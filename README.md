@@ -1,11 +1,11 @@
 # Demo App
 
-First, run `npm i`. Then run locally or build.
+First, run `pnpm install`. Then run locally or build.
 
 ## Running locally
 
 ```
-yarn start
+pnpm start
 ```
 
 The server will be running on port `2021`.
@@ -13,11 +13,11 @@ The server will be running on port `2021`.
 ## Build
 
 ```
-yarn build
+pnpm build
 ```
 
 ## Lint
 
 ```
-yarn eslint
+pnpm lint
 ```

@@ -1,6 +1,8 @@
-package-lock.json
 old-minerva-browser/
-node_modules/
+
+package-lock.json
+node_modules
 build
+
 .*.swp
 .DS_Store
