@@ -1,18 +1,43 @@
 {
+  "name": "minerva-core-ui",
+  "version": "1.0.0-alpha.1",
+  "description": "A microscopy viewer for non-experts",
   "scripts": {
-    "start": "webpack-dev-server --config ./webpack.development.mts",
-    "build": "webpack --config ./webpack.production.mts --progress",
+    "demo": "webpack-dev-server --config ./demo/webpack.development.mts",
+    "pages": "webpack --config ./demo/webpack.production.mts --progress",
+    "format": "prettier --ignore-path .eslintignore --write .",
+    "build": "rm -rf build && tsc -b",
     "lint": "eslint src"
   },
+  "type": "module",
+  "main": "build/main.js",
+  "types": "build/main.d.ts",
+  "author": "John T. Hoffer",
+  "exports": {
+    ".": "./build/main.js"
+  },
+  "files": [
+    "build"
+  ],
+  "keywords": [
+    "microscopy",
+    "proteomics",
+    "react"
+  ],
   "dependencies": {
+    "@fontsource/overpass": "^4.5.1",
+    "@fortawesome/fontawesome-svg-core": "^1.2.36",
+    "@fortawesome/free-solid-svg-icons": "^5.15.4",
+    "@fortawesome/react-fontawesome": "^0.1.16",
     "@types/openseadragon": "^2.4.8",
+    "history": "^5.2.0",
     "openseadragon": "^2.4.2",
     "prop-types": "^15.7.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-markdown": "^8.0.0",
     "react-router-dom": "^6.1.1",
-    "use-hash-history": "^1.2.2",
-    "history": "^5.2.0"
+    "use-hash-history": "^1.2.2"
   },
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
@@ -30,16 +55,22 @@
     "eslint-plugin-react": "^7.26.1",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.5.0",
+    "prettier": "^2.5.1",
+    "react-lorem-ipsum": "^1.4.9",
     "react-refresh": "^0.10.0",
     "style-loader": "^3.3.1",
+    "styled-components": "^5.3.3",
     "ts-loader": "^9.2.6",
     "ts-node": "^10.4.0",
     "type-fest": "^2.5.2",
     "typescript": "^4.5.2",
+    "typescript-plugin-styled-components": "^2.0.0",
     "webpack": "^5.62.1",
     "webpack-cli": "^4.9.1",
     "webpack-dev-server": "^4.4.0",
     "webpack-merge": "^5.8.0"
   },
-  "packageManager": "yarn@3.1.1"
+  "resolutions": {
+    "styled-components": "^5"
+  }
 }

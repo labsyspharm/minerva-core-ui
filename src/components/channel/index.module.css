@@ -1,0 +1,23 @@
+.textWrap {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 100%;
+  grid-template-columns: 1fr 200px;
+}
+
+.textHide > .textCore {
+  transform: translateX(100%);
+}
+
+.textCore {
+  color: #eee;
+  z-index: 1;
+  grid-row: 1;
+  grid-column: 2;
+  transition: all 1s;
+}
+
+.textOther {
+  grid-row: 1;
+  grid-column: 1 / -1;
+}

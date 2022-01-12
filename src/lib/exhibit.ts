@@ -1,45 +1,53 @@
-import {
-  toVec3, toVec1
-} from './hashUtil'
-
 // Types
-import type {
-  Vec3, Vec1
-} from "./hashUtil"
+import type { HashState } from "./hashUtil";
 
 export type Waypoint = {
-  name: string,
-  g: Vec1,
-  v: Vec3 
-}
+  name: string;
+  audio?: string;
+  markdown: string;
+  g: HashState["g"];
+  v: HashState["v"];
+};
 
 export type Story = {
-  waypoints: Waypoint[]
-}
+  waypoints: Waypoint[];
+};
+
+export type Channel = {
+  color: string;
+  name: string;
+};
 
 export type Group = {
-  name: string,
-  path: string
-}
+  name: string;
+  path: string;
+  g: HashState["g"];
+  channels: Channel[];
+};
 
 export interface Exhibit {
-  stories: Story[],
-  groups: Group[]
+  stories: Story[];
+  groups: Group[];
 }
 
+export type ConfigGroup = {
+  Name: string;
+  Path: string;
+  Colors: string[];
+  Channels: string[];
+};
+
 export interface Config {
-  Groups?: {
-    Name: string,
-    Path: string
-  }[],
+  Groups?: ConfigGroup[];
   Stories?: {
     Waypoints: {
-      Name: string,
-      Group: string,
-      Zoom: number, 
-      Pan: number[]
-    }[]
-  }[]
+      Description: string;
+      Group: string;
+      Name: string;
+      Zoom: number;
+      Pan: number[];
+    }[];
+  }[];
 }
 
 const readStories = (config: Config): Story[] => {
@@ -49,40 +57,54 @@ const readStories = (config: Config): Story[] => {
     return group.Name;
   });
   const indexGroupName = (name) => {
-    return groupNames.indexOf(name)
-  }
+    return groupNames.indexOf(name);
+  };
 
   return stories.map((story) => {
     return {
       waypoints: story.Waypoints.map((waypoint) => {
-        const [x, y] = waypoint.Pan.slice(0, 2)
+        const [x, y] = waypoint.Pan.slice(0, 2);
         return {
           name: waypoint.Name,
-          g: toVec1(indexGroupName(waypoint.Group)),
-          v: toVec3([ waypoint.Zoom, x, y ], 4)
-        }
-      })
-    }
-  })
-}
+          markdown: waypoint.Description,
+          g: indexGroupName(waypoint.Group),
+          v: [waypoint.Zoom, x, y],
+        };
+      }),
+    };
+  });
+};
+
+const readChannels = (group: ConfigGroup): Channel[] => {
+  const colors = group.Colors || [];
+  const names = group.Channels || [];
+  const named = names.slice(0, colors.length);
+
+  return [...named.keys()].map((k) => {
+    return {
+      name: names[k],
+      color: colors[k],
+    };
+  });
+};
 
 const readGroups = (config: Config): Group[] => {
   const groups = config.Groups || [];
-  return groups.map((group) => {
+  return groups.map((group, g) => {
     return {
+      g,
       name: group.Name,
-      path: group.Path
-    }
-  })
-}
+      path: group.Path,
+      channels: readChannels(group),
+    };
+  });
+};
 
 const readConfig = (config: Config): Exhibit => {
   return {
     stories: readStories(config),
-    groups: readGroups(config)
-  }
-}
+    groups: readGroups(config),
+  };
+};
 
-export {
-  readConfig
-}
+export { readConfig };

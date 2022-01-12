@@ -1,0 +1,42 @@
+.wrap {
+  height: 100%;
+  display: grid;
+  pointer-events: none;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 100% auto;
+}
+
+.core {
+  padding: 1em;
+  grid-column: 1;
+  grid-row: 1 / -1;
+  overflow: scroll;
+  pointer-events: all;
+  word-wrap: break-word;
+  background-color: rgba(0, 0, 0, 0.8);
+  grid-auto-rows: auto;
+  display: grid;
+}
+
+.core .header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+
+.core .count {
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+
+.count > div {
+  grid-column: 2;
+}
+
+.toolbar {
+  grid-row: 1;
+  grid-column: 2;
+  padding: 0.8em;
+  font-size: 16px;
+  pointer-events: all;
+  background-color: rgba(0, 0, 0, 0.8);
+}

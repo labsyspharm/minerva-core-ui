@@ -1,9 +1,5 @@
-// Generic functional types    
-export type OptFn<I=any, O=any> = (_?: I) => O
-export type UnaryFn<I=any, O=any> = (_: I) => O
-export type Fn<I extends any[], O=any> = (..._: I) => O
+const getStyler = (styles) => {
+  return (..._) => _.map((k) => styles[k]).join(" ");
+};
 
-// Types shared across application
-export type ReadWrite<State> = {
-  state: State, set: UnaryFn<State, void>
-}
+export { getStyler };

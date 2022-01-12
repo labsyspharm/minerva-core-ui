@@ -1,0 +1,27 @@
+.wrap {
+  height: 100%;
+  display: grid;
+  pointer-events: none;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 150px auto 100%;
+  transform: translate(-150px);
+}
+
+.core {
+  padding: 1em;
+  grid-column: 3;
+  grid-row: 1 / -1;
+  overflow: scroll;
+  pointer-events: all;
+  word-wrap: break-word;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.nav {
+  grid-row: 1;
+  grid-column: 1;
+  padding: 0.8em;
+  font-size: 16px;
+  pointer-events: all;
+  background-color: rgba(0, 0, 0, 0.8);
+}

@@ -1,61 +1,101 @@
 import * as React from "react";
-import {useEffect, useState} from "react";
-import {createOSD} from '../lib/createOSD';
-import styles from "./imageView.module.css";
-import {
-  toV, fromV  
-} from '../lib/hashUtil';
-import type {
-  Hash
-} from '../lib/hashUtil';
+import { findDOMNode } from "react-dom";
+import { useEffect, useRef, useState } from "react";
+import { OpenSeadragonContext, readViewport } from "../lib/openseadragon";
+import styled from "styled-components";
+import { useHash, useSetHash } from "../lib/hashUtil";
+import { getWaypoint } from "../lib/waypoint";
 
-type Props = {
-  hash?: Hash,
-  img: object,
-  channels: any[]
-}
+// Types
+import type { Config } from "../lib/openseadragon";
+import type { Group, Story } from "../lib/exhibit";
 
-const setViewport = ({viewport}, {v}) => {
-  const {scale, pan} = fromV(v)
-  viewport.panTo(pan);
-  viewport.zoomTo(scale);
-  viewport.applyConstraints(true);
-}
-
-const ImageView = (props:Props) => {
-
-  const osdID = 'ImageView'
-  const {hash, img, channels} = props
-  const [viewer, setViewer] = useState(null)
-
-  const viewportToV = (viewport) => {
-    const v = toV(viewport)
-    hash.set({...hash.state, v})
-  }
-
-  useEffect(() => {
-    setViewer(createOSD({
-      osdID,
-      viewportToV,
-      img, channels
-    }))
-  }, [])
-
-  useEffect(() => {
-    if (viewer !== null) {
-      setViewport(viewer, hash.state)
-    }
-  }, [viewer, hash.state.v])
-
-
-  return (
-    <div className={styles.h100}>
-      <div className={styles.h100} id={osdID}>
-      </div>
-    </div>
-  );
-}
-
-export {
-  ImageView
+export type Props = {
+  groups: Group[];
+  stories: Story[];
+  viewerConfig: Config;
 };
+
+const Main = styled.div`
+  height: 100%;
+`;
+
+const useSetV = (setHash) => {
+  return (context) => {
+    setHash({
+      v: readViewport(context),
+    });
+  };
+};
+
+const useUpdate = ({ setV, setCache }) => {
+  return (c) => {
+    if (c?.context?.viewport) {
+      setV(c.context);
+    }
+    setCache((_c) => {
+      const keys = [...Object.keys(_c)];
+      const entries = keys.map((k) => {
+        return [k, k in c ? c[k] : _c[k]];
+      });
+      return Object.fromEntries(entries);
+    });
+  };
+};
+
+const ImageView = (props: Props) => {
+  const rootRef = useRef();
+  const { v, g, s, w } = useHash();
+  const { groups, stories } = props;
+  const waypoint = getWaypoint(stories, s, w);
+  const setV = useSetV(useSetHash());
+  const rootEl = findDOMNode(rootRef.current);
+  const config = {
+    ...props.viewerConfig,
+    element: rootEl,
+  };
+
+  const [cache, setCache] = useState({
+    context: null,
+    redraw: false,
+    g,
+  });
+  const { context } = cache;
+  const update = useUpdate({ setV, setCache });
+  const opts = { config, update, v, g, groups };
+  const firstDraw = !context?.viewport;
+
+  useEffect(() => {
+    if (g !== cache.g) {
+      update({ g, redraw: true });
+    }
+  }, [g]);
+
+  useEffect(() => {
+    if (waypoint.g !== g) {
+      update({ g: waypoint.g });
+    }
+  }, [waypoint.g]);
+
+  useEffect(() => {
+    if (cache.redraw && rootEl) {
+      const next = context.reset(opts);
+      update({ redraw: false, context: next });
+    }
+  }, [cache.redraw, rootEl]);
+
+  const { zoomInButton, zoomOutButton } = config;
+  const els = [rootEl, zoomInButton, zoomOutButton];
+  const ready = els.every((el) => el !== null);
+
+  useEffect(() => {
+    if (ready && firstDraw) {
+      const next = OpenSeadragonContext(opts);
+      update({ context: next });
+    }
+  }, [ready, firstDraw]);
+
+  return <Main ref={rootRef} />;
+};
+
+export { ImageView };
