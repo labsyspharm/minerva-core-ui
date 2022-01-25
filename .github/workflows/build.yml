@@ -1,0 +1,28 @@
+name: Check Build 
+on:
+  push:
+    branches:
+      - stable
+      - main
+  pull_request:
+    branches:
+      - stable
+      - main
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.nodejs }}
+      - uses: pnpm/action-setup@v2.0.1
+        with:
+          version: 6.24.1
+      - name: Install
+        run: pnpm install
+      - name: Build
+        run: pnpm build
