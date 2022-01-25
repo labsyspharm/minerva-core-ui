@@ -144,7 +144,6 @@ const useRedirects = (stories: Story[], toElement) => {
   const waypoint = getWaypoint(stories, s, w);
   const { g, v } = waypoint;
   const noHash = { ...NO_HASH, g, v };
-  console.log(noHash);
   const makeRoutes = (all: Key[]) => {
     const path = toRoutePath(all[0]);
     const children = all.length > 1 ? makeRoutes(all.slice(1)) : undefined;
