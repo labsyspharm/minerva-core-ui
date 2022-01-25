@@ -41,7 +41,7 @@ specifiers:
   type-fest: ^2.5.2
   typescript: ^4.5.2
   typescript-plugin-styled-components: ^2.0.0
-  use-hash-history: ^1.2.2
+  use-hash-history: ^1.3.0
   webpack: ^5.62.1
   webpack-cli: ^4.9.1
   webpack-dev-server: ^4.4.0
@@ -60,7 +60,7 @@ dependencies:
   react-dom: 17.0.2_react@17.0.2
   react-markdown: 8.0.0_b08e3c15324cbe90a6ff8fcd416c932c
   react-router-dom: 6.2.1_react-dom@17.0.2+react@17.0.2
-  use-hash-history: 1.2.2_history@5.2.0
+  use-hash-history: 1.3.0_history@5.2.0
 
 devDependencies:
   '@pmmmwh/react-refresh-webpack-plugin': 0.5.4_46776858311854f8ec5c8e7580c333f6
@@ -4388,8 +4388,8 @@ packages:
       punycode: 2.1.1
     dev: true
 
-  /use-hash-history/1.2.2_history@5.2.0:
-    resolution: {integrity: sha512-sL+HK9VLtFRewmHqGJ6UFEiRUfnBslCKPuMqEFT467Rtu/9dGF9lM+9ZkuBaAkkyF8FXMk3yV67bSV4INdvTnQ==}
+  /use-hash-history/1.3.0_history@5.2.0:
+    resolution: {integrity: sha512-O+G6LPmh5mmOFgKmSUJF0WXkScF/ckRkjymBS87Q1rgLOaSZ33/K6r9BmdQLucJY3gprcIGzpSEJl/siFmE/IQ==}
     peerDependencies:
       history: 5.x
     dependencies:

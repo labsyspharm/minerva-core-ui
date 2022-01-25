@@ -11,13 +11,14 @@ type Props = {
 };
 
 const RedirectElement = ({ noHash }) => {
-  const hashPath = useHashPath(noHash);
-  return <Navigate replace to={hashPath} />;
+  const hash = useHashPath(noHash);
+  return <Navigate replace to={hash} />;
 };
 
 const Redirect = (props: Props) => {
   const { path, children, noHash } = props;
   const element = <RedirectElement noHash={noHash} />;
+  console.log({path: window.location})
   return (
     <Route key={path} {...{ path, element }}>
       {children}

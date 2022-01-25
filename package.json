@@ -39,7 +39,7 @@
     "react-dom": "^17.0.2",
     "react-markdown": "^8.0.0",
     "react-router-dom": "^6.1.1",
-    "use-hash-history": "^1.2.2"
+    "use-hash-history": "^1.3.0"
   },
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",

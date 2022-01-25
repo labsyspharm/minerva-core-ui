@@ -6,9 +6,16 @@ import { Index } from "./components";
 
 import type { Config } from "./lib/exhibit";
 
+const defaultPath = ({location}) => {
+  const {pathname, search} = location;
+  console.log(pathname, search);
+  return {pathname, search};
+}
 const history = useHashHistory({
+  defaultPath: defaultPath(window),
   hashSlash: "#",
   hashRoot: "",
+  window
 });
 
 type Props = {
