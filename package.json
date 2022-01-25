@@ -1,6 +1,6 @@
 {
   "name": "minerva-core-ui",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "A microscopy viewer for non-experts",
   "scripts": {
     "demo": "webpack-dev-server --config ./demo/webpack.development.mts",
