@@ -13,6 +13,8 @@
   "main": "build/main.js",
   "types": "build/main.d.ts",
   "author": "John T. Hoffer",
+  "repository": "github:labsyspharm/minerva-core-ui",
+  "license": "MIT",
   "exports": {
     ".": "./build/main.js"
   },
