@@ -8,6 +8,13 @@ First, run `pnpm install`. Then run locally or build.
 pnpm demo
 ```
 
+## Building demo
+
+```
+pnpm pages
+```
+
+
 The server will run on port `2021`.
 
 ## Build module
