@@ -11,6 +11,7 @@ import type { Story } from "../../lib/exhibit";
 
 type Props = {
   stories: Story[];
+  toggleViewer: () => void;
   onZoomInEl: (HTMLButtonElement) => void;
   onZoomOutEl: (HTMLButtonElement) => void;
 };

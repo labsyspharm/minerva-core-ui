@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useVars, useSetVars } from "path-vars";
 import { getWaypoint } from "./waypoint";
 
 import type { Story } from "./exhibit";
@@ -22,117 +23,62 @@ type ParamInput = {
   params: Partial<Record<Key, string>>;
 };
 
-const NO_HASH: HashState = {
-  s: 0,
-  w: 0,
-  g: 0,
-  m: -1,
-  a: [-100, -100],
-  v: [-1, -1, -1],
-  o: [-100, -100, 1, 1],
-  p: "Q",
-};
-
-function isKey(k): k is Key {
-  return K_ALL.includes(k);
-}
-
-function isNumKey(k): k is NumsKey {
-  return K_NUM.includes(k);
-}
-
-function isNumsKey(k): k is NumsKey {
-  return K_NUMS.includes(k);
-}
-
-function handleKey(forNums, forNum, forStr) {
-  return (k: Key) => {
-    if (isNumsKey(k)) return forNums;
-    else if (isNumKey(k)) return forNum;
-    else return forStr;
-  };
-}
-
-function invalidator(k) {
-  const okLength = ({ length }) => length === NO_HASH[k].length;
-  return handleKey(
-    (a) => !okLength(a) || a.some(isNaN),
-    isNaN,
-    (s) => !s
-  )(k);
-}
-
-function encoder(k: Key, p: number) {
-  const toString = (precision?) => {
-    return (n) => n.toPrecision(precision);
-  };
-  return handleKey(
-    (a) => a.map(toString(p)).join("_"),
-    toString(),
-    (s) => s
-  )(k);
-}
-
-function decoder(k: Key) {
-  return handleKey(
-    (s) => s.split("_").map(parseFloat),
-    parseFloat,
-    (s) => s
-  )(k);
-}
-
-const toHashState = ({ noHash, params }: ParamInput) => {
-  const paramKV = Object.entries(params);
-  const hashKV = paramKV
-    .map(([k, v]) => {
-      if (isKey(k)) {
-        const value = decoder(k)(v);
-        if (!invalidator(k)(value)) {
-          return [k, value];
-        }
-      }
-    })
-    .filter((kv) => !!kv);
+const VEC = (len) => {
   return {
-    ...noHash,
-    ...Object.fromEntries(hashKV),
-  };
+    checkValue: (a) => !a.some(isNaN) && a.length === len,
+    encode: (a) => a.map(n => n.toPrecision(4)).join("_"), 
+    decode: (s) => s.split("_").map(parseFloat),
+    checkText: (s) => true
+  }
+}
+
+const OPTS = {
+  formats: [{
+    keys: ["s", "w", "g", "m"],
+    encode: x => `${x}`,
+    decode: parseInt,
+    empty: 0
+  }, {
+    ...VEC(2),
+    keys: ["a"],
+    empty: [-100, -100]
+  }, {
+    ...VEC(3),
+    keys: ["v"],
+    empty: [-1, -1, -1]
+  }, {
+    ...VEC(4),
+    keys: ["o"],
+    empty: [-100, -100, 1, 1]
+  }, {
+    keys: ["p"],
+    empty: "Q"
+  }].map((f) => {
+    const join = (kv) => kv.join("=");
+    return {...f, join}
+  })
+}
+
+const useHashPath = (hash) => {
+  return ((out: {pathname: string}) => {
+    useSetVars((to) => out = to, OPTS)(hash)
+    return out.pathname;
+  })(null)
 };
 
-const serialize = (hash) => {
-  const precision = 4;
-  const hashKVs = K_ALL.map((k) => {
-    const encode = encoder(k, precision);
-    return [k, encode(hash[k])].join("=");
-  });
-  return "/" + hashKVs.join("/");
-};
-
-const useHash = (noHash = NO_HASH) => {
-  const params = useParams();
-  return toHashState({ noHash, params });
-};
-
-const _useSetHash = (navigate, oldHash) => {
-  return (newState: Partial<HashState>) => {
-    const hash = serialize({
-      ...oldHash,
-      ...newState,
-    });
-    navigate({ pathname: hash });
-  };
+const useHash = () => {
+  return useVars(useParams(), OPTS) as HashState;
 };
 
 const useSetHash = () => {
-  const oldHash = useHash(NO_HASH);
-  const navigate = useNavigate();
+  const nav = useNavigate();
+  const oldHash = useHash();
+  const setVars = useSetVars(nav, OPTS);
   return useMemo(() => {
-    return _useSetHash(navigate, oldHash);
-  }, [oldHash, navigate]);
-};
-
-const useHashPath = (noHash = NO_HASH) => {
-  return serialize(useHash(noHash));
+    return (hash: Partial<HashState>) => {
+      return setVars({...oldHash, ...hash});
+    }
+  }, [oldHash, setVars]);
 };
 
 const toRoutePath = (..._: string[]) => {
@@ -140,10 +86,20 @@ const toRoutePath = (..._: string[]) => {
 };
 
 const useRedirects = (stories: Story[], toElement) => {
-  const { s, w } = NO_HASH;
+  const defaultHash = {
+    s: 0,
+    w: 0,
+    g: 0,
+    m: -1,
+    a: [-100, -100],
+    v: [-1, -1, -1],
+    o: [-100, -100, 1, 1],
+    p: "Q",
+  };
+  const { s, w } = defaultHash;
   const waypoint = getWaypoint(stories, s, w);
   const { g, v } = waypoint;
-  const noHash = { ...NO_HASH, g, v };
+  const noHash = { ...defaultHash, g, v };
   const makeRoutes = (all: Key[]) => {
     const path = toRoutePath(all[0]);
     const children = all.length > 1 ? makeRoutes(all.slice(1)) : undefined;

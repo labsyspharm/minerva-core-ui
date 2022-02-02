@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
-import { ImageView } from "./imageView";
+import { ImageView, toImageProps } from "./imageView";
 import { Redirects } from "./redirects";
 import { Waypoint } from "./waypoint";
 import { Channel } from "./channel";
@@ -18,12 +18,19 @@ const onLoaded = (setter) => {
   return (el) => (el ? setter(el) : null);
 };
 
+const toggle = (list: string[], item: string) => {
+  return list[(list.indexOf(item) + 1) % list.length] 
+}
+
 const Index = (props: Props) => {
   const { exhibit } = props;
   const { groups, stories } = exhibit;
 
+  const views = ["viv", "osd"]; 
+  const [view, setView] = useState(views[0]);
   const [zoomInEl, setZoomIn] = useState(null);
   const [zoomOutEl, setZoomOut] = useState(null);
+  const toggleViewer = () => setView(toggle(views, view))
 
   const onZoomInEl = onLoaded(setZoomIn);
   const onZoomOutEl = onLoaded(setZoomOut);
@@ -32,19 +39,22 @@ const Index = (props: Props) => {
     stories,
     onZoomInEl,
     onZoomOutEl,
+    toggleViewer,
   };
   const channelProps = {
     groups,
     stories,
   };
-  const imageProps = {
-    groups,
-    stories,
-    viewerConfig: {
+  const imageProps = toImageProps({
+    props: {
+      viewer: view,
+      ...channelProps,
+    },
+    buttons: {
       zoomInButton: zoomInEl,
       zoomOutButton: zoomOutEl,
-    },
-  };
+    }
+  });
   const redirectProps = {
     stories,
   };

@@ -9,6 +9,7 @@ import { Audio, Sample } from "./audio";
 import { Nav } from "./nav";
 import styles from "./content.module.css";
 import {
+  faEye as faView,
   faList as faHome,
   faArrowLeft as faPrev,
   faArrowRight as faNext,
@@ -18,6 +19,7 @@ import {
 import type { Story, Waypoint } from "../../lib/exhibit";
 
 type Props = {
+  toggleViewer: () => void;
   stories: Story[];
   children: any;
 };
@@ -59,7 +61,7 @@ const useIcons = ({ stories }: Props) => {
       size: `${1.5 * size}em`,
       icon: faNext,
       onClick: () => onClick(+1),
-    },
+    } 
   };
 };
 
@@ -90,6 +92,13 @@ const Content = (props: Props) => {
   const { markdown, name, audio } = useWaypoint(props);
   const { prevProps, nextProps, homeProps } = icons;
   const audioProps = { audio };
+
+  const toggleProps = {
+    onClick: () => props.toggleViewer(),
+    size: "1.5em",
+    icon: faView,
+  }
+
   return (
     <div className={styles.wrap}>
       <div className={styles.core}>
@@ -101,6 +110,11 @@ const Content = (props: Props) => {
           <Icon {...prevProps} />
           <Audio {...audioProps} />
           <Icon {...nextProps} />
+        </Nav>
+        <Nav>
+          <span/>
+          <Icon {...toggleProps}/>
+          <span/>
         </Nav>
         <div className={styles.count}>
           <div>

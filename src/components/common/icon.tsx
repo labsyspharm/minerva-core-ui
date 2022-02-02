@@ -2,6 +2,7 @@ import * as React from "react";
 import styled from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconProp } from "@fortawesome/fontawesome-svg-core";
+import type { RefObject } from "react";
 
 export type Props = {
   size?: string;
@@ -9,6 +10,12 @@ export type Props = {
   icon: IconProp;
   onClick?: (_: unknown) => unknown;
 };
+
+type Ref = (x: unknown) => void;
+
+const isRef = (x: unknown): x is Ref => {
+  return typeof x === "function";
+}
 
 const clickOpacity = (noClick) => {
   return noClick ? "0.5" : "1.0";
@@ -30,37 +37,36 @@ const Button = styled.button`
   cursor: ${({ onClick }) => clickCursor(!onClick)};
 `;
 
-const getProps = (props: Props, ref = null) => {
-  const noClick = !ref ? null : () => null;
-  const { onClick = noClick } = props;
+const getProps = (props: Props, noClick=null) => {
+  const { icon, onClick = noClick } = props;
   const { size = "1em", color = "inherit" } = props;
   return {
     size,
+    icon,
     color,
-    onClick,
-    ...(!ref ? {} : { ref }),
+    onClick
   };
 };
 
 const Icon = (props: Props) => {
-  const { icon } = props;
-  const buttonProps = getProps(props);
+  const { icon, ...rest} = getProps(props);
   return (
-    <Button {...buttonProps}>
+    <Button {...rest}>
       <FontAwesomeIcon {...{ icon }} />
     </Button>
-  );
+  )
 };
 
-const RefIconCore = (props: Props, ref: unknown) => {
-  const { icon } = props;
-  const buttonProps = getProps(props, ref);
-  return (
-    <Button {...buttonProps}>
-      <FontAwesomeIcon {...{ icon }} />
-    </Button>
-  );
-};
-const RefIcon = React.forwardRef(RefIconCore);
+const RefIcon = React.forwardRef(
+  (props: Props, ref: Ref) => {
+    const coreProps = getProps(props, () => null);
+    const { icon, ...rest} = { ref, ...coreProps };
+    return (
+      <Button {...rest}>
+        <FontAwesomeIcon {...{ icon }} />
+      </Button>
+    )
+  }
+);
 
 export { Icon, RefIcon };
