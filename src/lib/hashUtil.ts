@@ -26,44 +26,50 @@ type ParamInput = {
 const VEC = (len) => {
   return {
     checkValue: (a) => !a.some(isNaN) && a.length === len,
-    encode: (a) => a.map(n => n.toPrecision(4)).join("_"), 
+    encode: (a) => a.map((n) => n.toPrecision(4)).join("_"),
     decode: (s) => s.split("_").map(parseFloat),
-    checkText: (s) => true
-  }
-}
+    checkText: (s) => true,
+  };
+};
 
 const OPTS = {
-  formats: [{
-    keys: ["s", "w", "g", "m"],
-    encode: x => `${x}`,
-    decode: parseInt,
-    empty: 0
-  }, {
-    ...VEC(2),
-    keys: ["a"],
-    empty: [-100, -100]
-  }, {
-    ...VEC(3),
-    keys: ["v"],
-    empty: [-1, -1, -1]
-  }, {
-    ...VEC(4),
-    keys: ["o"],
-    empty: [-100, -100, 1, 1]
-  }, {
-    keys: ["p"],
-    empty: "Q"
-  }].map((f) => {
+  formats: [
+    {
+      keys: ["s", "w", "g", "m"],
+      encode: (x) => `${x}`,
+      decode: parseInt,
+      empty: 0,
+    },
+    {
+      ...VEC(2),
+      keys: ["a"],
+      empty: [-100, -100],
+    },
+    {
+      ...VEC(3),
+      keys: ["v"],
+      empty: [-1, -1, -1],
+    },
+    {
+      ...VEC(4),
+      keys: ["o"],
+      empty: [-100, -100, 1, 1],
+    },
+    {
+      keys: ["p"],
+      empty: "Q",
+    },
+  ].map((f) => {
     const join = (kv) => kv.join("=");
-    return {...f, join}
-  })
-}
+    return { ...f, join };
+  }),
+};
 
 const useHashPath = (hash) => {
-  return ((out: {pathname: string}) => {
-    useSetVars((to) => out = to, OPTS)(hash)
+  return ((out: { pathname: string }) => {
+    useSetVars((to) => (out = to), OPTS)(hash);
     return out.pathname;
-  })(null)
+  })(null);
 };
 
 const useHash = () => {
@@ -76,8 +82,8 @@ const useSetHash = () => {
   const setVars = useSetVars(nav, OPTS);
   return useMemo(() => {
     return (hash: Partial<HashState>) => {
-      return setVars({...oldHash, ...hash});
-    }
+      return setVars({ ...oldHash, ...hash });
+    };
   }, [oldHash, setVars]);
 };
 

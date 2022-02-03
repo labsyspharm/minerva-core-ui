@@ -19,18 +19,18 @@ const onLoaded = (setter) => {
 };
 
 const toggle = (list: string[], item: string) => {
-  return list[(list.indexOf(item) + 1) % list.length] 
-}
+  return list[(list.indexOf(item) + 1) % list.length];
+};
 
 const Index = (props: Props) => {
   const { exhibit } = props;
   const { groups, stories } = exhibit;
 
-  const views = ["viv", "osd"]; 
+  const views = ["viv", "osd"];
   const [view, setView] = useState(views[0]);
   const [zoomInEl, setZoomIn] = useState(null);
   const [zoomOutEl, setZoomOut] = useState(null);
-  const toggleViewer = () => setView(toggle(views, view))
+  const toggleViewer = () => setView(toggle(views, view));
 
   const onZoomInEl = onLoaded(setZoomIn);
   const onZoomOutEl = onLoaded(setZoomOut);
@@ -53,7 +53,7 @@ const Index = (props: Props) => {
     buttons: {
       zoomInButton: zoomInEl,
       zoomOutButton: zoomOutEl,
-    }
+    },
   });
   const redirectProps = {
     stories,

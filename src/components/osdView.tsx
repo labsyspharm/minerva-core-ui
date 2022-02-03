@@ -43,9 +43,9 @@ const useUpdate = ({ setV, setCache }) => {
   };
 };
 
-const useEl = ({current}) => {
+const useEl = ({ current }) => {
   return findDOMNode(current);
-}
+};
 
 const OsdView = (props: Props) => {
   const rootRef = useRef();
@@ -70,7 +70,7 @@ const OsdView = (props: Props) => {
   const opts = { config, update, v, g, groups };
   const firstDraw = !context?.viewport;
 
-  useEffect(() => setEl(useEl(rootRef)), [rootRef.current])
+  useEffect(() => setEl(useEl(rootRef)), [rootRef.current]);
   useEffect(() => {
     if (g !== cache.g) {
       update({ g, redraw: true });

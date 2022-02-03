@@ -61,7 +61,7 @@ const useIcons = ({ stories }: Props) => {
       size: `${1.5 * size}em`,
       icon: faNext,
       onClick: () => onClick(+1),
-    } 
+    },
   };
 };
 
@@ -97,7 +97,7 @@ const Content = (props: Props) => {
     onClick: () => props.toggleViewer(),
     size: "1.5em",
     icon: faView,
-  }
+  };
 
   return (
     <div className={styles.wrap}>
@@ -112,9 +112,9 @@ const Content = (props: Props) => {
           <Icon {...nextProps} />
         </Nav>
         <Nav>
-          <span/>
-          <Icon {...toggleProps}/>
-          <span/>
+          <span />
+          <Icon {...toggleProps} />
+          <span />
         </Nav>
         <div className={styles.count}>
           <div>

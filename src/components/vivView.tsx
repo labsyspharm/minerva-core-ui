@@ -5,7 +5,7 @@ import {
   getChannelStats,
   loadOmeTiff,
   PictureInPictureViewer,
-} from '@hms-dbmi/viv';
+} from "@hms-dbmi/viv";
 
 import styled from "styled-components";
 import { useHash, useSetHash } from "../lib/hashUtil";
@@ -22,19 +22,19 @@ export type Props = {
 };
 
 type Shape = {
-  width: number,
-  height: number
-}
+  width: number;
+  height: number;
+};
 
-const url = '/LUNG-3-PR_40X.ome.tif'
+const url = "/LUNG-3-PR_40X.ome.tif";
 
 const Main = styled.div`
   height: 100%;
 `;
 
-const isElement = (x={}): x is HTMLElement => {
-  return ["Width", "Height"].every(k => `client${k}` in x);
-}
+const isElement = (x = {}): x is HTMLElement => {
+  return ["Width", "Height"].every((k) => `client${k}` in x);
+};
 
 const useSetV = (setHash) => {
   return (context) => {
@@ -66,10 +66,10 @@ const shapeRef = (setShape: (s: Shape) => void) => {
     if (el && isElement(el)) {
       const height = el.clientHeight;
       const width = el.clientWidth;
-      setShape({ width, height});
+      setShape({ width, height });
     }
-  }
-}
+  };
+};
 
 const VivView = (props: Props) => {
   const maxShape = useWindowSize();
@@ -81,22 +81,22 @@ const VivView = (props: Props) => {
   const [shape, setShape] = useState(maxShape);
   const rootRef = React.useMemo(() => {
     return shapeRef(setShape);
-  }, [maxShape])
+  }, [maxShape]);
 
   const [loader, setLoader] = useState(null);
   useEffect(() => {
     loadOmeTiff(url).then((loader) => {
-      setLoader(loader)
+      setLoader(loader);
     });
   }, []);
- 
+
   if (!loader || !settings) return null;
   return (
     <Main ref={rootRef}>
       <PictureInPictureViewer
         {...{
           ...shape,
-          ...settings as any,
+          ...(settings as any),
           loader: loader.data,
         }}
       />

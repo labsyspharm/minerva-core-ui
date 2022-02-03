@@ -15,7 +15,7 @@ type Ref = (x: unknown) => void;
 
 const isRef = (x: unknown): x is Ref => {
   return typeof x === "function";
-}
+};
 
 const clickOpacity = (noClick) => {
   return noClick ? "0.5" : "1.0";
@@ -37,36 +37,34 @@ const Button = styled.button`
   cursor: ${({ onClick }) => clickCursor(!onClick)};
 `;
 
-const getProps = (props: Props, noClick=null) => {
+const getProps = (props: Props, noClick = null) => {
   const { icon, onClick = noClick } = props;
   const { size = "1em", color = "inherit" } = props;
   return {
     size,
     icon,
     color,
-    onClick
+    onClick,
   };
 };
 
 const Icon = (props: Props) => {
-  const { icon, ...rest} = getProps(props);
+  const { icon, ...rest } = getProps(props);
   return (
     <Button {...rest}>
       <FontAwesomeIcon {...{ icon }} />
     </Button>
-  )
+  );
 };
 
-const RefIcon = React.forwardRef(
-  (props: Props, ref: Ref) => {
-    const coreProps = getProps(props, () => null);
-    const { icon, ...rest} = { ref, ...coreProps };
-    return (
-      <Button {...rest}>
-        <FontAwesomeIcon {...{ icon }} />
-      </Button>
-    )
-  }
-);
+const RefIcon = React.forwardRef((props: Props, ref: Ref) => {
+  const coreProps = getProps(props, () => null);
+  const { icon, ...rest } = { ref, ...coreProps };
+  return (
+    <Button {...rest}>
+      <FontAwesomeIcon {...{ icon }} />
+    </Button>
+  );
+});
 
 export { Icon, RefIcon };
