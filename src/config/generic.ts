@@ -1,6 +1,6 @@
 export enum RasterLayers {
   Intensity = "intensity",
-  Label = "intensity",
+  Label = "label",
 }
 
 export enum SparseLayers {
@@ -101,7 +101,7 @@ type Unit = typeof Units;
 type RasterIntensity = {
   transfers: { type: Corrections; value: number }[];
   intent: RasterLayers.Intensity;
-  channels: RasterChannel[];
+  channels: IntensityChannel[];
 };
 type RasterLabel = {
   shaders: { type: Shaders; value: unknown }[];
@@ -109,7 +109,7 @@ type RasterLabel = {
   channels: LabelChannel[];
 };
 
-type RasterChannel = IndexAndName & {
+type IntensityChannel = IndexAndName & {
   intensity: Vec<"min" | "max">;
   color: Vec<"r" | "g" | "b">;
 };
