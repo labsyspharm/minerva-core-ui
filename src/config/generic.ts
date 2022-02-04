@@ -139,6 +139,16 @@ type Sparse =
       rotation: number;
       origin: Point;
       size: number;
+    }
+  | {
+      intent: SparseLayers.Ellipse;
+      origin: Point;
+      shape: Shape;
+    }
+  | {
+      intent: SparseLayers.Rect;
+      origin: Point;
+      shape: Shape;
     };
 
 type Point = Vec<"x" | "y"> & Measure<keyof Unit>;
