@@ -40,6 +40,17 @@
             },
             "type": "object"
         },
+        "Measure<\"Millimeter\">": {
+            "properties": {
+                "unit": {
+                    "enum": [
+                        "mm"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
         "Measure<\"WidthRatio\"|\"HeightRatio\"|\"Millimeter\"|\"ImagePixel\">": {
             "properties": {
                 "unit": {
@@ -223,8 +234,18 @@
                                 "$ref": "#/definitions/Partial<{publications:Publication[];creation:Date;}>"
                             },
                             "shapes": {
-                                "items": [
-                                    {
+                                "properties": {
+                                    "physical": {
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/definitions/Vec<\"width\"|\"height\">"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/Measure<\"Millimeter\">"
+                                            }
+                                        ]
+                                    },
+                                    "pixel": {
                                         "allOf": [
                                             {
                                                 "$ref": "#/definitions/Vec<\"width\"|\"height\">"
@@ -233,21 +254,9 @@
                                                 "$ref": "#/definitions/Measure<\"ImagePixel\">"
                                             }
                                         ]
-                                    },
-                                    {
-                                        "allOf": [
-                                            {
-                                                "$ref": "#/definitions/Vec<\"width\"|\"height\">"
-                                            },
-                                            {
-                                                "$ref": "#/definitions/Measure<\"WidthRatio\"|\"HeightRatio\"|\"Millimeter\"|\"ImagePixel\">"
-                                            }
-                                        ]
                                     }
-                                ],
-                                "maxItems": 2,
-                                "minItems": 2,
-                                "type": "array"
+                                },
+                                "type": "object"
                             }
                         },
                         "type": "object"

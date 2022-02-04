@@ -51,7 +51,10 @@ export type Image<R extends RasterLayers, F extends Formats> = {
   location: string;
   metadata: Metadata;
   markers: Marker[];
-  shapes: [PixelShape, Shape];
+  shapes: {
+    pixel: PixelShape;
+    physical: PhysicalShape;
+  };
   intent: R;
   format: F;
 };
@@ -154,6 +157,7 @@ type Sparse =
 type Point = Vec<"x" | "y"> & Measure<keyof Unit>;
 type Shape = Vec<"width" | "height"> & Measure<keyof Unit>;
 type PixelShape = Vec<"width" | "height"> & Measure<"ImagePixel">;
+type PhysicalShape = Vec<"width" | "height"> & Measure<"Millimeter">;
 type Measure<U extends keyof Unit> = Record<"unit", Unit[U]>;
 type Vec<V extends string> = { [v in V]: number };
 type IndexAndName = { name: string; index: number };

@@ -115,18 +115,18 @@ const IMAGES: StoryImage[] = [
         marker_name: "DNA_1",
       },
     ],
-    shapes: [
-      {
+    shapes: {
+      pixel: {
         width: 14448,
         height: 11101,
         unit: Units.ImagePixel,
       },
-      {
+      physical: {
         width: 4.6956,
         height: 3.6078,
         unit: Units.Millimeter,
       },
-    ],
+    },
     intent: RasterLayers.Intensity,
     format: Formats.ColorJpeg,
   },
