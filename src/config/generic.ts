@@ -84,7 +84,7 @@ export type Scene = {
   layout?: Layout;
 };
 
-type Layer = RasterIntensity | RasterLabel | Sparse<SparseLayers>;
+type Layer = RasterIntensity | RasterLabel | Sparse;
 
 type Camera = {
   center: Point;
@@ -119,17 +119,27 @@ type LabelChannel = IndexAndName & {
   opacity?: number;
 };
 
-type Sparse<L extends SparseLayers> = {
-  intent: L;
-} & (L extends SparseLayers.Polygon ? { path: number[] } : {}) &
-  (L extends SparseLayers.Svg | SparseLayers.Text ? { text: string } : {}) &
-  (L extends SparseLayers.Rect | SparseLayers.Ellipse
-    ? { origin: Point; shape: Shape }
-    : {}) &
-  (L extends SparseLayers.Arrow | SparseLayers.Text
-    ? { origin: Point; size: number }
-    : {}) &
-  (L extends SparseLayers.Arrow ? { rotation: number } : {});
+type Sparse =
+  | {
+      intent: SparseLayers.Polygon;
+      path: number[];
+    }
+  | {
+      intent: SparseLayers.Svg;
+      text: string;
+    }
+  | {
+      intent: SparseLayers.Text;
+      origin: Point;
+      size: number;
+      text: string;
+    }
+  | {
+      intent: SparseLayers.Arrow;
+      rotation: number;
+      origin: Point;
+      size: number;
+    };
 
 type Point = Vec<"x" | "y"> & Measure<keyof Unit>;
 type Shape = Vec<"width" | "height"> & Measure<keyof Unit>;
