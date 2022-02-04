@@ -1,0 +1,497 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "Corrections": {
+            "enum": [
+                "gamma",
+                "log"
+            ],
+            "type": "string"
+        },
+        "F": {
+            "$ref": "#/definitions/Formats"
+        },
+        "Formats": {
+            "enum": [
+                "color_jpeg",
+                "color_png",
+                "gray_png",
+                "ome_tiff",
+                "ome_zarr"
+            ],
+            "type": "string"
+        },
+        "Index": {
+            "properties": {
+                "index": {
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        },
+        "L": {
+            "$ref": "#/definitions/SparseLayers"
+        },
+        "Measure<\"ImagePixel\">": {
+            "properties": {
+                "unit": {
+                    "enum": [
+                        "px"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "Measure<\"WidthRatio\"|\"HeightRatio\"|\"Millimeter\"|\"ImagePixel\">": {
+            "properties": {
+                "unit": {
+                    "enum": [
+                        "h",
+                        "mm",
+                        "px",
+                        "w"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "Partial<{channel_number:number;cycle_number:number;marker_name:string;filter:string;excitation_wavelength:number;emission_wavelength:number;}>": {
+            "properties": {
+                "channel_number": {
+                    "type": "number"
+                },
+                "cycle_number": {
+                    "type": "number"
+                },
+                "emission_wavelength": {
+                    "type": "number"
+                },
+                "excitation_wavelength": {
+                    "type": "number"
+                },
+                "filter": {
+                    "type": "string"
+                },
+                "marker_name": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "Partial<{publications:Publication[];creation:Date;}>": {
+            "properties": {
+                "creation": {
+                    "format": "date-time",
+                    "type": "string"
+                },
+                "publications": {
+                    "items": {
+                        "properties": {
+                            "authors": {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            "creation": {
+                                "format": "date-time",
+                                "type": "string"
+                            },
+                            "doi": {
+                                "type": "string"
+                            },
+                            "title": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "R": {
+            "$ref": "#/definitions/RasterLayers"
+        },
+        "RasterLayers": {
+            "enum": [
+                "intensity",
+                "label"
+            ],
+            "type": "string"
+        },
+        "Record<string,string>": {
+            "type": "object"
+        },
+        "Shaders": {
+            "enum": [
+                "dot",
+                "fill",
+                "filter",
+                "outline"
+            ],
+            "type": "string"
+        },
+        "SparseLayers": {
+            "enum": [
+                "arrow",
+                "ellipse",
+                "polygon",
+                "rect",
+                "svg",
+                "text"
+            ],
+            "type": "string"
+        },
+        "Vec<\"g\"|\"b\"|\"r\">": {
+            "properties": {
+                "b": {
+                    "type": "number"
+                },
+                "g": {
+                    "type": "number"
+                },
+                "r": {
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        },
+        "Vec<\"max\"|\"min\">": {
+            "properties": {
+                "max": {
+                    "type": "number"
+                },
+                "min": {
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        },
+        "Vec<\"width\"|\"height\">": {
+            "properties": {
+                "height": {
+                    "type": "number"
+                },
+                "width": {
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        },
+        "Vec<\"x\"|\"y\">": {
+            "properties": {
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "properties": {
+        "images": {
+            "items": {
+                "allOf": [
+                    {
+                        "properties": {
+                            "index": {
+                                "type": "number"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    {
+                        "properties": {
+                            "format": {
+                                "$ref": "#/definitions/F"
+                            },
+                            "intent": {
+                                "$ref": "#/definitions/R"
+                            },
+                            "location": {
+                                "type": "string"
+                            },
+                            "markers": {
+                                "items": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/Index"
+                                        },
+                                        {
+                                            "$ref": "#/definitions/Partial<{channel_number:number;cycle_number:number;marker_name:string;filter:string;excitation_wavelength:number;emission_wavelength:number;}>"
+                                        }
+                                    ]
+                                },
+                                "type": "array"
+                            },
+                            "metadata": {
+                                "$ref": "#/definitions/Partial<{publications:Publication[];creation:Date;}>"
+                            },
+                            "shapes": {
+                                "items": [
+                                    {
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/definitions/Vec<\"width\"|\"height\">"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/Measure<\"ImagePixel\">"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/definitions/Vec<\"width\"|\"height\">"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/Measure<\"WidthRatio\"|\"HeightRatio\"|\"Millimeter\"|\"ImagePixel\">"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "maxItems": 2,
+                                "minItems": 2,
+                                "type": "array"
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "type": "array"
+        },
+        "scenes": {
+            "items": {
+                "allOf": [
+                    {
+                        "properties": {
+                            "index": {
+                                "type": "number"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    {
+                        "properties": {
+                            "camera": {
+                                "properties": {
+                                    "center": {
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/definitions/Vec<\"x\"|\"y\">"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/Measure<\"WidthRatio\"|\"HeightRatio\"|\"Millimeter\"|\"ImagePixel\">"
+                                            }
+                                        ]
+                                    },
+                                    "zoom": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "layers": {
+                                "items": {
+                                    "anyOf": [
+                                        {
+                                            "allOf": [
+                                                {
+                                                    "properties": {
+                                                        "index": {
+                                                            "type": "number"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                {
+                                                    "properties": {
+                                                        "channels": {
+                                                            "items": {
+                                                                "allOf": [
+                                                                    {
+                                                                        "properties": {
+                                                                            "index": {
+                                                                                "type": "number"
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    },
+                                                                    {
+                                                                        "properties": {
+                                                                            "color": {
+                                                                                "$ref": "#/definitions/Vec<\"g\"|\"b\"|\"r\">"
+                                                                            },
+                                                                            "intensity": {
+                                                                                "$ref": "#/definitions/Vec<\"max\"|\"min\">"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "type": "array"
+                                                        },
+                                                        "intent": {
+                                                            "enum": [
+                                                                "intensity"
+                                                            ],
+                                                            "type": "string"
+                                                        },
+                                                        "transfers": {
+                                                            "items": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "$ref": "#/definitions/Corrections"
+                                                                    },
+                                                                    "value": {
+                                                                        "type": "number"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "type": "array"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "allOf": [
+                                                {
+                                                    "properties": {
+                                                        "index": {
+                                                            "type": "number"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                {
+                                                    "properties": {
+                                                        "channels": {
+                                                            "items": {
+                                                                "allOf": [
+                                                                    {
+                                                                        "properties": {
+                                                                            "index": {
+                                                                                "type": "number"
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    },
+                                                                    {
+                                                                        "properties": {
+                                                                            "color": {
+                                                                                "$ref": "#/definitions/Vec<\"g\"|\"b\"|\"r\">"
+                                                                            },
+                                                                            "opacity": {
+                                                                                "type": "number"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "type": "array"
+                                                        },
+                                                        "intent": {
+                                                            "enum": [
+                                                                "label"
+                                                            ],
+                                                            "type": "string"
+                                                        },
+                                                        "shaders": {
+                                                            "items": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "$ref": "#/definitions/Shaders"
+                                                                    },
+                                                                    "value": {}
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "type": "array"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "allOf": [
+                                                {
+                                                    "properties": {
+                                                        "index": {
+                                                            "type": "number"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                {
+                                                    "properties": {
+                                                        "intent": {
+                                                            "$ref": "#/definitions/L"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "type": "array"
+                            },
+                            "layout": {
+                                "properties": {
+                                    "classNames": {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "styles": {
+                                        "$ref": "#/definitions/Record<string,string>"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "type": "array"
+        }
+    },
+    "type": "object"
+}
+
