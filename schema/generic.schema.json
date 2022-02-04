@@ -233,7 +233,7 @@
                             "metadata": {
                                 "$ref": "#/definitions/Partial<{publications:Publication[];creation:Date;}>"
                             },
-                            "shapes": {
+                            "shape": {
                                 "properties": {
                                     "physical": {
                                         "allOf": [

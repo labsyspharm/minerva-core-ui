@@ -115,7 +115,7 @@ const IMAGES: StoryImage[] = [
         marker_name: "DNA_1",
       },
     ],
-    shapes: {
+    shape: {
       pixel: {
         width: 14448,
         height: 11101,

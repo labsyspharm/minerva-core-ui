@@ -51,7 +51,7 @@ export type Image<R extends RasterLayers, F extends Formats> = {
   location: string;
   metadata: Metadata;
   markers: Marker[];
-  shapes: {
+  shape: {
     pixel: PixelShape;
     physical: PhysicalShape;
   };
