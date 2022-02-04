@@ -119,13 +119,17 @@ type LabelChannel = IndexAndName & {
   opacity?: number;
 };
 
-type Sparse<L extends SparseLayers> = { intent: L } & (L extends "Polygon"
-  ? { path: number[] }
-  : {}) &
-  (L extends "Svg" | "Text" ? { text: string } : {}) &
-  (L extends "Rect" | "Ellipse" ? { origin: Point; shape: Shape } : {}) &
-  (L extends "Arrow" | "Text" ? { origin: Point; size: number } : {}) &
-  (L extends "Arrow" ? { rotation: number } : {});
+type Sparse<L extends SparseLayers> = {
+  intent: L;
+} & (L extends SparseLayers.Polygon ? { path: number[] } : {}) &
+  (L extends SparseLayers.Svg | SparseLayers.Text ? { text: string } : {}) &
+  (L extends SparseLayers.Rect | SparseLayers.Ellipse
+    ? { origin: Point; shape: Shape }
+    : {}) &
+  (L extends SparseLayers.Arrow | SparseLayers.Text
+    ? { origin: Point; size: number }
+    : {}) &
+  (L extends SparseLayers.Arrow ? { rotation: number } : {});
 
 type Point = Vec<"x" | "y"> & Measure<keyof Unit>;
 type Shape = Vec<"width" | "height"> & Measure<keyof Unit>;
