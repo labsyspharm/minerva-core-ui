@@ -6,6 +6,12 @@
   grid-template-columns: 100% auto;
 }
 
+.navSpan {
+  display: grid;
+  justify-content: space-evenly;
+  grid-template-columns: 1fr 1fr;
+}
+
 .core {
   padding: 1em;
   grid-column: 1;
@@ -14,7 +20,7 @@
   pointer-events: all;
   word-wrap: break-word;
   background-color: rgba(0, 0, 0, 0.8);
-  grid-auto-rows: auto;
+  grid-template-rows: auto auto auto auto 1fr;
   display: grid;
 }
 
@@ -24,12 +30,12 @@
 }
 
 .core .count {
+  gap: 0.5em;
   display: grid;
-  grid-template-columns: 1fr auto;
-}
-
-.count > div {
-  grid-column: 2;
+  font-size: 1.5em;
+  justify-items: right;
+  justify-content: end;
+  grid-template-columns: auto auto;
 }
 
 .toolbar {

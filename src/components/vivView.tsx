@@ -8,18 +8,18 @@ import {
 } from "@hms-dbmi/viv";
 
 import styled from "styled-components";
-import { useHash, useSetHash } from "../lib/hashUtil";
 import { getWaypoint } from "../lib/waypoint";
 
 // Types
 import type { Config } from "../lib/viv";
 import type { Group, Story } from "../lib/exhibit";
+import type { HashContext } from "../lib/hashUtil";
 
 export type Props = {
   groups: Group[];
   stories: Story[];
   viewerConfig: Config;
-};
+} & HashContext;
 
 type Shape = {
   width: number;
@@ -73,10 +73,11 @@ const shapeRef = (setShape: (s: Shape) => void) => {
 
 const VivView = (props: Props) => {
   const maxShape = useWindowSize();
-  const { v, g, s, w } = useHash();
-  const { groups, stories } = props;
-  const setV = useSetV(useSetHash());
-  const { settings } = props.viewerConfig;
+  const { groups, stories, hash, setHash } = props;
+  const { v, g, s, w } = hash;
+  const setV = useSetV(setHash);
+  const { toSettings } = props.viewerConfig;
+  const settings = toSettings(hash);
   const waypoint = getWaypoint(stories, s, w);
   const [shape, setShape] = useState(maxShape);
   const rootRef = React.useMemo(() => {

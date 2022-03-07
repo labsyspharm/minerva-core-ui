@@ -15,7 +15,7 @@ const config = {
     {
       Path: "Structural-Components_0__DAPI--14__KERATIN--34__ASMA--22__CD45--33__IBA1",
       Name: "Test",
-      Colors: ["0000FF", "FF0000", "FFFFFF", "00FF00", "00FFFF"],
+      Colors: ["0000FF", "FFFFFF", "FF0000", "00FF00", "00FFFF"],
       Channels: ["DNA", "Keratin", "α-SMA", "CD45", "IBA1"],
     },
     {

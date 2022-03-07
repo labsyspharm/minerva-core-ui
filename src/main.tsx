@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState } from "react";
 import { unstable_HistoryRouter as HistoryRouter } from "react-router-dom";
 import { useHashHistory } from "use-hash-history";
 import { readConfig } from "./lib/exhibit";
@@ -22,10 +23,11 @@ type Props = {
 };
 
 const Main = (props: Props) => {
-  const exhibit = readConfig(props.config);
+  const firstExhibit = readConfig(props.config);
+  const [exhibit, setExhibit] = useState(firstExhibit)
   return (
     <HistoryRouter history={history}>
-      <Index {...{ exhibit }} />
+      <Index {...{ exhibit, setExhibit }} />
     </HistoryRouter>
   );
 };

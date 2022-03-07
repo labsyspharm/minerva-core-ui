@@ -1,7 +1,16 @@
 import * as React from "react";
 import { Groups } from "./groups";
 import { Header } from "../common/header";
+import styled from "styled-components";
 import styles from "./content.module.css";
+import { PushGroup } from "../editable/groups";
+import { Editor } from "../editable/common";
+
+const WrapColumns = styled.div`
+  grid-template-columns: auto 1fr;
+  display: grid;
+  gap: 0.25em;
+`;
 
 const splitGroups = (groups) => {
   return groups.reduce(
@@ -18,20 +27,57 @@ const splitGroups = (groups) => {
 
 const Content = (props) => {
   const { children, groups, stories } = props;
+  const { pushGroup } = props;
+  const { hash, setHash } = props;
+  const { editable } = props;
 
   const { poly, solo } = splitGroups(groups);
+  const total = groups.length;
+  const groupProps = { ...props, total, editable, hash, setHash, stories };
 
-  const polyGroups = poly.length ? (
+  const pushFunction = (numChannels) => {
+    const channels = [
+      {color: "0000FF", name: "DNA"},
+      {color: "FF0000", name: "Red"},
+      {color: "00FF00", name: "Green"},
+      {color: "FFFFFF", name: "White"},
+    ].slice(0, numChannels)
+    return () => {
+      const newG = groups.length;
+      pushGroup({
+        g: newG, 
+        path: "TODO",
+        name: `Group ${groups.length}`,
+        channels: channels
+      })
+      setHash({g: newG})
+    }
+  }
+  const extraUI = (numChannels) => {
+    const onPush = pushFunction(numChannels);
+    const editSwitch = [ ["span", {}], [PushGroup, {onPush}] ]
+    return <Editor {...{...props, editSwitch}}/>
+  }
+
+  const polyGroups = poly.length || props.editable ? (
     <>
-      <Header>Channel Groups:</Header>
-      <Groups groups={poly} stories={stories} />
+      <Header>
+        <WrapColumns>
+          {extraUI(3)}<span>Channel Groups:</span>
+        </WrapColumns>
+      </Header>
+      <Groups {...{...groupProps, groups: poly}} />
     </>
   ) : null;
 
-  const soloGroups = solo.length ? (
+  const soloGroups = solo.length || props.editable ? (
     <>
-      <Header>Channels:</Header>
-      <Groups groups={solo} stories={stories} />
+      <Header>
+        <WrapColumns>
+          {extraUI(1)}<span>Channels:</span>
+        </WrapColumns>
+      </Header>
+      <Groups {...{...groupProps, groups: solo}} />
     </>
   ) : null;
 

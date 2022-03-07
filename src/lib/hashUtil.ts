@@ -14,6 +14,11 @@ export type HashState = Record<StrKey, string> &
   Record<NumKey, number> &
   Record<NumsKey, number[]>;
 
+export type HashContext = {
+  setHash: (h: Partial<HashState>) => void,
+  hash: HashState,
+}
+
 const K_ALL = [..."swgmavop"] as Key[];
 const K_NUM = [..."swgm"] as Key[];
 const K_NUMS = [..."avo"] as Key[];

@@ -9,6 +9,21 @@
   transform: translateX(-100%);
 }
 
+.invalid {
+  height: 100%;
+  display: grid;
+  grid-auto-rows: auto;
+  justify-items: center;
+  justify-content: center;
+  grid-template-columns: auto;
+}
+.invalid > * {
+  Padding: 5em;
+}
+.invalid a {
+  color: #79c0ff;
+}
+
 .textCore {
   color: #eee;
   z-index: 1;

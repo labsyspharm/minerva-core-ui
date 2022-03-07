@@ -3,18 +3,18 @@ import { findDOMNode } from "react-dom";
 import { useEffect, useRef, useState } from "react";
 import { OpenSeadragonContext, readViewport } from "../lib/openseadragon";
 import styled from "styled-components";
-import { useHash, useSetHash } from "../lib/hashUtil";
 import { getWaypoint } from "../lib/waypoint";
 
 // Types
 import type { Config } from "../lib/openseadragon";
 import type { Group, Story } from "../lib/exhibit";
+import type { HashContext } from "../lib/hashUtil";
 
 export type Props = {
   groups: Group[];
   stories: Story[];
   viewerConfig: Config;
-};
+} & HashContext;
 
 const Main = styled.div`
   height: 100%;
@@ -49,10 +49,10 @@ const useEl = ({ current }) => {
 
 const OsdView = (props: Props) => {
   const rootRef = useRef();
-  const { v, g, s, w } = useHash();
-  const { groups, stories } = props;
+  const { groups, stories, hash, setHash } = props;
+  const { v, g, s, w } = hash;
   const waypoint = getWaypoint(stories, s, w);
-  const setV = useSetV(useSetHash());
+  const setV = useSetV(setHash);
 
   const [cache, setCache] = useState({
     context: null,

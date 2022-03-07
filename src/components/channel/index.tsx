@@ -3,13 +3,13 @@ import { useState } from "react";
 import { Legend } from "./legend";
 import { Content } from "./content";
 import { Toolbar } from "./toolbar";
-import { useHash } from "../../lib/hashUtil";
+import { Outlet, useOutletContext } from "react-router-dom";
 import { getStyler } from "../../lib/util";
-import { Outlet } from "react-router-dom";
 import styles from "./index.module.css";
 
 // Types
 import type { Group, Story } from "../../lib/exhibit";
+import type { HashContext } from "../../lib/hashUtil";
 
 type Props = {
   groups: Group[];
@@ -19,28 +19,31 @@ type Props = {
 const Channel = (props: Props) => {
   const styler = getStyler(styles);
   const [hide, setHide] = useState(false);
+  const context = useOutletContext() as HashContext;
+  const contextProps = {...props, ...context};
 
   const togglePanel = () => setHide(!hide);
 
   const wrapClass = styler("textWrap", ...(hide ? ["textHide"] : []));
 
-  const hash = useHash();
+  const { hash } = context;
   const group = props.groups[hash.g];
+  const legendProps = {...props, ...group};
 
   return (
     <div className={wrapClass}>
       <div className={styles.textOther}>
-        <Outlet />
+        <Outlet {...{ context }}/>
       </div>
       <div className={styles.textCore}>
-        <Content {...props}>
+        <Content {...contextProps}>
           <Toolbar
             {...{
               togglePanel,
               hide,
             }}
           />
-          <Legend {...group} />
+          <Legend {...legendProps} />
         </Content>
       </div>
     </div>

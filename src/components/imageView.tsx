@@ -2,7 +2,8 @@ import * as React from "react";
 import { OsdView } from "./osdView";
 import { VivView } from "./vivView";
 import { toSettings } from "../lib/viv";
-import { useHash } from "../lib/hashUtil";
+import { useOutletContext } from "react-router-dom";
+import type { HashContext } from "../lib/hashUtil";
 
 type Viewers = "viv" | "osd";
 type Prop = {
@@ -10,16 +11,12 @@ type Prop = {
 };
 
 const toImageProps = (opts) => {
-  /*
-  const { g } = useHash();
-  console.log(opts)
-  */
   const { props, buttons } = opts;
   const vivProps = {
     ...props,
     viewerConfig: {
       ...buttons,
-      settings: toSettings(props),
+      toSettings: toSettings(props),
     },
   };
   const osdProps = {
@@ -38,12 +35,13 @@ const toImageProps = (opts) => {
 
 const ImageView = (props) => {
   const { viewer, ...rest } = props;
+  const context = useOutletContext() as HashContext;
   const Component =
     {
       viv: VivView,
       osd: OsdView,
     }[viewer] || OsdView;
-  return <Component {...rest} />;
+  return <Component {...{...rest, ...context}} />;
 };
 
 export { ImageView, toImageProps };
