@@ -5,6 +5,7 @@ import styled from "styled-components";
 import styles from "./content.module.css";
 import { PushGroup } from "../editable/groups";
 import { Editor } from "../editable/common";
+import { defaultChannels } from "./legend";
 
 const WrapColumns = styled.div`
   grid-template-columns: auto 1fr;
@@ -36,50 +37,52 @@ const Content = (props) => {
   const groupProps = { ...props, total, editable, hash, setHash, stories };
 
   const pushFunction = (numChannels) => {
-    const channels = [
-      {color: "0000FF", name: "DNA"},
-      {color: "FF0000", name: "Red"},
-      {color: "00FF00", name: "Green"},
-      {color: "FFFFFF", name: "White"},
-    ].slice(0, numChannels)
+    const channels = defaultChannels.slice(0, numChannels);
     return () => {
       const newG = groups.length;
       pushGroup({
-        g: newG, 
+        g: newG,
         path: "TODO",
         name: `Group ${groups.length}`,
-        channels: channels
-      })
-      setHash({g: newG})
-    }
-  }
+        channels: channels,
+      });
+      setHash({ g: newG });
+    };
+  };
   const extraUI = (numChannels) => {
     const onPush = pushFunction(numChannels);
-    const editSwitch = [ ["span", {}], [PushGroup, {onPush}] ]
-    return <Editor {...{...props, editSwitch}}/>
-  }
+    const editSwitch = [
+      ["span", {}],
+      [PushGroup, { onPush }],
+    ];
+    return <Editor {...{ ...props, editSwitch }} />;
+  };
 
-  const polyGroups = poly.length || props.editable ? (
-    <>
-      <Header>
-        <WrapColumns>
-          {extraUI(3)}<span>Channel Groups:</span>
-        </WrapColumns>
-      </Header>
-      <Groups {...{...groupProps, groups: poly}} />
-    </>
-  ) : null;
+  const polyGroups =
+    poly.length || props.editable ? (
+      <>
+        <Header>
+          <WrapColumns>
+            {extraUI(3)}
+            <span>Channel Groups:</span>
+          </WrapColumns>
+        </Header>
+        <Groups {...{ ...groupProps, groups: poly }} />
+      </>
+    ) : null;
 
-  const soloGroups = solo.length || props.editable ? (
-    <>
-      <Header>
-        <WrapColumns>
-          {extraUI(1)}<span>Channels:</span>
-        </WrapColumns>
-      </Header>
-      <Groups {...{...groupProps, groups: solo}} />
-    </>
-  ) : null;
+  const soloGroups =
+    solo.length || props.editable ? (
+      <>
+        <Header>
+          <WrapColumns>
+            {extraUI(1)}
+            <span>Channels:</span>
+          </WrapColumns>
+        </Header>
+        <Groups {...{ ...groupProps, groups: solo }} />
+      </>
+    ) : null;
 
   return (
     <div className={styles.wrap}>

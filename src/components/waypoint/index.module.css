@@ -18,7 +18,7 @@
   grid-template-columns: auto;
 }
 .invalid > * {
-  Padding: 5em;
+  padding: 5em;
 }
 .invalid a {
   color: #79c0ff;

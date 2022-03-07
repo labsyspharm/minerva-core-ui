@@ -17,8 +17,8 @@ type Props = ExternalProps & {
   onZoomOutEl: (e: HTMLButtonElement) => void;
 };
 
-const invalidateHash = ({stories, groups}, {hash}) => {
-  const output: Partial<HashState> = {}
+const invalidateHash = ({ stories, groups }, { hash }) => {
+  const output: Partial<HashState> = {};
   if (stories.length <= hash.s) {
     output.s = hash.s;
   }
@@ -29,7 +29,7 @@ const invalidateHash = ({stories, groups}, {hash}) => {
     output.g = hash.g;
   }
   return output;
-}
+};
 
 const Waypoint = (props: Props) => {
   const styler = getStyler(styles);
@@ -39,9 +39,9 @@ const Waypoint = (props: Props) => {
   const togglePanel = () => setHide(!hide);
   const context = {
     hash: useHash(),
-    setHash: useSetHash()
+    setHash: useSetHash(),
   };
-  const invalid = invalidateHash(props, context)
+  const invalid = invalidateHash(props, context);
   if (Object.keys(invalid).length) {
     return (
       <div className={styles.invalid}>
@@ -49,12 +49,12 @@ const Waypoint = (props: Props) => {
         <p>
           <h3>You refreshed the page.</h3>
           <h5>Your changes were not saved.</h5>
-          <br/>
+          <br />
           <Link to="/">Reset the demo</Link>
         </p>
         <p></p>
       </div>
-    )
+    );
   }
 
   const wrapClass = styler("textWrap", ...(hide ? ["textHide"] : []));
@@ -62,7 +62,7 @@ const Waypoint = (props: Props) => {
   return (
     <div className={wrapClass}>
       <div className={styles.textCore}>
-        <Content {...{...props, ...context}}>
+        <Content {...{ ...props, ...context }}>
           <Toolbar
             {...{
               onZoomInEl,
@@ -74,7 +74,7 @@ const Waypoint = (props: Props) => {
         </Content>
       </div>
       <div className={styles.textOther}>
-        <Outlet { ...{ context } }/>
+        <Outlet {...{ context }} />
       </div>
     </div>
   );

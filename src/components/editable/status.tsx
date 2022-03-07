@@ -10,21 +10,21 @@ const handleText = ({ setInput }) => {
 };
 
 const Mono = styled.div`
-	textarea {
-		resize: none;
-		display: grid;
-		width: 100%;
-		padding: 0.333em;
-		font-size: 1.0em;
-		align-items: center;
-		word-spacing: -0.333em;
-		font-family: monospace;
-		border-radius: 0.333em;
-		color: rgb(244, 255, 244);
-		background-color: rgb(0, 0, 0, 0);
-		border-bottom: 0.5em ridge rgba(244, 255, 244, 0.5);
+  textarea {
+    resize: none;
+    display: grid;
+    width: 100%;
+    padding: 0.333em;
+    font-size: 1em;
+    align-items: center;
+    word-spacing: -0.333em;
+    font-family: monospace;
+    border-radius: 0.333em;
+    color: rgb(244, 255, 244);
+    background-color: rgb(0, 0, 0, 0);
+    border-bottom: 0.5em ridge rgba(244, 255, 244, 0.5);
   }
-`
+`;
 
 const Status = (props) => {
   const { uuid, editable = true } = props;
@@ -45,16 +45,14 @@ const Status = (props) => {
 
   const El = md ? ReactMarkdown : React.Fragment;
   const content = editable ? (
-    <Mono><TextareaAutosize {...inputProps} /></Mono>
+    <Mono>
+      <TextareaAutosize {...inputProps} />
+    </Mono>
   ) : (
     <El>{text}</El>
   );
 
-  return (
-    <div>
-      {content}
-    </div>
-  );
+  return <div>{content}</div>;
 };
 
 export { Status };

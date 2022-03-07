@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { PushChannel, PopUpdateChannel } from "../editable/channels";
 import { Editor } from "../editable/common";
 import { Status } from "../editable/status";
-import {GithubPicker} from "react-color";
+import { GithubPicker } from "react-color";
 
 const RightAlign = styled.div`
   justify-items: right;
@@ -29,76 +29,84 @@ const Box = styled.div`
   width: 1em;
 `;
 
+const defaultChannels = [
+  { color: "0000FF", name: "DNA" },
+  { color: "FF0000", name: "Red" },
+  { color: "00FF00", name: "Green" },
+  { color: "FFFFFF", name: "White" },
+];
+
 const LegendRow = (props) => {
-  const {channel} = props
+  const { channel } = props;
   const channelName = channel.name;
   const [picking, setPicking] = React.useState(false);
   const { idx, name, path, g } = props;
-	const setInput = (t) => {
-    props.updateChannel({...channel, name: t}, {idx, g});
-  }
+  const setInput = (t) => {
+    props.updateChannel({ ...channel, name: t }, { idx, g });
+  };
   const onPop = () => {
-    props.popChannel({g, idx});
-  }
+    props.popChannel({ g, idx });
+  };
 
-	const uuid = `group/channel/name/${idx}`;
-	const statusProps = {
-		...props,
-		md: false,
-		setInput,
-		updateCache: () => null,
-		cache: new Map(),
-		uuid
-  }
+  const uuid = `group/channel/name/${idx}`;
+  const statusProps = {
+    ...props,
+    md: false,
+    setInput,
+    updateCache: () => null,
+    cache: new Map(),
+    uuid,
+  };
 
-  const pickColor = () => setPicking(true)
+  const pickColor = () => setPicking(true);
   const picked = `#${props.channel.color}`;
-  const updateColor = ({hex}) => {
-    props.updateChannel({...channel, color: hex.slice(1)}, {idx, g});
+  const updateColor = ({ hex }) => {
+    props.updateChannel({ ...channel, color: hex.slice(1) }, { idx, g });
     setPicking(false);
-  }
+  };
   const coreUI = picking ? (
-    <GithubPicker color={picked} onChangeComplete={updateColor}/>
+    <GithubPicker color={picked} onChangeComplete={updateColor} />
   ) : (
     <WrapBox>
-      <Box {...{...props.channel, onClick: pickColor}} />
+      <Box {...{ ...props.channel, onClick: pickColor }} />
       <Status {...statusProps}>{channelName}</Status>
     </WrapBox>
   );
   const editSwitch = [
-    ["div", {children: coreUI}],
-    [PopUpdateChannel, {children: coreUI, onPop}]
-  ]
-  const canPop = props.editable && props.total > 1; 
-  const extraUI = <Editor {...{...props, editable: canPop, editSwitch}}/>
+    ["div", { children: coreUI }],
+    [PopUpdateChannel, { children: coreUI, onPop }],
+  ];
+  const canPop = props.editable && props.total > 1;
+  const extraUI = <Editor {...{ ...props, editable: canPop, editSwitch }} />;
 
-  return (
-    <>{extraUI}</>
-  );
+  return <>{extraUI}</>;
 };
 
 const Legend = (props) => {
-  const {g, pushChannel} = props;
-  const newChannel = {color: "00FF00", name: "G"}
+  const { g, pushChannel } = props;
+  const nextIdx = props.channels.length + 1;
+  const newChannel = defaultChannels[nextIdx % defaultChannels.length];
   const onPush = () => {
-    pushChannel(newChannel, {g})
-  }
+    pushChannel(newChannel, { g });
+  };
   const editSwitch = [
     ["div", {}],
-    [PushChannel, {onPush}]
-  ]
-  const extraUI = <Editor {...{...props, editSwitch}}/>
+    [PushChannel, { onPush }],
+  ];
+  const extraUI = <Editor {...{ ...props, editSwitch }} />;
 
   const { channels } = props;
   const total = channels.length;
   const rows = channels.map((c, k) => {
-    const rowProps = {...props, total, channel: c, idx: k};
+    const rowProps = { ...props, total, channel: c, idx: k };
     return <LegendRow key={k} {...rowProps} />;
   });
-  return <div>
-    <RightAlign>{extraUI}</RightAlign>
-    <WrapRows>{rows}</WrapRows>
-  </div>
+  return (
+    <div>
+      <RightAlign>{extraUI}</RightAlign>
+      <WrapRows>{rows}</WrapRows>
+    </div>
+  );
 };
 
-export { Legend };
+export { Legend, defaultChannels };

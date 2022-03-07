@@ -24,7 +24,7 @@ type Props = {
 
 const Main = (props: Props) => {
   const firstExhibit = readConfig(props.config);
-  const [exhibit, setExhibit] = useState(firstExhibit)
+  const [exhibit, setExhibit] = useState(firstExhibit);
   return (
     <HistoryRouter history={history}>
       <Index {...{ exhibit, setExhibit }} />

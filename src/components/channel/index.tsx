@@ -20,7 +20,7 @@ const Channel = (props: Props) => {
   const styler = getStyler(styles);
   const [hide, setHide] = useState(false);
   const context = useOutletContext() as HashContext;
-  const contextProps = {...props, ...context};
+  const contextProps = { ...props, ...context };
 
   const togglePanel = () => setHide(!hide);
 
@@ -28,12 +28,12 @@ const Channel = (props: Props) => {
 
   const { hash } = context;
   const group = props.groups[hash.g];
-  const legendProps = {...props, ...group};
+  const legendProps = { ...props, ...group };
 
   return (
     <div className={wrapClass}>
       <div className={styles.textOther}>
-        <Outlet {...{ context }}/>
+        <Outlet {...{ context }} />
       </div>
       <div className={styles.textCore}>
         <Content {...contextProps}>

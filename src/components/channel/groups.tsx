@@ -50,38 +50,38 @@ const GroupRow = (props) => {
   const w = waypoints.indexOf(waypoints.find(sameGroup));
   const toWaypoint = w < 0 ? null : () => setHash({ w, g: group.g });
   const toWaypointText = w < 0 ? "" : `@${w + 1}`;
-  const { updateGroup, updateWaypoint } = props
+  const { updateGroup, updateWaypoint } = props;
   const onPop = () => {
     if (hash.g >= group.g) {
-      setHash({g: Math.max(hash.g - 1, 0)})
+      setHash({ g: Math.max(hash.g - 1, 0) });
     }
-    props.popGroup({g: group.g});
-  }
+    props.popGroup({ g: group.g });
+  };
 
-	const setInput = (t) => {
-    props.updateGroup({...group, name: t}, {g: group.g});
-  }
-	const uuid = `group/name/${group.g}`;
-	const statusProps = {
-		...props,
-		md: false,
-		setInput,
-		updateCache: () => null,
-		cache: new Map(),
-		uuid
-  }
+  const setInput = (t) => {
+    props.updateGroup({ ...group, name: t }, { g: group.g });
+  };
+  const uuid = `group/name/${group.g}`;
+  const statusProps = {
+    ...props,
+    md: false,
+    setInput,
+    updateCache: () => null,
+    cache: new Map(),
+    uuid,
+  };
 
   const waypoint = getWaypoint(stories, hash.s, hash.w);
   const selected = waypoint.g === group.g;
   const updateWaypointGroup = () => {
-    const {s, w} = hash;
-    toGroup()
-    updateWaypoint({...waypoint, g: group.g}, {s, w}) 
-  }
+    const { s, w } = hash;
+    toGroup();
+    updateWaypoint({ ...waypoint, g: group.g }, { s, w });
+  };
   const selectSwitch = [
-    ['a', {onClick: toWaypoint, children: toWaypointText}],
-    [UpdateGroup, {onUpdate: (() => null)}]
-  ]
+    ["a", { onClick: toWaypoint, children: toWaypointText }],
+    [UpdateGroup, { onUpdate: () => null }],
+  ];
   const selectClick = props.editable ? updateWaypointGroup : toGroup;
   const coreUI = (
     <WrapGroup {...wrapGroupProps}>
@@ -89,27 +89,27 @@ const GroupRow = (props) => {
         <Status {...statusProps}>{name}</Status>
       </GroupName>
       <Corner>
-        <Editor {...{...props, editable: selected, editSwitch: selectSwitch}}/>
+        <Editor
+          {...{ ...props, editable: selected, editSwitch: selectSwitch }}
+        />
       </Corner>
     </WrapGroup>
   );
   const editSwitch = [
-    [React.Fragment, {children: coreUI}],
-    [PopUpdateGroup, {onPop, children: coreUI}]
-  ]
+    [React.Fragment, { children: coreUI }],
+    [PopUpdateGroup, { onPop, children: coreUI }],
+  ];
 
-  const canPop = props.editable && props.total > 1; 
-  const extraUI = <Editor {...{...props, editable: canPop, editSwitch}}/>
+  const canPop = props.editable && props.total > 1;
+  const extraUI = <Editor {...{ ...props, editable: canPop, editSwitch }} />;
 
-  return (
-    <>{extraUI}</>
-  );
+  return <>{extraUI}</>;
 };
 
 const Groups = (props) => {
   const { groups } = props;
   const rows = groups.map((group, k) => {
-    const groupProps = {...props, group }
+    const groupProps = { ...props, group };
     return <GroupRow key={k} {...groupProps} />;
   });
   return <WrapRows>{rows}</WrapRows>;

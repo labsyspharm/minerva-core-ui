@@ -22,7 +22,7 @@ import {
 import type { Group, Story, Waypoint } from "../../lib/exhibit";
 import type { HashState } from "../../lib/hashUtil";
 
-export type OptSW = {s: number, w: number}
+export type OptSW = { s: number; w: number };
 
 export type ExternalProps = {
   pushWaypoint: (w: Waypoint, opt: OptSW) => void;
@@ -34,7 +34,7 @@ export type ExternalProps = {
   groups: Group[];
   stories: Story[];
   viewer: string;
-}
+};
 
 type Props = ExternalProps & {
   children: any;
@@ -108,22 +108,29 @@ const Count = (props) => {
   const { pushWaypoint, hash } = props;
   const { s } = hash;
   const onPush = () => {
-    const w = getWaypoints(props.stories, s).length
-    pushWaypoint({name: `WP ${w}`, markdown: "", g: 0, v: [-1, -1, -1]}, {s})
-    props.setHash({w})
-  }
+    const w = getWaypoints(props.stories, s).length;
+    pushWaypoint(
+      { name: `WP ${w}`, markdown: "", g: 0, v: [-1, -1, -1] },
+      { s }
+    );
+    props.setHash({ w });
+  };
 
   const editSwitch = [
     ["div", {}],
-    [PushWaypoint, {onPush}]
-  ]
-  const extraUI = <Editor {...{...props, editSwitch}}/>
+    [PushWaypoint, { onPush }],
+  ];
+  const extraUI = <Editor {...{ ...props, editSwitch }} />;
 
-  return <div className={styles.count}>
-    <span>{idx}/{sum}</span>
-    <span>{extraUI}</span>
-  </div>
-}
+  return (
+    <div className={styles.count}>
+      <span>
+        {idx}/{sum}
+      </span>
+      <span>{extraUI}</span>
+    </div>
+  );
+};
 
 const Content = (props: Props) => {
   const { children } = props;
@@ -134,18 +141,17 @@ const Content = (props: Props) => {
   const { updateWaypoint } = props;
   const onPop = () => {
     const { s, w } = props.hash;
-    props.popWaypoint({s, w});
+    props.popWaypoint({ s, w });
     if (w > 0) {
-      props.setHash({w: w-1});
-    }
-    else {
+      props.setHash({ w: w - 1 });
+    } else {
       const newS = (s - 1) % props.stories.length;
-      const waypoints = getWaypoints(props.stories, newS)
+      const waypoints = getWaypoints(props.stories, newS);
       const diff = newS === s ? 2 : 1;
       const newW = waypoints.length - diff;
-      props.setHash({s: newS, w: newW});
+      props.setHash({ s: newS, w: newW });
     }
-  }
+  };
   const audioProps = { audio };
 
   const toggleProps = {
@@ -160,53 +166,53 @@ const Content = (props: Props) => {
   };
 
   const setNameInput = (t) => {
-    const {s, w} = props.hash;
-    props.updateWaypoint({...waypoint, name: t}, {s, w});
-  }
+    const { s, w } = props.hash;
+    props.updateWaypoint({ ...waypoint, name: t }, { s, w });
+  };
 
-	const uuidName = `waypoint/name/${props.hash.w}`;
-	const nameStatusProps = {
-		...props,
-		md: false,
-		setInput: setNameInput,
-		updateCache: () => null,
-		cache: new Map(),
-		uuid: uuidName
-  }
+  const uuidName = `waypoint/name/${props.hash.w}`;
+  const nameStatusProps = {
+    ...props,
+    md: false,
+    setInput: setNameInput,
+    updateCache: () => null,
+    cache: new Map(),
+    uuid: uuidName,
+  };
 
   const coreUI = (
     <Header h={3}>
       <Status {...nameStatusProps}>{name}</Status>
     </Header>
-  )
+  );
   const editSwitch = [
-    ["div", {children: coreUI}],
-    [PopUpdateWaypoint, {children: coreUI, onPop}]
-  ]
-  const waypoints = getWaypoints(props.stories, props.hash.s)
-  const isSoloWaypoint = waypoints.length <= 1
-  const canPop = props.editable && !isSoloWaypoint 
-  const extraUI = <Editor {...{...props, editable: canPop, editSwitch}}/>
+    ["div", { children: coreUI }],
+    [PopUpdateWaypoint, { children: coreUI, onPop }],
+  ];
+  const waypoints = getWaypoints(props.stories, props.hash.s);
+  const isSoloWaypoint = waypoints.length <= 1;
+  const canPop = props.editable && !isSoloWaypoint;
+  const extraUI = <Editor {...{ ...props, editable: canPop, editSwitch }} />;
 
   const editStatus = [
-    ["div", {children: "Editor is off"}],
-    ["div", {children: "Editor is on"}]
-  ]
-  const editStatusUI = <Editor {...{...props, editSwitch: editStatus}}/>
+    ["div", { children: "Editor is off" }],
+    ["div", { children: "Editor is on" }],
+  ];
+  const editStatusUI = <Editor {...{ ...props, editSwitch: editStatus }} />;
 
-	const uuid = `waypoint/markdown/${props.hash.s}/${props.hash.w}`;
-	const setInput = (t) => {
-    const {s, w} = props.hash;
-    props.updateWaypoint({...waypoint, markdown: t}, {s, w});
-  }
-	const statusProps = {
-		...props,
-		md: true,
-		setInput,
-		updateCache: () => null,
-		cache: new Map(),
-		uuid
-  }
+  const uuid = `waypoint/markdown/${props.hash.s}/${props.hash.w}`;
+  const setInput = (t) => {
+    const { s, w } = props.hash;
+    props.updateWaypoint({ ...waypoint, markdown: t }, { s, w });
+  };
+  const statusProps = {
+    ...props,
+    md: true,
+    setInput,
+    updateCache: () => null,
+    cache: new Map(),
+    uuid,
+  };
 
   return (
     <div className={styles.wrap}>
@@ -216,21 +222,21 @@ const Content = (props: Props) => {
           <Icon {...homeProps} />
         </div>
         <Nav>
-          {isSoloWaypoint ? '' :<Icon {...prevProps} />}
+          {isSoloWaypoint ? "" : <Icon {...prevProps} />}
           <Audio {...audioProps} />
-          {isSoloWaypoint ? '' :<Icon {...nextProps} />}
+          {isSoloWaypoint ? "" : <Icon {...nextProps} />}
         </Nav>
         <Nav>
           <div className={styles.navSpan}>
-          Viewer is {props.viewer}
-          <Icon {...toggleProps} />
+            Viewer is {props.viewer}
+            <Icon {...toggleProps} />
           </div>
           <div className={styles.navSpan}>
-          {editStatusUI}
-          <Icon {...toggleEditorProps} />
+            {editStatusUI}
+            <Icon {...toggleEditorProps} />
           </div>
         </Nav>
-        {<Count {...props}/>}
+        {<Count {...props} />}
         <Status {...statusProps}>{markdown}</Status>
       </div>
       <div className={styles.toolbar}>{children}</div>

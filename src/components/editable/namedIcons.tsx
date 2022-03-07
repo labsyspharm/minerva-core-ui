@@ -7,17 +7,17 @@ import {
   faCheck as faSelect,
 } from "@fortawesome/free-solid-svg-icons";
 
-const defineIcon = ({icon, onClick, color}) => {
+const defineIcon = ({ icon, onClick, color }) => {
   return {
     size: "1em",
     color,
     icon,
     onClick,
   };
-}
+};
 
 const SimpleButton = (props) => {
-  return <Icon {...defineIcon(props)} />
+  return <Icon {...defineIcon(props)} />;
 };
 
 const WrapColumn = styled.div`
@@ -29,26 +29,35 @@ const WrapColumn = styled.div`
 `;
 
 const Push = (props) => {
-  const pushProps = {...props, onClick: props.onPush, icon: faPush, color: "#2e5"}
-  return <SimpleButton {...pushProps}/>
-}
+  const pushProps = {
+    ...props,
+    onClick: props.onPush,
+    icon: faPush,
+    color: "#2e5",
+  };
+  return <SimpleButton {...pushProps} />;
+};
 
 const PopUpdate = (props) => {
   const { onPop, children } = props;
-  const popProps = {...props, onClick: onPop, icon: faPop, color: "#e25"};
-  return <WrapColumn>
-    <SimpleButton {...popProps}/>
-    {children}
-  </WrapColumn>
-}
+  const popProps = { ...props, onClick: onPop, icon: faPop, color: "#e25" };
+  return (
+    <WrapColumn>
+      <SimpleButton {...popProps} />
+      {children}
+    </WrapColumn>
+  );
+};
 
 const Update = (props) => {
   const { onUpdate, children } = props;
-  const updateProps = {...props, onClick: onUpdate};
-  return <WrapColumn>
-    <SimpleButton {...{...updateProps, icon: faSelect, color: "#fff"}}/>
-    {children}
-  </WrapColumn>
-}
+  const updateProps = { ...props, onClick: onUpdate };
+  return (
+    <WrapColumn>
+      <SimpleButton {...{ ...updateProps, icon: faSelect, color: "#fff" }} />
+      {children}
+    </WrapColumn>
+  );
+};
 
 export { Push, PopUpdate, Update };
