@@ -15,7 +15,7 @@ const GroupName = styled.div`
   grid-area: name;
 `;
 
-const Corner = styled.a`
+const Corner = styled.div`
   grid-area: waypoint;
   text-decoration: underline;
 `;

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { OpenSeadragonContext, readViewport } from "../lib/openseadragon";
 import styled from "styled-components";
 import { getWaypoint } from "../lib/waypoint";
+import {OsdLensingContext} from "../lib/osdLensingContext";
 
 // Types
 import type { Config } from "../lib/openseadragon";
@@ -70,7 +71,10 @@ const OsdView = (props: Props) => {
   const opts = { config, update, v, g, groups };
   const firstDraw = !context?.viewport;
 
-  useEffect(() => setEl(useEl(rootRef)), [rootRef.current]);
+  useEffect(() => {
+    setEl(useEl(rootRef))
+  }, [rootRef.current]);
+
   useEffect(() => {
     if (g !== cache.g) {
       update({ g, redraw: true });
@@ -96,8 +100,17 @@ const OsdView = (props: Props) => {
 
   useEffect(() => {
     if (ready && firstDraw) {
+
+      // LENSING :: {{Initial draw}} ~ Append id to OSD el
+      (opts.config.element as HTMLElement).setAttribute('id', 'minervaAnalysisOSD');
+
       const next = OpenSeadragonContext(opts);
       update({ context: next });
+
+      // LENSING  :: {{Initial draw}} ~ Build Lensing instance (w. hidden viewer)
+      const nextL = new OsdLensingContext(next, opts);
+      // update({ context: nextL }); // TODO
+
     }
   }, [ready, firstDraw]);
 
