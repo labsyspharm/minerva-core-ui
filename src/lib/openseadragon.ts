@@ -84,6 +84,7 @@ const makeTileSource = (img: Image) => {
 
 const addChannels = (viewer, img: Image) => {
   viewer.addTiledImage({
+    crossOriginPolicy: 'anonymous',
     tileSource: makeTileSource(img),
     width: img.width / img.height,
   });
@@ -94,13 +95,14 @@ const readViewport = ({ viewport }) => {
   return [viewport.getZoom(), x, y];
 };
 
+// FIXME
 const setViewport = ({ viewport }, v, now) => {
-  if (v.some((i) => i < 0)) {
-    return;
-  }
-  viewport.zoomTo(v[0], undefined, now);
-  viewport.panTo(new Point(v[1], v[2]), now);
-  viewport.applyConstraints(true);
+  // if (v.some((i) => i < 0)) {
+  //   return;
+  // }
+  // viewport.zoomTo(v[0], undefined, now);
+  // viewport.panTo(new Point(v[1], v[2]), now);
+  // viewport.applyConstraints(true);
 };
 
 const toContext = (viewer, reset, event) => {
@@ -119,11 +121,12 @@ const toContext = (viewer, reset, event) => {
   };
 };
 
+// FIXME
 const handle = (context, update) => {
-  context.clear();
-  context.add(() => {
-    update({ context });
-  });
+  // context.clear();
+  // context.add(() => {
+  //   update({ context });
+  // });
 };
 
 const newContext = (opts: Opts, reset: Reset) => {
@@ -177,4 +180,4 @@ const OpenSeadragonContext = (opts) => {
   return new OpenSeadragon(opts).context;
 };
 
-export { OpenSeadragonContext, readViewport };
+export { OpenSeadragonContext, readViewport, Reset, Opts, makeImage, addChannels, toContext, handle, setViewport };

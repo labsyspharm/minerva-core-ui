@@ -42,6 +42,7 @@ specifiers:
   gl-matrix: ^3.4.3
   history: ^5.2.0
   html-webpack-plugin: ^5.5.0
+  lensing: link:../lensing
   openseadragon: ^2.4.2
   path-vars: ^1.0.0
   prettier: ^2.5.1
@@ -93,6 +94,7 @@ dependencies:
   '@types/openseadragon': 2.4.8
   gl-matrix: 3.4.3
   history: 5.2.0
+  lensing: link:../lensing
   openseadragon: 2.4.2
   prop-types: 15.8.0
   react: 17.0.2
