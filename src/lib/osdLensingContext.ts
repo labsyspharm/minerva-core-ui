@@ -1,6 +1,15 @@
 import * as lensing from 'lensing';
 import * as OSD from "openseadragon";
-import {readViewport, Reset, Opts, makeImage, addChannels, toContext, handle, setViewport} from './openseadragon';
+import {
+    Reset,
+    Opts,
+    readViewport,
+    makeImage,
+    addChannels,
+    toContext,
+    handle,
+    setViewport
+} from './openseadragon';
 
 export class OsdLensingContext {
 
