@@ -62,10 +62,10 @@ export class OsdLensingContext {
             {},
             []
         );
-        const viewer = lensingViewer.viewer_aux;
+        const viewer = lensingViewer.viewerAux;
 
         // Refactored from original reset
-        const img = makeImage({g, groups});
+        const img = makeImage({g: g, groups});
 
         addChannels(viewer, img);
         viewer.world.addHandler("add-item", (e) => {
