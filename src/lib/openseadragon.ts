@@ -45,7 +45,7 @@ const makeImage = ({ g, groups }) => {
   return {
     name: "i0",
     description: "Primary Lung Cancer [M-003]",
-    url: "https://s3.amazonaws.com/www.cycif.org/Nature-protocol-2019/LUNG_3",
+    url: "https://s3.amazonaws.com/www.cycif.org/crc02-lens-1/story-alpha",
     group: path,
     width: 14448,
     height: 11101,

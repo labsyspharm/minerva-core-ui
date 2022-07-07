@@ -105,7 +105,7 @@ const IMAGES: StoryImage[] = [
     index: 0,
     name: "Channel Group A",
     location:
-      "https://s3.amazonaws.com/www.cycif.org/Nature-protocol-2019/LUNG_3/Nuclei_0__DAPI/",
+      "https://s3.amazonaws.com/www.cycif.org/crc02-lens-1/story-alpha",
     metadata: {},
     markers: [
       {
