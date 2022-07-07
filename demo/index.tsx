@@ -11,70 +11,159 @@ const fakeText = (p) => {
 };
 
 const config = {
-  Groups: [
+  "Images": [
     {
-      Path: "Structural-Components_0__DAPI--14__KERATIN--34__ASMA--22__CD45--33__IBA1",
-      Name: "Test",
-      Colors: ["0000FF", "FFFFFF", "FF0000", "00FF00", "00FFFF"],
-      Channels: ["DNA", "Keratin", "α-SMA", "CD45", "IBA1"],
-    },
-    {
-      Path: "Nuclei_0__DAPI",
-      Name: "Test DNA",
-      Colors: ["FFFFFF"],
-      Channels: ["DNA"],
-    },
+      "Name": "i0",
+      "Description": "",
+      "Path": "https://s3.amazonaws.com/www.cycif.org/crc02-lens-1/story-alpha",
+      "Width": 58709,
+      "Height": 48460,
+      "MaxLevel": 6
+    }
   ],
-  Stories: [
+  "Header": "",
+  "Rotation": 0,
+  "Layout": {
+    "Grid": [
+      [
+        "i0"
+      ]
+    ]
+  },
+  "Stories": [
     {
-      Name: "",
-      Waypoints: [
+      "Name": "",
+      "Waypoints": [
         {
-          Name: "Waypoint Example",
-          Group: "Test",
-          // Lensing: {
-          // },
-          Audio: "",
-          Description: fakeText(3),
-          Zoom: 0.5,
-          Pan: [0.5, 0.5],
-          Overlays: [],
-          Arrows: [],
-          Polygon: "Q",
+          "Name": "Waypoint Example",
+          "Group": "H&E",
+          "Audio": "",
+          "Description": fakeText(3),
+          "Zoom": 0.5,
+          "Pan": [0.5, 0.5],
+          "Overlays": [],
+          "Arrows": [],
+          "Polygon": "Q",
         },
         {
-          Name: "Another Waypoint",
-          Group: "Test DNA",
-          Audio: "",
-          Description: fakeText(4),
-          Zoom: 0.5,
-          Pan: [0.5, 0.5],
-          Overlays: [
+          "Name": "Another Waypoint",
+          "Group": "One",
+          "Audio": "",
+          "Description: fakeText(4),
+          "Zoom": 0.5,
+          "Pan": [0.5, 0.5],
+          "Overlays": [
+          ],
+          "Arrows": [
             {
-              x: 0.8681,
-              y: 0.5487,
-              width: 0,
-              height: 0,
+              "Point": [0.9381917980144533, 0.5809178743961351],
+              "Text": "TUMOR",
+              "HideArrow": true,
+            },
+            {
+              "Point": [0.3480346062266265, 0.2077906326563334],
+              "Text": "STROMA",
+              "HideArrow": true,
             },
           ],
-          Arrows: [
-            {
-              Point: [0.9381917980144533, 0.5809178743961351],
-              Text: "TUMOR",
-              HideArrow: true,
-            },
-            {
-              Point: [0.3480346062266265, 0.2077906326563334],
-              Text: "STROMA",
-              HideArrow: true,
-            },
-          ],
-          Polygon: "Q",
+          "Polygon": "Q",
         },
       ],
     },
   ],
+  "Groups": [
+    {
+      "Name": "H&E",
+      "Path": "HE_0__Hematoxylin--1__Eosin",
+      "Colors": [
+        "6000a0",
+        "d030d0"
+      ],
+      "Channels": [
+        "Hematoxylin",
+        "Eosin"
+      ]
+    },
+    {
+      "Name": "One",
+      "Path": "One_0__Hoechst--2__CD31--3__CD45--17__Pan-CK--18__alpha-SMA",
+      "Colors": [
+        "0000FF",
+        "FFFF00",
+        "00FF00",
+        "FFFFFF",
+        "FF0000"
+      ],
+      "Channels": [
+        "Hoechst",
+        "CD31",
+        "CD45",
+        "Pan CK",
+        "alpha SMA"
+      ]
+    },
+    {
+      "Name": "Two",
+      "Path": "Two_0__Hoechst--9__CD45RO--10__CD20--12__CD3e--15__PD-1--17__Pan-CK",
+      "Colors": [
+        "0000FF",
+        "FFFF00",
+        "FF00FF",
+        "0000FF",
+        "00FF00",
+        "FF0000"
+      ],
+      "Channels": [
+        "Hoechst",
+        "CD45RO",
+        "CD20",
+        "CD3e",
+        "PD-1",
+        "Pan CK"
+      ]
+    },
+    {
+      "Name": "Three",
+      "Path": "Three_0__Hoechst--4__CD68--11__PD-L1--13__CD163--16__Ki67--17__Pan-CK",
+      "Colors": [
+        "0000FF",
+        "00FF00",
+        "FF00FF",
+        "FF0000",
+        "FFFFFF",
+        "00FFFF"
+      ],
+      "Channels": [
+        "Hoechst",
+        "CD68",
+        "PD-L1",
+        "CD163",
+        "Ki67",
+        "Pan CK"
+      ]
+    },
+    {
+      "Name": "Four",
+      "Path": "Four_0__Hoechst--6__CD4--7__FoxP3--8__CD8a--14__E-Cadherin",
+      "Colors": [
+        "0000FF",
+        "FF0000",
+        "00FF00",
+        "00FFFF",
+        "FFFFFF"
+      ],
+      "Channels": [
+        "Hoechst",
+        "CD4",
+        "FoxP3",
+        "CD8a",
+        "E Cadherin"
+      ]
+    }
+  ],
+  "Masks": []
 };
+
 
 const color = "black";
 const fontColor = "eeeeee";
