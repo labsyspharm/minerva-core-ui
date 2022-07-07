@@ -49,7 +49,7 @@ const config = {
           "Name": "Another Waypoint",
           "Group": "One",
           "Audio": "",
-          "Description: fakeText(4),
+          "Description": fakeText(4),
           "Zoom": 0.5,
           "Pan": [0.5, 0.5],
           "Overlays": [
