@@ -10,6 +10,7 @@ import {
     handle,
     setViewport
 } from './openseadragon';
+import LensingFilters from './osdLensingFilters';
 
 export class OsdLensingContext {
 
@@ -60,7 +61,7 @@ export class OsdLensingContext {
             this.viewerContext.viewport.viewer,
             Object.assign(viewerConfigs, {id: viewerConfigs.element.id}),
             {},
-            []
+            LensingFilters
         );
         const viewer = lensingViewer.viewerAux;
 

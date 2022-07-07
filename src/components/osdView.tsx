@@ -17,6 +17,9 @@ export type Props = {
     viewerConfig: Config;
 } & HashContext;
 
+// Lensing var
+let lensingContext = null as any;
+
 const Main = styled.div`
   height: 100%;
 `;
@@ -96,7 +99,7 @@ const OsdView = (props: Props) => {
             update({redraw: false, context: next});
 
             // LENSING  :: {{On image channel update}} ~ Create new lensing instance
-            new OsdLensingContext(next, opts);
+            lensingContext = new OsdLensingContext(next, opts);
 
         }
     }, [cache.redraw, el]);
@@ -116,7 +119,7 @@ const OsdView = (props: Props) => {
             update({context: next});
 
             // LENSING  :: {{Initial draw}} ~ Build Lensing instance (w. hidden viewer)
-            new OsdLensingContext(next, opts);
+            lensingContext = new OsdLensingContext(next, opts);
 
         }
     }, [ready, firstDraw]);
