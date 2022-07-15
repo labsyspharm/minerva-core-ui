@@ -32,6 +32,8 @@ const config = {
         {
           Name: "Waypoint Example",
           Group: "Test",
+          // Lensing: {
+          // },
           Audio: "",
           Description: fakeText(3),
           Zoom: 0.5,
