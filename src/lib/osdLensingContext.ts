@@ -45,7 +45,7 @@ export class OsdLensingContext {
      */
     newContext(opts: Opts, reset: Reset): any {
 
-        const {g, v, groups, config, update} = opts;
+        const {g, v, groups, config, update, lensingConfig} = opts;
 
         // LENSING - viewer
         const viewerConfigs = {
@@ -66,7 +66,7 @@ export class OsdLensingContext {
         const viewer = lensingViewer.viewerAux;
 
         // Refactored from original reset
-        const img = makeImage({g: g, groups});
+        const img = makeImage({g: lensingConfig.g, groups});
 
         addChannels(viewer, img);
         viewer.world.addHandler("add-item", (e) => {

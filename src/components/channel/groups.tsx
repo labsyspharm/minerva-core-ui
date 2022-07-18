@@ -77,6 +77,7 @@ const GroupRow = (props) => {
     const { s, w } = hash;
     toGroup();
     updateWaypoint({ ...waypoint, g: group.g }, { s, w });
+    //
   };
   const selectSwitch = [
     ["a", { onClick: toWaypoint, children: toWaypointText }],

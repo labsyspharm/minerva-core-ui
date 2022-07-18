@@ -38,20 +38,21 @@ type Opts = {
   groups: Group[];
   update: Update;
   config: Config;
+  lensingConfig: any;
 };
 
 const makeImage = ({ g, groups }) => {
   const { path } = groups[g] || groups[0];
   return {
     name: "i0",
-    description: "Primary Lung Cancer [M-003]",
-    url: "https://s3.amazonaws.com/www.cycif.org/Nature-protocol-2019/LUNG_3",
+    description: "",
+    url: "https://s3.amazonaws.com/www.cycif.org/crc02-lens-1/story-alpha",
     group: path,
-    width: 14448,
-    height: 11101,
+    width: 58709,
+    height: 48460,
     tilesize: 1024,
     ext: "jpg",
-    maxLevel: 4,
+    maxLevel: 6,
   } as Image;
 };
 

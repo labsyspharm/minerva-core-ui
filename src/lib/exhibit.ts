@@ -7,6 +7,7 @@ export type Waypoint = {
   markdown: string;
   g: HashState["g"];
   v: HashState["v"];
+  lensing?: any,
 };
 
 export type Story = {
@@ -46,6 +47,7 @@ export interface Config {
       Name: string;
       Zoom: number;
       Pan: number[];
+      Lensing: any;
     }[];
   }[];
 }
@@ -69,6 +71,11 @@ const readStories = (config: Config): Story[] => {
           markdown: waypoint.Description,
           g: indexGroupName(waypoint.Group),
           v: [waypoint.Zoom, x, y],
+          //
+          lensing: Object.assign(waypoint.Lensing, {
+            g: indexGroupName(waypoint.Lensing.group),
+          }),
+          //
         };
       }),
     };
