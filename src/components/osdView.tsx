@@ -70,16 +70,20 @@ const OsdView = (props: Props) => {
 
   const { context } = cache;
   const update = useUpdate({ setV, setCache });
-  const opts = { config, update, v, g, groups };
+  const opts = { config, update, v, g, groups, lensingConfig: waypoint.lensing };
   const firstDraw = !context?.viewport;
 
-  useEffect(() => setEl(useEl(rootRef)), [rootRef.current]);
+  useEffect(() => {
+    setEl(useEl(rootRef))
+  }, [rootRef.current]);
+
   useEffect(() => {
     if (g !== cache.g) {
       update({ g, redraw: true });
     }
   }, [g]);
 
+  // Called on re-draw - TODO :: integrate later
   useEffect(() => {
     if (waypoint.g !== g) {
       update({ g: waypoint.g });
@@ -100,6 +104,7 @@ const OsdView = (props: Props) => {
   const els = [el, zoomInButton, zoomOutButton];
   const ready = els.every((el) => el !== null);
 
+  // First draw
   useEffect(() => {
     if (ready && firstDraw) {
 
@@ -113,7 +118,7 @@ const OsdView = (props: Props) => {
     }
   }, [ready, firstDraw]);
 
-  return <Main ref={rootRef} />;
+  return <Main ref={ rootRef }/>;
 };
 
 export { OsdView };

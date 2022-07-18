@@ -27,6 +27,9 @@ const config = {
         {
           "Name": "Waypoint Example",
           "Group": "H&E",
+          "Lensing": {
+            group: 'One'
+          },
           "Audio": "",
           "Description": fakeText(3),
           "Zoom": 0.5,
@@ -38,6 +41,9 @@ const config = {
         {
           "Name": "Another Waypoint",
           "Group": "One",
+          "Lensing": {
+            group: 'H&E'
+          },
           "Audio": "",
           "Description": fakeText(4),
           "Zoom": 0.5,

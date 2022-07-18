@@ -38,6 +38,7 @@ type Opts = {
   groups: Group[];
   update: Update;
   config: Config;
+  lensingConfig: any;
 };
 
 const makeImage = ({ g, groups }) => {
