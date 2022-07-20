@@ -1,9 +1,14 @@
 import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
+import { DeckGL } from '@deck.gl/react';
+import { OrthographicView } from '@deck.gl/core';
 import {
   getChannelStats,
   loadOmeTiff,
+  DetailView,
+  MultiscaleImageLayer,
+  getDefaultInitialViewState,
   PictureInPictureViewer,
 } from "@hms-dbmi/viv";
 
@@ -92,14 +97,39 @@ const VivView = (props: Props) => {
   }, []);
 
   if (!loader || !settings) return null;
+
+/*
+  const deckProps = {
+    controller: {inertia: 10000},
+  }
+*/
+
+  const layerConfig = { loader };
+  const layerProps = layerConfig;
+  const viewState = getDefaultInitialViewState(loader.data, shape, 0.5);
+  const layerId = 'multi-layer';
+  const viewId = 'ortho-view';
+  const layer = new MultiscaleImageLayer({
+    channelsVisible: [true, true, true],
+    selections: [
+      {z: 0, t: 0, c: 0},
+      {z: 0, t: 0, c: 1},
+      {z: 0, t: 0, c: 2}
+    ],
+    contrastLimits: [[0, 65535], [0, 65535], [0, 65535]],
+    loader: loader.data,
+    viewportId: viewId,
+    dtype: "Uint16",
+    id: layerId,
+  });
+
   return (
     <Main ref={rootRef}>
-      <PictureInPictureViewer
-        {...{
-          ...shape,
-          ...(settings as any),
-          loader: loader.data,
-        }}
+      <DeckGL
+        layers={layer}
+        viewState={viewState}
+        glOptions={{ webgl2: true }}
+        views={[new OrthographicView({ viewId, controller: true })]}
       />
     </Main>
   );
