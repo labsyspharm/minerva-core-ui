@@ -14,6 +14,7 @@ import type { HashContext } from "../../lib/hashUtil";
 type Props = {
   groups: Group[];
   stories: Story[];
+  hidden: boolean;
 };
 
 const Channel = (props: Props) => {
@@ -26,26 +27,31 @@ const Channel = (props: Props) => {
 
   const wrapClass = styler("textWrap", ...(hide ? ["textHide"] : []));
 
+  const { hidden } = props;
   const { hash } = context;
   const group = props.groups[hash.g];
   const legendProps = { ...props, ...group };
+
+  const channelMenu = (
+    <div className={styles.textCore}>
+      <Content {...contextProps}>
+        <Toolbar
+          {...{
+            togglePanel,
+            hide,
+          }}
+        />
+        <Legend {...legendProps} />
+      </Content>
+    </div>
+  );
 
   return (
     <div className={wrapClass}>
       <div className={styles.textOther}>
         <Outlet {...{ context }} />
       </div>
-      <div className={styles.textCore}>
-        <Content {...contextProps}>
-          <Toolbar
-            {...{
-              togglePanel,
-              hide,
-            }}
-          />
-          <Legend {...legendProps} />
-        </Content>
-      </div>
+      {hidden ? "" : channelMenu}
     </div>
   );
 };

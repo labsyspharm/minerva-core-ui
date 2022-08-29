@@ -9,6 +9,10 @@
   transform: translateX(-100%);
 }
 
+.textFull {
+  grid-template-columns: 1fr;
+}
+
 .invalid {
   height: 100%;
   display: grid;

@@ -9,12 +9,12 @@ import {
   faLocationArrow as faArrow,
   faBullseye as faPolygon,
   faCrosshairs as faOverlay,
-  faClone,
+  faInfo,
 } from "@fortawesome/free-solid-svg-icons";
 
 const Toolbar = (props) => {
   const { onZoomInEl, onZoomOutEl } = props;
-  const { hide, togglePanel } = props;
+  const { hide, togglePanel, toggleInfo } = props;
 
   const faToggle = hide ? faShow : faHide;
   const toggleProps = {
@@ -30,6 +30,10 @@ const Toolbar = (props) => {
     ref: React.useCallback(onZoomOutEl, []),
     icon: faMinus,
   };
+  const infoProps = {
+    icon: faInfo,
+    onClick: toggleInfo
+  }
 
   return (
     <>
@@ -40,7 +44,7 @@ const Toolbar = (props) => {
         <Icon icon={faArrow} />
         <Icon icon={faPolygon} />
         <Icon icon={faOverlay} />
-        <Icon icon={faClone} />
+        <Icon {...infoProps} />
       </WrapIcons>
     </>
   );
