@@ -14,7 +14,6 @@ import type { HashContext } from "../../lib/hashUtil";
 type Props = {
   groups: Group[];
   stories: Story[];
-  hidden: boolean;
 };
 
 const Channel = (props: Props) => {
@@ -27,8 +26,8 @@ const Channel = (props: Props) => {
 
   const wrapClass = styler("textWrap", ...(hide ? ["textHide"] : []));
 
-  const { hidden } = props;
   const { hash } = context;
+  const hidden = hash.i >= 0;
   const group = props.groups[hash.g];
   const legendProps = { ...props, ...group };
 

@@ -12,11 +12,9 @@ import type { Story } from "../../lib/exhibit";
 import type { HashState } from "../../lib/hashutil";
 import type { ExternalProps } from "./content";
 
-type Props = ExternalProps & {
+export type Props = ExternalProps & {
   onZoomInEl: (e: HTMLButtonElement) => void;
   onZoomOutEl: (e: HTMLButtonElement) => void;
-  setFull: (x: boolean) => void;
-  full: boolean;
 };
 
 const invalidateHash = ({ stories, groups }, { hash }) => {
@@ -33,10 +31,7 @@ const invalidateHash = ({ stories, groups }, { hash }) => {
   return output;
 };
 
-const toWrapKey = (hide: boolean, full: boolean) => {
-  if (full) {
-    return ["textFull"];
-  }
+const toWrapKey = (hide: boolean) => {
   if (hide) {
     return ["textHide"];
   }
@@ -47,13 +42,14 @@ const Waypoint = (props: Props) => {
   const styler = getStyler(styles);
   const [hide, setHide] = useState(false);
   const { onZoomInEl, onZoomOutEl } = props;
-  const { full, setFull } = props;
 
   const togglePanel = () => setHide(!hide);
-  const toggleInfo = () => setFull(!full);
   const context = {
     hash: useHash(),
     setHash: useSetHash(),
+  };
+  const toggleInfo = () => {
+    context.setHash({i: 0})
   };
   const invalid = invalidateHash(props, context);
   if (Object.keys(invalid).length) {
@@ -71,7 +67,7 @@ const Waypoint = (props: Props) => {
     );
   }
 
-  const wrapKeys = toWrapKey(hide, full);
+  const wrapKeys = toWrapKey(hide);
   const wrapClass = styler("textWrap", ...wrapKeys);
 
   return (

@@ -2,8 +2,7 @@ import * as React from "react";
 import { useState } from "react";
 import { ImageView, toImageProps } from "./imageView";
 import { Redirects } from "./redirects";
-import { Waypoint } from "./waypoint";
-import { Info } from "./info";
+import { Main } from "./content";
 import { Channel } from "./channel";
 import { Routes, Route } from "react-router-dom";
 import { toRoutePath } from "../lib/hashUtil";
@@ -85,11 +84,10 @@ const Index = (props: Props) => {
 
   const views = ["viv", "osd"];
   // TODO - return to views[0] - changed for quick dev w OSD
-  const [full, setFull] = useState(false);
   const [view, setView] = useState(views[1]);
   const [zoomInEl, setZoomIn] = useState(null);
   const [zoomOutEl, setZoomOut] = useState(null);
-  const [editable, setEditable] = useState(true);
+  const [editable, setEditable] = useState(false);
   const toggleViewer = () => setView(toggle(views, view));
   const toggleEditor = () => setEditable(!editable);
 
@@ -179,9 +177,7 @@ const Index = (props: Props) => {
     setExhibit(ex);
   };
 
-  const waypointProps = {
-    full,
-    setFull,
+  const mainProps = {
     groups,
     stories,
     onZoomInEl,
@@ -198,7 +194,6 @@ const Index = (props: Props) => {
     groups,
     stories,
     editable,
-    hidden: full,
     updateWaypoint,
     updateGroup,
     pushGroup,
@@ -220,23 +215,13 @@ const Index = (props: Props) => {
   const redirectProps = {
     stories,
   };
-  const infoProps = {
-    close: () => setFull(false)
-  }
-
-  const mainElement = ((full: boolean) => {
-    if (full) {
-      return <Info {...infoProps}/>;
-    }
-    return <Waypoint {...waypointProps}/>;
-  })(full);
 
   return (
     <Routes>
       <Route
         {...{
-          path: toRoutePath("s", "w"),
-          element: mainElement
+          path: toRoutePath("i", "s", "w"),
+          element: <Main {...mainProps}/>
         }}
       >
         <Route

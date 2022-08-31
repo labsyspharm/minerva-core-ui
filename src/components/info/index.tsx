@@ -5,9 +5,7 @@ import { useHash, useSetHash } from "../../lib/hashUtil";
 import { getStyler } from "../../lib/util";
 import styles from "./index.module.css";
 
-type Props = {
-  close: () => void;
-}
+type Props = { };
 
 const Info = (props: Props) => {
 
@@ -22,7 +20,7 @@ const Info = (props: Props) => {
   return (
     <div className={wrapClass}>
       <div className={styles.textCore}>
-        <Content {...props}/> 
+        <Content {...{...props, ...context}}/> 
       </div>
       <div className={styles.textOther}>
         <Outlet {...{ context }} />

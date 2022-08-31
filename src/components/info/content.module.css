@@ -1,15 +1,57 @@
+@font-face {
+  font-family: 'Kreon';
+  font-style: normal;
+  font-weight: 300;
+  src: url(https://fonts.gstatic.com/s/kreon/v32/t5tuIRIUKY-TFHXHc2idrq7o.woff2) format('woff2');
+  unicode-range: U+0000-00FF;
+}
+@font-face {
+  font-family: 'Kreon';
+  font-style: normal;
+  font-weight: 600;
+  src: url(https://fonts.gstatic.com/s/kreon/v32/t5tuIRIUKY-TFHXHc2idrq7o.woff2) format('woff2');
+  unicode-range: U+0000-00FF;
+}
+
 .wrap {
   height: 100%;
   display: grid;
   pointer-events: none;
   background-color: rgba(0, 0, 0, 0.8);
   grid-template-rows: auto 1fr;
-  grid-template-columns: 3fr 1fr;
+  grid-template-columns: auto 1fr;
+}
+
+.nav {
+  display: grid;
+  grid-gap: 0.5em;
+  font-size: 1.5em;
+  padding: 1em 0.5em;
+  font-weight: 600;
+  font-family: 'Kreon', sans;
+  grid-template-columns: repeat( auto-fit, minmax(200px, 1fr) );
+}
+
+.nav > * {
+  display: grid;
+  padding: 0.5em;
+  pointer-events: all;
+  justify-items: center;
+  background-color: black;
+  border-radius: 0.5em;
+  cursor: pointer;
+}
+
+.active {
+  background-color: #300000;
 }
 
 .close {
-  grid-column: 2;
   pointer-events: all;
+  justify-items: center;
+  color: #DD3377;
+  padding: 1em 2em;
+  display: grid;
 }
 .core {
   padding: 1em;

@@ -7,7 +7,7 @@ import type { Story } from "./exhibit";
 
 type StrKey = "p";
 type NumsKey = "o" | "v" | "a";
-type NumKey = "s" | "w" | "g" | "m";
+type NumKey = "i" | "s" | "w" | "g" | "m";
 type Key = StrKey | NumKey | NumsKey;
 
 export type HashState = Record<StrKey, string> &
@@ -19,8 +19,8 @@ export type HashContext = {
   hash: HashState;
 };
 
-const K_ALL = [..."swgmavop"] as Key[];
-const K_NUM = [..."swgm"] as Key[];
+const K_ALL = [..."iswgmavop"] as Key[];
+const K_NUM = [..."iswgm"] as Key[];
 const K_NUMS = [..."avo"] as Key[];
 
 type ParamInput = {
@@ -40,10 +40,10 @@ const VEC = (len) => {
 const OPTS = {
   formats: [
     {
-      keys: ["s", "w", "g", "m"],
+      keys: ["i", "s", "w", "g", "m"],
       encode: (x) => `${x}`,
       decode: parseInt,
-      empty: 0,
+      empty: -1,
     },
     {
       ...VEC(2),
@@ -102,6 +102,7 @@ const useRedirects = (stories: Story[], toElement) => {
     w: 0,
     g: 0,
     m: -1,
+    i: -1,
     a: [-100, -100],
     v: [-1, -1, -1],
     o: [-100, -100, 1, 1],
