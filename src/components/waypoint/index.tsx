@@ -9,7 +9,7 @@ import styles from "./index.module.css";
 
 // Types
 import type { Story } from "../../lib/exhibit";
-import type { HashState } from "../../lib/hashutil";
+import type { HashState } from "../../lib/hashUtil";
 import type { ExternalProps } from "./content";
 
 export type Props = ExternalProps & {
