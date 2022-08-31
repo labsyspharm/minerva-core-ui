@@ -14,11 +14,14 @@ import type { HashContext } from "../../lib/hashUtil";
 type Props = {
   groups: Group[];
   stories: Story[];
+  hiddenChannel: boolean;
+  setHiddenChannel: (v: boolean) => void;
 };
 
 const Channel = (props: Props) => {
   const styler = getStyler(styles);
-  const [hide, setHide] = useState(false);
+  const hide = props.hiddenChannel;
+  const setHide = props.setHiddenChannel;
   const context = useOutletContext() as HashContext;
   const contextProps = { ...props, ...context };
 

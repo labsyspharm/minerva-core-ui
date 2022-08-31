@@ -88,11 +88,42 @@ const Index = (props: Props) => {
   const [zoomInEl, setZoomIn] = useState(null);
   const [zoomOutEl, setZoomOut] = useState(null);
   const [editable, setEditable] = useState(false);
+  const checkWindow = () => {
+    return window.innerWidth > 600;
+  }
+  const [twoNavOk, setTwoNavOk] = useState(checkWindow());
+  const [hidden, setHidden] = useState([false, !twoNavOk]);
+  const handleResize = () => {
+    const twoNavPossible = checkWindow();
+    if (!twoNavPossible) {
+      setHidden([false, true]);
+    }
+    setTwoNavOk(twoNavPossible);
+  }
+  React.useEffect(() => {
+    window.addEventListener("resize", handleResize, false);
+  }, []);
   const toggleViewer = () => setView(toggle(views, view));
   const toggleEditor = () => setEditable(!editable);
 
   const onZoomInEl = onLoaded(setZoomIn);
   const onZoomOutEl = onLoaded(setZoomOut);
+
+  const hiddenWaypoint = hidden[0];
+  const hiddenChannel = hidden[1];
+  const setHiddenChannel = (v: boolean) => {
+    console.log(window.innerWidth);
+    if(!twoNavOk && !v) {
+      return setHidden([!v, v]);
+    }
+    setHidden([hiddenWaypoint, v])
+  }
+  const setHiddenWaypoint = (v: boolean) => {
+    if(!twoNavOk && !v) {
+      return setHidden([v, !v]);
+    }
+    setHidden([v, hiddenChannel])
+  }
 
   const updateWaypoint = (newWaypoint: WaypointType, { s, w }: OptSW) => {
     const oldWaypoint = stories[s]?.waypoints[w];
@@ -180,6 +211,8 @@ const Index = (props: Props) => {
   const mainProps = {
     groups,
     stories,
+    hiddenWaypoint,
+    setHiddenWaypoint,
     onZoomInEl,
     onZoomOutEl,
     toggleViewer,
@@ -194,6 +227,8 @@ const Index = (props: Props) => {
     groups,
     stories,
     editable,
+    hiddenChannel,
+    setHiddenChannel,
     updateWaypoint,
     updateGroup,
     pushGroup,

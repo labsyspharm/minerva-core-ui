@@ -7,7 +7,7 @@ type Props = {
 
 const Wrap = styled.audio`
   height: 25px;
-  width: 200px;
+  width: min(200px, 33vw);
 `;
 const Audio = ({ audio }: Props) => {
   return (

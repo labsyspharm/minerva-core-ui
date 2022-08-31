@@ -2,7 +2,7 @@
   height: 100%;
   display: grid;
   grid-template-rows: 100%;
-  grid-template-columns: 380px 1fr;
+  grid-template-columns: min(380px, 50vw) 1fr;
 }
 
 .textHide > .textCore {

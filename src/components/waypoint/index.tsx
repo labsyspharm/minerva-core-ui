@@ -15,6 +15,8 @@ import type { ExternalProps } from "./content";
 export type Props = ExternalProps & {
   onZoomInEl: (e: HTMLButtonElement) => void;
   onZoomOutEl: (e: HTMLButtonElement) => void;
+  hiddenWaypoint: boolean;
+  setHiddenWaypoint: (v: boolean) => void;
 };
 
 const invalidateHash = ({ stories, groups }, { hash }) => {
@@ -40,7 +42,8 @@ const toWrapKey = (hide: boolean) => {
 
 const Waypoint = (props: Props) => {
   const styler = getStyler(styles);
-  const [hide, setHide] = useState(false);
+  const hide = props.hiddenWaypoint;
+  const setHide = props.setHiddenWaypoint;
   const { onZoomInEl, onZoomOutEl } = props;
 
   const togglePanel = () => setHide(!hide);
