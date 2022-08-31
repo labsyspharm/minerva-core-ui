@@ -1,7 +1,7 @@
 package-lock.json
 node_modules
+pages
 build
-docs/*.ome.tif
 
 .*.swp
 .DS_Store

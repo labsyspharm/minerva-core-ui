@@ -26,12 +26,12 @@ jobs:
       - name: Build with pnpm
         run: |
           pnpm install
-          pnpm run build
+          pnpm run pages
       - name: Archive artifact
         run: |
           tar \
             --dereference --hard-dereference \
-            --directory build \
+            --directory pages \
             -cvf ${{ runner.temp }}/artifact.tar \
             --exclude=.git \
             --exclude=.github \

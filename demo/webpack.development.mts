@@ -8,7 +8,7 @@ module.exports = merge(webpackConfig, {
   mode: "development",
   devtool: "inline-source-map",
   devServer: {
-    static: "./docs",
+    static: "./pages",
     port: PORT,
     hot: true,
   },
