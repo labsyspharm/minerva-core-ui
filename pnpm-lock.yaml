@@ -51,6 +51,7 @@ specifiers:
   react-color: ^2.19.3
   react-datalist-input: ^2.2.1
   react-dom: ^17.0.2
+  react-input-range: ^1.3.0
   react-is: ^18.2.0
   react-json-view: ^1.21.3
   react-lorem-ipsum: ^1.4.9
@@ -103,6 +104,7 @@ dependencies:
   react-color: 2.19.3_react@17.0.2
   react-datalist-input: 2.2.1_fcd735ed90f9ecea045d06f518d846c2
   react-dom: 17.0.2_react@17.0.2
+  react-input-range: 1.3.0_react-dom@17.0.2+react@17.0.2
   react-is: 18.2.0
   react-json-view: 1.21.3_b3482aaf5744fc7c2aeb7941b0e0a78f
   react-markdown: 8.0.0_b08e3c15324cbe90a6ff8fcd416c932c
@@ -1531,6 +1533,10 @@ packages:
     dependencies:
       lodash: 4.17.21
     dev: true
+
+  /autobind-decorator/1.4.3:
+    resolution: {integrity: sha512-FRzT10Vc0lzgDOhMTpm9a2kZF6Q+MMGwd6Y7OGgHigMZwGz7vpN4qH9ifiPTum8mhJQV9UqLPperHxc9yalAAA==}
+    dev: false
 
   /babel-plugin-styled-components/2.0.2_styled-components@5.3.3:
     resolution: {integrity: sha512-7eG5NE8rChnNTDxa6LQfynwgHTVOYYaHJbUYSlOhk8QBXIQiMBKq4gyfHBBKPrxUcVBXVJL61ihduCpCQbuNbw==}
@@ -4546,6 +4552,18 @@ packages:
       object-assign: 4.1.1
       react: 17.0.2
       scheduler: 0.20.2
+    dev: false
+
+  /react-input-range/1.3.0_react-dom@17.0.2+react@17.0.2:
+    resolution: {integrity: sha512-G//kJqUHo7zQA5PuGZNKhuzhGcj83FJsv62tcP4Eo61DUC/0usHPYxFfIZ3zOfdMWuWEaduD6N4lNsZMmaOJgw==}
+    peerDependencies:
+      react: ^15.0.0 || ^16.0.0
+      react-dom: ^15.0.0 || ^16.0.0
+    dependencies:
+      autobind-decorator: 1.4.3
+      prop-types: 15.8.0
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
     dev: false
 
   /react-is/16.13.1:
