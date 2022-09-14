@@ -3,7 +3,6 @@ import { Icon } from "../common/icon";
 import {
   faTimes
 } from "@fortawesome/free-solid-svg-icons";
-import ReactJson from 'react-json-view'
 import MITI_UI from "./miti_ui";
 import styles from "./content.module.css";
 import { Biospecimen } from "./biospecimen";
@@ -81,7 +80,7 @@ const Content = (props: Props) => {
     "Channels": Channels,
     "Clinical": Clinical,
     "Overview": Overview,
-  }[navKey] || ReactJson;
+  }[navKey];
 
   const onNavClick = (key: string) => {
     const i = mitiKeys.indexOf(key);
