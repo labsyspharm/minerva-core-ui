@@ -6,6 +6,11 @@ import {
 import ReactJson from 'react-json-view'
 import MITI_UI from "./miti_ui";
 import styles from "./content.module.css";
+import { Biospecimen } from "./biospecimen";
+import { Publication } from "./publication";
+import { Channels } from "./channels";
+import { Clinical } from "./clinical";
+import { Overview } from "./overview";
 
 // Types
 import type { HashState } from "../../lib/hashUtil";
@@ -64,14 +69,19 @@ const Content = (props: Props) => {
     name: navKey,
     theme: jsonTheme,
     style: {
-      fontSize: "1.5em",
       fontFamily: "'Kreon', sans"
     },
     displayDataTypes: false,
     displayObjectSize: false
   }
 
-
+  const InfoContent = {
+    "Biospecimen": Biospecimen,
+    "Publication": Publication,
+    "Channels": Channels,
+    "Clinical": Clinical,
+    "Overview": Overview,
+  }[navKey] || ReactJson;
 
   const onNavClick = (key: string) => {
     const i = mitiKeys.indexOf(key);
@@ -94,7 +104,7 @@ const Content = (props: Props) => {
         {navItems}
       </div>
       <div className={styles.core}>
-        <ReactJson {...jsonProps} />
+        <InfoContent {...jsonProps} />
       </div>
     </div>
   );

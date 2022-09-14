@@ -2,6 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { Main } from "../src/main";
 import "@fontsource/overpass/200.css";
+import "@fontsource/overpass/500.css";
 import { createGlobalStyle } from "styled-components";
 import { loremIpsum } from "react-lorem-ipsum";
 
@@ -172,6 +173,7 @@ const MainStyle = createGlobalStyle`
   #${id} {
     background-color: ${color};
     font-family: "Overpass";
+    font-weight: 200;
     color: #${fontColor};
     height: 100%;
   }

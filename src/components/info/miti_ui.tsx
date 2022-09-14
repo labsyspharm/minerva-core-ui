@@ -2,7 +2,7 @@ const MITI_UI = {
   "Biospecimen": {
     "CollectionDetails": {
       "AcquisitionMethodType": "Surgical Resection",
-      "BiospecimenType": "Tissue Biospecimen Type",
+      "BiospecimenType": "Paraffin-embedded tissue",
       "PreservationMethod": "Formalin fixed paraffin embedded - FFPE",
       "ProtocolLink": "https://www.protocols.io/view/automated-tissue-fixation-with-10-nbf-leica-5jyl8n349l2w/v14",
       "SpecimenThickness": "5 microns",
@@ -43,12 +43,12 @@ const MITI_UI = {
           "HostSpecies": "Rabbit",
           "Identifier": "AB_10854267",
           "IdentifierType": "RRID",
-          "Isotype": "IGM",
+          "Isotype": "IgM",
           "Polyclonal": false,
           "TargetName": "Collagen"
         }
       ],
-      "Channel": {
+      "Wavelength": {
         "EmissionBandwidth": 40,
         "EmissionWavelength": 692,
         "ExcitationBandwidth": 10,
@@ -77,11 +77,12 @@ const MITI_UI = {
           "HostSpecies": "Donkey",
           "Identifier": "AB_2535794",
           "IdentifierType": "RRID",
+          "Isotype": "IgM",
           "Polyclonal": true,
           "TargetName": "Rat-IgG"
         }
       ],
-      "Channel": {
+      "Wavelength": {
         "EmissionBandwidth": 20,
         "EmissionWavelength": 522,
         "ExcitationBandwidth": 25,
@@ -98,7 +99,7 @@ const MITI_UI = {
     "ClinicalDetails": {
       "InitialDiseaseStatus": "Initial Diagnosis",
       "ProgressionOrRecurrence": {
-        "Comment": "etc.",
+        "Comment": "",
         "Progression": true,
         "Recurrence": {
           "ProgressionFreeSurvivalInDays": 397,
@@ -120,7 +121,8 @@ const MITI_UI = {
     },
     "TreatmentDetails": {
       "PriorTreatment": false,
-      "TreatmentType": "None"
+      "TreatmentType": "",
+      "Treatment": false
     }
   },
   "Overview": {
@@ -131,7 +133,7 @@ const MITI_UI = {
     "ImagingAssayType": "t-CyCIF",
     "ImagingDetails": {
       "Binned": true,
-      "Comment": "Type of Binning, etc.",
+      "Comment": "",
       "FixativeType": "Formalin",
       "Microscope": "RareCyte;CF;46",
       "Objective": "Nikon CFI Plan Apo Lambda 20X"
@@ -141,7 +143,8 @@ const MITI_UI = {
     "SiteOfResectionOrBiopsy": "Rectum NOS",
     "Species": "Human",
     "TimepointLabel": "Baseline",
-    "TreatmentType": false,
+    "TreatmentType": "",
+    "Treatment": false,
     "TumorGrade": "Low Grade"
   },
   "Publication": {
