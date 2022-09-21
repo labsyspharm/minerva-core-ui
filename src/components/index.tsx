@@ -83,8 +83,7 @@ const Index = (props: Props) => {
   const { groups, stories } = exhibit;
 
   const views = ["viv", "osd"];
-  // TODO - return to views[0] - changed for quick dev w OSD
-  const [view, setView] = useState(views[1]);
+  const [view, setView] = useState(views[0]);
   const [zoomInEl, setZoomIn] = useState(null);
   const [zoomOutEl, setZoomOut] = useState(null);
   const [editable, setEditable] = useState(true);
