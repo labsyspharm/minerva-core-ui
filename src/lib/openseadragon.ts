@@ -62,15 +62,10 @@ const makeImage: MakeImage = (props: Props, g) => {
   const { path } = props.groups[g] || props.groups[0];
   const image = props.images[0];
   return {
-    name: "i0",
-    description: "",
-    url: "https://s3.amazonaws.com/www.cycif.org/crc02-lens-1/story-alpha",
+    ...image,
     group: path,
-    width: 58709,
-    height: 48460,
     tilesize: 1024,
     ext: "jpg",
-    maxLevel: 6,
   } as Image;
 };
 
