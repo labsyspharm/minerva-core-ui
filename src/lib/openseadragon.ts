@@ -10,6 +10,7 @@ type VoidFn = () => void;
 export type Context = {
   clear: VoidFn;
   destroy: VoidFn;
+  reset: Reset;
   add: (VoidFn) => void;
   viewport: OSD.Viewport;
 };
@@ -31,21 +32,35 @@ export type Image = Record<StrKeys, string> & {
 };
 
 type Reset = (c: Opts) => void;
-type Update = (c: Context) => void;
+
+export type V = [number, number, number];
+export type Cache = {
+  contexts: any[],
+  redraw: boolean,
+  l: number,
+  g: number,
+  v: V,
+}
+
+export type ToCache = () => Partial<Cache>;
+export type Update = (c: Partial<Cache>) => void;
 
 type Opts = {
   g: HashState["g"];
   v: HashState["v"];
-  groups: Group[];
+  updateLens: Update;
   update: Update;
   config: Config;
-  //
   props: Props,
   lensingConfig: any;
 };
 
-const makeImage = ({ g, groups }) => {
-  const { path } = groups[g] || groups[0];
+export interface MakeImage {
+  (p: Props, g: number)
+}
+const makeImage: MakeImage = (props: Props, g) => {
+  const { path } = props.groups[g] || props.groups[0];
+  const image = props.images[0];
   return {
     name: "i0",
     description: "",
@@ -94,7 +109,7 @@ const addChannels = (viewer, img: Image) => {
   });
 };
 
-const readViewport = ({ viewport }) => {
+const readViewport = ({ viewport }): V => {
   const { x, y } = viewport.getCenter();
   return [viewport.getZoom(), x, y];
 };
@@ -125,16 +140,20 @@ const toContext = (viewer, reset, event) => {
   };
 };
 
-// FIXME
-const handle = (context, update) => {
-  // context.clear();
-  // context.add(() => {
-  //   update({ context });
-  // });
-};
+class Handler {
+  toCache: ToCache;
+
+  constructor(toCache: ToCache) {
+    this.toCache = toCache;
+  }
+
+  handle(update) {
+    update(this.toCache());
+  }
+}
 
 const newContext = (opts: Opts, reset: Reset) => {
-  const { g, v, groups, config, update } = opts;
+  const { g, v, props, config, update } = opts;
   const viewer = OSD({
     immediateRender: true,
     maxZoomPixelRatio: 10,
@@ -143,7 +162,7 @@ const newContext = (opts: Opts, reset: Reset) => {
     showFullPageControl: false,
     ...(config as any),
   });
-  const img = makeImage({ g, groups });
+  const img = makeImage(props, g);
 
   addChannels(viewer, img);
   viewer.world.addHandler("add-item", (e) => {
@@ -152,8 +171,11 @@ const newContext = (opts: Opts, reset: Reset) => {
 
   const event = "animation-finish";
   const context = toContext(viewer, reset, event);
+  const handler = new Handler(() => {
+    return { v: readViewport(context) };
+  });
   viewer.addHandler(event, () => {
-    handle(context, update);
+    handler.handle(update);
     setViewport(viewer, v, true);
   });
   setViewport(viewer, v, true);
@@ -184,4 +206,4 @@ const OpenSeadragonContext = (opts) => {
   return new OpenSeadragon(opts).context;
 };
 
-export { OpenSeadragonContext, readViewport, Reset, Opts, makeImage, addChannels, toContext, handle, setViewport };
+export { OpenSeadragonContext, readViewport, Reset, Opts, makeImage, addChannels, toContext, Handler, setViewport };

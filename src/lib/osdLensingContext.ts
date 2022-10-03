@@ -7,31 +7,53 @@ import {
     makeImage,
     addChannels,
     toContext,
-    handle,
-    setViewport
+    setViewport,
+    Handler
 } from './openseadragon';
 import LensingFilters from './osdLensingFilters';
-import DemoConfig from '../../demo/index'
 import Demo from "../../demo/index";
 import {hash} from "typescript-plugin-styled-components/dist/hash";
 
+import type { Group, ConfigGroup } from "./exhibit";
+import type { Update } from "./openseadragon"
+
+interface ToConfigGroup {
+  (group: Group): ConfigGroup
+}
+
+const toConfigGroup = (group) => {
+  const colors = group.channels.map(c => c.color);
+  const channels = group.channels.map(c => c.name);
+  return {
+    Name: group.name,
+    Path: group.path,
+    Channels: channels,
+    Colors: colors
+  }
+}
+
+const noUpdateLens: Update = () => null;
 export class OsdLensingContext {
 
     // Class vars
     lensingContext = null as any;
     lensingViewer = null as any;
-    viewerContext = null as any
+    viewerContext = null as any;
+    handler = null as any;
+    updateLens = noUpdateLens;
+    groups = [] as Group[];
     settings = {
-        configs: {},
-        selects: {
-            currentChannelGroupIndex: 0,
-        }
+        configs: {}
     }
+    lg = -1;
 
     constructor(viewerContext: any, viewerOptions: any) {
 
         // Contexts
         this.viewerContext = viewerContext;
+        this.handler = new Handler(() => {
+          return { l: this.lg, redraw: true };
+        });
         this.reset(viewerOptions);
 
     }
@@ -55,7 +77,13 @@ export class OsdLensingContext {
      */
     newContext(opts: Opts, reset: Reset): any {
 
-        const {g, v, groups, config, update, props, lensingConfig} = opts;
+        const {v, config, props, lensingConfig} = opts;
+        const { updateLens, update } = opts;
+        const { groups, images } = props;
+        const { metadata } = images[0];
+        this.updateLens = updateLens;
+        this.lg = lensingConfig.g;
+        this.groups = groups;
 
         // LENSING - viewer
         const viewerConfigs = {
@@ -67,7 +95,6 @@ export class OsdLensingContext {
             ...(config as any),
         }
         const filters = LensingFilters;
-        console.log(config)
         this.lensingViewer = new lensing.create(
             OSD,
             this.viewerContext.viewport.viewer,
@@ -79,14 +106,7 @@ export class OsdLensingContext {
                     outputUnit: 'mm',
                     inputOutputRatio: [1, 1]
                 },
-                imageMetadata: {
-                    physical_size_x: 25.485,
-                    physical_size_x_unit: 'mm',
-                    physical_size_y: 18.642,
-                    physical_size_y_unit: ',,',
-                    size_x: 78417,
-                    size_y: 57360,
-                }
+                imageMetadata: metadata 
             },
             filters
         );
@@ -98,8 +118,7 @@ export class OsdLensingContext {
         const viewer = this.lensingViewer.viewerAux;
 
         // Refactored from original reset
-        this.settings.selects.currentChannelGroupIndex = lensingConfig.g;
-        const img = makeImage({g: lensingConfig.g, groups});
+        const img = makeImage(props, this.lg);
 
         addChannels(viewer, img);
         viewer.world.addHandler("add-item", (e) => {
@@ -109,7 +128,6 @@ export class OsdLensingContext {
         const event = "animation-finish";
         const context = toContext(viewer, reset, event);
         viewer.addHandler(event, () => {
-            handle(context, update);
             setViewport(viewer, v, true);
         });
         setViewport(viewer, v, true);
@@ -120,30 +138,21 @@ export class OsdLensingContext {
     /**
      * getChannelGroups
      */
-    getChannelGroups(): any[] {
-        return DemoConfig.Groups;
+    getChannelGroups(): ConfigGroup[] {
+        return this.groups.map(toConfigGroup);
     }
 
-    getCurrentChannelGroup(): any {
-        return DemoConfig.Groups[this.settings.selects.currentChannelGroupIndex];
+    getCurrentChannelGroup(): ConfigGroup {
+        const { groups, lg } = this;
+        const group = groups[lg] || groups[0];
+        return toConfigGroup(group);
     }
 
-    loadNewChannelGroup(): void {
-
-        // Update index position
-        this.settings.selects.currentChannelGroupIndex++;
-        if (this.settings.selects.currentChannelGroupIndex > DemoConfig.Groups.length - 1) {
-            this.settings.selects.currentChannelGroupIndex = 0;
-        }
-
-        // Change images
-        const img = makeImage({g: this.settings.selects.currentChannelGroupIndex, groups: DemoConfig.Groups});
-
-        addChannels(this.lensingViewer.viewerAux, img);
-        // this.lensingViewer.viewerAux.world.addHandler("add-item", (e) => {
-        //     e.item.setWidth(img.width / img.height);
-        // });
-
+    loadNewChannelGroup() {
+        const { lg, updateLens } = this;
+        const max_lg = this.groups.length - 1;
+        const new_lg = [lg + 1, 0][+(lg === max_lg)];
+        this.lg = new_lg;
+        this.handler.handle(updateLens);
     }
-
 }

@@ -7,7 +7,7 @@ import type { Story } from "./exhibit";
 
 type StrKey = "p";
 type NumsKey = "o" | "v" | "a";
-type NumKey = "i" | "s" | "w" | "g" | "m";
+type NumKey = "i" | "s" | "w" | "g" | "m" | "l";
 type Key = StrKey | NumKey | NumsKey;
 
 export type HashState = Record<StrKey, string> &
@@ -20,7 +20,7 @@ export type HashContext = {
 };
 
 const K_ALL = [..."iswgmavop"] as Key[];
-const K_NUM = [..."iswgm"] as Key[];
+const K_NUM = [..."iswgml"] as Key[];
 const K_NUMS = [..."avo"] as Key[];
 
 type ParamInput = {
@@ -40,7 +40,7 @@ const VEC = (len) => {
 const OPTS = {
   formats: [
     {
-      keys: ["i", "s", "w", "g", "m"],
+      keys: ["i", "s", "w", "g", "m", "l"],
       encode: (x) => `${x}`,
       decode: parseInt,
       empty: -1,
@@ -101,6 +101,7 @@ const useRedirects = (stories: Story[], toElement) => {
     s: 0,
     w: 0,
     g: 0,
+    l: -1,
     m: -1,
     i: -1,
     a: [-100, -100],
@@ -109,8 +110,7 @@ const useRedirects = (stories: Story[], toElement) => {
     p: "Q",
   };
   const { s, w } = defaultHash;
-  const waypoint = getWaypoint(stories, s, w);
-  const { g, v } = waypoint;
+  const { g, v } = getWaypoint(stories, s, w);
   const noHash = { ...defaultHash, g, v };
   const makeRoutes = (all: Key[]) => {
     const path = toRoutePath(all[0]);

@@ -14,6 +14,15 @@ const fakeText = (p) => {
 const config = {
   "Header": "",
   "Rotation": 0,
+  "PixelsPerMicron": 3.0769,
+  "Images": [{
+    Name: "i0",
+    Description: "",
+    Path: "https://s3.amazonaws.com/www.cycif.org/crc02-lens-1/story-alpha",
+    MaxLevel: 6,
+    Width: 58709,
+    Height: 48460
+  }],
   "Layout": {
     "Grid": [
       [

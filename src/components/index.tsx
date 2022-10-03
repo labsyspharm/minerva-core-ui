@@ -80,7 +80,7 @@ const removeKey = (container, key, idx) => {
 
 const Index = (props: Props) => {
   const { exhibit, setExhibit } = props;
-  const { groups, stories } = exhibit;
+  const { images, groups, stories } = exhibit;
 
   const views = ["viv", "osd"];
   // TODO - return to views[0] - changed for quick dev w OSD
@@ -239,6 +239,7 @@ const Index = (props: Props) => {
   };
   const imageProps = toImageProps({
     props: {
+      images, 
       viewer: view,
       ...channelProps,
     },
@@ -261,7 +262,7 @@ const Index = (props: Props) => {
       >
         <Route
           {...{
-            path: toRoutePath("g", "m"),
+            path: toRoutePath("g", "m", "l"),
             element: <Channel {...channelProps} />,
           }}
         >
