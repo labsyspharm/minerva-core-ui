@@ -186,3 +186,5 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById(id)
 );
+
+export default config;

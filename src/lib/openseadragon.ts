@@ -3,6 +3,7 @@ import { Point } from "openseadragon";
 
 import type { Group } from "./exhibit";
 import type { HashState } from "./hashUtil";
+import type {Props} from '../components/osdView';
 
 type VoidFn = () => void;
 
@@ -38,6 +39,8 @@ type Opts = {
   groups: Group[];
   update: Update;
   config: Config;
+  //
+  props: Props,
   lensingConfig: any;
 };
 

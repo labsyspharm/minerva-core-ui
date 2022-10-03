@@ -49,6 +49,7 @@
     "@luma.gl/shadertools": "^8.5.10",
     "@luma.gl/webgl": "^8.5.10",
     "@types/openseadragon": "^2.4.8",
+    "d3": "^7.6.1",
     "gl-matrix": "^3.4.3",
     "history": "^5.2.0",
     "lensing": "https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9",
