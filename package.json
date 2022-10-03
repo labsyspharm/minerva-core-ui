@@ -52,7 +52,7 @@
     "d3": "^7.6.1",
     "gl-matrix": "^3.4.3",
     "history": "^5.2.0",
-    "lensing": "https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9",
+    "lensing": "https://github.com/jessupjs/lensing/tarball/14375f075ef443b0e2d65cb034681e14575e0492",
     "openseadragon": "^2.4.2",
     "prop-types": "^15.7.2",
     "react": "^17.0.2",
