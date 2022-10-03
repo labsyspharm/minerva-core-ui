@@ -11,12 +11,22 @@ import {
     setViewport
 } from './openseadragon';
 import LensingFilters from './osdLensingFilters';
+import DemoConfig from '../../demo/index'
+import Demo from "../../demo/index";
+import {hash} from "typescript-plugin-styled-components/dist/hash";
 
 export class OsdLensingContext {
 
     // Class vars
     lensingContext = null as any;
-    viewerContext = null as any;
+    lensingViewer = null as any;
+    viewerContext = null as any
+    settings = {
+        configs: {},
+        selects: {
+            currentChannelGroupIndex: 0,
+        }
+    }
 
     constructor(viewerContext: any, viewerOptions: any) {
 
@@ -45,7 +55,7 @@ export class OsdLensingContext {
      */
     newContext(opts: Opts, reset: Reset): any {
 
-        const {g, v, groups, config, update, lensingConfig} = opts;
+        const {g, v, groups, config, update, props, lensingConfig} = opts;
 
         // LENSING - viewer
         const viewerConfigs = {
@@ -56,16 +66,39 @@ export class OsdLensingContext {
             showFullPageControl: false,
             ...(config as any),
         }
-        const lensingViewer = new lensing.construct(
+        const filters = LensingFilters;
+        console.log(config)
+        this.lensingViewer = new lensing.create(
             OSD,
             this.viewerContext.viewport.viewer,
             Object.assign(viewerConfigs, {id: viewerConfigs.element.id}),
-            {},
-            LensingFilters
+            {
+                compassOn: true,
+                compassUnitConversion: {
+                    inputUnit: 'px',
+                    outputUnit: 'mm',
+                    inputOutputRatio: [1, 1]
+                },
+                imageMetadata: {
+                    physical_size_x: 25.485,
+                    physical_size_x_unit: 'mm',
+                    physical_size_y: 18.642,
+                    physical_size_y_unit: ',,',
+                    size_x: 78417,
+                    size_y: 57360,
+                }
+            },
+            filters
         );
-        const viewer = lensingViewer.viewerAux;
+        filters.forEach((f: any) => {
+
+            f.variables.referenceClass = this.lensingViewer;
+            f.variables.sourceClass = this;
+        });
+        const viewer = this.lensingViewer.viewerAux;
 
         // Refactored from original reset
+        this.settings.selects.currentChannelGroupIndex = lensingConfig.g;
         const img = makeImage({g: lensingConfig.g, groups});
 
         addChannels(viewer, img);
@@ -82,6 +115,35 @@ export class OsdLensingContext {
         setViewport(viewer, v, true);
 
         return context;
+    }
+
+    /**
+     * getChannelGroups
+     */
+    getChannelGroups(): any[] {
+        return DemoConfig.Groups;
+    }
+
+    getCurrentChannelGroup(): any {
+        return DemoConfig.Groups[this.settings.selects.currentChannelGroupIndex];
+    }
+
+    loadNewChannelGroup(): void {
+
+        // Update index position
+        this.settings.selects.currentChannelGroupIndex++;
+        if (this.settings.selects.currentChannelGroupIndex > DemoConfig.Groups.length - 1) {
+            this.settings.selects.currentChannelGroupIndex = 0;
+        }
+
+        // Change images
+        const img = makeImage({g: this.settings.selects.currentChannelGroupIndex, groups: DemoConfig.Groups});
+
+        addChannels(this.lensingViewer.viewerAux, img);
+        // this.lensingViewer.viewerAux.world.addHandler("add-item", (e) => {
+        //     e.item.setWidth(img.width / img.height);
+        // });
+
     }
 
 }

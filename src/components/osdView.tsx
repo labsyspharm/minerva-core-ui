@@ -73,7 +73,7 @@ const OsdView = (props: Props) => {
     // LENSING  :: {{'Global' var}} ~
     const {context} = cache;
     const update = useUpdate({setV, setCache});
-    const opts = {config, update, v, g, groups, lensingConfig: waypoint.lensing};
+    const opts = {config, update, v, g, groups, props, lensingConfig: waypoint.lensing};
     const firstDraw = !context?.viewport;
 
     useEffect(() => {
