@@ -14,8 +14,8 @@
 
 .core {
   padding: 1em;
+  grid-row: 1;
   grid-column: 1;
-  grid-row: 1 / -1;
   overflow: scroll;
   pointer-events: all;
   word-wrap: break-word;

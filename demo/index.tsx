@@ -26,17 +26,15 @@ const config = {
       "Name": "",
       "Waypoints": [
         {
-          "Name": "Waypoint Example",
-          "Group": "H&E",
-          //
+          "Name": "H&E lens over cycif",
+          "Group": "One",
           "Lensing": {
-            rad: 400,
-            radDefault: 400,
-            group: 'One'
+            rad: 250,
+            group: 'H&E'
           },
-          //
           "Audio": "",
-          "Description": fakeText(3),
+          //"Description": fakeText(3),
+          "Description": "### Following the cursor, the lens shows Hematoxylin-eosin imagery over a backdrop of five Immunofluorescence markers.",
           "Zoom": 0.5,
           "Pan": [0.5, 0.5],
           "Overlays": [],
@@ -44,17 +42,15 @@ const config = {
           "Polygon": "Q",
         },
         {
-          "Name": "Another Waypoint",
-          "Group": "One",
-          //
+          "Name": "CyCIF lens over H&E",
+          "Group": "H&E",
           "Lensing": {
-            rad: 400,
-            radDefault: 400,
+            rad: 250,
             group: 'One'
           },
-          //
           "Audio": "",
-          "Description": fakeText(4),
+          "Description": "### Following the cursor, the lens shows five Immunofluorescence markers over Hematoxylin-eosin brightfield imagery.",
+          //"Description": fakeText(4),
           "Zoom": 0.5,
           "Pan": [0.5, 0.5],
           "Overlays": [
