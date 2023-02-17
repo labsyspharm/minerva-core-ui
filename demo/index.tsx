@@ -30,6 +30,8 @@ const config = {
           "Group": "H&E",
           //
           "Lensing": {
+            rad: 400,
+            radDefault: 400,
             group: 'One'
           },
           //
@@ -46,7 +48,9 @@ const config = {
           "Group": "One",
           //
           "Lensing": {
-            group: 'H&E'
+            rad: 400,
+            radDefault: 400,
+            group: 'One'
           },
           //
           "Audio": "",

@@ -63,6 +63,7 @@ export class OsdLensingContext {
             {},
             LensingFilters
         );
+        lensingViewer.updateConfigs(lensingConfig);
         const viewer = lensingViewer.viewerAux;
 
         // Refactored from original reset
