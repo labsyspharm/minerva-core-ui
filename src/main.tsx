@@ -18,7 +18,6 @@ const Main = (props: Props) => {
   // Handle changes to URL
   window.addEventListener("hashchange", () => {
     setUrl(window.location.href);
-    console.error("The hash has changed!");
   });
   return (
     <Index {...{
