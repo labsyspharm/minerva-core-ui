@@ -16,9 +16,11 @@ const Main = (props: Props) => {
   const [url, setUrl] = useState(window.location.href);
   const hashContext = useHash(url, exhibit.stories);
   // Handle changes to URL
-  window.addEventListener("hashchange", () => {
-    setUrl(window.location.href);
-  });
+  useEffect(() => {
+    window.addEventListener("hashchange", () => {
+      setUrl(window.location.href);
+    });
+  }, [])
   return (
     <Index {...{
       exhibit, setExhibit,
