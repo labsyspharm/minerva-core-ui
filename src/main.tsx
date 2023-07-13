@@ -1,23 +1,10 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { useHash } from "./lib/hashUtil";
-//import { useHashHistory } from "use-hash-history";
 import { readConfig } from "./lib/exhibit";
 import { Index } from "./components";
 
 import type { Config } from "./lib/exhibit";
-
-/*const defaultPath = ({ location }) => {
-  const { pathname, search } = location;
-  return { pathname, search };
-};
-*/
-/*const history = useHashHistory({
-  defaultPath: defaultPath(window),
-  hashSlash: "#",
-  hashRoot: "",
-  window,
-});*/
 
 type Props = {
   config: Config;
