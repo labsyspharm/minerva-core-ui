@@ -2,9 +2,7 @@ import * as React from "react";
 import { useState } from "react";
 import { Content } from "./content";
 import { Toolbar } from "./toolbar";
-import { useHash, useSetHash } from "../../lib/hashUtil";
 import { getStyler } from "../../lib/util";
-import { Outlet, Link } from "react-router-dom";
 import styles from "./index.module.css";
 
 // Types
@@ -13,6 +11,7 @@ import type { HashState } from "../../lib/hashUtil";
 import type { ExternalProps } from "./content";
 
 export type Props = ExternalProps & {
+  children: any,
   onZoomInEl: (e: HTMLButtonElement) => void;
   onZoomOutEl: (e: HTMLButtonElement) => void;
   hiddenWaypoint: boolean;
@@ -47,14 +46,10 @@ const Waypoint = (props: Props) => {
   const { onZoomInEl, onZoomOutEl } = props;
 
   const togglePanel = () => setHide(!hide);
-  const context = {
-    hash: useHash(),
-    setHash: useSetHash(),
-  };
   const toggleInfo = () => {
-    context.setHash({i: 0})
+    props.setHash({i: 0});
   };
-  const invalid = invalidateHash(props, context);
+  const invalid = invalidateHash(props, props);
   if (Object.keys(invalid).length) {
     return (
       <div className={styles.invalid}>
@@ -63,7 +58,7 @@ const Waypoint = (props: Props) => {
           <h3>You refreshed the page.</h3>
           <h5>Your changes were not saved.</h5>
           <br />
-          <Link to="/">Reset the demo</Link>
+          <a href="/">Reset the demo</a>
         </p>
         <p></p>
       </div>
@@ -76,7 +71,7 @@ const Waypoint = (props: Props) => {
   return (
     <div className={wrapClass}>
       <div className={styles.textCore}>
-        <Content {...{ ...props, ...context }}>
+        <Content {...{ ...props }}>
           <Toolbar
             {...{
               onZoomInEl,
@@ -89,7 +84,7 @@ const Waypoint = (props: Props) => {
         </Content>
       </div>
       <div className={styles.textOther}>
-        <Outlet {...{ context }} />
+      { props.children }
       </div>
     </div>
   );

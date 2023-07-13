@@ -1,18 +1,16 @@
 import * as React from "react";
 import { useState } from "react";
 import { ImageView, toImageProps } from "./imageView";
-import { Redirects } from "./redirects";
 import { Main } from "./content";
 import { Channel } from "./channel";
-import { Routes, Route } from "react-router-dom";
-import { toRoutePath } from "../lib/hashUtil";
 
 // Types
 import type { OptSW } from "./waypoint/content";
 import type { Waypoint as WaypointType } from "../lib/exhibit";
+import type { HashContext } from "../lib/hashUtil";
 import type { Exhibit } from "../lib/exhibit";
 
-type Props = {
+type Props = HashContext & {
   exhibit: Exhibit;
   setExhibit: (e: Exhibit) => void;
 };
@@ -208,7 +206,11 @@ const Index = (props: Props) => {
     setExhibit(ex);
   };
 
+  const { hash, setHash } = props;
+
   const mainProps = {
+    hash,
+    setHash,
     groups,
     stories,
     hiddenWaypoint,
@@ -224,6 +226,8 @@ const Index = (props: Props) => {
     editable,
   };
   const channelProps = {
+    hash,
+    setHash,
     groups,
     stories,
     editable,
@@ -247,34 +251,13 @@ const Index = (props: Props) => {
       zoomOutButton: zoomOutEl,
     },
   });
-  const redirectProps = {
-    stories,
-  };
-
   return (
-    <Routes>
-      <Route
-        {...{
-          path: toRoutePath("i", "s", "w"),
-          element: <Main {...mainProps}/>
-        }}
-      >
-        <Route
-          {...{
-            path: toRoutePath("g", "m"),
-            element: <Channel {...channelProps} />,
-          }}
-        >
-          <Route
-            {...{
-              path: toRoutePath(..."avop"),
-              element: <ImageView {...imageProps} />,
-            }}
-          />
-        </Route>
-      </Route>
-      {Redirects(redirectProps)}
-    </Routes>
+    <Main {...mainProps}>
+      <Channel {...channelProps}>
+        <ImageView {...imageProps}>
+        </ImageView>
+      </Channel>
+    </Main>
   );
 };
 

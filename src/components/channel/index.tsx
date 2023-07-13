@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Legend } from "./legend";
 import { Content } from "./content";
 import { Toolbar } from "./toolbar";
-import { Outlet, useOutletContext } from "react-router-dom";
 import { getStyler } from "../../lib/util";
 import styles from "./index.module.css";
 
@@ -11,7 +10,8 @@ import styles from "./index.module.css";
 import type { Group, Story } from "../../lib/exhibit";
 import type { HashContext } from "../../lib/hashUtil";
 
-type Props = {
+type Props = HashContext & {
+  children: any,
   groups: Group[];
   stories: Story[];
   hiddenChannel: boolean;
@@ -22,21 +22,19 @@ const Channel = (props: Props) => {
   const styler = getStyler(styles);
   const hide = props.hiddenChannel;
   const setHide = props.setHiddenChannel;
-  const context = useOutletContext() as HashContext;
-  const contextProps = { ...props, ...context };
 
   const togglePanel = () => setHide(!hide);
 
   const wrapClass = styler("textWrap", ...(hide ? ["textHide"] : []));
 
-  const { hash } = context;
+  const { hash } = props;
   const hidden = hash.i >= 0;
   const group = props.groups[hash.g];
   const legendProps = { ...props, ...group };
 
   const channelMenu = (
     <div className={styles.textCore}>
-      <Content {...contextProps}>
+      <Content {...props}>
         <Toolbar
           {...{
             togglePanel,
@@ -51,7 +49,7 @@ const Channel = (props: Props) => {
   return (
     <div className={wrapClass}>
       <div className={styles.textOther}>
-        <Outlet {...{ context }} />
+        {props.children}
       </div>
       {hidden ? "" : channelMenu}
     </div>

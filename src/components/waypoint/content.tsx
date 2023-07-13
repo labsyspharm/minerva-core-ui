@@ -1,6 +1,4 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
-import { useHash, useSetHash } from "../../lib/hashUtil";
 import { getWaypoint, getWaypoints, handleWaypoint } from "../../lib/waypoint";
 import { PopUpdateWaypoint, PushWaypoint } from "../editable/waypoints";
 import { Status } from "../editable/status";
@@ -20,11 +18,11 @@ import {
 
 // Types
 import type { Group, Story, Waypoint } from "../../lib/exhibit";
-import type { HashState } from "../../lib/hashUtil";
+import type { HashContext } from "../../lib/hashUtil";
 
 export type OptSW = { s: number; w: number };
 
-export type ExternalProps = {
+export type ExternalProps = HashContext & {
   pushWaypoint: (w: Waypoint, opt: OptSW) => void;
   updateWaypoint: (w: Waypoint, opt: OptSW) => void;
   popWaypoint: (opt: OptSW) => void;
@@ -38,8 +36,6 @@ export type ExternalProps = {
 
 type Props = ExternalProps & {
   children: any;
-  hash: HashState;
-  setHash: (h: Partial<HashState>) => void;
 };
 
 const defaultWaypoint: Waypoint = {
@@ -59,7 +55,6 @@ const useWaypoint = ({ stories, hash }: Props) => {
 const useIcons = (props: Props) => {
   const { stories, hash, setHash } = props;
   const { s, w } = hash;
-  const navigate = useNavigate();
   const handler = handleWaypoint(stories, { s, w });
   const onClick = (diff) => setHash(handler(diff));
   const pathname = "/";
@@ -68,7 +63,10 @@ const useIcons = (props: Props) => {
     homeProps: {
       size: `${size}em`,
       icon: faHome,
-      onClick: () => navigate({ pathname }),
+      onClick: () => {
+        // TODO
+        //navigate.push({ pathname });
+      }
     },
     prevProps: {
       size: `${1.5 * size}em`,

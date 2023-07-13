@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useHash } from "../lib/hashUtil";
 import { Waypoint } from "./waypoint";
 import { Info } from "./info";
 
@@ -7,9 +6,8 @@ import { Info } from "./info";
 import type { Props } from "./waypoint";
 
 const Main = (props: Props) => {
-  const hash = useHash();
-  if (hash.i >= 0) {
-    return <Info/>;
+  if (props.hash.i >= 0) {
+    return <Info {...props}/>;
   }
   return <Waypoint {...props}/>;
 };

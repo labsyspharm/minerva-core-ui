@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { useVars, useSetVars } from "path-vars";
 import { getWaypoint } from "./waypoint";
 
@@ -37,66 +36,60 @@ const VEC = (len) => {
   };
 };
 
-const OPTS = {
-  formats: [
-    {
-      keys: ["i", "s", "w", "g", "m"],
-      encode: (x) => `${x}`,
-      decode: parseInt,
-      empty: -1,
-    },
-    {
-      ...VEC(2),
-      keys: ["a"],
-      empty: [-100, -100],
-    },
-    {
-      ...VEC(3),
-      keys: ["v"],
-      empty: [-1, -1, -1],
-    },
-    {
-      ...VEC(4),
-      keys: ["o"],
-      empty: [-100, -100, 1, 1],
-    },
-    {
-      keys: ["p"],
-      empty: "Q",
-    },
-  ].map((f) => {
-    const join = (kv) => kv.join("=");
-    return { ...f, join };
-  }),
+const toOpts = (noHash) => {
+  const asInt = {
+    encode: (x) => `${x}`,
+    decode: parseInt,
+  };
+  return {
+    root: '#',
+    slash: '#',
+    formats: [
+      { ...asInt, keys: ["i"], empty: noHash.i },
+      { ...asInt, keys: ["s"], empty: noHash.s },
+      { ...asInt, keys: ["w"], empty: noHash.w },
+      { ...asInt, keys: ["g"], empty: noHash.g },
+      { ...asInt, keys: ["m"], empty: noHash.m },
+      { ...VEC(2), keys: ["a"], empty: noHash.a },
+      { ...VEC(3), keys: ["v"], empty: noHash.v },
+      { ...VEC(4), keys: ["o"], empty: noHash.o },
+      { keys: ["p"], empty: noHash.p }
+    ].map((f) => {
+      const join = (kv) => kv.join("=");
+      return { ...f, join };
+    }),
+    }
 };
 
-const useHashPath = (hash) => {
-  return ((out: { pathname: string }) => {
-    useSetVars((to) => (out = to), OPTS)(hash);
-    return out.pathname;
-  })(null);
-};
-
-const useHash = () => {
-  return useVars(useParams(), OPTS) as HashState;
-};
-
-const useSetHash = () => {
-  const nav = useNavigate();
-  const oldHash = useHash();
-  const setVars = useSetVars(nav, OPTS);
+const toHashMemo = (url, opts) => {
   return useMemo(() => {
-    return (hash: Partial<HashState>) => {
-      return setVars({ ...oldHash, ...hash });
+    const urlHash = window.location.hash.split('#');
+    const urlParams = urlHash.reduce((obj, str) => {
+      const [ k, v ] = str.split('=');
+      obj[k] = v;
+      return obj;
+    }, {});
+    return useVars(urlParams, opts) as HashState;
+  }, [url]);
+};
+
+const useHash = (url, stories: Story[]) => {
+  const opts = toOpts(toEmptyHash(stories));
+  const hash = toHashMemo(url, opts);
+  const setVars = useSetVars((to) => {
+    location.hash = to.pathname;
+  }, opts);
+  const setHash = useMemo(() => {
+    return (newHash: Partial<HashState>) => {
+      return setVars({ 
+        ...hash, ...newHash
+      });
     };
-  }, [oldHash, setVars]);
+  }, [hash]);
+  return { hash, setHash };
 };
 
-const toRoutePath = (..._: string[]) => {
-  return _.map((c) => c + "=:" + c).join("/");
-};
-
-const useRedirects = (stories: Story[], toElement) => {
+const toEmptyHash = (stories: Story[]) => {
   const defaultHash = {
     s: 0,
     w: 0,
@@ -109,19 +102,8 @@ const useRedirects = (stories: Story[], toElement) => {
     p: "Q",
   };
   const { s, w } = defaultHash;
-  const waypoint = getWaypoint(stories, s, w);
-  const { g, v } = waypoint;
-  const noHash = { ...defaultHash, g, v };
-  const makeRoutes = (all: Key[]) => {
-    const path = toRoutePath(all[0]);
-    const children = all.length > 1 ? makeRoutes(all.slice(1)) : undefined;
-    return [
-      toElement({ path, noHash, children }),
-      toElement({ path: "*", noHash, children }),
-    ];
-  };
-  const children = makeRoutes(K_ALL);
-  return toElement({ path: "/", noHash, children });
+  const { g, v } = getWaypoint(stories, s, w);
+  return { ...defaultHash, s, w, g, v };
 };
 
-export { useHash, useSetHash, useHashPath, useRedirects, toRoutePath };
+export { useHash, toEmptyHash };
