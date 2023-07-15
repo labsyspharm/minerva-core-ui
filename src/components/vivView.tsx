@@ -14,6 +14,7 @@ import { getWaypoint } from "../lib/waypoint";
 import type { Config } from "../lib/viv";
 import type { Group, Story } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
+import type { Selection, Color, Limit } from "../lib/viv";
 
 export type Props = {
   groups: Group[];
@@ -70,6 +71,33 @@ const shapeRef = (setShape: (s: Shape) => void) => {
     }
   };
 };
+const rgb2hex = (rgb) => {
+  try {
+    return (
+      "#" +
+      ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2])
+        .toString(16)
+        .substr(1)
+    );
+  } catch (e) {
+    console.log("Error in hex2rgb", rgb, e);
+  }
+};
+
+function hex2rgb(hex) {
+  try {
+    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result
+      ? [
+          parseInt(result[1], 16),
+          parseInt(result[2], 16),
+          parseInt(result[3], 16),
+        ]
+      : null;
+  } catch (e) {
+    console.log("Error in hex2rgb", hex, e);
+  }
+}
 
 const VivView = (props: Props) => {
   const maxShape = useWindowSize();
@@ -77,9 +105,11 @@ const VivView = (props: Props) => {
   const { v, g, s, w } = hash;
   const setV = useSetV(setHash);
   const { toSettings } = props.viewerConfig;
-  const settings = toSettings(hash);
+  const [settings, setSettings] = useState(toSettings(hash));
   const waypoint = getWaypoint(stories, s, w);
   const [shape, setShape] = useState(maxShape);
+  const [channelSettings, setChannelSettings] = useState({});
+  const [channels, setChannels] = useState([]);
   const rootRef = React.useMemo(() => {
     return shapeRef(setShape);
   }, [maxShape]);
@@ -90,6 +120,42 @@ const VivView = (props: Props) => {
       setLoader(loader);
     });
   }, []);
+
+  // useEffect(() => {
+  //   console.log("groups", groups);
+  //   console.log("g", g);
+  //   if (!groups?.[g]?.channels) return;
+  //   console.log("channels", groups[g].channels, settings, loader);
+  // }, [groups, loader]);
+
+  useEffect(() => {
+    if (!groups?.[g]?.channels) return;
+    const _channels = groups?.[g]?.channels.map((d: any, i: number) => {
+      return { id: i, ...d };
+    });
+    setChannels(_channels);
+  }, [loader, groups, g]);
+
+  useEffect(() => {
+    console.log("Settings", settings, loader);
+    const channelsVisible = channels.map((d) => true);
+    const colors: Color[] = channels.map(
+      (d) => hex2rgb(`#${d.color}`) as Color
+    );
+    const selections = channels.map((d) => {
+      return { z: 0, t: 0, c: d.id };
+    });
+    // TODO: Update this to read the bitdepth from metadata and set ranges based on that
+    const contrastLimits: Limit[] = channels.map((d) => {
+      return [0, 65535];
+    });
+    setSettings({ channelsVisible, colors, selections, contrastLimits });
+    console.log(channels, colors, selections);
+  }, [channels]);
+
+  // useEffect(() => {
+  //   console.log("CHANNELS", channels);
+  // }, [channels]);
 
   if (!loader || !settings) return null;
   return (

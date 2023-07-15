@@ -27,7 +27,7 @@ const toImageProps = (opts) => {
     {
       viv: vivProps,
       osd: osdProps,
-    }[props.viewer] || osdProps
+    }[props.viewer] || vivProps
   );
 };
 
@@ -37,7 +37,7 @@ const ImageView = (props) => {
     {
       viv: VivView,
       osd: OsdView,
-    }[viewer] || OsdView;
+    }[viewer] || VivView;
   return <Component {...{ ...rest }} />;
 };
 

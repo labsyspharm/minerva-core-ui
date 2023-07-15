@@ -43,4 +43,4 @@ const toSettings = (opts) => {
   };
 };
 
-export { toSettings };
+export { toSettings, Selection, Color, Limit };
