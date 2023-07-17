@@ -11,6 +11,7 @@ import type { HashContext } from "../lib/hashUtil";
 import type { Exhibit } from "../lib/exhibit";
 
 type Props = HashContext & {
+  loader: any;
   exhibit: Exhibit;
   setExhibit: (e: Exhibit) => void;
 };
@@ -82,7 +83,7 @@ const Index = (props: Props) => {
 
   const views = ["viv", "osd"];
   // TODO - return to views[0] - changed for quick dev w OSD
-  const [view, setView] = useState(views[1]);
+  const [view, setView] = useState(views[0]);
   const [zoomInEl, setZoomIn] = useState(null);
   const [zoomOutEl, setZoomOut] = useState(null);
   const [editable, setEditable] = useState(false);
@@ -206,7 +207,7 @@ const Index = (props: Props) => {
     setExhibit(ex);
   };
 
-  const { hash, setHash } = props;
+  const { loader, hash, setHash } = props;
 
   const mainProps = {
     hash,
@@ -243,6 +244,7 @@ const Index = (props: Props) => {
   };
   const imageProps = toImageProps({
     props: {
+      loader,
       viewer: view,
       ...channelProps,
     },

@@ -27,7 +27,7 @@ const toImageProps = (opts) => {
     {
       viv: vivProps,
       osd: osdProps,
-    }[props.viewer] || osdProps
+    }[props.viewer] || vivProps
   );
 };
 

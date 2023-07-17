@@ -16,6 +16,7 @@ import type { Group, Story } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
 
 export type Props = {
+  loader: any;
   groups: Group[];
   stories: Story[];
   viewerConfig: Config;
@@ -26,7 +27,7 @@ type Shape = {
   height: number;
 };
 
-const url = "/LUNG-3-PR_40X.ome.tif";
+const url = "/PCA19_001_F8_HE_aligned_to_cycif.ome.tif";
 
 const Main = styled.div`
   height: 100%;
@@ -73,7 +74,7 @@ const shapeRef = (setShape: (s: Shape) => void) => {
 
 const VivView = (props: Props) => {
   const maxShape = useWindowSize();
-  const { groups, stories, hash, setHash } = props;
+  const { loader, groups, stories, hash, setHash } = props;
   const { v, g, s, w } = hash;
   const setV = useSetV(setHash);
   const { toSettings } = props.viewerConfig;
@@ -84,13 +85,6 @@ const VivView = (props: Props) => {
     return shapeRef(setShape);
   }, [maxShape]);
 
-  const [loader, setLoader] = useState(null);
-  useEffect(() => {
-    loadOmeTiff(url).then((loader) => {
-      setLoader(loader);
-    });
-  }, []);
-
   if (!loader || !settings) return null;
   return (
     <Main ref={rootRef}>
@@ -98,7 +92,7 @@ const VivView = (props: Props) => {
         {...{
           ...shape,
           ...(settings as any),
-          loader: loader.data,
+          loader
         }}
       />
     </Main>
