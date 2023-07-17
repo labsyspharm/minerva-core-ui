@@ -90,9 +90,9 @@ const VivView = (props: Props) => {
     <Main ref={rootRef}>
       <PictureInPictureViewer
         {...{
+          loader,
           ...shape,
           ...(settings as any),
-          loader
         }}
       />
     </Main>

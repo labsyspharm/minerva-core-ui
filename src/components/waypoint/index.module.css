@@ -30,6 +30,7 @@
   grid-row: 1;
   grid-column: 1;
   transition: all 1s;
+  pointer-events: none;
 }
 
 .textOther {

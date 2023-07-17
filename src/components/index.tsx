@@ -111,7 +111,6 @@ const Index = (props: Props) => {
   const hiddenWaypoint = hidden[0];
   const hiddenChannel = hidden[1];
   const setHiddenChannel = (v: boolean) => {
-    console.log(window.innerWidth);
     if(!twoNavOk && !v) {
       return setHidden([!v, v]);
     }
