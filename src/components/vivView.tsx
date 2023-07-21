@@ -15,6 +15,8 @@ import type { Config } from "../lib/viv";
 import type { Group, Story } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
 import type { Selection, Color, Limit } from "../lib/viv";
+import { VivLensing } from "./vivLensing";
+import { LensExtension } from "@hms-dbmi/viv";
 
 export type Props = {
   groups: Group[];
@@ -110,6 +112,7 @@ const VivView = (props: Props) => {
   const [shape, setShape] = useState(maxShape);
   const [channelSettings, setChannelSettings] = useState({});
   const [channels, setChannels] = useState([]);
+  const [canvas, setCanvas] = useState(null);
   const rootRef = React.useMemo(() => {
     return shapeRef(setShape);
   }, [maxShape]);
@@ -128,16 +131,21 @@ const VivView = (props: Props) => {
   //   console.log("channels", groups[g].channels, settings, loader);
   // }, [groups, loader]);
 
+
+
   useEffect(() => {
     if (!groups?.[g]?.channels) return;
     const _channels = groups?.[g]?.channels.map((d: any, i: number) => {
       return { id: i, ...d };
     });
     setChannels(_channels);
-  }, [loader, groups, g]);
+  }, [groups, g]);
+
+
 
   useEffect(() => {
-    console.log("Settings", settings, loader);
+    // console.log("Settings", settings, loader);
+    console.log("Loder", loader);
     const channelsVisible = channels.map((d) => true);
     const colors: Color[] = channels.map(
       (d) => hex2rgb(`#${d.color}`) as Color
@@ -151,7 +159,11 @@ const VivView = (props: Props) => {
     });
     setSettings({ channelsVisible, colors, selections, contrastLimits });
     console.log(channels, colors, selections);
-  }, [channels]);
+  }, [channels, loader]);
+
+  useEffect(() => {
+    console.log('Canvas IS', canvas);
+  },[canvas]);
 
   // useEffect(() => {
   //   console.log("CHANNELS", channels);
@@ -159,12 +171,19 @@ const VivView = (props: Props) => {
 
   if (!loader || !settings) return null;
   return (
-    <Main ref={rootRef}>
+    <Main ref={rootRef} className={"SimonSimonSimon"}>
       <PictureInPictureViewer
         {...{
           ...shape,
           ...(settings as any),
           loader: loader.data,
+          lensEnabled: true,
+          lensRadius: 100,
+          lensSelection: 0,
+          extensions: [new VivLensing()],
+          onViewportLoad: (viewport: any, e: any, d: any) => {
+            console.log("Viewport", viewport?.[0]);
+          }
         }}
       />
     </Main>
