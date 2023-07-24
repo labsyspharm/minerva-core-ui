@@ -9,6 +9,8 @@ First, run `pnpm install`. Then run locally or build.
 
 ## Running demo
 
+Run `npx serve --cors` in the same directory as `LUNG-3-PR_40X.ome.tif`. In a separate shell, run the development server:
+
 ```
 pnpm demo
 ```

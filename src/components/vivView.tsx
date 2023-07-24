@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import {
   getChannelStats,
-  loadOmeTiff,
   PictureInPictureViewer,
 } from "@hms-dbmi/viv";
 
@@ -29,8 +28,6 @@ type Shape = {
   width: number;
   height: number;
 };
-
-const url = "/PCA19_001_F8_HE_aligned_to_cycif.ome.tif";
 
 const Main = styled.div`
   height: 100%;

@@ -2,6 +2,7 @@ import * as React from "react";
 import styled from 'styled-components';
 import { useState, useEffect } from "react";
 import { useHash } from "./lib/hashUtil";
+import { loadOmeTiff } from "@hms-dbmi/viv";
 import { hasFileSystemAccess, toDir, toLoader } from "./lib/filesystem";
 import { isOpts, validate } from './lib/validate';
 import { Upload } from './components/upload';
@@ -19,6 +20,13 @@ type Props = {
 
 interface ReduceFormData {
   (o: ObjAny, kv: KV): ObjAny;
+}
+
+const devSetup = (loader: any, setLoader: any ) => {
+  const DEV_URL = "http://localhost:3000/LUNG-3-PR_40X.ome.tif";
+  loadOmeTiff(DEV_URL).then((loader) => {
+    setLoader('set', loader.data);
+  });
 }
 
 const Wrapper = styled.div`
@@ -53,6 +61,12 @@ const Content = (props: Props) => {
   const hashContext = useHash(url, exhibit.stories);
   const [handle, setHandle] = useState(null);
   const [loader, setLoader] = useState(null);
+
+  // Dev setup
+  useEffect(() => {
+    devSetup(loader, setLoader);
+  });
+
   // Create ome-tiff loader
   const onAllow = async () => {
     const newHandle = await toDir();
@@ -62,7 +76,7 @@ const Content = (props: Props) => {
     (async () => {
       if (handle === null) return;
       const loader = await toLoader({ handle, in_f });
-      setLoader(loader.data);
+      setLoader(loader);
     })();
   }
   // Handle changes to URL
