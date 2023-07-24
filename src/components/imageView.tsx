@@ -37,7 +37,7 @@ const ImageView = (props) => {
     {
       viv: VivView,
       osd: OsdView,
-    }[viewer] || OsdView;
+    }[viewer] || VivView;
   return <Component {...{ ...rest }} />;
 };
 
