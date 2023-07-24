@@ -112,61 +112,15 @@ const VivView = (props: Props) => {
   const waypoint = getWaypoint(stories, s, w);
   const [shape, setShape] = useState(maxShape);
   const [channelSettings, setChannelSettings] = useState({});
-  const [channels, setChannels] = useState([]);
   const [canvas, setCanvas] = useState(null);
   const rootRef = React.useMemo(() => {
     return shapeRef(setShape);
   }, [maxShape]);
 
-  /*
-  const [loader, setLoader] = useState(null);
   useEffect(() => {
-    loadOmeTiff(url).then((loader) => {
-      setLoader(loader);
-    });
-  }, []);
-
-  // useEffect(() => {
-  //   console.log("groups", groups);
-  //   console.log("g", g);
-  //   if (!groups?.[g]?.channels) return;
-  //   console.log("channels", groups[g].channels, settings, loader);
-  // }, [groups, loader]);
-
-
-
-  useEffect(() => {
-    if (!groups?.[g]?.channels) return;
-    const _channels = groups?.[g]?.channels.map((d: any, i: number) => {
-      return { id: i, ...d };
-    });
-    setChannels(_channels);
-  }, [groups, g]);
-
-
-
-  useEffect(() => {
-    // console.log("Settings", settings, loader);
-    console.log("Loder", loader);
-    const channelsVisible = channels.map((d) => true);
-    const colors: Color[] = channels.map(
-      (d) => hex2rgb(`#${d.color}`) as Color
-    );
-    const selections = channels.map((d) => {
-      return { z: 0, t: 0, c: d.id };
-    });
-    // TODO: Update this to read the bitdepth from metadata and set ranges based on that
-    const contrastLimits: Limit[] = channels.map((d) => {
-      return [0, 65535];
-    });
-    setSettings({ channelsVisible, colors, selections, contrastLimits });
-    console.log(channels, colors, selections);
-  }, [channels, loader]);
-
-  useEffect(() => {
-    console.log('Canvas IS', canvas);
-  },[canvas]);
-  */
+    const newSettings = toSettings(hash, loader)
+    setSettings(newSettings);
+  }, [loader]);
 
   if (!loader || !settings) return null;
   return (
@@ -177,7 +131,6 @@ const VivView = (props: Props) => {
           ...shape,
           ...(settings as any),
 /*
-          loader: loader.data,
           lensEnabled: true,
           lensRadius: 100,
           lensSelection: 0,
