@@ -13,7 +13,7 @@ type Settings = {
 };
 
 export type Config = {
-  toSettings: (h: HashState) => Settings;
+  toSettings: (h: HashState, l?: any) => Settings;
 };
 
 const toDefaultSettings = (n) => {
