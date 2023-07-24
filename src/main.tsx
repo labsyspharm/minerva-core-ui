@@ -23,7 +23,7 @@ interface ReduceFormData {
 }
 
 const devSetup = (loader: any, setLoader: any ) => {
-  const DEV_URL = "http://localhost:3000/LUNG-3-PR_40X.ome.tif";
+  const DEV_URL = "http://localhost:3000/LSP10353.ome.tiff";
   loadOmeTiff(DEV_URL).then((loader) => {
     setLoader('set', loader.data);
   });
