@@ -22,10 +22,12 @@ interface ReduceFormData {
   (o: ObjAny, kv: KV): ObjAny;
 }
 
-const devSetup = (loader: any, setLoader: any ) => {
+const devSetup = (setLoader: any ) => {
   const DEV_URL = "http://localhost:3000/LSP10353.ome.tiff";
+  console.log('DEV', DEV_URL)
   loadOmeTiff(DEV_URL).then((loader) => {
-    setLoader('set', loader.data);
+    console.log(loader)
+    setLoader(loader.data);
   });
 }
 
@@ -64,7 +66,7 @@ const Content = (props: Props) => {
 
   // Dev setup
   useEffect(() => {
-    devSetup(loader, setLoader);
+    devSetup(setLoader);
   });
 
   // Create ome-tiff loader
