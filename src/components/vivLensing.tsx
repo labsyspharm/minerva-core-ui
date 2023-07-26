@@ -1,4 +1,4 @@
-import { LensExtension, ScaleBarLayer} from "@hms-dbmi/viv";
+import { LensExtension, ScaleBarLayer } from "@hms-dbmi/viv";
 // import { getDefaultPalette, padColors } from '../utils';
 
 const fs = `\
@@ -33,20 +33,19 @@ bool frag_on_lens_bounds(vec2 vTexCoord) {
   // Check membership on "bourndary" of ellipse.
   return ellipseDistance <= 1. && ellipseDistance >= (1. - lensBorderRadius);
 }
-// Return a float for boolean arithmetic calculation.
-float get_use_color_float(vec2 vTexCoord, int channelIndex) {
+
+// gets color relative to lens selection and lens opacity
+vec3 get_color(vec2 vTexCoord, int channelIndex) {
+  float lensOpacity = 1.00;
   bool isFragInLensBounds = frag_in_lens_bounds(vTexCoord);
   bool inLensAndUseLens = lensEnabled && isFragInLensBounds;
   bool isSelectedChannel = channelIndex == lensSelection;
-  return float(int((inLensAndUseLens && isSelectedChannel) || (!inLensAndUseLens && !isSelectedChannel)));
-//   return 1.0;
- 
+  float factorOutside = 1.0 - float(isSelectedChannel);
+  float factorInside = isSelectedChannel ? lensOpacity : (1.0 - lensOpacity);
+  float factor = inLensAndUseLens ? factorInside : factorOutside;
+  return factor * colors[channelIndex];
 }
 
-vec3 get_color(vec2 vTexCoord, int channelIndex) {
-  float useColorValue = get_use_color_float(vTexCoord, channelIndex);
-  return mix(vec3(0., 0., 0.), vec3(colors[channelIndex]), useColorValue);
-}
 
 void mutate_color(inout vec3 rgb, float intensity0, float intensity1, float intensity2, float intensity3, float intensity4, float intensity5, vec2 vTexCoord){
 
@@ -62,6 +61,11 @@ void mutate_color(inout vec3 rgb, float intensity0, float intensity1, float inte
 `;
 
 const VivLensing = class extends LensExtension {
+
+  state: any;
+  props: any;
+
+
   getShaders() {
     return {
       ...super.getShaders(),
@@ -76,13 +80,33 @@ const VivLensing = class extends LensExtension {
        rgba = vec4(rgb, 1.);
       `,
             "fs:#main-end": `
-          bool isFragOnLensBounds = frag_on_lens_bounds(vTexCoord);
-         gl_FragColor = (lensEnabled && isFragOnLensBounds) ? vec4(lensBorderColor, 1.) : gl_FragColor;
+        //   bool isFragOnLensBounds = frag_on_lens_bounds(vTexCoord);
+        //  gl_FragColor = (lensEnabled && isFragOnLensBounds) ? vec4(lensBorderColor, 1.) : gl_FragColor;
       `,
           },
         },
       ],
     };
+  }
+  draw() {
+    super.draw();
+    const otherCoordinates = [100,200]; // Use the bounds below to convert these arbitrary screen coordinast to lensCenter
+    const { unprojectLensBounds = [0, 0, 0, 0] } = this.state;
+    const { bounds } = this.props;
+    const [leftMouseBound, bottomMouseBound, rightMouseBound, topMouseBound] =
+      unprojectLensBounds;
+    const [left, bottom, right, top] = bounds;
+    const leftMouseBoundScaled = (leftMouseBound - left) / (right - left);
+    const bottomMouseBoundScaled = (bottomMouseBound - top) / (bottom - top);
+    const rightMouseBoundScaled = (rightMouseBound - left) / (right - left);
+    const topMouseBoundScaled = (topMouseBound - top) / (bottom - top);
+    const majorLensAxis = (rightMouseBoundScaled - leftMouseBoundScaled) / 2;
+    const minorLensAxis = (bottomMouseBoundScaled - topMouseBoundScaled) / 2;
+    const lensCenter = [
+      (rightMouseBoundScaled + leftMouseBoundScaled) / 2,
+      (bottomMouseBoundScaled + topMouseBoundScaled) / 2
+    ];
+    // console.log('draw', this) 
   }
 };
 export { VivLensing };

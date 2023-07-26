@@ -1,10 +1,12 @@
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
+
 import {
   getChannelStats,
   loadOmeTiff,
   PictureInPictureViewer,
+  LensExtension
 } from "@hms-dbmi/viv";
 
 import styled from "styled-components";
@@ -16,7 +18,8 @@ import type { Group, Story } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
 import type { Selection, Color, Limit } from "../lib/viv";
 import { VivLensing } from "./vivLensing";
-import { LensExtension } from "@hms-dbmi/viv";
+import { IconLayer, LineLayer } from "@deck.gl/layers";
+import { on } from "events";
 
 export type Props = {
   groups: Group[];
@@ -91,17 +94,20 @@ function hex2rgb(hex) {
     let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
       ? [
-          parseInt(result[1], 16),
-          parseInt(result[2], 16),
-          parseInt(result[3], 16),
-        ]
+        parseInt(result[1], 16),
+        parseInt(result[2], 16),
+        parseInt(result[3], 16),
+      ]
       : null;
   } catch (e) {
     console.log("Error in hex2rgb", hex, e);
   }
 }
 
+
 const VivView = (props: Props) => {
+  const deckRef = useRef(null);
+
   const maxShape = useWindowSize();
   const { groups, stories, hash, setHash } = props;
   const { v, g, s, w } = hash;
@@ -113,23 +119,19 @@ const VivView = (props: Props) => {
   const [channelSettings, setChannelSettings] = useState({});
   const [channels, setChannels] = useState([]);
   const [canvas, setCanvas] = useState(null);
-  const rootRef = React.useMemo(() => {
-    return shapeRef(setShape);
-  }, [maxShape]);
+
+  const [scale, setScale] = useState(0);
+
+  const [movingLens, setMovingLens] = useState(false);
 
   const [loader, setLoader] = useState(null);
+  const [lensPosition, setLensPosition] = useState({});
   useEffect(() => {
     loadOmeTiff(url).then((loader) => {
       setLoader(loader);
     });
   }, []);
 
-  // useEffect(() => {
-  //   console.log("groups", groups);
-  //   console.log("g", g);
-  //   if (!groups?.[g]?.channels) return;
-  //   console.log("channels", groups[g].channels, settings, loader);
-  // }, [groups, loader]);
 
 
 
@@ -144,8 +146,6 @@ const VivView = (props: Props) => {
 
 
   useEffect(() => {
-    // console.log("Settings", settings, loader);
-    console.log("Loder", loader);
     const channelsVisible = channels.map((d) => true);
     const colors: Color[] = channels.map(
       (d) => hex2rgb(`#${d.color}`) as Color
@@ -158,20 +158,72 @@ const VivView = (props: Props) => {
       return [0, 65535];
     });
     setSettings({ channelsVisible, colors, selections, contrastLimits });
+
+    // Set mouse in the middle of the image
+    setLensPosition([(loader?.metadata?.Pixels?.SizeX || 0)
+      / 2, (loader?.metadata?.Pixels?.SizeY || 0) / 2]);
     console.log(channels, colors, selections);
-  }, [channels, loader]);
+  }, [loader]);
 
   useEffect(() => {
-    console.log('Canvas IS', canvas);
-  },[canvas]);
+    console.log('Loader is', loader);
+  }, [loader]);
 
-  // useEffect(() => {
-  //   console.log("CHANNELS", channels);
-  // }, [channels]);
+
+
+  const onClick = useCallback(event => {
+    moveLens(event)
+  }, [lensPosition])
+
+  const moveLens = (event) => {
+    const pickInfo = deckRef.current.pickObject({
+      x: event?.offsetCenter?.x || event?.pageX,
+      y: event?.offsetCenter?.y || event?.pageY,
+      radius: 1
+    });
+    setLensPosition(pickInfo.coordinate);
+  }
+
+
+
+  const iconSvg = `
+  <svg width="1000" height="1000" viewBox="0 0 1000 1000"  xmlns="http://www.w3.org/2000/svg">
+      <circle cx="500" cy="500" r="497" fill="rgba(1,1,1,0)" stroke="#ffffff" pointer-events="fill" stroke-width="6"/>
+    </svg>
+  `
+
+  const circleOverlay = new IconLayer({
+    id: 'line-layer-#detail#',
+    data: [lensPosition],
+    getIcon: () => ({
+      url: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(iconSvg)}`,
+      width: 1000,
+      height: 1000
+    }),
+    sizeScale: 2,
+    getSize: d => 100,
+    alphaCutoff: 0,
+    getPosition: d => d,
+
+    onDrag: (info, event) => {
+      setMovingLens(true)
+      moveLens(event)
+    },
+    onDragEnd: (info, event) => {
+      setMovingLens(false)
+      console.log('DRAGEND')
+    },
+    pickable: true,
+  });
+
+  console.log('Scale', window.devicePixelRatio)
+
+
+
 
   if (!loader || !settings) return null;
   return (
-    <Main ref={rootRef} className={"SimonSimonSimon"}>
+    <Main className={"SimonSimonSimon"}>
       <PictureInPictureViewer
         {...{
           ...shape,
@@ -179,11 +231,21 @@ const VivView = (props: Props) => {
           loader: loader.data,
           lensEnabled: true,
           lensRadius: 100,
-          lensSelection: 0,
+          lensSelection: 1,
           extensions: [new VivLensing()],
           onViewportLoad: (viewport: any, e: any, d: any) => {
             console.log("Viewport", viewport?.[0]);
-          }
+            setScale(window.devicePixelRatio);
+          },
+          onViewStateChange: (d: any, e: any) => {
+            if (movingLens) {
+              return d?.oldViewState
+            } else {
+              return d?.viewState
+            }
+
+          },
+          deckProps: { layers: [circleOverlay], ref: deckRef, userData: { lensPosition } },
         }}
       />
     </Main>
