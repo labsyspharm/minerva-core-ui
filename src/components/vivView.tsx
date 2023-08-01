@@ -18,6 +18,7 @@ import type { Group, Story } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
 import type { Selection, Color, Limit } from "../lib/viv";
 import { VivLensing } from "./vivLensing";
+import {ScaleBarLayer} from './vivLensingUI'
 import { IconLayer, LineLayer } from "@deck.gl/layers";
 import { on } from "events";
 
@@ -38,9 +39,7 @@ const Main = styled.div`
   height: 100%;
 `;
 
-const isElement = (x = {}): x is HTMLElement => {
-  return ["Width", "Height"].every((k) => `client${k}` in x);
-};
+
 
 const useSetV = (setHash) => {
   return (context) => {
@@ -52,42 +51,7 @@ const useSetV = (setHash) => {
   };
 };
 
-const useUpdate = ({ setV, setCache }) => {
-  return (c) => {
-    if (c?.context?.viewport) {
-      setV(c.context);
-    }
-    setCache((_c) => {
-      const keys = [...Object.keys(_c)];
-      const entries = keys.map((k) => {
-        return [k, k in c ? c[k] : _c[k]];
-      });
-      return Object.fromEntries(entries);
-    });
-  };
-};
 
-const shapeRef = (setShape: (s: Shape) => void) => {
-  return (el: unknown) => {
-    if (el && isElement(el)) {
-      const height = el.clientHeight;
-      const width = el.clientWidth;
-      setShape({ width, height });
-    }
-  };
-};
-const rgb2hex = (rgb) => {
-  try {
-    return (
-      "#" +
-      ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2])
-        .toString(16)
-        .substr(1)
-    );
-  } catch (e) {
-    console.log("Error in hex2rgb", rgb, e);
-  }
-};
 
 function hex2rgb(hex) {
   try {
@@ -126,6 +90,7 @@ const VivView = (props: Props) => {
 
   const [loader, setLoader] = useState(null);
   const [lensPosition, setLensPosition] = useState({});
+  const [mousePosition, setMousePosition] = useState({});
   useEffect(() => {
     loadOmeTiff(url).then((loader) => {
       setLoader(loader);
@@ -170,40 +135,61 @@ const VivView = (props: Props) => {
   }, [loader]);
 
 
-
-  const onClick = useCallback(event => {
-    moveLens(event)
-  }, [lensPosition])
-
   const moveLens = (event) => {
-    const pickInfo = deckRef.current.pickObject({
-      x: event?.offsetCenter?.x || event?.pageX,
-      y: event?.offsetCenter?.y || event?.pageY,
-      radius: 1
-    });
-    setLensPosition(pickInfo.coordinate);
+    console.log(event?.offsetCenter?.x, event?.offsetCenter?.y)
+    const mouseX = event?.offsetCenter?.x || event?.pageX;
+    const mouseY = event?.offsetCenter?.y || event?.pageY;
+    positionLens(mouseX, mouseY);
+
   }
 
+  const positionLens = (x: number, y: number) => {
+    setMousePosition([x, y]);
+  }
+
+  useEffect(() => {
+    console.log('mouse')
+  }, [mousePosition]);
 
 
-  const iconSvg = `
-  <svg width="1000" height="1000" viewBox="0 0 1000 1000"  xmlns="http://www.w3.org/2000/svg">
-      <circle cx="500" cy="500" r="497" fill="rgba(1,1,1,0)" stroke="#ffffff" pointer-events="fill" stroke-width="6"/>
-    </svg>
-  `
 
-  const circleOverlay = new IconLayer({
-    id: 'line-layer-#detail#',
-    data: [lensPosition],
+  const lensBorderSvg =
+    `<svg width="1000" height="1000" viewBox="0 0 1000 1000"  xmlns="http://www.w3.org/2000/svg">
+      <circle cx="500" cy="500" r="497" fill="rgba(1,1,1,0)" stroke="rgba(1,1,1,0)" pointer-events="fill" stroke-width="6"/>
+    </svg>`
+
+  const resizeSvg =
+    `<svg id="a" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 437.92 437.92">
+    <g id="b">
+      <polygon points="323.71 308.11 129.81 114.21 194.86 114.22 194.86 92.15 92.15 92.15 92.15 194.85 114.21 194.88 114.21 129.81 308.11 323.71 243.07 323.7 243.06 345.77 345.77 345.77 345.78 243.07 323.7 243.05 323.71 308.11" style="fill:#007bff;" />
+    </g>
+    <circle cx="218.96" cy="218.96" r="207.96" style="fill:none; stroke:#fff; stroke-miterlimit:10; stroke-width:22px;" />
+  </svg>`
+
+  const opacitySvg =
+    `<svg id="a" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 437.92 218.96">
+    <path d="m11,218.96C11,104.11,104.11,11,218.96,11s207.96,93.11,207.96,207.96" style="stroke:#fff; stroke-miterlimit:10; stroke-width:22px;" />
+  </svg>`
+
+  const lensOverlay = new IconLayer({
+    id: 'lens-layer-#detail#',
+    data: [mousePosition],
     getIcon: () => ({
-      url: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(iconSvg)}`,
+      url: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(lensBorderSvg)}`,
       width: 1000,
       height: 1000
     }),
     sizeScale: 2,
     getSize: d => 100,
     alphaCutoff: 0,
-    getPosition: d => d,
+    getPosition: d => {
+      const pickInfo = deckRef.current.pickObject({
+        x: d[0],
+        y: d[1],
+        radius: 1
+      });
+      return pickInfo.coordinate;
+    },
 
     onDrag: (info, event) => {
       setMovingLens(true)
@@ -211,19 +197,19 @@ const VivView = (props: Props) => {
     },
     onDragEnd: (info, event) => {
       setMovingLens(false)
-      console.log('DRAGEND')
     },
     pickable: true,
   });
 
-  console.log('Scale', window.devicePixelRatio)
+
+
 
 
 
 
   if (!loader || !settings) return null;
   return (
-    <Main className={"SimonSimonSimon"}>
+    <Main>
       <PictureInPictureViewer
         {...{
           ...shape,
@@ -235,7 +221,8 @@ const VivView = (props: Props) => {
           extensions: [new VivLensing()],
           onViewportLoad: (viewport: any, e: any, d: any) => {
             console.log("Viewport", viewport?.[0]);
-            setScale(window.devicePixelRatio);
+            console.log('deckRef is', deckRef?.current?.deck?.width, deckRef?.current?.deck?.height);
+            setMousePosition([Math.round((deckRef?.current?.deck?.width || 0) / 2), Math.round((deckRef?.current?.deck?.height || 0) / 2)]);
           },
           onViewStateChange: (d: any, e: any) => {
             if (movingLens) {
@@ -245,7 +232,7 @@ const VivView = (props: Props) => {
             }
 
           },
-          deckProps: { layers: [circleOverlay], ref: deckRef, userData: { lensPosition } },
+          deckProps: { layers: [ScaleBarLayer], ref: deckRef, userData: { lensPosition, movingLens, mousePosition } },
         }}
       />
     </Main>

@@ -26,7 +26,8 @@ type StoryImage = IndexedImage<Formats.ColorJpeg>;
 type AuthorImage = IndexedImage<Formats.OmeTiff>;
 
 const urlToFile = (url: string) => {
-  const dir = ["", "Users", "jth30", "data"];
+  // /Users/simonwarchol/Documents/minerva-core-ui/demo
+  const dir = ["", "Users", "simonwarchol", "Documents", "minerva-core-ui", "pages"];
   const { file } = [
     {
       match: new RegExp("/LUNG_3/"),

@@ -1,5 +1,15 @@
-import { LensExtension, ScaleBarLayer } from "@hms-dbmi/viv";
-// import { getDefaultPalette, padColors } from '../utils';
+import { LensExtension } from "@hms-dbmi/viv";
+
+
+const defaultProps = {
+  lensEnabled: { type: 'boolean', value: false, compare: true },
+  lensSelection: { type: 'number', value: 0, compare: true },
+  lensRadius: { type: 'number', value: 100, compare: true },
+  lensBorderColor: { type: 'array', value: [255, 255, 255], compare: true },
+  lensBorderRadius: { type: 'number', value: 0.02, compare: true },
+  colors: { type: 'array', value: null, compare: true }
+};
+
 
 const fs = `\
 // lens bounds for ellipse
@@ -60,10 +70,15 @@ void mutate_color(inout vec3 rgb, float intensity0, float intensity1, float inte
 }
 `;
 
+
 const VivLensing = class extends LensExtension {
 
   state: any;
   props: any;
+  context: any;
+  getCurrentLayer: any;
+  defaultProps: any;
+  parent: any;
 
 
   getShaders() {
@@ -88,25 +103,131 @@ const VivLensing = class extends LensExtension {
       ],
     };
   }
-  draw() {
-    super.draw();
-    const otherCoordinates = [100,200]; // Use the bounds below to convert these arbitrary screen coordinast to lensCenter
-    const { unprojectLensBounds = [0, 0, 0, 0] } = this.state;
-    const { bounds } = this.props;
-    const [leftMouseBound, bottomMouseBound, rightMouseBound, topMouseBound] =
-      unprojectLensBounds;
-    const [left, bottom, right, top] = bounds;
-    const leftMouseBoundScaled = (leftMouseBound - left) / (right - left);
-    const bottomMouseBoundScaled = (bottomMouseBound - top) / (bottom - top);
-    const rightMouseBoundScaled = (rightMouseBound - left) / (right - left);
-    const topMouseBoundScaled = (topMouseBound - top) / (bottom - top);
-    const majorLensAxis = (rightMouseBoundScaled - leftMouseBoundScaled) / 2;
-    const minorLensAxis = (bottomMouseBoundScaled - topMouseBoundScaled) / 2;
-    const lensCenter = [
-      (rightMouseBoundScaled + leftMouseBoundScaled) / 2,
-      (bottomMouseBoundScaled + topMouseBoundScaled) / 2
-    ];
-    // console.log('draw', this) 
+  initializeState() {
+    // super.initializeState();
+    if (this.context.deck) {
+      this.context.deck.eventManager.on({
+        pan: () => null,
+        pointermove: () => null,
+        pointerleave: () => null,
+        wheel: () => null
+      });
+    }
   }
+
+  draw(): void {
+    const layer = this.getCurrentLayer();
+    const { viewportId } = layer.props;
+    const { lensRadius = defaultProps.lensRadius.value } = this.props;
+    // If there is no viewportId, don't try to do anything.
+    if (!viewportId) {
+      layer.setState({ unprojectLensBounds: [0, 0, 0, 0] });
+      return;
+    }
+    const mousePosition = { x: this.parent.context.userData.mousePosition[0], y: this.parent.context.userData.mousePosition[1] };
+    const layerView = layer.context.deck.viewManager.views.filter(
+      view => view.id === viewportId
+    )[0];
+    const viewState = layer.context.deck.viewManager.viewState[viewportId];
+    const viewport = layerView.makeViewport({
+      ...viewState,
+      viewState
+    });
+    // If the mouse is in the viewport and the mousePosition exists, set
+    // the state with the bounding box of the circle that will render as a lens.
+    if (mousePosition && viewport.containsPixel(mousePosition)) {
+      const offsetMousePosition = {
+        x: mousePosition.x - viewport.x,
+        y: mousePosition.y - viewport.y
+      };
+      const mousePositionBounds = [
+        // left
+        [offsetMousePosition.x - lensRadius, offsetMousePosition.y],
+        // bottom
+        [offsetMousePosition.x, offsetMousePosition.y + lensRadius],
+        // right
+        [offsetMousePosition.x + lensRadius, offsetMousePosition.y],
+        // top
+        [offsetMousePosition.x, offsetMousePosition.y - lensRadius]
+      ];
+      // Unproject from screen to world coordinates.
+      const unprojectLensBounds = mousePositionBounds.map(
+        (bounds, i) => viewport.unproject(bounds)[i % 2]
+      );
+      layer.setState({ unprojectLensBounds });
+    } else {
+      layer.setState({ unprojectLensBounds: [0, 0, 0, 0] });
+    }
+    super.draw();
+  }
+
+
+
 };
-export { VivLensing };
+
+
+import { CompositeLayer, CompositeLayerProps, COORDINATE_SYSTEM } from '@deck.gl/core';
+import { PolygonLayer } from '@deck.gl/layers';
+
+interface LensProps {
+  pickable?: boolean,
+  viewState: {
+    zoom: number,
+    target: [number, number, number],
+  },
+  radius: number,
+};
+
+interface PolygonData {
+  polygon: number[][];
+}
+
+class LensUILayer extends CompositeLayer<PolygonData, LensProps> {
+  props: any;
+  layerName = 'LensUILayer';
+  defaultProps = {
+    pickable: { type: 'boolean', value: true, compare: true },
+    viewState: {
+      type: 'object',
+      value: { zoom: 0, target: [0, 0, 0] },
+      compare: true
+    },
+    radius: { type: 'number', value: 100, compare: true }
+  };
+  renderLayers(): PolygonLayer<PolygonData>[] {
+    const { id, radius, viewState } = this.props;
+    const { longitude, latitude } = viewState.target;
+
+    // Create a circle polygon with center at viewport's center and fixed radius
+    const circle = new Array(360).fill(0).map((d, i): [number, number] => {
+      const angle = (i * Math.PI) / 180;
+      const dx = radius * Math.cos(angle);
+      const dy = radius * Math.sin(angle);
+      return [longitude + dx, latitude + dy];
+    });
+
+    return [
+      new PolygonLayer({
+        id: `${id}-polygon-layer`,
+        data: [{ polygon: [circle] }],
+        pickable: true,
+        stroked: true,
+        filled: true,
+        wireframe: true,
+        lineWidthMinPixels: 1,
+        getPolygon: (d: PolygonData) => d.polygon,
+        getFillColor: [0, 0, 0, 50], // semi-transparent black
+        getLineColor: [0, 0, 0],
+        getLineWidth: 1
+      })
+    ];
+  }
+  onError({ error }: { error: Error }): void {
+    console.error(error);
+  }
+}
+
+
+
+
+export { VivLensing, LensUILayer };
