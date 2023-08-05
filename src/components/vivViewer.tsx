@@ -1,90 +1,186 @@
-import * as React from 'react';
-import {
-  DetailView,
-  OverviewView,
-  getDefaultInitialViewState,
-  DETAIL_VIEW_ID,
-  OVERVIEW_VIEW_ID
-} from '@vivjs/views';
-import { ColorPaletteExtension } from '@vivjs/extensions';
-import VivViewer from './VivViewer';
+import * as React from "react";
+import { getDefaultInitialViewState } from "@vivjs/views";
+import { ColorPaletteExtension } from "@vivjs/extensions";
+import { VivViewer, VivView } from "@hms-dbmi/viv";
+import { OrthographicView } from "@deck.gl/core";
+import { MultiscaleImageLayer, ImageLayer } from "@vivjs/layers";
 
+import { CompositeLayer, COORDINATE_SYSTEM } from "@deck.gl/core";
+import { LineLayer, TextLayer, ScatterplotLayer } from "@deck.gl/layers";
+
+function range(len) {
+  return [...Array(len).keys()];
+}
+
+import { DEFAULT_FONT_FAMILY } from "@vivjs/constants";
+
+function getBoundingBoxCenter(viewState) {
+  const viewport = new OrthographicView().makeViewport({
+    // From the current `detail` viewState, we need its projection matrix (actually the inverse).
+    viewState,
+    height: viewState.height,
+    width: viewState.width,
+  });
+  // Use the inverse of the projection matrix to map screen to the view space.
+  return [viewport.unproject([viewport.width, viewport.height])];
+}
+
+const defaultProps = {
+  pickable: { type: "boolean", value: true, compare: true },
+  viewState: {
+    type: "object",
+    value: { zoom: 0, target: [0, 0, 0] },
+    compare: true,
+  },
+  unit: { type: "string", value: "", compare: true },
+  size: { type: "number", value: 1, compare: true },
+  position: { type: "string", value: "bottom-right", compare: true },
+  length: { type: "number", value: 0.085, compare: true },
+};
 /**
- * This component provides a component for an overview-detail VivViewer of an image (i.e picture-in-picture).
- * @param {Object} props
- * @param {Array} props.contrastLimits List of [begin, end] values to control each channel's ramp function.
- * @param {Array} props.colors List of [r, g, b] values for each channel.
- * @param {Array} props.channelsVisible List of boolean values for each channel for whether or not it is visible.
- * @param {string} [props.colormap] String indicating a colormap (default: '').  The full list of options is here: https://github.com/glslify/glsl-colormap#glsl-colormap
- * @param {Array} props.loader The data source for the viewer, PixelSource[]. If loader.length > 1, data is assumed to be multiscale.
- * @param {Array} props.selections Selection to be used for fetching data.
- * @param {Object} props.overview Allows you to pass settings into the OverviewView: { scale, margin, position, minimumWidth, maximumWidth,
- * boundingBoxColor, boundingBoxOutlineWidth, viewportOutlineColor, viewportOutlineWidth}.  See http://viv.gehlenborglab.org/#overviewview for defaults.
- * @param {Boolean} props.overviewOn Whether or not to show the OverviewView.
- * @param {import('./VivViewer').HoverHooks} [props.hoverHooks] Object including utility hooks - an object with key handleValue like { handleValue: (valueArray) => {}, handleCoordinate: (coordinate) => {} } where valueArray
- * has the pixel values for the image under the hover location and coordinate is the coordinate in the image from which the values are picked.
- * @param {Array} [props.viewStates] Array of objects like [{ target: [x, y, 0], zoom: -zoom, id: DETAIL_VIEW_ID }] for setting where the viewer looks (optional - this is inferred from height/width/loader
- * internally by default using getDefaultInitialViewState).
- * @param {number} props.height Current height of the component.
- * @param {number} props.width Current width of the component.
- * @param {Array} [props.extensions] [deck.gl extensions](https://deck.gl/docs/developer-guide/custom-layers/layer-extensions) to add to the layers.
- * @param {Boolean} [props.clickCenter] Click to center the default view. Default is true.
- * @param {boolean} [props.lensEnabled] Whether or not to use the lens (deafult false). Must be used with the `LensExtension` in the `extensions` prop.
- * @param {number} [props.lensSelection] Numeric index of the channel to be focused on by the lens (default 0). Must be used with the `LensExtension` in the `extensions` prop.
- * @param {number} [props.lensRadius] Pixel radius of the lens (default: 100). Must be used with the `LensExtension` in the `extensions` prop.
- * @param {Array} [props.lensBorderColor] RGB color of the border of the lens (default [255, 255, 255]). Must be used with the `LensExtension` in the `extensions` prop.
- * @param {number} [props.lensBorderRadius] Percentage of the radius of the lens for a border (default 0.02). Must be used with the `LensExtension` in the `extensions` prop.
- * @param {Array} [props.transparentColor] An RGB (0-255 range) color to be considered "transparent" if provided.
- * In other words, any fragment shader output equal transparentColor (before applying opacity) will have opacity 0.
- * This parameter only needs to be a truthy value when using colormaps because each colormap has its own transparent color that is calculated on the shader.
- * Thus setting this to a truthy value (with a colormap set) indicates that the shader should make that color transparent.
- * @param {import('./VivViewer').ViewStateChange} [props.onViewStateChange] Callback that returns the deck.gl view state (https://deck.gl/docs/api-reference/core/deck#onviewstatechange).
- * @param {import('./VivViewer').Hover} [props.onHover] Callback that returns the picking info and the event (https://deck.gl/docs/api-reference/core/layer#onhover
- *     https://deck.gl/docs/developer-guide/interactivity#the-picking-info-object)
- * @param {function} [props.onViewportLoad] Function that gets called when the data in the viewport loads.
- * @param {Object} [props.deckProps] Additional options used when creating the DeckGL component.  See [the deck.gl docs.](https://deck.gl/docs/api-reference/core/deck#initialization-settings).  `layerFilter`, `layers`, `onViewStateChange`, `views`, `viewState`, `useDevicePixels`, and `getCursor` are already set.
+ * @typedef LayerProps
+ * @type {Object}
+ * @property {String} unit Physical unit size per pixel at full resolution.
+ * @property {Number} size Physical size of a pixel.
+ * @property {Object} viewState The current viewState for the desired view.  We cannot internally use this.context.viewport because it is one frame behind:
+ * https://github.com/visgl/deck.gl/issues/4504
+ * @property {Array=} boundingBox Boudning box of the view in which this should render.
+ * @property {string=} id Id from the parent layer.
+ * @property {number=} length Value from 0 to 1 representing the portion of the view to be used for the length part of the scale bar.
  */
 
-const PictureInPictureViewer = props => {
-  const {
-    loader,
-    contrastLimits,
-    colors,
-    channelsVisible,
-    viewStates: viewStatesProp,
-    colormap,
-    overview,
-    overviewOn,
-    selections,
-    hoverHooks = { handleValue: () => {}, handleCoordinate: () => {} },
-    height,
-    width,
-    lensEnabled = false,
-    lensSelection = 0,
-    lensRadius = 100,
-    lensBorderRadius = 0.02,
-    clickCenter = true,
-    transparentColor,
-    onViewStateChange,
-    onHover,
-    onViewportLoad,
-    extensions = [new ColorPaletteExtension()],
-    deckProps
-  } = props;
-  const detailViewState = viewStatesProp?.find(v => v.id === DETAIL_VIEW_ID);
-  const baseViewState = React.useMemo(() => {
-    return (
-      detailViewState ||
-      getDefaultInitialViewState(loader, { height, width }, 0.5)
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loader, detailViewState]);
+/**
+ * @type {{ new(...props: LayerProps[]) }}
+ * @ignore
+ */
+const MyScaleBarLayer = class extends CompositeLayer {
+  props: any;
+  context: any;
+  renderLayers() {
+    const { id, viewState } = this.props;
+    console.log("viewState", viewState);
+    const mousePosition = this.context.userData.mousePosition || [
+      Math.round((this.context.deck.width || 0) / 2),
+      Math.round((this.context.deck.height || 0) / 2),
+    ];
+    const lensPosition =
+      this.context.deck.pickObject({
+        x: mousePosition[0],
+        y: mousePosition[1],
+        radius: 1,
+      })?.coordinate || viewState.target;
+    const lensCircle = new ScatterplotLayer({
+      id: `scale-bar-length-${id}`,
+      coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+      data: [lensPosition],
+      pickable: true,
+      opacity: 0.8,
+      stroked: true,
+      filled: false,
+      lineWidthMinPixels: 1,
+      getPosition: (d) => {
+        console.log("d", d);
+        return d;
+      },
+      getRadius: (d) => {
+        let multiplier = 1 / Math.pow(2, viewState.zoom);
+        const size = this.context.userData.lensRadius * multiplier;
+        console.log("SOZE", size, this);
+        return size;
+      },
+      getLineColor: (d) => [255, 255, 255],
+    });
 
-  const detailView = new DetailView({
-    id: DETAIL_VIEW_ID,
-    height,
-    width
+    return [lensCircle];
+  }
+};
+// @ts-ignore
+MyScaleBarLayer.layerName = "MyScaleBarLayer";
+// @ts-ignore
+MyScaleBarLayer.defaultProps = defaultProps;
+
+function getImageLayer(id, props) {
+  const { loader } = props;
+  // Grab name of PixelSource if a class instance (works for Tiff & Zarr).
+  const sourceName = loader[0]?.constructor?.name;
+
+  // Create at least one layer even without selections so that the tests pass.
+  const Layer = loader.length > 1 ? MultiscaleImageLayer : ImageLayer;
+  const layerLoader = loader.length > 1 ? loader : loader[0];
+
+  return new Layer({
+    ...props,
+    id: `${sourceName}${getVivId(id)}`,
+    viewportId: id,
+    loader: layerLoader,
   });
+}
+
+function getVivId(id) {
+  return `-#${id}#`;
+}
+export const DETAIL_VIEW_ID = "detail";
+
+class MyDetailView extends VivView {
+  getLayers({ props, viewStates }) {
+    const { loader } = props;
+    const { id, height, width } = this;
+    const layerViewState = viewStates[id];
+    const layers = [getImageLayer(id, props)];
+
+    // Inspect the first pixel source for physical sizes
+    if (loader[0]?.meta?.physicalSizes?.x) {
+      const { size, unit } = loader[0].meta.physicalSizes.x;
+      layers.push(
+        // @ts-ignore
+        new MyScaleBarLayer({
+          id: getVivId(id),
+          //@ts-ignore
+          loader,
+          unit,
+          size,
+          viewState: { ...layerViewState, height, width },
+        })
+      );
+    }
+
+    return layers;
+  }
+}
+
+const MinervaVivViewer = ({
+  loader,
+  contrastLimits,
+  colors,
+  channelsVisible,
+  viewStates: viewStatesProp,
+  colormap,
+  overviewOn,
+  selections,
+  hoverHooks = { handleValue: () => {}, handleCoordinate: () => {} },
+  height,
+  width,
+  lensEnabled = false,
+  lensSelection = 0,
+  lensRadius = 100,
+  transparentColor,
+  onViewStateChange,
+  onHover,
+  onViewportLoad,
+  extensions = [new ColorPaletteExtension()],
+  deckProps,
+}) => {
+  const detailViewState = viewStatesProp?.find((v) => v.id === DETAIL_VIEW_ID);
+  const baseViewState = React.useMemo(
+    () =>
+      detailViewState ||
+      getDefaultInitialViewState(loader, { height, width }, 0.5),
+    [loader, detailViewState]
+  );
+
+  if (!loader) return null;
+
+  const detailView = new MyDetailView({ id: DETAIL_VIEW_ID, height, width });
   const layerConfig = {
     loader,
     contrastLimits,
@@ -96,31 +192,16 @@ const PictureInPictureViewer = props => {
     lensEnabled,
     lensSelection,
     lensRadius,
-    lensBorderRadius,
     extensions,
-    transparentColor
+    transparentColor,
   };
   const views = [detailView];
-  const layerProps = [layerConfig];
+  const layerProps = [
+    layerConfig,
+    ...(overviewOn && loader ? [{ ...layerConfig, lensEnabled: false }] : []),
+  ];
   const viewStates = [{ ...baseViewState, id: DETAIL_VIEW_ID }];
-  if (overviewOn && loader) {
-    // It's unclear why this is needed because OverviewView.filterViewState sets "zoom" and "target".
-    const overviewViewState = viewStatesProp?.find(
-      v => v.id === OVERVIEW_VIEW_ID
-    ) || { ...baseViewState, id: OVERVIEW_VIEW_ID };
-    const overviewView = new OverviewView({
-      id: OVERVIEW_VIEW_ID,
-      loader,
-      detailHeight: height,
-      detailWidth: width,
-      clickCenter,
-      ...overview
-    });
-    views.push(overviewView);
-    layerProps.push({ ...layerConfig, lensEnabled: false });
-    viewStates.push(overviewViewState);
-  }
-  if (!loader) return null;
+
   return (
     <VivViewer
       layerProps={layerProps}
@@ -134,4 +215,4 @@ const PictureInPictureViewer = props => {
   );
 };
 
-export default PictureInPictureViewer;
+export { MinervaVivViewer };

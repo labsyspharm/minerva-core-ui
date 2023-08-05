@@ -118,7 +118,7 @@ const VivLensing = class extends LensExtension {
   draw(): void {
     const layer = this.getCurrentLayer();
     const { viewportId } = layer.props;
-    const { lensRadius = defaultProps.lensRadius.value } = this.props;
+    const { lensRadius = defaultProps.lensRadius.value } = this.parent.context.userData;
     // If there is no viewportId, don't try to do anything.
     if (!viewportId) {
       layer.setState({ unprojectLensBounds: [0, 0, 0, 0] });

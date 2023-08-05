@@ -51,6 +51,8 @@
     "@math.gl/core": "^3.6.3",
     "@types/openseadragon": "^2.4.8",
     "@vivjs/constants": "^0.13.7",
+    "@vivjs/extensions": "^0.13.7",
+    "@vivjs/layers": "^0.13.7",
     "@vivjs/views": "^0.13.7",
     "gl-matrix": "^3.4.3",
     "lensing": "https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9",
