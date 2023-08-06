@@ -5,6 +5,7 @@ const defaultProps = {
   lensEnabled: { type: 'boolean', value: false, compare: true },
   lensSelection: { type: 'number', value: 0, compare: true },
   lensRadius: { type: 'number', value: 100, compare: true },
+  lensOpacity: { type: 'number', value: 1.0, compare: true },
   lensBorderColor: { type: 'array', value: [255, 255, 255], compare: true },
   lensBorderRadius: { type: 'number', value: 0.02, compare: true },
   colors: { type: 'array', value: null, compare: true }
@@ -21,6 +22,7 @@ uniform vec2 lensCenter;
 uniform bool lensEnabled;
 uniform int lensSelection;
 uniform vec3 lensBorderColor;
+uniform float lensOpacity;
 uniform float lensBorderRadius;
 
 // color palette
@@ -46,7 +48,6 @@ bool frag_on_lens_bounds(vec2 vTexCoord) {
 
 // gets color relative to lens selection and lens opacity
 vec3 get_color(vec2 vTexCoord, int channelIndex) {
-  float lensOpacity = 1.00;
   bool isFragInLensBounds = frag_in_lens_bounds(vTexCoord);
   bool inLensAndUseLens = lensEnabled && isFragInLensBounds;
   bool isSelectedChannel = channelIndex == lensSelection;
@@ -119,6 +120,7 @@ const VivLensing = class extends LensExtension {
     const layer = this.getCurrentLayer();
     const { viewportId } = layer.props;
     const { lensRadius = defaultProps.lensRadius.value } = this.parent.context.userData;
+    const { lensOpacity = defaultProps.lensOpacity.value } = this.parent.context.userData;
     // If there is no viewportId, don't try to do anything.
     if (!viewportId) {
       layer.setState({ unprojectLensBounds: [0, 0, 0, 0] });
@@ -158,6 +160,7 @@ const VivLensing = class extends LensExtension {
     } else {
       layer.setState({ unprojectLensBounds: [0, 0, 0, 0] });
     }
+    this.state.model?.setUniforms({lensOpacity: lensOpacity});
     super.draw();
   }
 

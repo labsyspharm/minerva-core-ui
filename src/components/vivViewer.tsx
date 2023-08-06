@@ -6,7 +6,13 @@ import { OrthographicView } from "@deck.gl/core";
 import { MultiscaleImageLayer, ImageLayer } from "@vivjs/layers";
 
 import { CompositeLayer, COORDINATE_SYSTEM } from "@deck.gl/core";
-import { LineLayer, TextLayer, ScatterplotLayer } from "@deck.gl/layers";
+import {
+  LineLayer,
+  TextLayer,
+  ScatterplotLayer,
+  PolygonLayer,
+  SolidPolygonLayer,
+} from "@deck.gl/layers";
 
 function range(len) {
   return [...Array(len).keys()];
@@ -32,72 +38,307 @@ const defaultProps = {
     value: { zoom: 0, target: [0, 0, 0] },
     compare: true,
   },
-  unit: { type: "string", value: "", compare: true },
-  size: { type: "number", value: 1, compare: true },
-  position: { type: "string", value: "bottom-right", compare: true },
-  length: { type: "number", value: 0.085, compare: true },
+  lensMousePosition: { type: "array", value: [0, 0], compare: true },
 };
-/**
- * @typedef LayerProps
- * @type {Object}
- * @property {String} unit Physical unit size per pixel at full resolution.
- * @property {Number} size Physical size of a pixel.
- * @property {Object} viewState The current viewState for the desired view.  We cannot internally use this.context.viewport because it is one frame behind:
- * https://github.com/visgl/deck.gl/issues/4504
- * @property {Array=} boundingBox Boudning box of the view in which this should render.
- * @property {string=} id Id from the parent layer.
- * @property {number=} length Value from 0 to 1 representing the portion of the view to be used for the length part of the scale bar.
- */
 
-/**
- * @type {{ new(...props: LayerProps[]) }}
- * @ignore
- */
-const MyScaleBarLayer = class extends CompositeLayer {
+function dotProduct(v1, v2) {
+  return v1[0] * v2[0] + v1[1] * v2[1];
+}
+
+const LensLayer = class extends CompositeLayer {
+  constructor(props) {
+    super(props);
+  }
   props: any;
   context: any;
+  lensPosition: any;
   renderLayers() {
     const { id, viewState } = this.props;
-    console.log("viewState", viewState);
     const mousePosition = this.context.userData.mousePosition || [
       Math.round((this.context.deck.width || 0) / 2),
       Math.round((this.context.deck.height || 0) / 2),
     ];
-    const lensPosition =
+    this.lensPosition =
       this.context.deck.pickObject({
         x: mousePosition[0],
         y: mousePosition[1],
         radius: 1,
       })?.coordinate || viewState.target;
+
     const lensCircle = new ScatterplotLayer({
-      id: `scale-bar-length-${id}`,
+      id: `lens-circle-${id}`,
       coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
-      data: [lensPosition],
+      data: [this.lensPosition],
       pickable: true,
-      opacity: 0.8,
+      animate: true,
+      // opacity: 0.5,
       stroked: true,
-      filled: false,
+      alphaCutoff: 0,
+      filled: true,
+      updateTriggers: {
+        getPosition: Date.now() % 2000,
+      },
+
+      getFillColor: (d) => [0, 0, 0, 0],
       lineWidthMinPixels: 1,
       getPosition: (d) => {
-        console.log("d", d);
         return d;
       },
       getRadius: (d) => {
         let multiplier = 1 / Math.pow(2, viewState.zoom);
         const size = this.context.userData.lensRadius * multiplier;
-        console.log("SOZE", size, this);
         return size;
       },
       getLineColor: (d) => [255, 255, 255],
+      getLineWidth: (d) => {
+        const multiplier = 1 / Math.pow(2, viewState.zoom);
+        return 3 * multiplier;
+      },
     });
 
-    return [lensCircle];
+    const resizeCircle = new ScatterplotLayer({
+      id: `resize-circle-${id}`,
+      coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+      data: [this.lensPosition],
+      pickable: true,
+      animate: true,
+      // opacity: 0.5,
+      stroked: true,
+      alphaCutoff: 0,
+      filled: true,
+      updateTriggers: {
+        getPosition: Date.now() % 2000,
+      },
+
+      getFillColor: (d) => [0, 0, 0, 0],
+      lineWidthMinPixels: 1,
+      getPosition: (d) => {
+        let multiplier = 1 / Math.pow(2, viewState.zoom);
+        const resizeRadius = 25 * multiplier;
+        const lensRadius = this.context.userData.lensRadius * multiplier;
+        const distanceFromCenter = lensRadius + resizeRadius; // Adjusts distance between lens and circle
+        const dx = Math.cos(Math.PI / 4) * distanceFromCenter;
+        const dy = Math.sin(Math.PI / 4) * distanceFromCenter;
+        return [d[0] + dx, d[1] + dy];
+      },
+      getRadius: (d) => {
+        let multiplier = 1 / Math.pow(2, viewState.zoom);
+        const resizeRadius = 25;
+
+        const size = resizeRadius * multiplier;
+        return size;
+      },
+      getLineColor: (d) => [255, 255, 255],
+      getLineWidth: (d) => {
+        const multiplier = 1 / Math.pow(2, viewState.zoom);
+        return 3 * multiplier;
+      },
+    });
+
+    const arrowLayer = new SolidPolygonLayer({
+      id: `arrow-layer-${id}`,
+      coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+      data: [this.lensPosition],
+      getPolygon: (d) => {
+        let multiplier = 1 / Math.pow(2, viewState.zoom);
+        const arrowLength = 10 * multiplier;
+        const resizeRadius = 25 * multiplier;
+        const lensRadius = this.context.userData.lensRadius * multiplier;
+        const distanceFromCenter = lensRadius + resizeRadius;
+        const dx = Math.cos(Math.PI / 4) * distanceFromCenter;
+        const dy = Math.sin(Math.PI / 4) * distanceFromCenter;
+        const center = [d[0] + dx, d[1] + dy];
+
+        const x1 = center[0] + arrowLength * Math.cos(Math.PI / 4);
+        const y1 = center[1] + arrowLength * Math.sin(Math.PI / 4);
+        const x2 = center[0] - arrowLength * Math.cos(Math.PI / 4);
+        const y2 = center[1] - arrowLength * Math.sin(Math.PI / 4);
+
+        const lineWidth = 2 * multiplier;
+
+        const topLeft = [
+          x1 + lineWidth * Math.sin(Math.PI / 4),
+          y1 - lineWidth * Math.cos(Math.PI / 4),
+        ];
+        const topRight = [
+          x1 - lineWidth * Math.sin(Math.PI / 4),
+          y1 + lineWidth * Math.cos(Math.PI / 4),
+        ];
+        const bottomRight = [
+          x2 - lineWidth * Math.sin(Math.PI / 4),
+          y2 + lineWidth * Math.cos(Math.PI / 4),
+        ];
+        const bottomLeft = [
+          x2 + lineWidth * Math.sin(Math.PI / 4),
+          y2 - lineWidth * Math.cos(Math.PI / 4),
+        ];
+
+        const arrowheadLength = 14 * multiplier;
+        const arrowheadWidth = 8 * multiplier;
+
+        // Arrowhead tips
+        const arrowheadTip1 = [
+          x1 + arrowheadLength * Math.cos(Math.PI / 4),
+          y1 + arrowheadLength * Math.sin(Math.PI / 4),
+        ];
+        const arrowheadTip2 = [
+          x2 - arrowheadLength * Math.cos(Math.PI / 4),
+          y2 - arrowheadLength * Math.sin(Math.PI / 4),
+        ];
+
+        // Arrowhead bases: 3 times the width of the line
+        const arrowheadBase1A = [
+          x1 + arrowheadWidth * Math.sin(Math.PI / 4),
+          y1 - arrowheadWidth * Math.cos(Math.PI / 4),
+        ];
+        const arrowheadBase1B = [
+          x1 - arrowheadWidth * Math.sin(Math.PI / 4),
+          y1 + arrowheadWidth * Math.cos(Math.PI / 4),
+        ];
+        const arrowheadBase2A = [
+          x2 + arrowheadWidth * Math.sin(Math.PI / 4),
+          y2 - arrowheadWidth * Math.cos(Math.PI / 4),
+        ];
+        const arrowheadBase2B = [
+          x2 - arrowheadWidth * Math.sin(Math.PI / 4),
+          y2 + arrowheadWidth * Math.cos(Math.PI / 4),
+        ];
+
+        return [
+          topLeft,
+          arrowheadBase1A,
+          arrowheadTip1,
+          arrowheadBase1B,
+          topRight,
+          bottomRight,
+          arrowheadBase2B,
+          arrowheadTip2,
+          arrowheadBase2A,
+          bottomLeft,
+          topLeft,
+        ];
+      },
+      getFillColor: [53, 121, 246],
+      extruded: false,
+      pickable: false,
+    });
+    const opacityLayer = new PolygonLayer({
+      id: `opacity-layer-${id}`,
+      coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+      data: [this.lensPosition],
+      getPolygon: (d) => {
+        const opacity = this.context.userData.lensOpacity;
+        const angle = (3 * Math.PI) / 2 - ((0.5 - opacity) * Math.PI) / 2;
+        let multiplier = 1 / Math.pow(2, viewState.zoom);
+
+        const lensRadius = this.context.userData.lensRadius * multiplier;
+
+        const centerOfSemiCircle = [
+          d[0] + Math.cos(angle) * lensRadius,
+          d[1] + Math.sin(angle) * lensRadius,
+        ];
+        const size = 25 * multiplier;
+
+        // Generate semicircle points
+        const semiCirclePoints = [];
+        for (
+          let theta = angle + Math.PI / 2;
+          theta <= (3 * Math.PI) / 2 + angle;
+          theta += Math.PI / 36
+        ) {
+          // Change the denominator for more or fewer points
+          semiCirclePoints.push([
+            centerOfSemiCircle[0] - size * Math.cos(theta),
+            centerOfSemiCircle[1] - size * Math.sin(theta),
+          ]);
+        }
+
+        // Add center of the semicircle to close the shape
+        semiCirclePoints.push(centerOfSemiCircle);
+
+        return semiCirclePoints;
+      },
+      getFillColor: [0, 0, 0, 0],
+      getLineWidth: (d) => {
+        const multiplier = 1 / Math.pow(2, viewState.zoom);
+        return 3 * multiplier;
+      },
+      extruded: false,
+      pickable: true,
+      alphaCutoff: 0,
+      stroked: true,
+      getLineColor: [255, 255, 255],
+    });
+
+    return [lensCircle, resizeCircle, arrowLayer, opacityLayer];
+  }
+  onDrag(pickingInfo, event) {
+    console.log("Drag", pickingInfo?.sourceLayer?.id);
+    const { viewState } = this.props;
+    this.context.userData.setMovingLens(true);
+
+    if (pickingInfo?.sourceLayer?.id === `resize-circle-${this.props.id}`) {
+      const lensCenter = this.context.userData.mousePosition;
+      console.log("lensCenter", lensCenter, "event", event.offsetCenter);
+      const xIntercept =
+        (lensCenter[0] -
+          lensCenter[1] +
+          event.offsetCenter.x +
+          event.offsetCenter.y) /
+        2;
+      const yIntercept = xIntercept + lensCenter[1] - lensCenter[0];
+      const dx = xIntercept - lensCenter[0];
+      const dy = yIntercept - lensCenter[1];
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const resizeRadius = 25;
+      const newRadius = distance - resizeRadius;
+      this.context.userData.setLensRadius(newRadius);
+    } else if (
+      pickingInfo?.sourceLayer?.id === `opacity-layer-${this.props.id}`
+    ) {
+      // console.log("Opacity");
+      const lensCenter = this.context.userData.mousePosition;
+      const angle = Math.atan2(
+        lensCenter[1] - event.offsetCenter.y,
+        lensCenter[0] - event.offsetCenter.x
+      );
+      let opacity;
+      if (angle < Math.PI / 4 && angle > -Math.PI / 2) {
+        opacity = 0;
+      } else if (angle > (3 * Math.PI) / 4 || angle < -Math.PI / 2) {
+        opacity = 1;
+      } else {
+        opacity = (angle - Math.PI / 4) / (Math.PI / 2);
+      }
+
+      this.context.userData.setLensOpacity(opacity);
+
+      // Calcualte angle between event.offsetCenter\ and lensCenter
+    } else {
+      console.log("pickingInfo", pickingInfo.sourceLayer.id);
+      this.context.userData.setMousePosition([
+        event.offsetCenter.x,
+        event.offsetCenter.y,
+      ]);
+    }
+  }
+
+  onDragEnd(pickingInfo, event) {
+    this.context.userData.setMovingLens(false);
+
+    // if (pickingInfo?.sourceLayer?.id !== `resize-circle-${this.props.id}`) {
+    //   console.log("pickingInfo", pickingInfo.sourceLayer.id);
+    //   this.context.userData.setMousePosition([
+    //     event.offsetCenter.x,
+    //     event.offsetCenter.y,
+    //   ]);
+    // }
   }
 };
 // @ts-ignore
-MyScaleBarLayer.layerName = "MyScaleBarLayer";
+LensLayer.layerName = "LensLayer";
 // @ts-ignore
-MyScaleBarLayer.defaultProps = defaultProps;
+LensLayer.defaultProps = defaultProps;
 
 function getImageLayer(id, props) {
   const { loader } = props;
@@ -119,9 +360,20 @@ function getImageLayer(id, props) {
 function getVivId(id) {
   return `-#${id}#`;
 }
+
 export const DETAIL_VIEW_ID = "detail";
 
-class MyDetailView extends VivView {
+class LensingDetailView extends VivView {
+  props: any;
+  mousePosition: any;
+  lensRadius: any;
+  lensOpacity: any;
+  constructor(props) {
+    super(props);
+    this.mousePosition = props?.mousePosition || [null, null];
+    this.lensRadius = props?.lensRadius;
+    this.lensOpacity = props?.lensOpacity;
+  }
   getLayers({ props, viewStates }) {
     const { loader } = props;
     const { id, height, width } = this;
@@ -132,13 +384,14 @@ class MyDetailView extends VivView {
     if (loader[0]?.meta?.physicalSizes?.x) {
       const { size, unit } = loader[0].meta.physicalSizes.x;
       layers.push(
-        // @ts-ignore
-        new MyScaleBarLayer({
+        new LensLayer({
           id: getVivId(id),
-          //@ts-ignore
           loader,
           unit,
           size,
+          lensMousePosition: this.mousePosition,
+          lensRadius: this.lensRadius,
+          lensOpacity: this.lensOpacity,
           viewState: { ...layerViewState, height, width },
         })
       );
@@ -167,6 +420,10 @@ const MinervaVivViewer = ({
   onViewStateChange,
   onHover,
   onViewportLoad,
+  onDrag,
+  onDragStart,
+  onDragEnd,
+  detailView,
   extensions = [new ColorPaletteExtension()],
   deckProps,
 }) => {
@@ -180,7 +437,6 @@ const MinervaVivViewer = ({
 
   if (!loader) return null;
 
-  const detailView = new MyDetailView({ id: DETAIL_VIEW_ID, height, width });
   const layerConfig = {
     loader,
     contrastLimits,
@@ -211,8 +467,9 @@ const MinervaVivViewer = ({
       onViewStateChange={onViewStateChange}
       onHover={onHover}
       deckProps={deckProps}
+      // @ts-ignore
     />
   );
 };
 
-export { MinervaVivViewer };
+export { MinervaVivViewer, LensingDetailView };

@@ -6,6 +6,7 @@ import { MinervaVivViewer } from "./vivViewer";
 import styled from "styled-components";
 import { getWaypoint } from "../lib/waypoint";
 import { VivLensing } from "./vivLensing";
+import { LensingDetailView } from "./vivViewer";
 
 export type Props = {
   groups: any[];
@@ -44,9 +45,11 @@ const VivView = (props: Props) => {
   const [shape, setShape] = useState(useWindowSize());
   const [channels, setChannels] = useState([]);
   const [loader, setLoader] = useState(null);
-  const [lensPosition, setLensPosition] = useState({});
-  const [mousePosition, setMousePosition] = useState(null);
+  // const [lensPosition, setLensPosition] = useState({});
+  const [mousePosition, setMousePosition] = useState([null, null]);
+  const [lensRadius, setLensRadius] = useState(100);
   const [movingLens, setMovingLens] = useState(false);
+  const [lensOpacity, setLensOpacity] = useState(1);
 
   useEffect(() => {
     loadOmeTiff(url).then(setLoader);
@@ -54,55 +57,80 @@ const VivView = (props: Props) => {
 
   useEffect(() => {
     if (groups?.[g]?.channels) {
-      setChannels(groups?.[g]?.channels.map((d: any, i: number) => ({ id: i, ...d })));
+      setChannels(
+        groups?.[g]?.channels.map((d: any, i: number) => ({ id: i, ...d }))
+      );
     }
   }, [groups, g]);
 
   useEffect(() => {
-    if(channels.length > 0 && loader){
+    if (channels.length > 0 && loader) {
       const selections = channels.map((d) => ({ z: 0, t: 0, c: d.id }));
       const contrastLimits = channels.map(() => [0, 65535]);
       const colors = channels.map((d) => hex2rgb(`#${d.color}`));
       const channelsVisible = channels.map(() => true);
       setSettings({ channelsVisible, colors, selections, contrastLimits });
-      // setLensPosition([
-      //   (loader?.metadata?.Pixels?.SizeX || 0) / 2,
-      //   (loader?.metadata?.Pixels?.SizeY || 0) / 2,
-      // ]);
     }
   }, [loader, channels]);
-  useEffect(() => {},[mousePosition])
+  useEffect(() => {}, [mousePosition]);
 
-  const positionLens = (x: number, y: number) => {
-    setMousePosition([x, y]);
-  };
+  // const positionLens = (x: number, y: number) => {
+  //   setMousePosition([x, y]);
+  // };
 
-  const moveLens = (event) => {
-    const mouseX = event?.offsetCenter?.x || event?.pageX;
-    const mouseY = event?.offsetCenter?.y || event?.pageY;
-    positionLens(mouseX, mouseY);
-  };
+  // const moveLens = (event) => {
+  //   const mouseX = event?.offsetCenter?.x || event?.pageX;
+  //   const mouseY = event?.offsetCenter?.y || event?.pageY;
+  //   positionLens(mouseX, mouseY);
+  // };
 
   if (!loader || !settings) return null;
   return (
     <Main>
-     <MinervaVivViewer
+      <MinervaVivViewer
         {...{
           ...shape,
           ...(settings as any),
           viewStates: [],
-          loader: loader.data, lensEnabled: true,
-          lensSelection: 1, extensions: [new VivLensing()],
+
+          loader: loader.data,
+          lensEnabled: true,
+          lensSelection: 1,
+          mousePosition,
+          detailView: new LensingDetailView({
+            id: "detail",
+            ...shape,
+            mousePosition,
+            lensRadius, lensOpacity
+          }),
+
+          extensions: [new VivLensing()],
           onViewportLoad: () => {
-            setMousePosition([
-              Math.round((deckRef?.current?.deck?.width || 0) / 2),
-              Math.round((deckRef?.current?.deck?.height || 0) / 2),
-            ]);
+            if (mousePosition[0] === null || mousePosition[1] === null) {
+              setMousePosition([
+                Math.round((deckRef?.current?.deck?.width || 0) / 2),
+                Math.round((deckRef?.current?.deck?.height || 0) / 2),
+              ]);
+            }
           },
           onViewStateChange: ({ oldViewState, viewState }: any) => {
             return movingLens ? oldViewState : viewState;
           },
-          deckProps: { layers: [], ref: deckRef, userData: { lensPosition, movingLens, mousePosition, lensRadius: 100 } },
+
+          deckProps: {
+            layers: [],
+            ref: deckRef,
+            userData: {
+              mousePosition,
+              setMousePosition,
+              movingLens,
+              setMovingLens,
+              lensRadius,
+              setLensRadius,
+              lensOpacity,
+              setLensOpacity,
+            },
+          },
         }}
       />
     </Main>
