@@ -114,7 +114,7 @@ const LensLayer = class extends CompositeLayer {
       lineWidthMinPixels: 1,
       getPosition: (d) => {
         let multiplier = 1 / Math.pow(2, viewState.zoom);
-        const resizeRadius = 25 * multiplier;
+        const resizeRadius = 20 * multiplier;
         const lensRadius = this.context.userData.lensRadius * multiplier;
         const distanceFromCenter = lensRadius + resizeRadius; // Adjusts distance between lens and circle
         const dx = Math.cos(Math.PI / 4) * distanceFromCenter;
@@ -123,7 +123,7 @@ const LensLayer = class extends CompositeLayer {
       },
       getRadius: (d) => {
         let multiplier = 1 / Math.pow(2, viewState.zoom);
-        const resizeRadius = 25;
+        const resizeRadius = 20;
 
         const size = resizeRadius * multiplier;
         return size;
@@ -135,93 +135,167 @@ const LensLayer = class extends CompositeLayer {
       },
     });
 
+    // const arrowLayer = new SolidPolygonLayer({
+    //   id: `arrow-layer-${id}`,
+    //   coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+    //   data: [this.lensPosition],
+    //   getPolygon: (d) => {
+    //     let multiplier = 1 / Math.pow(2, viewState.zoom);
+    //     const arrowLength = 10 * multiplier;
+    //     const resizeRadius = 25 * multiplier;
+    //     const lensRadius = this.context.userData.lensRadius * multiplier;
+    //     const distanceFromCenter = lensRadius + resizeRadius;
+    //     const dx = Math.cos(Math.PI / 4) * distanceFromCenter;
+    //     const dy = Math.sin(Math.PI / 4) * distanceFromCenter;
+    //     const center = [d[0] + dx, d[1] + dy];
+
+    //     const x1 = center[0] + arrowLength * Math.cos(Math.PI / 4);
+    //     const y1 = center[1] + arrowLength * Math.sin(Math.PI / 4);
+    //     const x2 = center[0] - arrowLength * Math.cos(Math.PI / 4);
+    //     const y2 = center[1] - arrowLength * Math.sin(Math.PI / 4);
+
+    //     const lineWidth = 2 * multiplier;
+
+    //     const topLeft = [
+    //       x1 + lineWidth * Math.sin(Math.PI / 4),
+    //       y1 - lineWidth * Math.cos(Math.PI / 4),
+    //     ];
+    //     const topRight = [
+    //       x1 - lineWidth * Math.sin(Math.PI / 4),
+    //       y1 + lineWidth * Math.cos(Math.PI / 4),
+    //     ];
+    //     const bottomRight = [
+    //       x2 - lineWidth * Math.sin(Math.PI / 4),
+    //       y2 + lineWidth * Math.cos(Math.PI / 4),
+    //     ];
+    //     const bottomLeft = [
+    //       x2 + lineWidth * Math.sin(Math.PI / 4),
+    //       y2 - lineWidth * Math.cos(Math.PI / 4),
+    //     ];
+
+    //     const arrowheadLength = 14 * multiplier;
+    //     const arrowheadWidth = 8 * multiplier;
+
+    //     // Arrowhead tips
+    //     const arrowheadTip1 = [
+    //       x1 + arrowheadLength * Math.cos(Math.PI / 4),
+    //       y1 + arrowheadLength * Math.sin(Math.PI / 4),
+    //     ];
+    //     const arrowheadTip2 = [
+    //       x2 - arrowheadLength * Math.cos(Math.PI / 4),
+    //       y2 - arrowheadLength * Math.sin(Math.PI / 4),
+    //     ];
+
+    //     // Arrowhead bases: 3 times the width of the line
+    //     const arrowheadBase1A = [
+    //       x1 + arrowheadWidth * Math.sin(Math.PI / 4),
+    //       y1 - arrowheadWidth * Math.cos(Math.PI / 4),
+    //     ];
+    //     const arrowheadBase1B = [
+    //       x1 - arrowheadWidth * Math.sin(Math.PI / 4),
+    //       y1 + arrowheadWidth * Math.cos(Math.PI / 4),
+    //     ];
+    //     const arrowheadBase2A = [
+    //       x2 + arrowheadWidth * Math.sin(Math.PI / 4),
+    //       y2 - arrowheadWidth * Math.cos(Math.PI / 4),
+    //     ];
+    //     const arrowheadBase2B = [
+    //       x2 - arrowheadWidth * Math.sin(Math.PI / 4),
+    //       y2 + arrowheadWidth * Math.cos(Math.PI / 4),
+    //     ];
+
+    //     return [
+    //       topLeft,
+    //       arrowheadBase1A,
+    //       arrowheadTip1,
+    //       arrowheadBase1B,
+    //       topRight,
+    //       bottomRight,
+    //       arrowheadBase2B,
+    //       arrowheadTip2,
+    //       arrowheadBase2A,
+    //       bottomLeft,
+    //       topLeft,
+    //     ];
+    //   },
+    //   getFillColor: [53, 121, 246],
+    //   extruded: false,
+    //   pickable: false,
+    // });
+
+    // SVG points
+    const svgPoints = [
+      [190.367, 316.44],
+      [190.367, 42.226],
+      [236.352, 88.225],
+      [251.958, 72.619],
+      [179.333, 0],
+      [106.714, 72.613],
+      [122.291, 88.231],
+      [168.302, 42.226],
+      [168.302, 316.44],
+      [122.314, 270.443],
+      [106.708, 286.044],
+      [179.333, 358.666],
+      [251.958, 286.056],
+      [236.363, 270.432],
+    ];
+
+    const avgPoint = svgPoints.reduce(
+      (acc, point) => [
+        acc[0] + point[0] / svgPoints.length,
+        acc[1] + point[1] / svgPoints.length,
+      ],
+      [0, 0]
+    );
+
+    const normalizedSvgPoints = svgPoints.map((point) => [
+      point[0] - avgPoint[0],
+      point[1] - avgPoint[1],
+    ]);
+
     const arrowLayer = new SolidPolygonLayer({
       id: `arrow-layer-${id}`,
       coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
       data: [this.lensPosition],
       getPolygon: (d) => {
         let multiplier = 1 / Math.pow(2, viewState.zoom);
-        const arrowLength = 10 * multiplier;
-        const resizeRadius = 25 * multiplier;
+        const resizeRadius = 20 * multiplier;
         const lensRadius = this.context.userData.lensRadius * multiplier;
         const distanceFromCenter = lensRadius + resizeRadius;
         const dx = Math.cos(Math.PI / 4) * distanceFromCenter;
         const dy = Math.sin(Math.PI / 4) * distanceFromCenter;
         const center = [d[0] + dx, d[1] + dy];
 
-        const x1 = center[0] + arrowLength * Math.cos(Math.PI / 4);
-        const y1 = center[1] + arrowLength * Math.sin(Math.PI / 4);
-        const x2 = center[0] - arrowLength * Math.cos(Math.PI / 4);
-        const y2 = center[1] - arrowLength * Math.sin(Math.PI / 4);
+        const scale = 0.1 * multiplier;
 
-        const lineWidth = 2 * multiplier;
+        const rotatePoint = (point, angle) => {
+          const cos = Math.cos(angle);
+          const sin = Math.sin(angle);
+          const [x, y] = point;
+          const rotatedX =
+            cos * (x - center[0]) - sin * (y - center[1]) + center[0];
+          const rotatedY =
+            sin * (x - center[0]) + cos * (y - center[1]) + center[1];
+          return [rotatedX, rotatedY];
+        };
 
-        const topLeft = [
-          x1 + lineWidth * Math.sin(Math.PI / 4),
-          y1 - lineWidth * Math.cos(Math.PI / 4),
-        ];
-        const topRight = [
-          x1 - lineWidth * Math.sin(Math.PI / 4),
-          y1 + lineWidth * Math.cos(Math.PI / 4),
-        ];
-        const bottomRight = [
-          x2 - lineWidth * Math.sin(Math.PI / 4),
-          y2 + lineWidth * Math.cos(Math.PI / 4),
-        ];
-        const bottomLeft = [
-          x2 + lineWidth * Math.sin(Math.PI / 4),
-          y2 - lineWidth * Math.cos(Math.PI / 4),
-        ];
+        // Rotate each SVG point by 45 degrees about its center, then scale and position them
+        const transformedPoints = normalizedSvgPoints.map((point) => {
+          const scaledPoint = [
+            center[0] + point[0] * scale,
+            center[1] + point[1] * scale,
+          ];
+          return rotatePoint(scaledPoint, -Math.PI / 4);
+        });
 
-        const arrowheadLength = 14 * multiplier;
-        const arrowheadWidth = 8 * multiplier;
-
-        // Arrowhead tips
-        const arrowheadTip1 = [
-          x1 + arrowheadLength * Math.cos(Math.PI / 4),
-          y1 + arrowheadLength * Math.sin(Math.PI / 4),
-        ];
-        const arrowheadTip2 = [
-          x2 - arrowheadLength * Math.cos(Math.PI / 4),
-          y2 - arrowheadLength * Math.sin(Math.PI / 4),
-        ];
-
-        // Arrowhead bases: 3 times the width of the line
-        const arrowheadBase1A = [
-          x1 + arrowheadWidth * Math.sin(Math.PI / 4),
-          y1 - arrowheadWidth * Math.cos(Math.PI / 4),
-        ];
-        const arrowheadBase1B = [
-          x1 - arrowheadWidth * Math.sin(Math.PI / 4),
-          y1 + arrowheadWidth * Math.cos(Math.PI / 4),
-        ];
-        const arrowheadBase2A = [
-          x2 + arrowheadWidth * Math.sin(Math.PI / 4),
-          y2 - arrowheadWidth * Math.cos(Math.PI / 4),
-        ];
-        const arrowheadBase2B = [
-          x2 - arrowheadWidth * Math.sin(Math.PI / 4),
-          y2 + arrowheadWidth * Math.cos(Math.PI / 4),
-        ];
-
-        return [
-          topLeft,
-          arrowheadBase1A,
-          arrowheadTip1,
-          arrowheadBase1B,
-          topRight,
-          bottomRight,
-          arrowheadBase2B,
-          arrowheadTip2,
-          arrowheadBase2A,
-          bottomLeft,
-          topLeft,
-        ];
+        return transformedPoints;
       },
       getFillColor: [53, 121, 246],
       extruded: false,
       pickable: false,
     });
+
     const opacityLayer = new PolygonLayer({
       id: `opacity-layer-${id}`,
       coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
@@ -237,7 +311,7 @@ const LensLayer = class extends CompositeLayer {
           d[0] + Math.cos(angle) * lensRadius,
           d[1] + Math.sin(angle) * lensRadius,
         ];
-        const size = 25 * multiplier;
+        const size = 20 * multiplier;
 
         // Generate semicircle points
         const semiCirclePoints = [];
@@ -254,7 +328,7 @@ const LensLayer = class extends CompositeLayer {
         }
 
         // Add center of the semicircle to close the shape
-        semiCirclePoints.push(centerOfSemiCircle);
+        // semiCirclePoints.push(centerOfSemiCircle);
 
         return semiCirclePoints;
       },
@@ -290,7 +364,7 @@ const LensLayer = class extends CompositeLayer {
       const dx = xIntercept - lensCenter[0];
       const dy = yIntercept - lensCenter[1];
       const distance = Math.sqrt(dx * dx + dy * dy);
-      const resizeRadius = 25;
+      const resizeRadius = 20;
       const newRadius = distance - resizeRadius;
       this.context.userData.setLensRadius(newRadius);
     } else if (
