@@ -7,29 +7,12 @@ import { MultiscaleImageLayer, ImageLayer } from "@vivjs/layers";
 
 import { CompositeLayer, COORDINATE_SYSTEM } from "@deck.gl/core";
 import {
-  LineLayer,
-  TextLayer,
+
   ScatterplotLayer,
   PolygonLayer,
   SolidPolygonLayer,
 } from "@deck.gl/layers";
 
-function range(len) {
-  return [...Array(len).keys()];
-}
-
-import { DEFAULT_FONT_FAMILY } from "@vivjs/constants";
-
-function getBoundingBoxCenter(viewState) {
-  const viewport = new OrthographicView().makeViewport({
-    // From the current `detail` viewState, we need its projection matrix (actually the inverse).
-    viewState,
-    height: viewState.height,
-    width: viewState.width,
-  });
-  // Use the inverse of the projection matrix to map screen to the view space.
-  return [viewport.unproject([viewport.width, viewport.height])];
-}
 
 const defaultProps = {
   pickable: { type: "boolean", value: true, compare: true },
@@ -41,9 +24,6 @@ const defaultProps = {
   lensMousePosition: { type: "array", value: [0, 0], compare: true },
 };
 
-function dotProduct(v1, v2) {
-  return v1[0] * v2[0] + v1[1] * v2[1];
-}
 
 const LensLayer = class extends CompositeLayer {
   constructor(props) {
@@ -135,93 +115,6 @@ const LensLayer = class extends CompositeLayer {
       },
     });
 
-    // const arrowLayer = new SolidPolygonLayer({
-    //   id: `arrow-layer-${id}`,
-    //   coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
-    //   data: [this.lensPosition],
-    //   getPolygon: (d) => {
-    //     let multiplier = 1 / Math.pow(2, viewState.zoom);
-    //     const arrowLength = 10 * multiplier;
-    //     const resizeRadius = 25 * multiplier;
-    //     const lensRadius = this.context.userData.lensRadius * multiplier;
-    //     const distanceFromCenter = lensRadius + resizeRadius;
-    //     const dx = Math.cos(Math.PI / 4) * distanceFromCenter;
-    //     const dy = Math.sin(Math.PI / 4) * distanceFromCenter;
-    //     const center = [d[0] + dx, d[1] + dy];
-
-    //     const x1 = center[0] + arrowLength * Math.cos(Math.PI / 4);
-    //     const y1 = center[1] + arrowLength * Math.sin(Math.PI / 4);
-    //     const x2 = center[0] - arrowLength * Math.cos(Math.PI / 4);
-    //     const y2 = center[1] - arrowLength * Math.sin(Math.PI / 4);
-
-    //     const lineWidth = 2 * multiplier;
-
-    //     const topLeft = [
-    //       x1 + lineWidth * Math.sin(Math.PI / 4),
-    //       y1 - lineWidth * Math.cos(Math.PI / 4),
-    //     ];
-    //     const topRight = [
-    //       x1 - lineWidth * Math.sin(Math.PI / 4),
-    //       y1 + lineWidth * Math.cos(Math.PI / 4),
-    //     ];
-    //     const bottomRight = [
-    //       x2 - lineWidth * Math.sin(Math.PI / 4),
-    //       y2 + lineWidth * Math.cos(Math.PI / 4),
-    //     ];
-    //     const bottomLeft = [
-    //       x2 + lineWidth * Math.sin(Math.PI / 4),
-    //       y2 - lineWidth * Math.cos(Math.PI / 4),
-    //     ];
-
-    //     const arrowheadLength = 14 * multiplier;
-    //     const arrowheadWidth = 8 * multiplier;
-
-    //     // Arrowhead tips
-    //     const arrowheadTip1 = [
-    //       x1 + arrowheadLength * Math.cos(Math.PI / 4),
-    //       y1 + arrowheadLength * Math.sin(Math.PI / 4),
-    //     ];
-    //     const arrowheadTip2 = [
-    //       x2 - arrowheadLength * Math.cos(Math.PI / 4),
-    //       y2 - arrowheadLength * Math.sin(Math.PI / 4),
-    //     ];
-
-    //     // Arrowhead bases: 3 times the width of the line
-    //     const arrowheadBase1A = [
-    //       x1 + arrowheadWidth * Math.sin(Math.PI / 4),
-    //       y1 - arrowheadWidth * Math.cos(Math.PI / 4),
-    //     ];
-    //     const arrowheadBase1B = [
-    //       x1 - arrowheadWidth * Math.sin(Math.PI / 4),
-    //       y1 + arrowheadWidth * Math.cos(Math.PI / 4),
-    //     ];
-    //     const arrowheadBase2A = [
-    //       x2 + arrowheadWidth * Math.sin(Math.PI / 4),
-    //       y2 - arrowheadWidth * Math.cos(Math.PI / 4),
-    //     ];
-    //     const arrowheadBase2B = [
-    //       x2 - arrowheadWidth * Math.sin(Math.PI / 4),
-    //       y2 + arrowheadWidth * Math.cos(Math.PI / 4),
-    //     ];
-
-    //     return [
-    //       topLeft,
-    //       arrowheadBase1A,
-    //       arrowheadTip1,
-    //       arrowheadBase1B,
-    //       topRight,
-    //       bottomRight,
-    //       arrowheadBase2B,
-    //       arrowheadTip2,
-    //       arrowheadBase2A,
-    //       bottomLeft,
-    //       topLeft,
-    //     ];
-    //   },
-    //   getFillColor: [53, 121, 246],
-    //   extruded: false,
-    //   pickable: false,
-    // });
 
     // SVG points
     const svgPoints = [
@@ -399,14 +292,6 @@ const LensLayer = class extends CompositeLayer {
 
   onDragEnd(pickingInfo, event) {
     this.context.userData.setMovingLens(false);
-
-    // if (pickingInfo?.sourceLayer?.id !== `resize-circle-${this.props.id}`) {
-    //   console.log("pickingInfo", pickingInfo.sourceLayer.id);
-    //   this.context.userData.setMousePosition([
-    //     event.offsetCenter.x,
-    //     event.offsetCenter.y,
-    //   ]);
-    // }
   }
 };
 // @ts-ignore

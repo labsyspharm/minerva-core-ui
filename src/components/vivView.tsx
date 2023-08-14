@@ -74,16 +74,6 @@ const VivView = (props: Props) => {
   }, [loader, channels]);
   useEffect(() => {}, [mousePosition]);
 
-  // const positionLens = (x: number, y: number) => {
-  //   setMousePosition([x, y]);
-  // };
-
-  // const moveLens = (event) => {
-  //   const mouseX = event?.offsetCenter?.x || event?.pageX;
-  //   const mouseY = event?.offsetCenter?.y || event?.pageY;
-  //   positionLens(mouseX, mouseY);
-  // };
-
   if (!loader || !settings) return null;
   return (
     <Main>
@@ -101,7 +91,8 @@ const VivView = (props: Props) => {
             id: "detail",
             ...shape,
             mousePosition,
-            lensRadius, lensOpacity
+            lensRadius,
+            lensOpacity,
           }),
 
           extensions: [new VivLensing()],
