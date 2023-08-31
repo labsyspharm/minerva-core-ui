@@ -9,7 +9,7 @@ import { Audio } from "./audio";
 import { Nav } from "./nav";
 import styles from "./content.module.css";
 import {
-  faEye as faView,
+  faSave as faSave,
   faPen as faEdit,
   faList as faHome,
   faArrowLeft as faPrev,
@@ -26,8 +26,8 @@ export type ExternalProps = HashContext & {
   pushWaypoint: (w: Waypoint, opt: OptSW) => void;
   updateWaypoint: (w: Waypoint, opt: OptSW) => void;
   popWaypoint: (opt: OptSW) => void;
+  toggleSaving: () => void;
   toggleEditor: () => void;
-  toggleViewer: () => void;
   editable: boolean;
   groups: Group[];
   stories: Story[];
@@ -148,16 +148,16 @@ const Content = (props: Props) => {
       props.setHash({ s: newS, w: newW });
     }
   };
-  const toggleProps = {
-    onClick: () => props.toggleViewer(),
+  const toggleSavingProps = {
+    onClick: () => props.toggleSaving(),
     size: "1.5em",
-    icon: faView,
-  };
+    icon: faSave,
+  }
   const toggleEditorProps = {
     onClick: () => props.toggleEditor(),
     size: "1.5em",
     icon: faEdit,
-  };
+  }
 
   const setNameInput = (t) => {
     const { s, w } = props.hash;
@@ -220,6 +220,9 @@ const Content = (props: Props) => {
           {isSoloWaypoint ? "" : <Icon {...nextProps} />}
         </Nav>
         <Nav>
+          <div className={styles.navSpan}>
+            <Icon {...toggleSavingProps} />
+          </div>
           <div className={styles.navSpan}>
             {editStatusUI}
             <Icon {...toggleEditorProps} />

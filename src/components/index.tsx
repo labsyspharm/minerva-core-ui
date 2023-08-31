@@ -83,7 +83,7 @@ const Index = (props: Props) => {
 
   const views = ["viv", "osd"];
   // TODO - return to views[0] - changed for quick dev w OSD
-  const [view, setView] = useState(views[0]);
+  const [view, setSave] = useState(views[0]);
   const [zoomInEl, setZoomIn] = useState(null);
   const [zoomOutEl, setZoomOut] = useState(null);
   const [editable, setEditable] = useState(false);
@@ -102,7 +102,7 @@ const Index = (props: Props) => {
   React.useEffect(() => {
     window.addEventListener("resize", handleResize, false);
   }, []);
-  const toggleViewer = () => setView(toggle(views, view));
+  const toggleSaving = () => setSave(toggle(views, view));
   const toggleEditor = () => setEditable(!editable);
 
   const onZoomInEl = onLoaded(setZoomIn);
@@ -217,7 +217,7 @@ const Index = (props: Props) => {
     setHiddenWaypoint,
     onZoomInEl,
     onZoomOutEl,
-    toggleViewer,
+    toggleSaving,
     toggleEditor,
     updateWaypoint,
     pushWaypoint,
