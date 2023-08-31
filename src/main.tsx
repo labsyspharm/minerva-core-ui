@@ -53,6 +53,7 @@ const Content = (props: Props) => {
   const hashContext = useHash(url, exhibit.stories);
   const [handle, setHandle] = useState(null);
   const [loader, setLoader] = useState(null);
+  const [fileName, setFileName] = useState('');
   // Create ome-tiff loader
   const onAllow = async () => {
     const newHandle = await toDir();
@@ -63,6 +64,7 @@ const Content = (props: Props) => {
       if (handle === null) return;
       const loader = await toLoader({ handle, in_f });
       setLoader(loader.data);
+      setFileName(in_f);
     })();
   }
   // Handle changes to URL
@@ -77,7 +79,7 @@ const Content = (props: Props) => {
     <Full>
       <Index {...{
         exhibit, setExhibit, loader,
-        ...hashContext
+        in_f: fileName, handle, ...hashContext
       }} />
     </Full>
   )

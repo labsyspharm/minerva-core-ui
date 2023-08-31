@@ -11,8 +11,10 @@ import type { HashContext } from "../lib/hashUtil";
 import type { Exhibit } from "../lib/exhibit";
 
 type Props = HashContext & {
+  in_f: string;
   loader: any;
   exhibit: Exhibit;
+  handle: Handle.Dir;
   setExhibit: (e: Exhibit) => void;
 };
 
@@ -81,9 +83,11 @@ const Index = (props: Props) => {
   const { exhibit, setExhibit } = props;
   const { groups, stories } = exhibit;
 
-  const views = ["viv", "osd"];
-  // TODO - return to views[0] - changed for quick dev w OSD
-  const [view, setSave] = useState(views[0]);
+  const ioStates = [
+    'IDLE', 'EXPORTING', 'EXPORTED'
+  ];
+  // TODO - return to ioStates[0] - changed for quick dev w OSD
+  const [ioState, setIoState] = useState(ioStates[0]);
   const [zoomInEl, setZoomIn] = useState(null);
   const [zoomOutEl, setZoomOut] = useState(null);
   const [editable, setEditable] = useState(false);
@@ -102,7 +106,8 @@ const Index = (props: Props) => {
   React.useEffect(() => {
     window.addEventListener("resize", handleResize, false);
   }, []);
-  const toggleSaving = () => setSave(toggle(views, view));
+  const startExport = () => setIoState(ioStates[1]);
+  const stopExport = () => setIoState(ioStates[0]);
   const toggleEditor = () => setEditable(!editable);
 
   const onZoomInEl = onLoaded(setZoomIn);
@@ -206,18 +211,22 @@ const Index = (props: Props) => {
     setExhibit(ex);
   };
 
-  const { loader, hash, setHash } = props;
+  const { in_f, handle, loader, hash, setHash } = props;
 
   const mainProps = {
     hash,
+    in_f,
+    handle,
     setHash,
     groups,
     stories,
+    ioState,
     hiddenWaypoint,
     setHiddenWaypoint,
     onZoomInEl,
     onZoomOutEl,
-    toggleSaving,
+    startExport,
+    stopExport,
     toggleEditor,
     updateWaypoint,
     pushWaypoint,

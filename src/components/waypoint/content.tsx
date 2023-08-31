@@ -26,7 +26,7 @@ export type ExternalProps = HashContext & {
   pushWaypoint: (w: Waypoint, opt: OptSW) => void;
   updateWaypoint: (w: Waypoint, opt: OptSW) => void;
   popWaypoint: (opt: OptSW) => void;
-  toggleSaving: () => void;
+  startExport: () => void;
   toggleEditor: () => void;
   editable: boolean;
   groups: Group[];
@@ -148,8 +148,8 @@ const Content = (props: Props) => {
       props.setHash({ s: newS, w: newW });
     }
   };
-  const toggleSavingProps = {
-    onClick: () => props.toggleSaving(),
+  const startExportProps = {
+    onClick: () => props.startExport(),
     size: "1.5em",
     icon: faSave,
   }
@@ -221,7 +221,7 @@ const Content = (props: Props) => {
         </Nav>
         <Nav>
           <div className={styles.navSpan}>
-            <Icon {...toggleSavingProps} />
+            <Icon {...startExportProps} />
           </div>
           <div className={styles.navSpan}>
             {editStatusUI}
