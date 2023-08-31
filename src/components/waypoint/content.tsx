@@ -5,7 +5,7 @@ import { Status } from "../editable/status";
 import { Editor } from "../editable/common";
 import { Header } from "../common/header";
 import { Icon } from "../common/icon";
-import { Audio, Sample } from "./audio";
+import { Audio } from "./audio";
 import { Nav } from "./nav";
 import styles from "./content.module.css";
 import {
@@ -31,7 +31,6 @@ export type ExternalProps = HashContext & {
   editable: boolean;
   groups: Group[];
   stories: Story[];
-  viewer: string;
 };
 
 type Props = ExternalProps & {
@@ -39,7 +38,6 @@ type Props = ExternalProps & {
 };
 
 const defaultWaypoint: Waypoint = {
-  audio: Sample,
   v: [0.5, 0.5, 0.5],
   markdown: "",
   name: "",
@@ -134,7 +132,7 @@ const Content = (props: Props) => {
   const { children } = props;
   const icons = useIcons(props);
   const waypoint = useWaypoint(props);
-  const { markdown, name, audio } = waypoint;
+  const { markdown, name } = waypoint;
   const { prevProps, nextProps, homeProps } = icons;
   const { updateWaypoint } = props;
   const onPop = () => {
@@ -150,8 +148,6 @@ const Content = (props: Props) => {
       props.setHash({ s: newS, w: newW });
     }
   };
-  const audioProps = { audio };
-
   const toggleProps = {
     onClick: () => props.toggleViewer(),
     size: "1.5em",
@@ -221,14 +217,9 @@ const Content = (props: Props) => {
         </div>
         <Nav>
           {isSoloWaypoint ? "" : <Icon {...prevProps} />}
-          <Audio {...audioProps} />
           {isSoloWaypoint ? "" : <Icon {...nextProps} />}
         </Nav>
         <Nav>
-          <div className={styles.navSpan}>
-            Viewer is {props.viewer}
-            <Icon {...toggleProps} />
-          </div>
           <div className={styles.navSpan}>
             {editStatusUI}
             <Icon {...toggleEditorProps} />

@@ -1,11 +1,8 @@
 import * as React from "react";
-import { OsdView } from "./osdView";
 import { VivView } from "./vivView";
 import { toSettings } from "../lib/viv";
 
-type Viewers = "viv" | "osd";
 type Prop = {
-  viewer: Viewers;
 };
 
 const toImageProps = (opts) => {
@@ -17,28 +14,12 @@ const toImageProps = (opts) => {
       toSettings: toSettings(props),
     },
   };
-  const osdProps = {
-    ...props,
-    viewerConfig: {
-      ...buttons,
-    },
-  };
-  return (
-    {
-      viv: vivProps,
-      osd: osdProps,
-    }[props.viewer] || vivProps
-  );
+  return vivProps;
 };
 
 const ImageView = (props) => {
-  const { viewer, ...rest } = props;
-  const Component =
-    {
-      viv: VivView,
-      osd: OsdView,
-    }[viewer] || VivView;
-  return <Component {...{ ...rest }} />;
+  const { ...rest } = props;
+  return <VivView {...{ ...rest }} />;
 };
 
 export { ImageView, toImageProps };

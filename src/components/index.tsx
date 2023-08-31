@@ -222,7 +222,6 @@ const Index = (props: Props) => {
     updateWaypoint,
     pushWaypoint,
     popWaypoint,
-    viewer: view,
     editable,
   };
   const channelProps = {
@@ -244,7 +243,6 @@ const Index = (props: Props) => {
   const imageProps = toImageProps({
     props: {
       loader,
-      viewer: view,
       ...channelProps,
     },
     buttons: {
