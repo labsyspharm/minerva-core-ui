@@ -4,9 +4,9 @@ import { useWindowSize } from "../lib/useWindowSize";
 import { loadOmeTiff } from "@hms-dbmi/viv";
 import { MinervaVivViewer } from "./vivViewer";
 import styled from "styled-components";
-import { getWaypoint } from "../lib/waypoint";
-import { VivLensing } from "./vivLensing";
-import { LensingDetailView } from "./vivViewer";
+import { VivLensing, LensingDetailView } from "./vivLensing";
+import { getDefaultInitialViewState } from "@vivjs/views";
+import { VivViewer } from "@hms-dbmi/viv";
 
 export type Props = {
   groups: any[];
@@ -17,6 +17,7 @@ export type Props = {
 };
 
 const url = "/LUNG-3-PR_40X.ome.tif";
+const DETAIL_VIEW_ID = "detail";
 
 const Main = styled.div`
   height: 100%;
@@ -45,7 +46,6 @@ const VivView = (props: Props) => {
   const [shape, setShape] = useState(useWindowSize());
   const [channels, setChannels] = useState([]);
   const [loader, setLoader] = useState(null);
-  // const [lensPosition, setLensPosition] = useState({});
   const [mousePosition, setMousePosition] = useState([null, null]);
   const [lensRadius, setLensRadius] = useState(100);
   const [movingLens, setMovingLens] = useState(false);
@@ -74,55 +74,76 @@ const VivView = (props: Props) => {
   }, [loader, channels]);
   useEffect(() => {}, [mousePosition]);
 
+  const baseViewState = React.useMemo(() => {
+    // Check if loader exists before trying to get the default view state.
+    if (!loader || !shape) {
+      return null;
+    }
+    console.log("getDefaultInitialViewState", loader, shape);
+    return getDefaultInitialViewState(loader, { ...shape }, 0.5);
+  }, [loader]);
+
+  const layerConfig = {
+    loader,
+    contrastLimits: settings?.contrastLimits,
+    colors: settings?.colors,
+    channelsVisible: settings?.channelsVisible,
+    selections: settings?.selections,
+    onViewportLoad: () => {
+      if (mousePosition[0] === null || mousePosition[1] === null) {
+        setMousePosition([
+          Math.round((deckRef?.current?.deck?.width || 0) / 2),
+          Math.round((deckRef?.current?.deck?.height || 0) / 2),
+        ]);
+      }
+    },
+    lensEnabled: true,
+    lensSelection: 0,
+    lensRadius: 100,
+    extensions: [new VivLensing()],
+  };
+  const views = [
+    new LensingDetailView({
+      id: DETAIL_VIEW_ID,
+      ...shape,
+      mousePosition,
+      lensRadius,
+      lensOpacity,
+    }),
+  ];
+  const layerProps = [layerConfig, [{ ...layerConfig, lensEnabled: false }]];
+
+  const viewStates = [{ ...baseViewState, id: DETAIL_VIEW_ID }];
+  const hoverHooks = { handleValue: () => {}, handleCoordinate: () => {} };
+  const onViewStateChange = ({ oldViewState, viewState }: any) => {
+    return movingLens ? oldViewState : viewState;
+  };
+
   if (!loader || !settings) return null;
   return (
     <Main>
-      <MinervaVivViewer
-        {...{
-          ...shape,
-          ...(settings as any),
-          viewStates: [],
-
-          loader: loader.data,
-          lensEnabled: true,
-          lensSelection: 1,
-          mousePosition,
-          detailView: new LensingDetailView({
-            id: "detail",
-            ...shape,
+      <VivViewer
+        layerProps={layerProps}
+        views={views}
+        viewStates={viewStates}
+        hoverHooks={hoverHooks}
+        onViewStateChange={onViewStateChange}
+        onHover={() => {}}
+        deckProps={{
+          layers: [],
+          ref: deckRef,
+          userData: {
             mousePosition,
+            setMousePosition,
+            movingLens,
+            setMovingLens,
             lensRadius,
+            setLensRadius,
             lensOpacity,
-          }),
-
-          extensions: [new VivLensing()],
-          onViewportLoad: () => {
-            if (mousePosition[0] === null || mousePosition[1] === null) {
-              setMousePosition([
-                Math.round((deckRef?.current?.deck?.width || 0) / 2),
-                Math.round((deckRef?.current?.deck?.height || 0) / 2),
-              ]);
-            }
-          },
-          onViewStateChange: ({ oldViewState, viewState }: any) => {
-            return movingLens ? oldViewState : viewState;
-          },
-
-          deckProps: {
-            layers: [],
-            ref: deckRef,
-            userData: {
-              mousePosition,
-              setMousePosition,
-              movingLens,
-              setMovingLens,
-              lensRadius,
-              setLensRadius,
-              lensOpacity,
-              setLensOpacity,
-            },
+            setLensOpacity,
           },
         }}
+        // @ts-ignore
       />
     </Main>
   );
