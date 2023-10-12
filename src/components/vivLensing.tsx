@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { LensExtension } from "@hms-dbmi/viv";
 import { VivView } from "@hms-dbmi/viv";
 import { CompositeLayer, COORDINATE_SYSTEM } from "@deck.gl/core";
@@ -98,14 +99,7 @@ function getVivId(id) {
   return `-#${id}#`;
 }
 
-const VivLensing = class extends LensExtension {
-  state: any;
-  props: any;
-  context: any;
-  getCurrentLayer: any;
-  defaultProps: any;
-  parent: any;
-
+const MinervaVivLensing = class extends LensExtension {
   getShaders() {
     return {
       ...super.getShaders(),
@@ -140,7 +134,7 @@ const VivLensing = class extends LensExtension {
     }
   }
 
-  draw(): void {
+  draw() {
     const layer = this.getCurrentLayer();
     const { viewportId } = layer.props;
     const { lensRadius = defaultProps.lensRadius.value } =
@@ -198,9 +192,7 @@ const LensLayer = class extends CompositeLayer {
   constructor(props) {
     super(props);
   }
-  props: any;
-  context: any;
-  lensPosition: any;
+
   renderLayers() {
     const { id, viewState } = this.props;
     const mousePosition = this.context.userData.mousePosition || [
@@ -462,16 +454,10 @@ const LensLayer = class extends CompositeLayer {
     this.context.userData.setMovingLens(false);
   }
 };
-// @ts-ignore
 LensLayer.layerName = "LensLayer";
-// @ts-ignore
 LensLayer.defaultProps = defaultProps;
 
-class LensingDetailView extends VivView {
-  props: any;
-  mousePosition: any;
-  lensRadius: any;
-  lensOpacity: any;
+class MinervaVivLensingDetailView extends VivView {
   constructor(props) {
     super(props);
     this.mousePosition = props?.mousePosition || [null, null];
@@ -505,4 +491,4 @@ class LensingDetailView extends VivView {
   }
 }
 
-export { VivLensing, LensingDetailView };
+export { MinervaVivLensing, MinervaVivLensingDetailView };

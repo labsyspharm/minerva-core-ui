@@ -2,10 +2,10 @@ import * as React from "react";
 import { useRef, useState, useEffect } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import { loadOmeTiff } from "@hms-dbmi/viv";
-import { MinervaVivViewer } from "./vivViewer";
 import styled from "styled-components";
-import { VivLensing, LensingDetailView } from "./vivLensing";
 import { getDefaultInitialViewState } from "@vivjs/views";
+// import { MinervaVivLensing, MinervaVivLensingDetailView } from "minerva-viv";
+import { MinervaVivLensing, MinervaVivLensingDetailView } from "./vivLensing";
 import { VivViewer } from "@hms-dbmi/viv";
 
 export type Props = {
@@ -80,11 +80,11 @@ const VivView = (props: Props) => {
       return null;
     }
     console.log("getDefaultInitialViewState", loader, shape);
-    return getDefaultInitialViewState(loader, { ...shape }, 0.5);
+    return getDefaultInitialViewState(loader.data, { ...shape }, 0.5);
   }, [loader]);
 
   const layerConfig = {
-    loader,
+    loader: loader?.data,
     contrastLimits: settings?.contrastLimits,
     colors: settings?.colors,
     channelsVisible: settings?.channelsVisible,
@@ -100,10 +100,10 @@ const VivView = (props: Props) => {
     lensEnabled: true,
     lensSelection: 0,
     lensRadius: 100,
-    extensions: [new VivLensing()],
+    extensions: [new MinervaVivLensing()],
   };
   const views = [
-    new LensingDetailView({
+    new MinervaVivLensingDetailView({
       id: DETAIL_VIEW_ID,
       ...shape,
       mousePosition,
