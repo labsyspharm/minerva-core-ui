@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from 'styled-components';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
@@ -167,11 +167,13 @@ const FormMC = (props: FormProps) => {
       c.mask.some((i: string) => !(i in choices.mask))
     ].some(x => x === true);
   }
-  toChoicesMC({
-    handle, mask, dir, setMask: sM, setDir: sD
-  }).then(c => {
-    if (hasNewChoice(c)) setChoices(c);
-  });
+  useEffect(() => {
+    toChoicesMC({
+      handle, mask, dir, setMask: sM, setDir: sD
+    }).then(c => {
+      if (hasNewChoice(c)) setChoices(c);
+    });
+  }, [JSON.stringify(choices)]);
   const dirOptions = {label: "Folder", vals: choices.dir};
   const maskOptions = {label: "Mask", vals: choices.mask};
   return (
@@ -285,12 +287,14 @@ const FormAny = (props: FormProps) => {
       c.mask.some((i: string) => !(i in choices.mask))
     ].some(x => x === true);
   }
-  toChoicesAny({
-    handle, mask, path, csv,
-    setMask: sM, setPath: sP, setCsv: sC
-  }).then(c => {
-    if (hasNewChoice(c)) setChoices(c);
-  });
+  useEffect(() => {
+    toChoicesAny({
+      handle, mask, path, csv,
+      setMask: sM, setPath: sP, setCsv: sC
+    }).then(c => {
+      if (hasNewChoice(c)) setChoices(c);
+    });
+  }, [JSON.stringify(choices)]);
   const pathOptions = {label: "Image", vals: choices.path};
   const maskOptions = {label: "Mask", vals: choices.mask};
   const csvOptions = {label: "CSV", vals: choices.csv};
