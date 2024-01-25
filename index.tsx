@@ -184,7 +184,7 @@ const root = createRoot(rootElement);
 
 root.render(
   <React.StrictMode>
-    <Main config={config} />
+    <Main config={config} handleKeys={["ome-dir-1"]} />
     <MainStyle />
   </React.StrictMode>
 );

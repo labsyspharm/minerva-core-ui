@@ -45,8 +45,10 @@ export type FormProps = {
   onSubmit: FormEventHandler<HTMLFormElement>
 }
 export type UploadProps = {
+  handleKeys: string[],
   handle: Handle.Dir | null,
   onAllow: () => Promise<void>,
+  onRecall: () => Promise<void>,
   formProps: Omit<FormProps, 'handle'>
 }
 export type ValidObj = {
@@ -83,9 +85,10 @@ const sh_6_20 = `0 6px 20px 0 ${shadow_gray}`;
 const UploadDiv = styled.div`
   height: 100%;
   display: grid;
-  grid-template-rows: 1fr auto 1fr;
-  > div {
-    grid-row: 2;
+  align-items: center;
+  grid-template-rows: auto;
+  button {
+    cursor: pointer;
   }
 `;
 
@@ -402,20 +405,27 @@ const Upload = (props: UploadProps) => {
   const [in_f, setInFile] = useState(test_f);
   const [mc, setMCMicro] = useState(false);
   const checkMC = () => setMCMicro(!mc);
-  const { formProps, handle, onAllow } = props;
+  const {
+    formProps, handle,
+    onAllow, onRecall
+  } = props;
   const F = mc ? FormMC : FormAny;
   const allowProps = {
     onClick: onAllow,
     variant: "primary",
     className: "mb-3"
-  }
+  };
+  const recallProps = {
+    onClick: onRecall,
+    variant: "primary",
+    className: "mb-3"
+  };
   if (handle === null) {
     return (
     <UploadDiv>
-        <div>
-          <div>Select an ome.tiff</div>
-          <Button {...allowProps}>Select Base Folder</Button>
-        </div>
+        <div>Select an ome.tiff</div>
+        <Button {...allowProps}>Select Base Folder</Button>
+        <Button {...recallProps}>Use recent Folder</Button>
     </UploadDiv>
     )
   }

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { get, set } from 'idb-keyval';
 import styled from 'styled-components';
 import { useState, useEffect } from "react";
 import { useHash } from "./lib/hashUtil";
@@ -15,6 +16,7 @@ import type { Config } from "./lib/exhibit";
 
 type Props = {
   config: Config;
+  handleKeys: string[];
 };
 
 interface ReduceFormData {
@@ -40,13 +42,13 @@ const Scrollable = styled.div`
   overflow-y: scroll;
   border-radius: 12px;
   background-color: hwb(220 10% 20% / .5);
-  cursor: pointer;
   font-size: 20px;
   padding: 5vh;
   margin: 5vh;
 `;
 
 const Content = (props: Props) => {
+  const { handleKeys } = props;
   const firstExhibit = readConfig(props.config);
   const [exhibit, setExhibit] = useState(firstExhibit);
   const [url, setUrl] = useState(window.location.href);
@@ -58,6 +60,20 @@ const Content = (props: Props) => {
   const onAllow = async () => {
     const newHandle = await toDir();
     setHandle(newHandle);
+    await set(
+      handleKeys[0], newHandle 
+    );
+  }
+  const onRecall = async () => {
+    const newHandle = await get(handleKeys[0])
+    const isGranted = (permission) => permission === 'granted';
+    const options = { mode: 'readwrite' };
+    if (
+      isGranted(await newHandle.queryPermission(options))
+      || isGranted(await newHandle.requestPermission(options))
+    ) {
+      setHandle(newHandle);
+    }
   }
   const onStart = (in_f: string) => {
     (async () => {
@@ -102,7 +118,10 @@ const Content = (props: Props) => {
     event.stopPropagation();
   }
   const formProps = { onSubmit, valid };
-  const uploadProps = { formProps, handle, onAllow };
+  const uploadProps = {
+    handleKeys, formProps, handle,
+    onAllow, onRecall
+  };
 
   const importer = loader !== null ? '' : (<Scrollable>
     <Upload {...uploadProps}/>
