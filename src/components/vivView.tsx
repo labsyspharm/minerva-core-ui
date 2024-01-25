@@ -97,7 +97,7 @@ const VivView = (props: Props) => {
         ]);
       }
     },
-    lensEnabled: true,
+    lensEnabled: false,
     lensSelection: 0,
     lensRadius: 100,
     extensions: [new MinervaVivLensing()],

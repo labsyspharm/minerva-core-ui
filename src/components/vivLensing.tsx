@@ -53,14 +53,26 @@ bool frag_on_lens_bounds(vec2 vTexCoord) {
   return ellipseDistance <= 1. && ellipseDistance >= (1. - lensBorderRadius);
 }
 
-// gets color relative to lens selection and lens opacity
 vec3 get_color(vec2 vTexCoord, int channelIndex) {
   bool isFragInLensBounds = frag_in_lens_bounds(vTexCoord);
-  bool inLensAndUseLens = lensEnabled && isFragInLensBounds;
   bool isSelectedChannel = channelIndex == lensSelection;
+
+  // Check if the lens is enabled and the fragment is within its bounds
+  bool inLensAndUseLens = lensEnabled && isFragInLensBounds;
+
+  // If the lens is disabled, we'll use the selected channel directly
+  bool useSelectedChannelDirectly = !lensEnabled && isSelectedChannel;
+
+  // Determine the color factor based on the above conditions
   float factorOutside = 1.0 - float(isSelectedChannel);
   float factorInside = isSelectedChannel ? lensOpacity : (1.0 - lensOpacity);
-  float factor = inLensAndUseLens ? factorInside : factorOutside;
+  
+  // When the lens is disabled, we want the selected channel to be fully visible
+  float factorSelectedChannel = 1.0;
+
+  // Choose the appropriate factor based on our conditions
+  float factor = inLensAndUseLens ? factorInside : (useSelectedChannelDirectly ? factorSelectedChannel : factorOutside);
+
   return factor * colors[channelIndex];
 }
 
