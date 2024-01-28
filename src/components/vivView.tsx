@@ -1,11 +1,7 @@
 import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
-import {
-  getChannelStats,
-  loadOmeTiff,
-  PictureInPictureViewer,
-} from "@hms-dbmi/viv";
+import { PictureInPictureViewer } from "@hms-dbmi/viv";
 
 import styled from "styled-components";
 import { getWaypoint } from "../lib/waypoint";
@@ -30,39 +26,12 @@ type Shape = {
   height: number;
 };
 
-const url = "/PCA19_001_F8_HE_aligned_to_cycif.ome.tif";
-
 const Main = styled.div`
   height: 100%;
 `;
 
 const isElement = (x = {}): x is HTMLElement => {
   return ["Width", "Height"].every((k) => `client${k}` in x);
-};
-
-const useSetV = (setHash) => {
-  return (context) => {
-    /*
-    setHash({
-      v: readViewport(context),
-    });
-    */
-  };
-};
-
-const useUpdate = ({ setV, setCache }) => {
-  return (c) => {
-    if (c?.context?.viewport) {
-      setV(c.context);
-    }
-    setCache((_c) => {
-      const keys = [...Object.keys(_c)];
-      const entries = keys.map((k) => {
-        return [k, k in c ? c[k] : _c[k]];
-      });
-      return Object.fromEntries(entries);
-    });
-  };
 };
 
 const shapeRef = (setShape: (s: Shape) => void) => {
@@ -74,39 +43,12 @@ const shapeRef = (setShape: (s: Shape) => void) => {
     }
   };
 };
-const rgb2hex = (rgb) => {
-  try {
-    return (
-      "#" +
-      ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2])
-        .toString(16)
-        .substr(1)
-    );
-  } catch (e) {
-    console.log("Error in hex2rgb", rgb, e);
-  }
-};
-
-function hex2rgb(hex) {
-  try {
-    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? [
-          parseInt(result[1], 16),
-          parseInt(result[2], 16),
-          parseInt(result[3], 16),
-        ]
-      : null;
-  } catch (e) {
-    console.log("Error in hex2rgb", hex, e);
-  }
-}
 
 const VivView = (props: Props) => {
+  console.log("VivView: props", props);
   const maxShape = useWindowSize();
   const { loader, groups, stories, hash, setHash } = props;
   const { v, g, s, w } = hash;
-  const setV = useSetV(setHash);
   const { toSettings } = props.viewerConfig;
   const [settings, setSettings] = useState(toSettings(hash));
   const waypoint = getWaypoint(stories, s, w);
@@ -118,29 +60,31 @@ const VivView = (props: Props) => {
   }, [maxShape]);
 
   useEffect(() => {
-    const newSettings = toSettings(hash, loader)
+    console.log("VivView: useEffect: groups", groups);
+  }, [groups]);
+
+  useEffect(() => {
+    // Gets the default settings
+    const newSettings = toSettings(hash, loader, groups);
+
+
     setSettings(newSettings);
-  }, [loader]);
+    console.log('VivView: useEffect: loader', newSettings,groups);
+
+  }, [loader,groups,hash]);
+
+  const viewerProps = {
+    ...{
+      loader,
+      ...shape,
+      ...(settings as any),
+    },
+  };
 
   if (!loader || !settings) return null;
   return (
-    <Main ref={rootRef} className={"SimonSimonSimon"}>
-      <PictureInPictureViewer
-        {...{
-          loader,
-          ...shape,
-          ...(settings as any),
-/*
-          lensEnabled: true,
-          lensRadius: 100,
-          lensSelection: 0,
-          extensions: [new VivLensing()],
-          onViewportLoad: (viewport: any, e: any, d: any) => {
-            console.log("Viewport", viewport?.[0]);
-          }
-*/
-        }}
-      />
+    <Main ref={rootRef}>
+      <PictureInPictureViewer {...viewerProps} />
     </Main>
   );
 };
