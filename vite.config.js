@@ -6,6 +6,9 @@ export default defineConfig({
   plugins: [
     mkcert(), 
   ],
+  optimizeDeps: {
+    exclude: [ "minerva-author-ui" ]
+  },
   build: {
     sourcemap: true
   }
