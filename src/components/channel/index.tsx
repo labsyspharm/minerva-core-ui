@@ -19,7 +19,14 @@ type Props = HashContext & {
 };
 
 const Channel = (props: Props) => {
-  const styler = getStyler(styles);
+  return (
+    <indexgrid-minerva>
+      {props.children}
+    </indexgrid-minerva>
+  )
+
+  // TODO TODO TODO
+
   const hide = props.hiddenChannel;
   const setHide = props.setHiddenChannel;
 

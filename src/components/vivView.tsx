@@ -45,7 +45,6 @@ const shapeRef = (setShape: (s: Shape) => void) => {
 };
 
 const VivView = (props: Props) => {
-  console.log("VivView: props", props);
   const maxShape = useWindowSize();
   const { loader, groups, stories, hash, setHash } = props;
   const { v, g, s, w } = hash;
@@ -83,7 +82,7 @@ const VivView = (props: Props) => {
 
   if (!loader || !settings) return null;
   return (
-    <Main ref={rootRef}>
+    <Main slot="image" ref={rootRef}>
       <PictureInPictureViewer {...viewerProps} />
     </Main>
   );

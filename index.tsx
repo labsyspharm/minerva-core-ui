@@ -5,6 +5,10 @@ import "@fontsource/overpass/200.css";
 import "@fontsource/overpass/500.css";
 import { createGlobalStyle } from "styled-components";
 import { loremIpsum } from "react-lorem-ipsum";
+import indexgrid from "minerva-author-ui";
+
+// Defines Index Grid Minerva Web Component
+indexgrid('minerva');
 
 const fakeText = (p) => {
   const random = true;

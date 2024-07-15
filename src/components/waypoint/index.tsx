@@ -40,6 +40,10 @@ const toWrapKey = (hide: boolean) => {
 }
 
 const Waypoint = (props: Props) => {
+  return props.children;
+
+  // TODO TODO TODO
+
   const styler = getStyler(styles);
   const hide = props.hiddenWaypoint;
   const setHide = props.setHiddenWaypoint;
