@@ -19,14 +19,8 @@ type Props = HashContext & {
 };
 
 const Channel = (props: Props) => {
-  return (
-    <indexgrid-minerva>
-      {props.children}
-    </indexgrid-minerva>
-  )
 
-  // TODO TODO TODO
-
+  const styler = getStyler(styles);
   const hide = props.hiddenChannel;
   const setHide = props.setHiddenChannel;
 
@@ -56,7 +50,9 @@ const Channel = (props: Props) => {
   return (
     <div className={wrapClass}>
       <div className={styles.textOther}>
-        {props.children}
+        <indexgrid-minerva>
+          {props.children}
+        </indexgrid-minerva>
       </div>
       {hidden ? "" : channelMenu}
     </div>
