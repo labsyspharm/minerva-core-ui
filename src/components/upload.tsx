@@ -160,7 +160,7 @@ const noChoice = (): Choices => {
 const FormMC = (props: FormProps) => {
   const { handle, valid, onSubmit } = props;
   const [ choices, setChoices ] = useState(noChoice());
-  const [ name, _, setName ] = _useState("");
+  const [ name, sN, setName ] = _useState("");
   const [ mask, sM, setMask ] = _useState("");
   const [ dir, sD, setDir ] = _useState("");
   const formProps = { onSubmit };
@@ -278,7 +278,7 @@ const toChoicesAny: ToChoicesAny = async (opts) => {
 const FormAny = (props: FormProps) => {
   const { handle, valid, onSubmit } = props;
   const [ choices, setChoices ] = useState(noChoice());
-  const [ name, _, setName ] = _useState("");
+  const [ name, sN, setName ] = _useState("");
   const [ path, sP, setPath ] = _useState("");
   const [ mask, sM, setMask ] = _useState("");
   const [ csv, sC, setCsv ] = _useState("");
@@ -295,7 +295,11 @@ const FormAny = (props: FormProps) => {
       handle, mask, path, csv,
       setMask: sM, setPath: sP, setCsv: sC
     }).then(c => {
-      if (hasNewChoice(c)) setChoices(c);
+      if (hasNewChoice(c)) {
+        sN(c.path[0].split('.')[0]);
+        sP(c.path[0]);
+        setChoices(c);
+      }
     });
   }, [JSON.stringify(choices)]);
   const pathOptions = {label: "Image", vals: choices.path};
