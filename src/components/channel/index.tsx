@@ -3,7 +3,9 @@ import { useState } from "react";
 import { Legend } from "./legend";
 import { Content } from "./content";
 import { Toolbar } from "./toolbar";
+import indexgrid from "minerva-author-ui";
 import { getStyler } from "../../lib/util";
+import styled from "styled-components";
 import styles from "./index.module.css";
 
 // Types
@@ -46,13 +48,15 @@ const Channel = (props: Props) => {
       </Content>
     </div>
   );
+  
+  const minerva_author_ui = React.createElement(
+    indexgrid('minerva'), { children: props.children }
+  );
 
   return (
     <div className={wrapClass}>
       <div className={styles.textOther}>
-        <indexgrid-minerva>
-          {props.children}
-        </indexgrid-minerva>
+        {minerva_author_ui}
       </div>
       {hidden ? "" : channelMenu}
     </div>
