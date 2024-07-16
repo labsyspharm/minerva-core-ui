@@ -12,7 +12,7 @@ import styles from "./index.module.css";
 import type { Group, Story } from "../../lib/exhibit";
 import type { HashContext } from "../../lib/hashUtil";
 
-type Props = HashContext & {
+export type Props = HashContext & {
   children: any,
   groups: Group[];
   stories: Story[];

@@ -1,12 +1,13 @@
 import * as React from "react";
 import { Exporter } from "./exporter";
-import { Waypoint } from "./waypoint";
+import { Channel } from "./channel";
 import { Info } from "./info";
 
 // Types
-import type { Props } from "./waypoint";
+import type { Props as WaypointProps } from "./waypoint";
+import type { Props as ChannelProps } from "./channel";
 
-type MainProps = Props & {
+type MainProps = WaypointProps & ChannelProps & {
   ioState: null | string;
   stopExport: () => void;
   handle: Handle.Dir;
@@ -25,7 +26,7 @@ const Main = (props: MainProps) => {
       out = <Info {...props}/>;
     }
     else {
-      out = <Waypoint {...props}/>;
+      out = <Channel {...props}/>;
     }
   }
   return <>{out}</>;

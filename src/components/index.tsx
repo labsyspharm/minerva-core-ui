@@ -2,7 +2,6 @@ import * as React from "react";
 import { useState } from "react";
 import { ImageView, toImageProps } from "./imageView";
 import { Main } from "./content";
-import { Channel } from "./channel";
 
 // Types
 import type { OptSW } from "./waypoint/content";
@@ -212,14 +211,26 @@ const Index = (props: Props) => {
   };
 
   const { in_f, handle, loader, hash, setHash } = props;
-
-  const mainProps = {
+;
+  const channelProps = {
     hash,
-    in_f,
-    handle,
     setHash,
     groups,
     stories,
+    editable,
+    hiddenChannel,
+    setHiddenChannel,
+    updateGroup,
+    pushGroup,
+    popGroup,
+    updateChannel,
+    pushChannel,
+    popChannel,
+  };
+  const mainProps = {
+    ...channelProps,
+    in_f,
+    handle,
     ioState,
     hiddenWaypoint,
     setHiddenWaypoint,
@@ -230,25 +241,8 @@ const Index = (props: Props) => {
     toggleEditor,
     updateWaypoint,
     pushWaypoint,
-    popWaypoint,
-    editable,
-  };
-  const channelProps = {
-    hash,
-    setHash,
-    groups,
-    stories,
-    editable,
-    hiddenChannel,
-    setHiddenChannel,
-    updateWaypoint,
-    updateGroup,
-    pushGroup,
-    popGroup,
-    updateChannel,
-    pushChannel,
-    popChannel,
-  };
+    popWaypoint
+  }
   const imageProps = toImageProps({
     props: {
       loader,
@@ -261,10 +255,8 @@ const Index = (props: Props) => {
   });
   return (
     <Main {...mainProps}>
-      <Channel {...channelProps}>
-        <ImageView {...imageProps}>
-        </ImageView>
-      </Channel>
+      <ImageView {...imageProps}>
+      </ImageView>
     </Main>
   );
 };
