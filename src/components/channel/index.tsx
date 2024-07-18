@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Legend } from "./legend";
 import { Content } from "./content";
 import { Toolbar } from "./toolbar";
-import indexgrid from "minerva-author-ui";
+import { author } from "minerva-author-ui";
 import { getStyler } from "../../lib/util";
 import styled from "styled-components";
 import styles from "./index.module.css";
@@ -50,7 +50,7 @@ const Channel = (props: Props) => {
   );
   
   const minerva_author_ui = React.createElement(
-    indexgrid('minerva'), { children: props.children }
+    author('minerva'), { children: props.children }
   );
 
   return (
