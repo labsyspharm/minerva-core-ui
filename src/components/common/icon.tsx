@@ -11,6 +11,12 @@ export type Props = {
   onClick?: (_: unknown) => unknown;
 };
 
+interface ButtonProps {
+  onClick: any;
+  size: string;
+  color: string;
+}
+
 type Ref = (x: unknown) => void;
 
 const isRef = (x: unknown): x is Ref => {
@@ -25,7 +31,7 @@ const clickCursor = (noClick) => {
   return noClick ? "default" : "pointer";
 };
 
-const Button = styled.button`
+const Button = styled.button<ButtonProps>`
   padding: 0px;
   border: none;
   font: inherit;

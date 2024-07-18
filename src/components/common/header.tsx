@@ -1,6 +1,10 @@
 import * as React from "react";
 import styled from "styled-components";
 
+interface HeaderProps {
+  font: string;  
+}
+
 const fontStack = ({ font }) => {
   return [font, "sans-serif"].join(",");
 };
@@ -8,14 +12,14 @@ const fontStack = ({ font }) => {
 const headers = new Map([
   [
     "h3",
-    styled.h3`
+    styled.h3<HeaderProps>`
       font-weight: 300;
       font-family: ${fontStack};
     `,
   ],
   [
     "h4",
-    styled.h4`
+    styled.h4<HeaderProps>`
       font-weight: 300;
       font-family: ${fontStack};
     `,

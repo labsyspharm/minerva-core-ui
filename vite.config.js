@@ -10,6 +10,19 @@ export default defineConfig({
     exclude: [ "minerva-author-ui" ]
   },
   build: {
-    sourcemap: true
+    optimizeDeps: {
+      exclude: [ "minerva-author-ui" ]
+    },
+    minify: false,
+    sourcemap: false,
+    assetsInlineLimit: 0,
+    rollupOptions: {
+      onwarn(warning, warn) {
+        if (warning.code === "MODULE_LEVEL_DIRECTIVE") {
+          return;
+        }
+        warn(warning);
+      },
+    }
   }
 })

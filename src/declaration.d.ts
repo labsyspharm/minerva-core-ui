@@ -1,4 +1,5 @@
 declare module "use-hash-history";
+declare module "minerva-author-ui";
 import * as DeckTypings from "@danmarshall/deckgl-typings"
 declare module "deck.gl" {
   export namespace DeckTypings {}

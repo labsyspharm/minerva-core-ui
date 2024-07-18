@@ -67,6 +67,10 @@ interface UseTargetState {
   (init: string): [string, SetState, SetTargetState];
 }
 
+interface HasValidation {
+  hasValidation: boolean;
+}
+
 const TwoColumn = styled.div`
   grid-template-columns: 1fr 1fr;
   display: grid;
@@ -107,7 +111,7 @@ const FormGrid = styled.div`
   display: grid;
   gap: 1em;
 `;
-const FormGridRow = styled.div`
+const FormGridRow = styled.div<HasValidation>`
   height: 2em;
 `
 const _useState: UseTargetState = (init) => {

@@ -267,7 +267,7 @@ const ExporterDiv = styled.div`
   }
 `;
 
-const ProgressBar = styled.div`
+const ProgressBar = styled.div<ProgressBarProps>`
   display: grid;
   grid-template-columns ${props => to_fr(props.$ratio || 0)};
   > div {
@@ -300,6 +300,10 @@ type LoaderOpts = {
 }
 interface ToLoader {
   (i: LoaderIn): Promise<LoaderOut>;
+}
+interface ProgressBarProps {
+  $ratio: number;
+  $done: boolean;
 }
 
 const toLoader: ToLoader = async ({in_f, handle}) => {
