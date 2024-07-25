@@ -72,6 +72,11 @@ interface HasValidation {
 }
 
 const TwoColumn = styled.div`
+  button {
+    border: none;
+    outline: 1px solid var(--theme-glass-edge);
+    background-color: var(--theme-dark-main-color);
+  }
   grid-template-columns: 1fr 1fr;
   display: grid;
   gap: 2em;
@@ -92,13 +97,16 @@ const UploadDiv = styled.div`
   align-items: center;
   grid-template-rows: auto;
   button {
-    cursor: pointer;
+    border: none;
+    outline: 1px solid var(--theme-glass-edge);
+    background-color: var(--theme-dark-main-color);
   }
 `;
 
 const PathGrid = styled.div`
   grid-template-columns: auto 1fr;
   white-space: nowrap;
+  align-items: start;
   grid-gap: 2em;
   display: grid;
   code {
@@ -107,6 +115,11 @@ const PathGrid = styled.div`
   }
 `;
 const FormGrid = styled.div`
+  button {
+    border: none;
+    outline: 1px solid var(--theme-glass-edge);
+    background-color: var(--theme-dark-main-color);
+  }
   margin-top: 2em;
   display: grid;
   gap: 1em;
@@ -438,19 +451,25 @@ const Upload = (props: UploadProps) => {
     )
   }
   const fullFormProps = { ...formProps, handle };
+  // TODO Improve layout of full version
+  const updateSettings = (<TwoColumn>
+      <Button {...allowProps}>Update Base Folder</Button>
+  </TwoColumn>) || (<TwoColumn>
+      <Button {...allowProps}>Update Base Folder</Button>
+      <PathGrid>
+        <span>Base Folder:</span>
+        <code>{handle.name}</code>
+      </PathGrid>
+  </TwoColumn>)
+  // TODO ensure MCMICRO settings work
+  const mcMicroSettings = ' ' || (<FullHeightText>
+    <div>Check if MCMICRO</div>
+    <input type="checkbox" name="is_mc_micro" 
+    checked={mc} onChange={checkMC}/>
+  </FullHeightText>);
   return (<>
-    <TwoColumn>
-        <Button {...allowProps}>Update Base Folder</Button>
-        <PathGrid>
-          <span>Base Folder:</span>
-          <code>{handle.name}</code>
-        </PathGrid>
-    </TwoColumn>
-    <FullHeightText>
-      <div>Check if MCMICRO</div>
-      <input type="checkbox" name="is_mc_micro" 
-      checked={mc} onChange={checkMC}/>
-    </FullHeightText>
+    { updateSettings }
+    { mcMicroSettings }
     <F {...fullFormProps}/>
   </>)
 }

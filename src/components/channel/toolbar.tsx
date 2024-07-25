@@ -12,8 +12,10 @@ const Toolbar = (props) => {
   const faToggle = hide ? faShow : faHide;
 
   const icon = {
-    size: "1.5em",
-    color: "#007bff",
+    size: "16px",
+    width: "32px",
+    height: "32px",
+    color: "inherit",
     icon: faToggle,
     onClick: togglePanel,
   };

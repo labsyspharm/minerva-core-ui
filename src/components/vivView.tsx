@@ -59,16 +59,13 @@ const VivView = (props: Props) => {
   }, [maxShape]);
 
   useEffect(() => {
-    console.log("VivView: useEffect: groups", groups);
+    //console.log("VivView: useEffect: groups", groups);
   }, [groups]);
 
   useEffect(() => {
     // Gets the default settings
     const newSettings = toSettings(hash, loader, groups);
-
-
     setSettings(newSettings);
-    console.log('VivView: useEffect: loader', newSettings,groups);
 
   }, [loader,groups,hash]);
 

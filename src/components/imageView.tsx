@@ -2,9 +2,6 @@ import * as React from "react";
 import { VivView } from "./vivView";
 import { toSettings } from "../lib/viv";
 
-type Prop = {
-};
-
 const toImageProps = (opts) => {
   const { props, buttons } = opts;
   const vivProps = {

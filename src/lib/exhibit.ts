@@ -21,7 +21,6 @@ export type Channel = {
 
 export type Group = {
   name: string;
-  path: string;
   g: HashState["g"];
   channels: Channel[];
 };
@@ -66,17 +65,20 @@ const readStories = (config: Config): Story[] => {
     return {
       waypoints: story.Waypoints.map((waypoint) => {
         const [x, y] = waypoint.Pan.slice(0, 2);
-        return {
+        const output_waypoint: Waypoint = {
           name: waypoint.Name,
           markdown: waypoint.Description,
           g: indexGroupName(waypoint.Group),
-          v: [waypoint.Zoom, x, y],
-          //
-          lensing: Object.assign(waypoint.Lensing, {
-            g: indexGroupName(waypoint.Lensing.group),
-          }),
-          //
+          v: [waypoint.Zoom, x, y]
         };
+        if ('Lensing' in waypoint) {
+          output_waypoint.lensing = (
+            Object.assign(waypoint.Lensing, {
+              g: indexGroupName(waypoint.Lensing.group)
+            })
+          );
+        }
+        return output_waypoint
       }),
     };
   });
@@ -101,7 +103,6 @@ const readGroups = (config: Config): Group[] => {
     return {
       g,
       name: group.Name,
-      path: group.Path,
       channels: readChannels(group),
     };
   });

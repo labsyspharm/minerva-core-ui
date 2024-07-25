@@ -53,7 +53,6 @@ const Channel = (props: Props) => {
   );
   
   const { title, configWaypoints } = props;
-  console.log(configWaypoints)
   const config = { name, stories: configWaypoints };
   const minerva_author_ui = React.createElement(
     author('minerva', { config }), { 

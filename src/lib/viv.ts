@@ -56,6 +56,7 @@ const hexToRGB = (hex: string) => {
 const toSettings = (opts) => {
   return (hash, loader, groups) => {
     const { g } = hash;
+    const { marker_names } = opts;
     const group = (groups || (opts.groups as Group[])).find(
       (group) => group.g === g
     );
@@ -66,9 +67,16 @@ const toSettings = (opts) => {
     if (!loader) return toDefaultSettings(3);
     const { labels, shape } = full_level;
     const c_idx = labels.indexOf("c");
-    // TODO How are we mapping channel names to indices?
-    const selections: Selection[] = channels.map((_, i: number) => {
-      return { z: 0, t: 0, c: i };
+    // TODO Improve mapping of channel names to indices!
+    const selections: Selection[] = channels.map(channel => {
+      const c = marker_names.indexOf(channel.name);
+      return { z: 0, t: 0, c };
+    }).filter(({ c }, i) => {
+      if (c < 0) {
+        console.error(`Missing channel "${channels[i].name}"`);
+        return false
+      }
+      return true;
     });
     const colors: Color[] = channels.map((c, i: number) => {
       return c.color ? hexToRGB(c.color) : [0, 0, 0];

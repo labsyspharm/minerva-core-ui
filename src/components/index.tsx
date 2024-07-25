@@ -8,7 +8,7 @@ import type { OptSW } from "./waypoint/content";
 import type { Waypoint as WaypointType } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
 import type { Exhibit } from "../lib/exhibit";
-import type { ConfigWaypoint } from "../lib/exhibit";
+import type { ConfigWaypoint } from "../lib/config";
 
 type Props = HashContext & {
   in_f: string;
@@ -16,6 +16,7 @@ type Props = HashContext & {
   exhibit: Exhibit;
   handle: Handle.Dir;
   title: string;
+  marker_names: string[];
   configWaypoints: ConfigWaypoint[];
   setExhibit: (e: Exhibit) => void;
 };
@@ -213,7 +214,10 @@ const Index = (props: Props) => {
     setExhibit(ex);
   };
 
-  const { in_f, handle, loader, hash, setHash } = props;
+  const {
+    in_f, handle, loader, hash, setHash,
+    marker_names
+  } = props;
 ;
   const channelProps = {
     hash,
@@ -251,6 +255,7 @@ const Index = (props: Props) => {
   const imageProps = toImageProps({
     props: {
       loader,
+      marker_names,
       ...channelProps,
     },
     buttons: {

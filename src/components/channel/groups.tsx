@@ -27,6 +27,7 @@ const WrapGroup = styled.div`
     "name waypoint";
   grid-template-columns: 80% auto;
   grid-template-rows: auto auto;
+  outline: 1px solid ${({ outline }) => outline};
   background-color: ${({ color }) => color};
   cursor: pointer;
   border-radius: 4px;
@@ -40,11 +41,12 @@ const GroupRow = (props) => {
   const { name } = group;
 
   const active = group.g === hash.g;
-  const color = active ? "#007bff" : "none";
+  const outline = active ? "var(--theme-glass-edge)" : "none";
+  const color = active ? "var(--theme-dark-main-color)" : "none";
 
   const toGroup = setHash.bind(null, { g: group.g });
 
-  const wrapGroupProps = { color };
+  const wrapGroupProps = { color, outline };
   const waypoints = getWaypoints(stories, hash.s);
   const sameGroup = (wp) => wp.g === group.g;
   const w = waypoints.indexOf(waypoints.find(sameGroup));
@@ -77,33 +79,21 @@ const GroupRow = (props) => {
     const { s, w } = hash;
     toGroup();
     updateWaypoint({ ...waypoint, g: group.g }, { s, w });
-    //
   };
-  const selectSwitch = [
-    ["a", { onClick: toWaypoint, children: toWaypointText }],
-    [UpdateGroup, { onUpdate: () => null }],
-  ];
   const selectClick = props.editable ? updateWaypointGroup : toGroup;
   const coreUI = (
     <WrapGroup {...wrapGroupProps}>
       <GroupName onClick={selectClick}>
         <Status {...statusProps}>{name}</Status>
       </GroupName>
-      <Corner>
-        <Editor
-          {...{ ...props, editable: selected, editSwitch: selectSwitch }}
-        />
-      </Corner>
     </WrapGroup>
   );
   const editSwitch = [
     [React.Fragment, { children: coreUI }],
     [PopUpdateGroup, { onPop, children: coreUI }],
   ];
-
   const canPop = props.editable && props.total > 1;
   const extraUI = <Editor {...{ ...props, editable: canPop, editSwitch }} />;
-
   return <>{extraUI}</>;
 };
 

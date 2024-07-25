@@ -6,6 +6,8 @@ import type { RefObject } from "react";
 
 export type Props = {
   size?: string;
+  width?: string;
+  height?: string;
   color?: string;
   icon: IconProp;
   onClick?: (_: unknown) => unknown;
@@ -32,22 +34,36 @@ const clickCursor = (noClick) => {
 };
 
 const Button = styled.button<ButtonProps>`
-  padding: 0px;
+  svg {
+    transform: scale(1.0, 0.9);
+  }
+  justify-items: center;
+  align-items: center;
+  display: grid;
   border: none;
   font: inherit;
-  outline: inherit;
-  background: none;
+  border-radius: 50%;
+  outline: 1px solid var(--theme-glass-edge) !important;
+  background-color: var(--theme-dark-main-color);
+  margin-bottom: calc(2 * var(--theme-gap-tiny));
   color: ${({ color }) => color};
   font-size: ${({ size }) => size};
+  height: ${({ height }) => height};
+  width: ${({ width }) => width};
   opacity: ${({ onClick }) => clickOpacity(!onClick)};
   cursor: ${({ onClick }) => clickCursor(!onClick)};
 `;
 
 const getProps = (props: Props, noClick = null) => {
   const { icon, onClick = noClick } = props;
-  const { size = "1em", color = "inherit" } = props;
+  const { 
+    size = "1em", color = "inherit",
+    height = "1em", width = "1em"
+  } = props;
   return {
     size,
+    height,
+    width,
     icon,
     color,
     onClick,
