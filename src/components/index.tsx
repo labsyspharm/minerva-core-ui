@@ -8,12 +8,15 @@ import type { OptSW } from "./waypoint/content";
 import type { Waypoint as WaypointType } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
 import type { Exhibit } from "../lib/exhibit";
+import type { ConfigWaypoint } from "../lib/exhibit";
 
 type Props = HashContext & {
   in_f: string;
   loader: any;
   exhibit: Exhibit;
   handle: Handle.Dir;
+  title: string;
+  configWaypoints: ConfigWaypoint[];
   setExhibit: (e: Exhibit) => void;
 };
 
@@ -217,6 +220,8 @@ const Index = (props: Props) => {
     setHash,
     groups,
     stories,
+    configWaypoints: props.configWaypoints,
+    title: props.title,
     editable,
     hiddenChannel,
     setHiddenChannel,

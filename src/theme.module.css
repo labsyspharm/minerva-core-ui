@@ -1,0 +1,15 @@
+.theme {
+  line-height: 1em;
+  --theme-font-family: "lato",sans-serif;
+  --theme-dark-main-color: hwb(240 10% 50%);
+  --theme-light-focus-color: hwb(45 90% 0%);
+  --theme-light-contrast-color: hwb(45 99% 0%);
+  --theme-dark-accept-color: hwb(170 5% 75%);
+  --theme-dark-reject-color: hwb(25 0% 75%);
+  --theme-dark-focus-color: hwb(45 0% 90%);
+  --theme-glass-edge: color-mix(in xyz, white 50%, transparent);
+  --theme-dark-gray-color: color-mix(in xyz, navy 2%, black);
+  --theme-glass-filter: blur(32px);
+  --theme-dim-gray-color: black;
+  --theme-gap-tiny: 0.3em;
+}

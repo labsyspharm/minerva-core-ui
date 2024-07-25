@@ -5,18 +5,21 @@ import { Content } from "./content";
 import { Toolbar } from "./toolbar";
 import { author } from "minerva-author-ui";
 import { getStyler } from "../../lib/util";
-import styled from "styled-components";
+import { theme } from "../../theme.module.css";
 import styles from "./index.module.css";
+import styled from "styled-components";
 
 // Types
+import type { ConfigWaypoint } from "../../lib/config";
 import type { Group, Story } from "../../lib/exhibit";
 import type { HashContext } from "../../lib/hashUtil";
 
 export type Props = HashContext & {
   children: any,
+  title: string,
   groups: Group[];
-  stories: Story[];
   hiddenChannel: boolean;
+  configWaypoints: ConfigWaypoint[];
   setHiddenChannel: (v: boolean) => void;
 };
 
@@ -49,8 +52,13 @@ const Channel = (props: Props) => {
     </div>
   );
   
+  const { title, configWaypoints } = props;
+  console.log(configWaypoints)
+  const config = { name, stories: configWaypoints };
   const minerva_author_ui = React.createElement(
-    author('minerva'), { children: props.children }
+    author('minerva', { config }), { 
+      class: theme, children: props.children,
+    }
   );
 
   return (
