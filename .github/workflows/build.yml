@@ -27,8 +27,6 @@ jobs:
         run: |
           pnpm install
           pnpm run pages
-      - name: Archive artifact
-        run: |
           tar \
             --dereference --hard-dereference \
             --directory pages \
