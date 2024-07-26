@@ -13,8 +13,8 @@ const Toolbar = (props) => {
 
   const icon = {
     size: "16px",
-    width: "32px",
-    height: "32px",
+    width: "34px",
+    height: "34px",
     color: "inherit",
     icon: faToggle,
     onClick: togglePanel,

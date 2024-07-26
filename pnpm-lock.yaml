@@ -90,8 +90,8 @@ dependencies:
     specifier: https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9
     version: '@github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9'
   minerva-author-ui:
-    specifier: 2.0.0-beta.17
-    version: 2.0.0-beta.17(vite@5.3.5)
+    specifier: 2.0.0-beta.18
+    version: 2.0.0-beta.18(vite@5.3.5)
   openseadragon:
     specifier: ^4.1.1
     version: 4.1.1
@@ -4510,8 +4510,8 @@ packages:
       mime-db: 1.52.0
     dev: true
 
-  /minerva-author-ui@2.0.0-beta.17(vite@5.3.5):
-    resolution: {integrity: sha512-JAeKEdI22NKNmLPxPhVzTbl1oBtCN/YqzGIL9o8JpeE/CZzYiJwoKGDZgBCUK+Mmue9P3v7GJl6fShz8+RjuYQ==}
+  /minerva-author-ui@2.0.0-beta.18(vite@5.3.5):
+    resolution: {integrity: sha512-2yvDhe792Yz5R7AdaodyxKpeOHGqiTW9EgCiTpHY7QeH4Yz/tvVEfJ89eRHjRwr+RcF+zSkcriSCQyurZiR10g==}
     dependencies:
       '@arrow-js/core': 1.0.0-alpha.10
       '@haxtheweb/a11y-collapse': 9.0.2

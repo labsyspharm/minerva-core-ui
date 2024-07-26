@@ -14,9 +14,14 @@ const fakeText = (p) => {
 const title = 'Primary Lung Cancer [M-003]';
 const configWaypoints = [
   {
+    "key": "test",
+    "title": "Metadata Template",
+    "content": "### Demographics  \n**Species:** Human  \n**Vital Status:** [Alive/deceased]  \n**Cause of death:** [if deceased]  \n**Sex:** (Female, Male, Intersex)   \n**Race:** [White, American Indian or Alaska Native, Black or African American, Asian, Native Hawaiian or Pacific Islander, Other]  \n**Ethnicity:** [Hispanic or Latino, Not Hispanic or Latino]  \n\n### Diagnosis  \n**Age at Diagnosis:** [years]  \n**Primary Diagnosis:**  \n**Site of Resection or Biopsy:**  \n**Tumor Grade:**  \n**Stage (AJCC 8th Edition):**  \n\n### Therapy  \n**Pre-operative:**  \n**Post-operative:**  \n**Initial Disease Status:**  \n\n### Follow Up  \n**Progression:**  \n**Last Known Disease Status:**   \n**Age at Follow Up:**  \n**Days to Progression## Metadata about this sample  \n\n"
+  },
+  {
     "key": "A",
     "title": "Data Aquisition",
-    "content": "Tissue cyclic immunofluorescence (t-CyCIF) was used to generate the fluorescence images.\n\nThe RareCyte CyteFinder microscope was used with a 40X/0.6NA objective.\n\nThe images were artifact corrected using the BaSiC tool, stitched and registered using the ASHLAR algorithm, \nand segmented using ilastik software and MATLAB. Single-cell features were then extracted from these images using HistoCAT software.\n\n![image](https://www.cycif.org/assets/img/du-lin-rashid-nat-protoc-2019/Fig1_Rashid_SciData.JPG)\n\nRead more about the t-CyCIF method and this data in the following papers:\n\n[Lin et al., eLife, 2018](https://elifesciences.org/articles/31657)\n\n[Du, Lin, and Rashid et al., Nature Methods, 2019](https://www-nature-com.ezp-prod1.hul.harvard.edu/articles/s41596-019-0206-y)\n\n[Rashid et al., Scientific Data, 2019](https://www-nature-com.ezp-prod1.hul.harvard.edu/articles/s41597-019-0332-y)\n"
+    "content": "Tissue cyclic immunofluorescence (t-CyCIF) was used to generate the fluorescence images.\n\nThe RareCyte CyteFinder microscope was used with a 40X/0.6NA objective.\n\nThe images were artifact corrected using the BaSiC tool, stitched and registered using the ASHLAR algorithm, \nand segmented using ilastik software and MATLAB. Single-cell features were then extracted from these images using HistoCAT software.\n\n![image](https://www.cycif.org/assets/img/du-lin-rashid-nat-protoc-2019/Fig1_Rashid_SciData.JPG)"
   },
   {
     "key": "B",
