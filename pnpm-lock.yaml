@@ -90,8 +90,8 @@ dependencies:
     specifier: https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9
     version: '@github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9'
   minerva-author-ui:
-    specifier: 2.0.0-beta.18
-    version: 2.0.0-beta.18(vite@5.3.5)
+    specifier: 2.0.0-beta.19
+    version: 2.0.0-beta.19(vite@5.3.5)
   openseadragon:
     specifier: ^4.1.1
     version: 4.1.1
@@ -4510,8 +4510,8 @@ packages:
       mime-db: 1.52.0
     dev: true
 
-  /minerva-author-ui@2.0.0-beta.18(vite@5.3.5):
-    resolution: {integrity: sha512-2yvDhe792Yz5R7AdaodyxKpeOHGqiTW9EgCiTpHY7QeH4Yz/tvVEfJ89eRHjRwr+RcF+zSkcriSCQyurZiR10g==}
+  /minerva-author-ui@2.0.0-beta.19(vite@5.3.5):
+    resolution: {integrity: sha512-XOT7+NSjzPLhRgIP+W+zlYRcnAm0+gFA3Xrsuid1ChbOTR/0/PdVfgS3hktG2HsB64g81+iP/Hm77f0V8dDllA==}
     dependencies:
       '@arrow-js/core': 1.0.0-alpha.10
       '@haxtheweb/a11y-collapse': 9.0.2
@@ -4529,6 +4529,7 @@ packages:
       prosemirror-markdown: 1.13.0
       prosemirror-schema-list: 1.4.1
       prosemirror-state: 1.4.3
+      prosemirror-transform: 1.9.0
       prosemirror-view: 1.33.9
       vite-plugin-standard-css-modules: 0.0.11(vite@5.3.5)
       web-dialog: 0.0.11
