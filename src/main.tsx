@@ -93,11 +93,15 @@ const Content = (props: Props) => {
     });
   }, [])
   const { marker_names, title, configWaypoints } = props;
+  const {
+    configGroups, configGroupChannels, configSourceChannels 
+  } = props;
 
   // Actual image viewer
   const imager = loader === null ? '' : (
     <Full>
       <Index {...{
+        configGroups, configGroupChannels, configSourceChannels,
         title, configWaypoints, exhibit, setExhibit, loader,
         marker_names, in_f: fileName, handle, ...hashContext
       }} />

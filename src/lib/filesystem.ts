@@ -91,9 +91,7 @@ const findFile: FindFile = async (opts) => {
 const toLoader: ToLoader = async ({in_f, handle}) => {
   const in_fh = await handle.getFileHandle(in_f);
   const in_file = await in_fh.getFile();
-  const in_tiff = await loadOmeTiff(in_file);
-  const { data } = in_tiff;
-  return { data };
+  return await loadOmeTiff(in_file);
 }
 
 export {

@@ -55,7 +55,7 @@
     "gl-matrix": "^3.4.3",
     "idb-keyval": "^6.2.1",
     "lensing": "https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9",
-    "minerva-author-ui": "2.0.0-beta.19",
+    "minerva-author-ui": "2.0.0-beta.26",
     "openseadragon": "^4.1.1",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",

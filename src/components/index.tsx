@@ -8,7 +8,10 @@ import type { OptSW } from "./waypoint/content";
 import type { Waypoint as WaypointType } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
 import type { Exhibit } from "../lib/exhibit";
+import type { ConfigGroup } from "../lib/config";
 import type { ConfigWaypoint } from "../lib/config";
+import type { ConfigGroupChannel } from "../lib/config";
+import type { ConfigSourceChannel } from "../lib/config";
 
 type Props = HashContext & {
   in_f: string;
@@ -17,7 +20,10 @@ type Props = HashContext & {
   handle: Handle.Dir;
   title: string;
   marker_names: string[];
+  configGroups: ConfigGroup[];
   configWaypoints: ConfigWaypoint[];
+  configGroupChannels: ConfigGroupChannel[];
+  configSourceChannels: ConfigSourceChannel[];
   setExhibit: (e: Exhibit) => void;
 };
 
@@ -224,6 +230,9 @@ const Index = (props: Props) => {
     setHash,
     groups,
     stories,
+    configGroups: props.configGroups,
+    configGroupChannels: props.configGroupChannels,
+    configSourceChannels: props.configSourceChannels,
     configWaypoints: props.configWaypoints,
     title: props.title,
     editable,

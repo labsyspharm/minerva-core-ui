@@ -10,7 +10,10 @@ import styles from "./index.module.css";
 import styled from "styled-components";
 
 // Types
+import type { ConfigGroup } from "../../lib/config";
 import type { ConfigWaypoint } from "../../lib/config";
+import type { ConfigGroupChannel } from "../../lib/config";
+import type { ConfigSourceChannel } from "../../lib/config";
 import type { Group, Story } from "../../lib/exhibit";
 import type { HashContext } from "../../lib/hashUtil";
 
@@ -19,7 +22,10 @@ export type Props = HashContext & {
   title: string,
   groups: Group[];
   hiddenChannel: boolean;
+  configGroups: ConfigGroup[];
   configWaypoints: ConfigWaypoint[];
+  configGroupChannels: ConfigGroupChannel[];
+  configSourceChannels: ConfigSourceChannel[];
   setHiddenChannel: (v: boolean) => void;
 };
 
@@ -52,8 +58,18 @@ const Channel = (props: Props) => {
     </div>
   );
   
-  const { title, configWaypoints } = props;
-  const config = { name, stories: configWaypoints };
+  const {
+    title, configGroups, configWaypoints,
+    configSourceChannels,
+    configGroupChannels 
+  } = props;
+  const config = {
+    Name: title,
+    Groups: configGroups,
+    Stories: configWaypoints,
+    SourceChannels: configSourceChannels,
+    GroupChannels: configGroupChannels,
+  };
   const minerva_author_ui = React.createElement(
     author('minerva', { config }), { 
       class: theme, children: props.children,
