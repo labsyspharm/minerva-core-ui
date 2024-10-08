@@ -5,6 +5,9 @@ import { useState, useEffect } from "react";
 import { useHash } from "./lib/hashUtil";
 import { hasFileSystemAccess, toDir, toLoader } from "./lib/filesystem";
 import { isOpts, validate } from './lib/validate';
+import { 
+  extractChannels, mutableConfigArray
+} from './lib/config';
 import { Upload } from './components/upload';
 import { readConfig } from "./lib/exhibit";
 import { Index } from "./components";
@@ -57,6 +60,16 @@ const Content = (props: Props) => {
   const [url, setUrl] = useState(window.location.href);
   const hashContext = useHash(url, exhibit.stories);
   const [handle, setHandle] = useState(null);
+  const [sourceChannels, setSourceChannels] = useState([]);
+  const [groupChannels, setGroupChannels] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const configState = {
+    configGroups: groups,
+    configGroupChannels: mutableConfigArray(
+      groupChannels, setGroupChannels
+    ),
+    configSourceChannels: sourceChannels
+  };
   const [loader, setLoader] = useState(null);
   const [fileName, setFileName] = useState('');
   // Create ome-tiff loader
@@ -82,7 +95,13 @@ const Content = (props: Props) => {
     (async () => {
       if (handle === null) return;
       const loader = await toLoader({ handle, in_f });
-      setLoader(loader.data);
+      const { 
+        SourceChannels, GroupChannels, Groups
+      } = extractChannels(loader);
+      setSourceChannels(SourceChannels);
+      setGroupChannels(GroupChannels);
+      setGroups(Groups);
+      setLoader(loader);
       setFileName(in_f);
     })();
   }
@@ -93,15 +112,12 @@ const Content = (props: Props) => {
     });
   }, [])
   const { marker_names, title, configWaypoints } = props;
-  const {
-    configGroups, configGroupChannels, configSourceChannels 
-  } = props;
 
   // Actual image viewer
   const imager = loader === null ? '' : (
     <Full>
       <Index {...{
-        configGroups, configGroupChannels, configSourceChannels,
+        ...configState,
         title, configWaypoints, exhibit, setExhibit, loader,
         marker_names, in_f: fileName, handle, ...hashContext
       }} />

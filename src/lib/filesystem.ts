@@ -2,6 +2,8 @@ import {
   loadOmeTiff,
 } from "@hms-dbmi/viv";
 
+import type { Loader } from './viv';
+
 type ListDirIn = {
   handle: Handle.Dir,
 }
@@ -25,11 +27,8 @@ type LoaderIn = {
   in_f: string,
   handle: Handle.Dir
 }
-type LoaderOut = {
-  data: LoaderPlane[]
-}
 interface ToLoader {
-  (i: LoaderIn): Promise<LoaderOut>;
+  (i: LoaderIn): Promise<Loader>;
 }
 export type Selection = {
   t: number,

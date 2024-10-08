@@ -12,8 +12,56 @@ type Settings = {
   colors: Color[];
 };
 
+type Channel = {
+  ID: string;
+  SamplesPerPixel: number;
+  Name: string;
+}
+
+type TiffDatum = {
+  IFD: number;
+  PlaneCount: number;
+  FirstT: number;
+  FirstC: number;
+  FirstZ: number;
+  UUID: {
+    FileName: string;
+  };
+}
+
+type Pixels = {
+  Channels: Channel[];
+  ID: string;
+  DimensionOrder: string;
+  Type: string;
+  SizeT: number;
+  SizeC: number;
+  SizeZ: number;
+  SizeY: number;
+  SizeX: number;
+  PhysicalSizeX: number;
+  PhysicalSizeY: number;
+  PhysicalSizeXUnit: string;
+  PhysicalSizeYUnit: string;
+  PhysicalSizeZUnit: string;
+  BigEndian: boolean;
+  TiffData: TiffDatum[];
+}
+
+type Metadata = {
+  ID: string;
+  AquisitionDate: string;
+  Description: string;
+  Pixels: Pixels;
+}
+
+export type Loader = {
+  data: any[];
+  metadata: any;
+}
+
 export type Config = {
-  toSettings: (h: HashState, l?: any, g?: any) => Settings;
+  toSettings: (h: HashState, l?: Loader, g?: any) => Settings;
 };
 
 const toDefaultSettings = (n) => {
@@ -63,7 +111,7 @@ const toSettings = (opts) => {
     const channels = group?.channels || [];
     // Defaults
     if (!loader) return toDefaultSettings(3);
-    const full_level = loader[0];
+    const full_level = loader.data[0];
     if (!loader) return toDefaultSettings(3);
     const { labels, shape } = full_level;
     const c_idx = labels.indexOf("c");

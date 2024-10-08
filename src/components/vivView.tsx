@@ -71,8 +71,8 @@ const VivView = (props: Props) => {
 
   const viewerProps = {
     ...{
-      loader,
       ...shape,
+      loader: loader.data,
       ...(settings as any),
     },
   };

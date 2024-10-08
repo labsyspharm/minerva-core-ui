@@ -7,6 +7,7 @@ import { Main } from "./content";
 import type { OptSW } from "./waypoint/content";
 import type { Waypoint as WaypointType } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
+import type { Loader } from "../lib/viv";
 import type { Exhibit } from "../lib/exhibit";
 import type { ConfigGroup } from "../lib/config";
 import type { ConfigWaypoint } from "../lib/config";
@@ -15,7 +16,7 @@ import type { ConfigSourceChannel } from "../lib/config";
 
 type Props = HashContext & {
   in_f: string;
-  loader: any;
+  loader: Loader;
   exhibit: Exhibit;
   handle: Handle.Dir;
   title: string;
