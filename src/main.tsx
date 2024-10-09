@@ -1,25 +1,26 @@
 import * as React from "react";
 import { get, set } from 'idb-keyval';
 import styled from 'styled-components';
-import { useState, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useHash } from "./lib/hashUtil";
+import { mutableConfigArray } from './lib/config';
 import { hasFileSystemAccess, toDir, toLoader } from "./lib/filesystem";
 import { isOpts, validate } from './lib/validate';
-import { 
-  extractChannels, mutableConfigArray
-} from './lib/config';
+import { extractChannels } from './lib/config';
 import { Upload } from './components/upload';
 import { readConfig } from "./lib/exhibit";
 import { Index } from "./components";
 
-import type { Props as ChannelProps } from "./components/channel"
 import type { ValidObj } from './components/upload';
+import type { ImageProps } from "./components/channel"
 import type { FormEventHandler } from "react";
 import type { ObjAny, KV } from './lib/validate';
-import type { Config } from "./lib/exhibit";
+import type { ConfigProps } from "./lib/config"
+import type { ExhibitConfig } from "./lib/exhibit";
 
-type Props = ChannelProps & {
-  config: Config;
+type Props = ImageProps & {
+  configWaypoints: ConfigProps['Stories']
+  exhibit_config: ExhibitConfig;
   marker_names: string[];
   handleKeys: string[];
 };
@@ -55,21 +56,33 @@ const Scrollable = styled.div`
 
 const Content = (props: Props) => {
   const { handleKeys } = props;
-  const firstExhibit = readConfig(props.config);
+  const firstExhibit = readConfig(props.exhibit_config);
   const [exhibit, setExhibit] = useState(firstExhibit);
   const [url, setUrl] = useState(window.location.href);
   const hashContext = useHash(url, exhibit.stories);
   const [handle, setHandle] = useState(null);
-  const [sourceChannels, setSourceChannels] = useState([]);
-  const [groupChannels, setGroupChannels] = useState([]);
-  const [groups, setGroups] = useState([]);
-  const configState = {
-    configGroups: groups,
-    configGroupChannels: mutableConfigArray(
-      groupChannels, setGroupChannels
-    ),
-    configSourceChannels: sourceChannels
-  };
+  const [config, setConfig] = useState({
+    Name: '',
+    Groups: [],
+    SourceChannels: [],
+    UpdateTimestamp: Date.now(),
+    Stories: props.configWaypoints,
+    GroupChannels: [] 
+  });
+  const setGroupChannels = useCallback(
+    (GroupChannels) => {
+      setConfig((config) => {
+        return {
+          ...config, GroupChannels
+        };
+      })
+    },
+    [setConfig]
+  );
+  useEffect(() => {
+    setGroupChannels(config.GroupChannels);
+  }, [config.GroupChannels, setGroupChannels]);
+
   const [loader, setLoader] = useState(null);
   const [fileName, setFileName] = useState('');
   // Create ome-tiff loader
@@ -98,9 +111,13 @@ const Content = (props: Props) => {
       const { 
         SourceChannels, GroupChannels, Groups
       } = extractChannels(loader);
-      setSourceChannels(SourceChannels);
-      setGroupChannels(GroupChannels);
-      setGroups(Groups);
+      setConfig((config) => {
+        return {
+          ...config, Groups,
+          UpdateTimestamp: Date.now(),
+          SourceChannels, GroupChannels
+        }
+      });
       setLoader(loader);
       setFileName(in_f);
     })();
@@ -111,14 +128,19 @@ const Content = (props: Props) => {
       setUrl(window.location.href);
     });
   }, [])
-  const { marker_names, title, configWaypoints } = props;
+  const { marker_names } = props;
+  const mutable_config = {
+    ...config,
+    GroupChannels: mutableConfigArray(
+      config.GroupChannels, setGroupChannels 
+    )
+  }
 
   // Actual image viewer
   const imager = loader === null ? '' : (
     <Full>
       <Index {...{
-        ...configState,
-        title, configWaypoints, exhibit, setExhibit, loader,
+        config: mutable_config, exhibit, setExhibit, loader,
         marker_names, in_f: fileName, handle, ...hashContext
       }} />
     </Full>

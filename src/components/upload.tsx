@@ -454,19 +454,9 @@ const Upload = (props: UploadProps) => {
   // TODO Improve layout of full version
   const updateSettings = (<TwoColumn>
       <Button {...allowProps}>Update Base Folder</Button>
-  </TwoColumn>) || (<TwoColumn>
-      <Button {...allowProps}>Update Base Folder</Button>
-      <PathGrid>
-        <span>Base Folder:</span>
-        <code>{handle.name}</code>
-      </PathGrid>
   </TwoColumn>)
   // TODO ensure MCMICRO settings work
-  const mcMicroSettings = ' ' || (<FullHeightText>
-    <div>Check if MCMICRO</div>
-    <input type="checkbox" name="is_mc_micro" 
-    checked={mc} onChange={checkMC}/>
-  </FullHeightText>);
+  const mcMicroSettings = ' ';
   return (<>
     { updateSettings }
     { mcMicroSettings }

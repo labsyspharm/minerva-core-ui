@@ -37,7 +37,7 @@ export type ConfigGroup = {
   Channels: string[];
 };
 
-export interface Config {
+export interface ExhibitConfig {
   Groups?: ConfigGroup[];
   Stories?: {
     Waypoints: {
@@ -51,7 +51,7 @@ export interface Config {
   }[];
 }
 
-const readStories = (config: Config): Story[] => {
+const readStories = (config: ExhibitConfig): Story[] => {
   const stories = config.Stories || [];
   const groups = config.Groups || [];
   const groupNames = groups.map((group) => {
@@ -97,7 +97,7 @@ const readChannels = (group: ConfigGroup): Channel[] => {
   });
 };
 
-const readGroups = (config: Config): Group[] => {
+const readGroups = (config: ExhibitConfig): Group[] => {
   const groups = config.Groups || [];
   return groups.map((group, g) => {
     return {
@@ -108,7 +108,7 @@ const readGroups = (config: Config): Group[] => {
   });
 };
 
-const readConfig = (config: Config): Exhibit => {
+const readConfig = (config: ExhibitConfig): Exhibit => {
   return {
     stories: readStories(config),
     groups: readGroups(config),

@@ -10,22 +10,18 @@ import styles from "./index.module.css";
 import styled from "styled-components";
 
 // Types
-import type { ConfigGroup } from "../../lib/config";
-import type { ConfigWaypoint } from "../../lib/config";
-import type { ConfigGroupChannel } from "../../lib/config";
-import type { ConfigSourceChannel } from "../../lib/config";
+import type { ConfigProps } from "../../lib/config";
 import type { Group, Story } from "../../lib/exhibit";
 import type { HashContext } from "../../lib/hashUtil";
 
-export type Props = HashContext & {
-  children: any,
-  title: string,
+export type ImageProps = {
   groups: Group[];
+};
+
+export type Props = HashContext & ImageProps & {
+  children: any,
+  config: ConfigProps;
   hiddenChannel: boolean;
-  configGroups: ConfigGroup[];
-  configWaypoints: ConfigWaypoint[];
-  configGroupChannels: ConfigGroupChannel[];
-  configSourceChannels: ConfigSourceChannel[];
   setHiddenChannel: (v: boolean) => void;
 };
 
@@ -58,20 +54,10 @@ const Channel = (props: Props) => {
     </div>
   );
   
-  const {
-    title, configGroups, configWaypoints,
-    configSourceChannels,
-    configGroupChannels 
-  } = props;
-  const config = {
-    Name: title,
-    Groups: configGroups,
-    Stories: configWaypoints,
-    SourceChannels: configSourceChannels,
-    GroupChannels: configGroupChannels,
-  };
+  const config = props.config;
+  const suffix = `minerva-${config.UpdateTimestamp}`;
   const minerva_author_ui = React.createElement(
-    author('minerva', { config }), { 
+    author(suffix, { config }), {
       class: theme, children: props.children,
     }
   );

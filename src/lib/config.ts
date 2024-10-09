@@ -1,3 +1,5 @@
+import { useRef, useEffect } from "react";
+
 import type { Loader } from './viv';
 
 type ExpandedState = {
@@ -31,6 +33,15 @@ type GroupChannelAssociations = Record<
   'SourceChannel' | 'Group',
   UUID
 >;
+
+export type ConfigProps = {
+  UpdateTimestamp: number;
+  Name: string;
+  Groups: ConfigGroup[];
+  Stories: ConfigWaypoint[];
+  GroupChannels: ConfigGroupChannel[];
+  SourceChannels: ConfigSourceChannel[];
+};
 
 export type ConfigSourceChannel = UUID & {
   Properties: SourceChannelProperties;
@@ -110,73 +121,63 @@ const extractChannels: ExtractChannels = (loader) => {
 }
 
 const mutableConfigArrayItem = (
-  item, namespace, array, index
-) => {
+  array, receiver, index
+) => namespace => {
+  const item = array[index][namespace];
   return [
-    namespace, new Proxy(
-      item[namespace], {
-        has(target, k) {
-          if (k == '$on')
-            return true;
-          return k in target;
-        },
-        get(target, k) {
-          if (k == '$on')
-            return () => {};
-          return target[k];
-        },
-        set(target, k, v) {
-          if (k in target) {
-            target[k] = v;
-            array.splice(index, 1, item);
-          }
+    namespace, new Proxy(item, {
+        set(...args) {
+          Reflect.set(...args);
+          receiver.splice(
+            index, 1, array[index]
+          );
           return true;
         }
-      }
-    )
+    })
   ];
 }
 
 const mutableConfigArray = (
-  state_array, set_state, 
+  target_array, set_state, 
 ) => {
   const methods = [
     'pop', 'push', 'shift', 'unshift',
-    'splice', 'sort', 'reverse'
+    'splice', 'sort', 'reverse',
+    'fill', 'copyWithin'
   ];
   const namespaces = [
-    /*'State', */'Properties', 'Associations'
+    'State', 'Properties', 'Associations'
   ];
-  return new Proxy(state_array, {
-    get(_, key, receiver) {
-      const item = state_array[key];
+  return new Proxy(target_array, {
+    get(target, key, receiver) {
+      const array = target;
+      const item = array[key];
+      // Specific methods will update the state
       if (methods.includes(String(key))) {
-        // Let specific array methods set the array state
         return new Proxy(item, {
-          apply(fn, _, ...args) {
-            const new_state = [...state_array];
+          apply(fn, _, args) {
+            const new_state = [...array];
             const output = fn.apply(new_state, args);
             set_state(new_state);
             return output;
           }
         });
       }
-      if (typeof key == 'symbol') {
+      if (
+        (typeof key != 'string')
+        || (typeof item != 'object')
+        || isNaN(parseInt(key))
+      ) {
         return item;
       }
-      const index = parseInt(key as string);
-      if (isNaN(index) || typeof item != 'object') {
-        return item;
-      }
-      // Let specific properties be modified
-      const entries = namespaces.map(
-        namespace => mutableConfigArrayItem(
-          item, namespace, receiver, index
-        )
-      );
+      // Setting values will update the state
       return {
-        ...item, ...Object.fromEntries(entries)
-      }
+        ...item, ...Object.fromEntries(
+          namespaces.map(mutableConfigArrayItem(
+            array, receiver, parseInt(key) 
+          ))
+        )
+      };
     }
   });
 }
