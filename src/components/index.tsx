@@ -217,14 +217,40 @@ const Index = (props: Props) => {
 
   const {
     in_f, handle, loader, hash, setHash,
-    marker_names, controlPanelElement
+    controlPanelElement, config
   } = props;
-;
+  const {
+    Groups, GroupChannels, SourceChannels
+  } = props.config.ItemRegistry;
+  const itemRegistryMarkerNames = SourceChannels.map(
+    source_channel => source_channel.Properties.Name
+  )
+  const itemRegistryGroups = Groups.map((group, g) => {
+    const { Name } = group.Properties;
+    const channels = GroupChannels.filter(group_channel => (
+      group_channel.Associations.Group.UUID == group.UUID
+    )).map(group_channel => {
+      const defaults = { Name: '' };
+      const {
+        Color, LowerRange, UpperRange
+      } = group_channel.Properties;
+      const { SourceChannel } = group_channel.Associations;
+      const { Name } = SourceChannels.find(source_channel => (
+        source_channel.UUID == SourceChannel.UUID
+      ))?.Properties || defaults;
+      return { 
+        color: Color, name: Name, contrast: [
+          LowerRange, UpperRange
+        ]
+      };
+    });
+    return { g, name: Name, channels };
+  })
   const channelProps = {
     hash,
     setHash,
-    groups,
     stories,
+    groups: itemRegistryGroups,
     controlPanelElement,
     config: props.config,
     editable,
@@ -256,7 +282,7 @@ const Index = (props: Props) => {
   const imageProps = toImageProps({
     props: {
       loader,
-      marker_names,
+      marker_names: itemRegistryMarkerNames,
       ...channelProps,
     },
     buttons: {

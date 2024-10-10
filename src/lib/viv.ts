@@ -129,7 +129,9 @@ const toSettings = (opts) => {
     const colors: Color[] = channels.map((c, i: number) => {
       return c.color ? hexToRGB(c.color) : [0, 0, 0];
     });
-    const contrastLimits: Limit[] = channels.map((c, i: number) => [0, 65535]);
+    const contrastLimits: Limit[] = channels.map(c => {
+      return c.contrast; 
+    });
     const channelsVisible: boolean[] = channels.map((c, i: number) => true);
 
     const n_channels = shape[c_idx] || 0;

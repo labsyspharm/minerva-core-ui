@@ -17,6 +17,7 @@ type SourceChannelProperties = NameProperty & {
   SourceIndex: number;
 };
 type GroupChannelProperties = {
+  Color: string;
   LowerRange: number;
   UpperRange: number;
 };
@@ -106,20 +107,28 @@ const extractChannels: ExtractChannels = (loader) => {
       }
     })
   )
+  const colors = [
+    '0000FF', 'FF0000', 'FFFF00', 'FFFFFF',
+    '00FF00', '00FFFF'
+  ];
   const GroupChannels = SourceChannels.map(
-    (channel, index) => ({
-      UUID: crypto.randomUUID(),
-      State: { Expanded: false },
-      Properties: {
-        LowerRange: 0, UpperRange: 65535 
-      },
-      Associations: {
-        SourceChannel: asUUID(channel.UUID),
-        Group: asUUID(Groups[
-          Math.floor(index / group_size)
-        ].UUID)
+    (channel, index) => {
+      const group_index = Math.floor(index / group_size);
+      const color_index = (index % group_size) % colors.length;
+      const group_uuid = Groups[group_index].UUID;
+      return {
+        UUID: crypto.randomUUID(),
+        State: { Expanded: false },
+        Properties: {
+          LowerRange: 0, UpperRange: 65535,
+          Color: colors[color_index]
+        },
+        Associations: {
+          SourceChannel: asUUID(channel.UUID),
+          Group: asUUID(group_uuid)
+        }
       }
-    })
+    }
   )
   return {
     SourceChannels,
