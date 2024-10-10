@@ -34,13 +34,21 @@ type GroupChannelAssociations = Record<
   UUID
 >;
 
-export type ConfigProps = {
-  UpdateTimestamp: number;
+export type MutableFields = (keyof ItemRegistryProps)[]
+export type ItemRegistryProps = {
   Name: string;
   Groups: ConfigGroup[];
   Stories: ConfigWaypoint[];
   GroupChannels: ConfigGroupChannel[];
   SourceChannels: ConfigSourceChannel[];
+}
+interface SetItems {
+  (user: Partial<ItemRegistryProps>): void;
+}
+
+export type ConfigProps = {
+  ItemRegistry: ItemRegistryProps;
+  ID: string;
 };
 
 export type ConfigSourceChannel = UUID & {
@@ -182,4 +190,18 @@ const mutableConfigArray = (
   });
 }
 
-export { extractChannels, mutableConfigArray }
+const mutableItemRegistry = (
+  ItemRegistry: ItemRegistryProps, setItems: SetItems,
+  fields: MutableFields
+) => {
+  // Transform certain fields into mutable arrays
+  return fields.reduce((registry, field) => ({
+    ...registry, [field]: mutableConfigArray(
+      ItemRegistry[field], updated => {
+        setItems({ [field]: updated })
+      }
+    )
+  }), ItemRegistry);
+}
+
+export { extractChannels, mutableItemRegistry }

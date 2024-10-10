@@ -1,9 +1,10 @@
 import * as React from "react";
 import { get, set } from 'idb-keyval';
 import styled from 'styled-components';
-import { useState, useCallback, useRef, useEffect } from "react";
+import { author } from "minerva-author-ui";
+import { useState, useMemo, useEffect } from "react";
 import { useHash } from "./lib/hashUtil";
-import { mutableConfigArray } from './lib/config';
+import { mutableItemRegistry } from './lib/config';
 import { hasFileSystemAccess, toDir, toLoader } from "./lib/filesystem";
 import { isOpts, validate } from './lib/validate';
 import { extractChannels } from './lib/config';
@@ -15,11 +16,12 @@ import type { ValidObj } from './components/upload';
 import type { ImageProps } from "./components/channel"
 import type { FormEventHandler } from "react";
 import type { ObjAny, KV } from './lib/validate';
-import type { ConfigProps } from "./lib/config"
+import type { ConfigWaypoint } from "./lib/config";
+import type { MutableFields } from "./lib/config";
 import type { ExhibitConfig } from "./lib/exhibit";
 
 type Props = ImageProps & {
-  configWaypoints: ConfigProps['Stories']
+  configWaypoints: ConfigWaypoint[]; 
   exhibit_config: ExhibitConfig;
   marker_names: string[];
   handleKeys: string[];
@@ -62,26 +64,28 @@ const Content = (props: Props) => {
   const hashContext = useHash(url, exhibit.stories);
   const [handle, setHandle] = useState(null);
   const [config, setConfig] = useState({
-    Name: '',
-    Groups: [],
-    SourceChannels: [],
-    UpdateTimestamp: Date.now(),
-    Stories: props.configWaypoints,
-    GroupChannels: [] 
-  });
-  const setGroupChannels = useCallback(
-    (GroupChannels) => {
-      setConfig((config) => {
-        return {
-          ...config, GroupChannels
-        };
-      })
+    ItemRegistry: {
+      Name: '', Groups: [],
+      GroupChannels: [], SourceChannels: [],
+      Stories: props.configWaypoints,
     },
-    [setConfig]
-  );
-  useEffect(() => {
-    setGroupChannels(config.GroupChannels);
-  }, [config.GroupChannels, setGroupChannels]);
+    ID: crypto.randomUUID()
+  });
+  const resetItems = ItemRegistry => {
+    setConfig(config => ({
+      ...config, ItemRegistry: {
+        ...config.ItemRegistry, ...ItemRegistry
+      },
+      ID: crypto.randomUUID()
+    }));
+  };
+  const setItems = ItemRegistry => {
+    setConfig(config => ({
+      ...config, ItemRegistry: {
+        ...config.ItemRegistry, ...ItemRegistry
+      },
+    }));
+  }
 
   const [loader, setLoader] = useState(null);
   const [fileName, setFileName] = useState('');
@@ -111,12 +115,8 @@ const Content = (props: Props) => {
       const { 
         SourceChannels, GroupChannels, Groups
       } = extractChannels(loader);
-      setConfig((config) => {
-        return {
-          ...config, Groups,
-          UpdateTimestamp: Date.now(),
-          SourceChannels, GroupChannels
-        }
+      resetItems({
+        Groups, SourceChannels, GroupChannels
       });
       setLoader(loader);
       setFileName(in_f);
@@ -129,18 +129,22 @@ const Content = (props: Props) => {
     });
   }, [])
   const { marker_names } = props;
-  const mutable_config = {
-    ...config,
-    GroupChannels: mutableConfigArray(
-      config.GroupChannels, setGroupChannels 
+  const mutableFields: MutableFields = [ 
+    'GroupChannels' 
+  ]
+  // Define a WebComponent for the item panel
+  const controlPanelElement = useMemo(() => author({
+    ...config, ItemRegistry: mutableItemRegistry(
+      config.ItemRegistry, setItems, mutableFields 
     )
-  }
+  }), [config.ID])
 
   // Actual image viewer
   const imager = loader === null ? '' : (
     <Full>
       <Index {...{
-        config: mutable_config, exhibit, setExhibit, loader,
+        config, controlPanelElement,
+        exhibit, setExhibit, loader,
         marker_names, in_f: fileName, handle, ...hashContext
       }} />
     </Full>

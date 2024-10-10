@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Legend } from "./legend";
 import { Content } from "./content";
 import { Toolbar } from "./toolbar";
-import { author } from "minerva-author-ui";
 import { getStyler } from "../../lib/util";
 import { theme } from "../../theme.module.css";
 import styles from "./index.module.css";
@@ -22,6 +21,7 @@ export type Props = HashContext & ImageProps & {
   children: any,
   config: ConfigProps;
   hiddenChannel: boolean;
+  controlPanelElement: string;
   setHiddenChannel: (v: boolean) => void;
 };
 
@@ -54,10 +54,8 @@ const Channel = (props: Props) => {
     </div>
   );
   
-  const config = props.config;
-  const suffix = `minerva-${config.UpdateTimestamp}`;
   const minerva_author_ui = React.createElement(
-    author(suffix, { config }), {
+    props.controlPanelElement, {
       class: theme, children: props.children,
     }
   );

@@ -18,6 +18,7 @@ type Props = HashContext & {
   handle: Handle.Dir;
   config: ConfigProps;
   marker_names: string[];
+  controlPanelElement: string;
   setExhibit: (e: Exhibit) => void;
 };
 
@@ -216,7 +217,7 @@ const Index = (props: Props) => {
 
   const {
     in_f, handle, loader, hash, setHash,
-    marker_names
+    marker_names, controlPanelElement
   } = props;
 ;
   const channelProps = {
@@ -224,6 +225,7 @@ const Index = (props: Props) => {
     setHash,
     groups,
     stories,
+    controlPanelElement,
     config: props.config,
     editable,
     hiddenChannel,
