@@ -17,17 +17,16 @@ type MainProps = WaypointProps & ChannelProps & {
 const Main = (props: MainProps) => {
   const { handle, in_f } = props;
   const { stopExport } = props;
-  const exporterProps = { 
-    handle, in_f, stopExport
-  };
-  let out = <Exporter {...exporterProps}/>;
+
+  let out = <></>;
   if (props.ioState == 'IDLE') {
-    if (props.hash.i >= 0) {
-      out = <Info {...props}/>;
-    }
-    else {
-      out = <Channel {...props}/>;
-    }
+    out = <Channel {...props}/>
+  }
+  else if (props.ioState == 'EXPORTING') {
+    const exporterProps = { 
+      handle, in_f, stopExport
+    };
+    out = <Exporter {...exporterProps}/>;
   }
   return <>{out}</>;
 };

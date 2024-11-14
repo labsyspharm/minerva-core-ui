@@ -114,7 +114,7 @@ const Content = (props: Props) => {
       const loader = await toLoader({ handle, in_f });
       const { 
         SourceChannels, GroupChannels, Groups
-      } = extractChannels(loader);
+      } = await extractChannels(loader);
       resetItems({
         Groups, SourceChannels, GroupChannels
       });

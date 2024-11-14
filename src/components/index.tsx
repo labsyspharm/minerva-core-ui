@@ -87,11 +87,7 @@ const Index = (props: Props) => {
   const { exhibit, setExhibit } = props;
   const { groups, stories } = exhibit;
 
-  const ioStates = [
-    'IDLE', 'EXPORTING', 'EXPORTED'
-  ];
-  // TODO - return to ioStates[0] - changed for quick dev w OSD
-  const [ioState, setIoState] = useState(ioStates[0]);
+  const [ioState, setIoState] = useState("IDLE");
   const [zoomInEl, setZoomIn] = useState(null);
   const [zoomOutEl, setZoomOut] = useState(null);
   const [editable, setEditable] = useState(false);
@@ -110,8 +106,8 @@ const Index = (props: Props) => {
   React.useEffect(() => {
     window.addEventListener("resize", handleResize, false);
   }, []);
-  const startExport = () => setIoState(ioStates[1]);
-  const stopExport = () => setIoState(ioStates[0]);
+  const startExport = () => setIoState("EXPORTING");
+  const stopExport = () => setIoState("IDLE");
   const toggleEditor = () => setEditable(!editable);
 
   const onZoomInEl = onLoaded(setZoomIn);

@@ -21,6 +21,7 @@ export type Props = HashContext & ImageProps & {
   children: any,
   config: ConfigProps;
   hiddenChannel: boolean;
+  startExport: () => void;
   controlPanelElement: string;
   setHiddenChannel: (v: boolean) => void;
 };

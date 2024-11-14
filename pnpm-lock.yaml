@@ -93,8 +93,8 @@ importers:
         specifier: https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9
         version: https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9
       minerva-author-ui:
-        specifier: 2.0.0-beta.28
-        version: 2.0.0-beta.28(lit@3.2.0)(rollup@4.19.0)(vite@5.3.5(@types/node@20.14.12))
+        specifier: 2.0.0-beta.40
+        version: 2.0.0-beta.40(lit@3.2.0)(rollup@4.19.0)(vite@5.3.5(@types/node@20.14.12))
       openseadragon:
         specifier: ^4.1.1
         version: 4.1.1
@@ -574,29 +574,41 @@ packages:
       '@fortawesome/fontawesome-svg-core': ~1 || ~6
       react: '>=16.3'
 
-  '@haxtheweb/a11y-collapse@9.0.6':
-    resolution: {integrity: sha512-0v1hrPnUR+JwxMUQ/LesgLCa2Cx0XRVRDpOtlJ+rYFXRbXzwnSzhYsN8RzyZdz/eygKcQDu5VDnOv7L/fy1bmQ==}
+  '@haxtheweb/a11y-collapse@9.0.7':
+    resolution: {integrity: sha512-S9wZDdVA2R+83Jcr6R3VmwUkbVeP2/5EglLoukuaW2aUtVsmcixpvAJEd97V1P+uN9svKxrmzp3U8fFtkfyNPA==}
 
-  '@haxtheweb/a11y-utils@9.0.6':
-    resolution: {integrity: sha512-vZ55dj9Avbdmkhffdldp5b45XDvlYyytbyYjB30KX2LXEAnoZZa7KReLzD/8gyTpF3vdFMF3Bm72BlPI0BbSHQ==}
+  '@haxtheweb/a11y-utils@9.0.17':
+    resolution: {integrity: sha512-onU4C5htTiXOWB6EPJscn59A0DmFWH5gVVOXHgjWon/OLyqEAtrEJGA5um2GLtncZZw4yhUr59V7XLEELOnhNQ==}
 
-  '@haxtheweb/d-d-d@9.0.6':
-    resolution: {integrity: sha512-uczI7P3Zkt5UjBnoZwOP8gLdFC2MwsN5MOhaRVUGCOARYWsW98m4bDyf/wxA8KaQ9rUH2SYWk2K/UiMoqONGjw==}
+  '@haxtheweb/chartist-render@9.0.7':
+    resolution: {integrity: sha512-M1nM1g5zjYs+2ZANm0plR0eUDd0xwCA5eHFFQwC/WJmwTq751aYzYJrvCst0PdqWVN2aRHraThqG2SMSbsJk/A==}
 
-  '@haxtheweb/hax-iconset@9.0.6':
-    resolution: {integrity: sha512-H1h5Phjb6rf1RvT5zpG4KHAfHj/Wq4qd9nkQehX6/Gz6oYSOS5/8ifk9MT3t4+PF4lSrSyz3AzS9cbyiXGgoBQ==}
+  '@haxtheweb/d-d-d@9.0.16':
+    resolution: {integrity: sha512-17jqT/eCvgUo8tjhjKy6gczlU4DjT2BRQK7NxsV8jdE2LY9Tt6XzXlF2iJfLpzXF2/E9epBjNpyk5UqcJIIJfQ==}
 
-  '@haxtheweb/simple-colors-shared-styles@9.0.6':
-    resolution: {integrity: sha512-dZhRF3xVvAZW0m3Q8t4OUmKsm2r39Vb0MscaNAt+RHBlZ2oqH17JUyJouueMKjVrIYEkmK+oRXq+FSQX2yXmcg==}
+  '@haxtheweb/es-global-bridge@9.0.17':
+    resolution: {integrity: sha512-q9zF5sRE7Pca2Vse3O9MN7+1tGeyHspWESVjkuyaau/ACLdsfLpX6nd58Eep/XF2vT0WwGKUORvtveyotfQtTA==}
 
-  '@haxtheweb/simple-colors@9.0.6':
-    resolution: {integrity: sha512-34ZM9cSQE2hoi/aJgzKpRGuYpA17NOskBm6zZDOjZZl9MyyU9Si0PpWIqnhtZkYtxyUXEwwjkLzqqxxyvtqx3g==}
+  '@haxtheweb/hax-iconset@9.0.7':
+    resolution: {integrity: sha512-g9UIss/rgsdAqT/8GZfXTqEv4rr2qBas3H75yywruDUckCsKcaewOQbgKcu4HA1a5PCMjwT4tKWLYy3RSLt99g==}
 
-  '@haxtheweb/simple-icon@9.0.6':
-    resolution: {integrity: sha512-pvPtp+DIx1mGIt4k6q2Ir/Q+U4+blSY0RiHjoiUg2eyHVPoh615yvlpUOwdJWBk7jPAZHUAVY+LLANQ89/dL7Q==}
+  '@haxtheweb/lrndesign-chart@9.0.7':
+    resolution: {integrity: sha512-gjgriWj64F9hWqD0yhsV7QAwpKciHHNJaw2b8KvDEEl6M1HdCbLAZZqrRxyvcr7yWpNZMZpQ0h2gYA574z4+Yg==}
 
-  '@haxtheweb/simple-tooltip@9.0.6':
-    resolution: {integrity: sha512-4Lnzm/3MH/w2kll3VyC1w9DcEvpmY2kRPBRQ0NZ2wuKJBOsVVlQaYSUw5je2WwR7gas7PyQ6CmWXIOiFOIDEEg==}
+  '@haxtheweb/simple-colors-shared-styles@9.0.7':
+    resolution: {integrity: sha512-9MwTju+NnvUxu1Zc2DwHggZ9gi0iweDHNfSM4Fw/RHTtSF8MjiK424OrXlNLaNfW/cktteo4Zm0n5HxL3YE0xQ==}
+
+  '@haxtheweb/simple-colors@9.0.7':
+    resolution: {integrity: sha512-kuJn+Bn3A6puj4HT9Jg9cVtPooIb0Sb7jw7iynQoaJn10luA6DDvr5Bh4xPMRCTwuiJknNw8s8unJIDFyMqJVw==}
+
+  '@haxtheweb/simple-icon@9.0.7':
+    resolution: {integrity: sha512-fFR+gpYHdLET6A+t/+kss8TNM4ieVl4+FJ2v1gtpUo8zaa0hYDYYHp0zs3G+Bs4nl9+MGRgZ0anrNkfQMMU83w==}
+
+  '@haxtheweb/simple-tooltip@9.0.7':
+    resolution: {integrity: sha512-eeGav5gapJClhYQNeF+xzOveXqy/AE4MZu/BpVnatme/qaCoaB5HGHFIQW0HA2HOoNl8jM4rc1Xd6Jzz2pgX9Q==}
+
+  '@haxtheweb/utils@9.0.7':
+    resolution: {integrity: sha512-9g2+zumdBbqjfxahnFEU49AgiRVCeFryPDv4r8NhmULsGkcgz2GY6Z9qKoWie3AF5JixKwodaOSxtqaXnKDaYQ==}
 
   '@hms-dbmi/viv@0.15.1':
     resolution: {integrity: sha512-fkQ701BEmq+oCQh2nx9aYo60TdDgf0IrIgSnzQTGlHFR4QbqdmEpmzvUnirQXWQ6j3dtshvmqoVAI6h/qD5vbQ==}
@@ -870,6 +882,9 @@ packages:
 
   '@petamoriken/float16@3.8.7':
     resolution: {integrity: sha512-/Ri4xDDpe12NT6Ex/DRgHzLlobiQXEW/hmG08w1wj/YU7hLemk97c+zHQFp0iZQ9r7YqgLEXZR2sls4HxBf9NA==}
+
+  '@polymer/iron-ajax@3.0.1':
+    resolution: {integrity: sha512-7+TPEAfWsRdhj1Y8UeF1759ktpVu+c3sG16rJiUC3wF9+woQ9xI1zUm2d59i7Yc3aDEJrR/Q8Y262KlOvyGVNg==}
 
   '@polymer/polymer@3.5.1':
     resolution: {integrity: sha512-JlAHuy+1qIC6hL1ojEUfIVD58fzTpJAoCxFwV5yr0mYTXV1H8bz5zy0+rC963Cgr9iNXQ4T9ncSjC2fkF9BQfw==}
@@ -1194,26 +1209,26 @@ packages:
     resolution: {integrity: sha512-RVGC9UhPOCsfCdI9pU++K4nD7to+jTcMIbXTSOcrLqUEW6gF2pU1UUbYJKc9cvcRSK1UDeMJ7pdMxf4bhMpV/A==}
     engines: {node: ^18.18.0 || >=20.0.0}
 
-  '@ui5/webcomponents-base@2.3.0':
-    resolution: {integrity: sha512-TxP65GLQjtVMSIRpgWGpXdCjz1Ec7KlO7dzde38Y4hC0BA1MNosn5+rLVwJdWUhALb+kJGYs4CMCqz4pm6sepQ==}
+  '@ui5/webcomponents-base@2.2.0':
+    resolution: {integrity: sha512-3t4dm26l3qnXwo/aAkIy7Hk466LOVnaOnaMJFtZtMdDrHa/dsIGPxjwoylhIOuKV6w0D+dCiXPbSAIqaB288HA==}
 
-  '@ui5/webcomponents-icons-business-suite@2.3.0':
-    resolution: {integrity: sha512-KfPd6uILOm/64pigpijFjlu9BiZzdS7Pj+qbweYF9uCe/48ILH7Oc2lRXQPzBhX0jnv38k1ZhFGQMgfPnl+WPA==}
+  '@ui5/webcomponents-icons-business-suite@2.2.0':
+    resolution: {integrity: sha512-Zl+7s1BUXWVwEEmLFqZPz2p78P7kpIC0T3RLM76AwlOtV5Du+Os/IIWjZVjciR3RqN2TD5CFG9DTgVvuLCJEgQ==}
 
-  '@ui5/webcomponents-icons-tnt@2.3.0':
-    resolution: {integrity: sha512-pv7VW09wolR0Asq/A2laOdNePEdFeZLVyScJS9OoQLBKvabcq7yyC4qugGIPsUaDpdNSGrigKMVcYSJs/OqQTQ==}
+  '@ui5/webcomponents-icons-tnt@2.2.0':
+    resolution: {integrity: sha512-8NC6XWPzOWHL85CDJV6EXk+35+rYnuayqb/TtHQtOxtAR6wYEceSVllO+hO2WaIZAMlhWW3YAWrzdH395qYdrg==}
 
-  '@ui5/webcomponents-icons@2.3.0':
-    resolution: {integrity: sha512-O1DvElbf9v0bf/0dHGg8woyE1qwnmwSJfzqNb0nd6yQCQm8d33TRrYSa1FgPvFphJQ/x0FBm/LGcFguo/1Lgow==}
+  '@ui5/webcomponents-icons@2.2.0':
+    resolution: {integrity: sha512-EY9lrjiiudD2DZBJ1K7fkTIrpKaVTu0QIsPo8yjIXXJlbwkZRKP57YhRGtb5il/D/xt+C0CIBqMyTrz/u2FGNA==}
 
-  '@ui5/webcomponents-localization@2.3.0':
-    resolution: {integrity: sha512-tIzbb2sKIURhM4FqGShWyzWhy0ucY9nvWrCOZZjshf/u2yasgIe1L4bdKzM95FshL1Uvxmq3X5ua4QiTguLaMg==}
+  '@ui5/webcomponents-localization@2.2.0':
+    resolution: {integrity: sha512-25oqK8dlMAAKsahD4O5I2os4QypA4QzdvZrfl/A5MbXPfWAQ7mKY6VDEiZSraGOO6UmypP2WxHQciXEGNaB16w==}
 
-  '@ui5/webcomponents-theming@2.3.0':
-    resolution: {integrity: sha512-4raqA6bTWWP8Rz9zfX0WNyYGuDMPI+BEGZ56HQvPe9856RWEt79bPbYNTM+zW5YT26eGZpZONYOu76LhOjImsA==}
+  '@ui5/webcomponents-theming@2.2.0':
+    resolution: {integrity: sha512-KKK3UUTtU4jdxn1lJdSRcNmzM7bNTTymTT5DfLeGmoRRqkmSye2pG7LAjwfRfxKRG3xPEJw+KdUGe5VBwpTZ6A==}
 
-  '@ui5/webcomponents@2.3.0':
-    resolution: {integrity: sha512-CIlKYCkF3NIkM25ngAJi859BWrgERFxSCwQfLPbR8b0Py6lleygp/73puZyaRXhRezUse97r/CfCbfLn9GzrLg==}
+  '@ui5/webcomponents@2.2.0':
+    resolution: {integrity: sha512-u2VlGKMFUfl9Mw7ECyQXEW+SSyrU4WAbGgD/fvqVhMxP8AiGF2XwCAfLFIo4tivKPHkZ0UeyiL5eL1ybRR4JBw==}
 
   '@ungap/structured-clone@1.2.0':
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
@@ -1453,6 +1468,29 @@ packages:
 
   character-reference-invalid@2.0.1:
     resolution: {integrity: sha512-iBZ4F4wRbyORVsu0jPV7gXkOsGYjGHPmAyv+HiHG8gi5PtC9KI2j1+v8/tlibRvjoWX027ypmG/n0HtO5t7unw==}
+
+  chartist-plugin-accessibility@0.0.5:
+    resolution: {integrity: sha512-TwY5UQqHjmvq3aj4L1+X4CP7cuuY71/efKWmkCnZMyR7aqIODnOfesfUfQWi1Txg5xRBL2uIoUZXxv44VQztiA==}
+    engines: {node: '>=0.8.0'}
+
+  chartist-plugin-axistitle@0.0.7:
+    resolution: {integrity: sha512-qFG7R/qiZZyCn/gx9WJpMcnyhE0LIpGBxDnPpYtzY5cG53fHBkvJDsAEHEFFfO1l/RHI0G8oN9fpoUD/BMeiFA==}
+    engines: {node: '>=0.8.0'}
+
+  chartist-plugin-fill-donut@0.1.4:
+    resolution: {integrity: sha512-/ZUXLQY9LfDJuDoHYG2sZIPBpFKZ/FYwm9E6zyIy8j0ZDUpG8yMUmXvngBfJCtUEmPMde5782Q2CLuuZ3YyndQ==}
+
+  chartist-plugin-pointlabels@0.0.6:
+    resolution: {integrity: sha512-DUemVUBWAN0qAHBUMXKKLrDCsUL1qWWwN+EfxN8gpftgXSheMiYeq83uHoHyp4X+W5Pz/aUWBf3N/HJwj+eRFw==}
+    engines: {node: '>=0.8.0'}
+
+  chartist@0.11.4:
+    resolution: {integrity: sha512-H4AimxaUD738/u9Mq8t27J4lh6STsLi4BQHt65nOtpLk3xyrBPaLiLMrHw7/WV9CmsjGA02WihjuL5qpSagLYw==}
+    engines: {node: '>=4.6.0'}
+
+  chartist@1.3.0:
+    resolution: {integrity: sha512-M3ckI3ua7EHt08WLZvdi3QXn5g+in27qU6TxjI5bpriS6QwIZlWtisyUhFbpGclW546SlT3SL9oq0vFFDiAo6g==}
+    engines: {node: '>=14'}
 
   classnames@2.5.1:
     resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
@@ -2383,8 +2421,8 @@ packages:
     resolution: {integrity: sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==}
     engines: {node: '>= 0.6'}
 
-  minerva-author-ui@2.0.0-beta.28:
-    resolution: {integrity: sha512-QjAHgR73o91l8h78wXkW0b4kMg0fhErFJ0bX2qFUCP2Ov92cxhdIF+AF0/lfZTfc72q3dMBe4Z0DlkYIKT8WFA==}
+  minerva-author-ui@2.0.0-beta.40:
+    resolution: {integrity: sha512-zSf3Pppvj+zIhKfVuVlfl4cdjTzUy6/5Ai5YTXSTJ/XMcc49hKMLLEGTsjG4xPjL3gGBVN0sRDVi5La1nG7reA==}
 
   minimatch@3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
@@ -3635,46 +3673,67 @@ snapshots:
       prop-types: 15.8.1
       react: 18.3.1
 
-  '@haxtheweb/a11y-collapse@9.0.6':
+  '@haxtheweb/a11y-collapse@9.0.7':
     dependencies:
-      '@haxtheweb/simple-icon': 9.0.6
-      '@haxtheweb/simple-tooltip': 9.0.6
+      '@haxtheweb/simple-icon': 9.0.7
+      '@haxtheweb/simple-tooltip': 9.0.7
       lit: 3.2.0
 
-  '@haxtheweb/a11y-utils@9.0.6':
-    dependencies:
-      lit: 3.2.0
-
-  '@haxtheweb/d-d-d@9.0.6':
-    dependencies:
-      '@haxtheweb/hax-iconset': 9.0.6
-      '@haxtheweb/simple-colors': 9.0.6
-      '@haxtheweb/simple-icon': 9.0.6
-      lit: 3.2.0
-
-  '@haxtheweb/hax-iconset@9.0.6':
-    dependencies:
-      '@haxtheweb/simple-icon': 9.0.6
-
-  '@haxtheweb/simple-colors-shared-styles@9.0.6':
+  '@haxtheweb/a11y-utils@9.0.17':
     dependencies:
       lit: 3.2.0
 
-  '@haxtheweb/simple-colors@9.0.6':
+  '@haxtheweb/chartist-render@9.0.7':
     dependencies:
-      '@haxtheweb/a11y-utils': 9.0.6
-      '@haxtheweb/simple-colors-shared-styles': 9.0.6
+      '@haxtheweb/utils': 9.0.7
+      '@polymer/iron-ajax': 3.0.1
+      chartist: 0.11.4
+      chartist-plugin-accessibility: 0.0.5
+      chartist-plugin-axistitle: 0.0.7
+      chartist-plugin-fill-donut: 0.1.4
+      chartist-plugin-pointlabels: 0.0.6
       lit: 3.2.0
 
-  '@haxtheweb/simple-icon@9.0.6':
+  '@haxtheweb/d-d-d@9.0.16':
     dependencies:
-      '@haxtheweb/simple-colors': 9.0.6
+      '@haxtheweb/hax-iconset': 9.0.7
+      '@haxtheweb/simple-colors': 9.0.7
+      '@haxtheweb/simple-icon': 9.0.7
+      lit: 3.2.0
+
+  '@haxtheweb/es-global-bridge@9.0.17': {}
+
+  '@haxtheweb/hax-iconset@9.0.7':
+    dependencies:
+      '@haxtheweb/simple-icon': 9.0.7
+
+  '@haxtheweb/lrndesign-chart@9.0.7':
+    dependencies:
+      '@haxtheweb/chartist-render': 9.0.7
+      '@haxtheweb/simple-colors': 9.0.7
+      lit: 3.2.0
+
+  '@haxtheweb/simple-colors-shared-styles@9.0.7':
+    dependencies:
+      lit: 3.2.0
+
+  '@haxtheweb/simple-colors@9.0.7':
+    dependencies:
+      '@haxtheweb/a11y-utils': 9.0.17
+      '@haxtheweb/simple-colors-shared-styles': 9.0.7
+      lit: 3.2.0
+
+  '@haxtheweb/simple-icon@9.0.7':
+    dependencies:
+      '@haxtheweb/simple-colors': 9.0.7
       flag-icons: 6.6.4
       lit: 3.2.0
 
-  '@haxtheweb/simple-tooltip@9.0.6':
+  '@haxtheweb/simple-tooltip@9.0.7':
     dependencies:
       lit: 3.2.0
+
+  '@haxtheweb/utils@9.0.7': {}
 
   '@hms-dbmi/viv@0.15.1(ci2eqikqe4vxuytf2dcm5p5xgu)':
     dependencies:
@@ -4108,6 +4167,10 @@ snapshots:
 
   '@petamoriken/float16@3.8.7': {}
 
+  '@polymer/iron-ajax@3.0.1':
+    dependencies:
+      '@polymer/polymer': 3.5.1
+
   '@polymer/polymer@3.5.1':
     dependencies:
       '@webcomponents/shadycss': 1.11.2
@@ -4441,41 +4504,41 @@ snapshots:
       '@typescript-eslint/types': 7.17.0
       eslint-visitor-keys: 3.4.3
 
-  '@ui5/webcomponents-base@2.3.0':
+  '@ui5/webcomponents-base@2.2.0':
     dependencies:
       '@lit-labs/ssr-dom-shim': 1.2.1
       lit-html: 2.8.0
 
-  '@ui5/webcomponents-icons-business-suite@2.3.0':
+  '@ui5/webcomponents-icons-business-suite@2.2.0':
     dependencies:
-      '@ui5/webcomponents-base': 2.3.0
+      '@ui5/webcomponents-base': 2.2.0
 
-  '@ui5/webcomponents-icons-tnt@2.3.0':
+  '@ui5/webcomponents-icons-tnt@2.2.0':
     dependencies:
-      '@ui5/webcomponents-base': 2.3.0
+      '@ui5/webcomponents-base': 2.2.0
 
-  '@ui5/webcomponents-icons@2.3.0':
+  '@ui5/webcomponents-icons@2.2.0':
     dependencies:
-      '@ui5/webcomponents-base': 2.3.0
+      '@ui5/webcomponents-base': 2.2.0
 
-  '@ui5/webcomponents-localization@2.3.0':
+  '@ui5/webcomponents-localization@2.2.0':
     dependencies:
       '@types/openui5': 1.128.0
-      '@ui5/webcomponents-base': 2.3.0
+      '@ui5/webcomponents-base': 2.2.0
 
-  '@ui5/webcomponents-theming@2.3.0':
+  '@ui5/webcomponents-theming@2.2.0':
     dependencies:
       '@sap-theming/theming-base-content': 11.17.1
-      '@ui5/webcomponents-base': 2.3.0
+      '@ui5/webcomponents-base': 2.2.0
 
-  '@ui5/webcomponents@2.3.0':
+  '@ui5/webcomponents@2.2.0':
     dependencies:
-      '@ui5/webcomponents-base': 2.3.0
-      '@ui5/webcomponents-icons': 2.3.0
-      '@ui5/webcomponents-icons-business-suite': 2.3.0
-      '@ui5/webcomponents-icons-tnt': 2.3.0
-      '@ui5/webcomponents-localization': 2.3.0
-      '@ui5/webcomponents-theming': 2.3.0
+      '@ui5/webcomponents-base': 2.2.0
+      '@ui5/webcomponents-icons': 2.2.0
+      '@ui5/webcomponents-icons-business-suite': 2.2.0
+      '@ui5/webcomponents-icons-tnt': 2.2.0
+      '@ui5/webcomponents-localization': 2.2.0
+      '@ui5/webcomponents-theming': 2.2.0
 
   '@ungap/structured-clone@1.2.0': {}
 
@@ -4833,6 +4896,18 @@ snapshots:
   character-entities@2.0.2: {}
 
   character-reference-invalid@2.0.1: {}
+
+  chartist-plugin-accessibility@0.0.5: {}
+
+  chartist-plugin-axistitle@0.0.7: {}
+
+  chartist-plugin-fill-donut@0.1.4: {}
+
+  chartist-plugin-pointlabels@0.0.6: {}
+
+  chartist@0.11.4: {}
+
+  chartist@1.3.0: {}
 
   classnames@2.5.1: {}
 
@@ -6058,17 +6133,21 @@ snapshots:
     dependencies:
       mime-db: 1.52.0
 
-  minerva-author-ui@2.0.0-beta.28(lit@3.2.0)(rollup@4.19.0)(vite@5.3.5(@types/node@20.14.12)):
+  minerva-author-ui@2.0.0-beta.40(lit@3.2.0)(rollup@4.19.0)(vite@5.3.5(@types/node@20.14.12)):
     dependencies:
       '@arrow-js/core': 1.0.0-alpha.10
-      '@haxtheweb/a11y-collapse': 9.0.6
-      '@haxtheweb/d-d-d': 9.0.6
-      '@haxtheweb/simple-icon': 9.0.6
+      '@haxtheweb/a11y-collapse': 9.0.7
+      '@haxtheweb/d-d-d': 9.0.16
+      '@haxtheweb/es-global-bridge': 9.0.17
+      '@haxtheweb/lrndesign-chart': 9.0.7
+      '@haxtheweb/simple-colors': 9.0.7
+      '@haxtheweb/simple-icon': 9.0.7
       '@lit/reactive-element': 2.0.4
       '@rollup/pluginutils': 5.1.2(rollup@4.19.0)
-      '@ui5/webcomponents': 2.3.0
+      '@ui5/webcomponents': 2.2.0
       '@vaadin/form-layout': 24.4.10
       '@vaadin/text-field': 24.4.10
+      chartist: 1.3.0
       foobar-ipsum: 1.0.3
       npm: 10.8.3
       prosemirror-commands: 1.6.0
