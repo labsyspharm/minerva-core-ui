@@ -216,7 +216,7 @@ const Index = (props: Props) => {
     controlPanelElement, config
   } = props;
   const {
-    Groups, GroupChannels, SourceChannels
+    Colors, Groups, GroupChannels, SourceChannels
   } = props.config.ItemRegistry;
   const itemRegistryMarkerNames = SourceChannels.map(
     source_channel => source_channel.Properties.Name
@@ -227,15 +227,19 @@ const Index = (props: Props) => {
       group_channel.Associations.Group.UUID == group.UUID
     )).map(group_channel => {
       const defaults = { Name: '' };
-      const {
-        Color, LowerRange, UpperRange
-      } = group_channel.Properties;
+      const { R, G, B } = Colors.find(({ ID }) => {
+        return ID === group_channel.Associations.Color.ID;
+      })?.Properties || {};
+      const color = (
+        (1 << 24) + (R << 16) + (G << 8) + B
+      ).toString(16).slice(1);
+      const { LowerRange, UpperRange } = group_channel.Properties;
       const { SourceChannel } = group_channel.Associations;
       const { Name } = SourceChannels.find(source_channel => (
         source_channel.UUID == SourceChannel.UUID
       ))?.Properties || defaults;
       return { 
-        color: Color, name: Name, contrast: [
+        color, name: Name, contrast: [
           LowerRange, UpperRange
         ]
       };

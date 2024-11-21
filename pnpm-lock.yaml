@@ -93,8 +93,8 @@ importers:
         specifier: https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9
         version: https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9
       minerva-author-ui:
-        specifier: 2.0.0-beta.40
-        version: 2.0.0-beta.40(lit@3.2.0)(rollup@4.19.0)(vite@5.3.5(@types/node@20.14.12))
+        specifier: 2.0.0-beta.48
+        version: 2.0.0-beta.48(lit@3.2.0)(rollup@4.19.0)(vite@5.3.5(@types/node@20.14.12))
       openseadragon:
         specifier: ^4.1.1
         version: 4.1.1
@@ -2421,8 +2421,8 @@ packages:
     resolution: {integrity: sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==}
     engines: {node: '>= 0.6'}
 
-  minerva-author-ui@2.0.0-beta.40:
-    resolution: {integrity: sha512-zSf3Pppvj+zIhKfVuVlfl4cdjTzUy6/5Ai5YTXSTJ/XMcc49hKMLLEGTsjG4xPjL3gGBVN0sRDVi5La1nG7reA==}
+  minerva-author-ui@2.0.0-beta.48:
+    resolution: {integrity: sha512-UCKd61/BEO7v4AanFUbPlSpRquEzPfEqk9aEcnV/8ZfEwmi0OGW85KUS6hQJyvWVLUZiV/LCSF5+HNMV/FiCfQ==}
 
   minimatch@3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
@@ -6133,7 +6133,7 @@ snapshots:
     dependencies:
       mime-db: 1.52.0
 
-  minerva-author-ui@2.0.0-beta.40(lit@3.2.0)(rollup@4.19.0)(vite@5.3.5(@types/node@20.14.12)):
+  minerva-author-ui@2.0.0-beta.48(lit@3.2.0)(rollup@4.19.0)(vite@5.3.5(@types/node@20.14.12)):
     dependencies:
       '@arrow-js/core': 1.0.0-alpha.10
       '@haxtheweb/a11y-collapse': 9.0.7

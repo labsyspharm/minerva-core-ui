@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { getImageSize } from "@hms-dbmi/viv";
+import { list_colors } from "minerva-author-ui";
 
 import type { Loader } from './viv';
 
@@ -14,11 +15,17 @@ type ID = { ID: string; };
 type UUID = { UUID: string; };
 type NameProperty = { Name: string; };
 type GroupProperties = NameProperty;
+type DistributionProperties = {
+  UpperRange: number;
+  LowerRange: number;
+  YValues: number[];
+  XScale: string;
+  YScale: string;
+};
 type SourceChannelProperties = NameProperty & {
   SourceIndex: number;
 };
 type GroupChannelProperties = {
-  Color: string;
   LowerRange: number;
   UpperRange: number;
 };
@@ -29,9 +36,13 @@ type WaypointProperties = NameProperty & {
 type SourceChannelAssociations = Record<
   'SourceDataType', ID 
 > & Record<
+  'SourceDistribution', UUID
+> & Record<
   'SourceImage', UUID
 >;
 type GroupChannelAssociations = Record<
+  'Color', ID 
+> & Record<
   'SourceChannel' | 'Group',
   UUID
 >;
@@ -40,9 +51,11 @@ export type MutableFields = (keyof ItemRegistryProps)[]
 export type ItemRegistryProps = {
   Name: string;
   Groups: ConfigGroup[];
+  Colors: ConfigColor[];
   Stories: ConfigWaypoint[];
   GroupChannels: ConfigGroupChannel[];
   SourceChannels: ConfigSourceChannel[];
+  SourceDistributions: ConfigSourceDistribution[];
 }
 interface SetItems {
   (user: Partial<ItemRegistryProps>): void;
@@ -123,6 +136,9 @@ export type ConfigProps = {
   ID: string;
 };
 
+export type ConfigSourceDistribution = UUID & {
+  Properties: DistributionProperties;
+};
 export type ConfigSourceChannel = UUID & {
   Properties: SourceChannelProperties;
   Associations: SourceChannelAssociations;
@@ -140,10 +156,20 @@ export type ConfigWaypoint = UUID & {
   State: WaypointState;
   Properties: WaypointProperties;
 };
+export type ConfigColor = ID & {
+  Properties: {
+    R: number,
+    G: number,
+    B: number,
+    Space: string
+  }
+}
 interface ExtractChannels {
   (loader: Loader): Promise<{
+    SourceDistributions: ConfigSourceDistribution[];
     SourceChannels: ConfigSourceChannel[];
     GroupChannels: ConfigGroupChannel[];
+    Colors: ConfigColor[];
     Groups: ConfigGroup[];
   }>
 }
@@ -165,27 +191,31 @@ const captureTile: CaptureTile = async (index, planes) => {
 }
 
 const bin: Bin = async (inputs) => {
-  const create = { create: true };
-  const { bits, index, planes } = inputs;
-  const { data } = await captureTile(index, planes);
-  const powers = [...new Array(bits).keys()].map(x => 2**x);
-  let indices = [...new Array(data.length).keys()];
-  // Number of pixels greater than or equal to each power
-  const highest = powers.reverse().map((power) => {
-    const next_indices = [];
-    indices.forEach(i => {
-      if (0 === (data[i] & power)) {
-        next_indices.push(i);
-      }
-    })
-    const pixel_count = indices.length - next_indices.length;
-    indices = next_indices;
-    return pixel_count;
-  }).reverse();
-  // Count zero-valued pixels
-  return [
-    indices.length, ...highest
-  ];
+  const n_bins = 100;
+  const max_power = inputs.bits;
+  const thresholds = [...new Array(n_bins).keys()].map(x => {
+    return Math.floor(2 ** (max_power * x / n_bins));
+  });
+  // Load the image tile for given index
+  const { data, width } = await captureTile(
+    inputs.index, inputs.planes
+  );
+  const step = 4;
+  // Sample along pixel grid of step size in x and y
+  let indices = [ ...new Array(data.length).keys() ].filter(
+    i => (i % step === 0) || Math.floor(i / width) % step === 0
+  );
+  // Count indices with data between thresholds
+  return thresholds.reduce((binned, threshold, t) => {
+    if (t > 0 && thresholds[t-1] == threshold) {
+      return binned.concat(binned.slice(-1));
+    }
+    const outside_indices = indices.filter(i => data[i] > threshold);
+    const pixel_count = indices.length - outside_indices.length;
+    indices = outside_indices;
+    binned.push(pixel_count);
+    return binned;
+  }, []);
 }
 
 const toTilePlane: ToTilePlane = (zoom, planes) => {
@@ -231,14 +261,17 @@ const extractChannels: ExtractChannels = async (loader) => {
   const bits = parseInt(
     init.tileProps.dtype.replace(/.?int/, '')
   )
-  const distributions = await Promise.all(
-    init.indices.map(index => {
-      if (isNaN(bits)) {
-        return [];
-      }
-      return bin({ 
+  const SourceDistributions = await Promise.all(
+    init.indices.map(async (index) => {
+      const YValues = isNaN(bits) ? [] : await bin({ 
         bits, index, planes: loader.data
       });
+      return {
+        UUID: crypto.randomUUID(), Properties: {
+          YValues, XScale: 'log', YScale: 'linear',
+          LowerRange: 0, UpperRange: bits
+        }
+      } as ConfigSourceDistribution;
     })
   );
   const { Channels, Type } = loader.metadata.Pixels;
@@ -248,9 +281,11 @@ const extractChannels: ExtractChannels = async (loader) => {
       Properties: {
         Name: channel.Name,
         SourceIndex: init.indices[index].c,
-        Distribution: distributions[index]
       },
       Associations: {
+        SourceDistribution: asUUID(
+          SourceDistributions[index].UUID
+        ),
         SourceDataType: asID(Type),
         SourceImage: asUUID('TODO')
       }
@@ -268,33 +303,32 @@ const extractChannels: ExtractChannels = async (loader) => {
       }
     })
   )
-  const colors = [
-    '0000FF', 'FF0000', 'FFFF00', 'FFFFFF',
-    '00FF00', '00FFFF'
-  ];
+  const Colors = list_colors("sRGB");
   const GroupChannels = SourceChannels.map(
     (channel, index) => {
       const group_index = Math.floor(index / group_size);
-      const color_index = (index % group_size) % colors.length;
+      const color_index = (index % group_size) % Colors.length;
       const group_uuid = Groups[group_index].UUID;
       return {
         UUID: crypto.randomUUID(),
         State: { Expanded: true },
         Properties: {
-          LowerRange: 0, UpperRange: 65535,
-          Color: colors[color_index]
+          LowerRange: 0, UpperRange: 65535
         },
         Associations: {
           SourceChannel: asUUID(channel.UUID),
+          Color: asID(Colors[color_index].ID),
           Group: asUUID(group_uuid)
         }
       }
     }
   )
   return {
+    SourceDistributions,
     SourceChannels,
     GroupChannels,
-    Groups
+    Groups,
+    Colors
   }
 }
 

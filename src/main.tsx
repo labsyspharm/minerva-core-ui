@@ -65,8 +65,9 @@ const Content = (props: Props) => {
   const [handle, setHandle] = useState(null);
   const [config, setConfig] = useState({
     ItemRegistry: {
-      Name: '', Groups: [],
+      Name: '', Groups: [], Colors: [],
       GroupChannels: [], SourceChannels: [],
+      SourceDistributions: [],
       Stories: props.configWaypoints,
     },
     ID: crypto.randomUUID()
@@ -113,10 +114,12 @@ const Content = (props: Props) => {
       if (handle === null) return;
       const loader = await toLoader({ handle, in_f });
       const { 
-        SourceChannels, GroupChannels, Groups
+        SourceChannels, GroupChannels, Groups, Colors,
+        SourceDistributions
       } = await extractChannels(loader);
       resetItems({
-        Groups, SourceChannels, GroupChannels
+        SourceChannels, GroupChannels, Groups, Colors,
+        SourceDistributions
       });
       setLoader(loader);
       setFileName(in_f);
