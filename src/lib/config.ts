@@ -35,9 +35,9 @@ type WaypointProperties = NameProperty & {
 
 type SourceChannelAssociations = Record<
   'SourceDataType', ID 
-> & Record<
+> & Partial<Record<
   'SourceDistribution', UUID
-> & Record<
+>> & Record<
   'SourceImage', UUID
 >;
 type GroupChannelAssociations = Record<
@@ -164,9 +164,13 @@ export type ConfigColor = ID & {
     Space: string
   }
 }
+interface ExtractDistributions {
+  (loader: Loader): Promise<
+    Map<number, ConfigSourceDistribution>
+  >
+}
 interface ExtractChannels {
   (loader: Loader): Promise<{
-    SourceDistributions: ConfigSourceDistribution[];
     SourceChannels: ConfigSourceChannel[];
     GroupChannels: ConfigGroupChannel[];
     Colors: ConfigColor[];
@@ -176,6 +180,7 @@ interface ExtractChannels {
 
 const asID = (k: string): ID => ({ ID: k });
 const asUUID = (k: string): UUID => ({ UUID: k });
+const onlyUUID = (v: UUID): UUID => (asUUID(v.UUID));
 
 const captureTile: CaptureTile = async (index, planes) => {
   const level = Math.abs(index.z);
@@ -191,7 +196,7 @@ const captureTile: CaptureTile = async (index, planes) => {
 }
 
 const bin: Bin = async (inputs) => {
-  const n_bins = 100;
+  const n_bins = 50;
   const max_power = inputs.bits;
   const thresholds = [...new Array(n_bins).keys()].map(x => {
     return Math.floor(2 ** (max_power * x / n_bins));
@@ -256,24 +261,35 @@ const initialize: Initialize = (inputs) => {
   return { indices, tileProps };
 }
 
-const extractChannels: ExtractChannels = async (loader) => {
+const extractDistributions: ExtractDistributions = async (loader) => {
   const init = initialize({ planes: loader.data });
   const bits = parseInt(
     init.tileProps.dtype.replace(/.?int/, '')
   )
-  const SourceDistributions = await Promise.all(
+  const SourceDistributionEntries = await Promise.all(
     init.indices.map(async (index) => {
+      const SourceIndex = index.c;
       const YValues = isNaN(bits) ? [] : await bin({ 
         bits, index, planes: loader.data
       });
-      return {
-        UUID: crypto.randomUUID(), Properties: {
-          YValues, XScale: 'log', YScale: 'linear',
-          LowerRange: 0, UpperRange: bits
+      return [
+        SourceIndex, {
+          UUID: crypto.randomUUID(), Properties: {
+            YValues, XScale: 'log', YScale: 'linear',
+            LowerRange: 0, UpperRange: bits
+          }
         }
-      } as ConfigSourceDistribution;
+      ] as [number, ConfigSourceDistribution];
     })
   );
+  // Map from image channel to distribution 
+  return new Map<number, ConfigSourceDistribution>(
+    SourceDistributionEntries
+  );
+}
+
+const extractChannels: ExtractChannels = async (loader) => {
+  const init = initialize({ planes: loader.data });
   const { Channels, Type } = loader.metadata.Pixels;
   const SourceChannels = Channels.map(
     (channel, index) => ({
@@ -283,9 +299,6 @@ const extractChannels: ExtractChannels = async (loader) => {
         SourceIndex: init.indices[index].c,
       },
       Associations: {
-        SourceDistribution: asUUID(
-          SourceDistributions[index].UUID
-        ),
         SourceDataType: asID(Type),
         SourceImage: asUUID('TODO')
       }
@@ -316,7 +329,7 @@ const extractChannels: ExtractChannels = async (loader) => {
           LowerRange: 0, UpperRange: 65535
         },
         Associations: {
-          SourceChannel: asUUID(channel.UUID),
+          SourceChannel: onlyUUID(channel),
           Color: asID(Colors[color_index].ID),
           Group: asUUID(group_uuid)
         }
@@ -324,7 +337,6 @@ const extractChannels: ExtractChannels = async (loader) => {
     }
   )
   return {
-    SourceDistributions,
     SourceChannels,
     GroupChannels,
     Groups,
@@ -408,4 +420,7 @@ const mutableItemRegistry = (
   }), ItemRegistry);
 }
 
-export { extractChannels, mutableItemRegistry }
+export {
+  onlyUUID, extractDistributions,
+  extractChannels, mutableItemRegistry
+}

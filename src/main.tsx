@@ -4,10 +4,11 @@ import styled from 'styled-components';
 import { author } from "minerva-author-ui";
 import { useState, useMemo, useEffect } from "react";
 import { useHash } from "./lib/hashUtil";
+import { onlyUUID } from './lib/config';
 import { mutableItemRegistry } from './lib/config';
 import { hasFileSystemAccess, toDir, toLoader } from "./lib/filesystem";
+import { extractChannels, extractDistributions } from './lib/config';
 import { isOpts, validate } from './lib/validate';
-import { extractChannels } from './lib/config';
 import { Upload } from './components/upload';
 import { readConfig } from "./lib/exhibit";
 import { Index } from "./components";
@@ -114,13 +115,28 @@ const Content = (props: Props) => {
       if (handle === null) return;
       const loader = await toLoader({ handle, in_f });
       const { 
-        SourceChannels, GroupChannels, Groups, Colors,
-        SourceDistributions
+        SourceChannels, GroupChannels, Groups, Colors
       } = await extractChannels(loader);
       resetItems({
-        SourceChannels, GroupChannels, Groups, Colors,
-        SourceDistributions
+        SourceChannels, GroupChannels, Groups, Colors
       });
+      // Asynchronously add distributions
+      extractDistributions(loader).then(
+        (sourceDistributionMap) => {
+          const SourceDistributions = sourceDistributionMap.values();
+          resetItems({
+            SourceDistributions: [...SourceDistributions],
+            SourceChannels: SourceChannels.map(sourceChannel => ({
+              ...sourceChannel, Associations: {
+                ...sourceChannel.Associations,
+                SourceDistribution: sourceDistributionMap.get(
+                  sourceChannel.Properties.SourceIndex
+                )
+              }
+            }))
+          });
+        }
+      );
       setLoader(loader);
       setFileName(in_f);
     })();
