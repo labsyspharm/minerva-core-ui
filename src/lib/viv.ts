@@ -142,6 +142,9 @@ const toSettings = (opts) => {
       contrastLimits,
       channelsVisible,
     };
+    console.log('XYZ [')
+    console.log(out);
+    console.log(']')
     return out;
   };
 };

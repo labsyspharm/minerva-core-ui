@@ -117,13 +117,17 @@ const IMAGES: StoryImage[] = [
     ],
     shape: {
       pixel: {
-        width: 14448,
-        height: 11101,
+        width: 35592,
+        height: 69367,
+//        width: 14448,
+//        height: 11101,
         unit: Units.ImagePixel,
       },
       physical: {
-        width: 4.6956,
-        height: 3.6078,
+        width: 11.5674,
+        height: 22.5443,
+//        width: 4.6956,
+//        height: 3.6078,
         unit: Units.Millimeter,
       },
     },

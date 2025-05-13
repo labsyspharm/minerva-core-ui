@@ -113,7 +113,10 @@ const Content = (props: Props) => {
   const onStart = (in_f: string) => {
     (async () => {
       if (handle === null) return;
+      console.log('A')
       const loader = await toLoader({ handle, in_f });
+      console.log('B')
+      console.log(loader);
       const { 
         SourceChannels, GroupChannels, Groups, Colors
       } = await extractChannels(loader);
@@ -176,6 +179,7 @@ const Content = (props: Props) => {
     const formOut = data.reduce(((o, [k,v]) => {
       return { ...o, [k]: `${v}`};
     }) as ReduceFormData, {mask: ""});
+
     const filled = (form as any).checkValidity(); 
     const formOpts = { formOut, onStart, handle };
     if (isOpts(formOpts)) {

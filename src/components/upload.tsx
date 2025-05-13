@@ -150,7 +150,7 @@ const toChoicesMC: ToChoicesMC = async (opts) => {
   const files = await listDir({ handle });
   const mask = files.reduce((o, [k, v]: Entry) => {
     if (v instanceof FileSystemFileHandle) {
-      return k.match(/\.tif$/) ? [...o, k] : o;
+      return k.match(/\.tiff?$/) ? [...o, k] : o;
     }
     return o;
   }, [] as string[]);
@@ -283,7 +283,7 @@ const toChoicesAny: ToChoicesAny = async (opts) => {
   }, [] as string[]);
   const mask = files.reduce((o, [k, v]: Entry) => {
     if (v instanceof FileSystemFileHandle) {
-      return k.match(/\.tif$/) ? [...o, k] : o;
+      return k.match(/\.tiff?$/) ? [...o, k] : o;
     }
     return o;
   }, [] as string[]);

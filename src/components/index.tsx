@@ -244,7 +244,10 @@ const Index = (props: Props) => {
         ]
       };
     });
-    return { g, name: Name, channels };
+    return { 
+      State: group.State,
+      g, name: Name, channels,
+    };
   })
   const channelProps = {
     hash,
@@ -290,6 +293,7 @@ const Index = (props: Props) => {
       zoomOutButton: zoomOutEl,
     },
   });
+  console.log(imageProps);
   return (
     <Main {...mainProps}>
       <ImageView {...imageProps}>
