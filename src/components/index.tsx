@@ -293,7 +293,6 @@ const Index = (props: Props) => {
       zoomOutButton: zoomOutEl,
     },
   });
-  console.log(imageProps);
   return (
     <Main {...mainProps}>
       <ImageView {...imageProps}>

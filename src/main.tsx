@@ -113,10 +113,7 @@ const Content = (props: Props) => {
   const onStart = (in_f: string) => {
     (async () => {
       if (handle === null) return;
-      console.log('A')
       const loader = await toLoader({ handle, in_f });
-      console.log('B')
-      console.log(loader);
       const { 
         SourceChannels, GroupChannels, Groups, Colors
       } = await extractChannels(loader);

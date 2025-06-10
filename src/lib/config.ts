@@ -326,7 +326,8 @@ const extractChannels: ExtractChannels = async (loader) => {
         UUID: crypto.randomUUID(),
         State: { Expanded: true },
         Properties: {
-          LowerRange: 0, UpperRange: 65535
+          LowerRange: 2**8, //TODO
+          UpperRange: 2**12  //TODO
         },
         Associations: {
           SourceChannel: onlyUUID(channel),

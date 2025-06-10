@@ -158,5 +158,3 @@ const authorConfig: NarativeConfig = {
   images: IMAGES.map(imageToAuthor).filter(isAuthorImage),
   stories: STORIES,
 };
-
-console.log({ storyConfig, authorConfig });
