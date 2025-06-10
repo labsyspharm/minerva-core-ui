@@ -147,6 +147,11 @@ const toSettings = (opts, brightfield) => {
       c => brightfield ? c.offset > 1 : c.offset == 0
     );
     if (brightfield) {
+      /* TODO -- debug only red channel with brightfield H&E
+      // at present, only accessing the red channel is possible
+      // due to missing specification of RGB rendering for this layer
+      // the workaround on lib/config.ts line 300 is not sufficient
+      */ 
       return {
         ...toDefaultSettings(1),
         selections: selections.filter((_,i) => i==0),
