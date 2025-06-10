@@ -164,18 +164,19 @@ export type ConfigColor = ID & {
     Space: string
   }
 }
+export type ExtractedChannels = {
+  SourceChannels: ConfigSourceChannel[];
+  GroupChannels: ConfigGroupChannel[];
+  Colors: ConfigColor[];
+  Groups: ConfigGroup[];
+}
 interface ExtractDistributions {
   (loader: Loader): Promise<
     Map<number, ConfigSourceDistribution>
   >
 }
 interface ExtractChannels {
-  (loader: Loader): Promise<{
-    SourceChannels: ConfigSourceChannel[];
-    GroupChannels: ConfigGroupChannel[];
-    Colors: ConfigColor[];
-    Groups: ConfigGroup[];
-  }>
+  (loader: Loader): Promise<ExtractedChannels>
 }
 
 const asID = (k: string): ID => ({ ID: k });
@@ -288,10 +289,27 @@ const extractDistributions: ExtractDistributions = async (loader) => {
   );
 }
 
-const extractChannels: ExtractChannels = async (loader) => {
+const extractChannels: ExtractChannels = async (
+  loader, brightfield
+) => {
   const init = initialize({ planes: loader.data });
   const { Channels, Type } = loader.metadata.Pixels;
-  const SourceChannels = Channels.map(
+  let rendered_channels = [...Channels];
+  if (brightfield) {
+    rendered_channels = Channels.reduce((o,c) => {
+      const individual_channels = [
+        ...new Array(c.SamplesPerPixel).keys()
+      ].map(i => {
+        return {
+          SamplesPerPixel: 1,
+          ID: `${c.ID}:${i}`,
+          Name: `${c.Name}:${i}`
+        }
+      });
+      return [ ...o, ...individual_channels]
+    }, []);
+  }
+  const SourceChannels = rendered_channels.map(
     (channel, index) => ({
       UUID: crypto.randomUUID(),
       Properties: {
@@ -316,7 +334,43 @@ const extractChannels: ExtractChannels = async (loader) => {
       }
     })
   )
-  const Colors = list_colors("sRGB");
+  const Colors = [
+    {
+      "ID": "sRGB#ff0000",
+      "Properties": {
+          "R": 255,
+          "G": 0,
+          "B": 0,
+          "Space": "sRGB",
+          "LowerRange": 0,
+          "UpperRange": 255
+      }
+    },
+    {
+      "ID": "sRGB#00ff00",
+      "Properties": {
+          "R": 0,
+          "G": 255,
+          "B": 0,
+          "Space": "sRGB",
+          "LowerRange": 0,
+          "UpperRange": 255
+      }
+    },
+    {
+      "ID": "sRGB#0000ff",
+      "Properties": {
+          "R": 0,
+          "G": 0,
+          "B": 255,
+          "Space": "sRGB",
+          "LowerRange": 0,
+          "UpperRange": 255
+      }
+    }
+  ].concat(
+    list_colors("sRGB")
+  );
   const GroupChannels = SourceChannels.map(
     (channel, index) => {
       const group_index = Math.floor(index / group_size);
@@ -326,7 +380,8 @@ const extractChannels: ExtractChannels = async (loader) => {
         UUID: crypto.randomUUID(),
         State: { Expanded: true },
         Properties: {
-          LowerRange: 0, UpperRange: 65535
+          LowerRange: brightfield? 0 : 2**8, //TODO
+          UpperRange: brightfield? 255 : 2**12  //TODO
         },
         Associations: {
           SourceChannel: onlyUUID(channel),

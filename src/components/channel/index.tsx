@@ -38,6 +38,7 @@ const Channel = (props: Props) => {
 
   const { hash } = props;
   const hidden = hash.i >= 0;
+  // TODO -- ensure hash.g is pre-processed to be within props.groups
   const group = props.groups[hash.g];
   const legendProps = { ...props, ...group };
 

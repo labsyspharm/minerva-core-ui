@@ -13,7 +13,7 @@ import type { Exhibit } from "../lib/exhibit";
 
 type Props = HashContext & {
   in_f: string;
-  loader: Loader;
+  loaders: Loader[];
   exhibit: Exhibit;
   handle: Handle.Dir;
   config: ConfigProps;
@@ -212,7 +212,7 @@ const Index = (props: Props) => {
   };
 
   const {
-    in_f, handle, loader, hash, setHash,
+    in_f, handle, loaders, hash, setHash,
     controlPanelElement, config
   } = props;
   const {
@@ -235,11 +235,16 @@ const Index = (props: Props) => {
       ).toString(16).slice(1);
       const { LowerRange, UpperRange } = group_channel.Properties;
       const { SourceChannel } = group_channel.Associations;
-      const { Name } = SourceChannels.find(source_channel => (
+      const source = SourceChannels.find(source_channel => (
         source_channel.UUID == SourceChannel.UUID
-      ))?.Properties || defaults;
+      ))
+      const { Name } = source?.Properties || defaults;
+      const image_id = source.Associations.SourceImage.ID || '';
+      const offset = SourceChannels.findIndex(source_channel => (
+        source_channel.Associations.SourceImage.ID === image_id
+      ));
       return { 
-        color, name: Name, contrast: [
+        color, name: Name, image_id, offset, contrast: [
           LowerRange, UpperRange
         ]
       };
@@ -282,21 +287,20 @@ const Index = (props: Props) => {
     pushWaypoint,
     popWaypoint
   }
-  const imageProps = toImageProps({
+  const allImageProps = toImageProps({
     props: {
-      loader,
+      loaders,
       marker_names: itemRegistryMarkerNames,
       ...channelProps,
     },
     buttons: {
       zoomInButton: zoomInEl,
       zoomOutButton: zoomOutEl,
-    },
+    }
   });
-  console.log(imageProps);
   return (
     <Main {...mainProps}>
-      <ImageView {...imageProps}>
+      <ImageView {...allImageProps}>
       </ImageView>
     </Main>
   );

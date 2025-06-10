@@ -23,7 +23,7 @@ type FormOutAny = FormOutCommon & {
 type ValidateIn<T> = {
   formOut: T,
   handle: Handle.Dir,
-  onStart: (s: string) => void
+  onStart: (s: string, s?: string) => void
 }
 type FormAnyOpts = ValidateIn<FormOutAny>
 type FormMCOpts = ValidateIn<FormOutMC>
@@ -76,9 +76,12 @@ const validateAny: Validate<FormAnyOpts> = async (opts) => {
       case "name":
         if (v.length === 0) return out;
         return [...out, k];
-      case "path":
-        const found = await findFile({ handle, path: v })
+      case "brightfield":
+        const found_brightfield = await findFile({ handle, path: v })
         return found ? [...out, k] : out;
+      case "path":
+        const found_path = await findFile({ handle, path: v })
+        return found_path ? [...out, k] : out;
     }
     return out;
   }, Promise.resolve([] as string[]));
@@ -86,7 +89,12 @@ const validateAny: Validate<FormAnyOpts> = async (opts) => {
     return valid_keys.includes(k as AnyKey);
   });
   if (validated && "path" in formOut) {
-    onStart(formOut.path);
+    if ("brightfield" in formOut) {
+      onStart(formOut.path, formOut.brightfield);
+    }
+    else {
+      onStart(formOut.path);
+    }
   }
   return toValid(need_keys, valid_keys);
 }

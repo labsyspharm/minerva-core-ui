@@ -3,13 +3,14 @@ import { VivView } from "./vivView";
 import { toSettings } from "../lib/viv";
 
 const toImageProps = (opts) => {
-  const { props, buttons } = opts;
+  const { props } = opts;
   const vivProps = {
     ...props,
-    viewerConfig: {
-      ...buttons,
-      toSettings: toSettings(props),
-    },
+    viewerConfigs: [{
+      toSettings: toSettings(props, false)
+    }, {
+      toSettings: toSettings(props, true)
+    }]
   };
   return vivProps;
 };

@@ -13,10 +13,12 @@ import { Upload } from './components/upload';
 import { readConfig } from "./lib/exhibit";
 import { Index } from "./components";
 
+import type { Loader } from './viv';
 import type { ValidObj } from './components/upload';
 import type { ImageProps } from "./components/channel"
 import type { FormEventHandler } from "react";
 import type { ObjAny, KV } from './lib/validate';
+import type { ExtractedChannels } from "./lib/config";
 import type { ConfigWaypoint } from "./lib/config";
 import type { MutableFields } from "./lib/config";
 import type { ExhibitConfig } from "./lib/exhibit";
@@ -88,9 +90,12 @@ const Content = (props: Props) => {
       },
     }));
   }
-
-  const [loader, setLoader] = useState(null);
-  const [fileName, setFileName] = useState('');
+  const [loader1, setLoader1] = useState(null);
+  const [loader2, setLoader2] = useState(null);
+  const [mainFileName, setMainFileName] = useState('');
+  const [
+    brightfieldFileName, setBrightfieldFileName
+  ] = useState('');
   // Create ome-tiff loader
   const onAllow = async () => {
     const newHandle = await toDir();
@@ -110,21 +115,40 @@ const Content = (props: Props) => {
       setHandle(newHandle);
     }
   }
-  const onStart = (in_f: string) => {
+  const onStart = (in_f1: string, in_f2?: string) => {
     (async () => {
       if (handle === null) return;
-      console.log('A')
-      const loader = await toLoader({ handle, in_f });
-      console.log('B')
-      console.log(loader);
-      const { 
+      let loader2: Loader | null = null;
+      const loader1 = await toLoader({ handle, in_f: in_f1 });
+      if (in_f2) {
+        loader2 = await toLoader({ handle, in_f: in_f2 });
+      }
+      let { 
         SourceChannels, GroupChannels, Groups, Colors
-      } = await extractChannels(loader);
+      } = await extractChannels(loader1, false);
+      let extractedBrightfield: ExtractedChannels  | null = null;
+      // TODO -- make less hard-coded
+      SourceChannels.forEach(c => {
+        c.Associations.SourceImage.ID = "main"
+      });
+      // TODO -- make less hard-coded
+      if (in_f2) {
+        extractedBrightfield = await extractChannels(loader2, true);
+        extractedBrightfield.GroupChannels[0].Associations.Color = { ID: 'sRGB#ff0000'}
+        extractedBrightfield.GroupChannels[1].Associations.Color = { ID: 'sRGB#00ff00'}
+        extractedBrightfield.GroupChannels[2].Associations.Color = { ID: 'sRGB#0000ff'}
+        extractedBrightfield.SourceChannels.forEach(c => {
+          c.Associations.SourceImage.ID = "brightfield"
+        });
+        SourceChannels = SourceChannels.concat(extractedBrightfield.SourceChannels);
+        GroupChannels = GroupChannels.concat(extractedBrightfield.GroupChannels);
+        Groups.push(extractedBrightfield.Groups[0]);
+      }
       resetItems({
         SourceChannels, GroupChannels, Groups, Colors
       });
       // Asynchronously add distributions
-      extractDistributions(loader).then(
+      extractDistributions(loader1).then(
         (sourceDistributionMap) => {
           const SourceDistributions = sourceDistributionMap.values();
           resetItems({
@@ -140,8 +164,12 @@ const Content = (props: Props) => {
           });
         }
       );
-      setLoader(loader);
-      setFileName(in_f);
+      setLoader1(loader1);
+      setLoader2(loader2);
+      setMainFileName(in_f1);
+      if (in_f2) {
+        setBrightfieldFileName(in_f2);
+      }
     })();
   }
   // Handle changes to URL
@@ -162,12 +190,19 @@ const Content = (props: Props) => {
   }), [config.ID])
 
   // Actual image viewer
-  const imager = loader === null ? '' : (
+  const imager = loader1 === null ? '' : (
     <Full>
       <Index {...{
         config, controlPanelElement,
-        exhibit, setExhibit, loader,
-        marker_names, in_f: fileName, handle, ...hashContext
+        exhibit, setExhibit,
+        loaders: [
+          loader1, ...(loader2 === null ? [] : [loader2])
+        ],
+        marker_names,
+        in_files: [
+          mainFileName, brightfieldFileName
+        ],
+        handle, ...hashContext
       }} />
     </Full>
   )
@@ -196,7 +231,7 @@ const Content = (props: Props) => {
     onAllow, onRecall
   };
 
-  const importer = loader !== null ? '' : (<Scrollable>
+  const importer = loader1 !== null ? '' : (<Scrollable>
     <Upload {...uploadProps}/>
   </Scrollable>)
   return (

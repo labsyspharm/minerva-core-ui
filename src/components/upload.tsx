@@ -12,6 +12,7 @@ type Choices = {
   csv: string[],
   path: string[],
   mask: string[],
+  brightfield: string[],
 }
 type ChoiceMCIn = {
   handle: Handle.Dir,
@@ -25,6 +26,7 @@ interface ToChoicesMC {
 }
 type ChoiceAnyIn = {
   handle: Handle.Dir,
+  setBrightfield: SetState,
   setMask: SetState,
   setPath: SetState,
   setCsv: SetState,
@@ -172,7 +174,7 @@ const Options = (props: OptionsProps) => {
   return (<><option value=""> No {label}</option> {options}</>);
 }
 const noChoice = (): Choices => {
-  return { dir: [], csv: [], path: [], mask: [] };
+  return { dir: [], csv: [], brightfield: [], path: [], mask: [] };
 } 
 const FormMC = (props: FormProps) => {
   const { handle, valid, onSubmit } = props;
@@ -281,39 +283,50 @@ const toChoicesAny: ToChoicesAny = async (opts) => {
     }
     return o;
   }, [] as string[]);
-  const mask = files.reduce((o, [k, v]: Entry) => {
+  const paths = files.reduce((o, [k, v]: Entry) => {
     if (v instanceof FileSystemFileHandle) {
       return k.match(/\.tiff?$/) ? [...o, k] : o;
     }
     return o;
-  }, [] as string[]);
-  const path = [...mask];
+  }, [] as string[]).sort(
+    (a,b) => ((x,y) => x-y)(
+      ...[a,b].map(
+        v => +v.toLowerCase().split(/\.|-|_/).includes("he")
+      )
+    )
+  );
   return {
-    csv, path, mask, dir: []
+    csv, brightfield: [...paths],
+    path: [...paths], mask: [...paths], dir: []
   }
-} 
+}
+
 const FormAny = (props: FormProps) => {
   const { handle, valid, onSubmit } = props;
   const [ choices, setChoices ] = useState(noChoice());
   const [ name, sN, setName ] = _useState("");
   const [ path, sP, setPath ] = _useState("");
   const [ mask, sM, setMask ] = _useState("");
+  const [ brightfield, sB, setBrightfield ] = _useState("");
   const [ csv, sC, setCsv ] = _useState("");
   const formProps = { onSubmit };
   const hasNewChoice = (c: Choices) => {
     return [
       c.csv.some((i: string) => !(i in choices.csv)),
       c.path.some((i: string) => !(i in choices.path)),
-      c.mask.some((i: string) => !(i in choices.mask))
+      c.mask.some((i: string) => !(i in choices.mask)),
+      c.brightfield.some((i: string) => !(i in choices.brightfield))
     ].some(x => x === true);
   }
   useEffect(() => {
     toChoicesAny({
-      handle, mask, path, csv,
+      handle, mask, path, csv, 
+      brightfield, setBrightfield: sB,
       setMask: sM, setPath: sP, setCsv: sC
     }).then(c => {
       if (hasNewChoice(c)) {
         sN(c.path[0].split('.')[0]);
+        sB(c.path[Math.min(c.path.length-1,1)]);
         sP(c.path[0]);
         setChoices(c);
       }
@@ -321,6 +334,9 @@ const FormAny = (props: FormProps) => {
   }, [JSON.stringify(choices)]);
   const pathOptions = {label: "Image", vals: choices.path};
   const maskOptions = {label: "Mask", vals: choices.mask};
+  const brightfieldOptions = {
+    label: "Brightfield", vals: choices.brightfield
+  };
   const csvOptions = {label: "CSV", vals: choices.csv};
   return (
   <Form {...formProps} noValidate>
@@ -346,7 +362,7 @@ const FormAny = (props: FormProps) => {
       </Form.Group> 
       <FormGrid id="custom_import">
           <Form.Group {...toGroupProps("path")}>
-              <Form.Label>Channel File Path:</Form.Label>
+              <Form.Label>Multichannel Image:</Form.Label>
               <FormGridRow hasValidation>
                   <Form.Control {...{
                     type: "select",
@@ -361,6 +377,29 @@ const FormAny = (props: FormProps) => {
                   </Form.Control>
                   <Form.Control.Feedback type="invalid">
                   Please provide a valid path to the channel image file.
+                  </Form.Control.Feedback>
+                  <Form.Control.Feedback type="valid">
+                  Valid.
+                  </Form.Control.Feedback>
+                  <br/>
+              </FormGridRow>
+          </Form.Group> 
+          <Form.Group {...toGroupProps("brightfield")}>
+              <Form.Label>Brightfield Image:</Form.Label>
+              <FormGridRow hasValidation>
+                  <Form.Control {...{
+                    type: "select",
+                    as: "select",
+                    required: false,
+                    value: brightfield,
+                    name: "brightfield",
+                    onChange: setBrightfield,
+                    ...validate(valid, 'brightfield')
+                  }}>
+                  <Options {...brightfieldOptions}/>
+                  </Form.Control>
+                  <Form.Control.Feedback type="invalid">
+                  Please provide a valid path to the brightfield image.
                   </Form.Control.Feedback>
                   <Form.Control.Feedback type="valid">
                   Valid.
@@ -422,8 +461,6 @@ const FormAny = (props: FormProps) => {
 }
 
 const Upload = (props: UploadProps) => {
-  const test_f = "default.ome.tif"; //TODO
-  const [in_f, setInFile] = useState(test_f);
   const [mc, setMCMicro] = useState(false);
   const checkMC = () => setMCMicro(!mc);
   const {

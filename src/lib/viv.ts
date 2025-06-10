@@ -101,40 +101,60 @@ const hexToRGB = (hex: string) => {
   return [r, g, b];
 };
 
-const toSettings = (opts) => {
-  return (hash, loader, groups) => {
+const toSettings = (opts, brightfield) => {
+  return (hash, loaders=[], groups=[]) => {
     const { g } = hash;
     const { marker_names } = opts;
+    const loadersData = loaders.map(loader => loader.data);
     const group = (groups || (opts.groups as Group[])).find(
       (group) => group.g === g
     );
     const channels = group?.channels || [];
     // Defaults
-    if (!loader) return toDefaultSettings(3);
-    const full_level = loader.data[0];
-    if (!loader) return toDefaultSettings(3);
+    if (!loadersData.length) {
+      return toDefaultSettings(3);
+    }
+    const full_level = loadersData[brightfield? 1 : 0][0];
+    if (!loadersData.length) {
+      return toDefaultSettings(3);
+    }
     const { labels, shape } = full_level;
     const c_idx = labels.indexOf("c");
+    const n_channels = shape[c_idx] || 0;
     // TODO Improve mapping of channel names to indices!
-    const selections: Selection[] = channels.map(channel => {
-      const c = marker_names.indexOf(channel.name);
-      return { z: 0, t: 0, c };
-    }).filter(({ c }, i) => {
+    const selections: Selection[] = channels.filter((channel, i) => {
+      const c = marker_names.indexOf(channel.name) - channel.offset;
       if (c < 0) {
         console.error(`Missing channel "${channels[i].name}"`);
-        return false
+        return false;
+      }
+      if (c >= n_channels) {
+        return false;
       }
       return true;
+    }).map(channel => {
+      const c = marker_names.indexOf(channel.name) - channel.offset;
+      return { ...channel, z: 0, t: 0, c };
     });
-    const colors: Color[] = channels.map((c, i: number) => {
+    const colors: Color[] = selections.map((c) => {
       return c.color ? hexToRGB(c.color) : [0, 0, 0];
     });
-    const contrastLimits: Limit[] = channels.map(c => {
+    const contrastLimits: Limit[] = selections.map(c => {
       return c.contrast; 
     });
-    const channelsVisible: boolean[] = channels.map((c, i: number) => true);
-
-    const n_channels = shape[c_idx] || 0;
+    // TODO -- make less hard-coded
+    const channelsVisible: boolean[] = selections.map(
+      c => brightfield ? c.offset > 1 : c.offset == 0
+    );
+    if (brightfield) {
+      return {
+        ...toDefaultSettings(1),
+        selections: selections.filter((_,i) => i==0),
+        colors: colors.filter((_,i) => i==0),
+        contrastLimits: contrastLimits.filter((_,i) => i==0),
+        channelsVisible: channelsVisible.filter((_,i) => i==0),
+      }
+    }
     const out = {
       ...toDefaultSettings(n_channels),
       selections,
@@ -142,9 +162,6 @@ const toSettings = (opts) => {
       contrastLimits,
       channelsVisible,
     };
-    console.log('XYZ [')
-    console.log(out);
-    console.log(']')
     return out;
   };
 };

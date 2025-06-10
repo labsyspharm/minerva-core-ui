@@ -1,7 +1,10 @@
 import * as React from "react";
+import Deck from '@deck.gl/react';
+import { OrthographicView } from '@deck.gl/core';
 import { useEffect, useRef, useState } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import { PictureInPictureViewer } from "@hms-dbmi/viv";
+import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 
 import styled from "styled-components";
 import { getWaypoint } from "../lib/waypoint";
@@ -15,10 +18,10 @@ import { VivLensing } from "./vivLensing";
 import { LensExtension } from "@hms-dbmi/viv";
 
 export type Props = {
-  loader: any;
+  loaders: any[];
   groups: Group[];
   stories: Story[];
-  viewerConfig: Config;
+  viewerConfigs: Config[];
 } & HashContext;
 
 type Shape = {
@@ -44,43 +47,89 @@ const shapeRef = (setShape: (s: Shape) => void) => {
   };
 };
 
+const takeChannelSubset = (
+  settings, keep_only_last, remove_last
+) => {
+  if (keep_only_last) {
+    return settings;
+  }
+  if (remove_last) {
+    return settings;
+  }
+  return settings;
+}
+
 const VivView = (props: Props) => {
   const maxShape = useWindowSize();
-  const { loader, groups, stories, hash, setHash } = props;
+  const { loaders, groups, stories, hash, setHash } = props;
   const { v, g, s, w } = hash;
-  const { toSettings } = props.viewerConfig;
-  const [settings, setSettings] = useState(toSettings(hash));
+  const toMainSettings = props.viewerConfigs[0].toSettings;
+  const [mainSettings, setMainSettings] = useState(
+    toMainSettings(hash)
+  );
+  const toBrightfieldSettings = props.viewerConfigs[1].toSettings;
+  const [brightfieldSettings, setBrightfieldSettings] = useState(
+    toBrightfieldSettings(hash)
+  );
+
   const waypoint = getWaypoint(stories, s, w);
   const [shape, setShape] = useState(maxShape);
-  const [channelSettings, setChannelSettings] = useState({});
   const [canvas, setCanvas] = useState(null);
   const rootRef = React.useMemo(() => {
     return shapeRef(setShape);
   }, [maxShape]);
 
   useEffect(() => {
-    //console.log("VivView: useEffect: groups", groups);
-  }, [groups]);
-
+    setMainSettings(toMainSettings(hash, loaders, groups));
+  }, [loaders,groups,hash]);
   useEffect(() => {
-    // Gets the default settings
-    const newSettings = toSettings(hash, loader, groups);
-    setSettings(newSettings);
+    setBrightfieldSettings(toBrightfieldSettings(hash, loaders, groups));
+  }, [loaders,groups,hash]);
 
-  }, [loader,groups,hash]);
-
-  const viewerProps = {
+  const loadersData = loaders.map(loader => loader.data);
+  if (!loaders.length || !mainSettings || !brightfieldSettings) {
+    return null;
+  }
+  const mainProps = {
     ...{
       ...shape,
-      loader: loader.data,
-      ...(settings as any),
+      id: "mainLayer",
+      loader: loadersData[0],
+      ...(mainSettings as any),
+    }
+  };
+  const brightfieldProps = {
+    ...{
+      ...shape,
+      id: "brightfieldLayer",
+      loader: loadersData[1],
+      ...(brightfieldSettings as any),
     },
   };
-
-  if (!loader || !settings) return null;
+  const layers = [
+    new MultiscaleImageLayer(mainProps),
+    new MultiscaleImageLayer(brightfieldProps)
+  ];
+  const n_levels = loadersData[0].length;
+  const shape_labels = loadersData[0][0].labels;
+  const shape_values = loadersData[0][0].shape;
+  const imageShape = Object.fromEntries(
+    shape_labels.map((k, i) => [k, shape_values[i]])
+  );
+  const [viewState, setViewState] = useState({
+    zoom: 1-1*n_levels,
+    target: [imageShape.x / 2, imageShape.y / 2, 0]
+  });
+  //console.log(layers);
   return (
     <Main slot="image" ref={rootRef}>
-      <PictureInPictureViewer {...viewerProps} />
+      <Deck
+        layers={layers}
+        controller={true}
+        viewState={viewState}
+        onViewStateChange={e => setViewState(e.viewState)}
+        views={[new OrthographicView({ id: 'ortho', controller: true })]}
+      />
     </Main>
   );
 };
