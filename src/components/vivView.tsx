@@ -111,6 +111,7 @@ const VivView = (props: Props) => {
         id: "brightfieldLayer",
         subLayerProps: {
           // TODO -- extension not working
+          // TODO -- for that matter, full-res H&E not loading!
           extensions: [new DimmerExtension()]
         },
         loader: loadersData[1],
