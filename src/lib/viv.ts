@@ -106,66 +106,47 @@ const toSettings = (opts, brightfield) => {
     const { g } = hash;
     const { marker_names } = opts;
     const loadersData = loaders.map(loader => loader.data);
+    // Defaults
+    if (!loadersData.length) {
+      return toDefaultSettings(brightfield ? 1 : 3);
+    }
     const group = (groups || (opts.groups as Group[])).find(
       (group) => group.g === g
     );
     const channels = group?.channels || [];
-    // Defaults
-    if (!loadersData.length) {
-      return toDefaultSettings(3);
-    }
-    const full_level = loadersData[brightfield? 1 : 0][0];
-    if (!loadersData.length) {
-      return toDefaultSettings(3);
-    }
-    const { labels, shape } = full_level;
-    const c_idx = labels.indexOf("c");
-    const n_channels = shape[c_idx] || 0;
-    // TODO Improve mapping of channel names to indices!
-    const selections: Selection[] = channels.filter((channel, i) => {
-      const c = marker_names.indexOf(channel.name) - channel.offset;
-      if (c < 0) {
-        console.error(`Missing channel "${channels[i].name}"`);
+    // TODO -- not needed if separate channel lists
+    //      -- offset solution is currently a hack
+    const selections: Selection[] = channels.map(channel => {
+        const c = marker_names.indexOf(channel.name) - channel.offset;
+        return { ...channel, c, z: 0, t: 0 };
+    }).filter(channel => {
+      if (brightfield && channel.offset === 0) {
         return false;
       }
-      if (c >= n_channels) {
+      if (!brightfield && channel.offset > 0) {
+        return false;
+      }
+      if (channel.c < 0) {
+        console.error(`Missing channel "${channel.name}"`);
         return false;
       }
       return true;
-    }).map(channel => {
-      const c = marker_names.indexOf(channel.name) - channel.offset;
-      return { ...channel, z: 0, t: 0, c };
-    });
+    }).map(
+      ({c, z, t, color, contrast}) => ({
+        c, z, t, color, contrast
+      })
+    );
+    const n_channels = selections.length;
     const colors: Color[] = selections.map((c) => {
       return c.color ? hexToRGB(c.color) : [0, 0, 0];
     });
     const contrastLimits: Limit[] = selections.map(c => {
       return c.contrast; 
     });
-    // TODO -- make less hard-coded
-    const channelsVisible: boolean[] = selections.map(
-      c => brightfield ? c.offset > 1 : c.offset == 0
-    );
-    if (brightfield) {
-      /* TODO -- debug only red channel with brightfield H&E
-      // at present, only accessing the red channel is possible
-      // due to missing specification of RGB rendering for this layer
-      // the workaround on lib/config.ts line 300 is not sufficient
-      */ 
-      return {
-        ...toDefaultSettings(1),
-        selections: selections.filter((_,i) => i==0),
-        colors: colors.filter((_,i) => i==0),
-        contrastLimits: contrastLimits.filter((_,i) => i==0),
-        channelsVisible: channelsVisible.filter((_,i) => i==0),
-      }
-    }
+    const channelsVisible = selections.map( c => true );
     const out = {
       ...toDefaultSettings(n_channels),
-      selections,
-      colors,
-      contrastLimits,
-      channelsVisible,
+      selections, colors, contrastLimits, channelsVisible,
     };
     return out;
   };

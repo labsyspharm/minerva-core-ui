@@ -210,7 +210,6 @@ const Index = (props: Props) => {
     const ex = setGroup({ exhibit, g, newGroup });
     setExhibit(ex);
   };
-
   const {
     in_f, handle, loaders, hash, setHash,
     controlPanelElement, config
@@ -243,7 +242,7 @@ const Index = (props: Props) => {
       const offset = SourceChannels.findIndex(source_channel => (
         source_channel.Associations.SourceImage.ID === image_id
       ));
-      return { 
+      return {
         color, name: Name, image_id, offset, contrast: [
           LowerRange, UpperRange
         ]

@@ -120,35 +120,26 @@ const Content = (props: Props) => {
       if (handle === null) return;
       let loader2: Loader | null = null;
       const loader1 = await toLoader({ handle, in_f: in_f1 });
-      if (in_f2) {
+      const has_brightfield = !!in_f2;
+      if (has_brightfield) {
         loader2 = await toLoader({ handle, in_f: in_f2 });
+        loader2.data.forEach(plane => {
+          plane.labels = [...plane.labels, '_c']
+          plane.shape = [...plane.shape, 3]
+        });
+      }
+      let extractedBrightfield: ExtractedChannels  | null = null;
+      if (has_brightfield) {
+        extractedBrightfield = await extractChannels(loader2, 2, true);
       }
       let { 
         SourceChannels, GroupChannels, Groups, Colors
-      } = await extractChannels(loader1, false);
-      let extractedBrightfield: ExtractedChannels  | null = null;
-      // TODO -- make less hard-coded
-      SourceChannels.forEach(c => {
-        c.Associations.SourceImage.ID = "main"
-      });
-      // TODO -- make less hard-coded
-      if (in_f2) {
-        extractedBrightfield = await extractChannels(loader2, true);
-        extractedBrightfield.GroupChannels[0].Associations.Color = { ID: 'sRGB#ff0000'}
-        extractedBrightfield.GroupChannels[1].Associations.Color = { ID: 'sRGB#00ff00'}
-        extractedBrightfield.GroupChannels[2].Associations.Color = { ID: 'sRGB#0000ff'}
-        extractedBrightfield.SourceChannels.forEach(c => {
-          c.Associations.SourceImage.ID = "brightfield"
-        });
-        SourceChannels = SourceChannels.concat(extractedBrightfield.SourceChannels);
-        GroupChannels = GroupChannels.concat(extractedBrightfield.GroupChannels);
-        Groups.push(extractedBrightfield.Groups[0]);
-      }
+      } = await extractChannels(loader1, 1, false);
       resetItems({
         SourceChannels, GroupChannels, Groups, Colors
       });
       // Asynchronously add distributions
-      extractDistributions(loader1).then(
+      extractDistributions(loader1, 1).then(
         (sourceDistributionMap) => {
           const SourceDistributions = sourceDistributionMap.values();
           resetItems({
@@ -164,10 +155,13 @@ const Content = (props: Props) => {
           });
         }
       );
+      const {
+        Channels, TiffData, ...rest
+      } = loader1.metadata.Pixels;
       setLoader1(loader1);
-      setLoader2(loader2);
       setMainFileName(in_f1);
-      if (in_f2) {
+      if (has_brightfield) {
+        setLoader2(loader2);
         setBrightfieldFileName(in_f2);
       }
     })();

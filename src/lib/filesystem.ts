@@ -25,6 +25,7 @@ interface ToDir {
 }
 type LoaderIn = {
   in_f: string,
+  all?: boolean,
   handle: Handle.Dir
 }
 interface ToLoader {
@@ -87,10 +88,14 @@ const findFile: FindFile = async (opts) => {
   return false
 }
 
-const toLoader: ToLoader = async ({in_f, handle}) => {
+const toLoader: ToLoader = async ({in_f, handle, all}) => {
   const in_fh = await handle.getFileHandle(in_f);
   const in_file = await in_fh.getFile();
-  return await loadOmeTiff(in_file);
+  return await loadOmeTiff(
+    in_file, {
+      images: all ? "all" : "first"
+    }
+  );
 }
 
 export {

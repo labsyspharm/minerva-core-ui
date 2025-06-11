@@ -109,10 +109,10 @@ type FullState = {
   tileProps: TileProps,
 }
 type InitIn = {
-  planes: LoaderPlane[]
+  loader: Loader 
 }
 interface Initialize {
-  (i: InitIn): FullState;
+  (i: InitIn, n: number): FullState;
 }
 type BinIn = InitIn & {
   bits: number,
@@ -171,12 +171,15 @@ export type ExtractedChannels = {
   Groups: ConfigGroup[];
 }
 interface ExtractDistributions {
-  (loader: Loader): Promise<
+  (loader: Loader, n: number): Promise<
     Map<number, ConfigSourceDistribution>
   >
 }
 interface ExtractChannels {
-  (loader: Loader): Promise<ExtractedChannels>
+  (
+    loader: Loader, n: number, brightfield: boolean,
+    extractedBrightfield?: ExtractedChannels
+  ): Promise<ExtractedChannels>
 }
 
 const asID = (k: string): ID => ({ ID: k });
@@ -227,9 +230,14 @@ const bin: Bin = async (inputs) => {
 const toTilePlane: ToTilePlane = (zoom, planes) => {
   return planes[Math.max(0, Math.abs(zoom))];
 }
-const toTileLayer = (planes: LoaderPlane[]): TileProps => {
-  const i = 0;
-  const id = `Tiled-Image-${i}`;
+const toTileLayer = (
+  loader: Loader, n: number
+): TileProps => {
+  const planes = loader.data;
+  const metadata = loader.metadata;
+  const { Channels } = metadata.Pixels;
+//  const { SamplesPerPixel } = Channels[0];
+  const id = `Tiled-Image-${n}`;
   const plane = toTilePlane(0, planes);
   const { height, width } = getImageSize(plane as any);
   const extent: Four = [0, 0, width, height];
@@ -242,16 +250,15 @@ const toTileLayer = (planes: LoaderPlane[]): TileProps => {
     dtype,
     tileSize,
     extent,
-    channels: label_shapes['c'] || 1,
+    channels: Channels.length,
     minZoom: -(planes.length - 1),
     maxZoom: 0
   };
   return props;
 }
 
-const initialize: Initialize = (inputs) => {
-  const { planes } = inputs; 
-  const tileProps = toTileLayer(planes);
+const initialize: Initialize = (loader, n) => {
+  const tileProps = toTileLayer(loader, n);
   const mz = Math.abs(tileProps.minZoom || 0);
   const channels = [
     ...new Array(tileProps.channels).keys()
@@ -262,8 +269,10 @@ const initialize: Initialize = (inputs) => {
   return { indices, tileProps };
 }
 
-const extractDistributions: ExtractDistributions = async (loader) => {
-  const init = initialize({ planes: loader.data });
+const extractDistributions: ExtractDistributions = async (
+  loader, n: number
+) => {
+  const init = initialize(loader, n);
   const bits = parseInt(
     init.tileProps.dtype.replace(/.?int/, '')
   )
@@ -290,35 +299,22 @@ const extractDistributions: ExtractDistributions = async (loader) => {
 }
 
 const extractChannels: ExtractChannels = async (
-  loader, brightfield
+  loader, n, brightfield
 ) => {
-  const init = initialize({ planes: loader.data });
+  const init = initialize(loader, n);
   const { Channels, Type } = loader.metadata.Pixels;
-  let rendered_channels = [...Channels];
-  if (brightfield) {
-    rendered_channels = Channels.reduce((o,c) => {
-      const individual_channels = [
-        ...new Array(c.SamplesPerPixel).keys()
-      ].map(i => {
-        return {
-          SamplesPerPixel: 1,
-          ID: `${c.ID}:${i}`,
-          Name: `${c.Name}:${i}`
-        }
-      });
-      return [ ...o, ...individual_channels]
-    }, []);
-  }
-  const SourceChannels = rendered_channels.map(
+  const SourceChannels = Channels.map(
     (channel, index) => ({
       UUID: crypto.randomUUID(),
       Properties: {
-        Name: channel.Name,
+        Name: brightfield ? "H&E" : channel.Name,
         SourceIndex: init.indices[index].c,
       },
       Associations: {
         SourceDataType: asID(Type),
-        SourceImage: asUUID('TODO')
+        SourceImage: asID(
+          brightfield ? "brightfield" : "main"
+        )
       }
     })
   );
@@ -334,63 +330,42 @@ const extractChannels: ExtractChannels = async (
       }
     })
   )
+  const color_cycle = list_colors("sRGB");
   const Colors = [
     {
-      "ID": "sRGB#ff0000",
+      "ID": "sRGB#ffffff",
       "Properties": {
           "R": 255,
-          "G": 0,
-          "B": 0,
-          "Space": "sRGB",
-          "LowerRange": 0,
-          "UpperRange": 255
-      }
-    },
-    {
-      "ID": "sRGB#00ff00",
-      "Properties": {
-          "R": 0,
           "G": 255,
-          "B": 0,
-          "Space": "sRGB",
-          "LowerRange": 0,
-          "UpperRange": 255
-      }
-    },
-    {
-      "ID": "sRGB#0000ff",
-      "Properties": {
-          "R": 0,
-          "G": 0,
           "B": 255,
           "Space": "sRGB",
           "LowerRange": 0,
           "UpperRange": 255
       }
     }
-  ].concat(
-    list_colors("sRGB")
-  );
+  ].concat(color_cycle);
   const GroupChannels = SourceChannels.map(
     (channel, index) => {
       const group_index = Math.floor(index / group_size);
-      const color_index = (index % group_size) % Colors.length;
+      const color_index = (index % group_size) % color_cycle.length;
       const group_uuid = Groups[group_index].UUID;
       return {
         UUID: crypto.randomUUID(),
         State: { Expanded: true },
         Properties: {
-          LowerRange: brightfield? 0 : 2**8, //TODO
-          UpperRange: brightfield? 255 : 2**12  //TODO
+          LowerRange: brightfield? 0 : 2**6, //TODO
+          UpperRange: brightfield? 255 : 2**14  //TODO
         },
         Associations: {
           SourceChannel: onlyUUID(channel),
-          Color: asID(Colors[color_index].ID),
+          Color: asID(
+            brightfield ? 'sRGB#ffffff': color_cycle[color_index].ID
+          ),
           Group: asUUID(group_uuid)
         }
       }
     }
-  )
+  );
   return {
     SourceChannels,
     GroupChannels,

@@ -10,7 +10,7 @@ const toImageProps = (opts) => {
       toSettings: toSettings(props, false)
     }, {
       toSettings: toSettings(props, true)
-    }]
+    }].filter((_,i)=> i < props.loaders.length)
   };
   return vivProps;
 };

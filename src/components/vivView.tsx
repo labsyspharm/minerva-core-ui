@@ -1,9 +1,10 @@
 import * as React from "react";
 import Deck from '@deck.gl/react';
+import GL from '@luma.gl/constants';
 import { OrthographicView } from '@deck.gl/core';
 import { useEffect, useRef, useState } from "react";
+import { DimmerExtension } from "../lib/shaders";
 import { useWindowSize } from "../lib/useWindowSize";
-import { PictureInPictureViewer } from "@hms-dbmi/viv";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 
 import styled from "styled-components";
@@ -14,8 +15,6 @@ import type { Config } from "../lib/viv";
 import type { Group, Story } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
 import type { Selection, Color, Limit } from "../lib/viv";
-import { VivLensing } from "./vivLensing";
-import { LensExtension } from "@hms-dbmi/viv";
 
 export type Props = {
   loaders: any[];
@@ -67,11 +66,6 @@ const VivView = (props: Props) => {
   const [mainSettings, setMainSettings] = useState(
     toMainSettings(hash)
   );
-  const toBrightfieldSettings = props.viewerConfigs[1].toSettings;
-  const [brightfieldSettings, setBrightfieldSettings] = useState(
-    toBrightfieldSettings(hash)
-  );
-
   const waypoint = getWaypoint(stories, s, w);
   const [shape, setShape] = useState(maxShape);
   const [canvas, setCanvas] = useState(null);
@@ -82,12 +76,9 @@ const VivView = (props: Props) => {
   useEffect(() => {
     setMainSettings(toMainSettings(hash, loaders, groups));
   }, [loaders,groups,hash]);
-  useEffect(() => {
-    setBrightfieldSettings(toBrightfieldSettings(hash, loaders, groups));
-  }, [loaders,groups,hash]);
 
   const loadersData = loaders.map(loader => loader.data);
-  if (!loaders.length || !mainSettings || !brightfieldSettings) {
+  if (!loaders.length || !mainSettings) {
     return null;
   }
   const mainProps = {
@@ -98,18 +89,39 @@ const VivView = (props: Props) => {
       ...(mainSettings as any),
     }
   };
-  const brightfieldProps = {
-    ...{
-      ...shape,
-      id: "brightfieldLayer",
-      loader: loadersData[1],
-      ...(brightfieldSettings as any),
-    },
-  };
-  const layers = [
-    new MultiscaleImageLayer(mainProps),
-    new MultiscaleImageLayer(brightfieldProps)
+  let layers = [
+    new MultiscaleImageLayer(mainProps)
   ];
+  const has_brightfield = props.viewerConfigs.length > 1;
+  if (has_brightfield) {
+    const toBrightfieldSettings = (hash, loaders, groups) => {
+      return props.viewerConfigs[1].toSettings(
+        { ...hash, g }, loaders, groups
+      );
+    }
+    const [brightfieldSettings, setBrightfieldSettings] = useState(
+      toBrightfieldSettings(hash)
+    );
+    useEffect(() => {
+      setBrightfieldSettings(toBrightfieldSettings(hash, loaders, groups));
+    }, [loaders,groups,hash]);
+    const brightfieldProps = {
+      ...{
+        ...shape,
+        id: "brightfieldLayer",
+        subLayerProps: {
+          // TODO -- extension not working
+          extensions: [new DimmerExtension()]
+        },
+        loader: loadersData[1],
+        ...(brightfieldSettings as any),
+      },
+    };
+    layers = [
+      new MultiscaleImageLayer(brightfieldProps),
+      ...layers
+    ];
+  }
   const n_levels = loadersData[0].length;
   const shape_labels = loadersData[0][0].labels;
   const shape_values = loadersData[0][0].shape;
@@ -120,13 +132,16 @@ const VivView = (props: Props) => {
     zoom: 1-1*n_levels,
     target: [imageShape.x / 2, imageShape.y / 2, 0]
   });
-  //console.log(layers);
   return (
     <Main slot="image" ref={rootRef}>
       <Deck
         layers={layers}
         controller={true}
         viewState={viewState}
+        parameters={{
+          blendFunc: [GL.ONE, GL.ONE, GL.ONE, GL.ONE],
+          blendEquation: GL.FUNC_ADD
+        }}
         onViewStateChange={e => setViewState(e.viewState)}
         views={[new OrthographicView({ id: 'ortho', controller: true })]}
       />
