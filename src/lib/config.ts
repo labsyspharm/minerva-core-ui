@@ -303,7 +303,8 @@ const extractChannels: ExtractChannels = async (
 ) => {
   const init = initialize(loader, n);
   const { Channels, Type } = loader.metadata.Pixels;
-  const use_first = brightfield ? [] : [];
+  // TODO -- don't hard-code anything
+  const use_first = brightfield ? [] : [2,3,4,5,8,10,13];
   const name_change = name => (
     brightfield ? "H&E" : name.split('_')[1]
   );
@@ -425,7 +426,16 @@ const extractChannels: ExtractChannels = async (
       }
     }
   );
-
+  // TODO -- don't hard-code anything
+  if (!brightfield) {
+    GroupChannels.splice(7, 1, {
+      ...GroupChannels[7],
+      Associations: {
+        ...GroupChannels[7].Associations,
+        Group: { UUID: [...Groups].pop().UUID }
+      }
+    })
+  }
   return {
     SourceChannels,
     GroupChannels,
