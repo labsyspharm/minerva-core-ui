@@ -91,7 +91,7 @@ const Content = (props: Props) => {
       ({State}) => State.Expanded
     );
     if (!isNaN(firstOpen) && firstOpen >= 0) {
-      console.log(hashContext.setHash({g: firstOpen}));
+      hashContext.setHash({g: firstOpen});
     }
     setConfig(config => ({
       ...config, ItemRegistry: {
