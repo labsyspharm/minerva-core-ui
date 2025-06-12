@@ -108,12 +108,17 @@ const VivView = (props: Props) => {
     useEffect(() => {
       setBrightfieldSettings(toBrightfieldSettings(hash, loaders, groups));
     }, [loaders,groups,hash]);
+    const setOpacity = (settings) => {
+      const expanded = settings.channelsVisible.some(x => x);
+      if (!expanded) return 0;
+      return 1/3;
+    }
     const brightfieldProps = {
       ...{
         ...shape,
         id: "brightfieldLayer",
-        opacity: 1 / 3,
         loader: loadersData[1],
+        opacity: setOpacity(brightfieldSettings),
         ...(brightfieldSettings as any),
       },
     };

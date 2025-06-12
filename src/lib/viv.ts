@@ -132,8 +132,8 @@ const toSettings = (opts, brightfield) => {
       }
       return true;
     }).map(
-      ({c, z, t, color, contrast}) => ({
-        c, z, t, color, contrast
+      ({c, z, t, color, contrast, expanded}) => ({
+        c, z, t, color, contrast, expanded
       })
     );
     const n_channels = selections.length;
@@ -143,7 +143,7 @@ const toSettings = (opts, brightfield) => {
     const contrastLimits: Limit[] = selections.map(c => {
       return c.contrast; 
     });
-    const channelsVisible = selections.map( c => true );
+    const channelsVisible = selections.map(c => c.expanded);
     const out = {
       ...toDefaultSettings(n_channels),
       selections, colors, contrastLimits, channelsVisible,

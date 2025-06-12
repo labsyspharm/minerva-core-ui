@@ -238,13 +238,16 @@ const Index = (props: Props) => {
         source_channel.UUID == SourceChannel.UUID
       ))
       const { Name } = source?.Properties || defaults;
+      const expanded = group_channel.State.Expanded || false;
       const image_id = source.Associations.SourceImage.ID || '';
       // TODO -- distinguish by some way other than index offset
       const offset = SourceChannels.findIndex(source_channel => (
         source_channel.Associations.SourceImage.ID === image_id
       ));
+      console.log();
       return {
-        color, name: Name, image_id, offset, contrast: [
+        color, name: Name, image_id, offset, expanded,
+        contrast: [
           LowerRange, UpperRange
         ]
       };
