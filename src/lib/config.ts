@@ -348,10 +348,10 @@ const extractChannels: ExtractChannels = async (
 //  const color_cycle = list_colors("sRGB");
   const color_cycle = [
     {
-      "ID": "sRGB#0000ff",
+      "ID": "sRGB#007fff",
       "Properties": {
           "R": 0,
-          "G": 0,
+          "G": 127,
           "B": 255,
           "Space": "sRGB",
           "LowerRange": 0,

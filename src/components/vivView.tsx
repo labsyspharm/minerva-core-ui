@@ -86,6 +86,7 @@ const VivView = (props: Props) => {
       ...shape,
       id: "mainLayer",
       loader: loadersData[0],
+      excludeBackground: true,
       parameters: {
         blendFunc: [GL.ONE, GL.ONE, GL.ONE, GL.ONE],
       },
@@ -143,8 +144,6 @@ const VivView = (props: Props) => {
         controller={true}
         viewState={viewState}
         parameters={{
-//          blendFunc: [GL.ONE, GL.ONE, GL.ONE, GL.ONE],
-//          blendEquation: GL.FUNC_ADD
         }}
         onViewStateChange={e => setViewState(e.viewState)}
         views={[new OrthographicView({ id: 'ortho', controller: true })]}
