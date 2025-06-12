@@ -244,7 +244,6 @@ const Index = (props: Props) => {
       const offset = SourceChannels.findIndex(source_channel => (
         source_channel.Associations.SourceImage.ID === image_id
       ));
-      console.log();
       return {
         color, name: Name, image_id, offset, expanded,
         contrast: [

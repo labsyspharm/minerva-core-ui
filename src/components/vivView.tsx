@@ -88,7 +88,6 @@ const VivView = (props: Props) => {
       loader: loadersData[0],
       parameters: {
         blendFunc: [GL.ONE, GL.ONE, GL.ONE, GL.ONE],
-        blendEquation: GL.FUNC_ADD,
       },
       ...(mainSettings as any)}
   };

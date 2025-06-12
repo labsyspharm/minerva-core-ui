@@ -323,6 +323,7 @@ const extractChannels: ExtractChannels = async (
       }
     })
   );
+  // TODO -- max is 6
   const group_size = 4;
   const ReorderedSourceChannels = [
     ...use_first, ...[
@@ -347,10 +348,10 @@ const extractChannels: ExtractChannels = async (
 //  const color_cycle = list_colors("sRGB");
   const color_cycle = [
     {
-      "ID": "sRGB#007fff",
+      "ID": "sRGB#0000ff",
       "Properties": {
           "R": 0,
-          "G": 127,
+          "G": 0,
           "B": 255,
           "Space": "sRGB",
           "LowerRange": 0,
