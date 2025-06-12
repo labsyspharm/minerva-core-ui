@@ -253,10 +253,15 @@ const MainStyle = createGlobalStyle`
 
 const rootElement = document.getElementById(id);
 const root = createRoot(rootElement);
-
+const channelRanges = {
+  "CD8a": [0, 4000],
+  "PD-L1": [0, 8000],
+  "PD-1": [0, 16000]
+}
 root.render(
   <React.StrictMode>
     <Main 
+      channelRanges={channelRanges}
       exhibit_config={exhibit_config} handleKeys={["ome-dir-1"]}
       marker_names={marker_names} configWaypoints={configWaypoints}
     />

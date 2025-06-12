@@ -24,6 +24,7 @@ import type { MutableFields } from "./lib/config";
 import type { ExhibitConfig } from "./lib/exhibit";
 
 type Props = ImageProps & {
+  channelRanges: Dict<string, number[]>;
   configWaypoints: ConfigWaypoint[]; 
   exhibit_config: ExhibitConfig;
   marker_names: string[];
@@ -61,6 +62,7 @@ const Scrollable = styled.div`
 
 const Content = (props: Props) => {
   const { handleKeys } = props;
+  const { channelRanges } = props;
   const firstExhibit = readConfig(props.exhibit_config);
   const [exhibit, setExhibit] = useState(firstExhibit);
   const [url, setUrl] = useState(window.location.href);
@@ -130,9 +132,13 @@ const Content = (props: Props) => {
       }
       const { 
         SourceChannels, GroupChannels, Groups, Colors
-      } = await extractChannels(loader1, 1, false);
+      } = await extractChannels(
+        loader1, 1, false, channelRanges
+      );
       if (has_brightfield) {
-        const extractedBrightfield = await extractChannels(loader2, 2, true);
+        const extractedBrightfield = await extractChannels(
+          loader2, 2, true, channelRanges
+        );
         extractedBrightfield.SourceChannels.forEach((sourceChannel) => {
           SourceChannels.push(sourceChannel)
         });

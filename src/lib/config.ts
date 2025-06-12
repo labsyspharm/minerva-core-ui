@@ -299,7 +299,7 @@ const extractDistributions: ExtractDistributions = async (
 }
 
 const extractChannels: ExtractChannels = async (
-  loader, n, brightfield
+  loader, n, brightfield, channelRanges
 ) => {
   const init = initialize(loader, n);
   const { Channels, Type } = loader.metadata.Pixels;
@@ -404,17 +404,25 @@ const extractChannels: ExtractChannels = async (
       }
     }
   ].concat(color_cycle);
+  const defaultRange = [0, 15000];
+  const specifyChannelRange = (Name, brightfield) => {
+    if (brightfield) {
+      return [0, 255];
+    }
+    return (channelRanges[Name] || defaultRange);
+  }
   const GroupChannels = ReorderedSourceChannels.map(
     (channel, index) => {
       const group_index = Math.floor(index / group_size);
       const color_index = (index % group_size) % color_cycle.length;
       const group_uuid = Groups[group_index].UUID;
+      const { Name } = channel.Properties;
       return {
         UUID: crypto.randomUUID(),
         State: { Expanded: true },
         Properties: {
-          LowerRange: brightfield? 0 : 0, //TODO
-          UpperRange: brightfield? 255 : 5000  //TODO
+          LowerRange: specifyChannelRange(Name, brightfield)[0],
+          UpperRange: specifyChannelRange(Name, brightfield)[1]
         },
         Associations: {
           SourceChannel: onlyUUID(channel),
