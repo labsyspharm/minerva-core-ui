@@ -456,7 +456,7 @@ const extractChannels: ExtractChannels = async (
 const mutableConfigArrayItem = (
   array, receiver, index
 ) => namespace => {
-  const item = array[index][namespace];
+  const item = array[index][namespace] || {};
   return [
     namespace, new Proxy(item, {
         set(...args) {

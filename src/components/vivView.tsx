@@ -109,9 +109,10 @@ const VivView = (props: Props) => {
       setBrightfieldSettings(toBrightfieldSettings(hash, loaders, groups));
     }, [loaders,groups,hash]);
     const setOpacity = (settings) => {
+      const percent = Math.log2(settings.contrastLimits[0][1]) / 15;
       const expanded = settings.channelsVisible.some(x => x);
       if (!expanded) return 0;
-      return 1/3;
+      return Math.min(percent, 1);
     }
     const brightfieldProps = {
       ...{

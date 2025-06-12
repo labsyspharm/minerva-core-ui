@@ -94,7 +94,7 @@ const Index = (props: Props) => {
   const checkWindow = () => {
     return window.innerWidth > 600;
   }
-  const [twoNavOk, setTwoNavOk] = useState(checkWindow());
+  const [twoNavOk, setTwoNavOk] = useState(false);
   const [hidden, setHidden] = useState([false, !twoNavOk]);
   const handleResize = () => {
     const twoNavPossible = checkWindow();

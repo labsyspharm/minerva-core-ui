@@ -22,6 +22,7 @@ import type { ExtractedChannels } from "./lib/config";
 import type { ConfigWaypoint } from "./lib/config";
 import type { MutableFields } from "./lib/config";
 import type { ExhibitConfig } from "./lib/exhibit";
+import type { HashState } from "../../lib/hashUtil";
 
 type Props = ImageProps & {
   channelRanges: Dict<string, number[]>;
@@ -86,6 +87,12 @@ const Content = (props: Props) => {
     }));
   };
   const setItems = ItemRegistry => {
+    const firstOpen = ItemRegistry.Groups?.findIndex(
+      ({State}) => State.Expanded
+    );
+    if (!isNaN(firstOpen) && firstOpen >= 0) {
+      console.log(hashContext.setHash({g: firstOpen}));
+    }
     setConfig(config => ({
       ...config, ItemRegistry: {
         ...config.ItemRegistry, ...ItemRegistry
@@ -193,7 +200,7 @@ const Content = (props: Props) => {
   }, [])
   const { marker_names } = props;
   const mutableFields: MutableFields = [ 
-    'GroupChannels' 
+    'GroupChannels', 'Groups' 
   ]
   // Define a WebComponent for the item panel
   const controlPanelElement = useMemo(() => author({
@@ -201,7 +208,6 @@ const Content = (props: Props) => {
       config.ItemRegistry, setItems, mutableFields 
     )
   }), [config.ID])
-
   // Actual image viewer
   const imager = loader1 === null ? '' : (
     <Full>
