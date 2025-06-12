@@ -239,6 +239,7 @@ const Index = (props: Props) => {
       ))
       const { Name } = source?.Properties || defaults;
       const image_id = source.Associations.SourceImage.ID || '';
+      // TODO -- distinguish by some way other than index offset
       const offset = SourceChannels.findIndex(source_channel => (
         source_channel.Associations.SourceImage.ID === image_id
       ));

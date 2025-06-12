@@ -86,8 +86,11 @@ const VivView = (props: Props) => {
       ...shape,
       id: "mainLayer",
       loader: loadersData[0],
-      ...(mainSettings as any),
-    }
+      parameters: {
+        blendFunc: [GL.ONE, GL.ONE, GL.ONE, GL.ONE],
+        blendEquation: GL.FUNC_ADD,
+      },
+      ...(mainSettings as any)}
   };
   let layers = [
     new MultiscaleImageLayer(mainProps)
@@ -109,11 +112,7 @@ const VivView = (props: Props) => {
       ...{
         ...shape,
         id: "brightfieldLayer",
-        subLayerProps: {
-          // TODO -- extension not working
-          // TODO -- for that matter, full-res H&E not loading!
-          extensions: [new DimmerExtension()]
-        },
+        opacity: 1 / 3,
         loader: loadersData[1],
         ...(brightfieldSettings as any),
       },
@@ -140,8 +139,8 @@ const VivView = (props: Props) => {
         controller={true}
         viewState={viewState}
         parameters={{
-          blendFunc: [GL.ONE, GL.ONE, GL.ONE, GL.ONE],
-          blendEquation: GL.FUNC_ADD
+//          blendFunc: [GL.ONE, GL.ONE, GL.ONE, GL.ONE],
+//          blendEquation: GL.FUNC_ADD
         }}
         onViewStateChange={e => setViewState(e.viewState)}
         views={[new OrthographicView({ id: 'ortho', controller: true })]}

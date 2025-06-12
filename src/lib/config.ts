@@ -303,11 +303,15 @@ const extractChannels: ExtractChannels = async (
 ) => {
   const init = initialize(loader, n);
   const { Channels, Type } = loader.metadata.Pixels;
+  const use_first = brightfield ? [] : [];
+  const name_change = name => (
+    brightfield ? "H&E" : name.split('_')[1]
+  );
   const SourceChannels = Channels.map(
     (channel, index) => ({
       UUID: crypto.randomUUID(),
       Properties: {
-        Name: brightfield ? "H&E" : channel.Name,
+        Name: name_change(channel.Name),
         SourceIndex: init.indices[index].c,
       },
       Associations: {
@@ -319,6 +323,15 @@ const extractChannels: ExtractChannels = async (
     })
   );
   const group_size = 4;
+  const ReorderedSourceChannels = [
+    ...use_first, ...[
+      ...Array(SourceChannels.length).keys()
+    ].filter(
+      i => !use_first.includes(i)
+    )
+  ].map(
+    i => SourceChannels[i]
+  )
   const Groups = [...Array(Math.ceil(
       SourceChannels.length / group_size
   )).keys()].map(
@@ -326,11 +339,57 @@ const extractChannels: ExtractChannels = async (
       UUID: crypto.randomUUID(),
       State: { Expanded: false },
       Properties: {
-        Name: `Group ${index}`
+        Name: `Group ${index+1}`
       }
     })
   )
-  const color_cycle = list_colors("sRGB");
+//  const color_cycle = list_colors("sRGB");
+  const color_cycle = [
+    {
+      "ID": "sRGB#007fff",
+      "Properties": {
+          "R": 0,
+          "G": 127,
+          "B": 255,
+          "Space": "sRGB",
+          "LowerRange": 0,
+          "UpperRange": 255
+      }
+    },
+    {
+      "ID": "sRGB#00ff00",
+      "Properties": {
+          "R": 0,
+          "G": 255,
+          "B": 0,
+          "Space": "sRGB",
+          "LowerRange": 0,
+          "UpperRange": 255
+      }
+    },
+    {
+      "ID": "sRGB#ffff00",
+      "Properties": {
+          "R": 255,
+          "G": 255,
+          "B": 0,
+          "Space": "sRGB",
+          "LowerRange": 0,
+          "UpperRange": 255
+      }
+    },
+    {
+    "ID": "sRGB#ff0000",
+      "Properties": {
+          "R": 255,
+          "G": 0,
+          "B": 0,
+          "Space": "sRGB",
+          "LowerRange": 0,
+          "UpperRange": 255
+      }
+    }
+  ]
   const Colors = [
     {
       "ID": "sRGB#ffffff",
@@ -344,7 +403,7 @@ const extractChannels: ExtractChannels = async (
       }
     }
   ].concat(color_cycle);
-  const GroupChannels = SourceChannels.map(
+  const GroupChannels = ReorderedSourceChannels.map(
     (channel, index) => {
       const group_index = Math.floor(index / group_size);
       const color_index = (index % group_size) % color_cycle.length;
@@ -353,8 +412,8 @@ const extractChannels: ExtractChannels = async (
         UUID: crypto.randomUUID(),
         State: { Expanded: true },
         Properties: {
-          LowerRange: brightfield? 0 : 2**6, //TODO
-          UpperRange: brightfield? 255 : 2**14  //TODO
+          LowerRange: brightfield? 0 : 0, //TODO
+          UpperRange: brightfield? 255 : 5000  //TODO
         },
         Associations: {
           SourceChannel: onlyUUID(channel),
@@ -366,6 +425,7 @@ const extractChannels: ExtractChannels = async (
       }
     }
   );
+
   return {
     SourceChannels,
     GroupChannels,

@@ -128,13 +128,26 @@ const Content = (props: Props) => {
           plane.shape = [...plane.shape, 3]
         });
       }
-      let extractedBrightfield: ExtractedChannels  | null = null;
-      if (has_brightfield) {
-        extractedBrightfield = await extractChannels(loader2, 2, true);
-      }
-      let { 
+      const { 
         SourceChannels, GroupChannels, Groups, Colors
       } = await extractChannels(loader1, 1, false);
+      if (has_brightfield) {
+        const extractedBrightfield = await extractChannels(loader2, 2, true);
+        extractedBrightfield.SourceChannels.forEach((sourceChannel) => {
+          SourceChannels.push(sourceChannel)
+        });
+        extractedBrightfield.GroupChannels.forEach((groupChannel) => {
+          Groups.forEach((group) => {
+            GroupChannels.push({
+              ...groupChannel, Associations: {
+                ...groupChannel.Associations, Group: {
+                  UUID: group.UUID
+                }
+              }
+            });
+          })
+        });
+      }
       resetItems({
         SourceChannels, GroupChannels, Groups, Colors
       });
