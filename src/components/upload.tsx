@@ -185,8 +185,11 @@ const FormMC = (props: FormProps) => {
   const formProps = { onSubmit };
   const hasNewChoice = (c: Choices) => {
     return [
-      c.dir.some((i: string) => !(i in choices.dir)),
-      c.mask.some((i: string) => !(i in choices.mask))
+      c.dir.some((i: string) => !(choices.dir).includes(i)),
+      c.mask.some((i: string) => !(choices.mask).includes(i)),
+      c.brightfield.some(
+        (i: string) => !(choices.brightfield.includes(i))
+      )
     ].some(x => x === true);
   }
   useEffect(() => {
@@ -312,10 +315,10 @@ const FormAny = (props: FormProps) => {
   const formProps = { onSubmit };
   const hasNewChoice = (c: Choices) => {
     return [
-      c.csv.some((i: string) => !(i in choices.csv)),
-      c.path.some((i: string) => !(i in choices.path)),
-      c.mask.some((i: string) => !(i in choices.mask)),
-      c.brightfield.some((i: string) => !(i in choices.brightfield))
+      c.csv.some((i: string) => !(choices.csv).includes(i)),
+      c.path.some((i: string) => !(choices.path).includes(i)),
+      c.mask.some((i: string) => !(choices.mask).includes(i)),
+      c.brightfield.some((i: string) => !(choices.brightfield).includes(i))
     ].some(x => x === true);
   }
   useEffect(() => {

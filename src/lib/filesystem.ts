@@ -71,12 +71,9 @@ const toDir: ToDir = async () => {
 
 const listDir: ListDir = async (opts) => {
   const { handle } = opts;
-  const paths = handle.entries();
-  const output: Entry[] = [];
-  for await (const e of paths) {
-    output.push(e);
-  }
-  return output;
+  const ok = await handle.queryPermission();
+  const entries = handle.entries();
+  return await Array.fromAsync(entries);
 }
 
 const findFile: FindFile = async (opts) => {
