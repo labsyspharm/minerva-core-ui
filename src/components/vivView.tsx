@@ -84,70 +84,75 @@ const VivView = (props: Props) => {
     }
   };
 
-  // TODO: delete first 3 lines and last 1 lines
   const series = "https://proxy.imaging.datacommons.cancer.gov/current/viewer-only-no-downloads-see-tinyurl-dot-com-slash-3j3d9jyp/dicomWeb/studies/2.25.93749216439228361118017742627453453196/series/1.3.6.1.4.1.5962.99.1.2344794501.795090168.1655907236229.4.0";
   const instances = `${series}/instances/`;
-  /*
-  readInstances(instances).then(
-    async (instance_list) => {
-      const pyramids = await Promise.all(
-        instance_list.map(({ SOPInstanceUID }, i) => {
-          const instance = `${series}/instances/${SOPInstanceUID}`;
-          return readMetadata(instance).then(
-            instance_metadata => {
-              const pyramid = computeImagePyramid({
-                metadata: instance_metadata
-              })
-              return pyramid;
-            }
-          )
-        })
-      )
-      const channel_pyramids = pyramids.reduce((o, i) => {
-        const k = String(
-          i.metadata[0].OpticalPathSequence[0].OpticalPathIdentifier
-        );
-        const channel_pyramid = [
-          ...(o[k] || []), ...[i]
-        ];
-        return {
-          ...o, [k]: channel_pyramid
-        }
-      }, {});
-      // For first optical channel
-      const test_pyramid = (
-        Object.values(channel_pyramids["0"]).map(
-          ({ frameMappings, extent, tileSizes }) => ({ 
-            frameMappings: Object.fromEntries(
-              Object.entries(frameMappings[0]).map(
-                ([k,v]) => (
-                  [k, v.split('/').slice(-3).join('/')]
-                )
-              )
-            ),
-            width: Math.abs(extent[1]),
-            height: Math.abs(extent[2]),
-            tileSize: Math.max(...tileSizes[0])
+  // Enables regeneration of test pyramid
+  if (false) {
+    readInstances(instances).then(
+      async (instance_list) => {
+        const pyramids = await Promise.all(
+          instance_list.map(({ SOPInstanceUID }, i) => {
+            const instance = `${series}/instances/${SOPInstanceUID}`;
+            return readMetadata(instance).then(
+              instance_metadata => {
+                const pyramid = computeImagePyramid({
+                  metadata: instance_metadata
+                })
+                return pyramid;
+              }
+            )
           })
-        ).sort((a, b) => {
-          return a.width - b.width
-        })
-      )
-    }
-  )
-  */
-  
+        )
+        const channel_pyramids = pyramids.reduce((o, i) => {
+          const k = String(
+            i.metadata[0].OpticalPathSequence[0].OpticalPathIdentifier
+          );
+          const channel_pyramid = [
+            ...(o[k] || []), ...[i]
+          ];
+          return {
+            ...o, [k]: channel_pyramid
+          }
+        }, {});
+        // For first optical channel
+        const test_pyramid = (
+          Object.values(channel_pyramids["0"]).map(
+            ({ frameMappings, extent, tileSizes }) => ({ 
+              extent,
+              width: Math.abs(extent[2]),
+              height: Math.abs(extent[3]),
+              frameMappings: Object.fromEntries(
+                Object.entries(frameMappings[0]).map(
+                  ([k,v]) => (
+                    [k, v.split('/').slice(-3).join('/')]
+                  )
+                )
+              ),
+              tileSize: Math.max(...tileSizes[0])
+            })
+          ).sort((a, b) => {
+            return a.width - b.width
+          })
+        )
+        console.log(JSON.stringify(test_pyramid));
+      }
+    );
+  }
+
+  const extent = [...testPyramid].pop().extent;
+  const height = [...testPyramid].pop().height;
+  const width = [...testPyramid].pop().width;
+
   const layers = [
     createTileLayer({
+      width, height, extent,
       tileSize: testPyramid[0].tileSize,
       maxLevel: testPyramid.length,
-      width: [...testPyramid].pop().width,
-      height: [...testPyramid].pop().height,
       pyramid: testPyramid,
       series,
     }, {
       id: "TODO-TEST-ID",
-      color: [100, 100, 255],
+      color: [255, 255, 255],
       visible: true
     }),
 //    new MultiscaleImageLayer(mainProps),
