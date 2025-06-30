@@ -521,45 +521,38 @@ function createTileLayer(meta, tile_info) {
           let over_x = 0;
           if (pyramid[zoom]) {
             const { tileSize, width, height } = pyramid[zoom];
-            over_y = Math.max((y+1)*tileSize-height, 0);
-            over_x = Math.max((x+1)*tileSize-width, 0);
-            if (over_y) {
-              console.log('overshoot y:', x, y)
-              console.log(over_y)
-            }
-            if (over_x) {
-              console.log('overshoot x:', x, y)
-              console.log(over_x)
-            }
+            const content_y = (y+1)*tileSize-height;
+            const content_x = (x+1)*tileSize-width;
+            over_y = Math.max(content_y, 0);
+            over_x = Math.max(content_x, 0);
           }
           const blob = await response.blob();
           const sliced = blob.slice(91);
           const buffer = await sliced.arrayBuffer();
           const view = new Uint8Array(buffer);
 
-          const hideOutOfBounds = ({
+          const hideOutOfBounds = async ({
             view, tileSize, over_x, over_y
           }) => {
-            return view;
+            const canvas = new OffscreenCanvas(tileSize, tileSize);
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(await createImageBitmap(sliced), 0, 0);
+            ctx.fillStyle = 'black';
             if (over_x) {
-              for (let x=(tileSize-over_x); x < tileSize; x++) {
-                for (let y=0; y < tileSize; y++) {
-                  view[y * tileSize + x] = 255;
-                }
-              }
+              ctx.fillRect(tileSize - over_x, 0, over_x, tileSize);
             }
             if (over_y) {
-              for (let y=(tileSize-over_y); y < tileSize; y++) {
-                for (let x=0; x < tileSize; x++) {
-                  view[y * tileSize + x] = 255;
-                }
-              }
+              ctx.fillRect(0, tileSize - over_y, tileSize, over_y);
             }
+            const blob = await canvas.convertToBlob({
+              "type": "image/png"
+            });
+            return new Uint8Array(
+              await blob.arrayBuffer()
+            );
             return view;
           };
-          return view;
-          // TODO -- not possible, need to decode png
-          return hideOutOfBounds({
+          return await hideOutOfBounds({
             view, tileSize, over_x, over_y
           })
         }
