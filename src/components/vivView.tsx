@@ -4,7 +4,7 @@ import { OrthographicView } from '@deck.gl/core';
 import { useEffect, useRef, useState } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import {
-  testPyramid,
+  testPyramids,
   createTileLayer, readInstances,
   readMetadata, computeImagePyramid
 } from "../lib/dicom";
@@ -115,43 +115,39 @@ const VivView = (props: Props) => {
           }
         }, {});
         // For first optical channel
-        const test_pyramid = (
-          Object.values(channel_pyramids["0"]).map(
-            ({ frameMappings, extent, tileSizes }) => ({ 
-              extent,
-              width: Math.abs(extent[2]),
-              height: Math.abs(extent[3]),
-              frameMappings: Object.fromEntries(
-                Object.entries(frameMappings[0]).map(
-                  ([k,v]) => (
-                    [k, v.split('/').slice(-3).join('/')]
-                  )
-                )
-              ),
-              tileSize: Math.max(...tileSizes[0])
-            })
-          ).sort((a, b) => {
-            return a.width - b.width
-          })
-        )
-        console.log(JSON.stringify(test_pyramid));
+        const test_pyramids = Object.fromEntries(
+          Object.entries(channel_pyramids).map(
+            ([key, pyramid]) => ([
+              key, Object.values(pyramid).map(
+                ({ frameMappings, extent, tileSizes }) => ({ 
+                  extent,
+                  width: Math.abs(extent[2]),
+                  height: Math.abs(extent[3]),
+                  frameMappings: Object.fromEntries(
+                    Object.entries(frameMappings[0]).map(
+                      ([k,v]) => (
+                        [k, v.split('/').slice(-3).join('/')]
+                      )
+                    )
+                  ),
+                  tileSize: Math.max(...tileSizes[0])
+                })
+              ).sort((a, b) => {
+                return a.width - b.width
+              })
+            ])
+          )
+        );
+        console.log(JSON.stringify(test_pyramids));
       }
     );
   }
 
-  const extent = [...testPyramid].pop().extent;
-  const height = [...testPyramid].pop().height;
-  const width = [...testPyramid].pop().width;
-
   const layers = [
     createTileLayer({
-      width, height, extent,
-      tileSize: testPyramid[0].tileSize,
-      maxLevel: testPyramid.length,
-      pyramid: testPyramid,
-      series,
+      pyramids: testPyramids, series
     }, {
-      id: "TODO-TEST-ID",
+      id: "5",
       color: [255, 255, 255],
       visible: true
     }),
