@@ -74,7 +74,6 @@ const VivView = (props: Props) => {
     setMainSettings(toMainSettings(hash, loader, groups));
 
   }, [loader,groups,hash]);
-
   const mainProps = {
     ...{
       ...shape,
@@ -142,17 +141,24 @@ const VivView = (props: Props) => {
       }
     );
   }
-
-  const layers = [
-    createTileLayer({
-      pyramids: testPyramids, series
-    }, {
-      id: "0",
-      color: [255, 255, 255],
-      visible: true
-    }),
-//    new MultiscaleImageLayer(mainProps),
-  ];
+  const layer_settings = [...(
+    Object.entries(mainSettings.channelsVisible).
+      filter(([i,x]) => x).map(([i,x]) => parseInt(i))
+  ).toReversed().map(i => {
+    return {
+      visible: true,
+      id: `${mainSettings.selections[i].c}`,
+      color: mainSettings.colors[i],
+    }
+  })];
+  const layers = layer_settings.map(
+    settings => createTileLayer(
+      {
+        pyramids: testPyramids, series
+      },
+      settings
+    )
+  );
   const n_levels = loader.data.length;
   const shape_labels = loader.data[0].labels;
   const shape_values = loader.data[0].shape;

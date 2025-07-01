@@ -580,9 +580,8 @@ function createTileLayer(meta, tile_info) {
         ],
         parameters: {
 //          depthTest: false,
-//          blend: true,
-//          blendFunc: [GL.CONSTANT_COLOR, GL.ONE, GL.ONE, GL.ONE],
-//          blendColor: color,
+          blendFunc: [GL.CONSTANT_COLOR, GL.ONE, GL.ONE, GL.ONE],
+          blendColor: color,
 //          blendEquation: GL.FUNC_ADD,
         },
       })
@@ -722,8 +721,167 @@ const testLoader = {
   )
 }
 
-const testChannels = {"SourceChannels":[{"UUID":"e3ecdf9f-4c22-41b3-92d4-2fc6437db980","Properties":{"Name":"R","SourceIndex":0},"Associations":{"SourceDataType":{"ID":"uint8"},"SourceImage":{"UUID":"TODO"}}}],"GroupChannels":[{"UUID":"66487bb2-194e-4c70-93c1-3de50bec2dbf","State":{"Expanded":true},"Properties":{"LowerRange":256,"UpperRange":4096},"Associations":{"SourceChannel":{"UUID":"e3ecdf9f-4c22-41b3-92d4-2fc6437db980"},"Color":{"ID":"sRGB#0dabff"},"Group":{"UUID":"5b96ddf9-e0a8-4a39-9678-6c1aab8dfd54"}}}],"Groups":[{"UUID":"5b96ddf9-e0a8-4a39-9678-6c1aab8dfd54","State":{"Expanded":false},"Properties":{"Name":"Group 0"}}],"Colors":[{"ID":"sRGB#0dabff","Properties":{"R":13,"G":171,"B":255,"Space":"sRGB","LowerRange":0,"UpperRange":255}},{"ID":"sRGB#c3ff00","Properties":{"R":195,"G":255,"B":0,"Space":"sRGB","LowerRange":0,"UpperRange":255}},{"ID":"sRGB#ff8b00","Properties":{"R":255,"G":139,"B":0,"Space":"sRGB","LowerRange":0,"UpperRange":255}},{"ID":"sRGB#ff00c7","Properties":{"R":255,"G":0,"B":199,"Space":"sRGB","LowerRange":0,"UpperRange":255}}]}
- 
+const testUUIDs = {
+  "Channel 0": crypto.randomUUID(),
+  "Channel 4": crypto.randomUUID(),
+  "Channel 5": crypto.randomUUID()
+}
+
+const testChannels = {
+  "SourceChannels": [
+    {
+      "UUID": testUUIDs["Channel 0"],
+      "Properties": {
+        "Name": "Channel 0",
+        "SourceIndex": 0
+      },
+      "Associations": {
+        "SourceDataType": {
+          "ID": "uint16"
+        },
+        "SourceImage": {
+          "UUID": "TODO"
+        }
+      }
+    },
+    {
+      "UUID": testUUIDs["Channel 4"],
+      "Properties": {
+        "Name": "Channel 4",
+        "SourceIndex": 4
+      },
+      "Associations": {
+        "SourceDataType": {
+          "ID": "uint16"
+        },
+        "SourceImage": {
+          "UUID": "TODO"
+        }
+      }
+    },
+    {
+      "UUID": testUUIDs["Channel 5"],
+      "Properties": {
+        "Name": "Channel 5",
+        "SourceIndex": 5
+      },
+      "Associations": {
+        "SourceDataType": {
+          "ID": "uint16"
+        },
+        "SourceImage": {
+          "UUID": "TODO"
+        }
+      }
+    }
+  ],
+  "GroupChannels": [
+    {
+      "UUID": "66487bb2-194e-4c70-93c1-3de50bec2dbf",
+      "State": {
+        "Expanded": true
+      },
+      "Properties": {
+        "LowerRange": 256,
+        "UpperRange": 4096
+      },
+      "Associations": {
+        "SourceChannel": {
+          "UUID": testUUIDs["Channel 0"],
+        },
+        "Color": {
+          "ID": "sRGB#blue"
+        },
+        "Group": {
+          "UUID": "5b96ddf9-e0a8-4a39-9678-6c1aab8dfd54"
+        }
+      }
+    },
+    {
+      "UUID": "cec489cb-4c97-43a7-b6e0-503a7401e352",
+      "State": {
+        "Expanded": true
+      },
+      "Properties": {
+        "LowerRange": 256,
+        "UpperRange": 4096
+      },
+      "Associations": {
+        "SourceChannel": {
+          "UUID": testUUIDs["Channel 4"],
+        },
+        "Color": {
+          "ID": "sRGB#yellow"
+        },
+        "Group": {
+          "UUID": "5b96ddf9-e0a8-4a39-9678-6c1aab8dfd54"
+        }
+      }
+    },
+    {
+      "UUID": "8749980c-e036-4985-a63d-cb9444a9950a",
+      "State": {
+        "Expanded": true
+      },
+      "Properties": {
+        "LowerRange": 256,
+        "UpperRange": 4096
+      },
+      "Associations": {
+        "SourceChannel": {
+          "UUID": testUUIDs["Channel 5"],
+        },
+        "Color": {
+          "ID": "sRGB#magenta"
+        },
+        "Group": {
+          "UUID": "5b96ddf9-e0a8-4a39-9678-6c1aab8dfd54"
+        }
+      }
+    }
+  ],
+  "Groups": [
+    {
+      "UUID": "5b96ddf9-e0a8-4a39-9678-6c1aab8dfd54",
+      "State": {
+        "Expanded": false
+      },
+      "Properties": {
+        "Name": "Channel Group"
+      }
+    }
+  ],
+  "Colors": [
+    {
+      "ID": "sRGB#blue",
+      "Properties": {
+        "R": 0,
+        "G": 100,
+        "B": 255,
+        "Space": "sRGB"
+      }
+    },
+    {
+      "ID": "sRGB#yellow",
+      "Properties": {
+        "R": 195,
+        "G": 195,
+        "B": 0,
+        "Space": "sRGB"
+      }
+    },
+    {
+      "ID": "sRGB#magenta",
+      "Properties": {
+        "R": 195,
+        "G": 0,
+        "B": 195,
+        "Space": "sRGB"
+      }
+    }
+  ]
+}
+
 export {
   testChannels, testLoader, testPyramids,
   createTileLayer, readInstances,
