@@ -585,22 +585,8 @@ function createTileLayer(meta, tile_info) {
 //          blendColor: color,
 //          blendEquation: GL.FUNC_ADD,
         },
-      }),
-      new PathLayer({
-          id: `${id}-${x}-${y}-${Math.abs(zoom)}-border`,
-          data: [
-            [
-              [left, top],
-              [left, bottom],
-              [right, bottom],
-              [right, top],
-              [left, top]
-            ]
-          ],
-          getPath: d => d,
-          getColor: [255, 0, 0],
-          widthMinPixels: 4
-      })];
+      })
+      ]
     },
   }
   return new TileLayer(tileProps);
