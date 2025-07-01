@@ -3,6 +3,7 @@ import { get, set } from 'idb-keyval';
 import styled from 'styled-components';
 import { author } from "minerva-author-ui";
 import { useState, useMemo, useEffect } from "react";
+import { testLoader, testChannels } from "./lib/dicom";
 import { useHash } from "./lib/hashUtil";
 import { onlyUUID } from './lib/config';
 import { mutableItemRegistry } from './lib/config';
@@ -57,6 +58,10 @@ const Scrollable = styled.div`
   margin: 5vh;
 `;
 
+const createPlaceholderFromLoader = (loader) => {
+  return testChannels;
+}
+
 const Content = (props: Props) => {
   const { handleKeys } = props;
   const firstExhibit = readConfig(props.exhibit_config);
@@ -64,12 +69,20 @@ const Content = (props: Props) => {
   const [url, setUrl] = useState(window.location.href);
   const hashContext = useHash(url, exhibit.stories);
   const [handle, setHandle] = useState(null);
+  // Bypass loading local ome.tiff 
+  const bypass = true;
+  const [loader, setLoader] = useState(bypass ? (
+    testLoader
+  ) : null);
   const [config, setConfig] = useState({
     ItemRegistry: {
       Name: '', Groups: [], Colors: [],
       GroupChannels: [], SourceChannels: [],
       SourceDistributions: [],
       Stories: props.configWaypoints,
+      ...(bypass ? (
+        createPlaceholderFromLoader(loader)
+      ): {})
     },
     ID: crypto.randomUUID()
   });
@@ -88,8 +101,6 @@ const Content = (props: Props) => {
       },
     }));
   }
-
-  const [loader, setLoader] = useState(null);
   const [fileName, setFileName] = useState('');
   // Create ome-tiff loader
   const onAllow = async () => {
@@ -116,7 +127,7 @@ const Content = (props: Props) => {
       const loader = await toLoader({ handle, in_f });
       const { 
         SourceChannels, GroupChannels, Groups, Colors
-      } = await extractChannels(loader);
+      } = extractChannels(loader);
       resetItems({
         SourceChannels, GroupChannels, Groups, Colors
       });
@@ -137,6 +148,7 @@ const Content = (props: Props) => {
           });
         }
       );
+      console.log(JSON.stringify(loader.data));
       setLoader(loader);
       setFileName(in_f);
     })();
@@ -168,6 +180,13 @@ const Content = (props: Props) => {
       }} />
     </Full>
   )
+  if (bypass) {
+    return (
+      <Wrapper>
+        { imager }
+      </Wrapper>
+    )
+  }
 
   const [valid, setValid] = useState({} as ValidObj);
   const onSubmit: FormEventHandler = (event) => {

@@ -288,7 +288,7 @@ const extractDistributions: ExtractDistributions = async (loader) => {
   );
 }
 
-const extractChannels: ExtractChannels = async (loader) => {
+const extractChannels: ExtractChannels = (loader) => {
   const init = initialize({ planes: loader.data });
   const { Channels, Type } = loader.metadata.Pixels;
   const SourceChannels = Channels.map(

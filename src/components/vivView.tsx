@@ -147,7 +147,7 @@ const VivView = (props: Props) => {
     createTileLayer({
       pyramids: testPyramids, series
     }, {
-      id: "5",
+      id: "0",
       color: [255, 255, 255],
       visible: true
     }),
@@ -160,7 +160,7 @@ const VivView = (props: Props) => {
     shape_labels.map((k, i) => [k, shape_values[i]])
   );
   const [viewState, setViewState] = useState({
-    zoom: 1-1*n_levels,
+    zoom: -n_levels,
     target: [imageShape.x / 2, imageShape.y / 2, 0]
   });
 
