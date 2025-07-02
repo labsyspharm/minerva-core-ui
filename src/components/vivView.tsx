@@ -148,6 +148,8 @@ const VivView = (props: Props) => {
     return {
       visible: true,
       id: `${mainSettings.selections[i].c}`,
+      lowerRange: mainSettings.contrastLimits[i][0],
+      upperRange: mainSettings.contrastLimits[i][1],
       color: mainSettings.colors[i],
     }
   })];
@@ -169,7 +171,6 @@ const VivView = (props: Props) => {
     zoom: -n_levels,
     target: [imageShape.x / 2, imageShape.y / 2, 0]
   });
-
   if (!loader || !mainSettings) return null;
   return (
     <Main slot="image" ref={rootRef}>
