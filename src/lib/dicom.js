@@ -584,15 +584,6 @@ function createTileLayer(meta, tile_info) {
 //              Accept: 'multipart/related; type="application/octet-stream"; transfer-syntax=*'
             }
           });
-          let over_y = 0;
-          let over_x = 0;
-          if (pyramid[zoom]) {
-            const { tileSize, width, height } = pyramid[zoom];
-            const content_y = (y+1)*tileSize-height;
-            const content_x = (x+1)*tileSize-width;
-            over_y = Math.max(content_y, 0);
-            over_x = Math.max(content_x, 0);
-          }
           const blob = await response.blob();
           const sliced = blob.slice(91);
           const buffer = await sliced.arrayBuffer();
