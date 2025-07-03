@@ -23,7 +23,7 @@ jobs:
         run: |
           pnpm run pages
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
   deploy:
@@ -38,5 +38,5 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy GitHub Pages site
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v3
         id: deployment
