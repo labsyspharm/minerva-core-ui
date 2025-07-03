@@ -761,19 +761,188 @@ const testLoader = {
   )
 }
 
-const testUUIDs = {
-  "Channel 0": crypto.randomUUID(),
-  "Channel 4": crypto.randomUUID(),
-  "Channel 5": crypto.randomUUID()
+const channelNames = [
+  "Hoechst1", "Control-488", "Control-555", "Control-647",
+  "Hoechst2", "CD3", "Na-K ATPase", "CD45RO",
+  "Hoechst3", "Ki67", "Keratin", "aSMA",
+  "Hoechst4", "CD4", "CD45", "PD1",
+  "Hoechst5", "CD20", "CD68", "CD8a",
+  "Hoechst6", "CD163", "FOXP3", "PDL1",
+  "Hoechst7", "Ecad", "Vimentin", "CDX2",
+  "Hoechst8", "LaminABC", "Desmin", "CD31",
+  "Hoechst9", "PCNA", "Ki67", "CollagenIV"
+];
+
+const testRangeDefault = {
+  "LowerRange": 0,
+  "UpperRange": 2**14
 }
 
+const testRangeHoechst = {
+  "LowerRange": 2**8,
+  "UpperRange": 2**16
+}
+
+const testRanges = {
+  ...channelNames.filter(x => x.includes("Hoechst")).reduce(
+    (o, x) => ({...o, [x]: testRangeHoechst}), {}
+  ),
+  "Control-488": {
+    "LowerRange": 2**10,
+    "UpperRange": 2**14
+  },
+  "Control-647": {
+    "LowerRange": 2**14,
+    "UpperRange": 2**16
+  },
+  "Na-K ATPase": {
+    "LowerRange": 2**8,
+    "UpperRange": 2**16
+  },
+  "CD3": {
+    "LowerRange": 2**10,
+    "UpperRange": 2**15
+  },
+  "CD45RO": {
+    "LowerRange": 2**8,
+    "UpperRange": 2**14.5
+  },
+  "Ki67": {
+    "LowerRange": 2**10,
+    "UpperRange": 2**16
+  },
+  "aSMA": {
+    "LowerRange": 2**8,
+    "UpperRange": 2**15.5
+  },
+  "Keratin": {
+    "LowerRange": 2**8,
+    "UpperRange": 2**15.5
+  },
+  "Hoechst4": {
+    "LowerRange": 2**8,
+    "UpperRange": 2**15
+  },
+  "CD4": {
+    "LowerRange": 2**8,
+    "UpperRange": 2**16
+  },
+  "CD5": {
+    "LowerRange": 2**8,
+    "UpperRange": 2**14
+  },
+  "CD20": {
+    "LowerRange": 2**12,
+    "UpperRange": 2**15
+  },
+  "CD8a": {
+    "LowerRange": 2**10,
+    "UpperRange": 2**15
+  },
+  "PDL1": {
+    "LowerRange": 2**12.1,
+    "UpperRange": 2**14
+  },
+  "Ecad": {
+    "LowerRange": 2**8,
+    "UpperRange": 2**15
+  },
+  "CDX2": {
+    "LowerRange": 2**8,
+    "UpperRange": 2**16
+  },
+  "Hoechst8": {
+    "LowerRange": 2**8,
+    "UpperRange": 2**15
+  },
+  "LaminABC": {
+    "LowerRange": 0,
+    "UpperRange": 2**16
+  },
+  "Desmin": {
+    "LowerRange": 2**8,
+    "UpperRange": 2**16
+  },
+  "CD31": {
+    "LowerRange": 2**8,
+    "UpperRange": 2**16
+  },
+  "PCNA": {
+    "LowerRange": 2**8,
+    "UpperRange": 2**16
+  },
+  "Ki67": {
+    "LowerRange": 2**12,
+    "UpperRange": 2**16
+  },
+}
+
+const channelNameLists = [
+  [0,1,2,3],
+  [4,5,6,7],
+  [8,9,10,11],
+  [12,13,14,15],
+  [16,17,18,19],
+  [20,21,22,23],
+  [24,25,26,27],
+  [28,29,30,31],
+  [32,33,34,35]
+].map(nameList => nameList.map(name => channelNames[name]));
+
+const sourceChannelUUIDs = channelNames.reduce((o,name) => ({
+  ...o, [name]: crypto.randomUUID()
+}),{});
+
+const groupUUIDs = [...channelNameLists.keys()].reduce((o, cycle) => ({
+  ...o, [`Cycle ${cycle+1}`]: crypto.randomUUID()
+}), {});
+
+const testColors = [
+  {
+    "ID": "sRGB#blue",
+    "Properties": {
+      "R": 0,
+      "G": 0,
+      "B": 255,
+      "Space": "sRGB"
+    }
+  },
+  {
+    "ID": "sRGB#green",
+    "Properties": {
+      "R": 0,
+      "G": 255,
+      "B": 0,
+      "Space": "sRGB"
+    }
+  },
+  {
+    "ID": "sRGB#white",
+    "Properties": {
+      "R": 255,
+      "G": 255,
+      "B": 255,
+      "Space": "sRGB"
+    }
+  },
+  {
+    "ID": "sRGB#red",
+    "Properties": {
+      "R": 255,
+      "G": 0,
+      "B": 0,
+      "Space": "sRGB"
+    }
+  }
+]
+
 const testChannels = {
-  "SourceChannels": [
-    {
-      "UUID": testUUIDs["Channel 0"],
+  "SourceChannels": channelNames.map(
+    (name,index) => ({
+      "UUID": sourceChannelUUIDs[name],
       "Properties": {
-        "Name": "Channel 0",
-        "SourceIndex": 0
+        "Name": name,
+        "SourceIndex": index
       },
       "Associations": {
         "SourceDataType": {
@@ -783,143 +952,40 @@ const testChannels = {
           "UUID": "TODO"
         }
       }
-    },
-    {
-      "UUID": testUUIDs["Channel 4"],
-      "Properties": {
-        "Name": "Channel 4",
-        "SourceIndex": 4
-      },
-      "Associations": {
-        "SourceDataType": {
-          "ID": "uint16"
+    })
+  ),
+  "GroupChannels": channelNameLists.reduce(
+    (a, nameList, cycle) => ([
+      ...a, ...nameList.map((name, i) => ({
+        "UUID": crypto.randomUUID(),
+        "State": {
+          "Expanded": true
         },
-        "SourceImage": {
-          "UUID": "TODO"
+        "Properties": testRanges[name] || testRangeDefault,
+        "Associations": {
+          "SourceChannel": {
+            "UUID": sourceChannelUUIDs[name],
+          },
+          "Color": {
+            "ID": testColors[i].ID
+          },
+          "Group": {
+            "UUID": groupUUIDs[`Cycle ${cycle+1}`]
+          }
         }
-      }
+      }))
+    ]),
+  []),
+  "Groups": Object.entries(groupUUIDs).map(([name, uuid]) => ({
+    "UUID": uuid,
+    "State": {
+      "Expanded": false
     },
-    {
-      "UUID": testUUIDs["Channel 5"],
-      "Properties": {
-        "Name": "Channel 5",
-        "SourceIndex": 5
-      },
-      "Associations": {
-        "SourceDataType": {
-          "ID": "uint16"
-        },
-        "SourceImage": {
-          "UUID": "TODO"
-        }
-      }
+    "Properties": {
+      "Name": name 
     }
-  ],
-  "GroupChannels": [
-    {
-      "UUID": "66487bb2-194e-4c70-93c1-3de50bec2dbf",
-      "State": {
-        "Expanded": true
-      },
-      "Properties": {
-        "LowerRange": 128,
-        "UpperRange": 2**14
-      },
-      "Associations": {
-        "SourceChannel": {
-          "UUID": testUUIDs["Channel 0"],
-        },
-        "Color": {
-          "ID": "sRGB#blue"
-        },
-        "Group": {
-          "UUID": "5b96ddf9-e0a8-4a39-9678-6c1aab8dfd54"
-        }
-      }
-    },
-    {
-      "UUID": "cec489cb-4c97-43a7-b6e0-503a7401e352",
-      "State": {
-        "Expanded": true
-      },
-      "Properties": {
-        "LowerRange": 128,
-        "UpperRange": 2**15
-      },
-      "Associations": {
-        "SourceChannel": {
-          "UUID": testUUIDs["Channel 4"],
-        },
-        "Color": {
-          "ID": "sRGB#yellow"
-        },
-        "Group": {
-          "UUID": "5b96ddf9-e0a8-4a39-9678-6c1aab8dfd54"
-        }
-      }
-    },
-    {
-      "UUID": "8749980c-e036-4985-a63d-cb9444a9950a",
-      "State": {
-        "Expanded": true
-      },
-      "Properties": {
-        "LowerRange": 128,
-        "UpperRange": 2**14
-      },
-      "Associations": {
-        "SourceChannel": {
-          "UUID": testUUIDs["Channel 5"],
-        },
-        "Color": {
-          "ID": "sRGB#magenta"
-        },
-        "Group": {
-          "UUID": "5b96ddf9-e0a8-4a39-9678-6c1aab8dfd54"
-        }
-      }
-    }
-  ],
-  "Groups": [
-    {
-      "UUID": "5b96ddf9-e0a8-4a39-9678-6c1aab8dfd54",
-      "State": {
-        "Expanded": false
-      },
-      "Properties": {
-        "Name": "Channel Group"
-      }
-    }
-  ],
-  "Colors": [
-    {
-      "ID": "sRGB#blue",
-      "Properties": {
-        "R": 0,
-        "G": 100,
-        "B": 255,
-        "Space": "sRGB"
-      }
-    },
-    {
-      "ID": "sRGB#yellow",
-      "Properties": {
-        "R": 195,
-        "G": 195,
-        "B": 0,
-        "Space": "sRGB"
-      }
-    },
-    {
-      "ID": "sRGB#magenta",
-      "Properties": {
-        "R": 195,
-        "G": 0,
-        "B": 195,
-        "Space": "sRGB"
-      }
-    }
-  ]
+  })),
+  "Colors": testColors 
 }
 
 export {
