@@ -123,7 +123,7 @@ const VivView = (props: Props) => {
                   width: Math.abs(extent[2]),
                   height: Math.abs(extent[3]),
                   frameMappings: Object.fromEntries(
-                    Object.entries(frameMappings[0]).map(
+                    Object.entries(frameMappings[0] as Record<string, string>).map(
                       ([k,v]) => (
                         [k, v.split('/').slice(-3).join('/')]
                       )

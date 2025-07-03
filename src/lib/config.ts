@@ -12,7 +12,7 @@ type GroupChannelState = ExpandedState;
 type WaypointState = ExpandedState;
 
 type ID = { ID: string; };
-type UUID = { UUID: string; };
+type UUID = { UUID: string };
 type NameProperty = { Name: string; };
 type GroupProperties = NameProperty;
 type DistributionProperties = {
@@ -170,12 +170,12 @@ interface ExtractDistributions {
   >
 }
 interface ExtractChannels {
-  (loader: Loader): Promise<{
+  (loader: Loader): {
     SourceChannels: ConfigSourceChannel[];
     GroupChannels: ConfigGroupChannel[];
     Colors: ConfigColor[];
     Groups: ConfigGroup[];
-  }>
+  }
 }
 
 const asID = (k: string): ID => ({ ID: k });

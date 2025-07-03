@@ -18,6 +18,7 @@ import type { ValidObj } from './components/upload';
 import type { ImageProps } from "./components/channel"
 import type { FormEventHandler } from "react";
 import type { ObjAny, KV } from './lib/validate';
+import type { ItemRegistryProps } from "./lib/config";
 import type { ConfigWaypoint } from "./lib/config";
 import type { MutableFields } from "./lib/config";
 import type { ExhibitConfig } from "./lib/exhibit";
@@ -83,7 +84,7 @@ const Content = (props: Props) => {
       ...(bypass ? (
         createPlaceholderFromLoader(loader)
       ): {})
-    },
+    } as ItemRegistryProps,
     ID: crypto.randomUUID()
   });
   const resetItems = ItemRegistry => {
@@ -148,7 +149,6 @@ const Content = (props: Props) => {
           });
         }
       );
-      console.log(JSON.stringify(loader.data));
       setLoader(loader);
       setFileName(in_f);
     })();
