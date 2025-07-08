@@ -550,6 +550,7 @@ function createTileLayer(meta, tile_info) {
   const maxLevel = pyramids["0"].length;
   const minZoom = -maxLevel;
   const tileProps = {
+    refinementStrategy: 'no-overlap',
     id, visible, tileSize,
     extent: [
       0, 0, tileSize*(1+2**maxLevel), 1000+tileSize*(1+2**maxLevel)
