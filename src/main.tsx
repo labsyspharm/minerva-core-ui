@@ -28,6 +28,7 @@ type Props = ImageProps & {
   exhibit_config: ExhibitConfig;
   marker_names: string[];
   handleKeys: string[];
+  bypass: bool;
 };
 
 interface ReduceFormData {
@@ -64,14 +65,12 @@ const createPlaceholderFromLoader = (loader) => {
 }
 
 const Content = (props: Props) => {
-  const { handleKeys } = props;
+  const { bypass, handleKeys } = props;
   const firstExhibit = readConfig(props.exhibit_config);
   const [exhibit, setExhibit] = useState(firstExhibit);
   const [url, setUrl] = useState(window.location.href);
   const hashContext = useHash(url, exhibit.stories);
   const [handle, setHandle] = useState(null);
-  // Bypass loading local ome.tiff 
-  const bypass = true;
   const [loader, setLoader] = useState(bypass ? (
     testLoader
   ) : null);
@@ -224,7 +223,7 @@ const Content = (props: Props) => {
 };
 
 const Main = (props: Props) => {
-  if (hasFileSystemAccess()) {
+  if (props.bypass || hasFileSystemAccess()) {
     return <Content {...props}/>;
   }
   const error_message = `<p>
