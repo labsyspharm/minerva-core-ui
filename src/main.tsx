@@ -28,7 +28,7 @@ type Props = ImageProps & {
   exhibit_config: ExhibitConfig;
   marker_names: string[];
   handleKeys: string[];
-  bypass: bool;
+  bypass: boolean;
 };
 
 interface ReduceFormData {
