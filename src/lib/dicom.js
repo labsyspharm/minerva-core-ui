@@ -1,10 +1,14 @@
-import { load } from '@loaders.gl/core';
 import { BitmapLayer } from '@deck.gl/layers';
 import { TileLayer } from '@deck.gl/geo-layers';
 import { PathLayer } from '@deck.gl/layers';
 import { ImageLoader } from '@loaders.gl/images';
-import GL from '@luma.gl/constants';
+import { DicomTIFFImage } from "./dicom-tiff-image";
 import * as dcmjs from 'dcmjs'
+import GL from '@luma.gl/constants';
+import { FetchPool } from "./fetch-pool";
+import {
+  MultiscaleImageLayer, TiffPixelSource
+} from "@hms-dbmi/viv";
 const { naturalizeDataset } = dcmjs.data.DicomMetaDictionary
 
 function _groupFramesPerMapping (metadata) {
@@ -539,97 +543,240 @@ class ContrastBitmapLayer extends BitmapLayer {
   }
 }
 
-function createTileLayer(meta, tile_info) {
+const toIndexer = (opts) => {
   const {
-    id, visible, color, lowerRange, upperRange
-  } = tile_info;
+    metadata, pyramids, series 
+  } = opts;
+  return ( sel, level ) => {
+    const little_endian = true;
+    return new DicomTIFFImage({
+      little_endian, metadata,
+      pyramids, series, level,
+      ...sel
+    });
+    /*
+    const args = sel; // TODO
+    const x = args.index.x;
+    const y = args.index.y;
+    const pyramid = pyramids[id];
+    const zoom = String(Math.abs(args.zoom+maxLevel));
+    if (!pyramid[zoom]?.frameMappings) {
+      return null;
+    }
+    const subpath = pyramid[zoom].frameMappings[
+      `${y+1}-${x+1}-${id}`
+    ];
+    if (!subpath) {
+      return null;
+    }
+    // Application octet stream
+    return load(
+      `${meta.series}/instances/${subpath}`, ImageLoader, {
+      fetch: async (url) => {
+        const response = await fetch(url, {
+          headers: {
+           Accept: 'multipart/related; type=application/octet-stream; transfer-syntax=1.2.840.10008.1.2.1'
+          }
+        });
+        const blob = await response.blob();
+        const array = await blob.arrayBuffer(); 
+        const parts = await (
+          dcmjs.utilities.message.multipartDecode(array)
+        );
+        const view = new Uint16Array(parts[0])
+        return view;
+      }
+    });
+    */
+  }
+}
+
+
+const getShapeForBinaryDownsampleLevel = (
+  options
+) => {
+  const { axes, level } = options;
+  const xIndex = axes.labels.indexOf('x');
+  const yIndex = axes.labels.indexOf('y');
+  const resolutionShape = axes.shape.slice();
+  resolutionShape[xIndex] = axes.shape[xIndex] >> level;
+  resolutionShape[yIndex] = axes.shape[yIndex] >> level;
+  return resolutionShape;
+}
+
+const loadDicom = (meta) => {
+  const { pyramids, series } = meta;
+  const { width, height } = [
+    ...pyramids[0]
+  ].pop()
+  const channels = (
+    Object.keys(pyramids).map(n => parseInt(n))
+  ).toSorted((x,y) => x-y)
+  const levels = (
+    Object.keys(pyramids["0"]).map(n => parseInt(n))
+  ).toSorted((x,y) => x-y)
+  const pixels = {
+    "Channels":channels.map(id => ({
+      "ID":`Channel:0:${id}`,
+      "Name":`Channel ${id}`,
+      "SamplesPerPixel":1
+    })),
+    "ID":"Pixels:0",
+    "DimensionOrder":"XYZCT",
+    "Type":"Uint16",
+    "SizeT":1,
+    "SizeZ":1,
+    "SizeC":channels.length,
+    "SizeY":height,
+    "SizeX":width,
+    "PhysicalSizeX":1,
+    "PhysicalSizeY":1,
+    "PhysicalSizeXUnit":"µm",
+    "PhysicalSizeYUnit":"µm",
+    "PhysicalSizeZUnit":"µm",
+    "BigEndian":false,
+    "TiffData": channels.map(id => ({
+      "IFD": id,
+      "PlaneCount": 1,
+      "FirstT": 0,
+      "FirstC": id,
+      "FirstZ": 0,
+      "UUID": {
+        "FileName": "tmp.tif"
+      }
+    }))
+  }
+  const toMetadata = (width, height) => ({
+    "ID":"Image:0",
+    "AquisitionDate":"",
+    "Description":"",
+    "Pixels": pixels,
+    format() {
+      const sizes = ["X", "Y", "Z"].map((name) => {
+        const size = pixels[`PhysicalSize${name}`];
+        const unit = pixels[`PhysicalSize${name}Unit`];
+        return size ? `${size} ${unit}` : "-";
+      }).join(" x ");
+      return {
+        "Acquisition Date": "",
+        "Dimensions (XY)": `${pixels["SizeX"]} x ${pixels["SizeY"]}`,
+        "Pixels Type": pixels["Type"],
+        "Pixels Size (XYZ)": sizes,
+        "Z-sections/Timepoints": `${pixels["SizeZ"]} x ${pixels["SizeT"]}`,
+        Channels: pixels["SizeC"]
+      };
+    }
+  })
+  const { tileSize } = pyramids["0"][0];
+  const metadata = toMetadata(width, height);
+  const pyramidIndexer = toIndexer({
+    metadata, pyramids, series
+  });
+  const data = levels.map(level => {
+    const pyramid = pyramids["0"][level];
+    const axes = {
+      labels: ['t', 'c', 'z', 'y', 'x'],
+      shape: [
+        1, channels.length, 1, height, width
+      ]
+    }
+    const meta = {
+      "physicalSizes": {
+          "x": {
+              "size": 0.324999988079,
+              "unit": "µm"
+          },
+          "y": {
+              "size": 0.324999988079,
+              "unit": "µm"
+          }
+      },
+      "photometricInterpretation": 1
+    }
+    return new TiffPixelSource(
+      sel => pyramidIndexer(
+        sel, level
+      ),
+      metadata.Pixels.Type,
+      tileSize,
+      getShapeForBinaryDownsampleLevel({
+        axes, level 
+      }),
+      axes.labels,
+      meta,
+      new FetchPool() 
+    );
+    return data;
+  });
+  return {
+    data, metadata
+  };
+  /*
+  for (const metadata of rootMeta) {
+    const imageSize = {
+      z: metadata['Pixels']['SizeZ'],
+      c: metadata['Pixels']['SizeC'],
+      t: metadata['Pixels']['SizeT']
+    };
+    const axes = extractAxesFromPixels(metadata['Pixels']);
+    const pyramidIndexer = createSingleFileOmeTiffPyramidalIndexer(tiff, {
+      size: imageSize,
+      ifdOffset: imageIfdOffset,
+      dimensionOrder: metadata['Pixels']['DimensionOrder']
+    });
+    const dtype = parsePixelDataType(metadata['Pixels']['Type']);
+    const tileSize = getTiffTileSize(
+      await pyramidIndexer({ c: 0, t: 0, z: 0 }, 0)
+    );
+    const meta = {
+      physicalSizes: extractPhysicalSizesfromPixels(metadata['Pixels']),
+      photometricInterpretation:
+        firstImage.fileDirectory.PhotometricInterpretation
+    };
+    const data = Array.from(
+      { length: levels },
+      (_, level) =>
+        new TiffPixelSource(
+          sel => pyramidIndexer(sel, level),
+          dtype,
+          tileSize,
+          getShapeForBinaryDownsampleLevel({ axes, level }),
+          axes.labels,
+          meta,
+          pool
+        )
+    );
+    images.push({
+      data, metadata
+    });
+  }
+  */
+}
+
+function createTileLayers(meta) {
+  const loader = loadDicom(meta);
+  const {
+    channelsVisible,
+    colors,
+    contrastLimits,
+    selections,
+  } = meta.settings;
   const { pyramids } = meta;
   const height = [...pyramids["0"]].pop().height;
   const width = [...pyramids["0"]].pop().width;
   const tileSize = pyramids["0"][0].tileSize;
   const maxLevel = pyramids["0"].length;
   const minZoom = -maxLevel;
-  const tileProps = {
+  const imageProps = {
+    loader: loader.data,
     refinementStrategy: 'no-overlap',
-    id, visible, tileSize,
-    extent: [
-      0, 0, tileSize*(1+2**maxLevel), 1000+tileSize*(1+2**maxLevel)
-    ],
-    minZoom: minZoom,
-    maxZoom: -1,
-    color: [
-      ...color.map(v => v/255), 1
-    ],
-    lowerRange: lowerRange / 65535,
-    upperRange: upperRange / 65535,
-    getTileData: (args) => {
-      const x = args.index.x;
-      const y = args.index.y;
-      const pyramid = pyramids[id];
-      const zoom = String(Math.abs(args.zoom+maxLevel));
-      if (!pyramid[zoom]?.frameMappings) {
-        return null;
-      }
-      const subpath = pyramid[zoom].frameMappings[
-        `${y+1}-${x+1}-${id}`
-      ];
-      if (!subpath) {
-        return null;
-      }
-      return load(
-        `${meta.series}/instances/${subpath}`, ImageLoader, {
-        fetch: async (url) => {
-          const response = await fetch(url, {
-            headers: {
-             "Accept": 'multipart/related; type="image/png"'
-//              Accept: 'multipart/related; type="application/octet-stream"; transfer-syntax=*'
-            }
-          });
-          const blob = await response.blob();
-          const sliced = blob.slice(91);
-          const buffer = await sliced.arrayBuffer();
-          const view = new Uint8Array(buffer);
-          return view;
-        }
-      });
-    },
-    renderSubLayers: (props) => {
-      const { left, bottom, right, top } = props.tile.bbox;
-      const { x, y } = props.tile.index;
-      const zoom = props.tile.zoom+maxLevel;
-      const info = (
-        x > 3 ? `${x}` : (
-          "etc"
-        )
-      )
-      let edge_x = tileSize;
-      let edge_y = tileSize;
-      const pyramid = pyramids[id];
-      if (pyramid[zoom]) {
-        const { tileSize, width, height } = pyramid[zoom];
-        edge_x = width-x*tileSize;
-        edge_y = height-y*tileSize;
-      }
-      return [new ContrastBitmapLayer({
-        id: `${id}-${x}-${y}-${zoom}`,
-        window_corner: [edge_x, edge_y].map(v => v/tileSize),
-        channel_color: props.color,
-        lower_range: props.lowerRange,
-        upper_range: props.upperRange,
-        image: props.data,
-        bounds: [
-          left, bottom, right, top
-        ],
-        parameters: {
-//          depthTest: false,
-          blendFunc: [GL.ONE, GL.ONE, GL.ONE, GL.ONE],
-//          blendEquation: GL.FUNC_ADD,
-        },
-      })
-      ]
-    },
+    id: "multichannel-tiled-image",
+    channelsVisible,
+    colors,
+    contrastLimits,
+    selections
   }
-  return new TileLayer(tileProps);
+  return new MultiscaleImageLayer(imageProps);
 }
 
 /**
@@ -992,6 +1139,6 @@ const testChannels = {
 
 export {
   testChannels, testLoader, testPyramids,
-  createTileLayer, readInstances,
+  createTileLayers, readInstances,
   readMetadata, computeImagePyramid
 }

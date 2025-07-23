@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import {
   testPyramids,
-  createTileLayer, readInstances,
+  createTileLayers, readInstances,
   readMetadata, computeImagePyramid
 } from "../lib/dicom";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
@@ -141,26 +141,11 @@ const VivView = (props: Props) => {
       }
     );
   }
-  const layer_settings = [...(
-    Object.entries(mainSettings.channelsVisible).
-      filter(([i,x]) => x).map(([i,x]) => parseInt(i))
-  ).toReversed().map(i => {
-    return {
-      visible: true,
-      id: `${mainSettings.selections[i].c}`,
-      lowerRange: mainSettings.contrastLimits[i][0],
-      upperRange: mainSettings.contrastLimits[i][1],
-      color: mainSettings.colors[i],
-    }
-  })];
-  const layers = layer_settings.map(
-    settings => createTileLayer(
-      {
-        pyramids: testPyramids, series
-      },
-      settings
-    )
-  );
+  const layers = createTileLayers({
+    pyramids: testPyramids,
+    settings: mainSettings,
+    series
+  });
   const n_levels = loader.data.length;
   const shape_labels = loader.data[0].labels;
   const shape_values = loader.data[0].shape;

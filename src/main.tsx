@@ -162,11 +162,12 @@ const Content = (props: Props) => {
   const mutableFields: MutableFields = [ 
     'GroupChannels' 
   ]
+  const ItemRegistry = mutableItemRegistry(
+    config.ItemRegistry, setItems, mutableFields 
+  )
   // Define a WebComponent for the item panel
   const controlPanelElement = useMemo(() => author({
-    ...config, ItemRegistry: mutableItemRegistry(
-      config.ItemRegistry, setItems, mutableFields 
-    )
+    ...config, ItemRegistry
   }), [config.ID])
 
   // Actual image viewer
