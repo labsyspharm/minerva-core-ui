@@ -554,40 +554,6 @@ const toIndexer = (opts) => {
       pyramids, series, level,
       ...sel
     });
-    /*
-    const args = sel; // TODO
-    const x = args.index.x;
-    const y = args.index.y;
-    const pyramid = pyramids[id];
-    const zoom = String(Math.abs(args.zoom+maxLevel));
-    if (!pyramid[zoom]?.frameMappings) {
-      return null;
-    }
-    const subpath = pyramid[zoom].frameMappings[
-      `${y+1}-${x+1}-${id}`
-    ];
-    if (!subpath) {
-      return null;
-    }
-    // Application octet stream
-    return load(
-      `${meta.series}/instances/${subpath}`, ImageLoader, {
-      fetch: async (url) => {
-        const response = await fetch(url, {
-          headers: {
-           Accept: 'multipart/related; type=application/octet-stream; transfer-syntax=1.2.840.10008.1.2.1'
-          }
-        });
-        const blob = await response.blob();
-        const array = await blob.arrayBuffer(); 
-        const parts = await (
-          dcmjs.utilities.message.multipartDecode(array)
-        );
-        const view = new Uint16Array(parts[0])
-        return view;
-      }
-    });
-    */
   }
 }
 
