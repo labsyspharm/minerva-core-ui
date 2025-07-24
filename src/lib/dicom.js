@@ -711,46 +711,6 @@ const loadDicom = (meta) => {
   return {
     data, metadata
   };
-  /*
-  for (const metadata of rootMeta) {
-    const imageSize = {
-      z: metadata['Pixels']['SizeZ'],
-      c: metadata['Pixels']['SizeC'],
-      t: metadata['Pixels']['SizeT']
-    };
-    const axes = extractAxesFromPixels(metadata['Pixels']);
-    const pyramidIndexer = createSingleFileOmeTiffPyramidalIndexer(tiff, {
-      size: imageSize,
-      ifdOffset: imageIfdOffset,
-      dimensionOrder: metadata['Pixels']['DimensionOrder']
-    });
-    const dtype = parsePixelDataType(metadata['Pixels']['Type']);
-    const tileSize = getTiffTileSize(
-      await pyramidIndexer({ c: 0, t: 0, z: 0 }, 0)
-    );
-    const meta = {
-      physicalSizes: extractPhysicalSizesfromPixels(metadata['Pixels']),
-      photometricInterpretation:
-        firstImage.fileDirectory.PhotometricInterpretation
-    };
-    const data = Array.from(
-      { length: levels },
-      (_, level) =>
-        new TiffPixelSource(
-          sel => pyramidIndexer(sel, level),
-          dtype,
-          tileSize,
-          getShapeForBinaryDownsampleLevel({ axes, level }),
-          axes.labels,
-          meta,
-          pool
-        )
-    );
-    images.push({
-      data, metadata
-    });
-  }
-  */
 }
 
 function createTileLayers(meta) {
