@@ -11,6 +11,7 @@ class DicomPixelSource {
     this._indexer = indexer;
     this.dtype = dtype;
     this.tileSize = tileSize;
+    this.tileCache = {};
     this.shape = shape;
     this.labels = labels;
     this.meta = meta;
@@ -39,9 +40,17 @@ class DicomPixelSource {
   }
 
   async _readRasters(image, props = {}) {
-    const raster = await image.readRasters({
-      ...props, pool: this.pool
-    });
+    const index = [ image.c, ...props.window ].join('-');
+    let raster = this.tileCache[index];
+    if (raster) {
+      console.log(`"Okay, tile "${index}" is cached!`)
+    }
+    if (!raster) {
+      raster = await image.readRasters({
+        ...props, pool: this.pool
+      });
+      this.tileCache[index] = raster;
+    }
 
     if (props.signal?.aborted) {
       throw "__vivSignalAborted";

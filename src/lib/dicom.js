@@ -681,6 +681,7 @@ const loadDicom = (meta) => {
 }
 
 function createTileLayers(meta) {
+  console.log("new loader");
   const loader = loadDicom(meta);
   const {
     channelsVisible,

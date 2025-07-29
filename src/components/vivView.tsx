@@ -141,11 +141,15 @@ const VivView = (props: Props) => {
       }
     );
   }
-  const layers = createTileLayers({
-    pyramids: testPyramids,
-    settings: mainSettings,
-    series
-  });
+  // TODO -- evaluate needed conditions for Memo
+  const layers = React.useMemo(
+    () => createTileLayers({
+      pyramids: testPyramids,
+      settings: mainSettings,
+      series
+    }),
+    [testPyramids, mainSettings, series]
+  );
   const n_levels = loader.data.length;
   const shape_labels = loader.data[0].labels;
   const shape_values = loader.data[0].shape;
