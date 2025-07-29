@@ -3,6 +3,7 @@ import { TileLayer } from '@deck.gl/geo-layers';
 import { PathLayer } from '@deck.gl/layers';
 import { ImageLoader } from '@loaders.gl/images';
 import { DicomTIFFImage } from "./dicom-tiff-image";
+import { DicomPixelSource } from "./dicom-pixel-source";
 import * as dcmjs from 'dcmjs'
 import GL from '@luma.gl/constants';
 import { FetchPool } from "./fetch-pool";
@@ -659,7 +660,7 @@ const loadDicom = (meta) => {
       },
       "photometricInterpretation": 1
     }
-    return new TiffPixelSource(
+    return new DicomPixelSource(
       sel => pyramidIndexer(
         sel, level
       ),
@@ -850,12 +851,12 @@ const channelNames = [
 
 const testRangeDefault = {
   "LowerRange": 0,
-  "UpperRange": 2**14
+  "UpperRange": 2**13
 }
 
 const testRangeHoechst = {
   "LowerRange": 2**8,
-  "UpperRange": 2**16
+  "UpperRange": 2**13
 }
 
 const testRanges = {
@@ -863,92 +864,92 @@ const testRanges = {
     (o, x) => ({...o, [x]: testRangeHoechst}), {}
   ),
   "Control-488": {
-    "LowerRange": 2**10,
-    "UpperRange": 2**14
+    "LowerRange": 2**8,
+    "UpperRange": 2**13
   },
   "Control-647": {
-    "LowerRange": 2**14,
-    "UpperRange": 2**16
+    "LowerRange": 2**8,
+    "UpperRange": 2**13
   },
   "Na-K ATPase": {
     "LowerRange": 2**8,
-    "UpperRange": 2**16
+    "UpperRange": 2**13
   },
   "CD3": {
-    "LowerRange": 2**10,
-    "UpperRange": 2**15
+    "LowerRange": 2**8,
+    "UpperRange": 2**13
   },
   "CD45RO": {
     "LowerRange": 2**8,
-    "UpperRange": 2**14.5
+    "UpperRange": 2**13
   },
   "Ki67": {
-    "LowerRange": 2**10,
-    "UpperRange": 2**16
+    "LowerRange": 2**8,
+    "UpperRange": 2**13
   },
   "aSMA": {
     "LowerRange": 2**8,
-    "UpperRange": 2**15.5
+    "UpperRange": 2**13
   },
   "Keratin": {
     "LowerRange": 2**8,
-    "UpperRange": 2**15.5
+    "UpperRange": 2**13
   },
   "Hoechst4": {
     "LowerRange": 2**8,
-    "UpperRange": 2**15
+    "UpperRange": 2**13
   },
   "CD4": {
     "LowerRange": 2**8,
-    "UpperRange": 2**16
+    "UpperRange": 2**13
   },
   "CD5": {
     "LowerRange": 2**8,
-    "UpperRange": 2**14
+    "UpperRange": 2**13
   },
   "CD20": {
-    "LowerRange": 2**12,
-    "UpperRange": 2**15
+    "LowerRange": 2**8,
+    "UpperRange": 2**13
   },
   "CD8a": {
-    "LowerRange": 2**10,
-    "UpperRange": 2**15
+    "LowerRange": 2**8,
+    "UpperRange": 2**13
   },
   "PDL1": {
-    "LowerRange": 2**12.1,
-    "UpperRange": 2**14
+    "LowerRange": 2**8,
+    "UpperRange": 2**13
   },
   "Ecad": {
     "LowerRange": 2**8,
-    "UpperRange": 2**15
+    "UpperRange": 2**13
   },
   "CDX2": {
     "LowerRange": 2**8,
-    "UpperRange": 2**16
+    "UpperRange": 2**13
   },
   "Hoechst8": {
     "LowerRange": 2**8,
-    "UpperRange": 2**15
+    "UpperRange": 2**13
   },
   "LaminABC": {
     "LowerRange": 0,
-    "UpperRange": 2**16
+    "UpperRange": 2**13
   },
   "Desmin": {
     "LowerRange": 2**8,
-    "UpperRange": 2**16
+    "UpperRange": 2**13
   },
   "CD31": {
     "LowerRange": 2**8,
-    "UpperRange": 2**16
+    "UpperRange": 2**13
   },
   "PCNA": {
     "LowerRange": 2**8,
-    "UpperRange": 2**16
+    "UpperRange": 2**13
   },
   "Ki67": {
-    "LowerRange": 2**12,
-    "UpperRange": 2**16
+    "LowerRange": 2**8,
+    "UpperRange": 2**13
   },
 }
 
