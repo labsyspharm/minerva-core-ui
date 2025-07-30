@@ -20,27 +20,22 @@ class DicomPixelSource {
 
   async getRaster({ selection, signal }) {
     const image = await this._indexer(selection);
-    const { height, width } = this._getTileExtent(0,0);
-    const window = [0, 0, width, height];
-    return this._readRasters(
-      image, { window, width, height, signal }
+    return await this.getTile(
+      { x: 0, y: 0, selection, signal }
     );
   }
 
   async getTile({ x, y, selection, signal }) {
     const { height, width } = this._getTileExtent(x, y);
-    const x0 = x * this.tileSize;
-    const y0 = y * this.tileSize;
-    const window = [x0, y0, x0 + width, y0 + height];
 
     const image = await this._indexer(selection);
     return this._readRasters(
-      image, { window, width, height, signal }
+      image, { x, y, width, height, signal }
     );
   }
 
   async _readRasters(image, props = {}) {
-    const index = [ image.c, ...props.window ].join('-');
+    const index = [ image.c, props.x, props.y ].join('-');
     let raster = this.tileCache[index];
     if (raster) {
       console.log(`"Okay, tile "${index}" is cached!`)
