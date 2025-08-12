@@ -17,18 +17,36 @@ function createWorker() {
 class FetchPool extends Pool {
   constructor() {
     super(defaultPoolSize, createWorker);
+    this.subpathCounts = new Map();
   }
 
-  async fetch({ series, subpath }) {
+  async fetch({ series, subpath, signal }) {
+    if (signal.aborted) {
+      throw new Error("Request Aborted");
+    }
     if (this._awaitingDecoder) {
       await this._awaitingDecoder;
     }
+    if (signal.aborted) {
+      throw new Error("Request Aborted");
+    }
+    const count = this.subpathCounts.get(subpath) || 0;
     if (this.size === 0) {
       const fetched = await fetchFrame(
         { series, subpath }
       );
+      this.subpathCounts = new Map([
+        ...this.subpathCounts,
+        [ subpath, count + 1 ]
+      ]);
+      console.log(this.subpathCounts.size);
+      console.log(this.subpathCounts);
       return fetched;
     }
+    if (signal.aborted) {
+      throw new Error("Request Aborted");
+    }
+    console.log(this.subpathCounts);
     return (
       new Promise((resolve) => {
         const worker = this.workers.find(

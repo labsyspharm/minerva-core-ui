@@ -25,11 +25,12 @@ class DicomTIFFImage {
   }
 
   async getTileOrStrip(x, y, sample, pool, signal) {
+    // TODO -- handle signal correctly
     const n_levels = this.pyramids[this.c].length - 1;
     const pyramid_level = n_levels - this.level;
     const pyramid = this.pyramids[this.c][pyramid_level];
     const subpath = pyramid.frameMappings[`${y+1}-${x+1}-${this.c}`];
-    const request = await pool.fetch({ series: this.series, subpath });
+    const request = await pool.fetch({ series: this.series, subpath, signal });
     return { x, y, sample, data: request };
   }
 

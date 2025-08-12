@@ -955,6 +955,7 @@ const testRanges = {
 }
 
 const channelNameLists = [
+  [10,14,26,34],
   [0,1,2,3],
   [4,5,6,7],
   [8,9,10,11],
