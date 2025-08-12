@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
+import { Overlays } from "./overlays";
 import { ImageView, toImageProps } from "./imageView";
 import { Main } from "./content";
 
@@ -293,11 +294,17 @@ const Index = (props: Props) => {
       zoomOutButton: zoomOutEl,
     },
   });
-  console.log(imageProps);
+  const overlayProps = {
+    hash: mainProps.hash,
+    groups: mainProps.groups,
+    setHash: mainProps.setHash
+  }
   return (
     <Main {...mainProps}>
       <ImageView {...imageProps}>
       </ImageView>
+      <Overlays {...overlayProps}>
+      </Overlays>
     </Main>
   );
 };
