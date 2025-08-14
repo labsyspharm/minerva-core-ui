@@ -8,7 +8,8 @@
     "schema": "typescript-json-schema -o 'schema/generic.schema.json' 'src/config/generic.ts' Config",
     "format": "prettier --ignore-path .eslintignore --write .",
     "build": "rm -rf build && tsc -b",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "test": "playwright test"
   },
   "type": "module",
   "main": "build/main.js",
@@ -65,6 +66,7 @@
     "lensing": "https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9",
     "minerva-author-ui": "2.0.0-beta.48",
     "openseadragon": "^4.1.1",
+    "playwright": "^1.54.2",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.4",
@@ -78,6 +80,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.24.9",
+    "@playwright/test": "^1.54.2",
     "@types/core-js": "^2.5.8",
     "@types/node": "^20.14.11",
     "@types/react": "^18.3.3",
