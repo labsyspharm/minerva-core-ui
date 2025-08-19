@@ -1,9 +1,11 @@
 import * as React from "react";
 import Deck from '@deck.gl/react';
 import { OrthographicView } from '@deck.gl/core';
-import { useEffect, useRef, useState } from "react";
+import { PolygonLayer } from '@deck.gl/layers';
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
+import { useActiveTool } from "../lib/store";
 
 import styled from "styled-components";
 import { getWaypoint } from "../lib/waypoint";
@@ -56,6 +58,10 @@ const VivView = (props: Props) => {
   const [shape, setShape] = useState(maxShape);
   const [channelSettings, setChannelSettings] = useState({});
   const [canvas, setCanvas] = useState(null);
+  
+  // Store hook - just for activeTool
+  const activeTool = useActiveTool();
+  
   const rootRef = React.useMemo(() => {
     return shapeRef(setShape);
   }, [maxShape]);
@@ -79,9 +85,40 @@ const VivView = (props: Props) => {
     }
   };
 
-  const layers = [
-    new MultiscaleImageLayer(mainProps),
-  ];
+  // Create image layer
+  const imageLayer = new MultiscaleImageLayer(mainProps);
+  
+  // Create simple green rectangle overlay
+  const greenRectangleLayer = React.useMemo(() => {
+    console.log('VivView: Creating green rectangle layer');
+    
+    return new PolygonLayer({
+      id: 'green-rectangle',
+      data: [{
+        polygon: [
+          [0, 0],
+          [5000, 0],
+          [5000, 5000],
+          [0, 5000],
+          [0, 0], // Close the polygon
+        ]
+      }],
+      getPolygon: d => d.polygon,
+      getFillColor: [0, 255, 0, 50], // Green with low opacity
+      getLineColor: [0, 255, 0, 255], // Solid green border
+      getLineWidth: 3,
+      stroked: true,
+      filled: true,
+      pickable: true,
+    });
+  }, []);
+
+  // Combine layers
+  const allLayers = [imageLayer, greenRectangleLayer];
+  
+  console.log('VivView: allLayers:', allLayers);
+  console.log('VivView: activeTool:', activeTool);
+  
   const n_levels = loader.data.length;
   const shape_labels = loader.data[0].labels;
   const shape_values = loader.data[0].shape;
@@ -97,8 +134,8 @@ const VivView = (props: Props) => {
   return (
     <Main slot="image" ref={rootRef}>
       <Deck
-        layers={layers}
-        controller={true}
+        layers={allLayers}
+        controller={activeTool === 'move'}
         viewState={viewState}
         onViewStateChange={e => setViewState(e.viewState)}
         views={[new OrthographicView({ id: 'ortho', controller: true })]}

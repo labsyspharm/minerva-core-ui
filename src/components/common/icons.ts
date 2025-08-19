@@ -11,4 +11,3 @@ const WrapIcons = styled.div<Props>`
   justify-items: ${({ justify }) => justify};
 `;
 export { WrapIcons };
-//# sourceMappingURL=icons.js.map

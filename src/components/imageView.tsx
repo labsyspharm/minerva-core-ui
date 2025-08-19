@@ -16,7 +16,7 @@ const toImageProps = (opts) => {
 
 const ImageView = (props) => {
   const { ...rest } = props;
-  return <VivView {...{ ...rest }} />;
+  return <VivView {...rest} />;
 };
 
 export { ImageView, toImageProps };
