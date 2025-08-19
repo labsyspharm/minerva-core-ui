@@ -294,17 +294,56 @@ const Index = (props: Props) => {
       zoomOutButton: zoomOutEl,
     },
   });
-  const overlayProps = {
-    hash: mainProps.hash,
-    groups: mainProps.groups,
-    setHash: mainProps.setHash
-  }
+  
+  // State for overlay layers
+  const [overlayLayers, setOverlayLayers] = useState<any[]>([]);
+  
+  // State for active tool
+  const [activeTool, setActiveTool] = useState('move');
+  
+  // Handle layer creation from overlays
+  const handleLayerCreate = React.useCallback((layer: any) => {
+    console.log('Index: handleLayerCreate called with layer:', layer);
+    setOverlayLayers(prev => {
+      console.log('Index: current overlayLayers:', prev);
+      
+      if (layer === null) {
+        // Remove the green rectangle layer when tool is not rectangle
+        const filtered = prev.filter(l => l && l.id !== 'green-rectangle');
+        console.log('Index: removed green rectangle layer, new overlayLayers:', filtered);
+        return filtered;
+      }
+      
+      // Remove existing layer with same id if it exists, and filter out any null values
+      const filtered = prev.filter(l => l && l.id !== layer.id);
+      const newLayers = [...filtered, layer];
+      console.log('Index: new overlayLayers:', newLayers);
+      return newLayers;
+    });
+  }, []);
+  
+  // Handle tool change
+  const handleToolChange = React.useCallback((tool: string) => {
+    console.log('Index: Tool changed to:', tool);
+    setActiveTool(tool);
+  }, []);
+  
   return (
     <Main {...mainProps}>
-      <ImageView {...imageProps}>
+      <ImageView 
+        {...imageProps} 
+        overlayLayers={overlayLayers}
+        activeTool={activeTool}
+      >
       </ImageView>
-      <Overlays {...overlayProps}>
-      </Overlays>
+      <Overlays 
+        hash={mainProps.hash} 
+        groups={mainProps.groups} 
+        setHash={mainProps.setHash}
+        onLayerCreate={handleLayerCreate}
+        activeTool={activeTool}
+        onToolChange={handleToolChange}
+      />
     </Main>
   );
 };

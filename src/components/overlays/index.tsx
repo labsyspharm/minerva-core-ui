@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useActiveTool, useSetActiveTool } from "../../lib/store";
+import { DrawingOverlay } from "./DrawingOverlay";
 import styles from "./index.module.css";
 import { MoveIcon, RectangleIcon } from "./icons";
 
@@ -9,6 +9,9 @@ import type { HashContext } from "../../lib/hashUtil";
 
 export type Props = HashContext & {
   groups: Group[];
+  onLayerCreate?: (layer: any) => void;
+  activeTool: string;
+  onToolChange: (tool: string) => void;
 };
 
 // Define available tools
@@ -20,15 +23,11 @@ const TOOLS = {
 type ToolType = typeof TOOLS[keyof typeof TOOLS];
 
 const Overlays = (props: Props) => {
-  const { hash } = props;
+  const { hash, onLayerCreate, activeTool, onToolChange } = props;
   const group = props.groups[hash.g];
-  
-  // Store hooks
-  const activeTool = useActiveTool();
-  const setActiveTool = useSetActiveTool();
 
   const handleToolChange = (tool: ToolType) => {
-    setActiveTool(tool);
+    onToolChange(tool);
   };
 
   const className = [
@@ -72,6 +71,11 @@ const Overlays = (props: Props) => {
         }}>
           Rectangle tool selected - green overlay visible
         </div>
+      )}
+      
+      {/* Drawing overlay component */}
+      {onLayerCreate && (
+        <DrawingOverlay onLayerCreate={onLayerCreate} activeTool={activeTool} />
       )}
     </div>
   );

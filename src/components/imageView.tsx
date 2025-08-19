@@ -15,8 +15,8 @@ const toImageProps = (opts) => {
 };
 
 const ImageView = (props) => {
-  const { ...rest } = props;
-  return <VivView {...rest} />;
+  const { overlayLayers, activeTool, ...rest } = props;
+  return <VivView {...rest} overlayLayers={overlayLayers} activeTool={activeTool} />;
 };
 
 export { ImageView, toImageProps };
