@@ -7,6 +7,28 @@ export interface OverlayLayer {
   [key: string]: any;
 }
 
+// New annotation types
+export interface RectangleAnnotation {
+  id: string;
+  type: 'rectangle';
+  coordinates: {
+    start: [number, number];
+    end: [number, number];
+  };
+  style: {
+    fillColor: [number, number, number, number];
+    lineColor: [number, number, number, number];
+    lineWidth: number;
+  };
+  metadata?: {
+    createdAt: Date;
+    label?: string;
+    description?: string;
+  };
+}
+
+export type Annotation = RectangleAnnotation; // Can be extended with other annotation types
+
 export interface InteractionCoordinate {
   type: 'click' | 'dragStart' | 'drag' | 'dragEnd';
   coordinate: [number, number, number];
@@ -24,6 +46,7 @@ export interface OverlayStore {
   activeTool: string;
   currentInteraction: InteractionCoordinate | null;
   drawingState: DrawingState;
+  annotations: Annotation[]; // New: persistent annotations
   
   // Actions
   setActiveTool: (tool: string) => void;
@@ -36,6 +59,13 @@ export interface OverlayStore {
   handleLayerCreate: (layer: OverlayLayer | null) => void;
   handleToolChange: (tool: string) => void;
   handleOverlayInteraction: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number]) => void;
+  
+  // New annotation actions
+  addAnnotation: (annotation: Annotation) => void;
+  removeAnnotation: (annotationId: string) => void;
+  updateAnnotation: (annotationId: string, updates: Partial<Annotation>) => void;
+  clearAnnotations: () => void;
+  finalizeRectangle: () => void; // Convert current drawing to annotation
 }
 
 // Initial state for overlay store
@@ -48,6 +78,7 @@ const overlayInitialState = {
     dragStart: null,
     dragEnd: null,
   },
+  annotations: [], // New: empty annotations array
 };
 
 // Create the overlay store
@@ -139,14 +170,84 @@ export const useOverlayStore = create<OverlayStore>()(
             }
             break;
           case 'dragEnd':
-            // Finish drawing but keep the final position
+            // Finish drawing and automatically finalize as annotation
             if (drawingState.isDrawing) {
               get().updateDrawingState({
                 dragEnd: [x, y],
-                // Don't reset isDrawing - keep the rectangle visible at final position
               });
+              // Automatically finalize the rectangle on mouseUp
+              setTimeout(() => {
+                get().finalizeRectangle();
+              }, 0);
             }
             break;
+        }
+      },
+
+      // New annotation actions
+      addAnnotation: (annotation: Annotation) => {
+        console.log('Store: Adding annotation:', annotation);
+        set((state) => ({
+          annotations: [...state.annotations, annotation]
+        }));
+      },
+
+      removeAnnotation: (annotationId: string) => {
+        console.log('Store: Removing annotation:', annotationId);
+        set((state) => ({
+          annotations: state.annotations.filter(a => a.id !== annotationId)
+        }));
+      },
+
+      updateAnnotation: (annotationId: string, updates: Partial<Annotation>) => {
+        console.log('Store: Updating annotation:', annotationId, updates);
+        set((state) => ({
+          annotations: state.annotations.map(a => 
+            a.id === annotationId ? { ...a, ...updates } : a
+          )
+        }));
+      },
+
+      clearAnnotations: () => {
+        console.log('Store: Clearing all annotations');
+        set({ annotations: [] });
+      },
+
+      finalizeRectangle: () => {
+        const { drawingState } = get();
+        if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
+          const [startX, startY] = drawingState.dragStart;
+          const [endX, endY] = drawingState.dragEnd;
+          
+          // Create a new rectangle annotation
+          const annotation: RectangleAnnotation = {
+            id: `rect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: 'rectangle',
+            coordinates: {
+              start: [startX, startY],
+              end: [endX, endY],
+            },
+            style: {
+              fillColor: [0, 255, 0, 50], // Green with low opacity
+              lineColor: [0, 255, 0, 255], // Solid green border
+              lineWidth: 3,
+            },
+            metadata: {
+              createdAt: new Date(),
+              label: `Rectangle ${get().annotations.length + 1}`,
+            },
+          };
+
+          console.log('Store: Finalizing rectangle as annotation:', annotation);
+          
+          // Add the annotation
+          get().addAnnotation(annotation);
+          
+          // Reset drawing state
+          get().resetDrawingState();
+          
+          // Remove the temporary drawing layer
+          get().removeOverlayLayer('green-rectangle');
         }
       },
     }),

@@ -33,7 +33,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     if (isDrawing && dragStart && dragEnd) {
       const [startX, startY] = dragStart;
       const [endX, endY] = dragEnd;
-      
+
       // Ensure proper rectangle coordinates (start can be anywhere relative to end)
       const minX = Math.min(startX, endX);
       const maxX = Math.max(startX, endX);
@@ -67,7 +67,47 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     return null;
   }, [activeTool, isDrawing, dragStart, dragEnd]);
 
-  // Notify parent when layer is created or removed
+  // Get annotations from store with proper reactivity
+  const annotations = useOverlayStore(state => state.annotations);
+
+  // Create persistent annotation layers from stored annotations
+  const annotationLayers = React.useMemo(() => {
+    return annotations.map(annotation => {
+      if (annotation.type === 'rectangle') {
+        const { start, end } = annotation.coordinates;
+        const [startX, startY] = start;
+        const [endX, endY] = end;
+
+        // Ensure proper rectangle coordinates
+        const minX = Math.min(startX, endX);
+        const maxX = Math.max(startX, endX);
+        const minY = Math.min(startY, endY);
+        const maxY = Math.max(startY, endY);
+
+        return new PolygonLayer({
+          id: `annotation-${annotation.id}`,
+          data: [{
+            polygon: [
+              [minX, minY],
+              [maxX, minY],
+              [maxX, maxY],
+              [minX, maxY],
+              [minX, minY], // Close the polygon
+            ]
+          }],
+          getPolygon: d => d.polygon,
+          getFillColor: [0, 0, 0, 0],
+          getLineColor: [255, 255, 255, 255],
+          getLineWidth: 50,
+          stroked: true,
+          filled: true,
+        });
+      }
+      return null;
+    }).filter(Boolean);
+  }, [annotations]);
+
+  // Notify parent when drawing layer is created or removed
   React.useEffect(() => {
     if (greenRectangleLayer) {
       console.log('DrawingOverlay: Notifying parent of green rectangle layer');
@@ -78,6 +118,27 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       onLayerCreate(null);
     }
   }, [greenRectangleLayer, onLayerCreate]);
+
+  // Handle annotation layers - they are now managed through the overlay layers system
+  React.useEffect(() => {
+    // Clear existing annotation layers from overlay store
+    const currentLayers = useOverlayStore.getState().overlayLayers;
+    const annotationLayerIds = currentLayers
+      .filter(layer => layer && layer.id.startsWith('annotation-'))
+      .map(layer => layer.id);
+
+    // Remove old annotation layers
+    annotationLayerIds.forEach(layerId => {
+      useOverlayStore.getState().removeOverlayLayer(layerId);
+    });
+
+    // Add new annotation layers
+    annotationLayers.forEach(layer => {
+      if (layer) {
+        useOverlayStore.getState().addOverlayLayer(layer);
+      }
+    });
+  }, [annotationLayers]);
 
   return null; // This component doesn't render anything visible
 };
