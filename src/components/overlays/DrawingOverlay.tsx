@@ -70,42 +70,47 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // Get annotations from store with proper reactivity
   const annotations = useOverlayStore(state => state.annotations);
 
-  // Create persistent annotation layers from stored annotations
+  // Get hidden layers from store
+  const hiddenLayers = useOverlayStore(state => state.hiddenLayers);
+
+  // Create persistent annotation layers from stored annotations (excluding hidden ones)
   const annotationLayers = React.useMemo(() => {
-    return annotations.map(annotation => {
-      if (annotation.type === 'rectangle') {
-        const { start, end } = annotation.coordinates;
-        const [startX, startY] = start;
-        const [endX, endY] = end;
+    return annotations
+      .filter(annotation => !hiddenLayers.has(annotation.id)) // Filter out hidden annotations
+      .map(annotation => {
+        if (annotation.type === 'rectangle') {
+          const { start, end } = annotation.coordinates;
+          const [startX, startY] = start;
+          const [endX, endY] = end;
 
-        // Ensure proper rectangle coordinates
-        const minX = Math.min(startX, endX);
-        const maxX = Math.max(startX, endX);
-        const minY = Math.min(startY, endY);
-        const maxY = Math.max(startY, endY);
+          // Ensure proper rectangle coordinates
+          const minX = Math.min(startX, endX);
+          const maxX = Math.max(startX, endX);
+          const minY = Math.min(startY, endY);
+          const maxY = Math.max(startY, endY);
 
-        return new PolygonLayer({
-          id: `annotation-${annotation.id}`,
-          data: [{
-            polygon: [
-              [minX, minY],
-              [maxX, minY],
-              [maxX, maxY],
-              [minX, maxY],
-              [minX, minY], // Close the polygon
-            ]
-          }],
-          getPolygon: d => d.polygon,
-          getFillColor: [0, 0, 0, 0],
-          getLineColor: [255, 255, 255, 255],
-          getLineWidth: 50,
-          stroked: true,
-          filled: true,
-        });
-      }
-      return null;
-    }).filter(Boolean);
-  }, [annotations]);
+          return new PolygonLayer({
+            id: `annotation-${annotation.id}`,
+            data: [{
+              polygon: [
+                [minX, minY],
+                [maxX, minY],
+                [maxX, maxY],
+                [minX, maxY],
+                [minX, minY], // Close the polygon
+              ]
+            }],
+            getPolygon: d => d.polygon,
+            getFillColor: [0, 0, 0, 0],
+            getLineColor: [255, 255, 255, 255],
+            getLineWidth: 50,
+            stroked: true,
+            filled: true,
+          });
+        }
+        return null;
+      }).filter(Boolean);
+  }, [annotations, hiddenLayers]);
 
   // Notify parent when drawing layer is created or removed
   React.useEffect(() => {

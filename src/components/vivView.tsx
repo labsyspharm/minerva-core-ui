@@ -120,7 +120,7 @@ const VivView = (props: Props) => {
         }}
         layers={allLayers}
         controller={{
-          dragPan: activeTool === 'move' && overlayLayers?.length === 0,
+          dragPan: activeTool !== 'rectangle',
           dragRotate: false,
           scrollZoom: true,
           doubleClickZoom: true,

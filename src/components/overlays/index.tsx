@@ -35,7 +35,7 @@ const Overlays = (props: Props) => {
   };
 
   const className = [
-    styles.center
+    styles.center, styles.black
   ].join(" ");
   
   return (

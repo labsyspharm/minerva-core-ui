@@ -47,6 +47,7 @@ export interface OverlayStore {
   currentInteraction: InteractionCoordinate | null;
   drawingState: DrawingState;
   annotations: Annotation[]; // New: persistent annotations
+  hiddenLayers: Set<string>; // New: track hidden layers
   
   // Actions
   setActiveTool: (tool: string) => void;
@@ -66,6 +67,11 @@ export interface OverlayStore {
   updateAnnotation: (annotationId: string, updates: Partial<Annotation>) => void;
   clearAnnotations: () => void;
   finalizeRectangle: () => void; // Convert current drawing to annotation
+  
+  // New layer visibility actions
+  toggleLayerVisibility: (annotationId: string) => void;
+  showAllLayers: () => void;
+  hideAllLayers: () => void;
 }
 
 // Initial state for overlay store
@@ -79,6 +85,7 @@ const overlayInitialState = {
     dragEnd: null,
   },
   annotations: [], // New: empty annotations array
+  hiddenLayers: new Set<string>(), // New: empty hidden layers set
 };
 
 // Create the overlay store
@@ -194,9 +201,14 @@ export const useOverlayStore = create<OverlayStore>()(
 
       removeAnnotation: (annotationId: string) => {
         console.log('Store: Removing annotation:', annotationId);
-        set((state) => ({
-          annotations: state.annotations.filter(a => a.id !== annotationId)
-        }));
+        set((state) => {
+          const newHiddenLayers = new Set(state.hiddenLayers);
+          newHiddenLayers.delete(annotationId); // Clean up hidden state
+          return {
+            annotations: state.annotations.filter(a => a.id !== annotationId),
+            hiddenLayers: newHiddenLayers
+          };
+        });
       },
 
       updateAnnotation: (annotationId: string, updates: Partial<Annotation>) => {
@@ -249,6 +261,29 @@ export const useOverlayStore = create<OverlayStore>()(
           // Remove the temporary drawing layer
           get().removeOverlayLayer('green-rectangle');
         }
+      },
+
+      // New layer visibility actions
+      toggleLayerVisibility: (annotationId: string) => {
+        set((state) => {
+          const newHiddenLayers = new Set(state.hiddenLayers);
+          if (newHiddenLayers.has(annotationId)) {
+            newHiddenLayers.delete(annotationId);
+          } else {
+            newHiddenLayers.add(annotationId);
+          }
+          return { hiddenLayers: newHiddenLayers };
+        });
+      },
+
+      showAllLayers: () => {
+        set({ hiddenLayers: new Set<string>() });
+      },
+
+      hideAllLayers: () => {
+        set((state) => ({
+          hiddenLayers: new Set(state.annotations.map(a => a.id))
+        }));
       },
     }),
     {
