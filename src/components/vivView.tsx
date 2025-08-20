@@ -23,6 +23,7 @@ export type Props = {
   viewerConfig: Config;
   overlayLayers?: any[];
   activeTool: string;
+  onOverlayInteraction?: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number]) => void;
 } & HashContext;
 
 type Shape = {
@@ -129,6 +130,26 @@ const VivView = (props: Props) => {
         }}
         viewState={viewState}
         onViewStateChange={e => setViewState(e.viewState)}
+        onClick={({ coordinate, pixel }) => {
+          if (activeTool === 'rectangle' && coordinate && props.onOverlayInteraction) {
+            props.onOverlayInteraction('click', coordinate);
+          }
+        }}
+        onDragStart={({ coordinate, pixel }) => {
+          if (activeTool === 'rectangle' && coordinate && props.onOverlayInteraction) {
+            props.onOverlayInteraction('dragStart', coordinate);
+          }
+        }}
+        onDrag={({ coordinate, pixel }) => {
+          if (activeTool === 'rectangle' && coordinate && props.onOverlayInteraction) {
+            props.onOverlayInteraction('drag', coordinate);
+          }
+        }}
+        onDragEnd={({ coordinate, pixel }) => {
+          if (activeTool === 'rectangle' && coordinate && props.onOverlayInteraction) {
+            props.onOverlayInteraction('dragEnd', coordinate);
+          }
+        }}
         views={[new OrthographicView({ id: 'ortho', controller: true })]}
       />
     </Main>

@@ -301,6 +301,9 @@ const Index = (props: Props) => {
   // State for active tool
   const [activeTool, setActiveTool] = useState('move');
   
+  // State for current interaction
+  const [currentInteraction, setCurrentInteraction] = useState<{ type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number] } | null>(null);
+  
   // Handle layer creation from overlays
   const handleLayerCreate = React.useCallback((layer: any) => {
     console.log('Index: handleLayerCreate called with layer:', layer);
@@ -327,6 +330,14 @@ const Index = (props: Props) => {
     console.log('Index: Tool changed to:', tool);
     setActiveTool(tool);
   }, []);
+
+  // Handle overlay interactions from VivView
+  const handleOverlayInteraction = React.useCallback((type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number]) => {
+    console.log('Index: Overlay interaction:', type, 'at coordinate:', coordinate);
+    
+    // Set the current interaction for the DrawingOverlay component
+    setCurrentInteraction({ type, coordinate });
+  }, []);
   
   return (
     <Main {...mainProps}>
@@ -334,6 +345,7 @@ const Index = (props: Props) => {
         {...imageProps} 
         overlayLayers={overlayLayers}
         activeTool={activeTool}
+        onOverlayInteraction={handleOverlayInteraction}
       >
       </ImageView>
       <Overlays 
@@ -343,6 +355,7 @@ const Index = (props: Props) => {
         onLayerCreate={handleLayerCreate}
         activeTool={activeTool}
         onToolChange={handleToolChange}
+        currentInteraction={currentInteraction}
       />
     </Main>
   );

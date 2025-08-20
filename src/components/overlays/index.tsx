@@ -12,6 +12,7 @@ export type Props = HashContext & {
   onLayerCreate?: (layer: any) => void;
   activeTool: string;
   onToolChange: (tool: string) => void;
+  currentInteraction?: { type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number] } | null;
 };
 
 // Define available tools
@@ -23,7 +24,7 @@ const TOOLS = {
 type ToolType = typeof TOOLS[keyof typeof TOOLS];
 
 const Overlays = (props: Props) => {
-  const { hash, onLayerCreate, activeTool, onToolChange } = props;
+  const { hash, onLayerCreate, activeTool, onToolChange, currentInteraction } = props;
   const group = props.groups[hash.g];
 
   const handleToolChange = (tool: ToolType) => {
@@ -75,7 +76,7 @@ const Overlays = (props: Props) => {
       
       {/* Drawing overlay component */}
       {onLayerCreate && (
-        <DrawingOverlay onLayerCreate={onLayerCreate} activeTool={activeTool} />
+        <DrawingOverlay onLayerCreate={onLayerCreate} activeTool={activeTool} currentInteraction={currentInteraction} />
       )}
     </div>
   );
