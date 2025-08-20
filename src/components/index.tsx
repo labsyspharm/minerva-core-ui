@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Overlays } from "./overlays";
 import { ImageView, toImageProps } from "./imageView";
 import { Main } from "./content";
+import { useOverlayStore } from "../lib/stores";
 
 // Types
 import type { OptSW } from "./waypoint/content";
@@ -295,49 +296,15 @@ const Index = (props: Props) => {
     },
   });
   
-  // State for overlay layers
-  const [overlayLayers, setOverlayLayers] = useState<any[]>([]);
-  
-  // State for active tool
-  const [activeTool, setActiveTool] = useState('move');
-  
-  // State for current interaction
-  const [currentInteraction, setCurrentInteraction] = useState<{ type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number] } | null>(null);
-  
-  // Handle layer creation from overlays
-  const handleLayerCreate = React.useCallback((layer: any) => {
-    console.log('Index: handleLayerCreate called with layer:', layer);
-    setOverlayLayers(prev => {
-      console.log('Index: current overlayLayers:', prev);
-      
-      if (layer === null) {
-        // Remove the green rectangle layer when tool is not rectangle
-        const filtered = prev.filter(l => l && l.id !== 'green-rectangle');
-        console.log('Index: removed green rectangle layer, new overlayLayers:', filtered);
-        return filtered;
-      }
-      
-      // Remove existing layer with same id if it exists, and filter out any null values
-      const filtered = prev.filter(l => l && l.id !== layer.id);
-      const newLayers = [...filtered, layer];
-      console.log('Index: new overlayLayers:', newLayers);
-      return newLayers;
-    });
-  }, []);
-  
-  // Handle tool change
-  const handleToolChange = React.useCallback((tool: string) => {
-    console.log('Index: Tool changed to:', tool);
-    setActiveTool(tool);
-  }, []);
-
-  // Handle overlay interactions from VivView
-  const handleOverlayInteraction = React.useCallback((type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number]) => {
-    console.log('Index: Overlay interaction:', type, 'at coordinate:', coordinate);
-    
-    // Set the current interaction for the DrawingOverlay component
-    setCurrentInteraction({ type, coordinate });
-  }, []);
+  // Use Zustand store for overlay state management
+  const {
+    overlayLayers,
+    activeTool,
+    currentInteraction,
+    handleLayerCreate,
+    handleToolChange,
+    handleOverlayInteraction
+  } = useOverlayStore();
   
   return (
     <Main {...mainProps}>
@@ -353,8 +320,6 @@ const Index = (props: Props) => {
         groups={mainProps.groups} 
         setHash={mainProps.setHash}
         onLayerCreate={handleLayerCreate}
-        activeTool={activeTool}
-        onToolChange={handleToolChange}
         currentInteraction={currentInteraction}
       />
     </Main>

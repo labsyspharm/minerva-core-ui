@@ -1,5 +1,6 @@
 import * as React from "react";
 import { PolygonLayer } from '@deck.gl/layers';
+import { useOverlayStore } from "../../lib/stores";
 
 interface DrawingOverlayProps {
   onLayerCreate: (layer: PolygonLayer) => void;
@@ -9,49 +10,12 @@ interface DrawingOverlayProps {
 }
 
 const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTool, currentInteraction }) => {
-  const [isDrawing, setIsDrawing] = React.useState(false);
-  const [dragStart, setDragStart] = React.useState<[number, number] | null>(null);
-  const [dragEnd, setDragEnd] = React.useState<[number, number] | null>(null);
+  // Use Zustand store for drawing state
+  const { drawingState } = useOverlayStore();
+  const { isDrawing, dragStart, dragEnd } = drawingState;
 
-  // Handle interaction events from parent
-  React.useEffect(() => {
-    if (currentInteraction && activeTool === 'rectangle') {
-      const { type, coordinate } = currentInteraction;
-      const [x, y] = coordinate;
-      
-      console.log('DrawingOverlay: Received interaction:', type, 'at coordinate:', [x, y]);
-      
-      switch (type) {
-        case 'click':
-          // Start drawing
-          setIsDrawing(true);
-          setDragStart([x, y]);
-          setDragEnd([x, y]);
-          break;
-        case 'dragStart':
-          // Start drawing
-          setIsDrawing(true);
-          setDragStart([x, y]);
-          setDragEnd([x, y]);
-          break;
-        case 'drag':
-          // Update drawing
-          if (isDrawing) {
-            setDragEnd([x, y]);
-            console.log('DrawingOverlay: Updated drag end to:', [x, y]);
-          }
-          break;
-        case 'dragEnd':
-          // Finish drawing but keep the final position
-          if (isDrawing) {
-            setDragEnd([x, y]);
-            // Don't reset isDrawing - keep the rectangle visible at final position
-            console.log('DrawingOverlay: Finished drawing rectangle from', dragStart, 'to', [x, y]);
-          }
-          break;
-      }
-    }
-  }, [currentInteraction, activeTool, isDrawing, dragStart]);
+  // Note: Interaction handling is now managed by the Zustand store
+  // The store automatically updates drawingState based on currentInteraction
 
   // Create green rectangle overlay layer based on drawing state
   const greenRectangleLayer = React.useMemo(() => {
