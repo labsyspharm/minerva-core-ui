@@ -613,29 +613,8 @@ const loadDicom = (meta) => {
       }
     }))
   }
-  const toMetadata = (width, height) => ({
-    "ID":"Image:0",
-    "AquisitionDate":"",
-    "Description":"",
-    "Pixels": pixels,
-    format() {
-      const sizes = ["X", "Y", "Z"].map((name) => {
-        const size = pixels[`PhysicalSize${name}`];
-        const unit = pixels[`PhysicalSize${name}Unit`];
-        return size ? `${size} ${unit}` : "-";
-      }).join(" x ");
-      return {
-        "Acquisition Date": "",
-        "Dimensions (XY)": `${pixels["SizeX"]} x ${pixels["SizeY"]}`,
-        "Pixels Type": pixels["Type"],
-        "Pixels Size (XYZ)": sizes,
-        "Z-sections/Timepoints": `${pixels["SizeZ"]} x ${pixels["SizeT"]}`,
-        Channels: pixels["SizeC"]
-      };
-    }
-  })
   const { tileSize } = pyramids["0"][0];
-  const metadata = toMetadata(width, height);
+  const metadata = { Pixels: pixels };
   const pyramidIndexer = toIndexer({
     metadata, pyramids, series
   });

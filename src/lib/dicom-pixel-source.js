@@ -37,9 +37,6 @@ class DicomPixelSource {
   async _readRasters(image, props = {}) {
     const index = [ image.c, props.x, props.y ].join('-');
     let raster = this.tileCache[index];
-    if (raster) {
-      console.log(`"Okay, tile "${index}" is cached!`)
-    }
     if (!raster) {
       raster = await image.readRasters({
         ...props, pool: this.pool

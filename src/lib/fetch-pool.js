@@ -39,14 +39,11 @@ class FetchPool extends Pool {
         ...this.subpathCounts,
         [ subpath, count + 1 ]
       ]);
-      console.log(this.subpathCounts.size);
-      console.log(this.subpathCounts);
       return fetched;
     }
     if (signal.aborted) {
       throw new Error("Request Aborted");
     }
-    console.log(this.subpathCounts);
     return (
       new Promise((resolve) => {
         const worker = this.workers.find(

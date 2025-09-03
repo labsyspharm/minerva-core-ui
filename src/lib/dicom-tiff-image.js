@@ -12,7 +12,6 @@ class DicomTIFFImage {
     const { metadata, little_endian } = opts;
     const { tileSize } = opts.pyramids[0][0];
     const { Pixels } = metadata;
-    const { TiffData } = Pixels;
     this.Pixels = Pixels;
     this.level = opts.level;
     this.c = opts.c;
@@ -24,11 +23,15 @@ class DicomTIFFImage {
     this.tileHeight = tileSize;
   }
 
-  async getTileOrStrip(x, y, sample, pool, signal) {
-    // TODO -- handle signal correctly
+  getPyramid() {
     const n_levels = this.pyramids[this.c].length - 1;
     const pyramid_level = n_levels - this.level;
     const pyramid = this.pyramids[this.c][pyramid_level];
+    return pyramid;
+  }
+
+  async getTileOrStrip(x, y, sample, pool, signal) {
+    const pyramid = this.getPyramid();
     const subpath = pyramid.frameMappings[`${y+1}-${x+1}-${this.c}`];
     const request = await pool.fetch({ series: this.series, subpath, signal });
     return { x, y, sample, data: request };
@@ -55,6 +58,20 @@ class DicomTIFFImage {
       const optimization = true;
       if ( littleEndianPlatform == this.littleEndian && optimization) {
         const data = new Uint16Array(tile.data.buffer);
+        // Blackout missing data
+        for (let pixel_y = ymax; pixel_y < tileHeight; ++pixel_y) {
+          for (let pixel_x = 0; pixel_x < tileWidth; ++pixel_x) {
+            const windowCoordinate = ( pixel_y * tileWidth ) + pixel_x;
+            data[windowCoordinate] = 0;
+          }
+        }
+        // Blackout missing data
+        for (let pixel_x = xmax; pixel_x < tileWidth; ++pixel_x) {
+          for (let pixel_y = 0; pixel_y < tileHeight; ++pixel_y) {
+            const windowCoordinate = ( pixel_y * tileWidth ) + pixel_x;
+            data[windowCoordinate] = 0;
+          }
+        }
         const fullTile = tileHeight * tileWidth;
         const full = data.length === fullTile;
         return {
@@ -66,15 +83,18 @@ class DicomTIFFImage {
       const data = new Uint16Array(ymax * xmax);
       for (let pixel_y = 0; pixel_y < ymax; ++pixel_y) {
         for (let pixel_x = 0; pixel_x < xmax; ++pixel_x) {
-          const windowCoordinate = ( pixel_y * width ) + pixel_x;
+          const windowCoordinate = ( pixel_y * tileWidth ) + pixel_x;
           data[windowCoordinate] = tile.data.getUint16(
-            ((pixel_y * tileWidth) + pixel_x) * this.bytesPerSample,
-            this.littleEndian
+            windowCoordinate * this.bytesPerSample, this.littleEndian
           );
         }
       }
+      const fullTile = tileHeight * tileWidth;
+      const full = data.length === fullTile;
       return {
-        data, width: xmax, height: ymax 
+        data,
+        width: full ? tileWidth: xmax,
+        height: full ? tileHeight: ymax
       }
     });
   }
@@ -93,11 +113,11 @@ class DicomTIFFImage {
   }
 
   getWidth() {
-    return this.Pixels.SizeX;
+    return this.getPyramid().width;
   }
 
   getHeight() {
-    return this.Pixels.SizeY;
+    return this.getPyramid().height;
   }
 }
 
