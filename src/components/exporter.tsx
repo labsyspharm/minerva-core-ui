@@ -142,7 +142,7 @@ const save: Save = async (inputs) => {
   const { output, filename } = await capture(index, loader);
   const fh = await handle.getFileHandle(filename, create);
   const write = await fh.createWritable();
-  await write.write(output);
+  await write.write(output as any);
   await write.close();
 }
 
