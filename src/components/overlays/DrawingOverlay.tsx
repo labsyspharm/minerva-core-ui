@@ -9,13 +9,61 @@ interface DrawingOverlayProps {
   currentInteraction?: { type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number] } | null;
 }
 
+const getLineWidthPx = () => 3; // always 3px
+
 const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTool, currentInteraction }) => {
   // Use Zustand store for drawing state
   const { drawingState } = useOverlayStore();
   const { isDrawing, dragStart, dragEnd } = drawingState;
 
+  // Local state for lasso tool
+  const [lassoPoints, setLassoPoints] = React.useState<[number, number][]>([]);
+  const [isLassoDrawing, setIsLassoDrawing] = React.useState(false);
+
   // Note: Interaction handling is now managed by the Zustand store
   // The store automatically updates drawingState based on currentInteraction
+
+  // Handle lasso tool interactions
+  React.useEffect(() => {
+    if (currentInteraction && activeTool === 'lasso') {
+      const { type, coordinate } = currentInteraction;
+      const [x, y] = coordinate;
+
+      console.log('DrawingOverlay: Received lasso interaction:', type, 'at coordinate:', [x, y]);
+
+      switch (type) {
+        case 'click':
+          // Add point to lasso
+          if (!isLassoDrawing) {
+            setIsLassoDrawing(true);
+          }
+          setLassoPoints(prev => [...prev, [x, y]]);
+          console.log('DrawingOverlay: Added lasso point:', [x, y]);
+          break;
+        case 'dragStart':
+          // Start lasso drawing
+          if (!isLassoDrawing) {
+            setIsLassoDrawing(true);
+            setLassoPoints([[x, y]]);
+          }
+          break;
+        case 'drag':
+          // Update lasso with drag points for smooth drawing
+          if (isLassoDrawing) {
+            setLassoPoints(prev => [...prev, [x, y]]);
+          }
+          break;
+        case 'dragEnd':
+          // Finish lasso drawing
+          if (isLassoDrawing) {
+            // Keep the final point
+            setLassoPoints(prev => [...prev, [x, y]]);
+            console.log('DrawingOverlay: Finished lasso with points:', lassoPoints);
+          }
+          break;
+      }
+    }
+  }, [currentInteraction, activeTool, isLassoDrawing, lassoPoints]);
 
   // Create green rectangle overlay layer based on drawing state
   const greenRectangleLayer = React.useMemo(() => {
@@ -67,6 +115,42 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     return null;
   }, [activeTool, isDrawing, dragStart, dragEnd]);
 
+  // Create lasso polygon overlay layer
+  const lassoLayer = React.useMemo(() => {
+    if (activeTool !== 'lasso') {
+      return null;
+    }
+
+    console.log('DrawingOverlay: Creating lasso layer with points:', lassoPoints);
+
+    // Only show lasso when actively drawing or when drawing is complete
+    if (isLassoDrawing && lassoPoints.length >= 3) {
+      // Close the polygon by adding the first point at the end
+      const closedPoints = [...lassoPoints, lassoPoints[0]];
+
+      return new PolygonLayer({
+        id: 'green-lasso',
+        data: [{
+          polygon: closedPoints
+        }],
+        getPolygon: d => d.polygon,
+        getFillColor: [255, 165, 0, 50], // Orange with low opacity
+        getLineColor: [255, 165, 0, 255], // Solid orange border
+        getLineWidth: getLineWidthPx(),
+        lineWidthScale: 1,
+        lineWidthUnits: 'pixels',
+        lineWidthMinPixels: getLineWidthPx(),
+        lineWidthMaxPixels: getLineWidthPx(),
+        stroked: true,
+        filled: true,
+      });
+    }
+
+    // No lasso to show - waiting for user interaction
+    console.log('DrawingOverlay: No lasso to show - waiting for user interaction');
+    return null;
+  }, [activeTool, isLassoDrawing, lassoPoints]);
+
   // Get annotations from store with proper reactivity
   const annotations = useOverlayStore(state => state.annotations);
 
@@ -103,7 +187,11 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
             getPolygon: d => d.polygon,
             getFillColor: [0, 0, 0, 0],
             getLineColor: [255, 255, 255, 255],
-            getLineWidth: 50,
+            getLineWidth: getLineWidthPx(),
+            lineWidthScale: 1,
+            lineWidthUnits: 'pixels',
+            lineWidthMinPixels: getLineWidthPx(),
+            lineWidthMaxPixels: getLineWidthPx(),
             stroked: true,
             filled: true,
           });
@@ -114,15 +202,24 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
 
   // Notify parent when drawing layer is created or removed
   React.useEffect(() => {
-    if (greenRectangleLayer) {
+    let layerToCreate = null;
+
+    if (activeTool === 'rectangle' && greenRectangleLayer) {
+      layerToCreate = greenRectangleLayer;
       console.log('DrawingOverlay: Notifying parent of green rectangle layer');
-      onLayerCreate(greenRectangleLayer);
+    } else if (activeTool === 'lasso' && lassoLayer) {
+      layerToCreate = lassoLayer;
+      console.log('DrawingOverlay: Notifying parent of lasso layer');
+    }
+
+    if (layerToCreate) {
+      onLayerCreate(layerToCreate);
     } else {
-      // When tool is not rectangle, notify parent to remove the layer
-      console.log('DrawingOverlay: Notifying parent to remove green rectangle layer');
+      // When no tool is active or no layer to show, notify parent to remove layers
+      console.log('DrawingOverlay: Notifying parent to remove drawing layers');
       onLayerCreate(null);
     }
-  }, [greenRectangleLayer, onLayerCreate]);
+  }, [greenRectangleLayer, lassoLayer, activeTool, onLayerCreate]);
 
   // Handle annotation layers - they are now managed through the overlay layers system
   React.useEffect(() => {

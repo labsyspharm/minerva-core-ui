@@ -27,7 +27,23 @@ export interface RectangleAnnotation {
   };
 }
 
-export type Annotation = RectangleAnnotation; // Can be extended with other annotation types
+export interface PolygonAnnotation {
+  id: string;
+  type: 'polygon';
+  coordinates: [number, number][]; // Array of points
+  style: {
+    fillColor: [number, number, number, number];
+    lineColor: [number, number, number, number];
+    lineWidth: number;
+  };
+  metadata?: {
+    createdAt: Date;
+    label?: string;
+    description?: string;
+  };
+}
+
+export type Annotation = RectangleAnnotation | PolygonAnnotation; // Extended with polygon type
 
 export interface InteractionCoordinate {
   type: 'click' | 'dragStart' | 'drag' | 'dragEnd';
@@ -67,6 +83,7 @@ export interface OverlayStore {
   updateAnnotation: (annotationId: string, updates: Partial<Annotation>) => void;
   clearAnnotations: () => void;
   finalizeRectangle: () => void; // Convert current drawing to annotation
+  finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
   
   // New layer visibility actions
   toggleLayerVisibility: (annotationId: string) => void;
@@ -260,6 +277,34 @@ export const useOverlayStore = create<OverlayStore>()(
           
           // Remove the temporary drawing layer
           get().removeOverlayLayer('green-rectangle');
+        }
+      },
+
+      finalizeLasso: (points: [number, number][]) => {
+        if (points.length >= 3) {
+          // Create a new polygon annotation
+          const annotation: PolygonAnnotation = {
+            id: `poly-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: 'polygon',
+            coordinates: points,
+            style: {
+              fillColor: [255, 165, 0, 50], // Orange with low opacity
+              lineColor: [255, 165, 0, 255], // Solid orange border
+              lineWidth: 3,
+            },
+            metadata: {
+              createdAt: new Date(),
+              label: `Polygon ${get().annotations.length + 1}`,
+            },
+          };
+
+          console.log('Store: Finalizing lasso as annotation:', annotation);
+          
+          // Add the annotation
+          get().addAnnotation(annotation);
+          
+          // Remove the temporary drawing layer
+          get().removeOverlayLayer('green-lasso');
         }
       },
 

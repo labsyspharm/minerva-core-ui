@@ -83,7 +83,6 @@ const VivView = (props: Props) => {
     }
   };
 
-  console.log('VivView: props:', mainProps);
 
   // Create image layer
   const imageLayer = new MultiscaleImageLayer(mainProps);
@@ -91,9 +90,6 @@ const VivView = (props: Props) => {
   // Combine layers
   const allLayers = [imageLayer, ...overlayLayers];
 
-  // console.log('VivView: allLayers:', allLayers);
-  // console.log('VivView: overlayLayers:', overlayLayers);
-  // console.log('VivView: activeTool:', activeTool);
 
   const n_levels = loader.data.length;
   const shape_labels = loader.data[0].labels;
