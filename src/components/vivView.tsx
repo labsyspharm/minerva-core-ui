@@ -8,7 +8,6 @@ import {
   createTileLayers, readInstances,
   readMetadata, computeImagePyramid
 } from "../lib/dicom";
-import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 
 import styled from "styled-components";
 import { getWaypoint } from "../lib/waypoint";

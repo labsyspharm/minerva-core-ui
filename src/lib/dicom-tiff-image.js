@@ -1,3 +1,5 @@
+import { fetchFrame } from './fetch-frame';
+
 const littleEndianPlatform = (() => {
   const uint16 = new Uint16Array( 1 );
 	uint16[ 0 ] = 0x1234;
@@ -30,15 +32,15 @@ class DicomTIFFImage {
     return pyramid;
   }
 
-  async getTileOrStrip(x, y, sample, pool, signal) {
+  async getTileOrStrip(x, y, sample, signal) {
     const pyramid = this.getPyramid();
     const subpath = pyramid.frameMappings[`${y+1}-${x+1}-${this.c}`];
-    const request = await pool.fetch({ series: this.series, subpath, signal });
+    const request = await fetchFrame({ series: this.series, subpath, signal });
     return { x, y, sample, data: request };
   }
 
   async _readRaster({
-    x, y, width, height, sample, pool, signal
+    x, y, width, height, sample, signal
   }) {
     const { tileHeight, tileWidth } = this;
     const imageHeight = this.getHeight();
@@ -47,7 +49,7 @@ class DicomTIFFImage {
     const origin_y = y * this.tileHeight;
 
     return await this.getTileOrStrip(
-        x, y, sample, pool, signal
+        x, y, sample, signal
     ).then((tile) => {
       const ymax = Math.min(
         tileHeight, height, imageHeight - origin_y 
@@ -100,14 +102,14 @@ class DicomTIFFImage {
   }
 
   async readRasters(options = {}) {
-    const { pool, signal } = options;
+    const { signal } = options;
     const { x, y, height, width } = options;
     const samples = options.samples ?? [0];
     const origin_x = x * this.tileWidth;
     const origin_y = y * this.tileHeight;
     const sample = samples[0]
     const raster = await this._readRaster({
-      x, y, width, height, sample, pool, signal
+      x, y, width, height, sample, signal
     });
     return raster;
   }

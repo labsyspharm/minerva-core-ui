@@ -6,7 +6,6 @@ import { DicomTIFFImage } from "./dicom-tiff-image";
 import { DicomPixelSource } from "./dicom-pixel-source";
 import * as dcmjs from 'dcmjs'
 import GL from '@luma.gl/constants';
-import { FetchPool } from "./fetch-pool";
 import {
   MultiscaleImageLayer, TiffPixelSource
 } from "@hms-dbmi/viv";
@@ -649,8 +648,7 @@ const loadDicom = (meta) => {
         axes, level 
       }),
       axes.labels,
-      meta,
-      new FetchPool() 
+      meta
     );
     return data;
   });
@@ -660,7 +658,6 @@ const loadDicom = (meta) => {
 }
 
 function createTileLayers(meta) {
-  console.log("new loader");
   const loader = loadDicom(meta);
   const {
     channelsVisible,
@@ -676,7 +673,8 @@ function createTileLayers(meta) {
   const minZoom = -maxLevel;
   const imageProps = {
     loader: loader.data,
-    refinementStrategy: 'no-overlap',
+    // https://deck.gl/docs/api-reference/geo-layers/tile-layer#refinementstrategy
+    refinementStrategy: "no-overlap",
     id: "multichannel-tiled-image",
     channelsVisible,
     colors,
@@ -934,6 +932,8 @@ const testRanges = {
 }
 
 const channelNameLists = [
+  [10],
+  [11],
   [10,14,26,34],
   [0,1,2,3],
   [4,5,6,7],
