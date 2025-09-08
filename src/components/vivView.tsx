@@ -7,6 +7,7 @@ import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 
 import styled from "styled-components";
 import { getWaypoint } from "../lib/waypoint";
+import { createDragHandlers } from "../lib/dragHandlers";
 
 // Types
 import type { Config } from "../lib/viv";
@@ -90,6 +91,8 @@ const VivView = (props: Props) => {
   // Combine layers
   const allLayers = [imageLayer, ...overlayLayers];
 
+  // Create drag handlers using the utility
+  const dragHandlers = createDragHandlers(activeTool, props.onOverlayInteraction);
 
   const n_levels = loader.data.length;
   const shape_labels = loader.data[0].labels;
@@ -109,6 +112,8 @@ const VivView = (props: Props) => {
         getCursor={({ isDragging, isHovering }) => {
           if (activeTool === 'rectangle') {
             return isDragging ? 'grabbing' : 'crosshair';
+          } else if (activeTool === 'lasso') {
+            return isDragging ? 'grabbing' : 'crosshair';
           } else if (activeTool === 'move') {
             return isDragging ? 'grabbing' : 'grab';
           }
@@ -116,7 +121,7 @@ const VivView = (props: Props) => {
         }}
         layers={allLayers}
         controller={{
-          dragPan: activeTool !== 'rectangle',
+          dragPan: activeTool !== 'rectangle' && activeTool !== 'lasso',
           dragRotate: false,
           scrollZoom: true,
           doubleClickZoom: true,
@@ -126,26 +131,10 @@ const VivView = (props: Props) => {
         }}
         viewState={viewState}
         onViewStateChange={e => setViewState(e.viewState)}
-        onClick={({ coordinate, pixel }) => {
-          if (activeTool === 'rectangle' && coordinate && props.onOverlayInteraction) {
-            props.onOverlayInteraction('click', coordinate);
-          }
-        }}
-        onDragStart={({ coordinate, pixel }) => {
-          if (activeTool === 'rectangle' && coordinate && props.onOverlayInteraction) {
-            props.onOverlayInteraction('dragStart', coordinate);
-          }
-        }}
-        onDrag={({ coordinate, pixel }) => {
-          if (activeTool === 'rectangle' && coordinate && props.onOverlayInteraction) {
-            props.onOverlayInteraction('drag', coordinate);
-          }
-        }}
-        onDragEnd={({ coordinate, pixel }) => {
-          if (activeTool === 'rectangle' && coordinate && props.onOverlayInteraction) {
-            props.onOverlayInteraction('dragEnd', coordinate);
-          }
-        }}
+        onClick={dragHandlers.onClick}
+        onDragStart={dragHandlers.onDragStart}
+        onDrag={dragHandlers.onDrag}
+        onDragEnd={dragHandlers.onDragEnd}
         views={[new OrthographicView({ id: 'ortho', controller: true })]}
       />
     </Main>

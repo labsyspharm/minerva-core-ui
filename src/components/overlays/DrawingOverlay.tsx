@@ -13,7 +13,7 @@ const getLineWidthPx = () => 3; // always 3px
 
 const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTool, currentInteraction }) => {
   // Use Zustand store for drawing state
-  const { drawingState } = useOverlayStore();
+  const { drawingState, finalizeLasso } = useOverlayStore();
   const { isDrawing, dragStart, dragEnd } = drawingState;
 
   // Local state for lasso tool
@@ -37,33 +37,41 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           if (!isLassoDrawing) {
             setIsLassoDrawing(true);
           }
-          setLassoPoints(prev => [...prev, [x, y]]);
+          setLassoPoints(prev => [...prev, [x, y] as [number, number]]);
           console.log('DrawingOverlay: Added lasso point:', [x, y]);
           break;
         case 'dragStart':
           // Start lasso drawing
           if (!isLassoDrawing) {
             setIsLassoDrawing(true);
-            setLassoPoints([[x, y]]);
+            setLassoPoints([[x, y] as [number, number]]);
           }
           break;
         case 'drag':
           // Update lasso with drag points for smooth drawing
           if (isLassoDrawing) {
-            setLassoPoints(prev => [...prev, [x, y]]);
+            setLassoPoints(prev => [...prev, [x, y] as [number, number]]);
           }
           break;
         case 'dragEnd':
           // Finish lasso drawing
           if (isLassoDrawing) {
             // Keep the final point
-            setLassoPoints(prev => [...prev, [x, y]]);
-            console.log('DrawingOverlay: Finished lasso with points:', lassoPoints);
+            const finalPoints: [number, number][] = [...lassoPoints, [x, y] as [number, number]];
+            setLassoPoints(finalPoints);
+            console.log('DrawingOverlay: Finished lasso with points:', finalPoints);
+            
+            // Finalize the lasso as an annotation
+            if (finalPoints.length >= 3) {
+              finalizeLasso(finalPoints);
+              setIsLassoDrawing(false);
+              setLassoPoints([]);
+            }
           }
           break;
       }
     }
-  }, [currentInteraction, activeTool, isLassoDrawing, lassoPoints]);
+  }, [currentInteraction, activeTool, isLassoDrawing, lassoPoints, finalizeLasso]);
 
   // Create green rectangle overlay layer based on drawing state
   const greenRectangleLayer = React.useMemo(() => {
@@ -185,13 +193,33 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
               ]
             }],
             getPolygon: d => d.polygon,
-            getFillColor: [0, 0, 0, 0],
-            getLineColor: [255, 255, 255, 255],
-            getLineWidth: getLineWidthPx(),
+            getFillColor: annotation.style.fillColor,
+            getLineColor: annotation.style.lineColor,
+            getLineWidth: annotation.style.lineWidth,
             lineWidthScale: 1,
             lineWidthUnits: 'pixels',
-            lineWidthMinPixels: getLineWidthPx(),
-            lineWidthMaxPixels: getLineWidthPx(),
+            lineWidthMinPixels: annotation.style.lineWidth,
+            lineWidthMaxPixels: annotation.style.lineWidth,
+            stroked: true,
+            filled: true,
+          });
+        } else if (annotation.type === 'polygon') {
+          // Close the polygon by adding the first point at the end
+          const closedPoints = [...annotation.coordinates, annotation.coordinates[0]];
+
+          return new PolygonLayer({
+            id: `annotation-${annotation.id}`,
+            data: [{
+              polygon: closedPoints
+            }],
+            getPolygon: d => d.polygon,
+            getFillColor: annotation.style.fillColor,
+            getLineColor: annotation.style.lineColor,
+            getLineWidth: annotation.style.lineWidth,
+            lineWidthScale: 1,
+            lineWidthUnits: 'pixels',
+            lineWidthMinPixels: annotation.style.lineWidth,
+            lineWidthMaxPixels: annotation.style.lineWidth,
             stroked: true,
             filled: true,
           });

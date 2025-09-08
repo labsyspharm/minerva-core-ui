@@ -31,6 +31,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
     switch (annotation.type) {
       case 'rectangle':
         return '▭';
+      case 'polygon':
+        return '◯';
       default:
         return '●';
     }
