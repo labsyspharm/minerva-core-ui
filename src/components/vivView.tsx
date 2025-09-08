@@ -1,7 +1,7 @@
 import * as React from "react";
 import Deck from '@deck.gl/react';
 import { OrthographicView } from '@deck.gl/core';
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 
@@ -56,20 +56,22 @@ const shapeRef = (setShape: (s: Shape) => void) => {
   };
 };
 
-const VivView = (props: Props) => {
+const VivView = React.memo((props: Props) => {
   const maxShape = useWindowSize();
-  const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool } = props;
+  const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
   const toMainSettings = props.viewerConfig.toSettings;
   const [mainSettings, setMainSettings] = useState(toMainSettings(hash));
-  const waypoint = getWaypoint(stories, s, w);
   const [shape, setShape] = useState(maxShape);
   const [channelSettings, setChannelSettings] = useState({});
   const [canvas, setCanvas] = useState(null);
 
-  const rootRef = React.useMemo(() => {
+  // Memoize expensive computations
+  const waypoint = useMemo(() => getWaypoint(stories, s, w), [stories, s, w]);
+  
+  const rootRef = useMemo(() => {
     return shapeRef(setShape);
-  }, [maxShape]);
+  }, []);
 
   useEffect(() => {
     //console.log("VivView: useEffect: groups", groups);
@@ -78,75 +80,100 @@ const VivView = (props: Props) => {
   useEffect(() => {
     // Gets the default settings
     setMainSettings(toMainSettings(hash, loader, groups));
+  }, [loader, groups, hash, toMainSettings]);
 
-  }, [loader, groups, hash]);
+  // Memoize image shape computation
+  const imageShape = useMemo(() => {
+    const n_levels = loader.data.length;
+    const shape_labels = loader.data[0].labels;
+    const shape_values = loader.data[0].shape;
+    return Object.fromEntries(
+      shape_labels.map((k, i) => [k, shape_values[i]])
+    );
+  }, [loader.data]);
 
-  const mainProps = {
-    ...{
-      ...shape,
-      id: "mainLayer",
-      loader: loader.data,
-      ...(mainSettings as any),
-    }
-  };
+  // Memoize initial view state
+  const initialViewState = useMemo(() => {
+    const n_levels = loader.data.length;
+    return {
+      zoom: -n_levels,
+      target: [imageShape.x / 2, imageShape.y / 2, 0]
+    };
+  }, [loader.data, imageShape]);
 
+  const [viewState, setViewState] = useState(initialViewState);
 
-  // Create image layer
-  const imageLayer = new MultiscaleImageLayer(mainProps);
+  // Memoize main props to prevent unnecessary layer recreation
+  const mainProps = useMemo(() => ({
+    ...shape,
+    id: "mainLayer",
+    loader: loader.data,
+    ...(mainSettings as any),
+  }), [shape, loader.data, mainSettings]);
 
-  // Combine layers
-  const allLayers = [imageLayer, ...overlayLayers];
+  // Memoize image layer creation
+  const imageLayer = useMemo(() => new MultiscaleImageLayer(mainProps), [mainProps]);
 
-  // Create drag handlers using the utility
-  const dragHandlers = createDragHandlers(activeTool, props.onOverlayInteraction);
+  // Memoize layer combination
+  const allLayers = useMemo(() => [imageLayer, ...overlayLayers], [imageLayer, overlayLayers]);
 
- 
-  const n_levels = loader.data.length;
-  const shape_labels = loader.data[0].labels;
-  const shape_values = loader.data[0].shape;
-  const imageShape = Object.fromEntries(
-    shape_labels.map((k, i) => [k, shape_values[i]])
+  // Memoize drag handlers
+  const dragHandlers = useMemo(() => 
+    createDragHandlers(activeTool, onOverlayInteraction), 
+    [activeTool, onOverlayInteraction]
   );
-  const [viewState, setViewState] = useState({
-    zoom: -n_levels,
-    target: [imageShape.x / 2, imageShape.y / 2, 0]
-  });
+
+  // Memoize cursor function
+  const getCursor = useCallback(({ isDragging, isHovering }) => {
+    if (activeTool === 'rectangle') {
+      return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'lasso') {
+      return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'line') {
+      return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'move') {
+      return isDragging ? 'grabbing' : 'grab';
+    }
+    return 'default';
+  }, [activeTool]);
+
+  // Memoize controller configuration
+  const controllerConfig = useMemo(() => ({
+    dragPan: activeTool !== 'rectangle' && activeTool !== 'lasso' && activeTool !== 'line',
+    dragRotate: false,
+    scrollZoom: true,
+    doubleClickZoom: true,
+    touchZoom: true,
+    touchRotate: false,
+    keyboard: false
+  }), [activeTool]);
+
+  // Memoize view configuration
+  const views = useMemo(() => [new OrthographicView({ id: 'ortho', controller: true })], []);
+
+  // Memoize view state change handler
+  const handleViewStateChange = useCallback((e) => setViewState(e.viewState), []);
+
   if (!loader || !mainSettings) return null;
+  
   return (
     <Main slot="image" ref={rootRef}>
       <Deck
-        getCursor={({ isDragging, isHovering }) => {
-          if (activeTool === 'rectangle') {
-            return isDragging ? 'grabbing' : 'crosshair';
-          } else if (activeTool === 'lasso') {
-            return isDragging ? 'grabbing' : 'crosshair';
-          } else if (activeTool === 'line') {
-            return isDragging ? 'grabbing' : 'crosshair';
-          } else if (activeTool === 'move') {
-            return isDragging ? 'grabbing' : 'grab';
-          }
-          return 'default';
-        }}
+        getCursor={getCursor}
         layers={allLayers}
-        controller={{
-          dragPan: activeTool !== 'rectangle' && activeTool !== 'lasso' && activeTool !== 'line',
-          dragRotate: false,
-          scrollZoom: true,
-          doubleClickZoom: true,
-          touchZoom: true,
-          touchRotate: false,
-          keyboard: false
-        }}
+        controller={controllerConfig}
         viewState={viewState}
-        onViewStateChange={e => setViewState(e.viewState)}
+        onViewStateChange={handleViewStateChange}
         onClick={dragHandlers.onClick}
         onDragStart={dragHandlers.onDragStart}
         onDrag={dragHandlers.onDrag}
         onDragEnd={dragHandlers.onDragEnd}
-        views={[new OrthographicView({ id: 'ortho', controller: true })]}
+        views={views}
       />
     </Main>
   );
-};
+});
+
+VivView.displayName = 'VivView';
 
 export { VivView };
