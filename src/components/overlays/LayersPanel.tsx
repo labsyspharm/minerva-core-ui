@@ -32,7 +32,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
       case 'rectangle':
         return '▭';
       case 'polygon':
-        return '◯';
+        return '⬡';
       default:
         return '●';
     }

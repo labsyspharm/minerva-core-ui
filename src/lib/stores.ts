@@ -199,10 +199,13 @@ export const useOverlayStore = create<OverlayStore>()(
               get().updateDrawingState({
                 dragEnd: [x, y],
               });
-              // Automatically finalize the rectangle on mouseUp
-              setTimeout(() => {
-                get().finalizeRectangle();
-              }, 0);
+              // Only finalize rectangle if rectangle tool is active
+              const { activeTool } = get();
+              if (activeTool === 'rectangle') {
+                setTimeout(() => {
+                  get().finalizeRectangle();
+                }, 0);
+              }
             }
             break;
         }
