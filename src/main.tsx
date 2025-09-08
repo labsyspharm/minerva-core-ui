@@ -3,6 +3,7 @@ import { get, set } from 'idb-keyval';
 import styled from 'styled-components';
 import { author } from "minerva-author-ui";
 import { useState, useMemo, useEffect } from "react";
+import { testLoader, testChannels } from "./lib/dicom";
 import { useHash } from "./lib/hashUtil";
 import { onlyUUID } from './lib/config';
 import { mutableItemRegistry } from './lib/config';
@@ -17,6 +18,7 @@ import type { ValidObj } from './components/upload';
 import type { ImageProps } from "./components/channel"
 import type { FormEventHandler } from "react";
 import type { ObjAny, KV } from './lib/validate';
+import type { ItemRegistryProps } from "./lib/config";
 import type { ConfigWaypoint } from "./lib/config";
 import type { MutableFields } from "./lib/config";
 import type { ExhibitConfig } from "./lib/exhibit";
@@ -26,6 +28,7 @@ type Props = ImageProps & {
   exhibit_config: ExhibitConfig;
   marker_names: string[];
   handleKeys: string[];
+  bypass: boolean;
 };
 
 interface ReduceFormData {
@@ -57,20 +60,30 @@ const Scrollable = styled.div`
   margin: 5vh;
 `;
 
+const createPlaceholderFromLoader = (loader) => {
+  return testChannels;
+}
+
 const Content = (props: Props) => {
-  const { handleKeys } = props;
+  const { bypass, handleKeys } = props;
   const firstExhibit = readConfig(props.exhibit_config);
   const [exhibit, setExhibit] = useState(firstExhibit);
   const [url, setUrl] = useState(window.location.href);
   const hashContext = useHash(url, exhibit.stories);
   const [handle, setHandle] = useState(null);
+  const [loader, setLoader] = useState(bypass ? (
+    testLoader
+  ) : null);
   const [config, setConfig] = useState({
     ItemRegistry: {
       Name: '', Groups: [], Colors: [],
       GroupChannels: [], SourceChannels: [],
       SourceDistributions: [],
       Stories: props.configWaypoints,
-    },
+      ...(bypass ? (
+        createPlaceholderFromLoader(loader)
+      ): {})
+    } as ItemRegistryProps,
     ID: crypto.randomUUID()
   });
   const resetItems = ItemRegistry => {
@@ -88,8 +101,6 @@ const Content = (props: Props) => {
       },
     }));
   }
-
-  const [loader, setLoader] = useState(null);
   const [fileName, setFileName] = useState('');
   // Create ome-tiff loader
   const onAllow = async () => {
@@ -113,13 +124,10 @@ const Content = (props: Props) => {
   const onStart = (in_f: string) => {
     (async () => {
       if (handle === null) return;
-      console.log('A')
       const loader = await toLoader({ handle, in_f });
-      console.log('B')
-      console.log(loader);
       const { 
         SourceChannels, GroupChannels, Groups, Colors
-      } = await extractChannels(loader);
+      } = extractChannels(loader);
       resetItems({
         SourceChannels, GroupChannels, Groups, Colors
       });
@@ -154,11 +162,12 @@ const Content = (props: Props) => {
   const mutableFields: MutableFields = [ 
     'GroupChannels' 
   ]
+  const ItemRegistry = mutableItemRegistry(
+    config.ItemRegistry, setItems, mutableFields 
+  )
   // Define a WebComponent for the item panel
   const controlPanelElement = useMemo(() => author({
-    ...config, ItemRegistry: mutableItemRegistry(
-      config.ItemRegistry, setItems, mutableFields 
-    )
+    ...config, ItemRegistry
   }), [config.ID])
 
   // Actual image viewer
@@ -171,6 +180,13 @@ const Content = (props: Props) => {
       }} />
     </Full>
   )
+  if (bypass) {
+    return (
+      <Wrapper>
+        { imager }
+      </Wrapper>
+    )
+  }
 
   const [valid, setValid] = useState({} as ValidObj);
   const onSubmit: FormEventHandler = (event) => {
@@ -208,7 +224,7 @@ const Content = (props: Props) => {
 };
 
 const Main = (props: Props) => {
-  if (hasFileSystemAccess()) {
+  if (props.bypass || hasFileSystemAccess()) {
     return <Content {...props}/>;
   }
   const error_message = `<p>

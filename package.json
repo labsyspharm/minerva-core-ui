@@ -1,6 +1,6 @@
 {
   "name": "minerva-core-ui",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.5",
   "description": "A microscopy viewer for non-experts",
   "scripts": {
     "demo": "vite",
@@ -8,7 +8,8 @@
     "schema": "typescript-json-schema -o 'schema/generic.schema.json' 'src/config/generic.ts' Config",
     "format": "prettier --ignore-path .eslintignore --write .",
     "build": "rm -rf build && tsc -b",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "test": "playwright test"
   },
   "type": "module",
   "main": "build/main.js",
@@ -58,6 +59,7 @@
     "@math.gl/core": "^4.1.0",
     "@math.gl/web-mercator": "^4.1.0",
     "@types/wicg-file-system-access": "^2023.10.5",
+    "dcmjs": "^0.41.0",
     "geotiff": "^2.1.3",
     "gl-matrix": "^3.4.3",
     "i": "^0.3.7",
@@ -66,6 +68,7 @@
     "minerva-author-ui": "2.0.0-beta.49",
     "npm": "^11.5.2",
     "openseadragon": "^4.1.1",
+    "playwright": "^1.54.2",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.4",
@@ -81,6 +84,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.24.9",
+    "@playwright/test": "^1.54.2",
     "@types/core-js": "^2.5.8",
     "@types/node": "^20.14.11",
     "@types/react": "^18.3.3",

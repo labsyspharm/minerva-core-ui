@@ -10,6 +10,7 @@ export default defineConfig({
       overlay: true
     }
   },
+  base: '',
   plugins: [
     react(),
     mkcert(),

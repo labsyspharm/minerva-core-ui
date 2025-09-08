@@ -104,7 +104,6 @@ const hexToRGB = (hex: string) => {
 const toSettings = (opts) => {
   return (hash, loader, groups) => {
     const { g } = hash;
-    const { marker_names } = opts;
     const group = (groups || (opts.groups as Group[])).find(
       (group) => group.g === g
     );
@@ -115,9 +114,13 @@ const toSettings = (opts) => {
     if (!loader) return toDefaultSettings(3);
     const { labels, shape } = full_level;
     const c_idx = labels.indexOf("c");
-    // TODO Improve mapping of channel names to indices!
+    const { SourceChannels } = opts.config.ItemRegistry; 
+    const marker_names = SourceChannels.map(x => x.Properties.Name)
+    // TODO Simplify mapping of channel names to indices!
     const selections: Selection[] = channels.map(channel => {
-      const c = marker_names.indexOf(channel.name);
+      const c = SourceChannels[
+        marker_names.indexOf(channel.name)
+      ].Properties.SourceIndex;
       return { z: 0, t: 0, c };
     }).filter(({ c }, i) => {
       if (c < 0) {
@@ -142,9 +145,6 @@ const toSettings = (opts) => {
       contrastLimits,
       channelsVisible,
     };
-    console.log('XYZ [')
-    console.log(out);
-    console.log(']')
     return out;
   };
 };
