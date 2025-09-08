@@ -193,8 +193,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
               ]
             }],
             getPolygon: d => d.polygon,
-            getFillColor: annotation.style.fillColor,
-            getLineColor: annotation.style.lineColor,
+            getFillColor: [0, 0, 0, 0], // Transparent fill
+            getLineColor: [255, 255, 255, 255], // White stroke
             getLineWidth: annotation.style.lineWidth,
             lineWidthScale: 1,
             lineWidthUnits: 'pixels',
@@ -213,8 +213,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
               polygon: closedPoints
             }],
             getPolygon: d => d.polygon,
-            getFillColor: annotation.style.fillColor,
-            getLineColor: annotation.style.lineColor,
+            getFillColor: [0, 0, 0, 0], // Transparent fill
+            getLineColor: [255, 255, 255, 255], // White stroke
             getLineWidth: annotation.style.lineWidth,
             lineWidthScale: 1,
             lineWidthUnits: 'pixels',
