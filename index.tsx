@@ -257,7 +257,7 @@ const root = createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <Main 
-      bypass={true}
+      // bypass={true}
       exhibit_config={exhibit_config} handleKeys={["ome-dir-1"]}
       marker_names={marker_names} configWaypoints={configWaypoints}
     />
