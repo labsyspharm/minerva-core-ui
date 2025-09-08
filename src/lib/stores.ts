@@ -43,7 +43,25 @@ export interface PolygonAnnotation {
   };
 }
 
-export type Annotation = RectangleAnnotation | PolygonAnnotation; // Extended with polygon type
+export interface LineAnnotation {
+  id: string;
+  type: 'line';
+  coordinates: {
+    start: [number, number];
+    end: [number, number];
+  };
+  style: {
+    lineColor: [number, number, number, number];
+    lineWidth: number;
+  };
+  metadata?: {
+    createdAt: Date;
+    label?: string;
+    description?: string;
+  };
+}
+
+export type Annotation = RectangleAnnotation | PolygonAnnotation | LineAnnotation; // Extended with line type
 
 export interface InteractionCoordinate {
   type: 'click' | 'dragStart' | 'drag' | 'dragEnd';
@@ -84,6 +102,7 @@ export interface OverlayStore {
   clearAnnotations: () => void;
   finalizeRectangle: () => void; // Convert current drawing to annotation
   finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
+  finalizeLine: () => void; // Convert current drawing to line annotation
   
   // New layer visibility actions
   toggleLayerVisibility: (annotationId: string) => void;
@@ -163,6 +182,14 @@ export const useOverlayStore = create<OverlayStore>()(
       handleToolChange: (tool: string) => {
         console.log('Store: Tool changed to:', tool);
         set({ activeTool: tool });
+        
+        // Clear any partial drawing state when switching tools
+        get().resetDrawingState();
+        
+        // Remove any temporary drawing layers
+        get().removeOverlayLayer('green-rectangle');
+        get().removeOverlayLayer('green-lasso');
+        get().removeOverlayLayer('green-line');
       },
 
       handleOverlayInteraction: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number]) => {
@@ -199,11 +226,15 @@ export const useOverlayStore = create<OverlayStore>()(
               get().updateDrawingState({
                 dragEnd: [x, y],
               });
-              // Only finalize rectangle if rectangle tool is active
+              // Finalize based on active tool
               const { activeTool } = get();
               if (activeTool === 'rectangle') {
                 setTimeout(() => {
                   get().finalizeRectangle();
+                }, 0);
+              } else if (activeTool === 'line') {
+                setTimeout(() => {
+                  get().finalizeLine();
                 }, 0);
               }
             }
@@ -235,7 +266,7 @@ export const useOverlayStore = create<OverlayStore>()(
         console.log('Store: Updating annotation:', annotationId, updates);
         set((state) => ({
           annotations: state.annotations.map(a => 
-            a.id === annotationId ? { ...a, ...updates } : a
+            a.id === annotationId ? { ...a, ...updates } as Annotation : a
           )
         }));
       },
@@ -308,6 +339,43 @@ export const useOverlayStore = create<OverlayStore>()(
           
           // Remove the temporary drawing layer
           get().removeOverlayLayer('green-lasso');
+        }
+      },
+
+      finalizeLine: () => {
+        const { drawingState } = get();
+        if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
+          const [startX, startY] = drawingState.dragStart;
+          const [endX, endY] = drawingState.dragEnd;
+          
+          // Create a new line annotation
+          const annotation: LineAnnotation = {
+            id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: 'line',
+            coordinates: {
+              start: [startX, startY],
+              end: [endX, endY],
+            },
+            style: {
+              lineColor: [0, 255, 255, 255], // Cyan line
+              lineWidth: 3,
+            },
+            metadata: {
+              createdAt: new Date(),
+              label: `Line ${get().annotations.length + 1}`,
+            },
+          };
+
+          console.log('Store: Finalizing line as annotation:', annotation);
+          
+          // Add the annotation
+          get().addAnnotation(annotation);
+          
+          // Reset drawing state
+          get().resetDrawingState();
+          
+          // Remove the temporary drawing layer
+          get().removeOverlayLayer('green-line');
         }
       },
 

@@ -114,6 +114,8 @@ const VivView = (props: Props) => {
             return isDragging ? 'grabbing' : 'crosshair';
           } else if (activeTool === 'lasso') {
             return isDragging ? 'grabbing' : 'crosshair';
+          } else if (activeTool === 'line') {
+            return isDragging ? 'grabbing' : 'crosshair';
           } else if (activeTool === 'move') {
             return isDragging ? 'grabbing' : 'grab';
           }
@@ -121,7 +123,7 @@ const VivView = (props: Props) => {
         }}
         layers={allLayers}
         controller={{
-          dragPan: activeTool !== 'rectangle' && activeTool !== 'lasso',
+          dragPan: activeTool !== 'rectangle' && activeTool !== 'lasso' && activeTool !== 'line',
           dragRotate: false,
           scrollZoom: true,
           doubleClickZoom: true,

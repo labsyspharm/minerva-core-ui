@@ -2,7 +2,7 @@ import * as React from "react";
 import { DrawingOverlay } from "./DrawingOverlay";
 import { LayersPanel } from "./LayersPanel";
 import styles from "./index.module.css";
-import { MoveIcon, RectangleIcon, LassoIcon } from "./icons";
+import { MoveIcon, RectangleIcon, LassoIcon, LineIcon } from "./icons";
 import { useOverlayStore } from "../../lib/stores";
 
 // Types
@@ -19,7 +19,8 @@ export type Props = HashContext & {
 const TOOLS = {
   MOVE: 'move',
   RECTANGLE: 'rectangle',
-  LASSO: 'lasso'
+  LASSO: 'lasso',
+  LINE: 'line'
 } as const;
 
 type ToolType = typeof TOOLS[keyof typeof TOOLS];
@@ -65,6 +66,14 @@ const Overlays = (props: Props) => {
           onClick={() => handleToolChangeLocal(TOOLS.LASSO)}
         >
           <LassoIcon />
+        </button>
+        
+        <button 
+          className={`${styles.toolButton} ${activeTool === TOOLS.LINE ? styles.active : ''}`}
+          title="Line Tool"
+          onClick={() => handleToolChangeLocal(TOOLS.LINE)}
+        >
+          <LineIcon />
         </button>
       </div>
       

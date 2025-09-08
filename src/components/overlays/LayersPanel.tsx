@@ -33,6 +33,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
         return '▭';
       case 'polygon':
         return '⬡';
+      case 'line':
+        return '—';
       default:
         return '●';
     }

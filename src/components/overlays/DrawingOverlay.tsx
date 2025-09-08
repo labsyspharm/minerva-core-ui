@@ -1,9 +1,9 @@
 import * as React from "react";
-import { PolygonLayer } from '@deck.gl/layers';
+import { PolygonLayer, LineLayer } from '@deck.gl/layers';
 import { useOverlayStore } from "../../lib/stores";
 
 interface DrawingOverlayProps {
-  onLayerCreate: (layer: PolygonLayer) => void;
+  onLayerCreate: (layer: PolygonLayer | LineLayer) => void;
   activeTool: string;
   onInteraction?: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number]) => void;
   currentInteraction?: { type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number] } | null;
@@ -19,6 +19,12 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // Local state for lasso tool
   const [lassoPoints, setLassoPoints] = React.useState<[number, number][]>([]);
   const [isLassoDrawing, setIsLassoDrawing] = React.useState(false);
+
+  // Clear lasso state when tool changes
+  React.useEffect(() => {
+    setLassoPoints([]);
+    setIsLassoDrawing(false);
+  }, [activeTool]);
 
   // Note: Interaction handling is now managed by the Zustand store
   // The store automatically updates drawingState based on currentInteraction
@@ -159,6 +165,47 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     return null;
   }, [activeTool, isLassoDrawing, lassoPoints]);
 
+  // Create green line overlay layer based on drawing state
+  const greenLineLayer = React.useMemo(() => {
+    if (activeTool !== 'line') {
+      return null;
+    }
+
+    console.log('DrawingOverlay: Creating green line layer with state:', {
+      isDrawing,
+      dragStart,
+      dragEnd
+    });
+
+    // Only show line when actively drawing or when drawing is complete
+    if (isDrawing && dragStart && dragEnd) {
+      const [startX, startY] = dragStart;
+      const [endX, endY] = dragEnd;
+
+      console.log('DrawingOverlay: Creating dynamic line from', [startX, startY], 'to', [endX, endY]);
+
+      return new LineLayer({
+        id: 'green-line',
+        data: [{
+          sourcePosition: [startX, startY],
+          targetPosition: [endX, endY],
+        }],
+        getSourcePosition: d => d.sourcePosition,
+        getTargetPosition: d => d.targetPosition,
+        getColor: [0, 255, 255, 255], // Cyan line
+        getWidth: getLineWidthPx(),
+        lineWidthScale: 1,
+        lineWidthUnits: 'pixels',
+        lineWidthMinPixels: getLineWidthPx(),
+        lineWidthMaxPixels: getLineWidthPx(),
+      });
+    }
+
+    // No default line - only show when drawing
+    console.log('DrawingOverlay: No line to show - waiting for user interaction');
+    return null;
+  }, [activeTool, isDrawing, dragStart, dragEnd]);
+
   // Get annotations from store with proper reactivity
   const annotations = useOverlayStore(state => state.annotations);
 
@@ -223,6 +270,24 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
             stroked: true,
             filled: true,
           });
+        } else if (annotation.type === 'line') {
+          const { start, end } = annotation.coordinates;
+
+          return new LineLayer({
+            id: `annotation-${annotation.id}`,
+            data: [{
+              sourcePosition: start,
+              targetPosition: end,
+            }],
+            getSourcePosition: d => d.sourcePosition,
+            getTargetPosition: d => d.targetPosition,
+            getColor: [255, 255, 255, 255], // White line
+            getWidth: annotation.style.lineWidth,
+            lineWidthScale: 1,
+            lineWidthUnits: 'pixels',
+            lineWidthMinPixels: annotation.style.lineWidth,
+            lineWidthMaxPixels: annotation.style.lineWidth,
+          });
         }
         return null;
       }).filter(Boolean);
@@ -238,6 +303,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     } else if (activeTool === 'lasso' && lassoLayer) {
       layerToCreate = lassoLayer;
       console.log('DrawingOverlay: Notifying parent of lasso layer');
+    } else if (activeTool === 'line' && greenLineLayer) {
+      layerToCreate = greenLineLayer;
+      console.log('DrawingOverlay: Notifying parent of green line layer');
     }
 
     if (layerToCreate) {
@@ -247,7 +315,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       console.log('DrawingOverlay: Notifying parent to remove drawing layers');
       onLayerCreate(null);
     }
-  }, [greenRectangleLayer, lassoLayer, activeTool, onLayerCreate]);
+  }, [greenRectangleLayer, lassoLayer, greenLineLayer, activeTool, onLayerCreate]);
 
   // Handle annotation layers - they are now managed through the overlay layers system
   React.useEffect(() => {
