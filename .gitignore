@@ -1,4 +1,6 @@
 package-lock.json
+.playwright-report
+test-results
 node_modules
 pages
 build
