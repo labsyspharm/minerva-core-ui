@@ -220,8 +220,8 @@ export interface OverlayStore {
   finalizeRectangle: () => void; // Convert current drawing to annotation
   finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
   finalizeLine: () => void; // Convert current drawing to line annotation
-  createTextAnnotation: (position: [number, number], text: string) => void; // Create text annotation
-  updateTextAnnotation: (annotationId: string, newText: string) => void; // Update text annotation content
+  createTextAnnotation: (position: [number, number], text: string, fontSize?: number) => void; // Create text annotation
+  updateTextAnnotation: (annotationId: string, newText: string, fontSize?: number) => void; // Update text annotation content
   
   // New layer visibility actions
   toggleLayerVisibility: (annotationId: string) => void;
@@ -542,7 +542,7 @@ export const useOverlayStore = create<OverlayStore>()(
         }
       },
 
-      createTextAnnotation: (position: [number, number], text: string) => {
+      createTextAnnotation: (position: [number, number], text: string, fontSize: number = 14) => {
         if (!text.trim()) {
           console.log('Store: Cannot create text annotation with empty text');
           return;
@@ -555,7 +555,7 @@ export const useOverlayStore = create<OverlayStore>()(
           position: position,
           text: text.trim(),
           style: {
-            fontSize: 14,
+            fontSize: fontSize,
             fontColor: [255, 255, 255, 255], // White text
             backgroundColor: [0, 0, 0, 100], // Semi-transparent black background
             padding: 4,
@@ -572,7 +572,7 @@ export const useOverlayStore = create<OverlayStore>()(
         get().addAnnotation(annotation);
       },
 
-      updateTextAnnotation: (annotationId: string, newText: string) => {
+      updateTextAnnotation: (annotationId: string, newText: string, fontSize?: number) => {
         if (!newText.trim()) {
           console.log('Store: Cannot update text annotation with empty text');
           return;
@@ -586,12 +586,21 @@ export const useOverlayStore = create<OverlayStore>()(
           return;
         }
 
-        console.log('Store: Updating text annotation:', annotationId, 'to:', newText.trim());
+        console.log('Store: Updating text annotation:', annotationId, 'to:', newText.trim(), 'fontSize:', fontSize);
         
-        // Update the text content
-        get().updateAnnotation(annotationId, {
+        // Update the text content and optionally fontSize
+        const updates: Partial<TextAnnotation> = {
           text: newText.trim()
-        });
+        };
+        
+        if (fontSize !== undefined) {
+          updates.style = {
+            ...annotation.style,
+            fontSize: fontSize
+          };
+        }
+        
+        get().updateAnnotation(annotationId, updates);
       },
 
       // New layer visibility actions

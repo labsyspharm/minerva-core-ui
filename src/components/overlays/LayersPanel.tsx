@@ -1,7 +1,139 @@
 import * as React from "react";
 import { useOverlayStore } from "../../lib/stores";
-import type { Annotation } from "../../lib/stores";
+import type { Annotation, TextAnnotation } from "../../lib/stores";
 import styles from "./index.module.css";
+
+// Shared Text Edit Panel Component (same as in DrawingOverlay)
+interface TextEditPanelProps {
+  title: string;
+  textValue: string;
+  fontSize: number;
+  onTextChange: (text: string) => void;
+  onFontSizeChange: (fontSize: number) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  submitButtonText: string;
+}
+
+const TextEditPanel: React.FC<TextEditPanelProps> = ({
+  title,
+  textValue,
+  fontSize,
+  onTextChange,
+  onFontSizeChange,
+  onSubmit,
+  onCancel,
+  submitButtonText
+}) => {
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        backgroundColor: '#2c2c2c',
+        border: '2px solid #444',
+        borderRadius: '8px',
+        padding: '20px',
+        zIndex: 1000,
+        minWidth: '300px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+      }}
+    >
+      <div style={{ marginBottom: '15px', color: 'white', fontSize: '16px', fontWeight: 'bold' }}>
+        {title}
+      </div>
+      
+      {/* Font Size Input */}
+      <div style={{ marginBottom: '15px' }}>
+        <label style={{ color: 'white', fontSize: '14px', marginBottom: '5px', display: 'block' }}>
+          Font Size:
+        </label>
+        <input
+          type="number"
+          value={fontSize}
+          onChange={(e) => onFontSizeChange(parseInt(e.target.value) || 14)}
+          min="8"
+          max="72"
+          style={{
+            width: '80px',
+            padding: '5px',
+            border: '1px solid #555',
+            borderRadius: '4px',
+            backgroundColor: '#1a1a1a',
+            color: 'white',
+            fontSize: '14px',
+            outline: 'none',
+          }}
+        />
+      </div>
+      
+      {/* Text Input */}
+      <textarea
+        value={textValue}
+        onChange={(e) => onTextChange(e.target.value)}
+        placeholder="Enter your text here..."
+        style={{
+          width: '100%',
+          minHeight: '80px',
+          padding: '10px',
+          border: '1px solid #555',
+          borderRadius: '4px',
+          backgroundColor: '#1a1a1a',
+          color: 'white',
+          fontSize: '14px',
+          fontFamily: 'Arial, sans-serif',
+          resize: 'vertical',
+          outline: 'none',
+        }}
+        autoFocus
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && e.ctrlKey) {
+            onSubmit();
+          } else if (e.key === 'Escape') {
+            onCancel();
+          }
+        }}
+      />
+      
+      <div style={{ marginTop: '15px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+        <button
+          onClick={onCancel}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#555',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px',
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={onSubmit}
+          disabled={!textValue.trim()}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: textValue.trim() ? '#4CAF50' : '#666',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: textValue.trim() ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+          }}
+        >
+          {submitButtonText}
+        </button>
+      </div>
+      <div style={{ marginTop: '10px', fontSize: '12px', color: '#999' }}>
+        Press Ctrl+Enter to submit, Escape to cancel
+      </div>
+    </div>
+  );
+};
 
 interface LayersPanelProps {
   className?: string;
@@ -20,6 +152,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
   // Local state for text editing
   const [editingTextId, setEditingTextId] = React.useState<string | null>(null);
   const [editTextValue, setEditTextValue] = React.useState('');
+  const [editFontSize, setEditFontSize] = React.useState(14);
   
   // Note: All annotations are shown in the list, but hidden ones are dimmed
   
@@ -28,22 +161,25 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
     // Hidden state is automatically cleaned up when annotation is removed
   };
 
-  const handleEditText = (annotationId: string, currentText: string) => {
+  const handleEditText = (annotationId: string, currentText: string, currentFontSize: number) => {
     setEditingTextId(annotationId);
     setEditTextValue(currentText);
+    setEditFontSize(currentFontSize);
   };
 
   const handleSaveTextEdit = () => {
     if (editingTextId && editTextValue.trim()) {
-      updateTextAnnotation(editingTextId, editTextValue.trim());
+      updateTextAnnotation(editingTextId, editTextValue.trim(), editFontSize);
     }
     setEditingTextId(null);
     setEditTextValue('');
+    setEditFontSize(14);
   };
 
   const handleCancelTextEdit = () => {
     setEditingTextId(null);
     setEditTextValue('');
+    setEditFontSize(14);
   };
   
   const formatDate = (date: Date) => {
@@ -225,81 +361,21 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
                 </span>
                 
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  {editingTextId === annotation.id ? (
-                    // Edit mode for text annotations
-                    <div>
-                      <textarea
-                        value={editTextValue}
-                        onChange={(e) => setEditTextValue(e.target.value)}
-                        style={{
-                          width: '100%',
-                          minHeight: '40px',
-                          padding: '4px',
-                          border: '1px solid #555',
-                          borderRadius: '2px',
-                          backgroundColor: '#1a1a1a',
-                          color: 'white',
-                          fontSize: '12px',
-                          fontFamily: 'Arial, sans-serif',
-                          resize: 'vertical',
-                          outline: 'none',
-                        }}
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && e.ctrlKey) {
-                            handleSaveTextEdit();
-                          } else if (e.key === 'Escape') {
-                            handleCancelTextEdit();
-                          }
-                        }}
-                      />
-                      <div style={{ marginTop: '4px', display: 'flex', gap: '4px' }}>
-                        <button
-                          onClick={handleSaveTextEdit}
-                          disabled={!editTextValue.trim()}
-                          style={{
-                            padding: '2px 6px',
-                            backgroundColor: editTextValue.trim() ? '#4CAF50' : '#666',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '2px',
-                            cursor: editTextValue.trim() ? 'pointer' : 'not-allowed',
-                            fontSize: '10px',
-                          }}
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={handleCancelTextEdit}
-                          style={{
-                            padding: '2px 6px',
-                            backgroundColor: '#555',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '2px',
-                            cursor: 'pointer',
-                            fontSize: '10px',
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    // Normal display mode
-                    <>
-                      <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
-                        {getLayerName(annotation)}
-                      </div>
-                      <div style={{ color: '#999', fontSize: '10px' }}>
-                        {annotation.metadata?.createdAt && formatDate(annotation.metadata.createdAt)}
-                      </div>
-                    </>
-                  )}
+                  <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+                    {getLayerName(annotation)}
+                  </div>
+                  <div style={{ color: '#999', fontSize: '10px' }}>
+                    {annotation.metadata?.createdAt && formatDate(annotation.metadata.createdAt)}
+                    {annotation.type === 'text' && (
+                      <span style={{ marginLeft: '8px' }}>
+                        Size: {(annotation as TextAnnotation).style.fontSize}px
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Edit button for text annotations */}
-                {annotation.type === 'text' && editingTextId !== annotation.id && (
+                {annotation.type === 'text' && (
                   <button
                     style={{
                       ...deleteButtonStyle,
@@ -308,7 +384,9 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleEditText(annotation.id, annotation.text);
+                      if (annotation.type === 'text') {
+                        handleEditText(annotation.id, annotation.text, annotation.style.fontSize);
+                      }
                     }}
                     title="Edit text"
                   >
@@ -335,6 +413,20 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
           })
         )}
       </div>
+      
+      {/* Text Edit Modal */}
+      {editingTextId && (
+        <TextEditPanel
+          title="Edit Text Annotation"
+          textValue={editTextValue}
+          fontSize={editFontSize}
+          onTextChange={setEditTextValue}
+          onFontSizeChange={setEditFontSize}
+          onSubmit={handleSaveTextEdit}
+          onCancel={handleCancelTextEdit}
+          submitButtonText="Save Changes"
+        />
+      )}
     </div>
   );
 };
