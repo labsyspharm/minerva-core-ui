@@ -2,7 +2,7 @@ import * as React from "react";
 import { DrawingOverlay } from "./DrawingOverlay";
 import { LayersPanel } from "./LayersPanel";
 import styles from "./index.module.css";
-import { MoveIcon, RectangleIcon, LassoIcon, LineIcon } from "./icons";
+import { MoveIcon, RectangleIcon, LassoIcon, LineIcon, TextIcon } from "./icons";
 import { useOverlayStore } from "../../lib/stores";
 
 // Types
@@ -12,7 +12,7 @@ import type { HashContext } from "../../lib/hashUtil";
 export type Props = HashContext & {
   groups: Group[];
   onLayerCreate?: (layer: any) => void;
-  currentInteraction?: { type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number] } | null;
+  currentInteraction?: { type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number] } | null;
 };
 
 // Define available tools
@@ -20,7 +20,8 @@ const TOOLS = {
   MOVE: 'move',
   RECTANGLE: 'rectangle',
   LASSO: 'lasso',
-  LINE: 'line'
+  LINE: 'line',
+  TEXT: 'text'
 } as const;
 
 type ToolType = typeof TOOLS[keyof typeof TOOLS];
@@ -74,6 +75,14 @@ const Overlays = (props: Props) => {
           onClick={() => handleToolChangeLocal(TOOLS.LINE)}
         >
           <LineIcon />
+        </button>
+        
+        <button 
+          className={`${styles.toolButton} ${activeTool === TOOLS.TEXT ? styles.active : ''}`}
+          title="Text Tool"
+          onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
+        >
+          <TextIcon />
         </button>
       </div>
       

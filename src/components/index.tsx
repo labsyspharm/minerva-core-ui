@@ -301,6 +301,8 @@ const Index = (props: Props) => {
     overlayLayers,
     activeTool,
     currentInteraction,
+    dragState,
+    hoverState,
     handleLayerCreate,
     handleToolChange,
     handleOverlayInteraction
@@ -312,6 +314,8 @@ const Index = (props: Props) => {
         {...imageProps} 
         overlayLayers={overlayLayers}
         activeTool={activeTool}
+        isDragging={dragState.isDragging}
+        hoveredAnnotationId={hoverState.hoveredAnnotationId}
         onOverlayInteraction={handleOverlayInteraction}
       >
       </ImageView>

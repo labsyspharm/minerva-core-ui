@@ -30,6 +30,8 @@ export type Props = {
   viewerConfig: Config;
   overlayLayers?: any[];
   activeTool: string;
+  isDragging?: boolean; // New prop to indicate if dragging an annotation
+  hoveredAnnotationId?: string | null; // New prop to indicate hovered annotation
   onOverlayInteraction?: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number]) => void;
 } & HashContext;
 
@@ -58,7 +60,7 @@ const shapeRef = (setShape: (s: Shape) => void) => {
 
 const VivView = React.memo((props: Props) => {
   const maxShape = useWindowSize();
-  const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, onOverlayInteraction } = props;
+  const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
   const toMainSettings = props.viewerConfig.toSettings;
   const [mainSettings, setMainSettings] = useState(toMainSettings(hash));
@@ -125,28 +127,34 @@ const VivView = React.memo((props: Props) => {
 
   // Memoize cursor function
   const getCursor = useCallback(({ isDragging, isHovering }) => {
-    if (activeTool === 'rectangle') {
+    if (isDragging && activeTool === 'move') {
+      return 'grabbing';
+    } else if (activeTool === 'move' && hoveredAnnotationId) {
+      return 'grab';
+    } else if (activeTool === 'rectangle') {
       return isDragging ? 'grabbing' : 'crosshair';
     } else if (activeTool === 'lasso') {
       return isDragging ? 'grabbing' : 'crosshair';
     } else if (activeTool === 'line') {
       return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'text') {
+      return 'text';
     } else if (activeTool === 'move') {
-      return isDragging ? 'grabbing' : 'grab';
+      return 'default';
     }
     return 'default';
-  }, [activeTool]);
+  }, [activeTool, hoveredAnnotationId]);
 
   // Memoize controller configuration
   const controllerConfig = useMemo(() => ({
-    dragPan: activeTool !== 'rectangle' && activeTool !== 'lasso' && activeTool !== 'line',
+    dragPan: activeTool !== 'rectangle' && activeTool !== 'lasso' && activeTool !== 'line' && !isDragging,
     dragRotate: false,
     scrollZoom: true,
     doubleClickZoom: true,
     touchZoom: true,
     touchRotate: false,
     keyboard: false
-  }), [activeTool]);
+  }), [activeTool, isDragging]);
 
   // Memoize view configuration
   const views = useMemo(() => [new OrthographicView({ id: 'ortho', controller: true })], []);
@@ -168,6 +176,7 @@ const VivView = React.memo((props: Props) => {
         onDragStart={dragHandlers.onDragStart}
         onDrag={dragHandlers.onDrag}
         onDragEnd={dragHandlers.onDragEnd}
+        onHover={dragHandlers.onHover}
         views={views}
       />
     </Main>

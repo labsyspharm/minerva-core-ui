@@ -13,14 +13,37 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
   const hiddenLayers = useOverlayStore(state => state.hiddenLayers);
   const removeAnnotation = useOverlayStore(state => state.removeAnnotation);
   const updateAnnotation = useOverlayStore(state => state.updateAnnotation);
+  const updateTextAnnotation = useOverlayStore(state => state.updateTextAnnotation);
   const clearAnnotations = useOverlayStore(state => state.clearAnnotations);
   const toggleLayerVisibility = useOverlayStore(state => state.toggleLayerVisibility);
+  
+  // Local state for text editing
+  const [editingTextId, setEditingTextId] = React.useState<string | null>(null);
+  const [editTextValue, setEditTextValue] = React.useState('');
   
   // Note: All annotations are shown in the list, but hidden ones are dimmed
   
   const handleDeleteLayer = (annotationId: string) => {
     removeAnnotation(annotationId);
     // Hidden state is automatically cleaned up when annotation is removed
+  };
+
+  const handleEditText = (annotationId: string, currentText: string) => {
+    setEditingTextId(annotationId);
+    setEditTextValue(currentText);
+  };
+
+  const handleSaveTextEdit = () => {
+    if (editingTextId && editTextValue.trim()) {
+      updateTextAnnotation(editingTextId, editTextValue.trim());
+    }
+    setEditingTextId(null);
+    setEditTextValue('');
+  };
+
+  const handleCancelTextEdit = () => {
+    setEditingTextId(null);
+    setEditTextValue('');
   };
   
   const formatDate = (date: Date) => {
@@ -35,8 +58,30 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
         return '⬡';
       case 'line':
         return '—';
+      case 'text':
+        return 'T';
       default:
         return '●';
+    }
+  };
+  
+  const getLayerName = (annotation: Annotation) => {
+    if (annotation.metadata?.label) {
+      return annotation.metadata.label;
+    }
+    
+    // Generate default names based on type
+    switch (annotation.type) {
+      case 'rectangle':
+        return 'Rectangle';
+      case 'polygon':
+        return 'Polygon';
+      case 'line':
+        return 'Line';
+      case 'text':
+        return annotation.text.length > 20 ? `${annotation.text.substring(0, 20)}...` : annotation.text;
+      default:
+        return 'Annotation';
     }
   };
   
@@ -180,13 +225,98 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
                 </span>
                 
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
-                    {annotation.metadata?.label || `${annotation.type} ${index + 1}`}
-                  </div>
-                  <div style={{ color: '#999', fontSize: '10px' }}>
-                    {annotation.metadata?.createdAt && formatDate(annotation.metadata.createdAt)}
-                  </div>
+                  {editingTextId === annotation.id ? (
+                    // Edit mode for text annotations
+                    <div>
+                      <textarea
+                        value={editTextValue}
+                        onChange={(e) => setEditTextValue(e.target.value)}
+                        style={{
+                          width: '100%',
+                          minHeight: '40px',
+                          padding: '4px',
+                          border: '1px solid #555',
+                          borderRadius: '2px',
+                          backgroundColor: '#1a1a1a',
+                          color: 'white',
+                          fontSize: '12px',
+                          fontFamily: 'Arial, sans-serif',
+                          resize: 'vertical',
+                          outline: 'none',
+                        }}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && e.ctrlKey) {
+                            handleSaveTextEdit();
+                          } else if (e.key === 'Escape') {
+                            handleCancelTextEdit();
+                          }
+                        }}
+                      />
+                      <div style={{ marginTop: '4px', display: 'flex', gap: '4px' }}>
+                        <button
+                          onClick={handleSaveTextEdit}
+                          disabled={!editTextValue.trim()}
+                          style={{
+                            padding: '2px 6px',
+                            backgroundColor: editTextValue.trim() ? '#4CAF50' : '#666',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '2px',
+                            cursor: editTextValue.trim() ? 'pointer' : 'not-allowed',
+                            fontSize: '10px',
+                          }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={handleCancelTextEdit}
+                          style={{
+                            padding: '2px 6px',
+                            backgroundColor: '#555',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '2px',
+                            cursor: 'pointer',
+                            fontSize: '10px',
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // Normal display mode
+                    <>
+                      <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+                        {getLayerName(annotation)}
+                      </div>
+                      <div style={{ color: '#999', fontSize: '10px' }}>
+                        {annotation.metadata?.createdAt && formatDate(annotation.metadata.createdAt)}
+                      </div>
+                    </>
+                  )}
                 </div>
+                
+                {/* Edit button for text annotations */}
+                {annotation.type === 'text' && editingTextId !== annotation.id && (
+                  <button
+                    style={{
+                      ...deleteButtonStyle,
+                      backgroundColor: '#4CAF50',
+                      marginRight: '4px',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditText(annotation.id, annotation.text);
+                    }}
+                    title="Edit text"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                    </svg>
+                  </button>
+                )}
                 
                 <button
                   style={deleteButtonStyle}

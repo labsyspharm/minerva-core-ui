@@ -54,17 +54,17 @@ const Channel = (props: Props) => {
       </Content>
     </div>
   );
-  
+
   const minerva_author_ui = React.createElement(
     props.controlPanelElement, {
-      class: theme, children: props.children,
-    }
+    class: theme, children: props.children,
+  }
   );
 
   return (
     <div className={wrapClass}>
       <div className={styles.textOther}>
-        {props.children}
+        {minerva_author_ui}
       </div>
       {hidden ? "" : channelMenu}
     </div>
