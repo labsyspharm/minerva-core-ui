@@ -199,6 +199,7 @@ export interface OverlayStore {
   hoverState: HoverState; // New: hover state for move tool
   annotations: Annotation[]; // New: persistent annotations
   hiddenLayers: Set<string>; // New: track hidden layers
+  globalColor: [number, number, number, number]; // New: global drawing color
   
   // Actions
   setActiveTool: (tool: string) => void;
@@ -222,6 +223,8 @@ export interface OverlayStore {
   finalizeLine: () => void; // Convert current drawing to line annotation
   createTextAnnotation: (position: [number, number], text: string, fontSize?: number) => void; // Create text annotation
   updateTextAnnotation: (annotationId: string, newText: string, fontSize?: number) => void; // Update text annotation content
+  updateTextAnnotationColor: (annotationId: string, fontColor: [number, number, number, number]) => void; // Update text annotation color
+  setGlobalColor: (color: [number, number, number, number]) => void; // Set global drawing color
   
   // New layer visibility actions
   toggleLayerVisibility: (annotationId: string) => void;
@@ -259,6 +262,7 @@ const overlayInitialState = {
   },
   annotations: [], // New: empty annotations array
   hiddenLayers: new Set<string>(), // New: empty hidden layers set
+  globalColor: [255, 255, 255, 255], // New: default white color
 };
 
 // Create the overlay store
@@ -457,8 +461,8 @@ export const useOverlayStore = create<OverlayStore>()(
             type: 'rectangle',
             polygon: rectangleToPolygon([startX, startY], [endX, endY]),
             style: {
-              fillColor: [0, 255, 0, 50], // Green with low opacity
-              lineColor: [0, 255, 0, 255], // Solid green border
+              fillColor: [...get().globalColor.slice(0, 3), 50], // Use global color with low opacity
+              lineColor: get().globalColor, // Use global color for border
               lineWidth: 3,
             },
             metadata: {
@@ -488,8 +492,8 @@ export const useOverlayStore = create<OverlayStore>()(
             type: 'polygon',
             polygon: points,
             style: {
-              fillColor: [255, 165, 0, 50], // Orange with low opacity
-              lineColor: [255, 165, 0, 255], // Solid orange border
+              fillColor: [...get().globalColor.slice(0, 3), 50], // Use global color with low opacity
+              lineColor: get().globalColor, // Use global color for border
               lineWidth: 3,
             },
             metadata: {
@@ -520,7 +524,7 @@ export const useOverlayStore = create<OverlayStore>()(
             type: 'line',
             polygon: lineToPolygon([startX, startY], [endX, endY], 3),
             style: {
-              lineColor: [0, 255, 255, 255], // Cyan line
+              lineColor: get().globalColor, // Use global color
               lineWidth: 3,
             },
             metadata: {
@@ -556,7 +560,7 @@ export const useOverlayStore = create<OverlayStore>()(
           text: text.trim(),
           style: {
             fontSize: fontSize,
-            fontColor: [255, 255, 255, 255], // White text
+            fontColor: get().globalColor, // Use global color
             backgroundColor: [0, 0, 0, 100], // Semi-transparent black background
             padding: 4,
           },
@@ -601,6 +605,33 @@ export const useOverlayStore = create<OverlayStore>()(
         }
         
         get().updateAnnotation(annotationId, updates);
+      },
+
+      updateTextAnnotationColor: (annotationId: string, fontColor: [number, number, number, number]) => {
+        const annotations = get().annotations;
+        const annotation = annotations.find(a => a.id === annotationId);
+        
+        if (!annotation || annotation.type !== 'text') {
+          console.log('Store: Cannot update color for non-text annotation or annotation not found');
+          return;
+        }
+
+        console.log('Store: Updating text annotation color:', annotationId, 'to:', fontColor);
+        
+        // Update the font color
+        const updates: Partial<TextAnnotation> = {
+          style: {
+            ...annotation.style,
+            fontColor: fontColor
+          }
+        };
+        
+        get().updateAnnotation(annotationId, updates);
+      },
+
+      setGlobalColor: (color: [number, number, number, number]) => {
+        console.log('Store: Setting global color to:', color);
+        set({ globalColor: color });
       },
 
       // New layer visibility actions

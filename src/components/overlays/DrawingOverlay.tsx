@@ -145,7 +145,7 @@ const getLineWidthPx = () => 3; // always 3px
 
 const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTool, currentInteraction }) => {
   // Use Zustand store for drawing state and drag state
-  const { drawingState, dragState, hoverState, finalizeLasso, startDrag, updateDrag, endDrag, setHoveredAnnotation, createTextAnnotation } = useOverlayStore();
+  const { drawingState, dragState, hoverState, finalizeLasso, startDrag, updateDrag, endDrag, setHoveredAnnotation, createTextAnnotation, globalColor } = useOverlayStore();
   const { isDrawing, dragStart, dragEnd } = drawingState;
 
   // Local state for lasso tool
@@ -566,9 +566,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
             getSize: fontSize,
             fontFamily: 'Arial, sans-serif',
             fontWeight: 'normal',
-            padding: annotation.style.padding || 4,
-            background: true,
-            backgroundPadding: [8, 8, 8, 8], // Increased padding for easier clicking
+            padding:  4,
+            // background: true,
+            // backgroundPadding: [80, 80, 80, 80], // Increased padding for easier clicking
             pickable: true, // Make the text layer itself pickable
           }));
         } else {
@@ -585,12 +585,17 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           } else if (isHovered) {
             // Hovered annotation - bright cyan
             lineColor = [0, 255, 255, 255];
-            fillColor = [0, 255, 255, 20];
+            fillColor = [255, 255, 255, 1];
             lineWidth = annotation.style.lineWidth + 1;
           } else {
-            // Normal annotation - white
-            lineColor = [255, 255, 255, 255];
-            fillColor = [0, 0, 0, 0];
+            // Normal annotation - use annotation's line color but very low opacity white fill
+            if (annotation.type === 'rectangle' || annotation.type === 'polygon') {
+              lineColor = annotation.style.lineColor;
+              fillColor = [255, 255, 255, 1]; // Very low opacity white fill
+            } else if (annotation.type === 'line') {
+              lineColor = annotation.style.lineColor;
+              fillColor = [0, 0, 0, 0]; // Lines don't have fill
+            }
           }
           
           layers.push(new PolygonLayer({

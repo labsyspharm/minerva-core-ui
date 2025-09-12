@@ -110,9 +110,6 @@ importers:
       gl-matrix:
         specifier: ^3.4.3
         version: 3.4.3
-      i:
-        specifier: ^0.3.7
-        version: 0.3.7
       idb-keyval:
         specifier: ^6.2.1
         version: 6.2.2
@@ -2133,10 +2130,6 @@ packages:
 
   html-url-attributes@3.0.1:
     resolution: {integrity: sha512-ol6UPyBWqsrO6EJySPz2O7ZSr856WDrEzM5zMqp+FJJLGMW35cLYmmZnl0vztAZxRUoNZJFTCohfjuIJ8I4QBQ==}
-
-  i@0.3.7:
-    resolution: {integrity: sha512-FYz4wlXgkQwIPqhzC5TdNMLSE5+GS1IIDJZY/1ZiEPCT2S3COUVZeT5OW4BmW4r5LHLQuOosSwsvnroG9GR59Q==}
-    engines: {node: '>=0.4'}
 
   iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
@@ -5979,8 +5972,6 @@ snapshots:
       react-is: 16.13.1
 
   html-url-attributes@3.0.1: {}
-
-  i@0.3.7: {}
 
   iconv-lite@0.4.24:
     dependencies:

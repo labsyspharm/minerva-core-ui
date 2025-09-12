@@ -137,15 +137,17 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
 
 interface LayersPanelProps {
   className?: string;
+  onOpenAnnotationColorPicker?: (annotationId: string, currentColor: [number, number, number, number]) => void;
 }
 
-const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
+const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationColorPicker }) => {
   // Subscribe to annotations and hidden layers from store
   const annotations = useOverlayStore(state => state.annotations);
   const hiddenLayers = useOverlayStore(state => state.hiddenLayers);
   const removeAnnotation = useOverlayStore(state => state.removeAnnotation);
   const updateAnnotation = useOverlayStore(state => state.updateAnnotation);
   const updateTextAnnotation = useOverlayStore(state => state.updateTextAnnotation);
+  const updateTextAnnotationColor = useOverlayStore(state => state.updateTextAnnotationColor);
   const clearAnnotations = useOverlayStore(state => state.clearAnnotations);
   const toggleLayerVisibility = useOverlayStore(state => state.toggleLayerVisibility);
   
@@ -153,6 +155,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
   const [editingTextId, setEditingTextId] = React.useState<string | null>(null);
   const [editTextValue, setEditTextValue] = React.useState('');
   const [editFontSize, setEditFontSize] = React.useState(14);
+  
   
   // Note: All annotations are shown in the list, but hidden ones are dimmed
   
@@ -181,6 +184,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
     setEditTextValue('');
     setEditFontSize(14);
   };
+
+
   
   const formatDate = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -379,7 +384,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
                   <button
                     style={{
                       ...deleteButtonStyle,
-                      backgroundColor: '#4CAF50',
+                      color: '#4CAF50',
+                      backgroundColor: 'transparent',
                       marginRight: '4px',
                     }}
                     onClick={(e) => {
@@ -395,6 +401,37 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
                     </svg>
                   </button>
                 )}
+                
+                {/* Color picker button for all annotations */}
+                <button
+                  style={{
+                    ...deleteButtonStyle,
+                    color: '#4CAF50',
+                    backgroundColor: 'transparent',
+                    marginRight: '4px',
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onOpenAnnotationColorPicker) {
+                      let currentAnnotationColor: [number, number, number, number];
+                      
+                      if (annotation.type === 'text') {
+                        currentAnnotationColor = annotation.style.fontColor;
+                      } else if (annotation.type === 'rectangle' || annotation.type === 'polygon' || annotation.type === 'line') {
+                        currentAnnotationColor = annotation.style.lineColor;
+                      } else {
+                        currentAnnotationColor = [255, 255, 255, 255]; // Default white
+                      }
+                      
+                      onOpenAnnotationColorPicker(annotation.id, currentAnnotationColor);
+                    }
+                  }}
+                  title="Change annotation color"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                  </svg>
+                </button>
                 
                 <button
                   style={deleteButtonStyle}
@@ -427,6 +464,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className }) => {
           submitButtonText="Save Changes"
         />
       )}
+      
     </div>
   );
 };
