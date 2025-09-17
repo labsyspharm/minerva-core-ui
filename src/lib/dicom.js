@@ -5,7 +5,6 @@ import { ImageLoader } from '@loaders.gl/images';
 import { DicomTIFFImage } from "./dicom-tiff-image";
 import { DicomPixelSource } from "./dicom-pixel-source";
 import * as dcmjs from 'dcmjs'
-import GL from '@luma.gl/constants';
 import {
   MultiscaleImageLayer, TiffPixelSource
 } from "@hms-dbmi/viv";
