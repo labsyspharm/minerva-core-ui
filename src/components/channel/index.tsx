@@ -64,7 +64,7 @@ const Channel = (props: Props) => {
   return (
     <div className={wrapClass}>
       <div className={styles.textOther}>
-        {props.children}
+        {minerva_author_ui}
       </div>
       {hidden ? "" : channelMenu}
     </div>
