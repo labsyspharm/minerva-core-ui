@@ -55,7 +55,7 @@ const shapeRef = (setShape: (s: Shape) => void) => {
 
 const VivView = (props: Props) => {
   const maxShape = useWindowSize();
-  const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool } = props;
+  const { loader, groups, stories, hash, setHash } = props;
   const { v, g, s, w } = hash;
   const toMainSettings = props.viewerConfig.toSettings;
   const [mainSettings, setMainSettings] = useState(toMainSettings(hash));
