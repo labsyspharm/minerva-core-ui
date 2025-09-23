@@ -1827,8 +1827,10 @@ packages:
 
   core-js-pure@3.43.0:
     resolution: {integrity: sha512-i/AgxU2+A+BbJdMxh3v7/vxi2SbFqxiFmg6VsDwYB4jkucrd1BZNA9a9gphC0fYMG5IBSgQcbQnk865VCLe7xA==}
+
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
+
   cosmiconfig@8.3.6:
     resolution: {integrity: sha512-kcZ6+W5QzcJ3P1Mt+83OUv/oHFqZHIx8DuxG6eZ5RGMERoLqp4BuGjhHLYGK+Kf5XVkQvqBSmAy/nGWN3qDgEA==}
     engines: {node: '>=14'}
@@ -2617,9 +2619,12 @@ packages:
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
+
   lie@3.3.0:
     resolution: {integrity: sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ==}
+
   lines-and-columns@1.2.4:
+    resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
   linkify-it@5.0.0:
     resolution: {integrity: sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ==}
@@ -2814,8 +2819,8 @@ packages:
     resolution: {integrity: sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==}
     engines: {node: '>= 0.6'}
 
-  minerva-author-ui@2.0.0-beta.50:
-    resolution: {integrity: sha512-kFEgnYVKBsf+EcEYakwglQgWxO3YaO61ez3fryRHDYfSvHOIKfasJKlZtvu6CoF0Z2rS+3ZEMwJPyjDy32B+VQ==}
+  minerva-author-ui@2.0.0-beta.49:
+    resolution: {integrity: sha512-reMovDYvIzWcjiVzPEMlaNYONb3gVZ1bq+QupxxnvUX7U7cDzw3toGS0VbYGlhK9ILfLNVERYQsEY0A4jjb1vA==}
 
   minimatch@3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
@@ -3428,10 +3433,12 @@ packages:
   side-channel@1.1.0:
     resolution: {integrity: sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==}
     engines: {node: '>= 0.4'}
-  snappyjs@0.6.1:
-    resolution: {integrity: sha512-YIK6I2lsH072UE0aOFxxY1dPDCS43I5ktqHpeAsuLNYWkE5pGxRGWfDM4/vSUfNzXjC1Ivzt3qx31PCLmc9yqg==}
+
   snake-case@3.0.4:
     resolution: {integrity: sha512-LAOh4z89bGQvl9pFfNF8V146i7o7/CqFPbqzYgP+yYzDIDeS9HaNFtXABamRW+AQzEVODcvE79ljJ+8a9YSdMg==}
+
+  snappyjs@0.6.1:
+    resolution: {integrity: sha512-YIK6I2lsH072UE0aOFxxY1dPDCS43I5ktqHpeAsuLNYWkE5pGxRGWfDM4/vSUfNzXjC1Ivzt3qx31PCLmc9yqg==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -3825,8 +3832,10 @@ packages:
 
   zstddec@0.1.0:
     resolution: {integrity: sha512-w2NTI8+3l3eeltKAdK8QpiLo/flRAr2p8AGeakfMZOXBxOg9HIu4LVDxBi81sYgVhFhdJjv1OrB5ssI8uFPoLg==}
+
   zstddec@0.2.0-alpha.3:
     resolution: {integrity: sha512-uHyE3TN8jRFOaMVwdhERfrcaabyoUUawIRDKXE6x0nCU7mzyIZO0LndJ3AtVUiKLF0lC+8F5bMSySWEF586PSA==}
+
   zustand@5.0.8:
     resolution: {integrity: sha512-gyPKpIaxY9XcO2vSMrLbiER7QMAMGOQZVRdJ6Zi782jkbzZygq5GI9nG8g+sMgitRtndwaBSl7uiqC49o1SSiw==}
     engines: {node: '>=12.20.0'}
@@ -3988,6 +3997,24 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
+  '@deck.gl/core@8.9.36':
+    dependencies:
+      '@babel/runtime': 7.27.4
+      '@loaders.gl/core': 3.4.13
+      '@loaders.gl/images': 3.4.13
+      '@luma.gl/constants': 8.5.21
+      '@luma.gl/core': 8.5.21
+      '@luma.gl/webgl': 8.5.21
+      '@math.gl/core': 3.6.3
+      '@math.gl/sun': 3.6.3
+      '@math.gl/web-mercator': 3.6.3
+      '@probe.gl/env': 3.6.0
+      '@probe.gl/log': 3.6.0
+      '@probe.gl/stats': 3.6.0
+      gl-matrix: 3.4.3
+      math.gl: 3.6.3
+      mjolnir.js: 2.7.3
+
   '@deck.gl/core@9.1.14':
     dependencies:
       '@loaders.gl/core': 4.3.4
@@ -4009,17 +4036,6 @@ snapshots:
       mjolnir.js: 3.0.0
 
   '@deck.gl/extensions@8.9.36(@deck.gl/core@8.9.36)(@luma.gl/constants@8.5.21)(@luma.gl/core@8.5.21)(@math.gl/core@3.6.3)(@math.gl/web-mercator@3.6.3)(gl-matrix@3.4.3)':
-    dependencies:
-      '@babel/runtime': 7.27.4
-      '@deck.gl/core': 8.9.36
-      '@luma.gl/constants': 8.5.21
-      '@luma.gl/core': 8.5.21
-      '@luma.gl/shadertools': 8.5.21
-      '@math.gl/core': 3.6.3
-      '@math.gl/web-mercator': 3.6.3
-      gl-matrix: 3.4.3
-
-  '@deck.gl/extensions@8.9.36(@deck.gl/core@8.9.36)(@luma.gl/constants@8.5.21)(@luma.gl/core@8.5.21)(@math.gl/core@4.1.0)(@math.gl/web-mercator@4.1.0)(gl-matrix@3.4.3)':
     dependencies:
       '@babel/runtime': 7.27.4
       '@deck.gl/core': 8.9.36
@@ -4397,6 +4413,7 @@ snapshots:
       lit: 3.3.0
 
   '@haxtheweb/utils@9.0.22': {}
+
   '@hms-dbmi/viv@0.18.0(21cf94faef7b19f45f602bb4d1db3bcd)':
     dependencies:
       '@vivjs/constants': 0.18.0
@@ -4406,7 +4423,6 @@ snapshots:
       '@vivjs/types': 0.18.0
       '@vivjs/viewers': 0.18.0(21cf94faef7b19f45f602bb4d1db3bcd)
       '@vivjs/views': 0.18.0(6d9d14bea1c4b3435dfffb1c8f1891f3)
-
     transitivePeerDependencies:
       - '@deck.gl/core'
       - '@deck.gl/geo-layers'
@@ -5908,7 +5924,9 @@ snapshots:
       is-error: 2.2.2
 
   core-js-pure@3.43.0: {}
+
   core-util-is@1.0.3: {}
+
   cosmiconfig@8.3.6(typescript@5.8.3):
     dependencies:
       import-fresh: 3.3.1
@@ -5916,6 +5934,7 @@ snapshots:
       parse-json: 5.2.0
       path-type: 4.0.0
     optionalDependencies:
+      typescript: 5.8.3
 
   create-require@1.1.1: {}
 
@@ -6893,7 +6912,9 @@ snapshots:
   lie@3.3.0:
     dependencies:
       immediate: 3.0.6
+
   lines-and-columns@1.2.4: {}
+
   linkify-it@5.0.0:
     dependencies:
       uc.micro: 2.1.0
@@ -7223,7 +7244,7 @@ snapshots:
     dependencies:
       mime-db: 1.52.0
 
-  minerva-author-ui@2.0.0-beta.50(@luma.gl/gltools@8.5.21)(@types/react@18.3.23)(gl-matrix@3.4.3)(lit@3.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.41.1)(vite@5.4.19(@types/node@20.17.57)):
+  minerva-author-ui@2.0.0-beta.49(@luma.gl/gltools@8.5.21)(@types/react@18.3.23)(gl-matrix@3.4.3)(lit@3.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.41.1)(vite@5.4.19(@types/node@20.17.57)):
     dependencies:
       '@arrow-js/core': 1.0.0-alpha.10
       '@deck.gl/core': 8.9.36
@@ -7853,11 +7874,12 @@ snapshots:
       side-channel-map: 1.0.1
       side-channel-weakmap: 1.0.2
 
-  snappyjs@0.6.1: {}
   snake-case@3.0.4:
     dependencies:
       dot-case: 3.0.4
       tslib: 2.8.1
+
+  snappyjs@0.6.1: {}
 
   source-map-js@1.2.1: {}
 
@@ -8332,13 +8354,11 @@ snapshots:
 
   zstddec@0.1.0: {}
 
-
   zstddec@0.2.0-alpha.3: {}
 
   zustand@5.0.8(@types/react@18.3.23)(react@18.3.1):
     optionalDependencies:
       '@types/react': 18.3.23
       react: 18.3.1
-
 
   zwitch@2.0.4: {}
