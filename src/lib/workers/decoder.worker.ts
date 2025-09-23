@@ -1,7 +1,7 @@
 import { addDecoder, getDecoder } from 'geotiff';
-import { LZWDecoder } from './decoders.ts';
+import { LZWDecoder } from './decoders';
 
-
+// Register the LZW decoder
 addDecoder(5, () => Promise.resolve(LZWDecoder));
 
 
