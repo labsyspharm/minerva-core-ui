@@ -6,9 +6,7 @@ import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 
 import {
-  testPyramids,
-  createTileLayers, readInstances,
-  readMetadata, computeImagePyramid
+  testPyramids, createTileLayers
 } from "../lib/dicom";
 
 import styled from "styled-components";
@@ -25,6 +23,7 @@ import { LensExtension } from "@hms-dbmi/viv";
 
 export type Props = {
   loader: any;
+  series: string; // DICOM
   groups: Group[];
   stories: Story[];
   viewerConfig: Config;
@@ -113,11 +112,32 @@ const VivView = (props: Props) => {
     ...(mainSettings as any),
   }), [shape, loader.data, mainSettings]);
 
+  const dicomLayer = React.useMemo(
+    () => createTileLayers({
+      pyramids: testPyramids,
+      settings: mainSettings,
+      series: props.series,
+    }),
+    [testPyramids, mainSettings]
+  );
+
   // Memoize image layer creation
-  const imageLayer = useMemo(() => new MultiscaleImageLayer(mainProps), [mainProps]);
+/*  const imageLayer = useMemo(
+    () => new MultiscaleImageLayer(mainProps),
+    [mainProps]
+  );
+  // Memoize layer combination
+  const allLayers = useMemo(
+    () => [imageLayer, ...overlayLayers],
+    [imageLayer, overlayLayers]
+  );
+*/
 
   // Memoize layer combination
-  const allLayers = useMemo(() => [imageLayer, ...overlayLayers], [imageLayer, overlayLayers]);
+  const allLayers = useMemo(
+    () => [dicomLayer, ...overlayLayers],
+    [dicomLayer, overlayLayers]
+  );
 
   // Memoize drag handlers
   const dragHandlers = useMemo(() =>
