@@ -1,7 +1,7 @@
 import * as React from "react";
 import Deck from '@deck.gl/react';
 import { OrthographicView } from '@deck.gl/core';
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 
@@ -13,7 +13,6 @@ import {
 
 import styled from "styled-components";
 import { getWaypoint } from "../lib/waypoint";
-// import { createDragHandlers } from "../lib/dragHandlers";
 
 // Types
 import type { Config } from "../lib/viv";
