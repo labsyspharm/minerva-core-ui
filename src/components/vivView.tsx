@@ -113,8 +113,8 @@ const VivView = (props: Props) => {
 
         layers={allLayers}
         controller={true}
-        viewState={viewState}
-        onViewStateChange={e => setViewState(e.viewState)}
+        viewState={viewState as any}
+        onViewStateChange={e => setViewState(e?.viewState as any)}
         views={[new OrthographicView({ id: 'ortho', controller: true })]}
       />
     </Main>

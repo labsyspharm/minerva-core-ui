@@ -13,9 +13,8 @@ function createWorker() {
 }
 
 export default class extends Pool {
-  constructor(numWorkers: number) {
+  constructor(numWorkers = null as number | null) {
     super(numWorkers || defaultPoolSize, createWorker);
-
   }
 }
 

@@ -13,6 +13,7 @@ import { isOpts, validate } from './lib/validate';
 import { Upload } from './components/upload';
 import { readConfig } from "./lib/exhibit";
 import { Index } from "./components";
+import Pool from './lib/workers/Pool';
 
 import type { ValidObj } from './components/upload';
 import type { ImageProps } from "./components/channel"
@@ -24,7 +25,7 @@ import type { MutableFields } from "./lib/config";
 import type { ExhibitConfig } from "./lib/exhibit";
 
 type Props = ImageProps & {
-  configWaypoints: ConfigWaypoint[]; 
+  configWaypoints: ConfigWaypoint[];
   exhibit_config: ExhibitConfig;
   marker_names: string[];
   handleKeys: string[];
@@ -82,7 +83,7 @@ const Content = (props: Props) => {
       Stories: props.configWaypoints,
       ...(bypass ? (
         createPlaceholderFromLoader(loader)
-      ): {})
+      ) : {})
     } as ItemRegistryProps,
     ID: crypto.randomUUID()
   });
@@ -107,7 +108,7 @@ const Content = (props: Props) => {
     const newHandle = await toDir();
     setHandle(newHandle);
     await set(
-      handleKeys[0], newHandle 
+      handleKeys[0], newHandle
     );
   }
   const onRecall = async () => {
@@ -124,8 +125,8 @@ const Content = (props: Props) => {
   const onStart = (in_f: string) => {
     (async () => {
       if (handle === null) return;
-      const loader = await toLoader({ handle, in_f });
-      const { 
+      const loader = await toLoader({ handle, in_f, pool: new Pool() });
+      const {
         SourceChannels, GroupChannels, Groups, Colors
       } = extractChannels(loader);
       resetItems({
@@ -159,11 +160,11 @@ const Content = (props: Props) => {
     });
   }, [])
   const { marker_names } = props;
-  const mutableFields: MutableFields = [ 
-    'GroupChannels' 
+  const mutableFields: MutableFields = [
+    'GroupChannels'
   ]
   const ItemRegistry = mutableItemRegistry(
-    config.ItemRegistry, setItems, mutableFields 
+    config.ItemRegistry, setItems, mutableFields
   )
   // Define a WebComponent for the item panel
   const controlPanelElement = useMemo(() => author({
@@ -183,7 +184,7 @@ const Content = (props: Props) => {
   if (bypass) {
     return (
       <Wrapper>
-        { imager }
+        {imager}
       </Wrapper>
     )
   }
@@ -192,11 +193,11 @@ const Content = (props: Props) => {
   const onSubmit: FormEventHandler = (event) => {
     const form = event.currentTarget as HTMLFormElement;
     const data = [...new FormData(form).entries()];
-    const formOut = data.reduce(((o, [k,v]) => {
-      return { ...o, [k]: `${v}`};
-    }) as ReduceFormData, {mask: ""});
+    const formOut = data.reduce(((o, [k, v]) => {
+      return { ...o, [k]: `${v}` };
+    }) as ReduceFormData, { mask: "" });
 
-    const filled = (form as any).checkValidity(); 
+    const filled = (form as any).checkValidity();
     const formOpts = { formOut, onStart, handle };
     if (isOpts(formOpts)) {
       validate(formOpts).then((valid: ValidObj) => {
@@ -213,19 +214,19 @@ const Content = (props: Props) => {
   };
 
   const importer = loader !== null ? '' : (<Scrollable>
-    <Upload {...uploadProps}/>
+    <Upload {...uploadProps} />
   </Scrollable>)
   return (
     <Wrapper>
-      { imager }
-      { importer }
+      {imager}
+      {importer}
     </Wrapper>
   );
 };
 
 const Main = (props: Props) => {
   if (props.bypass || hasFileSystemAccess()) {
-    return <Content {...props}/>;
+    return <Content {...props} />;
   }
   const error_message = `<p>
   Unable to access file system api.
