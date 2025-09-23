@@ -13,13 +13,23 @@ import type { ConfigProps } from "../lib/config";
 import type { Loader } from "../lib/viv";
 import type { Exhibit } from "../lib/exhibit";
 
+type DicomData = {
+  labels: ["x","y", "c"];
+  shape: [int, int, int];
+}
+
+interface DicomLoader {
+  data: DicomData[];
+}
+
 type Props = HashContext & {
   in_f: string;
-  loader: Loader;
+  loader: Loader | DicomLoader;
   exhibit: Exhibit;
   handle: Handle.Dir;
   config: ConfigProps;
   marker_names: string[];
+  dicomSeries: string | null;
   controlPanelElement: string;
   setExhibit: (e: Exhibit) => void;
 };
@@ -312,6 +322,7 @@ const Index = (props: Props) => {
     <Main {...mainProps}>
       <ImageView 
         {...imageProps} 
+        series={props.dicomSeries}
         overlayLayers={overlayLayers}
         activeTool={activeTool}
         isDragging={dragState.isDragging}

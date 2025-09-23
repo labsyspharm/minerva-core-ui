@@ -1044,8 +1044,131 @@ const testChannels = {
   "Colors": testColors 
 }
 
+const listDicomWeb = async (series) => {
+  return await readInstances(`${series}/instances/`);
+}
+
+const loadDicomWeb = async (series) => {
+  // Test Series: 
+  // "https://proxy.imaging.datacommons.cancer.gov/current/viewer-only-no-downloads-see-tinyurl-dot-com-slash-3j3d9jyp/dicomWeb/studies/2.25.93749216439228361118017742627453453196/series/1.3.6.1.4.1.5962.99.1.2344794501.795090168.1655907236229.4.0"
+  const instance_list = await listDicomWeb(series);
+  const pyramids = await Promise.all(
+    instance_list.map(({ SOPInstanceUID }, i) => {
+      const instance = `${series}/instances/${SOPInstanceUID}`;
+      return readMetadata(instance).then(
+        instance_metadata => {
+          const pyramid = computeImagePyramid({
+            metadata: instance_metadata
+          })
+          return pyramid;
+        }
+      )
+    })
+  )
+  const channel_pyramids = pyramids.reduce((o, i) => {
+    const k = String(
+      i.metadata[0].OpticalPathSequence[0].OpticalPathIdentifier
+    );
+    const channel_pyramid = [
+      ...(o[k] || []), ...[i]
+    ];
+    return {
+      ...o, [k]: channel_pyramid
+    }
+  }, {});
+  // For first optical channel
+  const dicom_pyramids = Object.fromEntries(
+    Object.entries(channel_pyramids).map(
+      ([key, pyramid]) => ([
+        key, Object.values(pyramid).map(
+          ({ frameMappings, extent, tileSizes }) => ({ 
+            extent,
+            width: Math.abs(extent[2]),
+            height: Math.abs(extent[3]),
+            frameMappings: Object.fromEntries(
+              Object.entries(frameMappings[0]).map(
+                ([k,v]) => (
+                  [k, v.split('/').slice(-3).join('/')]
+                )
+              )
+            ),
+            tileSize: Math.max(...tileSizes[0])
+          })
+        ).sort((a, b) => {
+          return a.width - b.width
+        })
+      ])
+    )
+  );
+  return dicom_pyramids;
+}
+
+const findDicomWeb = (series) => {
+  return listDicomWeb(series);
+}
+
+const parseDicomWeb = (dicom_pyramids) => {
+  if (!dicom_pyramids) {
+    return null;
+  }
+  const channel_pyramids = (
+    Object.values(dicom_pyramids)
+  );
+  const n_channels = channel_pyramids.length;
+  const any_channel = [...channel_pyramids].pop();
+  const levels = any_channel.toReversed();
+  // Levels starting at full resolution
+  const data = levels.map(level => {
+    const {tileSize, width, height} = level;
+    const shape = [width, height, n_channels];
+    return {
+      "dtype":"Uint16",
+      "tileSize":tileSize,
+      "shape": shape,
+      "labels":["x","y","c"],
+      "meta":{
+        "physicalSizes":{
+          "x":{"size":1,"unit":"µm"},
+          "y":{"size":1,"unit":"µm"}
+        },
+        "photometricInterpretation":1
+      }
+    };
+  });
+  const metadata = {
+    "ID":"Image:0",
+    "AquisitionDate":"",
+    "Description":"",
+    "Pixels": {
+      "Channels":channel_pyramids.map((_, i) => {
+        return {
+          "ID":`Channel:0:${i}`,
+          "Name":`Channel ${i}`,
+          "SamplesPerPixel":1
+        }
+      }),
+      "ID":"Pixels:0",
+      "DimensionOrder":"XYC",
+      "Type":"uint16",
+      "SizeC":data[0].shape[2],
+      "SizeY":data[0].shape[1],
+      "SizeX":data[0].shape[0],
+      "PhysicalSizeX":1,
+      "PhysicalSizeY":1,
+      "PhysicalSizeXUnit":"µm",
+      "PhysicalSizeYUnit":"µm",
+      "BigEndian":false
+    }
+  }
+  return {
+    data, metadata
+  };
+}
+
 export {
+  loadDicomWeb, findDicomWeb,
   testChannels, testLoader, testPyramids,
   createTileLayers, readInstances,
-  readMetadata, computeImagePyramid
+  readMetadata, computeImagePyramid,
+  parseDicomWeb
 }

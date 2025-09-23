@@ -13,16 +13,6 @@ type Choices = {
   path: string[],
   mask: string[],
 }
-type ChoiceMCIn = {
-  handle: Handle.Dir,
-  setMask: SetState,
-  setDir: SetState,
-  mask: string,
-  dir: string
-}
-interface ToChoicesMC {
-  (i: ChoiceMCIn): Promise<Choices>
-}
 type ChoiceAnyIn = {
   handle: Handle.Dir,
   setMask: SetState,
@@ -41,8 +31,10 @@ type OptionsProps = {
 }
 export type FormProps = {
   valid: ValidObj,
-  handle: Handle.Dir,
   onSubmit: FormEventHandler<HTMLFormElement>
+}
+export type FullFormProps = FormProps & {
+  handle: Handle.Dir
 }
 export type UploadProps = {
   handleKeys: string[],
@@ -54,12 +46,18 @@ export type UploadProps = {
 export type ValidObj = {
   [s: string]: boolean;
 }
+interface ValidationFunction {
+  (v: ValidObj): boolean | null 
+}
+interface Validation {
+  (s: string): ValidationFunction
+}
 type ValidOut = Partial<{
   isValid: true,
   isInvalid: true
 }>
 interface Validate {
-  (v: ValidObj, key: string): ValidOut;
+  (v: ValidObj, fn: ValidationFunction): ValidOut;
 }
 type SetState = (s: string) => void;
 type SetTargetState = FormEventHandler;
@@ -87,6 +85,14 @@ const FullHeightText = styled.div`
   display: grid;
   gap: 1em;
 `
+const FullWidthGrid = styled.div`
+  grid-template-columns: auto 1fr;
+  grid-column: 1 / -1;
+  align-items: center;
+  display: grid;
+  gap: 0.25em;
+`
+
 
 const shadow_gray = 'rgb(0 0 0 / 20%)';
 const sh_4_8 = `0 4px 8px 0 ${shadow_gray}`;
@@ -94,12 +100,27 @@ const sh_6_20 = `0 6px 20px 0 ${shadow_gray}`;
 const UploadDiv = styled.div`
   height: 100%;
   display: grid;
-  align-items: center;
+  padding-top: 2em;
+  align-items: start;
+  grid-template-columns: auto minmax(320px,1fr);
   grid-template-rows: auto;
+  gap: 0.5em;
   button {
     border: none;
+    grid-column: 1 / -1;
     outline: 1px solid var(--theme-glass-edge);
     background-color: var(--theme-dark-main-color);
+  }
+  button.dicom-toggle {
+    grid-column: 1;
+    display: grid;
+    grid-template-rows: 3px 1fr;
+    span {
+      grid-row: 2;
+    }
+  }
+  .full-width {
+    grid-column: 1 / -1;
   }
 `;
 
@@ -135,35 +156,19 @@ const _useState: UseTargetState = (init) => {
   }
   return [val, set, new_set];
 }
-const validate: Validate = (valid, key) => {
-  if (!(key in valid)) return {};
-  const opt = valid[key] ? 'isValid' : 'isInvalid';
-  return { [opt]: true }; 
+const validation: Validation = (key) => {
+  return (valid) => {
+    if (key in valid) {
+      return !!valid[key];
+    }
+    return null;
+  }
 }
 
 const toGroupProps = (n: string): any => {
   return {controlId: n};
 };
 
-const toChoicesMC: ToChoicesMC = async (opts) => {
-  const { handle } = opts;
-  const files = await listDir({ handle });
-  const mask = files.reduce((o, [k, v]: Entry) => {
-    if (v instanceof FileSystemFileHandle) {
-      return k.match(/\.tiff?$/) ? [...o, k] : o;
-    }
-    return o;
-  }, [] as string[]);
-  const dir = files.reduce((o, [k, v]: Entry) => {
-    if (v instanceof FileSystemDirectoryHandle) {
-      return [...o, k];
-    };
-    return o;
-  }, [] as string[]);
-  return {
-    csv: [], path: [], mask, dir
-  }
-} 
 const Options = (props: OptionsProps) => {
   const { label, vals } = props;
   const options = vals.map((value, i) => {
@@ -174,97 +179,75 @@ const Options = (props: OptionsProps) => {
 const noChoice = (): Choices => {
   return { dir: [], csv: [], path: [], mask: [] };
 } 
-const FormMC = (props: FormProps) => {
-  const { handle, valid, onSubmit } = props;
-  const [ choices, setChoices ] = useState(noChoice());
-  const [ name, sN, setName ] = _useState("");
-  const [ mask, sM, setMask ] = _useState("");
-  const [ dir, sD, setDir ] = _useState("");
-  const formProps = { onSubmit };
-  const hasNewChoice = (c: Choices) => {
-    return [
-      c.dir.some((i: string) => !(i in choices.dir)),
-      c.mask.some((i: string) => !(i in choices.mask))
-    ].some(x => x === true);
+
+const validate: Validate = (valid, fn) => {
+  const validated = fn(valid);
+  if ( validated === null ) {
+    return {};
   }
-  useEffect(() => {
-    toChoicesMC({
-      handle, mask, dir, setMask: sM, setDir: sD
-    }).then(c => {
-      if (hasNewChoice(c)) setChoices(c);
-    });
-  }, [JSON.stringify(choices)]);
-  const dirOptions = {label: "Folder", vals: choices.dir};
-  const maskOptions = {label: "Mask", vals: choices.mask};
+  const opt = validated ? 'isValid' : 'isInvalid';
+  return { [opt]: true }; 
+}
+
+const FormDicom = (props: FormProps) => {
+  const { handle, valid, onSubmit } = props;
+  const [ url, sU, setURL ] = _useState("");
+  const [ name, sN, setName ] = _useState("");
+  const fProps = { onSubmit, className: "full-width" };
   return (
-  <Form {...formProps} noValidate>
-      <Form.Group {...toGroupProps("name")}>
-          <Form.Label>Dataset Name:</Form.Label>
+  <Form {...fProps} noValidate>
+      <Form.Group {...toGroupProps("url")}>
+          <Form.Label>DICOMweb™ URL:</Form.Label>
           <FormGridRow hasValidation>
               <Form.Control {...{
                 type: "text",
                 required: true,
-                value: name,
-                name: "name",
-                onChange: setName,
-                ...validate(valid, 'name')
+                value: url,
+                name: "url",
+                onChange: setURL,
+                ...validate(
+                  valid,
+                  ({ url: validEndpoint }) => {
+                    // DICOMweb data found at endpoint
+                    if (validEndpoint === undefined) {
+                      return null;
+                    }
+                    // URL matches expectations
+                    return validEndpoint && (
+                      /^(?:https?:\/\/)?[^\/]+\/current\/.+\/dicomWeb\/studies\/.+\/series\/.+$/
+                    ).test(url)
+                  }
+                )
               }}/>
               <Form.Control.Feedback type="invalid">
-              Dataset name already exists. Please choose a different name.
+              Invalid DICOMweb™ URL 
               </Form.Control.Feedback>
               <Form.Control.Feedback type="valid">
-              Valid. (if no name chosen mcmicro project name is used.)
+              Valid.
               </Form.Control.Feedback>
               <br/>
           </FormGridRow>
-      </Form.Group>
-      <FormGrid id="mcmicro_import">
-          <Form.Group {...toGroupProps("path")}>
-              <Form.Label>Folder:</Form.Label>
+          <FormGrid>
+              <Form.Label>Dataset Name:</Form.Label>
               <FormGridRow hasValidation>
                   <Form.Control {...{
-                    type: "select",
-                    as: "select",
+                    type: "text",
                     required: true,
-                    value: dir,
-                    name: "dir",
-                    onChange: setDir,
-                    ...validate(valid, 'dir')
-                  }}>
-                  <Options {...dirOptions}/>
-                  </Form.Control>
+                    value: name,
+                    name: "name",
+                    onChange: setName,
+                    ...validate(valid, validation('name'))
+                  }}/>
                   <Form.Control.Feedback type="invalid">
-                  Please provide a valid path.
+                  Please name the dataset.
                   </Form.Control.Feedback>
                   <Form.Control.Feedback type="valid">
                   Valid.
                   </Form.Control.Feedback>
                   <br/>
               </FormGridRow>
-          </Form.Group>
-          <Form.Group {...toGroupProps("mask")}>
-              <Form.Label>Choose a mask:</Form.Label>
-              <FormGridRow hasValidation>
-                <Form.Control {...{
-                  type: "select",
-                  as: "select",
-                  required: false,
-                  value: mask,
-                  name: "mask",
-                  onChange: setMask,
-                  ...validate(valid, 'mask')
-                }}>
-                <Options {...maskOptions}/>
-                </Form.Control>
-                <Form.Control.Feedback type="invalid">
-                No mask files found under this path.
-                </Form.Control.Feedback>
-                <Form.Control.Feedback type="valid">
-                Valid.
-                </Form.Control.Feedback>
-              </FormGridRow>
-          </Form.Group>
-      </FormGrid>
+        </FormGrid>
+      </Form.Group>
       <FormGrid>
         <Button type="submit" variant="primary">Submit</Button>
       </FormGrid>
@@ -292,14 +275,14 @@ const toChoicesAny: ToChoicesAny = async (opts) => {
     csv, path, mask, dir: []
   }
 } 
-const FormAny = (props: FormProps) => {
+const FormAny = (props: FullFormProps) => {
   const { handle, valid, onSubmit } = props;
   const [ choices, setChoices ] = useState(noChoice());
   const [ name, sN, setName ] = _useState("");
   const [ path, sP, setPath ] = _useState("");
   const [ mask, sM, setMask ] = _useState("");
   const [ csv, sC, setCsv ] = _useState("");
-  const formProps = { onSubmit };
+  const fProps = { onSubmit };
   const hasNewChoice = (c: Choices) => {
     return [
       c.csv.some((i: string) => !(i in choices.csv)),
@@ -323,7 +306,7 @@ const FormAny = (props: FormProps) => {
   const maskOptions = {label: "Mask", vals: choices.mask};
   const csvOptions = {label: "CSV", vals: choices.csv};
   return (
-  <Form {...formProps} noValidate>
+  <Form {...fProps} noValidate>
       <Form.Group {...toGroupProps("name")}>
           <Form.Label>Dataset Name:</Form.Label>
           <FormGridRow hasValidation>
@@ -333,7 +316,7 @@ const FormAny = (props: FormProps) => {
                 value: name,
                 name: "name",
                 onChange: setName,
-                ...validate(valid, 'name')
+                ...validate(valid, validation('name'))
               }}/>
               <Form.Control.Feedback type="invalid">
               Please name the dataset.
@@ -355,7 +338,7 @@ const FormAny = (props: FormProps) => {
                     value: path,
                     name: "path",
                     onChange: setPath,
-                    ...validate(valid, 'path')
+                    ...validate(valid, validation('path'))
                   }}>
                   <Options {...pathOptions}/>
                   </Form.Control>
@@ -378,7 +361,7 @@ const FormAny = (props: FormProps) => {
                     value: mask,
                     name: "mask",
                     onChange: setMask,
-                    ...validate(valid, 'mask')
+                    ...validate(valid, validation('mask'))
                   }}>
                   <Options {...maskOptions}/>
                   </Form.Control>
@@ -401,7 +384,7 @@ const FormAny = (props: FormProps) => {
                     value: csv,
                     name: "csv",
                     onChange: setCsv,
-                    ...validate(valid, 'csv')
+                    ...validate(valid, validation('csv'))
                   }}>
                   <Options {...csvOptions}/>
                   </Form.Control>
@@ -423,14 +406,12 @@ const FormAny = (props: FormProps) => {
 
 const Upload = (props: UploadProps) => {
   const test_f = "default.ome.tif"; //TODO
+  const [imageFormat, setImageFormat] = useState("DICOM-WEB");
   const [in_f, setInFile] = useState(test_f);
-  const [mc, setMCMicro] = useState(false);
-  const checkMC = () => setMCMicro(!mc);
   const {
     formProps, handle,
     onAllow, onRecall
   } = props;
-  const F = mc ? FormMC : FormAny;
   const allowProps = {
     onClick: onAllow,
     variant: "primary",
@@ -441,26 +422,51 @@ const Upload = (props: UploadProps) => {
     variant: "primary",
     className: "mb-3"
   };
+  const toggleImageFormat = () => {
+    const newImageFormat = {
+      "OME-TIFF": "DICOM-WEB",
+      "DICOM-WEB": "OME-TIFF"
+    }[imageFormat];
+    setImageFormat(newImageFormat);
+  }
+  const useOME = imageFormat == "OME-TIFF";
+  const message =  useOME ? (
+    "Open a Local OME-TIFF Image"
+  ): (
+    "Connect to a DICOMweb™ Proxy"
+  )
+  const possibleActions = useOME ? (
+    <>
+      <Button {...allowProps}>Select Base Folder</Button>
+      <Button {...recallProps}>Use recent Folder</Button>
+    </>
+  ) : (
+    <FormDicom { ...formProps }/>
+  )
   if (handle === null) {
     return (
     <UploadDiv>
-        <div>Select an ome.tiff</div>
-        <Button {...allowProps}>Select Base Folder</Button>
-        <Button {...recallProps}>Use recent Folder</Button>
+        <FullWidthGrid>
+          <Button
+            onClick={toggleImageFormat}
+            className="dicom-toggle"
+          >
+            <span>⇄</span>
+          </Button>
+          <div>{message}</div>
+        </FullWidthGrid>
+        {possibleActions}
     </UploadDiv>
     )
   }
   const fullFormProps = { ...formProps, handle };
-  // TODO Improve layout of full version
   const updateSettings = (<TwoColumn>
       <Button {...allowProps}>Update Base Folder</Button>
+      <h4>Local OME-TIFF</h4>
   </TwoColumn>)
-  // TODO ensure MCMICRO settings work
-  const mcMicroSettings = ' ';
   return (<>
     { updateSettings }
-    { mcMicroSettings }
-    <F {...fullFormProps}/>
+    <FormAny {...fullFormProps}/>
   </>)
 }
 
