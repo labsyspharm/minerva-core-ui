@@ -1,8 +1,10 @@
 import * as React from "react";
 import Deck from '@deck.gl/react';
 import { OrthographicView } from '@deck.gl/core';
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
+import { MultiscaleImageLayer } from "@hms-dbmi/viv";
+
 import {
   testPyramids,
   createTileLayers, readInstances,
@@ -11,6 +13,7 @@ import {
 
 import styled from "styled-components";
 import { getWaypoint } from "../lib/waypoint";
+// import { createDragHandlers } from "../lib/dragHandlers";
 
 // Types
 import type { Config } from "../lib/viv";
@@ -52,7 +55,7 @@ const shapeRef = (setShape: (s: Shape) => void) => {
 
 const VivView = (props: Props) => {
   const maxShape = useWindowSize();
-  const { loader, groups, stories, hash, setHash } = props;
+  const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool } = props;
   const { v, g, s, w } = hash;
   const toMainSettings = props.viewerConfig.toSettings;
   const [mainSettings, setMainSettings] = useState(toMainSettings(hash));
@@ -60,6 +63,7 @@ const VivView = (props: Props) => {
   const [shape, setShape] = useState(maxShape);
   const [channelSettings, setChannelSettings] = useState({});
   const [canvas, setCanvas] = useState(null);
+
   const rootRef = React.useMemo(() => {
     return shapeRef(setShape);
   }, [maxShape]);
@@ -72,7 +76,8 @@ const VivView = (props: Props) => {
     // Gets the default settings
     setMainSettings(toMainSettings(hash, loader, groups));
 
-  }, [loader,groups,hash]);
+  }, [loader, groups, hash]);
+
   const mainProps = {
     ...{
       ...shape,
@@ -82,73 +87,15 @@ const VivView = (props: Props) => {
     }
   };
 
-  const series = "https://proxy.imaging.datacommons.cancer.gov/current/viewer-only-no-downloads-see-tinyurl-dot-com-slash-3j3d9jyp/dicomWeb/studies/2.25.93749216439228361118017742627453453196/series/1.3.6.1.4.1.5962.99.1.2344794501.795090168.1655907236229.4.0";
-  const instances = `${series}/instances/`;
-  // Enables regeneration of test pyramid
-  if (false) {
-    readInstances(instances).then(
-      async (instance_list) => {
-        const pyramids = await Promise.all(
-          instance_list.map(({ SOPInstanceUID }, i) => {
-            const instance = `${series}/instances/${SOPInstanceUID}`;
-            return readMetadata(instance).then(
-              instance_metadata => {
-                const pyramid = computeImagePyramid({
-                  metadata: instance_metadata
-                })
-                return pyramid;
-              }
-            )
-          })
-        )
-        const channel_pyramids = pyramids.reduce((o, i) => {
-          const k = String(
-            i.metadata[0].OpticalPathSequence[0].OpticalPathIdentifier
-          );
-          const channel_pyramid = [
-            ...(o[k] || []), ...[i]
-          ];
-          return {
-            ...o, [k]: channel_pyramid
-          }
-        }, {});
-        // For first optical channel
-        const test_pyramids = Object.fromEntries(
-          Object.entries(channel_pyramids).map(
-            ([key, pyramid]) => ([
-              key, Object.values(pyramid).map(
-                ({ frameMappings, extent, tileSizes }) => ({ 
-                  extent,
-                  width: Math.abs(extent[2]),
-                  height: Math.abs(extent[3]),
-                  frameMappings: Object.fromEntries(
-                    Object.entries(frameMappings[0] as Record<string, string>).map(
-                      ([k,v]) => (
-                        [k, v.split('/').slice(-3).join('/')]
-                      )
-                    )
-                  ),
-                  tileSize: Math.max(...tileSizes[0])
-                })
-              ).sort((a, b) => {
-                return a.width - b.width
-              })
-            ])
-          )
-        );
-        console.log(JSON.stringify(test_pyramids));
-      }
-    );
-  }
-  // TODO -- evaluate needed conditions for Memo
-  const layers = React.useMemo(
-    () => createTileLayers({
-      pyramids: testPyramids,
-      settings: mainSettings,
-      series
-    }),
-    [testPyramids, mainSettings, series]
-  );
+
+  // Create image layer
+  const imageLayer = new MultiscaleImageLayer(mainProps);
+
+  // Combine layers
+  const allLayers = [imageLayer];
+
+
+
   const n_levels = loader.data.length;
   const shape_labels = loader.data[0].labels;
   const shape_values = loader.data[0].shape;
@@ -163,7 +110,8 @@ const VivView = (props: Props) => {
   return (
     <Main slot="image" ref={rootRef}>
       <Deck
-        layers={layers}
+
+        layers={allLayers}
         controller={true}
         viewState={viewState}
         onViewStateChange={e => setViewState(e.viewState)}
