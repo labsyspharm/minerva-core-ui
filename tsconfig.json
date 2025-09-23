@@ -11,7 +11,13 @@
     "outDir": "./build",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "lib": ["esnext", "DOM", "DOM.Iterable"]
+    "lib": [
+      "esnext",
+      "DOM",
+      "DOM.Iterable"
+    ]
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

@@ -84,6 +84,17 @@ const VivView = React.memo((props: Props) => {
     setMainSettings(toMainSettings(hash, loader, groups));
   }, [loader, groups, hash, toMainSettings]);
 
+  }, [loader, groups, hash]);
+
+
+
+
+  const n_levels = loader.data.length;
+  const shape_labels = loader.data[0].labels;
+  const shape_values = loader.data[0].shape;
+  const imageShape = Object.fromEntries(
+    shape_labels.map((k, i) => [k, shape_values[i]])
+
   // Memoize image shape computation
   const imageShape = useMemo(() => {
     const n_levels = loader.data.length;
@@ -123,6 +134,7 @@ const VivView = React.memo((props: Props) => {
   const dragHandlers = useMemo(() => 
     createDragHandlers(activeTool, onOverlayInteraction), 
     [activeTool, onOverlayInteraction]
+
   );
 
   // Memoize cursor function
