@@ -25,7 +25,8 @@ interface ToDir {
 }
 type LoaderIn = {
   in_f: string,
-  handle: Handle.Dir
+  handle: Handle.Dir,
+  pool: any | null
 }
 interface ToLoader {
   (i: LoaderIn): Promise<Loader>;
@@ -50,7 +51,7 @@ export type HasShape = {
 }
 export type Dtype = (
   "Uint8" | "Uint16" | "Uint32" |
-  "Int8" | "Int16" | "Int32" | 
+  "Int8" | "Int16" | "Int32" |
   "Float32" | "Float64"
 )
 export interface LoaderPlane {
@@ -87,10 +88,10 @@ const findFile: FindFile = async (opts) => {
   return false
 }
 
-const toLoader: ToLoader = async ({in_f, handle}) => {
+const toLoader: ToLoader = async ({ in_f, handle, pool = null }) => {
   const in_fh = await handle.getFileHandle(in_f);
   const in_file = await in_fh.getFile();
-  return await loadOmeTiff(in_file);
+  return await loadOmeTiff(in_file, { pool });
 }
 
 export {
@@ -98,5 +99,5 @@ export {
   toLoader,
   findFile,
   listDir,
-  toDir 
+  toDir
 }

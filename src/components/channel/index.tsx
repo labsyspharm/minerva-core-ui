@@ -54,11 +54,11 @@ const Channel = (props: Props) => {
       </Content>
     </div>
   );
-  
+
   const minerva_author_ui = React.createElement(
     props.controlPanelElement, {
-      class: theme, children: props.children,
-    }
+    class: theme, children: props.children,
+  }
   );
 
   return (

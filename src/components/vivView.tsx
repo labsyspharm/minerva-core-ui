@@ -1,8 +1,10 @@
 import * as React from "react";
 import Deck from '@deck.gl/react';
 import { OrthographicView } from '@deck.gl/core';
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
+import { MultiscaleImageLayer } from "@hms-dbmi/viv";
+
 import {
   testPyramids,
   createTileLayers, readInstances,
@@ -11,6 +13,7 @@ import {
 
 import styled from "styled-components";
 import { getWaypoint } from "../lib/waypoint";
+import { createDragHandlers } from "../lib/dragHandlers";
 
 // Types
 import type { Config } from "../lib/viv";
@@ -25,6 +28,11 @@ export type Props = {
   groups: Group[];
   stories: Story[];
   viewerConfig: Config;
+  overlayLayers?: any[];
+  activeTool: string;
+  isDragging?: boolean; // New prop to indicate if dragging an annotation
+  hoveredAnnotationId?: string | null; // New prop to indicate hovered annotation
+  onOverlayInteraction?: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number]) => void;
 } & HashContext;
 
 type Shape = {
@@ -50,19 +58,22 @@ const shapeRef = (setShape: (s: Shape) => void) => {
   };
 };
 
-const VivView = (props: Props) => {
+const VivView = React.memo((props: Props) => {
   const maxShape = useWindowSize();
-  const { loader, groups, stories, hash, setHash } = props;
+  const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
   const toMainSettings = props.viewerConfig.toSettings;
   const [mainSettings, setMainSettings] = useState(toMainSettings(hash));
-  const waypoint = getWaypoint(stories, s, w);
   const [shape, setShape] = useState(maxShape);
   const [channelSettings, setChannelSettings] = useState({});
   const [canvas, setCanvas] = useState(null);
-  const rootRef = React.useMemo(() => {
+
+  // Memoize expensive computations
+  const waypoint = useMemo(() => getWaypoint(stories, s, w), [stories, s, w]);
+  
+  const rootRef = useMemo(() => {
     return shapeRef(setShape);
-  }, [maxShape]);
+  }, []);
 
   useEffect(() => {
     //console.log("VivView: useEffect: groups", groups);
@@ -71,106 +82,108 @@ const VivView = (props: Props) => {
   useEffect(() => {
     // Gets the default settings
     setMainSettings(toMainSettings(hash, loader, groups));
+  }, [loader, groups, hash, toMainSettings]);
 
-  }, [loader,groups,hash]);
-  const mainProps = {
-    ...{
-      ...shape,
-      id: "mainLayer",
-      loader: loader.data,
-      ...(mainSettings as any),
-    }
-  };
-
-  const series = "https://proxy.imaging.datacommons.cancer.gov/current/viewer-only-no-downloads-see-tinyurl-dot-com-slash-3j3d9jyp/dicomWeb/studies/2.25.93749216439228361118017742627453453196/series/1.3.6.1.4.1.5962.99.1.2344794501.795090168.1655907236229.4.0";
-  const instances = `${series}/instances/`;
-  // Enables regeneration of test pyramid
-  if (false) {
-    readInstances(instances).then(
-      async (instance_list) => {
-        const pyramids = await Promise.all(
-          instance_list.map(({ SOPInstanceUID }, i) => {
-            const instance = `${series}/instances/${SOPInstanceUID}`;
-            return readMetadata(instance).then(
-              instance_metadata => {
-                const pyramid = computeImagePyramid({
-                  metadata: instance_metadata
-                })
-                return pyramid;
-              }
-            )
-          })
-        )
-        const channel_pyramids = pyramids.reduce((o, i) => {
-          const k = String(
-            i.metadata[0].OpticalPathSequence[0].OpticalPathIdentifier
-          );
-          const channel_pyramid = [
-            ...(o[k] || []), ...[i]
-          ];
-          return {
-            ...o, [k]: channel_pyramid
-          }
-        }, {});
-        // For first optical channel
-        const test_pyramids = Object.fromEntries(
-          Object.entries(channel_pyramids).map(
-            ([key, pyramid]) => ([
-              key, Object.values(pyramid).map(
-                ({ frameMappings, extent, tileSizes }) => ({ 
-                  extent,
-                  width: Math.abs(extent[2]),
-                  height: Math.abs(extent[3]),
-                  frameMappings: Object.fromEntries(
-                    Object.entries(frameMappings[0] as Record<string, string>).map(
-                      ([k,v]) => (
-                        [k, v.split('/').slice(-3).join('/')]
-                      )
-                    )
-                  ),
-                  tileSize: Math.max(...tileSizes[0])
-                })
-              ).sort((a, b) => {
-                return a.width - b.width
-              })
-            ])
-          )
-        );
-        console.log(JSON.stringify(test_pyramids));
-      }
+  // Memoize image shape computation
+  const imageShape = useMemo(() => {
+    const n_levels = loader.data.length;
+    const shape_labels = loader.data[0].labels;
+    const shape_values = loader.data[0].shape;
+    return Object.fromEntries(
+      shape_labels.map((k, i) => [k, shape_values[i]])
     );
-  }
-  // TODO -- evaluate needed conditions for Memo
-  const layers = React.useMemo(
-    () => createTileLayers({
-      pyramids: testPyramids,
-      settings: mainSettings,
-      series
-    }),
-    [testPyramids, mainSettings, series]
+  }, [loader.data]);
+
+  // Memoize initial view state
+  const initialViewState = useMemo(() => {
+    const n_levels = loader.data.length;
+    return {
+      zoom: -n_levels,
+      target: [imageShape.x / 2, imageShape.y / 2, 0]
+    };
+  }, [loader.data, imageShape]);
+
+  const [viewState, setViewState] = useState(initialViewState);
+
+  // Memoize main props to prevent unnecessary layer recreation
+  const mainProps = useMemo(() => ({
+    ...shape,
+    id: "mainLayer",
+    loader: loader.data,
+    ...(mainSettings as any),
+  }), [shape, loader.data, mainSettings]);
+
+  // Memoize image layer creation
+  const imageLayer = useMemo(() => new MultiscaleImageLayer(mainProps), [mainProps]);
+
+  // Memoize layer combination
+  const allLayers = useMemo(() => [imageLayer, ...overlayLayers], [imageLayer, overlayLayers]);
+
+  // Memoize drag handlers
+  const dragHandlers = useMemo(() => 
+    createDragHandlers(activeTool, onOverlayInteraction), 
+    [activeTool, onOverlayInteraction]
+
   );
-  const n_levels = loader.data.length;
-  const shape_labels = loader.data[0].labels;
-  const shape_values = loader.data[0].shape;
-  const imageShape = Object.fromEntries(
-    shape_labels.map((k, i) => [k, shape_values[i]])
-  );
-  const [viewState, setViewState] = useState({
-    zoom: -n_levels,
-    target: [imageShape.x / 2, imageShape.y / 2, 0]
-  });
+
+  // Memoize cursor function
+  const getCursor = useCallback(({ isDragging, isHovering }) => {
+    if (isDragging && activeTool === 'move') {
+      return 'grabbing';
+    } else if (activeTool === 'move' && hoveredAnnotationId) {
+      return 'grab';
+    } else if (activeTool === 'rectangle') {
+      return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'lasso') {
+      return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'line') {
+      return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'text') {
+      return 'text';
+    } else if (activeTool === 'move') {
+      return 'default';
+    }
+    return 'default';
+  }, [activeTool, hoveredAnnotationId]);
+
+  // Memoize controller configuration
+  const controllerConfig = useMemo(() => ({
+    dragPan: activeTool !== 'rectangle' && activeTool !== 'lasso' && activeTool !== 'line' && !isDragging,
+    dragRotate: false,
+    scrollZoom: true,
+    doubleClickZoom: true,
+    touchZoom: true,
+    touchRotate: false,
+    keyboard: false
+  }), [activeTool, isDragging]);
+
+  // Memoize view configuration
+  const views = useMemo(() => [new OrthographicView({ id: 'ortho', controller: true })], []);
+
+  // Memoize view state change handler
+  const handleViewStateChange = useCallback((e) => setViewState(e.viewState), []);
+
   if (!loader || !mainSettings) return null;
+  
   return (
     <Main slot="image" ref={rootRef}>
       <Deck
-        layers={layers}
-        controller={true}
+        getCursor={getCursor}
+        layers={allLayers}
+        controller={controllerConfig}
         viewState={viewState}
-        onViewStateChange={e => setViewState(e.viewState)}
-        views={[new OrthographicView({ id: 'ortho', controller: true })]}
+        onViewStateChange={handleViewStateChange}
+        onClick={dragHandlers.onClick}
+        onDragStart={dragHandlers.onDragStart}
+        onDrag={dragHandlers.onDrag}
+        onDragEnd={dragHandlers.onDragEnd}
+        onHover={dragHandlers.onHover}
+        views={views}
       />
     </Main>
   );
-};
+});
+
+VivView.displayName = 'VivView';
 
 export { VivView };
