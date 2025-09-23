@@ -58,7 +58,7 @@ const shapeRef = (setShape: (s: Shape) => void) => {
   };
 };
 
-const VivView = React.memo((props: Props) => {
+const VivView = (props: Props) => {
   const maxShape = useWindowSize();
   const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
@@ -70,7 +70,7 @@ const VivView = React.memo((props: Props) => {
 
   // Memoize expensive computations
   const waypoint = useMemo(() => getWaypoint(stories, s, w), [stories, s, w]);
-  
+
   const rootRef = useMemo(() => {
     return shapeRef(setShape);
   }, []);
@@ -84,7 +84,6 @@ const VivView = React.memo((props: Props) => {
     setMainSettings(toMainSettings(hash, loader, groups));
   }, [loader, groups, hash, toMainSettings]);
 
-  }, [loader, groups, hash]);
 
 
 
@@ -94,16 +93,7 @@ const VivView = React.memo((props: Props) => {
   const shape_values = loader.data[0].shape;
   const imageShape = Object.fromEntries(
     shape_labels.map((k, i) => [k, shape_values[i]])
-
-  // Memoize image shape computation
-  const imageShape = useMemo(() => {
-    const n_levels = loader.data.length;
-    const shape_labels = loader.data[0].labels;
-    const shape_values = loader.data[0].shape;
-    return Object.fromEntries(
-      shape_labels.map((k, i) => [k, shape_values[i]])
-    );
-  }, [loader.data]);
+  );
 
   // Memoize initial view state
   const initialViewState = useMemo(() => {
@@ -131,11 +121,11 @@ const VivView = React.memo((props: Props) => {
   const allLayers = useMemo(() => [imageLayer, ...overlayLayers], [imageLayer, overlayLayers]);
 
   // Memoize drag handlers
-  const dragHandlers = useMemo(() => 
-    createDragHandlers(activeTool, onOverlayInteraction), 
+  const dragHandlers = useMemo(() =>
+    createDragHandlers(activeTool, onOverlayInteraction),
     [activeTool, onOverlayInteraction]
+  )
 
-  );
 
   // Memoize cursor function
   const getCursor = useCallback(({ isDragging, isHovering }) => {
@@ -175,14 +165,14 @@ const VivView = React.memo((props: Props) => {
   const handleViewStateChange = useCallback((e) => setViewState(e.viewState), []);
 
   if (!loader || !mainSettings) return null;
-  
+
   return (
     <Main slot="image" ref={rootRef}>
       <Deck
         getCursor={getCursor}
         layers={allLayers}
         controller={controllerConfig}
-        viewState={viewState}
+        viewState={viewState as any}
         onViewStateChange={handleViewStateChange}
         onClick={dragHandlers.onClick}
         onDragStart={dragHandlers.onDragStart}
@@ -192,8 +182,8 @@ const VivView = React.memo((props: Props) => {
         views={views}
       />
     </Main>
-  );
-});
+  )
+};
 
 VivView.displayName = 'VivView';
 
