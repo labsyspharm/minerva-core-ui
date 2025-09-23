@@ -1,7 +1,9 @@
 import * as React from "react";
 import { useState } from "react";
+import { Overlays } from "./overlays";
 import { ImageView, toImageProps } from "./imageView";
 import { Main } from "./content";
+import { useOverlayStore } from "../lib/stores";
 
 // Types
 import type { OptSW } from "./waypoint/content";
@@ -293,10 +295,37 @@ const Index = (props: Props) => {
       zoomOutButton: zoomOutEl,
     },
   });
+  
+  // Use Zustand store for overlay state management
+  const {
+    overlayLayers,
+    activeTool,
+    currentInteraction,
+    dragState,
+    hoverState,
+    handleLayerCreate,
+    handleToolChange,
+    handleOverlayInteraction
+  } = useOverlayStore();
+  
   return (
     <Main {...mainProps}>
-      <ImageView {...imageProps}>
+      <ImageView 
+        {...imageProps} 
+        overlayLayers={overlayLayers}
+        activeTool={activeTool}
+        isDragging={dragState.isDragging}
+        hoveredAnnotationId={hoverState.hoveredAnnotationId}
+        onOverlayInteraction={handleOverlayInteraction}
+      >
       </ImageView>
+      <Overlays 
+        hash={mainProps.hash} 
+        groups={mainProps.groups} 
+        setHash={mainProps.setHash}
+        onLayerCreate={handleLayerCreate}
+        currentInteraction={currentInteraction}
+      />
     </Main>
   );
 };
