@@ -87,7 +87,6 @@ const VivView = (props: Props) => {
 
   // Memoize image shape computation
   const imageShape = useMemo(() => {
-    const n_levels = loader.data.length;
     const shape_labels = loader.data[0].labels;
     const shape_values = loader.data[0].shape;
     return Object.fromEntries(
