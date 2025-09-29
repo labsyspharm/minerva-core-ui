@@ -85,15 +85,15 @@ const VivView = (props: Props) => {
   }, [loader, groups, hash, toMainSettings]);
 
 
-
-
-
-  const n_levels = loader.data.length;
-  const shape_labels = loader.data[0].labels;
-  const shape_values = loader.data[0].shape;
-  const imageShape = Object.fromEntries(
-    shape_labels.map((k, i) => [k, shape_values[i]])
-  );
+  // Memoize image shape computation
+  const imageShape = useMemo(() => {
+    const n_levels = loader.data.length;
+    const shape_labels = loader.data[0].labels;
+    const shape_values = loader.data[0].shape;
+    return Object.fromEntries(
+      shape_labels.map((k, i) => [k, shape_values[i]])
+    );
+  }, [loader.data]);
 
   // Memoize initial view state
   const initialViewState = useMemo(() => {
