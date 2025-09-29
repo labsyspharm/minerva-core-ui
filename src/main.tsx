@@ -125,7 +125,8 @@ const Content = (props: Props) => {
   const onStart = (in_f: string) => {
     (async () => {
       if (handle === null) return;
-      const loader = await toLoader({ handle, in_f, pool: new Pool() });
+      const loader = await toLoader({ handle, in_f, pool: new Pool(8) });
+      console.log("loader", loader);
       const {
         SourceChannels, GroupChannels, Groups, Colors
       } = extractChannels(loader);

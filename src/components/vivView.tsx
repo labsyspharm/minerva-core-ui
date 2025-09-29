@@ -161,7 +161,12 @@ const VivView = (props: Props) => {
   const views = useMemo(() => [new OrthographicView({ id: 'ortho', controller: true })], []);
 
   // Memoize view state change handler
-  const handleViewStateChange = useCallback((e) => setViewState(e.viewState), []);
+  const handleViewStateChange = useCallback(({ viewState: nextViewState }) => {
+    console.log('activeTool', activeTool);
+    if (isDragging || activeTool !== 'move') return;
+
+    setViewState(nextViewState);
+  }, [isDragging, activeTool]);
 
   if (!loader || !mainSettings) return null;
 
