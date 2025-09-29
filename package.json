@@ -29,17 +29,17 @@
     "react"
   ],
   "dependencies": {
-    "@deck.gl/core": "9.1.14",
-    "@deck.gl/extensions": "9.1.14",
-    "@deck.gl/geo-layers": "9.1.14",
-    "@deck.gl/layers": "9.1.14",
-    "@deck.gl/mesh-layers": "9.1.14",
-    "@deck.gl/react": "9.1.14",
+    "@deck.gl/core": "9.1.11",
+    "@deck.gl/extensions": "9.1.11",
+    "@deck.gl/geo-layers": "9.1.11",
+    "@deck.gl/layers": "9.1.11",
+    "@deck.gl/mesh-layers": "9.1.11",
+    "@deck.gl/react": "9.1.11",
     "@fontsource/overpass": "^5.0.18",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/free-solid-svg-icons": "^6.6.0",
     "@fortawesome/react-fontawesome": "^0.2.2",
-    "@hms-dbmi/viv": "0.18.0",
+    "@hms-dbmi/viv": "link:../viv/packages/main",
     "@loaders.gl/3d-tiles": "3.4.13",
     "@loaders.gl/core": "3.4.13",
     "@loaders.gl/gis": "3.4.13",
@@ -110,5 +110,16 @@
   },
   "resolutions": {
     "styled-components": "^5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@vivjs/constants": "link:../viv/packages/constants",
+      "@vivjs/extensions": "link:../viv/packages/extensions",
+      "@vivjs/layers": "link:../viv/packages/layers",
+      "@vivjs/loaders": "link:../viv/packages/loaders",
+      "@vivjs/types": "link:../viv/packages/types",
+      "@vivjs/viewers": "link:../viv/packages/viewers",
+      "@vivjs/views": "link:../viv/packages/views"
+    }
   }
 }
