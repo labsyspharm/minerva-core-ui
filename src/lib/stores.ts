@@ -221,6 +221,7 @@ export interface OverlayStore {
   finalizeRectangle: () => void; // Convert current drawing to annotation
   finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
   finalizeLine: () => void; // Convert current drawing to line annotation
+  finalizePolyline: (points: [number, number][]) => void; // Convert polyline points to polyline annotation
   createTextAnnotation: (position: [number, number], text: string, fontSize?: number) => void; // Create text annotation
   updateTextAnnotation: (annotationId: string, newText: string, fontSize?: number) => void; // Update text annotation content
   updateTextAnnotationColor: (annotationId: string, fontColor: [number, number, number, number]) => void; // Update text annotation color
@@ -311,8 +312,8 @@ export const useOverlayStore = create<OverlayStore>()(
         console.log('Store: handleLayerCreate called with layer:', layer);
         
         if (layer === null) {
-          // Remove the green rectangle layer when tool is not rectangle
-          get().removeOverlayLayer('green-rectangle');
+          // Remove the drawing layer when tool is not active
+          get().removeOverlayLayer('drawing-layer');
           return;
         }
 
@@ -330,10 +331,8 @@ export const useOverlayStore = create<OverlayStore>()(
         // Clear any drag state when switching tools
         get().resetDragState();
         
-        // Remove any temporary drawing layers
-        get().removeOverlayLayer('green-rectangle');
-        get().removeOverlayLayer('green-lasso');
-        get().removeOverlayLayer('green-line');
+        // Remove the unified drawing layer
+        get().removeOverlayLayer('drawing-layer');
       },
 
       handleOverlayInteraction: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number]) => {
@@ -480,7 +479,7 @@ export const useOverlayStore = create<OverlayStore>()(
           get().resetDrawingState();
           
           // Remove the temporary drawing layer
-          get().removeOverlayLayer('green-rectangle');
+          get().removeOverlayLayer('drawing-layer');
         }
       },
 
@@ -508,7 +507,35 @@ export const useOverlayStore = create<OverlayStore>()(
           get().addAnnotation(annotation);
           
           // Remove the temporary drawing layer
-          get().removeOverlayLayer('green-lasso');
+          get().removeOverlayLayer('drawing-layer');
+        }
+      },
+
+      finalizePolyline: (points: [number, number][]) => {
+        if (points.length >= 2) {
+          // Create a new polyline annotation
+          const annotation: PolygonAnnotation = {
+            id: `polyline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: 'polyline',
+            polygon: points,
+            style: {
+              fillColor: [0, 0, 0, 0], // No fill for polyline
+              lineColor: get().globalColor, // Use global color for border
+              lineWidth: 3,
+            },
+            metadata: {
+              createdAt: new Date(),
+              label: `Polyline ${get().annotations.length + 1}`,
+            },
+          };
+
+          console.log('Store: Finalizing polyline as annotation:', annotation);
+          
+          // Add the annotation
+          get().addAnnotation(annotation);
+          
+          // Remove the temporary drawing layer
+          get().removeOverlayLayer('drawing-layer');
         }
       },
 
@@ -542,7 +569,7 @@ export const useOverlayStore = create<OverlayStore>()(
           get().resetDrawingState();
           
           // Remove the temporary drawing layer
-          get().removeOverlayLayer('green-line');
+          get().removeOverlayLayer('drawing-layer');
         }
       },
 

@@ -144,12 +144,29 @@ const getLineWidthPx = () => 3; // always 3px
 
 const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTool, currentInteraction }) => {
   // Use Zustand store for drawing state
-  const { drawingState, finalizeLasso, createTextAnnotation, globalColor } = useOverlayStore();
+  const { drawingState, finalizeLasso, finalizePolyline, createTextAnnotation, globalColor } = useOverlayStore();
   const { isDrawing, dragStart, dragEnd } = drawingState;
 
   // Local state for lasso tool
   const [lassoPoints, setLassoPoints] = React.useState<[number, number][]>([]);
   const [isLassoDrawing, setIsLassoDrawing] = React.useState(false);
+
+  // Local state for polyline tool
+  const [polylinePoints, setPolylinePoints] = React.useState<[number, number][]>([]);
+  const [isPolylineDrawing, setIsPolylineDrawing] = React.useState(false);
+  
+  // Refs to access current values without causing re-renders
+  const polylinePointsRef = React.useRef<[number, number][]>([]);
+  const isPolylineDrawingRef = React.useRef(false);
+
+  // Keep refs in sync with state
+  React.useEffect(() => {
+    polylinePointsRef.current = polylinePoints;
+  }, [polylinePoints]);
+
+  React.useEffect(() => {
+    isPolylineDrawingRef.current = isPolylineDrawing;
+  }, [isPolylineDrawing]);
 
   // Local state for text tool
   const [showTextInput, setShowTextInput] = React.useState(false);
@@ -157,14 +174,52 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   const [textInputValue, setTextInputValue] = React.useState('');
   const [textFontSize, setTextFontSize] = React.useState(14);
 
+  // Handle polyline finalization
+  const finalizeCurrentPolyline = () => {
+    if (isPolylineDrawing && polylinePoints.length >= 2) {
+      console.log('DrawingOverlay: Finalizing polyline with points:', polylinePoints);
+      finalizePolyline(polylinePoints);
+      setIsPolylineDrawing(false);
+      setPolylinePoints([]);
+    }
+  };
 
-  // Handle tool changes - clear lasso state when switching tools
+  // Handle tool changes - clear state when switching tools
   React.useEffect(() => {
     if (activeTool !== 'lasso') {
       setLassoPoints([]);
       setIsLassoDrawing(false);
     }
-  }, [activeTool]);
+    if (activeTool !== 'polyline') {
+      // Finalize polyline if we were drawing one
+      if (isPolylineDrawingRef.current && polylinePointsRef.current.length >= 2) {
+        finalizePolyline(polylinePointsRef.current);
+      }
+      setPolylinePoints([]);
+      setIsPolylineDrawing(false);
+    }
+  }, [activeTool, finalizePolyline]);
+
+  // Handle keyboard events for polyline finalization
+  React.useEffect(() => {
+    if (activeTool !== 'polyline' || !isPolylineDrawing) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Finalize polyline on Enter, Return, or Escape
+      if (event.key === 'Enter' || event.key === 'Return' || event.key === 'Escape') {
+        event.preventDefault();
+        finalizeCurrentPolyline();
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeTool, isPolylineDrawing, polylinePoints, finalizeCurrentPolyline]);
 
   // Simplified interaction handler for creation tools only
   React.useEffect(() => {
@@ -220,8 +275,37 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           }
           break;
       }
+    } else if (activeTool === 'polyline') {
+      console.log('DrawingOverlay: Received polyline interaction:', type, 'at coordinate:', [x, y]);
+
+      if (type === 'click') {
+        // Add point to polyline
+        if (!isPolylineDrawing) {
+          setIsPolylineDrawing(true);
+          // Add first point twice on start
+          setPolylinePoints([[x, y] as [number, number], [x, y] as [number, number]]);
+          console.log('DrawingOverlay: Started polyline with point (duplicated):', [x, y]);
+        } else {
+          // Add additional points - add twice in the middle of the array
+          setPolylinePoints(prev => {
+            const middleIndex = Math.floor(prev.length / 2);
+            const newPoint = [x, y] as [number, number];
+            const newPoints = [...prev];
+            newPoints.splice(middleIndex, 0, newPoint, newPoint);
+            return newPoints;
+          });
+          console.log('DrawingOverlay: Added polyline segment point (duplicated in middle):', [x, y]);
+        }
+      } else if (type === 'dragStart') {
+        // Start polyline drawing
+        if (!isPolylineDrawing) {
+          setIsPolylineDrawing(true);
+          // Add first point twice on start (same as click)
+          setPolylinePoints([[x, y] as [number, number], [x, y] as [number, number]]);
+        }
+      }
     }
-  }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso]);
+  }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso, isPolylineDrawing, finalizePolyline]);
 
   // Handle text input submission
   const handleTextSubmit = () => {
@@ -245,142 +329,85 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     setTextFontSize(14); // Reset to default
   };
 
-  // Create green rectangle overlay layer based on drawing state
-  const greenRectangleLayer = React.useMemo(() => {
-    if (activeTool !== 'rectangle') {
-      return null;
-    }
+  // Unified drawing layer - handles all drawing tools with one layer
+  const drawingLayer = React.useMemo(() => {
+    // Determine polygon data and styling based on active tool
+    let polygonData: [number, number][] | null = null;
+    let layerId = 'drawing-layer';
+    let fillColor: [number, number, number, number] = [0, 255, 0, 50];
+    let lineColor: [number, number, number, number] = [0, 255, 0, 255];
+    let shouldFill = true;
 
-    console.log('DrawingOverlay: Creating green rectangle layer with state:', {
-      isDrawing,
-      dragStart,
-      dragEnd
-    });
-
-    // Only show rectangle when actively drawing or when drawing is complete
-    if (isDrawing && dragStart && dragEnd) {
+    // Rectangle tool: uses dragStart/dragEnd to create rectangle coordinates
+    if (activeTool === 'rectangle' && isDrawing && dragStart && dragEnd) {
       const [startX, startY] = dragStart;
       const [endX, endY] = dragEnd;
-
-      // Ensure proper rectangle coordinates (start can be anywhere relative to end)
       const minX = Math.min(startX, endX);
       const maxX = Math.max(startX, endX);
       const minY = Math.min(startY, endY);
       const maxY = Math.max(startY, endY);
-
-      console.log('DrawingOverlay: Creating dynamic rectangle from', [minX, minY], 'to', [maxX, maxY]);
-
-      return new PolygonLayer({
-        id: 'green-rectangle',
-        data: [{
-          polygon: [
-            [minX, minY],
-            [maxX, minY],
-            [maxX, maxY],
-            [minX, maxY],
-            [minX, minY], // Close the polygon
-          ]
-        }],
-        getPolygon: d => d.polygon,
-        getFillColor: [0, 255, 0, 50], // Green with low opacity
-        getLineColor: [0, 255, 0, 255], // Solid green border
-        getLineWidth: 3,
-        stroked: true,
-        filled: true,
-      });
+      
+      polygonData = [
+        [minX, minY],
+        [maxX, minY],
+        [maxX, maxY],
+        [minX, maxY],
+        [minX, minY],
+      ];
+      console.log('DrawingOverlay: Rectangle polygon data:', polygonData);
     }
-
-    // No default rectangle - only show when drawing
-    console.log('DrawingOverlay: No rectangle to show - waiting for user interaction');
-    return null;
-  }, [activeTool, isDrawing, dragStart, dragEnd]);
-
-  // Create lasso polygon overlay layer
-  const lassoLayer = React.useMemo(() => {
-    if (activeTool !== 'lasso') {
-      return null;
+    // Lasso tool: uses lassoPoints array with auto-closing
+    else if (activeTool === 'lasso' && isLassoDrawing && lassoPoints.length >= 3) {
+      polygonData = [...lassoPoints, lassoPoints[0]]; // Close the polygon
+      fillColor = [255, 165, 0, 50]; // Orange
+      lineColor = [255, 165, 0, 255];
+      console.log('DrawingOverlay: Lasso polygon data:', polygonData);
     }
-
-    console.log('DrawingOverlay: Creating lasso layer with points:', lassoPoints);
-
-    // Only show lasso when actively drawing or when drawing is complete
-    if (isLassoDrawing && lassoPoints.length >= 3) {
-      // Close the polygon by adding the first point at the end
-      const closedPoints = [...lassoPoints, lassoPoints[0]];
-
-      return new PolygonLayer({
-        id: 'green-lasso',
-        data: [{
-          polygon: closedPoints
-        }],
-        getPolygon: d => d.polygon,
-        getFillColor: [255, 165, 0, 50], // Orange with low opacity
-        getLineColor: [255, 165, 0, 255], // Solid orange border
-        getLineWidth: getLineWidthPx(),
-        lineWidthScale: 1,
-        lineWidthUnits: 'pixels',
-        lineWidthMinPixels: getLineWidthPx(),
-        lineWidthMaxPixels: getLineWidthPx(),
-        stroked: true,
-        filled: true,
-      });
+    // Polyline tool: uses polylinePoints array without closing
+    else if (activeTool === 'polyline' && isPolylineDrawing && polylinePoints.length >= 1) {
+      polygonData = polylinePoints;
+      fillColor = [0, 255, 0, 0]; // No fill for polyline
+      shouldFill = false;
+      console.log('DrawingOverlay: Polyline polygon data:', polygonData);
     }
-
-    // No lasso to show - waiting for user interaction
-    console.log('DrawingOverlay: No lasso to show - waiting for user interaction');
-    return null;
-  }, [activeTool, isLassoDrawing, lassoPoints]);
-
-  // Create green line overlay layer based on drawing state
-  const greenLineLayer = React.useMemo(() => {
-    if (activeTool !== 'line') {
-      return null;
-    }
-
-    console.log('DrawingOverlay: Creating green line layer with state:', {
-      isDrawing,
-      dragStart,
-      dragEnd
-    });
-
-    // Only show line when actively drawing or when drawing is complete
-    if (isDrawing && dragStart && dragEnd) {
+    // Line tool: uses dragStart/dragEnd to create line coordinates
+    else if (activeTool === 'line' && isDrawing && dragStart && dragEnd) {
       const [startX, startY] = dragStart;
       const [endX, endY] = dragEnd;
-
-      console.log('DrawingOverlay: Creating dynamic line from', [startX, startY], 'to', [endX, endY]);
-
-      // Convert line to polygon for consistent rendering
-      const linePolygon = [
+      
+      polygonData = [
         [startX, startY],
         [endX, endY],
         [endX, endY],
         [startX, startY],
-        [startX, startY] // Close the polygon
+        [startX, startY]
       ];
-
-      return new PolygonLayer({
-        id: 'green-line',
-        data: [{
-          polygon: linePolygon
-        }],
-        getPolygon: d => d.polygon,
-        getFillColor: [0, 255, 255, 50], // Cyan with low opacity
-        getLineColor: [0, 255, 255, 255], // Solid cyan border
-        getLineWidth: getLineWidthPx(),
-        lineWidthScale: 1,
-        lineWidthUnits: 'pixels',
-        lineWidthMinPixels: getLineWidthPx(),
-        lineWidthMaxPixels: getLineWidthPx(),
-        stroked: true,
-        filled: true,
-      });
+      fillColor = [0, 255, 255, 50]; // Cyan
+      lineColor = [0, 255, 255, 255];
+      console.log('DrawingOverlay: Line polygon data:', polygonData);
     }
 
-    // No default line - only show when drawing
-    console.log('DrawingOverlay: No line to show - waiting for user interaction');
-    return null;
-  }, [activeTool, isDrawing, dragStart, dragEnd]);
+    // Return null if no polygon data
+    if (!polygonData) {
+      return null;
+    }
+
+    // Create single unified polygon layer
+    return new PolygonLayer({
+      id: layerId,
+      data: [{ polygon: polygonData }],
+      getPolygon: d => d.polygon,
+      getFillColor: fillColor,
+      getLineColor: lineColor,
+      getLineWidth: getLineWidthPx(),
+      lineWidthScale: 1,
+      lineWidthUnits: 'pixels',
+      lineWidthMinPixels: getLineWidthPx(),
+      lineWidthMaxPixels: getLineWidthPx(),
+      stroked: true,
+      filled: shouldFill,
+    });
+  }, [activeTool, isDrawing, dragStart, dragEnd, isLassoDrawing, lassoPoints, isPolylineDrawing, polylinePoints]);
 
   // Get annotations from store with proper reactivity
   const annotations = useOverlayStore(state => state.annotations);
@@ -421,12 +448,11 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           }));
         } else {
           // Create polygon layer for other annotations
-          let fillColor: [number, number, number, number];
+          let fillColor: [number, number, number, number] = [255, 255, 255, 1]; // Default: very low opacity white fill
           
-          if (annotation.type === 'rectangle' || annotation.type === 'polygon') {
-            fillColor = [255, 255, 255, 1]; // Very low opacity white fill
-          } else if (annotation.type === 'line') {
-            fillColor = [0, 0, 0, 0]; // Lines don't have fill
+          // @ts-ignore - polyline type exists at runtime but not in type definition
+          if (annotation.type === 'line' || annotation.type === 'polyline') {
+            fillColor = [0, 0, 0, 0]; // Lines and polylines don't have fill
           }
           
           layers.push(new PolygonLayer({
@@ -453,27 +479,14 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
 
   // Notify parent when drawing layer is created or removed
   React.useEffect(() => {
-    let layerToCreate = null;
-
-    if (activeTool === 'rectangle' && greenRectangleLayer) {
-      layerToCreate = greenRectangleLayer;
-      console.log('DrawingOverlay: Notifying parent of green rectangle layer');
-    } else if (activeTool === 'lasso' && lassoLayer) {
-      layerToCreate = lassoLayer;
-      console.log('DrawingOverlay: Notifying parent of lasso layer');
-    } else if (activeTool === 'line' && greenLineLayer) {
-      layerToCreate = greenLineLayer;
-      console.log('DrawingOverlay: Notifying parent of green line layer');
-    }
-
-    if (layerToCreate) {
-      onLayerCreate(layerToCreate);
+    if (drawingLayer) {
+      console.log('DrawingOverlay: Notifying parent of drawing layer for tool:', activeTool);
+      onLayerCreate(drawingLayer);
     } else {
-      // When no tool is active or no layer to show, notify parent to remove layers
-      console.log('DrawingOverlay: Notifying parent to remove drawing layers');
+      console.log('DrawingOverlay: Notifying parent to remove drawing layer');
       onLayerCreate(null);
     }
-  }, [greenRectangleLayer, lassoLayer, greenLineLayer, activeTool, onLayerCreate]);
+  }, [drawingLayer, activeTool, onLayerCreate]);
 
   // Handle annotation layers - they are now managed through the overlay layers system
   React.useEffect(() => {
