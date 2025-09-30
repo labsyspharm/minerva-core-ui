@@ -3,7 +3,7 @@ import { ChromePicker } from 'react-color';
 import { DrawingOverlay } from "./DrawingOverlay";
 import { LayersPanel } from "./LayersPanel";
 import styles from "./index.module.css";
-import { MoveIcon, RectangleIcon, LassoIcon, LineIcon, TextIcon, ColorIcon } from "./icons";
+import { MoveIcon, RectangleIcon, LassoIcon, LineIcon, PolylineIcon, TextIcon, ColorIcon } from "./icons";
 import { useOverlayStore } from "../../lib/stores";
 
 // Types
@@ -22,6 +22,7 @@ const TOOLS = {
   RECTANGLE: 'rectangle',
   LASSO: 'lasso',
   LINE: 'line',
+  POLYLINE: 'polyline',
   TEXT: 'text'
 } as const;
 
@@ -156,6 +157,14 @@ const Overlays = (props: Props) => {
           onClick={() => handleToolChangeLocal(TOOLS.LINE)}
         >
           <LineIcon />
+        </button>
+        
+        <button 
+          className={`${styles.toolButton} ${activeTool === TOOLS.POLYLINE ? styles.active : ''}`}
+          title="Poly-line Tool"
+          onClick={() => handleToolChangeLocal(TOOLS.POLYLINE)}
+        >
+          <PolylineIcon />
         </button>
         
         <button 
