@@ -1,6 +1,6 @@
 import * as React from "react";
 import { PolygonLayer, TextLayer } from '@deck.gl/layers';
-import { useOverlayStore, isPointInPolygon, textToPolygon } from "../../lib/stores";
+import { useOverlayStore } from "../../lib/stores";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {
@@ -137,15 +137,14 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
 interface DrawingOverlayProps {
   onLayerCreate: (layer: PolygonLayer | TextLayer | null) => void;
   activeTool: string;
-  onInteraction?: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number]) => void;
-  currentInteraction?: { type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number] } | null;
+  currentInteraction?: { type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number] } | null;
 }
 
 const getLineWidthPx = () => 3; // always 3px
 
 const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTool, currentInteraction }) => {
-  // Use Zustand store for drawing state and drag state
-  const { drawingState, dragState, hoverState, finalizeLasso, startDrag, updateDrag, endDrag, setHoveredAnnotation, createTextAnnotation, globalColor } = useOverlayStore();
+  // Use Zustand store for drawing state
+  const { drawingState, finalizeLasso, createTextAnnotation, globalColor } = useOverlayStore();
   const { isDrawing, dragStart, dragEnd } = drawingState;
 
   // Local state for lasso tool
@@ -158,127 +157,29 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   const [textInputValue, setTextInputValue] = React.useState('');
   const [textFontSize, setTextFontSize] = React.useState(14);
 
-  // Clear lasso state when tool changes
+
+  // Handle tool changes - clear lasso state when switching tools
   React.useEffect(() => {
-    setLassoPoints([]);
-    setIsLassoDrawing(false);
+    if (activeTool !== 'lasso') {
+      setLassoPoints([]);
+      setIsLassoDrawing(false);
+    }
   }, [activeTool]);
 
-  // Note: Interaction handling is now managed by the Zustand store
-  // The store automatically updates drawingState based on currentInteraction
-
-  // Hit detection function for move tool
-  const findAnnotationAtPoint = (point: [number, number]) => {
-    const annotations = useOverlayStore.getState().annotations;
-    const hiddenLayers = useOverlayStore.getState().hiddenLayers;
-    
-    console.log('DrawingOverlay: Checking hit detection at point:', point, 'with', annotations.length, 'annotations');
-    
-    // Check annotations in reverse order (top to bottom)
-    for (let i = annotations.length - 1; i >= 0; i--) {
-      const annotation = annotations[i];
-      
-      // Skip hidden annotations
-      if (hiddenLayers.has(annotation.id)) {
-        continue;
-      }
-      
-      let hit = false;
-      
-      if (annotation.type === 'text') {
-        // For text annotations, use a larger hit detection area
-        // Since TextLayer is pickable, we still need some hit detection logic
-        const textPolygon = textToPolygon(annotation.position, annotation.text, annotation.style.fontSize, annotation.style.padding || 4);
-        hit = isPointInPolygon(point, textPolygon);
-        console.log('DrawingOverlay: Checking text annotation:', annotation.id, 'at position:', annotation.position, 'hit:', hit);
-      } else {
-        // All other annotations use polygon coordinates
-        hit = isPointInPolygon(point, annotation.polygon);
-        console.log('DrawingOverlay: Checking non-text annotation:', annotation.id, 'hit:', hit);
-      }
-      
-      if (hit) {
-        console.log('DrawingOverlay: Found hit annotation:', annotation.id);
-        return annotation;
-      }
-    }
-    
-    console.log('DrawingOverlay: No annotation found at point:', point);
-    return null;
-  };
-
-  // Handle move tool and text tool interactions (for moving existing annotations)
+  // Simplified interaction handler for creation tools only
   React.useEffect(() => {
-    if (currentInteraction && (activeTool === 'move' || activeTool === 'text')) {
-      const { type, coordinate } = currentInteraction;
-      const [x, y] = coordinate;
+    if (!currentInteraction) return;
 
-      console.log('DrawingOverlay: Received interaction:', type, 'at coordinate:', [x, y], 'with tool:', activeTool);
+    const { type, coordinate } = currentInteraction;
+    const [x, y] = coordinate;
 
-      switch (type) {
-        case 'click':
-        case 'dragStart':
-          // Find annotation at click point
-          const annotation = findAnnotationAtPoint([x, y]);
-          if (annotation) {
-            console.log('DrawingOverlay: Found annotation to drag:', annotation.id);
-            
-            // Calculate offset from annotation's reference point
-            let offsetX = 0, offsetY = 0;
-            
-            if (annotation.type === 'text') {
-              const [refX, refY] = annotation.position;
-              offsetX = x - refX;
-              offsetY = y - refY;
-            } else {
-              const [refX, refY] = annotation.polygon[0];
-              offsetX = x - refX;
-              offsetY = y - refY;
-            }
-            
-            startDrag(annotation.id, [offsetX, offsetY]);
-          }
-          break;
-        case 'drag':
-          // Update drag position
-          if (dragState.isDragging) {
-            updateDrag(coordinate);
-          }
-          break;
-        case 'dragEnd':
-          // End drag
-          if (dragState.isDragging) {
-            endDrag();
-          }
-          break;
-      }
-    }
-  }, [currentInteraction, activeTool, dragState.isDragging, startDrag, updateDrag, endDrag]);
-
-  // Handle hover detection for move tool and text tool
-  React.useEffect(() => {
-    if ((activeTool === 'move' || activeTool === 'text') && currentInteraction) {
-      const { type, coordinate } = currentInteraction;
-      const [x, y] = coordinate;
-
-      if (type === 'hover' || type === 'click' || type === 'dragStart') {
-        // Find annotation at hover point
-        const annotation = findAnnotationAtPoint([x, y]);
-        if (annotation) {
-          setHoveredAnnotation(annotation.id);
-        } else {
-          setHoveredAnnotation(null);
-        }
-      }
-    }
-  }, [currentInteraction, activeTool, setHoveredAnnotation]);
-
-  // Handle lasso tool interactions
-  React.useEffect(() => {
-    if (currentInteraction && activeTool === 'lasso') {
-      const { type, coordinate } = currentInteraction;
-      const [x, y] = coordinate;
-
+    if (activeTool === 'text' && type === 'click') {
+      // Show text input when clicking with text tool
+      console.log('DrawingOverlay: Clicked with text tool, showing text input');
+      setTextInputPosition([x, y]);
+      setShowTextInput(true);
+      setTextInputValue('');
+    } else if (activeTool === 'lasso') {
       console.log('DrawingOverlay: Received lasso interaction:', type, 'at coordinate:', [x, y]);
 
       switch (type) {
@@ -288,7 +189,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
             setIsLassoDrawing(true);
           }
           setLassoPoints(prev => [...prev, [x, y] as [number, number]]);
-          console.log('DrawingOverlay: Added lasso point:', [x, y]);
           break;
         case 'dragStart':
           // Start lasso drawing
@@ -306,49 +206,22 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         case 'dragEnd':
           // Finish lasso drawing
           if (isLassoDrawing) {
-            // Keep the final point
-            const finalPoints: [number, number][] = [...lassoPoints, [x, y] as [number, number]];
-            setLassoPoints(finalPoints);
-            console.log('DrawingOverlay: Finished lasso with points:', finalPoints);
+            setLassoPoints(currentPoints => {
+              const finalPoints: [number, number][] = [...currentPoints, [x, y] as [number, number]];
 
-            // Finalize the lasso as an annotation
-            if (finalPoints.length >= 3) {
-              finalizeLasso(finalPoints);
-              setIsLassoDrawing(false);
-              setLassoPoints([]);
-            }
+              // Finalize the lasso as an annotation
+              if (finalPoints.length >= 3) {
+                finalizeLasso(finalPoints);
+                setIsLassoDrawing(false);
+                return []; // Clear points
+              }
+              return finalPoints; // Keep current points if not enough
+            });
           }
           break;
       }
     }
-  }, [currentInteraction, activeTool, isLassoDrawing, lassoPoints, finalizeLasso]);
-
-  // Handle text tool interactions
-  React.useEffect(() => {
-    if (currentInteraction && activeTool === 'text') {
-      const { type, coordinate } = currentInteraction;
-      const [x, y] = coordinate;
-
-      console.log('DrawingOverlay: Received text tool interaction:', type, 'at coordinate:', [x, y]);
-
-      if (type === 'click') {
-        // Check if clicking on an existing annotation
-        const annotation = findAnnotationAtPoint([x, y]);
-        
-        if (annotation) {
-          // If clicking on existing annotation, don't show text input
-          // The drag logic above will handle moving the annotation
-          console.log('DrawingOverlay: Clicked on existing annotation with text tool, not showing text input');
-        } else {
-          // Only show text input when clicking on empty space
-          console.log('DrawingOverlay: Clicked on empty space with text tool, showing text input');
-          setTextInputPosition([x, y]);
-          setShowTextInput(true);
-          setTextInputValue('');
-        }
-      }
-    }
-  }, [currentInteraction, activeTool]);
+  }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso]);
 
   // Handle text input submission
   const handleTextSubmit = () => {
@@ -521,38 +394,15 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   }, [annotations]);
 
   // Create persistent annotation layers from stored annotations (excluding hidden ones)
-  // All annotations are now rendered as polygon layers with hover effects
+  // All annotations are now rendered as polygon layers
   const annotationLayers = React.useMemo(() => {
     const layers: (PolygonLayer | TextLayer)[] = [];
     
     annotations
       .filter(annotation => !hiddenLayers.has(annotation.id)) // Filter out hidden annotations
       .forEach(annotation => {
-        const isHovered = hoverState.hoveredAnnotationId === annotation.id;
-        const isDragged = dragState.draggedAnnotationId === annotation.id;
-        
         if (annotation.type === 'text') {
           // Create text layer for text annotations
-          let fontColor: [number, number, number, number];
-          let backgroundColor: [number, number, number, number];
-          let fontSize = annotation.style.fontSize;
-          
-          if (isDragged) {
-            // Dragged text - bright yellow
-            fontColor = [255, 255, 0, 255];
-            backgroundColor = [255, 255, 0, 50];
-            fontSize = annotation.style.fontSize + 2;
-          } else if (isHovered) {
-            // Hovered text - bright cyan
-            fontColor = [0, 255, 255, 255];
-            backgroundColor = [0, 255, 255, 30];
-            fontSize = annotation.style.fontSize + 1;
-          } else {
-            // Normal text - use annotation's style
-            fontColor = annotation.style.fontColor;
-            backgroundColor = annotation.style.backgroundColor || [0, 0, 0, 100];
-          }
-          
           layers.push(new TextLayer({
             id: `annotation-${annotation.id}`,
             data: [{
@@ -561,41 +411,22 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
             }],
             getText: d => d.text,
             getPosition: d => d.position,
-            getColor: fontColor,
-            getBackgroundColor: backgroundColor,
-            getSize: fontSize,
+            getColor: annotation.style.fontColor,
+            getBackgroundColor: annotation.style.backgroundColor || [0, 0, 0, 100],
+            getSize: annotation.style.fontSize,
             fontFamily: 'Arial, sans-serif',
             fontWeight: 'normal',
-            padding:  4,
-            // background: true,
-            // backgroundPadding: [80, 80, 80, 80], // Increased padding for easier clicking
-            pickable: true, // Make the text layer itself pickable
+            padding: 4,
+            pickable: true,
           }));
         } else {
           // Create polygon layer for other annotations
-          let lineColor: [number, number, number, number];
           let fillColor: [number, number, number, number];
-          let lineWidth = annotation.style.lineWidth;
           
-          if (isDragged) {
-            // Dragged annotation - bright yellow
-            lineColor = [255, 255, 0, 255];
-            fillColor = [255, 255, 0, 30];
-            lineWidth = annotation.style.lineWidth + 2;
-          } else if (isHovered) {
-            // Hovered annotation - bright cyan
-            lineColor = [0, 255, 255, 255];
-            fillColor = [255, 255, 255, 1];
-            lineWidth = annotation.style.lineWidth + 1;
-          } else {
-            // Normal annotation - use annotation's line color but very low opacity white fill
-            if (annotation.type === 'rectangle' || annotation.type === 'polygon') {
-              lineColor = annotation.style.lineColor;
-              fillColor = [255, 255, 255, 1]; // Very low opacity white fill
-            } else if (annotation.type === 'line') {
-              lineColor = annotation.style.lineColor;
-              fillColor = [0, 0, 0, 0]; // Lines don't have fill
-            }
+          if (annotation.type === 'rectangle' || annotation.type === 'polygon') {
+            fillColor = [255, 255, 255, 1]; // Very low opacity white fill
+          } else if (annotation.type === 'line') {
+            fillColor = [0, 0, 0, 0]; // Lines don't have fill
           }
           
           layers.push(new PolygonLayer({
@@ -605,12 +436,12 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
             }],
             getPolygon: d => d.polygon,
             getFillColor: fillColor,
-            getLineColor: lineColor,
-            getLineWidth: lineWidth,
+            getLineColor: annotation.style.lineColor,
+            getLineWidth: annotation.style.lineWidth * 10,
             lineWidthScale: 1,
             lineWidthUnits: 'pixels',
-            lineWidthMinPixels: lineWidth,
-            lineWidthMaxPixels: lineWidth,
+            lineWidthMinPixels: annotation.style.lineWidth,
+            lineWidthMaxPixels: annotation.style.lineWidth,
             stroked: true,
             filled: true,
           }));
@@ -618,7 +449,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       });
     
     return layers;
-  }, [annotations, hiddenLayers, hoverState.hoveredAnnotationId, dragState.draggedAnnotationId]);
+  }, [annotations, hiddenLayers]);
 
   // Notify parent when drawing layer is created or removed
   React.useEffect(() => {
