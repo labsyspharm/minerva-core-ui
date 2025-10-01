@@ -226,7 +226,7 @@ export interface OverlayStore {
   resetDrawingState: () => void;
   handleLayerCreate: (layer: OverlayLayer | null) => void;
   handleToolChange: (tool: string) => void;
-  handleOverlayInteraction: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number]) => void;
+  handleOverlayInteraction: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number]) => void;
 
   // New annotation actions
   addAnnotation: (annotation: Annotation) => void;

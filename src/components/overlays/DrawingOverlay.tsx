@@ -137,7 +137,7 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
 interface DrawingOverlayProps {
   onLayerCreate: (layer: PolygonLayer | TextLayer | null) => void;
   activeTool: string;
-  currentInteraction?: { type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number] } | null;
+  currentInteraction?: { type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number] } | null;
 }
 
 const getLineWidthPx = () => 3; // always 3px
@@ -245,6 +245,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
 
     const [x, y] = coordinate;
 
+    // Handle hover interactions for all tools
+
     if (activeTool === 'text' && type === 'click') {
       // Show text input when clicking with text tool
       console.log('DrawingOverlay: Clicked with text tool, showing text input');
@@ -304,6 +306,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         newPoints.splice(middleIndex, 0, newPoint, newPoint);
         console.log('DrawingOverlay: New points:', newPoints);
         setPolylinePoints(newPoints);
+      } else if (type === 'hover') {
+        console.log('DrawingOverlay: Hover interaction at coordinate:', [x, y]);
       }
     }
   }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso, isPolylineDrawing, finalizePolyline]);
