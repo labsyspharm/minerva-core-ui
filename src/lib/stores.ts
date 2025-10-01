@@ -21,6 +21,7 @@ export interface RectangleAnnotation {
     createdAt: Date;
     label?: string;
     description?: string;
+    isImported?: boolean; // Flag to mark imported annotations as un-deletable
   };
 }
 
@@ -37,6 +38,7 @@ export interface PolygonAnnotation {
     createdAt: Date;
     label?: string;
     description?: string;
+    isImported?: boolean; // Flag to mark imported annotations as un-deletable
   };
 }
 
@@ -52,6 +54,7 @@ export interface LineAnnotation {
     createdAt: Date;
     label?: string;
     description?: string;
+    isImported?: boolean; // Flag to mark imported annotations as un-deletable
   };
 }
 
@@ -67,6 +70,7 @@ export interface PolylineAnnotation {
     createdAt: Date;
     label?: string;
     description?: string;
+    isImported?: boolean; // Flag to mark imported annotations as un-deletable
   };
 }
 
@@ -85,6 +89,7 @@ export interface TextAnnotation {
     createdAt: Date;
     label?: string;
     description?: string;
+    isImported?: boolean; // Flag to mark imported annotations as un-deletable
   };
 }
 
@@ -101,6 +106,7 @@ export interface PointAnnotation {
     createdAt: Date;
     label?: string;
     description?: string;
+    isImported?: boolean; // Flag to mark imported annotations as un-deletable
   };
 }
 
@@ -764,15 +770,15 @@ export const useOverlayStore = create<OverlayStore>()(
           // Find the annotation being dragged
           const annotation = annotations.find(a => a.id === dragState.draggedAnnotationId);
           if (annotation) {
-            if (annotation.type === 'text') {
-              // For text annotations, update the position directly
+            if (annotation.type === 'text' || annotation.type === 'point') {
+              // For text and point annotations, update the position directly
               const updatedAnnotation = {
                 ...annotation,
                 position: [newX, newY] as [number, number]
               };
               get().updateAnnotation(dragState.draggedAnnotationId, updatedAnnotation);
             } else {
-              // For polygon-based annotations, calculate delta from first point
+              // For polygon-based annotations (rectangle, polygon, line, polyline), calculate delta from first point
               const deltaX = newX - annotation.polygon[0][0];
               const deltaY = newY - annotation.polygon[0][1];
 

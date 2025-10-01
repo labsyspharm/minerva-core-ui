@@ -160,8 +160,22 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
   // Note: All annotations are shown in the list, but hidden ones are dimmed
   
   const handleDeleteLayer = (annotationId: string) => {
+    // Check if annotation is imported (un-deletable)
+    const annotation = annotations.find(a => a.id === annotationId);
+    if (annotation?.metadata?.isImported) {
+      console.log('Cannot delete imported annotation:', annotationId);
+      return;
+    }
     removeAnnotation(annotationId);
     // Hidden state is automatically cleaned up when annotation is removed
+  };
+  
+  const handleClearAllLayers = () => {
+    // Only clear non-imported annotations
+    const nonImportedAnnotations = annotations.filter(a => !a.metadata?.isImported);
+    nonImportedAnnotations.forEach(annotation => {
+      removeAnnotation(annotation.id);
+    });
   };
 
   const handleEditText = (annotationId: string, currentText: string, currentFontSize: number) => {
@@ -319,8 +333,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
         {annotations.length > 0 && (
           <button
             style={clearButtonStyle}
-            onClick={() => clearAnnotations()}
-            title="Clear all layers"
+            onClick={() => handleClearAllLayers()}
+            title="Clear all user-created layers (imported layers are protected)"
           >
             Clear All
           </button>
@@ -335,6 +349,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
         ) : (
           annotations.map((annotation, index) => {
             const isHidden = hiddenLayers.has(annotation.id);
+            const isImported = annotation.metadata?.isImported || false;
             return (
               <div
                 key={annotation.id}
@@ -374,8 +389,23 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
                 </span>
                 
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {getLayerName(annotation)}
+                    {isImported && (
+                      <span 
+                        style={{ 
+                          fontSize: '9px', 
+                          color: '#4CAF50', 
+                          backgroundColor: '#1a3a1a',
+                          padding: '2px 4px',
+                          borderRadius: '3px',
+                          fontWeight: 'normal'
+                        }}
+                        title="Imported from metadata - cannot be deleted"
+                      >
+                        IMPORTED
+                      </span>
+                    )}
                   </div>
                   <div style={{ color: '#999', fontSize: '10px' }}>
                     {annotation.metadata?.createdAt && formatDate(annotation.metadata.createdAt)}
@@ -443,18 +473,35 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
                   </svg>
                 </button>
                 
-                <button
-                  style={deleteButtonStyle}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteLayer(annotation.id);
-                  }}
-                  title="Delete layer"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                  </svg>
-                </button>
+                {!isImported && (
+                  <button
+                    style={deleteButtonStyle}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteLayer(annotation.id);
+                    }}
+                    title="Delete layer"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                    </svg>
+                  </button>
+                )}
+                {isImported && (
+                  <span 
+                    style={{ 
+                      ...deleteButtonStyle, 
+                      color: '#666',
+                      cursor: 'not-allowed',
+                      opacity: 0.5
+                    }}
+                    title="Imported annotations cannot be deleted"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z"/>
+                    </svg>
+                  </span>
+                )}
               </div>
             );
           })
