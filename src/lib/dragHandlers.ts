@@ -29,19 +29,19 @@ export const createDragHandlers = (
   return {
     // Single click without dragging (used for text, polyline, lasso point-by-point)
     onClick: ({ coordinate }: any) => emit('click', coordinate),
-    
+
     // Start of drag operation (used for rectangle, line, lasso freehand)
     onDragStart: ({ coordinate }: any) => emit('dragStart', coordinate),
-    
+
     // During drag operation (used for rectangle, line, lasso freehand)
     onDrag: ({ coordinate }: any) => emit('drag', coordinate),
-    
+
     // End of drag operation (used for rectangle, line, lasso freehand)
     onDragEnd: ({ coordinate }: any) => emit('dragEnd', coordinate),
-    
+
     // Hover events (only for move and text tools to show cursor changes)
     onHover: ({ coordinate }: any) => {
-      if (activeTool === 'move' || activeTool === 'text') {
+      if (activeTool === 'move' || activeTool === 'text' || activeTool === 'polyline') {
         emit('hover', coordinate);
       }
     },

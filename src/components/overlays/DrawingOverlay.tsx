@@ -153,6 +153,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
 
   // Local state for polyline tool
   const [polylinePoints, setPolylinePoints] = React.useState<[number, number][]>([]);
+  const [finalizedPolylineSegmentCount, setFinalizedPolylineSegmentCount] = React.useState(0);
   const [isPolylineDrawing, setIsPolylineDrawing] = React.useState(false);
 
   // Refs to access current values without causing re-renders
@@ -179,12 +180,11 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
 
   // Handle polyline finalization
   const finalizeCurrentPolyline = () => {
-    console.log('DrawingOverlay: Finalizing current polyline');
     if (polylinePoints.length >= 2) {
-      console.log('DrawingOverlay: Finalizing polyline with points:', polylinePoints);
       finalizePolyline(polylinePoints);
       setIsPolylineDrawing(false);
       setPolylinePoints([]);
+      setFinalizedPolylineSegmentCount(0);
     }
   };
 
@@ -204,7 +204,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // Handle keyboard events for polyline finalization
   React.useEffect(() => {
     if (activeTool !== 'polyline') return;
-    console.log('DrawingOverlay: Handling keyboard events for polyline');
 
     const handleKeyDown = (event: KeyboardEvent) => {
       // Finalize polyline on Enter, Return, or Escape
@@ -294,19 +293,34 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       }
     } else if (activeTool === 'polyline') {
       console.log('DrawingOverlay: Received polyline interaction:', type, 'at coordinate:', [x, y]);
-
+      const removeMiddleTwoElements = (arr: [number, number][]) => {
+        const mid = arr.length / 2;
+        return [...arr.slice(0, mid - 1), ...arr.slice(mid + 1)];
+      };
+      let prevPoints = [...polylinePoints];
+      if (prevPoints.length > (finalizedPolylineSegmentCount * 2)) {
+        prevPoints = removeMiddleTwoElements(prevPoints);
+      }
       if (type === 'click' || type === 'drag') {
         // Add point to polyline
         console.log('DrawingOverlay: Adding polyline segment point:', [x, y]);
         // Add additional points - add twice in the middle of the array
-        const prevPoints = [...polylinePoints];
         const middleIndex = Math.floor(prevPoints.length / 2);
         const newPoint = [x, y] as [number, number];
         const newPoints = [...prevPoints];
         newPoints.splice(middleIndex, 0, newPoint, newPoint);
         console.log('DrawingOverlay: New points:', newPoints);
         setPolylinePoints(newPoints);
+        setFinalizedPolylineSegmentCount(prev => prev + 1);
       } else if (type === 'hover') {
+        console.log('Hovering over polyline');
+        // based on the number of segments finalized, add temporary point for this hover
+        const middleIndex = Math.floor(prevPoints.length / 2);
+        const newPoint = [x, y] as [number, number];
+        const newPoints = [...prevPoints];
+        newPoints.splice(middleIndex, 0, newPoint, newPoint);
+        console.log('DrawingOverlay: New points:', newPoints);
+        setPolylinePoints(newPoints);
         console.log('DrawingOverlay: Hover interaction at coordinate:', [x, y]);
       }
     }
