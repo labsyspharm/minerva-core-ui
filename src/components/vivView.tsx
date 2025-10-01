@@ -148,7 +148,7 @@ const VivView = (props: Props) => {
 
   // Memoize controller configuration
   const controllerConfig = useMemo(() => ({
-    dragPan: activeTool !== 'rectangle' && activeTool !== 'lasso' && activeTool !== 'line' && !isDragging,
+    dragPan: activeTool === 'move' && !isDragging,
     dragRotate: false,
     scrollZoom: true,
     doubleClickZoom: true,
@@ -161,13 +161,11 @@ const VivView = (props: Props) => {
   const views = useMemo(() => [new OrthographicView({ id: 'ortho', controller: true })], []);
 
   // Memoize view state change handler
-  const handleViewStateChange = useCallback((e: any) => {
-    const { viewState: nextViewState } = e;
-    console.log('Simon', e);
-    if (isDragging) return;
-
+  const handleViewStateChange = useCallback(({ interactionState, viewState: nextViewState }) => {
+    if (isDragging || (activeTool !== 'move' && interactionState.isDragging)) return;
+    // don't allow pan on non-move tool
     setViewState(nextViewState);
-  }, [isDragging]);
+  }, [isDragging, activeTool]);
 
   if (!loader || !mainSettings) return null;
 
