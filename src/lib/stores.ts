@@ -512,6 +512,7 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       finalizePolyline: (points: [number, number][]) => {
+        console.log('Store: Finalizing polyline with points:', points);
         if (points.length >= 2) {
           // Create a new polyline annotation
           const annotation: PolygonAnnotation = {

@@ -43,7 +43,7 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
       <div style={{ marginBottom: '15px', color: 'white', fontSize: '16px', fontWeight: 'bold' }}>
         {title}
       </div>
-      
+
       {/* Font Size Input */}
       <div style={{ marginBottom: '15px' }}>
         <label style={{ color: 'white', fontSize: '14px', marginBottom: '5px', display: 'block' }}>
@@ -67,7 +67,7 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
           }}
         />
       </div>
-      
+
       {/* Text Input */}
       <textarea
         value={textValue}
@@ -95,7 +95,7 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
           }
         }}
       />
-      
+
       <div style={{ marginTop: '15px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
         <button
           onClick={onCancel}
@@ -154,7 +154,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // Local state for polyline tool
   const [polylinePoints, setPolylinePoints] = React.useState<[number, number][]>([]);
   const [isPolylineDrawing, setIsPolylineDrawing] = React.useState(false);
-  
+
   // Refs to access current values without causing re-renders
   const polylinePointsRef = React.useRef<[number, number][]>([]);
   const isPolylineDrawingRef = React.useRef(false);
@@ -176,7 +176,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
 
   // Handle polyline finalization
   const finalizeCurrentPolyline = () => {
-    if (isPolylineDrawing && polylinePoints.length >= 2) {
+    console.log('DrawingOverlay: Finalizing current polyline');
+    if (polylinePoints.length >= 2) {
       console.log('DrawingOverlay: Finalizing polyline with points:', polylinePoints);
       finalizePolyline(polylinePoints);
       setIsPolylineDrawing(false);
@@ -187,22 +188,20 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // Handle tool changes - clear state when switching tools
   React.useEffect(() => {
     if (activeTool !== 'lasso') {
-      setLassoPoints([]);
       setIsLassoDrawing(false);
+      setLassoPoints([]);
     }
     if (activeTool !== 'polyline') {
-      // Finalize polyline if we were drawing one
-      if (isPolylineDrawingRef.current && polylinePointsRef.current.length >= 2) {
-        finalizePolyline(polylinePointsRef.current);
-      }
       setPolylinePoints([]);
-      setIsPolylineDrawing(false);
+
+
     }
   }, [activeTool, finalizePolyline]);
 
   // Handle keyboard events for polyline finalization
   React.useEffect(() => {
-    if (activeTool !== 'polyline' || !isPolylineDrawing) return;
+    if (activeTool !== 'polyline') return;
+    console.log('DrawingOverlay: Handling keyboard events for polyline');
 
     const handleKeyDown = (event: KeyboardEvent) => {
       // Finalize polyline on Enter, Return, or Escape
@@ -278,31 +277,17 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     } else if (activeTool === 'polyline') {
       console.log('DrawingOverlay: Received polyline interaction:', type, 'at coordinate:', [x, y]);
 
-      if (type === 'click') {
+      if (type === 'click' || type === 'drag') {
         // Add point to polyline
-        if (!isPolylineDrawing) {
-          setIsPolylineDrawing(true);
-          // Add first point twice on start
-          setPolylinePoints([[x, y] as [number, number], [x, y] as [number, number]]);
-          console.log('DrawingOverlay: Started polyline with point (duplicated):', [x, y]);
-        } else {
-          // Add additional points - add twice in the middle of the array
-          setPolylinePoints(prev => {
-            const middleIndex = Math.floor(prev.length / 2);
-            const newPoint = [x, y] as [number, number];
-            const newPoints = [...prev];
-            newPoints.splice(middleIndex, 0, newPoint, newPoint);
-            return newPoints;
-          });
-          console.log('DrawingOverlay: Added polyline segment point (duplicated in middle):', [x, y]);
-        }
-      } else if (type === 'dragStart') {
-        // Start polyline drawing
-        if (!isPolylineDrawing) {
-          setIsPolylineDrawing(true);
-          // Add first point twice on start (same as click)
-          setPolylinePoints([[x, y] as [number, number], [x, y] as [number, number]]);
-        }
+        console.log('DrawingOverlay: Adding polyline segment point:', [x, y]);
+        // Add additional points - add twice in the middle of the array
+        const prevPoints = [...polylinePoints];
+        const middleIndex = Math.floor(prevPoints.length / 2);
+        const newPoint = [x, y] as [number, number];
+        const newPoints = [...prevPoints];
+        newPoints.splice(middleIndex, 0, newPoint, newPoint);
+        console.log('DrawingOverlay: New points:', newPoints);
+        setPolylinePoints(newPoints);
       }
     }
   }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso, isPolylineDrawing, finalizePolyline]);
@@ -346,7 +331,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       const maxX = Math.max(startX, endX);
       const minY = Math.min(startY, endY);
       const maxY = Math.max(startY, endY);
-      
+
       polygonData = [
         [minX, minY],
         [maxX, minY],
@@ -364,7 +349,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       console.log('DrawingOverlay: Lasso polygon data:', polygonData);
     }
     // Polyline tool: uses polylinePoints array without closing
-    else if (activeTool === 'polyline' && isPolylineDrawing && polylinePoints.length >= 1) {
+    else if (activeTool === 'polyline' && polylinePoints.length >= 1) {
       polygonData = polylinePoints;
       fillColor = [0, 255, 0, 0]; // No fill for polyline
       shouldFill = false;
@@ -374,7 +359,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     else if (activeTool === 'line' && isDrawing && dragStart && dragEnd) {
       const [startX, startY] = dragStart;
       const [endX, endY] = dragEnd;
-      
+
       polygonData = [
         [startX, startY],
         [endX, endY],
@@ -424,7 +409,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // All annotations are now rendered as polygon layers
   const annotationLayers = React.useMemo(() => {
     const layers: (PolygonLayer | TextLayer)[] = [];
-    
+
     annotations
       .filter(annotation => !hiddenLayers.has(annotation.id)) // Filter out hidden annotations
       .forEach(annotation => {
@@ -449,12 +434,12 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         } else {
           // Create polygon layer for other annotations
           let fillColor: [number, number, number, number] = [255, 255, 255, 1]; // Default: very low opacity white fill
-          
+
           // @ts-ignore - polyline type exists at runtime but not in type definition
           if (annotation.type === 'line' || annotation.type === 'polyline') {
             fillColor = [0, 0, 0, 0]; // Lines and polylines don't have fill
           }
-          
+
           layers.push(new PolygonLayer({
             id: `annotation-${annotation.id}`,
             data: [{
@@ -473,7 +458,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           }));
         }
       });
-    
+
     return layers;
   }, [annotations, hiddenLayers]);
 
@@ -491,7 +476,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // Handle annotation layers - they are now managed through the overlay layers system
   React.useEffect(() => {
     console.log('DrawingOverlay: Updating annotation layers:', annotationLayers.length, 'layers');
-    
+
     // Clear existing annotation layers from overlay store
     const currentLayers = useOverlayStore.getState().overlayLayers;
     const annotationLayerIds = currentLayers
