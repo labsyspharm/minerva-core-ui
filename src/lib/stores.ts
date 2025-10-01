@@ -79,12 +79,12 @@ export type Annotation = RectangleAnnotation | PolygonAnnotation | LineAnnotatio
 export const rectangleToPolygon = (start: [number, number], end: [number, number]): [number, number][] => {
   const [startX, startY] = start;
   const [endX, endY] = end;
-  
+
   const minX = Math.min(startX, endX);
   const maxX = Math.max(startX, endX);
   const minY = Math.min(startY, endY);
   const maxY = Math.max(startY, endY);
-  
+
   return [
     [minX, minY],
     [maxX, minY],
@@ -97,12 +97,12 @@ export const rectangleToPolygon = (start: [number, number], end: [number, number
 export const lineToPolygon = (start: [number, number], end: [number, number], lineWidth: number = 3): [number, number][] => {
   const [startX, startY] = start;
   const [endX, endY] = end;
-  
+
   // Calculate perpendicular vector for line width
   const dx = endX - startX;
   const dy = endY - startY;
   const length = Math.sqrt(dx * dx + dy * dy);
-  
+
   if (length === 0) {
     // If line has no length, create a small square
     const halfWidth = lineWidth / 2;
@@ -114,12 +114,12 @@ export const lineToPolygon = (start: [number, number], end: [number, number], li
       [startX - halfWidth, startY - halfWidth]
     ];
   }
-  
+
   // Normalize and create perpendicular vector
   const nx = -dy / length;
   const ny = dx / length;
   const halfWidth = lineWidth / 2;
-  
+
   return [
     [startX + nx * halfWidth, startY + ny * halfWidth],
     [endX + nx * halfWidth, endY + ny * halfWidth],
@@ -132,33 +132,33 @@ export const lineToPolygon = (start: [number, number], end: [number, number], li
 export const isPointInPolygon = (point: [number, number], polygon: [number, number][]): boolean => {
   const [px, py] = point;
   let inside = false;
-  
+
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
     const [xi, yi] = polygon[i];
     const [xj, yj] = polygon[j];
-    
+
     if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) {
       inside = !inside;
     }
   }
-  
+
   return inside;
 };
 
 export const textToPolygon = (position: [number, number], text: string, fontSize: number = 14, padding: number = 4): [number, number][] => {
   const [x, y] = position;
-  
+
   // Estimate text dimensions with better approximation
   const charWidth = fontSize * 0.7; // More accurate character width
   const textWidth = text.length * charWidth;
   const textHeight = fontSize * 1.2; // Account for line height
-  
+
   // Add VERY generous padding for easy hit detection
   // Make the hit area much larger than the actual text
   const hitPadding = Math.max(fontSize * 2, 20); // Much larger padding - at least 2x font size or 20px
   const halfWidth = (textWidth + hitPadding * 2) / 2;
   const halfHeight = (textHeight + hitPadding * 2) / 2;
-  
+
   return [
     [x - halfWidth, y - halfHeight],
     [x + halfWidth, y - halfHeight],
@@ -200,7 +200,7 @@ export interface OverlayStore {
   annotations: Annotation[]; // New: persistent annotations
   hiddenLayers: Set<string>; // New: track hidden layers
   globalColor: [number, number, number, number]; // New: global drawing color
-  
+
   // Actions
   setActiveTool: (tool: string) => void;
   setCurrentInteraction: (interaction: InteractionCoordinate | null) => void;
@@ -212,7 +212,7 @@ export interface OverlayStore {
   handleLayerCreate: (layer: OverlayLayer | null) => void;
   handleToolChange: (tool: string) => void;
   handleOverlayInteraction: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number]) => void;
-  
+
   // New annotation actions
   addAnnotation: (annotation: Annotation) => void;
   removeAnnotation: (annotationId: string) => void;
@@ -226,18 +226,18 @@ export interface OverlayStore {
   updateTextAnnotation: (annotationId: string, newText: string, fontSize?: number) => void; // Update text annotation content
   updateTextAnnotationColor: (annotationId: string, fontColor: [number, number, number, number]) => void; // Update text annotation color
   setGlobalColor: (color: [number, number, number, number]) => void; // Set global drawing color
-  
+
   // New layer visibility actions
   toggleLayerVisibility: (annotationId: string) => void;
   showAllLayers: () => void;
   hideAllLayers: () => void;
-  
+
   // New drag actions for move tool
   startDrag: (annotationId: string, offset: [number, number]) => void;
   updateDrag: (coordinate: [number, number, number]) => void;
   endDrag: () => void;
   resetDragState: () => void;
-  
+
   // New hover actions for move tool
   setHoveredAnnotation: (annotationId: string | null) => void;
   resetHoverState: () => void;
@@ -310,7 +310,7 @@ export const useOverlayStore = create<OverlayStore>()(
 
       handleLayerCreate: (layer: OverlayLayer | null) => {
         console.log('Store: handleLayerCreate called with layer:', layer);
-        
+
         if (layer === null) {
           // Remove the drawing layer when tool is not active
           get().removeOverlayLayer('drawing-layer');
@@ -324,20 +324,20 @@ export const useOverlayStore = create<OverlayStore>()(
       handleToolChange: (tool: string) => {
         console.log('Store: Tool changed to:', tool);
         set({ activeTool: tool });
-        
+
         // Clear any partial drawing state when switching tools
         get().resetDrawingState();
-        
+
         // Clear any drag state when switching tools
         get().resetDragState();
-        
+
         // Remove the unified drawing layer
         get().removeOverlayLayer('drawing-layer');
       },
 
       handleOverlayInteraction: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number]) => {
         console.log('Store: Overlay interaction:', type, 'at coordinate:', coordinate);
-        
+
         const interaction: InteractionCoordinate = { type, coordinate };
         set({ currentInteraction: interaction });
 
@@ -437,7 +437,7 @@ export const useOverlayStore = create<OverlayStore>()(
       updateAnnotation: (annotationId: string, updates: Partial<Annotation>) => {
         console.log('Store: Updating annotation:', annotationId, updates);
         set((state) => ({
-          annotations: state.annotations.map(a => 
+          annotations: state.annotations.map(a =>
             a.id === annotationId ? { ...a, ...updates } as Annotation : a
           )
         }));
@@ -453,7 +453,7 @@ export const useOverlayStore = create<OverlayStore>()(
         if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
           const [startX, startY] = drawingState.dragStart;
           const [endX, endY] = drawingState.dragEnd;
-          
+
           // Create a new rectangle annotation using polygon coordinates
           const annotation: RectangleAnnotation = {
             id: `rect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -471,13 +471,13 @@ export const useOverlayStore = create<OverlayStore>()(
           };
 
           console.log('Store: Finalizing rectangle as annotation:', annotation);
-          
+
           // Add the annotation
           get().addAnnotation(annotation);
-          
+
           // Reset drawing state
           get().resetDrawingState();
-          
+
           // Remove the temporary drawing layer
           get().removeOverlayLayer('drawing-layer');
         }
@@ -502,10 +502,10 @@ export const useOverlayStore = create<OverlayStore>()(
           };
 
           console.log('Store: Finalizing lasso as annotation:', annotation);
-          
+
           // Add the annotation
           get().addAnnotation(annotation);
-          
+
           // Remove the temporary drawing layer
           get().removeOverlayLayer('drawing-layer');
         }
@@ -531,10 +531,10 @@ export const useOverlayStore = create<OverlayStore>()(
           };
 
           console.log('Store: Finalizing polyline as annotation:', annotation);
-          
+
           // Add the annotation
           get().addAnnotation(annotation);
-          
+
           // Remove the temporary drawing layer
           get().removeOverlayLayer('drawing-layer');
         }
@@ -545,7 +545,7 @@ export const useOverlayStore = create<OverlayStore>()(
         if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
           const [startX, startY] = drawingState.dragStart;
           const [endX, endY] = drawingState.dragEnd;
-          
+
           // Create a new line annotation using polygon coordinates
           const annotation: LineAnnotation = {
             id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -562,13 +562,13 @@ export const useOverlayStore = create<OverlayStore>()(
           };
 
           console.log('Store: Finalizing line as annotation:', annotation);
-          
+
           // Add the annotation
           get().addAnnotation(annotation);
-          
+
           // Reset drawing state
           get().resetDrawingState();
-          
+
           // Remove the temporary drawing layer
           get().removeOverlayLayer('drawing-layer');
         }
@@ -599,7 +599,7 @@ export const useOverlayStore = create<OverlayStore>()(
         };
 
         console.log('Store: Creating text annotation:', annotation);
-        
+
         // Add the annotation
         get().addAnnotation(annotation);
       },
@@ -612,40 +612,40 @@ export const useOverlayStore = create<OverlayStore>()(
 
         const annotations = get().annotations;
         const annotation = annotations.find(a => a.id === annotationId);
-        
+
         if (!annotation || annotation.type !== 'text') {
           console.log('Store: Cannot update non-text annotation or annotation not found');
           return;
         }
 
         console.log('Store: Updating text annotation:', annotationId, 'to:', newText.trim(), 'fontSize:', fontSize);
-        
+
         // Update the text content and optionally fontSize
         const updates: Partial<TextAnnotation> = {
           text: newText.trim()
         };
-        
+
         if (fontSize !== undefined) {
           updates.style = {
             ...annotation.style,
             fontSize: fontSize
           };
         }
-        
+
         get().updateAnnotation(annotationId, updates);
       },
 
       updateTextAnnotationColor: (annotationId: string, fontColor: [number, number, number, number]) => {
         const annotations = get().annotations;
         const annotation = annotations.find(a => a.id === annotationId);
-        
+
         if (!annotation || annotation.type !== 'text') {
           console.log('Store: Cannot update color for non-text annotation or annotation not found');
           return;
         }
 
         console.log('Store: Updating text annotation color:', annotationId, 'to:', fontColor);
-        
+
         // Update the font color
         const updates: Partial<TextAnnotation> = {
           style: {
@@ -653,7 +653,7 @@ export const useOverlayStore = create<OverlayStore>()(
             fontColor: fontColor
           }
         };
-        
+
         get().updateAnnotation(annotationId, updates);
       },
 
@@ -702,11 +702,11 @@ export const useOverlayStore = create<OverlayStore>()(
         if (dragState.isDragging && dragState.draggedAnnotationId && dragState.dragOffset) {
           const [x, y] = coordinate;
           const [offsetX, offsetY] = dragState.dragOffset;
-          
+
           // Calculate new position based on drag offset
           const newX = x - offsetX;
           const newY = y - offsetY;
-          
+
           // Find the annotation being dragged
           const annotation = annotations.find(a => a.id === dragState.draggedAnnotationId);
           if (annotation) {
@@ -721,15 +721,15 @@ export const useOverlayStore = create<OverlayStore>()(
               // For polygon-based annotations, calculate delta from first point
               const deltaX = newX - annotation.polygon[0][0];
               const deltaY = newY - annotation.polygon[0][1];
-              
+
               // Update all polygon points by the same delta
               const updatedPolygon = annotation.polygon.map(([px, py]) => [px + deltaX, py + deltaY] as [number, number]);
-              
+
               const updatedAnnotation = {
                 ...annotation,
                 polygon: updatedPolygon
               };
-              
+
               // Update the annotation in the store
               get().updateAnnotation(dragState.draggedAnnotationId, updatedAnnotation);
             }

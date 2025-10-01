@@ -158,6 +158,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // Refs to access current values without causing re-renders
   const polylinePointsRef = React.useRef<[number, number][]>([]);
   const isPolylineDrawingRef = React.useRef(false);
+  
+  // Ref to track the last processed interaction to prevent double-processing
+  const lastProcessedInteractionRef = React.useRef<{ type: string, coordinate: [number, number, number] } | null>(null);
 
   // Keep refs in sync with state
   React.useEffect(() => {
@@ -193,9 +196,10 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     }
     if (activeTool !== 'polyline') {
       setPolylinePoints([]);
-
-
     }
+    
+    // Clear the last processed interaction when tool changes
+    lastProcessedInteractionRef.current = null;
   }, [activeTool, finalizePolyline]);
 
   // Handle keyboard events for polyline finalization
@@ -225,6 +229,21 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     if (!currentInteraction) return;
 
     const { type, coordinate } = currentInteraction;
+    
+    // Check if we've already processed this interaction
+    const lastProcessed = lastProcessedInteractionRef.current;
+    if (lastProcessed && 
+        lastProcessed.type === type && 
+        lastProcessed.coordinate[0] === coordinate[0] && 
+        lastProcessed.coordinate[1] === coordinate[1] && 
+        lastProcessed.coordinate[2] === coordinate[2]) {
+      console.log('DrawingOverlay: Skipping already processed interaction:', type);
+      return;
+    }
+    
+    // Mark this interaction as processed
+    lastProcessedInteractionRef.current = { type, coordinate };
+    
     const [x, y] = coordinate;
 
     if (activeTool === 'text' && type === 'click') {
@@ -260,17 +279,16 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         case 'dragEnd':
           // Finish lasso drawing
           if (isLassoDrawing) {
-            setLassoPoints(currentPoints => {
-              const finalPoints: [number, number][] = [...currentPoints, [x, y] as [number, number]];
-
-              // Finalize the lasso as an annotation
-              if (finalPoints.length >= 3) {
-                finalizeLasso(finalPoints);
-                setIsLassoDrawing(false);
-                return []; // Clear points
-              }
-              return finalPoints; // Keep current points if not enough
-            });
+            console.log('DrawingOverlay: Processing lasso dragEnd');
+            const finalPoints: [number, number][] = [...lassoPoints, [x, y] as [number, number]];
+            
+            // Finalize the lasso as an annotation
+            if (finalPoints.length >= 3) {
+              console.log('DrawingOverlay: Calling finalizeLasso with', finalPoints.length, 'points');
+              finalizeLasso(finalPoints);
+              setIsLassoDrawing(false);
+              setLassoPoints([]); // Clear points
+            }
           }
           break;
       }
