@@ -138,6 +138,10 @@ const VivView = (props: Props) => {
       return isDragging ? 'grabbing' : 'crosshair';
     } else if (activeTool === 'line') {
       return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'polyline') {
+      return 'crosshair';
+    } else if (activeTool === 'point') {
+      return 'crosshair';
     } else if (activeTool === 'text') {
       return 'text';
     } else if (activeTool === 'move') {

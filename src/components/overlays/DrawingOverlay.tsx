@@ -1,5 +1,5 @@
 import * as React from "react";
-import { PolygonLayer, TextLayer } from '@deck.gl/layers';
+import { PolygonLayer, TextLayer, ScatterplotLayer } from '@deck.gl/layers';
 import { useOverlayStore } from "../../lib/stores";
 
 // Shared Text Edit Panel Component
@@ -144,7 +144,7 @@ const getLineWidthPx = () => 3; // always 3px
 
 const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTool, currentInteraction }) => {
   // Use Zustand store for drawing state
-  const { drawingState, finalizeLasso, finalizePolyline, createTextAnnotation, globalColor } = useOverlayStore();
+  const { drawingState, finalizeLasso, finalizePolyline, createTextAnnotation, createPointAnnotation, globalColor } = useOverlayStore();
   const { isDrawing, dragStart, dragEnd } = drawingState;
 
   // Local state for lasso tool
@@ -177,11 +177,19 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   const [textInputPosition, setTextInputPosition] = React.useState<[number, number] | null>(null);
   const [textInputValue, setTextInputValue] = React.useState('');
   const [textFontSize, setTextFontSize] = React.useState(14);
+  const removeMiddleTwoElements = (arr: [number, number][]) => {
+    const mid = arr.length / 2;
+    return [...arr.slice(0, mid - 1), ...arr.slice(mid + 1)];
+  };
 
   // Handle polyline finalization
   const finalizeCurrentPolyline = () => {
     if (polylinePoints.length >= 2) {
-      finalizePolyline(polylinePoints);
+      let finalizedPoints = [...polylinePoints];
+      if (polylinePoints.length > (finalizedPolylineSegmentCount * 2)) {
+        finalizedPoints = removeMiddleTwoElements(finalizedPoints);
+      }
+      finalizePolyline(finalizedPoints);
       setIsPolylineDrawing(false);
       setPolylinePoints([]);
       setFinalizedPolylineSegmentCount(0);
@@ -249,10 +257,13 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
 
     if (activeTool === 'text' && type === 'click') {
       // Show text input when clicking with text tool
-      console.log('DrawingOverlay: Clicked with text tool, showing text input');
       setTextInputPosition([x, y]);
       setShowTextInput(true);
       setTextInputValue('');
+    } else if (activeTool === 'point') {
+      if (type === 'click' || type === 'dragEnd') {
+        createPointAnnotation([x, y], 5); // Default radius of 5 pixels
+      }
     } else if (activeTool === 'lasso') {
       console.log('DrawingOverlay: Received lasso interaction:', type, 'at coordinate:', [x, y]);
 
@@ -294,10 +305,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       }
     } else if (activeTool === 'polyline') {
       console.log('DrawingOverlay: Received polyline interaction:', type, 'at coordinate:', [x, y]);
-      const removeMiddleTwoElements = (arr: [number, number][]) => {
-        const mid = arr.length / 2;
-        return [...arr.slice(0, mid - 1), ...arr.slice(mid + 1)];
-      };
+
       let prevPoints = [...polylinePoints];
       if (prevPoints.length > (finalizedPolylineSegmentCount * 2)) {
         prevPoints = removeMiddleTwoElements(prevPoints);
@@ -443,7 +451,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // Create persistent annotation layers from stored annotations (excluding hidden ones)
   // All annotations are now rendered as polygon layers
   const annotationLayers = React.useMemo(() => {
-    const layers: (PolygonLayer | TextLayer)[] = [];
+    const layers: (PolygonLayer | TextLayer | ScatterplotLayer)[] = [];
 
     annotations
       .filter(annotation => !hiddenLayers.has(annotation.id)) // Filter out hidden annotations
@@ -465,6 +473,24 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
             fontWeight: 'normal',
             padding: 4,
             pickable: true,
+          }));
+        } else if (annotation.type === 'point') {
+          // Create scatterplot layer for point annotations
+          console.log('DrawingOverlay: Creating point annotation:', annotation);
+          layers.push(new ScatterplotLayer({
+            id: `annotation-${annotation.id}`,
+            data: [{
+              position: [annotation.position[0], annotation.position[1], 0], // Add z coordinate
+              radius: annotation.style.radius,
+            }],
+            getPosition: d => { console.log('DrawingOverlay: Point position:', d.position); return d.position; },
+            getRadius: d => { console.log('DrawingOverlay: Point radius:', d.radius); return d.radius; },
+            radiusMinPixels: annotation.style.radius,
+            radiusMaxPixels: annotation.style.radius,
+            getFillColor: [255, 140, 0],
+            getLineColor: [0, 0, 0],
+            getLineWidth: 10,
+            pickable: true
           }));
         } else {
           // Create polygon layer for other annotations

@@ -88,7 +88,23 @@ export interface TextAnnotation {
   };
 }
 
-export type Annotation = RectangleAnnotation | PolygonAnnotation | LineAnnotation | PolylineAnnotation | TextAnnotation;
+export interface PointAnnotation {
+  id: string;
+  type: 'point';
+  position: [number, number]; // Point position
+  style: {
+    fillColor: [number, number, number, number];
+    strokeColor: [number, number, number, number];
+    radius: number; // Point radius in pixels
+  };
+  metadata?: {
+    createdAt: Date;
+    label?: string;
+    description?: string;
+  };
+}
+
+export type Annotation = RectangleAnnotation | PolygonAnnotation | LineAnnotation | PolylineAnnotation | TextAnnotation | PointAnnotation;
 
 // Helper functions to convert shapes to polygon coordinates
 export const rectangleToPolygon = (start: [number, number], end: [number, number]): [number, number][] => {
@@ -238,6 +254,7 @@ export interface OverlayStore {
   finalizeLine: () => void; // Convert current drawing to line annotation
   finalizePolyline: (points: [number, number][]) => void; // Convert polyline points to polyline annotation
   createTextAnnotation: (position: [number, number], text: string, fontSize?: number) => void; // Create text annotation
+  createPointAnnotation: (position: [number, number], radius?: number) => void; // Create point annotation
   updateTextAnnotation: (annotationId: string, newText: string, fontSize?: number) => void; // Update text annotation content
   updateTextAnnotationColor: (annotationId: string, fontColor: [number, number, number, number]) => void; // Update text annotation color
   setGlobalColor: (color: [number, number, number, number]) => void; // Set global drawing color
@@ -613,6 +630,29 @@ export const useOverlayStore = create<OverlayStore>()(
         };
 
         console.log('Store: Creating text annotation:', annotation);
+
+        // Add the annotation
+        get().addAnnotation(annotation);
+      },
+
+      createPointAnnotation: (position: [number, number], radius: number = 5) => {
+        // Create a new point annotation
+        const annotation: PointAnnotation = {
+          id: `point-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: 'point',
+          position: position,
+          style: {
+            fillColor: get().globalColor, // Use global color for fill
+            strokeColor: [255, 255, 255, 255], // White stroke
+            radius: radius,
+          },
+          metadata: {
+            createdAt: new Date(),
+            label: `Point ${get().annotations.length + 1}`,
+          },
+        };
+
+        console.log('Store: Creating point annotation:', annotation);
 
         // Add the annotation
         get().addAnnotation(annotation);

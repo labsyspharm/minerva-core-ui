@@ -203,6 +203,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
         return '∠';
       case 'text':
         return 'T';
+      case 'point':
+        return '●';
       default:
         return '●';
     }
@@ -223,6 +225,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
         return 'Line';
       case 'polyline':
         return 'Polyline';
+      case 'point':
+        return 'Point';
       case 'text':
         return annotation.text.length > 20 ? `${annotation.text.substring(0, 20)}...` : annotation.text;
       default:
@@ -423,6 +427,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
                         currentAnnotationColor = annotation.style.fontColor;
                       } else if (annotation.type === 'rectangle' || annotation.type === 'polygon' || annotation.type === 'line' || annotation.type === 'polyline') {
                         currentAnnotationColor = annotation.style.lineColor;
+                      } else if (annotation.type === 'point') {
+                        currentAnnotationColor = annotation.style.fillColor;
                       } else {
                         currentAnnotationColor = [255, 255, 255, 255]; // Default white
                       }

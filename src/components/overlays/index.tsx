@@ -3,7 +3,7 @@ import { ChromePicker } from 'react-color';
 import { DrawingOverlay } from "./DrawingOverlay";
 import { LayersPanel } from "./LayersPanel";
 import styles from "./index.module.css";
-import { MoveIcon, RectangleIcon, LassoIcon, LineIcon, PolylineIcon, TextIcon, ColorIcon } from "./icons";
+import { MoveIcon, RectangleIcon, LassoIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "./icons";
 import { useOverlayStore } from "../../lib/stores";
 
 // Types
@@ -23,7 +23,8 @@ const TOOLS = {
   LASSO: 'lasso',
   LINE: 'line',
   POLYLINE: 'polyline',
-  TEXT: 'text'
+  TEXT: 'text',
+  POINT: 'point'
 } as const;
 
 type ToolType = typeof TOOLS[keyof typeof TOOLS];
@@ -84,6 +85,13 @@ const Overlays = (props: Props) => {
             style: {
               ...annotation.style,
               lineColor: newColor
+            }
+          });
+        } else if (annotation.type === 'point') {
+          updateAnnotation(editingAnnotationId, {
+            style: {
+              ...annotation.style,
+              fillColor: newColor
             }
           });
         }
@@ -173,6 +181,14 @@ const Overlays = (props: Props) => {
           onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
         >
           <TextIcon />
+        </button>
+        
+        <button 
+          className={`${styles.toolButton} ${activeTool === TOOLS.POINT ? styles.active : ''}`}
+          title="Point Tool"
+          onClick={() => handleToolChangeLocal(TOOLS.POINT)}
+        >
+          <PointIcon />
         </button>
         
         <button 
