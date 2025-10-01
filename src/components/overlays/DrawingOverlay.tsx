@@ -195,6 +195,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
 
     }
     setPolylinePoints([]);
+    setFinalizedPolylineSegmentCount(0);
     setLassoPoints([]);
 
     // Clear the last processed interaction when tool changes
