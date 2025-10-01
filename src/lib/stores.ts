@@ -55,6 +55,21 @@ export interface LineAnnotation {
   };
 }
 
+export interface PolylineAnnotation {
+  id: string;
+  type: 'polyline';
+  polygon: [number, number][]; // Polyline points as polygon coordinates
+  style: {
+    lineColor: [number, number, number, number];
+    lineWidth: number;
+  };
+  metadata?: {
+    createdAt: Date;
+    label?: string;
+    description?: string;
+  };
+}
+
 export interface TextAnnotation {
   id: string;
   type: 'text';
@@ -73,7 +88,7 @@ export interface TextAnnotation {
   };
 }
 
-export type Annotation = RectangleAnnotation | PolygonAnnotation | LineAnnotation | TextAnnotation;
+export type Annotation = RectangleAnnotation | PolygonAnnotation | LineAnnotation | PolylineAnnotation | TextAnnotation;
 
 // Helper functions to convert shapes to polygon coordinates
 export const rectangleToPolygon = (start: [number, number], end: [number, number]): [number, number][] => {
@@ -460,7 +475,7 @@ export const useOverlayStore = create<OverlayStore>()(
             type: 'rectangle',
             polygon: rectangleToPolygon([startX, startY], [endX, endY]),
             style: {
-              fillColor: [...get().globalColor.slice(0, 3), 50], // Use global color with low opacity
+              fillColor: [get().globalColor[0], get().globalColor[1], get().globalColor[2], 50], // Use global color with low opacity
               lineColor: get().globalColor, // Use global color for border
               lineWidth: 3,
             },
@@ -491,7 +506,7 @@ export const useOverlayStore = create<OverlayStore>()(
             type: 'polygon',
             polygon: points,
             style: {
-              fillColor: [...get().globalColor.slice(0, 3), 50], // Use global color with low opacity
+              fillColor: [get().globalColor[0], get().globalColor[1], get().globalColor[2], 50], // Use global color with low opacity
               lineColor: get().globalColor, // Use global color for border
               lineWidth: 3,
             },
@@ -515,12 +530,11 @@ export const useOverlayStore = create<OverlayStore>()(
         console.log('Store: Finalizing polyline with points:', points);
         if (points.length >= 2) {
           // Create a new polyline annotation
-          const annotation: PolygonAnnotation = {
+          const annotation: PolylineAnnotation = {
             id: `polyline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             type: 'polyline',
             polygon: points,
             style: {
-              fillColor: [0, 0, 0, 0], // No fill for polyline
               lineColor: get().globalColor, // Use global color for border
               lineWidth: 3,
             },
