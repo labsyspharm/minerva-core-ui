@@ -3,7 +3,6 @@ import { get, set } from 'idb-keyval';
 import styled from 'styled-components';
 import { author } from "./minerva-author-ui/author";
 import { useState, useMemo, useEffect } from "react";
-import { testLoader, testChannels } from "./lib/dicom";
 import { loadDicomWeb, parseDicomWeb } from "./lib/dicom";
 import { useHash } from "./lib/hashUtil";
 import { onlyUUID } from './lib/config';
@@ -65,10 +64,6 @@ const Scrollable = styled.div`
   margin: 5vh;
 `;
 
-const createPlaceholderFromLoader = (loader) => {
-  return testChannels;
-}
-
 const Content = (props: Props) => {
   const bypass = false;
   const { testDicom, handleKeys } = props;
@@ -112,9 +107,6 @@ const Content = (props: Props) => {
       GroupChannels: [], SourceChannels: [],
       SourceDistributions: [],
       Stories: props.configWaypoints,
-      ...(testDicom ? (
-        createPlaceholderFromLoader(loader)
-      ) : {})
     } as ItemRegistryProps,
     ID: crypto.randomUUID()
   });
@@ -197,14 +189,21 @@ const Content = (props: Props) => {
   // Dicom Web derived state
   const onStartDicomWeb = async (series: string) => {
     setDicomSeries(series);
-    setDicomIndex(await loadDicomWeb(series));
-  }
-  useEffect(() => {
-    setLoader(
+    const dicomIndex = await loadDicomWeb(series);
+    const loader = (
       parseDicomWeb(dicomIndex) as DicomLoader
     );
-  }, [dicomIndex]);
-
+    setDicomIndex(dicomIndex);
+    setLoader(loader);
+    const {
+      SourceChannels, GroupChannels, Groups, Colors
+    } = extractChannels(loader);
+    resetItems({
+      SourceChannels,
+      GroupChannels,
+      Groups, Colors
+    });
+  }
   const { marker_names } = props;
   const mutableFields: MutableFields = [
     'GroupChannels'
@@ -216,13 +215,11 @@ const Content = (props: Props) => {
   const controlPanelElement = useMemo(() => author({
     ...config, ItemRegistry
   }), [config.ID])
-
-  console.log(JSON.stringify(dicomIndex), "ok");
-  console.log(JSON.stringify(loader), "ok");
   // Actual image viewer
   const imager = loader === null ? '' : (
     <Full>
       <Index {...{
+        dicomIndex: dicomIndex,
         dicomSeries: dicomSeries,
         config, controlPanelElement,
         exhibit, setExhibit, loader,
