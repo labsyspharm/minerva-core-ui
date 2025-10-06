@@ -23,6 +23,7 @@ export type Props = {
   series: string; // DICOM
   groups: Group[];
   stories: Story[];
+  dicomIndex: any[];
   viewerConfig: Config;
 } & HashContext;
 
@@ -102,11 +103,11 @@ const VivView = (props: Props) => {
 
   const dicomLayer = React.useMemo(
     () => createTileLayers({
-      pyramids: testPyramids,
+      pyramids: props.dicomIndex,
       settings: mainSettings,
       series: props.series,
     }),
-    [testPyramids, mainSettings]
+    [mainSettings]
   );
 
   // Memoize image layer creation

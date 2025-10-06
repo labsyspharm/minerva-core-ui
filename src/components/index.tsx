@@ -27,6 +27,7 @@ type Props = HashContext & {
   handle: Handle.Dir;
   config: ConfigProps;
   marker_names: string[];
+  dicomIndex: any[];
   dicomSeries: string | null;
   controlPanelElement: string;
   setExhibit: (e: Exhibit) => void;
@@ -295,6 +296,7 @@ const Index = (props: Props) => {
   const imageProps = toImageProps({
     props: {
       loader,
+      dicomIndex: props.dicomIndex,
       marker_names: itemRegistryMarkerNames,
       ...channelProps,
     },
