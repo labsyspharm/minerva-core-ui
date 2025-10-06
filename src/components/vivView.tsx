@@ -6,7 +6,7 @@ import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 
 import {
-  testPyramids, createTileLayers
+  createTileLayers
 } from "../lib/dicom";
 
 import styled from "styled-components";
@@ -26,6 +26,7 @@ export type Props = {
   series: string; // DICOM
   groups: Group[];
   stories: Story[];
+  dicomIndex: any[];
   viewerConfig: Config;
   overlayLayers?: any[];
   activeTool: string;
@@ -114,11 +115,11 @@ const VivView = React.memo((props: Props) => {
 
   const dicomLayer = React.useMemo(
     () => createTileLayers({
-      pyramids: testPyramids,
+      pyramids: props.dicomIndex,
       settings: mainSettings,
       series: props.series,
     }),
-    [testPyramids, mainSettings]
+    [mainSettings]
   );
 
   // Memoize image layer creation
