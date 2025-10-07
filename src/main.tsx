@@ -77,7 +77,7 @@ const Content = (props: Props) => {
   const [loader, setLoader] = useState(bypass ? (
     testLoader
   ) : null);
-  
+
   // Autopopulate annotations from loader metadata in bypass mode
   useEffect(() => {
     if (bypass && loader) {
@@ -149,7 +149,6 @@ const Content = (props: Props) => {
       if (handle === null) return;
       const loader = await toLoader({ handle, in_f, pool: new Pool(8) });
       console.log("loader", loader);
-      console.log("loaderJson", JSON.stringify(loader, null, 2));
       const {
         SourceChannels, GroupChannels, Groups, Colors
       } = extractChannels(loader);
@@ -173,7 +172,7 @@ const Content = (props: Props) => {
           });
         }
       );
-      
+
       // Parse ROIs from loader metadata and populate annotations
       try {
         const annotations = parseRoisFromLoader(loader);
@@ -189,7 +188,7 @@ const Content = (props: Props) => {
       } catch (error) {
         console.error('Error parsing ROIs from loader:', error);
       }
-      
+
       setLoader(loader);
       setFileName(in_f);
     })();

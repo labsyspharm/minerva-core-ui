@@ -182,7 +182,7 @@ const rectangleShapeToAnnotation = (shape: RoiRectangleShape, roi: Roi): Rectang
     style: colors,
     metadata: {
       createdAt: new Date(),
-      label: Name || Text || `Rectangle from ${roi.Name || roi.ID}`,
+      label: Name || `Rectangle from ${roi.Name || roi.ID}`,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -193,7 +193,7 @@ const rectangleShapeToAnnotation = (shape: RoiRectangleShape, roi: Roi): Rectang
  * Convert ROI ellipse shape to PolygonAnnotation
  */
 const ellipseShapeToAnnotation = (shape: RoiEllipseShape, roi: Roi): PolygonAnnotation => {
-  const { X, Y, RadiusX, RadiusY, Transform, ID, Name, Text } = shape;
+  const { X, Y, RadiusX, RadiusY, Transform, ID, Name } = shape;
   
   // Convert ellipse to polygon approximation
   const polygon = ellipseToPolygon(X, Y, RadiusX, RadiusY, Transform);
@@ -207,7 +207,7 @@ const ellipseShapeToAnnotation = (shape: RoiEllipseShape, roi: Roi): PolygonAnno
     style: colors,
     metadata: {
       createdAt: new Date(),
-      label: Name || Text || `Ellipse from ${roi.Name || roi.ID}`,
+      label: Name || `Ellipse from ${roi.Name || roi.ID}`,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -218,7 +218,7 @@ const ellipseShapeToAnnotation = (shape: RoiEllipseShape, roi: Roi): PolygonAnno
  * Convert ROI line shape to LineAnnotation
  */
 const lineShapeToAnnotation = (shape: RoiLineShape, roi: Roi): LineAnnotation => {
-  const { X1, Y1, X2, Y2, Transform, ID, Name, Text } = shape;
+  const { X1, Y1, X2, Y2, Transform, ID, Name } = shape;
   
   const start = applyTransform(X1, Y1, Transform);
   const end = applyTransform(X2, Y2, Transform);
@@ -238,7 +238,7 @@ const lineShapeToAnnotation = (shape: RoiLineShape, roi: Roi): LineAnnotation =>
     },
     metadata: {
       createdAt: new Date(),
-      label: Name || Text || `Line from ${roi.Name || roi.ID}`,
+      label: Name || `Line from ${roi.Name || roi.ID}`,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -249,7 +249,7 @@ const lineShapeToAnnotation = (shape: RoiLineShape, roi: Roi): LineAnnotation =>
  * Convert ROI point shape to PointAnnotation
  */
 const pointShapeToAnnotation = (shape: RoiPointShape, roi: Roi): PointAnnotation => {
-  const { X, Y, Transform, ID, Name, Text } = shape;
+  const { X, Y, Transform, ID, Name } = shape;
   
   const position = applyTransform(X, Y, Transform);
   
@@ -267,7 +267,7 @@ const pointShapeToAnnotation = (shape: RoiPointShape, roi: Roi): PointAnnotation
     },
     metadata: {
       createdAt: new Date(),
-      label: Name || Text || `Point from ${roi.Name || roi.ID}`,
+      label: Name || `Point from ${roi.Name || roi.ID}`,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -278,7 +278,7 @@ const pointShapeToAnnotation = (shape: RoiPointShape, roi: Roi): PointAnnotation
  * Convert ROI polygon shape to PolygonAnnotation
  */
 const polygonShapeToAnnotation = (shape: RoiPolygonShape, roi: Roi): PolygonAnnotation => {
-  const { Points, Transform, ID, Name, Text } = shape;
+  const { Points, Transform, ID, Name } = shape;
   
   const polygon = parsePoints(Points, Transform);
   
@@ -291,7 +291,7 @@ const polygonShapeToAnnotation = (shape: RoiPolygonShape, roi: Roi): PolygonAnno
     style: colors,
     metadata: {
       createdAt: new Date(),
-      label: Name || Text || `Polygon from ${roi.Name || roi.ID}`,
+      label: Name || `Polygon from ${roi.Name || roi.ID}`,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -302,7 +302,7 @@ const polygonShapeToAnnotation = (shape: RoiPolygonShape, roi: Roi): PolygonAnno
  * Convert ROI polyline shape to PolylineAnnotation
  */
 const polylineShapeToAnnotation = (shape: RoiPolylineShape, roi: Roi): PolylineAnnotation => {
-  const { Points, Transform, ID, Name, Text } = shape;
+  const { Points, Transform, ID, Name } = shape;
   
   const polygon = parsePoints(Points, Transform);
   
@@ -319,7 +319,7 @@ const polylineShapeToAnnotation = (shape: RoiPolylineShape, roi: Roi): PolylineA
     },
     metadata: {
       createdAt: new Date(),
-      label: Name || Text || `Polyline from ${roi.Name || roi.ID}`,
+      label: Name || `Polyline from ${roi.Name || roi.ID}`,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -358,6 +358,35 @@ const labelShapeToAnnotation = (shape: RoiLabelShape, roi: Roi): TextAnnotation 
 };
 
 /**
+ * Create a text annotation from a shape's Text field, positioned at the center of the shape
+ */
+const createTextAnnotationFromShape = (shape: BaseRoiShape, roi: Roi, centerPosition: [number, number]): TextAnnotation => {
+  const { ID, Text, Name } = shape;
+  
+  const fontColor = shape.StrokeColor || [255, 255, 255, 255];
+  const backgroundColor = shape.FillColor || [0, 0, 0, 150];
+  
+  return {
+    id: `roi-${roi.ID}-${ID}:Label`,
+    type: 'text',
+    position: centerPosition,
+    text: Text!,
+    style: {
+      fontSize: 14,
+      fontColor,
+      backgroundColor,
+      padding: 4,
+    },
+    metadata: {
+      createdAt: new Date(),
+      label: Name || `Text from ${roi.Name || roi.ID}`,
+      description: `Imported text from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+      isImported: true,
+    },
+  };
+};
+
+/**
  * Parse ROIs from loader metadata and convert to annotations
  */
 export const parseRoisFromLoader = (loader: any): Annotation[] => {
@@ -380,40 +409,82 @@ export const parseRoisFromLoader = (loader: any): Annotation[] => {
     roi.shapes.forEach((shape) => {
       try {
         let annotation: Annotation | null = null;
+        let centerPosition: [number, number] | null = null;
         
         switch (shape.type) {
           case 'rectangle':
             annotation = rectangleShapeToAnnotation(shape, roi);
+            // Calculate center position for text annotation
+            const rectShape = shape as RoiRectangleShape;
+            const rectCenter = applyTransform(
+              rectShape.X + rectShape.Width / 2, 
+              rectShape.Y + rectShape.Height / 2, 
+              rectShape.Transform
+            );
+            centerPosition = rectCenter;
             console.log(`Created rectangle annotation: ${annotation.id}`);
             break;
           
           case 'ellipse':
             annotation = ellipseShapeToAnnotation(shape, roi);
+            // Center position is already the center of the ellipse
+            const ellipseShape = shape as RoiEllipseShape;
+            centerPosition = applyTransform(ellipseShape.X, ellipseShape.Y, ellipseShape.Transform);
             console.log(`Created ellipse annotation: ${annotation.id}`);
             break;
           
           case 'line':
             annotation = lineShapeToAnnotation(shape, roi);
+            // Calculate center position for text annotation
+            const lineShape = shape as RoiLineShape;
+            const lineCenter = applyTransform(
+              (lineShape.X1 + lineShape.X2) / 2, 
+              (lineShape.Y1 + lineShape.Y2) / 2, 
+              lineShape.Transform
+            );
+            centerPosition = lineCenter;
             console.log(`Created line annotation: ${annotation.id}`);
             break;
           
           case 'point':
             annotation = pointShapeToAnnotation(shape, roi);
+            // Point position is the center
+            const pointShape = shape as RoiPointShape;
+            centerPosition = applyTransform(pointShape.X, pointShape.Y, pointShape.Transform);
             console.log(`Created point annotation: ${annotation.id}`);
             break;
           
           case 'polygon':
             annotation = polygonShapeToAnnotation(shape, roi);
+            // Calculate center position for text annotation
+            const polygonShape = shape as RoiPolygonShape;
+            const polygonPoints = parsePoints(polygonShape.Points, polygonShape.Transform);
+            const polygonCenter: [number, number] = [
+              polygonPoints.reduce((sum, [x]) => sum + x, 0) / polygonPoints.length,
+              polygonPoints.reduce((sum, [, y]) => sum + y, 0) / polygonPoints.length
+            ];
+            centerPosition = polygonCenter;
             console.log(`Created polygon annotation: ${annotation.id}`);
             break;
           
           case 'polyline':
             annotation = polylineShapeToAnnotation(shape, roi);
+            // Calculate center position for text annotation
+            const polylineShape = shape as RoiPolylineShape;
+            const polylinePoints = parsePoints(polylineShape.Points, polylineShape.Transform);
+            const polylineCenter: [number, number] = [
+              polylinePoints.reduce((sum, [x]) => sum + x, 0) / polylinePoints.length,
+              polylinePoints.reduce((sum, [, y]) => sum + y, 0) / polylinePoints.length
+            ];
+            centerPosition = polylineCenter;
             console.log(`Created polyline annotation: ${annotation.id}`);
             break;
           
           case 'label':
             annotation = labelShapeToAnnotation(shape, roi);
+            // Label position is already the text position
+            const labelShape = shape as RoiLabelShape;
+            centerPosition = applyTransform(labelShape.X, labelShape.Y, labelShape.Transform);
             console.log(`Created text annotation: ${annotation.id}`);
             break;
           
@@ -423,6 +494,13 @@ export const parseRoisFromLoader = (loader: any): Annotation[] => {
         
         if (annotation) {
           annotations.push(annotation);
+          
+          // If the shape has a Text field and we have a center position, create an additional text annotation
+          if (shape.Text && centerPosition) {
+            const textAnnotation = createTextAnnotationFromShape(shape, roi, centerPosition);
+            annotations.push(textAnnotation);
+            console.log(`Created additional text annotation: ${textAnnotation.id}`);
+          }
         }
       } catch (error) {
         console.error(`Error processing shape ${shape.ID} in ROI ${roi.ID}:`, error);

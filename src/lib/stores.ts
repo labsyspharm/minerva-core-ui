@@ -45,7 +45,7 @@ export interface PolygonAnnotation {
 export interface LineAnnotation {
   id: string;
   type: 'line';
-  polygon: [number, number][]; // Converted to polygon coordinates (line as degenerate polygon)
+  polygon: [number, number][]; // Converted t o polygon coordinates (line as degenerate polygon)
   style: {
     lineColor: [number, number, number, number];
     lineWidth: number;
@@ -54,7 +54,7 @@ export interface LineAnnotation {
     createdAt: Date;
     label?: string;
     description?: string;
-    isImported?: boolean; // Flag to mark imported annotations as un-deletable
+    isImported?: boolean; // Flag to mark imported annotatiohns as un-deletable
   };
 }
 
