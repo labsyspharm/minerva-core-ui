@@ -3,7 +3,7 @@ import { ChromePicker } from 'react-color';
 import { DrawingOverlay } from "./DrawingOverlay";
 import { LayersPanel } from "./LayersPanel";
 import styles from "./index.module.css";
-import { MoveIcon, RectangleIcon, LassoIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "./icons";
+import { MoveIcon, RectangleIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "./icons";
 import { useOverlayStore } from "../../lib/stores";
 
 // Types
@@ -156,7 +156,7 @@ const Overlays = (props: Props) => {
           title="Lasso Tool (L)"
           onClick={() => handleToolChangeLocal(TOOLS.LASSO)}
         >
-          <LassoIcon />
+          <PolygonIcon />
         </button>
         
         <button 
