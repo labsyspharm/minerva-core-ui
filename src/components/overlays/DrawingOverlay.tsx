@@ -155,6 +155,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   const [polylinePoints, setPolylinePoints] = React.useState<[number, number][]>([]);
   const [finalizedPolylineSegmentCount, setFinalizedPolylineSegmentCount] = React.useState(0);
   const [isPolylineDrawing, setIsPolylineDrawing] = React.useState(false);
+  const [isPolylineDragging, setIsPolylineDragging] = React.useState(false);
 
   // Refs to access current values without causing re-renders
   const polylinePointsRef = React.useRef<[number, number][]>([]);
@@ -256,6 +257,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     }
     setPolylinePoints([]);
     setFinalizedPolylineSegmentCount(0);
+    setIsPolylineDragging(false);
     setLassoPoints([]);
 
     // Clear the last processed interaction when tool changes
@@ -404,9 +406,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       if (prevPoints.length > (finalizedPolylineSegmentCount * 2)) {
         prevPoints = removeMiddleTwoElements(prevPoints);
       }
-      if (type === 'click' || type === 'drag') {
-        // Add point to polyline
-        console.log('DrawingOverlay: Adding polyline segment point:', [x, y]);
+      if (type === 'click') {
+        // Add point to polyline on single click
+        console.log('DrawingOverlay: Adding polyline segment point via click:', [x, y]);
         // Add additional points - add twice in the middle of the array
         const middleIndex = Math.floor(prevPoints.length / 2);
         const newPoint = [x, y] as [number, number];
@@ -415,6 +417,29 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         console.log('DrawingOverlay: New points:', newPoints);
         setPolylinePoints(newPoints);
         setFinalizedPolylineSegmentCount(prev => prev + 1);
+      } else if (type === 'dragStart') {
+        // Start dragging - set dragging state
+        console.log('DrawingOverlay: Starting polyline drag');
+        setIsPolylineDragging(true);
+      } else if (type === 'drag') {
+        // Add point to polyline during drag
+        console.log('DrawingOverlay: Adding polyline segment point via drag:', [x, y]);
+        // Add additional points - add twice in the middle of the array
+        const middleIndex = Math.floor(prevPoints.length / 2);
+        const newPoint = [x, y] as [number, number];
+        const newPoints = [...prevPoints];
+        newPoints.splice(middleIndex, 0, newPoint, newPoint);
+        console.log('DrawingOverlay: New points:', newPoints);
+        setPolylinePoints(newPoints);
+        setFinalizedPolylineSegmentCount(prev => prev + 1);
+      } else if (type === 'dragEnd') {
+        // Finalize polyline only if user was actually dragging
+        console.log('DrawingOverlay: dragEnd received, was dragging:', isPolylineDragging);
+        if (isPolylineDragging) {
+          console.log('DrawingOverlay: Finalizing polyline on dragEnd');
+          finalizeCurrentPolyline();
+        }
+        setIsPolylineDragging(false);
       } else if (type === 'hover') {
         console.log('Hovering over polyline');
         // based on the number of segments finalized, add temporary point for this hover
@@ -427,7 +452,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         console.log('DrawingOverlay: Hover interaction at coordinate:', [x, y]);
       }
     }
-  }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso, isPolylineDrawing, finalizePolyline, isRectangleClickMode, rectangleFirstClick, finalizeClickRectangle]);
+  }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso, isPolylineDrawing, isPolylineDragging, finalizePolyline, isRectangleClickMode, rectangleFirstClick, finalizeClickRectangle]);
 
   // Handle text input submission
   const handleTextSubmit = () => {
