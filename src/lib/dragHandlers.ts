@@ -41,7 +41,7 @@ export const createDragHandlers = (
 
     // Hover events (only for move and text tools to show cursor changes)
     onHover: ({ coordinate }: any) => {
-      if (activeTool === 'move' || activeTool === 'text' || activeTool === 'polyline') {
+      if (activeTool === 'move' || activeTool === 'text' || activeTool === 'polyline' || activeTool === 'rectangle') {
         emit('hover', coordinate);
       }
     },

@@ -177,6 +177,11 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   const [textInputPosition, setTextInputPosition] = React.useState<[number, number] | null>(null);
   const [textInputValue, setTextInputValue] = React.useState('');
   const [textFontSize, setTextFontSize] = React.useState(14);
+
+  // Local state for click-to-draw rectangle
+  const [rectangleFirstClick, setRectangleFirstClick] = React.useState<[number, number] | null>(null);
+  const [rectangleSecondClick, setRectangleSecondClick] = React.useState<[number, number] | null>(null);
+  const [isRectangleClickMode, setIsRectangleClickMode] = React.useState(false);
   const removeMiddleTwoElements = (arr: [number, number][]) => {
     const mid = arr.length / 2;
     return [...arr.slice(0, mid - 1), ...arr.slice(mid + 1)];
@@ -196,11 +201,58 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     }
   };
 
+  // Handle rectangle finalization from click mode
+  const finalizeClickRectangle = () => {
+    if (rectangleFirstClick && rectangleSecondClick) {
+      const [startX, startY] = rectangleFirstClick;
+      const [endX, endY] = rectangleSecondClick;
+      const minX = Math.min(startX, endX);
+      const maxX = Math.max(startX, endX);
+      const minY = Math.min(startY, endY);
+      const maxY = Math.max(startY, endY);
+
+      const polygonData: [number, number][] = [
+        [minX, minY],
+        [maxX, minY],
+        [maxX, maxY],
+        [minX, maxY],
+        [minX, minY],
+      ];
+
+      // Create rectangle annotation directly using click coordinates
+      const annotation = {
+        id: `rect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: 'rectangle' as const,
+        polygon: polygonData,
+        style: {
+          fillColor: [globalColor[0], globalColor[1], globalColor[2], 50] as [number, number, number, number],
+          lineColor: globalColor as [number, number, number, number],
+          lineWidth: 3,
+        },
+        metadata: {
+          createdAt: new Date(),
+        },
+      };
+
+      // Add the annotation to the store
+      useOverlayStore.getState().addAnnotation(annotation);
+      
+      // Reset rectangle click state
+      setRectangleFirstClick(null);
+      setRectangleSecondClick(null);
+      setIsRectangleClickMode(false);
+    }
+  };
+
   // Handle tool changes - clear state when switching tools
   React.useEffect(() => {
     if (activeTool !== 'lasso') {
       setIsLassoDrawing(false);
-
+    }
+    if (activeTool !== 'rectangle') {
+      setRectangleFirstClick(null);
+      setRectangleSecondClick(null);
+      setIsRectangleClickMode(false);
     }
     setPolylinePoints([]);
     setFinalizedPolylineSegmentCount(0);
@@ -230,6 +282,29 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [activeTool, isPolylineDrawing, polylinePoints, finalizeCurrentPolyline]);
+
+  // Handle keyboard events for rectangle finalization
+  React.useEffect(() => {
+    if (activeTool !== 'rectangle') return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Cancel rectangle drawing on Escape
+      if (event.key === 'Escape' && isRectangleClickMode) {
+        event.preventDefault();
+        setRectangleFirstClick(null);
+        setRectangleSecondClick(null);
+        setIsRectangleClickMode(false);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeTool, isRectangleClickMode]);
 
   // Simplified interaction handler for creation tools only
   React.useEffect(() => {
@@ -303,6 +378,25 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           }
           break;
       }
+    } else if (activeTool === 'rectangle') {
+      console.log('DrawingOverlay: Received rectangle interaction:', type, 'at coordinate:', [x, y]);
+
+      if (type === 'click') {
+        if (!isRectangleClickMode) {
+          // First click - start rectangle drawing
+          console.log('DrawingOverlay: First rectangle click at:', [x, y]);
+          setRectangleFirstClick([x, y]);
+          setIsRectangleClickMode(true);
+        } else {
+          // Second click - finalize rectangle
+          console.log('DrawingOverlay: Second rectangle click at:', [x, y]);
+          setRectangleSecondClick([x, y]);
+          finalizeClickRectangle();
+        }
+      } else if (type === 'hover' && isRectangleClickMode && rectangleFirstClick) {
+        // Update the second click position for preview during hover
+        setRectangleSecondClick([x, y]);
+      }
     } else if (activeTool === 'polyline') {
       console.log('DrawingOverlay: Received polyline interaction:', type, 'at coordinate:', [x, y]);
 
@@ -333,7 +427,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         console.log('DrawingOverlay: Hover interaction at coordinate:', [x, y]);
       }
     }
-  }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso, isPolylineDrawing, finalizePolyline]);
+  }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso, isPolylineDrawing, finalizePolyline, isRectangleClickMode, rectangleFirstClick, finalizeClickRectangle]);
 
   // Handle text input submission
   const handleTextSubmit = () => {
@@ -366,23 +460,44 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     let lineColor: [number, number, number, number] = [0, 255, 0, 255];
     let shouldFill = true;
 
-    // Rectangle tool: uses dragStart/dragEnd to create rectangle coordinates
-    if (activeTool === 'rectangle' && isDrawing && dragStart && dragEnd) {
-      const [startX, startY] = dragStart;
-      const [endX, endY] = dragEnd;
-      const minX = Math.min(startX, endX);
-      const maxX = Math.max(startX, endX);
-      const minY = Math.min(startY, endY);
-      const maxY = Math.max(startY, endY);
+    // Rectangle tool: uses click-to-draw mode or drag mode
+    if (activeTool === 'rectangle') {
+      // Check for click-to-draw mode first
+      if (isRectangleClickMode && rectangleFirstClick && rectangleSecondClick) {
+        const [startX, startY] = rectangleFirstClick;
+        const [endX, endY] = rectangleSecondClick;
+        const minX = Math.min(startX, endX);
+        const maxX = Math.max(startX, endX);
+        const minY = Math.min(startY, endY);
+        const maxY = Math.max(startY, endY);
 
-      polygonData = [
-        [minX, minY],
-        [maxX, minY],
-        [maxX, maxY],
-        [minX, maxY],
-        [minX, minY],
-      ];
-      console.log('DrawingOverlay: Rectangle polygon data:', polygonData);
+        polygonData = [
+          [minX, minY],
+          [maxX, minY],
+          [maxX, maxY],
+          [minX, maxY],
+          [minX, minY],
+        ];
+        console.log('DrawingOverlay: Click rectangle polygon data:', polygonData);
+      }
+      // Fall back to drag mode for backward compatibility
+      else if (isDrawing && dragStart && dragEnd) {
+        const [startX, startY] = dragStart;
+        const [endX, endY] = dragEnd;
+        const minX = Math.min(startX, endX);
+        const maxX = Math.max(startX, endX);
+        const minY = Math.min(startY, endY);
+        const maxY = Math.max(startY, endY);
+
+        polygonData = [
+          [minX, minY],
+          [maxX, minY],
+          [maxX, maxY],
+          [minX, maxY],
+          [minX, minY],
+        ];
+        console.log('DrawingOverlay: Drag rectangle polygon data:', polygonData);
+      }
     }
     // Lasso tool: uses lassoPoints array with auto-closing
     else if (activeTool === 'lasso' && isLassoDrawing && lassoPoints.length >= 3) {
@@ -435,7 +550,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       stroked: true,
       filled: shouldFill,
     });
-  }, [activeTool, isDrawing, dragStart, dragEnd, isLassoDrawing, lassoPoints, isPolylineDrawing, polylinePoints]);
+  }, [activeTool, isDrawing, dragStart, dragEnd, isLassoDrawing, lassoPoints, isPolylineDrawing, polylinePoints, isRectangleClickMode, rectangleFirstClick, rectangleSecondClick]);
 
   // Get annotations from store with proper reactivity
   const annotations = useOverlayStore(state => state.annotations);
