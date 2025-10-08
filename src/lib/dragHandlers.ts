@@ -39,9 +39,9 @@ export const createDragHandlers = (
     // End of drag operation (used for rectangle, line, lasso freehand)
     onDragEnd: ({ coordinate }: any) => emit('dragEnd', coordinate),
 
-    // Hover events (only for move and text tools to show cursor changes)
+    // Hover events (for tools that need hover feedback)
     onHover: ({ coordinate }: any) => {
-      if (activeTool === 'move' || activeTool === 'text' || activeTool === 'polyline' || activeTool === 'rectangle') {
+      if (activeTool === 'move' || activeTool === 'text' || activeTool === 'polyline' || activeTool === 'rectangle' || activeTool === 'lasso') {
         emit('hover', coordinate);
       }
     },

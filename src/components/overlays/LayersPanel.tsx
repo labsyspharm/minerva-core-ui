@@ -2,7 +2,7 @@ import * as React from "react";
 import { useOverlayStore } from "../../lib/stores";
 import type { Annotation, TextAnnotation } from "../../lib/stores";
 import styles from "./index.module.css";
-import { RectangleIcon, PolylineIcon } from "./icons";
+import { RectangleIcon, PolylineIcon, PolygonIcon } from "./icons";
 
 // Shared Text Edit Panel Component (same as in DrawingOverlay)
 interface TextEditPanelProps {
@@ -197,7 +197,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
       case 'rectangle':
         return <RectangleIcon style={{ width: '16px', height: '16px' }} />;
       case 'polygon':
-        return '⬡';
+        return <PolygonIcon style={{ width: '16px', height: '16px' }} />;
       case 'line':
         return '—';
       case 'polyline':
