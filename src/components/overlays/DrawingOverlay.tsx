@@ -150,7 +150,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // Local state for lasso tool
   const [lassoPoints, setLassoPoints] = React.useState<[number, number][]>([]);
   const [isLassoDrawing, setIsLassoDrawing] = React.useState(false);
-  
+
   // Local state for polygon click mode (similar to rectangle click mode)
   const [polygonClickPoints, setPolygonClickPoints] = React.useState<[number, number][]>([]);
   const [isPolygonClickMode, setIsPolygonClickMode] = React.useState(false);
@@ -188,17 +188,17 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   const [rectangleFirstClick, setRectangleFirstClick] = React.useState<[number, number] | null>(null);
   const [rectangleSecondClick, setRectangleSecondClick] = React.useState<[number, number] | null>(null);
   const [isRectangleClickMode, setIsRectangleClickMode] = React.useState(false);
-  
+
   // Local state for click-to-draw line
   const [lineFirstClick, setLineFirstClick] = React.useState<[number, number] | null>(null);
   const [lineSecondClick, setLineSecondClick] = React.useState<[number, number] | null>(null);
   const [isLineClickMode, setIsLineClickMode] = React.useState(false);
-  
+
   // Local state for click-to-draw ellipse
   const [ellipseFirstClick, setEllipseFirstClick] = React.useState<[number, number] | null>(null);
   const [ellipseSecondClick, setEllipseSecondClick] = React.useState<[number, number] | null>(null);
   const [isEllipseClickMode, setIsEllipseClickMode] = React.useState(false);
-  
+
   const removeMiddleTwoElements = (arr: [number, number][]) => {
     const mid = arr.length / 2;
     return [...arr.slice(0, mid - 1), ...arr.slice(mid + 1)];
@@ -253,7 +253,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
 
       // Add the annotation to the store
       useOverlayStore.getState().addAnnotation(annotation);
-      
+
       // Reset rectangle click state
       setRectangleFirstClick(null);
       setRectangleSecondClick(null);
@@ -266,7 +266,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     if (polygonClickPoints.length >= 3) {
       // Close the polygon by adding the first point at the end
       const closedPolygon = [...polygonClickPoints, polygonClickPoints[0]];
-      
+
       // Create polygon annotation directly using click coordinates
       const annotation = {
         id: `polygon-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -284,7 +284,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
 
       // Add the annotation to the store
       useOverlayStore.getState().addAnnotation(annotation);
-      
+
       // Reset polygon click state
       setPolygonClickPoints([]);
       setIsPolygonClickMode(false);
@@ -323,7 +323,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
 
       // Add the annotation to the store
       useOverlayStore.getState().addAnnotation(annotation);
-      
+
       // Reset line click state
       setLineFirstClick(null);
       setLineSecondClick(null);
@@ -354,7 +354,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
 
       // Add the annotation to the store
       useOverlayStore.getState().addAnnotation(annotation);
-      
+
       // Reset ellipse click state
       setEllipseFirstClick(null);
       setEllipseSecondClick(null);
@@ -528,7 +528,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       lastProcessed.coordinate[1] === coordinate[1] &&
       lastProcessed.coordinate[2] === coordinate[2] &&
       type !== 'hover') {
-      console.log('DrawingOverlay: Skipping already processed interaction:', type);
       return;
     }
 
@@ -779,12 +778,12 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       // Check for click-to-draw mode first
       if (isPolygonClickMode && polygonClickPoints.length >= 1) {
         let previewPoints = [...polygonClickPoints];
-        
+
         // Add hover point for preview if available
         if (polygonHoverPoint) {
           previewPoints = [...polygonClickPoints, polygonHoverPoint];
         }
-        
+
         // Show preview if we have at least 1 point
         if (previewPoints.length >= 1) {
           polygonData = previewPoints;
