@@ -425,17 +425,35 @@ export const useOverlayStore = create<OverlayStore>()(
 
         // Handle move tool interactions
         if (activeTool === 'move') {
+          const { hoverState } = get();
+          
           switch (type) {
             case 'hover':
-              // Handle hover detection - this will be processed by DrawingOverlay
+              // Hover detection is handled in dragHandlers.ts
               break;
             case 'click':
-              // For move tool, we need to detect if clicking on an annotation
-              // This will be handled by hit detection in the DrawingOverlay component
+              // Click without drag - just a click on annotation (no action needed)
               break;
             case 'dragStart':
-              // Start drag if clicking on an annotation
-              // This will be handled by hit detection in the DrawingOverlay component
+              // Start drag if clicking on a hovered annotation
+              if (hoverState.hoveredAnnotationId) {
+                const annotation = get().annotations.find(a => a.id === hoverState.hoveredAnnotationId);
+                if (annotation) {
+                  // Calculate offset between click position and annotation position
+                  let offset: [number, number] = [0, 0];
+                  
+                  if (annotation.type === 'text' || annotation.type === 'point') {
+                    // For text and point, offset from position
+                    offset = [x - annotation.position[0], y - annotation.position[1]];
+                  } else {
+                    // For polygon-based annotations, calculate offset from first point
+                    const firstPoint = annotation.polygon[0];
+                    offset = [x - firstPoint[0], y - firstPoint[1]];
+                  }
+                  
+                  get().startDrag(hoverState.hoveredAnnotationId, offset);
+                }
+              }
               break;
             case 'drag':
               // Update drag position

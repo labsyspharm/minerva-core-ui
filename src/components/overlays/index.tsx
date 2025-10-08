@@ -81,7 +81,7 @@ const Overlays = (props: Props) => {
       if (annotation) {
         if (annotation.type === 'text') {
           updateTextAnnotationColor(editingAnnotationId, newColor);
-        } else if (annotation.type === 'rectangle' || annotation.type === 'polygon' || annotation.type === 'line' || annotation.type === 'polyline') {
+        } else if (annotation.type === 'rectangle' || annotation.type === 'ellipse' || annotation.type === 'polygon' || annotation.type === 'line' || annotation.type === 'polyline') {
           updateAnnotation(editingAnnotationId, {
             style: {
               ...annotation.style,

@@ -1,6 +1,8 @@
 // Drag handlers for Deck.gl interactions
 // These handlers translate Deck.gl events into interaction events for the overlay system
 
+import { useOverlayStore } from './stores';
+
 type InteractionType = 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover';
 type InteractionCallback = (type: InteractionType, coordinate: [number, number, number]) => void;
 
@@ -40,7 +42,24 @@ export const createDragHandlers = (
     onDragEnd: ({ coordinate }: any) => emit('dragEnd', coordinate),
 
     // Hover events (for tools that need hover feedback)
-    onHover: ({ coordinate }: any) => {
+    onHover: (info: any) => {
+      const { coordinate, layer } = info;
+      
+      // Detect if hovering over an annotation layer (only for move tool)
+      if (activeTool === 'move') {
+        if (layer && layer.id && layer.id.startsWith('annotation-')) {
+          const annotationId = layer.id.replace('annotation-', '');
+          useOverlayStore.getState().setHoveredAnnotation(annotationId);
+        } else {
+          // Clear hover state if not hovering over an annotation
+          useOverlayStore.getState().setHoveredAnnotation(null);
+        }
+      } else {
+        // Clear hover state when not using move tool
+        useOverlayStore.getState().setHoveredAnnotation(null);
+      }
+      
+      // Emit hover coordinate for drawing tools
       if (activeTool === 'move' || activeTool === 'text' || activeTool === 'polyline' || activeTool === 'rectangle' || activeTool === 'ellipse' || activeTool === 'line' || activeTool === 'lasso') {
         emit('hover', coordinate);
       }
