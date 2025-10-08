@@ -1,6 +1,6 @@
 import * as React from "react";
 import { PolygonLayer, TextLayer, ScatterplotLayer } from '@deck.gl/layers';
-import { useOverlayStore } from "../../lib/stores";
+import { useOverlayStore, ellipseToPolygon } from "../../lib/stores";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {
@@ -188,6 +188,17 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   const [rectangleFirstClick, setRectangleFirstClick] = React.useState<[number, number] | null>(null);
   const [rectangleSecondClick, setRectangleSecondClick] = React.useState<[number, number] | null>(null);
   const [isRectangleClickMode, setIsRectangleClickMode] = React.useState(false);
+  
+  // Local state for click-to-draw line
+  const [lineFirstClick, setLineFirstClick] = React.useState<[number, number] | null>(null);
+  const [lineSecondClick, setLineSecondClick] = React.useState<[number, number] | null>(null);
+  const [isLineClickMode, setIsLineClickMode] = React.useState(false);
+  
+  // Local state for click-to-draw ellipse
+  const [ellipseFirstClick, setEllipseFirstClick] = React.useState<[number, number] | null>(null);
+  const [ellipseSecondClick, setEllipseSecondClick] = React.useState<[number, number] | null>(null);
+  const [isEllipseClickMode, setIsEllipseClickMode] = React.useState(false);
+  
   const removeMiddleTwoElements = (arr: [number, number][]) => {
     const mid = arr.length / 2;
     return [...arr.slice(0, mid - 1), ...arr.slice(mid + 1)];
@@ -281,6 +292,76 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     }
   };
 
+  // Handle line finalization from click mode
+  const finalizeClickLine = () => {
+    if (lineFirstClick && lineSecondClick) {
+      const [startX, startY] = lineFirstClick;
+      const [endX, endY] = lineSecondClick;
+
+      const lineData: [number, number][] = [
+        [startX, startY],
+        [endX, endY],
+        [endX, endY],
+        [startX, startY],
+        [startX, startY]
+      ];
+
+      // Create line annotation directly using click coordinates
+      const annotation = {
+        id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: 'line' as const,
+        polygon: lineData,
+        style: {
+          fillColor: [globalColor[0], globalColor[1], globalColor[2], 50] as [number, number, number, number],
+          lineColor: globalColor as [number, number, number, number],
+          lineWidth: 3,
+        },
+        metadata: {
+          createdAt: new Date(),
+        },
+      };
+
+      // Add the annotation to the store
+      useOverlayStore.getState().addAnnotation(annotation);
+      
+      // Reset line click state
+      setLineFirstClick(null);
+      setLineSecondClick(null);
+      setIsLineClickMode(false);
+    }
+  };
+
+  // Handle ellipse finalization from click mode
+  const finalizeClickEllipse = () => {
+    if (ellipseFirstClick && ellipseSecondClick) {
+      // Generate ellipse polygon using helper function
+      const ellipsePolygon = ellipseToPolygon(ellipseFirstClick, ellipseSecondClick);
+
+      // Create ellipse annotation directly using click coordinates
+      const annotation = {
+        id: `ellipse-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: 'ellipse' as const,
+        polygon: ellipsePolygon,
+        style: {
+          fillColor: [globalColor[0], globalColor[1], globalColor[2], 50] as [number, number, number, number],
+          lineColor: globalColor as [number, number, number, number],
+          lineWidth: 3,
+        },
+        metadata: {
+          createdAt: new Date(),
+        },
+      };
+
+      // Add the annotation to the store
+      useOverlayStore.getState().addAnnotation(annotation);
+      
+      // Reset ellipse click state
+      setEllipseFirstClick(null);
+      setEllipseSecondClick(null);
+      setIsEllipseClickMode(false);
+    }
+  };
+
   // Handle tool changes - clear state when switching tools
   React.useEffect(() => {
     if (activeTool !== 'lasso') {
@@ -293,6 +374,16 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       setRectangleFirstClick(null);
       setRectangleSecondClick(null);
       setIsRectangleClickMode(false);
+    }
+    if (activeTool !== 'line') {
+      setLineFirstClick(null);
+      setLineSecondClick(null);
+      setIsLineClickMode(false);
+    }
+    if (activeTool !== 'ellipse') {
+      setEllipseFirstClick(null);
+      setEllipseSecondClick(null);
+      setIsEllipseClickMode(false);
     }
     setPolylinePoints([]);
     setFinalizedPolylineSegmentCount(0);
@@ -347,6 +438,52 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     };
   }, [activeTool, isRectangleClickMode]);
 
+  // Handle keyboard events for line finalization
+  React.useEffect(() => {
+    if (activeTool !== 'line') return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Cancel line drawing on Escape
+      if (event.key === 'Escape' && isLineClickMode) {
+        event.preventDefault();
+        setLineFirstClick(null);
+        setLineSecondClick(null);
+        setIsLineClickMode(false);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeTool, isLineClickMode]);
+
+  // Handle keyboard events for ellipse finalization
+  React.useEffect(() => {
+    if (activeTool !== 'ellipse') return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Cancel ellipse drawing on Escape
+      if (event.key === 'Escape' && isEllipseClickMode) {
+        event.preventDefault();
+        setEllipseFirstClick(null);
+        setEllipseSecondClick(null);
+        setIsEllipseClickMode(false);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeTool, isEllipseClickMode]);
+
   // Handle keyboard events for polygon finalization
   React.useEffect(() => {
     if (activeTool !== 'lasso') return;
@@ -381,7 +518,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     if (!currentInteraction) return;
 
     const { type, coordinate } = currentInteraction;
-    console.log('DrawingOverlay: Received interaction:', type, 'at coordinate:', coordinate, 'activeTool:', activeTool);
 
     // Check if we've already processed this interaction
     // Skip deduplication for hover interactions to allow smooth mouse tracking
@@ -416,7 +552,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       }
     } else if (activeTool === 'lasso') {
       console.log('DrawingOverlay: Received lasso interaction:', type, 'at coordinate:', [x, y]);
-      console.log('DrawingOverlay: Current state - isPolygonClickMode:', isPolygonClickMode, 'isLassoDrawing:', isLassoDrawing);
 
       if (type === 'click') {
         // Click mode: Add point to polygon
@@ -431,10 +566,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           setPolygonClickPoints(prev => [...prev, [x, y] as [number, number]]);
         }
       } else if (type === 'hover') {
-        console.log('DrawingOverlay: Hover interaction received, isPolygonClickMode:', isPolygonClickMode);
         if (isPolygonClickMode) {
           // Update hover point for preview
-          console.log('DrawingOverlay: Updating polygon hover point:', [x, y]);
           setPolygonHoverPoint([x, y] as [number, number]);
         }
       } else if (type === 'dragStart') {
@@ -477,6 +610,44 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       } else if (type === 'hover' && isRectangleClickMode && rectangleFirstClick) {
         // Update the second click position for preview during hover
         setRectangleSecondClick([x, y]);
+      }
+    } else if (activeTool === 'line') {
+      console.log('DrawingOverlay: Received line interaction:', type, 'at coordinate:', [x, y]);
+
+      if (type === 'click') {
+        if (!isLineClickMode) {
+          // First click - start line drawing
+          console.log('DrawingOverlay: First line click at:', [x, y]);
+          setLineFirstClick([x, y]);
+          setIsLineClickMode(true);
+        } else {
+          // Second click - finalize line
+          console.log('DrawingOverlay: Second line click at:', [x, y]);
+          setLineSecondClick([x, y]);
+          finalizeClickLine();
+        }
+      } else if (type === 'hover' && isLineClickMode && lineFirstClick) {
+        // Update the second click position for preview during hover
+        setLineSecondClick([x, y]);
+      }
+    } else if (activeTool === 'ellipse') {
+      console.log('DrawingOverlay: Received ellipse interaction:', type, 'at coordinate:', [x, y]);
+
+      if (type === 'click') {
+        if (!isEllipseClickMode) {
+          // First click - start ellipse drawing
+          console.log('DrawingOverlay: First ellipse click at:', [x, y]);
+          setEllipseFirstClick([x, y]);
+          setIsEllipseClickMode(true);
+        } else {
+          // Second click - finalize ellipse
+          console.log('DrawingOverlay: Second ellipse click at:', [x, y]);
+          setEllipseSecondClick([x, y]);
+          finalizeClickEllipse();
+        }
+      } else if (type === 'hover' && isEllipseClickMode && ellipseFirstClick) {
+        // Update the second click position for preview during hover
+        setEllipseSecondClick([x, y]);
       }
     } else if (activeTool === 'polyline') {
       console.log('DrawingOverlay: Received polyline interaction:', type, 'at coordinate:', [x, y]);
@@ -531,7 +702,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         console.log('DrawingOverlay: Hover interaction at coordinate:', [x, y]);
       }
     }
-  }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso, isPolylineDrawing, isPolylineDragging, finalizePolyline, isRectangleClickMode, rectangleFirstClick, finalizeClickRectangle, isPolygonClickMode, polygonClickPoints, finalizeClickPolygon]);
+  }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso, isPolylineDrawing, isPolylineDragging, finalizePolyline, isRectangleClickMode, rectangleFirstClick, finalizeClickRectangle, isLineClickMode, lineFirstClick, finalizeClickLine, isEllipseClickMode, ellipseFirstClick, finalizeClickEllipse, isPolygonClickMode, polygonClickPoints, finalizeClickPolygon]);
 
   // Handle text input submission
   const handleTextSubmit = () => {
@@ -605,7 +776,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     }
     // Lasso tool: uses click mode or drag mode
     else if (activeTool === 'lasso') {
-      console.log('DrawingOverlay: Processing lasso tool, isPolygonClickMode:', isPolygonClickMode, 'polygonClickPoints.length:', polygonClickPoints.length, 'polygonHoverPoint:', polygonHoverPoint);
       // Check for click-to-draw mode first
       if (isPolygonClickMode && polygonClickPoints.length >= 1) {
         let previewPoints = [...polygonClickPoints];
@@ -613,9 +783,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         // Add hover point for preview if available
         if (polygonHoverPoint) {
           previewPoints = [...polygonClickPoints, polygonHoverPoint];
-          console.log('DrawingOverlay: Polygon click points:', polygonClickPoints.length, 'hover point:', polygonHoverPoint);
-        } else {
-          console.log('DrawingOverlay: Polygon click points:', polygonClickPoints.length, 'no hover point');
         }
         
         // Show preview if we have at least 1 point
@@ -642,21 +809,59 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       shouldFill = false;
       console.log('DrawingOverlay: Polyline polygon data:', polygonData);
     }
-    // Line tool: uses dragStart/dragEnd to create line coordinates
-    else if (activeTool === 'line' && isDrawing && dragStart && dragEnd) {
-      const [startX, startY] = dragStart;
-      const [endX, endY] = dragEnd;
+    // Line tool: uses click mode or drag mode
+    else if (activeTool === 'line') {
+      // Check for click-to-draw mode first
+      if (isLineClickMode && lineFirstClick && lineSecondClick) {
+        const [startX, startY] = lineFirstClick;
+        const [endX, endY] = lineSecondClick;
 
-      polygonData = [
-        [startX, startY],
-        [endX, endY],
-        [endX, endY],
-        [startX, startY],
-        [startX, startY]
-      ];
-      fillColor = [0, 255, 255, 50]; // Cyan
-      lineColor = [0, 255, 255, 255];
-      console.log('DrawingOverlay: Line polygon data:', polygonData);
+        polygonData = [
+          [startX, startY],
+          [endX, endY],
+          [endX, endY],
+          [startX, startY],
+          [startX, startY]
+        ];
+        fillColor = [0, 255, 255, 50]; // Cyan
+        lineColor = [0, 255, 255, 255];
+        console.log('DrawingOverlay: Click line polygon data:', polygonData);
+      }
+      // Fall back to drag mode for backward compatibility
+      else if (isDrawing && dragStart && dragEnd) {
+        const [startX, startY] = dragStart;
+        const [endX, endY] = dragEnd;
+
+        polygonData = [
+          [startX, startY],
+          [endX, endY],
+          [endX, endY],
+          [startX, startY],
+          [startX, startY]
+        ];
+        fillColor = [0, 255, 255, 50]; // Cyan
+        lineColor = [0, 255, 255, 255];
+        console.log('DrawingOverlay: Drag line polygon data:', polygonData);
+      }
+    }
+    // Ellipse tool: uses click mode or drag mode
+    else if (activeTool === 'ellipse') {
+      // Check for click-to-draw mode first
+      if (isEllipseClickMode && ellipseFirstClick && ellipseSecondClick) {
+        // Generate ellipse polygon using helper function
+        polygonData = ellipseToPolygon(ellipseFirstClick, ellipseSecondClick);
+        fillColor = [128, 0, 128, 50]; // Purple
+        lineColor = [128, 0, 128, 255];
+        console.log('DrawingOverlay: Click ellipse polygon data:', polygonData);
+      }
+      // Fall back to drag mode for backward compatibility
+      else if (isDrawing && dragStart && dragEnd) {
+        // Generate ellipse polygon using helper function
+        polygonData = ellipseToPolygon(dragStart, dragEnd);
+        fillColor = [128, 0, 128, 50]; // Purple
+        lineColor = [128, 0, 128, 255];
+        console.log('DrawingOverlay: Drag ellipse polygon data:', polygonData);
+      }
     }
 
     // Return null if no polygon data
@@ -679,7 +884,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       stroked: true,
       filled: shouldFill,
     });
-  }, [activeTool, isDrawing, dragStart, dragEnd, isLassoDrawing, lassoPoints, isPolylineDrawing, polylinePoints, isRectangleClickMode, rectangleFirstClick, rectangleSecondClick, isPolygonClickMode, polygonClickPoints, polygonHoverPoint]);
+  }, [activeTool, isDrawing, dragStart, dragEnd, isLassoDrawing, lassoPoints, isPolylineDrawing, polylinePoints, isRectangleClickMode, rectangleFirstClick, rectangleSecondClick, isLineClickMode, lineFirstClick, lineSecondClick, isEllipseClickMode, ellipseFirstClick, ellipseSecondClick, isPolygonClickMode, polygonClickPoints, polygonHoverPoint]);
 
   // Get annotations from store with proper reactivity
   const annotations = useOverlayStore(state => state.annotations);

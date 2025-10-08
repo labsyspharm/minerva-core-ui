@@ -41,7 +41,7 @@ export const createDragHandlers = (
 
     // Hover events (for tools that need hover feedback)
     onHover: ({ coordinate }: any) => {
-      if (activeTool === 'move' || activeTool === 'text' || activeTool === 'polyline' || activeTool === 'rectangle' || activeTool === 'lasso') {
+      if (activeTool === 'move' || activeTool === 'text' || activeTool === 'polyline' || activeTool === 'rectangle' || activeTool === 'ellipse' || activeTool === 'line' || activeTool === 'lasso') {
         emit('hover', coordinate);
       }
     },

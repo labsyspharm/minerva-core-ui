@@ -134,6 +134,8 @@ const VivView = (props: Props) => {
       return 'grab';
     } else if (activeTool === 'rectangle') {
       return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'ellipse') {
+      return isDragging ? 'grabbing' : 'crosshair';
     } else if (activeTool === 'lasso') {
       return isDragging ? 'grabbing' : 'crosshair';
     } else if (activeTool === 'line') {

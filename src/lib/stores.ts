@@ -42,6 +42,23 @@ export interface PolygonAnnotation {
   };
 }
 
+export interface EllipseAnnotation {
+  id: string;
+  type: 'ellipse';
+  polygon: [number, number][]; // Ellipse approximated as polygon coordinates
+  style: {
+    fillColor: [number, number, number, number];
+    lineColor: [number, number, number, number];
+    lineWidth: number;
+  };
+  metadata?: {
+    createdAt: Date;
+    label?: string;
+    description?: string;
+    isImported?: boolean; // Flag to mark imported annotations as un-deletable
+  };
+}
+
 export interface LineAnnotation {
   id: string;
   type: 'line';
@@ -110,7 +127,7 @@ export interface PointAnnotation {
   };
 }
 
-export type Annotation = RectangleAnnotation | PolygonAnnotation | LineAnnotation | PolylineAnnotation | TextAnnotation | PointAnnotation;
+export type Annotation = RectangleAnnotation | EllipseAnnotation | PolygonAnnotation | LineAnnotation | PolylineAnnotation | TextAnnotation | PointAnnotation;
 
 // Helper functions to convert shapes to polygon coordinates
 export const rectangleToPolygon = (start: [number, number], end: [number, number]): [number, number][] => {
@@ -129,6 +146,29 @@ export const rectangleToPolygon = (start: [number, number], end: [number, number
     [minX, maxY],
     [minX, minY] // Close the polygon
   ];
+};
+
+// Helper function to convert bounding box to ellipse polygon
+export const ellipseToPolygon = (start: [number, number], end: [number, number], segments: number = 64): [number, number][] => {
+  const [startX, startY] = start;
+  const [endX, endY] = end;
+
+  // Calculate center and radii
+  const centerX = (startX + endX) / 2;
+  const centerY = (startY + endY) / 2;
+  const radiusX = Math.abs(endX - startX) / 2;
+  const radiusY = Math.abs(endY - startY) / 2;
+
+  // Generate points around the ellipse
+  const points: [number, number][] = [];
+  for (let i = 0; i <= segments; i++) {
+    const angle = (i / segments) * 2 * Math.PI;
+    const x = centerX + radiusX * Math.cos(angle);
+    const y = centerY + radiusY * Math.sin(angle);
+    points.push([x, y]);
+  }
+
+  return points;
 };
 
 export const lineToPolygon = (start: [number, number], end: [number, number], lineWidth: number = 3): [number, number][] => {
@@ -256,6 +296,7 @@ export interface OverlayStore {
   updateAnnotation: (annotationId: string, updates: Partial<Annotation>) => void;
   clearAnnotations: () => void;
   finalizeRectangle: () => void; // Convert current drawing to annotation
+  finalizeEllipse: () => void; // Convert current drawing to ellipse annotation
   finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
   finalizeLine: () => void; // Convert current drawing to line annotation
   finalizePolyline: (points: [number, number][]) => void; // Convert polyline points to polyline annotation
@@ -442,6 +483,10 @@ export const useOverlayStore = create<OverlayStore>()(
                 setTimeout(() => {
                   get().finalizeRectangle();
                 }, 0);
+              } else if (activeTool === 'ellipse') {
+                setTimeout(() => {
+                  get().finalizeEllipse();
+                }, 0);
               } else if (activeTool === 'line') {
                 setTimeout(() => {
                   get().finalizeLine();
@@ -509,6 +554,41 @@ export const useOverlayStore = create<OverlayStore>()(
           };
 
           console.log('Store: Finalizing rectangle as annotation:', annotation);
+
+          // Add the annotation
+          get().addAnnotation(annotation);
+
+          // Reset drawing state
+          get().resetDrawingState();
+
+          // Remove the temporary drawing layer
+          get().removeOverlayLayer('drawing-layer');
+        }
+      },
+
+      finalizeEllipse: () => {
+        const { drawingState } = get();
+        if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
+          const [startX, startY] = drawingState.dragStart;
+          const [endX, endY] = drawingState.dragEnd;
+
+          // Create a new ellipse annotation using polygon coordinates
+          const annotation: EllipseAnnotation = {
+            id: `ellipse-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: 'ellipse',
+            polygon: ellipseToPolygon([startX, startY], [endX, endY]),
+            style: {
+              fillColor: [get().globalColor[0], get().globalColor[1], get().globalColor[2], 50], // Use global color with low opacity
+              lineColor: get().globalColor, // Use global color for border
+              lineWidth: 3,
+            },
+            metadata: {
+              createdAt: new Date(),
+              label: `Ellipse ${get().annotations.length + 1}`,
+            },
+          };
+
+          console.log('Store: Finalizing ellipse as annotation:', annotation);
 
           // Add the annotation
           get().addAnnotation(annotation);
