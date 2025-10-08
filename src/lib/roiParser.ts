@@ -182,7 +182,7 @@ const rectangleShapeToAnnotation = (shape: RoiRectangleShape, roi: Roi): Rectang
     style: colors,
     metadata: {
       createdAt: new Date(),
-      label: Name || `Rectangle from ${roi.Name || roi.ID}`,
+      label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -207,7 +207,7 @@ const ellipseShapeToAnnotation = (shape: RoiEllipseShape, roi: Roi): PolygonAnno
     style: colors,
     metadata: {
       createdAt: new Date(),
-      label: Name || `Ellipse from ${roi.Name || roi.ID}`,
+      label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -238,7 +238,7 @@ const lineShapeToAnnotation = (shape: RoiLineShape, roi: Roi): LineAnnotation =>
     },
     metadata: {
       createdAt: new Date(),
-      label: Name || `Line from ${roi.Name || roi.ID}`,
+      label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -267,7 +267,7 @@ const pointShapeToAnnotation = (shape: RoiPointShape, roi: Roi): PointAnnotation
     },
     metadata: {
       createdAt: new Date(),
-      label: Name || `Point from ${roi.Name || roi.ID}`,
+      label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -291,7 +291,7 @@ const polygonShapeToAnnotation = (shape: RoiPolygonShape, roi: Roi): PolygonAnno
     style: colors,
     metadata: {
       createdAt: new Date(),
-      label: Name || `Polygon from ${roi.Name || roi.ID}`,
+      label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -319,7 +319,7 @@ const polylineShapeToAnnotation = (shape: RoiPolylineShape, roi: Roi): PolylineA
     },
     metadata: {
       createdAt: new Date(),
-      label: Name || `Polyline from ${roi.Name || roi.ID}`,
+      label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -350,7 +350,7 @@ const labelShapeToAnnotation = (shape: RoiLabelShape, roi: Roi): TextAnnotation 
     },
     metadata: {
       createdAt: new Date(),
-      label: Name || `Label from ${roi.Name || roi.ID}`,
+      label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -379,7 +379,7 @@ const createTextAnnotationFromShape = (shape: BaseRoiShape, roi: Roi, centerPosi
     },
     metadata: {
       createdAt: new Date(),
-      label: Name || `Text from ${roi.Name || roi.ID}`,
+      label: `${ID}:Label`,
       description: `Imported text from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -387,15 +387,16 @@ const createTextAnnotationFromShape = (shape: BaseRoiShape, roi: Roi, centerPosi
 };
 
 /**
- * Parse ROIs from loader metadata and convert to annotations
+ * Parse ROIs from loader metadata and convert to annotations and groups
  */
-export const parseRoisFromLoader = (loader: any): Annotation[] => {
+export const parseRoisFromLoader = (loader: any): { annotations: Annotation[], groups: any[] } => {
   const annotations: Annotation[] = [];
+  const groups: any[] = [];
   
   // Check if loader has metadata with ROIs
   if (!loader || !loader.metadata || !loader.metadata.ROIs) {
     console.log('No ROIs found in loader metadata');
-    return annotations;
+    return { annotations, groups };
   }
   
   const rois = loader.metadata.ROIs as Roi[];
@@ -404,6 +405,10 @@ export const parseRoisFromLoader = (loader: any): Annotation[] => {
   // Process each ROI
   rois.forEach((roi) => {
     console.log(`Processing ROI ${roi.ID} (${roi.Name || 'unnamed'}) with ${roi.shapes.length} shapes`);
+    
+    // Create a group for this ROI
+    const groupId = `roi-group-${roi.ID}`;
+    const roiAnnotationIds: string[] = [];
     
     // Process each shape in the ROI
     roi.shapes.forEach((shape) => {
@@ -494,11 +499,14 @@ export const parseRoisFromLoader = (loader: any): Annotation[] => {
         
         if (annotation) {
           annotations.push(annotation);
+          roiAnnotationIds.push(annotation.id);
           
           // If the shape has a Text field and we have a center position, create an additional text annotation
-          if (shape.Text && centerPosition) {
+          // BUT NOT for label shapes, since they already are text annotations
+          if (shape.Text && centerPosition && shape.type !== 'label') {
             const textAnnotation = createTextAnnotationFromShape(shape, roi, centerPosition);
             annotations.push(textAnnotation);
+            roiAnnotationIds.push(textAnnotation.id);
             console.log(`Created additional text annotation: ${textAnnotation.id}`);
           }
         }
@@ -506,9 +514,25 @@ export const parseRoisFromLoader = (loader: any): Annotation[] => {
         console.error(`Error processing shape ${shape.ID} in ROI ${roi.ID}:`, error);
       }
     });
+    
+    // Create a group for this ROI if it has any annotations
+    if (roiAnnotationIds.length > 0) {
+      const group = {
+        id: groupId,
+        name: roi.Name || `ROI ${roi.ID}`,
+        annotationIds: roiAnnotationIds,
+        isExpanded: true,
+        metadata: {
+          createdAt: new Date(),
+        },
+      };
+      groups.push(group);
+      console.log(`Created group for ROI ${roi.ID} with ${roiAnnotationIds.length} annotations`);
+    }
   });
   
   console.log(`Total annotations created from ROIs: ${annotations.length}`);
-  return annotations;
+  console.log(`Total groups created from ROIs: ${groups.length}`);
+  return { annotations, groups };
 };
 

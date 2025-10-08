@@ -82,14 +82,18 @@ const Content = (props: Props) => {
   useEffect(() => {
     if (bypass && loader) {
       try {
-        const annotations = parseRoisFromLoader(loader);
+        const { annotations, groups } = parseRoisFromLoader(loader);
         if (annotations.length > 0) {
-          console.log(`Autopopulating ${annotations.length} annotations from test loader metadata`);
+          console.log(`Autopopulating ${annotations.length} annotations and ${groups.length} groups from test loader metadata`);
           // Clear existing annotations first
           useOverlayStore.getState().clearAnnotations();
           // Add each annotation to the store
           annotations.forEach(annotation => {
             useOverlayStore.getState().addAnnotation(annotation);
+          });
+          // Add each group to the store
+          groups.forEach(group => {
+            useOverlayStore.getState().annotationGroups.push(group);
           });
         }
       } catch (error) {
@@ -173,16 +177,20 @@ const Content = (props: Props) => {
         }
       );
 
-      // Parse ROIs from loader metadata and populate annotations
+      // Parse ROIs from loader metadata and populate annotations and groups
       try {
-        const annotations = parseRoisFromLoader(loader);
+        const { annotations, groups } = parseRoisFromLoader(loader);
         if (annotations.length > 0) {
-          console.log(`Autopopulating ${annotations.length} annotations from loader metadata`);
+          console.log(`Autopopulating ${annotations.length} annotations and ${groups.length} groups from loader metadata`);
           // Clear existing annotations first
           useOverlayStore.getState().clearAnnotations();
           // Add each annotation to the store
           annotations.forEach(annotation => {
             useOverlayStore.getState().addAnnotation(annotation);
+          });
+          // Add each group to the store
+          groups.forEach(group => {
+            useOverlayStore.getState().annotationGroups.push(group);
           });
         }
       } catch (error) {

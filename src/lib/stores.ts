@@ -129,6 +129,18 @@ export interface PointAnnotation {
 
 export type Annotation = RectangleAnnotation | EllipseAnnotation | PolygonAnnotation | LineAnnotation | PolylineAnnotation | TextAnnotation | PointAnnotation;
 
+// Annotation Group interface
+export interface AnnotationGroup {
+  id: string;
+  name: string;
+  annotationIds: string[]; // IDs of annotations in this group
+  isExpanded: boolean; // Whether the group is expanded in the UI
+  metadata?: {
+    createdAt: Date;
+    color?: [number, number, number, number]; // Optional group color
+  };
+}
+
 // Helper functions to convert shapes to polygon coordinates
 export const rectangleToPolygon = (start: [number, number], end: [number, number]): [number, number][] => {
   const [startX, startY] = start;
@@ -275,6 +287,7 @@ export interface OverlayStore {
   dragState: DragState; // New: drag state for move tool
   hoverState: HoverState; // New: hover state for move tool
   annotations: Annotation[]; // New: persistent annotations
+  annotationGroups: AnnotationGroup[]; // New: annotation groups
   hiddenLayers: Set<string>; // New: track hidden layers
   globalColor: [number, number, number, number]; // New: global drawing color
 
@@ -320,6 +333,13 @@ export interface OverlayStore {
   // New hover actions for move tool
   setHoveredAnnotation: (annotationId: string | null) => void;
   resetHoverState: () => void;
+
+  // Group actions
+  createGroup: (name?: string) => void;
+  deleteGroup: (groupId: string) => void;
+  addAnnotationToGroup: (groupId: string, annotationId: string) => void;
+  removeAnnotationFromGroup: (groupId: string, annotationId: string) => void;
+  toggleGroupExpanded: (groupId: string) => void;
 }
 
 // Initial state for overlay store
@@ -341,6 +361,7 @@ const overlayInitialState = {
     hoveredAnnotationId: null,
   },
   annotations: [], // New: empty annotations array
+  annotationGroups: [], // New: empty groups array
   hiddenLayers: new Set<string>(), // New: empty hidden layers set
   globalColor: [255, 255, 255, 255], // New: default white color
 };
@@ -922,6 +943,64 @@ export const useOverlayStore = create<OverlayStore>()(
 
       resetHoverState: () => {
         set({ hoverState: overlayInitialState.hoverState });
+      },
+
+      // Group actions
+      createGroup: (name?: string) => {
+        const groupCount = get().annotationGroups.length;
+        const newGroup: AnnotationGroup = {
+          id: `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: name || `Group ${groupCount + 1}`,
+          annotationIds: [],
+          isExpanded: true,
+          metadata: {
+            createdAt: new Date(),
+          },
+        };
+        console.log('Store: Creating group:', newGroup);
+        set((state) => ({
+          annotationGroups: [...state.annotationGroups, newGroup]
+        }));
+      },
+
+      deleteGroup: (groupId: string) => {
+        console.log('Store: Deleting group:', groupId);
+        set((state) => ({
+          annotationGroups: state.annotationGroups.filter(g => g.id !== groupId)
+        }));
+      },
+
+      addAnnotationToGroup: (groupId: string, annotationId: string) => {
+        console.log('Store: Adding annotation', annotationId, 'to group', groupId);
+        set((state) => ({
+          annotationGroups: state.annotationGroups.map(group =>
+            group.id === groupId
+              ? { ...group, annotationIds: [...group.annotationIds, annotationId] }
+              : group
+          )
+        }));
+      },
+
+      removeAnnotationFromGroup: (groupId: string, annotationId: string) => {
+        console.log('Store: Removing annotation', annotationId, 'from group', groupId);
+        set((state) => ({
+          annotationGroups: state.annotationGroups.map(group =>
+            group.id === groupId
+              ? { ...group, annotationIds: group.annotationIds.filter(id => id !== annotationId) }
+              : group
+          )
+        }));
+      },
+
+      toggleGroupExpanded: (groupId: string) => {
+        console.log('Store: Toggling group expanded:', groupId);
+        set((state) => ({
+          annotationGroups: state.annotationGroups.map(group =>
+            group.id === groupId
+              ? { ...group, isExpanded: !group.isExpanded }
+              : group
+          )
+        }));
       },
     }),
     {

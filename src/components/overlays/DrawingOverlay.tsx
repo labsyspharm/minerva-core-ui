@@ -932,6 +932,14 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       .forEach(annotation => {
         if (annotation.type === 'text') {
           // Create text layer for text annotations
+          const isHovered = hoveredAnnotationId === annotation.id;
+          const fontColor = isHovered 
+            ? [0, 120, 255, 255] as [number, number, number, number] // Blue when hovered
+            : annotation.style.fontColor;
+          const backgroundColor = isHovered
+            ? [0, 120, 255, 150] as [number, number, number, number] // Blue background when hovered
+            : annotation.style.backgroundColor || [0, 0, 0, 100];
+            
           layers.push(new TextLayer({
             id: `annotation-${annotation.id}`,
             data: [{
@@ -940,8 +948,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
             }],
             getText: d => d.text,
             getPosition: d => d.position,
-            getColor: annotation.style.fontColor,
-            getBackgroundColor: annotation.style.backgroundColor || [0, 0, 0, 100],
+            getColor: fontColor,
+            getBackgroundColor: backgroundColor,
             getSize: annotation.style.fontSize,
             fontFamily: 'Arial, sans-serif',
             fontWeight: 'normal',
@@ -950,6 +958,14 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           }));
         } else if (annotation.type === 'point') {
           // Create scatterplot layer for point annotations
+          const isHovered = hoveredAnnotationId === annotation.id;
+          const fillColor = isHovered
+            ? [0, 120, 255, 255] as [number, number, number, number] // Blue when hovered
+            : annotation.style.fillColor;
+          const lineColor = isHovered
+            ? [0, 120, 255, 255] as [number, number, number, number] // Blue when hovered
+            : annotation.style.strokeColor;
+            
           console.log('DrawingOverlay: Creating point annotation:', annotation);
           layers.push(new ScatterplotLayer({
             id: `annotation-${annotation.id}`,
@@ -961,8 +977,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
             getRadius: d => { console.log('DrawingOverlay: Point radius:', d.radius); return d.radius; },
             radiusMinPixels: annotation.style.radius,
             radiusMaxPixels: annotation.style.radius,
-            getFillColor: [255, 140, 0],
-            getLineColor: [0, 0, 0],
+            getFillColor: fillColor,
+            getLineColor: lineColor,
             getLineWidth: 10,
             pickable: true
           }));

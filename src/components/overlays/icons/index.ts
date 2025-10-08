@@ -9,3 +9,4 @@ export { default as PolylineIcon } from './polyline.svg?react';
 export { default as TextIcon } from './text.svg?react';
 export { default as PointIcon } from './point.svg?react';
 export { default as ColorIcon } from './color.svg?react';
+export { default as GroupIcon } from './group.svg?react';
