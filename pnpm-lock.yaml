@@ -120,8 +120,8 @@ importers:
         specifier: ^0.1.1
         version: 0.1.1
       minerva-author-ui:
-        specifier: 2.0.0-beta.49
-        version: 2.0.0-beta.49(@luma.gl/gltools@8.5.21)(@types/react@18.3.23)(gl-matrix@3.4.3)(lit@3.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.41.1)(vite@5.4.19(@types/node@20.17.57))
+        specifier: 2.0.0-beta.50
+        version: 2.0.0-beta.50(@luma.gl/gltools@8.5.21)(@types/react@18.3.23)(gl-matrix@3.4.3)(lit@3.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.41.1)(vite@5.4.19(@types/node@20.17.57))
       npm:
         specifier: ^11.5.2
         version: 11.5.2
@@ -2819,8 +2819,8 @@ packages:
     resolution: {integrity: sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==}
     engines: {node: '>= 0.6'}
 
-  minerva-author-ui@2.0.0-beta.49:
-    resolution: {integrity: sha512-reMovDYvIzWcjiVzPEMlaNYONb3gVZ1bq+QupxxnvUX7U7cDzw3toGS0VbYGlhK9ILfLNVERYQsEY0A4jjb1vA==}
+  minerva-author-ui@2.0.0-beta.50:
+    resolution: {integrity: sha512-kFEgnYVKBsf+EcEYakwglQgWxO3YaO61ez3fryRHDYfSvHOIKfasJKlZtvu6CoF0Z2rS+3ZEMwJPyjDy32B+VQ==}
 
   minimatch@3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
@@ -7244,7 +7244,7 @@ snapshots:
     dependencies:
       mime-db: 1.52.0
 
-  minerva-author-ui@2.0.0-beta.49(@luma.gl/gltools@8.5.21)(@types/react@18.3.23)(gl-matrix@3.4.3)(lit@3.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.41.1)(vite@5.4.19(@types/node@20.17.57)):
+  minerva-author-ui@2.0.0-beta.50(@luma.gl/gltools@8.5.21)(@types/react@18.3.23)(gl-matrix@3.4.3)(lit@3.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.41.1)(vite@5.4.19(@types/node@20.17.57)):
     dependencies:
       '@arrow-js/core': 1.0.0-alpha.10
       '@deck.gl/core': 8.9.36
