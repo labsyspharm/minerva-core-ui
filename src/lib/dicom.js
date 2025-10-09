@@ -472,10 +472,9 @@ const readMetadata = async (series) => {
 
 const toIndexer = (opts) => {
   const {
-    metadata, pyramids, series 
+    metadata, pyramids, series, little_endian
   } = opts;
   return ( sel, level ) => {
-    const little_endian = true;
     return new DicomTIFFImage({
       little_endian, metadata,
       pyramids, series, level,
@@ -497,7 +496,7 @@ const getShapeForBinaryDownsampleLevel = (
   return resolutionShape;
 }
 
-const loadDicom = (meta) => {
+const loadDicom = (meta, little_endian) => {
   const { pyramids, series } = meta;
   const { width, height } = [
     ...pyramids[0]
@@ -542,7 +541,7 @@ const loadDicom = (meta) => {
   const { tileSize } = pyramids["0"][0];
   const metadata = { Pixels: pixels };
   const pyramidIndexer = toIndexer({
-    metadata, pyramids, series
+    metadata, pyramids, series, little_endian
   });
   const data = levels.map(level => {
     const pyramid = pyramids["0"][level];
@@ -585,7 +584,8 @@ const loadDicom = (meta) => {
 }
 
 function createTileLayers(meta) {
-  const loader = loadDicom(meta);
+  const little_endian = true;
+  const loader = loadDicom(meta, little_endian);
   const {
     channelsVisible,
     colors,
@@ -674,7 +674,41 @@ const findDicomWeb = (series) => {
   return listDicomWeb(series);
 }
 
-const parseDicomWeb = (dicom_pyramids) => {
+class DicomPlane {
+  constructor(props) {
+    console.warn(props);
+    this.meta = props.meta;
+    this.dtype = props.dtype;
+    this.shape = props.shape;
+    this.labels = props.labels;
+    this.series = props.series;
+    this.metadata = props.metadata;
+    this.tileSize = props.tileSize;
+  }
+
+  async getTile({ selection, x, y, signal }) {
+    const metadata= this.metadata;
+    const width = this.shape[0];
+    const height = this.shape[1];
+    const series = this.series;
+    const subpath = "foo";
+    const pyramids = computeImagePyramid({ metadata });
+/*    const image = new DicomTIFFImage({
+      little_endian, metadata,
+      pyramids, series, level,
+      ...sel
+    });
+    */
+    const data = `await image._readRaster({
+      x, y, width, height, sample, signal
+    })`;
+    return {
+      width, height, data
+    };
+  }
+}
+
+const parseDicomWeb = (series, dicom_pyramids) => {
   if (!dicom_pyramids) {
     return null;
   }
@@ -685,10 +719,11 @@ const parseDicomWeb = (dicom_pyramids) => {
   const any_channel = [...channel_pyramids].pop();
   const levels = any_channel.toReversed();
   // Levels starting at full resolution
-  const data = levels.map(level => {
+  const data_config = levels.map(level => {
     const {tileSize, width, height} = level;
     const shape = [width, height, n_channels];
     return {
+      "series": series,
       "dtype":"Uint16",
       "tileSize":tileSize,
       "shape": shape,
@@ -717,9 +752,9 @@ const parseDicomWeb = (dicom_pyramids) => {
       "ID":"Pixels:0",
       "DimensionOrder":"XYC",
       "Type":"uint16",
-      "SizeC":data[0].shape[2],
-      "SizeY":data[0].shape[1],
-      "SizeX":data[0].shape[0],
+      "SizeC":data_config[0].shape[2],
+      "SizeY":data_config[0].shape[1],
+      "SizeX":data_config[0].shape[0],
       "PhysicalSizeX":1,
       "PhysicalSizeY":1,
       "PhysicalSizeXUnit":"µm",
@@ -727,6 +762,12 @@ const parseDicomWeb = (dicom_pyramids) => {
       "BigEndian":false
     }
   }
+  const data = data_config.map(level_data => {
+    return new DicomPlane({
+      metadata,
+      ...level_data
+    });
+  });
   return {
     data, metadata
   };

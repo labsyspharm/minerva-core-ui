@@ -20,6 +20,7 @@ type FormOutAny = {
 type Format = "DICOM-WEB" | "OME-TIFF";
 type AnyKey = keyof Required<FormOutAny>;
 type DicomKey = keyof Required<FormOutDicom>;
+type Format = "DICOM-WEB" | "OME-TIFF";
 type ValidateIn<T> = {
   formOut: T,
   handle: Handle.Dir,
