@@ -17,6 +17,7 @@ export interface RectangleAnnotation {
     lineColor: [number, number, number, number];
     lineWidth: number;
   };
+  text?: string; // Optional text content to display within the shape
   metadata?: {
     createdAt: Date;
     label?: string;
@@ -34,6 +35,7 @@ export interface PolygonAnnotation {
     lineColor: [number, number, number, number];
     lineWidth: number;
   };
+  text?: string; // Optional text content to display within the shape
   metadata?: {
     createdAt: Date;
     label?: string;
@@ -51,6 +53,7 @@ export interface EllipseAnnotation {
     lineColor: [number, number, number, number];
     lineWidth: number;
   };
+  text?: string; // Optional text content to display within the shape
   metadata?: {
     createdAt: Date;
     label?: string;
@@ -67,6 +70,7 @@ export interface LineAnnotation {
     lineColor: [number, number, number, number];
     lineWidth: number;
   };
+  text?: string; // Optional text content to display within the shape
   metadata?: {
     createdAt: Date;
     label?: string;
@@ -83,6 +87,7 @@ export interface PolylineAnnotation {
     lineColor: [number, number, number, number];
     lineWidth: number;
   };
+  text?: string; // Optional text content to display within the shape
   metadata?: {
     createdAt: Date;
     label?: string;
@@ -119,6 +124,7 @@ export interface PointAnnotation {
     strokeColor: [number, number, number, number];
     radius: number; // Point radius in pixels
   };
+  text?: string; // Optional text content to display within the shape
   metadata?: {
     createdAt: Date;
     label?: string;
@@ -317,6 +323,7 @@ export interface OverlayStore {
   createPointAnnotation: (position: [number, number], radius?: number) => void; // Create point annotation
   updateTextAnnotation: (annotationId: string, newText: string, fontSize?: number) => void; // Update text annotation content
   updateTextAnnotationColor: (annotationId: string, fontColor: [number, number, number, number]) => void; // Update text annotation color
+  updateShapeText: (annotationId: string, newText: string) => void; // Update text field on any annotation (for shapes with text)
   setGlobalColor: (color: [number, number, number, number]) => void; // Set global drawing color
 
   // New layer visibility actions
@@ -831,6 +838,32 @@ export const useOverlayStore = create<OverlayStore>()(
             ...annotation.style,
             fontColor: fontColor
           }
+        };
+
+        get().updateAnnotation(annotationId, updates);
+      },
+
+      updateShapeText: (annotationId: string, newText: string) => {
+        const annotations = get().annotations;
+        const annotation = annotations.find(a => a.id === annotationId);
+
+        if (!annotation) {
+          console.log('Store: Annotation not found:', annotationId);
+          return;
+        }
+
+        // For text annotations, use the existing updateTextAnnotation method
+        if (annotation.type === 'text') {
+          get().updateTextAnnotation(annotationId, newText);
+          return;
+        }
+
+        console.log('Store: Updating shape text:', annotationId, 'to:', newText);
+
+        // Update the text field on the shape
+        // Empty string removes the text field
+        const updates: Partial<Annotation> = {
+          text: newText.trim() || undefined
         };
 
         get().updateAnnotation(annotationId, updates);

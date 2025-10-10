@@ -982,6 +982,31 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
             getLineWidth: 10,
             pickable: true
           }));
+          
+          // If the point has text, render a text layer
+          // @ts-ignore - text field exists on all annotation types now
+          if (annotation.text) {
+            // Use the point's stroke color for text, or white if not available
+            const textColor = annotation.style.strokeColor || [255, 255, 255, 255];
+            
+            layers.push(new TextLayer({
+              id: `annotation-${annotation.id}-text`,
+              data: [{
+                // @ts-ignore - text field exists on all annotation types now
+                text: annotation.text,
+                position: [annotation.position[0], annotation.position[1], 0], // Use point position
+              }],
+              getText: d => d.text,
+              getPosition: d => d.position,
+              getColor: textColor,
+              getBackgroundColor: [0, 0, 0, 150], // Semi-transparent black background
+              getSize: 14, // Default font size for shape text
+              fontFamily: 'Arial, sans-serif',
+              fontWeight: 'normal',
+              padding: 4,
+              pickable: false, // Don't make text pickable separately from the point
+            }));
+          }
         } else {
           // Create polygon layer for other annotations
           const isHovered = hoveredAnnotationId === annotation.id;
@@ -1015,6 +1040,36 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
             filled: true,
             pickable: true,
           }));
+          
+          // If the shape has text, render a text layer at the center of the shape
+          // @ts-ignore - text field exists on all annotation types now
+          if (annotation.text) {
+            // Calculate center position of the shape
+            const polygon = annotation.polygon;
+            const centerX = polygon.reduce((sum, [x]) => sum + x, 0) / polygon.length;
+            const centerY = polygon.reduce((sum, [, y]) => sum + y, 0) / polygon.length;
+            
+            // Use the shape's stroke color for text, or white if not available
+            const textColor = annotation.style.lineColor || [255, 255, 255, 255];
+            
+            layers.push(new TextLayer({
+              id: `annotation-${annotation.id}-text`,
+              data: [{
+                // @ts-ignore - text field exists on all annotation types now
+                text: annotation.text,
+                position: [centerX, centerY, 0], // Add z coordinate
+              }],
+              getText: d => d.text,
+              getPosition: d => d.position,
+              getColor: textColor,
+              getBackgroundColor: [0, 0, 0, 150], // Semi-transparent black background
+              getSize: 14, // Default font size for shape text
+              fontFamily: 'Arial, sans-serif',
+              fontWeight: 'normal',
+              padding: 4,
+              pickable: false, // Don't make text pickable separately from the shape
+            }));
+          }
         }
       });
 

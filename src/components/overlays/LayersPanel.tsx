@@ -14,6 +14,7 @@ interface TextEditPanelProps {
   onSubmit: () => void;
   onCancel: () => void;
   submitButtonText: string;
+  allowEmpty?: boolean; // Allow empty text (for removing labels from shapes)
 }
 
 const TextEditPanel: React.FC<TextEditPanelProps> = ({
@@ -24,7 +25,8 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
   onFontSizeChange,
   onSubmit,
   onCancel,
-  submitButtonText
+  submitButtonText,
+  allowEmpty = false
 }) => {
   return (
     <div
@@ -115,14 +117,14 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
         </button>
         <button
           onClick={onSubmit}
-          disabled={!textValue.trim()}
+          disabled={!allowEmpty && !textValue.trim()}
           style={{
             padding: '8px 16px',
-            backgroundColor: textValue.trim() ? '#4CAF50' : '#666',
+            backgroundColor: (allowEmpty || textValue.trim()) ? '#4CAF50' : '#666',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            cursor: textValue.trim() ? 'pointer' : 'not-allowed',
+            cursor: (allowEmpty || textValue.trim()) ? 'pointer' : 'not-allowed',
             fontSize: '14px',
           }}
         >
@@ -131,6 +133,7 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
       </div>
       <div style={{ marginTop: '10px', fontSize: '12px', color: '#999' }}>
         Press Ctrl+Enter to submit, Escape to cancel
+        {allowEmpty && <div style={{ marginTop: '4px' }}>Leave empty to remove label</div>}
       </div>
     </div>
   );
@@ -150,6 +153,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
   const updateAnnotation = useOverlayStore(state => state.updateAnnotation);
   const updateTextAnnotation = useOverlayStore(state => state.updateTextAnnotation);
   const updateTextAnnotationColor = useOverlayStore(state => state.updateTextAnnotationColor);
+  const updateShapeText = useOverlayStore(state => state.updateShapeText);
   const clearAnnotations = useOverlayStore(state => state.clearAnnotations);
   const toggleLayerVisibility = useOverlayStore(state => state.toggleLayerVisibility);
   const createGroup = useOverlayStore(state => state.createGroup);
@@ -161,6 +165,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
   const [editingTextId, setEditingTextId] = React.useState<string | null>(null);
   const [editTextValue, setEditTextValue] = React.useState('');
   const [editFontSize, setEditFontSize] = React.useState(14);
+  const [editingIsShape, setEditingIsShape] = React.useState(false); // Track if editing a shape (vs pure text annotation)
   
   // Local state for drag and drop
   const [draggedAnnotationId, setDraggedAnnotationId] = React.useState<string | null>(null);
@@ -175,24 +180,32 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
   };
 
   const handleEditText = (annotationId: string, currentText: string, currentFontSize: number) => {
+    // Check if this is a shape with text or a pure text annotation
+    const annotation = annotations.find(a => a.id === annotationId);
+    const isShape = annotation ? annotation.type !== 'text' : false;
+    
     setEditingTextId(annotationId);
     setEditTextValue(currentText);
     setEditFontSize(currentFontSize);
+    setEditingIsShape(isShape);
   };
 
   const handleSaveTextEdit = () => {
-    if (editingTextId && editTextValue.trim()) {
-      updateTextAnnotation(editingTextId, editTextValue.trim(), editFontSize);
+    if (editingTextId) {
+      // Use updateShapeText which works for both text annotations and shapes with text
+      updateShapeText(editingTextId, editTextValue.trim());
     }
     setEditingTextId(null);
     setEditTextValue('');
     setEditFontSize(14);
+    setEditingIsShape(false);
   };
 
   const handleCancelTextEdit = () => {
     setEditingTextId(null);
     setEditTextValue('');
     setEditFontSize(14);
+    setEditingIsShape(false);
   };
 
 
@@ -515,8 +528,22 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
                         </span>
                         
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
-                            {getLayerName(annotation)}
+                          <div style={{ fontWeight: 'bold', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span>{getLayerName(annotation)}</span>
+                            {((annotation.type === 'text' && annotation.text) || (annotation.type !== 'text' && (annotation as any).text)) && (
+                              <span style={{ 
+                                color: '#aaa', 
+                                fontWeight: 'normal', 
+                                fontStyle: 'italic',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                flex: '1',
+                                minWidth: 0
+                              }}>
+                                "{annotation.type === 'text' ? annotation.text : (annotation as any).text}"
+                              </span>
+                            )}
                           </div>
                           <div style={{ color: '#999', fontSize: '10px' }}>
                             {annotation.metadata?.createdAt && formatDate(annotation.metadata.createdAt)}
@@ -528,28 +555,29 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
                           </div>
                         </div>
                         
-                        {/* Edit button for text annotations */}
-                        {annotation.type === 'text' && (
-                          <button
-                            style={{
-                              ...deleteButtonStyle,
-                              color: '#4CAF50',
-                              backgroundColor: 'transparent',
-                              marginRight: '4px',
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (annotation.type === 'text') {
-                                handleEditText(annotation.id, annotation.text, annotation.style.fontSize);
-                              }
-                            }}
-                            title="Edit text"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                            </svg>
-                          </button>
-                        )}
+                        {/* Edit button for all annotations to add/edit text */}
+                        <button
+                          style={{
+                            ...deleteButtonStyle,
+                            color: annotation.type === 'text' || (annotation as any).text ? '#4CAF50' : '#666',
+                            backgroundColor: 'transparent',
+                            marginRight: '4px',
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (annotation.type === 'text') {
+                              handleEditText(annotation.id, annotation.text, annotation.style.fontSize);
+                            } else {
+                              // For shapes, pass the text (if exists) and default font size
+                              handleEditText(annotation.id, (annotation as any).text || '', 14);
+                            }
+                          }}
+                          title={annotation.type === 'text' || (annotation as any).text ? 'Edit text' : 'Add text'}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                          </svg>
+                        </button>
                         
                         {/* Color picker button for all annotations */}
                         <button
@@ -663,8 +691,22 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
                 </span>
                 
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
-                    {getLayerName(annotation)}
+                  <div style={{ fontWeight: 'bold', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>{getLayerName(annotation)}</span>
+                    {((annotation.type === 'text' && annotation.text) || (annotation.type !== 'text' && (annotation as any).text)) && (
+                      <span style={{ 
+                        color: '#aaa', 
+                        fontWeight: 'normal', 
+                        fontStyle: 'italic',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        flex: '1',
+                        minWidth: 0
+                      }}>
+                        "{annotation.type === 'text' ? annotation.text : (annotation as any).text}"
+                      </span>
+                    )}
                   </div>
                   <div style={{ color: '#999', fontSize: '10px' }}>
                     {annotation.metadata?.createdAt && formatDate(annotation.metadata.createdAt)}
@@ -676,28 +718,29 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
                   </div>
                 </div>
                 
-                {/* Edit button for text annotations */}
-                {annotation.type === 'text' && (
-                  <button
-                    style={{
-                      ...deleteButtonStyle,
-                      color: '#4CAF50',
-                      backgroundColor: 'transparent',
-                      marginRight: '4px',
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (annotation.type === 'text') {
-                        handleEditText(annotation.id, annotation.text, annotation.style.fontSize);
-                      }
-                    }}
-                    title="Edit text"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                    </svg>
-                  </button>
-                )}
+                {/* Edit button for all annotations to add/edit text */}
+                <button
+                  style={{
+                    ...deleteButtonStyle,
+                    color: annotation.type === 'text' || (annotation as any).text ? '#4CAF50' : '#666',
+                    backgroundColor: 'transparent',
+                    marginRight: '4px',
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (annotation.type === 'text') {
+                      handleEditText(annotation.id, annotation.text, annotation.style.fontSize);
+                    } else {
+                      // For shapes, pass the text (if exists) and default font size
+                      handleEditText(annotation.id, (annotation as any).text || '', 14);
+                    }
+                  }}
+                  title={annotation.type === 'text' || (annotation as any).text ? 'Edit text' : 'Add text'}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                  </svg>
+                </button>
                 
                 {/* Color picker button for all annotations */}
                 <button
@@ -754,7 +797,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
       {/* Text Edit Modal */}
       {editingTextId && (
         <TextEditPanel
-          title="Edit Text Annotation"
+          title={editingIsShape ? "Edit Shape Label" : "Edit Text Annotation"}
           textValue={editTextValue}
           fontSize={editFontSize}
           onTextChange={setEditTextValue}
@@ -762,6 +805,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
           onSubmit={handleSaveTextEdit}
           onCancel={handleCancelTextEdit}
           submitButtonText="Save Changes"
+          allowEmpty={editingIsShape}
         />
       )}
       
