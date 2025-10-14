@@ -24,7 +24,35 @@ export default defineConfig({
     }),
   ],
   optimizeDeps: {
-    exclude: [ "minerva-author-ui" ]
+    exclude: [ "minerva-author-ui" ],
+    include: [
+      '@luma.gl/core',
+      '@luma.gl/constants',
+      '@luma.gl/engine',
+      '@luma.gl/shadertools',
+      '@luma.gl/webgl',
+      '@luma.gl/gltf',
+      '@deck.gl/core',
+      '@deck.gl/layers',
+      '@deck.gl/react'
+    ]
+  },
+  resolve: {
+    dedupe: [
+      '@luma.gl/core',
+      '@luma.gl/constants', 
+      '@luma.gl/engine',
+      '@luma.gl/shadertools',
+      '@luma.gl/webgl',
+      '@luma.gl/gltf',
+      '@deck.gl/core',
+      '@deck.gl/layers',
+      '@deck.gl/extensions',
+      '@deck.gl/geo-layers',
+      '@deck.gl/mesh-layers',
+      '@deck.gl/react',
+      '@deck.gl/widgets'
+    ]
   },
   build: {
     optimizeDeps: {

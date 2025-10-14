@@ -131,5 +131,29 @@
   },
   "resolutions": {
     "styled-components": "^5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@vivjs/constants": "link:../viv/packages/constants",
+      "@vivjs/extensions": "link:../viv/packages/extensions",
+      "@vivjs/layers": "link:../viv/packages/layers",
+      "@vivjs/loaders": "link:../viv/packages/loaders",
+      "@vivjs/types": "link:../viv/packages/types",
+      "@vivjs/viewers": "link:../viv/packages/viewers",
+      "@vivjs/views": "link:../viv/packages/views",
+      "@deck.gl/core": "9.1.11",
+      "@deck.gl/extensions": "9.1.11",
+      "@deck.gl/geo-layers": "9.1.11",
+      "@deck.gl/layers": "9.1.11",
+      "@deck.gl/mesh-layers": "9.1.11",
+      "@deck.gl/react": "9.1.11",
+      "@deck.gl/widgets": "9.1.11",
+      "@luma.gl/constants": "9.1.9",
+      "@luma.gl/core": "9.1.9",
+      "@luma.gl/engine": "9.1.9",
+      "@luma.gl/gltf": "9.1.9",
+      "@luma.gl/shadertools": "9.1.9",
+      "@luma.gl/webgl": "9.1.9"
+    }
   }
 }
