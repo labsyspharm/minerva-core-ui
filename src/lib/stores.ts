@@ -301,6 +301,8 @@ export interface OverlayStore {
   // Stories state
   stories: ConfigWaypoint[];
   activeStoryIndex: number | null;
+  waypoints: ConfigWaypoint[]; // All waypoints from all stories
+  activeWaypointId: string | null;
 
   // Actions
   setActiveTool: (tool: string) => void;
@@ -327,6 +329,13 @@ export interface OverlayStore {
   addStory: (story: ConfigWaypoint) => void;
   updateStory: (index: number, updates: Partial<ConfigWaypoint>) => void;
   removeStory: (index: number) => void;
+  
+  // Waypoints actions
+  setWaypoints: (waypoints: ConfigWaypoint[]) => void;
+  setActiveWaypoint: (waypointId: string | null) => void;
+  addWaypoint: (waypoint: ConfigWaypoint) => void;
+  updateWaypoint: (waypointId: string, updates: Partial<ConfigWaypoint>) => void;
+  removeWaypoint: (waypointId: string) => void;
   finalizeEllipse: () => void; // Convert current drawing to ellipse annotation
   finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
   finalizeLine: () => void; // Convert current drawing to line annotation
@@ -385,6 +394,8 @@ const overlayInitialState = {
   globalColor: [255, 255, 255, 255], // New: default white color
   stories: [], // New: empty stories array
   activeStoryIndex: null, // New: no active story initially
+  waypoints: [], // New: empty waypoints array
+  activeWaypointId: null, // New: no active waypoint initially
 };
 
 // Create the overlay store
@@ -1084,6 +1095,41 @@ export const useOverlayStore = create<OverlayStore>()(
           activeStoryIndex: state.activeStoryIndex === index ? null : 
             state.activeStoryIndex && state.activeStoryIndex > index ? 
               state.activeStoryIndex - 1 : state.activeStoryIndex
+        }));
+      },
+
+      // Waypoints actions
+      setWaypoints: (waypoints: ConfigWaypoint[]) => {
+        console.log('Store: Setting waypoints:', waypoints.length);
+        set({ waypoints, activeWaypointId: null });
+      },
+
+      setActiveWaypoint: (waypointId: string | null) => {
+        console.log('Store: Setting active waypoint ID:', waypointId);
+        set({ activeWaypointId: waypointId });
+      },
+
+      addWaypoint: (waypoint: ConfigWaypoint) => {
+        console.log('Store: Adding waypoint:', waypoint.Properties.Name);
+        set((state) => ({
+          waypoints: [...state.waypoints, waypoint]
+        }));
+      },
+
+      updateWaypoint: (waypointId: string, updates: Partial<ConfigWaypoint>) => {
+        console.log('Store: Updating waypoint:', waypointId);
+        set((state) => ({
+          waypoints: state.waypoints.map((waypoint) =>
+            waypoint.UUID === waypointId ? { ...waypoint, ...updates } : waypoint
+          )
+        }));
+      },
+
+      removeWaypoint: (waypointId: string) => {
+        console.log('Store: Removing waypoint:', waypointId);
+        set((state) => ({
+          waypoints: state.waypoints.filter((waypoint) => waypoint.UUID !== waypointId),
+          activeWaypointId: state.activeWaypointId === waypointId ? null : state.activeWaypointId
         }));
       },
     }),

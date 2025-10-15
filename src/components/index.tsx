@@ -307,15 +307,20 @@ const Index = (props: Props) => {
     handleLayerCreate,
     handleToolChange,
     handleOverlayInteraction,
-    setStories
+    setStories,
+    setWaypoints
   } = useOverlayStore();
   
   // Initialize stories in the store when config changes
   useEffect(() => {
     if (props.config.ItemRegistry.Stories) {
       setStories(props.config.ItemRegistry.Stories);
+      
+      // For now, we'll work with stories only since the current config structure
+      // doesn't have waypoints within stories. Each ConfigWaypoint represents a story.
+      setWaypoints([]);
     }
-  }, [props.config.ItemRegistry.Stories, setStories]);
+  }, [props.config.ItemRegistry.Stories, setStories, setWaypoints]);
   
   return (
     <Main {...mainProps}>

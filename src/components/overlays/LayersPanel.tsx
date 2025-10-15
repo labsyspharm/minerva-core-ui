@@ -1,10 +1,11 @@
 import * as React from "react";
 import { useOverlayStore } from "../../lib/stores";
 import type { Annotation, TextAnnotation } from "../../lib/stores";
+import { ItemList, type ListItem } from "../common/ItemList";
+import { RectangleIcon, EllipseIcon, PolylineIcon, PolygonIcon, LineIcon, GroupIcon, PointIcon, TextIcon } from "./icons";
 import styles from "./index.module.css";
-import { RectangleIcon, EllipseIcon, PolylineIcon, PolygonIcon, LineIcon, GroupIcon } from "./icons";
 
-// Shared Text Edit Panel Component (same as in DrawingOverlay)
+// Shared Text Edit Panel Component (same as in original LayersPanel)
 interface TextEditPanelProps {
   title: string;
   textValue: string;
@@ -100,7 +101,12 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
         }}
       />
       
-      <div style={{ marginTop: '15px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+      <div style={{ 
+        marginTop: '15px', 
+        display: 'flex', 
+        gap: '10px', 
+        justifyContent: 'flex-end' 
+      }}>
         <button
           onClick={onCancel}
           style={{
@@ -117,23 +123,19 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
         </button>
         <button
           onClick={onSubmit}
-          disabled={!allowEmpty && !textValue.trim()}
+          disabled={!allowEmpty && !textValue?.trim()}
           style={{
             padding: '8px 16px',
-            backgroundColor: (allowEmpty || textValue.trim()) ? '#4CAF50' : '#666',
+            backgroundColor: allowEmpty || textValue?.trim() ? '#4CAF50' : '#666',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            cursor: (allowEmpty || textValue.trim()) ? 'pointer' : 'not-allowed',
+            cursor: allowEmpty || textValue?.trim() ? 'pointer' : 'not-allowed',
             fontSize: '14px',
           }}
         >
           {submitButtonText}
         </button>
-      </div>
-      <div style={{ marginTop: '10px', fontSize: '12px', color: '#999' }}>
-        Press Ctrl+Enter to submit, Escape to cancel
-        {allowEmpty && <div style={{ marginTop: '4px' }}>Leave empty to remove label</div>}
       </div>
     </div>
   );
@@ -144,14 +146,16 @@ interface LayersPanelProps {
   onOpenAnnotationColorPicker?: (annotationId: string, currentColor: [number, number, number, number]) => void;
 }
 
-const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationColorPicker }) => {
+const LayersPanel: React.FC<LayersPanelProps> = ({ 
+  className, 
+  onOpenAnnotationColorPicker 
+}) => {
   // Subscribe to annotations and hidden layers from store
   const annotations = useOverlayStore(state => state.annotations);
   const annotationGroups = useOverlayStore(state => state.annotationGroups);
   const hiddenLayers = useOverlayStore(state => state.hiddenLayers);
   const removeAnnotation = useOverlayStore(state => state.removeAnnotation);
   const updateAnnotation = useOverlayStore(state => state.updateAnnotation);
-  const updateTextAnnotation = useOverlayStore(state => state.updateTextAnnotation);
   const updateTextAnnotationColor = useOverlayStore(state => state.updateTextAnnotationColor);
   const updateShapeText = useOverlayStore(state => state.updateShapeText);
   const clearAnnotations = useOverlayStore(state => state.clearAnnotations);
@@ -160,7 +164,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
   const deleteGroup = useOverlayStore(state => state.deleteGroup);
   const toggleGroupExpanded = useOverlayStore(state => state.toggleGroupExpanded);
   const addAnnotationToGroup = useOverlayStore(state => state.addAnnotationToGroup);
-  
+
   // Local state for text editing
   const [editingTextId, setEditingTextId] = React.useState<string | null>(null);
   const [editTextValue, setEditTextValue] = React.useState('');
@@ -169,31 +173,81 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
   
   // Local state for drag and drop
   const [draggedAnnotationId, setDraggedAnnotationId] = React.useState<string | null>(null);
-  const [dropTargetGroupId, setDropTargetGroupId] = React.useState<string | null>(null);
-  
-  
-  // Note: All annotations are shown in the list, but hidden ones are dimmed
-  
-  const handleDeleteLayer = (annotationId: string) => {
-    removeAnnotation(annotationId);
-    // Hidden state is automatically cleaned up when annotation is removed
+  const [dropTargetGroupId, setDropTargetGroupId] = React.useState<string | null>(null);;
+
+  const getLayerIcon = (annotation: Annotation) => {
+    switch (annotation.type) {
+      case 'rectangle':
+        return <RectangleIcon style={{ width: '16px', height: '16px' }} />;
+      case 'ellipse':
+        return <EllipseIcon style={{ width: '16px', height: '16px' }} />;
+      case 'polygon':
+        return <PolygonIcon style={{ width: '16px', height: '16px' }} />;
+      case 'line':
+        return <LineIcon style={{ width: '16px', height: '16px' }} />;
+      case 'polyline':
+        return <PolylineIcon style={{ width: '16px', height: '16px' }} />;
+      case 'point':
+        return <PointIcon style={{ width: '16px', height: '16px' }} />;
+      case 'text':
+        return <TextIcon style={{ width: '16px', height: '16px' }} />;
+      default:
+        return <PointIcon style={{ width: '16px', height: '16px' }} />;
+    }
   };
 
-  const handleEditText = (annotationId: string, currentText: string, currentFontSize: number) => {
-    // Check if this is a shape with text or a pure text annotation
-    const annotation = annotations.find(a => a.id === annotationId);
-    const isShape = annotation ? annotation.type !== 'text' : false;
+  const getLayerName = (annotation: Annotation) => {
+    // Extract just the shape ID (last part after the last dash)
+    const shapeId = annotation.id.split('-').pop() || annotation.id;
     
-    setEditingTextId(annotationId);
+    switch (annotation.type) {
+      case 'rectangle':
+        return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
+      case 'ellipse':
+        return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
+      case 'polygon':
+        return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
+      case 'line':
+        return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
+      case 'polyline':
+        return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
+      case 'point':
+        return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
+      case 'text':
+        return annotation.text && annotation.text.length > 20 ? `${shapeId}: ${annotation.text.substring(0, 20)}...` : annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
+      default:
+        return shapeId;
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Text editing functions
+  const handleEditText = (annotation: Annotation) => {
+    let currentText = '';
+    let currentFontSize = 14;
+    
+    if (annotation.type === 'text') {
+      currentText = annotation.text;
+      currentFontSize = annotation.style.fontSize;
+      setEditingIsShape(false);
+    } else {
+      currentText = annotation.text || '';
+      currentFontSize = 14; // Default for shapes
+      setEditingIsShape(true);
+    }
+    
     setEditTextValue(currentText);
     setEditFontSize(currentFontSize);
-    setEditingIsShape(isShape);
+    setEditingTextId(annotation.id);
   };
 
-  const handleSaveTextEdit = () => {
+  const handleSubmitTextEdit = () => {
     if (editingTextId) {
       // Use updateShapeText which works for both text annotations and shapes with text
-      updateShapeText(editingTextId, editTextValue.trim());
+      updateShapeText(editingTextId, editTextValue?.trim() || '');
     }
     setEditingTextId(null);
     setEditTextValue('');
@@ -208,591 +262,252 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
     setEditingIsShape(false);
   };
 
-
-  
-  const formatDate = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-  
-  const getLayerIcon = (annotation: Annotation) => {
-    switch (annotation.type) {
-      case 'rectangle':
-        return <RectangleIcon style={{ width: '16px', height: '16px' }} />;
-      case 'ellipse':
-        return <EllipseIcon style={{ width: '16px', height: '16px' }} />;
-      case 'polygon':
-        return <PolygonIcon style={{ width: '16px', height: '16px' }} />;
-      case 'line':
-        return <LineIcon style={{ width: '16px', height: '16px' }} />;
-      case 'polyline':
-        return <PolylineIcon style={{ width: '16px', height: '16px' }} />;
-      case 'text':
-        return 'T';
-      case 'point':
-        return '●';
-      default:
-        return '●';
-    }
-  };
-  
-  const getLayerName = (annotation: Annotation) => {
-    if (annotation.metadata?.label) {
-      return annotation.metadata.label;
-    }
+  // Convert groups to ListItem format
+  const groupItems: ListItem[] = annotationGroups.map((group) => {
+    const groupAnnotations = annotations.filter(a => group.annotationIds.includes(a.id));
     
-    // Generate default names based on type
-    switch (annotation.type) {
-      case 'rectangle':
-        return 'Rectangle';
-      case 'ellipse':
-        return 'Ellipse';
-      case 'polygon':
-        return 'Polygon';
-      case 'line':
-        return 'Line';
-      case 'polyline':
-        return 'Polyline';
-      case 'point':
-        return 'Point';
-      case 'text':
-        return annotation.text.length > 20 ? `${annotation.text.substring(0, 20)}...` : annotation.text;
-      default:
-        return 'Annotation';
+    const children: ListItem[] = groupAnnotations.map((annotation) => ({
+      id: annotation.id,
+      title: getLayerName(annotation),
+      subtitle: formatDate(annotation.metadata?.createdAt || new Date()),
+      isHidden: hiddenLayers.has(annotation.id),
+      icon: getLayerIcon(annotation),
+      isExpanded: group.isExpanded,
+      metadata: { annotation, type: 'annotation' }
+    }));
+
+    return {
+      id: group.id,
+      title: group.name,
+      subtitle: `${groupAnnotations.length} annotations`,
+      isExpanded: group.isExpanded,
+      children,
+      metadata: { group, type: 'group' }
+    };
+  });
+
+  // Convert ungrouped annotations to ListItem format
+  const ungroupedAnnotations = annotations.filter(annotation => {
+    return !annotationGroups.some(group => group.annotationIds.includes(annotation.id));
+  });
+
+  const annotationItems: ListItem[] = ungroupedAnnotations.map((annotation) => ({
+    id: annotation.id,
+    title: getLayerName(annotation),
+    subtitle: formatDate(annotation.metadata?.createdAt || new Date()),
+    isHidden: hiddenLayers.has(annotation.id),
+    icon: getLayerIcon(annotation),
+    metadata: { annotation, type: 'annotation' }
+  }));
+
+  // Combine groups and ungrouped annotations
+  const allItems = [...groupItems, ...annotationItems];
+
+  const handleItemClick = (item: ListItem) => {
+    if (item.metadata?.type === 'group') {
+      toggleGroupExpanded(item.id);
+    }
+    // For annotations, we could add selection logic here if needed
+  };
+
+  const handleToggleVisibility = (itemId: string) => {
+    // Find if it's a group or annotation
+    const group = annotationGroups.find(g => g.id === itemId);
+    if (group) {
+      // Toggle visibility for all annotations in the group
+      group.annotationIds.forEach(annotationId => {
+        toggleLayerVisibility(annotationId);
+      });
+    } else {
+      // Toggle visibility for individual annotation
+      toggleLayerVisibility(itemId);
     }
   };
-  
-  const panelStyle: React.CSSProperties = {
-    width: '100%',
-    backgroundColor: '#2c2c2c',
-    color: 'white',
-    border: '1px solid #444',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontFamily: 'system-ui, -apple-system, sans-serif',
-    minHeight: '200px',
-    flex: '1 1 auto',
-    overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
+
+  const handleDelete = (itemId: string) => {
+    // Find if it's a group or annotation
+    const group = annotationGroups.find(g => g.id === itemId);
+    if (group) {
+      deleteGroup(itemId);
+    } else {
+      removeAnnotation(itemId);
+    }
   };
-  
-  const headerStyle: React.CSSProperties = {
-    padding: '8px 12px',
-    backgroundColor: '#3c3c3c',
-    borderBottom: '1px solid #444',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    fontWeight: 'bold',
+
+  const handleToggleExpand = (itemId: string) => {
+    toggleGroupExpanded(itemId);
   };
-  
-  const layersListStyle: React.CSSProperties = {
-    flex: '1 1 auto',
-    overflowY: 'auto',
-    minHeight: '0',
-    maxHeight: 'none',
+
+  const handleDragStart = (itemId: string, event: React.DragEvent) => {
+    setDraggedAnnotationId(itemId);
+    event.dataTransfer.effectAllowed = 'move';
   };
-  
-  const layerItemStyle: React.CSSProperties = {
-    padding: '8px 12px',
-    borderBottom: '1px solid #444',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
+
+  const handleDragEnd = (itemId: string, event: React.DragEvent) => {
+    setDraggedAnnotationId(null);
+    setDropTargetGroupId(null);
   };
-  
-  const layerItemHoverStyle: React.CSSProperties = {
-    ...layerItemStyle,
-    backgroundColor: '#404040',
+
+  const handleDragOver = (itemId: string, event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    setDropTargetGroupId(itemId);
   };
-  
-  const eyeButtonStyle: React.CSSProperties = {
-    background: 'none',
-    border: 'none',
-    color: 'white',
-    cursor: 'pointer',
-    fontSize: '14px',
-    padding: '2px',
-    minWidth: '20px',
-    textAlign: 'center',
+
+  const handleDragLeave = (itemId: string, event: React.DragEvent) => {
+    setDropTargetGroupId(null);
   };
-  
-  const deleteButtonStyle: React.CSSProperties = {
-    background: 'none',
-    border: 'none',
-    color: '#ff6b6b',
-    cursor: 'pointer',
-    fontSize: '12px',
-    padding: '2px',
-    marginLeft: 'auto',
+
+  const handleDrop = (targetId: string, draggedId: string) => {
+    // Handle drag and drop between groups
+    if (draggedAnnotationId && draggedAnnotationId !== targetId) {
+      // Find if target is a group
+      const targetGroup = annotationGroups.find(g => g.id === targetId);
+      if (targetGroup) {
+        // Add annotation to group
+        addAnnotationToGroup(targetId, draggedAnnotationId);
+      }
+    }
+    setDraggedAnnotationId(null);
+    setDropTargetGroupId(null);
   };
-  
-  const clearButtonStyle: React.CSSProperties = {
-    background: '#ff6b6b',
-    border: 'none',
-    color: 'white',
-    cursor: 'pointer',
-    fontSize: '10px',
-    padding: '4px 8px',
-    borderRadius: '3px',
-  };
-  
-  return (
-    <div className={`${className} ${styles.layersPanel}`} style={panelStyle}>
-      <div style={headerStyle}>
-        <span>Layers ({annotations.length})</span>
-        <div style={{ display: 'flex', gap: '8px' }}>
+
+  const itemActions = (item: ListItem) => {
+    if (item.metadata?.type === 'annotation') {
+      const annotation = item.metadata.annotation as Annotation;
+      
+      return (
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {/* Text Edit Button */}
           <button
             style={{
-              ...clearButtonStyle,
-              backgroundColor: '#4CAF50',
+              background: 'none',
+              border: 'none',
+              color: '#ccc',
+              cursor: 'pointer',
+              padding: '4px',
+              borderRadius: '3px',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
             }}
-            onClick={() => createGroup()}
-            title="Create group"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditText(annotation);
+            }}
+            title="Edit text"
           >
-            <GroupIcon style={{ width: '12px', height: '12px' }} />
-            Group
+            <TextIcon style={{ width: '14px', height: '14px' }} />
           </button>
-          {annotations.length > 0 && (
+          
+          {/* Color Picker Button */}
+          {onOpenAnnotationColorPicker && (
             <button
-              style={clearButtonStyle}
-              onClick={() => clearAnnotations()}
-              title="Clear all layers"
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#ccc',
+                cursor: 'pointer',
+                padding: '4px',
+                borderRadius: '3px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                let currentAnnotationColor: [number, number, number, number];
+                
+                if (annotation.type === 'text') {
+                  currentAnnotationColor = annotation.style.fontColor;
+                } else if (annotation.type === 'rectangle' || annotation.type === 'ellipse' || annotation.type === 'polygon' || annotation.type === 'line' || annotation.type === 'polyline') {
+                  currentAnnotationColor = annotation.style.lineColor;
+                } else if (annotation.type === 'point') {
+                  currentAnnotationColor = annotation.style.fillColor;
+                } else {
+                  currentAnnotationColor = [255, 255, 255, 255]; // Default white
+                }
+                
+                onOpenAnnotationColorPicker(annotation.id, currentAnnotationColor);
+              }}
+              title="Change annotation color"
             >
-              Clear All
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+              </svg>
             </button>
           )}
         </div>
-      </div>
-      
-      <div style={layersListStyle}>
-        {annotations.length === 0 && annotationGroups.length === 0 ? (
-          <div style={{ padding: '16px', textAlign: 'center', color: '#999' }}>
-            No layers yet
-          </div>
-        ) : (
-          <>
-            {/* Render groups with their annotations */}
-            {annotationGroups.map((group) => {
-              const isDropTarget = dropTargetGroupId === group.id;
-              const groupAnnotations = annotations.filter(a => group.annotationIds.includes(a.id));
-              
-              return (
-                <React.Fragment key={group.id}>
-                  {/* Group header */}
-                  <div
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.dataTransfer.dropEffect = 'move';
-                      setDropTargetGroupId(group.id);
-                    }}
-                    onDragLeave={() => {
-                      setDropTargetGroupId(null);
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (draggedAnnotationId) {
-                        addAnnotationToGroup(group.id, draggedAnnotationId);
-                      }
-                      setDraggedAnnotationId(null);
-                      setDropTargetGroupId(null);
-                    }}
-                    style={{
-                      ...layerItemStyle,
-                      backgroundColor: isDropTarget ? '#5c5c5c' : '#3c3c3c',
-                      fontWeight: 'bold',
-                      border: isDropTarget ? '2px dashed #4CAF50' : 'none',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isDropTarget) {
-                        e.currentTarget.style.backgroundColor = '#4c4c4c';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isDropTarget) {
-                        e.currentTarget.style.backgroundColor = '#3c3c3c';
-                      }
-                    }}
-                  >
-                    <button
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'white',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        padding: '2px',
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleGroupExpanded(group.id);
-                      }}
-                      title={group.isExpanded ? 'Collapse group' : 'Expand group'}
-                    >
-                      {group.isExpanded ? '▼' : '▶'}
-                    </button>
-                    
-                    <span style={{ fontSize: '16px', color: '#4CAF50' }}>
-                      <GroupIcon style={{ width: '16px', height: '16px' }} />
-                    </span>
-                    
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
-                        {group.name}
-                      </div>
-                    </div>
-                    
-                    <button
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#ff6b6b',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        padding: '2px',
-                        marginLeft: 'auto',
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteGroup(group.id);
-                      }}
-                      title="Delete group"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                      </svg>
-                    </button>
-                  </div>
-                  
-                  {/* Grouped annotations (shown when expanded) */}
-                  {group.isExpanded && groupAnnotations.map((annotation) => {
-                    const isHidden = hiddenLayers.has(annotation.id);
-                    const isDragging = draggedAnnotationId === annotation.id;
-                    return (
-                      <div
-                        key={annotation.id}
-                        draggable
-                        onDragStart={(e) => {
-                          setDraggedAnnotationId(annotation.id);
-                          e.dataTransfer.effectAllowed = 'move';
-                        }}
-                        onDragEnd={() => {
-                          setDraggedAnnotationId(null);
-                          setDropTargetGroupId(null);
-                        }}
-                        style={{
-                          ...layerItemStyle,
-                          paddingLeft: '32px', // Indent grouped annotations
-                          opacity: isHidden ? 0.5 : (isDragging ? 0.3 : 1),
-                          backgroundColor: isHidden ? '#1c1c1c' : 'transparent',
-                          cursor: 'move',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isDragging) {
-                            e.currentTarget.style.backgroundColor = '#404040';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isDragging) {
-                            e.currentTarget.style.backgroundColor = isHidden ? '#1c1c1c' : 'transparent';
-                          }
-                        }}
-                      >
-                        {/* Same annotation content as ungrouped annotations */}
-                        <button
-                          style={eyeButtonStyle}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleLayerVisibility(annotation.id);
-                          }}
-                          title={isHidden ? 'Show layer' : 'Hide layer'}
-                        >
-                          {isHidden ? (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.66 4.02 5.02 7 9 7 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.02c.33-1.31-.08-2.69-1.26-3.87-1.18-1.18-2.56-1.59-3.87-1.26l-.02.02z"/>
-                            </svg>
-                          ) : (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                            </svg>
-                          )}
-                        </button>
-                        
-                        <span style={{ fontSize: '16px', color: '#4CAF50' }}>
-                          {getLayerIcon(annotation)}
-                        </span>
-                        
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 'bold', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span>{getLayerName(annotation)}</span>
-                            {((annotation.type === 'text' && annotation.text) || (annotation.type !== 'text' && (annotation as any).text)) && (
-                              <span style={{ 
-                                color: '#aaa', 
-                                fontWeight: 'normal', 
-                                fontStyle: 'italic',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                flex: '1',
-                                minWidth: 0
-                              }}>
-                                "{annotation.type === 'text' ? annotation.text : (annotation as any).text}"
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ color: '#999', fontSize: '10px' }}>
-                            {annotation.metadata?.createdAt && formatDate(annotation.metadata.createdAt)}
-                            {annotation.type === 'text' && (
-                              <span style={{ marginLeft: '8px' }}>
-                                Size: {(annotation as TextAnnotation).style.fontSize}px
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Edit button for all annotations to add/edit text */}
-                        <button
-                          style={{
-                            ...deleteButtonStyle,
-                            color: annotation.type === 'text' || (annotation as any).text ? '#4CAF50' : '#666',
-                            backgroundColor: 'transparent',
-                            marginRight: '4px',
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (annotation.type === 'text') {
-                              handleEditText(annotation.id, annotation.text, annotation.style.fontSize);
-                            } else {
-                              // For shapes, pass the text (if exists) and default font size
-                              handleEditText(annotation.id, (annotation as any).text || '', 14);
-                            }
-                          }}
-                          title={annotation.type === 'text' || (annotation as any).text ? 'Edit text' : 'Add text'}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                          </svg>
-                        </button>
-                        
-                        {/* Color picker button for all annotations */}
-                        <button
-                          style={{
-                            ...deleteButtonStyle,
-                            color: '#4CAF50',
-                            backgroundColor: 'transparent',
-                            marginRight: '4px',
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (onOpenAnnotationColorPicker) {
-                              let currentAnnotationColor: [number, number, number, number];
-                              
-                              if (annotation.type === 'text') {
-                                currentAnnotationColor = annotation.style.fontColor;
-                              } else if (annotation.type === 'rectangle' || annotation.type === 'ellipse' || annotation.type === 'polygon' || annotation.type === 'line' || annotation.type === 'polyline') {
-                                currentAnnotationColor = annotation.style.lineColor;
-                              } else if (annotation.type === 'point') {
-                                currentAnnotationColor = annotation.style.fillColor;
-                              } else {
-                                currentAnnotationColor = [255, 255, 255, 255]; // Default white
-                              }
-                              
-                              onOpenAnnotationColorPicker(annotation.id, currentAnnotationColor);
-                            }
-                          }}
-                          title="Change annotation color"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                          </svg>
-                        </button>
-                        
-                        <button
-                          style={deleteButtonStyle}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteLayer(annotation.id);
-                          }}
-                          title="Delete layer"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                          </svg>
-                        </button>
-                      </div>
-                    );
-                  })}
-                </React.Fragment>
-              );
-            })}
-            
-            {/* Render ungrouped annotations */}
-            {annotations.filter(annotation => {
-              // Filter out annotations that are in any group
-              return !annotationGroups.some(group => group.annotationIds.includes(annotation.id));
-            }).map((annotation, index) => {
-            const isHidden = hiddenLayers.has(annotation.id);
-            const isDragging = draggedAnnotationId === annotation.id;
-            return (
-              <div
-                key={annotation.id}
-                draggable
-                onDragStart={(e) => {
-                  setDraggedAnnotationId(annotation.id);
-                  e.dataTransfer.effectAllowed = 'move';
-                }}
-                onDragEnd={() => {
-                  setDraggedAnnotationId(null);
-                  setDropTargetGroupId(null);
-                }}
-                style={{
-                  ...layerItemStyle,
-                  opacity: isHidden ? 0.5 : (isDragging ? 0.3 : 1),
-                  backgroundColor: isHidden ? '#1c1c1c' : 'transparent',
-                  cursor: 'move',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isDragging) {
-                    e.currentTarget.style.backgroundColor = '#404040';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isDragging) {
-                    e.currentTarget.style.backgroundColor = isHidden ? '#1c1c1c' : 'transparent';
-                  }
-                }}
-              >
-                <button
-                  style={eyeButtonStyle}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleLayerVisibility(annotation.id);
-                  }}
-                  title={isHidden ? 'Show layer' : 'Hide layer'}
-                >
-                  {isHidden ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.66 4.02 5.02 7 9 7 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.02c.33-1.31-.08-2.69-1.26-3.87-1.18-1.18-2.56-1.59-3.87-1.26l-.02.02z"/>
-                    </svg>
-                  ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                    </svg>
-                  )}
-                </button>
-                
-                <span style={{ fontSize: '16px', color: '#4CAF50' }}>
-                  {getLayerIcon(annotation)}
-                </span>
-                
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 'bold', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>{getLayerName(annotation)}</span>
-                    {((annotation.type === 'text' && annotation.text) || (annotation.type !== 'text' && (annotation as any).text)) && (
-                      <span style={{ 
-                        color: '#aaa', 
-                        fontWeight: 'normal', 
-                        fontStyle: 'italic',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        flex: '1',
-                        minWidth: 0
-                      }}>
-                        "{annotation.type === 'text' ? annotation.text : (annotation as any).text}"
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ color: '#999', fontSize: '10px' }}>
-                    {annotation.metadata?.createdAt && formatDate(annotation.metadata.createdAt)}
-                    {annotation.type === 'text' && (
-                      <span style={{ marginLeft: '8px' }}>
-                        Size: {(annotation as TextAnnotation).style.fontSize}px
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Edit button for all annotations to add/edit text */}
-                <button
-                  style={{
-                    ...deleteButtonStyle,
-                    color: annotation.type === 'text' || (annotation as any).text ? '#4CAF50' : '#666',
-                    backgroundColor: 'transparent',
-                    marginRight: '4px',
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (annotation.type === 'text') {
-                      handleEditText(annotation.id, annotation.text, annotation.style.fontSize);
-                    } else {
-                      // For shapes, pass the text (if exists) and default font size
-                      handleEditText(annotation.id, (annotation as any).text || '', 14);
-                    }
-                  }}
-                  title={annotation.type === 'text' || (annotation as any).text ? 'Edit text' : 'Add text'}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                  </svg>
-                </button>
-                
-                {/* Color picker button for all annotations */}
-                <button
-                  style={{
-                    ...deleteButtonStyle,
-                    color: '#4CAF50',
-                    backgroundColor: 'transparent',
-                    marginRight: '4px',
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onOpenAnnotationColorPicker) {
-                      let currentAnnotationColor: [number, number, number, number];
-                      
-                      if (annotation.type === 'text') {
-                        currentAnnotationColor = annotation.style.fontColor;
-                      } else if (annotation.type === 'rectangle' || annotation.type === 'ellipse' || annotation.type === 'polygon' || annotation.type === 'line' || annotation.type === 'polyline') {
-                        currentAnnotationColor = annotation.style.lineColor;
-                      } else if (annotation.type === 'point') {
-                        currentAnnotationColor = annotation.style.fillColor;
-                      } else {
-                        currentAnnotationColor = [255, 255, 255, 255]; // Default white
-                      }
-                      
-                      onOpenAnnotationColorPicker(annotation.id, currentAnnotationColor);
-                    }
-                  }}
-                  title="Change annotation color"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                  </svg>
-                </button>
-                
-                <button
-                  style={deleteButtonStyle}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteLayer(annotation.id);
-                  }}
-                  title="Delete layer"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                  </svg>
-                </button>
-              </div>
-            );
-          })}
-          </>
-        )}
-      </div>
+      );
+    }
+    return null;
+  };
+
+  const headerActions = (
+    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <button
+        style={{
+          background: '#4CAF50',
+          border: 'none',
+          color: 'white',
+          cursor: 'pointer',
+          padding: '6px 12px',
+          borderRadius: '4px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          fontSize: '12px',
+        }}
+        onClick={() => createGroup()}
+        title="Create group"
+      >
+        <GroupIcon style={{ width: '12px', height: '12px' }} />
+        Group
+      </button>
+      {annotations.length > 0 && (
+        <button
+          style={{
+            background: '#f44336',
+            border: 'none',
+            color: 'white',
+            cursor: 'pointer',
+            padding: '6px 12px',
+            borderRadius: '4px',
+            fontSize: '12px',
+          }}
+          onClick={() => clearAnnotations()}
+          title="Clear all layers"
+        >
+          Clear All
+        </button>
+      )}
+    </div>
+  );
+
+  return (
+    <div className={styles.layersPanel}>
+      <ItemList
+        className={className}
+        items={allItems}
+        title="Layers"
+        emptyMessage="No layers yet"
+        onItemClick={handleItemClick}
+        onToggleVisibility={handleToggleVisibility}
+        onDelete={handleDelete}
+        onToggleExpand={handleToggleExpand}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        showVisibilityToggle={true}
+        showDeleteButton={true}
+        showExpandToggle={true}
+        headerActions={headerActions}
+        itemActions={itemActions}
+      />
       
       {/* Text Edit Modal */}
       {editingTextId && (
@@ -802,13 +517,12 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ className, onOpenAnnotationCo
           fontSize={editFontSize}
           onTextChange={setEditTextValue}
           onFontSizeChange={setEditFontSize}
-          onSubmit={handleSaveTextEdit}
+          onSubmit={handleSubmitTextEdit}
           onCancel={handleCancelTextEdit}
-          submitButtonText="Save Changes"
-          allowEmpty={editingIsShape}
+          submitButtonText={editingIsShape ? "Update Label" : "Update Text"}
+          allowEmpty={editingIsShape} // Allow empty text for shapes (to remove labels)
         />
       )}
-      
     </div>
   );
 };

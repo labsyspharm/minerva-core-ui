@@ -35,6 +35,7 @@ export interface ItemListProps<T = any> {
   showExpandToggle?: boolean;
   headerActions?: React.ReactNode;
   itemActions?: (item: ListItem<T>) => React.ReactNode;
+  customChildRenderer?: (item: ListItem<T>, parentItem: ListItem<T>) => React.ReactNode;
 }
 
 const ItemList = <T = any,>({
@@ -55,7 +56,8 @@ const ItemList = <T = any,>({
   showDeleteButton = true,
   showExpandToggle = false,
   headerActions,
-  itemActions
+  itemActions,
+  customChildRenderer
 }: ItemListProps<T>) => {
   const [draggedItemId, setDraggedItemId] = React.useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = React.useState<string | null>(null);
@@ -241,7 +243,10 @@ const ItemList = <T = any,>({
                 <>
                   {item.children.map((child) => (
                     <React.Fragment key={`${item.id}-child-${child.id}`}>
-                      {renderItem(child, true)}
+                      {customChildRenderer ? 
+                        customChildRenderer(child, item) : 
+                        renderItem(child, true)
+                      }
                     </React.Fragment>
                   ))}
                 </>

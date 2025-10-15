@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ChromePicker } from 'react-color';
 import { DrawingOverlay } from "./DrawingOverlay";
-import { SimpleLayersPanel } from "./SimpleLayersPanel";
+import { LayersPanel } from "./LayersPanel";
 import styles from "./index.module.css";
 import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "./icons";
 import { useOverlayStore } from "../../lib/stores";
@@ -216,7 +216,7 @@ const Overlays = (props: Props) => {
       </div>
       
       {/* Layers Panel - Photoshop style - positioned below toolbar */}
-      <SimpleLayersPanel onOpenAnnotationColorPicker={handleOpenAnnotationColorPicker} />
+      <LayersPanel onOpenAnnotationColorPicker={handleOpenAnnotationColorPicker} />
       
       {/* Drawing overlay component */}
       {onLayerCreate && (
