@@ -105,6 +105,13 @@ const VivView = React.memo((props: Props) => {
 
   const [viewState, setViewState] = useState(initialViewState);
 
+  // Update viewState when initialViewState changes (e.g., when loader changes)
+  useEffect(() => {
+    if (loader && loader.data && loader.data.length > 0) {
+      setViewState(initialViewState);
+    }
+  }, [initialViewState, loader]);
+
   // Memoize main props to prevent unnecessary layer recreation
   const mainProps = useMemo(() => ({
     ...shape,
