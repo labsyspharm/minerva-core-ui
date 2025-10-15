@@ -98,7 +98,7 @@ const Channel = (props: Props) => {
   }
   return (
     <TextWrap>
-      {content}
+      {props.children}
       {hidden ? "" : channelMenu}
     </TextWrap>
   );
