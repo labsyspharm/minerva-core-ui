@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import type { ConfigWaypoint } from './config';
 
 // Types for the overlay store
 export interface OverlayLayer {
@@ -296,6 +297,10 @@ export interface OverlayStore {
   annotationGroups: AnnotationGroup[]; // New: annotation groups
   hiddenLayers: Set<string>; // New: track hidden layers
   globalColor: [number, number, number, number]; // New: global drawing color
+  
+  // Stories state
+  stories: ConfigWaypoint[];
+  activeStoryIndex: number | null;
 
   // Actions
   setActiveTool: (tool: string) => void;
@@ -315,6 +320,13 @@ export interface OverlayStore {
   updateAnnotation: (annotationId: string, updates: Partial<Annotation>) => void;
   clearAnnotations: () => void;
   finalizeRectangle: () => void; // Convert current drawing to annotation
+  
+  // Stories actions
+  setStories: (stories: ConfigWaypoint[]) => void;
+  setActiveStory: (index: number | null) => void;
+  addStory: (story: ConfigWaypoint) => void;
+  updateStory: (index: number, updates: Partial<ConfigWaypoint>) => void;
+  removeStory: (index: number) => void;
   finalizeEllipse: () => void; // Convert current drawing to ellipse annotation
   finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
   finalizeLine: () => void; // Convert current drawing to line annotation
@@ -371,6 +383,8 @@ const overlayInitialState = {
   annotationGroups: [], // New: empty groups array
   hiddenLayers: new Set<string>(), // New: empty hidden layers set
   globalColor: [255, 255, 255, 255], // New: default white color
+  stories: [], // New: empty stories array
+  activeStoryIndex: null, // New: no active story initially
 };
 
 // Create the overlay store
@@ -1033,6 +1047,43 @@ export const useOverlayStore = create<OverlayStore>()(
               ? { ...group, isExpanded: !group.isExpanded }
               : group
           )
+        }));
+      },
+
+      // Stories actions
+      setStories: (stories: ConfigWaypoint[]) => {
+        console.log('Store: Setting stories:', stories.length);
+        set({ stories, activeStoryIndex: null });
+      },
+
+      setActiveStory: (index: number | null) => {
+        console.log('Store: Setting active story index:', index);
+        set({ activeStoryIndex: index });
+      },
+
+      addStory: (story: ConfigWaypoint) => {
+        console.log('Store: Adding story:', story.Properties.Name);
+        set((state) => ({
+          stories: [...state.stories, story]
+        }));
+      },
+
+      updateStory: (index: number, updates: Partial<ConfigWaypoint>) => {
+        console.log('Store: Updating story at index:', index);
+        set((state) => ({
+          stories: state.stories.map((story, i) => 
+            i === index ? { ...story, ...updates } : story
+          )
+        }));
+      },
+
+      removeStory: (index: number) => {
+        console.log('Store: Removing story at index:', index);
+        set((state) => ({
+          stories: state.stories.filter((_, i) => i !== index),
+          activeStoryIndex: state.activeStoryIndex === index ? null : 
+            state.activeStoryIndex && state.activeStoryIndex > index ? 
+              state.activeStoryIndex - 1 : state.activeStoryIndex
         }));
       },
     }),

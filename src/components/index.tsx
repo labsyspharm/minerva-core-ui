@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Overlays } from "./overlays";
 import { Stories } from "./stories";
 import { ImageView, toImageProps } from "./imageView";
@@ -306,8 +306,16 @@ const Index = (props: Props) => {
     hoverState,
     handleLayerCreate,
     handleToolChange,
-    handleOverlayInteraction
+    handleOverlayInteraction,
+    setStories
   } = useOverlayStore();
+  
+  // Initialize stories in the store when config changes
+  useEffect(() => {
+    if (props.config.ItemRegistry.Stories) {
+      setStories(props.config.ItemRegistry.Stories);
+    }
+  }, [props.config.ItemRegistry.Stories, setStories]);
   
   return (
     <Main {...mainProps}>
@@ -329,7 +337,6 @@ const Index = (props: Props) => {
       />
       <Stories 
         hash={mainProps.hash}
-        stories={stories}
         setHash={mainProps.setHash}
       />
     </Main>
