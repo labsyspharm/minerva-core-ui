@@ -4,7 +4,7 @@ import type { ValidObj } from '../components/upload';
 
 export type KV = [string, FormDataEntryValue];
 export type ObjAny = {
-  [key: string]: unknown;
+  [key: string]: any;
 }
 
 type FormOutCommon = {
@@ -20,10 +20,11 @@ type FormOutAny = FormOutCommon & {
   path: string,
   csv?: string
 }
+type Format = "DICOM-WEB" | "OME-TIFF";
 type ValidateIn<T> = {
   formOut: T,
   handle: Handle.Dir,
-  onStart: (s: string) => void
+  onStart: (s: string, m: Format) => void
 }
 type FormAnyOpts = ValidateIn<FormOutAny>
 type FormMCOpts = ValidateIn<FormOutMC>
@@ -86,7 +87,7 @@ const validateAny: Validate<FormAnyOpts> = async (opts) => {
     return valid_keys.includes(k as AnyKey);
   });
   if (validated && "path" in formOut) {
-    onStart(formOut.path);
+    onStart(formOut.path, "OME-TIFF");
   }
   return toValid(need_keys, valid_keys);
 }

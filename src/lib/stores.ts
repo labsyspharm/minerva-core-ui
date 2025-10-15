@@ -8,13 +8,14 @@ export interface OverlayLayer {
 }
 
 // New annotation types - all using polygon coordinates internally
+type ColorRGBA = [number, number, number, number];
 export interface RectangleAnnotation {
   id: string;
   type: 'rectangle';
   polygon: [number, number][]; // Converted to polygon coordinates
   style: {
-    fillColor: [number, number, number, number];
-    lineColor: [number, number, number, number];
+    fillColor: ColorRGBA;
+    lineColor: ColorRGBA;
     lineWidth: number;
   };
   metadata?: {
@@ -461,7 +462,7 @@ export const useOverlayStore = create<OverlayStore>()(
             type: 'rectangle',
             polygon: rectangleToPolygon([startX, startY], [endX, endY]),
             style: {
-              fillColor: [...get().globalColor.slice(0, 3), 50], // Use global color with low opacity
+              fillColor: [...get().globalColor.slice(0, 3), 50] as ColorRGBA, // Use global color with low opacity
               lineColor: get().globalColor, // Use global color for border
               lineWidth: 3,
             },
@@ -492,7 +493,7 @@ export const useOverlayStore = create<OverlayStore>()(
             type: 'polygon',
             polygon: points,
             style: {
-              fillColor: [...get().globalColor.slice(0, 3), 50], // Use global color with low opacity
+              fillColor: [...get().globalColor.slice(0, 3), 50] as ColorRGBA, // Use global color with low opacity
               lineColor: get().globalColor, // Use global color for border
               lineWidth: 3,
             },

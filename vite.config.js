@@ -4,6 +4,9 @@ import mkcert from 'vite-plugin-mkcert'
 import svgr from 'vite-plugin-svgr'
 
 export default defineConfig({
+  worker: {
+    format: "es"
+  },
   server: { 
     https: true,
     hmr: {
@@ -37,6 +40,9 @@ export default defineConfig({
         }
         warn(warning);
       },
+      output: {
+        format: "es"
+      }
     }
   }
 })
