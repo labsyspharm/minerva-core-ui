@@ -15,7 +15,7 @@ import { readConfig } from "./lib/exhibit";
 import { Index } from "./components";
 import Pool from './lib/workers/Pool';
 
-import type { DicomLoader } from "./components";
+import type { DicomLoader, DicomIndex } from "./components";
 import type { ValidObj } from './components/upload';
 import type { ImageProps } from "./components/channel"
 import type { FormEventHandler } from "react";
@@ -70,7 +70,9 @@ const Content = (props: Props) => {
   const hashContext = useHash(url, exhibit.stories);
   const [handle, setHandle] = useState(null);
   const [dicomSeries, setDicomSeries] = useState(null);
-  const [dicomIndex, setDicomIndex] = useState([]);
+  const [dicomIndex, setDicomIndex] = useState(
+    { } as DicomIndex
+  );
   const [loader, setLoader] = useState(null);
   const [config, setConfig] = useState({
     ItemRegistry: {

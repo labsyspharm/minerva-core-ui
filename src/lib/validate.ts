@@ -5,7 +5,7 @@ import type { ValidObj } from '../components/upload';
 
 export type KV = [string, FormDataEntryValue];
 export type ObjAny = {
-  [key: string]: unknown;
+  [key: string]: any;
 }
 type FormOutDicom = {
   url: string,
@@ -19,10 +19,11 @@ type FormOutAny = {
 }
 type AnyKey = keyof Required<FormOutAny>;
 type DicomKey = keyof Required<FormOutDicom>;
+type Format = "DICOM-WEB" | "OME-TIFF";
 type ValidateIn<T> = {
   formOut: T,
   handle: Handle.Dir,
-  onStart: (s: string) => void
+  onStart: (s: string, m: Format) => void
 }
 type FormAnyOpts = ValidateIn<FormOutAny>
 type FormDicomOpts = ValidateIn<FormOutDicom>

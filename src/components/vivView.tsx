@@ -1,6 +1,6 @@
 import * as React from "react";
 import Deck from '@deck.gl/react';
-import { OrthographicView } from '@deck.gl/core';
+import { OrthographicView, OrthographicViewState } from '@deck.gl/core';
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
@@ -100,10 +100,10 @@ const VivView = React.memo((props: Props) => {
     return {
       zoom: -n_levels,
       target: [imageShape.x / 2, imageShape.y / 2, 0]
-    };
+    } as OrthographicViewState;
   }, [loader.data, imageShape]);
 
-  const [viewState, setViewState] = useState(initialViewState);
+  const [viewState, setViewState] = useState<OrthographicViewState>(initialViewState);
 
   // Memoize main props to prevent unnecessary layer recreation
   const mainProps = useMemo(() => ({
@@ -192,7 +192,7 @@ const VivView = React.memo((props: Props) => {
         getCursor={getCursor}
         layers={allLayers}
         controller={controllerConfig}
-        viewState={viewState}
+        viewState={{'ortho': viewState}}
         onViewStateChange={handleViewStateChange}
         onClick={dragHandlers.onClick}
         onDragStart={dragHandlers.onDragStart}

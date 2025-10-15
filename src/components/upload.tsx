@@ -190,7 +190,7 @@ const validate: Validate = (valid, fn) => {
 }
 
 const FormDicom = (props: FormProps) => {
-  const { handle, valid, onSubmit } = props;
+  const { valid, onSubmit } = props;
   const [ url, sU, setURL ] = _useState("");
   const [ name, sN, setName ] = _useState("");
   const fProps = { onSubmit, className: "full-width" };
