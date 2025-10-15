@@ -329,6 +329,7 @@ export interface OverlayStore {
   addStory: (story: ConfigWaypoint) => void;
   updateStory: (index: number, updates: Partial<ConfigWaypoint>) => void;
   removeStory: (index: number) => void;
+  reorderStories: (fromIndex: number, toIndex: number) => void;
   
   // Waypoints actions
   setWaypoints: (waypoints: ConfigWaypoint[]) => void;
@@ -1096,6 +1097,35 @@ export const useOverlayStore = create<OverlayStore>()(
             state.activeStoryIndex && state.activeStoryIndex > index ? 
               state.activeStoryIndex - 1 : state.activeStoryIndex
         }));
+      },
+
+      reorderStories: (fromIndex: number, toIndex: number) => {
+        console.log('Store: Reordering stories from', fromIndex, 'to', toIndex);
+        set((state) => {
+          const newStories = [...state.stories];
+          const [movedStory] = newStories.splice(fromIndex, 1);
+          newStories.splice(toIndex, 0, movedStory);
+          
+          // Update activeStoryIndex if it's affected by the reordering
+          let newActiveStoryIndex = state.activeStoryIndex;
+          if (state.activeStoryIndex !== null) {
+            if (state.activeStoryIndex === fromIndex) {
+              // The active story was moved
+              newActiveStoryIndex = toIndex;
+            } else if (fromIndex < state.activeStoryIndex && toIndex >= state.activeStoryIndex) {
+              // Story moved from before active to after active
+              newActiveStoryIndex = state.activeStoryIndex - 1;
+            } else if (fromIndex > state.activeStoryIndex && toIndex <= state.activeStoryIndex) {
+              // Story moved from after active to before active
+              newActiveStoryIndex = state.activeStoryIndex + 1;
+            }
+          }
+          
+          return {
+            stories: newStories,
+            activeStoryIndex: newActiveStoryIndex
+          };
+        });
       },
 
       // Waypoints actions

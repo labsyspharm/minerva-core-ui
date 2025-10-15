@@ -47,3 +47,28 @@
   overflow: hidden;
 }
 
+.roiPanelInline {
+  margin: 8px 0; /* Remove left/right margins to take full width */
+  width: 100%; /* Take full width */
+}
+
+/* Drag and drop styles */
+.dragHandle {
+  cursor: grab;
+  user-select: none;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+}
+
+.dropTarget {
+  background-color: #2a4a2a !important;
+  border-color: #4CAF50 !important;
+}
+
