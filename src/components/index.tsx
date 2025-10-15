@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { Overlays } from "./overlays";
+import { Stories } from "./stories";
 import { ImageView, toImageProps } from "./imageView";
 import { Main } from "./content";
 import { useOverlayStore } from "../lib/stores";
@@ -325,6 +326,11 @@ const Index = (props: Props) => {
         setHash={mainProps.setHash}
         onLayerCreate={handleLayerCreate}
         currentInteraction={currentInteraction}
+      />
+      <Stories 
+        hash={mainProps.hash}
+        stories={stories}
+        setHash={mainProps.setHash}
       />
     </Main>
   );
