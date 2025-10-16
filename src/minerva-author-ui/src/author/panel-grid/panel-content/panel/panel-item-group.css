@@ -1,0 +1,12 @@
+:host {
+  div.grid {
+    gap: var(--gap-medium);
+  }
+}
+.full.histogram {
+  margin: var(--gap-medium) 0;
+  width: 100%;
+}
+.one-line {
+  height: 100%;
+}

@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { getImageSize } from "@hms-dbmi/viv";
-import { list_colors } from "minerva-author-ui";
+import { list_colors } from "../minerva-author-ui";
 
 import type { Loader } from './viv';
 

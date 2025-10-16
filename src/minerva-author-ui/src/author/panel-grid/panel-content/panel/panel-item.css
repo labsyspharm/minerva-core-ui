@@ -1,0 +1,31 @@
+.full {
+  grid-column: 1 / -1; 
+  grid-row: 1 / -1;
+}
+.full.actions > button {
+  padding: 0px;
+  border: none;
+  height: 100%;
+  width: 100%;
+}
+[slot=heading].one-line {
+  align-items: center;
+}
+[slot=heading] {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  height: 100%;
+  div.grid {
+    gap: var(--gap-small);
+    font-size: 1.1em;
+    > div:first-child {
+      font-size: 1.1em;
+    }
+    > div.flex.wrap {
+      gap: var(--gap-tiny);
+      div:not(:last-child)::after {
+        content: ',';
+      }
+    }
+  }
+}
