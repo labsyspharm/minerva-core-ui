@@ -37,7 +37,7 @@ const Channel = (props: Props) => {
   const wrapClass = styler("textWrap", ...(hide ? ["textHide"] : []));
 
   const { hash } = props;
-  const hidden = true; // TODO
+  const hidden = false; // TODO
 //  const hidden = hash.i >= 0;
   const group = props.groups[hash.g];
   const legendProps = { ...props, ...group };
