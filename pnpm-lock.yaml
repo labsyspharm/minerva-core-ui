@@ -31,6 +31,9 @@ importers:
 
   .:
     dependencies:
+      '@arrow-js/core':
+        specifier: ^1.0.0-alpha.10
+        version: 1.0.0-alpha.10
       '@deck.gl/core':
         specifier: 9.1.11
         version: 9.1.11
@@ -61,9 +64,30 @@ importers:
       '@fortawesome/react-fontawesome':
         specifier: ^0.2.2
         version: 0.2.6(@fortawesome/fontawesome-svg-core@6.7.2)(react@18.3.1)
+      '@haxtheweb/a11y-collapse':
+        specifier: 9.0.7
+        version: 9.0.7
+      '@haxtheweb/d-d-d':
+        specifier: ^9.0.7
+        version: 9.0.27
+      '@haxtheweb/es-global-bridge':
+        specifier: ^9.0.7
+        version: 9.0.22
+      '@haxtheweb/lrndesign-chart':
+        specifier: ^9.0.7
+        version: 9.0.27
+      '@haxtheweb/simple-colors':
+        specifier: ^9.0.7
+        version: 9.0.27
+      '@haxtheweb/simple-icon':
+        specifier: ^9.0.7
+        version: 9.0.27
       '@hms-dbmi/viv':
-        specifier: link:../viv/packages/main
-        version: link:../viv/packages/main
+        specifier: 0.18.0
+        version: 0.18.0
+      '@lit/reactive-element':
+        specifier: ^2.0.4
+        version: 2.1.1
       '@loaders.gl/3d-tiles':
         specifier: 3.4.13
         version: 3.4.13(@loaders.gl/core@3.4.13)
@@ -121,9 +145,21 @@ importers:
       '@types/wicg-file-system-access':
         specifier: ^2023.10.5
         version: 2023.10.7
+      '@ui5/webcomponents':
+        specifier: 2.2.0
+        version: 2.2.0
+      '@vaadin/form-layout':
+        specifier: ^24.4.3
+        version: 24.9.2
+      '@vaadin/text-field':
+        specifier: ^24.4.3
+        version: 24.9.2
       dcmjs:
         specifier: ^0.41.0
         version: 0.41.0
+      foobar-ipsum:
+        specifier: ^1.0.3
+        version: 1.0.3
       geotiff:
         specifier: 2.1.4-beta.0
         version: 2.1.4-beta.0
@@ -139,9 +175,6 @@ importers:
       lzw-tiff-decoder:
         specifier: ^0.1.1
         version: 0.1.1
-      minerva-author-ui:
-        specifier: 2.0.0-beta.50
-        version: 2.0.0-beta.50(@deck.gl/widgets@9.1.11(@deck.gl/core@9.1.11))(lit@3.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.52.4)(vite@5.4.20(@types/node@20.19.21))
       npm:
         specifier: ^11.5.2
         version: 11.6.2
@@ -154,6 +187,30 @@ importers:
       prop-types:
         specifier: ^15.8.1
         version: 15.8.1
+      prosemirror-commands:
+        specifier: ^1.5.2
+        version: 1.7.1
+      prosemirror-history:
+        specifier: ^1.4.1
+        version: 1.4.1
+      prosemirror-keymap:
+        specifier: ^1.2.2
+        version: 1.2.3
+      prosemirror-markdown:
+        specifier: ^1.13.0
+        version: 1.13.2
+      prosemirror-schema-list:
+        specifier: ^1.4.1
+        version: 1.5.1
+      prosemirror-state:
+        specifier: ^1.4.3
+        version: 1.4.3
+      prosemirror-transform:
+        specifier: ^1.9.0
+        version: 1.10.4
+      prosemirror-view:
+        specifier: ^1.33.9
+        version: 1.41.3
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -181,9 +238,15 @@ importers:
       react-textarea-autosize:
         specifier: ^8.5.3
         version: 8.5.9(@types/react@18.3.26)(react@18.3.1)
+      vite-plugin-standard-css-modules:
+        specifier: ^0.0.11
+        version: 0.0.11(lit@3.3.1)(vite@5.4.20(@types/node@20.19.21))
       vite-plugin-svgr:
         specifier: ^4.3.0
         version: 4.5.0(rollup@4.52.4)(typescript@5.9.3)(vite@5.4.20(@types/node@20.19.21))
+      web-dialog:
+        specifier: ^0.0.11
+        version: 0.0.11
       zustand:
         specifier: ^5.0.8
         version: 5.0.8(@types/react@18.3.26)(react@18.3.1)
@@ -677,6 +740,9 @@ packages:
 
   '@haxtheweb/utils@9.0.22':
     resolution: {integrity: sha512-17trb46MhB8SPhePdx+4bIQQfVACamWj5dZoVGPOyrRY91RADbMh4+fkkgJiU06Jk0HwrvUSR1jNardB4+QdJg==}
+
+  '@hms-dbmi/viv@0.18.0':
+    resolution: {integrity: sha512-Xa3iGTEcvrFdWsM8pAlJNjOG1jbfWT37PEWoVC3mrXKGGAEmtzTtI47UKourbveKh2968nhtSw/3ZGzeqGDQ/w==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -1662,10 +1728,6 @@ packages:
   chartist@0.11.4:
     resolution: {integrity: sha512-H4AimxaUD738/u9Mq8t27J4lh6STsLi4BQHt65nOtpLk3xyrBPaLiLMrHw7/WV9CmsjGA02WihjuL5qpSagLYw==}
     engines: {node: '>=4.6.0'}
-
-  chartist@1.5.0:
-    resolution: {integrity: sha512-mcCJuWHpNqkJucuWEeHxymQCQEeAOkamGypqCV5+C+uI2NF4I3BOn/tjIuZaowJVNAcrY9BG3janLaCWSNVPDw==}
-    engines: {node: '>=14'}
 
   classnames@2.5.1:
     resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
@@ -2671,9 +2733,6 @@ packages:
     resolution: {integrity: sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==}
     engines: {node: '>= 0.6'}
 
-  minerva-author-ui@2.0.0-beta.50:
-    resolution: {integrity: sha512-kFEgnYVKBsf+EcEYakwglQgWxO3YaO61ez3fryRHDYfSvHOIKfasJKlZtvu6CoF0Z2rS+3ZEMwJPyjDy32B+VQ==}
-
   minimatch@3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
 
@@ -2703,80 +2762,6 @@ packages:
 
   node-releases@2.0.23:
     resolution: {integrity: sha512-cCmFDMSm26S6tQSDpBCg/NR8NENrVPhAJSf+XbxBG4rPFaaonlEoE9wHQmun+cls499TQGSb7ZyPBRlzgKfpeg==}
-
-  npm@10.9.4:
-    resolution: {integrity: sha512-OnUG836FwboQIbqtefDNlyR0gTHzIfwRfE3DuiNewBvnMnWEpB0VEXwBlFVgqpNzIgYo/MHh3d2Hel/pszapAA==}
-    engines: {node: ^18.17.0 || >=20.5.0}
-    hasBin: true
-    bundledDependencies:
-      - '@isaacs/string-locale-compare'
-      - '@npmcli/arborist'
-      - '@npmcli/config'
-      - '@npmcli/fs'
-      - '@npmcli/map-workspaces'
-      - '@npmcli/package-json'
-      - '@npmcli/promise-spawn'
-      - '@npmcli/redact'
-      - '@npmcli/run-script'
-      - '@sigstore/tuf'
-      - abbrev
-      - archy
-      - cacache
-      - chalk
-      - ci-info
-      - cli-columns
-      - fastest-levenshtein
-      - fs-minipass
-      - glob
-      - graceful-fs
-      - hosted-git-info
-      - ini
-      - init-package-json
-      - is-cidr
-      - json-parse-even-better-errors
-      - libnpmaccess
-      - libnpmdiff
-      - libnpmexec
-      - libnpmfund
-      - libnpmhook
-      - libnpmorg
-      - libnpmpack
-      - libnpmpublish
-      - libnpmsearch
-      - libnpmteam
-      - libnpmversion
-      - make-fetch-happen
-      - minimatch
-      - minipass
-      - minipass-pipeline
-      - ms
-      - node-gyp
-      - nopt
-      - normalize-package-data
-      - npm-audit-report
-      - npm-install-checks
-      - npm-package-arg
-      - npm-pick-manifest
-      - npm-profile
-      - npm-registry-fetch
-      - npm-user-validate
-      - p-map
-      - pacote
-      - parse-conflict-json
-      - proc-log
-      - qrcode-terminal
-      - read
-      - semver
-      - spdx-expression-parse
-      - ssri
-      - supports-color
-      - tar
-      - text-table
-      - tiny-relative-date
-      - treeverse
-      - validate-npm-package-name
-      - which
-      - write-file-atomic
 
   npm@11.6.2:
     resolution: {integrity: sha512-7iKzNfy8lWYs3zq4oFPa8EXZz5xt9gQNKJZau3B1ErLBb6bF7sBJ00x09485DOvRT2l5Gerbl3VlZNT57MxJVA==}
@@ -4138,6 +4123,16 @@ snapshots:
 
   '@haxtheweb/utils@9.0.22': {}
 
+  '@hms-dbmi/viv@0.18.0':
+    dependencies:
+      '@vivjs/constants': link:../viv/packages/constants
+      '@vivjs/extensions': link:../viv/packages/extensions
+      '@vivjs/layers': link:../viv/packages/layers
+      '@vivjs/loaders': link:../viv/packages/loaders
+      '@vivjs/types': link:../viv/packages/types
+      '@vivjs/viewers': link:../viv/packages/viewers
+      '@vivjs/views': link:../viv/packages/views
+
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.7':
@@ -5409,8 +5404,6 @@ snapshots:
   chartist-plugin-pointlabels@0.0.6: {}
 
   chartist@0.11.4: {}
-
-  chartist@1.5.0: {}
 
   classnames@2.5.1: {}
 
@@ -6739,65 +6732,6 @@ snapshots:
     dependencies:
       mime-db: 1.52.0
 
-  minerva-author-ui@2.0.0-beta.50(@deck.gl/widgets@9.1.11(@deck.gl/core@9.1.11))(lit@3.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.52.4)(vite@5.4.20(@types/node@20.19.21)):
-    dependencies:
-      '@arrow-js/core': 1.0.0-alpha.10
-      '@deck.gl/core': 9.1.11
-      '@deck.gl/extensions': 9.1.11(@deck.gl/core@9.1.11)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9)))
-      '@deck.gl/geo-layers': 9.1.11(@deck.gl/core@9.1.11)(@deck.gl/extensions@9.1.11(@deck.gl/core@9.1.11)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9))))(@deck.gl/layers@9.1.11(@deck.gl/core@9.1.11)(@loaders.gl/core@3.4.13)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9))))(@deck.gl/mesh-layers@9.1.11(@deck.gl/core@9.1.11)(@loaders.gl/core@3.4.13)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9))))(@loaders.gl/core@3.4.13)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9)))
-      '@deck.gl/layers': 9.1.11(@deck.gl/core@9.1.11)(@loaders.gl/core@3.4.13)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9)))
-      '@deck.gl/mesh-layers': 9.1.11(@deck.gl/core@9.1.11)(@loaders.gl/core@3.4.13)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9)))
-      '@deck.gl/react': 9.1.11(@deck.gl/core@9.1.11)(@deck.gl/widgets@9.1.11(@deck.gl/core@9.1.11))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@haxtheweb/a11y-collapse': 9.0.7
-      '@haxtheweb/d-d-d': 9.0.27
-      '@haxtheweb/es-global-bridge': 9.0.22
-      '@haxtheweb/lrndesign-chart': 9.0.27
-      '@haxtheweb/simple-colors': 9.0.27
-      '@haxtheweb/simple-icon': 9.0.27
-      '@lit/reactive-element': 2.1.1
-      '@loaders.gl/3d-tiles': 3.4.13(@loaders.gl/core@3.4.13)
-      '@loaders.gl/core': 3.4.13
-      '@loaders.gl/gis': 3.4.13
-      '@loaders.gl/gltf': 3.4.13
-      '@loaders.gl/images': 3.4.13
-      '@loaders.gl/loader-utils': 3.4.13
-      '@loaders.gl/mvt': 3.4.13
-      '@loaders.gl/schema': 3.4.13
-      '@loaders.gl/terrain': 3.4.13
-      '@loaders.gl/textures': 3.4.13
-      '@loaders.gl/tiles': 3.4.13(@loaders.gl/core@3.4.13)
-      '@luma.gl/constants': 9.1.9
-      '@luma.gl/core': 9.1.9
-      '@luma.gl/engine': 9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9))
-      '@luma.gl/shadertools': 9.1.9(@luma.gl/core@9.1.9)
-      '@luma.gl/webgl': 9.1.9(@luma.gl/core@9.1.9)
-      '@math.gl/core': 3.6.3
-      '@math.gl/web-mercator': 3.6.3
-      '@rollup/pluginutils': 5.3.0(rollup@4.52.4)
-      '@ui5/webcomponents': 2.2.0
-      '@vaadin/form-layout': 24.9.2
-      '@vaadin/text-field': 24.9.2
-      chartist: 1.5.0
-      foobar-ipsum: 1.0.3
-      npm: 10.9.4
-      prosemirror-commands: 1.7.1
-      prosemirror-history: 1.4.1
-      prosemirror-keymap: 1.2.3
-      prosemirror-markdown: 1.13.2
-      prosemirror-schema-list: 1.5.1
-      prosemirror-state: 1.4.3
-      prosemirror-transform: 1.10.4
-      prosemirror-view: 1.41.3
-      vite-plugin-standard-css-modules: 0.0.11(lit@3.3.1)(vite@5.4.20(@types/node@20.19.21))
-      web-dialog: 0.0.11
-    transitivePeerDependencies:
-      - '@deck.gl/widgets'
-      - lit
-      - react
-      - react-dom
-      - rollup
-      - vite
-
   minimatch@3.1.2:
     dependencies:
       brace-expansion: 1.1.12
@@ -6825,8 +6759,6 @@ snapshots:
       tslib: 2.8.1
 
   node-releases@2.0.23: {}
-
-  npm@10.9.4: {}
 
   npm@11.6.2: {}
 
