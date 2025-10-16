@@ -2,7 +2,6 @@ import * as React from "react";
 import styles from "./index.module.css";
 import { useOverlayStore } from "../../lib/stores";
 import { ItemList, type ListItem } from "../common/ItemList";
-import { MarkdownEditor } from "./MarkdownEditor";
 import { ROIPanel } from "./ROIPanel";
 import { TextIcon, PolylineIcon } from "../overlays/icons";
 
@@ -11,11 +10,7 @@ import type { HashContext } from "../../lib/hashUtil";
 import type { ConfigWaypoint } from "../../lib/config";
 
 // Extended metadata type for markdown editor
-interface MarkdownEditorMetadata {
-    type: 'markdown-editor';
-    story: ConfigWaypoint;
-    storyIndex: number;
-}
+// Removed markdown editor
 
 interface ROIPanelMetadata {
     type: 'roi-panel';
@@ -56,7 +51,7 @@ const Stories = (props: Props) => {
     ].join(" ");
 
     // Convert stories to ListItem format with inline markdown editor and ROI panel
-    const listItems: ListItem<ConfigWaypoint | MarkdownEditorMetadata | ROIPanelMetadata>[] = stories.map((story, index) => {
+const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((story, index) => {
         const storyId = story.UUID || `story-${index}`;
         const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
         const isROIExpanded = expandedROIStories.has(storyId);
@@ -64,22 +59,9 @@ const Stories = (props: Props) => {
         const isDropTarget = dropTargetIndex === index;
         
         // Build children array based on what's expanded
-        const children: ListItem<ConfigWaypoint | MarkdownEditorMetadata | ROIPanelMetadata>[] = [];
+    const children: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = [];
         
-        if (isMarkdownExpanded) {
-            children.push({
-                id: `${storyId}-markdown-editor`,
-                title: 'Markdown Editor',
-                subtitle: 'Click to edit content',
-                isActive: false,
-                isExpanded: false,
-                metadata: { 
-                    type: 'markdown-editor',
-                    story: story,
-                    storyIndex: index
-                } as MarkdownEditorMetadata
-            });
-        }
+    // Markdown editor removed
         
         if (isROIExpanded) {
             children.push({
@@ -112,7 +94,7 @@ const Stories = (props: Props) => {
         };
     });
 
-    const handleItemClick = (item: ListItem<ConfigWaypoint | MarkdownEditorMetadata | ROIPanelMetadata>) => {
+    const handleItemClick = (item: ListItem<ConfigWaypoint | ROIPanelMetadata>) => {
         // Only handle story clicks, not child panel clicks
         if (item.metadata && !('type' in item.metadata)) {
             const story = item.metadata as ConfigWaypoint;
@@ -124,41 +106,12 @@ const Stories = (props: Props) => {
     };
 
     // Markdown editing handlers
-    const handleContentChange = (newContent: string) => {
-        if (activeStoryIndex !== null && stories[activeStoryIndex]) {
-            updateStory(activeStoryIndex, {
-                Properties: {
-                    ...stories[activeStoryIndex].Properties,
-                    Content: newContent
-                }
-            });
-        }
-    };
+    // Markdown editor removed
 
-    const handleSaveMarkdown = () => {
-        setIsEditingMarkdown(false);
-    };
-
-    const handleCancelMarkdown = () => {
-        setIsEditingMarkdown(false);
-    };
-
-    const handleToggleEditMarkdown = () => {
-        setIsEditingMarkdown(!isEditingMarkdown);
-    };
+    // Markdown editor removed
 
     // Handle markdown editor toggle
-    const handleToggleMarkdownEditor = (storyId: string) => {
-        setExpandedMarkdownStories(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(storyId)) {
-                newSet.delete(storyId);
-            } else {
-                newSet.add(storyId);
-            }
-            return newSet;
-        });
-    };
+    // Markdown editor removed
 
     // Handle ROI panel toggle
     const handleToggleROIPanel = (storyId: string) => {
@@ -217,7 +170,7 @@ const Stories = (props: Props) => {
     const activeStory = activeStoryIndex !== null ? stories[activeStoryIndex] : null;
 
     // Custom item actions for stories
-    const storyItemActions = (item: ListItem<ConfigWaypoint | MarkdownEditorMetadata | ROIPanelMetadata>) => {
+    const storyItemActions = (item: ListItem<ConfigWaypoint | ROIPanelMetadata>) => {
         // Only show actions for story items, not child panel items
         if (item.metadata && 'type' in item.metadata) {
             return null;
@@ -225,7 +178,7 @@ const Stories = (props: Props) => {
 
         const story = item.metadata as ConfigWaypoint;
         const storyId = story.UUID || item.id;
-        const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
+        const isMarkdownExpanded = false;
         const isROIExpanded = expandedROIStories.has(storyId);
 
         return (
@@ -249,25 +202,27 @@ const Stories = (props: Props) => {
                     ⋮⋮
                 </div>
 
-                {/* Markdown/Text Editor Button */}
+                {/* Text Editor Button (disabled) */}
                 <button
                     style={{
                         background: 'none',
                         border: 'none',
-                        color: isMarkdownExpanded ? '#007acc' : '#ccc',
-                        cursor: 'pointer',
+                        color: '#999',
+                        cursor: 'not-allowed',
                         padding: '4px',
                         borderRadius: '3px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         transition: 'all 0.2s ease',
+                        opacity: 0.5,
                     }}
                     onClick={(e) => {
                         e.stopPropagation();
-                        handleToggleMarkdownEditor(storyId);
+                        // No-op: markdown editor removed
                     }}
-                    title={isMarkdownExpanded ? "Hide markdown editor" : "Show markdown editor"}
+                    title="Text editor removed"
+                    disabled
                 >
                     <TextIcon style={{ width: '14px', height: '14px' }} />
                 </button>
@@ -299,37 +254,11 @@ const Stories = (props: Props) => {
     };
 
     // Custom child renderer for markdown editor and ROI panel
-    const customChildRenderer = (childItem: ListItem<ConfigWaypoint | MarkdownEditorMetadata | ROIPanelMetadata>, parentItem: ListItem<ConfigWaypoint | MarkdownEditorMetadata | ROIPanelMetadata>) => {
+    const customChildRenderer = (childItem: ListItem<ConfigWaypoint | ROIPanelMetadata>, parentItem: ListItem<ConfigWaypoint | ROIPanelMetadata>) => {
         if (childItem.metadata && 'type' in childItem.metadata) {
-            const metadata = childItem.metadata as MarkdownEditorMetadata | ROIPanelMetadata;
+            const metadata = childItem.metadata as ROIPanelMetadata;
             
-            if (metadata.type === 'markdown-editor') {
-                const markdownMetadata = metadata as MarkdownEditorMetadata;
-                const story = markdownMetadata.story;
-                const storyIndex = markdownMetadata.storyIndex;
-                
-                return (
-                    <div className={styles.markdownEditorInline}>
-                        <MarkdownEditor
-                            title={`Edit: ${story.Properties.Name}`}
-                            content={story.Properties.Content || ''}
-                            onContentChange={(newContent) => {
-                                updateStory(storyIndex, {
-                                    Properties: {
-                                        ...story.Properties,
-                                        Content: newContent
-                                    }
-                                });
-                            }}
-                            onSave={handleSaveMarkdown}
-                            onCancel={handleCancelMarkdown}
-                            isEditing={isEditingMarkdown}
-                            onToggleEdit={handleToggleEditMarkdown}
-                            compact={true}
-                        />
-                    </div>
-                );
-            } else if (metadata.type === 'roi-panel') {
+            if (metadata.type === 'roi-panel') {
                 const roiMetadata = metadata as ROIPanelMetadata;
                 const story = roiMetadata.story;
                 

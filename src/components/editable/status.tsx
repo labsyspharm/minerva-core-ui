@@ -1,6 +1,5 @@
 import React from "react";
 import styled from "styled-components";
-import ReactMarkdown from "react-markdown";
 import TextareaAutosize from "react-textarea-autosize";
 
 const parseEvent = (e) => e.target.value;
@@ -43,7 +42,7 @@ const Status = (props) => {
     onChange,
   };
 
-  const El = md ? ReactMarkdown : React.Fragment;
+  const El = React.Fragment;
   const content = editable ? (
     <Mono>
       <TextareaAutosize {...inputProps} />
