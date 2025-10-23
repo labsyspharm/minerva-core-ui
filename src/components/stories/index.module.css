@@ -1,0 +1,74 @@
+.black {
+  background-color: black;
+}
+
+.center {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 100%;
+  flex: 1;
+}
+
+.storiesContainer {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: white;
+}
+
+.storyItem {
+  padding: 12px;
+  border-bottom: 1px solid #333;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.storyItem:hover {
+  background: #1a1a1a;
+}
+
+.storyItem.active {
+  background: #2a2a2a;
+  border-left: 3px solid #007acc;
+}
+
+.markdownEditorInline {
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+  border-radius: 6px;
+  margin: 8px 16px 8px 32px; /* Indent to match child items */
+  overflow: hidden;
+}
+
+.roiPanelInline {
+  margin: 8px 0; /* Remove left/right margins to take full width */
+  width: 100%; /* Take full width */
+}
+
+/* Drag and drop styles */
+.dragHandle {
+  cursor: grab;
+  user-select: none;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+}
+
+.dropTarget {
+  background-color: #2a4a2a !important;
+  border-color: #4CAF50 !important;
+}
+

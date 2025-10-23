@@ -3,7 +3,7 @@ import { ChromePicker } from 'react-color';
 import { DrawingOverlay } from "./DrawingOverlay";
 import { LayersPanel } from "./LayersPanel";
 import styles from "./index.module.css";
-import { MoveIcon, RectangleIcon, LassoIcon, LineIcon, TextIcon, ColorIcon } from "./icons";
+import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "./icons";
 import { useOverlayStore } from "../../lib/stores";
 
 // Types
@@ -20,9 +20,12 @@ export type Props = HashContext & {
 const TOOLS = {
   MOVE: 'move',
   RECTANGLE: 'rectangle',
+  ELLIPSE: 'ellipse',
   LASSO: 'lasso',
   LINE: 'line',
-  TEXT: 'text'
+  POLYLINE: 'polyline',
+  TEXT: 'text',
+  POINT: 'point'
 } as const;
 
 type ToolType = typeof TOOLS[keyof typeof TOOLS];
@@ -78,11 +81,18 @@ const Overlays = (props: Props) => {
       if (annotation) {
         if (annotation.type === 'text') {
           updateTextAnnotationColor(editingAnnotationId, newColor);
-        } else if (annotation.type === 'rectangle' || annotation.type === 'polygon' || annotation.type === 'line') {
+        } else if (annotation.type === 'rectangle' || annotation.type === 'ellipse' || annotation.type === 'polygon' || annotation.type === 'line' || annotation.type === 'polyline') {
           updateAnnotation(editingAnnotationId, {
             style: {
               ...annotation.style,
               lineColor: newColor
+            }
+          });
+        } else if (annotation.type === 'point') {
+          updateAnnotation(editingAnnotationId, {
+            style: {
+              ...annotation.style,
+              fillColor: newColor
             }
           });
         }
@@ -143,11 +153,19 @@ const Overlays = (props: Props) => {
         </button>
         
         <button 
+          className={`${styles.toolButton} ${activeTool === TOOLS.ELLIPSE ? styles.active : ''}`}
+          title="Ellipse Tool (E)"
+          onClick={() => handleToolChangeLocal(TOOLS.ELLIPSE)}
+        >
+          <EllipseIcon />
+        </button>
+        
+        <button 
           className={`${styles.toolButton} ${activeTool === TOOLS.LASSO ? styles.active : ''}`}
           title="Lasso Tool (L)"
           onClick={() => handleToolChangeLocal(TOOLS.LASSO)}
         >
-          <LassoIcon />
+          <PolygonIcon />
         </button>
         
         <button 
@@ -159,11 +177,27 @@ const Overlays = (props: Props) => {
         </button>
         
         <button 
+          className={`${styles.toolButton} ${activeTool === TOOLS.POLYLINE ? styles.active : ''}`}
+          title="Poly-line Tool"
+          onClick={() => handleToolChangeLocal(TOOLS.POLYLINE)}
+        >
+          <PolylineIcon />
+        </button>
+        
+        <button 
           className={`${styles.toolButton} ${activeTool === TOOLS.TEXT ? styles.active : ''}`}
           title="Text Tool"
           onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
         >
           <TextIcon />
+        </button>
+        
+        <button 
+          className={`${styles.toolButton} ${activeTool === TOOLS.POINT ? styles.active : ''}`}
+          title="Point Tool"
+          onClick={() => handleToolChangeLocal(TOOLS.POINT)}
+        >
+          <PointIcon />
         </button>
         
         <button 

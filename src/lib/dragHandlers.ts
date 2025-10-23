@@ -1,49 +1,68 @@
-// Drag handlers for Deck.gl interactions with optimized performance
+// Drag handlers for Deck.gl interactions
+// These handlers translate Deck.gl events into interaction events for the overlay system
+
+import { useOverlayStore } from './stores';
+
+type InteractionType = 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover';
+type InteractionCallback = (type: InteractionType, coordinate: [number, number, number]) => void;
+
 export const createDragHandlers = (
-  activeTool: string, 
-  onInteraction?: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number]) => void
+  activeTool: string,
+  onInteraction?: InteractionCallback
 ) => {
-  const handleClick = ({ coordinate }: any) => {
-    if (coordinate && onInteraction) {
-      // Handle all tools including move tool
-      onInteraction('click', coordinate);
-    }
-  };
+  // Early return if no interaction callback provided
+  if (!onInteraction) {
+    return {
+      onClick: undefined,
+      onDragStart: undefined,
+      onDrag: undefined,
+      onDragEnd: undefined,
+      onHover: undefined,
+    };
+  }
 
-  const handleDragStart = ({ coordinate }: any) => {
-    if (coordinate && onInteraction) {
-      // Handle all tools including move tool
-      onInteraction('dragStart', coordinate);
-    }
-  };
-
-  const handleDrag = ({ coordinate }: any) => {
-    if (coordinate && onInteraction) {
-      // Handle all tools including move tool
-      onInteraction('drag', coordinate);
-    }
-  };
-
-  const handleDragEnd = ({ coordinate }: any) => {
-    if (coordinate && onInteraction) {
-      // Handle all tools including move tool
-      onInteraction('dragEnd', coordinate);
-    }
-  };
-
-  const handleHover = ({ coordinate }: any) => {
-    if (coordinate && onInteraction && (activeTool === 'move' || activeTool === 'text')) {
-      // Handle hover for move tool and text tool
-      onInteraction('hover', coordinate);
+  // Helper to emit interaction if coordinate exists
+  const emit = (type: InteractionType, coordinate?: [number, number, number]) => {
+    if (coordinate) {
+      onInteraction(type, coordinate);
     }
   };
 
   return {
-    onClick: handleClick,
-    onDragStart: handleDragStart,
-    onDrag: handleDrag,
-    onDragEnd: handleDragEnd,
-    onHover: handleHover,
+    // Single click without dragging (used for text, polyline, lasso point-by-point)
+    onClick: ({ coordinate }: any) => emit('click', coordinate),
+
+    // Start of drag operation (used for rectangle, line, lasso freehand)
+    onDragStart: ({ coordinate }: any) => emit('dragStart', coordinate),
+
+    // During drag operation (used for rectangle, line, lasso freehand)
+    onDrag: ({ coordinate }: any) => emit('drag', coordinate),
+
+    // End of drag operation (used for rectangle, line, lasso freehand)
+    onDragEnd: ({ coordinate }: any) => emit('dragEnd', coordinate),
+
+    // Hover events (for tools that need hover feedback)
+    onHover: (info: any) => {
+      const { coordinate, layer } = info;
+      
+      // Detect if hovering over an annotation layer (only for move tool)
+      if (activeTool === 'move') {
+        if (layer && layer.id && layer.id.startsWith('annotation-')) {
+          const annotationId = layer.id.replace('annotation-', '');
+          useOverlayStore.getState().setHoveredAnnotation(annotationId);
+        } else {
+          // Clear hover state if not hovering over an annotation
+          useOverlayStore.getState().setHoveredAnnotation(null);
+        }
+      } else {
+        // Clear hover state when not using move tool
+        useOverlayStore.getState().setHoveredAnnotation(null);
+      }
+      
+      // Emit hover coordinate for drawing tools
+      if (activeTool === 'move' || activeTool === 'text' || activeTool === 'polyline' || activeTool === 'rectangle' || activeTool === 'ellipse' || activeTool === 'line' || activeTool === 'lasso') {
+        emit('hover', coordinate);
+      }
+    },
   };
 };
-

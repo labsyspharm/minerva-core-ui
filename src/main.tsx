@@ -14,6 +14,8 @@ import { Upload } from './components/upload';
 import { readConfig } from "./lib/exhibit";
 import { Index } from "./components";
 import Pool from './lib/workers/Pool';
+import { parseRoisFromLoader } from './lib/roiParser';
+import { useOverlayStore } from './lib/stores';
 
 import type { ValidObj } from './components/upload';
 import type { ImageProps } from "./components/channel"
@@ -75,6 +77,30 @@ const Content = (props: Props) => {
   const [loader, setLoader] = useState(bypass ? (
     testLoader
   ) : null);
+
+  // Autopopulate annotations from loader metadata in bypass mode
+  useEffect(() => {
+    if (bypass && loader) {
+      try {
+        const { annotations, groups } = parseRoisFromLoader(loader);
+        if (annotations.length > 0) {
+          console.log(`Autopopulating ${annotations.length} annotations and ${groups.length} groups from test loader metadata`);
+          // Clear existing annotations first
+          useOverlayStore.getState().clearAnnotations();
+          // Add each annotation to the store
+          annotations.forEach(annotation => {
+            useOverlayStore.getState().addAnnotation(annotation);
+          });
+          // Add each group to the store
+          groups.forEach(group => {
+            useOverlayStore.getState().annotationGroups.push(group);
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing ROIs from test loader:', error);
+      }
+    }
+  }, [bypass, loader]);
   const [config, setConfig] = useState({
     ItemRegistry: {
       Name: '', Groups: [], Colors: [],
@@ -125,7 +151,8 @@ const Content = (props: Props) => {
   const onStart = (in_f: string) => {
     (async () => {
       if (handle === null) return;
-      const loader = await toLoader({ handle, in_f, pool: new Pool() });
+      const loader = await toLoader({ handle, in_f, pool: new Pool(8) });
+      console.log("loader", loader);
       const {
         SourceChannels, GroupChannels, Groups, Colors
       } = extractChannels(loader);
@@ -149,6 +176,27 @@ const Content = (props: Props) => {
           });
         }
       );
+
+      // Parse ROIs from loader metadata and populate annotations and groups
+      try {
+        const { annotations, groups } = parseRoisFromLoader(loader);
+        if (annotations.length > 0) {
+          console.log(`Autopopulating ${annotations.length} annotations and ${groups.length} groups from loader metadata`);
+          // Clear existing annotations first
+          useOverlayStore.getState().clearAnnotations();
+          // Add each annotation to the store
+          annotations.forEach(annotation => {
+            useOverlayStore.getState().addAnnotation(annotation);
+          });
+          // Add each group to the store
+          groups.forEach(group => {
+            useOverlayStore.getState().annotationGroups.push(group);
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing ROIs from loader:', error);
+      }
+
       setLoader(loader);
       setFileName(in_f);
     })();

@@ -1,6 +1,7 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Overlays } from "./overlays";
+import { Stories } from "./stories";
 import { ImageView, toImageProps } from "./imageView";
 import { Main } from "./content";
 import { useOverlayStore } from "../lib/stores";
@@ -305,8 +306,21 @@ const Index = (props: Props) => {
     hoverState,
     handleLayerCreate,
     handleToolChange,
-    handleOverlayInteraction
+    handleOverlayInteraction,
+    setStories,
+    setWaypoints
   } = useOverlayStore();
+  
+  // Initialize stories in the store when config changes
+  useEffect(() => {
+    if (props.config.ItemRegistry.Stories) {
+      setStories(props.config.ItemRegistry.Stories);
+      
+      // For now, we'll work with stories only since the current config structure
+      // doesn't have waypoints within stories. Each ConfigWaypoint represents a story.
+      setWaypoints([]);
+    }
+  }, [props.config.ItemRegistry.Stories, setStories, setWaypoints]);
   
   return (
     <Main {...mainProps}>
@@ -325,6 +339,10 @@ const Index = (props: Props) => {
         setHash={mainProps.setHash}
         onLayerCreate={handleLayerCreate}
         currentInteraction={currentInteraction}
+      />
+      <Stories 
+        hash={mainProps.hash}
+        setHash={mainProps.setHash}
       />
     </Main>
   );

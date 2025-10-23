@@ -58,7 +58,7 @@ const shapeRef = (setShape: (s: Shape) => void) => {
   };
 };
 
-const VivView = React.memo((props: Props) => {
+const VivView = (props: Props) => {
   const maxShape = useWindowSize();
   const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
@@ -70,7 +70,7 @@ const VivView = React.memo((props: Props) => {
 
   // Memoize expensive computations
   const waypoint = useMemo(() => getWaypoint(stories, s, w), [stories, s, w]);
-  
+
   const rootRef = useMemo(() => {
     return shapeRef(setShape);
   }, []);
@@ -84,9 +84,9 @@ const VivView = React.memo((props: Props) => {
     setMainSettings(toMainSettings(hash, loader, groups));
   }, [loader, groups, hash, toMainSettings]);
 
+
   // Memoize image shape computation
   const imageShape = useMemo(() => {
-    const n_levels = loader.data.length;
     const shape_labels = loader.data[0].labels;
     const shape_values = loader.data[0].shape;
     return Object.fromEntries(
@@ -120,11 +120,11 @@ const VivView = React.memo((props: Props) => {
   const allLayers = useMemo(() => [imageLayer, ...overlayLayers], [imageLayer, overlayLayers]);
 
   // Memoize drag handlers
-  const dragHandlers = useMemo(() => 
-    createDragHandlers(activeTool, onOverlayInteraction), 
+  const dragHandlers = useMemo(() =>
+    createDragHandlers(activeTool, onOverlayInteraction),
     [activeTool, onOverlayInteraction]
+  )
 
-  );
 
   // Memoize cursor function
   const getCursor = useCallback(({ isDragging, isHovering }) => {
@@ -134,10 +134,16 @@ const VivView = React.memo((props: Props) => {
       return 'grab';
     } else if (activeTool === 'rectangle') {
       return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'ellipse') {
+      return isDragging ? 'grabbing' : 'crosshair';
     } else if (activeTool === 'lasso') {
       return isDragging ? 'grabbing' : 'crosshair';
     } else if (activeTool === 'line') {
       return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'polyline') {
+      return 'crosshair';
+    } else if (activeTool === 'point') {
+      return 'crosshair';
     } else if (activeTool === 'text') {
       return 'text';
     } else if (activeTool === 'move') {
@@ -148,7 +154,7 @@ const VivView = React.memo((props: Props) => {
 
   // Memoize controller configuration
   const controllerConfig = useMemo(() => ({
-    dragPan: activeTool !== 'rectangle' && activeTool !== 'lasso' && activeTool !== 'line' && !isDragging,
+    dragPan: activeTool === 'move' && !isDragging,
     dragRotate: false,
     scrollZoom: true,
     doubleClickZoom: true,
@@ -161,10 +167,14 @@ const VivView = React.memo((props: Props) => {
   const views = useMemo(() => [new OrthographicView({ id: 'ortho', controller: true })], []);
 
   // Memoize view state change handler
-  const handleViewStateChange = useCallback((e) => setViewState(e.viewState), []);
+  const handleViewStateChange = useCallback(({ interactionState, viewState: nextViewState }) => {
+    if (isDragging || (activeTool !== 'move' && interactionState.isDragging)) return;
+    // don't allow pan on non-move tool
+    setViewState(nextViewState);
+  }, [isDragging, activeTool]);
 
   if (!loader || !mainSettings) return null;
-  
+
   return (
     <Main slot="image" ref={rootRef}>
       <Deck
@@ -181,8 +191,8 @@ const VivView = React.memo((props: Props) => {
         views={views}
       />
     </Main>
-  );
-});
+  )
+};
 
 VivView.displayName = 'VivView';
 
