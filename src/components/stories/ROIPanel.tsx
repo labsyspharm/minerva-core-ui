@@ -4,7 +4,8 @@ import { LayersPanel } from "../overlays/LayersPanel";
 import { useOverlayStore } from "../../lib/stores";
 import type { ConfigWaypoint } from "../../lib/config";
 import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "../overlays/icons";
-import styles from "./ROIPanel.module.css";
+//import styles from "./ROIPanel.module.css";
+const styles = {};
 
 // Define available tools (same as overlays)
 const TOOLS = {
@@ -77,7 +78,7 @@ const ROIPanel: React.FC<ROIPanelProps> = ({ story, storyIndex }) => {
         
         // If we're editing a specific annotation, update it
         if (editingAnnotationId) {
-            updateAnnotation(editingAnnotationId, { color: newColor });
+            updateAnnotation(editingAnnotationId, { color: newColor } as any);
             updateTextAnnotationColor(editingAnnotationId, newColor);
             setEditingAnnotationId(null);
         }

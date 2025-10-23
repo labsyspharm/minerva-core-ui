@@ -56,6 +56,9 @@ importers:
       '@deck.gl/react':
         specifier: 9.1.11
         version: 9.1.11(@deck.gl/core@9.1.11)(@deck.gl/widgets@9.1.11(@deck.gl/core@9.1.11))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@deck.gl/widgets':
+        specifier: 9.1.11
+        version: 9.1.11(@deck.gl/core@9.1.11)
       '@fontsource/overpass':
         specifier: ^5.0.18
         version: 5.2.8
@@ -134,6 +137,9 @@ importers:
       '@luma.gl/engine':
         specifier: 9.1.9
         version: 9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9))
+      '@luma.gl/gltf':
+        specifier: 9.1.9
+        version: 9.1.9(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9)))(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9))
       '@luma.gl/shadertools':
         specifier: 9.1.9
         version: 9.1.9(@luma.gl/core@9.1.9)

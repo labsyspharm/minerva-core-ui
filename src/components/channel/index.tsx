@@ -3,10 +3,9 @@ import { useState } from "react";
 import { Legend } from "./legend";
 import { Content } from "./content";
 import { Toolbar } from "./toolbar";
-import { getStyler } from "../../lib/util";
-import { theme } from "../../theme.module.css";
-import styles from "./index.module.css";
+//import { theme } from "../../theme.module.css";
 import styled from "styled-components";
+const theme = {};
 
 // Types
 import type { ConfigProps } from "../../lib/config";
@@ -26,15 +25,36 @@ export type Props = HashContext & ImageProps & {
   setHiddenChannel: (v: boolean) => void;
 };
 
+const TextWrap = styled.div`
+  height: 100%;
+  display: grid;
+  grid-template-rows: 100%;
+  grid-template-columns: 1fr 200px;
+  > div.core {
+    color: #eee;
+    grid-row: 1;
+    grid-column: 2;
+    transition: transform 0.5s ease 0s;
+  }
+`;
+
+const TextHide = styled.div`
+  > div.core {
+    transform: translateX(100%);
+  }
+`;
+
+const TextOther = styled.div`
+  grid-row: 1;
+  grid-column: 1 / -1;
+`;
+
 const Channel = (props: Props) => {
 
-  const styler = getStyler(styles);
   const hide = props.hiddenChannel;
   const setHide = props.setHiddenChannel;
 
   const togglePanel = () => setHide(!hide);
-
-  const wrapClass = styler("textWrap", ...(hide ? ["textHide"] : []));
 
   const { hash } = props;
   const hidden = hash.i >= 0;
@@ -42,7 +62,7 @@ const Channel = (props: Props) => {
   const legendProps = { ...props, ...group };
 
   const channelMenu = (
-    <div className={styles.textCore}>
+    <div className="core">
       <Content {...props}>
         <Toolbar
           {...{
@@ -61,13 +81,25 @@ const Channel = (props: Props) => {
   }
   );
 
+  const content = (
+    <TextOther>
+      {minerva_author_ui}
+    </TextOther>
+  );
+
+  if (hide) {
+    return (
+      <TextHide>
+        {content}
+        {hidden ? "" : channelMenu}
+      </TextHide>
+    );
+  }
   return (
-    <div className={wrapClass}>
-      <div className={styles.textOther}>
-        {minerva_author_ui}
-      </div>
+    <TextWrap>
+      {content}
       {hidden ? "" : channelMenu}
-    </div>
+    </TextWrap>
   );
 };
 

@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { standardCssModules } from 'vite-plugin-standard-css-modules';
 import react from '@vitejs/plugin-react'
 import mkcert from 'vite-plugin-mkcert'
 import svgr from 'vite-plugin-svgr'
@@ -22,6 +23,7 @@ export default defineConfig({
         icon: true,
       },
     }),
+		standardCssModules()
   ],
   optimizeDeps: {
     exclude: [ "minerva-author-ui" ],
@@ -55,9 +57,6 @@ export default defineConfig({
     ]
   },
   build: {
-    optimizeDeps: {
-      exclude: [ "minerva-author-ui" ]
-    },
     minify: false,
     sourcemap: false,
     assetsInlineLimit: 0,

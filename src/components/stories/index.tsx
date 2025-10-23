@@ -1,9 +1,10 @@
 import * as React from "react";
-import styles from "./index.module.css";
+//import styles from "./index.module.css";
 import { useOverlayStore } from "../../lib/stores";
 import { ItemList, type ListItem } from "../common/ItemList";
 import { ROIPanel } from "./ROIPanel";
 import { TextIcon, PolylineIcon } from "../overlays/icons";
+const styles = {};
 
 // Types
 import type { HashContext } from "../../lib/hashUtil";

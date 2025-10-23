@@ -1,5 +1,6 @@
 import * as React from "react";
-import styles from './ItemList.module.css';
+//import styles from './ItemList.module.css';
+const styles = {};
 
 // Generic item interface that can be extended
 export interface ListItem<T = any> {

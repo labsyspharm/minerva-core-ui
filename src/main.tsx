@@ -1,7 +1,7 @@
 import * as React from "react";
 import { get, set } from 'idb-keyval';
 import styled from 'styled-components';
-import { author } from "./minerva-author-ui";
+import { author } from "./minerva-author-ui/author";
 import { useState, useMemo, useEffect } from "react";
 import { testLoader, testChannels } from "./lib/dicom";
 import { useHash } from "./lib/hashUtil";
