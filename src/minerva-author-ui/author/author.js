@@ -22,6 +22,7 @@ class Author extends HTMLElement {
       <slot name="image"></slot>
       <${panel_grid} class="stretch grid panel outer">
         <slot slot="overlays" name="overlays"></slot>
+        <slot slot="waypoints" name="waypoints"></slot>
       </${panel_grid}>
       <${notice_grid} class="notice" open="${
         () => this.elementState.notice != ''

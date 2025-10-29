@@ -39,6 +39,7 @@ class Panel extends HTMLElement {
     return toElement('div')`
         ${sources}
         <slot name="overlays"></slot>
+        <slot name="waypoints"></slot>
     `({
       class: 'grid'
     })

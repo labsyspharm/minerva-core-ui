@@ -62,6 +62,7 @@ class PanelGrid extends HTMLElement {
       );
       return toElement(panel)`
         <slot slot="overlays" name="overlays"></slot>
+        <slot slot="waypoints" name="waypoints"></slot>
       `({
         class: 'stretch panel grid inner'
       })

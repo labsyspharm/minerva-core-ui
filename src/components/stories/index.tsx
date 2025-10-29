@@ -278,7 +278,7 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
     };
 
     return (
-        <div slot="stories" className={className}>
+        <div slot="waypoints" className={className}>
             {/* Stories panel content */}
             <ItemList
                 items={listItems}
