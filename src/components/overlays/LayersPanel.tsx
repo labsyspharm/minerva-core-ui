@@ -3,8 +3,7 @@ import { useOverlayStore } from "../../lib/stores";
 import type { Annotation, TextAnnotation } from "../../lib/stores";
 import { ItemList, type ListItem } from "../common/ItemList";
 import { RectangleIcon, EllipseIcon, PolylineIcon, PolygonIcon, LineIcon, GroupIcon, PointIcon, TextIcon } from "./icons";
-//import styles from "./index.module.css";
-const styles = {};
+import styles from "./index.module.css";
 
 // Shared Text Edit Panel Component (same as in original LayersPanel)
 interface TextEditPanelProps {
