@@ -7,7 +7,6 @@ import { Main } from "./content";
 import { useOverlayStore } from "../lib/stores";
 
 // Types
-import type { OptSW } from "./waypoint/content";
 import type { Waypoint as WaypointType } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
 import type { ConfigProps } from "../lib/config";
@@ -131,7 +130,7 @@ const Index = (props: Props) => {
     setHidden([v, hiddenChannel])
   }
 
-  const updateWaypoint = (newWaypoint: WaypointType, { s, w }: OptSW) => {
+  const updateWaypoint = (newWaypoint: WaypointType, { s, w }: any) => {
     const oldWaypoint = stories[s]?.waypoints[w];
     if (!oldWaypoint) {
       throw `Cannot update waypoint. Waypoint ${w} does not exist!`;
@@ -139,7 +138,7 @@ const Index = (props: Props) => {
     const ex = setWaypoint({ exhibit, s, w, newWaypoint });
     setExhibit(ex);
   };
-  const pushWaypoint = (newWaypoint: WaypointType, { s }: OptSW) => {
+  const pushWaypoint = (newWaypoint: WaypointType, { s }: any) => {
     if (!stories[s]) {
       throw `Cannot push waypoint. Story ${s} does not exist!`;
     }

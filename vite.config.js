@@ -23,7 +23,9 @@ export default defineConfig({
         icon: true,
       },
     }),
-		standardCssModules()
+		standardCssModules({
+			include: ["/**/minerva-author-ui/**/*.css"],
+    })
   ],
   optimizeDeps: {
     exclude: [ "minerva-author-ui" ],
