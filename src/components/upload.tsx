@@ -214,7 +214,7 @@ const FormDicom = (props: FormProps) => {
                     }
                     // URL matches expectations
                     return validEndpoint && (
-                      /^(?:https?:\/\/)?[^\/]+\/current\/.+\/dicomWeb\/studies\/.+\/series\/.+$/
+                      /^https?:\/\/.+\/studies\/[^/]+\/series\/[^/]+$/
                     ).test(url)
                   }
                 )
