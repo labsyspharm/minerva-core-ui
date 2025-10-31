@@ -65,39 +65,13 @@ const Scrollable = styled.div`
 `;
 
 const Content = (props: Props) => {
-  const bypass = false;
   const { testDicom, handleKeys } = props;
   const firstExhibit = readConfig(props.exhibit_config);
   const [exhibit, setExhibit] = useState(firstExhibit);
   const [url, setUrl] = useState(window.location.href);
   const hashContext = useHash(url, exhibit.stories);
   const [handle, setHandle] = useState(null);
-  const [loader, setLoader] = useState(bypass ? (
-    testLoader
-  ) : null);
-  // Autopopulate annotations from loader metadata in bypass mode
-  useEffect(() => {
-    if (bypass && loader) {
-      try {
-        const { annotations, groups } = parseRoisFromLoader(loader);
-        if (annotations.length > 0) {
-          console.log(`Autopopulating ${annotations.length} annotations and ${groups.length} groups from test loader metadata`);
-          // Clear existing annotations first
-          useOverlayStore.getState().clearAnnotations();
-          // Add each annotation to the store
-          annotations.forEach(annotation => {
-            useOverlayStore.getState().addAnnotation(annotation);
-          });
-          // Add each group to the store
-          groups.forEach(group => {
-            useOverlayStore.getState().annotationGroups.push(group);
-          });
-        }
-      } catch (error) {
-        console.error('Error parsing ROIs from test loader:', error);
-      }
-    }
-  }, [bypass, loader]);
+  const [loader, setLoader] = useState(null);
   const [dicomSeries, setDicomSeries] = useState(null);
   const [dicomIndex, setDicomIndex] = useState(
     { } as DicomIndex
