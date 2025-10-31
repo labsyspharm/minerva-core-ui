@@ -5,6 +5,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: lsp-idc-minerva
     permissions:
       contents: read
     steps:
@@ -23,7 +24,6 @@ jobs:
         run: |
           pnpm run pages
       - name: Push artifact
-        environment: lsp-idc-minerva
         env:
           PAT: ${{ secrets.PAT }}
         run: |
