@@ -35,7 +35,7 @@ jobs:
           git clone https://github.com/labsyspharm/lsp-idc-minerva
           rm -rf ./lsp-idc-minerva/*
           cp -R ./dist/* ./lsp-idc-minerva/
-          cd ./tlsp-idc-minerva
+          cd ./lsp-idc-minerva
           git add -A
           git commit -m update
           git push -f
