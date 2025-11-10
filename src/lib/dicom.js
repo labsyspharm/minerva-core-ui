@@ -691,17 +691,19 @@ class DicomPlane {
     const width = this.shape[0];
     const height = this.shape[1];
     const series = this.series;
-    const subpath = "foo";
+// TODO
+/*
     const pyramids = computeImagePyramid({ metadata });
-/*    const image = new DicomTIFFImage({
+    const image = new DicomTIFFImage({
       little_endian, metadata,
       pyramids, series, level,
       ...sel
     });
-    */
-    const data = `await image._readRaster({
+    const data = await image._readRaster({
       x, y, width, height, sample, signal
-    })`;
+    });
+*/
+    const data = [];
     return {
       width, height, data
     };
