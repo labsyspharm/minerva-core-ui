@@ -5,6 +5,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: lsp-idc-minerva
     permissions:
       contents: read
     steps:
@@ -22,10 +23,18 @@ jobs:
       - name: Build with pnpm
         run: |
           pnpm run pages
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
+      - name: Push artifact
+        env:
+          PAT: ${{ secrets.PAT }}
+        run: |
+          export GITHUB_TOKEN=$PAT
+          git clone https://github.com/labsyspharm/lsp-idc-minerva
+          rm -rf ./lsp-idc-minerva/*
+          cp -R ./dist/* ./lsp-idc-minerva/
+          cd ./lsp-idc-minerva
+          git add -A
+          git commit -m update
+          git push -f
   deploy:
     runs-on: ubuntu-latest
     needs: build
