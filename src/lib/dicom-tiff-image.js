@@ -10,7 +10,6 @@ const littleEndianPlatform = (() => {
 
 class DicomTIFFImage {
   constructor(opts) {
-    console.warn(opts);
     const bytesPerSample = 2;
     const { metadata, little_endian } = opts;
     const { tileSize } = opts.pyramids[0][0];

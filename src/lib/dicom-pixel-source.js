@@ -39,6 +39,9 @@ class DicomPixelSource {
         [props.y+1, props.x+1, image.c].join('-')
       ].split("/").pop()
     )
+    console.log(
+      `x: ${props.x}, y: ${props.y}, level: ${image.level}, frame: ${frame}`
+    );
     let raster = this.tileCache[index];
     if (!raster) {
       raster = await image.readRasters({
@@ -48,6 +51,7 @@ class DicomPixelSource {
     }
 
     if (props.signal?.aborted) {
+      console.log('abort abort');
       throw "__vivSignalAborted";
     }
 

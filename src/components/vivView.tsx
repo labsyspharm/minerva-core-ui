@@ -4,7 +4,7 @@ import { OrthographicView } from '@deck.gl/core';
 import { useEffect, useRef, useState } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import {
-  createTileLayers
+  testPyramids, createTileLayers
 } from "../lib/dicom";
 
 import styled from "styled-components";
@@ -23,7 +23,6 @@ export type Props = {
   series: string; // DICOM
   groups: Group[];
   stories: Story[];
-  dicomIndex: any[];
   viewerConfig: Config;
 } & HashContext;
 

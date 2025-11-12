@@ -18,19 +18,6 @@ type DicomData = {
 
 export interface DicomLoader {
   data: DicomData[];
-  metadata: Loader["metadata"];
-}
-
-export type DicomIndex = {
-  [k: string]: {
-    width: number;
-    height: number;
-    extent: [number, number, number, number];
-    frameMappings: {
-      [k: string]: any;
-    };
-    tileSize: number;
-  }[]; 
 }
 
 type Props = HashContext & {
@@ -40,7 +27,6 @@ type Props = HashContext & {
   handle: Handle.Dir;
   config: ConfigProps;
   marker_names: string[];
-  dicomIndex: DicomIndex;
   dicomSeries: string | null;
   controlPanelElement: string;
   setExhibit: (e: Exhibit) => void;
@@ -309,7 +295,6 @@ const Index = (props: Props) => {
   const imageProps = toImageProps({
     props: {
       loader,
-      dicomIndex: props.dicomIndex,
       marker_names: itemRegistryMarkerNames,
       ...channelProps,
     },
