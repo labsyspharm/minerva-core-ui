@@ -4,9 +4,7 @@ import { OrthographicView } from '@deck.gl/core';
 import { useEffect, useRef, useState } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import {
-  testPyramids,
-  createTileLayers, readInstances,
-  readMetadata, computeImagePyramid
+  createTileLayers
 } from "../lib/dicom";
 
 import styled from "styled-components";
@@ -22,6 +20,7 @@ import { LensExtension } from "@hms-dbmi/viv";
 
 export type Props = {
   loader: any;
+  series: string; // DICOM
   groups: Group[];
   stories: Story[];
   viewerConfig: Config;
@@ -71,99 +70,100 @@ const VivView = (props: Props) => {
   useEffect(() => {
     // Gets the default settings
     setMainSettings(toMainSettings(hash, loader, groups));
-
   }, [loader,groups,hash]);
-  const mainProps = {
-    ...{
-      ...shape,
-      id: "mainLayer",
-      loader: loader.data,
-      ...(mainSettings as any),
-    }
-  };
 
-  const series = "https://proxy.imaging.datacommons.cancer.gov/current/viewer-only-no-downloads-see-tinyurl-dot-com-slash-3j3d9jyp/dicomWeb/studies/2.25.93749216439228361118017742627453453196/series/1.3.6.1.4.1.5962.99.1.2344794501.795090168.1655907236229.4.0";
-  const instances = `${series}/instances/`;
-  // Enables regeneration of test pyramid
-  if (false) {
-    readInstances(instances).then(
-      async (instance_list) => {
-        const pyramids = await Promise.all(
-          instance_list.map(({ SOPInstanceUID }, i) => {
-            const instance = `${series}/instances/${SOPInstanceUID}`;
-            return readMetadata(instance).then(
-              instance_metadata => {
-                const pyramid = computeImagePyramid({
-                  metadata: instance_metadata
-                })
-                return pyramid;
-              }
-            )
-          })
-        )
-        const channel_pyramids = pyramids.reduce((o, i) => {
-          const k = String(
-            i.metadata[0].OpticalPathSequence[0].OpticalPathIdentifier
-          );
-          const channel_pyramid = [
-            ...(o[k] || []), ...[i]
-          ];
-          return {
-            ...o, [k]: channel_pyramid
-          }
-        }, {});
-        // For first optical channel
-        const test_pyramids = Object.fromEntries(
-          Object.entries(channel_pyramids).map(
-            ([key, pyramid]) => ([
-              key, Object.values(pyramid).map(
-                ({ frameMappings, extent, tileSizes }) => ({ 
-                  extent,
-                  width: Math.abs(extent[2]),
-                  height: Math.abs(extent[3]),
-                  frameMappings: Object.fromEntries(
-                    Object.entries(frameMappings[0] as Record<string, string>).map(
-                      ([k,v]) => (
-                        [k, v.split('/').slice(-3).join('/')]
-                      )
-                    )
-                  ),
-                  tileSize: Math.max(...tileSizes[0])
-                })
-              ).sort((a, b) => {
-                return a.width - b.width
-              })
-            ])
-          )
-        );
-        console.log(JSON.stringify(test_pyramids));
-      }
+  // Memoize image shape computation
+  const imageShape = useMemo(() => {
+    const shape_labels = loader.data[0].labels;
+    const shape_values = loader.data[0].shape;
+    return Object.fromEntries(
+      shape_labels.map((k, i) => [k, shape_values[i]])
     );
-  }
-  // TODO -- evaluate needed conditions for Memo
-  const layers = React.useMemo(
+  }, [loader.data]);
+
+  // Memoize initial view state
+  const initialViewState = useMemo(() => {
+    const n_levels = loader.data.length;
+    return {
+      zoom: -n_levels,
+      target: [imageShape.x / 2, imageShape.y / 2, 0]
+    } as OrthographicViewState;
+  }, [loader.data, imageShape]);
+
+  const [viewState, setViewState] = useState<OrthographicViewState>(initialViewState);
+
+  // Memoize main props to prevent unnecessary layer recreation
+  const mainProps = useMemo(() => ({
+    ...shape,
+    id: "mainLayer",
+    loader: loader.data,
+    ...(mainSettings as any),
+  }), [shape, loader.data, mainSettings]);
+
+  const dicomLayer = React.useMemo(
     () => createTileLayers({
       pyramids: testPyramids,
       settings: mainSettings,
-      series
+      series: props.series,
     }),
-    [testPyramids, mainSettings, series]
+    [testPyramids, mainSettings]
   );
-  const n_levels = loader.data.length;
-  const shape_labels = loader.data[0].labels;
-  const shape_values = loader.data[0].shape;
-  const imageShape = Object.fromEntries(
-    shape_labels.map((k, i) => [k, shape_values[i]])
+
+  // Memoize image layer creation
+/*  const imageLayer = useMemo(
+    () => new MultiscaleImageLayer(mainProps),
+    [mainProps]
   );
-  const [viewState, setViewState] = useState({
-    zoom: -n_levels,
-    target: [imageShape.x / 2, imageShape.y / 2, 0]
+  // Memoize layer combination
+  const allLayers = useMemo(
+    () => [imageLayer, ...overlayLayers],
+    [imageLayer, overlayLayers]
+  );
+*/
+
+  // Memoize layer combination
+  const allLayers = useMemo(
+    () => [dicomLayer, ...overlayLayers],
+    [dicomLayer, overlayLayers]
+  );
+
+  // Memoize drag handlers
+  const dragHandlers = useMemo(() =>
+    createDragHandlers(activeTool, onOverlayInteraction),
+    [activeTool, onOverlayInteraction]
+  )
+
+
+  // Memoize cursor function
+  const getCursor = useCallback(({ isDragging, isHovering }) => {
+    if (isDragging && activeTool === 'move') {
+      return 'grabbing';
+    } else if (activeTool === 'move' && hoveredAnnotationId) {
+      return 'grab';
+    } else if (activeTool === 'rectangle') {
+      return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'ellipse') {
+      return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'lasso') {
+      return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'line') {
+      return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'polyline') {
+      return 'crosshair';
+    } else if (activeTool === 'point') {
+      return 'crosshair';
+    } else if (activeTool === 'text') {
+      return 'text';
+    } else if (activeTool === 'move') {
+      return 'default';
+    }
   });
+
   if (!loader || !mainSettings) return null;
   return (
     <Main slot="image" ref={rootRef}>
       <Deck
-        layers={layers}
+        layers={allLayers}
         controller={true}
         viewState={viewState}
         onViewStateChange={e => setViewState(e.viewState)}

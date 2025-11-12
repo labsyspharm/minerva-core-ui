@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { author } from "minerva-author-ui";
 import { useState, useMemo, useEffect } from "react";
 import { testLoader, testChannels } from "./lib/dicom";
+import { loadDicomWeb, parseDicomWeb } from "./lib/dicom";
 import { useHash } from "./lib/hashUtil";
 import { onlyUUID } from './lib/config';
 import { mutableItemRegistry } from './lib/config';
@@ -14,6 +15,7 @@ import { Upload } from './components/upload';
 import { readConfig } from "./lib/exhibit";
 import { Index } from "./components";
 
+import type { DicomLoader } from "./components";
 import type { ValidObj } from './components/upload';
 import type { ImageProps } from "./components/channel"
 import type { FormEventHandler } from "react";
@@ -28,6 +30,7 @@ type Props = ImageProps & {
   exhibit_config: ExhibitConfig;
   marker_names: string[];
   handleKeys: string[];
+  testDicom: boolean;
 };
 
 interface ReduceFormData {
@@ -71,12 +74,17 @@ const Content = (props: Props) => {
   const hashContext = useHash(url, exhibit.stories);
   const [handle, setHandle] = useState(null);
   const [loader, setLoader] = useState(null);
+  const [dicomSeries, setDicomSeries] = useState(null);
+  const [dicomIndex, setDicomIndex] = useState(null);
   const [config, setConfig] = useState({
     ItemRegistry: {
       Name: '', Groups: [], Colors: [],
       GroupChannels: [], SourceChannels: [],
       SourceDistributions: [],
       Stories: props.configWaypoints,
+      ...(testDicom ? (
+        createPlaceholderFromLoader(loader)
+      ): {})
     } as ItemRegistryProps,
     ID: crypto.randomUUID()
   });
@@ -115,36 +123,40 @@ const Content = (props: Props) => {
       setHandle(newHandle);
     }
   }
-  const onStart = (in_f: string) => {
-    (async () => {
-      if (handle === null) return;
-      const loader = await toLoader({ handle, in_f });
-      const { 
-        SourceChannels, GroupChannels, Groups, Colors
-      } = extractChannels(loader);
-      resetItems({
-        SourceChannels, GroupChannels, Groups, Colors
-      });
-      // Asynchronously add distributions
-      extractDistributions(loader).then(
-        (sourceDistributionMap) => {
-          const SourceDistributions = sourceDistributionMap.values();
-          resetItems({
-            SourceDistributions: [...SourceDistributions],
-            SourceChannels: SourceChannels.map(sourceChannel => ({
-              ...sourceChannel, Associations: {
-                ...sourceChannel.Associations,
-                SourceDistribution: sourceDistributionMap.get(
-                  sourceChannel.Properties.SourceIndex
-                )
-              }
-            }))
-          });
-        }
-      );
-      setLoader(loader);
-      setFileName(in_f);
-    })();
+  const onStartOmeTiff = async (in_f: string) => {
+    if (handle === null) return;
+    const loader = await toLoader({ handle, in_f, pool: new Pool() });
+    const {
+      SourceChannels, GroupChannels, Groups, Colors
+    } = extractChannels(loader);
+    resetItems({
+      SourceChannels, GroupChannels, Groups, Colors
+    });
+    // Asynchronously add distributions
+    extractDistributions(loader).then(
+      (sourceDistributionMap) => {
+        const SourceDistributions = sourceDistributionMap.values();
+        resetItems({
+          SourceDistributions: [...SourceDistributions],
+          SourceChannels: SourceChannels.map(sourceChannel => ({
+            ...sourceChannel, Associations: {
+              ...sourceChannel.Associations,
+              SourceDistribution: sourceDistributionMap.get(
+                sourceChannel.Properties.SourceIndex
+              )
+            }
+          }))
+        });
+      }
+    );
+    setLoader(loader);
+    setFileName(in_f);
+  }
+  const onStart = (s: string, type: string) => {
+    if (type == "DICOM-WEB") {
+      onStartDicomWeb(s);
+    }
+    onStartOmeTiff(s);
   }
   // Handle changes to URL
   useEffect(() => {
@@ -152,6 +164,17 @@ const Content = (props: Props) => {
       setUrl(window.location.href);
     });
   }, [])
+  // Dicom Web derived state
+  const onStartDicomWeb = async (series: string) => {
+    setDicomSeries(series);
+    setDicomIndex(await loadDicomWeb(series));
+  }
+  useEffect(() => {
+    setLoader(
+      parseDicomWeb(dicomIndex) as DicomLoader
+    );
+  }, [dicomIndex]);
+
   const { marker_names } = props;
   const mutableFields: MutableFields = [ 
     'GroupChannels' 
@@ -164,25 +187,27 @@ const Content = (props: Props) => {
     ...config, ItemRegistry
   }), [config.ID])
 
+  console.log(JSON.stringify(dicomIndex), "ok");
+  console.log(JSON.stringify(loader), "ok");
   // Actual image viewer
   const imager = loader === null ? '' : (
     <Full>
       <Index {...{
+        dicomSeries: dicomSeries,
         config, controlPanelElement,
         exhibit, setExhibit, loader,
         marker_names, in_f: fileName, handle, ...hashContext
       }} />
     </Full>
   )
+
   const [valid, setValid] = useState({} as ValidObj);
   const onSubmit: FormEventHandler = (event) => {
     const form = event.currentTarget as HTMLFormElement;
     const data = [...new FormData(form).entries()];
-    const formOut = data.reduce(((o, [k,v]) => {
-      return { ...o, [k]: `${v}`};
-    }) as ReduceFormData, {mask: ""});
-
-    const filled = (form as any).checkValidity(); 
+    const formOut = data.reduce(((o, [k, v]) => {
+      return { ...o, [k]: `${v}` };
+    }) as ReduceFormData, { mask: "" });
     const formOpts = { formOut, onStart, handle };
     if (isOpts(formOpts)) {
       validate(formOpts).then((valid: ValidObj) => {
