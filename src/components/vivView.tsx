@@ -113,31 +113,24 @@ const VivView = (props: Props) => {
     ...(mainSettings as any),
   }), [shape, loader.data, mainSettings]);
 
-  const dicomLayer = React.useMemo(
-    () => createTileLayers({
-      pyramids: props.dicomIndex,
-      settings: mainSettings,
-      series: props.series,
-    }),
-    [mainSettings]
-  );
-
-  // Memoize image layer creation
-/*  const imageLayer = useMemo(
-    () => new MultiscaleImageLayer(mainProps),
-    [mainProps]
-  );
   // Memoize layer combination
   const allLayers = useMemo(
-    () => [imageLayer, ...overlayLayers],
-    [imageLayer, overlayLayers]
-  );
-*/
-
-  // Memoize layer combination
-  const allLayers = useMemo(
-    () => [dicomLayer, ...overlayLayers],
-    [dicomLayer, overlayLayers]
+    () => {
+      // Memoize image layer creation
+      if (props.series) {
+        const dicomLayer = createTileLayers({
+          pyramids: props.dicomIndex,
+          settings: mainSettings,
+          series: props.series,
+        });
+        return [dicomLayer, ...overlayLayers];
+      }
+      const imageLayer = (
+        new MultiscaleImageLayer(mainProps)
+      );
+      return [imageLayer, ...overlayLayers];
+    },
+    [mainProps, overlayLayers]
   );
 
   // Memoize drag handlers
