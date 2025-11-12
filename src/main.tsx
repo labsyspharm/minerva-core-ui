@@ -14,7 +14,7 @@ import { Upload } from './components/upload';
 import { readConfig } from "./lib/exhibit";
 import { Index } from "./components";
 
-import type { DicomLoader } from "./components";
+import type { DicomLoader, DicomIndex } from "./components";
 import type { ValidObj } from './components/upload';
 import type { ImageProps } from "./components/channel"
 import type { FormEventHandler } from "react";
@@ -70,7 +70,9 @@ const Content = (props: Props) => {
   const [handle, setHandle] = useState(null);
   const [loader, setLoader] = useState(null);
   const [dicomSeries, setDicomSeries] = useState(null);
-  const [dicomIndex, setDicomIndex] = useState(null);
+  const [dicomIndex, setDicomIndex] = useState(
+    { } as DicomIndex
+  );
   const [config, setConfig] = useState({
     ItemRegistry: {
       Name: '', Groups: [], Colors: [],
@@ -161,7 +163,7 @@ const Content = (props: Props) => {
     setDicomSeries(series);
     const dicomIndex = await loadDicomWeb(series);
     const loader = (
-      parseDicomWeb(dicomIndex) as DicomLoader
+      parseDicomWeb(series, dicomIndex) as DicomLoader
     );
     setDicomIndex(dicomIndex);
     setLoader(loader);
@@ -173,6 +175,24 @@ const Content = (props: Props) => {
       GroupChannels,
       Groups, Colors
     });
+    // Asynchronously add distributions
+    extractDistributions(loader).then(
+      (sourceDistributionMap) => {
+        const SourceDistributions = sourceDistributionMap.values();
+        resetItems({
+          SourceDistributions: [...SourceDistributions],
+          SourceChannels: SourceChannels.map(sourceChannel => ({
+            ...sourceChannel, Associations: {
+              ...sourceChannel.Associations,
+              SourceDistribution: sourceDistributionMap.get(
+                sourceChannel.Properties.SourceIndex
+              )
+            }
+          }))
+        });
+      }
+    );
+
   }
   const { marker_names } = props;
   const mutableFields: MutableFields = [ 
