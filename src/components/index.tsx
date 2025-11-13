@@ -323,11 +323,6 @@ const Index = (props: Props) => {
       <ImageView 
         {...imageProps} 
         series={props.dicomSeries}
-        overlayLayers={overlayLayers}
-        activeTool={activeTool}
-        isDragging={dragState.isDragging}
-        hoveredAnnotationId={hoverState.hoveredAnnotationId}
-        onOverlayInteraction={handleOverlayInteraction}
       >
       </ImageView>
     </Main>

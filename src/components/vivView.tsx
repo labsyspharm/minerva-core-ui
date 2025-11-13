@@ -74,7 +74,7 @@ const VivView = (props: Props) => {
   }, [loader,groups,hash]);
 
   // Memoize image shape computation
-  const imageShape = useMemo(() => {
+  const imageShape = React.useMemo(() => {
     const shape_labels = loader.data[0].labels;
     const shape_values = loader.data[0].shape;
     return Object.fromEntries(
@@ -83,7 +83,7 @@ const VivView = (props: Props) => {
   }, [loader.data]);
 
   // Memoize initial view state
-  const initialViewState = useMemo(() => {
+  const initialViewState = React.useMemo(() => {
     const n_levels = loader.data.length;
     return {
       zoom: -n_levels,
@@ -94,64 +94,27 @@ const VivView = (props: Props) => {
   const [viewState, setViewState] = useState<OrthographicViewState>(initialViewState);
 
   // Memoize main props to prevent unnecessary layer recreation
-  const mainProps = useMemo(() => ({
+  const mainProps = React.useMemo(() => ({
     ...shape,
     id: "mainLayer",
     loader: loader.data,
     ...(mainSettings as any),
   }), [shape, loader.data, mainSettings]);
 
-  // Memoize layer combination
-  const allLayers = useMemo(
-    () => {
-      // Memoize image layer creation
-      if (props.series) {
-        const dicomLayer = createTileLayers({
-          pyramids: props.dicomIndex,
-          settings: mainSettings,
-          series: props.series,
-        });
-        return [dicomLayer, ...overlayLayers];
-      }
-      const imageLayer = (
-        new MultiscaleImageLayer(mainProps)
-      );
-      return [imageLayer, ...overlayLayers];
-    },
-    [mainProps, overlayLayers]
+  const dicomLayer = React.useMemo(
+    () => createTileLayers({
+      pyramids: testPyramids,
+      settings: mainSettings,
+      series: props.series,
+    }),
+    [testPyramids, mainSettings]
   );
 
-  // Memoize drag handlers
-  const dragHandlers = useMemo(() =>
-    createDragHandlers(activeTool, onOverlayInteraction),
-    [activeTool, onOverlayInteraction]
-  )
-
-
-  // Memoize cursor function
-  const getCursor = useCallback(({ isDragging, isHovering }) => {
-    if (isDragging && activeTool === 'move') {
-      return 'grabbing';
-    } else if (activeTool === 'move' && hoveredAnnotationId) {
-      return 'grab';
-    } else if (activeTool === 'rectangle') {
-      return isDragging ? 'grabbing' : 'crosshair';
-    } else if (activeTool === 'ellipse') {
-      return isDragging ? 'grabbing' : 'crosshair';
-    } else if (activeTool === 'lasso') {
-      return isDragging ? 'grabbing' : 'crosshair';
-    } else if (activeTool === 'line') {
-      return isDragging ? 'grabbing' : 'crosshair';
-    } else if (activeTool === 'polyline') {
-      return 'crosshair';
-    } else if (activeTool === 'point') {
-      return 'crosshair';
-    } else if (activeTool === 'text') {
-      return 'text';
-    } else if (activeTool === 'move') {
-      return 'default';
-    }
-  });
+  // Memoize layer combination
+  const allLayers = React.useMemo(
+    () => [dicomLayer],
+    [dicomLayer]
+  );
 
   if (!loader || !mainSettings) return null;
   return (
