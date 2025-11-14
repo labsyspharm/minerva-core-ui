@@ -615,65 +615,6 @@ const listDicomWeb = async (series) => {
   return await readInstances(`${series}/instances/`);
 }
 
-const loadDicomWeb = async (series) => {
-  // Test Series: 
-  // "https://proxy.imaging.datacommons.cancer.gov/current/viewer-only-no-downloads-see-tinyurl-dot-com-slash-3j3d9jyp/dicomWeb/studies/2.25.93749216439228361118017742627453453196/series/1.3.6.1.4.1.5962.99.1.2344794501.795090168.1655907236229.4.0"
-  const instance_list = await listDicomWeb(series);
-  const pyramids = await Promise.all(
-    instance_list.map(({ SOPInstanceUID }, i) => {
-      const instance = `${series}/instances/${SOPInstanceUID}`;
-      return readMetadata(instance).then(
-        instance_metadata => {
-          const pyramid = computeImagePyramid({
-            metadata: instance_metadata
-          })
-          return pyramid;
-        }
-      )
-    })
-  )
-  const channel_pyramids = pyramids.reduce((o, i) => {
-    const k = String(
-      i.metadata[0].OpticalPathSequence[0].OpticalPathIdentifier
-    );
-    const channel_pyramid = [
-      ...(o[k] || []), ...[i]
-    ];
-    return {
-      ...o, [k]: channel_pyramid
-    }
-  }, {});
-  // For first optical channel
-  const dicom_pyramids = Object.fromEntries(
-    Object.entries(channel_pyramids).map(
-      ([key, pyramid]) => ([
-        key, Object.values(pyramid).map(
-          ({ frameMappings, extent, tileSizes }) => ({ 
-            extent,
-            width: Math.abs(extent[2]),
-            height: Math.abs(extent[3]),
-            frameMappings: Object.fromEntries(
-              Object.entries(frameMappings[0]).map(
-                ([k,v]) => (
-                  [k, v.split('/').slice(-3).join('/')]
-                )
-              )
-            ),
-            tileSize: Math.max(...tileSizes[0])
-          })
-        ).sort((a, b) => {
-          return a.width - b.width
-        })
-      ])
-    )
-  );
-  return dicom_pyramids;
-}
-
-const findDicomWeb = (series) => {
-  return listDicomWeb(series);
-}
-
 class DicomPlane {
   constructor(props) {
     console.warn(props);
@@ -773,6 +714,65 @@ const parseDicomWeb = (series, dicom_pyramids) => {
   return {
     data, metadata
   };
+}
+
+const loadDicomWeb = async (series) => {
+  // Test Series: 
+  // "https://proxy.imaging.datacommons.cancer.gov/current/viewer-only-no-downloads-see-tinyurl-dot-com-slash-3j3d9jyp/dicomWeb/studies/2.25.93749216439228361118017742627453453196/series/1.3.6.1.4.1.5962.99.1.2344794501.795090168.1655907236229.4.0"
+  const instance_list = await listDicomWeb(series);
+  const pyramids = await Promise.all(
+    instance_list.map(({ SOPInstanceUID }, i) => {
+      const instance = `${series}/instances/${SOPInstanceUID}`;
+      return readMetadata(instance).then(
+        instance_metadata => {
+          const pyramid = computeImagePyramid({
+            metadata: instance_metadata
+          })
+          return pyramid;
+        }
+      )
+    })
+  )
+  const channel_pyramids = pyramids.reduce((o, i) => {
+    const k = String(
+      i.metadata[0].OpticalPathSequence[0].OpticalPathIdentifier
+    );
+    const channel_pyramid = [
+      ...(o[k] || []), ...[i]
+    ];
+    return {
+      ...o, [k]: channel_pyramid
+    }
+  }, {});
+  // For first optical channel
+  const dicom_pyramids = Object.fromEntries(
+    Object.entries(channel_pyramids).map(
+      ([key, pyramid]) => ([
+        key, Object.values(pyramid).map(
+          ({ frameMappings, extent, tileSizes }) => ({ 
+            extent,
+            width: Math.abs(extent[2]),
+            height: Math.abs(extent[3]),
+            frameMappings: Object.fromEntries(
+              Object.entries(frameMappings[0]).map(
+                ([k,v]) => (
+                  [k, v.split('/').slice(-3).join('/')]
+                )
+              )
+            ),
+            tileSize: Math.max(...tileSizes[0])
+          })
+        ).sort((a, b) => {
+          return a.width - b.width
+        })
+      ])
+    )
+  );
+  return dicom_pyramids;
+}
+
+const findDicomWeb = (series) => {
+  return listDicomWeb(series);
 }
 
 export {
