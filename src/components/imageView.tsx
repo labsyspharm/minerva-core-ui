@@ -16,7 +16,7 @@ const toImageProps = (opts) => {
 
 const ImageView = (props) => {
   const { overlayLayers, activeTool, isDragging, hoveredAnnotationId, onOverlayInteraction, ...rest } = props;
-  return <VivView {...rest} overlayLayers={overlayLayers} activeTool={activeTool} isDragging={isDragging} hoveredAnnotationId={hoveredAnnotationId} onOverlayInteraction={onOverlayInteraction} />;
+  return <VivView {...rest} overlayLayers={overlayLayers} activeTool={activeTool} isDragging={isDragging} hoveredAnnotationId={hoveredAnnotationId} onOverlayInteraction={onOverlayInteraction} series={props.series}/>;
 };
 
 export { ImageView, toImageProps };

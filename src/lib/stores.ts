@@ -616,7 +616,7 @@ export const useOverlayStore = create<OverlayStore>()(
             type: 'rectangle',
             polygon: rectangleToPolygon([startX, startY], [endX, endY]),
             style: {
-              fillColor: [...get().globalColor.slice(0, 3), 50] as ColorRGBA, // Use global color with low opacity
+              fillColor: [get().globalColor[0], get().globalColor[1], get().globalColor[2], 50], // Use global color with low opacity
               lineColor: get().globalColor, // Use global color for border
               lineWidth: 3,
             },
@@ -682,7 +682,7 @@ export const useOverlayStore = create<OverlayStore>()(
             type: 'polygon',
             polygon: points,
             style: {
-              fillColor: [...get().globalColor.slice(0, 3), 50] as ColorRGBA, // Use global color with low opacity
+              fillColor: [get().globalColor[0], get().globalColor[1], get().globalColor[2], 50], // Use global color with low opacity
               lineColor: get().globalColor, // Use global color for border
               lineWidth: 3,
             },

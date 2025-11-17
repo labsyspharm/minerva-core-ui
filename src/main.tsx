@@ -32,7 +32,6 @@ type Props = ImageProps & {
   exhibit_config: ExhibitConfig;
   marker_names: string[];
   handleKeys: string[];
-  testDicom: boolean;
 };
 
 interface ReduceFormData {
@@ -65,7 +64,7 @@ const Scrollable = styled.div`
 `;
 
 const Content = (props: Props) => {
-  const { testDicom, handleKeys } = props;
+  const { handleKeys } = props;
   const firstExhibit = readConfig(props.exhibit_config);
   const [exhibit, setExhibit] = useState(firstExhibit);
   const [url, setUrl] = useState(window.location.href);

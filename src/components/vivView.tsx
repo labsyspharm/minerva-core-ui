@@ -135,7 +135,8 @@ const VivView = (props: Props) => {
 
   // Memoize drag handlers
   const dragHandlers = useMemo(() =>
-    createDragHandlers(activeTool, onOverlayInteraction),
+    createDragHandlers(activeTool, null),
+    //createDragHandlers(activeTool, onOverlayInteraction),
     [activeTool, onOverlayInteraction]
   )
 
