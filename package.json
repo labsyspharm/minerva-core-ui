@@ -4,7 +4,7 @@
   "description": "A microscopy viewer for non-experts",
   "scripts": {
     "demo": "vite",
-    "pages": "tsc && vite build",
+    "pages": "tsc && vite build && mkdir -p dist/assets/svgs && cp -R icons dist/assets/svgs/",
     "schema": "typescript-json-schema -o 'schema/generic.schema.json' 'src/config/generic.ts' Config",
     "format": "prettier --ignore-path .eslintignore --write .",
     "build": "rm -rf build && tsc -b",
