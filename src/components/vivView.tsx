@@ -62,8 +62,6 @@ const VivView = (props: Props) => {
   const maxShape = useWindowSize();
   const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
-  const toMainSettings = props.viewerConfig.toSettings;
-  const [mainSettings, setMainSettings] = useState(toMainSettings(hash));
   const [shape, setShape] = useState(maxShape);
   const [channelSettings, setChannelSettings] = useState({});
   const [canvas, setCanvas] = useState(null);
@@ -75,15 +73,15 @@ const VivView = (props: Props) => {
     return shapeRef(setShape);
   }, []);
 
-  useEffect(() => {
-    //console.log("VivView: useEffect: groups", groups);
-  }, [groups]);
-
-  useEffect(() => {
+  const mainSettings = useMemo(() => {
     // Gets the default settings
-    setMainSettings(toMainSettings(hash, loader, groups));
-  }, [loader, groups, hash, toMainSettings]);
-
+    if (!loader || !groups) {
+      return props.viewerConfig.toSettings(hash);
+    }
+    return props.viewerConfig.toSettings(
+      hash, loader, groups
+    );
+  }, [loader, groups, hash]);
 
   // Memoize image shape computation
   const imageShape = useMemo(() => {
@@ -130,7 +128,10 @@ const VivView = (props: Props) => {
       );
       return [imageLayer, ...overlayLayers];
     },
-    [mainProps, overlayLayers]
+    [
+      props.series, mainProps,
+      overlayLayers
+    ]
   );
 
   // Memoize drag handlers
@@ -139,7 +140,6 @@ const VivView = (props: Props) => {
     //createDragHandlers(activeTool, onOverlayInteraction),
     [activeTool, onOverlayInteraction]
   )
-
 
   // Memoize cursor function
   const getCursor = useCallback(({ isDragging, isHovering }) => {

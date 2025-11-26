@@ -247,34 +247,38 @@ const Index = (props: Props) => {
   const itemRegistryMarkerNames = SourceChannels.map(
     source_channel => source_channel.Properties.Name
   )
-  const itemRegistryGroups = Groups.map((group, g) => {
-    const { Name } = group.Properties;
-    const channels = GroupChannels.filter(group_channel => (
-      group_channel.Associations.Group.UUID == group.UUID
-    )).map(group_channel => {
-      const defaults = { Name: '' };
-      const { R, G, B } = Colors.find(({ ID }) => {
-        return ID === group_channel.Associations.Color.ID;
-      })?.Properties || {};
-      const color = (
-        (1 << 24) + (R << 16) + (G << 8) + B
-      ).toString(16).slice(1);
-      const { LowerRange, UpperRange } = group_channel.Properties;
-      const { SourceChannel } = group_channel.Associations;
-      const { Name } = SourceChannels.find(source_channel => (
-        source_channel.UUID == SourceChannel.UUID
-      ))?.Properties || defaults;
+  const itemRegistryGroups = React.useMemo(() => {
+    return Groups.map((group, g) => {
+      const { Name } = group.Properties;
+      const channels = GroupChannels.filter(group_channel => (
+        group_channel.Associations.Group.UUID == group.UUID
+      )).map(group_channel => {
+        const defaults = { Name: '' };
+        const { R, G, B } = Colors.find(({ ID }) => {
+          return ID === group_channel.Associations.Color.ID;
+        })?.Properties || {};
+        const color = (
+          (1 << 24) + (R << 16) + (G << 8) + B
+        ).toString(16).slice(1);
+        const { LowerRange, UpperRange } = group_channel.Properties;
+        const { SourceChannel } = group_channel.Associations;
+        const { Name } = SourceChannels.find(source_channel => (
+          source_channel.UUID == SourceChannel.UUID
+        ))?.Properties || defaults;
+        return { 
+          color, name: Name, contrast: [
+            LowerRange, UpperRange
+          ]
+        };
+      });
       return { 
-        color, name: Name, contrast: [
-          LowerRange, UpperRange
-        ]
+        State: group.State,
+        g, name: Name, channels,
       };
-    });
-    return { 
-      State: group.State,
-      g, name: Name, channels,
-    };
-  })
+    })
+  }, [
+    GroupChannels
+  ]);
   const channelProps = {
     hash,
     setHash,
@@ -308,18 +312,25 @@ const Index = (props: Props) => {
     pushWaypoint,
     popWaypoint
   }
-  const imageProps = toImageProps({
-    props: {
-      loader,
-      dicomIndex: props.dicomIndex,
-      marker_names: itemRegistryMarkerNames,
-      ...channelProps,
-    },
-    buttons: {
-      zoomInButton: zoomInEl,
-      zoomOutButton: zoomOutEl,
-    },
-  });
+  const imageProps = React.useMemo(() => {
+    return toImageProps({
+      props: {
+        loader,
+        dicomIndex: props.dicomIndex,
+        marker_names: itemRegistryMarkerNames,
+        ...channelProps,
+      },
+      buttons: {
+        zoomInButton: zoomInEl,
+        zoomOutButton: zoomOutEl,
+      },
+    });
+  }, [
+    JSON.stringify(GroupChannels.map(channel => {
+      console.log(channel);
+      return channel.Properties;
+    }))
+  ]);
   
   // Use Zustand store for overlay state management
   const {
