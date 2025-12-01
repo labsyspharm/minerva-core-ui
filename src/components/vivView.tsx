@@ -110,30 +110,41 @@ const VivView = (props: Props) => {
     loader: loader.data,
     ...(mainSettings as any),
   }), [shape, loader.data, mainSettings]);
+  console.log(mainProps);
 
+  // Memoize dicom layer
+  const dicomLayer = useMemo(
+      () => {
+        return createTileLayers({
+          pyramids: props.dicomIndex,
+          settings: mainSettings,
+          series: props.series,
+        });
+      },
+    [
+      props.dicomIndex, props.series, mainSettings
+    ]
+  );
+  // Memoize image layer
+  const imageLayer = useMemo(
+    () => {
+      return new MultiscaleImageLayer(mainProps)
+    }, 
+    [mainProps]
+  );
   // Memoize layer combination
   const allLayers = useMemo(
     () => {
       // Memoize image layer creation
       if (props.series) {
-        const dicomLayer = createTileLayers({
-          pyramids: props.dicomIndex,
-          settings: mainSettings,
-          series: props.series,
-        });
         return [dicomLayer, ...overlayLayers];
       }
-      const imageLayer = (
-        new MultiscaleImageLayer(mainProps)
-      );
       return [imageLayer, ...overlayLayers];
     },
     [
-      props.series, mainProps,
-      overlayLayers
+      dicomLayer, imageLayer, overlayLayers
     ]
   );
-
   // Memoize drag handlers
   const dragHandlers = useMemo(() =>
     createDragHandlers(activeTool, null),

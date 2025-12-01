@@ -326,10 +326,7 @@ const Index = (props: Props) => {
       },
     });
   }, [
-    JSON.stringify(GroupChannels.map(channel => {
-      console.log(channel);
-      return channel.Properties;
-    }))
+    GroupChannels
   ]);
   
   // Use Zustand store for overlay state management
