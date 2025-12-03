@@ -6,7 +6,7 @@ import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 
 import {
-  createTileLayers
+  createTileLayers, loadDicom
 } from "../lib/dicom";
 
 import styled from "styled-components";
@@ -112,17 +112,26 @@ const VivView = (props: Props) => {
   }), [shape, loader.data, mainSettings]);
   console.log(mainProps);
 
+  const dicomSource = useMemo(() => {
+    return loadDicom({
+      pyramids: props.dicomIndex,
+      series: props.series,
+      little_endian: true
+    });
+  }, [
+    props.dicomIndex, props.series
+  ]);
   // Memoize dicom layer
   const dicomLayer = useMemo(
-      () => {
-        return createTileLayers({
-          pyramids: props.dicomIndex,
-          settings: mainSettings,
-          series: props.series,
-        });
-      },
+    () => {
+      return createTileLayers({
+        pyramids: props.dicomIndex,
+        settings: mainSettings,
+        dicomSource: dicomSource
+      });
+    },
     [
-      props.dicomIndex, props.series, mainSettings
+      dicomSource, mainSettings
     ]
   );
   // Memoize image layer

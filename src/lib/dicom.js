@@ -496,8 +496,8 @@ const getShapeForBinaryDownsampleLevel = (
   return resolutionShape;
 }
 
-const loadDicom = (meta, little_endian) => {
-  const { pyramids, series } = meta;
+const loadDicom = (meta) => {
+  const { pyramids, series, little_endian } = meta;
   const { width, height } = [
     ...pyramids[0]
   ].pop()
@@ -584,22 +584,20 @@ const loadDicom = (meta, little_endian) => {
 }
 
 function createTileLayers(meta) {
-  const little_endian = true;
-  const loader = loadDicom(meta, little_endian);
   const {
     channelsVisible,
     colors,
     contrastLimits,
     selections,
   } = meta.settings;
-  const { pyramids } = meta;
+  const { pyramids, dicomSource } = meta;
   const height = [...pyramids["0"]].pop().height;
   const width = [...pyramids["0"]].pop().width;
   const tileSize = pyramids["0"][0].tileSize;
   const maxLevel = pyramids["0"].length;
   const minZoom = -maxLevel;
   const imageProps = {
-    loader: loader.data,
+    loader: dicomSource.data,
     // https://deck.gl/docs/api-reference/geo-layers/tile-layer#refinementstrategy
     refinementStrategy: "no-overlap",
     id: "multichannel-tiled-image",
@@ -779,5 +777,5 @@ export {
   loadDicomWeb, findDicomWeb,
   createTileLayers, readInstances,
   readMetadata, computeImagePyramid,
-  parseDicomWeb
+  parseDicomWeb, loadDicom
 }
