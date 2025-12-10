@@ -3,7 +3,7 @@ import { get, set } from 'idb-keyval';
 import styled from 'styled-components';
 import { author } from "./minerva-author-ui/author";
 import { useState, useMemo, useEffect } from "react";
-import { testLoader, testChannels } from "./lib/dicom";
+import { loadDicomWeb, parseDicomWeb } from "./lib/dicom";
 import { useHash } from "./lib/hashUtil";
 import { onlyUUID } from './lib/config';
 import { mutableItemRegistry } from './lib/config';
@@ -17,6 +17,7 @@ import Pool from './lib/workers/Pool';
 import { parseRoisFromLoader } from './lib/roiParser';
 import { useOverlayStore } from './lib/stores';
 
+import type { DicomLoader, DicomIndex } from "./components";
 import type { ValidObj } from './components/upload';
 import type { ImageProps } from "./components/channel"
 import type { FormEventHandler } from "react";
@@ -31,7 +32,6 @@ type Props = ImageProps & {
   exhibit_config: ExhibitConfig;
   marker_names: string[];
   handleKeys: string[];
-  bypass: boolean;
 };
 
 interface ReduceFormData {
@@ -63,53 +63,24 @@ const Scrollable = styled.div`
   margin: 5vh;
 `;
 
-const createPlaceholderFromLoader = (loader) => {
-  return testChannels;
-}
-
 const Content = (props: Props) => {
-  const { bypass, handleKeys } = props;
+  const { handleKeys } = props;
   const firstExhibit = readConfig(props.exhibit_config);
   const [exhibit, setExhibit] = useState(firstExhibit);
   const [url, setUrl] = useState(window.location.href);
   const hashContext = useHash(url, exhibit.stories);
   const [handle, setHandle] = useState(null);
-  const [loader, setLoader] = useState(bypass ? (
-    testLoader
-  ) : null);
-
-  // Autopopulate annotations from loader metadata in bypass mode
-  useEffect(() => {
-    if (bypass && loader) {
-      try {
-        const { annotations, groups } = parseRoisFromLoader(loader);
-        if (annotations.length > 0) {
-          console.log(`Autopopulating ${annotations.length} annotations and ${groups.length} groups from test loader metadata`);
-          // Clear existing annotations first
-          useOverlayStore.getState().clearAnnotations();
-          // Add each annotation to the store
-          annotations.forEach(annotation => {
-            useOverlayStore.getState().addAnnotation(annotation);
-          });
-          // Add each group to the store
-          groups.forEach(group => {
-            useOverlayStore.getState().annotationGroups.push(group);
-          });
-        }
-      } catch (error) {
-        console.error('Error parsing ROIs from test loader:', error);
-      }
-    }
-  }, [bypass, loader]);
+  const [loader, setLoader] = useState(null);
+  const [dicomSeries, setDicomSeries] = useState(null);
+  const [dicomIndex, setDicomIndex] = useState(
+    { } as DicomIndex
+  );
   const [config, setConfig] = useState({
     ItemRegistry: {
       Name: '', Groups: [], Colors: [],
       GroupChannels: [], SourceChannels: [],
       SourceDistributions: [],
       Stories: props.configWaypoints,
-      ...(bypass ? (
-        createPlaceholderFromLoader(loader)
-      ) : {})
     } as ItemRegistryProps,
     ID: crypto.randomUUID()
   });
@@ -148,58 +119,40 @@ const Content = (props: Props) => {
       setHandle(newHandle);
     }
   }
-  const onStart = (in_f: string) => {
-    (async () => {
-      if (handle === null) return;
-      const loader = await toLoader({ handle, in_f, pool: new Pool(8) });
-      console.log("loader", loader);
-      const {
-        SourceChannels, GroupChannels, Groups, Colors
-      } = extractChannels(loader);
-      resetItems({
-        SourceChannels, GroupChannels, Groups, Colors
-      });
-      // Asynchronously add distributions
-      extractDistributions(loader).then(
-        (sourceDistributionMap) => {
-          const SourceDistributions = sourceDistributionMap.values();
-          resetItems({
-            SourceDistributions: [...SourceDistributions],
-            SourceChannels: SourceChannels.map(sourceChannel => ({
-              ...sourceChannel, Associations: {
-                ...sourceChannel.Associations,
-                SourceDistribution: sourceDistributionMap.get(
-                  sourceChannel.Properties.SourceIndex
-                )
-              }
-            }))
-          });
-        }
-      );
-
-      // Parse ROIs from loader metadata and populate annotations and groups
-      try {
-        const { annotations, groups } = parseRoisFromLoader(loader);
-        if (annotations.length > 0) {
-          console.log(`Autopopulating ${annotations.length} annotations and ${groups.length} groups from loader metadata`);
-          // Clear existing annotations first
-          useOverlayStore.getState().clearAnnotations();
-          // Add each annotation to the store
-          annotations.forEach(annotation => {
-            useOverlayStore.getState().addAnnotation(annotation);
-          });
-          // Add each group to the store
-          groups.forEach(group => {
-            useOverlayStore.getState().annotationGroups.push(group);
-          });
-        }
-      } catch (error) {
-        console.error('Error parsing ROIs from loader:', error);
+  const onStartOmeTiff = async (in_f: string) => {
+    if (handle === null) return;
+    const loader = await toLoader({ handle, in_f, pool: new Pool() });
+    const {
+      SourceChannels, GroupChannels, Groups, Colors
+    } = extractChannels(loader);
+    resetItems({
+      SourceChannels, GroupChannels, Groups, Colors
+    });
+    // Asynchronously add distributions
+    extractDistributions(loader).then(
+      (sourceDistributionMap) => {
+        const SourceDistributions = sourceDistributionMap.values();
+        resetItems({
+          SourceDistributions: [...SourceDistributions],
+          SourceChannels: SourceChannels.map(sourceChannel => ({
+            ...sourceChannel, Associations: {
+              ...sourceChannel.Associations,
+              SourceDistribution: sourceDistributionMap.get(
+                sourceChannel.Properties.SourceIndex
+              )
+            }
+          }))
+        });
       }
-
-      setLoader(loader);
-      setFileName(in_f);
-    })();
+    );
+    setLoader(loader);
+    setFileName(in_f);
+  }
+  const onStart = (s: string, type: string) => {
+    if (type == "DICOM-WEB") {
+      onStartDicomWeb(s);
+    }
+    onStartOmeTiff(s);
   }
   // Handle changes to URL
   useEffect(() => {
@@ -207,6 +160,42 @@ const Content = (props: Props) => {
       setUrl(window.location.href);
     });
   }, [])
+  // Dicom Web derived state
+  const onStartDicomWeb = async (series: string) => {
+    setDicomSeries(series);
+    const dicomIndex = await loadDicomWeb(series);
+    const loader = (
+      parseDicomWeb(series, dicomIndex) as DicomLoader
+    );
+    setDicomIndex(dicomIndex);
+    setLoader(loader);
+    const {
+      SourceChannels, GroupChannels, Groups, Colors
+    } = extractChannels(loader);
+    resetItems({
+      SourceChannels,
+      GroupChannels,
+      Groups, Colors
+    });
+    // Asynchronously add distributions
+    extractDistributions(loader).then(
+      (sourceDistributionMap) => {
+        const SourceDistributions = sourceDistributionMap.values();
+        resetItems({
+          SourceDistributions: [...SourceDistributions],
+          SourceChannels: SourceChannels.map(sourceChannel => ({
+            ...sourceChannel, Associations: {
+              ...sourceChannel.Associations,
+              SourceDistribution: sourceDistributionMap.get(
+                sourceChannel.Properties.SourceIndex
+              )
+            }
+          }))
+        });
+      }
+    );
+
+  }
   const { marker_names } = props;
   const mutableFields: MutableFields = [
     'GroupChannels'
@@ -218,24 +207,18 @@ const Content = (props: Props) => {
   const controlPanelElement = useMemo(() => author({
     ...config, ItemRegistry
   }), [config.ID])
-
   // Actual image viewer
   const imager = loader === null ? '' : (
     <Full>
       <Index {...{
+        dicomIndex: dicomIndex,
+        dicomSeries: dicomSeries,
         config, controlPanelElement,
         exhibit, setExhibit, loader,
         marker_names, in_f: fileName, handle, ...hashContext
       }} />
     </Full>
   )
-  if (bypass) {
-    return (
-      <Wrapper>
-        {imager}
-      </Wrapper>
-    )
-  }
 
   const [valid, setValid] = useState({} as ValidObj);
   const onSubmit: FormEventHandler = (event) => {
@@ -244,8 +227,6 @@ const Content = (props: Props) => {
     const formOut = data.reduce(((o, [k, v]) => {
       return { ...o, [k]: `${v}` };
     }) as ReduceFormData, { mask: "" });
-
-    const filled = (form as any).checkValidity();
     const formOpts = { formOut, onStart, handle };
     if (isOpts(formOpts)) {
       validate(formOpts).then((valid: ValidObj) => {
@@ -273,7 +254,7 @@ const Content = (props: Props) => {
 };
 
 const Main = (props: Props) => {
-  if (props.bypass || hasFileSystemAccess()) {
+  if (hasFileSystemAccess()) {
     return <Content {...props} />;
   }
   const error_message = `<p>

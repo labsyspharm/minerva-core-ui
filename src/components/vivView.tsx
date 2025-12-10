@@ -6,9 +6,7 @@ import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 
 import {
-  testPyramids,
-  createTileLayers, readInstances,
-  readMetadata, computeImagePyramid
+  createTileLayers, loadDicom
 } from "../lib/dicom";
 
 import styled from "styled-components";
@@ -25,8 +23,10 @@ import { LensExtension } from "@hms-dbmi/viv";
 
 export type Props = {
   loader: any;
+  series: string; // DICOM
   groups: Group[];
   stories: Story[];
+  dicomIndex: any[];
   viewerConfig: Config;
   overlayLayers?: any[];
   activeTool: string;
@@ -62,8 +62,6 @@ const VivView = (props: Props) => {
   const maxShape = useWindowSize();
   const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
-  const toMainSettings = props.viewerConfig.toSettings;
-  const [mainSettings, setMainSettings] = useState(toMainSettings(hash));
   const [shape, setShape] = useState(maxShape);
   const [channelSettings, setChannelSettings] = useState({});
   const [canvas, setCanvas] = useState(null);
@@ -75,15 +73,15 @@ const VivView = (props: Props) => {
     return shapeRef(setShape);
   }, []);
 
-  useEffect(() => {
-    //console.log("VivView: useEffect: groups", groups);
-  }, [groups]);
-
-  useEffect(() => {
+  const mainSettings = useMemo(() => {
     // Gets the default settings
-    setMainSettings(toMainSettings(hash, loader, groups));
-  }, [loader, groups, hash, toMainSettings]);
-
+    if (!loader || !groups) {
+      return props.viewerConfig.toSettings(hash);
+    }
+    return props.viewerConfig.toSettings(
+      hash, loader, groups
+    );
+  }, [loader, groups, hash]);
 
   // Memoize image shape computation
   const imageShape = useMemo(() => {
@@ -112,19 +110,56 @@ const VivView = (props: Props) => {
     loader: loader.data,
     ...(mainSettings as any),
   }), [shape, loader.data, mainSettings]);
+  console.log(mainProps);
 
-  // Memoize image layer creation
-  const imageLayer = useMemo(() => new MultiscaleImageLayer(mainProps), [mainProps]);
-
+  const dicomSource = useMemo(() => {
+    return loadDicom({
+      pyramids: props.dicomIndex,
+      series: props.series,
+      little_endian: true
+    });
+  }, [
+    props.dicomIndex, props.series
+  ]);
+  // Memoize dicom layer
+  const dicomLayer = useMemo(
+    () => {
+      return createTileLayers({
+        pyramids: props.dicomIndex,
+        settings: mainSettings,
+        dicomSource: dicomSource
+      });
+    },
+    [
+      dicomSource, mainSettings
+    ]
+  );
+  // Memoize image layer
+  const imageLayer = useMemo(
+    () => {
+      return new MultiscaleImageLayer(mainProps)
+    }, 
+    [mainProps]
+  );
   // Memoize layer combination
-  const allLayers = useMemo(() => [imageLayer, ...overlayLayers], [imageLayer, overlayLayers]);
-
+  const allLayers = useMemo(
+    () => {
+      // Memoize image layer creation
+      if (props.series) {
+        return [dicomLayer, ...overlayLayers];
+      }
+      return [imageLayer, ...overlayLayers];
+    },
+    [
+      dicomLayer, imageLayer, overlayLayers
+    ]
+  );
   // Memoize drag handlers
   const dragHandlers = useMemo(() =>
-    createDragHandlers(activeTool, onOverlayInteraction),
+    createDragHandlers(activeTool, null),
+    //createDragHandlers(activeTool, onOverlayInteraction),
     [activeTool, onOverlayInteraction]
   )
-
 
   // Memoize cursor function
   const getCursor = useCallback(({ isDragging, isHovering }) => {
