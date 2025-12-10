@@ -75,13 +75,15 @@ const VivView = (props: Props) => {
 
   const mainSettings = useMemo(() => {
     // Gets the default settings
+    // TODO -- why not responsive to changes in hash.g?
+    console.log(hash, "HASH");
     if (!loader || !groups) {
       return props.viewerConfig.toSettings(hash);
     }
     return props.viewerConfig.toSettings(
       hash, loader, groups
     );
-  }, [loader, groups, hash]);
+  }, [loader, groups, hash.g]);
 
   // Memoize image shape computation
   const imageShape = useMemo(() => {
@@ -110,7 +112,6 @@ const VivView = (props: Props) => {
     loader: loader.data,
     ...(mainSettings as any),
   }), [shape, loader.data, mainSettings]);
-  console.log(mainProps);
 
   const dicomSource = useMemo(() => {
     return loadDicom({

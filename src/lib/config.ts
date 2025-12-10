@@ -2,6 +2,7 @@ import { useRef, useEffect } from "react";
 import { getImageSize } from "@hms-dbmi/viv";
 import { list_colors } from "../minerva-author-ui/author";
 
+import type { ConfigGroup as LegacyConfigGroup } from "./exhibit";
 import type { Loader } from './viv';
 
 type ExpandedState = {
@@ -170,13 +171,136 @@ interface ExtractDistributions {
   >
 }
 interface ExtractChannels {
-  (loader: Loader): {
+  (loader: Loader, groups: LegacyConfigGroup[]): {
     SourceChannels: ConfigSourceChannel[];
     GroupChannels: ConfigGroupChannel[];
     Colors: ConfigColor[];
     Groups: ConfigGroup[];
   }
 }
+
+const GROUP_CHANNELS_CRC01 = {
+    "Histology_40__HE-r--41__HE-g--42__HE-b": [
+        40,
+        41,
+        42
+    ],
+    "Tissue-Structure_0__DNA1--14__PanCK--15__ASMA--35__CD31--18__CD45": [
+        0,
+        14,
+        15,
+        35,
+        18
+    ],
+    "Immune-Populations_0__DNA1--18__CD45--23__CD8a--17__CD4--21__CD20--22__CD68--25__CD163": [
+        0,
+        18,
+        23,
+        17,
+        21,
+        22,
+        25
+    ],
+    "Lymphocytes_0__DNA1--23__CD8a--17__CD4--21__CD20--26__FOXP3": [
+        0,
+        23,
+        17,
+        21,
+        26
+    ],
+    "Macrophages_0__DNA1--22__CD68--25__CD163": [
+        0,
+        22,
+        25
+    ],
+    "Proliferation_0__DNA1--37__PCNA--14__PanCK--18__CD45--13__Ki67": [
+        0,
+        37,
+        14,
+        18,
+        13
+    ],
+    "PD1-Immune-Checkpoint_0__DNA1--14__PanCK--27__PDL1--19__PD1": [
+        0,
+        14,
+        27,
+        19
+    ],
+    "Helper-and-Regulatory-T-Cells_0__DNA1--17__CD4--26__FOXP3": [
+        0,
+        17,
+        26
+    ],
+    "CD8-Cytotoxic-T-Cells_0__DNA1--23__CD8a--19__PD1": [
+        0,
+        23,
+        19
+    ],
+    "FOXP3-CD8-T-Cells_0__DNA1--23__CD8a--26__FOXP3": [
+        0,
+        23,
+        26
+    ],
+    "NaK-ATPase_0__DNA1--14__PanCK--10__Na-K-ATPase": [
+        0,
+        14,
+        10
+    ],
+    "E-Cadherin_0__DNA1--14__PanCK--29__Ecadherin": [
+        0,
+        14,
+        29
+    ],
+    "Stroma_0__DNA1--15__ASMA--34__Desmin--39__Collagen--30__Vimentin": [
+        0,
+        15,
+        34,
+        39,
+        30
+    ],
+    "PDL1-Positive-Immune-Cells_0__DNA1--17__CD4--22__CD68--25__CD163--27__PDL1": [
+        0,
+        17,
+        22,
+        25,
+        27
+    ],
+    "PDL1-CD8-Interaction_0__DNA1--27__PDL1--23__CD8a--19__PD1": [
+        0,
+        27,
+        23,
+        19
+    ],
+    "Tumor-Budding-Epithelial_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA": [
+        0,
+        14,
+        29,
+        37
+    ],
+    "Tumor-Budding-Immune-Modulation_0__DNA1--14__PanCK--27__PDL1--26__FOXP3--23__CD8a--19__PD1--22__CD68": [
+        0,
+        14,
+        27,
+        26,
+        23,
+        19,
+        22
+    ],
+    "Nuclear-Lamina_0__DNA1--33__LaminABC": [
+        0,
+        33
+    ],
+    "DAPI-Cycle-Correlation_0__DNA1--36__DNA10": [
+        0,
+        36
+    ],
+    "Transitions_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA": [
+        0,
+        14,
+        29,
+        37
+    ]
+}; 
 
 const asID = (k: string): ID => ({ ID: k });
 const asUUID = (k: string): UUID => ({ UUID: k });
@@ -288,9 +412,10 @@ const extractDistributions: ExtractDistributions = async (loader) => {
   );
 }
 
-const extractChannels: ExtractChannels = (loader) => {
+const extractChannels: ExtractChannels = (loader, groups) => {
   const init = initialize({ planes: loader.data });
   const { Channels, Type } = loader.metadata.Pixels;
+  const Colors = list_colors("sRGB");
   const SourceChannels = Channels.map(
     (channel, index) => ({
       UUID: crypto.randomUUID(),
@@ -304,6 +429,107 @@ const extractChannels: ExtractChannels = (loader) => {
       }
     })
   );
+  // Match hard-coded groups to existing channels
+  const hardcoded_crc01 = groups.reduce(
+    ({ name_map, Groups, GroupChannels }, g) => {
+      if (!(g.Path in GROUP_CHANNELS_CRC01)) {
+        return { name_map, Groups, GroupChannels };
+      }
+      const channel_names = GROUP_CHANNELS_CRC01[g.Path].map(
+        n => `Channel ${n}`
+      );
+      const valid_names = SourceChannels.map(
+        ({ Properties }) => Properties.Name
+      )
+      if (g.Channels.length !== channel_names.length) {
+        return { name_map, Groups, GroupChannels };
+      }
+      const all_match = channel_names.every(name => (
+        valid_names.includes(name)
+      ));
+      if (!all_match) {
+        return { name_map, Groups, GroupChannels };
+      }
+      // Update Source Channel Names
+      const new_name_map = SourceChannels.reduce(
+        (nmap, sourceChannel) => {
+          const in_group_idx = channel_names.indexOf(
+            sourceChannel.Properties.Name
+          )
+          if (in_group_idx >= 0) {
+            const descriptive_name = g.Channels[in_group_idx];
+            return {
+              ...nmap,
+              [descriptive_name]: sourceChannel.UUID
+            }
+          }
+          return nmap;
+        },
+        name_map
+      );
+      const new_group = {
+        UUID: crypto.randomUUID(),
+        State: { Expanded: false },
+        Properties: {
+          Name: g.Name 
+        }
+      }
+      const new_group_channels = g.Channels.reduce(
+        (new_group_channels, name, index) => {
+          const color_index = index % Colors.length;
+          if (!(name in new_name_map)) {
+            return new_group_channels;
+          }
+          return {
+            UUID: crypto.randomUUID(),
+            State: { Expanded: true },
+            Properties: {
+              LowerRange: 2**8, //TODO
+              UpperRange: 2**12  //TODO
+            },
+            Associations: {
+              SourceChannel: asUUID(new_name_map[name]),
+              Color: asID(Colors[color_index].ID),
+              Group: asUUID(new_group.UUID)
+            }
+          }
+        },
+        [] as ConfigGroupChannel[]
+      )
+      return {
+        name_map: new_name_map,
+        Groups: Groups.concat([new_group]),
+        GroupChannels: GroupChannels.concat(new_group_channels)
+      }
+    },
+    {
+      Groups: [] as ConfigGroup[],
+      GroupChannels: [] as ConfigGroupChannel[],
+      name_map: {} as Record<string, string>
+    }
+  );
+  const name_map = hardcoded_crc01.name_map;
+  const reverse_name_map = Object.fromEntries(
+    Object.entries(name_map).map(([k,v]) => [v,k])
+  )
+  if (Object.keys(name_map).length) {
+    SourceChannels.forEach(
+      (sourceChannel) => {
+        if (sourceChannel.UUID in reverse_name_map) {
+          sourceChannel.Properties.Name = reverse_name_map[
+            sourceChannel.UUID
+          ];
+        }
+      }
+    );
+    const { GroupChannels, Groups } = hardcoded_crc01;
+    return {
+      SourceChannels,
+      GroupChannels,
+      Groups,
+      Colors
+    }
+  }
   const group_size = 4;
   const Groups = [...Array(Math.ceil(
       SourceChannels.length / group_size
@@ -316,7 +542,6 @@ const extractChannels: ExtractChannels = (loader) => {
       }
     })
   )
-  const Colors = list_colors("sRGB");
   const GroupChannels = SourceChannels.map(
     (channel, index) => {
       const group_index = Math.floor(index / group_size);
@@ -326,8 +551,8 @@ const extractChannels: ExtractChannels = (loader) => {
         UUID: crypto.randomUUID(),
         State: { Expanded: true },
         Properties: {
-          LowerRange: 2**8, //TODO
-          UpperRange: 2**12  //TODO
+          LowerRange: 2**5, //TODO
+          UpperRange: 2**14  //TODO
         },
         Associations: {
           SourceChannel: onlyUUID(channel),
