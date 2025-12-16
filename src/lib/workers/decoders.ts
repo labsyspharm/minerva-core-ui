@@ -20,7 +20,6 @@ class LZWDecoder extends BaseDecoder {
     }
 
     async decodeBlock(buffer: ArrayBuffer) {
-        console.log('decodeBlock lzw', buffer);
         const bytes = new Uint8Array(buffer);
         const decoded = await decompress(bytes, this.maxUncompressedSize);
         return decoded.buffer;

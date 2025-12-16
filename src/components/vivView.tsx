@@ -1,14 +1,12 @@
 import * as React from "react";
 import Deck from '@deck.gl/react';
-import { OrthographicView } from '@deck.gl/core';
+import { OrthographicView, OrthographicViewState } from '@deck.gl/core';
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 
 import {
-  testPyramids,
-  createTileLayers, readInstances,
-  readMetadata, computeImagePyramid
+  createTileLayers, loadDicom
 } from "../lib/dicom";
 
 import styled from "styled-components";
@@ -25,8 +23,10 @@ import { LensExtension } from "@hms-dbmi/viv";
 
 export type Props = {
   loader: any;
+  series: string; // DICOM
   groups: Group[];
   stories: Story[];
+  dicomIndex: any[];
   viewerConfig: Config;
   overlayLayers?: any[];
   activeTool: string;
@@ -58,35 +58,33 @@ const shapeRef = (setShape: (s: Shape) => void) => {
   };
 };
 
-const VivView = React.memo((props: Props) => {
+const VivView = (props: Props) => {
   const maxShape = useWindowSize();
   const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
-  const toMainSettings = props.viewerConfig.toSettings;
-  const [mainSettings, setMainSettings] = useState(toMainSettings(hash));
   const [shape, setShape] = useState(maxShape);
   const [channelSettings, setChannelSettings] = useState({});
   const [canvas, setCanvas] = useState(null);
 
   // Memoize expensive computations
   const waypoint = useMemo(() => getWaypoint(stories, s, w), [stories, s, w]);
-  
+
   const rootRef = useMemo(() => {
     return shapeRef(setShape);
   }, []);
 
-  useEffect(() => {
-    //console.log("VivView: useEffect: groups", groups);
-  }, [groups]);
-
-  useEffect(() => {
+  const mainSettings = useMemo(() => {
     // Gets the default settings
-    setMainSettings(toMainSettings(hash, loader, groups));
-  }, [loader, groups, hash, toMainSettings]);
+    if (!loader || !groups) {
+      return props.viewerConfig.toSettings(hash);
+    }
+    return props.viewerConfig.toSettings(
+      hash, loader, groups
+    );
+  }, [loader, groups, hash]);
 
   // Memoize image shape computation
   const imageShape = useMemo(() => {
-    const n_levels = loader.data.length;
     const shape_labels = loader.data[0].labels;
     const shape_values = loader.data[0].shape;
     return Object.fromEntries(
@@ -100,10 +98,10 @@ const VivView = React.memo((props: Props) => {
     return {
       zoom: -n_levels,
       target: [imageShape.x / 2, imageShape.y / 2, 0]
-    };
+    } as OrthographicViewState;
   }, [loader.data, imageShape]);
 
-  const [viewState, setViewState] = useState(initialViewState);
+  const [viewState, setViewState] = useState<OrthographicViewState>(initialViewState);
 
   // Update viewState when initialViewState changes (e.g., when loader changes)
   useEffect(() => {
@@ -119,19 +117,56 @@ const VivView = React.memo((props: Props) => {
     loader: loader.data,
     ...(mainSettings as any),
   }), [shape, loader.data, mainSettings]);
+  console.log(mainProps);
 
-  // Memoize image layer creation
-  const imageLayer = useMemo(() => new MultiscaleImageLayer(mainProps), [mainProps]);
-
-  // Memoize layer combination
-  const allLayers = useMemo(() => [imageLayer, ...overlayLayers], [imageLayer, overlayLayers]);
-
-  // Memoize drag handlers
-  const dragHandlers = useMemo(() => 
-    createDragHandlers(activeTool, onOverlayInteraction), 
-    [activeTool, onOverlayInteraction]
-
+  const dicomSource = useMemo(() => {
+    return loadDicom({
+      pyramids: props.dicomIndex,
+      series: props.series,
+      little_endian: true
+    });
+  }, [
+    props.dicomIndex, props.series
+  ]);
+  // Memoize dicom layer
+  const dicomLayer = useMemo(
+    () => {
+      return createTileLayers({
+        pyramids: props.dicomIndex,
+        settings: mainSettings,
+        dicomSource: dicomSource
+      });
+    },
+    [
+      dicomSource, mainSettings
+    ]
   );
+  // Memoize image layer
+  const imageLayer = useMemo(
+    () => {
+      return new MultiscaleImageLayer(mainProps)
+    }, 
+    [mainProps]
+  );
+  // Memoize layer combination
+  const allLayers = useMemo(
+    () => {
+      // Memoize image layer creation
+      if (props.series) {
+        return [dicomLayer, ...overlayLayers];
+      }
+      return [imageLayer, ...overlayLayers];
+    },
+    [
+      dicomLayer, imageLayer, overlayLayers
+    ]
+  );
+  // Memoize drag handlers
+  const dragHandlers = useMemo(() =>
+    createDragHandlers(activeTool, null),
+    //createDragHandlers(activeTool, onOverlayInteraction),
+    [activeTool, onOverlayInteraction]
+  )
 
   // Memoize cursor function
   const getCursor = useCallback(({ isDragging, isHovering }) => {
@@ -141,10 +176,16 @@ const VivView = React.memo((props: Props) => {
       return 'grab';
     } else if (activeTool === 'rectangle') {
       return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'ellipse') {
+      return isDragging ? 'grabbing' : 'crosshair';
     } else if (activeTool === 'lasso') {
       return isDragging ? 'grabbing' : 'crosshair';
     } else if (activeTool === 'line') {
       return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'polyline') {
+      return 'crosshair';
+    } else if (activeTool === 'point') {
+      return 'crosshair';
     } else if (activeTool === 'text') {
       return 'text';
     } else if (activeTool === 'move') {
@@ -155,7 +196,7 @@ const VivView = React.memo((props: Props) => {
 
   // Memoize controller configuration
   const controllerConfig = useMemo(() => ({
-    dragPan: activeTool !== 'rectangle' && activeTool !== 'lasso' && activeTool !== 'line' && !isDragging,
+    dragPan: activeTool === 'move' && !isDragging,
     dragRotate: false,
     scrollZoom: true,
     doubleClickZoom: true,
@@ -168,17 +209,21 @@ const VivView = React.memo((props: Props) => {
   const views = useMemo(() => [new OrthographicView({ id: 'ortho', controller: true })], []);
 
   // Memoize view state change handler
-  const handleViewStateChange = useCallback((e) => setViewState(e.viewState), []);
+  const handleViewStateChange = useCallback(({ interactionState, viewState: nextViewState }) => {
+    if (isDragging || (activeTool !== 'move' && interactionState.isDragging)) return;
+    // don't allow pan on non-move tool
+    setViewState(nextViewState);
+  }, [isDragging, activeTool]);
 
   if (!loader || !mainSettings) return null;
-  
+
   return (
     <Main slot="image" ref={rootRef}>
       <Deck
         getCursor={getCursor}
         layers={allLayers}
         controller={controllerConfig}
-        viewState={viewState}
+        viewState={{'ortho': viewState}}
         onViewStateChange={handleViewStateChange}
         onClick={dragHandlers.onClick}
         onDragStart={dragHandlers.onDragStart}
@@ -188,8 +233,8 @@ const VivView = React.memo((props: Props) => {
         views={views}
       />
     </Main>
-  );
-});
+  )
+};
 
 VivView.displayName = 'VivView';
 

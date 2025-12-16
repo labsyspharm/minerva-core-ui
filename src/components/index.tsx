@@ -1,25 +1,49 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Overlays } from "./overlays";
+import { Stories } from "./stories";
 import { ImageView, toImageProps } from "./imageView";
 import { Main } from "./content";
 import { useOverlayStore } from "../lib/stores";
 
 // Types
-import type { OptSW } from "./waypoint/content";
 import type { Waypoint as WaypointType } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
 import type { ConfigProps } from "../lib/config";
 import type { Loader } from "../lib/viv";
 import type { Exhibit } from "../lib/exhibit";
 
+type DicomData = {
+  labels: string[];
+  shape: number[];
+}
+
+export interface DicomLoader {
+  data: DicomData[];
+  metadata: Loader["metadata"];
+}
+
+export type DicomIndex = {
+  [k: string]: {
+    width: number;
+    height: number;
+    extent: [number, number, number, number];
+    frameMappings: {
+      [k: string]: any;
+    };
+    tileSize: number;
+  }[]; 
+}
+
 type Props = HashContext & {
   in_f: string;
-  loader: Loader;
+  loader: Loader | DicomLoader;
   exhibit: Exhibit;
   handle: Handle.Dir;
   config: ConfigProps;
   marker_names: string[];
+  dicomIndex: DicomIndex;
+  dicomSeries: string | null;
   controlPanelElement: string;
   setExhibit: (e: Exhibit) => void;
 };
@@ -130,7 +154,7 @@ const Index = (props: Props) => {
     setHidden([v, hiddenChannel])
   }
 
-  const updateWaypoint = (newWaypoint: WaypointType, { s, w }: OptSW) => {
+  const updateWaypoint = (newWaypoint: WaypointType, { s, w }: any) => {
     const oldWaypoint = stories[s]?.waypoints[w];
     if (!oldWaypoint) {
       throw `Cannot update waypoint. Waypoint ${w} does not exist!`;
@@ -138,7 +162,7 @@ const Index = (props: Props) => {
     const ex = setWaypoint({ exhibit, s, w, newWaypoint });
     setExhibit(ex);
   };
-  const pushWaypoint = (newWaypoint: WaypointType, { s }: OptSW) => {
+  const pushWaypoint = (newWaypoint: WaypointType, { s }: any) => {
     if (!stories[s]) {
       throw `Cannot push waypoint. Story ${s} does not exist!`;
     }
@@ -223,34 +247,38 @@ const Index = (props: Props) => {
   const itemRegistryMarkerNames = SourceChannels.map(
     source_channel => source_channel.Properties.Name
   )
-  const itemRegistryGroups = Groups.map((group, g) => {
-    const { Name } = group.Properties;
-    const channels = GroupChannels.filter(group_channel => (
-      group_channel.Associations.Group.UUID == group.UUID
-    )).map(group_channel => {
-      const defaults = { Name: '' };
-      const { R, G, B } = Colors.find(({ ID }) => {
-        return ID === group_channel.Associations.Color.ID;
-      })?.Properties || {};
-      const color = (
-        (1 << 24) + (R << 16) + (G << 8) + B
-      ).toString(16).slice(1);
-      const { LowerRange, UpperRange } = group_channel.Properties;
-      const { SourceChannel } = group_channel.Associations;
-      const { Name } = SourceChannels.find(source_channel => (
-        source_channel.UUID == SourceChannel.UUID
-      ))?.Properties || defaults;
+  const itemRegistryGroups = React.useMemo(() => {
+    return Groups.map((group, g) => {
+      const { Name } = group.Properties;
+      const channels = GroupChannels.filter(group_channel => (
+        group_channel.Associations.Group.UUID == group.UUID
+      )).map(group_channel => {
+        const defaults = { Name: '' };
+        const { R, G, B } = Colors.find(({ ID }) => {
+          return ID === group_channel.Associations.Color.ID;
+        })?.Properties || {};
+        const color = (
+          (1 << 24) + (R << 16) + (G << 8) + B
+        ).toString(16).slice(1);
+        const { LowerRange, UpperRange } = group_channel.Properties;
+        const { SourceChannel } = group_channel.Associations;
+        const { Name } = SourceChannels.find(source_channel => (
+          source_channel.UUID == SourceChannel.UUID
+        ))?.Properties || defaults;
+        return { 
+          color, name: Name, contrast: [
+            LowerRange, UpperRange
+          ]
+        };
+      });
       return { 
-        color, name: Name, contrast: [
-          LowerRange, UpperRange
-        ]
+        State: group.State,
+        g, name: Name, channels,
       };
-    });
-    return { 
-      State: group.State,
-      g, name: Name, channels,
-    };
-  })
+    })
+  }, [
+    GroupChannels
+  ]);
   const channelProps = {
     hash,
     setHash,
@@ -284,17 +312,22 @@ const Index = (props: Props) => {
     pushWaypoint,
     popWaypoint
   }
-  const imageProps = toImageProps({
-    props: {
-      loader,
-      marker_names: itemRegistryMarkerNames,
-      ...channelProps,
-    },
-    buttons: {
-      zoomInButton: zoomInEl,
-      zoomOutButton: zoomOutEl,
-    },
-  });
+  const imageProps = React.useMemo(() => {
+    return toImageProps({
+      props: {
+        loader,
+        dicomIndex: props.dicomIndex,
+        marker_names: itemRegistryMarkerNames,
+        ...channelProps,
+      },
+      buttons: {
+        zoomInButton: zoomInEl,
+        zoomOutButton: zoomOutEl,
+      },
+    });
+  }, [
+    GroupChannels
+  ]);
   
   // Use Zustand store for overlay state management
   const {
@@ -305,13 +338,27 @@ const Index = (props: Props) => {
     hoverState,
     handleLayerCreate,
     handleToolChange,
-    handleOverlayInteraction
+    handleOverlayInteraction,
+    setStories,
+    setWaypoints
   } = useOverlayStore();
+  
+  // Initialize stories in the store when config changes
+  useEffect(() => {
+    if (props.config.ItemRegistry.Stories) {
+      setStories(props.config.ItemRegistry.Stories);
+      
+      // For now, we'll work with stories only since the current config structure
+      // doesn't have waypoints within stories. Each ConfigWaypoint represents a story.
+      setWaypoints([]);
+    }
+  }, [props.config.ItemRegistry.Stories, setStories, setWaypoints]);
   
   return (
     <Main {...mainProps}>
       <ImageView 
         {...imageProps} 
+        series={props.dicomSeries}
         overlayLayers={overlayLayers}
         activeTool={activeTool}
         isDragging={dragState.isDragging}
@@ -325,6 +372,10 @@ const Index = (props: Props) => {
         setHash={mainProps.setHash}
         onLayerCreate={handleLayerCreate}
         currentInteraction={currentInteraction}
+      />
+      <Stories 
+        hash={mainProps.hash}
+        setHash={mainProps.setHash}
       />
     </Main>
   );

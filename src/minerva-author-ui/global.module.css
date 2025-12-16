@@ -1,0 +1,129 @@
+@font-face {
+  font-family: "lato";
+  src: url(/lato.ttf) format("truetype");
+}
+@font-face {
+  font-family: "lato";
+  src: url(/lato-300.ttf) format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: "lato";
+  src: url(/lato-italic-300.ttf) format("truetype");
+  font-weight: normal;
+  font-style: italic;
+}
+@font-face {
+  font-family: "lato";
+  src: url(/lato-700.ttf) format("truetype");
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: "lato";
+  src: url(/lato-italic-700.ttf) format("truetype");
+  font-weight: bold;
+  font-style: italic;
+}
+
+* {
+  --font-family: var(--theme-font-family, "lato", sans-serif);
+  --dark-main-color: var(--theme-dark-main-color, navy);
+  --light-focus-color: var(--theme-light-focus-color, white);
+  --light-link-color: var(--theme-light-link-color, ivory);
+  --light-contrast-color: var(--theme-light-contrast-color, white);
+  --dark-accept-color: var(--theme-dark-accept-color, darkslategray);
+  --dark-reject-color: var(--theme-dark-reject-color, darkred);
+  --dark-focus-color: var(--theme-dark-focus-color, black);
+  --glass-edge: var(--theme-glass-edge, rgba(255,255,255,0.5));
+  --dark-gray-color: var(--theme-dark-gray-color, black);
+  --dim-gray-color: var(--theme-dim-gray-color, black);
+  --glass-filter: var(--theme-glass-filter, blur(32px));
+  --gap-tiny: var(--theme-gap-tiny, 0.3em);
+  --gap-small: calc(var(--gap-tiny) * 2);
+  --gap-medium: calc(var(--gap-tiny) * 3);
+  --thin: 1px;
+  --radius-outer-0010: 0 0 20px 0;
+  --radius-inner-0010: 0 0 12px 0;
+  --padding-border-0110: 0 8px 8px 0;
+  --floating-box-shadow: 0px 4px 16px 4px black;
+  --radius-panel-0011: 0 0 var(--gap-small) var(--gap-small);
+  --radius-tab-1100: var(--gap-small) var(--gap-small) 0 0;
+  --radius-notice-1111: var(--gap-medium);
+  --radius-button-1111: var(--gap-small);
+  --radius-field-1111: var(--gap-tiny);
+  --thin-border: var(--thin) solid var(--glass-edge);
+  --thin-glass-border: var(--thin) solid var(--glass-edge);
+  --thin-white-shadow: 
+    inset 0em calc(var(--thin) * -1) var(--glass-edge);
+  --white-highlight: inset 1.0px 1.0px 1.0px var(--glass-edge);
+  --glass-gradient: linear-gradient(
+    to bottom in xyz, var(--glass-edge), transparent 
+  );
+  --menu-font-size: 0.75em;
+  --panel-font-size: 0.75em;
+  --header-font-size: 1.25em;
+  --dark-focus-shadow: var(--dark-focus-color) 0 0 4px;
+  --dark-main-glass: color-mix(in xyz, var(--dark-main-color), transparent 60%);
+  --dark-gray-glass: color-mix(in xyz, var(--dark-gray-color), transparent 60%);
+  --dim-gray-glass: color-mix(in xyz, var(--dim-gray-color), transparent 60%);
+}
+.contents {
+  display: contents;
+}
+.flex.wrap {
+	display: flex;
+	flex-wrap: wrap;
+}
+.grid {
+  display: grid;
+}
+.menu.grid {
+  grid-auto-flow: column;
+}
+.start.grid {
+  align-items: start;
+}
+.start.left.grid {
+  align-items: start;
+  justify-items: start;
+}
+.center.grid {
+  align-items: center;
+  justify-items: center;
+}
+.stretch.grid {
+  align-items: stretch;
+  justify-items: stretch;
+}
+.indent {
+  padding-left: 1em;
+}
+button, input[type='submit'] {
+	background: none;
+	color: inherit;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+  border: none;
+}
+.tab {
+  box-shadow: var(--thin-white-shadow);
+}
+input.button, .button, .tab {
+  border-top: var(--thin-glass-border);
+  border-right: var(--thin-glass-border);
+}
+input.button, .button {
+  border-radius: var(--radius-button-1111);
+  border-bottom: var(--thin-glass-border);
+  border-left: var(--thin-glass-border);
+  padding-bottom: var(--gap-small);
+  padding-top: var(--gap-small);
+}
+.tab {
+  border-radius: var(--radius-tab-1100);
+  padding-bottom: var(--gap-medium);
+  padding-top: var(--gap-medium);
+}

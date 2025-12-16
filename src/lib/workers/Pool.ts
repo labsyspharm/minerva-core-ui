@@ -17,4 +17,3 @@ export default class extends Pool {
     super(numWorkers || defaultPoolSize, createWorker);
   }
 }
-

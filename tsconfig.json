@@ -11,6 +11,9 @@
     "outDir": "./build",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
+    "plugins": [
+      { "name": "typescript-plugin-css-modules" }
+    ],
     "lib": [
       "esnext",
       "DOM",

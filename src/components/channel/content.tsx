@@ -2,10 +2,42 @@ import * as React from "react";
 import { Groups } from "./groups";
 import { Header } from "../common/header";
 import styled from "styled-components";
-import styles from "./content.module.css";
 import { PushGroup } from "../editable/groups";
 import { Editor } from "../editable/common";
 import { defaultChannels } from "./legend";
+
+const WrapContent = styled.div`
+  height: 100%;
+  display: grid;
+  pointer-events: none;
+  grid-template-rows: auto auto 1fr;
+  grid-template-columns: 150px auto 100%;
+  transform: translate(-150px);
+`;
+
+const WrapCore = styled.div`
+  padding: 1em;
+  grid-column: 3;
+  grid-row: 1 / 3;
+  overflow: scroll;
+  pointer-events: all;
+  word-wrap: break-word;
+  outline: 1px solid var(--theme-glass-edge);
+  background-color: var(--dark-glass);
+  border-radius: var(--radius-0001);
+`;
+
+const WrapNav = styled.div`
+  grid-row: 1;
+  grid-column: 1;
+  padding: 0.8em;
+  font-size: 16px;
+  pointer-events: all;
+  padding-top: calc(1.5*var(--theme-gap-tiny));
+  outline: 1px solid var(--theme-glass-edge);
+  background-color: var(--dark-glass);
+  border-radius: var(--radius-0001);
+`;
 
 const WrapColumns = styled.div`
   grid-template-columns: auto 1fr;
@@ -85,13 +117,15 @@ const Content = (props) => {
     ) : null;
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles.nav}>{children}</div>
-      <div className={styles.core}>
+    <WrapContent> 
+      <WrapNav> 
+        {children}
+      </WrapNav> 
+      <WrapCore>
         {polyGroups}
         {soloGroups}
-      </div>
-    </div>
+      </WrapCore>
+    </WrapContent> 
   );
 };
 
