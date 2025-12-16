@@ -120,6 +120,9 @@ const VivView = (props: Props) => {
   console.log(mainProps);
 
   const dicomSource = useMemo(() => {
+    if (!props.series) {
+      return null;
+    }
     return loadDicom({
       pyramids: props.dicomIndex,
       series: props.series,
@@ -131,6 +134,9 @@ const VivView = (props: Props) => {
   // Memoize dicom layer
   const dicomLayer = useMemo(
     () => {
+      if (!props.series || !dicomSource) {
+        return null;
+      }
       return createTileLayers({
         pyramids: props.dicomIndex,
         settings: mainSettings,
@@ -138,7 +144,7 @@ const VivView = (props: Props) => {
       });
     },
     [
-      dicomSource, mainSettings
+      dicomSource, mainSettings, props.series, props.dicomIndex
     ]
   );
   // Memoize image layer
@@ -152,13 +158,13 @@ const VivView = (props: Props) => {
   const allLayers = useMemo(
     () => {
       // Memoize image layer creation
-      if (props.series) {
+      if (props.series && dicomLayer) {
         return [dicomLayer, ...overlayLayers];
       }
       return [imageLayer, ...overlayLayers];
     },
     [
-      dicomLayer, imageLayer, overlayLayers
+      dicomLayer, imageLayer, overlayLayers, props.series
     ]
   );
   // Memoize drag handlers
