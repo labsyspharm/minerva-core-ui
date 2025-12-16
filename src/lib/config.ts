@@ -32,6 +32,7 @@ type GroupChannelProperties = {
 };
 type WaypointProperties = NameProperty & {
   Content: string;
+  Group: string;
 };
 
 type SourceChannelAssociations = Record<

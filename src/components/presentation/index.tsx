@@ -1,7 +1,5 @@
 import * as React from "react";
 import { useState } from "react";
-import { Legend } from "./legend";
-import { Content } from "./content";
 import ReactMarkdown from 'react-markdown'
 import { useOverlayStore } from "../../lib/stores";
 //import { theme } from "../../theme.module.css";
@@ -170,8 +168,8 @@ const Presentation = (props: Props) => {
       setActiveStory,
   } = useOverlayStore();
 
-  const story = stories[activeStoryIndex];
-  const updateGroup = () => {
+  const updateGroup = (activeStory) => {
+    const story = stories[activeStory];
     const group_name = story.Properties.Group
     const { Groups } = props.config.ItemRegistry;
     const group_names = Groups.map(
@@ -236,6 +234,7 @@ const Presentation = (props: Props) => {
   )
   const first_story = activeStoryIndex == 0;
   const last_story = activeStoryIndex == stories.length - 1;
+  const story = stories[activeStoryIndex];
   const story_content = (
     story?.Properties?.Content+story?.Properties
     ?.Content+story?.Properties?.Content 

@@ -296,7 +296,7 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
                 showExpandToggle={false}
                 emptyMessage="No stories yet"
                 customChildRenderer={customChildRenderer}
-                itemActions={viewOnly ? '': storyItemActions}
+                itemActions={viewOnly ? null: storyItemActions}
                 noHeader={viewOnly}
             />
         </div>
