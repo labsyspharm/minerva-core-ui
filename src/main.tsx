@@ -232,7 +232,7 @@ const Content = (props: Props) => {
         "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.331207435.2054329796.1752677896971.4.0",
         "DICOM-WEB"
       )
-    });
+    }, []);
     if ( loader === null) {
       return <Wrapper>Loading DicomWeb Endpoint...</Wrapper>
     }
