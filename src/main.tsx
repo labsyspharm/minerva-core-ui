@@ -226,6 +226,7 @@ const Content = (props: Props) => {
       }} />
     </Full>
   )
+  const [valid, setValid] = useState({} as ValidObj);
   if (props.demo_dicom_web) {
     useEffect(() => {
       onStart(
@@ -237,8 +238,6 @@ const Content = (props: Props) => {
       return <Wrapper>Loading DicomWeb Endpoint...</Wrapper>
     }
   }
-
-  const [valid, setValid] = useState({} as ValidObj);
   const onSubmit: FormEventHandler = (event) => {
     const form = event.currentTarget as HTMLFormElement;
     const data = [...new FormData(form).entries()];
