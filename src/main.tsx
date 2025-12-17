@@ -31,6 +31,7 @@ import type { ConfigGroup } from "./lib/exhibit";
 type Props = ImageProps & {
   configWaypoints: ConfigWaypoint[];
   exhibit_config: ExhibitConfig;
+  demo_dicom_web?: boolean;
   handleKeys: string[];
 };
 
@@ -225,6 +226,17 @@ const Content = (props: Props) => {
       }} />
     </Full>
   )
+  if (props.demo_dicom_web) {
+    useEffect(() => {
+      onStart(
+        "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.331207435.2054329796.1752677896971.4.0",
+        "DICOM-WEB"
+      )
+    });
+    if ( loader === null) {
+      return <Wrapper>Loading DicomWeb Endpoint...</Wrapper>
+    }
+  }
 
   const [valid, setValid] = useState({} as ValidObj);
   const onSubmit: FormEventHandler = (event) => {
