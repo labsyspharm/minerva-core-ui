@@ -26,7 +26,9 @@ const configWaypoints = [
             ],
             "Zoom": 0.518359375,
             "Group": "Histology"
-        }
+        },
+        "Arrows": [],
+        "Overlays": []
     },
     {
         "UUID": "dac02fed-dcd8-4e77-829e-57d247c07d18",
@@ -42,7 +44,154 @@ const configWaypoints = [
             ],
             "Zoom": 0.518359375,
             "Group": "Histology"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 300,
+                "HideArrow": false,
+                "Point": [
+                    0.807627524065269,
+                    0.306258334920546
+                ],
+                "Text": "Mucosa"
+            },
+            {
+                "Angle": 300,
+                "HideArrow": false,
+                "Point": [
+                    0.765761996140962,
+                    0.261043564762295
+                ],
+                "Text": "Muscularis Mucosa"
+            },
+            {
+                "Angle": 300,
+                "HideArrow": false,
+                "Point": [
+                    0.740642679386377,
+                    0.214154173487071
+                ],
+                "Text": "Submucosa"
+            },
+            {
+                "Angle": 315,
+                "HideArrow": false,
+                "Point": [
+                    0.641002722926526,
+                    0.155542434393041
+                ],
+                "Text": "Muscularis Propria"
+            },
+            {
+                "Angle": 325,
+                "HideArrow": false,
+                "Point": [
+                    0.519592691946036,
+                    0.0994426269744693
+                ],
+                "Text": "Subserosa"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.146989493419702,
+                    0.24680928526803
+                ],
+                "Text": "Serosa"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.0867031332087,
+                    0.567499229168223
+                ],
+                "Text": "Invasive Adenocarcinoma, involving Muscularis Propria"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.191366953019468,
+                    0.863069856313831
+                ],
+                "Text": "Invasive Adenocarcinoma, involving Submucosa"
+            },
+            {
+                "Angle": 30,
+                "HideArrow": false,
+                "Point": [
+                    0.398182660965545,
+                    0.919169663732403
+                ],
+                "Text": "Invasive Adenocarcinoma, Superficial/luminal Surface"
+            },
+            {
+                "Angle": 30,
+                "HideArrow": false,
+                "Point": [
+                    0.265050282166248,
+                    0.96103519165671
+                ],
+                "Text": "Ulcer Bed"
+            },
+            {
+                "Angle": 230,
+                "HideArrow": false,
+                "Point": [
+                    0.409905008784351,
+                    0.640345247756517
+                ],
+                "Text": "Invasive Adenocarcinoma, with Mucinous Features"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.858684481416086,
+                    0.531246000270804
+                ],
+                "Text": "Invasive Adenocarcinoma, with Solid Architecture"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.743403329861254,
+                    0.370787100133673
+                ],
+                "Text": "Invasive Adenocarcinoma, with Signet Ring Cell Features"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.718867138820867,
+                    0.500478395632859
+                ],
+                "Text": "Invasive Adenocarcinoma, Tumor Budding Region"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.844385457582811,
+                    0.834212509419744
+                ],
+                "Text": "Bowel Lumen"
+            },
+            {
+                "Angle": 86,
+                "HideArrow": true,
+                "Point": [
+                    0.0869986737335296,
+                    0.0954022705774824
+                ],
+                "Text": "Peritoneal Cavity"
+            }
+        ],
+        "Overlays": []
     },
     {
         "UUID": "7ab327d3-578b-4503-bb34-8dd17ffe847e",
@@ -58,7 +207,154 @@ const configWaypoints = [
             ],
             "Zoom": 0.518359375,
             "Group": "Tissue Structure"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 300,
+                "HideArrow": false,
+                "Point": [
+                    0.815749436482584,
+                    0.316503391107762
+                ],
+                "Text": "Mucosa"
+            },
+            {
+                "Angle": 300,
+                "HideArrow": false,
+                "Point": [
+                    0.787866994884996,
+                    0.269027882441597
+                ],
+                "Text": "Muscularis Mucosa"
+            },
+            {
+                "Angle": 300,
+                "HideArrow": false,
+                "Point": [
+                    0.745666542737294,
+                    0.204973624717408
+                ],
+                "Text": "Submucosa"
+            },
+            {
+                "Angle": 300,
+                "HideArrow": false,
+                "Point": [
+                    0.641672571373315,
+                    0.154483798040693
+                ],
+                "Text": "Muscularis Propria"
+            },
+            {
+                "Angle": 300,
+                "HideArrow": false,
+                "Point": [
+                    0.524616555296952,
+                    0.0864941806916185
+                ],
+                "Text": "Subserosa"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.132755213925438,
+                    0.260654776856736
+                ],
+                "Text": "Serosa"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.0850285120917276,
+                    0.553713472326886
+                ],
+                "Text": "Invasive Adenocarcinoma, involving Muscularis Propria"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.191366953019468,
+                    0.86770493175919
+                ],
+                "Text": "Invasive Adenocarcinoma, involving Submucosa"
+            },
+            {
+                "Angle": 30,
+                "HideArrow": false,
+                "Point": [
+                    0.418278114369212,
+                    0.909570459683497
+                ],
+                "Text": "Invasive Adenocarcinoma, superficial/luminal surface"
+            },
+            {
+                "Angle": 30,
+                "HideArrow": false,
+                "Point": [
+                    0.276772629985054,
+                    0.975717993803902
+                ],
+                "Text": "Ulcer Bed"
+            },
+            {
+                "Angle": 220,
+                "HideArrow": false,
+                "Point": [
+                    0.397345350407059,
+                    0.645817633760362
+                ],
+                "Text": "Invasive Adenocarcinoma, with Mucinous Features"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.753202337763669,
+                    0.378715565603282
+                ],
+                "Text": "Invasive Adenocarcinoma, with Signet Ring Cell Features"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.856443289976337,
+                    0.533737010323139
+                ],
+                "Text": "Invasive Adenocarcinoma, with Solid Architecture"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.718707533645425,
+                    0.504093567653586
+                ],
+                "Text": "Invasive Adenocarcinoma, Tumor Budding Region"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.844469188638659,
+                    0.910240308130285
+                ],
+                "Text": "Bowel Lumen"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.0891690798501797,
+                    0.100174053827581
+                ],
+                "Text": "Peritoneal Cavity"
+            }
+        ],
+        "Overlays": []
     },
     {
         "UUID": "a7c25aae-5851-404b-b15f-113e752f8f53",
@@ -74,7 +370,73 @@ const configWaypoints = [
             ],
             "Zoom": 0.518359375,
             "Group": "Histology"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.106934423989135,
+                    0.673880651886504
+                ],
+                "Text": "ROI4"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.240904113346918,
+                    0.847622592772379
+                ],
+                "Text": "ROI3"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.382549149490824,
+                    0.89227915589164
+                ],
+                "Text": "ROI2"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.725148719671404,
+                    0.287322277385402
+                ],
+                "Text": "ROI1"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.855174256062348,
+                    0.528461032283529
+                ],
+                "Text": "ROI5"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.440007770812969,
+                    0.686038227665296
+                ],
+                "Text": "ROI6"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.733066466283119,
+                    0.517994650302452
+                ],
+                "Text": "ROI7"
+            }
+        ],
+        "Overlays": []
     },
     {
         "UUID": "549b2a20-2541-441e-a6ca-b40323d4929d",
@@ -90,7 +452,104 @@ const configWaypoints = [
             ],
             "Zoom": 1.85737536,
             "Group": "Histology"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 210,
+                "HideArrow": false,
+                "Point": [
+                    0.616983210209847,
+                    0.310703307581856
+                ],
+                "Text": "Germinal center"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.804453730438995,
+                    0.282016995085495
+                ],
+                "Text": "Colonic crypts in longitudinal profile"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.577318704807988,
+                    0.402104124377444
+                ],
+                "Text": "Colonic crypts in cross-section"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": false,
+                "Point": [
+                    0.707290413919064,
+                    0.310619183498289
+                ],
+                "Text": "Mucosal stroma, with prominent immune infiltrate"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.757344243641453,
+                    0.256359149597548
+                ],
+                "Text": "Muscularis mucosa"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.79435884041095,
+                    0.362355494892018
+                ],
+                "Text": "Bowel Lumen"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.737364773794281,
+                    0.430916622999155
+                ],
+                "Text": "Adenocarcinoma, poorly differentiated region"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.710865687470663,
+                    0.233645647034448
+                ],
+                "Text": "Submucosa"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.451132579457429,
+                    0.395163887483164
+                ],
+                "Text": "Muscularis Propria"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.0878255432439893,
+                "width": 0.246567688934993,
+                "x": 0.574515254951026,
+                "y": 0.252882790684345
+            },
+            {
+                "height": 0.160004006944509,
+                "width": 0.0782353977173467,
+                "x": 0.558363430906155,
+                "y": 0.326070743387669
+            }
+        ]
     },
     {
         "UUID": "537f9079-6395-4d41-ada6-37f980433294",
@@ -106,7 +565,62 @@ const configWaypoints = [
             ],
             "Zoom": 3.20954462208,
             "Group": "Histology"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.404474190111976,
+                    0.941309789228942
+                ],
+                "Text": "Bowel Lumen"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.317331765583619,
+                    0.916968329863479
+                ],
+                "Text": "Adenocarcinoma, with glandular architecture"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.348732248165066,
+                    0.933763936825648
+                ],
+                "Text": "Peritumoral stroma"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.374534195092457,
+                    0.890436139155124
+                ],
+                "Text": "Glandular lumen with mucin"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.440621257269689,
+                    0.884229067016931
+                ],
+                "Text": "Adenocarcinoma with cribriform architecture"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.117082419547876,
+                "width": 0.147630951051532,
+                "x": 0.305891279681852,
+                "y": 0.835424440989178
+            }
+        ]
     },
     {
         "UUID": "7b1716ce-6aa9-42b8-9d3a-7cd225968702",
@@ -122,7 +636,62 @@ const configWaypoints = [
             ],
             "Zoom": 3.851453546496,
             "Group": "Histology"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.249824340684316,
+                    0.867594646418917
+                ],
+                "Text": "Glandular lumen with mucin"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.192419065680766,
+                    0.881590985554058
+                ],
+                "Text": "Adenocarcinoma, with glandular architecture"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.245767430790072,
+                    0.844977373758508
+                ],
+                "Text": "Peritumoral stroma"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.332382457032177,
+                    0.918914556581101
+                ],
+                "Text": "ROI1"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.270514581144959,
+                    0.938590569568184
+                ],
+                "Text": "Ulcer Bed"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.0829638073372858,
+                "width": 0.105378234502983,
+                "x": 0.179639799513898,
+                "y": 0.837877781443581
+            }
+        ]
     },
     {
         "UUID": "43ddf397-902a-40be-98d0-16c5cb11ca22",
@@ -138,7 +707,71 @@ const configWaypoints = [
             ],
             "Zoom": 2.228850432,
             "Group": "Histology"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.0789774677122247,
+                    0.590523439970914
+                ],
+                "Text": "Adenocarcinoma, with glandular architecture"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.0924723727844373,
+                    0.608224549221478
+                ],
+                "Text": "Glandular lumen with mucin"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.143297339939524,
+                    0.610152392803223
+                ],
+                "Text": "Extracellular mucin pool"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.172565510680556,
+                    0.631884447724708
+                ],
+                "Text": "Peritumoral lymphohistiocytic inflammation"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.104214692782337,
+                    0.523048914609851
+                ],
+                "Text": "Deepest invasive front of tumor"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.243194689175383,
+                    0.609276100266066
+                ],
+                "Text": "Muscularis Propria"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.218196841752009,
+                "width": 0.105155104458799,
+                "x": 0.0639052360731302,
+                "y": 0.514461247745715
+            }
+        ]
     },
     {
         "UUID": "15dab9ef-a574-4526-a159-24d260fb63fc",
@@ -154,7 +787,62 @@ const configWaypoints = [
             ],
             "Zoom": 6.65531172834508,
             "Group": "Histology"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.90190277447454,
+                    0.525471465466552
+                ],
+                "Text": "Bowel Lumen"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.856239060676483,
+                    0.495185506186607
+                ],
+                "Text": "Colonic Mucosa"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": false,
+                "Point": [
+                    0.860465008482987,
+                    0.532514711810725
+                ],
+                "Text": "Adenocarcinoma, with solid architecture"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.856591222993692,
+                    0.532045162054447
+                ],
+                "Text": "Intracellular mucin vacuole"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.888579300140146,
+                    0.504165645275428
+                ],
+                "Text": "Discohesive and fragmented adenocarcinoma, with focal signet ring cell features"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.0591632692910555,
+                "width": 0.0579893949003599,
+                "x": 0.840156981523954,
+                "y": 0.485207573865695
+            }
+        ]
     },
     {
         "UUID": "d84ccda9-ccb3-4f62-aa3a-fc5859efa0bc",
@@ -170,7 +858,80 @@ const configWaypoints = [
             ],
             "Zoom": 3.0956256,
             "Group": "Histology"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.413938390261963,
+                    0.609300898756441
+                ],
+                "Text": "Muscularis propria"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.448311490807455,
+                    0.740887790272005
+                ],
+                "Text": "Submucosa"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.466305059467286,
+                    0.632746047346773
+                ],
+                "Text": "Peritumoral inflammation"
+            },
+            {
+                "Angle": 200,
+                "HideArrow": false,
+                "Point": [
+                    0.41532586482566,
+                    0.637036375608692
+                ],
+                "Text": "Invasive Front"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.43576801713245,
+                    0.665428253812568
+                ],
+                "Text": "Extracellular mucin"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.484980606019168,
+                    0.666059184439321
+                ],
+                "Text": "Adenocarcinoma, with cribriform architecture"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.39740743502588,
+                    0.690917851133381
+                ],
+                "Text": "Carcinomatous glandular lumen in cribfriform structure"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.0917625503549266,
+                "width": 0.155360357531609,
+                "x": 0.371994122195437,
+                "y": 0.637465641934686
+            }
+        ]
     },
     {
         "UUID": "88bb6cc7-5c26-4dac-816d-12c9b8f307cc",
@@ -186,7 +947,80 @@ const configWaypoints = [
             ],
             "Zoom": 3.851453546496,
             "Group": "Histology"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.835703507969231,
+                    0.50829264236419
+                ],
+                "Text": "Mucosa"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.634815196411141,
+                    0.55119592498338
+                ],
+                "Text": "Submucosa"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": false,
+                "Point": [
+                    0.746363731221035,
+                    0.539208243075077
+                ],
+                "Text": "Prominent peritumoral lymphohistiocytic inflammation"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.706993660111661,
+                    0.521289813275298
+                ],
+                "Text": "Adenocaricnoma, with glandular archiecture"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.735125833258095,
+                    0.515075052064657
+                ],
+                "Text": "Tumor Budding Cell(s)"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.723797945387883,
+                    0.502279821206076
+                ],
+                "Text": "Tumor Budding Cell(s)"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.714935193738131,
+                    0.492419276324233
+                ],
+                "Text": "Tumor Budding Cell(s)"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.0586765482880101,
+                "width": 0.0714213469484165,
+                "x": 0.687560996807675,
+                "y": 0.489490909686957
+            }
+        ]
     },
     {
         "UUID": "fb073470-b7be-45d1-87d0-99897a31d1c4",
@@ -202,7 +1036,107 @@ const configWaypoints = [
             ],
             "Zoom": 6.65531172834508,
             "Group": "Tumor Budding Epithelial"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.727080493256782,
+                    0.502476977421495
+                ],
+                "Text": "Tumor Budding Cell(s)"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.734417208198629,
+                    0.513677695566049
+                ],
+                "Text": "Tumor Budding Cell(s)"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.753394844181541,
+                    0.522824133526885
+                ],
+                "Text": "Tumor Budding Cell(s)"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.754666541438128,
+                    0.502183508823822
+                ],
+                "Text": "Tumor Budding Cell(s)"
+            },
+            {
+                "Angle": 30,
+                "HideArrow": false,
+                "Point": [
+                    0.740266172148522,
+                    0.527883887596454
+                ],
+                "Text": "Poorly Differentiated Cluster"
+            },
+            {
+                "Angle": 330,
+                "HideArrow": false,
+                "Point": [
+                    0.713184751391609,
+                    0.493707334464114
+                ],
+                "Text": "Poorly Differentiated Cluster"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.703841161573265,
+                    0.520988618104842
+                ],
+                "Text": "Main Tumor Mass"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.734270285634077,
+                    0.491758671346919
+                ],
+                "Text": "Main Tumor Mass"
+            },
+            {
+                "Angle": 30,
+                "HideArrow": false,
+                "Point": [
+                    0.726825393211973,
+                    0.526984504619287
+                ],
+                "Text": "Poorly Differentiated Cluster"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.682455833005075,
+                    0.54007552350916
+                ],
+                "Text": "Submucosa"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.0473306154328444,
+                "width": 0.0750810060288871,
+                "x": 0.6896834716437,
+                "y": 0.487993036181762
+            }
+        ]
     },
     {
         "UUID": "11d43bd8-9a11-44d3-9818-fb2d1dc91108",
@@ -218,7 +1152,107 @@ const configWaypoints = [
             ],
             "Zoom": 7.9863740740141,
             "Group": "Tumor Budding Immune Modulation"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.734314594092866,
+                    0.513752814745281
+                ],
+                "Text": "Tumor Budding Cell(s)"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.722751931344515,
+                    0.500429340410887
+                ],
+                "Text": "Tumor Budding Cell(s)"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.711834899511046,
+                    0.490157939492301
+                ],
+                "Text": "Tumor Budding Cell(s)"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.700683092799439,
+                    0.519739574137828
+                ],
+                "Text": "Main Tumor Mass"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.740418740924483,
+                    0.482175593635571
+                ],
+                "Text": "Main Tumor Mass"
+            },
+            {
+                "Angle": 120,
+                "HideArrow": false,
+                "Point": [
+                    0.727506122626832,
+                    0.508939929743429
+                ],
+                "Text": "FOXP3+ Treg"
+            },
+            {
+                "Angle": 120,
+                "HideArrow": false,
+                "Point": [
+                    0.735194999885888,
+                    0.528367550909441
+                ],
+                "Text": "Macrophages (PD-L1 Positive)"
+            },
+            {
+                "Angle": 120,
+                "HideArrow": false,
+                "Point": [
+                    0.711893593230581,
+                    0.500722809008561
+                ],
+                "Text": "FOXP3+ Treg"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": false,
+                "Point": [
+                    0.73190815159194,
+                    0.506650874681573
+                ],
+                "Text": "Sparse CD8+ Cytotoxic T Cells"
+            },
+            {
+                "Angle": 310,
+                "HideArrow": true,
+                "Point": [
+                    0.752509647148647,
+                    0.541221475487557
+                ],
+                "Text": "Lymphocyte Aggregate with abundant CD4 and CD8 T cells"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.0474658457626525,
+                "width": 0.0799211249166029,
+                "x": 0.683685023596169,
+                "y": 0.486997982182443
+            }
+        ]
     },
     {
         "UUID": "d93d3231-b3f1-4d0e-9aa3-7827739e2953",
@@ -234,7 +1268,62 @@ const configWaypoints = [
             ],
             "Zoom": 4.6217442557952,
             "Group": "Histology"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.859131958911064,
+                    0.501037051156166
+                ],
+                "Text": "Superficial mucosal epithelium with typical mucosal molecular pattern (ROI1-like)"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.825958268630008,
+                    0.483358502832291
+                ],
+                "Text": "Adenocarcinoma, with glandular architecture"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.853145199518517,
+                    0.528223982044675
+                ],
+                "Text": "Adenocarcinoma, with solid architecture"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.892728243972771,
+                    0.470117199705245
+                ],
+                "Text": "Bowel Lumen"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.786269474266984,
+                    0.528357505588102
+                ],
+                "Text": "Atypical deep mucosal epithelium, with molecular pattern resembling glandular adenocarcinoma (ROI2-4-like)"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.0842372262763123,
+                "width": 0.100929720112003,
+                "x": 0.777496964571449,
+                "y": 0.463914768060275
+            }
+        ]
     },
     {
         "UUID": "97166d10-c821-4936-a0e2-1468beafeac7",
@@ -250,7 +1339,62 @@ const configWaypoints = [
             ],
             "Zoom": 4.6217442557952,
             "Group": "Transitions"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.785798169926556,
+                    0.528651051827187
+                ],
+                "Text": "Atypical deep mucosal epithelium, with molecular pattern resembling glandular adenocarcinoma (ROI2-4-like)"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.859836775496506,
+                    0.49932297405005
+                ],
+                "Text": "Superficial mucosal epithelium with typical mucosal molecular pattern (ROI1-like)"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.893137244211757,
+                    0.469234225667742
+                ],
+                "Text": "Bowel Lumen"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.81081578094106,
+                    0.484447637771156
+                ],
+                "Text": "Adenocarcinoma, with glandular architecture"
+            },
+            {
+                "Angle": 166,
+                "HideArrow": true,
+                "Point": [
+                    0.857892839505514,
+                    0.530087874081399
+                ],
+                "Text": "Adenocarcinoma, with solid architecture"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.0820679064023069,
+                "width": 0.101169190487705,
+                "x": 0.777847925064133,
+                "y": 0.466849325883803
+            }
+        ]
     },
     {
         "UUID": "31843b78-61d8-411e-8e09-4fdbbf0297c2",
@@ -266,7 +1410,35 @@ const configWaypoints = [
             ],
             "Zoom": 5.54609310695424,
             "Group": "Histology"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.822563231202727,
+                    0.479472250295616
+                ],
+                "Text": "Adenocarcinoma, with glandular architecture"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.823639282727532,
+                    0.456092585347596
+                ],
+                "Text": "Adenocarcinoma, with solid and signet ring cell morphology"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.0527754361483539,
+                "width": 0.0651500286836028,
+                "x": 0.777662535758623,
+                "y": 0.449293896168151
+            }
+        ]
     },
     {
         "UUID": "b130ffec-ff91-4806-99f6-b572819dc720",
@@ -282,7 +1454,53 @@ const configWaypoints = [
             ],
             "Zoom": 4.6217442557952,
             "Group": "Transitions"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.837603550886017,
+                    0.47612859654803
+                ],
+                "Text": "Adenocarcinoma, with glandular architecture"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.798454839956321,
+                    0.455761875869462
+                ],
+                "Text": "Adenocarcinoma, with solid architecture"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.846348915096699,
+                    0.460809535749453
+                ],
+                "Text": "Adenocarcinoma, with solid architecture"
+            },
+            {
+                "Angle": 180,
+                "HideArrow": false,
+                "Point": [
+                    0.781844517327979,
+                    0.489628152041029
+                ],
+                "Text": "Adenocarcinoma, with glandular architecture"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.0757148981998627,
+                "width": 0.0799408460063666,
+                "x": 0.76429509518708,
+                "y": 0.434397361958803
+            }
+        ]
     },
     {
         "UUID": "6b54a970-a0e9-414b-8603-497968daaf35",
@@ -298,7 +1516,35 @@ const configWaypoints = [
             ],
             "Zoom": 5.54609310695424,
             "Group": "Histology"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.715086358932731,
+                    0.404547739101745
+                ],
+                "Text": "Adenocarcinoma, with solid and signet ring cell morphology"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.713032078749014,
+                    0.432016399844021
+                ],
+                "Text": "Adenocarcinoma, with mucinous morphology"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.0655608847203462,
+                "width": 0.0609240808770988,
+                "x": 0.672474718550482,
+                "y": 0.378018177872026
+            }
+        ]
     },
     {
         "UUID": "268aee9d-5972-4a23-b3bb-3155ed2d60eb",
@@ -314,18 +1560,56 @@ const configWaypoints = [
             ],
             "Zoom": 5.54609310695424,
             "Group": "Transitions"
-        }
+        },
+        "Arrows": [
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.717283333549791,
+                    0.396108533420069
+                ],
+                "Text": "Adenocarcinoma, with solid and signet ring cell morphology"
+            },
+            {
+                "Angle": 360,
+                "HideArrow": false,
+                "Point": [
+                    0.711599065547207,
+                    0.430697908925159
+                ],
+                "Text": "Adenocarcinoma, with mucinous features"
+            },
+            {
+                "Angle": 60,
+                "HideArrow": true,
+                "Point": [
+                    0.649314001263566,
+                    0.444122456761051
+                ],
+                "Text": "Mucosa"
+            }
+        ],
+        "Overlays": [
+            {
+                "height": 0.0656714367107122,
+                "width": 0.0660947332640962,
+                "x": 0.673804730423638,
+                "y": 0.376576421028209
+            }
+        ]
     }
 ]; 
 
 // TODO: remove legacy exhibit data structure
 const exhibit_config = {
   Stories: [{
-    Waypoints: configWaypoints.map(({Properties}) => {
+    Waypoints: configWaypoints.map(({ Properties, Arrows, Overlays  }) => {
       const { Name, Content, Pan, Zoom, Group } = Properties;
       return {
         Name, Description: Content,
-        Pan, Zoom, Group 
+        Pan, Zoom, Group,
+        Arrows, Overlays
       }
     })
   }],
@@ -669,6 +1953,8 @@ const MainStyle = createGlobalStyle`
 
 const rootElement = document.getElementById(id);
 const root = createRoot(rootElement);
+
+console.log({ exhibit_config });
 
 root.render(
   <React.StrictMode>
