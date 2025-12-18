@@ -157,6 +157,11 @@ export type ConfigGroup = UUID & {
 export type ConfigWaypoint = UUID & {
   State: WaypointState;
   Properties: WaypointProperties;
+// TODO use UUID for group
+/*  Associations: {
+    Group: UUID
+  }
+*/
 };
 export type ConfigColor = ID & {
   Properties: {

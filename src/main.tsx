@@ -87,6 +87,10 @@ const Content = (props: Props) => {
     } as ItemRegistryProps,
     ID: crypto.randomUUID()
   });
+  // Active Group from Store
+  const { 
+    setActiveChannelGroup
+  } = useOverlayStore();
   const resetItems = ItemRegistry => {
     setConfig(config => ({
       ...config, ItemRegistry: {
@@ -94,6 +98,10 @@ const Content = (props: Props) => {
       },
       ID: crypto.randomUUID()
     }));
+    const { Groups } = ItemRegistry;
+    if ( Groups?.length > 0) {
+      setActiveChannelGroup(Groups[0].UUID)
+    }
   };
   const setItems = ItemRegistry => {
     setConfig(config => ({

@@ -4,6 +4,7 @@ import { OrthographicView, OrthographicViewState } from '@deck.gl/core';
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
+import { useOverlayStore } from "../lib/stores";
 
 import {
   createTileLayers, loadDicom
@@ -62,6 +63,9 @@ const VivView = (props: Props) => {
   const maxShape = useWindowSize();
   const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
+  const { 
+    activeChannelGroupId
+  } = useOverlayStore();
   const [shape, setShape] = useState(maxShape);
   const [channelSettings, setChannelSettings] = useState({});
   const [canvas, setCanvas] = useState(null);
@@ -75,15 +79,15 @@ const VivView = (props: Props) => {
 
   const mainSettings = useMemo(() => {
     // Gets the default settings
-    // TODO -- why not responsive to changes in hash.g?
-    console.log(hash, "HASH");
     if (!loader || !groups) {
-      return props.viewerConfig.toSettings(hash);
+      return props.viewerConfig.toSettings(
+          activeChannelGroupId  
+      );
     }
     return props.viewerConfig.toSettings(
-      hash, loader, groups
+      activeChannelGroupId, loader, groups
     );
-  }, [loader, groups, hash.g]);
+  }, [loader, groups, activeChannelGroupId]);
 
   // Memoize image shape computation
   const imageShape = useMemo(() => {

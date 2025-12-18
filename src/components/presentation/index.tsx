@@ -166,20 +166,20 @@ const Presentation = (props: Props) => {
       stories, 
       activeStoryIndex, 
       setActiveStory,
+      activeChannelGroupId,
+      setActiveChannelGroup
   } = useOverlayStore();
 
   const updateGroup = (activeStory) => {
     const story = stories[activeStory];
     const group_name = story.Properties.Group
     const { Groups } = props.config.ItemRegistry;
-    const group_names = Groups.map(
-      ({Properties}) => Properties.Name
-    )
-    const found_group_index = group_names.indexOf(
-      group_name
-    );
-    if (found_group_index >= 0) {
-      props.setHash({g: found_group_index});
+    // TODO -- use UUID in story
+    const found_group = Groups.find(
+      ({ Properties }) => Properties.Name === group_name
+    ) || Groups[0];
+    if (found_group) {
+      setActiveChannelGroup(found_group.UUID);
     }
   }
   const storyFirst = () => {
