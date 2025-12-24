@@ -43,12 +43,19 @@ export const createDragHandlers = (
 
     // Hover events (for tools that need hover feedback)
     onHover: (info: any) => {
-      const { coordinate, layer } = info;
+      // Deck.gl hover events can have coordinate as an array or as x, y, z properties
+      const coordinate = info.coordinate || (info.x !== undefined && info.y !== undefined ? [info.x, info.y, info.z || 0] : null);
+      const layer = info.layer;
       
       // Detect if hovering over an annotation layer (only for move tool)
       if (activeTool === 'move') {
         if (layer && layer.id && layer.id.startsWith('annotation-')) {
-          const annotationId = layer.id.replace('annotation-', '');
+          // Extract annotation ID, handling both 'annotation-{id}' and 'annotation-{id}-text' formats
+          let annotationId = layer.id.replace('annotation-', '');
+          // Remove '-text' suffix if present (for text layers attached to shapes)
+          if (annotationId.endsWith('-text')) {
+            annotationId = annotationId.replace('-text', '');
+          }
           useOverlayStore.getState().setHoveredAnnotation(annotationId);
         } else {
           // Clear hover state if not hovering over an annotation
@@ -61,7 +68,9 @@ export const createDragHandlers = (
       
       // Emit hover coordinate for drawing tools
       if (activeTool === 'move' || activeTool === 'text' || activeTool === 'polyline' || activeTool === 'rectangle' || activeTool === 'ellipse' || activeTool === 'line' || activeTool === 'lasso') {
-        emit('hover', coordinate);
+        if (coordinate) {
+          emit('hover', coordinate);
+        }
       }
     },
   };

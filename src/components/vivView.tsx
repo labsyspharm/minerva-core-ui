@@ -32,7 +32,7 @@ export type Props = {
   activeTool: string;
   isDragging?: boolean; // New prop to indicate if dragging an annotation
   hoveredAnnotationId?: string | null; // New prop to indicate hovered annotation
-  onOverlayInteraction?: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd', coordinate: [number, number, number]) => void;
+  onOverlayInteraction?: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number]) => void;
 } & HashContext;
 
 type Shape = {
@@ -169,8 +169,7 @@ const VivView = (props: Props) => {
   );
   // Memoize drag handlers
   const dragHandlers = useMemo(() =>
-    createDragHandlers(activeTool, null),
-    //createDragHandlers(activeTool, onOverlayInteraction),
+    createDragHandlers(activeTool, onOverlayInteraction),
     [activeTool, onOverlayInteraction]
   )
 
