@@ -597,17 +597,21 @@ function createTileLayers(meta) {
   const width = [...pyramids["0"]].pop().width;
   const tileSize = pyramids["0"][0].tileSize;
   const maxLevel = pyramids["0"].length;
-  const minZoom = -maxLevel;
+  const minZoom = Math.round(-(maxLevel-1));
   if (rgbImage) {
     return new TileLayer({
       id: 'rgb_image',
       getTileData: async ({ index, signal }) => {
         const { x, y, z } = index;
-        const level = -1 - z;
+        const level = Math.abs(-z);
+        console.log("z level and x,y")
+        console.log({x, y, z, level});
         const source = dicomSource.data[level];
         if (!source) {
           return null;
         }
+        console.log("z level Has Source")
+        console.log({x, y, z, level}, source);
         const selection = {z: 0, t:0, c: 0};
         let tile = null;
         try {
@@ -626,15 +630,20 @@ function createTileLayers(meta) {
         if (!tile) {
           return null;
         }
+        console.log("x,y Has Tile")
+        console.log({x, y, z, level}, source, tile);
         return tile;
       },
-      maxZoom: 0,
+      refinementStrategy: "best-available",
+      tileSize: 1024,
       minZoom: minZoom,
+      maxZoom: 0,
       // See
       // viv/packages/layers/src/multiscale-image-layer/multiscale-image-layer.js
-      zoomOffset: 5,
+      zoomOffset: 0, // what should this be?
+      extent: [0, 0, width, height],
       renderSubLayers: props => {
-        const {boundingBox} = props.tile;
+        const { left, bottom, right, top } = props.tile.bbox;
         if (!props.data) {
           return null;
         }
@@ -649,13 +658,28 @@ function createTileLayers(meta) {
         const imageData = new ImageData(
           ...imageDataArguments
         );
+        console.log("Bitmap Layer Bounds:");
+        console.log([
+          left, bottom, right, top
+        ])
         return new BitmapLayer(props, {
           image: data,
           bounds: [
-            boundingBox[0][0], boundingBox[0][1],
-            boundingBox[1][0], boundingBox[1][1]
+            left, bottom, right, top
           ]
         });
+      },
+      pickable: true,
+      onClick: ({bitmap, layer}) => {
+        if (bitmap) {
+          console.log("Picked Pixel:");
+          console.log({
+            sourceX: bitmap.pixel[0],
+            sourceY: bitmap.pixel[1],
+            sourceWidth: 1,
+            sourceHeight: 1
+          });
+        }
       }
     });
   }

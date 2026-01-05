@@ -1,7 +1,5 @@
 import * as React from "react";
 import Deck from '@deck.gl/react';
-import { BitmapLayer } from '@deck.gl/layers';
-import { TileLayer } from '@deck.gl/geo-layers';
 import { OrthographicView, OrthographicViewState } from '@deck.gl/core';
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
@@ -105,10 +103,13 @@ const VivView = (props: Props) => {
   // Memoize initial view state
   const initialViewState = useMemo(() => {
     const n_levels = loader.data.length;
-    return {
+    const initial_view = {
       zoom: -n_levels,
       target: [imageShape.x / 2, imageShape.y / 2, 0]
-    } as OrthographicViewState;
+    }
+    console.log("Initial View State:")
+    console.log(initial_view)
+    return initial_view as OrthographicViewState;
   }, [loader.data, imageShape]);
 
   const [viewState, setViewState] = useState<OrthographicViewState>(initialViewState);
@@ -139,7 +140,6 @@ const VivView = (props: Props) => {
         ( SourceChannels[0].Properties.Samples === 3 ) &&
         ( SourceChannels[0].Associations.SourceDataType.ID === "Uint8" )
       )
-      console.log({rgbImage})
       return createTileLayers({
         pyramids: props.dicomIndex,
         settings: mainSettings,
