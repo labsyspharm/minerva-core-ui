@@ -1,6 +1,6 @@
 import * as React from "react";
 import { PolygonLayer, TextLayer, ScatterplotLayer } from '@deck.gl/layers';
-import { useOverlayStore, ellipseToPolygon } from "../../lib/stores";
+import { useOverlayStore, ellipseToPolygon, arrowToPolygon, lineToPolygon, ARROW_LINE_WIDTH } from "../../lib/stores";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {
@@ -148,7 +148,7 @@ const PREVIEW_LINE_COLOR: [number, number, number, number] = [255, 165, 0, 255];
 
 const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTool, currentInteraction }) => {
   // Use Zustand store for drawing state
-  const { drawingState, finalizeLasso, finalizePolyline, createTextAnnotation, createPointAnnotation, globalColor } = useOverlayStore();
+  const { drawingState, finalizeLasso, finalizePolyline, createTextAnnotation, createPointAnnotation, globalColor, viewportZoom } = useOverlayStore();
   const { isDrawing, dragStart, dragEnd } = drawingState;
 
   // Local state for lasso tool
@@ -202,6 +202,11 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   const [ellipseFirstClick, setEllipseFirstClick] = React.useState<[number, number] | null>(null);
   const [ellipseSecondClick, setEllipseSecondClick] = React.useState<[number, number] | null>(null);
   const [isEllipseClickMode, setIsEllipseClickMode] = React.useState(false);
+
+  // Local state for click-to-draw arrow
+  const [arrowFirstClick, setArrowFirstClick] = React.useState<[number, number] | null>(null);
+  const [arrowSecondClick, setArrowSecondClick] = React.useState<[number, number] | null>(null);
+  const [isArrowClickMode, setIsArrowClickMode] = React.useState(false);
 
   const removeMiddleTwoElements = (arr: [number, number][]) => {
     const mid = arr.length / 2;
@@ -299,33 +304,27 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // Handle line finalization from click mode
   const finalizeClickLine = () => {
     if (lineFirstClick && lineSecondClick) {
-      const [startX, startY] = lineFirstClick;
-      const [endX, endY] = lineSecondClick;
+      // Calculate world-coordinate width for consistent 5px visual width
+      const desiredPixelWidth = 5;
+      const worldWidth = desiredPixelWidth * Math.pow(2, -viewportZoom);
 
-      const lineData: [number, number][] = [
-        [startX, startY],
-        [endX, endY],
-        [endX, endY],
-        [startX, startY],
-        [startX, startY]
-      ];
-
-      // Create line annotation directly using click coordinates
       const annotation = {
         id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: 'line' as const,
-        polygon: lineData,
+        polygon: lineToPolygon(lineFirstClick, lineSecondClick, worldWidth),
+        startPoint: lineFirstClick as [number, number],
+        endPoint: lineSecondClick as [number, number],
+        desiredPixelWidth,
         style: {
-          fillColor: [globalColor[0], globalColor[1], globalColor[2], 50] as [number, number, number, number],
+          fillColor: globalColor as [number, number, number, number],
           lineColor: globalColor as [number, number, number, number],
-          lineWidth: 3,
+          lineWidth: 0,
         },
         metadata: {
           createdAt: new Date(),
         },
       };
 
-      // Add the annotation to the store
       useOverlayStore.getState().addAnnotation(annotation);
 
       // Reset line click state
@@ -366,6 +365,41 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     }
   };
 
+  // Handle arrow finalization from click mode
+  const finalizeClickArrow = () => {
+    if (arrowFirstClick && arrowSecondClick) {
+      // Calculate world-coordinate width for consistent pixel width
+      const desiredPixelWidth = ARROW_LINE_WIDTH;
+      const worldWidth = desiredPixelWidth * Math.pow(2, -viewportZoom);
+
+      const annotation = {
+        id: `arrow-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: 'arrow' as const,
+        polygon: arrowToPolygon(arrowFirstClick, arrowSecondClick, worldWidth),
+        startPoint: arrowFirstClick as [number, number],
+        endPoint: arrowSecondClick as [number, number],
+        desiredPixelWidth,
+        style: {
+          fillColor: globalColor as [number, number, number, number],
+          lineColor: globalColor as [number, number, number, number],
+          lineWidth: 0,
+        },
+        metadata: {
+          createdAt: new Date(),
+        },
+      };
+      useOverlayStore.getState().addAnnotation(annotation);
+
+      // Reset arrow click state
+      setArrowFirstClick(null);
+      setArrowSecondClick(null);
+      setIsArrowClickMode(false);
+      
+      // Reset store's drawing state to prevent duplicate finalization
+      useOverlayStore.getState().resetDrawingState();
+    }
+  };
+
   // Handle tool changes - clear state when switching tools
   React.useEffect(() => {
     if (activeTool !== 'lasso') {
@@ -388,6 +422,11 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       setEllipseFirstClick(null);
       setEllipseSecondClick(null);
       setIsEllipseClickMode(false);
+    }
+    if (activeTool !== 'arrow') {
+      setArrowFirstClick(null);
+      setArrowSecondClick(null);
+      setIsArrowClickMode(false);
     }
     setPolylinePoints([]);
     setFinalizedPolylineSegmentCount(0);
@@ -487,6 +526,29 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [activeTool, isEllipseClickMode]);
+
+  // Handle keyboard events for arrow finalization
+  React.useEffect(() => {
+    if (activeTool !== 'arrow') return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Cancel arrow drawing on Escape
+      if (event.key === 'Escape' && isArrowClickMode) {
+        event.preventDefault();
+        setArrowFirstClick(null);
+        setArrowSecondClick(null);
+        setIsArrowClickMode(false);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeTool, isArrowClickMode]);
 
   // Handle keyboard events for polygon finalization
   React.useEffect(() => {
@@ -652,6 +714,37 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         // Update the second click position for preview during hover
         setEllipseSecondClick([x, y]);
       }
+    } else if (activeTool === 'arrow') {
+      console.log('DrawingOverlay: Received arrow interaction:', type, 'at coordinate:', [x, y]);
+
+      if (type === 'click') {
+        if (!isArrowClickMode) {
+          // First click - start arrow drawing
+          console.log('DrawingOverlay: First arrow click at:', [x, y]);
+          setArrowFirstClick([x, y]);
+          setIsArrowClickMode(true);
+        } else {
+          // Second click - finalize arrow
+          console.log('DrawingOverlay: Second arrow click at:', [x, y]);
+          setArrowSecondClick([x, y]);
+          finalizeClickArrow();
+        }
+      } else if (type === 'hover' && isArrowClickMode && arrowFirstClick) {
+        // Update the second click position for preview during hover
+        setArrowSecondClick([x, y]);
+      } else if (type === 'dragStart') {
+        // Start drag - set first click position
+        if (!isArrowClickMode) {
+          setArrowFirstClick([x, y]);
+          setIsArrowClickMode(true);
+        }
+      } else if (type === 'drag' && isArrowClickMode && arrowFirstClick) {
+        // Update second position during drag for preview
+        setArrowSecondClick([x, y]);
+      } else if (type === 'dragEnd' && isArrowClickMode && arrowFirstClick && arrowSecondClick) {
+        // Finalize arrow on drag end
+        finalizeClickArrow();
+      }
     } else if (activeTool === 'polyline') {
       console.log('DrawingOverlay: Received polyline interaction:', type, 'at coordinate:', [x, y]);
 
@@ -705,7 +798,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         console.log('DrawingOverlay: Hover interaction at coordinate:', [x, y]);
       }
     }
-  }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso, isPolylineDrawing, isPolylineDragging, finalizePolyline, isRectangleClickMode, rectangleFirstClick, finalizeClickRectangle, isLineClickMode, lineFirstClick, finalizeClickLine, isEllipseClickMode, ellipseFirstClick, finalizeClickEllipse, isPolygonClickMode, polygonClickPoints, finalizeClickPolygon]);
+  }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso, isPolylineDrawing, isPolylineDragging, finalizePolyline, isRectangleClickMode, rectangleFirstClick, finalizeClickRectangle, isLineClickMode, lineFirstClick, finalizeClickLine, isEllipseClickMode, ellipseFirstClick, finalizeClickEllipse, isArrowClickMode, arrowFirstClick, finalizeClickArrow, isPolygonClickMode, polygonClickPoints, finalizeClickPolygon]);
 
   // Handle text input submission
   const handleTextSubmit = () => {
@@ -737,6 +830,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     let fillColor: [number, number, number, number] = PREVIEW_FILL_COLOR;
     let lineColor: [number, number, number, number] = PREVIEW_LINE_COLOR;
     let shouldFill = true;
+    let lineWidth = getLineWidthPx(); // Default line width
 
     // Rectangle tool: uses click-to-draw mode or drag mode
     if (activeTool === 'rectangle') {
@@ -811,33 +905,19 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     }
     // Line tool: uses click mode or drag mode
     else if (activeTool === 'line') {
-      // Check for click-to-draw mode first
+      // Calculate world-coordinate width for consistent 5px visual width
+      const desiredPixelWidth = 5;
+      const worldWidth = desiredPixelWidth * Math.pow(2, -viewportZoom);
+      lineWidth = worldWidth;
+      
       if (isLineClickMode && lineFirstClick && lineSecondClick) {
-        const [startX, startY] = lineFirstClick;
-        const [endX, endY] = lineSecondClick;
-
-        polygonData = [
-          [startX, startY],
-          [endX, endY],
-          [endX, endY],
-          [startX, startY],
-          [startX, startY]
-        ];
-        console.log('DrawingOverlay: Click line polygon data:', polygonData);
-      }
-      // Fall back to drag mode for backward compatibility
-      else if (isDrawing && dragStart && dragEnd) {
-        const [startX, startY] = dragStart;
-        const [endX, endY] = dragEnd;
-
-        polygonData = [
-          [startX, startY],
-          [endX, endY],
-          [endX, endY],
-          [startX, startY],
-          [startX, startY]
-        ];
-        console.log('DrawingOverlay: Drag line polygon data:', polygonData);
+        polygonData = lineToPolygon(lineFirstClick, lineSecondClick, worldWidth);
+        fillColor = PREVIEW_LINE_COLOR;
+        shouldFill = true;
+      } else if (isDrawing && dragStart && dragEnd) {
+        polygonData = lineToPolygon(dragStart, dragEnd, worldWidth);
+        fillColor = PREVIEW_LINE_COLOR;
+        shouldFill = true;
       }
     }
     // Ellipse tool: uses click mode or drag mode
@@ -855,12 +935,32 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         console.log('DrawingOverlay: Drag ellipse polygon data:', polygonData);
       }
     }
+    // Arrow tool: uses arrow shape (line with arrowhead)
+    else if (activeTool === 'arrow') {
+      // Calculate world-coordinate width for consistent pixel width
+      const desiredPixelWidth = ARROW_LINE_WIDTH;
+      const worldWidth = desiredPixelWidth * Math.pow(2, -viewportZoom);
+      lineWidth = worldWidth;
+      
+      if (isArrowClickMode && arrowFirstClick && arrowSecondClick) {
+        polygonData = arrowToPolygon(arrowFirstClick, arrowSecondClick, worldWidth);
+        fillColor = [255, 165, 0, 255] as [number, number, number, number];
+        shouldFill = true;
+      } else if (isDrawing && dragStart && dragEnd) {
+        polygonData = arrowToPolygon(dragStart, dragEnd, worldWidth);
+        fillColor = [255, 165, 0, 255] as [number, number, number, number];
+        shouldFill = true;
+      }
+    }
 
     // Return null if no polygon data
     if (!polygonData) {
       return null;
     }
 
+    // Determine if we should stroke (lines and arrows use polygon fill only, no stroke)
+    const shouldStroke = activeTool !== 'line' && activeTool !== 'arrow';
+    
     // Create single unified polygon layer
     return new PolygonLayer({
       id: layerId,
@@ -868,15 +968,15 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       getPolygon: d => d.polygon,
       getFillColor: fillColor,
       getLineColor: lineColor,
-      getLineWidth: getLineWidthPx(),
+      getLineWidth: lineWidth,
       lineWidthScale: 1,
       lineWidthUnits: 'pixels',
-      lineWidthMinPixels: getLineWidthPx(),
-      lineWidthMaxPixels: getLineWidthPx(),
-      stroked: true,
+      lineWidthMinPixels: lineWidth,
+      lineWidthMaxPixels: lineWidth,
+      stroked: shouldStroke,
       filled: shouldFill,
     });
-  }, [activeTool, isDrawing, dragStart, dragEnd, isLassoDrawing, lassoPoints, isPolylineDrawing, polylinePoints, isRectangleClickMode, rectangleFirstClick, rectangleSecondClick, isLineClickMode, lineFirstClick, lineSecondClick, isEllipseClickMode, ellipseFirstClick, ellipseSecondClick, isPolygonClickMode, polygonClickPoints, polygonHoverPoint]);
+  }, [activeTool, isDrawing, dragStart, dragEnd, isLassoDrawing, lassoPoints, isPolylineDrawing, polylinePoints, isRectangleClickMode, rectangleFirstClick, rectangleSecondClick, isLineClickMode, lineFirstClick, lineSecondClick, isEllipseClickMode, ellipseFirstClick, ellipseSecondClick, isArrowClickMode, arrowFirstClick, arrowSecondClick, isPolygonClickMode, polygonClickPoints, polygonHoverPoint, viewportZoom]);
 
   // Text placement marker - shows where text will be placed
   const textPlacementMarker = React.useMemo(() => {
@@ -1012,9 +1112,17 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           const isHovered = hoveredAnnotationId === annotation.id;
           let fillColor: [number, number, number, number] = [255, 255, 255, 1]; // Default: very low opacity white fill
           let lineColor: [number, number, number, number] = annotation.style.lineColor; // Default: black line
-          // @ts-ignore - polyline type exists at runtime but not in type definition
-          if (annotation.type === 'line' || annotation.type === 'polyline') {
-            fillColor = [0, 0, 0, 0]; // Lines and polylines don't have fill
+          
+          // Check if annotation has fillColor in style (arrows and lines now have fillColor)
+          // @ts-ignore - fillColor may exist on arrow and line annotations
+          if (annotation.style.fillColor) {
+            // @ts-ignore - fillColor exists on this annotation type
+            fillColor = annotation.style.fillColor;
+          } else {
+            // @ts-ignore - polyline type exists at runtime but not in type definition
+            if (annotation.type === 'polyline') {
+              fillColor = [0, 0, 0, 0]; // Polylines don't have fill
+            }
           }
 
           // Change fill color to blue if hovered
@@ -1023,10 +1131,33 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
             lineColor = [0, 120, 255, 255]; // Blue with moderate opacity
           }
 
+          // @ts-ignore - arrow and line types exist at runtime
+          const isArrow = annotation.type === 'arrow';
+          const isLine = annotation.type === 'line';
+          // Lines and arrows use polygon fill only - no stroke for consistent scaling
+          const shouldStroke = !isArrow && !isLine && annotation.style.lineWidth > 0;
+          
+          // For lines and arrows, recalculate polygon based on current zoom for consistent pixel width
+          let polygonToRender = annotation.polygon;
+          // @ts-ignore - LineAnnotation properties
+          if (isLine && annotation.startPoint && annotation.endPoint && annotation.desiredPixelWidth) {
+            // @ts-ignore - LineAnnotation properties
+            const worldWidth = annotation.desiredPixelWidth * Math.pow(2, -viewportZoom);
+            // @ts-ignore - LineAnnotation properties
+            polygonToRender = lineToPolygon(annotation.startPoint, annotation.endPoint, worldWidth);
+          }
+          // @ts-ignore - ArrowAnnotation properties
+          if (isArrow && annotation.startPoint && annotation.endPoint && annotation.desiredPixelWidth) {
+            // @ts-ignore - ArrowAnnotation properties
+            const worldWidth = annotation.desiredPixelWidth * Math.pow(2, -viewportZoom);
+            // @ts-ignore - ArrowAnnotation properties
+            polygonToRender = arrowToPolygon(annotation.startPoint, annotation.endPoint, worldWidth);
+          }
+          
           layers.push(new PolygonLayer({
             id: `annotation-${annotation.id}`,
             data: [{
-              polygon: annotation.polygon
+              polygon: polygonToRender
             }],
             getPolygon: d => d.polygon,
             getFillColor: fillColor,
@@ -1036,7 +1167,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
             lineWidthUnits: 'pixels',
             lineWidthMinPixels: annotation.style.lineWidth,
             lineWidthMaxPixels: annotation.style.lineWidth,
-            stroked: true,
+            stroked: shouldStroke,
             filled: true,
             pickable: true,
           }));
@@ -1074,7 +1205,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       });
 
     return layers;
-  }, [annotations, hiddenLayers, hoveredAnnotationId]);
+  }, [annotations, hiddenLayers, hoveredAnnotationId, viewportZoom]);
 
   // Notify parent when drawing layer is created or removed
   React.useEffect(() => {

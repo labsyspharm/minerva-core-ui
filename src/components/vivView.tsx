@@ -12,6 +12,7 @@ import {
 import styled from "styled-components";
 import { getWaypoint } from "../lib/waypoint";
 import { createDragHandlers } from "../lib/dragHandlers";
+import { useOverlayStore } from "../lib/stores";
 
 // Types
 import type { Config } from "../lib/viv";
@@ -103,12 +104,19 @@ const VivView = (props: Props) => {
 
   const [viewState, setViewState] = useState<OrthographicViewState>(initialViewState);
 
+  // Get setViewportZoom from overlay store (needed for initial zoom setting)
+  const setViewportZoom = useOverlayStore(state => state.setViewportZoom);
+
   // Update viewState when initialViewState changes (e.g., when loader changes)
   useEffect(() => {
     if (loader && loader.data && loader.data.length > 0) {
       setViewState(initialViewState);
+      // Set initial viewport zoom for line width calculations
+      if (typeof initialViewState.zoom === 'number') {
+        setViewportZoom(initialViewState.zoom);
+      }
     }
-  }, [initialViewState, loader]);
+  }, [initialViewState, loader, setViewportZoom]);
 
   // Memoize main props to prevent unnecessary layer recreation
   const mainProps = useMemo(() => ({
@@ -187,6 +195,8 @@ const VivView = (props: Props) => {
       return isDragging ? 'grabbing' : 'crosshair';
     } else if (activeTool === 'line') {
       return isDragging ? 'grabbing' : 'crosshair';
+    } else if (activeTool === 'arrow') {
+      return isDragging ? 'grabbing' : 'crosshair';
     } else if (activeTool === 'polyline') {
       return 'crosshair';
     } else if (activeTool === 'point') {
@@ -218,7 +228,9 @@ const VivView = (props: Props) => {
     if (isDragging || (activeTool !== 'move' && interactionState.isDragging)) return;
     // don't allow pan on non-move tool
     setViewState(nextViewState);
-  }, [isDragging, activeTool]);
+    // Update viewport zoom in store for arrowhead scaling
+    setViewportZoom(nextViewState.zoom);
+  }, [isDragging, activeTool, setViewportZoom]);
 
   if (!loader || !mainSettings) return null;
 
