@@ -104,7 +104,7 @@ const VivView = (props: Props) => {
   const initialViewState = useMemo(() => {
     const n_levels = loader.data.length;
     const initial_view = {
-      zoom: -n_levels,
+      zoom: 0, //-n_levels,
       target: [imageShape.x / 2, imageShape.y / 2, 0]
     }
     console.log("Initial View State:")
