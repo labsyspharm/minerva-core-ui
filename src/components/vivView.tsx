@@ -1,5 +1,7 @@
 import * as React from "react";
 import Deck from '@deck.gl/react';
+import { BitmapLayer } from '@deck.gl/layers';
+import { TileLayer } from '@deck.gl/geo-layers';
 import { OrthographicView, OrthographicViewState } from '@deck.gl/core';
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
@@ -18,12 +20,14 @@ import { createDragHandlers } from "../lib/dragHandlers";
 import type { Config } from "../lib/viv";
 import type { Group, Story } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
+import type { ConfigProps } from "../lib/config";
 import type { Selection, Color, Limit } from "../lib/viv";
 import { VivLensing } from "./vivLensing";
 import { LensExtension } from "@hms-dbmi/viv";
 
 export type Props = {
   loader: any;
+  config: ConfigProps;
   series: string; // DICOM
   groups: Group[];
   stories: Story[];
@@ -127,16 +131,25 @@ const VivView = (props: Props) => {
     props.dicomIndex, props.series
   ]);
   // Memoize dicom layer
+  const { SourceChannels } = props.config.ItemRegistry 
   const dicomLayer = useMemo(
     () => {
+      const rgbImage = (
+        ( SourceChannels.length === 1 ) &&
+        ( SourceChannels[0].Properties.Samples === 3 ) &&
+        ( SourceChannels[0].Associations.SourceDataType.ID === "Uint8" )
+      )
+      console.log({rgbImage})
       return createTileLayers({
         pyramids: props.dicomIndex,
         settings: mainSettings,
-        dicomSource: dicomSource
+        dicomSource: dicomSource,
+        rgbImage
       });
     },
     [
-      dicomSource, mainSettings
+      dicomSource, mainSettings, 
+      SourceChannels
     ]
   );
   // Memoize image layer

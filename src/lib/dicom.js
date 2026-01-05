@@ -1,4 +1,5 @@
 import { BitmapLayer } from '@deck.gl/layers';
+import { TileLayer } from '@deck.gl/geo-layers';
 import { DicomTIFFImage } from "./dicom-tiff-image";
 import { DicomPixelSource } from "./dicom-pixel-source";
 import * as dcmjs from 'dcmjs'
@@ -227,7 +228,7 @@ function getPixelSpacing (metadata) {
   ]
 }
 
-function computeImagePyramid ({ metadata }) {
+function computeImagePyramid ({ metadata, bits }) {
   if (metadata.length === 0) {
     throw new Error(
       'No image metadata was provided to computate image pyramid structure.'
@@ -440,6 +441,7 @@ function computeImagePyramid ({ metadata }) {
   ]
 
   return {
+    bits,
     extent,
     origins: pyramidOrigins,
     resolutions: pyramidResolutions,
@@ -498,7 +500,7 @@ const getShapeForBinaryDownsampleLevel = (
 
 const loadDicom = (meta) => {
   const { pyramids, series, little_endian } = meta;
-  const { width, height } = [
+  const { width, height, bits } = [
     ...pyramids[0]
   ].pop()
   const channels = (
@@ -515,7 +517,7 @@ const loadDicom = (meta) => {
     })),
     "ID":"Pixels:0",
     "DimensionOrder":"XYZCT",
-    "Type":"Uint16",
+    "Type": bits === 8 ? "Uint8" : "Uint16",
     "SizeT":1,
     "SizeZ":1,
     "SizeC":channels.length,
@@ -590,12 +592,73 @@ function createTileLayers(meta) {
     contrastLimits,
     selections,
   } = meta.settings;
-  const { pyramids, dicomSource } = meta;
+  const { pyramids, dicomSource, rgbImage } = meta;
   const height = [...pyramids["0"]].pop().height;
   const width = [...pyramids["0"]].pop().width;
   const tileSize = pyramids["0"][0].tileSize;
   const maxLevel = pyramids["0"].length;
   const minZoom = -maxLevel;
+  if (rgbImage) {
+    return new TileLayer({
+      id: 'rgb_image',
+      getTileData: async ({ index, signal }) => {
+        const { x, y, z } = index;
+        const level = -1 - z;
+        const source = dicomSource.data[level];
+        if (!source) {
+          return null;
+        }
+        const selection = {z: 0, t:0, c: 0};
+        let tile = null;
+        try {
+          tile = await source.getTile({
+            x, y, selection, signal
+          })
+        }
+        catch (e) {
+          if (e !== "__minervaEmptyFramePath") {
+            if (!(e instanceof AbortError)) {
+              console.error(e);
+            }
+          };
+          return null;
+        }
+        if (!tile) {
+          return null;
+        }
+        return tile;
+      },
+      maxZoom: 0,
+      minZoom: minZoom,
+      // See
+      // viv/packages/layers/src/multiscale-image-layer/multiscale-image-layer.js
+      zoomOffset: 5,
+      renderSubLayers: props => {
+        const {boundingBox} = props.tile;
+        if (!props.data) {
+          return null;
+        }
+        const {
+          data, width, height
+        } = props.data;
+        const imageDataArguments = [
+          data, width, height
+        ] 
+        console.log("Image Data Arguments:");
+        console.log(imageDataArguments);
+        const imageData = new ImageData(
+          ...imageDataArguments
+        );
+        return new BitmapLayer(props, {
+          image: data,
+          bounds: [
+            boundingBox[0][0], boundingBox[0][1],
+            boundingBox[1][0], boundingBox[1][1]
+          ]
+        });
+      }
+    });
+  }
   const imageProps = {
     loader: dicomSource.data,
     // https://deck.gl/docs/api-reference/geo-layers/tile-layer#refinementstrategy
@@ -615,9 +678,9 @@ const listDicomWeb = async (series) => {
 
 class DicomPlane {
   constructor(props) {
-    console.warn(props);
     this.meta = props.meta;
     this.dtype = props.dtype;
+    this.samples = props.samples;
     this.shape = props.shape;
     this.labels = props.labels;
     this.series = props.series;
@@ -661,11 +724,12 @@ const parseDicomWeb = (series, dicom_pyramids) => {
   const levels = any_channel.toReversed();
   // Levels starting at full resolution
   const data_config = levels.map(level => {
-    const {tileSize, width, height} = level;
+    const {tileSize, width, height, bits} = level;
     const shape = [width, height, n_channels];
     return {
       "series": series,
-      "dtype":"Uint16",
+      "samples": ( bits === 16 ) ? 1 : 3,
+      "dtype": ( bits === 16 ) ? "Uint16" : "Uint8",
       "tileSize":tileSize,
       "shape": shape,
       "labels":["x","y","c"],
@@ -684,15 +748,16 @@ const parseDicomWeb = (series, dicom_pyramids) => {
     "Description":"",
     "Pixels": {
       "Channels":channel_pyramids.map((_, i) => {
+        const { samples } = data_config[0];
         return {
           "ID":`Channel:0:${i}`,
           "Name":`Channel ${i}`,
-          "SamplesPerPixel":1
+          "SamplesPerPixel": samples
         }
       }),
       "ID":"Pixels:0",
       "DimensionOrder":"XYC",
-      "Type":"uint16",
+      "Type": data_config[0].dtype,
       "SizeC":data_config[0].shape[2],
       "SizeY":data_config[0].shape[1],
       "SizeX":data_config[0].shape[0],
@@ -719,12 +784,14 @@ const loadDicomWeb = async (series) => {
   // "https://proxy.imaging.datacommons.cancer.gov/current/viewer-only-no-downloads-see-tinyurl-dot-com-slash-3j3d9jyp/dicomWeb/studies/2.25.93749216439228361118017742627453453196/series/1.3.6.1.4.1.5962.99.1.2344794501.795090168.1655907236229.4.0"
   const instance_list = await listDicomWeb(series);
   const pyramids = await Promise.all(
-    instance_list.map(({ SOPInstanceUID }, i) => {
+    instance_list.map((opts, i) => {
+      const { SOPInstanceUID, BitsAllocated } = opts;
       const instance = `${series}/instances/${SOPInstanceUID}`;
       return readMetadata(instance).then(
         instance_metadata => {
           const pyramid = computeImagePyramid({
-            metadata: instance_metadata
+            metadata: instance_metadata,
+            bits: BitsAllocated
           })
           return pyramid;
         }
@@ -747,7 +814,10 @@ const loadDicomWeb = async (series) => {
     Object.entries(channel_pyramids).map(
       ([key, pyramid]) => ([
         key, Object.values(pyramid).map(
-          ({ frameMappings, extent, tileSizes }) => ({ 
+          ({
+            frameMappings, bits, extent, tileSizes
+          }) => ({ 
+            bits,
             extent,
             width: Math.abs(extent[2]),
             height: Math.abs(extent[3]),

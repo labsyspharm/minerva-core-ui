@@ -421,12 +421,12 @@ const extractDistributions: ExtractDistributions = async (loader) => {
 const extractChannels: ExtractChannels = (loader, groups) => {
   const init = initialize({ planes: loader.data });
   const { Channels, Type } = loader.metadata.Pixels;
-  const Colors = list_colors("sRGB");
   const SourceChannels = Channels.map(
     (channel, index) => ({
       UUID: crypto.randomUUID(),
       Properties: {
         Name: channel.Name,
+        Samples: channel.SamplesPerPixel,
         SourceIndex: init.indices[index].c,
       },
       Associations: {
@@ -435,6 +435,7 @@ const extractChannels: ExtractChannels = (loader, groups) => {
       }
     })
   );
+  const Colors = list_colors("sRGB");
   // Match hard-coded groups to existing channels
   const hardcoded_crc01 = groups.reduce(
     ({ name_map, Groups, GroupChannels }, g) => {
@@ -534,6 +535,53 @@ const extractChannels: ExtractChannels = (loader, groups) => {
       GroupChannels,
       Groups,
       Colors
+    }
+  }
+  else if (
+    ( SourceChannels.length === 1 ) &&
+    ( SourceChannels[0].Properties.Samples === 3 ) &&
+    ( SourceChannels[0].Associations.SourceDataType.ID === "Uint8" )
+  ) {
+    const OneColor = [{
+      ID: "sRGB#ffffff",
+      Properties: {
+        R: 255, G: 255, B: 255,
+        Space: "sRGB",
+        LowerRange: 0,
+        UpperRange: 255
+      }
+    }]
+    const White = OneColor[0]
+    const Groups = [{
+      UUID: crypto.randomUUID(),
+      State: { Expanded: true },
+      Properties: {
+        Name: "H&E"
+      }
+    }]
+    const GroupChannels = SourceChannels.map(
+      (channel, index) => {
+        const group_uuid = Groups[0].UUID;
+        return {
+          UUID: crypto.randomUUID(),
+          State: { Expanded: true },
+          Properties: {
+            LowerRange: 0,
+            UpperRange: 255 
+          },
+          Associations: {
+            SourceChannel: onlyUUID(channel),
+            Color: asID(White.ID),
+            Group: asUUID(group_uuid)
+          }
+        }
+      }
+    )
+    return {
+      SourceChannels,
+      GroupChannels,
+      Groups,
+      Colors: OneColor
     }
   }
   const group_size = 4;

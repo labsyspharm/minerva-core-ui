@@ -115,7 +115,6 @@ const toSettings = (opts) => {
     // Defaults
     if (!loader) return toDefaultSettings(3);
     const full_level = loader.data[0];
-    if (!loader) return toDefaultSettings(3);
     const { labels, shape } = full_level;
     const c_idx = labels.indexOf("c");
     // TODO Simplify mapping of channel names to indices!
@@ -145,7 +144,7 @@ const toSettings = (opts) => {
     const channelsVisible: boolean[] = channels.map(
       (c, i: number) => true
     );
-    console.log(colors, contrastLimits, channelsVisible);
+    console.log({colors, contrastLimits, channelsVisible});
     const n_channels = shape[c_idx] || 0;
     const out = {
       ...toDefaultSettings(n_channels),

@@ -10,11 +10,11 @@ const littleEndianPlatform = (() => {
 
 class DicomTIFFImage {
   constructor(opts) {
-    console.warn(opts);
-    const bytesPerSample = 2;
     const { metadata, little_endian } = opts;
     const { tileSize } = opts.pyramids[0][0];
     const { Pixels } = metadata;
+    const rgbImage = Pixels.Type === "Uint8";
+    const bytesPerSample = rgbImage ? 3 : 2;
     this.Pixels = Pixels;
     this.level = opts.level;
     this.c = opts.c;
@@ -24,6 +24,7 @@ class DicomTIFFImage {
     this.bytesPerSample = bytesPerSample;
     this.tileWidth = tileSize;
     this.tileHeight = tileSize;
+    this.rgbImage = rgbImage;
   }
 
   getPyramid() {
@@ -48,19 +49,39 @@ class DicomTIFFImage {
     const imageWidth = this.getWidth();
     const origin_x = x * this.tileWidth;
     const origin_y = y * this.tileHeight;
-
     return await this.getTileOrStrip(
         x, y, sample, signal
     ).then((tile) => {
+      const fullTile = tileHeight * tileWidth;
       const ymax = Math.min(
         tileHeight, height, imageHeight - origin_y 
       );
       const xmax = Math.min(
         tileWidth, width, imageWidth - origin_x
       );
+      if (this.rgbImage) {
+        const rgb = new Uint8ClampedArray(tile.data.buffer);
+        const rgba = new Uint8ClampedArray(rgb.length * 4 / 3);
+        for (let i = 0, j = 0; i < rgb.length; i += 3, j += 4) {
+          rgba[j] = rgb[i];
+          rgba[j + 1] = rgb[i + 1];
+          rgba[j + 2] = rgb[i + 2];
+          rgba[j + 3] = 255;
+        }
+        const samples = 4;
+        const full = Math.round(
+          rgba.length / samples
+        ) === fullTile;
+        return {
+          data: rgba,
+          width: full ? tileWidth: xmax,
+          height: full ? tileHeight: ymax
+        }
+      }
       const optimization = true;
       if ( littleEndianPlatform == this.littleEndian && optimization) {
         const data = new Uint16Array(tile.data.buffer);
+        const full = data.length === fullTile;
         // Blackout missing data
         for (let pixel_y = ymax; pixel_y < tileHeight; ++pixel_y) {
           for (let pixel_x = 0; pixel_x < tileWidth; ++pixel_x) {
@@ -75,8 +96,6 @@ class DicomTIFFImage {
             data[windowCoordinate] = 0;
           }
         }
-        const fullTile = tileHeight * tileWidth;
-        const full = data.length === fullTile;
         return {
           data,
           width: full ? tileWidth: xmax,
@@ -92,8 +111,6 @@ class DicomTIFFImage {
           );
         }
       }
-      const fullTile = tileHeight * tileWidth;
-      const full = data.length === fullTile;
       return {
         data,
         width: full ? tileWidth: xmax,
