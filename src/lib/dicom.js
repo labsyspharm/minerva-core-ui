@@ -638,12 +638,10 @@ function createTileLayers(meta) {
       tileSize: 1024,
       minZoom: minZoom,
       maxZoom: 0,
-      // See
-      // viv/packages/layers/src/multiscale-image-layer/multiscale-image-layer.js
-      zoomOffset: 0, // what should this be?
       extent: [0, 0, width, height],
       renderSubLayers: props => {
         const { left, bottom, right, top } = props.tile.bbox;
+        const { x, y, z } = props.tile.index;
         if (!props.data) {
           return null;
         }
@@ -663,7 +661,8 @@ function createTileLayers(meta) {
           left, bottom, right, top
         ])
         return new BitmapLayer(props, {
-          image: data,
+          image: imageData,
+          id: `rgb-${z}-${x}-${y}`,
           bounds: [
             left, bottom, right, top
           ]
