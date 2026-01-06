@@ -34,10 +34,14 @@ class DicomPixelSource {
 
   async _readRasters(image, props = {}) {
     const index = [ image.c, props.x, props.y ].join('-');
+    const frame_path = image.getPyramid().frameMappings[
+      [props.y+1, props.x+1, image.c].join('-')
+    ];
+    if (!frame_path) {
+      throw "__minervaEmptyFramePath"
+    }
     const frame = (
-      image.getPyramid().frameMappings[
-        [props.y+1, props.x+1, image.c].join('-')
-      ].split("/").pop()
+      frame_path.split("/").pop()
     )
     let raster = this.tileCache[index];
     if (!raster) {

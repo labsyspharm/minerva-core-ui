@@ -305,6 +305,9 @@ export interface OverlayStore {
   waypoints: ConfigWaypoint[]; // All waypoints from all stories
   activeWaypointId: string | null;
 
+  // Channel Group and Channel State
+  activeChannelGroupId: string | null;
+
   // Actions
   setActiveTool: (tool: string) => void;
   setCurrentInteraction: (interaction: InteractionCoordinate | null) => void;
@@ -338,6 +341,10 @@ export interface OverlayStore {
   addWaypoint: (waypoint: ConfigWaypoint) => void;
   updateWaypoint: (waypointId: string, updates: Partial<ConfigWaypoint>) => void;
   removeWaypoint: (waypointId: string) => void;
+
+  // Channel group and channel actions
+  setActiveChannelGroup: (channelGroupId: string) => void;
+
   finalizeEllipse: () => void; // Convert current drawing to ellipse annotation
   finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
   finalizeLine: () => void; // Convert current drawing to line annotation
@@ -390,6 +397,7 @@ const overlayInitialState = {
   hoverState: {
     hoveredAnnotationId: null,
   },
+  activeWaypoint: 0,
   annotations: [], // New: empty annotations array
   annotationGroups: [], // New: empty groups array
   hiddenLayers: new Set<string>(), // New: empty hidden layers set
@@ -1163,6 +1171,13 @@ export const useOverlayStore = create<OverlayStore>()(
           activeWaypointId: state.activeWaypointId === waypointId ? null : state.activeWaypointId
         }));
       },
+
+      // channel and group actions
+      //
+      setActiveChannelGroup: (channelGroupId: string) => {
+        console.log('Store: Setting active channel group ID:', channelGroupId);
+        set({ activeChannelGroupId: channelGroupId });
+      }
     }),
     {
       name: 'overlay-store',
