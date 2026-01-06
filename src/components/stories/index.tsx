@@ -32,7 +32,9 @@ const Stories = (props: Props) => {
         activeWaypointId,
         setActiveWaypoint,
         updateStory,
-        reorderStories
+        reorderStories,
+        importWaypointAnnotations,
+        clearImportedAnnotations
     } = useOverlayStore();
 
     // Local state for markdown editing
@@ -101,6 +103,20 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
             const index = stories.findIndex(s => s.UUID === story.UUID);
             if (index !== -1) {
                 setActiveStory(index);
+                
+                // Collapse all ROI panels when switching stories to avoid showing
+                // annotations from the new story under the old story's panel
+                setExpandedROIStories(new Set());
+                
+                // Clear previous imported annotations and load new ones
+                clearImportedAnnotations();
+                
+                // Import annotations from the selected story
+                const arrows = story.Arrows || [];
+                const overlays = story.Overlays || [];
+                if (arrows.length > 0 || overlays.length > 0) {
+                    importWaypointAnnotations(arrows, overlays);
+                }
             }
         }
     };

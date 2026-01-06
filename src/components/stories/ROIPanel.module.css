@@ -66,5 +66,6 @@
 .layersContainer {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  max-height: 300px;
+  overflow-y: auto;
 }

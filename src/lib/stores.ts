@@ -1,10 +1,13 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { ConfigWaypoint } from './config';
+import type { ConfigWaypoint, ConfigWaypointArrow, ConfigWaypointOverlay } from './config';
 
 // Arrow configuration - centralized to ensure preview and finalization match
 // Use same width as lines to match line appearance
 export const ARROW_LINE_WIDTH = 5; // Line width for arrow shaft in pixels (matches line width)
+
+// Re-export config types for convenience
+export type { ConfigWaypointArrow as ConfigArrow, ConfigWaypointOverlay as ConfigOverlay };
 
 // Types for the overlay store
 export interface OverlayLayer {
@@ -534,6 +537,13 @@ export interface OverlayStore {
   addAnnotationToGroup: (groupId: string, annotationId: string) => void;
   removeAnnotationFromGroup: (groupId: string, annotationId: string) => void;
   toggleGroupExpanded: (groupId: string) => void;
+
+  // Import waypoint annotations actions
+  imageWidth: number;
+  imageHeight: number;
+  setImageDimensions: (width: number, height: number) => void;
+  importWaypointAnnotations: (arrows: ConfigWaypointArrow[], overlays: ConfigWaypointOverlay[]) => void;
+  clearImportedAnnotations: () => void;
 }
 
 // Initial state for overlay store
@@ -563,6 +573,8 @@ const overlayInitialState = {
   activeStoryIndex: null, // New: no active story initially
   waypoints: [], // New: empty waypoints array
   activeWaypointId: null, // New: no active waypoint initially
+  imageWidth: 0,
+  imageHeight: 0,
 };
 
 // Create the overlay store
@@ -572,7 +584,6 @@ export const useOverlayStore = create<OverlayStore>()(
       ...overlayInitialState,
 
       setActiveTool: (tool: string) => {
-        console.log('Store: Tool changed to:', tool);
         set({ activeTool: tool });
       },
 
@@ -608,8 +619,6 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       handleLayerCreate: (layer: OverlayLayer | null) => {
-        console.log('Store: handleLayerCreate called with layer:', layer);
-
         if (layer === null) {
           // Remove the drawing layer when tool is not active
           get().removeOverlayLayer('drawing-layer');
@@ -621,7 +630,6 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       handleToolChange: (tool: string) => {
-        console.log('Store: Tool changed to:', tool);
         set({ activeTool: tool });
 
         // Clear any partial drawing state when switching tools
@@ -635,8 +643,6 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       handleOverlayInteraction: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number]) => {
-        console.log('Store: Overlay interaction:', type, 'at coordinate:', coordinate);
-
         const interaction: InteractionCoordinate = { type, coordinate };
         set({ currentInteraction: interaction });
 
@@ -741,14 +747,12 @@ export const useOverlayStore = create<OverlayStore>()(
 
       // New annotation actions
       addAnnotation: (annotation: Annotation) => {
-        console.log('Store: Adding annotation:', annotation);
         set((state) => ({
           annotations: [...state.annotations, annotation]
         }));
       },
 
       removeAnnotation: (annotationId: string) => {
-        console.log('Store: Removing annotation:', annotationId);
         set((state) => {
           const newHiddenLayers = new Set(state.hiddenLayers);
           newHiddenLayers.delete(annotationId); // Clean up hidden state
@@ -760,7 +764,6 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       updateAnnotation: (annotationId: string, updates: Partial<Annotation>) => {
-        console.log('Store: Updating annotation:', annotationId, updates);
         set((state) => ({
           annotations: state.annotations.map(a =>
             a.id === annotationId ? { ...a, ...updates } as Annotation : a
@@ -769,7 +772,6 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       clearAnnotations: () => {
-        console.log('Store: Clearing all annotations');
         set({ annotations: [] });
       },
 
@@ -794,8 +796,6 @@ export const useOverlayStore = create<OverlayStore>()(
               label: `Rectangle ${get().annotations.length + 1}`,
             },
           };
-
-          console.log('Store: Finalizing rectangle as annotation:', annotation);
 
           // Add the annotation
           get().addAnnotation(annotation);
@@ -830,8 +830,6 @@ export const useOverlayStore = create<OverlayStore>()(
             },
           };
 
-          console.log('Store: Finalizing ellipse as annotation:', annotation);
-
           // Add the annotation
           get().addAnnotation(annotation);
 
@@ -861,8 +859,6 @@ export const useOverlayStore = create<OverlayStore>()(
             },
           };
 
-          console.log('Store: Finalizing lasso as annotation:', annotation);
-
           // Add the annotation
           get().addAnnotation(annotation);
 
@@ -872,7 +868,6 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       finalizePolyline: (points: [number, number][]) => {
-        console.log('Store: Finalizing polyline with points:', points);
         if (points.length >= 2) {
           // Create a new polyline annotation
           const annotation: PolylineAnnotation = {
@@ -888,8 +883,6 @@ export const useOverlayStore = create<OverlayStore>()(
               label: `Polyline ${get().annotations.length + 1}`,
             },
           };
-
-          console.log('Store: Finalizing polyline as annotation:', annotation);
 
           // Add the annotation
           get().addAnnotation(annotation);
@@ -926,8 +919,6 @@ export const useOverlayStore = create<OverlayStore>()(
               label: `Line ${get().annotations.length + 1}`,
             },
           };
-
-          console.log('Store: Finalizing line as annotation:', annotation);
 
           // Add the annotation
           get().addAnnotation(annotation);
@@ -968,8 +959,6 @@ export const useOverlayStore = create<OverlayStore>()(
             },
           };
 
-          console.log('Store: Finalizing arrow as annotation:', annotation);
-
           // Add the annotation
           get().addAnnotation(annotation);
 
@@ -983,7 +972,6 @@ export const useOverlayStore = create<OverlayStore>()(
 
       createTextAnnotation: (position: [number, number], text: string, fontSize: number = 14) => {
         if (!text.trim()) {
-          console.log('Store: Cannot create text annotation with empty text');
           return;
         }
 
@@ -1004,8 +992,6 @@ export const useOverlayStore = create<OverlayStore>()(
             label: `Text ${get().annotations.length + 1}`,
           },
         };
-
-        console.log('Store: Creating text annotation:', annotation);
 
         // Add the annotation
         get().addAnnotation(annotation);
@@ -1028,15 +1014,12 @@ export const useOverlayStore = create<OverlayStore>()(
           },
         };
 
-        console.log('Store: Creating point annotation:', annotation);
-
         // Add the annotation
         get().addAnnotation(annotation);
       },
 
       updateTextAnnotation: (annotationId: string, newText: string, fontSize?: number) => {
         if (!newText.trim()) {
-          console.log('Store: Cannot update text annotation with empty text');
           return;
         }
 
@@ -1044,11 +1027,8 @@ export const useOverlayStore = create<OverlayStore>()(
         const annotation = annotations.find(a => a.id === annotationId);
 
         if (!annotation || annotation.type !== 'text') {
-          console.log('Store: Cannot update non-text annotation or annotation not found');
           return;
         }
-
-        console.log('Store: Updating text annotation:', annotationId, 'to:', newText.trim(), 'fontSize:', fontSize);
 
         // Update the text content and optionally fontSize
         const updates: Partial<TextAnnotation> = {
@@ -1070,11 +1050,8 @@ export const useOverlayStore = create<OverlayStore>()(
         const annotation = annotations.find(a => a.id === annotationId);
 
         if (!annotation || annotation.type !== 'text') {
-          console.log('Store: Cannot update color for non-text annotation or annotation not found');
           return;
         }
-
-        console.log('Store: Updating text annotation color:', annotationId, 'to:', fontColor);
 
         // Update the font color
         const updates: Partial<TextAnnotation> = {
@@ -1092,7 +1069,6 @@ export const useOverlayStore = create<OverlayStore>()(
         const annotation = annotations.find(a => a.id === annotationId);
 
         if (!annotation) {
-          console.log('Store: Annotation not found:', annotationId);
           return;
         }
 
@@ -1101,8 +1077,6 @@ export const useOverlayStore = create<OverlayStore>()(
           get().updateTextAnnotation(annotationId, newText);
           return;
         }
-
-        console.log('Store: Updating shape text:', annotationId, 'to:', newText);
 
         // Update the text field on the shape
         // Empty string removes the text field
@@ -1114,7 +1088,6 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       setGlobalColor: (color: [number, number, number, number]) => {
-        console.log('Store: Setting global color to:', color);
         set({ globalColor: color });
       },
 
@@ -1147,7 +1120,6 @@ export const useOverlayStore = create<OverlayStore>()(
 
       // New drag actions for move tool
       startDrag: (annotationId: string, offset: [number, number]) => {
-        console.log('Store: Starting drag for annotation:', annotationId, 'with offset:', offset);
         set({
           dragState: {
             isDragging: true,
@@ -1198,7 +1170,6 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       endDrag: () => {
-        console.log('Store: Ending drag');
         set({
           dragState: {
             isDragging: false,
@@ -1214,7 +1185,6 @@ export const useOverlayStore = create<OverlayStore>()(
 
       // New hover actions for move tool
       setHoveredAnnotation: (annotationId: string | null) => {
-        console.log('Store: Setting hovered annotation:', annotationId);
         set({
           hoverState: {
             hoveredAnnotationId: annotationId,
@@ -1238,21 +1208,18 @@ export const useOverlayStore = create<OverlayStore>()(
             createdAt: new Date(),
           },
         };
-        console.log('Store: Creating group:', newGroup);
         set((state) => ({
           annotationGroups: [...state.annotationGroups, newGroup]
         }));
       },
 
       deleteGroup: (groupId: string) => {
-        console.log('Store: Deleting group:', groupId);
         set((state) => ({
           annotationGroups: state.annotationGroups.filter(g => g.id !== groupId)
         }));
       },
 
       addAnnotationToGroup: (groupId: string, annotationId: string) => {
-        console.log('Store: Adding annotation', annotationId, 'to group', groupId);
         set((state) => ({
           annotationGroups: state.annotationGroups.map(group =>
             group.id === groupId
@@ -1263,7 +1230,6 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       removeAnnotationFromGroup: (groupId: string, annotationId: string) => {
-        console.log('Store: Removing annotation', annotationId, 'from group', groupId);
         set((state) => ({
           annotationGroups: state.annotationGroups.map(group =>
             group.id === groupId
@@ -1274,7 +1240,6 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       toggleGroupExpanded: (groupId: string) => {
-        console.log('Store: Toggling group expanded:', groupId);
         set((state) => ({
           annotationGroups: state.annotationGroups.map(group =>
             group.id === groupId
@@ -1286,24 +1251,20 @@ export const useOverlayStore = create<OverlayStore>()(
 
       // Stories actions
       setStories: (stories: ConfigWaypoint[]) => {
-        console.log('Store: Setting stories:', stories.length);
         set({ stories, activeStoryIndex: null });
       },
 
       setActiveStory: (index: number | null) => {
-        console.log('Store: Setting active story index:', index);
         set({ activeStoryIndex: index });
       },
 
       addStory: (story: ConfigWaypoint) => {
-        console.log('Store: Adding story:', story.Properties.Name);
         set((state) => ({
           stories: [...state.stories, story]
         }));
       },
 
       updateStory: (index: number, updates: Partial<ConfigWaypoint>) => {
-        console.log('Store: Updating story at index:', index);
         set((state) => ({
           stories: state.stories.map((story, i) => 
             i === index ? { ...story, ...updates } : story
@@ -1312,7 +1273,6 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       removeStory: (index: number) => {
-        console.log('Store: Removing story at index:', index);
         set((state) => ({
           stories: state.stories.filter((_, i) => i !== index),
           activeStoryIndex: state.activeStoryIndex === index ? null : 
@@ -1322,7 +1282,6 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       reorderStories: (fromIndex: number, toIndex: number) => {
-        console.log('Store: Reordering stories from', fromIndex, 'to', toIndex);
         set((state) => {
           const newStories = [...state.stories];
           const [movedStory] = newStories.splice(fromIndex, 1);
@@ -1352,24 +1311,20 @@ export const useOverlayStore = create<OverlayStore>()(
 
       // Waypoints actions
       setWaypoints: (waypoints: ConfigWaypoint[]) => {
-        console.log('Store: Setting waypoints:', waypoints.length);
         set({ waypoints, activeWaypointId: null });
       },
 
       setActiveWaypoint: (waypointId: string | null) => {
-        console.log('Store: Setting active waypoint ID:', waypointId);
         set({ activeWaypointId: waypointId });
       },
 
       addWaypoint: (waypoint: ConfigWaypoint) => {
-        console.log('Store: Adding waypoint:', waypoint.Properties.Name);
         set((state) => ({
           waypoints: [...state.waypoints, waypoint]
         }));
       },
 
       updateWaypoint: (waypointId: string, updates: Partial<ConfigWaypoint>) => {
-        console.log('Store: Updating waypoint:', waypointId);
         set((state) => ({
           waypoints: state.waypoints.map((waypoint) =>
             waypoint.UUID === waypointId ? { ...waypoint, ...updates } : waypoint
@@ -1378,10 +1333,155 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       removeWaypoint: (waypointId: string) => {
-        console.log('Store: Removing waypoint:', waypointId);
         set((state) => ({
           waypoints: state.waypoints.filter((waypoint) => waypoint.UUID !== waypointId),
           activeWaypointId: state.activeWaypointId === waypointId ? null : state.activeWaypointId
+        }));
+      },
+
+      // Image dimensions actions
+      setImageDimensions: (width: number, height: number) => {
+        set({ imageWidth: width, imageHeight: height });
+      },
+
+      // Import waypoint annotations actions
+      importWaypointAnnotations: (arrows: ConfigWaypointArrow[], overlays: ConfigWaypointOverlay[]) => {
+        const { imageWidth, imageHeight } = get();
+        
+        // Skip if image dimensions not set
+        if (imageWidth === 0 || imageHeight === 0) {
+          return;
+        }
+        
+        const newAnnotations: Annotation[] = [];
+
+        // Convert arrows to annotations (coordinates are normalized 0-1, convert to image pixels)
+        arrows.forEach((arrow, index) => {
+          // Convert normalized coordinates to image pixels
+          const [normX, normY] = arrow.Point;
+          const x = normX * imageWidth;
+          const y = normY * imageHeight;
+
+          if (arrow.HideArrow) {
+            // Create text-only annotation
+            const textAnnotation: TextAnnotation = {
+              id: `imported-text-${Date.now()}-${index}`,
+              type: 'text',
+              position: [x, y],
+              text: arrow.Text,
+              style: {
+                fontSize: 16,
+                fontColor: [255, 255, 255, 255], // White text
+                backgroundColor: [0, 0, 0, 150], // Semi-transparent black background
+                padding: 6,
+              },
+              metadata: {
+                createdAt: new Date(),
+                label: arrow.Text,
+                isImported: true,
+              },
+            };
+            newAnnotations.push(textAnnotation);
+          } else {
+            // Create arrow annotation
+            // Convert angle from degrees to radians and calculate start point
+            // Angle 0 = pointing right, 90 = pointing down, etc.
+            const angleRad = (arrow.Angle * Math.PI) / 180;
+            
+            // Arrow length proportional to image size (50% of the smaller dimension)
+            const minDimension = Math.min(imageWidth, imageHeight);
+            const arrowLength = minDimension * 0.50;
+            
+            // Calculate start point (arrow points TO the Point location)
+            // So start is away from the point in the direction of the angle
+            const startX = x + Math.cos(angleRad) * arrowLength;
+            const startY = y + Math.sin(angleRad) * arrowLength;
+            const endX = x;
+            const endY = y;
+
+            // Calculate arrow polygon with desired pixel width for zoom-independent rendering
+            // Line width 10px with smaller arrowhead (3x multiplier instead of default 6x)
+            const desiredPixelWidth = 10;
+            const arrowheadSize = desiredPixelWidth * 3; // Smaller heads relative to line
+            // Initial polygon calculation (will be recalculated on render based on zoom)
+            const polygon = arrowToPolygon(
+              [startX, startY],
+              [endX, endY],
+              desiredPixelWidth,
+              arrowheadSize,
+              arrowheadSize
+            );
+
+            const arrowAnnotation: ArrowAnnotation = {
+              id: `imported-arrow-${Date.now()}-${index}`,
+              type: 'arrow',
+              polygon,
+              startPoint: [startX, startY],
+              endPoint: [endX, endY],
+              desiredPixelWidth,
+              arrowheadMultiplier: 3, // Smaller heads for imported arrows (default is 6)
+              text: arrow.Text,
+              style: {
+                fillColor: [255, 255, 255, 255], // White fill
+                lineColor: [255, 255, 255, 255], // White line
+                lineWidth: 0,
+              },
+              metadata: {
+                createdAt: new Date(),
+                label: arrow.Text,
+                isImported: true,
+              },
+            };
+            newAnnotations.push(arrowAnnotation);
+          }
+        });
+
+        // Convert overlays (rectangles) to annotations (coordinates are normalized 0-1, convert to image pixels)
+        overlays.forEach((overlay, index) => {
+          // Convert normalized coordinates to image pixels
+          const x = overlay.x * imageWidth;
+          const y = overlay.y * imageHeight;
+          const width = overlay.width * imageWidth;
+          const height = overlay.height * imageHeight;
+          
+          const polygon = rectangleToPolygon(
+            [x, y],
+            [x + width, y + height]
+          );
+
+          const rectAnnotation: RectangleAnnotation = {
+            id: `imported-rect-${Date.now()}-${index}`,
+            type: 'rectangle',
+            polygon,
+            style: {
+              fillColor: [255, 255, 255, 30], // White with very low opacity
+              lineColor: [255, 255, 255, 200], // White border
+              lineWidth: 2,
+            },
+            metadata: {
+              createdAt: new Date(),
+              label: `Region ${index + 1}`,
+              isImported: true,
+            },
+          };
+          newAnnotations.push(rectAnnotation);
+        });
+
+        // Add all new annotations to the store
+        set((state) => ({
+          annotations: [...state.annotations, ...newAnnotations]
+        }));
+      },
+
+      clearImportedAnnotations: () => {
+        set((state) => ({
+          annotations: state.annotations.filter(a => !a.metadata?.isImported),
+          hiddenLayers: new Set(
+            [...state.hiddenLayers].filter(id => {
+              const annotation = state.annotations.find(a => a.id === id);
+              return annotation && !annotation.metadata?.isImported;
+            })
+          )
         }));
       },
     }),

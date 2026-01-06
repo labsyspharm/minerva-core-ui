@@ -104,8 +104,9 @@ const VivView = (props: Props) => {
 
   const [viewState, setViewState] = useState<OrthographicViewState>(initialViewState);
 
-  // Get setViewportZoom from overlay store (needed for initial zoom setting)
+  // Get setViewportZoom and setImageDimensions from overlay store
   const setViewportZoom = useOverlayStore(state => state.setViewportZoom);
+  const setImageDimensions = useOverlayStore(state => state.setImageDimensions);
 
   // Update viewState when initialViewState changes (e.g., when loader changes)
   useEffect(() => {
@@ -118,6 +119,13 @@ const VivView = (props: Props) => {
     }
   }, [initialViewState, loader, setViewportZoom]);
 
+  // Set image dimensions in the store when imageShape is available
+  useEffect(() => {
+    if (imageShape.x > 0 && imageShape.y > 0) {
+      setImageDimensions(imageShape.x, imageShape.y);
+    }
+  }, [imageShape, setImageDimensions]);
+
   // Memoize main props to prevent unnecessary layer recreation
   const mainProps = useMemo(() => ({
     ...shape,
@@ -125,7 +133,6 @@ const VivView = (props: Props) => {
     loader: loader.data,
     ...(mainSettings as any),
   }), [shape, loader.data, mainSettings]);
-  console.log(mainProps);
 
   const dicomSource = useMemo(() => {
     if (!props.series) {
