@@ -33,6 +33,7 @@ type Props = ImageProps & {
   exhibit_config: ExhibitConfig;
   demo_dicom_web?: boolean;
   handleKeys: string[];
+  h_and_e?: boolean;
 };
 
 interface ReduceFormData {
@@ -237,7 +238,7 @@ const Content = (props: Props) => {
   const [valid, setValid] = useState({} as ValidObj);
   if (props.demo_dicom_web) {
     useEffect(() => {
-      const h_and_e = true;
+      const h_and_e = props.h_and_e;
       onStart(
         ["https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.331207435.2054329796.1752677896971.4.0",
         "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.714652616.317867787.1753061342152.4.0"][+h_and_e],

@@ -1957,7 +1957,7 @@ const root = createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <Main 
-      handleKeys={["ome-dir-1"]} demo_dicom_web={true}
+      handleKeys={["ome-dir-1"]} demo_dicom_web={true} h_and_e={false}
       exhibit_config={exhibit_config} configWaypoints={configWaypoints}
     />
     <MainStyle />
