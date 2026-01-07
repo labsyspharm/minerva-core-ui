@@ -331,6 +331,7 @@ export function createAnnotationLayers(
 
 /**
  * Create all deck.gl layers for multiple annotations
+ * Labels are added last to ensure they render on top of all other layers
  */
 export function createAllAnnotationLayers(
   annotations: Annotation[],
@@ -338,15 +339,25 @@ export function createAllAnnotationLayers(
   hoveredAnnotationId: string | null,
   pickable: boolean = true
 ): LayerType[] {
-  const layers: LayerType[] = [];
+  const mainLayers: LayerType[] = [];
+  const labelLayers: LayerType[] = [];
 
   annotations
     .filter(annotation => !hiddenLayers.has(annotation.id))
     .forEach(annotation => {
-      layers.push(...createAnnotationLayers(annotation, hoveredAnnotationId, pickable));
+      const annotationLayers = createAnnotationLayers(annotation, hoveredAnnotationId, pickable);
+      // Separate label layers (ending with '-text') from main layers
+      annotationLayers.forEach(layer => {
+        if (layer.id.endsWith('-text')) {
+          labelLayers.push(layer);
+        } else {
+          mainLayers.push(layer);
+        }
+      });
     });
 
-  return layers;
+  // Return main layers first, then labels on top
+  return [...mainLayers, ...labelLayers];
 }
 
 // ============================================================================
