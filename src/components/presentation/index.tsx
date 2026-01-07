@@ -2,6 +2,7 @@ import * as React from "react";
 import { useState } from "react";
 import ReactMarkdown from 'react-markdown'
 import { useOverlayStore } from "../../lib/stores";
+import { AnnotationRenderer } from "../overlays/AnnotationRenderer";
 //import { theme } from "../../theme.module.css";
 import styled from "styled-components";
 const theme = {};
@@ -167,8 +168,36 @@ const Presentation = (props: Props) => {
       activeStoryIndex, 
       setActiveStory,
       activeChannelGroupId,
-      setActiveChannelGroup
+      setActiveChannelGroup,
+      importWaypointAnnotations,
+      clearImportedAnnotations,
+      imageWidth,
+      imageHeight
   } = useOverlayStore();
+
+  // Auto-import annotations for the active story
+  // Re-run when image dimensions become available or active story changes
+  React.useEffect(() => {
+    if (stories.length === 0) return;
+    // Wait for image dimensions to be set
+    if (imageWidth === 0 || imageHeight === 0) return;
+    
+    // Determine which story to use - active story or default to first
+    const storyIndex = activeStoryIndex ?? 0;
+    const story = stories[storyIndex];
+    
+    if (story) {
+      // Clear any existing imported annotations first
+      clearImportedAnnotations();
+      
+      // Import annotations from the story
+      const arrows = story.Arrows || [];
+      const overlays = story.Overlays || [];
+      if (arrows.length > 0 || overlays.length > 0) {
+        importWaypointAnnotations(arrows, overlays);
+      }
+    }
+  }, [stories, activeStoryIndex, imageWidth, imageHeight, importWaypointAnnotations, clearImportedAnnotations]);
 
   const updateGroup = (activeStory) => {
     const story = stories[activeStory];
@@ -258,6 +287,8 @@ const Presentation = (props: Props) => {
         </StoryContent>
       </NavPane>
       {props.children}
+      {/* Renders annotation layers without UI */}
+      <AnnotationRenderer />
     </Wrap>
   );
 };

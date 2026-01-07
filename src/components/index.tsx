@@ -346,6 +346,7 @@ const Index = (props: Props) => {
     setStories,
     setWaypoints
   } = useOverlayStore();
+  console.log('Overlay Store:', overlayLayers);
   
   // Initialize stories in the store when config changes
   useEffect(() => {
@@ -378,14 +379,15 @@ const Index = (props: Props) => {
         onOverlayInteraction={handleOverlayInteraction}
       >
       </ImageView>
-{/*
-      <Overlays 
+      {/* <Overlays 
         hash={mainProps.hash} 
         groups={mainProps.groups} 
         setHash={mainProps.setHash}
         onLayerCreate={handleLayerCreate}
         currentInteraction={currentInteraction}
-      />
+      /> */}
+{/*
+      
       <Stories 
         hash={mainProps.hash}
         viewOnly={presenting}
