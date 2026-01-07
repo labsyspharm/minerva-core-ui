@@ -264,10 +264,8 @@ const Presentation = (props: Props) => {
   const first_story = activeStoryIndex == 0;
   const last_story = activeStoryIndex == stories.length - 1;
   const story = stories[activeStoryIndex];
-  const story_content = (
-    story?.Properties?.Content+story?.Properties
-    ?.Content+story?.Properties?.Content 
-  );
+  const story_title = story?.Properties?.Name ?? `Waypoint ${activeStoryIndex + 1}`;
+  const story_content = story?.Properties?.Content;
   return (
     <Wrap>
       <NavPane>
@@ -279,6 +277,7 @@ const Presentation = (props: Props) => {
         </Toolbar>
         <StoryContent>
           <div>
+            <h2 class="h5">{story_title}</h2>
             <ReactMarkdown> 
               {story_content}
             </ReactMarkdown>
