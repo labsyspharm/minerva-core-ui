@@ -346,7 +346,6 @@ const Index = (props: Props) => {
     setStories,
     setWaypoints
   } = useOverlayStore();
-  console.log('Overlay Store:', overlayLayers);
   
   // Initialize stories in the store when config changes
   useEffect(() => {
