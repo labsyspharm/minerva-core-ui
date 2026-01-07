@@ -70,11 +70,7 @@ export interface EllipseAnnotation {
 export interface LineAnnotation {
   id: string;
   type: 'line';
-  polygon: [number, number][]; // Converted to polygon coordinates (line as degenerate polygon)
-  // Store original endpoints for dynamic width calculation based on zoom
-  startPoint?: [number, number];
-  endPoint?: [number, number];
-  desiredPixelWidth?: number; // Desired width in pixels (for zoom-based scaling)
+  polygon: [number, number][]; // Simple line as degenerate polygon for stroke-based rendering
   style: {
     fillColor: [number, number, number, number];
     lineColor: [number, number, number, number];
@@ -798,26 +794,28 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       finalizeLine: () => {
-        const { drawingState, viewportZoom } = get();
+        const { drawingState } = get();
         if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
-          const startPoint: [number, number] = [drawingState.dragStart[0], drawingState.dragStart[1]];
-          const endPoint: [number, number] = [drawingState.dragEnd[0], drawingState.dragEnd[1]];
+          const [startX, startY] = drawingState.dragStart;
+          const [endX, endY] = drawingState.dragEnd;
 
-          // Calculate world-coordinate width for consistent 5px visual width
-          const desiredPixelWidth = 5;
-          const worldWidth = desiredPixelWidth * Math.pow(2, -viewportZoom);
+          // Simple polygon for stroke-based line rendering (no fill, just stroke)
+          const linePolygon: [number, number][] = [
+            [startX, startY],
+            [endX, endY],
+            [endX, endY],
+            [startX, startY],
+            [startX, startY]
+          ];
 
           const annotation: LineAnnotation = {
             id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             type: 'line',
-            polygon: lineToPolygon(startPoint, endPoint, worldWidth),
-            startPoint,
-            endPoint,
-            desiredPixelWidth,
+            polygon: linePolygon,
             style: {
-              fillColor: get().globalColor,
+              fillColor: [0, 0, 0, 0] as [number, number, number, number], // Transparent fill
               lineColor: get().globalColor,
-              lineWidth: 0,
+              lineWidth: 3,
             },
             metadata: {
               createdAt: new Date(),
@@ -1250,7 +1248,7 @@ export const useOverlayStore = create<OverlayStore>()(
             };
             newAnnotations.push(textAnnotation);
           } else {
-            // Create line annotation (arrow converted to simple line)
+            // Create line annotation (arrow converted to simple stroke-based line)
             // Convert angle from degrees to radians and calculate start point
             // Angle 0 = pointing right, 90 = pointing down, etc.
             const angleRad = (arrow.Angle * Math.PI) / 180;
@@ -1266,27 +1264,24 @@ export const useOverlayStore = create<OverlayStore>()(
             const endX = x;
             const endY = y;
 
-            // Calculate line polygon with desired pixel width for zoom-independent rendering
-            const desiredPixelWidth = 10;
-            // Initial polygon calculation (will be recalculated on render based on zoom)
-            const polygon = lineToPolygon(
+            // Simple polygon for stroke-based line rendering (no fill, just stroke)
+            const linePolygon: [number, number][] = [
               [startX, startY],
               [endX, endY],
-              desiredPixelWidth
-            );
+              [endX, endY],
+              [startX, startY],
+              [startX, startY]
+            ];
 
             const lineAnnotation: LineAnnotation = {
               id: `imported-line-${Date.now()}-${index}`,
               type: 'line',
-              polygon,
-              startPoint: [startX, startY],
-              endPoint: [endX, endY],
-              desiredPixelWidth,
+              polygon: linePolygon,
               text: arrow.Text,
               style: {
-                fillColor: [255, 255, 255, 255], // White fill
+                fillColor: [0, 0, 0, 0], // Transparent fill
                 lineColor: [255, 255, 255, 255], // White line
-                lineWidth: 0,
+                lineWidth: 3,
               },
               metadata: {
                 createdAt: new Date(),

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { PolygonLayer, TextLayer, ScatterplotLayer } from '@deck.gl/layers';
-import { useOverlayStore, ellipseToPolygon, lineToPolygon } from "../../lib/stores";
+import { useOverlayStore, ellipseToPolygon } from "../../lib/stores";
+import { useAnnotationLayers } from "./AnnotationLayers";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {
@@ -148,7 +149,7 @@ const PREVIEW_LINE_COLOR: [number, number, number, number] = [255, 165, 0, 255];
 
 const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTool, currentInteraction }) => {
   // Use Zustand store for drawing state
-  const { drawingState, finalizeLasso, finalizePolyline, createTextAnnotation, createPointAnnotation, globalColor, viewportZoom } = useOverlayStore();
+  const { drawingState, finalizeLasso, finalizePolyline, createTextAnnotation, createPointAnnotation, globalColor } = useOverlayStore();
   const { isDrawing, dragStart, dragEnd } = drawingState;
 
   // Local state for lasso tool
@@ -299,21 +300,26 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // Handle line finalization from click mode
   const finalizeClickLine = () => {
     if (lineFirstClick && lineSecondClick) {
-      // Calculate world-coordinate width for consistent 5px visual width
-      const desiredPixelWidth = 5;
-      const worldWidth = desiredPixelWidth * Math.pow(2, -viewportZoom);
+      const [startX, startY] = lineFirstClick;
+      const [endX, endY] = lineSecondClick;
+
+      // Simple polygon for stroke-based line rendering (no fill, just stroke)
+      const linePolygon: [number, number][] = [
+        [startX, startY],
+        [endX, endY],
+        [endX, endY],
+        [startX, startY],
+        [startX, startY]
+      ];
 
       const annotation = {
         id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: 'line' as const,
-        polygon: lineToPolygon(lineFirstClick, lineSecondClick, worldWidth),
-        startPoint: lineFirstClick as [number, number],
-        endPoint: lineSecondClick as [number, number],
-        desiredPixelWidth,
+        polygon: linePolygon,
         style: {
-          fillColor: globalColor as [number, number, number, number],
+          fillColor: [0, 0, 0, 0] as [number, number, number, number], // Transparent fill
           lineColor: globalColor as [number, number, number, number],
-          lineWidth: 0,
+          lineWidth: 3,
         },
         metadata: {
           createdAt: new Date(),
@@ -766,21 +772,32 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       fillColor = [PREVIEW_LINE_COLOR[0], PREVIEW_LINE_COLOR[1], PREVIEW_LINE_COLOR[2], 0]; // No fill for polyline
       shouldFill = false;
     }
-    // Line tool: uses click mode or drag mode
+    // Line tool: uses simple stroke-based rendering
     else if (activeTool === 'line') {
-      // Calculate world-coordinate width for consistent 5px visual width
-      const desiredPixelWidth = 5;
-      const worldWidth = desiredPixelWidth * Math.pow(2, -viewportZoom);
-      lineWidth = worldWidth;
-      
       if (isLineClickMode && lineFirstClick && lineSecondClick) {
-        polygonData = lineToPolygon(lineFirstClick, lineSecondClick, worldWidth);
-        fillColor = PREVIEW_LINE_COLOR;
-        shouldFill = true;
+        const [startX, startY] = lineFirstClick;
+        const [endX, endY] = lineSecondClick;
+        polygonData = [
+          [startX, startY],
+          [endX, endY],
+          [endX, endY],
+          [startX, startY],
+          [startX, startY]
+        ];
+        fillColor = [0, 0, 0, 0]; // No fill for line
+        shouldFill = false;
       } else if (isDrawing && dragStart && dragEnd) {
-        polygonData = lineToPolygon(dragStart, dragEnd, worldWidth);
-        fillColor = PREVIEW_LINE_COLOR;
-        shouldFill = true;
+        const [startX, startY] = dragStart;
+        const [endX, endY] = dragEnd;
+        polygonData = [
+          [startX, startY],
+          [endX, endY],
+          [endX, endY],
+          [startX, startY],
+          [startX, startY]
+        ];
+        fillColor = [0, 0, 0, 0]; // No fill for line
+        shouldFill = false;
       }
     }
     // Ellipse tool: uses click mode or drag mode
@@ -819,7 +836,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       stroked: shouldStroke,
       filled: shouldFill,
     });
-  }, [activeTool, isDrawing, dragStart, dragEnd, isLassoDrawing, lassoPoints, isPolylineDrawing, polylinePoints, isRectangleClickMode, rectangleFirstClick, rectangleSecondClick, isLineClickMode, lineFirstClick, lineSecondClick, isEllipseClickMode, ellipseFirstClick, ellipseSecondClick, isPolygonClickMode, polygonClickPoints, polygonHoverPoint, viewportZoom]);
+  }, [activeTool, isDrawing, dragStart, dragEnd, isLassoDrawing, lassoPoints, isPolylineDrawing, polylinePoints, isRectangleClickMode, rectangleFirstClick, rectangleSecondClick, isLineClickMode, lineFirstClick, lineSecondClick, isEllipseClickMode, ellipseFirstClick, ellipseSecondClick, isPolygonClickMode, polygonClickPoints, polygonHoverPoint]);
 
   // Text placement marker - shows where text will be placed
   const textPlacementMarker = React.useMemo(() => {
@@ -851,190 +868,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     });
   }, [textInputPosition, showTextInput]);
 
-  // Get annotations from store with proper reactivity
-  const annotations = useOverlayStore(state => state.annotations);
-
-  // Get hidden layers from store
-  const hiddenLayers = useOverlayStore(state => state.hiddenLayers);
-
-  // Get hovered annotation ID from store
-  const hoveredAnnotationId = useOverlayStore(state => state.hoverState.hoveredAnnotationId);
-
-
-  // Create persistent annotation layers from stored annotations (excluding hidden ones)
-  // All annotations are now rendered as polygon layers
-  const annotationLayers = React.useMemo(() => {
-    const layers: (PolygonLayer | TextLayer | ScatterplotLayer)[] = [];
-
-    annotations
-      .filter(annotation => !hiddenLayers.has(annotation.id)) // Filter out hidden annotations
-      .forEach(annotation => {
-        if (annotation.type === 'text') {
-          // Create text layer for text annotations
-          const isHovered = hoveredAnnotationId === annotation.id;
-          const fontColor = isHovered 
-            ? [0, 120, 255, 255] as [number, number, number, number] // Blue when hovered
-            : annotation.style.fontColor;
-          const backgroundColor = isHovered
-            ? [0, 120, 255, 150] as [number, number, number, number] // Blue background when hovered
-            : annotation.style.backgroundColor || [0, 0, 0, 100];
-            
-          layers.push(new TextLayer({
-            id: `annotation-${annotation.id}`,
-            data: [{
-              text: annotation.text,
-              position: [annotation.position[0], annotation.position[1], 0], // Add z coordinate
-            }],
-            getText: d => d.text,
-            getPosition: d => d.position,
-            getColor: fontColor,
-            getBackgroundColor: backgroundColor,
-            getSize: annotation.style.fontSize,
-            fontFamily: 'Arial, sans-serif',
-            fontWeight: 'normal',
-            padding: 4,
-            pickable: true,
-          }));
-        } else if (annotation.type === 'point') {
-          // Create scatterplot layer for point annotations
-          const isHovered = hoveredAnnotationId === annotation.id;
-          const fillColor = isHovered
-            ? [0, 120, 255, 255] as [number, number, number, number] // Blue when hovered
-            : annotation.style.fillColor;
-          const lineColor = isHovered
-            ? [0, 120, 255, 255] as [number, number, number, number] // Blue when hovered
-            : annotation.style.strokeColor;
-            
-          layers.push(new ScatterplotLayer({
-            id: `annotation-${annotation.id}`,
-            data: [{
-              position: [annotation.position[0], annotation.position[1], 0], // Add z coordinate
-              radius: annotation.style.radius,
-            }],
-            getPosition: d => d.position,
-            getRadius: d => d.radius,
-            radiusMinPixels: annotation.style.radius,
-            radiusMaxPixels: annotation.style.radius,
-            getFillColor: fillColor,
-            getLineColor: lineColor,
-            getLineWidth: 10,
-            pickable: true
-          }));
-          
-          // If the point has text, render a text layer
-          // @ts-ignore - text field exists on all annotation types now
-          if (annotation.text) {
-            // Use the point's stroke color for text, or white if not available
-            const textColor = annotation.style.strokeColor || [255, 255, 255, 255];
-            
-            layers.push(new TextLayer({
-              id: `annotation-${annotation.id}-text`,
-              data: [{
-                // @ts-ignore - text field exists on all annotation types now
-                text: annotation.text,
-                position: [annotation.position[0], annotation.position[1], 0], // Use point position
-              }],
-              getText: d => d.text,
-              getPosition: d => d.position,
-              getColor: textColor,
-              getBackgroundColor: [0, 0, 0, 150], // Semi-transparent black background
-              getSize: 14, // Default font size for shape text
-              fontFamily: 'Arial, sans-serif',
-              fontWeight: 'normal',
-              padding: 4,
-              pickable: false, // Don't make text pickable separately from the point
-            }));
-          }
-        } else {
-          // Create polygon layer for other annotations
-          const isHovered = hoveredAnnotationId === annotation.id;
-          let fillColor: [number, number, number, number] = [255, 255, 255, 1]; // Default: very low opacity white fill
-          let lineColor: [number, number, number, number] = annotation.style.lineColor; // Default: black line
-          
-          // Check if annotation has fillColor in style (lines now have fillColor)
-          // @ts-ignore - fillColor may exist on line annotations
-          if (annotation.style.fillColor) {
-            // @ts-ignore - fillColor exists on this annotation type
-            fillColor = annotation.style.fillColor;
-          } else {
-            // @ts-ignore - polyline type exists at runtime but not in type definition
-            if (annotation.type === 'polyline') {
-              fillColor = [0, 0, 0, 0]; // Polylines don't have fill
-            }
-          }
-
-          // Change fill color to blue if hovered
-          if (isHovered) {
-            fillColor = [0, 120, 255, 100]; // Blue with moderate opacity
-            lineColor = [0, 120, 255, 255]; // Blue with moderate opacity
-          }
-
-          const isLine = annotation.type === 'line';
-          // Lines use polygon fill only - no stroke for consistent scaling
-          const shouldStroke = !isLine && annotation.style.lineWidth > 0;
-          
-          // For lines, recalculate polygon based on current zoom for consistent pixel width
-          let polygonToRender = annotation.polygon;
-          // @ts-ignore - LineAnnotation properties
-          if (isLine && annotation.startPoint && annotation.endPoint && annotation.desiredPixelWidth) {
-            // @ts-ignore - LineAnnotation properties
-            const worldWidth = annotation.desiredPixelWidth * Math.pow(2, -viewportZoom);
-            // @ts-ignore - LineAnnotation properties
-            polygonToRender = lineToPolygon(annotation.startPoint, annotation.endPoint, worldWidth);
-          }
-          
-          layers.push(new PolygonLayer({
-            id: `annotation-${annotation.id}`,
-            data: [{
-              polygon: polygonToRender
-            }],
-            getPolygon: d => d.polygon,
-            getFillColor: fillColor,
-            getLineColor: lineColor,
-            getLineWidth: annotation.style.lineWidth * 10,
-            lineWidthScale: 1,
-            lineWidthUnits: 'pixels',
-            lineWidthMinPixels: annotation.style.lineWidth,
-            lineWidthMaxPixels: annotation.style.lineWidth,
-            stroked: shouldStroke,
-            filled: true,
-            pickable: true,
-          }));
-          
-          // If the shape has text, render a text layer at the center of the shape
-          // @ts-ignore - text field exists on all annotation types now
-          if (annotation.text) {
-            // Calculate center position of the shape
-            const polygon = annotation.polygon;
-            const centerX = polygon.reduce((sum, [x]) => sum + x, 0) / polygon.length;
-            const centerY = polygon.reduce((sum, [, y]) => sum + y, 0) / polygon.length;
-            
-            // Use the shape's stroke color for text, or white if not available
-            const textColor = annotation.style.lineColor || [255, 255, 255, 255];
-            
-            layers.push(new TextLayer({
-              id: `annotation-${annotation.id}-text`,
-              data: [{
-                // @ts-ignore - text field exists on all annotation types now
-                text: annotation.text,
-                position: [centerX, centerY, 0], // Add z coordinate
-              }],
-              getText: d => d.text,
-              getPosition: d => d.position,
-              getColor: textColor,
-              getBackgroundColor: [0, 0, 0, 150], // Semi-transparent black background
-              getSize: 14, // Default font size for shape text
-              fontFamily: 'Arial, sans-serif',
-              fontWeight: 'normal',
-              padding: 4,
-              pickable: false, // Don't make text pickable separately from the shape
-            }));
-          }
-        }
-      });
-
-    return layers;
-  }, [annotations, hiddenLayers, hoveredAnnotationId, viewportZoom]);
+  // Use shared hook to create and sync annotation layers to the store
+  useAnnotationLayers();
 
   // Notify parent when drawing layer is created or removed
   React.useEffect(() => {
@@ -1058,27 +893,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       useOverlayStore.getState().removeOverlayLayer('text-placement-marker');
     };
   }, [textPlacementMarker]);
-
-  // Handle annotation layers - they are now managed through the overlay layers system
-  React.useEffect(() => {
-    // Clear existing annotation layers from overlay store
-    const currentLayers = useOverlayStore.getState().overlayLayers;
-    const annotationLayerIds = currentLayers
-      .filter(layer => layer && layer.id.startsWith('annotation-'))
-      .map(layer => layer.id);
-
-    // Remove old annotation layers
-    annotationLayerIds.forEach(layerId => {
-      useOverlayStore.getState().removeOverlayLayer(layerId);
-    });
-
-    // Add new annotation layers
-    annotationLayers.forEach(layer => {
-      if (layer) {
-        useOverlayStore.getState().addOverlayLayer(layer);
-      }
-    });
-  }, [annotationLayers]);
 
   return (
     <>
