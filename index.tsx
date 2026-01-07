@@ -1959,7 +1959,6 @@ console.log({ exhibit_config });
 root.render(
   <React.StrictMode>
     <Main 
-ç
       handleKeys={["ome-dir-1"]} demo_dicom_web={true} h_and_e={false}
       exhibit_config={exhibit_config} configWaypoints={configWaypoints}
     />
