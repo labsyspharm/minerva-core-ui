@@ -4,6 +4,7 @@ import { OrthographicView, OrthographicViewState } from '@deck.gl/core';
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
+import { useOverlayStore } from "../lib/stores";
 
 import {
   createTileLayers, loadDicom
@@ -18,12 +19,14 @@ import { useOverlayStore } from "../lib/stores";
 import type { Config } from "../lib/viv";
 import type { Group, Story } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
+import type { ConfigProps } from "../lib/config";
 import type { Selection, Color, Limit } from "../lib/viv";
 import { VivLensing } from "./vivLensing";
 import { LensExtension } from "@hms-dbmi/viv";
 
 export type Props = {
   loader: any;
+  config: ConfigProps;
   series: string; // DICOM
   groups: Group[];
   stories: Story[];
@@ -63,6 +66,9 @@ const VivView = (props: Props) => {
   const maxShape = useWindowSize();
   const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
+  const { 
+    activeChannelGroupId
+  } = useOverlayStore();
   const [shape, setShape] = useState(maxShape);
   const [channelSettings, setChannelSettings] = useState({});
   const [canvas, setCanvas] = useState(null);
@@ -77,12 +83,14 @@ const VivView = (props: Props) => {
   const mainSettings = useMemo(() => {
     // Gets the default settings
     if (!loader || !groups) {
-      return props.viewerConfig.toSettings(hash);
+      return props.viewerConfig.toSettings(
+          activeChannelGroupId  
+      );
     }
     return props.viewerConfig.toSettings(
-      hash, loader, groups
+      activeChannelGroupId, loader, groups
     );
-  }, [loader, groups, hash]);
+  }, [loader, groups, activeChannelGroupId]);
 
   // Memoize image shape computation
   const imageShape = useMemo(() => {
@@ -96,10 +104,13 @@ const VivView = (props: Props) => {
   // Memoize initial view state
   const initialViewState = useMemo(() => {
     const n_levels = loader.data.length;
-    return {
+    const initial_view = {
       zoom: -n_levels,
       target: [imageShape.x / 2, imageShape.y / 2, 0]
-    } as OrthographicViewState;
+    }
+    console.log("Initial View State:")
+    console.log(initial_view)
+    return initial_view as OrthographicViewState;
   }, [loader.data, imageShape]);
 
   const [viewState, setViewState] = useState<OrthographicViewState>(initialViewState);
@@ -147,19 +158,27 @@ const VivView = (props: Props) => {
     props.dicomIndex, props.series
   ]);
   // Memoize dicom layer
+  const { SourceChannels } = props.config.ItemRegistry 
   const dicomLayer = useMemo(
     () => {
       if (!props.series || !dicomSource) {
         return null;
       }
+      const rgbImage = (
+        ( SourceChannels.length === 1 ) &&
+        ( SourceChannels[0].Properties.Samples === 3 ) &&
+        ( SourceChannels[0].Associations.SourceDataType.ID === "Uint8" )
+      )
       return createTileLayers({
         pyramids: props.dicomIndex,
         settings: mainSettings,
-        dicomSource: dicomSource
+        dicomSource: dicomSource,
+        rgbImage
       });
     },
     [
-      dicomSource, mainSettings, props.series, props.dicomIndex
+      dicomSource, mainSettings, props.series, props.dicomIndex,
+      SourceChannels
     ]
   );
   // Memoize image layer

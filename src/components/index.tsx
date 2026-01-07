@@ -41,7 +41,6 @@ type Props = HashContext & {
   exhibit: Exhibit;
   handle: Handle.Dir;
   config: ConfigProps;
-  marker_names: string[];
   dicomIndex: DicomIndex;
   dicomSeries: string | null;
   controlPanelElement: string;
@@ -114,6 +113,7 @@ const Index = (props: Props) => {
   const { groups, stories } = exhibit;
 
   const [ioState, setIoState] = useState("IDLE");
+  const [presenting, setPresenting] = useState(true);
   const [zoomInEl, setZoomIn] = useState(null);
   const [zoomOutEl, setZoomOut] = useState(null);
   const [editable, setEditable] = useState(false);
@@ -301,6 +301,7 @@ const Index = (props: Props) => {
     in_f,
     handle,
     ioState,
+    presenting,
     hiddenWaypoint,
     setHiddenWaypoint,
     onZoomInEl,
@@ -339,6 +340,9 @@ const Index = (props: Props) => {
     handleLayerCreate,
     handleToolChange,
     handleOverlayInteraction,
+    stories: _stories,
+    activeStoryIndex,
+    setActiveStory,
     setStories,
     setWaypoints
   } = useOverlayStore();
@@ -353,6 +357,14 @@ const Index = (props: Props) => {
       setWaypoints([]);
     }
   }, [props.config.ItemRegistry.Stories, setStories, setWaypoints]);
+
+  // Initialize to first active story index
+  useEffect(() => {
+    const hasStories = _stories.length;
+    if (hasStories && activeStoryIndex === null) {
+      setActiveStory(0);
+    }
+  }, [_stories])
   
   return (
     <Main {...mainProps}>
@@ -366,6 +378,7 @@ const Index = (props: Props) => {
         onOverlayInteraction={handleOverlayInteraction}
       >
       </ImageView>
+{/*
       <Overlays 
         hash={mainProps.hash} 
         groups={mainProps.groups} 
@@ -375,8 +388,10 @@ const Index = (props: Props) => {
       />
       <Stories 
         hash={mainProps.hash}
+        viewOnly={presenting}
         setHash={mainProps.setHash}
       />
+*/}
     </Main>
   );
 };

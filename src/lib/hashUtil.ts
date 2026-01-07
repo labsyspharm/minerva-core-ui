@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useVars, useSetVars } from "path-vars";
 import { getWaypoint } from "./waypoint";
 
@@ -61,31 +60,27 @@ const toOpts = (noHash) => {
     }
 };
 
-const toHashMemo = (url, opts) => {
-  return useMemo(() => {
-    const urlHash = window.location.hash.split('#');
-    const urlParams = urlHash.reduce((obj, str) => {
-      const [ k, v ] = str.split('=');
-      obj[k] = v;
-      return obj;
-    }, {});
-    return useVars(urlParams, opts) as HashState;
-  }, [url]);
+const toHash = (url, opts) => {
+  const urlHash = window.location.hash.split('#');
+  const urlParams = urlHash.reduce((obj, str) => {
+    const [ k, v ] = str.split('=');
+    obj[k] = v;
+    return obj;
+  }, {});
+  return useVars(urlParams, opts) as HashState;
 };
 
 const useHash = (url, stories: Story[]) => {
   const opts = toOpts(toEmptyHash(stories));
-  const hash = toHashMemo(url, opts);
+  const hash = toHash(url, opts);
   const setVars = useSetVars((to) => {
     location.hash = to.pathname;
   }, opts);
-  const setHash = useMemo(() => {
-    return (newHash: Partial<HashState>) => {
-      return setVars({ 
-        ...hash, ...newHash
-      });
-    };
-  }, [hash]);
+  const setHash = (newHash: Partial<HashState>) => {
+    return setVars({
+      ...hash, ...newHash
+    });
+  };
   return { hash, setHash };
 };
 

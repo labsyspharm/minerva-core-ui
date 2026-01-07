@@ -18,10 +18,12 @@ interface ROIPanelMetadata {
     storyIndex: number;
 }
 
-export type Props = HashContext;
+export type Props = HashContext & {
+  viewOnly?: boolean;
+};
 
 const Stories = (props: Props) => {
-    const { hash } = props;
+    const { hash, viewOnly } = props;
 
     // Use Zustand store for stories and waypoints management
     const { 
@@ -310,7 +312,8 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
                 showExpandToggle={false}
                 emptyMessage="No stories yet"
                 customChildRenderer={customChildRenderer}
-                itemActions={storyItemActions}
+                itemActions={viewOnly ? null: storyItemActions}
+                noHeader={viewOnly}
             />
         </div>
     );

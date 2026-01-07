@@ -19,6 +19,7 @@ export interface ListItem<T = any> {
 export interface ItemListProps<T = any> {
   items: ListItem<T>[];
   title: string;
+  noHeader?: boolean;
   emptyMessage?: string;
   className?: string;
   onItemClick?: (item: ListItem<T>) => void;
@@ -57,7 +58,8 @@ const ItemList = <T = any,>({
   showExpandToggle = false,
   headerActions,
   itemActions,
-  customChildRenderer
+  customChildRenderer,
+  noHeader = false
 }: ItemListProps<T>) => {
   const [draggedItemId, setDraggedItemId] = React.useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = React.useState<string | null>(null);
@@ -216,17 +218,21 @@ const ItemList = <T = any,>({
     );
   };
 
+  const header = (
+    <div className={styles.header}>
+      <span>{title} ({items.length})</span>
+      {headerActions && (
+        <div className={styles.headerActions}>
+          {headerActions}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className={`${styles.itemList} ${className}`}>
       {/* Header */}
-      <div className={styles.header}>
-        <span>{title} ({items.length})</span>
-        {headerActions && (
-          <div className={styles.headerActions}>
-            {headerActions}
-          </div>
-        )}
-      </div>
+      { noHeader? '' : header }
 
       {/* List */}
       <div className={styles.list}>

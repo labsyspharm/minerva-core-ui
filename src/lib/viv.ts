@@ -61,7 +61,9 @@ export type Loader = {
 }
 
 export type Config = {
-  toSettings: (h: HashState, l?: Loader, g?: any) => Settings;
+  toSettings: (
+    activeChannelGroupId: string | null, l?: Loader, g?: any
+  ) => Settings;
 };
 
 const toDefaultSettings = (n) => {
@@ -102,41 +104,47 @@ const hexToRGB = (hex: string) => {
 };
 
 const toSettings = (opts) => {
-  return (hash, loader, groups) => {
-    const { g } = hash;
-    const group = (groups || (opts.groups as Group[])).find(
-      (group) => group.g === g
+  return (activeChannelGroupId, loader, groups) => {
+    const { ItemRegistry } = opts.config;
+    const { GroupChannels, SourceChannels } = ItemRegistry;
+    const channels = (GroupChannels).filter(
+      (channel) => (
+        channel.Associations.Group.UUID === activeChannelGroupId
+      )
     );
-    const channels = group?.channels || [];
     // Defaults
     if (!loader) return toDefaultSettings(3);
     const full_level = loader.data[0];
-    if (!loader) return toDefaultSettings(3);
     const { labels, shape } = full_level;
     const c_idx = labels.indexOf("c");
-    const { SourceChannels } = opts.config.ItemRegistry; 
-    const marker_names = SourceChannels.map(x => x.Properties.Name)
     // TODO Simplify mapping of channel names to indices!
     const selections: Selection[] = channels.map(channel => {
-      const c = SourceChannels[
-        marker_names.indexOf(channel.name)
-      ].Properties.SourceIndex;
+      const source_channels = SourceChannels.map(
+        (source_channel) => (
+          source_channel.UUID
+        )
+      );
+      const source_channel = SourceChannels.find(
+        (source_channel) => (
+          channel.Associations.SourceChannel.UUID 
+          === source_channel.UUID
+        )
+      );
+      const c = source_channel?.Properties.SourceIndex || 0;
       return { z: 0, t: 0, c };
-    }).filter(({ c }, i) => {
-      if (c < 0) {
-        console.error(`Missing channel "${channels[i].name}"`);
-        return false
-      }
-      return true;
     });
     const colors: Color[] = channels.map((c, i: number) => {
-      return c.color ? hexToRGB(c.color) : [0, 0, 0];
+      const rgb = c.Associations.Color.ID.split("#").pop();
+      return rgb ? hexToRGB(rgb) : [0, 0, 0];
     });
     const contrastLimits: Limit[] = channels.map(c => {
-      return c.contrast; 
+      const { LowerRange, UpperRange } = c.Properties;
+      return [ LowerRange, UpperRange ]; 
     });
-    const channelsVisible: boolean[] = channels.map((c, i: number) => true);
-
+    const channelsVisible: boolean[] = channels.map(
+      (c, i: number) => true
+    );
+    console.log({colors, contrastLimits, channelsVisible});
     const n_channels = shape[c_idx] || 0;
     const out = {
       ...toDefaultSettings(n_channels),
