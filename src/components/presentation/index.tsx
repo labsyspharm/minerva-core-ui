@@ -13,6 +13,7 @@ import type { Group, Story } from "../../lib/exhibit";
 import type { HashContext } from "../../lib/hashUtil";
 
 export type ImageProps = {
+  name: string;
   groups: Group[];
 };
 
