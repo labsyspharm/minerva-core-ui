@@ -231,62 +231,6 @@ export const lineToPolygon = (start: [number, number], end: [number, number], li
   ];
 };
 
-// Helper function to create hexagon polygon (rectangle with one pointy edge)
-// The pointy edge is at the start position, and the rectangle extends to the end position
-export const hexagonToPolygon = (start: [number, number], end: [number, number], width: number = 25): [number, number][] => {
-  const [startX, startY] = start;
-  const [endX, endY] = end;
-
-  // Calculate direction vector from start to end
-  const dx = endX - startX;
-  const dy = endY - startY;
-  const length = Math.sqrt(dx * dx + dy * dy);
-
-  if (length === 0) {
-    // If line has no length, return a small hexagon around the point
-    const halfWidth = width / 2;
-    return [
-      [startX, startY], // Pointy tip
-      [startX + halfWidth, startY - halfWidth],
-      [startX + halfWidth, startY + halfWidth],
-      [startX, startY + halfWidth],
-      [startX - halfWidth, startY + halfWidth],
-      [startX - halfWidth, startY - halfWidth],
-      [startX, startY], // Close the polygon
-    ];
-  }
-
-  // Normalize direction vector
-  const dirX = dx / length;
-  const dirY = dy / length;
-
-  // Perpendicular vector for rectangle width
-  const perpX = -dirY;
-  const perpY = dirX;
-  const halfWidth = width / 2;
-
-  // Offset from the tip to start the rectangle (makes it look more like a hexagon)
-  // Move a small distance along the direction vector from the tip
-  const tipOffset = Math.min(width * 0.3, length * 0.1); // Small offset, but not more than 10% of length
-  const rectangleStartX = startX + dirX * tipOffset;
-  const rectangleStartY = startY + dirY * tipOffset;
-
-  // Create hexagon points:
-  // 1. Start position (pointy tip)
-  // 2. Top edge of rectangle, starting slightly offset from tip
-  // 3. Top corner at end
-  // 4. Bottom corner at end
-  // 5. Bottom edge of rectangle, starting slightly offset from tip
-  // 6. Back to start (closes polygon)
-  return [
-    [startX, startY], // Point 1: Sharp point at start
-    [rectangleStartX + perpX * halfWidth, rectangleStartY + perpY * halfWidth], // Point 2: Top edge at rectangle start
-    [endX + perpX * halfWidth, endY + perpY * halfWidth], // Point 3: Top corner at end
-    [endX - perpX * halfWidth, endY - perpY * halfWidth], // Point 4: Bottom corner at end
-    [rectangleStartX - perpX * halfWidth, rectangleStartY - perpY * halfWidth], // Point 5: Bottom edge at rectangle start
-    [startX, startY], // Point 6: Back to start (closes polygon)
-  ];
-};
 
 export const isPointInPolygon = (point: [number, number], polygon: [number, number][]): boolean => {
   const [px, py] = point;
