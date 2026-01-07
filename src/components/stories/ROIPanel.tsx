@@ -3,7 +3,7 @@ import { ChromePicker } from 'react-color';
 import { LayersPanel } from "../overlays/LayersPanel";
 import { useOverlayStore } from "../../lib/stores";
 import type { ConfigWaypoint } from "../../lib/config";
-import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, ArrowIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "../overlays/icons";
+import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "../overlays/icons";
 import styles from "./ROIPanel.module.css";
 
 // Define available tools (same as overlays)
@@ -153,14 +153,6 @@ const ROIPanel: React.FC<ROIPanelProps> = ({ story, storyIndex }) => {
                         onClick={() => handleToolChangeLocal(TOOLS.LINE)}
                     >
                         <LineIcon />
-                    </button>
-                    
-                    <button 
-                        className={`${styles.toolButton} ${activeTool === TOOLS.ARROW ? styles.active : ''}`}
-                        title="Arrow Tool"
-                        onClick={() => handleToolChangeLocal(TOOLS.ARROW)}
-                    >
-                        <ArrowIcon />
                     </button>
                     
                     <button 

@@ -13,7 +13,6 @@ import {
 import styled from "styled-components";
 import { getWaypoint } from "../lib/waypoint";
 import { createDragHandlers } from "../lib/dragHandlers";
-import { useOverlayStore } from "../lib/stores";
 
 // Types
 import type { Config } from "../lib/viv";
@@ -221,8 +220,6 @@ const VivView = (props: Props) => {
       return isDragging ? 'grabbing' : 'crosshair';
     } else if (activeTool === 'line') {
       return isDragging ? 'grabbing' : 'crosshair';
-    } else if (activeTool === 'arrow') {
-      return isDragging ? 'grabbing' : 'crosshair';
     } else if (activeTool === 'polyline') {
       return 'crosshair';
     } else if (activeTool === 'point') {
@@ -254,7 +251,7 @@ const VivView = (props: Props) => {
     if (isDragging || (activeTool !== 'move' && interactionState.isDragging)) return;
     // don't allow pan on non-move tool
     setViewState(nextViewState);
-    // Update viewport zoom in store for arrowhead scaling
+    // Update viewport zoom in store for line width scaling
     setViewportZoom(nextViewState.zoom);
   }, [isDragging, activeTool, setViewportZoom]);
 

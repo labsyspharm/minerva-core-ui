@@ -67,7 +67,7 @@ export const createDragHandlers = (
       }
       
       // Emit hover coordinate for drawing tools
-      if (activeTool === 'move' || activeTool === 'text' || activeTool === 'polyline' || activeTool === 'rectangle' || activeTool === 'ellipse' || activeTool === 'line' || activeTool === 'arrow' || activeTool === 'lasso') {
+      if (activeTool === 'move' || activeTool === 'text' || activeTool === 'polyline' || activeTool === 'rectangle' || activeTool === 'ellipse' || activeTool === 'line' || activeTool === 'lasso') {
         if (coordinate) {
           emit('hover', coordinate);
         }

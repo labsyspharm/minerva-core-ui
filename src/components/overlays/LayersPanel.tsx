@@ -2,7 +2,7 @@ import * as React from "react";
 import { useOverlayStore } from "../../lib/stores";
 import type { Annotation, TextAnnotation } from "../../lib/stores";
 import { ItemList, type ListItem } from "../common/ItemList";
-import { RectangleIcon, EllipseIcon, PolylineIcon, PolygonIcon, LineIcon, ArrowIcon, GroupIcon, PointIcon, TextIcon } from "./icons";
+import { RectangleIcon, EllipseIcon, PolylineIcon, PolygonIcon, LineIcon, GroupIcon, PointIcon, TextIcon } from "./icons";
 import styles from "./index.module.css";
 
 // Shared Text Edit Panel Component (same as in original LayersPanel)
@@ -185,8 +185,6 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         return <PolygonIcon style={{ width: '16px', height: '16px' }} />;
       case 'line':
         return <LineIcon style={{ width: '16px', height: '16px' }} />;
-      case 'arrow':
-        return <ArrowIcon style={{ width: '16px', height: '16px' }} />;
       case 'polyline':
         return <PolylineIcon style={{ width: '16px', height: '16px' }} />;
       case 'point':
@@ -210,8 +208,6 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       case 'polygon':
         return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
       case 'line':
-        return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
-      case 'arrow':
         return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
       case 'polyline':
         return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
@@ -426,7 +422,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
                 
                 if (annotation.type === 'text') {
                   currentAnnotationColor = annotation.style.fontColor;
-                } else if (annotation.type === 'rectangle' || annotation.type === 'ellipse' || annotation.type === 'polygon' || annotation.type === 'line' || annotation.type === 'arrow' || annotation.type === 'polyline') {
+                } else if (annotation.type === 'rectangle' || annotation.type === 'ellipse' || annotation.type === 'polygon' || annotation.type === 'line' || annotation.type === 'polyline') {
                   currentAnnotationColor = annotation.style.lineColor;
                 } else if (annotation.type === 'point') {
                   currentAnnotationColor = annotation.style.fillColor;

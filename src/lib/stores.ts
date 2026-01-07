@@ -2,10 +2,6 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { ConfigWaypoint, ConfigWaypointArrow, ConfigWaypointOverlay } from './config';
 
-// Arrow configuration - centralized to ensure preview and finalization match
-// Use same width as lines to match line appearance
-export const ARROW_LINE_WIDTH = 5; // Line width for arrow shaft in pixels (matches line width)
-
 // Re-export config types for convenience
 export type { ConfigWaypointArrow as ConfigArrow, ConfigWaypointOverlay as ConfigOverlay };
 
@@ -93,27 +89,6 @@ export interface LineAnnotation {
   };
 }
 
-export interface ArrowAnnotation {
-  id: string;
-  type: 'arrow';
-  polygon: [number, number][]; // Arrow polygon coordinates (line with arrowhead)
-  // Store original endpoints for dynamic width calculation based on zoom
-  startPoint?: [number, number];
-  endPoint?: [number, number];
-  desiredPixelWidth?: number; // Desired width in pixels (for zoom-based scaling)
-  style: {
-    fillColor: [number, number, number, number];
-    lineColor: [number, number, number, number];
-    lineWidth: number;
-  };
-  text?: string; // Optional text content to display within the shape
-  metadata?: {
-    createdAt: Date;
-    label?: string;
-    description?: string;
-    isImported?: boolean; // Flag to mark imported annotations as un-deletable
-  };
-}
 
 export interface PolylineAnnotation {
   id: string;
@@ -169,7 +144,7 @@ export interface PointAnnotation {
   };
 }
 
-export type Annotation = RectangleAnnotation | EllipseAnnotation | PolygonAnnotation | LineAnnotation | ArrowAnnotation | PolylineAnnotation | TextAnnotation | PointAnnotation;
+export type Annotation = RectangleAnnotation | EllipseAnnotation | PolygonAnnotation | LineAnnotation | PolylineAnnotation | TextAnnotation | PointAnnotation;
 
 // Annotation Group interface
 export interface AnnotationGroup {
@@ -257,79 +232,6 @@ export const lineToPolygon = (start: [number, number], end: [number, number], li
     [endX - nx * halfWidth, endY - ny * halfWidth],
     [startX - nx * halfWidth, startY - ny * halfWidth],
     [startX + nx * halfWidth, startY + ny * halfWidth] // Close the polygon
-  ];
-};
-
-// Helper function to create arrow polygon with arrowhead at the end
-export const arrowToPolygon = (
-  start: [number, number], 
-  end: [number, number], 
-  lineWidth: number = 3, 
-  arrowheadLength?: number, 
-  arrowheadWidth?: number
-): [number, number][] => {
-  const [startX, startY] = start;
-  const [endX, endY] = end;
-
-  // Calculate direction vector
-  const dx = endX - startX;
-  const dy = endY - startY;
-  const length = Math.sqrt(dx * dx + dy * dy);
-
-  if (length === 0) {
-    // If line has no length, return empty polygon
-    return [[startX, startY], [startX, startY], [startX, startY]];
-  }
-
-  // Normalize direction vector
-  const dirX = dx / length;
-  const dirY = dy / length;
-
-  // Perpendicular vector for line width
-  const perpX = -dirY;
-  const perpY = dirX;
-  const halfWidth = lineWidth / 2;
-
-  // Arrowhead size is proportional to line width (6x multiplier for visibility)
-  let finalArrowheadLength = arrowheadLength ?? lineWidth * 6;
-  let finalArrowheadWidth = arrowheadWidth ?? lineWidth * 6;
-
-  // If arrowhead would be bigger than the line, shrink it to fit (max 60% of line length)
-  const maxArrowheadLength = length * 0.6;
-  if (finalArrowheadLength > maxArrowheadLength) {
-    const scale = maxArrowheadLength / finalArrowheadLength;
-    finalArrowheadLength = maxArrowheadLength;
-    finalArrowheadWidth = finalArrowheadWidth * scale;
-  }
-
-  // Calculate where the arrowhead starts (shorten the line by arrowhead length)
-  const arrowheadStartX = endX - dirX * finalArrowheadLength;
-  const arrowheadStartY = endY - dirY * finalArrowheadLength;
-
-  // Create arrowhead triangle points
-  const arrowheadBase1X = arrowheadStartX + perpX * finalArrowheadWidth / 2;
-  const arrowheadBase1Y = arrowheadStartY + perpY * finalArrowheadWidth / 2;
-  const arrowheadBase2X = arrowheadStartX - perpX * finalArrowheadWidth / 2;
-  const arrowheadBase2Y = arrowheadStartY - perpY * finalArrowheadWidth / 2;
-
-  // Create polygon points in clockwise order:
-  // 1. Top-left of line start
-  // 2. Top-right of line end (before arrowhead)
-  // 3. Top base of arrowhead
-  // 4. Arrowhead tip
-  // 5. Bottom base of arrowhead
-  // 6. Bottom-right of line end (before arrowhead)
-  // 7. Bottom-left of line start
-  // 8. Back to start (closes polygon)
-  return [
-    [startX + perpX * halfWidth, startY + perpY * halfWidth], // Top-left of line start
-    [arrowheadStartX + perpX * halfWidth, arrowheadStartY + perpY * halfWidth], // Top-right of line end
-    [arrowheadBase1X, arrowheadBase1Y], // Top base of arrowhead
-    [endX, endY], // Arrowhead tip
-    [arrowheadBase2X, arrowheadBase2Y], // Bottom base of arrowhead
-    [arrowheadStartX - perpX * halfWidth, arrowheadStartY - perpY * halfWidth], // Bottom-right of line end
-    [startX - perpX * halfWidth, startY - perpY * halfWidth], // Bottom-left of line start
-    [startX + perpX * halfWidth, startY + perpY * halfWidth], // Close the polygon
   ];
 };
 
@@ -462,7 +364,7 @@ export interface OverlayStore {
   annotationGroups: AnnotationGroup[]; // New: annotation groups
   hiddenLayers: Set<string>; // New: track hidden layers
   globalColor: [number, number, number, number]; // New: global drawing color
-  viewportZoom: number; // Current viewport zoom level for arrowhead scaling
+  viewportZoom: number; // Current viewport zoom level for line width scaling
   
   // Stories state
   stories: ConfigWaypoint[];
@@ -513,7 +415,6 @@ export interface OverlayStore {
   finalizeEllipse: () => void; // Convert current drawing to ellipse annotation
   finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
   finalizeLine: () => void; // Convert current drawing to line annotation
-  finalizeArrow: () => void; // Convert current drawing to arrow annotation
   finalizePolyline: (points: [number, number][]) => void; // Convert polyline points to polyline annotation
   createTextAnnotation: (position: [number, number], text: string, fontSize?: number) => void; // Create text annotation
   createPointAnnotation: (position: [number, number], radius?: number) => void; // Create point annotation
@@ -521,7 +422,7 @@ export interface OverlayStore {
   updateTextAnnotationColor: (annotationId: string, fontColor: [number, number, number, number]) => void; // Update text annotation color
   updateShapeText: (annotationId: string, newText: string) => void; // Update text field on any annotation (for shapes with text)
   setGlobalColor: (color: [number, number, number, number]) => void; // Set global drawing color
-  setViewportZoom: (zoom: number) => void; // Set viewport zoom for arrowhead scaling
+  setViewportZoom: (zoom: number) => void; // Set viewport zoom for line width scaling
 
   // New layer visibility actions
   toggleLayerVisibility: (annotationId: string) => void;
@@ -743,10 +644,6 @@ export const useOverlayStore = create<OverlayStore>()(
                 setTimeout(() => {
                   get().finalizeLine();
                 }, 0);
-              } else if (activeTool === 'arrow') {
-                setTimeout(() => {
-                  get().finalizeArrow();
-                }, 0);
               }
             }
             break;
@@ -925,45 +822,6 @@ export const useOverlayStore = create<OverlayStore>()(
             metadata: {
               createdAt: new Date(),
               label: `Line ${get().annotations.length + 1}`,
-            },
-          };
-
-          // Add the annotation
-          get().addAnnotation(annotation);
-
-          // Reset drawing state
-          get().resetDrawingState();
-
-          // Remove the temporary drawing layer
-          get().removeOverlayLayer('drawing-layer');
-        }
-      },
-
-      finalizeArrow: () => {
-        const { drawingState, viewportZoom } = get();
-        if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
-          const startPoint: [number, number] = [drawingState.dragStart[0], drawingState.dragStart[1]];
-          const endPoint: [number, number] = [drawingState.dragEnd[0], drawingState.dragEnd[1]];
-
-          // Calculate world-coordinate width for consistent pixel width
-          const desiredPixelWidth = ARROW_LINE_WIDTH;
-          const worldWidth = desiredPixelWidth * Math.pow(2, -viewportZoom);
-
-          const annotation: ArrowAnnotation = {
-            id: `arrow-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            type: 'arrow',
-            polygon: arrowToPolygon(startPoint, endPoint, worldWidth),
-            startPoint,
-            endPoint,
-            desiredPixelWidth,
-            style: {
-              fillColor: get().globalColor,
-              lineColor: get().globalColor,
-              lineWidth: 0,
-            },
-            metadata: {
-              createdAt: new Date(),
-              label: `Arrow ${get().annotations.length + 1}`,
             },
           };
 
@@ -1364,7 +1222,7 @@ export const useOverlayStore = create<OverlayStore>()(
         
         const newAnnotations: Annotation[] = [];
 
-        // Convert arrows to annotations (coordinates are normalized 0-1, convert to image pixels)
+        // Convert arrows to line annotations (coordinates are normalized 0-1, convert to image pixels)
         arrows.forEach((arrow, index) => {
           // Convert normalized coordinates to image pixels
           const [normX, normY] = arrow.Point;
@@ -1392,43 +1250,38 @@ export const useOverlayStore = create<OverlayStore>()(
             };
             newAnnotations.push(textAnnotation);
           } else {
-            // Create arrow annotation
+            // Create line annotation (arrow converted to simple line)
             // Convert angle from degrees to radians and calculate start point
             // Angle 0 = pointing right, 90 = pointing down, etc.
             const angleRad = (arrow.Angle * Math.PI) / 180;
             
-            // Arrow length proportional to image size (50% of the smaller dimension)
+            // Line length proportional to image size (50% of the smaller dimension)
             const minDimension = Math.min(imageWidth, imageHeight);
-            const arrowLength = minDimension * 0.50;
+            const lineLength = minDimension * 0.50;
             
-            // Calculate start point (arrow points TO the Point location)
+            // Calculate start point (line points TO the Point location)
             // So start is away from the point in the direction of the angle
-            const startX = x + Math.cos(angleRad) * arrowLength;
-            const startY = y + Math.sin(angleRad) * arrowLength;
+            const startX = x + Math.cos(angleRad) * lineLength;
+            const startY = y + Math.sin(angleRad) * lineLength;
             const endX = x;
             const endY = y;
 
-            // Calculate arrow polygon with desired pixel width for zoom-independent rendering
-            // Line width 10px with smaller arrowhead (3x multiplier instead of default 6x)
+            // Calculate line polygon with desired pixel width for zoom-independent rendering
             const desiredPixelWidth = 10;
-            const arrowheadSize = desiredPixelWidth * 3; // Smaller heads relative to line
             // Initial polygon calculation (will be recalculated on render based on zoom)
-            const polygon = arrowToPolygon(
+            const polygon = lineToPolygon(
               [startX, startY],
               [endX, endY],
-              desiredPixelWidth,
-              arrowheadSize,
-              arrowheadSize
+              desiredPixelWidth
             );
 
-            const arrowAnnotation: ArrowAnnotation = {
-              id: `imported-arrow-${Date.now()}-${index}`,
-              type: 'arrow',
+            const lineAnnotation: LineAnnotation = {
+              id: `imported-line-${Date.now()}-${index}`,
+              type: 'line',
               polygon,
               startPoint: [startX, startY],
               endPoint: [endX, endY],
               desiredPixelWidth,
-              arrowheadMultiplier: 3, // Smaller heads for imported arrows (default is 6)
               text: arrow.Text,
               style: {
                 fillColor: [255, 255, 255, 255], // White fill
@@ -1441,7 +1294,7 @@ export const useOverlayStore = create<OverlayStore>()(
                 isImported: true,
               },
             };
-            newAnnotations.push(arrowAnnotation);
+            newAnnotations.push(lineAnnotation);
           }
         });
 
