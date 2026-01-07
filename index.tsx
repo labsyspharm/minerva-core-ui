@@ -1954,8 +1954,6 @@ const MainStyle = createGlobalStyle`
 const rootElement = document.getElementById(id);
 const root = createRoot(rootElement);
 
-console.log({ exhibit_config });
-
 root.render(
     <React.StrictMode>
         <Main
