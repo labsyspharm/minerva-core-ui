@@ -7,8 +7,8 @@ import { createGlobalStyle } from "styled-components";
 import { loremIpsum } from "react-lorem-ipsum";
 
 const fakeText = (p) => {
-  const random = true;
-  return loremIpsum({ p, random }).join("\n\n");
+    const random = true;
+    return loremIpsum({ p, random }).join("\n\n");
 };
 
 const configWaypoints = [
@@ -1599,344 +1599,344 @@ const configWaypoints = [
             }
         ]
     }
-]; 
+];
 
 // TODO: remove legacy exhibit data structure
 const exhibit_config = {
-  Stories: [{
-    Waypoints: configWaypoints.map(({ Properties, Arrows, Overlays  }) => {
-      const { Name, Content, Pan, Zoom, Group } = Properties;
-      return {
-        Name, Description: Content,
-        Pan, Zoom, Group,
-        Arrows, Overlays
-      }
-    })
-  }],
-  Groups: [
-      {
-          "Channels": [
-              "Hematoxylin",
-              "Eosin"
-          ],
-          "Colors": [
-              "8233CC",
-              "FF8080"
-          ],
-          "Name": "Histology",
-          "Path": "Histology_40__HE-r--41__HE-g--42__HE-b"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "PanCK",
-              "ASMA",
-              "CD31",
-              "CD45"
-          ],
-          "Colors": [
-              "0000ff",
-              "ffffff",
-              "ff0000",
-              "00ff00",
-              "ffff00"
-          ],
-          "Name": "Tissue Structure",
-          "Path": "Tissue-Structure_0__DNA1--14__PanCK--15__ASMA--35__CD31--18__CD45"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "CD45",
-              "CD8a",
-              "CD4",
-              "CD20",
-              "CD68",
-              "CD163"
-          ],
-          "Colors": [
-              "0000ff",
-              "ffffff",
-              "ff0000",
-              "ff00ff",
-              "ffff00",
-              "00ff00",
-              "00ffff"
-          ],
-          "Name": "Immune Populations",
-          "Path": "Immune-Populations_0__DNA1--18__CD45--23__CD8a--17__CD4--21__CD20--22__CD68--25__CD163"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "CD8a",
-              "CD4",
-              "CD20",
-              "FOXP3"
-          ],
-          "Colors": [
-              "0000ff",
-              "00ff00",
-              "ff0000",
-              "ffff00",
-              "ffffff"
-          ],
-          "Name": "Lymphocytes",
-          "Path": "Lymphocytes_0__DNA1--23__CD8a--17__CD4--21__CD20--26__FOXP3"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "CD68",
-              "CD163"
-          ],
-          "Colors": [
-              "0000ff",
-              "00ff00",
-              "ff0000"
-          ],
-          "Name": "Macrophages",
-          "Path": "Macrophages_0__DNA1--22__CD68--25__CD163"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "PCNA",
-              "PanCK",
-              "CD45",
-              "Ki67"
-          ],
-          "Colors": [
-              "0000ff",
-              "ff0000",
-              "ffffff",
-              "00ffff",
-              "00ff00"
-          ],
-          "Name": "Proliferation",
-          "Path": "Proliferation_0__DNA1--37__PCNA--14__PanCK--18__CD45--13__Ki67"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "PanCK",
-              "PDL1",
-              "PD1"
-          ],
-          "Colors": [
-              "0000ff",
-              "ffffff",
-              "ff0000",
-              "00ff00"
-          ],
-          "Name": "PD1 Immune Checkpoint",
-          "Path": "PD1-Immune-Checkpoint_0__DNA1--14__PanCK--27__PDL1--19__PD1"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "CD4",
-              "FOXP3"
-          ],
-          "Colors": [
-              "0000ff",
-              "ffffff",
-              "ff0000"
-          ],
-          "Name": "Helper and Regulatory T Cells",
-          "Path": "Helper-and-Regulatory-T-Cells_0__DNA1--17__CD4--26__FOXP3"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "CD8a",
-              "PD1"
-          ],
-          "Colors": [
-              "0000ff",
-              "ffffff",
-              "00ff00"
-          ],
-          "Name": "CD8 Cytotoxic T Cells",
-          "Path": "CD8-Cytotoxic-T-Cells_0__DNA1--23__CD8a--19__PD1"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "CD8a",
-              "FOXP3"
-          ],
-          "Colors": [
-              "0000ff",
-              "ffffff",
-              "ff0000"
-          ],
-          "Name": "FOXP3 CD8 T Cells",
-          "Path": "FOXP3-CD8-T-Cells_0__DNA1--23__CD8a--26__FOXP3"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "PanCK",
-              "Na_K_ATPase"
-          ],
-          "Colors": [
-              "0000ff",
-              "ffffff",
-              "00ff00"
-          ],
-          "Name": "NaK ATPase",
-          "Path": "NaK-ATPase_0__DNA1--14__PanCK--10__Na-K-ATPase"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "PanCK",
-              "Ecadherin"
-          ],
-          "Colors": [
-              "0000ff",
-              "ffffff",
-              "00ff00"
-          ],
-          "Name": "E-Cadherin",
-          "Path": "E-Cadherin_0__DNA1--14__PanCK--29__Ecadherin"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "ASMA",
-              "Desmin",
-              "Collagen",
-              "Vimentin"
-          ],
-          "Colors": [
-              "0000ff",
-              "ff0000",
-              "00ff00",
-              "ffffff",
-              "00ffff"
-          ],
-          "Name": "Stroma",
-          "Path": "Stroma_0__DNA1--15__ASMA--34__Desmin--39__Collagen--30__Vimentin"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "CD4",
-              "CD68",
-              "CD163",
-              "PDL1"
-          ],
-          "Colors": [
-              "0000ff",
-              "ffffff",
-              "00ffff",
-              "00ff00",
-              "ff0000"
-          ],
-          "Name": "PDL1-Positive Immune Cells",
-          "Path": "PDL1-Positive-Immune-Cells_0__DNA1--17__CD4--22__CD68--25__CD163--27__PDL1"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "PDL1",
-              "CD8a",
-              "PD1"
-          ],
-          "Colors": [
-              "0000ff",
-              "ff0000",
-              "ffffff",
-              "00ff00"
-          ],
-          "Name": "PDL1-CD8 Interaction",
-          "Path": "PDL1-CD8-Interaction_0__DNA1--27__PDL1--23__CD8a--19__PD1"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "PanCK",
-              "Ecadherin",
-              "PCNA"
-          ],
-          "Colors": [
-              "0000ff",
-              "ffffff",
-              "00ff00",
-              "ff0000"
-          ],
-          "Name": "Tumor Budding Epithelial",
-          "Path": "Tumor-Budding-Epithelial_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "PanCK",
-              "PDL1",
-              "FOXP3",
-              "CD8a",
-              "PD1",
-              "CD68"
-          ],
-          "Colors": [
-              "0000ff",
-              "ffffff",
-              "ff0000",
-              "ffff00",
-              "00ff00",
-              "6c00ff",
-              "654321"
-          ],
-          "Name": "Tumor Budding Immune Modulation",
-          "Path": "Tumor-Budding-Immune-Modulation_0__DNA1--14__PanCK--27__PDL1--26__FOXP3--23__CD8a--19__PD1--22__CD68"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "LaminABC"
-          ],
-          "Colors": [
-              "0000ff",
-              "00ff00"
-          ],
-          "Name": "Nuclear Lamina",
-          "Path": "Nuclear-Lamina_0__DNA1--33__LaminABC"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "DNA10"
-          ],
-          "Colors": [
-              "0000ff",
-              "ff0000"
-          ],
-          "Name": "DAPI Cycle Correlation",
-          "Path": "DAPI-Cycle-Correlation_0__DNA1--36__DNA10"
-      },
-      {
-          "Channels": [
-              "DNA1",
-              "PanCK",
-              "Ecadherin",
-              "PCNA"
-          ],
-          "Colors": [
-              "0000ff",
-              "ffffff",
-              "00ff00",
-              "ff0000"
-          ],
-          "Name": "Transitions",
-          "Path": "Transitions_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA"
-      }
-  ]
+    Stories: [{
+        Waypoints: configWaypoints.map(({ Properties, Arrows, Overlays }) => {
+            const { Name, Content, Pan, Zoom, Group } = Properties;
+            return {
+                Name, Description: Content,
+                Pan, Zoom, Group,
+                Arrows, Overlays
+            }
+        })
+    }],
+    Groups: [
+        {
+            "Channels": [
+                "Hematoxylin",
+                "Eosin"
+            ],
+            "Colors": [
+                "8233CC",
+                "FF8080"
+            ],
+            "Name": "Histology",
+            "Path": "Histology_40__HE-r--41__HE-g--42__HE-b"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "PanCK",
+                "ASMA",
+                "CD31",
+                "CD45"
+            ],
+            "Colors": [
+                "0000ff",
+                "ffffff",
+                "ff0000",
+                "00ff00",
+                "ffff00"
+            ],
+            "Name": "Tissue Structure",
+            "Path": "Tissue-Structure_0__DNA1--14__PanCK--15__ASMA--35__CD31--18__CD45"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "CD45",
+                "CD8a",
+                "CD4",
+                "CD20",
+                "CD68",
+                "CD163"
+            ],
+            "Colors": [
+                "0000ff",
+                "ffffff",
+                "ff0000",
+                "ff00ff",
+                "ffff00",
+                "00ff00",
+                "00ffff"
+            ],
+            "Name": "Immune Populations",
+            "Path": "Immune-Populations_0__DNA1--18__CD45--23__CD8a--17__CD4--21__CD20--22__CD68--25__CD163"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "CD8a",
+                "CD4",
+                "CD20",
+                "FOXP3"
+            ],
+            "Colors": [
+                "0000ff",
+                "00ff00",
+                "ff0000",
+                "ffff00",
+                "ffffff"
+            ],
+            "Name": "Lymphocytes",
+            "Path": "Lymphocytes_0__DNA1--23__CD8a--17__CD4--21__CD20--26__FOXP3"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "CD68",
+                "CD163"
+            ],
+            "Colors": [
+                "0000ff",
+                "00ff00",
+                "ff0000"
+            ],
+            "Name": "Macrophages",
+            "Path": "Macrophages_0__DNA1--22__CD68--25__CD163"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "PCNA",
+                "PanCK",
+                "CD45",
+                "Ki67"
+            ],
+            "Colors": [
+                "0000ff",
+                "ff0000",
+                "ffffff",
+                "00ffff",
+                "00ff00"
+            ],
+            "Name": "Proliferation",
+            "Path": "Proliferation_0__DNA1--37__PCNA--14__PanCK--18__CD45--13__Ki67"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "PanCK",
+                "PDL1",
+                "PD1"
+            ],
+            "Colors": [
+                "0000ff",
+                "ffffff",
+                "ff0000",
+                "00ff00"
+            ],
+            "Name": "PD1 Immune Checkpoint",
+            "Path": "PD1-Immune-Checkpoint_0__DNA1--14__PanCK--27__PDL1--19__PD1"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "CD4",
+                "FOXP3"
+            ],
+            "Colors": [
+                "0000ff",
+                "ffffff",
+                "ff0000"
+            ],
+            "Name": "Helper and Regulatory T Cells",
+            "Path": "Helper-and-Regulatory-T-Cells_0__DNA1--17__CD4--26__FOXP3"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "CD8a",
+                "PD1"
+            ],
+            "Colors": [
+                "0000ff",
+                "ffffff",
+                "00ff00"
+            ],
+            "Name": "CD8 Cytotoxic T Cells",
+            "Path": "CD8-Cytotoxic-T-Cells_0__DNA1--23__CD8a--19__PD1"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "CD8a",
+                "FOXP3"
+            ],
+            "Colors": [
+                "0000ff",
+                "ffffff",
+                "ff0000"
+            ],
+            "Name": "FOXP3 CD8 T Cells",
+            "Path": "FOXP3-CD8-T-Cells_0__DNA1--23__CD8a--26__FOXP3"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "PanCK",
+                "Na_K_ATPase"
+            ],
+            "Colors": [
+                "0000ff",
+                "ffffff",
+                "00ff00"
+            ],
+            "Name": "NaK ATPase",
+            "Path": "NaK-ATPase_0__DNA1--14__PanCK--10__Na-K-ATPase"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "PanCK",
+                "Ecadherin"
+            ],
+            "Colors": [
+                "0000ff",
+                "ffffff",
+                "00ff00"
+            ],
+            "Name": "E-Cadherin",
+            "Path": "E-Cadherin_0__DNA1--14__PanCK--29__Ecadherin"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "ASMA",
+                "Desmin",
+                "Collagen",
+                "Vimentin"
+            ],
+            "Colors": [
+                "0000ff",
+                "ff0000",
+                "00ff00",
+                "ffffff",
+                "00ffff"
+            ],
+            "Name": "Stroma",
+            "Path": "Stroma_0__DNA1--15__ASMA--34__Desmin--39__Collagen--30__Vimentin"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "CD4",
+                "CD68",
+                "CD163",
+                "PDL1"
+            ],
+            "Colors": [
+                "0000ff",
+                "ffffff",
+                "00ffff",
+                "00ff00",
+                "ff0000"
+            ],
+            "Name": "PDL1-Positive Immune Cells",
+            "Path": "PDL1-Positive-Immune-Cells_0__DNA1--17__CD4--22__CD68--25__CD163--27__PDL1"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "PDL1",
+                "CD8a",
+                "PD1"
+            ],
+            "Colors": [
+                "0000ff",
+                "ff0000",
+                "ffffff",
+                "00ff00"
+            ],
+            "Name": "PDL1-CD8 Interaction",
+            "Path": "PDL1-CD8-Interaction_0__DNA1--27__PDL1--23__CD8a--19__PD1"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "PanCK",
+                "Ecadherin",
+                "PCNA"
+            ],
+            "Colors": [
+                "0000ff",
+                "ffffff",
+                "00ff00",
+                "ff0000"
+            ],
+            "Name": "Tumor Budding Epithelial",
+            "Path": "Tumor-Budding-Epithelial_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "PanCK",
+                "PDL1",
+                "FOXP3",
+                "CD8a",
+                "PD1",
+                "CD68"
+            ],
+            "Colors": [
+                "0000ff",
+                "ffffff",
+                "ff0000",
+                "ffff00",
+                "00ff00",
+                "6c00ff",
+                "654321"
+            ],
+            "Name": "Tumor Budding Immune Modulation",
+            "Path": "Tumor-Budding-Immune-Modulation_0__DNA1--14__PanCK--27__PDL1--26__FOXP3--23__CD8a--19__PD1--22__CD68"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "LaminABC"
+            ],
+            "Colors": [
+                "0000ff",
+                "00ff00"
+            ],
+            "Name": "Nuclear Lamina",
+            "Path": "Nuclear-Lamina_0__DNA1--33__LaminABC"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "DNA10"
+            ],
+            "Colors": [
+                "0000ff",
+                "ff0000"
+            ],
+            "Name": "DAPI Cycle Correlation",
+            "Path": "DAPI-Cycle-Correlation_0__DNA1--36__DNA10"
+        },
+        {
+            "Channels": [
+                "DNA1",
+                "PanCK",
+                "Ecadherin",
+                "PCNA"
+            ],
+            "Colors": [
+                "0000ff",
+                "ffffff",
+                "00ff00",
+                "ff0000"
+            ],
+            "Name": "Transitions",
+            "Path": "Transitions_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA"
+        }
+    ]
 }
 
 // TODO Warning: hard-coded for LUNG-3-PR_40X.ome.tif
-const marker_names = ["DNA_1","AF488","AF555","AF647","DNA_2","A488 background","A555 background","A647 background","DNA_3","A488 background","LAG3","ARL13B","DNA_4","KI67","Keratin","PD1","DNA_5","CD45RB","CD3D","PD-L1","DNA_6","CD4","CD45","CD8A","DNA_7","CD163","CD68","CD14","DNA_8","CD11B","FOXP3","CD21","DNA_9","IBA1","α-SMA","CD20","DNA_10","CD19","GFAP","GTUBULIN","DNA_11","LAMINAC","BANF1","LAMINB"];
+const marker_names = ["DNA_1", "AF488", "AF555", "AF647", "DNA_2", "A488 background", "A555 background", "A647 background", "DNA_3", "A488 background", "LAG3", "ARL13B", "DNA_4", "KI67", "Keratin", "PD1", "DNA_5", "CD45RB", "CD3D", "PD-L1", "DNA_6", "CD4", "CD45", "CD8A", "DNA_7", "CD163", "CD68", "CD14", "DNA_8", "CD11B", "FOXP3", "CD21", "DNA_9", "IBA1", "α-SMA", "CD20", "DNA_10", "CD19", "GFAP", "GTUBULIN", "DNA_11", "LAMINAC", "BANF1", "LAMINB"];
 
 const color = "black";
 const fontColor = "eeeeee";
@@ -1955,13 +1955,13 @@ const rootElement = document.getElementById(id);
 const root = createRoot(rootElement);
 
 root.render(
-  <React.StrictMode>
-    <Main 
-      handleKeys={["ome-dir-1"]} demo_dicom_web={true} h_and_e={false}
-      exhibit_config={exhibit_config} configWaypoints={configWaypoints}
-    />
-    <MainStyle />
-  </React.StrictMode>
-);
+    <React.StrictMode>
+        <Main
 
+            handleKeys={["ome-dir-1"]} demo_dicom_web={true} h_and_e={false}
+            exhibit_config={exhibit_config} configWaypoints={configWaypoints}
+        />
+        <MainStyle />
+    </React.StrictMode>
+);
 

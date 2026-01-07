@@ -32,6 +32,25 @@ type GroupChannelProperties = {
 };
 type WaypointProperties = NameProperty & {
   Content: string;
+  Pan?: [number, number];
+  Zoom?: number;
+  Group?: string;
+};
+
+// Arrow annotation from config
+export type ConfigWaypointArrow = {
+  Angle: number;
+  HideArrow: boolean;
+  Point: [number, number];
+  Text: string;
+};
+
+// Overlay (rectangle) annotation from config
+export type ConfigWaypointOverlay = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
   Group: string;
 };
 
@@ -157,11 +176,14 @@ export type ConfigGroup = UUID & {
 export type ConfigWaypoint = UUID & {
   State: WaypointState;
   Properties: WaypointProperties;
+  Arrows?: ConfigWaypointArrow[];
+  Overlays?: ConfigWaypointOverlay[];
 // TODO use UUID for group
 /*  Associations: {
     Group: UUID
   }
 */
+
 };
 export type ConfigColor = ID & {
   Properties: {

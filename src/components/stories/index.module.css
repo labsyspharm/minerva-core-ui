@@ -9,8 +9,9 @@
   padding: 10px;
   align-items: center;
   width: 100%;
-  min-height: 100%;
+  min-height: 0;
   flex: 1;
+  overflow-y: auto;
 }
 
 .storiesContainer {

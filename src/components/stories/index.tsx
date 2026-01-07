@@ -34,7 +34,11 @@ const Stories = (props: Props) => {
         activeWaypointId,
         setActiveWaypoint,
         updateStory,
-        reorderStories
+        reorderStories,
+        importWaypointAnnotations,
+        clearImportedAnnotations,
+        imageWidth,
+        imageHeight
     } = useOverlayStore();
 
     // Local state for markdown editing
@@ -51,6 +55,30 @@ const Stories = (props: Props) => {
     const className = [
         styles.center, styles.black
     ].join(" ");
+
+    // Auto-import annotations for the active story (or first story on initial load)
+    // Also re-run when image dimensions become available
+    React.useEffect(() => {
+        if (stories.length === 0) return;
+        // Wait for image dimensions to be set
+        if (imageWidth === 0 || imageHeight === 0) return;
+        
+        // Determine which story to use - active story or default to first
+        const storyIndex = activeStoryIndex ?? 0;
+        const story = stories[storyIndex];
+        
+        if (story) {
+            // Clear any existing imported annotations first
+            clearImportedAnnotations();
+            
+            // Import annotations from the story
+            const arrows = story.Arrows || [];
+            const overlays = story.Overlays || [];
+            if (arrows.length > 0 || overlays.length > 0) {
+                importWaypointAnnotations(arrows, overlays);
+            }
+        }
+    }, [stories, activeStoryIndex, imageWidth, imageHeight, importWaypointAnnotations, clearImportedAnnotations]);
 
     // Convert stories to ListItem format with inline markdown editor and ROI panel
 const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((story, index) => {
@@ -103,6 +131,13 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
             const index = stories.findIndex(s => s.UUID === story.UUID);
             if (index !== -1) {
                 setActiveStory(index);
+                
+                // Collapse all ROI panels when switching stories to avoid showing
+                // annotations from the new story under the old story's panel
+                setExpandedROIStories(new Set());
+                
+                // Note: annotations are imported automatically by the useEffect 
+                // that watches activeStoryIndex changes
             }
         }
     };

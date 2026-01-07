@@ -1,6 +1,7 @@
 import * as React from "react";
 import { PolygonLayer, TextLayer, ScatterplotLayer } from '@deck.gl/layers';
 import { useOverlayStore, ellipseToPolygon } from "../../lib/stores";
+import { useAnnotationLayers } from "./AnnotationLayers";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {
@@ -302,7 +303,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       const [startX, startY] = lineFirstClick;
       const [endX, endY] = lineSecondClick;
 
-      const lineData: [number, number][] = [
+      // Simple polygon for stroke-based line rendering (no fill, just stroke)
+      const linePolygon: [number, number][] = [
         [startX, startY],
         [endX, endY],
         [endX, endY],
@@ -310,13 +312,12 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         [startX, startY]
       ];
 
-      // Create line annotation directly using click coordinates
       const annotation = {
         id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: 'line' as const,
-        polygon: lineData,
+        polygon: linePolygon,
         style: {
-          fillColor: [globalColor[0], globalColor[1], globalColor[2], 50] as [number, number, number, number],
+          fillColor: [0, 0, 0, 0] as [number, number, number, number], // Transparent fill
           lineColor: globalColor as [number, number, number, number],
           lineWidth: 3,
         },
@@ -325,7 +326,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         },
       };
 
-      // Add the annotation to the store
       useOverlayStore.getState().addAnnotation(annotation);
 
       // Reset line click state
@@ -554,18 +554,14 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         createPointAnnotation([x, y], 5); // Default radius of 5 pixels
       }
     } else if (activeTool === 'lasso') {
-      console.log('DrawingOverlay: Received lasso interaction:', type, 'at coordinate:', [x, y]);
-
       if (type === 'click') {
         // Click mode: Add point to polygon
         if (!isPolygonClickMode) {
           // First click - start polygon drawing
-          console.log('DrawingOverlay: First polygon click at:', [x, y]);
           setPolygonClickPoints([[x, y] as [number, number]]);
           setIsPolygonClickMode(true);
         } else {
           // Subsequent clicks - add corner point
-          console.log('DrawingOverlay: Adding polygon corner at:', [x, y]);
           setPolygonClickPoints(prev => [...prev, [x, y] as [number, number]]);
         }
       } else if (type === 'hover') {
@@ -584,29 +580,23 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         setLassoPoints(prev => [...prev, [x, y] as [number, number]]);
       } else if (type === 'dragEnd' && isLassoDrawing) {
         // Finish lasso drawing
-        console.log('DrawingOverlay: Processing lasso dragEnd');
         const finalPoints: [number, number][] = [...lassoPoints, [x, y] as [number, number]];
 
         // Finalize the lasso as an annotation
         if (finalPoints.length >= 3) {
-          console.log('DrawingOverlay: Calling finalizeLasso with', finalPoints.length, 'points');
           finalizeLasso(finalPoints);
           setIsLassoDrawing(false);
           setLassoPoints([]); // Clear points
         }
       }
     } else if (activeTool === 'rectangle') {
-      console.log('DrawingOverlay: Received rectangle interaction:', type, 'at coordinate:', [x, y]);
-
       if (type === 'click') {
         if (!isRectangleClickMode) {
           // First click - start rectangle drawing
-          console.log('DrawingOverlay: First rectangle click at:', [x, y]);
           setRectangleFirstClick([x, y]);
           setIsRectangleClickMode(true);
         } else {
           // Second click - finalize rectangle
-          console.log('DrawingOverlay: Second rectangle click at:', [x, y]);
           setRectangleSecondClick([x, y]);
           finalizeClickRectangle();
         }
@@ -615,17 +605,13 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         setRectangleSecondClick([x, y]);
       }
     } else if (activeTool === 'line') {
-      console.log('DrawingOverlay: Received line interaction:', type, 'at coordinate:', [x, y]);
-
       if (type === 'click') {
         if (!isLineClickMode) {
           // First click - start line drawing
-          console.log('DrawingOverlay: First line click at:', [x, y]);
           setLineFirstClick([x, y]);
           setIsLineClickMode(true);
         } else {
           // Second click - finalize line
-          console.log('DrawingOverlay: Second line click at:', [x, y]);
           setLineSecondClick([x, y]);
           finalizeClickLine();
         }
@@ -634,17 +620,13 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         setLineSecondClick([x, y]);
       }
     } else if (activeTool === 'ellipse') {
-      console.log('DrawingOverlay: Received ellipse interaction:', type, 'at coordinate:', [x, y]);
-
       if (type === 'click') {
         if (!isEllipseClickMode) {
           // First click - start ellipse drawing
-          console.log('DrawingOverlay: First ellipse click at:', [x, y]);
           setEllipseFirstClick([x, y]);
           setIsEllipseClickMode(true);
         } else {
           // Second click - finalize ellipse
-          console.log('DrawingOverlay: Second ellipse click at:', [x, y]);
           setEllipseSecondClick([x, y]);
           finalizeClickEllipse();
         }
@@ -653,56 +635,44 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         setEllipseSecondClick([x, y]);
       }
     } else if (activeTool === 'polyline') {
-      console.log('DrawingOverlay: Received polyline interaction:', type, 'at coordinate:', [x, y]);
-
       let prevPoints = [...polylinePoints];
       if (prevPoints.length > (finalizedPolylineSegmentCount * 2)) {
         prevPoints = removeMiddleTwoElements(prevPoints);
       }
       if (type === 'click') {
         // Add point to polyline on single click
-        console.log('DrawingOverlay: Adding polyline segment point via click:', [x, y]);
         // Add additional points - add twice in the middle of the array
         const middleIndex = Math.floor(prevPoints.length / 2);
         const newPoint = [x, y] as [number, number];
         const newPoints = [...prevPoints];
         newPoints.splice(middleIndex, 0, newPoint, newPoint);
-        console.log('DrawingOverlay: New points:', newPoints);
         setPolylinePoints(newPoints);
         setFinalizedPolylineSegmentCount(prev => prev + 1);
       } else if (type === 'dragStart') {
         // Start dragging - set dragging state
-        console.log('DrawingOverlay: Starting polyline drag');
         setIsPolylineDragging(true);
       } else if (type === 'drag') {
         // Add point to polyline during drag
-        console.log('DrawingOverlay: Adding polyline segment point via drag:', [x, y]);
         // Add additional points - add twice in the middle of the array
         const middleIndex = Math.floor(prevPoints.length / 2);
         const newPoint = [x, y] as [number, number];
         const newPoints = [...prevPoints];
         newPoints.splice(middleIndex, 0, newPoint, newPoint);
-        console.log('DrawingOverlay: New points:', newPoints);
         setPolylinePoints(newPoints);
         setFinalizedPolylineSegmentCount(prev => prev + 1);
       } else if (type === 'dragEnd') {
         // Finalize polyline if user was dragging or if there are any points
-        console.log('DrawingOverlay: dragEnd received, was dragging:', isPolylineDragging, 'points:', polylinePoints.length);
         if (isPolylineDragging || polylinePoints.length >= 2) {
-          console.log('DrawingOverlay: Finalizing polyline on dragEnd');
           finalizeCurrentPolyline();
         }
         setIsPolylineDragging(false);
       } else if (type === 'hover') {
-        console.log('Hovering over polyline');
         // based on the number of segments finalized, add temporary point for this hover
         const middleIndex = Math.floor(prevPoints.length / 2);
         const newPoint = [x, y] as [number, number];
         const newPoints = [...prevPoints];
         newPoints.splice(middleIndex, 0, newPoint, newPoint);
-        console.log('DrawingOverlay: New points:', newPoints);
         setPolylinePoints(newPoints);
-        console.log('DrawingOverlay: Hover interaction at coordinate:', [x, y]);
       }
     }
   }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso, isPolylineDrawing, isPolylineDragging, finalizePolyline, isRectangleClickMode, rectangleFirstClick, finalizeClickRectangle, isLineClickMode, lineFirstClick, finalizeClickLine, isEllipseClickMode, ellipseFirstClick, finalizeClickEllipse, isPolygonClickMode, polygonClickPoints, finalizeClickPolygon]);
@@ -710,10 +680,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // Handle text input submission
   const handleTextSubmit = () => {
     if (textInputPosition && textInputValue.trim()) {
-      console.log('DrawingOverlay: Creating text annotation at position:', textInputPosition, 'with text:', textInputValue.trim(), 'fontSize:', textFontSize);
       createTextAnnotation(textInputPosition, textInputValue.trim(), textFontSize);
-    } else {
-      console.log('DrawingOverlay: Cannot create text annotation - missing position or empty text');
     }
     setShowTextInput(false);
     setTextInputPosition(null);
@@ -737,6 +704,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     let fillColor: [number, number, number, number] = PREVIEW_FILL_COLOR;
     let lineColor: [number, number, number, number] = PREVIEW_LINE_COLOR;
     let shouldFill = true;
+    let lineWidth = getLineWidthPx(); // Default line width
 
     // Rectangle tool: uses click-to-draw mode or drag mode
     if (activeTool === 'rectangle') {
@@ -756,7 +724,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           [minX, maxY],
           [minX, minY],
         ];
-        console.log('DrawingOverlay: Click rectangle polygon data:', polygonData);
       }
       // Fall back to drag mode for backward compatibility
       else if (isDrawing && dragStart && dragEnd) {
@@ -774,7 +741,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           [minX, maxY],
           [minX, minY],
         ];
-        console.log('DrawingOverlay: Drag rectangle polygon data:', polygonData);
       }
     }
     // Lasso tool: uses click mode or drag mode
@@ -793,13 +759,11 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           polygonData = previewPoints;
           fillColor = [PREVIEW_LINE_COLOR[0], PREVIEW_LINE_COLOR[1], PREVIEW_LINE_COLOR[2], 0]; // No fill for preview
           shouldFill = false; // Don't fill the preview
-          console.log('DrawingOverlay: Click polygon preview data:', polygonData);
         }
       }
       // Fall back to drag mode for backward compatibility
       else if (isLassoDrawing && lassoPoints.length >= 3) {
         polygonData = [...lassoPoints, lassoPoints[0]]; // Close the polygon
-        console.log('DrawingOverlay: Lasso drag polygon data:', polygonData);
       }
     }
     // Polyline tool: uses polylinePoints array without closing
@@ -807,15 +771,12 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       polygonData = polylinePoints;
       fillColor = [PREVIEW_LINE_COLOR[0], PREVIEW_LINE_COLOR[1], PREVIEW_LINE_COLOR[2], 0]; // No fill for polyline
       shouldFill = false;
-      console.log('DrawingOverlay: Polyline polygon data:', polygonData);
     }
-    // Line tool: uses click mode or drag mode
+    // Line tool: uses simple stroke-based rendering
     else if (activeTool === 'line') {
-      // Check for click-to-draw mode first
       if (isLineClickMode && lineFirstClick && lineSecondClick) {
         const [startX, startY] = lineFirstClick;
         const [endX, endY] = lineSecondClick;
-
         polygonData = [
           [startX, startY],
           [endX, endY],
@@ -823,13 +784,11 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           [startX, startY],
           [startX, startY]
         ];
-        console.log('DrawingOverlay: Click line polygon data:', polygonData);
-      }
-      // Fall back to drag mode for backward compatibility
-      else if (isDrawing && dragStart && dragEnd) {
+        fillColor = [0, 0, 0, 0]; // No fill for line
+        shouldFill = false;
+      } else if (isDrawing && dragStart && dragEnd) {
         const [startX, startY] = dragStart;
         const [endX, endY] = dragEnd;
-
         polygonData = [
           [startX, startY],
           [endX, endY],
@@ -837,7 +796,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
           [startX, startY],
           [startX, startY]
         ];
-        console.log('DrawingOverlay: Drag line polygon data:', polygonData);
+        fillColor = [0, 0, 0, 0]; // No fill for line
+        shouldFill = false;
       }
     }
     // Ellipse tool: uses click mode or drag mode
@@ -846,21 +806,21 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       if (isEllipseClickMode && ellipseFirstClick && ellipseSecondClick) {
         // Generate ellipse polygon using helper function
         polygonData = ellipseToPolygon(ellipseFirstClick, ellipseSecondClick);
-        console.log('DrawingOverlay: Click ellipse polygon data:', polygonData);
       }
       // Fall back to drag mode for backward compatibility
       else if (isDrawing && dragStart && dragEnd) {
         // Generate ellipse polygon using helper function
         polygonData = ellipseToPolygon(dragStart, dragEnd);
-        console.log('DrawingOverlay: Drag ellipse polygon data:', polygonData);
       }
     }
-
     // Return null if no polygon data
     if (!polygonData) {
       return null;
     }
 
+    // Determine if we should stroke (lines use polygon fill only, no stroke)
+    const shouldStroke = activeTool !== 'line';
+    
     // Create single unified polygon layer
     return new PolygonLayer({
       id: layerId,
@@ -868,12 +828,12 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       getPolygon: d => d.polygon,
       getFillColor: fillColor,
       getLineColor: lineColor,
-      getLineWidth: getLineWidthPx(),
+      getLineWidth: lineWidth,
       lineWidthScale: 1,
       lineWidthUnits: 'pixels',
-      lineWidthMinPixels: getLineWidthPx(),
-      lineWidthMaxPixels: getLineWidthPx(),
-      stroked: true,
+      lineWidthMinPixels: lineWidth,
+      lineWidthMaxPixels: lineWidth,
+      stroked: shouldStroke,
       filled: shouldFill,
     });
   }, [activeTool, isDrawing, dragStart, dragEnd, isLassoDrawing, lassoPoints, isPolylineDrawing, polylinePoints, isRectangleClickMode, rectangleFirstClick, rectangleSecondClick, isLineClickMode, lineFirstClick, lineSecondClick, isEllipseClickMode, ellipseFirstClick, ellipseSecondClick, isPolygonClickMode, polygonClickPoints, polygonHoverPoint]);
@@ -908,181 +868,14 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     });
   }, [textInputPosition, showTextInput]);
 
-  // Get annotations from store with proper reactivity
-  const annotations = useOverlayStore(state => state.annotations);
-
-  // Get hidden layers from store
-  const hiddenLayers = useOverlayStore(state => state.hiddenLayers);
-
-  // Get hovered annotation ID from store
-  const hoveredAnnotationId = useOverlayStore(state => state.hoverState.hoveredAnnotationId);
-
-  // Debug: Log annotations when they change
-  React.useEffect(() => {
-    console.log('DrawingOverlay: Annotations changed:', annotations);
-  }, [annotations]);
-
-  // Create persistent annotation layers from stored annotations (excluding hidden ones)
-  // All annotations are now rendered as polygon layers
-  const annotationLayers = React.useMemo(() => {
-    const layers: (PolygonLayer | TextLayer | ScatterplotLayer)[] = [];
-
-    annotations
-      .filter(annotation => !hiddenLayers.has(annotation.id)) // Filter out hidden annotations
-      .forEach(annotation => {
-        if (annotation.type === 'text') {
-          // Create text layer for text annotations
-          const isHovered = hoveredAnnotationId === annotation.id;
-          const fontColor = isHovered 
-            ? [0, 120, 255, 255] as [number, number, number, number] // Blue when hovered
-            : annotation.style.fontColor;
-          const backgroundColor = isHovered
-            ? [0, 120, 255, 150] as [number, number, number, number] // Blue background when hovered
-            : annotation.style.backgroundColor || [0, 0, 0, 100];
-            
-          layers.push(new TextLayer({
-            id: `annotation-${annotation.id}`,
-            data: [{
-              text: annotation.text,
-              position: [annotation.position[0], annotation.position[1], 0], // Add z coordinate
-            }],
-            getText: d => d.text,
-            getPosition: d => d.position,
-            getColor: fontColor,
-            getBackgroundColor: backgroundColor,
-            getSize: annotation.style.fontSize,
-            fontFamily: 'Arial, sans-serif',
-            fontWeight: 'normal',
-            padding: 4,
-            pickable: true,
-          }));
-        } else if (annotation.type === 'point') {
-          // Create scatterplot layer for point annotations
-          const isHovered = hoveredAnnotationId === annotation.id;
-          const fillColor = isHovered
-            ? [0, 120, 255, 255] as [number, number, number, number] // Blue when hovered
-            : annotation.style.fillColor;
-          const lineColor = isHovered
-            ? [0, 120, 255, 255] as [number, number, number, number] // Blue when hovered
-            : annotation.style.strokeColor;
-            
-          console.log('DrawingOverlay: Creating point annotation:', annotation);
-          layers.push(new ScatterplotLayer({
-            id: `annotation-${annotation.id}`,
-            data: [{
-              position: [annotation.position[0], annotation.position[1], 0], // Add z coordinate
-              radius: annotation.style.radius,
-            }],
-            getPosition: d => { console.log('DrawingOverlay: Point position:', d.position); return d.position; },
-            getRadius: d => { console.log('DrawingOverlay: Point radius:', d.radius); return d.radius; },
-            radiusMinPixels: annotation.style.radius,
-            radiusMaxPixels: annotation.style.radius,
-            getFillColor: fillColor,
-            getLineColor: lineColor,
-            getLineWidth: 10,
-            pickable: true
-          }));
-          
-          // If the point has text, render a text layer
-          // @ts-ignore - text field exists on all annotation types now
-          if (annotation.text) {
-            // Use the point's stroke color for text, or white if not available
-            const textColor = annotation.style.strokeColor || [255, 255, 255, 255];
-            
-            layers.push(new TextLayer({
-              id: `annotation-${annotation.id}-text`,
-              data: [{
-                // @ts-ignore - text field exists on all annotation types now
-                text: annotation.text,
-                position: [annotation.position[0], annotation.position[1], 0], // Use point position
-              }],
-              getText: d => d.text,
-              getPosition: d => d.position,
-              getColor: textColor,
-              getBackgroundColor: [0, 0, 0, 150], // Semi-transparent black background
-              getSize: 14, // Default font size for shape text
-              fontFamily: 'Arial, sans-serif',
-              fontWeight: 'normal',
-              padding: 4,
-              pickable: false, // Don't make text pickable separately from the point
-            }));
-          }
-        } else {
-          // Create polygon layer for other annotations
-          const isHovered = hoveredAnnotationId === annotation.id;
-          let fillColor: [number, number, number, number] = [255, 255, 255, 1]; // Default: very low opacity white fill
-          let lineColor: [number, number, number, number] = annotation.style.lineColor; // Default: black line
-          // @ts-ignore - polyline type exists at runtime but not in type definition
-          if (annotation.type === 'line' || annotation.type === 'polyline') {
-            fillColor = [0, 0, 0, 0]; // Lines and polylines don't have fill
-          }
-
-          // Change fill color to blue if hovered
-          if (isHovered) {
-            fillColor = [0, 120, 255, 100]; // Blue with moderate opacity
-            lineColor = [0, 120, 255, 255]; // Blue with moderate opacity
-          }
-
-          layers.push(new PolygonLayer({
-            id: `annotation-${annotation.id}`,
-            data: [{
-              polygon: annotation.polygon
-            }],
-            getPolygon: d => d.polygon,
-            getFillColor: fillColor,
-            getLineColor: lineColor,
-            getLineWidth: annotation.style.lineWidth * 10,
-            lineWidthScale: 1,
-            lineWidthUnits: 'pixels',
-            lineWidthMinPixels: annotation.style.lineWidth,
-            lineWidthMaxPixels: annotation.style.lineWidth,
-            stroked: true,
-            filled: true,
-            pickable: true,
-          }));
-          
-          // If the shape has text, render a text layer at the center of the shape
-          // @ts-ignore - text field exists on all annotation types now
-          if (annotation.text) {
-            // Calculate center position of the shape
-            const polygon = annotation.polygon;
-            const centerX = polygon.reduce((sum, [x]) => sum + x, 0) / polygon.length;
-            const centerY = polygon.reduce((sum, [, y]) => sum + y, 0) / polygon.length;
-            
-            // Use the shape's stroke color for text, or white if not available
-            const textColor = annotation.style.lineColor || [255, 255, 255, 255];
-            
-            layers.push(new TextLayer({
-              id: `annotation-${annotation.id}-text`,
-              data: [{
-                // @ts-ignore - text field exists on all annotation types now
-                text: annotation.text,
-                position: [centerX, centerY, 0], // Add z coordinate
-              }],
-              getText: d => d.text,
-              getPosition: d => d.position,
-              getColor: textColor,
-              getBackgroundColor: [0, 0, 0, 150], // Semi-transparent black background
-              getSize: 14, // Default font size for shape text
-              fontFamily: 'Arial, sans-serif',
-              fontWeight: 'normal',
-              padding: 4,
-              pickable: false, // Don't make text pickable separately from the shape
-            }));
-          }
-        }
-      });
-
-    return layers;
-  }, [annotations, hiddenLayers, hoveredAnnotationId]);
+  // Use shared hook to create and sync annotation layers to the store
+  useAnnotationLayers();
 
   // Notify parent when drawing layer is created or removed
   React.useEffect(() => {
     if (drawingLayer) {
-      console.log('DrawingOverlay: Notifying parent of drawing layer for tool:', activeTool);
       onLayerCreate(drawingLayer);
     } else {
-      console.log('DrawingOverlay: Notifying parent to remove drawing layer');
       onLayerCreate(null);
     }
   }, [drawingLayer, activeTool, onLayerCreate]);
@@ -1090,10 +883,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
   // Handle text placement marker layer
   React.useEffect(() => {
     if (textPlacementMarker) {
-      console.log('DrawingOverlay: Adding text placement marker');
       useOverlayStore.getState().addOverlayLayer(textPlacementMarker);
     } else {
-      console.log('DrawingOverlay: Removing text placement marker');
       useOverlayStore.getState().removeOverlayLayer('text-placement-marker');
     }
     
@@ -1102,32 +893,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
       useOverlayStore.getState().removeOverlayLayer('text-placement-marker');
     };
   }, [textPlacementMarker]);
-
-  // Handle annotation layers - they are now managed through the overlay layers system
-  React.useEffect(() => {
-    console.log('DrawingOverlay: Updating annotation layers:', annotationLayers.length, 'layers');
-
-    // Clear existing annotation layers from overlay store
-    const currentLayers = useOverlayStore.getState().overlayLayers;
-    const annotationLayerIds = currentLayers
-      .filter(layer => layer && layer.id.startsWith('annotation-'))
-      .map(layer => layer.id);
-
-    console.log('DrawingOverlay: Removing old annotation layers:', annotationLayerIds);
-
-    // Remove old annotation layers
-    annotationLayerIds.forEach(layerId => {
-      useOverlayStore.getState().removeOverlayLayer(layerId);
-    });
-
-    // Add new annotation layers
-    annotationLayers.forEach(layer => {
-      if (layer) {
-        console.log('DrawingOverlay: Adding annotation layer:', layer.id);
-        useOverlayStore.getState().addOverlayLayer(layer);
-      }
-    });
-  }, [annotationLayers]);
 
   return (
     <>

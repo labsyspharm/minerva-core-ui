@@ -378,14 +378,15 @@ const Index = (props: Props) => {
         onOverlayInteraction={handleOverlayInteraction}
       >
       </ImageView>
-{/*
-      <Overlays 
+      {/* <Overlays 
         hash={mainProps.hash} 
         groups={mainProps.groups} 
         setHash={mainProps.setHash}
         onLayerCreate={handleLayerCreate}
         currentInteraction={currentInteraction}
-      />
+      /> */}
+{/*
+      
       <Stories 
         hash={mainProps.hash}
         viewOnly={presenting}
