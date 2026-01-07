@@ -30,7 +30,8 @@ const ARROW_ICON_SIZE = 1000;
  */
 export function createTextLayer(
   annotation: Annotation & { type: 'text' },
-  isHovered: boolean
+  isHovered: boolean,
+  pickable: boolean = true
 ): TextLayer {
   const fontColor = isHovered
     ? [0, 120, 255, 255] as ColorRGBA
@@ -53,7 +54,7 @@ export function createTextLayer(
     fontFamily: 'Arial, sans-serif',
     fontWeight: 'normal',
     padding: 4,
-    pickable: true,
+    pickable,
   });
 }
 
@@ -62,7 +63,8 @@ export function createTextLayer(
  */
 export function createPointLayer(
   annotation: Annotation & { type: 'point' },
-  isHovered: boolean
+  isHovered: boolean,
+  pickable: boolean = true
 ): ScatterplotLayer {
   const fillColor = isHovered
     ? [0, 120, 255, 255] as ColorRGBA
@@ -84,7 +86,7 @@ export function createPointLayer(
     getFillColor: fillColor,
     getLineColor: lineColor,
     getLineWidth: 10,
-    pickable: true
+    pickable
   });
 }
 
@@ -94,7 +96,8 @@ export function createPointLayer(
  */
 export function createArrowIconLayer(
   annotation: Annotation,
-  isHovered: boolean
+  isHovered: boolean,
+  pickable: boolean = true
 ): IconLayer | null {
   // Only for line annotations
   if (annotation.type !== 'line') {
@@ -141,7 +144,7 @@ export function createArrowIconLayer(
     sizeMaxPixels: 300,
     getAngle: d => d.angle,
     getColor: iconColor,
-    pickable: true,
+    pickable,
     billboard: false, // Don't rotate to face camera
   });
 }
@@ -152,7 +155,8 @@ export function createArrowIconLayer(
  */
 export function createPolygonLayer(
   annotation: Annotation,
-  isHovered: boolean
+  isHovered: boolean,
+  pickable: boolean = true
 ): PolygonLayer | null {
   // Skip text, point, and line types (lines use IconLayer now)
   if (annotation.type === 'text' || annotation.type === 'point' || annotation.type === 'line') {
@@ -186,7 +190,7 @@ export function createPolygonLayer(
     lineWidthMaxPixels: annotation.style.lineWidth,
     stroked: true,
     filled: true,
-    pickable: true,
+    pickable,
   });
 }
 
@@ -197,20 +201,25 @@ export function createLabelTextLayer(
   annotationId: string,
   text: string,
   position: [number, number, number],
-  textColor: ColorRGBA
+  textColor: ColorRGBA,
+  textAnchor: 'start' | 'middle' | 'end' = 'middle',
+  pixelOffset: [number, number] = [0, 0]
 ): TextLayer {
   return new TextLayer({
     id: `annotation-${annotationId}-text`,
-    data: [{ text, position }],
+    data: [{ text, position, pixelOffset }],
     getText: d => d.text,
     getPosition: d => d.position,
+    getPixelOffset: d => d.pixelOffset,
     getColor: textColor,
-    getBackgroundColor: [0, 0, 0, 150] as ColorRGBA,
+    background: true, // Enable background rendering
+    getBackgroundColor: [0, 0, 0, 180] as ColorRGBA, // Semi-transparent grey
     getSize: 14,
     fontFamily: 'Arial, sans-serif',
     fontWeight: 'normal',
-    padding: 4,
+    backgroundPadding: [6, 6], // Padding around text
     pickable: false,
+    getTextAnchor: textAnchor,
   });
 }
 
@@ -223,15 +232,16 @@ export function createLabelTextLayer(
  */
 export function createAnnotationLayers(
   annotation: Annotation,
-  hoveredAnnotationId: string | null
+  hoveredAnnotationId: string | null,
+  pickable: boolean = true
 ): LayerType[] {
   const layers: LayerType[] = [];
   const isHovered = hoveredAnnotationId === annotation.id;
 
   if (annotation.type === 'text') {
-    layers.push(createTextLayer(annotation, isHovered));
+    layers.push(createTextLayer(annotation, isHovered, pickable));
   } else if (annotation.type === 'point') {
-    layers.push(createPointLayer(annotation, isHovered));
+    layers.push(createPointLayer(annotation, isHovered, pickable));
 
     // Add label text if present
     // @ts-ignore
@@ -247,30 +257,52 @@ export function createAnnotationLayers(
     }
   } else if (annotation.type === 'line') {
     // Arrow/line annotations use IconLayer
-    const arrowLayer = createArrowIconLayer(annotation, isHovered);
+    const arrowLayer = createArrowIconLayer(annotation, isHovered, pickable);
     if (arrowLayer) {
       layers.push(arrowLayer);
     }
 
-    // Add label text if present (position near the arrow tip)
+    // Add label text if present (position at icon center with pixel offset toward tail)
     // @ts-ignore
     if (annotation.text) {
       const polygon = annotation.polygon;
-      // Use end point (arrow tip) for text position
-      const [endX, endY] = polygon[1];
+      const [startX, startY] = polygon[0]; // Tail
+      const [endX, endY] = polygon[1]; // Tip (icon center)
+
+      // Calculate direction from tip to tail (normalized)
+      const dx = startX - endX;
+      const dy = startY - endY;
+      const length = Math.sqrt(dx * dx + dy * dy);
+      const dirX = length > 0 ? dx / length : 0;
+      const dirY = length > 0 ? dy / length : 1;
+
+      // Fixed pixel offset (at the icon's visual tail)
+      // Icon is 300px, so tail is ~150px from center
+      const pixelOffsetMagnitude = 160;
+      // Pixel offset in screen coordinates (x right, y down in screen space)
+      const pixelOffsetX = dirX * pixelOffsetMagnitude;
+      const pixelOffsetY = dirY * pixelOffsetMagnitude;
+
+      // Text anchor based on arrow direction:
+      // - Arrow pointing left (tail on right, dx > 0): text starts at tail, extends right
+      // - Arrow pointing right (tail on left, dx < 0): text ends at tail, extends left
+      const textAnchor: 'start' | 'end' = dx > 0 ? 'start' : 'end';
+
       const textColor = annotation.style.lineColor || [255, 255, 255, 255] as ColorRGBA;
 
       layers.push(createLabelTextLayer(
         annotation.id,
         // @ts-ignore
         annotation.text,
-        [endX, endY, 0],
-        textColor
+        [endX, endY, 0], // Position at icon center
+        textColor,
+        textAnchor,
+        [pixelOffsetX, pixelOffsetY] // Pixel offset toward tail
       ));
     }
   } else {
     // Polygon-based annotations (rectangle, polygon, polyline, ellipse)
-    const polygonLayer = createPolygonLayer(annotation, isHovered);
+    const polygonLayer = createPolygonLayer(annotation, isHovered, pickable);
     if (polygonLayer) {
       layers.push(polygonLayer);
     }
@@ -302,14 +334,15 @@ export function createAnnotationLayers(
 export function createAllAnnotationLayers(
   annotations: Annotation[],
   hiddenLayers: Set<string>,
-  hoveredAnnotationId: string | null
+  hoveredAnnotationId: string | null,
+  pickable: boolean = true
 ): LayerType[] {
   const layers: LayerType[] = [];
 
   annotations
     .filter(annotation => !hiddenLayers.has(annotation.id))
     .forEach(annotation => {
-      layers.push(...createAnnotationLayers(annotation, hoveredAnnotationId));
+      layers.push(...createAnnotationLayers(annotation, hoveredAnnotationId, pickable));
     });
 
   return layers;
@@ -322,15 +355,16 @@ export function createAllAnnotationLayers(
 /**
  * Hook that creates deck.gl layers from annotations in the store
  * and syncs them to the overlay layers.
+ * @param pickable - Whether layers should be pickable/interactive (default true, set false for presenter mode)
  */
-export function useAnnotationLayers() {
+export function useAnnotationLayers(pickable: boolean = true) {
   const annotations = useOverlayStore(state => state.annotations);
   const hiddenLayers = useOverlayStore(state => state.hiddenLayers);
   const hoveredAnnotationId = useOverlayStore(state => state.hoverState.hoveredAnnotationId);
 
   const annotationLayers = React.useMemo(() => {
-    return createAllAnnotationLayers(annotations, hiddenLayers, hoveredAnnotationId);
-  }, [annotations, hiddenLayers, hoveredAnnotationId]);
+    return createAllAnnotationLayers(annotations, hiddenLayers, hoveredAnnotationId, pickable);
+  }, [annotations, hiddenLayers, hoveredAnnotationId, pickable]);
 
   // Sync layers to the overlay store
   React.useEffect(() => {

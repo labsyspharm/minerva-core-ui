@@ -7,7 +7,8 @@ import { useAnnotationLayers } from "./AnnotationLayers";
  */
 const AnnotationRenderer: React.FC = () => {
   // Use the shared hook to create and sync annotation layers
-  useAnnotationLayers();
+  // Pass pickable: false to disable click/drag interactions in presenter mode
+  useAnnotationLayers(false);
 
   // This component renders nothing - it only manages layers in the store
   return null;
