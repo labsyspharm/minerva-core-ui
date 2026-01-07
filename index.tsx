@@ -1603,6 +1603,7 @@ const configWaypoints = [
 
 // TODO: remove legacy exhibit data structure
 const exhibit_config = {
+    Name: "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer (Introduction)",
     Stories: [{
         Waypoints: configWaypoints.map(({ Properties, Arrows, Overlays }) => {
             const { Name, Content, Pan, Zoom, Group } = Properties;

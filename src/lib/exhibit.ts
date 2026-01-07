@@ -26,6 +26,7 @@ export type Group = {
 };
 
 export interface Exhibit {
+  name: string;
   stories: Story[];
   groups: Group[];
 }
@@ -38,6 +39,7 @@ export type ConfigGroup = {
 };
 
 export interface ExhibitConfig {
+  Name?: string;
   Groups?: ConfigGroup[];
   Stories?: {
     Waypoints: {
@@ -110,6 +112,7 @@ const readGroups = (config: ExhibitConfig): Group[] => {
 
 const readConfig = (config: ExhibitConfig): Exhibit => {
   return {
+    name: config.Name,
     stories: readStories(config),
     groups: readGroups(config),
   };

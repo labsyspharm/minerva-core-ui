@@ -45,24 +45,35 @@ const Wrap = styled.div`
 `;
 
 const NavPane = styled.div`
+  border-right: 2px solid gray;
   display: grid;
-  gap: 1em;
+  gap: 0.5em;
   z-index: 1;
   overflow: hidden;
   background-color: black;
-  grid-template-rows: 50px 1fr;
+  grid-template-rows: auto 50px 1fr;
   grid-template-columns: 1fr;
   > :nth-child(1) {
     grid-column: 1;
     grid-row: 1;
+    padding: 0.5em;
   }
   > :nth-child(2) {
-    padding: 0.5em;
-    overflow-y: auto;
     grid-column: 1;
     grid-row: 2;
   }
+  > :nth-child(3) {
+    overflow-y: auto;
+    grid-column: 1;
+    grid-row: 3;
+    padding: 0.5em;
+}
 `;
+
+const StoryTitle = styled.div`
+  margin: 0;
+  line-height: 1.1;
+`
 
 const Toolbar = styled.div`
   display: grid;
@@ -263,12 +274,14 @@ const Presentation = (props: Props) => {
   )
   const first_story = activeStoryIndex == 0;
   const last_story = activeStoryIndex == stories.length - 1;
+  const main_title = props.name;
   const story = stories[activeStoryIndex];
   const story_title = story?.Properties?.Name ?? `Waypoint ${activeStoryIndex + 1}`;
   const story_content = story?.Properties?.Content;
   return (
     <Wrap>
       <NavPane>
+        <StoryTitle className="h5">{main_title}</StoryTitle>
         <Toolbar>
           { first_story ? "" : story_left }
           { count }
@@ -277,7 +290,7 @@ const Presentation = (props: Props) => {
         </Toolbar>
         <StoryContent>
           <div>
-            <h2 class="h5">{story_title}</h2>
+            <h2 className="h6">{story_title}</h2>
             <ReactMarkdown> 
               {story_content}
             </ReactMarkdown>

@@ -110,7 +110,7 @@ const removeKey = (container, key, idx) => {
 
 const Index = (props: Props) => {
   const { exhibit, setExhibit } = props;
-  const { groups, stories } = exhibit;
+  const { name, groups, stories } = exhibit;
 
   const [ioState, setIoState] = useState("IDLE");
   const [presenting, setPresenting] = useState(true);
@@ -282,6 +282,7 @@ const Index = (props: Props) => {
   const channelProps = {
     hash,
     setHash,
+    name,
     stories,
     groups: itemRegistryGroups,
     controlPanelElement,
