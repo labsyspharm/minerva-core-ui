@@ -49,11 +49,12 @@ export function createTextLayer(
     getText: d => d.text,
     getPosition: d => d.position,
     getColor: fontColor,
+    background: true, // Enable background rendering
     getBackgroundColor: backgroundColor,
     getSize: annotation.style.fontSize,
     fontFamily: 'Arial, sans-serif',
     fontWeight: 'normal',
-    padding: 4,
+    backgroundPadding: [6, 6], // Padding around text
     pickable,
   });
 }

@@ -27,17 +27,7 @@ const configWaypoints = [
             "Zoom": 0.518359375,
             "Group": "Histology"
         },
-        "Arrows": [
-            {
-                "Angle": 300,
-                "HideArrow": false,
-                "Point": [
-                    0.815749436482584,
-                    0.316503391107762
-                ],
-                "Text": "Mucosa"
-            },
-        ],
+        "Arrows": [],
         "Overlays": []
     },
     {
@@ -1969,6 +1959,7 @@ console.log({ exhibit_config });
 root.render(
     <React.StrictMode>
         <Main
+
             handleKeys={["ome-dir-1"]} demo_dicom_web={true} h_and_e={false}
             exhibit_config={exhibit_config} configWaypoints={configWaypoints}
         />
