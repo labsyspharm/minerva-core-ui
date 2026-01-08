@@ -3,7 +3,7 @@ import Deck from '@deck.gl/react';
 import { OrthographicView, OrthographicViewState } from '@deck.gl/core';
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
-import { MultiscaleImageLayer } from "@hms-dbmi/viv";
+import { MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
 import { useOverlayStore } from "../lib/stores";
 
 import {
@@ -65,7 +65,7 @@ const VivView = (props: Props) => {
   const maxShape = useWindowSize();
   const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
-  const { 
+  const {
     activeChannelGroupId
   } = useOverlayStore();
   const [shape, setShape] = useState(maxShape);
@@ -83,7 +83,7 @@ const VivView = (props: Props) => {
     // Gets the default settings
     if (!loader || !groups) {
       return props.viewerConfig.toSettings(
-          activeChannelGroupId  
+        activeChannelGroupId
       );
     }
     return props.viewerConfig.toSettings(
@@ -114,7 +114,7 @@ const VivView = (props: Props) => {
   // Get setViewportZoom and setImageDimensions from overlay store
   const setViewportZoom = useOverlayStore(state => state.setViewportZoom);
   const setImageDimensions = useOverlayStore(state => state.setImageDimensions);
-  
+
   // Get target waypoint view state for responding to waypoint selection
   const targetWaypointPan = useOverlayStore(state => state.targetWaypointPan);
   const targetWaypointZoom = useOverlayStore(state => state.targetWaypointZoom);
@@ -189,16 +189,16 @@ const VivView = (props: Props) => {
     props.dicomIndex, props.series
   ]);
   // Memoize dicom layer
-  const { SourceChannels } = props.config.ItemRegistry 
+  const { SourceChannels } = props.config.ItemRegistry
   const dicomLayer = useMemo(
     () => {
       if (!props.series || !dicomSource) {
         return null;
       }
       const rgbImage = (
-        ( SourceChannels.length === 1 ) &&
-        ( SourceChannels[0].Properties.Samples === 3 ) &&
-        ( SourceChannels[0].Associations.SourceDataType.ID === "Uint8" )
+        (SourceChannels.length === 1) &&
+        (SourceChannels[0].Properties.Samples === 3) &&
+        (SourceChannels[0].Associations.SourceDataType.ID === "Uint8")
       )
       return createTileLayers({
         pyramids: props.dicomIndex,
@@ -216,20 +216,47 @@ const VivView = (props: Props) => {
   const imageLayer = useMemo(
     () => {
       return new MultiscaleImageLayer(mainProps)
-    }, 
+    },
     [mainProps]
   );
+  // Memoize scale bar layer
+  const scaleBarLayer = useMemo(() => {
+    // Get physical size from loader metadata if available
+    const physicalSize = loader?.metadata?.Pixels?.PhysicalSizeX;
+    const unit = loader?.metadata?.Pixels?.PhysicalSizeXUnit || 'µm';
+    
+    if (!physicalSize || shape.width <= 0 || shape.height <= 0) return null;
+    
+    // ScaleBarLayer needs viewState with viewport dimensions
+    const viewStateWithDimensions = {
+      ...viewState,
+      width: shape.width,
+      height: shape.height,
+    };
+    
+    return new ScaleBarLayer({
+      id: 'scale-bar',
+      viewState: viewStateWithDimensions,
+      unit,
+      size: physicalSize,
+      snap: true,
+      position: 'bottom-right',
+    });
+  }, [viewState, loader?.metadata, shape.width, shape.height]);
   // Memoize layer combination
   const allLayers = useMemo(
     () => {
-      // Memoize image layer creation
-      if (props.series && dicomLayer) {
-        return [dicomLayer, ...overlayLayers];
+      const layers = props.series && dicomLayer
+        ? [dicomLayer, ...overlayLayers]
+        : [imageLayer, ...overlayLayers];
+      
+      if (scaleBarLayer) {
+        layers.push(scaleBarLayer);
       }
-      return [imageLayer, ...overlayLayers];
+      return layers;
     },
     [
-      dicomLayer, imageLayer, overlayLayers, props.series
+      dicomLayer, imageLayer, overlayLayers, props.series, scaleBarLayer
     ]
   );
   // Memoize drag handlers
@@ -288,6 +315,7 @@ const VivView = (props: Props) => {
   }, [isDragging, activeTool, setViewportZoom]);
 
   if (!loader || !mainSettings) return null;
+  console.log('loader in JSON', JSON.stringify(loader, null, 2));
 
   return (
     <Main slot="image" ref={rootRef}>
@@ -295,7 +323,7 @@ const VivView = (props: Props) => {
         getCursor={getCursor}
         layers={allLayers}
         controller={controllerConfig}
-        viewState={{'ortho': viewState}}
+        viewState={{ 'ortho': viewState }}
         onViewStateChange={handleViewStateChange}
         onClick={dragHandlers.onClick}
         onDragStart={dragHandlers.onDragStart}
