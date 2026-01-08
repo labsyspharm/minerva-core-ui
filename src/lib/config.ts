@@ -510,7 +510,7 @@ const extractChannels: ExtractChannels = (loader, groups) => {
           if (!(name in new_name_map)) {
             return new_group_channels;
           }
-          return {
+          return new_group_channels.concat({
             UUID: crypto.randomUUID(),
             State: { Expanded: true },
             Properties: {
@@ -522,7 +522,7 @@ const extractChannels: ExtractChannels = (loader, groups) => {
               Color: asID(Colors[color_index].ID),
               Group: asUUID(new_group.UUID)
             }
-          }
+          })
         },
         [] as ConfigGroupChannel[]
       )
