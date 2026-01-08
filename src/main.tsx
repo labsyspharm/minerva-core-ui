@@ -281,7 +281,7 @@ const Content = (props: Props) => {
 };
 
 const Main = (props: Props) => {
-  if (hasFileSystemAccess()) {
+  if (props.demo_dicom_web || hasFileSystemAccess()) {
     return <Content {...props} />;
   }
   const error_message = `<p>
