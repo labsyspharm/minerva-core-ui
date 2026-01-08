@@ -9,7 +9,7 @@ import * as React from "react";
 import { PolygonLayer, TextLayer, ScatterplotLayer, IconLayer } from '@deck.gl/layers';
 import { useOverlayStore } from "../../lib/stores";
 import type { Annotation } from "../../lib/stores";
-import ArrowIconUrl from './arrow-annotation.svg?url';
+import ArrowIconUrl from './icons/arrow-annotation.svg?url';
 
 type ColorRGBA = [number, number, number, number];
 type LayerType = PolygonLayer | TextLayer | ScatterplotLayer | IconLayer;
