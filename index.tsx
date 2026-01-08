@@ -2195,7 +2195,7 @@ root.render(
     <React.StrictMode>
         <Main
 
-            handleKeys={["ome-dir-1"]} demo_dicom_web={true} h_and_e={false}
+            handleKeys={["ome-dir-1"]} demo_dicom_web={true} h_and_e={true}
             exhibit_config={exhibit_config} configWaypoints={configWaypoints}
         />
         <MainStyle />
