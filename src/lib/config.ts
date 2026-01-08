@@ -458,7 +458,38 @@ const extractChannels: ExtractChannels = (loader, groups) => {
       }
     })
   );
-  const Colors = list_colors("sRGB");
+  const Colors = [...new Set(
+    groups.reduce((colors, g) => {
+      return g.Colors.reduce((colors, c) => {
+        const n = parseInt(c, 16);
+        const R = (n >> 16) & 255;
+        const G = (n >> 8) & 255;
+        const B = n & 255;
+        return [
+          ...colors,
+          {
+            ID: `sRGB#${c}`,
+            Properties: {
+              R, G, B,
+              Space: "sRGB",
+              LowerRange: 0,
+              UpperRange: 255
+            }
+          }
+        ]
+      }, colors);
+    }, [
+      ...list_colors("sRGB"), {
+        ID: "sRGB#ffffff",
+        Properties: {
+          R: 255, G: 255, B: 255,
+          Space: "sRGB",
+          LowerRange: 0,
+          UpperRange: 255
+        }
+      }
+    ])
+  )]
   // Match hard-coded groups to existing channels
   const hardcoded_crc01 = groups.reduce(
     ({ name_map, Groups, GroupChannels }, g) => {
@@ -506,20 +537,21 @@ const extractChannels: ExtractChannels = (loader, groups) => {
       }
       const new_group_channels = g.Channels.reduce(
         (new_group_channels, name, index) => {
-          const color_index = index % Colors.length;
           if (!(name in new_name_map)) {
             return new_group_channels;
           }
+          const color = g.Colors[index];
+          const color_id = `sRGB#${color}`;
           return new_group_channels.concat({
             UUID: crypto.randomUUID(),
             State: { Expanded: true },
             Properties: {
-              LowerRange: 2**8, //TODO
-              UpperRange: 2**12  //TODO
+              LowerRange: g.Lows[index],
+              UpperRange: g.Highs[index] 
             },
             Associations: {
               SourceChannel: asUUID(new_name_map[name]),
-              Color: asID(Colors[color_index].ID),
+              Color: asID(color_id),
               Group: asUUID(new_group.UUID)
             }
           })
@@ -565,16 +597,6 @@ const extractChannels: ExtractChannels = (loader, groups) => {
     ( SourceChannels[0].Properties.Samples === 3 ) &&
     ( SourceChannels[0].Associations.SourceDataType.ID === "Uint8" )
   ) {
-    const OneColor = [{
-      ID: "sRGB#ffffff",
-      Properties: {
-        R: 255, G: 255, B: 255,
-        Space: "sRGB",
-        LowerRange: 0,
-        UpperRange: 255
-      }
-    }]
-    const White = OneColor[0]
     const Groups = [{
       UUID: crypto.randomUUID(),
       State: { Expanded: true },
@@ -594,7 +616,7 @@ const extractChannels: ExtractChannels = (loader, groups) => {
           },
           Associations: {
             SourceChannel: onlyUUID(channel),
-            Color: asID(White.ID),
+            Color: asID("sRGB#ffffff"),
             Group: asUUID(group_uuid)
           }
         }
@@ -622,8 +644,13 @@ const extractChannels: ExtractChannels = (loader, groups) => {
   const GroupChannels = SourceChannels.map(
     (channel, index) => {
       const group_index = Math.floor(index / group_size);
-      const color_index = (index % group_size) % Colors.length;
       const group_uuid = Groups[group_index].UUID;
+      const color_id = [
+        'sRGB#0dabff', 'sRGB#c3ff00',
+        'sRGB#ff8b00', 'sRGB#ff00c7'
+      ][
+        index % 4
+      ];
       return {
         UUID: crypto.randomUUID(),
         State: { Expanded: true },
@@ -633,7 +660,7 @@ const extractChannels: ExtractChannels = (loader, groups) => {
         },
         Associations: {
           SourceChannel: onlyUUID(channel),
-          Color: asID(Colors[color_index].ID),
+          Color: asID(color_id),
           Group: asUUID(group_uuid)
         }
       }

@@ -36,6 +36,8 @@ export type ConfigGroup = {
   Path: string;
   Colors: string[];
   Channels: string[];
+  Lows: number[];
+  Highs: number[];
 };
 
 export interface ExhibitConfig {

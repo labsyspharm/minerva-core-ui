@@ -1625,7 +1625,17 @@ const exhibit_config = {
                 "FF8080"
             ],
             "Name": "Histology",
-            "Path": "Histology_40__HE-r--41__HE-g--42__HE-b"
+            "Path": "Histology_40__HE-r--41__HE-g--42__HE-b",
+            "Highs": [
+                65600,
+                65600,
+                65600
+            ],
+            "Lows": [
+                0,
+                0,
+                0
+            ]
         },
         {
             "Channels": [
@@ -1643,7 +1653,21 @@ const exhibit_config = {
                 "ffff00"
             ],
             "Name": "Tissue Structure",
-            "Path": "Tissue-Structure_0__DNA1--14__PanCK--15__ASMA--35__CD31--18__CD45"
+            "Path": "Tissue-Structure_0__DNA1--14__PanCK--15__ASMA--35__CD31--18__CD45",
+            "Highs": [
+                30000,
+                40000,
+                10000,
+                10000,
+                12000
+            ],
+            "Lows": [
+                500,
+                500,
+                500,
+                500,
+                1500
+            ]
         },
         {
             "Channels": [
@@ -1665,7 +1689,25 @@ const exhibit_config = {
                 "00ffff"
             ],
             "Name": "Immune Populations",
-            "Path": "Immune-Populations_0__DNA1--18__CD45--23__CD8a--17__CD4--21__CD20--22__CD68--25__CD163"
+            "Path": "Immune-Populations_0__DNA1--18__CD45--23__CD8a--17__CD4--21__CD20--22__CD68--25__CD163",
+            "Highs": [
+                30000,
+                20000,
+                15000,
+                8000,
+                45000,
+                15000,
+                10000
+            ],
+            "Lows": [
+                500,
+                1500,
+                3000,
+                3000,
+                500,
+                3000,
+                2000
+            ]
         },
         {
             "Channels": [
@@ -1683,7 +1725,21 @@ const exhibit_config = {
                 "ffffff"
             ],
             "Name": "Lymphocytes",
-            "Path": "Lymphocytes_0__DNA1--23__CD8a--17__CD4--21__CD20--26__FOXP3"
+            "Path": "Lymphocytes_0__DNA1--23__CD8a--17__CD4--21__CD20--26__FOXP3",
+            "Highs": [
+                30000,
+                15000,
+                8000,
+                45000,
+                15000
+            ],
+            "Lows": [
+                500,
+                3000,
+                3000,
+                500,
+                500
+            ]
         },
         {
             "Channels": [
@@ -1697,7 +1753,17 @@ const exhibit_config = {
                 "ff0000"
             ],
             "Name": "Macrophages",
-            "Path": "Macrophages_0__DNA1--22__CD68--25__CD163"
+            "Path": "Macrophages_0__DNA1--22__CD68--25__CD163",
+            "Highs": [
+                30000,
+                10000,
+                7000
+            ],
+            "Lows": [
+                500,
+                1000,
+                2000
+            ]
         },
         {
             "Channels": [
@@ -1715,7 +1781,21 @@ const exhibit_config = {
                 "00ff00"
             ],
             "Name": "Proliferation",
-            "Path": "Proliferation_0__DNA1--37__PCNA--14__PanCK--18__CD45--13__Ki67"
+            "Path": "Proliferation_0__DNA1--37__PCNA--14__PanCK--18__CD45--13__Ki67",
+            "Highs": [
+                30000,
+                20000,
+                65000,
+                15000,
+                8000
+            ],
+            "Lows": [
+                500,
+                5000,
+                1000,
+                1500,
+                4000
+            ]
         },
         {
             "Channels": [
@@ -1731,7 +1811,19 @@ const exhibit_config = {
                 "00ff00"
             ],
             "Name": "PD1 Immune Checkpoint",
-            "Path": "PD1-Immune-Checkpoint_0__DNA1--14__PanCK--27__PDL1--19__PD1"
+            "Path": "PD1-Immune-Checkpoint_0__DNA1--14__PanCK--27__PDL1--19__PD1",
+            "Highs": [
+                30000,
+                65000,
+                6000,
+                6000
+            ],
+            "Lows": [
+                500,
+                1000,
+                2500,
+                1500
+            ]
         },
         {
             "Channels": [
@@ -1745,7 +1837,17 @@ const exhibit_config = {
                 "ff0000"
             ],
             "Name": "Helper and Regulatory T Cells",
-            "Path": "Helper-and-Regulatory-T-Cells_0__DNA1--17__CD4--26__FOXP3"
+            "Path": "Helper-and-Regulatory-T-Cells_0__DNA1--17__CD4--26__FOXP3",
+            "Highs": [
+                30000,
+                15000,
+                10000
+            ],
+            "Lows": [
+                500,
+                3000,
+                1000
+            ]
         },
         {
             "Channels": [
@@ -1759,7 +1861,17 @@ const exhibit_config = {
                 "00ff00"
             ],
             "Name": "CD8 Cytotoxic T Cells",
-            "Path": "CD8-Cytotoxic-T-Cells_0__DNA1--23__CD8a--19__PD1"
+            "Path": "CD8-Cytotoxic-T-Cells_0__DNA1--23__CD8a--19__PD1",
+            "Highs": [
+                30000,
+                25000,
+                10000
+            ],
+            "Lows": [
+                500,
+                3000,
+                1500
+            ]
         },
         {
             "Channels": [
@@ -1773,7 +1885,17 @@ const exhibit_config = {
                 "ff0000"
             ],
             "Name": "FOXP3 CD8 T Cells",
-            "Path": "FOXP3-CD8-T-Cells_0__DNA1--23__CD8a--26__FOXP3"
+            "Path": "FOXP3-CD8-T-Cells_0__DNA1--23__CD8a--26__FOXP3",
+            "Highs": [
+                30000,
+                25000,
+                10000
+            ],
+            "Lows": [
+                500,
+                3000,
+                1000
+            ]
         },
         {
             "Channels": [
@@ -1787,7 +1909,17 @@ const exhibit_config = {
                 "00ff00"
             ],
             "Name": "NaK ATPase",
-            "Path": "NaK-ATPase_0__DNA1--14__PanCK--10__Na-K-ATPase"
+            "Path": "NaK-ATPase_0__DNA1--14__PanCK--10__Na-K-ATPase",
+            "Highs": [
+                30000,
+                65000,
+                20000
+            ],
+            "Lows": [
+                500,
+                1000,
+                1000
+            ]
         },
         {
             "Channels": [
@@ -1801,7 +1933,17 @@ const exhibit_config = {
                 "00ff00"
             ],
             "Name": "E-Cadherin",
-            "Path": "E-Cadherin_0__DNA1--14__PanCK--29__Ecadherin"
+            "Path": "E-Cadherin_0__DNA1--14__PanCK--29__Ecadherin",
+            "Highs": [
+                30000,
+                65000,
+                25000
+            ],
+            "Lows": [
+                500,
+                1000,
+                1000
+            ]
         },
         {
             "Channels": [
@@ -1819,7 +1961,21 @@ const exhibit_config = {
                 "00ffff"
             ],
             "Name": "Stroma",
-            "Path": "Stroma_0__DNA1--15__ASMA--34__Desmin--39__Collagen--30__Vimentin"
+            "Path": "Stroma_0__DNA1--15__ASMA--34__Desmin--39__Collagen--30__Vimentin",
+            "Highs": [
+                30000,
+                30000,
+                30000,
+                60000,
+                5000
+            ],
+            "Lows": [
+                500,
+                1000,
+                1000,
+                1000,
+                1000
+            ]
         },
         {
             "Channels": [
@@ -1837,7 +1993,21 @@ const exhibit_config = {
                 "ff0000"
             ],
             "Name": "PDL1-Positive Immune Cells",
-            "Path": "PDL1-Positive-Immune-Cells_0__DNA1--17__CD4--22__CD68--25__CD163--27__PDL1"
+            "Path": "PDL1-Positive-Immune-Cells_0__DNA1--17__CD4--22__CD68--25__CD163--27__PDL1",
+            "Highs": [
+                30000,
+                15000,
+                15000,
+                10000,
+                5000
+            ],
+            "Lows": [
+                500,
+                3000,
+                3000,
+                2000,
+                2500
+            ]
         },
         {
             "Channels": [
@@ -1853,7 +2023,19 @@ const exhibit_config = {
                 "00ff00"
             ],
             "Name": "PDL1-CD8 Interaction",
-            "Path": "PDL1-CD8-Interaction_0__DNA1--27__PDL1--23__CD8a--19__PD1"
+            "Path": "PDL1-CD8-Interaction_0__DNA1--27__PDL1--23__CD8a--19__PD1",
+            "Highs": [
+                30000,
+                5000,
+                25000,
+                10000
+            ],
+            "Lows": [
+                500,
+                2500,
+                3000,
+                1500
+            ]
         },
         {
             "Channels": [
@@ -1869,7 +2051,19 @@ const exhibit_config = {
                 "ff0000"
             ],
             "Name": "Tumor Budding Epithelial",
-            "Path": "Tumor-Budding-Epithelial_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA"
+            "Path": "Tumor-Budding-Epithelial_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA",
+            "Highs": [
+                40000,
+                65000,
+                25000,
+                50000
+            ],
+            "Lows": [
+                500,
+                1000,
+                1000,
+                1000
+            ]
         },
         {
             "Channels": [
@@ -1891,7 +2085,25 @@ const exhibit_config = {
                 "654321"
             ],
             "Name": "Tumor Budding Immune Modulation",
-            "Path": "Tumor-Budding-Immune-Modulation_0__DNA1--14__PanCK--27__PDL1--26__FOXP3--23__CD8a--19__PD1--22__CD68"
+            "Path": "Tumor-Budding-Immune-Modulation_0__DNA1--14__PanCK--27__PDL1--26__FOXP3--23__CD8a--19__PD1--22__CD68",
+            "Highs": [
+                30000,
+                40000,
+                5000,
+                7000,
+                20000,
+                6000,
+                8000
+            ],
+            "Lows": [
+                500,
+                500,
+                2500,
+                1000,
+                1500,
+                1500,
+                1000
+            ]
         },
         {
             "Channels": [
@@ -1903,7 +2115,15 @@ const exhibit_config = {
                 "00ff00"
             ],
             "Name": "Nuclear Lamina",
-            "Path": "Nuclear-Lamina_0__DNA1--33__LaminABC"
+            "Path": "Nuclear-Lamina_0__DNA1--33__LaminABC",
+            "Highs": [
+                30000,
+                20000
+            ],
+            "Lows": [
+                500,
+                500
+            ]
         },
         {
             "Channels": [
@@ -1915,7 +2135,15 @@ const exhibit_config = {
                 "ff0000"
             ],
             "Name": "DAPI Cycle Correlation",
-            "Path": "DAPI-Cycle-Correlation_0__DNA1--36__DNA10"
+            "Path": "DAPI-Cycle-Correlation_0__DNA1--36__DNA10",
+            "Highs": [
+                65000,
+                50000
+            ],
+            "Lows": [
+                1000,
+                1000
+            ]
         },
         {
             "Channels": [
@@ -1931,9 +2159,21 @@ const exhibit_config = {
                 "ff0000"
             ],
             "Name": "Transitions",
-            "Path": "Transitions_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA"
+            "Path": "Transitions_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA",
+            "Highs": [
+                32768,
+                50000,
+                50000,
+                20000
+            ],
+            "Lows": [
+                0,
+                0,
+                1000,
+                5000
+            ]
         }
-    ]
+    ]  
 }
 
 // TODO Warning: hard-coded for LUNG-3-PR_40X.ome.tif
