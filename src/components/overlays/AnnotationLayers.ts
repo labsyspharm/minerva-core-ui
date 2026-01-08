@@ -18,7 +18,7 @@ type LayerType = PolygonLayer | TextLayer | ScatterplotLayer | IconLayer;
 // ============================================================================
 
 // Arrow SVG icon (250x250) - positioned so center (125,125) is at target point
-const ARROW_ICON_URL = '/arrow.svg';
+const ARROW_ICON_URL = `${import.meta.env.BASE_URL}arrow.svg`;
 const ARROW_ICON_SIZE = 250;
 
 // ============================================================================
