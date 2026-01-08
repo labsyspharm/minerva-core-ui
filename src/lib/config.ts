@@ -626,7 +626,7 @@ const extractChannels: ExtractChannels = (loader, groups) => {
       SourceChannels,
       GroupChannels,
       Groups,
-      Colors: OneColor
+      Colors 
     }
   }
   const group_size = 4;
