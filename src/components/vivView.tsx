@@ -44,6 +44,7 @@ type Shape = {
 };
 
 const Main = styled.div`
+  position: relative;
   height: 100%;
 `;
 
