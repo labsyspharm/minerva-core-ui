@@ -2073,7 +2073,6 @@ const exhibit_config = {
                 "FOXP3",
                 "CD8a",
                 "PD1",
-                "CD68"
             ],
             "Colors": [
                 "0000ff",
@@ -2082,7 +2081,6 @@ const exhibit_config = {
                 "ffff00",
                 "00ff00",
                 "6c00ff",
-                "654321"
             ],
             "Name": "Tumor Budding Immune Modulation",
             "Path": "Tumor-Budding-Immune-Modulation_0__DNA1--14__PanCK--27__PDL1--26__FOXP3--23__CD8a--19__PD1--22__CD68",
@@ -2093,7 +2091,6 @@ const exhibit_config = {
                 7000,
                 20000,
                 6000,
-                8000
             ],
             "Lows": [
                 500,
@@ -2102,7 +2099,6 @@ const exhibit_config = {
                 1000,
                 1500,
                 1500,
-                1000
             ]
         },
         {
