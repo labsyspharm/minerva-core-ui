@@ -48,6 +48,7 @@ export function createTextLayer(
     }],
     getText: d => d.text,
     getPosition: d => d.position,
+    maxWidth: 10,
     getColor: fontColor,
     background: true, // Enable background rendering
     getBackgroundColor: backgroundColor,
@@ -126,7 +127,7 @@ export function createArrowIconLayer(
     : annotation.style.lineColor;
 
   return new IconLayer({
-    id: `annotation-${annotation.id}`,
+    id: `annotation-${annotation.id}-arrow`,
     data: [{
       position: [endX, endY, 0],
       angle: angleDeg,
@@ -212,6 +213,7 @@ export function createLabelTextLayer(
     getText: d => d.text,
     getPosition: d => d.position,
     getPixelOffset: d => d.pixelOffset,
+    maxWidth: 10,
     getColor: textColor,
     background: true, // Enable background rendering
     getBackgroundColor: [0, 0, 0, 180] as ColorRGBA, // Semi-transparent grey
@@ -331,7 +333,7 @@ export function createAnnotationLayers(
 
 /**
  * Create all deck.gl layers for multiple annotations
- * Labels are added last to ensure they render on top of all other layers
+ * Drawing hierarchy (bottom to top): shapes/points, arrows, labels
  */
 export function createAllAnnotationLayers(
   annotations: Annotation[],
@@ -339,25 +341,28 @@ export function createAllAnnotationLayers(
   hoveredAnnotationId: string | null,
   pickable: boolean = true
 ): LayerType[] {
-  const mainLayers: LayerType[] = [];
+  const shapeLayers: LayerType[] = [];
+  const arrowLayers: LayerType[] = [];
   const labelLayers: LayerType[] = [];
 
   annotations
     .filter(annotation => !hiddenLayers.has(annotation.id))
     .forEach(annotation => {
       const annotationLayers = createAnnotationLayers(annotation, hoveredAnnotationId, pickable);
-      // Separate label layers (ending with '-text') from main layers
+      // Separate layers by type based on ID suffix
       annotationLayers.forEach(layer => {
         if (layer.id.endsWith('-text')) {
           labelLayers.push(layer);
+        } else if (layer.id.endsWith('-arrow')) {
+          arrowLayers.push(layer);
         } else {
-          mainLayers.push(layer);
+          shapeLayers.push(layer);
         }
       });
     });
 
-  // Return main layers first, then labels on top
-  return [...mainLayers, ...labelLayers];
+  // Return in z-order: shapes at bottom, then arrows, then labels on top
+  return [...shapeLayers, ...arrowLayers, ...labelLayers];
 }
 
 // ============================================================================
