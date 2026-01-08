@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import { useEffect, useRef } from "react";
 import ReactMarkdown from 'react-markdown'
 import { useOverlayStore } from "../../lib/stores";
 import { AnnotationRenderer } from "../overlays/AnnotationRenderer";
@@ -46,18 +46,17 @@ const Wrap = styled.div`
 `;
 
 const NavPane = styled.div`
-  border-right: 2px solid gray;
+  border-right: 2px solid #333;
+  background: #111;
   display: grid;
   gap: 0.5em;
   z-index: 1;
   overflow: hidden;
-  background-color: black;
-  grid-template-rows: auto 50px 1fr;
+  grid-template-rows: auto 30px 1fr;
   grid-template-columns: 1fr;
   > :nth-child(1) {
     grid-column: 1;
     grid-row: 1;
-    padding: 0.5em;
   }
   > :nth-child(2) {
     grid-column: 1;
@@ -67,101 +66,77 @@ const NavPane = styled.div`
     overflow-y: auto;
     grid-column: 1;
     grid-row: 3;
-    padding: 0.5em;
-}
+    border-top: 2px solid #333;
+  }
+  > * {
+    padding: 8px 8px 0;
+    margin: 0;
+  }
 `;
 
 const StoryTitle = styled.div`
-  margin: 0;
   line-height: 1.1;
 `
 
 const Toolbar = styled.div`
   display: grid;
-  gap: 1em;
   overflow: hidden;
-  padding-top: 0.333em;
   grid-template-rows: 1fr;
-  grid-template-columns: 50px minmax(50px,auto) 50px 1fr 50px;
-  > .left {
+  grid-template-columns: 30px 1fr 30px 50px 30px;
+  > .table-of-contents {
     grid-column: 1;
-    grid-row: 1;
+    text-align: left;
+  }
+  > .left {
+    grid-column: 3;
   }
   > .count {
-    grid-column: 2;
-    grid-row: 1;
+    grid-column: 4;
   }
   > .right {
-    grid-column: 3;
-    grid-row: 1;
-  }
-  > .table-of-contents {
     grid-column: 5;
-    grid-row: 1;
   }
   }
 `;
 
-const TableOfContentsRow = styled.div`
-  gap: 8px 6px;
+const InlineNext = styled.div`
   display: grid;
-  grid-template-rows: 8px;
-  grid-template-columns: 8px 30px;
-  > * {
-    background-color: white;
-  }
+  grid-template-columns: 1fr 30px;
+  margin-bottom: 1em;
   > :nth-child(1) {
-    border-radius: 4px;
-  }
-  > :nth-child(2) {
-    border-radius: 1px;
-  }
-
-`
-const TableOfContentsIcon = styled.button`
-  display: grid;
-`
-
-const StoryContent = styled.div`
-  display: grid;
-  grid-template-rows: auto 50px;
-  grid-template-columns: auto 50px;
-  > :nth-child(1) {
-    grid-column: 1/-1;
-    grid-row: 1;
+    grid-column: 1;
+    text-align: right;
+    text-decoration: underline;
+    font-style: italic;
+    cursor: pointer;
+    margin: 0;
   }
   > :nth-child(2) {
     grid-column: 2;
-    grid-row: 2;
   }
 `;
 
 const Count = styled.div`
+  text-align: center;
   display: grid;
-  grid-template-rows: 10px 10px 10px;
-  grid-template-columns: auto 10px auto;
+  grid-template-columns: 2fr 1fr 2fr;
   > :nth-child(1) {
-    text-align: right;
     grid-column: 1;
-    grid-row: 1;
   }
   > :nth-child(2) {
-    text-align: center;
     grid-column: 2;
-    grid-row: 2;
   }
   > :nth-child(3) {
     grid-column: 3;
-    grid-row: 3;
   }
 `;
 
 const SVG = (props) => {
   return (
     <svg
-      viewBox="0 0 20 40"
+      viewBox="-3 0 17 40"
       height={props.px+"px"}
-      width={props.px/2+"px"}
+      width={props.px*1.5+"px"}
       aria-hidden="true"
       focusable="false"
     >
@@ -190,7 +165,7 @@ const Presentation = (props: Props) => {
 
   // Auto-import annotations for the active story
   // Re-run when image dimensions become available or active story changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (stories.length === 0) return;
     // Wait for image dimensions to be set
     if (imageWidth === 0 || imageHeight === 0) return;
@@ -264,9 +239,27 @@ const Presentation = (props: Props) => {
     updateGroup(active_story);
     updateViewState(active_story);
   }
-  const buttonHeight = 50;
+  const buttonHeight = 20;
+  const table_of_contents = (
+    <button className="table-of-contents" title="View table of contents" onClick={storyFirst}>
+      <svg
+        viewBox="0 0 30 20"
+        height={buttonHeight+"px"}
+        width={buttonHeight*1.5+"px"}
+        aria-hidden="true"
+        focusable="false"
+      >
+        <circle cx="4" cy="4" r="2" fill="currentColor" />
+        <circle cx="4" cy="10" r="2" fill="currentColor" />
+        <circle cx="4" cy="16" r="2" fill="currentColor" />
+        <path d="M 9 4 H 24" stroke="currentColor" stroke-width="3" />
+        <path d="M 9 10 H 24" stroke="currentColor" stroke-width="3" />
+        <path d="M 9 16 H 24" stroke="currentColor" stroke-width="3" />
+      </svg>
+    </button>
+  );
   const story_left = (
-    <button className="left" onClick={storyLeft}>
+    <button className="left" title="View previous waypoint" onClick={storyLeft}>
       <SVG d="M 14 7 L 12 0 l -12 18 l 12 17 l 2 -7 L 8 18 z" px={buttonHeight}/>
     </button>
   );
@@ -278,48 +271,50 @@ const Presentation = (props: Props) => {
     </Count>
   );
   const story_right = (
-    <button className="right" onClick={storyRight}>
+    <button className="right" title="View next waypoint" onClick={storyRight}>
       <SVG d="M 0 7 L 2 0 l 12 18 l -12 17 l -2 -7 L 6 18 z" px={buttonHeight}/>
     </button>
   );
-  const table_of_contents_row = (
-      <TableOfContentsRow>
-        <div></div><div></div>
-      </TableOfContentsRow>
-  )
-  const table_of_contents = (
-    <TableOfContentsIcon onClick={storyFirst}
-      className="table-of-contents">
-      {table_of_contents_row}
-      {table_of_contents_row}
-      {table_of_contents_row}
-    </TableOfContentsIcon>
-  )
+  const story_next = (
+    <p title="View next waypoint" onClick={storyRight}>
+      Next
+    </p>
+  );
   const first_story = activeStoryIndex == 0;
   const last_story = activeStoryIndex == stories.length - 1;
   const main_title = props.name;
   const story = stories[activeStoryIndex];
   const story_title = story?.Properties?.Name ?? `Waypoint ${activeStoryIndex + 1}`;
   const story_content = story?.Properties?.Content;
+
+  // Scroll waypoint content back to top when changing to a different waypoint.
+  const contentPaneRef = useRef(null);
+  useEffect(() => {
+    if (contentPaneRef.current) {
+      contentPaneRef.current.scrollTop = 0;
+    }
+  }, [activeStoryIndex])
+
   return (
     <Wrap>
       <NavPane>
         <StoryTitle className="h5">{main_title}</StoryTitle>
         <Toolbar>
-          { first_story ? "" : story_left }
+          { table_of_contents }
+          { story_left }
           { count }
-          { last_story ? "" : story_right }
-          { first_story ? "" : table_of_contents }
+          { story_right }
         </Toolbar>
-        <StoryContent>
-          <div>
-            <h2 className="h6">{story_title}</h2>
-            <ReactMarkdown> 
-              {story_content}
-            </ReactMarkdown>
-          </div>
-          { last_story ? "" : story_right }
-        </StoryContent>
+        <div ref={contentPaneRef}>
+          <h2 className="h6">{story_title}</h2>
+          <ReactMarkdown>
+            {story_content}
+          </ReactMarkdown>
+          <InlineNext>
+            { story_next }
+            { story_right }
+          </InlineNext>
+        </div>
       </NavPane>
       {props.children}
       {/* Renders annotation layers without UI */}
