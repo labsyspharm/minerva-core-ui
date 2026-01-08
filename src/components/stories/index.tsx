@@ -38,7 +38,8 @@ const Stories = (props: Props) => {
         importWaypointAnnotations,
         clearImportedAnnotations,
         imageWidth,
-        imageHeight
+        imageHeight,
+        setTargetWaypointViewState
     } = useOverlayStore();
 
     // Local state for markdown editing
@@ -135,6 +136,13 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
                 // Collapse all ROI panels when switching stories to avoid showing
                 // annotations from the new story under the old story's panel
                 setExpandedROIStories(new Set());
+                
+                // Trigger view state change if waypoint has Pan/Zoom properties
+                // These are in Minerva 1.5 (OSD) format and will be converted by VivView
+                const { Pan, Zoom } = story.Properties;
+                if (Pan !== undefined || Zoom !== undefined) {
+                    setTargetWaypointViewState(Pan || null, Zoom ?? null);
+                }
                 
                 // Note: annotations are imported automatically by the useEffect 
                 // that watches activeStoryIndex changes

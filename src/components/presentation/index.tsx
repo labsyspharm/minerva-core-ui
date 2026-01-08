@@ -184,7 +184,8 @@ const Presentation = (props: Props) => {
       importWaypointAnnotations,
       clearImportedAnnotations,
       imageWidth,
-      imageHeight
+      imageHeight,
+      setTargetWaypointViewState
   } = useOverlayStore();
 
   // Auto-import annotations for the active story
@@ -208,8 +209,14 @@ const Presentation = (props: Props) => {
       if (arrows.length > 0 || overlays.length > 0) {
         importWaypointAnnotations(arrows, overlays);
       }
+
+      // Also set the initial view state based on waypoint's Pan/Zoom
+      const { Pan, Zoom } = story.Properties;
+      if (Pan !== undefined || Zoom !== undefined) {
+        setTargetWaypointViewState(Pan || null, Zoom ?? null);
+      }
     }
-  }, [stories, activeStoryIndex, imageWidth, imageHeight, importWaypointAnnotations, clearImportedAnnotations]);
+  }, [stories, activeStoryIndex, imageWidth, imageHeight, importWaypointAnnotations, clearImportedAnnotations, setTargetWaypointViewState]);
 
   const updateGroup = (activeStory) => {
     const story = stories[activeStory];
@@ -223,10 +230,23 @@ const Presentation = (props: Props) => {
       setActiveChannelGroup(found_group.UUID);
     }
   }
+
+  // Update view state based on waypoint's Pan/Zoom properties
+  const updateViewState = (storyIndex: number) => {
+    const story = stories[storyIndex];
+    if (story) {
+      const { Pan, Zoom } = story.Properties;
+      if (Pan !== undefined || Zoom !== undefined) {
+        setTargetWaypointViewState(Pan || null, Zoom ?? null);
+      }
+    }
+  }
+
   const storyFirst = () => {
     const { Groups } = props.config.ItemRegistry;
     setActiveStory(0);
     updateGroup(0);
+    updateViewState(0);
   }
   const storyLeft = () => {
     const active_story = Math.max(
@@ -234,6 +254,7 @@ const Presentation = (props: Props) => {
     )
     setActiveStory(active_story)
     updateGroup(active_story);
+    updateViewState(active_story);
   };
   const storyRight = () => {
     const active_story = Math.min(
@@ -241,6 +262,7 @@ const Presentation = (props: Props) => {
     )
     setActiveStory(active_story)
     updateGroup(active_story);
+    updateViewState(active_story);
   }
   const buttonHeight = 50;
   const story_left = (
