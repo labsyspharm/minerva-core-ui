@@ -9,6 +9,7 @@ import * as React from "react";
 import { PolygonLayer, TextLayer, ScatterplotLayer, IconLayer } from '@deck.gl/layers';
 import { useOverlayStore } from "../../lib/stores";
 import type { Annotation } from "../../lib/stores";
+import ArrowIconUrl from './arrow-annotation.svg?url';
 
 type ColorRGBA = [number, number, number, number];
 type LayerType = PolygonLayer | TextLayer | ScatterplotLayer | IconLayer;
@@ -18,7 +19,7 @@ type LayerType = PolygonLayer | TextLayer | ScatterplotLayer | IconLayer;
 // ============================================================================
 
 // Arrow SVG icon (250x250) - positioned so center (125,125) is at target point
-const ARROW_ICON_URL = `${import.meta.env.BASE_URL}arrow.svg`;
+const ARROW_ICON_URL = ArrowIconUrl;
 const ARROW_ICON_SIZE = 250;
 
 // ============================================================================
