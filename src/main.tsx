@@ -246,7 +246,7 @@ const Content = (props: Props) => {
       )
     }, []);
     if ( loader === null) {
-      return <Wrapper>Loading DicomWeb Endpoint...</Wrapper>
+      return <Wrapper>Retrieving DICOM metadata...</Wrapper>
     }
   }
   const onSubmit: FormEventHandler = (event) => {
@@ -283,11 +283,9 @@ const Content = (props: Props) => {
 const Main = (props: Props) => {
   if (props.demo_dicom_web || hasFileSystemAccess()) {
     return <Content {...props} />;
+  } else {
+    return <div><p>Unable to access FileSystem API.</p></div>;
   }
-  const error_message = `<p>
-  Unable to access file system api.
-  </p>`
-  return <div>{error_message}</div>;
 };
 
 
