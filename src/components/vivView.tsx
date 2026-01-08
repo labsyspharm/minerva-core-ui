@@ -315,7 +315,6 @@ const VivView = (props: Props) => {
   }, [isDragging, activeTool, setViewportZoom]);
 
   if (!loader || !mainSettings) return null;
-  console.log('loader in JSON', JSON.stringify(loader, null, 2));
 
   return (
     <Main slot="image" ref={rootRef}>
