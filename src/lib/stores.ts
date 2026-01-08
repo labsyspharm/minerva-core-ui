@@ -315,6 +315,11 @@ export interface OverlayStore {
   // Channel Group and Channel State
   activeChannelGroupId: string | null;
 
+  // Waypoint view state (for triggering view changes from waypoint selection)
+  // These are in Minerva 1.5 (OSD) format - will be converted by VivView
+  targetWaypointPan: [number, number] | null;
+  targetWaypointZoom: number | null;
+
   // Actions
   setActiveTool: (tool: string) => void;
   setCurrentInteraction: (interaction: InteractionCoordinate | null) => void;
@@ -392,6 +397,10 @@ export interface OverlayStore {
   setImageDimensions: (width: number, height: number) => void;
   importWaypointAnnotations: (arrows: ConfigWaypointArrow[], overlays: ConfigWaypointOverlay[]) => void;
   clearImportedAnnotations: () => void;
+
+  // Waypoint view state actions
+  setTargetWaypointViewState: (pan: [number, number] | null, zoom: number | null) => void;
+  clearTargetWaypointViewState: () => void;
 }
 
 // Initial state for overlay store
@@ -424,6 +433,8 @@ const overlayInitialState = {
   activeWaypointId: null, // New: no active waypoint initially
   imageWidth: 0,
   imageHeight: 0,
+  targetWaypointPan: null, // Target pan from waypoint selection (Minerva 1.5 format)
+  targetWaypointZoom: null, // Target zoom from waypoint selection (Minerva 1.5 format)
 };
 
 // Create the overlay store
@@ -1291,6 +1302,15 @@ export const useOverlayStore = create<OverlayStore>()(
       setActiveChannelGroup: (channelGroupId: string) => {
         console.log('Store: Setting active channel group ID:', channelGroupId);
         set({ activeChannelGroupId: channelGroupId });
+      },
+
+      // Waypoint view state actions
+      setTargetWaypointViewState: (pan: [number, number] | null, zoom: number | null) => {
+        set({ targetWaypointPan: pan, targetWaypointZoom: zoom });
+      },
+
+      clearTargetWaypointViewState: () => {
+        set({ targetWaypointPan: null, targetWaypointZoom: null });
       }
     }),
     {

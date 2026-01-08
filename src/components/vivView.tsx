@@ -11,7 +11,7 @@ import {
 } from "../lib/dicom";
 
 import styled from "styled-components";
-import { getWaypoint } from "../lib/waypoint";
+import { getWaypoint, convertWaypointToViewState } from "../lib/waypoint";
 import { createDragHandlers } from "../lib/dragHandlers";
 
 // Types
@@ -103,13 +103,10 @@ const VivView = (props: Props) => {
   // Memoize initial view state
   const initialViewState = useMemo(() => {
     const n_levels = loader.data.length;
-    const initial_view = {
+    return {
       zoom: -n_levels,
       target: [imageShape.x / 2, imageShape.y / 2, 0]
-    }
-    console.log("Initial View State:")
-    console.log(initial_view)
-    return initial_view as OrthographicViewState;
+    } as OrthographicViewState;
   }, [loader.data, imageShape]);
 
   const [viewState, setViewState] = useState<OrthographicViewState>(initialViewState);
@@ -117,6 +114,11 @@ const VivView = (props: Props) => {
   // Get setViewportZoom and setImageDimensions from overlay store
   const setViewportZoom = useOverlayStore(state => state.setViewportZoom);
   const setImageDimensions = useOverlayStore(state => state.setImageDimensions);
+  
+  // Get target waypoint view state for responding to waypoint selection
+  const targetWaypointPan = useOverlayStore(state => state.targetWaypointPan);
+  const targetWaypointZoom = useOverlayStore(state => state.targetWaypointZoom);
+  const clearTargetWaypointViewState = useOverlayStore(state => state.clearTargetWaypointViewState);
 
   // Update viewState when initialViewState changes (e.g., when loader changes)
   useEffect(() => {
@@ -135,6 +137,36 @@ const VivView = (props: Props) => {
       setImageDimensions(imageShape.x, imageShape.y);
     }
   }, [imageShape, setImageDimensions]);
+
+  // Apply waypoint view state when target is set (from waypoint selection)
+  useEffect(() => {
+    // Skip if no target is set
+    if (targetWaypointPan === null && targetWaypointZoom === null) {
+      return;
+    }
+
+    // Skip if we don't have the required dimensions
+    if (!imageShape.x || imageShape.x <= 0 || !imageShape.y || imageShape.y <= 0 || shape.width <= 0) {
+      return;
+    }
+
+    // Convert Minerva 1.5 (OSD) coordinates to Minerva 2.0 (deck.gl) view state
+    const newViewState = convertWaypointToViewState(
+      targetWaypointPan,
+      targetWaypointZoom,
+      imageShape.x,
+      imageShape.y,
+      shape.width
+    );
+
+    if (newViewState) {
+      setViewState(newViewState as OrthographicViewState);
+      setViewportZoom(newViewState.zoom);
+    }
+
+    // Clear the target after applying
+    clearTargetWaypointViewState();
+  }, [targetWaypointPan, targetWaypointZoom, imageShape.x, imageShape.y, shape.width, clearTargetWaypointViewState, setViewportZoom]);
 
   // Memoize main props to prevent unnecessary layer recreation
   const mainProps = useMemo(() => ({
