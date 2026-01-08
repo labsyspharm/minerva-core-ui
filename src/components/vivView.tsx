@@ -240,7 +240,6 @@ const VivView = (props: Props) => {
       unit,
       size: physicalSize,
       snap: true,
-      position: 'bottom-right',
     });
   }, [viewState, loader?.metadata, shape.width, shape.height]);
   // Memoize layer combination
