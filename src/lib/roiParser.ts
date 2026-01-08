@@ -229,12 +229,14 @@ const lineShapeToAnnotation = (shape: RoiLineShape, roi: Roi): LineAnnotation =>
   const polygon = lineToPolygon(start, end, lineWidth);
   
   const lineColor = shape.StrokeColor || [0, 255, 255, 255];
+  const fillColor = shape.FillColor || [0, 255, 255, 255];
   
   return {
     id: `roi-${roi.ID}-${ID}`,
     type: 'line',
     polygon,
     style: {
+      fillColor,
       lineColor,
       lineWidth,
     },

@@ -25,6 +25,7 @@ type DistributionProperties = {
 };
 type SourceChannelProperties = NameProperty & {
   SourceIndex: number;
+  Samples: number;
 };
 type GroupChannelProperties = {
   LowerRange: number;
