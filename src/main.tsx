@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { author } from "./minerva-author-ui/author";
 import { useState, useMemo, useEffect } from "react";
 import { loadDicomWeb, parseDicomWeb } from "./lib/dicom";
-import { useHash, toEmptyHash } from "./lib/hashUtil";
+import { toEmptyHash } from "./lib/hashUtil";
 import { onlyUUID } from './lib/config';
 import { mutableItemRegistry } from './lib/config';
 import { hasFileSystemAccess, toDir, toLoader } from "./lib/filesystem";
@@ -167,14 +167,6 @@ const Content = (props: Props) => {
     }
     onStartOmeTiff(s);
   }
-  // Handle changes to URL
-  useEffect(() => {
-    const urlContext = useHash(
-      window.location.href, exhibit.stories
-    );
-    console.log(hash);
-    urlContext.setHash(hash);
-  }, [hash])
   // Dicom Web derived state
   const onStartDicomWeb = async (
     series: string, groups: ConfigGroup[]
