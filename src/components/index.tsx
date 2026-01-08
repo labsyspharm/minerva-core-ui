@@ -121,11 +121,13 @@ const Index = (props: Props) => {
     return window.innerWidth > 600;
   }
   const [twoNavOk, setTwoNavOk] = useState(checkWindow());
-  const [hidden, setHidden] = useState([false, !twoNavOk]);
+  const [hiddenWaypoint, setHideWaypoint] = useState(false);
+  const [hiddenChannel, setHideChannel] = useState(!twoNavOk);
   const handleResize = () => {
     const twoNavPossible = checkWindow();
     if (!twoNavPossible) {
-      setHidden([false, true]);
+      setHiddenWaypoint(false);
+      setHiddenChannel(true);
     }
     setTwoNavOk(twoNavPossible);
   }
@@ -139,19 +141,17 @@ const Index = (props: Props) => {
   const onZoomInEl = onLoaded(setZoomIn);
   const onZoomOutEl = onLoaded(setZoomOut);
 
-  const hiddenWaypoint = hidden[0];
-  const hiddenChannel = hidden[1];
   const setHiddenChannel = (v: boolean) => {
     if(!twoNavOk && !v) {
-      return setHidden([!v, v]);
+      setHideWaypoint(true);
     }
-    setHidden([hiddenWaypoint, v])
+    setHideChannel(v)
   }
   const setHiddenWaypoint = (v: boolean) => {
     if(!twoNavOk && !v) {
-      return setHidden([v, !v]);
+      setHideChannel(true);
     }
-    setHidden([v, hiddenChannel])
+    setHideWaypoint(v)
   }
 
   const updateWaypoint = (newWaypoint: WaypointType, { s, w }: any) => {
@@ -284,6 +284,7 @@ const Index = (props: Props) => {
     setHash,
     name,
     stories,
+    authorMode: !presenting,
     groups: itemRegistryGroups,
     controlPanelElement,
     config: props.config,

@@ -43,13 +43,12 @@ interface ReduceFormData {
 const Wrapper = styled.div`
   height: 100%;
   display: grid;
-  grid-template-columns: 1fr auto 1fr; 
-  grid-template-rows: 33vh 1fr 33vh; 
+  grid-template-columns: 1fr; 
+  grid-template-rows: 1fr; 
 `;
 
 const Full = styled.div`
-  grid-row: 1 / -1;
-  grid-column: 1 / -1;
+  max-height: 100vh;
 `
 
 const Scrollable = styled.div`
