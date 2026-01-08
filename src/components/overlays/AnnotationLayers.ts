@@ -17,9 +17,9 @@ type LayerType = PolygonLayer | TextLayer | ScatterplotLayer | IconLayer;
 // Arrow Icon Constants
 // ============================================================================
 
-// Arrow PNG icon (1000x1000) - positioned so center (500,500) is at target point
-const ARROW_ICON_URL = '/arrow.png';
-const ARROW_ICON_SIZE = 1000;
+// Arrow SVG icon (250x250) - positioned so center (125,125) is at target point
+const ARROW_ICON_URL = '/arrow.svg';
+const ARROW_ICON_SIZE = 250;
 
 // ============================================================================
 // Layer Creation Functions
@@ -115,7 +115,7 @@ export function createArrowIconLayer(
   const [endX, endY] = polygon[1];
 
   // Calculate angle from start to end (in degrees)
-  // The PNG arrow points up (negative Y), so we need to adjust
+  // The SVG arrow points up (negative Y), so we need to adjust
   const dx = endX - startX;
   const dy = endY - startY;
   const angleRad = Math.atan2(dy, dx);
@@ -137,13 +137,13 @@ export function createArrowIconLayer(
       url: ARROW_ICON_URL,
       width: ARROW_ICON_SIZE,
       height: ARROW_ICON_SIZE,
-      anchorX: ARROW_ICON_SIZE / 2, // Center of PNG (200,200)
+      anchorX: ARROW_ICON_SIZE / 2, // Center of SVG (125,125)
       anchorY: ARROW_ICON_SIZE / 2,
     }),
-    getSize: 300,
+    getSize: ARROW_ICON_SIZE,
     sizeUnits: 'pixels',
-    sizeMinPixels: 300,
-    sizeMaxPixels: 300,
+    sizeMinPixels: ARROW_ICON_SIZE,
+    sizeMaxPixels: ARROW_ICON_SIZE,
     getAngle: d => d.angle,
     getColor: iconColor,
     pickable,
@@ -279,9 +279,8 @@ export function createAnnotationLayers(
       const dirX = length > 0 ? dx / length : 0;
       const dirY = length > 0 ? dy / length : 1;
 
-      // Fixed pixel offset (at the icon's visual tail)
-      // Icon is 300px, so tail is ~150px from center
-      const pixelOffsetMagnitude = 160;
+      // Pixel offset relative to icon size (tail is at ~half the icon size from center
+      const pixelOffsetMagnitude = ARROW_ICON_SIZE / 2 + 12;
       // Pixel offset in screen coordinates (x right, y down in screen space)
       const pixelOffsetX = dirX * pixelOffsetMagnitude;
       const pixelOffsetY = dirY * pixelOffsetMagnitude;
