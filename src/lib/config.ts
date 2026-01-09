@@ -227,8 +227,7 @@ const GROUP_CHANNELS_CRC01 = {
         23,
         17,
         21,
-        22,
-        25
+        22
     ],
     "Lymphocytes_0__DNA1--23__CD8a--17__CD4--21__CD20--26__FOXP3": [
         0,
@@ -312,8 +311,7 @@ const GROUP_CHANNELS_CRC01 = {
         27,
         26,
         23,
-        19,
-        22
+        19
     ],
     "Nuclear-Lamina_0__DNA1--33__LaminABC": [
         0,
