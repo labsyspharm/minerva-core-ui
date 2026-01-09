@@ -168,7 +168,7 @@ const VivView = (props: Props) => {
         ...newViewState,
         transitionDuration: 1000, // 1 second transition
         transitionInterpolator: new LinearInterpolator(['target', 'zoom']),
-        transitionEasing: (x: number) => 1 - (1 - x) * (1 - x) // ease-out-quad https://easings.net/#easeOutQuad 
+        transitionEasing: (x: number) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x) // ease out exponential https://easings.net/#easeOutExpo
       };
 
       setViewState(viewStateWithTransition as OrthographicViewState);
