@@ -52,32 +52,35 @@ const isElement = (x = {}): x is HTMLElement => {
   return ["Width", "Height"].every((k) => `client${k}` in x);
 };
 
-const shapeRef = (setShape: (s: Shape) => void) => {
-  return (el: unknown) => {
-    if (el && isElement(el)) {
-      const height = el.clientHeight;
-      const width = el.clientWidth;
-      setShape({ width, height });
-    }
-  };
-};
-
 const VivView = (props: Props) => {
-  const maxShape = useWindowSize();
+  const windowSize = useWindowSize();
   const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
   const {
     activeChannelGroupId
   } = useOverlayStore();
-  const [shape, setShape] = useState(maxShape);
+  const [viewportSize, setViewportSize] = useState(windowSize);
   const [channelSettings, setChannelSettings] = useState({});
   const [canvas, setCanvas] = useState(null);
+  const rootRef = useRef<HTMLElement | null>(null);
 
   // Memoize expensive computations
   const waypoint = useMemo(() => getWaypoint(stories, s, w), [stories, s, w]);
 
-  const rootRef = useMemo(() => {
-    return shapeRef(setShape);
+  // Set up ResizeObserver to track viewport size changes
+  useEffect(() => {
+    const element = rootRef.current;
+    if (!element) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        setViewportSize({ width, height });
+      }
+    });
+
+    resizeObserver.observe(element);
+    return () => resizeObserver.disconnect();
   }, []);
 
   const mainSettings = useMemo(() => {
@@ -147,7 +150,7 @@ const VivView = (props: Props) => {
     }
 
     // Skip if we don't have the required dimensions
-    if (!imageShape.x || imageShape.x <= 0 || !imageShape.y || imageShape.y <= 0 || shape.width <= 0) {
+    if (!imageShape.x || imageShape.x <= 0 || !imageShape.y || imageShape.y <= 0 || viewportSize.width <= 0) {
       return;
     }
 
@@ -157,7 +160,7 @@ const VivView = (props: Props) => {
       targetWaypointZoom,
       imageShape.x,
       imageShape.y,
-      shape.width
+      viewportSize.width
     );
 
     if (newViewState) {
@@ -167,15 +170,15 @@ const VivView = (props: Props) => {
 
     // Clear the target after applying
     clearTargetWaypointViewState();
-  }, [targetWaypointPan, targetWaypointZoom, imageShape.x, imageShape.y, shape.width, clearTargetWaypointViewState, setViewportZoom]);
+  }, [targetWaypointPan, targetWaypointZoom, imageShape.x, imageShape.y, viewportSize.width, clearTargetWaypointViewState, setViewportZoom]);
 
   // Memoize main props to prevent unnecessary layer recreation
   const mainProps = useMemo(() => ({
-    ...shape,
+    ...viewportSize,
     id: "mainLayer",
     loader: loader.data,
     ...(mainSettings as any),
-  }), [shape, loader.data, mainSettings]);
+  }), [viewportSize, loader.data, mainSettings]);
 
   const dicomSource = useMemo(() => {
     if (!props.series) {
@@ -226,13 +229,13 @@ const VivView = (props: Props) => {
     const physicalSize = loader?.metadata?.Pixels?.PhysicalSizeX;
     const unit = loader?.metadata?.Pixels?.PhysicalSizeXUnit || 'µm';
     
-    if (!physicalSize || shape.width <= 0 || shape.height <= 0) return null;
+    if (!physicalSize || viewportSize.width <= 0 || viewportSize.height <= 0) return null;
     
     // ScaleBarLayer needs viewState with viewport dimensions
     const viewStateWithDimensions = {
       ...viewState,
-      width: shape.width,
-      height: shape.height,
+      width: viewportSize.width,
+      height: viewportSize.height,
     };
     
     return new ScaleBarLayer({
@@ -242,7 +245,7 @@ const VivView = (props: Props) => {
       size: physicalSize,
       snap: true,
     });
-  }, [viewState, loader?.metadata, shape.width, shape.height]);
+  }, [viewState, loader?.metadata, viewportSize.width, viewportSize.height]);
   // Memoize layer combination
   const allLayers = useMemo(
     () => {
