@@ -167,9 +167,9 @@ const VivView = (props: Props) => {
       // Add smooth transition properties for animated waypoint navigation
       const viewStateWithTransition = {
         ...newViewState,
-        transitionDuration: 1000, // 1 second transition
+        transitionDuration: 750, // 1 second transition
         transitionInterpolator: new LinearInterpolator(['target', 'zoom']),
-        transitionEasing: (t: number) => t * (2 - t) // ease-out-quad for smooth deceleration
+        transitionEasing: (t: number) => 1 - Math.pow(1 - t, 3) // ease-out-cubic: fast start, smooth deceleration
       };
       
       setViewState(viewStateWithTransition as OrthographicViewState);
