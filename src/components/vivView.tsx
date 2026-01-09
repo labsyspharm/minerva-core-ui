@@ -1,6 +1,6 @@
 import * as React from "react";
 import Deck from '@deck.gl/react';
-import { OrthographicView, OrthographicViewState } from '@deck.gl/core';
+import { OrthographicView, OrthographicViewState, LinearInterpolator } from '@deck.gl/core';
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
@@ -164,7 +164,15 @@ const VivView = (props: Props) => {
     );
 
     if (newViewState) {
-      setViewState(newViewState as OrthographicViewState);
+      // Add smooth transition properties for animated waypoint navigation
+      const viewStateWithTransition = {
+        ...newViewState,
+        transitionDuration: 1000, // 1 second transition
+        transitionInterpolator: new LinearInterpolator(['target', 'zoom']),
+        transitionEasing: (t: number) => t * (2 - t) // ease-out-quad for smooth deceleration
+      };
+      
+      setViewState(viewStateWithTransition as OrthographicViewState);
       setViewportZoom(newViewState.zoom);
     }
 
