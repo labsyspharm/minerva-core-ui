@@ -51,10 +51,10 @@ const NavPane = styled.div`
   border-right: 2px solid #333;
   background: #111;
   display: grid;
-  gap: 0.5em;
+  gap: 0.4em;
   z-index: 1;
   overflow: hidden;
-  grid-template-rows: auto 30px 1fr;
+  grid-template-rows: auto 24px 1fr;
   grid-template-columns: 1fr;
   > :nth-child(1) {
     grid-column: 1;
@@ -63,6 +63,7 @@ const NavPane = styled.div`
   > :nth-child(2) {
     grid-column: 1;
     grid-row: 2;
+    padding-top: 0;
   }
   > :nth-child(3) {
     overflow-y: auto;
@@ -86,8 +87,6 @@ const StoryTitle = styled.div`
 const Toolbar = styled.div`
   display: grid;
   overflow: hidden;
-  padding-top: 0.333em;
-  margin-bottom: 0.5em;
   grid-template-rows: 1fr;
   grid-template-columns: 30px 1fr 30px 50px 30px;
   > .table-of-contents {
