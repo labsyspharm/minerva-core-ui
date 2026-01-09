@@ -1676,8 +1676,7 @@ const exhibit_config = {
                 "CD8a",
                 "CD4",
                 "CD20",
-                "CD68",
-                "CD163"
+                "CD68"
             ],
             "Colors": [
                 "0000ff",
@@ -1686,7 +1685,6 @@ const exhibit_config = {
                 "ff00ff",
                 "ffff00",
                 "00ff00",
-                "00ffff"
             ],
             "Name": "Immune Populations",
             "Path": "Immune-Populations_0__DNA1--18__CD45--23__CD8a--17__CD4--21__CD20--22__CD68--25__CD163",
@@ -1697,7 +1695,6 @@ const exhibit_config = {
                 8000,
                 45000,
                 15000,
-                10000
             ],
             "Lows": [
                 500,
@@ -1706,7 +1703,6 @@ const exhibit_config = {
                 3000,
                 500,
                 3000,
-                2000
             ]
         },
         {
