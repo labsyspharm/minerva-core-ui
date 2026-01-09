@@ -72,6 +72,9 @@ const NavPane = styled.div`
     padding: 8px 8px 0;
     margin: 0;
   }
+  .inactive {
+    color: #444;
+  }
 `;
 
 const StoryTitle = styled.div`
@@ -106,13 +109,15 @@ const InlineNext = styled.div`
   > :nth-child(1) {
     grid-column: 1;
     text-align: right;
-    text-decoration: underline;
     font-style: italic;
-    cursor: pointer;
     margin: 0;
   }
   > :nth-child(2) {
     grid-column: 2;
+  }
+  .right {
+    text-decoration: underline;
+    cursor: pointer;
   }
 `;
 
@@ -134,7 +139,7 @@ const Count = styled.div`
 const SVG = (props) => {
   return (
     <svg
-      viewBox="-3 0 17 40"
+      viewBox="-3 0 20 40"
       height={props.px+"px"}
       width={props.px*1.5+"px"}
       aria-hidden="true"
@@ -252,31 +257,37 @@ const Presentation = (props: Props) => {
         <circle cx="4" cy="4" r="2" fill="currentColor" />
         <circle cx="4" cy="10" r="2" fill="currentColor" />
         <circle cx="4" cy="16" r="2" fill="currentColor" />
-        <path d="M 9 4 H 24" stroke="currentColor" stroke-width="3" />
-        <path d="M 9 10 H 24" stroke="currentColor" stroke-width="3" />
-        <path d="M 9 16 H 24" stroke="currentColor" stroke-width="3" />
+        <path d="M 9 4 H 24" stroke="currentColor" strokeWidth="3" />
+        <path d="M 9 10 H 24" stroke="currentColor" strokeWidth="3" />
+        <path d="M 9 16 H 24" stroke="currentColor" strokeWidth="3" />
       </svg>
     </button>
   );
-  const story_left = (
-    <button className="left" title="View previous waypoint" onClick={storyLeft}>
-      <SVG d="M 14 7 L 12 0 l -12 18 l 12 17 l 2 -7 L 8 18 z" px={buttonHeight}/>
-    </button>
-  );
+  const StoryLeft = (props) => {
+    const activeClass = props.active ? '' : 'inactive';
+    return (
+      <button className={`left ${activeClass}`} title="View previous waypoint" onClick={storyLeft}>
+          <SVG d="M 14 7 L 12 0 l -12 18 l 12 17 l 2 -7 L 8 18 z" px={buttonHeight}/>
+        </button>
+    );
+  };
   const count = (
     <Count className="count">
-      <div>{activeStoryIndex+1}</div>
+      <div title="Current waypoint">{activeStoryIndex+1}</div>
       <div>{"⁄"}</div>
-      <div>{stories.length}</div>
+      <div title="Number of waypoints">{stories.length}</div>
     </Count>
   );
-  const story_right = (
-    <button className="right" title="View next waypoint" onClick={storyRight}>
-      <SVG d="M 0 7 L 2 0 l 12 18 l -12 17 l -2 -7 L 6 18 z" px={buttonHeight}/>
-    </button>
-  );
+  const StoryRight = (props) => {
+    const activeClass = props.active ? '' : 'inactive';
+    return (
+      <button className={`right ${activeClass}`} title="View next waypoint" onClick={storyRight}>
+        <SVG d="M 0 7 L 2 0 l 12 18 l -12 17 l -2 -7 L 6 18 z" px={buttonHeight}/>
+      </button>
+    );
+  };
   const story_next = (
-    <p title="View next waypoint" onClick={storyRight}>
+    <p className="right" title="View next waypoint" onClick={storyRight}>
       Next
     </p>
   );
@@ -301,19 +312,20 @@ const Presentation = (props: Props) => {
         <StoryTitle className="h5">{main_title}</StoryTitle>
         <Toolbar>
           { table_of_contents }
-          { story_left }
+          <StoryLeft active={!first_story} />
           { count }
-          { story_right }
+          <StoryRight active={!last_story} />
         </Toolbar>
         <div ref={contentPaneRef}>
           <h2 className="h6">{story_title}</h2>
           <ReactMarkdown>
             {story_content}
           </ReactMarkdown>
-          <InlineNext>
-            { story_next }
-            { story_right }
-          </InlineNext>
+          <InlineNext>{
+            last_story
+              ? <p>End</p>
+              : [story_next, <StoryRight active={!last_story} /> ]
+          }</InlineNext>
         </div>
       </NavPane>
       {props.children}
