@@ -20,6 +20,7 @@ export type ImageProps = {
 export type Props = HashContext & ImageProps & {
   children: any,
   config: ConfigProps;
+  authorMode: boolean;
   hiddenChannel: boolean;
   startExport: () => void;
   controlPanelElement: string;
@@ -35,19 +36,18 @@ const TextWrap = styled.div`
     color: #eee;
     grid-row: 1;
     grid-column: 2;
+    margin-bottom: 4px;
     transition: transform 0.5s ease 0s;
   }
-`;
-
-const TextHide = styled.div`
-  > div.core {
-    transform: translateX(100%);
+  > div.core.hide {
+    transform: translateX(100%); 
   }
 `;
 
 const TextOther = styled.div`
   grid-row: 1;
   grid-column: 1 / -1;
+  background-color: blue;
 `;
 
 const Channel = (props: Props) => {
@@ -58,13 +58,18 @@ const Channel = (props: Props) => {
   const togglePanel = () => setHide(!hide);
 
   const { hash } = props;
-  const hidden = true; // TODO
+  const hidden = false;
   // const hidden = hash.i >= 0;
   const group = props.groups[hash.g];
   const legendProps = { ...props, ...group };
+  const hideClass=[
+    "show core", "hide core"
+  ][
+    +hide
+  ];
 
   const channelMenu = (
-    <div className="core">
+    <div className={hideClass}>
       <Content {...props}>
         <Toolbar
           {...{
@@ -83,20 +88,12 @@ const Channel = (props: Props) => {
   }
   );
 
-  const content = (
+  const content = props.authorMode ? (
     <TextOther>
       {minerva_author_ui}
     </TextOther>
-  );
+  ) : props.children;
 
-  if (hide) {
-    return (
-      <TextHide>
-        {content}
-        {hidden ? "" : channelMenu}
-      </TextHide>
-    );
-  }
   return (
     <TextWrap>
       {content}

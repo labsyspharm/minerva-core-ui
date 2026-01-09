@@ -30,6 +30,7 @@ const Main = (props: MainProps) => {
     const image_div = <ImageDiv/>;
     out = (
       <Presentation {...props}>
+        <Channel {...props}/>
         {props.children}
       </Presentation>
     )

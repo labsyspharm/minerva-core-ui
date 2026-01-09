@@ -29,6 +29,7 @@ export type Props = HashContext & ImageProps & {
 const Wrap = styled.div`
   display: grid;
   height: 100%;
+  overflow: hidden;
   grid-template-rows: 1fr;
   grid-template-columns: 350px 1fr;
   > :nth-child(1) {
@@ -36,6 +37,7 @@ const Wrap = styled.div`
     grid-row: 1;
   }
   > :nth-child(2) {
+    max-height: 100vh;
     grid-column: 2;
     grid-row: 1;
   }
@@ -84,6 +86,8 @@ const StoryTitle = styled.div`
 const Toolbar = styled.div`
   display: grid;
   overflow: hidden;
+  padding-top: 0.333em;
+  margin-bottom: 0.5em;
   grid-template-rows: 1fr;
   grid-template-columns: 30px 1fr 30px 50px 30px;
   > .table-of-contents {
