@@ -1,9 +1,6 @@
 import * as React from "react";
 import styled from "styled-components";
-import { getWaypoints, getWaypoint } from "../../lib/waypoint";
-import { UpdateGroup, PopUpdateGroup } from "../editable/groups";
-import { Editor } from "../editable/common";
-import { Status } from "../editable/status";
+import { useOverlayStore } from "../../lib/stores";
 
 const WrapRows = styled.div`
   grid-auto-rows: auto;
@@ -36,23 +33,43 @@ const WrapGroup = styled.div`
 `;
 
 const GroupRow = (props) => {
-  const { group, stories, hash, setHash } = props;
+  const { group, stories } = props;
   const { editable } = props;
   const { name } = group;
 
-  const active = group.g === hash.g;
+  const { Groups } = props.config.ItemRegistry;
+  const {
+    setActiveChannelGroup, activeChannelGroupId
+  } = useOverlayStore();
+  const active_group = React.useMemo(
+    () => (
+      Groups.find(
+        ({ UUID }) => UUID === activeChannelGroupId 
+      ) || Groups[0]
+    ),
+    [Groups, activeChannelGroupId]
+  )
+  const row_group = React.useMemo(
+    () => (
+      Groups.find(
+        ({ Properties }) => Properties?.Name === name 
+      ) || Groups[0]
+    ),
+    [Groups]
+  )
+
+  const active = active_group.UUID === row_group.UUID;
   const outline = active ? "var(--theme-glass-edge)" : "none";
   const color = active ? "var(--theme-dark-main-color)" : "none";
 
-  const toGroup = setHash.bind(null, { g: group.g });
+  const toGroup = () => {
+    if (row_group) {
+      setActiveChannelGroup(row_group.UUID);
+    }
+  }
 
   const wrapGroupProps = { color, outline };
-  const waypoints = getWaypoints(stories, hash.s);
-  const sameGroup = (wp) => wp.g === group.g;
-  const w = waypoints.indexOf(waypoints.find(sameGroup));
-  const toWaypoint = w < 0 ? null : () => setHash({ w, g: group.g });
-  const toWaypointText = w < 0 ? "" : `@${w + 1}`;
-  const { updateGroup, updateWaypoint } = props;
+  const { updateGroup } = props;
   const onPop = () => {
     if (hash.g >= group.g) {
       setHash({ g: Math.max(hash.g - 1, 0) });
@@ -73,28 +90,14 @@ const GroupRow = (props) => {
     uuid,
   };
 
-  const waypoint = getWaypoint(stories, hash.s, hash.w);
-  const selected = waypoint.g === group.g;
-  const updateWaypointGroup = () => {
-    const { s, w } = hash;
-    toGroup();
-    updateWaypoint({ ...waypoint, g: group.g }, { s, w });
-  };
-  const selectClick = props.editable ? updateWaypointGroup : toGroup;
   const coreUI = (
     <WrapGroup {...wrapGroupProps}>
-      <GroupName onClick={selectClick}>
-        <Status {...statusProps}>{name}</Status>
+      <GroupName onClick={toGroup}>
+        {name}
       </GroupName>
     </WrapGroup>
   );
-  const editSwitch = [
-    [React.Fragment, { children: coreUI }],
-    [PopUpdateGroup, { onPop, children: coreUI }],
-  ];
-  const canPop = props.editable && props.total > 1;
-  const extraUI = <Editor {...{ ...props, editable: canPop, editSwitch }} />;
-  return <>{extraUI}</>;
+  return <>{coreUI}</>;
 };
 
 const Groups = (props) => {
