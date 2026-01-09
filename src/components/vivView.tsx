@@ -62,14 +62,14 @@ const VivView = (props: Props) => {
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [channelSettings, setChannelSettings] = useState({});
   const [canvas, setCanvas] = useState(null);
-  const rootElementRef = useRef<HTMLElement | null>(null);
+  const rootRef = useRef<HTMLElement | null>(null);
 
   // Memoize expensive computations
   const waypoint = useMemo(() => getWaypoint(stories, s, w), [stories, s, w]);
 
   // Set up ResizeObserver to track viewport size changes
   useEffect(() => {
-    const element = rootElementRef.current;
+    const element = rootRef.current;
     if (!element) return;
 
     const resizeObserver = new ResizeObserver((entries) => {
@@ -320,7 +320,7 @@ const VivView = (props: Props) => {
   if (!loader || !mainSettings) return null;
 
   return (
-    <Main slot="image" ref={rootElementRef}>
+    <Main slot="image" ref={rootRef}>
       <Deck
         getCursor={getCursor}
         layers={allLayers}
