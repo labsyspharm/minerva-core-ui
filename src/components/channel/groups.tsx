@@ -70,12 +70,6 @@ const GroupRow = (props) => {
 
   const wrapGroupProps = { color, outline };
   const { updateGroup } = props;
-  const onPop = () => {
-    if (hash.g >= group.g) {
-      setHash({ g: Math.max(hash.g - 1, 0) });
-    }
-    props.popGroup({ g: group.g });
-  };
 
   const setInput = (t) => {
     props.updateGroup({ ...group, name: t }, { g: group.g });
