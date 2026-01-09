@@ -8,7 +8,7 @@ import styled from "styled-components";
 const theme = {};
 
 // Types
-import type { ConfigProps } from "../../lib/config";
+import type { ConfigProps, ConfigWaypoint } from "../../lib/config";
 import type { Group, Story } from "../../lib/exhibit";
 import type { HashContext } from "../../lib/hashUtil";
 
@@ -119,8 +119,10 @@ const InlineNext = styled.div`
     grid-column: 2;
   }
   .right {
-    text-decoration: underline;
     cursor: pointer;
+  }
+  .right:hover {
+    text-decoration: underline;
   }
 `;
 
@@ -155,6 +157,16 @@ const SVG = (props) => {
     </svg>
   )
 }
+
+const TocWrapper = styled.div`
+  li {
+    color: var(--bs-link-color);
+    cursor: pointer;
+  }
+  li:hover {
+    text-decoration: underline;
+  }
+`;
 
 const Presentation = (props: Props) => {
 
@@ -247,8 +259,14 @@ const Presentation = (props: Props) => {
     updateGroup(active_story);
     updateViewState(active_story);
   }
+  const storyAt = (i: number) => {
+    const active_story = Math.min(stories.length-1, Math.max(0, i))
+    setActiveStory(active_story);
+    updateGroup(active_story);
+    updateViewState(active_story);
+  }
   const buttonHeight = 20;
-  const table_of_contents = (
+  const toc_button = (
     <button className="table-of-contents" title="View table of contents" onClick={storyFirst}>
       <svg
         viewBox="0 0 30 20"
@@ -294,6 +312,21 @@ const Presentation = (props: Props) => {
       Next
     </p>
   );
+  const TableOfContents = (props) => {
+    const { stories } = props;
+    return (
+      <TocWrapper>
+        <h2 className="h6">Table of Contents</h2>
+        <ol>{
+          stories.map((wp: ConfigWaypoint, i: number) => {
+            const goToStory = () => { storyAt(i) };
+            return <li onClick={ goToStory }>{ wp.Properties.Name }</li>;
+          })
+        }</ol>
+      </TocWrapper>
+    );
+  }
+
   const first_story = activeStoryIndex == 0;
   const last_story = activeStoryIndex == stories.length - 1;
   const main_title = props.name;
@@ -314,7 +347,7 @@ const Presentation = (props: Props) => {
       <NavPane>
         <StoryTitle className="h5">{main_title}</StoryTitle>
         <Toolbar>
-          { table_of_contents }
+          { toc_button }
           <StoryLeft active={!first_story} />
           { count }
           <StoryRight active={!last_story} />
@@ -324,10 +357,11 @@ const Presentation = (props: Props) => {
           <ReactMarkdown>
             {story_content}
           </ReactMarkdown>
+          { first_story && <TableOfContents {...{stories}} /> }
           <InlineNext>{
             last_story
               ? <p>End</p>
-              : [story_next, <StoryRight active={!last_story} /> ]
+              : <>{ story_next } <StoryRight active={!last_story} /></>
           }</InlineNext>
         </div>
       </NavPane>

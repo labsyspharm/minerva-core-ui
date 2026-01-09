@@ -13,6 +13,24 @@ const fakeText = (p) => {
 
 const configWaypoints = [
     {
+        "UUID": "8320f08c-9456-49a3-a104-8ab3d5daab2a",
+        "State": {
+            "Expanded": true
+        },
+        "Properties": {
+            "Name": "Introduction",
+            "Content": "This Minerva introduction accompanies the analysis in Lin et al 2021 of specimen CRC1, a poorly differentiated stage IIIB adenocarcinoma (pT3N1bM0) with microsatellite instability (MSI-H) and a BRAFV600E (c.1799T>A) mutation. The tumor along with adjacent normal tissue was imaged using 24-plex cyclic immunofluorescence at a nominal resolution of 0.5 micron.",
+            "Pan": [
+                0.481913716814159,
+                0.5
+            ],
+            "Zoom": 0.518359375,
+            "Group": "Histology"
+        },
+        "Arrows": [],
+        "Overlays": []
+    },
+    {
         "UUID": "29180ca9-990e-4eca-8489-4d72db82adee",
         "State": {
             "Expanded": true
@@ -1603,7 +1621,7 @@ const configWaypoints = [
 
 // TODO: remove legacy exhibit data structure
 const exhibit_config = {
-    Name: "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer (Introduction)",
+    Name: "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer",
     Stories: [{
         Waypoints: configWaypoints.map(({ Properties, Arrows, Overlays }) => {
             const { Name, Content, Pan, Zoom, Group } = Properties;
