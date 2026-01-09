@@ -164,14 +164,13 @@ const VivView = (props: Props) => {
     );
 
     if (newViewState) {
-      // Add smooth transition properties for animated waypoint navigation
       const viewStateWithTransition = {
         ...newViewState,
-        transitionDuration: 750, // 1 second transition
+        transitionDuration: 1000, // 1 second transition
         transitionInterpolator: new LinearInterpolator(['target', 'zoom']),
-        transitionEasing: (t: number) => 1 - Math.pow(1 - t, 3) // ease-out-cubic: fast start, smooth deceleration
+        transitionEasing: (x: number) => 1 - (1 - x) * (1 - x) // ease-out-quad https://easings.net/#easeOutQuad 
       };
-      
+
       setViewState(viewStateWithTransition as OrthographicViewState);
       setViewportZoom(newViewState.zoom);
     }
@@ -236,16 +235,16 @@ const VivView = (props: Props) => {
     // Get physical size from loader metadata if available
     const physicalSize = loader?.metadata?.Pixels?.PhysicalSizeX;
     const unit = loader?.metadata?.Pixels?.PhysicalSizeXUnit || 'µm';
-    
+
     if (!physicalSize || viewportSize.width <= 0 || viewportSize.height <= 0) return null;
-    
+
     // ScaleBarLayer needs viewState with viewport dimensions
     const viewStateWithDimensions = {
       ...viewState,
       width: viewportSize.width,
       height: viewportSize.height,
     };
-    
+
     return new ScaleBarLayer({
       id: 'scale-bar',
       viewState: viewStateWithDimensions,
@@ -260,7 +259,7 @@ const VivView = (props: Props) => {
       const layers = props.series && dicomLayer
         ? [dicomLayer, ...overlayLayers]
         : [imageLayer, ...overlayLayers];
-      
+
       if (scaleBarLayer) {
         layers.push(scaleBarLayer);
       }
