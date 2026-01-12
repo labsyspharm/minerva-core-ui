@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import ReactMarkdown from 'react-markdown'
 import { useOverlayStore } from "../../lib/stores";
 import { AnnotationRenderer } from "../overlays/AnnotationRenderer";
@@ -145,8 +145,8 @@ const SVG = (props) => {
   return (
     <svg
       viewBox="-3 0 20 40"
-      height={props.px+"px"}
-      width={props.px*1.5+"px"}
+      height={props.px + "px"}
+      width={props.px * 1.5 + "px"}
       aria-hidden="true"
       focusable="false"
     >
@@ -168,19 +168,26 @@ const TocWrapper = styled.div`
   }
 `;
 
+const ChannelName = styled.span<{ color: string }>`
+  text-decoration: underline;
+  text-decoration-color: #${props => props.color};
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+`;
+
 const Presentation = (props: Props) => {
 
   const {
-      stories, 
-      activeStoryIndex, 
-      setActiveStory,
-      activeChannelGroupId,
-      setActiveChannelGroup,
-      importWaypointAnnotations,
-      clearImportedAnnotations,
-      imageWidth,
-      imageHeight,
-      setTargetWaypointViewState
+    stories,
+    activeStoryIndex,
+    setActiveStory,
+    activeChannelGroupId,
+    setActiveChannelGroup,
+    importWaypointAnnotations,
+    clearImportedAnnotations,
+    imageWidth,
+    imageHeight,
+    setTargetWaypointViewState
   } = useOverlayStore();
 
   // Auto-import annotations for the active story
@@ -189,15 +196,15 @@ const Presentation = (props: Props) => {
     if (stories.length === 0) return;
     // Wait for image dimensions to be set
     if (imageWidth === 0 || imageHeight === 0) return;
-    
+
     // Determine which story to use - active story or default to first
     const storyIndex = activeStoryIndex ?? 0;
     const story = stories[storyIndex];
-    
+
     if (story) {
       // Clear any existing imported annotations first
       clearImportedAnnotations();
-      
+
       // Import annotations from the story
       const arrows = story.Arrows || [];
       const overlays = story.Overlays || [];
@@ -245,7 +252,7 @@ const Presentation = (props: Props) => {
   }
   const storyLeft = () => {
     const active_story = Math.max(
-      0, activeStoryIndex-1
+      0, activeStoryIndex - 1
     )
     setActiveStory(active_story)
     updateGroup(active_story);
@@ -253,14 +260,14 @@ const Presentation = (props: Props) => {
   };
   const storyRight = () => {
     const active_story = Math.min(
-      stories.length-1, activeStoryIndex+1
+      stories.length - 1, activeStoryIndex + 1
     )
     setActiveStory(active_story)
     updateGroup(active_story);
     updateViewState(active_story);
   }
   const storyAt = (i: number) => {
-    const active_story = Math.min(stories.length-1, Math.max(0, i))
+    const active_story = Math.min(stories.length - 1, Math.max(0, i))
     setActiveStory(active_story);
     updateGroup(active_story);
     updateViewState(active_story);
@@ -270,8 +277,8 @@ const Presentation = (props: Props) => {
     <button className="table-of-contents" title="View table of contents" onClick={storyFirst}>
       <svg
         viewBox="0 0 30 20"
-        height={buttonHeight+"px"}
-        width={buttonHeight*1.5+"px"}
+        height={buttonHeight + "px"}
+        width={buttonHeight * 1.5 + "px"}
         aria-hidden="true"
         focusable="false"
       >
@@ -288,13 +295,13 @@ const Presentation = (props: Props) => {
     const activeClass = props.active ? '' : 'inactive';
     return (
       <button className={`left ${activeClass}`} title="View previous waypoint" onClick={storyLeft}>
-          <SVG d="M 14 7 L 12 0 l -12 18 l 12 17 l 2 -7 L 8 18 z" px={buttonHeight}/>
-        </button>
+        <SVG d="M 14 7 L 12 0 l -12 18 l 12 17 l 2 -7 L 8 18 z" px={buttonHeight} />
+      </button>
     );
   };
   const count = (
     <Count className="count">
-      <div title="Current waypoint">{activeStoryIndex+1}</div>
+      <div title="Current waypoint">{activeStoryIndex + 1}</div>
       <div>{"⁄"}</div>
       <div title="Number of waypoints">{stories.length}</div>
     </Count>
@@ -303,7 +310,7 @@ const Presentation = (props: Props) => {
     const activeClass = props.active ? '' : 'inactive';
     return (
       <button className={`right ${activeClass}`} title="View next waypoint" onClick={storyRight}>
-        <SVG d="M 0 7 L 2 0 l 12 18 l -12 17 l -2 -7 L 6 18 z" px={buttonHeight}/>
+        <SVG d="M 0 7 L 2 0 l 12 18 l -12 17 l -2 -7 L 6 18 z" px={buttonHeight} />
       </button>
     );
   };
@@ -320,7 +327,7 @@ const Presentation = (props: Props) => {
         <ol>{
           stories.map((wp: ConfigWaypoint, i: number) => {
             const goToStory = () => { storyAt(i) };
-            return <li onClick={ goToStory }>{ wp.Properties.Name }</li>;
+            return <li onClick={goToStory}>{wp.Properties.Name}</li>;
           })
         }</ol>
       </TocWrapper>
@@ -342,26 +349,55 @@ const Presentation = (props: Props) => {
     }
   }, [activeStoryIndex])
 
+  // Process story content to highlight channel names
+  const { processedContent, channelColors } = useMemo(() => {
+    const { Groups } = props.config.ItemRegistry;
+    const activeGroup = Groups.find(g => g.UUID === activeChannelGroupId);
+    if (!activeGroup || !story_content) return { processedContent: story_content || '', channelColors: new Map() };
+
+    const propsGroup = props.groups.find(g => g.name === activeGroup.Properties.Name);
+    const channels = propsGroup?.channels || [];
+    
+    let content = story_content;
+    const colors = new Map();
+    
+    channels.forEach(channel => {
+      content = content.split(channel.name).join(`**${channel.name}**`);
+      colors.set(channel.name, channel.color);
+    });
+    
+    return { processedContent: content, channelColors: colors };
+  }, [story_content, activeChannelGroupId, props.config.ItemRegistry, props.groups]);
+
+
   return (
     <Wrap>
       <NavPane>
         <StoryTitle className="h5">{main_title}</StoryTitle>
         <Toolbar>
-          { toc_button }
+          {toc_button}
           <StoryLeft active={!first_story} />
-          { count }
+          {count}
           <StoryRight active={!last_story} />
         </Toolbar>
         <div ref={contentPaneRef}>
           <h2 className="h6">{story_title}</h2>
-          <ReactMarkdown>
-            {story_content}
+          <ReactMarkdown
+            components={{
+              strong: ({ children }: any) => {
+                const text = String(children);
+                const color = channelColors.get(text);
+                return color ? <ChannelName color={color}>{text}</ChannelName> : <strong>{children}</strong>;
+              }
+            }}
+          >
+            {processedContent}
           </ReactMarkdown>
-          { first_story && <TableOfContents {...{stories}} /> }
+          {first_story && <TableOfContents {...{ stories }} />}
           <InlineNext>{
             last_story
               ? <p>End</p>
-              : <>{ story_next } <StoryRight active={!last_story} /></>
+              : <>{story_next} <StoryRight active={!last_story} /></>
           }</InlineNext>
         </div>
       </NavPane>
