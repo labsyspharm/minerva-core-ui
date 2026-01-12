@@ -4,6 +4,7 @@ import { Legend } from "./legend";
 import { Content } from "./content";
 import { Toolbar } from "./toolbar";
 //import { theme } from "../../theme.module.css";
+import { useOverlayStore } from "../../lib/stores";
 import styled from "styled-components";
 const theme = {};
 
@@ -57,10 +58,18 @@ const Channel = (props: Props) => {
 
   const togglePanel = () => setHide(!hide);
 
-  const { hash } = props;
+  const { Groups } = props.config.ItemRegistry;
   const hidden = false;
-  // const hidden = hash.i >= 0;
-  const group = props.groups[hash.g];
+  const {
+    activeChannelGroupId,
+  } = useOverlayStore();
+  const group_name = Groups.find(
+    ({ UUID }) => UUID === activeChannelGroupId
+  )?.Properties?.Name;
+  // TODO -- avoid extra name lookup step
+  const group = props.groups.find(
+    ({ name }) => group_name === name
+  );
   const legendProps = { ...props, ...group };
   const hideClass=[
     "show core", "hide core"
