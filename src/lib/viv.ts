@@ -5,10 +5,16 @@ type Selection = Record<"z" | "t" | "c", number>;
 type Color = [number, number, number];
 type Limit = [number, number];
 
+export type Loader = {
+  data: any[];
+  metadata: any;
+}
+
 type Settings = {
   channelsVisible: boolean[];
   selections: Selection[];
   contrastLimits: Limit[];
+  loader: Loader | null;
   colors: Color[];
 };
 
@@ -55,14 +61,10 @@ type Metadata = {
   Pixels: Pixels;
 }
 
-export type Loader = {
-  data: any[];
-  metadata: any;
-}
-
 export type Config = {
   toSettings: (
-    activeChannelGroupId: string | null, l?: Loader, g?: any
+    activeChannelGroupId: string | null, 
+    modality: string, l?: Loader, g?: any
   ) => Settings;
 };
 
@@ -71,6 +73,7 @@ const toDefaultSettings = (n) => {
   const n_shown = 3;
   const n_sub = n_shown; //TODO
   return {
+    loader: null,
     selections: chan_range
       .map((c) => {
         return { z: 0, t: 0, c: c };
@@ -104,7 +107,7 @@ const hexToRGB = (hex: string) => {
 };
 
 const toSettings = (opts) => {
-  return (activeChannelGroupId, loader, groups) => {
+  return (activeChannelGroupId, modality, loader, groups) => {
     const { ItemRegistry } = opts.config;
     const { GroupChannels, SourceChannels } = ItemRegistry;
     const channels = (GroupChannels).filter(
@@ -142,9 +145,19 @@ const toSettings = (opts) => {
       return [ LowerRange, UpperRange ]; 
     });
     const channelsVisible: boolean[] = channels.map(
-      (c, i: number) => true
+      (c, i: number) => {
+        const source_channel = SourceChannels.find(
+          (source_channel) => (
+            c.Associations.SourceChannel.UUID 
+            === source_channel.UUID
+          )
+        );
+        const image_id = (
+          source_channel.Associations.SourceImage.UUID
+        );
+        return image_id === modality;
+      }
     );
-    console.log({colors, contrastLimits, channelsVisible});
     const n_channels = shape[c_idx] || 0;
     const out = {
       ...toDefaultSettings(n_channels),
@@ -152,6 +165,7 @@ const toSettings = (opts) => {
       colors,
       contrastLimits,
       channelsVisible,
+      loader
     };
     return out;
   };

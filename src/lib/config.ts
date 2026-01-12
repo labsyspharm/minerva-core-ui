@@ -200,7 +200,7 @@ interface ExtractDistributions {
   >
 }
 interface ExtractChannels {
-  (loader: Loader, groups: LegacyConfigGroup[]): {
+  (loader: Loader, modality: string, groups: LegacyConfigGroup[]): {
     SourceChannels: ConfigSourceChannel[];
     GroupChannels: ConfigGroupChannel[];
     Colors: ConfigColor[];
@@ -439,7 +439,7 @@ const extractDistributions: ExtractDistributions = async (loader) => {
   );
 }
 
-const extractChannels: ExtractChannels = (loader, groups) => {
+const extractChannels: ExtractChannels = (loader, modality, groups) => {
   const init = initialize({ planes: loader.data });
   const { Channels, Type } = loader.metadata.Pixels;
   const SourceChannels = Channels.map(
@@ -452,7 +452,7 @@ const extractChannels: ExtractChannels = (loader, groups) => {
       },
       Associations: {
         SourceDataType: asID(Type),
-        SourceImage: asUUID('TODO')
+        SourceImage: asUUID(modality) //TODO
       }
     })
   );
@@ -599,7 +599,7 @@ const extractChannels: ExtractChannels = (loader, groups) => {
       UUID: crypto.randomUUID(),
       State: { Expanded: true },
       Properties: {
-        Name: "H&E"
+        Name: "Histology"
       }
     }]
     const GroupChannels = SourceChannels.map(
@@ -620,6 +620,9 @@ const extractChannels: ExtractChannels = (loader, groups) => {
         }
       }
     )
+    if (SourceChannels.length === 1) {
+      SourceChannels[0].Properties.Name = "Brightfield";
+    }
     return {
       SourceChannels,
       GroupChannels,

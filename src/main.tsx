@@ -17,7 +17,7 @@ import Pool from './lib/workers/Pool';
 import { parseRoisFromLoader } from './lib/roiParser';
 import { useOverlayStore } from './lib/stores';
 
-import type { DicomLoader, DicomIndex } from "./components";
+import type { DicomIndex, DicomLoader } from "./lib/dicom-index";
 import type { ValidObj } from './components/upload';
 import type { ImageProps } from "./components/channel"
 import type { FormEventHandler } from "react";
@@ -33,7 +33,6 @@ type Props = ImageProps & {
   exhibit_config: ExhibitConfig;
   demo_dicom_web?: boolean;
   handleKeys: string[];
-  h_and_e?: boolean;
 };
 
 interface ReduceFormData {
@@ -73,10 +72,9 @@ const Content = (props: Props) => {
     _setHash({...hash, ...partial_hash})
   }
   const [handle, setHandle] = useState(null);
-  const [loader, setLoader] = useState(null);
-  const [dicomSeries, setDicomSeries] = useState(null);
-  const [dicomIndex, setDicomIndex] = useState(
-    { } as DicomIndex
+  const [loaderOmeTiff, setLoaderOmeTiff] = useState(null);
+  const [dicomIndexList, setDicomIndexList] = useState(
+    [] as DicomIndex[]
   );
   const [config, setConfig] = useState({
     ItemRegistry: {
@@ -135,7 +133,7 @@ const Content = (props: Props) => {
     const loader = await toLoader({ handle, in_f, pool: new Pool() });
     const {
       SourceChannels, GroupChannels, Groups, Colors
-    } = extractChannels(loader, []);
+    } = extractChannels(loader, "Colorimetric", []);
     resetItems({
       SourceChannels, GroupChannels, Groups, Colors
     });
@@ -156,36 +154,99 @@ const Content = (props: Props) => {
         });
       }
     );
-    setLoader(loader);
+    setLoaderOmeTiff(loader);
     setFileName(in_f);
   }
-  const onStart = (s: string, type: string) => {
-    // handle hard-coded channels for dicom-web demo
-    if (type == "DICOM-WEB") {
-      onStartDicomWeb(s, props.exhibit_config.Groups);
+  const onStart = async (
+    imagePropList: [string, string, string][]
+  ) => {
+    if ( imagePropList.length === 0 ) {
+      return;
     }
-    onStartOmeTiff(s);
+    // handle hard-coded channels for dicom-web demo
+    const dicomPropList = imagePropList.filter(
+      ([series, modality, type]) => type === "DICOM-WEB"
+    ).map(
+      ([series, modality]) => [series, modality]
+    ) as (
+      [string, string][]
+    )
+    if (dicomPropList.length > 0) {
+      await onStartDicomWeb(
+        dicomPropList, props.exhibit_config.Groups
+      );
+    }
+    // handle only one ome-tiff image ( TODO support more )
+    const omeTiffPropList = imagePropList.filter(
+      ([path, modality, type]) => type === "OME-TIFF"
+    ).map(
+      ([path]) => [path]
+    )
+    if (omeTiffPropList.length > 0) {
+      await onStartOmeTiff(omeTiffPropList[0][0]);
+    }
   }
   // Dicom Web derived state
   const onStartDicomWeb = async (
-    series: string, groups: ConfigGroup[]
+    imagePropList: [string, string][],
+    groups: ConfigGroup[]
   ) => {
-    setDicomSeries(series);
-    const dicomIndex = await loadDicomWeb(series);
-    const loader = (
-      parseDicomWeb(series, dicomIndex) as DicomLoader
+    const indexList = await Promise.all(
+      imagePropList.map(
+        async ( [series, modality] ) => {
+        const pyramids = await loadDicomWeb(series);
+        const loader = (
+          parseDicomWeb(series, pyramids) as DicomLoader
+        );
+        return {
+          series, pyramids, modality, loader
+        }
+      })
     );
-    setDicomIndex(dicomIndex);
-    setLoader(loader);
+    setDicomIndexList(indexList);
     const {
-      SourceChannels, GroupChannels, Groups, Colors
-    } = extractChannels(loader, groups);
+      SourceChannels,
+      GroupChannels,
+      Groups, Colors
+    } = indexList.reduce(
+      (registry, { loader, modality }) => {
+        const relevant_groups = groups.filter(
+          ({ Image }) => Image.Method === modality
+        )
+        const {
+          SourceChannels, GroupChannels, Groups, Colors
+        } = extractChannels(
+          loader, modality, relevant_groups
+        );
+        return {
+          SourceChannels: [
+            ...registry.SourceChannels, ...SourceChannels
+          ],
+          GroupChannels: [
+            ...registry.GroupChannels, ...GroupChannels
+          ],
+          Groups: [
+            ...registry.Groups, ...Groups
+          ],
+          Colors: [
+            ...registry.Colors, ...Colors
+          ],
+        };
+      },
+      {
+        SourceChannels: [],
+        GroupChannels: [],
+        Groups: [],
+        Colors: []
+      }
+    )
     resetItems({
       SourceChannels,
       GroupChannels,
       Groups, Colors
     });
-    // Asynchronously add distributions
+    // TODO: Asynchronously add distributions
+    /*
     extractDistributions(loader).then(
       (sourceDistributionMap) => {
         const SourceDistributions = sourceDistributionMap.values();
@@ -202,7 +263,7 @@ const Content = (props: Props) => {
         });
       }
     );
-
+    */
   }
   const mutableFields: MutableFields = [
     'GroupChannels'
@@ -214,14 +275,16 @@ const Content = (props: Props) => {
   const controlPanelElement = useMemo(() => author({
     ...config, ItemRegistry
   }), [config.ID])
+  const noLoader = loaderOmeTiff === null && (
+    dicomIndexList.length === 0
+  );
   // Actual image viewer
-  const imager = loader === null ? '' : (
+  const imager = noLoader ? '' : (
     <Full>
       <Index {...{
-        dicomIndex: dicomIndex,
-        dicomSeries: dicomSeries,
+        dicomIndexList,
         config, controlPanelElement,
-        exhibit, setExhibit, loader,
+        exhibit, setExhibit, loaderOmeTiff,
         in_f: fileName, handle, hash, setHash 
       }} />
     </Full>
@@ -229,14 +292,22 @@ const Content = (props: Props) => {
   const [valid, setValid] = useState({} as ValidObj);
   if (props.demo_dicom_web) {
     useEffect(() => {
-      const h_and_e = props.h_and_e;
-      onStart(
-        ["https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.331207435.2054329796.1752677896971.4.0",
-        "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.2507374895.494638264.1767738966319.4.0"][+h_and_e],
-        "DICOM-WEB"
-      )
+      (async () => {
+        // H&E Demo Image and
+        // CyCIF Demo Image
+        await onStart([[
+          "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.2507374895.494638264.1767738966319.4.0",
+          "Brightfield",
+          "DICOM-WEB"
+        ],
+        [
+          "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.331207435.2054329796.1752677896971.4.0",
+          "Colorimetric",
+          "DICOM-WEB"
+        ]])
+      })()
     }, []);
-    if ( loader === null) {
+    if ( dicomIndexList.length === 0 ) {
       return <Wrapper>Retrieving DICOM metadata...</Wrapper>
     }
   }
@@ -260,7 +331,7 @@ const Content = (props: Props) => {
     handleKeys, formProps, handle,
     onAllow, onRecall
   };
-  const importer = loader !== null ? '' : (<Scrollable>
+  const importer = !noLoader ? '' : (<Scrollable>
     <Upload {...uploadProps} />
   </Scrollable>)
   return (

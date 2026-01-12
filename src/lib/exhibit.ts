@@ -38,6 +38,9 @@ export type ConfigGroup = {
   Channels: string[];
   Lows: number[];
   Highs: number[];
+  Image: {
+    Method: string
+  }
 };
 
 export interface ExhibitConfig {

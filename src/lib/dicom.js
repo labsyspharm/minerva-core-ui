@@ -592,7 +592,10 @@ function createTileLayers(meta) {
     contrastLimits,
     selections,
   } = meta.settings;
-  const { pyramids, dicomSource, rgbImage } = meta;
+  const visible = channelsVisible.some(x => x)
+  const {
+    imageID, pyramids, dicomSource, rgbImage
+  } = meta;
   const height = [...pyramids["0"]].pop().height;
   const width = [...pyramids["0"]].pop().width;
   const tileSize = pyramids["0"][0].tileSize;
@@ -600,6 +603,7 @@ function createTileLayers(meta) {
   const minZoom = Math.round(-(maxLevel-1));
   if (rgbImage) {
     return new TileLayer({
+      visible,
       id: 'rgb_image',
       getTileData: async ({ index, signal }) => {
         const { x, y, z } = index;
@@ -683,10 +687,11 @@ function createTileLayers(meta) {
     });
   }
   const imageProps = {
+    visible,
     loader: dicomSource.data,
     // https://deck.gl/docs/api-reference/geo-layers/tile-layer#refinementstrategy
     refinementStrategy: "no-overlap",
-    id: "multichannel-tiled-image",
+    id: imageID,
     channelsVisible,
     colors,
     contrastLimits,

@@ -1634,6 +1634,9 @@ const exhibit_config = {
     }],
     Groups: [
         {
+            "Image": {
+                "Method": "Brightfield"
+            },
             "Channels": [
                 "Hematoxylin",
                 "Eosin"
@@ -1656,6 +1659,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "PanCK",
@@ -1688,6 +1694,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "CD45",
@@ -1724,6 +1733,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "CD8a",
@@ -1756,6 +1768,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "CD68",
@@ -1780,6 +1795,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "PCNA",
@@ -1812,6 +1830,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "PanCK",
@@ -1840,6 +1861,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "CD4",
@@ -1864,6 +1888,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "CD8a",
@@ -1888,6 +1915,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "CD8a",
@@ -1912,6 +1942,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "PanCK",
@@ -1936,6 +1969,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "PanCK",
@@ -1960,6 +1996,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "ASMA",
@@ -1992,6 +2031,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "CD4",
@@ -2024,6 +2066,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "PDL1",
@@ -2052,6 +2097,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "PanCK",
@@ -2080,6 +2128,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "PanCK",
@@ -2116,6 +2167,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "LaminABC"
@@ -2136,6 +2190,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "DNA10"
@@ -2156,6 +2213,9 @@ const exhibit_config = {
             ]
         },
         {
+            "Image": {
+                "Method": "Colorimetric"
+            },
             "Channels": [
                 "DNA1",
                 "PanCK",
@@ -2208,8 +2268,7 @@ const root = createRoot(rootElement);
 root.render(
     <React.StrictMode>
         <Main
-
-            handleKeys={["ome-dir-1"]} demo_dicom_web={true} h_and_e={false}
+            handleKeys={["ome-dir-1"]} demo_dicom_web={true}
             exhibit_config={exhibit_config} configWaypoints={configWaypoints}
         />
         <MainStyle />

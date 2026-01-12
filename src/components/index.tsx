@@ -10,39 +10,17 @@ import { useOverlayStore } from "../lib/stores";
 import type { Waypoint as WaypointType } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
 import type { ConfigProps } from "../lib/config";
+import type { DicomIndex } from "../lib/dicom-index";
 import type { Loader } from "../lib/viv";
 import type { Exhibit } from "../lib/exhibit";
 
-type DicomData = {
-  labels: string[];
-  shape: number[];
-}
-
-export interface DicomLoader {
-  data: DicomData[];
-  metadata: Loader["metadata"];
-}
-
-export type DicomIndex = {
-  [k: string]: {
-    width: number;
-    height: number;
-    extent: [number, number, number, number];
-    frameMappings: {
-      [k: string]: any;
-    };
-    tileSize: number;
-  }[]; 
-}
-
 type Props = HashContext & {
   in_f: string;
-  loader: Loader | DicomLoader;
   exhibit: Exhibit;
   handle: Handle.Dir;
   config: ConfigProps;
-  dicomIndex: DicomIndex;
-  dicomSeries: string | null;
+  loaderOmeTiff: Loader;
+  dicomIndexList: DicomIndex[];
   controlPanelElement: string;
   setExhibit: (e: Exhibit) => void;
 };
@@ -238,7 +216,7 @@ const Index = (props: Props) => {
   };
 
   const {
-    in_f, handle, loader, hash, setHash,
+    in_f, handle, loaderOmeTiff, hash, setHash,
     controlPanelElement, config
   } = props;
   const {
@@ -316,10 +294,11 @@ const Index = (props: Props) => {
     popWaypoint
   }
   const imageProps = React.useMemo(() => {
+    const { dicomIndexList } = props;
     return toImageProps({
       props: {
-        loader,
-        dicomIndex: props.dicomIndex,
+        loaderOmeTiff,
+        dicomIndexList,
         marker_names: itemRegistryMarkerNames,
         ...channelProps,
       },
@@ -372,7 +351,6 @@ const Index = (props: Props) => {
     <Main {...mainProps}>
       <ImageView 
         {...imageProps} 
-        series={props.dicomSeries}
         overlayLayers={overlayLayers}
         activeTool={activeTool}
         isDragging={dragState.isDragging}

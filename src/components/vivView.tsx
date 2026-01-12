@@ -4,6 +4,7 @@ import { OrthographicView, OrthographicViewState, LinearInterpolator } from '@de
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
+import type { DicomIndex } from "../lib/dicom-index";
 import { useOverlayStore } from "../lib/stores";
 
 import {
@@ -19,17 +20,17 @@ import type { Config } from "../lib/viv";
 import type { Group, Story } from "../lib/exhibit";
 import type { HashContext } from "../lib/hashUtil";
 import type { ConfigProps } from "../lib/config";
+import type { Loader } from "../lib/viv";
 import type { Selection, Color, Limit } from "../lib/viv";
 import { VivLensing } from "./vivLensing";
 import { LensExtension } from "@hms-dbmi/viv";
 
 export type Props = {
-  loader: any;
+  loaderOmeTiff: Loader;
   config: ConfigProps;
-  series: string; // DICOM
   groups: Group[];
   stories: Story[];
-  dicomIndex: any[];
+  dicomIndexList: DicomIndex[];
   viewerConfig: Config;
   overlayLayers?: any[];
   activeTool: string;
@@ -54,7 +55,7 @@ const isElement = (x = {}): x is HTMLElement => {
 
 const VivView = (props: Props) => {
   const windowSize = useWindowSize();
-  const { loader, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
+  const { loaderOmeTiff, dicomIndexList, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
   const {
     activeChannelGroupId
@@ -83,35 +84,93 @@ const VivView = (props: Props) => {
     return () => resizeObserver.disconnect();
   }, []);
 
-  const mainSettings = useMemo(() => {
+  const loaderList = useMemo(() => (
+    // Show only ome-tiff if available
+    loaderOmeTiff !== null ? (
+      [ loaderOmeTiff ]
+    ) : (
+      dicomIndexList
+    )
+  ), [
+    loaderOmeTiff, dicomIndexList
+  ]);
+  const toSettings = (
+    loader, modality, groups, activeChannelGroupId
+  ) => {
     // Gets the default settings
-    if (!loader || !groups) {
+    if (loader === null || !groups) {
       return props.viewerConfig.toSettings(
-        activeChannelGroupId
+        activeChannelGroupId, modality
       );
     }
     return props.viewerConfig.toSettings(
-      activeChannelGroupId, loader, groups
+      activeChannelGroupId, modality, loader, groups
     );
-  }, [loader, groups, activeChannelGroupId]);
+  }
+  const mainSettingsOmeTiff = useMemo(() => {
+    const modality = "Colorimetric";
+    return toSettings(
+      loaderOmeTiff, modality, groups, activeChannelGroupId
+    )
+  }, [
+    loaderOmeTiff, groups, activeChannelGroupId
+  ]);
+  const mainSettingsDicomList = useMemo(() => {
+    return dicomIndexList.map(dicomIndex => {
+      const { modality } = dicomIndex;
+      return toSettings(
+        dicomIndex.loader, modality, groups, activeChannelGroupId
+      );
+    });
+  }, [
+    dicomIndexList, groups, activeChannelGroupId
+  ]);
+  // Show only ome-tiff if available
+  const mainSettingsList = useMemo(() => (
+    loaderOmeTiff !== null ? (
+      [ mainSettingsOmeTiff ]
+    ) : (
+      mainSettingsDicomList
+    )
+  ), [
+    mainSettingsOmeTiff, mainSettingsDicomList
+  ])
+  // TODO, assert all loaders match shape
+  const firstLoader = useMemo(() => (
+    (mainSettingsList.length > 0) ? (
+      mainSettingsList[0].loader
+    ) : {
+      data: null,
+      metadata: null
+    }
+  ), [
+    mainSettingsList
+  ])
 
   // Memoize image shape computation
   const imageShape = useMemo(() => {
-    const shape_labels = loader.data[0].labels;
-    const shape_values = loader.data[0].shape;
+    if (firstLoader.data === null) {
+      return {
+        x: viewportSize.width, y: viewportSize.height
+      };
+    }
+    const shape_labels = firstLoader.data[0].labels;
+    const shape_values = firstLoader.data[0].shape;
     return Object.fromEntries(
       shape_labels.map((k, i) => [k, shape_values[i]])
     );
-  }, [loader.data]);
+  }, [mainSettingsList, firstLoader]);
 
   // Memoize initial view state
   const initialViewState = useMemo(() => {
-    const n_levels = loader.data.length;
+    const n_levels = firstLoader.data === null ? 1 : (
+      firstLoader.data.length
+    );
     return {
       zoom: -n_levels,
       target: [imageShape.x / 2, imageShape.y / 2, 0]
     } as OrthographicViewState;
-  }, [loader.data, imageShape]);
+  }, [mainSettingsList, imageShape]);
 
   const [viewState, setViewState] = useState<OrthographicViewState>(initialViewState);
 
@@ -126,14 +185,14 @@ const VivView = (props: Props) => {
 
   // Update viewState when initialViewState changes (e.g., when loader changes)
   useEffect(() => {
-    if (loader && loader.data && loader.data.length > 0) {
+    if (firstLoader.data !== null) {
       setViewState(initialViewState);
       // Set initial viewport zoom for line width calculations
       if (typeof initialViewState.zoom === 'number') {
         setViewportZoom(initialViewState.zoom);
       }
     }
-  }, [initialViewState, loader, setViewportZoom]);
+  }, [initialViewState, firstLoader, setViewportZoom]);
 
   // Set image dimensions in the store when imageShape is available
   useEffect(() => {
@@ -180,61 +239,68 @@ const VivView = (props: Props) => {
   }, [targetWaypointPan, targetWaypointZoom, imageShape.x, imageShape.y, viewportSize.width, clearTargetWaypointViewState, setViewportZoom]);
 
   // Memoize main props to prevent unnecessary layer recreation
-  const mainProps = useMemo(() => ({
-    ...viewportSize,
-    id: "mainLayer",
-    loader: loader.data,
-    ...(mainSettings as any),
-  }), [viewportSize, loader.data, mainSettings]);
-
-  const dicomSource = useMemo(() => {
-    if (!props.series) {
-      return null;
-    }
-    return loadDicom({
-      pyramids: props.dicomIndex,
-      series: props.series,
-      little_endian: true
+  const omeTiffPropsList = useMemo(() => {
+    return mainSettingsList.map((mainSettings, i) => {
+      return {
+        ...viewportSize,
+        id: `mainLayer-${i}`,
+        ...(mainSettings as any),
+        loader: mainSettings.loader.data
+      }
     });
+  }, [viewportSize, mainSettingsList]);
+
+  const dicomSources = useMemo(() => {
+    return dicomIndexList.map((opts) => {
+      const { series, pyramids, modality } = opts;
+      return {
+        series, pyramids, modality,
+        ...loadDicom({
+          pyramids, series,
+          little_endian: true
+        })
+      };
+    })
   }, [
-    props.dicomIndex, props.series
+    dicomIndexList
   ]);
   // Memoize dicom layer
-  const { SourceChannels } = props.config.ItemRegistry
-  const dicomLayer = useMemo(
+  const dicomLayers = useMemo(
     () => {
-      if (!props.series || !dicomSource) {
-        return null;
+      if (loaderOmeTiff !== null) {
+        return [];
       }
-      const rgbImage = (
-        (SourceChannels.length === 1) &&
-        (SourceChannels[0].Properties.Samples === 3) &&
-        (SourceChannels[0].Associations.SourceDataType.ID === "Uint8")
-      )
-      return createTileLayers({
-        pyramids: props.dicomIndex,
-        settings: mainSettings,
-        dicomSource: dicomSource,
-        rgbImage
-      });
+      return dicomSources.map((dicomSource, i) => {
+        const { series, pyramids, modality } = dicomSource;
+        const rgbImage = (
+          modality === "Brightfield"
+        )
+        const imageID = crypto.randomUUID();
+        return createTileLayers({
+          pyramids, dicomSource,
+          settings: mainSettingsList[i],
+          rgbImage, imageID
+        });
+      })
     },
     [
-      dicomSource, mainSettings, props.series, props.dicomIndex,
-      SourceChannels
+      dicomSources, mainSettingsList 
     ]
   );
-  // Memoize image layer
-  const imageLayer = useMemo(
-    () => {
-      return new MultiscaleImageLayer(mainProps)
-    },
-    [mainProps]
+  // Memoize image layers
+  const omeTiffLayers = useMemo(
+    () => (
+      loaderOmeTiff === null ? [] : omeTiffPropsList.map(
+        layerProps => new MultiscaleImageLayer(layerProps)
+      )
+    ),
+    [loaderOmeTiff, omeTiffPropsList]
   );
   // Memoize scale bar layer
   const scaleBarLayer = useMemo(() => {
     // Get physical size from loader metadata if available
-    const physicalSize = loader?.metadata?.Pixels?.PhysicalSizeX;
-    const unit = loader?.metadata?.Pixels?.PhysicalSizeXUnit || 'µm';
+    const physicalSize = firstLoader.metadata?.Pixels?.PhysicalSizeX;
+    const unit = firstLoader.metadata?.Pixels?.PhysicalSizeXUnit || 'µm';
 
     if (!physicalSize || viewportSize.width <= 0 || viewportSize.height <= 0) return null;
 
@@ -252,13 +318,13 @@ const VivView = (props: Props) => {
       size: physicalSize,
       snap: true,
     });
-  }, [viewState, loader?.metadata, viewportSize.width, viewportSize.height]);
+  }, [viewState, firstLoader, viewportSize.width, viewportSize.height]);
   // Memoize layer combination
   const allLayers = useMemo(
     () => {
-      const layers = props.series && dicomLayer
-        ? [dicomLayer, ...overlayLayers]
-        : [imageLayer, ...overlayLayers];
+      const layers = 0 === omeTiffLayers.length
+        ? [...dicomLayers, ...overlayLayers]
+        : [...omeTiffLayers, ...overlayLayers];
 
       if (scaleBarLayer) {
         layers.push(scaleBarLayer);
@@ -266,7 +332,8 @@ const VivView = (props: Props) => {
       return layers;
     },
     [
-      dicomLayer, imageLayer, overlayLayers, props.series, scaleBarLayer
+      dicomLayers, omeTiffLayers,
+      overlayLayers, scaleBarLayer
     ]
   );
   // Memoize drag handlers
@@ -324,7 +391,9 @@ const VivView = (props: Props) => {
     setViewportZoom(nextViewState.zoom);
   }, [isDragging, activeTool, setViewportZoom]);
 
-  if (!loader || !mainSettings) return null;
+  if (mainSettingsList.length === 0) {
+    return null;
+  }
 
   return (
     <Main slot="image" ref={rootRef}>

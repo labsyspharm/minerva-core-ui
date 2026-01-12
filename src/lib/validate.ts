@@ -23,7 +23,7 @@ type DicomKey = keyof Required<FormOutDicom>;
 type ValidateIn<T> = {
   formOut: T,
   handle: Handle.Dir,
-  onStart: (s: string, m: Format) => void
+  onStart: (imagePropList: [string, string, Format][]) => void
 }
 type FormAnyOpts = ValidateIn<FormOutAny>
 type FormDicomOpts = ValidateIn<FormOutDicom>
@@ -96,7 +96,7 @@ const validateDicom: Validate<FormDicomOpts> = async (opts) => {
     return valid_keys.includes(k as DicomKey);
   });
   if (validated && "url" in formOut) {
-    onStart(formOut.url, "DICOM-WEB");
+    onStart([[formOut.url, "Colorimetric", "DICOM-WEB"]]);
   }
   return toValid(need_keys, valid_keys);
 }
@@ -123,7 +123,7 @@ const validateAny: Validate<FormAnyOpts> = async (opts) => {
     return valid_keys.includes(k as AnyKey);
   });
   if (validated && "path" in formOut) {
-    onStart(formOut.path, "OME-TIFF");
+    onStart([[formOut.path, "Colorimetric", "OME-TIFF"]]);
   }
   return toValid(need_keys, valid_keys);
 }
