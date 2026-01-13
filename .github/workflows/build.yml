@@ -37,5 +37,5 @@ jobs:
           cp -R ./dist/* ./lsp-idc-minerva/
           cd ./lsp-idc-minerva
           git add -A
-          git commit -m update
+          git commit -m update --allow-empty
           git push -f
