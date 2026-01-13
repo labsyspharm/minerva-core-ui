@@ -105,6 +105,10 @@ const Toolbar = styled.div`
   }
 `;
 
+const ContentWrap = styled.div`
+  scrollbar-color: #888 var(--theme-dim-gray-color);
+`
+
 const InlineNext = styled.div`
   display: grid;
   grid-template-columns: 1fr 30px;
@@ -408,7 +412,7 @@ const Presentation = (props: Props) => {
           {count}
           <StoryRight active={!last_story} />
         </Toolbar>
-        <div ref={contentPaneRef}>
+        <ContentWrap ref={contentPaneRef}>
           <h2 className="h6">{story_title}</h2>
           <ReactMarkdown
             components={{
@@ -427,7 +431,7 @@ const Presentation = (props: Props) => {
               ? <p>End</p>
               : <>{story_next} <StoryRight active={!last_story} /></>
           }</InlineNext>
-        </div>
+        </ContentWrap>
       </NavPane>
       {props.children}
       {/* Renders annotation layers without UI */}

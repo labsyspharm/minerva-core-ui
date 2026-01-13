@@ -18,7 +18,8 @@ const WrapCore = styled.div`
   padding: 0.5em;
   grid-column: 3;
   grid-row: 1 / 3;
-  overflow: scroll;
+  overflow: auto;
+  scrollbar-color: #888 var(--theme-dim-gray-color);
   pointer-events: all;
   word-wrap: break-word;
   border: 2px solid var(--theme-glass-edge);
