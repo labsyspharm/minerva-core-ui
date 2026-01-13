@@ -329,7 +329,7 @@ const Presentation = (props: Props) => {
         <ol>{
           stories.map((wp: ConfigWaypoint, i: number) => {
             const goToStory = () => { storyAt(i) };
-            return <li onClick={goToStory}>{wp.Properties.Name}</li>;
+            return <li key={i} onClick={goToStory}>{wp.Properties.Name}</li>;
           })
         }</ol>
       </TocWrapper>
