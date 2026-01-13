@@ -196,20 +196,20 @@ const Presentation = (props: Props) => {
     if (stories.length === 0) return;
     // Wait for image dimensions to be set
     if (imageWidth === 0 || imageHeight === 0) return;
+    // Wait for active story to be explicitly set (avoid duplicate imports)
+    if (activeStoryIndex === null) return;
 
-    // Determine which story to use - active story or default to first
-    const storyIndex = activeStoryIndex ?? 0;
-    const story = stories[storyIndex];
+    const story = stories[activeStoryIndex];
 
     if (story) {
-      // Clear any existing imported annotations first
-      clearImportedAnnotations();
-
-      // Import annotations from the story
+      // Import annotations from the story (clearing existing imported ones atomically)
       const arrows = story.Arrows || [];
       const overlays = story.Overlays || [];
       if (arrows.length > 0 || overlays.length > 0) {
-        importWaypointAnnotations(arrows, overlays);
+        importWaypointAnnotations(arrows, overlays, true); // true = clear existing imported annotations
+      } else {
+        // If no annotations to import, just clear existing ones
+        clearImportedAnnotations();
       }
 
       // Also set the initial view state based on waypoint's Pan/Zoom
@@ -218,7 +218,9 @@ const Presentation = (props: Props) => {
         setTargetWaypointViewState(Pan || null, Zoom ?? null);
       }
     }
-  }, [stories, activeStoryIndex, imageWidth, imageHeight, importWaypointAnnotations, clearImportedAnnotations, setTargetWaypointViewState]);
+  // Zustand store actions are stable and don't need to be in deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stories, activeStoryIndex, imageWidth, imageHeight]);
 
   const updateGroup = (activeStory) => {
     const story = stories[activeStory];

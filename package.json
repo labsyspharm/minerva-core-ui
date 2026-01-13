@@ -8,6 +8,7 @@
     "schema": "typescript-json-schema -o 'schema/generic.schema.json' 'src/config/generic.ts' Config",
     "format": "prettier --ignore-path .eslintignore --write .",
     "build": "rm -rf build && tsc -b",
+    "preview": "vite build && vite preview --port 2021",
     "lint": "eslint src",
     "test": "playwright test"
   },
