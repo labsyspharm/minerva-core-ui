@@ -27,15 +27,7 @@ const configWaypoints = [
             "Zoom": 0.518359375,
             "Group": "Histology"
         },
-        "Arrows": [{
-            "Angle": 300,
-            "HideArrow": false,
-            "Point": [
-                0.807627524065269,
-                0.306258334920546
-            ],
-            "Text": "Mucosa"
-        },],
+        "Arrows": [],
         "Overlays": []
     },
     {
@@ -2191,7 +2183,7 @@ const exhibit_config = {
                 5000
             ]
         }
-    ]
+    ]  
 }
 
 // TODO Warning: hard-coded for LUNG-3-PR_40X.ome.tif
