@@ -276,7 +276,11 @@ const Presentation = (props: Props) => {
   }
   const buttonHeight = 20;
   const toc_button = (
-    <button className="table-of-contents" title="View table of contents" onClick={storyFirst}>
+    <button 
+      className="table-of-contents" 
+      title="View table of contents" 
+      onMouseDown={(e) => { e.preventDefault(); storyFirst(); }}
+    >
       <svg
         viewBox="0 0 30 20"
         height={buttonHeight + "px"}
@@ -295,8 +299,16 @@ const Presentation = (props: Props) => {
   );
   const StoryLeft = (props) => {
     const activeClass = props.active ? '' : 'inactive';
+    const handleMouseDown = (e: React.MouseEvent) => {
+      e.preventDefault(); // Prevent any default behavior
+      storyLeft();
+    };
     return (
-      <button className={`left ${activeClass}`} title="View previous waypoint" onClick={storyLeft}>
+      <button 
+        className={`left ${activeClass}`} 
+        title="View previous waypoint" 
+        onMouseDown={handleMouseDown}
+      >
         <SVG d="M 14 7 L 12 0 l -12 18 l 12 17 l 2 -7 L 8 18 z" px={buttonHeight} />
       </button>
     );
@@ -310,14 +322,26 @@ const Presentation = (props: Props) => {
   );
   const StoryRight = (props) => {
     const activeClass = props.active ? '' : 'inactive';
+    const handleMouseDown = (e: React.MouseEvent) => {
+      e.preventDefault(); // Prevent any default behavior
+      storyRight();
+    };
     return (
-      <button className={`right ${activeClass}`} title="View next waypoint" onClick={storyRight}>
+      <button 
+        className={`right ${activeClass}`} 
+        title="View next waypoint" 
+        onMouseDown={handleMouseDown}
+      >
         <SVG d="M 0 7 L 2 0 l 12 18 l -12 17 l -2 -7 L 6 18 z" px={buttonHeight} />
       </button>
     );
   };
   const story_next = (
-    <p className="right" title="View next waypoint" onClick={storyRight}>
+    <p 
+      className="right" 
+      title="View next waypoint" 
+      onMouseDown={(e) => { e.preventDefault(); storyRight(); }}
+    >
       Next
     </p>
   );
@@ -328,8 +352,11 @@ const Presentation = (props: Props) => {
         <h2 className="h6">Table of Contents</h2>
         <ol>{
           stories.map((wp: ConfigWaypoint, i: number) => {
-            const goToStory = () => { storyAt(i) };
-            return <li onClick={goToStory}>{wp.Properties.Name}</li>;
+            const goToStory = (e: React.MouseEvent) => { 
+              e.preventDefault(); 
+              storyAt(i);
+            };
+            return <li onMouseDown={goToStory}>{wp.Properties.Name}</li>;
           })
         }</ol>
       </TocWrapper>
