@@ -194,14 +194,14 @@ const VivView = (props: Props) => {
       }
       hasInitialized.current = true;
     }
-  }, [initialViewState, firstLoader.data, setViewportZoom]);
+  }, [initialViewState, firstLoader.data]);
 
   // Set image dimensions in the store when imageShape is available
   useEffect(() => {
     if (imageShape.x > 0 && imageShape.y > 0) {
       setImageDimensions(imageShape.x, imageShape.y);
     }
-  }, [imageShape, setImageDimensions]);
+  }, [imageShape]);
 
   // Apply waypoint view state when target is set (from waypoint selection)
   useEffect(() => {
@@ -246,7 +246,7 @@ const VivView = (props: Props) => {
 
       clearTargetWaypointViewState();
     }
-  }, [targetWaypointPan, targetWaypointZoom, imageShape.x, imageShape.y, viewportSize.width, setViewportZoom, clearTargetWaypointViewState]);
+  }, [targetWaypointPan, targetWaypointZoom, imageShape.x, imageShape.y, viewportSize.width]);
 
   // Memoize main props to prevent unnecessary layer recreation
   const omeTiffPropsList = useMemo(() => {
@@ -399,7 +399,7 @@ const VivView = (props: Props) => {
     setViewState(nextViewState);
     // Update viewport zoom in store for line width scaling
     setViewportZoom(nextViewState.zoom);
-  }, [isDragging, activeTool, setViewportZoom]);
+  }, [isDragging, activeTool]);
 
   if (mainSettingsList.length === 0) {
     return null;

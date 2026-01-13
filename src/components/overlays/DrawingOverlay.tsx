@@ -396,7 +396,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
 
     // Clear the last processed interaction when tool changes
     lastProcessedInteractionRef.current = null;
-  }, [activeTool, finalizePolyline]);
+  }, [activeTool]);
 
   // Handle keyboard events for polyline finalization
   React.useEffect(() => {
@@ -675,7 +675,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
         setPolylinePoints(newPoints);
       }
     }
-  }, [currentInteraction, activeTool, isLassoDrawing, finalizeLasso, isPolylineDrawing, isPolylineDragging, finalizePolyline, isRectangleClickMode, rectangleFirstClick, finalizeClickRectangle, isLineClickMode, lineFirstClick, finalizeClickLine, isEllipseClickMode, ellipseFirstClick, finalizeClickEllipse, isPolygonClickMode, polygonClickPoints, finalizeClickPolygon]);
+  }, [currentInteraction, activeTool, isLassoDrawing, isPolylineDrawing, isPolylineDragging, isRectangleClickMode, rectangleFirstClick, isLineClickMode, lineFirstClick, isEllipseClickMode, ellipseFirstClick, isPolygonClickMode, polygonClickPoints, lassoPoints, polylinePoints, finalizedPolylineSegmentCount, rectangleSecondClick, lineSecondClick, ellipseSecondClick, polygonHoverPoint]);
 
   // Handle text input submission
   const handleTextSubmit = () => {
@@ -878,7 +878,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ onLayerCreate, activeTo
     } else {
       onLayerCreate(null);
     }
-  }, [drawingLayer, activeTool, onLayerCreate]);
+  }, [drawingLayer, onLayerCreate]);
 
   // Handle text placement marker layer
   React.useEffect(() => {
