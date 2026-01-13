@@ -285,7 +285,8 @@ const VivView = (props: Props) => {
         const rgbImage = (
           modality === "Brightfield"
         )
-        const imageID = crypto.randomUUID();
+        // Use deterministic ID based on series to prevent layer recreation on settings change
+        const imageID = `dicom-${series}-${i}`;
         return createTileLayers({
           pyramids, dicomSource,
           settings: mainSettingsList[i],
