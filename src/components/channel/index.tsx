@@ -69,7 +69,10 @@ const Channel = (props: Props) => {
   // TODO -- avoid extra name lookup step
   const group = props.groups.find(
     ({ name }) => group_name === name
-  );
+  ) || {
+    g: 0,
+    channels: []
+  };
   const legendProps = { ...props, ...group };
   const hideClass=[
     "show core", "hide core"
