@@ -170,9 +170,10 @@ const VivView = (props: Props) => {
       zoom: -n_levels,
       target: [imageShape.x / 2, imageShape.y / 2, 0]
     } as OrthographicViewState;
-  }, [mainSettingsList, imageShape]);
+  }, [firstLoader.data, imageShape]);
 
   const [viewState, setViewState] = useState<OrthographicViewState>(initialViewState);
+  const hasInitialized = useRef(false);
 
   // Get setViewportZoom and setImageDimensions from overlay store
   const setViewportZoom = useOverlayStore(state => state.setViewportZoom);
@@ -183,16 +184,17 @@ const VivView = (props: Props) => {
   const targetWaypointZoom = useOverlayStore(state => state.targetWaypointZoom);
   const clearTargetWaypointViewState = useOverlayStore(state => state.clearTargetWaypointViewState);
 
-  // Update viewState when initialViewState changes (e.g., when loader changes)
+  // Update viewState only on initial mount (not when loader changes)
   useEffect(() => {
-    if (firstLoader.data !== null) {
+    if (firstLoader.data !== null && !hasInitialized.current) {
       setViewState(initialViewState);
       // Set initial viewport zoom for line width calculations
       if (typeof initialViewState.zoom === 'number') {
         setViewportZoom(initialViewState.zoom);
       }
+      hasInitialized.current = true;
     }
-  }, [initialViewState, firstLoader, setViewportZoom]);
+  }, [initialViewState, firstLoader.data, setViewportZoom]);
 
   // Set image dimensions in the store when imageShape is available
   useEffect(() => {
