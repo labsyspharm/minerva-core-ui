@@ -1,6 +1,5 @@
 import * as React from "react";
 import { Groups } from "./groups";
-import { Header } from "../common/header";
 import styled from "styled-components";
 import { PushGroup } from "../editable/groups";
 import { Editor } from "../editable/common";
@@ -16,13 +15,13 @@ const WrapContent = styled.div`
 `;
 
 const WrapCore = styled.div`
-  padding: 1em;
+  padding: 0.5em;
   grid-column: 3;
   grid-row: 1 / 3;
   overflow: scroll;
   pointer-events: all;
   word-wrap: break-word;
-  outline: 1px solid var(--theme-glass-edge);
+  border: 2px solid var(--theme-glass-edge);
   background-color: var(--dark-glass);
   border-radius: var(--radius-0001);
 `;
@@ -33,8 +32,9 @@ const WrapNav = styled.div`
   padding: 0.8em;
   font-size: 16px;
   pointer-events: all;
-  padding-top: calc(1.5*var(--theme-gap-tiny));
-  outline: 1px solid var(--theme-glass-edge);
+  padding: 0.5em 0.75em;
+  border: 2px solid var(--theme-glass-edge);
+  border-right: 0;
   background-color: var(--dark-glass);
   border-radius: var(--radius-0001);
 `;
@@ -43,6 +43,9 @@ const WrapColumns = styled.div`
   grid-template-columns: auto 1fr;
   display: grid;
   gap: 0.25em;
+`;
+
+const Header = styled.h2`
 `;
 
 const Content = (props) => {
@@ -79,10 +82,10 @@ const Content = (props) => {
   const allGroups =
     groups.length || props.editable ? (
       <>
-        <Header>
+        <Header className="h6">
           <WrapColumns>
             {extraUI(3)}
-            <span>Channel Groups:</span>
+            <span>Channel Groups</span>
           </WrapColumns>
         </Header>
         <Groups {...{ ...groupProps, groups }} />

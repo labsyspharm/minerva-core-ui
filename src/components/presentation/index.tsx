@@ -48,8 +48,8 @@ const Wrap = styled.div`
 `;
 
 const NavPane = styled.div`
-  border-right: 2px solid #333;
-  background: #111;
+  border-right: 2px solid var(--theme-glass-edge);
+  background: var(--theme-dim-gray-color);
   display: grid;
   gap: 0.4em;
   z-index: 1;
@@ -69,7 +69,7 @@ const NavPane = styled.div`
     overflow-y: auto;
     grid-column: 1;
     grid-row: 3;
-    border-top: 2px solid #333;
+    border-top: 2px solid var(--theme-glass-edge);
   }
   > * {
     padding: 8px 8px 0;

@@ -32,7 +32,7 @@ const TextWrap = styled.div`
   height: 100%;
   display: grid;
   grid-template-rows: 100%;
-  grid-template-columns: 1fr 200px;
+  grid-template-columns: 1fr 220px;
   > div.core {
     color: #eee;
     grid-row: 1;
@@ -83,12 +83,15 @@ const Channel = (props: Props) => {
   const channelMenu = (
     <div className={hideClass}>
       <Content {...props}>
-        <Toolbar
-          {...{
-            togglePanel,
-            hide,
-          }}
-        />
+        {
+        // FIXME temporarily hide the channelgroup display toggle since it causes layout problems with the scrollIntoView code
+        // <Toolbar
+        //   {...{
+        //     togglePanel,
+        //     hide,
+        //   }}
+        // />
+        }
         <Legend {...legendProps} />
       </Content>
     </div>

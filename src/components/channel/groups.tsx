@@ -9,27 +9,18 @@ const WrapRows = styled.div`
 `;
 
 const GroupName = styled.div`
-  grid-area: name;
-`;
-
-const Corner = styled.div`
-  grid-area: waypoint;
-  text-decoration: underline;
-`;
-
-const WrapGroup = styled.div`
-  display: grid;
-  grid-template-areas:
-    "name ."
-    "name waypoint";
-  grid-template-columns: 80% auto;
-  grid-template-rows: auto auto;
   outline: 1px solid ${({ outline }) => outline};
   background-color: ${({ color }) => color};
   cursor: pointer;
-  border-radius: 4px;
-  padding: 0.5em;
-  gap: 1em;
+  border-radius: 2px;
+  margin-bottom: 0.15em;
+  padding: 2px 2px 2px 21px;
+  text-indent: -1em;
+  line-height: 1.2em;
+
+  :hover {
+    text-decoration: underline;
+  }
 `;
 
 const GroupRow = (props) => {
@@ -69,7 +60,7 @@ const GroupRow = (props) => {
   }
 
   const ref = React.useRef(null);
-  const wrapGroupProps = { color, outline, ref };
+  const nameProps = { color, outline, ref };
   const { updateGroup } = props;
 
   React.useEffect(() => {
@@ -94,11 +85,9 @@ const GroupRow = (props) => {
   };
 
   const coreUI = (
-    <WrapGroup {...wrapGroupProps}>
-      <GroupName onClick={toGroup}>
-        {name}
-      </GroupName>
-    </WrapGroup>
+    <GroupName {...nameProps} onClick={toGroup}>
+      {name}
+    </GroupName>
   );
   return <>{coreUI}</>;
 };
