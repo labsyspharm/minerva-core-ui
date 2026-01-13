@@ -395,7 +395,7 @@ export interface OverlayStore {
   imageWidth: number;
   imageHeight: number;
   setImageDimensions: (width: number, height: number) => void;
-  importWaypointAnnotations: (arrows: ConfigWaypointArrow[], overlays: ConfigWaypointOverlay[]) => void;
+  importWaypointAnnotations: (arrows: ConfigWaypointArrow[], overlays: ConfigWaypointOverlay[], clearExisting?: boolean) => void;
   clearImportedAnnotations: () => void;
 
   // Waypoint view state actions
@@ -1165,7 +1165,7 @@ export const useOverlayStore = create<OverlayStore>()(
       },
 
       // Import waypoint annotations actions
-      importWaypointAnnotations: (arrows: ConfigWaypointArrow[], overlays: ConfigWaypointOverlay[]) => {
+      importWaypointAnnotations: (arrows: ConfigWaypointArrow[], overlays: ConfigWaypointOverlay[], clearExisting: boolean = false) => {
         const { imageWidth, imageHeight } = get();
         
         // Skip if image dimensions not set
@@ -1280,9 +1280,26 @@ export const useOverlayStore = create<OverlayStore>()(
         });
 
         // Add all new annotations to the store
-        set((state) => ({
-          annotations: [...state.annotations, ...newAnnotations]
-        }));
+        // If clearExisting is true, filter out old imported annotations in the same operation
+        set((state) => {
+          const existingAnnotations = clearExisting 
+            ? state.annotations.filter(a => !a.metadata?.isImported)
+            : state.annotations;
+          
+          const newHiddenLayers = clearExisting
+            ? new Set(
+                [...state.hiddenLayers].filter(id => {
+                  const annotation = state.annotations.find(a => a.id === id);
+                  return annotation && !annotation.metadata?.isImported;
+                })
+              )
+            : state.hiddenLayers;
+          
+          return {
+            annotations: [...existingAnnotations, ...newAnnotations],
+            hiddenLayers: newHiddenLayers
+          };
+        });
       },
 
       clearImportedAnnotations: () => {

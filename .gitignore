@@ -9,3 +9,4 @@ dist
 
 .*.swp
 .DS_Store
+.pnpm-store
