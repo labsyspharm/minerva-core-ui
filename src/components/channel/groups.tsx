@@ -68,8 +68,17 @@ const GroupRow = (props) => {
     }
   }
 
-  const wrapGroupProps = { color, outline };
+  const ref = React.useRef(null);
+  const wrapGroupProps = { color, outline, ref };
   const { updateGroup } = props;
+
+  React.useEffect(() => {
+    if (active && ref.current !== null) {
+      window.requestAnimationFrame(() => {
+        ref.current.scrollIntoView({behavior: "smooth", block: "nearest"});
+      });
+    }
+  }, [active]);
 
   const setInput = (t) => {
     props.updateGroup({ ...group, name: t }, { g: group.g });
