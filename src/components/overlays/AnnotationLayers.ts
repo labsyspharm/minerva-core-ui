@@ -124,15 +124,18 @@ export function createAllAnnotationLayers(
         // Add label text if present
         // @ts-ignore
         if (annotation.text) {
-          const length = Math.sqrt(dx * dx + dy * dy);
-          const dirX = length > 0 ? dx / length : 0;
-          const dirY = length > 0 ? dy / length : 1;
+          // Calculate direction from tip to tail (opposite of arrow direction)
+          const labelDx = startX - endX;
+          const labelDy = startY - endY;
+          const length = Math.sqrt(labelDx * labelDx + labelDy * labelDy);
+          const dirX = length > 0 ? labelDx / length : 0;
+          const dirY = length > 0 ? labelDy / length : 1;
 
           const pixelOffsetMagnitude = ARROW_ICON_SIZE / 2 + 12;
           const pixelOffsetX = dirX * pixelOffsetMagnitude;
           const pixelOffsetY = dirY * pixelOffsetMagnitude;
 
-          const textAnchor: 'start' | 'end' = dx > 0 ? 'start' : 'end';
+          const textAnchor: 'start' | 'end' = labelDx > 0 ? 'start' : 'end';
           const textColor = annotation.style.lineColor || [255, 255, 255, 255] as ColorRGBA;
 
           labelData.push({
