@@ -223,20 +223,28 @@ const VivView = (props: Props) => {
     );
 
     if (newViewState) {
-      const viewStateWithTransition = {
-        ...newViewState,
-        transitionDuration: 1000, // 1 second transition
-        transitionInterpolator: new LinearInterpolator(['target', 'zoom']),
-        transitionEasing: (x: number) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x) // ease out exponential https://easings.net/#easeOutExpo
-      };
+      // Cancel any ongoing transition
+      setViewState((currentViewState) => ({
+        ...currentViewState,
+        transitionDuration: 0
+      } as OrthographicViewState));
 
-      setViewState(viewStateWithTransition as OrthographicViewState);
-      setViewportZoom(newViewState.zoom);
+      // Start the new transition
+      setTimeout(() => {
+        const viewStateWithTransition = {
+          ...newViewState,
+          transitionDuration: 1000,
+          transitionInterpolator: new LinearInterpolator(['target', 'zoom']),
+          transitionEasing: (x: number) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x)
+        };
+
+        setViewState(viewStateWithTransition as OrthographicViewState);
+        setViewportZoom(newViewState.zoom);
+      }, 0);
+
+      clearTargetWaypointViewState();
     }
-
-    // Clear the target after applying
-    clearTargetWaypointViewState();
-  }, [targetWaypointPan, targetWaypointZoom, imageShape.x, imageShape.y, viewportSize.width, clearTargetWaypointViewState, setViewportZoom]);
+  }, [targetWaypointPan, targetWaypointZoom, imageShape.x, imageShape.y, viewportSize.width, setViewportZoom, clearTargetWaypointViewState]);
 
   // Memoize main props to prevent unnecessary layer recreation
   const omeTiffPropsList = useMemo(() => {

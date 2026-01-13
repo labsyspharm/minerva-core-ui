@@ -235,7 +235,6 @@ const Presentation = (props: Props) => {
     }
   }
 
-  // Update view state based on waypoint's Pan/Zoom properties
   const updateViewState = (storyIndex: number) => {
     const story = stories[storyIndex];
     if (story) {
@@ -356,7 +355,7 @@ const Presentation = (props: Props) => {
               e.preventDefault(); 
               storyAt(i);
             };
-            return <li onMouseDown={goToStory}>{wp.Properties.Name}</li>;
+            return <li key={i} onMouseDown={goToStory}>{wp.Properties.Name}</li>;
           })
         }</ol>
       </TocWrapper>
