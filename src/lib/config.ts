@@ -478,9 +478,9 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
       }, colors);
     }, [
       ...list_colors("sRGB"), {
-        ID: "sRGB#ffffff",
+        ID: "sRGB#cc00ff",
         Properties: {
-          R: 255, G: 255, B: 255,
+          R: 204, G: 0, B: 255,
           Space: "sRGB",
           LowerRange: 0,
           UpperRange: 255
@@ -595,11 +595,13 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
     ( SourceChannels[0].Properties.Samples === 3 ) &&
     ( SourceChannels[0].Associations.SourceDataType.ID === "Uint8" )
   ) {
+    const groupName = "Hematoxylin & Eosin";
+    const channelName = "H&E";
     const Groups = [{
       UUID: crypto.randomUUID(),
       State: { Expanded: true },
       Properties: {
-        Name: "Histology"
+        Name: groupName
       }
     }]
     const GroupChannels = SourceChannels.map(
@@ -614,14 +616,14 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
           },
           Associations: {
             SourceChannel: onlyUUID(channel),
-            Color: asID("sRGB#ffffff"),
+            Color: asID("sRGB#cc00ff"),
             Group: asUUID(group_uuid)
           }
         }
       }
     )
     if (SourceChannels.length === 1) {
-      SourceChannels[0].Properties.Name = "Brightfield";
+      SourceChannels[0].Properties.Name = channelName;
     }
     return {
       SourceChannels,

@@ -45,26 +45,12 @@ const WrapColumns = styled.div`
   gap: 0.25em;
 `;
 
-const splitGroups = (groups) => {
-  return groups.reduce(
-    (out, group) => {
-      const { channels } = group;
-      if (channels.length <= 1) {
-        return { ...out, solo: out.solo.concat([group]) };
-      }
-      return { ...out, poly: out.poly.concat([group]) };
-    },
-    { poly: [], solo: [] }
-  );
-};
-
 const Content = (props) => {
   const { children, groups, stories } = props;
   const { pushGroup } = props;
   const { hash, setHash } = props;
   const { editable } = props;
 
-  const { poly, solo } = splitGroups(groups);
   const total = groups.length;
   const groupProps = { ...props, total, editable, hash, setHash, stories };
 
@@ -90,8 +76,8 @@ const Content = (props) => {
     return <Editor {...{ ...props, editSwitch }} />;
   };
 
-  const polyGroups =
-    poly.length || props.editable ? (
+  const allGroups =
+    groups.length || props.editable ? (
       <>
         <Header>
           <WrapColumns>
@@ -99,20 +85,7 @@ const Content = (props) => {
             <span>Channel Groups:</span>
           </WrapColumns>
         </Header>
-        <Groups {...{ ...groupProps, groups: poly }} />
-      </>
-    ) : null;
-
-  const soloGroups =
-    solo.length || props.editable ? (
-      <>
-        <Header>
-          <WrapColumns>
-            {extraUI(1)}
-            <span>Channels:</span>
-          </WrapColumns>
-        </Header>
-        <Groups {...{ ...groupProps, groups: solo }} />
+        <Groups {...{ ...groupProps, groups }} />
       </>
     ) : null;
 
@@ -122,8 +95,7 @@ const Content = (props) => {
         {children}
       </WrapNav> 
       <WrapCore>
-        {polyGroups}
-        {soloGroups}
+        {allGroups}
       </WrapCore>
     </WrapContent> 
   );

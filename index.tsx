@@ -25,7 +25,7 @@ const configWaypoints = [
                 0.5
             ],
             "Zoom": 0.518359375,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [],
         "Overlays": []
@@ -43,7 +43,7 @@ const configWaypoints = [
                 0.5
             ],
             "Zoom": 0.518359375,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [],
         "Overlays": []
@@ -61,7 +61,7 @@ const configWaypoints = [
                 0.5
             ],
             "Zoom": 0.518359375,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [
             {
@@ -387,7 +387,7 @@ const configWaypoints = [
                 0.5
             ],
             "Zoom": 0.518359375,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [
             {
@@ -469,7 +469,7 @@ const configWaypoints = [
                 0.35257607017735
             ],
             "Zoom": 1.85737536,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [
             {
@@ -582,7 +582,7 @@ const configWaypoints = [
                 0.900233576549723
             ],
             "Zoom": 3.20954462208,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [
             {
@@ -653,7 +653,7 @@ const configWaypoints = [
                 0.883446929780717
             ],
             "Zoom": 3.851453546496,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [
             {
@@ -724,7 +724,7 @@ const configWaypoints = [
                 0.624786478173739
             ],
             "Zoom": 2.228850432,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [
             {
@@ -804,7 +804,7 @@ const configWaypoints = [
                 0.516461979517963
             ],
             "Zoom": 6.65531172834508,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [
             {
@@ -875,7 +875,7 @@ const configWaypoints = [
                 0.675930909892408
             ],
             "Zoom": 3.0956256,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [
             {
@@ -964,7 +964,7 @@ const configWaypoints = [
                 0.521758434263343
             ],
             "Zoom": 3.851453546496,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [
             {
@@ -1285,7 +1285,7 @@ const configWaypoints = [
                 0.506602504369754
             ],
             "Zoom": 4.6217442557952,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [
             {
@@ -1427,7 +1427,7 @@ const configWaypoints = [
                 0.472953356472153
             ],
             "Zoom": 5.54609310695424,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [
             {
@@ -1533,7 +1533,7 @@ const configWaypoints = [
                 0.409558554502176
             ],
             "Zoom": 5.54609310695424,
-            "Group": "Histology"
+            "Group": "Hematoxylin & Eosin"
         },
         "Arrows": [
             {
@@ -1645,7 +1645,7 @@ const exhibit_config = {
                 "8233CC",
                 "FF8080"
             ],
-            "Name": "Histology",
+            "Name": "Hematoxylin & Eosin",
             "Path": "Histology_40__HE-r--41__HE-g--42__HE-b",
             "Highs": [
                 65600,
