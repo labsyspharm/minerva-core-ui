@@ -20,13 +20,14 @@ const WrapBox = styled.div`
   grid-template-columns: auto 1fr;
   justify-items: left;
   display: grid;
-  gap: 0.25em;
+  gap: 0.5em;
 `;
 
 const Box = styled.div`
   background-color: #${({ color }) => color};
   height: 1em;
   width: 1em;
+  margin-top: 2px;
 `;
 
 const defaultChannels = [
@@ -104,7 +105,10 @@ const Legend = (props) => {
   return (
     <div>
       <RightAlign>{extraUI}</RightAlign>
-      <WrapRows>{rows}</WrapRows>
+      <h2 className="h6">Channels</h2>
+      <WrapRows>
+        {rows}
+      </WrapRows>
     </div>
   );
 };
