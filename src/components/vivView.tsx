@@ -170,9 +170,10 @@ const VivView = (props: Props) => {
       zoom: -n_levels,
       target: [imageShape.x / 2, imageShape.y / 2, 0]
     } as OrthographicViewState;
-  }, [mainSettingsList, imageShape]);
+  }, [firstLoader.data, imageShape]);
 
   const [viewState, setViewState] = useState<OrthographicViewState>(initialViewState);
+  const hasInitialized = useRef(false);
 
   // Get setViewportZoom and setImageDimensions from overlay store
   const setViewportZoom = useOverlayStore(state => state.setViewportZoom);
@@ -183,23 +184,24 @@ const VivView = (props: Props) => {
   const targetWaypointZoom = useOverlayStore(state => state.targetWaypointZoom);
   const clearTargetWaypointViewState = useOverlayStore(state => state.clearTargetWaypointViewState);
 
-  // Update viewState when initialViewState changes (e.g., when loader changes)
+  // Update viewState only on initial mount (not when loader changes)
   useEffect(() => {
-    if (firstLoader.data !== null) {
+    if (firstLoader.data !== null && !hasInitialized.current) {
       setViewState(initialViewState);
       // Set initial viewport zoom for line width calculations
       if (typeof initialViewState.zoom === 'number') {
         setViewportZoom(initialViewState.zoom);
       }
+      hasInitialized.current = true;
     }
-  }, [initialViewState, firstLoader, setViewportZoom]);
+  }, [initialViewState, firstLoader.data]);
 
   // Set image dimensions in the store when imageShape is available
   useEffect(() => {
     if (imageShape.x > 0 && imageShape.y > 0) {
       setImageDimensions(imageShape.x, imageShape.y);
     }
-  }, [imageShape, setImageDimensions]);
+  }, [imageShape]);
 
   // Apply waypoint view state when target is set (from waypoint selection)
   useEffect(() => {
@@ -244,7 +246,7 @@ const VivView = (props: Props) => {
 
       clearTargetWaypointViewState();
     }
-  }, [targetWaypointPan, targetWaypointZoom, imageShape.x, imageShape.y, viewportSize.width, setViewportZoom, clearTargetWaypointViewState]);
+  }, [targetWaypointPan, targetWaypointZoom, imageShape.x, imageShape.y, viewportSize.width]);
 
   // Memoize main props to prevent unnecessary layer recreation
   const omeTiffPropsList = useMemo(() => {
@@ -283,7 +285,8 @@ const VivView = (props: Props) => {
         const rgbImage = (
           modality === "Brightfield"
         )
-        const imageID = crypto.randomUUID();
+        // Use deterministic ID based on series to prevent layer recreation on settings change
+        const imageID = `dicom-${series}-${i}`;
         return createTileLayers({
           pyramids, dicomSource,
           settings: mainSettingsList[i],
@@ -397,7 +400,7 @@ const VivView = (props: Props) => {
     setViewState(nextViewState);
     // Update viewport zoom in store for line width scaling
     setViewportZoom(nextViewState.zoom);
-  }, [isDragging, activeTool, setViewportZoom]);
+  }, [isDragging, activeTool]);
 
   if (mainSettingsList.length === 0) {
     return null;

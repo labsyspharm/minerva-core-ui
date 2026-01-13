@@ -337,7 +337,7 @@ const Index = (props: Props) => {
       // doesn't have waypoints within stories. Each ConfigWaypoint represents a story.
       setWaypoints([]);
     }
-  }, [props.config.ItemRegistry.Stories, setStories, setWaypoints]);
+  }, [props.config.ItemRegistry.Stories]);
 
   // Initialize to first active story index
   useEffect(() => {

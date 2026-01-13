@@ -79,7 +79,7 @@ const Stories = (props: Props) => {
                 importWaypointAnnotations(arrows, overlays);
             }
         }
-    }, [stories, activeStoryIndex, imageWidth, imageHeight, importWaypointAnnotations, clearImportedAnnotations]);
+    }, [stories, activeStoryIndex, imageWidth, imageHeight]);
 
     // Convert stories to ListItem format with inline markdown editor and ROI panel
 const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((story, index) => {
