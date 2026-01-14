@@ -10,6 +10,7 @@ import type { Props as ChannelProps } from "./channel";
 type MainProps = ChannelProps & {
   ioState: null | string;
   stopExport: () => void;
+  retrievingMetadata: boolean;
   presenting: boolean;
   handle: Handle.Dir;
   in_f: string;
@@ -31,7 +32,6 @@ const Main = (props: MainProps) => {
     out = (
       <Presentation {...props}>
         <Channel {...props}/>
-        {props.children}
       </Presentation>
     )
   }

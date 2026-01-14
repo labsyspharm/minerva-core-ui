@@ -2,6 +2,7 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { Overlays } from "./overlays";
 import { Stories } from "./stories";
+import styled from 'styled-components';
 import { ImageView, toImageProps } from "./imageView";
 import { Main } from "./content";
 import { useOverlayStore } from "../lib/stores";
@@ -20,10 +21,20 @@ type Props = HashContext & {
   handle: Handle.Dir;
   config: ConfigProps;
   loaderOmeTiff: Loader;
+  demo_dicom_web?: boolean;
   dicomIndexList: DicomIndex[];
   controlPanelElement: string;
   setExhibit: (e: Exhibit) => void;
 };
+
+const Wrapper = styled.div`
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr; 
+  grid-template-rows: 1fr; 
+  justify-items: center;
+  align-items: center;
+`;
 
 const onLoaded = (setter) => {
   return (el) => (el ? setter(el) : null);
@@ -276,6 +287,11 @@ const Index = (props: Props) => {
     pushChannel,
     popChannel,
   };
+  const retrievingMetadata = (
+    props.dicomIndexList.length === 0
+  ) && (
+    props.demo_dicom_web
+  );
   const mainProps = {
     ...channelProps,
     in_f,
@@ -284,6 +300,7 @@ const Index = (props: Props) => {
     presenting,
     hiddenWaypoint,
     setHiddenWaypoint,
+    retrievingMetadata,
     onZoomInEl,
     onZoomOutEl,
     startExport,
@@ -346,33 +363,25 @@ const Index = (props: Props) => {
       setActiveStory(0);
     }
   }, [_stories])
-  
+
+  const retrieving_status = (
+     <Wrapper>Retrieving DICOM metadata...</Wrapper>
+  )
   return (
     <Main {...mainProps}>
-      <ImageView 
-        {...imageProps} 
-        overlayLayers={overlayLayers}
-        activeTool={activeTool}
-        isDragging={dragState.isDragging}
-        hoveredAnnotationId={hoverState.hoveredAnnotationId}
-        onOverlayInteraction={handleOverlayInteraction}
-      >
-      </ImageView>
-      {/* <Overlays 
-        hash={mainProps.hash} 
-        groups={mainProps.groups} 
-        setHash={mainProps.setHash}
-        onLayerCreate={handleLayerCreate}
-        currentInteraction={currentInteraction}
-      /> */}
-{/*
-      
-      <Stories 
-        hash={mainProps.hash}
-        viewOnly={presenting}
-        setHash={mainProps.setHash}
-      />
-*/}
+      {
+        retrievingMetadata ? retrieving_status : (
+          <ImageView 
+            {...imageProps} 
+            overlayLayers={overlayLayers}
+            activeTool={activeTool}
+            isDragging={dragState.isDragging}
+            hoveredAnnotationId={hoverState.hoveredAnnotationId}
+            onOverlayInteraction={handleOverlayInteraction}
+          >
+          </ImageView>
+        )
+      }
     </Main>
   );
 };

@@ -277,6 +277,8 @@ const Content = (props: Props) => {
   }), [config.ID])
   const noLoader = loaderOmeTiff === null && (
     dicomIndexList.length === 0
+  ) && !(
+    props.demo_dicom_web
   );
   // Actual image viewer
   const imager = noLoader ? '' : (
@@ -285,7 +287,8 @@ const Content = (props: Props) => {
         dicomIndexList,
         config, controlPanelElement,
         exhibit, setExhibit, loaderOmeTiff,
-        in_f: fileName, handle, hash, setHash 
+        in_f: fileName, handle, hash, setHash,
+        demo_dicom_web: props.demo_dicom_web
       }} />
     </Full>
   )
@@ -307,9 +310,6 @@ const Content = (props: Props) => {
         ]])
       })()
     }, []);
-    if ( dicomIndexList.length === 0 ) {
-      return <Wrapper>Retrieving DICOM metadata...</Wrapper>
-    }
   }
   const onSubmit: FormEventHandler = (event) => {
     const form = event.currentTarget as HTMLFormElement;

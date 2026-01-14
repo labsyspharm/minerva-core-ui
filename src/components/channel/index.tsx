@@ -25,6 +25,7 @@ export type Props = HashContext & ImageProps & {
   hiddenChannel: boolean;
   startExport: () => void;
   controlPanelElement: string;
+  retrievingMetadata: boolean;
   setHiddenChannel: (v: boolean) => void;
 };
 
@@ -59,7 +60,7 @@ const Channel = (props: Props) => {
   const togglePanel = () => setHide(!hide);
 
   const { Groups } = props.config.ItemRegistry;
-  const hidden = false;
+  const hidden = props.retrievingMetadata;
   const {
     activeChannelGroupId,
   } = useOverlayStore();
