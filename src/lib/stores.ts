@@ -1173,14 +1173,17 @@ export const useOverlayStore = create<OverlayStore>()(
           return;
         }
         
+        // Use max dimension for uniform coordinate scaling (1.0 = max dimension)
+        const maxDimension = Math.max(imageWidth, imageHeight);
+        
         const newAnnotations: Annotation[] = [];
 
-        // Convert arrows to line annotations (coordinates are normalized 0-1, convert to image pixels)
+        // Convert arrows to line annotations (coordinates are normalized 0-1 relative to max dimension, convert to image pixels)
         arrows.forEach((arrow, index) => {
-          // Convert normalized coordinates to image pixels
+          // Convert normalized coordinates to image pixels (relative to max dimension)
           const [normX, normY] = arrow.Point;
-          const x = normX * imageWidth;
-          const y = normY * imageHeight;
+          const x = normX * maxDimension;
+          const y = normY * maxDimension;
 
           if (arrow.HideArrow) {
             // Create text-only annotation
@@ -1248,13 +1251,13 @@ export const useOverlayStore = create<OverlayStore>()(
           }
         });
 
-        // Convert overlays (rectangles) to annotations (coordinates are normalized 0-1, convert to image pixels)
+        // Convert overlays (rectangles) to annotations (coordinates are normalized 0-1 relative to max dimension, convert to image pixels)
         overlays.forEach((overlay, index) => {
-          // Convert normalized coordinates to image pixels
-          const x = overlay.x * imageWidth;
-          const y = overlay.y * imageHeight;
-          const width = overlay.width * imageWidth;
-          const height = overlay.height * imageHeight;
+          // Convert normalized coordinates to image pixels (relative to max dimension)
+          const x = overlay.x * maxDimension;
+          const y = overlay.y * maxDimension;
+          const width = overlay.width * maxDimension;
+          const height = overlay.height * maxDimension;
           
           const polygon = rectangleToPolygon(
             [x, y],
