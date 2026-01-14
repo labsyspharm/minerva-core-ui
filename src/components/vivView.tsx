@@ -249,11 +249,16 @@ const VivView = (props: Props) => {
   }, [targetWaypointPan, targetWaypointZoom, imageShape.x, imageShape.y, viewportSize.width]);
 
   // Memoize main props to prevent unnecessary layer recreation
+  // Include contrast limits in ID to force layer recreation when they change
+  // This prevents flash when switching channel groups
   const omeTiffPropsList = useMemo(() => {
     return mainSettingsList.map((mainSettings, i) => {
+      const contrastId = mainSettings.contrastLimits 
+        ? mainSettings.contrastLimits.map(([l, u]) => `${l}-${u}`).join('-')
+        : 'default';
       return {
         ...viewportSize,
-        id: `mainLayer-${i}`,
+        id: `mainLayer-${i}-${contrastId}`,
         ...(mainSettings as any),
         loader: mainSettings.loader.data
       }
