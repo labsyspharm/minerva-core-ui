@@ -6,6 +6,11 @@ import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
 import type { DicomIndex } from "../lib/dicom-index";
 import { useOverlayStore } from "../lib/stores";
+import { FullscreenWidget } from '@deck.gl/widgets';
+import { LoadingWidget } from './loadingWidget';
+
+import '@deck.gl/widgets/stylesheet.css';
+
 
 import {
   createTileLayers, loadDicom
@@ -87,7 +92,7 @@ const VivView = (props: Props) => {
   const loaderList = useMemo(() => (
     // Show only ome-tiff if available
     loaderOmeTiff !== null ? (
-      [ loaderOmeTiff ]
+      [loaderOmeTiff]
     ) : (
       dicomIndexList
     )
@@ -128,7 +133,7 @@ const VivView = (props: Props) => {
   // Show only ome-tiff if available
   const mainSettingsList = useMemo(() => (
     loaderOmeTiff !== null ? (
-      [ mainSettingsOmeTiff ]
+      [mainSettingsOmeTiff]
     ) : (
       mainSettingsDicomList
     )
@@ -253,7 +258,7 @@ const VivView = (props: Props) => {
   // This prevents flash when switching channel groups
   const omeTiffPropsList = useMemo(() => {
     return mainSettingsList.map((mainSettings, i) => {
-      const contrastId = mainSettings.contrastLimits 
+      const contrastId = mainSettings.contrastLimits
         ? mainSettings.contrastLimits.map(([l, u]) => `${l}-${u}`).join('-')
         : 'default';
       return {
@@ -300,7 +305,7 @@ const VivView = (props: Props) => {
       })
     },
     [
-      dicomSources, mainSettingsList 
+      dicomSources, mainSettingsList
     ]
   );
   // Memoize image layers
@@ -407,6 +412,16 @@ const VivView = (props: Props) => {
     setViewportZoom(nextViewState.zoom);
   }, [isDragging, activeTool]);
 
+  // LoadingWidget ref for onRedraw callback
+  const loadingWidgetRef = useRef<{ onRedraw: (params: { layers: any[] }) => void }>(null);
+
+  // onAfterRender callback to call LoadingWidget's onRedraw
+  const handleAfterRender = useCallback(() => {
+    if (loadingWidgetRef.current) {
+      loadingWidgetRef.current.onRedraw({ layers: allLayers });
+    }
+  }, [allLayers]);
+
   if (mainSettingsList.length === 0) {
     return null;
   }
@@ -424,8 +439,10 @@ const VivView = (props: Props) => {
         onDrag={dragHandlers.onDrag}
         onDragEnd={dragHandlers.onDragEnd}
         onHover={dragHandlers.onHover}
+        onAfterRender={handleAfterRender}
         views={views}
       />
+      <LoadingWidget ref={loadingWidgetRef} />
     </Main>
   )
 };
