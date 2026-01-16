@@ -356,6 +356,12 @@ export interface OverlayStore {
 
   // Channel group and channel actions
   setActiveChannelGroup: (channelGroupId: string) => void;
+  setChannelVisibilities: (vis: Record<string, boolean>) => void;
+  setGroupChannelLists: (l: Record<string, string[]>) => void;
+  setGroupNames: (l: Record<string, string>) => void;
+  channelVisibilities: Record<string, boolean>
+  groupChannelLists: Record<string, string[]>
+  groupNames: Record<string, string>
 
   finalizeEllipse: () => void; // Convert current drawing to ellipse annotation
   finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
@@ -429,10 +435,14 @@ const overlayInitialState = {
   viewportZoom: 0, // Default zoom level
   stories: [], // New: empty stories array
   activeStoryIndex: null, // New: no active story initially
+  activeChannelGroupId: null, // No channel group initially
   waypoints: [], // New: empty waypoints array
   activeWaypointId: null, // New: no active waypoint initially
   imageWidth: 0,
   imageHeight: 0,
+  channelVisibilities: {},
+  groupChannelLists: {},
+  groupNames: {},
   targetWaypointPan: null, // Target pan from waypoint selection (Minerva 1.5 format)
   targetWaypointZoom: null, // Target zoom from waypoint selection (Minerva 1.5 format)
 };
@@ -1127,8 +1137,18 @@ export const useOverlayStore = create<OverlayStore>()(
           };
         });
       },
+      setGroupNames: (o: Record<string, string>) => {
+        set({ groupNames: o });
+      },
 
-      // Waypoints actions
+      setGroupChannelLists: (o: Record<string, string[]>) => {
+        set({ groupChannelLists: o });
+      },
+
+      setChannelVisibilities: (vis: Record<string, boolean>) => {
+        set({ channelVisibilities: vis });
+      },
+
       setWaypoints: (waypoints: ConfigWaypoint[]) => {
         set({ waypoints, activeWaypointId: null });
       },
@@ -1321,7 +1341,17 @@ export const useOverlayStore = create<OverlayStore>()(
       //
       setActiveChannelGroup: (channelGroupId: string) => {
         console.log('Store: Setting active channel group ID:', channelGroupId);
-        set({ activeChannelGroupId: channelGroupId });
+        set(({ groupChannelLists, groupNames }) => {
+          const name = groupNames[channelGroupId] || '';
+          const channels = groupChannelLists[name] || [];
+          const channelVisibilities = Object.fromEntries(
+            channels.map(name => [name, true])
+          )
+          return {
+            activeChannelGroupId: channelGroupId,
+            channelVisibilities
+          }
+        });
       },
 
       // Waypoint view state actions

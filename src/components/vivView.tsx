@@ -63,10 +63,9 @@ const VivView = (props: Props) => {
   const { loaderOmeTiff, dicomIndexList, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
   const { v, g, s, w } = hash;
   const {
-    activeChannelGroupId
+    activeChannelGroupId, channelVisibilities
   } = useOverlayStore();
   const [viewportSize, setViewportSize] = useState(windowSize);
-  const [channelSettings, setChannelSettings] = useState({});
   const [canvas, setCanvas] = useState(null);
   const rootRef = useRef<HTMLElement | null>(null);
 
@@ -100,7 +99,8 @@ const VivView = (props: Props) => {
     loaderOmeTiff, dicomIndexList
   ]);
   const toSettings = (
-    loader, modality, groups, activeChannelGroupId
+    loader, modality, groups, activeChannelGroupId,
+    channelVisibilities
   ) => {
     // Gets the default settings
     if (loader === null || !groups) {
@@ -109,26 +109,31 @@ const VivView = (props: Props) => {
       );
     }
     return props.viewerConfig.toSettings(
-      activeChannelGroupId, modality, loader, groups
+      activeChannelGroupId, modality, loader, groups,
+      channelVisibilities
     );
   }
   const mainSettingsOmeTiff = useMemo(() => {
     const modality = "Colorimetric";
     return toSettings(
-      loaderOmeTiff, modality, groups, activeChannelGroupId
+      loaderOmeTiff, modality, groups,
+      activeChannelGroupId, channelVisibilities
     )
   }, [
-    loaderOmeTiff, groups, activeChannelGroupId
+    loaderOmeTiff, groups, activeChannelGroupId,
+    channelVisibilities
   ]);
   const mainSettingsDicomList = useMemo(() => {
     return dicomIndexList.map(dicomIndex => {
       const { modality } = dicomIndex;
       return toSettings(
-        dicomIndex.loader, modality, groups, activeChannelGroupId
+        dicomIndex.loader, modality, groups,
+        activeChannelGroupId, channelVisibilities
       );
     });
   }, [
-    dicomIndexList, groups, activeChannelGroupId
+    dicomIndexList, groups, activeChannelGroupId,
+    channelVisibilities
   ]);
   // Show only ome-tiff if available
   const mainSettingsList = useMemo(() => (

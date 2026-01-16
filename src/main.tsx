@@ -87,8 +87,49 @@ const Content = (props: Props) => {
   });
   // Active Group from Store
   const { 
-    setActiveChannelGroup
+    setActiveChannelGroup,
+    setChannelVisibilities,
+    setGroupChannelLists,
+    setGroupNames
   } = useOverlayStore();
+  const updateGroupChannelLists = ({
+    SourceChannels, GroupChannels, Groups
+  }) => {
+    setGroupNames(Object.fromEntries(
+      Groups.map(({ Properties, UUID }) => [
+        UUID, Properties.Name
+      ])
+    ))
+    const groupChannelLists = Object.fromEntries(
+      Groups.map(({ Properties, UUID }) => {
+        return [
+          Properties.Name, GroupChannels.filter(
+            ({ Associations }) => (
+              UUID === Associations.Group.UUID
+            )
+          ).map(
+            ({ Associations }) => {
+              return (
+                (found) => found?.Properties.Name || ''
+              )(SourceChannels.find(
+                ({ UUID }) => (
+                  UUID === Associations.SourceChannel.UUID
+                )
+              ))
+            }
+          )
+        ]
+      })
+    )
+    setGroupChannelLists(groupChannelLists)
+    const groupName = Groups[0].Properties.Name
+    const channelList = groupChannelLists[
+      groupName
+    ] || [];
+    setChannelVisibilities(Object.fromEntries(
+      channelList.map(name => [name, true])
+    ))
+  }
   const resetItems = ItemRegistry => {
     setConfig(config => ({
       ...config, ItemRegistry: {
@@ -137,6 +178,9 @@ const Content = (props: Props) => {
     resetItems({
       SourceChannels, GroupChannels, Groups, Colors
     });
+    updateGroupChannelLists({
+      SourceChannels, GroupChannels, Groups
+    })
     // Asynchronously add distributions
     extractDistributions(loader).then(
       (sourceDistributionMap) => {
@@ -245,6 +289,9 @@ const Content = (props: Props) => {
       GroupChannels,
       Groups, Colors
     });
+    updateGroupChannelLists({
+      SourceChannels, GroupChannels, Groups
+    })
     // TODO: Asynchronously add distributions
     /*
     extractDistributions(loader).then(

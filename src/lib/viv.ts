@@ -63,8 +63,9 @@ type Metadata = {
 
 export type Config = {
   toSettings: (
-    activeChannelGroupId: string | null, 
-    modality: string, l?: Loader, g?: any
+    activeChannelGroupId: string | null,
+    modality: string, l?: Loader, g?: any,
+    channelVisibilities?: Record<string, boolean>
   ) => Settings;
 };
 
@@ -107,7 +108,10 @@ const hexToRGB = (hex: string) => {
 };
 
 const toSettings = (opts) => {
-  return (activeChannelGroupId, modality, loader, groups) => {
+  return (
+    activeChannelGroupId, modality, loader, groups,
+    channelVisibilities
+  ) => {
     const { ItemRegistry } = opts.config;
     const { GroupChannels, SourceChannels } = ItemRegistry;
     const channels = (GroupChannels).filter(
@@ -152,10 +156,18 @@ const toSettings = (opts) => {
             === source_channel.UUID
           )
         );
+        const { Name } = source_channel?.Properties || {};
         const image_id = (
           source_channel.Associations.SourceImage.UUID
         );
-        return image_id === modality;
+        const brightfield = modality === "Brightfield";
+        //if (!channelVisibilities || brightfield ) {
+        if (!channelVisibilities) {
+          return image_id === modality;
+        }
+        return image_id === modality && (
+          (channelVisibilities || {})[Name]
+        );
       }
     );
     const n_channels = shape[c_idx] || 0;

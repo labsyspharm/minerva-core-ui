@@ -3,7 +3,6 @@ import styled from "styled-components";
 import { PushChannel, PopUpdateChannel } from "../editable/channels";
 import { Editor } from "../editable/common";
 import { Status } from "../editable/status";
-import { GithubPicker } from "react-color";
 
 const RightAlign = styled.div`
   justify-items: right;
@@ -17,6 +16,7 @@ const WrapRows = styled.div`
 `;
 
 const WrapBox = styled.div`
+  color: ${({ color }) => color};
   grid-template-columns: auto 1fr;
   justify-items: left;
   display: grid;
@@ -25,6 +25,7 @@ const WrapBox = styled.div`
 
 const Box = styled.div`
   background-color: #${({ color }) => color};
+  outline: ${({ outline }) => outline};
   height: 1em;
   width: 1em;
   margin-top: 2px;
@@ -38,10 +39,10 @@ const defaultChannels = [
 ];
 
 const LegendRow = (props) => {
-  const { channel } = props;
+  const { channel, channelVisibilities } = props;
   const channelName = channel.name;
-  const [picking, setPicking] = React.useState(false);
-  const { idx, name, path, g } = props;
+  const visible = channelVisibilities[channelName];
+  const { idx, name, path, g, onClick } = props;
   const setInput = (t) => {
     props.updateChannel({ ...channel, name: t }, { idx, g });
   };
@@ -59,17 +60,22 @@ const LegendRow = (props) => {
     uuid,
   };
 
-  const pickColor = () => setPicking(true);
-  const picked = `#${props.channel.color}`;
-  const updateColor = ({ hex }) => {
-    props.updateChannel({ ...channel, color: hex.slice(1) }, { idx, g });
-    setPicking(false);
+  const wrapProps = {
+    color: "rgb(238, 238, 238)",
+    onClick
   };
-  const coreUI = picking ? (
-    <GithubPicker color={picked} onChangeComplete={updateColor} />
-  ) : (
-    <WrapBox>
-      <Box {...{ ...props.channel, onClick: pickColor }} />
+  const boxProps = {
+    ...props.channel,
+    outline: "none"
+  }
+  if (!visible) {
+    boxProps.color = "black";
+    wrapProps.color = "rgb(138, 138, 138)";
+    boxProps.outline = "2px solid #cccccc";
+  }
+  const coreUI = (
+    <WrapBox {...wrapProps}>
+      <Box {...boxProps} />
       <Status {...statusProps}>{channelName}</Status>
     </WrapBox>
   );
@@ -84,7 +90,7 @@ const LegendRow = (props) => {
 };
 
 const Legend = (props) => {
-  const { g, pushChannel } = props;
+  const { g, pushChannel, toggleChannel } = props;
   const nextIdx = props.channels.length + 1;
   const newChannel = defaultChannels[nextIdx % defaultChannels.length];
   const onPush = () => {
@@ -99,7 +105,10 @@ const Legend = (props) => {
   const { channels } = props;
   const total = channels.length;
   const rows = channels.map((c, k) => {
-    const rowProps = { ...props, total, channel: c, idx: k };
+    const rowProps = { 
+      ...props, total, channel: c, idx: k,
+      onClick: () => toggleChannel(c)
+    };
     return <LegendRow key={k} {...rowProps} />;
   });
   return (

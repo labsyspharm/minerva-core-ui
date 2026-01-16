@@ -44,6 +44,9 @@ const TextWrap = styled.div`
   > div.core.hide {
     transform: translateX(100%); 
   }
+  .dim {
+    color: #aaa;
+  }
 `;
 
 const TextOther = styled.div`
@@ -63,6 +66,8 @@ const Channel = (props: Props) => {
   const hidden = props.retrievingMetadata;
   const {
     activeChannelGroupId,
+    setChannelVisibilities,
+    channelVisibilities
   } = useOverlayStore();
   const group_name = Groups.find(
     ({ UUID }) => UUID === activeChannelGroupId
@@ -74,7 +79,20 @@ const Channel = (props: Props) => {
     g: 0,
     channels: []
   };
-  const legendProps = { ...props, ...group };
+  const toggleChannel = ({ name }) => {
+    setChannelVisibilities(
+      Object.fromEntries(
+        Object.entries(channelVisibilities).map(
+          ([k,v]) => [k, k === name ? !v : v]
+        )
+      )
+    )
+  }
+  const legendProps = {
+    ...props, ...group,
+    channelVisibilities,
+    toggleChannel
+  };
   const hideClass=[
     "show core", "hide core"
   ][
