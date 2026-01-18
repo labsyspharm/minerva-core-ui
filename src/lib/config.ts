@@ -208,126 +208,17 @@ interface ExtractChannels {
   }
 }
 
-const GROUP_CHANNELS_CRC01 = {
-    "Histology_40__HE-r--41__HE-g--42__HE-b": [
-        40,
-        41,
-        42
-    ],
-    "Tissue-Structure_0__DNA1--14__PanCK--15__ASMA--35__CD31--18__CD45": [
-        0,
-        14,
-        15,
-        35,
-        18
-    ],
-    "Immune-Populations_0__DNA1--18__CD45--23__CD8a--17__CD4--21__CD20--22__CD68--25__CD163": [
-        0,
-        18,
-        23,
-        17,
-        21,
-        22
-    ],
-    "Lymphocytes_0__DNA1--23__CD8a--17__CD4--21__CD20--26__FOXP3": [
-        0,
-        23,
-        17,
-        21,
-        26
-    ],
-    "Macrophages_0__DNA1--22__CD68--25__CD163": [
-        0,
-        22,
-        25
-    ],
-    "Proliferation_0__DNA1--37__PCNA--14__PanCK--18__CD45--13__Ki67": [
-        0,
-        37,
-        14,
-        18,
-        13
-    ],
-    "PD1-Immune-Checkpoint_0__DNA1--14__PanCK--27__PDL1--19__PD1": [
-        0,
-        14,
-        27,
-        19
-    ],
-    "Helper-and-Regulatory-T-Cells_0__DNA1--17__CD4--26__FOXP3": [
-        0,
-        17,
-        26
-    ],
-    "CD8-Cytotoxic-T-Cells_0__DNA1--23__CD8a--19__PD1": [
-        0,
-        23,
-        19
-    ],
-    "FOXP3-CD8-T-Cells_0__DNA1--23__CD8a--26__FOXP3": [
-        0,
-        23,
-        26
-    ],
-    "NaK-ATPase_0__DNA1--14__PanCK--10__Na-K-ATPase": [
-        0,
-        14,
-        10
-    ],
-    "E-Cadherin_0__DNA1--14__PanCK--29__Ecadherin": [
-        0,
-        14,
-        29
-    ],
-    "Stroma_0__DNA1--15__ASMA--34__Desmin--39__Collagen--30__Vimentin": [
-        0,
-        15,
-        34,
-        39,
-        30
-    ],
-    "PDL1-Positive-Immune-Cells_0__DNA1--17__CD4--22__CD68--25__CD163--27__PDL1": [
-        0,
-        17,
-        22,
-        25,
-        27
-    ],
-    "PDL1-CD8-Interaction_0__DNA1--27__PDL1--23__CD8a--19__PD1": [
-        0,
-        27,
-        23,
-        19
-    ],
-    "Tumor-Budding-Epithelial_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA": [
-        0,
-        14,
-        29,
-        37
-    ],
-    "Tumor-Budding-Immune-Modulation_0__DNA1--14__PanCK--27__PDL1--26__FOXP3--23__CD8a--19__PD1--22__CD68": [
-        0,
-        14,
-        27,
-        26,
-        23,
-        19
-    ],
-    "Nuclear-Lamina_0__DNA1--33__LaminABC": [
-        0,
-        33
-    ],
-    "DAPI-Cycle-Correlation_0__DNA1--36__DNA10": [
-        0,
-        36
-    ],
-    "Transitions_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA": [
-        0,
-        14,
-        29,
-        37
-    ]
-}; 
+const GROUP_CHANNELS_CRC02 = {
+    "Cycle_1": [0, 1, 2, 3],
+    "Cycle_2": [4, 5, 6, 7],
+    "Cycle_3": [8, 9, 10, 11],
+    "Cycle_4": [12, 13, 14, 15],
+    "Cycle_5": [16, 17, 18, 19],
+    "Cycle_6": [20, 21, 22, 23],
+    "Cycle_7": [24, 25, 26, 27],
+    "Cycle_8": [28, 29, 30, 31],
+    "Cycle_9": [32, 33, 34, 35]
+};
 
 const asID = (k: string): ID => ({ ID: k });
 const asUUID = (k: string): UUID => ({ UUID: k });
@@ -489,12 +380,12 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
     ])
   )]
   // Match hard-coded groups to existing channels
-  const hardcoded_crc01 = groups.reduce(
+  const hardcoded_crc02 = groups.reduce(
     ({ name_map, Groups, GroupChannels }, g) => {
-      if (!(g.Path in GROUP_CHANNELS_CRC01)) {
+      if (!(g.Path in GROUP_CHANNELS_CRC02)) {
         return { name_map, Groups, GroupChannels };
       }
-      const channel_names = GROUP_CHANNELS_CRC01[g.Path].map(
+      const channel_names = GROUP_CHANNELS_CRC02[g.Path].map(
         n => `Channel ${n}`
       );
       const valid_names = SourceChannels.map(
@@ -568,7 +459,7 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
       name_map: {} as Record<string, string>
     }
   );
-  const name_map = hardcoded_crc01.name_map;
+  const name_map = hardcoded_crc02.name_map;
   const reverse_name_map = Object.fromEntries(
     Object.entries(name_map).map(([k,v]) => [v,k])
   )
@@ -582,7 +473,7 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
         }
       }
     );
-    const { GroupChannels, Groups } = hardcoded_crc01;
+    const { GroupChannels, Groups } = hardcoded_crc02;
     return {
       SourceChannels,
       GroupChannels,

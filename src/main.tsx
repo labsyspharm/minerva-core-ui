@@ -343,15 +343,9 @@ const Content = (props: Props) => {
   if (props.demo_dicom_web) {
     useEffect(() => {
       (async () => {
-        // H&E Demo Image and
         // CyCIF Demo Image
         await onStart([[
-          "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.2507374895.494638264.1767738966319.4.0",
-          "Brightfield",
-          "DICOM-WEB"
-        ],
-        [
-          "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.331207435.2054329796.1752677896971.4.0",
+          "https://proxy.imaging.datacommons.cancer.gov/current/viewer-only-no-downloads-see-tinyurl-dot-com-slash-3j3d9jyp/dicomWeb/studies/2.25.93749216439228361118017742627453453196/series/1.3.6.1.4.1.5962.99.1.2344794501.795090168.1655907236229.4.0",
           "Colorimetric",
           "DICOM-WEB"
         ]])
