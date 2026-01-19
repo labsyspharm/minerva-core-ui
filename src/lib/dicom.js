@@ -690,7 +690,7 @@ function createTileLayers(meta) {
     visible,
     loader: dicomSource.data,
     // https://deck.gl/docs/api-reference/geo-layers/tile-layer#refinementstrategy
-    refinementStrategy: "no-overlap",
+    refinementStrategy: "best-available",
     // Include contrast limits in ID to force layer recreation when they change
     // This prevents flash when switching channel groups
     id: `${imageID}-${contrastLimits.map(([l, u]) => `${l}-${u}`).join('-')}`,
