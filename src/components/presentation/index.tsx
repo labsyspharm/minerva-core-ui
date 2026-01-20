@@ -394,7 +394,11 @@ const Presentation = (props: Props) => {
     const colors = new Map();
     
     channels.forEach(channel => {
-      content = content.split(channel.name).join(`**${channel.name}**`);
+      // Escape special regex characters in channel name
+      const escapedName = channel.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Use word boundaries to match whole words only
+      const regex = new RegExp(`\\b${escapedName}\\b`, 'g');
+      content = content.replace(regex, `**${channel.name}**`);
       colors.set(channel.name, channel.color);
     });
     
