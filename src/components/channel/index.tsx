@@ -31,13 +31,12 @@ export type Props = HashContext & ImageProps & {
 
 const TextWrap = styled.div`
   height: 100%;
-  display: grid;
-  grid-template-rows: 100%;
-  grid-template-columns: 1fr 220px;
   > div.core {
     color: #eee;
-    grid-row: 1;
-    grid-column: 2;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 220px;
     margin-bottom: 4px;
     transition: transform 0.5s ease 0s;
   }
@@ -50,8 +49,6 @@ const TextWrap = styled.div`
 `;
 
 const TextOther = styled.div`
-  grid-row: 1;
-  grid-column: 1 / -1;
   background-color: blue;
 `;
 
