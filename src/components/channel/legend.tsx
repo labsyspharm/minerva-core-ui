@@ -21,6 +21,10 @@ const WrapBox = styled.div`
   justify-items: left;
   display: grid;
   gap: 0.5em;
+  :hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
 `;
 
 const Box = styled.div`
