@@ -25,7 +25,7 @@ export interface WaypointViewState {
  * - zoom: number - log2 scale (0 = 1:1 pixel ratio, negative = zoomed out)
  * 
  * Conversion formulas:
- * - Pan: targetX = panX * imageWidth, targetY = panY * imageHeight
+ * - Pan: targetX = panX * maxDimension, targetY = panY * maxDimension (where maxDimension = max(imageWidth, imageHeight))
  * - Zoom: deckZoom = Math.log2(viewportZoom * containerWidth / imageWidth)
  */
 const convertWaypointToViewState = (
@@ -45,8 +45,10 @@ const convertWaypointToViewState = (
   const panY = pan?.[1] ?? 0.5;
 
   // Convert pan from normalized viewport coords (0-1) to image pixels
-  const targetX = panX * imageWidth;
-  const targetY = panY * imageHeight;
+  // Coordinates are normalized relative to max dimension (same as overlays)
+  const maxDimension = Math.max(imageWidth, imageHeight);
+  const targetX = panX * maxDimension;
+  const targetY = panY * maxDimension;
 
   // Convert zoom from OSD viewport zoom to deck.gl zoom
   // OSD viewport zoom 1 = image fits viewport width
