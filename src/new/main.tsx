@@ -7,20 +7,20 @@ import { toEmptyHash } from "src/lib/hashUtil";
 import { mutableItemRegistry, extractChannels, extractDistributions } from "src/lib/config";
 import { hasFileSystemAccess, toLoader } from "src/lib/filesystem";
 import { isOpts, validate } from "src/lib/validate";
-import { Upload } from "src/components/upload";
+import { Upload } from "src/new/shared/components/Upload";
 import { readConfig } from "src/lib/exhibit";
 import Pool from "src/lib/workers/Pool";
 import { parseRoisFromLoader } from "src/lib/roiParser";
 import { useOverlayStore } from "src/lib/stores";
 import { FileHandler } from "src/new/shared/components/FileHandler";
 import { ImageViewer, toImageProps } from "src/new/viewer/ImageViewer";
-import { Main as ViewerMain } from "src/components/content";
-import { Channel } from "src/components/channel";
+import { PlaybackRouter } from "src/new/playback/PlaybackRouter";
+import { ChannelPanel } from "src/new/shared/components/ChannelPanel/ChannelPanel";
 import { Presentation } from "src/new/playback/Presentation";
 
 import type { DicomIndex, DicomLoader } from "src/lib/dicom-index";
-import type { ValidObj } from "src/components/upload";
-import type { ImageProps } from "src/components/channel";
+import type { ValidObj } from "src/new/shared/components/Upload";
+import type { ImageProps } from "src/new/shared/components/ChannelPanel/ChannelPanel";
 import type { FormEventHandler } from "react";
 import type { ObjAny, KV } from "src/lib/validate";
 import type { ItemRegistryProps } from "src/lib/config";
@@ -716,7 +716,7 @@ const Content = (props: Props) => {
         // Actual image viewer
         const imager = noLoader ? '' : (
           <Full>
-            <ViewerMain {...mainPropsWithHandle}>
+            <PlaybackRouter {...mainPropsWithHandle}>
               {
                 retrievingMetadata ? retrieving_status : (
                   <ImageViewer 
@@ -729,7 +729,7 @@ const Content = (props: Props) => {
                   />
                 )
               }
-            </ViewerMain>
+            </PlaybackRouter>
           </Full>
         );
         
