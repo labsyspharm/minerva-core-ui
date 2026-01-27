@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Icon, RefIcon, WrapIcons } from "src/components/shared/common/Icon";
+import { Icon, RefIcon, WrapIcons } from "@/components/shared/common/Icon";
 import {
   faChevronLeft as faHide,
   faChevronRight as faShow,

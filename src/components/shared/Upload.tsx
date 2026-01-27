@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import styled from 'styled-components';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
-import { listDir } from "src/lib/filesystem";
+import { listDir } from "@/lib/filesystem";
 
-import type { Entry } from "src/lib/filesystem";
+import type { Entry } from "@/lib/filesystem";
 import type { FormEventHandler } from "react";
 type Choices = {
   dir: string[],

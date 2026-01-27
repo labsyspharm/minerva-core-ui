@@ -1,6 +1,6 @@
 import * as React from "react";
 import styled from "styled-components";
-import { useOverlayStore } from "src/lib/stores";
+import { useOverlayStore } from "@/lib/stores";
 
 const WrapRows = styled.div`
   grid-auto-rows: auto;

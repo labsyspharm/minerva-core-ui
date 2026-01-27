@@ -2,17 +2,17 @@ import * as React from "react";
 import { useState } from "react";
 import { ChannelLegend } from "./ChannelLegend";
 import { ChannelGroups } from "./ChannelGroups";
-import { useOverlayStore } from "src/lib/stores";
+import { useOverlayStore } from "@/lib/stores";
 import styled from "styled-components";
-import { Push as PushGroup } from "src/components/authoring/tools/ActionButtons";
-import { EditModeSwitcher } from "src/components/authoring/tools/EditModeSwitcher";
+import { Push as PushGroup } from "@/components/authoring/tools/ActionButtons";
+import { EditModeSwitcher } from "@/components/authoring/tools/EditModeSwitcher";
 import { defaultChannels } from "./ChannelLegend";
 
 // Types
-import type { ConfigProps } from "src/lib/config";
-import type { Group, Story } from "src/lib/exhibit";
-import type { HashContext } from "src/lib/hashUtil";
-import type { ImageProps } from "src/components/shared/common/types";
+import type { ConfigProps } from "@/lib/config";
+import type { Group, Story } from "@/lib/exhibit";
+import type { HashContext } from "@/lib/hashUtil";
+import type { ImageProps } from "@/components/shared/common/types";
 
 export type ChannelPanelProps = HashContext & ImageProps & {
   children: any,

@@ -1,6 +1,6 @@
 import * as React from "react";
 import styled from "styled-components";
-import { Icon } from "src/components/shared/common/Icon";
+import { Icon } from "@/components/shared/common/Icon";
 
 const EditModeSwitcher = (props) => {
   const [noEdit, yesEdit] = props.editSwitch;

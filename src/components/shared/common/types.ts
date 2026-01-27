@@ -1,5 +1,5 @@
 // Shared type definitions
-import type { Group } from "src/lib/exhibit";
+import type { Group } from "@/lib/exhibit";
 
 export type ImageProps = {
   name: string;

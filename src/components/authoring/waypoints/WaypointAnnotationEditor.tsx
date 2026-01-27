@@ -1,9 +1,9 @@
 import * as React from "react";
 import { ChromePicker } from 'react-color';
-import { LayersPanel } from "src/components/authoring/LayersPanel";
-import { useOverlayStore } from "src/lib/stores";
-import type { ConfigWaypoint } from "src/lib/config";
-import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "src/components/shared/icons/OverlayIcons";
+import { LayersPanel } from "@/components/authoring/LayersPanel";
+import { useOverlayStore } from "@/lib/stores";
+import type { ConfigWaypoint } from "@/lib/config";
+import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "@/components/shared/icons/OverlayIcons";
 import styles from "./WaypointAnnotationEditor.module.css";
 
 // Define available tools (same as overlays)

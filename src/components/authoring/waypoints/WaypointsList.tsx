@@ -1,13 +1,13 @@
 import * as React from "react";
 import styles from "./WaypointsList.module.css";
-import { useOverlayStore } from "src/lib/stores";
-import { ItemList, type ListItem } from "src/components/shared/common/ItemList";
+import { useOverlayStore } from "@/lib/stores";
+import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
-import { TextIcon, PolylineIcon } from "src/components/shared/icons/OverlayIcons";
+import { TextIcon, PolylineIcon } from "@/components/shared/icons/OverlayIcons";
 
 // Types
-import type { HashContext } from "src/lib/hashUtil";
-import type { ConfigWaypoint } from "src/lib/config";
+import type { HashContext } from "@/lib/hashUtil";
+import type { ConfigWaypoint } from "@/lib/config";
 
 interface WaypointAnnotationEditorMetadata {
     type: 'annotations-panel';

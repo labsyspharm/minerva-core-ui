@@ -8,20 +8,20 @@ import styled from "styled-components";
 
 import '@deck.gl/widgets/stylesheet.css';
 
-import { useWindowSize } from "src/lib/useWindowSize";
-import { useOverlayStore } from "src/lib/stores";
-import { createTileLayers, loadDicom } from "src/lib/dicom";
-import { getWaypoint, convertWaypointToViewState } from "src/lib/waypoint";
-import { createDragHandlers } from "src/lib/dragHandlers";
-import { LoadingWidget } from "src/components/viewer/layers/LoadingWidget";
-import { Lensing } from "src/components/viewer/layers/Lensing";
-import { toSettings } from "src/lib/viv";
+import { useWindowSize } from "@/lib/useWindowSize";
+import { useOverlayStore } from "@/lib/stores";
+import { createTileLayers, loadDicom } from "@/lib/dicom";
+import { getWaypoint, convertWaypointToViewState } from "@/lib/waypoint";
+import { createDragHandlers } from "@/lib/dragHandlers";
+import { LoadingWidget } from "@/components/viewer/layers/LoadingWidget";
+import { Lensing } from "@/components/viewer/layers/Lensing";
+import { toSettings } from "@/lib/viv";
 
-import type { DicomIndex } from "src/lib/dicom-index";
-import type { Config, Loader } from "src/lib/viv";
-import type { Group, Story } from "src/lib/exhibit";
-import type { HashContext } from "src/lib/hashUtil";
-import type { ConfigProps } from "src/lib/config";
+import type { DicomIndex } from "@/lib/dicom-index";
+import type { Config, Loader } from "@/lib/viv";
+import type { Group, Story } from "@/lib/exhibit";
+import type { HashContext } from "@/lib/hashUtil";
+import type { ConfigProps } from "@/lib/config";
 
 export type ImageViewerProps = {
   loaderOmeTiff: Loader;

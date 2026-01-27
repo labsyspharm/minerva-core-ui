@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { get, set } from 'idb-keyval';
-import { toDir } from "src/lib/filesystem";
+import { toDir } from "@/lib/filesystem";
 
 export type FileHandlerProps = {
   handleKeys: string[];

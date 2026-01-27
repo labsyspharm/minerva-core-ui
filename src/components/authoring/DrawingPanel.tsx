@@ -1,14 +1,14 @@
 import * as React from "react";
 import { ChromePicker } from 'react-color';
-import { DrawingOverlay } from "src/components/viewer/layers/annotations/DrawingOverlay";
-import { LayersPanel } from "src/components/authoring/LayersPanel";
+import { DrawingOverlay } from "@/components/viewer/layers/annotations/DrawingOverlay";
+import { LayersPanel } from "@/components/authoring/LayersPanel";
 import styles from "./DrawingPanel.module.css";
-import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "src/components/shared/icons/OverlayIcons";
-import { useOverlayStore } from "src/lib/stores";
+import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "@/components/shared/icons/OverlayIcons";
+import { useOverlayStore } from "@/lib/stores";
 
 // Types
-import type { Group } from "src/lib/exhibit";
-import type { HashContext } from "src/lib/hashUtil";
+import type { Group } from "@/lib/exhibit";
+import type { HashContext } from "@/lib/hashUtil";
 
 export type DrawingPanelProps = HashContext & {
   groups: Group[];
