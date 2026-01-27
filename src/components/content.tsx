@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Exporter } from "./exporter";
 import { Channel } from "./channel";
-import { Presentation } from "./presentation";
+import { Presentation } from "src/new/playback/Presentation";
 import styled from "styled-components";
 
 // Types

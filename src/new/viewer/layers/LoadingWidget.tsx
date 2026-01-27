@@ -67,3 +67,5 @@ export const LoadingWidget = React.forwardRef<
 });
 
 LoadingWidget.displayName = 'LoadingWidget';
+
+export type { LoadingWidgetProps };

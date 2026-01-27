@@ -2,35 +2,28 @@ import * as React from "react";
 import Deck from '@deck.gl/react';
 import { OrthographicView, OrthographicViewState, LinearInterpolator } from '@deck.gl/core';
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { useWindowSize } from "../lib/useWindowSize";
 import { MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
-import type { DicomIndex } from "../lib/dicom-index";
-import { useOverlayStore } from "../lib/stores";
 import { FullscreenWidget } from '@deck.gl/widgets';
-import { LoadingWidget } from './loadingWidget';
+import styled from "styled-components";
 
 import '@deck.gl/widgets/stylesheet.css';
 
+import { useWindowSize } from "src/lib/useWindowSize";
+import { useOverlayStore } from "src/lib/stores";
+import { createTileLayers, loadDicom } from "src/lib/dicom";
+import { getWaypoint, convertWaypointToViewState } from "src/lib/waypoint";
+import { createDragHandlers } from "src/lib/dragHandlers";
+import { LoadingWidget } from "src/new/viewer/layers/LoadingWidget";
+import { VivLensing } from "src/new/viewer/layers/VivLensing";
+import { toSettings } from "src/lib/viv";
 
-import {
-  createTileLayers, loadDicom
-} from "../lib/dicom";
+import type { DicomIndex } from "src/lib/dicom-index";
+import type { Config, Loader } from "src/lib/viv";
+import type { Group, Story } from "src/lib/exhibit";
+import type { HashContext } from "src/lib/hashUtil";
+import type { ConfigProps } from "src/lib/config";
 
-import styled from "styled-components";
-import { getWaypoint, convertWaypointToViewState } from "../lib/waypoint";
-import { createDragHandlers } from "../lib/dragHandlers";
-
-// Types
-import type { Config } from "../lib/viv";
-import type { Group, Story } from "../lib/exhibit";
-import type { HashContext } from "../lib/hashUtil";
-import type { ConfigProps } from "../lib/config";
-import type { Loader } from "../lib/viv";
-import type { Selection, Color, Limit } from "../lib/viv";
-import { VivLensing } from "./vivLensing";
-import { LensExtension } from "@hms-dbmi/viv";
-
-export type Props = {
+export type ImageViewerProps = {
   loaderOmeTiff: Loader;
   config: ConfigProps;
   groups: Group[];
@@ -39,14 +32,27 @@ export type Props = {
   viewerConfig: Config;
   overlayLayers?: any[];
   activeTool: string;
-  isDragging?: boolean; // New prop to indicate if dragging an annotation
-  hoveredAnnotationId?: string | null; // New prop to indicate hovered annotation
+  isDragging?: boolean;
+  hoveredAnnotationId?: string | null;
   onOverlayInteraction?: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number]) => void;
+  zoomInButton?: HTMLElement | null;
+  zoomOutButton?: HTMLElement | null;
+  [key: string]: any;
 } & HashContext;
 
-type Shape = {
-  width: number;
-  height: number;
+export const toImageProps = (opts: {
+  props: any;
+  buttons: any;
+}) => {
+  const { props, buttons } = opts;
+  const vivProps = {
+    ...props,
+    viewerConfig: {
+      ...buttons,
+      toSettings: toSettings(props),
+    },
+  };
+  return vivProps;
 };
 
 const Main = styled.div`
@@ -58,9 +64,22 @@ const isElement = (x = {}): x is HTMLElement => {
   return ["Width", "Height"].every((k) => `client${k}` in x);
 };
 
-const VivView = (props: Props) => {
+export const ImageViewer = (props: ImageViewerProps) => {
   const windowSize = useWindowSize();
-  const { loaderOmeTiff, dicomIndexList, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
+  const { 
+    loaderOmeTiff, 
+    dicomIndexList, 
+    groups, 
+    stories, 
+    hash, 
+    setHash, 
+    overlayLayers = [], 
+    activeTool, 
+    isDragging = false, 
+    hoveredAnnotationId = null, 
+    onOverlayInteraction,
+    viewerConfig
+  } = props;
   const { v, g, s, w } = hash;
   const {
     activeChannelGroupId, channelVisibilities
@@ -98,24 +117,26 @@ const VivView = (props: Props) => {
   ), [
     loaderOmeTiff, dicomIndexList
   ]);
-  const toSettings = (
+  
+  const toSettingsInternal = (
     loader, modality, groups, activeChannelGroupId,
     channelVisibilities
   ) => {
     // Gets the default settings
     if (loader === null || !groups) {
-      return props.viewerConfig.toSettings(
+      return viewerConfig.toSettings(
         activeChannelGroupId, modality
       );
     }
-    return props.viewerConfig.toSettings(
+    return viewerConfig.toSettings(
       activeChannelGroupId, modality, loader, groups,
       channelVisibilities
     );
   }
+  
   const mainSettingsOmeTiff = useMemo(() => {
     const modality = "Colorimetric";
-    return toSettings(
+    return toSettingsInternal(
       loaderOmeTiff, modality, groups,
       activeChannelGroupId, channelVisibilities
     )
@@ -123,10 +144,11 @@ const VivView = (props: Props) => {
     loaderOmeTiff, groups, activeChannelGroupId,
     channelVisibilities
   ]);
+  
   const mainSettingsDicomList = useMemo(() => {
     return dicomIndexList.map(dicomIndex => {
       const { modality } = dicomIndex;
-      return toSettings(
+      return toSettingsInternal(
         dicomIndex.loader, modality, groups,
         activeChannelGroupId, channelVisibilities
       );
@@ -135,6 +157,7 @@ const VivView = (props: Props) => {
     dicomIndexList, groups, activeChannelGroupId,
     channelVisibilities
   ]);
+  
   // Show only ome-tiff if available
   const mainSettingsList = useMemo(() => (
     loaderOmeTiff !== null ? (
@@ -145,6 +168,7 @@ const VivView = (props: Props) => {
   ), [
     mainSettingsOmeTiff, mainSettingsDicomList
   ])
+  
   // TODO, assert all loaders match shape
   const firstLoader = useMemo(() => (
     (mainSettingsList.length > 0) ? (
@@ -289,6 +313,7 @@ const VivView = (props: Props) => {
   }, [
     dicomIndexList
   ]);
+  
   // Memoize dicom layer
   const dicomLayers = useMemo(
     () => {
@@ -313,6 +338,7 @@ const VivView = (props: Props) => {
       dicomSources, mainSettingsList
     ]
   );
+  
   // Memoize image layers
   const omeTiffLayers = useMemo(
     () => (
@@ -322,6 +348,7 @@ const VivView = (props: Props) => {
     ),
     [loaderOmeTiff, omeTiffPropsList]
   );
+  
   // Memoize scale bar layer
   const scaleBarLayer = useMemo(() => {
     // Get physical size from loader metadata if available
@@ -345,6 +372,7 @@ const VivView = (props: Props) => {
       snap: true,
     });
   }, [viewState, firstLoader, viewportSize.width, viewportSize.height]);
+  
   // Memoize layer combination
   const allLayers = useMemo(
     () => {
@@ -362,6 +390,7 @@ const VivView = (props: Props) => {
       overlayLayers, scaleBarLayer
     ]
   );
+  
   // Memoize drag handlers
   const dragHandlers = useMemo(() =>
     createDragHandlers(activeTool, onOverlayInteraction),
@@ -452,6 +481,4 @@ const VivView = (props: Props) => {
   )
 };
 
-VivView.displayName = 'VivView';
-
-export { VivView };
+ImageViewer.displayName = 'ImageViewer';
