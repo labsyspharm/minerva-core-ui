@@ -1,16 +1,16 @@
 import * as React from "react";
 import { ChromePicker } from 'react-color';
-import { DrawingOverlay } from "./DrawingOverlay";
+import { DrawingOverlay } from "src/components/viewer/layers/annotations/DrawingOverlay";
 import { LayersPanel } from "src/components/authoring/LayersPanel";
-import styles from "./index.module.css";
-import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "./icons";
+import styles from "./DrawingPanel.module.css";
+import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "src/components/shared/icons/OverlayIcons";
 import { useOverlayStore } from "src/lib/stores";
 
 // Types
 import type { Group } from "src/lib/exhibit";
 import type { HashContext } from "src/lib/hashUtil";
 
-export type Props = HashContext & {
+export type DrawingPanelProps = HashContext & {
   groups: Group[];
   onLayerCreate?: (layer: any) => void;
   currentInteraction?: { type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number] } | null;
@@ -30,7 +30,7 @@ const TOOLS = {
 
 type ToolType = typeof TOOLS[keyof typeof TOOLS];
 
-const Overlays = (props: Props) => {
+const DrawingPanel = (props: DrawingPanelProps) => {
   const { hash, onLayerCreate, currentInteraction } = props;
   const group = props.groups[hash.g];
   
@@ -300,6 +300,6 @@ const Overlays = (props: Props) => {
   );
 };
 
-export { Overlays };
-export type { ToolType };
+export { DrawingPanel };
+export type { DrawingPanelProps, ToolType };
 export { TOOLS };

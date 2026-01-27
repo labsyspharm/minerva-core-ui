@@ -65,7 +65,7 @@ void mutate_color(inout vec3 rgb, float intensity0, float intensity1, float inte
 }
 `;
 
-export class VivLensing extends LensExtension {
+export class Lensing extends LensExtension {
   getShaders() {
     return {
       ...super.getShaders(),

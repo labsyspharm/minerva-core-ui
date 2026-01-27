@@ -1,4 +1,4 @@
-// Tool icons for the overlays component
+// Overlay tool icons - shared icon components for drawing tools
 export { default as MoveIcon } from './move.svg?react';
 export { default as RectangleIcon } from './rectangle.svg?react';
 export { default as EllipseIcon } from './ellipse.svg?react';

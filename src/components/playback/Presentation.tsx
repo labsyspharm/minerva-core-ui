@@ -2,7 +2,7 @@ import * as React from "react";
 import { useEffect, useRef, useMemo } from "react";
 import ReactMarkdown from 'react-markdown'
 import { useOverlayStore } from "src/lib/stores";
-import { AnnotationRenderer } from "src/components/viewer/layers/overlays/AnnotationLayers";
+import { AnnotationRenderer } from "src/components/viewer/layers/annotations/AnnotationLayers";
 //import { theme } from "src/theme.module.css";
 import styled from "styled-components";
 const theme = {};
@@ -11,11 +11,7 @@ const theme = {};
 import type { ConfigProps, ConfigWaypoint } from "src/lib/config";
 import type { Group, Story } from "src/lib/exhibit";
 import type { HashContext } from "src/lib/hashUtil";
-
-export type ImageProps = {
-  name: string;
-  groups: Group[];
-};
+import type { ImageProps } from "src/components/shared/common/types";
 
 export type PresentationProps = HashContext & ImageProps & {
   children: any,

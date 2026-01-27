@@ -25,7 +25,7 @@ const Mono = styled.div`
   }
 `;
 
-const Status = (props) => {
+const EditableText = (props) => {
   const { uuid, editable = true } = props;
   const { setInput, md = false } = props;
   const { cache, updateCache } = props;
@@ -54,4 +54,4 @@ const Status = (props) => {
   return <div>{content}</div>;
 };
 
-export { Status };
+export { EditableText };

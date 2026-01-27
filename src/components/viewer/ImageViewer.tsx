@@ -14,7 +14,7 @@ import { createTileLayers, loadDicom } from "src/lib/dicom";
 import { getWaypoint, convertWaypointToViewState } from "src/lib/waypoint";
 import { createDragHandlers } from "src/lib/dragHandlers";
 import { LoadingWidget } from "src/components/viewer/layers/LoadingWidget";
-import { VivLensing } from "src/components/viewer/layers/VivLensing";
+import { Lensing } from "src/components/viewer/layers/Lensing";
 import { toSettings } from "src/lib/viv";
 
 import type { DicomIndex } from "src/lib/dicom-index";

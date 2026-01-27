@@ -3,8 +3,8 @@ import { ChromePicker } from 'react-color';
 import { LayersPanel } from "src/components/authoring/LayersPanel";
 import { useOverlayStore } from "src/lib/stores";
 import type { ConfigWaypoint } from "src/lib/config";
-import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "src/components/viewer/layers/overlays/icons";
-import styles from "./WaypointAnnotationsPanel.module.css";
+import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "src/components/shared/icons/OverlayIcons";
+import styles from "./WaypointAnnotationEditor.module.css";
 
 // Define available tools (same as overlays)
 const TOOLS = {
@@ -20,12 +20,12 @@ const TOOLS = {
 
 type ToolType = typeof TOOLS[keyof typeof TOOLS];
 
-export interface WaypointAnnotationsPanelProps {
+export interface WaypointAnnotationEditorProps {
     story: ConfigWaypoint;
     storyIndex: number;
 }
 
-const WaypointAnnotationsPanel: React.FC<WaypointAnnotationsPanelProps> = ({ story, storyIndex }) => {
+const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({ story, storyIndex }) => {
     const { 
         overlayLayers,
         activeTool,
@@ -277,4 +277,4 @@ const WaypointAnnotationsPanel: React.FC<WaypointAnnotationsPanelProps> = ({ sto
     );
 };
 
-export { WaypointAnnotationsPanel };
+export { WaypointAnnotationEditor };

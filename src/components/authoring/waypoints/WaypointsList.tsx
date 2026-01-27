@@ -1,25 +1,25 @@
 import * as React from "react";
-import styles from "./WaypointsPanel.module.css";
+import styles from "./WaypointsList.module.css";
 import { useOverlayStore } from "src/lib/stores";
 import { ItemList, type ListItem } from "src/components/shared/common/ItemList";
-import { WaypointAnnotationsPanel } from "./WaypointAnnotationsPanel";
-import { TextIcon, PolylineIcon } from "src/components/viewer/layers/overlays/icons";
+import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
+import { TextIcon, PolylineIcon } from "src/components/shared/icons/OverlayIcons";
 
 // Types
 import type { HashContext } from "src/lib/hashUtil";
 import type { ConfigWaypoint } from "src/lib/config";
 
-interface WaypointAnnotationsPanelMetadata {
+interface WaypointAnnotationEditorMetadata {
     type: 'annotations-panel';
     story: ConfigWaypoint;
     storyIndex: number;
 }
 
-export type WaypointsPanelProps = HashContext & {
+export type WaypointsListProps = HashContext & {
   viewOnly?: boolean;
 };
 
-const WaypointsPanel = (props: WaypointsPanelProps) => {
+const WaypointsList = (props: WaypointsListProps) => {
     const { hash, viewOnly } = props;
 
     // Use Zustand store for stories and waypoints management
@@ -79,7 +79,7 @@ const WaypointsPanel = (props: WaypointsPanelProps) => {
     }, [stories, activeStoryIndex, imageWidth, imageHeight]);
 
     // Convert stories to ListItem format with inline annotations panel
-    const listItems: ListItem<ConfigWaypoint | WaypointAnnotationsPanelMetadata>[] = stories.map((story, index) => {
+    const listItems: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>[] = stories.map((story, index) => {
         const storyId = story.UUID || `story-${index}`;
         const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
         const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
@@ -87,7 +87,7 @@ const WaypointsPanel = (props: WaypointsPanelProps) => {
         const isDropTarget = dropTargetIndex === index;
         
         // Build children array based on what's expanded
-        const children: ListItem<ConfigWaypoint | WaypointAnnotationsPanelMetadata>[] = [];
+        const children: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>[] = [];
         
         if (isAnnotationsExpanded) {
             children.push({
@@ -100,7 +100,7 @@ const WaypointsPanel = (props: WaypointsPanelProps) => {
                     type: 'annotations-panel',
                     story: story,
                     storyIndex: index
-                } as WaypointAnnotationsPanelMetadata
+                } as WaypointAnnotationEditorMetadata
             });
         }
         
@@ -120,7 +120,7 @@ const WaypointsPanel = (props: WaypointsPanelProps) => {
         };
     });
 
-    const handleItemClick = (item: ListItem<ConfigWaypoint | WaypointAnnotationsPanelMetadata>) => {
+    const handleItemClick = (item: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>) => {
         // Only handle story clicks, not child panel clicks
         if (item.metadata && !('type' in item.metadata)) {
             const story = item.metadata as ConfigWaypoint;
@@ -199,7 +199,7 @@ const WaypointsPanel = (props: WaypointsPanelProps) => {
     };
 
     // Custom item actions for stories
-    const storyItemActions = (item: ListItem<ConfigWaypoint | WaypointAnnotationsPanelMetadata>) => {
+    const storyItemActions = (item: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>) => {
         // Only show actions for story items, not child panel items
         if (item.metadata && 'type' in item.metadata) {
             return null;
@@ -282,17 +282,17 @@ const WaypointsPanel = (props: WaypointsPanelProps) => {
     };
 
     // Custom child renderer for annotations panel
-    const customChildRenderer = (childItem: ListItem<ConfigWaypoint | WaypointAnnotationsPanelMetadata>, parentItem: ListItem<ConfigWaypoint | WaypointAnnotationsPanelMetadata>) => {
+    const customChildRenderer = (childItem: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>, parentItem: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>) => {
         if (childItem.metadata && 'type' in childItem.metadata) {
-            const metadata = childItem.metadata as WaypointAnnotationsPanelMetadata;
+            const metadata = childItem.metadata as WaypointAnnotationEditorMetadata;
             
             if (metadata.type === 'annotations-panel') {
-                const annotationsMetadata = metadata as WaypointAnnotationsPanelMetadata;
+                const annotationsMetadata = metadata as WaypointAnnotationEditorMetadata;
                 const story = annotationsMetadata.story;
                 
                 return (
                     <div className={styles.annotationsPanelInline}>
-                        <WaypointAnnotationsPanel 
+                        <WaypointAnnotationEditor 
                             story={story}
                             storyIndex={annotationsMetadata.storyIndex}
                         />
@@ -329,5 +329,5 @@ const WaypointsPanel = (props: WaypointsPanelProps) => {
     );
 };
 
-export { WaypointsPanel };
-export type { WaypointsPanelProps };
+export { WaypointsList };
+export type { WaypointsListProps };

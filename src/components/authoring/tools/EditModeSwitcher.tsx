@@ -1,8 +1,8 @@
 import * as React from "react";
 import styled from "styled-components";
-import { Icon } from "src/components/shared/common/Icons";
+import { Icon } from "src/components/shared/common/Icon";
 
-const Editor = (props) => {
+const EditModeSwitcher = (props) => {
   const [noEdit, yesEdit] = props.editSwitch;
   const [Plain, plainProps] = noEdit;
   const [Edit, editProps] = yesEdit;
@@ -12,4 +12,4 @@ const Editor = (props) => {
   return <Plain {...plainProps} />;
 };
 
-export { Editor };
+export { EditModeSwitcher };

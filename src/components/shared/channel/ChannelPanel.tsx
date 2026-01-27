@@ -4,19 +4,15 @@ import { ChannelLegend } from "./ChannelLegend";
 import { ChannelGroups } from "./ChannelGroups";
 import { useOverlayStore } from "src/lib/stores";
 import styled from "styled-components";
-import { PushGroup } from "src/components/authoring/editable/EditActions";
-import { Editor } from "src/components/authoring/editable/Editor";
+import { Push as PushGroup } from "src/components/authoring/tools/ActionButtons";
+import { EditModeSwitcher } from "src/components/authoring/tools/EditModeSwitcher";
 import { defaultChannels } from "./ChannelLegend";
 
 // Types
 import type { ConfigProps } from "src/lib/config";
 import type { Group, Story } from "src/lib/exhibit";
 import type { HashContext } from "src/lib/hashUtil";
-
-export type ImageProps = {
-  name: string;
-  groups: Group[];
-};
+import type { ImageProps } from "src/components/shared/common/types";
 
 export type ChannelPanelProps = HashContext & ImageProps & {
   children: any,
@@ -170,7 +166,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       ["span", {}],
       [PushGroup, { onPush }],
     ];
-    return <Editor {...{ ...props, editSwitch }} />;
+    return <EditModeSwitcher {...{ ...props, editSwitch }} />;
   };
 
   const allGroups =

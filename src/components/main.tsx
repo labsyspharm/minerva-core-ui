@@ -15,12 +15,12 @@ import { useOverlayStore } from "src/lib/stores";
 import { FileHandler } from "src/components/shared/FileHandler";
 import { ImageViewer, toImageProps } from "src/components/viewer/ImageViewer";
 import { PlaybackRouter } from "src/components/playback/PlaybackRouter";
-import { ChannelPanel } from "src/components/shared/ChannelPanel/ChannelPanel";
+import { ChannelPanel } from "src/components/shared/channel/ChannelPanel";
 import { Presentation } from "src/components/playback/Presentation";
 
 import type { DicomIndex, DicomLoader } from "src/lib/dicom-index";
 import type { ValidObj } from "src/components/shared/Upload";
-import type { ImageProps } from "src/components/shared/ChannelPanel/ChannelPanel";
+import type { ImageProps } from "src/components/shared/common/types";
 import type { FormEventHandler } from "react";
 import type { ObjAny, KV } from "src/lib/validate";
 import type { ItemRegistryProps } from "src/lib/config";

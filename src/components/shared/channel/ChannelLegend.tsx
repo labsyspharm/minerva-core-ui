@@ -1,8 +1,8 @@
 import * as React from "react";
 import styled from "styled-components";
-import { PushChannel, PopUpdateChannel } from "src/components/authoring/editable/EditActions";
-import { Editor } from "src/components/authoring/editable/Editor";
-import { Status } from "src/components/authoring/editable/Status";
+import { Push as PushChannel, PopUpdate as PopUpdateChannel } from "src/components/authoring/tools/ActionButtons";
+import { EditModeSwitcher } from "src/components/authoring/tools/EditModeSwitcher";
+import { EditableText } from "src/components/authoring/tools/EditableText";
 
 const RightAlign = styled.div`
   justify-items: right;
@@ -80,7 +80,7 @@ const LegendRow = (props) => {
   const coreUI = (
     <WrapBox {...wrapProps}>
       <Box {...boxProps} />
-      <Status {...statusProps}>{channelName}</Status>
+      <EditableText {...statusProps}>{channelName}</EditableText>
     </WrapBox>
   );
   const editSwitch = [
@@ -88,7 +88,7 @@ const LegendRow = (props) => {
     [PopUpdateChannel, { children: coreUI, onPop }],
   ];
   const canPop = props.editable && props.total > 1;
-  const extraUI = <Editor {...{ ...props, editable: canPop, editSwitch }} />;
+  const extraUI = <EditModeSwitcher {...{ ...props, editable: canPop, editSwitch }} />;
 
   return <>{extraUI}</>;
 };
@@ -104,7 +104,7 @@ export const ChannelLegend = (props) => {
     ["div", {}],
     [PushChannel, { onPush }],
   ];
-  const extraUI = <Editor {...{ ...props, editSwitch }} />;
+  const extraUI = <EditModeSwitcher {...{ ...props, editSwitch }} />;
 
   const { channels } = props;
   const total = channels.length;

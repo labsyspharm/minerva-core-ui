@@ -1,11 +1,11 @@
 import * as React from "react";
 import { ImageExporter } from "src/components/playback/ImageExporter";
-import { ChannelPanel } from "src/components/shared/ChannelPanel/ChannelPanel";
+import { ChannelPanel } from "src/components/shared/channel/ChannelPanel";
 import { Presentation } from "src/components/playback/Presentation";
 import styled from "styled-components";
 
 // Types
-import type { ChannelPanelProps } from "src/components/shared/ChannelPanel/ChannelPanel";
+import type { ChannelPanelProps } from "src/components/shared/channel/ChannelPanel";
 
 export type PlaybackRouterProps = ChannelPanelProps & {
   ioState: null | string;
