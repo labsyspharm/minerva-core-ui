@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createRoot } from 'react-dom/client';
-import { Main } from "./src/main";
+// import { Main } from "./src/main";
+import { Main } from "./src/new/main";
 import "@fontsource/overpass/200.css";
 import "@fontsource/overpass/500.css";
 import { createGlobalStyle } from "styled-components";

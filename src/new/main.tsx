@@ -1,32 +1,30 @@
 import * as React from "react";
-import { get, set } from 'idb-keyval';
 import styled from 'styled-components';
-import { author } from "./minerva-author-ui/author";
+import { author } from "src/minerva-author-ui/author";
 import { useState, useMemo, useEffect } from "react";
-import { loadDicomWeb, parseDicomWeb } from "./lib/dicom";
-import { toEmptyHash } from "./lib/hashUtil";
-import { onlyUUID } from './lib/config';
-import { mutableItemRegistry } from './lib/config';
-import { hasFileSystemAccess, toDir, toLoader } from "./lib/filesystem";
-import { extractChannels, extractDistributions } from './lib/config';
-import { isOpts, validate } from './lib/validate';
-import { Upload } from './components/upload';
-import { readConfig } from "./lib/exhibit";
-import { Index } from "./components";
-import Pool from './lib/workers/Pool';
-import { parseRoisFromLoader } from './lib/roiParser';
-import { useOverlayStore } from './lib/stores';
+import { loadDicomWeb, parseDicomWeb } from "src/lib/dicom";
+import { toEmptyHash } from "src/lib/hashUtil";
+import { mutableItemRegistry, extractChannels, extractDistributions } from "src/lib/config";
+import { hasFileSystemAccess, toLoader } from "src/lib/filesystem";
+import { isOpts, validate } from "src/lib/validate";
+import { Upload } from "src/components/upload";
+import { readConfig } from "src/lib/exhibit";
+import { Index } from "src/components";
+import Pool from "src/lib/workers/Pool";
+import { parseRoisFromLoader } from "src/lib/roiParser";
+import { useOverlayStore } from "src/lib/stores";
+import { FileHandler } from "src/new/shared/components/FileHandler";
 
-import type { DicomIndex, DicomLoader } from "./lib/dicom-index";
-import type { ValidObj } from './components/upload';
-import type { ImageProps } from "./components/channel"
+import type { DicomIndex, DicomLoader } from "src/lib/dicom-index";
+import type { ValidObj } from "src/components/upload";
+import type { ImageProps } from "src/components/channel";
 import type { FormEventHandler } from "react";
-import type { ObjAny, KV } from './lib/validate';
-import type { ItemRegistryProps } from "./lib/config";
-import type { ConfigWaypoint } from "./lib/config";
-import type { MutableFields } from "./lib/config";
-import type { ExhibitConfig } from "./lib/exhibit";
-import type { ConfigGroup } from "./lib/exhibit";
+import type { ObjAny, KV } from "src/lib/validate";
+import type { ItemRegistryProps } from "src/lib/config";
+import type { ConfigWaypoint } from "src/lib/config";
+import type { MutableFields } from "src/lib/config";
+import type { ExhibitConfig } from "src/lib/exhibit";
+import type { ConfigGroup } from "src/lib/exhibit";
 
 type Props = ImageProps & {
   configWaypoints: ConfigWaypoint[];
@@ -71,7 +69,6 @@ const Content = (props: Props) => {
   const setHash = (partial_hash) => {
     _setHash({...hash, ...partial_hash})
   }
-  const [handle, setHandle] = useState(null);
   const [loaderOmeTiff, setLoaderOmeTiff] = useState(null);
   const [dicomIndexList, setDicomIndexList] = useState(
     [] as DicomIndex[]
@@ -150,26 +147,8 @@ const Content = (props: Props) => {
     }));
   }
   const [fileName, setFileName] = useState('');
-  // Create ome-tiff loader
-  const onAllow = async () => {
-    const newHandle = await toDir();
-    setHandle(newHandle);
-    await set(
-      handleKeys[0], newHandle
-    );
-  }
-  const onRecall = async () => {
-    const newHandle = await get(handleKeys[0])
-    const isGranted = (permission) => permission === 'granted';
-    const options = { mode: 'readwrite' };
-    if (
-      isGranted(await newHandle.queryPermission(options))
-      || isGranted(await newHandle.requestPermission(options))
-    ) {
-      setHandle(newHandle);
-    }
-  }
-  const onStartOmeTiff = async (in_f: string) => {
+  
+  const onStartOmeTiff = async (in_f: string, handle: Handle.Dir) => {
     if (handle === null) return;
     const loader = await toLoader({ handle, in_f, pool: new Pool() });
     const {
@@ -202,7 +181,8 @@ const Content = (props: Props) => {
     setFileName(in_f);
   }
   const onStart = async (
-    imagePropList: [string, string, string][]
+    imagePropList: [string, string, string][],
+    handle: Handle.Dir | null
   ) => {
     if ( imagePropList.length === 0 ) {
       return;
@@ -226,8 +206,8 @@ const Content = (props: Props) => {
     ).map(
       ([path]) => [path]
     )
-    if (omeTiffPropList.length > 0) {
-      await onStartOmeTiff(omeTiffPropList[0][0]);
+    if (omeTiffPropList.length > 0 && handle) {
+      await onStartOmeTiff(omeTiffPropList[0][0], handle);
     }
   }
   // Dicom Web derived state
@@ -322,23 +302,6 @@ const Content = (props: Props) => {
   const controlPanelElement = useMemo(() => author({
     ...config, ItemRegistry
   }), [config.ID])
-  const noLoader = loaderOmeTiff === null && (
-    dicomIndexList.length === 0
-  ) && !(
-    props.demo_dicom_web
-  );
-  // Actual image viewer
-  const imager = noLoader ? '' : (
-    <Full>
-      <Index {...{
-        dicomIndexList,
-        config, controlPanelElement,
-        exhibit, setExhibit, loaderOmeTiff,
-        in_f: fileName, handle, hash, setHash,
-        demo_dicom_web: props.demo_dicom_web
-      }} />
-    </Full>
-  )
   const [valid, setValid] = useState({} as ValidObj);
   if (props.demo_dicom_web) {
     useEffect(() => {
@@ -354,38 +317,70 @@ const Content = (props: Props) => {
           "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.331207435.2054329796.1752677896971.4.0",
           "Colorimetric",
           "DICOM-WEB"
-        ]])
+        ]], null as Handle.Dir | null)
       })()
     }, []);
   }
-  const onSubmit: FormEventHandler = (event) => {
-    const form = event.currentTarget as HTMLFormElement;
-    const data = [...new FormData(form).entries()];
-    const formOut = data.reduce(((o, [k, v]) => {
-      return { ...o, [k]: `${v}` };
-    }) as ReduceFormData, { mask: "" });
-    const formOpts = { formOut, onStart, handle };
-    if (isOpts(formOpts)) {
-      validate(formOpts).then((valid: ValidObj) => {
-        setValid(valid);
-      })
-    
-    event.preventDefault();
-    event.stopPropagation();
-  }
-  const formProps = { onSubmit, valid };
-  const uploadProps = {
-    handleKeys, formProps, handle,
-    onAllow, onRecall
-  };
-  const importer = !noLoader ? '' : (<Scrollable>
-    <Upload {...uploadProps} />
-  </Scrollable>)
+  const noLoader = loaderOmeTiff === null && (
+    dicomIndexList.length === 0
+  ) && !(
+    props.demo_dicom_web
+  );
+
   return (
-    <Wrapper>
-      {imager}
-      {importer}
-    </Wrapper>
+    <FileHandler handleKeys={handleKeys}>
+      {({ handle, onAllow, onRecall }) => {
+        const onSubmit: FormEventHandler = (event) => {
+          const form = event.currentTarget as HTMLFormElement;
+          const data = [...new FormData(form).entries()];
+          const formOut = data.reduce(((o, [k, v]) => {
+            return { ...o, [k]: `${v}` };
+          }) as ReduceFormData, { mask: "" });
+          const formOpts = { formOut, onStart: (list) => onStart(list, handle), handle };
+          if (isOpts(formOpts)) {
+            validate(formOpts).then((valid: ValidObj) => {
+              setValid(valid);
+            })
+          }
+          event.preventDefault();
+          event.stopPropagation();
+        };
+
+        const formProps = { onSubmit, valid };
+        const uploadProps = {
+          handleKeys, 
+          formProps, 
+          handle,
+          onAllow, 
+          onRecall
+        };
+        const importer = !noLoader ? '' : (
+          <Scrollable>
+            <Upload {...uploadProps} />
+          </Scrollable>
+        );
+        
+        // Actual image viewer
+        const imager = noLoader ? '' : (
+          <Full>
+            <Index {...{
+              dicomIndexList,
+              config, controlPanelElement,
+              exhibit, setExhibit, loaderOmeTiff,
+              in_f: fileName, handle, hash, setHash,
+              demo_dicom_web: props.demo_dicom_web
+            }} />
+          </Full>
+        );
+        
+        return (
+          <Wrapper>
+            {imager}
+            {importer}
+          </Wrapper>
+        );
+      }}
+    </FileHandler>
   );
 };
 

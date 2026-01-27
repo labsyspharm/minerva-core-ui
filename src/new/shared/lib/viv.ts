@@ -1,0 +1,186 @@
+import type { Group } from "../lib/exhibit";
+import type { HashState } from "../lib/hashUtil";
+
+type Selection = Record<"z" | "t" | "c", number>;
+type Color = [number, number, number];
+type Limit = [number, number];
+
+export type Loader = {
+  data: any[];
+  metadata: any;
+}
+
+type Settings = {
+  channelsVisible: boolean[];
+  selections: Selection[];
+  contrastLimits: Limit[];
+  loader: Loader | null;
+  colors: Color[];
+};
+
+type Channel = {
+  ID: string;
+  SamplesPerPixel: number;
+  Name: string;
+}
+
+type TiffDatum = {
+  IFD: number;
+  PlaneCount: number;
+  FirstT: number;
+  FirstC: number;
+  FirstZ: number;
+  UUID: {
+    FileName: string;
+  };
+}
+
+type Pixels = {
+  Channels: Channel[];
+  ID: string;
+  DimensionOrder: string;
+  Type: string;
+  SizeT: number;
+  SizeC: number;
+  SizeZ: number;
+  SizeY: number;
+  SizeX: number;
+  PhysicalSizeX: number;
+  PhysicalSizeY: number;
+  PhysicalSizeXUnit: string;
+  PhysicalSizeYUnit: string;
+  PhysicalSizeZUnit: string;
+  BigEndian: boolean;
+  TiffData: TiffDatum[];
+}
+
+type Metadata = {
+  ID: string;
+  AquisitionDate: string;
+  Description: string;
+  Pixels: Pixels;
+}
+
+export type Config = {
+  toSettings: (
+    activeChannelGroupId: string | null,
+    modality: string, l?: Loader, g?: any,
+    channelVisibilities?: Record<string, boolean>
+  ) => Settings;
+};
+
+const toDefaultSettings = (n) => {
+  const chan_range = [...Array(n).keys()];
+  const n_shown = 3;
+  const n_sub = n_shown; //TODO
+  return {
+    loader: null,
+    selections: chan_range
+      .map((c) => {
+        return { z: 0, t: 0, c: c };
+      })
+      .slice(0, n_sub),
+    colors: chan_range
+      .map((c) => {
+        return [
+          [0, 0, 255],
+          [0, 255, 0],
+          [255, 0, 0],
+        ][c % 3];
+      })
+      .slice(0, n_sub),
+    contrastLimits: chan_range.map(() => [0, 65535]).slice(0, n_sub),
+    channelsVisible: chan_range
+      .map((n) => {
+        return n < n_shown;
+      })
+      .slice(0, n_sub),
+  };
+};
+
+const hexToRGB = (hex: string) => {
+  // Remove leading # if it exists
+  hex = hex.replace("#", "");
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  return [r, g, b];
+};
+
+const toSettings = (opts) => {
+  return (
+    activeChannelGroupId, modality, loader, groups,
+    channelVisibilities
+  ) => {
+    const { ItemRegistry } = opts.config;
+    const { GroupChannels, SourceChannels } = ItemRegistry;
+    const channels = (GroupChannels).filter(
+      (channel) => (
+        channel.Associations.Group.UUID === activeChannelGroupId
+      )
+    );
+    // Defaults
+    if (!loader) return toDefaultSettings(3);
+    const full_level = loader.data[0];
+    const { labels, shape } = full_level;
+    const c_idx = labels.indexOf("c");
+    // TODO Simplify mapping of channel names to indices!
+    const selections: Selection[] = channels.map(channel => {
+      const source_channels = SourceChannels.map(
+        (source_channel) => (
+          source_channel.UUID
+        )
+      );
+      const source_channel = SourceChannels.find(
+        (source_channel) => (
+          channel.Associations.SourceChannel.UUID 
+          === source_channel.UUID
+        )
+      );
+      const c = source_channel?.Properties.SourceIndex || 0;
+      return { z: 0, t: 0, c };
+    });
+    const colors: Color[] = channels.map((c, i: number) => {
+      const rgb = c.Associations.Color.ID.split("#").pop();
+      return rgb ? hexToRGB(rgb) : [0, 0, 0];
+    });
+    const contrastLimits: Limit[] = channels.map(c => {
+      const { LowerRange, UpperRange } = c.Properties;
+      return [ LowerRange, UpperRange ]; 
+    });
+    const channelsVisible: boolean[] = channels.map(
+      (c, i: number) => {
+        const source_channel = SourceChannels.find(
+          (source_channel) => (
+            c.Associations.SourceChannel.UUID 
+            === source_channel.UUID
+          )
+        );
+        const { Name } = source_channel?.Properties || {};
+        const image_id = (
+          source_channel.Associations.SourceImage.UUID
+        );
+        const brightfield = modality === "Brightfield";
+        //if (!channelVisibilities || brightfield ) {
+        if (!channelVisibilities) {
+          return image_id === modality;
+        }
+        return image_id === modality && (
+          (channelVisibilities || {})[Name]
+        );
+      }
+    );
+    const n_channels = shape[c_idx] || 0;
+    const out = {
+      ...toDefaultSettings(n_channels),
+      selections,
+      colors,
+      contrastLimits,
+      channelsVisible,
+      loader
+    };
+    return out;
+  };
+};
+
+export { toSettings, Selection, Color, Limit };

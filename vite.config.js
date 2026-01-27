@@ -3,6 +3,7 @@ import { standardCssModules } from 'vite-plugin-standard-css-modules';
 import react from '@vitejs/plugin-react'
 import mkcert from 'vite-plugin-mkcert'
 import svgr from 'vite-plugin-svgr'
+import path from 'path'
 
 export default defineConfig({
   worker: {
@@ -42,6 +43,9 @@ export default defineConfig({
     ]
   },
   resolve: {
+    alias: {
+      'src': path.resolve(__dirname, './src')
+    },
     dedupe: [
       '@luma.gl/core',
       '@luma.gl/constants', 
