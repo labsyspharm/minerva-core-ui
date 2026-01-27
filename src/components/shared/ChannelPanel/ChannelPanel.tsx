@@ -4,8 +4,8 @@ import { ChannelLegend } from "./ChannelLegend";
 import { ChannelGroups } from "./ChannelGroups";
 import { useOverlayStore } from "src/lib/stores";
 import styled from "styled-components";
-import { PushGroup } from "src/components/authoring/components/editable/EditActions";
-import { Editor } from "src/components/authoring/components/editable/Editor";
+import { PushGroup } from "src/components/authoring/editable/EditActions";
+import { Editor } from "src/components/authoring/editable/Editor";
 import { defaultChannels } from "./ChannelLegend";
 
 // Types

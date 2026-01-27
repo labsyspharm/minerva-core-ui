@@ -1,7 +1,7 @@
 import * as React from "react";
 import styles from "./WaypointsPanel.module.css";
 import { useOverlayStore } from "src/lib/stores";
-import { ItemList, type ListItem } from "src/components/shared/components/common/ItemList";
+import { ItemList, type ListItem } from "src/components/shared/common/ItemList";
 import { WaypointAnnotationsPanel } from "./WaypointAnnotationsPanel";
 import { TextIcon, PolylineIcon } from "src/components/viewer/layers/overlays/icons";
 

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ChromePicker } from 'react-color';
-import { LayersPanel } from "src/components/authoring/components/LayersPanel";
+import { LayersPanel } from "src/components/authoring/LayersPanel";
 import { useOverlayStore } from "src/lib/stores";
 import type { ConfigWaypoint } from "src/lib/config";
 import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "src/components/viewer/layers/overlays/icons";

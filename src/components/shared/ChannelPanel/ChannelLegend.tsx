@@ -1,8 +1,8 @@
 import * as React from "react";
 import styled from "styled-components";
-import { PushChannel, PopUpdateChannel } from "src/components/authoring/components/editable/EditActions";
-import { Editor } from "src/components/authoring/components/editable/Editor";
-import { Status } from "src/components/authoring/components/editable/Status";
+import { PushChannel, PopUpdateChannel } from "src/components/authoring/editable/EditActions";
+import { Editor } from "src/components/authoring/editable/Editor";
+import { Status } from "src/components/authoring/editable/Status";
 
 const RightAlign = styled.div`
   justify-items: right;

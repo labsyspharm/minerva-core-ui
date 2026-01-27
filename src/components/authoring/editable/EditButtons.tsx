@@ -1,6 +1,6 @@
 import * as React from "react";
 import styled from "styled-components";
-import { Icon } from "src/components/shared/components/common/Icons";
+import { Icon } from "src/components/shared/common/Icons";
 import {
   faPlus as faPush,
   faMinus as faPop,

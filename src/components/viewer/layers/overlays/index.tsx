@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ChromePicker } from 'react-color';
 import { DrawingOverlay } from "./DrawingOverlay";
-import { LayersPanel } from "src/components/authoring/components/LayersPanel";
+import { LayersPanel } from "src/components/authoring/LayersPanel";
 import styles from "./index.module.css";
 import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "./icons";
 import { useOverlayStore } from "src/lib/stores";
