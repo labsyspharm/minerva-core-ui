@@ -216,12 +216,13 @@ const Content = (props: Props) => {
     SourceChannels, GroupChannels, Groups
   }) => {
     setGroupNames(Object.fromEntries(
-      Groups.map(({ Name, UUID }) => [
-        UUID, Name
+      Groups.map(({ Properties, UUID }) => [
+        UUID, Properties.Name
       ])
     ))
     const groupChannelLists = Object.fromEntries(
-      Groups.map(({ Name, UUID }) => {
+      Groups.map(({ Properties, UUID }) => {
+        const { Name } = Properties;
         return [
           Name, GroupChannels.filter(
             ({ Associations }) => (
@@ -230,7 +231,7 @@ const Content = (props: Props) => {
           ).map(
             ({ Associations }) => {
               return (
-                (found) => found?.Name || ''
+                (found) => found?.Properties.Name || ''
               )(SourceChannels.find(
                 ({ UUID }) => (
                   UUID === Associations.SourceChannel.UUID
@@ -242,7 +243,7 @@ const Content = (props: Props) => {
       })
     )
     setGroupChannelLists(groupChannelLists)
-    const groupName = Groups[0]?.Name || ""
+    const groupName = Groups[0]?.Properties.Name || ""
     const channelList = groupChannelLists[
       groupName
     ] || [];
