@@ -2278,22 +2278,9 @@ const MainStyle = createGlobalStyle`
 const rootElement = document.getElementById(id);
 const root = createRoot(rootElement);
 
-const groups = exhibit_config.Groups.map(
-  (group, g) => {
-    return {
-      channels: group.Channels.map((name, c) => {
-        return { name, color: group.Colors[c] };
-      }),
-      name: group.Name,
-      g
-    }
-  }
-);
-
 root.render(
     <React.StrictMode>
         <Main
-            groups={groups}
             handleKeys={["ome-dir-1"]} demo_dicom_web={true}
             exhibit_config={exhibit_config} configWaypoints={configWaypoints}
         />

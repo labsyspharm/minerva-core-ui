@@ -10,7 +10,6 @@ import { defaultChannels } from "./ChannelLegend";
 
 // Types
 import type { ConfigProps } from "@/lib/config";
-import type { Group, Story } from "@/lib/exhibit";
 import type { HashContext } from "@/lib/hashUtil";
 import type { ImageProps } from "@/components/shared/common/types";
 
@@ -101,23 +100,44 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
 
   const togglePanel = () => setHide(!hide);
 
-  const { Groups } = props.config.ItemRegistry;
   const hidden = props.retrievingMetadata;
   const {
     activeChannelGroupId,
     setChannelVisibilities,
-    channelVisibilities
+    channelVisibilities,
+    SourceChannels,
+    Groups
   } = useOverlayStore();
-  const group_name = Groups.find(
+  // TODO -- lookup group correctly
+  const groups = Groups.map((group, g) => {
+    return {
+      g,
+      UUID: group.UUID,
+      name: group.Name,
+      channels: group.GroupChannels.map(
+        ({ SourceChannel, Color }) => {
+          const found = SourceChannels.find(
+            ({ UUID }) => (
+              SourceChannel.UUID === UUID
+            )
+          );
+          if (found) {
+            const { R, G, B } = Color;
+            const hex_color = [R, G, B].map(
+              n => n.toString(16).padStart(2, '0')
+            ).join('');
+            return {
+              name: found.Name,
+              color: `${hex_color}`
+            }
+          }
+        }
+      ).filter(x => x)
+    }
+  });
+  const group = groups.find(
     ({ UUID }) => UUID === activeChannelGroupId
-  )?.Properties.Name;
-  // TODO -- avoid extra name lookup step
-  const group = props.groups.find(
-    ({ name }) => group_name === name
-  ) || {
-    g: 0,
-    channels: []
-  };
+  ) || groups[0];
   const toggleChannel = ({ name }) => {
     setChannelVisibilities(
       Object.fromEntries(
@@ -139,8 +159,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   ];
 
   // Content logic (merged from content.tsx)
-  const { groups } = props;
-
   const total = groups.length;
   const groupProps = { ...props, total };
 

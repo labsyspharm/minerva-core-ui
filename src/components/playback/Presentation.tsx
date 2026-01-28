@@ -188,7 +188,9 @@ export const Presentation = (props: PresentationProps) => {
     clearImportedAnnotations,
     imageWidth,
     imageHeight,
-    setTargetWaypointViewState
+    setTargetWaypointViewState,
+    SourceChannels,
+    Groups
   } = useOverlayStore();
 
   // Auto-import annotations for the active story
@@ -226,10 +228,9 @@ export const Presentation = (props: PresentationProps) => {
   const updateGroup = (activeStory) => {
     const story = stories[activeStory];
     const group_name = story.Properties.Group
-    const { Groups } = props.config.ItemRegistry;
     // TODO -- use UUID in story
     const found_group = Groups.find(
-      ({ Properties }) => Properties.Name === group_name
+      ({ Name }) => Name === group_name
     ) || Groups[0];
     if (found_group) {
       setActiveChannelGroup(found_group.UUID);
@@ -247,7 +248,6 @@ export const Presentation = (props: PresentationProps) => {
   }
 
   const storyFirst = () => {
-    const { Groups } = props.config.ItemRegistry;
     setActiveStory(0);
     updateGroup(0);
     updateViewState(0);
@@ -380,27 +380,32 @@ export const Presentation = (props: PresentationProps) => {
 
   // Process story content to highlight channel names
   const { processedContent, channelColors } = useMemo(() => {
-    const { Groups } = props.config.ItemRegistry;
     const activeGroup = Groups.find(g => g.UUID === activeChannelGroupId);
     if (!activeGroup || !story_content) return { processedContent: story_content || '', channelColors: new Map() };
 
-    const propsGroup = props.groups.find(g => g.name === activeGroup.Properties.Name);
-    const channels = propsGroup?.channels || [];
+    const channels = activeGroup?.GroupChannels || [];
     
-    let content = story_content;
+    let content =  story_content;
     const colors = new Map();
     
     channels.forEach(channel => {
+      const { Name } = SourceChannels.find(({ UUID }) => {
+        return UUID === channel.SourceChannel.UUID
+      }) || { Name: "unknown" };
       // Escape special regex characters in channel name
-      const escapedName = channel.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapedName = Name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       // Use word boundaries to match whole words only
       const regex = new RegExp(`\\b${escapedName}\\b`, 'g');
-      content = content.replace(regex, `**${channel.name}**`);
-      colors.set(channel.name, channel.color);
+      content = content.replace(regex, `**${Name}**`);
+      const { R, G, B } = channel.Color;
+      const hex_color = [R, G, B].map(
+        n => n.toString(16).padStart(2, '0')
+      ).join('');
+      colors.set(Name, `#${hex_color}`);
     });
     
     return { processedContent: content, channelColors: colors };
-  }, [story_content, activeChannelGroupId, props.config.ItemRegistry, props.groups]);
+  }, [story_content, activeChannelGroupId, props.config.ItemRegistry, Groups, SourceChannels]);
 
 
   return (
