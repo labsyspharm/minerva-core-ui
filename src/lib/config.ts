@@ -172,7 +172,8 @@ export type ConfigGroupChannel = UUID & {
 };
 export type ConfigGroup = UUID & {
   State: GroupState;
-} & GroupProperties;
+  Properties: GroupProperties;
+};
 export type ConfigWaypoint = UUID & {
   State: WaypointState;
   Properties: WaypointProperties;
@@ -528,7 +529,9 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
       const new_group = {
         UUID: crypto.randomUUID(),
         State: { Expanded: false },
-        Name: g.Name 
+        Properties: {
+          Name: g.Name 
+        }
       }
       const new_group_channels = g.Channels.reduce(
         (new_group_channels, name, index) => {
@@ -597,7 +600,9 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
     const Groups = [{
       UUID: crypto.randomUUID(),
       State: { Expanded: true },
-      Name: groupName
+      Properties: {
+        Name: groupName
+      }
     }]
     const GroupChannels = SourceChannels.map(
       (channel, index) => {
@@ -634,7 +639,9 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
     index => ({
       UUID: crypto.randomUUID(),
       State: { Expanded: false },
-      Name: `Group ${index}`
+      Properties: {
+        Name: `Group ${index}`
+      }
     })
   )
   const GroupChannels = SourceChannels.map(

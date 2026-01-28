@@ -110,7 +110,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   } = useOverlayStore();
   const group_name = Groups.find(
     ({ UUID }) => UUID === activeChannelGroupId
-  )?.Name;
+  )?.Properties.Name;
   // TODO -- avoid extra name lookup step
   const group = props.groups.find(
     ({ name }) => group_name === name
