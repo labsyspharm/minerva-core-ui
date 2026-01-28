@@ -216,21 +216,21 @@ const Content = (props: Props) => {
     SourceChannels, GroupChannels, Groups
   }) => {
     setGroupNames(Object.fromEntries(
-      Groups.map(({ Properties, UUID }) => [
-        UUID, Properties.Name
+      Groups.map(({ Name, UUID }) => [
+        UUID, Name
       ])
     ))
     const groupChannelLists = Object.fromEntries(
-      Groups.map(({ Properties, UUID }) => {
+      Groups.map(({ Name, UUID }) => {
         return [
-          Properties.Name, GroupChannels.filter(
+          Name, GroupChannels.filter(
             ({ Associations }) => (
               UUID === Associations.Group.UUID
             )
           ).map(
             ({ Associations }) => {
               return (
-                (found) => found?.Properties.Name || ''
+                (found) => found?.Name || ''
               )(SourceChannels.find(
                 ({ UUID }) => (
                   UUID === Associations.SourceChannel.UUID
@@ -242,7 +242,7 @@ const Content = (props: Props) => {
       })
     )
     setGroupChannelLists(groupChannelLists)
-    const groupName = Groups[0].Properties.Name
+    const groupName = Groups[0]?.Name || ""
     const channelList = groupChannelLists[
       groupName
     ] || [];
@@ -362,6 +362,7 @@ const Content = (props: Props) => {
       Groups, Colors
     } = indexList.reduce(
       (registry, { loader, modality }) => {
+        console.log(groups)
         const relevant_groups = groups.filter(
           ({ Image }) => Image.Method === modality
         )
@@ -604,6 +605,7 @@ const Content = (props: Props) => {
   const mainProps = {
     ...channelProps,
     in_f: fileName,
+    name,
     handle: null as Handle.Dir | null, // Will be set in FileHandler render
     ioState,
     presenting,

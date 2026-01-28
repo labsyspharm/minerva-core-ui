@@ -2281,7 +2281,7 @@ const root = createRoot(rootElement);
 root.render(
     <React.StrictMode>
         <Main
-            name={""} groups={[]}
+            groups={[]}
             handleKeys={["ome-dir-1"]} demo_dicom_web={true}
             exhibit_config={exhibit_config} configWaypoints={configWaypoints}
         />

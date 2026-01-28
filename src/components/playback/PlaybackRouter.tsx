@@ -8,6 +8,7 @@ import styled from "styled-components";
 import type { ChannelPanelProps } from "@/components/shared/channel/ChannelPanel";
 
 export type PlaybackRouterProps = ChannelPanelProps & {
+  name: string;
   ioState: null | string;
   stopExport: () => void;
   retrievingMetadata: boolean;

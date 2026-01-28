@@ -15,6 +15,7 @@ import type { ImageProps } from "@/components/shared/common/types";
 
 export type PresentationProps = HashContext & ImageProps & {
   children: any,
+  name: string,
   config: ConfigProps;
   hiddenChannel: boolean;
   startExport: () => void;
