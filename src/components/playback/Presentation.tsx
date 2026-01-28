@@ -228,7 +228,7 @@ export const Presentation = (props: PresentationProps) => {
     const { Groups } = props.config.ItemRegistry;
     // TODO -- use UUID in story
     const found_group = Groups.find(
-      ({ Properties }) => Properties.Name === group_name
+      ({ Name }) => Name === group_name
     ) || Groups[0];
     if (found_group) {
       setActiveChannelGroup(found_group.UUID);
@@ -383,7 +383,7 @@ export const Presentation = (props: PresentationProps) => {
     const activeGroup = Groups.find(g => g.UUID === activeChannelGroupId);
     if (!activeGroup || !story_content) return { processedContent: story_content || '', channelColors: new Map() };
 
-    const propsGroup = props.groups.find(g => g.name === activeGroup.Properties.Name);
+    const propsGroup = props.groups.find(g => g.name === activeGroup.Name);
     const channels = propsGroup?.channels || [];
     
     let content = story_content;

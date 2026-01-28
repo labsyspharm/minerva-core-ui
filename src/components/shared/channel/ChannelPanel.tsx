@@ -110,7 +110,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   } = useOverlayStore();
   const group_name = Groups.find(
     ({ UUID }) => UUID === activeChannelGroupId
-  )?.Properties?.Name;
+  )?.Name;
   // TODO -- avoid extra name lookup step
   const group = props.groups.find(
     ({ name }) => group_name === name
@@ -139,42 +139,16 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   ];
 
   // Content logic (merged from content.tsx)
-  const { groups, stories } = props;
-  const { pushGroup } = props;
-  const { hash, setHash } = props;
-  const { editable } = props;
+  const { groups } = props;
 
   const total = groups.length;
-  const groupProps = { ...props, total, editable, hash, setHash, stories };
-
-  const pushFunction = (numChannels) => {
-    const channels = defaultChannels.slice(0, numChannels);
-    return () => {
-      const newG = groups.length;
-      pushGroup({
-        g: newG,
-        path: "TODO",
-        name: `Group ${groups.length}`,
-        channels: channels,
-      });
-      setHash({ g: newG });
-    };
-  };
-  const extraUI = (numChannels) => {
-    const onPush = pushFunction(numChannels);
-    const editSwitch = [
-      ["span", {}],
-      [PushGroup, { onPush }],
-    ];
-    return <EditModeSwitcher {...{ ...props, editSwitch }} />;
-  };
+  const groupProps = { ...props, total };
 
   const allGroups =
-    groups.length || props.editable ? (
+    groups.length || props ? (
       <>
         <Header className="h6">
           <WrapColumns>
-            {extraUI(3)}
             <span>Channel Groups</span>
           </WrapColumns>
         </Header>

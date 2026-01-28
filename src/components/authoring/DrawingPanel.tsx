@@ -10,7 +10,7 @@ import { useOverlayStore } from "@/lib/stores";
 import type { Group } from "@/lib/exhibit";
 import type { HashContext } from "@/lib/hashUtil";
 
-export type DrawingPanelProps = HashContext & {
+type DrawingPanelProps = HashContext & {
   groups: Group[];
   onLayerCreate?: (layer: any) => void;
   currentInteraction?: { type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number] } | null;
