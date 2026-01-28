@@ -544,7 +544,7 @@ const Content = (props: Props) => {
   
   const itemRegistryGroups = React.useMemo(() => {
     return Groups.map((group, g) => {
-      const { Name } = group.Properties;
+      const { Name } = group;
       const channels = GroupChannels.filter(group_channel => (
         group_channel.Associations.Group.UUID == group.UUID
       )).map(group_channel => {

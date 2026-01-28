@@ -15,7 +15,7 @@ interface WaypointAnnotationEditorMetadata {
     storyIndex: number;
 }
 
-export type WaypointsListProps = HashContext & {
+type WaypointsListProps = HashContext & {
   viewOnly?: boolean;
 };
 

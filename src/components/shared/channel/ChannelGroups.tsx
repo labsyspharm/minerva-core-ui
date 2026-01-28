@@ -24,8 +24,7 @@ const GroupName = styled.div`
 `;
 
 const GroupRow = (props) => {
-  const { group, stories } = props;
-  const { editable } = props;
+  const { group } = props;
   const { name } = group;
 
   const { Groups } = props.config.ItemRegistry;

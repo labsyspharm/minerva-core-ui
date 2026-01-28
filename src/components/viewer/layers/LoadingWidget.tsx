@@ -1,7 +1,7 @@
 import * as React from "react";
 import type { Layer } from '@deck.gl/core';
 
-export type LoadingWidgetProps = {
+type LoadingWidgetProps = {
   /** Widget positioning within the view. Default 'top-left'. */
   placement?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   /** Tooltip message when loading */
