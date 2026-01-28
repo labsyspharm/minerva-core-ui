@@ -28,8 +28,6 @@ import { convertWaypointToViewState, getWaypoint } from "@/lib/waypoint";
 
 export type ImageViewerProps = {
 	loaderOmeTiff: Loader;
-	config: ConfigProps;
-	groups: Group[];
 	stories: Story[];
 	dicomIndexList: DicomIndex[];
 	viewerConfig: Config;
@@ -130,7 +128,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
 			activeChannelGroupId,
 			modality,
 			loader,
-			groups,
 			channelVisibilities,
 		);
 	};

@@ -64,7 +64,7 @@ type Metadata = {
 export type Config = {
   toSettings: (
     activeChannelGroupId: string | null,
-    modality: string, l?: Loader, g?: any,
+    modality: string, l?: Loader,
     channelVisibilities?: Record<string, boolean>
   ) => Settings;
 };
@@ -109,16 +109,16 @@ const hexToRGB = (hex: string) => {
 
 const toSettings = (opts) => {
   return (
-    activeChannelGroupId, modality, loader, groups,
+    activeChannelGroupId, modality, loader,
     channelVisibilities
   ) => {
-    const { ItemRegistry } = opts.config;
-    const { GroupChannels, SourceChannels } = ItemRegistry;
-    const channels = (GroupChannels).filter(
-      (channel) => (
-        channel.Associations.Group.UUID === activeChannelGroupId
-      )
-    );
+    const { Groups, SourceChannels } = opts;
+    const group = Groups.find(
+      ({ UUID }) => UUID === activeChannelGroupId 
+    ) || Groups[0];
+    const { GroupChannels: channels } = group || {
+      GroupChannels: []
+    }
     // Defaults
     if (!loader) return toDefaultSettings(3);
     const full_level = loader.data[0];
@@ -133,32 +133,32 @@ const toSettings = (opts) => {
       );
       const source_channel = SourceChannels.find(
         (source_channel) => (
-          channel.Associations.SourceChannel.UUID 
+          channel.SourceChannel.UUID 
           === source_channel.UUID
         )
       );
-      const c = source_channel?.Properties.SourceIndex || 0;
+      const c = source_channel?.SourceIndex || 0;
       return { z: 0, t: 0, c };
     });
     const colors: Color[] = channels.map((c, i: number) => {
-      const rgb = c.Associations.Color.ID.split("#").pop();
-      return rgb ? hexToRGB(rgb) : [0, 0, 0];
+      const { R, G, B } = c.Color;
+      return [R, G, B];
     });
     const contrastLimits: Limit[] = channels.map(c => {
-      const { LowerRange, UpperRange } = c.Properties;
+      const { LowerRange, UpperRange } = c;
       return [ LowerRange, UpperRange ]; 
     });
     const channelsVisible: boolean[] = channels.map(
       (c, i: number) => {
         const source_channel = SourceChannels.find(
           (source_channel) => (
-            c.Associations.SourceChannel.UUID 
+            c.SourceChannel.UUID 
             === source_channel.UUID
           )
         );
-        const { Name } = source_channel?.Properties || {};
+        const { Name } = source_channel || {};
         const image_id = (
-          source_channel.Associations.SourceImage.UUID
+          source_channel.SourceImage.UUID
         );
         const brightfield = modality === "Brightfield";
         //if (!channelVisibilities || brightfield ) {

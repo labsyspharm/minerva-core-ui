@@ -129,7 +129,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       );
     }
     return viewerConfig.toSettings(
-      activeChannelGroupId, modality, loader, groups,
+      activeChannelGroupId, modality, loader,
       channelVisibilities
     );
   }

@@ -27,9 +27,9 @@ const GroupRow = (props) => {
   const { group } = props;
   const { name } = group;
 
-  const { Groups } = props.config.ItemRegistry;
   const {
-    setActiveChannelGroup, activeChannelGroupId
+    setActiveChannelGroup, activeChannelGroupId,
+    Groups
   } = useOverlayStore();
   const active_group = React.useMemo(
     () => (
@@ -42,7 +42,7 @@ const GroupRow = (props) => {
   const row_group = React.useMemo(
     () => (
       Groups.find(
-        ({ Properties }) => Properties?.Name === name 
+        ({ Name }) => Name === name 
       ) || Groups[0]
     ),
     [Groups]

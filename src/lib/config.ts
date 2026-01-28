@@ -1,35 +1,22 @@
 import { useRef, useEffect } from "react";
 import { getImageSize } from "@hms-dbmi/viv";
 import { list_colors } from "../minerva-author-ui/author";
-
+import type { ConfigSourceChannel, ConfigGroup } from "./document-store";
 import type { ConfigGroup as LegacyConfigGroup } from "./exhibit";
 import type { Loader } from './viv';
 
-type ExpandedState = {
+type WaypointState = {
   Expanded: boolean;
 };
-type GroupState = ExpandedState;
-type GroupChannelState = ExpandedState;
-type WaypointState = ExpandedState;
-
 type ID = { ID: string; };
 type UUID = { UUID: string };
 type NameProperty = { Name: string; };
-type GroupProperties = NameProperty;
 type DistributionProperties = {
   UpperRange: number;
   LowerRange: number;
   YValues: number[];
   XScale: string;
   YScale: string;
-};
-type SourceChannelProperties = NameProperty & {
-  SourceIndex: number;
-  Samples: number;
-};
-type GroupChannelProperties = {
-  LowerRange: number;
-  UpperRange: number;
 };
 type WaypointProperties = NameProperty & {
   Content: string;
@@ -55,28 +42,10 @@ export type ConfigWaypointOverlay = {
   Group: string;
 };
 
-type SourceChannelAssociations = Record<
-  'SourceDataType', ID 
-> & Partial<Record<
-  'SourceDistribution', UUID
->> & Record<
-  'SourceImage', UUID
->;
-type GroupChannelAssociations = Record<
-  'Color', ID 
-> & Record<
-  'SourceChannel' | 'Group',
-  UUID
->;
-
 export type MutableFields = (keyof ItemRegistryProps)[]
 export type ItemRegistryProps = {
   Name: string;
-  Groups: ConfigGroup[];
-  Colors: ConfigColor[];
   Stories: ConfigWaypoint[];
-  GroupChannels: ConfigGroupChannel[];
-  SourceChannels: ConfigSourceChannel[];
   SourceDistributions: ConfigSourceDistribution[];
 }
 interface SetItems {
@@ -161,39 +130,13 @@ export type ConfigProps = {
 export type ConfigSourceDistribution = UUID & {
   Properties: DistributionProperties;
 };
-export type ConfigSourceChannel = UUID & {
-  Properties: SourceChannelProperties;
-  Associations: SourceChannelAssociations;
-};
-export type ConfigGroupChannel = UUID & {
-  State: GroupChannelState;
-  Properties: GroupChannelProperties;
-  Associations: GroupChannelAssociations;
-};
-export type ConfigGroup = UUID & {
-  State: GroupState;
-  Properties: GroupProperties;
-};
 export type ConfigWaypoint = UUID & {
   State: WaypointState;
   Properties: WaypointProperties;
   Arrows?: ConfigWaypointArrow[];
   Overlays?: ConfigWaypointOverlay[];
-// TODO use UUID for group
-/*  Associations: {
-    Group: UUID
-  }
-*/
-
 };
-export type ConfigColor = ID & {
-  Properties: {
-    R: number,
-    G: number,
-    B: number,
-    Space: string
-  }
-}
+
 interface ExtractDistributions {
   (loader: Loader): Promise<
     Map<number, ConfigSourceDistribution>
@@ -202,10 +145,16 @@ interface ExtractDistributions {
 interface ExtractChannels {
   (loader: Loader, modality: string, groups: LegacyConfigGroup[]): {
     SourceChannels: ConfigSourceChannel[];
-    GroupChannels: ConfigGroupChannel[];
-    Colors: ConfigColor[];
     Groups: ConfigGroup[];
   }
+}
+
+const hex_to_rgb = (c) => {
+  const n = parseInt(c, 16);
+  const R = (n >> 16) & 255;
+  const G = (n >> 8) & 255;
+  const B = n & 255;
+  return { R, G, B };
 }
 
 const GROUP_CHANNELS_CRC01 = {
@@ -445,75 +394,39 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
   const SourceChannels = Channels.map(
     (channel, index) => ({
       UUID: crypto.randomUUID(),
-      Properties: {
-        Name: channel.Name,
-        Samples: channel.SamplesPerPixel,
-        SourceIndex: init.indices[index].c,
-      },
-      Associations: {
-        SourceDataType: asID(Type),
-        SourceImage: asUUID(modality) //TODO
-      }
+      Name: channel.Name,
+      Samples: channel.SamplesPerPixel,
+      SourceIndex: init.indices[index].c,
+      SourceDataType: asID(Type),
+      SourceImage: asUUID(modality) //TODO
     })
   );
-  const Colors = [...new Set(
-    groups.reduce((colors, g) => {
-      return g.Colors.reduce((colors, c) => {
-        const n = parseInt(c, 16);
-        const R = (n >> 16) & 255;
-        const G = (n >> 8) & 255;
-        const B = n & 255;
-        return [
-          ...colors,
-          {
-            ID: `sRGB#${c}`,
-            Properties: {
-              R, G, B,
-              Space: "sRGB",
-              LowerRange: 0,
-              UpperRange: 255
-            }
-          }
-        ]
-      }, colors);
-    }, [
-      ...list_colors("sRGB"), {
-        ID: "sRGB#cc00ff",
-        Properties: {
-          R: 204, G: 0, B: 255,
-          Space: "sRGB",
-          LowerRange: 0,
-          UpperRange: 255
-        }
-      }
-    ])
-  )]
   // Match hard-coded groups to existing channels
   const hardcoded_crc01 = groups.reduce(
-    ({ name_map, Groups, GroupChannels }, g) => {
+    ({ name_map, Groups }, g) => {
       if (!(g.Path in GROUP_CHANNELS_CRC01)) {
-        return { name_map, Groups, GroupChannels };
+        return { name_map, Groups };
       }
       const channel_names = GROUP_CHANNELS_CRC01[g.Path].map(
         n => `Channel ${n}`
       );
       const valid_names = SourceChannels.map(
-        ({ Properties }) => Properties.Name
+        ({ Name }) => Name
       )
       if (g.Channels.length !== channel_names.length) {
-        return { name_map, Groups, GroupChannels };
+        return { name_map, Groups };
       }
       const all_match = channel_names.every(name => (
         valid_names.includes(name)
       ));
       if (!all_match) {
-        return { name_map, Groups, GroupChannels };
+        return { name_map, Groups };
       }
       // Update Source Channel Names
       const new_name_map = SourceChannels.reduce(
         (nmap, sourceChannel) => {
           const in_group_idx = channel_names.indexOf(
-            sourceChannel.Properties.Name
+            sourceChannel.Name
           )
           if (in_group_idx >= 0) {
             const descriptive_name = g.Channels[in_group_idx];
@@ -526,45 +439,37 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
         },
         name_map
       );
+      const new_group_uuid = crypto.randomUUID();
       const new_group = {
-        UUID: crypto.randomUUID(),
+        UUID: new_group_uuid,
         State: { Expanded: false },
-        Properties: {
-          Name: g.Name 
-        }
-      }
-      const new_group_channels = g.Channels.reduce(
-        (new_group_channels, name, index) => {
-          if (!(name in new_name_map)) {
-            return new_group_channels;
-          }
-          const color = g.Colors[index];
-          const color_id = `sRGB#${color}`;
-          return new_group_channels.concat({
-            UUID: crypto.randomUUID(),
-            State: { Expanded: true },
-            Properties: {
-              LowerRange: g.Lows[index],
-              UpperRange: g.Highs[index] 
-            },
-            Associations: {
-              SourceChannel: asUUID(new_name_map[name]),
-              Color: asID(color_id),
-              Group: asUUID(new_group.UUID)
+        Name: g.Name,
+        GroupChannels: g.Channels.reduce(
+          (new_group_channels, name, index) => {
+            if (!(name in new_name_map)) {
+              return new_group_channels;
             }
-          })
-        },
-        [] as ConfigGroupChannel[]
-      )
+            const color = g.Colors[index];
+            return new_group_channels.concat({
+              UUID: crypto.randomUUID(),
+              State: { Expanded: true },
+              LowerRange: g.Lows[index],
+              UpperRange: g.Highs[index],
+              SourceChannel: asUUID(new_name_map[name]),
+              Color: hex_to_rgb(color),
+              Group: asUUID(new_group_uuid)
+            })
+          },
+          [] as ConfigGroup['GroupChannels']
+        )
+      }
       return {
         name_map: new_name_map,
-        Groups: Groups.concat([new_group]),
-        GroupChannels: GroupChannels.concat(new_group_channels)
+        Groups: Groups.concat([new_group])
       }
     },
     {
       Groups: [] as ConfigGroup[],
-      GroupChannels: [] as ConfigGroupChannel[],
       name_map: {} as Record<string, string>
     }
   );
@@ -576,104 +481,86 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
     SourceChannels.forEach(
       (sourceChannel) => {
         if (sourceChannel.UUID in reverse_name_map) {
-          sourceChannel.Properties.Name = reverse_name_map[
+          sourceChannel.Name = reverse_name_map[
             sourceChannel.UUID
           ];
         }
       }
     );
-    const { GroupChannels, Groups } = hardcoded_crc01;
+    const { Groups } = hardcoded_crc01;
     return {
       SourceChannels,
-      GroupChannels,
-      Groups,
-      Colors
+      Groups
     }
   }
   else if (
     ( SourceChannels.length === 1 ) &&
-    ( SourceChannels[0].Properties.Samples === 3 ) &&
-    ( SourceChannels[0].Associations.SourceDataType.ID === "Uint8" )
+    ( SourceChannels[0].Samples === 3 ) &&
+    ( SourceChannels[0].SourceDataType.ID === "Uint8" )
   ) {
+    const group_uuid = crypto.randomUUID();
     const groupName = "Hematoxylin & Eosin";
     const channelName = "H&E";
     const Groups = [{
-      UUID: crypto.randomUUID(),
+      UUID: group_uuid,
       State: { Expanded: true },
-      Properties: {
-        Name: groupName
-      }
-    }]
-    const GroupChannels = SourceChannels.map(
-      (channel, index) => {
-        const group_uuid = Groups[0].UUID;
-        return {
-          UUID: crypto.randomUUID(),
-          State: { Expanded: true },
-          Properties: {
+      Name: groupName,
+      GroupChannels: SourceChannels.map(
+        (channel, index) => {
+          return {
+            UUID: crypto.randomUUID(),
+            State: { Expanded: true },
             LowerRange: 0,
-            UpperRange: 255 
-          },
-          Associations: {
+            UpperRange: 255,
             SourceChannel: onlyUUID(channel),
-            Color: asID("sRGB#cc00ff"),
+            Color: hex_to_rgb("cc00ff"),
             Group: asUUID(group_uuid)
           }
         }
-      }
-    )
+      )
+    }]
     if (SourceChannels.length === 1) {
-      SourceChannels[0].Properties.Name = channelName;
+      SourceChannels[0].Name = channelName;
     }
     return {
       SourceChannels,
-      GroupChannels,
-      Groups,
-      Colors 
+      Groups
     }
   }
   const group_size = 4;
   const Groups = [...Array(Math.ceil(
-      SourceChannels.length / group_size
+    SourceChannels.length / group_size
   )).keys()].map(
-    index => ({
-      UUID: crypto.randomUUID(),
-      State: { Expanded: false },
-      Properties: {
-        Name: `Group ${index}`
-      }
-    })
-  )
-  const GroupChannels = SourceChannels.map(
-    (channel, index) => {
-      const group_index = Math.floor(index / group_size);
-      const group_uuid = Groups[group_index].UUID;
-      const color_id = [
-        'sRGB#0dabff', 'sRGB#c3ff00',
-        'sRGB#ff8b00', 'sRGB#ff00c7'
-      ][
-        index % 4
-      ];
+    group_index => {
+      const group_uuid = crypto.randomUUID();
       return {
-        UUID: crypto.randomUUID(),
-        State: { Expanded: true },
-        Properties: {
-          LowerRange: 2**5, //TODO
-          UpperRange: 2**14  //TODO
-        },
-        Associations: {
-          SourceChannel: onlyUUID(channel),
-          Color: asID(color_id),
-          Group: asUUID(group_uuid)
-        }
+        UUID: group_uuid,
+        State: { Expanded: false },
+        Name: `Group ${group_index}`,
+        GroupChannels: SourceChannels.slice(
+          group_index * group_size, (group_index+1)*group_size
+        ).map(
+          (channel, index) => {
+            const color_id = [
+              '0dabff', 'c3ff00', 'ff8b00', 'ff00c7'
+            ][ index % 4 ];
+            return {
+              UUID: crypto.randomUUID(),
+              State: { Expanded: true },
+              LowerRange: 2**5, //TODO
+              UpperRange: 2**14,  //TODO
+              SourceChannel: onlyUUID(channel),
+              Color: hex_to_rgb(color_id),
+              Group: asUUID(group_uuid)
+            }
+          }
+        )
       }
     }
   )
   return {
     SourceChannels,
-    GroupChannels,
-    Groups,
-    Colors
+    Groups
   }
 }
 
@@ -703,7 +590,7 @@ const mutableConfigArray = (
     'fill', 'copyWithin'
   ];
   const namespaces = [
-    'State', 'Properties', 'Associations'
+    'State', 'Properties', 'Associations' // TODO
   ];
   return new Proxy(target_array, {
     get(target, key, receiver) {

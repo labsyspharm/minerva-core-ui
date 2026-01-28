@@ -149,8 +149,7 @@ const Content = (props: Props) => {
   );
   const [config, setConfig] = useState({
     ItemRegistry: {
-      Name: '', Groups: [], Colors: [],
-      GroupChannels: [], SourceChannels: [],
+      Name: '',
       SourceDistributions: [],
       Stories: props.configWaypoints,
     } as ItemRegistryProps,
@@ -209,46 +208,45 @@ const Content = (props: Props) => {
     setActiveChannelGroup,
     setChannelVisibilities,
     setGroupChannelLists,
-    setGroupNames
+    setGroupNames,
+    setGroups, Groups,
+    setSourceChannels, SourceChannels
   } = useOverlayStore();
-  
+
   const updateGroupChannelLists = ({
-    SourceChannels, GroupChannels, Groups
+    Groups, SourceChannels
   }) => {
     setGroupNames(Object.fromEntries(
-      Groups.map(({ Properties, UUID }) => [
-        UUID, Properties.Name
+      Groups.map(({ Name, UUID }) => [
+        UUID, Name
       ])
     ))
+    const toChannelList = (GroupChannels => {
+      return GroupChannels.map(
+        ({ SourceChannel }) => (
+          SourceChannels.find(({ UUID }) => (
+            UUID === SourceChannel.UUID
+          ))
+        )
+      ).filter(x => x).map(({ Name }) => Name);
+    })
     const groupChannelLists = Object.fromEntries(
-      Groups.map(({ Properties, UUID }) => {
-        const { Name } = Properties;
-        return [
-          Name, GroupChannels.filter(
-            ({ Associations }) => (
-              UUID === Associations.Group.UUID
-            )
-          ).map(
-            ({ Associations }) => {
-              return (
-                (found) => found?.Properties.Name || ''
-              )(SourceChannels.find(
-                ({ UUID }) => (
-                  UUID === Associations.SourceChannel.UUID
-                )
-              ))
-            }
-          )
-        ]
+      Groups.map(({ Name, GroupChannels }) => {
+        return [ Name, toChannelList(GroupChannels) ]; 
       })
     )
     setGroupChannelLists(groupChannelLists)
-    const groupName = Groups[0]?.Properties.Name || ""
+    const defaultGroup = Groups[0] || {
+      GroupChannels: [],
+      Name: ""
+    }
+    const groupName = defaultGroup.Name;
     const channelList = groupChannelLists[
       groupName
     ] || [];
+    console.log(groupChannelLists);
     setChannelVisibilities(Object.fromEntries(
-      channelList.map(name => [name, true])
+      channelList.map((name) => [name, true])
     ))
   }
   
@@ -279,13 +277,12 @@ const Content = (props: Props) => {
     if (handle === null) return;
     const loader = await toLoader({ handle, in_f, pool: new Pool() });
     const {
-      SourceChannels, GroupChannels, Groups, Colors
+      SourceChannels, Groups
     } = extractChannels(loader, "Colorimetric", []);
-    resetItems({
-      SourceChannels, GroupChannels, Groups, Colors
-    });
+    setSourceChannels(SourceChannels)
+    setGroups(Groups);
     updateGroupChannelLists({
-      SourceChannels, GroupChannels, Groups
+      Groups, SourceChannels
     })
     // Asynchronously add distributions
     extractDistributions(loader).then(
@@ -294,12 +291,10 @@ const Content = (props: Props) => {
         resetItems({
           SourceDistributions: [...SourceDistributions],
           SourceChannels: SourceChannels.map(sourceChannel => ({
-            ...sourceChannel, Associations: {
-              ...sourceChannel.Associations,
-              SourceDistribution: sourceDistributionMap.get(
-                sourceChannel.Properties.SourceIndex
-              )
-            }
+            ...sourceChannel, 
+            SourceDistribution: sourceDistributionMap.get(
+              sourceChannel.SourceIndex
+            )
           }))
         });
       }
@@ -358,17 +353,14 @@ const Content = (props: Props) => {
     );
     setDicomIndexList(indexList);
     const {
-      SourceChannels,
-      GroupChannels,
-      Groups, Colors
+      SourceChannels, Groups
     } = indexList.reduce(
       (registry, { loader, modality }) => {
-        console.log(groups)
         const relevant_groups = groups.filter(
           ({ Image }) => Image.Method === modality
         )
         const {
-          SourceChannels, GroupChannels, Groups, Colors
+          SourceChannels, Groups
         } = extractChannels(
           loader, modality, relevant_groups
         );
@@ -376,36 +368,24 @@ const Content = (props: Props) => {
           SourceChannels: [
             ...registry.SourceChannels, ...SourceChannels
           ],
-          GroupChannels: [
-            ...registry.GroupChannels, ...GroupChannels
-          ],
           Groups: [
             ...registry.Groups, ...Groups
-          ],
-          Colors: [
-            ...registry.Colors, ...Colors
-          ],
+          ]
         };
       },
       {
         SourceChannels: [],
-        GroupChannels: [],
-        Groups: [],
-        Colors: []
+        Groups: []
       }
     )
-    resetItems({
-      SourceChannels,
-      GroupChannels,
-      Groups, Colors
-    });
+    setGroups(Groups);
+    setSourceChannels(SourceChannels);
     updateGroupChannelLists({
-      SourceChannels, GroupChannels, Groups
-    })
+      Groups, SourceChannels
+    });
   }
   
   const mutableFields: MutableFields = [
-    'GroupChannels'
   ]
   const ItemRegistry = mutableItemRegistry(
     config.ItemRegistry, setItems, mutableFields
@@ -536,32 +516,24 @@ const Content = (props: Props) => {
   };
 
   // Data transformation (from Index)
-  const {
-    Colors, Groups, GroupChannels, SourceChannels
-  } = config.ItemRegistry;
-  
   const itemRegistryMarkerNames = SourceChannels.map(
-    source_channel => source_channel.Properties.Name
+    source_channel => source_channel.Name
   )
   
   const itemRegistryGroups = React.useMemo(() => {
     return Groups.map((group, g) => {
-      const { Name } = group.Properties;
-      const channels = GroupChannels.filter(group_channel => (
-        group_channel.Associations.Group.UUID == group.UUID
-      )).map(group_channel => {
+      const { Name, GroupChannels } = group;
+      const channels = GroupChannels.map(group_channel => {
         const defaults = { Name: '' };
-        const { R, G, B } = Colors.find(({ ID }) => {
-          return ID === group_channel.Associations.Color.ID;
-        })?.Properties || {};
+        const { R, G, B } = group_channel.Color;
         const color = (
           (1 << 24) + (R << 16) + (G << 8) + B
         ).toString(16).slice(1);
-        const { LowerRange, UpperRange } = group_channel.Properties;
-        const { SourceChannel } = group_channel.Associations;
+        const { LowerRange, UpperRange } = group_channel;
+        const { SourceChannel } = group_channel;
         const { Name } = SourceChannels.find(source_channel => (
           source_channel.UUID == SourceChannel.UUID
-        ))?.Properties || defaults;
+        )) || defaults;
         return { 
           color, name: Name, contrast: [
             LowerRange, UpperRange
@@ -574,7 +546,7 @@ const Content = (props: Props) => {
       };
     })
   }, [
-    GroupChannels
+    Groups 
   ]);
   
   const channelProps = {
@@ -626,6 +598,8 @@ const Content = (props: Props) => {
   const imageProps = React.useMemo(() => {
     return toImageProps({
       props: {
+        Groups,
+        SourceChannels,
         loaderOmeTiff,
         dicomIndexList,
         marker_names: itemRegistryMarkerNames,
@@ -637,7 +611,7 @@ const Content = (props: Props) => {
       },
     });
   }, [
-    GroupChannels, loaderOmeTiff, dicomIndexList, itemRegistryMarkerNames, channelProps, zoomInEl, zoomOutEl
+    loaderOmeTiff, dicomIndexList, itemRegistryMarkerNames, channelProps, zoomInEl, zoomOutEl
   ]);
   
   // Use Zustand store for overlay state management
@@ -654,7 +628,7 @@ const Content = (props: Props) => {
     activeStoryIndex,
     setActiveStory,
     setStories,
-    setWaypoints
+    setWaypoints,
   } = useOverlayStore();
   
   // Initialize stories in the store when config changes

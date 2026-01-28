@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { documentStore } from './document-store';
+export type { ConfigGroup } from './document-store';
+import type { DocumentStore } from './document-store';
 import type { ConfigWaypoint, ConfigWaypointArrow, ConfigWaypointOverlay } from './config';
 
 // Re-export config types for convenience
@@ -448,10 +451,13 @@ const overlayInitialState = {
 };
 
 // Create the overlay store
-export const useOverlayStore = create<OverlayStore>()(
+export const useOverlayStore = create<
+  OverlayStore & DocumentStore
+>()(
   devtools(
     (set, get) => ({
       ...overlayInitialState,
+      ...documentStore(set, get),
 
       setActiveTool: (tool: string) => {
         set({ activeTool: tool });
