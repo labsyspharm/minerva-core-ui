@@ -52,8 +52,8 @@ export interface ExhibitConfig {
       Group: string;
       Name: string;
       Zoom: number;
-      Pan: number[];
-      Lensing: any;
+      Pan: [number, number];
+      Lensing?: any;
     }[];
   }[];
 }
@@ -71,7 +71,7 @@ const readStories = (config: ExhibitConfig): Story[] => {
   return stories.map((story) => {
     return {
       waypoints: story.Waypoints.map((waypoint) => {
-        const [x, y] = waypoint.Pan.slice(0, 2);
+        const [x, y] = waypoint.Pan.slice(0, 2) as [ number, number ];
         const output_waypoint: Waypoint = {
           name: waypoint.Name,
           markdown: waypoint.Description,

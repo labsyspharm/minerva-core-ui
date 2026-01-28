@@ -1,7 +1,7 @@
 import { findFile } from "./filesystem";
 import { findDicomWeb } from "../lib/dicom";
 
-import type { ValidObj } from '../components/upload';
+import type { ValidObj } from '@/components/shared/Upload';
 
 export type KV = [string, FormDataEntryValue];
 export type ObjAny = {

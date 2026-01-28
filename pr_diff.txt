@@ -1,0 +1,3598 @@
+diff --git a/index.tsx b/index.tsx
+index f94c42b..421c685 100644
+--- a/index.tsx
++++ b/index.tsx
+@@ -1,6 +1,7 @@
+ import * as React from "react";
+ import { createRoot } from 'react-dom/client';
+-import { Main } from "./src/main";
++// import { Main } from "./src/main";
++import { Main } from "@/components/Main";
+ import "@fontsource/overpass/200.css";
+ import "@fontsource/overpass/500.css";
+ import { createGlobalStyle } from "styled-components";
+diff --git a/src/components/overlays/index.module.css b/src/components/authoring/DrawingPanel.module.css
+similarity index 100%
+rename from src/components/overlays/index.module.css
+rename to src/components/authoring/DrawingPanel.module.css
+diff --git a/src/components/overlays/index.tsx b/src/components/authoring/DrawingPanel.tsx
+similarity index 94%
+rename from src/components/overlays/index.tsx
+rename to src/components/authoring/DrawingPanel.tsx
+index b870213..06d1d0f 100644
+--- a/src/components/overlays/index.tsx
++++ b/src/components/authoring/DrawingPanel.tsx
+@@ -1,16 +1,16 @@
+ import * as React from "react";
+ import { ChromePicker } from 'react-color';
+-import { DrawingOverlay } from "./DrawingOverlay";
+-import { LayersPanel } from "./LayersPanel";
+-import styles from "./index.module.css";
+-import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "./icons";
+-import { useOverlayStore } from "../../lib/stores";
++import { DrawingOverlay } from "@/components/viewer/layers/annotations/DrawingOverlay";
++import { LayersPanel } from "@/components/authoring/LayersPanel";
++import styles from "./DrawingPanel.module.css";
++import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "@/components/shared/icons/OverlayIcons";
++import { useOverlayStore } from "@/lib/stores";
+ 
+ // Types
+-import type { Group } from "../../lib/exhibit";
+-import type { HashContext } from "../../lib/hashUtil";
++import type { Group } from "@/lib/exhibit";
++import type { HashContext } from "@/lib/hashUtil";
+ 
+-export type Props = HashContext & {
++export type DrawingPanelProps = HashContext & {
+   groups: Group[];
+   onLayerCreate?: (layer: any) => void;
+   currentInteraction?: { type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number] } | null;
+@@ -30,7 +30,7 @@ const TOOLS = {
+ 
+ type ToolType = typeof TOOLS[keyof typeof TOOLS];
+ 
+-const Overlays = (props: Props) => {
++const DrawingPanel = (props: DrawingPanelProps) => {
+   const { hash, onLayerCreate, currentInteraction } = props;
+   const group = props.groups[hash.g];
+   
+@@ -300,6 +300,6 @@ const Overlays = (props: Props) => {
+   );
+ };
+ 
+-export { Overlays };
+-export type { ToolType };
++export { DrawingPanel };
++export type { DrawingPanelProps, ToolType };
+ export { TOOLS };
+diff --git a/src/components/overlays/LayersPanel.tsx b/src/components/authoring/LayersPanel.tsx
+similarity index 98%
+rename from src/components/overlays/LayersPanel.tsx
+rename to src/components/authoring/LayersPanel.tsx
+index ebd8655..d30e1a1 100644
+--- a/src/components/overlays/LayersPanel.tsx
++++ b/src/components/authoring/LayersPanel.tsx
+@@ -1,9 +1,9 @@
+ import * as React from "react";
+-import { useOverlayStore } from "../../lib/stores";
+-import type { Annotation, TextAnnotation } from "../../lib/stores";
+-import { ItemList, type ListItem } from "../common/ItemList";
+-import { RectangleIcon, EllipseIcon, PolylineIcon, PolygonIcon, LineIcon, GroupIcon, PointIcon, TextIcon } from "./icons";
+-import styles from "./index.module.css";
++import { useOverlayStore } from "@/lib/stores";
++import type { Annotation, TextAnnotation } from "@/lib/stores";
++import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
++import { RectangleIcon, EllipseIcon, PolylineIcon, PolygonIcon, LineIcon, GroupIcon, PointIcon, TextIcon } from "@/components/shared/icons/OverlayIcons";
++import styles from "@/components/authoring/DrawingPanel.module.css";
+ 
+ // Shared Text Edit Panel Component (same as in original LayersPanel)
+ interface TextEditPanelProps {
+diff --git a/src/components/waypoint/toolbar.tsx b/src/components/authoring/WaypointToolbar.tsx
+similarity index 76%
+rename from src/components/waypoint/toolbar.tsx
+rename to src/components/authoring/WaypointToolbar.tsx
+index 82134b0..888e175 100644
+--- a/src/components/waypoint/toolbar.tsx
++++ b/src/components/authoring/WaypointToolbar.tsx
+@@ -1,6 +1,5 @@
+ import * as React from "react";
+-import { Icon, RefIcon } from "../common/icon";
+-import { WrapIcons } from "../common/icons";
++import { Icon, RefIcon, WrapIcons } from "@/components/shared/common/Icon";
+ import {
+   faChevronLeft as faHide,
+   faChevronRight as faShow,
+@@ -12,7 +11,15 @@ import {
+   faInfo,
+ } from "@fortawesome/free-solid-svg-icons";
+ 
+-const Toolbar = (props) => {
++export type WaypointToolbarProps = {
++  onZoomInEl: (el: HTMLElement | null) => void;
++  onZoomOutEl: (el: HTMLElement | null) => void;
++  hide: boolean;
++  togglePanel: () => void;
++  toggleInfo: () => void;
++};
++
++export const WaypointToolbar = (props: WaypointToolbarProps) => {
+   const { onZoomInEl, onZoomOutEl } = props;
+   const { hide, togglePanel, toggleInfo } = props;
+ 
+@@ -49,5 +56,3 @@ const Toolbar = (props) => {
+     </>
+   );
+ };
+-
+-export { Toolbar };
+diff --git a/src/components/editable/namedIcons.tsx b/src/components/authoring/tools/ActionButtons.tsx
+similarity index 95%
+rename from src/components/editable/namedIcons.tsx
+rename to src/components/authoring/tools/ActionButtons.tsx
+index 89680ba..4ee22db 100644
+--- a/src/components/editable/namedIcons.tsx
++++ b/src/components/authoring/tools/ActionButtons.tsx
+@@ -1,6 +1,6 @@
+ import * as React from "react";
+ import styled from "styled-components";
+-import { Icon } from "../common/icon";
++import { Icon } from "@/components/shared/common/Icon";
+ import {
+   faPlus as faPush,
+   faMinus as faPop,
+diff --git a/src/components/editable/common.tsx b/src/components/authoring/tools/EditModeSwitcher.tsx
+similarity index 70%
+rename from src/components/editable/common.tsx
+rename to src/components/authoring/tools/EditModeSwitcher.tsx
+index 81c909e..0db81b2 100644
+--- a/src/components/editable/common.tsx
++++ b/src/components/authoring/tools/EditModeSwitcher.tsx
+@@ -1,8 +1,8 @@
+ import * as React from "react";
+ import styled from "styled-components";
+-import { Icon } from "../common/icon";
++import { Icon } from "@/components/shared/common/Icon";
+ 
+-const Editor = (props) => {
++const EditModeSwitcher = (props) => {
+   const [noEdit, yesEdit] = props.editSwitch;
+   const [Plain, plainProps] = noEdit;
+   const [Edit, editProps] = yesEdit;
+@@ -12,4 +12,4 @@ const Editor = (props) => {
+   return <Plain {...plainProps} />;
+ };
+ 
+-export { Editor };
++export { EditModeSwitcher };
+diff --git a/src/components/editable/status.tsx b/src/components/authoring/tools/EditableText.tsx
+similarity index 95%
+rename from src/components/editable/status.tsx
+rename to src/components/authoring/tools/EditableText.tsx
+index 23f2b10..0ec5dad 100644
+--- a/src/components/editable/status.tsx
++++ b/src/components/authoring/tools/EditableText.tsx
+@@ -25,7 +25,7 @@ const Mono = styled.div`
+   }
+ `;
+ 
+-const Status = (props) => {
++const EditableText = (props) => {
+   const { uuid, editable = true } = props;
+   const { setInput, md = false } = props;
+   const { cache, updateCache } = props;
+@@ -54,4 +54,4 @@ const Status = (props) => {
+   return <div>{content}</div>;
+ };
+ 
+-export { Status };
++export { EditableText };
+diff --git a/src/components/stories/ROIPanel.module.css b/src/components/authoring/waypoints/WaypointAnnotationEditor.module.css
+similarity index 96%
+rename from src/components/stories/ROIPanel.module.css
+rename to src/components/authoring/waypoints/WaypointAnnotationEditor.module.css
+index 7ef1ffc..702dc29 100644
+--- a/src/components/stories/ROIPanel.module.css
++++ b/src/components/authoring/waypoints/WaypointAnnotationEditor.module.css
+@@ -1,4 +1,4 @@
+-.roiPanel {
++.annotationsPanel {
+   background-color: #2c2c2c;
+   border: 1px solid #444;
+   border-radius: 6px;
+@@ -10,7 +10,7 @@
+   width: 100%; /* Take full width */
+ }
+ 
+-.roiPanelContent {
++.annotationsPanelContent {
+   display: flex;
+   flex-direction: column;
+   flex: 1;
+diff --git a/src/components/stories/ROIPanel.tsx b/src/components/authoring/waypoints/WaypointAnnotationEditor.tsx
+similarity index 94%
+rename from src/components/stories/ROIPanel.tsx
+rename to src/components/authoring/waypoints/WaypointAnnotationEditor.tsx
+index 88410b9..9527fa1 100644
+--- a/src/components/stories/ROIPanel.tsx
++++ b/src/components/authoring/waypoints/WaypointAnnotationEditor.tsx
+@@ -1,10 +1,10 @@
+ import * as React from "react";
+ import { ChromePicker } from 'react-color';
+-import { LayersPanel } from "../overlays/LayersPanel";
+-import { useOverlayStore } from "../../lib/stores";
+-import type { ConfigWaypoint } from "../../lib/config";
+-import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "../overlays/icons";
+-import styles from "./ROIPanel.module.css";
++import { LayersPanel } from "@/components/authoring/LayersPanel";
++import { useOverlayStore } from "@/lib/stores";
++import type { ConfigWaypoint } from "@/lib/config";
++import { MoveIcon, RectangleIcon, EllipseIcon, LassoIcon, PolygonIcon, LineIcon, PolylineIcon, TextIcon, PointIcon, ColorIcon } from "@/components/shared/icons/OverlayIcons";
++import styles from "./WaypointAnnotationEditor.module.css";
+ 
+ // Define available tools (same as overlays)
+ const TOOLS = {
+@@ -20,12 +20,12 @@ const TOOLS = {
+ 
+ type ToolType = typeof TOOLS[keyof typeof TOOLS];
+ 
+-interface ROIPanelProps {
++export interface WaypointAnnotationEditorProps {
+     story: ConfigWaypoint;
+     storyIndex: number;
+ }
+ 
+-const ROIPanel: React.FC<ROIPanelProps> = ({ story, storyIndex }) => {
++const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({ story, storyIndex }) => {
+     const { 
+         overlayLayers,
+         activeTool,
+@@ -111,8 +111,8 @@ const ROIPanel: React.FC<ROIPanelProps> = ({ story, storyIndex }) => {
+     };
+ 
+     return (
+-        <div className={styles.roiPanel}>
+-            <div className={styles.roiPanelContent}>
++        <div className={styles.annotationsPanel}>
++            <div className={styles.annotationsPanelContent}>
+                 {/* Toolbar with drawing tools - same as main overlays */}
+                 <div className={styles.toolbar}>
+                     <button 
+@@ -277,4 +277,4 @@ const ROIPanel: React.FC<ROIPanelProps> = ({ story, storyIndex }) => {
+     );
+ };
+ 
+-export { ROIPanel };
++export { WaypointAnnotationEditor };
+diff --git a/src/components/stories/index.module.css b/src/components/authoring/waypoints/WaypointsList.module.css
+similarity index 97%
+rename from src/components/stories/index.module.css
+rename to src/components/authoring/waypoints/WaypointsList.module.css
+index 0094c72..da86197 100644
+--- a/src/components/stories/index.module.css
++++ b/src/components/authoring/waypoints/WaypointsList.module.css
+@@ -48,7 +48,7 @@
+   overflow: hidden;
+ }
+ 
+-.roiPanelInline {
++.annotationsPanelInline {
+   margin: 8px 0; /* Remove left/right margins to take full width */
+   width: 100%; /* Take full width */
+ }
+diff --git a/src/components/stories/index.tsx b/src/components/authoring/waypoints/WaypointsList.tsx
+similarity index 75%
+rename from src/components/stories/index.tsx
+rename to src/components/authoring/waypoints/WaypointsList.tsx
+index 9643463..aa6ccde 100644
+--- a/src/components/stories/index.tsx
++++ b/src/components/authoring/waypoints/WaypointsList.tsx
+@@ -1,28 +1,25 @@
+ import * as React from "react";
+-import styles from "./index.module.css";
+-import { useOverlayStore } from "../../lib/stores";
+-import { ItemList, type ListItem } from "../common/ItemList";
+-import { ROIPanel } from "./ROIPanel";
+-import { TextIcon, PolylineIcon } from "../overlays/icons";
++import styles from "./WaypointsList.module.css";
++import { useOverlayStore } from "@/lib/stores";
++import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
++import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
++import { TextIcon, PolylineIcon } from "@/components/shared/icons/OverlayIcons";
+ 
+ // Types
+-import type { HashContext } from "../../lib/hashUtil";
+-import type { ConfigWaypoint } from "../../lib/config";
++import type { HashContext } from "@/lib/hashUtil";
++import type { ConfigWaypoint } from "@/lib/config";
+ 
+-// Extended metadata type for markdown editor
+-// Removed markdown editor
+-
+-interface ROIPanelMetadata {
+-    type: 'roi-panel';
++interface WaypointAnnotationEditorMetadata {
++    type: 'annotations-panel';
+     story: ConfigWaypoint;
+     storyIndex: number;
+ }
+ 
+-export type Props = HashContext & {
++export type WaypointsListProps = HashContext & {
+   viewOnly?: boolean;
+ };
+ 
+-const Stories = (props: Props) => {
++const WaypointsList = (props: WaypointsListProps) => {
+     const { hash, viewOnly } = props;
+ 
+     // Use Zustand store for stories and waypoints management
+@@ -46,8 +43,8 @@ const Stories = (props: Props) => {
+     const [isEditingMarkdown, setIsEditingMarkdown] = React.useState(false);
+     const [expandedMarkdownStories, setExpandedMarkdownStories] = React.useState<Set<string>>(new Set());
+     
+-    // Local state for ROI panel expansion
+-    const [expandedROIStories, setExpandedROIStories] = React.useState<Set<string>>(new Set());
++    // Local state for annotations panel expansion
++    const [expandedAnnotationsStories, setExpandedAnnotationsStories] = React.useState<Set<string>>(new Set());
+     
+     // Drag and drop state
+     const [draggedStoryId, setDraggedStoryId] = React.useState<string | null>(null);
+@@ -81,31 +78,29 @@ const Stories = (props: Props) => {
+         }
+     }, [stories, activeStoryIndex, imageWidth, imageHeight]);
+ 
+-    // Convert stories to ListItem format with inline markdown editor and ROI panel
+-const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((story, index) => {
++    // Convert stories to ListItem format with inline annotations panel
++    const listItems: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>[] = stories.map((story, index) => {
+         const storyId = story.UUID || `story-${index}`;
+         const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
+-        const isROIExpanded = expandedROIStories.has(storyId);
++        const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
+         const isDragging = draggedStoryId === storyId;
+         const isDropTarget = dropTargetIndex === index;
+         
+         // Build children array based on what's expanded
+-    const children: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = [];
+-        
+-    // Markdown editor removed
++        const children: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>[] = [];
+         
+-        if (isROIExpanded) {
++        if (isAnnotationsExpanded) {
+             children.push({
+-                id: `${storyId}-roi-panel`,
+-                title: 'ROI Panel',
++                id: `${storyId}-annotations-panel`,
++                title: 'Annotations Panel',
+                 subtitle: 'Overlays and annotations',
+                 isActive: false,
+                 isExpanded: false,
+                 metadata: { 
+-                    type: 'roi-panel',
++                    type: 'annotations-panel',
+                     story: story,
+                     storyIndex: index
+-                } as ROIPanelMetadata
++                } as WaypointAnnotationEditorMetadata
+             });
+         }
+         
+@@ -118,14 +113,14 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
+                     story.Properties.Content) : 
+                 'Story',
+             isActive: activeStoryIndex === index,
+-            isExpanded: isMarkdownExpanded || isROIExpanded,
++            isExpanded: isMarkdownExpanded || isAnnotationsExpanded,
+             isDragging: isDragging,
+             children: children.length > 0 ? children : undefined,
+             metadata: story
+         };
+     });
+ 
+-    const handleItemClick = (item: ListItem<ConfigWaypoint | ROIPanelMetadata>) => {
++    const handleItemClick = (item: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>) => {
+         // Only handle story clicks, not child panel clicks
+         if (item.metadata && !('type' in item.metadata)) {
+             const story = item.metadata as ConfigWaypoint;
+@@ -133,9 +128,9 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
+             if (index !== -1) {
+                 setActiveStory(index);
+                 
+-                // Collapse all ROI panels when switching stories to avoid showing
++                // Collapse all annotations panels when switching stories to avoid showing
+                 // annotations from the new story under the old story's panel
+-                setExpandedROIStories(new Set());
++                setExpandedAnnotationsStories(new Set());
+                 
+                 // Trigger view state change if waypoint has Pan/Zoom properties
+                 // These are in Minerva 1.5 (OSD) format and will be converted by VivView
+@@ -150,17 +145,9 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
+         }
+     };
+ 
+-    // Markdown editing handlers
+-    // Markdown editor removed
+-
+-    // Markdown editor removed
+-
+-    // Handle markdown editor toggle
+-    // Markdown editor removed
+-
+-    // Handle ROI panel toggle
+-    const handleToggleROIPanel = (storyId: string) => {
+-        setExpandedROIStories(prev => {
++    // Handle annotations panel toggle
++    const handleToggleAnnotationsPanel = (storyId: string) => {
++        setExpandedAnnotationsStories(prev => {
+             const newSet = new Set(prev);
+             if (newSet.has(storyId)) {
+                 newSet.delete(storyId);
+@@ -211,11 +198,8 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
+         setDropTargetIndex(null);
+     };
+ 
+-    // Get the active story for markdown editing
+-    const activeStory = activeStoryIndex !== null ? stories[activeStoryIndex] : null;
+-
+     // Custom item actions for stories
+-    const storyItemActions = (item: ListItem<ConfigWaypoint | ROIPanelMetadata>) => {
++    const storyItemActions = (item: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>) => {
+         // Only show actions for story items, not child panel items
+         if (item.metadata && 'type' in item.metadata) {
+             return null;
+@@ -223,8 +207,7 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
+ 
+         const story = item.metadata as ConfigWaypoint;
+         const storyId = story.UUID || item.id;
+-        const isMarkdownExpanded = false;
+-        const isROIExpanded = expandedROIStories.has(storyId);
++        const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
+ 
+         return (
+             <div style={{ display: 'flex', gap: '4px' }}>
+@@ -272,12 +255,12 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
+                     <TextIcon style={{ width: '14px', height: '14px' }} />
+                 </button>
+ 
+-                {/* ROI/Annotations Button */}
++                {/* Annotations Panel Button */}
+                 <button
+                     style={{
+                         background: 'none',
+                         border: 'none',
+-                        color: isROIExpanded ? '#007acc' : '#ccc',
++                        color: isAnnotationsExpanded ? '#007acc' : '#ccc',
+                         cursor: 'pointer',
+                         padding: '4px',
+                         borderRadius: '3px',
+@@ -288,9 +271,9 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
+                     }}
+                     onClick={(e) => {
+                         e.stopPropagation();
+-                        handleToggleROIPanel(storyId);
++                        handleToggleAnnotationsPanel(storyId);
+                     }}
+-                    title={isROIExpanded ? "Hide ROI panel" : "Show ROI panel"}
++                    title={isAnnotationsExpanded ? "Hide annotations panel" : "Show annotations panel"}
+                 >
+                     <PolylineIcon style={{ width: '14px', height: '14px' }} />
+                 </button>
+@@ -298,20 +281,20 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
+         );
+     };
+ 
+-    // Custom child renderer for markdown editor and ROI panel
+-    const customChildRenderer = (childItem: ListItem<ConfigWaypoint | ROIPanelMetadata>, parentItem: ListItem<ConfigWaypoint | ROIPanelMetadata>) => {
++    // Custom child renderer for annotations panel
++    const customChildRenderer = (childItem: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>, parentItem: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>) => {
+         if (childItem.metadata && 'type' in childItem.metadata) {
+-            const metadata = childItem.metadata as ROIPanelMetadata;
++            const metadata = childItem.metadata as WaypointAnnotationEditorMetadata;
+             
+-            if (metadata.type === 'roi-panel') {
+-                const roiMetadata = metadata as ROIPanelMetadata;
+-                const story = roiMetadata.story;
++            if (metadata.type === 'annotations-panel') {
++                const annotationsMetadata = metadata as WaypointAnnotationEditorMetadata;
++                const story = annotationsMetadata.story;
+                 
+                 return (
+-                    <div className={styles.roiPanelInline}>
+-                        <ROIPanel 
++                    <div className={styles.annotationsPanelInline}>
++                        <WaypointAnnotationEditor 
+                             story={story}
+-                            storyIndex={roiMetadata.storyIndex}
++                            storyIndex={annotationsMetadata.storyIndex}
+                         />
+                     </div>
+                 );
+@@ -324,10 +307,10 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
+ 
+     return (
+         <div slot="waypoints" className={className}>
+-            {/* Stories panel content */}
++            {/* Waypoints panel content */}
+             <ItemList
+                 items={listItems}
+-                title="Stories"
++                title="Waypoints"
+                 onItemClick={handleItemClick}
+                 onDragStart={handleDragStart}
+                 onDragEnd={handleDragEnd}
+@@ -337,7 +320,7 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
+                 showVisibilityToggle={false}
+                 showDeleteButton={false}
+                 showExpandToggle={false}
+-                emptyMessage="No stories yet"
++                emptyMessage="No waypoints yet"
+                 customChildRenderer={customChildRenderer}
+                 itemActions={viewOnly ? null: storyItemActions}
+                 noHeader={viewOnly}
+@@ -346,4 +329,5 @@ const listItems: ListItem<ConfigWaypoint | ROIPanelMetadata>[] = stories.map((st
+     );
+ };
+ 
+-export { Stories };
++export { WaypointsList };
++export type { WaypointsListProps };
+diff --git a/src/components/channel/content.tsx b/src/components/channel/content.tsx
+deleted file mode 100644
+index 2338f99..0000000
+--- a/src/components/channel/content.tsx
++++ /dev/null
+@@ -1,108 +0,0 @@
+-import * as React from "react";
+-import { Groups } from "./groups";
+-import styled from "styled-components";
+-import { PushGroup } from "../editable/groups";
+-import { Editor } from "../editable/common";
+-import { defaultChannels } from "./legend";
+-
+-const WrapContent = styled.div`
+-  height: 100%;
+-  display: grid;
+-  pointer-events: none;
+-  grid-template-rows: auto auto 1fr;
+-  grid-template-columns: 150px auto 100%;
+-  transform: translate(-150px);
+-`;
+-
+-const WrapCore = styled.div`
+-  padding: 0.5em;
+-  grid-column: 3;
+-  grid-row: 1 / 3;
+-  overflow: auto;
+-  scrollbar-color: #888 var(--theme-dim-gray-color);
+-  pointer-events: all;
+-  word-wrap: break-word;
+-  border: 2px solid var(--theme-glass-edge);
+-  background-color: var(--dark-glass);
+-  border-radius: var(--radius-0001);
+-`;
+-
+-const WrapNav = styled.div`
+-  grid-row: 1;
+-  grid-column: 1;
+-  padding: 0.8em;
+-  font-size: 16px;
+-  pointer-events: all;
+-  padding: 0.5em 0.75em;
+-  border: 2px solid var(--theme-glass-edge);
+-  border-right: 0;
+-  background-color: var(--dark-glass);
+-  border-radius: var(--radius-0001);
+-`;
+-
+-const WrapColumns = styled.div`
+-  grid-template-columns: auto 1fr;
+-  display: grid;
+-  gap: 0.25em;
+-`;
+-
+-const Header = styled.h2`
+-`;
+-
+-const Content = (props) => {
+-  const { children, groups, stories } = props;
+-  const { pushGroup } = props;
+-  const { hash, setHash } = props;
+-  const { editable } = props;
+-
+-  const total = groups.length;
+-  const groupProps = { ...props, total, editable, hash, setHash, stories };
+-
+-  const pushFunction = (numChannels) => {
+-    const channels = defaultChannels.slice(0, numChannels);
+-    return () => {
+-      const newG = groups.length;
+-      pushGroup({
+-        g: newG,
+-        path: "TODO",
+-        name: `Group ${groups.length}`,
+-        channels: channels,
+-      });
+-      setHash({ g: newG });
+-    };
+-  };
+-  const extraUI = (numChannels) => {
+-    const onPush = pushFunction(numChannels);
+-    const editSwitch = [
+-      ["span", {}],
+-      [PushGroup, { onPush }],
+-    ];
+-    return <Editor {...{ ...props, editSwitch }} />;
+-  };
+-
+-  const allGroups =
+-    groups.length || props.editable ? (
+-      <>
+-        <Header className="h6">
+-          <WrapColumns>
+-            {extraUI(3)}
+-            <span>Channel Groups</span>
+-          </WrapColumns>
+-        </Header>
+-        <Groups {...{ ...groupProps, groups }} />
+-      </>
+-    ) : null;
+-
+-  return (
+-    <WrapContent> 
+-      <WrapNav> 
+-        {children}
+-      </WrapNav> 
+-      <WrapCore>
+-        {allGroups}
+-      </WrapCore>
+-    </WrapContent> 
+-  );
+-};
+-
+-export { Content };
+diff --git a/src/components/channel/index.tsx b/src/components/channel/index.tsx
+deleted file mode 100644
+index 23e0088..0000000
+--- a/src/components/channel/index.tsx
++++ /dev/null
+@@ -1,136 +0,0 @@
+-import * as React from "react";
+-import { useState } from "react";
+-import { Legend } from "./legend";
+-import { Content } from "./content";
+-import { Toolbar } from "./toolbar";
+-//import { theme } from "../../theme.module.css";
+-import { useOverlayStore } from "../../lib/stores";
+-import styled from "styled-components";
+-const theme = {};
+-
+-// Types
+-import type { ConfigProps } from "../../lib/config";
+-import type { Group, Story } from "../../lib/exhibit";
+-import type { HashContext } from "../../lib/hashUtil";
+-
+-export type ImageProps = {
+-  name: string;
+-  groups: Group[];
+-};
+-
+-export type Props = HashContext & ImageProps & {
+-  children: any,
+-  config: ConfigProps;
+-  authorMode: boolean;
+-  hiddenChannel: boolean;
+-  startExport: () => void;
+-  controlPanelElement: string;
+-  retrievingMetadata: boolean;
+-  setHiddenChannel: (v: boolean) => void;
+-};
+-
+-const TextWrap = styled.div`
+-  height: 100%;
+-  > div.core {
+-    color: #eee;
+-    position: absolute;
+-    right: 0;
+-    top: 0;
+-    width: 220px;
+-    margin-bottom: 4px;
+-    transition: transform 0.5s ease 0s;
+-  }
+-  > div.core.hide {
+-    transform: translateX(100%); 
+-  }
+-  .dim {
+-    color: #aaa;
+-  }
+-`;
+-
+-const TextOther = styled.div`
+-  background-color: blue;
+-`;
+-
+-const Channel = (props: Props) => {
+-
+-  const hide = props.hiddenChannel;
+-  const setHide = props.setHiddenChannel;
+-
+-  const togglePanel = () => setHide(!hide);
+-
+-  const { Groups } = props.config.ItemRegistry;
+-  const hidden = props.retrievingMetadata;
+-  const {
+-    activeChannelGroupId,
+-    setChannelVisibilities,
+-    channelVisibilities
+-  } = useOverlayStore();
+-  const group_name = Groups.find(
+-    ({ UUID }) => UUID === activeChannelGroupId
+-  )?.Properties?.Name;
+-  // TODO -- avoid extra name lookup step
+-  const group = props.groups.find(
+-    ({ name }) => group_name === name
+-  ) || {
+-    g: 0,
+-    channels: []
+-  };
+-  const toggleChannel = ({ name }) => {
+-    setChannelVisibilities(
+-      Object.fromEntries(
+-        Object.entries(channelVisibilities).map(
+-          ([k,v]) => [k, k === name ? !v : v]
+-        )
+-      )
+-    )
+-  }
+-  const legendProps = {
+-    ...props, ...group,
+-    channelVisibilities,
+-    toggleChannel
+-  };
+-  const hideClass=[
+-    "show core", "hide core"
+-  ][
+-    +hide
+-  ];
+-
+-  const channelMenu = (
+-    <div className={hideClass}>
+-      <Content {...props}>
+-        {
+-        // FIXME temporarily hide the channelgroup display toggle since it causes layout problems with the scrollIntoView code
+-        // <Toolbar
+-        //   {...{
+-        //     togglePanel,
+-        //     hide,
+-        //   }}
+-        // />
+-        }
+-        <Legend {...legendProps} />
+-      </Content>
+-    </div>
+-  );
+-
+-  const minerva_author_ui = React.createElement(
+-    props.controlPanelElement, {
+-    class: theme, children: props.children,
+-  }
+-  );
+-
+-  const content = props.authorMode ? (
+-    <TextOther>
+-      {minerva_author_ui}
+-    </TextOther>
+-  ) : props.children;
+-
+-  return (
+-    <TextWrap>
+-      {content}
+-      {hidden ? "" : channelMenu}
+-    </TextWrap>
+-  );
+-};
+-
+-export { Channel };
+diff --git a/src/components/channel/toolbar.tsx b/src/components/channel/toolbar.tsx
+deleted file mode 100644
+index 473a9f4..0000000
+--- a/src/components/channel/toolbar.tsx
++++ /dev/null
+@@ -1,29 +0,0 @@
+-import * as React from "react";
+-import { Icon } from "../common/icon";
+-import { WrapIcons } from "../common/icons";
+-import {
+-  faChevronLeft as faShow,
+-  faChevronRight as faHide,
+-} from "@fortawesome/free-solid-svg-icons";
+-
+-const Toolbar = (props) => {
+-  const { hide, togglePanel } = props;
+-
+-  const faToggle = hide ? faShow : faHide;
+-
+-  const icon = {
+-    size: "16px",
+-    width: "34px",
+-    height: "34px",
+-    color: "inherit",
+-    icon: faToggle,
+-    onClick: togglePanel,
+-  };
+-  return (
+-    <WrapIcons justify="start">
+-      <Icon {...icon} />
+-    </WrapIcons>
+-  );
+-};
+-
+-export { Toolbar };
+diff --git a/src/components/common/icons.ts b/src/components/common/icons.ts
+deleted file mode 100644
+index ccc8da2..0000000
+--- a/src/components/common/icons.ts
++++ /dev/null
+@@ -1,13 +0,0 @@
+-import styled from "styled-components";
+-
+-interface Props {
+-  justify: string;
+-}
+-
+-const WrapIcons = styled.div<Props>`
+-  gap: 1.333em;
+-  display: grid;
+-  grid-template-rows: auto;
+-  justify-items: ${({ justify }) => justify};
+-`;
+-export { WrapIcons };
+diff --git a/src/components/common/icons.tsx b/src/components/common/icons.tsx
+deleted file mode 100644
+index 2745abf..0000000
+--- a/src/components/common/icons.tsx
++++ /dev/null
+@@ -1,11 +0,0 @@
+-import styled from "styled-components";
+-
+-const WrapIcons = styled.div`
+-  gap: 1.333em;
+-  display: grid;
+-  grid-template-rows: auto;
+-  color: var(--theme-light-contrast-color);
+-  justify-items: ${({ justify }) => justify};
+-`;
+-
+-export { WrapIcons };
+diff --git a/src/components/custom.d.ts b/src/components/custom.d.ts
+deleted file mode 100644
+index 1eabbb4..0000000
+--- a/src/components/custom.d.ts
++++ /dev/null
+@@ -1 +0,0 @@
+-declare module "*.module.css";
+diff --git a/src/components/editable/channels.tsx b/src/components/editable/channels.tsx
+deleted file mode 100644
+index 589c8cc..0000000
+--- a/src/components/editable/channels.tsx
++++ /dev/null
+@@ -1,6 +0,0 @@
+-import * as React from "react";
+-import styled from "styled-components";
+-import { Push as PushChannel } from "./namedIcons";
+-import { PopUpdate as PopUpdateChannel } from "./namedIcons";
+-
+-export { PushChannel, PopUpdateChannel };
+diff --git a/src/components/editable/groups.tsx b/src/components/editable/groups.tsx
+deleted file mode 100644
+index 1450dcc..0000000
+--- a/src/components/editable/groups.tsx
++++ /dev/null
+@@ -1,7 +0,0 @@
+-import * as React from "react";
+-import styled from "styled-components";
+-import { Push as PushGroup } from "./namedIcons";
+-import { PopUpdate as PopUpdateGroup } from "./namedIcons";
+-import { Update as UpdateGroup } from "./namedIcons";
+-
+-export { PushGroup, PopUpdateGroup, UpdateGroup };
+diff --git a/src/components/editable/waypoints.tsx b/src/components/editable/waypoints.tsx
+deleted file mode 100644
+index eb1638e..0000000
+--- a/src/components/editable/waypoints.tsx
++++ /dev/null
+@@ -1,6 +0,0 @@
+-import * as React from "react";
+-import styled from "styled-components";
+-import { Push as PushWaypoint } from "./namedIcons";
+-import { PopUpdate as PopUpdateWaypoint } from "./namedIcons";
+-
+-export { PushWaypoint, PopUpdateWaypoint };
+diff --git a/src/components/imageView.tsx b/src/components/imageView.tsx
+deleted file mode 100644
+index b5d873d..0000000
+--- a/src/components/imageView.tsx
++++ /dev/null
+@@ -1,22 +0,0 @@
+-import * as React from "react";
+-import { VivView } from "./vivView";
+-import { toSettings } from "../lib/viv";
+-
+-const toImageProps = (opts) => {
+-  const { props, buttons } = opts;
+-  const vivProps = {
+-    ...props,
+-    viewerConfig: {
+-      ...buttons,
+-      toSettings: toSettings(props),
+-    },
+-  };
+-  return vivProps;
+-};
+-
+-const ImageView = (props) => {
+-  const { overlayLayers, activeTool, isDragging, hoveredAnnotationId, onOverlayInteraction, ...rest } = props;
+-  return <VivView {...rest} overlayLayers={overlayLayers} activeTool={activeTool} isDragging={isDragging} hoveredAnnotationId={hoveredAnnotationId} onOverlayInteraction={onOverlayInteraction}/>;
+-};
+-
+-export { ImageView, toImageProps };
+diff --git a/src/components/index.tsx b/src/components/index.tsx
+deleted file mode 100644
+index 307ee81..0000000
+--- a/src/components/index.tsx
++++ /dev/null
+@@ -1,389 +0,0 @@
+-import * as React from "react";
+-import { useState, useEffect } from "react";
+-import { Overlays } from "./overlays";
+-import { Stories } from "./stories";
+-import styled from 'styled-components';
+-import { ImageView, toImageProps } from "./imageView";
+-import { Main } from "./content";
+-import { useOverlayStore } from "../lib/stores";
+-
+-// Types
+-import type { Waypoint as WaypointType } from "../lib/exhibit";
+-import type { HashContext } from "../lib/hashUtil";
+-import type { ConfigProps } from "../lib/config";
+-import type { DicomIndex } from "../lib/dicom-index";
+-import type { Loader } from "../lib/viv";
+-import type { Exhibit } from "../lib/exhibit";
+-
+-type Props = HashContext & {
+-  in_f: string;
+-  exhibit: Exhibit;
+-  handle: Handle.Dir;
+-  config: ConfigProps;
+-  loaderOmeTiff: Loader;
+-  demo_dicom_web?: boolean;
+-  dicomIndexList: DicomIndex[];
+-  controlPanelElement: string;
+-  setExhibit: (e: Exhibit) => void;
+-};
+-
+-const Wrapper = styled.div`
+-  height: 100%;
+-  display: grid;
+-  grid-template-columns: 1fr; 
+-  grid-template-rows: 1fr; 
+-  justify-items: center;
+-  align-items: center;
+-`;
+-
+-const onLoaded = (setter) => {
+-  return (el) => (el ? setter(el) : null);
+-};
+-
+-const toggle = (list: string[], item: string) => {
+-  return list[(list.indexOf(item) + 1) % list.length];
+-};
+-
+-const setContainer = ({ container, idx, key, newItem }) => {
+-  const extra = idx >= container[key].length ? [newItem] : [];
+-  const newItems = container[key].concat(extra).map((item, i) => {
+-    return i === idx ? newItem : item;
+-  });
+-  return { ...container, [key]: newItems };
+-};
+-
+-const setStory = ({ exhibit, s, newStory }) => {
+-  return setContainer({
+-    newItem: newStory,
+-    container: exhibit,
+-    key: "stories",
+-    idx: s,
+-  });
+-};
+-
+-const setWaypoint = ({ exhibit, s, w, newWaypoint }) => {
+-  const story = exhibit.stories[s];
+-  const newStory = setContainer({
+-    newItem: newWaypoint,
+-    container: story,
+-    key: "waypoints",
+-    idx: w,
+-  });
+-  return setStory({ exhibit, s, newStory });
+-};
+-
+-const setGroup = ({ exhibit, g, newGroup }) => {
+-  return setContainer({
+-    newItem: newGroup,
+-    container: exhibit,
+-    key: "groups",
+-    idx: g,
+-  });
+-};
+-
+-const setChannel = ({ exhibit, g, idx, newChannel }) => {
+-  const group = exhibit.groups[g];
+-  const newGroup = setContainer({
+-    newItem: newChannel,
+-    container: group,
+-    key: "channels",
+-    idx,
+-  });
+-  return setGroup({ exhibit, g, newGroup });
+-};
+-
+-const removeKey = (container, key, idx) => {
+-  const newList = container[key].filter((_, i) => i !== idx);
+-  return { ...container, [key]: newList };
+-};
+-
+-const Index = (props: Props) => {
+-  const { exhibit, setExhibit } = props;
+-  const { name, groups, stories } = exhibit;
+-
+-  const [ioState, setIoState] = useState("IDLE");
+-  const [presenting, setPresenting] = useState(true);
+-  const [zoomInEl, setZoomIn] = useState(null);
+-  const [zoomOutEl, setZoomOut] = useState(null);
+-  const [editable, setEditable] = useState(false);
+-  const checkWindow = () => {
+-    return window.innerWidth > 600;
+-  }
+-  const [twoNavOk, setTwoNavOk] = useState(checkWindow());
+-  const [hiddenWaypoint, setHideWaypoint] = useState(false);
+-  const [hiddenChannel, setHideChannel] = useState(!twoNavOk);
+-  const handleResize = () => {
+-    const twoNavPossible = checkWindow();
+-    if (!twoNavPossible) {
+-      setHiddenWaypoint(false);
+-      setHiddenChannel(true);
+-    }
+-    setTwoNavOk(twoNavPossible);
+-  }
+-  React.useEffect(() => {
+-    window.addEventListener("resize", handleResize, false);
+-  }, []);
+-  const startExport = () => setIoState("EXPORTING");
+-  const stopExport = () => setIoState("IDLE");
+-  const toggleEditor = () => setEditable(!editable);
+-
+-  const onZoomInEl = onLoaded(setZoomIn);
+-  const onZoomOutEl = onLoaded(setZoomOut);
+-
+-  const setHiddenChannel = (v: boolean) => {
+-    if(!twoNavOk && !v) {
+-      setHideWaypoint(true);
+-    }
+-    setHideChannel(v)
+-  }
+-  const setHiddenWaypoint = (v: boolean) => {
+-    if(!twoNavOk && !v) {
+-      setHideChannel(true);
+-    }
+-    setHideWaypoint(v)
+-  }
+-
+-  const updateWaypoint = (newWaypoint: WaypointType, { s, w }: any) => {
+-    const oldWaypoint = stories[s]?.waypoints[w];
+-    if (!oldWaypoint) {
+-      throw `Cannot update waypoint. Waypoint ${w} does not exist!`;
+-    }
+-    const ex = setWaypoint({ exhibit, s, w, newWaypoint });
+-    setExhibit(ex);
+-  };
+-  const pushWaypoint = (newWaypoint: WaypointType, { s }: any) => {
+-    if (!stories[s]) {
+-      throw `Cannot push waypoint. Story ${s} does not exist!`;
+-    }
+-    const w = stories[s].waypoints.length;
+-    const ex = setWaypoint({ exhibit, s, w, newWaypoint });
+-    setExhibit(ex);
+-  };
+-  const popWaypoint = ({ s, w }) => {
+-    const story = stories[s];
+-    const oldWaypoints = story?.waypoints;
+-    if (oldWaypoints?.length <= 1) {
+-      throw "Unable to pop last waypoint";
+-    }
+-    const newStory = removeKey(story, "waypoints", w);
+-    const ex = setStory({ exhibit, s, newStory });
+-    setExhibit(ex);
+-  };
+-
+-  const updateGroup = (newGroup, { g }) => {
+-    const ex = setGroup({ exhibit, g, newGroup });
+-    setExhibit(ex);
+-  };
+-  const pushGroup = (newGroup) => {
+-    const g = exhibit.groups.length;
+-    const ex = setGroup({ exhibit, g, newGroup });
+-    setExhibit(ex);
+-  };
+-  const popGroup = ({ g }) => {
+-    if (groups.length <= 1) {
+-      throw "Unable to pop last group";
+-    }
+-    const ex = removeKey(exhibit, "groups", g);
+-    const newGroups = ex.groups.map((group) => {
+-      const gNext = group.g >= g ? group.g - 1 : group.g;
+-      return { ...group, g: gNext };
+-    });
+-    const newStories = ex.stories.map((story) => {
+-      const newWaypoints = story.waypoints.map((waypoint) => {
+-        const gNext = waypoint.g >= g ? 0 : g;
+-        return { ...waypoint, g: gNext };
+-      });
+-      return { ...story, waypoints: newWaypoints };
+-    });
+-    setExhibit({ ...ex, groups: newGroups, stories: newStories });
+-  };
+-
+-  const updateChannel = (newChannel, { g, idx }) => {
+-    const group = groups[g];
+-    if (!group?.channels[idx]) {
+-      throw `Cannot update channel. Channel ${idx} does not exist!`;
+-    }
+-    const ex = setChannel({ exhibit, g, idx, newChannel });
+-    setExhibit(ex);
+-  };
+-  const pushChannel = (newChannel, { g }) => {
+-    const group = groups[g];
+-    if (!group) {
+-      throw `Cannot push channel. Group ${g} does not exist!`;
+-    }
+-    const idx = group.channels.length;
+-    const ex = setChannel({ exhibit, g, idx, newChannel });
+-    setExhibit(ex);
+-  };
+-  const popChannel = ({ g, idx }) => {
+-    const group = groups[g];
+-    const channels = group?.channels;
+-    if (channels.length <= 1) {
+-      throw "Unable to pop last channel";
+-    }
+-    const newGroup = removeKey(group, "channels", idx);
+-    const ex = setGroup({ exhibit, g, newGroup });
+-    setExhibit(ex);
+-  };
+-
+-  const {
+-    in_f, handle, loaderOmeTiff, hash, setHash,
+-    controlPanelElement, config
+-  } = props;
+-  const {
+-    Colors, Groups, GroupChannels, SourceChannels
+-  } = props.config.ItemRegistry;
+-  const itemRegistryMarkerNames = SourceChannels.map(
+-    source_channel => source_channel.Properties.Name
+-  )
+-  const itemRegistryGroups = React.useMemo(() => {
+-    return Groups.map((group, g) => {
+-      const { Name } = group.Properties;
+-      const channels = GroupChannels.filter(group_channel => (
+-        group_channel.Associations.Group.UUID == group.UUID
+-      )).map(group_channel => {
+-        const defaults = { Name: '' };
+-        const { R, G, B } = Colors.find(({ ID }) => {
+-          return ID === group_channel.Associations.Color.ID;
+-        })?.Properties || {};
+-        const color = (
+-          (1 << 24) + (R << 16) + (G << 8) + B
+-        ).toString(16).slice(1);
+-        const { LowerRange, UpperRange } = group_channel.Properties;
+-        const { SourceChannel } = group_channel.Associations;
+-        const { Name } = SourceChannels.find(source_channel => (
+-          source_channel.UUID == SourceChannel.UUID
+-        ))?.Properties || defaults;
+-        return { 
+-          color, name: Name, contrast: [
+-            LowerRange, UpperRange
+-          ]
+-        };
+-      });
+-      return { 
+-        State: group.State,
+-        g, name: Name, channels,
+-      };
+-    })
+-  }, [
+-    GroupChannels
+-  ]);
+-  const channelProps = {
+-    hash,
+-    setHash,
+-    name,
+-    stories,
+-    authorMode: !presenting,
+-    groups: itemRegistryGroups,
+-    controlPanelElement,
+-    config: props.config,
+-    editable,
+-    hiddenChannel,
+-    setHiddenChannel,
+-    updateGroup,
+-    pushGroup,
+-    popGroup,
+-    updateChannel,
+-    pushChannel,
+-    popChannel,
+-  };
+-  const retrievingMetadata = (
+-    props.dicomIndexList.length === 0
+-  ) && (
+-    props.demo_dicom_web
+-  );
+-  const mainProps = {
+-    ...channelProps,
+-    in_f,
+-    handle,
+-    ioState,
+-    presenting,
+-    hiddenWaypoint,
+-    setHiddenWaypoint,
+-    retrievingMetadata,
+-    onZoomInEl,
+-    onZoomOutEl,
+-    startExport,
+-    stopExport,
+-    toggleEditor,
+-    updateWaypoint,
+-    pushWaypoint,
+-    popWaypoint
+-  }
+-  const imageProps = React.useMemo(() => {
+-    const { dicomIndexList } = props;
+-    return toImageProps({
+-      props: {
+-        loaderOmeTiff,
+-        dicomIndexList,
+-        marker_names: itemRegistryMarkerNames,
+-        ...channelProps,
+-      },
+-      buttons: {
+-        zoomInButton: zoomInEl,
+-        zoomOutButton: zoomOutEl,
+-      },
+-    });
+-  }, [
+-    GroupChannels
+-  ]);
+-  
+-  // Use Zustand store for overlay state management
+-  const {
+-    overlayLayers,
+-    activeTool,
+-    currentInteraction,
+-    dragState,
+-    hoverState,
+-    handleLayerCreate,
+-    handleToolChange,
+-    handleOverlayInteraction,
+-    stories: _stories,
+-    activeStoryIndex,
+-    setActiveStory,
+-    setStories,
+-    setWaypoints
+-  } = useOverlayStore();
+-  
+-  // Initialize stories in the store when config changes
+-  useEffect(() => {
+-    if (props.config.ItemRegistry.Stories) {
+-      setStories(props.config.ItemRegistry.Stories);
+-      
+-      // For now, we'll work with stories only since the current config structure
+-      // doesn't have waypoints within stories. Each ConfigWaypoint represents a story.
+-      setWaypoints([]);
+-    }
+-  }, [props.config.ItemRegistry.Stories]);
+-
+-  // Initialize to first active story index
+-  useEffect(() => {
+-    const hasStories = _stories.length;
+-    if (hasStories && activeStoryIndex === null) {
+-      setActiveStory(0);
+-    }
+-  }, [_stories])
+-
+-  const retrieving_status = (
+-     <Wrapper>Retrieving DICOM metadata...</Wrapper>
+-  )
+-  return (
+-    <Main {...mainProps}>
+-      {
+-        retrievingMetadata ? retrieving_status : (
+-          <ImageView 
+-            {...imageProps} 
+-            overlayLayers={overlayLayers}
+-            activeTool={activeTool}
+-            isDragging={dragState.isDragging}
+-            hoveredAnnotationId={hoverState.hoveredAnnotationId}
+-            onOverlayInteraction={handleOverlayInteraction}
+-          >
+-          </ImageView>
+-        )
+-      }
+-    </Main>
+-  );
+-};
+-
+-export { Index };
+diff --git a/src/components/main.tsx b/src/components/main.tsx
+new file mode 100644
+index 0000000..e616177
+--- /dev/null
++++ b/src/components/main.tsx
+@@ -0,0 +1,755 @@
++import * as React from "react";
++import styled from 'styled-components';
++import { author } from "@/minerva-author-ui/author";
++import { useState, useMemo, useEffect } from "react";
++import { loadDicomWeb, parseDicomWeb } from "@/lib/dicom";
++import { toEmptyHash } from "@/lib/hashUtil";
++import { mutableItemRegistry, extractChannels, extractDistributions } from "@/lib/config";
++import { hasFileSystemAccess, toLoader } from "@/lib/filesystem";
++import { isOpts, validate } from "@/lib/validate";
++import { Upload } from "@/components/shared/Upload";
++import { readConfig } from "@/lib/exhibit";
++import Pool from "@/lib/workers/Pool";
++import { parseRoisFromLoader } from "@/lib/roiParser";
++import { useOverlayStore } from "@/lib/stores";
++import { FileHandler } from "@/components/shared/FileHandler";
++import { ImageViewer, toImageProps } from "@/components/viewer/ImageViewer";
++import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
++import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
++import { Presentation } from "@/components/playback/Presentation";
++
++import type { DicomIndex, DicomLoader } from "@/lib/dicom-index";
++import type { ValidObj } from "@/components/shared/Upload";
++import type { ImageProps } from "@/components/shared/common/types";
++import type { FormEventHandler } from "react";
++import type { ObjAny, KV } from "@/lib/validate";
++import type { ItemRegistryProps } from "@/lib/config";
++import type { ConfigWaypoint } from "@/lib/config";
++import type { MutableFields } from "@/lib/config";
++import type { ExhibitConfig } from "@/lib/exhibit";
++import type { ConfigGroup } from "@/lib/exhibit";
++import type { Waypoint as WaypointType, Exhibit } from "@/lib/exhibit";
++import type { HashContext } from "@/lib/hashUtil";
++import type { ConfigProps } from "@/lib/config";
++import type { Loader } from "@/lib/viv";
++
++type Props = ImageProps & {
++  configWaypoints: ConfigWaypoint[];
++  exhibit_config: ExhibitConfig;
++  demo_dicom_web?: boolean;
++  handleKeys: string[];
++};
++
++interface ReduceFormData {
++  (o: ObjAny, kv: KV): ObjAny;
++}
++
++const Wrapper = styled.div`
++  height: 100%;
++  display: grid;
++  grid-template-columns: 1fr; 
++  grid-template-rows: 1fr; 
++`;
++
++const Full = styled.div`
++  max-height: 100vh;
++`
++
++const Scrollable = styled.div`
++  z-index: 2;
++  grid-column: 2;
++  grid-row: 1 / -1;
++  overflow-y: scroll;
++  border-radius: 12px;
++  outline: 1px solid var(--theme-glass-edge);
++  background-color: var(--dark-main-glass);
++  font-size: 20px;
++  padding: 5vh;
++  margin: 5vh;
++`;
++
++const RetrievingWrapper = styled.div`
++  height: 100%;
++  display: grid;
++  grid-template-columns: 1fr; 
++  grid-template-rows: 1fr; 
++  justify-items: center;
++  align-items: center;
++`;
++
++// Helper functions for exhibit editing
++const onLoaded = (setter) => {
++  return (el) => (el ? setter(el) : null);
++};
++
++const setContainer = ({ container, idx, key, newItem }) => {
++  const extra = idx >= container[key].length ? [newItem] : [];
++  const newItems = container[key].concat(extra).map((item, i) => {
++    return i === idx ? newItem : item;
++  });
++  return { ...container, [key]: newItems };
++};
++
++const setStory = ({ exhibit, s, newStory }) => {
++  return setContainer({
++    newItem: newStory,
++    container: exhibit,
++    key: "stories",
++    idx: s,
++  });
++};
++
++const setWaypoint = ({ exhibit, s, w, newWaypoint }) => {
++  const story = exhibit.stories[s];
++  const newStory = setContainer({
++    newItem: newWaypoint,
++    container: story,
++    key: "waypoints",
++    idx: w,
++  });
++  return setStory({ exhibit, s, newStory });
++};
++
++const setGroup = ({ exhibit, g, newGroup }) => {
++  return setContainer({
++    newItem: newGroup,
++    container: exhibit,
++    key: "groups",
++    idx: g,
++  });
++};
++
++const setChannel = ({ exhibit, g, idx, newChannel }) => {
++  const group = exhibit.groups[g];
++  const newGroup = setContainer({
++    newItem: newChannel,
++    container: group,
++    key: "channels",
++    idx,
++  });
++  return setGroup({ exhibit, g, newGroup });
++};
++
++const removeKey = (container, key, idx) => {
++  const newList = container[key].filter((_, i) => i !== idx);
++  return { ...container, [key]: newList };
++};
++
++const Content = (props: Props) => {
++  const { handleKeys } = props;
++  const firstExhibit = readConfig(props.exhibit_config);
++  const [exhibit, setExhibit] = useState(firstExhibit);
++  const [hash, _setHash] = useState(toEmptyHash(exhibit.stories));
++  const setHash = (partial_hash) => {
++    _setHash({...hash, ...partial_hash})
++  }
++  const [loaderOmeTiff, setLoaderOmeTiff] = useState(null);
++  const [dicomIndexList, setDicomIndexList] = useState(
++    [] as DicomIndex[]
++  );
++  const [config, setConfig] = useState({
++    ItemRegistry: {
++      Name: '', Groups: [], Colors: [],
++      GroupChannels: [], SourceChannels: [],
++      SourceDistributions: [],
++      Stories: props.configWaypoints,
++    } as ItemRegistryProps,
++    ID: crypto.randomUUID()
++  });
++  
++  // UI State (from Index)
++  const [ioState, setIoState] = useState("IDLE");
++  const [presenting, setPresenting] = useState(true);
++  const [zoomInEl, setZoomIn] = useState(null);
++  const [zoomOutEl, setZoomOut] = useState(null);
++  const [editable, setEditable] = useState(false);
++  const checkWindow = () => {
++    return window.innerWidth > 600;
++  }
++  const [twoNavOk, setTwoNavOk] = useState(checkWindow());
++  const [hiddenWaypoint, setHideWaypoint] = useState(false);
++  const [hiddenChannel, setHideChannel] = useState(!twoNavOk);
++  
++  const handleResize = () => {
++    const twoNavPossible = checkWindow();
++    if (!twoNavPossible) {
++      setHideWaypoint(false);
++      setHideChannel(true);
++    }
++    setTwoNavOk(twoNavPossible);
++  }
++  
++  React.useEffect(() => {
++    window.addEventListener("resize", handleResize, false);
++  }, []);
++  
++  const startExport = () => setIoState("EXPORTING");
++  const stopExport = () => setIoState("IDLE");
++  const toggleEditor = () => setEditable(!editable);
++
++  const onZoomInEl = onLoaded(setZoomIn);
++  const onZoomOutEl = onLoaded(setZoomOut);
++
++  const setHiddenChannelWithLogic = (v: boolean) => {
++    if(!twoNavOk && !v) {
++      setHideWaypoint(true);
++    }
++    setHideChannel(v)
++  }
++  
++  const setHiddenWaypointWithLogic = (v: boolean) => {
++    if(!twoNavOk && !v) {
++      setHideChannel(true);
++    }
++    setHideWaypoint(v)
++  }
++
++  // Active Group from Store
++  const { 
++    setActiveChannelGroup,
++    setChannelVisibilities,
++    setGroupChannelLists,
++    setGroupNames
++  } = useOverlayStore();
++  
++  const updateGroupChannelLists = ({
++    SourceChannels, GroupChannels, Groups
++  }) => {
++    setGroupNames(Object.fromEntries(
++      Groups.map(({ Properties, UUID }) => [
++        UUID, Properties.Name
++      ])
++    ))
++    const groupChannelLists = Object.fromEntries(
++      Groups.map(({ Properties, UUID }) => {
++        return [
++          Properties.Name, GroupChannels.filter(
++            ({ Associations }) => (
++              UUID === Associations.Group.UUID
++            )
++          ).map(
++            ({ Associations }) => {
++              return (
++                (found) => found?.Properties.Name || ''
++              )(SourceChannels.find(
++                ({ UUID }) => (
++                  UUID === Associations.SourceChannel.UUID
++                )
++              ))
++            }
++          )
++        ]
++      })
++    )
++    setGroupChannelLists(groupChannelLists)
++    const groupName = Groups[0].Properties.Name
++    const channelList = groupChannelLists[
++      groupName
++    ] || [];
++    setChannelVisibilities(Object.fromEntries(
++      channelList.map(name => [name, true])
++    ))
++  }
++  
++  const resetItems = ItemRegistry => {
++    setConfig(config => ({
++      ...config, ItemRegistry: {
++        ...config.ItemRegistry, ...ItemRegistry
++      },
++      ID: crypto.randomUUID()
++    }));
++    const { Groups } = ItemRegistry;
++    if ( Groups?.length > 0) {
++      setActiveChannelGroup(Groups[0].UUID)
++    }
++  };
++  
++  const setItems = ItemRegistry => {
++    setConfig(config => ({
++      ...config, ItemRegistry: {
++        ...config.ItemRegistry, ...ItemRegistry
++      },
++    }));
++  }
++  
++  const [fileName, setFileName] = useState('');
++  
++  const onStartOmeTiff = async (in_f: string, handle: Handle.Dir) => {
++    if (handle === null) return;
++    const loader = await toLoader({ handle, in_f, pool: new Pool() });
++    const {
++      SourceChannels, GroupChannels, Groups, Colors
++    } = extractChannels(loader, "Colorimetric", []);
++    resetItems({
++      SourceChannels, GroupChannels, Groups, Colors
++    });
++    updateGroupChannelLists({
++      SourceChannels, GroupChannels, Groups
++    })
++    // Asynchronously add distributions
++    extractDistributions(loader).then(
++      (sourceDistributionMap) => {
++        const SourceDistributions = sourceDistributionMap.values();
++        resetItems({
++          SourceDistributions: [...SourceDistributions],
++          SourceChannels: SourceChannels.map(sourceChannel => ({
++            ...sourceChannel, Associations: {
++              ...sourceChannel.Associations,
++              SourceDistribution: sourceDistributionMap.get(
++                sourceChannel.Properties.SourceIndex
++              )
++            }
++          }))
++        });
++      }
++    );
++    setLoaderOmeTiff(loader);
++    setFileName(in_f);
++  }
++  
++  const onStart = async (
++    imagePropList: [string, string, string][],
++    handle: Handle.Dir | null
++  ) => {
++    if ( imagePropList.length === 0 ) {
++      return;
++    }
++    // handle hard-coded channels for dicom-web demo
++    const dicomPropList = imagePropList.filter(
++      ([series, modality, type]) => type === "DICOM-WEB"
++    ).map(
++      ([series, modality]) => [series, modality]
++    ) as (
++      [string, string][]
++    )
++    if (dicomPropList.length > 0) {
++      await onStartDicomWeb(
++        dicomPropList, props.exhibit_config.Groups
++      );
++    }
++    // handle only one ome-tiff image ( TODO support more )
++    const omeTiffPropList = imagePropList.filter(
++      ([path, modality, type]) => type === "OME-TIFF"
++    ).map(
++      ([path]) => [path]
++    )
++    if (omeTiffPropList.length > 0 && handle) {
++      await onStartOmeTiff(omeTiffPropList[0][0], handle);
++    }
++  }
++  
++  // Dicom Web derived state
++  const onStartDicomWeb = async (
++    imagePropList: [string, string][],
++    groups: ConfigGroup[]
++  ) => {
++    const indexList = await Promise.all(
++      imagePropList.map(
++        async ( [series, modality] ) => {
++        const pyramids = await loadDicomWeb(series);
++        const loader = (
++          parseDicomWeb(series, pyramids) as DicomLoader
++        );
++        return {
++          series, pyramids, modality, loader
++        }
++      })
++    );
++    setDicomIndexList(indexList);
++    const {
++      SourceChannels,
++      GroupChannels,
++      Groups, Colors
++    } = indexList.reduce(
++      (registry, { loader, modality }) => {
++        const relevant_groups = groups.filter(
++          ({ Image }) => Image.Method === modality
++        )
++        const {
++          SourceChannels, GroupChannels, Groups, Colors
++        } = extractChannels(
++          loader, modality, relevant_groups
++        );
++        return {
++          SourceChannels: [
++            ...registry.SourceChannels, ...SourceChannels
++          ],
++          GroupChannels: [
++            ...registry.GroupChannels, ...GroupChannels
++          ],
++          Groups: [
++            ...registry.Groups, ...Groups
++          ],
++          Colors: [
++            ...registry.Colors, ...Colors
++          ],
++        };
++      },
++      {
++        SourceChannels: [],
++        GroupChannels: [],
++        Groups: [],
++        Colors: []
++      }
++    )
++    resetItems({
++      SourceChannels,
++      GroupChannels,
++      Groups, Colors
++    });
++    updateGroupChannelLists({
++      SourceChannels, GroupChannels, Groups
++    })
++  }
++  
++  const mutableFields: MutableFields = [
++    'GroupChannels'
++  ]
++  const ItemRegistry = mutableItemRegistry(
++    config.ItemRegistry, setItems, mutableFields
++  )
++  
++  // Define a WebComponent for the item panel
++  const controlPanelElement = useMemo(() => author({
++    ...config, ItemRegistry
++  }), [config.ID])
++  
++  const [valid, setValid] = useState({} as ValidObj);
++  
++  if (props.demo_dicom_web) {
++    useEffect(() => {
++      (async () => {
++        // H&E Demo Image and
++        // CyCIF Demo Image
++        await onStart([[
++          "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.2507374895.494638264.1767738966319.4.0",
++          "Brightfield",
++          "DICOM-WEB"
++        ],
++        [
++          "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.331207435.2054329796.1752677896971.4.0",
++          "Colorimetric",
++          "DICOM-WEB"
++        ]], null as Handle.Dir | null)
++      })()
++    }, []);
++  }
++  
++  const noLoader = loaderOmeTiff === null && (
++    dicomIndexList.length === 0
++  ) && !(
++    props.demo_dicom_web
++  );
++
++  // Exhibit editing operations (from Index)
++  const { name, groups, stories } = exhibit;
++  
++  const updateWaypoint = (newWaypoint: WaypointType, { s, w }: any) => {
++    const oldWaypoint = stories[s]?.waypoints[w];
++    if (!oldWaypoint) {
++      throw `Cannot update waypoint. Waypoint ${w} does not exist!`;
++    }
++    const ex = setWaypoint({ exhibit, s, w, newWaypoint });
++    setExhibit(ex);
++  };
++  
++  const pushWaypoint = (newWaypoint: WaypointType, { s }: any) => {
++    if (!stories[s]) {
++      throw `Cannot push waypoint. Story ${s} does not exist!`;
++    }
++    const w = stories[s].waypoints.length;
++    const ex = setWaypoint({ exhibit, s, w, newWaypoint });
++    setExhibit(ex);
++  };
++  
++  const popWaypoint = ({ s, w }) => {
++    const story = stories[s];
++    const oldWaypoints = story?.waypoints;
++    if (oldWaypoints?.length <= 1) {
++      throw "Unable to pop last waypoint";
++    }
++    const newStory = removeKey(story, "waypoints", w);
++    const ex = setStory({ exhibit, s, newStory });
++    setExhibit(ex);
++  };
++
++  const updateGroup = (newGroup, { g }) => {
++    const ex = setGroup({ exhibit, g, newGroup });
++    setExhibit(ex);
++  };
++  
++  const pushGroup = (newGroup) => {
++    const g = exhibit.groups.length;
++    const ex = setGroup({ exhibit, g, newGroup });
++    setExhibit(ex);
++  };
++  
++  const popGroup = ({ g }) => {
++    if (groups.length <= 1) {
++      throw "Unable to pop last group";
++    }
++    const ex = removeKey(exhibit, "groups", g);
++    const newGroups = ex.groups.map((group) => {
++      const gNext = group.g >= g ? group.g - 1 : group.g;
++      return { ...group, g: gNext };
++    });
++    const newStories = ex.stories.map((story) => {
++      const newWaypoints = story.waypoints.map((waypoint) => {
++        const gNext = waypoint.g >= g ? 0 : g;
++        return { ...waypoint, g: gNext };
++      });
++      return { ...story, waypoints: newWaypoints };
++    });
++    setExhibit({ ...ex, groups: newGroups, stories: newStories });
++  };
++
++  const updateChannel = (newChannel, { g, idx }) => {
++    const group = groups[g];
++    if (!group?.channels[idx]) {
++      throw `Cannot update channel. Channel ${idx} does not exist!`;
++    }
++    const ex = setChannel({ exhibit, g, idx, newChannel });
++    setExhibit(ex);
++  };
++  
++  const pushChannel = (newChannel, { g }) => {
++    const group = groups[g];
++    if (!group) {
++      throw `Cannot push channel. Group ${g} does not exist!`;
++    }
++    const idx = group.channels.length;
++    const ex = setChannel({ exhibit, g, idx, newChannel });
++    setExhibit(ex);
++  };
++  
++  const popChannel = ({ g, idx }) => {
++    const group = groups[g];
++    const channels = group?.channels;
++    if (channels.length <= 1) {
++      throw "Unable to pop last channel";
++    }
++    const newGroup = removeKey(group, "channels", idx);
++    const ex = setGroup({ exhibit, g, newGroup });
++    setExhibit(ex);
++  };
++
++  // Data transformation (from Index)
++  const {
++    Colors, Groups, GroupChannels, SourceChannels
++  } = config.ItemRegistry;
++  
++  const itemRegistryMarkerNames = SourceChannels.map(
++    source_channel => source_channel.Properties.Name
++  )
++  
++  const itemRegistryGroups = React.useMemo(() => {
++    return Groups.map((group, g) => {
++      const { Name } = group.Properties;
++      const channels = GroupChannels.filter(group_channel => (
++        group_channel.Associations.Group.UUID == group.UUID
++      )).map(group_channel => {
++        const defaults = { Name: '' };
++        const { R, G, B } = Colors.find(({ ID }) => {
++          return ID === group_channel.Associations.Color.ID;
++        })?.Properties || {};
++        const color = (
++          (1 << 24) + (R << 16) + (G << 8) + B
++        ).toString(16).slice(1);
++        const { LowerRange, UpperRange } = group_channel.Properties;
++        const { SourceChannel } = group_channel.Associations;
++        const { Name } = SourceChannels.find(source_channel => (
++          source_channel.UUID == SourceChannel.UUID
++        ))?.Properties || defaults;
++        return { 
++          color, name: Name, contrast: [
++            LowerRange, UpperRange
++          ]
++        };
++      });
++      return { 
++        State: group.State,
++        g, name: Name, channels,
++      };
++    })
++  }, [
++    GroupChannels
++  ]);
++  
++  const channelProps = {
++    hash,
++    setHash,
++    name,
++    stories,
++    authorMode: !presenting,
++    groups: itemRegistryGroups,
++    controlPanelElement,
++    config: config,
++    editable,
++    hiddenChannel,
++    setHiddenChannel: setHiddenChannelWithLogic,
++    updateGroup,
++    pushGroup,
++    popGroup,
++    updateChannel,
++    pushChannel,
++    popChannel,
++  };
++  
++  const retrievingMetadata = (
++    dicomIndexList.length === 0
++  ) && (
++    props.demo_dicom_web
++  );
++  
++  const mainProps = {
++    ...channelProps,
++    in_f: fileName,
++    handle: null as Handle.Dir | null, // Will be set in FileHandler render
++    ioState,
++    presenting,
++    hiddenWaypoint,
++    setHiddenWaypoint: setHiddenWaypointWithLogic,
++    retrievingMetadata,
++    onZoomInEl,
++    onZoomOutEl,
++    startExport,
++    stopExport,
++    toggleEditor,
++    updateWaypoint,
++    pushWaypoint,
++    popWaypoint
++  }
++  
++  const imageProps = React.useMemo(() => {
++    return toImageProps({
++      props: {
++        loaderOmeTiff,
++        dicomIndexList,
++        marker_names: itemRegistryMarkerNames,
++        ...channelProps,
++      },
++      buttons: {
++        zoomInButton: zoomInEl,
++        zoomOutButton: zoomOutEl,
++      },
++    });
++  }, [
++    GroupChannels, loaderOmeTiff, dicomIndexList, itemRegistryMarkerNames, channelProps, zoomInEl, zoomOutEl
++  ]);
++  
++  // Use Zustand store for overlay state management
++  const {
++    overlayLayers,
++    activeTool,
++    currentInteraction,
++    dragState,
++    hoverState,
++    handleLayerCreate,
++    handleToolChange,
++    handleOverlayInteraction,
++    stories: _stories,
++    activeStoryIndex,
++    setActiveStory,
++    setStories,
++    setWaypoints
++  } = useOverlayStore();
++  
++  // Initialize stories in the store when config changes
++  useEffect(() => {
++    if (config.ItemRegistry.Stories) {
++      setStories(config.ItemRegistry.Stories);
++      setWaypoints([]);
++    }
++  }, [config.ItemRegistry.Stories]);
++
++  // Initialize to first active story index
++  useEffect(() => {
++    const hasStories = _stories.length;
++    if (hasStories && activeStoryIndex === null) {
++      setActiveStory(0);
++    }
++  }, [_stories])
++
++  const retrieving_status = (
++    <RetrievingWrapper>Retrieving DICOM metadata...</RetrievingWrapper>
++  )
++
++  return (
++    <FileHandler handleKeys={handleKeys}>
++      {({ handle, onAllow, onRecall }) => {
++        const onSubmit: FormEventHandler = (event) => {
++          const form = event.currentTarget as HTMLFormElement;
++          const data = [...new FormData(form).entries()];
++          const formOut = data.reduce(((o, [k, v]) => {
++            return { ...o, [k]: `${v}` };
++          }) as ReduceFormData, { mask: "" });
++          const formOpts = { formOut, onStart: (list) => onStart(list, handle), handle };
++          if (isOpts(formOpts)) {
++            validate(formOpts).then((valid: ValidObj) => {
++              setValid(valid);
++            })
++          }
++          event.preventDefault();
++          event.stopPropagation();
++        };
++
++        const formProps = { onSubmit, valid };
++        const uploadProps = {
++          handleKeys, 
++          formProps, 
++          handle,
++          onAllow, 
++          onRecall
++        };
++        const importer = !noLoader ? '' : (
++          <Scrollable>
++            <Upload {...uploadProps} />
++          </Scrollable>
++        );
++        
++        // Update mainProps with actual handle
++        const mainPropsWithHandle = {
++          ...mainProps,
++          handle
++        };
++        
++        // Actual image viewer
++        const imager = noLoader ? '' : (
++          <Full>
++            <PlaybackRouter {...mainPropsWithHandle}>
++              {
++                retrievingMetadata ? retrieving_status : (
++                  <ImageViewer 
++                    {...imageProps} 
++                    overlayLayers={overlayLayers}
++                    activeTool={activeTool}
++                    isDragging={dragState.isDragging}
++                    hoveredAnnotationId={hoverState.hoveredAnnotationId}
++                    onOverlayInteraction={handleOverlayInteraction}
++                  />
++                )
++              }
++            </PlaybackRouter>
++          </Full>
++        );
++        
++        return (
++          <Wrapper>
++            {imager}
++            {importer}
++          </Wrapper>
++        );
++      }}
++    </FileHandler>
++  );
++};
++
++const Main = (props: Props) => {
++  if (props.demo_dicom_web || hasFileSystemAccess()) {
++    return <Content {...props} />;
++  } else {
++    return <div><p>Unable to access FileSystem API.</p></div>;
++  }
++};
++
++export { Main };
+diff --git a/src/components/overlays/AnnotationRenderer.tsx b/src/components/overlays/AnnotationRenderer.tsx
+deleted file mode 100644
+index 47c67e2..0000000
+--- a/src/components/overlays/AnnotationRenderer.tsx
++++ /dev/null
+@@ -1,17 +0,0 @@
+-import { useAnnotationLayers } from "./AnnotationLayers";
+-
+-/**
+- * AnnotationRenderer - A minimal component that renders annotations as deck.gl layers
+- * without any UI (no toolbar, no drawing tools). This is used in presenter mode
+- * where we want to display annotations but not allow editing.
+- */
+-const AnnotationRenderer: React.FC = () => {
+-  // Use the shared hook to create and sync annotation layers
+-  // Pass pickable: false to disable click/drag interactions in presenter mode
+-  useAnnotationLayers(false);
+-
+-  // This component renders nothing - it only manages layers in the store
+-  return null;
+-};
+-
+-export { AnnotationRenderer };
+diff --git a/src/components/exporter.tsx b/src/components/playback/ImageExporter.tsx
+similarity index 98%
+rename from src/components/exporter.tsx
+rename to src/components/playback/ImageExporter.tsx
+index fdab15b..903f357 100644
+--- a/src/components/exporter.tsx
++++ b/src/components/playback/ImageExporter.tsx
+@@ -252,8 +252,7 @@ function isFullState (o: Partial<FullState>): o is FullState {
+ 
+ ///
+ 
+-
+-const ExporterDiv = styled.div`
++const ImageExporterDiv = styled.div`
+   height: 100%;
+   display: grid;
+   grid-template-rows: 1fr 30px 1fr;
+@@ -318,13 +317,13 @@ const useLoader = async (opts: LoaderOpts) => {
+   return data.data;
+ }
+ 
+-type ExporterProps = {
++export type ImageExporterProps = {
+   in_f: string,
+   handle: Handle.Dir,
+   stopExport: () => void
+ }
+   
+-const Exporter = (props: ExporterProps) => {
++export const ImageExporter = (props: ImageExporterProps) => {
+   const exportProps = {
+     variant: "primary",
+     className: "mb-3"
+@@ -384,12 +383,10 @@ const Exporter = (props: ExporterProps) => {
+     ratio = step / (state.indices.length - 1);
+   }
+   return (
+-  <ExporterDiv>
++  <ImageExporterDiv>
+       <ProgressBar $ratio={ratio} $done={done}>
+         <div></div>
+       </ProgressBar>
+-  </ExporterDiv>
++  </ImageExporterDiv>
+   )
+ }
+-
+-export { Exporter }
+diff --git a/src/components/content.tsx b/src/components/playback/PlaybackRouter.tsx
+similarity index 57%
+rename from src/components/content.tsx
+rename to src/components/playback/PlaybackRouter.tsx
+index 7f5d588..a426478 100644
+--- a/src/components/content.tsx
++++ b/src/components/playback/PlaybackRouter.tsx
+@@ -1,13 +1,13 @@
+ import * as React from "react";
+-import { Exporter } from "./exporter";
+-import { Channel } from "./channel";
+-import { Presentation } from "./presentation";
++import { ImageExporter } from "@/components/playback/ImageExporter";
++import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
++import { Presentation } from "@/components/playback/Presentation";
+ import styled from "styled-components";
+ 
+ // Types
+-import type { Props as ChannelProps } from "./channel";
++import type { ChannelPanelProps } from "@/components/shared/channel/ChannelPanel";
+ 
+-type MainProps = ChannelProps & {
++export type PlaybackRouterProps = ChannelPanelProps & {
+   ioState: null | string;
+   stopExport: () => void;
+   retrievingMetadata: boolean;
+@@ -22,7 +22,7 @@ const ImageDiv = styled.div`
+   height: 100%;
+ `;
+ 
+-const Main = (props: MainProps) => {
++export const PlaybackRouter = (props: PlaybackRouterProps) => {
+   const { handle, in_f } = props;
+   const { stopExport } = props;
+ 
+@@ -31,20 +31,18 @@ const Main = (props: MainProps) => {
+     const image_div = <ImageDiv/>;
+     out = (
+       <Presentation {...props}>
+-        <Channel {...props}/>
++        <ChannelPanel {...props}/>
+       </Presentation>
+     )
+   }
+   else if (props.ioState == 'IDLE') {
+-    out = <Channel {...props}/>
++    out = <ChannelPanel {...props}/>
+   }
+   else if (props.ioState == 'EXPORTING') {
+     const exporterProps = { 
+       handle, in_f, stopExport
+     };
+-    out = <Exporter {...exporterProps}/>;
++    out = <ImageExporter {...exporterProps}/>;
+   }
+   return <>{out}</>;
+ };
+-
+-export { Main };
+diff --git a/src/components/presentation/index.tsx b/src/components/playback/Presentation.tsx
+similarity index 95%
+rename from src/components/presentation/index.tsx
+rename to src/components/playback/Presentation.tsx
+index fd0b47d..005af25 100644
+--- a/src/components/presentation/index.tsx
++++ b/src/components/playback/Presentation.tsx
+@@ -1,23 +1,19 @@
+ import * as React from "react";
+ import { useEffect, useRef, useMemo } from "react";
+ import ReactMarkdown from 'react-markdown'
+-import { useOverlayStore } from "../../lib/stores";
+-import { AnnotationRenderer } from "../overlays/AnnotationRenderer";
+-//import { theme } from "../../theme.module.css";
++import { useOverlayStore } from "@/lib/stores";
++import { AnnotationRenderer } from "@/components/viewer/layers/annotations/AnnotationLayers";
++//import { theme } from "@/theme.module.css";
+ import styled from "styled-components";
+ const theme = {};
+ 
+ // Types
+-import type { ConfigProps, ConfigWaypoint } from "../../lib/config";
+-import type { Group, Story } from "../../lib/exhibit";
+-import type { HashContext } from "../../lib/hashUtil";
++import type { ConfigProps, ConfigWaypoint } from "@/lib/config";
++import type { Group, Story } from "@/lib/exhibit";
++import type { HashContext } from "@/lib/hashUtil";
++import type { ImageProps } from "@/components/shared/common/types";
+ 
+-export type ImageProps = {
+-  name: string;
+-  groups: Group[];
+-};
+-
+-export type Props = HashContext & ImageProps & {
++export type PresentationProps = HashContext & ImageProps & {
+   children: any,
+   config: ConfigProps;
+   hiddenChannel: boolean;
+@@ -179,7 +175,7 @@ const ChannelName = styled.span<{ color: string }>`
+   text-underline-offset: 2px;
+ `;
+ 
+-const Presentation = (props: Props) => {
++export const Presentation = (props: PresentationProps) => {
+ 
+   const {
+     stories,
+@@ -443,5 +439,3 @@ const Presentation = (props: Props) => {
+     </Wrap>
+   );
+ };
+-
+-export { Presentation };
+diff --git a/src/components/shared/FileHandler.tsx b/src/components/shared/FileHandler.tsx
+new file mode 100644
+index 0000000..b3eaae4
+--- /dev/null
++++ b/src/components/shared/FileHandler.tsx
+@@ -0,0 +1,38 @@
++import { useState } from "react";
++import { get, set } from 'idb-keyval';
++import { toDir } from "@/lib/filesystem";
++
++export type FileHandlerProps = {
++  handleKeys: string[];
++  children: (props: {
++    handle: Handle.Dir | null;
++    onAllow: () => Promise<void>;
++    onRecall: () => Promise<void>;
++  }) => React.ReactNode;
++};
++
++export const FileHandler = ({ handleKeys, children }: FileHandlerProps) => {
++  const [handle, setHandle] = useState<Handle.Dir | null>(null);
++
++  const onAllow = async () => {
++    const newHandle = await toDir();
++    setHandle(newHandle);
++    await set(handleKeys[0], newHandle);
++  };
++
++  const onRecall = async () => {
++    const newHandle = await get(handleKeys[0]);
++    if (!newHandle) return;
++    
++    const isGranted = (permission) => permission === 'granted';
++    const options = { mode: 'readwrite' };
++    if (
++      isGranted(await newHandle.queryPermission(options)) ||
++      isGranted(await newHandle.requestPermission(options))
++    ) {
++      setHandle(newHandle);
++    }
++  };
++
++  return <>{children({ handle, onAllow, onRecall })}</>;
++};
+diff --git a/src/components/upload.tsx b/src/components/shared/Upload.tsx
+similarity index 99%
+rename from src/components/upload.tsx
+rename to src/components/shared/Upload.tsx
+index 4281c99..807bc6b 100644
+--- a/src/components/upload.tsx
++++ b/src/components/shared/Upload.tsx
+@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
+ import styled from 'styled-components';
+ import Form from 'react-bootstrap/Form';
+ import Button from 'react-bootstrap/Button';
+-import { listDir } from "../lib/filesystem";
++import { listDir } from "@/lib/filesystem";
+ 
+-import type { Entry } from "../lib/filesystem";
++import type { Entry } from "@/lib/filesystem";
+ import type { FormEventHandler } from "react";
+ type Choices = {
+   dir: string[],
+diff --git a/src/components/channel/groups.tsx b/src/components/shared/channel/ChannelGroups.tsx
+similarity index 95%
+rename from src/components/channel/groups.tsx
+rename to src/components/shared/channel/ChannelGroups.tsx
+index 71fb2fd..90a5631 100644
+--- a/src/components/channel/groups.tsx
++++ b/src/components/shared/channel/ChannelGroups.tsx
+@@ -1,6 +1,6 @@
+ import * as React from "react";
+ import styled from "styled-components";
+-import { useOverlayStore } from "../../lib/stores";
++import { useOverlayStore } from "@/lib/stores";
+ 
+ const WrapRows = styled.div`
+   grid-auto-rows: auto;
+@@ -92,7 +92,7 @@ const GroupRow = (props) => {
+   return <>{coreUI}</>;
+ };
+ 
+-const Groups = (props) => {
++export const ChannelGroups = (props) => {
+   const { groups } = props;
+   const rows = groups.map((group, k) => {
+     const groupProps = { ...props, group };
+@@ -100,5 +100,3 @@ const Groups = (props) => {
+   });
+   return <WrapRows>{rows}</WrapRows>;
+ };
+-
+-export { Groups };
+diff --git a/src/components/channel/legend.tsx b/src/components/shared/channel/ChannelLegend.tsx
+similarity index 82%
+rename from src/components/channel/legend.tsx
+rename to src/components/shared/channel/ChannelLegend.tsx
+index bb77230..8d4a80d 100644
+--- a/src/components/channel/legend.tsx
++++ b/src/components/shared/channel/ChannelLegend.tsx
+@@ -1,8 +1,8 @@
+ import * as React from "react";
+ import styled from "styled-components";
+-import { PushChannel, PopUpdateChannel } from "../editable/channels";
+-import { Editor } from "../editable/common";
+-import { Status } from "../editable/status";
++import { Push as PushChannel, PopUpdate as PopUpdateChannel } from "@/components/authoring/tools/ActionButtons";
++import { EditModeSwitcher } from "@/components/authoring/tools/EditModeSwitcher";
++import { EditableText } from "@/components/authoring/tools/EditableText";
+ 
+ const RightAlign = styled.div`
+   justify-items: right;
+@@ -35,7 +35,7 @@ const Box = styled.div`
+   margin-top: 2px;
+ `;
+ 
+-const defaultChannels = [
++export const defaultChannels = [
+   { color: "0000FF", name: "DNA" },
+   { color: "FF0000", name: "Red" },
+   { color: "00FF00", name: "Green" },
+@@ -80,7 +80,7 @@ const LegendRow = (props) => {
+   const coreUI = (
+     <WrapBox {...wrapProps}>
+       <Box {...boxProps} />
+-      <Status {...statusProps}>{channelName}</Status>
++      <EditableText {...statusProps}>{channelName}</EditableText>
+     </WrapBox>
+   );
+   const editSwitch = [
+@@ -88,12 +88,12 @@ const LegendRow = (props) => {
+     [PopUpdateChannel, { children: coreUI, onPop }],
+   ];
+   const canPop = props.editable && props.total > 1;
+-  const extraUI = <Editor {...{ ...props, editable: canPop, editSwitch }} />;
++  const extraUI = <EditModeSwitcher {...{ ...props, editable: canPop, editSwitch }} />;
+ 
+   return <>{extraUI}</>;
+ };
+ 
+-const Legend = (props) => {
++export const ChannelLegend = (props) => {
+   const { g, pushChannel, toggleChannel } = props;
+   const nextIdx = props.channels.length + 1;
+   const newChannel = defaultChannels[nextIdx % defaultChannels.length];
+@@ -104,7 +104,7 @@ const Legend = (props) => {
+     ["div", {}],
+     [PushChannel, { onPush }],
+   ];
+-  const extraUI = <Editor {...{ ...props, editSwitch }} />;
++  const extraUI = <EditModeSwitcher {...{ ...props, editSwitch }} />;
+ 
+   const { channels } = props;
+   const total = channels.length;
+@@ -125,5 +125,3 @@ const Legend = (props) => {
+     </div>
+   );
+ };
+-
+-export { Legend, defaultChannels };
+diff --git a/src/components/shared/channel/ChannelPanel.tsx b/src/components/shared/channel/ChannelPanel.tsx
+new file mode 100644
+index 0000000..5629514
+--- /dev/null
++++ b/src/components/shared/channel/ChannelPanel.tsx
+@@ -0,0 +1,216 @@
++import * as React from "react";
++import { useState } from "react";
++import { ChannelLegend } from "./ChannelLegend";
++import { ChannelGroups } from "./ChannelGroups";
++import { useOverlayStore } from "@/lib/stores";
++import styled from "styled-components";
++import { Push as PushGroup } from "@/components/authoring/tools/ActionButtons";
++import { EditModeSwitcher } from "@/components/authoring/tools/EditModeSwitcher";
++import { defaultChannels } from "./ChannelLegend";
++
++// Types
++import type { ConfigProps } from "@/lib/config";
++import type { Group, Story } from "@/lib/exhibit";
++import type { HashContext } from "@/lib/hashUtil";
++import type { ImageProps } from "@/components/shared/common/types";
++
++export type ChannelPanelProps = HashContext & ImageProps & {
++  children: any,
++  config: ConfigProps;
++  authorMode: boolean;
++  hiddenChannel: boolean;
++  startExport: () => void;
++  controlPanelElement: string;
++  retrievingMetadata: boolean;
++  setHiddenChannel: (v: boolean) => void;
++};
++
++const TextWrap = styled.div`
++  height: 100%;
++  > div.core {
++    color: #eee;
++    position: absolute;
++    right: 0;
++    top: 0;
++    width: 220px;
++    margin-bottom: 4px;
++    transition: transform 0.5s ease 0s;
++  }
++  > div.core.hide {
++    transform: translateX(100%); 
++  }
++  .dim {
++    color: #aaa;
++  }
++`;
++
++const TextOther = styled.div`
++  background-color: blue;
++`;
++
++// Content layout styles (merged from content.tsx)
++const WrapContent = styled.div`
++  height: 100%;
++  display: grid;
++  pointer-events: none;
++  grid-template-rows: auto auto 1fr;
++  grid-template-columns: 150px auto 100%;
++  transform: translate(-150px);
++`;
++
++const WrapCore = styled.div`
++  padding: 0.5em;
++  grid-column: 3;
++  grid-row: 1 / 3;
++  overflow: auto;
++  scrollbar-color: #888 var(--theme-dim-gray-color);
++  pointer-events: all;
++  word-wrap: break-word;
++  border: 2px solid var(--theme-glass-edge);
++  background-color: var(--dark-glass);
++  border-radius: var(--radius-0001);
++`;
++
++const WrapNav = styled.div`
++  grid-row: 1;
++  grid-column: 1;
++  padding: 0.8em;
++  font-size: 16px;
++  pointer-events: all;
++  padding: 0.5em 0.75em;
++  border: 2px solid var(--theme-glass-edge);
++  border-right: 0;
++  background-color: var(--dark-glass);
++  border-radius: var(--radius-0001);
++`;
++
++const WrapColumns = styled.div`
++  grid-template-columns: auto 1fr;
++  display: grid;
++  gap: 0.25em;
++`;
++
++const Header = styled.h2`
++`;
++
++const theme = {};
++
++export const ChannelPanel = (props: ChannelPanelProps) => {
++  const hide = props.hiddenChannel;
++  const setHide = props.setHiddenChannel;
++
++  const togglePanel = () => setHide(!hide);
++
++  const { Groups } = props.config.ItemRegistry;
++  const hidden = props.retrievingMetadata;
++  const {
++    activeChannelGroupId,
++    setChannelVisibilities,
++    channelVisibilities
++  } = useOverlayStore();
++  const group_name = Groups.find(
++    ({ UUID }) => UUID === activeChannelGroupId
++  )?.Properties?.Name;
++  // TODO -- avoid extra name lookup step
++  const group = props.groups.find(
++    ({ name }) => group_name === name
++  ) || {
++    g: 0,
++    channels: []
++  };
++  const toggleChannel = ({ name }) => {
++    setChannelVisibilities(
++      Object.fromEntries(
++        Object.entries(channelVisibilities).map(
++          ([k,v]) => [k, k === name ? !v : v]
++        )
++      )
++    )
++  }
++  const legendProps = {
++    ...props, ...group,
++    channelVisibilities,
++    toggleChannel
++  };
++  const hideClass=[
++    "show core", "hide core"
++  ][
++    +hide
++  ];
++
++  // Content logic (merged from content.tsx)
++  const { groups, stories } = props;
++  const { pushGroup } = props;
++  const { hash, setHash } = props;
++  const { editable } = props;
++
++  const total = groups.length;
++  const groupProps = { ...props, total, editable, hash, setHash, stories };
++
++  const pushFunction = (numChannels) => {
++    const channels = defaultChannels.slice(0, numChannels);
++    return () => {
++      const newG = groups.length;
++      pushGroup({
++        g: newG,
++        path: "TODO",
++        name: `Group ${groups.length}`,
++        channels: channels,
++      });
++      setHash({ g: newG });
++    };
++  };
++  const extraUI = (numChannels) => {
++    const onPush = pushFunction(numChannels);
++    const editSwitch = [
++      ["span", {}],
++      [PushGroup, { onPush }],
++    ];
++    return <EditModeSwitcher {...{ ...props, editSwitch }} />;
++  };
++
++  const allGroups =
++    groups.length || props.editable ? (
++      <>
++        <Header className="h6">
++          <WrapColumns>
++            {extraUI(3)}
++            <span>Channel Groups</span>
++          </WrapColumns>
++        </Header>
++        <ChannelGroups {...{ ...groupProps, groups }} />
++      </>
++    ) : null;
++
++  const channelMenu = (
++    <div className={hideClass}>
++      <WrapContent> 
++        <WrapNav> 
++          <ChannelLegend {...legendProps} />
++        </WrapNav> 
++        <WrapCore>
++          {allGroups}
++        </WrapCore>
++      </WrapContent>
++    </div>
++  );
++
++  const minerva_author_ui = React.createElement(
++    props.controlPanelElement, {
++    class: theme, children: props.children,
++  }
++  );
++
++  const content = props.authorMode ? (
++    <TextOther>
++      {minerva_author_ui}
++    </TextOther>
++  ) : props.children;
++
++  return (
++    <TextWrap>
++      {content}
++      {hidden ? "" : channelMenu}
++    </TextWrap>
++  );
++};
+diff --git a/src/components/common/header.tsx b/src/components/shared/common/Header.tsx
+similarity index 100%
+rename from src/components/common/header.tsx
+rename to src/components/shared/common/Header.tsx
+diff --git a/src/components/common/icon.tsx b/src/components/shared/common/Icon.tsx
+similarity index 78%
+rename from src/components/common/icon.tsx
+rename to src/components/shared/common/Icon.tsx
+index 212348d..586c9da 100644
+--- a/src/components/common/icon.tsx
++++ b/src/components/shared/common/Icon.tsx
+@@ -4,7 +4,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+ import type { IconProp } from "@fortawesome/fontawesome-svg-core";
+ import type { RefObject } from "react";
+ 
+-export type Props = {
++// Individual Icon Component
++export type IconProps = {
+   size?: string;
+   width?: string;
+   height?: string;
+@@ -54,7 +55,7 @@ const Button = styled.button<ButtonProps>`
+   cursor: ${({ onClick }) => clickCursor(!onClick)};
+ `;
+ 
+-const getProps = (props: Props, noClick = null) => {
++const getProps = (props: IconProps, noClick = null) => {
+   const { icon, onClick = noClick } = props;
+   const { 
+     size = "1em", color = "inherit",
+@@ -70,7 +71,7 @@ const getProps = (props: Props, noClick = null) => {
+   };
+ };
+ 
+-const Icon = (props: Props) => {
++const Icon = (props: IconProps) => {
+   const { icon, ...rest } = getProps(props);
+   return (
+     <Button {...rest}>
+@@ -79,7 +80,7 @@ const Icon = (props: Props) => {
+   );
+ };
+ 
+-const RefIcon = React.forwardRef((props: Props, ref: Ref) => {
++const RefIcon = React.forwardRef((props: IconProps, ref: Ref) => {
+   const coreProps = getProps(props, () => null);
+   const { icon, ...rest } = { ref, ...coreProps };
+   return (
+@@ -89,4 +90,17 @@ const RefIcon = React.forwardRef((props: Props, ref: Ref) => {
+   );
+ });
+ 
+-export { Icon, RefIcon };
++// WrapIcons Component
++interface WrapIconsProps {
++  justify?: string;
++}
++
++const WrapIcons = styled.div<WrapIconsProps>`
++  gap: 1.333em;
++  display: grid;
++  grid-template-rows: auto;
++  color: var(--theme-light-contrast-color);
++  justify-items: ${({ justify }) => justify};
++`;
++
++export { Icon, RefIcon, WrapIcons };
+diff --git a/src/components/common/ItemList.module.css b/src/components/shared/common/ItemList.module.css
+similarity index 100%
+rename from src/components/common/ItemList.module.css
+rename to src/components/shared/common/ItemList.module.css
+diff --git a/src/components/common/ItemList.tsx b/src/components/shared/common/ItemList.tsx
+similarity index 100%
+rename from src/components/common/ItemList.tsx
+rename to src/components/shared/common/ItemList.tsx
+diff --git a/src/components/shared/common/types.ts b/src/components/shared/common/types.ts
+new file mode 100644
+index 0000000..311f523
+--- /dev/null
++++ b/src/components/shared/common/types.ts
+@@ -0,0 +1,7 @@
++// Shared type definitions
++import type { Group } from "@/lib/exhibit";
++
++export type ImageProps = {
++  name: string;
++  groups: Group[];
++};
+diff --git a/src/components/overlays/icons/index.ts b/src/components/shared/icons/OverlayIcons.tsx
+similarity index 90%
+rename from src/components/overlays/icons/index.ts
+rename to src/components/shared/icons/OverlayIcons.tsx
+index cd11dea..546afd2 100644
+--- a/src/components/overlays/icons/index.ts
++++ b/src/components/shared/icons/OverlayIcons.tsx
+@@ -1,4 +1,4 @@
+-// Tool icons for the overlays component
++// Overlay tool icons - shared icon components for drawing tools
+ export { default as MoveIcon } from './move.svg?react';
+ export { default as RectangleIcon } from './rectangle.svg?react';
+ export { default as EllipseIcon } from './ellipse.svg?react';
+diff --git a/src/components/overlays/icons/arrow-annotation.svg b/src/components/shared/icons/arrow-annotation.svg
+similarity index 100%
+rename from src/components/overlays/icons/arrow-annotation.svg
+rename to src/components/shared/icons/arrow-annotation.svg
+diff --git a/src/components/overlays/icons/arrow.svg b/src/components/shared/icons/arrow.svg
+similarity index 100%
+rename from src/components/overlays/icons/arrow.svg
+rename to src/components/shared/icons/arrow.svg
+diff --git a/src/components/overlays/icons/color.svg b/src/components/shared/icons/color.svg
+similarity index 100%
+rename from src/components/overlays/icons/color.svg
+rename to src/components/shared/icons/color.svg
+diff --git a/src/components/overlays/icons/ellipse.svg b/src/components/shared/icons/ellipse.svg
+similarity index 100%
+rename from src/components/overlays/icons/ellipse.svg
+rename to src/components/shared/icons/ellipse.svg
+diff --git a/src/components/overlays/icons/group.svg b/src/components/shared/icons/group.svg
+similarity index 100%
+rename from src/components/overlays/icons/group.svg
+rename to src/components/shared/icons/group.svg
+diff --git a/src/components/overlays/icons/lasso.svg b/src/components/shared/icons/lasso.svg
+similarity index 100%
+rename from src/components/overlays/icons/lasso.svg
+rename to src/components/shared/icons/lasso.svg
+diff --git a/src/components/overlays/icons/line.svg b/src/components/shared/icons/line.svg
+similarity index 100%
+rename from src/components/overlays/icons/line.svg
+rename to src/components/shared/icons/line.svg
+diff --git a/src/components/overlays/icons/move.svg b/src/components/shared/icons/move.svg
+similarity index 100%
+rename from src/components/overlays/icons/move.svg
+rename to src/components/shared/icons/move.svg
+diff --git a/src/components/overlays/icons/point.svg b/src/components/shared/icons/point.svg
+similarity index 100%
+rename from src/components/overlays/icons/point.svg
+rename to src/components/shared/icons/point.svg
+diff --git a/src/components/overlays/icons/polygon.svg b/src/components/shared/icons/polygon.svg
+similarity index 100%
+rename from src/components/overlays/icons/polygon.svg
+rename to src/components/shared/icons/polygon.svg
+diff --git a/src/components/overlays/icons/polyline.svg b/src/components/shared/icons/polyline.svg
+similarity index 100%
+rename from src/components/overlays/icons/polyline.svg
+rename to src/components/shared/icons/polyline.svg
+diff --git a/src/components/overlays/icons/rectangle.svg b/src/components/shared/icons/rectangle.svg
+similarity index 100%
+rename from src/components/overlays/icons/rectangle.svg
+rename to src/components/shared/icons/rectangle.svg
+diff --git a/src/components/overlays/icons/text.svg b/src/components/shared/icons/text.svg
+similarity index 100%
+rename from src/components/overlays/icons/text.svg
+rename to src/components/shared/icons/text.svg
+diff --git a/src/components/vivView.tsx b/src/components/viewer/ImageViewer.tsx
+similarity index 88%
+rename from src/components/vivView.tsx
+rename to src/components/viewer/ImageViewer.tsx
+index 3645d75..c5a01bb 100644
+--- a/src/components/vivView.tsx
++++ b/src/components/viewer/ImageViewer.tsx
+@@ -2,35 +2,28 @@ import * as React from "react";
+ import Deck from '@deck.gl/react';
+ import { OrthographicView, OrthographicViewState, LinearInterpolator } from '@deck.gl/core';
+ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+-import { useWindowSize } from "../lib/useWindowSize";
+ import { MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
+-import type { DicomIndex } from "../lib/dicom-index";
+-import { useOverlayStore } from "../lib/stores";
+ import { FullscreenWidget } from '@deck.gl/widgets';
+-import { LoadingWidget } from './loadingWidget';
++import styled from "styled-components";
+ 
+ import '@deck.gl/widgets/stylesheet.css';
+ 
+-
+-import {
+-  createTileLayers, loadDicom
+-} from "../lib/dicom";
+-
+-import styled from "styled-components";
+-import { getWaypoint, convertWaypointToViewState } from "../lib/waypoint";
+-import { createDragHandlers } from "../lib/dragHandlers";
+-
+-// Types
+-import type { Config } from "../lib/viv";
+-import type { Group, Story } from "../lib/exhibit";
+-import type { HashContext } from "../lib/hashUtil";
+-import type { ConfigProps } from "../lib/config";
+-import type { Loader } from "../lib/viv";
+-import type { Selection, Color, Limit } from "../lib/viv";
+-import { VivLensing } from "./vivLensing";
+-import { LensExtension } from "@hms-dbmi/viv";
+-
+-export type Props = {
++import { useWindowSize } from "@/lib/useWindowSize";
++import { useOverlayStore } from "@/lib/stores";
++import { createTileLayers, loadDicom } from "@/lib/dicom";
++import { getWaypoint, convertWaypointToViewState } from "@/lib/waypoint";
++import { createDragHandlers } from "@/lib/dragHandlers";
++import { LoadingWidget } from "@/components/viewer/layers/LoadingWidget";
++import { Lensing } from "@/components/viewer/layers/Lensing";
++import { toSettings } from "@/lib/viv";
++
++import type { DicomIndex } from "@/lib/dicom-index";
++import type { Config, Loader } from "@/lib/viv";
++import type { Group, Story } from "@/lib/exhibit";
++import type { HashContext } from "@/lib/hashUtil";
++import type { ConfigProps } from "@/lib/config";
++
++export type ImageViewerProps = {
+   loaderOmeTiff: Loader;
+   config: ConfigProps;
+   groups: Group[];
+@@ -39,14 +32,27 @@ export type Props = {
+   viewerConfig: Config;
+   overlayLayers?: any[];
+   activeTool: string;
+-  isDragging?: boolean; // New prop to indicate if dragging an annotation
+-  hoveredAnnotationId?: string | null; // New prop to indicate hovered annotation
++  isDragging?: boolean;
++  hoveredAnnotationId?: string | null;
+   onOverlayInteraction?: (type: 'click' | 'dragStart' | 'drag' | 'dragEnd' | 'hover', coordinate: [number, number, number]) => void;
++  zoomInButton?: HTMLElement | null;
++  zoomOutButton?: HTMLElement | null;
++  [key: string]: any;
+ } & HashContext;
+ 
+-type Shape = {
+-  width: number;
+-  height: number;
++export const toImageProps = (opts: {
++  props: any;
++  buttons: any;
++}) => {
++  const { props, buttons } = opts;
++  const vivProps = {
++    ...props,
++    viewerConfig: {
++      ...buttons,
++      toSettings: toSettings(props),
++    },
++  };
++  return vivProps;
+ };
+ 
+ const Main = styled.div`
+@@ -58,9 +64,22 @@ const isElement = (x = {}): x is HTMLElement => {
+   return ["Width", "Height"].every((k) => `client${k}` in x);
+ };
+ 
+-const VivView = (props: Props) => {
++export const ImageViewer = (props: ImageViewerProps) => {
+   const windowSize = useWindowSize();
+-  const { loaderOmeTiff, dicomIndexList, groups, stories, hash, setHash, overlayLayers = [], activeTool, isDragging = false, hoveredAnnotationId = null, onOverlayInteraction } = props;
++  const { 
++    loaderOmeTiff, 
++    dicomIndexList, 
++    groups, 
++    stories, 
++    hash, 
++    setHash, 
++    overlayLayers = [], 
++    activeTool, 
++    isDragging = false, 
++    hoveredAnnotationId = null, 
++    onOverlayInteraction,
++    viewerConfig
++  } = props;
+   const { v, g, s, w } = hash;
+   const {
+     activeChannelGroupId, channelVisibilities
+@@ -98,24 +117,26 @@ const VivView = (props: Props) => {
+   ), [
+     loaderOmeTiff, dicomIndexList
+   ]);
+-  const toSettings = (
++  
++  const toSettingsInternal = (
+     loader, modality, groups, activeChannelGroupId,
+     channelVisibilities
+   ) => {
+     // Gets the default settings
+     if (loader === null || !groups) {
+-      return props.viewerConfig.toSettings(
++      return viewerConfig.toSettings(
+         activeChannelGroupId, modality
+       );
+     }
+-    return props.viewerConfig.toSettings(
++    return viewerConfig.toSettings(
+       activeChannelGroupId, modality, loader, groups,
+       channelVisibilities
+     );
+   }
++  
+   const mainSettingsOmeTiff = useMemo(() => {
+     const modality = "Colorimetric";
+-    return toSettings(
++    return toSettingsInternal(
+       loaderOmeTiff, modality, groups,
+       activeChannelGroupId, channelVisibilities
+     )
+@@ -123,10 +144,11 @@ const VivView = (props: Props) => {
+     loaderOmeTiff, groups, activeChannelGroupId,
+     channelVisibilities
+   ]);
++  
+   const mainSettingsDicomList = useMemo(() => {
+     return dicomIndexList.map(dicomIndex => {
+       const { modality } = dicomIndex;
+-      return toSettings(
++      return toSettingsInternal(
+         dicomIndex.loader, modality, groups,
+         activeChannelGroupId, channelVisibilities
+       );
+@@ -135,6 +157,7 @@ const VivView = (props: Props) => {
+     dicomIndexList, groups, activeChannelGroupId,
+     channelVisibilities
+   ]);
++  
+   // Show only ome-tiff if available
+   const mainSettingsList = useMemo(() => (
+     loaderOmeTiff !== null ? (
+@@ -145,6 +168,7 @@ const VivView = (props: Props) => {
+   ), [
+     mainSettingsOmeTiff, mainSettingsDicomList
+   ])
++  
+   // TODO, assert all loaders match shape
+   const firstLoader = useMemo(() => (
+     (mainSettingsList.length > 0) ? (
+@@ -289,6 +313,7 @@ const VivView = (props: Props) => {
+   }, [
+     dicomIndexList
+   ]);
++  
+   // Memoize dicom layer
+   const dicomLayers = useMemo(
+     () => {
+@@ -313,6 +338,7 @@ const VivView = (props: Props) => {
+       dicomSources, mainSettingsList
+     ]
+   );
++  
+   // Memoize image layers
+   const omeTiffLayers = useMemo(
+     () => (
+@@ -322,6 +348,7 @@ const VivView = (props: Props) => {
+     ),
+     [loaderOmeTiff, omeTiffPropsList]
+   );
++  
+   // Memoize scale bar layer
+   const scaleBarLayer = useMemo(() => {
+     // Get physical size from loader metadata if available
+@@ -345,6 +372,7 @@ const VivView = (props: Props) => {
+       snap: true,
+     });
+   }, [viewState, firstLoader, viewportSize.width, viewportSize.height]);
++  
+   // Memoize layer combination
+   const allLayers = useMemo(
+     () => {
+@@ -362,6 +390,7 @@ const VivView = (props: Props) => {
+       overlayLayers, scaleBarLayer
+     ]
+   );
++  
+   // Memoize drag handlers
+   const dragHandlers = useMemo(() =>
+     createDragHandlers(activeTool, onOverlayInteraction),
+@@ -452,6 +481,4 @@ const VivView = (props: Props) => {
+   )
+ };
+ 
+-VivView.displayName = 'VivView';
+-
+-export { VivView };
++ImageViewer.displayName = 'ImageViewer';
+diff --git a/src/components/vivLensing.tsx b/src/components/viewer/layers/Lensing.tsx
+similarity index 97%
+rename from src/components/vivLensing.tsx
+rename to src/components/viewer/layers/Lensing.tsx
+index 2757d02..02bcdfb 100644
+--- a/src/components/vivLensing.tsx
++++ b/src/components/viewer/layers/Lensing.tsx
+@@ -65,7 +65,7 @@ void mutate_color(inout vec3 rgb, float intensity0, float intensity1, float inte
+ }
+ `;
+ 
+-const VivLensing = class extends LensExtension {
++export class Lensing extends LensExtension {
+   getShaders() {
+     return {
+       ...super.getShaders(),
+@@ -88,5 +88,4 @@ const VivLensing = class extends LensExtension {
+       ],
+     };
+   }
+-};
+-export { VivLensing };
++}
+diff --git a/src/components/loadingWidget.tsx b/src/components/viewer/layers/LoadingWidget.tsx
+similarity index 98%
+rename from src/components/loadingWidget.tsx
+rename to src/components/viewer/layers/LoadingWidget.tsx
+index 6a4598d..a8c875c 100644
+--- a/src/components/loadingWidget.tsx
++++ b/src/components/viewer/layers/LoadingWidget.tsx
+@@ -67,3 +67,5 @@ export const LoadingWidget = React.forwardRef<
+ });
+ 
+ LoadingWidget.displayName = 'LoadingWidget';
++
++export type { LoadingWidgetProps };
+diff --git a/src/components/overlays/AnnotationLayers.ts b/src/components/viewer/layers/annotations/AnnotationLayers.tsx
+similarity index 92%
+rename from src/components/overlays/AnnotationLayers.ts
+rename to src/components/viewer/layers/annotations/AnnotationLayers.tsx
+index a7cdb93..ac6a02f 100644
+--- a/src/components/overlays/AnnotationLayers.ts
++++ b/src/components/viewer/layers/annotations/AnnotationLayers.tsx
+@@ -7,9 +7,9 @@
+ 
+ import * as React from "react";
+ import { PolygonLayer, TextLayer, ScatterplotLayer, IconLayer } from '@deck.gl/layers';
+-import { useOverlayStore } from "../../lib/stores";
+-import type { Annotation } from "../../lib/stores";
+-import ArrowIconUrl from './icons/arrow-annotation.svg?url';
++import { useOverlayStore } from "@/lib/stores";
++import type { Annotation } from "@/lib/stores";
++import ArrowIconUrl from '@/components/shared/icons/arrow-annotation.svg?url';
+ 
+ type ColorRGBA = [number, number, number, number];
+ type LayerType = PolygonLayer | TextLayer | ScatterplotLayer | IconLayer;
+@@ -340,3 +340,21 @@ export function useAnnotationLayers(pickable: boolean = true) {
+ 
+   return annotationLayers;
+ }
++
++// ============================================================================
++// AnnotationRenderer Component
++// ============================================================================
++
++/**
++ * AnnotationRenderer - A minimal component that renders annotations as deck.gl layers
++ * without any UI (no toolbar, no drawing tools). This is used in presenter mode
++ * where we want to display annotations but not allow editing.
++ */
++export const AnnotationRenderer: React.FC = () => {
++  // Use the shared hook to create and sync annotation layers
++  // Pass pickable: false to disable click/drag interactions in presenter mode
++  useAnnotationLayers(false);
++
++  // This component renders nothing - it only manages layers in the store
++  return null;
++};
+diff --git a/src/components/overlays/DrawingOverlay.tsx b/src/components/viewer/layers/annotations/DrawingOverlay.tsx
+similarity index 99%
+rename from src/components/overlays/DrawingOverlay.tsx
+rename to src/components/viewer/layers/annotations/DrawingOverlay.tsx
+index 77b39a0..fa9b13d 100644
+--- a/src/components/overlays/DrawingOverlay.tsx
++++ b/src/components/viewer/layers/annotations/DrawingOverlay.tsx
+@@ -1,6 +1,6 @@
+ import * as React from "react";
+ import { PolygonLayer, TextLayer, ScatterplotLayer } from '@deck.gl/layers';
+-import { useOverlayStore, ellipseToPolygon } from "../../lib/stores";
++import { useOverlayStore, ellipseToPolygon } from "@/lib/stores";
+ import { useAnnotationLayers } from "./AnnotationLayers";
+ 
+ // Shared Text Edit Panel Component
+diff --git a/src/lib/validate.ts b/src/lib/validate.ts
+index dacef85..26cb9a2 100644
+--- a/src/lib/validate.ts
++++ b/src/lib/validate.ts
+@@ -1,7 +1,7 @@
+ import { findFile } from "./filesystem";
+ import { findDicomWeb } from "../lib/dicom";
+ 
+-import type { ValidObj } from '../components/upload';
++import type { ValidObj } from '@/components/shared/Upload';
+ 
+ export type KV = [string, FormDataEntryValue];
+ export type ObjAny = {
+diff --git a/src/main.tsx b/src/main.tsx
+deleted file mode 100644
+index 9e59023..0000000
+--- a/src/main.tsx
++++ /dev/null
+@@ -1,401 +0,0 @@
+-import * as React from "react";
+-import { get, set } from 'idb-keyval';
+-import styled from 'styled-components';
+-import { author } from "./minerva-author-ui/author";
+-import { useState, useMemo, useEffect } from "react";
+-import { loadDicomWeb, parseDicomWeb } from "./lib/dicom";
+-import { toEmptyHash } from "./lib/hashUtil";
+-import { onlyUUID } from './lib/config';
+-import { mutableItemRegistry } from './lib/config';
+-import { hasFileSystemAccess, toDir, toLoader } from "./lib/filesystem";
+-import { extractChannels, extractDistributions } from './lib/config';
+-import { isOpts, validate } from './lib/validate';
+-import { Upload } from './components/upload';
+-import { readConfig } from "./lib/exhibit";
+-import { Index } from "./components";
+-import Pool from './lib/workers/Pool';
+-import { parseRoisFromLoader } from './lib/roiParser';
+-import { useOverlayStore } from './lib/stores';
+-
+-import type { DicomIndex, DicomLoader } from "./lib/dicom-index";
+-import type { ValidObj } from './components/upload';
+-import type { ImageProps } from "./components/channel"
+-import type { FormEventHandler } from "react";
+-import type { ObjAny, KV } from './lib/validate';
+-import type { ItemRegistryProps } from "./lib/config";
+-import type { ConfigWaypoint } from "./lib/config";
+-import type { MutableFields } from "./lib/config";
+-import type { ExhibitConfig } from "./lib/exhibit";
+-import type { ConfigGroup } from "./lib/exhibit";
+-
+-type Props = ImageProps & {
+-  configWaypoints: ConfigWaypoint[];
+-  exhibit_config: ExhibitConfig;
+-  demo_dicom_web?: boolean;
+-  handleKeys: string[];
+-};
+-
+-interface ReduceFormData {
+-  (o: ObjAny, kv: KV): ObjAny;
+-}
+-
+-const Wrapper = styled.div`
+-  height: 100%;
+-  display: grid;
+-  grid-template-columns: 1fr; 
+-  grid-template-rows: 1fr; 
+-`;
+-
+-const Full = styled.div`
+-  max-height: 100vh;
+-`
+-
+-const Scrollable = styled.div`
+-  z-index: 2;
+-  grid-column: 2;
+-  grid-row: 1 / -1;
+-  overflow-y: scroll;
+-  border-radius: 12px;
+-  outline: 1px solid var(--theme-glass-edge);
+-  background-color: var(--dark-main-glass);
+-  font-size: 20px;
+-  padding: 5vh;
+-  margin: 5vh;
+-`;
+-
+-const Content = (props: Props) => {
+-  const { handleKeys } = props;
+-  const firstExhibit = readConfig(props.exhibit_config);
+-  const [exhibit, setExhibit] = useState(firstExhibit);
+-  const [hash, _setHash] = useState(toEmptyHash(exhibit.stories));
+-  const setHash = (partial_hash) => {
+-    _setHash({...hash, ...partial_hash})
+-  }
+-  const [handle, setHandle] = useState(null);
+-  const [loaderOmeTiff, setLoaderOmeTiff] = useState(null);
+-  const [dicomIndexList, setDicomIndexList] = useState(
+-    [] as DicomIndex[]
+-  );
+-  const [config, setConfig] = useState({
+-    ItemRegistry: {
+-      Name: '', Groups: [], Colors: [],
+-      GroupChannels: [], SourceChannels: [],
+-      SourceDistributions: [],
+-      Stories: props.configWaypoints,
+-    } as ItemRegistryProps,
+-    ID: crypto.randomUUID()
+-  });
+-  // Active Group from Store
+-  const { 
+-    setActiveChannelGroup,
+-    setChannelVisibilities,
+-    setGroupChannelLists,
+-    setGroupNames
+-  } = useOverlayStore();
+-  const updateGroupChannelLists = ({
+-    SourceChannels, GroupChannels, Groups
+-  }) => {
+-    setGroupNames(Object.fromEntries(
+-      Groups.map(({ Properties, UUID }) => [
+-        UUID, Properties.Name
+-      ])
+-    ))
+-    const groupChannelLists = Object.fromEntries(
+-      Groups.map(({ Properties, UUID }) => {
+-        return [
+-          Properties.Name, GroupChannels.filter(
+-            ({ Associations }) => (
+-              UUID === Associations.Group.UUID
+-            )
+-          ).map(
+-            ({ Associations }) => {
+-              return (
+-                (found) => found?.Properties.Name || ''
+-              )(SourceChannels.find(
+-                ({ UUID }) => (
+-                  UUID === Associations.SourceChannel.UUID
+-                )
+-              ))
+-            }
+-          )
+-        ]
+-      })
+-    )
+-    setGroupChannelLists(groupChannelLists)
+-    const groupName = Groups[0].Properties.Name
+-    const channelList = groupChannelLists[
+-      groupName
+-    ] || [];
+-    setChannelVisibilities(Object.fromEntries(
+-      channelList.map(name => [name, true])
+-    ))
+-  }
+-  const resetItems = ItemRegistry => {
+-    setConfig(config => ({
+-      ...config, ItemRegistry: {
+-        ...config.ItemRegistry, ...ItemRegistry
+-      },
+-      ID: crypto.randomUUID()
+-    }));
+-    const { Groups } = ItemRegistry;
+-    if ( Groups?.length > 0) {
+-      setActiveChannelGroup(Groups[0].UUID)
+-    }
+-  };
+-  const setItems = ItemRegistry => {
+-    setConfig(config => ({
+-      ...config, ItemRegistry: {
+-        ...config.ItemRegistry, ...ItemRegistry
+-      },
+-    }));
+-  }
+-  const [fileName, setFileName] = useState('');
+-  // Create ome-tiff loader
+-  const onAllow = async () => {
+-    const newHandle = await toDir();
+-    setHandle(newHandle);
+-    await set(
+-      handleKeys[0], newHandle
+-    );
+-  }
+-  const onRecall = async () => {
+-    const newHandle = await get(handleKeys[0])
+-    const isGranted = (permission) => permission === 'granted';
+-    const options = { mode: 'readwrite' };
+-    if (
+-      isGranted(await newHandle.queryPermission(options))
+-      || isGranted(await newHandle.requestPermission(options))
+-    ) {
+-      setHandle(newHandle);
+-    }
+-  }
+-  const onStartOmeTiff = async (in_f: string) => {
+-    if (handle === null) return;
+-    const loader = await toLoader({ handle, in_f, pool: new Pool() });
+-    const {
+-      SourceChannels, GroupChannels, Groups, Colors
+-    } = extractChannels(loader, "Colorimetric", []);
+-    resetItems({
+-      SourceChannels, GroupChannels, Groups, Colors
+-    });
+-    updateGroupChannelLists({
+-      SourceChannels, GroupChannels, Groups
+-    })
+-    // Asynchronously add distributions
+-    extractDistributions(loader).then(
+-      (sourceDistributionMap) => {
+-        const SourceDistributions = sourceDistributionMap.values();
+-        resetItems({
+-          SourceDistributions: [...SourceDistributions],
+-          SourceChannels: SourceChannels.map(sourceChannel => ({
+-            ...sourceChannel, Associations: {
+-              ...sourceChannel.Associations,
+-              SourceDistribution: sourceDistributionMap.get(
+-                sourceChannel.Properties.SourceIndex
+-              )
+-            }
+-          }))
+-        });
+-      }
+-    );
+-    setLoaderOmeTiff(loader);
+-    setFileName(in_f);
+-  }
+-  const onStart = async (
+-    imagePropList: [string, string, string][]
+-  ) => {
+-    if ( imagePropList.length === 0 ) {
+-      return;
+-    }
+-    // handle hard-coded channels for dicom-web demo
+-    const dicomPropList = imagePropList.filter(
+-      ([series, modality, type]) => type === "DICOM-WEB"
+-    ).map(
+-      ([series, modality]) => [series, modality]
+-    ) as (
+-      [string, string][]
+-    )
+-    if (dicomPropList.length > 0) {
+-      await onStartDicomWeb(
+-        dicomPropList, props.exhibit_config.Groups
+-      );
+-    }
+-    // handle only one ome-tiff image ( TODO support more )
+-    const omeTiffPropList = imagePropList.filter(
+-      ([path, modality, type]) => type === "OME-TIFF"
+-    ).map(
+-      ([path]) => [path]
+-    )
+-    if (omeTiffPropList.length > 0) {
+-      await onStartOmeTiff(omeTiffPropList[0][0]);
+-    }
+-  }
+-  // Dicom Web derived state
+-  const onStartDicomWeb = async (
+-    imagePropList: [string, string][],
+-    groups: ConfigGroup[]
+-  ) => {
+-    const indexList = await Promise.all(
+-      imagePropList.map(
+-        async ( [series, modality] ) => {
+-        const pyramids = await loadDicomWeb(series);
+-        const loader = (
+-          parseDicomWeb(series, pyramids) as DicomLoader
+-        );
+-        return {
+-          series, pyramids, modality, loader
+-        }
+-      })
+-    );
+-    setDicomIndexList(indexList);
+-    const {
+-      SourceChannels,
+-      GroupChannels,
+-      Groups, Colors
+-    } = indexList.reduce(
+-      (registry, { loader, modality }) => {
+-        const relevant_groups = groups.filter(
+-          ({ Image }) => Image.Method === modality
+-        )
+-        const {
+-          SourceChannels, GroupChannels, Groups, Colors
+-        } = extractChannels(
+-          loader, modality, relevant_groups
+-        );
+-        return {
+-          SourceChannels: [
+-            ...registry.SourceChannels, ...SourceChannels
+-          ],
+-          GroupChannels: [
+-            ...registry.GroupChannels, ...GroupChannels
+-          ],
+-          Groups: [
+-            ...registry.Groups, ...Groups
+-          ],
+-          Colors: [
+-            ...registry.Colors, ...Colors
+-          ],
+-        };
+-      },
+-      {
+-        SourceChannels: [],
+-        GroupChannels: [],
+-        Groups: [],
+-        Colors: []
+-      }
+-    )
+-    resetItems({
+-      SourceChannels,
+-      GroupChannels,
+-      Groups, Colors
+-    });
+-    updateGroupChannelLists({
+-      SourceChannels, GroupChannels, Groups
+-    })
+-    // TODO: Asynchronously add distributions
+-    /*
+-    extractDistributions(loader).then(
+-      (sourceDistributionMap) => {
+-        const SourceDistributions = sourceDistributionMap.values();
+-        resetItems({
+-          SourceDistributions: [...SourceDistributions],
+-          SourceChannels: SourceChannels.map(sourceChannel => ({
+-            ...sourceChannel, Associations: {
+-              ...sourceChannel.Associations,
+-              SourceDistribution: sourceDistributionMap.get(
+-                sourceChannel.Properties.SourceIndex
+-              )
+-            }
+-          }))
+-        });
+-      }
+-    );
+-    */
+-  }
+-  const mutableFields: MutableFields = [
+-    'GroupChannels'
+-  ]
+-  const ItemRegistry = mutableItemRegistry(
+-    config.ItemRegistry, setItems, mutableFields
+-  )
+-  // Define a WebComponent for the item panel
+-  const controlPanelElement = useMemo(() => author({
+-    ...config, ItemRegistry
+-  }), [config.ID])
+-  const noLoader = loaderOmeTiff === null && (
+-    dicomIndexList.length === 0
+-  ) && !(
+-    props.demo_dicom_web
+-  );
+-  // Actual image viewer
+-  const imager = noLoader ? '' : (
+-    <Full>
+-      <Index {...{
+-        dicomIndexList,
+-        config, controlPanelElement,
+-        exhibit, setExhibit, loaderOmeTiff,
+-        in_f: fileName, handle, hash, setHash,
+-        demo_dicom_web: props.demo_dicom_web
+-      }} />
+-    </Full>
+-  )
+-  const [valid, setValid] = useState({} as ValidObj);
+-  if (props.demo_dicom_web) {
+-    useEffect(() => {
+-      (async () => {
+-        // H&E Demo Image and
+-        // CyCIF Demo Image
+-        await onStart([[
+-          "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.2507374895.494638264.1767738966319.4.0",
+-          "Brightfield",
+-          "DICOM-WEB"
+-        ],
+-        [
+-          "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.331207435.2054329796.1752677896971.4.0",
+-          "Colorimetric",
+-          "DICOM-WEB"
+-        ]])
+-      })()
+-    }, []);
+-  }
+-  const onSubmit: FormEventHandler = (event) => {
+-    const form = event.currentTarget as HTMLFormElement;
+-    const data = [...new FormData(form).entries()];
+-    const formOut = data.reduce(((o, [k, v]) => {
+-      return { ...o, [k]: `${v}` };
+-    }) as ReduceFormData, { mask: "" });
+-    const formOpts = { formOut, onStart, handle };
+-    if (isOpts(formOpts)) {
+-      validate(formOpts).then((valid: ValidObj) => {
+-        setValid(valid);
+-      })
+-    }
+-    event.preventDefault();
+-    event.stopPropagation();
+-  }
+-  const formProps = { onSubmit, valid };
+-  const uploadProps = {
+-    handleKeys, formProps, handle,
+-    onAllow, onRecall
+-  };
+-  const importer = !noLoader ? '' : (<Scrollable>
+-    <Upload {...uploadProps} />
+-  </Scrollable>)
+-  return (
+-    <Wrapper>
+-      {imager}
+-      {importer}
+-    </Wrapper>
+-  );
+-};
+-
+-const Main = (props: Props) => {
+-  if (props.demo_dicom_web || hasFileSystemAccess()) {
+-    return <Content {...props} />;
+-  } else {
+-    return <div><p>Unable to access FileSystem API.</p></div>;
+-  }
+-};
+-
+-
+-export { Main };
+diff --git a/tsconfig.json b/tsconfig.json
+index e19bccd..c89a57f 100644
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -11,6 +11,10 @@
+     "outDir": "./build",
+     "moduleResolution": "node",
+     "allowSyntheticDefaultImports": true,
++    "baseUrl": ".",
++    "paths": {
++      "@/*": ["src/*"]
++    },
+     "plugins": [
+       { "name": "typescript-plugin-css-modules" }
+     ],
+@@ -21,6 +25,7 @@
+     ]
+   },
+   "include": [
+-    "src"
++    "src",
++    "index.tsx"
+   ]
+ }
+diff --git a/vite.config.js b/vite.config.js
+index c851c0d..68f5d32 100644
+--- a/vite.config.js
++++ b/vite.config.js
+@@ -3,6 +3,7 @@ import { standardCssModules } from 'vite-plugin-standard-css-modules';
+ import react from '@vitejs/plugin-react'
+ import mkcert from 'vite-plugin-mkcert'
+ import svgr from 'vite-plugin-svgr'
++import path from 'path'
+ 
+ export default defineConfig({
+   worker: {
+@@ -42,6 +43,9 @@ export default defineConfig({
+     ]
+   },
+   resolve: {
++    alias: {
++      '@': path.resolve(__dirname, './src')
++    },
+     dedupe: [
+       '@luma.gl/core',
+       '@luma.gl/constants', 
