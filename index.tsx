@@ -1625,8 +1625,8 @@ const configWaypoints = [
     Properties: {
       ...Properties,
       Pan: [
-        Number(Properties.Pan?.[0]),
-        Number(Properties.Pan?.[1])
+        Number(Properties.Pan?.[0]) || 0,
+        Number(Properties.Pan?.[1]) || 0
       ] as [number, number]
     }
   } as ConfigWaypoint
