@@ -1,8 +1,10 @@
 import * as React from "react";
 import { createRoot } from 'react-dom/client';
-import { Main } from "./src/main";
+// import { Main } from "./src/main";
+import { Main } from "@/components/main";
 import "@fontsource/overpass/200.css";
 import "@fontsource/overpass/500.css";
+import type { ConfigWaypoint } from "@/lib/config";
 import { createGlobalStyle } from "styled-components";
 import { loremIpsum } from "react-lorem-ipsum";
 
@@ -1617,7 +1619,18 @@ const configWaypoints = [
             }
         ]
     }
-];
+].map(({ Properties, ...wp }) => {
+  return {
+    ...wp,
+    Properties: {
+      ...Properties,
+      Pan: [
+        Number(Properties.Pan?.[0]) || 0,
+        Number(Properties.Pan?.[1]) || 0
+      ] as [number, number]
+    }
+  } as ConfigWaypoint
+})
 
 // TODO: remove legacy exhibit data structure
 const exhibit_config = {
@@ -1627,7 +1640,7 @@ const exhibit_config = {
             const { Name, Content, Pan, Zoom, Group } = Properties;
             return {
                 Name, Description: Content,
-                Pan, Zoom, Group,
+                Pan: Pan as [number, number], Zoom, Group,
                 Arrows, Overlays
             }
         })
@@ -2243,7 +2256,7 @@ const exhibit_config = {
                 5000
             ]
         }
-    ]  
+    ]
 }
 
 // TODO Warning: hard-coded for LUNG-3-PR_40X.ome.tif
@@ -2265,9 +2278,22 @@ const MainStyle = createGlobalStyle`
 const rootElement = document.getElementById(id);
 const root = createRoot(rootElement);
 
+const groups = exhibit_config.Groups.map(
+  (group, g) => {
+    return {
+      channels: group.Channels.map((name, c) => {
+        return { name, color: group.Colors[c] };
+      }),
+      name: group.Name,
+      g
+    }
+  }
+);
+
 root.render(
     <React.StrictMode>
         <Main
+            groups={groups}
             handleKeys={["ome-dir-1"]} demo_dicom_web={true}
             exhibit_config={exhibit_config} configWaypoints={configWaypoints}
         />
