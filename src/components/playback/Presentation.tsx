@@ -2,7 +2,7 @@ import * as React from "react";
 import { useEffect, useRef, useMemo } from "react";
 import ReactMarkdown from 'react-markdown'
 import { useOverlayStore } from "@/lib/stores";
-import { AnnotationRenderer } from "@/components/viewer/layers/AnnotationRenderer";
+import { useAnnotationLayers } from "@/lib/annotationLayers";
 //import { theme } from "@/theme.module.css";
 import styled from "styled-components";
 const theme = {};
@@ -190,6 +190,9 @@ export const Presentation = (props: PresentationProps) => {
     imageHeight,
     setTargetWaypointViewState
   } = useOverlayStore();
+
+  // Sync annotation layers (presenter mode: non-interactive)
+  useAnnotationLayers(false);
 
   // Auto-import annotations for the active story
   // Re-run when image dimensions become available or active story changes
@@ -435,8 +438,6 @@ export const Presentation = (props: PresentationProps) => {
         </ContentWrap>
       </NavPane>
       {props.children}
-      {/* Renders annotation layers without UI */}
-      <AnnotationRenderer />
     </Wrap>
   );
 };

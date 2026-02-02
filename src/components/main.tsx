@@ -13,7 +13,7 @@ import Pool from "@/lib/workers/Pool";
 import { parseRoisFromLoader } from "@/lib/roiParser";
 import { useOverlayStore } from "@/lib/stores";
 import { FileHandler } from "@/components/shared/FileHandler";
-import { ImageViewer, toImageProps } from "@/components/viewer/ImageViewer";
+import { ImageViewer, toImageProps } from "@/components/shared/viewer/ImageViewer";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 import { Presentation } from "@/components/playback/Presentation";
@@ -159,7 +159,7 @@ const Content = (props: Props) => {
   
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
-  const [presenting, setPresenting] = useState(true);
+  const [presenting, setPresenting] = useState(false);
   const [zoomInEl, setZoomIn] = useState(null);
   const [zoomOutEl, setZoomOut] = useState(null);
   const [editable, setEditable] = useState(false);
