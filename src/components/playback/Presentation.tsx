@@ -2,7 +2,7 @@ import * as React from "react";
 import { useEffect, useRef, useMemo } from "react";
 import ReactMarkdown from 'react-markdown'
 import { useOverlayStore } from "@/lib/stores";
-import { AnnotationRenderer } from "@/components/viewer/layers/AnnotationLayers";
+import { AnnotationRenderer } from "@/components/viewer/layers/AnnotationRenderer";
 //import { theme } from "@/theme.module.css";
 import styled from "styled-components";
 const theme = {};

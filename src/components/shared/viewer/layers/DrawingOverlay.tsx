@@ -5,7 +5,7 @@ import {
 } from "@deck.gl/layers";
 import * as React from "react";
 import { ellipseToPolygon, useOverlayStore } from "@/lib/stores";
-import { useAnnotationLayers } from "./AnnotationLayers";
+import { useAnnotationLayers } from "@/lib/annotationLayers";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {

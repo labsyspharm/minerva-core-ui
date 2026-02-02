@@ -1,8 +1,11 @@
 /**
- * AnnotationLayers.ts
+ * Annotation layer utilities
  *
- * Contains all deck.gl layer creation logic for rendering annotations.
- * Used by both DrawingOverlay (editor mode) and AnnotationRenderer (presenter mode).
+ * Contains deck.gl layer creation logic for rendering annotations, plus a hook
+ * that syncs those layers into the overlay store.
+ *
+ * Kept in `src/lib/` because this is non-UI logic (it renders via deck.gl layers),
+ * even though it is consumed by React components.
  */
 
 import {
@@ -19,22 +22,15 @@ import { useOverlayStore } from "@/lib/stores";
 type ColorRGBA = [number, number, number, number];
 type LayerType = PolygonLayer | TextLayer | ScatterplotLayer | IconLayer;
 
-// ============================================================================
-// Arrow Icon Constants
-// ============================================================================
-
 // Arrow SVG icon (250x250) - positioned so center (125,125) is at target point
 const ARROW_ICON_URL = ArrowIconUrl;
 const ARROW_ICON_SIZE = 250;
 
-// ============================================================================
-// Main Layer Creation
-// ============================================================================
-
 /**
- * Create all deck.gl layers for multiple annotations
- * Uses single consolidated layers per type with arrays of data for better performance
- * Drawing hierarchy (bottom to top): shapes/points, arrows, labels
+ * Create all deck.gl layers for multiple annotations.
+ * Uses consolidated layers per type with arrays of data for better performance.
+ *
+ * Drawing hierarchy (bottom to top): shapes/points, arrows, labels.
  */
 export function createAllAnnotationLayers(
 	annotations: Annotation[],
@@ -45,6 +41,7 @@ export function createAllAnnotationLayers(
 	const visibleAnnotations = annotations.filter(
 		(annotation) => !hiddenLayers.has(annotation.id),
 	);
+
 	const layers: LayerType[] = [];
 
 	// Group data by layer type
@@ -85,7 +82,6 @@ export function createAllAnnotationLayers(
 		id: string;
 	}> = [];
 
-	// Process each annotation and add its data to the appropriate arrays
 	visibleAnnotations.forEach((annotation) => {
 		const isHovered = hoveredAnnotationId === annotation.id;
 
@@ -93,6 +89,7 @@ export function createAllAnnotationLayers(
 			const fontColor = isHovered
 				? ([0, 120, 255, 255] as ColorRGBA)
 				: annotation.style.fontColor;
+
 			const backgroundColor = isHovered
 				? ([0, 120, 255, 150] as ColorRGBA)
 				: annotation.style.backgroundColor || ([0, 0, 0, 100] as ColorRGBA);
@@ -101,11 +98,14 @@ export function createAllAnnotationLayers(
 				text: annotation.text,
 				position: [annotation.position[0], annotation.position[1], 0],
 				color: fontColor,
-				backgroundColor: backgroundColor,
+				backgroundColor,
 				fontSize: annotation.style.fontSize,
 				id: annotation.id,
 			});
-		} else if (annotation.type === "point") {
+			return;
+		}
+
+		if (annotation.type === "point") {
 			const fillColor = isHovered
 				? ([0, 120, 255, 255] as ColorRGBA)
 				: annotation.style.fillColor;
@@ -116,8 +116,8 @@ export function createAllAnnotationLayers(
 			pointData.push({
 				position: [annotation.position[0], annotation.position[1], 0],
 				radius: annotation.style.radius,
-				fillColor: fillColor,
-				lineColor: lineColor,
+				fillColor,
+				lineColor,
 				id: annotation.id,
 			});
 
@@ -134,7 +134,11 @@ export function createAllAnnotationLayers(
 					id: `${annotation.id}-text`,
 				});
 			}
-		} else if (annotation.type === "line") {
+
+			return;
+		}
+
+		if (annotation.type === "line") {
 			// Arrow/line annotations use IconLayer
 			const polygon = annotation.polygon;
 			if (polygon.length >= 2) {
@@ -180,57 +184,56 @@ export function createAllAnnotationLayers(
 						position: [endX, endY, 0],
 						pixelOffset: [pixelOffsetX, pixelOffsetY],
 						color: textColor,
-						textAnchor: textAnchor,
+						textAnchor,
 						id: `${annotation.id}-text`,
 					});
 				}
 			}
-		} else {
-			// Polygon-based annotations (rectangle, polygon, polyline, ellipse)
-			let fillColor: ColorRGBA = [255, 255, 255, 1];
-			let lineColor: ColorRGBA = annotation.style.lineColor;
 
-			const isPolyline = annotation.type === "polyline";
-			if (isPolyline) {
-				fillColor = [0, 0, 0, 0]; // Transparent fill
-			}
+			return;
+		}
 
-			if (isHovered) {
-				fillColor = isPolyline ? [0, 0, 0, 0] : [0, 120, 255, 100];
-				lineColor = [0, 120, 255, 255];
-			}
+		// Polygon-based annotations (rectangle, polygon, polyline, ellipse)
+		let fillColor: ColorRGBA = [255, 255, 255, 1];
+		let lineColor: ColorRGBA = annotation.style.lineColor;
 
-			polygonData.push({
-				polygon: annotation.polygon,
-				fillColor: fillColor,
-				lineColor: lineColor,
-				lineWidth: annotation.style.lineWidth,
-				id: annotation.id,
+		const isPolyline = annotation.type === "polyline";
+		if (isPolyline) {
+			fillColor = [0, 0, 0, 0]; // Transparent fill
+		}
+
+		if (isHovered) {
+			fillColor = isPolyline ? [0, 0, 0, 0] : [0, 120, 255, 100];
+			lineColor = [0, 120, 255, 255];
+		}
+
+		polygonData.push({
+			polygon: annotation.polygon,
+			fillColor,
+			lineColor,
+			lineWidth: annotation.style.lineWidth,
+			id: annotation.id,
+		});
+
+		// Add label text if present
+		if (annotation.text) {
+			const polygon = annotation.polygon;
+			const centerX = polygon.reduce((sum, [x]) => sum + x, 0) / polygon.length;
+			const centerY = polygon.reduce((sum, [, y]) => sum + y, 0) / polygon.length;
+			const textColor =
+				annotation.style.lineColor || ([255, 255, 255, 255] as ColorRGBA);
+
+			labelData.push({
+				text: annotation.text,
+				position: [centerX, centerY, 0],
+				pixelOffset: [0, 0],
+				color: textColor,
+				textAnchor: "middle",
+				id: `${annotation.id}-text`,
 			});
-
-			// Add label text if present
-			if (annotation.text) {
-				const polygon = annotation.polygon;
-				const centerX =
-					polygon.reduce((sum, [x]) => sum + x, 0) / polygon.length;
-				const centerY =
-					polygon.reduce((sum, [, y]) => sum + y, 0) / polygon.length;
-				const textColor =
-					annotation.style.lineColor || ([255, 255, 255, 255] as ColorRGBA);
-
-				labelData.push({
-					text: annotation.text,
-					position: [centerX, centerY, 0],
-					pixelOffset: [0, 0],
-					color: textColor,
-					textAnchor: "middle",
-					id: `${annotation.id}-text`,
-				});
-			}
 		}
 	});
 
-	// Create consolidated layers with all data
 	// 1. Polygons layer (rectangles, polygons, polylines, ellipses)
 	if (polygonData.length > 0) {
 		layers.push(
@@ -343,14 +346,12 @@ export function createAllAnnotationLayers(
 	return layers;
 }
 
-// ============================================================================
-// React Hook
-// ============================================================================
-
 /**
- * Hook that creates deck.gl layers from annotations in the store
- * and syncs them to the overlay layers.
- * @param pickable - Whether layers should be pickable/interactive (default true, set false for presenter mode)
+ * Hook that creates deck.gl layers from annotations in the store and syncs them
+ * to the overlay layers.
+ *
+ * @param pickable - Whether layers should be pickable/interactive (default true).
+ *                  Set false for presenter mode.
  */
 export function useAnnotationLayers(pickable: boolean = true) {
 	const annotations = useOverlayStore((state) => state.annotations);
@@ -368,9 +369,7 @@ export function useAnnotationLayers(pickable: boolean = true) {
 		);
 	}, [annotations, hiddenLayers, hoveredAnnotationId, pickable]);
 
-	// Sync layers to the overlay store
 	React.useEffect(() => {
-		// Define the consolidated layer IDs we manage
 		const consolidatedLayerIds = [
 			"annotation-polygons",
 			"annotation-points",
@@ -379,36 +378,15 @@ export function useAnnotationLayers(pickable: boolean = true) {
 			"annotation-labels",
 		];
 
-		// Remove old annotation layers
 		consolidatedLayerIds.forEach((layerId) => {
 			useOverlayStore.getState().removeOverlayLayer(layerId);
 		});
 
-		// Add new annotation layers
 		annotationLayers.forEach((layer) => {
-			if (layer) {
-				useOverlayStore.getState().addOverlayLayer(layer);
-			}
+			useOverlayStore.getState().addOverlayLayer(layer);
 		});
 	}, [annotationLayers]);
 
 	return annotationLayers;
 }
 
-// ============================================================================
-// AnnotationRenderer Component
-// ============================================================================
-
-/**
- * AnnotationRenderer - A minimal component that renders annotations as deck.gl layers
- * without any UI (no toolbar, no drawing tools). This is used in presenter mode
- * where we want to display annotations but not allow editing.
- */
-export const AnnotationRenderer: React.FC = () => {
-	// Use the shared hook to create and sync annotation layers
-	// Pass pickable: false to disable click/drag interactions in presenter mode
-	useAnnotationLayers(false);
-
-	// This component renders nothing - it only manages layers in the store
-	return null;
-};
