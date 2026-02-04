@@ -32,7 +32,7 @@
   > div > .grid > .grid::before,
   > div > .grid > .grid::after {
     width: var(--gap-tiny);
-    content: '';
+    content: "";
   }
   > div > .grid > .grid:first-child::before,
   > div > .grid > .grid:last-child::after {

@@ -1,7 +1,7 @@
 import {
   schema,
   defaultMarkdownParser as parser,
-  defaultMarkdownSerializer as serializer
+  defaultMarkdownSerializer as serializer,
 } from "prosemirror-markdown";
 import { canSplit } from "prosemirror-transform";
 import { EditorState } from "prosemirror-state";
@@ -10,40 +10,39 @@ import { history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
 import { splitListItem } from "prosemirror-schema-list";
 import {
-  baseKeymap, chainCommands, toggleMark,
-  deleteSelection, joinBackward
+  baseKeymap,
+  chainCommands,
+  toggleMark,
+  deleteSelection,
+  joinBackward,
 } from "prosemirror-commands";
-import { buildMenuItems } from './md-menu';
-import { enterNewLine } from './md-new-line'
-import { menuBar } from './md-menu-bar';
-import { useItemSelection } from '../../../filters/use-item-selection'
-import { sourceHyperlinkItems } from '../../../items/source-hyperlink-items'
-import { sourceItemMap } from '../../../items/source-item-map'
-import MDEditorCSS from './md-editor.module.css' with { type: 'css' };
+import { buildMenuItems } from "./md-menu";
+import { enterNewLine } from "./md-new-line";
+import { menuBar } from "./md-menu-bar";
+import { useItemSelection } from "../../../filters/use-item-selection";
+import { sourceHyperlinkItems } from "../../../items/source-hyperlink-items";
+import { sourceItemMap } from "../../../items/source-item-map";
+import MDEditorCSS from "./md-editor.module.css" with { type: "css" };
 
 const itemMap = {
-  hyperlinks: useItemSelection(
-    'md-editor', sourceHyperlinkItems()
-  )
-}
+  hyperlinks: useItemSelection("md-editor", sourceHyperlinkItems()),
+};
 
-class MDEditor extends sourceItemMap(
-  itemMap, HTMLElement
-) {
-  static name = 'md-editor'
+class MDEditor extends sourceItemMap(itemMap, HTMLElement) {
+  static name = "md-editor";
 
   static get _styleSheet() {
     return MDEditorCSS;
   }
 
   static elementProperties = new Map([
-    ['editable', { type: Boolean }],
-    ['linking', { type: Boolean }]
-  ])
+    ["editable", { type: Boolean }],
+    ["linking", { type: Boolean }],
+  ]);
 
   constructor() {
     super();
-    this.attachShadow({mode: 'open'});
+    this.attachShadow({ mode: "open" });
   }
 
   connectedCallback() {
@@ -56,7 +55,7 @@ class MDEditor extends sourceItemMap(
         const newContent = serializer.serialize(newState.doc);
         this.view.updateState(newState);
         this.contentValue = newContent;
-      }
+      },
     });
   }
 
@@ -67,79 +66,61 @@ class MDEditor extends sourceItemMap(
 
   createState(content) {
     const { editable } = this.elementState;
-    const {
-      list_item, hard_break 
-    } = schema.nodes;
-    const mdMenu = menuBar({ 
+    const { list_item, hard_break } = schema.nodes;
+    const mdMenu = menuBar({
       floating: false,
-      content: buildMenuItems(
-        schema, {
-          openLinkNotice: () => {
-            this.elementState.notice = 'LINK-NOTICE'
-            const hyperlinks = this.itemMap.get('hyperlinks')
-            const UUID = hyperlinks.addNewItemSource({
-              url: 'https://'
-            });
-            this.elementState.selections.push({
-              origin: MDEditor.name, UUID 
-            });
-          }
-        }
-      )
-    }); 
+      content: buildMenuItems(schema, {
+        openLinkNotice: () => {
+          this.elementState.notice = "LINK-NOTICE";
+          const hyperlinks = this.itemMap.get("hyperlinks");
+          const UUID = hyperlinks.addNewItemSource({
+            url: "https://",
+          });
+          this.elementState.selections.push({
+            origin: MDEditor.name,
+            UUID,
+          });
+        },
+      }),
+    });
     return EditorState.create({
       doc: parser.parse(content),
       plugins: [
         keymap({
-          Enter: chainCommands(
-            splitListItem(list_item),
-            (state, dispatch) => {
-              this.view.input.mouseDown = null;
-              return enterNewLine(state, dispatch);
-            }
-          ),
-          Backspace: chainCommands(
-            deleteSelection, joinBackward
-          )
+          Enter: chainCommands(splitListItem(list_item), (state, dispatch) => {
+            this.view.input.mouseDown = null;
+            return enterNewLine(state, dispatch);
+          }),
+          Backspace: chainCommands(deleteSelection, joinBackward),
         }),
         history(),
-        ...(
-          editable ? [ mdMenu ] : []
-        )
-      ]
-    })
+        ...(editable ? [mdMenu] : []),
+      ],
+    });
   }
 
   closeLinkNotice(view) {
     const { elementState } = this;
-    const hyperlinks = this.itemMap.get('hyperlinks')
+    const hyperlinks = this.itemMap.get("hyperlinks");
     const hyperlink = hyperlinks.itemSource;
     if (hyperlink == null || !view) {
       return;
     }
-    elementState.selections = (
-      elementState.selections.filter(
-        v => v.UUID != hyperlink.UUID
-      )
+    elementState.selections = elementState.selections.filter(
+      (v) => v.UUID != hyperlink.UUID,
     );
     const href = hyperlink.url;
-    toggleMark(schema.marks.link, { href })(
-      view.state, view.dispatch
-    );
+    toggleMark(schema.marks.link, { href })(view.state, view.dispatch);
     view.focus();
   }
 
   get editorMarkdown() {
-    return serializer.serialize(
-      this.view.state.doc
-    );
+    return serializer.serialize(this.view.state.doc);
   }
 
   get contentValue() {
     const { Properties } = this.itemSource || {};
-    return (Properties || {})[
-      this.elementState.property
-    ] || '';
+    return (Properties || {})[this.elementState.property] || "";
   }
 
   set contentValue(v) {
@@ -151,12 +132,10 @@ class MDEditor extends sourceItemMap(
   }
 
   attributeChangedCallback(k, old_v, v) {
-    if (k == 'linking' && v == null) {
-      this.closeLinkNotice(this.view)
+    if (k == "linking" && v == null) {
+      this.closeLinkNotice(this.view);
     }
   }
 }
 
-export { 
-  MDEditor
-}
+export { MDEditor };

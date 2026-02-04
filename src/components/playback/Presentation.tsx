@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEffect, useRef, useMemo } from "react";
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown from "react-markdown";
 import { useOverlayStore } from "@/lib/stores";
 import { useAnnotationLayers } from "@/lib/annotationLayers";
 //import { theme } from "@/theme.module.css";
@@ -13,15 +13,16 @@ import type { Group, Story } from "@/lib/exhibit";
 import type { HashContext } from "@/lib/hashUtil";
 import type { ImageProps } from "@/components/shared/common/types";
 
-export type PresentationProps = HashContext & ImageProps & {
-  children: any,
-  name: string,
-  config: ConfigProps;
-  hiddenChannel: boolean;
-  startExport: () => void;
-  controlPanelElement: string;
-  setHiddenChannel: (v: boolean) => void;
-};
+export type PresentationProps = HashContext &
+  ImageProps & {
+    children: any;
+    name: string;
+    config: ConfigProps;
+    hiddenChannel: boolean;
+    startExport: () => void;
+    controlPanelElement: string;
+    setHiddenChannel: (v: boolean) => void;
+  };
 
 const Wrap = styled.div`
   display: grid;
@@ -79,7 +80,7 @@ const NavPane = styled.div`
 
 const StoryTitle = styled.div`
   line-height: 1.1;
-`
+`;
 
 const Toolbar = styled.div`
   display: grid;
@@ -104,7 +105,7 @@ const Toolbar = styled.div`
 
 const ContentWrap = styled.div`
   scrollbar-color: #888 var(--theme-dim-gray-color);
-`
+`;
 
 const InlineNext = styled.div`
   display: grid;
@@ -151,13 +152,10 @@ const SVG = (props) => {
       aria-hidden="true"
       focusable="false"
     >
-      <path
-        d={props.d}
-        fill="currentColor"
-      />
+      <path d={props.d} fill="currentColor" />
     </svg>
-  )
-}
+  );
+};
 
 const TocWrapper = styled.div`
   li {
@@ -171,13 +169,12 @@ const TocWrapper = styled.div`
 
 const ChannelName = styled.span<{ color: string }>`
   text-decoration: underline;
-  text-decoration-color: #${props => props.color};
+  text-decoration-color: #${(props) => props.color};
   text-decoration-thickness: 2px;
   text-underline-offset: 2px;
 `;
 
 export const Presentation = (props: PresentationProps) => {
-
   const {
     stories,
     activeStoryIndex,
@@ -190,7 +187,7 @@ export const Presentation = (props: PresentationProps) => {
     imageHeight,
     setTargetWaypointViewState,
     SourceChannels,
-    Groups
+    Groups,
   } = useOverlayStore();
 
   // Sync annotation layers (presenter mode: non-interactive)
@@ -224,21 +221,20 @@ export const Presentation = (props: PresentationProps) => {
         setTargetWaypointViewState(Pan || null, Zoom ?? null);
       }
     }
-  // Zustand store actions are stable and don't need to be in deps
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Zustand store actions are stable and don't need to be in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stories, activeStoryIndex, imageWidth, imageHeight]);
 
   const updateGroup = (activeStory) => {
     const story = stories[activeStory];
-    const group_name = story.Properties.Group
+    const group_name = story.Properties.Group;
     // TODO -- use UUID in story
-    const found_group = Groups.find(
-      ({ Name }) => Name === group_name
-    ) || Groups[0];
+    const found_group =
+      Groups.find(({ Name }) => Name === group_name) || Groups[0];
     if (found_group) {
       setActiveChannelGroup(found_group.UUID);
     }
-  }
+  };
 
   const updateViewState = (storyIndex: number) => {
     const story = stories[storyIndex];
@@ -248,41 +244,40 @@ export const Presentation = (props: PresentationProps) => {
         setTargetWaypointViewState(Pan || null, Zoom ?? null);
       }
     }
-  }
+  };
 
   const storyFirst = () => {
     setActiveStory(0);
     updateGroup(0);
     updateViewState(0);
-  }
+  };
   const storyLeft = () => {
-    const active_story = Math.max(
-      0, activeStoryIndex - 1
-    )
-    setActiveStory(active_story)
+    const active_story = Math.max(0, activeStoryIndex - 1);
+    setActiveStory(active_story);
     updateGroup(active_story);
     updateViewState(active_story);
   };
   const storyRight = () => {
-    const active_story = Math.min(
-      stories.length - 1, activeStoryIndex + 1
-    )
-    setActiveStory(active_story)
-    updateGroup(active_story);
-    updateViewState(active_story);
-  }
-  const storyAt = (i: number) => {
-    const active_story = Math.min(stories.length - 1, Math.max(0, i))
+    const active_story = Math.min(stories.length - 1, activeStoryIndex + 1);
     setActiveStory(active_story);
     updateGroup(active_story);
     updateViewState(active_story);
-  }
+  };
+  const storyAt = (i: number) => {
+    const active_story = Math.min(stories.length - 1, Math.max(0, i));
+    setActiveStory(active_story);
+    updateGroup(active_story);
+    updateViewState(active_story);
+  };
   const buttonHeight = 20;
   const toc_button = (
-    <button 
-      className="table-of-contents" 
-      title="View table of contents" 
-      onMouseDown={(e) => { e.preventDefault(); storyFirst(); }}
+    <button
+      className="table-of-contents"
+      title="View table of contents"
+      onMouseDown={(e) => {
+        e.preventDefault();
+        storyFirst();
+      }}
     >
       <svg
         viewBox="0 0 30 20"
@@ -301,18 +296,21 @@ export const Presentation = (props: PresentationProps) => {
     </button>
   );
   const StoryLeft = (props) => {
-    const activeClass = props.active ? '' : 'inactive';
+    const activeClass = props.active ? "" : "inactive";
     const handleMouseDown = (e: React.MouseEvent) => {
       e.preventDefault(); // Prevent any default behavior
       storyLeft();
     };
     return (
-      <button 
-        className={`left ${activeClass}`} 
-        title="View previous waypoint" 
+      <button
+        className={`left ${activeClass}`}
+        title="View previous waypoint"
         onMouseDown={handleMouseDown}
       >
-        <SVG d="M 14 7 L 12 0 l -12 18 l 12 17 l 2 -7 L 8 18 z" px={buttonHeight} />
+        <SVG
+          d="M 14 7 L 12 0 l -12 18 l 12 17 l 2 -7 L 8 18 z"
+          px={buttonHeight}
+        />
       </button>
     );
   };
@@ -324,26 +322,32 @@ export const Presentation = (props: PresentationProps) => {
     </Count>
   );
   const StoryRight = (props) => {
-    const activeClass = props.active ? '' : 'inactive';
+    const activeClass = props.active ? "" : "inactive";
     const handleMouseDown = (e: React.MouseEvent) => {
       e.preventDefault(); // Prevent any default behavior
       storyRight();
     };
     return (
-      <button 
-        className={`right ${activeClass}`} 
-        title="View next waypoint" 
+      <button
+        className={`right ${activeClass}`}
+        title="View next waypoint"
         onMouseDown={handleMouseDown}
       >
-        <SVG d="M 0 7 L 2 0 l 12 18 l -12 17 l -2 -7 L 6 18 z" px={buttonHeight} />
+        <SVG
+          d="M 0 7 L 2 0 l 12 18 l -12 17 l -2 -7 L 6 18 z"
+          px={buttonHeight}
+        />
       </button>
     );
   };
   const story_next = (
-    <p 
-      className="right" 
-      title="View next waypoint" 
-      onMouseDown={(e) => { e.preventDefault(); storyRight(); }}
+    <p
+      className="right"
+      title="View next waypoint"
+      onMouseDown={(e) => {
+        e.preventDefault();
+        storyRight();
+      }}
     >
       Next
     </p>
@@ -353,24 +357,29 @@ export const Presentation = (props: PresentationProps) => {
     return (
       <TocWrapper>
         <h2 className="h6">Table of Contents</h2>
-        <ol>{
-          stories.map((wp: ConfigWaypoint, i: number) => {
-            const goToStory = (e: React.MouseEvent) => { 
-              e.preventDefault(); 
+        <ol>
+          {stories.map((wp: ConfigWaypoint, i: number) => {
+            const goToStory = (e: React.MouseEvent) => {
+              e.preventDefault();
               storyAt(i);
             };
-            return <li key={i} onMouseDown={goToStory}>{wp.Properties.Name}</li>;
-          })
-        }</ol>
+            return (
+              <li key={i} onMouseDown={goToStory}>
+                {wp.Properties.Name}
+              </li>
+            );
+          })}
+        </ol>
       </TocWrapper>
     );
-  }
+  };
 
   const first_story = activeStoryIndex == 0;
   const last_story = activeStoryIndex == stories.length - 1;
   const main_title = props.name;
   const story = stories[activeStoryIndex];
-  const story_title = story?.Properties?.Name ?? `Waypoint ${activeStoryIndex + 1}`;
+  const story_title =
+    story?.Properties?.Name ?? `Waypoint ${activeStoryIndex + 1}`;
   const story_content = story?.Properties?.Content;
 
   // Scroll waypoint content back to top when changing to a different waypoint.
@@ -379,37 +388,46 @@ export const Presentation = (props: PresentationProps) => {
     if (contentPaneRef.current) {
       contentPaneRef.current.scrollTop = 0;
     }
-  }, [activeStoryIndex])
+  }, [activeStoryIndex]);
 
   // Process story content to highlight channel names
   const { processedContent, channelColors } = useMemo(() => {
-    const activeGroup = Groups.find(g => g.UUID === activeChannelGroupId);
-    if (!activeGroup || !story_content) return { processedContent: story_content || '', channelColors: new Map() };
+    const activeGroup = Groups.find((g) => g.UUID === activeChannelGroupId);
+    if (!activeGroup || !story_content)
+      return {
+        processedContent: story_content || "",
+        channelColors: new Map(),
+      };
 
     const channels = activeGroup?.GroupChannels || [];
-    
-    let content =  story_content;
+
+    let content = story_content;
     const colors = new Map();
-    
-    channels.forEach(channel => {
+
+    channels.forEach((channel) => {
       const { Name } = SourceChannels.find(({ UUID }) => {
-        return UUID === channel.SourceChannel.UUID
+        return UUID === channel.SourceChannel.UUID;
       }) || { Name: "unknown" };
       // Escape special regex characters in channel name
-      const escapedName = Name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapedName = Name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       // Use word boundaries to match whole words only
-      const regex = new RegExp(`\\b${escapedName}\\b`, 'g');
+      const regex = new RegExp(`\\b${escapedName}\\b`, "g");
       content = content.replace(regex, `**${Name}**`);
       const { R, G, B } = channel.Color;
-      const hex_color = [R, G, B].map(
-        n => n.toString(16).padStart(2, '0')
-      ).join('');
+      const hex_color = [R, G, B]
+        .map((n) => n.toString(16).padStart(2, "0"))
+        .join("");
       colors.set(Name, `#${hex_color}`);
     });
-    
-    return { processedContent: content, channelColors: colors };
-  }, [story_content, activeChannelGroupId, props.config.ItemRegistry, Groups, SourceChannels]);
 
+    return { processedContent: content, channelColors: colors };
+  }, [
+    story_content,
+    activeChannelGroupId,
+    props.config.ItemRegistry,
+    Groups,
+    SourceChannels,
+  ]);
 
   return (
     <Wrap>
@@ -428,18 +446,26 @@ export const Presentation = (props: PresentationProps) => {
               strong: ({ children }: any) => {
                 const text = String(children);
                 const color = channelColors.get(text);
-                return color ? <ChannelName color={color}>{text}</ChannelName> : <strong>{children}</strong>;
-              }
+                return color ? (
+                  <ChannelName color={color}>{text}</ChannelName>
+                ) : (
+                  <strong>{children}</strong>
+                );
+              },
             }}
           >
             {processedContent}
           </ReactMarkdown>
           {first_story && <TableOfContents {...{ stories }} />}
-          <InlineNext>{
-            last_story
-              ? <p>End</p>
-              : <>{story_next} <StoryRight active={!last_story} /></>
-          }</InlineNext>
+          <InlineNext>
+            {last_story ? (
+              <p>End</p>
+            ) : (
+              <>
+                {story_next} <StoryRight active={!last_story} />
+              </>
+            )}
+          </InlineNext>
         </ContentWrap>
       </NavPane>
       {props.children}

@@ -7,7 +7,7 @@ export type Waypoint = {
   markdown: string;
   g: HashState["g"];
   v: HashState["v"];
-  lensing?: any,
+  lensing?: any;
 };
 
 export type Story = {
@@ -39,8 +39,8 @@ export type ConfigGroup = {
   Lows: number[];
   Highs: number[];
   Image: {
-    Method: string
-  }
+    Method: string;
+  };
 };
 
 export interface ExhibitConfig {
@@ -71,21 +71,19 @@ const readStories = (config: ExhibitConfig): Story[] => {
   return stories.map((story) => {
     return {
       waypoints: story.Waypoints.map((waypoint) => {
-        const [x, y] = waypoint.Pan.slice(0, 2) as [ number, number ];
+        const [x, y] = waypoint.Pan.slice(0, 2) as [number, number];
         const output_waypoint: Waypoint = {
           name: waypoint.Name,
           markdown: waypoint.Description,
           g: indexGroupName(waypoint.Group),
-          v: [waypoint.Zoom, x, y]
+          v: [waypoint.Zoom, x, y],
         };
-        if ('Lensing' in waypoint) {
-          output_waypoint.lensing = (
-            Object.assign(waypoint.Lensing, {
-              g: indexGroupName(waypoint.Lensing.group)
-            })
-          );
+        if ("Lensing" in waypoint) {
+          output_waypoint.lensing = Object.assign(waypoint.Lensing, {
+            g: indexGroupName(waypoint.Lensing.group),
+          });
         }
-        return output_waypoint
+        return output_waypoint;
       }),
     };
   });

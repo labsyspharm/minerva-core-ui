@@ -41,8 +41,8 @@ const toOpts = (noHash) => {
     decode: parseInt,
   };
   return {
-    root: '#',
-    slash: '#',
+    root: "#",
+    slash: "#",
     formats: [
       { ...asInt, keys: ["i"], empty: noHash.i },
       { ...asInt, keys: ["s"], empty: noHash.s },
@@ -52,18 +52,18 @@ const toOpts = (noHash) => {
       { ...VEC(2), keys: ["a"], empty: noHash.a },
       { ...VEC(3), keys: ["v"], empty: noHash.v },
       { ...VEC(4), keys: ["o"], empty: noHash.o },
-      { keys: ["p"], empty: noHash.p }
+      { keys: ["p"], empty: noHash.p },
     ].map((f) => {
       const join = (kv) => kv.join("=");
       return { ...f, join };
     }),
-    }
+  };
 };
 
 const toHash = (url, opts) => {
-  const urlHash = window.location.hash.split('#');
+  const urlHash = window.location.hash.split("#");
   const urlParams = urlHash.reduce((obj, str) => {
-    const [ k, v ] = str.split('=');
+    const [k, v] = str.split("=");
     obj[k] = v;
     return obj;
   }, {});
@@ -78,7 +78,8 @@ const useHash = (url, stories: Story[]) => {
   }, opts);
   const setHash = (newHash: Partial<HashState>) => {
     return setVars({
-      ...hash, ...newHash
+      ...hash,
+      ...newHash,
     });
   };
   return { hash, setHash };

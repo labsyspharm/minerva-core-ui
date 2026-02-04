@@ -3,7 +3,7 @@ import type { Loader } from "../lib/viv";
 type DicomData = {
   labels: string[];
   shape: number[];
-}
+};
 
 export interface DicomLoader extends Loader {
   data: DicomData[];
@@ -11,9 +11,9 @@ export interface DicomLoader extends Loader {
 }
 
 export type DicomIndex = {
-  series: string,
-  modality: string,
-  loader: DicomLoader,
+  series: string;
+  modality: string;
+  loader: DicomLoader;
   pyramids: {
     [k: string]: {
       width: number;
@@ -23,7 +23,6 @@ export type DicomIndex = {
         [k: string]: any;
       };
       tileSize: number;
-    }[]; 
-  }
-}
-
+    }[];
+  };
+};

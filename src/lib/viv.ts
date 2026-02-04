@@ -8,7 +8,7 @@ type Limit = [number, number];
 export type Loader = {
   data: any[];
   metadata: any;
-}
+};
 
 type Settings = {
   channelsVisible: boolean[];
@@ -22,7 +22,7 @@ type Channel = {
   ID: string;
   SamplesPerPixel: number;
   Name: string;
-}
+};
 
 type TiffDatum = {
   IFD: number;
@@ -33,7 +33,7 @@ type TiffDatum = {
   UUID: {
     FileName: string;
   };
-}
+};
 
 type Pixels = {
   Channels: Channel[];
@@ -52,20 +52,21 @@ type Pixels = {
   PhysicalSizeZUnit: string;
   BigEndian: boolean;
   TiffData: TiffDatum[];
-}
+};
 
 type Metadata = {
   ID: string;
   AquisitionDate: string;
   Description: string;
   Pixels: Pixels;
-}
+};
 
 export type Config = {
   toSettings: (
     activeChannelGroupId: string | null,
-    modality: string, l?: Loader,
-    channelVisibilities?: Record<string, boolean>
+    modality: string,
+    l?: Loader,
+    channelVisibilities?: Record<string, boolean>,
   ) => Settings;
 };
 
@@ -108,34 +109,25 @@ const hexToRGB = (hex: string) => {
 };
 
 const toSettings = (opts) => {
-  return (
-    activeChannelGroupId, modality, loader,
-    channelVisibilities
-  ) => {
+  return (activeChannelGroupId, modality, loader, channelVisibilities) => {
     const { Groups, SourceChannels } = opts;
-    const group = Groups.find(
-      ({ UUID }) => UUID === activeChannelGroupId 
-    ) || Groups[0];
+    const group =
+      Groups.find(({ UUID }) => UUID === activeChannelGroupId) || Groups[0];
     const { GroupChannels: channels } = group || {
-      GroupChannels: []
-    }
+      GroupChannels: [],
+    };
     // Defaults
     if (!loader) return toDefaultSettings(3);
     const full_level = loader.data[0];
     const { labels, shape } = full_level;
     const c_idx = labels.indexOf("c");
     // TODO Simplify mapping of channel names to indices!
-    const selections: Selection[] = channels.map(channel => {
+    const selections: Selection[] = channels.map((channel) => {
       const source_channels = SourceChannels.map(
-        (source_channel) => (
-          source_channel.UUID
-        )
+        (source_channel) => source_channel.UUID,
       );
       const source_channel = SourceChannels.find(
-        (source_channel) => (
-          channel.SourceChannel.UUID 
-          === source_channel.UUID
-        )
+        (source_channel) => channel.SourceChannel.UUID === source_channel.UUID,
       );
       const c = source_channel?.SourceIndex || 0;
       return { z: 0, t: 0, c };
@@ -144,32 +136,23 @@ const toSettings = (opts) => {
       const { R, G, B } = c.Color;
       return [R, G, B];
     });
-    const contrastLimits: Limit[] = channels.map(c => {
+    const contrastLimits: Limit[] = channels.map((c) => {
       const { LowerRange, UpperRange } = c;
-      return [ LowerRange, UpperRange ]; 
+      return [LowerRange, UpperRange];
     });
-    const channelsVisible: boolean[] = channels.map(
-      (c, i: number) => {
-        const source_channel = SourceChannels.find(
-          (source_channel) => (
-            c.SourceChannel.UUID 
-            === source_channel.UUID
-          )
-        );
-        const { Name } = source_channel || {};
-        const image_id = (
-          source_channel.SourceImage.UUID
-        );
-        const brightfield = modality === "Brightfield";
-        //if (!channelVisibilities || brightfield ) {
-        if (!channelVisibilities) {
-          return image_id === modality;
-        }
-        return image_id === modality && (
-          (channelVisibilities || {})[Name]
-        );
+    const channelsVisible: boolean[] = channels.map((c, i: number) => {
+      const source_channel = SourceChannels.find(
+        (source_channel) => c.SourceChannel.UUID === source_channel.UUID,
+      );
+      const { Name } = source_channel || {};
+      const image_id = source_channel.SourceImage.UUID;
+      const brightfield = modality === "Brightfield";
+      //if (!channelVisibilities || brightfield ) {
+      if (!channelVisibilities) {
+        return image_id === modality;
       }
-    );
+      return image_id === modality && (channelVisibilities || {})[Name];
+    });
     const n_channels = shape[c_idx] || 0;
     const out = {
       ...toDefaultSettings(n_channels),
@@ -177,7 +160,7 @@ const toSettings = (opts) => {
       colors,
       contrastLimits,
       channelsVisible,
-      loader
+      loader,
     };
     return out;
   };

@@ -1,6 +1,9 @@
 import * as React from "react";
 import styled from "styled-components";
-import { Push as PushChannel, PopUpdate as PopUpdateChannel } from "@/components/authoring/tools/ActionButtons";
+import {
+  Push as PushChannel,
+  PopUpdate as PopUpdateChannel,
+} from "@/components/authoring/tools/ActionButtons";
 import { EditModeSwitcher } from "@/components/authoring/tools/EditModeSwitcher";
 import { EditableText } from "@/components/authoring/tools/EditableText";
 
@@ -67,12 +70,12 @@ const LegendRow = (props) => {
 
   const wrapProps = {
     color: "rgb(238, 238, 238)",
-    onClick
+    onClick,
   };
   const boxProps = {
     ...props.channel,
-    outline: "none"
-  }
+    outline: "none",
+  };
   if (!visible) {
     boxProps.color = "black";
     wrapProps.color = "rgb(138, 138, 138)";
@@ -89,7 +92,9 @@ const LegendRow = (props) => {
     [PopUpdateChannel, { children: coreUI, onPop }],
   ];
   const canPop = props.editable && props.total > 1;
-  const extraUI = <EditModeSwitcher {...{ ...props, editable: canPop, editSwitch }} />;
+  const extraUI = (
+    <EditModeSwitcher {...{ ...props, editable: canPop, editSwitch }} />
+  );
 
   return <>{extraUI}</>;
 };
@@ -110,9 +115,12 @@ export const ChannelLegend = (props) => {
   const { channels } = props;
   const total = channels.length;
   const rows = channels.map((c, k) => {
-    const rowProps = { 
-      ...props, total, channel: c, idx: k,
-      onClick: () => toggleChannel(c)
+    const rowProps = {
+      ...props,
+      total,
+      channel: c,
+      idx: k,
+      onClick: () => toggleChannel(c),
     };
     return <LegendRow key={k} {...rowProps} />;
   });
@@ -120,9 +128,7 @@ export const ChannelLegend = (props) => {
     <div>
       <RightAlign>{extraUI}</RightAlign>
       <h2 className="h6">Channels</h2>
-      <WrapRows>
-        {rows}
-      </WrapRows>
+      <WrapRows>{rows}</WrapRows>
     </div>
   );
 };

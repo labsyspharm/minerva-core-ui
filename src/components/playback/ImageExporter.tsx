@@ -1,83 +1,87 @@
 import * as React from "react";
 import { useState } from "react";
-import styled from 'styled-components';
-import Button from 'react-bootstrap/Button';
+import styled from "styled-components";
+import Button from "react-bootstrap/Button";
 import { getImageSize } from "@hms-dbmi/viv";
 import { loadOmeTiff } from "@hms-dbmi/viv";
 import type { TiffPixelSource } from "@hms-dbmi/viv";
 
 ///
 
-type Dtype = (
-  "Uint8" | "Uint16" | "Uint32" |
-  "Int8" | "Int16" | "Int32" | 
-  "Float32" | "Float64"
-)
+type Dtype =
+  | "Uint8"
+  | "Uint16"
+  | "Uint32"
+  | "Int8"
+  | "Int16"
+  | "Int32"
+  | "Float32"
+  | "Float64";
 type HasShape = {
-  height: number,
-  width: number
-}
+  height: number;
+  width: number;
+};
 type HasTile = HasShape & {
-  data: ArrayBuffer 
-}
+  data: ArrayBuffer;
+};
 type Selection = {
-  t: number,
-  z: number,
-  c: number
-}
+  t: number;
+  z: number;
+  c: number;
+};
 type TileConfig = {
-  x: number,
-  y: number,
-  signal: AbortSignal,
-  selection: Selection
-}
+  x: number;
+  y: number;
+  signal: AbortSignal;
+  selection: Selection;
+};
 
-type LoaderPlane = TiffPixelSource<any>; 
+type LoaderPlane = TiffPixelSource<any>;
 type Canvas = HTMLCanvasElement;
 
 interface ToTilePlane {
   (z: number, l: LoaderPlane[]): LoaderPlane;
 }
-type TileCounts = { x: number, y: number }
+type TileCounts = { x: number; y: number };
 type TileCountsIn = {
-  tileProps: TileProps,
-  zoom: number
-}
+  tileProps: TileProps;
+  zoom: number;
+};
 interface ToTileCounts {
   (i: TileCountsIn): TileCounts;
 }
 
 type InitIn = {
-  loader: LoaderPlane[]
-}
+  loader: LoaderPlane[];
+};
 type CommonIn = InitIn & {
-  handle: FileSystemDirectoryHandle,
-  index: Index,
-}
+  handle: FileSystemDirectoryHandle;
+  index: Index;
+};
 
 type SaveIn = CommonIn & {
-  step: number
-}
+  step: number;
+};
 interface Save {
   (i: SaveIn): Promise<void>;
 }
 
 type StepIn = CommonIn & {
-  stepSignal: StepOut,
-  next: number,
-}
+  stepSignal: StepOut;
+  next: number;
+};
 type StepOut = {
-  step: number,
-  done: boolean
-}
+  step: number;
+  done: boolean;
+};
 interface DoStep {
   (o: StepIn): Promise<StepOut | null>;
 }
 
 type CaptureOut = {
-  output: Uint8Array,
-  filename: string,
-}
+  output: Uint8Array;
+  filename: string;
+};
 interface Capture {
   (i: Index, loader: LoaderPlane[]): Promise<CaptureOut>;
 }
@@ -86,23 +90,23 @@ const toFilename = (index: Index) => {
   const level = -index.z;
   const { x, y } = index;
   return `${level}_${x}_${y}.jpg`;
-}
+};
 
 const clampValue = (x, min, max) => {
- return Math.min(255, Math.max(0, 255 * (x - min) / (max - min)));
-}
+  return Math.min(255, Math.max(0, (255 * (x - min)) / (max - min)));
+};
 
 const clampArray = (imageData, tile_u16, min, max) => {
   var tile_u8 = new Uint8Array(tile_u16.length);
   for (var i = 0; i < tile_u16.length; i++) {
-      const clamped = clampValue(tile_u16[i], min, max);
-      imageData.data[i*4] = clamped;
-      imageData.data[i*4 + 1] = clamped;
-      imageData.data[i*4 + 2] = clamped;
-      imageData.data[i*4 + 3] = 255; // Alpha
+    const clamped = clampValue(tile_u16[i], min, max);
+    imageData.data[i * 4] = clamped;
+    imageData.data[i * 4 + 1] = clamped;
+    imageData.data[i * 4 + 2] = clamped;
+    imageData.data[i * 4 + 3] = 255; // Alpha
   }
   return imageData;
-}
+};
 
 const capture: Capture = async (index, loader) => {
   const filename = toFilename(index);
@@ -110,31 +114,36 @@ const capture: Capture = async (index, loader) => {
   const level = Math.abs(index.z);
   const z_loader = loader[level];
   const selection = { t: 0, z: 0, c: 0 };
-  const signal = (AbortSignal as any).timeout(10*1000);
+  const signal = (AbortSignal as any).timeout(10 * 1000);
   const { x, y } = index;
   const tile = await z_loader.getTile({
-    selection, x, y, signal
-  })
+    selection,
+    x,
+    y,
+    signal,
+  });
   const { width, height, data } = tile;
 
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   const imageData = clampArray(
     ctx.createImageData(width, height),
-    data, 1000, 30000
+    data,
+    1000,
+    30000,
   );
   canvas.width = width;
   canvas.height = height;
   ctx.putImageData(imageData, 0, 0);
 
   const blob = await new Promise((r: BlobCallback) => {
-    canvas.toBlob(r, 'image/jpeg', 0.5);
+    canvas.toBlob(r, "image/jpeg", 0.5);
   });
 
   const buff = await blob.arrayBuffer();
   const output = new Uint8Array(buff);
   return { output, filename };
-}
+};
 
 const save: Save = async (inputs) => {
   const create = { create: true };
@@ -144,7 +153,7 @@ const save: Save = async (inputs) => {
   const write = await fh.createWritable();
   await write.write(output as any);
   await write.close();
-}
+};
 
 const doStep: DoStep = async (inputs) => {
   const { loader, handle } = inputs;
@@ -154,26 +163,26 @@ const doStep: DoStep = async (inputs) => {
 
   save({ step, handle, loader, index });
   return { done: next === 0, step: next };
-}
+};
 
 type TileProps = {
-  id: string,
-  dtype?: Dtype,
-  tileSize: number,
-  minZoom?: number,
-  maxZoom?: number,
-  extent?: [number, number, number, number]
-}
+  id: string;
+  dtype?: Dtype;
+  tileSize: number;
+  minZoom?: number;
+  maxZoom?: number;
+  extent?: [number, number, number, number];
+};
 type Index = {
-  x: number,
-  y: number,
-  z: number
-}
+  x: number;
+  y: number;
+  z: number;
+};
 type FullState = {
-  indices: Index[],
-  tileProps: TileProps,
-}
-type MainState = null | FullState; 
+  indices: Index[];
+  tileProps: TileProps;
+};
+type MainState = null | FullState;
 interface Initialize {
   (i: InitIn): Partial<FullState>;
 }
@@ -183,20 +192,20 @@ type Two = [number, number];
 type Three = [number, number, number];
 type Four = [number, number, number, number];
 
-function toTileScale (zoom: number, ...vals: One): One;
-function toTileScale (zoom: number, ...vals: Two): Two;
-function toTileScale (zoom: number, ...vals: Three): Three;
-function toTileScale (zoom: number, ...vals: Four): Four;
-function toTileScale (zoom: number, ...vals: number[]): number[] {
+function toTileScale(zoom: number, ...vals: One): One;
+function toTileScale(zoom: number, ...vals: Two): Two;
+function toTileScale(zoom: number, ...vals: Three): Three;
+function toTileScale(zoom: number, ...vals: Four): Four;
+function toTileScale(zoom: number, ...vals: number[]): number[] {
   const scale = 2 ** Math.abs(zoom);
-  return vals.map(v => {
+  return vals.map((v) => {
     return v * scale;
   });
 }
 
 const toTilePlane: ToTilePlane = (zoom, loaders) => {
   return loaders[Math.max(0, Math.abs(zoom))];
-}
+};
 
 const toTileLayer = (loader: LoaderPlane[]): TileProps => {
   const i = 0;
@@ -211,42 +220,46 @@ const toTileLayer = (loader: LoaderPlane[]): TileProps => {
     tileSize,
     extent,
     minZoom: -(loader.length - 1),
-    maxZoom: 0
+    maxZoom: 0,
   };
   return props;
-}
+};
 
 const toTileCounts: ToTileCounts = ({ zoom, tileProps }) => {
   const { tileSize } = tileProps;
   const width = tileProps.extent[2];
   const height = tileProps.extent[3];
-  const [ ts ] = toTileScale(zoom, tileSize);
+  const [ts] = toTileScale(zoom, tileSize);
   const y = Math.ceil(height / ts);
   const x = Math.ceil(width / ts);
   return { x, y };
-}
+};
 
 const initialize: Initialize = (inputs) => {
-  const { loader } = inputs; 
+  const { loader } = inputs;
   const tileProps = toTileLayer(loader);
   const mz = Math.abs(tileProps.minZoom || 0) + 1;
   const zoomRange = [...new Array(mz).keys()];
-  const zr = zoomRange.reverse().map(z => -z);
-  const indices = ([] as Index[]).concat(...zr.map((zoom) => {
-    const counts = toTileCounts({ zoom, tileProps });
-    const xRange = [...new Array(counts.x).keys()]; 
-    const yRange = [...new Array(counts.y).keys()]; 
-    return ([] as Index[]).concat(...xRange.map((x) => {
-      return yRange.map((y) => {
-        return { z: zoom, x, y };
-      });
-    }));
-  }));
+  const zr = zoomRange.reverse().map((z) => -z);
+  const indices = ([] as Index[]).concat(
+    ...zr.map((zoom) => {
+      const counts = toTileCounts({ zoom, tileProps });
+      const xRange = [...new Array(counts.x).keys()];
+      const yRange = [...new Array(counts.y).keys()];
+      return ([] as Index[]).concat(
+        ...xRange.map((x) => {
+          return yRange.map((y) => {
+            return { z: zoom, x, y };
+          });
+        }),
+      );
+    }),
+  );
   return { indices, tileProps };
-}
+};
 
-function isFullState (o: Partial<FullState>): o is FullState {
-  const needs: string[] = ['indices', 'tileProps'];
+function isFullState(o: Partial<FullState>): o is FullState {
+  const needs: string[] = ["indices", "tileProps"];
   return needs.every((x: string) => x in o && o[x] !== null);
 }
 
@@ -265,35 +278,35 @@ const ImageExporterDiv = styled.div`
 
 const ProgressBar = styled.div<ProgressBarProps>`
   display: grid;
-  grid-template-columns ${props => to_fr(props.$ratio || 0)};
+  grid-template-columns ${(props) => to_fr(props.$ratio || 0)};
   > div {
-    background-color: ${props => to_color(props.$done) || 'white'};
+    background-color: ${(props) => to_color(props.$done) || "white"};
   }
-`
+`;
 
 const to_fr = (ratio) => {
   const percent = Math.round(parseFloat(ratio) * 100);
   return `${percent}fr ${100 - percent}fr`;
-}
+};
 
 const to_color = (done) => {
   if (done) {
-    return 'hwb(220 70% 30% / .9)';
+    return "hwb(220 70% 30% / .9)";
   }
-  return 'hwb(220 10% 20% / .5)';
-}
+  return "hwb(220 10% 20% / .5)";
+};
 
 type LoaderIn = {
-  in_f: string,
-  handle: Handle.Dir
-}
+  in_f: string;
+  handle: Handle.Dir;
+};
 type LoaderOut = {
-  data: LoaderPlane[]
-}
+  data: LoaderPlane[];
+};
 type LoaderOpts = {
-  in_f: string,
-  handle: Handle.Dir | null
-}
+  in_f: string;
+  handle: Handle.Dir | null;
+};
 interface ToLoader {
   (i: LoaderIn): Promise<LoaderOut>;
 }
@@ -302,45 +315,45 @@ interface ProgressBarProps {
   $done: boolean;
 }
 
-const toLoader: ToLoader = async ({in_f, handle}) => {
+const toLoader: ToLoader = async ({ in_f, handle }) => {
   const in_fh = await handle.getFileHandle(in_f);
   const in_file = await in_fh.getFile();
   const in_tiff = await loadOmeTiff(in_file);
   const { data } = in_tiff;
   return { data };
-}
+};
 
 const useLoader = async (opts: LoaderOpts) => {
   const { handle, in_f } = opts;
   if (handle === null) return;
   const data = await toLoader({ in_f, handle });
   return data.data;
-}
+};
 
 export type ImageExporterProps = {
-  in_f: string,
-  handle: Handle.Dir,
-  stopExport: () => void
-}
-  
+  in_f: string;
+  handle: Handle.Dir;
+  stopExport: () => void;
+};
+
 export const ImageExporter = (props: ImageExporterProps) => {
   const exportProps = {
     variant: "primary",
-    className: "mb-3"
-  }
+    className: "mb-3",
+  };
 
   const { in_f, handle } = props;
 
-  const [state, setState] = useState(null as MainState)
+  const [state, setState] = useState(null as MainState);
   const [loader, setLoader] = useState([] as LoaderPlane[]);
   const [stepSignal, setStepSignal] = useState({
     done: false,
-    step: 0
+    step: 0,
   });
 
   React.useEffect(() => {
-    useLoader({ handle, in_f }).then(loader => {
-      const init = initialize({ loader })
+    useLoader({ handle, in_f }).then((loader) => {
+      const init = initialize({ loader });
       if (isFullState(init) && loader.length) {
         setLoader(loader);
         setState(init);
@@ -361,14 +374,17 @@ export const ImageExporter = (props: ImageExporterProps) => {
       setTimeout(() => {
         props.stopExport();
       }, 2000);
-    }
-    else {
+    } else {
       if (!state || !loader.length) return;
       const { indices, tileProps } = state;
       const next = (step + 1) % indices.length;
       doStep({
-        handle, loader, index, next, stepSignal 
-      }).then(nextStepSignal => {
+        handle,
+        loader,
+        index,
+        next,
+        stepSignal,
+      }).then((nextStepSignal) => {
         if (nextStepSignal !== null) {
           setStepSignal(nextStepSignal);
         }
@@ -376,17 +392,16 @@ export const ImageExporter = (props: ImageExporterProps) => {
     }
   }, [state, step, done]);
 
-  
-  const tileShape = { width: 1024, height: 1024 } // TODO
+  const tileShape = { width: 1024, height: 1024 }; // TODO
   let ratio = done ? 1 : 0;
   if (!done && state !== null) {
     ratio = step / (state.indices.length - 1);
   }
   return (
-  <ImageExporterDiv>
+    <ImageExporterDiv>
       <ProgressBar $ratio={ratio} $done={done}>
         <div></div>
       </ProgressBar>
-  </ImageExporterDiv>
-  )
-}
+    </ImageExporterDiv>
+  );
+};

@@ -5,7 +5,7 @@
     grid-template-rows: auto 1fr;
     grid-template-columns: auto 1fr;
     > div {
-      grid-row: 1/-1;
+      grid-row: 1 / -1;
     }
     > div:first-child {
       --scale: 0.5;

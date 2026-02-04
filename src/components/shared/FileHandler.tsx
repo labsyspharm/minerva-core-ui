@@ -1,6 +1,6 @@
-import React from 'react'
+import React from "react";
 import { useState } from "react";
-import { get, set } from 'idb-keyval';
+import { get, set } from "idb-keyval";
 import { toDir } from "@/lib/filesystem";
 
 export type FileHandlerProps = {
@@ -24,9 +24,9 @@ export const FileHandler = ({ handleKeys, children }: FileHandlerProps) => {
   const onRecall = async () => {
     const newHandle = await get(handleKeys[0]);
     if (!newHandle) return;
-    
-    const isGranted = (permission) => permission === 'granted';
-    const options = { mode: 'readwrite' };
+
+    const isGranted = (permission) => permission === "granted";
+    const options = { mode: "readwrite" };
     if (
       isGranted(await newHandle.queryPermission(options)) ||
       isGranted(await newHandle.requestPermission(options))

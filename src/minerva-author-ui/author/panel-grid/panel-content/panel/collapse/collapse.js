@@ -1,26 +1,25 @@
-import collapseCSS from './collapse.module.css' with { type: 'css' };
-import { useItemIdentifier } from '../../../../../filters/use-item-identifier';
-import { A11yCollapse } from '@haxtheweb/a11y-collapse';
+import collapseCSS from "./collapse.module.css" with { type: "css" };
+import { useItemIdentifier } from "../../../../../filters/use-item-identifier";
+import { A11yCollapse } from "@haxtheweb/a11y-collapse";
 
 class Collapse extends useItemIdentifier(A11yCollapse) {
-
-  static name = 'collapse'
+  static name = "collapse";
 
   static get _styleSheet() {
     return collapseCSS;
   }
 
-  connectedCallback () {
+  connectedCallback() {
     super.connectedCallback();
     this.expanded = this.expanded;
     this.addEventListener("a11y-collapse-attached", () => {
-      const icon = this.shadowRoot.querySelector("#expand"); 
+      const icon = this.shadowRoot.querySelector("#expand");
       icon.removeAttribute("aria-hidden");
       icon.setAttribute("tabindex", "1");
-    })
+    });
   }
 
-  get expanded () {
+  get expanded() {
     const item = this.itemSource;
     if (item) {
       return this.getItemState("Expanded");
@@ -28,17 +27,15 @@ class Collapse extends useItemIdentifier(A11yCollapse) {
     return false;
   }
 
-  set expanded (v) {
+  set expanded(v) {
     const item = this.itemSource;
     if (item) {
       this.setItemState("Expanded", v);
     }
     const prefix = "icons:radio-button-";
-    this.icon = prefix + [
-      "unchecked", "checked"
-    ][+v];
+    this.icon = prefix + ["unchecked", "checked"][+v];
     return true;
   }
 }
 
-export { Collapse }
+export { Collapse };

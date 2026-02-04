@@ -11,12 +11,12 @@
     height: unset;
   }
 }
-:host(*[close=true]) {
+:host(*[close="true"]) {
   button {
     background-color: var(--dark-reject-color);
   }
 }
-:host(*[delete=true]) {
+:host(*[delete="true"]) {
   button {
     background-color: var(--dark-reject-color);
   }

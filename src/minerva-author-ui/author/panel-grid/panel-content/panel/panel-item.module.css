@@ -1,5 +1,5 @@
 .full {
-  grid-column: 1 / -1; 
+  grid-column: 1 / -1;
   grid-row: 1 / -1;
 }
 .full.actions > button {
@@ -8,10 +8,10 @@
   height: 100%;
   width: 100%;
 }
-[slot=heading].one-line {
+[slot="heading"].one-line {
   align-items: center;
 }
-[slot=heading] {
+[slot="heading"] {
   grid-template-columns: auto 1fr;
   align-items: start;
   height: 100%;
@@ -24,7 +24,7 @@
     > div.flex.wrap {
       gap: var(--gap-tiny);
       div:not(:last-child)::after {
-        content: ',';
+        content: ",";
       }
     }
   }

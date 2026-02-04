@@ -39,8 +39,8 @@ export const WaypointToolbar = (props: WaypointToolbarProps) => {
   };
   const infoProps = {
     icon: faInfo,
-    onClick: toggleInfo
-  }
+    onClick: toggleInfo,
+  };
 
   return (
     <>

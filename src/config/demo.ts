@@ -104,8 +104,7 @@ const IMAGES: StoryImage[] = [
   {
     index: 0,
     name: "Channel Group A",
-    location:
-      "https://s3.amazonaws.com/www.cycif.org/crc02-lens-1/story-alpha",
+    location: "https://s3.amazonaws.com/www.cycif.org/crc02-lens-1/story-alpha",
     metadata: {},
     markers: [
       {
@@ -119,15 +118,15 @@ const IMAGES: StoryImage[] = [
       pixel: {
         width: 35592,
         height: 69367,
-//        width: 14448,
-//        height: 11101,
+        //        width: 14448,
+        //        height: 11101,
         unit: Units.ImagePixel,
       },
       physical: {
         width: 11.5674,
         height: 22.5443,
-//        width: 4.6956,
-//        height: 3.6078,
+        //        width: 4.6956,
+        //        height: 3.6078,
         unit: Units.Millimeter,
       },
     },

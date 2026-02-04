@@ -1,50 +1,46 @@
-import { toElement } from '../../../../lib/elements';
-import panelCSS from './panel.module.css' with { type: 'css' };
-import { ItemSideMenu } from './item-side-menu';
+import { toElement } from "../../../../lib/elements";
+import panelCSS from "./panel.module.css" with { type: "css" };
+import { ItemSideMenu } from "./item-side-menu";
 
 class Panel extends HTMLElement {
-
-  static name = 'panel'
-  static menuElement = ItemSideMenu
+  static name = "panel";
+  static menuElement = ItemSideMenu;
 
   static get _styleSheet() {
     return panelCSS;
   }
 
   connectedCallback() {
-    this.elementState.items = [
-      ...this.itemSources
-    ];
+    this.elementState.items = [...this.itemSources];
   }
 
   get elementTemplate() {
     const content = (item) => {
-      const menu_element = this.constructor.menuElement; 
+      const menu_element = this.constructor.menuElement;
       const menu = this.defineElement(menu_element, {
         defaults: {
           expanded: item.State.Expanded,
           open_menu: false,
-          UUID: item.UUID
-        }
+          UUID: item.UUID,
+        },
       });
       return toElement(menu)``({
-        UUID: item.UUID
+        UUID: item.UUID,
       }).key(item.UUID);
-    }
+    };
     const sources = () => {
-      return this.elementState.items.map(item => {
+      return this.elementState.items.map((item) => {
         return content(item);
       });
-    }
-    return toElement('div')`
+    };
+    return toElement("div")`
         ${sources}
         <slot name="overlays"></slot>
         <slot name="waypoints"></slot>
     `({
-      class: 'grid'
-    })
+      class: "grid",
+    });
   }
-
 }
 
-export { Panel }
+export { Panel };

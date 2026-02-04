@@ -1,53 +1,40 @@
-import globalCSS from './global.module.css' assert { type: 'css' };
-import { toElementState } from './lib/elements.js';
-import { Author } from './author/author.js';
-import { nav_config } from './config/nav-config.js';
-import {
-  item_registry, list_colors
-} from './config/metadata-config';
+import globalCSS from "./global.module.css" with { type: "css" };
+import { toElementState } from "./lib/elements.js";
+import { Author } from "./author/author.js";
+import { nav_config } from "./config/nav-config.js";
+import { item_registry, list_colors } from "./config/metadata-config";
 
-const author = (options={}) => {
-  document.adoptedStyleSheets = [
-    globalCSS
-  ];
+const author = (options = {}) => {
+  document.adoptedStyleSheets = [globalCSS];
   const customSuffix = options.ID || crypto.randomUUID();
   const defineElement = toElementState(customSuffix, {
-    defaults: {
-    },
+    defaults: {},
     constants: {
       item_registry: {
         ...item_registry,
-        ...(options.ItemRegistry || {})
+        ...(options.ItemRegistry || {}),
       },
       nav_config,
-      tab_order: (
-        [ 
-          'IMAGE-PANEL', 'OVERLAY-PANEL',
-          'GROUP-PANEL', 'STORY-PANEL'
-        ]
-      ),
-      menu_order: (
-        [ 
-          'EXPORT-DIALOG', 'SAVEAS-DIALOG',
-          'SAVE-NOTICE'
-        ]
-      ),
+      tab_order: ["IMAGE-PANEL", "OVERLAY-PANEL", "GROUP-PANEL", "STORY-PANEL"],
+      menu_order: ["EXPORT-DIALOG", "SAVEAS-DIALOG", "SAVE-NOTICE"],
       dialog_notices: {
-        'EXPORT-DIALOG': 'EXPORT-NOTICE',
-        'SAVEAS-DIALOG': 'SAVEAS-NOTICE',
+        "EXPORT-DIALOG": "EXPORT-NOTICE",
+        "SAVEAS-DIALOG": "SAVEAS-NOTICE",
       },
       tab_dialogs: {
-        'STORY-PANEL': 'STORY-DIALOG',
-      }
+        "STORY-PANEL": "STORY-DIALOG",
+      },
     },
-    styleSheet: globalCSS
+    styleSheet: globalCSS,
   });
   return defineElement(Author, {
     defaults: {
-      notice: '', dialog: '', tab: 'GROUP-PANEL',
-      selections: []
-    }
+      notice: "",
+      dialog: "",
+      tab: "GROUP-PANEL",
+      selections: [],
+    },
   });
-}
+};
 
-export { author, list_colors } 
+export { author, list_colors };
