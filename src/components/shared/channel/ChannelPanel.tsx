@@ -194,7 +194,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     <DrawingPanel
       hash={props.hash}
       setHash={props.setHash}
-      groups={props.groups}
+      groups={groups}
       onLayerCreate={handleLayerCreate}
       currentInteraction={currentInteraction}
     />
