@@ -7,6 +7,7 @@ import styled from "styled-components";
 import { Push as PushGroup } from "@/components/authoring/tools/ActionButtons";
 import { EditModeSwitcher } from "@/components/authoring/tools/EditModeSwitcher";
 import { defaultChannels } from "./ChannelLegend";
+import { DrawingPanel } from "@/components/authoring/DrawingPanel";
 
 // Types
 import type { ConfigProps } from "@/lib/config";
@@ -106,7 +107,9 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const {
     activeChannelGroupId,
     setChannelVisibilities,
-    channelVisibilities
+    channelVisibilities,
+    currentInteraction,
+    handleLayerCreate,
   } = useOverlayStore();
   const group_name = Groups.find(
     ({ UUID }) => UUID === activeChannelGroupId
@@ -169,9 +172,24 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     </div>
   );
 
+  const drawingPanel = props.authorMode ? (
+    <DrawingPanel
+      hash={props.hash}
+      setHash={props.setHash}
+      groups={props.groups}
+      onLayerCreate={handleLayerCreate}
+      currentInteraction={currentInteraction}
+    />
+  ) : null;
+
   const minerva_author_ui = React.createElement(
     props.controlPanelElement, {
-    class: theme, children: props.children,
+    class: theme, children: (
+      <>
+        {props.children}
+        {drawingPanel}
+      </>
+    ),
   }
   );
 

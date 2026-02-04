@@ -29,15 +29,14 @@ export const PlaybackRouter = (props: PlaybackRouterProps) => {
 
   let out = <></>;
   if (props.presenting) {
-    const image_div = <ImageDiv/>;
     out = (
       <Presentation {...props}>
-        <ChannelPanel {...props}/>
+        <ChannelPanel {...props}>{props.children}</ChannelPanel>
       </Presentation>
     )
   }
   else if (props.ioState == 'IDLE') {
-    out = <ChannelPanel {...props}/>
+    out = <ChannelPanel {...props}>{props.children}</ChannelPanel>
   }
   else if (props.ioState == 'EXPORTING') {
     const exporterProps = { 
