@@ -1,7 +1,0 @@
-*.cjs
-*.mjs
-.yarn
-/docs/
-/build/
-node_modules/
-pnpm-lock.yaml
