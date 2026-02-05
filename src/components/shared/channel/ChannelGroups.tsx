@@ -27,26 +27,16 @@ const GroupRow = (props) => {
   const { group } = props;
   const { name } = group;
 
-  const {
-    setActiveChannelGroup, activeChannelGroupId,
-    Groups
-  } = useOverlayStore();
+  const { setActiveChannelGroup, activeChannelGroupId, Groups } =
+    useOverlayStore();
   const active_group = React.useMemo(
-    () => (
-      Groups.find(
-        ({ UUID }) => UUID === activeChannelGroupId 
-      ) || Groups[0]
-    ),
-    [Groups, activeChannelGroupId]
-  )
+    () => Groups.find(({ UUID }) => UUID === activeChannelGroupId) || Groups[0],
+    [Groups, activeChannelGroupId],
+  );
   const row_group = React.useMemo(
-    () => (
-      Groups.find(
-        ({ Name }) => Name === name 
-      ) || Groups[0]
-    ),
-    [Groups]
-  )
+    () => Groups.find(({ Name }) => Name === name) || Groups[0],
+    [Groups],
+  );
 
   const active = active_group.UUID === row_group.UUID;
   const outline = active ? "var(--theme-glass-edge)" : "none";
@@ -56,7 +46,7 @@ const GroupRow = (props) => {
     if (row_group) {
       setActiveChannelGroup(row_group.UUID);
     }
-  }
+  };
 
   const ref = React.useRef(null);
   const nameProps = { color, outline, ref };
@@ -65,7 +55,7 @@ const GroupRow = (props) => {
   React.useEffect(() => {
     if (active && ref.current !== null) {
       window.requestAnimationFrame(() => {
-        ref.current.scrollIntoView({behavior: "smooth", block: "nearest"});
+        ref.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
       });
     }
   }, [active]);

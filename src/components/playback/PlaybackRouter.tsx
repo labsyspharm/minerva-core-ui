@@ -15,7 +15,7 @@ export type PlaybackRouterProps = ChannelPanelProps & {
   presenting: boolean;
   handle: Handle.Dir;
   in_f: string;
-}
+};
 
 const ImageDiv = styled.div`
   background-color: white;
@@ -33,16 +33,16 @@ export const PlaybackRouter = (props: PlaybackRouterProps) => {
       <Presentation {...props}>
         <ChannelPanel {...props}>{props.children}</ChannelPanel>
       </Presentation>
-    )
-  }
-  else if (props.ioState == 'IDLE') {
-    out = <ChannelPanel {...props}>{props.children}</ChannelPanel>
-  }
-  else if (props.ioState == 'EXPORTING') {
-    const exporterProps = { 
-      handle, in_f, stopExport
+    );
+  } else if (props.ioState == "IDLE") {
+    out = <ChannelPanel {...props}>{props.children}</ChannelPanel>;
+  } else if (props.ioState == "EXPORTING") {
+    const exporterProps = {
+      handle,
+      in_f,
+      stopExport,
     };
-    out = <ImageExporter {...exporterProps}/>;
+    out = <ImageExporter {...exporterProps} />;
   }
   return <>{out}</>;
 };

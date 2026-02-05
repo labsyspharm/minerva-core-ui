@@ -1,12 +1,12 @@
-import noticeLinkCSS from './notice-link.module.css' with { type: 'css' };
-import noticeCSS from './notice.module.css' with { type: 'css' };
-import { Notice } from './notice.js';
-import { IconButton } from '../../panel-grid/icon-button';
-import { TextFieldLink } from './text-field/text-field-link';
-import { toElement } from '../../../lib/elements'
+import noticeLinkCSS from "./notice-link.module.css" with { type: "css" };
+import noticeCSS from "./notice.module.css" with { type: "css" };
+import { Notice } from "./notice.js";
+import { IconButton } from "../../panel-grid/icon-button";
+import { TextFieldLink } from "./text-field/text-field-link";
+import { toElement } from "../../../lib/elements";
 
 class NoticeLink extends Notice {
-  static name = 'notice-link'
+  static name = "notice-link";
 
   static get _styleSheet() {
     return noticeLinkCSS;
@@ -17,36 +17,35 @@ class NoticeLink extends Notice {
     const button = this.defineElement(IconButton);
     const config = nav_config[notice];
     const text_field_link = this.defineElement(TextFieldLink, {
-      defaults: { label: '', UUID: '' }
+      defaults: { label: "", UUID: "" },
     });
     const fields = config.fields.map((x) => {
       return toElement(text_field_link)``({
-        label: x.label, UUID: this.elementState.UUID
+        label: x.label,
+        UUID: this.elementState.UUID,
       });
     });
-    const actions = config.actions.map(({
-      id, heading
-    }) => {
-      return toElement('input')``({
+    const actions = config.actions.map(({ id, heading }) => {
+      return toElement("input")``({
         value: () => {
           return heading;
         },
-        '@click': () => {
-          this.elementState.notice = '';
+        "@click": () => {
+          this.elementState.notice = "";
         },
-        class: 'button',
-        type: 'submit'
-      })
+        class: "button",
+        type: "submit",
+      });
     });
-    return toElement('div')`
+    return toElement("div")`
       <h2>${() => config.title}</h2>
       ${() => this.iconTemplate(button)}
       ${() => fields}
       ${() => actions}
     `({
-       class: 'grid'
-     });
+      class: "grid",
+    });
   }
 }
 
-export { NoticeLink }
+export { NoticeLink };

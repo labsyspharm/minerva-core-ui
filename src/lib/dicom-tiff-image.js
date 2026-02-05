@@ -1,11 +1,9 @@
-import { fetchFrame } from './fetch-frame';
+import { fetchFrame } from "./fetch-frame";
 
 const littleEndianPlatform = (() => {
-  const uint16 = new Uint16Array( 1 );
-	uint16[ 0 ] = 0x1234;
-	return (
-    new Uint8Array( uint16.buffer )[ 0 ] === 0x34
-  );
+  const uint16 = new Uint16Array(1);
+  uint16[0] = 0x1234;
+  return new Uint8Array(uint16.buffer)[0] === 0x34;
 })();
 
 class DicomTIFFImage {
@@ -36,32 +34,24 @@ class DicomTIFFImage {
 
   async getTileOrStrip(x, y, sample, signal) {
     const pyramid = this.getPyramid();
-    const subpath = pyramid.frameMappings[`${y+1}-${x+1}-${this.c}`];
+    const subpath = pyramid.frameMappings[`${y + 1}-${x + 1}-${this.c}`];
     const request = await fetchFrame({ series: this.series, subpath, signal });
     return { x, y, sample, data: request };
   }
 
-  async _readRaster({
-    x, y, width, height, sample, signal
-  }) {
+  async _readRaster({ x, y, width, height, sample, signal }) {
     const { tileHeight, tileWidth } = this;
     const imageHeight = this.getHeight();
     const imageWidth = this.getWidth();
     const origin_x = x * this.tileWidth;
     const origin_y = y * this.tileHeight;
-    return await this.getTileOrStrip(
-        x, y, sample, signal
-    ).then((tile) => {
+    return await this.getTileOrStrip(x, y, sample, signal).then((tile) => {
       const fullTile = tileHeight * tileWidth;
-      const ymax = Math.min(
-        tileHeight, height, imageHeight - origin_y 
-      );
-      const xmax = Math.min(
-        tileWidth, width, imageWidth - origin_x
-      );
+      const ymax = Math.min(tileHeight, height, imageHeight - origin_y);
+      const xmax = Math.min(tileWidth, width, imageWidth - origin_x);
       if (this.rgbImage) {
         const rgb = new Uint8ClampedArray(tile.data.buffer);
-        const rgba = new Uint8ClampedArray(rgb.length * 4 / 3);
+        const rgba = new Uint8ClampedArray((rgb.length * 4) / 3);
         for (let i = 0, j = 0; i < rgb.length; i += 3, j += 4) {
           rgba[j] = rgb[i];
           rgba[j + 1] = rgb[i + 1];
@@ -69,53 +59,52 @@ class DicomTIFFImage {
           rgba[j + 3] = 255;
         }
         const samples = 4;
-        const full = Math.round(
-          rgba.length / samples
-        ) === fullTile;
+        const full = Math.round(rgba.length / samples) === fullTile;
         return {
           data: rgba,
-          width: full ? tileWidth: xmax,
-          height: full ? tileHeight: ymax
-        }
+          width: full ? tileWidth : xmax,
+          height: full ? tileHeight : ymax,
+        };
       }
       const optimization = true;
-      if ( littleEndianPlatform == this.littleEndian && optimization) {
+      if (littleEndianPlatform == this.littleEndian && optimization) {
         const data = new Uint16Array(tile.data.buffer);
         const full = data.length === fullTile;
         // Blackout missing data
         for (let pixel_y = ymax; pixel_y < tileHeight; ++pixel_y) {
           for (let pixel_x = 0; pixel_x < tileWidth; ++pixel_x) {
-            const windowCoordinate = ( pixel_y * tileWidth ) + pixel_x;
+            const windowCoordinate = pixel_y * tileWidth + pixel_x;
             data[windowCoordinate] = 0;
           }
         }
         // Blackout missing data
         for (let pixel_x = xmax; pixel_x < tileWidth; ++pixel_x) {
           for (let pixel_y = 0; pixel_y < tileHeight; ++pixel_y) {
-            const windowCoordinate = ( pixel_y * tileWidth ) + pixel_x;
+            const windowCoordinate = pixel_y * tileWidth + pixel_x;
             data[windowCoordinate] = 0;
           }
         }
         return {
           data,
-          width: full ? tileWidth: xmax,
-          height: full ? tileHeight: ymax
-        }
+          width: full ? tileWidth : xmax,
+          height: full ? tileHeight : ymax,
+        };
       }
       const data = new Uint16Array(ymax * xmax);
       for (let pixel_y = 0; pixel_y < ymax; ++pixel_y) {
         for (let pixel_x = 0; pixel_x < xmax; ++pixel_x) {
-          const windowCoordinate = ( pixel_y * tileWidth ) + pixel_x;
+          const windowCoordinate = pixel_y * tileWidth + pixel_x;
           data[windowCoordinate] = tile.data.getUint16(
-            windowCoordinate * this.bytesPerSample, this.littleEndian
+            windowCoordinate * this.bytesPerSample,
+            this.littleEndian,
           );
         }
       }
       return {
         data,
-        width: full ? tileWidth: xmax,
-        height: full ? tileHeight: ymax
-      }
+        width: full ? tileWidth : xmax,
+        height: full ? tileHeight : ymax,
+      };
     });
   }
 
@@ -125,9 +114,14 @@ class DicomTIFFImage {
     const samples = options.samples ?? [0];
     const origin_x = x * this.tileWidth;
     const origin_y = y * this.tileHeight;
-    const sample = samples[0]
+    const sample = samples[0];
     const raster = await this._readRaster({
-      x, y, width, height, sample, signal
+      x,
+      y,
+      width,
+      height,
+      sample,
+      signal,
     });
     return raster;
   }

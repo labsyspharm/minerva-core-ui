@@ -1,12 +1,11 @@
-import { updateElementState } from '../lib/element-state';
+import { updateElementState } from "../lib/element-state";
 
-const useItemSelection = (origin, element=Object) => (
+const useItemSelection = (origin, element = Object) =>
   class extends element {
-
     get selectionSources() {
       const { selections } = this.elementState;
-      return selections.filter(v => {
-        return v.origin == origin && 'UUID' in v;
+      return selections.filter((v) => {
+        return v.origin == origin && "UUID" in v;
       });
     }
 
@@ -16,9 +15,11 @@ const useItemSelection = (origin, element=Object) => (
 
     get itemSource() {
       const { UUID } = this.selectionSource;
-      return this.itemSources.find(x => {
-        return x.UUID == UUID; 
-      }) || null;
+      return (
+        this.itemSources.find((x) => {
+          return x.UUID == UUID;
+        }) || null
+      );
     }
 
     getSelectionProperty(item_key) {
@@ -34,7 +35,6 @@ const useItemSelection = (origin, element=Object) => (
       const key = (bindings || new Map()).get(item_key);
       updateElementState(originElementState, key, value);
     }
-  }
-)
+  };
 
-export { useItemSelection }
+export { useItemSelection };

@@ -1,4 +1,4 @@
-import { LensExtension, ScaleBarLayer} from "@hms-dbmi/viv";
+import { LensExtension, ScaleBarLayer } from "@hms-dbmi/viv";
 // import { getDefaultPalette, padColors } from '../utils';
 
 const fs = `\

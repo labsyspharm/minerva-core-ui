@@ -15,15 +15,15 @@ export interface WaypointViewState {
 
 /**
  * Convert Minerva 1.5 (OpenSeadragon) waypoint coordinates to Minerva 2.0 (deck.gl) view state.
- * 
+ *
  * Minerva 1.5 coordinates:
  * - Pan: [x, y] - normalized viewport coordinates (0-1 range)
  * - Zoom: number - OSD "viewport zoom" (1 = image fits viewport width)
- * 
+ *
  * Minerva 2.0 (deck.gl OrthographicView) coordinates:
  * - target: [x, y, z] - image pixel coordinates
  * - zoom: number - log2 scale (0 = 1:1 pixel ratio, negative = zoomed out)
- * 
+ *
  * Conversion formulas:
  * - Pan: targetX = panX * maxDimension, targetY = panY * maxDimension (where maxDimension = max(imageWidth, imageHeight))
  * - Zoom: deckZoom = Math.log2(viewportZoom * containerWidth / imageWidth)
@@ -33,10 +33,13 @@ const convertWaypointToViewState = (
   zoom: number | null | undefined,
   imageWidth: number,
   imageHeight: number,
-  containerWidth: number
+  containerWidth: number,
 ): WaypointViewState | null => {
   // Need at least pan or zoom to create a view state
-  if ((pan === undefined || pan === null) && (zoom === undefined || zoom === null)) {
+  if (
+    (pan === undefined || pan === null) &&
+    (zoom === undefined || zoom === null)
+  ) {
     return null;
   }
 
@@ -54,7 +57,12 @@ const convertWaypointToViewState = (
   // OSD viewport zoom 1 = image fits viewport width
   // deck.gl zoom is log2 scale where 0 = 1:1 pixel ratio
   let deckZoom: number;
-  if (zoom !== undefined && zoom !== null && containerWidth > 0 && imageWidth > 0) {
+  if (
+    zoom !== undefined &&
+    zoom !== null &&
+    containerWidth > 0 &&
+    imageWidth > 0
+  ) {
     // viewportToImageZoom = viewportZoom * (containerWidth / imageWidth) * scale
     // where scale = 1 for standard setup (contentBounds.width = 1)
     const imageZoom = zoom * (containerWidth / imageWidth);
@@ -67,7 +75,7 @@ const convertWaypointToViewState = (
 
   return {
     zoom: deckZoom,
-    target: [targetX, targetY, 0]
+    target: [targetX, targetY, 0],
   };
 };
 
@@ -98,4 +106,9 @@ const handleWaypoint = (list: Story[], { w, s }: WS) => {
   };
 };
 
-export { getWaypoint, getWaypoints, handleWaypoint, convertWaypointToViewState };
+export {
+  getWaypoint,
+  getWaypoints,
+  handleWaypoint,
+  convertWaypointToViewState,
+};

@@ -57,9 +57,11 @@ const Button = styled.button<ButtonProps>`
 
 const getProps = (props: IconProps, noClick = null) => {
   const { icon, onClick = noClick } = props;
-  const { 
-    size = "1em", color = "inherit",
-    height = "1em", width = "1em"
+  const {
+    size = "1em",
+    color = "inherit",
+    height = "1em",
+    width = "1em",
   } = props;
   return {
     size,

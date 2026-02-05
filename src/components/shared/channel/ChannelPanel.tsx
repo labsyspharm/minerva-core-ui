@@ -14,16 +14,17 @@ import type { ConfigProps } from "@/lib/config";
 import type { HashContext } from "@/lib/hashUtil";
 import type { ImageProps } from "@/components/shared/common/types";
 
-export type ChannelPanelProps = HashContext & ImageProps & {
-  children: any,
-  config: ConfigProps;
-  authorMode: boolean;
-  hiddenChannel: boolean;
-  startExport: () => void;
-  controlPanelElement: string;
-  retrievingMetadata: boolean;
-  setHiddenChannel: (v: boolean) => void;
-};
+export type ChannelPanelProps = HashContext &
+  ImageProps & {
+    children: any;
+    config: ConfigProps;
+    authorMode: boolean;
+    hiddenChannel: boolean;
+    startExport: () => void;
+    controlPanelElement: string;
+    retrievingMetadata: boolean;
+    setHiddenChannel: (v: boolean) => void;
+  };
 
 const TextWrap = styled.div`
   height: 100%;
@@ -109,7 +110,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     currentInteraction,
     handleLayerCreate,
     SourceChannels,
-    Groups
+    Groups,
   } = useOverlayStore();
   // TODO -- lookup group correctly
   const groups = Groups.map((group, g) => {
@@ -117,49 +118,42 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       g,
       UUID: group.UUID,
       name: group.Name,
-      channels: group.GroupChannels.map(
-        ({ SourceChannel, Color }) => {
-          const found = SourceChannels.find(
-            ({ UUID }) => (
-              SourceChannel.UUID === UUID
-            )
-          );
-          if (found) {
-            const { R, G, B } = Color;
-            const hex_color = [R, G, B].map(
-              n => n.toString(16).padStart(2, '0')
-            ).join('');
-            return {
-              name: found.Name,
-              color: `${hex_color}`
-            }
-          }
+      channels: group.GroupChannels.map(({ SourceChannel, Color }) => {
+        const found = SourceChannels.find(
+          ({ UUID }) => SourceChannel.UUID === UUID,
+        );
+        if (found) {
+          const { R, G, B } = Color;
+          const hex_color = [R, G, B]
+            .map((n) => n.toString(16).padStart(2, "0"))
+            .join("");
+          return {
+            name: found.Name,
+            color: `${hex_color}`,
+          };
         }
-      ).filter(x => x)
-    }
+      }).filter((x) => x),
+    };
   });
-  const group = groups.find(
-    ({ UUID }) => UUID === activeChannelGroupId
-  ) || groups[0];
+  const group =
+    groups.find(({ UUID }) => UUID === activeChannelGroupId) || groups[0];
   const toggleChannel = ({ name }) => {
     setChannelVisibilities(
       Object.fromEntries(
-        Object.entries(channelVisibilities).map(
-          ([k,v]) => [k, k === name ? !v : v]
-        )
-      )
-    )
-  }
-  const legendProps = {
-    ...props, ...group,
-    channelVisibilities,
-    toggleChannel
+        Object.entries(channelVisibilities).map(([k, v]) => [
+          k,
+          k === name ? !v : v,
+        ]),
+      ),
+    );
   };
-  const hideClass=[
-    "show core", "hide core"
-  ][
-    +hide
-  ];
+  const legendProps = {
+    ...props,
+    ...group,
+    channelVisibilities,
+    toggleChannel,
+  };
+  const hideClass = ["show core", "hide core"][+hide];
 
   // Content logic (merged from content.tsx)
   const total = groups.length;
@@ -179,13 +173,11 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
 
   const channelMenu = (
     <div className={hideClass}>
-      <WrapContent> 
-        <WrapNav> 
+      <WrapContent>
+        <WrapNav>
           <ChannelLegend {...legendProps} />
-        </WrapNav> 
-        <WrapCore>
-          {allGroups}
-        </WrapCore>
+        </WrapNav>
+        <WrapCore>{allGroups}</WrapCore>
       </WrapContent>
     </div>
   );
@@ -200,22 +192,21 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     />
   ) : null;
 
-  const minerva_author_ui = React.createElement(
-    props.controlPanelElement, {
-    class: theme, children: (
+  const minerva_author_ui = React.createElement(props.controlPanelElement, {
+    class: theme,
+    children: (
       <>
         {props.children}
         {drawingPanel}
       </>
     ),
-  }
-  );
+  });
 
   const content = props.authorMode ? (
-    <TextOther>
-      {minerva_author_ui}
-    </TextOther>
-  ) : props.children;
+    <TextOther>{minerva_author_ui}</TextOther>
+  ) : (
+    props.children
+  );
 
   return (
     <TextWrap>

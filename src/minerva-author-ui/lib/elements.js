@@ -1,6 +1,4 @@
-import { toElement } from './element-template';
-import { toElementState } from './element-state';
+import { toElement } from "./element-template";
+import { toElementState } from "./element-state";
 
-export { 
-  toElement, toElementState
-}
+export { toElement, toElementState };

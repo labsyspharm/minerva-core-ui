@@ -1,10 +1,8 @@
-const sourceColors = (element=Object) => (
+const sourceColors = (element = Object) =>
   class extends element {
-
-    get itemSources () {
+    get itemSources() {
       return this.elementState.item_registry?.Colors;
     }
-  }
-)
+  };
 
-export { sourceColors }
+export { sourceColors };

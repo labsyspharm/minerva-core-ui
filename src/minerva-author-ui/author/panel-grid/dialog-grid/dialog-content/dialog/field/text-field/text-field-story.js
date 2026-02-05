@@ -1,16 +1,15 @@
-import { TextField } from '../../../../../../text-field/text-field';
-import { PanelItem } from '../../../../../panel-content/panel/panel-item'
-import { sourceStoryItems } from '../../../../../../../items/source-story-items'
-import { useItemSelection } from '../../../../../../../filters/use-item-selection'
+import { TextField } from "../../../../../../text-field/text-field";
+import { PanelItem } from "../../../../../panel-content/panel/panel-item";
+import { sourceStoryItems } from "../../../../../../../items/source-story-items";
+import { useItemSelection } from "../../../../../../../filters/use-item-selection";
 
 class TextFieldStory extends useItemSelection(
-    PanelItem.name, sourceStoryItems(TextField)
+  PanelItem.name,
+  sourceStoryItems(TextField),
 ) {
-  static name = 'text-field-story'
+  static name = "text-field-story";
 
-  static itemStateMap = new Map([
-    ['Name', 'name']
-  ])
+  static itemStateMap = new Map([["Name", "name"]]);
 
   get value() {
     return this.getSelectionProperty(this.elementState.property);
@@ -21,4 +20,4 @@ class TextFieldStory extends useItemSelection(
   }
 }
 
-export { TextFieldStory }
+export { TextFieldStory };

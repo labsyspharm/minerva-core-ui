@@ -1,6 +1,6 @@
 .theme {
   line-height: 1em;
-  --theme-font-family: "lato",sans-serif;
+  --theme-font-family: "lato", sans-serif;
   --theme-dark-main-color: hwb(240 10% 50%);
   --theme-light-focus-color: hwb(45 90% 0%);
   --theme-light-contrast-color: hwb(45 99% 0%);

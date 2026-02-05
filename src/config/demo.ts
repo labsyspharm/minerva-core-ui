@@ -3,7 +3,7 @@ import type { Index, IndexedImage, Layout } from "./generic";
 import type { Config } from "./generic";
 import type { ReactChild } from "react";
 
-type Waypoint<C extends unknown> = {
+type Waypoint<C> = {
   [k in "scene" | "image"]: Index["index"];
 } & {
   layers?: Index["index"][];
@@ -29,7 +29,7 @@ const urlToFile = (url: string) => {
   const dir = ["", "Users", "jth30", "data"];
   const { file } = [
     {
-      match: new RegExp("/LUNG_3/"),
+      match: /\/LUNG_3\//,
       file: ["LUNG-3-PR", "LUNG-3-PR_40X.ome.tif"],
     },
   ].find(({ match }) => {
@@ -104,8 +104,7 @@ const IMAGES: StoryImage[] = [
   {
     index: 0,
     name: "Channel Group A",
-    location:
-      "https://s3.amazonaws.com/www.cycif.org/crc02-lens-1/story-alpha",
+    location: "https://s3.amazonaws.com/www.cycif.org/crc02-lens-1/story-alpha",
     metadata: {},
     markers: [
       {
@@ -119,15 +118,15 @@ const IMAGES: StoryImage[] = [
       pixel: {
         width: 35592,
         height: 69367,
-//        width: 14448,
-//        height: 11101,
+        //        width: 14448,
+        //        height: 11101,
         unit: Units.ImagePixel,
       },
       physical: {
         width: 11.5674,
         height: 22.5443,
-//        width: 4.6956,
-//        height: 3.6078,
+        //        width: 4.6956,
+        //        height: 3.6078,
         unit: Units.Millimeter,
       },
     },

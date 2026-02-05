@@ -1,11 +1,8 @@
-const sourceSourceDistributions = (element=Object) => (
+const sourceSourceDistributions = (element = Object) =>
   class extends element {
-
-    get itemSources () {
+    get itemSources() {
       return this.elementState.item_registry?.SourceDistributions;
     }
+  };
 
-  }
-)
-
-export { sourceSourceDistributions }
+export { sourceSourceDistributions };

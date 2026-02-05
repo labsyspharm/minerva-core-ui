@@ -1,9 +1,9 @@
 import * as React from "react";
-import type { Layer } from '@deck.gl/core';
+import type { Layer } from "@deck.gl/core";
 
 type LoadingWidgetProps = {
   /** Widget positioning within the view. Default 'top-left'. */
-  placement?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  placement?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
   /** Tooltip message when loading */
   label?: string;
 };
@@ -16,16 +16,13 @@ type LoadingWidgetProps = {
 export const LoadingWidget = React.forwardRef<
   { onRedraw: (params: { layers: Layer[] }) => void },
   LoadingWidgetProps
->(({ 
-  placement = 'top-left',
-  label = 'Loading layer data'
-}, ref) => {
+>(({ placement = "top-left", label = "Loading layer data" }, ref) => {
   const [loading, setLoading] = React.useState(true);
 
   // onRedraw callback - matches the original Widget implementation
   const onRedraw = React.useCallback(({ layers }: { layers: Layer[] }) => {
-    const isLoading = layers.some(layer => !layer.isLoaded);
-    setLoading(prev => prev !== isLoading ? isLoading : prev);
+    const isLoading = layers.some((layer) => !layer.isLoaded);
+    setLoading((prev) => (prev !== isLoading ? isLoading : prev));
   }, []);
 
   React.useImperativeHandle(ref, () => ({ onRedraw }), [onRedraw]);
@@ -36,24 +33,24 @@ export const LoadingWidget = React.forwardRef<
 
   // Determine position based on placement
   const positionStyles: React.CSSProperties = {
-    position: 'absolute',
+    position: "absolute",
     zIndex: 2,
-    ...(placement === 'top-left' && { top: '8px', left: '8px' }),
-    ...(placement === 'top-right' && { top: '8px', right: '8px' }),
-    ...(placement === 'bottom-left' && { bottom: '8px', left: '8px' }),
-    ...(placement === 'bottom-right' && { bottom: '8px', right: '8px' }),
+    ...(placement === "top-left" && { top: "8px", left: "8px" }),
+    ...(placement === "top-right" && { top: "8px", right: "8px" }),
+    ...(placement === "bottom-left" && { bottom: "8px", left: "8px" }),
+    ...(placement === "bottom-right" && { bottom: "8px", right: "8px" }),
   };
 
   return (
     <div className="deck-widget-loading" style={positionStyles} title={label}>
-      <div 
+      <div
         style={{
-          width: '24px',
-          height: '24px',
-          border: '3px solid rgba(255, 255, 255, 0.3)',
-          borderTop: '3px solid rgba(255, 255, 255, 0.9)',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
+          width: "24px",
+          height: "24px",
+          border: "3px solid rgba(255, 255, 255, 0.3)",
+          borderTop: "3px solid rgba(255, 255, 255, 0.9)",
+          borderRadius: "50%",
+          animation: "spin 1s linear infinite",
         }}
       />
       <style>{`
@@ -66,6 +63,6 @@ export const LoadingWidget = React.forwardRef<
   );
 });
 
-LoadingWidget.displayName = 'LoadingWidget';
+LoadingWidget.displayName = "LoadingWidget";
 
 export type { LoadingWidgetProps };

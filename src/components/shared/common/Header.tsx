@@ -2,7 +2,7 @@ import * as React from "react";
 import styled from "styled-components";
 
 interface HeaderProps {
-  font: string;  
+  font: string;
 }
 
 const fontStack = ({ font }) => {

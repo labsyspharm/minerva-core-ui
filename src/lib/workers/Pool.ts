@@ -1,4 +1,4 @@
-import { Pool } from 'geotiff';
+import { Pool } from "geotiff";
 
 // adapted from https://github.com/hms-dbmi/viv/blob/08a74203b99f54bc62307c741944ed61e33e810c/packages/loaders/src/tiff/lib/Pool.ts#L4
 
@@ -9,7 +9,9 @@ import { Pool } from 'geotiff';
 const defaultPoolSize = globalThis?.navigator?.hardwareConcurrency ?? 4;
 
 function createWorker() {
-  return new Worker(new URL('./decoder.worker.ts', import.meta.url), { type: 'module' });
+  return new Worker(new URL("./decoder.worker.ts", import.meta.url), {
+    type: "module",
+  });
 }
 
 export default class extends Pool {

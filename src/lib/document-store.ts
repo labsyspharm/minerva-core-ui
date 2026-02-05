@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 
 type ExpandedState = {
   Expanded: boolean;
@@ -9,8 +9,8 @@ type GroupChannelState = ExpandedState;
 
 type ID = { ID: string };
 type UUID = { UUID: string };
-type NameProperty = { Name: string; };
-type Color = Record<'R' | 'G' | 'B', number>;
+type NameProperty = { Name: string };
+type Color = Record<"R" | "G" | "B", number>;
 type GroupChannel = UUID & {
   LowerRange: number;
   UpperRange: number;
@@ -19,16 +19,12 @@ type GroupChannel = UUID & {
   Group: UUID;
   State: GroupChannelState;
 };
-export type ConfigGroup = (
-  UUID & NameProperty
-) & {
+export type ConfigGroup = (UUID & NameProperty) & {
   GroupChannels: GroupChannel[];
   State: GroupState;
 };
 
-export type ConfigSourceChannel = (
-  UUID & NameProperty
-) & {
+export type ConfigSourceChannel = (UUID & NameProperty) & {
   SourceIndex: number;
   Samples: number;
   SourceImage: UUID;
@@ -40,9 +36,7 @@ export interface DocumentStore {
   Groups: ConfigGroup[];
   setGroups: (groups: ConfigGroup[]) => void;
   SourceChannels: ConfigSourceChannel[];
-  setSourceChannels: (
-    source_channels: ConfigSourceChannel[]
-  ) => void;
+  setSourceChannels: (source_channels: ConfigSourceChannel[]) => void;
 }
 
 const documentInitialState = {
@@ -51,16 +45,13 @@ const documentInitialState = {
 };
 
 // Create the document store
-export const documentStore = (
-  (set, get) => ({
-    ...documentInitialState,
-    // Group and Channel actions
-    setGroups: (Groups: ConfigGroup[]) => {
-      set({ Groups });
-    },
-    setSourceChannels: (SourceChannels: ConfigSourceChannel[]) => {
-      set({ SourceChannels });
-    },
-  })
-);
-
+export const documentStore = (set, get) => ({
+  ...documentInitialState,
+  // Group and Channel actions
+  setGroups: (Groups: ConfigGroup[]) => {
+    set({ Groups });
+  },
+  setSourceChannels: (SourceChannels: ConfigSourceChannel[]) => {
+    set({ SourceChannels });
+  },
+});

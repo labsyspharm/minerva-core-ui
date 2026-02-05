@@ -36,7 +36,7 @@
   --dark-accept-color: var(--theme-dark-accept-color, darkslategray);
   --dark-reject-color: var(--theme-dark-reject-color, darkred);
   --dark-focus-color: var(--theme-dark-focus-color, black);
-  --glass-edge: var(--theme-glass-edge, rgba(255,255,255,0.5));
+  --glass-edge: var(--theme-glass-edge, rgba(255, 255, 255, 0.5));
   --dark-gray-color: var(--theme-dark-gray-color, black);
   --dim-gray-color: var(--theme-dim-gray-color, black);
   --glass-filter: var(--theme-glass-filter, blur(32px));
@@ -55,11 +55,12 @@
   --radius-field-1111: var(--gap-tiny);
   --thin-border: var(--thin) solid var(--glass-edge);
   --thin-glass-border: var(--thin) solid var(--glass-edge);
-  --thin-white-shadow: 
-    inset 0em calc(var(--thin) * -1) var(--glass-edge);
-  --white-highlight: inset 1.0px 1.0px 1.0px var(--glass-edge);
+  --thin-white-shadow: inset 0em calc(var(--thin) * -1) var(--glass-edge);
+  --white-highlight: inset 1px 1px 1px var(--glass-edge);
   --glass-gradient: linear-gradient(
-    to bottom in xyz, var(--glass-edge), transparent 
+    to bottom in xyz,
+    var(--glass-edge),
+    transparent
   );
   --menu-font-size: 0.75em;
   --panel-font-size: 0.75em;
@@ -73,8 +74,8 @@
   display: contents;
 }
 .flex.wrap {
-	display: flex;
-	flex-wrap: wrap;
+  display: flex;
+  flex-wrap: wrap;
 }
 .grid {
   display: grid;
@@ -100,22 +101,26 @@
 .indent {
   padding-left: 1em;
 }
-button, input[type='submit'] {
-	background: none;
-	color: inherit;
-	padding: 0;
-	font: inherit;
-	cursor: pointer;
+button,
+input[type="submit"] {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
   border: none;
 }
 .tab {
   box-shadow: var(--thin-white-shadow);
 }
-input.button, .button, .tab {
+input.button,
+.button,
+.tab {
   border-top: var(--thin-glass-border);
   border-right: var(--thin-glass-border);
 }
-input.button, .button {
+input.button,
+.button {
   border-radius: var(--radius-button-1111);
   border-bottom: var(--thin-glass-border);
   border-left: var(--thin-glass-border);

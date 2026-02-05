@@ -1,12 +1,12 @@
-import styledDialogCSS from './styled-dialog.module.css'
-import { WebDialog } from 'web-dialog';
+import styledDialogCSS from "./styled-dialog.module.css";
+import { WebDialog } from "web-dialog";
 
 class StyledDialog extends WebDialog {
-  static name = 'styled-dialog'
+  static name = "styled-dialog";
 
   static get _styleSheet() {
     return styledDialogCSS;
   }
 }
 
-export { StyledDialog }
+export { StyledDialog };
