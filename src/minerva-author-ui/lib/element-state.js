@@ -122,8 +122,8 @@ function defineElement(element, options = {}) {
       constructor() {
         super();
         this._reactiveState = createReactiveState(options, closure);
-        for (let k in this._reactiveState) {
-          let att_v = this.getAttribute(k);
+        for (const k in this._reactiveState) {
+          const att_v = this.getAttribute(k);
           const init_v = convertFromAttribute(
             this.constructor.elementProperties,
             k,

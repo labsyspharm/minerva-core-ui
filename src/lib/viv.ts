@@ -166,4 +166,4 @@ const toSettings = (opts) => {
   };
 };
 
-export { toSettings, Selection, Color, Limit };
+export { toSettings, type Selection, type Color, type Limit };

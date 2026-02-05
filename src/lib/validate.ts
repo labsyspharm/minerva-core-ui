@@ -29,12 +29,8 @@ type FormAnyOpts = ValidateIn<FormOutAny>;
 type FormDicomOpts = ValidateIn<FormOutDicom>;
 type FormOpts = FormAnyOpts | FormDicomOpts;
 type Opts = ValidateIn<ObjAny>;
-interface Validate<I> {
-  (i: I): Promise<ValidObj>;
-}
-interface ToValid {
-  (n: string[], k: string[]): ValidObj;
-}
+type Validate<I> = (i: I) => Promise<ValidObj>
+type ToValid = (n: string[], k: string[]) => ValidObj
 export function isOpts(o: ObjAny): o is Opts {
   if ("onStart" in o && typeof o.onStart === "function") {
     const h = FileSystemDirectoryHandle;
@@ -116,9 +112,10 @@ const validateAny: Validate<FormAnyOpts> = async (opts) => {
         case "name":
           if (v.length === 0) return out;
           return [...out, k];
-        case "path":
+        case "path": {
           const found = await findFile({ handle, path: v });
           return found ? [...out, k] : out;
+        }
       }
       return out;
     },

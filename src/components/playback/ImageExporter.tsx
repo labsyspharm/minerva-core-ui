@@ -39,17 +39,13 @@ type TileConfig = {
 type LoaderPlane = TiffPixelSource<any>;
 type Canvas = HTMLCanvasElement;
 
-interface ToTilePlane {
-  (z: number, l: LoaderPlane[]): LoaderPlane;
-}
+type ToTilePlane = (z: number, l: LoaderPlane[]) => LoaderPlane
 type TileCounts = { x: number; y: number };
 type TileCountsIn = {
   tileProps: TileProps;
   zoom: number;
 };
-interface ToTileCounts {
-  (i: TileCountsIn): TileCounts;
-}
+type ToTileCounts = (i: TileCountsIn) => TileCounts
 
 type InitIn = {
   loader: LoaderPlane[];
@@ -62,9 +58,7 @@ type CommonIn = InitIn & {
 type SaveIn = CommonIn & {
   step: number;
 };
-interface Save {
-  (i: SaveIn): Promise<void>;
-}
+type Save = (i: SaveIn) => Promise<void>
 
 type StepIn = CommonIn & {
   stepSignal: StepOut;
@@ -74,17 +68,13 @@ type StepOut = {
   step: number;
   done: boolean;
 };
-interface DoStep {
-  (o: StepIn): Promise<StepOut | null>;
-}
+type DoStep = (o: StepIn) => Promise<StepOut | null>
 
 type CaptureOut = {
   output: Uint8Array;
   filename: string;
 };
-interface Capture {
-  (i: Index, loader: LoaderPlane[]): Promise<CaptureOut>;
-}
+type Capture = (i: Index, loader: LoaderPlane[]) => Promise<CaptureOut>
 
 const toFilename = (index: Index) => {
   const level = -index.z;
@@ -183,9 +173,7 @@ type FullState = {
   tileProps: TileProps;
 };
 type MainState = null | FullState;
-interface Initialize {
-  (i: InitIn): Partial<FullState>;
-}
+type Initialize = (i: InitIn) => Partial<FullState>
 
 type One = [number];
 type Two = [number, number];
@@ -307,9 +295,7 @@ type LoaderOpts = {
   in_f: string;
   handle: Handle.Dir | null;
 };
-interface ToLoader {
-  (i: LoaderIn): Promise<LoaderOut>;
-}
+type ToLoader = (i: LoaderIn) => Promise<LoaderOut>
 interface ProgressBarProps {
   $ratio: number;
   $done: boolean;

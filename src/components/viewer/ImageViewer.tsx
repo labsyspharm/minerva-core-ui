@@ -2,7 +2,7 @@ import * as React from "react";
 import Deck from "@deck.gl/react";
 import {
   OrthographicView,
-  OrthographicViewState,
+  type OrthographicViewState,
   LinearInterpolator,
 } from "@deck.gl/core";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
@@ -282,7 +282,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
           transitionDuration: 1000,
           transitionInterpolator: new LinearInterpolator(["target", "zoom"]),
           transitionEasing: (x: number) =>
-            x === 1 ? 1 : 1 - Math.pow(2, -10 * x),
+            x === 1 ? 1 : 1 - 2 ** (-10 * x),
         };
 
         setViewState(viewStateWithTransition as OrthographicViewState);

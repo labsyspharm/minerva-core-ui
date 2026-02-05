@@ -22,9 +22,7 @@ type ChoiceAnyIn = {
   path: string;
   csv: string;
 };
-interface ToChoicesAny {
-  (i: ChoiceAnyIn): Promise<Choices>;
-}
+type ToChoicesAny = (i: ChoiceAnyIn) => Promise<Choices>
 type OptionsProps = {
   label: string;
   vals: string[];
@@ -46,24 +44,16 @@ export type UploadProps = {
 export type ValidObj = {
   [s: string]: boolean;
 };
-interface ValidationFunction {
-  (v: ValidObj): boolean | null;
-}
-interface Validation {
-  (s: string): ValidationFunction;
-}
+type ValidationFunction = (v: ValidObj) => boolean | null
+type Validation = (s: string) => ValidationFunction
 type ValidOut = Partial<{
   isValid: true;
   isInvalid: true;
 }>;
-interface Validate {
-  (v: ValidObj, fn: ValidationFunction): ValidOut;
-}
+type Validate = (v: ValidObj, fn: ValidationFunction) => ValidOut
 type SetState = (s: string) => void;
 type SetTargetState = FormEventHandler;
-interface UseTargetState {
-  (init: string): [string, SetState, SetTargetState];
-}
+type UseTargetState = (init: string) => [string, SetState, SetTargetState]
 
 interface HasValidation {
   hasValidation: boolean;

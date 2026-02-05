@@ -48,9 +48,7 @@ export type ItemRegistryProps = {
   Stories: ConfigWaypoint[];
   SourceDistributions: ConfigSourceDistribution[];
 };
-interface SetItems {
-  (user: Partial<ItemRegistryProps>): void;
-}
+type SetItems = (user: Partial<ItemRegistryProps>) => void
 
 type Dtype =
   | "Uint8"
@@ -104,9 +102,7 @@ type LoaderPlane = {
   labels: string[];
   getTile: (s: TileConfig) => Promise<HasTile>;
 };
-interface ToTilePlane {
-  (z: number, l: LoaderPlane[]): LoaderPlane;
-}
+type ToTilePlane = (z: number, l: LoaderPlane[]) => LoaderPlane
 type FullState = {
   indices: Index[];
   tileProps: TileProps;
@@ -114,25 +110,19 @@ type FullState = {
 type InitIn = {
   planes: LoaderPlane[];
 };
-interface Initialize {
-  (i: InitIn): FullState;
-}
+type Initialize = (i: InitIn) => FullState
 type BinIn = InitIn & {
   bits: number;
   index: Index;
 };
-interface Bin {
-  (i: BinIn): Promise<number[]>;
-}
+type Bin = (i: BinIn) => Promise<number[]>
 
 type HasTile = {
   data: TypedArray;
   height: number;
   width: number;
 };
-interface CaptureTile {
-  (i: Index, planes: LoaderPlane[]): Promise<HasTile>;
-}
+type CaptureTile = (i: Index, planes: LoaderPlane[]) => Promise<HasTile>
 
 export type ConfigProps = {
   ItemRegistry: ItemRegistryProps;
@@ -149,19 +139,14 @@ export type ConfigWaypoint = UUID & {
   Overlays?: ConfigWaypointOverlay[];
 };
 
-interface ExtractDistributions {
-  (loader: Loader): Promise<Map<number, ConfigSourceDistribution>>;
-}
-interface ExtractChannels {
-  (
+type ExtractDistributions = (loader: Loader) => Promise<Map<number, ConfigSourceDistribution>>
+type ExtractChannels = (
     loader: Loader,
     modality: string,
-    groups: LegacyConfigGroup[],
-  ): {
+    groups: LegacyConfigGroup[],) => {
     SourceChannels: ConfigSourceChannel[];
     Groups: ConfigGroup[];
-  };
-}
+  }
 
 const hex_to_rgb = (c) => {
   const n = parseInt(c, 16);

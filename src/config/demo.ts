@@ -3,7 +3,7 @@ import type { Index, IndexedImage, Layout } from "./generic";
 import type { Config } from "./generic";
 import type { ReactChild } from "react";
 
-type Waypoint<C extends unknown> = {
+type Waypoint<C> = {
   [k in "scene" | "image"]: Index["index"];
 } & {
   layers?: Index["index"][];
@@ -29,7 +29,7 @@ const urlToFile = (url: string) => {
   const dir = ["", "Users", "jth30", "data"];
   const { file } = [
     {
-      match: new RegExp("/LUNG_3/"),
+      match: /\/LUNG_3\//,
       file: ["LUNG-3-PR", "LUNG-3-PR_40X.ome.tif"],
     },
   ].find(({ match }) => {

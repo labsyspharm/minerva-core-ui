@@ -47,9 +47,7 @@ type Props = ImageProps & {
   handleKeys: string[];
 };
 
-interface ReduceFormData {
-  (o: ObjAny, kv: KV): ObjAny;
-}
+type ReduceFormData = (o: ObjAny, kv: KV) => ObjAny
 
 const Wrapper = styled.div`
   height: 100%;

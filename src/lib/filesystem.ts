@@ -6,27 +6,19 @@ type ListDirIn = {
   handle: Handle.Dir;
 };
 export type Entry = [string, Handle.File | Handle.Dir];
-interface ListDir {
-  (i: ListDirIn): Promise<Entry[]>;
-}
+type ListDir = (i: ListDirIn) => Promise<Entry[]>
 type FindFileIn = {
   handle: Handle.Dir;
   path: string;
 };
-interface FindFile {
-  (i: FindFileIn): Promise<boolean>;
-}
-interface ToDir {
-  (): Promise<Handle.Dir>;
-}
+type FindFile = (i: FindFileIn) => Promise<boolean>
+type ToDir = () => Promise<Handle.Dir>
 type LoaderIn = {
   in_f: string;
   handle: Handle.Dir;
   pool: any | null;
 };
-interface ToLoader {
-  (i: LoaderIn): Promise<Loader>;
-}
+type ToLoader = (i: LoaderIn) => Promise<Loader>
 export type Selection = {
   t: number;
   z: number;

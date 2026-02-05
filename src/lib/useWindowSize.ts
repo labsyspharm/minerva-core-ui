@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 const debounce = (fn, wait) => {
   let timeout;
   return (...args) => {
-    const later = function () {
+    const later = () => {
       timeout = null;
       fn(...args);
     };

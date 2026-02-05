@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["src/**"]
+    "includes": ["src/**","!src/minerva-author-ui"]
   },
   "formatter": {
     "enabled": true,
@@ -14,7 +14,7 @@
     "indentWidth": 2
   },
   "linter": {
-    "enabled": false
+    "enabled": true
   },
   "javascript": {
     "formatter": {

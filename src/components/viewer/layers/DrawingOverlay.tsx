@@ -1,5 +1,5 @@
 import * as React from "react";
-import { PolygonLayer, TextLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { PolygonLayer, type TextLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { useOverlayStore, ellipseToPolygon } from "@/lib/stores";
 import { useAnnotationLayers } from "@/lib/annotationLayers";
 
@@ -828,11 +828,11 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   const drawingLayer = React.useMemo(() => {
     // Determine polygon data and styling based on active tool
     let polygonData: [number, number][] | null = null;
-    let layerId = "drawing-layer";
+    const layerId = "drawing-layer";
     let fillColor: [number, number, number, number] = PREVIEW_FILL_COLOR;
-    let lineColor: [number, number, number, number] = PREVIEW_LINE_COLOR;
+    const lineColor: [number, number, number, number] = PREVIEW_LINE_COLOR;
     let shouldFill = true;
-    let lineWidth = getLineWidthPx(); // Default line width
+    const lineWidth = getLineWidthPx(); // Default line width
 
     // Rectangle tool: uses click-to-draw mode or drag mode
     if (activeTool === "rectangle") {
