@@ -7,7 +7,6 @@ import {
   MoveIcon,
   RectangleIcon,
   EllipseIcon,
-  LassoIcon,
   PolygonIcon,
   LineIcon,
   PolylineIcon,
@@ -172,6 +171,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
       {/* Toolbar with drawing tools - positioned above layers */}
       <div className={styles.toolbar}>
         <button
+          type="button"
           className={`${styles.toolButton} ${activeTool === TOOLS.MOVE ? styles.active : ""}`}
           title="Move Tool"
           onClick={() => handleToolChangeLocal(TOOLS.MOVE)}
@@ -180,6 +180,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
         </button>
 
         <button
+          type="button"
           className={`${styles.toolButton} ${activeTool === TOOLS.RECTANGLE ? styles.active : ""}`}
           title="Rectangle Tool (R)"
           onClick={() => handleToolChangeLocal(TOOLS.RECTANGLE)}
@@ -188,6 +189,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
         </button>
 
         <button
+          type="button"
           className={`${styles.toolButton} ${activeTool === TOOLS.ELLIPSE ? styles.active : ""}`}
           title="Ellipse Tool (E)"
           onClick={() => handleToolChangeLocal(TOOLS.ELLIPSE)}
@@ -196,6 +198,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
         </button>
 
         <button
+          type="button"
           className={`${styles.toolButton} ${activeTool === TOOLS.LASSO ? styles.active : ""}`}
           title="Lasso Tool (L)"
           onClick={() => handleToolChangeLocal(TOOLS.LASSO)}
@@ -204,6 +207,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
         </button>
 
         <button
+          type="button"
           className={`${styles.toolButton} ${activeTool === TOOLS.LINE ? styles.active : ""}`}
           title="Line Tool"
           onClick={() => handleToolChangeLocal(TOOLS.LINE)}
@@ -212,6 +216,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
         </button>
 
         <button
+          type="button"
           className={`${styles.toolButton} ${activeTool === TOOLS.POLYLINE ? styles.active : ""}`}
           title="Poly-line Tool"
           onClick={() => handleToolChangeLocal(TOOLS.POLYLINE)}
@@ -220,6 +225,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
         </button>
 
         <button
+          type="button"
           className={`${styles.toolButton} ${activeTool === TOOLS.TEXT ? styles.active : ""}`}
           title="Text Tool"
           onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
@@ -228,6 +234,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
         </button>
 
         <button
+          type="button"
           className={`${styles.toolButton} ${activeTool === TOOLS.POINT ? styles.active : ""}`}
           title="Point Tool"
           onClick={() => handleToolChangeLocal(TOOLS.POINT)}
@@ -236,6 +243,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
         </button>
 
         <button
+          type="button"
           className={styles.toolButton}
           title="Color Picker"
           onClick={handleColorPickerOpen}
@@ -304,6 +312,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
               </h3>
               <button
                 onClick={handleColorPickerCancel}
+                type="button"
                 style={{
                   background: "none",
                   border: "none",
@@ -329,6 +338,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
             >
               <button
                 onClick={handleColorChangeComplete}
+                type="button"
                 style={{
                   padding: "8px 16px",
                   border: "none",

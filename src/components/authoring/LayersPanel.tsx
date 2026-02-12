@@ -68,6 +68,7 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
       {/* Font Size Input */}
       <div style={{ marginBottom: "15px" }}>
         <label
+          htmlFor="fontSizeInput"
           style={{
             color: "white",
             fontSize: "14px",
@@ -78,6 +79,7 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
           Font Size:
         </label>
         <input
+          id="fontSizeInput"
           type="number"
           value={fontSize}
           onChange={(e) => onFontSizeChange(parseInt(e.target.value) || 14)}
@@ -114,7 +116,6 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
           resize: "vertical",
           outline: "none",
         }}
-        autoFocus
         onKeyDown={(e) => {
           if (e.key === "Enter" && e.ctrlKey) {
             onSubmit();
@@ -133,6 +134,7 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
         }}
       >
         <button
+          type="button"
           onClick={onCancel}
           style={{
             padding: "8px 16px",
@@ -147,6 +149,7 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
           Cancel
         </button>
         <button
+          type="button"
           onClick={onSubmit}
           disabled={!allowEmpty && !textValue?.trim()}
           style={{
@@ -431,6 +434,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         <div style={{ display: "flex", gap: "4px" }}>
           {/* Text Edit Button */}
           <button
+            type="button"
             style={{
               background: "none",
               border: "none",
@@ -455,6 +459,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
           {/* Color Picker Button */}
           {onOpenAnnotationColorPicker && (
             <button
+              type="button"
               style={{
                 background: "none",
                 border: "none",
@@ -495,6 +500,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
               title="Change annotation color"
             >
               <svg
+                aria-label="Change annotation color"
+                role="img"
                 width="14"
                 height="14"
                 viewBox="0 0 24 24"
@@ -513,6 +520,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const headerActions = (
     <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
       <button
+        type="button"
         style={{
           background: "#4CAF50",
           border: "none",
@@ -533,6 +541,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       </button>
       {annotations.length > 0 && (
         <button
+          type="button"
           style={{
             background: "#f44336",
             border: "none",

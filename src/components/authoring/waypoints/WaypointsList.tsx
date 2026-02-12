@@ -81,7 +81,7 @@ const WaypointsList = (props: WaypointsListProps) => {
         importWaypointAnnotations(arrows, overlays);
       }
     }
-  }, [stories, activeStoryIndex, imageWidth, imageHeight]);
+  }, [stories, activeStoryIndex, imageWidth, imageHeight, clearImportedAnnotations, importWaypointAnnotations]);
 
   // Convert stories to ListItem format with inline annotations panel
   const listItems: ListItem<
@@ -229,7 +229,8 @@ const WaypointsList = (props: WaypointsListProps) => {
     return (
       <div style={{ display: "flex", gap: "4px" }}>
         {/* Drag Handle */}
-        <div
+        <button
+          type="button"
           style={{
             cursor: "grab",
             padding: "4px",
@@ -238,6 +239,8 @@ const WaypointsList = (props: WaypointsListProps) => {
             justifyContent: "center",
             color: "#999",
             fontSize: "12px",
+            background: "none",
+            border: "none",
           }}
           draggable
           onDragStart={(e) => handleDragStart(storyId, e)}
@@ -245,10 +248,11 @@ const WaypointsList = (props: WaypointsListProps) => {
           title="Drag to reorder"
         >
           ⋮⋮
-        </div>
+        </button>
 
         {/* Text Editor Button (disabled) */}
         <button
+          type="button"
           style={{
             background: "none",
             border: "none",
@@ -274,6 +278,7 @@ const WaypointsList = (props: WaypointsListProps) => {
 
         {/* Annotations Panel Button */}
         <button
+          type="button"
           style={{
             background: "none",
             border: "none",

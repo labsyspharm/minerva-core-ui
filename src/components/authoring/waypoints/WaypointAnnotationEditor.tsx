@@ -140,6 +140,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         {/* Toolbar with drawing tools - same as main overlays */}
         <div className={styles.toolbar}>
           <button
+            type="button"
             className={`${styles.toolButton} ${activeTool === TOOLS.MOVE ? styles.active : ""}`}
             title="Move Tool"
             onClick={() => handleToolChangeLocal(TOOLS.MOVE)}
@@ -148,6 +149,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
           </button>
 
           <button
+            type="button"
             className={`${styles.toolButton} ${activeTool === TOOLS.RECTANGLE ? styles.active : ""}`}
             title="Rectangle Tool (R)"
             onClick={() => handleToolChangeLocal(TOOLS.RECTANGLE)}
@@ -156,6 +158,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
           </button>
 
           <button
+            type="button"
             className={`${styles.toolButton} ${activeTool === TOOLS.ELLIPSE ? styles.active : ""}`}
             title="Ellipse Tool (E)"
             onClick={() => handleToolChangeLocal(TOOLS.ELLIPSE)}
@@ -164,6 +167,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
           </button>
 
           <button
+            type="button"
             className={`${styles.toolButton} ${activeTool === TOOLS.LASSO ? styles.active : ""}`}
             title="Lasso Tool (L)"
             onClick={() => handleToolChangeLocal(TOOLS.LASSO)}
@@ -172,6 +176,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
           </button>
 
           <button
+            type="button"
             className={`${styles.toolButton} ${activeTool === TOOLS.LINE ? styles.active : ""}`}
             title="Line Tool"
             onClick={() => handleToolChangeLocal(TOOLS.LINE)}
@@ -180,6 +185,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
           </button>
 
           <button
+            type="button"
             className={`${styles.toolButton} ${activeTool === TOOLS.POLYLINE ? styles.active : ""}`}
             title="Poly-line Tool"
             onClick={() => handleToolChangeLocal(TOOLS.POLYLINE)}
@@ -188,6 +194,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
           </button>
 
           <button
+            type="button"
             className={`${styles.toolButton} ${activeTool === TOOLS.TEXT ? styles.active : ""}`}
             title="Text Tool"
             onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
@@ -196,6 +203,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
           </button>
 
           <button
+            type="button"
             className={`${styles.toolButton} ${activeTool === TOOLS.POINT ? styles.active : ""}`}
             title="Point Tool"
             onClick={() => handleToolChangeLocal(TOOLS.POINT)}
@@ -204,6 +212,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
           </button>
 
           <button
+            type="button"
             className={styles.toolButton}
             title="Color Picker"
             onClick={handleColorPickerOpen}
@@ -265,6 +274,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
                   : "Choose Drawing Color"}
               </h3>
               <button
+                type="button"
                 onClick={handleColorPickerCancel}
                 style={{
                   background: "none",
@@ -290,6 +300,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
               }}
             >
               <button
+                type="button"
                 onClick={handleColorChangeComplete}
                 style={{
                   padding: "8px 16px",

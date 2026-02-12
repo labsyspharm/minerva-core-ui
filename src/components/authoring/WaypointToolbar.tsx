@@ -30,11 +30,11 @@ export const WaypointToolbar = (props: WaypointToolbarProps) => {
     onClick: togglePanel,
   };
   const zoomInProps = {
-    ref: React.useCallback(onZoomInEl, []),
+    ref: React.useCallback(onZoomInEl, [onZoomInEl]),
     icon: faPlus,
   };
   const zoomOutProps = {
-    ref: React.useCallback(onZoomOutEl, []),
+    ref: React.useCallback(onZoomOutEl, [onZoomOutEl]),
     icon: faMinus,
   };
   const infoProps = {
