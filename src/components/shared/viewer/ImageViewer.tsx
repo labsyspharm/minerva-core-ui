@@ -71,7 +71,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     dicomIndexList,
     groups,
     stories,
-    hash,
     setHash,
     overlayLayers = [],
     activeTool,
@@ -80,14 +79,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
     onOverlayInteraction,
     viewerConfig,
   } = props;
-  const { v, g, s, w } = hash;
   const { activeChannelGroupId, channelVisibilities } = useOverlayStore();
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [canvas, setCanvas] = useState(null);
   const rootRef = useRef<HTMLElement | null>(null);
-
-  // Memoize expensive computations
-  const waypoint = useMemo(() => getWaypoint(stories, s, w), [stories, s, w]);
 
   // Set up ResizeObserver to track viewport size changes
   useEffect(() => {
