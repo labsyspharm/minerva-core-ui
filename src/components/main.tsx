@@ -1,10 +1,14 @@
 import * as React from "react";
-import styled from 'styled-components';
+import styled from "styled-components";
 import { author } from "@/minerva-author-ui/author";
 import { useState, useMemo, useEffect } from "react";
 import { loadDicomWeb, parseDicomWeb } from "@/lib/dicom";
 import { toEmptyHash } from "@/lib/hashUtil";
-import { mutableItemRegistry, extractChannels, extractDistributions } from "@/lib/config";
+import {
+  mutableItemRegistry,
+  extractChannels,
+  extractDistributions,
+} from "@/lib/config";
 import { hasFileSystemAccess, toLoader } from "@/lib/filesystem";
 import { isOpts, validate } from "@/lib/validate";
 import { Upload } from "@/components/shared/Upload";
@@ -13,7 +17,10 @@ import Pool from "@/lib/workers/Pool";
 import { parseRoisFromLoader } from "@/lib/roiParser";
 import { useOverlayStore } from "@/lib/stores";
 import { FileHandler } from "@/components/shared/FileHandler";
-import { ImageViewer, toImageProps } from "@/components/shared/viewer/ImageViewer";
+import {
+  ImageViewer,
+  toImageProps,
+} from "@/components/shared/viewer/ImageViewer";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 import { Presentation } from "@/components/playback/Presentation";
@@ -53,7 +60,7 @@ const Wrapper = styled.div`
 
 const Full = styled.div`
   max-height: 100vh;
-`
+`;
 
 const Scrollable = styled.div`
   z-index: 2;
@@ -141,47 +148,51 @@ const Content = (props: Props) => {
   const [exhibit, setExhibit] = useState(firstExhibit);
   const [hash, _setHash] = useState(toEmptyHash(exhibit.stories));
   const setHash = (partial_hash) => {
-    _setHash({...hash, ...partial_hash})
-  }
+    _setHash({ ...hash, ...partial_hash });
+  };
   const [loaderOmeTiff, setLoaderOmeTiff] = useState(null);
-  const [dicomIndexList, setDicomIndexList] = useState(
-    [] as DicomIndex[]
-  );
+  const [dicomIndexList, setDicomIndexList] = useState([] as DicomIndex[]);
   const [config, setConfig] = useState({
     ItemRegistry: {
-      Name: '',
+      Name: "",
       SourceDistributions: [],
       Stories: props.configWaypoints,
     } as ItemRegistryProps,
-    ID: crypto.randomUUID()
+    ID: crypto.randomUUID(),
   });
-  
+
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
   const [presenting, setPresenting] = useState(false);
   const [zoomInEl, setZoomIn] = useState(null);
   const [zoomOutEl, setZoomOut] = useState(null);
   const [editable, setEditable] = useState(false);
-  const checkWindow = () => {
-    return window.innerWidth > 600;
-  }
+  const checkWindow = React.useCallback(() => window.innerWidth > 600, []);
+
   const [twoNavOk, setTwoNavOk] = useState(checkWindow());
   const [hiddenWaypoint, setHideWaypoint] = useState(false);
   const [hiddenChannel, setHideChannel] = useState(!twoNavOk);
-  
-  const handleResize = () => {
+
+  const handleResize = React.useCallback(() => {
     const twoNavPossible = checkWindow();
+
     if (!twoNavPossible) {
       setHideWaypoint(false);
       setHideChannel(true);
     }
     setTwoNavOk(twoNavPossible);
-  }
-  
+  }, [checkWindow]);
+
   React.useEffect(() => {
+    // sync once on mount (and when handleResize changes)
+    handleResize();
+
     window.addEventListener("resize", handleResize, false);
-  }, []);
-  
+    return () => {
+      window.removeEventListener("resize", handleResize, false);
+    };
+  }, [handleResize]);
+
   const startExport = () => setIoState("EXPORTING");
   const stopExport = () => setIoState("IDLE");
   const toggleEditor = () => setEditable(!editable);
@@ -190,242 +201,237 @@ const Content = (props: Props) => {
   const onZoomOutEl = onLoaded(setZoomOut);
 
   const setHiddenChannelWithLogic = (v: boolean) => {
-    if(!twoNavOk && !v) {
+    if (!twoNavOk && !v) {
       setHideWaypoint(true);
     }
-    setHideChannel(v)
-  }
-  
+    setHideChannel(v);
+  };
+
   const setHiddenWaypointWithLogic = (v: boolean) => {
-    if(!twoNavOk && !v) {
+    if (!twoNavOk && !v) {
       setHideChannel(true);
     }
-    setHideWaypoint(v)
-  }
+    setHideWaypoint(v);
+  };
 
   // Active Group from Store
-  const { 
+  const {
     setActiveChannelGroup,
     setChannelVisibilities,
     setGroupChannelLists,
     setGroupNames,
-    setGroups, Groups,
-    setSourceChannels, SourceChannels
+    setGroups,
+    Groups,
+    setSourceChannels,
+    SourceChannels,
   } = useOverlayStore();
 
-  const updateGroupChannelLists = ({
-    Groups, SourceChannels
-  }) => {
-    setGroupNames(Object.fromEntries(
-      Groups.map(({ Name, UUID }) => [
-        UUID, Name
-      ])
-    ))
-    const toChannelList = (GroupChannels => {
-      return GroupChannels.map(
-        ({ SourceChannel }) => (
-          SourceChannels.find(({ UUID }) => (
-            UUID === SourceChannel.UUID
-          ))
-        )
-      ).filter(x => x).map(({ Name }) => Name);
-    })
+  const updateGroupChannelLists = ({ Groups, SourceChannels }) => {
+    setGroupNames(
+      Object.fromEntries(Groups.map(({ Name, UUID }) => [UUID, Name])),
+    );
+    const toChannelList = (GroupChannels) => {
+      return GroupChannels.map(({ SourceChannel }) =>
+        SourceChannels.find(({ UUID }) => UUID === SourceChannel.UUID),
+      )
+        .filter((x) => x)
+        .map(({ Name }) => Name);
+    };
     const groupChannelLists = Object.fromEntries(
       Groups.map(({ Name, GroupChannels }) => {
-        return [ Name, toChannelList(GroupChannels) ]; 
-      })
-    )
-    setGroupChannelLists(groupChannelLists)
+        return [Name, toChannelList(GroupChannels)];
+      }),
+    );
+    setGroupChannelLists(groupChannelLists);
     const defaultGroup = Groups[0] || {
       GroupChannels: [],
-      Name: ""
-    }
+      Name: "",
+    };
     const groupName = defaultGroup.Name;
-    const channelList = groupChannelLists[
-      groupName
-    ] || [];
+    const channelList = groupChannelLists[groupName] || [];
     console.log(groupChannelLists);
-    setChannelVisibilities(Object.fromEntries(
-      channelList.map((name) => [name, true])
-    ))
-  }
-  
-  const resetItems = ItemRegistry => {
-    setConfig(config => ({
-      ...config, ItemRegistry: {
-        ...config.ItemRegistry, ...ItemRegistry
+    setChannelVisibilities(
+      Object.fromEntries(channelList.map((name) => [name, true])),
+    );
+  };
+
+  const resetItems = (ItemRegistry) => {
+    setConfig((config) => ({
+      ...config,
+      ItemRegistry: {
+        ...config.ItemRegistry,
+        ...ItemRegistry,
       },
-      ID: crypto.randomUUID()
+      ID: crypto.randomUUID(),
     }));
     const { Groups } = ItemRegistry;
-    if ( Groups?.length > 0) {
-      setActiveChannelGroup(Groups[0].UUID)
+    if (Groups?.length > 0) {
+      setActiveChannelGroup(Groups[0].UUID);
     }
   };
-  
-  const setItems = ItemRegistry => {
-    setConfig(config => ({
-      ...config, ItemRegistry: {
-        ...config.ItemRegistry, ...ItemRegistry
+
+  const setItems = (ItemRegistry) => {
+    setConfig((config) => ({
+      ...config,
+      ItemRegistry: {
+        ...config.ItemRegistry,
+        ...ItemRegistry,
       },
     }));
-  }
-  
-  const [fileName, setFileName] = useState('');
-  
+  };
+
+  const [fileName, setFileName] = useState("");
+
   const onStartOmeTiff = async (in_f: string, handle: Handle.Dir) => {
     if (handle === null) return;
     const loader = await toLoader({ handle, in_f, pool: new Pool() });
-    const {
-      SourceChannels, Groups
-    } = extractChannels(loader, "Colorimetric", []);
-    setSourceChannels(SourceChannels)
+    const { SourceChannels, Groups } = extractChannels(
+      loader,
+      "Colorimetric",
+      [],
+    );
+    setSourceChannels(SourceChannels);
     setGroups(Groups);
     updateGroupChannelLists({
-      Groups, SourceChannels
-    })
+      Groups,
+      SourceChannels,
+    });
     // Asynchronously add distributions
-    extractDistributions(loader).then(
-      (sourceDistributionMap) => {
-        const SourceDistributions = sourceDistributionMap.values();
-        resetItems({
-          SourceDistributions: [...SourceDistributions],
-          SourceChannels: SourceChannels.map(sourceChannel => ({
-            ...sourceChannel, 
-            SourceDistribution: sourceDistributionMap.get(
-              sourceChannel.SourceIndex
-            )
-          }))
-        });
-      }
-    );
+    extractDistributions(loader).then((sourceDistributionMap) => {
+      const SourceDistributions = sourceDistributionMap.values();
+      resetItems({
+        SourceDistributions: [...SourceDistributions],
+        SourceChannels: SourceChannels.map((sourceChannel) => ({
+          ...sourceChannel,
+          SourceDistribution: sourceDistributionMap.get(
+            sourceChannel.SourceIndex,
+          ),
+        })),
+      });
+    });
     setLoaderOmeTiff(loader);
     setFileName(in_f);
-  }
-  
+  };
+
   const onStart = async (
     imagePropList: [string, string, string][],
-    handle: Handle.Dir | null
+    handle: Handle.Dir | null,
   ) => {
-    if ( imagePropList.length === 0 ) {
+    if (imagePropList.length === 0) {
       return;
     }
     // handle hard-coded channels for dicom-web demo
-    const dicomPropList = imagePropList.filter(
-      ([series, modality, type]) => type === "DICOM-WEB"
-    ).map(
-      ([series, modality]) => [series, modality]
-    ) as (
-      [string, string][]
-    )
+    const dicomPropList = imagePropList
+      .filter(([series, modality, type]) => type === "DICOM-WEB")
+      .map(([series, modality]) => [series, modality]) as [string, string][];
     if (dicomPropList.length > 0) {
-      await onStartDicomWeb(
-        dicomPropList, props.exhibit_config.Groups
-      );
+      await onStartDicomWeb(dicomPropList, props.exhibit_config.Groups);
     }
     // handle only one ome-tiff image ( TODO support more )
-    const omeTiffPropList = imagePropList.filter(
-      ([path, modality, type]) => type === "OME-TIFF"
-    ).map(
-      ([path]) => [path]
-    )
+    const omeTiffPropList = imagePropList
+      .filter(([path, modality, type]) => type === "OME-TIFF")
+      .map(([path]) => [path]);
     if (omeTiffPropList.length > 0 && handle) {
       await onStartOmeTiff(omeTiffPropList[0][0], handle);
     }
-  }
-  
+  };
+
   // Dicom Web derived state
   const onStartDicomWeb = async (
     imagePropList: [string, string][],
-    groups: ConfigGroup[]
+    groups: ConfigGroup[],
   ) => {
     const indexList = await Promise.all(
-      imagePropList.map(
-        async ( [series, modality] ) => {
+      imagePropList.map(async ([series, modality]) => {
         const pyramids = await loadDicomWeb(series);
-        const loader = (
-          parseDicomWeb(series, pyramids) as DicomLoader
-        );
+        const loader = parseDicomWeb(series, pyramids) as DicomLoader;
         return {
-          series, pyramids, modality, loader
-        }
-      })
+          series,
+          pyramids,
+          modality,
+          loader,
+        };
+      }),
     );
     setDicomIndexList(indexList);
-    const {
-      SourceChannels, Groups
-    } = indexList.reduce(
+    const { SourceChannels, Groups } = indexList.reduce(
       (registry, { loader, modality }) => {
         const relevant_groups = groups.filter(
-          ({ Image }) => Image.Method === modality
-        )
-        const {
-          SourceChannels, Groups
-        } = extractChannels(
-          loader, modality, relevant_groups
+          ({ Image }) => Image.Method === modality,
+        );
+        const { SourceChannels, Groups } = extractChannels(
+          loader,
+          modality,
+          relevant_groups,
         );
         return {
-          SourceChannels: [
-            ...registry.SourceChannels, ...SourceChannels
-          ],
-          Groups: [
-            ...registry.Groups, ...Groups
-          ]
+          SourceChannels: [...registry.SourceChannels, ...SourceChannels],
+          Groups: [...registry.Groups, ...Groups],
         };
       },
       {
         SourceChannels: [],
-        Groups: []
-      }
-    )
+        Groups: [],
+      },
+    );
     setGroups(Groups);
     setSourceChannels(SourceChannels);
     updateGroupChannelLists({
-      Groups, SourceChannels
+      Groups,
+      SourceChannels,
     });
-  }
-  
-  const mutableFields: MutableFields = [
-  ]
+  };
+
+  const mutableFields: MutableFields = [];
   const ItemRegistry = mutableItemRegistry(
-    config.ItemRegistry, setItems, mutableFields
-  )
-  
-  // Define a WebComponent for the item panel
-  const controlPanelElement = useMemo(() => author({
-    ...config, ItemRegistry
-  }), [config.ID])
-  
-  const [valid, setValid] = useState({} as ValidObj);
-  
-  if (props.demo_dicom_web) {
-    useEffect(() => {
-      (async () => {
-        // H&E Demo Image and
-        // CyCIF Demo Image
-        await onStart([[
-          "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.2507374895.494638264.1767738966319.4.0",
-          "Brightfield",
-          "DICOM-WEB"
-        ],
-        [
-          "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.331207435.2054329796.1752677896971.4.0",
-          "Colorimetric",
-          "DICOM-WEB"
-        ]], null as Handle.Dir | null)
-      })()
-    }, []);
-  }
-  
-  const noLoader = loaderOmeTiff === null && (
-    dicomIndexList.length === 0
-  ) && !(
-    props.demo_dicom_web
+    config.ItemRegistry,
+    setItems,
+    mutableFields,
   );
+
+  // Define a WebComponent for the item panel
+  const controlPanelElement = useMemo(
+    () =>
+      author({
+        ...config,
+        ItemRegistry,
+      }),
+    [config, ItemRegistry],
+  );
+
+  const [valid, setValid] = useState({} as ValidObj);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: demo runs once on mount when demo_dicom_web is true
+  useEffect(() => {
+    if (!props.demo_dicom_web) return;
+    (async () => {
+      // H&E Demo Image and CyCIF Demo Image
+      await onStart(
+        [
+          [
+            "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.2507374895.494638264.1767738966319.4.0",
+            "Brightfield",
+            "DICOM-WEB",
+          ],
+          [
+            "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.331207435.2054329796.1752677896971.4.0",
+            "Colorimetric",
+            "DICOM-WEB",
+          ],
+        ],
+        null as Handle.Dir | null,
+      );
+    })();
+  }, [props.demo_dicom_web]);
+
+  const noLoader =
+    loaderOmeTiff === null &&
+    dicomIndexList.length === 0 &&
+    !props.demo_dicom_web;
 
   // Exhibit editing operations (from Index)
   const { name, groups, stories } = exhibit;
-  
+
   const updateWaypoint = (newWaypoint: WaypointType, { s, w }: any) => {
     const oldWaypoint = stories[s]?.waypoints[w];
     if (!oldWaypoint) {
@@ -434,7 +440,7 @@ const Content = (props: Props) => {
     const ex = setWaypoint({ exhibit, s, w, newWaypoint });
     setExhibit(ex);
   };
-  
+
   const pushWaypoint = (newWaypoint: WaypointType, { s }: any) => {
     if (!stories[s]) {
       throw `Cannot push waypoint. Story ${s} does not exist!`;
@@ -443,7 +449,7 @@ const Content = (props: Props) => {
     const ex = setWaypoint({ exhibit, s, w, newWaypoint });
     setExhibit(ex);
   };
-  
+
   const popWaypoint = ({ s, w }) => {
     const story = stories[s];
     const oldWaypoints = story?.waypoints;
@@ -459,13 +465,13 @@ const Content = (props: Props) => {
     const ex = setGroup({ exhibit, g, newGroup });
     setExhibit(ex);
   };
-  
+
   const pushGroup = (newGroup) => {
     const g = exhibit.groups.length;
     const ex = setGroup({ exhibit, g, newGroup });
     setExhibit(ex);
   };
-  
+
   const popGroup = ({ g }) => {
     if (groups.length <= 1) {
       throw "Unable to pop last group";
@@ -493,7 +499,7 @@ const Content = (props: Props) => {
     const ex = setChannel({ exhibit, g, idx, newChannel });
     setExhibit(ex);
   };
-  
+
   const pushChannel = (newChannel, { g }) => {
     const group = groups[g];
     if (!group) {
@@ -503,7 +509,7 @@ const Content = (props: Props) => {
     const ex = setChannel({ exhibit, g, idx, newChannel });
     setExhibit(ex);
   };
-  
+
   const popChannel = ({ g, idx }) => {
     const group = groups[g];
     const channels = group?.channels;
@@ -517,38 +523,39 @@ const Content = (props: Props) => {
 
   // Data transformation (from Index)
   const itemRegistryMarkerNames = SourceChannels.map(
-    source_channel => source_channel.Name
-  )
-  
+    (source_channel) => source_channel.Name,
+  );
+
   const itemRegistryGroups = React.useMemo(() => {
     return Groups.map((group, g) => {
       const { Name, GroupChannels } = group;
-      const channels = GroupChannels.map(group_channel => {
-        const defaults = { Name: '' };
+      const channels = GroupChannels.map((group_channel) => {
+        const defaults = { Name: "" };
         const { R, G, B } = group_channel.Color;
-        const color = (
-          (1 << 24) + (R << 16) + (G << 8) + B
-        ).toString(16).slice(1);
+        const color = ((1 << 24) + (R << 16) + (G << 8) + B)
+          .toString(16)
+          .slice(1);
         const { LowerRange, UpperRange } = group_channel;
         const { SourceChannel } = group_channel;
-        const { Name } = SourceChannels.find(source_channel => (
-          source_channel.UUID == SourceChannel.UUID
-        )) || defaults;
-        return { 
-          color, name: Name, contrast: [
-            LowerRange, UpperRange
-          ]
+        const { Name } =
+          SourceChannels.find(
+            (source_channel) => source_channel.UUID == SourceChannel.UUID,
+          ) || defaults;
+        return {
+          color,
+          name: Name,
+          contrast: [LowerRange, UpperRange],
         };
       });
-      return { 
+      return {
         State: group.State,
-        g, name: Name, channels,
+        g,
+        name: Name,
+        channels,
       };
-    })
-  }, [
-    Groups 
-  ]);
-  
+    });
+  }, [Groups, SourceChannels]);
+
   const channelProps = {
     hash,
     setHash,
@@ -568,13 +575,10 @@ const Content = (props: Props) => {
     pushChannel,
     popChannel,
   };
-  
-  const retrievingMetadata = (
-    dicomIndexList.length === 0
-  ) && (
-    props.demo_dicom_web
-  );
-  
+
+  const retrievingMetadata =
+    dicomIndexList.length === 0 && props.demo_dicom_web;
+
   const mainProps = {
     ...channelProps,
     in_f: fileName,
@@ -592,9 +596,9 @@ const Content = (props: Props) => {
     toggleEditor,
     updateWaypoint,
     pushWaypoint,
-    popWaypoint
-  }
-  
+    popWaypoint,
+  };
+
   const imageProps = React.useMemo(() => {
     return toImageProps({
       props: {
@@ -611,9 +615,14 @@ const Content = (props: Props) => {
       },
     });
   }, [
-    loaderOmeTiff, dicomIndexList, itemRegistryMarkerNames, channelProps, zoomInEl, zoomOutEl
+    loaderOmeTiff,
+    dicomIndexList,
+    itemRegistryMarkerNames,
+    channelProps,
+    zoomInEl,
+    zoomOutEl,
   ]);
-  
+
   // Use Zustand store for overlay state management
   const {
     overlayLayers,
@@ -630,7 +639,7 @@ const Content = (props: Props) => {
     setStories,
     setWaypoints,
   } = useOverlayStore();
-  
+
   // Initialize stories in the store when config changes
   useEffect(() => {
     if (config.ItemRegistry.Stories) {
@@ -645,11 +654,11 @@ const Content = (props: Props) => {
     if (hasStories && activeStoryIndex === null) {
       setActiveStory(0);
     }
-  }, [_stories])
+  }, [_stories]);
 
   const retrieving_status = (
     <RetrievingWrapper>Retrieving DICOM metadata...</RetrievingWrapper>
-  )
+  );
 
   return (
     <FileHandler handleKeys={handleKeys}>
@@ -657,14 +666,21 @@ const Content = (props: Props) => {
         const onSubmit: FormEventHandler = (event) => {
           const form = event.currentTarget as HTMLFormElement;
           const data = [...new FormData(form).entries()];
-          const formOut = data.reduce(((o, [k, v]) => {
-            return { ...o, [k]: `${v}` };
-          }) as ReduceFormData, { mask: "" });
-          const formOpts = { formOut, onStart: (list) => onStart(list, handle), handle };
+          const formOut = data.reduce(
+            ((o, [k, v]) => {
+              return { ...o, [k]: `${v}` };
+            }) as ReduceFormData,
+            { mask: "" },
+          );
+          const formOpts = {
+            formOut,
+            onStart: (list) => onStart(list, handle),
+            handle,
+          };
           if (isOpts(formOpts)) {
             validate(formOpts).then((valid: ValidObj) => {
               setValid(valid);
-            })
+            });
           }
           event.preventDefault();
           event.stopPropagation();
@@ -672,44 +688,48 @@ const Content = (props: Props) => {
 
         const formProps = { onSubmit, valid };
         const uploadProps = {
-          handleKeys, 
-          formProps, 
+          handleKeys,
+          formProps,
           handle,
-          onAllow, 
-          onRecall
+          onAllow,
+          onRecall,
         };
-        const importer = !noLoader ? '' : (
+        const importer = !noLoader ? (
+          ""
+        ) : (
           <Scrollable>
             <Upload {...uploadProps} />
           </Scrollable>
         );
-        
+
         // Update mainProps with actual handle
         const mainPropsWithHandle = {
           ...mainProps,
-          handle
+          handle,
         };
-        
+
         // Actual image viewer
-        const imager = noLoader ? '' : (
+        const imager = noLoader ? (
+          ""
+        ) : (
           <Full>
             <PlaybackRouter {...mainPropsWithHandle}>
-              {
-                retrievingMetadata ? retrieving_status : (
-                  <ImageViewer 
-                    {...imageProps} 
-                    overlayLayers={overlayLayers}
-                    activeTool={activeTool}
-                    isDragging={dragState.isDragging}
-                    hoveredAnnotationId={hoverState.hoveredAnnotationId}
-                    onOverlayInteraction={handleOverlayInteraction}
-                  />
-                )
-              }
+              {retrievingMetadata ? (
+                retrieving_status
+              ) : (
+                <ImageViewer
+                  {...imageProps}
+                  overlayLayers={overlayLayers}
+                  activeTool={activeTool}
+                  isDragging={dragState.isDragging}
+                  hoveredAnnotationId={hoverState.hoveredAnnotationId}
+                  onOverlayInteraction={handleOverlayInteraction}
+                />
+              )}
             </PlaybackRouter>
           </Full>
         );
-        
+
         return (
           <Wrapper>
             {imager}
@@ -725,7 +745,11 @@ const Main = (props: Props) => {
   if (props.demo_dicom_web || hasFileSystemAccess()) {
     return <Content {...props} />;
   } else {
-    return <div><p>Unable to access FileSystem API.</p></div>;
+    return (
+      <div>
+        <p>Unable to access FileSystem API.</p>
+      </div>
+    );
   }
 };
 
