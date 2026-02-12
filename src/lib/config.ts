@@ -84,21 +84,25 @@ type TileProps = {
   maxZoom?: number;
   extent?: Four;
 };
-type TileConfig = {
-  x: number;
-  y: number;
+type SelectionConfig = {
   signal: AbortSignal;
   selection: {
     t: number;
     z: number;
     c: number;
   };
+}
+type TileConfig = SelectionConfig & {
+  x: number;
+  y: number;
 };
 export type LoaderPlane = {
   dtype: Dtype;
   shape: number[];
   tileSize: number;
   labels: string[];
+  onTileError: (e: Error) => void;
+  getRaster: (s: SelectionConfig) => Promise<HasTile>;
   getTile: (s: TileConfig) => Promise<HasTile>;
 };
 type ToTilePlane = (z: number, l: LoaderPlane[]) => LoaderPlane
