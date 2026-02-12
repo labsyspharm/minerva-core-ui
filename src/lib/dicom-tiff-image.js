@@ -67,7 +67,7 @@ class DicomTIFFImage {
         };
       }
       const optimization = true;
-      if (littleEndianPlatform == this.littleEndian && optimization) {
+      if (littleEndianPlatform === this.littleEndian && optimization) {
         const data = new Uint16Array(tile.data.buffer);
         const full = data.length === fullTile;
         // Blackout missing data
@@ -112,8 +112,8 @@ class DicomTIFFImage {
     const { signal } = options;
     const { x, y, height, width } = options;
     const samples = options.samples ?? [0];
-    const origin_x = x * this.tileWidth;
-    const origin_y = y * this.tileHeight;
+    const _origin_x = x * this.tileWidth;
+    const _origin_y = y * this.tileHeight;
     const sample = samples[0];
     const raster = await this._readRaster({
       x,

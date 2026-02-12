@@ -3,17 +3,12 @@ import styled from "styled-components";
 import { author } from "@/minerva-author-ui/author";
 import { useState, useMemo, useEffect } from "react";
 import { loadDicomWeb, parseDicomWeb } from "@/lib/dicom";
-import { toEmptyHash } from "@/lib/hashUtil";
-import {
-  mutableItemRegistry,
-  extractChannels,
-  extractDistributions,
-} from "@/lib/config";
+import { mutableItemRegistry, extractChannels, extractDistributions } from "@/lib/config";
 import { hasFileSystemAccess, toLoader } from "@/lib/filesystem";
 import { isOpts, validate } from "@/lib/validate";
 import { Upload } from "@/components/shared/Upload";
 import { readConfig } from "@/lib/exhibit";
-import Pool from "@/lib/workers/Pool";
+import { Pool } from "@/lib/workers/Pool";
 import { parseRoisFromLoader } from "@/lib/roiParser";
 import { useOverlayStore } from "@/lib/stores";
 import { FileHandler } from "@/components/shared/FileHandler";
@@ -29,14 +24,12 @@ import type { DicomIndex, DicomLoader } from "@/lib/dicom-index";
 import type { ValidObj } from "@/components/shared/Upload";
 import type { ImageProps } from "@/components/shared/common/types";
 import type { FormEventHandler } from "react";
-import type { ObjAny, KV } from "@/lib/validate";
 import type { ItemRegistryProps } from "@/lib/config";
 import type { ConfigWaypoint } from "@/lib/config";
 import type { MutableFields } from "@/lib/config";
 import type { ExhibitConfig } from "@/lib/exhibit";
 import type { ConfigGroup } from "@/lib/exhibit";
 import type { Waypoint as WaypointType, Exhibit } from "@/lib/exhibit";
-import type { HashContext } from "@/lib/hashUtil";
 import type { ConfigProps } from "@/lib/config";
 import type { Loader } from "@/lib/viv";
 
@@ -46,10 +39,6 @@ type Props = ImageProps & {
   demo_dicom_web?: boolean;
   handleKeys: string[];
 };
-
-interface ReduceFormData {
-  (o: ObjAny, kv: KV): ObjAny;
-}
 
 const Wrapper = styled.div`
   height: 100%;
@@ -146,10 +135,6 @@ const Content = (props: Props) => {
   const { handleKeys } = props;
   const firstExhibit = readConfig(props.exhibit_config);
   const [exhibit, setExhibit] = useState(firstExhibit);
-  const [hash, _setHash] = useState(toEmptyHash(exhibit.stories));
-  const setHash = (partial_hash) => {
-    _setHash({ ...hash, ...partial_hash });
-  };
   const [loaderOmeTiff, setLoaderOmeTiff] = useState(null);
   const [dicomIndexList, setDicomIndexList] = useState([] as DicomIndex[]);
   const [config, setConfig] = useState({
@@ -557,8 +542,6 @@ const Content = (props: Props) => {
   }, [Groups, SourceChannels]);
 
   const channelProps = {
-    hash,
-    setHash,
     name,
     stories,
     authorMode: !presenting,
@@ -666,16 +649,13 @@ const Content = (props: Props) => {
         const onSubmit: FormEventHandler = (event) => {
           const form = event.currentTarget as HTMLFormElement;
           const data = [...new FormData(form).entries()];
-          const formOut = data.reduce(
-            ((o, [k, v]) => {
-              return { ...o, [k]: `${v}` };
-            }) as ReduceFormData,
-            { mask: "" },
-          );
+          const formOut = data.reduce(((o, [k, v]) => {
+            return { ...o, [k]: `${v}` };
+          }), { 
+            mask: "", url: "", name: ""
+          });
           const formOpts = {
-            formOut,
-            onStart: (list) => onStart(list, handle),
-            handle,
+            formOut, onStart: (list) => onStart(list, handle), handle
           };
           if (isOpts(formOpts)) {
             validate(formOpts).then((valid: ValidObj) => {

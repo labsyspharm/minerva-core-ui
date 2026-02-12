@@ -24,7 +24,6 @@ import { toSettings } from "@/lib/viv";
 import type { DicomIndex } from "@/lib/dicom-index";
 import type { Config, Loader } from "@/lib/viv";
 import type { Group, Story } from "@/lib/exhibit";
-import type { HashContext } from "@/lib/hashUtil";
 import type { ConfigProps } from "@/lib/config";
 
 export type ImageViewerProps = {
@@ -45,7 +44,7 @@ export type ImageViewerProps = {
   zoomInButton?: HTMLElement | null;
   zoomOutButton?: HTMLElement | null;
   [key: string]: any;
-} & HashContext;
+};
 
 export const toImageProps = (opts: { props: any; buttons: any }) => {
   const { props, buttons } = opts;

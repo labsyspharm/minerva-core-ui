@@ -1,13 +1,14 @@
 // Types
-import type { HashState } from "./hashUtil";
 
 export type Waypoint = {
   name: string;
   audio?: string;
   markdown: string;
-  g: HashState["g"];
-  v: HashState["v"];
-  lensing?: any;
+  g: number;
+  v: number[];
+  lensing?: {
+      group: string;
+  };
 };
 
 export type Story = {
@@ -21,7 +22,7 @@ export type Channel = {
 
 export type Group = {
   name: string;
-  g: HashState["g"];
+  g: number;
   channels: Channel[];
 };
 
@@ -53,7 +54,9 @@ export interface ExhibitConfig {
       Name: string;
       Zoom: number;
       Pan: [number, number];
-      Lensing?: any;
+      Lensing?: {
+        group: string;
+      };
     }[];
   }[];
 }

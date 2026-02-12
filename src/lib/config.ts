@@ -1,6 +1,5 @@
-import { useRef, useEffect } from "react";
+
 import { getImageSize } from "@hms-dbmi/viv";
-import { list_colors } from "../minerva-author-ui/author";
 import type { ConfigSourceChannel, ConfigGroup } from "./document-store";
 import type { ConfigGroup as LegacyConfigGroup } from "./exhibit";
 import type { Loader } from "./viv";
@@ -95,7 +94,7 @@ type TileConfig = {
     c: number;
   };
 };
-type LoaderPlane = {
+export type LoaderPlane = {
   dtype: Dtype;
   shape: number[];
   tileSize: number;
@@ -202,7 +201,7 @@ const captureTile: CaptureTile = async (index, planes) => {
   const level = Math.abs(index.z);
   const z_plane = planes[level];
   const selection = { t: 0, z: 0, c: index.c };
-  const signal = (AbortSignal as any).timeout(10 * 1000);
+  const signal = (AbortSignal).timeout(10 * 1000);
   const { x, y } = index;
   const tile = await z_plane.getTile({
     selection,
@@ -229,7 +228,7 @@ const bin: Bin = async (inputs) => {
   );
   // Count indices with data between thresholds
   return thresholds.reduce((binned, threshold, t) => {
-    if (t > 0 && thresholds[t - 1] == threshold) {
+    if (t > 0 && thresholds[t - 1] === threshold) {
       return binned.concat(binned.slice(-1));
     }
     const outside_indices = indices.filter((i) => data[i] > threshold);
@@ -247,19 +246,24 @@ const toTileLayer = (planes: LoaderPlane[]): TileProps => {
   const i = 0;
   const id = `Tiled-Image-${i}`;
   const plane = toTilePlane(0, planes);
-  const { height, width } = getImageSize(plane as any);
+  const { height, width } = getImageSize(plane);
   const extent: Four = [0, 0, width, height];
   const { tileSize, dtype } = plane;
   const label_shapes = plane.labels.reduce(
-    (obj, label, i) => ({ ...obj, [label]: plane.shape[i] }),
-    {},
+    (obj, label, i) => {
+      obj[label] = plane.shape[i];
+      return obj;
+    },
+    {
+      c: 1
+    }
   );
   const props = {
     id,
     dtype,
     tileSize,
     extent,
-    channels: label_shapes["c"] || 1,
+    channels: label_shapes.c || 1,
     minZoom: -(planes.length - 1),
     maxZoom: 0,
   };
@@ -282,11 +286,11 @@ const initialize: Initialize = (inputs) => {
 
 const extractDistributions: ExtractDistributions = async (loader) => {
   const init = initialize({ planes: loader.data });
-  const bits = parseInt(init.tileProps.dtype.replace(/.?int/, ""));
+  const bits = parseInt(init.tileProps.dtype.replace(/.?int/, ""), 10);
   const SourceDistributionEntries = await Promise.all(
     init.indices.map(async (index) => {
       const SourceIndex = index.c;
-      const YValues = isNaN(bits)
+      const YValues = Number.isNaN(bits)
         ? []
         : await bin({
             bits,
@@ -347,10 +351,7 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
         const in_group_idx = channel_names.indexOf(sourceChannel.Name);
         if (in_group_idx >= 0) {
           const descriptive_name = g.Channels[in_group_idx];
-          return {
-            ...nmap,
-            [descriptive_name]: sourceChannel.UUID,
-          };
+          nmap[descriptive_name] = sourceChannel.UUID;
         }
         return nmap;
       }, name_map);
@@ -416,7 +417,7 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
         UUID: group_uuid,
         State: { Expanded: true },
         Name: groupName,
-        GroupChannels: SourceChannels.map((channel, index) => {
+        GroupChannels: SourceChannels.map((channel, _index) => {
           return {
             UUID: crypto.randomUUID(),
             State: { Expanded: true },
@@ -516,9 +517,10 @@ const mutableConfigArray = (target_array, set_state) => {
         });
       }
       if (
-        typeof key != "string" ||
-        typeof item != "object" ||
-        isNaN(parseInt(key))
+        typeof key !== "string" ||
+        typeof item !== "object" ||
+        Number.
+        isNaN(parseInt(key, 10))
       ) {
         return item;
       }
@@ -527,7 +529,7 @@ const mutableConfigArray = (target_array, set_state) => {
         ...item,
         ...Object.fromEntries(
           namespaces.map(
-            mutableConfigArrayItem(array, receiver, parseInt(key)),
+            mutableConfigArrayItem(array, receiver, parseInt(key, 10)),
           ),
         ),
       };
@@ -542,13 +544,15 @@ const mutableItemRegistry = (
 ) => {
   // Transform certain fields into mutable arrays
   return fields.reduce(
-    (registry, field) => ({
-      ...registry,
-      [field]: mutableConfigArray(ItemRegistry[field], (updated) => {
-        setItems({ [field]: updated });
-      }),
-    }),
-    ItemRegistry,
+    (registry, field) => {
+      registry[field] = mutableConfigArray(
+        ItemRegistry[field], (updated) => {
+          setItems({ [field]: updated });
+        }
+      )
+      return registry;
+    },
+    ItemRegistry
   );
 };
 

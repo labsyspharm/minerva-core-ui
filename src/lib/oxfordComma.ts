@@ -1,10 +1,10 @@
 const oxfordComma = (items) => {
   return items.reduce((o, v, i) => {
-    if (i == 0) {
+    if (i === 0) {
       return v;
-    } else if (items.length == 2) {
+    } else if (items.length === 2) {
       return `${o} and ${v}`;
-    } else if (i + 1 == items.length) {
+    } else if (i + 1 === items.length) {
       return `${o}, and ${v}`;
     }
     return `${o}, ${v}`;
@@ -12,7 +12,7 @@ const oxfordComma = (items) => {
 };
 
 const isLowerCase = (s) => {
-  return s == s.toLowerCase() && s != s.toUpperCase();
+  return s === s.toLowerCase() && s !== s.toUpperCase();
 };
 
 const Los = (str) => {
@@ -36,7 +36,7 @@ const Los = (str) => {
 const Hi = (str) => {
   return [...Los(str)]
     .map((c, i) => {
-      return i == 0 ? c.toUpperCase() : c;
+      return i === 0 ? c.toUpperCase() : c;
     })
     .join("");
 };

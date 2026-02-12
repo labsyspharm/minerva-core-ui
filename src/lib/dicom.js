@@ -493,10 +493,10 @@ const loadDicom = (meta) => {
   const { pyramids, series, little_endian } = meta;
   const { width, height, bits } = [...pyramids[0]].pop();
   const channels = Object.keys(pyramids)
-    .map((n) => parseInt(n))
+    .map((n) => parseInt(n, 10))
     .toSorted((x, y) => x - y);
   const levels = Object.keys(pyramids["0"])
-    .map((n) => parseInt(n))
+    .map((n) => parseInt(n, 10))
     .toSorted((x, y) => x - y);
   const pixels = {
     Channels: channels.map((id) => ({
@@ -538,7 +538,7 @@ const loadDicom = (meta) => {
     little_endian,
   });
   const data = levels.map((level) => {
-    const pyramid = pyramids["0"][level];
+    const _pyramid = pyramids["0"][level];
     const axes = {
       labels: ["t", "c", "z", "y", "x"],
       shape: [1, channels.length, 1, height, width],
@@ -567,7 +567,6 @@ const loadDicom = (meta) => {
       axes.labels,
       meta,
     );
-    return data;
   });
   return {
     data,
@@ -581,7 +580,7 @@ function createTileLayers(meta) {
   const { imageID, pyramids, dicomSource, rgbImage } = meta;
   const height = [...pyramids["0"]].pop().height;
   const width = [...pyramids["0"]].pop().width;
-  const tileSize = pyramids["0"][0].tileSize;
+  const _tileSize = pyramids["0"][0].tileSize;
   const maxLevel = pyramids["0"].length;
   const minZoom = Math.round(-(maxLevel - 1));
   if (rgbImage) {
@@ -648,7 +647,7 @@ function createTileLayers(meta) {
         });
       },
       pickable: true,
-      onClick: ({ bitmap, layer }) => {
+      onClick: ({ bitmap }) => {
         if (bitmap) {
           console.log("Picked Pixel:");
           console.log({
@@ -693,11 +692,11 @@ class DicomPlane {
     this.tileSize = props.tileSize;
   }
 
-  async getTile({ selection, x, y, signal }) {
-    const metadata = this.metadata;
+  async getTile(/*{ selection, x, y,  }*/) {
+    const _metadata = this.metadata;
     const width = this.shape[0];
     const height = this.shape[1];
-    const series = this.series;
+    const _series = this.series;
     // TODO
     /*
     const pyramids = computeImagePyramid({ metadata });
@@ -790,7 +789,7 @@ const loadDicomWeb = async (series) => {
   // "https://proxy.imaging.datacommons.cancer.gov/current/viewer-only-no-downloads-see-tinyurl-dot-com-slash-3j3d9jyp/dicomWeb/studies/2.25.93749216439228361118017742627453453196/series/1.3.6.1.4.1.5962.99.1.2344794501.795090168.1655907236229.4.0"
   const instance_list = await listDicomWeb(series);
   const pyramids = await Promise.all(
-    instance_list.map((opts, i) => {
+    instance_list.map((opts, _i) => {
       const { SOPInstanceUID, BitsAllocated } = opts;
       const instance = `${series}/instances/${SOPInstanceUID}`;
       return readMetadata(instance).then((instance_metadata) => {
@@ -807,10 +806,8 @@ const loadDicomWeb = async (series) => {
       i.metadata[0].OpticalPathSequence[0].OpticalPathIdentifier,
     );
     const channel_pyramid = [...(o[k] || []), ...[i]];
-    return {
-      ...o,
-      [k]: channel_pyramid,
-    };
+    o[k] = channel_pyramid;
+    return o;
   }, {});
   // For first optical channel
   const dicom_pyramids = Object.fromEntries(

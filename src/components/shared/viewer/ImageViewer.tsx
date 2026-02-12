@@ -19,7 +19,6 @@ import { createTileLayers, loadDicom } from "@/lib/dicom";
 import type { DicomIndex } from "@/lib/dicom-index";
 import { createDragHandlers } from "@/lib/dragHandlers";
 import type { Group, Story } from "@/lib/exhibit";
-import type { HashContext } from "@/lib/hashUtil";
 import { useOverlayStore } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
 import type { Config, Loader } from "@/lib/viv";
@@ -42,7 +41,7 @@ export type ImageViewerProps = {
   zoomInButton?: HTMLElement | null;
   zoomOutButton?: HTMLElement | null;
   [key: string]: any;
-} & HashContext;
+};
 
 export const toImageProps = (opts: { props: any; buttons: any }) => {
   const { props, buttons } = opts;

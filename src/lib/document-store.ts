@@ -1,5 +1,4 @@
-import { create } from "zustand";
-import { devtools } from "zustand/middleware";
+
 
 type ExpandedState = {
   Expanded: boolean;
@@ -29,7 +28,7 @@ export type ConfigSourceChannel = (UUID & NameProperty) & {
   Samples: number;
   SourceImage: UUID;
   SourceDataType: ID;
-  SourceDistribution: UUID;
+  SourceDistribution?: UUID;
 };
 
 export interface DocumentStore {
@@ -45,7 +44,7 @@ const documentInitialState = {
 };
 
 // Create the document store
-export const documentStore = (set, get) => ({
+export const documentStore = (set, _get) => ({
   ...documentInitialState,
   // Group and Channel actions
   setGroups: (Groups: ConfigGroup[]) => {

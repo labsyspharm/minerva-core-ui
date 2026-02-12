@@ -11,11 +11,9 @@ import { DrawingPanel } from "@/components/authoring/DrawingPanel";
 
 // Types
 import type { ConfigProps } from "@/lib/config";
-import type { HashContext } from "@/lib/hashUtil";
 import type { ImageProps } from "@/components/shared/common/types";
 
-export type ChannelPanelProps = HashContext &
-  ImageProps & {
+export type ChannelPanelProps = ImageProps & {
     children: any;
     config: ConfigProps;
     authorMode: boolean;
@@ -184,8 +182,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
 
   const drawingPanel = props.authorMode ? (
     <DrawingPanel
-      hash={props.hash}
-      setHash={props.setHash}
       groups={groups}
       onLayerCreate={handleLayerCreate}
       currentInteraction={currentInteraction}
