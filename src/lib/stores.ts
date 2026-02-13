@@ -574,8 +574,9 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         // Clear any drag state when switching tools
         get().resetDragState();
 
-        // Remove the unified drawing layer
+        // Remove the unified drawing layer and arrow preview
         get().removeOverlayLayer("drawing-layer");
+        get().removeOverlayLayer("drawing-arrow-preview");
       },
 
       handleOverlayInteraction: (

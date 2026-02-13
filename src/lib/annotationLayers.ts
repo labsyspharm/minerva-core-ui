@@ -23,8 +23,9 @@ type ColorRGBA = [number, number, number, number];
 type LayerType = PolygonLayer | TextLayer | ScatterplotLayer | IconLayer;
 
 // Arrow SVG icon (250x250) - positioned so center (125,125) is at target point
-const ARROW_ICON_URL = ArrowIconUrl;
-const ARROW_ICON_SIZE = 250;
+// Exported for drawing preview (arrow tool)
+export const ARROW_ICON_URL = ArrowIconUrl;
+export const ARROW_ICON_SIZE = 250;
 
 /**
  * Create all deck.gl layers for multiple annotations.

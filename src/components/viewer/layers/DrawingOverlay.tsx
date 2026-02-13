@@ -1,7 +1,13 @@
 import * as React from "react";
-import { PolygonLayer, type TextLayer, ScatterplotLayer } from "@deck.gl/layers";
+import {
+  PolygonLayer,
+  type TextLayer,
+  ScatterplotLayer,
+  IconLayer,
+} from "@deck.gl/layers";
 import { useOverlayStore, ellipseToPolygon } from "@/lib/stores";
-import { useAnnotationLayers } from "@/lib/annotationLayers";
+import { useAnnotationLayers, ARROW_ICON_SIZE } from "@/lib/annotationLayers";
+import ArrowDrawingIconUrl from "@/components/shared/icons/arrow-annotation-drawing.svg?url";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {
@@ -910,33 +916,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       ]; // No fill for polyline
       shouldFill = false;
     }
-    // Line tool: uses simple stroke-based rendering
+    // Line (arrow) tool: preview is drawn as arrow icon only (see arrowPreviewLayer)
     else if (activeTool === "line") {
-      if (isLineClickMode && lineFirstClick && lineSecondClick) {
-        const [startX, startY] = lineFirstClick;
-        const [endX, endY] = lineSecondClick;
-        polygonData = [
-          [startX, startY],
-          [endX, endY],
-          [endX, endY],
-          [startX, startY],
-          [startX, startY],
-        ];
-        fillColor = [0, 0, 0, 0]; // No fill for line
-        shouldFill = false;
-      } else if (isDrawing && dragStart && dragEnd) {
-        const [startX, startY] = dragStart;
-        const [endX, endY] = dragEnd;
-        polygonData = [
-          [startX, startY],
-          [endX, endY],
-          [endX, endY],
-          [startX, startY],
-          [startX, startY],
-        ];
-        fillColor = [0, 0, 0, 0]; // No fill for line
-        shouldFill = false;
-      }
+      // No polygon data - arrow preview is a separate IconLayer that shows position and updates on mouse move
     }
     // Ellipse tool: uses click mode or drag mode
     else if (activeTool === "ellipse") {
@@ -997,6 +979,73 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     polygonHoverPoint,
   ]);
 
+  // Arrow preview layer: shows arrow icon from start to current position (updates on mouse move)
+  const arrowPreviewLayer = React.useMemo(() => {
+    if (activeTool !== "line") return null;
+
+    let start: [number, number] | null = null;
+    let end: [number, number] | null = null;
+
+    if (isLineClickMode && lineFirstClick) {
+      start = lineFirstClick;
+      // Use second click if set, otherwise use current hover so arrow follows mouse
+      end =
+        lineSecondClick ??
+        (currentInteraction?.type === "hover"
+          ? [currentInteraction.coordinate[0], currentInteraction.coordinate[1]]
+          : null);
+    } else if (isDrawing && dragStart && dragEnd) {
+      start = [dragStart[0], dragStart[1]];
+      end = [dragEnd[0], dragEnd[1]];
+    }
+
+    if (!start || !end) return null;
+
+    const [startX, startY] = start;
+    const [endX, endY] = end;
+    const dx = endX - startX;
+    const dy = endY - startY;
+    const angleRad = Math.atan2(dy, dx);
+    const angleDeg = (angleRad * 180) / Math.PI + 90;
+
+    const arrowColor: [number, number, number, number] = [
+      PREVIEW_LINE_COLOR[0],
+      PREVIEW_LINE_COLOR[1],
+      PREVIEW_LINE_COLOR[2],
+      PREVIEW_LINE_COLOR[3],
+    ];
+
+    return new IconLayer({
+      id: "drawing-arrow-preview",
+      data: [{ position: [endX, endY, 0], angle: angleDeg, color: arrowColor }],
+      getPosition: (d) => d.position,
+      getIcon: () => ({
+        url: ArrowDrawingIconUrl,
+        width: ARROW_ICON_SIZE,
+        height: ARROW_ICON_SIZE,
+        anchorX: ARROW_ICON_SIZE / 2,
+        anchorY: ARROW_ICON_SIZE / 2,
+      }),
+      getSize: ARROW_ICON_SIZE,
+      sizeUnits: "pixels",
+      sizeMinPixels: ARROW_ICON_SIZE,
+      sizeMaxPixels: ARROW_ICON_SIZE,
+      getAngle: (d) => d.angle,
+      getColor: (d) => d.color,
+      pickable: false,
+      billboard: false,
+    });
+  }, [
+    activeTool,
+    isLineClickMode,
+    lineFirstClick,
+    lineSecondClick,
+    currentInteraction,
+    isDrawing,
+    dragStart,
+    dragEnd,
+  ]);
+
   // Text placement marker - shows where text will be placed
   const textPlacementMarker = React.useMemo(() => {
     if (!textInputPosition || !showTextInput) {
@@ -1040,6 +1089,16 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       onLayerCreate(null);
     }
   }, [drawingLayer, onLayerCreate]);
+
+  // Add/remove arrow preview layer so it shows and updates as mouse moves
+  React.useEffect(() => {
+    if (arrowPreviewLayer) {
+      useOverlayStore.getState().addOverlayLayer(arrowPreviewLayer);
+    }
+    return () => {
+      useOverlayStore.getState().removeOverlayLayer("drawing-arrow-preview");
+    };
+  }, [arrowPreviewLayer]);
 
   // Handle text placement marker layer
   React.useEffect(() => {
