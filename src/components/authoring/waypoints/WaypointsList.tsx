@@ -114,11 +114,11 @@ const WaypointsList = (props: WaypointsListProps) => {
 
     return {
       id: storyId,
-      title: story.Properties.Name,
-      subtitle: story.Properties.Content
-        ? story.Properties.Content.length > 30
-          ? `${story.Properties.Content.substring(0, 30)}...`
-          : story.Properties.Content
+      title: story.Name,
+      subtitle: story.Content
+        ? story.Content.length > 30
+          ? `${story.Content.substring(0, 30)}...`
+          : story.Content
         : "Story",
       isActive: activeStoryIndex === index,
       isExpanded: isMarkdownExpanded || isAnnotationsExpanded,
@@ -144,7 +144,7 @@ const WaypointsList = (props: WaypointsListProps) => {
 
         // Trigger view state change if waypoint has Pan/Zoom properties
         // These are in Minerva 1.5 (OSD) format and will be converted by VivView
-        const { Pan, Zoom } = story.Properties;
+        const { Pan, Zoom } = story;
         if (Pan !== undefined || Zoom !== undefined) {
           setTargetWaypointViewState(Pan || null, Zoom ?? null);
         }

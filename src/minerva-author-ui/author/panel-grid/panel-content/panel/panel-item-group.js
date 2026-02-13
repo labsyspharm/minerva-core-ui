@@ -6,7 +6,6 @@ import panelItemGroupCSS from "./panel-item-group.module.css" with {
 import { RangeEditorChannel } from "./range-editor/range-editor-channel";
 import { sourceItemMap } from "../../../../items/source-item-map";
 import { sourceGroupItems } from "../../../../items/source-group-items";
-import { sourceGroupChannels } from "../../../../items/source-group-channels";
 import { sourceSourceChannels } from "../../../../items/source-source-channels";
 import { useItemIdentifier } from "../../../../filters/use-item-identifier";
 import { CollapseGroup } from "./collapse/collapse-group";
@@ -14,7 +13,7 @@ import { CollapseChannel } from "./collapse/collapse-channel";
 import { Chart } from "./chart/chart";
 
 const itemMap = {
-  "group-channels": sourceGroupChannels(),
+  // None
 };
 
 class PanelItemGroup extends sourceItemMap(
@@ -52,7 +51,7 @@ class PanelItemGroup extends sourceItemMap(
     const groupChannels = this.itemMap.get("group-channels");
     const channels = groupChannels.itemSources.map((channel, i) => {
       const source = groupChannels.getSourceChannel(channel);
-      const item_title = () => source.Properties.Name;
+      const item_title = () => source.Name;
       const chart = () => {
         return toElement(chartElement)``({
           class: () => `full histogram`,
@@ -60,9 +59,8 @@ class PanelItemGroup extends sourceItemMap(
         });
       };
       const style = () => {
-        const color = groupChannels.getSourceColor(channel);
-        const { R, G, B, Space } = color?.Properties || {};
-        const rgb = Space !== "sRGB" ? "" : `rgb(${R},${G},${B})`;
+        const { R, G, B } = groupChannels.Color;
+        const rgb = `rgb(${R},${G},${B})`;
         return `--slider-background: ${rgb};`;
       };
       const rangeEditor = () => {
@@ -108,7 +106,7 @@ class PanelItemGroup extends sourceItemMap(
         }
         const source = groupChannels.getSourceChannel(channel);
         const name = () => {
-          return source.Properties.Name;
+          return source.Name;
         };
         return toElement("div")`${name}`({
           class: "flex item",

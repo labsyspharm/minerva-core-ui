@@ -4,14 +4,15 @@ import { sourceColors } from "./source-colors";
 const sourceGroupChannels = (element = Object) =>
   class extends element {
     get itemSources() {
-      const group_channels = this.elementState.item_registry?.GroupChannels;
-      return (group_channels || []).filter(({ Associations: x }) => {
-        return x.Group.UUID == this.itemIdentifiers.GroupUUID;
-      });
+      const groups = this.elementState.item_registry?.Groups;
+      const group = Object.values(groups).find(({ UUID }) => {
+        return UUID == this.itemIdentifiers.GroupUUID;
+      }) || null;
+      return group ? group.GroupChannels : [];
     }
 
     getSourceChannel(group_channel) {
-      const source_channel = group_channel.Associations.SourceChannel;
+      const source_channel = group_channel.SourceChannel;
       const source = new (sourceSourceChannels(Object))();
       source.elementState = this.elementState;
       return (
@@ -41,16 +42,6 @@ const sourceGroupChannels = (element = Object) =>
       return null;
     }
 
-    getSourceColor(group_channel) {
-      const color = group_channel.Associations.Color;
-      const source = new (sourceColors(Object))();
-      source.elementState = this.elementState;
-      return (
-        source.itemSources.find(({ ID }) => {
-          return ID === color?.ID;
-        }) || null
-      );
-    }
   };
 
 export { sourceGroupChannels };

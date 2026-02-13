@@ -67,7 +67,7 @@ class PanelItem extends useItemIdentifier(HTMLElement) {
     const name = () => {
       this.elementState.dialog;
       const item = this.itemSource;
-      return item?.Properties.Name;
+      return item?.Name;
     };
     return toElement("div")`<div>${name}</div>`({
       class: "grid",

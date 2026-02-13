@@ -361,7 +361,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
     // Get physical size from loader metadata if available
     const physicalSize = firstLoader.metadata?.Pixels?.PhysicalSizeX;
     const unit = firstLoader.metadata?.Pixels?.PhysicalSizeXUnit || "µm";
-
+    const units = new Set([
+      "Y", "Z", "E", "P", "T", "G", "M", "k", "h", "da", "",
+      "d", "c", "m", "µ", "n", "p", "f", "a", "z", "y"
+    ].map(
+      prefix => `${prefix}m`
+    ));
+    if (!units.has(unit))
+      return null;
     if (!physicalSize || viewportSize.width <= 0 || viewportSize.height <= 0)
       return null;
 

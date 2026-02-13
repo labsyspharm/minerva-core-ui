@@ -18,7 +18,7 @@ class Chart extends useItemIdentifier(sourceSourceChannels(HTMLElement)) {
     const d = () => {
       const source = this.itemSource;
       const { YValues: values } =
-        (this.getSourceDistribution(source) || {}).Properties || {};
+        (this.getSourceDistribution(source) || {}) || {};
       const line = [0, ...(values || []), 0];
       const flat = line.slice(1, -1).every((v) => v == line[1]);
       const max = Math.max(1, ...(flat ? [2 * line[1]] : line));

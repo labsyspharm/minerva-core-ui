@@ -23,14 +23,12 @@ const useItemSelection = (origin, element = Object) =>
     }
 
     getSelectionProperty(item_key) {
-      const { Properties = {} } = this.itemSource;
-      return Properties[item_key];
+      return this.itemSource[item_key];
     }
 
     setSelectionProperty(item_key, value) {
       const { originElementState } = this.selectionSource;
-      const { Properties = {} } = this.itemSource;
-      Properties[item_key] = value;
+      this.itemSource[item_key] = value;
       const bindings = this.constructor.itemStateMap;
       const key = (bindings || new Map()).get(item_key);
       updateElementState(originElementState, key, value);

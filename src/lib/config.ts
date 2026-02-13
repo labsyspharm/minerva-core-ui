@@ -1,4 +1,3 @@
-
 import { getImageSize } from "@hms-dbmi/viv";
 import type { ConfigSourceChannel, ConfigGroup } from "./document-store";
 import type { ConfigGroup as LegacyConfigGroup } from "./exhibit";
@@ -44,7 +43,9 @@ export type ConfigWaypointOverlay = {
 export type MutableFields = (keyof ItemRegistryProps)[];
 export type ItemRegistryProps = {
   Name: string;
+  Groups: ConfigGroup[];
   Stories: ConfigWaypoint[];
+  SourceChannels: ConfigSourceChannel[];
   SourceDistributions: ConfigSourceDistribution[];
 };
 type SetItems = (user: Partial<ItemRegistryProps>) => void
@@ -132,12 +133,9 @@ export type ConfigProps = {
   ID: string;
 };
 
-export type ConfigSourceDistribution = UUID & {
-  Properties: DistributionProperties;
-};
-export type ConfigWaypoint = UUID & {
+export type ConfigSourceDistribution = UUID & DistributionProperties;
+export type ConfigWaypoint = UUID & WaypointProperties & {
   State: WaypointState;
-  Properties: WaypointProperties;
   Arrows?: ConfigWaypointArrow[];
   Overlays?: ConfigWaypointOverlay[];
 };
@@ -305,13 +303,11 @@ const extractDistributions: ExtractDistributions = async (loader) => {
         SourceIndex,
         {
           UUID: crypto.randomUUID(),
-          Properties: {
-            YValues,
-            XScale: "log",
-            YScale: "linear",
-            LowerRange: 0,
-            UpperRange: bits,
-          },
+          YValues,
+          XScale: "log",
+          YScale: "linear",
+          LowerRange: 0,
+          UpperRange: bits,
         },
       ] as [number, ConfigSourceDistribution];
     }),
@@ -501,9 +497,7 @@ const mutableConfigArray = (target_array, set_state) => {
     "copyWithin",
   ];
   const namespaces = [
-    "State",
-    "Properties",
-    "Associations", // TODO
+    "State"
   ];
   return new Proxy(target_array, {
     get(target, key, receiver) {
