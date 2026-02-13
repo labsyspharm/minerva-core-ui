@@ -371,7 +371,7 @@ export const Presentation = (props: PresentationProps) => {
               storyAt(i);
             };
             return (
-              <li key={i} onMouseDown={goToStory}>
+              <li key={wp.UUID} onMouseDown={goToStory}>
                 {wp.Properties.Name}
               </li>
             );
