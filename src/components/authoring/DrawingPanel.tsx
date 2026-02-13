@@ -53,6 +53,8 @@ const DrawingPanel = (props: DrawingPanelProps) => {
     setGlobalColor,
     updateAnnotation,
     updateTextAnnotationColor,
+    magneticLassoOverlayEnabled,
+    toggleMagneticLassoOverlay,
   } = useOverlayStore();
 
   // Local state for color picker
@@ -253,6 +255,16 @@ const DrawingPanel = (props: DrawingPanelProps) => {
           }}
         >
           <ColorIcon />
+        </button>
+
+        <button
+          type="button"
+          className={`${styles.toolButton} ${magneticLassoOverlayEnabled ? styles.active : ""}`}
+          title="Toggle Magnetic Lasso Debug Overlay"
+          onClick={toggleMagneticLassoOverlay}
+          style={{ fontSize: "14px", fontWeight: "bold" }}
+        >
+          ML
         </button>
       </div>
 

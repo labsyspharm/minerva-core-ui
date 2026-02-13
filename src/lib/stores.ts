@@ -348,6 +348,9 @@ export interface OverlayStore {
   // Channel Group and Channel State
   activeChannelGroupId: string | null;
 
+  // Magnetic lasso debug overlay
+  magneticLassoOverlayEnabled: boolean;
+
   // Waypoint view state (for triggering view changes from waypoint selection)
   // These are in Minerva 1.5 (OSD) format - will be converted by VivView
   targetWaypointPan: [number, number] | null;
@@ -467,6 +470,10 @@ export interface OverlayStore {
     zoom: number | null,
   ) => void;
   clearTargetWaypointViewState: () => void;
+
+  // Magnetic lasso debug overlay actions
+  setMagneticLassoOverlayEnabled: (enabled: boolean) => void;
+  toggleMagneticLassoOverlay: () => void;
 }
 
 // Initial state for overlay store
@@ -505,6 +512,7 @@ const overlayInitialState = {
   groupNames: {},
   targetWaypointPan: null, // Target pan from waypoint selection (Minerva 1.5 format)
   targetWaypointZoom: null, // Target zoom from waypoint selection (Minerva 1.5 format)
+  magneticLassoOverlayEnabled: true, // Magnetic lasso debug overlay on by default
 };
 
 // Create the overlay store
@@ -1528,6 +1536,16 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       clearTargetWaypointViewState: () => {
         set({ targetWaypointPan: null, targetWaypointZoom: null });
+      },
+
+      // Magnetic lasso debug overlay
+      setMagneticLassoOverlayEnabled: (enabled: boolean) => {
+        set({ magneticLassoOverlayEnabled: enabled });
+      },
+      toggleMagneticLassoOverlay: () => {
+        set((state) => ({
+          magneticLassoOverlayEnabled: !state.magneticLassoOverlayEnabled,
+        }));
       },
     }),
     {

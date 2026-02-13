@@ -14,6 +14,7 @@ import "@deck.gl/widgets/stylesheet.css";
 
 import { Lensing } from "@/components/shared/viewer/layers/Lensing";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
+import { MagneticLassoDebugOverlay } from "@/components/shared/viewer/layers/MagneticLassoDebugOverlay";
 import type { ConfigProps } from "@/lib/config";
 import { createTileLayers, loadDicom } from "@/lib/dicom";
 import type { DicomIndex } from "@/lib/dicom-index";
@@ -494,6 +495,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         views={views}
       />
       <LoadingWidget ref={loadingWidgetRef} />
+      <MagneticLassoDebugOverlay />
     </Main>
   );
 };
