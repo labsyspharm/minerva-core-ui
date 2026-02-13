@@ -119,15 +119,13 @@ class MDEditor extends sourceItemMap(itemMap, HTMLElement) {
   }
 
   get contentValue() {
-    const { Properties } = this.itemSource || {};
-    return (Properties || {})[this.elementState.property] || "";
+    return (this.itemSource || {})[this.elementState.property] || "";
   }
 
   set contentValue(v) {
     const { property } = this.elementState;
-    const { Properties } = this.itemSource || {};
-    if (Properties && property in Properties) {
-      Properties[property] = v;
+    if (property in (this.itemSource || {})) {
+      (this.itemSource || {})[property] = v;
     }
   }
 

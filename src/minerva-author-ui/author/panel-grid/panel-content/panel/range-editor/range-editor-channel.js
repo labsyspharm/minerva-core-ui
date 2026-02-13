@@ -24,7 +24,7 @@ class RangeEditorChannel extends sourceGroupChannels(
   get distribution() {
     const distribution = this.getSourceDistribution(this.itemSource);
     return (
-      distribution?.Properties || {
+      distribution || {
         XScale: "log",
         YScale: "linear",
         YValues: [],
@@ -37,7 +37,7 @@ class RangeEditorChannel extends sourceGroupChannels(
   get dataType() {
     const data_type = this.getSourceDataType(this.itemSource);
     return (
-      data_type?.Properties || {
+      data_type || {
         LowerRange: 0,
         UpperRange: 65535,
       }
@@ -72,7 +72,7 @@ class RangeEditorChannel extends sourceGroupChannels(
           Math.max(0, Math.min(chart_x_range, value - chart_x_origin)),
       );
     };
-    const defaultValues = this.itemSource.Properties;
+    const defaultValues = this.itemSource;
     const rangeInput = toElement(rangeInputElement)``({
       min: "0",
       max: String(chart_x_steps),
@@ -83,8 +83,8 @@ class RangeEditorChannel extends sourceGroupChannels(
         const start = e.target.startValue;
         const end = e.target.endValue;
         const { itemSource } = this;
-        itemSource.Properties.LowerRange = from_input(start);
-        itemSource.Properties.UpperRange = from_input(end);
+        itemSource.LowerRange = from_input(start);
+        itemSource.UpperRange = from_input(end);
       },
     });
     return toElement("div")`${rangeInput}`({

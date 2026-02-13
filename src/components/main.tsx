@@ -137,9 +137,22 @@ const Content = (props: Props) => {
   const [exhibit, setExhibit] = useState(firstExhibit);
   const [loaderOmeTiff, setLoaderOmeTiff] = useState(null);
   const [dicomIndexList, setDicomIndexList] = useState([] as DicomIndex[]);
+  // Active Group from Store
+  const {
+    setActiveChannelGroup,
+    setChannelVisibilities,
+    setGroupChannelLists,
+    setGroupNames,
+    setGroups,
+    Groups,
+    setSourceChannels,
+    SourceChannels,
+  } = useOverlayStore();
   const [config, setConfig] = useState({
     ItemRegistry: {
       Name: "",
+      Groups,
+      SourceChannels,
       SourceDistributions: [],
       Stories: props.configWaypoints,
     } as ItemRegistryProps,
@@ -198,18 +211,6 @@ const Content = (props: Props) => {
     }
     setHideWaypoint(v);
   };
-
-  // Active Group from Store
-  const {
-    setActiveChannelGroup,
-    setChannelVisibilities,
-    setGroupChannelLists,
-    setGroupNames,
-    setGroups,
-    Groups,
-    setSourceChannels,
-    SourceChannels,
-  } = useOverlayStore();
 
   const updateGroupChannelLists = ({ Groups, SourceChannels }) => {
     setGroupNames(

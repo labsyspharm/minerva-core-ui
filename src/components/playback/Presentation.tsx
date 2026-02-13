@@ -214,7 +214,7 @@ export const Presentation = (props: PresentationProps) => {
       }
 
       // Also set the initial view state based on waypoint's Pan/Zoom
-      const { Pan, Zoom } = story.Properties;
+      const { Pan, Zoom } = story;
       if (Pan !== undefined || Zoom !== undefined) {
         setTargetWaypointViewState(Pan || null, Zoom ?? null);
       }
@@ -231,7 +231,7 @@ export const Presentation = (props: PresentationProps) => {
 
   const updateGroup = (activeStory) => {
     const story = stories[activeStory];
-    const group_name = story.Properties.Group;
+    const group_name = story.Group;
     // TODO -- use UUID in story
     const found_group =
       Groups.find(({ Name }) => Name === group_name) || Groups[0];
@@ -243,7 +243,7 @@ export const Presentation = (props: PresentationProps) => {
   const updateViewState = (storyIndex: number) => {
     const story = stories[storyIndex];
     if (story) {
-      const { Pan, Zoom } = story.Properties;
+      const { Pan, Zoom } = story;
       if (Pan !== undefined || Zoom !== undefined) {
         setTargetWaypointViewState(Pan || null, Zoom ?? null);
       }
@@ -372,7 +372,7 @@ export const Presentation = (props: PresentationProps) => {
             };
             return (
               <li key={wp.UUID} onMouseDown={goToStory}>
-                {wp.Properties.Name}
+                {wp.Name}
               </li>
             );
           })}
@@ -386,8 +386,8 @@ export const Presentation = (props: PresentationProps) => {
   const main_title = props.name;
   const story = stories[activeStoryIndex];
   const story_title =
-    story?.Properties?.Name ?? `Waypoint ${activeStoryIndex + 1}`;
-  const story_content = story?.Properties?.Content;
+    story?.Name ?? `Waypoint ${activeStoryIndex + 1}`;
+  const story_content = story?.Content;
 
   // Scroll waypoint content back to top when changing to a different waypoint.
   const contentPaneRef = useRef(null);

@@ -1,7 +1,7 @@
 name: Github Pages
 on:
   push:
-    branches: [ "dicom-pages" ]
+    branches: ["dicom-pages"]
 jobs:
   build:
     runs-on: ubuntu-latest

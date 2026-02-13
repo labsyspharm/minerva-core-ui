@@ -23,12 +23,12 @@ const toMainSettings = (ItemRegistry, testPyramids, hash) => {
     const { labels, shape } = full_level;
     const c_idx = labels.indexOf("c");
     const { SourceChannels } = ItemRegistry;
-    const marker_names = SourceChannels.map((x) => x.Properties.Name);
+    const marker_names = SourceChannels.map((x) => x.Name);
     // TODO Simplify mapping of channel names to indices!
     const selections = channels
       .map((channel) => {
         const c =
-          SourceChannels[marker_names.indexOf(channel.name)].Properties
+          SourceChannels[marker_names.indexOf(channel.name)]
             .SourceIndex;
         return { z: 0, t: 0, c };
       })
@@ -71,25 +71,20 @@ const toMainSettings = (ItemRegistry, testPyramids, hash) => {
     hash,
     loader,
     ItemRegistry.Groups.map((group, g) => {
-      const { Name } = group.Properties;
-      const { Colors, GroupChannels, SourceChannels } = ItemRegistry;
-      const channels = GroupChannels.filter(
-        (group_channel) => group_channel.Associations.Group.UUID == group.UUID,
-      ).map((group_channel) => {
+      const { Name, GroupChannels } = group;
+      const { SourceChannels } = ItemRegistry;
+      Channels.map((group_channel) => {
         const defaults = { Name: "" };
-        const { R, G, B } =
-          Colors.find(({ ID }) => {
-            return ID === group_channel.Associations.Color.ID;
-          })?.Properties || {};
+        const { R, G, B } = group_channel.Color;
         const color = ((1 << 24) + (R << 16) + (G << 8) + B)
           .toString(16)
           .slice(1);
-        const { LowerRange, UpperRange } = group_channel.Properties;
-        const { SourceChannel } = group_channel.Associations;
+        const { LowerRange, UpperRange } = group_channel;
+        const { SourceChannel } = group_channel;
         const { Name } =
           SourceChannels.find(
             (source_channel) => source_channel.UUID == SourceChannel.UUID,
-          )?.Properties || defaults;
+          ) || defaults;
         return {
           color,
           name: Name,

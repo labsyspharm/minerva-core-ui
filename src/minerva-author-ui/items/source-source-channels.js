@@ -8,7 +8,7 @@ const sourceSourceChannels = (element = Object) =>
     }
 
     getSourceDistribution(source_channel) {
-      const distribution = source_channel.Associations.SourceDistribution;
+      const distribution = source_channel.SourceDistribution;
       const source = new (sourceSourceDistributions(Object))();
       source.elementState = this.elementState;
       return (
@@ -19,7 +19,7 @@ const sourceSourceChannels = (element = Object) =>
     }
 
     getSourceDataType(source_channel) {
-      const data_type = source_channel.Associations.SourceDataType;
+      const data_type = source_channel.SourceDataType;
       const source = new (sourceDataTypes(Object))();
       source.elementState = this.elementState;
       return (
