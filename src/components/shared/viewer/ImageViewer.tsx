@@ -365,7 +365,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       "d", "c", "m", "µ", "n", "p", "f", "a", "z", "y"
     ].map(
       prefix => `${prefix}m`
-    ))
+    ));
     if (!units.has(unit))
       return null;
     if (!physicalSize || viewportSize.width <= 0 || viewportSize.height <= 0)
