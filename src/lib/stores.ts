@@ -18,7 +18,6 @@ export type {
 // Types for the overlay store
 export interface OverlayLayer {
   id: string;
-  [key: string]: any;
 }
 
 // New annotation types - all using polygon coordinates internally
@@ -281,7 +280,7 @@ export const textToPolygon = (
   position: [number, number],
   text: string,
   fontSize: number = 14,
-  padding: number = 4,
+  _padding: number = 4,
 ): [number, number][] => {
   const [x, y] = position;
 

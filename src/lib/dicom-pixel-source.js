@@ -10,7 +10,7 @@ class DicomPixelSource {
   }
 
   async getRaster({ selection, signal }) {
-    const image = await this._indexer(selection);
+    const _image = await this._indexer(selection);
     return await this.getTile({ x: 0, y: 0, selection, signal });
   }
 
@@ -30,7 +30,7 @@ class DicomPixelSource {
     if (!frame_path) {
       throw "__minervaEmptyFramePath";
     }
-    const frame = frame_path.split("/").pop();
+    const _frame = frame_path.split("/").pop();
     let raster = this.tileCache[index];
     if (!raster) {
       raster = await image.readRasters({

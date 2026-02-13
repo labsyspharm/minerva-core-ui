@@ -1,12 +1,8 @@
-import type { Loader } from "../lib/viv";
-
-type DicomData = {
-  labels: string[];
-  shape: number[];
-};
+import type { Loader } from "./viv";
+import type { LoaderPlane } from "./config";
 
 export interface DicomLoader extends Loader {
-  data: DicomData[];
+  data: LoaderPlane[];
   metadata: Loader["metadata"];
 }
 
@@ -20,7 +16,7 @@ export type DicomIndex = {
       height: number;
       extent: [number, number, number, number];
       frameMappings: {
-        [k: string]: any;
+        [k: string]: string[];
       };
       tileSize: number;
     }[];

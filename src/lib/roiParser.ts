@@ -7,6 +7,7 @@ import type {
   LineAnnotation,
   PointAnnotation,
 } from "./stores";
+import type { Loader } from "./viv";
 import { rectangleToPolygon, lineToPolygon } from "./stores";
 
 // Type definitions for ROI shapes from loader metadata (OME-XML compatible)
@@ -79,6 +80,15 @@ interface RoiLabelShape extends BaseRoiShape {
   Text: string;
 }
 
+type Group = {
+  name: string;
+  annotationIds: string[];
+  isExpanded: boolean;
+  metadata: {
+    createdAt: Date;
+  };
+}
+
 type RoiShape =
   | RoiRectangleShape
   | RoiEllipseShape
@@ -88,16 +98,11 @@ type RoiShape =
   | RoiPolylineShape
   | RoiLabelShape;
 
-interface Roi {
+export interface Roi {
   ID: string;
   Name?: string;
   Description?: string;
   shapes: RoiShape[];
-}
-
-interface LoaderMetadata {
-  ROIs?: Roi[];
-  [key: string]: any;
 }
 
 /**
@@ -400,10 +405,10 @@ const labelShapeToAnnotation = (
  * Parse ROIs from loader metadata and convert to annotations and groups
  */
 export const parseRoisFromLoader = (
-  loader: any,
-): { annotations: Annotation[]; groups: any[] } => {
+  loader: Loader,
+): { annotations: Annotation[]; groups: Group[] } => {
   const annotations: Annotation[] = [];
-  const groups: any[] = [];
+  const groups: Group[] = [];
 
   // Check if loader has metadata with ROIs
   if (!loader || !loader.metadata || !loader.metadata.ROIs) {
@@ -466,7 +471,7 @@ export const parseRoisFromLoader = (
             break;
 
           default:
-            console.warn(`Unknown shape type: ${(shape as any).type}`);
+            console.warn(`Unknown shape: ${shape}`);
         }
 
         if (annotation) {

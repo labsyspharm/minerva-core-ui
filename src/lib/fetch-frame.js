@@ -1,8 +1,7 @@
 import * as dcmjs from "dcmjs";
-import { load } from "@loaders.gl/core";
-import { ImageLoader } from "@loaders.gl/images";
 
-const temp = () => {
+// TODO use this again
+const _temp = () => {
   // Create canvas and context
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");

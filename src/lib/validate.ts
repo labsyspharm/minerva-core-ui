@@ -3,10 +3,6 @@ import { findDicomWeb } from "../lib/dicom";
 
 import type { ValidObj } from "@/components/shared/Upload";
 
-export type KV = [string, FormDataEntryValue];
-export type ObjAny = {
-  [key: string]: any;
-};
 type FormOutDicom = {
   url: string;
   name: string;
@@ -28,10 +24,10 @@ type ValidateIn<T> = {
 type FormAnyOpts = ValidateIn<FormOutAny>;
 type FormDicomOpts = ValidateIn<FormOutDicom>;
 type FormOpts = FormAnyOpts | FormDicomOpts;
-type Opts = ValidateIn<ObjAny>;
+type MaybeOpts = Partial<FormOpts>;
 type Validate<I> = (i: I) => Promise<ValidObj>
 type ToValid = (n: string[], k: string[]) => ValidObj
-export function isOpts(o: ObjAny): o is Opts {
+export function isOpts(o: MaybeOpts) {
   if ("onStart" in o && typeof o.onStart === "function") {
     const h = FileSystemDirectoryHandle;
     if ("formOut" in o) {
@@ -46,9 +42,9 @@ export function isOpts(o: ObjAny): o is Opts {
   return false;
 }
 
-function isFormOpts(o: ObjAny): o is FormOpts {
+function isFormOpts(o: MaybeOpts): o is FormOpts {
   if (isOpts(o)) {
-    const fo = (o.formOut || {}) as ObjAny;
+    const fo = (o.formOut || {}) as MaybeOpts;
     return "name" in fo || "url" in fo;
   }
   return false;
@@ -60,12 +56,13 @@ function isAnyOpts(o: FormOpts): o is FormAnyOpts {
 
 const toValid: ToValid = (need_keys, keys) => {
   return need_keys.reduce((o: ValidObj, k: string) => {
-    return { ...o, [k]: keys.includes(k) };
+    o[k] = keys.includes(k);
+    return o;
   }, {} as ValidObj);
 };
 
 const validateDicom: Validate<FormDicomOpts> = async (opts) => {
-  const { handle, formOut, onStart } = opts;
+  const { formOut, onStart } = opts;
   const need_keys = ["url", "name"];
   const all = [...need_keys];
   const valid_keys = await all.reduce(
@@ -130,7 +127,7 @@ const validateAny: Validate<FormAnyOpts> = async (opts) => {
   return toValid(need_keys, valid_keys);
 };
 
-const validate: Validate<Opts> = async (opts) => {
+const validate: Validate<MaybeOpts> = async (opts: MaybeOpts) => {
   if (!isFormOpts(opts)) {
     return toValid(["name"], []);
   }

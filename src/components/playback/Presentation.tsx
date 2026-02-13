@@ -1,4 +1,4 @@
-import type * as React from "react";
+import * as React from "react";
 import { useEffect, useRef, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { useOverlayStore } from "@/lib/stores";
@@ -10,11 +10,9 @@ const theme = {};
 // Types
 import type { ConfigProps, ConfigWaypoint } from "@/lib/config";
 import type { Group, Story } from "@/lib/exhibit";
-import type { HashContext } from "@/lib/hashUtil";
 import type { ImageProps } from "@/components/shared/common/types";
 
-export type PresentationProps = HashContext &
-  ImageProps & {
+export type PresentationProps = ImageProps & {
     children: any;
     name: string;
     config: ConfigProps;

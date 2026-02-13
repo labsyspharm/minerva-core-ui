@@ -19,7 +19,6 @@ import { createTileLayers, loadDicom } from "@/lib/dicom";
 import type { DicomIndex } from "@/lib/dicom-index";
 import { createDragHandlers } from "@/lib/dragHandlers";
 import type { Group, Story } from "@/lib/exhibit";
-import type { HashContext } from "@/lib/hashUtil";
 import { useOverlayStore } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
 import type { Config, Loader } from "@/lib/viv";
@@ -42,7 +41,7 @@ export type ImageViewerProps = {
   zoomInButton?: HTMLElement | null;
   zoomOutButton?: HTMLElement | null;
   [key: string]: any;
-} & HashContext;
+};
 
 export const toImageProps = (opts: { props: any; buttons: any }) => {
   const { props, buttons } = opts;
@@ -72,7 +71,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     dicomIndexList,
     groups,
     stories,
-    hash,
     setHash,
     overlayLayers = [],
     activeTool,
@@ -81,14 +79,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
     onOverlayInteraction,
     viewerConfig,
   } = props;
-  const { v, g, s, w } = hash;
   const { activeChannelGroupId, channelVisibilities } = useOverlayStore();
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [canvas, setCanvas] = useState(null);
   const rootRef = useRef<HTMLElement | null>(null);
-
-  // Memoize expensive computations
-  const waypoint = useMemo(() => getWaypoint(stories, s, w), [stories, s, w]);
 
   // Set up ResizeObserver to track viewport size changes
   useEffect(() => {

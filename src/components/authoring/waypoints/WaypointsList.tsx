@@ -6,7 +6,6 @@ import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { TextIcon, PolylineIcon } from "@/components/shared/icons/OverlayIcons";
 
 // Types
-import type { HashContext } from "@/lib/hashUtil";
 import type { ConfigWaypoint } from "@/lib/config";
 
 interface WaypointAnnotationEditorMetadata {
@@ -15,12 +14,12 @@ interface WaypointAnnotationEditorMetadata {
   storyIndex: number;
 }
 
-type WaypointsListProps = HashContext & {
+type WaypointsListProps = {
   viewOnly?: boolean;
 };
 
 const WaypointsList = (props: WaypointsListProps) => {
-  const { hash, viewOnly } = props;
+  const { viewOnly } = props;
 
   // Use Zustand store for stories and waypoints management
   const {

@@ -18,9 +18,8 @@ import { useOverlayStore } from "@/lib/stores";
 
 // Types
 import type { Group } from "@/lib/exhibit";
-import type { HashContext } from "@/lib/hashUtil";
 
-type DrawingPanelProps = HashContext & {
+type DrawingPanelProps = {
   groups: Group[];
   onLayerCreate?: (layer: any) => void;
   currentInteraction?: {
@@ -44,8 +43,7 @@ const TOOLS = {
 type ToolType = (typeof TOOLS)[keyof typeof TOOLS];
 
 const DrawingPanel = (props: DrawingPanelProps) => {
-  const { hash, onLayerCreate, currentInteraction } = props;
-  const group = props.groups[hash.g];
+  const { onLayerCreate, currentInteraction } = props;
 
   // Use Zustand store for tool management
   const {

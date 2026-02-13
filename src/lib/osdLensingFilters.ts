@@ -1,3 +1,25 @@
+interface LensMagnifier {
+  update(i: number, index: number, lensing: Lensing): void;
+}
+
+type Lens = {
+  selections: {
+    magnifier: LensMagnifier;
+  };
+}
+
+interface ViewFinderSetup {
+  wrangle(): void;
+  render(): void;
+}
+
+type Lensing = {
+  lenses: Lens;
+  viewfinder: {
+    setup: ViewFinderSetup;
+  };
+}
+
 const filters = [
   // Channel groups
   {
@@ -17,12 +39,12 @@ const filters = [
       iter: "px",
     },
     variables: {},
-    set_pixel: (lensing: any, lenses: any) => {
+    set_pixel: (lensing: Lensing) => {
       // Trigger update
       lensing.viewfinder.setup.wrangle();
       lensing.viewfinder.setup.render();
     },
-    update: (i, index, lensing, lenses: any) => {
+    update: (i, index, lensing: Lensing) => {
       // Magnify (simply pass through after filter)
       lensing.lenses.selections.magnifier.update(i, index, lensing);
     },

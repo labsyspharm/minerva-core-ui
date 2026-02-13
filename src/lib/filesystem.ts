@@ -1,6 +1,7 @@
 import { loadOmeTiff } from "@hms-dbmi/viv";
 
 import type { Loader } from "./viv";
+import type { PoolClass } from "./workers/Pool";
 
 type ListDirIn = {
   handle: Handle.Dir;
@@ -16,7 +17,7 @@ type ToDir = () => Promise<Handle.Dir>
 type LoaderIn = {
   in_f: string;
   handle: Handle.Dir;
-  pool: any | null;
+  pool?: PoolClass;
 };
 type ToLoader = (i: LoaderIn) => Promise<Loader>
 export type Selection = {
@@ -53,12 +54,15 @@ export interface LoaderPlane {
 }
 
 const hasFileSystemAccess = () => {
-  return "showDirectoryPicker" in (window as any);
+  return "showDirectoryPicker" in window;
 };
 
 const toDir: ToDir = async () => {
-  const dir_opts = { mode: "readwrite" };
-  return await (window as any).showDirectoryPicker(dir_opts);
+  const dir_opts = { mode: "readwrite" } as DirectoryPickerOptions;
+  if (hasFileSystemAccess) {
+    return await window.showDirectoryPicker(dir_opts);
+  }
+  return null;
 };
 
 const listDir: ListDir = async (opts) => {
@@ -83,7 +87,10 @@ const findFile: FindFile = async (opts) => {
 const toLoader: ToLoader = async ({ in_f, handle, pool = null }) => {
   const in_fh = await handle.getFileHandle(in_f);
   const in_file = await in_fh.getFile();
-  return await loadOmeTiff(in_file, { pool });
+  if (pool) {
+    return await loadOmeTiff(in_file, { pool });
+  }
+  return await loadOmeTiff(in_file);
 };
 
 export { hasFileSystemAccess, toLoader, findFile, listDir, toDir };

@@ -9,6 +9,16 @@ type InteractionCallback = (
   coordinate: [number, number, number],
 ) => void;
 
+type HasCoordinate = {
+  coordinate: [number, number, number];
+  layer: {
+    id: string;
+  };
+  x: number;
+  y: number;
+  z: number;
+}
+
 export const createDragHandlers = (
   activeTool: string,
   onInteraction?: InteractionCallback,
@@ -36,19 +46,19 @@ export const createDragHandlers = (
 
   return {
     // Single click without dragging (used for text, polyline, lasso point-by-point)
-    onClick: ({ coordinate }: any) => emit("click", coordinate),
+    onClick: ({ coordinate }: HasCoordinate) => emit("click", coordinate),
 
     // Start of drag operation (used for rectangle, line, lasso freehand)
-    onDragStart: ({ coordinate }: any) => emit("dragStart", coordinate),
+    onDragStart: ({ coordinate }: HasCoordinate) => emit("dragStart", coordinate),
 
     // During drag operation (used for rectangle, line, lasso freehand)
-    onDrag: ({ coordinate }: any) => emit("drag", coordinate),
+    onDrag: ({ coordinate }: HasCoordinate) => emit("drag", coordinate),
 
     // End of drag operation (used for rectangle, line, lasso freehand)
-    onDragEnd: ({ coordinate }: any) => emit("dragEnd", coordinate),
+    onDragEnd: ({ coordinate }: HasCoordinate) => emit("dragEnd", coordinate),
 
     // Hover events (for tools that need hover feedback)
-    onHover: (info: any) => {
+    onHover: (info: HasCoordinate) => {
       // Deck.gl hover events can have coordinate as an array or as x, y, z properties
       const coordinate =
         info.coordinate ||
@@ -59,7 +69,7 @@ export const createDragHandlers = (
 
       // Detect if hovering over an annotation layer (only for move tool)
       if (activeTool === "move") {
-        if (layer && layer.id && layer.id.startsWith("annotation-")) {
+        if (layer?.id?.startsWith("annotation-")) {
           // Extract annotation ID, handling both 'annotation-{id}' and 'annotation-{id}-text' formats
           let annotationId = layer.id.replace("annotation-", "");
           // Remove '-text' suffix if present (for text layers attached to shapes)

@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 
 // Debounce function
 const debounce = (fn, wait) => {
-  let timeout;
+  let timeout: number;
   return (...args) => {
     const later = () => {
       timeout = null;
       fn(...args);
     };
     clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+    timeout = window.setTimeout(later, wait);
   };
 };
 

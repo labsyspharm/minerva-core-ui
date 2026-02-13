@@ -1,13 +1,13 @@
-import type { Group } from "../lib/exhibit";
-import type { HashState } from "../lib/hashUtil";
+import type { LoaderPlane } from "./config";
+import type { Roi } from "./roiParser";
 
 type Selection = Record<"z" | "t" | "c", number>;
 type Color = [number, number, number];
 type Limit = [number, number];
 
 export type Loader = {
-  data: any[];
-  metadata: any;
+  data: LoaderPlane[];
+  metadata: Metadata;
 };
 
 type Settings = {
@@ -59,6 +59,7 @@ type Metadata = {
   AquisitionDate: string;
   Description: string;
   Pixels: Pixels;
+  ROIs: Roi[];
 };
 
 export type Config = {
@@ -99,7 +100,7 @@ const toDefaultSettings = (n) => {
   };
 };
 
-const hexToRGB = (hex: string) => {
+const _hexToRGB = (hex: string) => {
   // Remove leading # if it exists
   hex = hex.replace("#", "");
   const r = parseInt(hex.slice(0, 2), 16);
@@ -123,7 +124,7 @@ const toSettings = (opts) => {
     const c_idx = labels.indexOf("c");
     // TODO Simplify mapping of channel names to indices!
     const selections: Selection[] = channels.map((channel) => {
-      const source_channels = SourceChannels.map(
+      const _source_channels = SourceChannels.map(
         (source_channel) => source_channel.UUID,
       );
       const source_channel = SourceChannels.find(
@@ -132,7 +133,7 @@ const toSettings = (opts) => {
       const c = source_channel?.SourceIndex || 0;
       return { z: 0, t: 0, c };
     });
-    const colors: Color[] = channels.map((c, i: number) => {
+    const colors: Color[] = channels.map((c, _i: number) => {
       const { R, G, B } = c.Color;
       return [R, G, B];
     });
@@ -140,18 +141,18 @@ const toSettings = (opts) => {
       const { LowerRange, UpperRange } = c;
       return [LowerRange, UpperRange];
     });
-    const channelsVisible: boolean[] = channels.map((c, i: number) => {
+    const channelsVisible: boolean[] = channels.map((c, _i: number) => {
       const source_channel = SourceChannels.find(
         (source_channel) => c.SourceChannel.UUID === source_channel.UUID,
       );
       const { Name } = source_channel || {};
       const image_id = source_channel.SourceImage.UUID;
-      const brightfield = modality === "Brightfield";
+      const _brightfield = modality === "Brightfield";
       //if (!channelVisibilities || brightfield ) {
       if (!channelVisibilities) {
         return image_id === modality;
       }
-      return image_id === modality && (channelVisibilities || {})[Name];
+      return image_id === modality && channelVisibilities?.[Name];
     });
     const n_channels = shape[c_idx] || 0;
     const out = {
