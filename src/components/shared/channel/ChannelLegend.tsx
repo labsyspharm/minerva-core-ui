@@ -48,7 +48,6 @@ export const defaultChannels = [
 const LegendRow = (props) => {
   const { channel, channelVisibilities } = props;
   const channelName = channel.name;
-  console.log(channelVisibilities);
   const visible = channelVisibilities[channelName];
   const { idx, name, path, g, onClick } = props;
   const setInput = (t) => {

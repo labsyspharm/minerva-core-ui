@@ -219,9 +219,15 @@ export const Presentation = (props: PresentationProps) => {
         setTargetWaypointViewState(Pan || null, Zoom ?? null);
       }
     }
-    // Zustand store actions are stable and don't need to be in deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stories, activeStoryIndex, imageWidth, imageHeight]);
+  }, [
+    stories,
+    activeStoryIndex,
+    imageWidth,
+    imageHeight,
+    importWaypointAnnotations,
+    clearImportedAnnotations,
+    setTargetWaypointViewState,
+  ]);
 
   const updateGroup = (activeStory) => {
     const story = stories[activeStory];
@@ -270,6 +276,7 @@ export const Presentation = (props: PresentationProps) => {
   const buttonHeight = 20;
   const toc_button = (
     <button
+    type="button"
       className="table-of-contents"
       title="View table of contents"
       onMouseDown={(e) => {
@@ -301,6 +308,7 @@ export const Presentation = (props: PresentationProps) => {
     };
     return (
       <button
+        type="button"
         className={`left ${activeClass}`}
         title="View previous waypoint"
         onMouseDown={handleMouseDown}
@@ -327,6 +335,7 @@ export const Presentation = (props: PresentationProps) => {
     };
     return (
       <button
+        type="button"
         className={`right ${activeClass}`}
         title="View next waypoint"
         onMouseDown={handleMouseDown}
@@ -372,8 +381,8 @@ export const Presentation = (props: PresentationProps) => {
     );
   };
 
-  const first_story = activeStoryIndex == 0;
-  const last_story = activeStoryIndex == stories.length - 1;
+  const first_story = activeStoryIndex === 0;
+  const last_story = activeStoryIndex === stories.length - 1;
   const main_title = props.name;
   const story = stories[activeStoryIndex];
   const story_title =
@@ -383,7 +392,7 @@ export const Presentation = (props: PresentationProps) => {
   // Scroll waypoint content back to top when changing to a different waypoint.
   const contentPaneRef = useRef(null);
   useEffect(() => {
-    if (contentPaneRef.current) {
+    if (contentPaneRef.current && activeStoryIndex != null) {
       contentPaneRef.current.scrollTop = 0;
     }
   }, [activeStoryIndex]);
@@ -419,13 +428,7 @@ export const Presentation = (props: PresentationProps) => {
     });
 
     return { processedContent: content, channelColors: colors };
-  }, [
-    story_content,
-    activeChannelGroupId,
-    props.config.ItemRegistry,
-    Groups,
-    SourceChannels,
-  ]);
+  }, [story_content, activeChannelGroupId, Groups, SourceChannels]);
 
   return (
     <Wrap>

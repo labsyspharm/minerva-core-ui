@@ -101,15 +101,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const togglePanel = () => setHide(!hide);
 
   const hidden = props.retrievingMetadata;
-  const {
-    activeChannelGroupId,
-    setChannelVisibilities,
-    channelVisibilities,
-    currentInteraction,
-    handleLayerCreate,
-    SourceChannels,
-    Groups,
-  } = useOverlayStore();
+  // Subscribe only to overlay state used by this panel so viewport/zoom updates don't re-render.
+  const activeChannelGroupId = useOverlayStore((s) => s.activeChannelGroupId);
+  const channelVisibilities = useOverlayStore((s) => s.channelVisibilities);
+  const setChannelVisibilities = useOverlayStore((s) => s.setChannelVisibilities);
+  const Groups = useOverlayStore((s) => s.Groups);
+  const SourceChannels = useOverlayStore((s) => s.SourceChannels);
+  const handleLayerCreate = useOverlayStore((s) => s.handleLayerCreate);
+  const currentInteraction = useOverlayStore((s) => s.currentInteraction);
   // TODO -- lookup group correctly
   const groups = Groups.map((group, g) => {
     return {

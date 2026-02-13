@@ -12,8 +12,8 @@ import styled from "styled-components";
 
 import "@deck.gl/widgets/stylesheet.css";
 
-import { Lensing } from "@/components/viewer/layers/Lensing";
-import { LoadingWidget } from "@/components/viewer/layers/LoadingWidget";
+import { Lensing } from "@/components/shared/viewer/layers/Lensing";
+import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import type { ConfigProps } from "@/lib/config";
 import { createTileLayers, loadDicom } from "@/lib/dicom";
 import type { DicomIndex } from "@/lib/dicom-index";
@@ -227,7 +227,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     if (imageShape.x > 0 && imageShape.y > 0) {
       setImageDimensions(imageShape.x, imageShape.y);
     }
-  }, [imageShape]);
+  }, [imageShape, setImageDimensions]);
 
   // Apply waypoint view state when target is set (from waypoint selection)
   useEffect(() => {
@@ -287,6 +287,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
     imageShape.x,
     imageShape.y,
     viewportSize.width,
+    clearTargetWaypointViewState,
+    setViewportZoom,
   ]);
 
   // Memoize main props to prevent unnecessary layer recreation
@@ -340,7 +342,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         imageID,
       });
     });
-  }, [dicomSources, mainSettingsList]);
+  }, [loaderOmeTiff, dicomSources, mainSettingsList]);
 
   // Memoize image layers
   const omeTiffLayers = useMemo(
@@ -456,7 +458,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       // Update viewport zoom in store for line width scaling
       setViewportZoom(nextViewState.zoom);
     },
-    [isDragging, activeTool],
+    [isDragging, activeTool, setViewportZoom],
   );
 
   // LoadingWidget ref for onRedraw callback
