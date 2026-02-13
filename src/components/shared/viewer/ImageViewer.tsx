@@ -154,7 +154,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const mainSettingsList = useMemo(
     () =>
       loaderOmeTiff !== null ? [mainSettingsOmeTiff] : mainSettingsDicomList,
-    [mainSettingsOmeTiff, mainSettingsDicomList],
+    [loaderOmeTiff, mainSettingsOmeTiff, mainSettingsDicomList],
   );
 
   // TODO, assert all loaders match shape
@@ -180,7 +180,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     const shape_labels = firstLoader.data[0].labels;
     const shape_values = firstLoader.data[0].shape;
     return Object.fromEntries(shape_labels.map((k, i) => [k, shape_values[i]]));
-  }, [mainSettingsList, firstLoader]);
+  }, [viewportSize.width, viewportSize.height, firstLoader]);
 
   // Memoize initial view state
   const initialViewState = useMemo(() => {
@@ -220,7 +220,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       }
       hasInitialized.current = true;
     }
-  }, [initialViewState, firstLoader.data]);
+  }, [initialViewState, firstLoader.data, setViewportZoom]);
 
   // Set image dimensions in the store when imageShape is available
   useEffect(() => {
