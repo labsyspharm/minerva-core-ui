@@ -3,7 +3,11 @@ import styled from "styled-components";
 import { author } from "@/minerva-author-ui/author";
 import { useState, useMemo, useEffect } from "react";
 import { loadDicomWeb, parseDicomWeb } from "@/lib/dicom";
-import { mutableItemRegistry, extractChannels, extractDistributions } from "@/lib/config";
+import {
+  mutableItemRegistry,
+  extractChannels,
+  extractDistributions,
+} from "@/lib/config";
 import { hasFileSystemAccess, toLoader } from "@/lib/filesystem";
 import { isOpts, validate } from "@/lib/validate";
 import { Upload } from "@/components/shared/Upload";
@@ -276,24 +280,26 @@ const Content = (props: Props) => {
       "Colorimetric",
       [],
     );
-    setSourceChannels(SourceChannels);
+
+    // Await distributions so that all state (loader, channels, groups,
+    // distributions) is set in a single React batch, avoiding a second
+    // render that causes a visible flash.
+    const sourceDistributionMap = await extractDistributions(loader);
+    const SourceDistributions = [...sourceDistributionMap.values()];
+    const SourceChannelsWithDist = SourceChannels.map((sourceChannel) => ({
+      ...sourceChannel,
+      SourceDistribution: sourceDistributionMap.get(sourceChannel.SourceIndex),
+    }));
+
+    setSourceChannels(SourceChannelsWithDist);
     setGroups(Groups);
     updateGroupChannelLists({
       Groups,
-      SourceChannels,
+      SourceChannels: SourceChannelsWithDist,
     });
-    // Asynchronously add distributions
-    extractDistributions(loader).then((sourceDistributionMap) => {
-      const SourceDistributions = sourceDistributionMap.values();
-      resetItems({
-        SourceDistributions: [...SourceDistributions],
-        SourceChannels: SourceChannels.map((sourceChannel) => ({
-          ...sourceChannel,
-          SourceDistribution: sourceDistributionMap.get(
-            sourceChannel.SourceIndex,
-          ),
-        })),
-      });
+    resetItems({
+      SourceDistributions,
+      SourceChannels: SourceChannelsWithDist,
     });
     setLoaderOmeTiff(loader);
     setFileName(in_f);
@@ -525,7 +531,7 @@ const Content = (props: Props) => {
         const { SourceChannel } = group_channel;
         const { Name } =
           SourceChannels.find(
-            (source_channel) => source_channel.UUID == SourceChannel.UUID,
+            (source_channel) => source_channel.UUID === SourceChannel.UUID,
           ) || defaults;
         return {
           color,
@@ -591,7 +597,9 @@ const Content = (props: Props) => {
         loaderOmeTiff,
         dicomIndexList,
         marker_names: itemRegistryMarkerNames,
-        ...channelProps,
+        groups: itemRegistryGroups,
+        stories,
+        name,
       },
       buttons: {
         zoomInButton: zoomInEl,
@@ -599,10 +607,14 @@ const Content = (props: Props) => {
       },
     });
   }, [
+    Groups,
+    SourceChannels,
     loaderOmeTiff,
     dicomIndexList,
     itemRegistryMarkerNames,
-    channelProps,
+    itemRegistryGroups,
+    stories,
+    name,
     zoomInEl,
     zoomOutEl,
   ]);
@@ -630,7 +642,7 @@ const Content = (props: Props) => {
       setStories(config.ItemRegistry.Stories);
       setWaypoints([]);
     }
-  }, [config.ItemRegistry.Stories]);
+  }, [config.ItemRegistry.Stories, setStories, setWaypoints]);
 
   // Initialize to first active story index
   useEffect(() => {
@@ -638,7 +650,7 @@ const Content = (props: Props) => {
     if (hasStories && activeStoryIndex === null) {
       setActiveStory(0);
     }
-  }, [_stories]);
+  }, [_stories, activeStoryIndex, setActiveStory]);
 
   const retrieving_status = (
     <RetrievingWrapper>Retrieving DICOM metadata...</RetrievingWrapper>
@@ -650,13 +662,20 @@ const Content = (props: Props) => {
         const onSubmit: FormEventHandler = (event) => {
           const form = event.currentTarget as HTMLFormElement;
           const data = [...new FormData(form).entries()];
-          const formOut = data.reduce(((o, [k, v]) => {
-            return { ...o, [k]: `${v}` };
-          }), { 
-            mask: "", url: "", name: ""
-          });
+          const formOut = data.reduce(
+            (o, [k, v]) => {
+              return { ...o, [k]: `${v}` };
+            },
+            {
+              mask: "",
+              url: "",
+              name: "",
+            },
+          );
           const formOpts = {
-            formOut, onStart: (list) => onStart(list, handle), handle
+            formOut,
+            onStart: (list) => onStart(list, handle),
+            handle,
           };
           if (isOpts(formOpts)) {
             validate(formOpts).then((valid: ValidObj) => {
