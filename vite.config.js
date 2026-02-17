@@ -6,6 +6,7 @@ import svgr from 'vite-plugin-svgr'
 import path from 'path'
 
 export default defineConfig({
+  assetsInclude: ['**/*.wasm'],
   worker: {
     format: "es"
   },
@@ -29,7 +30,7 @@ export default defineConfig({
     })
   ],
   optimizeDeps: {
-    exclude: [ "minerva-author-ui" ],
+    exclude: [ "minerva-author-ui", "onnxruntime-web" ],
     include: [
       '@luma.gl/core',
       '@luma.gl/constants',

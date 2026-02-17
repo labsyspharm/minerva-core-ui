@@ -10,10 +10,15 @@ import {
   PolygonIcon,
   LineIcon,
   PolylineIcon,
+  ArrowIcon,
+  ShapesIcon,
+  LinesIcon,
   TextIcon,
   PointIcon,
   ColorIcon,
+  MagicWandIcon,
 } from "@/components/shared/icons/OverlayIcons";
+import { ToolSubmenu } from "@/components/authoring/ToolSubmenu";
 import { useOverlayStore } from "@/lib/stores";
 
 // Types
@@ -34,10 +39,12 @@ const TOOLS = {
   RECTANGLE: "rectangle",
   ELLIPSE: "ellipse",
   LASSO: "lasso",
+  ARROW: "arrow",
   LINE: "line",
   POLYLINE: "polyline",
   TEXT: "text",
   POINT: "point",
+  MAGIC_WAND: "magic_wand",
 } as const;
 
 type ToolType = (typeof TOOLS)[keyof typeof TOOLS];
@@ -177,50 +184,33 @@ const DrawingPanel = (props: DrawingPanelProps) => {
           <MoveIcon />
         </button>
 
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.RECTANGLE ? styles.active : ""}`}
-          title="Rectangle Tool (R)"
-          onClick={() => handleToolChangeLocal(TOOLS.RECTANGLE)}
-        >
-          <RectangleIcon />
-        </button>
+        <ToolSubmenu
+          items={[
+            { id: TOOLS.RECTANGLE, icon: <RectangleIcon />, title: "Rectangle" },
+            { id: TOOLS.ELLIPSE, icon: <EllipseIcon />, title: "Ellipse" },
+            { id: TOOLS.LASSO, icon: <PolygonIcon />, title: "Lasso Polygon" },
+          ]}
+          activeTool={activeTool}
+          onToolChange={handleToolChangeLocal}
+          parentIcon={<ShapesIcon />}
+          parentTitle="Shapes"
+          buttonClassName={styles.toolButton}
+          activeClassName={styles.active}
+        />
 
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.ELLIPSE ? styles.active : ""}`}
-          title="Ellipse Tool (E)"
-          onClick={() => handleToolChangeLocal(TOOLS.ELLIPSE)}
-        >
-          <EllipseIcon />
-        </button>
-
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.LASSO ? styles.active : ""}`}
-          title="Lasso Tool (L)"
-          onClick={() => handleToolChangeLocal(TOOLS.LASSO)}
-        >
-          <PolygonIcon />
-        </button>
-
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.LINE ? styles.active : ""}`}
-          title="Line Tool"
-          onClick={() => handleToolChangeLocal(TOOLS.LINE)}
-        >
-          <LineIcon />
-        </button>
-
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.POLYLINE ? styles.active : ""}`}
-          title="Poly-line Tool"
-          onClick={() => handleToolChangeLocal(TOOLS.POLYLINE)}
-        >
-          <PolylineIcon />
-        </button>
+        <ToolSubmenu
+          items={[
+            { id: TOOLS.ARROW, icon: <ArrowIcon />, title: "Arrow" },
+            { id: TOOLS.LINE, icon: <LineIcon />, title: "Line" },
+            { id: TOOLS.POLYLINE, icon: <PolylineIcon />, title: "Polyline" },
+          ]}
+          activeTool={activeTool}
+          onToolChange={handleToolChangeLocal}
+          parentIcon={<LinesIcon />}
+          parentTitle="Lines"
+          buttonClassName={styles.toolButton}
+          activeClassName={styles.active}
+        />
 
         <button
           type="button"
@@ -238,6 +228,15 @@ const DrawingPanel = (props: DrawingPanelProps) => {
           onClick={() => handleToolChangeLocal(TOOLS.POINT)}
         >
           <PointIcon />
+        </button>
+
+        <button
+          type="button"
+          className={`${styles.toolButton} ${activeTool === TOOLS.MAGIC_WAND ? styles.active : ""}`}
+          title="Magic Wand (SAM2)"
+          onClick={() => handleToolChangeLocal(TOOLS.MAGIC_WAND)}
+        >
+          <MagicWandIcon />
         </button>
 
         <button

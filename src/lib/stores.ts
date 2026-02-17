@@ -80,6 +80,7 @@ export interface LineAnnotation {
   id: string;
   type: "line";
   polygon: [number, number][]; // Simple line as degenerate polygon for stroke-based rendering
+  hasArrowHead?: boolean; // When true (default), render as arrow icon; when false, render as plain stroke
   style: {
     fillColor: [number, number, number, number];
     lineColor: [number, number, number, number];
@@ -396,6 +397,20 @@ export interface OverlayStore {
   ) => void;
   removeWaypoint: (waypointId: string) => void;
 
+  // SAM2 magic wand: image fetcher for 1024x1024 crop (set by ImageViewer)
+  sam2ImageFetcher: ((cx: number, cy: number) => Promise<{
+    float32Array: Float32Array;
+    shape: [number, number, number, number];
+  }>) | null;
+  setSam2ImageFetcher: (fetcher: ((cx: number, cy: number) => Promise<{
+    float32Array: Float32Array;
+    shape: [number, number, number, number];
+  }>) | null) => void;
+  sam2Processing: boolean;
+  setSam2Processing: (v: boolean) => void;
+  sam2DebugImages: { encoded: string; mask: string } | null;
+  setSam2DebugImages: (v: { encoded: string; mask: string } | null) => void;
+
   // Channel group and channel actions
   setActiveChannelGroup: (channelGroupId: string) => void;
   setChannelVisibilities: (vis: Record<string, boolean>) => void;
@@ -407,7 +422,7 @@ export interface OverlayStore {
 
   finalizeEllipse: () => void; // Convert current drawing to ellipse annotation
   finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
-  finalizeLine: () => void; // Convert current drawing to line annotation
+      finalizeLine: (hasArrowHead?: boolean) => void; // Convert current drawing to line annotation
   finalizePolyline: (points: [number, number][]) => void; // Convert polyline points to polyline annotation
   createTextAnnotation: (
     position: [number, number],
@@ -505,6 +520,9 @@ const overlayInitialState = {
   groupNames: {},
   targetWaypointPan: null, // Target pan from waypoint selection (Minerva 1.5 format)
   targetWaypointZoom: null, // Target zoom from waypoint selection (Minerva 1.5 format)
+  sam2ImageFetcher: null,
+  sam2Processing: false,
+  sam2DebugImages: null,
 };
 
 // Create the overlay store
@@ -678,9 +696,9 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
                 setTimeout(() => {
                   get().finalizeEllipse();
                 }, 0);
-              } else if (activeTool === "line") {
+              } else if (activeTool === "arrow" || activeTool === "line") {
                 setTimeout(() => {
-                  get().finalizeLine();
+                  get().finalizeLine(activeTool === "arrow");
                 }, 0);
               }
             }
@@ -861,7 +879,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         }
       },
 
-      finalizeLine: () => {
+      finalizeLine: (hasArrowHead: boolean = true) => {
         const { drawingState } = get();
         if (
           drawingState.isDrawing &&
@@ -870,20 +888,24 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         ) {
           const [startX, startY] = drawingState.dragStart;
           const [endX, endY] = drawingState.dragEnd;
+          const lineWidth = 3;
 
-          // Simple polygon for stroke-based line rendering (no fill, just stroke)
-          const linePolygon: [number, number][] = [
-            [startX, startY],
-            [endX, endY],
-            [endX, endY],
-            [startX, startY],
-            [startX, startY],
-          ];
+          // Arrow uses degenerate polygon (IconLayer uses first 2 points); plain line uses lineToPolygon for proper stroke
+          const linePolygon: [number, number][] = hasArrowHead
+            ? [
+                [startX, startY],
+                [endX, endY],
+                [endX, endY],
+                [startX, startY],
+                [startX, startY],
+              ]
+            : lineToPolygon([startX, startY], [endX, endY], lineWidth);
 
           const annotation: LineAnnotation = {
             id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             type: "line",
             polygon: linePolygon,
+            hasArrowHead,
             style: {
               fillColor: [0, 0, 0, 0] as [number, number, number, number], // Transparent fill
               lineColor: get().globalColor,
@@ -1299,6 +1321,18 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         set({ groupChannelLists: o });
       },
 
+      setSam2ImageFetcher: (fetcher) => {
+        set({ sam2ImageFetcher: fetcher });
+      },
+
+      setSam2Processing: (v) => {
+        set({ sam2Processing: v });
+      },
+
+      setSam2DebugImages: (v) => {
+        set({ sam2DebugImages: v });
+      },
+
       setChannelVisibilities: (vis: Record<string, boolean>) => {
         set({ channelVisibilities: vis });
       },
@@ -1422,6 +1456,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               id: `imported-line-${Date.now()}-${index}`,
               type: "line",
               polygon: linePolygon,
+              hasArrowHead: true, // Imported arrows display arrow heads
               text: arrow.Text,
               style: {
                 fillColor: [0, 0, 0, 0], // Transparent fill

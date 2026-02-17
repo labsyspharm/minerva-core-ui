@@ -5,8 +5,13 @@ import {
   ScatterplotLayer,
   IconLayer,
 } from "@deck.gl/layers";
-import { useOverlayStore, ellipseToPolygon } from "@/lib/stores";
+import {
+  useOverlayStore,
+  ellipseToPolygon,
+  lineToPolygon,
+} from "@/lib/stores";
 import { useAnnotationLayers, ARROW_ICON_SIZE } from "@/lib/annotationLayers";
+import { useSam2 } from "@/lib/sam2/useSam2";
 import ArrowDrawingIconUrl from "@/components/shared/icons/arrow-annotation-drawing.svg?url";
 
 // Shared Text Edit Panel Component
@@ -201,6 +206,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     createPointAnnotation,
     globalColor,
   } = useOverlayStore();
+  const sam2DebugImages = useOverlayStore((s) => s.sam2DebugImages);
   const { isDrawing, dragStart, dragEnd } = drawingState;
 
   // Local state for lasso tool
@@ -270,6 +276,13 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     [number, number] | null
   >(null);
   const [isLineClickMode, setIsLineClickMode] = React.useState(false);
+
+  // SAM2 magic wand
+  const {
+    runSegmentation,
+    isProcessing: isSam2Processing,
+    error: sam2Error,
+  } = useSam2();
 
   // Local state for click-to-draw ellipse
   const [ellipseFirstClick, setEllipseFirstClick] = React.useState<
@@ -396,29 +409,34 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     }
   }, [polygonClickPoints, globalColor]);
 
-  // Handle line finalization from click mode
+  // Handle line/arrow finalization from click mode
   const finalizeClickLine = React.useCallback(() => {
     if (lineFirstClick && lineSecondClick) {
       const [startX, startY] = lineFirstClick;
       const [endX, endY] = lineSecondClick;
+      const lineWidth = 3;
+      const hasArrowHead = activeTool === "arrow";
 
-      // Simple polygon for stroke-based line rendering (no fill, just stroke)
-      const linePolygon: [number, number][] = [
-        [startX, startY],
-        [endX, endY],
-        [endX, endY],
-        [startX, startY],
-        [startX, startY],
-      ];
+      // Arrow uses degenerate polygon; plain line uses lineToPolygon for proper stroke
+      const linePolygon: [number, number][] = hasArrowHead
+        ? [
+            [startX, startY],
+            [endX, endY],
+            [endX, endY],
+            [startX, startY],
+            [startX, startY],
+          ]
+        : lineToPolygon([startX, startY], [endX, endY], lineWidth);
 
       const annotation = {
         id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: "line" as const,
         polygon: linePolygon,
+        hasArrowHead,
         style: {
           fillColor: [0, 0, 0, 0] as [number, number, number, number], // Transparent fill
           lineColor: globalColor as [number, number, number, number],
-          lineWidth: 3,
+          lineWidth,
         },
         metadata: {
           createdAt: new Date(),
@@ -432,7 +450,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       setLineSecondClick(null);
       setIsLineClickMode(false);
     }
-  }, [lineFirstClick, lineSecondClick, globalColor]);
+  }, [lineFirstClick, lineSecondClick, globalColor, activeTool]);
 
   // Handle ellipse finalization from click mode
   const finalizeClickEllipse = React.useCallback(() => {
@@ -486,7 +504,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       setRectangleSecondClick(null);
       setIsRectangleClickMode(false);
     }
-    if (activeTool !== "line") {
+    if (activeTool !== "arrow" && activeTool !== "line") {
       setLineFirstClick(null);
       setLineSecondClick(null);
       setIsLineClickMode(false);
@@ -553,9 +571,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     };
   }, [activeTool, isRectangleClickMode]);
 
-  // Handle keyboard events for line finalization
+  // Handle keyboard events for line/arrow finalization
   React.useEffect(() => {
-    if (activeTool !== "line") return;
+    if (activeTool !== "arrow" && activeTool !== "line") return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       // Cancel line drawing on Escape
@@ -671,6 +689,10 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       if (type === "click" || type === "dragEnd") {
         createPointAnnotation([x, y], 5); // Default radius of 5 pixels
       }
+    } else if (activeTool === "magic_wand") {
+      if (type === "click" && !isSam2Processing) {
+        void runSegmentation(x, y);
+      }
     } else if (activeTool === "lasso") {
       if (type === "click") {
         // Click mode: Add point to polygon
@@ -732,14 +754,14 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
         // Update the second click position for preview during hover
         setRectangleSecondClick([x, y]);
       }
-    } else if (activeTool === "line") {
+    } else if (activeTool === "arrow" || activeTool === "line") {
       if (type === "click") {
         if (!isLineClickMode) {
-          // First click - start line drawing
+          // First click - start line/arrow drawing
           setLineFirstClick([x, y]);
           setIsLineClickMode(true);
         } else {
-          // Second click - finalize line
+          // Second click - finalize line/arrow
           setLineSecondClick([x, y]);
           finalizeClickLine();
         }
@@ -824,6 +846,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     finalizeClickEllipse,
     finalizeLasso,
     finalizeCurrentPolyline,
+    isSam2Processing,
+    runSegmentation,
   ]);
 
   // Handle text input submission
@@ -935,9 +959,46 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       ]; // No fill for polyline
       shouldFill = false;
     }
-    // Line (arrow) tool: preview is drawn as arrow icon only (see arrowPreviewLayer)
+    // Arrow tool: preview is drawn as arrow icon only (see arrowPreviewLayer)
+    else if (activeTool === "arrow") {
+      // No polygon data - arrow preview is a separate IconLayer
+    }
+    // Plain line tool: show polygon stroke preview (click mode and drag mode)
     else if (activeTool === "line") {
-      // No polygon data - arrow preview is a separate IconLayer that shows position and updates on mouse move
+      if (isLineClickMode && lineFirstClick) {
+        const end =
+          lineSecondClick ??
+          (currentInteraction?.type === "hover"
+            ? [currentInteraction.coordinate[0], currentInteraction.coordinate[1]]
+            : null);
+        if (end) {
+          polygonData = lineToPolygon(
+            lineFirstClick,
+            [end[0], end[1]],
+            getLineWidthPx(),
+          );
+          fillColor = [
+            PREVIEW_LINE_COLOR[0],
+            PREVIEW_LINE_COLOR[1],
+            PREVIEW_LINE_COLOR[2],
+            0,
+          ];
+          shouldFill = false;
+        }
+      } else if (isDrawing && dragStart && dragEnd) {
+        polygonData = lineToPolygon(
+          [dragStart[0], dragStart[1]],
+          [dragEnd[0], dragEnd[1]],
+          getLineWidthPx(),
+        );
+        fillColor = [
+          PREVIEW_LINE_COLOR[0],
+          PREVIEW_LINE_COLOR[1],
+          PREVIEW_LINE_COLOR[2],
+          0,
+        ];
+        shouldFill = false;
+      }
     }
     // Ellipse tool: uses click mode or drag mode
     else if (activeTool === "ellipse") {
@@ -957,8 +1018,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       return null;
     }
 
-    // Determine if we should stroke (lines use polygon fill only, no stroke)
-    const shouldStroke = activeTool !== "line";
+    // Determine if we should stroke (arrow uses IconLayer, not polygon; plain line needs stroke)
+    const shouldStroke = activeTool !== "arrow";
 
     // Create single unified polygon layer
     return new PolygonLayer({
@@ -992,11 +1053,15 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     isPolygonClickMode,
     polygonClickPoints,
     polygonHoverPoint,
+    isLineClickMode,
+    lineFirstClick,
+    lineSecondClick,
+    currentInteraction,
   ]);
 
   // Arrow preview layer: shows arrow icon from start to current position (updates on mouse move)
   const arrowPreviewLayer = React.useMemo(() => {
-    if (activeTool !== "line") return null;
+    if (activeTool !== "arrow") return null;
 
     let start: [number, number] | null = null;
     let end: [number, number] | null = null;
@@ -1131,6 +1196,76 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
 
   return (
     <>
+      {/* SAM2 error toast */}
+      {sam2Error && activeTool === "magic_wand" && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 16,
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "#c62828",
+            color: "white",
+            padding: "8px 16px",
+            borderRadius: 8,
+            fontSize: 14,
+            zIndex: 1000,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+          }}
+        >
+          {sam2Error}
+        </div>
+      )}
+
+      {/* SAM2 debug overlay - images shown when localStorage sam2_debug=1 */}
+      {sam2DebugImages && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 16,
+            left: 16,
+            display: "flex",
+            gap: 12,
+            backgroundColor: "rgba(0,0,0,0.85)",
+            padding: 12,
+            borderRadius: 8,
+            zIndex: 1001,
+            maxWidth: "90vw",
+          }}
+        >
+          {sam2DebugImages.encoded ? (
+            <div>
+              <div style={{ color: "#ccc", fontSize: 12, marginBottom: 4 }}>
+                Encoded (1024×1024)
+              </div>
+              <img
+                src={sam2DebugImages.encoded}
+                alt="SAM2 encoded"
+                style={{ maxWidth: 256, maxHeight: 256, display: "block" }}
+                title="Right-click → Save image as"
+              />
+            </div>
+          ) : null}
+          {sam2DebugImages.mask ? (
+            <div>
+              <div style={{ color: "#ccc", fontSize: 12, marginBottom: 4 }}>
+                Mask (256×256)
+              </div>
+              <img
+                src={sam2DebugImages.mask}
+                alt="SAM2 mask"
+                style={{ maxWidth: 256, maxHeight: 256, display: "block" }}
+                title="Right-click → Save image as"
+              />
+            </div>
+          ) : (
+            <div style={{ color: "#888", fontSize: 12 }}>
+              Mask: waiting for decode…
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Text Input Modal */}
       {showTextInput && textInputPosition && (
         <TextEditPanel

@@ -81,6 +81,7 @@
     "lensing": "https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9",
     "lzw-tiff-decoder": "^0.1.1",
     "npm": "^11.5.2",
+    "onnxruntime-web": "^1.24.1",
     "openseadragon": "^4.1.1",
     "playwright": "^1.54.2",
     "prop-types": "^15.8.1",

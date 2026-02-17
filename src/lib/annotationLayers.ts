@@ -53,6 +53,12 @@ export function createAllAnnotationLayers(
     lineWidth: number;
     id: string;
   }> = [];
+  // Plain lines (lineToPolygon): filled only, no stroke - polygon represents thick line
+  const filledOnlyPolygonData: Array<{
+    polygon: [number, number][];
+    fillColor: ColorRGBA;
+    id: string;
+  }> = [];
   const textData: Array<{
     text: string;
     position: [number, number, number];
@@ -140,55 +146,71 @@ export function createAllAnnotationLayers(
     }
 
     if (annotation.type === "line") {
-      // Arrow/line annotations use IconLayer
-      const polygon = annotation.polygon;
-      if (polygon.length >= 2) {
-        const [startX, startY] = polygon[0];
-        const [endX, endY] = polygon[1];
+      const hasArrowHead = annotation.hasArrowHead !== false; // Default true for backward compat
 
-        // Calculate angle from start to end (in degrees)
-        const dx = endX - startX;
-        const dy = endY - startY;
-        const angleRad = Math.atan2(dy, dx);
-        const angleDeg = (angleRad * 180) / Math.PI + 90;
+      if (hasArrowHead) {
+        // Arrow annotations use IconLayer
+        const polygon = annotation.polygon;
+        if (polygon.length >= 2) {
+          const [startX, startY] = polygon[0];
+          const [endX, endY] = polygon[1];
 
-        const iconColor = isHovered
+          // Calculate angle from start to end (in degrees)
+          const dx = endX - startX;
+          const dy = endY - startY;
+          const angleRad = Math.atan2(dy, dx);
+          const angleDeg = (angleRad * 180) / Math.PI + 90;
+
+          const iconColor = isHovered
+            ? ([0, 120, 255, 255] as ColorRGBA)
+            : annotation.style.lineColor;
+
+          arrowData.push({
+            position: [endX, endY, 0],
+            angle: angleDeg,
+            color: iconColor,
+            id: `${annotation.id}-arrow`,
+          });
+
+          // Add label text if present
+          if (annotation.text) {
+            // Calculate direction from tip to tail (opposite of arrow direction)
+            const labelDx = startX - endX;
+            const labelDy = startY - endY;
+            const length = Math.sqrt(labelDx * labelDx + labelDy * labelDy);
+            const dirX = length > 0 ? labelDx / length : 0;
+            const dirY = length > 0 ? labelDy / length : 1;
+
+            const pixelOffsetMagnitude = ARROW_ICON_SIZE / 2 + 12;
+            const pixelOffsetX = dirX * pixelOffsetMagnitude;
+            const pixelOffsetY = dirY * pixelOffsetMagnitude;
+
+            const textAnchor: "start" | "end" = labelDx > 0 ? "start" : "end";
+            const textColor =
+              annotation.style.lineColor ||
+              ([255, 255, 255, 255] as ColorRGBA);
+
+            labelData.push({
+              text: annotation.text,
+              position: [endX, endY, 0],
+              pixelOffset: [pixelOffsetX, pixelOffsetY],
+              color: textColor,
+              textAnchor,
+              id: `${annotation.id}-text`,
+            });
+          }
+        }
+      } else {
+        // Plain line (no arrow head): lineToPolygon creates a rectangular polygon
+        // that should be FILLED with the line color, not stroked
+        const fillColor = isHovered
           ? ([0, 120, 255, 255] as ColorRGBA)
           : annotation.style.lineColor;
-
-        arrowData.push({
-          position: [endX, endY, 0],
-          angle: angleDeg,
-          color: iconColor,
-          id: `${annotation.id}-arrow`,
+        filledOnlyPolygonData.push({
+          polygon: annotation.polygon,
+          fillColor,
+          id: annotation.id,
         });
-
-        // Add label text if present
-        if (annotation.text) {
-          // Calculate direction from tip to tail (opposite of arrow direction)
-          const labelDx = startX - endX;
-          const labelDy = startY - endY;
-          const length = Math.sqrt(labelDx * labelDx + labelDy * labelDy);
-          const dirX = length > 0 ? labelDx / length : 0;
-          const dirY = length > 0 ? labelDy / length : 1;
-
-          const pixelOffsetMagnitude = ARROW_ICON_SIZE / 2 + 12;
-          const pixelOffsetX = dirX * pixelOffsetMagnitude;
-          const pixelOffsetY = dirY * pixelOffsetMagnitude;
-
-          const textAnchor: "start" | "end" = labelDx > 0 ? "start" : "end";
-          const textColor =
-            annotation.style.lineColor || ([255, 255, 255, 255] as ColorRGBA);
-
-          labelData.push({
-            text: annotation.text,
-            position: [endX, endY, 0],
-            pixelOffset: [pixelOffsetX, pixelOffsetY],
-            color: textColor,
-            textAnchor,
-            id: `${annotation.id}-text`,
-          });
-        }
       }
 
       return;
@@ -251,6 +273,21 @@ export function createAllAnnotationLayers(
         lineWidthMinPixels: 1,
         lineWidthMaxPixels: 100,
         stroked: true,
+        filled: true,
+        pickable,
+      }),
+    );
+  }
+
+  // 1b. Filled-only polygons (plain lines from lineToPolygon - thick line as filled rect)
+  if (filledOnlyPolygonData.length > 0) {
+    layers.push(
+      new PolygonLayer({
+        id: "annotation-filled-polygons",
+        data: filledOnlyPolygonData,
+        getPolygon: (d) => d.polygon,
+        getFillColor: (d) => d.fillColor,
+        stroked: false,
         filled: true,
         pickable,
       }),
