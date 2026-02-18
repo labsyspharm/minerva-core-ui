@@ -26,10 +26,6 @@ const WaypointsList = (props: WaypointsListProps) => {
     stories,
     activeStoryIndex,
     setActiveStory,
-    waypoints,
-    activeWaypointId,
-    setActiveWaypoint,
-    updateStory,
     reorderStories,
     importWaypointAnnotations,
     clearImportedAnnotations,
@@ -39,8 +35,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   } = useOverlayStore();
 
   // Local state for markdown editing
-  const [isEditingMarkdown, setIsEditingMarkdown] = React.useState(false);
-  const [expandedMarkdownStories, setExpandedMarkdownStories] = React.useState<
+  const [expandedMarkdownStories, _setExpandedMarkdownStories] = React.useState<
     Set<string>
   >(new Set());
 
@@ -52,7 +47,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   const [draggedStoryId, setDraggedStoryId] = React.useState<string | null>(
     null,
   );
-  const [dropTargetIndex, setDropTargetIndex] = React.useState<number | null>(
+  const [_dropTargetIndex, setDropTargetIndex] = React.useState<number | null>(
     null,
   );
 
@@ -90,7 +85,6 @@ const WaypointsList = (props: WaypointsListProps) => {
     const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
     const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
     const isDragging = draggedStoryId === storyId;
-    const isDropTarget = dropTargetIndex === index;
 
     // Build children array based on what's expanded
     const children: ListItem<
@@ -175,7 +169,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     event.dataTransfer.setData("text/plain", storyId);
   };
 
-  const handleDragEnd = (storyId: string, event: React.DragEvent) => {
+  const handleDragEnd = () => {
     setDraggedStoryId(null);
     setDropTargetIndex(null);
   };
@@ -191,7 +185,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     }
   };
 
-  const handleDragLeave = (storyId: string, event: React.DragEvent) => {
+  const handleDragLeave = () => {
     setDropTargetIndex(null);
   };
 
@@ -243,7 +237,7 @@ const WaypointsList = (props: WaypointsListProps) => {
           }}
           draggable
           onDragStart={(e) => handleDragStart(storyId, e)}
-          onDragEnd={(e) => handleDragEnd(storyId, e)}
+          onDragEnd={(_e) => handleDragEnd()}
           title="Drag to reorder"
         >
           ⋮⋮
@@ -309,7 +303,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   // Custom child renderer for annotations panel
   const customChildRenderer = (
     childItem: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>,
-    parentItem: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>,
+    _parentItem: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>,
   ) => {
     if (childItem.metadata && "type" in childItem.metadata) {
       const metadata = childItem.metadata as WaypointAnnotationEditorMetadata;

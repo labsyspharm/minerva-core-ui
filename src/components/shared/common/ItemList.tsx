@@ -27,9 +27,9 @@ export interface ItemListProps<T = any> {
   onDelete?: (itemId: string) => void;
   onToggleExpand?: (itemId: string) => void;
   onDragStart?: (itemId: string, event: React.DragEvent) => void;
-  onDragEnd?: (itemId: string, event: React.DragEvent) => void;
+  onDragEnd?: () => void;
   onDragOver?: (itemId: string, event: React.DragEvent) => void;
-  onDragLeave?: (itemId: string, event: React.DragEvent) => void;
+  onDragLeave?: () => void;
   onDrop?: (targetId: string, draggedId: string) => void;
   showVisibilityToggle?: boolean;
   showDeleteButton?: boolean;
@@ -74,11 +74,11 @@ const ItemList = <T = any>({
     }
   };
 
-  const handleDragEnd = (itemId: string, event: React.DragEvent) => {
+  const handleDragEnd = () => {
     setDraggedItemId(null);
     setDropTargetId(null);
     if (onDragEnd) {
-      onDragEnd(itemId, event);
+      onDragEnd();
     }
   };
 
@@ -91,10 +91,10 @@ const ItemList = <T = any>({
     }
   };
 
-  const handleDragLeave = (itemId: string, event: React.DragEvent) => {
+  const handleDragLeave = () => {
     setDropTargetId(null);
     if (onDragLeave) {
-      onDragLeave(itemId, event);
+      onDragLeave();
     }
   };
 
@@ -132,9 +132,9 @@ const ItemList = <T = any>({
         className={itemClasses}
         draggable={!!onDragStart}
         onDragStart={(e) => handleDragStart(item.id, e)}
-        onDragEnd={(e) => handleDragEnd(item.id, e)}
+        onDragEnd={(_e) => handleDragEnd()}
         onDragOver={(e) => handleDragOver(item.id, e)}
-        onDragLeave={(e) => handleDragLeave(item.id, e)}
+        onDragLeave={(_e) => handleDragLeave()}
         onDrop={(e) => handleDrop(item.id, e)}
         onClick={() => onItemClick?.(item)}
       >

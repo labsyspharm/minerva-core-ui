@@ -6,17 +6,17 @@ import { useOverlayStore } from "./stores";
 type InteractionType = "click" | "dragStart" | "drag" | "dragEnd" | "hover";
 type InteractionCallback = (
   type: InteractionType,
-  coordinate: [number, number, number],
+  coordinate: number[],
 ) => void;
 
 type HasCoordinate = {
-  coordinate: [number, number, number];
+  coordinate?: number[];
   layer: {
     id: string;
   };
   x: number;
   y: number;
-  z: number;
+  z?: number;
 }
 
 export const createDragHandlers = (
@@ -37,7 +37,7 @@ export const createDragHandlers = (
   // Helper to emit interaction if coordinate exists
   const emit = (
     type: InteractionType,
-    coordinate?: [number, number, number],
+    coordinate?: number[],
   ) => {
     if (coordinate) {
       onInteraction(type, coordinate);

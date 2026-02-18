@@ -17,11 +17,12 @@ import {
 import { useOverlayStore } from "@/lib/stores";
 
 // Types
+import type { CreatableLayer } from "@/components/shared/viewer/layers/DrawingOverlay";
 import type { Group } from "@/lib/exhibit";
 
 type DrawingPanelProps = {
   groups: Group[];
-  onLayerCreate?: (layer: any) => void;
+  onLayerCreate?: (layer: CreatableLayer) => void;
   currentInteraction?: {
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover";
     coordinate: [number, number, number];
@@ -83,7 +84,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
     setShowColorPicker(true);
   };
 
-  const handleColorChange = (color: any) => {
+  const handleColorChange = (color) => {
     setCurrentColor(color.rgb);
   };
 

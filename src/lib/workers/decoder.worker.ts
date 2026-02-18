@@ -1,4 +1,4 @@
-import { addDecoder, getDecoder } from "geotiff";
+import { addDecoder } from "geotiff";
 import { LZWDecoder } from "./decoders";
 
 import type { PoolClass } from './Pool';

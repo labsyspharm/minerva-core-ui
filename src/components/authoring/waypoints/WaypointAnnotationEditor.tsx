@@ -7,7 +7,6 @@ import {
   MoveIcon,
   RectangleIcon,
   EllipseIcon,
-  LassoIcon,
   PolygonIcon,
   LineIcon,
   PolylineIcon,
@@ -36,19 +35,17 @@ export interface WaypointAnnotationEditorProps {
   storyIndex: number;
 }
 
-const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
-  story,
-  storyIndex,
-}) => {
+type RGBA = {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+}
+
+const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = () => {
   const {
-    overlayLayers,
     activeTool,
-    currentInteraction,
-    dragState,
-    hoverState,
-    handleLayerCreate,
     handleToolChange,
-    handleOverlayInteraction,
     globalColor,
     setGlobalColor,
     updateAnnotation,
@@ -82,7 +79,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     setShowColorPicker(true);
   };
 
-  const handleColorChange = (color: any) => {
+  const handleColorChange = (color: { rgb: RGBA }) => {
     setCurrentColor(color.rgb);
   };
 
@@ -98,7 +95,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
     // If we're editing a specific annotation, update it
     if (editingAnnotationId) {
-      updateAnnotation(editingAnnotationId, { color: newColor } as any);
+      updateAnnotation(editingAnnotationId, { color: newColor });
       updateTextAnnotationColor(editingAnnotationId, newColor);
       setEditingAnnotationId(null);
     }

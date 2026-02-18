@@ -27,11 +27,10 @@ const Mono = styled.div`
 
 const EditableText = (props) => {
   const { uuid, editable = true } = props;
-  const { setInput, md = false } = props;
-  const { cache, updateCache } = props;
+  const { setInput } = props;
+  const { cache } = props;
 
   const cached = cache.has(uuid);
-  const setText = (t) => updateCache(uuid, t);
   const text = cached ? cache.get(uuid) : props.children;
 
   const onChange = handleText({ setInput });

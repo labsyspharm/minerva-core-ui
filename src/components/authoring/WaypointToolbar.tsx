@@ -43,16 +43,14 @@ export const WaypointToolbar = (props: WaypointToolbarProps) => {
   };
 
   return (
-    <>
-      <WrapIcons justify="center">
-        <Icon {...toggleProps} />
-        <RefIcon {...zoomInProps} />
-        <RefIcon {...zoomOutProps} />
-        <Icon icon={faArrow} />
-        <Icon icon={faPolygon} />
-        <Icon icon={faOverlay} />
-        <Icon {...infoProps} />
-      </WrapIcons>
-    </>
+    <WrapIcons justify="center">
+      <Icon {...toggleProps} />
+      <RefIcon {...zoomInProps} />
+      <RefIcon {...zoomOutProps} />
+      <Icon icon={faArrow} />
+      <Icon icon={faPolygon} />
+      <Icon icon={faOverlay} />
+      <Icon {...infoProps} />
+    </WrapIcons>
   );
 };

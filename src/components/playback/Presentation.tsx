@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { useEffect, useRef, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { useOverlayStore } from "@/lib/stores";
@@ -8,6 +8,7 @@ import styled from "styled-components";
 const theme = {};
 
 // Types
+import type { MouseEvent } from "react";
 import type { ConfigProps, ConfigWaypoint } from "@/lib/config";
 import type { Group, Story } from "@/lib/exhibit";
 import type { ImageProps } from "@/components/shared/common/types";
@@ -302,7 +303,7 @@ export const Presentation = (props: PresentationProps) => {
   );
   const StoryLeft = (props) => {
     const activeClass = props.active ? "" : "inactive";
-    const handleMouseDown = (e: React.MouseEvent) => {
+    const handleMouseDown = (e: MouseEvent) => {
       e.preventDefault(); // Prevent any default behavior
       storyLeft();
     };
@@ -329,7 +330,7 @@ export const Presentation = (props: PresentationProps) => {
   );
   const StoryRight = (props) => {
     const activeClass = props.active ? "" : "inactive";
-    const handleMouseDown = (e: React.MouseEvent) => {
+    const handleMouseDown = (e: MouseEvent) => {
       e.preventDefault(); // Prevent any default behavior
       storyRight();
     };
@@ -366,7 +367,7 @@ export const Presentation = (props: PresentationProps) => {
         <h2 className="h6">Table of Contents</h2>
         <ol>
           {stories.map((wp: ConfigWaypoint, i: number) => {
-            const goToStory = (e: React.MouseEvent) => {
+            const goToStory = (e: MouseEvent) => {
               e.preventDefault();
               storyAt(i);
             };

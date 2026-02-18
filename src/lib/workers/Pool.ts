@@ -39,7 +39,7 @@ class Pool extends GeotiffPool {
     super(numWorkers || defaultPoolSize, createWorker);
   }
 
-  decode(fileDirectory, buffer) {
+  decode(_fileDirectory, _buffer) {
     return null; // TOOD, unused
   }
 

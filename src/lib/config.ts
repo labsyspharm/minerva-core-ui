@@ -65,16 +65,6 @@ type Dtype =
   | "Int32"
   | "Float32"
   | "Float64";
-type TypedArray =
-  | Int8Array
-  | Uint8Array
-  | Int16Array
-  | Uint16Array
-  | Int32Array
-  | Uint32Array
-  | Uint8ClampedArray
-  | Float32Array
-  | Float64Array;
 type Index = {
   x: number;
   y: number;
@@ -119,7 +109,7 @@ export type LoaderPlane = {
   getTile: (s: TileConfig) => Promise<HasTile>;
 };
 export type VivLoaderPlane = LoaderPlane & {
-  labels: ["t","c","z","y","x","_c"]
+  labels: ["t","c","z","y","x"]
 }
 type ToTilePlane = (z: number, l: LoaderPlane[]) => LoaderPlane
 type FullState = {
@@ -284,12 +274,17 @@ const toTileLayer = (planes: LoaderPlane[]): TileProps => {
 };
 
 function hasVivLabels(plane): plane is VivLoaderPlane {
-  const labels = plane.labels.slice(-3);
-  return (
+  const labels = plane.labels.slice(-2);
+  const labels_match = (
     labels[0] === "y" &&
-    labels[1] === "x" &&
-    labels[2] === "_c"
+    labels[1] === "x"
   )
+  if (!labels_match) {
+    console.error(`
+      ${plane.labels.join(',')} must end in y,x
+    `);
+  }
+  return labels_match;
 }
 
 const initialize: Initialize = (inputs) => {
