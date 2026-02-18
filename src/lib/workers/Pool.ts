@@ -40,7 +40,7 @@ class Pool extends GeotiffPool {
   }
 
   decode(fileDirectory, buffer) {
-    return super.decode(fileDirectory, buffer);
+    return null; // TOOD, unused
   }
 
   async destroy() {

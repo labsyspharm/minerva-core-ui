@@ -2,6 +2,7 @@ import { loadOmeTiff } from "@hms-dbmi/viv";
 
 import type { Loader } from "./viv";
 import type { PoolClass } from "./workers/Pool";
+import type { HasTile } from "./config";
 
 type ListDirIn = {
   handle: Handle.Dir;
@@ -30,13 +31,6 @@ type TileConfig = {
   y: number;
   signal: AbortSignal;
   selection: Selection;
-};
-type HasTile = HasShape & {
-  data: ArrayBuffer;
-};
-export type HasShape = {
-  height: number;
-  width: number;
 };
 export type Dtype =
   | "Uint8"

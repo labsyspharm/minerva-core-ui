@@ -12,7 +12,7 @@ class LZWDecoder extends BaseDecoder {
   maxUncompressedSize: number;
 
   constructor(fileDirectory: FileDirectory) {
-    super();
+    super({});
     const width = fileDirectory.TileWidth || fileDirectory.ImageWidth;
     const height = fileDirectory.TileLength || fileDirectory.ImageLength;
     const nbytes = fileDirectory.BitsPerSample[0] / 8;
