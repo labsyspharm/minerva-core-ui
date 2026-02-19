@@ -248,7 +248,7 @@ const toTileLayer = (planes: LoaderPlane[]): TileProps => {
   const i = 0;
   const id = `Tiled-Image-${i}`;
   const plane = toTilePlane(0, planes);
-  const { height, width } = getImageSize(plane);
+  const { height, width } = getImageSize(plane as any);
   const extent: Four = [0, 0, width, height];
   const { tileSize, dtype } = plane;
   const label_shapes = plane.labels.reduce(
