@@ -1,7 +1,8 @@
 name: Github Pages
 on:
   push:
-    branches: ["dicom-pages"]
+    branches: ["dicom-pages", "annotation"]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,32 +11,56 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v3
+
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 21
+
       - uses: pnpm/action-setup@v4
         name: Install pnpm
-        id: pnpm-install
         with:
           version: 10
           run_install: true
+
       - name: Build with pnpm
         run: |
           pnpm run pages
-      - name: Push artifact
+
+      # dicom-pages -> lsp-idc-minerva
+      - name: Push artifact (dicom-pages)
+        if: github.ref == 'refs/heads/dicom-pages'
         env:
           PAT: ${{ secrets.PAT }}
           EMAIL: ${{ secrets.EMAIL }}
           NAME: ${{ secrets.NAME }}
         run: |
-          export GITHUB_TOKEN=$PAT
           git config --global user.email "$EMAIL"
           git config --global user.name "$NAME"
-          git clone "https://${PAT}@github.com/labsyspharm/lsp-idc-minerva"
+
+          git clone "https://${PAT}@github.com/labsyspharm/lsp-idc-minerva.git"
           rm -rf ./lsp-idc-minerva/*
           cp -R ./dist/* ./lsp-idc-minerva/
           cd ./lsp-idc-minerva
+          git add -A
+          git commit -m update --allow-empty
+          git push -f
+
+      # annotation -> minerva-annotation-demo
+      - name: Push artifact (annotation)
+        if: github.ref == 'refs/heads/annotation'
+        env:
+          PAT: ${{ secrets.PAT }}
+          EMAIL: ${{ secrets.EMAIL }}
+          NAME: ${{ secrets.NAME }}
+        run: |
+          git config --global user.email "$EMAIL"
+          git config --global user.name "$NAME"
+
+          git clone "https://${PAT}@github.com/labsyspharm/minerva-annotation-demo.git"
+          rm -rf ./minerva-annotation-demo/*
+          cp -R ./dist/* ./minerva-annotation-demo/
+          cd ./minerva-annotation-demo
           git add -A
           git commit -m update --allow-empty
           git push -f
