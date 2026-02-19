@@ -1640,10 +1640,8 @@ const configWaypoints = [
 const exhibit_config = {
     Name: "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer",
     Stories: [{
-        Waypoints: configWaypoints.map(({
-            Arrows, Overlays,
-            Name, Content, Pan, Zoom, Group
-        }) => {
+        Waypoints: configWaypoints.map(({ Properties, Arrows, Overlays }) => {
+            const { Name, Content, Pan, Zoom, Group } = Properties;
             return {
                 Name, Description: Content,
                 Pan: Pan as [number, number], Zoom, Group,
