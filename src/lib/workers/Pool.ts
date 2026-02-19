@@ -1,4 +1,9 @@
 import { Pool as GeotiffPool } from "geotiff";
+import { addDecoder, getDecoder } from "geotiff";
+import { LZWDecoder } from "./decoders";
+
+// Register the LZW decoder
+addDecoder(5, () => Promise.resolve(LZWDecoder));
 
 export declare class PoolClass {
     /**
@@ -23,10 +28,15 @@ export declare class PoolClass {
 // each other and not the UI thread, which is the real benefit.
 const defaultPoolSize = globalThis?.navigator?.hardwareConcurrency ?? 4;
 
-function createWorker() {
-  return new Worker(new URL("./decoder.worker.ts", import.meta.url), {
-    type: "module",
-  });
+async function defaultDecoderParameterFn(fileDirectory) {
+  // TODO -- using v2.0 fileDirectory
+  return {
+    tileWidth: fileDirectory.TileWidth,
+    tileHeight: fileDirectory.TileLength,
+    planarConfiguration: 1,
+    bitsPerSample: await fileDirectory.BitsPerSample,
+    predictor: 1
+  };
 }
 
 class Pool extends GeotiffPool {
@@ -36,11 +46,19 @@ class Pool extends GeotiffPool {
   messageId: 0;
 
   constructor(numWorkers = 1) {
-    super(numWorkers || defaultPoolSize, createWorker);
+    super(numWorkers || defaultPoolSize, null);
   }
 
-  decode(_fileDirectory, _buffer) {
-    return null; // TOOD, unused
+  async decode(fileDirectory, buffer) {
+    const compression = fileDirectory.Compression;
+    const params = await defaultDecoderParameterFn(
+      fileDirectory
+    );
+    const decoder = await getDecoder(
+      compression, params
+    );
+    const decoded = await decoder.decode(buffer);
+    return decoded;
   }
 
   async destroy() {
