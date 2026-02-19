@@ -274,14 +274,13 @@ const toTileLayer = (planes: LoaderPlane[]): TileProps => {
 };
 
 function hasVivLabels(plane): plane is VivLoaderPlane {
-  const labels = plane.labels.slice(-2);
+  const labels = plane.labels;
   const labels_match = (
-    labels[0] === "y" &&
-    labels[1] === "x"
+    labels.includes("y") && labels.includes("x")
   )
   if (!labels_match) {
     console.error(`
-      ${plane.labels.join(',')} must end in y,x
+      Channel labels ${labels.join(',')} must include y and x
     `);
   }
   return labels_match;
