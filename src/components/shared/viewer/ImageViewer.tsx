@@ -4,26 +4,22 @@ import {
   type OrthographicViewState,
 } from "@deck.gl/core";
 import Deck from "@deck.gl/react";
-import { FullscreenWidget } from "@deck.gl/widgets";
 import { MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
-import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 
 import "@deck.gl/widgets/stylesheet.css";
 
-import { Lensing } from "@/components/shared/viewer/layers/Lensing";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
-import type { ConfigProps } from "@/lib/config";
 import { createTileLayers, loadDicom } from "@/lib/dicom";
 import type { DicomIndex } from "@/lib/dicom-index";
 import { createDragHandlers } from "@/lib/dragHandlers";
-import type { Group, Story } from "@/lib/exhibit";
+import type { Story } from "@/lib/exhibit";
 import { useOverlayStore } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
 import type { Config, Loader } from "@/lib/viv";
 import { toSettings } from "@/lib/viv";
-import { convertWaypointToViewState, getWaypoint } from "@/lib/waypoint";
+import { convertWaypointToViewState, } from "@/lib/waypoint";
 
 export type ImageViewerProps = {
   loaderOmeTiff: Loader;
@@ -60,9 +56,31 @@ const Main = styled.div`
   height: 100%;
 `;
 
-const isElement = (x = {}): x is HTMLElement => {
+const _isElement = (x = {}): x is HTMLElement => {
   return ["Width", "Height"].every((k) => `client${k}` in x);
 };
+
+const toSettingsInternal = (
+  loader,
+  modality,
+  groups,
+  activeChannelGroupId,
+  channelVisibilities,
+  viewerConfig
+) => {
+  // Gets the default settings
+  if (loader === null || !groups) {
+    return viewerConfig.toSettings(activeChannelGroupId, modality);
+  }
+  return viewerConfig.toSettings(
+    activeChannelGroupId,
+    modality,
+    loader,
+    channelVisibilities,
+  );
+  };
+
+
 
 export const ImageViewer = (props: ImageViewerProps) => {
   const windowSize = useWindowSize();
@@ -81,7 +99,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   } = props;
   const { activeChannelGroupId, channelVisibilities } = useOverlayStore();
   const [viewportSize, setViewportSize] = useState(windowSize);
-  const [canvas, setCanvas] = useState(null);
+  const [_canvas, _setCanvas] = useState(null);
   const rootRef = useRef<HTMLElement | null>(null);
 
   // Set up ResizeObserver to track viewport size changes
@@ -100,31 +118,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return () => resizeObserver.disconnect();
   }, []);
 
-  const loaderList = useMemo(
+  const _loaderList = useMemo(
     () =>
       // Show only ome-tiff if available
       loaderOmeTiff !== null ? [loaderOmeTiff] : dicomIndexList,
     [loaderOmeTiff, dicomIndexList],
   );
-
-  const toSettingsInternal = (
-    loader,
-    modality,
-    groups,
-    activeChannelGroupId,
-    channelVisibilities,
-  ) => {
-    // Gets the default settings
-    if (loader === null || !groups) {
-      return viewerConfig.toSettings(activeChannelGroupId, modality);
-    }
-    return viewerConfig.toSettings(
-      activeChannelGroupId,
-      modality,
-      loader,
-      channelVisibilities,
-    );
-  };
 
   const mainSettingsOmeTiff = useMemo(() => {
     const modality = "Colorimetric";
@@ -134,8 +133,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
       groups,
       activeChannelGroupId,
       channelVisibilities,
+      viewerConfig
     );
-  }, [loaderOmeTiff, groups, activeChannelGroupId, channelVisibilities]);
+  }, [loaderOmeTiff, groups, activeChannelGroupId, channelVisibilities, viewerConfig]);
 
   const mainSettingsDicomList = useMemo(() => {
     return dicomIndexList.map((dicomIndex) => {
@@ -146,9 +146,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
         groups,
         activeChannelGroupId,
         channelVisibilities,
+        viewerConfig
       );
     });
-  }, [dicomIndexList, groups, activeChannelGroupId, channelVisibilities]);
+  }, [dicomIndexList, groups, activeChannelGroupId, channelVisibilities, viewerConfig]);
 
   // Show only ome-tiff if available
   const mainSettingsList = useMemo(

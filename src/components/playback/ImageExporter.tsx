@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
 import styled from "styled-components";
-import Button from "react-bootstrap/Button";
 import { getImageSize } from "@hms-dbmi/viv";
 import { loadOmeTiff } from "@hms-dbmi/viv";
 import type { TiffPixelSource } from "@hms-dbmi/viv";
@@ -87,7 +86,7 @@ const clampValue = (x, min, max) => {
 };
 
 const clampArray = (imageData, tile_u16, min, max) => {
-  var tile_u8 = new Uint8Array(tile_u16.length);
+  var _tile_u8 = new Uint8Array(tile_u16.length);
   for (var i = 0; i < tile_u16.length; i++) {
     const clamped = clampValue(tile_u16[i], min, max);
     imageData.data[i * 4] = clamped;
@@ -323,7 +322,7 @@ export type ImageExporterProps = {
 };
 
 export const ImageExporter = (props: ImageExporterProps) => {
-  const exportProps = {
+  const _exportProps = {
     variant: "primary",
     className: "mb-3",
   };
@@ -345,7 +344,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
         setState(init);
       }
     });
-  }, [in_f]);
+  }, [in_f, handle]);
 
   const { step, done } = stepSignal;
   const index = (() => {
@@ -376,9 +375,9 @@ export const ImageExporter = (props: ImageExporterProps) => {
         }
       });
     }
-  }, [state, step, done]);
+  }, [state, step, done, handle, index, loader, props, stepSignal]);
 
-  const tileShape = { width: 1024, height: 1024 }; // TODO
+  const _tileShape = { width: 1024, height: 1024 }; // TODO
   let ratio = done ? 1 : 0;
   if (!done && state !== null) {
     ratio = step / (state.indices.length - 1);

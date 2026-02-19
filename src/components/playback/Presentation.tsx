@@ -1,16 +1,15 @@
-import React from "react";
+
 import { useEffect, useRef, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { useOverlayStore } from "@/lib/stores";
 import { useAnnotationLayers } from "@/lib/annotationLayers";
 //import { theme } from "@/theme.module.css";
 import styled from "styled-components";
-const theme = {};
+const _theme = {};
 
 // Types
 import type { MouseEvent } from "react";
 import type { ConfigProps, ConfigWaypoint } from "@/lib/config";
-import type { Group, Story } from "@/lib/exhibit";
 import type { ImageProps } from "@/components/shared/common/types";
 
 export type PresentationProps = ImageProps & {
@@ -146,8 +145,8 @@ const SVG = (props) => {
   return (
     <svg
       viewBox="-3 0 20 40"
-      height={props.px + "px"}
-      width={props.px * 1.5 + "px"}
+      height={`${props.px}px`}
+      width={`${props.px * 1.5}px`}
       aria-hidden="true"
       focusable="false"
     >
@@ -287,8 +286,8 @@ export const Presentation = (props: PresentationProps) => {
     >
       <svg
         viewBox="0 0 30 20"
-        height={buttonHeight + "px"}
-        width={buttonHeight * 1.5 + "px"}
+        height={`${buttonHeight}px`}
+        width={`${buttonHeight * 1.5}px`}
         aria-hidden="true"
         focusable="false"
       >

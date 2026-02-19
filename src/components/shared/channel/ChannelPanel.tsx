@@ -1,12 +1,8 @@
 import * as React from "react";
-import { useState } from "react";
 import { ChannelLegend } from "./ChannelLegend";
 import { ChannelGroups } from "./ChannelGroups";
 import { useOverlayStore } from "@/lib/stores";
 import styled from "styled-components";
-import { Push as PushGroup } from "@/components/authoring/tools/ActionButtons";
-import { EditModeSwitcher } from "@/components/authoring/tools/EditModeSwitcher";
-import { defaultChannels } from "./ChannelLegend";
 import { DrawingPanel } from "@/components/authoring/DrawingPanel";
 
 // Types
@@ -98,7 +94,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const hide = props.hiddenChannel;
   const setHide = props.setHiddenChannel;
 
-  const togglePanel = () => setHide(!hide);
+  const _togglePanel = () => setHide(!hide);
 
   const hidden = props.retrievingMetadata;
   // Subscribe only to overlay state used by this panel so viewport/zoom updates don't re-render.
@@ -129,6 +125,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
             color: `${hex_color}`,
           };
         }
+        return null;
       }).filter((x) => x),
     };
   });

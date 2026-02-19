@@ -1,4 +1,4 @@
-import * as React from "react";
+
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Form from "react-bootstrap/Form";
@@ -69,7 +69,7 @@ const TwoColumn = styled.div`
   display: grid;
   gap: 2em;
 `;
-const FullHeightText = styled.div`
+const _FullHeightText = styled.div`
   grid-template-columns: auto 2em 1fr;
   margin-bottom: 1em;
   display: grid;
@@ -84,8 +84,8 @@ const FullWidthGrid = styled.div`
 `;
 
 const shadow_gray = "rgb(0 0 0 / 20%)";
-const sh_4_8 = `0 4px 8px 0 ${shadow_gray}`;
-const sh_6_20 = `0 6px 20px 0 ${shadow_gray}`;
+const _sh_4_8 = `0 4px 8px 0 ${shadow_gray}`;
+const _sh_6_20 = `0 6px 20px 0 ${shadow_gray}`;
 const UploadDiv = styled.div`
   height: 100%;
   display: grid;
@@ -113,7 +113,7 @@ const UploadDiv = styled.div`
   }
 `;
 
-const PathGrid = styled.div`
+const _PathGrid = styled.div`
   grid-template-columns: auto 1fr;
   white-space: nowrap;
   align-items: start;
@@ -188,8 +188,8 @@ const validate: Validate = (valid, fn) => {
 
 const FormDicom = (props: FormProps) => {
   const { valid, onSubmit } = props;
-  const [url, sU, setURL] = _useState("");
-  const [name, sN, setName] = _useState("");
+  const [url, _sU, setURL] = _useState("");
+  const [name, _sN, setName] = _useState("");
   const fProps = { onSubmit, className: "full-width" };
   return (
     <Form {...fProps} noValidate>
@@ -306,7 +306,7 @@ const FormAny = (props: FullFormProps) => {
         setChoices(c);
       }
     });
-  }, [JSON.stringify(choices)]);
+  }, [csv, handle, hasNewChoice, mask, path, sC, sM, sN, sP]);
   const pathOptions = { label: "Image", vals: choices.path };
   const maskOptions = { label: "Mask", vals: choices.mask };
   const csvOptions = { label: "CSV", vals: choices.csv };
@@ -414,7 +414,7 @@ const FormAny = (props: FullFormProps) => {
 const Upload = (props: UploadProps) => {
   const test_f = "default.ome.tif"; //TODO
   const [imageFormat, setImageFormat] = useState("DICOM-WEB");
-  const [in_f, setInFile] = useState(test_f);
+  const [_in_f, _setInFile] = useState(test_f);
   const { formProps, handle, onAllow, onRecall } = props;
   const allowProps = {
     onClick: onAllow,
@@ -433,7 +433,7 @@ const Upload = (props: UploadProps) => {
     }[imageFormat];
     setImageFormat(newImageFormat);
   };
-  const useOME = imageFormat == "OME-TIFF";
+  const useOME = imageFormat === "OME-TIFF";
   const message = useOME
     ? "Open a Local OME-TIFF Image"
     : "Connect to a DICOMweb™ Proxy";

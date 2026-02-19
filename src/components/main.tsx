@@ -13,7 +13,6 @@ import { isOpts, validate } from "@/lib/validate";
 import { Upload } from "@/components/shared/Upload";
 import { readConfig } from "@/lib/exhibit";
 import { Pool } from "@/lib/workers/Pool";
-import { parseRoisFromLoader } from "@/lib/roiParser";
 import { useOverlayStore } from "@/lib/stores";
 import { FileHandler } from "@/components/shared/FileHandler";
 import {
@@ -21,8 +20,6 @@ import {
   toImageProps,
 } from "@/components/shared/viewer/ImageViewer";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
-import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
-import { Presentation } from "@/components/playback/Presentation";
 
 import type { DicomIndex, DicomLoader } from "@/lib/dicom-index";
 import type { ValidObj } from "@/components/shared/Upload";
@@ -33,9 +30,7 @@ import type { ConfigWaypoint } from "@/lib/config";
 import type { MutableFields } from "@/lib/config";
 import type { ExhibitConfig } from "@/lib/exhibit";
 import type { ConfigGroup } from "@/lib/exhibit";
-import type { Waypoint as WaypointType, Exhibit } from "@/lib/exhibit";
-import type { ConfigProps } from "@/lib/config";
-import type { Loader } from "@/lib/viv";
+import type { Waypoint as WaypointType, } from "@/lib/exhibit";
 
 type Props = ImageProps & {
   configWaypoints: ConfigWaypoint[];
@@ -165,7 +160,7 @@ const Content = (props: Props) => {
 
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
-  const [presenting, setPresenting] = useState(false);
+  const [presenting, _setPresenting] = useState(false);
   const [zoomInEl, setZoomIn] = useState(null);
   const [zoomOutEl, setZoomOut] = useState(null);
   const [editable, setEditable] = useState(false);
@@ -314,14 +309,14 @@ const Content = (props: Props) => {
     }
     // handle hard-coded channels for dicom-web demo
     const dicomPropList = imagePropList
-      .filter(([series, modality, type]) => type === "DICOM-WEB")
+      .filter(([_series, _modality, type]) => type === "DICOM-WEB")
       .map(([series, modality]) => [series, modality]) as [string, string][];
     if (dicomPropList.length > 0) {
       await onStartDicomWeb(dicomPropList, props.exhibit_config.Groups);
     }
     // handle only one ome-tiff image ( TODO support more )
     const omeTiffPropList = imagePropList
-      .filter(([path, modality, type]) => type === "OME-TIFF")
+      .filter(([_path, _modality, type]) => type === "OME-TIFF")
       .map(([path]) => [path]);
     if (omeTiffPropList.length > 0 && handle) {
       await onStartOmeTiff(omeTiffPropList[0][0], handle);
