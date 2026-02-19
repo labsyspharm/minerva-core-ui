@@ -16,7 +16,7 @@ export default defineConfig({
       overlay: true
     }
   },
-  base: '',
+  base: process.env.BASE_PATH ?? '',
   plugins: [
     react(),
     mkcert(),
