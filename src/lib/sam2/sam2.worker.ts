@@ -5,7 +5,9 @@
 import * as ort from "onnxruntime-web";
 import { SAM2, type Sam2Point } from "./sam2";
 
-const basePath = typeof import.meta.env?.BASE_URL === "string" ? import.meta.env.BASE_URL : "/";
+// Normalize base: avoid "." which would produce origin + "." => "https://example.com." (invalid)
+const rawBase = typeof import.meta.env?.BASE_URL === "string" ? import.meta.env.BASE_URL : "/";
+const basePath = rawBase === "." || rawBase === "" ? "/" : rawBase.replace(/\/?$/, "/");
 ort.env.wasm.wasmPaths = `${self.location.origin}${basePath}wasm/`;
 
 let sam2: SAM2 | null = null;
