@@ -9,14 +9,16 @@ type InteractionCallback = (
   coordinate: [number, number, number],
 ) => void;
 
-type HasCoordinate = {
-  coordinate: [number, number, number];
-  layer: {
+// Compatible with Deck.gl PickingInfo
+type PickInfo = {
+  coordinate?: number[] | [number, number, number];
+  layer?: {
     id: string;
   };
-  x: number;
-  y: number;
-  z: number;
+  object?: { id?: string };
+  x?: number;
+  y?: number;
+  z?: number;
 }
 
 export const createDragHandlers = (
@@ -44,45 +46,62 @@ export const createDragHandlers = (
     }
   };
 
+  // Use only coordinate (world space). Never use x,y - those are screen pixels.
+  const toCoord = (info: PickInfo): [number, number, number] | undefined => {
+    const c = info.coordinate;
+    if (c && c.length >= 2) {
+      return [c[0], c[1], c[2] ?? 0];
+    }
+    return undefined;
+  };
+
   return {
     // Single click without dragging (used for text, polyline, lasso point-by-point)
-    onClick: ({ coordinate }: HasCoordinate) => emit("click", coordinate),
+    onClick: (info: PickInfo) => {
+      const coord = toCoord(info);
+      if (coord) emit("click", coord);
+    },
 
     // Start of drag operation (used for rectangle, line, lasso freehand)
-    onDragStart: ({ coordinate }: HasCoordinate) => emit("dragStart", coordinate),
+    onDragStart: (info: PickInfo) => {
+      const coord = toCoord(info);
+      if (coord) emit("dragStart", coord);
+    },
 
     // During drag operation (used for rectangle, line, lasso freehand)
-    onDrag: ({ coordinate }: HasCoordinate) => emit("drag", coordinate),
+    onDrag: (info: PickInfo) => {
+      const coord = toCoord(info);
+      if (coord) emit("drag", coord);
+    },
 
     // End of drag operation (used for rectangle, line, lasso freehand)
-    onDragEnd: ({ coordinate }: HasCoordinate) => emit("dragEnd", coordinate),
+    onDragEnd: (info: PickInfo) => {
+      const coord = toCoord(info);
+      if (coord) emit("dragEnd", coord);
+    },
 
     // Hover events (for tools that need hover feedback)
-    onHover: (info: HasCoordinate) => {
+    onHover: (info: PickInfo) => {
       // Deck.gl hover events can have coordinate as an array or as x, y, z properties
-      const coordinate =
-        info.coordinate ||
-        (info.x !== undefined && info.y !== undefined
-          ? [info.x, info.y, info.z || 0]
-          : null);
+      const coordinate = toCoord(info) ?? null;
       const layer = info.layer;
+      const object = info.object;
 
-      // Detect if hovering over an annotation layer (only for move tool)
+      // Detect if hovering over an annotation (only for move tool)
       if (activeTool === "move") {
-        if (layer?.id?.startsWith("annotation-")) {
-          // Extract annotation ID, handling both 'annotation-{id}' and 'annotation-{id}-text' formats
-          let annotationId = layer.id.replace("annotation-", "");
-          // Remove '-text' suffix if present (for text layers attached to shapes)
-          if (annotationId.endsWith("-text")) {
+        if (layer?.id?.startsWith("annotation-") && object?.id) {
+          // Use the picked object's id; strip -arrow or -text suffix for sub-layers
+          let annotationId = object.id;
+          if (annotationId.endsWith("-arrow")) {
+            annotationId = annotationId.replace("-arrow", "");
+          } else if (annotationId.endsWith("-text")) {
             annotationId = annotationId.replace("-text", "");
           }
           useOverlayStore.getState().setHoveredAnnotation(annotationId);
         } else {
-          // Clear hover state if not hovering over an annotation
           useOverlayStore.getState().setHoveredAnnotation(null);
         }
       } else {
-        // Clear hover state when not using move tool
         useOverlayStore.getState().setHoveredAnnotation(null);
       }
 
@@ -93,8 +112,10 @@ export const createDragHandlers = (
         activeTool === "polyline" ||
         activeTool === "rectangle" ||
         activeTool === "ellipse" ||
+        activeTool === "arrow" ||
         activeTool === "line" ||
-        activeTool === "lasso"
+        activeTool === "lasso" ||
+        activeTool === "magic_wand"
       ) {
         if (coordinate) {
           emit("hover", coordinate);
