@@ -5,9 +5,10 @@ import { Main } from "@/components/main";
 import { SimpleIconsetStore } from "@haxtheweb/simple-icon/lib/simple-iconset.js";
 import "@fontsource/overpass/200.css";
 
-// Override "icons" iconset so icons:name resolves to our SVGs in public/icons/
-// (default resolution breaks under Vite because import.meta.url points at deps)
-SimpleIconsetStore.registerIconset("icons", "/icons/");
+// Base path for deployment (e.g. /minerva-annotation-demo/ or /)
+const base = (typeof import.meta.env?.BASE_URL === "string" ? import.meta.env.BASE_URL : "/").replace(/\/?$/, "/");
+SimpleIconsetStore.registerIconset("icons", `${base}icons/`);
+import "@/fonts.css";
 import "@fontsource/overpass/500.css";
 import type { ConfigWaypoint } from "@/lib/config";
 import { createGlobalStyle } from "styled-components";
