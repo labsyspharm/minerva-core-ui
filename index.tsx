@@ -5,9 +5,10 @@ import { Main } from "@/components/main";
 import { SimpleIconsetStore } from "@haxtheweb/simple-icon/lib/simple-iconset.js";
 import "@fontsource/overpass/200.css";
 
-// Override "icons" iconset so icons:name resolves to our SVGs in public/icons/
-// (default resolution breaks under Vite because import.meta.url points at deps)
-SimpleIconsetStore.registerIconset("icons", "/icons/");
+// Base path for deployment (e.g. /minerva-annotation-demo/ or /)
+const base = (typeof import.meta.env?.BASE_URL === "string" ? import.meta.env.BASE_URL : "/").replace(/\/?$/, "/");
+SimpleIconsetStore.registerIconset("icons", `${base}icons/`);
+import "@/fonts.css";
 import "@fontsource/overpass/500.css";
 import type { ConfigWaypoint } from "@/lib/config";
 import { createGlobalStyle } from "styled-components";
@@ -1627,13 +1628,11 @@ const configWaypoints = [
 ].map(({ Properties, ...wp }) => {
   return {
     ...wp,
-    Properties: {
-      ...Properties,
-      Pan: [
-        Number(Properties.Pan?.[0]) || 0,
-        Number(Properties.Pan?.[1]) || 0
-      ] as [number, number]
-    }
+    ...Properties,
+    Pan: [
+      Number(Properties.Pan?.[0]) || 0,
+      Number(Properties.Pan?.[1]) || 0
+    ] as [number, number]
   } as ConfigWaypoint
 })
 
@@ -1641,8 +1640,7 @@ const configWaypoints = [
 const exhibit_config = {
     Name: "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer",
     Stories: [{
-        Waypoints: configWaypoints.map(({ Properties, Arrows, Overlays }) => {
-            const { Name, Content, Pan, Zoom, Group } = Properties;
+        Waypoints: configWaypoints.map(({ Name, Content, Pan, Zoom, Group, Arrows, Overlays }) => {
             return {
                 Name, Description: Content,
                 Pan: Pan as [number, number], Zoom, Group,
