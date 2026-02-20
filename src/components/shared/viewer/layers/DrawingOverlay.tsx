@@ -12,7 +12,7 @@ import {
 } from "@/lib/stores";
 import { useAnnotationLayers, ARROW_ICON_SIZE } from "@/lib/annotationLayers";
 import { useSam2 } from "@/lib/sam2/useSam2";
-import ArrowDrawingIconUrl from "@/components/shared/icons/arrow-annotation-drawing.svg?url";
+import ArrowDrawingIconUrl from "/icons/arrow-annotation-drawing.svg?url";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {

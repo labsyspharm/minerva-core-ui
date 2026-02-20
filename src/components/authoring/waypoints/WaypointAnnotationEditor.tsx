@@ -3,21 +3,19 @@ import { ChromePicker } from "react-color";
 import { LayersPanel } from "@/components/authoring/LayersPanel";
 import { useOverlayStore } from "@/lib/stores";
 import type { ConfigWaypoint } from "@/lib/config";
-import {
-  MoveIcon,
-  RectangleIcon,
-  EllipseIcon,
-  PolygonIcon,
-  LineIcon,
-  PolylineIcon,
-  ArrowIcon,
-  ShapesIcon,
-  LinesIcon,
-  TextIcon,
-  PointIcon,
-  ColorIcon,
-  MagicWandIcon,
-} from "@/components/shared/icons/OverlayIcons";
+import MoveIcon from "/icons/move.svg?react";
+import RectangleIcon from "/icons/rectangle.svg?react";
+import EllipseIcon from "/icons/ellipse.svg?react";
+import PolygonIcon from "/icons/polygon.svg?react";
+import LineIcon from "/icons/line.svg?react";
+import PolylineIcon from "/icons/polyline.svg?react";
+import ArrowIcon from "/icons/arrow-tool.svg?react";
+import ShapesIcon from "/icons/shapes.svg?react";
+import LinesIcon from "/icons/lines.svg?react";
+import TextIcon from "/icons/text.svg?react";
+import PointIcon from "/icons/point.svg?react";
+import ColorIcon from "/icons/color.svg?react";
+import MagicWandIcon from "/icons/magic-wand.svg?react";
 import { ToolSubmenu } from "@/components/authoring/ToolSubmenu";
 import styles from "./WaypointAnnotationEditor.module.css";
 
