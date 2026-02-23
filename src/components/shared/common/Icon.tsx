@@ -14,7 +14,7 @@ export type IconProps = {
 };
 
 interface ButtonProps {
-  onClick: any;
+  onClick: (_: unknown) => unknown;
   size: string;
   color: string;
 }

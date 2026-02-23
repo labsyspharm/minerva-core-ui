@@ -7,9 +7,8 @@ import { DrawingPanel } from "@/components/authoring/DrawingPanel";
 
 // Types
 import type { ConfigProps } from "@/lib/config";
-import type { ImageProps } from "@/components/shared/common/types";
 
-export type ChannelPanelProps = ImageProps & {
+export type ChannelPanelProps = {
     children: any;
     config: ConfigProps;
     authorMode: boolean;
@@ -184,15 +183,12 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     />
   ) : null;
 
-  const minerva_author_ui = React.createElement(props.controlPanelElement, {
-    class: theme,
-    children: (
-      <>
-        {props.children}
-        {drawingPanel}
-      </>
-    ),
-  });
+  const minerva_author_ui = React.createElement(
+    props.controlPanelElement, {
+      class: theme
+    },
+    ...props.children.concat([drawingPanel])
+  );
 
   const content = props.authorMode ? (
     <TextOther>{minerva_author_ui}</TextOther>

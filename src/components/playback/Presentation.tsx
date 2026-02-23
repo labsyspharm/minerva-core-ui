@@ -10,9 +10,8 @@ const _theme = {};
 // Types
 import type { MouseEvent } from "react";
 import type { ConfigProps, ConfigWaypoint } from "@/lib/config";
-import type { ImageProps } from "@/components/shared/common/types";
 
-export type PresentationProps = ImageProps & {
+export type PresentationProps = {
     children: any;
     name: string;
     config: ConfigProps;

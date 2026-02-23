@@ -23,7 +23,6 @@ import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
 
 import type { DicomIndex, DicomLoader } from "@/lib/dicom-index";
 import type { ValidObj } from "@/components/shared/Upload";
-import type { ImageProps } from "@/components/shared/common/types";
 import type { FormEventHandler } from "react";
 import type { ItemRegistryProps } from "@/lib/config";
 import type { ConfigWaypoint } from "@/lib/config";
@@ -32,7 +31,7 @@ import type { ExhibitConfig } from "@/lib/exhibit";
 import type { ConfigGroup } from "@/lib/exhibit";
 import type { Waypoint as WaypointType, } from "@/lib/exhibit";
 
-type Props = ImageProps & {
+type Props = {
   configWaypoints: ConfigWaypoint[];
   exhibit_config: ExhibitConfig;
   demo_dicom_web?: boolean;

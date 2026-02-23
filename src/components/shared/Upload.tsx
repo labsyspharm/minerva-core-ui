@@ -161,8 +161,9 @@ const toGroupProps = (n: string): any => {
 const Options = (props: OptionsProps) => {
   const { label, vals } = props;
   const options = vals.map((value, i) => {
+    const key = `${label}-${i}`;
     return (
-      <option key={i} value={value}>
+      <option key={key} value={value}>
         {value}
       </option>
     );
@@ -275,6 +276,15 @@ const toChoicesAny: ToChoicesAny = async (opts) => {
     dir: [],
   };
 };
+
+const hasNewChoice = (choices: Choices, c: Choices) => {
+  return [
+    c.csv.some((i: string) => !(i in choices.csv)),
+    c.path.some((i: string) => !(i in choices.path)),
+    c.mask.some((i: string) => !(i in choices.mask)),
+  ].some((x) => x === true);
+};
+
 const FormAny = (props: FullFormProps) => {
   const { handle, valid, onSubmit } = props;
   const [choices, setChoices] = useState(noChoice());
@@ -283,13 +293,6 @@ const FormAny = (props: FullFormProps) => {
   const [mask, sM, setMask] = _useState("");
   const [csv, sC, setCsv] = _useState("");
   const fProps = { onSubmit };
-  const hasNewChoice = (c: Choices) => {
-    return [
-      c.csv.some((i: string) => !(i in choices.csv)),
-      c.path.some((i: string) => !(i in choices.path)),
-      c.mask.some((i: string) => !(i in choices.mask)),
-    ].some((x) => x === true);
-  };
   useEffect(() => {
     toChoicesAny({
       handle,
@@ -300,13 +303,13 @@ const FormAny = (props: FullFormProps) => {
       setPath: sP,
       setCsv: sC,
     }).then((c) => {
-      if (hasNewChoice(c)) {
+      if (hasNewChoice(choices, c)) {
         sN(c.path[0].split(".")[0]);
         sP(c.path[0]);
         setChoices(c);
       }
     });
-  }, [csv, handle, hasNewChoice, mask, path, sC, sM, sN, sP]);
+  }, [csv, handle, mask, path, sC, sM, sN, sP, choices]);
   const pathOptions = { label: "Image", vals: choices.path };
   const maskOptions = { label: "Mask", vals: choices.mask };
   const csvOptions = { label: "CSV", vals: choices.csv };

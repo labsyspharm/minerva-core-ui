@@ -42,7 +42,7 @@ export interface ItemListProps<T = any> {
   ) => React.ReactNode;
 }
 
-const ItemList = <T = any>({
+const ItemList = <T = React.Component>({
   items,
   title,
   emptyMessage = "No items yet",
@@ -127,7 +127,9 @@ const ItemList = <T = any>({
       .join(" ");
 
     return (
-      <div
+      <button
+        type="button"
+        tabIndex={0}
         key={item.id}
         className={itemClasses}
         draggable={!!onDragStart}
@@ -229,7 +231,7 @@ const ItemList = <T = any>({
             </button>
           )}
         </div>
-      </div>
+      </button>
     );
   };
 

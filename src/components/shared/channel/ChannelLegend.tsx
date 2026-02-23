@@ -121,7 +121,7 @@ export const ChannelLegend = (props) => {
       idx: k,
       onClick: () => toggleChannel(c),
     };
-    return <LegendRow key={k} {...rowProps} />;
+    return <LegendRow key={c} {...rowProps} />;
   });
   return (
     <div>

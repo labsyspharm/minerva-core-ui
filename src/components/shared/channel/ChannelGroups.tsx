@@ -85,7 +85,7 @@ export const ChannelGroups = (props) => {
   const { groups } = props;
   const rows = groups.map((group, k) => {
     const groupProps = { ...props, group };
-    return <GroupRow key={k} {...groupProps} />;
+    return <GroupRow key={group.name} {...groupProps} />;
   });
   return <WrapRows>{rows}</WrapRows>;
 };

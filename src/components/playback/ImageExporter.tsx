@@ -87,7 +87,7 @@ const clampValue = (x, min, max) => {
 
 const clampArray = (imageData, tile_u16, min, max) => {
   var _tile_u8 = new Uint8Array(tile_u16.length);
-  for (var i = 0; i < tile_u16.length; i++) {
+  for (let i = 0; i < tile_u16.length; i++) {
     const clamped = clampValue(tile_u16[i], min, max);
     imageData.data[i * 4] = clamped;
     imageData.data[i * 4 + 1] = clamped;
@@ -308,7 +308,7 @@ const toLoader: ToLoader = async ({ in_f, handle }) => {
   return { data };
 };
 
-const useLoader = async (opts: LoaderOpts) => {
+const getLoader = async (opts: LoaderOpts) => {
   const { handle, in_f } = opts;
   if (handle === null) return;
   const data = await toLoader({ in_f, handle });
@@ -337,7 +337,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
   });
 
   React.useEffect(() => {
-    useLoader({ handle, in_f }).then((loader) => {
+    getLoader({ handle, in_f }).then((loader) => {
       const init = initialize({ loader });
       if (isFullState(init) && loader.length) {
         setLoader(loader);
