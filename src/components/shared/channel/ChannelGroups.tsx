@@ -61,7 +61,7 @@ const GroupRow = (props) => {
   }, [active]);
 
   const setInput = (t) => {
-    props.updateGroup({ ...group, name: t }, { g: group.g });
+    updateGroup({ ...group, name: t }, { g: group.g });
   };
   const uuid = `group/name/${group.g}`;
   const _statusProps = {
@@ -83,7 +83,7 @@ const GroupRow = (props) => {
 
 export const ChannelGroups = (props) => {
   const { groups } = props;
-  const rows = groups.map((group, k) => {
+  const rows = groups.map((group) => {
     const groupProps = { ...props, group };
     return <GroupRow key={group.name} {...groupProps} />;
   });

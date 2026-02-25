@@ -264,7 +264,10 @@ const toChoicesAny: ToChoicesAny = async (opts) => {
   }, [] as string[]);
   const mask = files.reduce((o, [k, v]: Entry) => {
     if (v instanceof FileSystemFileHandle) {
-      return k.match(/\.tiff?$/) ? [...o, k] : o;
+      if (k.match(/\.tiff?$/)) {
+        o.push(k);
+      }
+      return o;
     }
     return o;
   }, [] as string[]);

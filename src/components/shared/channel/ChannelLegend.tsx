@@ -49,7 +49,7 @@ const LegendRow = (props) => {
   const { channel, channelVisibilities } = props;
   const channelName = channel.name;
   const visible = channelVisibilities[channelName];
-  const { idx, name, path, g, onClick } = props;
+  const { idx, g, onClick } = props;
   const setInput = (t) => {
     props.updateChannel({ ...channel, name: t }, { idx, g });
   };

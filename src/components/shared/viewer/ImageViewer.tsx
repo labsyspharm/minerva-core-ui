@@ -15,18 +15,34 @@ import { createTileLayers, loadDicom } from "@/lib/dicom";
 import type { DicomIndex } from "@/lib/dicom-index";
 import { createDragHandlers } from "@/lib/dragHandlers";
 import type { Story } from "@/lib/exhibit";
+import type { Layer } from "@deck.gl/core";
 import { useOverlayStore } from "@/lib/stores";
+import type { ConfigGroup } from "@/lib/stores";
+import type { OverlayLayer } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
 import type { Config, Loader } from "@/lib/viv";
 import { toSettings } from "@/lib/viv";
 import { convertWaypointToViewState, } from "@/lib/waypoint";
+
+type ItemRegistryChannel = {
+  name: string;
+  color: string;
+  contrast: [number, number];
+}
+
+type ItemRegistryGroup =  {
+  State: ConfigGroup["State"];
+  channels: ItemRegistryChannel[];
+  name: string;
+  g: number;
+}
 
 export type ImageViewerProps = {
   loaderOmeTiff: Loader;
   stories: Story[];
   dicomIndexList: DicomIndex[];
   viewerConfig: Config;
-  overlayLayers?: any[];
+  overlayLayers?: OverlayLayer[];
   activeTool: string;
   isDragging?: boolean;
   hoveredAnnotationId?: string | null;
@@ -34,7 +50,7 @@ export type ImageViewerProps = {
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
     coordinate: [number, number, number],
   ) => void;
-  [key: string]: any;
+  groups: ItemRegistryGroup[]
 };
 
 const Main = styled.div`
@@ -74,8 +90,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     loaderOmeTiff,
     dicomIndexList,
     groups,
-    stories,
-    setHash,
     overlayLayers = [],
     activeTool,
     isDragging = false,
@@ -395,7 +409,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // Memoize cursor function
   const getCursor = useCallback(
-    ({ isDragging, isHovering }) => {
+    ({ isDragging }) => {
       if (isDragging && activeTool === "move") {
         return "grabbing";
       } else if (activeTool === "move" && hoveredAnnotationId) {
@@ -457,7 +471,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // LoadingWidget ref for onRedraw callback
   const loadingWidgetRef = useRef<{
-    onRedraw: (params: { layers: any[] }) => void;
+    onRedraw: (params: { layers: Layer[] }) => void;
   }>(null);
 
   // onAfterRender callback to call LoadingWidget's onRedraw

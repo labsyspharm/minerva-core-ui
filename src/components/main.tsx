@@ -520,7 +520,7 @@ const Content = (props: Props) => {
         return {
           color,
           name: Name,
-          contrast: [LowerRange, UpperRange],
+          contrast: [LowerRange, UpperRange] as [ number, number ],
         };
       });
       return {

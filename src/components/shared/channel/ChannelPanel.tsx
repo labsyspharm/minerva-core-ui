@@ -4,12 +4,13 @@ import { ChannelGroups } from "./ChannelGroups";
 import { useOverlayStore } from "@/lib/stores";
 import styled from "styled-components";
 import { DrawingPanel } from "@/components/authoring/DrawingPanel";
+import type { ReactElement } from "react";
 
 // Types
 import type { ConfigProps } from "@/lib/config";
 
 export type ChannelPanelProps = {
-    children: any;
+    children: ReactElement;
     config: ConfigProps;
     authorMode: boolean;
     hiddenChannel: boolean;

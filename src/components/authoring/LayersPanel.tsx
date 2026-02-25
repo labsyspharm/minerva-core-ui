@@ -424,7 +424,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
 
   const itemActions = (item: ListItem) => {
     if (item.metadata?.type === "annotation") {
-      const annotation = item.metadata.annotation as Annotation;
+      const annotation = item.metadata.annotation;
 
       return (
         <div style={{ display: "flex", gap: "4px" }}>

@@ -1,8 +1,17 @@
 import * as React from "react";
 import styles from "./ItemList.module.css";
+import type { AnnotationGroup, Annotation } from "@/lib/stores";
+
+type Metadata = {
+  group: AnnotationGroup;
+  type: "group";
+} | {
+  annotation: Annotation;
+  type: "annotation";
+}
 
 // Generic item interface that can be extended
-export interface ListItem<T = any> {
+export interface ListItem<T = Metadata> {
   id: string;
   title: string;
   subtitle?: string;
@@ -16,7 +25,7 @@ export interface ListItem<T = any> {
   isExpanded?: boolean;
 }
 
-export interface ItemListProps<T = any> {
+export interface ItemListProps<T = Metadata> {
   items: ListItem<T>[];
   title: string;
   noHeader?: boolean;
