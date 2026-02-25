@@ -34,8 +34,6 @@ export type ImageViewerProps = {
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
     coordinate: [number, number, number],
   ) => void;
-  zoomInButton?: HTMLElement | null;
-  zoomOutButton?: HTMLElement | null;
   [key: string]: any;
 };
 
