@@ -16,9 +16,9 @@ import { Pool } from "@/lib/workers/Pool";
 import { useOverlayStore } from "@/lib/stores";
 import { FileHandler } from "@/components/shared/FileHandler";
 import {
-  ImageViewer,
-  toImageProps,
+  ImageViewer
 } from "@/components/shared/viewer/ImageViewer";
+import { toSettings } from "@/lib/viv";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
 
 import type { DicomIndex, DicomLoader } from "@/lib/dicom-index";
@@ -70,11 +70,6 @@ const RetrievingWrapper = styled.div`
   justify-items: center;
   align-items: center;
 `;
-
-// Helper functions for exhibit editing
-const onLoaded = (setter) => {
-  return (el) => (el ? setter(el) : null);
-};
 
 const setContainer = ({ container, idx, key, newItem }) => {
   const extra = idx >= container[key].length ? [newItem] : [];
@@ -160,8 +155,6 @@ const Content = (props: Props) => {
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
   const [presenting, _setPresenting] = useState(false);
-  const [zoomInEl, setZoomIn] = useState(null);
-  const [zoomOutEl, setZoomOut] = useState(null);
   const [editable, setEditable] = useState(false);
   const checkWindow = React.useCallback(() => window.innerWidth > 600, []);
 
@@ -192,9 +185,6 @@ const Content = (props: Props) => {
   const startExport = () => setIoState("EXPORTING");
   const stopExport = () => setIoState("IDLE");
   const toggleEditor = () => setEditable(!editable);
-
-  const onZoomInEl = onLoaded(setZoomIn);
-  const onZoomOutEl = onLoaded(setZoomOut);
 
   const setHiddenChannelWithLogic = (v: boolean) => {
     if (!twoNavOk && !v) {
@@ -573,8 +563,6 @@ const Content = (props: Props) => {
     hiddenWaypoint,
     setHiddenWaypoint: setHiddenWaypointWithLogic,
     retrievingMetadata,
-    onZoomInEl,
-    onZoomOutEl,
     startExport,
     stopExport,
     toggleEditor,
@@ -583,23 +571,23 @@ const Content = (props: Props) => {
     popWaypoint,
   };
 
+  const viewerConfig = React.useMemo(() => {
+    return {
+      toSettings: toSettings({ Groups, SourceChannels }),
+    }
+  }, [ Groups, SourceChannels ])
+
   const imageProps = React.useMemo(() => {
-    return toImageProps({
-      props: {
-        Groups,
-        SourceChannels,
-        loaderOmeTiff,
-        dicomIndexList,
-        marker_names: itemRegistryMarkerNames,
-        groups: itemRegistryGroups,
-        stories,
-        name,
-      },
-      buttons: {
-        zoomInButton: zoomInEl,
-        zoomOutButton: zoomOutEl,
-      },
-    });
+    return {
+      Groups,
+      SourceChannels,
+      loaderOmeTiff,
+      dicomIndexList,
+      marker_names: itemRegistryMarkerNames,
+      groups: itemRegistryGroups,
+      stories,
+      name
+    };
   }, [
     Groups,
     SourceChannels,
@@ -608,9 +596,7 @@ const Content = (props: Props) => {
     itemRegistryMarkerNames,
     itemRegistryGroups,
     stories,
-    name,
-    zoomInEl,
-    zoomOutEl,
+    name
   ]);
 
   // Use Zustand store for overlay state management
@@ -713,6 +699,7 @@ const Content = (props: Props) => {
               ) : (
                 <ImageViewer
                   {...imageProps}
+                  viewerConfig={viewerConfig}
                   overlayLayers={overlayLayers}
                   activeTool={activeTool}
                   isDragging={dragState.isDragging}

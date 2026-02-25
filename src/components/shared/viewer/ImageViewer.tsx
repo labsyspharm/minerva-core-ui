@@ -39,18 +39,6 @@ export type ImageViewerProps = {
   [key: string]: any;
 };
 
-export const toImageProps = (opts: { props: any; buttons: any }) => {
-  const { props, buttons } = opts;
-  const vivProps = {
-    ...props,
-    viewerConfig: {
-      ...buttons,
-      toSettings: toSettings(props),
-    },
-  };
-  return vivProps;
-};
-
 const Main = styled.div`
   position: relative;
   height: 100%;
@@ -66,19 +54,19 @@ const toSettingsInternal = (
   groups,
   activeChannelGroupId,
   channelVisibilities,
-  viewerConfig
+  toSettings 
 ) => {
   // Gets the default settings
   if (loader === null || !groups) {
-    return viewerConfig.toSettings(activeChannelGroupId, modality);
+    return toSettings(activeChannelGroupId, modality);
   }
-  return viewerConfig.toSettings(
+  return toSettings(
     activeChannelGroupId,
     modality,
     loader,
     channelVisibilities,
   );
-  };
+};
 
 
 
@@ -133,9 +121,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
       groups,
       activeChannelGroupId,
       channelVisibilities,
-      viewerConfig
+      viewerConfig.toSettings
     );
-  }, [loaderOmeTiff, groups, activeChannelGroupId, channelVisibilities, viewerConfig]);
+  }, [loaderOmeTiff, groups, activeChannelGroupId, channelVisibilities, viewerConfig.toSettings]);
 
   const mainSettingsDicomList = useMemo(() => {
     return dicomIndexList.map((dicomIndex) => {
@@ -146,10 +134,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
         groups,
         activeChannelGroupId,
         channelVisibilities,
-        viewerConfig
+        viewerConfig.toSettings
       );
     });
-  }, [dicomIndexList, groups, activeChannelGroupId, channelVisibilities, viewerConfig]);
+  }, [dicomIndexList, groups, activeChannelGroupId, channelVisibilities, viewerConfig.toSettings]);
 
   // Show only ome-tiff if available
   const mainSettingsList = useMemo(
