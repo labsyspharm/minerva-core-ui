@@ -84,8 +84,4 @@ const getWaypoint = (list: Story[], s: number, w: number) => {
   return waypoints[modulo(w, waypoints.length)];
 };
 
-export {
-  getWaypoint,
-  getWaypoints,
-  convertWaypointToViewState,
-};
+export { getWaypoint, getWaypoints, convertWaypointToViewState };

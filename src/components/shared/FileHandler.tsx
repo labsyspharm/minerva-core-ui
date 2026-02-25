@@ -1,6 +1,6 @@
+import { get, set } from "idb-keyval";
 import type React from "react";
 import { useState } from "react";
-import { get, set } from "idb-keyval";
 import { toDir } from "@/lib/filesystem";
 
 export type FileHandlerProps = {

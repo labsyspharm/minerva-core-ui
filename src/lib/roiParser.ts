@@ -1,14 +1,14 @@
 import type {
   Annotation,
-  RectangleAnnotation,
-  TextAnnotation,
-  PolygonAnnotation,
-  PolylineAnnotation,
   LineAnnotation,
   PointAnnotation,
+  PolygonAnnotation,
+  PolylineAnnotation,
+  RectangleAnnotation,
+  TextAnnotation,
 } from "./stores";
+import { lineToPolygon, rectangleToPolygon } from "./stores";
 import type { Loader } from "./viv";
-import { rectangleToPolygon, lineToPolygon } from "./stores";
 
 // Type definitions for ROI shapes from loader metadata (OME-XML compatible)
 interface Transform {
@@ -87,7 +87,7 @@ type Group = {
   metadata: {
     createdAt: Date;
   };
-}
+};
 
 type RoiShape =
   | RoiRectangleShape

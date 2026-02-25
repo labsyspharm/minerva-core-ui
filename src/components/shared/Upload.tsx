@@ -1,12 +1,12 @@
-
-import { useState, useEffect } from "react";
-import styled from "styled-components";
-import Form from "react-bootstrap/Form";
+import type { FormEventHandler } from "react";
+import { useEffect, useState } from "react";
 import Button from "react-bootstrap/Button";
-import { listDir } from "@/lib/filesystem";
+import Form from "react-bootstrap/Form";
+import styled from "styled-components";
 
 import type { Entry } from "@/lib/filesystem";
-import type { FormEventHandler } from "react";
+import { listDir } from "@/lib/filesystem";
+
 type Choices = {
   dir: string[];
   csv: string[];
@@ -22,7 +22,7 @@ type ChoiceAnyIn = {
   path: string;
   csv: string;
 };
-type ToChoicesAny = (i: ChoiceAnyIn) => Promise<Choices>
+type ToChoicesAny = (i: ChoiceAnyIn) => Promise<Choices>;
 type OptionsProps = {
   label: string;
   vals: string[];
@@ -44,16 +44,16 @@ export type UploadProps = {
 export type ValidObj = {
   [s: string]: boolean;
 };
-type ValidationFunction = (v: ValidObj) => boolean | null
-type Validation = (s: string) => ValidationFunction
+type ValidationFunction = (v: ValidObj) => boolean | null;
+type Validation = (s: string) => ValidationFunction;
 type ValidOut = Partial<{
   isValid: true;
   isInvalid: true;
 }>;
-type Validate = (v: ValidObj, fn: ValidationFunction) => ValidOut
+type Validate = (v: ValidObj, fn: ValidationFunction) => ValidOut;
 type SetState = (s: string) => void;
 type SetTargetState = FormEventHandler;
-type UseTargetState = (init: string) => [string, SetState, SetTargetState]
+type UseTargetState = (init: string) => [string, SetState, SetTargetState];
 
 interface HasValidation {
   hasValidation: boolean;

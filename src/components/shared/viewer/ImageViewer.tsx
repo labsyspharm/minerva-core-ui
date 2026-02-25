@@ -10,31 +10,30 @@ import styled from "styled-components";
 
 import "@deck.gl/widgets/stylesheet.css";
 
+import type { Layer } from "@deck.gl/core";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import { createTileLayers, loadDicom } from "@/lib/dicom";
 import type { DicomIndex } from "@/lib/dicom-index";
 import { createDragHandlers } from "@/lib/dragHandlers";
 import type { Story } from "@/lib/exhibit";
-import type { Layer } from "@deck.gl/core";
+import type { ConfigGroup, OverlayLayer } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
-import type { ConfigGroup } from "@/lib/stores";
-import type { OverlayLayer } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
 import type { Config, Loader } from "@/lib/viv";
-import { convertWaypointToViewState, } from "@/lib/waypoint";
+import { convertWaypointToViewState } from "@/lib/waypoint";
 
 type ItemRegistryChannel = {
   name: string;
   color: string;
   contrast: [number, number];
-}
+};
 
-type ItemRegistryGroup =  {
+type ItemRegistryGroup = {
   State: ConfigGroup["State"];
   channels: ItemRegistryChannel[];
   name: string;
   g: number;
-}
+};
 
 export type ImageViewerProps = {
   loaderOmeTiff: Loader;
@@ -49,7 +48,7 @@ export type ImageViewerProps = {
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
     coordinate: [number, number, number],
   ) => void;
-  groups: ItemRegistryGroup[]
+  groups: ItemRegistryGroup[];
 };
 
 const Main = styled.div`
@@ -67,7 +66,7 @@ const toSettingsInternal = (
   groups,
   activeChannelGroupId,
   channelVisibilities,
-  toSettings 
+  toSettings,
 ) => {
   // Gets the default settings
   if (loader === null || !groups) {
@@ -80,8 +79,6 @@ const toSettingsInternal = (
     channelVisibilities,
   );
 };
-
-
 
 export const ImageViewer = (props: ImageViewerProps) => {
   const windowSize = useWindowSize();
@@ -132,9 +129,15 @@ export const ImageViewer = (props: ImageViewerProps) => {
       groups,
       activeChannelGroupId,
       channelVisibilities,
-      viewerConfig.toSettings
+      viewerConfig.toSettings,
     );
-  }, [loaderOmeTiff, groups, activeChannelGroupId, channelVisibilities, viewerConfig.toSettings]);
+  }, [
+    loaderOmeTiff,
+    groups,
+    activeChannelGroupId,
+    channelVisibilities,
+    viewerConfig.toSettings,
+  ]);
 
   const mainSettingsDicomList = useMemo(() => {
     return dicomIndexList.map((dicomIndex) => {
@@ -145,10 +148,16 @@ export const ImageViewer = (props: ImageViewerProps) => {
         groups,
         activeChannelGroupId,
         channelVisibilities,
-        viewerConfig.toSettings
+        viewerConfig.toSettings,
       );
     });
-  }, [dicomIndexList, groups, activeChannelGroupId, channelVisibilities, viewerConfig.toSettings]);
+  }, [
+    dicomIndexList,
+    groups,
+    activeChannelGroupId,
+    channelVisibilities,
+    viewerConfig.toSettings,
+  ]);
 
   // Show only ome-tiff if available
   const mainSettingsList = useMemo(
@@ -360,14 +369,32 @@ export const ImageViewer = (props: ImageViewerProps) => {
     // Get physical size from loader metadata if available
     const physicalSize = firstLoader.metadata?.Pixels?.PhysicalSizeX;
     const unit = firstLoader.metadata?.Pixels?.PhysicalSizeXUnit || "µm";
-    const units = new Set([
-      "Y", "Z", "E", "P", "T", "G", "M", "k", "h", "da", "",
-      "d", "c", "m", "µ", "n", "p", "f", "a", "z", "y"
-    ].map(
-      prefix => `${prefix}m`
-    ));
-    if (!units.has(unit))
-      return null;
+    const units = new Set(
+      [
+        "Y",
+        "Z",
+        "E",
+        "P",
+        "T",
+        "G",
+        "M",
+        "k",
+        "h",
+        "da",
+        "",
+        "d",
+        "c",
+        "m",
+        "µ",
+        "n",
+        "p",
+        "f",
+        "a",
+        "z",
+        "y",
+      ].map((prefix) => `${prefix}m`),
+    );
+    if (!units.has(unit)) return null;
     if (!physicalSize || viewportSize.width <= 0 || viewportSize.height <= 0)
       return null;
 

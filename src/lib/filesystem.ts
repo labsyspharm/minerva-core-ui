@@ -1,26 +1,25 @@
 import { loadOmeTiff } from "@hms-dbmi/viv";
-
+import type { HasTile } from "./config";
 import type { Loader } from "./viv";
 import type { PoolClass } from "./workers/Pool";
-import type { HasTile } from "./config";
 
 type ListDirIn = {
   handle: Handle.Dir;
 };
 export type Entry = [string, Handle.File | Handle.Dir];
-type ListDir = (i: ListDirIn) => Promise<Entry[]>
+type ListDir = (i: ListDirIn) => Promise<Entry[]>;
 type FindFileIn = {
   handle: Handle.Dir;
   path: string;
 };
-type FindFile = (i: FindFileIn) => Promise<boolean>
-type ToDir = () => Promise<Handle.Dir>
+type FindFile = (i: FindFileIn) => Promise<boolean>;
+type ToDir = () => Promise<Handle.Dir>;
 type LoaderIn = {
   in_f: string;
   handle: Handle.Dir;
   pool?: PoolClass;
 };
-type ToLoader = (i: LoaderIn) => Promise<Loader>
+type ToLoader = (i: LoaderIn) => Promise<Loader>;
 export type Selection = {
   t: number;
   z: number;

@@ -1,24 +1,23 @@
+import type { ReactElement } from "react";
 import * as React from "react";
-import { ChannelLegend } from "./ChannelLegend";
-import { ChannelGroups } from "./ChannelGroups";
-import { useOverlayStore } from "@/lib/stores";
 import styled from "styled-components";
 import { DrawingPanel } from "@/components/authoring/DrawingPanel";
-import type { ReactElement } from "react";
-
 // Types
 import type { ConfigProps } from "@/lib/config";
+import { useOverlayStore } from "@/lib/stores";
+import { ChannelGroups } from "./ChannelGroups";
+import { ChannelLegend } from "./ChannelLegend";
 
 export type ChannelPanelProps = {
-    children: ReactElement;
-    config: ConfigProps;
-    authorMode: boolean;
-    hiddenChannel: boolean;
-    startExport: () => void;
-    controlPanelElement: string;
-    retrievingMetadata: boolean;
-    setHiddenChannel: (v: boolean) => void;
-  };
+  children: ReactElement;
+  config: ConfigProps;
+  authorMode: boolean;
+  hiddenChannel: boolean;
+  startExport: () => void;
+  controlPanelElement: string;
+  retrievingMetadata: boolean;
+  setHiddenChannel: (v: boolean) => void;
+};
 
 const TextWrap = styled.div`
   height: 100%;
@@ -96,7 +95,9 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   // Subscribe only to overlay state used by this panel so viewport/zoom updates don't re-render.
   const activeChannelGroupId = useOverlayStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useOverlayStore((s) => s.channelVisibilities);
-  const setChannelVisibilities = useOverlayStore((s) => s.setChannelVisibilities);
+  const setChannelVisibilities = useOverlayStore(
+    (s) => s.setChannelVisibilities,
+  );
   const Groups = useOverlayStore((s) => s.Groups);
   const SourceChannels = useOverlayStore((s) => s.SourceChannels);
   const handleLayerCreate = useOverlayStore((s) => s.handleLayerCreate);
@@ -181,10 +182,13 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   ) : null;
 
   const minerva_author_ui = React.createElement(
-    props.controlPanelElement, {
-      class: theme
+    props.controlPanelElement,
+    {
+      class: theme,
     },
-    <>{props.children} {drawingPanel}</>
+    <>
+      {props.children} {drawingPanel}
+    </>,
   );
 
   const content = props.authorMode ? (

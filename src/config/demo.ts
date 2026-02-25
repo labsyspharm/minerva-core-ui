@@ -1,7 +1,6 @@
-import { RasterLayers, Formats, Units } from "./generic";
-import type { Index, IndexedImage, Layout } from "./generic";
-import type { Config } from "./generic";
 import type { ReactChild } from "react";
+import type { Config, Index, IndexedImage, Layout } from "./generic";
+import { Formats, RasterLayers, Units } from "./generic";
 
 type Waypoint<C> = {
   [k in "scene" | "image"]: Index["index"];

@@ -6,7 +6,7 @@ type Lens = {
   selections: {
     magnifier: LensMagnifier;
   };
-}
+};
 
 interface ViewFinderSetup {
   wrangle(): void;
@@ -18,7 +18,7 @@ type Lensing = {
   viewfinder: {
     setup: ViewFinderSetup;
   };
-}
+};
 
 const filters = [
   // Channel groups

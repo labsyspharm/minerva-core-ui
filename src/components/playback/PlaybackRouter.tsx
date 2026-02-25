@@ -1,11 +1,9 @@
-
-import { ImageExporter } from "@/components/playback/ImageExporter";
-import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
-import { Presentation } from "@/components/playback/Presentation";
 import styled from "styled-components";
-
+import { ImageExporter } from "@/components/playback/ImageExporter";
+import { Presentation } from "@/components/playback/Presentation";
 // Types
 import type { ChannelPanelProps } from "@/components/shared/channel/ChannelPanel";
+import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 
 export type PlaybackRouterProps = ChannelPanelProps & {
   name: string;
