@@ -46,7 +46,7 @@ class Pool extends GeotiffPool {
   messageId: 0;
 
   constructor(numWorkers = 1) {
-    super(numWorkers || defaultPoolSize, null);
+    super(numWorkers || defaultPoolSize);
   }
 
   async decode(fileDirectory, buffer) {
