@@ -16,27 +16,8 @@ type Dtype =
   | "Int32"
   | "Float32"
   | "Float64";
-type HasShape = {
-  height: number;
-  width: number;
-};
-type HasTile = HasShape & {
-  data: ArrayBuffer;
-};
-type Selection = {
-  t: number;
-  z: number;
-  c: number;
-};
-type TileConfig = {
-  x: number;
-  y: number;
-  signal: AbortSignal;
-  selection: Selection;
-};
 
-type LoaderPlane = TiffPixelSource<any>;
-type Canvas = HTMLCanvasElement;
+type LoaderPlane = TiffPixelSource<string[]>;
 
 type ToTilePlane = (z: number, l: LoaderPlane[]) => LoaderPlane
 type TileCounts = { x: number; y: number };
@@ -103,7 +84,7 @@ const capture: Capture = async (index, loader) => {
   const level = Math.abs(index.z);
   const z_loader = loader[level];
   const selection = { t: 0, z: 0, c: 0 };
-  const signal = (AbortSignal as any).timeout(10 * 1000);
+  const signal = AbortSignal.timeout(10 * 1000);
   const { x, y } = index;
   const tile = await z_loader.getTile({
     selection,
@@ -136,11 +117,11 @@ const capture: Capture = async (index, loader) => {
 
 const save: Save = async (inputs) => {
   const create = { create: true };
-  const { step, index, loader, handle } = inputs;
+  const { index, loader, handle } = inputs;
   const { output, filename } = await capture(index, loader);
   const fh = await handle.getFileHandle(filename, create);
   const write = await fh.createWritable();
-  await write.write(output as any);
+  await write.write(output);
   await write.close();
 };
 
@@ -198,7 +179,7 @@ const toTileLayer = (loader: LoaderPlane[]): TileProps => {
   const i = 0;
   const id = `Tiled-Image-${i}`;
   const plane = toTilePlane(0, loader);
-  const { height, width } = getImageSize(plane as any);
+  const { height, width } = getImageSize(plane);
   const extent: Four = [0, 0, width, height];
   const { tileSize, dtype } = plane;
   const props = {
@@ -361,8 +342,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
       }, 2000);
     } else {
       if (!state || !loader.length) return;
-      const { indices, tileProps } = state;
-      const next = (step + 1) % indices.length;
+      const next = (step + 1) % state.indices.length;
       doStep({
         handle,
         loader,

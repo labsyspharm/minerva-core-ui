@@ -408,7 +408,7 @@ const Content = (props: Props) => {
   // Exhibit editing operations (from Index)
   const { name, groups, stories } = exhibit;
 
-  const updateWaypoint = (newWaypoint: WaypointType, { s, w }: any) => {
+  const updateWaypoint = (newWaypoint: WaypointType, { s, w }) => {
     const oldWaypoint = stories[s]?.waypoints[w];
     if (!oldWaypoint) {
       throw `Cannot update waypoint. Waypoint ${w} does not exist!`;
@@ -417,7 +417,7 @@ const Content = (props: Props) => {
     setExhibit(ex);
   };
 
-  const pushWaypoint = (newWaypoint: WaypointType, { s }: any) => {
+  const pushWaypoint = (newWaypoint: WaypointType, { s }) => {
     if (!stories[s]) {
       throw `Cannot push waypoint. Story ${s} does not exist!`;
     }
@@ -603,11 +603,8 @@ const Content = (props: Props) => {
   const {
     overlayLayers,
     activeTool,
-    currentInteraction,
     dragState,
     hoverState,
-    handleLayerCreate,
-    handleToolChange,
     handleOverlayInteraction,
     stories: _stories,
     activeStoryIndex,
@@ -644,7 +641,8 @@ const Content = (props: Props) => {
           const data = [...new FormData(form).entries()];
           const formOut = data.reduce(
             (o, [k, v]) => {
-              return { ...o, [k]: `${v}` };
+              o[k] = `${v}`;
+              return o;
             },
             {
               mask: "",

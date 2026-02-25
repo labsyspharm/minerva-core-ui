@@ -8,11 +8,11 @@ import styled from "styled-components";
 const _theme = {};
 
 // Types
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactElement } from "react";
 import type { ConfigProps, ConfigWaypoint } from "@/lib/config";
 
 export type PresentationProps = {
-    children: any;
+    children: ReactElement;
     name: string;
     config: ConfigProps;
     hiddenChannel: boolean;
@@ -443,7 +443,7 @@ export const Presentation = (props: PresentationProps) => {
           <h2 className="h6">{story_title}</h2>
           <ReactMarkdown
             components={{
-              strong: ({ children }: any) => {
+              strong: ({ children }) => {
                 const text = String(children);
                 const color = channelColors.get(text);
                 return color ? (

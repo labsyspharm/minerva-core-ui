@@ -21,7 +21,6 @@ import type { ConfigGroup } from "@/lib/stores";
 import type { OverlayLayer } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
 import type { Config, Loader } from "@/lib/viv";
-import { toSettings } from "@/lib/viv";
 import { convertWaypointToViewState, } from "@/lib/waypoint";
 
 type ItemRegistryChannel = {
@@ -303,7 +302,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       return {
         ...viewportSize,
         id: `mainLayer-${i}-${contrastId}`,
-        ...(mainSettings as any),
+        ...mainSettings,
         loader: mainSettings.loader.data,
       };
     });

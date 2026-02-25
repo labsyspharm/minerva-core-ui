@@ -154,7 +154,7 @@ const validation: Validation = (key) => {
   };
 };
 
-const toGroupProps = (n: string): any => {
+const toGroupProps = (n: string) => {
   return { controlId: n };
 };
 
@@ -258,7 +258,10 @@ const toChoicesAny: ToChoicesAny = async (opts) => {
   const files = await listDir({ handle });
   const csv = files.reduce((o, [k, v]: Entry) => {
     if (v instanceof FileSystemFileHandle) {
-      return k.match(/\.csv/) ? [...o, k] : o;
+      if (k.match(/\.csv/)) {
+        o.push(k);
+      }
+      return o;
     }
     return o;
   }, [] as string[]);
