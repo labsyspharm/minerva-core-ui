@@ -13,31 +13,25 @@ import { isOpts, validate } from "@/lib/validate";
 import { Upload } from "@/components/shared/Upload";
 import { readConfig } from "@/lib/exhibit";
 import { Pool } from "@/lib/workers/Pool";
-import { parseRoisFromLoader } from "@/lib/roiParser";
 import { useOverlayStore } from "@/lib/stores";
 import { FileHandler } from "@/components/shared/FileHandler";
 import {
-  ImageViewer,
-  toImageProps,
+  ImageViewer
 } from "@/components/shared/viewer/ImageViewer";
+import { toSettings } from "@/lib/viv";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
-import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
-import { Presentation } from "@/components/playback/Presentation";
 
 import type { DicomIndex, DicomLoader } from "@/lib/dicom-index";
 import type { ValidObj } from "@/components/shared/Upload";
-import type { ImageProps } from "@/components/shared/common/types";
 import type { FormEventHandler } from "react";
 import type { ItemRegistryProps } from "@/lib/config";
 import type { ConfigWaypoint } from "@/lib/config";
 import type { MutableFields } from "@/lib/config";
 import type { ExhibitConfig } from "@/lib/exhibit";
 import type { ConfigGroup } from "@/lib/exhibit";
-import type { Waypoint as WaypointType, Exhibit } from "@/lib/exhibit";
-import type { ConfigProps } from "@/lib/config";
-import type { Loader } from "@/lib/viv";
+import type { Waypoint as WaypointType, } from "@/lib/exhibit";
 
-type Props = ImageProps & {
+type Props = {
   configWaypoints: ConfigWaypoint[];
   exhibit_config: ExhibitConfig;
   demo_dicom_web?: boolean;
@@ -76,11 +70,6 @@ const RetrievingWrapper = styled.div`
   justify-items: center;
   align-items: center;
 `;
-
-// Helper functions for exhibit editing
-const onLoaded = (setter) => {
-  return (el) => (el ? setter(el) : null);
-};
 
 const setContainer = ({ container, idx, key, newItem }) => {
   const extra = idx >= container[key].length ? [newItem] : [];
@@ -165,9 +154,7 @@ const Content = (props: Props) => {
 
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
-  const [presenting, setPresenting] = useState(false);
-  const [zoomInEl, setZoomIn] = useState(null);
-  const [zoomOutEl, setZoomOut] = useState(null);
+  const [presenting, _setPresenting] = useState(false);
   const [editable, setEditable] = useState(false);
   const checkWindow = React.useCallback(() => window.innerWidth > 600, []);
 
@@ -198,9 +185,6 @@ const Content = (props: Props) => {
   const startExport = () => setIoState("EXPORTING");
   const stopExport = () => setIoState("IDLE");
   const toggleEditor = () => setEditable(!editable);
-
-  const onZoomInEl = onLoaded(setZoomIn);
-  const onZoomOutEl = onLoaded(setZoomOut);
 
   const setHiddenChannelWithLogic = (v: boolean) => {
     if (!twoNavOk && !v) {
@@ -314,14 +298,14 @@ const Content = (props: Props) => {
     }
     // handle hard-coded channels for dicom-web demo
     const dicomPropList = imagePropList
-      .filter(([series, modality, type]) => type === "DICOM-WEB")
+      .filter(([_series, _modality, type]) => type === "DICOM-WEB")
       .map(([series, modality]) => [series, modality]) as [string, string][];
     if (dicomPropList.length > 0) {
       await onStartDicomWeb(dicomPropList, props.exhibit_config.Groups);
     }
     // handle only one ome-tiff image ( TODO support more )
     const omeTiffPropList = imagePropList
-      .filter(([path, modality, type]) => type === "OME-TIFF")
+      .filter(([_path, _modality, type]) => type === "OME-TIFF")
       .map(([path]) => [path]);
     if (omeTiffPropList.length > 0 && handle) {
       await onStartOmeTiff(omeTiffPropList[0][0], handle);
@@ -424,7 +408,7 @@ const Content = (props: Props) => {
   // Exhibit editing operations (from Index)
   const { name, groups, stories } = exhibit;
 
-  const updateWaypoint = (newWaypoint: WaypointType, { s, w }: any) => {
+  const updateWaypoint = (newWaypoint: WaypointType, { s, w }) => {
     const oldWaypoint = stories[s]?.waypoints[w];
     if (!oldWaypoint) {
       throw `Cannot update waypoint. Waypoint ${w} does not exist!`;
@@ -433,7 +417,7 @@ const Content = (props: Props) => {
     setExhibit(ex);
   };
 
-  const pushWaypoint = (newWaypoint: WaypointType, { s }: any) => {
+  const pushWaypoint = (newWaypoint: WaypointType, { s }) => {
     if (!stories[s]) {
       throw `Cannot push waypoint. Story ${s} does not exist!`;
     }
@@ -536,7 +520,7 @@ const Content = (props: Props) => {
         return {
           color,
           name: Name,
-          contrast: [LowerRange, UpperRange],
+          contrast: [LowerRange, UpperRange] as [ number, number ],
         };
       });
       return {
@@ -579,8 +563,6 @@ const Content = (props: Props) => {
     hiddenWaypoint,
     setHiddenWaypoint: setHiddenWaypointWithLogic,
     retrievingMetadata,
-    onZoomInEl,
-    onZoomOutEl,
     startExport,
     stopExport,
     toggleEditor,
@@ -589,23 +571,23 @@ const Content = (props: Props) => {
     popWaypoint,
   };
 
+  const viewerConfig = React.useMemo(() => {
+    return {
+      toSettings: toSettings({ Groups, SourceChannels }),
+    }
+  }, [ Groups, SourceChannels ])
+
   const imageProps = React.useMemo(() => {
-    return toImageProps({
-      props: {
-        Groups,
-        SourceChannels,
-        loaderOmeTiff,
-        dicomIndexList,
-        marker_names: itemRegistryMarkerNames,
-        groups: itemRegistryGroups,
-        stories,
-        name,
-      },
-      buttons: {
-        zoomInButton: zoomInEl,
-        zoomOutButton: zoomOutEl,
-      },
-    });
+    return {
+      Groups,
+      SourceChannels,
+      loaderOmeTiff,
+      dicomIndexList,
+      marker_names: itemRegistryMarkerNames,
+      groups: itemRegistryGroups,
+      stories,
+      name
+    };
   }, [
     Groups,
     SourceChannels,
@@ -614,20 +596,15 @@ const Content = (props: Props) => {
     itemRegistryMarkerNames,
     itemRegistryGroups,
     stories,
-    name,
-    zoomInEl,
-    zoomOutEl,
+    name
   ]);
 
   // Use Zustand store for overlay state management
   const {
     overlayLayers,
     activeTool,
-    currentInteraction,
     dragState,
     hoverState,
-    handleLayerCreate,
-    handleToolChange,
     handleOverlayInteraction,
     stories: _stories,
     activeStoryIndex,
@@ -664,7 +641,8 @@ const Content = (props: Props) => {
           const data = [...new FormData(form).entries()];
           const formOut = data.reduce(
             (o, [k, v]) => {
-              return { ...o, [k]: `${v}` };
+              o[k] = `${v}`;
+              return o;
             },
             {
               mask: "",
@@ -719,6 +697,7 @@ const Content = (props: Props) => {
               ) : (
                 <ImageViewer
                   {...imageProps}
+                  viewerConfig={viewerConfig}
                   overlayLayers={overlayLayers}
                   activeTool={activeTool}
                   isDragging={dragState.isDragging}

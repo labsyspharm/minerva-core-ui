@@ -4,33 +4,44 @@ import {
   type OrthographicViewState,
 } from "@deck.gl/core";
 import Deck from "@deck.gl/react";
-import { FullscreenWidget } from "@deck.gl/widgets";
 import { MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
-import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 
 import "@deck.gl/widgets/stylesheet.css";
 
-import { Lensing } from "@/components/shared/viewer/layers/Lensing";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
-import type { ConfigProps } from "@/lib/config";
 import { createTileLayers, loadDicom } from "@/lib/dicom";
 import type { DicomIndex } from "@/lib/dicom-index";
 import { createDragHandlers } from "@/lib/dragHandlers";
-import type { Group, Story } from "@/lib/exhibit";
+import type { Story } from "@/lib/exhibit";
+import type { Layer } from "@deck.gl/core";
 import { useOverlayStore } from "@/lib/stores";
+import type { ConfigGroup } from "@/lib/stores";
+import type { OverlayLayer } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
 import type { Config, Loader } from "@/lib/viv";
-import { toSettings } from "@/lib/viv";
-import { convertWaypointToViewState, getWaypoint } from "@/lib/waypoint";
+import { convertWaypointToViewState, } from "@/lib/waypoint";
+
+type ItemRegistryChannel = {
+  name: string;
+  color: string;
+  contrast: [number, number];
+}
+
+type ItemRegistryGroup =  {
+  State: ConfigGroup["State"];
+  channels: ItemRegistryChannel[];
+  name: string;
+  g: number;
+}
 
 export type ImageViewerProps = {
   loaderOmeTiff: Loader;
   stories: Story[];
   dicomIndexList: DicomIndex[];
   viewerConfig: Config;
-  overlayLayers?: any[];
+  overlayLayers?: OverlayLayer[];
   activeTool: string;
   isDragging?: boolean;
   hoveredAnnotationId?: string | null;
@@ -38,21 +49,7 @@ export type ImageViewerProps = {
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
     coordinate: [number, number, number],
   ) => void;
-  zoomInButton?: HTMLElement | null;
-  zoomOutButton?: HTMLElement | null;
-  [key: string]: any;
-};
-
-export const toImageProps = (opts: { props: any; buttons: any }) => {
-  const { props, buttons } = opts;
-  const vivProps = {
-    ...props,
-    viewerConfig: {
-      ...buttons,
-      toSettings: toSettings(props),
-    },
-  };
-  return vivProps;
+  groups: ItemRegistryGroup[]
 };
 
 const Main = styled.div`
@@ -60,9 +57,31 @@ const Main = styled.div`
   height: 100%;
 `;
 
-const isElement = (x = {}): x is HTMLElement => {
+const _isElement = (x = {}): x is HTMLElement => {
   return ["Width", "Height"].every((k) => `client${k}` in x);
 };
+
+const toSettingsInternal = (
+  loader,
+  modality,
+  groups,
+  activeChannelGroupId,
+  channelVisibilities,
+  toSettings 
+) => {
+  // Gets the default settings
+  if (loader === null || !groups) {
+    return toSettings(activeChannelGroupId, modality);
+  }
+  return toSettings(
+    activeChannelGroupId,
+    modality,
+    loader,
+    channelVisibilities,
+  );
+};
+
+
 
 export const ImageViewer = (props: ImageViewerProps) => {
   const windowSize = useWindowSize();
@@ -70,8 +89,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     loaderOmeTiff,
     dicomIndexList,
     groups,
-    stories,
-    setHash,
     overlayLayers = [],
     activeTool,
     isDragging = false,
@@ -81,7 +98,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   } = props;
   const { activeChannelGroupId, channelVisibilities } = useOverlayStore();
   const [viewportSize, setViewportSize] = useState(windowSize);
-  const [canvas, setCanvas] = useState(null);
+  const [_canvas, _setCanvas] = useState(null);
   const rootRef = useRef<HTMLElement | null>(null);
 
   // Set up ResizeObserver to track viewport size changes
@@ -100,31 +117,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return () => resizeObserver.disconnect();
   }, []);
 
-  const loaderList = useMemo(
+  const _loaderList = useMemo(
     () =>
       // Show only ome-tiff if available
       loaderOmeTiff !== null ? [loaderOmeTiff] : dicomIndexList,
     [loaderOmeTiff, dicomIndexList],
   );
-
-  const toSettingsInternal = (
-    loader,
-    modality,
-    groups,
-    activeChannelGroupId,
-    channelVisibilities,
-  ) => {
-    // Gets the default settings
-    if (loader === null || !groups) {
-      return viewerConfig.toSettings(activeChannelGroupId, modality);
-    }
-    return viewerConfig.toSettings(
-      activeChannelGroupId,
-      modality,
-      loader,
-      channelVisibilities,
-    );
-  };
 
   const mainSettingsOmeTiff = useMemo(() => {
     const modality = "Colorimetric";
@@ -134,8 +132,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
       groups,
       activeChannelGroupId,
       channelVisibilities,
+      viewerConfig.toSettings
     );
-  }, [loaderOmeTiff, groups, activeChannelGroupId, channelVisibilities]);
+  }, [loaderOmeTiff, groups, activeChannelGroupId, channelVisibilities, viewerConfig.toSettings]);
 
   const mainSettingsDicomList = useMemo(() => {
     return dicomIndexList.map((dicomIndex) => {
@@ -146,9 +145,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
         groups,
         activeChannelGroupId,
         channelVisibilities,
+        viewerConfig.toSettings
       );
     });
-  }, [dicomIndexList, groups, activeChannelGroupId, channelVisibilities]);
+  }, [dicomIndexList, groups, activeChannelGroupId, channelVisibilities, viewerConfig.toSettings]);
 
   // Show only ome-tiff if available
   const mainSettingsList = useMemo(
@@ -302,7 +302,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       return {
         ...viewportSize,
         id: `mainLayer-${i}-${contrastId}`,
-        ...(mainSettings as any),
+        ...mainSettings,
         loader: mainSettings.loader.data,
       };
     });
@@ -408,7 +408,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // Memoize cursor function
   const getCursor = useCallback(
-    ({ isDragging, isHovering }) => {
+    ({ isDragging }) => {
       if (isDragging && activeTool === "move") {
         return "grabbing";
       } else if (activeTool === "move" && hoveredAnnotationId) {
@@ -470,7 +470,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // LoadingWidget ref for onRedraw callback
   const loadingWidgetRef = useRef<{
-    onRedraw: (params: { layers: any[] }) => void;
+    onRedraw: (params: { layers: Layer[] }) => void;
   }>(null);
 
   // onAfterRender callback to call LoadingWidget's onRedraw

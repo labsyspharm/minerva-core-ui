@@ -164,6 +164,9 @@ importers:
       '@vaadin/text-field':
         specifier: ^24.4.3
         version: 24.7.7
+      '@vivjs/constants':
+        specifier: github:simonwarchol/viv#path:packages/constants
+        version: https://codeload.github.com/simonwarchol/viv/tar.gz/327bbdec6a6965886a36cb2adaf6d9e188591a8c#path:packages/constants
       dcmjs:
         specifier: ^0.41.0
         version: 0.41.0
@@ -171,8 +174,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       geotiff:
-        specifier: 2.1.4-beta.0
-        version: 2.1.4-beta.0
+        specifier: 3.0.3
+        version: 3.0.3
       gl-matrix:
         specifier: ^3.4.3
         version: 3.4.3
@@ -2287,8 +2290,8 @@ packages:
     resolution: {integrity: sha512-PT6uoF5a1+kbC3tHmZSUsLHBp2QJlHasxxxxPW47QIY1VBKpFB+FcDvX+MxER6UzgLQZ0xDzJ9s48B9JbOCTqA==}
     engines: {node: '>=10.19'}
 
-  geotiff@2.1.4-beta.0:
-    resolution: {integrity: sha512-jb6SYvHMyiCqwqgGGLDAxtig9h1g6O+n1wEyNEE4QgVEXOItYaWrEgPg9SAnwdoZm2yx6DpFtilbGG65hvZgpQ==}
+  geotiff@3.0.3:
+    resolution: {integrity: sha512-yRoDQDYxWYiB421p0cbxJvdy79OlQW+rxDI9GDbIUeWCAh6YAZ0vlTKF448EAiEuuUpBsNaegd2flavF0p+kvw==}
     engines: {node: '>=10.19'}
 
   get-caller-file@2.0.5:
@@ -3771,8 +3774,8 @@ packages:
   zstddec@0.1.0:
     resolution: {integrity: sha512-w2NTI8+3l3eeltKAdK8QpiLo/flRAr2p8AGeakfMZOXBxOg9HIu4LVDxBi81sYgVhFhdJjv1OrB5ssI8uFPoLg==}
 
-  zstddec@0.2.0-alpha.3:
-    resolution: {integrity: sha512-uHyE3TN8jRFOaMVwdhERfrcaabyoUUawIRDKXE6x0nCU7mzyIZO0LndJ3AtVUiKLF0lC+8F5bMSySWEF586PSA==}
+  zstddec@0.2.0:
+    resolution: {integrity: sha512-oyPnDa1X5c13+Y7mA/FDMNJrn4S8UNBe0KCqtDmor40Re7ALrPN6npFwyYVRRh+PqozZQdeg23QtbcamZnG5rA==}
 
   zustand@5.0.8:
     resolution: {integrity: sha512-gyPKpIaxY9XcO2vSMrLbiER7QMAMGOQZVRdJ6Zi782jkbzZygq5GI9nG8g+sMgitRtndwaBSl7uiqC49o1SSiw==}
@@ -6274,7 +6277,7 @@ snapshots:
       xml-utils: 1.10.2
       zstddec: 0.1.0
 
-  geotiff@2.1.4-beta.0:
+  geotiff@3.0.3:
     dependencies:
       '@petamoriken/float16': 3.9.2
       lerc: 3.0.0
@@ -6283,7 +6286,7 @@ snapshots:
       quick-lru: 6.1.2
       web-worker: 1.5.0
       xml-utils: 1.10.2
-      zstddec: 0.2.0-alpha.3
+      zstddec: 0.2.0
 
   get-caller-file@2.0.5: {}
 
@@ -8013,7 +8016,7 @@ snapshots:
 
   zstddec@0.1.0: {}
 
-  zstddec@0.2.0-alpha.3: {}
+  zstddec@0.2.0: {}
 
   zustand@5.0.8(@types/react@18.3.23)(react@18.3.1):
     optionalDependencies:

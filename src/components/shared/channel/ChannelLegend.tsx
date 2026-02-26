@@ -1,4 +1,4 @@
-import * as React from "react";
+
 import styled from "styled-components";
 import {
   Push as PushChannel,
@@ -49,7 +49,7 @@ const LegendRow = (props) => {
   const { channel, channelVisibilities } = props;
   const channelName = channel.name;
   const visible = channelVisibilities[channelName];
-  const { idx, name, path, g, onClick } = props;
+  const { idx, g, onClick } = props;
   const setInput = (t) => {
     props.updateChannel({ ...channel, name: t }, { idx, g });
   };
@@ -121,7 +121,7 @@ export const ChannelLegend = (props) => {
       idx: k,
       onClick: () => toggleChannel(c),
     };
-    return <LegendRow key={k} {...rowProps} />;
+    return <LegendRow key={c.name} {...rowProps} />;
   });
   return (
     <div>

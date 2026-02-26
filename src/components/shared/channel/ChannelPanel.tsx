@@ -1,20 +1,16 @@
 import * as React from "react";
-import { useState } from "react";
 import { ChannelLegend } from "./ChannelLegend";
 import { ChannelGroups } from "./ChannelGroups";
 import { useOverlayStore } from "@/lib/stores";
 import styled from "styled-components";
-import { Push as PushGroup } from "@/components/authoring/tools/ActionButtons";
-import { EditModeSwitcher } from "@/components/authoring/tools/EditModeSwitcher";
-import { defaultChannels } from "./ChannelLegend";
 import { DrawingPanel } from "@/components/authoring/DrawingPanel";
+import type { ReactElement } from "react";
 
 // Types
 import type { ConfigProps } from "@/lib/config";
-import type { ImageProps } from "@/components/shared/common/types";
 
-export type ChannelPanelProps = ImageProps & {
-    children: any;
+export type ChannelPanelProps = {
+    children: ReactElement;
     config: ConfigProps;
     authorMode: boolean;
     hiddenChannel: boolean;
@@ -96,10 +92,6 @@ const theme = {};
 
 export const ChannelPanel = (props: ChannelPanelProps) => {
   const hide = props.hiddenChannel;
-  const setHide = props.setHiddenChannel;
-
-  const togglePanel = () => setHide(!hide);
-
   const hidden = props.retrievingMetadata;
   // Subscribe only to overlay state used by this panel so viewport/zoom updates don't re-render.
   const activeChannelGroupId = useOverlayStore((s) => s.activeChannelGroupId);
@@ -129,6 +121,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
             color: `${hex_color}`,
           };
         }
+        return null;
       }).filter((x) => x),
     };
   });
@@ -187,15 +180,12 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     />
   ) : null;
 
-  const minerva_author_ui = React.createElement(props.controlPanelElement, {
-    class: theme,
-    children: (
-      <>
-        {props.children}
-        {drawingPanel}
-      </>
-    ),
-  });
+  const minerva_author_ui = React.createElement(
+    props.controlPanelElement, {
+      class: theme
+    },
+    <>{props.children} {drawingPanel}</>
+  );
 
   const content = props.authorMode ? (
     <TextOther>{minerva_author_ui}</TextOther>

@@ -146,13 +146,13 @@ const STORIES: NarativeConfig["stories"] = [
   },
 ];
 
-const storyConfig: NarativeConfig = {
+const _storyConfig: NarativeConfig = {
   scenes: SCENES,
   images: IMAGES,
   stories: STORIES,
 };
 
-const authorConfig: NarativeConfig = {
+const _authorConfig: NarativeConfig = {
   scenes: SCENES,
   images: IMAGES.map(imageToAuthor).filter(isAuthorImage),
   stories: STORIES,

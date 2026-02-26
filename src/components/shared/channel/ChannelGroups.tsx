@@ -35,7 +35,7 @@ const GroupRow = (props) => {
   );
   const row_group = React.useMemo(
     () => Groups.find(({ Name }) => Name === name) || Groups[0],
-    [Groups],
+    [Groups, name],
   );
 
   const active = active_group.UUID === row_group.UUID;
@@ -61,10 +61,10 @@ const GroupRow = (props) => {
   }, [active]);
 
   const setInput = (t) => {
-    props.updateGroup({ ...group, name: t }, { g: group.g });
+    updateGroup({ ...group, name: t }, { g: group.g });
   };
   const uuid = `group/name/${group.g}`;
-  const statusProps = {
+  const _statusProps = {
     ...props,
     md: false,
     setInput,
@@ -83,9 +83,9 @@ const GroupRow = (props) => {
 
 export const ChannelGroups = (props) => {
   const { groups } = props;
-  const rows = groups.map((group, k) => {
+  const rows = groups.map((group) => {
     const groupProps = { ...props, group };
-    return <GroupRow key={k} {...groupProps} />;
+    return <GroupRow key={group.name} {...groupProps} />;
   });
   return <WrapRows>{rows}</WrapRows>;
 };

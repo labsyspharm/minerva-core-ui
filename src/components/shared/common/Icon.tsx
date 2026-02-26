@@ -2,7 +2,6 @@ import * as React from "react";
 import styled from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconProp } from "@fortawesome/fontawesome-svg-core";
-import type { RefObject } from "react";
 
 // Individual Icon Component
 export type IconProps = {
@@ -15,14 +14,14 @@ export type IconProps = {
 };
 
 interface ButtonProps {
-  onClick: any;
+  onClick: (_: unknown) => unknown;
   size: string;
   color: string;
 }
 
 type Ref = (x: unknown) => void;
 
-const isRef = (x: unknown): x is Ref => {
+const _isRef = (x: unknown): x is Ref => {
   return typeof x === "function";
 };
 

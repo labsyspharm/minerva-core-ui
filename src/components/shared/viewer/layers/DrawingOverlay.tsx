@@ -76,7 +76,7 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
           id="fontSizeInput"
           type="number"
           value={fontSize}
-          onChange={(e) => onFontSizeChange(parseInt(e.target.value) || 14)}
+          onChange={(e) => onFontSizeChange(parseInt(e.target.value, 10) || 14)}
           min="8"
           max="72"
           style={{
@@ -166,8 +166,12 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
   );
 };
 
+export type CreatableLayer = (
+  PolygonLayer | TextLayer | null
+);
+
 interface DrawingOverlayProps {
-  onLayerCreate: (layer: PolygonLayer | TextLayer | null) => void;
+  onLayerCreate: (layer: CreatableLayer) => void;
   activeTool: string;
   currentInteraction?: {
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover";

@@ -1,7 +1,13 @@
 import { getImageSize } from "@hms-dbmi/viv";
 import type { ConfigSourceChannel, ConfigGroup } from "./document-store";
+import type { DTYPE_VALUES } from "@vivjs/constants";
 import type { ConfigGroup as LegacyConfigGroup } from "./exhibit";
 import type { Loader } from "./viv";
+
+export type SupportedDtype = keyof typeof DTYPE_VALUES;
+export type SupportedTypedArray = InstanceType<
+  (typeof globalThis)[`${SupportedDtype}Array`]
+>;
 
 type WaypointState = {
   Expanded: boolean;
@@ -59,16 +65,6 @@ type Dtype =
   | "Int32"
   | "Float32"
   | "Float64";
-type TypedArray =
-  | Int8Array
-  | Uint8Array
-  | Int16Array
-  | Uint16Array
-  | Int32Array
-  | Uint32Array
-  | Uint8ClampedArray
-  | Float32Array
-  | Float64Array;
 type Index = {
   x: number;
   y: number;
@@ -86,7 +82,7 @@ type TileProps = {
   extent?: Four;
 };
 type SelectionConfig = {
-  signal: AbortSignal;
+  signal?: AbortSignal;
   selection: {
     t: number;
     z: number;
@@ -101,11 +97,20 @@ export type LoaderPlane = {
   dtype: Dtype;
   shape: number[];
   tileSize: number;
-  labels: string[];
+  labels: ([
+    ...("t"|"c"|"z"|"y"|"x"|"_c")[],
+    "y", "x", "_c"
+  ] | [
+    ...("t"|"c"|"z"|"y"|"x")[],
+    "y", "x"
+  ]);
   onTileError: (e: Error) => void;
   getRaster: (s: SelectionConfig) => Promise<HasTile>;
   getTile: (s: TileConfig) => Promise<HasTile>;
 };
+export type VivLoaderPlane = LoaderPlane & {
+  labels: ["t","c","z","y","x"]
+}
 type ToTilePlane = (z: number, l: LoaderPlane[]) => LoaderPlane
 type FullState = {
   indices: Index[];
@@ -121,8 +126,8 @@ type BinIn = InitIn & {
 };
 type Bin = (i: BinIn) => Promise<number[]>
 
-type HasTile = {
-  data: TypedArray;
+export type HasTile = {
+  data: SupportedTypedArray;
   height: number;
   width: number;
 };
@@ -251,30 +256,43 @@ const toTileLayer = (planes: LoaderPlane[]): TileProps => {
   const { height, width } = getImageSize(plane);
   const extent: Four = [0, 0, width, height];
   const { tileSize, dtype } = plane;
-  const label_shapes = plane.labels.reduce(
-    (obj, label, i) => {
-      obj[label] = plane.shape[i];
-      return obj;
-    },
-    {
-      c: 1
-    }
-  );
+  const n_channels = plane.shape[
+    Math.max(
+      1, plane.labels.indexOf("c")
+    )
+  ]
   const props = {
     id,
     dtype,
     tileSize,
     extent,
-    channels: label_shapes.c || 1,
+    channels: n_channels || 1,
     minZoom: -(planes.length - 1),
     maxZoom: 0,
   };
   return props;
 };
 
+function hasVivLabels(plane): plane is VivLoaderPlane {
+  const labels = plane.labels;
+  const labels_match = (
+    labels.includes("y") && labels.includes("x")
+  )
+  if (!labels_match) {
+    console.error(`
+      Channel labels ${labels.join(',')} must include y and x
+    `);
+  }
+  return labels_match;
+}
+
 const initialize: Initialize = (inputs) => {
   const { planes } = inputs;
-  const tileProps = toTileLayer(planes);
+  const tileProps = toTileLayer(
+    planes.filter(plane => {
+      return hasVivLabels(plane);
+    })
+  );
   const mz = Math.abs(tileProps.minZoom || 0);
   const channels = [...new Array(tileProps.channels).keys()];
   const indices = channels.map((c) => ({

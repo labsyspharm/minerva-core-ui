@@ -1,4 +1,4 @@
-import * as React from "react";
+
 import { ImageExporter } from "@/components/playback/ImageExporter";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 import { Presentation } from "@/components/playback/Presentation";
@@ -17,7 +17,7 @@ export type PlaybackRouterProps = ChannelPanelProps & {
   in_f: string;
 };
 
-const ImageDiv = styled.div`
+const _ImageDiv = styled.div`
   background-color: white;
   width: 100%;
   height: 100%;
@@ -34,9 +34,9 @@ export const PlaybackRouter = (props: PlaybackRouterProps) => {
         <ChannelPanel {...props}>{props.children}</ChannelPanel>
       </Presentation>
     );
-  } else if (props.ioState == "IDLE") {
+  } else if (props.ioState === "IDLE") {
     out = <ChannelPanel {...props}>{props.children}</ChannelPanel>;
-  } else if (props.ioState == "EXPORTING") {
+  } else if (props.ioState === "EXPORTING") {
     const exporterProps = {
       handle,
       in_f,

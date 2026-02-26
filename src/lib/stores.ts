@@ -148,14 +148,17 @@ export interface PointAnnotation {
   };
 }
 
-export type Annotation =
+export type Annotation = (
   | RectangleAnnotation
   | EllipseAnnotation
   | PolygonAnnotation
   | LineAnnotation
   | PolylineAnnotation
   | TextAnnotation
-  | PointAnnotation;
+  | PointAnnotation
+) & {
+  color?: [number, number, number, number];
+};
 
 // Annotation Group interface
 export interface AnnotationGroup {

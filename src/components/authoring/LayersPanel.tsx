@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useOverlayStore } from "@/lib/stores";
-import type { Annotation, TextAnnotation } from "@/lib/stores";
+import type { Annotation } from "@/lib/stores";
 import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
 import {
   RectangleIcon,
@@ -82,7 +82,7 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
           id="fontSizeInput"
           type="number"
           value={fontSize}
-          onChange={(e) => onFontSizeChange(parseInt(e.target.value) || 14)}
+          onChange={(e) => onFontSizeChange(parseInt(e.target.value, 10) || 14)}
           min="8"
           max="72"
           style={{
@@ -187,10 +187,6 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const annotationGroups = useOverlayStore((state) => state.annotationGroups);
   const hiddenLayers = useOverlayStore((state) => state.hiddenLayers);
   const removeAnnotation = useOverlayStore((state) => state.removeAnnotation);
-  const updateAnnotation = useOverlayStore((state) => state.updateAnnotation);
-  const updateTextAnnotationColor = useOverlayStore(
-    (state) => state.updateTextAnnotationColor,
-  );
   const updateShapeText = useOverlayStore((state) => state.updateShapeText);
   const clearAnnotations = useOverlayStore((state) => state.clearAnnotations);
   const toggleLayerVisibility = useOverlayStore(
@@ -215,7 +211,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const [draggedAnnotationId, setDraggedAnnotationId] = React.useState<
     string | null
   >(null);
-  const [dropTargetGroupId, setDropTargetGroupId] = React.useState<
+  const [_dropTargetGroupId, setDropTargetGroupId] = React.useState<
     string | null
   >(null);
 
@@ -397,7 +393,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     event.dataTransfer.effectAllowed = "move";
   };
 
-  const handleDragEnd = (itemId: string, event: React.DragEvent) => {
+  const handleDragEnd = () => {
     setDraggedAnnotationId(null);
     setDropTargetGroupId(null);
   };
@@ -408,11 +404,11 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     setDropTargetGroupId(itemId);
   };
 
-  const handleDragLeave = (itemId: string, event: React.DragEvent) => {
+  const handleDragLeave = () => {
     setDropTargetGroupId(null);
   };
 
-  const handleDrop = (targetId: string, draggedId: string) => {
+  const handleDrop = (targetId: string, _draggedId: string) => {
     // Handle drag and drop between groups
     if (draggedAnnotationId && draggedAnnotationId !== targetId) {
       // Find if target is a group
@@ -428,7 +424,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
 
   const itemActions = (item: ListItem) => {
     if (item.metadata?.type === "annotation") {
-      const annotation = item.metadata.annotation as Annotation;
+      const annotation = item.metadata.annotation;
 
       return (
         <div style={{ display: "flex", gap: "4px" }}>

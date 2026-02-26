@@ -1,8 +1,17 @@
 import * as React from "react";
 import styles from "./ItemList.module.css";
+import type { AnnotationGroup, Annotation } from "@/lib/stores";
+
+type Metadata = {
+  group: AnnotationGroup;
+  type: "group";
+} | {
+  annotation: Annotation;
+  type: "annotation";
+}
 
 // Generic item interface that can be extended
-export interface ListItem<T = any> {
+export interface ListItem<T = Metadata> {
   id: string;
   title: string;
   subtitle?: string;
@@ -16,7 +25,7 @@ export interface ListItem<T = any> {
   isExpanded?: boolean;
 }
 
-export interface ItemListProps<T = any> {
+export interface ItemListProps<T = Metadata> {
   items: ListItem<T>[];
   title: string;
   noHeader?: boolean;
@@ -27,9 +36,9 @@ export interface ItemListProps<T = any> {
   onDelete?: (itemId: string) => void;
   onToggleExpand?: (itemId: string) => void;
   onDragStart?: (itemId: string, event: React.DragEvent) => void;
-  onDragEnd?: (itemId: string, event: React.DragEvent) => void;
+  onDragEnd?: () => void;
   onDragOver?: (itemId: string, event: React.DragEvent) => void;
-  onDragLeave?: (itemId: string, event: React.DragEvent) => void;
+  onDragLeave?: () => void;
   onDrop?: (targetId: string, draggedId: string) => void;
   showVisibilityToggle?: boolean;
   showDeleteButton?: boolean;
@@ -42,7 +51,7 @@ export interface ItemListProps<T = any> {
   ) => React.ReactNode;
 }
 
-const ItemList = <T = any>({
+const ItemList = <T = React.Component>({
   items,
   title,
   emptyMessage = "No items yet",
@@ -74,11 +83,11 @@ const ItemList = <T = any>({
     }
   };
 
-  const handleDragEnd = (itemId: string, event: React.DragEvent) => {
+  const handleDragEnd = () => {
     setDraggedItemId(null);
     setDropTargetId(null);
     if (onDragEnd) {
-      onDragEnd(itemId, event);
+      onDragEnd();
     }
   };
 
@@ -91,10 +100,10 @@ const ItemList = <T = any>({
     }
   };
 
-  const handleDragLeave = (itemId: string, event: React.DragEvent) => {
+  const handleDragLeave = () => {
     setDropTargetId(null);
     if (onDragLeave) {
-      onDragLeave(itemId, event);
+      onDragLeave();
     }
   };
 
@@ -127,14 +136,16 @@ const ItemList = <T = any>({
       .join(" ");
 
     return (
-      <div
+      <button
+        type="button"
+        tabIndex={0}
         key={item.id}
         className={itemClasses}
         draggable={!!onDragStart}
         onDragStart={(e) => handleDragStart(item.id, e)}
-        onDragEnd={(e) => handleDragEnd(item.id, e)}
+        onDragEnd={(_e) => handleDragEnd()}
         onDragOver={(e) => handleDragOver(item.id, e)}
-        onDragLeave={(e) => handleDragLeave(item.id, e)}
+        onDragLeave={(_e) => handleDragLeave()}
         onDrop={(e) => handleDrop(item.id, e)}
         onClick={() => onItemClick?.(item)}
       >
@@ -143,7 +154,7 @@ const ItemList = <T = any>({
 
         {/* Expand/Collapse Toggle */}
         {showExpandToggle && item.children && (
-          <button
+          <button type="button"
             className={styles.button}
             onClick={(e) => {
               e.stopPropagation();
@@ -151,12 +162,14 @@ const ItemList = <T = any>({
             }}
           >
             <svg
+              aria-labelledby="expand-title"
               width="12"
               height="12"
               viewBox="0 0 24 24"
               fill="currentColor"
               className={`${styles.expandIcon} ${item.isExpanded ? styles.expandIconExpanded : ""}`}
             >
+              <title id="expand-title">expand</title>
               <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
             </svg>
           </button>
@@ -178,7 +191,7 @@ const ItemList = <T = any>({
         <div className={styles.actions}>
           {/* Visibility Toggle */}
           {showVisibilityToggle && onToggleVisibility && (
-            <button
+            <button type="button"
               className={styles.button}
               onClick={(e) => {
                 e.stopPropagation();
@@ -186,12 +199,13 @@ const ItemList = <T = any>({
               }}
               title={item.isHidden ? "Show" : "Hide"}
             >
-              <svg
+              <svg aria-labelledby="show-title"
                 width="14"
                 height="14"
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
+                <title id="show-title">show</title>
                 {item.isHidden ? (
                   <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
                 ) : (
@@ -202,11 +216,11 @@ const ItemList = <T = any>({
           )}
 
           {/* Custom Item Actions */}
-          {itemActions && itemActions(item)}
+          {itemActions?.(item)}
 
           {/* Delete Button */}
           {showDeleteButton && onDelete && (
-            <button
+            <button type="button"
               className={styles.button}
               onClick={(e) => {
                 e.stopPropagation();
@@ -214,18 +228,19 @@ const ItemList = <T = any>({
               }}
               title="Delete"
             >
-              <svg
+              <svg aria-labelledby="delete-title"
                 width="14"
                 height="14"
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
+                <title id="delete-title">delete</title>
                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
               </svg>
             </button>
           )}
         </div>
-      </div>
+      </button>
     );
   };
 
@@ -255,15 +270,13 @@ const ItemList = <T = any>({
               {renderItem(item)}
               {/* Render children if expanded */}
               {item.isExpanded && item.children && (
-                <>
-                  {item.children.map((child) => (
+                item.children.map((child) => (
                     <React.Fragment key={`${item.id}-child-${child.id}`}>
                       {customChildRenderer
                         ? customChildRenderer(child, item)
                         : renderItem(child, true)}
                     </React.Fragment>
-                  ))}
-                </>
+                  ))
               )}
             </React.Fragment>
           ))
