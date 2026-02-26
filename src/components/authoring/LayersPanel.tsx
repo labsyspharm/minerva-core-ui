@@ -2,14 +2,14 @@ import * as React from "react";
 import { useOverlayStore } from "@/lib/stores";
 import type { Annotation, TextAnnotation } from "@/lib/stores";
 import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
-import RectangleIcon from "/icons/rectangle.svg?react";
-import EllipseIcon from "/icons/ellipse.svg?react";
-import PolylineIcon from "/icons/polyline.svg?react";
-import PolygonIcon from "/icons/polygon.svg?react";
-import LineIcon from "/icons/line.svg?react";
-import GroupIcon from "/icons/group.svg?react";
-import PointIcon from "/icons/point.svg?react";
-import TextIcon from "/icons/text.svg?react";
+import RectangleIcon from "/src/icons/rectangle.svg?react";
+import EllipseIcon from "/src/icons/ellipse.svg?react";
+import PolylineIcon from "/src/icons/polyline.svg?react";
+import PolygonIcon from "/src/icons/polygon.svg?react";
+import LineIcon from "/src/icons/line.svg?react";
+import GroupIcon from "/src/icons/group.svg?react";
+import PointIcon from "/src/icons/point.svg?react";
+import TextIcon from "/src/icons/text.svg?react";
 import styles from "@/components/authoring/DrawingPanel.module.css";
 
 // Shared Text Edit Panel Component (same as in original LayersPanel)

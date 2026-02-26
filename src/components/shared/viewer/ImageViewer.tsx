@@ -22,7 +22,6 @@ import type { Group, Story } from "@/lib/exhibit";
 import { useOverlayStore } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
 import type { Config, Loader } from "@/lib/viv";
-import { toSettings } from "@/lib/viv";
 import { convertWaypointToViewState, getWaypoint } from "@/lib/waypoint";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 
@@ -42,18 +41,6 @@ export type ImageViewerProps = {
   zoomInButton?: HTMLElement | null;
   zoomOutButton?: HTMLElement | null;
   [key: string]: any;
-};
-
-export const toImageProps = (opts: { props: any; buttons: any }) => {
-  const { props, buttons } = opts;
-  const vivProps = {
-    ...props,
-    viewerConfig: {
-      ...buttons,
-      toSettings: toSettings(props),
-    },
-  };
-  return vivProps;
 };
 
 const Main = styled.div`
@@ -465,6 +452,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
         return "crosshair";
       } else if (activeTool === "text") {
         return "text";
+      } else if (activeTool === "brush") {
+        return "none";
       } else if (activeTool === "move") {
         return "default";
       }
@@ -504,8 +493,11 @@ export const ImageViewer = (props: ImageViewerProps) => {
         return;
       // don't allow pan on non-move tool
       setViewState(nextViewState);
-      // Update viewport zoom in store for line width scaling
-      setViewportZoom(nextViewState.zoom);
+      // Update viewport zoom in store (view state is keyed by view id "ortho")
+      const zoom =
+        nextViewState?.ortho?.zoom ??
+        (typeof nextViewState?.zoom === "number" ? nextViewState.zoom : undefined);
+      if (typeof zoom === "number") setViewportZoom(zoom);
     },
     [isDragging, activeTool, setViewportZoom],
   );

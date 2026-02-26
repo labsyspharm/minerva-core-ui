@@ -16,10 +16,8 @@ import { Pool } from "@/lib/workers/Pool";
 import { parseRoisFromLoader } from "@/lib/roiParser";
 import { useOverlayStore } from "@/lib/stores";
 import { FileHandler } from "@/components/shared/FileHandler";
-import {
-  ImageViewer,
-  toImageProps,
-} from "@/components/shared/viewer/ImageViewer";
+import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
+import { toImageProps } from "@/components/shared/viewer/imageViewerUtils";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 import { Presentation } from "@/components/playback/Presentation";
@@ -675,8 +673,7 @@ const Content = (props: Props) => {
           const formOpts = {
             formOut,
             onStart: (list) => onStart(list, handle),
-            handle,
-          };
+            handle,          };
           if (isOpts(formOpts)) {
             validate(formOpts).then((valid: ValidObj) => {
               setValid(valid);

@@ -3,19 +3,20 @@ import { ChromePicker } from "react-color";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import { LayersPanel } from "@/components/authoring/LayersPanel";
 import styles from "./DrawingPanel.module.css";
-import MoveIcon from "/icons/move.svg?react";
-import RectangleIcon from "/icons/rectangle.svg?react";
-import EllipseIcon from "/icons/ellipse.svg?react";
-import PolygonIcon from "/icons/polygon.svg?react";
-import LineIcon from "/icons/line.svg?react";
-import PolylineIcon from "/icons/polyline.svg?react";
-import ArrowIcon from "/icons/arrow-tool.svg?react";
-import ShapesIcon from "/icons/shapes.svg?react";
-import LinesIcon from "/icons/lines.svg?react";
-import TextIcon from "/icons/text.svg?react";
-import PointIcon from "/icons/point.svg?react";
-import ColorIcon from "/icons/color.svg?react";
-import MagicWandIcon from "/icons/magic-wand.svg?react";
+import MoveIcon from "/src/icons/move.svg?react";
+import RectangleIcon from "/src/icons/rectangle.svg?react";
+import EllipseIcon from "/src/icons/ellipse.svg?react";
+import PolygonIcon from "/src/icons/polygon.svg?react";
+import LineIcon from "/src/icons/line.svg?react";
+import PolylineIcon from "/src/icons/polyline.svg?react";
+import ArrowIcon from "/src/icons/arrow-tool.svg?react";
+import ShapesIcon from "/src/icons/shapes.svg?react";
+import LinesIcon from "/src/icons/lines.svg?react";
+import TextIcon from "/src/icons/text.svg?react";
+import PointIcon from "/src/icons/point.svg?react";
+import ColorIcon from "/src/icons/color.svg?react";
+import MagicWandIcon from "/src/icons/magic-wand.svg?react";
+import BrushIcon from "/src/icons/brush.svg?react";
 import { ToolSubmenu } from "@/components/authoring/ToolSubmenu";
 import { useOverlayStore } from "@/lib/stores";
 
@@ -43,6 +44,7 @@ const TOOLS = {
   TEXT: "text",
   POINT: "point",
   MAGIC_WAND: "magic_wand",
+  BRUSH: "brush",
 } as const;
 
 type ToolType = (typeof TOOLS)[keyof typeof TOOLS];
@@ -72,7 +74,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
     string | null
   >(null);
 
-  const handleToolChangeLocal = (tool: ToolType) => {
+  const handleToolChangeLocal = (tool: string) => {
     handleToolChange(tool);
   };
 
@@ -209,6 +211,15 @@ const DrawingPanel = (props: DrawingPanelProps) => {
           buttonClassName={styles.toolButton}
           activeClassName={styles.active}
         />
+
+        <button
+          type="button"
+          className={`${styles.toolButton} ${activeTool === TOOLS.BRUSH ? styles.active : ""}`}
+          title="Brush"
+          onClick={() => handleToolChangeLocal(TOOLS.BRUSH)}
+        >
+          <BrushIcon />
+        </button>
 
         <button
           type="button"
@@ -355,4 +366,3 @@ const DrawingPanel = (props: DrawingPanelProps) => {
 
 export { DrawingPanel };
 export type { DrawingPanelProps, ToolType };
-export { TOOLS };
