@@ -6,6 +6,17 @@ function createWorker() {
   });
 }
 
+async function defaultDecoderParameterFn(fileDirectory) {
+  // TODO -- using v2.0 fileDirectory
+  return {
+    tileWidth: fileDirectory.TileWidth,
+    tileHeight: fileDirectory.TileLength,
+    planarConfiguration: 1,
+    bitsPerSample: await fileDirectory.BitsPerSample,
+    predictor: 1
+  };
+}
+
 export declare class PoolClass {
     /**
      * @constructor
@@ -40,7 +51,9 @@ class Pool extends GeotiffPool {
   }
 
   async decode(fileDirectory, buffer) {
-    return super.decode(fileDirectory, buffer); // TODO
+    const compression = fileDirectory.Compression;
+    const params = await defaultDecoderParameterFn(fileDirectory);
+    return await this.bindParameters(compression, params).decode(buffer);
   }
 
   async destroy() {
