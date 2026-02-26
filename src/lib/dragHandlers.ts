@@ -94,7 +94,9 @@ export const createDragHandlers = (
         activeTool === "rectangle" ||
         activeTool === "ellipse" ||
         activeTool === "line" ||
-        activeTool === "lasso"
+        activeTool === "lasso" ||
+        activeTool === "magic_wand" ||
+        activeTool === "brush"
       ) {
         if (coordinate) {
           emit("hover", coordinate);

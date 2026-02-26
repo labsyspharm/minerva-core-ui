@@ -10,9 +10,11 @@ import {
   ellipseToPolygon,
   lineToPolygon,
 } from "@/lib/stores";
+import { makeCircle } from "@/lib/brushStroke";
+import { polygonUnion } from "@/lib/polygonClipping";
 import { useAnnotationLayers, ARROW_ICON_SIZE } from "@/lib/annotationLayers";
 import { useSam2 } from "@/lib/sam2/useSam2";
-import ArrowDrawingIconUrl from "/icons/arrow-annotation-drawing.svg?url";
+import ArrowDrawingIconUrl from "@/icons/arrow-annotation-drawing.svg?url";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {
@@ -187,7 +189,8 @@ interface DrawingOverlayProps {
 const getLineWidthPx = () => 3; // always 3px
 
 // Unified preview colors for non-finalized shapes
-const PREVIEW_FILL_COLOR: [number, number, number, number] = [255, 165, 0, 50]; // Orange with transparency
+// Lower alpha so brush is very subtle and effectively single-level opacity.
+const PREVIEW_FILL_COLOR: [number, number, number, number] = [255, 165, 0, 32]; // Very transparent orange
 const PREVIEW_LINE_COLOR: [number, number, number, number] = [255, 165, 0, 255]; // Orange solid
 
 // Pure helper function - moved outside component to avoid re-creation
@@ -206,12 +209,28 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     drawingState,
     finalizeLasso,
     finalizePolyline,
+    finalizeBrush,
     createTextAnnotation,
     createPointAnnotation,
     globalColor,
+    brushRadiusPx,
+    viewportZoom,
   } = useOverlayStore();
   const sam2DebugImages = useOverlayStore((s) => s.sam2DebugImages);
   const { isDrawing, dragStart, dragEnd } = drawingState;
+
+  // Local state for brush tool
+  const [brushStrokePoints, setBrushStrokePoints] = React.useState<
+    [number, number][]
+  >([]);
+  const [isBrushDrawing, setIsBrushDrawing] = React.useState(false);
+  const brushStrokePointsRef = React.useRef<[number, number][]>([]);
+  const brushHullCacheRef = React.useRef<{
+    hull: [number, number][] | null;
+    processedCount: number;
+    radiusWorld: number;
+    zoom: number;
+  }>({ hull: null, processedCount: 0, radiusWorld: 0, zoom: 0 });
 
   // Local state for lasso tool
   const [lassoPoints, setLassoPoints] = React.useState<[number, number][]>([]);
@@ -497,6 +516,16 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
 
   // Handle tool changes - clear state when switching tools
   React.useEffect(() => {
+    if (activeTool !== "brush") {
+      setIsBrushDrawing(false);
+      setBrushStrokePoints([]);
+      brushHullCacheRef.current = {
+        hull: null,
+        processedCount: 0,
+        radiusWorld: 0,
+        zoom: 0,
+      };
+    }
     if (activeTool !== "lasso") {
       setIsLassoDrawing(false);
       setPolygonClickPoints([]);
@@ -697,6 +726,54 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       if (type === "click" && !isSam2Processing) {
         void runSegmentation(x, y);
       }
+    } else if (activeTool === "brush") {
+      if (type === "dragStart") {
+        setIsBrushDrawing(true);
+        const start: [number, number] = [x, y];
+        brushStrokePointsRef.current = [start];
+        setBrushStrokePoints([start]);
+      } else if (type === "drag" && isBrushDrawing) {
+        const prev = brushStrokePointsRef.current;
+        if (prev.length > 0) {
+          const last = prev[prev.length - 1];
+          const dist = Math.hypot(x - last[0], y - last[1]);
+          if (dist >= 0.5) {
+            const next = [...prev, [x, y] as [number, number]];
+            brushStrokePointsRef.current = next;
+            setBrushStrokePoints(next);
+          }
+        }
+      } else if (type === "dragEnd" && isBrushDrawing) {
+        const prev = brushStrokePointsRef.current;
+        const finalPoints: [number, number][] =
+          prev.length > 0 ? [...prev, [x, y] as [number, number]] : [[x, y]];
+        if (finalPoints.length >= 1) {
+          // Make sure the precomputed hull includes the final dragEnd point.
+          const zoom = viewportZoom ?? 0;
+          const scale = 2 ** zoom;
+          const radiusWorld = brushRadiusPx / Math.max(scale, 0.01);
+          let hull = brushHullCacheRef.current.hull;
+          const circle = makeCircle(x, y, radiusWorld);
+          if (!hull) {
+            hull = circle;
+          } else {
+            const union = polygonUnion(hull, circle);
+            if (union && union.length >= 3) {
+              hull = union;
+            }
+          }
+          finalizeBrush(finalPoints, hull ?? undefined);
+        }
+        brushStrokePointsRef.current = [];
+        brushHullCacheRef.current = {
+          hull: null,
+          processedCount: 0,
+          radiusWorld: 0,
+          zoom: 0,
+        };
+        setIsBrushDrawing(false);
+        setBrushStrokePoints([]);
+      }
     } else if (activeTool === "lasso") {
       if (type === "click") {
         // Click mode: Add point to polygon
@@ -832,6 +909,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   }, [
     currentInteraction,
     activeTool,
+    isBrushDrawing,
+    finalizeBrush,
     isLassoDrawing,
     isPolylineDragging,
     isRectangleClickMode,
@@ -852,6 +931,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     finalizeCurrentPolyline,
     isSam2Processing,
     runSegmentation,
+    brushRadiusPx,
+    viewportZoom,
   ]);
 
   // Handle text input submission
@@ -1017,13 +1098,60 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
         polygonData = ellipseToPolygon(dragStart, dragEnd);
       }
     }
+    // Brush tool: preview uses the same union-of-circles hull as the final mask,
+    // but builds it incrementally so it doesn't lag for long strokes.
+    else if (activeTool === "brush" && isBrushDrawing && brushStrokePoints.length >= 1) {
+      const zoom = viewportZoom ?? 0;
+      const scale = 2 ** zoom;
+      const radiusWorld = brushRadiusPx / Math.max(scale, 0.01);
+      const points = brushStrokePoints;
+      const total = points.length;
+      const cache = brushHullCacheRef.current;
+
+      let hull = cache.hull;
+      let processed = cache.processedCount;
+      const sameParams =
+        cache.radiusWorld === radiusWorld && cache.zoom === zoom;
+
+      if (!sameParams || processed > total) {
+        hull = null;
+        processed = 0;
+      }
+
+      for (let i = processed; i < total; i++) {
+        const pt = points[i];
+        if (!pt) continue;
+        const [px, py] = pt;
+        const circle = makeCircle(px, py, radiusWorld);
+        if (!hull) {
+          hull = circle;
+        } else {
+          const union = polygonUnion(hull, circle);
+          if (union && union.length >= 3) {
+            hull = union;
+          }
+        }
+      }
+
+      brushHullCacheRef.current = {
+        hull,
+        processedCount: total,
+        radiusWorld,
+        zoom,
+      };
+
+      polygonData = hull ?? null;
+      fillColor = PREVIEW_FILL_COLOR;
+      shouldFill = true;
+    }
     // Return null if no polygon data
     if (!polygonData) {
       return null;
     }
 
-    // Determine if we should stroke (arrow uses IconLayer, not polygon; plain line needs stroke)
-    const shouldStroke = activeTool !== "arrow";
+    // Stroke: arrow uses IconLayer; brush preview is fill-only (no stroke until finished)
+    const shouldStroke =
+      activeTool !== "arrow" && !(activeTool === "brush" && isBrushDrawing);
 
     // Create single unified polygon layer
     return new PolygonLayer({
@@ -1045,6 +1173,10 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     isDrawing,
     dragStart,
     dragEnd,
+    isBrushDrawing,
+    brushStrokePoints,
+    brushRadiusPx,
+    viewportZoom,
     isLassoDrawing,
     lassoPoints,
     polylinePoints,
@@ -1062,6 +1194,40 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     lineSecondClick,
     currentInteraction,
   ]);
+
+  // Brush cursor layer: circle at pointer when brush tool is active (hover or while drawing)
+  const brushCursorLayer = React.useMemo(() => {
+    if (activeTool !== "brush") return null;
+    const type = currentInteraction?.type;
+    if (type !== "hover" && type !== "drag" && type !== "dragStart") return null;
+    const [cx, cy] = currentInteraction.coordinate;
+    const scale = 2 ** (viewportZoom ?? 0);
+    const radiusWorld = brushRadiusPx / Math.max(scale, 0.01);
+    const segments = 32;
+    const circle: [number, number][] = [];
+    for (let i = 0; i <= segments; i++) {
+      const angle = (i / segments) * 2 * Math.PI;
+      circle.push([
+        cx + radiusWorld * Math.cos(angle),
+        cy + radiusWorld * Math.sin(angle),
+      ]);
+    }
+    return new PolygonLayer({
+      id: "brush-cursor-layer",
+      data: [{ polygon: circle }],
+      getPolygon: (d) => d.polygon,
+      getFillColor: PREVIEW_FILL_COLOR,
+      getLineColor: PREVIEW_LINE_COLOR,
+      getLineWidth: 2,
+      lineWidthScale: 1,
+      lineWidthUnits: "pixels",
+      lineWidthMinPixels: 2,
+      lineWidthMaxPixels: 2,
+      stroked: true,
+      filled: true,
+      pickable: false,
+    });
+  }, [activeTool, currentInteraction, brushRadiusPx, viewportZoom]);
 
   // Arrow preview layer: shows arrow icon from start to current position (updates on mouse move)
   const arrowPreviewLayer = React.useMemo(() => {
@@ -1173,6 +1339,16 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       onLayerCreate(null);
     }
   }, [drawingLayer, onLayerCreate]);
+
+  // Add/remove brush cursor layer when brush tool is active
+  React.useEffect(() => {
+    if (brushCursorLayer) {
+      useOverlayStore.getState().addOverlayLayer(brushCursorLayer);
+    }
+    return () => {
+      useOverlayStore.getState().removeOverlayLayer("brush-cursor-layer");
+    };
+  }, [brushCursorLayer]);
 
   // Add/remove arrow preview layer so it shows and updates as mouse moves
   React.useEffect(() => {

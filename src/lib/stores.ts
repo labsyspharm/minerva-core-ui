@@ -8,6 +8,7 @@ import type {
   ConfigWaypointArrow,
   ConfigWaypointOverlay,
 } from "./config";
+import { buildBrushHull } from "./brushHull";
 
 // Re-export config types for convenience
 export type {
@@ -343,6 +344,10 @@ export interface OverlayStore {
   globalColor: [number, number, number, number]; // New: global drawing color
   viewportZoom: number; // Current viewport zoom level for line width scaling
 
+  // Brush tool state
+  brushRadiusPx: number;
+  selectedAnnotationId: string | null;
+
   // Stories state
   stories: ConfigWaypoint[];
   activeStoryIndex: number | null;
@@ -445,6 +450,12 @@ export interface OverlayStore {
   updateShapeText: (annotationId: string, newText: string) => void; // Update text field on any annotation (for shapes with text)
   setGlobalColor: (color: [number, number, number, number]) => void; // Set global drawing color
   setViewportZoom: (zoom: number) => void; // Set viewport zoom for line width scaling
+  setBrushRadiusPx: (radius: number) => void;
+  setSelectedAnnotation: (annotationId: string | null) => void;
+  finalizeBrush: (
+    strokePoints: [number, number][],
+    precomputedHull?: [number, number][],
+  ) => void;
 
   // New layer visibility actions
   toggleLayerVisibility: (annotationId: string) => void;
@@ -511,6 +522,8 @@ const overlayInitialState = {
   hiddenLayers: new Set<string>(), // New: empty hidden layers set
   globalColor: [255, 255, 255, 255], // New: default white color
   viewportZoom: 0, // Default zoom level
+  brushRadiusPx: 30,
+  selectedAnnotationId: null as string | null,
   stories: [], // New: empty stories array
   activeStoryIndex: null, // New: no active story initially
   activeChannelGroupId: null, // No channel group initially
@@ -618,7 +631,10 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               // Hover detection is handled in dragHandlers.ts
               break;
             case "click":
-              // Click without drag - just a click on annotation (no action needed)
+              // Click without drag: select annotation (e.g. for layers panel)
+              if (hoverState.hoveredAnnotationId) {
+                get().setSelectedAnnotation(hoverState.hoveredAnnotationId);
+              }
               break;
             case "dragStart":
               // Start drag if clicking on a hovered annotation
@@ -665,47 +681,44 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           return;
         }
 
-        // Handle drawing state updates based on interaction type for drawing tools
-        switch (type) {
-          case "click":
-          case "dragStart":
-            // Start drawing
-            get().updateDrawingState({
-              isDrawing: true,
-              dragStart: [x, y],
-              dragEnd: [x, y],
-            });
-            break;
-          case "drag":
-            // Update drawing
-            if (drawingState.isDrawing) {
+        // Handle drawing state updates only for tools that use it (rectangle, ellipse, arrow, line)
+        const usesDrawingState =
+          activeTool === "rectangle" ||
+          activeTool === "ellipse" ||
+          activeTool === "arrow" ||
+          activeTool === "line";
+        if (usesDrawingState) {
+          switch (type) {
+            case "click":
+            case "dragStart":
               get().updateDrawingState({
+                isDrawing: true,
+                dragStart: [x, y],
                 dragEnd: [x, y],
               });
-            }
-            break;
-          case "dragEnd":
-            // Finish drawing and automatically finalize as annotation
-            if (drawingState.isDrawing) {
-              get().updateDrawingState({
-                dragEnd: [x, y],
-              });
-              // Finalize based on active tool
-              if (activeTool === "rectangle") {
-                setTimeout(() => {
-                  get().finalizeRectangle();
-                }, 0);
-              } else if (activeTool === "ellipse") {
-                setTimeout(() => {
-                  get().finalizeEllipse();
-                }, 0);
-              } else if (activeTool === "arrow" || activeTool === "line") {
-                setTimeout(() => {
-                  get().finalizeLine(activeTool === "arrow");
-                }, 0);
+              break;
+            case "drag":
+              if (drawingState.isDrawing) {
+                get().updateDrawingState({
+                  dragEnd: [x, y],
+                });
               }
-            }
-            break;
+              break;
+            case "dragEnd":
+              if (drawingState.isDrawing) {
+                get().updateDrawingState({
+                  dragEnd: [x, y],
+                });
+                if (activeTool === "rectangle") {
+                  setTimeout(() => get().finalizeRectangle(), 0);
+                } else if (activeTool === "ellipse") {
+                  setTimeout(() => get().finalizeEllipse(), 0);
+                } else if (activeTool === "arrow" || activeTool === "line") {
+                  setTimeout(() => get().finalizeLine(activeTool === "arrow"), 0);
+                }
+              }
+              break;
+          }
         }
       },
 
@@ -719,10 +732,15 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       removeAnnotation: (annotationId: string) => {
         set((state) => {
           const newHiddenLayers = new Set(state.hiddenLayers);
-          newHiddenLayers.delete(annotationId); // Clean up hidden state
+          newHiddenLayers.delete(annotationId);
+          const newSelected =
+            state.selectedAnnotationId === annotationId
+              ? null
+              : state.selectedAnnotationId;
           return {
             annotations: state.annotations.filter((a) => a.id !== annotationId),
             hiddenLayers: newHiddenLayers,
+            selectedAnnotationId: newSelected,
           };
         });
       },
@@ -1068,6 +1086,57 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       setViewportZoom: (zoom: number) => {
         set({ viewportZoom: zoom });
+      },
+
+      setBrushRadiusPx: (radius: number) => {
+        set({ brushRadiusPx: radius });
+      },
+
+      setSelectedAnnotation: (annotationId: string | null) => {
+        set({ selectedAnnotationId: annotationId });
+      },
+
+      finalizeBrush: (
+        strokePoints: [number, number][],
+        precomputedHull?: [number, number][],
+      ) => {
+        const state = get();
+        const { brushRadiusPx, viewportZoom } = state;
+        if (strokePoints.length === 0) return;
+
+        const overlayPolygon =
+          precomputedHull && precomputedHull.length >= 3
+            ? precomputedHull
+            : buildBrushHull(strokePoints, brushRadiusPx, viewportZoom);
+        if (!overlayPolygon || overlayPolygon.length < 3) return;
+
+        // Debug: log final brush overlay polygon points for inspection
+        try {
+          // eslint-disable-next-line no-console
+          console.log(
+            "[brush] overlay polygon",
+            JSON.stringify(overlayPolygon),
+          );
+        } catch {
+          // ignore logging errors
+        }
+
+        const annotation: PolygonAnnotation = {
+          id: `brush-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: "polygon",
+          polygon: overlayPolygon,
+          style: {
+            fillColor: [0, 0, 0, 0], // Outline only: annotation is the outline of the shape
+            lineColor: state.globalColor,
+            lineWidth: 3,
+          },
+          metadata: {
+            createdAt: new Date(),
+            label: `Brush ${state.annotations.length + 1}`,
+          },
+        };
+        get().addAnnotation(annotation);
+        get().removeOverlayLayer("drawing-layer");
       },
 
       // New layer visibility actions

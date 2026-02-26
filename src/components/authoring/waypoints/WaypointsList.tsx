@@ -3,8 +3,8 @@ import styles from "./WaypointsList.module.css";
 import { useOverlayStore } from "@/lib/stores";
 import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
-import TextIcon from "/icons/text.svg?react";
-import PolylineIcon from "/icons/polyline.svg?react";
+import TextIcon from "/src/icons/text.svg?react";
+import PolylineIcon from "/src/icons/polyline.svg?react";
 
 // Types
 import type { ConfigWaypoint } from "@/lib/config";

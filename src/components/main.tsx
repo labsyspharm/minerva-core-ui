@@ -15,9 +15,7 @@ import { readConfig } from "@/lib/exhibit";
 import { Pool } from "@/lib/workers/Pool";
 import { useOverlayStore } from "@/lib/stores";
 import { FileHandler } from "@/components/shared/FileHandler";
-import {
-  ImageViewer
-} from "@/components/shared/viewer/ImageViewer";
+import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
 import { toSettings } from "@/lib/viv";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
 
@@ -653,8 +651,7 @@ const Content = (props: Props) => {
           const formOpts = {
             formOut,
             onStart: (list) => onStart(list, handle),
-            handle,
-          };
+            handle,          };
           if (isOpts(formOpts)) {
             validate(formOpts).then((valid: ValidObj) => {
               setValid(valid);

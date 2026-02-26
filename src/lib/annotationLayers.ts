@@ -15,7 +15,7 @@ import {
   TextLayer,
 } from "@deck.gl/layers";
 import * as React from "react";
-import ArrowIconUrl from "/icons/arrow-annotation.svg?url";
+import ArrowIconUrl from "@/icons/arrow-annotation.svg?url";
 import type { Annotation } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
 
