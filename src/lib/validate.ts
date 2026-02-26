@@ -1,5 +1,5 @@
-import { findFile } from "./filesystem";
 import { findDicomWeb } from "../lib/dicom";
+import { findFile } from "@/lib/filesystem";
 
 import type { ValidObj } from "@/components/shared/Upload";
 
@@ -18,7 +18,7 @@ type AnyKey = keyof Required<FormOutAny>;
 type DicomKey = keyof Required<FormOutDicom>;
 type ValidateIn<T> = {
   formOut: T;
-  handle: Handle.Dir;
+  handles: Handle.File[];
   onStart: (imagePropList: [string, string, Format][]) => void;
 };
 type FormAnyOpts = ValidateIn<FormOutAny>;
@@ -29,9 +29,9 @@ type Validate<I> = (i: I) => Promise<ValidObj>
 type ToValid = (n: string[], k: string[]) => ValidObj
 export function isOpts(o: MaybeOpts) {
   if ("onStart" in o && typeof o.onStart === "function") {
-    const h = FileSystemDirectoryHandle;
+    const h = FileSystemFileHandle;
     if ("formOut" in o) {
-      if ("handle" in o && o.handle instanceof h) {
+      if ("handles" in o && o.handles instanceof h) {
         return typeof o.formOut === "object";
       }
       if ("url" in o.formOut) {
@@ -97,7 +97,7 @@ const validateDicom: Validate<FormDicomOpts> = async (opts) => {
 };
 
 const validateAny: Validate<FormAnyOpts> = async (opts) => {
-  const { handle, formOut, onStart } = opts;
+  const { handles, formOut, onStart } = opts;
   const need_keys = ["name", "path"];
   const all = [...need_keys, "mask", "csv"];
   const valid_keys = await all.reduce(
@@ -110,7 +110,11 @@ const validateAny: Validate<FormAnyOpts> = async (opts) => {
           if (v.length === 0) return out;
           return [...out, k];
         case "path": {
-          const found = await findFile({ handle, path: v });
+          if (handles.length === 0) {
+            return out; 
+          }
+          const handle = handles[0] // TODO
+          const found = await findFile({ handle });
           return found ? [...out, k] : out;
         }
       }

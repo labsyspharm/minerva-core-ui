@@ -1,24 +1,26 @@
 import type React from "react";
 import { useState } from "react";
 import { get, set } from "idb-keyval";
-import { toDir } from "@/lib/filesystem";
+import { toFile } from "@/lib/filesystem";
 
 export type FileHandlerProps = {
   handleKeys: string[];
   children: (props: {
-    handle: Handle.Dir | null;
+    handles: Handle.File[];
     onAllow: () => Promise<void>;
     onRecall: () => Promise<void>;
   }) => React.ReactNode;
 };
 
 export const FileHandler = ({ handleKeys, children }: FileHandlerProps) => {
-  const [handle, setHandle] = useState<Handle.Dir | null>(null);
+  const [handles, setHandles] = useState<Handle.File[]>([]);
 
   const onAllow = async () => {
-    const newHandle = await toDir();
-    setHandle(newHandle);
-    await set(handleKeys[0], newHandle);
+    const newHandles = await toFile();
+    if (newHandles.length > 0) {
+      setHandles(newHandles);
+      await set(handleKeys[0], newHandles[0]);
+    }
   };
 
   const onRecall = async () => {
@@ -31,9 +33,9 @@ export const FileHandler = ({ handleKeys, children }: FileHandlerProps) => {
       isGranted(await newHandle.queryPermission(options)) ||
       isGranted(await newHandle.requestPermission(options))
     ) {
-      setHandle(newHandle);
+      setHandles([newHandle]);
     }
   };
 
-  return <>{children({ handle, onAllow, onRecall })}</>;
+  return <>{children({ handles, onAllow, onRecall })}</>;
 };

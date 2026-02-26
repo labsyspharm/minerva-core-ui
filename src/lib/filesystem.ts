@@ -4,20 +4,14 @@ import type { Loader } from "./viv";
 import type { PoolClass } from "./workers/Pool";
 import type { HasTile } from "./config";
 
-type ListDirIn = {
-  handle: Handle.Dir;
-};
-export type Entry = [string, Handle.File | Handle.Dir];
-type ListDir = (i: ListDirIn) => Promise<Entry[]>
 type FindFileIn = {
-  handle: Handle.Dir;
-  path: string;
+  handle: Handle.File;
 };
 type FindFile = (i: FindFileIn) => Promise<boolean>
-type ToDir = () => Promise<Handle.Dir>
+type ToFiles = () => Promise<Handle.File[]>
 type LoaderIn = {
   in_f: string;
-  handle: Handle.Dir;
+  handle: Handle.File;
   pool?: PoolClass;
 };
 type ToLoader = (i: LoaderIn) => Promise<Loader>
@@ -51,40 +45,33 @@ const hasFileSystemAccess = () => {
   return "showDirectoryPicker" in window;
 };
 
-const toDir: ToDir = async () => {
-  const dir_opts = { mode: "readwrite" } as DirectoryPickerOptions;
+const toFile: ToFiles = async () => {
+  const opts = { multiple: false };
   if (hasFileSystemAccess) {
-    return await window.showDirectoryPicker(dir_opts);
+    return await window.showOpenFilePicker(opts);
   }
-  return null;
-};
-
-const listDir: ListDir = async (opts) => {
-  const { handle } = opts;
-  const paths = handle.entries();
-  const output: Entry[] = [];
-  for await (const e of paths) {
-    output.push(e);
-  }
-  return output;
+  return [];
 };
 
 const findFile: FindFile = async (opts) => {
-  const { path, handle } = opts;
-  const paths = handle.keys();
-  for await (const f of paths) {
-    if (f === path) return true;
+  const { handle } = opts;
+  try {
+    handle.createWritable()
   }
-  return false;
+  catch (e) {
+    if (e.name === "NotFoundError") {
+      return false;
+    }
+  }
+  return true;
 };
 
-const toLoader: ToLoader = async ({ in_f, handle, pool = null }) => {
-  const in_fh = await handle.getFileHandle(in_f);
-  const in_file = await in_fh.getFile();
+const toLoader: ToLoader = async ({ handle, pool = null }) => {
+  const in_file = await handle.getFile();
   if (pool) {
     return await loadOmeTiff(in_file, { pool });
   }
   return await loadOmeTiff(in_file);
 };
 
-export { hasFileSystemAccess, toLoader, findFile, listDir, toDir };
+export { hasFileSystemAccess, toLoader, findFile, toFile };

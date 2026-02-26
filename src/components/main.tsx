@@ -256,8 +256,9 @@ const Content = (props: Props) => {
 
   const [fileName, setFileName] = useState("");
 
-  const onStartOmeTiff = async (in_f: string, handle: Handle.Dir) => {
-    if (handle === null) return;
+  const onStartOmeTiff = async (in_f: string, handles: Handle.File[]) => {
+    if (handles.length === 0) return;
+    const handle = handles[0]; // TODO
     const loader = await toLoader({ handle, in_f, pool: new Pool() });
     const { SourceChannels, Groups } = extractChannels(
       loader,
@@ -291,7 +292,7 @@ const Content = (props: Props) => {
 
   const onStart = async (
     imagePropList: [string, string, string][],
-    handle: Handle.Dir | null,
+    handles: Handle.File[],
   ) => {
     if (imagePropList.length === 0) {
       return;
@@ -307,8 +308,8 @@ const Content = (props: Props) => {
     const omeTiffPropList = imagePropList
       .filter(([_path, _modality, type]) => type === "OME-TIFF")
       .map(([path]) => [path]);
-    if (omeTiffPropList.length > 0 && handle) {
-      await onStartOmeTiff(omeTiffPropList[0][0], handle);
+    if (omeTiffPropList.length > 0 && handles.length > 0) {
+      await onStartOmeTiff(omeTiffPropList[0][0], handles);
     }
   };
 
@@ -395,7 +396,7 @@ const Content = (props: Props) => {
             "DICOM-WEB",
           ],
         ],
-        null as Handle.Dir | null,
+        [] as Handle.File[]
       );
     })();
   }, [props.demo_dicom_web]);
@@ -557,7 +558,7 @@ const Content = (props: Props) => {
     ...channelProps,
     in_f: fileName,
     name,
-    handle: null as Handle.Dir | null, // Will be set in FileHandler render
+    handles: [] as Handle.File[],
     ioState,
     presenting,
     hiddenWaypoint,
@@ -635,7 +636,7 @@ const Content = (props: Props) => {
 
   return (
     <FileHandler handleKeys={handleKeys}>
-      {({ handle, onAllow, onRecall }) => {
+      {({ handles, onAllow, onRecall }) => {
         const onSubmit: FormEventHandler = (event) => {
           const form = event.currentTarget as HTMLFormElement;
           const data = [...new FormData(form).entries()];
@@ -652,8 +653,8 @@ const Content = (props: Props) => {
           );
           const formOpts = {
             formOut,
-            onStart: (list) => onStart(list, handle),
-            handle,
+            onStart: (list) => onStart(list, handles),
+            handles,
           };
           if (isOpts(formOpts)) {
             validate(formOpts).then((valid: ValidObj) => {
@@ -668,7 +669,7 @@ const Content = (props: Props) => {
         const uploadProps = {
           handleKeys,
           formProps,
-          handle,
+          handles,
           onAllow,
           onRecall,
         };
@@ -680,10 +681,10 @@ const Content = (props: Props) => {
           </Scrollable>
         );
 
-        // Update mainProps with actual handle
+        // Update mainProps with actual handles
         const mainPropsWithHandle = {
           ...mainProps,
-          handle,
+          handles,
         };
 
         // Actual image viewer

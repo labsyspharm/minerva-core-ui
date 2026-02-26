@@ -3,18 +3,15 @@ import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
-import { listDir } from "@/lib/filesystem";
 
-import type { Entry } from "@/lib/filesystem";
 import type { FormEventHandler } from "react";
 type Choices = {
-  dir: string[];
   csv: string[];
   path: string[];
   mask: string[];
 };
 type ChoiceAnyIn = {
-  handle: Handle.Dir;
+  handles: Handle.File[];
   setMask: SetState;
   setPath: SetState;
   setCsv: SetState;
@@ -32,14 +29,14 @@ export type FormProps = {
   onSubmit: FormEventHandler<HTMLFormElement>;
 };
 export type FullFormProps = FormProps & {
-  handle: Handle.Dir;
+  handles: Handle.File[];
 };
 export type UploadProps = {
   handleKeys: string[];
-  handle: Handle.Dir | null;
+  handles: Handle.File[];
   onAllow: () => Promise<void>;
   onRecall: () => Promise<void>;
-  formProps: Omit<FormProps, "handle">;
+  formProps: Omit<FormProps, "handles">;
 };
 export type ValidObj = {
   [s: string]: boolean;
@@ -175,7 +172,7 @@ const Options = (props: OptionsProps) => {
   );
 };
 const noChoice = (): Choices => {
-  return { dir: [], csv: [], path: [], mask: [] };
+  return { csv: [], path: [], mask: [] };
 };
 
 const validate: Validate = (valid, fn) => {
@@ -254,23 +251,16 @@ const FormDicom = (props: FormProps) => {
 };
 
 const toChoicesAny: ToChoicesAny = async (opts) => {
-  const { handle } = opts;
-  const files = await listDir({ handle });
-  const csv = files.reduce((o, [k, v]: Entry) => {
-    if (v instanceof FileSystemFileHandle) {
-      if (k.match(/\.csv/)) {
-        o.push(k);
-      }
-      return o;
+  const files = opts.handles;
+  const csv = files.reduce((o, v) => {
+    if (v.name.match(/\.csv/)) {
+      o.push(v.name);
     }
     return o;
   }, [] as string[]);
-  const mask = files.reduce((o, [k, v]: Entry) => {
-    if (v instanceof FileSystemFileHandle) {
-      if (k.match(/\.tiff?$/)) {
-        o.push(k);
-      }
-      return o;
+  const mask = files.reduce((o, v) => {
+    if (v.name.match(/\.tiff?$/)) {
+      o.push(v.name);
     }
     return o;
   }, [] as string[]);
@@ -278,8 +268,7 @@ const toChoicesAny: ToChoicesAny = async (opts) => {
   return {
     csv,
     path,
-    mask,
-    dir: [],
+    mask
   };
 };
 
@@ -292,7 +281,7 @@ const hasNewChoice = (choices: Choices, c: Choices) => {
 };
 
 const FormAny = (props: FullFormProps) => {
-  const { handle, valid, onSubmit } = props;
+  const { handles, valid, onSubmit } = props;
   const [choices, setChoices] = useState(noChoice());
   const [name, sN, setName] = _useState("");
   const [path, sP, setPath] = _useState("");
@@ -301,7 +290,7 @@ const FormAny = (props: FullFormProps) => {
   const fProps = { onSubmit };
   useEffect(() => {
     toChoicesAny({
-      handle,
+      handles,
       mask,
       path,
       csv,
@@ -315,7 +304,7 @@ const FormAny = (props: FullFormProps) => {
         setChoices(c);
       }
     });
-  }, [csv, handle, mask, path, sC, sM, sN, sP, choices]);
+  }, [csv, handles, mask, path, sC, sM, sN, sP, choices]);
   const pathOptions = { label: "Image", vals: choices.path };
   const maskOptions = { label: "Mask", vals: choices.mask };
   const csvOptions = { label: "CSV", vals: choices.csv };
@@ -424,7 +413,7 @@ const Upload = (props: UploadProps) => {
   const test_f = "default.ome.tif"; //TODO
   const [imageFormat, setImageFormat] = useState("DICOM-WEB");
   const [_in_f, _setInFile] = useState(test_f);
-  const { formProps, handle, onAllow, onRecall } = props;
+  const { formProps, handles, onAllow, onRecall } = props;
   const allowProps = {
     onClick: onAllow,
     variant: "primary",
@@ -448,13 +437,13 @@ const Upload = (props: UploadProps) => {
     : "Connect to a DICOMweb™ Proxy";
   const possibleActions = useOME ? (
     <>
-      <Button {...allowProps}>Select Base Folder</Button>
-      <Button {...recallProps}>Use recent Folder</Button>
+      <Button {...allowProps}>Select Image</Button>
+      <Button {...recallProps}>Use recent Image</Button>
     </>
   ) : (
     <FormDicom {...formProps} />
   );
-  if (handle === null) {
+  if (handles.length === 0) {
     return (
       <UploadDiv>
         <FullWidthGrid>
@@ -467,7 +456,7 @@ const Upload = (props: UploadProps) => {
       </UploadDiv>
     );
   }
-  const fullFormProps = { ...formProps, handle };
+  const fullFormProps = { ...formProps, handles };
   const updateSettings = (
     <TwoColumn>
       <Button {...allowProps}>Update Base Folder</Button>
