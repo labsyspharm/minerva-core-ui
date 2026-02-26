@@ -285,9 +285,9 @@ const toChoicesAny: ToChoicesAny = async (opts) => {
 
 const hasNewChoice = (choices: Choices, c: Choices) => {
   return [
-    c.csv.some((i: string) => !(i in choices.csv)),
-    c.path.some((i: string) => !(i in choices.path)),
-    c.mask.some((i: string) => !(i in choices.mask)),
+    c.csv.some((i: string) => !choices.csv.includes(i)),
+    c.path.some((i: string) => !choices.path.includes(i)),
+    c.mask.some((i: string) => !choices.mask.includes(i))
   ].some((x) => x === true);
 };
 
