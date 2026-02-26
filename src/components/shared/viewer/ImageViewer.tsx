@@ -21,7 +21,8 @@ import type { ConfigGroup } from "@/lib/stores";
 import type { OverlayLayer } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
 import type { Config, Loader } from "@/lib/viv";
-import { convertWaypointToViewState, } from "@/lib/waypoint";
+import { convertWaypointToViewState } from "@/lib/waypoint";
+import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 
 type ItemRegistryChannel = {
   name: string;
@@ -96,7 +97,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     onOverlayInteraction,
     viewerConfig,
   } = props;
-  const { activeChannelGroupId, channelVisibilities } = useOverlayStore();
+  const { activeChannelGroupId, channelVisibilities, sam2Processing } = useOverlayStore();
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [_canvas, _setCanvas] = useState(null);
   const rootRef = useRef<HTMLElement | null>(null);
@@ -228,6 +229,42 @@ export const ImageViewer = (props: ImageViewerProps) => {
       setImageDimensions(imageShape.x, imageShape.y);
     }
   }, [imageShape, setImageDimensions]);
+
+  // Register SAM2 image fetcher for magic wand (OME-TIFF only)
+  const setSam2ImageFetcher = useOverlayStore((s) => s.setSam2ImageFetcher);
+  useEffect(() => {
+    if (
+      loaderOmeTiff &&
+      firstLoader?.data &&
+      mainSettingsList.length > 0 &&
+      imageShape.x > 0 &&
+      imageShape.y > 0
+    ) {
+      const settings = mainSettingsList[0];
+      const fetcher = createSam2ImageFetcher(
+        firstLoader,
+        {
+          selections: settings.selections,
+          colors: settings.colors,
+          contrastLimits: settings.contrastLimits,
+          channelsVisible: settings.channelsVisible,
+        },
+        imageShape.x,
+        imageShape.y,
+      );
+      setSam2ImageFetcher(fetcher);
+    } else {
+      setSam2ImageFetcher(null);
+    }
+    return () => setSam2ImageFetcher(null);
+  }, [
+    loaderOmeTiff,
+    firstLoader,
+    mainSettingsList,
+    imageShape.x,
+    imageShape.y,
+    setSam2ImageFetcher,
+  ]);
 
   // Apply waypoint view state when target is set (from waypoint selection)
   useEffect(() => {
@@ -408,7 +445,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // Memoize cursor function
   const getCursor = useCallback(
-    ({ isDragging }) => {
+    ({ isDragging, isHovering: _isHovering }) => {
+      if (sam2Processing) return "wait";
       if (isDragging && activeTool === "move") {
         return "grabbing";
       } else if (activeTool === "move" && hoveredAnnotationId) {
@@ -417,9 +455,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
         return isDragging ? "grabbing" : "crosshair";
       } else if (activeTool === "ellipse") {
         return isDragging ? "grabbing" : "crosshair";
-      } else if (activeTool === "lasso") {
+      } else if (activeTool === "lasso" || activeTool === "magic_wand") {
         return isDragging ? "grabbing" : "crosshair";
-      } else if (activeTool === "line") {
+      } else if (activeTool === "arrow" || activeTool === "line") {
         return isDragging ? "grabbing" : "crosshair";
       } else if (activeTool === "polyline") {
         return "crosshair";
@@ -432,13 +470,17 @@ export const ImageViewer = (props: ImageViewerProps) => {
       }
       return "default";
     },
-    [activeTool, hoveredAnnotationId],
+    [activeTool, hoveredAnnotationId, sam2Processing],
   );
 
   // Memoize controller configuration
+  // When move tool is active and hovering over an annotation, disable pan so drag moves the annotation
   const controllerConfig = useMemo(
     () => ({
-      dragPan: activeTool === "move" && !isDragging,
+      dragPan:
+        activeTool === "move" &&
+        !isDragging &&
+        !hoveredAnnotationId,
       dragRotate: false,
       scrollZoom: true,
       doubleClickZoom: true,
@@ -446,7 +488,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       touchRotate: false,
       keyboard: false,
     }),
-    [activeTool, isDragging],
+    [activeTool, isDragging, hoveredAnnotationId],
   );
 
   // Memoize view configuration
