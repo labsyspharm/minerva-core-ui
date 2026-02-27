@@ -2284,7 +2284,7 @@ const root = createRoot(rootElement);
 root.render(
     <React.StrictMode>
         <Main
-            handleKeys={["ome-dir-1"]} demo_dicom_web={false}
+            handleKeys={["img-1"]} demo_dicom_web={false}
             exhibit_config={exhibit_config} configWaypoints={configWaypoints}
         />
         <MainStyle />
