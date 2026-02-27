@@ -21,11 +21,14 @@ type PickInfo = {
   z?: number;
 };
 
+/** (worldX, worldY) -> [screenX, screenY] in canvas pixels; used for brush. */
+export type WorldToScreen = (worldX: number, worldY: number) => [number, number] | undefined;
+
 export const createDragHandlers = (
   activeTool: string,
   onInteraction?: InteractionCallback,
+  getScreenFromWorld?: WorldToScreen,
 ) => {
-  // Early return if no interaction callback provided
   if (!onInteraction) {
     return {
       onClick: undefined,
@@ -36,7 +39,6 @@ export const createDragHandlers = (
     };
   }
 
-  // Helper to emit interaction if coordinate exists
   const emit = (
     type: InteractionType,
     coordinate?: number[],
@@ -55,28 +57,35 @@ export const createDragHandlers = (
     return undefined;
   };
 
+  const store = useOverlayStore.getState;
+
   return {
-    // Single click without dragging (used for text, polyline, lasso point-by-point)
     onClick: (info: PickInfo) => {
       const coord = toCoord(info);
       if (coord) emit("click", coord);
     },
 
-    // Start of drag operation (used for rectangle, line, lasso freehand)
     onDragStart: (info: PickInfo) => {
       const coord = toCoord(info);
+      if (coord && activeTool === "brush" && getScreenFromWorld) {
+        const screen = getScreenFromWorld(coord[0], coord[1]);
+        if (screen) store().brushPaintStart(screen);
+      }
       if (coord) emit("dragStart", coord);
     },
 
-    // During drag operation (used for rectangle, line, lasso freehand)
     onDrag: (info: PickInfo) => {
       const coord = toCoord(info);
+      if (coord && activeTool === "brush" && getScreenFromWorld) {
+        const screen = getScreenFromWorld(coord[0], coord[1]);
+        if (screen) store().brushPaint(screen);
+      }
       if (coord) emit("drag", coord);
     },
 
-    // End of drag operation (used for rectangle, line, lasso freehand)
     onDragEnd: (info: PickInfo) => {
       const coord = toCoord(info);
+      if (activeTool === "brush") store().brushPaintEnd();
       if (coord) emit("dragEnd", coord);
     },
 

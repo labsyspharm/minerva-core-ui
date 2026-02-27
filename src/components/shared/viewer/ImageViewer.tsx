@@ -199,11 +199,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
     useState<OrthographicViewState>(initialViewState);
   const hasInitialized = useRef(false);
 
-  // Get setViewportZoom and setImageDimensions from overlay store
   const setViewportZoom = useOverlayStore((state) => state.setViewportZoom);
   const setImageDimensions = useOverlayStore(
     (state) => state.setImageDimensions,
   );
+  const setBrushViewport = useOverlayStore((state) => state.setBrushViewport);
+
+  const viewRef = useRef({ viewState, viewportSize });
+  viewRef.current = { viewState, viewportSize };
 
   // Get target waypoint view state for responding to waypoint selection
   const targetWaypointPan = useOverlayStore((state) => state.targetWaypointPan);
@@ -226,12 +229,31 @@ export const ImageViewer = (props: ImageViewerProps) => {
     }
   }, [initialViewState, firstLoader.data, setViewportZoom]);
 
-  // Set image dimensions in the store when imageShape is available
   useEffect(() => {
     if (imageShape.x > 0 && imageShape.y > 0) {
       setImageDimensions(imageShape.x, imageShape.y);
     }
   }, [imageShape, setImageDimensions]);
+
+  // Sync viewport size and visible world bounds for brush (canvas-aligned mask)
+  useEffect(() => {
+    const { width, height } = viewportSize;
+    if (width <= 0 || height <= 0) return;
+    const zoom = typeof viewState?.zoom === "number" ? viewState.zoom : 0;
+    const target = viewState?.target ?? [0, 0, 0];
+    const scale = 2 ** zoom;
+    const halfW = width / (2 * scale);
+    const halfH = height / (2 * scale);
+    // BitmapLayer bounds are [left, bottom, right, top] in world coords.
+    // Our world space for images uses y increasing downward, so "bottom" is +halfH and "top" is -halfH.
+    const bounds: [number, number, number, number] = [
+      target[0] - halfW,
+      target[1] + halfH,
+      target[0] + halfW,
+      target[1] - halfH,
+    ];
+    setBrushViewport(width, height, bounds);
+  }, [viewState, viewportSize, setBrushViewport]);
 
   // Register SAM2 image fetcher for magic wand (OME-TIFF only)
   const setSam2ImageFetcher = useOverlayStore((s) => s.setSam2ImageFetcher);
@@ -440,10 +462,21 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return layers;
   }, [dicomLayers, omeTiffLayers, overlayLayers, scaleBarLayer]);
 
-  // Memoize drag handlers
+  const getScreenFromWorld = useCallback((worldX: number, worldY: number): [number, number] => {
+    const { viewState: vs, viewportSize: vp } = viewRef.current;
+    const zoom = typeof vs?.zoom === "number" ? vs.zoom : 0;
+    const target = (vs as { target?: number[] })?.target ?? [0, 0, 0];
+    const scale = 2 ** zoom;
+    return [
+      (worldX - target[0]) * scale + vp.width / 2,
+      // World y increases downward for images; screen y also increases downward.
+      (worldY - target[1]) * scale + vp.height / 2,
+    ];
+  }, []);
+
   const dragHandlers = useMemo(
-    () => createDragHandlers(activeTool, onOverlayInteraction),
-    [activeTool, onOverlayInteraction],
+    () => createDragHandlers(activeTool, onOverlayInteraction, getScreenFromWorld),
+    [activeTool, onOverlayInteraction, getScreenFromWorld],
   );
 
   // Memoize cursor function

@@ -4,6 +4,7 @@ import {
   type TextLayer,
   ScatterplotLayer,
   IconLayer,
+  BitmapLayer,
 } from "@deck.gl/layers";
 import {
   useOverlayStore,
@@ -216,6 +217,11 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     brushRadiusPx,
     viewportZoom,
   } = useOverlayStore();
+  const brushMask = useOverlayStore((s) => s.brushMask);
+  const brushMaskVersion = useOverlayStore((s) => s.brushMaskVersion);
+  const brushViewBounds = useOverlayStore((s) => s.brushViewBounds);
+  const imageWidth = useOverlayStore((s) => s.imageWidth);
+  const imageHeight = useOverlayStore((s) => s.imageHeight);
   const sam2DebugImages = useOverlayStore((s) => s.sam2DebugImages);
   const { isDrawing, dragStart, dragEnd } = drawingState;
 
@@ -726,54 +732,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       if (type === "click" && !isSam2Processing) {
         void runSegmentation(x, y);
       }
-    } else if (activeTool === "brush") {
-      if (type === "dragStart") {
-        setIsBrushDrawing(true);
-        const start: [number, number] = [x, y];
-        brushStrokePointsRef.current = [start];
-        setBrushStrokePoints([start]);
-      } else if (type === "drag" && isBrushDrawing) {
-        const prev = brushStrokePointsRef.current;
-        if (prev.length > 0) {
-          const last = prev[prev.length - 1];
-          const dist = Math.hypot(x - last[0], y - last[1]);
-          if (dist >= 0.5) {
-            const next = [...prev, [x, y] as [number, number]];
-            brushStrokePointsRef.current = next;
-            setBrushStrokePoints(next);
-          }
-        }
-      } else if (type === "dragEnd" && isBrushDrawing) {
-        const prev = brushStrokePointsRef.current;
-        const finalPoints: [number, number][] =
-          prev.length > 0 ? [...prev, [x, y] as [number, number]] : [[x, y]];
-        if (finalPoints.length >= 1) {
-          // Make sure the precomputed hull includes the final dragEnd point.
-          const zoom = viewportZoom ?? 0;
-          const scale = 2 ** zoom;
-          const radiusWorld = brushRadiusPx / Math.max(scale, 0.01);
-          let hull = brushHullCacheRef.current.hull;
-          const circle = makeCircle(x, y, radiusWorld);
-          if (!hull) {
-            hull = circle;
-          } else {
-            const union = polygonUnion(hull, circle);
-            if (union && union.length >= 3) {
-              hull = union;
-            }
-          }
-          finalizeBrush(finalPoints, hull ?? undefined);
-        }
-        brushStrokePointsRef.current = [];
-        brushHullCacheRef.current = {
-          hull: null,
-          processedCount: 0,
-          radiusWorld: 0,
-          zoom: 0,
-        };
-        setIsBrushDrawing(false);
-        setBrushStrokePoints([]);
-      }
     } else if (activeTool === "lasso") {
       if (type === "click") {
         // Click mode: Add point to polygon
@@ -1098,51 +1056,10 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
         polygonData = ellipseToPolygon(dragStart, dragEnd);
       }
     }
-    // Brush tool: preview uses the same union-of-circles hull as the final mask,
-    // but builds it incrementally so it doesn't lag for long strokes.
+    // Brush tool: in bitmask mode we don't render a separate polygon here;
+    // the brushMaskLayer BitmapLayer visualizes the painted region instead.
     else if (activeTool === "brush" && isBrushDrawing && brushStrokePoints.length >= 1) {
-      const zoom = viewportZoom ?? 0;
-      const scale = 2 ** zoom;
-      const radiusWorld = brushRadiusPx / Math.max(scale, 0.01);
-      const points = brushStrokePoints;
-      const total = points.length;
-      const cache = brushHullCacheRef.current;
-
-      let hull = cache.hull;
-      let processed = cache.processedCount;
-      const sameParams =
-        cache.radiusWorld === radiusWorld && cache.zoom === zoom;
-
-      if (!sameParams || processed > total) {
-        hull = null;
-        processed = 0;
-      }
-
-      for (let i = processed; i < total; i++) {
-        const pt = points[i];
-        if (!pt) continue;
-        const [px, py] = pt;
-        const circle = makeCircle(px, py, radiusWorld);
-        if (!hull) {
-          hull = circle;
-        } else {
-          const union = polygonUnion(hull, circle);
-          if (union && union.length >= 3) {
-            hull = union;
-          }
-        }
-      }
-
-      brushHullCacheRef.current = {
-        hull,
-        processedCount: total,
-        radiusWorld,
-        zoom,
-      };
-
-      polygonData = hull ?? null;
-      fillColor = PREVIEW_FILL_COLOR;
-      shouldFill = true;
+      polygonData = null;
     }
     // Return null if no polygon data
     if (!polygonData) {
@@ -1228,6 +1145,31 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       pickable: false,
     });
   }, [activeTool, currentInteraction, brushRadiusPx, viewportZoom]);
+
+  // Brush mask layer: canvas-aligned; bounds = visible world rect (works when zoomed out, canvas > image)
+  const brushMaskLayer = React.useMemo(() => {
+    if (activeTool !== "brush" || !brushMask || !brushViewBounds) return null;
+    const { width, height, data } = brushMask;
+    const rgba = new Uint8ClampedArray(width * height * 4);
+    const orangeAlpha = 140;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const v = data[y * width + x] ? 255 : 0;
+        const o = (y * width + x) * 4;
+        rgba[o] = 255;
+        rgba[o + 1] = 165;
+        rgba[o + 2] = 0;
+        rgba[o + 3] = (orangeAlpha * v) / 255;
+      }
+    }
+    const [minX, minY, maxX, maxY] = brushViewBounds;
+    return new BitmapLayer({
+      id: "brush-mask-layer",
+      bounds: [minX, minY, maxX, maxY],
+      image: new ImageData(rgba, width, height),
+      opacity: 1,
+    });
+  }, [activeTool, brushMask, brushMaskVersion, brushViewBounds]);
 
   // Arrow preview layer: shows arrow icon from start to current position (updates on mouse move)
   const arrowPreviewLayer = React.useMemo(() => {
@@ -1349,6 +1291,16 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       useOverlayStore.getState().removeOverlayLayer("brush-cursor-layer");
     };
   }, [brushCursorLayer]);
+
+  // Add/remove brush mask layer when brush tool is active
+  React.useEffect(() => {
+    if (brushMaskLayer) {
+      useOverlayStore.getState().addOverlayLayer(brushMaskLayer);
+    }
+    return () => {
+      useOverlayStore.getState().removeOverlayLayer("brush-mask-layer");
+    };
+  }, [brushMaskLayer]);
 
   // Add/remove arrow preview layer so it shows and updates as mouse moves
   React.useEffect(() => {

@@ -9,6 +9,7 @@ import type {
   ConfigWaypointOverlay,
 } from "./config";
 import { buildBrushHull } from "./brushHull";
+import { polygonUnion } from "./polygonClipping";
 
 // Re-export config types for convenience
 export type {
@@ -19,6 +20,445 @@ export type {
 // Types for the overlay store
 export interface OverlayLayer {
   id: string;
+}
+
+type BrushMask = {
+  width: number;
+  height: number;
+  data: Uint8Array;
+};
+
+function ensureBrushMask(
+  imageWidth: number,
+  imageHeight: number,
+  maxRes: number,
+  existing: BrushMask | null,
+): BrushMask {
+  if (existing) return existing;
+  if (imageWidth <= 0 || imageHeight <= 0) {
+    return { width: 1, height: 1, data: new Uint8Array(1) };
+  }
+
+  // Create a mask that fits within maxRes while preserving aspect ratio.
+  // This keeps the mask roughly "canvas sized" and avoids huge allocations
+  // for very large images.
+  const scale = Math.min(1, maxRes / Math.max(imageWidth, imageHeight));
+  const width = Math.max(1, Math.round(imageWidth * scale));
+  const height = Math.max(1, Math.round(imageHeight * scale));
+  return { width, height, data: new Uint8Array(width * height) };
+}
+
+function paintCircleOnMask(
+  mask: BrushMask,
+  imageWidth: number,
+  imageHeight: number,
+  cxWorld: number,
+  cyWorld: number,
+  radiusWorld: number,
+): void {
+  const { width, height, data } = mask;
+  if (imageWidth <= 0 || imageHeight <= 0) return;
+
+  const sx = width / imageWidth;
+  const sy = height / imageHeight;
+  const scale = Math.min(sx, sy);
+  const r = Math.max(1, Math.round(radiusWorld * scale));
+
+  const mx = Math.round((cxWorld / imageWidth) * (width - 1));
+  // Deck.gl BitmapLayer draws texture with row 0 at bottom; world y=0 is bottom. Flip mask row so painted position matches cursor.
+  const my = (height - 1) - Math.round((cyWorld / imageHeight) * (height - 1));
+
+  const y0 = Math.max(0, my - r);
+  const y1 = Math.min(height - 1, my + r);
+  const x0 = Math.max(0, mx - r);
+  const x1 = Math.min(width - 1, mx + r);
+  const r2 = r * r;
+
+  for (let y = y0; y <= y1; y++) {
+    const dy = y - my;
+    for (let x = x0; x <= x1; x++) {
+      const dx = x - mx;
+      if (dx * dx + dy * dy <= r2) {
+        data[y * width + x] = 1;
+      }
+    }
+  }
+}
+
+/** Viewport-sized mask: one pixel per screen pixel. */
+function ensureBrushMaskViewport(
+  viewportWidth: number,
+  viewportHeight: number,
+  existing: BrushMask | null,
+): BrushMask {
+  if (existing && existing.width === viewportWidth && existing.height === viewportHeight) return existing;
+  const w = Math.max(1, Math.round(viewportWidth));
+  const h = Math.max(1, Math.round(viewportHeight));
+  return { width: w, height: h, data: new Uint8Array(w * h) };
+}
+
+/** Paint circle in screen coords. sx,sy in [0, viewportW] x [0, viewportH]; row 0 = top. */
+function paintCircleOnMaskScreen(
+  mask: BrushMask,
+  viewportWidth: number,
+  viewportHeight: number,
+  sx: number,
+  sy: number,
+  radiusPx: number,
+): void {
+  const { width, height, data } = mask;
+  if (width <= 0 || height <= 0) return;
+  const mx = Math.round(Math.max(0, Math.min(width - 1, sx)));
+  const my = Math.round(Math.max(0, Math.min(height - 1, sy)));
+  const r = Math.max(1, Math.round(radiusPx));
+  const y0 = Math.max(0, my - r);
+  const y1 = Math.min(height - 1, my + r);
+  const x0 = Math.max(0, mx - r);
+  const x1 = Math.min(width - 1, mx + r);
+  const r2 = r * r;
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      if ((x - mx) ** 2 + (y - my) ** 2 <= r2) data[y * width + x] = 1;
+    }
+  }
+}
+
+type Point2 = [number, number];
+
+function polygonArea(poly: Point2[]): number {
+  if (poly.length < 3) return 0;
+  let a = 0;
+  // accepts closed or open
+  const n = poly.length;
+  const end = poly[0][0] === poly[n - 1][0] && poly[0][1] === poly[n - 1][1] ? n - 1 : n;
+  for (let i = 0; i < end; i++) {
+    const [x1, y1] = poly[i];
+    const [x2, y2] = poly[(i + 1) % end];
+    a += x1 * y2 - x2 * y1;
+  }
+  return a / 2;
+}
+
+function pointToSegmentDistance(p: Point2, a: Point2, b: Point2): number {
+  const [px, py] = p;
+  const [ax, ay] = a;
+  const [bx, by] = b;
+  const abx = bx - ax;
+  const aby = by - ay;
+  const apx = px - ax;
+  const apy = py - ay;
+  const denom = abx * abx + aby * aby;
+  const t = denom === 0 ? 0 : Math.max(0, Math.min(1, (apx * abx + apy * aby) / denom));
+  const cx = ax + t * abx;
+  const cy = ay + t * aby;
+  return Math.hypot(px - cx, py - cy);
+}
+
+function simplifyRdpOpen(points: Point2[], epsilon: number): Point2[] {
+  if (points.length <= 2) return points;
+  let maxDist = -1;
+  let idx = -1;
+  const a = points[0];
+  const b = points[points.length - 1];
+  for (let i = 1; i < points.length - 1; i++) {
+    const d = pointToSegmentDistance(points[i], a, b);
+    if (d > maxDist) {
+      maxDist = d;
+      idx = i;
+    }
+  }
+  if (maxDist <= epsilon || idx === -1) return [a, b];
+  const left = simplifyRdpOpen(points.slice(0, idx + 1), epsilon);
+  const right = simplifyRdpOpen(points.slice(idx), epsilon);
+  return [...left.slice(0, -1), ...right];
+}
+
+function simplifyClosedPolygon(pointsClosed: Point2[], epsilon: number): Point2[] {
+  if (pointsClosed.length < 4) return pointsClosed;
+  const pts =
+    pointsClosed[0][0] === pointsClosed[pointsClosed.length - 1][0] &&
+    pointsClosed[0][1] === pointsClosed[pointsClosed.length - 1][1]
+      ? pointsClosed.slice(0, -1)
+      : [...pointsClosed];
+  if (pts.length < 3) return pointsClosed;
+
+  // Choose a stable cut: minX and maxX
+  let minI = 0;
+  let maxI = 0;
+  for (let i = 1; i < pts.length; i++) {
+    if (pts[i][0] < pts[minI][0]) minI = i;
+    if (pts[i][0] > pts[maxI][0]) maxI = i;
+  }
+  if (minI === maxI) {
+    // fallback: minY/maxY
+    minI = 0;
+    maxI = 0;
+    for (let i = 1; i < pts.length; i++) {
+      if (pts[i][1] < pts[minI][1]) minI = i;
+      if (pts[i][1] > pts[maxI][1]) maxI = i;
+    }
+  }
+
+  const n = pts.length;
+  const forward = (from: number, to: number): Point2[] => {
+    const out: Point2[] = [];
+    let i = from;
+    while (true) {
+      out.push(pts[i]);
+      if (i === to) break;
+      i = (i + 1) % n;
+    }
+    return out;
+  };
+
+  const path1 = forward(minI, maxI);
+  const path2 = forward(maxI, minI);
+  const s1 = simplifyRdpOpen(path1, epsilon);
+  const s2 = simplifyRdpOpen(path2, epsilon);
+  const combined = [...s1, ...s2.slice(1, -1)];
+
+  // Remove near-duplicates
+  const cleaned: Point2[] = [];
+  for (const p of combined) {
+    const last = cleaned[cleaned.length - 1];
+    if (!last || Math.hypot(p[0] - last[0], p[1] - last[1]) > epsilon * 0.25) cleaned.push(p);
+  }
+
+  if (cleaned.length < 3) return pointsClosed;
+  return [...cleaned, cleaned[0]];
+}
+
+type IKey = string; // "ix,iy" where ix/iy are integer coordinates in half-pixel grid (x*2, y*2)
+function ikey(ix: number, iy: number): IKey {
+  return `${ix},${iy}`;
+}
+function parseIKey(k: IKey): Point2 {
+  const [xs, ys] = k.split(",");
+  return [Number.parseInt(xs, 10) / 2, Number.parseInt(ys, 10) / 2];
+}
+function edgeKey(a: IKey, b: IKey): string {
+  return a < b ? `${a}|${b}` : `${b}|${a}`;
+}
+
+function addAdj(adj: Map<IKey, IKey[]>, a: IKey, b: IKey) {
+  const la = adj.get(a);
+  if (la) la.push(b);
+  else adj.set(a, [b]);
+  const lb = adj.get(b);
+  if (lb) lb.push(a);
+  else adj.set(b, [a]);
+}
+
+function maskToLoops(mask: BrushMask): Point2[][] {
+  const { width: w, height: h, data } = mask;
+  if (w < 2 || h < 2) return [];
+
+  const adj = new Map<IKey, IKey[]>();
+
+  // Marching squares edge midpoints in half-grid integer coords.
+  const pt = (x2: number, y2: number): IKey => ikey(x2, y2);
+  const edgePoint = (x: number, y: number, edge: 0 | 1 | 2 | 3): IKey => {
+    // edges: 0=top,1=right,2=bottom,3=left
+    switch (edge) {
+      case 0:
+        return pt(x * 2 + 1, y * 2);
+      case 1:
+        return pt((x + 1) * 2, y * 2 + 1);
+      case 2:
+        return pt(x * 2 + 1, (y + 1) * 2);
+      case 3:
+        return pt(x * 2, y * 2 + 1);
+    }
+  };
+
+  const addSeg = (a: IKey, b: IKey) => {
+    if (a === b) return;
+    addAdj(adj, a, b);
+  };
+
+  // Build segment graph
+  for (let y = 0; y < h - 1; y++) {
+    for (let x = 0; x < w - 1; x++) {
+      const tl = data[y * w + x] ? 1 : 0;
+      const tr = data[y * w + (x + 1)] ? 1 : 0;
+      const br = data[(y + 1) * w + (x + 1)] ? 1 : 0;
+      const bl = data[(y + 1) * w + x] ? 1 : 0;
+      const idx = (tl << 0) | (tr << 1) | (br << 2) | (bl << 3);
+
+      // segments as pairs of edges
+      let segs: [0 | 1 | 2 | 3, 0 | 1 | 2 | 3][] = [];
+      switch (idx) {
+        case 0:
+        case 15:
+          segs = [];
+          break;
+        case 1:
+          segs = [[3, 0]];
+          break;
+        case 2:
+          segs = [[0, 1]];
+          break;
+        case 3:
+          segs = [[3, 1]];
+          break;
+        case 4:
+          segs = [[1, 2]];
+          break;
+        case 5:
+          segs = [
+            [3, 0],
+            [1, 2],
+          ];
+          break;
+        case 6:
+          segs = [[0, 2]];
+          break;
+        case 7:
+          segs = [[3, 2]];
+          break;
+        case 8:
+          segs = [[2, 3]];
+          break;
+        case 9:
+          segs = [[0, 2]];
+          break;
+        case 10:
+          segs = [
+            [0, 1],
+            [2, 3],
+          ];
+          break;
+        case 11:
+          segs = [[1, 2]];
+          break;
+        case 12:
+          segs = [[1, 3]];
+          break;
+        case 13:
+          segs = [[0, 1]];
+          break;
+        case 14:
+          segs = [[3, 0]];
+          break;
+      }
+
+      for (const [e1, e2] of segs) {
+        const a = edgePoint(x, y, e1);
+        const b = edgePoint(x, y, e2);
+        addSeg(a, b);
+      }
+    }
+  }
+
+  // Stitch loops by walking edges
+  const visited = new Set<string>();
+  const loops: Point2[][] = [];
+
+  for (const [start, neighbors] of adj.entries()) {
+    for (const n0 of neighbors) {
+      const ek0 = edgeKey(start, n0);
+      if (visited.has(ek0)) continue;
+
+      const loopKeys: IKey[] = [start];
+      let prev: IKey = start;
+      let curr: IKey = n0;
+      visited.add(ek0);
+
+      while (true) {
+        loopKeys.push(curr);
+        const neigh = adj.get(curr) ?? [];
+        // pick next neighbor with unvisited edge
+        let next: IKey | null = null;
+        for (const cand of neigh) {
+          if (cand === prev) continue;
+          const ek = edgeKey(curr, cand);
+          if (!visited.has(ek)) {
+            next = cand;
+            visited.add(ek);
+            break;
+          }
+        }
+        if (!next) {
+          // dead-end; give up
+          break;
+        }
+        prev = curr;
+        curr = next;
+        if (curr === start) {
+          loopKeys.push(start);
+          break;
+        }
+        if (loopKeys.length > (w + h) * 8) break;
+      }
+
+      if (loopKeys.length >= 6 && loopKeys[0] === loopKeys[loopKeys.length - 1]) {
+        loops.push(loopKeys.map(parseIKey));
+      }
+    }
+  }
+
+  return loops;
+}
+
+function loopScreenToWorld(
+  loop: Point2[],
+  bounds: [number, number, number, number],
+  maskWidth: number,
+  maskHeight: number,
+): Point2[] {
+  const [left, bottom, right, top] = bounds;
+  const dx = right - left;
+  const dy = bottom - top; // y-down world; bottom > top
+  return loop.map(([x, y]) => [left + (x / maskWidth) * dx, top + (y / maskHeight) * dy]);
+}
+
+function maskToPolygon(
+  mask: BrushMask,
+  imageWidth: number,
+  imageHeight: number,
+): [number, number][] | null {
+  const { width, height, data } = mask;
+  if (!width || !height) return null;
+  if (imageWidth <= 0 || imageHeight <= 0) return null;
+
+  const sx = imageWidth / width;
+  const sy = imageHeight / height;
+
+  let hull: [number, number][] | null = null;
+
+  for (let y = 0; y < height; y++) {
+    let runStart = -1;
+    const rowOffset = y * width;
+    for (let x = 0; x <= width; x++) {
+      const inside = x < width && data[rowOffset + x] !== 0;
+      if (inside && runStart === -1) {
+        runStart = x;
+      } else if (!inside && runStart !== -1) {
+        const x0 = runStart * sx;
+        const x1 = x * sx;
+        const y0 = y * sy;
+        const y1 = (y + 1) * sy;
+        const rect: [number, number][] = [
+          [x0, y0],
+          [x1, y0],
+          [x1, y1],
+          [x0, y1],
+          [x0, y0],
+        ];
+        if (!hull) {
+          hull = rect;
+        } else {
+          const union = polygonUnion(hull, rect);
+          if (union && union.length >= 3) {
+            hull = union;
+          }
+        }
+        runStart = -1;
+      }
+    }
+  }
+
+  return hull && hull.length >= 3 ? hull : null;
 }
 
 // New annotation types - all using polygon coordinates internally
@@ -343,9 +783,14 @@ export interface OverlayStore {
   hiddenLayers: Set<string>; // New: track hidden layers
   globalColor: [number, number, number, number]; // New: global drawing color
   viewportZoom: number; // Current viewport zoom level for line width scaling
-
   // Brush tool state
   brushRadiusPx: number;
+  brushMask: BrushMask | null;
+  brushMaskVersion: number;
+  brushMaskMaxResolution: number;
+  brushViewportWidth: number;
+  brushViewportHeight: number;
+  brushViewBounds: [number, number, number, number] | null;
   selectedAnnotationId: string | null;
 
   // Stories state
@@ -451,6 +896,12 @@ export interface OverlayStore {
   setGlobalColor: (color: [number, number, number, number]) => void; // Set global drawing color
   setViewportZoom: (zoom: number) => void; // Set viewport zoom for line width scaling
   setBrushRadiusPx: (radius: number) => void;
+  setBrushMaskResolution: (res: number) => void;
+  setBrushViewport: (width: number, height: number, bounds: [number, number, number, number] | null) => void;
+  clearBrushMask: () => void;
+  brushPaintStart: (screenCoord: [number, number]) => void;
+  brushPaint: (screenCoord: [number, number]) => void;
+  brushPaintEnd: () => void;
   setSelectedAnnotation: (annotationId: string | null) => void;
   finalizeBrush: (
     strokePoints: [number, number][],
@@ -523,6 +974,12 @@ const overlayInitialState = {
   globalColor: [255, 255, 255, 255], // New: default white color
   viewportZoom: 0, // Default zoom level
   brushRadiusPx: 30,
+   brushMask: null as BrushMask | null,
+   brushMaskVersion: 0,
+   brushMaskMaxResolution: 1024,
+   brushViewportWidth: 0,
+   brushViewportHeight: 0,
+   brushViewBounds: null as [number, number, number, number] | null,
   selectedAnnotationId: null as string | null,
   stories: [], // New: empty stories array
   activeStoryIndex: null, // New: no active story initially
@@ -1092,6 +1549,85 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         set({ brushRadiusPx: radius });
       },
 
+      setBrushMaskResolution: (res: number) => {
+        set({ brushMaskMaxResolution: Math.max(1, Math.floor(res)) });
+      },
+
+      setBrushViewport: (width: number, height: number, bounds: [number, number, number, number] | null) => {
+        set({ brushViewportWidth: width, brushViewportHeight: height, brushViewBounds: bounds });
+      },
+
+      clearBrushMask: () => {
+        set({ brushMask: null, brushMaskVersion: 0 });
+      },
+
+      brushPaintStart: (screenCoord: [number, number]) => {
+        const state = get();
+        const { brushViewportWidth, brushViewportHeight, brushRadiusPx } = state;
+        if (brushViewportWidth <= 0 || brushViewportHeight <= 0 || brushRadiusPx <= 0) return;
+        const mask = ensureBrushMaskViewport(brushViewportWidth, brushViewportHeight, null);
+        paintCircleOnMaskScreen(mask, brushViewportWidth, brushViewportHeight, screenCoord[0], screenCoord[1], brushRadiusPx);
+        set({ brushMask: mask, brushMaskVersion: 1 });
+      },
+
+      brushPaint: (screenCoord: [number, number]) => {
+        const state = get();
+        const mask = state.brushMask;
+        if (!mask) return;
+        const { brushViewportWidth, brushViewportHeight, brushRadiusPx } = state;
+        paintCircleOnMaskScreen(mask, brushViewportWidth, brushViewportHeight, screenCoord[0], screenCoord[1], brushRadiusPx);
+        set({ brushMask: { ...mask }, brushMaskVersion: state.brushMaskVersion + 1 });
+      },
+
+      brushPaintEnd: () => {
+        const state = get();
+        const mask = state.brushMask;
+        const bounds = state.brushViewBounds;
+        if (mask && bounds) {
+          const loops = maskToLoops(mask);
+          const pxToWorld = Math.max(
+            Math.abs(bounds[2] - bounds[0]) / Math.max(1, mask.width),
+            Math.abs(bounds[1] - bounds[3]) / Math.max(1, mask.height),
+          );
+          const epsilonWorld = pxToWorld * 2.5; // smooth away pixel bumps
+
+          let hull: [number, number][] | null = null;
+          for (const loop of loops) {
+            const worldLoop = loopScreenToWorld(loop, bounds, mask.width, mask.height);
+            const simplified = simplifyClosedPolygon(worldLoop, epsilonWorld);
+            if (simplified.length < 4) continue;
+            const area = Math.abs(polygonArea(simplified));
+            if (area < (epsilonWorld * epsilonWorld) * 8) continue;
+            if (!hull) {
+              hull = simplified;
+            } else {
+              const union = polygonUnion(hull, simplified);
+              if (union && union.length >= 4) hull = union;
+            }
+          }
+
+          if (hull && hull.length >= 4) {
+            const annotation: PolygonAnnotation = {
+              id: `brush-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              type: "polygon",
+              polygon: hull,
+              style: {
+                fillColor: [0, 0, 0, 0],
+                lineColor: state.globalColor,
+                lineWidth: 3,
+              },
+              metadata: {
+                createdAt: new Date(),
+                label: `Brush ${state.annotations.length + 1}`,
+              },
+            };
+            get().addAnnotation(annotation);
+          }
+        }
+
+        set({ brushMask: null, brushMaskVersion: 0 });
+      },
+
       setSelectedAnnotation: (annotationId: string | null) => {
         set({ selectedAnnotationId: annotationId });
       },
@@ -1101,13 +1637,24 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         precomputedHull?: [number, number][],
       ) => {
         const state = get();
-        const { brushRadiusPx, viewportZoom } = state;
+        const { brushRadiusPx, viewportZoom, brushMask, imageWidth, imageHeight } = state;
         if (strokePoints.length === 0) return;
 
-        const overlayPolygon =
-          precomputedHull && precomputedHull.length >= 3
-            ? precomputedHull
-            : buildBrushHull(strokePoints, brushRadiusPx, viewportZoom);
+        let overlayPolygon: [number, number][] | null = null;
+
+        // Prefer mask-based polygon if a brush mask exists
+        if (brushMask && imageWidth > 0 && imageHeight > 0) {
+          overlayPolygon = maskToPolygon(brushMask, imageWidth, imageHeight);
+        }
+
+        // Fallback to geometry-based union-of-circles if mask is unavailable or empty
+        if (!overlayPolygon || overlayPolygon.length < 3) {
+          overlayPolygon =
+            precomputedHull && precomputedHull.length >= 3
+              ? precomputedHull
+              : buildBrushHull(strokePoints, brushRadiusPx, viewportZoom);
+        }
+
         if (!overlayPolygon || overlayPolygon.length < 3) return;
 
         // Debug: log final brush overlay polygon points for inspection
@@ -1137,6 +1684,8 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         };
         get().addAnnotation(annotation);
         get().removeOverlayLayer("drawing-layer");
+        // Clear mask after finalizing this brush annotation
+        set({ brushMask: null });
       },
 
       // New layer visibility actions
