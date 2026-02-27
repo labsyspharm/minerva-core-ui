@@ -79,6 +79,7 @@
     "geotiff": "3.0.3",
     "gl-matrix": "^3.4.3",
     "idb-keyval": "^6.2.1",
+    "lefthook": "^2.1.1",
     "lensing": "https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9",
     "lzw-tiff-decoder": "^0.1.1",
     "npm": "^11.5.2",
