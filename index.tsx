@@ -17,7 +17,6 @@ import { createGlobalStyle } from "styled-components";
 import type { ConfigWaypoint } from "@/lib/config";
 
 const fakeText = (p) => {
-  const hrmm = "";
   return loremIpsum({ p, random: true }).join("\n\n");
 };
 
