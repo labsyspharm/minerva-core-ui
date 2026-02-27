@@ -18,6 +18,9 @@
     "rules": {
       "complexity": {
         "noImportantStyles": "off"
+      },
+      "correctness": {
+        "noUnusedVariables": "off"
       }
     }
   },
