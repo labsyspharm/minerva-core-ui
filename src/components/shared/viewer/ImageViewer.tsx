@@ -21,21 +21,21 @@ import type { ConfigGroup } from "@/lib/stores";
 import type { OverlayLayer } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
 import type { Config, Loader } from "@/lib/viv";
-import { convertWaypointToViewState, getWaypoint } from "@/lib/waypoint";
+import { convertWaypointToViewState } from "@/lib/waypoint";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 
 type ItemRegistryChannel = {
   name: string;
   color: string;
   contrast: [number, number];
-}
+};
 
-type ItemRegistryGroup =  {
+type ItemRegistryGroup = {
   State: ConfigGroup["State"];
   channels: ItemRegistryChannel[];
   name: string;
   g: number;
-}
+};
 
 export type ImageViewerProps = {
   loaderOmeTiff: Loader;
