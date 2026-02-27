@@ -1,14 +1,16 @@
 import * as React from "react";
+import type { Annotation, AnnotationGroup } from "@/lib/stores";
 import styles from "./ItemList.module.css";
-import type { AnnotationGroup, Annotation } from "@/lib/stores";
 
-type Metadata = {
-  group: AnnotationGroup;
-  type: "group";
-} | {
-  annotation: Annotation;
-  type: "annotation";
-}
+type Metadata =
+  | {
+      group: AnnotationGroup;
+      type: "group";
+    }
+  | {
+      annotation: Annotation;
+      type: "annotation";
+    };
 
 // Generic item interface that can be extended
 export interface ListItem<T = Metadata> {
@@ -154,7 +156,8 @@ const ItemList = <T = React.Component>({
 
         {/* Expand/Collapse Toggle */}
         {showExpandToggle && item.children && (
-          <button type="button"
+          <button
+            type="button"
             className={styles.button}
             onClick={(e) => {
               e.stopPropagation();
@@ -191,7 +194,8 @@ const ItemList = <T = React.Component>({
         <div className={styles.actions}>
           {/* Visibility Toggle */}
           {showVisibilityToggle && onToggleVisibility && (
-            <button type="button"
+            <button
+              type="button"
               className={styles.button}
               onClick={(e) => {
                 e.stopPropagation();
@@ -199,7 +203,8 @@ const ItemList = <T = React.Component>({
               }}
               title={item.isHidden ? "Show" : "Hide"}
             >
-              <svg aria-labelledby="show-title"
+              <svg
+                aria-labelledby="show-title"
                 width="14"
                 height="14"
                 viewBox="0 0 24 24"
@@ -220,7 +225,8 @@ const ItemList = <T = React.Component>({
 
           {/* Delete Button */}
           {showDeleteButton && onDelete && (
-            <button type="button"
+            <button
+              type="button"
               className={styles.button}
               onClick={(e) => {
                 e.stopPropagation();
@@ -228,7 +234,8 @@ const ItemList = <T = React.Component>({
               }}
               title="Delete"
             >
-              <svg aria-labelledby="delete-title"
+              <svg
+                aria-labelledby="delete-title"
                 width="14"
                 height="14"
                 viewBox="0 0 24 24"
@@ -269,15 +276,15 @@ const ItemList = <T = React.Component>({
             <React.Fragment key={item.id}>
               {renderItem(item)}
               {/* Render children if expanded */}
-              {item.isExpanded && item.children && (
+              {item.isExpanded &&
+                item.children &&
                 item.children.map((child) => (
-                    <React.Fragment key={`${item.id}-child-${child.id}`}>
-                      {customChildRenderer
-                        ? customChildRenderer(child, item)
-                        : renderItem(child, true)}
-                    </React.Fragment>
-                  ))
-              )}
+                  <React.Fragment key={`${item.id}-child-${child.id}`}>
+                    {customChildRenderer
+                      ? customChildRenderer(child, item)
+                      : renderItem(child, true)}
+                  </React.Fragment>
+                ))}
             </React.Fragment>
           ))
         )}

@@ -1,24 +1,23 @@
 import * as React from "react";
 import { ChromePicker } from "react-color";
-import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import { LayersPanel } from "@/components/authoring/LayersPanel";
-import styles from "./DrawingPanel.module.css";
 import {
-  MoveIcon,
-  RectangleIcon,
-  EllipseIcon,
-  PolygonIcon,
-  LineIcon,
-  PolylineIcon,
-  TextIcon,
-  PointIcon,
   ColorIcon,
+  EllipseIcon,
+  LineIcon,
+  MoveIcon,
+  PointIcon,
+  PolygonIcon,
+  PolylineIcon,
+  RectangleIcon,
+  TextIcon,
 } from "@/components/shared/icons/OverlayIcons";
-import { useOverlayStore } from "@/lib/stores";
-
 // Types
 import type { CreatableLayer } from "@/components/shared/viewer/layers/DrawingOverlay";
+import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import type { Group } from "@/lib/exhibit";
+import { useOverlayStore } from "@/lib/stores";
+import styles from "./DrawingPanel.module.css";
 
 type DrawingPanelProps = {
   groups: Group[];

@@ -1,10 +1,10 @@
-import styled from "styled-components";
-import { Icon } from "@/components/shared/common/Icon";
 import {
-  faPlus as faPush,
   faMinus as faPop,
+  faPlus as faPush,
   faCheck as faSelect,
 } from "@fortawesome/free-solid-svg-icons";
+import styled from "styled-components";
+import { Icon } from "@/components/shared/common/Icon";
 
 const defineIcon = ({ icon, onClick, color }) => {
   return {

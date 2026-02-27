@@ -1,10 +1,9 @@
-
-import { useState, useEffect } from "react";
-import styled from "styled-components";
-import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
-
 import type { FormEventHandler } from "react";
+import { useEffect, useState } from "react";
+import Button from "react-bootstrap/Button";
+import Form from "react-bootstrap/Form";
+import styled from "styled-components";
+
 type Choices = {
   csv: string[];
   path: string[];
@@ -19,7 +18,7 @@ type ChoiceAnyIn = {
   path: string;
   csv: string;
 };
-type ToChoicesAny = (i: ChoiceAnyIn) => Promise<Choices>
+type ToChoicesAny = (i: ChoiceAnyIn) => Promise<Choices>;
 type OptionsProps = {
   label: string;
   vals: string[];
@@ -41,16 +40,16 @@ export type UploadProps = {
 export type ValidObj = {
   [s: string]: boolean;
 };
-type ValidationFunction = (v: ValidObj) => boolean | null
-type Validation = (s: string) => ValidationFunction
+type ValidationFunction = (v: ValidObj) => boolean | null;
+type Validation = (s: string) => ValidationFunction;
 type ValidOut = Partial<{
   isValid: true;
   isInvalid: true;
 }>;
-type Validate = (v: ValidObj, fn: ValidationFunction) => ValidOut
+type Validate = (v: ValidObj, fn: ValidationFunction) => ValidOut;
 type SetState = (s: string) => void;
 type SetTargetState = FormEventHandler;
-type UseTargetState = (init: string) => [string, SetState, SetTargetState]
+type UseTargetState = (init: string) => [string, SetState, SetTargetState];
 
 interface HasValidation {
   hasValidation: boolean;
@@ -268,7 +267,7 @@ const toChoicesAny: ToChoicesAny = async (opts) => {
   return {
     csv,
     path,
-    mask
+    mask,
   };
 };
 
@@ -276,7 +275,7 @@ const hasNewChoice = (choices: Choices, c: Choices) => {
   return [
     c.csv.some((i: string) => !choices.csv.includes(i)),
     c.path.some((i: string) => !choices.path.includes(i)),
-    c.mask.some((i: string) => !choices.mask.includes(i))
+    c.mask.some((i: string) => !choices.mask.includes(i)),
   ].some((x) => x === true);
 };
 

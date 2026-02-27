@@ -7,7 +7,7 @@ export type Waypoint = {
   g: number;
   v: number[];
   lensing?: {
-      group: string;
+    group: string;
   };
 };
 

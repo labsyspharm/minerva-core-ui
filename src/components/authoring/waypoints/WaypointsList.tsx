@@ -1,12 +1,11 @@
 import * as React from "react";
-import styles from "./WaypointsList.module.css";
-import { useOverlayStore } from "@/lib/stores";
 import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
-import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
-import { TextIcon, PolylineIcon } from "@/components/shared/icons/OverlayIcons";
-
+import { PolylineIcon, TextIcon } from "@/components/shared/icons/OverlayIcons";
 // Types
 import type { ConfigWaypoint } from "@/lib/config";
+import { useOverlayStore } from "@/lib/stores";
+import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
+import styles from "./WaypointsList.module.css";
 
 interface WaypointAnnotationEditorMetadata {
   type: "annotations-panel";
@@ -75,7 +74,14 @@ const WaypointsList = (props: WaypointsListProps) => {
         importWaypointAnnotations(arrows, overlays);
       }
     }
-  }, [stories, activeStoryIndex, imageWidth, imageHeight, clearImportedAnnotations, importWaypointAnnotations]);
+  }, [
+    stories,
+    activeStoryIndex,
+    imageWidth,
+    imageHeight,
+    clearImportedAnnotations,
+    importWaypointAnnotations,
+  ]);
 
   // Convert stories to ListItem format with inline annotations panel
   const listItems: ListItem<

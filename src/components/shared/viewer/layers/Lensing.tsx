@@ -1,4 +1,4 @@
-import { LensExtension, } from "@hms-dbmi/viv";
+import { LensExtension } from "@hms-dbmi/viv";
 
 // import { getDefaultPalette, padColors } from '../utils';
 
