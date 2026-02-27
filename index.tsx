@@ -15,8 +15,8 @@ import { createGlobalStyle } from "styled-components";
 import { loremIpsum } from "react-lorem-ipsum";
 
 const fakeText = (p) => {
-    const random = true;
-    return loremIpsum({ p, random }).join("\n\n");
+    
+    return loremIpsum({ p, random:true }).join("\n\n");
 };
 
 const configWaypoints = [
