@@ -1,9 +1,8 @@
+import type { TiffPixelSource } from "@hms-dbmi/viv";
+import { getImageSize, loadOmeTiff } from "@hms-dbmi/viv";
 import * as React from "react";
 import { useState } from "react";
 import styled from "styled-components";
-import { getImageSize } from "@hms-dbmi/viv";
-import { loadOmeTiff } from "@hms-dbmi/viv";
-import type { TiffPixelSource } from "@hms-dbmi/viv";
 
 ///
 
@@ -19,13 +18,13 @@ type Dtype =
 
 type LoaderPlane = TiffPixelSource<string[]>;
 
-type ToTilePlane = (z: number, l: LoaderPlane[]) => LoaderPlane
+type ToTilePlane = (z: number, l: LoaderPlane[]) => LoaderPlane;
 type TileCounts = { x: number; y: number };
 type TileCountsIn = {
   tileProps: TileProps;
   zoom: number;
 };
-type ToTileCounts = (i: TileCountsIn) => TileCounts
+type ToTileCounts = (i: TileCountsIn) => TileCounts;
 
 type InitIn = {
   loader: LoaderPlane[];
@@ -38,7 +37,7 @@ type CommonIn = InitIn & {
 type SaveIn = CommonIn & {
   step: number;
 };
-type Save = (i: SaveIn) => Promise<void>
+type Save = (i: SaveIn) => Promise<void>;
 
 type StepIn = CommonIn & {
   stepSignal: StepOut;
@@ -48,13 +47,13 @@ type StepOut = {
   step: number;
   done: boolean;
 };
-type DoStep = (o: StepIn) => Promise<StepOut | null>
+type DoStep = (o: StepIn) => Promise<StepOut | null>;
 
 type CaptureOut = {
   output: Uint8Array;
   filename: string;
 };
-type Capture = (i: Index, loader: LoaderPlane[]) => Promise<CaptureOut>
+type Capture = (i: Index, loader: LoaderPlane[]) => Promise<CaptureOut>;
 
 const toFilename = (index: Index) => {
   const level = -index.z;
@@ -153,7 +152,7 @@ type FullState = {
   tileProps: TileProps;
 };
 type MainState = null | FullState;
-type Initialize = (i: InitIn) => Partial<FullState>
+type Initialize = (i: InitIn) => Partial<FullState>;
 
 type One = [number];
 type Two = [number, number];
@@ -275,7 +274,7 @@ type LoaderOpts = {
   in_f: string;
   handle: Handle.Dir | null;
 };
-type ToLoader = (i: LoaderIn) => Promise<LoaderOut>
+type ToLoader = (i: LoaderIn) => Promise<LoaderOut>;
 interface ProgressBarProps {
   $ratio: number;
   $done: boolean;

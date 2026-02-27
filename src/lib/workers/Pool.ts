@@ -13,23 +13,26 @@ async function defaultDecoderParameterFn(fileDirectory) {
     tileHeight: fileDirectory.TileLength,
     planarConfiguration: 1,
     bitsPerSample: await fileDirectory.BitsPerSample,
-    predictor: 1
+    predictor: 1,
   };
 }
 
 export declare class PoolClass {
-    /**
-     * @constructor
-     * @param {Number}
-     * @param {function(): Worker}
-     */
-    constructor(size?: number | undefined, createWorker?: (() => Worker) | undefined);
-    workers: null;
-    _awaitingDecoder: null;
-    size: number;
-    messageId: number;
-    decode(fileDirectory: unknown, buffer: ArrayBuffer): Promise<ArrayBuffer>;
-    destroy(): void;
+  /**
+   * @constructor
+   * @param {Number}
+   * @param {function(): Worker}
+   */
+  constructor(
+    size?: number | undefined,
+    createWorker?: (() => Worker) | undefined,
+  );
+  workers: null;
+  _awaitingDecoder: null;
+  size: number;
+  messageId: number;
+  decode(fileDirectory: unknown, buffer: ArrayBuffer): Promise<ArrayBuffer>;
+  destroy(): void;
 }
 
 // adapted from https://github.com/hms-dbmi/viv/blob/08a74203b99f54bc62307c741944ed61e33e810c/packages/loaders/src/tiff/lib/Pool.ts#L4
@@ -41,7 +44,7 @@ export declare class PoolClass {
 const defaultPoolSize = globalThis?.navigator?.hardwareConcurrency ?? 4;
 
 class Pool extends GeotiffPool {
-  workers: null 
+  workers: null;
   _awaitingDecoder: null;
   size: 1;
   messageId: 0;

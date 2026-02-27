@@ -1,19 +1,19 @@
 import * as React from "react";
 import { ChromePicker } from "react-color";
 import { LayersPanel } from "@/components/authoring/LayersPanel";
-import { useOverlayStore } from "@/lib/stores";
-import type { ConfigWaypoint } from "@/lib/config";
 import {
-  MoveIcon,
-  RectangleIcon,
-  EllipseIcon,
-  PolygonIcon,
-  LineIcon,
-  PolylineIcon,
-  TextIcon,
-  PointIcon,
   ColorIcon,
+  EllipseIcon,
+  LineIcon,
+  MoveIcon,
+  PointIcon,
+  PolygonIcon,
+  PolylineIcon,
+  RectangleIcon,
+  TextIcon,
 } from "@/components/shared/icons/OverlayIcons";
+import type { ConfigWaypoint } from "@/lib/config";
+import { useOverlayStore } from "@/lib/stores";
 import styles from "./WaypointAnnotationEditor.module.css";
 
 // Define available tools (same as overlays)
@@ -40,9 +40,11 @@ type RGBA = {
   g: number;
   b: number;
   a: number;
-}
+};
 
-const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = () => {
+const WaypointAnnotationEditor: React.FC<
+  WaypointAnnotationEditorProps
+> = () => {
   const {
     activeTool,
     handleToolChange,

@@ -1,21 +1,21 @@
-import { defineConfig } from 'vite'
-import { standardCssModules } from 'vite-plugin-standard-css-modules';
-import react from '@vitejs/plugin-react'
-import mkcert from 'vite-plugin-mkcert'
-import svgr from 'vite-plugin-svgr'
-import path from 'path'
+import path from "node:path";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+import mkcert from "vite-plugin-mkcert";
+import { standardCssModules } from "vite-plugin-standard-css-modules";
+import svgr from "vite-plugin-svgr";
 
 export default defineConfig({
   worker: {
-    format: "es"
+    format: "es",
   },
-  server: { 
+  server: {
     https: true,
     hmr: {
-      overlay: true
-    }
+      overlay: true,
+    },
   },
-  base: '',
+  base: "",
   plugins: [
     react(),
     mkcert(),
@@ -24,43 +24,43 @@ export default defineConfig({
         icon: true,
       },
     }),
-		standardCssModules({
-			include: ["/**/minerva-author-ui/**/*.css"],
-    })
+    standardCssModules({
+      include: ["/**/minerva-author-ui/**/*.css"],
+    }),
   ],
   optimizeDeps: {
-    exclude: [ "minerva-author-ui" ],
+    exclude: ["minerva-author-ui"],
     include: [
-      '@luma.gl/core',
-      '@luma.gl/constants',
-      '@luma.gl/engine',
-      '@luma.gl/shadertools',
-      '@luma.gl/webgl',
-      '@luma.gl/gltf',
-      '@deck.gl/core',
-      '@deck.gl/layers',
-      '@deck.gl/react'
-    ]
+      "@luma.gl/core",
+      "@luma.gl/constants",
+      "@luma.gl/engine",
+      "@luma.gl/shadertools",
+      "@luma.gl/webgl",
+      "@luma.gl/gltf",
+      "@deck.gl/core",
+      "@deck.gl/layers",
+      "@deck.gl/react",
+    ],
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      "@": path.resolve(__dirname, "./src"),
     },
     dedupe: [
-      '@luma.gl/core',
-      '@luma.gl/constants', 
-      '@luma.gl/engine',
-      '@luma.gl/shadertools',
-      '@luma.gl/webgl',
-      '@luma.gl/gltf',
-      '@deck.gl/core',
-      '@deck.gl/layers',
-      '@deck.gl/extensions',
-      '@deck.gl/geo-layers',
-      '@deck.gl/mesh-layers',
-      '@deck.gl/react',
-      '@deck.gl/widgets'
-    ]
+      "@luma.gl/core",
+      "@luma.gl/constants",
+      "@luma.gl/engine",
+      "@luma.gl/shadertools",
+      "@luma.gl/webgl",
+      "@luma.gl/gltf",
+      "@deck.gl/core",
+      "@deck.gl/layers",
+      "@deck.gl/extensions",
+      "@deck.gl/geo-layers",
+      "@deck.gl/mesh-layers",
+      "@deck.gl/react",
+      "@deck.gl/widgets",
+    ],
   },
   build: {
     minify: false,
@@ -74,8 +74,8 @@ export default defineConfig({
         warn(warning);
       },
       output: {
-        format: "es"
-      }
-    }
-  }
-})
+        format: "es",
+      },
+    },
+  },
+});

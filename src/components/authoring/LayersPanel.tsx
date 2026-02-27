@@ -1,18 +1,18 @@
 import * as React from "react";
-import { useOverlayStore } from "@/lib/stores";
-import type { Annotation } from "@/lib/stores";
+import styles from "@/components/authoring/DrawingPanel.module.css";
 import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
 import {
-  RectangleIcon,
   EllipseIcon,
-  PolylineIcon,
-  PolygonIcon,
-  LineIcon,
   GroupIcon,
+  LineIcon,
   PointIcon,
+  PolygonIcon,
+  PolylineIcon,
+  RectangleIcon,
   TextIcon,
 } from "@/components/shared/icons/OverlayIcons";
-import styles from "@/components/authoring/DrawingPanel.module.css";
+import type { Annotation } from "@/lib/stores";
+import { useOverlayStore } from "@/lib/stores";
 
 // Shared Text Edit Panel Component (same as in original LayersPanel)
 interface TextEditPanelProps {
