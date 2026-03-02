@@ -893,6 +893,7 @@ export interface OverlayStore {
     fontColor: [number, number, number, number],
   ) => void; // Update text annotation color
   updateShapeText: (annotationId: string, newText: string) => void; // Update text field on any annotation (for shapes with text)
+  updateAnnotationLabel: (annotationId: string, newLabel: string) => void; // Update the metadata label (used as layer name)
   setGlobalColor: (color: [number, number, number, number]) => void; // Set global drawing color
   setViewportZoom: (zoom: number) => void; // Set viewport zoom for line width scaling
   setBrushRadiusPx: (radius: number) => void;
@@ -1244,7 +1245,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             },
             metadata: {
               createdAt: new Date(),
-              label: `Rectangle ${get().annotations.length + 1}`,
+              label: `Untitled ${get().annotations.length + 1}`,
             },
           };
 
@@ -1286,7 +1287,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             },
             metadata: {
               createdAt: new Date(),
-              label: `Ellipse ${get().annotations.length + 1}`,
+              label: `Untitled ${get().annotations.length + 1}`,
             },
           };
 
@@ -1320,7 +1321,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             },
             metadata: {
               createdAt: new Date(),
-              label: `Polygon ${get().annotations.length + 1}`,
+              label: `Untitled ${get().annotations.length + 1}`,
             },
           };
 
@@ -1345,7 +1346,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             },
             metadata: {
               createdAt: new Date(),
-              label: `Polyline ${get().annotations.length + 1}`,
+              label: `Untitled ${get().annotations.length + 1}`,
             },
           };
 
@@ -1366,18 +1367,17 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         ) {
           const [startX, startY] = drawingState.dragStart;
           const [endX, endY] = drawingState.dragEnd;
-          const lineWidth = 3;
-
-          // Arrow uses degenerate polygon (IconLayer uses first 2 points); plain line uses lineToPolygon for proper stroke
-          const linePolygon: [number, number][] = hasArrowHead
-            ? [
-                [startX, startY],
-                [endX, endY],
-                [endX, endY],
-                [startX, startY],
-                [startX, startY],
-              ]
-            : lineToPolygon([startX, startY], [endX, endY], lineWidth);
+          // Store both arrow and plain lines as a degenerate polygon encoding the
+          // centerline only. The visual thickness is controlled via lineWidth in
+          // the rendering layer (pixel units), so geometry stays in world units
+          // and remains independent of stroke width.
+          const linePolygon: [number, number][] = [
+            [startX, startY],
+            [endX, endY],
+            [endX, endY],
+            [startX, startY],
+            [startX, startY],
+          ];
 
           const annotation: LineAnnotation = {
             id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -1391,7 +1391,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             },
             metadata: {
               createdAt: new Date(),
-              label: `Line ${get().annotations.length + 1}`,
+              label: `Untitled ${get().annotations.length + 1}`,
             },
           };
 
@@ -1429,7 +1429,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           },
           metadata: {
             createdAt: new Date(),
-            label: `Text ${get().annotations.length + 1}`,
+            label: `Untitled ${get().annotations.length + 1}`,
           },
         };
 
@@ -1453,7 +1453,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           },
           metadata: {
             createdAt: new Date(),
-            label: `Point ${get().annotations.length + 1}`,
+            label: `Untitled ${get().annotations.length + 1}`,
           },
         };
 
@@ -1537,6 +1537,28 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         get().updateAnnotation(annotationId, updates);
       },
 
+      updateAnnotationLabel: (annotationId: string, newLabel: string) => {
+        const trimmed = newLabel.trim();
+
+        set((state) => ({
+          annotations: state.annotations.map((annotation) => {
+            if (annotation.id !== annotationId) {
+              return annotation;
+            }
+
+            const nextMetadata = {
+              ...(annotation.metadata ?? { createdAt: new Date() }),
+              label: trimmed || undefined,
+            };
+
+            return {
+              ...annotation,
+              metadata: nextMetadata,
+            } as Annotation;
+          }),
+        }));
+      },
+
       setGlobalColor: (color: [number, number, number, number]) => {
         set({ globalColor: color });
       },
@@ -1618,7 +1640,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               },
               metadata: {
                 createdAt: new Date(),
-                label: `Brush ${state.annotations.length + 1}`,
+                label: `Untitled ${state.annotations.length + 1}`,
               },
             };
             get().addAnnotation(annotation);
@@ -1679,7 +1701,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           },
           metadata: {
             createdAt: new Date(),
-            label: `Brush ${state.annotations.length + 1}`,
+            label: `Untitled ${state.annotations.length + 1}`,
           },
         };
         get().addAnnotation(annotation);

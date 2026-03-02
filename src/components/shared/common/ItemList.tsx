@@ -32,6 +32,7 @@ export interface ItemListProps<T = Metadata> {
   emptyMessage?: string;
   className?: string;
   onItemClick?: (item: ListItem<T>) => void;
+  onItemDoubleClick?: (item: ListItem<T>) => void;
   onToggleVisibility?: (itemId: string) => void;
   onDelete?: (itemId: string) => void;
   onToggleExpand?: (itemId: string) => void;
@@ -57,6 +58,7 @@ const ItemList = <T = React.Component>({
   emptyMessage = "No items yet",
   className = "",
   onItemClick,
+  onItemDoubleClick,
   onToggleVisibility,
   onDelete,
   onToggleExpand,
@@ -148,6 +150,7 @@ const ItemList = <T = React.Component>({
         onDragLeave={(_e) => handleDragLeave()}
         onDrop={(e) => handleDrop(item.id, e)}
         onClick={() => onItemClick?.(item)}
+        onDoubleClick={() => onItemDoubleClick?.(item)}
       >
         {/* Icon */}
         {item.icon && <div className={styles.icon}>{item.icon}</div>}

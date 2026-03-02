@@ -2,14 +2,14 @@ import * as React from "react";
 import { useOverlayStore } from "@/lib/stores";
 import type { Annotation } from "@/lib/stores";
 import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
-import RectangleIcon from "/src/icons/rectangle.svg?react";
-import EllipseIcon from "/src/icons/ellipse.svg?react";
-import PolylineIcon from "/src/icons/polyline.svg?react";
-import PolygonIcon from "/src/icons/polygon.svg?react";
-import LineIcon from "/src/icons/line.svg?react";
-import GroupIcon from "/src/icons/group.svg?react";
-import PointIcon from "/src/icons/point.svg?react";
-import TextIcon from "/src/icons/text.svg?react";
+import RectangleIcon from "/icons/rectangle.svg?react";
+import EllipseIcon from "/icons/ellipse.svg?react";
+import PolylineIcon from "/icons/polyline.svg?react";
+import PolygonIcon from "/icons/polygon.svg?react";
+import LineIcon from "/icons/line.svg?react";
+import GroupIcon from "/icons/group.svg?react";
+import PointIcon from "/icons/point.svg?react";
+import TextIcon from "/icons/text.svg?react";
 import styles from "@/components/authoring/DrawingPanel.module.css";
 
 // Shared Text Edit Panel Component (same as in original LayersPanel)
@@ -186,6 +186,9 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const hiddenLayers = useOverlayStore((state) => state.hiddenLayers);
   const removeAnnotation = useOverlayStore((state) => state.removeAnnotation);
   const updateShapeText = useOverlayStore((state) => state.updateShapeText);
+  const updateAnnotationLabel = useOverlayStore(
+    (state) => state.updateAnnotationLabel,
+  );
   const clearAnnotations = useOverlayStore((state) => state.clearAnnotations);
   const toggleLayerVisibility = useOverlayStore(
     (state) => state.toggleLayerVisibility,
@@ -204,6 +207,12 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const [editTextValue, setEditTextValue] = React.useState("");
   const [editFontSize, setEditFontSize] = React.useState(14);
   const [editingIsShape, setEditingIsShape] = React.useState(false); // Track if editing a shape (vs pure text annotation)
+
+  // Local state for name (label) editing
+  const [editingLabelId, setEditingLabelId] = React.useState<string | null>(
+    null,
+  );
+  const [editLabelValue, setEditLabelValue] = React.useState("");
 
   // Local state for drag and drop
   const [draggedAnnotationId, setDraggedAnnotationId] = React.useState<
@@ -234,32 +243,36 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     }
   };
 
-  const getLayerName = (annotation: Annotation) => {
-    // Extract just the shape ID (last part after the last dash)
-    const shapeId = annotation.id.split("-").pop() || annotation.id;
+  // Stable index-based default for "Untitled N" labels
+  const annotationIndexMap = React.useMemo(() => {
+    const map = new Map<string, number>();
+    annotations.forEach((annotation, index) => {
+      map.set(annotation.id, index + 1);
+    });
+    return map;
+  }, [annotations]);
 
-    switch (annotation.type) {
-      case "rectangle":
-        return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
-      case "ellipse":
-        return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
-      case "polygon":
-        return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
-      case "line":
-        return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
-      case "polyline":
-        return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
-      case "point":
-        return annotation.text ? `${shapeId}: ${annotation.text}` : shapeId;
-      case "text":
-        return annotation.text && annotation.text.length > 20
-          ? `${shapeId}: ${annotation.text.substring(0, 20)}...`
-          : annotation.text
-            ? `${shapeId}: ${annotation.text}`
-            : shapeId;
-      default:
-        return shapeId;
+  const getLayerName = (annotation: Annotation) => {
+    const index = annotationIndexMap.get(annotation.id);
+    const defaultLabel =
+      index !== undefined ? `Untitled ${index}` : "Untitled";
+    const baseLabel = annotation.metadata?.label || defaultLabel;
+
+    // For pure text annotations, just show the label
+    if (annotation.type === "text") {
+      return baseLabel;
     }
+
+    // For shapes/points, append any text as a description
+    if (annotation.text) {
+      const textPreview =
+        annotation.text.length > 20
+          ? `${annotation.text.substring(0, 20)}...`
+          : annotation.text;
+      return `${baseLabel}: ${textPreview}`;
+    }
+
+    return baseLabel;
   };
 
   const formatDate = (date: Date) => {
@@ -295,6 +308,25 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     setEditTextValue("");
     setEditFontSize(14);
     setEditingIsShape(false);
+  };
+
+  // Name (label) editing functions
+  const handleEditLabel = (annotation: Annotation) => {
+    setEditLabelValue(annotation.metadata?.label || "");
+    setEditingLabelId(annotation.id);
+  };
+
+  const handleSubmitLabelEdit = () => {
+    if (editingLabelId) {
+      updateAnnotationLabel(editingLabelId, editLabelValue);
+    }
+    setEditingLabelId(null);
+    setEditLabelValue("");
+  };
+
+  const handleCancelLabelEdit = () => {
+    setEditingLabelId(null);
+    setEditLabelValue("");
   };
 
   const handleCancelTextEdit = () => {
@@ -511,6 +543,12 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     return null;
   };
 
+  const handleItemDoubleClick = (item: ListItem) => {
+    if (item.metadata?.type === "annotation") {
+      handleEditLabel(item.metadata.annotation);
+    }
+  };
+
   const headerActions = (
     <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
       <button
@@ -563,6 +601,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         emptyMessage="No layers yet"
         onItemClick={handleItemClick}
         onToggleVisibility={handleToggleVisibility}
+        onItemDoubleClick={handleItemDoubleClick}
         onDelete={handleDelete}
         onToggleExpand={handleToggleExpand}
         onDragStart={handleDragStart}
@@ -590,6 +629,99 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
           submitButtonText={editingIsShape ? "Update Label" : "Update Text"}
           allowEmpty={editingIsShape} // Allow empty text for shapes (to remove labels)
         />
+      )}
+
+      {/* Name (label) Edit Modal */}
+      {editingLabelId && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "#2c2c2c",
+            border: "2px solid #444",
+            borderRadius: "8px",
+            padding: "20px",
+            zIndex: 1000,
+            minWidth: "300px",
+            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.5)",
+          }}
+        >
+          <div
+            style={{
+              marginBottom: "15px",
+              color: "white",
+              fontSize: "16px",
+              fontWeight: "bold",
+            }}
+          >
+            Rename Annotation
+          </div>
+          <input
+            type="text"
+            value={editLabelValue}
+            onChange={(e) => setEditLabelValue(e.target.value)}
+            placeholder="Enter layer name"
+            style={{
+              width: "100%",
+              padding: "8px",
+              border: "1px solid #555",
+              borderRadius: "4px",
+              backgroundColor: "#1a1a1a",
+              color: "white",
+              fontSize: "14px",
+              outline: "none",
+              marginBottom: "15px",
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSubmitLabelEdit();
+              } else if (e.key === "Escape") {
+                handleCancelLabelEdit();
+              }
+            }}
+          />
+          <div
+            style={{
+              marginTop: "15px",
+              display: "flex",
+              gap: "10px",
+              justifyContent: "flex-end",
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleCancelLabelEdit}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "#555",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "14px",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmitLabelEdit}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "#4CAF50",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "14px",
+              }}
+            >
+              Save
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -15,7 +15,7 @@ import {
   TextLayer,
 } from "@deck.gl/layers";
 import * as React from "react";
-import ArrowIconUrl from "@/icons/arrow-annotation.svg?url";
+import ArrowIconUrl from "/icons/arrow-annotation.svg?url";
 import type { Annotation } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
 
@@ -51,12 +51,6 @@ export function createAllAnnotationLayers(
     fillColor: ColorRGBA;
     lineColor: ColorRGBA;
     lineWidth: number;
-    id: string;
-  }> = [];
-  // Plain lines (lineToPolygon): filled only, no stroke - polygon represents thick line
-  const filledOnlyPolygonData: Array<{
-    polygon: [number, number][];
-    fillColor: ColorRGBA;
     id: string;
   }> = [];
   const textData: Array<{
@@ -148,8 +142,12 @@ export function createAllAnnotationLayers(
     if (annotation.type === "line") {
       const hasArrowHead = annotation.hasArrowHead !== false; // Default true for backward compat
 
+      const lineColor = isHovered
+        ? ([0, 120, 255, 255] as ColorRGBA)
+        : annotation.style.lineColor;
+
       if (hasArrowHead) {
-        // Arrow annotations use IconLayer
+        // Arrow annotations use IconLayer for the head/body glyph
         const polygon = annotation.polygon;
         if (polygon.length >= 2) {
           const [startX, startY] = polygon[0];
@@ -161,9 +159,7 @@ export function createAllAnnotationLayers(
           const angleRad = Math.atan2(dy, dx);
           const angleDeg = (angleRad * 180) / Math.PI + 90;
 
-          const iconColor = isHovered
-            ? ([0, 120, 255, 255] as ColorRGBA)
-            : annotation.style.lineColor;
+          const iconColor = lineColor;
 
           arrowData.push({
             position: [endX, endY, 0],
@@ -201,14 +197,13 @@ export function createAllAnnotationLayers(
           }
         }
       } else {
-        // Plain line (no arrow head): lineToPolygon creates a rectangular polygon
-        // that should be FILLED with the line color, not stroked
-        const fillColor = isHovered
-          ? ([0, 120, 255, 255] as ColorRGBA)
-          : annotation.style.lineColor;
-        filledOnlyPolygonData.push({
+        // Plain line (no arrow head): render as stroke-only polygon using pixel
+        // line width for consistent thickness with the orange preview mode.
+        polygonData.push({
           polygon: annotation.polygon,
-          fillColor,
+          fillColor: [0, 0, 0, 0],
+          lineColor,
+          lineWidth: annotation.style.lineWidth,
           id: annotation.id,
         });
       }
@@ -273,21 +268,6 @@ export function createAllAnnotationLayers(
         lineWidthMinPixels: 1,
         lineWidthMaxPixels: 100,
         stroked: true,
-        filled: true,
-        pickable,
-      }),
-    );
-  }
-
-  // 1b. Filled-only polygons (plain lines from lineToPolygon - thick line as filled rect)
-  if (filledOnlyPolygonData.length > 0) {
-    layers.push(
-      new PolygonLayer({
-        id: "annotation-filled-polygons",
-        data: filledOnlyPolygonData,
-        getPolygon: (d) => d.polygon,
-        getFillColor: (d) => d.fillColor,
-        stroked: false,
         filled: true,
         pickable,
       }),
