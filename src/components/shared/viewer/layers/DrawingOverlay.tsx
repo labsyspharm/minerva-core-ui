@@ -6,16 +6,10 @@ import {
   IconLayer,
   BitmapLayer,
 } from "@deck.gl/layers";
-import {
-  useOverlayStore,
-  ellipseToPolygon,
-  lineToPolygon,
-} from "@/lib/stores";
-import { makeCircle } from "@/lib/brushStroke";
-import { polygonUnion } from "@/lib/polygonClipping";
+import { useOverlayStore, ellipseToPolygon, lineToPolygon } from "@/lib/stores";
 import { useAnnotationLayers, ARROW_ICON_SIZE } from "@/lib/annotationLayers";
 import { useSam2 } from "@/lib/sam2/useSam2";
-import ArrowDrawingIconUrl from "/icons/arrow-annotation-drawing.svg?url";
+import ArrowDrawingIconUrl from "@/components/shared/icons/arrow-annotation-drawing.svg?url";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {
@@ -174,9 +168,7 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
   );
 };
 
-export type CreatableLayer = (
-  PolygonLayer | TextLayer | null
-);
+export type CreatableLayer = PolygonLayer | TextLayer | null;
 
 interface DrawingOverlayProps {
   onLayerCreate: (layer: CreatableLayer) => void;
@@ -210,7 +202,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     drawingState,
     finalizeLasso,
     finalizePolyline,
-    finalizeBrush,
     createTextAnnotation,
     createPointAnnotation,
     globalColor,
@@ -220,23 +211,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   const brushMask = useOverlayStore((s) => s.brushMask);
   const brushMaskVersion = useOverlayStore((s) => s.brushMaskVersion);
   const brushViewBounds = useOverlayStore((s) => s.brushViewBounds);
-  const imageWidth = useOverlayStore((s) => s.imageWidth);
-  const imageHeight = useOverlayStore((s) => s.imageHeight);
   const sam2DebugImages = useOverlayStore((s) => s.sam2DebugImages);
   const { isDrawing, dragStart, dragEnd } = drawingState;
-
-  // Local state for brush tool
-  const [brushStrokePoints, setBrushStrokePoints] = React.useState<
-    [number, number][]
-  >([]);
-  const [isBrushDrawing, setIsBrushDrawing] = React.useState(false);
-  const brushStrokePointsRef = React.useRef<[number, number][]>([]);
-  const brushHullCacheRef = React.useRef<{
-    hull: [number, number][] | null;
-    processedCount: number;
-    radiusWorld: number;
-    zoom: number;
-  }>({ hull: null, processedCount: 0, radiusWorld: 0, zoom: 0 });
 
   // Local state for lasso tool
   const [lassoPoints, setLassoPoints] = React.useState<[number, number][]>([]);
@@ -534,16 +510,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
 
   // Handle tool changes - clear state when switching tools
   React.useEffect(() => {
-    if (activeTool !== "brush") {
-      setIsBrushDrawing(false);
-      setBrushStrokePoints([]);
-      brushHullCacheRef.current = {
-        hull: null,
-        processedCount: 0,
-        radiusWorld: 0,
-        zoom: 0,
-      };
-    }
     if (activeTool !== "lasso") {
       setIsLassoDrawing(false);
       setPolygonClickPoints([]);
@@ -879,8 +845,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   }, [
     currentInteraction,
     activeTool,
-    isBrushDrawing,
-    finalizeBrush,
     isLassoDrawing,
     isPolylineDragging,
     isRectangleClickMode,
@@ -901,8 +865,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     finalizeCurrentPolyline,
     isSam2Processing,
     runSegmentation,
-    brushRadiusPx,
-    viewportZoom,
   ]);
 
   // Handle text input submission
@@ -1024,7 +986,10 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
         const end =
           lineSecondClick ??
           (currentInteraction?.type === "hover"
-            ? [currentInteraction.coordinate[0], currentInteraction.coordinate[1]]
+            ? [
+                currentInteraction.coordinate[0],
+                currentInteraction.coordinate[1],
+              ]
             : null);
         if (end) {
           polygonData = lineToPolygon(
@@ -1070,7 +1035,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     }
     // Brush tool: in bitmask mode we don't render a separate polygon here;
     // the brushMaskLayer BitmapLayer visualizes the painted region instead.
-    else if (activeTool === "brush" && isBrushDrawing && brushStrokePoints.length >= 1) {
+    else if (activeTool === "brush") {
       polygonData = null;
     }
     // Return null if no polygon data
@@ -1079,8 +1044,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     }
 
     // Stroke: arrow uses IconLayer; brush preview is fill-only (no stroke until finished)
-    const shouldStroke =
-      activeTool !== "arrow" && !(activeTool === "brush" && isBrushDrawing);
+    const shouldStroke = activeTool !== "arrow";
 
     // Create single unified polygon layer
     return new PolygonLayer({
@@ -1102,10 +1066,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     isDrawing,
     dragStart,
     dragEnd,
-    isBrushDrawing,
-    brushStrokePoints,
-    brushRadiusPx,
-    viewportZoom,
     isLassoDrawing,
     lassoPoints,
     polylinePoints,
@@ -1128,7 +1088,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   const brushCursorLayer = React.useMemo(() => {
     if (activeTool !== "brush") return null;
     const type = currentInteraction?.type;
-    if (type !== "hover" && type !== "drag" && type !== "dragStart") return null;
+    if (type !== "hover" && type !== "drag" && type !== "dragStart")
+      return null;
     const [cx, cy] = currentInteraction.coordinate;
     const scale = 2 ** (viewportZoom ?? 0);
     const radiusWorld = brushRadiusPx / Math.max(scale, 0.01);
@@ -1161,6 +1122,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   // Brush mask layer: canvas-aligned; bounds = visible world rect (works when zoomed out, canvas > image)
   const brushMaskLayer = React.useMemo(() => {
     if (activeTool !== "brush" || !brushMask || !brushViewBounds) return null;
+    // Depend on brushMaskVersion so the layer updates when the mask changes.
+    void brushMaskVersion;
     const { width, height, data } = brushMask;
     const rgba = new Uint8ClampedArray(width * height * 4);
     const orangeAlpha = 140;

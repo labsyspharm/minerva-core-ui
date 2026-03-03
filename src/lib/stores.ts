@@ -9,7 +9,7 @@ import type {
   ConfigWaypointOverlay,
 } from "./config";
 import { buildBrushHull } from "./brushHull";
-import { polygonUnion } from "./polygonClipping";
+import { polygonUnion, polygonDifference } from "./polygonClipping";
 
 // Re-export config types for convenience
 export type {
@@ -28,62 +28,9 @@ type BrushMask = {
   data: Uint8Array;
 };
 
-function ensureBrushMask(
-  imageWidth: number,
-  imageHeight: number,
-  maxRes: number,
-  existing: BrushMask | null,
-): BrushMask {
-  if (existing) return existing;
-  if (imageWidth <= 0 || imageHeight <= 0) {
-    return { width: 1, height: 1, data: new Uint8Array(1) };
-  }
-
-  // Create a mask that fits within maxRes while preserving aspect ratio.
-  // This keeps the mask roughly "canvas sized" and avoids huge allocations
-  // for very large images.
-  const scale = Math.min(1, maxRes / Math.max(imageWidth, imageHeight));
-  const width = Math.max(1, Math.round(imageWidth * scale));
-  const height = Math.max(1, Math.round(imageHeight * scale));
-  return { width, height, data: new Uint8Array(width * height) };
-}
-
-function paintCircleOnMask(
-  mask: BrushMask,
-  imageWidth: number,
-  imageHeight: number,
-  cxWorld: number,
-  cyWorld: number,
-  radiusWorld: number,
-): void {
-  const { width, height, data } = mask;
-  if (imageWidth <= 0 || imageHeight <= 0) return;
-
-  const sx = width / imageWidth;
-  const sy = height / imageHeight;
-  const scale = Math.min(sx, sy);
-  const r = Math.max(1, Math.round(radiusWorld * scale));
-
-  const mx = Math.round((cxWorld / imageWidth) * (width - 1));
-  // Deck.gl BitmapLayer draws texture with row 0 at bottom; world y=0 is bottom. Flip mask row so painted position matches cursor.
-  const my = (height - 1) - Math.round((cyWorld / imageHeight) * (height - 1));
-
-  const y0 = Math.max(0, my - r);
-  const y1 = Math.min(height - 1, my + r);
-  const x0 = Math.max(0, mx - r);
-  const x1 = Math.min(width - 1, mx + r);
-  const r2 = r * r;
-
-  for (let y = y0; y <= y1; y++) {
-    const dy = y - my;
-    for (let x = x0; x <= x1; x++) {
-      const dx = x - mx;
-      if (dx * dx + dy * dy <= r2) {
-        data[y * width + x] = 1;
-      }
-    }
-  }
-}
+// Legacy image-aligned brush helpers (kept for reference, currently unused).
+// function ensureBrushMask(...) { ... }
+// function paintCircleOnMask(...) { ... }
 
 /** Viewport-sized mask: one pixel per screen pixel. */
 function ensureBrushMaskViewport(
@@ -100,8 +47,6 @@ function ensureBrushMaskViewport(
 /** Paint circle in screen coords. sx,sy in [0, viewportW] x [0, viewportH]; row 0 = top. */
 function paintCircleOnMaskScreen(
   mask: BrushMask,
-  viewportWidth: number,
-  viewportHeight: number,
   sx: number,
   sy: number,
   radiusPx: number,
@@ -125,19 +70,8 @@ function paintCircleOnMaskScreen(
 
 type Point2 = [number, number];
 
-function polygonArea(poly: Point2[]): number {
-  if (poly.length < 3) return 0;
-  let a = 0;
-  // accepts closed or open
-  const n = poly.length;
-  const end = poly[0][0] === poly[n - 1][0] && poly[0][1] === poly[n - 1][1] ? n - 1 : n;
-  for (let i = 0; i < end; i++) {
-    const [x1, y1] = poly[i];
-    const [x2, y2] = poly[(i + 1) % end];
-    a += x1 * y2 - x2 * y1;
-  }
-  return a / 2;
-}
+// Legacy utility, no longer used.
+// function polygonArea(poly: Point2[]): number { ... }
 
 function pointToSegmentDistance(p: Point2, a: Point2, b: Point2): number {
   const [px, py] = p;
@@ -226,6 +160,34 @@ function simplifyClosedPolygon(pointsClosed: Point2[], epsilon: number): Point2[
 
   if (cleaned.length < 3) return pointsClosed;
   return [...cleaned, cleaned[0]];
+}
+
+function polygonCentroid(points: Point2[]): Point2 {
+  if (points.length === 0) return [0, 0];
+  let areaAcc = 0;
+  let cxAcc = 0;
+  let cyAcc = 0;
+  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+    const [x0, y0] = points[j];
+    const [x1, y1] = points[i];
+    const cross = x0 * y1 - x1 * y0;
+    areaAcc += cross;
+    cxAcc += (x0 + x1) * cross;
+    cyAcc += (y0 + y1) * cross;
+  }
+  const area = areaAcc * 0.5;
+  if (!area || !Number.isFinite(area)) {
+    // Fallback: simple average of vertices
+    let sx = 0;
+    let sy = 0;
+    for (const [x, y] of points) {
+      sx += x;
+      sy += y;
+    }
+    return [sx / points.length, sy / points.length];
+  }
+  const factor = 1 / (6 * area);
+  return [cxAcc * factor, cyAcc * factor];
 }
 
 type IKey = string; // "ix,iy" where ix/iy are integer coordinates in half-pixel grid (x*2, y*2)
@@ -412,32 +374,41 @@ function loopScreenToWorld(
   return loop.map(([x, y]) => [left + (x / maskWidth) * dx, top + (y / maskHeight) * dy]);
 }
 
-function maskToPolygon(
+function maskToViewportPolygon(
   mask: BrushMask,
-  imageWidth: number,
-  imageHeight: number,
+  bounds: [number, number, number, number],
 ): [number, number][] | null {
   const { width, height, data } = mask;
   if (!width || !height) return null;
-  if (imageWidth <= 0 || imageHeight <= 0) return null;
 
-  const sx = imageWidth / width;
-  const sy = imageHeight / height;
+  const [left, bottom, right, top] = bounds;
+  const dx = right - left;
+  const dy = bottom - top; // y-down world; bottom > top
 
+  if (dx === 0 || dy === 0) return null;
+
+  const w = width;
+  const h = height;
   let hull: [number, number][] | null = null;
 
-  for (let y = 0; y < height; y++) {
+  for (let y = 0; y < h; y++) {
     let runStart = -1;
-    const rowOffset = y * width;
-    for (let x = 0; x <= width; x++) {
-      const inside = x < width && data[rowOffset + x] !== 0;
+    const rowOffset = y * w;
+    for (let x = 0; x <= w; x++) {
+      const inside = x < w && data[rowOffset + x] !== 0;
       if (inside && runStart === -1) {
         runStart = x;
       } else if (!inside && runStart !== -1) {
-        const x0 = runStart * sx;
-        const x1 = x * sx;
-        const y0 = y * sy;
-        const y1 = (y + 1) * sy;
+        const x0t = runStart / w;
+        const x1t = x / w;
+        const y0t = y / h;
+        const y1t = (y + 1) / h;
+
+        const x0 = left + x0t * dx;
+        const x1 = left + x1t * dx;
+        const y0 = top + y0t * dy;
+        const y1 = top + y1t * dy;
+
         const rect: [number, number][] = [
           [x0, y0],
           [x1, y0],
@@ -458,7 +429,48 @@ function maskToPolygon(
     }
   }
 
-  return hull && hull.length >= 3 ? hull : null;
+  if (!hull || hull.length < 3) return null;
+
+  // Smooth jagged edges by simplifying in world units, scaled to approximately
+  // a few screen pixels so that pixel-level stair-steps are removed while
+  // preserving the overall shape and topology.
+  const pxToWorld = Math.max(
+    Math.abs(dx) / Math.max(1, w),
+    Math.abs(dy) / Math.max(1, h),
+  );
+  const epsilonWorld = pxToWorld * 2.5;
+  const simplified = simplifyClosedPolygon(hull as Point2[], epsilonWorld);
+
+  return simplified && simplified.length >= 3 ? simplified : hull;
+}
+
+function computeBrushPolygon(
+  strokePoints: Point2[],
+  precomputedHull: [number, number][] | undefined,
+  mask: BrushMask | null,
+  brushRadiusPx: number,
+  viewportZoom: number,
+  brushViewBounds: [number, number, number, number] | null,
+): [number, number][] | null {
+  if (precomputedHull && precomputedHull.length >= 3) {
+    return precomputedHull;
+  }
+
+  if (mask && brushViewBounds) {
+    const fromMask = maskToViewportPolygon(mask, brushViewBounds);
+    if (fromMask && fromMask.length >= 3) {
+      return fromMask;
+    }
+  }
+
+  if (strokePoints.length > 0 && brushRadiusPx > 0) {
+    const hull = buildBrushHull(strokePoints, brushRadiusPx, viewportZoom);
+    if (hull && hull.length >= 3) {
+      return hull;
+    }
+  }
+
+  return null;
 }
 
 // New annotation types - all using polygon coordinates internally
@@ -791,7 +803,10 @@ export interface OverlayStore {
   brushViewportWidth: number;
   brushViewportHeight: number;
   brushViewBounds: [number, number, number, number] | null;
+  brushLastScreenCoord: [number, number] | null;
   selectedAnnotationId: string | null;
+  brushEditTargetId: string | null;
+  brushEditMode: "add" | "subtract" | null;
 
   // Stories state
   stories: ConfigWaypoint[];
@@ -903,6 +918,8 @@ export interface OverlayStore {
   brushPaintStart: (screenCoord: [number, number]) => void;
   brushPaint: (screenCoord: [number, number]) => void;
   brushPaintEnd: () => void;
+  startBrushEdit: (annotationId: string, mode: "add" | "subtract") => void;
+  stopBrushEdit: () => void;
   setSelectedAnnotation: (annotationId: string | null) => void;
   finalizeBrush: (
     strokePoints: [number, number][],
@@ -981,7 +998,10 @@ const overlayInitialState = {
    brushViewportWidth: 0,
    brushViewportHeight: 0,
    brushViewBounds: null as [number, number, number, number] | null,
+  brushLastScreenCoord: null as [number, number] | null,
   selectedAnnotationId: null as string | null,
+  brushEditTargetId: null as string | null,
+  brushEditMode: null as "add" | "subtract" | null,
   stories: [], // New: empty stories array
   activeStoryIndex: null, // New: no active story initially
   activeChannelGroupId: null, // No channel group initially
@@ -1007,7 +1027,11 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       ...documentStore(set, get),
 
       setActiveTool: (tool: string) => {
-        set({ activeTool: tool });
+        set({
+          activeTool: tool,
+          brushEditTargetId: null,
+          brushEditMode: null,
+        });
       },
 
       setCurrentInteraction: (interaction: InteractionCoordinate | null) => {
@@ -1057,7 +1081,11 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       },
 
       handleToolChange: (tool: string) => {
-        set({ activeTool: tool });
+        set({
+          activeTool: tool,
+          brushEditTargetId: null,
+          brushEditMode: null,
+        });
 
         // Clear any partial drawing state when switching tools
         get().resetDrawingState();
@@ -1195,10 +1223,17 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             state.selectedAnnotationId === annotationId
               ? null
               : state.selectedAnnotationId;
+
+          const clearingBrushEdit =
+            state.brushEditTargetId === annotationId
+              ? { brushEditTargetId: null as string | null, brushEditMode: null as "add" | "subtract" | null }
+              : {};
+
           return {
             annotations: state.annotations.filter((a) => a.id !== annotationId),
             hiddenLayers: newHiddenLayers,
             selectedAnnotationId: newSelected,
+            ...clearingBrushEdit,
           };
         });
       },
@@ -1588,24 +1623,100 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         const { brushViewportWidth, brushViewportHeight, brushRadiusPx } = state;
         if (brushViewportWidth <= 0 || brushViewportHeight <= 0 || brushRadiusPx <= 0) return;
         const mask = ensureBrushMaskViewport(brushViewportWidth, brushViewportHeight, null);
-        paintCircleOnMaskScreen(mask, brushViewportWidth, brushViewportHeight, screenCoord[0], screenCoord[1], brushRadiusPx);
-        set({ brushMask: mask, brushMaskVersion: 1 });
+        paintCircleOnMaskScreen(mask, screenCoord[0], screenCoord[1], brushRadiusPx);
+        set({
+          brushMask: mask,
+          brushMaskVersion: 1,
+          brushLastScreenCoord: screenCoord,
+        });
       },
 
       brushPaint: (screenCoord: [number, number]) => {
         const state = get();
         const mask = state.brushMask;
         if (!mask) return;
-        const { brushViewportWidth, brushViewportHeight, brushRadiusPx } = state;
-        paintCircleOnMaskScreen(mask, brushViewportWidth, brushViewportHeight, screenCoord[0], screenCoord[1], brushRadiusPx);
-        set({ brushMask: { ...mask }, brushMaskVersion: state.brushMaskVersion + 1 });
+        const { brushRadiusPx } = state;
+
+        const [x2, y2] = screenCoord;
+        const last = state.brushLastScreenCoord;
+
+        if (!last) {
+          // No previous point: just stamp once and record this coord.
+          paintCircleOnMaskScreen(
+            mask,
+            x2,
+            y2,
+            brushRadiusPx,
+          );
+          set({
+            brushMask: { ...mask },
+            brushMaskVersion: state.brushMaskVersion + 1,
+            brushLastScreenCoord: screenCoord,
+          });
+          return;
+        }
+
+        const [x1, y1] = last;
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist === 0) {
+          paintCircleOnMaskScreen(
+            mask,
+            x2,
+            y2,
+            brushRadiusPx,
+          );
+        } else {
+          // Step at most half a brush radius in screen space to avoid gaps.
+          const step = Math.max(1, brushRadiusPx * 0.5);
+          const steps = Math.max(1, Math.ceil(dist / step));
+          for (let i = 1; i <= steps; i++) {
+            const t = i / steps;
+            const sx = x1 + dx * t;
+            const sy = y1 + dy * t;
+            paintCircleOnMaskScreen(
+              mask,
+              sx,
+              sy,
+              brushRadiusPx,
+            );
+          }
+        }
+
+        set({
+          brushMask: { ...mask },
+          brushMaskVersion: state.brushMaskVersion + 1,
+          brushLastScreenCoord: screenCoord,
+        });
       },
 
       brushPaintEnd: () => {
         const state = get();
         const mask = state.brushMask;
         const bounds = state.brushViewBounds;
+
+        let hull: [number, number][] | undefined;
         if (mask && bounds) {
+          // Log full bitmask snapshot for debugging / notebook visualization.
+          // This can be large, so it's primarily intended for manual copy/paste
+          // from the browser console into `brush_bitmap_debug.ipynb`.
+          try {
+            const { width, height, data } = mask;
+            const bitmapSnapshot = {
+              tag: "brush_bitmap_debug",
+              width,
+              height,
+              data: Array.from(data),
+              bounds,
+            };
+            // eslint-disable-next-line no-console
+            console.log(JSON.stringify(bitmapSnapshot));
+          } catch {
+            // ignore logging errors
+          }
+
           const loops = maskToLoops(mask);
           const pxToWorld = Math.max(
             Math.abs(bounds[2] - bounds[0]) / Math.max(1, mask.width),
@@ -1613,41 +1724,78 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           );
           const epsilonWorld = pxToWorld * 2.5; // smooth away pixel bumps
 
-          let hull: [number, number][] | null = null;
+          const [left, bottom, right, top] = bounds;
+          const dx = right - left;
+          const dy = bottom - top;
+          const w = mask.width;
+          const h = mask.height;
+
+          const loopEnclosesOnPixel = (worldLoop: Point2[]): boolean => {
+            if (worldLoop.length < 3 || !dx || !dy || !w || !h) return false;
+            const [cx, cy] = polygonCentroid(worldLoop);
+            const u = (cx - left) / dx;
+            const v = (cy - top) / dy;
+            if (!Number.isFinite(u) || !Number.isFinite(v)) return false;
+            const mx = Math.min(w - 1, Math.max(0, Math.floor(u * w)));
+            const my = Math.min(h - 1, Math.max(0, Math.floor(v * h)));
+            const idx = my * w + mx;
+            return mask.data[idx] !== 0;
+          };
+
+          let accHull: [number, number][] | null = null;
           for (const loop of loops) {
-            const worldLoop = loopScreenToWorld(loop, bounds, mask.width, mask.height);
+            const worldLoop = loopScreenToWorld(loop, bounds, w, h);
             const simplified = simplifyClosedPolygon(worldLoop, epsilonWorld);
             if (simplified.length < 4) continue;
-            const area = Math.abs(polygonArea(simplified));
-            if (area < (epsilonWorld * epsilonWorld) * 8) continue;
-            if (!hull) {
-              hull = simplified;
+            if (!loopEnclosesOnPixel(simplified)) continue;
+            if (!accHull) {
+              accHull = simplified;
             } else {
-              const union = polygonUnion(hull, simplified);
-              if (union && union.length >= 4) hull = union;
+              const union = polygonUnion(accHull, simplified);
+              if (union && union.length >= 4) accHull = union;
             }
           }
 
-          if (hull && hull.length >= 4) {
-            const annotation: PolygonAnnotation = {
-              id: `brush-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              type: "polygon",
-              polygon: hull,
-              style: {
-                fillColor: [0, 0, 0, 0],
-                lineColor: state.globalColor,
-                lineWidth: 3,
-              },
-              metadata: {
-                createdAt: new Date(),
-                label: `Untitled ${state.annotations.length + 1}`,
-              },
-            };
-            get().addAnnotation(annotation);
+          if (accHull && accHull.length >= 4) {
+            hull = accHull;
+          } else {
+            const fallback = maskToViewportPolygon(mask, bounds);
+            if (fallback && fallback.length >= 3) {
+              hull = fallback;
+            }
           }
         }
 
-        set({ brushMask: null, brushMaskVersion: 0 });
+        // Delegate polygon creation / editing logic to finalizeBrush so that all
+        // brush finalization paths share the same behavior.
+        get().finalizeBrush([], hull);
+
+        // Reset last screen coordinate for the next stroke.
+        set({ brushLastScreenCoord: null });
+      },
+
+      startBrushEdit: (annotationId: string, mode: "add" | "subtract") => {
+        set((state) => {
+          const newHiddenLayers = new Set(state.hiddenLayers);
+          if (newHiddenLayers.has(annotationId)) {
+            newHiddenLayers.delete(annotationId);
+          }
+
+          return {
+            activeTool: "brush",
+            brushEditTargetId: annotationId,
+            brushEditMode: mode,
+            hiddenLayers: newHiddenLayers,
+            selectedAnnotationId: annotationId,
+          };
+        });
+      },
+
+      stopBrushEdit: () => {
+        set({
+          brushEditTargetId: null,
+          brushEditMode: null,
+        });
       },
 
       setSelectedAnnotation: (annotationId: string | null) => {
@@ -1659,55 +1807,59 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         precomputedHull?: [number, number][],
       ) => {
         const state = get();
-        const { brushRadiusPx, viewportZoom, brushMask, imageWidth, imageHeight } = state;
-        if (strokePoints.length === 0) return;
+        const { brushRadiusPx, viewportZoom, brushMask, brushViewBounds, brushEditTargetId, brushEditMode, annotations, globalColor } =
+          state;
 
-        let overlayPolygon: [number, number][] | null = null;
+        const overlayPolygon = computeBrushPolygon(
+          strokePoints,
+          precomputedHull,
+          brushMask,
+          brushRadiusPx,
+          viewportZoom,
+          brushViewBounds,
+        );
 
-        // Prefer mask-based polygon if a brush mask exists
-        if (brushMask && imageWidth > 0 && imageHeight > 0) {
-          overlayPolygon = maskToPolygon(brushMask, imageWidth, imageHeight);
-        }
-
-        // Fallback to geometry-based union-of-circles if mask is unavailable or empty
         if (!overlayPolygon || overlayPolygon.length < 3) {
-          overlayPolygon =
-            precomputedHull && precomputedHull.length >= 3
-              ? precomputedHull
-              : buildBrushHull(strokePoints, brushRadiusPx, viewportZoom);
+          set({ brushMask: null, brushMaskVersion: 0 });
+          return;
         }
 
-        if (!overlayPolygon || overlayPolygon.length < 3) return;
+        if (brushEditTargetId && brushEditMode) {
+          const target = annotations.find((a) => a.id === brushEditTargetId);
+          if (target && target.type === "polygon") {
+            const basePolygon = target.polygon;
+            const nextPolygon =
+              brushEditMode === "add"
+                ? polygonUnion(basePolygon, overlayPolygon)
+                : polygonDifference(basePolygon, overlayPolygon);
 
-        // Debug: log final brush overlay polygon points for inspection
-        try {
-          // eslint-disable-next-line no-console
-          console.log(
-            "[brush] overlay polygon",
-            JSON.stringify(overlayPolygon),
-          );
-        } catch {
-          // ignore logging errors
+            if (nextPolygon && nextPolygon.length >= 3) {
+              get().updateAnnotation(brushEditTargetId, {
+                polygon: nextPolygon,
+              } as Partial<Annotation>);
+            }
+          }
+        } else {
+          const annotation: PolygonAnnotation = {
+            id: `brush-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: "polygon",
+            polygon: overlayPolygon,
+            style: {
+              fillColor: [0, 0, 0, 0],
+              lineColor: globalColor,
+              lineWidth: 3,
+            },
+            metadata: {
+              createdAt: new Date(),
+              label: `Untitled ${annotations.length + 1}`,
+            },
+          };
+          get().addAnnotation(annotation);
         }
 
-        const annotation: PolygonAnnotation = {
-          id: `brush-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          type: "polygon",
-          polygon: overlayPolygon,
-          style: {
-            fillColor: [0, 0, 0, 0], // Outline only: annotation is the outline of the shape
-            lineColor: state.globalColor,
-            lineWidth: 3,
-          },
-          metadata: {
-            createdAt: new Date(),
-            label: `Untitled ${state.annotations.length + 1}`,
-          },
-        };
-        get().addAnnotation(annotation);
         get().removeOverlayLayer("drawing-layer");
         // Clear mask after finalizing this brush annotation
-        set({ brushMask: null });
+        set({ brushMask: null, brushMaskVersion: 0 });
       },
 
       // New layer visibility actions

@@ -462,17 +462,20 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return layers;
   }, [dicomLayers, omeTiffLayers, overlayLayers, scaleBarLayer]);
 
-  const getScreenFromWorld = useCallback((worldX: number, worldY: number): [number, number] => {
-    const { viewState: vs, viewportSize: vp } = viewRef.current;
-    const zoom = typeof vs?.zoom === "number" ? vs.zoom : 0;
-    const target = (vs as { target?: number[] })?.target ?? [0, 0, 0];
-    const scale = 2 ** zoom;
-    return [
-      (worldX - target[0]) * scale + vp.width / 2,
-      // World y increases downward for images; screen y also increases downward.
-      (worldY - target[1]) * scale + vp.height / 2,
-    ];
-  }, []);
+  const getScreenFromWorld = useCallback(
+    (worldX: number, worldY: number): [number, number] => {
+      const { viewState: vs, viewportSize: vp } = viewRef.current;
+      const zoom = typeof vs?.zoom === "number" ? vs.zoom : 0;
+      const target = (vs as { target?: number[] })?.target ?? [0, 0, 0];
+      const scale = 2 ** zoom;
+      return [
+        (worldX - target[0]) * scale + vp.width / 2,
+        // World y increases downward for images; screen y also increases downward.
+        (worldY - target[1]) * scale + vp.height / 2,
+      ];
+    },
+    [],
+  );
 
   const dragHandlers = useMemo(
     () => createDragHandlers(activeTool, onOverlayInteraction, getScreenFromWorld),

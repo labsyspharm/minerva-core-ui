@@ -2,14 +2,15 @@ import * as React from "react";
 import { useOverlayStore } from "@/lib/stores";
 import type { Annotation } from "@/lib/stores";
 import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
-import RectangleIcon from "/icons/rectangle.svg?react";
-import EllipseIcon from "/icons/ellipse.svg?react";
-import PolylineIcon from "/icons/polyline.svg?react";
-import PolygonIcon from "/icons/polygon.svg?react";
-import LineIcon from "/icons/line.svg?react";
-import GroupIcon from "/icons/group.svg?react";
-import PointIcon from "/icons/point.svg?react";
-import TextIcon from "/icons/text.svg?react";
+import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
+import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
+import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
+import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
+import LineIcon from "@/components/shared/icons/line.svg?react";
+import GroupIcon from "@/components/shared/icons/group.svg?react";
+import PointIcon from "@/components/shared/icons/point.svg?react";
+import TextIcon from "@/components/shared/icons/text.svg?react";
+import BrushIcon from "@/components/shared/icons/brush.svg?react";
 import styles from "@/components/authoring/DrawingPanel.module.css";
 
 // Shared Text Edit Panel Component (same as in original LayersPanel)
@@ -201,6 +202,12 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const addAnnotationToGroup = useOverlayStore(
     (state) => state.addAnnotationToGroup,
   );
+  const brushEditTargetId = useOverlayStore(
+    (state) => state.brushEditTargetId,
+  );
+  const brushEditMode = useOverlayStore((state) => state.brushEditMode);
+  const startBrushEdit = useOverlayStore((state) => state.startBrushEdit);
+  const stopBrushEdit = useOverlayStore((state) => state.stopBrushEdit);
 
   // Local state for text editing
   const [editingTextId, setEditingTextId] = React.useState<string | null>(null);
@@ -455,9 +462,100 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const itemActions = (item: ListItem) => {
     if (item.metadata?.type === "annotation") {
       const annotation = item.metadata.annotation;
+      const isPolygon = annotation.type === "polygon";
+      const isBrushActive =
+        isPolygon &&
+        brushEditTargetId === annotation.id &&
+        brushEditMode === "add";
+      const isEraserActive =
+        isPolygon &&
+        brushEditTargetId === annotation.id &&
+        brushEditMode === "subtract";
 
       return (
         <div style={{ display: "flex", gap: "4px" }}>
+          {/* Brush add mode */}
+          {isPolygon && (
+            <button
+              type="button"
+              style={{
+                background: isBrushActive ? "#444" : "none",
+                border: "none",
+                color: "#ccc",
+                cursor: "pointer",
+                padding: "4px",
+                borderRadius: "3px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "all 0.2s ease",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+
+                // Ensure polygon is visible before editing
+                if (hiddenLayers.has(annotation.id)) {
+                  toggleLayerVisibility(annotation.id);
+                }
+
+                if (isBrushActive) {
+                  stopBrushEdit();
+                } else {
+                  startBrushEdit(annotation.id, "add");
+                }
+              }}
+              title="Brush add to polygon"
+            >
+              <BrushIcon style={{ width: "14px", height: "14px" }} />
+            </button>
+          )}
+
+          {/* Brush subtract (eraser) mode */}
+          {isPolygon && (
+            <button
+              type="button"
+              style={{
+                background: isEraserActive ? "#444" : "none",
+                border: "none",
+                color: "#ccc",
+                cursor: "pointer",
+                padding: "4px",
+                borderRadius: "3px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "all 0.2s ease",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+
+                // Ensure polygon is visible before editing
+                if (hiddenLayers.has(annotation.id)) {
+                  toggleLayerVisibility(annotation.id);
+                }
+
+                if (isEraserActive) {
+                  stopBrushEdit();
+                } else {
+                  startBrushEdit(annotation.id, "subtract");
+                }
+              }}
+              title="Brush subtract from polygon"
+            >
+              {/* Simple eraser glyph */}
+              <svg
+                aria-label="Eraser"
+                role="img"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M16.24 3.56a2 2 0 0 0-2.83 0L3.56 13.41a2 2 0 0 0 0 2.83L7.76 20.44a2 2 0 0 0 2.83 0l9.85-9.85a2 2 0 0 0 0-2.83L16.24 3.56zm-7.78 15.02-3.18-3.18L9.41 11l3.18 3.18-4.13 4.4zM14 18h6v2h-7.5L14 18z" />
+              </svg>
+            </button>
+          )}
+
           {/* Text Edit Button */}
           <button
             type="button"

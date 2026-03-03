@@ -22,7 +22,10 @@ type PickInfo = {
 };
 
 /** (worldX, worldY) -> [screenX, screenY] in canvas pixels; used for brush. */
-export type WorldToScreen = (worldX: number, worldY: number) => [number, number] | undefined;
+export type WorldToScreen = (
+  worldX: number,
+  worldY: number,
+) => [number, number] | undefined;
 
 export const createDragHandlers = (
   activeTool: string,
