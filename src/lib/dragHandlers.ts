@@ -17,7 +17,7 @@ type HasCoordinate = {
   x: number;
   y: number;
   z?: number;
-}
+};
 
 export const createDragHandlers = (
   activeTool: string,
@@ -35,10 +35,7 @@ export const createDragHandlers = (
   }
 
   // Helper to emit interaction if coordinate exists
-  const emit = (
-    type: InteractionType,
-    coordinate?: number[],
-  ) => {
+  const emit = (type: InteractionType, coordinate?: number[]) => {
     if (coordinate) {
       onInteraction(type, coordinate);
     }
@@ -49,7 +46,8 @@ export const createDragHandlers = (
     onClick: ({ coordinate }: HasCoordinate) => emit("click", coordinate),
 
     // Start of drag operation (used for rectangle, line, lasso freehand)
-    onDragStart: ({ coordinate }: HasCoordinate) => emit("dragStart", coordinate),
+    onDragStart: ({ coordinate }: HasCoordinate) =>
+      emit("dragStart", coordinate),
 
     // During drag operation (used for rectangle, line, lasso freehand)
     onDrag: ({ coordinate }: HasCoordinate) => emit("drag", coordinate),

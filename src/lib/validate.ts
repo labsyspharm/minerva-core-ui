@@ -1,7 +1,6 @@
-import { findDicomWeb } from "../lib/dicom";
-import { findFile } from "@/lib/filesystem";
-
 import type { ValidObj } from "@/components/shared/Upload";
+import { findFile } from "@/lib/filesystem";
+import { findDicomWeb } from "../lib/dicom";
 
 type FormOutDicom = {
   url: string;
@@ -25,8 +24,8 @@ type FormAnyOpts = ValidateIn<FormOutAny>;
 type FormDicomOpts = ValidateIn<FormOutDicom>;
 type FormOpts = FormAnyOpts | FormDicomOpts;
 type MaybeOpts = Partial<FormOpts>;
-type Validate<I> = (i: I) => Promise<ValidObj>
-type ToValid = (n: string[], k: string[]) => ValidObj
+type Validate<I> = (i: I) => Promise<ValidObj>;
+type ToValid = (n: string[], k: string[]) => ValidObj;
 export function isOpts(o: MaybeOpts) {
   if ("onStart" in o && typeof o.onStart === "function") {
     const h = FileSystemFileHandle;
@@ -111,9 +110,9 @@ const validateAny: Validate<FormAnyOpts> = async (opts) => {
           return [...out, k];
         case "path": {
           if (handles.length === 0) {
-            return out; 
+            return out;
           }
-          const handle = handles[0] // TODO
+          const handle = handles[0]; // TODO
           const found = await findFile({ handle });
           return found ? [...out, k] : out;
         }

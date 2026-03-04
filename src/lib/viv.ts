@@ -91,9 +91,7 @@ const toDefaultSettings = (n) => {
         ][c % 3] as Color;
       })
       .slice(0, n_sub),
-    contrastLimits: chan_range.map(
-      () => [0, 65535] as Limit
-    ).slice(0, n_sub),
+    contrastLimits: chan_range.map(() => [0, 65535] as Limit).slice(0, n_sub),
     channelsVisible: chan_range
       .map((n) => {
         return n < n_shown;

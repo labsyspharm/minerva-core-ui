@@ -1,35 +1,36 @@
+import type { FormEventHandler } from "react";
 import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import { author } from "@/minerva-author-ui/author";
-import { useState, useMemo, useEffect } from "react";
-import { loadDicomWeb, parseDicomWeb } from "@/lib/dicom";
+import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
+import { FileHandler } from "@/components/shared/FileHandler";
+import type { ValidObj } from "@/components/shared/Upload";
+import { Upload } from "@/components/shared/Upload";
+import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
+import type {
+  ConfigWaypoint,
+  ItemRegistryProps,
+  MutableFields,
+} from "@/lib/config";
 import {
-  mutableItemRegistry,
   extractChannels,
   extractDistributions,
+  mutableItemRegistry,
 } from "@/lib/config";
-import { hasFileSystemAccess, toLoader } from "@/lib/filesystem";
-import { isOpts, validate } from "@/lib/validate";
-import { Upload } from "@/components/shared/Upload";
-import { readConfig } from "@/lib/exhibit";
-import { Pool } from "@/lib/workers/Pool";
-import { useOverlayStore } from "@/lib/stores";
-import { FileHandler } from "@/components/shared/FileHandler";
-import {
-  ImageViewer
-} from "@/components/shared/viewer/ImageViewer";
-import { toSettings } from "@/lib/viv";
-import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
-
+import { loadDicomWeb, parseDicomWeb } from "@/lib/dicom";
 import type { DicomIndex, DicomLoader } from "@/lib/dicom-index";
-import type { ValidObj } from "@/components/shared/Upload";
-import type { FormEventHandler } from "react";
-import type { ItemRegistryProps } from "@/lib/config";
-import type { ConfigWaypoint } from "@/lib/config";
-import type { MutableFields } from "@/lib/config";
-import type { ExhibitConfig } from "@/lib/exhibit";
-import type { ConfigGroup } from "@/lib/exhibit";
-import type { Waypoint as WaypointType, } from "@/lib/exhibit";
+import type {
+  ConfigGroup,
+  ExhibitConfig,
+  Waypoint as WaypointType,
+} from "@/lib/exhibit";
+import { readConfig } from "@/lib/exhibit";
+import { hasFileSystemAccess, toLoader } from "@/lib/filesystem";
+import { useOverlayStore } from "@/lib/stores";
+import { isOpts, validate } from "@/lib/validate";
+import { toSettings } from "@/lib/viv";
+import { Pool } from "@/lib/workers/Pool";
+import { author } from "@/minerva-author-ui/author";
 
 type Props = {
   configWaypoints: ConfigWaypoint[];
@@ -396,7 +397,7 @@ const Content = (props: Props) => {
             "DICOM-WEB",
           ],
         ],
-        [] as Handle.File[]
+        [] as Handle.File[],
       );
     })();
   }, [props.demo_dicom_web]);
@@ -521,7 +522,7 @@ const Content = (props: Props) => {
         return {
           color,
           name: Name,
-          contrast: [LowerRange, UpperRange] as [ number, number ],
+          contrast: [LowerRange, UpperRange] as [number, number],
         };
       });
       return {
@@ -575,8 +576,8 @@ const Content = (props: Props) => {
   const viewerConfig = React.useMemo(() => {
     return {
       toSettings: toSettings({ Groups, SourceChannels }),
-    }
-  }, [ Groups, SourceChannels ])
+    };
+  }, [Groups, SourceChannels]);
 
   const imageProps = React.useMemo(() => {
     return {
@@ -587,7 +588,7 @@ const Content = (props: Props) => {
       marker_names: itemRegistryMarkerNames,
       groups: itemRegistryGroups,
       stories,
-      name
+      name,
     };
   }, [
     Groups,
@@ -597,7 +598,7 @@ const Content = (props: Props) => {
     itemRegistryMarkerNames,
     itemRegistryGroups,
     stories,
-    name
+    name,
   ]);
 
   // Use Zustand store for overlay state management

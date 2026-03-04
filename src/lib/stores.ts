@@ -1,13 +1,15 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { documentStore } from "./document-store";
+
 export type { ConfigGroup } from "./document-store";
-import type { DocumentStore } from "./document-store";
+
 import type {
   ConfigWaypoint,
   ConfigWaypointArrow,
   ConfigWaypointOverlay,
 } from "./config";
+import type { DocumentStore } from "./document-store";
 
 // Re-export config types for convenience
 export type {

@@ -11,16 +11,16 @@ type FileDirectory = {
   TileWidth: number;
   TileLength: number;
   BitsPerSample: number[];
-}
+};
 
 type MessageData = {
   jobId: number;
   fileDirectory: FileDirectory;
   buffer: ArrayBuffer;
-}
+};
 type Message = MessageEvent & {
   data: MessageData;
-}
+};
 
 worker.addEventListener("message", async (e: Message) => {
   const { jobId, fileDirectory, buffer } = e.data;

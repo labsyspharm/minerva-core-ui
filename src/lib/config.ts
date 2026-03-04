@@ -1,6 +1,6 @@
 import { getImageSize } from "@hms-dbmi/viv";
-import type { ConfigSourceChannel, ConfigGroup } from "./document-store";
 import type { DTYPE_VALUES } from "@vivjs/constants";
+import type { ConfigGroup, ConfigSourceChannel } from "./document-store";
 import type { ConfigGroup as LegacyConfigGroup } from "./exhibit";
 import type { Loader } from "./viv";
 
@@ -54,7 +54,7 @@ export type ItemRegistryProps = {
   SourceChannels: ConfigSourceChannel[];
   SourceDistributions: ConfigSourceDistribution[];
 };
-type SetItems = (user: Partial<ItemRegistryProps>) => void
+type SetItems = (user: Partial<ItemRegistryProps>) => void;
 
 type Dtype =
   | "Uint8"
@@ -88,7 +88,7 @@ type SelectionConfig = {
     z: number;
     c: number;
   };
-}
+};
 type TileConfig = SelectionConfig & {
   x: number;
   y: number;
@@ -97,21 +97,17 @@ export type LoaderPlane = {
   dtype: Dtype;
   shape: number[];
   tileSize: number;
-  labels: ([
-    ...("t"|"c"|"z"|"y"|"x"|"_c")[],
-    "y", "x", "_c"
-  ] | [
-    ...("t"|"c"|"z"|"y"|"x")[],
-    "y", "x"
-  ]);
+  labels:
+    | [...("t" | "c" | "z" | "y" | "x" | "_c")[], "y", "x", "_c"]
+    | [...("t" | "c" | "z" | "y" | "x")[], "y", "x"];
   onTileError: (e: Error) => void;
   getRaster: (s: SelectionConfig) => Promise<HasTile>;
   getTile: (s: TileConfig) => Promise<HasTile>;
 };
 export type VivLoaderPlane = LoaderPlane & {
-  labels: ["t","c","z","y","x"]
-}
-type ToTilePlane = (z: number, l: LoaderPlane[]) => LoaderPlane
+  labels: ["t", "c", "z", "y", "x"];
+};
+type ToTilePlane = (z: number, l: LoaderPlane[]) => LoaderPlane;
 type FullState = {
   indices: Index[];
   tileProps: TileProps;
@@ -119,19 +115,19 @@ type FullState = {
 type InitIn = {
   planes: LoaderPlane[];
 };
-type Initialize = (i: InitIn) => FullState
+type Initialize = (i: InitIn) => FullState;
 type BinIn = InitIn & {
   bits: number;
   index: Index;
 };
-type Bin = (i: BinIn) => Promise<number[]>
+type Bin = (i: BinIn) => Promise<number[]>;
 
 export type HasTile = {
   data: SupportedTypedArray;
   height: number;
   width: number;
 };
-type CaptureTile = (i: Index, planes: LoaderPlane[]) => Promise<HasTile>
+type CaptureTile = (i: Index, planes: LoaderPlane[]) => Promise<HasTile>;
 
 export type ConfigProps = {
   ItemRegistry: ItemRegistryProps;
@@ -139,20 +135,24 @@ export type ConfigProps = {
 };
 
 export type ConfigSourceDistribution = UUID & DistributionProperties;
-export type ConfigWaypoint = UUID & WaypointProperties & {
-  State: WaypointState;
-  Arrows?: ConfigWaypointArrow[];
-  Overlays?: ConfigWaypointOverlay[];
-};
+export type ConfigWaypoint = UUID &
+  WaypointProperties & {
+    State: WaypointState;
+    Arrows?: ConfigWaypointArrow[];
+    Overlays?: ConfigWaypointOverlay[];
+  };
 
-type ExtractDistributions = (loader: Loader) => Promise<Map<number, ConfigSourceDistribution>>
+type ExtractDistributions = (
+  loader: Loader,
+) => Promise<Map<number, ConfigSourceDistribution>>;
 type ExtractChannels = (
-    loader: Loader,
-    modality: string,
-    groups: LegacyConfigGroup[],) => {
-    SourceChannels: ConfigSourceChannel[];
-    Groups: ConfigGroup[];
-  }
+  loader: Loader,
+  modality: string,
+  groups: LegacyConfigGroup[],
+) => {
+  SourceChannels: ConfigSourceChannel[];
+  Groups: ConfigGroup[];
+};
 
 const hex_to_rgb = (c) => {
   const n = parseInt(c, 16);
@@ -208,7 +208,7 @@ const captureTile: CaptureTile = async (index, planes) => {
   const level = Math.abs(index.z);
   const z_plane = planes[level];
   const selection = { t: 0, z: 0, c: index.c };
-  const signal = (AbortSignal).timeout(10 * 1000);
+  const signal = AbortSignal.timeout(10 * 1000);
   const { x, y } = index;
   const tile = await z_plane.getTile({
     selection,
@@ -256,11 +256,7 @@ const toTileLayer = (planes: LoaderPlane[]): TileProps => {
   const { height, width } = getImageSize(plane);
   const extent: Four = [0, 0, width, height];
   const { tileSize, dtype } = plane;
-  const n_channels = plane.shape[
-    Math.max(
-      1, plane.labels.indexOf("c")
-    )
-  ]
+  const n_channels = plane.shape[Math.max(1, plane.labels.indexOf("c"))];
   const props = {
     id,
     dtype,
@@ -275,12 +271,10 @@ const toTileLayer = (planes: LoaderPlane[]): TileProps => {
 
 function hasVivLabels(plane): plane is VivLoaderPlane {
   const labels = plane.labels;
-  const labels_match = (
-    labels.includes("y") && labels.includes("x")
-  )
+  const labels_match = labels.includes("y") && labels.includes("x");
   if (!labels_match) {
     console.error(`
-      Channel labels ${labels.join(',')} must include y and x
+      Channel labels ${labels.join(",")} must include y and x
     `);
   }
   return labels_match;
@@ -289,9 +283,9 @@ function hasVivLabels(plane): plane is VivLoaderPlane {
 const initialize: Initialize = (inputs) => {
   const { planes } = inputs;
   const tileProps = toTileLayer(
-    planes.filter(plane => {
+    planes.filter((plane) => {
       return hasVivLabels(plane);
-    })
+    }),
   );
   const mz = Math.abs(tileProps.minZoom || 0);
   const channels = [...new Array(tileProps.channels).keys()];
@@ -514,9 +508,7 @@ const mutableConfigArray = (target_array, set_state) => {
     "fill",
     "copyWithin",
   ];
-  const namespaces = [
-    "State"
-  ];
+  const namespaces = ["State"];
   return new Proxy(target_array, {
     get(target, key, receiver) {
       const array = target;
@@ -535,8 +527,7 @@ const mutableConfigArray = (target_array, set_state) => {
       if (
         typeof key !== "string" ||
         typeof item !== "object" ||
-        Number.
-        isNaN(parseInt(key, 10))
+        Number.isNaN(parseInt(key, 10))
       ) {
         return item;
       }
@@ -559,17 +550,12 @@ const mutableItemRegistry = (
   fields: MutableFields,
 ) => {
   // Transform certain fields into mutable arrays
-  return fields.reduce(
-    (registry, field) => {
-      registry[field] = mutableConfigArray(
-        ItemRegistry[field], (updated) => {
-          setItems({ [field]: updated });
-        }
-      )
-      return registry;
-    },
-    ItemRegistry
-  );
+  return fields.reduce((registry, field) => {
+    registry[field] = mutableConfigArray(ItemRegistry[field], (updated) => {
+      setItems({ [field]: updated });
+    });
+    return registry;
+  }, ItemRegistry);
 };
 
 export { onlyUUID, extractDistributions, extractChannels, mutableItemRegistry };

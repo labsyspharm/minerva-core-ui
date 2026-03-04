@@ -1,13 +1,13 @@
-import * as React from "react";
 import {
-  PolygonLayer,
-  type TextLayer,
-  ScatterplotLayer,
   IconLayer,
+  PolygonLayer,
+  ScatterplotLayer,
+  type TextLayer,
 } from "@deck.gl/layers";
-import { useOverlayStore, ellipseToPolygon } from "@/lib/stores";
-import { useAnnotationLayers, ARROW_ICON_SIZE } from "@/lib/annotationLayers";
+import * as React from "react";
 import ArrowDrawingIconUrl from "@/components/shared/icons/arrow-annotation-drawing.svg?url";
+import { ARROW_ICON_SIZE, useAnnotationLayers } from "@/lib/annotationLayers";
+import { ellipseToPolygon, useOverlayStore } from "@/lib/stores";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {
@@ -166,9 +166,7 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
   );
 };
 
-export type CreatableLayer = (
-  PolygonLayer | TextLayer | null
-);
+export type CreatableLayer = PolygonLayer | TextLayer | null;
 
 interface DrawingOverlayProps {
   onLayerCreate: (layer: CreatableLayer) => void;

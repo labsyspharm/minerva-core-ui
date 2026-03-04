@@ -1,15 +1,15 @@
+import {
+  faLocationArrow as faArrow,
+  faChevronLeft as faHide,
+  faInfo,
+  faSearchMinus as faMinus,
+  faCrosshairs as faOverlay,
+  faSearchPlus as faPlus,
+  faBullseye as faPolygon,
+  faChevronRight as faShow,
+} from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
 import { Icon, RefIcon, WrapIcons } from "@/components/shared/common/Icon";
-import {
-  faChevronLeft as faHide,
-  faChevronRight as faShow,
-  faSearchMinus as faMinus,
-  faSearchPlus as faPlus,
-  faLocationArrow as faArrow,
-  faBullseye as faPolygon,
-  faCrosshairs as faOverlay,
-  faInfo,
-} from "@fortawesome/free-solid-svg-icons";
 
 export type WaypointToolbarProps = {
   onZoomInEl: (el: HTMLElement | null) => void;

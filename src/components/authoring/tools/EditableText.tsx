@@ -1,6 +1,6 @@
 import React from "react";
-import styled from "styled-components";
 import TextareaAutosize from "react-textarea-autosize";
+import styled from "styled-components";
 
 const parseEvent = (e) => e.target.value;
 

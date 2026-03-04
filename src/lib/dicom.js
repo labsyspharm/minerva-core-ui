@@ -1,9 +1,10 @@
-import { BitmapLayer } from "@deck.gl/layers";
 import { TileLayer } from "@deck.gl/geo-layers";
-import { DicomTIFFImage } from "./dicom-tiff-image";
-import { DicomPixelSource } from "./dicom-pixel-source";
-import * as dcmjs from "dcmjs";
+import { BitmapLayer } from "@deck.gl/layers";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
+import * as dcmjs from "dcmjs";
+import { DicomPixelSource } from "./dicom-pixel-source";
+import { DicomTIFFImage } from "./dicom-tiff-image";
+
 const { naturalizeDataset } = dcmjs.data.DicomMetaDictionary;
 
 function _groupFramesPerMapping(metadata) {

@@ -1,10 +1,10 @@
-
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import { useOverlayStore } from "@/lib/stores";
-import { useAnnotationLayers } from "@/lib/annotationLayers";
 //import { theme } from "@/theme.module.css";
 import styled from "styled-components";
+import { useAnnotationLayers } from "@/lib/annotationLayers";
+import { useOverlayStore } from "@/lib/stores";
+
 const _theme = {};
 
 // Types
@@ -12,14 +12,14 @@ import type { MouseEvent, ReactElement } from "react";
 import type { ConfigProps, ConfigWaypoint } from "@/lib/config";
 
 export type PresentationProps = {
-    children: ReactElement;
-    name: string;
-    config: ConfigProps;
-    hiddenChannel: boolean;
-    startExport: () => void;
-    controlPanelElement: string;
-    setHiddenChannel: (v: boolean) => void;
-  };
+  children: ReactElement;
+  name: string;
+  config: ConfigProps;
+  hiddenChannel: boolean;
+  startExport: () => void;
+  controlPanelElement: string;
+  setHiddenChannel: (v: boolean) => void;
+};
 
 const Wrap = styled.div`
   display: grid;
@@ -275,7 +275,7 @@ export const Presentation = (props: PresentationProps) => {
   const buttonHeight = 20;
   const toc_button = (
     <button
-    type="button"
+      type="button"
       className="table-of-contents"
       title="View table of contents"
       onMouseDown={(e) => {
@@ -384,8 +384,7 @@ export const Presentation = (props: PresentationProps) => {
   const last_story = activeStoryIndex === stories.length - 1;
   const main_title = props.name;
   const story = stories[activeStoryIndex];
-  const story_title =
-    story?.Name ?? `Waypoint ${activeStoryIndex + 1}`;
+  const story_title = story?.Name ?? `Waypoint ${activeStoryIndex + 1}`;
   const story_content = story?.Content;
 
   // Scroll waypoint content back to top when changing to a different waypoint.

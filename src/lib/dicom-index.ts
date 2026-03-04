@@ -1,5 +1,5 @@
-import type { Loader } from "./viv";
 import type { LoaderPlane } from "./config";
+import type { Loader } from "./viv";
 
 export interface DicomLoader extends Loader {
   data: LoaderPlane[];
