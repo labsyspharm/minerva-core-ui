@@ -1,22 +1,5 @@
 import { Pool as GeotiffPool } from "geotiff";
 
-function createWorker() {
-  return new Worker(new URL("./decoder.worker.ts", import.meta.url), {
-    type: "module",
-  });
-}
-
-async function defaultDecoderParameterFn(fileDirectory) {
-  // TODO -- using v2.0 fileDirectory
-  return {
-    tileWidth: fileDirectory.TileWidth,
-    tileHeight: fileDirectory.TileLength,
-    planarConfiguration: 1,
-    bitsPerSample: await fileDirectory.BitsPerSample,
-    predictor: 1
-  };
-}
-
 export declare class PoolClass {
     /**
      * @constructor
@@ -40,6 +23,12 @@ export declare class PoolClass {
 // each other and not the UI thread, which is the real benefit.
 const defaultPoolSize = globalThis?.navigator?.hardwareConcurrency ?? 4;
 
+function createWorker() {
+  return new Worker(new URL("./decoder.worker.ts", import.meta.url), {
+    type: "module",
+  });
+}
+
 class Pool extends GeotiffPool {
   workers: null 
   _awaitingDecoder: null;
@@ -50,10 +39,8 @@ class Pool extends GeotiffPool {
     super(numWorkers || defaultPoolSize, createWorker);
   }
 
-  async decode(fileDirectory, buffer) {
-    const compression = fileDirectory.Compression;
-    const params = await defaultDecoderParameterFn(fileDirectory);
-    return await this.bindParameters(compression, params).decode(buffer);
+  decode(fileDirectory, buffer) {
+    return super.decode(fileDirectory, buffer);
   }
 
   async destroy() {
