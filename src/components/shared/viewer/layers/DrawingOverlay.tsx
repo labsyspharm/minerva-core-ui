@@ -285,6 +285,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   // SAM2 magic wand
   const {
     runSegmentation,
+    warmup: warmupSam2,
     isProcessing: isSam2Processing,
     error: sam2Error,
   } = useSam2();
@@ -539,6 +540,14 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     // Clear the last processed interaction when tool changes
     lastProcessedInteractionRef.current = null;
   }, [activeTool]);
+
+  // Pre-load SAM2 model weights when magic wand tool is selected so that
+  // clicks only need to run encode/decode, not model initialization.
+  React.useEffect(() => {
+    if (activeTool === "magic_wand") {
+      void warmupSam2();
+    }
+  }, [activeTool, warmupSam2]);
 
   // Handle keyboard events for polyline finalization
   React.useEffect(() => {

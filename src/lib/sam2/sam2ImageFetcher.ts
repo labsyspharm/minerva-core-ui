@@ -29,8 +29,10 @@ export function createSam2ImageFetcher(
   if (!loader?.data?.length || !settings) return null;
   const plane = loader.data[0];
   const { tileSize } = plane;
-  const labels = plane.labels || [];
-  const shape = plane.shape || [];
+  // Widen the strongly-typed Viv label tuple to a plain string array so that
+  // standard array helpers like indexOf work without TS inferring `never`.
+  const labels: string[] = Array.from(plane.labels ?? []);
+  const shape: number[] = plane.shape ?? [];
   const xIdx = labels.indexOf("x") >= 0 ? labels.indexOf("x") : shape.length - 1;
   const yIdx = labels.indexOf("y") >= 0 ? labels.indexOf("y") : shape.length - 2;
   const levelW = shape[xIdx] ?? imageWidth;

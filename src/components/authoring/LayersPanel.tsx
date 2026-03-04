@@ -9,8 +9,10 @@ import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
 import LineIcon from "@/components/shared/icons/line.svg?react";
 import GroupIcon from "@/components/shared/icons/group.svg?react";
 import PointIcon from "@/components/shared/icons/point.svg?react";
+import EraserIcon from "@/components/shared/icons/eraser.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
-import BrushIcon from "@/components/shared/icons/brush.svg?react";
+import AddBrushIcon from "@/components/shared/icons/add-brush.svg?react";
+import AnnotationColorIcon from "@/components/shared/icons/annotation-color.svg?react";
 import styles from "@/components/authoring/DrawingPanel.module.css";
 
 // Shared Text Edit Panel Component (same as in original LayersPanel)
@@ -196,6 +198,9 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   );
   const createGroup = useOverlayStore((state) => state.createGroup);
   const deleteGroup = useOverlayStore((state) => state.deleteGroup);
+  const removeAnnotationFromGroup = useOverlayStore(
+    (state) => state.removeAnnotationFromGroup,
+  );
   const toggleGroupExpanded = useOverlayStore(
     (state) => state.toggleGroupExpanded,
   );
@@ -349,6 +354,10 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       group.annotationIds.includes(a.id),
     );
 
+    const groupIsHidden =
+      groupAnnotations.length > 0 &&
+      groupAnnotations.every((annotation) => hiddenLayers.has(annotation.id));
+
     const children: ListItem[] = groupAnnotations.map((annotation) => ({
       id: annotation.id,
       title: getLayerName(annotation),
@@ -363,6 +372,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       id: group.id,
       title: group.name,
       subtitle: `${groupAnnotations.length} annotations`,
+      isHidden: groupIsHidden,
       isExpanded: group.isExpanded,
       children,
       metadata: { group, type: "group" },
@@ -400,10 +410,23 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const handleToggleVisibility = (itemId: string) => {
     // Find if it's a group or annotation
     const group = annotationGroups.find((g) => g.id === itemId);
+
     if (group) {
-      // Toggle visibility for all annotations in the group
+      const allHidden =
+        group.annotationIds.length > 0 &&
+        group.annotationIds.every((annotationId) =>
+          hiddenLayers.has(annotationId),
+        );
+
       group.annotationIds.forEach((annotationId) => {
-        toggleLayerVisibility(annotationId);
+        const isHidden = hiddenLayers.has(annotationId);
+
+        // If any are visible, hide all; if all are hidden, show all.
+        if (allHidden && isHidden) {
+          toggleLayerVisibility(annotationId);
+        } else if (!allHidden && !isHidden) {
+          toggleLayerVisibility(annotationId);
+        }
       });
     } else {
       // Toggle visibility for individual annotation
@@ -450,9 +473,19 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     if (draggedAnnotationId && draggedAnnotationId !== targetId) {
       // Find if target is a group
       const targetGroup = annotationGroups.find((g) => g.id === targetId);
+
       if (targetGroup) {
-        // Add annotation to group
-        addAnnotationToGroup(targetId, draggedAnnotationId);
+        // First, remove the annotation from any groups it already belongs to
+        annotationGroups.forEach((group) => {
+          if (group.annotationIds.includes(draggedAnnotationId)) {
+            removeAnnotationFromGroup(group.id, draggedAnnotationId);
+          }
+        });
+
+        // Then add it to the target group if not already present
+        if (!targetGroup.annotationIds.includes(draggedAnnotationId)) {
+          addAnnotationToGroup(targetId, draggedAnnotationId);
+        }
       }
     }
     setDraggedAnnotationId(null);
@@ -506,7 +539,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
               }}
               title="Brush add to polygon"
             >
-              <BrushIcon style={{ width: "14px", height: "14px" }} />
+              <AddBrushIcon style={{ width: "14px", height: "14px" }} />
             </button>
           )}
 
@@ -542,17 +575,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
               }}
               title="Brush subtract from polygon"
             >
-              {/* Simple eraser glyph */}
-              <svg
-                aria-label="Eraser"
-                role="img"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M16.24 3.56a2 2 0 0 0-2.83 0L3.56 13.41a2 2 0 0 0 0 2.83L7.76 20.44a2 2 0 0 0 2.83 0l9.85-9.85a2 2 0 0 0 0-2.83L16.24 3.56zm-7.78 15.02-3.18-3.18L9.41 11l3.18 3.18-4.13 4.4zM14 18h6v2h-7.5L14 18z" />
-              </svg>
+              <EraserIcon style={{ width: "14px", height: "14px" }} />
             </button>
           )}
 
@@ -623,16 +646,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
               }}
               title="Change annotation color"
             >
-              <svg
-                aria-label="Change annotation color"
-                role="img"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
-              </svg>
+              <AnnotationColorIcon style={{ width: "14px", height: "14px" }} />
             </button>
           )}
         </div>
@@ -664,10 +678,10 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
           fontSize: "12px",
         }}
         onClick={() => createGroup()}
-        title="Create group"
+        title="Add group"
       >
         <GroupIcon style={{ width: "12px", height: "12px" }} />
-        Group
+        Add Group
       </button>
       {annotations.length > 0 && (
         <button

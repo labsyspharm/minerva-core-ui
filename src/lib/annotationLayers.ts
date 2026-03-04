@@ -38,6 +38,7 @@ export function createAllAnnotationLayers(
   hiddenLayers: Set<string>,
   hoveredAnnotationId: string | null,
   pickable: boolean = true,
+  brushEditTargetId: string | null = null,
 ): LayerType[] {
   const visibleAnnotations = annotations.filter(
     (annotation) => !hiddenLayers.has(annotation.id),
@@ -83,8 +84,19 @@ export function createAllAnnotationLayers(
     id: string;
   }> = [];
 
+  const brushEditOutlineData: Array<{
+    polygon: [number, number][];
+    lineColor: ColorRGBA;
+    lineWidth: number;
+    id: string;
+  }> = [];
+
   visibleAnnotations.forEach((annotation) => {
     const isHovered = hoveredAnnotationId === annotation.id;
+    const isBrushEditTarget =
+      brushEditTargetId != null &&
+      annotation.id === brushEditTargetId &&
+      annotation.type === "polygon";
 
     if (annotation.type === "text") {
       const fontColor = isHovered
@@ -233,6 +245,15 @@ export function createAllAnnotationLayers(
       id: annotation.id,
     });
 
+    if (isBrushEditTarget) {
+      brushEditOutlineData.push({
+        polygon: annotation.polygon,
+        lineColor: [255, 165, 0, 255],
+        lineWidth: Math.max(annotation.style.lineWidth, 3),
+        id: `${annotation.id}-brush-outline`,
+      });
+    }
+
     // Add label text if present
     if (annotation.text) {
       const polygon = annotation.polygon;
@@ -270,6 +291,28 @@ export function createAllAnnotationLayers(
         stroked: true,
         filled: true,
         pickable,
+      }),
+    );
+  }
+
+  // 1b. Brush-edit outline layer: orange outline for the polygon currently
+  // being edited with the brush add/remove tool. Rendered above base polygons.
+  if (brushEditOutlineData.length > 0) {
+    layers.push(
+      new PolygonLayer({
+        id: "annotation-brush-edit-outline",
+        data: brushEditOutlineData,
+        getPolygon: (d) => d.polygon,
+        getFillColor: [0, 0, 0, 0] as ColorRGBA,
+        getLineColor: (d) => d.lineColor,
+        getLineWidth: (d) => d.lineWidth,
+        lineWidthScale: 1,
+        lineWidthUnits: "pixels",
+        lineWidthMinPixels: 1,
+        lineWidthMaxPixels: 100,
+        stroked: true,
+        filled: false,
+        pickable: false,
       }),
     );
   }
@@ -378,6 +421,9 @@ export function useAnnotationLayers(pickable: boolean = true) {
   const hoveredAnnotationId = useOverlayStore(
     (state) => state.hoverState.hoveredAnnotationId,
   );
+  const brushEditTargetId = useOverlayStore(
+    (state) => state.brushEditTargetId,
+  );
 
   const annotationLayers = React.useMemo(() => {
     return createAllAnnotationLayers(
@@ -385,12 +431,14 @@ export function useAnnotationLayers(pickable: boolean = true) {
       hiddenLayers,
       hoveredAnnotationId,
       pickable,
+      brushEditTargetId,
     );
-  }, [annotations, hiddenLayers, hoveredAnnotationId, pickable]);
+  }, [annotations, hiddenLayers, hoveredAnnotationId, pickable, brushEditTargetId]);
 
   React.useEffect(() => {
     const consolidatedLayerIds = [
       "annotation-polygons",
+      "annotation-brush-edit-outline",
       "annotation-points",
       "annotation-texts",
       "annotation-arrows",

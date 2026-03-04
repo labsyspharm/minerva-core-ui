@@ -65,6 +65,15 @@ export const createDragHandlers = (
   return {
     onClick: (info: PickInfo) => {
       const coord = toCoord(info);
+      // For brush tool, treat a simple click as a single stamped stroke that
+      // immediately finalizes into a circular annotation.
+      if (coord && activeTool === "brush" && getScreenFromWorld) {
+        const screen = getScreenFromWorld(coord[0], coord[1]);
+        if (screen) {
+          store().brushPaintStart(screen);
+          store().brushPaintEnd();
+        }
+      }
       if (coord) emit("click", coord);
     },
 

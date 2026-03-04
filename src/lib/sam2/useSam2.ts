@@ -27,6 +27,8 @@ export function useSam2() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [isReady, setIsReady] = React.useState(false);
+  const readyRef = React.useRef(false);
   const resolveEncodeRef = React.useRef<(() => void) | null>(null);
   const resolveDecodeRef = React.useRef<
     ((result: { masks: { dims: readonly number[]; cpuData: Float32Array }; iou_predictions: Float32Array }) => void) | null
@@ -92,6 +94,9 @@ export function useSam2() {
   }, []);
 
   const ensureReady = React.useCallback((): Promise<void> => {
+    if (readyRef.current) {
+      return Promise.resolve();
+    }
     return new Promise((resolve, reject) => {
       const worker = workerRef.current;
       if (!worker) {
@@ -106,6 +111,8 @@ export function useSam2() {
         if (e.data.type === "pong" && e.data.success) {
           clearTimeout(timeout);
           worker.removeEventListener("message", handler);
+          readyRef.current = true;
+          setIsReady(true);
           resolve();
         }
         if (e.data.type === "error") {
@@ -118,6 +125,20 @@ export function useSam2() {
       worker.postMessage({ type: "ping" });
     });
   }, []);
+
+  const warmup = React.useCallback(async () => {
+    setError(null);
+    setIsLoading(true);
+    useOverlayStore.getState().setSam2Processing(true);
+    try {
+      await ensureReady();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "SAM2 load failed");
+    } finally {
+      setIsLoading(false);
+      useOverlayStore.getState().setSam2Processing(false);
+    }
+  }, [ensureReady]);
 
   const runSegmentation = React.useCallback(
     async (clickX: number, clickY: number): Promise<boolean> => {
@@ -254,6 +275,8 @@ export function useSam2() {
     isLoading,
     isProcessing,
     error,
+    isReady,
+    warmup,
     isAvailable: !!sam2ImageFetcher,
   };
 }

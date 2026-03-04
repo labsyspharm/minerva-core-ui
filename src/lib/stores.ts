@@ -190,6 +190,60 @@ function polygonCentroid(points: Point2[]): Point2 {
   return [cxAcc * factor, cyAcc * factor];
 }
 
+function pointInPolygon2(p: Point2, polygon: Point2[]): boolean {
+  const [px, py] = p;
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [xi, yi] = polygon[i];
+    const [xj, yj] = polygon[j];
+    const intersect =
+      yi > py !== yj > py &&
+      px < ((xj - xi) * (py - yi)) / (yj - yi || Number.EPSILON) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function polygonsOverlap(a: Point2[], b: Point2[]): boolean {
+  if (a.length === 0 || b.length === 0) return false;
+
+  // Quick reject: bounding boxes do not intersect
+  const bbox = (poly: Point2[]) => {
+    let minX = poly[0][0];
+    let maxX = poly[0][0];
+    let minY = poly[0][1];
+    let maxY = poly[0][1];
+    for (const [x, y] of poly) {
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+    return { minX, maxX, minY, maxY };
+  };
+
+  const ab = bbox(a);
+  const bb = bbox(b);
+  if (
+    ab.maxX < bb.minX ||
+    ab.minX > bb.maxX ||
+    ab.maxY < bb.minY ||
+    ab.minY > bb.maxY
+  ) {
+    return false;
+  }
+
+  // Check if any vertex of one polygon lies inside the other
+  for (const pt of a) {
+    if (pointInPolygon2(pt, b)) return true;
+  }
+  for (const pt of b) {
+    if (pointInPolygon2(pt, a)) return true;
+  }
+
+  return false;
+}
+
 type IKey = string; // "ix,iy" where ix/iy are integer coordinates in half-pixel grid (x*2, y*2)
 function ikey(ix: number, iy: number): IKey {
   return `${ix},${iy}`;
@@ -1830,10 +1884,21 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             const basePolygon = target.polygon;
             const nextPolygon =
               brushEditMode === "add"
-                ? polygonUnion(basePolygon, overlayPolygon)
+                ? (() => {
+                    // If the brush stroke does not touch the original polygon at
+                    // all, treat it as a no-op in add mode.
+                    const touches = polygonsOverlap(
+                      basePolygon as Point2[],
+                      overlayPolygon as Point2[],
+                    );
+                    if (!touches) {
+                      return basePolygon;
+                    }
+                    return polygonUnion(basePolygon, overlayPolygon);
+                  })()
                 : polygonDifference(basePolygon, overlayPolygon);
 
-            if (nextPolygon && nextPolygon.length >= 3) {
+            if (nextPolygon && nextPolygon.length >= 3 && nextPolygon !== basePolygon) {
               get().updateAnnotation(brushEditTargetId, {
                 polygon: nextPolygon,
               } as Partial<Annotation>);
