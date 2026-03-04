@@ -444,7 +444,7 @@ const Upload = (props: UploadProps) => {
   );
   if (handles.length === 0) {
     return (
-      <UploadDiv>
+      <UploadDiv slot="images">
         <FullWidthGrid>
           <Button onClick={toggleImageFormat} className="dicom-toggle">
             <span>⇄</span>
@@ -463,10 +463,10 @@ const Upload = (props: UploadProps) => {
     </TwoColumn>
   );
   return (
-    <>
+    <div slot="images">
       {updateSettings}
       <FormAny {...fullFormProps} />
-    </>
+    </div>
   );
 };
 

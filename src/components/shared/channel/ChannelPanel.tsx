@@ -92,7 +92,9 @@ const theme = {};
 
 export const ChannelPanel = (props: ChannelPanelProps) => {
   const hide = props.hiddenChannel;
-  const hidden = props.retrievingMetadata;
+  const hidden = (
+    props.retrievingMetadata || props.noLoader
+  );
   // Subscribe only to overlay state used by this panel so viewport/zoom updates don't re-render.
   const activeChannelGroupId = useOverlayStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useOverlayStore((s) => s.channelVisibilities);

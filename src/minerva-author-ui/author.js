@@ -31,7 +31,7 @@ const author = (options = {}) => {
     defaults: {
       notice: "",
       dialog: "",
-      tab: "GROUP-PANEL",
+      tab: "IMAGE-PANEL",
       selections: [],
     },
   });

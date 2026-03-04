@@ -1,4 +1,5 @@
 import panelGridCSS from "./panel-grid.module.css" with { type: "css" };
+import { PanelContentImage } from "./panel-content/panel-content-image";
 import { PanelContentOverlay } from "./panel-content/panel-content-overlay";
 import { PanelContentGroup } from "./panel-content/panel-content-group";
 import { PanelContentStory } from "./panel-content/panel-content-story";
@@ -47,6 +48,7 @@ class PanelGrid extends HTMLElement {
     const choose_content = (tab) => {
       return (
         {
+          "IMAGE-PANEL": PanelContentImage,
           "OVERLAY-PANEL": PanelContentOverlay,
           "STORY-PANEL": PanelContentStory,
           "GROUP-PANEL": PanelContentGroup,
@@ -58,6 +60,7 @@ class PanelGrid extends HTMLElement {
         defaults: { items: [] },
       });
       return toElement(panel)`
+        <slot slot="images" name="images"></slot>
         <slot slot="overlays" name="overlays"></slot>
         <slot slot="waypoints" name="waypoints"></slot>
       `({

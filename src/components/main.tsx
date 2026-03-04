@@ -794,23 +794,19 @@ const Content = (props: Props) => {
           onAllow,
           onRecall,
         };
-        const importer = !noLoader ? (
-          ""
-        ) : (
-          <Scrollable>
-            <Upload {...uploadProps} />
-          </Scrollable>
-        );
-
         // Update mainProps with actual handles
         const mainPropsWithHandle = {
           ...mainProps,
+          noLoader,
           handles,
         };
-
         // Actual image viewer
         const imager = noLoader ? (
-          ""
+          <Full>
+            <PlaybackRouter {...mainPropsWithHandle}>
+              <Upload {...uploadProps} />
+            </PlaybackRouter>
+          </Full>
         ) : (
           <Full>
             <PlaybackRouter {...mainPropsWithHandle}>
@@ -834,7 +830,6 @@ const Content = (props: Props) => {
         return (
           <Wrapper>
             {imager}
-            {importer}
           </Wrapper>
         );
       }}
