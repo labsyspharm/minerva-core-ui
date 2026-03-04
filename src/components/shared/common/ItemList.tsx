@@ -138,8 +138,9 @@ const ItemList = <T = React.Component>({
       .join(" ");
 
     return (
-      <button
-        type="button"
+      // biome-ignore lint/a11y/useSemanticElements: div needed to allow nested button children
+      <div
+        role="button"
         tabIndex={0}
         key={item.id}
         className={itemClasses}
@@ -151,6 +152,12 @@ const ItemList = <T = React.Component>({
         onDrop={(e) => handleDrop(item.id, e)}
         onClick={() => onItemClick?.(item)}
         onDoubleClick={() => onItemDoubleClick?.(item)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onItemClick?.(item);
+          }
+        }}
       >
         {/* Icon */}
         {item.icon && <div className={styles.icon}>{item.icon}</div>}
@@ -243,7 +250,7 @@ const ItemList = <T = React.Component>({
             </button>
           )}
         </div>
-      </button>
+      </div>
     );
   };
 

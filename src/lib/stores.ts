@@ -162,32 +162,13 @@ function simplifyClosedPolygon(pointsClosed: Point2[], epsilon: number): Point2[
   return [...cleaned, cleaned[0]];
 }
 
-function polygonCentroid(points: Point2[]): Point2 {
-  if (points.length === 0) return [0, 0];
-  let areaAcc = 0;
-  let cxAcc = 0;
-  let cyAcc = 0;
+function signedPolygonArea(points: Point2[]): number {
+  let area = 0;
   for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-    const [x0, y0] = points[j];
-    const [x1, y1] = points[i];
-    const cross = x0 * y1 - x1 * y0;
-    areaAcc += cross;
-    cxAcc += (x0 + x1) * cross;
-    cyAcc += (y0 + y1) * cross;
+    area += points[j][0] * points[i][1];
+    area -= points[i][0] * points[j][1];
   }
-  const area = areaAcc * 0.5;
-  if (!area || !Number.isFinite(area)) {
-    // Fallback: simple average of vertices
-    let sx = 0;
-    let sy = 0;
-    for (const [x, y] of points) {
-      sx += x;
-      sy += y;
-    }
-    return [sx / points.length, sy / points.length];
-  }
-  const factor = 1 / (6 * area);
-  return [cxAcc * factor, cyAcc * factor];
+  return area / 2;
 }
 
 function pointInPolygon2(p: Point2, polygon: Point2[]): boolean {
@@ -492,7 +473,7 @@ function maskToViewportPolygon(
     Math.abs(dx) / Math.max(1, w),
     Math.abs(dy) / Math.max(1, h),
   );
-  const epsilonWorld = pxToWorld * 2.5;
+  const epsilonWorld = pxToWorld * 1.0;
   const simplified = simplifyClosedPolygon(hull as Point2[], epsilonWorld);
 
   return simplified && simplified.length >= 3 ? simplified : hull;
@@ -1753,69 +1734,54 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
         let hull: [number, number][] | undefined;
         if (mask && bounds) {
-          // Log full bitmask snapshot for debugging / notebook visualization.
-          // This can be large, so it's primarily intended for manual copy/paste
-          // from the browser console into `brush_bitmap_debug.ipynb`.
-          try {
-            const { width, height, data } = mask;
-            const bitmapSnapshot = {
-              tag: "brush_bitmap_debug",
-              width,
-              height,
-              data: Array.from(data),
-              bounds,
-            };
-            // eslint-disable-next-line no-console
-            console.log(JSON.stringify(bitmapSnapshot));
-          } catch {
-            // ignore logging errors
-          }
-
           const loops = maskToLoops(mask);
-          const pxToWorld = Math.max(
-            Math.abs(bounds[2] - bounds[0]) / Math.max(1, mask.width),
-            Math.abs(bounds[1] - bounds[3]) / Math.max(1, mask.height),
-          );
-          const epsilonWorld = pxToWorld * 2.5; // smooth away pixel bumps
-
-          const [left, bottom, right, top] = bounds;
-          const dx = right - left;
-          const dy = bottom - top;
           const w = mask.width;
           const h = mask.height;
+          const pxToWorld = Math.max(
+            Math.abs(bounds[2] - bounds[0]) / Math.max(1, w),
+            Math.abs(bounds[1] - bounds[3]) / Math.max(1, h),
+          );
+          const epsilonWorld = pxToWorld * 1.0;
 
-          const loopEnclosesOnPixel = (worldLoop: Point2[]): boolean => {
-            if (worldLoop.length < 3 || !dx || !dy || !w || !h) return false;
-            const [cx, cy] = polygonCentroid(worldLoop);
-            const u = (cx - left) / dx;
-            const v = (cy - top) / dy;
-            if (!Number.isFinite(u) || !Number.isFinite(v)) return false;
-            const mx = Math.min(w - 1, Math.max(0, Math.floor(u * w)));
-            const my = Math.min(h - 1, Math.max(0, Math.floor(v * h)));
-            const idx = my * w + mx;
-            return mask.data[idx] !== 0;
-          };
-
-          let accHull: [number, number][] | null = null;
+          // Convert loops to world coords, simplify, and keep only outer
+          // boundaries (positive signed area). Inner hole loops have
+          // negative signed area and are discarded.
+          const outerLoops: Point2[][] = [];
           for (const loop of loops) {
             const worldLoop = loopScreenToWorld(loop, bounds, w, h);
             const simplified = simplifyClosedPolygon(worldLoop, epsilonWorld);
             if (simplified.length < 4) continue;
-            if (!loopEnclosesOnPixel(simplified)) continue;
-            if (!accHull) {
-              accHull = simplified;
-            } else {
-              const union = polygonUnion(accHull, simplified);
-              if (union && union.length >= 4) accHull = union;
+            const area = signedPolygonArea(simplified);
+            if (area > 0) {
+              outerLoops.push(simplified);
             }
           }
 
-          if (accHull && accHull.length >= 4) {
-            hull = accHull;
-          } else {
-            const fallback = maskToViewportPolygon(mask, bounds);
-            if (fallback && fallback.length >= 3) {
-              hull = fallback;
+          // If no outer loops matched with positive area, try negative
+          // (winding direction depends on coordinate system orientation).
+          if (outerLoops.length === 0) {
+            for (const loop of loops) {
+              const worldLoop = loopScreenToWorld(loop, bounds, w, h);
+              const simplified = simplifyClosedPolygon(worldLoop, epsilonWorld);
+              if (simplified.length < 4) continue;
+              const area = signedPolygonArea(simplified);
+              if (area < 0) {
+                outerLoops.push(simplified);
+              }
+            }
+          }
+
+          if (outerLoops.length === 1) {
+            hull = outerLoops[0] as [number, number][];
+          } else if (outerLoops.length > 1) {
+            // Union all outer boundary loops together.
+            let accHull: [number, number][] | null = outerLoops[0] as [number, number][];
+            for (let i = 1; i < outerLoops.length; i++) {
+              const union = polygonUnion(accHull, outerLoops[i] as [number, number][]);
+              if (union && union.length >= 4) accHull = union;
+            }
+            if (accHull && accHull.length >= 4) {
+              hull = accHull;
             }
           }
         }
