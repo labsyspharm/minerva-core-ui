@@ -22,23 +22,9 @@ type Message = MessageEvent & {
   data: MessageData;
 }
 
-async function defaultDecoderParameterFn(fileDirectory) {
-  // TODO -- using v2.0 fileDirectory
-  return {
-    tileWidth: fileDirectory.TileWidth,
-    tileHeight: fileDirectory.TileLength,
-    planarConfiguration: 1,
-    bitsPerSample: await fileDirectory.BitsPerSample,
-    predictor: 1
-  };
-}
-
 worker.addEventListener("message", async (e: Message) => {
   const { jobId, fileDirectory, buffer } = e.data;
-  const params = await defaultDecoderParameterFn(
-    fileDirectory
-  );
-  const decoder = await getDecoder(fileDirectory, params);
-  const decoded = await decoder.decode(buffer);
+  const decoder = await getDecoder(fileDirectory);
+  const decoded = await decoder.decode(fileDirectory, buffer);
   worker.postMessage({ decoded, jobId }, [decoded]);
 });

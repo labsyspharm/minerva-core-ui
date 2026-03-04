@@ -174,8 +174,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       geotiff:
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 2.1.4-beta.0
+        version: 2.1.4-beta.0
       gl-matrix:
         specifier: ^3.4.3
         version: 3.4.3
@@ -2290,8 +2290,8 @@ packages:
     resolution: {integrity: sha512-PT6uoF5a1+kbC3tHmZSUsLHBp2QJlHasxxxxPW47QIY1VBKpFB+FcDvX+MxER6UzgLQZ0xDzJ9s48B9JbOCTqA==}
     engines: {node: '>=10.19'}
 
-  geotiff@3.0.3:
-    resolution: {integrity: sha512-yRoDQDYxWYiB421p0cbxJvdy79OlQW+rxDI9GDbIUeWCAh6YAZ0vlTKF448EAiEuuUpBsNaegd2flavF0p+kvw==}
+  geotiff@2.1.4-beta.0:
+    resolution: {integrity: sha512-jb6SYvHMyiCqwqgGGLDAxtig9h1g6O+n1wEyNEE4QgVEXOItYaWrEgPg9SAnwdoZm2yx6DpFtilbGG65hvZgpQ==}
     engines: {node: '>=10.19'}
 
   get-caller-file@2.0.5:
@@ -6277,7 +6277,7 @@ snapshots:
       xml-utils: 1.10.2
       zstddec: 0.1.0
 
-  geotiff@3.0.3:
+  geotiff@2.1.4-beta.0:
     dependencies:
       '@petamoriken/float16': 3.9.2
       lerc: 3.0.0
