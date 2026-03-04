@@ -77,7 +77,7 @@
     "@vivjs/constants": "github:simonwarchol/viv#path:packages/constants",
     "dcmjs": "^0.41.0",
     "foobar-ipsum": "^1.0.3",
-    "geotiff": "3.0.3",
+    "geotiff": "2.1.4-beta.0",
     "gl-matrix": "^3.4.3",
     "idb-keyval": "^6.2.1",
     "lefthook": "^2.1.1",
