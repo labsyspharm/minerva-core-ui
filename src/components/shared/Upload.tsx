@@ -72,11 +72,12 @@ const _FullHeightText = styled.div`
   gap: 1em;
 `;
 const FullWidthGrid = styled.div`
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto auto;
+  margin-left: 1em;
   grid-column: 1 / -1;
   align-items: center;
   display: grid;
-  gap: 0.25em;
+  gap: 0.5em;
 `;
 
 const shadow_gray = "rgb(0 0 0 / 20%)";
@@ -410,7 +411,7 @@ const FormAny = (props: FullFormProps) => {
 
 const Upload = (props: UploadProps) => {
   const test_f = "default.ome.tif"; //TODO
-  const [imageFormat, setImageFormat] = useState("DICOM-WEB");
+  const [imageFormat, setImageFormat] = useState("");
   const [_in_f, _setInFile] = useState(test_f);
   const { formProps, handles, onAllow, onRecall } = props;
   const allowProps = {
@@ -423,33 +424,37 @@ const Upload = (props: UploadProps) => {
     variant: "primary",
     className: "mb-3",
   };
-  const toggleImageFormat = () => {
-    const newImageFormat = {
-      "OME-TIFF": "DICOM-WEB",
-      "DICOM-WEB": "OME-TIFF",
-    }[imageFormat];
-    setImageFormat(newImageFormat);
+  const selectDicomWebFormat = () => {
+    setImageFormat("DICOM-WEB");
   };
-  const useOME = imageFormat === "OME-TIFF";
-  const message = useOME
-    ? "Open a Local OME-TIFF Image"
-    : "Connect to a DICOMweb™ Proxy";
-  const possibleActions = useOME ? (
-    <>
-      <Button {...allowProps}>Select Image</Button>
-      <Button {...recallProps}>Use recent Image</Button>
-    </>
-  ) : (
-    <FormDicom {...formProps} />
-  );
+  const selectOmeTiffFormat = () => {
+    setImageFormat("OME-TIFF");
+    onAllow();
+  };
+  let possibleActions = "";
+  if (imageFormat === "OME-TIFF") {
+    possibleActions = (
+      <>
+        <Button {...allowProps}>Select Image</Button>
+        <Button {...recallProps}>Use recent Image</Button>
+      </>
+    );
+  }
+  if (imageFormat === "DICOM-WEB") {
+    possibleActions = <FormDicom {...formProps} />;
+  }
   if (handles.length === 0) {
     return (
       <UploadDiv slot="images">
         <FullWidthGrid>
-          <Button onClick={toggleImageFormat} className="dicom-toggle">
-            <span>⇄</span>
+          <Button onClick={selectDicomWebFormat} className="dicom-toggle">
+            <span>DicomWeb</span>
           </Button>
-          <div>{message}</div>
+          <div>{"Connect to a DICOMweb™ Proxy"}</div>
+          <Button onClick={selectOmeTiffFormat} className="dicom-toggle">
+            <span>OME-TIFF</span>
+          </Button>
+          <div>{"Open an OME-TIFF from a local file"}</div>
         </FullWidthGrid>
         {possibleActions}
       </UploadDiv>
@@ -458,8 +463,7 @@ const Upload = (props: UploadProps) => {
   const fullFormProps = { ...formProps, handles };
   const updateSettings = (
     <TwoColumn>
-      <Button {...allowProps}>Update Base Folder</Button>
-      <h4>Local OME-TIFF</h4>
+      <Button {...allowProps}>Update Image</Button>
     </TwoColumn>
   );
   return (
