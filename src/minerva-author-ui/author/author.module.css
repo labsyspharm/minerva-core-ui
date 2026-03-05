@@ -6,8 +6,9 @@
   overflow: hidden;
   max-height: 100dvh;
   position: absolute;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 30em 1fr;
   grid-template-rows: 100dvh auto;
+  transition: grid-template-columns 0.5s ease;
   > .grid {
     grid-column: 1;
     grid-row: 1;
@@ -17,9 +18,12 @@
     grid-row: 1 / -1;
   }
   ::slotted([slot="image"]) {
-    grid-column: 1 / -1;
+    grid-column: 2;
     grid-row: 1 / -1;
   }
+}
+.root.grid:has(> .panel:not([expanded="true"])) {
+  grid-template-columns: 3em 1fr;
 }
 .panel.inner {
   border-radius: var(--radius-inner-0010);
