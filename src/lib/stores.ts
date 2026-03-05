@@ -4,6 +4,7 @@ import { documentStore } from "./document-store";
 
 export type { ConfigGroup } from "./document-store";
 
+import type { OrthographicViewState } from "@deck.gl/core";
 import { buildBrushHull } from "./brushHull";
 import type {
   ConfigWaypoint,
@@ -12,6 +13,7 @@ import type {
 } from "./config";
 import type { DocumentStore } from "./document-store";
 import { polygonDifference, polygonUnion } from "./polygonClipping";
+import type { ViewportSize, ViewRect } from "./samViewport";
 
 // Re-export config types for convenience
 export type {
@@ -918,22 +920,16 @@ export interface OverlayStore {
   ) => void;
   removeWaypoint: (waypointId: string) => void;
 
-  // SAM2 magic wand: image fetcher for 1024x1024 crop (set by ImageViewer)
+  // SAM2 magic wand: image fetcher for visible viewport region (set by ImageViewer)
   sam2ImageFetcher:
-    | ((
-        cx: number,
-        cy: number,
-      ) => Promise<{
+    | ((viewRect: ViewRect) => Promise<{
         float32Array: Float32Array;
         shape: [number, number, number, number];
       }>)
     | null;
   setSam2ImageFetcher: (
     fetcher:
-      | ((
-          cx: number,
-          cy: number,
-        ) => Promise<{
+      | ((viewRect: ViewRect) => Promise<{
           float32Array: Float32Array;
           shape: [number, number, number, number];
         }>)
@@ -943,6 +939,11 @@ export interface OverlayStore {
   setSam2Processing: (v: boolean) => void;
   sam2DebugImages: { encoded: string; mask: string } | null;
   setSam2DebugImages: (v: { encoded: string; mask: string } | null) => void;
+  // SAM2: current viewer state for computing visible region at click time
+  sam2ViewState: OrthographicViewState | null;
+  setSam2ViewState: (vs: OrthographicViewState) => void;
+  sam2ViewportSize: ViewportSize | null;
+  setSam2ViewportSize: (size: ViewportSize) => void;
 
   // Channel group and channel actions
   setActiveChannelGroup: (channelGroupId: string) => void;
@@ -1086,6 +1087,8 @@ const overlayInitialState = {
   sam2ImageFetcher: null,
   sam2Processing: false,
   sam2DebugImages: null,
+  sam2ViewState: null,
+  sam2ViewportSize: null,
 };
 
 // Create the overlay store
@@ -2223,6 +2226,14 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       setSam2DebugImages: (v) => {
         set({ sam2DebugImages: v });
+      },
+
+      setSam2ViewState: (vs) => {
+        set({ sam2ViewState: vs });
+      },
+
+      setSam2ViewportSize: (size) => {
+        set({ sam2ViewportSize: size });
       },
 
       setChannelVisibilities: (vis: Record<string, boolean>) => {

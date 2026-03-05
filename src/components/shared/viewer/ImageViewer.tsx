@@ -267,6 +267,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // Register SAM2 image fetcher for magic wand (OME-TIFF only)
   const setSam2ImageFetcher = useOverlayStore((s) => s.setSam2ImageFetcher);
+  const setSam2ViewState = useOverlayStore((s) => s.setSam2ViewState);
+  const setSam2ViewportSize = useOverlayStore((s) => s.setSam2ViewportSize);
   useEffect(() => {
     if (
       loaderOmeTiff &&
@@ -300,6 +302,16 @@ export const ImageViewer = (props: ImageViewerProps) => {
     imageShape.y,
     setSam2ImageFetcher,
   ]);
+
+  // Keep SAM2 store in sync with current view so useSam2 can compute the
+  // visible region at click time without needing direct access to ImageViewer state.
+  useEffect(() => {
+    setSam2ViewState(viewState);
+  }, [viewState, setSam2ViewState]);
+
+  useEffect(() => {
+    setSam2ViewportSize(viewportSize);
+  }, [viewportSize, setSam2ViewportSize]);
 
   // Apply waypoint view state when target is set (from waypoint selection)
   useEffect(() => {

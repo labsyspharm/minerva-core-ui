@@ -282,13 +282,34 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   >(null);
   const [isLineClickMode, setIsLineClickMode] = React.useState(false);
 
-  // SAM2 magic wand
+  // SAM2 magic wand (session-based iterative refinement)
   const {
-    runSegmentation,
+    session: sam2Session,
+    startSession: sam2StartSession,
+    refineSession: sam2RefineSession,
+    confirmSession: sam2ConfirmSession,
+    cancelSession: sam2CancelSession,
     warmup: warmupSam2,
     isProcessing: isSam2Processing,
     error: sam2Error,
   } = useSam2();
+
+  // Track shift key for SAM2 negative-point clicks
+  const shiftKeyRef = React.useRef(false);
+  React.useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "Shift") shiftKeyRef.current = true;
+    };
+    const up = (e: KeyboardEvent) => {
+      if (e.key === "Shift") shiftKeyRef.current = false;
+    };
+    document.addEventListener("keydown", down);
+    document.addEventListener("keyup", up);
+    return () => {
+      document.removeEventListener("keydown", down);
+      document.removeEventListener("keyup", up);
+    };
+  }, []);
 
   // Local state for click-to-draw ellipse
   const [ellipseFirstClick, setEllipseFirstClick] = React.useState<
@@ -677,6 +698,29 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     };
   }, [activeTool, isPolygonClickMode, finalizeClickPolygon]);
 
+  // SAM2: cancel active session when switching away from magic_wand
+  React.useEffect(() => {
+    if (activeTool !== "magic_wand") {
+      sam2CancelSession();
+    }
+  }, [activeTool, sam2CancelSession]);
+
+  // SAM2: Enter confirms, Escape cancels the active session
+  React.useEffect(() => {
+    if (activeTool !== "magic_wand") return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Enter" || event.key === "Return") {
+        event.preventDefault();
+        sam2ConfirmSession();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        sam2CancelSession();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [activeTool, sam2ConfirmSession, sam2CancelSession]);
+
   // Simplified interaction handler for creation tools only
   React.useEffect(() => {
     if (!currentInteraction) return;
@@ -717,7 +761,12 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       }
     } else if (activeTool === "magic_wand") {
       if (type === "click" && !isSam2Processing) {
-        void runSegmentation(x, y);
+        if (!sam2Session) {
+          void sam2StartSession(x, y);
+        } else {
+          const label: 0 | 1 = shiftKeyRef.current ? 0 : 1;
+          void sam2RefineSession(x, y, label);
+        }
       }
     } else if (activeTool === "lasso") {
       if (type === "click") {
@@ -873,7 +922,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     finalizeLasso,
     finalizeCurrentPolyline,
     isSam2Processing,
-    runSegmentation,
+    sam2Session,
+    sam2StartSession,
+    sam2RefineSession,
   ]);
 
   // Handle text input submission
@@ -1128,6 +1179,53 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     });
   }, [activeTool, currentInteraction, brushRadiusPx, viewportZoom]);
 
+  // SAM2 session preview: mask polygon overlay
+  const sam2PreviewLayer = React.useMemo(() => {
+    if (!sam2Session || sam2Session.previewPolygon.length < 3) return null;
+    return new PolygonLayer({
+      id: "sam2-preview-polygon",
+      data: [{ polygon: sam2Session.previewPolygon }],
+      getPolygon: (d: { polygon: [number, number][] }) => d.polygon,
+      getFillColor: [66, 133, 244, 80],
+      getLineColor: [66, 133, 244, 255],
+      getLineWidth: 2,
+      lineWidthMinPixels: 2,
+      lineWidthMaxPixels: 2,
+      stroked: true,
+      filled: true,
+      pickable: false,
+    });
+  }, [sam2Session]);
+
+  // SAM2 session preview: prompt point markers (green = positive, red = negative)
+  const sam2PointsLayer = React.useMemo(() => {
+    if (!sam2Session || sam2Session.points.length === 0) return null;
+    return new ScatterplotLayer({
+      id: "sam2-preview-points",
+      data: sam2Session.points.map((p) => ({
+        position: [p.x, p.y, 0] as [number, number, number],
+        color: (p.label === 1 ? [0, 200, 0, 255] : [255, 50, 50, 255]) as [
+          number,
+          number,
+          number,
+          number,
+        ],
+      })),
+      getPosition: (d: { position: [number, number, number] }) => d.position,
+      getRadius: 6,
+      radiusMinPixels: 6,
+      radiusMaxPixels: 6,
+      getFillColor: (d: { color: [number, number, number, number] }) => d.color,
+      getLineColor: [255, 255, 255, 255],
+      getLineWidth: 2,
+      lineWidthMinPixels: 2,
+      lineWidthMaxPixels: 2,
+      stroked: true,
+      filled: true,
+      pickable: false,
+    });
+  }, [sam2Session]);
+
   // Brush mask layer: canvas-aligned; bounds = visible world rect (works when zoomed out, canvas > image)
   const brushMaskLayer = React.useMemo(() => {
     if (activeTool !== "brush" || !brushMask || !brushViewBounds) return null;
@@ -1286,6 +1384,26 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     };
   }, [brushMaskLayer]);
 
+  // Add/remove SAM2 preview polygon layer
+  React.useEffect(() => {
+    if (sam2PreviewLayer) {
+      useOverlayStore.getState().addOverlayLayer(sam2PreviewLayer);
+    }
+    return () => {
+      useOverlayStore.getState().removeOverlayLayer("sam2-preview-polygon");
+    };
+  }, [sam2PreviewLayer]);
+
+  // Add/remove SAM2 prompt point markers
+  React.useEffect(() => {
+    if (sam2PointsLayer) {
+      useOverlayStore.getState().addOverlayLayer(sam2PointsLayer);
+    }
+    return () => {
+      useOverlayStore.getState().removeOverlayLayer("sam2-preview-points");
+    };
+  }, [sam2PointsLayer]);
+
   // Add/remove arrow preview layer so it shows and updates as mouse moves
   React.useEffect(() => {
     if (arrowPreviewLayer) {
@@ -1313,7 +1431,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   return (
     <>
       {/* SAM2 error toast */}
-      {sam2Error && activeTool === "magic_wand" && (
+      {sam2Error && activeTool === "magic_wand" && !sam2Session && (
         <div
           style={{
             position: "fixed",
@@ -1330,6 +1448,46 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
           }}
         >
           {sam2Error}
+        </div>
+      )}
+
+      {/* SAM2 session hint bar */}
+      {sam2Session && activeTool === "magic_wand" && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 16,
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "rgba(30,30,30,0.9)",
+            color: "#ddd",
+            padding: "8px 20px",
+            borderRadius: 8,
+            fontSize: 13,
+            zIndex: 1000,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+            display: "flex",
+            gap: 16,
+            alignItems: "center",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span>
+            <strong style={{ color: "#4caf50" }}>Click</strong> to add
+          </span>
+          <span>
+            <strong style={{ color: "#ef5350" }}>Shift+Click</strong> to remove
+          </span>
+          <span>
+            <strong style={{ color: "#90caf9" }}>Enter</strong> to confirm
+          </span>
+          <span>
+            <strong style={{ color: "#999" }}>Esc</strong> to cancel
+          </span>
+          <span style={{ color: "#888", fontSize: 12 }}>
+            ({sam2Session.points.length} point
+            {sam2Session.points.length !== 1 ? "s" : ""})
+          </span>
         </div>
       )}
 
