@@ -10,19 +10,18 @@ import styled from "styled-components";
 
 import "@deck.gl/widgets/stylesheet.css";
 
+import type { Layer } from "@deck.gl/core";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import { createTileLayers, loadDicom } from "@/lib/dicom";
 import type { DicomIndex } from "@/lib/dicom-index";
 import { createDragHandlers } from "@/lib/dragHandlers";
 import type { Story } from "@/lib/exhibit";
-import type { Layer } from "@deck.gl/core";
+import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
+import type { ConfigGroup, OverlayLayer } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
-import type { ConfigGroup } from "@/lib/stores";
-import type { OverlayLayer } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
 import type { Config, Loader } from "@/lib/viv";
 import { convertWaypointToViewState } from "@/lib/waypoint";
-import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 
 type ItemRegistryChannel = {
   name: string;
@@ -71,7 +70,7 @@ const toSettingsInternal = (
   groups,
   activeChannelGroupId,
   channelVisibilities,
-  toSettings 
+  toSettings,
 ) => {
   // Gets the default settings
   if (loader === null || !groups) {
@@ -84,8 +83,6 @@ const toSettingsInternal = (
     channelVisibilities,
   );
 };
-
-
 
 export const ImageViewer = (props: ImageViewerProps) => {
   const windowSize = useWindowSize();
@@ -100,7 +97,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
     onOverlayInteraction,
     viewerConfig,
   } = props;
-  const { activeChannelGroupId, channelVisibilities, sam2Processing } = useOverlayStore();
+  const { activeChannelGroupId, channelVisibilities, sam2Processing } =
+    useOverlayStore();
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [_canvas, _setCanvas] = useState(null);
   const rootRef = useRef<HTMLElement | null>(null);
@@ -136,9 +134,15 @@ export const ImageViewer = (props: ImageViewerProps) => {
       groups,
       activeChannelGroupId,
       channelVisibilities,
-      viewerConfig.toSettings
+      viewerConfig.toSettings,
     );
-  }, [loaderOmeTiff, groups, activeChannelGroupId, channelVisibilities, viewerConfig.toSettings]);
+  }, [
+    loaderOmeTiff,
+    groups,
+    activeChannelGroupId,
+    channelVisibilities,
+    viewerConfig.toSettings,
+  ]);
 
   const mainSettingsDicomList = useMemo(() => {
     return dicomIndexList.map((dicomIndex) => {
@@ -149,10 +153,16 @@ export const ImageViewer = (props: ImageViewerProps) => {
         groups,
         activeChannelGroupId,
         channelVisibilities,
-        viewerConfig.toSettings
+        viewerConfig.toSettings,
       );
     });
-  }, [dicomIndexList, groups, activeChannelGroupId, channelVisibilities, viewerConfig.toSettings]);
+  }, [
+    dicomIndexList,
+    groups,
+    activeChannelGroupId,
+    channelVisibilities,
+    viewerConfig.toSettings,
+  ]);
 
   // Show only ome-tiff if available
   const mainSettingsList = useMemo(
@@ -422,14 +432,32 @@ export const ImageViewer = (props: ImageViewerProps) => {
     // Get physical size from loader metadata if available
     const physicalSize = firstLoader.metadata?.Pixels?.PhysicalSizeX;
     const unit = firstLoader.metadata?.Pixels?.PhysicalSizeXUnit || "µm";
-    const units = new Set([
-      "Y", "Z", "E", "P", "T", "G", "M", "k", "h", "da", "",
-      "d", "c", "m", "µ", "n", "p", "f", "a", "z", "y"
-    ].map(
-      prefix => `${prefix}m`
-    ));
-    if (!units.has(unit))
-      return null;
+    const units = new Set(
+      [
+        "Y",
+        "Z",
+        "E",
+        "P",
+        "T",
+        "G",
+        "M",
+        "k",
+        "h",
+        "da",
+        "",
+        "d",
+        "c",
+        "m",
+        "µ",
+        "n",
+        "p",
+        "f",
+        "a",
+        "z",
+        "y",
+      ].map((prefix) => `${prefix}m`),
+    );
+    if (!units.has(unit)) return null;
     if (!physicalSize || viewportSize.width <= 0 || viewportSize.height <= 0)
       return null;
 
@@ -478,7 +506,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
   );
 
   const dragHandlers = useMemo(
-    () => createDragHandlers(activeTool, onOverlayInteraction, getScreenFromWorld),
+    () =>
+      createDragHandlers(activeTool, onOverlayInteraction, getScreenFromWorld),
     [activeTool, onOverlayInteraction, getScreenFromWorld],
   );
 
@@ -518,10 +547,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   // When move tool is active and hovering over an annotation, disable pan so drag moves the annotation
   const controllerConfig = useMemo(
     () => ({
-      dragPan:
-        activeTool === "move" &&
-        !isDragging &&
-        !hoveredAnnotationId,
+      dragPan: activeTool === "move" && !isDragging && !hoveredAnnotationId,
       dragRotate: false,
       scrollZoom: true,
       doubleClickZoom: true,
@@ -548,7 +574,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
       // Update viewport zoom in store (view state is keyed by view id "ortho")
       const zoom =
         nextViewState?.ortho?.zoom ??
-        (typeof nextViewState?.zoom === "number" ? nextViewState.zoom : undefined);
+        (typeof nextViewState?.zoom === "number"
+          ? nextViewState.zoom
+          : undefined);
       if (typeof zoom === "number") setViewportZoom(zoom);
     },
     [isDragging, activeTool, setViewportZoom],

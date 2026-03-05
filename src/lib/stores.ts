@@ -1,15 +1,17 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { documentStore } from "./document-store";
+
 export type { ConfigGroup } from "./document-store";
-import type { DocumentStore } from "./document-store";
+
+import { buildBrushHull } from "./brushHull";
 import type {
   ConfigWaypoint,
   ConfigWaypointArrow,
   ConfigWaypointOverlay,
 } from "./config";
-import { buildBrushHull } from "./brushHull";
-import { polygonUnion, polygonDifference } from "./polygonClipping";
+import type { DocumentStore } from "./document-store";
+import { polygonDifference, polygonUnion } from "./polygonClipping";
 
 // Re-export config types for convenience
 export type {
@@ -38,7 +40,12 @@ function ensureBrushMaskViewport(
   viewportHeight: number,
   existing: BrushMask | null,
 ): BrushMask {
-  if (existing && existing.width === viewportWidth && existing.height === viewportHeight) return existing;
+  if (
+    existing &&
+    existing.width === viewportWidth &&
+    existing.height === viewportHeight
+  )
+    return existing;
   const w = Math.max(1, Math.round(viewportWidth));
   const h = Math.max(1, Math.round(viewportHeight));
   return { width: w, height: h, data: new Uint8Array(w * h) };
@@ -82,7 +89,8 @@ function pointToSegmentDistance(p: Point2, a: Point2, b: Point2): number {
   const apx = px - ax;
   const apy = py - ay;
   const denom = abx * abx + aby * aby;
-  const t = denom === 0 ? 0 : Math.max(0, Math.min(1, (apx * abx + apy * aby) / denom));
+  const t =
+    denom === 0 ? 0 : Math.max(0, Math.min(1, (apx * abx + apy * aby) / denom));
   const cx = ax + t * abx;
   const cy = ay + t * aby;
   return Math.hypot(px - cx, py - cy);
@@ -107,7 +115,10 @@ function simplifyRdpOpen(points: Point2[], epsilon: number): Point2[] {
   return [...left.slice(0, -1), ...right];
 }
 
-function simplifyClosedPolygon(pointsClosed: Point2[], epsilon: number): Point2[] {
+function simplifyClosedPolygon(
+  pointsClosed: Point2[],
+  epsilon: number,
+): Point2[] {
   if (pointsClosed.length < 4) return pointsClosed;
   const pts =
     pointsClosed[0][0] === pointsClosed[pointsClosed.length - 1][0] &&
@@ -155,7 +166,8 @@ function simplifyClosedPolygon(pointsClosed: Point2[], epsilon: number): Point2[
   const cleaned: Point2[] = [];
   for (const p of combined) {
     const last = cleaned[cleaned.length - 1];
-    if (!last || Math.hypot(p[0] - last[0], p[1] - last[1]) > epsilon * 0.25) cleaned.push(p);
+    if (!last || Math.hypot(p[0] - last[0], p[1] - last[1]) > epsilon * 0.25)
+      cleaned.push(p);
   }
 
   if (cleaned.length < 3) return pointsClosed;
@@ -388,7 +400,10 @@ function maskToLoops(mask: BrushMask): Point2[][] {
         if (loopKeys.length > (w + h) * 8) break;
       }
 
-      if (loopKeys.length >= 6 && loopKeys[0] === loopKeys[loopKeys.length - 1]) {
+      if (
+        loopKeys.length >= 6 &&
+        loopKeys[0] === loopKeys[loopKeys.length - 1]
+      ) {
         loops.push(loopKeys.map(parseIKey));
       }
     }
@@ -406,7 +421,10 @@ function loopScreenToWorld(
   const [left, bottom, right, top] = bounds;
   const dx = right - left;
   const dy = bottom - top; // y-down world; bottom > top
-  return loop.map(([x, y]) => [left + (x / maskWidth) * dx, top + (y / maskHeight) * dy]);
+  return loop.map(([x, y]) => [
+    left + (x / maskWidth) * dx,
+    top + (y / maskHeight) * dy,
+  ]);
 }
 
 function maskToViewportPolygon(
@@ -901,14 +919,26 @@ export interface OverlayStore {
   removeWaypoint: (waypointId: string) => void;
 
   // SAM2 magic wand: image fetcher for 1024x1024 crop (set by ImageViewer)
-  sam2ImageFetcher: ((cx: number, cy: number) => Promise<{
-    float32Array: Float32Array;
-    shape: [number, number, number, number];
-  }>) | null;
-  setSam2ImageFetcher: (fetcher: ((cx: number, cy: number) => Promise<{
-    float32Array: Float32Array;
-    shape: [number, number, number, number];
-  }>) | null) => void;
+  sam2ImageFetcher:
+    | ((
+        cx: number,
+        cy: number,
+      ) => Promise<{
+        float32Array: Float32Array;
+        shape: [number, number, number, number];
+      }>)
+    | null;
+  setSam2ImageFetcher: (
+    fetcher:
+      | ((
+          cx: number,
+          cy: number,
+        ) => Promise<{
+          float32Array: Float32Array;
+          shape: [number, number, number, number];
+        }>)
+      | null,
+  ) => void;
   sam2Processing: boolean;
   setSam2Processing: (v: boolean) => void;
   sam2DebugImages: { encoded: string; mask: string } | null;
@@ -925,7 +955,7 @@ export interface OverlayStore {
 
   finalizeEllipse: () => void; // Convert current drawing to ellipse annotation
   finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
-      finalizeLine: (hasArrowHead?: boolean) => void; // Convert current drawing to line annotation
+  finalizeLine: (hasArrowHead?: boolean) => void; // Convert current drawing to line annotation
   finalizePolyline: (points: [number, number][]) => void; // Convert polyline points to polyline annotation
   createTextAnnotation: (
     position: [number, number],
@@ -948,7 +978,11 @@ export interface OverlayStore {
   setViewportZoom: (zoom: number) => void; // Set viewport zoom for line width scaling
   setBrushRadiusPx: (radius: number) => void;
   setBrushMaskResolution: (res: number) => void;
-  setBrushViewport: (width: number, height: number, bounds: [number, number, number, number] | null) => void;
+  setBrushViewport: (
+    width: number,
+    height: number,
+    bounds: [number, number, number, number] | null,
+  ) => void;
   clearBrushMask: () => void;
   brushPaintStart: (screenCoord: [number, number]) => void;
   brushPaint: (screenCoord: [number, number]) => void;
@@ -1027,12 +1061,12 @@ const overlayInitialState = {
   globalColor: [255, 255, 255, 255], // New: default white color
   viewportZoom: 0, // Default zoom level
   brushRadiusPx: 30,
-   brushMask: null as BrushMask | null,
-   brushMaskVersion: 0,
-   brushMaskMaxResolution: 1024,
-   brushViewportWidth: 0,
-   brushViewportHeight: 0,
-   brushViewBounds: null as [number, number, number, number] | null,
+  brushMask: null as BrushMask | null,
+  brushMaskVersion: 0,
+  brushMaskMaxResolution: 1024,
+  brushViewportWidth: 0,
+  brushViewportHeight: 0,
+  brushViewBounds: null as [number, number, number, number] | null,
   brushLastScreenCoord: null as [number, number] | null,
   selectedAnnotationId: null as string | null,
   brushEditTargetId: null as string | null,
@@ -1235,7 +1269,10 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
                 } else if (activeTool === "ellipse") {
                   setTimeout(() => get().finalizeEllipse(), 0);
                 } else if (activeTool === "arrow" || activeTool === "line") {
-                  setTimeout(() => get().finalizeLine(activeTool === "arrow"), 0);
+                  setTimeout(
+                    () => get().finalizeLine(activeTool === "arrow"),
+                    0,
+                  );
                 }
               }
               break;
@@ -1261,7 +1298,10 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
           const clearingBrushEdit =
             state.brushEditTargetId === annotationId
-              ? { brushEditTargetId: null as string | null, brushEditMode: null as "add" | "subtract" | null }
+              ? {
+                  brushEditTargetId: null as string | null,
+                  brushEditMode: null as "add" | "subtract" | null,
+                }
               : {};
 
           return {
@@ -1645,8 +1685,16 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         set({ brushMaskMaxResolution: Math.max(1, Math.floor(res)) });
       },
 
-      setBrushViewport: (width: number, height: number, bounds: [number, number, number, number] | null) => {
-        set({ brushViewportWidth: width, brushViewportHeight: height, brushViewBounds: bounds });
+      setBrushViewport: (
+        width: number,
+        height: number,
+        bounds: [number, number, number, number] | null,
+      ) => {
+        set({
+          brushViewportWidth: width,
+          brushViewportHeight: height,
+          brushViewBounds: bounds,
+        });
       },
 
       clearBrushMask: () => {
@@ -1655,10 +1703,25 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       brushPaintStart: (screenCoord: [number, number]) => {
         const state = get();
-        const { brushViewportWidth, brushViewportHeight, brushRadiusPx } = state;
-        if (brushViewportWidth <= 0 || brushViewportHeight <= 0 || brushRadiusPx <= 0) return;
-        const mask = ensureBrushMaskViewport(brushViewportWidth, brushViewportHeight, null);
-        paintCircleOnMaskScreen(mask, screenCoord[0], screenCoord[1], brushRadiusPx);
+        const { brushViewportWidth, brushViewportHeight, brushRadiusPx } =
+          state;
+        if (
+          brushViewportWidth <= 0 ||
+          brushViewportHeight <= 0 ||
+          brushRadiusPx <= 0
+        )
+          return;
+        const mask = ensureBrushMaskViewport(
+          brushViewportWidth,
+          brushViewportHeight,
+          null,
+        );
+        paintCircleOnMaskScreen(
+          mask,
+          screenCoord[0],
+          screenCoord[1],
+          brushRadiusPx,
+        );
         set({
           brushMask: mask,
           brushMaskVersion: 1,
@@ -1677,12 +1740,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
         if (!last) {
           // No previous point: just stamp once and record this coord.
-          paintCircleOnMaskScreen(
-            mask,
-            x2,
-            y2,
-            brushRadiusPx,
-          );
+          paintCircleOnMaskScreen(mask, x2, y2, brushRadiusPx);
           set({
             brushMask: { ...mask },
             brushMaskVersion: state.brushMaskVersion + 1,
@@ -1697,12 +1755,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         const dist = Math.hypot(dx, dy);
 
         if (dist === 0) {
-          paintCircleOnMaskScreen(
-            mask,
-            x2,
-            y2,
-            brushRadiusPx,
-          );
+          paintCircleOnMaskScreen(mask, x2, y2, brushRadiusPx);
         } else {
           // Step at most half a brush radius in screen space to avoid gaps.
           const step = Math.max(1, brushRadiusPx * 0.5);
@@ -1711,12 +1764,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             const t = i / steps;
             const sx = x1 + dx * t;
             const sy = y1 + dy * t;
-            paintCircleOnMaskScreen(
-              mask,
-              sx,
-              sy,
-              brushRadiusPx,
-            );
+            paintCircleOnMaskScreen(mask, sx, sy, brushRadiusPx);
           }
         }
 
@@ -1775,9 +1823,15 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             hull = outerLoops[0] as [number, number][];
           } else if (outerLoops.length > 1) {
             // Union all outer boundary loops together.
-            let accHull: [number, number][] | null = outerLoops[0] as [number, number][];
+            let accHull: [number, number][] | null = outerLoops[0] as [
+              number,
+              number,
+            ][];
             for (let i = 1; i < outerLoops.length; i++) {
-              const union = polygonUnion(accHull, outerLoops[i] as [number, number][]);
+              const union = polygonUnion(
+                accHull,
+                outerLoops[i] as [number, number][],
+              );
               if (union && union.length >= 4) accHull = union;
             }
             if (accHull && accHull.length >= 4) {
@@ -1827,8 +1881,16 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         precomputedHull?: [number, number][],
       ) => {
         const state = get();
-        const { brushRadiusPx, viewportZoom, brushMask, brushViewBounds, brushEditTargetId, brushEditMode, annotations, globalColor } =
-          state;
+        const {
+          brushRadiusPx,
+          viewportZoom,
+          brushMask,
+          brushViewBounds,
+          brushEditTargetId,
+          brushEditMode,
+          annotations,
+          globalColor,
+        } = state;
 
         const overlayPolygon = computeBrushPolygon(
           strokePoints,
@@ -1864,7 +1926,11 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
                   })()
                 : polygonDifference(basePolygon, overlayPolygon);
 
-            if (nextPolygon && nextPolygon.length >= 3 && nextPolygon !== basePolygon) {
+            if (
+              nextPolygon &&
+              nextPolygon.length >= 3 &&
+              nextPolygon !== basePolygon
+            ) {
               get().updateAnnotation(brushEditTargetId, {
                 polygon: nextPolygon,
               } as Partial<Annotation>);

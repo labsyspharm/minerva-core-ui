@@ -1,23 +1,23 @@
 import * as React from "react";
 import { ChromePicker } from "react-color";
 import { LayersPanel } from "@/components/authoring/LayersPanel";
-import { useOverlayStore } from "@/lib/stores";
-import type { ConfigWaypoint } from "@/lib/config";
-import MoveIcon from "@/components/shared/icons/move.svg?react";
-import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
-import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
-import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
-import LineIcon from "@/components/shared/icons/line.svg?react";
-import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
-import ArrowIcon from "@/components/shared/icons/arrow-tool.svg?react";
-import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
-import LinesIcon from "@/components/shared/icons/lines.svg?react";
-import TextIcon from "@/components/shared/icons/text.svg?react";
-import PointIcon from "@/components/shared/icons/point.svg?react";
-import ColorIcon from "@/components/shared/icons/color.svg?react";
-import MagicWandIcon from "@/components/shared/icons/magic-wand.svg?react";
-import BrushIcon from "@/components/shared/icons/brush.svg?react";
 import { ToolSubmenu } from "@/components/authoring/ToolSubmenu";
+import ArrowIcon from "@/components/shared/icons/arrow-tool.svg?react";
+import BrushIcon from "@/components/shared/icons/brush.svg?react";
+import ColorIcon from "@/components/shared/icons/color.svg?react";
+import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
+import LineIcon from "@/components/shared/icons/line.svg?react";
+import LinesIcon from "@/components/shared/icons/lines.svg?react";
+import MagicWandIcon from "@/components/shared/icons/magic-wand.svg?react";
+import MoveIcon from "@/components/shared/icons/move.svg?react";
+import PointIcon from "@/components/shared/icons/point.svg?react";
+import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
+import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
+import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
+import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
+import TextIcon from "@/components/shared/icons/text.svg?react";
+import type { ConfigWaypoint } from "@/lib/config";
+import { useOverlayStore } from "@/lib/stores";
 import styles from "./WaypointAnnotationEditor.module.css";
 
 // Define available tools (same as overlays)
@@ -47,9 +47,11 @@ type RGBA = {
   g: number;
   b: number;
   a: number;
-}
+};
 
-const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = () => {
+const WaypointAnnotationEditor: React.FC<
+  WaypointAnnotationEditorProps
+> = () => {
   const {
     activeTool,
     handleToolChange,
@@ -160,7 +162,11 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = () => 
                 title: "Rectangle",
               },
               { id: TOOLS.ELLIPSE, icon: <EllipseIcon />, title: "Ellipse" },
-              { id: TOOLS.LASSO, icon: <PolygonIcon />, title: "Lasso Polygon" },
+              {
+                id: TOOLS.LASSO,
+                icon: <PolygonIcon />,
+                title: "Lasso Polygon",
+              },
             ]}
             activeTool={activeTool}
             onToolChange={handleToolChangeLocal}

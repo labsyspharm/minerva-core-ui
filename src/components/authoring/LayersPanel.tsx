@@ -1,19 +1,19 @@
 import * as React from "react";
-import { useOverlayStore } from "@/lib/stores";
-import type { Annotation } from "@/lib/stores";
+import styles from "@/components/authoring/DrawingPanel.module.css";
 import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
-import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
-import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
-import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
-import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
-import LineIcon from "@/components/shared/icons/line.svg?react";
-import GroupIcon from "@/components/shared/icons/group.svg?react";
-import PointIcon from "@/components/shared/icons/point.svg?react";
-import EraserIcon from "@/components/shared/icons/eraser.svg?react";
-import TextIcon from "@/components/shared/icons/text.svg?react";
 import AddBrushIcon from "@/components/shared/icons/add-brush.svg?react";
 import AnnotationColorIcon from "@/components/shared/icons/annotation-color.svg?react";
-import styles from "@/components/authoring/DrawingPanel.module.css";
+import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
+import EraserIcon from "@/components/shared/icons/eraser.svg?react";
+import GroupIcon from "@/components/shared/icons/group.svg?react";
+import LineIcon from "@/components/shared/icons/line.svg?react";
+import PointIcon from "@/components/shared/icons/point.svg?react";
+import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
+import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
+import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
+import TextIcon from "@/components/shared/icons/text.svg?react";
+import type { Annotation } from "@/lib/stores";
+import { useOverlayStore } from "@/lib/stores";
 
 // Shared Text Edit Panel Component (same as in original LayersPanel)
 interface TextEditPanelProps {
@@ -207,9 +207,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const addAnnotationToGroup = useOverlayStore(
     (state) => state.addAnnotationToGroup,
   );
-  const brushEditTargetId = useOverlayStore(
-    (state) => state.brushEditTargetId,
-  );
+  const brushEditTargetId = useOverlayStore((state) => state.brushEditTargetId);
   const brushEditMode = useOverlayStore((state) => state.brushEditMode);
   const startBrushEdit = useOverlayStore((state) => state.startBrushEdit);
   const stopBrushEdit = useOverlayStore((state) => state.stopBrushEdit);
@@ -266,8 +264,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
 
   const getLayerName = (annotation: Annotation) => {
     const index = annotationIndexMap.get(annotation.id);
-    const defaultLabel =
-      index !== undefined ? `Untitled ${index}` : "Untitled";
+    const defaultLabel = index !== undefined ? `Untitled ${index}` : "Untitled";
     const baseLabel = annotation.metadata?.label || defaultLabel;
 
     // For pure text annotations, just show the label

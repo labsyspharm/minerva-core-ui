@@ -1,20 +1,19 @@
 import { loadOmeTiff } from "@hms-dbmi/viv";
-
+import type { HasTile } from "./config";
 import type { Loader } from "./viv";
 import type { PoolClass } from "./workers/Pool";
-import type { HasTile } from "./config";
 
 type FindFileIn = {
   handle: Handle.File;
 };
-type FindFile = (i: FindFileIn) => Promise<boolean>
-type ToFiles = () => Promise<Handle.File[]>
+type FindFile = (i: FindFileIn) => Promise<boolean>;
+type ToFiles = () => Promise<Handle.File[]>;
 type LoaderIn = {
   in_f: string;
   handle: Handle.File;
   pool?: PoolClass;
 };
-type ToLoader = (i: LoaderIn) => Promise<Loader>
+type ToLoader = (i: LoaderIn) => Promise<Loader>;
 export type Selection = {
   t: number;
   z: number;
@@ -56,9 +55,8 @@ const toFile: ToFiles = async () => {
 const findFile: FindFile = async (opts) => {
   const { handle } = opts;
   try {
-    handle.createWritable()
-  }
-  catch (e) {
+    handle.createWritable();
+  } catch (e) {
     if (e.name === "NotFoundError") {
       return false;
     }

@@ -15,17 +15,8 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "plugins": [
-      { "name": "typescript-plugin-css-modules" }
-    ],
-    "lib": [
-      "esnext",
-      "DOM",
-      "DOM.Iterable"
-    ]
+    "plugins": [{ "name": "typescript-plugin-css-modules" }],
+    "lib": ["esnext", "DOM", "DOM.Iterable"]
   },
-  "include": [
-    "src",
-    "index.tsx"
-  ]
+  "include": ["src", "index.tsx"]
 }

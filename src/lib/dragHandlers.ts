@@ -42,10 +42,8 @@ export const createDragHandlers = (
     };
   }
 
-  const emit = (
-    type: InteractionType,
-    coordinate?: number[],
-  ) => {
+  // Helper to emit interaction if coordinate exists
+  const emit = (type: InteractionType, coordinate?: number[]) => {
     if (coordinate) {
       onInteraction(type, coordinate);
     }

@@ -1,29 +1,28 @@
 import * as React from "react";
 import { ChromePicker } from "react-color";
-import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import { LayersPanel } from "@/components/authoring/LayersPanel";
-import styles from "./DrawingPanel.module.css";
-import MoveIcon from "@/components/shared/icons/move.svg?react";
-import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
-import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
-import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
-import LineIcon from "@/components/shared/icons/line.svg?react";
-import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
-import ArrowIcon from "@/components/shared/icons/arrow-tool.svg?react";
-import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
-import LinesIcon from "@/components/shared/icons/lines.svg?react";
-import TextIcon from "@/components/shared/icons/text.svg?react";
-import PointIcon from "@/components/shared/icons/point.svg?react";
-import ColorIcon from "@/components/shared/icons/color.svg?react";
-import MagicWandIcon from "@/components/shared/icons/magic-wand.svg?react";
-import BrushIcon from "@/components/shared/icons/brush.svg?react";
-import LassoIcon from "@/components/shared/icons/lasso.svg?react";
 import { ToolSubmenu } from "@/components/authoring/ToolSubmenu";
-import { useOverlayStore } from "@/lib/stores";
-
+import ArrowIcon from "@/components/shared/icons/arrow-tool.svg?react";
+import BrushIcon from "@/components/shared/icons/brush.svg?react";
+import ColorIcon from "@/components/shared/icons/color.svg?react";
+import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
+import LassoIcon from "@/components/shared/icons/lasso.svg?react";
+import LineIcon from "@/components/shared/icons/line.svg?react";
+import LinesIcon from "@/components/shared/icons/lines.svg?react";
+import MagicWandIcon from "@/components/shared/icons/magic-wand.svg?react";
+import MoveIcon from "@/components/shared/icons/move.svg?react";
+import PointIcon from "@/components/shared/icons/point.svg?react";
+import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
+import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
+import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
+import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
+import TextIcon from "@/components/shared/icons/text.svg?react";
 // Types
 import type { CreatableLayer } from "@/components/shared/viewer/layers/DrawingOverlay";
+import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import type { Group } from "@/lib/exhibit";
+import { useOverlayStore } from "@/lib/stores";
+import styles from "./DrawingPanel.module.css";
 
 type DrawingPanelProps = {
   groups: Group[];

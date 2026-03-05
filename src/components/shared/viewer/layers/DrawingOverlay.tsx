@@ -1,15 +1,15 @@
-import * as React from "react";
 import {
-  PolygonLayer,
-  type TextLayer,
-  ScatterplotLayer,
-  IconLayer,
   BitmapLayer,
+  IconLayer,
+  PolygonLayer,
+  ScatterplotLayer,
+  type TextLayer,
 } from "@deck.gl/layers";
-import { useOverlayStore, ellipseToPolygon, lineToPolygon } from "@/lib/stores";
-import { useAnnotationLayers, ARROW_ICON_SIZE } from "@/lib/annotationLayers";
-import { useSam2 } from "@/lib/sam2/useSam2";
+import * as React from "react";
 import ArrowDrawingIconUrl from "@/components/shared/icons/arrow-annotation-drawing.svg?url";
+import { ARROW_ICON_SIZE, useAnnotationLayers } from "@/lib/annotationLayers";
+import { useSam2 } from "@/lib/sam2/useSam2";
+import { ellipseToPolygon, lineToPolygon, useOverlayStore } from "@/lib/stores";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {

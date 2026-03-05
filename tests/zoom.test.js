@@ -1,25 +1,22 @@
-import { chromium, test, expect } from '@playwright/test';
+import { chromium, test } from "@playwright/test";
 
-test('zoom', async () => {
-
+test("zoom", async () => {
   const browser = await chromium.launch({
     headless: false,
-    devtools: true
+    devtools: true,
   });
 
   const context = await browser.newContext();
   const page = await context.newPage();
 
-  await page.goto('https://localhost:5173/');
+  await page.goto("https://localhost:5173/");
 
   // Get dimensions of visible area
   const { width, height } = await page.evaluate(() => ({
-      width: window.innerWidth,
-      height: window.innerHeight
+    width: window.innerWidth,
+    height: window.innerHeight,
   }));
-  const start = [
-    0.5 * width, 0.5 * height
-  ].map(x => parseInt(x));
+  const start = [0.5 * width, 0.5 * height].map((x) => parseInt(x, 10));
 
   const pre_ms = 5000;
   const scroll_ms = 1000;
@@ -28,15 +25,11 @@ test('zoom', async () => {
   const post_ms = 20000;
 
   await page.waitForTimeout(pre_ms);
-  const scrolls = (
-    [...new Array(scroll_steps).keys()].map(() => (
-      async () => {
-        const half_step = scroll_ms/scroll_steps;
-        await page.mouse.wheel(0, -half_step*scroll_speed);
-        await page.waitForTimeout(half_step*(1-scroll_speed));
-      }
-    ))
-  );
+  const scrolls = [...new Array(scroll_steps).keys()].map(() => async () => {
+    const half_step = scroll_ms / scroll_steps;
+    await page.mouse.wheel(0, -half_step * scroll_speed);
+    await page.waitForTimeout(half_step * (1 - scroll_speed));
+  });
   await page.mouse.move(...start);
   for (const scroll of scrolls) {
     await scroll();

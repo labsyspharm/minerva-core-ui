@@ -1,11 +1,9 @@
-
-//import { ImageExporter } from "@/components/playback/ImageExporter";
-import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
-import { Presentation } from "@/components/playback/Presentation";
 import styled from "styled-components";
-
+import { Presentation } from "@/components/playback/Presentation";
 // Types
 import type { ChannelPanelProps } from "@/components/shared/channel/ChannelPanel";
+//import { ImageExporter } from "@/components/playback/ImageExporter";
+import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 
 export type PlaybackRouterProps = ChannelPanelProps & {
   name: string;
@@ -24,7 +22,6 @@ const _ImageDiv = styled.div`
 `;
 
 export const PlaybackRouter = (props: PlaybackRouterProps) => {
-
   let out = <></>;
   if (props.presenting) {
     out = (
