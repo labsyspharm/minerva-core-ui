@@ -3,11 +3,16 @@
  */
 
 import * as ort from "onnxruntime-web";
+import "onnxruntime-web/webgpu";
 import { SAM2, type Sam2Point } from "./sam2";
 
 // Normalize base: avoid "." which would produce origin + "." => "https://example.com." (invalid)
-const rawBase = typeof import.meta.env?.BASE_URL === "string" ? import.meta.env.BASE_URL : "/";
-const basePath = rawBase === "." || rawBase === "" ? "/" : rawBase.replace(/\/?$/, "/");
+const rawBase =
+  typeof import.meta.env?.BASE_URL === "string"
+    ? import.meta.env.BASE_URL
+    : "/";
+const basePath =
+  rawBase === "." || rawBase === "" ? "/" : rawBase.replace(/\/?$/, "/");
 // Use an absolute URL so Vite treats this as a network fetch (not a module import),
 // while still respecting the configured base path.
 ort.env.wasm.wasmPaths = `${self.location.origin}${basePath}wasm/`;
@@ -22,7 +27,9 @@ async function ensureLoaded(): Promise<"webgpu" | "cpu"> {
   return "cpu";
 }
 
-self.onmessage = async (e: MessageEvent<{ type: string; [key: string]: unknown }>) => {
+self.onmessage = async (
+  e: MessageEvent<{ type: string; [key: string]: unknown }>,
+) => {
   const { type } = e.data;
   try {
     if (type === "ping") {
@@ -52,15 +59,32 @@ self.onmessage = async (e: MessageEvent<{ type: string; [key: string]: unknown }
       };
       const { points, maskArray } = data;
       if (!sam2) throw new Error("Encode first");
-      const result = await sam2.decode(
-        ort,
-        points,
-        maskArray ?? null,
-      );
+      const result = await sam2.decode(ort, points, maskArray ?? null);
       self.postMessage({
         type: "decodeMaskResult",
         masks: { dims: result.masks.dims, cpuData: result.masks.cpuData },
         iou_predictions: result.iou_predictions,
+      });
+      return;
+    }
+    if (type === "encodeDinoImage") {
+      // DINO similarity is optional. For now, just signal that features
+      // are "ready" so the UI can enable the button, without doing work.
+      const data = e.data as unknown as {
+        gridHW?: [number, number];
+      };
+      const gridHW = data.gridHW ?? [0, 0];
+      self.postMessage({
+        type: "dinoPatchFeatures",
+        data: { gridH: gridHW[0], gridW: gridHW[1], dim: 0 },
+      });
+      return;
+    }
+    if (type === "findSimilar") {
+      // Stub implementation: no similar regions found yet.
+      self.postMessage({
+        type: "findSimilarResult",
+        data: { masks: [] },
       });
       return;
     }

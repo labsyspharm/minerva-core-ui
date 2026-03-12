@@ -18,7 +18,7 @@ export function resizeCanvas(
 
 /**
  * Convert canvas to Float32Array for SAM2 encoder.
- * Shape [1, 3, height, width], NCHW, values 0-1.
+ * Shape [1, 3, height, width], NCHW, ImageNet mean/std normalized.
  */
 export function canvasToFloat32Array(canvas: HTMLCanvasElement): {
   float32Array: Float32Array;
@@ -31,13 +31,25 @@ export function canvasToFloat32Array(canvas: HTMLCanvasElement): {
   const { data } = imageData;
   const total = width * height * 3;
   const float32Array = new Float32Array(total);
+
+  // Match ONNX-community Sam2ImageProcessorFast (preprocessor_config.json)
+  const rescale = 1 / 255;
+  const meanR = 0.485;
+  const meanG = 0.456;
+  const meanB = 0.406;
+  const stdR = 0.229;
+  const stdG = 0.224;
+  const stdB = 0.225;
+
   for (let i = 0; i < width * height; i++) {
-    const r = data[i * 4] / 255;
-    const g = data[i * 4 + 1] / 255;
-    const b = data[i * 4 + 2] / 255;
-    float32Array[i] = r;
-    float32Array[width * height + i] = g;
-    float32Array[width * height * 2 + i] = b;
+    const r = data[i * 4] * rescale;
+    const g = data[i * 4 + 1] * rescale;
+    const b = data[i * 4 + 2] * rescale;
+
+    // (x - mean) / std
+    float32Array[i] = (r - meanR) / stdR;
+    float32Array[width * height + i] = (g - meanG) / stdG;
+    float32Array[width * height * 2 + i] = (b - meanB) / stdB;
   }
   return {
     float32Array,
@@ -48,7 +60,9 @@ export function canvasToFloat32Array(canvas: HTMLCanvasElement): {
 /**
  * Duplicate grayscale to RGB for SAM (expects 3 channels).
  */
-export function grayscaleToRgbCanvas(canvas: HTMLCanvasElement): HTMLCanvasElement {
+export function grayscaleToRgbCanvas(
+  canvas: HTMLCanvasElement,
+): HTMLCanvasElement {
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Could not get 2d context");
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -80,8 +94,12 @@ export function float32ArrayToCanvas(
   const size = width * height;
   for (let i = 0; i < size; i++) {
     const r = Math.round(Math.min(255, Math.max(0, float32Array[i] * 255)));
-    const g = Math.round(Math.min(255, Math.max(0, float32Array[size + i] * 255)));
-    const b = Math.round(Math.min(255, Math.max(0, float32Array[size * 2 + i] * 255)));
+    const g = Math.round(
+      Math.min(255, Math.max(0, float32Array[size + i] * 255)),
+    );
+    const b = Math.round(
+      Math.min(255, Math.max(0, float32Array[size * 2 + i] * 255)),
+    );
     imageData.data[i * 4] = r;
     imageData.data[i * 4 + 1] = g;
     imageData.data[i * 4 + 2] = b;
@@ -94,7 +112,11 @@ export function float32ArrayToCanvas(
 /**
  * Convert single-channel float mask (256x256, 0-1) to canvas for debugging.
  */
-export function maskFloatToCanvas(mask: Float32Array, w: number, h: number): HTMLCanvasElement {
+export function maskFloatToCanvas(
+  mask: Float32Array,
+  w: number,
+  h: number,
+): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
@@ -126,6 +148,76 @@ export function saveEncodedImageForDebug(
   return float32ArrayToCanvas(float32Array, w, h);
 }
 
+/**
+ * Convert canvas to Float32Array for DINOv2 encoder.
+ * - Scales longest side to maxSide
+ * - Rounds both dims to multiple of patchSize
+ * - Applies ImageNet mean/std normalization
+ * Returns NCHW tensor plus scale and patch grid info.
+ */
+export function canvasToFloat32ArrayDINO(
+  canvas: HTMLCanvasElement,
+  maxSide = 518,
+  patchSize = 14,
+): {
+  float32Array: Float32Array;
+  shape: [number, number, number, number];
+  scaleXY: [number, number];
+  gridHW: [number, number];
+} {
+  const srcW = Math.max(1, canvas.width);
+  const srcH = Math.max(1, canvas.height);
+  const longer = Math.max(srcW, srcH);
+  const scale = maxSide / longer;
+  let targetW = Math.max(1, Math.round(srcW * scale));
+  let targetH = Math.max(1, Math.round(srcH * scale));
+
+  const roundTo = (v: number, m: number) => Math.max(m, Math.round(v / m) * m);
+  targetW = roundTo(targetW, patchSize);
+  targetH = roundTo(targetH, patchSize);
+
+  const resized = document.createElement("canvas");
+  resized.width = targetW;
+  resized.height = targetH;
+  const rctx = resized.getContext("2d");
+  if (!rctx) throw new Error("Could not get 2d context");
+  rctx.drawImage(canvas, 0, 0, srcW, srcH, 0, 0, targetW, targetH);
+
+  const imgData = rctx.getImageData(0, 0, targetW, targetH);
+  const { data } = imgData;
+  const total = targetW * targetH * 3;
+  const float32Array = new Float32Array(total);
+
+  const rescale = 1 / 255;
+  const meanR = 0.485;
+  const meanG = 0.456;
+  const meanB = 0.406;
+  const stdR = 0.229;
+  const stdG = 0.224;
+  const stdB = 0.225;
+
+  for (let i = 0; i < targetW * targetH; i++) {
+    const r = data[i * 4] * rescale;
+    const g = data[i * 4 + 1] * rescale;
+    const b = data[i * 4 + 2] * rescale;
+    float32Array[i] = (r - meanR) / stdR;
+    float32Array[targetW * targetH + i] = (g - meanG) / stdG;
+    float32Array[targetW * targetH * 2 + i] = (b - meanB) / stdB;
+  }
+
+  const scaleX = targetW / srcW;
+  const scaleY = targetH / srcH;
+  const gridH = targetH / patchSize;
+  const gridW = targetW / patchSize;
+
+  return {
+    float32Array,
+    shape: [1, 3, targetH, targetW],
+    scaleXY: [scaleX, scaleY],
+    gridHW: [gridH, gridW],
+  };
+}
+
 export type MaskTensor = {
   dims: readonly number[];
   cpuData: Float32Array;
@@ -138,9 +230,21 @@ export function sliceTensorMask(
   tensor: MaskTensor,
   maskIdx: number,
 ): Float32Array {
-  const [batch, numMasks, h, w] = tensor.dims;
+  const dims = tensor.dims;
+  if (dims.length < 3) {
+    // Unexpected, but avoid crashing.
+    return tensor.cpuData.slice();
+  }
+
+  const h = dims[dims.length - 2] ?? 0;
+  const w = dims[dims.length - 1] ?? 0;
   const size = h * w;
-  const start = maskIdx * size;
+  if (size === 0) return new Float32Array(0);
+
+  // Flatten all leading dimensions into a mask index space.
+  const leading = dims.slice(0, dims.length - 2).reduce((acc, v) => acc * v, 1);
+  const clampedIdx = Math.max(0, Math.min(maskIdx, leading - 1));
+  const start = clampedIdx * size;
   return tensor.cpuData.slice(start, start + size);
 }
 
@@ -173,7 +277,14 @@ export function maskToPolygon(
       ? [...contour, contour[0]]
       : contour;
   const simplified = douglasPeucker(closed, 1);
-  if (simplified.length < 3) return closed.map(([x, y]) => [cropOffsetX + x * scaleX, cropOffsetY + y * scaleY] as [number, number]);
+  if (simplified.length < 3)
+    return closed.map(
+      ([x, y]) =>
+        [cropOffsetX + x * scaleX, cropOffsetY + y * scaleY] as [
+          number,
+          number,
+        ],
+    );
   return simplified.map(([x, y]) => [
     cropOffsetX + x * scaleX,
     cropOffsetY + y * scaleY,
@@ -204,20 +315,30 @@ function convexHullOfForeground(
  */
 function convexHull(points: [number, number][]): [number, number][] {
   if (points.length < 3) return points;
-  const pivot = points.reduce((min, p) => (p[1] < min[1] || (p[1] === min[1] && p[0] < min[0]) ? p : min));
+  const pivot = points.reduce((min, p) =>
+    p[1] < min[1] || (p[1] === min[1] && p[0] < min[0]) ? p : min,
+  );
   const sorted = points
     .filter((p) => p !== pivot)
     .sort((a, b) => {
       const angleA = Math.atan2(a[1] - pivot[1], a[0] - pivot[0]);
       const angleB = Math.atan2(b[1] - pivot[1], b[0] - pivot[0]);
       if (angleA !== angleB) return angleA - angleB;
-      return (a[0] - pivot[0]) ** 2 + (a[1] - pivot[1]) ** 2 - (b[0] - pivot[0]) ** 2 - (b[1] - pivot[1]) ** 2;
+      return (
+        (a[0] - pivot[0]) ** 2 +
+        (a[1] - pivot[1]) ** 2 -
+        (b[0] - pivot[0]) ** 2 -
+        (b[1] - pivot[1]) ** 2
+      );
     });
 
   const hull: [number, number][] = [pivot, sorted[0]];
   for (let i = 1; i < sorted.length; i++) {
     const p = sorted[i];
-    while (hull.length >= 2 && cross(hull[hull.length - 2], hull[hull.length - 1], p) <= 0) {
+    while (
+      hull.length >= 2 &&
+      cross(hull[hull.length - 2], hull[hull.length - 1], p) <= 0
+    ) {
       hull.pop();
     }
     hull.push(p);
@@ -225,14 +346,23 @@ function convexHull(points: [number, number][]): [number, number][] {
   return hull;
 }
 
-function cross(o: [number, number], a: [number, number], b: [number, number]): number {
+function cross(
+  o: [number, number],
+  a: [number, number],
+  b: [number, number],
+): number {
   return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
 }
 
 const MOORE_NEIGHBORS = [
-  [-1, -1], [0, -1], [1, -1],
-  [1, 0],           [1, 1],
-  [0, 1], [-1, 1], [-1, 0],
+  [-1, -1],
+  [0, -1],
+  [1, -1],
+  [1, 0],
+  [1, 1],
+  [0, 1],
+  [-1, 1],
+  [-1, 0],
 ];
 
 function traceContour(
@@ -291,7 +421,11 @@ function traceContour(
         cy = ny;
         dir = (idx + 5) % 8;
         found = true;
-        if (boundary.length > 2 && Math.abs(cx - startCx) <= 1 && Math.abs(cy - startCy) <= 1) {
+        if (
+          boundary.length > 2 &&
+          Math.abs(cx - startCx) <= 1 &&
+          Math.abs(cy - startCy) <= 1
+        ) {
           return boundary;
         }
         break;
