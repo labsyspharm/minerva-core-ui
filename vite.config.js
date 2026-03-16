@@ -29,7 +29,7 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: "src/assets/icons/*.svg",
+          src: "src/components/shared/icons/*.svg",
           dest: "icons",
         },
       ],
