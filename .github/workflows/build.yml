@@ -24,6 +24,8 @@ jobs:
           run_install: true
 
       - name: Build with pnpm
+        env:
+          BASE_PATH: ${{ github.ref == 'refs/heads/annotation' && '/minerva-annotation-demo/' || '' }}
         run: |
           pnpm run pages
 

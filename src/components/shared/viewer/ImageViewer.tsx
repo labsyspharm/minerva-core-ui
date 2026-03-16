@@ -16,6 +16,7 @@ import { createTileLayers, loadDicom } from "@/lib/dicom";
 import type { DicomIndex } from "@/lib/dicom-index";
 import { createDragHandlers } from "@/lib/dragHandlers";
 import type { Story } from "@/lib/exhibit";
+import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import type { ConfigGroup, OverlayLayer } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
@@ -49,6 +50,9 @@ export type ImageViewerProps = {
     coordinate: [number, number, number],
   ) => void;
   groups: ItemRegistryGroup[];
+  zoomInButton?: HTMLElement | null;
+  zoomOutButton?: HTMLElement | null;
+  [key: string]: unknown;
 };
 
 const Main = styled.div`
@@ -93,7 +97,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
     onOverlayInteraction,
     viewerConfig,
   } = props;
-  const { activeChannelGroupId, channelVisibilities } = useOverlayStore();
+  const { activeChannelGroupId, channelVisibilities, sam2Processing } =
+    useOverlayStore();
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [_canvas, _setCanvas] = useState(null);
   const rootRef = useRef<HTMLElement | null>(null);
@@ -204,11 +209,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
     useState<OrthographicViewState>(initialViewState);
   const hasInitialized = useRef(false);
 
-  // Get setViewportZoom and setImageDimensions from overlay store
   const setViewportZoom = useOverlayStore((state) => state.setViewportZoom);
   const setImageDimensions = useOverlayStore(
     (state) => state.setImageDimensions,
   );
+  const setBrushViewport = useOverlayStore((state) => state.setBrushViewport);
+
+  const viewRef = useRef({ viewState, viewportSize });
+  viewRef.current = { viewState, viewportSize };
 
   // Get target waypoint view state for responding to waypoint selection
   const targetWaypointPan = useOverlayStore((state) => state.targetWaypointPan);
@@ -231,12 +239,79 @@ export const ImageViewer = (props: ImageViewerProps) => {
     }
   }, [initialViewState, firstLoader.data, setViewportZoom]);
 
-  // Set image dimensions in the store when imageShape is available
   useEffect(() => {
     if (imageShape.x > 0 && imageShape.y > 0) {
       setImageDimensions(imageShape.x, imageShape.y);
     }
   }, [imageShape, setImageDimensions]);
+
+  // Sync viewport size and visible world bounds for brush (canvas-aligned mask)
+  useEffect(() => {
+    const { width, height } = viewportSize;
+    if (width <= 0 || height <= 0) return;
+    const zoom = typeof viewState?.zoom === "number" ? viewState.zoom : 0;
+    const target = viewState?.target ?? [0, 0, 0];
+    const scale = 2 ** zoom;
+    const halfW = width / (2 * scale);
+    const halfH = height / (2 * scale);
+    // BitmapLayer bounds are [left, bottom, right, top] in world coords.
+    // Our world space for images uses y increasing downward, so "bottom" is +halfH and "top" is -halfH.
+    const bounds: [number, number, number, number] = [
+      target[0] - halfW,
+      target[1] + halfH,
+      target[0] + halfW,
+      target[1] - halfH,
+    ];
+    setBrushViewport(width, height, bounds);
+  }, [viewState, viewportSize, setBrushViewport]);
+
+  // Register SAM2 image fetcher for magic wand (OME-TIFF only)
+  const setSam2ImageFetcher = useOverlayStore((s) => s.setSam2ImageFetcher);
+  const setSam2ViewState = useOverlayStore((s) => s.setSam2ViewState);
+  const setSam2ViewportSize = useOverlayStore((s) => s.setSam2ViewportSize);
+  useEffect(() => {
+    if (
+      loaderOmeTiff &&
+      firstLoader?.data &&
+      mainSettingsList.length > 0 &&
+      imageShape.x > 0 &&
+      imageShape.y > 0
+    ) {
+      const settings = mainSettingsList[0];
+      const fetcher = createSam2ImageFetcher(
+        firstLoader,
+        {
+          selections: settings.selections,
+          colors: settings.colors,
+          contrastLimits: settings.contrastLimits,
+          channelsVisible: settings.channelsVisible,
+        },
+        imageShape.x,
+        imageShape.y,
+      );
+      setSam2ImageFetcher(fetcher);
+    } else {
+      setSam2ImageFetcher(null);
+    }
+    return () => setSam2ImageFetcher(null);
+  }, [
+    loaderOmeTiff,
+    firstLoader,
+    mainSettingsList,
+    imageShape.x,
+    imageShape.y,
+    setSam2ImageFetcher,
+  ]);
+
+  // Keep SAM2 store in sync with current view so useSam2 can compute the
+  // visible region at click time without needing direct access to ImageViewer state.
+  useEffect(() => {
+    setSam2ViewState(viewState);
+  }, [viewState, setSam2ViewState]);
+
+  useEffect(() => {
+    setSam2ViewportSize(viewportSize);
+  }, [viewportSize, setSam2ViewportSize]);
 
   // Apply waypoint view state when target is set (from waypoint selection)
   useEffect(() => {
@@ -427,15 +502,31 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return layers;
   }, [dicomLayers, omeTiffLayers, overlayLayers, scaleBarLayer]);
 
-  // Memoize drag handlers
+  const getScreenFromWorld = useCallback(
+    (worldX: number, worldY: number): [number, number] => {
+      const { viewState: vs, viewportSize: vp } = viewRef.current;
+      const zoom = typeof vs?.zoom === "number" ? vs.zoom : 0;
+      const target = (vs as { target?: number[] })?.target ?? [0, 0, 0];
+      const scale = 2 ** zoom;
+      return [
+        (worldX - target[0]) * scale + vp.width / 2,
+        // World y increases downward for images; screen y also increases downward.
+        (worldY - target[1]) * scale + vp.height / 2,
+      ];
+    },
+    [],
+  );
+
   const dragHandlers = useMemo(
-    () => createDragHandlers(activeTool, onOverlayInteraction),
-    [activeTool, onOverlayInteraction],
+    () =>
+      createDragHandlers(activeTool, onOverlayInteraction, getScreenFromWorld),
+    [activeTool, onOverlayInteraction, getScreenFromWorld],
   );
 
   // Memoize cursor function
   const getCursor = useCallback(
-    ({ isDragging }) => {
+    ({ isDragging, isHovering: _isHovering }) => {
+      if (sam2Processing) return "wait";
       if (isDragging && activeTool === "move") {
         return "grabbing";
       } else if (activeTool === "move" && hoveredAnnotationId) {
@@ -444,9 +535,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
         return isDragging ? "grabbing" : "crosshair";
       } else if (activeTool === "ellipse") {
         return isDragging ? "grabbing" : "crosshair";
-      } else if (activeTool === "lasso") {
+      } else if (activeTool === "lasso" || activeTool === "magic_wand") {
         return isDragging ? "grabbing" : "crosshair";
-      } else if (activeTool === "line") {
+      } else if (activeTool === "arrow" || activeTool === "line") {
         return isDragging ? "grabbing" : "crosshair";
       } else if (activeTool === "polyline") {
         return "crosshair";
@@ -454,18 +545,21 @@ export const ImageViewer = (props: ImageViewerProps) => {
         return "crosshair";
       } else if (activeTool === "text") {
         return "text";
+      } else if (activeTool === "brush") {
+        return "none";
       } else if (activeTool === "move") {
         return "default";
       }
       return "default";
     },
-    [activeTool, hoveredAnnotationId],
+    [activeTool, hoveredAnnotationId, sam2Processing],
   );
 
   // Memoize controller configuration
+  // When move tool is active and hovering over an annotation, disable pan so drag moves the annotation
   const controllerConfig = useMemo(
     () => ({
-      dragPan: activeTool === "move" && !isDragging,
+      dragPan: activeTool === "move" && !isDragging && !hoveredAnnotationId,
       dragRotate: false,
       scrollZoom: true,
       doubleClickZoom: true,
@@ -473,7 +567,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       touchRotate: false,
       keyboard: false,
     }),
-    [activeTool, isDragging],
+    [activeTool, isDragging, hoveredAnnotationId],
   );
 
   // Memoize view configuration
@@ -489,8 +583,13 @@ export const ImageViewer = (props: ImageViewerProps) => {
         return;
       // don't allow pan on non-move tool
       setViewState(nextViewState);
-      // Update viewport zoom in store for line width scaling
-      setViewportZoom(nextViewState.zoom);
+      // Update viewport zoom in store (view state is keyed by view id "ortho")
+      const zoom =
+        nextViewState?.ortho?.zoom ??
+        (typeof nextViewState?.zoom === "number"
+          ? nextViewState.zoom
+          : undefined);
+      if (typeof zoom === "number") setViewportZoom(zoom);
     },
     [isDragging, activeTool, setViewportZoom],
   );

@@ -1,17 +1,22 @@
 import * as React from "react";
 import { ChromePicker } from "react-color";
 import { LayersPanel } from "@/components/authoring/LayersPanel";
-import {
-  ColorIcon,
-  EllipseIcon,
-  LineIcon,
-  MoveIcon,
-  PointIcon,
-  PolygonIcon,
-  PolylineIcon,
-  RectangleIcon,
-  TextIcon,
-} from "@/components/shared/icons/OverlayIcons";
+import { ToolSubmenu } from "@/components/authoring/ToolSubmenu";
+import ArrowIcon from "@/components/shared/icons/arrow-tool.svg?react";
+import BrushIcon from "@/components/shared/icons/brush.svg?react";
+import ColorIcon from "@/components/shared/icons/color.svg?react";
+import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
+import LassoIcon from "@/components/shared/icons/lasso.svg?react";
+import LineIcon from "@/components/shared/icons/line.svg?react";
+import LinesIcon from "@/components/shared/icons/lines.svg?react";
+import MagicWandIcon from "@/components/shared/icons/magic-wand.svg?react";
+import MoveIcon from "@/components/shared/icons/move.svg?react";
+import PointIcon from "@/components/shared/icons/point.svg?react";
+import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
+import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
+import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
+import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
+import TextIcon from "@/components/shared/icons/text.svg?react";
 // Types
 import type { CreatableLayer } from "@/components/shared/viewer/layers/DrawingOverlay";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
@@ -34,10 +39,13 @@ const TOOLS = {
   RECTANGLE: "rectangle",
   ELLIPSE: "ellipse",
   LASSO: "lasso",
+  ARROW: "arrow",
   LINE: "line",
   POLYLINE: "polyline",
   TEXT: "text",
   POINT: "point",
+  MAGIC_WAND: "magic_wand",
+  BRUSH: "brush",
 } as const;
 
 type ToolType = (typeof TOOLS)[keyof typeof TOOLS];
@@ -67,7 +75,7 @@ const DrawingPanel = (props: DrawingPanelProps) => {
     string | null
   >(null);
 
-  const handleToolChangeLocal = (tool: ToolType) => {
+  const handleToolChangeLocal = (tool: string) => {
     handleToolChange(tool);
   };
 
@@ -177,50 +185,49 @@ const DrawingPanel = (props: DrawingPanelProps) => {
           <MoveIcon />
         </button>
 
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.RECTANGLE ? styles.active : ""}`}
-          title="Rectangle Tool (R)"
-          onClick={() => handleToolChangeLocal(TOOLS.RECTANGLE)}
-        >
-          <RectangleIcon />
-        </button>
+        <ToolSubmenu
+          items={[
+            {
+              id: TOOLS.RECTANGLE,
+              icon: <RectangleIcon />,
+              title: "Rectangle",
+            },
+            { id: TOOLS.ELLIPSE, icon: <EllipseIcon />, title: "Ellipse" },
+          ]}
+          activeTool={activeTool}
+          onToolChange={handleToolChangeLocal}
+          parentIcon={<ShapesIcon />}
+          parentTitle="Shapes"
+          buttonClassName={styles.toolButton}
+          activeClassName={styles.active}
+        />
 
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.ELLIPSE ? styles.active : ""}`}
-          title="Ellipse Tool (E)"
-          onClick={() => handleToolChangeLocal(TOOLS.ELLIPSE)}
-        >
-          <EllipseIcon />
-        </button>
+        <ToolSubmenu
+          items={[
+            { id: TOOLS.ARROW, icon: <ArrowIcon />, title: "Arrow" },
+            { id: TOOLS.LINE, icon: <LineIcon />, title: "Line" },
+            { id: TOOLS.POLYLINE, icon: <PolylineIcon />, title: "Polyline" },
+          ]}
+          activeTool={activeTool}
+          onToolChange={handleToolChangeLocal}
+          parentIcon={<LinesIcon />}
+          parentTitle="Lines"
+          buttonClassName={styles.toolButton}
+          activeClassName={styles.active}
+        />
 
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.LASSO ? styles.active : ""}`}
-          title="Lasso Tool (L)"
-          onClick={() => handleToolChangeLocal(TOOLS.LASSO)}
-        >
-          <PolygonIcon />
-        </button>
-
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.LINE ? styles.active : ""}`}
-          title="Line Tool"
-          onClick={() => handleToolChangeLocal(TOOLS.LINE)}
-        >
-          <LineIcon />
-        </button>
-
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.POLYLINE ? styles.active : ""}`}
-          title="Poly-line Tool"
-          onClick={() => handleToolChangeLocal(TOOLS.POLYLINE)}
-        >
-          <PolylineIcon />
-        </button>
+        <ToolSubmenu
+          items={[
+            { id: TOOLS.BRUSH, icon: <BrushIcon />, title: "Brush" },
+            { id: TOOLS.LASSO, icon: <LassoIcon />, title: "Polygon Lasso" },
+          ]}
+          activeTool={activeTool}
+          onToolChange={handleToolChangeLocal}
+          parentIcon={<PolygonIcon />}
+          parentTitle="Polygon Tools"
+          buttonClassName={styles.toolButton}
+          activeClassName={styles.active}
+        />
 
         <button
           type="button"
@@ -238,6 +245,15 @@ const DrawingPanel = (props: DrawingPanelProps) => {
           onClick={() => handleToolChangeLocal(TOOLS.POINT)}
         >
           <PointIcon />
+        </button>
+
+        <button
+          type="button"
+          className={`${styles.toolButton} ${activeTool === TOOLS.MAGIC_WAND ? styles.active : ""}`}
+          title="Magic Wand (SAM2)"
+          onClick={() => handleToolChangeLocal(TOOLS.MAGIC_WAND)}
+        >
+          <MagicWandIcon />
         </button>
 
         <button
@@ -358,4 +374,3 @@ const DrawingPanel = (props: DrawingPanelProps) => {
 
 export { DrawingPanel };
 export type { DrawingPanelProps, ToolType };
-export { TOOLS };

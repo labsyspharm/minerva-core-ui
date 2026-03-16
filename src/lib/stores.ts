@@ -4,12 +4,16 @@ import { documentStore } from "./document-store";
 
 export type { ConfigGroup } from "./document-store";
 
+import type { OrthographicViewState } from "@deck.gl/core";
+import { buildBrushHull } from "./brushHull";
 import type {
   ConfigWaypoint,
   ConfigWaypointArrow,
   ConfigWaypointOverlay,
 } from "./config";
 import type { DocumentStore } from "./document-store";
+import { polygonDifference, polygonUnion } from "./polygonClipping";
+import type { ViewportSize, ViewRect } from "./samViewport";
 
 // Re-export config types for convenience
 export type {
@@ -20,6 +24,508 @@ export type {
 // Types for the overlay store
 export interface OverlayLayer {
   id: string;
+}
+
+type BrushMask = {
+  width: number;
+  height: number;
+  data: Uint8Array;
+};
+
+// Legacy image-aligned brush helpers (kept for reference, currently unused).
+// function ensureBrushMask(...) { ... }
+// function paintCircleOnMask(...) { ... }
+
+/** Viewport-sized mask: one pixel per screen pixel. */
+function ensureBrushMaskViewport(
+  viewportWidth: number,
+  viewportHeight: number,
+  existing: BrushMask | null,
+): BrushMask {
+  if (
+    existing &&
+    existing.width === viewportWidth &&
+    existing.height === viewportHeight
+  )
+    return existing;
+  const w = Math.max(1, Math.round(viewportWidth));
+  const h = Math.max(1, Math.round(viewportHeight));
+  return { width: w, height: h, data: new Uint8Array(w * h) };
+}
+
+/** Paint circle in screen coords. sx,sy in [0, viewportW] x [0, viewportH]; row 0 = top. */
+function paintCircleOnMaskScreen(
+  mask: BrushMask,
+  sx: number,
+  sy: number,
+  radiusPx: number,
+): void {
+  const { width, height, data } = mask;
+  if (width <= 0 || height <= 0) return;
+  const mx = Math.round(Math.max(0, Math.min(width - 1, sx)));
+  const my = Math.round(Math.max(0, Math.min(height - 1, sy)));
+  const r = Math.max(1, Math.round(radiusPx));
+  const y0 = Math.max(0, my - r);
+  const y1 = Math.min(height - 1, my + r);
+  const x0 = Math.max(0, mx - r);
+  const x1 = Math.min(width - 1, mx + r);
+  const r2 = r * r;
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      if ((x - mx) ** 2 + (y - my) ** 2 <= r2) data[y * width + x] = 1;
+    }
+  }
+}
+
+type Point2 = [number, number];
+
+// Legacy utility, no longer used.
+// function polygonArea(poly: Point2[]): number { ... }
+
+function pointToSegmentDistance(p: Point2, a: Point2, b: Point2): number {
+  const [px, py] = p;
+  const [ax, ay] = a;
+  const [bx, by] = b;
+  const abx = bx - ax;
+  const aby = by - ay;
+  const apx = px - ax;
+  const apy = py - ay;
+  const denom = abx * abx + aby * aby;
+  const t =
+    denom === 0 ? 0 : Math.max(0, Math.min(1, (apx * abx + apy * aby) / denom));
+  const cx = ax + t * abx;
+  const cy = ay + t * aby;
+  return Math.hypot(px - cx, py - cy);
+}
+
+function simplifyRdpOpen(points: Point2[], epsilon: number): Point2[] {
+  if (points.length <= 2) return points;
+  let maxDist = -1;
+  let idx = -1;
+  const a = points[0];
+  const b = points[points.length - 1];
+  for (let i = 1; i < points.length - 1; i++) {
+    const d = pointToSegmentDistance(points[i], a, b);
+    if (d > maxDist) {
+      maxDist = d;
+      idx = i;
+    }
+  }
+  if (maxDist <= epsilon || idx === -1) return [a, b];
+  const left = simplifyRdpOpen(points.slice(0, idx + 1), epsilon);
+  const right = simplifyRdpOpen(points.slice(idx), epsilon);
+  return [...left.slice(0, -1), ...right];
+}
+
+function simplifyClosedPolygon(
+  pointsClosed: Point2[],
+  epsilon: number,
+): Point2[] {
+  if (pointsClosed.length < 4) return pointsClosed;
+  const pts =
+    pointsClosed[0][0] === pointsClosed[pointsClosed.length - 1][0] &&
+    pointsClosed[0][1] === pointsClosed[pointsClosed.length - 1][1]
+      ? pointsClosed.slice(0, -1)
+      : [...pointsClosed];
+  if (pts.length < 3) return pointsClosed;
+
+  // Choose a stable cut: minX and maxX
+  let minI = 0;
+  let maxI = 0;
+  for (let i = 1; i < pts.length; i++) {
+    if (pts[i][0] < pts[minI][0]) minI = i;
+    if (pts[i][0] > pts[maxI][0]) maxI = i;
+  }
+  if (minI === maxI) {
+    // fallback: minY/maxY
+    minI = 0;
+    maxI = 0;
+    for (let i = 1; i < pts.length; i++) {
+      if (pts[i][1] < pts[minI][1]) minI = i;
+      if (pts[i][1] > pts[maxI][1]) maxI = i;
+    }
+  }
+
+  const n = pts.length;
+  const forward = (from: number, to: number): Point2[] => {
+    const out: Point2[] = [];
+    let i = from;
+    while (true) {
+      out.push(pts[i]);
+      if (i === to) break;
+      i = (i + 1) % n;
+    }
+    return out;
+  };
+
+  const path1 = forward(minI, maxI);
+  const path2 = forward(maxI, minI);
+  const s1 = simplifyRdpOpen(path1, epsilon);
+  const s2 = simplifyRdpOpen(path2, epsilon);
+  const combined = [...s1, ...s2.slice(1, -1)];
+
+  // Remove near-duplicates
+  const cleaned: Point2[] = [];
+  for (const p of combined) {
+    const last = cleaned[cleaned.length - 1];
+    if (!last || Math.hypot(p[0] - last[0], p[1] - last[1]) > epsilon * 0.25)
+      cleaned.push(p);
+  }
+
+  if (cleaned.length < 3) return pointsClosed;
+  return [...cleaned, cleaned[0]];
+}
+
+function signedPolygonArea(points: Point2[]): number {
+  let area = 0;
+  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+    area += points[j][0] * points[i][1];
+    area -= points[i][0] * points[j][1];
+  }
+  return area / 2;
+}
+
+function pointInPolygon2(p: Point2, polygon: Point2[]): boolean {
+  const [px, py] = p;
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [xi, yi] = polygon[i];
+    const [xj, yj] = polygon[j];
+    const intersect =
+      yi > py !== yj > py &&
+      px < ((xj - xi) * (py - yi)) / (yj - yi || Number.EPSILON) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function polygonsOverlap(a: Point2[], b: Point2[]): boolean {
+  if (a.length === 0 || b.length === 0) return false;
+
+  // Quick reject: bounding boxes do not intersect
+  const bbox = (poly: Point2[]) => {
+    let minX = poly[0][0];
+    let maxX = poly[0][0];
+    let minY = poly[0][1];
+    let maxY = poly[0][1];
+    for (const [x, y] of poly) {
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+    return { minX, maxX, minY, maxY };
+  };
+
+  const ab = bbox(a);
+  const bb = bbox(b);
+  if (
+    ab.maxX < bb.minX ||
+    ab.minX > bb.maxX ||
+    ab.maxY < bb.minY ||
+    ab.minY > bb.maxY
+  ) {
+    return false;
+  }
+
+  // Check if any vertex of one polygon lies inside the other
+  for (const pt of a) {
+    if (pointInPolygon2(pt, b)) return true;
+  }
+  for (const pt of b) {
+    if (pointInPolygon2(pt, a)) return true;
+  }
+
+  return false;
+}
+
+type IKey = string; // "ix,iy" where ix/iy are integer coordinates in half-pixel grid (x*2, y*2)
+function ikey(ix: number, iy: number): IKey {
+  return `${ix},${iy}`;
+}
+function parseIKey(k: IKey): Point2 {
+  const [xs, ys] = k.split(",");
+  return [Number.parseInt(xs, 10) / 2, Number.parseInt(ys, 10) / 2];
+}
+function edgeKey(a: IKey, b: IKey): string {
+  return a < b ? `${a}|${b}` : `${b}|${a}`;
+}
+
+function addAdj(adj: Map<IKey, IKey[]>, a: IKey, b: IKey) {
+  const la = adj.get(a);
+  if (la) la.push(b);
+  else adj.set(a, [b]);
+  const lb = adj.get(b);
+  if (lb) lb.push(a);
+  else adj.set(b, [a]);
+}
+
+function maskToLoops(mask: BrushMask): Point2[][] {
+  const { width: w, height: h, data } = mask;
+  if (w < 2 || h < 2) return [];
+
+  const adj = new Map<IKey, IKey[]>();
+
+  // Marching squares edge midpoints in half-grid integer coords.
+  const pt = (x2: number, y2: number): IKey => ikey(x2, y2);
+  const edgePoint = (x: number, y: number, edge: 0 | 1 | 2 | 3): IKey => {
+    // edges: 0=top,1=right,2=bottom,3=left
+    switch (edge) {
+      case 0:
+        return pt(x * 2 + 1, y * 2);
+      case 1:
+        return pt((x + 1) * 2, y * 2 + 1);
+      case 2:
+        return pt(x * 2 + 1, (y + 1) * 2);
+      case 3:
+        return pt(x * 2, y * 2 + 1);
+    }
+  };
+
+  const addSeg = (a: IKey, b: IKey) => {
+    if (a === b) return;
+    addAdj(adj, a, b);
+  };
+
+  // Build segment graph
+  for (let y = 0; y < h - 1; y++) {
+    for (let x = 0; x < w - 1; x++) {
+      const tl = data[y * w + x] ? 1 : 0;
+      const tr = data[y * w + (x + 1)] ? 1 : 0;
+      const br = data[(y + 1) * w + (x + 1)] ? 1 : 0;
+      const bl = data[(y + 1) * w + x] ? 1 : 0;
+      const idx = (tl << 0) | (tr << 1) | (br << 2) | (bl << 3);
+
+      // segments as pairs of edges
+      let segs: [0 | 1 | 2 | 3, 0 | 1 | 2 | 3][] = [];
+      switch (idx) {
+        case 0:
+        case 15:
+          segs = [];
+          break;
+        case 1:
+          segs = [[3, 0]];
+          break;
+        case 2:
+          segs = [[0, 1]];
+          break;
+        case 3:
+          segs = [[3, 1]];
+          break;
+        case 4:
+          segs = [[1, 2]];
+          break;
+        case 5:
+          segs = [
+            [3, 0],
+            [1, 2],
+          ];
+          break;
+        case 6:
+          segs = [[0, 2]];
+          break;
+        case 7:
+          segs = [[3, 2]];
+          break;
+        case 8:
+          segs = [[2, 3]];
+          break;
+        case 9:
+          segs = [[0, 2]];
+          break;
+        case 10:
+          segs = [
+            [0, 1],
+            [2, 3],
+          ];
+          break;
+        case 11:
+          segs = [[1, 2]];
+          break;
+        case 12:
+          segs = [[1, 3]];
+          break;
+        case 13:
+          segs = [[0, 1]];
+          break;
+        case 14:
+          segs = [[3, 0]];
+          break;
+      }
+
+      for (const [e1, e2] of segs) {
+        const a = edgePoint(x, y, e1);
+        const b = edgePoint(x, y, e2);
+        addSeg(a, b);
+      }
+    }
+  }
+
+  // Stitch loops by walking edges
+  const visited = new Set<string>();
+  const loops: Point2[][] = [];
+
+  for (const [start, neighbors] of adj.entries()) {
+    for (const n0 of neighbors) {
+      const ek0 = edgeKey(start, n0);
+      if (visited.has(ek0)) continue;
+
+      const loopKeys: IKey[] = [start];
+      let prev: IKey = start;
+      let curr: IKey = n0;
+      visited.add(ek0);
+
+      while (true) {
+        loopKeys.push(curr);
+        const neigh = adj.get(curr) ?? [];
+        // pick next neighbor with unvisited edge
+        let next: IKey | null = null;
+        for (const cand of neigh) {
+          if (cand === prev) continue;
+          const ek = edgeKey(curr, cand);
+          if (!visited.has(ek)) {
+            next = cand;
+            visited.add(ek);
+            break;
+          }
+        }
+        if (!next) {
+          // dead-end; give up
+          break;
+        }
+        prev = curr;
+        curr = next;
+        if (curr === start) {
+          loopKeys.push(start);
+          break;
+        }
+        if (loopKeys.length > (w + h) * 8) break;
+      }
+
+      if (
+        loopKeys.length >= 6 &&
+        loopKeys[0] === loopKeys[loopKeys.length - 1]
+      ) {
+        loops.push(loopKeys.map(parseIKey));
+      }
+    }
+  }
+
+  return loops;
+}
+
+function loopScreenToWorld(
+  loop: Point2[],
+  bounds: [number, number, number, number],
+  maskWidth: number,
+  maskHeight: number,
+): Point2[] {
+  const [left, bottom, right, top] = bounds;
+  const dx = right - left;
+  const dy = bottom - top; // y-down world; bottom > top
+  return loop.map(([x, y]) => [
+    left + (x / maskWidth) * dx,
+    top + (y / maskHeight) * dy,
+  ]);
+}
+
+function maskToViewportPolygon(
+  mask: BrushMask,
+  bounds: [number, number, number, number],
+): [number, number][] | null {
+  const { width, height, data } = mask;
+  if (!width || !height) return null;
+
+  const [left, bottom, right, top] = bounds;
+  const dx = right - left;
+  const dy = bottom - top; // y-down world; bottom > top
+
+  if (dx === 0 || dy === 0) return null;
+
+  const w = width;
+  const h = height;
+  let hull: [number, number][] | null = null;
+
+  for (let y = 0; y < h; y++) {
+    let runStart = -1;
+    const rowOffset = y * w;
+    for (let x = 0; x <= w; x++) {
+      const inside = x < w && data[rowOffset + x] !== 0;
+      if (inside && runStart === -1) {
+        runStart = x;
+      } else if (!inside && runStart !== -1) {
+        const x0t = runStart / w;
+        const x1t = x / w;
+        const y0t = y / h;
+        const y1t = (y + 1) / h;
+
+        const x0 = left + x0t * dx;
+        const x1 = left + x1t * dx;
+        const y0 = top + y0t * dy;
+        const y1 = top + y1t * dy;
+
+        const rect: [number, number][] = [
+          [x0, y0],
+          [x1, y0],
+          [x1, y1],
+          [x0, y1],
+          [x0, y0],
+        ];
+        if (!hull) {
+          hull = rect;
+        } else {
+          const union = polygonUnion(hull, rect);
+          if (union && union.length >= 3) {
+            hull = union;
+          }
+        }
+        runStart = -1;
+      }
+    }
+  }
+
+  if (!hull || hull.length < 3) return null;
+
+  // Smooth jagged edges by simplifying in world units, scaled to approximately
+  // a few screen pixels so that pixel-level stair-steps are removed while
+  // preserving the overall shape and topology.
+  const pxToWorld = Math.max(
+    Math.abs(dx) / Math.max(1, w),
+    Math.abs(dy) / Math.max(1, h),
+  );
+  const epsilonWorld = pxToWorld * 1.0;
+  const simplified = simplifyClosedPolygon(hull as Point2[], epsilonWorld);
+
+  return simplified && simplified.length >= 3 ? simplified : hull;
+}
+
+function computeBrushPolygon(
+  strokePoints: Point2[],
+  precomputedHull: [number, number][] | undefined,
+  mask: BrushMask | null,
+  brushRadiusPx: number,
+  viewportZoom: number,
+  brushViewBounds: [number, number, number, number] | null,
+): [number, number][] | null {
+  if (precomputedHull && precomputedHull.length >= 3) {
+    return precomputedHull;
+  }
+
+  if (mask && brushViewBounds) {
+    const fromMask = maskToViewportPolygon(mask, brushViewBounds);
+    if (fromMask && fromMask.length >= 3) {
+      return fromMask;
+    }
+  }
+
+  if (strokePoints.length > 0 && brushRadiusPx > 0) {
+    const hull = buildBrushHull(strokePoints, brushRadiusPx, viewportZoom);
+    if (hull && hull.length >= 3) {
+      return hull;
+    }
+  }
+
+  return null;
 }
 
 // New annotation types - all using polygon coordinates internally
@@ -82,6 +588,7 @@ export interface LineAnnotation {
   id: string;
   type: "line";
   polygon: [number, number][]; // Simple line as degenerate polygon for stroke-based rendering
+  hasArrowHead?: boolean; // When true (default), render as arrow icon; when false, render as plain stroke
   style: {
     fillColor: [number, number, number, number];
     lineColor: [number, number, number, number];
@@ -343,6 +850,18 @@ export interface OverlayStore {
   hiddenLayers: Set<string>; // New: track hidden layers
   globalColor: [number, number, number, number]; // New: global drawing color
   viewportZoom: number; // Current viewport zoom level for line width scaling
+  // Brush tool state
+  brushRadiusPx: number;
+  brushMask: BrushMask | null;
+  brushMaskVersion: number;
+  brushMaskMaxResolution: number;
+  brushViewportWidth: number;
+  brushViewportHeight: number;
+  brushViewBounds: [number, number, number, number] | null;
+  brushLastScreenCoord: [number, number] | null;
+  selectedAnnotationId: string | null;
+  brushEditTargetId: string | null;
+  brushEditMode: "add" | "subtract" | null;
 
   // Stories state
   stories: ConfigWaypoint[];
@@ -401,6 +920,31 @@ export interface OverlayStore {
   ) => void;
   removeWaypoint: (waypointId: string) => void;
 
+  // SAM2 magic wand: image fetcher for visible viewport region (set by ImageViewer)
+  sam2ImageFetcher:
+    | ((viewRect: ViewRect) => Promise<{
+        float32Array: Float32Array;
+        shape: [number, number, number, number];
+      }>)
+    | null;
+  setSam2ImageFetcher: (
+    fetcher:
+      | ((viewRect: ViewRect) => Promise<{
+          float32Array: Float32Array;
+          shape: [number, number, number, number];
+        }>)
+      | null,
+  ) => void;
+  sam2Processing: boolean;
+  setSam2Processing: (v: boolean) => void;
+  sam2DebugImages: { encoded: string; mask: string } | null;
+  setSam2DebugImages: (v: { encoded: string; mask: string } | null) => void;
+  // SAM2: current viewer state for computing visible region at click time
+  sam2ViewState: OrthographicViewState | null;
+  setSam2ViewState: (vs: OrthographicViewState) => void;
+  sam2ViewportSize: ViewportSize | null;
+  setSam2ViewportSize: (size: ViewportSize) => void;
+
   // Channel group and channel actions
   setActiveChannelGroup: (channelGroupId: string) => void;
   setChannelVisibilities: (vis: Record<string, boolean>) => void;
@@ -412,7 +956,7 @@ export interface OverlayStore {
 
   finalizeEllipse: () => void; // Convert current drawing to ellipse annotation
   finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
-  finalizeLine: () => void; // Convert current drawing to line annotation
+  finalizeLine: (hasArrowHead?: boolean) => void; // Convert current drawing to line annotation
   finalizePolyline: (points: [number, number][]) => void; // Convert polyline points to polyline annotation
   createTextAnnotation: (
     position: [number, number],
@@ -430,8 +974,27 @@ export interface OverlayStore {
     fontColor: [number, number, number, number],
   ) => void; // Update text annotation color
   updateShapeText: (annotationId: string, newText: string) => void; // Update text field on any annotation (for shapes with text)
+  updateAnnotationLabel: (annotationId: string, newLabel: string) => void; // Update the metadata label (used as layer name)
   setGlobalColor: (color: [number, number, number, number]) => void; // Set global drawing color
   setViewportZoom: (zoom: number) => void; // Set viewport zoom for line width scaling
+  setBrushRadiusPx: (radius: number) => void;
+  setBrushMaskResolution: (res: number) => void;
+  setBrushViewport: (
+    width: number,
+    height: number,
+    bounds: [number, number, number, number] | null,
+  ) => void;
+  clearBrushMask: () => void;
+  brushPaintStart: (screenCoord: [number, number]) => void;
+  brushPaint: (screenCoord: [number, number]) => void;
+  brushPaintEnd: () => void;
+  startBrushEdit: (annotationId: string, mode: "add" | "subtract") => void;
+  stopBrushEdit: () => void;
+  setSelectedAnnotation: (annotationId: string | null) => void;
+  finalizeBrush: (
+    strokePoints: [number, number][],
+    precomputedHull?: [number, number][],
+  ) => void;
 
   // New layer visibility actions
   toggleLayerVisibility: (annotationId: string) => void;
@@ -498,6 +1061,17 @@ const overlayInitialState = {
   hiddenLayers: new Set<string>(), // New: empty hidden layers set
   globalColor: [255, 255, 255, 255], // New: default white color
   viewportZoom: 0, // Default zoom level
+  brushRadiusPx: 30,
+  brushMask: null as BrushMask | null,
+  brushMaskVersion: 0,
+  brushMaskMaxResolution: 1024,
+  brushViewportWidth: 0,
+  brushViewportHeight: 0,
+  brushViewBounds: null as [number, number, number, number] | null,
+  brushLastScreenCoord: null as [number, number] | null,
+  selectedAnnotationId: null as string | null,
+  brushEditTargetId: null as string | null,
+  brushEditMode: null as "add" | "subtract" | null,
   stories: [], // New: empty stories array
   activeStoryIndex: null, // New: no active story initially
   activeChannelGroupId: null, // No channel group initially
@@ -510,6 +1084,11 @@ const overlayInitialState = {
   groupNames: {},
   targetWaypointPan: null, // Target pan from waypoint selection (Minerva 1.5 format)
   targetWaypointZoom: null, // Target zoom from waypoint selection (Minerva 1.5 format)
+  sam2ImageFetcher: null,
+  sam2Processing: false,
+  sam2DebugImages: null,
+  sam2ViewState: null,
+  sam2ViewportSize: null,
 };
 
 // Create the overlay store
@@ -520,7 +1099,11 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       ...documentStore(set, get),
 
       setActiveTool: (tool: string) => {
-        set({ activeTool: tool });
+        set({
+          activeTool: tool,
+          brushEditTargetId: null,
+          brushEditMode: null,
+        });
       },
 
       setCurrentInteraction: (interaction: InteractionCoordinate | null) => {
@@ -570,7 +1153,11 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       },
 
       handleToolChange: (tool: string) => {
-        set({ activeTool: tool });
+        set({
+          activeTool: tool,
+          brushEditTargetId: null,
+          brushEditMode: null,
+        });
 
         // Clear any partial drawing state when switching tools
         get().resetDrawingState();
@@ -602,7 +1189,10 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               // Hover detection is handled in dragHandlers.ts
               break;
             case "click":
-              // Click without drag - just a click on annotation (no action needed)
+              // Click without drag: select annotation (e.g. for layers panel)
+              if (hoverState.hoveredAnnotationId) {
+                get().setSelectedAnnotation(hoverState.hoveredAnnotationId);
+              }
               break;
             case "dragStart":
               // Start drag if clicking on a hovered annotation
@@ -649,47 +1239,47 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           return;
         }
 
-        // Handle drawing state updates based on interaction type for drawing tools
-        switch (type) {
-          case "click":
-          case "dragStart":
-            // Start drawing
-            get().updateDrawingState({
-              isDrawing: true,
-              dragStart: [x, y],
-              dragEnd: [x, y],
-            });
-            break;
-          case "drag":
-            // Update drawing
-            if (drawingState.isDrawing) {
+        // Handle drawing state updates only for tools that use it (rectangle, ellipse, arrow, line)
+        const usesDrawingState =
+          activeTool === "rectangle" ||
+          activeTool === "ellipse" ||
+          activeTool === "arrow" ||
+          activeTool === "line";
+        if (usesDrawingState) {
+          switch (type) {
+            case "click":
+            case "dragStart":
               get().updateDrawingState({
+                isDrawing: true,
+                dragStart: [x, y],
                 dragEnd: [x, y],
               });
-            }
-            break;
-          case "dragEnd":
-            // Finish drawing and automatically finalize as annotation
-            if (drawingState.isDrawing) {
-              get().updateDrawingState({
-                dragEnd: [x, y],
-              });
-              // Finalize based on active tool
-              if (activeTool === "rectangle") {
-                setTimeout(() => {
-                  get().finalizeRectangle();
-                }, 0);
-              } else if (activeTool === "ellipse") {
-                setTimeout(() => {
-                  get().finalizeEllipse();
-                }, 0);
-              } else if (activeTool === "line") {
-                setTimeout(() => {
-                  get().finalizeLine();
-                }, 0);
+              break;
+            case "drag":
+              if (drawingState.isDrawing) {
+                get().updateDrawingState({
+                  dragEnd: [x, y],
+                });
               }
-            }
-            break;
+              break;
+            case "dragEnd":
+              if (drawingState.isDrawing) {
+                get().updateDrawingState({
+                  dragEnd: [x, y],
+                });
+                if (activeTool === "rectangle") {
+                  setTimeout(() => get().finalizeRectangle(), 0);
+                } else if (activeTool === "ellipse") {
+                  setTimeout(() => get().finalizeEllipse(), 0);
+                } else if (activeTool === "arrow" || activeTool === "line") {
+                  setTimeout(
+                    () => get().finalizeLine(activeTool === "arrow"),
+                    0,
+                  );
+                }
+              }
+              break;
+          }
         }
       },
 
@@ -703,10 +1293,25 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       removeAnnotation: (annotationId: string) => {
         set((state) => {
           const newHiddenLayers = new Set(state.hiddenLayers);
-          newHiddenLayers.delete(annotationId); // Clean up hidden state
+          newHiddenLayers.delete(annotationId);
+          const newSelected =
+            state.selectedAnnotationId === annotationId
+              ? null
+              : state.selectedAnnotationId;
+
+          const clearingBrushEdit =
+            state.brushEditTargetId === annotationId
+              ? {
+                  brushEditTargetId: null as string | null,
+                  brushEditMode: null as "add" | "subtract" | null,
+                }
+              : {};
+
           return {
             annotations: state.annotations.filter((a) => a.id !== annotationId),
             hiddenLayers: newHiddenLayers,
+            selectedAnnotationId: newSelected,
+            ...clearingBrushEdit,
           };
         });
       },
@@ -753,7 +1358,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             },
             metadata: {
               createdAt: new Date(),
-              label: `Rectangle ${get().annotations.length + 1}`,
+              label: `Untitled ${get().annotations.length + 1}`,
             },
           };
 
@@ -795,7 +1400,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             },
             metadata: {
               createdAt: new Date(),
-              label: `Ellipse ${get().annotations.length + 1}`,
+              label: `Untitled ${get().annotations.length + 1}`,
             },
           };
 
@@ -829,7 +1434,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             },
             metadata: {
               createdAt: new Date(),
-              label: `Polygon ${get().annotations.length + 1}`,
+              label: `Untitled ${get().annotations.length + 1}`,
             },
           };
 
@@ -854,7 +1459,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             },
             metadata: {
               createdAt: new Date(),
-              label: `Polyline ${get().annotations.length + 1}`,
+              label: `Untitled ${get().annotations.length + 1}`,
             },
           };
 
@@ -866,7 +1471,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         }
       },
 
-      finalizeLine: () => {
+      finalizeLine: (hasArrowHead: boolean = true) => {
         const { drawingState } = get();
         if (
           drawingState.isDrawing &&
@@ -875,8 +1480,10 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         ) {
           const [startX, startY] = drawingState.dragStart;
           const [endX, endY] = drawingState.dragEnd;
-
-          // Simple polygon for stroke-based line rendering (no fill, just stroke)
+          // Store both arrow and plain lines as a degenerate polygon encoding the
+          // centerline only. The visual thickness is controlled via lineWidth in
+          // the rendering layer (pixel units), so geometry stays in world units
+          // and remains independent of stroke width.
           const linePolygon: [number, number][] = [
             [startX, startY],
             [endX, endY],
@@ -889,6 +1496,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             type: "line",
             polygon: linePolygon,
+            hasArrowHead,
             style: {
               fillColor: [0, 0, 0, 0] as [number, number, number, number], // Transparent fill
               lineColor: get().globalColor,
@@ -896,7 +1504,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             },
             metadata: {
               createdAt: new Date(),
-              label: `Line ${get().annotations.length + 1}`,
+              label: `Untitled ${get().annotations.length + 1}`,
             },
           };
 
@@ -934,7 +1542,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           },
           metadata: {
             createdAt: new Date(),
-            label: `Text ${get().annotations.length + 1}`,
+            label: `Untitled ${get().annotations.length + 1}`,
           },
         };
 
@@ -958,7 +1566,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           },
           metadata: {
             createdAt: new Date(),
-            label: `Point ${get().annotations.length + 1}`,
+            label: `Untitled ${get().annotations.length + 1}`,
           },
         };
 
@@ -1042,12 +1650,316 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         get().updateAnnotation(annotationId, updates);
       },
 
+      updateAnnotationLabel: (annotationId: string, newLabel: string) => {
+        const trimmed = newLabel.trim();
+
+        set((state) => ({
+          annotations: state.annotations.map((annotation) => {
+            if (annotation.id !== annotationId) {
+              return annotation;
+            }
+
+            const nextMetadata = {
+              ...(annotation.metadata ?? { createdAt: new Date() }),
+              label: trimmed || undefined,
+            };
+
+            return {
+              ...annotation,
+              metadata: nextMetadata,
+            } as Annotation;
+          }),
+        }));
+      },
+
       setGlobalColor: (color: [number, number, number, number]) => {
         set({ globalColor: color });
       },
 
       setViewportZoom: (zoom: number) => {
         set({ viewportZoom: zoom });
+      },
+
+      setBrushRadiusPx: (radius: number) => {
+        set({ brushRadiusPx: radius });
+      },
+
+      setBrushMaskResolution: (res: number) => {
+        set({ brushMaskMaxResolution: Math.max(1, Math.floor(res)) });
+      },
+
+      setBrushViewport: (
+        width: number,
+        height: number,
+        bounds: [number, number, number, number] | null,
+      ) => {
+        set({
+          brushViewportWidth: width,
+          brushViewportHeight: height,
+          brushViewBounds: bounds,
+        });
+      },
+
+      clearBrushMask: () => {
+        set({ brushMask: null, brushMaskVersion: 0 });
+      },
+
+      brushPaintStart: (screenCoord: [number, number]) => {
+        const state = get();
+        const { brushViewportWidth, brushViewportHeight, brushRadiusPx } =
+          state;
+        if (
+          brushViewportWidth <= 0 ||
+          brushViewportHeight <= 0 ||
+          brushRadiusPx <= 0
+        )
+          return;
+        const mask = ensureBrushMaskViewport(
+          brushViewportWidth,
+          brushViewportHeight,
+          null,
+        );
+        paintCircleOnMaskScreen(
+          mask,
+          screenCoord[0],
+          screenCoord[1],
+          brushRadiusPx,
+        );
+        set({
+          brushMask: mask,
+          brushMaskVersion: 1,
+          brushLastScreenCoord: screenCoord,
+        });
+      },
+
+      brushPaint: (screenCoord: [number, number]) => {
+        const state = get();
+        const mask = state.brushMask;
+        if (!mask) return;
+        const { brushRadiusPx } = state;
+
+        const [x2, y2] = screenCoord;
+        const last = state.brushLastScreenCoord;
+
+        if (!last) {
+          // No previous point: just stamp once and record this coord.
+          paintCircleOnMaskScreen(mask, x2, y2, brushRadiusPx);
+          set({
+            brushMask: { ...mask },
+            brushMaskVersion: state.brushMaskVersion + 1,
+            brushLastScreenCoord: screenCoord,
+          });
+          return;
+        }
+
+        const [x1, y1] = last;
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist === 0) {
+          paintCircleOnMaskScreen(mask, x2, y2, brushRadiusPx);
+        } else {
+          // Step at most half a brush radius in screen space to avoid gaps.
+          const step = Math.max(1, brushRadiusPx * 0.5);
+          const steps = Math.max(1, Math.ceil(dist / step));
+          for (let i = 1; i <= steps; i++) {
+            const t = i / steps;
+            const sx = x1 + dx * t;
+            const sy = y1 + dy * t;
+            paintCircleOnMaskScreen(mask, sx, sy, brushRadiusPx);
+          }
+        }
+
+        set({
+          brushMask: { ...mask },
+          brushMaskVersion: state.brushMaskVersion + 1,
+          brushLastScreenCoord: screenCoord,
+        });
+      },
+
+      brushPaintEnd: () => {
+        const state = get();
+        const mask = state.brushMask;
+        const bounds = state.brushViewBounds;
+
+        let hull: [number, number][] | undefined;
+        if (mask && bounds) {
+          const loops = maskToLoops(mask);
+          const w = mask.width;
+          const h = mask.height;
+          const pxToWorld = Math.max(
+            Math.abs(bounds[2] - bounds[0]) / Math.max(1, w),
+            Math.abs(bounds[1] - bounds[3]) / Math.max(1, h),
+          );
+          const epsilonWorld = pxToWorld * 1.0;
+
+          // Convert loops to world coords, simplify, and keep only outer
+          // boundaries (positive signed area). Inner hole loops have
+          // negative signed area and are discarded.
+          const outerLoops: Point2[][] = [];
+          for (const loop of loops) {
+            const worldLoop = loopScreenToWorld(loop, bounds, w, h);
+            const simplified = simplifyClosedPolygon(worldLoop, epsilonWorld);
+            if (simplified.length < 4) continue;
+            const area = signedPolygonArea(simplified);
+            if (area > 0) {
+              outerLoops.push(simplified);
+            }
+          }
+
+          // If no outer loops matched with positive area, try negative
+          // (winding direction depends on coordinate system orientation).
+          if (outerLoops.length === 0) {
+            for (const loop of loops) {
+              const worldLoop = loopScreenToWorld(loop, bounds, w, h);
+              const simplified = simplifyClosedPolygon(worldLoop, epsilonWorld);
+              if (simplified.length < 4) continue;
+              const area = signedPolygonArea(simplified);
+              if (area < 0) {
+                outerLoops.push(simplified);
+              }
+            }
+          }
+
+          if (outerLoops.length === 1) {
+            hull = outerLoops[0] as [number, number][];
+          } else if (outerLoops.length > 1) {
+            // Union all outer boundary loops together.
+            let accHull: [number, number][] | null = outerLoops[0] as [
+              number,
+              number,
+            ][];
+            for (let i = 1; i < outerLoops.length; i++) {
+              const union = polygonUnion(
+                accHull,
+                outerLoops[i] as [number, number][],
+              );
+              if (union && union.length >= 4) accHull = union;
+            }
+            if (accHull && accHull.length >= 4) {
+              hull = accHull;
+            }
+          }
+        }
+
+        // Delegate polygon creation / editing logic to finalizeBrush so that all
+        // brush finalization paths share the same behavior.
+        get().finalizeBrush([], hull);
+
+        // Reset last screen coordinate for the next stroke.
+        set({ brushLastScreenCoord: null });
+      },
+
+      startBrushEdit: (annotationId: string, mode: "add" | "subtract") => {
+        set((state) => {
+          const newHiddenLayers = new Set(state.hiddenLayers);
+          if (newHiddenLayers.has(annotationId)) {
+            newHiddenLayers.delete(annotationId);
+          }
+
+          return {
+            activeTool: "brush",
+            brushEditTargetId: annotationId,
+            brushEditMode: mode,
+            hiddenLayers: newHiddenLayers,
+            selectedAnnotationId: annotationId,
+          };
+        });
+      },
+
+      stopBrushEdit: () => {
+        set({
+          brushEditTargetId: null,
+          brushEditMode: null,
+        });
+      },
+
+      setSelectedAnnotation: (annotationId: string | null) => {
+        set({ selectedAnnotationId: annotationId });
+      },
+
+      finalizeBrush: (
+        strokePoints: [number, number][],
+        precomputedHull?: [number, number][],
+      ) => {
+        const state = get();
+        const {
+          brushRadiusPx,
+          viewportZoom,
+          brushMask,
+          brushViewBounds,
+          brushEditTargetId,
+          brushEditMode,
+          annotations,
+          globalColor,
+        } = state;
+
+        const overlayPolygon = computeBrushPolygon(
+          strokePoints,
+          precomputedHull,
+          brushMask,
+          brushRadiusPx,
+          viewportZoom,
+          brushViewBounds,
+        );
+
+        if (!overlayPolygon || overlayPolygon.length < 3) {
+          set({ brushMask: null, brushMaskVersion: 0 });
+          return;
+        }
+
+        if (brushEditTargetId && brushEditMode) {
+          const target = annotations.find((a) => a.id === brushEditTargetId);
+          if (target && target.type === "polygon") {
+            const basePolygon = target.polygon;
+            const nextPolygon =
+              brushEditMode === "add"
+                ? (() => {
+                    // If the brush stroke does not touch the original polygon at
+                    // all, treat it as a no-op in add mode.
+                    const touches = polygonsOverlap(
+                      basePolygon as Point2[],
+                      overlayPolygon as Point2[],
+                    );
+                    if (!touches) {
+                      return basePolygon;
+                    }
+                    return polygonUnion(basePolygon, overlayPolygon);
+                  })()
+                : polygonDifference(basePolygon, overlayPolygon);
+
+            if (
+              nextPolygon &&
+              nextPolygon.length >= 3 &&
+              nextPolygon !== basePolygon
+            ) {
+              get().updateAnnotation(brushEditTargetId, {
+                polygon: nextPolygon,
+              } as Partial<Annotation>);
+            }
+          }
+        } else {
+          const annotation: PolygonAnnotation = {
+            id: `brush-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: "polygon",
+            polygon: overlayPolygon,
+            style: {
+              fillColor: [0, 0, 0, 0],
+              lineColor: globalColor,
+              lineWidth: 3,
+            },
+            metadata: {
+              createdAt: new Date(),
+              label: `Untitled ${annotations.length + 1}`,
+            },
+          };
+          get().addAnnotation(annotation);
+        }
+
+        get().removeOverlayLayer("drawing-layer");
+        // Clear mask after finalizing this brush annotation
+        set({ brushMask: null, brushMaskVersion: 0 });
       },
 
       // New layer visibility actions
@@ -1304,6 +2216,26 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         set({ groupChannelLists: o });
       },
 
+      setSam2ImageFetcher: (fetcher) => {
+        set({ sam2ImageFetcher: fetcher });
+      },
+
+      setSam2Processing: (v) => {
+        set({ sam2Processing: v });
+      },
+
+      setSam2DebugImages: (v) => {
+        set({ sam2DebugImages: v });
+      },
+
+      setSam2ViewState: (vs) => {
+        set({ sam2ViewState: vs });
+      },
+
+      setSam2ViewportSize: (size) => {
+        set({ sam2ViewportSize: size });
+      },
+
       setChannelVisibilities: (vis: Record<string, boolean>) => {
         set({ channelVisibilities: vis });
       },
@@ -1427,6 +2359,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               id: `imported-line-${Date.now()}-${index}`,
               type: "line",
               polygon: linePolygon,
+              hasArrowHead: true, // Imported arrows display arrow heads
               text: arrow.Text,
               style: {
                 fillColor: [0, 0, 0, 0], // Transparent fill

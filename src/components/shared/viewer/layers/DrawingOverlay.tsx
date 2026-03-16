@@ -1,4 +1,5 @@
 import {
+  BitmapLayer,
   IconLayer,
   PolygonLayer,
   ScatterplotLayer,
@@ -7,7 +8,8 @@ import {
 import * as React from "react";
 import ArrowDrawingIconUrl from "@/components/shared/icons/arrow-annotation-drawing.svg?url";
 import { ARROW_ICON_SIZE, useAnnotationLayers } from "@/lib/annotationLayers";
-import { ellipseToPolygon, useOverlayStore } from "@/lib/stores";
+import { useSam2 } from "@/lib/sam2/useSam2";
+import { ellipseToPolygon, lineToPolygon, useOverlayStore } from "@/lib/stores";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {
@@ -180,7 +182,8 @@ interface DrawingOverlayProps {
 const getLineWidthPx = () => 3; // always 3px
 
 // Unified preview colors for non-finalized shapes
-const PREVIEW_FILL_COLOR: [number, number, number, number] = [255, 165, 0, 50]; // Orange with transparency
+// Lower alpha so brush is very subtle and effectively single-level opacity.
+const PREVIEW_FILL_COLOR: [number, number, number, number] = [255, 165, 0, 32]; // Very transparent orange
 const PREVIEW_LINE_COLOR: [number, number, number, number] = [255, 165, 0, 255]; // Orange solid
 
 // Pure helper function - moved outside component to avoid re-creation
@@ -202,7 +205,13 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     createTextAnnotation,
     createPointAnnotation,
     globalColor,
+    brushRadiusPx,
+    viewportZoom,
   } = useOverlayStore();
+  const brushMask = useOverlayStore((s) => s.brushMask);
+  const brushMaskVersion = useOverlayStore((s) => s.brushMaskVersion);
+  const brushViewBounds = useOverlayStore((s) => s.brushViewBounds);
+  const sam2DebugImages = useOverlayStore((s) => s.sam2DebugImages);
   const { isDrawing, dragStart, dragEnd } = drawingState;
 
   // Local state for lasso tool
@@ -272,6 +281,35 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     [number, number] | null
   >(null);
   const [isLineClickMode, setIsLineClickMode] = React.useState(false);
+
+  // SAM2 magic wand (session-based iterative refinement)
+  const {
+    session: sam2Session,
+    startSession: sam2StartSession,
+    refineSession: sam2RefineSession,
+    confirmSession: sam2ConfirmSession,
+    cancelSession: sam2CancelSession,
+    warmup: warmupSam2,
+    isProcessing: isSam2Processing,
+    error: sam2Error,
+  } = useSam2();
+
+  // Track shift key for SAM2 negative-point clicks
+  const shiftKeyRef = React.useRef(false);
+  React.useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "Shift") shiftKeyRef.current = true;
+    };
+    const up = (e: KeyboardEvent) => {
+      if (e.key === "Shift") shiftKeyRef.current = false;
+    };
+    document.addEventListener("keydown", down);
+    document.addEventListener("keyup", up);
+    return () => {
+      document.removeEventListener("keydown", down);
+      document.removeEventListener("keyup", up);
+    };
+  }, []);
 
   // Local state for click-to-draw ellipse
   const [ellipseFirstClick, setEllipseFirstClick] = React.useState<
@@ -349,6 +387,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
         },
         metadata: {
           createdAt: new Date(),
+          label: `Untitled ${
+            useOverlayStore.getState().annotations.length + 1
+          }`,
         },
       };
 
@@ -385,6 +426,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
         },
         metadata: {
           createdAt: new Date(),
+          label: `Untitled ${
+            useOverlayStore.getState().annotations.length + 1
+          }`,
         },
       };
 
@@ -398,32 +442,40 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     }
   }, [polygonClickPoints, globalColor]);
 
-  // Handle line finalization from click mode
+  // Handle line/arrow finalization from click mode
   const finalizeClickLine = React.useCallback(() => {
     if (lineFirstClick && lineSecondClick) {
       const [startX, startY] = lineFirstClick;
       const [endX, endY] = lineSecondClick;
+      const lineWidth = 3;
+      const hasArrowHead = activeTool === "arrow";
 
-      // Simple polygon for stroke-based line rendering (no fill, just stroke)
-      const linePolygon: [number, number][] = [
-        [startX, startY],
-        [endX, endY],
-        [endX, endY],
-        [startX, startY],
-        [startX, startY],
-      ];
+      // Arrow uses degenerate polygon; plain line uses lineToPolygon for proper stroke
+      const linePolygon: [number, number][] = hasArrowHead
+        ? [
+            [startX, startY],
+            [endX, endY],
+            [endX, endY],
+            [startX, startY],
+            [startX, startY],
+          ]
+        : lineToPolygon([startX, startY], [endX, endY], lineWidth);
 
       const annotation = {
         id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: "line" as const,
         polygon: linePolygon,
+        hasArrowHead,
         style: {
           fillColor: [0, 0, 0, 0] as [number, number, number, number], // Transparent fill
           lineColor: globalColor as [number, number, number, number],
-          lineWidth: 3,
+          lineWidth,
         },
         metadata: {
           createdAt: new Date(),
+          label: `Untitled ${
+            useOverlayStore.getState().annotations.length + 1
+          }`,
         },
       };
 
@@ -434,7 +486,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       setLineSecondClick(null);
       setIsLineClickMode(false);
     }
-  }, [lineFirstClick, lineSecondClick, globalColor]);
+  }, [lineFirstClick, lineSecondClick, globalColor, activeTool]);
 
   // Handle ellipse finalization from click mode
   const finalizeClickEllipse = React.useCallback(() => {
@@ -462,6 +514,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
         },
         metadata: {
           createdAt: new Date(),
+          label: `Untitled ${
+            useOverlayStore.getState().annotations.length + 1
+          }`,
         },
       };
 
@@ -488,7 +543,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       setRectangleSecondClick(null);
       setIsRectangleClickMode(false);
     }
-    if (activeTool !== "line") {
+    if (activeTool !== "arrow" && activeTool !== "line") {
       setLineFirstClick(null);
       setLineSecondClick(null);
       setIsLineClickMode(false);
@@ -506,6 +561,14 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     // Clear the last processed interaction when tool changes
     lastProcessedInteractionRef.current = null;
   }, [activeTool]);
+
+  // Pre-load SAM2 model weights when magic wand tool is selected so that
+  // clicks only need to run encode/decode, not model initialization.
+  React.useEffect(() => {
+    if (activeTool === "magic_wand") {
+      void warmupSam2();
+    }
+  }, [activeTool, warmupSam2]);
 
   // Handle keyboard events for polyline finalization
   React.useEffect(() => {
@@ -555,9 +618,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     };
   }, [activeTool, isRectangleClickMode]);
 
-  // Handle keyboard events for line finalization
+  // Handle keyboard events for line/arrow finalization
   React.useEffect(() => {
-    if (activeTool !== "line") return;
+    if (activeTool !== "arrow" && activeTool !== "line") return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       // Cancel line drawing on Escape
@@ -635,6 +698,29 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     };
   }, [activeTool, isPolygonClickMode, finalizeClickPolygon]);
 
+  // SAM2: cancel active session when switching away from magic_wand
+  React.useEffect(() => {
+    if (activeTool !== "magic_wand") {
+      sam2CancelSession();
+    }
+  }, [activeTool, sam2CancelSession]);
+
+  // SAM2: Enter confirms, Escape cancels the active session
+  React.useEffect(() => {
+    if (activeTool !== "magic_wand") return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Enter" || event.key === "Return") {
+        event.preventDefault();
+        sam2ConfirmSession();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        sam2CancelSession();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [activeTool, sam2ConfirmSession, sam2CancelSession]);
+
   // Simplified interaction handler for creation tools only
   React.useEffect(() => {
     if (!currentInteraction) return;
@@ -672,6 +758,15 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     } else if (activeTool === "point") {
       if (type === "click" || type === "dragEnd") {
         createPointAnnotation([x, y], 5); // Default radius of 5 pixels
+      }
+    } else if (activeTool === "magic_wand") {
+      if (type === "click" && !isSam2Processing) {
+        if (!sam2Session) {
+          void sam2StartSession(x, y);
+        } else {
+          const label: 0 | 1 = shiftKeyRef.current ? 0 : 1;
+          void sam2RefineSession(x, y, label);
+        }
       }
     } else if (activeTool === "lasso") {
       if (type === "click") {
@@ -734,14 +829,14 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
         // Update the second click position for preview during hover
         setRectangleSecondClick([x, y]);
       }
-    } else if (activeTool === "line") {
+    } else if (activeTool === "arrow" || activeTool === "line") {
       if (type === "click") {
         if (!isLineClickMode) {
-          // First click - start line drawing
+          // First click - start line/arrow drawing
           setLineFirstClick([x, y]);
           setIsLineClickMode(true);
         } else {
-          // Second click - finalize line
+          // Second click - finalize line/arrow
           setLineSecondClick([x, y]);
           finalizeClickLine();
         }
@@ -826,6 +921,10 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     finalizeClickEllipse,
     finalizeLasso,
     finalizeCurrentPolyline,
+    isSam2Processing,
+    sam2Session,
+    sam2StartSession,
+    sam2RefineSession,
   ]);
 
   // Handle text input submission
@@ -937,9 +1036,49 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       ]; // No fill for polyline
       shouldFill = false;
     }
-    // Line (arrow) tool: preview is drawn as arrow icon only (see arrowPreviewLayer)
+    // Arrow tool: preview is drawn as arrow icon only (see arrowPreviewLayer)
+    else if (activeTool === "arrow") {
+      // No polygon data - arrow preview is a separate IconLayer
+    }
+    // Plain line tool: show polygon stroke preview (click mode and drag mode)
     else if (activeTool === "line") {
-      // No polygon data - arrow preview is a separate IconLayer that shows position and updates on mouse move
+      if (isLineClickMode && lineFirstClick) {
+        const end =
+          lineSecondClick ??
+          (currentInteraction?.type === "hover"
+            ? [
+                currentInteraction.coordinate[0],
+                currentInteraction.coordinate[1],
+              ]
+            : null);
+        if (end) {
+          polygonData = lineToPolygon(
+            lineFirstClick,
+            [end[0], end[1]],
+            getLineWidthPx(),
+          );
+          fillColor = [
+            PREVIEW_LINE_COLOR[0],
+            PREVIEW_LINE_COLOR[1],
+            PREVIEW_LINE_COLOR[2],
+            0,
+          ];
+          shouldFill = false;
+        }
+      } else if (isDrawing && dragStart && dragEnd) {
+        polygonData = lineToPolygon(
+          [dragStart[0], dragStart[1]],
+          [dragEnd[0], dragEnd[1]],
+          getLineWidthPx(),
+        );
+        fillColor = [
+          PREVIEW_LINE_COLOR[0],
+          PREVIEW_LINE_COLOR[1],
+          PREVIEW_LINE_COLOR[2],
+          0,
+        ];
+        shouldFill = false;
+      }
     }
     // Ellipse tool: uses click mode or drag mode
     else if (activeTool === "ellipse") {
@@ -954,13 +1093,18 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
         polygonData = ellipseToPolygon(dragStart, dragEnd);
       }
     }
+    // Brush tool: in bitmask mode we don't render a separate polygon here;
+    // the brushMaskLayer BitmapLayer visualizes the painted region instead.
+    else if (activeTool === "brush") {
+      polygonData = null;
+    }
     // Return null if no polygon data
     if (!polygonData) {
       return null;
     }
 
-    // Determine if we should stroke (lines use polygon fill only, no stroke)
-    const shouldStroke = activeTool !== "line";
+    // Stroke: arrow uses IconLayer; brush preview is fill-only (no stroke until finished)
+    const shouldStroke = activeTool !== "arrow";
 
     // Create single unified polygon layer
     return new PolygonLayer({
@@ -994,11 +1138,124 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     isPolygonClickMode,
     polygonClickPoints,
     polygonHoverPoint,
+    isLineClickMode,
+    lineFirstClick,
+    lineSecondClick,
+    currentInteraction,
   ]);
+
+  // Brush cursor layer: circle at pointer when brush tool is active (hover or while drawing)
+  const brushCursorLayer = React.useMemo(() => {
+    if (activeTool !== "brush") return null;
+    const type = currentInteraction?.type;
+    if (type !== "hover" && type !== "drag" && type !== "dragStart")
+      return null;
+    const [cx, cy] = currentInteraction.coordinate;
+    const scale = 2 ** (viewportZoom ?? 0);
+    const radiusWorld = brushRadiusPx / Math.max(scale, 0.01);
+    const segments = 32;
+    const circle: [number, number][] = [];
+    for (let i = 0; i <= segments; i++) {
+      const angle = (i / segments) * 2 * Math.PI;
+      circle.push([
+        cx + radiusWorld * Math.cos(angle),
+        cy + radiusWorld * Math.sin(angle),
+      ]);
+    }
+    return new PolygonLayer({
+      id: "brush-cursor-layer",
+      data: [{ polygon: circle }],
+      getPolygon: (d) => d.polygon,
+      getFillColor: PREVIEW_FILL_COLOR,
+      getLineColor: PREVIEW_LINE_COLOR,
+      getLineWidth: 2,
+      lineWidthScale: 1,
+      lineWidthUnits: "pixels",
+      lineWidthMinPixels: 2,
+      lineWidthMaxPixels: 2,
+      stroked: true,
+      filled: true,
+      pickable: false,
+    });
+  }, [activeTool, currentInteraction, brushRadiusPx, viewportZoom]);
+
+  // SAM2 session preview: mask polygon overlay
+  const sam2PreviewLayer = React.useMemo(() => {
+    if (!sam2Session || sam2Session.previewPolygon.length < 3) return null;
+    return new PolygonLayer({
+      id: "sam2-preview-polygon",
+      data: [{ polygon: sam2Session.previewPolygon }],
+      getPolygon: (d: { polygon: [number, number][] }) => d.polygon,
+      getFillColor: [66, 133, 244, 80],
+      getLineColor: [66, 133, 244, 255],
+      getLineWidth: 2,
+      lineWidthMinPixels: 2,
+      lineWidthMaxPixels: 2,
+      stroked: true,
+      filled: true,
+      pickable: false,
+    });
+  }, [sam2Session]);
+
+  // SAM2 session preview: prompt point markers (green = positive, red = negative)
+  const sam2PointsLayer = React.useMemo(() => {
+    if (!sam2Session || sam2Session.points.length === 0) return null;
+    return new ScatterplotLayer({
+      id: "sam2-preview-points",
+      data: sam2Session.points.map((p) => ({
+        position: [p.x, p.y, 0] as [number, number, number],
+        color: (p.label === 1 ? [0, 200, 0, 255] : [255, 50, 50, 255]) as [
+          number,
+          number,
+          number,
+          number,
+        ],
+      })),
+      getPosition: (d: { position: [number, number, number] }) => d.position,
+      getRadius: 6,
+      radiusMinPixels: 6,
+      radiusMaxPixels: 6,
+      getFillColor: (d: { color: [number, number, number, number] }) => d.color,
+      getLineColor: [255, 255, 255, 255],
+      getLineWidth: 2,
+      lineWidthMinPixels: 2,
+      lineWidthMaxPixels: 2,
+      stroked: true,
+      filled: true,
+      pickable: false,
+    });
+  }, [sam2Session]);
+
+  // Brush mask layer: canvas-aligned; bounds = visible world rect (works when zoomed out, canvas > image)
+  const brushMaskLayer = React.useMemo(() => {
+    if (activeTool !== "brush" || !brushMask || !brushViewBounds) return null;
+    // Depend on brushMaskVersion so the layer updates when the mask changes.
+    void brushMaskVersion;
+    const { width, height, data } = brushMask;
+    const rgba = new Uint8ClampedArray(width * height * 4);
+    const orangeAlpha = 140;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const v = data[y * width + x] ? 255 : 0;
+        const o = (y * width + x) * 4;
+        rgba[o] = 255;
+        rgba[o + 1] = 165;
+        rgba[o + 2] = 0;
+        rgba[o + 3] = (orangeAlpha * v) / 255;
+      }
+    }
+    const [minX, minY, maxX, maxY] = brushViewBounds;
+    return new BitmapLayer({
+      id: "brush-mask-layer",
+      bounds: [minX, minY, maxX, maxY],
+      image: new ImageData(rgba, width, height),
+      opacity: 1,
+    });
+  }, [activeTool, brushMask, brushMaskVersion, brushViewBounds]);
 
   // Arrow preview layer: shows arrow icon from start to current position (updates on mouse move)
   const arrowPreviewLayer = React.useMemo(() => {
-    if (activeTool !== "line") return null;
+    if (activeTool !== "arrow") return null;
 
     let start: [number, number] | null = null;
     let end: [number, number] | null = null;
@@ -1107,6 +1364,46 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     }
   }, [drawingLayer, onLayerCreate]);
 
+  // Add/remove brush cursor layer when brush tool is active
+  React.useEffect(() => {
+    if (brushCursorLayer) {
+      useOverlayStore.getState().addOverlayLayer(brushCursorLayer);
+    }
+    return () => {
+      useOverlayStore.getState().removeOverlayLayer("brush-cursor-layer");
+    };
+  }, [brushCursorLayer]);
+
+  // Add/remove brush mask layer when brush tool is active
+  React.useEffect(() => {
+    if (brushMaskLayer) {
+      useOverlayStore.getState().addOverlayLayer(brushMaskLayer);
+    }
+    return () => {
+      useOverlayStore.getState().removeOverlayLayer("brush-mask-layer");
+    };
+  }, [brushMaskLayer]);
+
+  // Add/remove SAM2 preview polygon layer
+  React.useEffect(() => {
+    if (sam2PreviewLayer) {
+      useOverlayStore.getState().addOverlayLayer(sam2PreviewLayer);
+    }
+    return () => {
+      useOverlayStore.getState().removeOverlayLayer("sam2-preview-polygon");
+    };
+  }, [sam2PreviewLayer]);
+
+  // Add/remove SAM2 prompt point markers
+  React.useEffect(() => {
+    if (sam2PointsLayer) {
+      useOverlayStore.getState().addOverlayLayer(sam2PointsLayer);
+    }
+    return () => {
+      useOverlayStore.getState().removeOverlayLayer("sam2-preview-points");
+    };
+  }, [sam2PointsLayer]);
+
   // Add/remove arrow preview layer so it shows and updates as mouse moves
   React.useEffect(() => {
     if (arrowPreviewLayer) {
@@ -1133,6 +1430,116 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
 
   return (
     <>
+      {/* SAM2 error toast */}
+      {sam2Error && activeTool === "magic_wand" && !sam2Session && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 16,
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "#c62828",
+            color: "white",
+            padding: "8px 16px",
+            borderRadius: 8,
+            fontSize: 14,
+            zIndex: 1000,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+          }}
+        >
+          {sam2Error}
+        </div>
+      )}
+
+      {/* SAM2 session hint bar */}
+      {sam2Session && activeTool === "magic_wand" && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 16,
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "rgba(30,30,30,0.9)",
+            color: "#ddd",
+            padding: "8px 20px",
+            borderRadius: 8,
+            fontSize: 13,
+            zIndex: 1000,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+            display: "flex",
+            gap: 16,
+            alignItems: "center",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span>
+            <strong style={{ color: "#4caf50" }}>Click</strong> to add
+          </span>
+          <span>
+            <strong style={{ color: "#ef5350" }}>Shift+Click</strong> to remove
+          </span>
+          <span>
+            <strong style={{ color: "#90caf9" }}>Enter</strong> to confirm
+          </span>
+          <span>
+            <strong style={{ color: "#999" }}>Esc</strong> to cancel
+          </span>
+          <span style={{ color: "#888", fontSize: 12 }}>
+            ({sam2Session.points.length} point
+            {sam2Session.points.length !== 1 ? "s" : ""})
+          </span>
+        </div>
+      )}
+
+      {/* SAM2 debug overlay - images shown when localStorage sam2_debug=1 */}
+      {sam2DebugImages && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 16,
+            left: 16,
+            display: "flex",
+            gap: 12,
+            backgroundColor: "rgba(0,0,0,0.85)",
+            padding: 12,
+            borderRadius: 8,
+            zIndex: 1001,
+            maxWidth: "90vw",
+          }}
+        >
+          {sam2DebugImages.encoded ? (
+            <div>
+              <div style={{ color: "#ccc", fontSize: 12, marginBottom: 4 }}>
+                Encoded (1024×1024)
+              </div>
+              <img
+                src={sam2DebugImages.encoded}
+                alt="SAM2 encoded"
+                style={{ maxWidth: 256, maxHeight: 256, display: "block" }}
+                title="Right-click → Save image as"
+              />
+            </div>
+          ) : null}
+          {sam2DebugImages.mask ? (
+            <div>
+              <div style={{ color: "#ccc", fontSize: 12, marginBottom: 4 }}>
+                Mask (256×256)
+              </div>
+              <img
+                src={sam2DebugImages.mask}
+                alt="SAM2 mask"
+                style={{ maxWidth: 256, maxHeight: 256, display: "block" }}
+                title="Right-click → Save image as"
+              />
+            </div>
+          ) : (
+            <div style={{ color: "#888", fontSize: 12 }}>
+              Mask: waiting for decode…
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Text Input Modal */}
       {showTextInput && textInputPosition && (
         <TextEditPanel

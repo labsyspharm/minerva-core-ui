@@ -9,6 +9,8 @@ export type SupportedTypedArray = InstanceType<
   (typeof globalThis)[`${SupportedDtype}Array`]
 >;
 
+type VivImageSizeInput = Parameters<typeof getImageSize>[0];
+
 type WaypointState = {
   Expanded: boolean;
 };
@@ -253,7 +255,7 @@ const toTileLayer = (planes: LoaderPlane[]): TileProps => {
   const i = 0;
   const id = `Tiled-Image-${i}`;
   const plane = toTilePlane(0, planes);
-  const { height, width } = getImageSize(plane);
+  const { height, width } = getImageSize(plane as VivImageSizeInput);
   const extent: Four = [0, 0, width, height];
   const { tileSize, dtype } = plane;
   const n_channels = plane.shape[Math.max(1, plane.labels.indexOf("c"))];

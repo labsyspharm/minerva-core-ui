@@ -6,6 +6,7 @@ import { standardCssModules } from "vite-plugin-standard-css-modules";
 import svgr from "vite-plugin-svgr";
 
 export default defineConfig({
+  assetsInclude: ["**/*.wasm"],
   worker: {
     format: "es",
   },
@@ -15,7 +16,7 @@ export default defineConfig({
       overlay: true,
     },
   },
-  base: "",
+  base: process.env.BASE_PATH ?? "",
   plugins: [
     react(),
     mkcert(),
@@ -29,7 +30,7 @@ export default defineConfig({
     }),
   ],
   optimizeDeps: {
-    exclude: ["minerva-author-ui"],
+    exclude: ["minerva-author-ui", "onnxruntime-web"],
     include: [
       "@luma.gl/core",
       "@luma.gl/constants",
@@ -45,6 +46,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "/icons": path.resolve(__dirname, "./public/icons"),
     },
     dedupe: [
       "@luma.gl/core",

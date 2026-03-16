@@ -259,6 +259,7 @@ const lineShapeToAnnotation = (
     id: `roi-${roi.ID}-${ID}`,
     type: "line",
     polygon,
+    hasArrowHead: false, // lineToPolygon creates rectangular geometry; arrows expect degenerate polygon
     style: {
       fillColor,
       lineColor,

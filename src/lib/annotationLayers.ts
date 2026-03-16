@@ -38,6 +38,7 @@ export function createAllAnnotationLayers(
   hiddenLayers: Set<string>,
   hoveredAnnotationId: string | null,
   pickable: boolean = true,
+  brushEditTargetId: string | null = null,
 ): LayerType[] {
   const visibleAnnotations = annotations.filter(
     (annotation) => !hiddenLayers.has(annotation.id),
@@ -83,8 +84,19 @@ export function createAllAnnotationLayers(
     id: string;
   }> = [];
 
+  const brushEditOutlineData: Array<{
+    polygon: [number, number][];
+    lineColor: ColorRGBA;
+    lineWidth: number;
+    id: string;
+  }> = [];
+
   visibleAnnotations.forEach((annotation) => {
     const isHovered = hoveredAnnotationId === annotation.id;
+    const isBrushEditTarget =
+      brushEditTargetId != null &&
+      annotation.id === brushEditTargetId &&
+      annotation.type === "polygon";
 
     if (annotation.type === "text") {
       const fontColor = isHovered
@@ -140,55 +152,72 @@ export function createAllAnnotationLayers(
     }
 
     if (annotation.type === "line") {
-      // Arrow/line annotations use IconLayer
-      const polygon = annotation.polygon;
-      if (polygon.length >= 2) {
-        const [startX, startY] = polygon[0];
-        const [endX, endY] = polygon[1];
+      const hasArrowHead = annotation.hasArrowHead !== false; // Default true for backward compat
 
-        // Calculate angle from start to end (in degrees)
-        const dx = endX - startX;
-        const dy = endY - startY;
-        const angleRad = Math.atan2(dy, dx);
-        const angleDeg = (angleRad * 180) / Math.PI + 90;
+      const lineColor = isHovered
+        ? ([0, 120, 255, 255] as ColorRGBA)
+        : annotation.style.lineColor;
 
-        const iconColor = isHovered
-          ? ([0, 120, 255, 255] as ColorRGBA)
-          : annotation.style.lineColor;
+      if (hasArrowHead) {
+        // Arrow annotations use IconLayer for the head/body glyph
+        const polygon = annotation.polygon;
+        if (polygon.length >= 2) {
+          const [startX, startY] = polygon[0];
+          const [endX, endY] = polygon[1];
 
-        arrowData.push({
-          position: [endX, endY, 0],
-          angle: angleDeg,
-          color: iconColor,
-          id: `${annotation.id}-arrow`,
-        });
+          // Calculate angle from start to end (in degrees)
+          const dx = endX - startX;
+          const dy = endY - startY;
+          const angleRad = Math.atan2(dy, dx);
+          const angleDeg = (angleRad * 180) / Math.PI + 90;
 
-        // Add label text if present
-        if (annotation.text) {
-          // Calculate direction from tip to tail (opposite of arrow direction)
-          const labelDx = startX - endX;
-          const labelDy = startY - endY;
-          const length = Math.sqrt(labelDx * labelDx + labelDy * labelDy);
-          const dirX = length > 0 ? labelDx / length : 0;
-          const dirY = length > 0 ? labelDy / length : 1;
+          const iconColor = lineColor;
 
-          const pixelOffsetMagnitude = ARROW_ICON_SIZE / 2 + 12;
-          const pixelOffsetX = dirX * pixelOffsetMagnitude;
-          const pixelOffsetY = dirY * pixelOffsetMagnitude;
-
-          const textAnchor: "start" | "end" = labelDx > 0 ? "start" : "end";
-          const textColor =
-            annotation.style.lineColor || ([255, 255, 255, 255] as ColorRGBA);
-
-          labelData.push({
-            text: annotation.text,
+          arrowData.push({
             position: [endX, endY, 0],
-            pixelOffset: [pixelOffsetX, pixelOffsetY],
-            color: textColor,
-            textAnchor,
-            id: `${annotation.id}-text`,
+            angle: angleDeg,
+            color: iconColor,
+            id: `${annotation.id}-arrow`,
           });
+
+          // Add label text if present
+          if (annotation.text) {
+            // Calculate direction from tip to tail (opposite of arrow direction)
+            const labelDx = startX - endX;
+            const labelDy = startY - endY;
+            const length = Math.sqrt(labelDx * labelDx + labelDy * labelDy);
+            const dirX = length > 0 ? labelDx / length : 0;
+            const dirY = length > 0 ? labelDy / length : 1;
+
+            const pixelOffsetMagnitude = ARROW_ICON_SIZE / 2 + 12;
+            const pixelOffsetX = dirX * pixelOffsetMagnitude;
+            const pixelOffsetY = dirY * pixelOffsetMagnitude;
+
+            const textAnchor: "start" | "end" = labelDx > 0 ? "start" : "end";
+            const textColor =
+              annotation.style.lineColor ||
+              ([255, 255, 255, 255] as ColorRGBA);
+
+            labelData.push({
+              text: annotation.text,
+              position: [endX, endY, 0],
+              pixelOffset: [pixelOffsetX, pixelOffsetY],
+              color: textColor,
+              textAnchor,
+              id: `${annotation.id}-text`,
+            });
+          }
         }
+      } else {
+        // Plain line (no arrow head): render as stroke-only polygon using pixel
+        // line width for consistent thickness with the orange preview mode.
+        polygonData.push({
+          polygon: annotation.polygon,
+          fillColor: [0, 0, 0, 0],
+          lineColor,
+          lineWidth: annotation.style.lineWidth,
+          id: annotation.id,
+        });
       }
 
       return;
@@ -215,6 +244,15 @@ export function createAllAnnotationLayers(
       lineWidth: annotation.style.lineWidth,
       id: annotation.id,
     });
+
+    if (isBrushEditTarget) {
+      brushEditOutlineData.push({
+        polygon: annotation.polygon,
+        lineColor: [255, 165, 0, 255],
+        lineWidth: Math.max(annotation.style.lineWidth, 3),
+        id: `${annotation.id}-brush-outline`,
+      });
+    }
 
     // Add label text if present
     if (annotation.text) {
@@ -253,6 +291,28 @@ export function createAllAnnotationLayers(
         stroked: true,
         filled: true,
         pickable,
+      }),
+    );
+  }
+
+  // 1b. Brush-edit outline layer: orange outline for the polygon currently
+  // being edited with the brush add/remove tool. Rendered above base polygons.
+  if (brushEditOutlineData.length > 0) {
+    layers.push(
+      new PolygonLayer({
+        id: "annotation-brush-edit-outline",
+        data: brushEditOutlineData,
+        getPolygon: (d) => d.polygon,
+        getFillColor: [0, 0, 0, 0] as ColorRGBA,
+        getLineColor: (d) => d.lineColor,
+        getLineWidth: (d) => d.lineWidth,
+        lineWidthScale: 1,
+        lineWidthUnits: "pixels",
+        lineWidthMinPixels: 1,
+        lineWidthMaxPixels: 100,
+        stroked: true,
+        filled: false,
+        pickable: false,
       }),
     );
   }
@@ -361,6 +421,9 @@ export function useAnnotationLayers(pickable: boolean = true) {
   const hoveredAnnotationId = useOverlayStore(
     (state) => state.hoverState.hoveredAnnotationId,
   );
+  const brushEditTargetId = useOverlayStore(
+    (state) => state.brushEditTargetId,
+  );
 
   const annotationLayers = React.useMemo(() => {
     return createAllAnnotationLayers(
@@ -368,12 +431,14 @@ export function useAnnotationLayers(pickable: boolean = true) {
       hiddenLayers,
       hoveredAnnotationId,
       pickable,
+      brushEditTargetId,
     );
-  }, [annotations, hiddenLayers, hoveredAnnotationId, pickable]);
+  }, [annotations, hiddenLayers, hoveredAnnotationId, pickable, brushEditTargetId]);
 
   React.useEffect(() => {
     const consolidatedLayerIds = [
       "annotation-polygons",
+      "annotation-brush-edit-outline",
       "annotation-points",
       "annotation-texts",
       "annotation-arrows",
