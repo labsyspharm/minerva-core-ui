@@ -32,6 +32,16 @@ type WorkerMessage =
       masks: { dims: readonly number[]; cpuData: Float32Array };
       iou_predictions: Float32Array;
     }
+  | {
+      type: "dinoPatchFeatures";
+      data: { gridH: number; gridW: number; dim: number };
+    }
+  | {
+      type: "findSimilarResult";
+      data: {
+        masks: { dims: readonly number[]; cpuData: Float32Array }[];
+      };
+    }
   | { type: "error"; message: string };
 
 // ---------------------------------------------------------------------------
@@ -131,6 +141,15 @@ export function useSam2() {
   >(null);
 
   const [session, setSession] = React.useState<Sam2Session | null>(null);
+  const sessionRef = React.useRef<Sam2Session | null>(null);
+  const [hasDinoFeatures, setHasDinoFeatures] = React.useState(false);
+  const [similarPolygons, setSimilarPolygons] = React.useState<
+    [number, number][][]
+  >([]);
+
+  React.useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
 
   const sam2ImageFetcher = useOverlayStore((s) => s.sam2ImageFetcher);
   const finalizeLasso = useOverlayStore((s) => s.finalizeLasso);
@@ -170,6 +189,34 @@ export function useSam2() {
         });
         resolveDecodeRef.current = null;
         setIsProcessing(false);
+        return;
+      }
+      if (msg.type === "dinoPatchFeatures") {
+        setHasDinoFeatures(true);
+        return;
+      }
+      if (msg.type === "findSimilarResult") {
+        const currentSession = sessionRef.current;
+        if (!currentSession) {
+          setIsProcessing(false);
+          useOverlayStore.getState().setSam2Processing(false);
+          return;
+        }
+        const polys: [number, number][][] = [];
+        for (const m of msg.data.masks) {
+          const dims = m.dims;
+          if (!Array.isArray(dims) || dims.length < 3) continue;
+          const h = dims[dims.length - 2] ?? 0;
+          const w = dims[dims.length - 1] ?? 0;
+          if (h <= 0 || w <= 0) continue;
+          const size = h * w;
+          const mask256 = m.cpuData.slice(0, size);
+          const poly = maskToImagePolygon(mask256, currentSession.samTransform);
+          if (poly.length >= 3) polys.push(poly);
+        }
+        setSimilarPolygons(polys);
+        setIsProcessing(false);
+        useOverlayStore.getState().setSam2Processing(false);
         return;
       }
       if (msg.type === "error") {
@@ -326,7 +373,8 @@ export function useSam2() {
         const samTransform = computeSamTransform(viewRect);
 
         // Fetch + encode (the slow part).
-        const { float32Array, shape } = await sam2ImageFetcher(viewRect);
+        const { float32Array, shape, dinoTensor } =
+          await sam2ImageFetcher(viewRect);
 
         if (isDebug()) {
           const canvas = saveEncodedImageForDebug(
@@ -353,6 +401,15 @@ export function useSam2() {
           float32Array,
           shape,
         });
+        if (dinoTensor) {
+          workerRef.current.postMessage({
+            type: "encodeDinoImage",
+            float32Array: dinoTensor.float32Array,
+            shape: dinoTensor.shape,
+            scaleXY: dinoTensor.scaleXY,
+            gridHW: dinoTensor.gridHW,
+          });
+        }
         await new Promise<void>((res, rej) => {
           const t = setTimeout(() => {
             resolveEncodeRef.current = null;
@@ -469,6 +526,22 @@ export function useSam2() {
     if (!isDebug()) setSam2DebugImages(null);
   }, [setSam2DebugImages]);
 
+  const findSimilar = React.useCallback(
+    (config?: Partial<import("./similaritySearch").SimilarityConfig>) => {
+      if (!session || !workerRef.current || !hasDinoFeatures) return;
+      setError(null);
+      setIsProcessing(true);
+      setSam2Processing(true);
+      workerRef.current.postMessage({
+        type: "findSimilar",
+        queryMask: session.currentMask256,
+        maskSize: MASK_SIZE,
+        config: config ?? {},
+      });
+    },
+    [session, hasDinoFeatures, setSam2Processing],
+  );
+
   return {
     session,
     startSession,
@@ -480,6 +553,9 @@ export function useSam2() {
     error,
     isReady,
     warmup,
+    hasDinoFeatures,
+    findSimilar,
+    similarPolygons,
     isAvailable: !!sam2ImageFetcher,
   };
 }

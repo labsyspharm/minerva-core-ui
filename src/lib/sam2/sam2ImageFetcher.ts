@@ -8,7 +8,7 @@
 
 import type { LoaderPlane } from "@/lib/config";
 import type { ViewRect } from "@/lib/samViewport";
-import { canvasToFloat32Array } from "./imageUtils";
+import { canvasToFloat32Array, canvasToFloat32ArrayDINO } from "./imageUtils";
 
 export type Sam2Settings = {
   selections: Array<{ z: number; t: number; c: number }>;
@@ -56,11 +56,15 @@ export function createSam2ImageFetcher(
   imageWidth: number,
   imageHeight: number,
 ):
-  | ((
-      viewRect: ViewRect,
-    ) => Promise<{
+  | ((viewRect: ViewRect) => Promise<{
       float32Array: Float32Array;
       shape: [number, number, number, number];
+      dinoTensor?: {
+        float32Array: Float32Array;
+        shape: [number, number, number, number];
+        scaleXY: [number, number];
+        gridHW: [number, number];
+      };
     }>)
   | null {
   if (!loader?.data?.length || !settings) return null;
@@ -198,6 +202,19 @@ export function createSam2ImageFetcher(
     );
 
     const { float32Array, shape: s } = canvasToFloat32Array(samCanvas);
-    return { float32Array, shape: s };
+    const dino = canvasToFloat32ArrayDINO(samCanvas);
+    return {
+      float32Array,
+      shape: s,
+      dinoTensor:
+        dino.shape[2] && dino.shape[3]
+          ? {
+              float32Array: dino.float32Array,
+              shape: dino.shape,
+              scaleXY: dino.scaleXY,
+              gridHW: dino.gridHW,
+            }
+          : undefined,
+    };
   };
 }

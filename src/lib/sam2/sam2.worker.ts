@@ -4,7 +4,9 @@
 
 import * as ort from "onnxruntime-web";
 import "onnxruntime-web/webgpu";
+import { DINOv2 } from "./dinoV2";
 import { SAM2, type Sam2Point } from "./sam2";
+import { candidateToSamCoords, findSimilarRegions } from "./similaritySearch";
 
 // Normalize base: avoid "." which would produce origin + "." => "https://example.com." (invalid)
 const rawBase =
@@ -18,6 +20,14 @@ const basePath =
 ort.env.wasm.wasmPaths = `${self.location.origin}${basePath}wasm/`;
 
 let sam2: SAM2 | null = null;
+let dino: DINOv2 | null = null;
+let lastDinoFeatures: {
+  features: Float32Array;
+  gridH: number;
+  gridW: number;
+  dim: number;
+  scaleXY: [number, number];
+} | null = null;
 
 async function ensureLoaded(): Promise<"webgpu" | "cpu"> {
   if (!sam2) {
@@ -68,23 +78,80 @@ self.onmessage = async (
       return;
     }
     if (type === "encodeDinoImage") {
-      // DINO similarity is optional. For now, just signal that features
-      // are "ready" so the UI can enable the button, without doing work.
       const data = e.data as unknown as {
-        gridHW?: [number, number];
+        float32Array: Float32Array;
+        shape: [number, number, number, number];
+        scaleXY: [number, number];
+        gridHW: [number, number];
       };
-      const gridHW = data.gridHW ?? [0, 0];
+      if (!dino) {
+        dino = new DINOv2();
+      }
+      const { float32Array, shape, scaleXY, gridHW } = data;
+      const tensor = new ort.Tensor("float32", float32Array, shape);
+      const encoded = await dino.encodeImage(tensor, scaleXY, gridHW);
+      lastDinoFeatures = encoded;
       self.postMessage({
         type: "dinoPatchFeatures",
-        data: { gridH: gridHW[0], gridW: gridHW[1], dim: 0 },
+        data: {
+          gridH: encoded.gridH,
+          gridW: encoded.gridW,
+          dim: encoded.dim,
+        },
       });
       return;
     }
     if (type === "findSimilar") {
-      // Stub implementation: no similar regions found yet.
+      const data = e.data as unknown as {
+        queryMask: Float32Array;
+        maskSize: number;
+        config?: Partial<import("./similaritySearch").SimilarityConfig>;
+      };
+      if (!sam2 || !lastDinoFeatures) {
+        throw new Error("DINO features not available for similarity search");
+      }
+      const { queryMask, maskSize, config } = data;
+      const { features, gridH, gridW, dim, scaleXY } = lastDinoFeatures;
+      const candidates = findSimilarRegions({
+        patchFeatures: features,
+        gridH,
+        gridW,
+        dim,
+        queryMask,
+        maskSize,
+        config,
+      });
+
+      const samSize = 1024;
+      const patchSize = 14;
+
+      const masksOut: {
+        dims: readonly number[];
+        cpuData: Float32Array;
+      }[] = [];
+
+      for (const cand of candidates) {
+        const { box, peak } = candidateToSamCoords(
+          cand,
+          patchSize,
+          scaleXY,
+          samSize,
+        );
+        const peakPoint: Sam2Point = {
+          x: peak[0],
+          y: peak[1],
+          label: 1,
+        };
+        const result = await sam2.decode(ort, [peakPoint], null, [box]);
+        masksOut.push({
+          dims: result.masks.dims,
+          cpuData: result.masks.cpuData,
+        });
+      }
+
       self.postMessage({
         type: "findSimilarResult",
-        data: { masks: [] },
+        data: { masks: masksOut },
       });
       return;
     }

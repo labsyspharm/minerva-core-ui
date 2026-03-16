@@ -292,6 +292,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     warmup: warmupSam2,
     isProcessing: isSam2Processing,
     error: sam2Error,
+    hasDinoFeatures,
+    findSimilar: sam2FindSimilar,
+    similarPolygons,
   } = useSam2();
 
   // Track shift key for SAM2 negative-point clicks
@@ -1197,6 +1200,24 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     });
   }, [sam2Session]);
 
+  // SAM2 similarity results: overlay polygons for similar regions
+  const sam2SimilarLayer = React.useMemo(() => {
+    if (!similarPolygons.length) return null;
+    return new PolygonLayer({
+      id: "sam2-similar-polygons",
+      data: similarPolygons.map((polygon) => ({ polygon })),
+      getPolygon: (d: { polygon: [number, number][] }) => d.polygon,
+      getFillColor: [255, 140, 0, 80],
+      getLineColor: [255, 140, 0, 255],
+      getLineWidth: 2,
+      lineWidthMinPixels: 2,
+      lineWidthMaxPixels: 2,
+      stroked: true,
+      filled: true,
+      pickable: false,
+    });
+  }, [similarPolygons]);
+
   // SAM2 session preview: prompt point markers (green = positive, red = negative)
   const sam2PointsLayer = React.useMemo(() => {
     if (!sam2Session || sam2Session.points.length === 0) return null;
@@ -1394,6 +1415,16 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     };
   }, [sam2PreviewLayer]);
 
+  // Add/remove SAM2 similar regions layer
+  React.useEffect(() => {
+    if (sam2SimilarLayer) {
+      useOverlayStore.getState().addOverlayLayer(sam2SimilarLayer);
+    }
+    return () => {
+      useOverlayStore.getState().removeOverlayLayer("sam2-similar-polygons");
+    };
+  }, [sam2SimilarLayer]);
+
   // Add/remove SAM2 prompt point markers
   React.useEffect(() => {
     if (sam2PointsLayer) {
@@ -1488,6 +1519,32 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
             ({sam2Session.points.length} point
             {sam2Session.points.length !== 1 ? "s" : ""})
           </span>
+          <button
+            type="button"
+            onClick={() => sam2FindSimilar()}
+            disabled={!hasDinoFeatures || isSam2Processing}
+            style={{
+              marginLeft: 16,
+              padding: "4px 10px",
+              borderRadius: 6,
+              border: "none",
+              cursor:
+                !hasDinoFeatures || isSam2Processing
+                  ? "not-allowed"
+                  : "pointer",
+              backgroundColor: hasDinoFeatures ? "#ff9800" : "#555",
+              color: "#000",
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+            title={
+              hasDinoFeatures
+                ? "Find visually similar objects in view"
+                : "Waiting for DINO features…"
+            }
+          >
+            Find similar
+          </button>
         </div>
       )}
 
