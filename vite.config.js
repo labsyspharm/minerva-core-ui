@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import mkcert from "vite-plugin-mkcert";
 import { standardCssModules } from "vite-plugin-standard-css-modules";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 import svgr from "vite-plugin-svgr";
 
 export default defineConfig({
@@ -25,6 +26,14 @@ export default defineConfig({
         icon: true,
       },
     }),
+    viteStaticCopy({
+      targets: [
+        {
+          src: "src/assets/icons/*.svg",
+          dest: "icons",
+        },
+      ],
+    }),
     standardCssModules({
       include: ["/**/minerva-author-ui/**/*.css"],
     }),
@@ -46,7 +55,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "/icons": path.resolve(__dirname, "./public/icons"),
     },
     dedupe: [
       "@luma.gl/core",

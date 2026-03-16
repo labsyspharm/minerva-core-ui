@@ -5,6 +5,7 @@ import { PolylineIcon, TextIcon } from "@/components/shared/icons/OverlayIcons";
 import type { ConfigWaypoint } from "@/lib/config";
 import { useOverlayStore } from "@/lib/stores";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
+import { WaypointContentEditor } from "./WaypointContentEditor";
 import styles from "./WaypointsList.module.css";
 
 interface WaypointAnnotationEditorMetadata {
@@ -12,6 +13,18 @@ interface WaypointAnnotationEditorMetadata {
   story: ConfigWaypoint;
   storyIndex: number;
 }
+
+interface WaypointMarkdownEditorMetadata {
+  type: "markdown-editor";
+  story: ConfigWaypoint;
+  storyIndex: number;
+}
+
+type WaypointChildMetadata =
+  | WaypointAnnotationEditorMetadata
+  | WaypointMarkdownEditorMetadata;
+
+type WaypointItemMetadata = ConfigWaypoint | WaypointChildMetadata;
 
 type WaypointsListProps = {
   viewOnly?: boolean;
@@ -31,10 +44,11 @@ const WaypointsList = (props: WaypointsListProps) => {
     imageWidth,
     imageHeight,
     setTargetWaypointViewState,
+    updateStory,
   } = useOverlayStore();
 
   // Local state for markdown editing
-  const [expandedMarkdownStories, _setExpandedMarkdownStories] = React.useState<
+  const [expandedMarkdownStories, setExpandedMarkdownStories] = React.useState<
     Set<string>
   >(new Set());
 
@@ -83,54 +97,65 @@ const WaypointsList = (props: WaypointsListProps) => {
     importWaypointAnnotations,
   ]);
 
-  // Convert stories to ListItem format with inline annotations panel
-  const listItems: ListItem<
-    ConfigWaypoint | WaypointAnnotationEditorMetadata
-  >[] = stories.map((story, index) => {
-    const storyId = story.UUID || `story-${index}`;
-    const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
-    const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
-    const isDragging = draggedStoryId === storyId;
+  // Convert stories to ListItem format with inline editors and annotations panel
+  const listItems: ListItem<WaypointItemMetadata>[] = stories.map(
+    (story, index) => {
+      const storyId = story.UUID || `story-${index}`;
+      const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
+      const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
+      const isDragging = draggedStoryId === storyId;
 
-    // Build children array based on what's expanded
-    const children: ListItem<
-      ConfigWaypoint | WaypointAnnotationEditorMetadata
-    >[] = [];
+      // Build children array based on what's expanded
+      const children: ListItem<WaypointItemMetadata>[] = [];
 
-    if (isAnnotationsExpanded) {
-      children.push({
-        id: `${storyId}-annotations-panel`,
-        title: "Annotations Panel",
-        subtitle: "Overlays and annotations",
-        isActive: false,
-        isExpanded: false,
-        metadata: {
-          type: "annotations-panel",
-          story: story,
-          storyIndex: index,
-        } as WaypointAnnotationEditorMetadata,
-      });
-    }
+      if (isMarkdownExpanded) {
+        children.push({
+          id: `${storyId}-markdown-editor`,
+          title: "Waypoint Text",
+          subtitle: "Edit waypoint markdown content",
+          isActive: false,
+          isExpanded: false,
+          metadata: {
+            type: "markdown-editor",
+            story,
+            storyIndex: index,
+          } as WaypointMarkdownEditorMetadata,
+        });
+      }
 
-    return {
-      id: storyId,
-      title: story.Name,
-      subtitle: story.Content
-        ? story.Content.length > 30
-          ? `${story.Content.substring(0, 30)}...`
-          : story.Content
-        : "Story",
-      isActive: activeStoryIndex === index,
-      isExpanded: isMarkdownExpanded || isAnnotationsExpanded,
-      isDragging: isDragging,
-      children: children.length > 0 ? children : undefined,
-      metadata: story,
-    };
-  });
+      if (isAnnotationsExpanded) {
+        children.push({
+          id: `${storyId}-annotations-panel`,
+          title: "Annotations Panel",
+          subtitle: "Overlays and annotations",
+          isActive: false,
+          isExpanded: false,
+          metadata: {
+            type: "annotations-panel",
+            story,
+            storyIndex: index,
+          } as WaypointAnnotationEditorMetadata,
+        });
+      }
 
-  const handleItemClick = (
-    item: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>,
-  ) => {
+      return {
+        id: storyId,
+        title: story.Name,
+        subtitle: story.Content
+          ? story.Content.length > 30
+            ? `${story.Content.substring(0, 30)}...`
+            : story.Content
+          : "Story",
+        isActive: activeStoryIndex === index,
+        isExpanded: isMarkdownExpanded || isAnnotationsExpanded,
+        isDragging: isDragging,
+        children: children.length > 0 ? children : undefined,
+        metadata: story,
+      };
+    },
+  );
+
+  const handleItemClick = (item: ListItem<WaypointItemMetadata>) => {
     // Only handle story clicks, not child panel clicks
     if (item.metadata && !("type" in item.metadata)) {
       const story = item.metadata as ConfigWaypoint;
@@ -158,6 +183,19 @@ const WaypointsList = (props: WaypointsListProps) => {
   // Handle annotations panel toggle
   const handleToggleAnnotationsPanel = (storyId: string) => {
     setExpandedAnnotationsStories((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(storyId)) {
+        newSet.delete(storyId);
+      } else {
+        newSet.add(storyId);
+      }
+      return newSet;
+    });
+  };
+
+  // Handle markdown editor toggle
+  const handleToggleMarkdownEditor = (storyId: string) => {
+    setExpandedMarkdownStories((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(storyId)) {
         newSet.delete(storyId);
@@ -213,9 +251,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   };
 
   // Custom item actions for stories
-  const storyItemActions = (
-    item: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>,
-  ) => {
+  const storyItemActions = (item: ListItem<WaypointItemMetadata>) => {
     // Only show actions for story items, not child panel items
     if (item.metadata && "type" in item.metadata) {
       return null;
@@ -224,6 +260,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     const story = item.metadata as ConfigWaypoint;
     const storyId = story.UUID || item.id;
     const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
+    const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
 
     return (
       <div style={{ display: "flex", gap: "4px" }}>
@@ -249,28 +286,30 @@ const WaypointsList = (props: WaypointsListProps) => {
           ⋮⋮
         </button>
 
-        {/* Text Editor Button (disabled) */}
+        {/* Text Editor Button */}
         <button
           type="button"
           style={{
             background: "none",
             border: "none",
-            color: "#999",
-            cursor: "not-allowed",
+            color: isMarkdownExpanded ? "#007acc" : "#ccc",
+            cursor: "pointer",
             padding: "4px",
             borderRadius: "3px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             transition: "all 0.2s ease",
-            opacity: 0.5,
           }}
           onClick={(e) => {
             e.stopPropagation();
-            // No-op: markdown editor removed
+            handleToggleMarkdownEditor(storyId);
           }}
-          title="Text editor removed"
-          disabled
+          title={
+            isMarkdownExpanded
+              ? "Hide text editor"
+              : "Show text editor for waypoint content"
+          }
         >
           <TextIcon style={{ width: "14px", height: "14px" }} />
         </button>
@@ -306,28 +345,44 @@ const WaypointsList = (props: WaypointsListProps) => {
     );
   };
 
-  // Custom child renderer for annotations panel
+  // Custom child renderer for inline panels (annotations, markdown editor)
   const customChildRenderer = (
-    childItem: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>,
-    _parentItem: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>,
+    childItem: ListItem<WaypointItemMetadata>,
+    _parentItem: ListItem<WaypointItemMetadata>,
   ) => {
-    if (childItem.metadata && "type" in childItem.metadata) {
-      const metadata = childItem.metadata as WaypointAnnotationEditorMetadata;
+    if (
+      !childItem.metadata ||
+      !("type" in (childItem.metadata as WaypointChildMetadata))
+    ) {
+      return null;
+    }
 
-      if (metadata.type === "annotations-panel") {
-        const annotationsMetadata =
-          metadata as WaypointAnnotationEditorMetadata;
-        const story = annotationsMetadata.story;
+    const metadata = childItem.metadata as WaypointChildMetadata;
 
-        return (
-          <div className={styles.annotationsPanelInline}>
-            <WaypointAnnotationEditor
-              story={story}
-              storyIndex={annotationsMetadata.storyIndex}
-            />
-          </div>
-        );
-      }
+    if (metadata.type === "annotations-panel") {
+      const story = metadata.story;
+
+      return (
+        <div className={styles.annotationsPanelInline}>
+          <WaypointAnnotationEditor
+            story={story}
+            storyIndex={metadata.storyIndex}
+          />
+        </div>
+      );
+    }
+
+    if (metadata.type === "markdown-editor") {
+      const story = metadata.story;
+
+      return (
+        <div className={styles.annotationsPanelInline}>
+          <WaypointContentEditor
+            story={story}
+            storyIndex={metadata.storyIndex}
+          />
+        </div>
+      );
     }
 
     // Fallback to default rendering

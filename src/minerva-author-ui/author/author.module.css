@@ -26,15 +26,15 @@
   grid-template-columns: 3em 1fr;
 }
 .panel.inner {
-  border-radius: var(--radius-inner-0010);
+  border-radius: 0;
   background: var(--dim-gray-glass);
 }
 .panel.outer {
-  border-radius: var(--radius-outer-0010);
+  border-radius: 0;
   backdrop-filter: var(--glass-filter);
   background-color: var(--dark-main-glass);
   border: var(--thin-glass-border);
-  padding-left: var(--gap-tiny);
+  padding-left: 0;
   border-left: none;
   border-top: none;
 }
