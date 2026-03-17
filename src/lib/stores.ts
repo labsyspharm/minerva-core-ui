@@ -873,9 +873,11 @@ export interface OverlayStore {
   activeChannelGroupId: string | null;
 
   // Waypoint view state (for triggering view changes from waypoint selection)
-  // These are in Minerva 1.5 (OSD) format - will be converted by VivView
-  targetWaypointPan: [number, number] | null;
-  targetWaypointZoom: number | null;
+  // Canonical deck.gl viewstate for waypoint selection
+  targetWaypointViewState: {
+    zoom: number;
+    target: [number, number, number];
+  } | null;
 
   // Actions
   setActiveTool: (tool: string) => void;
@@ -944,6 +946,10 @@ export interface OverlayStore {
   setSam2ViewState: (vs: OrthographicViewState) => void;
   sam2ViewportSize: ViewportSize | null;
   setSam2ViewportSize: (size: ViewportSize) => void;
+
+  // Waypoint viewstate editing (Save does not persist — deferred)
+  editingViewstateWaypointIndex: number | null;
+  setEditingViewstateWaypointIndex: (index: number | null) => void;
 
   // Channel group and channel actions
   setActiveChannelGroup: (channelGroupId: string) => void;
@@ -1031,8 +1037,7 @@ export interface OverlayStore {
 
   // Waypoint view state actions
   setTargetWaypointViewState: (
-    pan: [number, number] | null,
-    zoom: number | null,
+    viewState: { zoom: number; target: [number, number, number] } | null,
   ) => void;
   clearTargetWaypointViewState: () => void;
 }
@@ -1082,13 +1087,13 @@ const overlayInitialState = {
   channelVisibilities: {},
   groupChannelLists: {},
   groupNames: {},
-  targetWaypointPan: null, // Target pan from waypoint selection (Minerva 1.5 format)
-  targetWaypointZoom: null, // Target zoom from waypoint selection (Minerva 1.5 format)
+  targetWaypointViewState: null,
   sam2ImageFetcher: null,
   sam2Processing: false,
   sam2DebugImages: null,
   sam2ViewState: null,
   sam2ViewportSize: null,
+  editingViewstateWaypointIndex: null,
 };
 
 // Create the overlay store
@@ -2156,11 +2161,12 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       },
 
       updateStory: (index: number, updates: Partial<ConfigWaypoint>) => {
-        set((state) => ({
-          stories: state.stories.map((story, i) =>
+        set((state) => {
+          const newStories = state.stories.map((story, i) =>
             i === index ? { ...story, ...updates } : story,
-          ),
-        }));
+          );
+          return { stories: newStories };
+        });
       },
 
       removeStory: (index: number) => {
@@ -2234,6 +2240,10 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       setSam2ViewportSize: (size) => {
         set({ sam2ViewportSize: size });
+      },
+
+      setEditingViewstateWaypointIndex: (index) => {
+        set({ editingViewstateWaypointIndex: index });
       },
 
       setChannelVisibilities: (vis: Record<string, boolean>) => {
@@ -2457,15 +2467,12 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       },
 
       // Waypoint view state actions
-      setTargetWaypointViewState: (
-        pan: [number, number] | null,
-        zoom: number | null,
-      ) => {
-        set({ targetWaypointPan: pan, targetWaypointZoom: zoom });
+      setTargetWaypointViewState: (viewState) => {
+        set({ targetWaypointViewState: viewState });
       },
 
       clearTargetWaypointViewState: () => {
-        set({ targetWaypointPan: null, targetWaypointZoom: null });
+        set({ targetWaypointViewState: null });
       },
     }),
     {

@@ -1,10 +1,16 @@
 import * as React from "react";
 import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
-import { PolylineIcon, TextIcon } from "@/components/shared/icons/OverlayIcons";
+import {
+  PinIcon,
+  PolylineIcon,
+  TextIcon,
+} from "@/components/shared/icons/OverlayIcons";
 // Types
 import type { ConfigWaypoint } from "@/lib/config";
 import { useOverlayStore } from "@/lib/stores";
+import { getWaypointViewState } from "@/lib/waypoint";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
+import { WaypointContentEditor } from "./WaypointContentEditor";
 import styles from "./WaypointsList.module.css";
 
 interface WaypointAnnotationEditorMetadata {
@@ -12,6 +18,18 @@ interface WaypointAnnotationEditorMetadata {
   story: ConfigWaypoint;
   storyIndex: number;
 }
+
+interface WaypointMarkdownEditorMetadata {
+  type: "markdown-editor";
+  story: ConfigWaypoint;
+  storyIndex: number;
+}
+
+type WaypointChildMetadata =
+  | WaypointAnnotationEditorMetadata
+  | WaypointMarkdownEditorMetadata;
+
+type WaypointItemMetadata = ConfigWaypoint | WaypointChildMetadata;
 
 type WaypointsListProps = {
   viewOnly?: boolean;
@@ -25,16 +43,21 @@ const WaypointsList = (props: WaypointsListProps) => {
     stories,
     activeStoryIndex,
     setActiveStory,
+    addStory,
     reorderStories,
     importWaypointAnnotations,
     clearImportedAnnotations,
     imageWidth,
     imageHeight,
     setTargetWaypointViewState,
+    sam2ViewportSize,
+    editingViewstateWaypointIndex,
+    setEditingViewstateWaypointIndex,
+    removeStory,
   } = useOverlayStore();
 
   // Local state for markdown editing
-  const [expandedMarkdownStories, _setExpandedMarkdownStories] = React.useState<
+  const [expandedMarkdownStories, setExpandedMarkdownStories] = React.useState<
     Set<string>
   >(new Set());
 
@@ -83,54 +106,70 @@ const WaypointsList = (props: WaypointsListProps) => {
     importWaypointAnnotations,
   ]);
 
-  // Convert stories to ListItem format with inline annotations panel
-  const listItems: ListItem<
-    ConfigWaypoint | WaypointAnnotationEditorMetadata
-  >[] = stories.map((story, index) => {
-    const storyId = story.UUID || `story-${index}`;
-    const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
-    const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
-    const isDragging = draggedStoryId === storyId;
+  // Convert stories to ListItem format with inline editors and annotations panel
+  const listItems: ListItem<WaypointItemMetadata>[] = stories.map(
+    (story, index) => {
+      const storyId = story.UUID || `story-${index}`;
+      const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
+      const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
+      const isDragging = draggedStoryId === storyId;
 
-    // Build children array based on what's expanded
-    const children: ListItem<
-      ConfigWaypoint | WaypointAnnotationEditorMetadata
-    >[] = [];
+      // Build children array based on what's expanded
+      const children: ListItem<WaypointItemMetadata>[] = [];
 
-    if (isAnnotationsExpanded) {
-      children.push({
-        id: `${storyId}-annotations-panel`,
-        title: "Annotations Panel",
-        subtitle: "Overlays and annotations",
-        isActive: false,
-        isExpanded: false,
-        metadata: {
-          type: "annotations-panel",
-          story: story,
-          storyIndex: index,
-        } as WaypointAnnotationEditorMetadata,
-      });
+      if (isMarkdownExpanded) {
+        children.push({
+          id: `${storyId}-markdown-editor`,
+          title: "Waypoint Text",
+          subtitle: "Edit waypoint markdown content",
+          isActive: false,
+          isExpanded: false,
+          metadata: {
+            type: "markdown-editor",
+            story,
+            storyIndex: index,
+          } as WaypointMarkdownEditorMetadata,
+        });
+      }
+
+      if (isAnnotationsExpanded) {
+        children.push({
+          id: `${storyId}-annotations-panel`,
+          title: "Annotations Panel",
+          subtitle: "Overlays and annotations",
+          isActive: false,
+          isExpanded: false,
+          metadata: {
+            type: "annotations-panel",
+            story,
+            storyIndex: index,
+          } as WaypointAnnotationEditorMetadata,
+        });
+      }
+
+      return {
+        id: storyId,
+        title: story.Name,
+        subtitle: story.Content
+          ? story.Content.length > 30
+            ? `${story.Content.substring(0, 30)}...`
+            : story.Content
+          : "Story",
+        isActive: activeStoryIndex === index,
+        isExpanded: isMarkdownExpanded || isAnnotationsExpanded,
+        isDragging: isDragging,
+        children: children.length > 0 ? children : undefined,
+        metadata: story,
+      };
+    },
+  );
+
+  const handleItemClick = (item: ListItem<WaypointItemMetadata>) => {
+    // Block changing waypoints while editing a viewstate
+    if (editingViewstateWaypointIndex !== null) {
+      return;
     }
 
-    return {
-      id: storyId,
-      title: story.Name,
-      subtitle: story.Content
-        ? story.Content.length > 30
-          ? `${story.Content.substring(0, 30)}...`
-          : story.Content
-        : "Story",
-      isActive: activeStoryIndex === index,
-      isExpanded: isMarkdownExpanded || isAnnotationsExpanded,
-      isDragging: isDragging,
-      children: children.length > 0 ? children : undefined,
-      metadata: story,
-    };
-  });
-
-  const handleItemClick = (
-    item: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>,
-  ) => {
     // Only handle story clicks, not child panel clicks
     if (item.metadata && !("type" in item.metadata)) {
       const story = item.metadata as ConfigWaypoint;
@@ -142,11 +181,33 @@ const WaypointsList = (props: WaypointsListProps) => {
         // annotations from the new story under the old story's panel
         setExpandedAnnotationsStories(new Set());
 
-        // Trigger view state change if waypoint has Pan/Zoom properties
-        // These are in Minerva 1.5 (OSD) format and will be converted by VivView
-        const { Pan, Zoom } = story;
-        if (Pan !== undefined || Zoom !== undefined) {
-          setTargetWaypointViewState(Pan || null, Zoom ?? null);
+        // Use the latest story from the store (authoritative) in case item.metadata is stale
+        const currentStory = useOverlayStore.getState().stories[index];
+
+        // Trigger view state change: prefer ViewState (Deck.gl format), else
+        // convert legacy Pan/Zoom. ViewState does not need viewport dims.
+        let viewState = null;
+        if (
+          currentStory?.ViewState &&
+          typeof currentStory.ViewState.zoom === "number" &&
+          Array.isArray(currentStory.ViewState.target) &&
+          currentStory.ViewState.target.length === 3
+        ) {
+          viewState = currentStory.ViewState;
+        } else if (
+          sam2ViewportSize?.width &&
+          imageWidth > 0 &&
+          imageHeight > 0
+        ) {
+          viewState = getWaypointViewState(
+            currentStory ?? story,
+            imageWidth,
+            imageHeight,
+            sam2ViewportSize.width,
+          );
+        }
+        if (viewState) {
+          setTargetWaypointViewState(viewState);
         }
 
         // Note: annotations are imported automatically by the useEffect
@@ -166,6 +227,78 @@ const WaypointsList = (props: WaypointsListProps) => {
       }
       return newSet;
     });
+  };
+
+  // Handle markdown editor toggle
+  const handleToggleMarkdownEditor = (storyId: string) => {
+    setExpandedMarkdownStories((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(storyId)) {
+        newSet.delete(storyId);
+      } else {
+        newSet.add(storyId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleAddWaypoint = () => {
+    const storyIndex = stories.length;
+    const newWaypoint: ConfigWaypoint = {
+      UUID: crypto.randomUUID(),
+      State: { Expanded: true },
+      Name: `Waypoint ${storyIndex + 1}`,
+      Content: "",
+      Arrows: [],
+      Overlays: [],
+    };
+
+    addStory(newWaypoint);
+    setActiveStory(storyIndex);
+
+    // Open the text editor by default for quick editing
+    setExpandedMarkdownStories((prev) => new Set(prev).add(newWaypoint.UUID));
+    // Close annotations panels to keep UI simple on create
+    setExpandedAnnotationsStories(new Set());
+  };
+
+  const handleStartEditViewstate = (storyId: string) => {
+    const index = stories.findIndex((s) => s.UUID === storyId);
+    if (index === -1) return;
+    setActiveStory(index);
+    setEditingViewstateWaypointIndex(index);
+  };
+
+  const handleCancelEditViewstate = () => {
+    setEditingViewstateWaypointIndex(null);
+  };
+
+  const handleSaveEditViewstate = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    e?.preventDefault();
+    // Don't persist — just exit edit mode. Viewstate save/export deferred.
+    setEditingViewstateWaypointIndex(null);
+  };
+
+  const handleDeleteWaypoint = (itemId: string) => {
+    const index = stories.findIndex((s) => s.UUID === itemId);
+    if (index === -1) return;
+
+    const storyId = stories[index]?.UUID;
+    removeStory(index);
+
+    if (storyId) {
+      setExpandedMarkdownStories((prev) => {
+        const next = new Set(prev);
+        next.delete(storyId);
+        return next;
+      });
+      setExpandedAnnotationsStories((prev) => {
+        const next = new Set(prev);
+        next.delete(storyId);
+        return next;
+      });
+    }
   };
 
   // Drag and drop handlers
@@ -213,9 +346,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   };
 
   // Custom item actions for stories
-  const storyItemActions = (
-    item: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>,
-  ) => {
+  const storyItemActions = (item: ListItem<WaypointItemMetadata>) => {
     // Only show actions for story items, not child panel items
     if (item.metadata && "type" in item.metadata) {
       return null;
@@ -224,6 +355,12 @@ const WaypointsList = (props: WaypointsListProps) => {
     const story = item.metadata as ConfigWaypoint;
     const storyId = story.UUID || item.id;
     const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
+    const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
+    const index = stories.findIndex((s) => s.UUID === storyId);
+    const isEditingViewstate =
+      editingViewstateWaypointIndex !== null &&
+      index !== -1 &&
+      editingViewstateWaypointIndex === index;
 
     return (
       <div style={{ display: "flex", gap: "4px" }}>
@@ -249,28 +386,30 @@ const WaypointsList = (props: WaypointsListProps) => {
           ⋮⋮
         </button>
 
-        {/* Text Editor Button (disabled) */}
+        {/* Text Editor Button */}
         <button
           type="button"
           style={{
             background: "none",
             border: "none",
-            color: "#999",
-            cursor: "not-allowed",
+            color: isMarkdownExpanded ? "#007acc" : "#ccc",
+            cursor: "pointer",
             padding: "4px",
             borderRadius: "3px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             transition: "all 0.2s ease",
-            opacity: 0.5,
           }}
           onClick={(e) => {
             e.stopPropagation();
-            // No-op: markdown editor removed
+            handleToggleMarkdownEditor(storyId);
           }}
-          title="Text editor removed"
-          disabled
+          title={
+            isMarkdownExpanded
+              ? "Hide text editor"
+              : "Show text editor for waypoint content"
+          }
         >
           <TextIcon style={{ width: "14px", height: "14px" }} />
         </button>
@@ -302,32 +441,72 @@ const WaypointsList = (props: WaypointsListProps) => {
         >
           <PolylineIcon style={{ width: "14px", height: "14px" }} />
         </button>
+
+        {/* Viewstate Edit Button (Save does not persist — deferred) */}
+        <button
+          type="button"
+          style={{
+            background: "none",
+            border: "none",
+            color: isEditingViewstate ? "#007acc" : "#ccc",
+            cursor: "pointer",
+            padding: "4px",
+            borderRadius: "3px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "all 0.2s ease",
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleStartEditViewstate(storyId);
+          }}
+          title="Edit waypoint viewstate"
+        >
+          <PinIcon style={{ width: "14px", height: "14px" }} />
+        </button>
       </div>
     );
   };
 
-  // Custom child renderer for annotations panel
+  // Custom child renderer for inline panels (annotations, markdown editor)
   const customChildRenderer = (
-    childItem: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>,
-    _parentItem: ListItem<ConfigWaypoint | WaypointAnnotationEditorMetadata>,
+    childItem: ListItem<WaypointItemMetadata>,
+    _parentItem: ListItem<WaypointItemMetadata>,
   ) => {
-    if (childItem.metadata && "type" in childItem.metadata) {
-      const metadata = childItem.metadata as WaypointAnnotationEditorMetadata;
+    if (
+      !childItem.metadata ||
+      !("type" in (childItem.metadata as WaypointChildMetadata))
+    ) {
+      return null;
+    }
 
-      if (metadata.type === "annotations-panel") {
-        const annotationsMetadata =
-          metadata as WaypointAnnotationEditorMetadata;
-        const story = annotationsMetadata.story;
+    const metadata = childItem.metadata as WaypointChildMetadata;
 
-        return (
-          <div className={styles.annotationsPanelInline}>
-            <WaypointAnnotationEditor
-              story={story}
-              storyIndex={annotationsMetadata.storyIndex}
-            />
-          </div>
-        );
-      }
+    if (metadata.type === "annotations-panel") {
+      const story = metadata.story;
+
+      return (
+        <div className={styles.annotationsPanelInline}>
+          <WaypointAnnotationEditor
+            story={story}
+            storyIndex={metadata.storyIndex}
+          />
+        </div>
+      );
+    }
+
+    if (metadata.type === "markdown-editor") {
+      const story = metadata.story;
+
+      return (
+        <div className={styles.annotationsPanelInline}>
+          <WaypointContentEditor
+            story={story}
+            storyIndex={metadata.storyIndex}
+          />
+        </div>
+      );
     }
 
     // Fallback to default rendering
@@ -337,9 +516,93 @@ const WaypointsList = (props: WaypointsListProps) => {
   return (
     <div slot="waypoints" className={className}>
       {/* Waypoints panel content */}
+      {editingViewstateWaypointIndex !== null && (
+        <div
+          style={{
+            marginBottom: "8px",
+            padding: "8px 10px",
+            borderRadius: "4px",
+            border: "1px solid #444",
+            backgroundColor: "#151515",
+            color: "#ddd",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "8px",
+            fontSize: "12px",
+          }}
+        >
+          <span>
+            Editing viewstate for{" "}
+            <strong>
+              {stories[editingViewstateWaypointIndex]
+                ? stories[editingViewstateWaypointIndex].Name
+                : "waypoint"}
+            </strong>
+            . Pan and zoom the image to set the view.
+          </span>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button
+              type="button"
+              style={{
+                background: "#007acc",
+                border: "none",
+                color: "#fff",
+                padding: "4px 8px",
+                borderRadius: "3px",
+                cursor: "pointer",
+                fontSize: "12px",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleSaveEditViewstate(e);
+              }}
+              title="Save waypoint viewstate (not persisted)"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              style={{
+                background: "none",
+                border: "1px solid #555",
+                color: "#ccc",
+                padding: "4px 8px",
+                borderRadius: "3px",
+                cursor: "pointer",
+                fontSize: "12px",
+              }}
+              onClick={handleCancelEditViewstate}
+              title="Cancel editing viewstate"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       <ItemList
         items={listItems}
         title="Waypoints"
+        headerActions={
+          viewOnly ? null : (
+            <button
+              type="button"
+              style={{
+                background: "none",
+                border: "1px solid #444",
+                color: "#ccc",
+                padding: "6px 10px",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+              onClick={handleAddWaypoint}
+              title="Add waypoint"
+            >
+              + Add
+            </button>
+          )
+        }
         onItemClick={handleItemClick}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
@@ -347,7 +610,8 @@ const WaypointsList = (props: WaypointsListProps) => {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         showVisibilityToggle={false}
-        showDeleteButton={false}
+        showDeleteButton={!viewOnly}
+        onDelete={viewOnly ? undefined : handleDeleteWaypoint}
         showExpandToggle={false}
         emptyMessage="No waypoints yet"
         customChildRenderer={customChildRenderer}

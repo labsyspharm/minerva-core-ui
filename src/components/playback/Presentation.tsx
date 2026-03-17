@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 import { useAnnotationLayers } from "@/lib/annotationLayers";
 import { useOverlayStore } from "@/lib/stores";
+import { getWaypointViewState } from "@/lib/waypoint";
 
 const _theme = {};
 
@@ -183,6 +184,7 @@ export const Presentation = (props: PresentationProps) => {
     imageWidth,
     imageHeight,
     setTargetWaypointViewState,
+    sam2ViewportSize,
     SourceChannels,
     Groups,
   } = useOverlayStore();
@@ -212,17 +214,33 @@ export const Presentation = (props: PresentationProps) => {
         clearImportedAnnotations();
       }
 
-      // Also set the initial view state based on waypoint's Pan/Zoom
-      const { Pan, Zoom } = story;
-      if (Pan !== undefined || Zoom !== undefined) {
-        setTargetWaypointViewState(Pan || null, Zoom ?? null);
+      // Also set the initial view state based on waypoint ViewState (preferred)
+      // or legacy Pan/Zoom (converted at runtime). ViewState does not need viewport.
+      const wp = story as ConfigWaypoint;
+      let viewState = null;
+      if (
+        wp.ViewState &&
+        typeof wp.ViewState.zoom === "number" &&
+        Array.isArray(wp.ViewState.target) &&
+        wp.ViewState.target.length === 3
+      ) {
+        viewState = wp.ViewState;
+      } else if (sam2ViewportSize?.width && imageWidth > 0 && imageHeight > 0) {
+        viewState = getWaypointViewState(
+          wp,
+          imageWidth,
+          imageHeight,
+          sam2ViewportSize.width,
+        );
       }
+      if (viewState) setTargetWaypointViewState(viewState);
     }
   }, [
     stories,
     activeStoryIndex,
     imageWidth,
     imageHeight,
+    sam2ViewportSize?.width,
     importWaypointAnnotations,
     clearImportedAnnotations,
     setTargetWaypointViewState,
@@ -240,13 +258,25 @@ export const Presentation = (props: PresentationProps) => {
   };
 
   const updateViewState = (storyIndex: number) => {
-    const story = stories[storyIndex];
-    if (story) {
-      const { Pan, Zoom } = story;
-      if (Pan !== undefined || Zoom !== undefined) {
-        setTargetWaypointViewState(Pan || null, Zoom ?? null);
-      }
+    const story = stories[storyIndex] as ConfigWaypoint | undefined;
+    if (!story) return;
+    let viewState = null;
+    if (
+      story.ViewState &&
+      typeof story.ViewState.zoom === "number" &&
+      Array.isArray(story.ViewState.target) &&
+      story.ViewState.target.length === 3
+    ) {
+      viewState = story.ViewState;
+    } else if (sam2ViewportSize?.width && imageWidth > 0 && imageHeight > 0) {
+      viewState = getWaypointViewState(
+        story,
+        imageWidth,
+        imageHeight,
+        sam2ViewportSize.width,
+      );
     }
+    if (viewState) setTargetWaypointViewState(viewState);
   };
 
   const storyFirst = () => {

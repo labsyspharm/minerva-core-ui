@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import * as React from "react";
 import styled from "styled-components";
 import { DrawingPanel } from "@/components/authoring/DrawingPanel";
+import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 // Types
 import type { ConfigProps } from "@/lib/config";
 import { useOverlayStore } from "@/lib/stores";
@@ -39,7 +40,7 @@ const TextWrap = styled.div`
 `;
 
 const TextOther = styled.div`
-  background-color: blue;
+  background-color: transparent;
 `;
 
 // Content layout styles (merged from content.tsx)
@@ -187,7 +188,9 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       class: theme,
     },
     <>
-      {props.children} {drawingPanel}
+      {props.children}
+      {drawingPanel}
+      <WaypointsList />
     </>,
   );
 
