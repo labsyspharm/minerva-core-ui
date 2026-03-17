@@ -28,6 +28,10 @@ type WaypointProperties = NameProperty & {
   Content: string;
   Pan?: [number, number];
   Zoom?: number;
+  ViewState?: {
+    target: [number, number, number];
+    zoom: number;
+  };
   Group?: string;
 };
 

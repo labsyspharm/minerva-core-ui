@@ -245,7 +245,7 @@ const Content = (props: Props) => {
     }
   };
 
-  const setItems = (ItemRegistry) => {
+  const setItems = React.useCallback((ItemRegistry) => {
     setConfig((config) => ({
       ...config,
       ItemRegistry: {
@@ -253,7 +253,13 @@ const Content = (props: Props) => {
         ...ItemRegistry,
       },
     }));
-  };
+  }, []);
+
+  // Keep a stable reference for store subscriptions.
+  const setItemsRef = React.useRef(setItems);
+  useEffect(() => {
+    setItemsRef.current = setItems;
+  }, [setItems]);
 
   const [fileName, setFileName] = useState("");
 
@@ -367,15 +373,18 @@ const Content = (props: Props) => {
     mutableFields,
   );
 
-  // Define a WebComponent for the item panel
-  const controlPanelElement = useMemo(
-    () =>
-      author({
-        ...config,
-        ItemRegistry,
-      }),
-    [config, ItemRegistry],
-  );
+  // Define a WebComponent for the item panel.
+  // Important: keep the custom element stable across config updates
+  // (like adding/removing waypoints), otherwise it remounts and resets
+  // internal UI state (e.g. active tab defaults back to GROUP-PANEL).
+  //
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally keyed by config.ID only
+  const controlPanelElement = useMemo(() => {
+    return author({
+      ...config,
+      ItemRegistry,
+    });
+  }, [config.ID]);
 
   const [valid, setValid] = useState({} as ValidObj);
 
@@ -615,13 +624,31 @@ const Content = (props: Props) => {
     setWaypoints,
   } = useOverlayStore();
 
-  // Initialize stories in the store when config changes
+  // Initialize stories in the store when config changes. Do not overwrite the store
+  // when it has been updated by the authoring UI (e.g. viewstate save) — the store
+  // is the source of truth during editing. Only sync config -> store when the store
+  // is empty (initial load) or when config and store already match (no-op).
   useEffect(() => {
-    if (config.ItemRegistry.Stories) {
-      setStories(config.ItemRegistry.Stories);
-      setWaypoints([]);
-    }
+    const configStories = config.ItemRegistry.Stories;
+    const storeStories = useOverlayStore.getState().stories;
+
+    if (!configStories?.length) return;
+    if (configStories === storeStories) return;
+    if (storeStories.length > 0) return;
+
+    setStories(configStories);
+    setWaypoints([]);
   }, [config.ItemRegistry.Stories, setStories, setWaypoints]);
+
+  // Sync store stories back into config for persistence.
+  useEffect(() => {
+    const unsub = useOverlayStore.subscribe((state, prevState) => {
+      if (state.stories !== prevState.stories) {
+        setItemsRef.current({ Stories: state.stories });
+      }
+    });
+    return () => unsub();
+  }, []);
 
   // Initialize to first active story index
   useEffect(() => {

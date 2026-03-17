@@ -1,4 +1,6 @@
 // Types
+
+import type { ConfigWaypoint } from "./config";
 import type { Story } from "./exhibit";
 
 // View state for deck.gl OrthographicView
@@ -73,6 +75,46 @@ const convertWaypointToViewState = (
   };
 };
 
+const isWaypointViewState = (v: unknown): v is WaypointViewState => {
+  if (!v || typeof v !== "object") return false;
+  const vs = v as { zoom?: unknown; target?: unknown };
+  return (
+    typeof vs.zoom === "number" &&
+    Array.isArray(vs.target) &&
+    vs.target.length === 3 &&
+    vs.target.every((n) => typeof n === "number")
+  );
+};
+
+/**
+ * Canonical view state getter for waypoints.
+ *
+ * - Prefer Deck.gl-native `waypoint.ViewState` when present.
+ * - Fall back to legacy Minerva 1.5 `Pan`/`Zoom` conversion when needed.
+ */
+const getWaypointViewState = (
+  waypoint: ConfigWaypoint,
+  imageWidth: number,
+  imageHeight: number,
+  containerWidth: number,
+): WaypointViewState | null => {
+  if (isWaypointViewState(waypoint.ViewState)) {
+    return waypoint.ViewState;
+  }
+  return convertWaypointToViewState(
+    waypoint.Pan,
+    waypoint.Zoom,
+    imageWidth,
+    imageHeight,
+    containerWidth,
+  );
+};
+
+const viewStateToWaypoint = (viewState: WaypointViewState | null) => {
+  if (!viewState) return { ViewState: undefined };
+  return { ViewState: viewState };
+};
+
 const modulo = (i, n) => ((i % n) + n) % n;
 
 const getWaypoints = (list: Story[], s: number) => {
@@ -84,4 +126,10 @@ const getWaypoint = (list: Story[], s: number, w: number) => {
   return waypoints[modulo(w, waypoints.length)];
 };
 
-export { getWaypoint, getWaypoints, convertWaypointToViewState };
+export {
+  getWaypoint,
+  getWaypoints,
+  convertWaypointToViewState,
+  getWaypointViewState,
+  viewStateToWaypoint,
+};

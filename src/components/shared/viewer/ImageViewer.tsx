@@ -21,7 +21,6 @@ import type { ConfigGroup, OverlayLayer } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
 import type { Config, Loader } from "@/lib/viv";
-import { convertWaypointToViewState } from "@/lib/waypoint";
 
 type ItemRegistryChannel = {
   name: string;
@@ -62,6 +61,34 @@ const Main = styled.div`
 
 const _isElement = (x = {}): x is HTMLElement => {
   return ["Width", "Height"].every((k) => `client${k}` in x);
+};
+
+/** Normalize view state to flat { zoom, target } — Deck may return ortho-nested. */
+const toFlatViewState = (
+  v:
+    | {
+        ortho?: { zoom?: number | [number, number]; target?: number[] };
+        zoom?: number | [number, number];
+        target?: number[];
+      }
+    | null
+    | undefined,
+): { zoom: number; target: [number, number, number] } | null => {
+  const inner = v?.ortho ?? v;
+  if (!inner || !Array.isArray(inner.target) || inner.target.length < 3)
+    return null;
+  const zoomVal = inner.zoom;
+  const zoom =
+    typeof zoomVal === "number"
+      ? zoomVal
+      : Array.isArray(zoomVal) && typeof zoomVal[0] === "number"
+        ? zoomVal[0]
+        : null;
+  if (zoom === null) return null;
+  return {
+    zoom,
+    target: inner.target.slice(0, 3) as [number, number, number],
+  };
 };
 
 const toSettingsInternal = (
@@ -218,10 +245,13 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const viewRef = useRef({ viewState, viewportSize });
   viewRef.current = { viewState, viewportSize };
 
+  // When we apply a programmatic waypoint view, ignore the next handleViewStateChange
+  // (Deck may emit stale state and overwrite our update)
+  const ignoreNextViewStateChangeRef = useRef(false);
+
   // Get target waypoint view state for responding to waypoint selection
-  const targetWaypointPan = useOverlayStore((state) => state.targetWaypointPan);
-  const targetWaypointZoom = useOverlayStore(
-    (state) => state.targetWaypointZoom,
+  const targetWaypointViewState = useOverlayStore(
+    (state) => state.targetWaypointViewState,
   );
   const clearTargetWaypointViewState = useOverlayStore(
     (state) => state.clearTargetWaypointViewState,
@@ -305,8 +335,23 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // Keep SAM2 store in sync with current view so useSam2 can compute the
   // visible region at click time without needing direct access to ImageViewer state.
+  // Deck.gl passes view state keyed by view id ("ortho"); normalize to flat { zoom, target }
+  // so consumers get a consistent shape.
   useEffect(() => {
-    setSam2ViewState(viewState);
+    const raw = viewState as {
+      ortho?: { zoom: number; target: [number, number, number] };
+      zoom?: number;
+      target?: [number, number, number];
+    } | null;
+    if (!raw) return;
+    const flat =
+      raw.ortho ??
+      (typeof raw.zoom === "number" &&
+      Array.isArray(raw.target) &&
+      raw.target.length === 3
+        ? { zoom: raw.zoom, target: raw.target as [number, number, number] }
+        : null);
+    if (flat) setSam2ViewState(flat);
   }, [viewState, setSam2ViewState]);
 
   useEffect(() => {
@@ -316,61 +361,48 @@ export const ImageViewer = (props: ImageViewerProps) => {
   // Apply waypoint view state when target is set (from waypoint selection)
   useEffect(() => {
     // Skip if no target is set
-    if (targetWaypointPan === null && targetWaypointZoom === null) {
+    if (targetWaypointViewState === null) {
       return;
     }
 
-    // Skip if we don't have the required dimensions
-    if (
-      !imageShape.x ||
-      imageShape.x <= 0 ||
-      !imageShape.y ||
-      imageShape.y <= 0 ||
-      viewportSize.width <= 0
-    ) {
+    if (viewportSize.width <= 0 || viewportSize.height <= 0) {
       return;
     }
 
-    // Convert Minerva 1.5 (OSD) coordinates to Minerva 2.0 (deck.gl) view state
-    const newViewState = convertWaypointToViewState(
-      targetWaypointPan,
-      targetWaypointZoom,
-      imageShape.x,
-      imageShape.y,
-      viewportSize.width,
-    );
+    const vs = targetWaypointViewState;
 
-    if (newViewState) {
-      // Cancel any ongoing transition
-      setViewState(
-        (currentViewState) =>
-          ({
-            ...currentViewState,
-            transitionDuration: 0,
-          }) as OrthographicViewState,
-      );
+    // Cancel any ongoing transition; normalize in case state is ortho-nested
+    setViewState((currentViewState) => {
+      const flat = toFlatViewState(currentViewState);
+      if (!flat) return currentViewState as OrthographicViewState;
+      return { ...flat, transitionDuration: 0 } as OrthographicViewState;
+    });
 
-      // Start the new transition
-      setTimeout(() => {
-        const viewStateWithTransition = {
-          ...newViewState,
-          transitionDuration: 1000,
-          transitionInterpolator: new LinearInterpolator(["target", "zoom"]),
-          transitionEasing: (x: number) => (x === 1 ? 1 : 1 - 2 ** (-10 * x)),
-        };
+    // Start the new transition; clear after applying to avoid race with re-render
+    const id = setTimeout(() => {
+      ignoreNextViewStateChangeRef.current = true;
+      const viewStateWithTransition = {
+        ...vs,
+        transitionDuration: 1000,
+        transitionInterpolator: new LinearInterpolator(["target", "zoom"]),
+        transitionEasing: (x: number) => (x === 1 ? 1 : 1 - 2 ** (-10 * x)),
+      };
 
-        setViewState(viewStateWithTransition as OrthographicViewState);
-        setViewportZoom(newViewState.zoom);
-      }, 0);
-
+      setViewState(viewStateWithTransition as OrthographicViewState);
+      setViewportZoom(vs.zoom);
       clearTargetWaypointViewState();
-    }
+      // Clear the ignore flag after Deck has had a chance to apply
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          ignoreNextViewStateChangeRef.current = false;
+        });
+      });
+    }, 0);
+
+    return () => clearTimeout(id);
   }, [
-    targetWaypointPan,
-    targetWaypointZoom,
-    imageShape.x,
-    imageShape.y,
-    viewportSize.width,
+    targetWaypointViewState,
+    viewportSize,
     clearTargetWaypointViewState,
     setViewportZoom,
   ]);
@@ -576,20 +608,26 @@ export const ImageViewer = (props: ImageViewerProps) => {
     [],
   );
 
-  // Memoize view state change handler
+  // Memoize view state change handler.
   const handleViewStateChange = useCallback(
     ({ interactionState, viewState: nextViewState }) => {
+      if (ignoreNextViewStateChangeRef.current) return;
       if (isDragging || (activeTool !== "move" && interactionState.isDragging))
         return;
-      // don't allow pan on non-move tool
-      setViewState(nextViewState);
-      // Update viewport zoom in store (view state is keyed by view id "ortho")
-      const zoom =
-        nextViewState?.ortho?.zoom ??
-        (typeof nextViewState?.zoom === "number"
-          ? nextViewState.zoom
-          : undefined);
-      if (typeof zoom === "number") setViewportZoom(zoom);
+      // Store normalized flat format when possible; else accept Deck's format
+      const flat = toFlatViewState(nextViewState);
+      if (flat) {
+        setViewState(flat as OrthographicViewState);
+        setViewportZoom(flat.zoom);
+      } else {
+        setViewState(nextViewState);
+        const zoom =
+          nextViewState?.ortho?.zoom ??
+          (typeof nextViewState?.zoom === "number"
+            ? nextViewState.zoom
+            : undefined);
+        if (typeof zoom === "number") setViewportZoom(zoom);
+      }
     },
     [isDragging, activeTool, setViewportZoom],
   );
