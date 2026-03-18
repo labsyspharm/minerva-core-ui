@@ -7,6 +7,7 @@ import {
 } from "@/components/shared/icons/OverlayIcons";
 // Types
 import type { ConfigWaypoint } from "@/lib/config";
+import { downloadStoryJSON } from "@/lib/exportStory";
 import { useOverlayStore } from "@/lib/stores";
 import { getWaypointViewState } from "@/lib/waypoint";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
@@ -586,21 +587,40 @@ const WaypointsList = (props: WaypointsListProps) => {
         title="Waypoints"
         headerActions={
           viewOnly ? null : (
-            <button
-              type="button"
-              style={{
-                background: "none",
-                border: "1px solid #444",
-                color: "#ccc",
-                padding: "6px 10px",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
-              onClick={handleAddWaypoint}
-              title="Add waypoint"
-            >
-              + Add
-            </button>
+            <div style={{ display: "flex", gap: "6px" }}>
+              <button
+                type="button"
+                style={{
+                  background: "none",
+                  border: "1px solid #444",
+                  color: "#ccc",
+                  padding: "6px 10px",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+                onClick={() =>
+                  downloadStoryJSON(stories, imageWidth, imageHeight)
+                }
+                title="Export story as JSON"
+              >
+                Export JSON
+              </button>
+              <button
+                type="button"
+                style={{
+                  background: "none",
+                  border: "1px solid #444",
+                  color: "#ccc",
+                  padding: "6px 10px",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+                onClick={handleAddWaypoint}
+                title="Add waypoint"
+              >
+                + Add
+              </button>
+            </div>
           )
         }
         onItemClick={handleItemClick}

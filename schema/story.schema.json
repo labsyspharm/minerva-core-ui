@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Story",
+  "type": "object",
+  "properties": {
+    "version": { "type": "string", "const": "1" },
+    "waypoints": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Waypoint" }
+    }
+  },
+  "required": ["version", "waypoints"],
+  "definitions": {
+    "Waypoint": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "UUID" },
+        "name": { "type": "string" },
+        "content": {
+          "type": "string",
+          "description": "Markdown narrative text"
+        },
+        "group": {
+          "type": "string",
+          "description": "Channel group name (optional)"
+        },
+        "position": { "$ref": "#/definitions/Position" },
+        "arrows": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Arrow" }
+        },
+        "overlays": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Overlay" }
+        }
+      },
+      "required": ["id", "name", "content", "position"]
+    },
+    "Position": {
+      "description": "Viewport position in image pixel coordinates",
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "Image pixel x of viewport center"
+        },
+        "y": {
+          "type": "number",
+          "description": "Image pixel y of viewport center"
+        },
+        "zoom": {
+          "type": "number",
+          "description": "deck.gl log2 zoom (0 = 1:1 pixel, negative = zoomed out)"
+        }
+      },
+      "required": ["x", "y", "zoom"]
+    },
+    "Arrow": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number", "description": "Tip x in image pixels" },
+        "y": { "type": "number", "description": "Tip y in image pixels" },
+        "angle": {
+          "type": "number",
+          "description": "Degrees 0-360, direction arrow points"
+        },
+        "text": { "type": "string" },
+        "hide_arrow": {
+          "type": "boolean",
+          "description": "If true, render as label only"
+        }
+      },
+      "required": ["x", "y", "angle", "text", "hide_arrow"]
+    },
+    "Overlay": {
+      "type": "object",
+      "description": "Rectangle overlay (highlights a region)",
+      "properties": {
+        "x": { "type": "number", "description": "Top-left x in image pixels" },
+        "y": { "type": "number", "description": "Top-left y in image pixels" },
+        "width": { "type": "number", "description": "Width in image pixels" },
+        "height": { "type": "number", "description": "Height in image pixels" },
+        "group": {
+          "type": "string",
+          "description": "Channel group to activate (optional)"
+        }
+      },
+      "required": ["x", "y", "width", "height"]
+    }
+  }
+}
