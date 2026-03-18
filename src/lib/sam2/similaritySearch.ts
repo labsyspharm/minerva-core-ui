@@ -12,13 +12,13 @@ export type SimilarityConfig = {
 };
 
 export const DEFAULT_SIMILARITY_CONFIG: SimilarityConfig = {
-  simQuantile: 0.9,
-  topKCandidates: 10,
-  minSimilarity: 0.5,
-  minComponentPatches: 4,
-  sizeRatioMin: 0.3,
-  sizeRatioMax: 3,
-  dedupIou: 0.75,
+  simQuantile: 0.85,
+  topKCandidates: 15,
+  minSimilarity: 0.35,
+  minComponentPatches: 3,
+  sizeRatioMin: 0.2,
+  sizeRatioMax: 4,
+  dedupIou: 0.7,
   exemplarErodeK: 3,
   bgDilateK: 7,
   bgSubtractAlpha: 0.5,
@@ -29,6 +29,9 @@ export type CandidateRegion = {
   scoreP90: number;
   peakX: number;
   peakY: number;
+  /** Grid coords of lowest-sim patch in bbox (for negative point, per plan Step 4). */
+  negPeakX: number;
+  negPeakY: number;
   minX: number;
   minY: number;
   maxX: number;
@@ -223,17 +226,24 @@ function extractCandidates(
   for (let i = 0; i < numPatches; i++) {
     binary[i] = simMap[i] >= threshold ? 1 : 0;
   }
+  const aboveThreshold = [...binary].filter((v) => v).length;
 
   const { labels, stats } = connectedComponents(binary, gridW, gridH);
+  let passedArea = 0;
+  let passedSimilarity = 0;
   const regions: CandidateRegion[] = [];
 
   for (const st of stats) {
     if (st.area < config.minComponentPatches) continue;
+    passedArea++;
 
     const scores: number[] = [];
     let peakScore = -Infinity;
     let peakX = st.minX;
     let peakY = st.minY;
+    let negScore = Infinity;
+    let negPeakX = st.minX;
+    let negPeakY = st.minY;
 
     for (let y = st.minY; y <= st.maxY; y++) {
       for (let x = st.minX; x <= st.maxX; x++) {
@@ -246,18 +256,26 @@ function extractCandidates(
           peakX = x;
           peakY = y;
         }
+        if (v < negScore) {
+          negScore = v;
+          negPeakX = x;
+          negPeakY = y;
+        }
       }
     }
     if (!scores.length) continue;
     scores.sort((a, b) => a - b);
     const p90 = scores[Math.floor(0.9 * (scores.length - 1))];
     if (p90 < config.minSimilarity) continue;
+    passedSimilarity++;
 
     regions.push({
       label: st.label,
       scoreP90: p90,
       peakX,
       peakY,
+      negPeakX,
+      negPeakY,
       minX: st.minX,
       minY: st.minY,
       maxX: st.maxX,
@@ -265,6 +283,17 @@ function extractCandidates(
       area: st.area,
     });
   }
+
+  console.log("[findSimilarRegions] extractCandidates filters", {
+    simQuantile: config.simQuantile,
+    threshold: threshold.toFixed(4),
+    aboveThreshold,
+    componentsTotal: stats.length,
+    passedMinComponentPatches: passedArea,
+    passedMinSimilarity: passedSimilarity,
+    minComponentPatches: config.minComponentPatches,
+    minSimilarity: config.minSimilarity,
+  });
 
   regions.sort((a, b) => b.scoreP90 - a.scoreP90);
   return regions.slice(0, config.topKCandidates);
@@ -278,6 +307,7 @@ export function candidateToSamCoords(
 ): {
   box: [number, number, number, number];
   peak: [number, number];
+  negPeak: [number, number];
 } {
   const [scaleX, scaleY] = scaleXY;
 
@@ -295,10 +325,12 @@ export function candidateToSamCoords(
   const [x1, y1] = toSam(candidate.minX, candidate.minY);
   const [x2, y2] = toSam(candidate.maxX + 1, candidate.maxY + 1);
   const [px, py] = toSam(candidate.peakX, candidate.peakY);
+  const [nx, ny] = toSam(candidate.negPeakX, candidate.negPeakY);
 
   return {
     box: [x1, y1, x2, y2],
     peak: [px, py],
+    negPeak: [nx, ny],
   };
 }
 
@@ -326,6 +358,15 @@ export function findSimilarRegions(params: {
   };
 
   const numPatches = gridH * gridW;
+  const queryFgPixels = [...queryMask].filter((v) => v > 0.25).length;
+  console.log("[findSimilarRegions] Input", {
+    gridH,
+    gridW,
+    dim,
+    numPatches,
+    maskSize,
+    queryMaskFgPixels: queryFgPixels,
+  });
 
   // Normalize patch features in-place, one vector per patch.
   for (let i = 0; i < numPatches; i++) {
@@ -345,9 +386,15 @@ export function findSimilarRegions(params: {
   for (let i = 0; i < maskResized.length; i++) {
     maskBinary[i] = maskResized[i] > 0.25 ? 1 : 0;
   }
+  const maskBinaryFg = [...maskBinary].filter((v) => v).length;
 
-  // Erode foreground to get a cleaner core.
-  const fgCore = binaryErode(maskBinary, gridW, gridH, config.exemplarErodeK);
+  // Erode foreground to get a cleaner core. If erosion would eliminate the
+  // exemplar (objCount=0), fall back to un-eroded mask so small objects still work.
+  let fgCore: Uint8Array;
+  const eroded = binaryErode(maskBinary, gridW, gridH, config.exemplarErodeK);
+  const erodedCount = [...eroded].filter((v) => v).length;
+  fgCore = erodedCount > 0 ? eroded : maskBinary;
+  const objCount = [...fgCore].filter((v) => v).length;
 
   // Background ring = dilated mask minus original mask.
   const dilated = binaryDilate(maskBinary, gridW, gridH, config.bgDilateK);
@@ -355,30 +402,43 @@ export function findSimilarRegions(params: {
   for (let i = 0; i < bgRing.length; i++) {
     bgRing[i] = dilated[i] && !maskBinary[i] ? 1 : 0;
   }
+  const bgCount = [...bgRing].filter((v) => v).length;
+
+  console.log("[findSimilarRegions] Mask pipeline", {
+    maskResizedFg: maskBinaryFg,
+    fgCoreAfterErode: objCount,
+    bgRingPatches: bgCount,
+    exemplarErodeK: config.exemplarErodeK,
+  });
 
   // Pool exemplar embeddings.
   const qObj = new Float32Array(dim);
   const qBg = new Float32Array(dim);
-  let objCount = 0;
-  let bgCount = 0;
+  let objCountAcc = 0;
+  let bgCountAcc = 0;
 
   for (let i = 0; i < numPatches; i++) {
     const offset = i * dim;
     if (fgCore[i]) {
       for (let d = 0; d < dim; d++) qObj[d] += patchFeatures[offset + d];
-      objCount++;
+      objCountAcc++;
     } else if (bgRing[i]) {
       for (let d = 0; d < dim; d++) qBg[d] += patchFeatures[offset + d];
-      bgCount++;
+      bgCountAcc++;
     }
   }
-  if (objCount === 0) return [];
-  for (let d = 0; d < dim; d++) qObj[d] /= objCount;
+  if (objCountAcc === 0) {
+    console.warn(
+      "[findSimilarRegions] objCount=0, no foreground patches — returning []",
+    );
+    return [];
+  }
+  for (let d = 0; d < dim; d++) qObj[d] /= objCountAcc;
   l2Normalize(qObj);
 
   let qBgNorm: Float32Array | null = null;
-  if (bgCount > 0) {
-    for (let d = 0; d < dim; d++) qBg[d] /= bgCount;
+  if (bgCountAcc > 0) {
+    for (let d = 0; d < dim; d++) qBg[d] /= bgCountAcc;
     l2Normalize(qBg);
     qBgNorm = qBg;
   }
@@ -392,5 +452,24 @@ export function findSimilarRegions(params: {
     config.bgSubtractAlpha,
   );
 
-  return extractCandidates(simMap, gridH, gridW, config);
+  const simVals = Array.from(simMap);
+  simVals.sort((a, b) => a - b);
+  const simMin = simVals[0] ?? 0;
+  const simMax = simVals[simVals.length - 1] ?? 0;
+  const simP50 = simVals[Math.floor(0.5 * simVals.length)] ?? 0;
+  const simP90 = simVals[Math.floor(0.9 * simVals.length)] ?? 0;
+  console.log("[findSimilarRegions] Similarity map", {
+    min: simMin.toFixed(4),
+    max: simMax.toFixed(4),
+    p50: simP50.toFixed(4),
+    p90: simP90.toFixed(4),
+    minSimilarity: config.minSimilarity,
+  });
+
+  const candidates = extractCandidates(simMap, gridH, gridW, config);
+  console.log("[findSimilarRegions] extractCandidates returned", {
+    count: candidates.length,
+    topKCandidates: config.topKCandidates,
+  });
+  return candidates;
 }

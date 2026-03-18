@@ -7,8 +7,8 @@ import {
 } from "@deck.gl/layers";
 import * as React from "react";
 import ArrowDrawingIconUrl from "@/components/shared/icons/arrow-annotation-drawing.svg?url";
+import { useSam2Context } from "@/contexts/Sam2Context";
 import { ARROW_ICON_SIZE, useAnnotationLayers } from "@/lib/annotationLayers";
-import { useSam2 } from "@/lib/sam2/useSam2";
 import { ellipseToPolygon, lineToPolygon, useOverlayStore } from "@/lib/stores";
 
 // Shared Text Edit Panel Component
@@ -292,10 +292,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     warmup: warmupSam2,
     isProcessing: isSam2Processing,
     error: sam2Error,
-    hasDinoFeatures,
-    findSimilar: sam2FindSimilar,
     similarPolygons,
-  } = useSam2();
+    similarityDebugCandidates,
+  } = useSam2Context();
 
   // Track shift key for SAM2 negative-point clicks
   const shiftKeyRef = React.useRef(false);
@@ -1200,6 +1199,42 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     });
   }, [sam2Session]);
 
+  // SAM2 similarity debug: DINO candidate points only (green=positive, red=negative)
+  const sam2SimilarityDebugLayer = React.useMemo(() => {
+    if (!similarityDebugCandidates) return null;
+    const { peaks, negPeaks } = similarityDebugCandidates;
+    const data: Array<{
+      position: [number, number, number];
+      color: [number, number, number, number];
+    }> = [
+      ...peaks.map(([x, y]) => ({
+        position: [x, y, 0] as [number, number, number],
+        color: [0, 200, 0, 255] as [number, number, number, number],
+      })),
+      ...negPeaks.map(([x, y]) => ({
+        position: [x, y, 0] as [number, number, number],
+        color: [255, 50, 50, 255] as [number, number, number, number],
+      })),
+    ];
+    if (data.length === 0) return null;
+    return new ScatterplotLayer({
+      id: "sam2-similarity-debug-points",
+      data,
+      getPosition: (d: { position: [number, number, number] }) => d.position,
+      getRadius: 8,
+      radiusMinPixels: 8,
+      radiusMaxPixels: 8,
+      getFillColor: (d: { color: [number, number, number, number] }) => d.color,
+      getLineColor: [255, 255, 255, 255],
+      getLineWidth: 2,
+      lineWidthMinPixels: 2,
+      lineWidthMaxPixels: 2,
+      stroked: true,
+      filled: true,
+      pickable: false,
+    });
+  }, [similarityDebugCandidates]);
+
   // SAM2 similarity results: overlay polygons for similar regions
   const sam2SimilarLayer = React.useMemo(() => {
     if (!similarPolygons.length) return null;
@@ -1425,6 +1460,18 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     };
   }, [sam2SimilarLayer]);
 
+  // Add/remove SAM2 similarity debug layer (DINO candidate points: green=positive, red=negative)
+  React.useEffect(() => {
+    if (sam2SimilarityDebugLayer) {
+      useOverlayStore.getState().addOverlayLayer(sam2SimilarityDebugLayer);
+    }
+    return () => {
+      useOverlayStore
+        .getState()
+        .removeOverlayLayer("sam2-similarity-debug-points");
+    };
+  }, [sam2SimilarityDebugLayer]);
+
   // Add/remove SAM2 prompt point markers
   React.useEffect(() => {
     if (sam2PointsLayer) {
@@ -1519,32 +1566,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
             ({sam2Session.points.length} point
             {sam2Session.points.length !== 1 ? "s" : ""})
           </span>
-          <button
-            type="button"
-            onClick={() => sam2FindSimilar()}
-            disabled={!hasDinoFeatures || isSam2Processing}
-            style={{
-              marginLeft: 16,
-              padding: "4px 10px",
-              borderRadius: 6,
-              border: "none",
-              cursor:
-                !hasDinoFeatures || isSam2Processing
-                  ? "not-allowed"
-                  : "pointer",
-              backgroundColor: hasDinoFeatures ? "#ff9800" : "#555",
-              color: "#000",
-              fontSize: 12,
-              fontWeight: 600,
-            }}
-            title={
-              hasDinoFeatures
-                ? "Find visually similar objects in view"
-                : "Waiting for DINO features…"
-            }
-          >
-            Find similar
-          </button>
         </div>
       )}
 

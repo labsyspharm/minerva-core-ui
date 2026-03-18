@@ -5,6 +5,7 @@ import AddBrushIcon from "@/components/shared/icons/add-brush.svg?react";
 import AnnotationColorIcon from "@/components/shared/icons/annotation-color.svg?react";
 import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
 import EraserIcon from "@/components/shared/icons/eraser.svg?react";
+import FindSimilarIcon from "@/components/shared/icons/find-similar.svg?react";
 import GroupIcon from "@/components/shared/icons/group.svg?react";
 import LineIcon from "@/components/shared/icons/line.svg?react";
 import PointIcon from "@/components/shared/icons/point.svg?react";
@@ -12,6 +13,7 @@ import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
 import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
+import { useSam2Context } from "@/contexts/Sam2Context";
 import type { Annotation } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
 
@@ -211,6 +213,15 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const brushEditMode = useOverlayStore((state) => state.brushEditMode);
   const startBrushEdit = useOverlayStore((state) => state.startBrushEdit);
   const stopBrushEdit = useOverlayStore((state) => state.stopBrushEdit);
+  const {
+    findSimilarForLayer,
+    hasDinoFeatures,
+    isProcessing: isSam2Processing,
+    similarPolygons,
+    pendingFindSimilarTargetId,
+    applyFindSimilar,
+    discardFindSimilar,
+  } = useSam2Context();
 
   // Local state for text editing
   const [editingTextId, setEditingTextId] = React.useState<string | null>(null);
@@ -575,6 +586,97 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
               <EraserIcon style={{ width: "14px", height: "14px" }} />
             </button>
           )}
+
+          {/* Find Similar (per-layer) */}
+          {isPolygon &&
+            (pendingFindSimilarTargetId === annotation.id &&
+            similarPolygons.length > 0 ? (
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <span style={{ color: "#ccc", fontSize: "11px" }}>
+                  {similarPolygons.length} found
+                </span>
+                <button
+                  type="button"
+                  style={{
+                    background: "#3a6",
+                    border: "1px solid #2a5",
+                    color: "white",
+                    cursor: "pointer",
+                    padding: "2px 6px",
+                    borderRadius: "3px",
+                    fontSize: "11px",
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    applyFindSimilar();
+                  }}
+                  title="Create new layers from each similar region"
+                >
+                  Add as layers
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    background: "none",
+                    border: "1px solid #666",
+                    color: "#ccc",
+                    cursor: "pointer",
+                    padding: "2px 6px",
+                    borderRadius: "3px",
+                    fontSize: "11px",
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    discardFindSimilar();
+                  }}
+                  title="Discard preview"
+                >
+                  Discard
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#ccc",
+                  cursor:
+                    !hasDinoFeatures || isSam2Processing
+                      ? "not-allowed"
+                      : "pointer",
+                  padding: "4px",
+                  borderRadius: "3px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s ease",
+                  opacity: !hasDinoFeatures || isSam2Processing ? 0.5 : 1,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+
+                  // Ensure polygon is visible before operating on it
+                  if (hiddenLayers.has(annotation.id)) {
+                    toggleLayerVisibility(annotation.id);
+                  }
+
+                  void findSimilarForLayer(annotation.id);
+                }}
+                disabled={!hasDinoFeatures || isSam2Processing}
+                title={
+                  !hasDinoFeatures
+                    ? "Waiting for DINO features…"
+                    : isSam2Processing
+                      ? "Finding similar…"
+                      : "Find visually similar objects (preview, then apply)"
+                }
+              >
+                <FindSimilarIcon style={{ width: "14px", height: "14px" }} />
+              </button>
+            ))}
 
           {/* Text Edit Button */}
           <button

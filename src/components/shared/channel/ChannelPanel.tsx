@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import * as React from "react";
 import styled from "styled-components";
 import { DrawingPanel } from "@/components/authoring/DrawingPanel";
+import { Sam2Provider } from "@/contexts/Sam2Context";
 // Types
 import type { ConfigProps } from "@/lib/config";
 import { useOverlayStore } from "@/lib/stores";
@@ -186,9 +187,9 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     {
       class: theme,
     },
-    <>
+    <Sam2Provider>
       {props.children} {drawingPanel}
-    </>,
+    </Sam2Provider>,
   );
 
   const content = props.authorMode ? (
