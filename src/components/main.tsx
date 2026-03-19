@@ -1,6 +1,6 @@
 import type { FormEventHandler } from "react";
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
 import { FileHandler } from "@/components/shared/FileHandler";
@@ -373,27 +373,34 @@ const Content = (props: Props) => {
     mutableFields,
   );
 
-  // Define a WebComponent for the item panel.
-  // Important: keep the custom element stable across config updates
-  // (like adding/removing waypoints), otherwise it remounts and resets
-  // internal UI state (e.g. active tab defaults back to GROUP-PANEL).
-  //
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally keyed by config.ID only
-  const controlPanelElement = useMemo(() => {
-    return author({
-      ...config,
-      ItemRegistry,
-    });
-  }, [config.ID]);
+  // Recreate the author web component only when config.ID changes (same behavior
+  // as the previous useMemo([config.ID]) + ref, without hook dependency noise).
+  const controlPanelCacheRef = React.useRef<{
+    configId: string;
+    element: ReturnType<typeof author>;
+  } | null>(null);
+  const cached = controlPanelCacheRef.current;
+  if (!cached || cached.configId !== config.ID) {
+    controlPanelCacheRef.current = {
+      configId: config.ID,
+      element: author({
+        ...config,
+        ItemRegistry,
+      }),
+    };
+  }
+  const controlPanelElement = controlPanelCacheRef.current.element;
 
   const [valid, setValid] = useState({} as ValidObj);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: demo runs once on mount when demo_dicom_web is true
+  const onStartRef = React.useRef(onStart);
+  onStartRef.current = onStart;
+
   useEffect(() => {
     if (!props.demo_dicom_web) return;
-    (async () => {
+    void (async () => {
       // H&E Demo Image and CyCIF Demo Image
-      await onStart(
+      await onStartRef.current(
         [
           [
             "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.2507374895.494638264.1767738966319.4.0",

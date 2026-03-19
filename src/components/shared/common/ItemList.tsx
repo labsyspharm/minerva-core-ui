@@ -27,12 +27,18 @@ export interface ListItem<T = Metadata> {
   isExpanded?: boolean;
 }
 
+export type ItemListVariant = "default" | "markdownEditorChrome";
+
 export interface ItemListProps<T = Metadata> {
   items: ListItem<T>[];
   title: string;
   noHeader?: boolean;
   emptyMessage?: string;
   className?: string;
+  /** Match @uiw/react-md-editor dark UI (#0d1117 / #30363d) */
+  variant?: ItemListVariant;
+  /** Dense rows (~waypoint list): tighter padding and type sizes */
+  compactRows?: boolean;
   onItemClick?: (item: ListItem<T>) => void;
   onItemDoubleClick?: (item: ListItem<T>) => void;
   onToggleVisibility?: (itemId: string) => void;
@@ -44,6 +50,8 @@ export interface ItemListProps<T = Metadata> {
   onDragLeave?: () => void;
   onDrop?: (targetId: string, draggedId: string) => void;
   showVisibilityToggle?: boolean;
+  /** When true, show/hide is at the start of the row (before the icon). Default trailing (with other actions). */
+  visibilityToggleLeading?: boolean;
   showDeleteButton?: boolean;
   showExpandToggle?: boolean;
   headerActions?: React.ReactNode;
@@ -59,6 +67,8 @@ const ItemList = <T = React.Component>({
   title,
   emptyMessage = "No items yet",
   className = "",
+  variant = "default",
+  compactRows = false,
   onItemClick,
   onItemDoubleClick,
   onToggleVisibility,
@@ -70,6 +80,7 @@ const ItemList = <T = React.Component>({
   onDragLeave,
   onDrop,
   showVisibilityToggle = true,
+  visibilityToggleLeading = false,
   showDeleteButton = true,
   showExpandToggle = false,
   headerActions,
@@ -123,6 +134,38 @@ const ItemList = <T = React.Component>({
 
   // All styles now handled by CSS classes
 
+  const renderVisibilityToggle = (item: ListItem<T>) => {
+    if (!showVisibilityToggle || !onToggleVisibility) {
+      return null;
+    }
+    return (
+      <button
+        type="button"
+        className={styles.button}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleVisibility(item.id);
+        }}
+        title={item.isHidden ? "Show" : "Hide"}
+      >
+        <svg
+          aria-labelledby="show-title"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <title id="show-title">show</title>
+          {item.isHidden ? (
+            <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+          ) : (
+            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+          )}
+        </svg>
+      </button>
+    );
+  };
+
   const renderItem = (item: ListItem<T>, isChild = false) => {
     const isDragging = draggedItemId === item.id;
     const isDropTarget = dropTargetId === item.id;
@@ -139,12 +182,21 @@ const ItemList = <T = React.Component>({
       .filter(Boolean)
       .join(" ");
 
+    const contentBlock = (
+      <span className={styles.content}>
+        <span
+          className={`${styles.title} ${item.isActive ? styles.titleActive : ""}`}
+        >
+          {item.title}
+        </span>
+        {item.subtitle ? (
+          <span className={styles.subtitle}>{item.subtitle}</span>
+        ) : null}
+      </span>
+    );
+
     return (
-      // biome-ignore lint/a11y/useSemanticElements: div needed to allow nested button children
-      <div
-        role="button"
-        tabIndex={0}
-        key={item.id}
+      <li
         className={itemClasses}
         draggable={!!onDragStart}
         onDragStart={(e) => handleDragStart(item.id, e)}
@@ -152,19 +204,28 @@ const ItemList = <T = React.Component>({
         onDragOver={(e) => handleDragOver(item.id, e)}
         onDragLeave={(_e) => handleDragLeave()}
         onDrop={(e) => handleDrop(item.id, e)}
-        onClick={() => onItemClick?.(item)}
-        onDoubleClick={() => onItemDoubleClick?.(item)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onItemClick?.(item);
-          }
-        }}
       >
-        {/* Icon */}
-        {item.icon && <div className={styles.icon}>{item.icon}</div>}
+        {visibilityToggleLeading ? (
+          <span className={styles.itemLeadingVisibility}>
+            {renderVisibilityToggle(item)}
+          </span>
+        ) : null}
 
-        {/* Expand/Collapse Toggle */}
+        {item.icon ? (
+          onItemClick ? (
+            <button
+              type="button"
+              className={styles.itemIconHit}
+              onClick={() => onItemClick(item)}
+              onDoubleClick={() => onItemDoubleClick?.(item)}
+            >
+              <span className={styles.icon}>{item.icon}</span>
+            </button>
+          ) : (
+            <div className={styles.icon}>{item.icon}</div>
+          )
+        ) : null}
+
         {showExpandToggle && item.children && (
           <button
             type="button"
@@ -188,47 +249,22 @@ const ItemList = <T = React.Component>({
           </button>
         )}
 
-        {/* Content */}
-        <div className={styles.content}>
-          <div
-            className={`${styles.title} ${item.isActive ? styles.titleActive : ""}`}
+        {onItemClick ? (
+          <button
+            type="button"
+            className={styles.itemRowMain}
+            onClick={() => onItemClick(item)}
+            onDoubleClick={() => onItemDoubleClick?.(item)}
           >
-            {item.title}
-          </div>
-          {item.subtitle && (
-            <div className={styles.subtitle}>{item.subtitle}</div>
-          )}
-        </div>
+            {contentBlock}
+          </button>
+        ) : (
+          <div className={styles.itemRowMainStatic}>{contentBlock}</div>
+        )}
 
         {/* Actions */}
         <div className={styles.actions}>
-          {/* Visibility Toggle */}
-          {showVisibilityToggle && onToggleVisibility && (
-            <button
-              type="button"
-              className={styles.button}
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleVisibility(item.id);
-              }}
-              title={item.isHidden ? "Show" : "Hide"}
-            >
-              <svg
-                aria-labelledby="show-title"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <title id="show-title">show</title>
-                {item.isHidden ? (
-                  <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
-                ) : (
-                  <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                )}
-              </svg>
-            </button>
-          )}
+          {!visibilityToggleLeading ? renderVisibilityToggle(item) : null}
 
           {/* Custom Item Actions */}
           {itemActions?.(item)}
@@ -257,7 +293,7 @@ const ItemList = <T = React.Component>({
             </button>
           )}
         </div>
-      </div>
+      </li>
     );
   };
 
@@ -272,33 +308,49 @@ const ItemList = <T = React.Component>({
     </div>
   );
 
+  const rootClass = [
+    styles.itemList,
+    variant === "markdownEditorChrome" ? styles.itemListMarkdownChrome : "",
+    compactRows ? styles.itemListCompact : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className={`${styles.itemList} ${className}`}>
+    <div className={rootClass}>
       {/* Header */}
       {noHeader ? "" : header}
 
       {/* List */}
-      <div className={styles.list}>
-        {items.length === 0 ? (
-          <div className={styles.emptyMessage}>{emptyMessage}</div>
-        ) : (
-          items.map((item) => (
+      {items.length === 0 ? (
+        <div className={styles.emptyMessage}>{emptyMessage}</div>
+      ) : (
+        <ul className={styles.list}>
+          {items.map((item) => (
             <React.Fragment key={item.id}>
               {renderItem(item)}
               {/* Render children if expanded */}
               {item.isExpanded &&
                 item.children &&
-                item.children.map((child) => (
-                  <React.Fragment key={`${item.id}-child-${child.id}`}>
-                    {customChildRenderer
-                      ? customChildRenderer(child, item)
-                      : renderItem(child, true)}
-                  </React.Fragment>
-                ))}
+                item.children.map((child) =>
+                  customChildRenderer ? (
+                    <li
+                      key={`${item.id}-child-${child.id}`}
+                      className={styles.itemChild}
+                    >
+                      {customChildRenderer(child, item)}
+                    </li>
+                  ) : (
+                    <React.Fragment key={`${item.id}-child-${child.id}`}>
+                      {renderItem(child, true)}
+                    </React.Fragment>
+                  ),
+                )}
             </React.Fragment>
-          ))
-        )}
-      </div>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

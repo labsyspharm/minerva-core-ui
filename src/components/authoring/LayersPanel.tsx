@@ -1,11 +1,16 @@
 import * as React from "react";
 import styles from "@/components/authoring/DrawingPanel.module.css";
-import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
+import {
+  ItemList,
+  type ItemListVariant,
+  type ListItem,
+} from "@/components/shared/common/ItemList";
 import AddBrushIcon from "@/components/shared/icons/add-brush.svg?react";
 import AnnotationColorIcon from "@/components/shared/icons/annotation-color.svg?react";
+import CursorIcon from "@/components/shared/icons/cursor.svg?react";
 import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
 import EraserIcon from "@/components/shared/icons/eraser.svg?react";
-import GroupIcon from "@/components/shared/icons/group.svg?react";
+import FolderIcon from "@/components/shared/icons/folder.svg?react";
 import LineIcon from "@/components/shared/icons/line.svg?react";
 import PointIcon from "@/components/shared/icons/point.svg?react";
 import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
@@ -171,8 +176,40 @@ const TextEditPanel: React.FC<TextEditPanelProps> = ({
   );
 };
 
+const TrashIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+  </svg>
+);
+
+const getAnnotationRgba = (
+  annotation: Annotation,
+): [number, number, number, number] => {
+  if (annotation.type === "text") {
+    return annotation.style.fontColor;
+  }
+  if (
+    annotation.type === "rectangle" ||
+    annotation.type === "ellipse" ||
+    annotation.type === "polygon" ||
+    annotation.type === "line" ||
+    annotation.type === "polyline"
+  ) {
+    return annotation.style.lineColor;
+  }
+  if (annotation.type === "point") {
+    return annotation.style.fillColor;
+  }
+  return [255, 255, 255, 255];
+};
+
 interface LayersPanelProps {
   className?: string;
+  itemListVariant?: ItemListVariant;
+  /** When set, renders one unified top bar: tools + layers actions */
+  toolbarSlot?: React.ReactNode;
+  /** Used when no annotation is selected (or a group is selected) for the header color control */
+  onOpenGlobalColorPicker?: () => void;
   onOpenAnnotationColorPicker?: (
     annotationId: string,
     currentColor: [number, number, number, number],
@@ -181,6 +218,9 @@ interface LayersPanelProps {
 
 const LayersPanel: React.FC<LayersPanelProps> = ({
   className,
+  itemListVariant = "default",
+  toolbarSlot,
+  onOpenGlobalColorPicker,
   onOpenAnnotationColorPicker,
 }) => {
   // Subscribe to annotations and hidden layers from store
@@ -192,7 +232,6 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const updateAnnotationLabel = useOverlayStore(
     (state) => state.updateAnnotationLabel,
   );
-  const clearAnnotations = useOverlayStore((state) => state.clearAnnotations);
   const toggleLayerVisibility = useOverlayStore(
     (state) => state.toggleLayerVisibility,
   );
@@ -232,24 +271,40 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     string | null
   >(null);
 
+  const [selectedLayerId, setSelectedLayerId] = React.useState<string | null>(
+    null,
+  );
+
+  React.useEffect(() => {
+    if (!selectedLayerId) {
+      return;
+    }
+    const isGroup = annotationGroups.some((g) => g.id === selectedLayerId);
+    const isAnnotation = annotations.some((a) => a.id === selectedLayerId);
+    if (!isGroup && !isAnnotation) {
+      setSelectedLayerId(null);
+    }
+  }, [annotations, annotationGroups, selectedLayerId]);
+
   const getLayerIcon = (annotation: Annotation) => {
+    const dim = { width: "14px", height: "14px" } as const;
     switch (annotation.type) {
       case "rectangle":
-        return <RectangleIcon style={{ width: "16px", height: "16px" }} />;
+        return <RectangleIcon style={dim} />;
       case "ellipse":
-        return <EllipseIcon style={{ width: "16px", height: "16px" }} />;
+        return <EllipseIcon style={dim} />;
       case "polygon":
-        return <PolygonIcon style={{ width: "16px", height: "16px" }} />;
+        return <PolygonIcon style={dim} />;
       case "line":
-        return <LineIcon style={{ width: "16px", height: "16px" }} />;
+        return <LineIcon style={dim} />;
       case "polyline":
-        return <PolylineIcon style={{ width: "16px", height: "16px" }} />;
+        return <PolylineIcon style={dim} />;
       case "point":
-        return <PointIcon style={{ width: "16px", height: "16px" }} />;
+        return <PointIcon style={dim} />;
       case "text":
-        return <TextIcon style={{ width: "16px", height: "16px" }} />;
+        return <TextIcon style={dim} />;
       default:
-        return <PointIcon style={{ width: "16px", height: "16px" }} />;
+        return <PointIcon style={dim} />;
     }
   };
 
@@ -282,10 +337,6 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     }
 
     return baseLabel;
-  };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   // Text editing functions
@@ -358,10 +409,10 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     const children: ListItem[] = groupAnnotations.map((annotation) => ({
       id: annotation.id,
       title: getLayerName(annotation),
-      subtitle: formatDate(annotation.metadata?.createdAt || new Date()),
       isHidden: hiddenLayers.has(annotation.id),
       icon: getLayerIcon(annotation),
       isExpanded: group.isExpanded,
+      isActive: annotation.id === selectedLayerId,
       metadata: { annotation, type: "annotation" },
     }));
 
@@ -371,6 +422,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       subtitle: `${groupAnnotations.length} annotations`,
       isHidden: groupIsHidden,
       isExpanded: group.isExpanded,
+      isActive: group.id === selectedLayerId,
+      icon: <FolderIcon style={{ width: "14px", height: "14px" }} />,
       children,
       metadata: { group, type: "group" },
     };
@@ -387,9 +440,9 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     (annotation) => ({
       id: annotation.id,
       title: getLayerName(annotation),
-      subtitle: formatDate(annotation.metadata?.createdAt || new Date()),
       isHidden: hiddenLayers.has(annotation.id),
       icon: getLayerIcon(annotation),
+      isActive: annotation.id === selectedLayerId,
       metadata: { annotation, type: "annotation" },
     }),
   );
@@ -398,10 +451,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const allItems = [...groupItems, ...annotationItems];
 
   const handleItemClick = (item: ListItem) => {
-    if (item.metadata?.type === "group") {
-      toggleGroupExpanded(item.id);
-    }
-    // For annotations, we could add selection logic here if needed
+    setSelectedLayerId(item.id);
   };
 
   const handleToggleVisibility = (itemId: string) => {
@@ -440,6 +490,47 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       removeAnnotation(itemId);
     }
   };
+
+  const handleHeaderColorClick = () => {
+    const ann = annotations.find((a) => a.id === selectedLayerId);
+    if (ann && onOpenAnnotationColorPicker) {
+      onOpenAnnotationColorPicker(ann.id, getAnnotationRgba(ann));
+      return;
+    }
+    onOpenGlobalColorPicker?.();
+  };
+
+  const headerColorDisabled = (() => {
+    if (!selectedLayerId) {
+      return true;
+    }
+    const ann = annotations.find((a) => a.id === selectedLayerId);
+    if (ann) {
+      return !onOpenAnnotationColorPicker && !onOpenGlobalColorPicker;
+    }
+    const grp = annotationGroups.find((g) => g.id === selectedLayerId);
+    if (grp) {
+      return !onOpenGlobalColorPicker;
+    }
+    return true;
+  })();
+
+  const handleHeaderDeleteClick = () => {
+    if (!selectedLayerId) {
+      return;
+    }
+    handleDelete(selectedLayerId);
+  };
+
+  const handleHeaderEditTextClick = () => {
+    const ann = annotations.find((a) => a.id === selectedLayerId);
+    if (ann) {
+      handleEditText(ann);
+    }
+  };
+
+  const headerEditTextDisabled =
+    !selectedLayerId || !annotations.some((a) => a.id === selectedLayerId);
 
   const handleToggleExpand = (itemId: string) => {
     toggleGroupExpanded(itemId);
@@ -575,77 +666,6 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
               <EraserIcon style={{ width: "14px", height: "14px" }} />
             </button>
           )}
-
-          {/* Text Edit Button */}
-          <button
-            type="button"
-            style={{
-              background: "none",
-              border: "none",
-              color: "#ccc",
-              cursor: "pointer",
-              padding: "4px",
-              borderRadius: "3px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.2s ease",
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditText(annotation);
-            }}
-            title="Edit text"
-          >
-            <TextIcon style={{ width: "14px", height: "14px" }} />
-          </button>
-
-          {/* Color Picker Button */}
-          {onOpenAnnotationColorPicker && (
-            <button
-              type="button"
-              style={{
-                background: "none",
-                border: "none",
-                color: "#ccc",
-                cursor: "pointer",
-                padding: "4px",
-                borderRadius: "3px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "all 0.2s ease",
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                let currentAnnotationColor: [number, number, number, number];
-
-                if (annotation.type === "text") {
-                  currentAnnotationColor = annotation.style.fontColor;
-                } else if (
-                  annotation.type === "rectangle" ||
-                  annotation.type === "ellipse" ||
-                  annotation.type === "polygon" ||
-                  annotation.type === "line" ||
-                  annotation.type === "polyline"
-                ) {
-                  currentAnnotationColor = annotation.style.lineColor;
-                } else if (annotation.type === "point") {
-                  currentAnnotationColor = annotation.style.fillColor;
-                } else {
-                  currentAnnotationColor = [255, 255, 255, 255]; // Default white
-                }
-
-                onOpenAnnotationColorPicker(
-                  annotation.id,
-                  currentAnnotationColor,
-                );
-              }}
-              title="Change annotation color"
-            >
-              <AnnotationColorIcon style={{ width: "14px", height: "14px" }} />
-            </button>
-          )}
         </div>
       );
     }
@@ -658,55 +678,77 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     }
   };
 
-  const headerActions = (
-    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+  const layerMetaButtons = (
+    <>
       <button
         type="button"
-        style={{
-          background: "#4CAF50",
-          border: "none",
-          color: "white",
-          cursor: "pointer",
-          padding: "6px 12px",
-          borderRadius: "4px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          fontSize: "12px",
-        }}
+        className={styles.toolButton}
         onClick={() => createGroup()}
         title="Add group"
       >
-        <GroupIcon style={{ width: "12px", height: "12px" }} />
-        Add Group
+        <FolderIcon />
       </button>
-      {annotations.length > 0 && (
-        <button
-          type="button"
-          style={{
-            background: "#f44336",
-            border: "none",
-            color: "white",
-            cursor: "pointer",
-            padding: "6px 12px",
-            borderRadius: "4px",
-            fontSize: "12px",
-          }}
-          onClick={() => clearAnnotations()}
-          title="Clear all layers"
-        >
-          Clear All
-        </button>
-      )}
-    </div>
+      <button
+        type="button"
+        className={styles.toolButton}
+        onClick={handleHeaderEditTextClick}
+        disabled={headerEditTextDisabled}
+        title={
+          headerEditTextDisabled
+            ? "Select an annotation to edit text"
+            : "Edit text — selected annotation"
+        }
+      >
+        <CursorIcon />
+      </button>
+      <button
+        type="button"
+        className={styles.toolButton}
+        onClick={handleHeaderColorClick}
+        disabled={headerColorDisabled}
+        title={
+          headerColorDisabled
+            ? "Select a layer or group to change color"
+            : annotations.some((a) => a.id === selectedLayerId)
+              ? "Color — selected annotation"
+              : "Color — global (group selected)"
+        }
+      >
+        <AnnotationColorIcon />
+      </button>
+      <button
+        type="button"
+        className={styles.toolButton}
+        onClick={handleHeaderDeleteClick}
+        disabled={!selectedLayerId}
+        title={
+          selectedLayerId
+            ? "Delete selected layer or group"
+            : "Select a layer or group to delete"
+        }
+      >
+        <TrashIcon />
+      </button>
+    </>
   );
+
+  const hasUnifiedChrome = !!toolbarSlot;
 
   return (
     <div className={styles.layersPanel}>
+      {hasUnifiedChrome ? (
+        <div className={styles.layersUnifiedTop}>
+          <div className={styles.layersToolbarSlot}>{toolbarSlot}</div>
+          <div className={styles.layersMetaCluster}>{layerMetaButtons}</div>
+        </div>
+      ) : null}
+
       <ItemList
         className={className}
+        variant={itemListVariant}
         items={allItems}
         title="Layers"
+        noHeader={hasUnifiedChrome}
         emptyMessage="No layers yet"
         onItemClick={handleItemClick}
         onToggleVisibility={handleToggleVisibility}
@@ -719,9 +761,15 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         showVisibilityToggle={true}
-        showDeleteButton={true}
+        visibilityToggleLeading={true}
+        compactRows={true}
+        showDeleteButton={false}
         showExpandToggle={true}
-        headerActions={headerActions}
+        headerActions={
+          hasUnifiedChrome ? undefined : (
+            <div className={styles.layersMetaCluster}>{layerMetaButtons}</div>
+          )
+        }
         itemActions={itemActions}
       />
 

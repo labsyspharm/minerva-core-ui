@@ -1,0 +1,65 @@
+/**
+ * Expanded waypoint: natural height + no inner scroll so `.detailBody` scrolls.
+ * Fixes live/split mode where the library uses absolute preview + overflow:auto.
+ */
+.waypointMarkdownEditorDetail .w-md-editor {
+  height: auto !important;
+  min-height: 120px;
+  overflow: visible;
+}
+
+.waypointMarkdownEditorDetail .w-md-editor-content {
+  height: auto !important;
+  min-height: 0;
+  overflow: visible !important;
+}
+
+.waypointMarkdownEditorDetail .w-md-editor-area {
+  overflow: visible !important;
+}
+
+.waypointMarkdownEditorDetail .w-md-editor-input {
+  height: auto !important;
+  align-self: flex-start;
+}
+
+.waypointMarkdownEditorDetail .w-md-editor-text {
+  min-height: 0 !important;
+}
+
+.waypointMarkdownEditorDetail .w-md-editor-show-live .w-md-editor-content {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.waypointMarkdownEditorDetail .w-md-editor-show-live .w-md-editor-input {
+  width: 50%;
+  flex: 0 0 50%;
+  max-width: 50%;
+  box-sizing: border-box;
+}
+
+.waypointMarkdownEditorDetail .w-md-editor-show-live .w-md-editor-preview {
+  position: static !important;
+  inset: auto !important;
+  width: 50% !important;
+  flex: 0 0 50%;
+  max-width: 50%;
+  height: auto !important;
+  min-height: 0;
+  overflow: visible !important;
+  box-sizing: border-box;
+}
+
+.waypointMarkdownEditorDetail .w-md-editor-show-preview .w-md-editor-preview {
+  position: static !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.waypointMarkdownEditorDetail .w-md-editor-show-edit .w-md-editor-input {
+  width: 100%;
+}

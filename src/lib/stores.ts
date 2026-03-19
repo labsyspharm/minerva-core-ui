@@ -541,7 +541,7 @@ export interface RectangleAnnotation {
   };
   text?: string; // Optional text content to display within the shape
   metadata?: {
-    createdAt: Date;
+    createdAt?: Date;
     label?: string;
     description?: string;
     isImported?: boolean; // Flag to mark imported annotations as un-deletable
@@ -559,7 +559,7 @@ export interface PolygonAnnotation {
   };
   text?: string; // Optional text content to display within the shape
   metadata?: {
-    createdAt: Date;
+    createdAt?: Date;
     label?: string;
     description?: string;
     isImported?: boolean; // Flag to mark imported annotations as un-deletable
@@ -577,7 +577,7 @@ export interface EllipseAnnotation {
   };
   text?: string; // Optional text content to display within the shape
   metadata?: {
-    createdAt: Date;
+    createdAt?: Date;
     label?: string;
     description?: string;
     isImported?: boolean; // Flag to mark imported annotations as un-deletable
@@ -596,7 +596,7 @@ export interface LineAnnotation {
   };
   text?: string; // Optional text content to display within the shape
   metadata?: {
-    createdAt: Date;
+    createdAt?: Date;
     label?: string;
     description?: string;
     isImported?: boolean; // Flag to mark imported annotations as un-deletable
@@ -613,7 +613,7 @@ export interface PolylineAnnotation {
   };
   text?: string; // Optional text content to display within the shape
   metadata?: {
-    createdAt: Date;
+    createdAt?: Date;
     label?: string;
     description?: string;
     isImported?: boolean; // Flag to mark imported annotations as un-deletable
@@ -632,7 +632,7 @@ export interface TextAnnotation {
     padding?: number;
   };
   metadata?: {
-    createdAt: Date;
+    createdAt?: Date;
     label?: string;
     description?: string;
     isImported?: boolean; // Flag to mark imported annotations as un-deletable
@@ -650,7 +650,7 @@ export interface PointAnnotation {
   };
   text?: string; // Optional text content to display within the shape
   metadata?: {
-    createdAt: Date;
+    createdAt?: Date;
     label?: string;
     description?: string;
     isImported?: boolean; // Flag to mark imported annotations as un-deletable
@@ -676,7 +676,7 @@ export interface AnnotationGroup {
   annotationIds: string[]; // IDs of annotations in this group
   isExpanded: boolean; // Whether the group is expanded in the UI
   metadata?: {
-    createdAt: Date;
+    createdAt?: Date;
     color?: [number, number, number, number]; // Optional group color
   };
 }
@@ -1362,7 +1362,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               lineWidth: 3,
             },
             metadata: {
-              createdAt: new Date(),
               label: `Untitled ${get().annotations.length + 1}`,
             },
           };
@@ -1404,7 +1403,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               lineWidth: 3,
             },
             metadata: {
-              createdAt: new Date(),
               label: `Untitled ${get().annotations.length + 1}`,
             },
           };
@@ -1438,7 +1436,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               lineWidth: 3,
             },
             metadata: {
-              createdAt: new Date(),
               label: `Untitled ${get().annotations.length + 1}`,
             },
           };
@@ -1463,7 +1460,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               lineWidth: 3,
             },
             metadata: {
-              createdAt: new Date(),
               label: `Untitled ${get().annotations.length + 1}`,
             },
           };
@@ -1508,7 +1504,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               lineWidth: 3,
             },
             metadata: {
-              createdAt: new Date(),
               label: `Untitled ${get().annotations.length + 1}`,
             },
           };
@@ -1546,7 +1541,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             padding: 4,
           },
           metadata: {
-            createdAt: new Date(),
             label: `Untitled ${get().annotations.length + 1}`,
           },
         };
@@ -1570,7 +1564,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             radius: radius,
           },
           metadata: {
-            createdAt: new Date(),
             label: `Untitled ${get().annotations.length + 1}`,
           },
         };
@@ -1665,7 +1658,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             }
 
             const nextMetadata = {
-              ...(annotation.metadata ?? { createdAt: new Date() }),
+              ...(annotation.metadata ?? {}),
               label: trimmed || undefined,
             };
 
@@ -1955,7 +1948,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               lineWidth: 3,
             },
             metadata: {
-              createdAt: new Date(),
               label: `Untitled ${annotations.length + 1}`,
             },
           };
@@ -2090,9 +2082,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           name: name || `Group ${groupCount + 1}`,
           annotationIds: [],
           isExpanded: true,
-          metadata: {
-            createdAt: new Date(),
-          },
         };
         set((state) => ({
           annotationGroups: [...state.annotationGroups, newGroup],
@@ -2333,7 +2322,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
                 padding: 6,
               },
               metadata: {
-                createdAt: new Date(),
                 label: arrow.Text,
                 isImported: true,
               },
@@ -2377,7 +2365,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
                 lineWidth: 3,
               },
               metadata: {
-                createdAt: new Date(),
                 label: arrow.Text,
                 isImported: true,
               },
@@ -2406,7 +2393,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               lineWidth: 2,
             },
             metadata: {
-              createdAt: new Date(),
               label: `Region ${index + 1}`,
               isImported: true,
             },

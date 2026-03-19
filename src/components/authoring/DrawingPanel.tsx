@@ -4,7 +4,6 @@ import { LayersPanel } from "@/components/authoring/LayersPanel";
 import { ToolSubmenu } from "@/components/authoring/ToolSubmenu";
 import ArrowIcon from "@/components/shared/icons/arrow-tool.svg?react";
 import BrushIcon from "@/components/shared/icons/brush.svg?react";
-import ColorIcon from "@/components/shared/icons/color.svg?react";
 import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
 import LassoIcon from "@/components/shared/icons/lasso.svg?react";
 import LineIcon from "@/components/shared/icons/line.svg?react";
@@ -161,119 +160,97 @@ const DrawingPanel = (props: DrawingPanelProps) => {
     setShowColorPicker(true);
   };
 
-  // Calculate icon color based on background color brightness
-  const getIconColor = (bgColor: [number, number, number, number]) => {
-    // Calculate luminance using relative luminance formula
-    const [r, g, b] = bgColor;
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    // If luminance is high (light color), use black icon, otherwise use white icon
-    return luminance > 0.5 ? "#000000" : "#ffffff";
-  };
-
   const className = [styles.center, styles.black].join(" ");
+
+  const drawingToolbar = (
+    <>
+      <button
+        type="button"
+        className={`${styles.toolButton} ${activeTool === TOOLS.MOVE ? styles.active : ""}`}
+        title="Move Tool"
+        onClick={() => handleToolChangeLocal(TOOLS.MOVE)}
+      >
+        <MoveIcon />
+      </button>
+
+      <ToolSubmenu
+        items={[
+          {
+            id: TOOLS.RECTANGLE,
+            icon: <RectangleIcon />,
+            title: "Rectangle",
+          },
+          { id: TOOLS.ELLIPSE, icon: <EllipseIcon />, title: "Ellipse" },
+        ]}
+        activeTool={activeTool}
+        onToolChange={handleToolChangeLocal}
+        parentIcon={<ShapesIcon />}
+        parentTitle="Shapes"
+        buttonClassName={styles.toolButton}
+        activeClassName={styles.active}
+      />
+
+      <ToolSubmenu
+        items={[
+          { id: TOOLS.ARROW, icon: <ArrowIcon />, title: "Arrow" },
+          { id: TOOLS.LINE, icon: <LineIcon />, title: "Line" },
+          { id: TOOLS.POLYLINE, icon: <PolylineIcon />, title: "Polyline" },
+        ]}
+        activeTool={activeTool}
+        onToolChange={handleToolChangeLocal}
+        parentIcon={<LinesIcon />}
+        parentTitle="Lines"
+        buttonClassName={styles.toolButton}
+        activeClassName={styles.active}
+      />
+
+      <ToolSubmenu
+        items={[
+          { id: TOOLS.BRUSH, icon: <BrushIcon />, title: "Brush" },
+          { id: TOOLS.LASSO, icon: <LassoIcon />, title: "Polygon Lasso" },
+        ]}
+        activeTool={activeTool}
+        onToolChange={handleToolChangeLocal}
+        parentIcon={<PolygonIcon />}
+        parentTitle="Polygon Tools"
+        buttonClassName={styles.toolButton}
+        activeClassName={styles.active}
+      />
+
+      <button
+        type="button"
+        className={`${styles.toolButton} ${activeTool === TOOLS.TEXT ? styles.active : ""}`}
+        title="Text Tool"
+        onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
+      >
+        <TextIcon />
+      </button>
+
+      <button
+        type="button"
+        className={`${styles.toolButton} ${activeTool === TOOLS.POINT ? styles.active : ""}`}
+        title="Point Tool"
+        onClick={() => handleToolChangeLocal(TOOLS.POINT)}
+      >
+        <PointIcon />
+      </button>
+
+      <button
+        type="button"
+        className={`${styles.toolButton} ${activeTool === TOOLS.MAGIC_WAND ? styles.active : ""}`}
+        title="Magic Wand (SAM2)"
+        onClick={() => handleToolChangeLocal(TOOLS.MAGIC_WAND)}
+      >
+        <MagicWandIcon />
+      </button>
+    </>
+  );
 
   return (
     <div slot="overlays" className={className}>
-      {/* Toolbar with drawing tools - positioned above layers */}
-      <div className={styles.toolbar}>
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.MOVE ? styles.active : ""}`}
-          title="Move Tool"
-          onClick={() => handleToolChangeLocal(TOOLS.MOVE)}
-        >
-          <MoveIcon />
-        </button>
-
-        <ToolSubmenu
-          items={[
-            {
-              id: TOOLS.RECTANGLE,
-              icon: <RectangleIcon />,
-              title: "Rectangle",
-            },
-            { id: TOOLS.ELLIPSE, icon: <EllipseIcon />, title: "Ellipse" },
-          ]}
-          activeTool={activeTool}
-          onToolChange={handleToolChangeLocal}
-          parentIcon={<ShapesIcon />}
-          parentTitle="Shapes"
-          buttonClassName={styles.toolButton}
-          activeClassName={styles.active}
-        />
-
-        <ToolSubmenu
-          items={[
-            { id: TOOLS.ARROW, icon: <ArrowIcon />, title: "Arrow" },
-            { id: TOOLS.LINE, icon: <LineIcon />, title: "Line" },
-            { id: TOOLS.POLYLINE, icon: <PolylineIcon />, title: "Polyline" },
-          ]}
-          activeTool={activeTool}
-          onToolChange={handleToolChangeLocal}
-          parentIcon={<LinesIcon />}
-          parentTitle="Lines"
-          buttonClassName={styles.toolButton}
-          activeClassName={styles.active}
-        />
-
-        <ToolSubmenu
-          items={[
-            { id: TOOLS.BRUSH, icon: <BrushIcon />, title: "Brush" },
-            { id: TOOLS.LASSO, icon: <LassoIcon />, title: "Polygon Lasso" },
-          ]}
-          activeTool={activeTool}
-          onToolChange={handleToolChangeLocal}
-          parentIcon={<PolygonIcon />}
-          parentTitle="Polygon Tools"
-          buttonClassName={styles.toolButton}
-          activeClassName={styles.active}
-        />
-
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.TEXT ? styles.active : ""}`}
-          title="Text Tool"
-          onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
-        >
-          <TextIcon />
-        </button>
-
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.POINT ? styles.active : ""}`}
-          title="Point Tool"
-          onClick={() => handleToolChangeLocal(TOOLS.POINT)}
-        >
-          <PointIcon />
-        </button>
-
-        <button
-          type="button"
-          className={`${styles.toolButton} ${activeTool === TOOLS.MAGIC_WAND ? styles.active : ""}`}
-          title="Magic Wand (SAM2)"
-          onClick={() => handleToolChangeLocal(TOOLS.MAGIC_WAND)}
-        >
-          <MagicWandIcon />
-        </button>
-
-        <button
-          type="button"
-          className={styles.toolButton}
-          title="Color Picker"
-          onClick={handleColorPickerOpen}
-          style={{
-            backgroundColor: `rgba(${globalColor[0]}, ${globalColor[1]}, ${globalColor[2]}, ${globalColor[3] / 255})`,
-            border: "2px solid #333",
-            borderRadius: "4px",
-            color: getIconColor(globalColor),
-          }}
-        >
-          <ColorIcon />
-        </button>
-      </div>
-
-      {/* Layers Panel - Photoshop style - positioned below toolbar */}
       <LayersPanel
+        toolbarSlot={drawingToolbar}
+        onOpenGlobalColorPicker={handleColorPickerOpen}
         onOpenAnnotationColorPicker={handleOpenAnnotationColorPicker}
       />
 

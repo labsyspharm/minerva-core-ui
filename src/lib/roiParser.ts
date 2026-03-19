@@ -84,8 +84,8 @@ type Group = {
   name: string;
   annotationIds: string[];
   isExpanded: boolean;
-  metadata: {
-    createdAt: Date;
+  metadata?: {
+    createdAt?: Date;
   };
 };
 
@@ -200,7 +200,6 @@ const rectangleShapeToAnnotation = (
     style: colors,
     text: Text, // Include text if present
     metadata: {
-      createdAt: new Date(),
       label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
@@ -229,7 +228,6 @@ const ellipseShapeToAnnotation = (
     style: colors,
     text: Text, // Include text if present
     metadata: {
-      createdAt: new Date(),
       label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
@@ -267,7 +265,6 @@ const lineShapeToAnnotation = (
     },
     text: Text, // Include text if present
     metadata: {
-      createdAt: new Date(),
       label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
@@ -300,7 +297,6 @@ const pointShapeToAnnotation = (
     },
     text: Text, // Include text if present
     metadata: {
-      createdAt: new Date(),
       label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
@@ -328,7 +324,6 @@ const polygonShapeToAnnotation = (
     style: colors,
     text: Text, // Include text if present
     metadata: {
-      createdAt: new Date(),
       label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
@@ -360,7 +355,6 @@ const polylineShapeToAnnotation = (
     },
     text: Text, // Include text if present
     metadata: {
-      createdAt: new Date(),
       label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
@@ -394,7 +388,6 @@ const labelShapeToAnnotation = (
       padding: 4,
     },
     metadata: {
-      createdAt: new Date(),
       label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
@@ -494,9 +487,6 @@ export const parseRoisFromLoader = (
         name: roi.Name || `ROI ${roi.ID}`,
         annotationIds: roiAnnotationIds,
         isExpanded: true,
-        metadata: {
-          createdAt: new Date(),
-        },
       };
       groups.push(group);
       console.log(

@@ -13,6 +13,7 @@ import { getWaypointViewState } from "@/lib/waypoint";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { WaypointContentEditor } from "./WaypointContentEditor";
 import styles from "./WaypointsList.module.css";
+import { WaypointsList as WaypointsListMasterDetail } from "./WaypointsListMasterDetail";
 
 interface WaypointAnnotationEditorMetadata {
   type: "annotations-panel";
@@ -365,28 +366,6 @@ const WaypointsList = (props: WaypointsListProps) => {
 
     return (
       <div style={{ display: "flex", gap: "4px" }}>
-        {/* Drag Handle */}
-        <button
-          type="button"
-          style={{
-            cursor: "grab",
-            padding: "4px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#999",
-            fontSize: "12px",
-            background: "none",
-            border: "none",
-          }}
-          draggable
-          onDragStart={(e) => handleDragStart(storyId, e)}
-          onDragEnd={(_e) => handleDragEnd()}
-          title="Drag to reorder"
-        >
-          ⋮⋮
-        </button>
-
         {/* Text Editor Button */}
         <button
           type="button"
@@ -642,5 +621,8 @@ const WaypointsList = (props: WaypointsListProps) => {
   );
 };
 
-export { WaypointsList };
+export {
+  WaypointsListMasterDetail as WaypointsList,
+  WaypointsList as LegacyWaypointsList,
+};
 export type { WaypointsListProps };

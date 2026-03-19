@@ -386,7 +386,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
           lineWidth: 3,
         },
         metadata: {
-          createdAt: new Date(),
           label: `Untitled ${
             useOverlayStore.getState().annotations.length + 1
           }`,
@@ -425,7 +424,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
           lineWidth: 3,
         },
         metadata: {
-          createdAt: new Date(),
           label: `Untitled ${
             useOverlayStore.getState().annotations.length + 1
           }`,
@@ -472,7 +470,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
           lineWidth,
         },
         metadata: {
-          createdAt: new Date(),
           label: `Untitled ${
             useOverlayStore.getState().annotations.length + 1
           }`,
@@ -513,7 +510,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
           lineWidth: 3,
         },
         metadata: {
-          createdAt: new Date(),
           label: `Untitled ${
             useOverlayStore.getState().annotations.length + 1
           }`,
