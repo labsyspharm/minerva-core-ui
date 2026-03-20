@@ -164,15 +164,33 @@
 }
 
 .compactRow {
-  padding: 6px 10px;
+  padding: 10px 10px;
+  min-height: 72px;
   border-bottom: 1px solid #333;
   display: grid;
   align-items: center;
   box-sizing: border-box;
-  grid-template-columns: 18px minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: 24px 56px minmax(0, 1fr);
+  gap: 10px;
   position: relative;
   user-select: none;
+}
+
+.rowChevronSpacer {
+  width: 24px;
+  min-height: 1px;
+}
+
+/* Placeholder until real waypoint thumbnails exist */
+.rowThumbnail {
+  width: 56px;
+  height: 56px;
+  border-radius: 3px;
+  border: 1px solid #333;
+  background-color: #000;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  align-self: center;
 }
 
 .compactRowDraggable {
@@ -184,12 +202,9 @@
 }
 
 .rowMainHit {
-  grid-column: 2;
   width: 100%;
   min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: block;
   padding: 0;
   margin: 0;
   border: none;
@@ -198,6 +213,24 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
+  align-self: center;
+}
+
+.rowTextStack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+}
+
+.rowTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
 }
 
 .rowMainHit:disabled {
@@ -250,8 +283,8 @@
 }
 
 .rowOpenDetailButton {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   background: none;
   border: none;
@@ -261,6 +294,7 @@
   align-items: center;
   justify-content: center;
   line-height: 0;
+  align-self: center;
 }
 
 .rowOpenDetailButton:hover {
@@ -285,8 +319,7 @@
   transform: rotate(90deg);
 }
 
-.rowTitle,
-.rowContent {
+.rowTitle {
   display: block;
   flex: 1 1 0;
   min-width: 0;
@@ -294,14 +327,26 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 12px;
-}
-
-.rowTitle {
+  font-weight: 600;
   color: #ddd;
+  line-height: 1.25;
 }
 
 .rowContent {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  word-break: break-word;
+  font-size: 11px;
+  line-height: 1.35;
+  min-height: calc(1.35em * 2);
   color: #999;
+}
+
+.rowTitleRow .rowTitle {
+  flex: 1 1 0;
 }
 
 .annotationBadge {
@@ -309,18 +354,21 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   font-size: 11px;
   color: #ccc;
   border: 1px solid #333;
   background-color: #151515;
   border-radius: 999px;
-  padding: 2px 0;
-  width: 74px; /* keep pill size consistent across different digit counts */
+  padding: 2px 8px;
+  min-width: 52px;
   justify-content: center;
   box-sizing: border-box;
   white-space: nowrap;
-  min-width: 0;
+}
+
+.rowTitleRow .annotationBadge {
+  width: auto;
 }
 
 .annotationIcon {

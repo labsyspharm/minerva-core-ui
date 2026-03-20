@@ -380,8 +380,10 @@ const WaypointsList = (props: WaypointsListProps) => {
                     />
                   </button>
                 ) : (
-                  <div />
+                  <div className={styles.rowChevronSpacer} aria-hidden />
                 )}
+
+                <div className={styles.rowThumbnail} aria-hidden />
 
                 <button
                   type="button"
@@ -391,32 +393,34 @@ const WaypointsList = (props: WaypointsListProps) => {
                   onClick={() => activateStoryIndex(index)}
                   onDoubleClick={() => openDetailForStoryId(storyId)}
                 >
-                  <span className={styles.rowTitle} title={story.Name}>
-                    {story.Name}
-                  </span>
-
-                  <span
-                    className={styles.rowContent}
-                    title={story.Content ?? ""}
-                  >
-                    {story.Content ? story.Content : ""}
-                  </span>
-
-                  <span
-                    className={styles.annotationBadge}
-                    title={annotationTitle}
-                  >
-                    <span className={styles.visuallyHidden}>
-                      {annotationTitle}
+                  <div className={styles.rowTextStack}>
+                    <div className={styles.rowTitleRow}>
+                      <span className={styles.rowTitle} title={story.Name}>
+                        {story.Name}
+                      </span>
+                      <span
+                        className={styles.annotationBadge}
+                        title={annotationTitle}
+                      >
+                        <span className={styles.visuallyHidden}>
+                          {annotationTitle}
+                        </span>
+                        <AnnotationsIcon
+                          className={styles.annotationIcon}
+                          aria-hidden
+                        />
+                        <span className={styles.annotationCount} aria-hidden>
+                          {annotationCount}
+                        </span>
+                      </span>
+                    </div>
+                    <span
+                      className={styles.rowContent}
+                      title={story.Content ?? ""}
+                    >
+                      {story.Content ?? ""}
                     </span>
-                    <AnnotationsIcon
-                      className={styles.annotationIcon}
-                      aria-hidden
-                    />
-                    <span className={styles.annotationCount} aria-hidden>
-                      {annotationCount}
-                    </span>
-                  </span>
+                  </div>
                 </button>
               </li>
             );
