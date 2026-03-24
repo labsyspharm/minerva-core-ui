@@ -1,9 +1,15 @@
 import * as React from "react";
 import AnnotationsIcon from "@/components/shared/icons/annotations.svg?react";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import { PinIcon } from "@/components/shared/icons/OverlayIcons";
+import JumpToViewIcon from "@/components/shared/icons/jump-to-view.svg?react";
+import OverwriteViewIcon from "@/components/shared/icons/overwrite-view.svg?react";
 import type { ConfigWaypoint } from "@/lib/config";
 import { useOverlayStore } from "@/lib/stores";
+import {
+  getViewerBoundsFromSnapshot,
+  getViewerViewportSnapshotFromStore,
+  orthographicZoomToNumber,
+} from "@/lib/viewerViewport";
 import { getWaypointViewState } from "@/lib/waypoint";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { WaypointContentEditor } from "./WaypointContentEditor";
@@ -58,16 +64,17 @@ const WaypointsList = (props: WaypointsListProps) => {
     activeStoryIndex,
     setActiveStory,
     addStory,
+    updateStory,
     reorderStories,
     importWaypointAnnotations,
     clearImportedAnnotations,
     imageWidth,
     imageHeight,
     setTargetWaypointViewState,
-    sam2ViewportSize,
-    editingViewstateWaypointIndex,
-    setEditingViewstateWaypointIndex,
+    captureSquareViewportThumbnail,
     removeStory,
+    setShowSquareViewportOverlay,
+    setAuthoringWaypointEditorOpen,
   } = useOverlayStore();
 
   const detailBodyRef = React.useRef<HTMLDivElement | null>(null);
@@ -79,6 +86,11 @@ const WaypointsList = (props: WaypointsListProps) => {
     React.useState(true);
   const [detailAnnotationsExpanded, setDetailAnnotationsExpanded] =
     React.useState(true);
+
+  React.useEffect(() => {
+    setAuthoringWaypointEditorOpen(detailStoryId != null);
+    return () => setAuthoringWaypointEditorOpen(false);
+  }, [detailStoryId, setAuthoringWaypointEditorOpen]);
 
   React.useEffect(() => {
     if (detailStoryId) {
@@ -94,6 +106,9 @@ const WaypointsList = (props: WaypointsListProps) => {
   const [dropTargetStoryId, setDropTargetStoryId] = React.useState<
     string | null
   >(null);
+  const pendingThumbnailCaptureTimeoutRef = React.useRef<number | null>(null);
+  const overlayFlashTimeoutRef = React.useRef<number | null>(null);
+  const previousActiveStoryIndexRef = React.useRef<number | null>(null);
 
   const detailStoryIndex = detailStoryId
     ? stories.findIndex((s) => s.UUID === detailStoryId)
@@ -108,6 +123,13 @@ const WaypointsList = (props: WaypointsListProps) => {
     const storyIndex = activeStoryIndex ?? 0;
     const story = stories[storyIndex];
     if (!story) return;
+
+    const prev = previousActiveStoryIndexRef.current;
+    const store = useOverlayStore.getState();
+    if (prev !== null && prev !== storyIndex) {
+      store.persistImportedAnnotationsToStory(prev);
+    }
+    previousActiveStoryIndexRef.current = storyIndex;
 
     clearImportedAnnotations();
 
@@ -125,38 +147,159 @@ const WaypointsList = (props: WaypointsListProps) => {
     importWaypointAnnotations,
   ]);
 
-  const activateStoryIndex = (index: number) => {
+  React.useEffect(() => {
+    return () => {
+      if (pendingThumbnailCaptureTimeoutRef.current !== null) {
+        window.clearTimeout(pendingThumbnailCaptureTimeoutRef.current);
+      }
+      if (overlayFlashTimeoutRef.current !== null) {
+        window.clearTimeout(overlayFlashTimeoutRef.current);
+      }
+      const p = previousActiveStoryIndexRef.current;
+      if (p !== null) {
+        const s = useOverlayStore.getState();
+        if (s.imageWidth > 0 && s.imageHeight > 0) {
+          s.persistImportedAnnotationsToStory(p);
+        }
+      }
+    };
+  }, []);
+
+  const flashSquareOverlay = (durationMs = 3000) => {
+    setShowSquareViewportOverlay(true);
+    if (overlayFlashTimeoutRef.current !== null) {
+      window.clearTimeout(overlayFlashTimeoutRef.current);
+    }
+    overlayFlashTimeoutRef.current = window.setTimeout(() => {
+      setShowSquareViewportOverlay(false);
+      overlayFlashTimeoutRef.current = null;
+    }, durationMs);
+  };
+
+  const saveCurrentViewToStory = (index: number, source: string) => {
+    const snap = getViewerViewportSnapshotFromStore();
+    const bounds = snap ? getViewerBoundsFromSnapshot(snap) : null;
+    const zoom = snap ? orthographicZoomToNumber(snap.viewState.zoom) : null;
+    const target = snap?.viewState.target;
+    const viewStateCanon =
+      snap &&
+      zoom !== null &&
+      Array.isArray(target) &&
+      target.length >= 3 &&
+      typeof target[0] === "number" &&
+      typeof target[1] === "number" &&
+      typeof target[2] === "number"
+        ? {
+            zoom,
+            target: [target[0], target[1], target[2]] as [
+              number,
+              number,
+              number,
+            ],
+          }
+        : null;
+
+    if (!bounds || !viewStateCanon) {
+      const st = useOverlayStore.getState();
+      console.warn(
+        "[Minerva] waypoint view not saved: no bounds from viewer (camera/size not ready). " +
+          "Try pan/zoom once or reload.",
+        {
+          source,
+          index,
+          viewerViewState: st.viewerViewState,
+          viewerViewportSize: st.viewerViewportSize,
+          imageWidth: st.imageWidth,
+          imageHeight: st.imageHeight,
+        },
+      );
+      return;
+    }
+    const thumbnail = captureSquareViewportThumbnail();
+
+    updateStory(index, {
+      Bounds: bounds,
+      ViewState: viewStateCanon,
+      Pan: undefined,
+      Zoom: undefined,
+      ...(thumbnail ? { ThumbnailDataUrl: thumbnail } : {}),
+    });
+  };
+
+  const saveThumbnailOnlyToStory = (index: number) => {
+    const thumbnail = captureSquareViewportThumbnail();
+    if (!thumbnail) return;
+    updateStory(index, { ThumbnailDataUrl: thumbnail });
+  };
+
+  const scheduleThumbnailCaptureForStory = (
+    index: number,
+    overwriteView = false,
+    thumbnailOnly = false,
+    delayMs = 1100,
+  ) => {
+    if (pendingThumbnailCaptureTimeoutRef.current !== null) {
+      window.clearTimeout(pendingThumbnailCaptureTimeoutRef.current);
+      pendingThumbnailCaptureTimeoutRef.current = null;
+    }
+    pendingThumbnailCaptureTimeoutRef.current = window.setTimeout(() => {
+      pendingThumbnailCaptureTimeoutRef.current = null;
+      const state = useOverlayStore.getState();
+      if (state.activeStoryIndex !== index) {
+        return;
+      }
+      const story = state.stories[index];
+      if (!story) return;
+      if (!overwriteView && story.ThumbnailDataUrl) return;
+      if (thumbnailOnly) {
+        saveThumbnailOnlyToStory(index);
+        return;
+      }
+      saveCurrentViewToStory(index, "scheduleThumbnail.full");
+    }, delayMs);
+  };
+
+  const activateStoryIndex = (
+    index: number,
+    shouldCaptureThumbnail = false,
+  ) => {
+    const priorActive = useOverlayStore.getState().activeStoryIndex;
+    if (
+      priorActive !== null &&
+      priorActive !== index &&
+      pendingThumbnailCaptureTimeoutRef.current !== null
+    ) {
+      window.clearTimeout(pendingThumbnailCaptureTimeoutRef.current);
+      pendingThumbnailCaptureTimeoutRef.current = null;
+    }
+
     setActiveStory(index);
 
-    // Trigger view state change: prefer ViewState (Deck.gl format), else
-    // convert legacy Pan/Zoom. ViewState does not need viewport dims.
-    const currentStory = useOverlayStore.getState().stories[index];
+    const storeNow = useOverlayStore.getState();
+    const storyForNav = storeNow.stories[index];
+    const viewerSnapshot = getViewerViewportSnapshotFromStore();
     let viewState = null;
-    if (
-      currentStory?.ViewState &&
-      typeof currentStory.ViewState.zoom === "number" &&
-      Array.isArray(currentStory.ViewState.target) &&
-      currentStory.ViewState.target.length === 3
-    ) {
-      viewState = currentStory.ViewState;
-    } else if (sam2ViewportSize?.width && imageWidth > 0 && imageHeight > 0) {
+    if (storyForNav && viewerSnapshot && imageWidth > 0 && imageHeight > 0) {
       viewState = getWaypointViewState(
-        currentStory ?? stories[index],
+        storyForNav,
         imageWidth,
         imageHeight,
-        sam2ViewportSize.width,
+        viewerSnapshot.viewportSize.width,
+        viewerSnapshot.viewportSize.height,
       );
     }
     if (viewState) {
       setTargetWaypointViewState(viewState);
     }
+    // Only grab the preview image after the camera settles — never rewrite
+    // Bounds/ViewState on row select (use “Overwrite view” to persist camera).
+    if (shouldCaptureThumbnail && !storyForNav?.ThumbnailDataUrl) {
+      scheduleThumbnailCaptureForStory(index, false, true, 1100);
+    }
   };
-
-  const canSwitchWaypoints = editingViewstateWaypointIndex === null;
 
   const openDetailForStoryId = (storyId: string) => {
     if (!canEdit) return;
-    if (!canSwitchWaypoints) return;
 
     const index = stories.findIndex((s) => s.UUID === storyId);
     if (index === -1) return;
@@ -168,6 +311,18 @@ const WaypointsList = (props: WaypointsListProps) => {
     requestAnimationFrame(() => {
       detailBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
     });
+  };
+
+  const handleOverwriteView = (
+    index: number,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    event.stopPropagation();
+    event.preventDefault();
+    setActiveStory(index);
+    saveCurrentViewToStory(index, "handleOverwriteView");
+    flashSquareOverlay();
+    scheduleThumbnailCaptureForStory(index, true, true, 150);
   };
 
   const handleAddWaypoint = () => {
@@ -188,24 +343,6 @@ const WaypointsList = (props: WaypointsListProps) => {
     requestAnimationFrame(() => {
       detailBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
     });
-  };
-
-  const handleStartEditViewstate = (storyId: string) => {
-    const index = stories.findIndex((s) => s.UUID === storyId);
-    if (index === -1) return;
-    activateStoryIndex(index);
-    setEditingViewstateWaypointIndex(index);
-  };
-
-  const handleCancelEditViewstate = () => {
-    setEditingViewstateWaypointIndex(null);
-  };
-
-  const handleSaveEditViewstate = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    e?.preventDefault();
-    // Don't persist — just exit edit mode. Viewstate save/export deferred.
-    setEditingViewstateWaypointIndex(null);
   };
 
   const handleDragStart = (storyId: string, event: React.DragEvent) => {
@@ -244,42 +381,6 @@ const WaypointsList = (props: WaypointsListProps) => {
 
     setDraggedStoryId(null);
     setDropTargetStoryId(null);
-  };
-
-  const renderViewstateBanner = () => {
-    if (editingViewstateWaypointIndex === null) return null;
-
-    return (
-      <div className={styles.subtleBanner}>
-        <span>
-          Editing viewstate for{" "}
-          <strong>
-            {stories[editingViewstateWaypointIndex]
-              ? stories[editingViewstateWaypointIndex].Name
-              : "waypoint"}
-          </strong>
-          . Pan and zoom the image to set the view.
-        </span>
-        <div className={styles.subtleBannerActions}>
-          <button
-            type="button"
-            className={styles.primaryButton}
-            onClick={(e) => handleSaveEditViewstate(e)}
-            title="Save waypoint viewstate (not persisted)"
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={handleCancelEditViewstate}
-            title="Cancel editing viewstate"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    );
   };
 
   const listHeader = (
@@ -324,7 +425,6 @@ const WaypointsList = (props: WaypointsListProps) => {
   const renderList = () => (
     <div className={styles.panel}>
       {listHeader}
-      {renderViewstateBanner()}
       {stories.length === 0 ? (
         <div className={styles.emptyMessage}>No waypoints yet</div>
       ) : (
@@ -383,14 +483,22 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <div className={styles.rowChevronSpacer} aria-hidden />
                 )}
 
-                <div className={styles.rowThumbnail} aria-hidden />
+                {story.ThumbnailDataUrl ? (
+                  <img
+                    className={styles.rowThumbnail}
+                    src={story.ThumbnailDataUrl}
+                    alt=""
+                    aria-hidden
+                  />
+                ) : (
+                  <div className={styles.rowThumbnail} aria-hidden />
+                )}
 
                 <button
                   type="button"
                   {...rowDragProps}
                   className={styles.rowMainHit}
-                  disabled={!canSwitchWaypoints}
-                  onClick={() => activateStoryIndex(index)}
+                  onClick={() => activateStoryIndex(index, true)}
                   onDoubleClick={() => openDetailForStoryId(storyId)}
                 >
                   <div className={styles.rowTextStack}>
@@ -422,6 +530,33 @@ const WaypointsList = (props: WaypointsListProps) => {
                     </span>
                   </div>
                 </button>
+                <div className={styles.rowActionButtons}>
+                  <button
+                    type="button"
+                    className={styles.rowActionButton}
+                    title="Jump to waypoint view"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      activateStoryIndex(index);
+                    }}
+                  >
+                    <JumpToViewIcon width={14} height={14} aria-hidden />
+                    <span className={styles.visuallyHidden}>
+                      Jump to waypoint view
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.rowActionButton}
+                    title="Overwrite waypoint view with current viewport"
+                    onClick={(event) => handleOverwriteView(index, event)}
+                  >
+                    <OverwriteViewIcon width={14} height={14} aria-hidden />
+                    <span className={styles.visuallyHidden}>
+                      Overwrite waypoint view
+                    </span>
+                  </button>
+                </div>
               </li>
             );
           })}
@@ -435,10 +570,6 @@ const WaypointsList = (props: WaypointsListProps) => {
 
     const detailAnnotationCount = countWaypointAnnotations(detailStory);
     const detailAnnotationText = annotationCountLabel(detailAnnotationCount);
-
-    const isEditingThisWaypoint =
-      editingViewstateWaypointIndex !== null &&
-      editingViewstateWaypointIndex === detailStoryIndex;
 
     return (
       <div className={styles.detailView}>
@@ -458,24 +589,9 @@ const WaypointsList = (props: WaypointsListProps) => {
           <div className={styles.detailTitle} title={detailStory.Name}>
             {detailStory.Name}
           </div>
-          {canEdit && !isEditingThisWaypoint && (
-            <button
-              type="button"
-              className={styles.headerButton}
-              onClick={() => handleStartEditViewstate(detailStory.UUID)}
-              title="Edit waypoint viewstate (pan/zoom)"
-              style={{ marginLeft: "auto" }}
-            >
-              <PinIcon
-                style={{ width: "14px", height: "14px", marginRight: "6px" }}
-              />{" "}
-              Edit Viewstate
-            </button>
-          )}
         </div>
 
         <div className={styles.detailBody} ref={detailBodyRef}>
-          {renderViewstateBanner()}
           <div className={styles.detailBodyInner}>
             <div
               className={[

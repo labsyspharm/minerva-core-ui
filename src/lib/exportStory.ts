@@ -42,6 +42,14 @@ export type StoryExport = {
 // ── Conversion helpers ──────────────────────────────────────────────────────
 
 function resolvePosition(waypoint: ConfigWaypoint): PositionExport | null {
+  if (waypoint.Bounds) {
+    return {
+      x: (waypoint.Bounds.x0 + waypoint.Bounds.x1) / 2,
+      y: (waypoint.Bounds.y0 + waypoint.Bounds.y1) / 2,
+      // Bounds do not carry viewport dimensions, so a true deck zoom cannot be reconstructed here.
+      zoom: 0,
+    };
+  }
   // Prefer deck.gl-native ViewState
   if (
     waypoint.ViewState &&

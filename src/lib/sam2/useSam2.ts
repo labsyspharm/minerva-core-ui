@@ -306,8 +306,9 @@ export function useSam2() {
         return false;
       }
 
-      const { sam2ViewState, sam2ViewportSize } = useOverlayStore.getState();
-      if (!sam2ViewState || !sam2ViewportSize) {
+      const { viewerViewState, viewerViewportSize } =
+        useOverlayStore.getState();
+      if (!viewerViewState || !viewerViewportSize) {
         setError("Viewer state not available");
         return false;
       }
@@ -319,8 +320,8 @@ export function useSam2() {
       try {
         const imageShape = { x: imageWidth, y: imageHeight };
         const viewRect = computeImageViewRect(
-          sam2ViewState,
-          sam2ViewportSize,
+          viewerViewState,
+          viewerViewportSize,
           imageShape,
         );
         const samTransform = computeSamTransform(viewRect);

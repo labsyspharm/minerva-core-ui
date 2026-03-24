@@ -29,6 +29,7 @@ import { hasFileSystemAccess, toLoader } from "@/lib/filesystem";
 import { useOverlayStore } from "@/lib/stores";
 import { isOpts, validate } from "@/lib/validate";
 import { toSettings } from "@/lib/viv";
+import { normalizeWaypointToBounds } from "@/lib/waypoint";
 import { Pool } from "@/lib/workers/Pool";
 import { author } from "@/minerva-author-ui/author";
 
@@ -37,6 +38,14 @@ type Props = {
   exhibit_config: ExhibitConfig;
   demo_dicom_web?: boolean;
   handleKeys: string[];
+};
+
+/** Deep copy so `index.tsx` arrays are never mutated; session edits live in React config + Zustand. */
+const cloneConfigWaypoints = (stories: ConfigWaypoint[]): ConfigWaypoint[] => {
+  if (typeof structuredClone === "function") {
+    return structuredClone(stories) as ConfigWaypoint[];
+  }
+  return JSON.parse(JSON.stringify(stories)) as ConfigWaypoint[];
 };
 
 const Wrapper = styled.div`
@@ -142,16 +151,16 @@ const Content = (props: Props) => {
     setSourceChannels,
     SourceChannels,
   } = useOverlayStore();
-  const [config, setConfig] = useState({
+  const [config, setConfig] = useState(() => ({
     ItemRegistry: {
       Name: "",
       Groups,
       SourceChannels,
       SourceDistributions: [],
-      Stories: props.configWaypoints,
+      Stories: cloneConfigWaypoints(props.configWaypoints),
     } as ItemRegistryProps,
     ID: crypto.randomUUID(),
-  });
+  }));
 
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
@@ -262,6 +271,25 @@ const Content = (props: Props) => {
   }, [setItems]);
 
   const [fileName, setFileName] = useState("");
+  const showSquareViewportOverlay = useOverlayStore(
+    (state) => state.showSquareViewportOverlay,
+  );
+  const setShowSquareViewportOverlay = useOverlayStore(
+    (state) => state.setShowSquareViewportOverlay,
+  );
+  const viewerViewportSize = useOverlayStore(
+    (state) => state.viewerViewportSize,
+  );
+  const imageWidth = useOverlayStore((state) => state.imageWidth);
+  const imageHeight = useOverlayStore((state) => state.imageHeight);
+
+  useEffect(() => {
+    const enabledFromConfig =
+      localStorage.getItem("square_viewport_overlay") === "1";
+    if (enabledFromConfig) {
+      setShowSquareViewportOverlay(true);
+    }
+  }, [setShowSquareViewportOverlay]);
 
   const onStartOmeTiff = async (in_f: string, handles: Handle.File[]) => {
     if (handles.length === 0) return;
@@ -605,6 +633,7 @@ const Content = (props: Props) => {
       groups: itemRegistryGroups,
       stories,
       name,
+      showSquareViewportOverlay,
     };
   }, [
     Groups,
@@ -615,6 +644,7 @@ const Content = (props: Props) => {
     itemRegistryGroups,
     stories,
     name,
+    showSquareViewportOverlay,
   ]);
 
   // Use Zustand store for overlay state management
@@ -631,21 +661,77 @@ const Content = (props: Props) => {
     setWaypoints,
   } = useOverlayStore();
 
-  // Initialize stories in the store when config changes. Do not overwrite the store
-  // when it has been updated by the authoring UI (e.g. viewstate save) — the store
-  // is the source of truth during editing. Only sync config -> store when the store
-  // is empty (initial load) or when config and store already match (no-op).
+  // Stories lifecycle: `index.tsx` waypoints are copied once into `config` (see
+  // `useState` initializer). After that, Zustand `stories` is authoritative;
+  // this effect only seeds an empty store or runs Pan→Bounds migration. The
+  // subscription below mirrors `stories` back into `config.ItemRegistry.Stories`
+  // for the legacy author panel — not back into `index.tsx`.
   useEffect(() => {
     const configStories = config.ItemRegistry.Stories;
     const storeStories = useOverlayStore.getState().stories;
 
     if (!configStories?.length) return;
-    if (configStories === storeStories) return;
-    if (storeStories.length > 0) return;
+    if (!viewerViewportSize?.width || !viewerViewportSize?.height) return;
 
-    setStories(configStories);
-    setWaypoints([]);
-  }, [config.ItemRegistry.Stories, setStories, setWaypoints]);
+    const cw = viewerViewportSize.width;
+    const ch = viewerViewportSize.height;
+
+    const hasAuthoritativeBounds = (s: ConfigWaypoint) =>
+      s.Bounds != null &&
+      typeof s.Bounds.x0 === "number" &&
+      typeof s.Bounds.x1 === "number" &&
+      typeof s.Bounds.y0 === "number" &&
+      typeof s.Bounds.y1 === "number";
+
+    const needsPanMigration = (s: ConfigWaypoint) =>
+      (s.Pan != null || s.Zoom != null) && !hasAuthoritativeBounds(s);
+
+    // First paint: fill empty store from config (clone if image size not ready yet).
+    if (storeStories.length === 0) {
+      if (imageWidth > 0 && imageHeight > 0) {
+        setStories(
+          configStories.map((story) =>
+            normalizeWaypointToBounds(story, imageWidth, imageHeight, cw, ch),
+          ),
+        );
+      } else {
+        setStories(configStories.map((s) => ({ ...s })));
+      }
+      setWaypoints([]);
+      return;
+    }
+
+    // Typical case: React config already points at the same array as the store.
+    if (configStories === storeStories) {
+      if (
+        imageWidth > 0 &&
+        imageHeight > 0 &&
+        storeStories.some(needsPanMigration)
+      ) {
+        const nextStories = storeStories.map((s) =>
+          needsPanMigration(s)
+            ? normalizeWaypointToBounds(s, imageWidth, imageHeight, cw, ch)
+            : s,
+        );
+        const changed = nextStories.some((s, i) => s !== storeStories[i]);
+        if (changed) {
+          setStories(nextStories);
+          setWaypoints([]);
+        }
+      }
+      return;
+    }
+
+    // Do not clobber an in-session store with a different Stories reference.
+    if (storeStories.length > 0) return;
+  }, [
+    config.ItemRegistry.Stories,
+    viewerViewportSize,
+    imageWidth,
+    imageHeight,
+    setStories,
+    setWaypoints,
+  ]);
 
   // Sync store stories back into config for persistence.
   useEffect(() => {

@@ -14,6 +14,7 @@ import type {
 import type { DocumentStore } from "./document-store";
 import { polygonDifference, polygonUnion } from "./polygonClipping";
 import type { ViewportSize, ViewRect } from "./samViewport";
+import { serializeImportedAnnotationsToWaypointFields } from "./waypointAnnotationSync";
 
 // Re-export config types for convenience
 export type {
@@ -545,6 +546,8 @@ export interface RectangleAnnotation {
     label?: string;
     description?: string;
     isImported?: boolean; // Flag to mark imported annotations as un-deletable
+    /** Original waypoint overlay Group when imported from ConfigWaypoint. */
+    sourceOverlayGroup?: string;
   };
 }
 
@@ -879,6 +882,10 @@ export interface OverlayStore {
     target: [number, number, number];
   } | null;
 
+  /** Authoring: viewer annotation pick/hover/drag only while a waypoint detail editor is open. */
+  authoringWaypointEditorOpen: boolean;
+  setAuthoringWaypointEditorOpen: (open: boolean) => void;
+
   // Actions
   setActiveTool: (tool: string) => void;
   setCurrentInteraction: (interaction: InteractionCoordinate | null) => void;
@@ -941,11 +948,16 @@ export interface OverlayStore {
   setSam2Processing: (v: boolean) => void;
   sam2DebugImages: { encoded: string; mask: string } | null;
   setSam2DebugImages: (v: { encoded: string; mask: string } | null) => void;
-  // SAM2: current viewer state for computing visible region at click time
-  sam2ViewState: OrthographicViewState | null;
-  setSam2ViewState: (vs: OrthographicViewState) => void;
-  sam2ViewportSize: ViewportSize | null;
-  setSam2ViewportSize: (size: ViewportSize) => void;
+  // Current viewer state/size shared by waypoints, playback, and SAM2.
+  viewerViewState: OrthographicViewState | null;
+  setViewerViewState: (vs: OrthographicViewState) => void;
+  viewerViewportSize: ViewportSize | null;
+  setViewerViewportSize: (size: ViewportSize) => void;
+  squareViewportThumbnailCapture: (() => string | null) | null;
+  setSquareViewportThumbnailCapture: (
+    capture: (() => string | null) | null,
+  ) => void;
+  captureSquareViewportThumbnail: () => string | null;
 
   // Waypoint viewstate editing (Save does not persist — deferred)
   editingViewstateWaypointIndex: number | null;
@@ -983,6 +995,9 @@ export interface OverlayStore {
   updateAnnotationLabel: (annotationId: string, newLabel: string) => void; // Update the metadata label (used as layer name)
   setGlobalColor: (color: [number, number, number, number]) => void; // Set global drawing color
   setViewportZoom: (zoom: number) => void; // Set viewport zoom for line width scaling
+  showSquareViewportOverlay: boolean;
+  setShowSquareViewportOverlay: (show: boolean) => void;
+  toggleSquareViewportOverlay: () => void;
   setBrushRadiusPx: (radius: number) => void;
   setBrushMaskResolution: (res: number) => void;
   setBrushViewport: (
@@ -1034,6 +1049,8 @@ export interface OverlayStore {
     clearExisting?: boolean,
   ) => void;
   clearImportedAnnotations: () => void;
+  /** Write imported annotations (from waypoint) back into stories[index].Arrows/Overlays. */
+  persistImportedAnnotationsToStory: (storyIndex: number) => void;
 
   // Waypoint view state actions
   setTargetWaypointViewState: (
@@ -1066,6 +1083,7 @@ const overlayInitialState = {
   hiddenLayers: new Set<string>(), // New: empty hidden layers set
   globalColor: [255, 255, 255, 255], // New: default white color
   viewportZoom: 0, // Default zoom level
+  showSquareViewportOverlay: false,
   brushRadiusPx: 30,
   brushMask: null as BrushMask | null,
   brushMaskVersion: 0,
@@ -1088,11 +1106,13 @@ const overlayInitialState = {
   groupChannelLists: {},
   groupNames: {},
   targetWaypointViewState: null,
+  authoringWaypointEditorOpen: false,
   sam2ImageFetcher: null,
   sam2Processing: false,
   sam2DebugImages: null,
-  sam2ViewState: null,
-  sam2ViewportSize: null,
+  viewerViewState: null,
+  viewerViewportSize: null,
+  squareViewportThumbnailCapture: null,
   editingViewstateWaypointIndex: null,
 };
 
@@ -1187,6 +1207,9 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
         // Handle move tool interactions
         if (activeTool === "move") {
+          if (!get().authoringWaypointEditorOpen) {
+            return;
+          }
           const { hoverState } = get();
 
           switch (type) {
@@ -1678,6 +1701,16 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         set({ viewportZoom: zoom });
       },
 
+      setShowSquareViewportOverlay: (show: boolean) => {
+        set({ showSquareViewportOverlay: show });
+      },
+
+      toggleSquareViewportOverlay: () => {
+        set((state) => ({
+          showSquareViewportOverlay: !state.showSquareViewportOverlay,
+        }));
+      },
+
       setBrushRadiusPx: (radius: number) => {
         set({ brushRadiusPx: radius });
       },
@@ -2055,6 +2088,10 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             dragOffset: null,
           },
         });
+        const { activeStoryIndex } = get();
+        if (activeStoryIndex !== null) {
+          get().persistImportedAnnotationsToStory(activeStoryIndex);
+        }
       },
 
       resetDragState: () => {
@@ -2072,6 +2109,18 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       resetHoverState: () => {
         set({ hoverState: overlayInitialState.hoverState });
+      },
+
+      setAuthoringWaypointEditorOpen: (open: boolean) => {
+        if (open) {
+          set({ authoringWaypointEditorOpen: true });
+        } else {
+          set({
+            authoringWaypointEditorOpen: false,
+            hoverState: overlayInitialState.hoverState,
+            dragState: overlayInitialState.dragState,
+          });
+        }
       },
 
       // Group actions
@@ -2151,9 +2200,18 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       updateStory: (index: number, updates: Partial<ConfigWaypoint>) => {
         set((state) => {
-          const newStories = state.stories.map((story, i) =>
-            i === index ? { ...story, ...updates } : story,
-          );
+          const shouldDropLegacyViewKeys = Object.hasOwn(updates, "Bounds");
+          const newStories = state.stories.map((story, i) => {
+            if (i !== index) return story;
+            const mergedStory = { ...story, ...updates };
+            if (!shouldDropLegacyViewKeys) return mergedStory;
+            const { Pan: _pan, Zoom: _zoom, ...withoutPanZoom } = mergedStory;
+            if (Object.hasOwn(updates, "ViewState")) {
+              return withoutPanZoom as ConfigWaypoint;
+            }
+            const { ViewState: _vs, ...rest } = withoutPanZoom;
+            return rest as ConfigWaypoint;
+          });
           return { stories: newStories };
         });
       },
@@ -2223,12 +2281,22 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         set({ sam2DebugImages: v });
       },
 
-      setSam2ViewState: (vs) => {
-        set({ sam2ViewState: vs });
+      setViewerViewState: (vs) => {
+        set({ viewerViewState: vs });
       },
 
-      setSam2ViewportSize: (size) => {
-        set({ sam2ViewportSize: size });
+      setViewerViewportSize: (size) => {
+        set({ viewerViewportSize: size });
+      },
+
+      setSquareViewportThumbnailCapture: (capture) => {
+        set({ squareViewportThumbnailCapture: capture });
+      },
+
+      captureSquareViewportThumbnail: () => {
+        const capture = get().squareViewportThumbnailCapture;
+        if (!capture) return null;
+        return capture();
       },
 
       setEditingViewstateWaypointIndex: (index) => {
@@ -2395,6 +2463,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             metadata: {
               label: `Region ${index + 1}`,
               isImported: true,
+              sourceOverlayGroup: overlay.Group,
             },
           };
           newAnnotations.push(rectAnnotation);
@@ -2435,6 +2504,42 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         }));
       },
 
+      persistImportedAnnotationsToStory: (storyIndex: number) => {
+        const state = get();
+        const story = state.stories[storyIndex];
+        if (!story || state.imageWidth <= 0 || state.imageHeight <= 0) {
+          return;
+        }
+        const imported = state.annotations.filter(
+          (a) => a.metadata?.isImported,
+        );
+        const hadStored =
+          (story.Arrows?.length ?? 0) > 0 || (story.Overlays?.length ?? 0) > 0;
+        if (imported.length === 0 && !hadStored) {
+          return;
+        }
+        if (imported.length === 0 && hadStored) {
+          get().updateStory(storyIndex, { Arrows: [], Overlays: [] });
+          return;
+        }
+        const { Arrows, Overlays } =
+          serializeImportedAnnotationsToWaypointFields(
+            state.annotations,
+            state.imageWidth,
+            state.imageHeight,
+            story,
+          );
+        const prevA = JSON.stringify(story.Arrows ?? []);
+        const prevO = JSON.stringify(story.Overlays ?? []);
+        if (
+          JSON.stringify(Arrows) === prevA &&
+          JSON.stringify(Overlays) === prevO
+        ) {
+          return;
+        }
+        get().updateStory(storyIndex, { Arrows, Overlays });
+      },
+
       // channel and group actions
       //
       setActiveChannelGroup: (channelGroupId: string) => {
@@ -2454,7 +2559,21 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       // Waypoint view state actions
       setTargetWaypointViewState: (viewState) => {
-        set({ targetWaypointViewState: viewState });
+        // Always store a fresh object so Jump-to-view retriggers after overwrite even
+        // when the story still points at the same ViewState reference, and so
+        // subscribers always see a change.
+        const next =
+          viewState === null
+            ? null
+            : {
+                zoom: viewState.zoom,
+                target: [
+                  viewState.target[0],
+                  viewState.target[1],
+                  viewState.target[2],
+                ] as [number, number, number],
+              };
+        set({ targetWaypointViewState: next });
       },
 
       clearTargetWaypointViewState: () => {

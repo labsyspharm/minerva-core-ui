@@ -170,7 +170,7 @@
   display: grid;
   align-items: center;
   box-sizing: border-box;
-  grid-template-columns: 24px 56px minmax(0, 1fr);
+  grid-template-columns: 24px 56px minmax(0, 1fr) 54px;
   gap: 10px;
   position: relative;
   user-select: none;
@@ -181,7 +181,6 @@
   min-height: 1px;
 }
 
-/* Placeholder until real waypoint thumbnails exist */
 .rowThumbnail {
   width: 56px;
   height: 56px;
@@ -191,6 +190,9 @@
   box-sizing: border-box;
   flex-shrink: 0;
   align-self: center;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 .compactRowDraggable {
@@ -369,6 +371,39 @@
 
 .rowTitleRow .annotationBadge {
   width: auto;
+}
+
+.rowActionButtons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  align-self: center;
+}
+
+.rowActionButton {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #333;
+  border-radius: 999px;
+  background: #151515;
+  color: #ccc;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.rowActionButton:hover {
+  color: #fff;
+  border-color: #555;
+}
+
+.rowActionButton:focus-visible {
+  outline: 1px solid #007acc;
+  outline-offset: 1px;
 }
 
 .annotationIcon {

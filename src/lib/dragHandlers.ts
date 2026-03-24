@@ -106,8 +106,9 @@ export const createDragHandlers = (
       const layer = info.layer;
       const object = info.object;
 
-      // Detect if hovering over an annotation (only for move tool)
-      if (activeTool === "move") {
+      // Detect if hovering over an annotation (only for move tool, and only
+      // while a waypoint is open for edit — annotation layers are not pickable otherwise).
+      if (activeTool === "move" && store().authoringWaypointEditorOpen) {
         if (layer?.id?.startsWith("annotation-") && object?.id) {
           // Use the picked object's id; strip -arrow or -text suffix for sub-layers
           let annotationId = object.id;

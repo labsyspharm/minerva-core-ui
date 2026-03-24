@@ -52,7 +52,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     imageWidth,
     imageHeight,
     setTargetWaypointViewState,
-    sam2ViewportSize,
+    viewerViewportSize,
     editingViewstateWaypointIndex,
     setEditingViewstateWaypointIndex,
     removeStory,
@@ -74,6 +74,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   const [_dropTargetIndex, setDropTargetIndex] = React.useState<number | null>(
     null,
   );
+  const previousActiveStoryIndexRef = React.useRef<number | null>(null);
 
   const className = [styles.center, styles.black].join(" ");
 
@@ -89,6 +90,13 @@ const WaypointsList = (props: WaypointsListProps) => {
     const story = stories[storyIndex];
 
     if (story) {
+      const prev = previousActiveStoryIndexRef.current;
+      const store = useOverlayStore.getState();
+      if (prev !== null && prev !== storyIndex) {
+        store.persistImportedAnnotationsToStory(prev);
+      }
+      previousActiveStoryIndexRef.current = storyIndex;
+
       // Clear any existing imported annotations first
       clearImportedAnnotations();
 
@@ -107,6 +115,18 @@ const WaypointsList = (props: WaypointsListProps) => {
     clearImportedAnnotations,
     importWaypointAnnotations,
   ]);
+
+  React.useEffect(() => {
+    return () => {
+      const p = previousActiveStoryIndexRef.current;
+      if (p !== null) {
+        const s = useOverlayStore.getState();
+        if (s.imageWidth > 0 && s.imageHeight > 0) {
+          s.persistImportedAnnotationsToStory(p);
+        }
+      }
+    };
+  }, []);
 
   // Convert stories to ListItem format with inline editors and annotations panel
   const listItems: ListItem<WaypointItemMetadata>[] = stories.map(
@@ -186,18 +206,10 @@ const WaypointsList = (props: WaypointsListProps) => {
         // Use the latest story from the store (authoritative) in case item.metadata is stale
         const currentStory = useOverlayStore.getState().stories[index];
 
-        // Trigger view state change: prefer ViewState (Deck.gl format), else
-        // convert legacy Pan/Zoom. ViewState does not need viewport dims.
         let viewState = null;
         if (
-          currentStory?.ViewState &&
-          typeof currentStory.ViewState.zoom === "number" &&
-          Array.isArray(currentStory.ViewState.target) &&
-          currentStory.ViewState.target.length === 3
-        ) {
-          viewState = currentStory.ViewState;
-        } else if (
-          sam2ViewportSize?.width &&
+          viewerViewportSize?.width &&
+          viewerViewportSize?.height &&
           imageWidth > 0 &&
           imageHeight > 0
         ) {
@@ -205,7 +217,8 @@ const WaypointsList = (props: WaypointsListProps) => {
             currentStory ?? story,
             imageWidth,
             imageHeight,
-            sam2ViewportSize.width,
+            viewerViewportSize.width,
+            viewerViewportSize.height,
           );
         }
         if (viewState) {

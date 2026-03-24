@@ -1,9 +1,5 @@
-import {
-  LinearInterpolator,
-  OrthographicView,
-  type OrthographicViewState,
-} from "@deck.gl/core";
-import Deck from "@deck.gl/react";
+import { OrthographicView, type OrthographicViewState } from "@deck.gl/core";
+import Deck, { type DeckGLRef } from "@deck.gl/react";
 import { MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
@@ -20,6 +16,11 @@ import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import type { ConfigGroup, OverlayLayer } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
 import { useWindowSize } from "@/lib/useWindowSize";
+import {
+  getViewerViewportSnapshotFromDeck,
+  orthographicZoomToNumber,
+  registerViewerLiveSnapshotReader,
+} from "@/lib/viewerViewport";
 import type { Config, Loader } from "@/lib/viv";
 
 type ItemRegistryChannel = {
@@ -51,12 +52,25 @@ export type ImageViewerProps = {
   groups: ItemRegistryGroup[];
   zoomInButton?: HTMLElement | null;
   zoomOutButton?: HTMLElement | null;
+  showSquareViewportOverlay?: boolean;
+  squareViewportScale?: number;
+  squareViewportColor?: string;
+  squareViewportBorderWidth?: number;
   [key: string]: unknown;
 };
 
 const Main = styled.div`
   position: relative;
   height: 100%;
+`;
+
+const SquareViewportOverlay = styled.div`
+  position: absolute;
+  pointer-events: none;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
 `;
 
 const _isElement = (x = {}): x is HTMLElement => {
@@ -123,12 +137,17 @@ export const ImageViewer = (props: ImageViewerProps) => {
     hoveredAnnotationId = null,
     onOverlayInteraction,
     viewerConfig,
+    showSquareViewportOverlay = false,
+    squareViewportScale = 0.9,
+    squareViewportColor = "rgba(255, 255, 255, 0.9)",
+    squareViewportBorderWidth = 2,
   } = props;
   const { activeChannelGroupId, channelVisibilities, sam2Processing } =
     useOverlayStore();
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [_canvas, _setCanvas] = useState(null);
   const rootRef = useRef<HTMLElement | null>(null);
+  const deckRef = useRef<DeckGLRef | null>(null);
 
   // Set up ResizeObserver to track viewport size changes
   useEffect(() => {
@@ -139,6 +158,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
         setViewportSize({ width, height });
+        // Same tick as layout — avoids null viewerViewportSize before React commits.
+        if (width > 0 && height > 0) {
+          useOverlayStore.getState().setViewerViewportSize({ width, height });
+        }
       }
     });
 
@@ -297,8 +320,11 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // Register SAM2 image fetcher for magic wand (OME-TIFF only)
   const setSam2ImageFetcher = useOverlayStore((s) => s.setSam2ImageFetcher);
-  const setSam2ViewState = useOverlayStore((s) => s.setSam2ViewState);
-  const setSam2ViewportSize = useOverlayStore((s) => s.setSam2ViewportSize);
+  const setViewerViewState = useOverlayStore((s) => s.setViewerViewState);
+  const setViewerViewportSize = useOverlayStore((s) => s.setViewerViewportSize);
+  const setSquareViewportThumbnailCapture = useOverlayStore(
+    (s) => s.setSquareViewportThumbnailCapture,
+  );
   useEffect(() => {
     if (
       loaderOmeTiff &&
@@ -351,12 +377,36 @@ export const ImageViewer = (props: ImageViewerProps) => {
       raw.target.length === 3
         ? { zoom: raw.zoom, target: raw.target as [number, number, number] }
         : null);
-    if (flat) setSam2ViewState(flat);
-  }, [viewState, setSam2ViewState]);
+    if (flat) setViewerViewState(flat);
+  }, [viewState, setViewerViewState]);
 
   useEffect(() => {
-    setSam2ViewportSize(viewportSize);
-  }, [viewportSize, setSam2ViewportSize]);
+    setViewerViewportSize(viewportSize);
+  }, [viewportSize, setViewerViewportSize]);
+
+  useEffect(() => {
+    registerViewerLiveSnapshotReader(() => {
+      const fromDeck = getViewerViewportSnapshotFromDeck(deckRef.current?.deck);
+      if (fromDeck) {
+        const z = orthographicZoomToNumber(fromDeck.viewState.zoom);
+        if (
+          z !== null &&
+          Array.isArray(fromDeck.viewState.target) &&
+          fromDeck.viewState.target.length >= 3 &&
+          fromDeck.viewportSize.width > 0 &&
+          fromDeck.viewportSize.height > 0
+        ) {
+          return fromDeck;
+        }
+      }
+      const { viewState: vs, viewportSize: vp } = viewRef.current;
+      const flat = toFlatViewState(vs);
+      if (!flat) return null;
+      if (vp.width <= 0 || vp.height <= 0) return null;
+      return { viewState: flat as OrthographicViewState, viewportSize: vp };
+    });
+    return () => registerViewerLiveSnapshotReader(null);
+  }, []);
 
   // Apply waypoint view state when target is set (from waypoint selection)
   useEffect(() => {
@@ -371,35 +421,31 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
     const vs = targetWaypointViewState;
 
-    // Cancel any ongoing transition; normalize in case state is ortho-nested
-    setViewState((currentViewState) => {
-      const flat = toFlatViewState(currentViewState);
-      if (!flat) return currentViewState as OrthographicViewState;
-      return { ...flat, transitionDuration: 0 } as OrthographicViewState;
-    });
-
-    // Start the new transition; clear after applying to avoid race with re-render
-    const id = setTimeout(() => {
-      ignoreNextViewStateChangeRef.current = true;
-      const viewStateWithTransition = {
-        ...vs,
-        transitionDuration: 1000,
-        transitionInterpolator: new LinearInterpolator(["target", "zoom"]),
-        transitionEasing: (x: number) => (x === 1 ? 1 : 1 - 2 ** (-10 * x)),
-      };
-
-      setViewState(viewStateWithTransition as OrthographicViewState);
-      setViewportZoom(vs.zoom);
-      clearTargetWaypointViewState();
-      // Clear the ignore flag after Deck has had a chance to apply
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          ignoreNextViewStateChangeRef.current = false;
-        });
-      });
+    // Snap immediately: long transitions fight authoring (mid-flight camera reads)
+    // and make “return to waypoint” feel like the wrong view for ~1s.
+    ignoreNextViewStateChangeRef.current = true;
+    setViewState({ ...vs, transitionDuration: 0 } as OrthographicViewState);
+    setViewportZoom(vs.zoom);
+    // Clear target on the next turn so React applies setViewState before we null
+    // the store flag; clearing synchronously could race and skip Deck updates.
+    let cancelled = false;
+    const clearId = window.setTimeout(() => {
+      if (!cancelled) {
+        clearTargetWaypointViewState();
+      }
     }, 0);
-
-    return () => clearTimeout(id);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!cancelled) {
+          ignoreNextViewStateChangeRef.current = false;
+        }
+      });
+    });
+    return () => {
+      cancelled = true;
+      window.clearTimeout(clearId);
+      ignoreNextViewStateChangeRef.current = false;
+    };
   }, [
     targetWaypointViewState,
     viewportSize,
@@ -534,6 +580,93 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return layers;
   }, [dicomLayers, omeTiffLayers, overlayLayers, scaleBarLayer]);
 
+  const squareViewportStyle = useMemo(() => {
+    const side = Math.max(
+      0,
+      Math.floor(
+        Math.min(viewportSize.width, viewportSize.height) *
+          Math.max(0, Math.min(1, squareViewportScale)),
+      ),
+    );
+    return {
+      width: `${side}px`,
+      height: `${side}px`,
+      border: `${Math.max(1, Math.round(squareViewportBorderWidth))}px solid ${squareViewportColor}`,
+    };
+  }, [
+    viewportSize.width,
+    viewportSize.height,
+    squareViewportScale,
+    squareViewportColor,
+    squareViewportBorderWidth,
+  ]);
+
+  const captureSquareViewportThumbnail = useCallback((): string | null => {
+    const canvas = deckRef.current?.deck?.getCanvas() ?? undefined;
+    if (!canvas) return null;
+    if (canvas.clientWidth <= 0 || canvas.clientHeight <= 0) return null;
+
+    const sideCss = Math.max(
+      0,
+      Math.floor(
+        Math.min(viewportSize.width, viewportSize.height) *
+          Math.max(0, Math.min(1, squareViewportScale)),
+      ),
+    );
+    const borderCss = Math.max(1, Math.round(squareViewportBorderWidth));
+    const innerSideCss = Math.max(1, sideCss - borderCss * 2);
+    if (innerSideCss <= 0) return null;
+
+    const offsetXCss = (canvas.clientWidth - innerSideCss) / 2;
+    const offsetYCss = (canvas.clientHeight - innerSideCss) / 2;
+    const scaleX = canvas.width / canvas.clientWidth;
+    const scaleY = canvas.height / canvas.clientHeight;
+
+    const sx = Math.max(0, Math.round(offsetXCss * scaleX));
+    const sy = Math.max(0, Math.round(offsetYCss * scaleY));
+    const sw = Math.max(1, Math.round(innerSideCss * scaleX));
+    const sh = Math.max(1, Math.round(innerSideCss * scaleY));
+
+    const sourceCanvas = document.createElement("canvas");
+    sourceCanvas.width = sw;
+    sourceCanvas.height = sh;
+    const sourceCtx = sourceCanvas.getContext("2d");
+    if (!sourceCtx) return null;
+    sourceCtx.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
+
+    const maxThumbSize = 160;
+    const outputSide = Math.max(1, Math.min(maxThumbSize, Math.min(sw, sh)));
+    const outputCanvas = document.createElement("canvas");
+    outputCanvas.width = outputSide;
+    outputCanvas.height = outputSide;
+    const outputCtx = outputCanvas.getContext("2d");
+    if (!outputCtx) return null;
+    outputCtx.imageSmoothingEnabled = true;
+    outputCtx.imageSmoothingQuality = "high";
+    outputCtx.drawImage(
+      sourceCanvas,
+      0,
+      0,
+      sw,
+      sh,
+      0,
+      0,
+      outputSide,
+      outputSide,
+    );
+    return outputCanvas.toDataURL("image/png");
+  }, [
+    viewportSize.width,
+    viewportSize.height,
+    squareViewportScale,
+    squareViewportBorderWidth,
+  ]);
+
+  useEffect(() => {
+    setSquareViewportThumbnailCapture(captureSquareViewportThumbnail);
+    return () => setSquareViewportThumbnailCapture(null);
+  }, [captureSquareViewportThumbnail, setSquareViewportThumbnailCapture]);
+
   const getScreenFromWorld = useCallback(
     (worldX: number, worldY: number): [number, number] => {
       const { viewState: vs, viewportSize: vp } = viewRef.current;
@@ -610,15 +743,20 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // Memoize view state change handler.
   const handleViewStateChange = useCallback(
-    ({ interactionState, viewState: nextViewState }) => {
+    ({ viewState: nextViewState }) => {
       if (ignoreNextViewStateChangeRef.current) return;
-      if (isDragging || (activeTool !== "move" && interactionState.isDragging))
-        return;
+      // Only skip while dragging an annotation (move tool). Do not skip for
+      // viewport pan/zoom while using brush or other tools — otherwise the store
+      // keeps a stale camera and waypoint overwrite saves the wrong view.
+      if (isDragging) return;
       // Store normalized flat format when possible; else accept Deck's format
       const flat = toFlatViewState(nextViewState);
       if (flat) {
         setViewState(flat as OrthographicViewState);
         setViewportZoom(flat.zoom);
+        // Keep Zustand in sync in the same tick so waypoint save / overwrite reads
+        // the latest camera (the useEffect below only runs after commit).
+        setViewerViewState(flat);
       } else {
         setViewState(nextViewState);
         const zoom =
@@ -629,7 +767,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         if (typeof zoom === "number") setViewportZoom(zoom);
       }
     },
-    [isDragging, activeTool, setViewportZoom],
+    [isDragging, setViewportZoom, setViewerViewState],
   );
 
   // LoadingWidget ref for onRedraw callback
@@ -651,9 +789,15 @@ export const ImageViewer = (props: ImageViewerProps) => {
   return (
     <Main slot="image" ref={rootRef}>
       <Deck
+        ref={deckRef}
         getCursor={getCursor}
         layers={allLayers}
         controller={controllerConfig}
+        deviceProps={{
+          webgl: {
+            preserveDrawingBuffer: true,
+          },
+        }}
         viewState={{ ortho: viewState }}
         onViewStateChange={handleViewStateChange}
         onClick={dragHandlers.onClick}
@@ -665,6 +809,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
         views={views}
       />
       <LoadingWidget ref={loadingWidgetRef} />
+      {showSquareViewportOverlay && (
+        <SquareViewportOverlay style={squareViewportStyle} />
+      )}
     </Main>
   );
 };

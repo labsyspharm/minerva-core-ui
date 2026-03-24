@@ -1348,8 +1348,11 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     });
   }, [textInputPosition, showTextInput]);
 
+  const authoringWaypointEditorOpen = useOverlayStore(
+    (s) => s.authoringWaypointEditorOpen,
+  );
   // Use shared hook to create and sync annotation layers to the store
-  useAnnotationLayers();
+  useAnnotationLayers(authoringWaypointEditorOpen);
 
   // Notify parent when drawing layer is created or removed
   React.useEffect(() => {

@@ -26,12 +26,19 @@ type DistributionProperties = {
 };
 type WaypointProperties = NameProperty & {
   Content: string;
+  Bounds?: {
+    x0: number;
+    x1: number;
+    y0: number;
+    y1: number;
+  };
   Pan?: [number, number];
   Zoom?: number;
   ViewState?: {
     target: [number, number, number];
     zoom: number;
   };
+  ThumbnailDataUrl?: string;
   Group?: string;
 };
 

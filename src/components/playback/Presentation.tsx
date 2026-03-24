@@ -184,10 +184,12 @@ export const Presentation = (props: PresentationProps) => {
     imageWidth,
     imageHeight,
     setTargetWaypointViewState,
-    sam2ViewportSize,
+    viewerViewportSize,
     SourceChannels,
     Groups,
   } = useOverlayStore();
+
+  const previousActiveStoryIndexRef = useRef<number | null>(null);
 
   // Sync annotation layers (presenter mode: non-interactive)
   useAnnotationLayers(false);
@@ -204,6 +206,14 @@ export const Presentation = (props: PresentationProps) => {
     const story = stories[activeStoryIndex];
 
     if (story) {
+      const idx = activeStoryIndex;
+      const prev = previousActiveStoryIndexRef.current;
+      const store = useOverlayStore.getState();
+      if (prev !== null && prev !== idx) {
+        store.persistImportedAnnotationsToStory(prev);
+      }
+      previousActiveStoryIndexRef.current = idx;
+
       // Import annotations from the story (clearing existing imported ones atomically)
       const arrows = story.Arrows || [];
       const overlays = story.Overlays || [];
@@ -214,23 +224,20 @@ export const Presentation = (props: PresentationProps) => {
         clearImportedAnnotations();
       }
 
-      // Also set the initial view state based on waypoint ViewState (preferred)
-      // or legacy Pan/Zoom (converted at runtime). ViewState does not need viewport.
       const wp = story as ConfigWaypoint;
       let viewState = null;
       if (
-        wp.ViewState &&
-        typeof wp.ViewState.zoom === "number" &&
-        Array.isArray(wp.ViewState.target) &&
-        wp.ViewState.target.length === 3
+        viewerViewportSize?.width &&
+        viewerViewportSize?.height &&
+        imageWidth > 0 &&
+        imageHeight > 0
       ) {
-        viewState = wp.ViewState;
-      } else if (sam2ViewportSize?.width && imageWidth > 0 && imageHeight > 0) {
         viewState = getWaypointViewState(
           wp,
           imageWidth,
           imageHeight,
-          sam2ViewportSize.width,
+          viewerViewportSize.width,
+          viewerViewportSize.height,
         );
       }
       if (viewState) setTargetWaypointViewState(viewState);
@@ -240,11 +247,24 @@ export const Presentation = (props: PresentationProps) => {
     activeStoryIndex,
     imageWidth,
     imageHeight,
-    sam2ViewportSize?.width,
+    viewerViewportSize?.width,
+    viewerViewportSize?.height,
     importWaypointAnnotations,
     clearImportedAnnotations,
     setTargetWaypointViewState,
   ]);
+
+  useEffect(() => {
+    return () => {
+      const p = previousActiveStoryIndexRef.current;
+      if (p !== null) {
+        const s = useOverlayStore.getState();
+        if (s.imageWidth > 0 && s.imageHeight > 0) {
+          s.persistImportedAnnotationsToStory(p);
+        }
+      }
+    };
+  }, []);
 
   const updateGroup = (activeStory) => {
     const story = stories[activeStory];
@@ -262,18 +282,17 @@ export const Presentation = (props: PresentationProps) => {
     if (!story) return;
     let viewState = null;
     if (
-      story.ViewState &&
-      typeof story.ViewState.zoom === "number" &&
-      Array.isArray(story.ViewState.target) &&
-      story.ViewState.target.length === 3
+      viewerViewportSize?.width &&
+      viewerViewportSize?.height &&
+      imageWidth > 0 &&
+      imageHeight > 0
     ) {
-      viewState = story.ViewState;
-    } else if (sam2ViewportSize?.width && imageWidth > 0 && imageHeight > 0) {
       viewState = getWaypointViewState(
         story,
         imageWidth,
         imageHeight,
-        sam2ViewportSize.width,
+        viewerViewportSize.width,
+        viewerViewportSize.height,
       );
     }
     if (viewState) setTargetWaypointViewState(viewState);
