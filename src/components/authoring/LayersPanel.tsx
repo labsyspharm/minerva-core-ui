@@ -208,6 +208,8 @@ interface LayersPanelProps {
   itemListVariant?: ItemListVariant;
   /** When set, renders one unified top bar: tools + layers actions */
   toolbarSlot?: React.ReactNode;
+  /** Waypoint editor only: copy/paste icons (same handlers as Cmd/Ctrl+C/V). */
+  waypointClipboardActions?: React.ReactNode;
   /** Used when no annotation is selected (or a group is selected) for the header color control */
   onOpenGlobalColorPicker?: () => void;
   onOpenAnnotationColorPicker?: (
@@ -220,6 +222,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   className,
   itemListVariant = "default",
   toolbarSlot,
+  waypointClipboardActions,
   onOpenGlobalColorPicker,
   onOpenAnnotationColorPicker,
 }) => {
@@ -239,6 +242,12 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const deleteGroup = useOverlayStore((state) => state.deleteGroup);
   const removeAnnotationFromGroup = useOverlayStore(
     (state) => state.removeAnnotationFromGroup,
+  );
+  const setLayersPanelSelectedAnnotationIds = useOverlayStore(
+    (state) => state.setLayersPanelSelectedAnnotationIds,
+  );
+  const setSelectedAnnotation = useOverlayStore(
+    (state) => state.setSelectedAnnotation,
   );
   const toggleGroupExpanded = useOverlayStore(
     (state) => state.toggleGroupExpanded,
@@ -271,20 +280,51 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     string | null
   >(null);
 
-  const [selectedLayerId, setSelectedLayerId] = React.useState<string | null>(
+  const [selectedGroupId, setSelectedGroupId] = React.useState<string | null>(
     null,
   );
+  const [selectedAnnotationIds, setSelectedAnnotationIds] = React.useState<
+    string[]
+  >([]);
+
+  /** Anchor for Shift+click range selection (last plain or Cmd/Ctrl+click on an annotation). */
+  const shiftRangeAnchorIdRef = React.useRef<string | null>(null);
+
+  /** Single id for header actions that expect one layer, or group id. */
+  const selectedLayerId =
+    selectedGroupId ??
+    (selectedAnnotationIds.length === 1 ? selectedAnnotationIds[0] : null);
 
   React.useEffect(() => {
-    if (!selectedLayerId) {
-      return;
+    setLayersPanelSelectedAnnotationIds(selectedAnnotationIds);
+    if (selectedAnnotationIds.length === 1 && selectedGroupId === null) {
+      setSelectedAnnotation(selectedAnnotationIds[0]);
+    } else {
+      setSelectedAnnotation(null);
     }
-    const isGroup = annotationGroups.some((g) => g.id === selectedLayerId);
-    const isAnnotation = annotations.some((a) => a.id === selectedLayerId);
-    if (!isGroup && !isAnnotation) {
-      setSelectedLayerId(null);
+  }, [
+    selectedAnnotationIds,
+    selectedGroupId,
+    setLayersPanelSelectedAnnotationIds,
+    setSelectedAnnotation,
+  ]);
+
+  React.useEffect(() => {
+    if (
+      selectedGroupId !== null &&
+      !annotationGroups.some((g) => g.id === selectedGroupId)
+    ) {
+      setSelectedGroupId(null);
     }
-  }, [annotations, annotationGroups, selectedLayerId]);
+    setSelectedAnnotationIds((prev) => {
+      const next = prev.filter((id) => annotations.some((a) => a.id === id));
+      return next.length === prev.length ? prev : next;
+    });
+    const anchor = shiftRangeAnchorIdRef.current;
+    if (anchor !== null && !annotations.some((a) => a.id === anchor)) {
+      shiftRangeAnchorIdRef.current = null;
+    }
+  }, [annotations, annotationGroups, selectedGroupId]);
 
   const getLayerIcon = (annotation: Annotation) => {
     const dim = { width: "14px", height: "14px" } as const;
@@ -412,7 +452,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       isHidden: hiddenLayers.has(annotation.id),
       icon: getLayerIcon(annotation),
       isExpanded: group.isExpanded,
-      isActive: annotation.id === selectedLayerId,
+      isActive: selectedAnnotationIds.includes(annotation.id),
       metadata: { annotation, type: "annotation" },
     }));
 
@@ -422,7 +462,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       subtitle: `${groupAnnotations.length} annotations`,
       isHidden: groupIsHidden,
       isExpanded: group.isExpanded,
-      isActive: group.id === selectedLayerId,
+      isActive: selectedGroupId === group.id,
       icon: <FolderIcon style={{ width: "14px", height: "14px" }} />,
       children,
       metadata: { group, type: "group" },
@@ -442,7 +482,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       title: getLayerName(annotation),
       isHidden: hiddenLayers.has(annotation.id),
       icon: getLayerIcon(annotation),
-      isActive: annotation.id === selectedLayerId,
+      isActive: selectedAnnotationIds.includes(annotation.id),
       metadata: { annotation, type: "annotation" },
     }),
   );
@@ -450,8 +490,70 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   // Combine groups and ungrouped annotations
   const allItems = [...groupItems, ...annotationItems];
 
-  const handleItemClick = (item: ListItem) => {
-    setSelectedLayerId(item.id);
+  /** Flat annotation order as rendered (groups top-to-bottom, then ungrouped), for Shift+range select. */
+  const orderedAnnotationIdsInPanel = React.useMemo(() => {
+    const ids: string[] = [];
+    for (const group of annotationGroups) {
+      for (const a of annotations) {
+        if (group.annotationIds.includes(a.id)) ids.push(a.id);
+      }
+    }
+    for (const a of annotations) {
+      const inGroup = annotationGroups.some((g) =>
+        g.annotationIds.includes(a.id),
+      );
+      if (!inGroup) ids.push(a.id);
+    }
+    return ids;
+  }, [annotations, annotationGroups]);
+
+  const handleItemClick = (item: ListItem, event: React.MouseEvent) => {
+    const meta = item.metadata;
+    if (meta?.type === "group") {
+      setSelectedGroupId(item.id);
+      setSelectedAnnotationIds([]);
+      shiftRangeAnchorIdRef.current = null;
+      return;
+    }
+    if (meta?.type === "annotation") {
+      const annId = meta.annotation.id;
+      setSelectedGroupId(null);
+
+      if (event.shiftKey) {
+        const flat = orderedAnnotationIdsInPanel;
+        const anchor =
+          shiftRangeAnchorIdRef.current ?? selectedAnnotationIds[0] ?? annId;
+        let i0 = flat.indexOf(anchor);
+        let i1 = flat.indexOf(annId);
+        if (i0 < 0) i0 = i1;
+        if (i1 < 0) i1 = i0;
+        if (i0 < 0 && i1 < 0) {
+          setSelectedAnnotationIds([annId]);
+        } else {
+          const lo = Math.min(i0, i1);
+          const hi = Math.max(i0, i1);
+          setSelectedAnnotationIds(flat.slice(lo, hi + 1));
+        }
+        return;
+      }
+
+      if (event.metaKey || event.ctrlKey) {
+        setSelectedAnnotationIds((prev) => {
+          const next = new Set(prev);
+          if (next.has(annId)) {
+            next.delete(annId);
+          } else {
+            next.add(annId);
+          }
+          return Array.from(next);
+        });
+        shiftRangeAnchorIdRef.current = annId;
+        return;
+      }
+
+      setSelectedAnnotationIds([annId]);
+      shiftRangeAnchorIdRef.current = annId;
+    }
   };
 
   const handleToggleVisibility = (itemId: string) => {
@@ -469,6 +571,21 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         const isHidden = hiddenLayers.has(annotationId);
 
         // If any are visible, hide all; if all are hidden, show all.
+        if (allHidden && isHidden) {
+          toggleLayerVisibility(annotationId);
+        } else if (!allHidden && !isHidden) {
+          toggleLayerVisibility(annotationId);
+        }
+      });
+    } else if (
+      selectedAnnotationIds.length > 1 &&
+      selectedAnnotationIds.includes(itemId)
+    ) {
+      const ids = selectedAnnotationIds;
+      const allHidden =
+        ids.length > 0 && ids.every((id) => hiddenLayers.has(id));
+      ids.forEach((annotationId) => {
+        const isHidden = hiddenLayers.has(annotationId);
         if (allHidden && isHidden) {
           toggleLayerVisibility(annotationId);
         } else if (!allHidden && !isHidden) {
@@ -516,21 +633,33 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   })();
 
   const handleHeaderDeleteClick = () => {
-    if (!selectedLayerId) {
+    if (selectedGroupId) {
+      deleteGroup(selectedGroupId);
+      setSelectedGroupId(null);
+      setSelectedAnnotationIds([]);
       return;
     }
-    handleDelete(selectedLayerId);
+    if (selectedAnnotationIds.length === 0) {
+      return;
+    }
+    for (const id of selectedAnnotationIds) {
+      removeAnnotation(id);
+    }
+    setSelectedAnnotationIds([]);
   };
 
   const handleHeaderEditTextClick = () => {
-    const ann = annotations.find((a) => a.id === selectedLayerId);
+    if (selectedAnnotationIds.length !== 1) return;
+    const ann = annotations.find((a) => a.id === selectedAnnotationIds[0]);
     if (ann) {
       handleEditText(ann);
     }
   };
 
   const headerEditTextDisabled =
-    !selectedLayerId || !annotations.some((a) => a.id === selectedLayerId);
+    selectedAnnotationIds.length !== 1 ||
+    selectedGroupId !== null ||
+    !annotations.some((a) => a.id === selectedAnnotationIds[0]);
 
   const handleToggleExpand = (itemId: string) => {
     toggleGroupExpanded(itemId);
@@ -720,15 +849,18 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         type="button"
         className={styles.toolButton}
         onClick={handleHeaderDeleteClick}
-        disabled={!selectedLayerId}
+        disabled={!selectedGroupId && selectedAnnotationIds.length === 0}
         title={
-          selectedLayerId
-            ? "Delete selected layer or group"
+          selectedGroupId || selectedAnnotationIds.length > 0
+            ? selectedAnnotationIds.length > 1
+              ? "Delete selected annotations"
+              : "Delete selected layer or group"
             : "Select a layer or group to delete"
         }
       >
         <TrashIcon />
       </button>
+      {waypointClipboardActions}
     </>
   );
 

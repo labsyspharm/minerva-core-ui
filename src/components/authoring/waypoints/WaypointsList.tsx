@@ -186,7 +186,10 @@ const WaypointsList = (props: WaypointsListProps) => {
     },
   );
 
-  const handleItemClick = (item: ListItem<WaypointItemMetadata>) => {
+  const handleItemClick = (
+    item: ListItem<WaypointItemMetadata>,
+    _event: React.MouseEvent,
+  ) => {
     // Block changing waypoints while editing a viewstate
     if (editingViewstateWaypointIndex !== null) {
       return;

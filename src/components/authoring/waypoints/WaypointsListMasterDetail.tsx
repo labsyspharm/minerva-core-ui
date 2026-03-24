@@ -78,6 +78,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   } = useOverlayStore();
 
   const detailBodyRef = React.useRef<HTMLDivElement | null>(null);
+  const detailTitleFieldId = React.useId();
 
   // Detail view state (master-detail).
   const [detailStoryId, setDetailStoryId] = React.useState<string | null>(null);
@@ -494,12 +495,21 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <div className={styles.rowThumbnail} aria-hidden />
                 )}
 
-                <button
-                  type="button"
+                {/* biome-ignore lint/a11y/useSemanticElements: Nested Jump <button> cannot sit inside a <button>. */}
+                <div
                   {...rowDragProps}
                   className={styles.rowMainHit}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Select waypoint: ${story.Name}`}
                   onClick={() => activateStoryIndex(index, true)}
                   onDoubleClick={() => openDetailForStoryId(storyId)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      activateStoryIndex(index, true);
+                    }
+                  }}
                 >
                   <div className={styles.rowTextStack}>
                     <div className={styles.rowTitleRow}>
@@ -529,11 +539,11 @@ const WaypointsList = (props: WaypointsListProps) => {
                       {story.Content ?? ""}
                     </span>
                   </div>
-                </button>
-                <div className={styles.rowActionButtons}>
+                </div>
+                <div className={styles.rowViewportActions}>
                   <button
                     type="button"
-                    className={styles.rowActionButton}
+                    className={styles.rowViewportIconButton}
                     title="Jump to waypoint view"
                     onClick={(event) => {
                       event.stopPropagation();
@@ -547,7 +557,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                   </button>
                   <button
                     type="button"
-                    className={styles.rowActionButton}
+                    className={styles.rowViewportIconButton}
                     title="Overwrite waypoint view with current viewport"
                     onClick={(event) => handleOverwriteView(index, event)}
                   >
@@ -571,6 +581,19 @@ const WaypointsList = (props: WaypointsListProps) => {
     const detailAnnotationCount = countWaypointAnnotations(detailStory);
     const detailAnnotationText = annotationCountLabel(detailAnnotationCount);
 
+    const handleDetailTitleBlur = (
+      event: React.FocusEvent<HTMLInputElement>,
+    ) => {
+      if (!canEdit) return;
+      const raw = event.target.value;
+      const trimmed = raw.trim();
+      if (trimmed === "") {
+        updateStory(detailStoryIndex, { Name: "Untitled waypoint" });
+      } else if (trimmed !== raw) {
+        updateStory(detailStoryIndex, { Name: trimmed });
+      }
+    };
+
     return (
       <div className={styles.detailView}>
         <div className={styles.detailHeader}>
@@ -593,6 +616,29 @@ const WaypointsList = (props: WaypointsListProps) => {
 
         <div className={styles.detailBody} ref={detailBodyRef}>
           <div className={styles.detailBodyInner}>
+            <div className={styles.detailTitleFieldWrap}>
+              <label
+                className={styles.detailTitleLabel}
+                htmlFor={detailTitleFieldId}
+              >
+                Title
+              </label>
+              <input
+                id={detailTitleFieldId}
+                className={styles.detailTitleInput}
+                type="text"
+                value={detailStory.Name ?? ""}
+                onChange={(e) =>
+                  updateStory(detailStoryIndex, { Name: e.target.value })
+                }
+                onBlur={handleDetailTitleBlur}
+                maxLength={200}
+                disabled={!canEdit}
+                autoComplete="off"
+                spellCheck={true}
+                placeholder="Waypoint title"
+              />
+            </div>
             <div
               className={[
                 styles.detailCollapsible,

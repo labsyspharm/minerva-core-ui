@@ -13,6 +13,10 @@ import type {
 /**
  * Serialize annotations that originated from waypoint Arrows/Overlays back into
  * config fields (normalized 0–1 vs max(image width, height), same as import).
+ *
+ * Only **text**, **line**, and **rectangle** types are written here; other
+ * shapes (polygon, ellipse, polyline, point, …) remain in memory until this
+ * serializer (or the config shape) is extended.
  */
 export function serializeImportedAnnotationsToWaypointFields(
   annotations: Annotation[],

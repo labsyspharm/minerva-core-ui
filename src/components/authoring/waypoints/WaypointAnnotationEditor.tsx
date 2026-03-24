@@ -4,11 +4,13 @@ import { LayersPanel } from "@/components/authoring/LayersPanel";
 import { ToolSubmenu } from "@/components/authoring/ToolSubmenu";
 import ArrowIcon from "@/components/shared/icons/arrow-tool.svg?react";
 import BrushIcon from "@/components/shared/icons/brush.svg?react";
+import CopyAnnotationsIcon from "@/components/shared/icons/copy-annotations.svg?react";
 import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
 import LineIcon from "@/components/shared/icons/line.svg?react";
 import LinesIcon from "@/components/shared/icons/lines.svg?react";
 import MagicWandIcon from "@/components/shared/icons/magic-wand.svg?react";
 import MoveIcon from "@/components/shared/icons/move.svg?react";
+import PasteAnnotationsIcon from "@/components/shared/icons/paste-annotations.svg?react";
 import PointIcon from "@/components/shared/icons/point.svg?react";
 import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
 import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
@@ -17,6 +19,10 @@ import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
 import type { ConfigWaypoint } from "@/lib/config";
 import { useOverlayStore } from "@/lib/stores";
+import {
+  copySelectedWaypointAnnotations,
+  pasteWaypointAnnotationsFromClipboard,
+} from "@/lib/waypointAnnotationClipboard";
 import styles from "./WaypointAnnotationEditor.module.css";
 
 // Define available tools (same as overlays)
@@ -60,7 +66,30 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     setGlobalColor,
     updateAnnotation,
     updateTextAnnotationColor,
+    layersPanelSelectedAnnotationIds,
   } = useOverlayStore();
+
+  const waypointClipboardActions = (
+    <>
+      <button
+        type="button"
+        className={styles.toolButton}
+        disabled={layersPanelSelectedAnnotationIds.length === 0}
+        title="Copy selected annotations to the clipboard"
+        onClick={() => void copySelectedWaypointAnnotations()}
+      >
+        <CopyAnnotationsIcon />
+      </button>
+      <button
+        type="button"
+        className={styles.toolButton}
+        title="Paste annotations from the clipboard"
+        onClick={() => void pasteWaypointAnnotationsFromClipboard()}
+      >
+        <PasteAnnotationsIcon />
+      </button>
+    </>
+  );
 
   // Local state for color picker
   const [showColorPicker, setShowColorPicker] = React.useState(false);
@@ -232,6 +261,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
               embeddedInScrollParent ? "markdownEditorChrome" : "default"
             }
             toolbarSlot={drawingToolbar}
+            waypointClipboardActions={waypointClipboardActions}
             onOpenGlobalColorPicker={handleColorPickerOpen}
             onOpenAnnotationColorPicker={handleOpenAnnotationColorPicker}
           />

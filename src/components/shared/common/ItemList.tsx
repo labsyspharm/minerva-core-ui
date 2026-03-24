@@ -39,7 +39,7 @@ export interface ItemListProps<T = Metadata> {
   variant?: ItemListVariant;
   /** Dense rows (~waypoint list): tighter padding and type sizes */
   compactRows?: boolean;
-  onItemClick?: (item: ListItem<T>) => void;
+  onItemClick?: (item: ListItem<T>, event: React.MouseEvent) => void;
   onItemDoubleClick?: (item: ListItem<T>) => void;
   onToggleVisibility?: (itemId: string) => void;
   onDelete?: (itemId: string) => void;
@@ -216,7 +216,7 @@ const ItemList = <T = React.Component>({
             <button
               type="button"
               className={styles.itemIconHit}
-              onClick={() => onItemClick(item)}
+              onClick={(e) => onItemClick(item, e)}
               onDoubleClick={() => onItemDoubleClick?.(item)}
             >
               <span className={styles.icon}>{item.icon}</span>
@@ -253,7 +253,7 @@ const ItemList = <T = React.Component>({
           <button
             type="button"
             className={styles.itemRowMain}
-            onClick={() => onItemClick(item)}
+            onClick={(e) => onItemClick(item, e)}
             onDoubleClick={() => onItemDoubleClick?.(item)}
           >
             {contentBlock}

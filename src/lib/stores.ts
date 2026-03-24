@@ -886,6 +886,10 @@ export interface OverlayStore {
   authoringWaypointEditorOpen: boolean;
   setAuthoringWaypointEditorOpen: (open: boolean) => void;
 
+  /** Layers panel: selected annotation ids (multi-select) for copy / keyboard shortcuts. */
+  layersPanelSelectedAnnotationIds: string[];
+  setLayersPanelSelectedAnnotationIds: (ids: string[]) => void;
+
   // Actions
   setActiveTool: (tool: string) => void;
   setCurrentInteraction: (interaction: InteractionCoordinate | null) => void;
@@ -903,6 +907,7 @@ export interface OverlayStore {
 
   // New annotation actions
   addAnnotation: (annotation: Annotation) => void;
+  addAnnotationsBatch: (items: Annotation[]) => void;
   removeAnnotation: (annotationId: string) => void;
   updateAnnotation: (
     annotationId: string,
@@ -1107,6 +1112,7 @@ const overlayInitialState = {
   groupNames: {},
   targetWaypointViewState: null,
   authoringWaypointEditorOpen: false,
+  layersPanelSelectedAnnotationIds: [] as string[],
   sam2ImageFetcher: null,
   sam2Processing: false,
   sam2DebugImages: null,
@@ -1315,6 +1321,13 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       addAnnotation: (annotation: Annotation) => {
         set((state) => ({
           annotations: [...state.annotations, annotation],
+        }));
+      },
+
+      addAnnotationsBatch: (items: Annotation[]) => {
+        if (items.length === 0) return;
+        set((state) => ({
+          annotations: [...state.annotations, ...items],
         }));
       },
 
@@ -2121,6 +2134,10 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             dragState: overlayInitialState.dragState,
           });
         }
+      },
+
+      setLayersPanelSelectedAnnotationIds: (ids: string[]) => {
+        set({ layersPanelSelectedAnnotationIds: [...ids] });
       },
 
       // Group actions
