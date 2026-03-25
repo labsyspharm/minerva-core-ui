@@ -55,7 +55,6 @@ class PanelItem extends useItemIdentifier(HTMLElement) {
         <div class="full text">
           ${item_contents}
         </div>
-          ${content_action}
       </div>
     `({
       accordion: "true",

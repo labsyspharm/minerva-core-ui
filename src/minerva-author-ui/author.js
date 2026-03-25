@@ -1,6 +1,7 @@
 import globalCSS from "./global.module.css" with { type: "css" };
 import { toElementState } from "./lib/elements.js";
 import { Author } from "./author/author.js";
+import { PanelItemGroup } from "./author/panel-grid/panel-content/panel/panel-item-group.js";
 import { nav_config } from "./config/nav-config.js";
 import { item_registry } from "./config/metadata-config";
 
@@ -37,4 +38,23 @@ const author = (options = {}) => {
   });
 };
 
-export { author };
+const channel = (options = {}) => {
+  document.adoptedStyleSheets = [globalCSS];
+  const customSuffix = options.ID || crypto.randomUUID();
+  const defineElement = toElementState(customSuffix, {
+    defaults: {},
+    constants: {
+      item_registry: {
+        ...item_registry,
+        ...(options.ItemRegistry || {}),
+      },
+    },
+    styleSheet: globalCSS,
+  });
+  return defineElement(PanelItemGroup, {
+    defaults: {
+    },
+  });
+};
+
+export { author, channel };

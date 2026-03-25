@@ -32,6 +32,7 @@ import { toSettings } from "@/lib/viv";
 import { normalizeWaypointToBounds } from "@/lib/waypoint";
 import { Pool } from "@/lib/workers/Pool";
 import { author } from "@/minerva-author-ui/author";
+import { toAuthorElement } from "@/minerva-author-ui/index";
 
 type Props = {
   configWaypoints: ConfigWaypoint[];
@@ -132,6 +133,15 @@ const setChannel = ({ exhibit, g, idx, newChannel }) => {
 const removeKey = (container, key, idx) => {
   const newList = container[key].filter((_, i) => i !== idx);
   return { ...container, [key]: newList };
+};
+
+const getDistributions = async (SourceChannels, loader) => {
+  const sourceDistributionMap = await extractDistributions(loader);
+  const SourceDistributions = [...sourceDistributionMap.values()];
+  return SourceChannels.map((sourceChannel) => ({
+    ...sourceChannel,
+    SourceDistribution: sourceDistributionMap.get(sourceChannel.SourceIndex),
+  }));
 };
 
 const Content = (props: Props) => {
@@ -300,17 +310,13 @@ const Content = (props: Props) => {
       "Colorimetric",
       [],
     );
-
     // Await distributions so that all state (loader, channels, groups,
     // distributions) is set in a single React batch, avoiding a second
     // render that causes a visible flash.
-    const sourceDistributionMap = await extractDistributions(loader);
-    const SourceDistributions = [...sourceDistributionMap.values()];
-    const SourceChannelsWithDist = SourceChannels.map((sourceChannel) => ({
-      ...sourceChannel,
-      SourceDistribution: sourceDistributionMap.get(sourceChannel.SourceIndex),
-    }));
-
+    const SourceChannelsWithDist = await getDistributions(
+      SourceChannels,
+      loader,
+    );
     setSourceChannels(SourceChannelsWithDist);
     setGroups(Groups);
     updateGroupChannelLists({
@@ -356,7 +362,11 @@ const Content = (props: Props) => {
     const indexList = await Promise.all(
       imagePropList.map(async ([series, modality]) => {
         const pyramids = await loadDicomWeb(series);
-        const loader = parseDicomWeb(series, pyramids) as DicomLoader;
+        const loader = parseDicomWeb({
+          pyramids,
+          series,
+          little_endian: true,
+        }) as DicomLoader;
         return {
           series,
           pyramids,
@@ -366,8 +376,8 @@ const Content = (props: Props) => {
       }),
     );
     setDicomIndexList(indexList);
-    const { SourceChannels, Groups } = indexList.reduce(
-      (registry, { loader, modality }) => {
+    const { SourceChannels, Groups } = await indexList.reduce(
+      async (registry, { loader, modality }) => {
         const relevant_groups = groups.filter(
           ({ Image }) => Image.Method === modality,
         );
@@ -376,8 +386,15 @@ const Content = (props: Props) => {
           modality,
           relevant_groups,
         );
+        const SourceChannelsWithDist = await getDistributions(
+          SourceChannels,
+          loader,
+        );
         return {
-          SourceChannels: [...registry.SourceChannels, ...SourceChannels],
+          SourceChannels: [
+            ...registry.SourceChannels,
+            ...SourceChannelsWithDist,
+          ],
           Groups: [...registry.Groups, ...Groups],
         };
       },
@@ -386,6 +403,7 @@ const Content = (props: Props) => {
         Groups: [],
       },
     );
+    setSourceChannels(SourceChannels);
     setGroups(Groups);
     setSourceChannels(SourceChannels);
     updateGroupChannelLists({
@@ -401,14 +419,16 @@ const Content = (props: Props) => {
     mutableFields,
   );
 
-  // Recreate the author web component only when config.ID changes (same behavior
+  // Recreate the author web components only when config.ID changes (same behavior
   // as the previous useMemo([config.ID]) + ref, without hook dependency noise).
   const controlPanelCacheRef = React.useRef<{
     configId: string;
-    element: ReturnType<typeof author>;
+    element: string;
   } | null>(null);
-  const cached = controlPanelCacheRef.current;
-  if (!cached || cached.configId !== config.ID) {
+  if (
+    !controlPanelCacheRef.current ||
+    controlPanelCacheRef.current.configId !== config.ID
+  ) {
     controlPanelCacheRef.current = {
       configId: config.ID,
       element: author({
@@ -418,6 +438,19 @@ const Content = (props: Props) => {
     };
   }
   const controlPanelElement = controlPanelCacheRef.current.element;
+
+  // Define a WebComponent for a channel
+  const channelItemElement = React.useMemo(
+    () =>
+      toAuthorElement("channel-item", {
+        ItemRegistry: {
+          Groups,
+          SourceChannels,
+        },
+        ID: crypto.randomUUID(),
+      }),
+    [Groups, SourceChannels],
+  );
 
   const [valid, setValid] = useState({} as ValidObj);
 
@@ -584,6 +617,7 @@ const Content = (props: Props) => {
     authorMode: !presenting,
     groups: itemRegistryGroups,
     controlPanelElement,
+    channelItemElement,
     config: config,
     editable,
     hiddenChannel,
@@ -827,11 +861,7 @@ const Content = (props: Props) => {
           </Full>
         );
 
-        return (
-          <Wrapper>
-            {imager}
-          </Wrapper>
-        );
+        return <Wrapper>{imager}</Wrapper>;
       }}
     </FileHandler>
   );

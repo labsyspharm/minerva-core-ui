@@ -99,7 +99,9 @@ const LegendRow = (props) => {
 
 export const ChannelLegend = (props) => {
   const { g, pushChannel, toggleChannel } = props;
-  const nextIdx = props.channels.length + 1;
+  const channels = props.channels || [];
+  const total = channels.length;
+  const nextIdx = total + 1;
   const newChannel = defaultChannels[nextIdx % defaultChannels.length];
   const onPush = () => {
     pushChannel(newChannel, { g });
@@ -110,8 +112,6 @@ export const ChannelLegend = (props) => {
   ];
   const extraUI = <EditModeSwitcher {...{ ...props, editSwitch }} />;
 
-  const { channels } = props;
-  const total = channels.length;
   const rows = channels.map((c, k) => {
     const rowProps = {
       ...props,
