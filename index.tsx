@@ -2,7 +2,7 @@ import { SimpleIconsetStore } from "@haxtheweb/simple-icon/lib/simple-iconset.js
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { Main } from "@/components/main";
-import { crc1DemoWaypoints, crc1ExhibitConfig } from "@/demo/crc1DemoData";
+import { crc1DemoWaypoints, crc1ExhibitConfig } from "./demo/crc1DemoData";
 import "@fontsource/overpass/200.css";
 
 // Base path for deployment (e.g. /minerva-annotation-demo/ or /)
