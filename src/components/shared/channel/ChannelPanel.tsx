@@ -129,6 +129,12 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   });
   const group =
     groups.find(({ UUID }) => UUID === activeChannelGroupId) || groups[0];
+  const legendGroup = group ?? {
+    g: 0,
+    UUID: "",
+    name: "",
+    channels: [] as { name: string; color: string }[],
+  };
   const toggleChannel = ({ name }) => {
     setChannelVisibilities(
       Object.fromEntries(
@@ -141,7 +147,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   };
   const legendProps = {
     ...props,
-    ...group,
+    ...legendGroup,
     channelVisibilities,
     toggleChannel,
   };
