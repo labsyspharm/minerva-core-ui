@@ -156,6 +156,7 @@ const Content = (props: Props) => {
     setChannelVisibilities,
     setGroupChannelLists,
     setGroupNames,
+    setGroupChannelRange,
     setGroups,
     Groups,
     setSourceChannels,
@@ -419,6 +420,19 @@ const Content = (props: Props) => {
     mutableFields,
   );
 
+  const getSourceDistribution = React.useMemo(() => {
+    return (source_uuid) => {
+      const source_channel = SourceChannels.find((x) => {
+        return x.UUID === source_uuid;
+      });
+      if (source_channel) {
+        const { SourceDistribution } = source_channel;
+        return SourceDistribution;
+      }
+      return null;
+    };
+  }, [SourceChannels]);
+
   // Recreate the author web components only when config.ID changes (same behavior
   // as the previous useMemo([config.ID]) + ref, without hook dependency noise).
   const controlPanelCacheRef = React.useRef<{
@@ -440,17 +454,13 @@ const Content = (props: Props) => {
   const controlPanelElement = controlPanelCacheRef.current.element;
 
   // Define a WebComponent for a channel
-  const channelItemElement = React.useMemo(
-    () =>
-      toAuthorElement("channel-item", {
-        ItemRegistry: {
-          Groups,
-          SourceChannels,
-        },
-        ID: crypto.randomUUID(),
-      }),
-    [Groups, SourceChannels],
-  );
+  const channelItemElement = React.useMemo(() => {
+    return toAuthorElement("channel-item", {
+      ID: crypto.randomUUID(),
+      setGroupChannelRange,
+      getSourceDistribution,
+    });
+  }, [getSourceDistribution, setGroupChannelRange]);
 
   const [valid, setValid] = useState({} as ValidObj);
 

@@ -1,7 +1,19 @@
+:host {
+  div.grid {
+    gap: var(--gap-medium);
+  }
+}
 svg {
   fill: none;
   stroke-width: 1.5;
   background-color: var(--dark-gray-color);
   stroke: var(--light-focus-color);
   fill: white;
+}
+.full.histogram {
+  margin: var(--gap-medium) 0;
+  width: 100%;
+}
+.one-line {
+  height: 100%;
 }

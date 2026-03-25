@@ -3,7 +3,10 @@ import globalCSS from "./global.module.css" with { type: "css" };
 import { html } from "@arrow-js/core";
 import { toElement } from "./lib/elements";
 
-const toChannelItem = (ItemRegistry) => {
+const toChannelItem = (
+  ItemRegistry, getSourceDistribution, elements
+) => {
+  const rangeEditorElement = elements["range-editor"];
   class ChannelItem extends HTMLElement {
 
     static eventHandlerKeys = [ ];
@@ -25,13 +28,49 @@ const toChannelItem = (ItemRegistry) => {
     }
 
     get elementTemplate() {
+      return toElement("div")`
+        ${this.chartTemplate}
+        ${this.rangeTemplate}
+      `({
+        class: "center grid"
+      });
+    }
+
+    get rangeTemplate() {
+      const { distribution } = this;
+      const {
+        XScale, YValues, UpperRange, LowerRange
+      } = distribution;
+      const style = () => {
+        const R = parseInt(this.getAttribute("r"));
+        const G = parseInt(this.getAttribute("g"));
+        const B = parseInt(this.getAttribute("b"));
+        const rgb = `rgb(${R},${G},${B})`;
+        return `--slider-background: ${rgb};`;
+      };
+      const rangeEditor = () => {
+        return toElement(rangeEditorElement)``({
+          group_uuid: () => this.getAttribute("group_uuid"),
+          channel_uuid: () => this.getAttribute("channel_uuid"),
+          lower_range: () => this.getAttribute("lower_range"),
+          upper_range: () => this.getAttribute("upper_range"),
+          dist_scale: XScale,
+          dist_count: YValues.length,
+          dist_max: UpperRange,
+          dist_min: LowerRange,
+          style,
+          class: "full",
+        });
+      };
+      return rangeEditor;
+    }
+
+    get chartTemplate() {
       const width = 100;
       const height = 25;
       const stroke = 1.5;
       const d = () => {
-        const source = this.itemSource;
-        const { YValues: values } =
-          (this.getSourceDistribution(source) || {}) || {};
+        const { YValues: values } = this.distribution;
         const line = [0, ...(values || []), 0];
         const flat = line.slice(1, -1).every((v) => v == line[1]);
         const max = Math.max(1, ...(flat ? [2 * line[1]] : line));
@@ -54,24 +93,28 @@ const toChannelItem = (ItemRegistry) => {
       });
     }
 
-    get itemSources() {
-      return ItemRegistry?.SourceChannels;
+    get groupChannel() {
+      const group = (ItemRegistry?.Groups || []).find((x) => {
+        return x.UUID == this.getAttribute("group_uuid");
+      }) || null;
+      return (group?.GroupChannels || []).find((x) => {
+        return x.UUID == this.getAttribute("channel_uuid");
+      }) || null;
     }
 
-    get itemSource() {
+    get distribution() {
+      const distribution = getSourceDistribution(
+        this.getAttribute("source_uuid")
+      )
       return (
-        (this.itemSources || []).find((x) => {
-          return x.UUID == this.getAttribute("source_uuid");
-        }) || null
+        distribution || {
+          XScale: "log",
+          YScale: "linear",
+          YValues: [],
+          LowerRange: 1,
+          UpperRange: 16,
+        }
       );
-    }
-
-    getSourceDistribution(source_channel) {
-      if (!source_channel) {
-        return null;
-      }
-      const { SourceDistribution } = source_channel;
-      return SourceDistribution;
     }
   }
   return ChannelItem;

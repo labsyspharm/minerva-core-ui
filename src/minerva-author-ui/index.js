@@ -1,5 +1,7 @@
 //import { PageRoot } from './page-root.js';
 import { toChannelItem } from './channel-item-element.js';
+import { toRangeEditor } from './range-editor-element.js';
+import { toRangeSlider } from './range-slider-element.js';
 
 const toAuthorElement = (name, opts) => {
   const { ItemRegistry, ID } = opts;
@@ -11,10 +13,34 @@ const toAuthorElement = (name, opts) => {
   );
   */
   if (name === "channel-item") {
+    const { 
+      setGroupChannelRange, getSourceDistribution
+    } = opts;
     const channelItemElement = `channel-item-${ID}`;
+    const rangeEditorElement = `range-editor-${ID}`;
+    const rangeSliderElement = `range-slider-${ID}`;
+    customElements.define(
+      rangeSliderElement, toRangeSlider()
+    );
+    customElements.define(
+      rangeEditorElement, (
+        toRangeEditor(
+          ItemRegistry,
+          setGroupChannelRange, {
+          "range-slider": rangeSliderElement
+          }
+        )
+      )
+    );
     customElements.define(
       channelItemElement, (
-        toChannelItem(ItemRegistry)
+        toChannelItem(
+          ItemRegistry, 
+          getSourceDistribution,
+          {
+            "range-editor": rangeEditorElement
+          }
+        )
       )
     );
     return channelItemElement;
@@ -22,32 +48,5 @@ const toAuthorElement = (name, opts) => {
   return null 
 };
 
-
-const eventSender = (element) => {
-  return class extends element {
-    sendCustomEvent(key, detail) {
-      this.shadowRoot.dispatchEvent(
-        new CustomEvent(
-          key, {
-            detail, bubbles: true, composed: true
-          }
-        )
-      );
-    }
-  }
-}
-
-const eventReceiver = (element, keys=[]) => {
-  return class extends element {
-    async connectedCallback() {
-      await super.connectedCallback();
-      keys.forEach(
-        key => this.addEventListener(
-          key, this.toEventHandler(key)
-        )
-      )
-    }
-  }
-}
 
 export { toAuthorElement }
