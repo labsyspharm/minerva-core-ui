@@ -40,7 +40,7 @@ type Props = {
   handleKeys: string[];
 };
 
-/** Deep copy so `index.tsx` arrays are never mutated; session edits live in React config + Zustand. */
+/** Deep copy so demo `configWaypoints` are never mutated; session edits live in React config + Zustand. */
 const cloneConfigWaypoints = (stories: ConfigWaypoint[]): ConfigWaypoint[] => {
   if (typeof structuredClone === "function") {
     return structuredClone(stories) as ConfigWaypoint[];
@@ -51,8 +51,8 @@ const cloneConfigWaypoints = (stories: ConfigWaypoint[]): ConfigWaypoint[] => {
 const Wrapper = styled.div`
   height: 100%;
   display: grid;
-  grid-template-columns: 1fr; 
-  grid-template-rows: 1fr; 
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
 `;
 
 const Full = styled.div`
@@ -75,8 +75,8 @@ const Scrollable = styled.div`
 const RetrievingWrapper = styled.div`
   height: 100%;
   display: grid;
-  grid-template-columns: 1fr; 
-  grid-template-rows: 1fr; 
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
   justify-items: center;
   align-items: center;
 `;
@@ -661,11 +661,11 @@ const Content = (props: Props) => {
     setWaypoints,
   } = useOverlayStore();
 
-  // Stories lifecycle: `index.tsx` waypoints are copied once into `config` (see
+  // Stories lifecycle: initial waypoints are copied once into `config` (see
   // `useState` initializer). After that, Zustand `stories` is authoritative;
   // this effect only seeds an empty store or runs Pan→Bounds migration. The
   // subscription below mirrors `stories` back into `config.ItemRegistry.Stories`
-  // for the legacy author panel — not back into `index.tsx`.
+  // for the legacy author panel — not back into the demo config module.
   useEffect(() => {
     const configStories = config.ItemRegistry.Stories;
     const storeStories = useOverlayStore.getState().stories;
@@ -845,13 +845,12 @@ const Content = (props: Props) => {
 const Main = (props: Props) => {
   if (props.demo_dicom_web || hasFileSystemAccess()) {
     return <Content {...props} />;
-  } else {
-    return (
-      <div>
-        <p>Unable to access FileSystem API.</p>
-      </div>
-    );
   }
+  return (
+    <div>
+      <p>Unable to access FileSystem API.</p>
+    </div>
+  );
 };
 
 export { Main };
