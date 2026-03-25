@@ -889,6 +889,29 @@ export interface OverlayStore {
   /** Layers panel: selected annotation ids (multi-select) for copy / keyboard shortcuts. */
   layersPanelSelectedAnnotationIds: string[];
   setLayersPanelSelectedAnnotationIds: (ids: string[]) => void;
+  /** Layers panel: selected group id (single-select) for copy/flash. */
+  layersPanelSelectedGroupId: string | null;
+  setLayersPanelSelectedGroupId: (id: string | null) => void;
+  /** Layers panel: transient pulse/flash request (e.g. copy/paste feedback). */
+  layersPanelSelectionFlash: {
+    token: number;
+    annotationIds: string[];
+    groupId: string | null;
+  } | null;
+  flashLayersPanelSelection: (payload: {
+    annotationIds: string[];
+    groupId: string | null;
+  }) => void;
+  /** Layers panel: optional selection request for paste feedback. */
+  layersPanelSelectionRequest: {
+    token: number;
+    annotationIds: string[];
+    groupId: string | null;
+  } | null;
+  requestLayersPanelSelection: (payload: {
+    annotationIds: string[];
+    groupId: string | null;
+  }) => void;
 
   // Actions
   setActiveTool: (tool: string) => void;
@@ -1113,6 +1136,9 @@ const overlayInitialState = {
   targetWaypointViewState: null,
   authoringWaypointEditorOpen: false,
   layersPanelSelectedAnnotationIds: [] as string[],
+  layersPanelSelectedGroupId: null as string | null,
+  layersPanelSelectionFlash: null,
+  layersPanelSelectionRequest: null,
   sam2ImageFetcher: null,
   sam2Processing: false,
   sam2DebugImages: null,
@@ -2138,6 +2164,30 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       setLayersPanelSelectedAnnotationIds: (ids: string[]) => {
         set({ layersPanelSelectedAnnotationIds: [...ids] });
+      },
+
+      setLayersPanelSelectedGroupId: (id: string | null) => {
+        set({ layersPanelSelectedGroupId: id });
+      },
+
+      flashLayersPanelSelection: (payload) => {
+        set({
+          layersPanelSelectionFlash: {
+            token: Date.now(),
+            annotationIds: [...payload.annotationIds],
+            groupId: payload.groupId,
+          },
+        });
+      },
+
+      requestLayersPanelSelection: (payload) => {
+        set({
+          layersPanelSelectionRequest: {
+            token: Date.now(),
+            annotationIds: [...payload.annotationIds],
+            groupId: payload.groupId,
+          },
+        });
       },
 
       // Group actions

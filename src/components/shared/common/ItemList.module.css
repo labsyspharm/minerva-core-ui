@@ -51,6 +51,23 @@
   border-left: 3px solid #007acc;
 }
 
+.itemPulse {
+  animation: selectionPulse 520ms ease-in-out;
+  will-change: filter;
+}
+
+@keyframes selectionPulse {
+  0% {
+    filter: brightness(1);
+  }
+  45% {
+    filter: brightness(1.65);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
 .itemHidden {
   opacity: 0.5;
 }

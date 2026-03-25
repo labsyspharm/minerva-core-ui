@@ -6,9 +6,26 @@ import {
 import { useOverlayStore } from "@/lib/stores";
 
 export async function copySelectedWaypointAnnotations(): Promise<void> {
-  const { annotations, layersPanelSelectedAnnotationIds } =
-    useOverlayStore.getState();
-  const selected = new Set(layersPanelSelectedAnnotationIds);
+  const {
+    annotations,
+    annotationGroups,
+    layersPanelSelectedAnnotationIds,
+    layersPanelSelectedGroupId,
+    flashLayersPanelSelection,
+  } = useOverlayStore.getState();
+
+  const selectedIds =
+    layersPanelSelectedGroupId != null
+      ? (annotationGroups.find((g) => g.id === layersPanelSelectedGroupId)
+          ?.annotationIds ?? [])
+      : layersPanelSelectedAnnotationIds;
+
+  flashLayersPanelSelection({
+    annotationIds: selectedIds,
+    groupId: layersPanelSelectedGroupId,
+  });
+
+  const selected = new Set(selectedIds);
   if (selected.size === 0) return;
   const toCopy = annotations.filter((a) => selected.has(a.id));
   if (toCopy.length === 0) return;
@@ -29,5 +46,15 @@ export async function pasteWaypointAnnotationsFromClipboard(): Promise<void> {
   }
   if (!raw?.length) return;
   const cloned = cloneAnnotationsForPaste(raw);
-  useOverlayStore.getState().addAnnotationsBatch(cloned);
+  const {
+    addAnnotationsBatch,
+    flashLayersPanelSelection,
+    requestLayersPanelSelection,
+  } = useOverlayStore.getState();
+
+  addAnnotationsBatch(cloned);
+
+  const ids = cloned.map((a) => a.id);
+  requestLayersPanelSelection({ annotationIds: ids, groupId: null });
+  flashLayersPanelSelection({ annotationIds: ids, groupId: null });
 }

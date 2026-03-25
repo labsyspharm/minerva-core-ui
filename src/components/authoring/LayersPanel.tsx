@@ -226,6 +226,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   onOpenGlobalColorPicker,
   onOpenAnnotationColorPicker,
 }) => {
+  const itemListRootRef = React.useRef<HTMLDivElement | null>(null);
   // Subscribe to annotations and hidden layers from store
   const annotations = useOverlayStore((state) => state.annotations);
   const annotationGroups = useOverlayStore((state) => state.annotationGroups);
@@ -246,8 +247,17 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const setLayersPanelSelectedAnnotationIds = useOverlayStore(
     (state) => state.setLayersPanelSelectedAnnotationIds,
   );
+  const setLayersPanelSelectedGroupId = useOverlayStore(
+    (state) => state.setLayersPanelSelectedGroupId,
+  );
   const setSelectedAnnotation = useOverlayStore(
     (state) => state.setSelectedAnnotation,
+  );
+  const layersPanelSelectionFlash = useOverlayStore(
+    (state) => state.layersPanelSelectionFlash,
+  );
+  const layersPanelSelectionRequest = useOverlayStore(
+    (state) => state.layersPanelSelectionRequest,
   );
   const toggleGroupExpanded = useOverlayStore(
     (state) => state.toggleGroupExpanded,
@@ -290,6 +300,11 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   /** Anchor for Shift+click range selection (last plain or Cmd/Ctrl+click on an annotation). */
   const shiftRangeAnchorIdRef = React.useRef<string | null>(null);
 
+  const [flashAnnotationIds, setFlashAnnotationIds] = React.useState<
+    Set<string>
+  >(new Set());
+  const [flashGroupId, setFlashGroupId] = React.useState<string | null>(null);
+
   /** Single id for header actions that expect one layer, or group id. */
   const selectedLayerId =
     selectedGroupId ??
@@ -297,6 +312,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
 
   React.useEffect(() => {
     setLayersPanelSelectedAnnotationIds(selectedAnnotationIds);
+    setLayersPanelSelectedGroupId(selectedGroupId);
     if (selectedAnnotationIds.length === 1 && selectedGroupId === null) {
       setSelectedAnnotation(selectedAnnotationIds[0]);
     } else {
@@ -306,8 +322,77 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     selectedAnnotationIds,
     selectedGroupId,
     setLayersPanelSelectedAnnotationIds,
+    setLayersPanelSelectedGroupId,
     setSelectedAnnotation,
   ]);
+
+  React.useEffect(() => {
+    if (!layersPanelSelectionFlash) return;
+
+    setFlashGroupId(layersPanelSelectionFlash.groupId);
+    setFlashAnnotationIds(new Set(layersPanelSelectionFlash.annotationIds));
+
+    const t = window.setTimeout(() => {
+      setFlashGroupId(null);
+      setFlashAnnotationIds(new Set());
+    }, 600);
+    return () => window.clearTimeout(t);
+  }, [layersPanelSelectionFlash]);
+
+  React.useEffect(() => {
+    if (!layersPanelSelectionRequest) return;
+    setSelectedGroupId(layersPanelSelectionRequest.groupId);
+    setSelectedAnnotationIds(layersPanelSelectionRequest.annotationIds);
+    shiftRangeAnchorIdRef.current =
+      layersPanelSelectionRequest.annotationIds.at(-1) ?? null;
+    // Paste feedback: scroll after new items render. Pasting can enqueue multiple
+    // state updates; use a few delayed attempts to catch the scroll container
+    // once it becomes scrollable.
+    const scrollToBottom = () => {
+      const root = itemListRootRef.current;
+      if (!root) return;
+
+      const isScrollable = (el: Element) => {
+        if (!(el instanceof HTMLElement)) return false;
+        if (el.scrollHeight <= el.clientHeight) return false;
+        const style = window.getComputedStyle(el);
+        const oy = style.overflowY || style.overflow;
+        return oy === "auto" || oy === "scroll";
+      };
+
+      const findScrollParent = (start: Element | null) => {
+        let el: Element | null = start;
+        while (el) {
+          if (isScrollable(el)) return el as HTMLElement;
+          el = el.parentElement;
+        }
+        return null;
+      };
+
+      // Default mode: the <ul> inside ItemList is scrollable.
+      // Embedded edit-waypoint mode: the scroll container is higher up (collapsible body / panel).
+      const ul = root.querySelector("ul");
+      const scrollParent = findScrollParent(ul ?? root) ?? (ul as HTMLElement);
+      if (!scrollParent) return;
+      scrollParent.scrollTop = scrollParent.scrollHeight;
+    };
+
+    const raf1 = window.requestAnimationFrame(() => {
+      const raf2 = window.requestAnimationFrame(() => {
+        scrollToBottom();
+      });
+      void raf2;
+    });
+
+    const t1 = window.setTimeout(scrollToBottom, 50);
+    const t2 = window.setTimeout(scrollToBottom, 150);
+
+    return () => {
+      window.cancelAnimationFrame(raf1);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [layersPanelSelectionRequest]);
 
   React.useEffect(() => {
     if (
@@ -453,6 +538,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       icon: getLayerIcon(annotation),
       isExpanded: group.isExpanded,
       isActive: selectedAnnotationIds.includes(annotation.id),
+      pulse: flashAnnotationIds.has(annotation.id),
       metadata: { annotation, type: "annotation" },
     }));
 
@@ -463,6 +549,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       isHidden: groupIsHidden,
       isExpanded: group.isExpanded,
       isActive: selectedGroupId === group.id,
+      pulse: flashGroupId === group.id,
       icon: <FolderIcon style={{ width: "14px", height: "14px" }} />,
       children,
       metadata: { group, type: "group" },
@@ -483,6 +570,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       isHidden: hiddenLayers.has(annotation.id),
       icon: getLayerIcon(annotation),
       isActive: selectedAnnotationIds.includes(annotation.id),
+      pulse: flashAnnotationIds.has(annotation.id),
       metadata: { annotation, type: "annotation" },
     }),
   );
@@ -875,35 +963,37 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         </div>
       ) : null}
 
-      <ItemList
-        className={className}
-        variant={itemListVariant}
-        items={allItems}
-        title="Layers"
-        noHeader={hasUnifiedChrome}
-        emptyMessage="No layers yet"
-        onItemClick={handleItemClick}
-        onToggleVisibility={handleToggleVisibility}
-        onItemDoubleClick={handleItemDoubleClick}
-        onDelete={handleDelete}
-        onToggleExpand={handleToggleExpand}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        showVisibilityToggle={true}
-        visibilityToggleLeading={true}
-        compactRows={true}
-        showDeleteButton={false}
-        showExpandToggle={true}
-        headerActions={
-          hasUnifiedChrome ? undefined : (
-            <div className={styles.layersMetaCluster}>{layerMetaButtons}</div>
-          )
-        }
-        itemActions={itemActions}
-      />
+      <div ref={itemListRootRef} style={{ minHeight: 0 }}>
+        <ItemList
+          className={className}
+          variant={itemListVariant}
+          items={allItems}
+          title="Layers"
+          noHeader={hasUnifiedChrome}
+          emptyMessage="No layers yet"
+          onItemClick={handleItemClick}
+          onToggleVisibility={handleToggleVisibility}
+          onItemDoubleClick={handleItemDoubleClick}
+          onDelete={handleDelete}
+          onToggleExpand={handleToggleExpand}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          showVisibilityToggle={true}
+          visibilityToggleLeading={true}
+          compactRows={true}
+          showDeleteButton={false}
+          showExpandToggle={true}
+          headerActions={
+            hasUnifiedChrome ? undefined : (
+              <div className={styles.layersMetaCluster}>{layerMetaButtons}</div>
+            )
+          }
+          itemActions={itemActions}
+        />
+      </div>
 
       {/* Text Edit Modal */}
       {editingTextId && (

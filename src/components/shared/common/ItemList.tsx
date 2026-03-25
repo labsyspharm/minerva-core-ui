@@ -18,6 +18,8 @@ export interface ListItem<T = Metadata> {
   title: string;
   subtitle?: string;
   isActive?: boolean;
+  /** Optional transient emphasis animation (e.g. copy flash). */
+  pulse?: boolean;
   isHidden?: boolean;
   isDragging?: boolean;
   metadata?: T;
@@ -174,6 +176,7 @@ const ItemList = <T = React.Component>({
     const itemClasses = [
       styles.item,
       item.isActive ? styles.itemActive : "",
+      item.pulse ? styles.itemPulse : "",
       item.isHidden ? styles.itemHidden : "",
       isDragging ? styles.itemDragging : "",
       isDropTarget ? styles.itemDropTarget : "",
