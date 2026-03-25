@@ -1415,6 +1415,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             id: `ellipse-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             type: "ellipse",
             polygon: ellipseToPolygon([startX, startY], [endX, endY]),
+            // polygon: [],
             style: {
               fillColor: [
                 get().globalColor[0],

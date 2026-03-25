@@ -98,9 +98,7 @@ const LegendRow = (props) => {
 };
 
 export const ChannelLegend = (props) => {
-  const { pushChannel, toggleChannel } = props;
-  const channels = props.channels ?? [];
-  const g = props.g ?? 0;
+  const { g, pushChannel, toggleChannel, channels } = props;
   const nextIdx = channels.length + 1;
   const newChannel = defaultChannels[nextIdx % defaultChannels.length];
   const onPush = () => {

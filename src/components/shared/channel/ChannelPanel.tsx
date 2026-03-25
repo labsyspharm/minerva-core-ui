@@ -133,7 +133,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     g: 0,
     UUID: "",
     name: "",
-    channels: [] as { name: string; color: string }[],
+    channels: [],
   };
   const toggleChannel = ({ name }) => {
     setChannelVisibilities(
@@ -158,7 +158,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const groupProps = { ...props, total };
 
   const allGroups =
-    groups.length || props ? (
+    groups.length > 0 ? (
       <>
         <Header className="h6">
           <WrapColumns>
