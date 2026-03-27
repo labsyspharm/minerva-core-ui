@@ -3,7 +3,9 @@ import AnnotationsIcon from "@/components/shared/icons/annotations.svg?react";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import JumpToViewIcon from "@/components/shared/icons/jump-to-view.svg?react";
 import OverwriteViewIcon from "@/components/shared/icons/overwrite-view.svg?react";
+import PlayIcon from "@/components/shared/icons/play.svg?react";
 import type { ConfigWaypoint } from "@/lib/config";
+import type { ConfigGroup, ConfigSourceChannel } from "@/lib/document-store";
 import { useOverlayStore } from "@/lib/stores";
 import {
   getViewerBoundsFromSnapshot,
@@ -17,6 +19,8 @@ import styles from "./WaypointsList.module.css";
 
 export type WaypointsListProps = {
   viewOnly?: boolean;
+  /** Open playback/presentation layout for the current waypoint (author mode). */
+  onEnterPlaybackPreview?: () => void;
 };
 
 const TrashIcon = () => (
@@ -55,14 +59,27 @@ const countWaypointAnnotations = (story: ConfigWaypoint) => {
 const annotationCountLabel = (count: number) =>
   `${count} ${count === 1 ? "annotation" : "annotations"}`;
 
+function channelNamesForGroup(
+  group: ConfigGroup,
+  sourceChannels: ConfigSourceChannel[],
+): string[] {
+  return (group.GroupChannels ?? [])
+    .map(({ SourceChannel }) =>
+      sourceChannels.find((sc) => sc.UUID === SourceChannel.UUID),
+    )
+    .filter((sc): sc is ConfigSourceChannel => sc != null)
+    .map((sc) => sc.Name);
+}
+
 const WaypointsList = (props: WaypointsListProps) => {
-  const { viewOnly } = props;
+  const { viewOnly, onEnterPlaybackPreview } = props;
   const canEdit = !viewOnly;
 
   const {
     stories,
     activeStoryIndex,
     setActiveStory,
+    setActiveChannelGroup,
     addStory,
     updateStory,
     reorderStories,
@@ -75,10 +92,16 @@ const WaypointsList = (props: WaypointsListProps) => {
     removeStory,
     setShowSquareViewportOverlay,
     setAuthoringWaypointEditorOpen,
+    Groups,
+    SourceChannels,
   } = useOverlayStore();
 
   const detailBodyRef = React.useRef<HTMLDivElement | null>(null);
   const detailTitleFieldId = React.useId();
+  const detailGroupFieldId = React.useId();
+  const channelGroupDropdownRef = React.useRef<HTMLDivElement | null>(null);
+
+  const [channelGroupMenuOpen, setChannelGroupMenuOpen] = React.useState(false);
 
   // Detail view state (master-detail).
   const [detailStoryId, setDetailStoryId] = React.useState<string | null>(null);
@@ -98,7 +121,29 @@ const WaypointsList = (props: WaypointsListProps) => {
       setDetailMarkdownExpanded(true);
       setDetailAnnotationsExpanded(true);
     }
+    setChannelGroupMenuOpen(false);
   }, [detailStoryId]);
+
+  React.useEffect(() => {
+    if (!channelGroupMenuOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const root = channelGroupDropdownRef.current;
+      if (root && !root.contains(event.target as Node)) {
+        setChannelGroupMenuOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setChannelGroupMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown, true);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown, true);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [channelGroupMenuOpen]);
 
   // Drag and drop state.
   const [draggedStoryId, setDraggedStoryId] = React.useState<string | null>(
@@ -233,6 +278,18 @@ const WaypointsList = (props: WaypointsListProps) => {
     updateStory(index, { ThumbnailDataUrl: thumbnail });
   };
 
+  const applyStoryChannelGroup = React.useCallback(
+    (story: ConfigWaypoint | undefined) => {
+      if (!story || Groups.length === 0) return;
+      const foundGroup =
+        Groups.find((group) => group.Name === story.Group) || Groups[0];
+      if (foundGroup) {
+        setActiveChannelGroup(foundGroup.UUID);
+      }
+    },
+    [Groups, setActiveChannelGroup],
+  );
+
   const scheduleThumbnailCaptureForStory = (
     index: number,
     overwriteView = false,
@@ -278,6 +335,7 @@ const WaypointsList = (props: WaypointsListProps) => {
 
     const storeNow = useOverlayStore.getState();
     const storyForNav = storeNow.stories[index];
+    applyStoryChannelGroup(storyForNav);
     const viewerSnapshot = getViewerViewportSnapshotFromStore();
     let viewState = null;
     if (storyForNav && viewerSnapshot && imageWidth > 0 && imageHeight > 0) {
@@ -328,11 +386,17 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   const handleAddWaypoint = () => {
     const storyIndex = stories.length;
+    const currentGroup =
+      Groups.find(
+        (group) =>
+          group.UUID === useOverlayStore.getState().activeChannelGroupId,
+      ) || Groups[0];
     const newWaypoint: ConfigWaypoint = {
       UUID: crypto.randomUUID(),
       State: { Expanded: true },
       Name: `Waypoint ${storyIndex + 1}`,
       Content: "",
+      Group: currentGroup?.Name,
       Arrows: [],
       Overlays: [],
     };
@@ -419,6 +483,19 @@ const WaypointsList = (props: WaypointsListProps) => {
             <PlusIcon />
           </button>
         )}
+
+        {canEdit && onEnterPlaybackPreview ? (
+          <button
+            type="button"
+            className={styles.iconHeaderButton}
+            onClick={onEnterPlaybackPreview}
+            disabled={stories.length === 0}
+            title="Preview narrative playback"
+            aria-label="Preview narrative playback"
+          >
+            <PlayIcon width={14} height={14} aria-hidden />
+          </button>
+        ) : null}
       </div>
     </div>
   );
@@ -594,6 +671,25 @@ const WaypointsList = (props: WaypointsListProps) => {
       }
     };
 
+    const selectedGroupUuid =
+      Groups.find((group) => group.Name === detailStory.Group)?.UUID ??
+      Groups[0].UUID;
+    const selectedGroup =
+      Groups.find((group) => group.UUID === selectedGroupUuid) ?? Groups[0];
+    const selectedChannelNames = channelNamesForGroup(
+      selectedGroup,
+      SourceChannels,
+    );
+    const selectedChannelsSubtitle = selectedChannelNames.join(", ");
+
+    const selectChannelGroupByUuid = (nextGroupUuid: string) => {
+      const nextGroup = Groups.find((group) => group.UUID === nextGroupUuid);
+      if (!nextGroup) return;
+      updateStory(detailStoryIndex, { Group: nextGroup.Name });
+      setActiveChannelGroup(nextGroup.UUID);
+      setChannelGroupMenuOpen(false);
+    };
+
     return (
       <div className={styles.detailView}>
         <div className={styles.detailHeader}>
@@ -612,6 +708,20 @@ const WaypointsList = (props: WaypointsListProps) => {
           <div className={styles.detailTitle} title={detailStory.Name}>
             {detailStory.Name}
           </div>
+          {canEdit && onEnterPlaybackPreview ? (
+            <div className={styles.detailHeaderActions}>
+              <button
+                type="button"
+                className={styles.iconHeaderButton}
+                onClick={onEnterPlaybackPreview}
+                disabled={stories.length === 0}
+                title="Preview narrative playback"
+                aria-label="Preview narrative playback"
+              >
+                <PlayIcon width={14} height={14} aria-hidden />
+              </button>
+            </div>
+          ) : null}
         </div>
 
         <div className={styles.detailBody} ref={detailBodyRef}>
@@ -639,6 +749,100 @@ const WaypointsList = (props: WaypointsListProps) => {
                 placeholder="Waypoint title"
               />
             </div>
+            {Groups.length > 0 ? (
+              <div className={styles.detailTitleFieldWrap}>
+                <label
+                  className={styles.detailTitleLabel}
+                  htmlFor={detailGroupFieldId}
+                >
+                  Channel group
+                </label>
+                <div
+                  className={styles.channelGroupDropdown}
+                  ref={channelGroupDropdownRef}
+                >
+                  <button
+                    type="button"
+                    id={detailGroupFieldId}
+                    className={styles.channelGroupDropdownTrigger}
+                    aria-haspopup="listbox"
+                    aria-expanded={channelGroupMenuOpen}
+                    disabled={!canEdit}
+                    onClick={() => setChannelGroupMenuOpen((open) => !open)}
+                  >
+                    <span className={styles.channelGroupDropdownTriggerMain}>
+                      <span className={styles.channelGroupDropdownTitle}>
+                        {selectedGroup.Name}
+                      </span>
+                      <span className={styles.channelGroupDropdownChannels}>
+                        {selectedChannelsSubtitle || "—"}
+                      </span>
+                    </span>
+                    <ChevronDownIcon
+                      className={[
+                        styles.channelGroupDropdownChevron,
+                        channelGroupMenuOpen
+                          ? styles.channelGroupDropdownChevronOpen
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      aria-hidden
+                    />
+                  </button>
+                  {channelGroupMenuOpen ? (
+                    <div
+                      className={styles.channelGroupDropdownMenu}
+                      role="listbox"
+                      aria-label="Channel groups"
+                    >
+                      {Groups.map((group) => {
+                        const names = channelNamesForGroup(
+                          group,
+                          SourceChannels,
+                        );
+                        const subtitle = names.join(", ");
+                        const isSelected = group.UUID === selectedGroupUuid;
+                        return (
+                          <div
+                            key={group.UUID}
+                            className={styles.channelGroupDropdownItem}
+                          >
+                            <button
+                              type="button"
+                              role="option"
+                              aria-selected={isSelected}
+                              className={[
+                                styles.channelGroupDropdownOption,
+                                isSelected
+                                  ? styles.channelGroupDropdownOptionSelected
+                                  : "",
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
+                              onClick={() =>
+                                selectChannelGroupByUuid(group.UUID)
+                              }
+                            >
+                              <span
+                                className={styles.channelGroupDropdownTitle}
+                              >
+                                {group.Name}
+                              </span>
+                              <span
+                                className={styles.channelGroupDropdownChannels}
+                              >
+                                {subtitle || "—"}
+                              </span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
             <div
               className={[
                 styles.detailCollapsible,

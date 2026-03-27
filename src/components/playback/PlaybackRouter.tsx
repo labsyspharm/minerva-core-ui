@@ -21,6 +21,22 @@ const _ImageDiv = styled.div`
   height: 100%;
 `;
 
+const ModeViewport = styled.div`
+  height: 100%;
+  min-height: 0;
+  animation: modeViewportIn 0.2s ease-out;
+
+  @keyframes modeViewportIn {
+    from {
+      opacity: 0.88;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+`;
+
 export const PlaybackRouter = (props: PlaybackRouterProps) => {
   let out = <></>;
   if (props.presenting) {
@@ -42,5 +58,15 @@ export const PlaybackRouter = (props: PlaybackRouterProps) => {
     out = <ImageExporter {...exporterProps} />;
     */
   }
-  return <>{out}</>;
+  const modeKey = props.presenting
+    ? "presenting"
+    : props.ioState === "IDLE"
+      ? "author"
+      : "other";
+
+  return (
+    <ModeViewport key={modeKey} data-mode={modeKey}>
+      {out}
+    </ModeViewport>
+  );
 };

@@ -138,10 +138,11 @@ const removeKey = (container, key, idx) => {
 const getDistributions = async (SourceChannels, loader) => {
   const sourceDistributionMap = await extractDistributions(loader);
   const SourceDistributions = [...sourceDistributionMap.values()];
-  return SourceChannels.map((sourceChannel) => ({
+  const SourceChannelsWithDist = SourceChannels.map((sourceChannel) => ({
     ...sourceChannel,
     SourceDistribution: sourceDistributionMap.get(sourceChannel.SourceIndex),
   }));
+  return { SourceChannelsWithDist, SourceDistributions };
 };
 
 const Content = (props: Props) => {
@@ -175,7 +176,7 @@ const Content = (props: Props) => {
 
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
-  const [presenting, _setPresenting] = useState(false);
+  const [presenting, setPresenting] = useState(false);
   const [editable, setEditable] = useState(false);
   const checkWindow = React.useCallback(() => window.innerWidth > 600, []);
 
@@ -314,10 +315,8 @@ const Content = (props: Props) => {
     // Await distributions so that all state (loader, channels, groups,
     // distributions) is set in a single React batch, avoiding a second
     // render that causes a visible flash.
-    const SourceChannelsWithDist = await getDistributions(
-      SourceChannels,
-      loader,
-    );
+    const { SourceChannelsWithDist, SourceDistributions } =
+      await getDistributions(SourceChannels, loader);
     setSourceChannels(SourceChannelsWithDist);
     setGroups(Groups);
     updateGroupChannelLists({
@@ -377,36 +376,25 @@ const Content = (props: Props) => {
       }),
     );
     setDicomIndexList(indexList);
-    const { SourceChannels, Groups } = await indexList.reduce(
-      async (registry, { loader, modality }) => {
-        const relevant_groups = groups.filter(
-          ({ Image }) => Image.Method === modality,
-        );
-        const { SourceChannels, Groups } = extractChannels(
-          loader,
-          modality,
-          relevant_groups,
-        );
-        const SourceChannelsWithDist = await getDistributions(
-          SourceChannels,
-          loader,
-        );
-        return {
-          SourceChannels: [
-            ...registry.SourceChannels,
-            ...SourceChannelsWithDist,
-          ],
-          Groups: [...registry.Groups, ...Groups],
-        };
-      },
-      {
-        SourceChannels: [],
-        Groups: [],
-      },
-    );
+    let registry = { SourceChannels: [], Groups: [] };
+    for (const { loader, modality } of indexList) {
+      const relevant_groups = groups.filter(
+        ({ Image }) => Image.Method === modality,
+      );
+      const { SourceChannels: sc, Groups: gr } = extractChannels(
+        loader,
+        modality,
+        relevant_groups,
+      );
+      const { SourceChannelsWithDist } = await getDistributions(sc, loader);
+      registry = {
+        SourceChannels: [...registry.SourceChannels, ...SourceChannelsWithDist],
+        Groups: [...registry.Groups, ...gr],
+      };
+    }
+    const { SourceChannels, Groups } = registry;
     setSourceChannels(SourceChannels);
     setGroups(Groups);
-    setSourceChannels(SourceChannels);
     updateGroupChannelLists({
       Groups,
       SourceChannels,
@@ -795,6 +783,22 @@ const Content = (props: Props) => {
     }
   }, [_stories, activeStoryIndex, setActiveStory]);
 
+  const enterPlaybackPreview = React.useCallback(() => {
+    const state = useOverlayStore.getState();
+    if (state.stories.length > 0 && state.activeStoryIndex === null) {
+      state.setActiveStory(0);
+    }
+    React.startTransition(() => {
+      setPresenting(true);
+    });
+  }, []);
+
+  const exitPlaybackPreview = React.useCallback(() => {
+    React.startTransition(() => {
+      setPresenting(false);
+    });
+  }, []);
+
   const retrieving_status = (
     <RetrievingWrapper>Retrieving DICOM metadata...</RetrievingWrapper>
   );
@@ -843,6 +847,8 @@ const Content = (props: Props) => {
           ...mainProps,
           noLoader,
           handles,
+          enterPlaybackPreview,
+          exitPlaybackPreview,
         };
         // Actual image viewer
         const imager = noLoader ? (

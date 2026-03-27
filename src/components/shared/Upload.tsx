@@ -1,4 +1,4 @@
-import type { FormEventHandler } from "react";
+import type { FormEventHandler, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
@@ -431,7 +431,7 @@ const Upload = (props: UploadProps) => {
     setImageFormat("OME-TIFF");
     onAllow();
   };
-  let possibleActions = "";
+  let possibleActions: ReactNode = null;
   if (imageFormat === "OME-TIFF") {
     possibleActions = (
       <>

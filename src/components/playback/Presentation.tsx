@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 //import { theme } from "@/theme.module.css";
 import styled from "styled-components";
+import EditIcon from "@/components/shared/icons/edit.svg?react";
 import { useAnnotationLayers } from "@/lib/annotationLayers";
 import { useOverlayStore } from "@/lib/stores";
 import { getWaypointViewState } from "@/lib/waypoint";
@@ -21,6 +22,7 @@ export type PresentationProps = {
   channelItemElement: string;
   controlPanelElement: string;
   setHiddenChannel: (v: boolean) => void;
+  exitPlaybackPreview?: () => void;
 };
 
 const Wrap = styled.div`
@@ -79,6 +81,8 @@ const NavPane = styled.div`
 
 const StoryTitle = styled.div`
   line-height: 1.1;
+  min-width: 0;
+  flex: 1;
 `;
 
 const Toolbar = styled.div`
@@ -173,6 +177,53 @@ const ChannelName = styled.span<{ color: string }>`
   text-underline-offset: 2px;
 `;
 
+const NavPaneTop = styled.div`
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+`;
+
+/** Icon-only control: leaves narrative / preview and returns to author mode */
+const ExitPreviewIconButton = styled.button`
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-0001, 4px);
+  background: transparent;
+  color: rgb(139 148 158);
+  cursor: pointer;
+  opacity: 0.85;
+  transition:
+    opacity 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    opacity: 1;
+    background: rgb(110 118 129 / 0.18);
+    color: var(--bs-link-color, #ccc);
+  }
+
+  &:active {
+    background: rgb(110 118 129 / 0.28);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bs-link-color, #58a6ff);
+    outline-offset: 2px;
+  }
+`;
+
 export const Presentation = (props: PresentationProps) => {
   const {
     stories,
@@ -242,6 +293,15 @@ export const Presentation = (props: PresentationProps) => {
         );
       }
       if (viewState) setTargetWaypointViewState(viewState);
+
+      const groupName = wp.Group;
+      if (Groups.length > 0) {
+        const foundGroup =
+          Groups.find((g) => g.Name === groupName) || Groups[0];
+        if (foundGroup) {
+          setActiveChannelGroup(foundGroup.UUID);
+        }
+      }
     }
   }, [
     stories,
@@ -253,6 +313,8 @@ export const Presentation = (props: PresentationProps) => {
     importWaypointAnnotations,
     clearImportedAnnotations,
     setTargetWaypointViewState,
+    Groups,
+    setActiveChannelGroup,
   ]);
 
   useEffect(() => {
@@ -481,7 +543,19 @@ export const Presentation = (props: PresentationProps) => {
   return (
     <Wrap>
       <NavPane>
-        <StoryTitle className="h5">{main_title}</StoryTitle>
+        <NavPaneTop>
+          <StoryTitle className="h5">{main_title}</StoryTitle>
+          {props.exitPlaybackPreview ? (
+            <ExitPreviewIconButton
+              type="button"
+              onClick={props.exitPlaybackPreview}
+              title="Back to editing"
+              aria-label="Back to editing"
+            >
+              <EditIcon width={16} height={16} aria-hidden />
+            </ExitPreviewIconButton>
+          ) : null}
+        </NavPaneTop>
         <Toolbar>
           {toc_button}
           <StoryLeft active={!first_story} />

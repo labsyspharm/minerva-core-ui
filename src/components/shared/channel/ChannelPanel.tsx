@@ -18,7 +18,12 @@ export type ChannelPanelProps = {
   channelItemElement: string;
   controlPanelElement: string;
   retrievingMetadata: boolean;
+  /** When true, image/data is not loaded yet — hide channel chrome that needs channels. */
+  noLoader: boolean;
   setHiddenChannel: (v: boolean) => void;
+  /** Switch layout to playback / presentation (optional). */
+  enterPlaybackPreview?: () => void;
+  exitPlaybackPreview?: () => void;
 };
 
 const TextWrap = styled.div`
@@ -188,6 +193,9 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       currentInteraction={currentInteraction}
     />
   ) : null;
+  const waypointsPanel = props.authorMode ? (
+    <WaypointsList onEnterPlaybackPreview={props.enterPlaybackPreview} />
+  ) : null;
 
   const channels = !group
     ? ""
@@ -211,6 +219,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     <>
       {props.children}
       {drawingPanel}
+      {waypointsPanel}
       <div slot="groups">{channels}</div>
     </>,
   );
