@@ -569,16 +569,13 @@ const loadDicom = (meta) => {
       meta,
     );
   });
-  return {
-    data,
-    metadata,
-  };
+  return data;
 };
 
 function createTileLayers(meta) {
   const { channelsVisible, colors, contrastLimits, selections } = meta.settings;
   const visible = channelsVisible.some((x) => x);
-  const { imageID, pyramids, dicomSource, rgbImage } = meta;
+  const { imageID, pyramids, dicomLoader, rgbImage } = meta;
   const height = [...pyramids["0"]].pop().height;
   const width = [...pyramids["0"]].pop().width;
   const _tileSize = pyramids["0"][0].tileSize;
@@ -593,7 +590,7 @@ function createTileLayers(meta) {
         const level = Math.abs(-z);
         console.log("z level and x,y");
         console.log({ x, y, z, level });
-        const source = dicomSource.data[level];
+        const source = dicomLoader[level];
         if (!source) {
           return null;
         }
@@ -663,7 +660,7 @@ function createTileLayers(meta) {
   }
   const imageProps = {
     visible,
-    loader: dicomSource.data,
+    loader: dicomLoader,
     // https://deck.gl/docs/api-reference/geo-layers/tile-layer#refinementstrategy
     refinementStrategy: "best-available",
     // Include contrast limits in ID to force layer recreation when they change
@@ -681,49 +678,37 @@ const listDicomWeb = async (series) => {
   return await readInstances(`${series}/instances/`);
 };
 
-class DicomPlane {
-  constructor(props) {
-    this.meta = props.meta;
-    this.dtype = props.dtype;
-    this.samples = props.samples;
-    this.shape = props.shape;
-    this.labels = props.labels;
-    this.series = props.series;
-    this.metadata = props.metadata;
-    this.tileSize = props.tileSize;
-  }
+const toDicomPlane = (dicomPixelSource) => {
+  class DicomPlane {
+    constructor(props) {
+      this.meta = props.meta;
+      this.dtype = props.dtype;
+      this.samples = props.samples;
+      this.shape = props.shape;
+      this.labels = props.labels;
+      this.series = props.series;
+      this.metadata = props.metadata;
+      this.tileSize = props.tileSize;
+    }
 
-  async getTile(/*{ selection, x, y,  }*/) {
-    const _metadata = this.metadata;
-    const width = this.shape[0];
-    const height = this.shape[1];
-    const _series = this.series;
-    // TODO
-    /*
-    const pyramids = computeImagePyramid({ metadata });
-    const image = new DicomTIFFImage({
-      little_endian, metadata,
-      pyramids, series, level,
-      ...sel
-    });
-    const data = await image._readRaster({
-      x, y, width, height, sample, signal
-    });
-*/
-    const data = [];
-    return {
-      width,
-      height,
-      data,
-    };
+    async getTile(opts) {
+      return await dicomPixelSource.getTile(opts);
+    }
   }
-}
+  return DicomPlane;
+};
 
-const parseDicomWeb = (series, dicom_pyramids) => {
-  if (!dicom_pyramids) {
+const parseDicomWeb = (meta) => {
+  const { pyramids, series, little_endian } = meta;
+  if (!pyramids) {
     return null;
   }
-  const channel_pyramids = Object.values(dicom_pyramids);
+  const loader_data = loadDicom({
+    pyramids,
+    series,
+    little_endian: true,
+  });
+  const channel_pyramids = Object.values(pyramids);
   const n_channels = channel_pyramids.length;
   const any_channel = [...channel_pyramids].pop();
   const levels = any_channel.toReversed();
@@ -773,7 +758,8 @@ const parseDicomWeb = (series, dicom_pyramids) => {
       BigEndian: false,
     },
   };
-  const data = data_config.map((level_data) => {
+  const data = data_config.map((level_data, i) => {
+    const DicomPlane = toDicomPlane(loader_data[i]);
     return new DicomPlane({
       metadata,
       ...level_data,

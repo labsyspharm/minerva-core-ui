@@ -1,14 +1,11 @@
-import { sourceGroupChannels } from "../../../../../items/source-group-channels";
-import { useItemIdentifier } from "../../../../../filters/use-item-identifier";
 import collapseChannelCSS from "./collapse-channel.module.css" with {
   type: "css",
 };
+import { sourceGroupChannels } from "../../../../../items/source-group-channels";
 import { Collapse } from "./collapse";
 
-class CollapseChannel extends sourceGroupChannels(useItemIdentifier(Collapse)) {
+class CollapseChannel extends Collapse {
   static name = "collapse-channel";
-
-  static itemStateMap = new Map([["Expanded", "expanded"]]);
 
   static get _styleSheet() {
     [...Collapse._styleSheet.cssRules].forEach((r) =>
@@ -19,8 +16,23 @@ class CollapseChannel extends sourceGroupChannels(useItemIdentifier(Collapse)) {
 
   get itemIdentifiers() {
     return {
-      GroupUUID: this.elementState.GroupUUID,
+      GroupUUID: this.getAttribute("group_uuid"),
+      ChannelUUID: this.getAttribute("channel_uuid"),
     };
+  }
+
+  get itemSources() {
+    console.log(this._reactiveState);
+    console.log(this.elementState);
+    return [];
+  }
+
+  get itemSource() {
+    return (
+      (this.itemSources || []).find((x) => {
+        return x.UUID == this.elementState.UUID;
+      }) || null
+    );
   }
 }
 

@@ -15,6 +15,7 @@ export type ChannelPanelProps = {
   authorMode: boolean;
   hiddenChannel: boolean;
   startExport: () => void;
+  channelItemElement: string;
   controlPanelElement: string;
   retrievingMetadata: boolean;
   setHiddenChannel: (v: boolean) => void;
@@ -88,11 +89,9 @@ const WrapColumns = styled.div`
 const Header = styled.h2`
 `;
 
-const theme = {};
-
 export const ChannelPanel = (props: ChannelPanelProps) => {
   const hide = props.hiddenChannel;
-  const hidden = props.retrievingMetadata;
+  const hidden = props.retrievingMetadata || props.noLoader;
   // Subscribe only to overlay state used by this panel so viewport/zoom updates don't re-render.
   const activeChannelGroupId = useOverlayStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useOverlayStore((s) => s.channelVisibilities);
@@ -103,13 +102,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const SourceChannels = useOverlayStore((s) => s.SourceChannels);
   const handleLayerCreate = useOverlayStore((s) => s.handleLayerCreate);
   const currentInteraction = useOverlayStore((s) => s.currentInteraction);
-  // TODO -- lookup group correctly
   const groups = Groups.map((group, g) => {
     return {
       g,
       UUID: group.UUID,
       name: group.Name,
-      channels: group.GroupChannels.map(({ SourceChannel, Color }) => {
+      channels: group.GroupChannels.map((channel) => {
+        const { SourceChannel, Color } = channel;
+        const { LowerRange, UpperRange } = channel;
         const found = SourceChannels.find(
           ({ UUID }) => SourceChannel.UUID === UUID,
         );
@@ -119,8 +119,15 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
             .map((n) => n.toString(16).padStart(2, "0"))
             .join("");
           return {
+            r: R,
+            g: G,
+            b: B,
+            lower_range: LowerRange,
+            upper_range: UpperRange,
             name: found.Name,
             color: `${hex_color}`,
+            source_uuid: found.UUID,
+            channel_uuid: channel.UUID,
           };
         }
         return null;
@@ -182,15 +189,29 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     />
   ) : null;
 
+  const channels = !group
+    ? ""
+    : group.channels.map((channel) => {
+        return React.createElement(props.channelItemElement, {
+          key: channel.source_uuid,
+          group_uuid: group.UUID,
+          source_uuid: channel.source_uuid,
+          channel_uuid: channel.channel_uuid,
+          r: channel.r,
+          g: channel.g,
+          b: channel.b,
+          lower_range: channel.lower_range,
+          upper_range: channel.upper_range,
+        });
+      });
+
   const minerva_author_ui = React.createElement(
     props.controlPanelElement,
-    {
-      class: theme,
-    },
+    {},
     <>
       {props.children}
       {drawingPanel}
-      <WaypointsList />
+      <div slot="groups">{channels}</div>
     </>,
   );
 

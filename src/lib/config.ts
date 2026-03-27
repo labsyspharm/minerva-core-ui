@@ -236,16 +236,21 @@ const captureTile: CaptureTile = async (index, planes) => {
 const bin: Bin = async (inputs) => {
   const n_bins = 50;
   const max_power = inputs.bits;
-  const thresholds = [...new Array(n_bins).keys()].map((x) => {
-    return Math.floor(2 ** ((max_power * x) / n_bins));
-  });
+  const thresholds = [
+    ...new Set(
+      [...new Array(n_bins).keys()].map((x) => {
+        return Math.floor(2 ** ((max_power * x) / n_bins));
+      }),
+    ),
+  ];
+  thresholds.sort((a, b) => a - b);
   // Load the image tile for given index
   const { data, width } = await captureTile(inputs.index, inputs.planes);
   const step = 4;
   // Sample along pixel grid of step size in x and y
-  let indices = [...new Array(data.length).keys()].filter(
-    (i) => i % step === 0 || Math.floor(i / width) % step === 0,
-  );
+  let indices = [...new Array(data.length).keys()]
+    .filter((i) => i % step === 0 || Math.floor(i / width) % step === 0)
+    .filter((i) => data[i] > 0);
   // Count indices with data between thresholds
   return thresholds.reduce((binned, threshold, t) => {
     if (t > 0 && thresholds[t - 1] === threshold) {

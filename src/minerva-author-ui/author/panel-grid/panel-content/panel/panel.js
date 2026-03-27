@@ -35,6 +35,8 @@ class Panel extends HTMLElement {
     };
     return toElement("div")`
         ${sources}
+        <slot name="images"></slot>
+        <slot name="groups"></slot>
         <slot name="overlays"></slot>
         <slot name="waypoints"></slot>
     `({

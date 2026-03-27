@@ -169,13 +169,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return () => resizeObserver.disconnect();
   }, []);
 
-  const _loaderList = useMemo(
-    () =>
-      // Show only ome-tiff if available
-      loaderOmeTiff !== null ? [loaderOmeTiff] : dicomIndexList,
-    [loaderOmeTiff, dicomIndexList],
-  );
-
   const mainSettingsOmeTiff = useMemo(() => {
     const modality = "Colorimetric";
     return toSettingsInternal(
@@ -477,7 +470,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         series,
         pyramids,
         modality,
-        ...loadDicom({
+        dicomLoader: loadDicom({
           pyramids,
           series,
           little_endian: true,
@@ -498,7 +491,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       const imageID = `dicom-${series}-${i}`;
       return createTileLayers({
         pyramids,
-        dicomSource,
+        dicomLoader: dicomSource.dicomLoader,
         settings: mainSettingsList[i],
         rgbImage,
         imageID,

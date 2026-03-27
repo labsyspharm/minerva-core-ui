@@ -29,11 +29,19 @@ export type ConfigSourceChannel = (UUID & NameProperty) & {
   SourceDistribution?: UUID;
 };
 
+type SetGroupChannelRangeInput = {
+  LowerRange: number;
+  UpperRange: number;
+  group_uuid: string;
+  channel_uuid: string;
+};
+
 export interface DocumentStore {
   Groups: ConfigGroup[];
   setGroups: (groups: ConfigGroup[]) => void;
   SourceChannels: ConfigSourceChannel[];
   setSourceChannels: (source_channels: ConfigSourceChannel[]) => void;
+  setGroupChannelRange: (SetGroupChannelRangeInput) => void;
 }
 
 const documentInitialState = {
@@ -47,6 +55,30 @@ export const documentStore = (set, _get) => ({
   // Group and Channel actions
   setGroups: (Groups: ConfigGroup[]) => {
     set({ Groups });
+  },
+  setGroupChannelRange: ({
+    LowerRange,
+    UpperRange,
+    group_uuid,
+    channel_uuid,
+  }) => {
+    set((state) => {
+      const Groups = state.Groups.map((group) => {
+        if (group.UUID !== group_uuid) {
+          return group;
+        }
+        group.GroupChannels = group.GroupChannels.map((channel) => {
+          if (channel.UUID !== channel_uuid) {
+            return channel;
+          }
+          channel.LowerRange = LowerRange;
+          channel.UpperRange = UpperRange;
+          return channel;
+        });
+        return group;
+      });
+      return { Groups };
+    });
   },
   setSourceChannels: (SourceChannels: ConfigSourceChannel[]) => {
     set({ SourceChannels });

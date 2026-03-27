@@ -1,24 +1,18 @@
 import { PanelItem } from "./panel-item";
 import { toElement } from "../../../../lib/elements";
+import { toElementState } from "../../../../lib/elements.js";
 import panelItemGroupCSS from "./panel-item-group.module.css" with {
   type: "css",
 };
 import { RangeEditorChannel } from "./range-editor/range-editor-channel";
 import { sourceItemMap } from "../../../../items/source-item-map";
-import { sourceGroupItems } from "../../../../items/source-group-items";
-import { sourceSourceChannels } from "../../../../items/source-source-channels";
-import { useItemIdentifier } from "../../../../filters/use-item-identifier";
+import { sourceGroupChannels } from "../../../../items/source-group-channels";
 import { CollapseGroup } from "./collapse/collapse-group";
 import { CollapseChannel } from "./collapse/collapse-channel";
 import { Chart } from "./chart/chart";
 
-const itemMap = {
-  // None
-};
-
-class PanelItemGroup extends sourceItemMap(
-  itemMap,
-  sourceGroupItems(PanelItem),
+class PanelItemGroup extends sourceGroupChannels(
+ PanelItem
 ) {
   static name = "panel-item-group";
   static collapseElement = CollapseGroup;
@@ -32,34 +26,44 @@ class PanelItemGroup extends sourceItemMap(
 
   get itemIdentifiers() {
     return {
-      GroupUUID: this.elementState.UUID,
+      GroupUUID: this.getAttribute("group_uuid"),
     };
   }
 
   get itemContents() {
-    const rangeEditorElement = this.defineElement(RangeEditorChannel, {
+    const rangeEditorElement = (RangeEditorChannel, {
       defaults: { UUID: "", GroupUUID: "" },
       attributes: ["dialog"],
     });
-    const collapseChannel = this.defineElement(CollapseChannel, {
-      defaults: { UUID: "", GroupUUID: "", expanded: true },
-      attributes: ["expanded"],
+    const defineElement = toElementState(this._suffix, {
+      defaults: {},
+      constants: {
+        item_registry: {
+          GroupChannels: this.itemSources
+        } 
+      }
+    })
+    const collapseChannel = defineElement(CollapseChannel, {
+      defaults: { expanded: true },
+      attributes: ["expanded", "group_uuid", "channel_uuid"],
     });
-    const chartElement = this.defineElement(Chart, {
-      defaults: { UUID: "" },
+/*    const chartElement = defineElement(Chart, {
+      defaults: { },
     });
-    const groupChannels = this.itemMap.get("group-channels");
-    const channels = groupChannels.itemSources.map((channel, i) => {
-      const source = groupChannels.getSourceChannel(channel);
+*/
+    const channels = this.itemSources.map((channel, i) => {
+      const source = this.getSourceChannel(channel);
       const item_title = () => source.Name;
-      const chart = () => {
+      const chart = "";
+/*      const chart = () => {
         return toElement(chartElement)``({
           class: () => `full histogram`,
           UUID: () => source.UUID,
         });
       };
+*/
       const style = () => {
-        const { R, G, B } = groupChannels.Color;
+        const { R, G, B } = channel.Color;
         const rgb = `rgb(${R},${G},${B})`;
         return `--slider-background: ${rgb};`;
       };
@@ -83,9 +87,9 @@ class PanelItemGroup extends sourceItemMap(
         </div>
       `({
         expanded: String(channel.State.Expanded),
-        GroupUUID: () => this.itemIdentifiers.GroupUUID,
+        group_uuid: () => this.itemIdentifiers.GroupUUID,
+        channel_uuid: () => channel.UUID,
         accordion: "true",
-        UUID: channel.UUID,
         class: "inner",
       });
     });
@@ -99,12 +103,12 @@ class PanelItemGroup extends sourceItemMap(
       return toElement("div")`${super.itemHeading}`();
     };
     const channelTitles = () => {
-      const groupChannels = this.itemMap.get("group-channels");
-      return groupChannels.itemSources.map((channel) => {
+      const groupChannels = this.itemSources;
+      return groupChannels.map((channel) => {
         if (this.elementState.expanded) {
           return "";
         }
-        const source = groupChannels.getSourceChannel(channel);
+        const source = this.getSourceChannel(channel);
         const name = () => {
           return source.Name;
         };

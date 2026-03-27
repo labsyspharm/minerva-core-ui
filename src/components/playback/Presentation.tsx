@@ -18,6 +18,7 @@ export type PresentationProps = {
   config: ConfigProps;
   hiddenChannel: boolean;
   startExport: () => void;
+  channelItemElement: string;
   controlPanelElement: string;
   setHiddenChannel: (v: boolean) => void;
 };

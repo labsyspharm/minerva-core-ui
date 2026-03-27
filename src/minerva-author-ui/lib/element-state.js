@@ -120,7 +120,8 @@ function defineElement(element, options = {}) {
         ]),
       ];
       constructor() {
-        super();
+        super()
+        this._suffix = customSuffix;
         this._reactiveState = createReactiveState(options, closure);
         for (const k in this._reactiveState) {
           const att_v = this.getAttribute(k);
@@ -135,6 +136,8 @@ function defineElement(element, options = {}) {
             this.elementState[k] = this._reactiveState[k];
           }
         }
+      }
+      connectedCallback() {
         if (this.elementTemplate) {
           // For elements without a framework
           this.attachShadow({ mode: "open" });
