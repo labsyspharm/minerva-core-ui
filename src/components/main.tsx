@@ -39,6 +39,8 @@ type Props = {
   exhibit_config: ExhibitConfig;
   demo_dicom_web?: boolean;
   handleKeys: string[];
+  /** PWA “Open with” / `launchQueue` (needs manifest `file_handlers`). */
+  useLaunchQueue?: boolean;
 };
 
 /** Deep copy so `index.tsx` arrays are never mutated; session edits live in React config + Zustand. */
@@ -146,7 +148,7 @@ const getDistributions = async (SourceChannels, loader) => {
 };
 
 const Content = (props: Props) => {
-  const { handleKeys } = props;
+  const { handleKeys, useLaunchQueue = false } = props;
   const firstExhibit = readConfig(props.exhibit_config);
   const [exhibit, setExhibit] = useState(firstExhibit);
   const [loaderOmeTiff, setLoaderOmeTiff] = useState(null);
@@ -283,6 +285,7 @@ const Content = (props: Props) => {
   }, [setItems]);
 
   const [fileName, setFileName] = useState("");
+  const [importRevision, setImportRevision] = useState(0);
   const showSquareViewportOverlay = useOverlayStore(
     (state) => state.showSquareViewportOverlay,
   );
@@ -331,6 +334,19 @@ const Content = (props: Props) => {
     setFileName(in_f);
   };
 
+  const onStartOmeTiffRef = React.useRef(onStartOmeTiff);
+  onStartOmeTiffRef.current = onStartOmeTiff;
+
+  const onRestoredOmeHandles = React.useCallback(
+    async (restored: Handle.File[]) => {
+      if (restored.length === 0) return;
+      const file = await restored[0].getFile();
+      await onStartOmeTiffRef.current(file.name, restored);
+      setImportRevision((r) => r + 1);
+    },
+    [],
+  );
+
   const onStart = async (
     imagePropList: [string, string, string][],
     handles: Handle.File[],
@@ -342,15 +358,21 @@ const Content = (props: Props) => {
     const dicomPropList = imagePropList
       .filter(([_series, _modality, type]) => type === "DICOM-WEB")
       .map(([series, modality]) => [series, modality]) as [string, string][];
-    if (dicomPropList.length > 0) {
-      await onStartDicomWeb(dicomPropList, props.exhibit_config.Groups);
-    }
     // handle only one ome-tiff image ( TODO support more )
     const omeTiffPropList = imagePropList
       .filter(([_path, _modality, type]) => type === "OME-TIFF")
       .map(([path]) => [path]);
+    let didLoad = false;
+    if (dicomPropList.length > 0) {
+      await onStartDicomWeb(dicomPropList, props.exhibit_config.Groups);
+      didLoad = true;
+    }
     if (omeTiffPropList.length > 0 && handles.length > 0) {
       await onStartOmeTiff(omeTiffPropList[0][0], handles);
+      didLoad = true;
+    }
+    if (didLoad) {
+      setImportRevision((r) => r + 1);
     }
   };
 
@@ -804,7 +826,14 @@ const Content = (props: Props) => {
   );
 
   return (
-    <FileHandler handleKeys={handleKeys}>
+    <FileHandler
+      handleKeys={handleKeys}
+      autoRestoreOnMount={!props.demo_dicom_web}
+      useLaunchQueue={useLaunchQueue}
+      onRestoredHandles={
+        props.demo_dicom_web ? undefined : onRestoredOmeHandles
+      }
+    >
       {({ handles, onAllow, onRecall }) => {
         const onSubmit: FormEventHandler = (event) => {
           const form = event.currentTarget as HTMLFormElement;
@@ -841,6 +870,7 @@ const Content = (props: Props) => {
           handles,
           onAllow,
           onRecall,
+          importRevision,
         };
         // Update mainProps with actual handles
         const mainPropsWithHandle = {
@@ -863,15 +893,18 @@ const Content = (props: Props) => {
               {retrievingMetadata ? (
                 retrieving_status
               ) : (
-                <ImageViewer
-                  {...imageProps}
-                  viewerConfig={viewerConfig}
-                  overlayLayers={overlayLayers}
-                  activeTool={activeTool}
-                  isDragging={dragState.isDragging}
-                  hoveredAnnotationId={hoverState.hoveredAnnotationId}
-                  onOverlayInteraction={handleOverlayInteraction}
-                />
+                <>
+                  <ImageViewer
+                    {...imageProps}
+                    viewerConfig={viewerConfig}
+                    overlayLayers={overlayLayers}
+                    activeTool={activeTool}
+                    isDragging={dragState.isDragging}
+                    hoveredAnnotationId={hoverState.hoveredAnnotationId}
+                    onOverlayInteraction={handleOverlayInteraction}
+                  />
+                  <Upload {...uploadProps} />
+                </>
               )}
             </PlaybackRouter>
           </Full>

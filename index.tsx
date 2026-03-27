@@ -1533,10 +1533,13 @@ const MainStyle = createGlobalStyle`
 const rootElement = document.getElementById(id);
 const root = createRoot(rootElement);
 
+// Stable array reference — FileHandler restore effect deps stay stable across renders.
+const OME_TIFF_HANDLE_KEYS = ["img-1"];
+
 root.render(
   <React.StrictMode>
     <Main
-      handleKeys={["img-1"]}
+      handleKeys={OME_TIFF_HANDLE_KEYS}
       demo_dicom_web={false}
       exhibit_config={exhibit_config}
       configWaypoints={configWaypoints}

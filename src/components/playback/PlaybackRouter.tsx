@@ -13,6 +13,7 @@ export type PlaybackRouterProps = ChannelPanelProps & {
   presenting: boolean;
   handles: Handle.File[];
   in_f: string;
+  exitPlaybackPreview?: () => void;
 };
 
 const _ImageDiv = styled.div`

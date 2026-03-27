@@ -1,8 +1,9 @@
 import type { FormEventHandler, ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import styled from "styled-components";
+import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 
 type Choices = {
   csv: string[];
@@ -36,6 +37,8 @@ export type UploadProps = {
   onAllow: () => Promise<void>;
   onRecall: () => Promise<void>;
   formProps: Omit<FormProps, "handles">;
+  /** Bumps after a successful image import (`onStart` / restore); closes format picker. */
+  importRevision: number;
 };
 export type ValidObj = {
   [s: string]: boolean;
@@ -71,26 +74,98 @@ const _FullHeightText = styled.div`
   display: grid;
   gap: 1em;
 `;
+const ImagesTabShell = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.25rem 1.5rem;
+  box-sizing: border-box;
+  color: #eee;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
+
+  form {
+    max-width: 100%;
+  }
+
+  .form-control,
+  .form-select {
+    max-width: 100%;
+  }
+`;
+
+const ImagesBackChevron = styled(ChevronDownIcon)`
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  display: block;
+  transform: rotate(90deg);
+  color: inherit;
+  opacity: 0.95;
+`;
+
+const ImagesBackButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 6px;
+  flex-shrink: 0;
+  background: rgb(0 0 0 / 0.2);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  color: rgb(248 250 252 / 0.95);
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.2;
+  font-family: inherit;
+  font-weight: 500;
+
+  &:hover {
+    background: rgb(0 0 0 / 0.3);
+    border-color: rgb(255 255 255 / 0.28);
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-light-focus-color, hwb(45 90% 0%));
+    outline-offset: 2px;
+  }
+`;
+
+const ImagesLoadedStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+`;
+
 const FullWidthGrid = styled.div`
-  grid-template-columns: auto auto;
-  margin-left: 1em;
+  grid-template-columns: auto 1fr;
+  margin-left: 0;
   grid-column: 1 / -1;
   align-items: center;
   display: grid;
-  gap: 0.5em;
+  column-gap: 1em;
+  row-gap: 0.65em;
 `;
 
 const shadow_gray = "rgb(0 0 0 / 20%)";
 const _sh_4_8 = `0 4px 8px 0 ${shadow_gray}`;
 const _sh_6_20 = `0 6px 20px 0 ${shadow_gray}`;
 const UploadDiv = styled.div`
-  height: 100%;
   display: grid;
-  padding-top: 2em;
   align-items: start;
-  grid-template-columns: auto minmax(320px,1fr);
+  align-content: start;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: auto minmax(240px, 1fr);
   grid-template-rows: auto;
-  gap: 0.5em;
+  gap: 0.65em;
   button {
     border: none;
     grid-column: 1 / -1;
@@ -410,18 +485,27 @@ const FormAny = (props: FullFormProps) => {
 };
 
 const Upload = (props: UploadProps) => {
-  const test_f = "default.ome.tif"; //TODO
   const [imageFormat, setImageFormat] = useState("");
-  const [_in_f, _setInFile] = useState(test_f);
-  const { formProps, handles, onAllow, onRecall } = props;
+  const [updatePickerOpen, setUpdatePickerOpen] = useState(false);
+  const prevImportRev = useRef(props.importRevision);
+  const { formProps, handles, onAllow, onRecall, importRevision } = props;
+
+  useEffect(() => {
+    if (prevImportRev.current !== importRevision) {
+      prevImportRev.current = importRevision;
+      setUpdatePickerOpen(false);
+      setImageFormat("");
+    }
+  }, [importRevision]);
+
   const allowProps = {
     onClick: onAllow,
-    variant: "primary",
+    variant: "primary" as const,
     className: "mb-3",
   };
   const recallProps = {
     onClick: onRecall,
-    variant: "primary",
+    variant: "primary" as const,
     className: "mb-3",
   };
   const selectDicomWebFormat = () => {
@@ -431,6 +515,7 @@ const Upload = (props: UploadProps) => {
     setImageFormat("OME-TIFF");
     onAllow();
   };
+
   let possibleActions: ReactNode = null;
   if (imageFormat === "OME-TIFF") {
     possibleActions = (
@@ -443,34 +528,79 @@ const Upload = (props: UploadProps) => {
   if (imageFormat === "DICOM-WEB") {
     possibleActions = <FormDicom {...formProps} />;
   }
+
+  const fullFormProps = { ...formProps, handles };
+
+  const formatPickerGrid = (
+    <FullWidthGrid>
+      <Button onClick={selectDicomWebFormat} className="dicom-toggle">
+        <span>DicomWeb</span>
+      </Button>
+      <div>{"Connect to a DICOMweb™ Proxy"}</div>
+      <Button onClick={selectOmeTiffFormat} className="dicom-toggle">
+        <span>OME-TIFF</span>
+      </Button>
+      <div>{"Open an OME-TIFF from a local file"}</div>
+    </FullWidthGrid>
+  );
+
   if (handles.length === 0) {
     return (
-      <UploadDiv slot="images">
-        <FullWidthGrid>
-          <Button onClick={selectDicomWebFormat} className="dicom-toggle">
-            <span>DicomWeb</span>
-          </Button>
-          <div>{"Connect to a DICOMweb™ Proxy"}</div>
-          <Button onClick={selectOmeTiffFormat} className="dicom-toggle">
-            <span>OME-TIFF</span>
-          </Button>
-          <div>{"Open an OME-TIFF from a local file"}</div>
-        </FullWidthGrid>
-        {possibleActions}
-      </UploadDiv>
+      <ImagesTabShell slot="images">
+        <UploadDiv>
+          {formatPickerGrid}
+          {possibleActions}
+        </UploadDiv>
+      </ImagesTabShell>
     );
   }
-  const fullFormProps = { ...formProps, handles };
-  const updateSettings = (
+
+  const closeUpdatePicker = () => {
+    setUpdatePickerOpen(false);
+    setImageFormat("");
+  };
+
+  const updateImageRow = (
     <TwoColumn>
-      <Button {...allowProps}>Update Image</Button>
+      <Button
+        type="button"
+        onClick={() => {
+          setUpdatePickerOpen(true);
+          setImageFormat("");
+        }}
+      >
+        Update Image
+      </Button>
     </TwoColumn>
   );
+
+  if (updatePickerOpen) {
+    return (
+      <ImagesTabShell slot="images">
+        <ImagesBackButton
+          type="button"
+          onClick={closeUpdatePicker}
+          title="Back to image details"
+        >
+          <ImagesBackChevron aria-hidden />
+          <span>Back</span>
+        </ImagesBackButton>
+        <UploadDiv>
+          {imageFormat === "" ? formatPickerGrid : null}
+          {possibleActions}
+          {imageFormat === "OME-TIFF" ? <FormAny {...fullFormProps} /> : null}
+        </UploadDiv>
+      </ImagesTabShell>
+    );
+  }
+
   return (
-    <div slot="images">
-      {updateSettings}
-      <FormAny {...fullFormProps} />
-    </div>
+    <ImagesTabShell slot="images">
+      <ImagesLoadedStack>
+        {updateImageRow}
+        <FormAny {...fullFormProps} />
+      </ImagesLoadedStack>
+    </ImagesTabShell>
   );
 };
 

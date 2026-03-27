@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 //import { theme } from "@/theme.module.css";
 import styled from "styled-components";
-import EditIcon from "@/components/shared/icons/edit.svg?react";
-import { useAnnotationLayers } from "@/lib/annotationLayers";
+import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { useOverlayStore } from "@/lib/stores";
 import { getWaypointViewState } from "@/lib/waypoint";
 
@@ -25,25 +24,125 @@ export type PresentationProps = {
   exitPlaybackPreview?: () => void;
 };
 
-const Wrap = styled.div`
-  display: grid;
+/** Preview mode: full-width ribbon (author tab tint) + two-column body */
+const PresentationShell = styled.div`
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  min-height: 0;
   overflow: hidden;
-  grid-template-rows: 1fr;
+`;
+
+const PreviewRibbon = styled.div`
+  flex-shrink: 0;
+  position: relative;
+  /* Above SplitGrid (later in DOM); channel chrome is absolutely positioned and was painting over */
+  z-index: 2;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  /* Author tabs / panels use --dark-main-glass from index.html */
+  background: var(
+    --dark-main-glass,
+    color-mix(in xyz, var(--theme-dark-main-color, navy), transparent 20%)
+  );
+  border-bottom: 1px solid rgb(255 255 255 / 0.18);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    inset 0 -1px 0 rgb(0 0 0 / 0.15);
+`;
+
+const PreviewBackButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+  background: rgb(0 0 0 / 0.16);
+  border: 1px solid rgb(255 255 255 / 0.22);
+  color: rgb(248 250 252 / 0.98);
+  padding: 3px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.2;
+  font-family: inherit;
+  font-weight: 500;
+
+  &:hover {
+    background: rgb(0 0 0 / 0.26);
+    border-color: rgb(255 255 255 / 0.28);
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-light-focus-color, hwb(45 90% 0%));
+    outline-offset: 2px;
+  }
+`;
+
+const PreviewRibbonChevron = styled(ChevronDownIcon)`
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  display: block;
+  transform: rotate(90deg);
+  color: inherit;
+  opacity: 0.95;
+`;
+
+const PreviewRibbonLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  font-style: normal;
+  line-height: 1.2;
+  color: rgb(255 255 255 / 0.94);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+  border-left: 1px solid rgb(255 255 255 / 0.14);
+  padding-left: 10px;
+`;
+
+const SplitGrid = styled.div`
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  z-index: 0;
+  display: grid;
+  overflow: hidden;
   grid-template-columns: 350px 1fr;
+  grid-template-rows: 1fr;
   > :nth-child(1) {
     grid-column: 1;
     grid-row: 1;
+    min-height: 0;
   }
   > :nth-child(2) {
-    max-height: 100vh;
     grid-column: 2;
     grid-row: 1;
+    min-height: 0;
+    /* Bound to grid cell — not 100vh, so story preview ribbon frees space below */
+    max-height: 100%;
   }
-  > :nth-child(3) {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
+`;
+
+/** Positioned containing block so author .root.grid (absolute + inset 0) fills viewer area only */
+const PresentationViewerRegion = styled.div`
+  position: relative;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
 `;
 
 const NavPane = styled.div`
@@ -82,7 +181,6 @@ const NavPane = styled.div`
 const StoryTitle = styled.div`
   line-height: 1.1;
   min-width: 0;
-  flex: 1;
 `;
 
 const Toolbar = styled.div`
@@ -177,53 +275,6 @@ const ChannelName = styled.span<{ color: string }>`
   text-underline-offset: 2px;
 `;
 
-const NavPaneTop = styled.div`
-  grid-column: 1;
-  grid-row: 1;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 6px;
-`;
-
-/** Icon-only control: leaves narrative / preview and returns to author mode */
-const ExitPreviewIconButton = styled.button`
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  margin: 0;
-  border: 1px solid transparent;
-  border-radius: var(--radius-0001, 4px);
-  background: transparent;
-  color: rgb(139 148 158);
-  cursor: pointer;
-  opacity: 0.85;
-  transition:
-    opacity 0.15s ease,
-    background-color 0.15s ease,
-    color 0.15s ease;
-
-  &:hover {
-    opacity: 1;
-    background: rgb(110 118 129 / 0.18);
-    color: var(--bs-link-color, #ccc);
-  }
-
-  &:active {
-    background: rgb(110 118 129 / 0.28);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--bs-link-color, #58a6ff);
-    outline-offset: 2px;
-  }
-`;
-
 export const Presentation = (props: PresentationProps) => {
   const {
     stories,
@@ -242,9 +293,6 @@ export const Presentation = (props: PresentationProps) => {
   } = useOverlayStore();
 
   const previousActiveStoryIndexRef = useRef<number | null>(null);
-
-  // Sync annotation layers (presenter mode: non-interactive)
-  useAnnotationLayers(false);
 
   // Auto-import annotations for the active story
   // Re-run when image dimensions become available or active story changes
@@ -541,57 +589,61 @@ export const Presentation = (props: PresentationProps) => {
   }, [story_content, activeChannelGroupId, Groups, SourceChannels]);
 
   return (
-    <Wrap>
-      <NavPane>
-        <NavPaneTop>
-          <StoryTitle className="h5">{main_title}</StoryTitle>
-          {props.exitPlaybackPreview ? (
-            <ExitPreviewIconButton
-              type="button"
-              onClick={props.exitPlaybackPreview}
-              title="Back to editing"
-              aria-label="Back to editing"
-            >
-              <EditIcon width={16} height={16} aria-hidden />
-            </ExitPreviewIconButton>
-          ) : null}
-        </NavPaneTop>
-        <Toolbar>
-          {toc_button}
-          <StoryLeft active={!first_story} />
-          {count}
-          <StoryRight active={!last_story} />
-        </Toolbar>
-        <ContentWrap ref={contentPaneRef}>
-          <h2 className="h6">{story_title}</h2>
-          <ReactMarkdown
-            components={{
-              strong: ({ children }) => {
-                const text = String(children);
-                const color = channelColors.get(text);
-                return color ? (
-                  <ChannelName color={color}>{text}</ChannelName>
-                ) : (
-                  <strong>{children}</strong>
-                );
-              },
-            }}
+    <PresentationShell>
+      {props.exitPlaybackPreview ? (
+        <PreviewRibbon>
+          <PreviewBackButton
+            type="button"
+            onClick={props.exitPlaybackPreview}
+            title="Back to editing"
+            aria-label="Back to editing"
           >
-            {processedContent}
-          </ReactMarkdown>
-          {first_story && <TableOfContents {...{ stories }} />}
-          <InlineNext>
-            {last_story ? (
-              <p>End</p>
-            ) : (
-              <>
-                {story_next} <StoryRight active={!last_story} />
-              </>
-            )}
-          </InlineNext>
-        </ContentWrap>
-      </NavPane>
-      {props.children}
-    </Wrap>
+            <PreviewRibbonChevron aria-hidden />
+            <span>Back</span>
+          </PreviewBackButton>
+          <PreviewRibbonLabel>Story preview</PreviewRibbonLabel>
+        </PreviewRibbon>
+      ) : null}
+      <SplitGrid>
+        <NavPane>
+          <StoryTitle className="h5">{main_title}</StoryTitle>
+          <Toolbar>
+            {toc_button}
+            <StoryLeft active={!first_story} />
+            {count}
+            <StoryRight active={!last_story} />
+          </Toolbar>
+          <ContentWrap ref={contentPaneRef}>
+            <h2 className="h6">{story_title}</h2>
+            <ReactMarkdown
+              components={{
+                strong: ({ children }) => {
+                  const text = String(children);
+                  const color = channelColors.get(text);
+                  return color ? (
+                    <ChannelName color={color}>{text}</ChannelName>
+                  ) : (
+                    <strong>{children}</strong>
+                  );
+                },
+              }}
+            >
+              {processedContent}
+            </ReactMarkdown>
+            {first_story && <TableOfContents {...{ stories }} />}
+            <InlineNext>
+              {last_story ? (
+                <p>End</p>
+              ) : (
+                <>
+                  {story_next} <StoryRight active={!last_story} />
+                </>
+              )}
+            </InlineNext>
+          </ContentWrap>
+        </NavPane>
+        <PresentationViewerRegion>{props.children}</PresentationViewerRegion>
+      </SplitGrid>
+    </PresentationShell>
   );
 };

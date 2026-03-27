@@ -17,6 +17,7 @@ import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
+import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import type { ConfigWaypoint } from "@/lib/config";
 import { useOverlayStore } from "@/lib/stores";
 import {
@@ -67,6 +68,8 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     updateAnnotation,
     updateTextAnnotationColor,
     layersPanelSelectedAnnotationIds,
+    handleLayerCreate,
+    currentInteraction,
   } = useOverlayStore();
 
   const waypointClipboardActions = (
@@ -266,6 +269,13 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
             onOpenAnnotationColorPicker={handleOpenAnnotationColorPicker}
           />
         </div>
+        {embeddedInScrollParent ? (
+          <DrawingOverlay
+            onLayerCreate={handleLayerCreate}
+            activeTool={activeTool}
+            currentInteraction={currentInteraction}
+          />
+        ) : null}
       </div>
 
       {/* Color Picker Modal */}

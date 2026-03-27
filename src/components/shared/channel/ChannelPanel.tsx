@@ -1,7 +1,6 @@
-import type { ReactElement } from "react";
+import type { ReactNode } from "react";
 import * as React from "react";
 import styled from "styled-components";
-import { DrawingPanel } from "@/components/authoring/DrawingPanel";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 // Types
 import type { ConfigProps } from "@/lib/config";
@@ -10,7 +9,7 @@ import { ChannelGroups } from "./ChannelGroups";
 import { ChannelLegend } from "./ChannelLegend";
 
 export type ChannelPanelProps = {
-  children: ReactElement;
+  children: ReactNode;
   config: ConfigProps;
   authorMode: boolean;
   hiddenChannel: boolean;
@@ -23,11 +22,12 @@ export type ChannelPanelProps = {
   setHiddenChannel: (v: boolean) => void;
   /** Switch layout to playback / presentation (optional). */
   enterPlaybackPreview?: () => void;
-  exitPlaybackPreview?: () => void;
 };
 
 const TextWrap = styled.div`
+  position: relative;
   height: 100%;
+  min-height: 0;
   > div.core {
     color: #eee;
     position: absolute;
@@ -105,8 +105,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   );
   const Groups = useOverlayStore((s) => s.Groups);
   const SourceChannels = useOverlayStore((s) => s.SourceChannels);
-  const handleLayerCreate = useOverlayStore((s) => s.handleLayerCreate);
-  const currentInteraction = useOverlayStore((s) => s.currentInteraction);
   const groups = Groups.map((group, g) => {
     return {
       g,
@@ -186,13 +184,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     </div>
   );
 
-  const drawingPanel = props.authorMode ? (
-    <DrawingPanel
-      groups={groups}
-      onLayerCreate={handleLayerCreate}
-      currentInteraction={currentInteraction}
-    />
-  ) : null;
   const waypointsPanel = props.authorMode ? (
     <WaypointsList onEnterPlaybackPreview={props.enterPlaybackPreview} />
   ) : null;
@@ -215,10 +206,9 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
 
   const minerva_author_ui = React.createElement(
     props.controlPanelElement,
-    {},
+    null,
     <>
       {props.children}
-      {drawingPanel}
       {waypointsPanel}
       <div slot="groups">{channels}</div>
     </>,

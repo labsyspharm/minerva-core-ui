@@ -16,7 +16,7 @@ const author = (options = {}) => {
         ...(options.ItemRegistry || {}),
       },
       nav_config,
-      tab_order: ["IMAGE-PANEL", "OVERLAY-PANEL", "GROUP-PANEL", "STORY-PANEL"],
+      tab_order: ["IMAGE-PANEL", "GROUP-PANEL", "STORY-PANEL"],
       menu_order: ["EXPORT-DIALOG", "SAVEAS-DIALOG", "SAVE-NOTICE"],
       dialog_notices: {
         "EXPORT-DIALOG": "EXPORT-NOTICE",

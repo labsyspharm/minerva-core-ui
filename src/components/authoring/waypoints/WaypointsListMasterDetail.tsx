@@ -708,20 +708,6 @@ const WaypointsList = (props: WaypointsListProps) => {
           <div className={styles.detailTitle} title={detailStory.Name}>
             {detailStory.Name}
           </div>
-          {canEdit && onEnterPlaybackPreview ? (
-            <div className={styles.detailHeaderActions}>
-              <button
-                type="button"
-                className={styles.iconHeaderButton}
-                onClick={onEnterPlaybackPreview}
-                disabled={stories.length === 0}
-                title="Preview narrative playback"
-                aria-label="Preview narrative playback"
-              >
-                <PlayIcon width={14} height={14} aria-hidden />
-              </button>
-            </div>
-          ) : null}
         </div>
 
         <div className={styles.detailBody} ref={detailBodyRef}>

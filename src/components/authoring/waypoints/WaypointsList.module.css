@@ -469,14 +469,6 @@
   color: #fff;
 }
 
-.detailHeaderActions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
 .detailTitle {
   font-size: 12px;
   font-weight: bold;
