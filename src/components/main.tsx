@@ -247,7 +247,6 @@ const Content = (props: Props) => {
     };
     const groupName = defaultGroup.Name;
     const channelList = groupChannelLists[groupName] || [];
-    console.log(groupChannelLists);
     setChannelVisibilities(
       Object.fromEntries(channelList.map((name) => [name, true])),
     );
@@ -310,10 +309,14 @@ const Content = (props: Props) => {
     if (handles.length === 0) return;
     const handle = handles[0]; // TODO
     const loader = await toLoader({ handle, in_f, pool: new Pool() });
+    const exhibitGroups = props.exhibit_config.Groups ?? [];
+    const relevant_groups = exhibitGroups.filter(
+      ({ Image }) => Image.Method === "Colorimetric",
+    );
     const { SourceChannels, Groups } = extractChannels(
       loader,
       "Colorimetric",
-      [],
+      relevant_groups,
     );
     // Await distributions so that all state (loader, channels, groups,
     // distributions) is set in a single React batch, avoiding a second

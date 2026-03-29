@@ -83,7 +83,7 @@ const capture: Capture = async (index, loader) => {
   const level = Math.abs(index.z);
   const z_loader = loader[level];
   const selection = { t: 0, z: 0, c: 0 };
-  const signal = AbortSignal.timeout(10 * 1000);
+  const signal = AbortSignal.timeout(30 * 1000);
   const { x, y } = index;
   const tile = await z_loader.getTile({
     selection,

@@ -1246,12 +1246,23 @@ const exhibit_config = {
     },
   ],
   Groups: [
+    // {
+    //   Image: {
+    //     Method: "Brightfield",
+    //   },
+    //   Channels: ["Hematoxylin", "Eosin"],
+    //   Colors: ["8233CC", "FF8080"],
+    //   Name: "Hematoxylin & Eosin",
+    //   Path: "Histology_40__HE-r--41__HE-g--42__HE-b",
+    //   Highs: [65600, 65600, 65600],
+    //   Lows: [0, 0, 0],
+    // },
     {
       Image: {
-        Method: "Brightfield",
+        Method: "Colorimetric",
       },
-      Channels: ["Hematoxylin", "Eosin"],
-      Colors: ["8233CC", "FF8080"],
+      Channels: ["HE_r", "HE_g", "HE_b"],
+      Colors: ["ff0000", "00ff00", "0000ff"],
       Name: "Hematoxylin & Eosin",
       Path: "Histology_40__HE-r--41__HE-g--42__HE-b",
       Highs: [65600, 65600, 65600],

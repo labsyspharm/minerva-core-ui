@@ -2610,7 +2610,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       // channel and group actions
       //
       setActiveChannelGroup: (channelGroupId: string) => {
-        console.log("Store: Setting active channel group ID:", channelGroupId);
         set(({ groupChannelLists, groupNames }) => {
           const name = groupNames[channelGroupId] || "";
           const channels = groupChannelLists[name] || [];
