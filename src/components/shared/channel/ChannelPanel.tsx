@@ -29,6 +29,7 @@ type ChannelItemMetadata = {
   upper_range: number;
   name: string;
   color: string;
+  group_uuid: string;
   source_uuid: string;
   channel_uuid: string;
 };
@@ -123,6 +124,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const hide = props.hiddenChannel;
   const hidden = props.retrievingMetadata || props.noLoader;
   // Subscribe only to overlay state used by this panel so viewport/zoom updates don't re-render.
+  const { setActiveChannelGroup } = useOverlayStore();
   const activeChannelGroupId = useOverlayStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useOverlayStore((s) => s.channelVisibilities);
   const setChannelVisibilities = useOverlayStore(
@@ -154,6 +156,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
             upper_range: UpperRange,
             name: found.Name,
             color: `${hex_color}`,
+            group_uuid: group.UUID,
             source_uuid: found.UUID,
             channel_uuid: channel.UUID,
           };
@@ -214,33 +217,34 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     <WaypointsList onEnterPlaybackPreview={props.enterPlaybackPreview} />
   ) : null;
 
-  const listItems: ListItem<GroupItemMetadata>[] = !group
-    ? []
-    : groups.map(({ channels, UUID, name }, _index) => {
-        const children: ListItem<ChannelItemMetadata>[] = channels.map(
-          (channel) => ({
-            id: `channel-${channel.source_uuid}`,
-            title: channel.name,
-            subtitle: undefined,
-            isActive: false,
-            isExpanded: true,
-            metadata: {
-              type: "channel-item",
-              ...channel,
-            } as ChannelItemMetadata,
-          }),
-        );
-        return {
-          id: UUID,
-          title: name,
-          subtitle: channels.map(({ name }) => name).join(", "),
-          isActive: activeGroup === UUID,
-          isExpanded: activeGroup === UUID,
-          isDragging: false,
-          children: children.length > 0 ? children : undefined,
-          metadata: group,
-        };
-      });
+  const listItems: ListItem<GroupItemMetadata>[] = groups.map(
+    (group, _index) => {
+      const { channels, UUID, name } = group;
+      const children: ListItem<ChannelItemMetadata>[] = channels.map(
+        (channel) => ({
+          id: `channel-${channel.source_uuid}`,
+          title: channel.name,
+          subtitle: undefined,
+          isActive: false,
+          isExpanded: true,
+          metadata: {
+            type: "channel-item",
+            ...channel,
+          } as ChannelItemMetadata,
+        }),
+      );
+      return {
+        id: UUID,
+        title: name,
+        subtitle: channels.map(({ name }) => name).join(", "),
+        isActive: activeGroup === UUID,
+        isExpanded: activeGroup === UUID,
+        isDragging: false,
+        children: children.length > 0 ? children : undefined,
+        metadata: group,
+      };
+    },
+  );
 
   const customChildRenderer = (childItem: ListItem<ChannelItemMetadata>) => {
     const channel = childItem.metadata as ChannelItemMetadata;
@@ -248,7 +252,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     if (channel.type === "channel-item") {
       return React.createElement(props.channelItemElement, {
         key: channel.source_uuid,
-        group_uuid: group.UUID,
+        group_uuid: channel.group_uuid,
         source_uuid: channel.source_uuid,
         channel_uuid: channel.channel_uuid,
         r: channel.r,
@@ -261,7 +265,19 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     return null;
   };
 
-  const handleItemClick = () => null;
+  const handleItemClick = (
+    item: ListItem<WaypointItemMetadata>,
+    _event: React.MouseEvent,
+  ) => {
+    if (item.metadata && !("type" in item.metadata)) {
+      const oldGroup = item.metadata as GroupItemMetadata;
+      const newGroup = groups.find((g) => g.UUID === oldGroup.UUID);
+      if (newGroup) {
+        console.log(newGroup.UUID);
+        setActiveChannelGroup(newGroup.UUID);
+      }
+    }
+  };
   const handleDragStart = () => null;
   const handleDragEnd = () => null;
   const handleDragOver = () => null;
