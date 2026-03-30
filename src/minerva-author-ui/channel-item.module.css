@@ -1,6 +1,7 @@
 :host {
   div.grid {
-    gap: var(--gap-medium);
+    gap: 2px;
+    padding-bottom: var(--gap-small);
   }
 }
 svg {

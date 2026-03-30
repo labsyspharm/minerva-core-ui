@@ -67,7 +67,7 @@ const toChannelItem = (
 
     get chartTemplate() {
       const width = 100;
-      const height = 25;
+      const height = 15;
       const stroke = 1.5;
       const d = () => {
         const { YValues: values } = this.distribution;

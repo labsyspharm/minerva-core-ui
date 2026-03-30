@@ -75,6 +75,18 @@ const TextOther = styled.div`
   background-color: transparent;
 `;
 
+const WrapChannel = styled.div`
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  position: relative;
+  > :first-child {
+    margin-left: -20px;
+  }
+`;
+
+const WrapChannelName = styled.div`
+`;
+
 // Content layout styles (merged from content.tsx)
 const WrapContent = styled.div`
   height: 100%;
@@ -250,7 +262,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     const channel = childItem.metadata as ChannelItemMetadata;
 
     if (channel.type === "channel-item") {
-      return React.createElement(props.channelItemElement, {
+      const chart = React.createElement(props.channelItemElement, {
         key: channel.source_uuid,
         group_uuid: channel.group_uuid,
         source_uuid: channel.source_uuid,
@@ -261,6 +273,16 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         lower_range: channel.lower_range,
         upper_range: channel.upper_range,
       });
+      const short_name =
+        channel.name.length < 8
+          ? channel.name
+          : `${channel.name.substring(0, 8)}...`;
+      return (
+        <WrapChannel>
+          <WrapChannelName>{short_name}</WrapChannelName>
+          {chart}
+        </WrapChannel>
+      );
     }
     return null;
   };
