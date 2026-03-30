@@ -447,14 +447,14 @@ const Upload = (props: UploadProps) => {
     return (
       <UploadDiv slot="images">
         <FullWidthGrid>
-          <Button onClick={selectDicomWebFormat} className="dicom-toggle">
-            <span>DicomWeb</span>
-          </Button>
-          <div>{"Connect to a DICOMweb™ Proxy"}</div>
           <Button onClick={selectOmeTiffFormat} className="dicom-toggle">
             <span>OME-TIFF</span>
           </Button>
           <div>{"Open an OME-TIFF from a local file"}</div>
+          <Button onClick={selectDicomWebFormat} className="dicom-toggle">
+            <span>DicomWeb</span>
+          </Button>
+          <div>{"Load from DICOMweb"}</div>
         </FullWidthGrid>
         {possibleActions}
       </UploadDiv>
