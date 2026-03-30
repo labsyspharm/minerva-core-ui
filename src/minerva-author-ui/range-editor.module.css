@@ -40,7 +40,7 @@
   position: relative;
   display: block;
   border-top: var(--thin-border);
-  background-color: var(--dim-gray-color);
+  background-color: var(--slider-background);
   height: var(--gap-medium);
   top: 0px;
   content: "";
@@ -51,7 +51,7 @@
   position: relative;
   display: block;
   border-bottom: var(--thin-border);
-  background-color: var(--dim-gray-color);
+  background-color: var(--slider-background);
   top: calc(100% - 2 * var(--gap-medium));
   height: var(--gap-medium);
   content: "";
