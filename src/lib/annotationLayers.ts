@@ -195,8 +195,7 @@ export function createAllAnnotationLayers(
 
             const textAnchor: "start" | "end" = labelDx > 0 ? "start" : "end";
             const textColor =
-              annotation.style.lineColor ||
-              ([255, 255, 255, 255] as ColorRGBA);
+              annotation.style.lineColor || ([255, 255, 255, 255] as ColorRGBA);
 
             labelData.push({
               text: annotation.text,
@@ -421,9 +420,7 @@ export function useAnnotationLayers(pickable: boolean = true) {
   const hoveredAnnotationId = useOverlayStore(
     (state) => state.hoverState.hoveredAnnotationId,
   );
-  const brushEditTargetId = useOverlayStore(
-    (state) => state.brushEditTargetId,
-  );
+  const brushEditTargetId = useOverlayStore((state) => state.brushEditTargetId);
 
   const annotationLayers = React.useMemo(() => {
     return createAllAnnotationLayers(
@@ -433,7 +430,13 @@ export function useAnnotationLayers(pickable: boolean = true) {
       pickable,
       brushEditTargetId,
     );
-  }, [annotations, hiddenLayers, hoveredAnnotationId, pickable, brushEditTargetId]);
+  }, [
+    annotations,
+    hiddenLayers,
+    hoveredAnnotationId,
+    pickable,
+    brushEditTargetId,
+  ]);
 
   React.useEffect(() => {
     const consolidatedLayerIds = [

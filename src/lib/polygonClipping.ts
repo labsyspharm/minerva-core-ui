@@ -91,7 +91,8 @@ export function polygonDifference(
     polyB as PCPolygon,
   ) as MultiPolygon;
   if (!result || result.length === 0) return null;
-  if (result.length === 1 && result[0][0]) return fromLibRings(result[0] as Polygon);
+  if (result.length === 1 && result[0][0])
+    return fromLibRings(result[0] as Polygon);
   let best = result[0][0] as Ring;
   let bestArea = polygonArea(best);
   for (let i = 0; i < result.length; i++) {

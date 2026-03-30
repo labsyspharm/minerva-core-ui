@@ -30,4 +30,3 @@ export function buildBrushHull(
 
   return hull && hull.length >= 3 ? hull : null;
 }
-

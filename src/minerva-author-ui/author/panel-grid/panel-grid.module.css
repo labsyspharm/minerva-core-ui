@@ -39,7 +39,7 @@
   .wrapper {
     overflow: hidden;
     .inner.grid {
-      overflow: hidden;
+      overflow: scroll;
     }
   }
 }

@@ -2,11 +2,36 @@ import type { ReactNode } from "react";
 import * as React from "react";
 import styled from "styled-components";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
+import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
 // Types
 import type { ConfigProps } from "@/lib/config";
 import { useOverlayStore } from "@/lib/stores";
 import { ChannelGroups } from "./ChannelGroups";
 import { ChannelLegend } from "./ChannelLegend";
+
+type GroupItemMetadata = {
+  r: number;
+  g: number;
+  b: number;
+  lower_range: number;
+  upper_range: number;
+  name: string;
+  color: string;
+  source_uuid: string;
+  channel_uuid: string;
+};
+type ChannelItemMetadata = {
+  type: "channel-item";
+  r: number;
+  g: number;
+  b: number;
+  lower_range: number;
+  upper_range: number;
+  name: string;
+  color: string;
+  source_uuid: string;
+  channel_uuid: string;
+};
 
 export type ChannelPanelProps = {
   children: ReactNode;
@@ -137,8 +162,9 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       }).filter((x) => x),
     };
   });
-  const group =
-    groups.find(({ UUID }) => UUID === activeChannelGroupId) || groups[0];
+  const activeGroup =
+    activeChannelGroupId || (groups.length > 0 ? groups[0].UUID : null);
+  const group = groups.find(({ UUID }) => UUID === activeGroup);
   const toggleChannel = ({ name }) => {
     setChannelVisibilities(
       Object.fromEntries(
@@ -188,21 +214,80 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     <WaypointsList onEnterPlaybackPreview={props.enterPlaybackPreview} />
   ) : null;
 
-  const channels = !group
-    ? ""
-    : group.channels.map((channel) => {
-        return React.createElement(props.channelItemElement, {
-          key: channel.source_uuid,
-          group_uuid: group.UUID,
-          source_uuid: channel.source_uuid,
-          channel_uuid: channel.channel_uuid,
-          r: channel.r,
-          g: channel.g,
-          b: channel.b,
-          lower_range: channel.lower_range,
-          upper_range: channel.upper_range,
-        });
+  const listItems: ListItem<GroupItemMetadata>[] = !group
+    ? []
+    : groups.map(({ channels, UUID, name }, _index) => {
+        const children: ListItem<ChannelItemMetadata>[] = channels.map(
+          (channel) => ({
+            id: `channel-${channel.source_uuid}`,
+            title: channel.name,
+            subtitle: undefined,
+            isActive: false,
+            isExpanded: true,
+            metadata: {
+              type: "channel-item",
+              ...channel,
+            } as ChannelItemMetadata,
+          }),
+        );
+        return {
+          id: UUID,
+          title: name,
+          subtitle: channels.map(({ name }) => name).join(", "),
+          isActive: activeGroup === UUID,
+          isExpanded: activeGroup === UUID,
+          isDragging: false,
+          children: children.length > 0 ? children : undefined,
+          metadata: group,
+        };
       });
+
+  const customChildRenderer = (childItem: ListItem<ChannelItemMetadata>) => {
+    const channel = childItem.metadata as ChannelItemMetadata;
+
+    if (channel.type === "channel-item") {
+      return React.createElement(props.channelItemElement, {
+        key: channel.source_uuid,
+        group_uuid: group.UUID,
+        source_uuid: channel.source_uuid,
+        channel_uuid: channel.channel_uuid,
+        r: channel.r,
+        g: channel.g,
+        b: channel.b,
+        lower_range: channel.lower_range,
+        upper_range: channel.upper_range,
+      });
+    }
+    return null;
+  };
+
+  const handleItemClick = () => null;
+  const handleDragStart = () => null;
+  const handleDragEnd = () => null;
+  const handleDragOver = () => null;
+  const handleDragLeave = () => null;
+  const handleDrop = () => null;
+
+  const channel_list = (
+    <ItemList
+      items={listItems}
+      title="Channels"
+      onItemClick={handleItemClick}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      showVisibilityToggle={false}
+      showDeleteButton={false}
+      onDelete={undefined}
+      showExpandToggle={false}
+      emptyMessage="No groups yet"
+      customChildRenderer={customChildRenderer}
+      itemActions={null}
+      noHeader={true}
+    />
+  );
 
   const minerva_author_ui = React.createElement(
     props.controlPanelElement,
@@ -210,7 +295,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     <>
       {props.children}
       {waypointsPanel}
-      <div slot="groups">{channels}</div>
+      <div slot="groups">{channel_list}</div>
     </>,
   );
 

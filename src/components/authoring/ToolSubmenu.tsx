@@ -60,7 +60,13 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
       >
         {activeItem ? activeItem.icon : parentIcon}
         <span className={styles.chevron} aria-hidden>
-          <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" aria-hidden>
+          <svg
+            width="8"
+            height="8"
+            viewBox="0 0 8 8"
+            fill="currentColor"
+            aria-hidden
+          >
             <title>Submenu</title>
             <path
               d="M1 3L4 6L7 3"

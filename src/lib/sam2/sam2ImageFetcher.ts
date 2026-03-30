@@ -56,9 +56,7 @@ export function createSam2ImageFetcher(
   imageWidth: number,
   imageHeight: number,
 ):
-  | ((
-      viewRect: ViewRect,
-    ) => Promise<{
+  | ((viewRect: ViewRect) => Promise<{
       float32Array: Float32Array;
       shape: [number, number, number, number];
     }>)
