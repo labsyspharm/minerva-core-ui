@@ -172,7 +172,10 @@ export function convexHull(points: [number, number][]): [number, number][] {
 
   const hull: [number, number][] = [];
   for (const p of pts) {
-    while (hull.length >= 2 && cross(hull[hull.length - 2], hull[hull.length - 1], p) <= 0) {
+    while (
+      hull.length >= 2 &&
+      cross(hull[hull.length - 2], hull[hull.length - 1], p) <= 0
+    ) {
       hull.pop();
     }
     hull.push(p);

@@ -330,7 +330,6 @@ const Content = (props: Props) => {
       SourceChannels: SourceChannelsWithDist,
     });
     resetItems({
-      SourceDistributions,
       SourceChannels: SourceChannelsWithDist,
     });
     setLoaderOmeTiff(loader);
