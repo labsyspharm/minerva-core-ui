@@ -7,7 +7,7 @@ import {
 } from "@deck.gl/layers";
 import * as React from "react";
 import ArrowDrawingIconUrl from "@/components/shared/icons/arrow-annotation-drawing.svg?url";
-import { ARROW_ICON_SIZE, useAnnotationLayers } from "@/lib/annotationLayers";
+import { ARROW_ICON_SIZE } from "@/lib/annotationLayers";
 import { useSam2 } from "@/lib/sam2/useSam2";
 import { ellipseToPolygon, lineToPolygon, useOverlayStore } from "@/lib/stores";
 
@@ -1347,12 +1347,6 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       pickable: false,
     });
   }, [textInputPosition, showTextInput]);
-
-  const authoringWaypointEditorOpen = useOverlayStore(
-    (s) => s.authoringWaypointEditorOpen,
-  );
-  // Use shared hook to create and sync annotation layers to the store
-  useAnnotationLayers(authoringWaypointEditorOpen);
 
   // Notify parent when drawing layer is created or removed
   React.useEffect(() => {

@@ -1,13 +1,13 @@
+/* Fill the positioned parent (story preview ribbon + nav shrink the slot);
+   when no inset parent exists, inset:0 still maps to the viewport. */
 .root.grid {
   font-family: var(--font-family);
   color: var(--light-contrast-color);
-  top: 0;
-  width: 100%;
-  overflow: hidden;
-  max-height: 100dvh;
   position: absolute;
+  inset: 0;
+  overflow: hidden;
   grid-template-columns: 30em 1fr;
-  grid-template-rows: 100dvh auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   transition: grid-template-columns 0.5s ease;
   > .grid {
     grid-column: 1;

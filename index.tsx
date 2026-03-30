@@ -1246,12 +1246,23 @@ const exhibit_config = {
     },
   ],
   Groups: [
+    // {
+    //   Image: {
+    //     Method: "Brightfield",
+    //   },
+    //   Channels: ["Hematoxylin", "Eosin"],
+    //   Colors: ["8233CC", "FF8080"],
+    //   Name: "Hematoxylin & Eosin",
+    //   Path: "Histology_40__HE-r--41__HE-g--42__HE-b",
+    //   Highs: [65600, 65600, 65600],
+    //   Lows: [0, 0, 0],
+    // },
     {
       Image: {
-        Method: "Brightfield",
+        Method: "Colorimetric",
       },
-      Channels: ["Hematoxylin", "Eosin"],
-      Colors: ["8233CC", "FF8080"],
+      Channels: ["HE_r", "HE_g", "HE_b"],
+      Colors: ["ff0000", "00ff00", "0000ff"],
       Name: "Hematoxylin & Eosin",
       Path: "Histology_40__HE-r--41__HE-g--42__HE-b",
       Highs: [65600, 65600, 65600],
@@ -1533,10 +1544,13 @@ const MainStyle = createGlobalStyle`
 const rootElement = document.getElementById(id);
 const root = createRoot(rootElement);
 
+// Stable array reference — FileHandler restore effect deps stay stable across renders.
+const OME_TIFF_HANDLE_KEYS = ["img-1"];
+
 root.render(
   <React.StrictMode>
     <Main
-      handleKeys={["img-1"]}
+      handleKeys={OME_TIFF_HANDLE_KEYS}
       demo_dicom_web={false}
       exhibit_config={exhibit_config}
       configWaypoints={configWaypoints}

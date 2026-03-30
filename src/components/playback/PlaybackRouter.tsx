@@ -13,12 +13,29 @@ export type PlaybackRouterProps = ChannelPanelProps & {
   presenting: boolean;
   handles: Handle.File[];
   in_f: string;
+  exitPlaybackPreview?: () => void;
 };
 
 const _ImageDiv = styled.div`
   background-color: white;
   width: 100%;
   height: 100%;
+`;
+
+const ModeViewport = styled.div`
+  height: 100%;
+  min-height: 0;
+  animation: modeViewportIn 0.2s ease-out;
+
+  @keyframes modeViewportIn {
+    from {
+      opacity: 0.88;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
 `;
 
 export const PlaybackRouter = (props: PlaybackRouterProps) => {
@@ -42,5 +59,15 @@ export const PlaybackRouter = (props: PlaybackRouterProps) => {
     out = <ImageExporter {...exporterProps} />;
     */
   }
-  return <>{out}</>;
+  const modeKey = props.presenting
+    ? "presenting"
+    : props.ioState === "IDLE"
+      ? "author"
+      : "other";
+
+  return (
+    <ModeViewport key={modeKey} data-mode={modeKey}>
+      {out}
+    </ModeViewport>
+  );
 };

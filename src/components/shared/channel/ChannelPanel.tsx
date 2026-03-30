@@ -1,16 +1,40 @@
-import type { ReactElement } from "react";
+import type { ReactNode } from "react";
 import * as React from "react";
 import styled from "styled-components";
-import { DrawingPanel } from "@/components/authoring/DrawingPanel";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
+import { ItemList, type ListItem } from "@/components/shared/common/ItemList";
 // Types
 import type { ConfigProps } from "@/lib/config";
 import { useOverlayStore } from "@/lib/stores";
 import { ChannelGroups } from "./ChannelGroups";
 import { ChannelLegend } from "./ChannelLegend";
 
+type GroupItemMetadata = {
+  r: number;
+  g: number;
+  b: number;
+  lower_range: number;
+  upper_range: number;
+  name: string;
+  color: string;
+  source_uuid: string;
+  channel_uuid: string;
+};
+type ChannelItemMetadata = {
+  type: "channel-item";
+  r: number;
+  g: number;
+  b: number;
+  lower_range: number;
+  upper_range: number;
+  name: string;
+  color: string;
+  source_uuid: string;
+  channel_uuid: string;
+};
+
 export type ChannelPanelProps = {
-  children: ReactElement;
+  children: ReactNode;
   config: ConfigProps;
   authorMode: boolean;
   hiddenChannel: boolean;
@@ -18,11 +42,17 @@ export type ChannelPanelProps = {
   channelItemElement: string;
   controlPanelElement: string;
   retrievingMetadata: boolean;
+  /** When true, image/data is not loaded yet — hide channel chrome that needs channels. */
+  noLoader: boolean;
   setHiddenChannel: (v: boolean) => void;
+  /** Switch layout to playback / presentation (optional). */
+  enterPlaybackPreview?: () => void;
 };
 
 const TextWrap = styled.div`
+  position: relative;
   height: 100%;
+  min-height: 0;
   > div.core {
     color: #eee;
     position: absolute;
@@ -100,8 +130,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   );
   const Groups = useOverlayStore((s) => s.Groups);
   const SourceChannels = useOverlayStore((s) => s.SourceChannels);
-  const handleLayerCreate = useOverlayStore((s) => s.handleLayerCreate);
-  const currentInteraction = useOverlayStore((s) => s.currentInteraction);
   const groups = Groups.map((group, g) => {
     return {
       g,
@@ -134,8 +162,9 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       }).filter((x) => x),
     };
   });
-  const group =
-    groups.find(({ UUID }) => UUID === activeChannelGroupId) || groups[0];
+  const activeGroup =
+    activeChannelGroupId || (groups.length > 0 ? groups[0].UUID : null);
+  const group = groups.find(({ UUID }) => UUID === activeGroup);
   const toggleChannel = ({ name }) => {
     setChannelVisibilities(
       Object.fromEntries(
@@ -181,37 +210,92 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     </div>
   );
 
-  const drawingPanel = props.authorMode ? (
-    <DrawingPanel
-      groups={groups}
-      onLayerCreate={handleLayerCreate}
-      currentInteraction={currentInteraction}
-    />
+  const waypointsPanel = props.authorMode ? (
+    <WaypointsList onEnterPlaybackPreview={props.enterPlaybackPreview} />
   ) : null;
 
-  const channels = !group
-    ? ""
-    : group.channels.map((channel) => {
-        return React.createElement(props.channelItemElement, {
-          key: channel.source_uuid,
-          group_uuid: group.UUID,
-          source_uuid: channel.source_uuid,
-          channel_uuid: channel.channel_uuid,
-          r: channel.r,
-          g: channel.g,
-          b: channel.b,
-          lower_range: channel.lower_range,
-          upper_range: channel.upper_range,
-        });
+  const listItems: ListItem<GroupItemMetadata>[] = !group
+    ? []
+    : groups.map(({ channels, UUID, name }, _index) => {
+        const children: ListItem<ChannelItemMetadata>[] = channels.map(
+          (channel) => ({
+            id: `channel-${channel.source_uuid}`,
+            title: channel.name,
+            subtitle: undefined,
+            isActive: false,
+            isExpanded: true,
+            metadata: {
+              type: "channel-item",
+              ...channel,
+            } as ChannelItemMetadata,
+          }),
+        );
+        return {
+          id: UUID,
+          title: name,
+          subtitle: channels.map(({ name }) => name).join(", "),
+          isActive: activeGroup === UUID,
+          isExpanded: activeGroup === UUID,
+          isDragging: false,
+          children: children.length > 0 ? children : undefined,
+          metadata: group,
+        };
       });
+
+  const customChildRenderer = (childItem: ListItem<ChannelItemMetadata>) => {
+    const channel = childItem.metadata as ChannelItemMetadata;
+
+    if (channel.type === "channel-item") {
+      return React.createElement(props.channelItemElement, {
+        key: channel.source_uuid,
+        group_uuid: group.UUID,
+        source_uuid: channel.source_uuid,
+        channel_uuid: channel.channel_uuid,
+        r: channel.r,
+        g: channel.g,
+        b: channel.b,
+        lower_range: channel.lower_range,
+        upper_range: channel.upper_range,
+      });
+    }
+    return null;
+  };
+
+  const handleItemClick = () => null;
+  const handleDragStart = () => null;
+  const handleDragEnd = () => null;
+  const handleDragOver = () => null;
+  const handleDragLeave = () => null;
+  const handleDrop = () => null;
+
+  const channel_list = (
+    <ItemList
+      items={listItems}
+      title="Channels"
+      onItemClick={handleItemClick}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      showVisibilityToggle={false}
+      showDeleteButton={false}
+      onDelete={undefined}
+      showExpandToggle={false}
+      emptyMessage="No groups yet"
+      customChildRenderer={customChildRenderer}
+      itemActions={null}
+      noHeader={true}
+    />
+  );
 
   const minerva_author_ui = React.createElement(
     props.controlPanelElement,
-    {},
+    null,
     <>
       {props.children}
-      {drawingPanel}
-      <div slot="groups">{channels}</div>
+      {waypointsPanel}
+      <div slot="groups">{channel_list}</div>
     </>,
   );
 

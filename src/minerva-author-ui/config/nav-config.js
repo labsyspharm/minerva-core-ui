@@ -136,13 +136,6 @@ const configure = (id) => {
         label: "Images",
         description: "Image Sources",
       };
-    case "OVERLAY-PANEL":
-      return {
-        role: "tab",
-        id,
-        label: "Overlays",
-        description: "Image Overlays",
-      };
     default:
       return { id };
   }

@@ -13,7 +13,10 @@ import { getWaypointViewState } from "@/lib/waypoint";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { WaypointContentEditor } from "./WaypointContentEditor";
 import styles from "./WaypointsList.module.css";
-import { WaypointsList as WaypointsListMasterDetail } from "./WaypointsListMasterDetail";
+import {
+  WaypointsList as WaypointsListMasterDetail,
+  type WaypointsListProps,
+} from "./WaypointsListMasterDetail";
 
 interface WaypointAnnotationEditorMetadata {
   type: "annotations-panel";
@@ -33,10 +36,6 @@ type WaypointChildMetadata =
 
 type WaypointItemMetadata = ConfigWaypoint | WaypointChildMetadata;
 
-type WaypointsListProps = {
-  viewOnly?: boolean;
-};
-
 const WaypointsList = (props: WaypointsListProps) => {
   const { viewOnly } = props;
 
@@ -45,6 +44,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     stories,
     activeStoryIndex,
     setActiveStory,
+    setActiveChannelGroup,
     addStory,
     reorderStories,
     importWaypointAnnotations,
@@ -56,6 +56,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     editingViewstateWaypointIndex,
     setEditingViewstateWaypointIndex,
     removeStory,
+    Groups,
   } = useOverlayStore();
 
   // Local state for markdown editing
@@ -201,6 +202,11 @@ const WaypointsList = (props: WaypointsListProps) => {
       const index = stories.findIndex((s) => s.UUID === story.UUID);
       if (index !== -1) {
         setActiveStory(index);
+        const foundGroup =
+          Groups.find((group) => group.Name === story.Group) || Groups[0];
+        if (foundGroup) {
+          setActiveChannelGroup(foundGroup.UUID);
+        }
 
         // Collapse all annotations panels when switching stories to avoid showing
         // annotations from the new story under the old story's panel
@@ -267,6 +273,11 @@ const WaypointsList = (props: WaypointsListProps) => {
       State: { Expanded: true },
       Name: `Waypoint ${storyIndex + 1}`,
       Content: "",
+      Group:
+        Groups.find(
+          (group) =>
+            group.UUID === useOverlayStore.getState().activeChannelGroupId,
+        )?.Name ?? Groups[0]?.Name,
       Arrows: [],
       Overlays: [],
     };

@@ -357,34 +357,28 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
     SourceDataType: asID(Type),
     SourceImage: asUUID(modality), //TODO
   }));
-  // Match hard-coded groups to existing channels
+  // Match hard-coded groups to existing channels. GROUP_CHANNELS_CRC01 maps Path →
+  // indices into OME Pixels.Channels (same order as SourceChannels), not "Channel N" strings.
   const hardcoded_crc01 = groups.reduce(
     ({ name_map, Groups }, g) => {
       if (!(g.Path in GROUP_CHANNELS_CRC01)) {
         return { name_map, Groups };
       }
-      const channel_names = GROUP_CHANNELS_CRC01[g.Path].map(
-        (n) => `Channel ${n}`,
-      );
-      const valid_names = SourceChannels.map(({ Name }) => Name);
-      if (g.Channels.length !== channel_names.length) {
+      const channel_indices = GROUP_CHANNELS_CRC01[g.Path];
+      if (g.Channels.length !== channel_indices.length) {
         return { name_map, Groups };
       }
-      const all_match = channel_names.every((name) =>
-        valid_names.includes(name),
+      const outOfRange = channel_indices.filter(
+        (idx) => idx < 0 || idx >= SourceChannels.length,
       );
-      if (!all_match) {
+      if (outOfRange.length > 0) {
         return { name_map, Groups };
       }
-      // Update Source Channel Names
-      const new_name_map = SourceChannels.reduce((nmap, sourceChannel) => {
-        const in_group_idx = channel_names.indexOf(sourceChannel.Name);
-        if (in_group_idx >= 0) {
-          const descriptive_name = g.Channels[in_group_idx];
-          nmap[descriptive_name] = sourceChannel.UUID;
-        }
-        return nmap;
-      }, name_map);
+      const new_name_map = { ...name_map };
+      for (let i = 0; i < channel_indices.length; i++) {
+        const idx = channel_indices[i];
+        new_name_map[g.Channels[i]] = SourceChannels[idx].UUID;
+      }
       const new_group_uuid = crypto.randomUUID();
       const new_group = {
         UUID: new_group_uuid,

@@ -8,6 +8,7 @@ import "@deck.gl/widgets/stylesheet.css";
 
 import type { Layer } from "@deck.gl/core";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
+import { useAnnotationLayers } from "@/lib/annotationLayers";
 import { createTileLayers, loadDicom } from "@/lib/dicom";
 import type { DicomIndex } from "@/lib/dicom-index";
 import { createDragHandlers } from "@/lib/dragHandlers";
@@ -142,8 +143,13 @@ export const ImageViewer = (props: ImageViewerProps) => {
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
     squareViewportBorderWidth = 2,
   } = props;
-  const { activeChannelGroupId, channelVisibilities, sam2Processing } =
-    useOverlayStore();
+  const {
+    activeChannelGroupId,
+    channelVisibilities,
+    sam2Processing,
+    authoringWaypointEditorOpen,
+  } = useOverlayStore();
+  useAnnotationLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [_canvas, _setCanvas] = useState(null);
   const rootRef = useRef<HTMLElement | null>(null);

@@ -1,6 +1,5 @@
 import panelGridCSS from "./panel-grid.module.css" with { type: "css" };
 import { PanelContentImage } from "./panel-content/panel-content-image";
-import { PanelContentOverlay } from "./panel-content/panel-content-overlay";
 import { PanelContentGroup } from "./panel-content/panel-content-group";
 import { PanelContentStory } from "./panel-content/panel-content-story";
 import { PanelContent } from "./panel-content/panel-content";
@@ -49,7 +48,6 @@ class PanelGrid extends HTMLElement {
       return (
         {
           "IMAGE-PANEL": PanelContentImage,
-          "OVERLAY-PANEL": PanelContentOverlay,
           "STORY-PANEL": PanelContentStory,
           "GROUP-PANEL": PanelContentGroup,
         }[tab] || PanelContent
