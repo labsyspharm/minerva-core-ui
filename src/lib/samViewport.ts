@@ -151,6 +151,26 @@ export function computeSamTransform(
 }
 
 /**
+ * Axis-aligned rectangle in SAM pixel space (same 1024×1024 canvas as the encoder)
+ * where real image pixels live — excludes letterbox padding.
+ */
+export function getSamContentBoundsSamSpace(t: SamTransform): {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+} {
+  const vw = Math.max(0, t.viewRect.maxX - t.viewRect.minX);
+  const vh = Math.max(0, t.viewRect.maxY - t.viewRect.minY);
+  return {
+    minX: t.padX,
+    minY: t.padY,
+    maxX: t.padX + vw * t.scale,
+    maxY: t.padY + vh * t.scale,
+  };
+}
+
+/**
  * Create a 1024×1024 (by default) canvas that contains a scaled-and-padded
  * copy of the current viewer canvas. This is useful for feeding the visible
  * viewport into SAM while keeping a fixed input resolution.

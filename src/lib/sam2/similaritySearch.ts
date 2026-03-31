@@ -9,20 +9,93 @@ export type SimilarityConfig = {
   exemplarErodeK: number;
   bgDilateK: number;
   bgSubtractAlpha: number;
+  /** Dilate query mask on DINO grid before zeroing similarity (exemplar + halo). */
+  suppressExemplarDilateK: number;
+  /** Min SAM-mask fg pixels (256²) or candidate is dropped. */
+  minSamMaskFgPixels: number;
+  /**
+   * If query mask fg pixel count in 256² is below this, skip strict ratio bounds:
+   * tiny exemplars make maskArea/queryArea explode when SAM returns a normal-sized blob.
+   */
+  skipSizeRatioIfQueryAreaBelow: number;
+  /** Max maskArea/queryArea when query is “small” (see above). */
+  sizeRatioMaxSmallQuery: number;
+  /** Hard cap for scaled small-query ratio (see `samMaskPassesSizeRatio`). */
+  sizeRatioSmallQueryAbsoluteCap: number;
+  /**
+   * Half-width/height in SAM 1024 space for the decode box around the DINO peak, intersected
+   * with the candidate component bbox. Using the full component bbox alone lets one large
+   * similarity blob span the viewport and SAM returns huge masks.
+   */
+  samDecodePeakRadiusSam: number;
 };
 
+/**
+ * Defaults biased toward recall. Final count is capped by `topKCandidates` (DINO regions
+ * sent to SAM) and then `dedupIou` (only masks with IoU ≥ this vs a kept mask drop).
+ */
 export const DEFAULT_SIMILARITY_CONFIG: SimilarityConfig = {
-  simQuantile: 0.85,
-  topKCandidates: 15,
-  minSimilarity: 0.35,
-  minComponentPatches: 3,
-  sizeRatioMin: 0.2,
-  sizeRatioMax: 4,
-  dedupIou: 0.7,
-  exemplarErodeK: 3,
+  simQuantile: 0.58,
+  topKCandidates: 32,
+  minSimilarity: 0.15,
+  minComponentPatches: 2,
+  sizeRatioMin: 0.12,
+  sizeRatioMax: 14,
+  /** Higher = stricter “duplicate” → more distinct hits kept (was 0.7, collapsed many to one). */
+  dedupIou: 0.88,
+  exemplarErodeK: 2,
   bgDilateK: 7,
   bgSubtractAlpha: 0.5,
+  suppressExemplarDilateK: 2,
+  minSamMaskFgPixels: 12,
+  skipSizeRatioIfQueryAreaBelow: 280,
+  sizeRatioMaxSmallQuery: 200,
+  sizeRatioSmallQueryAbsoluteCap: 4000,
+  samDecodePeakRadiusSam: 168,
 };
+
+/**
+ * Whether a decoded SAM mask passes the size check vs the query mask (256² fg counts).
+ */
+export function samMaskPassesSizeRatio(
+  maskFgPixels: number,
+  queryFgPixels: number,
+  config: SimilarityConfig,
+): boolean {
+  if (maskFgPixels < config.minSamMaskFgPixels) return false;
+  if (queryFgPixels <= 0) return true;
+  const ratio = maskFgPixels / queryFgPixels;
+  if (queryFgPixels < config.skipSizeRatioIfQueryAreaBelow) {
+    const ref = Math.max(queryFgPixels, 16);
+    const scale = config.skipSizeRatioIfQueryAreaBelow / ref;
+    const maxRatio = Math.min(
+      config.sizeRatioSmallQueryAbsoluteCap,
+      config.sizeRatioMaxSmallQuery * Math.min(scale, 16),
+    );
+    return ratio <= maxRatio;
+  }
+  return ratio >= config.sizeRatioMin && ratio <= config.sizeRatioMax;
+}
+
+/** Letterbox-exclusive content area in SAM 1024×1024 space (see getSamContentBoundsSamSpace). */
+export type SamContentBoundsSam = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+};
+
+/** DINO patch (gx, gy) center in SAM pixel coordinates (before clamping to canvas). */
+export function dinoGridCellCenterSam(
+  gx: number,
+  gy: number,
+  patchSize: number,
+  scaleXY: [number, number],
+): [number, number] {
+  const dinoX = (gx + 0.5) * patchSize;
+  const dinoY = (gy + 0.5) * patchSize;
+  return [dinoX / scaleXY[0], dinoY / scaleXY[1]];
+}
 
 export type CandidateRegion = {
   label: number;
@@ -309,16 +382,11 @@ export function candidateToSamCoords(
   peak: [number, number];
   negPeak: [number, number];
 } {
-  const [scaleX, scaleY] = scaleXY;
-
   const toSam = (xGrid: number, yGrid: number): [number, number] => {
-    const dinoX = (xGrid + 0.5) * patchSize;
-    const dinoY = (yGrid + 0.5) * patchSize;
-    const samX = dinoX / scaleX;
-    const samY = dinoY / scaleY;
+    const [sx, sy] = dinoGridCellCenterSam(xGrid, yGrid, patchSize, scaleXY);
     return [
-      Math.max(0, Math.min(samSize, samX)),
-      Math.max(0, Math.min(samSize, samY)),
+      Math.max(0, Math.min(samSize, sx)),
+      Math.max(0, Math.min(samSize, sy)),
     ];
   };
 
@@ -334,6 +402,49 @@ export function candidateToSamCoords(
   };
 }
 
+/**
+ * Box passed to SAM2 decode: intersect the candidate’s SAM-space bbox with a square of
+ * `radiusSam` around the positive peak. Huge DINO components otherwise produce a full-viewport
+ * box and decoder masks cover half the image or more.
+ */
+export function samDecodeBoxForCandidate(
+  peak: [number, number],
+  componentBoxSam: [number, number, number, number],
+  samSize: number,
+  contentBounds: SamContentBoundsSam | null | undefined,
+  radiusSam: number,
+): [number, number, number, number] {
+  const [px, py] = peak;
+  const [cx1, cy1, cx2, cy2] = componentBoxSam;
+
+  let x1 = Math.max(cx1, px - radiusSam);
+  let y1 = Math.max(cy1, py - radiusSam);
+  let x2 = Math.min(cx2, px + radiusSam);
+  let y2 = Math.min(cy2, py + radiusSam);
+
+  const minSpan = 48;
+  if (x2 - x1 < minSpan || y2 - y1 < minSpan) {
+    x1 = Math.max(0, px - radiusSam);
+    y1 = Math.max(0, py - radiusSam);
+    x2 = Math.min(samSize, px + radiusSam);
+    y2 = Math.min(samSize, py + radiusSam);
+  }
+
+  if (contentBounds) {
+    x1 = Math.max(x1, contentBounds.minX);
+    y1 = Math.max(y1, contentBounds.minY);
+    x2 = Math.min(x2, contentBounds.maxX);
+    y2 = Math.min(y2, contentBounds.maxY);
+  }
+
+  return [
+    Math.max(0, x1),
+    Math.max(0, y1),
+    Math.min(samSize, x2),
+    Math.min(samSize, y2),
+  ];
+}
+
 export function findSimilarRegions(params: {
   patchFeatures: Float32Array;
   gridH: number;
@@ -341,6 +452,11 @@ export function findSimilarRegions(params: {
   dim: number;
   queryMask: Float32Array; // 256x256 SAM mask, values 0..1
   maskSize: number;
+  /** Same scaleXY as DINO preprocess (target / 1024 canvas). */
+  scaleXY: [number, number];
+  /** Exclude DINO patches whose centers fall in SAM letterbox padding. */
+  samContentBounds?: SamContentBoundsSam | null;
+  patchSize?: number;
   config?: Partial<SimilarityConfig>;
 }): CandidateRegion[] {
   const {
@@ -350,6 +466,8 @@ export function findSimilarRegions(params: {
     dim,
     queryMask,
     maskSize,
+    scaleXY,
+    samContentBounds,
     config: overrides,
   } = params;
   const config: SimilarityConfig = {
@@ -451,6 +569,46 @@ export function findSimilarRegions(params: {
     qBgNorm,
     config.bgSubtractAlpha,
   );
+
+  const patchSize = params.patchSize ?? 14;
+  let suppressedPadding = 0;
+  if (samContentBounds) {
+    for (let gy = 0; gy < gridH; gy++) {
+      for (let gx = 0; gx < gridW; gx++) {
+        const i = gy * gridW + gx;
+        const [sx, sy] = dinoGridCellCenterSam(gx, gy, patchSize, scaleXY);
+        if (
+          sx < samContentBounds.minX ||
+          sx > samContentBounds.maxX ||
+          sy < samContentBounds.minY ||
+          sy > samContentBounds.maxY
+        ) {
+          simMap[i] = Number.NEGATIVE_INFINITY;
+          suppressedPadding++;
+        }
+      }
+    }
+  }
+
+  const exemplarBlock = binaryDilate(
+    maskBinary,
+    gridW,
+    gridH,
+    config.suppressExemplarDilateK,
+  );
+  let suppressedExemplar = 0;
+  for (let i = 0; i < numPatches; i++) {
+    if (exemplarBlock[i]) {
+      simMap[i] = Number.NEGATIVE_INFINITY;
+      suppressedExemplar++;
+    }
+  }
+
+  console.log("[findSimilarRegions] Suppressed map regions", {
+    suppressedPadding,
+    suppressedExemplar,
+    hasContentBounds: !!samContentBounds,
+  });
 
   const simVals = Array.from(simMap);
   simVals.sort((a, b) => a - b);

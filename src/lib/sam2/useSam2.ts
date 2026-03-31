@@ -13,6 +13,7 @@ import * as React from "react";
 import {
   computeImageViewRect,
   computeSamTransform,
+  getSamContentBoundsSamSpace,
   type SamTransform,
 } from "@/lib/samViewport";
 import { useOverlayStore } from "@/lib/stores";
@@ -41,6 +42,10 @@ type WorkerMessage =
       type: "findSimilarResult";
       data: {
         masks: { dims: readonly number[]; cpuData: Float32Array }[];
+        candidateMarkers?: Array<{
+          peak: [number, number];
+          negPeak: [number, number];
+        }>;
       };
     }
   | {
@@ -71,6 +76,12 @@ export interface Sam2Session {
   currentMask256: Float32Array;
   previewPolygon: [number, number][];
 }
+
+/** DINO retrieval points in image space (green = peak similarity, red = neg peak in blob). */
+export type SimilarityCandidatePreview = {
+  peaks: [number, number][];
+  negPeaks: [number, number][];
+};
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -185,6 +196,8 @@ export function useSam2() {
       peaks: [number, number][];
       negPeaks: [number, number][];
     } | null>(null);
+  const [similarityCandidatePreview, setSimilarityCandidatePreview] =
+    React.useState<SimilarityCandidatePreview | null>(null);
 
   React.useEffect(() => {
     sessionRef.current = session;
@@ -244,6 +257,7 @@ export function useSam2() {
         return;
       }
       if (msg.type === "findSimilarDebugResult") {
+        setSimilarityCandidatePreview(null);
         const samTransform =
           sessionRef.current?.samTransform ?? lastSamTransformRef.current;
         if (!samTransform) {
@@ -267,6 +281,7 @@ export function useSam2() {
       if (msg.type === "findSimilarResult") {
         console.log("[SAM2 findSimilar] Received findSimilarResult", {
           masksCount: msg.data?.masks?.length ?? 0,
+          dinoMarkers: msg.data?.candidateMarkers?.length ?? 0,
         });
         const currentSession = sessionRef.current;
         const samTransform =
@@ -276,6 +291,19 @@ export function useSam2() {
           setIsProcessing(false);
           useOverlayStore.getState().setSam2Processing(false);
           return;
+        }
+        setSimilarityDebugCandidates(null);
+        const markers = msg.data.candidateMarkers;
+        if (markers && markers.length > 0) {
+          const peaks: [number, number][] = [];
+          const negPeaks: [number, number][] = [];
+          for (const m of markers) {
+            peaks.push(samTransform.samToImage(m.peak));
+            negPeaks.push(samTransform.samToImage(m.negPeak));
+          }
+          setSimilarityCandidatePreview({ peaks, negPeaks });
+        } else {
+          setSimilarityCandidatePreview(null);
         }
         const polys: [number, number][][] = [];
         for (const m of msg.data.masks) {
@@ -320,6 +348,7 @@ export function useSam2() {
         pendingFindSimilarTargetIdRef.current = null;
         findSimilarInFlightRef.current = false;
         resolveDecodeRef.current = null;
+        setSimilarityCandidatePreview(null);
       }
     };
 
@@ -338,6 +367,7 @@ export function useSam2() {
       resolveDecodeRef.current = null;
       pendingFindSimilarTargetIdRef.current = null;
       findSimilarInFlightRef.current = false;
+      setSimilarityCandidatePreview(null);
     };
 
     worker.addEventListener("message", onMessage as EventListener);
@@ -509,6 +539,7 @@ export function useSam2() {
         shape: fetched.dinoTensor.shape,
         scaleXY: fetched.dinoTensor.scaleXY,
         gridHW: fetched.dinoTensor.gridHW,
+        samContentBounds: getSamContentBoundsSamSpace(samTransform),
       });
 
       await waitForEncode();
@@ -699,6 +730,7 @@ export function useSam2() {
             shape: dinoTensor.shape,
             scaleXY: dinoTensor.scaleXY,
             gridHW: dinoTensor.gridHW,
+            samContentBounds: getSamContentBoundsSamSpace(samTransform),
           });
         }
         return true;
@@ -776,6 +808,7 @@ export function useSam2() {
   const findSimilar = React.useCallback(
     (config?: Partial<import("./similaritySearch").SimilarityConfig>) => {
       if (!session || !workerRef.current || !hasDinoFeatures) return;
+      setSimilarityCandidatePreview(null);
       setError(null);
       setIsProcessing(true);
       setSam2Processing(true);
@@ -802,6 +835,7 @@ export function useSam2() {
         return;
       }
       console.log("[SAM2 findSimilar] Starting for layer", annotationId);
+      setSimilarityCandidatePreview(null);
       setError(null);
       setIsProcessing(true);
       setSam2Processing(true);
@@ -856,6 +890,7 @@ export function useSam2() {
     findSimilarInFlightRef.current = false;
     setSimilarPolygons([]);
     setSimilarityDebugCandidates(null);
+    setSimilarityCandidatePreview(null);
   }, []);
 
   const applyFindSimilar = React.useCallback(() => {
@@ -919,6 +954,7 @@ export function useSam2() {
     discardFindSimilar,
     similarPolygons,
     similarityDebugCandidates,
+    similarityCandidatePreview,
     isSimilarityDebugMode: isSimilarityDebugMode,
     isAvailable: !!sam2ImageFetcher,
   };

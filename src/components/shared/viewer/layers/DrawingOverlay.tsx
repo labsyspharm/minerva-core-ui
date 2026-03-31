@@ -294,6 +294,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     error: sam2Error,
     similarPolygons,
     similarityDebugCandidates,
+    similarityCandidatePreview,
   } = useSam2Context();
 
   // Track shift key for SAM2 negative-point clicks
@@ -1199,10 +1200,12 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     });
   }, [sam2Session]);
 
-  // SAM2 similarity debug: DINO candidate points only (green=positive, red=negative)
+  // DINO candidate peaks before SAM refine: debug mode OR real findSimilar (green=high-sim, red=neg in blob)
+  const similarityDotCandidates =
+    similarityDebugCandidates ?? similarityCandidatePreview;
   const sam2SimilarityDebugLayer = React.useMemo(() => {
-    if (!similarityDebugCandidates) return null;
-    const { peaks, negPeaks } = similarityDebugCandidates;
+    if (!similarityDotCandidates) return null;
+    const { peaks, negPeaks } = similarityDotCandidates;
     const data: Array<{
       position: [number, number, number];
       color: [number, number, number, number];
@@ -1233,7 +1236,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       filled: true,
       pickable: false,
     });
-  }, [similarityDebugCandidates]);
+  }, [similarityDotCandidates]);
 
   // SAM2 similarity results: overlay polygons for similar regions
   const sam2SimilarLayer = React.useMemo(() => {

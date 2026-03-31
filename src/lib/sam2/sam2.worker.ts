@@ -7,10 +7,13 @@ import "onnxruntime-web/webgpu";
 import { DINOv2 } from "./dinoV2";
 import { sliceTensorMask } from "./imageUtils";
 import { SAM2, type Sam2Point } from "./sam2";
+import type { SamContentBoundsSam } from "./similaritySearch";
 import {
   candidateToSamCoords,
   DEFAULT_SIMILARITY_CONFIG,
   findSimilarRegions,
+  samDecodeBoxForCandidate,
+  samMaskPassesSizeRatio,
 } from "./similaritySearch";
 
 // Normalize base: avoid "." which would produce origin + "." => "https://example.com." (invalid)
@@ -32,6 +35,7 @@ let lastDinoFeatures: {
   gridW: number;
   dim: number;
   scaleXY: [number, number];
+  samContentBounds?: SamContentBoundsSam | null;
 } | null = null;
 
 async function ensureLoaded(): Promise<"webgpu" | "cpu"> {
@@ -131,14 +135,18 @@ async function handleMessage(
         shape: [number, number, number, number];
         scaleXY: [number, number];
         gridHW: [number, number];
+        samContentBounds?: SamContentBoundsSam | null;
       };
       if (!dino) {
         dino = new DINOv2();
       }
-      const { float32Array, shape, scaleXY, gridHW } = data;
+      const { float32Array, shape, scaleXY, gridHW, samContentBounds } = data;
       const tensor = new ort.Tensor("float32", float32Array, shape);
       const encoded = await dino.encodeImage(tensor, scaleXY, gridHW);
-      lastDinoFeatures = encoded;
+      lastDinoFeatures = {
+        ...encoded,
+        samContentBounds: samContentBounds ?? null,
+      };
       self.postMessage({
         type: "dinoPatchFeatures",
         data: {
@@ -171,7 +179,8 @@ async function handleMessage(
       }
       const { queryMask, maskSize, config: configOverrides } = data;
       const config = { ...DEFAULT_SIMILARITY_CONFIG, ...configOverrides };
-      const { features, gridH, gridW, dim, scaleXY } = lastDinoFeatures;
+      const { features, gridH, gridW, dim, scaleXY, samContentBounds } =
+        lastDinoFeatures;
       const candidates = findSimilarRegions({
         patchFeatures: features,
         gridH,
@@ -179,6 +188,8 @@ async function handleMessage(
         dim,
         queryMask,
         maskSize,
+        scaleXY,
+        samContentBounds: samContentBounds ?? null,
         config: configOverrides,
       });
       console.log("[SAM2 worker] findSimilarRegions returned", {
@@ -187,6 +198,16 @@ async function handleMessage(
 
       const samSize = 1024;
       const patchSize = 14;
+      /** DINO candidate peaks in SAM 1024 space (before SAM decode) — for UI dots. */
+      const candidateMarkersSam = candidates.map((cand) => {
+        const { peak, negPeak } = candidateToSamCoords(
+          cand,
+          patchSize,
+          scaleXY,
+          samSize,
+        );
+        return { peak, negPeak };
+      });
 
       if (debug) {
         const debugCandidates = candidates.map((cand) => {
@@ -208,29 +229,41 @@ async function handleMessage(
       const queryArea = maskForegroundCount(queryMask);
       const rawMasks: Float32Array[] = [];
       for (const cand of candidates) {
-        const { box, peak, negPeak } = candidateToSamCoords(
-          cand,
-          patchSize,
-          scaleXY,
+        const {
+          box: componentBox,
+          peak,
+          negPeak,
+        } = candidateToSamCoords(cand, patchSize, scaleXY, samSize);
+        const decodeBox = samDecodeBoxForCandidate(
+          peak,
+          componentBox,
           samSize,
+          samContentBounds ?? null,
+          config.samDecodePeakRadiusSam,
         );
         const points: Sam2Point[] = [
           { x: peak[0], y: peak[1], label: 1 },
           { x: negPeak[0], y: negPeak[1], label: 0 },
         ];
         if (!sam2) throw new Error("SAM2 not loaded");
-        const result = await sam2.decode(ort, points, null, [box]);
+        const result = await sam2.decode(ort, points, null, [decodeBox]);
         const bestIdx = pickBestMaskIdx(result.iou_predictions);
         const mask256 = sliceTensorMask(
           { dims: result.masks.dims, cpuData: result.masks.cpuData },
           bestIdx,
         );
 
-        // Size ratio filter (plan Step 4)
         const maskArea = maskForegroundCount(mask256);
-        const ratio = queryArea > 0 ? maskArea / queryArea : 1;
-        if (ratio < config.sizeRatioMin || ratio > config.sizeRatioMax)
+        if (!samMaskPassesSizeRatio(maskArea, queryArea, config)) {
+          console.log("[SAM2 worker] findSimilar skip size filter", {
+            maskArea,
+            queryArea,
+            ratio:
+              queryArea > 0 ? Number((maskArea / queryArea).toFixed(2)) : null,
+            smallQuery: queryArea < config.skipSizeRatioIfQueryAreaBelow,
+          });
           continue;
+        }
 
         rawMasks.push(mask256);
       }
@@ -257,7 +290,7 @@ async function handleMessage(
       });
       self.postMessage({
         type: "findSimilarResult",
-        data: { masks: masksOut },
+        data: { masks: masksOut, candidateMarkers: candidateMarkersSam },
       });
       return;
     }
