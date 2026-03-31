@@ -45,6 +45,18 @@
   </head>
   <body>
     <script type="module" src="./index.tsx"></script>
+    <div id="global-loader" style="
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--theme-dark-gray-color, #111);
+      color: #aaa;
+      font-family: var(--theme-font-family, sans-serif);
+      font-size: 18px;
+      z-index: 9999;
+    ">Loading Minerva...</div>
     <div id="react-output"></div>
   </body>
 </html>

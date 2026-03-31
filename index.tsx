@@ -1551,7 +1551,7 @@ root.render(
   <React.StrictMode>
     <Main
       handleKeys={OME_TIFF_HANDLE_KEYS}
-      demo_dicom_web={false}
+      demo_dicom_web={true}
       exhibit_config={exhibit_config}
       configWaypoints={configWaypoints}
     />

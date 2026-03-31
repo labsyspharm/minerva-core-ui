@@ -91,32 +91,18 @@ const WrapContent = styled.div`
   display: grid;
   pointer-events: none;
   grid-template-rows: auto auto 1fr;
-  grid-template-columns: 150px auto 100%;
-  transform: translate(-150px);
+  grid-template-columns: 100%;
 `;
 
 const WrapCore = styled.div`
   padding: 0.5em;
-  grid-column: 3;
+  grid-column: 1;
   grid-row: 1 / 3;
   overflow: auto;
   scrollbar-color: #888 var(--theme-dim-gray-color);
   pointer-events: all;
   word-wrap: break-word;
   border: 2px solid var(--theme-glass-edge);
-  background-color: var(--dark-glass);
-  border-radius: var(--radius-0001);
-`;
-
-const WrapNav = styled.div`
-  grid-row: 1;
-  grid-column: 1;
-  padding: 0.8em;
-  font-size: 16px;
-  pointer-events: all;
-  padding: 0.5em 0.75em;
-  border: 2px solid var(--theme-glass-edge);
-  border-right: 0;
   background-color: var(--dark-glass);
   border-radius: var(--radius-0001);
 `;
@@ -205,7 +191,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       <>
         <Header className="h6">
           <WrapColumns>
-            <span>Channel Groups</span>
+            <span>Channel Group</span>
           </WrapColumns>
         </Header>
         <ChannelGroups {...{ ...groupProps, groups }} />
@@ -215,16 +201,20 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const channelMenu = (
     <div className={hideClass}>
       <WrapContent>
-        <WrapNav>
+        <WrapCore>
+          {allGroups}
           <ChannelLegend {...legendProps} />
-        </WrapNav>
-        <WrapCore>{allGroups}</WrapCore>
+        </WrapCore>
       </WrapContent>
     </div>
   );
 
   const waypointsPanel = props.authorMode ? (
-    <WaypointsList onEnterPlaybackPreview={props.enterPlaybackPreview} />
+    props.retrievingMetadata ? (
+      <div style={{ padding: "1em", color: "#aaa" }}>Loading image data...</div>
+    ) : (
+      <WaypointsList onEnterPlaybackPreview={props.enterPlaybackPreview} />
+    )
   ) : null;
 
   const listItems: ListItem<ChannelGroupMetadata>[] = groups.map(
@@ -329,15 +319,28 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const prevImportRevision = React.useRef(props.importRevision ?? 0);
   React.useEffect(() => {
     const rev = props.importRevision ?? 0;
-    if (rev > prevImportRevision.current && controlPanelRef.current) {
-      const el = controlPanelRef.current as HTMLElement & {
-        elementState: { tab: string };
-      };
-      if (el.elementState) {
-        el.elementState.tab = "STORY-PANEL";
-      }
+    if (rev <= prevImportRevision.current) {
+      prevImportRevision.current = rev;
+      return;
     }
     prevImportRevision.current = rev;
+
+    // The custom element's elementState may not be ready immediately;
+    // poll briefly until it is.
+    let attempts = 0;
+    const trySet = () => {
+      const el = controlPanelRef.current as
+        | (HTMLElement & { elementState?: { tab: string } })
+        | null;
+      if (el?.elementState) {
+        el.elementState.tab = "STORY-PANEL";
+        return;
+      }
+      if (++attempts < 20) {
+        requestAnimationFrame(trySet);
+      }
+    };
+    trySet();
   }, [props.importRevision]);
 
   const minerva_author_ui = React.createElement(

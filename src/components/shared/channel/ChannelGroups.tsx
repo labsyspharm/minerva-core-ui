@@ -23,24 +23,40 @@ const GroupName = styled.div`
   }
 `;
 
+const ActiveGroupName = styled.div`
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 4px 8px;
+  line-height: 1.2em;
+  margin-bottom: 0.5em;
+  outline: 1px solid var(--theme-glass-edge);
+  background-color: var(--theme-dark-main-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  :hover {
+    text-decoration: underline;
+  }
+`;
+
+const Arrow = styled.span`
+  font-size: 0.7em;
+  margin-right: 4px;
+  transition: transform 0.2s ease;
+  transform: rotate(${({ expanded }) => (expanded ? "180deg" : "0deg")});
+`;
+
 const GroupRow = (props) => {
   const { group } = props;
   const { name } = group;
 
   const { setActiveChannelGroup, activeChannelGroupId, Groups } =
     useOverlayStore();
-  const active_group = React.useMemo(
-    () => Groups.find(({ UUID }) => UUID === activeChannelGroupId) || Groups[0],
-    [Groups, activeChannelGroupId],
-  );
   const row_group = React.useMemo(
     () => Groups.find(({ Name }) => Name === name) || Groups[0],
     [Groups, name],
   );
-
-  const active = active_group.UUID === row_group.UUID;
-  const outline = active ? "var(--theme-glass-edge)" : "none";
-  const color = active ? "var(--theme-dark-main-color)" : "none";
 
   const toGroup = () => {
     if (row_group) {
@@ -48,44 +64,61 @@ const GroupRow = (props) => {
     }
   };
 
-  const ref = React.useRef(null);
-  const nameProps = { color, outline, ref };
-  const { updateGroup } = props;
+  const nameProps = { color: "none", outline: "none" };
 
-  React.useEffect(() => {
-    if (active && ref.current !== null) {
-      window.requestAnimationFrame(() => {
-        ref.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      });
-    }
-  }, [active]);
-
-  const setInput = (t) => {
-    updateGroup({ ...group, name: t }, { g: group.g });
-  };
-  const uuid = `group/name/${group.g}`;
-  const _statusProps = {
-    ...props,
-    md: false,
-    setInput,
-    updateCache: () => null,
-    cache: new Map(),
-    uuid,
-  };
-
-  const coreUI = (
+  return (
     <GroupName {...nameProps} onClick={toGroup}>
       {name}
     </GroupName>
   );
-  return <>{coreUI}</>;
 };
 
 export const ChannelGroups = (props) => {
   const { groups } = props;
-  const rows = groups.map((group) => {
-    const groupProps = { ...props, group };
-    return <GroupRow key={group.name} {...groupProps} />;
+  const [expanded, setExpanded] = React.useState(false);
+
+  const { activeChannelGroupId, Groups } = useOverlayStore();
+  const activeGroup = React.useMemo(
+    () => Groups.find(({ UUID }) => UUID === activeChannelGroupId) || Groups[0],
+    [Groups, activeChannelGroupId],
+  );
+
+  // Collapse dropdown when active group changes (e.g. waypoint navigation)
+  const prevGroupId = React.useRef(activeChannelGroupId);
+  React.useEffect(() => {
+    if (prevGroupId.current !== activeChannelGroupId) {
+      prevGroupId.current = activeChannelGroupId;
+      setExpanded(false);
+    }
   });
-  return <WrapRows>{rows}</WrapRows>;
+
+  const activeGroupName = activeGroup?.Name || "No group";
+
+  // Only one group — just show the name, no dropdown
+  if (groups.length <= 1) {
+    return (
+      <WrapRows>
+        <ActiveGroupName>
+          <span>{activeGroupName}</span>
+        </ActiveGroupName>
+      </WrapRows>
+    );
+  }
+
+  const otherGroups = expanded
+    ? groups.filter((g) => g.UUID !== activeGroup?.UUID)
+    : [];
+
+  return (
+    <WrapRows>
+      <ActiveGroupName onClick={() => setExpanded(!expanded)}>
+        <span>{activeGroupName}</span>
+        <Arrow expanded={expanded}>▼</Arrow>
+      </ActiveGroupName>
+      {otherGroups.map((group) => {
+        const groupProps = { ...props, group };
+        return <GroupRow key={group.name} {...groupProps} />;
+      })}
+    </WrapRows>
+  );
 };

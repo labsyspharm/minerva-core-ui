@@ -1,4 +1,8 @@
-import { OrthographicView, type OrthographicViewState } from "@deck.gl/core";
+import {
+  LinearInterpolator,
+  OrthographicView,
+  type OrthographicViewState,
+} from "@deck.gl/core";
 import Deck, { type DeckGLRef } from "@deck.gl/react";
 import { MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -467,30 +471,31 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
     const vs = targetWaypointViewState;
 
-    // Snap immediately: long transitions fight authoring (mid-flight camera reads)
-    // and make “return to waypoint” feel like the wrong view for ~1s.
-    ignoreNextViewStateChangeRef.current = true;
-    setViewState({ ...vs, transitionDuration: 0 } as OrthographicViewState);
-    setViewportZoom(vs.zoom);
-    // Clear target on the next turn so React applies setViewState before we null
-    // the store flag; clearing synchronously could race and skip Deck updates.
-    let cancelled = false;
+    // Cancel any ongoing transition first
+    setViewState(
+      (currentViewState) =>
+        ({
+          ...currentViewState,
+          transitionDuration: 0,
+        }) as OrthographicViewState,
+    );
+
+    // Start animated transition to the new waypoint view
     const clearId = window.setTimeout(() => {
-      if (!cancelled) {
-        clearTargetWaypointViewState();
-      }
+      const viewStateWithTransition = {
+        ...vs,
+        transitionDuration: 1000,
+        transitionInterpolator: new LinearInterpolator(["target", "zoom"]),
+        transitionEasing: (t: number) => (t === 1 ? 1 : 1 - 2 ** (-10 * t)),
+      };
+
+      setViewState(viewStateWithTransition as OrthographicViewState);
+      setViewportZoom(vs.zoom);
+      clearTargetWaypointViewState();
     }, 0);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!cancelled) {
-          ignoreNextViewStateChangeRef.current = false;
-        }
-      });
-    });
+
     return () => {
-      cancelled = true;
       window.clearTimeout(clearId);
-      ignoreNextViewStateChangeRef.current = false;
     };
   }, [
     targetWaypointViewState,

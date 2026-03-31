@@ -68,7 +68,8 @@ const convertWaypointToViewState = (
     // viewportToImageZoom = viewportZoom * (containerWidth / imageWidth) * scale
     // where scale = 1 for standard setup (contentBounds.width = 1)
     const imageZoom = zoom * (containerWidth / imageWidth);
-    deckZoom = Math.log2(imageZoom);
+    // Pull back slightly so legacy waypoints don't feel over-zoomed
+    deckZoom = Math.log2(imageZoom) - 0.3;
   } else if (zoom !== undefined && zoom !== null && containerWidth > 0) {
     // Image size not ready yet (e.g. initial config normalize): avoid log2(∞).
     deckZoom = Math.log2(Math.max(zoom, 1e-9));

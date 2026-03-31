@@ -285,6 +285,7 @@ const Content = (props: Props) => {
 
   const [fileName, setFileName] = useState("");
   const [importRevision, setImportRevision] = useState(0);
+  const [isLoadingImage, setIsLoadingImage] = useState(!!props.demo_dicom_web);
   const showSquareViewportOverlay = useOverlayStore(
     (state) => state.showSquareViewportOverlay,
   );
@@ -341,11 +342,15 @@ const Content = (props: Props) => {
 
   const onRestoredOmeHandles = React.useCallback(
     async (restored: Handle.File[]) => {
-      if (restored.length === 0) return;
+      if (restored.length === 0) {
+        document.getElementById("global-loader")?.remove();
+        return;
+      }
       const file = await restored[0].getFile();
       await onStartOmeTiffRef.current(file.name, restored);
       setImportRevision((r) => r + 1);
       setHideWaypoint(false);
+      document.getElementById("global-loader")?.remove();
     },
     [],
   );
@@ -365,18 +370,31 @@ const Content = (props: Props) => {
     const omeTiffPropList = imagePropList
       .filter(([_path, _modality, type]) => type === "OME-TIFF")
       .map(([path]) => [path]);
-    let didLoad = false;
-    if (dicomPropList.length > 0) {
-      await onStartDicomWeb(dicomPropList, props.exhibit_config.Groups);
-      didLoad = true;
-    }
-    if (omeTiffPropList.length > 0 && handles.length > 0) {
-      await onStartOmeTiff(omeTiffPropList[0][0], handles);
-      didLoad = true;
-    }
-    if (didLoad) {
-      setImportRevision((r) => r + 1);
-      setHiddenWaypointWithLogic(false);
+    const willLoad =
+      dicomPropList.length > 0 ||
+      (omeTiffPropList.length > 0 && handles.length > 0);
+    if (!willLoad) return;
+    console.log("[minerva] onStart: will load, setting loading state");
+    // Switch to waypoints tab and show loading immediately.
+    setImportRevision((r) => r + 1);
+    setHiddenWaypointWithLogic(false);
+    setIsLoadingImage(true);
+    try {
+      if (dicomPropList.length > 0) {
+        console.time("[minerva] onStartDicomWeb");
+        await onStartDicomWeb(dicomPropList, props.exhibit_config.Groups);
+        console.timeEnd("[minerva] onStartDicomWeb");
+      }
+      if (omeTiffPropList.length > 0 && handles.length > 0) {
+        console.time("[minerva] onStartOmeTiff");
+        await onStartOmeTiff(omeTiffPropList[0][0], handles);
+        console.timeEnd("[minerva] onStartOmeTiff");
+      }
+    } finally {
+      console.log("[minerva] onStart: done, clearing loading state");
+      console.timeEnd("[minerva] total load");
+      setIsLoadingImage(false);
+      document.getElementById("global-loader")?.remove();
     }
   };
 
@@ -385,9 +403,16 @@ const Content = (props: Props) => {
     imagePropList: [string, string][],
     groups: ConfigGroup[],
   ) => {
+    console.log(
+      "[minerva] dicom: fetching pyramids for",
+      imagePropList.length,
+      "series",
+    );
     const indexList = await Promise.all(
       imagePropList.map(async ([series, modality]) => {
+        console.time(`[minerva] dicom: loadDicomWeb ${modality}`);
         const pyramids = await loadDicomWeb(series);
+        console.timeEnd(`[minerva] dicom: loadDicomWeb ${modality}`);
         const loader = parseDicomWeb({
           pyramids,
           series,
@@ -401,6 +426,7 @@ const Content = (props: Props) => {
         };
       }),
     );
+    console.log("[minerva] dicom: all pyramids loaded, extracting channels");
     setDicomIndexList(indexList);
     let registry = { SourceChannels: [], Groups: [] };
     for (const { loader, modality } of indexList) {
@@ -412,12 +438,15 @@ const Content = (props: Props) => {
         modality,
         relevant_groups,
       );
+      console.time(`[minerva] dicom: getDistributions ${modality}`);
       const { SourceChannelsWithDist } = await getDistributions(sc, loader);
+      console.timeEnd(`[minerva] dicom: getDistributions ${modality}`);
       registry = {
         SourceChannels: [...registry.SourceChannels, ...SourceChannelsWithDist],
         Groups: [...registry.Groups, ...gr],
       };
     }
+    console.log("[minerva] dicom: setting store state");
     const { SourceChannels, Groups } = registry;
     setSourceChannels(SourceChannels);
     setGroups(Groups);
@@ -483,6 +512,8 @@ const Content = (props: Props) => {
 
   useEffect(() => {
     if (!props.demo_dicom_web) return;
+    console.time("[minerva] total load");
+    console.log("[minerva] demo_dicom_web effect fired");
     void (async () => {
       // H&E Demo Image and CyCIF Demo Image
       await onStartRef.current(
@@ -654,8 +685,7 @@ const Content = (props: Props) => {
     popChannel,
   };
 
-  const retrievingMetadata =
-    dicomIndexList.length === 0 && props.demo_dicom_web;
+  const retrievingMetadata = isLoadingImage;
 
   const mainProps = {
     ...channelProps,
@@ -826,8 +856,15 @@ const Content = (props: Props) => {
     });
   }, []);
 
+  // Remove the global HTML loader once React is rendering and no async load is pending.
+  useEffect(() => {
+    if (!props.demo_dicom_web && !isLoadingImage) {
+      document.getElementById("global-loader")?.remove();
+    }
+  }, [props.demo_dicom_web, isLoadingImage]);
+
   const retrieving_status = (
-    <RetrievingWrapper>Retrieving DICOM metadata...</RetrievingWrapper>
+    <RetrievingWrapper>Loading image data...</RetrievingWrapper>
   );
 
   return (
