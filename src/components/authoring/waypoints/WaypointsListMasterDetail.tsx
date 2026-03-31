@@ -688,6 +688,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       updateStory(detailStoryIndex, { Group: nextGroup.Name });
       setActiveChannelGroup(nextGroup.UUID);
       setChannelGroupMenuOpen(false);
+      scheduleThumbnailCaptureForStory(detailStoryIndex, true, true, 1100);
     };
 
     return (

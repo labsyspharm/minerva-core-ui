@@ -44,6 +44,8 @@ export type ChannelPanelProps = {
   setHiddenChannel: (v: boolean) => void;
   /** Switch layout to playback / presentation (optional). */
   enterPlaybackPreview?: () => void;
+  /** Incremented after a successful image import. */
+  importRevision?: number;
 };
 
 const TextWrap = styled.div`
@@ -323,9 +325,24 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     />
   );
 
+  const controlPanelRef = React.useRef<HTMLElement>(null);
+  const prevImportRevision = React.useRef(props.importRevision ?? 0);
+  React.useEffect(() => {
+    const rev = props.importRevision ?? 0;
+    if (rev > prevImportRevision.current && controlPanelRef.current) {
+      const el = controlPanelRef.current as HTMLElement & {
+        elementState: { tab: string };
+      };
+      if (el.elementState) {
+        el.elementState.tab = "STORY-PANEL";
+      }
+    }
+    prevImportRevision.current = rev;
+  }, [props.importRevision]);
+
   const minerva_author_ui = React.createElement(
     props.controlPanelElement,
-    null,
+    { ref: controlPanelRef },
     <>
       {props.children}
       {waypointsPanel}

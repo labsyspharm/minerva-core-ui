@@ -667,6 +667,7 @@ const Content = (props: Props) => {
     hiddenWaypoint,
     setHiddenWaypoint: setHiddenWaypointWithLogic,
     retrievingMetadata,
+    importRevision,
     startExport,
     stopExport,
     toggleEditor,

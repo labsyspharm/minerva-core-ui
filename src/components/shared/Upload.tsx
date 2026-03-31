@@ -207,7 +207,12 @@ const FormGrid = styled.div`
   gap: 1em;
 `;
 const FormGridRow = styled.div<HasValidation>`
-  height: 2em;
+  position: relative;
+  .valid-feedback,
+  .invalid-feedback {
+    position: absolute;
+    font-size: 0.75em;
+  }
 `;
 const _useState: UseTargetState = (init) => {
   const [val, set] = useState(init);
