@@ -13,14 +13,12 @@ import * as React from "react";
 import {
   computeImageViewRect,
   computeSamTransform,
-  getSamContentBoundsSamSpace,
   type SamTransform,
 } from "@/lib/samViewport";
 import { useOverlayStore } from "@/lib/stores";
 import {
   maskFloatToCanvas,
   maskToPolygon,
-  polygonToMask256,
   saveEncodedImageForDebug,
   sliceTensorMask,
 } from "./imageUtils";
@@ -33,30 +31,6 @@ type WorkerMessage =
       type: "decodeMaskResult";
       masks: { dims: readonly number[]; cpuData: Float32Array };
       iou_predictions: Float32Array;
-    }
-  | {
-      type: "dinoPatchFeatures";
-      data: { gridH: number; gridW: number; dim: number };
-    }
-  | {
-      type: "findSimilarResult";
-      data: {
-        masks: { dims: readonly number[]; cpuData: Float32Array }[];
-        candidateMarkers?: Array<{
-          peak: [number, number];
-          negPeak: [number, number];
-        }>;
-      };
-    }
-  | {
-      type: "findSimilarDebugResult";
-      data: {
-        candidates: Array<{
-          peak: [number, number];
-          negPeak: [number, number];
-          box: [number, number, number, number];
-        }>;
-      };
     }
   | { type: "error"; message: string };
 
@@ -76,12 +50,6 @@ export interface Sam2Session {
   currentMask256: Float32Array;
   previewPolygon: [number, number][];
 }
-
-/** DINO retrieval points in image space (green = peak similarity, red = neg peak in blob). */
-export type SimilarityCandidatePreview = {
-  peaks: [number, number][];
-  negPeaks: [number, number][];
-};
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -142,11 +110,6 @@ const isDebug = () =>
   typeof localStorage !== "undefined" &&
   localStorage.getItem("sam2_debug") === "1";
 
-/** When enabled, Find Similar returns DINO candidate points only (no SAM2 decode). */
-const isSimilarityDebugMode = () =>
-  typeof localStorage !== "undefined" &&
-  localStorage.getItem("sam2_similarity_debug") === "1";
-
 // Shared singleton worker to avoid repeated model/session loads if the hook
 // is ever remounted (e.g. due to parent subtree remounting).
 let sharedSam2Worker: Worker | null = null;
@@ -167,12 +130,7 @@ export function useSam2() {
     resolve: () => void;
     reject: (e: Error) => void;
   } | null>(null);
-  const dinoWaiterRef = React.useRef<{
-    resolve: () => void;
-    reject: (e: Error) => void;
-  } | null>(null);
   const opChainRef = React.useRef<Promise<void>>(Promise.resolve());
-  const findSimilarInFlightRef = React.useRef(false);
   const resolveDecodeRef = React.useRef<
     | ((result: {
         masks: { dims: readonly number[]; cpuData: Float32Array };
@@ -183,21 +141,6 @@ export function useSam2() {
 
   const [session, setSession] = React.useState<Sam2Session | null>(null);
   const sessionRef = React.useRef<Sam2Session | null>(null);
-  const lastSamTransformRef = React.useRef<SamTransform | null>(null);
-  const pendingFindSimilarTargetIdRef = React.useRef<string | null>(null);
-  const [pendingFindSimilarTargetId, setPendingFindSimilarTargetId] =
-    React.useState<string | null>(null);
-  const [hasDinoFeatures, setHasDinoFeatures] = React.useState(false);
-  const [similarPolygons, setSimilarPolygons] = React.useState<
-    [number, number][][]
-  >([]);
-  const [similarityDebugCandidates, setSimilarityDebugCandidates] =
-    React.useState<{
-      peaks: [number, number][];
-      negPeaks: [number, number][];
-    } | null>(null);
-  const [similarityCandidatePreview, setSimilarityCandidatePreview] =
-    React.useState<SimilarityCandidatePreview | null>(null);
 
   React.useEffect(() => {
     sessionRef.current = session;
@@ -250,91 +193,6 @@ export function useSam2() {
         setIsProcessing(false);
         return;
       }
-      if (msg.type === "dinoPatchFeatures") {
-        setHasDinoFeatures(true);
-        dinoWaiterRef.current?.resolve();
-        dinoWaiterRef.current = null;
-        return;
-      }
-      if (msg.type === "findSimilarDebugResult") {
-        setSimilarityCandidatePreview(null);
-        const samTransform =
-          sessionRef.current?.samTransform ?? lastSamTransformRef.current;
-        if (!samTransform) {
-          setIsProcessing(false);
-          useOverlayStore.getState().setSam2Processing(false);
-          return;
-        }
-        const peaks: [number, number][] = [];
-        const negPeaks: [number, number][] = [];
-        for (const c of msg.data.candidates) {
-          peaks.push(samTransform.samToImage(c.peak) as [number, number]);
-          negPeaks.push(samTransform.samToImage(c.negPeak) as [number, number]);
-        }
-        setSimilarityDebugCandidates({ peaks, negPeaks });
-        setSimilarPolygons([]);
-        findSimilarInFlightRef.current = false;
-        setIsProcessing(false);
-        useOverlayStore.getState().setSam2Processing(false);
-        return;
-      }
-      if (msg.type === "findSimilarResult") {
-        console.log("[SAM2 findSimilar] Received findSimilarResult", {
-          masksCount: msg.data?.masks?.length ?? 0,
-          dinoMarkers: msg.data?.candidateMarkers?.length ?? 0,
-        });
-        const currentSession = sessionRef.current;
-        const samTransform =
-          currentSession?.samTransform ?? lastSamTransformRef.current;
-        if (!samTransform) {
-          console.warn("[SAM2 findSimilar] No samTransform, aborting");
-          setIsProcessing(false);
-          useOverlayStore.getState().setSam2Processing(false);
-          return;
-        }
-        setSimilarityDebugCandidates(null);
-        const markers = msg.data.candidateMarkers;
-        if (markers && markers.length > 0) {
-          const peaks: [number, number][] = [];
-          const negPeaks: [number, number][] = [];
-          for (const m of markers) {
-            peaks.push(samTransform.samToImage(m.peak));
-            negPeaks.push(samTransform.samToImage(m.negPeak));
-          }
-          setSimilarityCandidatePreview({ peaks, negPeaks });
-        } else {
-          setSimilarityCandidatePreview(null);
-        }
-        const polys: [number, number][][] = [];
-        for (const m of msg.data.masks) {
-          const dims = m.dims;
-          if (!Array.isArray(dims) || dims.length < 3) continue;
-          const h = dims[dims.length - 2] ?? 0;
-          const w = dims[dims.length - 1] ?? 0;
-          if (h <= 0 || w <= 0) continue;
-          const size = h * w;
-          const mask256 = m.cpuData.slice(0, size);
-          const poly = maskToImagePolygon(mask256, samTransform);
-          if (poly.length >= 3) polys.push(poly);
-        }
-        const pendingTargetId = pendingFindSimilarTargetIdRef.current;
-        console.log("[SAM2 findSimilar] Processed result", {
-          masksReceived: msg.data.masks.length,
-          polysExtracted: polys.length,
-          pendingTargetId: pendingTargetId ?? "(none)",
-        });
-        if (pendingTargetId) {
-          // Per-layer find similar: show preview overlays first. The user can
-          // later Apply/Discard which will merge into the target annotation.
-          setSimilarPolygons(polys);
-          findSimilarInFlightRef.current = false;
-        } else {
-          setSimilarPolygons(polys);
-        }
-        setIsProcessing(false);
-        useOverlayStore.getState().setSam2Processing(false);
-        return;
-      }
       if (msg.type === "error") {
         console.error("[SAM2] Worker error:", msg.message);
         setError(msg.message);
@@ -343,12 +201,7 @@ export function useSam2() {
         useOverlayStore.getState().setSam2Processing(false);
         encodeWaiterRef.current?.reject(new Error(msg.message));
         encodeWaiterRef.current = null;
-        dinoWaiterRef.current?.reject(new Error(msg.message));
-        dinoWaiterRef.current = null;
-        pendingFindSimilarTargetIdRef.current = null;
-        findSimilarInFlightRef.current = false;
         resolveDecodeRef.current = null;
-        setSimilarityCandidatePreview(null);
       }
     };
 
@@ -362,12 +215,7 @@ export function useSam2() {
       const err = new Error(e.message || "Worker error");
       encodeWaiterRef.current?.reject(err);
       encodeWaiterRef.current = null;
-      dinoWaiterRef.current?.reject(err);
-      dinoWaiterRef.current = null;
       resolveDecodeRef.current = null;
-      pendingFindSimilarTargetIdRef.current = null;
-      findSimilarInFlightRef.current = false;
-      setSimilarityCandidatePreview(null);
     };
 
     worker.addEventListener("message", onMessage as EventListener);
@@ -436,27 +284,6 @@ export function useSam2() {
     });
   }, []);
 
-  const waitForDino = React.useCallback(() => {
-    return new Promise<void>((res, rej) => {
-      const t = setTimeout(() => {
-        dinoWaiterRef.current = null;
-        rej(new Error("DINO encode timeout"));
-      }, 120_000);
-      dinoWaiterRef.current = {
-        resolve: () => {
-          clearTimeout(t);
-          dinoWaiterRef.current = null;
-          res();
-        },
-        reject: (e: Error) => {
-          clearTimeout(t);
-          dinoWaiterRef.current = null;
-          rej(e);
-        },
-      };
-    });
-  }, []);
-
   const warmup = React.useCallback(async () => {
     setError(null);
     setIsLoading(true);
@@ -485,76 +312,6 @@ export function useSam2() {
       release();
     }
   }, []);
-
-  const encodeViewport = React.useCallback(async (): Promise<SamTransform> => {
-    return await runExclusive(async () => {
-      if (!sam2ImageFetcher || !workerRef.current) {
-        throw new Error("No image loaded or worker not ready");
-      }
-      const { sam2ViewState, sam2ViewportSize } = useOverlayStore.getState();
-      if (!sam2ViewState || !sam2ViewportSize) {
-        throw new Error("Viewer state not available");
-      }
-
-      const imageShape = { x: imageWidth, y: imageHeight };
-      const viewRect = computeImageViewRect(
-        sam2ViewState,
-        sam2ViewportSize,
-        imageShape,
-      );
-      const samTransform = computeSamTransform(viewRect);
-      lastSamTransformRef.current = samTransform;
-
-      const fetched = (await sam2ImageFetcher(viewRect)) as unknown as {
-        float32Array: Float32Array;
-        shape: [number, number, number, number];
-        dinoTensor?: {
-          float32Array: Float32Array;
-          shape: [number, number, number, number];
-          scaleXY: [number, number];
-          gridHW: [number, number];
-        } | null;
-      };
-
-      // Similarity search requires a fresh DINO encode for this viewport; never
-      // fall back to stale worker features from a previous encode.
-      if (!fetched.dinoTensor) {
-        setHasDinoFeatures(false);
-        throw new Error("DINO features not available for this viewport");
-      }
-
-      await ensureReady();
-
-      workerRef.current.postMessage({
-        type: "encodeImage",
-        float32Array: fetched.float32Array,
-        shape: fetched.shape,
-      });
-
-      // Ensure callers don't race `findSimilar` against stale worker features.
-      setHasDinoFeatures(false);
-      workerRef.current.postMessage({
-        type: "encodeDinoImage",
-        float32Array: fetched.dinoTensor.float32Array,
-        shape: fetched.dinoTensor.shape,
-        scaleXY: fetched.dinoTensor.scaleXY,
-        gridHW: fetched.dinoTensor.gridHW,
-        samContentBounds: getSamContentBoundsSamSpace(samTransform),
-      });
-
-      await waitForEncode();
-      await waitForDino();
-      return samTransform;
-    });
-  }, [
-    sam2ImageFetcher,
-    imageWidth,
-    imageHeight,
-    ensureReady,
-    runExclusive,
-    waitForEncode,
-    waitForDino,
-  ]);
 
   // ------- Shared decode helper -------
 
@@ -641,20 +398,13 @@ export function useSam2() {
           imageShape,
         );
         const samTransform = computeSamTransform(viewRect);
-        lastSamTransformRef.current = samTransform;
 
         // Fetch + encode (the slow part).
-        const { float32Array, shape, dinoTensor } = (await sam2ImageFetcher(
+        const { float32Array, shape } = (await sam2ImageFetcher(
           viewRect,
         )) as unknown as {
           float32Array: Float32Array;
           shape: [number, number, number, number];
-          dinoTensor?: {
-            float32Array: Float32Array;
-            shape: [number, number, number, number];
-            scaleXY: [number, number];
-            gridHW: [number, number];
-          } | null;
         };
 
         if (isDebug()) {
@@ -683,7 +433,6 @@ export function useSam2() {
           shape,
         });
 
-        // Wait only for the SAM2 encoder — DINO finishes in the background.
         await waitForEncode();
 
         // First decode — single positive point, no prior mask.
@@ -720,19 +469,6 @@ export function useSam2() {
           previewPolygon: polygon,
         });
 
-        // Kick off DINO in the background *after* the first decode completes,
-        // so segmentation latency is not dominated by DINO encode.
-        setHasDinoFeatures(false);
-        if (dinoTensor) {
-          workerRef.current.postMessage({
-            type: "encodeDinoImage",
-            float32Array: dinoTensor.float32Array,
-            shape: dinoTensor.shape,
-            scaleXY: dinoTensor.scaleXY,
-            gridHW: dinoTensor.gridHW,
-            samContentBounds: getSamContentBoundsSamSpace(samTransform),
-          });
-        }
         return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
@@ -805,136 +541,6 @@ export function useSam2() {
     if (!isDebug()) setSam2DebugImages(null);
   }, [setSam2DebugImages]);
 
-  const findSimilar = React.useCallback(
-    (config?: Partial<import("./similaritySearch").SimilarityConfig>) => {
-      if (!session || !workerRef.current || !hasDinoFeatures) return;
-      setSimilarityCandidatePreview(null);
-      setError(null);
-      setIsProcessing(true);
-      setSam2Processing(true);
-      workerRef.current.postMessage({
-        type: "findSimilar",
-        queryMask: session.currentMask256,
-        maskSize: MASK_SIZE,
-        config: config ?? {},
-      });
-    },
-    [session, hasDinoFeatures, setSam2Processing],
-  );
-
-  const findSimilarForLayer = React.useCallback(
-    async (
-      annotationId: string,
-      config?: Partial<import("./similaritySearch").SimilarityConfig>,
-    ): Promise<void> => {
-      if (!workerRef.current) throw new Error("Worker not ready");
-      if (findSimilarInFlightRef.current) {
-        console.log(
-          "[SAM2 findSimilar] Skipped: find similar already in flight",
-        );
-        return;
-      }
-      console.log("[SAM2 findSimilar] Starting for layer", annotationId);
-      setSimilarityCandidatePreview(null);
-      setError(null);
-      setIsProcessing(true);
-      setSam2Processing(true);
-      pendingFindSimilarTargetIdRef.current = annotationId;
-      setPendingFindSimilarTargetId(annotationId);
-      findSimilarInFlightRef.current = true;
-      try {
-        // If we already have DINO features + a recent transform (typically from
-        // the last segmentation), skip the expensive re-encode path.
-        const existingTransform = lastSamTransformRef.current;
-        const skipEncode = hasDinoFeatures && existingTransform !== null;
-        const samTransform = skipEncode
-          ? existingTransform
-          : await encodeViewport();
-        console.log("[SAM2 findSimilar] Transform ready", {
-          skipEncode,
-          hasSamTransform: !!samTransform,
-        });
-        const state = useOverlayStore.getState();
-        const target = state.annotations.find((a) => a.id === annotationId);
-        if (!target || target.type !== "polygon") {
-          throw new Error("Target layer is not a polygon");
-        }
-        const queryMask = polygonToMask256(target.polygon, samTransform);
-        console.log("[SAM2 findSimilar] Posting findSimilar to worker", {
-          queryMaskLength: queryMask.length,
-          polygonVertices: target.polygon.length,
-        });
-        workerRef.current.postMessage({
-          type: "findSimilar",
-          queryMask,
-          maskSize: MASK_SIZE,
-          config: config ?? {},
-          debug: isSimilarityDebugMode(),
-        });
-      } catch (e) {
-        console.error("[SAM2 findSimilar] Error:", e);
-        pendingFindSimilarTargetIdRef.current = null;
-        setPendingFindSimilarTargetId(null);
-        findSimilarInFlightRef.current = false;
-        setError(e instanceof Error ? e.message : String(e));
-        setIsProcessing(false);
-        setSam2Processing(false);
-      }
-    },
-    [encodeViewport, hasDinoFeatures, setSam2Processing],
-  );
-
-  const discardFindSimilar = React.useCallback(() => {
-    pendingFindSimilarTargetIdRef.current = null;
-    setPendingFindSimilarTargetId(null);
-    findSimilarInFlightRef.current = false;
-    setSimilarPolygons([]);
-    setSimilarityDebugCandidates(null);
-    setSimilarityCandidatePreview(null);
-  }, []);
-
-  const applyFindSimilar = React.useCallback(() => {
-    const targetId = pendingFindSimilarTargetIdRef.current;
-    if (!targetId || similarPolygons.length === 0) {
-      discardFindSimilar();
-      return;
-    }
-    const state = useOverlayStore.getState();
-    const target = state.annotations.find((a) => a.id === targetId);
-    const baseLabel = target?.metadata?.label ?? "layer";
-    const fillColor = (
-      target?.type === "polygon" && target.style?.fillColor
-        ? target.style.fillColor
-        : [128, 128, 128, 50]
-    ) as [number, number, number, number];
-    const lineColor = (
-      target?.type === "polygon" && target.style?.lineColor
-        ? target.style.lineColor
-        : [128, 128, 128, 255]
-    ) as [number, number, number, number];
-    const lineWidth =
-      target?.type === "polygon" && target.style?.lineWidth
-        ? target.style.lineWidth
-        : 3;
-
-    for (let i = 0; i < similarPolygons.length; i++) {
-      const polygon = similarPolygons[i];
-      if (polygon.length < 3) continue;
-      const annotation: import("@/lib/stores").PolygonAnnotation = {
-        id: `poly-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
-        type: "polygon",
-        polygon,
-        style: { fillColor, lineColor, lineWidth },
-        metadata: {
-          createdAt: new Date(),
-          label: `Similar ${i + 1} to ${baseLabel}`,
-        },
-      };
-      state.addAnnotation(annotation);
-    }
-    discardFindSimilar();
-  }, [discardFindSimilar, similarPolygons]);
-
   return {
     session,
     startSession,
@@ -946,16 +552,6 @@ export function useSam2() {
     error,
     isReady,
     warmup,
-    hasDinoFeatures,
-    findSimilar,
-    findSimilarForLayer,
-    pendingFindSimilarTargetId,
-    applyFindSimilar,
-    discardFindSimilar,
-    similarPolygons,
-    similarityDebugCandidates,
-    similarityCandidatePreview,
-    isSimilarityDebugMode: isSimilarityDebugMode,
     isAvailable: !!sam2ImageFetcher,
   };
 }

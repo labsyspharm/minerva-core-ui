@@ -3,8 +3,6 @@
  * Resize, convert canvas to tensor, slice mask, convert mask to polygon.
  */
 
-import type { SamTransform } from "@/lib/samViewport";
-
 export function resizeCanvas(
   canvas: HTMLCanvasElement,
   size: { w: number; h: number },
@@ -137,56 +135,6 @@ export function maskFloatToCanvas(
 }
 
 /**
- * Rasterize an image-space polygon into a 256×256 SAM mask (values 0/1).
- *
- * The polygon is transformed into SAM space using `samTransform`, then scaled
- * down from 1024×1024 to 256×256.
- */
-export function polygonToMask256(
-  polygon: [number, number][],
-  samTransform: SamTransform,
-): Float32Array {
-  const MASK_SIZE = 256;
-  if (polygon.length < 3) return new Float32Array(MASK_SIZE * MASK_SIZE);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = MASK_SIZE;
-  canvas.height = MASK_SIZE;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Could not get 2d context");
-
-  ctx.clearRect(0, 0, MASK_SIZE, MASK_SIZE);
-  ctx.fillStyle = "rgba(255,255,255,1)";
-  ctx.beginPath();
-
-  for (let i = 0; i < polygon.length; i++) {
-    const [ix, iy] = polygon[i];
-    const [sx, sy] = samTransform.imageToSam([ix, iy]);
-    const mx = sx / 4;
-    const my = sy / 4;
-    if (i === 0) ctx.moveTo(mx, my);
-    else ctx.lineTo(mx, my);
-  }
-  ctx.closePath();
-  ctx.fill("nonzero");
-
-  const { data } = ctx.getImageData(0, 0, MASK_SIZE, MASK_SIZE);
-  const out = new Float32Array(MASK_SIZE * MASK_SIZE);
-  let any = false;
-  for (let i = 0; i < MASK_SIZE * MASK_SIZE; i++) {
-    const a = data[i * 4 + 3] ?? 0;
-    if (a > 0) {
-      out[i] = 1;
-      any = true;
-    }
-  }
-  if (!any) {
-    throw new Error("Query polygon is outside the current viewport");
-  }
-  return out;
-}
-
-/**
  * Build encoded image canvas for debugging. Returns canvas for caller to use.
  * Enable with: localStorage.setItem('sam2_debug', '1')
  */
@@ -198,76 +146,6 @@ export function saveEncodedImageForDebug(
 ): HTMLCanvasElement {
   const [, , h, w] = shape;
   return float32ArrayToCanvas(float32Array, w, h);
-}
-
-/**
- * Convert canvas to Float32Array for DINOv2 encoder.
- * - Scales longest side to maxSide
- * - Rounds both dims to multiple of patchSize
- * - Applies ImageNet mean/std normalization
- * Returns NCHW tensor plus scale and patch grid info.
- */
-export function canvasToFloat32ArrayDINO(
-  canvas: HTMLCanvasElement,
-  maxSide = 518,
-  patchSize = 14,
-): {
-  float32Array: Float32Array;
-  shape: [number, number, number, number];
-  scaleXY: [number, number];
-  gridHW: [number, number];
-} {
-  const srcW = Math.max(1, canvas.width);
-  const srcH = Math.max(1, canvas.height);
-  const longer = Math.max(srcW, srcH);
-  const scale = maxSide / longer;
-  let targetW = Math.max(1, Math.round(srcW * scale));
-  let targetH = Math.max(1, Math.round(srcH * scale));
-
-  const roundTo = (v: number, m: number) => Math.max(m, Math.round(v / m) * m);
-  targetW = roundTo(targetW, patchSize);
-  targetH = roundTo(targetH, patchSize);
-
-  const resized = document.createElement("canvas");
-  resized.width = targetW;
-  resized.height = targetH;
-  const rctx = resized.getContext("2d");
-  if (!rctx) throw new Error("Could not get 2d context");
-  rctx.drawImage(canvas, 0, 0, srcW, srcH, 0, 0, targetW, targetH);
-
-  const imgData = rctx.getImageData(0, 0, targetW, targetH);
-  const { data } = imgData;
-  const total = targetW * targetH * 3;
-  const float32Array = new Float32Array(total);
-
-  const rescale = 1 / 255;
-  const meanR = 0.485;
-  const meanG = 0.456;
-  const meanB = 0.406;
-  const stdR = 0.229;
-  const stdG = 0.224;
-  const stdB = 0.225;
-
-  for (let i = 0; i < targetW * targetH; i++) {
-    const r = data[i * 4] * rescale;
-    const g = data[i * 4 + 1] * rescale;
-    const b = data[i * 4 + 2] * rescale;
-    float32Array[i] = (r - meanR) / stdR;
-    float32Array[targetW * targetH + i] = (g - meanG) / stdG;
-    float32Array[targetW * targetH * 2 + i] = (b - meanB) / stdB;
-  }
-
-  const scaleX = targetW / srcW;
-  const scaleY = targetH / srcH;
-  const gridH = targetH / patchSize;
-  const gridW = targetW / patchSize;
-
-  return {
-    float32Array,
-    shape: [1, 3, targetH, targetW],
-    scaleXY: [scaleX, scaleY],
-    gridHW: [gridH, gridW],
-  };
 }
 
 export type MaskTensor = {
