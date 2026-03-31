@@ -316,14 +316,61 @@ export const ImageViewer = (props: ImageViewerProps) => {
     ];
     setBrushViewport(width, height, bounds);
   }, [viewState, viewportSize, setBrushViewport]);
-
-  // Register SAM2 image fetcher for magic wand (OME-TIFF only)
-  const setSam2ImageFetcher = useOverlayStore((s) => s.setSam2ImageFetcher);
   const setViewerViewState = useOverlayStore((s) => s.setViewerViewState);
   const setViewerViewportSize = useOverlayStore((s) => s.setViewerViewportSize);
   const setSquareViewportThumbnailCapture = useOverlayStore(
     (s) => s.setSquareViewportThumbnailCapture,
   );
+
+  // Register SAM2 image fetcher for magic wand (OME-TIFF only)
+  // Register SAM2 image fetcher for magic wand (OME-TIFF only)
+  const setSam2ImageFetcher = useOverlayStore((s) => s.setSam2ImageFetcher);
+  const setSam2ViewState = useOverlayStore((s) => s.setSam2ViewState);
+  const setSam2ViewportSize = useOverlayStore((s) => s.setSam2ViewportSize);
+  useEffect(() => {
+    if (
+      loaderOmeTiff &&
+      firstLoader?.data &&
+      mainSettingsList.length > 0 &&
+      imageShape.x > 0 &&
+      imageShape.y > 0
+    ) {
+      const settings = mainSettingsList[0];
+      const fetcher = createSam2ImageFetcher(
+        firstLoader,
+        {
+          selections: settings.selections,
+          colors: settings.colors,
+          contrastLimits: settings.contrastLimits,
+          channelsVisible: settings.channelsVisible,
+        },
+        imageShape.x,
+        imageShape.y,
+      );
+      setSam2ImageFetcher(fetcher);
+    } else {
+      setSam2ImageFetcher(null);
+    }
+    return () => setSam2ImageFetcher(null);
+  }, [
+    loaderOmeTiff,
+    firstLoader,
+    mainSettingsList,
+    imageShape.x,
+    imageShape.y,
+    setSam2ImageFetcher,
+  ]);
+
+  // Keep SAM2 store in sync with current view so useSam2 can compute the
+  // visible region at click time without needing direct access to ImageViewer state.
+  useEffect(() => {
+    setSam2ViewState(viewState);
+  }, [viewState, setSam2ViewState]);
+
+  useEffect(() => {
+    setSam2ViewportSize(viewportSize);
+  }, [viewportSize, setSam2ViewportSize]);
+
   useEffect(() => {
     if (
       loaderOmeTiff &&

@@ -172,6 +172,7 @@ export class SAM2 {
     ort: typeof import("onnxruntime-web"),
     points: Sam2Point[],
     maskArray: Float32Array | null,
+    boxes?: Array<[number, number, number, number]>,
   ): Promise<{
     masks: { dims: readonly number[]; cpuData: Float32Array };
     iou_predictions: Float32Array;
@@ -210,8 +211,24 @@ export class SAM2 {
       } else if (name === "input_labels" || name === "point_labels") {
         feeds[name] = new ort.Tensor("int64", pointLabels, [1, 1, n]);
       } else if (name === "input_boxes") {
-        // No boxes used in this UI.
-        feeds[name] = new ort.Tensor("float32", new Float32Array(0), [1, 0, 4]);
+        if (boxes && boxes.length > 0) {
+          const flat = new Float32Array(boxes.length * 4);
+          for (let i = 0; i < boxes.length; i++) {
+            const [x1, y1, x2, y2] = boxes[i];
+            const o = i * 4;
+            flat[o] = x1;
+            flat[o + 1] = y1;
+            flat[o + 2] = x2;
+            flat[o + 3] = y2;
+          }
+          feeds[name] = new ort.Tensor("float32", flat, [1, boxes.length, 4]);
+        } else {
+          feeds[name] = new ort.Tensor(
+            "float32",
+            new Float32Array(0),
+            [1, 0, 4],
+          );
+        }
       } else if (name === "mask_input") {
         feeds[name] = new ort.Tensor(
           "float32",

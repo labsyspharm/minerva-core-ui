@@ -976,7 +976,12 @@ export interface OverlayStore {
   setSam2Processing: (v: boolean) => void;
   sam2DebugImages: { encoded: string; mask: string } | null;
   setSam2DebugImages: (v: { encoded: string; mask: string } | null) => void;
-  // Current viewer state/size shared by waypoints, playback, and SAM2.
+  // SAM2: current viewer state for computing visible region at click time
+  sam2ViewState: OrthographicViewState | null;
+  setSam2ViewState: (vs: OrthographicViewState) => void;
+  sam2ViewportSize: ViewportSize | null;
+  setSam2ViewportSize: (size: ViewportSize) => void;
+
   viewerViewState: OrthographicViewState | null;
   setViewerViewState: (vs: OrthographicViewState) => void;
   viewerViewportSize: ViewportSize | null;
@@ -1142,6 +1147,8 @@ const overlayInitialState = {
   sam2ImageFetcher: null,
   sam2Processing: false,
   sam2DebugImages: null,
+  sam2ViewState: null,
+  sam2ViewportSize: null,
   viewerViewState: null,
   viewerViewportSize: null,
   squareViewportThumbnailCapture: null,
@@ -2348,6 +2355,13 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         set({ sam2DebugImages: v });
       },
 
+      setSam2ViewState: (vs) => {
+        set({ sam2ViewState: vs });
+      },
+
+      setSam2ViewportSize: (size) => {
+        set({ sam2ViewportSize: size });
+      },
       setViewerViewState: (vs) => {
         set({ viewerViewState: vs });
       },

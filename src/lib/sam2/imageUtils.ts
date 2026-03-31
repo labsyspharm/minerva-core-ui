@@ -3,6 +3,8 @@
  * Resize, convert canvas to tensor, slice mask, convert mask to polygon.
  */
 
+import type { SamTransform } from "@/lib/samViewport";
+
 export function resizeCanvas(
   canvas: HTMLCanvasElement,
   size: { w: number; h: number },
@@ -132,6 +134,56 @@ export function maskFloatToCanvas(
   }
   ctx.putImageData(imageData, 0, 0);
   return canvas;
+}
+
+/**
+ * Rasterize an image-space polygon into a 256×256 SAM mask (values 0/1).
+ *
+ * The polygon is transformed into SAM space using `samTransform`, then scaled
+ * down from 1024×1024 to 256×256.
+ */
+export function polygonToMask256(
+  polygon: [number, number][],
+  samTransform: SamTransform,
+): Float32Array {
+  const MASK_SIZE = 256;
+  if (polygon.length < 3) return new Float32Array(MASK_SIZE * MASK_SIZE);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = MASK_SIZE;
+  canvas.height = MASK_SIZE;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not get 2d context");
+
+  ctx.clearRect(0, 0, MASK_SIZE, MASK_SIZE);
+  ctx.fillStyle = "rgba(255,255,255,1)";
+  ctx.beginPath();
+
+  for (let i = 0; i < polygon.length; i++) {
+    const [ix, iy] = polygon[i];
+    const [sx, sy] = samTransform.imageToSam([ix, iy]);
+    const mx = sx / 4;
+    const my = sy / 4;
+    if (i === 0) ctx.moveTo(mx, my);
+    else ctx.lineTo(mx, my);
+  }
+  ctx.closePath();
+  ctx.fill("nonzero");
+
+  const { data } = ctx.getImageData(0, 0, MASK_SIZE, MASK_SIZE);
+  const out = new Float32Array(MASK_SIZE * MASK_SIZE);
+  let any = false;
+  for (let i = 0; i < MASK_SIZE * MASK_SIZE; i++) {
+    const a = data[i * 4 + 3] ?? 0;
+    if (a > 0) {
+      out[i] = 1;
+      any = true;
+    }
+  }
+  if (!any) {
+    throw new Error("Query polygon is outside the current viewport");
+  }
+  return out;
 }
 
 /**
