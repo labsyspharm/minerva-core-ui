@@ -9,17 +9,6 @@ import { useOverlayStore } from "@/lib/stores";
 import { ChannelGroups } from "./ChannelGroups";
 import { ChannelLegend } from "./ChannelLegend";
 
-type GroupItemMetadata = {
-  r: number;
-  g: number;
-  b: number;
-  lower_range: number;
-  upper_range: number;
-  name: string;
-  color: string;
-  source_uuid: string;
-  channel_uuid: string;
-};
 type ChannelItemMetadata = {
   type: "channel-item";
   r: number;
@@ -33,6 +22,13 @@ type ChannelItemMetadata = {
   source_uuid: string;
   channel_uuid: string;
 };
+type GroupItemMetadata = {
+  g: number;
+  UUID: string;
+  name: string;
+  channels: (Omit<ChannelItemMetadata, "type"> | null)[];
+};
+type ChannelGroupMetadata = GroupItemMetadata | ChannelItemMetadata;
 
 export type ChannelPanelProps = {
   children: ReactNode;
@@ -229,10 +225,10 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     <WaypointsList onEnterPlaybackPreview={props.enterPlaybackPreview} />
   ) : null;
 
-  const listItems: ListItem<GroupItemMetadata>[] = groups.map(
+  const listItems: ListItem<ChannelGroupMetadata>[] = groups.map(
     (group, _index) => {
       const { channels, UUID, name } = group;
-      const children: ListItem<ChannelItemMetadata>[] = channels.map(
+      const children: ListItem<ChannelGroupMetadata>[] = channels.map(
         (channel) => ({
           id: `channel-${channel.source_uuid}`,
           title: channel.name,
@@ -258,7 +254,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     },
   );
 
-  const customChildRenderer = (childItem: ListItem<ChannelItemMetadata>) => {
+  const customChildRenderer = (childItem: ListItem<ChannelGroupMetadata>) => {
     const channel = childItem.metadata as ChannelItemMetadata;
 
     if (channel.type === "channel-item") {
@@ -288,7 +284,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   };
 
   const handleItemClick = (
-    item: ListItem<WaypointItemMetadata>,
+    item: ListItem<ChannelGroupMetadata>,
     _event: React.MouseEvent,
   ) => {
     if (item.metadata && !("type" in item.metadata)) {

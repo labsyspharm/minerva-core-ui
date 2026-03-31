@@ -345,6 +345,7 @@ const Content = (props: Props) => {
       const file = await restored[0].getFile();
       await onStartOmeTiffRef.current(file.name, restored);
       setImportRevision((r) => r + 1);
+      setHideWaypoint(false);
     },
     [],
   );
@@ -375,6 +376,7 @@ const Content = (props: Props) => {
     }
     if (didLoad) {
       setImportRevision((r) => r + 1);
+      setHiddenWaypointWithLogic(false);
     }
   };
 
