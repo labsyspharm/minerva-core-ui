@@ -241,7 +241,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
       <button
         type="button"
         className={`${styles.toolButton} ${activeTool === TOOLS.MAGIC_WAND ? styles.active : ""}`}
-        title="Magic Wand (coming soon)"
+        title="Magic Wand"
         onClick={() => handleToolChangeLocal(TOOLS.MAGIC_WAND)}
       >
         <MagicWandIcon />
