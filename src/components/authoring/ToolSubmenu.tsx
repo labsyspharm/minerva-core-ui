@@ -1,4 +1,5 @@
 import * as React from "react";
+import { createPortal } from "react-dom";
 import styles from "./ToolSubmenu.module.css";
 
 export interface ToolSubmenuItem {
@@ -27,16 +28,24 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
   activeClassName = "",
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  const toggleRef = React.useRef<HTMLButtonElement>(null);
+  const menuRef = React.useRef<HTMLDivElement>(null);
+  const [menuPos, setMenuPos] = React.useState<{ top: number; left: number }>({
+    top: 0,
+    left: 0,
+  });
 
   const isActive = items.some((item) => item.id === activeTool);
   const activeItem = items.find((item) => item.id === activeTool);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
+        toggleRef.current &&
+        !toggleRef.current.contains(target) &&
+        menuRef.current &&
+        !menuRef.current.contains(target)
       ) {
         setIsOpen(false);
       }
@@ -45,14 +54,22 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  React.useEffect(() => {
+    if (isOpen && toggleRef.current) {
+      const rect = toggleRef.current.getBoundingClientRect();
+      setMenuPos({ top: rect.bottom + 3, left: rect.left });
+    }
+  }, [isOpen]);
+
   const handleSelect = (toolId: string) => {
     onToolChange(toolId);
     setIsOpen(false);
   };
 
   return (
-    <div ref={containerRef} className={styles.container}>
+    <div className={styles.container}>
       <button
+        ref={toggleRef}
         type="button"
         className={`${styles.toggle} ${buttonClassName} ${isActive ? activeClassName : ""}`}
         title={parentTitle}
@@ -79,22 +96,28 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
           </svg>
         </span>
       </button>
-      {isOpen && (
-        <div className={styles.menu}>
-          {items.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`${styles.menuItem} ${activeTool === item.id ? styles.menuItemActive : ""}`}
-              title={item.title}
-              onClick={() => handleSelect(item.id)}
-            >
-              {item.icon}
-              <span className={styles.menuItemLabel}>{item.title}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      {isOpen &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className={styles.menu}
+            style={{ top: menuPos.top, left: menuPos.left }}
+          >
+            {items.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`${styles.menuItem} ${activeTool === item.id ? styles.menuItemActive : ""}`}
+                title={item.title}
+                onClick={() => handleSelect(item.id)}
+              >
+                {item.icon}
+                <span className={styles.menuItemLabel}>{item.title}</span>
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };

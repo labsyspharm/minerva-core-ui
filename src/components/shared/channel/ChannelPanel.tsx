@@ -545,7 +545,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       );
     }
 
-    // Channel row in edit mode
+    // Channel row in edit mode (toolbar + legacy histogram / contrast sliders)
     if (meta.type === "channel-item") {
       const channel = meta as ChannelItemMetadata;
       const isReplacing = replacingChannelUUID === channel.channel_uuid;
@@ -555,99 +555,145 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         ({ UUID }) => UUID !== channel.source_uuid,
       );
 
+      const channelItemAttrs = {
+        group_uuid: channel.group_uuid,
+        channel_uuid: channel.channel_uuid,
+        source_uuid: channel.source_uuid,
+        r: String(channel.r),
+        g: String(channel.g),
+        b: String(channel.b),
+        lower_range: String(channel.lower_range),
+        upper_range: String(channel.upper_range),
+      };
+
+      const legacyChannelItem =
+        !props.retrievingMetadata &&
+        !props.noLoader &&
+        React.createElement(props.channelItemElement, {
+          key: `embed-${channel.channel_uuid}`,
+          ...channelItemAttrs,
+        });
+
       return (
         <div
           style={{
             display: "flex",
-            alignItems: "center",
-            gap: "6px",
+            flexDirection: "column",
+            gap: "8px",
+            width: "100%",
             padding: "2px 0",
           }}
         >
-          <button
-            type="button"
-            title="Pick color"
-            aria-label={`Pick color for ${channel.name}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              const el = e.currentTarget;
-              const rect = el.getBoundingClientRect();
-              setColorPickerChannelUUID(channel.channel_uuid);
-              setColorPickerPos({
-                top: Math.min(rect.bottom + 4, window.innerHeight - 280),
-                left: Math.min(rect.left, window.innerWidth - 240),
-              });
-            }}
+          <div
             style={{
-              width: "14px",
-              height: "14px",
-              padding: 0,
-              border: "1px solid var(--theme-glass-edge, #444)",
-              borderRadius: "2px",
-              backgroundColor: `#${channel.color}`,
-              flexShrink: 0,
-              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
             }}
-          />
-          {isReplacing ? (
-            <ReplaceChannelSelect
-              options={replaceOptions}
-              onPick={(sourceUuid) => {
-                replaceChannelInGroup(
-                  channel.group_uuid,
-                  channel.channel_uuid,
-                  sourceUuid,
+          >
+            <button
+              type="button"
+              title="Pick color"
+              aria-label={`Pick color for ${channel.name}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                const el = e.currentTarget;
+                const rect = el.getBoundingClientRect();
+                setColorPickerChannelUUID(channel.channel_uuid);
+                setColorPickerPos({
+                  top: Math.min(rect.bottom + 4, window.innerHeight - 280),
+                  left: Math.min(rect.left, window.innerWidth - 240),
+                });
+              }}
+              style={{
+                width: "14px",
+                height: "14px",
+                padding: 0,
+                border: "1px solid var(--theme-glass-edge, #444)",
+                borderRadius: "2px",
+                backgroundColor: `#${channel.color}`,
+                flexShrink: 0,
+                cursor: "pointer",
+              }}
+            />
+            {isReplacing ? (
+              <ReplaceChannelSelect
+                options={replaceOptions}
+                onPick={(sourceUuid) => {
+                  replaceChannelInGroup(
+                    channel.group_uuid,
+                    channel.channel_uuid,
+                    sourceUuid,
+                  );
+                }}
+                onDismiss={() => setReplacingChannelUUID(null)}
+              />
+            ) : (
+              <span style={{ flex: 1, fontSize: "12px" }}>{channel.name}</span>
+            )}
+            <button
+              type="button"
+              title="Replace channel"
+              style={{
+                background: "none",
+                border: "none",
+                color: "#ccc",
+                cursor: "pointer",
+                padding: "2px",
+                fontSize: "11px",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setReplacingChannelUUID(
+                  isReplacing ? null : channel.channel_uuid,
                 );
               }}
-              onDismiss={() => setReplacingChannelUUID(null)}
-            />
-          ) : (
-            <span style={{ flex: 1, fontSize: "12px" }}>{channel.name}</span>
-          )}
-          <button
-            type="button"
-            title="Replace channel"
-            style={{
-              background: "none",
-              border: "none",
-              color: "#ccc",
-              cursor: "pointer",
-              padding: "2px",
-              fontSize: "11px",
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setReplacingChannelUUID(
-                isReplacing ? null : channel.channel_uuid,
-              );
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-              <title>Replace channel</title>
-              <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            title="Remove channel"
-            style={{
-              background: "none",
-              border: "none",
-              color: "#ccc",
-              cursor: "pointer",
-              padding: "2px",
-              fontSize: "11px",
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              removeChannelFromGroup(channel.group_uuid, channel.channel_uuid);
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-              <title>Remove channel</title>
-              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-            </svg>
-          </button>
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <title>Replace channel</title>
+                <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              title="Remove channel"
+              style={{
+                background: "none",
+                border: "none",
+                color: "#ccc",
+                cursor: "pointer",
+                padding: "2px",
+                fontSize: "11px",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                removeChannelFromGroup(
+                  channel.group_uuid,
+                  channel.channel_uuid,
+                );
+              }}
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <title>Remove channel</title>
+                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+              </svg>
+            </button>
+          </div>
+          {legacyChannelItem ? (
+            <div style={{ width: "100%", minWidth: 0 }}>
+              {legacyChannelItem}
+            </div>
+          ) : null}
         </div>
       );
     }

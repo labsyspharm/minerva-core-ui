@@ -379,6 +379,7 @@ const Content = (props: Props) => {
       store.setStories([]);
       store.setWaypoints([]);
       store.clearOverlayLayers();
+      store.clearAnnotations();
       setConfig((prev) => ({
         ...prev,
         ItemRegistry: {
@@ -429,6 +430,7 @@ const Content = (props: Props) => {
       store.setStories([]);
       store.setWaypoints([]);
       store.clearOverlayLayers();
+      store.clearAnnotations();
       setConfig((prev) => ({
         ...prev,
         ItemRegistry: {

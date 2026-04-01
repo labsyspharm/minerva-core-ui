@@ -6,17 +6,18 @@ import type {
 import type {
   Annotation,
   LineAnnotation,
+  PointAnnotation,
   RectangleAnnotation,
   TextAnnotation,
 } from "./stores";
 
 /**
- * Serialize annotations that originated from waypoint Arrows/Overlays back into
- * config fields (normalized 0–1 vs max(image width, height), same as import).
+ * Serialize annotations back into waypoint config fields (normalized 0–1 vs
+ * max(image width, height), same coordinate space as import).
  *
- * Only **text**, **line**, and **rectangle** types are written here; other
- * shapes (polygon, ellipse, polyline, point, …) remain in memory until this
- * serializer (or the config shape) is extended.
+ * Handles **text**, **line**, **rectangle**, and **point** types; other shapes
+ * (polygon, ellipse, polyline, …) remain in memory until this serializer (or
+ * the config shape) is extended.
  */
 export function serializeImportedAnnotationsToWaypointFields(
   annotations: Annotation[],
@@ -29,13 +30,12 @@ export function serializeImportedAnnotationsToWaypointFields(
     return { Arrows: [], Overlays: [] };
   }
 
-  const imported = annotations.filter((a) => a.metadata?.isImported);
   const arrows: ConfigWaypointArrow[] = [];
   const overlays: ConfigWaypointOverlay[] = [];
   let overlayFallbackIndex = 0;
   const prevOverlays = story.Overlays ?? [];
 
-  for (const ann of imported) {
+  for (const ann of annotations) {
     if (ann.type === "text") {
       const t = ann as TextAnnotation;
       const x = t.position[0] / maxDimension;
@@ -82,6 +82,16 @@ export function serializeImportedAnnotationsToWaypointFields(
         width: (maxX - minX) / maxDimension,
         height: (maxY - minY) / maxDimension,
         Group: group,
+      });
+    } else if (ann.type === "point") {
+      const pt = ann as PointAnnotation;
+      const [px, py] = pt.position;
+      arrows.push({
+        Angle: 0,
+        HideArrow: true,
+        IsPoint: true,
+        Point: [px / maxDimension, py / maxDimension],
+        Text: pt.text ?? pt.metadata?.label ?? "",
       });
     }
   }

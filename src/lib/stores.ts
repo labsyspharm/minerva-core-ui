@@ -2457,7 +2457,24 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           const x = normX * maxDimension;
           const y = normY * maxDimension;
 
-          if (arrow.HideArrow) {
+          if (arrow.IsPoint) {
+            // Create point annotation
+            const pointAnnotation: PointAnnotation = {
+              id: `imported-point-${Date.now()}-${index}`,
+              type: "point",
+              position: [x, y],
+              style: {
+                fillColor: get().globalColor,
+                strokeColor: [255, 255, 255, 255],
+                radius: 5,
+              },
+              metadata: {
+                label: arrow.Text || `Point ${index + 1}`,
+                isImported: true,
+              },
+            };
+            newAnnotations.push(pointAnnotation);
+          } else if (arrow.HideArrow) {
             // Create text-only annotation
             const textAnnotation: TextAnnotation = {
               id: `imported-text-${Date.now()}-${index}`,
@@ -2574,15 +2591,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       },
 
       clearImportedAnnotations: () => {
-        set((state) => ({
-          annotations: state.annotations.filter((a) => !a.metadata?.isImported),
-          hiddenLayers: new Set(
-            [...state.hiddenLayers].filter((id) => {
-              const annotation = state.annotations.find((a) => a.id === id);
-              return annotation && !annotation.metadata?.isImported;
-            }),
-          ),
-        }));
+        set({ annotations: [], hiddenLayers: new Set() });
       },
 
       persistImportedAnnotationsToStory: (storyIndex: number) => {
@@ -2591,15 +2600,12 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         if (!story || state.imageWidth <= 0 || state.imageHeight <= 0) {
           return;
         }
-        const imported = state.annotations.filter(
-          (a) => a.metadata?.isImported,
-        );
         const hadStored =
           (story.Arrows?.length ?? 0) > 0 || (story.Overlays?.length ?? 0) > 0;
-        if (imported.length === 0 && !hadStored) {
+        if (state.annotations.length === 0 && !hadStored) {
           return;
         }
-        if (imported.length === 0 && hadStored) {
+        if (state.annotations.length === 0 && hadStored) {
           get().updateStory(storyIndex, { Arrows: [], Overlays: [] });
           return;
         }

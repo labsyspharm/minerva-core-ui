@@ -1175,6 +1175,29 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     });
   }, [activeTool, currentInteraction, brushRadiusPx, viewportZoom]);
 
+  // Point hover preview: orange dot at cursor when point tool is active
+  const pointHoverLayer = React.useMemo(() => {
+    if (activeTool !== "point") return null;
+    if (currentInteraction?.type !== "hover") return null;
+    const [cx, cy] = currentInteraction.coordinate;
+    return new ScatterplotLayer({
+      id: "point-hover-preview",
+      data: [{ position: [cx, cy, 0], radius: 5 }],
+      getPosition: (d) => d.position,
+      getRadius: (d) => d.radius,
+      radiusMinPixels: 5,
+      radiusMaxPixels: 5,
+      getFillColor: PREVIEW_FILL_COLOR,
+      getLineColor: PREVIEW_LINE_COLOR,
+      getLineWidth: 2,
+      lineWidthMinPixels: 2,
+      lineWidthMaxPixels: 2,
+      stroked: true,
+      filled: true,
+      pickable: false,
+    });
+  }, [activeTool, currentInteraction]);
+
   // SAM2 session preview: mask polygon overlay
   const sam2PreviewLayer = React.useMemo(() => {
     if (!sam2Session || sam2Session.previewPolygon.length < 3) return null;
@@ -1366,6 +1389,16 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       useOverlayStore.getState().removeOverlayLayer("brush-cursor-layer");
     };
   }, [brushCursorLayer]);
+
+  // Add/remove point hover preview layer
+  React.useEffect(() => {
+    if (pointHoverLayer) {
+      useOverlayStore.getState().addOverlayLayer(pointHoverLayer);
+    }
+    return () => {
+      useOverlayStore.getState().removeOverlayLayer("point-hover-preview");
+    };
+  }, [pointHoverLayer]);
 
   // Add/remove brush mask layer when brush tool is active
   React.useEffect(() => {

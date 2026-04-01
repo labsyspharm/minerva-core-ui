@@ -48,6 +48,7 @@ export type ConfigWaypointArrow = {
   HideArrow: boolean;
   Point: [number, number];
   Text: string;
+  IsPoint?: boolean;
 };
 
 // Overlay (rectangle) annotation from config
