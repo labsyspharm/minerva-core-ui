@@ -354,9 +354,11 @@ const extractDistributions: ExtractDistributions = async (loader) => {
 const extractChannels: ExtractChannels = (loader, modality, groups) => {
   const init = initialize({ planes: loader.data });
   const { Channels, Type } = loader.metadata.Pixels;
+  const stripCycif = (name: string) =>
+    name.startsWith("CYCIF_") ? name.slice(6) : name;
   const SourceChannels = Channels.map((channel, index) => ({
     UUID: crypto.randomUUID(),
-    Name: channel.Name,
+    Name: stripCycif(channel.Name),
     Samples: channel.SamplesPerPixel,
     SourceIndex: init.indices[index].c,
     SourceDataType: asID(Type),

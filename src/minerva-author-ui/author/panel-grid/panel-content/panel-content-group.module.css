@@ -4,4 +4,10 @@ div {
   display: grid;
   grid-template-rows: 1fr;
   grid-template-columns: 1fr;
+  overflow: hidden;
+}
+
+::slotted(*) {
+  min-height: 0;
+  overflow: hidden;
 }

@@ -373,6 +373,20 @@ const Content = (props: Props) => {
         document.getElementById("global-loader")?.remove();
         return;
       }
+      // Restoring a previous file replaces the hardcoded demo, so clear
+      // stories, waypoints, and overlays.
+      const store = useOverlayStore.getState();
+      store.setStories([]);
+      store.setWaypoints([]);
+      store.clearOverlayLayers();
+      setConfig((prev) => ({
+        ...prev,
+        ItemRegistry: {
+          ...prev.ItemRegistry,
+          Stories: [],
+        },
+        ID: crypto.randomUUID(),
+      }));
       const file = await restored[0].getFile();
       await onStartOmeTiffRef.current(file.name, restored);
       setImportRevision((r) => r + 1);
@@ -385,6 +399,7 @@ const Content = (props: Props) => {
   const onStart = async (
     imagePropList: [string, string, string][],
     handles: Handle.File[],
+    { clearStories = false }: { clearStories?: boolean } = {},
   ) => {
     if (imagePropList.length === 0) {
       return;
@@ -406,6 +421,24 @@ const Content = (props: Props) => {
       (omeTiffPropList.length > 0 && handles.length > 0) ||
       omeTiffUrlList.length > 0;
     if (!willLoad) return;
+
+    // When opening a new image (not the initial demo), clear hardcoded
+    // waypoints, stories, and overlay annotations.
+    if (clearStories) {
+      const store = useOverlayStore.getState();
+      store.setStories([]);
+      store.setWaypoints([]);
+      store.clearOverlayLayers();
+      setConfig((prev) => ({
+        ...prev,
+        ItemRegistry: {
+          ...prev.ItemRegistry,
+          Stories: [],
+        },
+        ID: crypto.randomUUID(),
+      }));
+    }
+
     const t0 = performance.now();
     console.log("[minerva] onStart: will load, setting loading state");
     // Switch to waypoints tab and show loading immediately.
@@ -925,7 +958,7 @@ const Content = (props: Props) => {
           );
           const formOpts = {
             formOut,
-            onStart: (list) => onStart(list, handles),
+            onStart: (list) => onStart(list, handles, { clearStories: true }),
             handles,
           };
           if (isOpts(formOpts)) {

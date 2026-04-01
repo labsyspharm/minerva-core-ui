@@ -1552,7 +1552,7 @@ root.render(
     <Main
       handleKeys={OME_TIFF_HANDLE_KEYS}
       demo_dicom_web={false}
-      demo_url="https://lin-2021-crc-atlas.s3.amazonaws.com/data/WD-76845-097.ome.tif"
+      demo_url="https://lsp-public-data.s3.amazonaws.com/biomedvis-challenge-2025/SARDANA-Coy-v9.ome.tif"
       exhibit_config={exhibit_config}
       configWaypoints={configWaypoints}
     />

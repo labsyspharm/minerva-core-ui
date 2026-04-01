@@ -855,7 +855,18 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     <>
       {props.children}
       {waypointsPanel}
-      <div slot="groups">{channel_list}</div>
+      <div
+        slot="groups"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          minHeight: 0,
+          overflow: "hidden",
+        }}
+      >
+        {channel_list}
+      </div>
     </>,
   );
 
