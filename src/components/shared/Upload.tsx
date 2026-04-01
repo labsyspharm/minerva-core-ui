@@ -264,6 +264,45 @@ const validate: Validate = (valid, fn) => {
   return { [opt]: true };
 };
 
+const FormOmeTiffUrl = (props: FormProps) => {
+  const { valid, onSubmit } = props;
+  const [url, _sU, setURL] = _useState("");
+  const fProps = { onSubmit, className: "full-width" };
+  return (
+    <Form {...fProps} noValidate>
+      <Form.Group {...toGroupProps("ome_tiff_url")}>
+        <Form.Label>OME-TIFF URL:</Form.Label>
+        <FormGridRow hasValidation>
+          <Form.Control
+            {...{
+              type: "text",
+              required: true,
+              value: url,
+              name: "ome_tiff_url",
+              placeholder: "https://example.com/image.ome.tif",
+              onChange: setURL,
+              ...validate(valid, ({ ome_tiff_url: validUrl }) => {
+                if (validUrl === undefined) return null;
+                return validUrl && /^https?:\/\/.+/.test(url);
+              }),
+            }}
+          />
+          <Form.Control.Feedback type="invalid">
+            Invalid URL
+          </Form.Control.Feedback>
+          <Form.Control.Feedback type="valid">Valid.</Form.Control.Feedback>
+          <br />
+        </FormGridRow>
+      </Form.Group>
+      <FormGrid>
+        <Button type="submit" variant="primary">
+          Load
+        </Button>
+      </FormGrid>
+    </Form>
+  );
+};
+
 const FormDicom = (props: FormProps) => {
   const { valid, onSubmit } = props;
   const [url, _sU, setURL] = _useState("");
@@ -520,6 +559,9 @@ const Upload = (props: UploadProps) => {
     setImageFormat("OME-TIFF");
     onAllow();
   };
+  const selectOmeTiffUrlFormat = () => {
+    setImageFormat("OME-TIFF-URL");
+  };
 
   let possibleActions: ReactNode = null;
   if (imageFormat === "OME-TIFF") {
@@ -532,6 +574,9 @@ const Upload = (props: UploadProps) => {
   }
   if (imageFormat === "DICOM-WEB") {
     possibleActions = <FormDicom {...formProps} />;
+  }
+  if (imageFormat === "OME-TIFF-URL") {
+    possibleActions = <FormOmeTiffUrl {...formProps} />;
   }
 
   const fullFormProps = { ...formProps, handles };
@@ -546,6 +591,10 @@ const Upload = (props: UploadProps) => {
         <span>OME-TIFF</span>
       </Button>
       <div>{"Open an OME-TIFF from a local file"}</div>
+      <Button onClick={selectOmeTiffUrlFormat} className="dicom-toggle">
+        <span>OME-TIFF URL</span>
+      </Button>
+      <div>{"Load an OME-TIFF from a URL"}</div>
     </FullWidthGrid>
   );
 

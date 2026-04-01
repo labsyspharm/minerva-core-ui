@@ -72,4 +72,14 @@ const toLoader: ToLoader = async ({ handle, pool = null }) => {
   return await loadOmeTiff(in_file);
 };
 
-export { hasFileSystemAccess, toLoader, findFile, toFile };
+const toLoaderFromUrl = async (
+  url: string,
+  pool?: PoolClass,
+): Promise<Loader> => {
+  if (pool) {
+    return await loadOmeTiff(url, { pool });
+  }
+  return await loadOmeTiff(url);
+};
+
+export { hasFileSystemAccess, toLoader, toLoaderFromUrl, findFile, toFile };

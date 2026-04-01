@@ -322,13 +322,18 @@ const extractDistributions: ExtractDistributions = async (loader) => {
   const SourceDistributionEntries = await Promise.all(
     init.indices.map(async (index) => {
       const SourceIndex = index.c;
-      const YValues = Number.isNaN(bits)
-        ? []
-        : await bin({
+      let YValues: number[] = [];
+      if (!Number.isNaN(bits)) {
+        try {
+          YValues = await bin({
             bits,
             index,
             planes: loader.data,
           });
+        } catch {
+          // Tile fetch can fail for remote images; use empty distribution.
+        }
+      }
       return [
         SourceIndex,
         {

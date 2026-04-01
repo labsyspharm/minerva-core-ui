@@ -12,7 +12,10 @@ type FormOutAny = {
   mask?: string;
   csv?: string;
 };
-type Format = "DICOM-WEB" | "OME-TIFF";
+type FormOutOmeTiffUrl = {
+  ome_tiff_url: string;
+};
+type Format = "DICOM-WEB" | "OME-TIFF" | "OME-TIFF-URL";
 type AnyKey = keyof Required<FormOutAny>;
 type DicomKey = keyof Required<FormOutDicom>;
 type ValidateIn<T> = {
@@ -22,7 +25,8 @@ type ValidateIn<T> = {
 };
 type FormAnyOpts = ValidateIn<FormOutAny>;
 type FormDicomOpts = ValidateIn<FormOutDicom>;
-type FormOpts = FormAnyOpts | FormDicomOpts;
+type FormOmeTiffUrlOpts = ValidateIn<FormOutOmeTiffUrl>;
+type FormOpts = FormAnyOpts | FormDicomOpts | FormOmeTiffUrlOpts;
 type MaybeOpts = Partial<FormOpts>;
 type Validate<I> = (i: I) => Promise<ValidObj>;
 type ToValid = (n: string[], k: string[]) => ValidObj;
@@ -36,6 +40,9 @@ export function isOpts(o: MaybeOpts) {
       if ("url" in o.formOut) {
         return true;
       }
+      if ("ome_tiff_url" in o.formOut) {
+        return true;
+      }
     }
   }
   return false;
@@ -44,13 +51,17 @@ export function isOpts(o: MaybeOpts) {
 function isFormOpts(o: MaybeOpts): o is FormOpts {
   if (isOpts(o)) {
     const fo = (o.formOut || {}) as MaybeOpts;
-    return "name" in fo || "url" in fo;
+    return "name" in fo || "url" in fo || "ome_tiff_url" in fo;
   }
   return false;
 }
 function isAnyOpts(o: FormOpts): o is FormAnyOpts {
   if (!isFormOpts(o)) return false;
   return "path" in o.formOut;
+}
+function isOmeTiffUrlOpts(o: FormOpts): o is FormOmeTiffUrlOpts {
+  if (!isFormOpts(o)) return false;
+  return "ome_tiff_url" in o.formOut;
 }
 
 const toValid: ToValid = (need_keys, keys) => {
@@ -130,9 +141,27 @@ const validateAny: Validate<FormAnyOpts> = async (opts) => {
   return toValid(need_keys, valid_keys);
 };
 
+const validateOmeTiffUrl: Validate<FormOmeTiffUrlOpts> = async (opts) => {
+  const { formOut, onStart } = opts;
+  const need_keys = ["ome_tiff_url"];
+  const url = formOut.ome_tiff_url || "";
+  const valid_keys: string[] = [];
+  if (/^https?:\/\/.+/.test(url)) {
+    valid_keys.push("ome_tiff_url");
+  }
+  const validated = need_keys.every((k) => valid_keys.includes(k));
+  if (validated) {
+    onStart([[url, "Colorimetric", "OME-TIFF-URL"]]);
+  }
+  return toValid(need_keys, valid_keys);
+};
+
 const validate: Validate<MaybeOpts> = async (opts: MaybeOpts) => {
   if (!isFormOpts(opts)) {
     return toValid(["name"], []);
+  }
+  if (isOmeTiffUrlOpts(opts)) {
+    return await validateOmeTiffUrl(opts);
   }
   if (isAnyOpts(opts)) {
     return await validateAny(opts);

@@ -1551,7 +1551,8 @@ root.render(
   <React.StrictMode>
     <Main
       handleKeys={OME_TIFF_HANDLE_KEYS}
-      demo_dicom_web={true}
+      demo_dicom_web={false}
+      demo_url="https://lin-2021-crc-atlas.s3.amazonaws.com/data/WD-76845-097.ome.tif"
       exhibit_config={exhibit_config}
       configWaypoints={configWaypoints}
     />

@@ -25,7 +25,11 @@ import type {
   Waypoint as WaypointType,
 } from "@/lib/exhibit";
 import { readConfig } from "@/lib/exhibit";
-import { hasFileSystemAccess, toLoader } from "@/lib/filesystem";
+import {
+  hasFileSystemAccess,
+  toLoader,
+  toLoaderFromUrl,
+} from "@/lib/filesystem";
 import { useOverlayStore } from "@/lib/stores";
 import { isOpts, validate } from "@/lib/validate";
 import { toSettings } from "@/lib/viv";
@@ -38,6 +42,7 @@ type Props = {
   configWaypoints: ConfigWaypoint[];
   exhibit_config: ExhibitConfig;
   demo_dicom_web?: boolean;
+  demo_url?: string;
   handleKeys: string[];
   /** PWA “Open with” / `launchQueue` (needs manifest `file_handlers`). */
   useLaunchQueue?: boolean;
@@ -285,7 +290,8 @@ const Content = (props: Props) => {
 
   const [fileName, setFileName] = useState("");
   const [importRevision, setImportRevision] = useState(0);
-  const [isLoadingImage, setIsLoadingImage] = useState(!!props.demo_dicom_web);
+  const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
+  const [isLoadingImage, setIsLoadingImage] = useState(hasDemo);
   const showSquareViewportOverlay = useOverlayStore(
     (state) => state.showSquareViewportOverlay,
   );
@@ -337,6 +343,27 @@ const Content = (props: Props) => {
     setFileName(in_f);
   };
 
+  const onStartOmeTiffUrl = async (url: string) => {
+    const loader = await toLoaderFromUrl(url, new Pool());
+    const exhibitGroups = props.exhibit_config.Groups ?? [];
+    const relevant_groups = exhibitGroups.filter(
+      ({ Image }) => Image.Method === "Colorimetric",
+    );
+    const { SourceChannels, Groups } = extractChannels(
+      loader,
+      "Colorimetric",
+      relevant_groups,
+    );
+    // Skip distribution computation for remote images — fetching tiles
+    // for every channel over HTTP is too slow and often times out.
+    setSourceChannels(SourceChannels);
+    setGroups(Groups);
+    updateGroupChannelLists({ Groups, SourceChannels });
+    resetItems({ SourceChannels });
+    setLoaderOmeTiff(loader);
+    setFileName(url.split("/").pop() || "remote.ome.tif");
+  };
+
   const onStartOmeTiffRef = React.useRef(onStartOmeTiff);
   onStartOmeTiffRef.current = onStartOmeTiff;
 
@@ -370,10 +397,16 @@ const Content = (props: Props) => {
     const omeTiffPropList = imagePropList
       .filter(([_path, _modality, type]) => type === "OME-TIFF")
       .map(([path]) => [path]);
+    // OME-TIFF loaded from a remote URL
+    const omeTiffUrlList = imagePropList
+      .filter(([_url, _modality, type]) => type === "OME-TIFF-URL")
+      .map(([url]) => url);
     const willLoad =
       dicomPropList.length > 0 ||
-      (omeTiffPropList.length > 0 && handles.length > 0);
+      (omeTiffPropList.length > 0 && handles.length > 0) ||
+      omeTiffUrlList.length > 0;
     if (!willLoad) return;
+    const t0 = performance.now();
     console.log("[minerva] onStart: will load, setting loading state");
     // Switch to waypoints tab and show loading immediately.
     setImportRevision((r) => r + 1);
@@ -381,18 +414,30 @@ const Content = (props: Props) => {
     setIsLoadingImage(true);
     try {
       if (dicomPropList.length > 0) {
-        console.time("[minerva] onStartDicomWeb");
+        const t1 = performance.now();
         await onStartDicomWeb(dicomPropList, props.exhibit_config.Groups);
-        console.timeEnd("[minerva] onStartDicomWeb");
+        console.log(
+          `[minerva] onStartDicomWeb: ${(performance.now() - t1).toFixed(0)}ms`,
+        );
       }
       if (omeTiffPropList.length > 0 && handles.length > 0) {
-        console.time("[minerva] onStartOmeTiff");
+        const t1 = performance.now();
         await onStartOmeTiff(omeTiffPropList[0][0], handles);
-        console.timeEnd("[minerva] onStartOmeTiff");
+        console.log(
+          `[minerva] onStartOmeTiff: ${(performance.now() - t1).toFixed(0)}ms`,
+        );
+      }
+      if (omeTiffUrlList.length > 0) {
+        const t1 = performance.now();
+        await onStartOmeTiffUrl(omeTiffUrlList[0]);
+        console.log(
+          `[minerva] onStartOmeTiffUrl: ${(performance.now() - t1).toFixed(0)}ms`,
+        );
       }
     } finally {
-      console.log("[minerva] onStart: done, clearing loading state");
-      console.timeEnd("[minerva] total load");
+      console.log(
+        `[minerva] total load: ${(performance.now() - t0).toFixed(0)}ms`,
+      );
       setIsLoadingImage(false);
       document.getElementById("global-loader")?.remove();
     }
@@ -410,9 +455,11 @@ const Content = (props: Props) => {
     );
     const indexList = await Promise.all(
       imagePropList.map(async ([series, modality]) => {
-        console.time(`[minerva] dicom: loadDicomWeb ${modality}`);
+        const t1 = performance.now();
         const pyramids = await loadDicomWeb(series);
-        console.timeEnd(`[minerva] dicom: loadDicomWeb ${modality}`);
+        console.log(
+          `[minerva] dicom: loadDicomWeb ${modality}: ${(performance.now() - t1).toFixed(0)}ms`,
+        );
         const loader = parseDicomWeb({
           pyramids,
           series,
@@ -438,9 +485,11 @@ const Content = (props: Props) => {
         modality,
         relevant_groups,
       );
-      console.time(`[minerva] dicom: getDistributions ${modality}`);
+      const t2 = performance.now();
       const { SourceChannelsWithDist } = await getDistributions(sc, loader);
-      console.timeEnd(`[minerva] dicom: getDistributions ${modality}`);
+      console.log(
+        `[minerva] dicom: getDistributions ${modality}: ${(performance.now() - t2).toFixed(0)}ms`,
+      );
       registry = {
         SourceChannels: [...registry.SourceChannels, ...SourceChannelsWithDist],
         Groups: [...registry.Groups, ...gr],
@@ -511,33 +560,18 @@ const Content = (props: Props) => {
   onStartRef.current = onStart;
 
   useEffect(() => {
-    if (!props.demo_dicom_web) return;
-    console.time("[minerva] total load");
-    console.log("[minerva] demo_dicom_web effect fired");
+    if (!props.demo_url) return;
+    console.log("[minerva] demo_url effect fired");
     void (async () => {
-      // H&E Demo Image and CyCIF Demo Image
       await onStartRef.current(
-        [
-          [
-            "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.2507374895.494638264.1767738966319.4.0",
-            "Brightfield",
-            "DICOM-WEB",
-          ],
-          [
-            "https://us-central1-idc-external-031.cloudfunctions.net/minerva_proxy/studies/2.25.112849421593762410108114587383519700602/series/1.3.6.1.4.1.5962.99.1.331207435.2054329796.1752677896971.4.0",
-            "Colorimetric",
-            "DICOM-WEB",
-          ],
-        ],
+        [[props.demo_url, "Colorimetric", "OME-TIFF-URL"]],
         [] as Handle.File[],
       );
     })();
-  }, [props.demo_dicom_web]);
+  }, [props.demo_url]);
 
   const noLoader =
-    loaderOmeTiff === null &&
-    dicomIndexList.length === 0 &&
-    !props.demo_dicom_web;
+    loaderOmeTiff === null && dicomIndexList.length === 0 && !hasDemo;
 
   // Exhibit editing operations (from Index)
   const { name, groups, stories } = exhibit;
@@ -858,10 +892,10 @@ const Content = (props: Props) => {
 
   // Remove the global HTML loader once React is rendering and no async load is pending.
   useEffect(() => {
-    if (!props.demo_dicom_web && !isLoadingImage) {
+    if (!hasDemo && !isLoadingImage) {
       document.getElementById("global-loader")?.remove();
     }
-  }, [props.demo_dicom_web, isLoadingImage]);
+  }, [hasDemo, isLoadingImage]);
 
   const retrieving_status = (
     <RetrievingWrapper>Loading image data...</RetrievingWrapper>
@@ -870,11 +904,9 @@ const Content = (props: Props) => {
   return (
     <FileHandler
       handleKeys={handleKeys}
-      autoRestoreOnMount={!props.demo_dicom_web}
+      autoRestoreOnMount={!hasDemo}
       useLaunchQueue={useLaunchQueue}
-      onRestoredHandles={
-        props.demo_dicom_web ? undefined : onRestoredOmeHandles
-      }
+      onRestoredHandles={hasDemo ? undefined : onRestoredOmeHandles}
     >
       {({ handles, onAllow, onRecall }) => {
         const onSubmit: FormEventHandler = (event) => {
@@ -959,7 +991,7 @@ const Content = (props: Props) => {
 };
 
 const Main = (props: Props) => {
-  if (props.demo_dicom_web || hasFileSystemAccess()) {
+  if (props.demo_dicom_web || props.demo_url || hasFileSystemAccess()) {
     return <Content {...props} />;
   } else {
     return (

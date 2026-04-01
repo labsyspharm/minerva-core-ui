@@ -72,6 +72,7 @@
     "@math.gl/web-mercator": "^4.1.0",
     "@types/wicg-file-system-access": "^2023.10.5",
     "@ui5/webcomponents": "2.2.0",
+    "@uiw/react-color": "^2.9.6",
     "@uiw/react-md-editor": "^4.0.11",
     "@vaadin/form-layout": "^24.4.3",
     "@vaadin/text-field": "^24.4.3",
