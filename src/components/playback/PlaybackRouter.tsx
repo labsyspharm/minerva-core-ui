@@ -1,8 +1,8 @@
 import styled from "styled-components";
+import { ImageExporter } from "@/components/playback/ImageExporter";
 import { Presentation } from "@/components/playback/Presentation";
 // Types
 import type { ChannelPanelProps } from "@/components/shared/channel/ChannelPanel";
-//import { ImageExporter } from "@/components/playback/ImageExporter";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 
 export type PlaybackRouterProps = ChannelPanelProps & {
@@ -49,14 +49,13 @@ export const PlaybackRouter = (props: PlaybackRouterProps) => {
     out = <ChannelPanel {...props}>{props.children}</ChannelPanel>;
   } else if (props.ioState === "EXPORTING") {
     // TODO: no UI yet for user selection of directory_handle
-    /*
     const exporterProps = {
       in_f: props.in_f,
+      handles: props.handles,
       stopExport: props.stopExport,
-      directory_handle: props.directory_handle
+      directory_handle: props.directory_handle,
     };
     out = <ImageExporter {...exporterProps} />;
-    */
   }
   const modeKey = props.presenting
     ? "presenting"

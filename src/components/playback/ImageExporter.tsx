@@ -30,7 +30,7 @@ type InitIn = {
   loader: LoaderPlane[];
 };
 type CommonIn = InitIn & {
-  handle: FileSystemDirectoryHandle;
+  directory_handle: FileSystemDirectoryHandle;
   index: Index;
 };
 
@@ -116,21 +116,21 @@ const capture: Capture = async (index, loader) => {
 
 const save: Save = async (inputs) => {
   const create = { create: true };
-  const { index, loader, handle } = inputs;
+  const { index, loader, directory_handle } = inputs;
   const { output, filename } = await capture(index, loader);
-  const fh = await handle.getFileHandle(filename, create);
+  const fh = await directory_handle.getFileHandle(filename, create);
   const write = await fh.createWritable();
   await write.write(output);
   await write.close();
 };
 
 const doStep: DoStep = async (inputs) => {
-  const { loader, handle } = inputs;
+  const { loader, directory_handle } = inputs;
   const { index, next } = inputs;
   const { step, done } = inputs.stepSignal;
   if (done) return null;
 
-  save({ step, handle, loader, index });
+  save({ step, directory_handle, loader, index });
   return { done: next === 0, step: next };
 };
 
@@ -264,15 +264,14 @@ const to_color = (done) => {
 };
 
 type LoaderIn = {
-  in_f: string;
-  handle: Handle.Dir;
+  handle: Handle.File;
 };
 type LoaderOut = {
   data: LoaderPlane[];
 };
 type LoaderOpts = {
   in_f: string;
-  handle: Handle.Dir | null;
+  handle: Handle.File | null;
 };
 type ToLoader = (i: LoaderIn) => Promise<LoaderOut>;
 interface ProgressBarProps {
@@ -280,24 +279,23 @@ interface ProgressBarProps {
   $done: boolean;
 }
 
-const toLoader: ToLoader = async ({ in_f, handle }) => {
-  const in_fh = await handle.getFileHandle(in_f);
-  const in_file = await in_fh.getFile();
+const toLoader: ToLoader = async ({ handle }) => {
+  const in_file = await handle.getFile();
   const in_tiff = await loadOmeTiff(in_file);
   const { data } = in_tiff;
   return { data };
 };
 
 const getLoader = async (opts: LoaderOpts) => {
-  const { handle, in_f } = opts;
-  if (handle === null) return;
-  const data = await toLoader({ in_f, handle });
+  const { handle } = opts;
+  if (handle === null) return null;
+  const data = await toLoader({ handle });
   return data.data;
 };
 
 export type ImageExporterProps = {
   in_f: string;
-  handle: Handle.Dir;
+  directory_handle: Handle.Dir;
   stopExport: () => void;
 };
 
@@ -307,7 +305,8 @@ export const ImageExporter = (props: ImageExporterProps) => {
     className: "mb-3",
   };
 
-  const { in_f, handle } = props;
+  const { handles, directory_handle } = props;
+  const handle = handles ? handles[0] : null; //TODO
 
   const [state, setState] = useState(null as MainState);
   const [loader, setLoader] = useState([] as LoaderPlane[]);
@@ -317,14 +316,17 @@ export const ImageExporter = (props: ImageExporterProps) => {
   });
 
   React.useEffect(() => {
-    getLoader({ handle, in_f }).then((loader) => {
+    getLoader({ handle }).then((loader) => {
+      if (loader === null) {
+        return;
+      }
       const init = initialize({ loader });
-      if (isFullState(init) && loader.length) {
+      if (isFullState(init) && loader?.length) {
         setLoader(loader);
         setState(init);
       }
     });
-  }, [in_f, handle]);
+  }, [handle]);
 
   const { step, done } = stepSignal;
   const index = (() => {
@@ -340,10 +342,10 @@ export const ImageExporter = (props: ImageExporterProps) => {
         props.stopExport();
       }, 2000);
     } else {
-      if (!state || !loader.length) return;
+      if (!state || !loader?.length) return;
       const next = (step + 1) % state.indices.length;
       doStep({
-        handle,
+        directory_handle,
         loader,
         index,
         next,
@@ -354,7 +356,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
         }
       });
     }
-  }, [state, step, done, handle, index, loader, props, stepSignal]);
+  }, [state, step, done, directory_handle, index, loader, props, stepSignal]);
 
   const _tileShape = { width: 1024, height: 1024 }; // TODO
   let ratio = done ? 1 : 0;
