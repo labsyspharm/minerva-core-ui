@@ -602,6 +602,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
     if (!physicalSize || viewportSize.width <= 0 || viewportSize.height <= 0)
       return null;
 
+    // The updated ScaleBarLayer expects imageViewState + height/width as top-level
+    // props for screen-space positioning, but the published types don't expose them.
     return new ScaleBarLayer({
       id: "scale-bar",
       imageViewState: {
@@ -614,7 +616,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       snap: true,
       height: viewportSize.height,
       width: viewportSize.width,
-    });
+    } as any);
   }, [viewState, firstLoader, viewportSize.width, viewportSize.height]);
 
   // Memoize layer combination
@@ -867,9 +869,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
           "scalebar-overlay": {
             zoom: 0,
             target: [viewportSize.width / 2, viewportSize.height / 2, 0],
-            width: viewportSize.width,
-            height: viewportSize.height,
-          },
+          } as any,
         }}
         onViewStateChange={handleViewStateChange}
         onClick={dragHandlers.onClick}

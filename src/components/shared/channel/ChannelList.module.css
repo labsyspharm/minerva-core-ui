@@ -818,3 +818,122 @@
 .channelGroupDropdownOptionSelected:hover {
   background-color: rgb(88 166 255 / 0.18);
 }
+
+/* ── Channel-group master-detail rows ── */
+
+.groupRow {
+  padding: 10px 10px;
+  min-height: 48px;
+  border-bottom: 1px solid #333;
+  display: grid;
+  align-items: center;
+  box-sizing: border-box;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 10px;
+  position: relative;
+  user-select: none;
+}
+
+.groupRow:hover {
+  background-color: #1a1a1a;
+}
+
+.groupRowActive {
+  background-color: #2a2a2a;
+}
+
+.groupRowActive::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: #007acc;
+}
+
+.groupRowMainHit {
+  width: 100%;
+  min-width: 0;
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.groupRowMainHit:focus-visible {
+  outline: 1px solid #007acc;
+  outline-offset: 1px;
+}
+
+/* Channel color swatch in detail view */
+.channelColorSwatch {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 1px solid #444;
+  border-radius: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.channelRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid #30363d;
+}
+
+.channelRow:last-child {
+  border-bottom: none;
+}
+
+.channelName {
+  flex: 1;
+  font-size: 12px;
+  color: #e6edf3;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channelActionButton {
+  background: none;
+  border: none;
+  color: #8b949e;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.channelActionButton:hover {
+  color: #e6edf3;
+}
+
+.addChannelRow {
+  padding: 6px 10px;
+}
+
+.addChannelSelect {
+  width: 100%;
+  padding: 4px 6px;
+  background: #161b22;
+  color: #e6edf3;
+  border: 1px solid #30363d;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.allChannelsNote {
+  color: #8b949e;
+  font-size: 12px;
+}
