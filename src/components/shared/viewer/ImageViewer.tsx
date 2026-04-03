@@ -616,7 +616,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       snap: true,
       height: viewportSize.height,
       width: viewportSize.width,
-    } as any);
+    } as ConstructorParameters<typeof ScaleBarLayer>[0]);
   }, [viewState, firstLoader, viewportSize.width, viewportSize.height]);
 
   // Memoize layer combination
@@ -869,7 +869,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
           "scalebar-overlay": {
             zoom: 0,
             target: [viewportSize.width / 2, viewportSize.height / 2, 0],
-          } as any,
+          } as Record<string, unknown>,
         }}
         onViewStateChange={handleViewStateChange}
         onClick={dragHandlers.onClick}
