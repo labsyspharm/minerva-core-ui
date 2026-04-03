@@ -354,14 +354,21 @@ const Content = (props: Props) => {
       "Colorimetric",
       relevant_groups,
     );
-    // Skip distribution computation for remote images — fetching tiles
-    // for every channel over HTTP is too slow and often times out.
+    // Set up the viewer immediately, then fetch distributions in the background.
     setSourceChannels(SourceChannels);
     setGroups(Groups);
     updateGroupChannelLists({ Groups, SourceChannels });
     resetItems({ SourceChannels });
     setLoaderOmeTiff(loader);
     setFileName(url.split("/").pop() || "remote.ome.tif");
+
+    // Fetch distributions lazily so channel histograms populate without
+    // blocking the initial render.
+    getDistributions(SourceChannels, loader).then(
+      ({ SourceChannelsWithDist }) => {
+        setSourceChannels(SourceChannelsWithDist);
+      },
+    );
   };
 
   const onStartOmeTiffRef = React.useRef(onStartOmeTiff);

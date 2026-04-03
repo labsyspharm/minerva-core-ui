@@ -222,7 +222,7 @@ const captureTile: CaptureTile = async (index, planes) => {
   const level = Math.abs(index.z);
   const z_plane = planes[level];
   const selection = { t: 0, z: 0, c: index.c };
-  const signal = AbortSignal.timeout(10 * 1000);
+  const signal = AbortSignal.timeout(30 * 1000);
   const { x, y } = index;
   const tile = await z_plane.getTile({
     selection,
@@ -320,34 +320,35 @@ const initialize: Initialize = (inputs) => {
 const extractDistributions: ExtractDistributions = async (loader) => {
   const init = initialize({ planes: loader.data });
   const bits = parseInt(init.tileProps.dtype.replace(/.?int/, ""), 10);
-  const SourceDistributionEntries = await Promise.all(
-    init.indices.map(async (index) => {
-      const SourceIndex = index.c;
-      let YValues: number[] = [];
-      if (!Number.isNaN(bits)) {
-        try {
-          YValues = await bin({
-            bits,
-            index,
-            planes: loader.data,
-          });
-        } catch {
-          // Tile fetch can fail for remote images; use empty distribution.
-        }
+  // Fetch channels sequentially to avoid overwhelming remote servers
+  // with many concurrent tile requests.
+  const SourceDistributionEntries: [number, ConfigSourceDistribution][] = [];
+  for (const index of init.indices) {
+    const SourceIndex = index.c;
+    let YValues: number[] = [];
+    if (!Number.isNaN(bits)) {
+      try {
+        YValues = await bin({
+          bits,
+          index,
+          planes: loader.data,
+        });
+      } catch {
+        // Tile fetch can fail for remote images; use empty distribution.
       }
-      return [
-        SourceIndex,
-        {
-          UUID: crypto.randomUUID(),
-          YValues,
-          XScale: "log",
-          YScale: "linear",
-          LowerRange: 0,
-          UpperRange: bits,
-        },
-      ] as [number, ConfigSourceDistribution];
-    }),
-  );
+    }
+    SourceDistributionEntries.push([
+      SourceIndex,
+      {
+        UUID: crypto.randomUUID(),
+        YValues,
+        XScale: "log",
+        YScale: "linear",
+        LowerRange: 0,
+        UpperRange: bits,
+      },
+    ]);
+  }
   // Map from image channel to distribution
   return new Map<number, ConfigSourceDistribution>(SourceDistributionEntries);
 };

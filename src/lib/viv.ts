@@ -145,7 +145,8 @@ const toSettings = (opts) => {
       const source_channel = SourceChannels.find(
         (source_channel) => c.SourceChannel.UUID === source_channel.UUID,
       );
-      const { Name } = source_channel || {};
+      if (!source_channel) return false;
+      const { Name } = source_channel;
       const image_id = source_channel.SourceImage.UUID;
       const _brightfield = modality === "Brightfield";
       //if (!channelVisibilities || brightfield ) {
