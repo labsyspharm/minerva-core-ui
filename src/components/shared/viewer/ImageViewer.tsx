@@ -602,19 +602,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
     if (!physicalSize || viewportSize.width <= 0 || viewportSize.height <= 0)
       return null;
 
-    // ScaleBarLayer needs viewState with viewport dimensions
-    const viewStateWithDimensions = {
-      ...viewState,
-      width: viewportSize.width,
-      height: viewportSize.height,
-    };
-
     return new ScaleBarLayer({
       id: "scale-bar",
-      viewState: viewStateWithDimensions,
+      imageViewState: {
+        ...viewState,
+        width: viewportSize.width,
+        height: viewportSize.height,
+      },
       unit,
       size: physicalSize,
       snap: true,
+      height: viewportSize.height,
+      width: viewportSize.width,
     });
   }, [viewState, firstLoader, viewportSize.width, viewportSize.height]);
 
@@ -786,9 +785,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
     [activeTool, isDragging, hoveredAnnotationId],
   );
 
-  // Memoize view configuration
+  // Memoize view configuration — main image view + a fixed overlay for the scale bar
   const views = useMemo(
-    () => [new OrthographicView({ id: "ortho", controller: true })],
+    () => [
+      new OrthographicView({ id: "ortho", controller: true }),
+      new OrthographicView({ id: "scalebar-overlay", controller: false }),
+    ],
     [],
   );
 
@@ -833,6 +835,17 @@ export const ImageViewer = (props: ImageViewerProps) => {
     }
   }, [allLayers]);
 
+  // Route scale bar to the fixed overlay view; everything else to the main view
+  const layerFilter = useCallback(
+    ({ layer, viewport }: { layer: Layer; viewport: { id: string } }) => {
+      if (layer.id.startsWith("scale-bar")) {
+        return viewport.id === "scalebar-overlay";
+      }
+      return viewport.id === "ortho";
+    },
+    [],
+  );
+
   if (mainSettingsList.length === 0) {
     return null;
   }
@@ -849,7 +862,15 @@ export const ImageViewer = (props: ImageViewerProps) => {
             preserveDrawingBuffer: true,
           },
         }}
-        viewState={{ ortho: viewState }}
+        viewState={{
+          ortho: viewState,
+          "scalebar-overlay": {
+            zoom: 0,
+            target: [viewportSize.width / 2, viewportSize.height / 2, 0],
+            width: viewportSize.width,
+            height: viewportSize.height,
+          },
+        }}
         onViewStateChange={handleViewStateChange}
         onClick={dragHandlers.onClick}
         onDragStart={dragHandlers.onDragStart}
@@ -857,6 +878,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         onDragEnd={dragHandlers.onDragEnd}
         onHover={dragHandlers.onHover}
         onAfterRender={handleAfterRender}
+        layerFilter={layerFilter}
         views={views}
       />
       <LoadingWidget ref={loadingWidgetRef} />
