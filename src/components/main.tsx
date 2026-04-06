@@ -862,7 +862,8 @@ const Content = (props: Props) => {
 
   // Stories lifecycle: `index.tsx` waypoints are copied once into `config` (see
   // `useState` initializer). After that, Zustand `stories` is authoritative;
-  // this effect only seeds an empty store or runs Pan→Bounds migration. The
+  // this effect only seeds an empty store or ensures Bounds on legacy waypoints
+  // (Pan/Zoom kept for viewport-accurate camera). The
   // subscription below mirrors `stories` back into `config.ItemRegistry.Stories`
   // for the legacy author panel — not back into `index.tsx`.
   useEffect(() => {

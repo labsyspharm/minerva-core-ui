@@ -2,6 +2,10 @@
   --handle-width: 0.75rem;
   --slider-track-height: 4px;
   --slider-row-height: 18px;
+  --range-start-frac: 0;
+  --range-end-frac: 1;
+  /** Narrow inputs; vw cap keeps them usable in tight overlay / mobile */
+  --range-input-width: min(2.85rem, 21vw);
   --_ui5-v2-2-0_slider_progress_container_background: none;
   --_ui5-v2-2-0_slider_handle_border_radius: 3px;
   --_ui5-v2-2-0_slider_handle_border: var(--thin-border);
@@ -31,26 +35,78 @@
   min-height: 0;
 }
 
-.range-controls-row {
-  display: grid;
-  grid-template-columns: minmax(2.65em, 2.9em) minmax(0, 1fr) minmax(
-      2.65em,
-      2.9em
-    );
-  align-items: center;
-  gap: 3px 4px;
+.range-controls-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   width: 100%;
   box-sizing: border-box;
 }
 
+.range-slider-row {
+  width: 100%;
+  min-width: 0;
+}
+
+.range-limits-track {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  min-height: 24px;
+  margin-top: 1px;
+  box-sizing: border-box;
+}
+
+.range-limit-field {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: var(--range-input-width);
+  min-width: 0;
+  max-width: var(--range-input-width);
+  box-sizing: border-box;
+  z-index: 0;
+}
+
+.range-limit-field--min {
+  left: clamp(
+    calc(var(--range-input-width) / 2),
+    calc(
+      (var(--handle-width) / 2) +
+        var(--range-start-frac) * (100% - var(--handle-width))
+    ),
+    calc(100% - var(--range-input-width) / 2)
+  );
+  transform: translateX(-50%);
+}
+
+.range-limit-field--max {
+  left: clamp(
+    calc(var(--range-input-width) / 2),
+    calc(
+      (var(--handle-width) / 2) +
+        var(--range-end-frac) * (100% - var(--handle-width))
+    ),
+    calc(100% - var(--range-input-width) / 2)
+  );
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
 .range-limit-input {
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   font-family: var(--font-family);
-  font-size: 10px;
+  font-size: 9px;
   line-height: 1.2;
-  padding: 2px 4px;
+  padding: 2px 3px;
   margin: 0;
+  overflow-x: auto;
+  text-align: center;
   border-radius: 3px;
   border: 1px solid color-mix(in srgb, var(--glass-edge) 70%, transparent);
   background: color-mix(in srgb, var(--dark-gray-color) 88%, black);

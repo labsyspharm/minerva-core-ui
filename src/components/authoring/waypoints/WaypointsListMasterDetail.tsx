@@ -12,7 +12,6 @@ import {
   getViewerViewportSnapshotFromStore,
   orthographicZoomToNumber,
 } from "@/lib/viewerViewport";
-import { getWaypointViewState } from "@/lib/waypoint";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { WaypointContentEditor } from "./WaypointContentEditor";
 import styles from "./WaypointsList.module.css";
@@ -87,7 +86,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     clearImportedAnnotations,
     imageWidth,
     imageHeight,
-    setTargetWaypointViewState,
+    setTargetWaypointCamera,
     captureSquareViewportThumbnail,
     removeStory,
     setShowSquareViewportOverlay,
@@ -336,19 +335,8 @@ const WaypointsList = (props: WaypointsListProps) => {
     const storeNow = useOverlayStore.getState();
     const storyForNav = storeNow.stories[index];
     applyStoryChannelGroup(storyForNav);
-    const viewerSnapshot = getViewerViewportSnapshotFromStore();
-    let viewState = null;
-    if (storyForNav && viewerSnapshot && imageWidth > 0 && imageHeight > 0) {
-      viewState = getWaypointViewState(
-        storyForNav,
-        imageWidth,
-        imageHeight,
-        viewerSnapshot.viewportSize.width,
-        viewerSnapshot.viewportSize.height,
-      );
-    }
-    if (viewState) {
-      setTargetWaypointViewState(viewState);
+    if (storyForNav && imageWidth > 0 && imageHeight > 0) {
+      setTargetWaypointCamera(storyForNav);
     }
     // Only grab the preview image after the camera settles — never rewrite
     // Bounds/ViewState on row select (use “Overwrite view” to persist camera).

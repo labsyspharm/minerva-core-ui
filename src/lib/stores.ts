@@ -875,12 +875,12 @@ export interface OverlayStore {
   // Channel Group and Channel State
   activeChannelGroupId: string | null;
 
-  // Waypoint view state (for triggering view changes from waypoint selection)
-  // Canonical deck.gl viewstate for waypoint selection
-  targetWaypointViewState: {
-    zoom: number;
-    target: [number, number, number];
-  } | null;
+  /**
+   * When set, ImageViewer applies this waypoint’s camera using **live** viewer
+   * pixel size from its ResizeObserver (not `viewerViewportSize`, which lags on
+   * author ↔ preview layout changes).
+   */
+  targetWaypointCamera: ConfigWaypoint | null;
 
   /** Authoring: viewer annotation pick/hover/drag only while a waypoint detail editor is open. */
   authoringWaypointEditorOpen: boolean;
@@ -1085,11 +1085,9 @@ export interface OverlayStore {
   /** Write imported annotations (from waypoint) back into stories[index].Arrows/Overlays. */
   persistImportedAnnotationsToStory: (storyIndex: number) => void;
 
-  // Waypoint view state actions
-  setTargetWaypointViewState: (
-    viewState: { zoom: number; target: [number, number, number] } | null,
-  ) => void;
-  clearTargetWaypointViewState: () => void;
+  // Waypoint camera (resolved inside ImageViewer for correct viewport coupling)
+  setTargetWaypointCamera: (waypoint: ConfigWaypoint | null) => void;
+  clearTargetWaypointCamera: () => void;
 }
 
 // Initial state for overlay store
@@ -1138,7 +1136,7 @@ const overlayInitialState = {
   channelVisibilities: {},
   groupChannelLists: {},
   groupNames: {},
-  targetWaypointViewState: null,
+  targetWaypointCamera: null,
   authoringWaypointEditorOpen: false,
   layersPanelSelectedAnnotationIds: [] as string[],
   layersPanelSelectedGroupId: null as string | null,
@@ -2643,27 +2641,14 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         });
       },
 
-      // Waypoint view state actions
-      setTargetWaypointViewState: (viewState) => {
-        // Always store a fresh object so Jump-to-view retriggers after overwrite even
-        // when the story still points at the same ViewState reference, and so
-        // subscribers always see a change.
+      setTargetWaypointCamera: (waypoint) => {
         const next =
-          viewState === null
-            ? null
-            : {
-                zoom: viewState.zoom,
-                target: [
-                  viewState.target[0],
-                  viewState.target[1],
-                  viewState.target[2],
-                ] as [number, number, number],
-              };
-        set({ targetWaypointViewState: next });
+          waypoint === null ? null : ({ ...waypoint } as ConfigWaypoint);
+        set({ targetWaypointCamera: next });
       },
 
-      clearTargetWaypointViewState: () => {
-        set({ targetWaypointViewState: null });
+      clearTargetWaypointCamera: () => {
+        set({ targetWaypointCamera: null });
       },
     }),
     {

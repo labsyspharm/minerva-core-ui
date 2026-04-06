@@ -27,6 +27,36 @@ const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
       this.attachShadow({ mode: "open" });
       const shadow = this.addStyles();
       html`${this.elementTemplate}`(shadow);
+      queueMicrotask(() => this._syncHandlePositionsFromState());
+    }
+
+    _setHandleFracVars(startVal, endVal, maxSteps) {
+      const max = Math.max(1, maxSteps);
+      const lo = Math.min(startVal, endVal);
+      const hi = Math.max(startVal, endVal);
+      this.style.setProperty("--range-start-frac", String(lo / max));
+      this.style.setProperty("--range-end-frac", String(hi / max));
+    }
+
+    _syncHandlePositionsFromState() {
+      const slider = this.shadowRoot?.getElementById("contrast-range-slider");
+      const { chart_x_steps, to_input } = this._scale();
+      if (
+        slider &&
+        Number.isFinite(slider.startValue) &&
+        Number.isFinite(slider.endValue)
+      ) {
+        this._setHandleFracVars(
+          slider.startValue,
+          slider.endValue,
+          chart_x_steps,
+        );
+        return;
+      }
+      const dv = this._readDefaultLimits();
+      const a = to_input(dv.LowerRange);
+      const b = to_input(dv.UpperRange);
+      this._setHandleFracVars(a, b, chart_x_steps);
     }
 
     _scale() {
@@ -103,11 +133,16 @@ const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
     _syncSliderUi(lo, hi) {
       const slider = this.shadowRoot?.getElementById("contrast-range-slider");
       if (!slider) return;
-      const { to_input } = this._scale();
+      const { to_input, chart_x_steps } = this._scale();
       const a = to_input(lo);
       const b = to_input(hi);
       slider.startValue = Math.min(a, b);
       slider.endValue = Math.max(a, b);
+      this._setHandleFracVars(
+        slider.startValue,
+        slider.endValue,
+        chart_x_steps,
+      );
     }
 
     attributeChangedCallback() {
@@ -132,6 +167,7 @@ const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
         const end = e.target.endValue;
         const LowerRange = Math.round(from_input(start));
         const UpperRange = Math.round(from_input(end));
+        self._setHandleFracVars(start, end, chart_x_steps);
         self._syncInputsUi(LowerRange, UpperRange);
         self._pushRange(LowerRange, UpperRange);
       };
@@ -167,7 +203,7 @@ const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
         id: "contrast-range-min",
         class: "range-limit-input",
         value: String(Math.round(defaultValues.LowerRange)),
-        "aria-label": "Contrast lower limit",
+        "aria-label": "Contrast minimum",
         min: String(dt.LowerRange),
         max: String(dt.UpperRange),
         "@blur": onLimitBlur,
@@ -179,7 +215,7 @@ const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
         id: "contrast-range-max",
         class: "range-limit-input",
         value: String(Math.round(defaultValues.UpperRange)),
-        "aria-label": "Contrast upper limit",
+        "aria-label": "Contrast maximum",
         min: String(dt.LowerRange),
         max: String(dt.UpperRange),
         "@blur": onLimitBlur,
@@ -196,12 +232,36 @@ const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
         "@input": onSliderInput,
       });
 
-      return toElement("div")`
+      const minField = toElement("div")`
         ${minInput}
-        ${rangeInput}
+      `({
+        class: "range-limit-field range-limit-field--min",
+      });
+
+      const maxField = toElement("div")`
         ${maxInput}
       `({
-        class: "range-controls-row",
+        class: "range-limit-field range-limit-field--max",
+      });
+
+      const limitsRow = toElement("div")`
+        ${minField}
+        ${maxField}
+      `({
+        class: "range-limits-track",
+      });
+
+      const sliderRow = toElement("div")`
+        ${rangeInput}
+      `({
+        class: "range-slider-row",
+      });
+
+      return toElement("div")`
+        ${sliderRow}
+        ${limitsRow}
+      `({
+        class: "range-controls-stack",
       });
     }
 

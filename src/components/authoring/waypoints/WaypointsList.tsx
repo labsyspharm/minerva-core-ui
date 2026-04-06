@@ -9,7 +9,6 @@ import {
 import type { ConfigWaypoint } from "@/lib/config";
 import { downloadStoryJSON } from "@/lib/exportStory";
 import { useOverlayStore } from "@/lib/stores";
-import { getWaypointViewState } from "@/lib/waypoint";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { WaypointContentEditor } from "./WaypointContentEditor";
 import styles from "./WaypointsList.module.css";
@@ -51,8 +50,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     clearImportedAnnotations,
     imageWidth,
     imageHeight,
-    setTargetWaypointViewState,
-    viewerViewportSize,
+    setTargetWaypointCamera,
     editingViewstateWaypointIndex,
     setEditingViewstateWaypointIndex,
     removeStory,
@@ -214,24 +212,9 @@ const WaypointsList = (props: WaypointsListProps) => {
 
         // Use the latest story from the store (authoritative) in case item.metadata is stale
         const currentStory = useOverlayStore.getState().stories[index];
-
-        let viewState = null;
-        if (
-          viewerViewportSize?.width &&
-          viewerViewportSize?.height &&
-          imageWidth > 0 &&
-          imageHeight > 0
-        ) {
-          viewState = getWaypointViewState(
-            currentStory ?? story,
-            imageWidth,
-            imageHeight,
-            viewerViewportSize.width,
-            viewerViewportSize.height,
-          );
-        }
-        if (viewState) {
-          setTargetWaypointViewState(viewState);
+        const navStory = currentStory ?? story;
+        if (imageWidth > 0 && imageHeight > 0) {
+          setTargetWaypointCamera(navStory);
         }
 
         // Note: annotations are imported automatically by the useEffect

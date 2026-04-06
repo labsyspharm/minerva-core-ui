@@ -27,6 +27,7 @@ import {
   registerViewerLiveSnapshotReader,
 } from "@/lib/viewerViewport";
 import type { Config, Loader } from "@/lib/viv";
+import { getWaypointViewState } from "@/lib/waypoint";
 
 type ItemRegistryChannel = {
   name: string;
@@ -276,12 +277,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const ignoreNextViewStateChangeRef = useRef(false);
 
   // Get target waypoint view state for responding to waypoint selection
-  const targetWaypointViewState = useOverlayStore(
-    (state) => state.targetWaypointViewState,
+  const targetWaypointCamera = useOverlayStore(
+    (state) => state.targetWaypointCamera,
   );
-  const clearTargetWaypointViewState = useOverlayStore(
-    (state) => state.clearTargetWaypointViewState,
+  const clearTargetWaypointCamera = useOverlayStore(
+    (state) => state.clearTargetWaypointCamera,
   );
+  const storeImageWidth = useOverlayStore((state) => state.imageWidth);
+  const storeImageHeight = useOverlayStore((state) => state.imageHeight);
 
   // Update viewState only on initial mount (not when loader changes)
   useEffect(() => {
@@ -458,10 +461,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return () => registerViewerLiveSnapshotReader(null);
   }, []);
 
-  // Apply waypoint view state when target is set (from waypoint selection)
+  // Apply waypoint camera when requested — resolve with this viewer's live size
+  // so author vs preview layout changes cannot mix stale width/height with Deck.
   useEffect(() => {
-    // Skip if no target is set
-    if (targetWaypointViewState === null) {
+    if (targetWaypointCamera === null) {
       return;
     }
 
@@ -469,7 +472,21 @@ export const ImageViewer = (props: ImageViewerProps) => {
       return;
     }
 
-    const vs = targetWaypointViewState;
+    if (storeImageWidth <= 0 || storeImageHeight <= 0) {
+      return;
+    }
+
+    const vs = getWaypointViewState(
+      targetWaypointCamera,
+      storeImageWidth,
+      storeImageHeight,
+      viewportSize.width,
+      viewportSize.height,
+    );
+    if (!vs) {
+      clearTargetWaypointCamera();
+      return;
+    }
 
     // Cancel any ongoing transition first
     setViewState(
@@ -480,7 +497,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
         }) as OrthographicViewState,
     );
 
-    // Start animated transition to the new waypoint view
     const clearId = window.setTimeout(() => {
       const viewStateWithTransition = {
         ...vs,
@@ -491,16 +507,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
       setViewState(viewStateWithTransition as OrthographicViewState);
       setViewportZoom(vs.zoom);
-      clearTargetWaypointViewState();
+      clearTargetWaypointCamera();
     }, 0);
 
     return () => {
       window.clearTimeout(clearId);
     };
   }, [
-    targetWaypointViewState,
+    targetWaypointCamera,
     viewportSize,
-    clearTargetWaypointViewState,
+    storeImageWidth,
+    storeImageHeight,
+    clearTargetWaypointCamera,
     setViewportZoom,
   ]);
 

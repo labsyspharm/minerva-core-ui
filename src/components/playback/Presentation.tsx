@@ -4,7 +4,6 @@ import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { useOverlayStore } from "@/lib/stores";
-import { getWaypointViewState } from "@/lib/waypoint";
 
 const _theme = {};
 
@@ -286,7 +285,7 @@ export const Presentation = (props: PresentationProps) => {
     clearImportedAnnotations,
     imageWidth,
     imageHeight,
-    setTargetWaypointViewState,
+    setTargetWaypointCamera,
     viewerViewportSize,
     SourceChannels,
     Groups,
@@ -295,7 +294,9 @@ export const Presentation = (props: PresentationProps) => {
   const previousActiveStoryIndexRef = useRef<number | null>(null);
 
   // Auto-import annotations for the active story
-  // Re-run when image dimensions become available or active story changes
+  // Re-run when image dimensions become available or active story changes.
+  // Also when `viewerViewportSize` updates so ImageViewer can re-resolve the camera after layout changes (author vs preview).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — effect must re-fire on viewport size
   useEffect(() => {
     if (stories.length === 0) return;
     // Wait for image dimensions to be set
@@ -325,22 +326,9 @@ export const Presentation = (props: PresentationProps) => {
       }
 
       const wp = story as ConfigWaypoint;
-      let viewState = null;
-      if (
-        viewerViewportSize?.width &&
-        viewerViewportSize?.height &&
-        imageWidth > 0 &&
-        imageHeight > 0
-      ) {
-        viewState = getWaypointViewState(
-          wp,
-          imageWidth,
-          imageHeight,
-          viewerViewportSize.width,
-          viewerViewportSize.height,
-        );
+      if (imageWidth > 0 && imageHeight > 0) {
+        setTargetWaypointCamera(wp);
       }
-      if (viewState) setTargetWaypointViewState(viewState);
 
       const groupName = wp.Group;
       if (Groups.length > 0) {
@@ -360,7 +348,7 @@ export const Presentation = (props: PresentationProps) => {
     viewerViewportSize?.height,
     importWaypointAnnotations,
     clearImportedAnnotations,
-    setTargetWaypointViewState,
+    setTargetWaypointCamera,
     Groups,
     setActiveChannelGroup,
   ]);
@@ -391,22 +379,9 @@ export const Presentation = (props: PresentationProps) => {
   const updateViewState = (storyIndex: number) => {
     const story = stories[storyIndex] as ConfigWaypoint | undefined;
     if (!story) return;
-    let viewState = null;
-    if (
-      viewerViewportSize?.width &&
-      viewerViewportSize?.height &&
-      imageWidth > 0 &&
-      imageHeight > 0
-    ) {
-      viewState = getWaypointViewState(
-        story,
-        imageWidth,
-        imageHeight,
-        viewerViewportSize.width,
-        viewerViewportSize.height,
-      );
+    if (imageWidth > 0 && imageHeight > 0) {
+      setTargetWaypointCamera(story);
     }
-    if (viewState) setTargetWaypointViewState(viewState);
   };
 
   const storyFirst = () => {
