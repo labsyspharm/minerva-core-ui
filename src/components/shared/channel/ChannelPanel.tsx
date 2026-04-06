@@ -33,12 +33,16 @@ const TextWrap = styled.div`
   height: 100%;
   min-height: 0;
   > div.core {
-    color: #eee;
+    color: #e6edf3;
     position: absolute;
     right: 0;
     top: 0;
-    width: 220px;
-    margin-bottom: 4px;
+    width: 200px;
+    max-height: min(100%, calc(100dvh - 12px));
+    margin-bottom: 2px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
     transition: transform 0.5s ease 0s;
   }
   > div.core.hide {
@@ -94,33 +98,39 @@ const HistogramsLoadingSpinner = styled.div`
 
 // Content layout styles (merged from content.tsx)
 const WrapContent = styled.div`
-  height: 100%;
-  display: grid;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   pointer-events: none;
-  grid-template-rows: auto auto 1fr;
-  grid-template-columns: 100%;
 `;
 
 const WrapCore = styled.div`
-  padding: 0.5em;
-  grid-column: 1;
-  grid-row: 1 / 3;
+  flex: 1;
+  min-height: 0;
+  padding: 6px 8px 7px;
   overflow: auto;
+  overscroll-behavior: contain;
   scrollbar-color: #888 var(--theme-dim-gray-color);
+  scrollbar-width: thin;
   pointer-events: all;
   word-wrap: break-word;
-  border: 2px solid var(--theme-glass-edge);
-  background-color: var(--dark-glass);
+  border: 1px solid color-mix(in srgb, var(--theme-glass-edge) 75%, transparent);
+  background-color: color-mix(in srgb, var(--dark-glass) 92%, black);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-0001);
+  font-size: 12px;
 `;
 
-const WrapColumns = styled.div`
-  grid-template-columns: auto 1fr;
-  display: grid;
-  gap: 0.25em;
-`;
-
-const Header = styled.h2`
+const OverlaySectionLabel = styled.div`
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--theme-light-contrast-color) 52%, transparent);
+  margin: 0 0 4px;
+  line-height: 1.2;
 `;
 
 export const ChannelPanel = (props: ChannelPanelProps) => {
@@ -195,11 +205,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const allGroups =
     groups.length || props ? (
       <>
-        <Header className="h6">
-          <WrapColumns>
-            <span>Channel Group</span>
-          </WrapColumns>
-        </Header>
+        <OverlaySectionLabel>Group</OverlaySectionLabel>
         <ChannelGroups {...{ ...groupProps, groups }} />
       </>
     ) : null;
