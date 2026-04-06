@@ -489,7 +489,7 @@
 .detailBodyInner {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .detailTitleFieldWrap {
@@ -612,6 +612,52 @@
 
 .detailCollapsibleBody {
   flex-shrink: 0;
+}
+
+/* Channel group detail: non-collapsible channel list (tighter than generic collapsible) */
+.detailChannelsSection {
+  border: 1px solid #30363d;
+  border-radius: 3px;
+  overflow: hidden;
+  background-color: #0d1117;
+  box-sizing: border-box;
+}
+
+.detailChannelsSectionTitle {
+  padding: 5px 10px;
+  border-bottom: 1px solid #30363d;
+  background-color: #0d1117;
+  color: #c9d1d9;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  user-select: none;
+}
+
+.detailChannelsSectionBody {
+  flex-shrink: 0;
+}
+
+.detailChannelsSectionBody .channelRow {
+  padding: 3px 8px;
+  gap: 4px;
+}
+
+.detailChannelsSectionBody .addChannelRow {
+  padding: 4px 8px;
+}
+
+.detailChannelBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.detailChannelItemEmbed {
+  padding: 0 8px 3px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .subtleBanner {

@@ -289,9 +289,13 @@ const Content = (props: Props) => {
   }, [setItems]);
 
   const [fileName, setFileName] = useState("");
+  /** Bumps on each OME-TIFF-URL load so stale `getDistributions` completions cannot overwrite `SourceChannels`. */
+  const omeTiffUrlLoadGenerationRef = React.useRef(0);
   const [importRevision, setImportRevision] = useState(0);
   const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
   const [isLoadingImage, setIsLoadingImage] = useState(hasDemo);
+  /** Lazy OME-TIFF URL histogram fetch — channel panel overlay only. */
+  const [histogramsLoading, setHistogramsLoading] = useState(false);
   const showSquareViewportOverlay = useOverlayStore(
     (state) => state.showSquareViewportOverlay,
   );
@@ -344,7 +348,12 @@ const Content = (props: Props) => {
   };
 
   const onStartOmeTiffUrl = async (url: string) => {
+    omeTiffUrlLoadGenerationRef.current += 1;
+    const loadGeneration = omeTiffUrlLoadGenerationRef.current;
     const loader = await toLoaderFromUrl(url, new Pool());
+    if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
+      return;
+    }
     const exhibitGroups = props.exhibit_config.Groups ?? [];
     const relevant_groups = exhibitGroups.filter(
       ({ Image }) => Image.Method === "Colorimetric",
@@ -364,11 +373,22 @@ const Content = (props: Props) => {
 
     // Fetch distributions lazily so channel histograms populate without
     // blocking the initial render.
-    getDistributions(SourceChannels, loader).then(
-      ({ SourceChannelsWithDist }) => {
+    setHistogramsLoading(true);
+    getDistributions(SourceChannels, loader)
+      .then(({ SourceChannelsWithDist }) => {
+        if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
+          return;
+        }
         setSourceChannels(SourceChannelsWithDist);
-      },
-    );
+        setItems({ SourceChannels: SourceChannelsWithDist });
+        setHistogramsLoading(false);
+      })
+      .catch((err) => {
+        if (loadGeneration === omeTiffUrlLoadGenerationRef.current) {
+          setHistogramsLoading(false);
+        }
+        console.warn("[minerva] distribution fetch aborted or failed:", err);
+      });
   };
 
   const onStartOmeTiffRef = React.useRef(onStartOmeTiff);
@@ -454,6 +474,7 @@ const Content = (props: Props) => {
     setImportRevision((r) => r + 1);
     setHiddenWaypointWithLogic(false);
     setIsLoadingImage(true);
+    setHistogramsLoading(false);
     try {
       if (dicomPropList.length > 0) {
         const t1 = performance.now();
@@ -759,6 +780,7 @@ const Content = (props: Props) => {
     updateChannel,
     pushChannel,
     popChannel,
+    histogramsLoading,
   };
 
   const retrievingMetadata = isLoadingImage;
@@ -788,6 +810,16 @@ const Content = (props: Props) => {
     };
   }, [Groups, SourceChannels]);
 
+  const viewerImageKey = React.useMemo(() => {
+    if (loaderOmeTiff !== null) {
+      return fileName || "ome-tiff";
+    }
+    if (dicomIndexList.length > 0) {
+      return dicomIndexList.map((d) => d.series).join("|");
+    }
+    return "";
+  }, [loaderOmeTiff, fileName, dicomIndexList]);
+
   const imageProps = React.useMemo(() => {
     return {
       Groups,
@@ -799,6 +831,7 @@ const Content = (props: Props) => {
       stories,
       name,
       showSquareViewportOverlay,
+      viewerImageKey,
     };
   }, [
     Groups,
@@ -810,6 +843,7 @@ const Content = (props: Props) => {
     stories,
     name,
     showSquareViewportOverlay,
+    viewerImageKey,
   ]);
 
   // Use Zustand store for overlay state management

@@ -2,6 +2,7 @@ import { getImageSize } from "@hms-dbmi/viv";
 import type { DTYPE_VALUES } from "@vivjs/constants";
 import type { ConfigGroup, ConfigSourceChannel } from "./document-store";
 import type { ConfigGroup as LegacyConfigGroup } from "./exhibit";
+import { histogramBinTile } from "./histogramBinPool";
 import type { Loader } from "./viv";
 
 export type SupportedDtype = keyof typeof DTYPE_VALUES;
@@ -218,12 +219,15 @@ const asID = (k: string): ID => ({ ID: k });
 const asUUID = (k: string): UUID => ({ UUID: k });
 const onlyUUID = (v: UUID): UUID => asUUID(v.UUID);
 
+/** Per-tile ceiling for histogram `getTile` (remote OME-TIFF); avoids hung lazy `getDistributions`. */
+const HISTOGRAM_TILE_TIMEOUT_MS = 10_000;
+
 const captureTile: CaptureTile = async (index, planes) => {
   const level = Math.abs(index.z);
   const z_plane = planes[level];
   const selection = { t: 0, z: 0, c: index.c };
-  const signal = AbortSignal.timeout(30 * 1000);
   const { x, y } = index;
+  const signal = AbortSignal.timeout(HISTOGRAM_TILE_TIMEOUT_MS);
   const tile = await z_plane.getTile({
     selection,
     x,
@@ -235,34 +239,8 @@ const captureTile: CaptureTile = async (index, planes) => {
 };
 
 const bin: Bin = async (inputs) => {
-  const n_bins = 50;
-  const max_power = inputs.bits;
-  const thresholds = [
-    ...new Set(
-      [...new Array(n_bins).keys()].map((x) => {
-        return Math.floor(2 ** ((max_power * x) / n_bins));
-      }),
-    ),
-  ];
-  thresholds.sort((a, b) => a - b);
-  // Load the image tile for given index
   const { data, width } = await captureTile(inputs.index, inputs.planes);
-  const step = 4;
-  // Sample along pixel grid of step size in x and y
-  let indices = [...new Array(data.length).keys()]
-    .filter((i) => i % step === 0 || Math.floor(i / width) % step === 0)
-    .filter((i) => data[i] > 0);
-  // Count indices with data between thresholds
-  return thresholds.reduce((binned, threshold, t) => {
-    if (t > 0 && thresholds[t - 1] === threshold) {
-      return binned.concat(binned.slice(-1));
-    }
-    const outside_indices = indices.filter((i) => data[i] > threshold);
-    const pixel_count = indices.length - outside_indices.length;
-    indices = outside_indices;
-    binned.push(pixel_count);
-    return binned;
-  }, []);
+  return histogramBinTile(inputs.bits, width, data);
 };
 
 const toTilePlane: ToTilePlane = (zoom, planes) => {
@@ -320,37 +298,35 @@ const initialize: Initialize = (inputs) => {
 const extractDistributions: ExtractDistributions = async (loader) => {
   const init = initialize({ planes: loader.data });
   const bits = parseInt(init.tileProps.dtype.replace(/.?int/, ""), 10);
-  // Fetch channels sequentially to avoid overwhelming remote servers
-  // with many concurrent tile requests.
-  const SourceDistributionEntries: [number, ConfigSourceDistribution][] = [];
-  for (const index of init.indices) {
-    const SourceIndex = index.c;
-    let YValues: number[] = [];
-    if (!Number.isNaN(bits)) {
-      try {
-        YValues = await bin({
-          bits,
-          index,
-          planes: loader.data,
-        });
-      } catch {
-        // Tile fetch can fail for remote images; use empty distribution.
+  const entries = await Promise.all(
+    init.indices.map(async (index) => {
+      const SourceIndex = index.c;
+      let YValues: number[] = [];
+      if (!Number.isNaN(bits)) {
+        try {
+          YValues = await bin({
+            bits,
+            index,
+            planes: loader.data,
+          });
+        } catch {
+          // Tile fetch can fail for remote images; use empty distribution.
+        }
       }
-    }
-    SourceDistributionEntries.push([
-      SourceIndex,
-      {
-        UUID: crypto.randomUUID(),
-        YValues,
-        XScale: "log",
-        YScale: "linear",
-        LowerRange: 0,
-        UpperRange: bits,
-      },
-    ]);
-  }
-  // Map from image channel to distribution
-  return new Map<number, ConfigSourceDistribution>(SourceDistributionEntries);
+      return [
+        SourceIndex,
+        {
+          UUID: crypto.randomUUID(),
+          YValues,
+          XScale: "log",
+          YScale: "linear",
+          LowerRange: 0,
+          UpperRange: bits,
+        },
+      ] as [number, ConfigSourceDistribution];
+    }),
+  );
+  return new Map<number, ConfigSourceDistribution>(entries);
 };
 
 const extractChannels: ExtractChannels = (loader, modality, groups) => {

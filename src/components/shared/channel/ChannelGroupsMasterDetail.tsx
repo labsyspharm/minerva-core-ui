@@ -77,13 +77,15 @@ export const ChannelGroupsMasterDetail = (
   const setGroups = useOverlayStore((s) => s.setGroups);
   const setGroupNames = useOverlayStore((s) => s.setGroupNames);
   const setGroupChannelLists = useOverlayStore((s) => s.setGroupChannelLists);
+  const setChannelVisibilities = useOverlayStore(
+    (s) => s.setChannelVisibilities,
+  );
 
   const detailBodyRef = React.useRef<HTMLDivElement | null>(null);
   const renameFieldId = React.useId();
 
   // Master-detail state
   const [detailGroupId, setDetailGroupId] = React.useState<string | null>(null);
-  const [channelsExpanded, setChannelsExpanded] = React.useState(true);
 
   // Editing state
   const [replacingChannelUUID, setReplacingChannelUUID] = React.useState<
@@ -100,7 +102,6 @@ export const ChannelGroupsMasterDetail = (
   // Reset detail state when switching groups
   React.useEffect(() => {
     if (detailGroupId) {
-      setChannelsExpanded(true);
       setReplacingChannelUUID(null);
     }
   }, [detailGroupId]);
@@ -127,8 +128,33 @@ export const ChannelGroupsMasterDetail = (
         ]),
       );
       setGroupChannelLists(lists);
+      const namesInUse = new Set<string>();
+      for (const g of newGroups) {
+        for (const gc of g.GroupChannels) {
+          const sc = SourceChannels.find(
+            ({ UUID }) => UUID === gc.SourceChannel.UUID,
+          );
+          if (sc?.Name) {
+            namesInUse.add(sc.Name);
+          }
+        }
+      }
+      const prev = useOverlayStore.getState().channelVisibilities;
+      const merged = { ...prev };
+      for (const name of namesInUse) {
+        if (merged[name] === undefined) {
+          merged[name] = true;
+        }
+      }
+      setChannelVisibilities(merged);
     },
-    [SourceChannels, setGroups, setGroupNames, setGroupChannelLists],
+    [
+      SourceChannels,
+      setGroups,
+      setGroupNames,
+      setGroupChannelLists,
+      setChannelVisibilities,
+    ],
   );
 
   // --- Group CRUD ---
@@ -478,178 +504,152 @@ export const ChannelGroupsMasterDetail = (
               />
             </div>
 
-            {/* Channels collapsible section */}
-            <div
-              className={[
-                styles.detailCollapsible,
-                !channelsExpanded ? styles.detailCollapsibleCollapsed : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              <button
-                type="button"
-                className={styles.detailCollapsibleHeader}
-                aria-expanded={channelsExpanded}
-                onClick={() => setChannelsExpanded((prev) => !prev)}
-              >
-                <ChevronDownIcon
-                  className={styles.detailCollapsibleChevron}
-                  aria-hidden
-                />
-                <span className={styles.detailCollapsibleTitle}>
-                  Channels{" "}
-                  <span className={styles.detailCollapsibleCount}>
-                    ({channels.length})
-                  </span>
+            {/* Channels — always visible (detail view is only this group + channels) */}
+            <div className={styles.detailChannelsSection}>
+              <div className={styles.detailChannelsSectionTitle}>
+                Channels{" "}
+                <span className={styles.detailCollapsibleCount}>
+                  ({channels.length})
                 </span>
-              </button>
-              {channelsExpanded ? (
-                <div className={styles.detailCollapsibleBody}>
-                  {channels.map((ch) => {
-                    const isReplacing = replacingChannelUUID === ch.channelUUID;
-                    const gc = detailGroup.GroupChannels.find(
-                      (c) => c.UUID === ch.channelUUID,
-                    );
-                    const legacyChannelItem =
-                      gc &&
-                      !props.retrievingMetadata &&
-                      !props.noLoader &&
-                      React.createElement(props.channelItemElement, {
-                        key: `embed-${ch.channelUUID}`,
-                        ...channelItemAttrsFor(gc),
-                      });
+              </div>
+              <div className={styles.detailChannelsSectionBody}>
+                {channels.map((ch) => {
+                  const isReplacing = replacingChannelUUID === ch.channelUUID;
+                  const gc = detailGroup.GroupChannels.find(
+                    (c) => c.UUID === ch.channelUUID,
+                  );
+                  const legacyChannelItem =
+                    gc &&
+                    !props.retrievingMetadata &&
+                    !props.noLoader &&
+                    React.createElement(props.channelItemElement, {
+                      key: `embed-${ch.channelUUID}-${ch.sourceUUID}`,
+                      ...channelItemAttrsFor(gc),
+                    });
 
-                    return (
-                      <div key={ch.channelUUID}>
-                        <div className={styles.channelRow}>
-                          <button
-                            type="button"
-                            className={styles.channelColorSwatch}
-                            style={{ backgroundColor: `#${ch.hex}` }}
-                            title={`Pick color for ${ch.name}`}
-                            aria-label={`Pick color for ${ch.name}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const rect =
-                                e.currentTarget.getBoundingClientRect();
-                              setColorPickerChannelUUID(ch.channelUUID);
-                              setColorPickerPos({
-                                top: Math.min(
-                                  rect.bottom + 4,
-                                  window.innerHeight - 280,
-                                ),
-                                left: Math.min(
-                                  rect.left,
-                                  window.innerWidth - 240,
-                                ),
-                              });
+                  return (
+                    <div
+                      key={ch.channelUUID}
+                      className={styles.detailChannelBlock}
+                    >
+                      <div className={styles.channelRow}>
+                        <button
+                          type="button"
+                          className={styles.channelColorSwatch}
+                          style={{ backgroundColor: `#${ch.hex}` }}
+                          title={`Pick color for ${ch.name}`}
+                          aria-label={`Pick color for ${ch.name}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const rect =
+                              e.currentTarget.getBoundingClientRect();
+                            setColorPickerChannelUUID(ch.channelUUID);
+                            setColorPickerPos({
+                              top: Math.min(
+                                rect.bottom + 4,
+                                window.innerHeight - 280,
+                              ),
+                              left: Math.min(
+                                rect.left,
+                                window.innerWidth - 240,
+                              ),
+                            });
+                          }}
+                        />
+                        {isReplacing ? (
+                          <select
+                            className={styles.addChannelSelect}
+                            defaultValue=""
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                replaceChannelInGroup(
+                                  detailGroup.UUID,
+                                  ch.channelUUID,
+                                  e.target.value,
+                                );
+                              }
                             }}
-                          />
-                          {isReplacing ? (
-                            <select
-                              className={styles.addChannelSelect}
-                              defaultValue=""
-                              onChange={(e) => {
-                                if (e.target.value) {
-                                  replaceChannelInGroup(
-                                    detailGroup.UUID,
-                                    ch.channelUUID,
-                                    e.target.value,
-                                  );
-                                }
-                              }}
-                              onBlur={() => setReplacingChannelUUID(null)}
-                              // biome-ignore lint/a11y/noAutofocus: replace dropdown
-                              autoFocus
-                            >
-                              <option value="" disabled>
-                                Replace with...
+                            onBlur={() => setReplacingChannelUUID(null)}
+                            // biome-ignore lint/a11y/noAutofocus: replace dropdown
+                            autoFocus
+                          >
+                            <option value="" disabled>
+                              Replace with...
+                            </option>
+                            {replaceOptions(ch.sourceUUID).map((sc) => (
+                              <option key={sc.UUID} value={sc.UUID}>
+                                {sc.Name}
                               </option>
-                              {replaceOptions(ch.sourceUUID).map((sc) => (
-                                <option key={sc.UUID} value={sc.UUID}>
-                                  {sc.Name}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <span className={styles.channelName}>
-                              {ch.name}
-                            </span>
-                          )}
-                          <button
-                            type="button"
-                            className={styles.channelActionButton}
-                            title="Replace channel"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setReplacingChannelUUID(
-                                isReplacing ? null : ch.channelUUID,
-                              );
-                            }}
-                          >
-                            <ReplaceIcon />
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.channelActionButton}
-                            title="Remove channel"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeChannelFromGroup(
-                                detailGroup.UUID,
-                                ch.channelUUID,
-                              );
-                            }}
-                          >
-                            <RemoveIcon />
-                          </button>
-                        </div>
-                        {legacyChannelItem ? (
-                          <div
-                            style={{
-                              padding: "0 10px 6px",
-                              width: "100%",
-                              minWidth: 0,
-                              boxSizing: "border-box",
-                            }}
-                          >
-                            {legacyChannelItem}
-                          </div>
-                        ) : null}
+                            ))}
+                          </select>
+                        ) : (
+                          <span className={styles.channelName}>{ch.name}</span>
+                        )}
+                        <button
+                          type="button"
+                          className={styles.channelActionButton}
+                          title="Replace channel"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReplacingChannelUUID(
+                              isReplacing ? null : ch.channelUUID,
+                            );
+                          }}
+                        >
+                          <ReplaceIcon />
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.channelActionButton}
+                          title="Remove channel"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeChannelFromGroup(
+                              detailGroup.UUID,
+                              ch.channelUUID,
+                            );
+                          }}
+                        >
+                          <RemoveIcon />
+                        </button>
                       </div>
-                    );
-                  })}
-                  {/* Add channel */}
-                  <div className={styles.addChannelRow}>
-                    {availableChannels.length === 0 ? (
-                      <span className={styles.allChannelsNote}>
-                        All channels in group
-                      </span>
-                    ) : (
-                      <select
-                        className={styles.addChannelSelect}
-                        defaultValue=""
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            addChannelToGroup(detailGroup.UUID, e.target.value);
-                            e.target.value = "";
-                          }
-                        }}
-                      >
-                        <option value="" disabled>
-                          Add channel...
+                      {legacyChannelItem ? (
+                        <div className={styles.detailChannelItemEmbed}>
+                          {legacyChannelItem}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+                {/* Add channel */}
+                <div className={styles.addChannelRow}>
+                  {availableChannels.length === 0 ? (
+                    <span className={styles.allChannelsNote}>
+                      All channels in group
+                    </span>
+                  ) : (
+                    <select
+                      className={styles.addChannelSelect}
+                      defaultValue=""
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          addChannelToGroup(detailGroup.UUID, e.target.value);
+                          e.target.value = "";
+                        }
+                      }}
+                    >
+                      <option value="" disabled>
+                        Add channel...
+                      </option>
+                      {availableChannels.map((sc) => (
+                        <option key={sc.UUID} value={sc.UUID}>
+                          {sc.Name}
                         </option>
-                        {availableChannels.map((sc) => (
-                          <option key={sc.UUID} value={sc.UUID}>
-                            {sc.Name}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
+                      ))}
+                    </select>
+                  )}
                 </div>
-              ) : null}
+              </div>
             </div>
           </div>
         </div>
