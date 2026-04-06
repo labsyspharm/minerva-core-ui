@@ -28,7 +28,7 @@ class RangeEditorChannel extends sourceGroupChannels(
         XScale: "log",
         YScale: "linear",
         YValues: [],
-        LowerRange: 1,
+        LowerRange: 0,
         UpperRange: 16,
       }
     );
@@ -54,18 +54,29 @@ class RangeEditorChannel extends sourceGroupChannels(
     const chart_x_range = chart_x_max - chart_x_origin;
     const chart_x_scale = chart_x_steps / chart_x_range;
     const from_input = (value) => {
-      value = chart_x_origin + value / chart_x_scale;
+      let v_linear = chart_x_origin + value / chart_x_scale;
+      let out = v_linear;
       if (distribution.XScale === "log") {
-        value = 2 ** value;
+        if (v_linear <= chart_x_origin) {
+          out = chart_x_origin === 0 ? 0 : 2 ** chart_x_origin;
+        } else {
+          out = 2 ** v_linear;
+        }
       }
       return Math.max(
         dataType.LowerRange,
-        Math.min(dataType.UpperRange, value),
+        Math.min(dataType.UpperRange, out),
       );
     };
     const to_input = (value) => {
       if (distribution.XScale === "log") {
-        value = Math.log2(Math.max(1, value));
+        if (chart_x_origin === 0 && value <= 0) {
+          value = 0;
+        } else {
+          const minPositive =
+            chart_x_origin === 0 ? 1 : 2 ** chart_x_origin;
+          value = Math.log2(Math.max(minPositive, value));
+        }
       }
       return Math.round(
         chart_x_scale *

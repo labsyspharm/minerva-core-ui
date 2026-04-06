@@ -11,6 +11,28 @@ const toChannelItem = (
 
     static eventHandlerKeys = [ ];
 
+    static get observedAttributes() {
+      return ["r", "g", "b"];
+    }
+
+    _syncRangeEditorSliderColor() {
+      const el = this.shadowRoot?.querySelector(
+        "[data-contrast-range-editor]",
+      );
+      if (!el) return;
+      const R = parseInt(this.getAttribute("r"), 10);
+      const G = parseInt(this.getAttribute("g"), 10);
+      const B = parseInt(this.getAttribute("b"), 10);
+      const r = Number.isFinite(R) ? R : 0;
+      const g = Number.isFinite(G) ? G : 0;
+      const b = Number.isFinite(B) ? B : 0;
+      el.style.setProperty("--slider-background", `rgb(${r},${g},${b})`);
+    }
+
+    attributeChangedCallback(_name, _old, _new) {
+      this._syncRangeEditorSliderColor();
+    }
+
     addStyles() {
       const shadow = this.shadowRoot;
       shadow.adoptedStyleSheets = [
@@ -25,6 +47,7 @@ const toChannelItem = (
       this.attachShadow({ mode: "open" });
       const shadow = this.addStyles();
       html`${this.elementTemplate}`(shadow);
+      queueMicrotask(() => this._syncRangeEditorSliderColor());
     }
 
     get elementTemplate() {
@@ -60,6 +83,7 @@ const toChannelItem = (
           dist_min: LowerRange,
           style,
           class: "full",
+          "data-contrast-range-editor": "",
         });
       };
       return rangeEditor;
@@ -67,8 +91,8 @@ const toChannelItem = (
 
     get chartTemplate() {
       const width = 100;
-      const height = 15;
-      const stroke = 1.5;
+      const height = 11;
+      const stroke = 1.15;
       const d = () => {
         const { YValues: values } = this.distribution;
         const line = [0, ...(values || []), 0];
@@ -111,7 +135,7 @@ const toChannelItem = (
           XScale: "log",
           YScale: "linear",
           YValues: [],
-          LowerRange: 1,
+          LowerRange: 0,
           UpperRange: 16,
         }
       );
