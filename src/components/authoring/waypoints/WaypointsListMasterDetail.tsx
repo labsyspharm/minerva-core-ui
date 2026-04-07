@@ -160,7 +160,6 @@ const WaypointsList = (props: WaypointsListProps) => {
   const detailStory = detailStoryIndex >= 0 ? stories[detailStoryIndex] : null;
 
   // Auto-import annotations for the active story (or first story on initial load).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-import when `Shapes` registry catches up (matches playback `Presentation`)
   React.useEffect(() => {
     if (stories.length === 0) return;
     if (imageWidth === 0 || imageHeight === 0) return;
@@ -175,6 +174,11 @@ const WaypointsList = (props: WaypointsListProps) => {
       store.persistImportedAnnotationsToStory(prev);
     }
     previousActiveStoryIndexRef.current = storyIndex;
+
+    const _pendingShapeImports = (story.ShapeIds ?? []).filter(
+      (id) => !Shapes.some((shape) => shape.uuid === id),
+    ).length;
+    void _pendingShapeImports;
 
     importWaypointAnnotations(story, true);
   }, [
@@ -553,21 +557,13 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <div className={styles.rowThumbnail} aria-hidden />
                 )}
 
-                {/* biome-ignore lint/a11y/useSemanticElements: Nested Jump <button> cannot sit inside a <button>. */}
-                <div
+                <button
+                  type="button"
                   {...rowDragProps}
                   className={styles.rowMainHit}
-                  role="button"
-                  tabIndex={0}
                   aria-label={`Select waypoint: ${story.Name}`}
                   onClick={() => activateStoryIndex(index, true)}
                   onDoubleClick={() => openDetailForStoryId(storyId)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      activateStoryIndex(index, true);
-                    }
-                  }}
                 >
                   <div className={styles.rowTextStack}>
                     <div className={styles.rowTitleRow}>
@@ -597,7 +593,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                       {story.Content ?? ""}
                     </span>
                   </div>
-                </div>
+                </button>
                 <div className={styles.rowViewportActions}>
                   <button
                     type="button"

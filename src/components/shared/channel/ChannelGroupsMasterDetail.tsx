@@ -97,6 +97,7 @@ export const ChannelGroupsMasterDetail = (
   const [replacingChannelUUID, setReplacingChannelUUID] = React.useState<
     string | null
   >(null);
+  const replaceChannelSelectRef = React.useRef<HTMLSelectElement | null>(null);
   const [colorPickerChannelUUID, setColorPickerChannelUUID] = React.useState<
     string | null
   >(null);
@@ -111,6 +112,14 @@ export const ChannelGroupsMasterDetail = (
       setReplacingChannelUUID(null);
     }
   }, [detailGroupId]);
+
+  React.useEffect(() => {
+    if (replacingChannelUUID === null) return;
+    const id = window.requestAnimationFrame(() => {
+      replaceChannelSelectRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [replacingChannelUUID]);
 
   const detailGroup = detailGroupId
     ? (Groups.find((g) => g.UUID === detailGroupId) ?? null)
@@ -436,20 +445,12 @@ export const ChannelGroupsMasterDetail = (
                   />
                 </button>
 
-                {/* biome-ignore lint/a11y/useSemanticElements: row needs nested interactive */}
-                <div
+                <button
+                  type="button"
                   className={styles.groupRowMainHit}
-                  role="button"
-                  tabIndex={0}
                   aria-label={`Select group: ${group.Name}`}
                   onClick={() => setActiveChannelGroup(group.UUID)}
                   onDoubleClick={() => openDetailForGroup(group.UUID)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      setActiveChannelGroup(group.UUID);
-                    }
-                  }}
                 >
                   <div className={styles.rowTextStack}>
                     <span className={styles.rowTitle} title={group.Name}>
@@ -459,7 +460,7 @@ export const ChannelGroupsMasterDetail = (
                       {subtitle || "No channels"}
                     </span>
                   </div>
-                </div>
+                </button>
               </li>
             );
           })}
@@ -621,6 +622,7 @@ export const ChannelGroupsMasterDetail = (
                         />
                         {isReplacing ? (
                           <select
+                            ref={replaceChannelSelectRef}
                             className={styles.addChannelSelect}
                             defaultValue=""
                             onChange={(e) => {
@@ -633,8 +635,6 @@ export const ChannelGroupsMasterDetail = (
                               }
                             }}
                             onBlur={() => setReplacingChannelUUID(null)}
-                            // biome-ignore lint/a11y/noAutofocus: replace dropdown
-                            autoFocus
                           >
                             <option value="" disabled>
                               Replace with...

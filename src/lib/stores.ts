@@ -2378,29 +2378,23 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
         const shapeIds = story.ShapeIds ?? [];
         const shapeById = new Map(Shapes.map((s) => [s.uuid, s]));
-        const registryComplete =
-          shapeIds.length > 0 && shapeIds.every((id) => shapeById.has(id));
 
         const newAnnotations: Annotation[] = [];
-        if (registryComplete) {
-          for (const id of shapeIds) {
-            const sh = shapeById.get(id);
-            if (sh) newAnnotations.push(shapeToAnnotation(sh));
-          }
+        for (const id of shapeIds) {
+          const sh = shapeById.get(id);
+          if (sh) newAnnotations.push(shapeToAnnotation(sh));
         }
 
-        // With `clearExisting`, only drop prior imported annotations when we can
-        // replace them (registry matches ShapeIds) or the waypoint has none.
-        // Otherwise we would wipe the canvas and show nothing (e.g. playback
-        // before `Shapes` is seeded — retry after registry updates).
-        const effectiveClearExisting =
-          clearExisting && (shapeIds.length === 0 || registryComplete);
-
+        // Always remove prior `isImported` overlays when `clearExisting` (waypoint
+        // switch), even if `Shapes` is not fully loaded yet — otherwise annotations
+        // from the previous waypoint stay on canvas until the registry catches up.
+        // Resolved shapes are appended in `ShapeIds` order; effects re-run when
+        // `Shapes` updates to add any entries that were still missing.
         set((state) =>
           mergeAnnotationsAfterWaypointImport(
             state,
             newAnnotations,
-            effectiveClearExisting,
+            clearExisting,
           ),
         );
       },

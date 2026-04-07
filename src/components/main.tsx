@@ -728,8 +728,10 @@ const Content = (props: Props) => {
   );
 
   const itemRegistryGroups = React.useMemo(() => {
-    void imageViewerStateSignature;
     const { Groups: G, SourceChannels: SC } = documentChannelsRef.current;
+    if (buildImageViewerSignature(G, SC) !== imageViewerStateSignature) {
+      throw new Error("minerva: document channel ref/signature mismatch");
+    }
     return G.map((group, g) => {
       const { Name, GroupChannels } = group;
       const channels = GroupChannels.map((group_channel) => {
@@ -831,7 +833,10 @@ const Content = (props: Props) => {
   };
 
   const viewerConfig = React.useMemo(() => {
-    void imageViewerStateSignature;
+    const { Groups: G, SourceChannels: SC } = documentChannelsRef.current;
+    if (buildImageViewerSignature(G, SC) !== imageViewerStateSignature) {
+      throw new Error("minerva: document channel ref/signature mismatch");
+    }
     return {
       toSettings: (
         activeChannelGroupId: string | null,

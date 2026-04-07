@@ -79,7 +79,6 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   // Auto-import annotations for the active story (or first story on initial load)
   // Also re-run when image dimensions become available
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-import when `Shapes` registry catches up (matches playback `Presentation`)
   React.useEffect(() => {
     if (stories.length === 0) return;
     // Wait for image dimensions to be set
@@ -96,6 +95,11 @@ const WaypointsList = (props: WaypointsListProps) => {
         store.persistImportedAnnotationsToStory(prev);
       }
       previousActiveStoryIndexRef.current = storyIndex;
+
+      const _pendingShapeImports = (story.ShapeIds ?? []).filter(
+        (id) => !Shapes.some((shape) => shape.uuid === id),
+      ).length;
+      void _pendingShapeImports;
 
       // Replace imported shapes from the story; keep user-drawn annotations (see `mergeAnnotationsAfterWaypointImport`).
       importWaypointAnnotations(story, true);

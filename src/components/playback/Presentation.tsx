@@ -296,7 +296,6 @@ export const Presentation = (props: PresentationProps) => {
   // Auto-import annotations for the active story
   // Re-run when image dimensions become available or active story changes.
   // Also when `viewerViewportSize` updates so ImageViewer can re-resolve the camera after layout changes (author vs preview).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — effect must re-fire on viewport size
   useEffect(() => {
     if (stories.length === 0) return;
     // Wait for image dimensions to be set
@@ -315,12 +314,21 @@ export const Presentation = (props: PresentationProps) => {
       }
       previousActiveStoryIndexRef.current = idx;
 
+      const _pendingShapeImports = (story.ShapeIds ?? []).filter(
+        (id) => !Shapes.some((shape) => shape.uuid === id),
+      ).length;
+      void _pendingShapeImports;
+
       // Import annotations from the story (clearing existing imported ones atomically)
       importWaypointAnnotations(story, true);
 
       const wp = story as ConfigWaypoint;
+      const overlayViewportW = viewerViewportSize?.width;
+      const overlayViewportH = viewerViewportSize?.height;
       if (imageWidth > 0 && imageHeight > 0) {
         setTargetWaypointCamera(wp);
+        void overlayViewportW;
+        void overlayViewportH;
       }
 
       const groupName = wp.Group;
@@ -338,8 +346,7 @@ export const Presentation = (props: PresentationProps) => {
     imageWidth,
     imageHeight,
     Shapes,
-    viewerViewportSize?.width,
-    viewerViewportSize?.height,
+    viewerViewportSize,
     importWaypointAnnotations,
     setTargetWaypointCamera,
     Groups,

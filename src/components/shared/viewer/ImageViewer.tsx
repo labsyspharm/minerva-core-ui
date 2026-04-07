@@ -240,15 +240,16 @@ export const ImageViewer = (props: ImageViewerProps) => {
   // Memoize image shape computation
   const imageShape = useMemo(() => {
     if (firstLoader.data === null) {
-      return {
-        x: viewportSize.width,
-        y: viewportSize.height,
-      };
+      // Do not use viewport size as a stand-in for image pixels: the overlay
+      // store's imageWidth/imageHeight drive legacy waypoint migration and
+      // shape import scaling. Wrong values here freeze incorrect coordinates
+      // because migration is skipped once ShapeIds already exist.
+      return { x: 0, y: 0 };
     }
     const shape_labels = firstLoader.data[0].labels;
     const shape_values = firstLoader.data[0].shape;
     return Object.fromEntries(shape_labels.map((k, i) => [k, shape_values[i]]));
-  }, [viewportSize.width, viewportSize.height, firstLoader]);
+  }, [firstLoader]);
 
   // Memoize initial view state
   const initialViewState = useMemo(() => {
