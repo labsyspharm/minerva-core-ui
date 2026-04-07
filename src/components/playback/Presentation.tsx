@@ -282,13 +282,13 @@ export const Presentation = (props: PresentationProps) => {
     activeChannelGroupId,
     setActiveChannelGroup,
     importWaypointAnnotations,
-    clearImportedAnnotations,
     imageWidth,
     imageHeight,
     setTargetWaypointCamera,
     viewerViewportSize,
     SourceChannels,
     Groups,
+    Shapes,
   } = useOverlayStore();
 
   const previousActiveStoryIndexRef = useRef<number | null>(null);
@@ -316,14 +316,7 @@ export const Presentation = (props: PresentationProps) => {
       previousActiveStoryIndexRef.current = idx;
 
       // Import annotations from the story (clearing existing imported ones atomically)
-      const arrows = story.Arrows || [];
-      const overlays = story.Overlays || [];
-      if (arrows.length > 0 || overlays.length > 0) {
-        importWaypointAnnotations(arrows, overlays, true); // true = clear existing imported annotations
-      } else {
-        // If no annotations to import, just clear existing ones
-        clearImportedAnnotations();
-      }
+      importWaypointAnnotations(story, true);
 
       const wp = story as ConfigWaypoint;
       if (imageWidth > 0 && imageHeight > 0) {
@@ -344,10 +337,10 @@ export const Presentation = (props: PresentationProps) => {
     activeStoryIndex,
     imageWidth,
     imageHeight,
+    Shapes,
     viewerViewportSize?.width,
     viewerViewportSize?.height,
     importWaypointAnnotations,
-    clearImportedAnnotations,
     setTargetWaypointCamera,
     Groups,
     setActiveChannelGroup,

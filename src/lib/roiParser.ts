@@ -4,7 +4,6 @@ import type {
   PointAnnotation,
   PolygonAnnotation,
   PolylineAnnotation,
-  RectangleAnnotation,
   TextAnnotation,
 } from "./stores";
 import { lineToPolygon, rectangleToPolygon } from "./stores";
@@ -176,29 +175,27 @@ const getColors = (
 };
 
 /**
- * Convert ROI rectangle shape to RectangleAnnotation
+ * Convert ROI rectangle shape to a closed polygon (same layer path as other regions).
  */
 const rectangleShapeToAnnotation = (
   shape: RoiRectangleShape,
   roi: Roi,
-): RectangleAnnotation => {
+): PolygonAnnotation => {
   const { X, Y, Width, Height, Transform, ID, Text, Name } = shape;
 
-  // Calculate rectangle corners
   const topLeft = applyTransform(X, Y, Transform);
   const bottomRight = applyTransform(X + Width, Y + Height, Transform);
 
-  // Create polygon from rectangle bounds
   const polygon = rectangleToPolygon(topLeft, bottomRight);
 
   const colors = getColors(shape, [255, 0, 0, 50], [255, 0, 0, 255]);
 
   return {
     id: `roi-${roi.ID}-${ID}`,
-    type: "rectangle",
+    type: "polygon",
     polygon,
     style: colors,
-    text: Text, // Include text if present
+    text: Text,
     metadata: {
       label: Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,

@@ -3,6 +3,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import type { ConfigGroup, ConfigSourceChannel } from "@/lib/document-store";
+import { sourceDistributionYValuesLength } from "@/lib/histogramLazy";
 import { useOverlayStore } from "@/lib/stores";
 import styles from "./ChannelList.module.css";
 
@@ -65,6 +66,8 @@ export type ChannelGroupsMasterDetailProps = {
   channelItemElement: string;
   retrievingMetadata: boolean;
   noLoader: boolean;
+  /** OME-TIFF: lazy-load histograms for visible source indices (see `histogramLazy.ts`). */
+  ensureChannelHistograms?: (sourceIndices: number[]) => Promise<void>;
 };
 
 export const ChannelGroupsMasterDetail = (
@@ -86,6 +89,9 @@ export const ChannelGroupsMasterDetail = (
 
   // Master-detail state
   const [detailGroupId, setDetailGroupId] = React.useState<string | null>(null);
+  /** Source channel UUIDs currently fetching histogram tiles (spinner on each chart). */
+  const [loadingHistogramSourceIds, setLoadingHistogramSourceIds] =
+    React.useState<string[]>([]);
 
   // Editing state
   const [replacingChannelUUID, setReplacingChannelUUID] = React.useState<
@@ -289,6 +295,58 @@ export const ChannelGroupsMasterDetail = (
 
   const activeGroup =
     activeChannelGroupId || (Groups.length > 0 ? Groups[0].UUID : null);
+
+  const { ensureChannelHistograms } = props;
+
+  const detailGroupSourcesKey = React.useMemo(() => {
+    if (!detailGroupId) return "";
+    const g = Groups.find((x) => x.UUID === detailGroupId);
+    if (!g) return "";
+    return g.GroupChannels.map((gc) => gc.SourceChannel.UUID).join("\0");
+  }, [detailGroupId, Groups]);
+
+  React.useEffect(() => {
+    void detailGroupSourcesKey;
+    if (!detailGroupId || !ensureChannelHistograms || props.noLoader) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { Groups: gList, SourceChannels: scList } =
+          useOverlayStore.getState();
+        const g = gList.find((x) => x.UUID === detailGroupId);
+        if (!g) return;
+        const indices: number[] = [];
+        const sourceIds: string[] = [];
+        for (const gc of g.GroupChannels) {
+          const sc = scList.find((s) => s.UUID === gc.SourceChannel.UUID);
+          if (!sc) continue;
+          if (sourceDistributionYValuesLength(sc) > 0) continue;
+          indices.push(sc.SourceIndex);
+          sourceIds.push(sc.UUID);
+        }
+        if (indices.length === 0 || cancelled) return;
+        setLoadingHistogramSourceIds(sourceIds);
+        await new Promise<void>((r) => {
+          requestAnimationFrame(() => r());
+        });
+        if (cancelled) return;
+        await ensureChannelHistograms(indices);
+      } finally {
+        if (!cancelled) {
+          setLoadingHistogramSourceIds([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+      setLoadingHistogramSourceIds([]);
+    };
+  }, [
+    detailGroupId,
+    detailGroupSourcesKey,
+    ensureChannelHistograms,
+    props.noLoader,
+  ]);
 
   const openDetailForGroup = (groupId: string) => {
     setActiveChannelGroup(groupId);
@@ -525,6 +583,11 @@ export const ChannelGroupsMasterDetail = (
                     React.createElement(props.channelItemElement, {
                       key: `embed-${ch.channelUUID}-${ch.sourceUUID}`,
                       ...channelItemAttrsFor(gc),
+                      histogram_loading: loadingHistogramSourceIds.includes(
+                        ch.sourceUUID,
+                      )
+                        ? "true"
+                        : "false",
                     });
 
                   return (

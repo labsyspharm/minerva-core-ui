@@ -624,6 +624,10 @@
 }
 
 .detailChannelsSectionTitle {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
   padding: 5px 10px;
   border-bottom: 1px solid #30363d;
   background-color: #0d1117;

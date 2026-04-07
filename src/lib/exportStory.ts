@@ -1,27 +1,10 @@
 import type { ConfigWaypoint } from "./config";
-
-// ── Export types (match story.schema.json) ──────────────────────────────────
+import type { StoryShape } from "./storyShapes";
 
 export type PositionExport = {
   x: number;
   y: number;
   zoom: number;
-};
-
-export type ArrowExport = {
-  x: number;
-  y: number;
-  angle: number;
-  text: string;
-  hide_arrow: boolean;
-};
-
-export type OverlayExport = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  group?: string;
 };
 
 export type WaypointExport = {
@@ -30,27 +13,24 @@ export type WaypointExport = {
   content: string;
   group?: string;
   position: PositionExport;
-  arrows: ArrowExport[];
-  overlays: OverlayExport[];
+  /** UUIDs referencing `shapes` in the root export object. */
+  shapes: string[];
 };
 
 export type StoryExport = {
-  version: "1";
+  version: "2";
   waypoints: WaypointExport[];
+  shapes: StoryShape[];
 };
-
-// ── Conversion helpers ──────────────────────────────────────────────────────
 
 function resolvePosition(waypoint: ConfigWaypoint): PositionExport | null {
   if (waypoint.Bounds) {
     return {
       x: (waypoint.Bounds.x0 + waypoint.Bounds.x1) / 2,
       y: (waypoint.Bounds.y0 + waypoint.Bounds.y1) / 2,
-      // Bounds do not carry viewport dimensions, so a true deck zoom cannot be reconstructed here.
       zoom: 0,
     };
   }
-  // Prefer deck.gl-native ViewState
   if (
     waypoint.ViewState &&
     typeof waypoint.ViewState.zoom === "number" &&
@@ -63,9 +43,6 @@ function resolvePosition(waypoint: ConfigWaypoint): PositionExport | null {
       zoom: waypoint.ViewState.zoom,
     };
   }
-  // Fall back to legacy Pan/Zoom — caller must denormalize if needed,
-  // but Pan is already in [0,1] relative to maxDim so we skip conversion
-  // here and return null; the caller handles the maxDim multiplication.
   return null;
 }
 
@@ -76,11 +53,9 @@ function resolvePositionWithFallback(
   const vs = resolvePosition(waypoint);
   if (vs) return vs;
 
-  // Legacy Pan/Zoom → pixel coords
   if (waypoint.Pan != null) {
     const x = waypoint.Pan[0] * maxDim;
     const y = waypoint.Pan[1] * maxDim;
-    // Zoom cannot be converted without containerWidth; store raw value as-is.
     const zoom = waypoint.Zoom ?? 0;
     return { x, y, zoom };
   }
@@ -88,10 +63,9 @@ function resolvePositionWithFallback(
   return null;
 }
 
-// ── Main export function ────────────────────────────────────────────────────
-
 export function exportStory(
   stories: ConfigWaypoint[],
+  shapes: StoryShape[],
   imageWidth: number,
   imageHeight: number,
 ): StoryExport {
@@ -104,29 +78,12 @@ export function exportStory(
       zoom: 0,
     };
 
-    const arrows: ArrowExport[] = (wp.Arrows ?? []).map((a) => ({
-      x: a.Point[0] * maxDim,
-      y: a.Point[1] * maxDim,
-      angle: a.Angle,
-      text: a.Text,
-      hide_arrow: a.HideArrow,
-    }));
-
-    const overlays: OverlayExport[] = (wp.Overlays ?? []).map((o) => ({
-      x: o.x * maxDim,
-      y: o.y * maxDim,
-      width: o.width * maxDim,
-      height: o.height * maxDim,
-      ...(o.Group ? { group: o.Group } : {}),
-    }));
-
     const result: WaypointExport = {
       id: wp.UUID,
       name: wp.Name,
       content: wp.Content,
       position,
-      arrows,
-      overlays,
+      shapes: [...(wp.ShapeIds ?? [])],
     };
 
     if (wp.Group) result.group = wp.Group;
@@ -134,17 +91,16 @@ export function exportStory(
     return result;
   });
 
-  return { version: "1", waypoints };
+  return { version: "2", waypoints, shapes: [...shapes] };
 }
-
-// ── Download helper ─────────────────────────────────────────────────────────
 
 export function downloadStoryJSON(
   stories: ConfigWaypoint[],
+  shapes: StoryShape[],
   imageWidth: number,
   imageHeight: number,
 ): void {
-  const data = exportStory(stories, imageWidth, imageHeight);
+  const data = exportStory(stories, shapes, imageWidth, imageHeight);
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);

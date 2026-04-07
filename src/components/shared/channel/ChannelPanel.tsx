@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import * as React from "react";
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 import type { ConfigProps } from "@/lib/config";
 import { useOverlayStore } from "@/lib/stores";
@@ -24,8 +24,11 @@ export type ChannelPanelProps = {
   enterPlaybackPreview?: () => void;
   /** Incremented after a successful image import. */
   importRevision?: number;
-  /** Lazy OME-TIFF URL histogram fetch in progress. */
-  histogramsLoading?: boolean;
+  /**
+   * OME-TIFF only: fetch histogram tiles for these `SourceChannel.SourceIndex` values
+   * when a group is expanded in the channel editor (cached per image).
+   */
+  ensureChannelHistograms?: (sourceIndices: number[]) => Promise<void>;
 };
 
 const TextWrap = styled.div`
@@ -57,12 +60,6 @@ const TextOther = styled.div`
   background-color: transparent;
 `;
 
-const channelHistogramsSpin = keyframes`
-  to {
-    transform: rotate(360deg);
-  }
-`;
-
 const ChannelGroupsSlot = styled.div`
   position: relative;
   flex: 1;
@@ -70,30 +67,6 @@ const ChannelGroupsSlot = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-`;
-
-const HistogramsLoadingOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: rgba(0, 0, 0, 0.42);
-  z-index: 3;
-  font-size: 12px;
-  color: #c8c8c8;
-  pointer-events: none;
-`;
-
-const HistogramsLoadingSpinner = styled.div`
-  width: 22px;
-  height: 22px;
-  border: 2px solid rgba(255, 255, 255, 0.28);
-  border-top-color: #9cf;
-  border-radius: 50%;
-  animation: ${channelHistogramsSpin} 0.65s linear infinite;
 `;
 
 // Content layout styles (merged from content.tsx)
@@ -235,17 +208,8 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         channelItemElement={props.channelItemElement}
         retrievingMetadata={props.retrievingMetadata}
         noLoader={props.noLoader}
+        ensureChannelHistograms={props.ensureChannelHistograms}
       />
-      {props.histogramsLoading ? (
-        <HistogramsLoadingOverlay
-          role="status"
-          aria-live="polite"
-          aria-label="Loading channel histograms"
-        >
-          <HistogramsLoadingSpinner aria-hidden />
-          Histograms…
-        </HistogramsLoadingOverlay>
-      ) : null}
     </ChannelGroupsSlot>
   );
 

@@ -12,7 +12,19 @@ const toChannelItem = (
     static eventHandlerKeys = [ ];
 
     static get observedAttributes() {
-      return ["r", "g", "b"];
+      return ["r", "g", "b", "histogram_loading"];
+    }
+
+    _updateHistogramLoadingOverlay() {
+      const el = this.shadowRoot?.querySelector(
+        "[data-histogram-loading-overlay]",
+      );
+      if (!el) return;
+      if (this.getAttribute("histogram_loading") === "true") {
+        el.classList.add("is-visible");
+      } else {
+        el.classList.remove("is-visible");
+      }
     }
 
     _syncRangeEditorSliderColor() {
@@ -29,8 +41,13 @@ const toChannelItem = (
       el.style.setProperty("--slider-background", `rgb(${r},${g},${b})`);
     }
 
-    attributeChangedCallback(_name, _old, _new) {
-      this._syncRangeEditorSliderColor();
+    attributeChangedCallback(name, _old, _new) {
+      if (name === "r" || name === "g" || name === "b") {
+        this._syncRangeEditorSliderColor();
+      }
+      if (name === "histogram_loading") {
+        this._updateHistogramLoadingOverlay();
+      }
     }
 
     addStyles() {
@@ -47,12 +64,24 @@ const toChannelItem = (
       this.attachShadow({ mode: "open" });
       const shadow = this.addStyles();
       html`${this.elementTemplate}`(shadow);
-      queueMicrotask(() => this._syncRangeEditorSliderColor());
+      queueMicrotask(() => {
+        this._syncRangeEditorSliderColor();
+        this._updateHistogramLoadingOverlay();
+      });
     }
 
     get elementTemplate() {
       return toElement("div")`
-        ${this.chartTemplate}
+        <div class="histogram-chart-host">
+          ${this.chartTemplate}
+          <div
+            class="histogram-loading-overlay"
+            data-histogram-loading-overlay
+            title="Loading histogram"
+          >
+            <div class="histogram-loading-spinner"></div>
+          </div>
+        </div>
         ${this.rangeTemplate}
       `({
         class: "center grid"

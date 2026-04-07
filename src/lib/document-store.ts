@@ -1,3 +1,5 @@
+import type { StoryShape } from "./storyShapes";
+
 type ExpandedState = {
   Expanded: boolean;
 };
@@ -42,11 +44,14 @@ export interface DocumentStore {
   SourceChannels: ConfigSourceChannel[];
   setSourceChannels: (source_channels: ConfigSourceChannel[]) => void;
   setGroupChannelRange: (SetGroupChannelRangeInput) => void;
+  Shapes: StoryShape[];
+  setShapes: (shapes: StoryShape[]) => void;
 }
 
 const documentInitialState = {
   Groups: [],
   SourceChannels: [],
+  Shapes: [] as StoryShape[],
 };
 
 // Create the document store
@@ -82,5 +87,8 @@ export const documentStore = (set, _get) => ({
   },
   setSourceChannels: (SourceChannels: ConfigSourceChannel[]) => {
     set({ SourceChannels });
+  },
+  setShapes: (Shapes: StoryShape[]) => {
+    set({ Shapes });
   },
 });

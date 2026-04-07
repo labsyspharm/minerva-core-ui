@@ -8,14 +8,12 @@ import {
 import AddBrushIcon from "@/components/shared/icons/add-brush.svg?react";
 import AnnotationColorIcon from "@/components/shared/icons/annotation-color.svg?react";
 import CursorIcon from "@/components/shared/icons/cursor.svg?react";
-import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
 import EraserIcon from "@/components/shared/icons/eraser.svg?react";
 import FolderIcon from "@/components/shared/icons/folder.svg?react";
 import LineIcon from "@/components/shared/icons/line.svg?react";
 import PointIcon from "@/components/shared/icons/point.svg?react";
 import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
 import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
-import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
 import type { Annotation } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
@@ -189,8 +187,6 @@ const getAnnotationRgba = (
     return annotation.style.fontColor;
   }
   if (
-    annotation.type === "rectangle" ||
-    annotation.type === "ellipse" ||
     annotation.type === "polygon" ||
     annotation.type === "line" ||
     annotation.type === "polyline"
@@ -414,10 +410,6 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const getLayerIcon = (annotation: Annotation) => {
     const dim = { width: "14px", height: "14px" } as const;
     switch (annotation.type) {
-      case "rectangle":
-        return <RectangleIcon style={dim} />;
-      case "ellipse":
-        return <EllipseIcon style={dim} />;
       case "polygon":
         return <PolygonIcon style={dim} />;
       case "line":

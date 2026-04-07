@@ -9,18 +9,17 @@ export type AnnotationClipboardEnvelope = {
   annotations: Annotation[];
 };
 
-function newPasteId(type: string, index: number): string {
-  return `${type}-paste-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 9)}`;
+function newPasteId(): string {
+  return crypto.randomUUID();
 }
 
 /** Deep-clone annotations and assign new ids + isImported for waypoint persist path. */
 export function cloneAnnotationsForPaste(
   annotations: Annotation[],
 ): Annotation[] {
-  const t = Date.now();
-  return annotations.map((ann, index) => {
+  return annotations.map((ann) => {
     const copy = JSON.parse(JSON.stringify(ann)) as Annotation;
-    copy.id = newPasteId(copy.type, index + t);
+    copy.id = newPasteId();
     const meta =
       copy.metadata && typeof copy.metadata === "object"
         ? { ...copy.metadata }
@@ -43,6 +42,26 @@ export function annotationsToClipboardPayload(
   return JSON.stringify(envelope);
 }
 
+/** Older clipboards used `rectangle` / `ellipse` types; normalize to `polygon`. */
+function normalizePastedAnnotations(raw: Annotation[]): Annotation[] {
+  return raw.map((ann) => {
+    const t = (ann as { type?: string }).type;
+    if (t === "rectangle" || t === "ellipse") {
+      const a = ann as unknown as {
+        type: string;
+        polygon: [number, number][];
+        metadata?: Record<string, unknown>;
+        [key: string]: unknown;
+      };
+      return {
+        ...a,
+        type: "polygon",
+      } as Annotation;
+    }
+    return ann;
+  });
+}
+
 export function parseClipboardPayload(text: string): Annotation[] | null {
   const trimmed = text.trim();
   if (!trimmed.startsWith("{")) return null;
@@ -55,7 +74,7 @@ export function parseClipboardPayload(text: string): Annotation[] | null {
     ) {
       return null;
     }
-    return parsed.annotations as Annotation[];
+    return normalizePastedAnnotations(parsed.annotations as Annotation[]);
   } catch {
     return null;
   }

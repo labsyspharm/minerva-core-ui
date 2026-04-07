@@ -222,7 +222,7 @@ export function createAllAnnotationLayers(
       return;
     }
 
-    // Polygon-based annotations (rectangle, polygon, polyline, ellipse)
+    // Polygon-based annotations (closed polygons, polylines share stroke path)
     let fillColor: ColorRGBA = [255, 255, 255, 1];
     let lineColor: ColorRGBA = annotation.style.lineColor;
 
@@ -273,7 +273,7 @@ export function createAllAnnotationLayers(
     }
   });
 
-  // 1. Polygons layer (rectangles, polygons, polylines, ellipses)
+  // 1. Polygons layer (filled polygons + stroked polylines)
   if (polygonData.length > 0) {
     layers.push(
       new PolygonLayer({
@@ -355,7 +355,7 @@ export function createAllAnnotationLayers(
     );
   }
 
-  // 4. Arrows layer
+  // 4. Line arrowheads (IconLayer)
   if (arrowData.length > 0) {
     layers.push(
       new IconLayer({

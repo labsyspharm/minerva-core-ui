@@ -1,0 +1,86 @@
+/**
+ * Lazy OME-TIFF histograms: `ChannelGroupsMasterDetail` requests indices →
+ * `ensureOmeHistogramDistributions` (tile extract + in-memory cache) →
+ * `mergeHistogramsIntoSourceChannels` patches `SourceDistribution` on the store.
+ * DICOM still uses eager `extractDistributions` in `main.tsx` (`getDistributions`).
+ */
+import type { ConfigSourceDistribution } from "./config";
+import { extractDistributionsForSourceIndices } from "./config";
+import type { ConfigSourceChannel } from "./document-store";
+import type { Loader } from "./viv";
+
+/** `SourceDistribution` is typed as UUID in document-store but holds curve data at runtime. */
+export function sourceDistributionYValuesLength(
+  sc: ConfigSourceChannel,
+): number {
+  const d = sc.SourceDistribution as unknown as
+    | { YValues?: number[] }
+    | undefined;
+  return d?.YValues?.length ?? 0;
+}
+
+/** Per-image OME pyramid; cleared when switching images. */
+const omeHistogramCache = new Map<string, ConfigSourceDistribution>();
+
+function cacheKey(imageKey: string, sourceIndex: number): string {
+  return `${imageKey}\u0000${sourceIndex}`;
+}
+
+export function clearOmeHistogramCache(): void {
+  omeHistogramCache.clear();
+}
+
+export function mergeHistogramsIntoSourceChannels(
+  channels: ConfigSourceChannel[],
+  byIndex: Map<number, ConfigSourceDistribution>,
+): ConfigSourceChannel[] {
+  let changed = false;
+  const next = channels.map((sc) => {
+    const dist = byIndex.get(sc.SourceIndex);
+    if (!dist) return sc;
+    if (sourceDistributionYValuesLength(sc) > 0) return sc;
+    changed = true;
+    return { ...sc, SourceDistribution: dist };
+  });
+  return changed ? next : channels;
+}
+
+/**
+ * Resolve histogram distributions for OME source indices, using an in-memory cache
+ * keyed by `{imageKey, SourceIndex}` (unique for a single multichannel OME-TIFF).
+ */
+export async function ensureOmeHistogramDistributions(
+  loader: Loader,
+  imageKey: string,
+  sourceIndices: readonly number[],
+): Promise<Map<number, ConfigSourceDistribution>> {
+  const unique = [...new Set(sourceIndices)].filter(
+    (i) => Number.isFinite(i) && i >= 0,
+  );
+  const result = new Map<number, ConfigSourceDistribution>();
+  const toCompute: number[] = [];
+
+  for (const c of unique) {
+    const hit = omeHistogramCache.get(cacheKey(imageKey, c));
+    if (hit) {
+      result.set(c, hit);
+    } else {
+      toCompute.push(c);
+    }
+  }
+
+  if (toCompute.length === 0) {
+    return result;
+  }
+
+  const fresh = await extractDistributionsForSourceIndices(loader, toCompute);
+  for (const c of toCompute) {
+    const dist = fresh.get(c);
+    if (dist) {
+      omeHistogramCache.set(cacheKey(imageKey, c), dist);
+      result.set(c, dist);
+    }
+  }
+
+  return result;
+}

@@ -51,9 +51,8 @@ const PlusIcon = () => (
   </svg>
 );
 
-const countWaypointAnnotations = (story: ConfigWaypoint) => {
-  return (story.Arrows?.length ?? 0) + (story.Overlays?.length ?? 0);
-};
+const countWaypointAnnotations = (story: ConfigWaypoint) =>
+  story.ShapeIds?.length ?? 0;
 
 const annotationCountLabel = (count: number) =>
   `${count} ${count === 1 ? "annotation" : "annotations"}`;
@@ -83,7 +82,6 @@ const WaypointsList = (props: WaypointsListProps) => {
     updateStory,
     reorderStories,
     importWaypointAnnotations,
-    clearImportedAnnotations,
     imageWidth,
     imageHeight,
     setTargetWaypointCamera,
@@ -93,6 +91,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     setAuthoringWaypointEditorOpen,
     Groups,
     SourceChannels,
+    Shapes,
   } = useOverlayStore();
 
   const detailBodyRef = React.useRef<HTMLDivElement | null>(null);
@@ -161,6 +160,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   const detailStory = detailStoryIndex >= 0 ? stories[detailStoryIndex] : null;
 
   // Auto-import annotations for the active story (or first story on initial load).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-import when `Shapes` registry catches up (matches playback `Presentation`)
   React.useEffect(() => {
     if (stories.length === 0) return;
     if (imageWidth === 0 || imageHeight === 0) return;
@@ -176,19 +176,13 @@ const WaypointsList = (props: WaypointsListProps) => {
     }
     previousActiveStoryIndexRef.current = storyIndex;
 
-    clearImportedAnnotations();
-
-    const arrows = story.Arrows || [];
-    const overlays = story.Overlays || [];
-    if (arrows.length > 0 || overlays.length > 0) {
-      importWaypointAnnotations(arrows, overlays);
-    }
+    importWaypointAnnotations(story, true);
   }, [
     stories,
     activeStoryIndex,
     imageWidth,
     imageHeight,
-    clearImportedAnnotations,
+    Shapes,
     importWaypointAnnotations,
   ]);
 
@@ -385,8 +379,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       Name: `Waypoint ${storyIndex + 1}`,
       Content: "",
       Group: currentGroup?.Name,
-      Arrows: [],
-      Overlays: [],
+      ShapeIds: [],
     };
 
     addStory(newWaypoint);

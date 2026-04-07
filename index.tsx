@@ -1230,19 +1230,15 @@ const exhibit_config = {
   Name: "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer",
   Stories: [
     {
-      Waypoints: configWaypoints.map(
-        ({ Arrows, Overlays, Name, Content, Pan, Zoom, Group }) => {
-          return {
-            Name,
-            Description: Content,
-            Pan: Pan as [number, number],
-            Zoom,
-            Group,
-            Arrows,
-            Overlays,
-          };
-        },
-      ),
+      Waypoints: configWaypoints.map(({ Name, Content, Pan, Zoom, Group }) => {
+        return {
+          Name,
+          Description: Content,
+          Pan: Pan as [number, number],
+          Zoom,
+          Group,
+        };
+      }),
     },
   ],
   Groups: [

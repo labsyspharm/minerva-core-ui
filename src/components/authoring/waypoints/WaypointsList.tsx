@@ -47,7 +47,6 @@ const WaypointsList = (props: WaypointsListProps) => {
     addStory,
     reorderStories,
     importWaypointAnnotations,
-    clearImportedAnnotations,
     imageWidth,
     imageHeight,
     setTargetWaypointCamera,
@@ -55,6 +54,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     setEditingViewstateWaypointIndex,
     removeStory,
     Groups,
+    Shapes,
   } = useOverlayStore();
 
   // Local state for markdown editing
@@ -79,6 +79,7 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   // Auto-import annotations for the active story (or first story on initial load)
   // Also re-run when image dimensions become available
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-import when `Shapes` registry catches up (matches playback `Presentation`)
   React.useEffect(() => {
     if (stories.length === 0) return;
     // Wait for image dimensions to be set
@@ -96,22 +97,15 @@ const WaypointsList = (props: WaypointsListProps) => {
       }
       previousActiveStoryIndexRef.current = storyIndex;
 
-      // Clear any existing imported annotations first
-      clearImportedAnnotations();
-
-      // Import annotations from the story
-      const arrows = story.Arrows || [];
-      const overlays = story.Overlays || [];
-      if (arrows.length > 0 || overlays.length > 0) {
-        importWaypointAnnotations(arrows, overlays);
-      }
+      // Replace imported shapes from the story; keep user-drawn annotations (see `mergeAnnotationsAfterWaypointImport`).
+      importWaypointAnnotations(story, true);
     }
   }, [
     stories,
     activeStoryIndex,
     imageWidth,
     imageHeight,
-    clearImportedAnnotations,
+    Shapes,
     importWaypointAnnotations,
   ]);
 
@@ -261,8 +255,7 @@ const WaypointsList = (props: WaypointsListProps) => {
           (group) =>
             group.UUID === useOverlayStore.getState().activeChannelGroupId,
         )?.Name ?? Groups[0]?.Name,
-      Arrows: [],
-      Overlays: [],
+      ShapeIds: [],
     };
 
     addStory(newWaypoint);
@@ -588,7 +581,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                   cursor: "pointer",
                 }}
                 onClick={() =>
-                  downloadStoryJSON(stories, imageWidth, imageHeight)
+                  downloadStoryJSON(stories, Shapes, imageWidth, imageHeight)
                 }
                 title="Export story as JSON"
               >

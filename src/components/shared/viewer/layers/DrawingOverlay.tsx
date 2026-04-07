@@ -7,6 +7,7 @@ import {
 } from "@deck.gl/layers";
 import * as React from "react";
 import ArrowDrawingIconUrl from "@/components/shared/icons/arrow-annotation-drawing.svg?url";
+import { arrowLineDegeneratePolygon } from "@/lib/annotationGeometry";
 import { ARROW_ICON_SIZE } from "@/lib/annotationLayers";
 import { useSam2 } from "@/lib/sam2/useSam2";
 import { ellipseToPolygon, lineToPolygon, useOverlayStore } from "@/lib/stores";
@@ -370,10 +371,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
         [minX, minY],
       ];
 
-      // Create rectangle annotation directly using click coordinates
       const annotation = {
-        id: `rect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        type: "rectangle" as const,
+        id: crypto.randomUUID(),
+        type: "polygon" as const,
         polygon: polygonData,
         style: {
           fillColor: [globalColor[0], globalColor[1], globalColor[2], 50] as [
@@ -410,7 +410,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
 
       // Create polygon annotation directly using click coordinates
       const annotation = {
-        id: `polygon-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: crypto.randomUUID(),
         type: "polygon" as const,
         polygon: closedPolygon,
         style: {
@@ -450,17 +450,11 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
 
       // Arrow uses degenerate polygon; plain line uses lineToPolygon for proper stroke
       const linePolygon: [number, number][] = hasArrowHead
-        ? [
-            [startX, startY],
-            [endX, endY],
-            [endX, endY],
-            [startX, startY],
-            [startX, startY],
-          ]
+        ? arrowLineDegeneratePolygon([startX, startY], [endX, endY])
         : lineToPolygon([startX, startY], [endX, endY], lineWidth);
 
       const annotation = {
-        id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: crypto.randomUUID(),
         type: "line" as const,
         polygon: linePolygon,
         hasArrowHead,
@@ -494,10 +488,9 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
         ellipseSecondClick,
       );
 
-      // Create ellipse annotation directly using click coordinates
       const annotation = {
-        id: `ellipse-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        type: "ellipse" as const,
+        id: crypto.randomUUID(),
+        type: "polygon" as const,
         polygon: ellipsePolygon,
         style: {
           fillColor: [globalColor[0], globalColor[1], globalColor[2], 50] as [

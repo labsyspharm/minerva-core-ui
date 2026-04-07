@@ -3,6 +3,7 @@ import type { DTYPE_VALUES } from "@vivjs/constants";
 import type { ConfigGroup, ConfigSourceChannel } from "./document-store";
 import type { ConfigGroup as LegacyConfigGroup } from "./exhibit";
 import { histogramBinTile } from "./histogramBinPool";
+import type { StoryShape } from "./storyShapes";
 import type { Loader } from "./viv";
 
 export type SupportedDtype = keyof typeof DTYPE_VALUES;
@@ -43,29 +44,13 @@ type WaypointProperties = NameProperty & {
   Group?: string;
 };
 
-// Arrow annotation from config
-export type ConfigWaypointArrow = {
-  Angle: number;
-  HideArrow: boolean;
-  Point: [number, number];
-  Text: string;
-  IsPoint?: boolean;
-};
-
-// Overlay (rectangle) annotation from config
-export type ConfigWaypointOverlay = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  Group: string;
-};
-
 export type MutableFields = (keyof ItemRegistryProps)[];
 export type ItemRegistryProps = {
   Name: string;
   Groups: ConfigGroup[];
   Stories: ConfigWaypoint[];
+  /** Global shape registry; same records serialized as story `shapes` on export. */
+  Shapes?: StoryShape[];
   SourceChannels: ConfigSourceChannel[];
   SourceDistributions: ConfigSourceDistribution[];
 };
@@ -153,8 +138,8 @@ export type ConfigSourceDistribution = UUID & DistributionProperties;
 export type ConfigWaypoint = UUID &
   WaypointProperties & {
     State: WaypointState;
-    Arrows?: ConfigWaypointArrow[];
-    Overlays?: ConfigWaypointOverlay[];
+    /** Ordered UUIDs into `ItemRegistry.Shapes` (same as export `waypoints[].shapes`). */
+    ShapeIds?: string[];
   };
 
 type ExtractDistributions = (
@@ -221,6 +206,43 @@ const onlyUUID = (v: UUID): UUID => asUUID(v.UUID);
 
 /** Per-tile ceiling for histogram `getTile` (remote OME-TIFF); avoids hung lazy `getDistributions`. */
 const HISTOGRAM_TILE_TIMEOUT_MS = 10_000;
+
+/** Limit parallel `getTile`+bin work so remote OME-TIFF is less likely to hit timeouts / throttling. */
+const HISTOGRAM_EXTRACT_CONCURRENCY = 6;
+
+/**
+ * Bit depth passed to `histogramBinFromPixels` (log-spaced thresholds up to 2^bits).
+ * Integer dtypes parse from the Viv dtype string; float planes use a nominal depth
+ * so we still produce a curve instead of skipping (NaN from `parseInt` on "Float32").
+ */
+function histogramBitsFromDtype(dtype: string | undefined): number | null {
+  if (dtype == null || dtype === "") {
+    console.warn("[minerva] histogram: missing plane dtype");
+    return null;
+  }
+  const parsed = parseInt(dtype.replace(/.?int/, ""), 10);
+  if (!Number.isNaN(parsed)) return parsed;
+  if (/float/i.test(dtype)) {
+    return 16;
+  }
+  console.warn(
+    `[minerva] histogram: unsupported dtype "${dtype}" (expected Uint*/Int* or Float*)`,
+  );
+  return null;
+}
+
+async function mapIndicesInBatches<T>(
+  indices: Index[],
+  batchSize: number,
+  fn: (index: Index) => Promise<T>,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let i = 0; i < indices.length; i += batchSize) {
+    const batch = indices.slice(i, i + batchSize);
+    out.push(...(await Promise.all(batch.map(fn))));
+  }
+  return out;
+}
 
 const captureTile: CaptureTile = async (index, planes) => {
   const level = Math.abs(index.z);
@@ -295,22 +317,47 @@ const initialize: Initialize = (inputs) => {
   return { indices, tileProps };
 };
 
-const extractDistributions: ExtractDistributions = async (loader) => {
+/**
+ * Histogram tiles for a subset of source channel indices (same `c` as `SourceChannel.SourceIndex`
+ * for a single OME-Z / pyramid loader). Used for lazy channel-panel fetching.
+ */
+const extractDistributionsForSourceIndices = async (
+  loader: Loader,
+  sourceIndices: readonly number[],
+): Promise<Map<number, ConfigSourceDistribution>> => {
   const init = initialize({ planes: loader.data });
-  const bits = parseInt(init.tileProps.dtype.replace(/.?int/, ""), 10);
-  const entries = await Promise.all(
-    init.indices.map(async (index) => {
+  const dtype = init.tileProps.dtype;
+  const bits = histogramBitsFromDtype(dtype);
+  const indexByC = new Map(init.indices.map((idx) => [idx.c, idx]));
+  const filtered = [...new Set(sourceIndices)].filter((c) => indexByC.has(c));
+  if (filtered.length === 0) {
+    return new Map();
+  }
+
+  let tileErrorCount = 0;
+  const indexObjs = filtered.flatMap((c) => {
+    const idx = indexByC.get(c);
+    return idx ? [idx] : [];
+  });
+  const entries = await mapIndicesInBatches(
+    indexObjs,
+    HISTOGRAM_EXTRACT_CONCURRENCY,
+    async (index) => {
       const SourceIndex = index.c;
       let YValues: number[] = [];
-      if (!Number.isNaN(bits)) {
+      if (bits != null) {
         try {
           YValues = await bin({
             bits,
             index,
             planes: loader.data,
           });
-        } catch {
-          // Tile fetch can fail for remote images; use empty distribution.
+        } catch (err) {
+          tileErrorCount += 1;
+          const msg = err instanceof Error ? err.message : String(err);
+          console.warn(
+            `[minerva] histogram: channel ${SourceIndex} tile/bin failed (${msg})`,
+          );
         }
       }
       return [
@@ -321,12 +368,26 @@ const extractDistributions: ExtractDistributions = async (loader) => {
           XScale: "log",
           YScale: "linear",
           LowerRange: 0,
-          UpperRange: bits,
+          UpperRange: bits ?? 0,
         },
       ] as [number, ConfigSourceDistribution];
-    }),
+    },
   );
+
+  const nonEmpty = entries.filter(([, d]) => d.YValues.length > 0).length;
+  const emptyCurves = entries.length - nonEmpty;
+  const skippedNoBits = bits == null ? filtered.length : 0;
+  console.log(
+    `[minerva] histogram extract: dtype=${dtype} effectiveBits=${bits ?? "none"} requested=${sourceIndices.length} resolved=${filtered.length} nonEmpty=${nonEmpty} emptyCurve=${emptyCurves} tileErrors=${tileErrorCount} skippedNoBits=${skippedNoBits}`,
+  );
+
   return new Map<number, ConfigSourceDistribution>(entries);
+};
+
+const extractDistributions: ExtractDistributions = async (loader) => {
+  const init = initialize({ planes: loader.data });
+  const allC = init.indices.map((i) => i.c);
+  return extractDistributionsForSourceIndices(loader, allC);
 };
 
 const extractChannels: ExtractChannels = (loader, modality, groups) => {
@@ -555,4 +616,10 @@ const mutableItemRegistry = (
   }, ItemRegistry);
 };
 
-export { onlyUUID, extractDistributions, extractChannels, mutableItemRegistry };
+export {
+  onlyUUID,
+  extractDistributions,
+  extractDistributionsForSourceIndices,
+  extractChannels,
+  mutableItemRegistry,
+};

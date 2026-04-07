@@ -30,9 +30,16 @@ import {
   toLoader,
   toLoaderFromUrl,
 } from "@/lib/filesystem";
+import {
+  clearOmeHistogramCache,
+  ensureOmeHistogramDistributions,
+  mergeHistogramsIntoSourceChannels,
+} from "@/lib/histogramLazy";
+import { buildImageViewerSignature } from "@/lib/imageViewerSignature";
+import { migrateLegacyWaypointAnnotations } from "@/lib/legacyWaypointMigration";
 import { useOverlayStore } from "@/lib/stores";
 import { isOpts, validate } from "@/lib/validate";
-import { toSettings } from "@/lib/viv";
+import { type Loader, toSettings } from "@/lib/viv";
 import { normalizeWaypointToBounds } from "@/lib/waypoint";
 import { Pool } from "@/lib/workers/Pool";
 import { author } from "@/minerva-author-ui/author";
@@ -170,12 +177,15 @@ const Content = (props: Props) => {
     setSourceChannels,
     SourceChannels,
   } = useOverlayStore();
+  const documentChannelsRef = React.useRef({ Groups, SourceChannels });
+  documentChannelsRef.current = { Groups, SourceChannels };
   const [config, setConfig] = useState(() => ({
     ItemRegistry: {
       Name: "",
       Groups,
       SourceChannels,
       SourceDistributions: [],
+      Shapes: [],
       Stories: cloneConfigWaypoints(props.configWaypoints),
     } as ItemRegistryProps,
     ID: crypto.randomUUID(),
@@ -289,13 +299,11 @@ const Content = (props: Props) => {
   }, [setItems]);
 
   const [fileName, setFileName] = useState("");
-  /** Bumps on each OME-TIFF-URL load so stale `getDistributions` completions cannot overwrite `SourceChannels`. */
+  /** Bumps on each OME-TIFF-URL load so a stale loader cannot commit after a newer URL starts. */
   const omeTiffUrlLoadGenerationRef = React.useRef(0);
   const [importRevision, setImportRevision] = useState(0);
   const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
   const [isLoadingImage, setIsLoadingImage] = useState(hasDemo);
-  /** Lazy OME-TIFF URL histogram fetch — channel panel overlay only. */
-  const [histogramsLoading, setHistogramsLoading] = useState(false);
   const showSquareViewportOverlay = useOverlayStore(
     (state) => state.showSquareViewportOverlay,
   );
@@ -329,19 +337,15 @@ const Content = (props: Props) => {
       "Colorimetric",
       relevant_groups,
     );
-    // Await distributions so that all state (loader, channels, groups,
-    // distributions) is set in a single React batch, avoiding a second
-    // render that causes a visible flash.
-    const { SourceChannelsWithDist, SourceDistributions } =
-      await getDistributions(SourceChannels, loader);
-    setSourceChannels(SourceChannelsWithDist);
+    clearOmeHistogramCache();
+    setSourceChannels(SourceChannels);
     setGroups(Groups);
     updateGroupChannelLists({
       Groups,
-      SourceChannels: SourceChannelsWithDist,
+      SourceChannels,
     });
     resetItems({
-      SourceChannels: SourceChannelsWithDist,
+      SourceChannels,
     });
     setLoaderOmeTiff(loader);
     setFileName(in_f);
@@ -350,6 +354,7 @@ const Content = (props: Props) => {
   const onStartOmeTiffUrl = async (url: string) => {
     omeTiffUrlLoadGenerationRef.current += 1;
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
+    clearOmeHistogramCache();
     const loader = await toLoaderFromUrl(url, new Pool());
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return;
@@ -363,32 +368,12 @@ const Content = (props: Props) => {
       "Colorimetric",
       relevant_groups,
     );
-    // Set up the viewer immediately, then fetch distributions in the background.
     setSourceChannels(SourceChannels);
     setGroups(Groups);
     updateGroupChannelLists({ Groups, SourceChannels });
     resetItems({ SourceChannels });
     setLoaderOmeTiff(loader);
     setFileName(url.split("/").pop() || "remote.ome.tif");
-
-    // Fetch distributions lazily so channel histograms populate without
-    // blocking the initial render.
-    setHistogramsLoading(true);
-    getDistributions(SourceChannels, loader)
-      .then(({ SourceChannelsWithDist }) => {
-        if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
-          return;
-        }
-        setSourceChannels(SourceChannelsWithDist);
-        setItems({ SourceChannels: SourceChannelsWithDist });
-        setHistogramsLoading(false);
-      })
-      .catch((err) => {
-        if (loadGeneration === omeTiffUrlLoadGenerationRef.current) {
-          setHistogramsLoading(false);
-        }
-        console.warn("[minerva] distribution fetch aborted or failed:", err);
-      });
   };
 
   const onStartOmeTiffRef = React.useRef(onStartOmeTiff);
@@ -407,11 +392,13 @@ const Content = (props: Props) => {
       store.setWaypoints([]);
       store.clearOverlayLayers();
       store.clearAnnotations();
+      store.setShapes([]);
       setConfig((prev) => ({
         ...prev,
         ItemRegistry: {
           ...prev.ItemRegistry,
           Stories: [],
+          Shapes: [],
         },
         ID: crypto.randomUUID(),
       }));
@@ -458,11 +445,13 @@ const Content = (props: Props) => {
       store.setWaypoints([]);
       store.clearOverlayLayers();
       store.clearAnnotations();
+      store.setShapes([]);
       setConfig((prev) => ({
         ...prev,
         ItemRegistry: {
           ...prev.ItemRegistry,
           Stories: [],
+          Shapes: [],
         },
         ID: crypto.randomUUID(),
       }));
@@ -474,7 +463,6 @@ const Content = (props: Props) => {
     setImportRevision((r) => r + 1);
     setHiddenWaypointWithLogic(false);
     setIsLoadingImage(true);
-    setHistogramsLoading(false);
     try {
       if (dicomPropList.length > 0) {
         const t1 = performance.now();
@@ -511,6 +499,7 @@ const Content = (props: Props) => {
     imagePropList: [string, string][],
     groups: ConfigGroup[],
   ) => {
+    clearOmeHistogramCache();
     console.log(
       "[minerva] dicom: fetching pyramids for",
       imagePropList.length,
@@ -733,8 +722,15 @@ const Content = (props: Props) => {
     (source_channel) => source_channel.Name,
   );
 
+  const imageViewerStateSignature = React.useMemo(
+    () => buildImageViewerSignature(Groups, SourceChannels),
+    [Groups, SourceChannels],
+  );
+
   const itemRegistryGroups = React.useMemo(() => {
-    return Groups.map((group, g) => {
+    void imageViewerStateSignature;
+    const { Groups: G, SourceChannels: SC } = documentChannelsRef.current;
+    return G.map((group, g) => {
       const { Name, GroupChannels } = group;
       const channels = GroupChannels.map((group_channel) => {
         const defaults = { Name: "" };
@@ -745,7 +741,7 @@ const Content = (props: Props) => {
         const { LowerRange, UpperRange } = group_channel;
         const { SourceChannel } = group_channel;
         const { Name } =
-          SourceChannels.find(
+          SC.find(
             (source_channel) => source_channel.UUID === SourceChannel.UUID,
           ) || defaults;
         return {
@@ -761,7 +757,37 @@ const Content = (props: Props) => {
         channels,
       };
     });
-  }, [Groups, SourceChannels]);
+  }, [imageViewerStateSignature]);
+
+  const viewerImageKey = React.useMemo(() => {
+    if (loaderOmeTiff !== null) {
+      return fileName || "ome-tiff";
+    }
+    if (dicomIndexList.length > 0) {
+      return dicomIndexList.map((d) => d.series).join("|");
+    }
+    return "";
+  }, [loaderOmeTiff, fileName, dicomIndexList]);
+
+  const onEnsureChannelHistograms = React.useCallback(
+    async (sourceIndices: number[]) => {
+      if (!loaderOmeTiff || sourceIndices.length === 0) return;
+      const imageKey = viewerImageKey;
+      if (!imageKey) return;
+      const map = await ensureOmeHistogramDistributions(
+        loaderOmeTiff,
+        imageKey,
+        sourceIndices,
+      );
+      if (map.size === 0) return;
+      const state = useOverlayStore.getState();
+      const next = mergeHistogramsIntoSourceChannels(state.SourceChannels, map);
+      if (next === state.SourceChannels) return;
+      state.setSourceChannels(next);
+      setItems({ SourceChannels: next });
+    },
+    [loaderOmeTiff, viewerImageKey, setItems],
+  );
 
   const channelProps = {
     name,
@@ -780,7 +806,7 @@ const Content = (props: Props) => {
     updateChannel,
     pushChannel,
     popChannel,
-    histogramsLoading,
+    ensureChannelHistograms: onEnsureChannelHistograms,
   };
 
   const retrievingMetadata = isLoadingImage;
@@ -805,20 +831,24 @@ const Content = (props: Props) => {
   };
 
   const viewerConfig = React.useMemo(() => {
+    void imageViewerStateSignature;
     return {
-      toSettings: toSettings({ Groups, SourceChannels }),
+      toSettings: (
+        activeChannelGroupId: string | null,
+        modality: string,
+        loader?: Loader,
+        channelVisibilities?: Record<string, boolean>,
+      ) => {
+        const { Groups: G, SourceChannels: SC } = documentChannelsRef.current;
+        return toSettings({ Groups: G, SourceChannels: SC })(
+          activeChannelGroupId,
+          modality,
+          loader,
+          channelVisibilities,
+        );
+      },
     };
-  }, [Groups, SourceChannels]);
-
-  const viewerImageKey = React.useMemo(() => {
-    if (loaderOmeTiff !== null) {
-      return fileName || "ome-tiff";
-    }
-    if (dicomIndexList.length > 0) {
-      return dicomIndexList.map((d) => d.series).join("|");
-    }
-    return "";
-  }, [loaderOmeTiff, fileName, dicomIndexList]);
+  }, [imageViewerStateSignature]);
 
   const imageProps = React.useMemo(() => {
     return {
@@ -897,6 +927,7 @@ const Content = (props: Props) => {
       } else {
         setStories(configStories.map((s) => ({ ...s })));
       }
+      useOverlayStore.getState().setShapes(config.ItemRegistry.Shapes ?? []);
       setWaypoints([]);
       return;
     }
@@ -926,6 +957,7 @@ const Content = (props: Props) => {
     if (storeStories.length > 0) return;
   }, [
     config.ItemRegistry.Stories,
+    config.ItemRegistry.Shapes,
     viewerViewportSize,
     imageWidth,
     imageHeight,
@@ -933,12 +965,38 @@ const Content = (props: Props) => {
     setWaypoints,
   ]);
 
-  // Sync store stories back into config for persistence.
+  // Legacy demo configs may still carry `Arrows` / `Overlays` at runtime; migrate once
+  // image size is known so `ShapeIds` + `Shapes` are authoritative.
+  useEffect(() => {
+    if (imageWidth <= 0 || imageHeight <= 0) return;
+    if (!_stories.length) return;
+    const { Shapes, setShapes, setWaypoints } = useOverlayStore.getState();
+    const {
+      stories: nextStories,
+      shapes: nextShapes,
+      didMigrate,
+    } = migrateLegacyWaypointAnnotations(
+      _stories,
+      Shapes,
+      imageWidth,
+      imageHeight,
+    );
+    if (!didMigrate) return;
+    setStories(nextStories);
+    setShapes(nextShapes);
+    setWaypoints([]);
+  }, [imageWidth, imageHeight, _stories, setStories]);
+
+  // Sync store stories and shape registry back into config for persistence.
   useEffect(() => {
     const unsub = useOverlayStore.subscribe((state, prevState) => {
-      if (state.stories !== prevState.stories) {
-        setItemsRef.current({ Stories: state.stories });
-      }
+      const storiesChanged = state.stories !== prevState.stories;
+      const shapesChanged = state.Shapes !== prevState.Shapes;
+      if (!storiesChanged && !shapesChanged) return;
+      setItemsRef.current({
+        ...(storiesChanged ? { Stories: state.stories } : {}),
+        ...(shapesChanged ? { Shapes: state.Shapes } : {}),
+      });
     });
     return () => unsub();
   }, []);

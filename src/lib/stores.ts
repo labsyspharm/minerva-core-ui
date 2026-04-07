@@ -5,22 +5,22 @@ import { documentStore } from "./document-store";
 export type { ConfigGroup } from "./document-store";
 
 import type { OrthographicViewState } from "@deck.gl/core";
+import { arrowLineDegeneratePolygon } from "./annotationGeometry";
+import { mergeAnnotationsAfterWaypointImport } from "./annotationWaypointImport";
 import { buildBrushHull } from "./brushHull";
-import type {
-  ConfigWaypoint,
-  ConfigWaypointArrow,
-  ConfigWaypointOverlay,
-} from "./config";
+import type { ConfigWaypoint } from "./config";
 import type { DocumentStore } from "./document-store";
 import { polygonDifference, polygonUnion } from "./polygonClipping";
 import type { ViewportSize, ViewRect } from "./samViewport";
-import { serializeImportedAnnotationsToWaypointFields } from "./waypointAnnotationSync";
+import {
+  annotationsToShapes,
+  mergeShapesForWaypointPersist,
+  shapeToAnnotation,
+} from "./storyShapes";
 
-// Re-export config types for convenience
-export type {
-  ConfigWaypointArrow as ConfigArrow,
-  ConfigWaypointOverlay as ConfigOverlay,
-};
+function newAnnotationId(): string {
+  return crypto.randomUUID();
+}
 
 // Types for the overlay store
 export interface OverlayLayer {
@@ -531,25 +531,14 @@ function computeBrushPolygon(
 
 // New annotation types - all using polygon coordinates internally
 type ColorRGBA = [number, number, number, number];
-export interface RectangleAnnotation {
-  id: string;
-  type: "rectangle";
-  polygon: [number, number][]; // Converted to polygon coordinates
-  style: {
-    fillColor: ColorRGBA;
-    lineColor: ColorRGBA;
-    lineWidth: number;
-  };
-  text?: string; // Optional text content to display within the shape
-  metadata?: {
-    createdAt?: Date;
-    label?: string;
-    description?: string;
-    isImported?: boolean; // Flag to mark imported annotations as un-deletable
-    /** Original waypoint overlay Group when imported from ConfigWaypoint. */
-    sourceOverlayGroup?: string;
-  };
-}
+
+/** Shared optional metadata on annotations (labels, import provenance). */
+export type AnnotationCommonMetadata = {
+  createdAt?: Date;
+  label?: string;
+  description?: string;
+  isImported?: boolean;
+};
 
 export interface PolygonAnnotation {
   id: string;
@@ -561,30 +550,7 @@ export interface PolygonAnnotation {
     lineWidth: number;
   };
   text?: string; // Optional text content to display within the shape
-  metadata?: {
-    createdAt?: Date;
-    label?: string;
-    description?: string;
-    isImported?: boolean; // Flag to mark imported annotations as un-deletable
-  };
-}
-
-export interface EllipseAnnotation {
-  id: string;
-  type: "ellipse";
-  polygon: [number, number][]; // Ellipse approximated as polygon coordinates
-  style: {
-    fillColor: [number, number, number, number];
-    lineColor: [number, number, number, number];
-    lineWidth: number;
-  };
-  text?: string; // Optional text content to display within the shape
-  metadata?: {
-    createdAt?: Date;
-    label?: string;
-    description?: string;
-    isImported?: boolean; // Flag to mark imported annotations as un-deletable
-  };
+  metadata?: AnnotationCommonMetadata;
 }
 
 export interface LineAnnotation {
@@ -598,12 +564,7 @@ export interface LineAnnotation {
     lineWidth: number;
   };
   text?: string; // Optional text content to display within the shape
-  metadata?: {
-    createdAt?: Date;
-    label?: string;
-    description?: string;
-    isImported?: boolean; // Flag to mark imported annotations as un-deletable
-  };
+  metadata?: AnnotationCommonMetadata;
 }
 
 export interface PolylineAnnotation {
@@ -615,12 +576,7 @@ export interface PolylineAnnotation {
     lineWidth: number;
   };
   text?: string; // Optional text content to display within the shape
-  metadata?: {
-    createdAt?: Date;
-    label?: string;
-    description?: string;
-    isImported?: boolean; // Flag to mark imported annotations as un-deletable
-  };
+  metadata?: AnnotationCommonMetadata;
 }
 
 export interface TextAnnotation {
@@ -634,12 +590,7 @@ export interface TextAnnotation {
     backgroundColor?: [number, number, number, number];
     padding?: number;
   };
-  metadata?: {
-    createdAt?: Date;
-    label?: string;
-    description?: string;
-    isImported?: boolean; // Flag to mark imported annotations as un-deletable
-  };
+  metadata?: AnnotationCommonMetadata;
 }
 
 export interface PointAnnotation {
@@ -652,17 +603,10 @@ export interface PointAnnotation {
     radius: number; // Point radius in pixels
   };
   text?: string; // Optional text content to display within the shape
-  metadata?: {
-    createdAt?: Date;
-    label?: string;
-    description?: string;
-    isImported?: boolean; // Flag to mark imported annotations as un-deletable
-  };
+  metadata?: AnnotationCommonMetadata;
 }
 
 export type Annotation = (
-  | RectangleAnnotation
-  | EllipseAnnotation
   | PolygonAnnotation
   | LineAnnotation
   | PolylineAnnotation
@@ -1077,12 +1021,11 @@ export interface OverlayStore {
   imageHeight: number;
   setImageDimensions: (width: number, height: number) => void;
   importWaypointAnnotations: (
-    arrows: ConfigWaypointArrow[],
-    overlays: ConfigWaypointOverlay[],
+    story: ConfigWaypoint,
     clearExisting?: boolean,
   ) => void;
   clearImportedAnnotations: () => void;
-  /** Write imported annotations (from waypoint) back into stories[index].Arrows/Overlays. */
+  /** Persist annotations into stories[index] (`ShapeIds` + `ItemRegistry.Shapes`). */
   persistImportedAnnotationsToStory: (storyIndex: number) => void;
 
   // Waypoint camera (resolved inside ImageViewer for correct viewport coupling)
@@ -1413,10 +1356,10 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           const [startX, startY] = drawingState.dragStart;
           const [endX, endY] = drawingState.dragEnd;
 
-          // Create a new rectangle annotation using polygon coordinates
-          const annotation: RectangleAnnotation = {
-            id: `rect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            type: "rectangle",
+          // Rectangle tool stores a closed polygon (same rendering path as lasso / brush).
+          const annotation: PolygonAnnotation = {
+            id: newAnnotationId(),
+            type: "polygon",
             polygon: rectangleToPolygon([startX, startY], [endX, endY]),
             style: {
               fillColor: [
@@ -1424,8 +1367,8 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
                 get().globalColor[1],
                 get().globalColor[2],
                 50,
-              ], // Use global color with low opacity
-              lineColor: get().globalColor, // Use global color for border
+              ],
+              lineColor: get().globalColor,
               lineWidth: 3,
             },
             metadata: {
@@ -1454,10 +1397,9 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           const [startX, startY] = drawingState.dragStart;
           const [endX, endY] = drawingState.dragEnd;
 
-          // Create a new ellipse annotation using polygon coordinates
-          const annotation: EllipseAnnotation = {
-            id: `ellipse-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            type: "ellipse",
+          const annotation: PolygonAnnotation = {
+            id: newAnnotationId(),
+            type: "polygon",
             polygon: ellipseToPolygon([startX, startY], [endX, endY]),
             style: {
               fillColor: [
@@ -1465,8 +1407,8 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
                 get().globalColor[1],
                 get().globalColor[2],
                 50,
-              ], // Use global color with low opacity
-              lineColor: get().globalColor, // Use global color for border
+              ],
+              lineColor: get().globalColor,
               lineWidth: 3,
             },
             metadata: {
@@ -1489,7 +1431,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         if (points.length >= 3) {
           // Create a new polygon annotation
           const annotation: PolygonAnnotation = {
-            id: `poly-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            id: newAnnotationId(),
             type: "polygon",
             polygon: points,
             style: {
@@ -1519,7 +1461,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         if (points.length >= 2) {
           // Create a new polyline annotation
           const annotation: PolylineAnnotation = {
-            id: `polyline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            id: newAnnotationId(),
             type: "polyline",
             polygon: points,
             style: {
@@ -1548,20 +1490,13 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         ) {
           const [startX, startY] = drawingState.dragStart;
           const [endX, endY] = drawingState.dragEnd;
-          // Store both arrow and plain lines as a degenerate polygon encoding the
-          // centerline only. The visual thickness is controlled via lineWidth in
-          // the rendering layer (pixel units), so geometry stays in world units
-          // and remains independent of stroke width.
-          const linePolygon: [number, number][] = [
+          const linePolygon = arrowLineDegeneratePolygon(
             [startX, startY],
             [endX, endY],
-            [endX, endY],
-            [startX, startY],
-            [startX, startY],
-          ];
+          );
 
           const annotation: LineAnnotation = {
-            id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            id: newAnnotationId(),
             type: "line",
             polygon: linePolygon,
             hasArrowHead,
@@ -1597,7 +1532,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
         // Create a new text annotation
         const annotation: TextAnnotation = {
-          id: `text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: newAnnotationId(),
           type: "text",
           position: position,
           text: text.trim(),
@@ -1622,7 +1557,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       ) => {
         // Create a new point annotation
         const annotation: PointAnnotation = {
-          id: `point-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: newAnnotationId(),
           type: "point",
           position: position,
           style: {
@@ -2016,7 +1951,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           }
         } else {
           const annotation: PolygonAnnotation = {
-            id: `brush-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            id: newAnnotationId(),
             type: "polygon",
             polygon: overlayPolygon,
             style: {
@@ -2432,160 +2367,42 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       // Import waypoint annotations actions
       importWaypointAnnotations: (
-        arrows: ConfigWaypointArrow[],
-        overlays: ConfigWaypointOverlay[],
+        story: ConfigWaypoint,
         clearExisting: boolean = false,
       ) => {
-        const { imageWidth, imageHeight } = get();
+        const { imageWidth, imageHeight, Shapes } = get();
 
-        // Skip if image dimensions not set
         if (imageWidth === 0 || imageHeight === 0) {
           return;
         }
 
-        // Use max dimension for uniform coordinate scaling (1.0 = max dimension)
-        const maxDimension = Math.max(imageWidth, imageHeight);
+        const shapeIds = story.ShapeIds ?? [];
+        const shapeById = new Map(Shapes.map((s) => [s.uuid, s]));
+        const registryComplete =
+          shapeIds.length > 0 && shapeIds.every((id) => shapeById.has(id));
 
         const newAnnotations: Annotation[] = [];
-
-        // Convert arrows to line annotations (coordinates are normalized 0-1 relative to max dimension, convert to image pixels)
-        arrows.forEach((arrow, index) => {
-          // Convert normalized coordinates to image pixels (relative to max dimension)
-          const [normX, normY] = arrow.Point;
-          const x = normX * maxDimension;
-          const y = normY * maxDimension;
-
-          if (arrow.IsPoint) {
-            // Create point annotation
-            const pointAnnotation: PointAnnotation = {
-              id: `imported-point-${Date.now()}-${index}`,
-              type: "point",
-              position: [x, y],
-              style: {
-                fillColor: get().globalColor,
-                strokeColor: [255, 255, 255, 255],
-                radius: 5,
-              },
-              metadata: {
-                label: arrow.Text || `Point ${index + 1}`,
-                isImported: true,
-              },
-            };
-            newAnnotations.push(pointAnnotation);
-          } else if (arrow.HideArrow) {
-            // Create text-only annotation
-            const textAnnotation: TextAnnotation = {
-              id: `imported-text-${Date.now()}-${index}`,
-              type: "text",
-              position: [x, y],
-              text: arrow.Text,
-              style: {
-                fontSize: 16,
-                fontColor: [255, 255, 255, 255], // White text
-                backgroundColor: [0, 0, 0, 150], // Semi-transparent black background
-                padding: 6,
-              },
-              metadata: {
-                label: arrow.Text,
-                isImported: true,
-              },
-            };
-            newAnnotations.push(textAnnotation);
-          } else {
-            // Create line annotation (arrow converted to simple stroke-based line)
-            // Convert angle from degrees to radians and calculate start point
-            // Angle 0 = pointing right, 90 = pointing down, etc.
-            const angleRad = (arrow.Angle * Math.PI) / 180;
-
-            // Line length proportional to image size (50% of the smaller dimension)
-            const minDimension = Math.min(imageWidth, imageHeight);
-            const lineLength = minDimension * 0.5;
-
-            // Calculate start point (line points TO the Point location)
-            // So start is away from the point in the direction of the angle
-            const startX = x + Math.cos(angleRad) * lineLength;
-            const startY = y + Math.sin(angleRad) * lineLength;
-            const endX = x;
-            const endY = y;
-
-            // Simple polygon for stroke-based line rendering (no fill, just stroke)
-            const linePolygon: [number, number][] = [
-              [startX, startY],
-              [endX, endY],
-              [endX, endY],
-              [startX, startY],
-              [startX, startY],
-            ];
-
-            const lineAnnotation: LineAnnotation = {
-              id: `imported-line-${Date.now()}-${index}`,
-              type: "line",
-              polygon: linePolygon,
-              hasArrowHead: true, // Imported arrows display arrow heads
-              text: arrow.Text,
-              style: {
-                fillColor: [0, 0, 0, 0], // Transparent fill
-                lineColor: [255, 255, 255, 255], // White line
-                lineWidth: 3,
-              },
-              metadata: {
-                label: arrow.Text,
-                isImported: true,
-              },
-            };
-            newAnnotations.push(lineAnnotation);
+        if (registryComplete) {
+          for (const id of shapeIds) {
+            const sh = shapeById.get(id);
+            if (sh) newAnnotations.push(shapeToAnnotation(sh));
           }
-        });
+        }
 
-        // Convert overlays (rectangles) to annotations (coordinates are normalized 0-1 relative to max dimension, convert to image pixels)
-        overlays.forEach((overlay, index) => {
-          // Convert normalized coordinates to image pixels (relative to max dimension)
-          const x = overlay.x * maxDimension;
-          const y = overlay.y * maxDimension;
-          const width = overlay.width * maxDimension;
-          const height = overlay.height * maxDimension;
+        // With `clearExisting`, only drop prior imported annotations when we can
+        // replace them (registry matches ShapeIds) or the waypoint has none.
+        // Otherwise we would wipe the canvas and show nothing (e.g. playback
+        // before `Shapes` is seeded — retry after registry updates).
+        const effectiveClearExisting =
+          clearExisting && (shapeIds.length === 0 || registryComplete);
 
-          const polygon = rectangleToPolygon([x, y], [x + width, y + height]);
-
-          const rectAnnotation: RectangleAnnotation = {
-            id: `imported-rect-${Date.now()}-${index}`,
-            type: "rectangle",
-            polygon,
-            style: {
-              fillColor: [255, 255, 255, 30], // White with very low opacity
-              lineColor: [255, 255, 255, 200], // White border
-              lineWidth: 2,
-            },
-            metadata: {
-              label: `Region ${index + 1}`,
-              isImported: true,
-              sourceOverlayGroup: overlay.Group,
-            },
-          };
-          newAnnotations.push(rectAnnotation);
-        });
-
-        // Add all new annotations to the store
-        // If clearExisting is true, filter out old imported annotations in the same operation
-        set((state) => {
-          const existingAnnotations = clearExisting
-            ? state.annotations.filter((a) => !a.metadata?.isImported)
-            : state.annotations;
-
-          const newHiddenLayers = clearExisting
-            ? new Set(
-                [...state.hiddenLayers].filter((id) => {
-                  const annotation = state.annotations.find((a) => a.id === id);
-                  return annotation && !annotation.metadata?.isImported;
-                }),
-              )
-            : state.hiddenLayers;
-
-          return {
-            annotations: [...existingAnnotations, ...newAnnotations],
-            hiddenLayers: newHiddenLayers,
-          };
-        });
+        set((state) =>
+          mergeAnnotationsAfterWaypointImport(
+            state,
+            newAnnotations,
+            effectiveClearExisting,
+          ),
+        );
       },
 
       clearImportedAnnotations: () => {
@@ -2598,31 +2415,46 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         if (!story || state.imageWidth <= 0 || state.imageHeight <= 0) {
           return;
         }
-        const hadStored =
-          (story.Arrows?.length ?? 0) > 0 || (story.Overlays?.length ?? 0) > 0;
+        const hadStored = (story.ShapeIds?.length ?? 0) > 0;
         if (state.annotations.length === 0 && !hadStored) {
           return;
         }
         if (state.annotations.length === 0 && hadStored) {
-          get().updateStory(storyIndex, { Arrows: [], Overlays: [] });
+          const merged = mergeShapesForWaypointPersist({
+            stories: state.stories,
+            storyIndex,
+            prevShapes: state.Shapes,
+            builtShapes: [],
+            newShapeIdsOrdered: [],
+          });
+          if (JSON.stringify(merged) !== JSON.stringify(state.Shapes)) {
+            set({ Shapes: merged });
+          }
+          get().updateStory(storyIndex, {
+            ShapeIds: [],
+          });
           return;
         }
-        const { Arrows, Overlays } =
-          serializeImportedAnnotationsToWaypointFields(
-            state.annotations,
-            state.imageWidth,
-            state.imageHeight,
-            story,
-          );
-        const prevA = JSON.stringify(story.Arrows ?? []);
-        const prevO = JSON.stringify(story.Overlays ?? []);
-        if (
-          JSON.stringify(Arrows) === prevA &&
-          JSON.stringify(Overlays) === prevO
-        ) {
+        const builtShapes = annotationsToShapes(state.annotations);
+        const newShapeIdsOrdered = builtShapes.map((s) => s.uuid);
+        const merged = mergeShapesForWaypointPersist({
+          stories: state.stories,
+          storyIndex,
+          prevShapes: state.Shapes,
+          builtShapes,
+          newShapeIdsOrdered,
+        });
+        const prevIds = JSON.stringify(story.ShapeIds ?? []);
+        const nextIds = JSON.stringify(newShapeIdsOrdered);
+        const prevShapesJson = JSON.stringify(state.Shapes);
+        const nextShapesJson = JSON.stringify(merged);
+        if (prevIds === nextIds && prevShapesJson === nextShapesJson) {
           return;
         }
-        get().updateStory(storyIndex, { Arrows, Overlays });
+        set({ Shapes: merged });
+        get().updateStory(storyIndex, {
+          ShapeIds: newShapeIdsOrdered,
+        });
       },
 
       // channel and group actions
