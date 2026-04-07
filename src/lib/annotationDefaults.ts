@@ -1,6 +1,6 @@
 /**
  * Default styles for annotations rehydrated from waypoint / shape registry data.
- * Keeps import (`shapeToAnnotation`) aligned with legacy `importWaypointAnnotations`.
+ * Keeps import (`shapeToAnnotation`) aligned with legacy waypoint arrows (tip + angle).
  */
 
 /** Region / rehydrated polygon (matches legacy overlay import and `shapeToAnnotation`). */

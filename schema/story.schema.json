@@ -40,10 +40,20 @@
           "properties": {
             "type": { "const": "arrow" },
             "uuid": { "type": "string" },
-            "from": { "$ref": "#/definitions/StoryPoint" },
-            "to": { "$ref": "#/definitions/StoryPoint" }
+            "point": {
+              "$ref": "#/definitions/StoryPoint",
+              "description": "Arrow tip (image pixels)"
+            },
+            "angle": {
+              "type": "number",
+              "description": "Degrees: bearing from tip toward tail (matches legacy waypoint arrow Angle)"
+            },
+            "label": {
+              "type": "string",
+              "description": "Caption toward the arrow tail (same role as LineAnnotation.text)"
+            }
           },
-          "required": ["type", "uuid", "from", "to"]
+          "required": ["type", "uuid", "point", "angle"]
         },
         {
           "type": "object",

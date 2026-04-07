@@ -11,8 +11,10 @@ import styled from "styled-components";
 import "@deck.gl/widgets/stylesheet.css";
 
 import type { Layer } from "@deck.gl/core";
+import { PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import { useAnnotationLayers } from "@/lib/annotationLayers";
+import { ORTHO_VIEW_ID, SCALEBAR_VIEW_ID } from "@/lib/deckViewIds";
 import { createTileLayers, loadDicom } from "@/lib/dicom";
 import type { DicomIndex } from "@/lib/dicom-index";
 import { createDragHandlers } from "@/lib/dragHandlers";
@@ -638,18 +640,47 @@ export const ImageViewer = (props: ImageViewerProps) => {
     } as ConstructorParameters<typeof ScaleBarLayer>[0]);
   }, [viewState, firstLoader, viewportSize.width, viewportSize.height]);
 
-  // Memoize layer combination
-  const allLayers = useMemo(() => {
-    const layers =
-      0 === omeTiffLayers.length
-        ? [...dicomLayers, ...overlayLayers]
-        : [...omeTiffLayers, ...overlayLayers];
+  // Invisible layer under the image so gutter picks have geometry (see dragHandlers toCoord).
+  const worldPickSurfaceLayer = useMemo(() => {
+    const w = Number(imageShape.x) || 0;
+    const h = Number(imageShape.y) || 0;
+    const cx = w > 0 ? w / 2 : 0;
+    const cy = h > 0 ? h / 2 : 0;
+    const R = Math.min(Math.max(Math.max(w, h, 4096) * 8, 512_000), 50_000_000);
+    const polygon: [number, number][] = [
+      [cx - R, cy - R],
+      [cx + R, cy - R],
+      [cx + R, cy + R],
+      [cx - R, cy + R],
+    ];
+    return new PolygonLayer({
+      id: "world-pick-surface",
+      data: [{ polygon }],
+      getPolygon: (d: { polygon: [number, number][] }) => d.polygon,
+      pickable: true,
+      filled: true,
+      stroked: false,
+      getFillColor: [0, 0, 0, 0],
+      getLineWidth: 0,
+    });
+  }, [imageShape.x, imageShape.y]);
 
-    if (scaleBarLayer) {
-      layers.push(scaleBarLayer);
-    }
+  const allLayers = useMemo(() => {
+    const imageStack = omeTiffLayers.length > 0 ? omeTiffLayers : dicomLayers;
+    const layers: Layer[] = [
+      worldPickSurfaceLayer,
+      ...imageStack,
+      ...overlayLayers,
+    ];
+    if (scaleBarLayer) layers.push(scaleBarLayer);
     return layers;
-  }, [dicomLayers, omeTiffLayers, overlayLayers, scaleBarLayer]);
+  }, [
+    dicomLayers,
+    omeTiffLayers,
+    overlayLayers,
+    scaleBarLayer,
+    worldPickSurfaceLayer,
+  ]);
 
   const squareViewportStyle = useMemo(() => {
     const side = Math.max(
@@ -809,8 +840,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
   // Memoize view configuration — main image view + a fixed overlay for the scale bar
   const views = useMemo(
     () => [
-      new OrthographicView({ id: "ortho", controller: true }),
-      new OrthographicView({ id: "scalebar-overlay", controller: false }),
+      new OrthographicView({ id: ORTHO_VIEW_ID, controller: true }),
+      new OrthographicView({ id: SCALEBAR_VIEW_ID, controller: false }),
     ],
     [],
   );
@@ -860,9 +891,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const layerFilter = useCallback(
     ({ layer, viewport }: { layer: Layer; viewport: { id: string } }) => {
       if (layer.id.startsWith("scale-bar")) {
-        return viewport.id === "scalebar-overlay";
+        return viewport.id === SCALEBAR_VIEW_ID;
       }
-      return viewport.id === "ortho";
+      return viewport.id === ORTHO_VIEW_ID;
     },
     [],
   );
@@ -884,8 +915,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
           },
         }}
         viewState={{
-          ortho: viewState,
-          "scalebar-overlay": {
+          [ORTHO_VIEW_ID]: viewState,
+          [SCALEBAR_VIEW_ID]: {
             zoom: 0,
             target: [viewportSize.width / 2, viewportSize.height / 2, 0],
           } as Record<string, unknown>,

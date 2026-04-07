@@ -16,6 +16,7 @@ import {
 } from "@deck.gl/layers";
 import * as React from "react";
 import ArrowIconUrl from "@/components/shared/icons/arrow-annotation.svg?url";
+import ArrowHoverIconUrl from "@/components/shared/icons/arrow-annotation-hover.svg?url";
 import type { Annotation } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
 
@@ -23,8 +24,10 @@ type ColorRGBA = [number, number, number, number];
 type LayerType = PolygonLayer | TextLayer | ScatterplotLayer | IconLayer;
 
 // Arrow SVG icon (250x250) - positioned so center (125,125) is at target point
-// Exported for drawing preview (arrow tool)
+// Exported for drawing preview (arrow tool). Hover uses a separate asset (WebGL
+// IconLayer cannot be styled with CSS).
 export const ARROW_ICON_URL = ArrowIconUrl;
+export const ARROW_ICON_HOVER_URL = ArrowHoverIconUrl;
 export const ARROW_ICON_SIZE = 250;
 
 /**
@@ -73,6 +76,7 @@ export function createAllAnnotationLayers(
     position: [number, number, number];
     angle: number;
     color: ColorRGBA;
+    iconUrl: string;
     id: string;
   }> = [];
   const labelData: Array<{
@@ -154,9 +158,12 @@ export function createAllAnnotationLayers(
     if (annotation.type === "line") {
       const hasArrowHead = annotation.hasArrowHead !== false; // Default true for backward compat
 
-      const lineColor = isHovered
-        ? ([0, 120, 255, 255] as ColorRGBA)
-        : annotation.style.lineColor;
+      const baseLineColor = annotation.style.lineColor;
+      const lineColor = hasArrowHead
+        ? baseLineColor
+        : isHovered
+          ? ([0, 120, 255, 255] as ColorRGBA)
+          : baseLineColor;
 
       if (hasArrowHead) {
         // Arrow annotations use IconLayer for the head/body glyph
@@ -171,13 +178,27 @@ export function createAllAnnotationLayers(
           const angleRad = Math.atan2(dy, dx);
           const angleDeg = (angleRad * 180) / Math.PI + 90;
 
-          const iconColor = lineColor;
+          // Arrow color stays fixed (no hover tint); glyph swaps to hover asset.
+          const iconColor = baseLineColor;
+          const iconUrl = isHovered ? ArrowHoverIconUrl : ArrowIconUrl;
 
           arrowData.push({
             position: [endX, endY, 0],
             angle: angleDeg,
             color: iconColor,
+            iconUrl,
             id: `${annotation.id}-arrow`,
+          });
+
+          // Wide invisible stroke along the segment for move-tool hover/drag on
+          // the shaft (hover appearance is the arrow SVG only).
+          const hitLineWidth = Math.max(annotation.style.lineWidth, 12);
+          polygonData.push({
+            polygon: annotation.polygon,
+            fillColor: [0, 0, 0, 0],
+            lineColor: [0, 0, 0, 0] as ColorRGBA,
+            lineWidth: hitLineWidth,
+            id: annotation.id,
           });
 
           // Add label text if present
@@ -194,8 +215,7 @@ export function createAllAnnotationLayers(
             const pixelOffsetY = dirY * pixelOffsetMagnitude;
 
             const textAnchor: "start" | "end" = labelDx > 0 ? "start" : "end";
-            const textColor =
-              annotation.style.lineColor || ([255, 255, 255, 255] as ColorRGBA);
+            const textColor = baseLineColor;
 
             labelData.push({
               text: annotation.text,
@@ -362,8 +382,8 @@ export function createAllAnnotationLayers(
         id: "annotation-arrows",
         data: arrowData,
         getPosition: (d) => d.position,
-        getIcon: () => ({
-          url: ARROW_ICON_URL,
+        getIcon: (d) => ({
+          url: d.iconUrl,
           width: ARROW_ICON_SIZE,
           height: ARROW_ICON_SIZE,
           anchorX: ARROW_ICON_SIZE / 2,
@@ -398,7 +418,7 @@ export function createAllAnnotationLayers(
         fontFamily: "Arial, sans-serif",
         fontWeight: "normal",
         backgroundPadding: [6, 6],
-        pickable: false,
+        pickable,
         getTextAnchor: (d) => d.textAnchor,
       }),
     );

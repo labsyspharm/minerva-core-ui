@@ -1,6 +1,8 @@
-import { Chrome } from "@uiw/react-color";
 import * as React from "react";
-import { createPortal } from "react-dom";
+import {
+  ChromeColorPickerPopover,
+  chromeColorPickerAnchorPosition,
+} from "@/components/shared/ChromeColorPickerPopover";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import type { ConfigGroup, ConfigSourceChannel } from "@/lib/document-store";
 import { sourceDistributionYValuesLength } from "@/lib/histogramLazy";
@@ -292,15 +294,6 @@ export const ChannelGroupsMasterDetail = (
     setColorPickerChannelUUID(null);
     setColorPickerPos(null);
   }, []);
-
-  React.useEffect(() => {
-    if (!colorPickerChannelUUID) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeColorPicker();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [colorPickerChannelUUID, closeColorPicker]);
 
   const activeGroup =
     activeChannelGroupId || (Groups.length > 0 ? Groups[0].UUID : null);
@@ -608,16 +601,9 @@ export const ChannelGroupsMasterDetail = (
                             const rect =
                               e.currentTarget.getBoundingClientRect();
                             setColorPickerChannelUUID(ch.channelUUID);
-                            setColorPickerPos({
-                              top: Math.min(
-                                rect.bottom + 4,
-                                window.innerHeight - 280,
-                              ),
-                              left: Math.min(
-                                rect.left,
-                                window.innerWidth - 240,
-                              ),
-                            });
+                            setColorPickerPos(
+                              chromeColorPickerAnchorPosition(rect),
+                            );
                           }}
                         />
                         {isReplacing ? (
@@ -720,61 +706,26 @@ export const ChannelGroupsMasterDetail = (
     );
   };
 
-  // ── Color picker portal ──
-  const colorPickerPortal =
-    colorPickerChannelUUID &&
-    colorPickerPos &&
-    pickingColorHex &&
-    typeof document !== "undefined"
-      ? createPortal(
-          <>
-            <button
-              type="button"
-              aria-label="Close color picker"
-              style={{
-                position: "fixed",
-                inset: 0,
-                zIndex: 9998,
-                margin: 0,
-                padding: 0,
-                border: "none",
-                background: "transparent",
-                cursor: "default",
-              }}
-              onClick={closeColorPicker}
-            />
-            <div
-              style={{
-                position: "fixed",
-                top: colorPickerPos.top,
-                left: colorPickerPos.left,
-                zIndex: 9999,
-                boxShadow: "0 4px 24px rgba(0,0,0,0.45)",
-              }}
-            >
-              <Chrome
-                color={`#${pickingColorHex}`}
-                showAlpha={false}
-                onChange={(c) => {
-                  const raw = c.hex.replace(/^#/, "").slice(0, 6);
-                  if (raw.length < 6) return;
-                  const R = Number.parseInt(raw.slice(0, 2), 16);
-                  const G = Number.parseInt(raw.slice(2, 4), 16);
-                  const B = Number.parseInt(raw.slice(4, 6), 16);
-                  if ([R, G, B].some((n) => Number.isNaN(n))) return;
-                  updateChannelColor(colorPickerChannelUUID, { R, G, B });
-                }}
-              />
-            </div>
-          </>,
-          document.body,
-        )
-      : null;
-
   return (
     <div className={[styles.panel, styles.black].join(" ")}>
       {detailGroupId ? renderDetail() : renderList()}
-      {colorPickerPortal}
+      {colorPickerChannelUUID && colorPickerPos && pickingColorHex ? (
+        <ChromeColorPickerPopover
+          position={colorPickerPos}
+          onClose={closeColorPicker}
+          color={`#${pickingColorHex}`}
+          showAlpha={false}
+          onChange={(c) => {
+            const raw = c.hex.replace(/^#/, "").slice(0, 6);
+            if (raw.length < 6) return;
+            const R = Number.parseInt(raw.slice(0, 2), 16);
+            const G = Number.parseInt(raw.slice(2, 4), 16);
+            const B = Number.parseInt(raw.slice(4, 6), 16);
+            if ([R, G, B].some((n) => Number.isNaN(n))) return;
+            updateChannelColor(colorPickerChannelUUID, { R, G, B });
+          }}
+        />
+      ) : null}
     </div>
   );
 };

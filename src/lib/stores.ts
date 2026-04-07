@@ -2382,7 +2382,10 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         const newAnnotations: Annotation[] = [];
         for (const id of shapeIds) {
           const sh = shapeById.get(id);
-          if (sh) newAnnotations.push(shapeToAnnotation(sh));
+          if (sh)
+            newAnnotations.push(
+              shapeToAnnotation(sh, { imageWidth, imageHeight }),
+            );
         }
 
         // Always remove prior `isImported` overlays when `clearExisting` (waypoint

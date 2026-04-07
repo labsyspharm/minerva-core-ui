@@ -1,6 +1,7 @@
 // Drag handlers for Deck.gl interactions
 // These handlers translate Deck.gl events into interaction events for the overlay system
 
+import { SCALEBAR_VIEW_ID } from "./deckViewIds";
 import { useOverlayStore } from "./stores";
 
 type InteractionType = "click" | "dragStart" | "drag" | "dragEnd" | "hover";
@@ -19,6 +20,12 @@ type PickInfo = {
   x?: number;
   y?: number;
   z?: number;
+  viewport?: {
+    id?: string;
+    x: number;
+    y: number;
+    unproject: (position: number[], opts?: { topLeft?: boolean }) => number[];
+  };
 };
 
 /** (worldX, worldY) -> [screenX, screenY] in canvas pixels; used for brush. */
@@ -49,10 +56,29 @@ export const createDragHandlers = (
     }
   };
 
-  // Use only coordinate (world space). Never use x,y - those are screen pixels.
+  const xyFinite = (p: number[] | null | undefined): p is number[] =>
+    !!p && p.length >= 2 && Number.isFinite(p[0]) && Number.isFinite(p[1]);
+
+  // Prefer viewport unproject on the slide (any view that is not the scale bar).
+  // Fall back to layer `coordinate` — MultiscaleImageLayer can lie outside tiles.
   const toCoord = (info: PickInfo): [number, number, number] | undefined => {
+    const vp = info.viewport;
+    const { x, y } = info;
+    if (
+      vp &&
+      vp.id !== SCALEBAR_VIEW_ID &&
+      typeof x === "number" &&
+      typeof y === "number" &&
+      Number.isFinite(x) &&
+      Number.isFinite(y)
+    ) {
+      const u = vp.unproject([x - vp.x, y - vp.y]);
+      if (xyFinite(u)) {
+        return [u[0], u[1], u[2] ?? 0];
+      }
+    }
     const c = info.coordinate;
-    if (c && c.length >= 2) {
+    if (xyFinite(c)) {
       return [c[0], c[1], c[2] ?? 0];
     }
     return undefined;

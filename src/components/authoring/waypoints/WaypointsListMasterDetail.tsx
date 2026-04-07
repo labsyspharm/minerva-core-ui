@@ -91,7 +91,6 @@ const WaypointsList = (props: WaypointsListProps) => {
     setAuthoringWaypointEditorOpen,
     Groups,
     SourceChannels,
-    Shapes,
   } = useOverlayStore();
 
   const detailBodyRef = React.useRef<HTMLDivElement | null>(null);
@@ -175,18 +174,12 @@ const WaypointsList = (props: WaypointsListProps) => {
     }
     previousActiveStoryIndexRef.current = storyIndex;
 
-    const _pendingShapeImports = (story.ShapeIds ?? []).filter(
-      (id) => !Shapes.some((shape) => shape.uuid === id),
-    ).length;
-    void _pendingShapeImports;
-
     importWaypointAnnotations(story, true);
   }, [
     stories,
     activeStoryIndex,
     imageWidth,
     imageHeight,
-    Shapes,
     importWaypointAnnotations,
   ]);
 

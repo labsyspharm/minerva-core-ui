@@ -96,11 +96,6 @@ const WaypointsList = (props: WaypointsListProps) => {
       }
       previousActiveStoryIndexRef.current = storyIndex;
 
-      const _pendingShapeImports = (story.ShapeIds ?? []).filter(
-        (id) => !Shapes.some((shape) => shape.uuid === id),
-      ).length;
-      void _pendingShapeImports;
-
       // Replace imported shapes from the story; keep user-drawn annotations (see `mergeAnnotationsAfterWaypointImport`).
       importWaypointAnnotations(story, true);
     }
@@ -109,7 +104,6 @@ const WaypointsList = (props: WaypointsListProps) => {
     activeStoryIndex,
     imageWidth,
     imageHeight,
-    Shapes,
     importWaypointAnnotations,
   ]);
 

@@ -1,7 +1,11 @@
+import { rgbaToHsva } from "@uiw/react-color";
 import * as React from "react";
-import { ChromePicker } from "react-color";
 import { LayersPanel } from "@/components/authoring/LayersPanel";
 import { ToolSubmenu } from "@/components/authoring/ToolSubmenu";
+import {
+  ChromeColorPickerPopover,
+  chromeColorPickerAnchorPosition,
+} from "@/components/shared/ChromeColorPickerPopover";
 import ArrowIcon from "@/components/shared/icons/arrow-tool.svg?react";
 import BrushIcon from "@/components/shared/icons/brush.svg?react";
 import CopyAnnotationsIcon from "@/components/shared/icons/copy-annotations.svg?react";
@@ -19,12 +23,53 @@ import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import type { ConfigWaypoint } from "@/lib/config";
+import type { Annotation } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
 import {
   copySelectedWaypointAnnotations,
   pasteWaypointAnnotationsFromClipboard,
 } from "@/lib/waypointAnnotationClipboard";
 import styles from "./WaypointAnnotationEditor.module.css";
+
+/** Writes rgba into the fields the renderer reads (`style.*`). */
+function applyWaypointPickerColor(
+  annotationId: string,
+  newColor: [number, number, number, number],
+) {
+  const { annotations, updateAnnotation } = useOverlayStore.getState();
+  const ann = annotations.find((a) => a.id === annotationId);
+  if (!ann) return;
+
+  if (ann.type === "polygon" || ann.type === "line") {
+    const fillA = ann.style.fillColor[3];
+    updateAnnotation(annotationId, {
+      style: {
+        ...ann.style,
+        lineColor: newColor,
+        fillColor: [newColor[0], newColor[1], newColor[2], fillA],
+      },
+    } as Partial<Annotation>);
+    return;
+  }
+  if (ann.type === "polyline") {
+    updateAnnotation(annotationId, {
+      style: {
+        ...ann.style,
+        lineColor: newColor,
+      },
+    } as Partial<Annotation>);
+    return;
+  }
+  if (ann.type === "point") {
+    updateAnnotation(annotationId, {
+      style: {
+        ...ann.style,
+        fillColor: newColor,
+        strokeColor: newColor,
+      },
+    } as Partial<Annotation>);
+  }
+}
 
 // Define available tools (same as overlays)
 const TOOLS = {
@@ -41,21 +86,12 @@ const TOOLS = {
   BRUSH: "brush",
 } as const;
 
-type ToolType = (typeof TOOLS)[keyof typeof TOOLS];
-
 export interface WaypointAnnotationEditorProps {
   story: ConfigWaypoint;
   storyIndex: number;
   /** When true, do not cap height or add inner scroll — parent scrolls */
   embeddedInScrollParent?: boolean;
 }
-
-type RGBA = {
-  r: number;
-  g: number;
-  b: number;
-  a: number;
-};
 
 const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
   embeddedInScrollParent,
@@ -65,12 +101,54 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     handleToolChange,
     globalColor,
     setGlobalColor,
-    updateAnnotation,
-    updateTextAnnotationColor,
     layersPanelSelectedAnnotationIds,
     handleLayerCreate,
     currentInteraction,
   } = useOverlayStore();
+
+  const [colorPickerPos, setColorPickerPos] = React.useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const [pickerHsva, setPickerHsva] = React.useState(() =>
+    rgbaToHsva({ r: 255, g: 255, b: 255, a: 1 }),
+  );
+  const colorPickerTargetIdRef = React.useRef<string | null>(null);
+
+  const closeColorPicker = React.useCallback(() => {
+    colorPickerTargetIdRef.current = null;
+    setColorPickerPos(null);
+  }, []);
+
+  const handleColorPickerOpen = (anchor: DOMRect) => {
+    colorPickerTargetIdRef.current = null;
+    setPickerHsva(
+      rgbaToHsva({
+        r: globalColor[0],
+        g: globalColor[1],
+        b: globalColor[2],
+        a: globalColor[3] / 255,
+      }),
+    );
+    setColorPickerPos(chromeColorPickerAnchorPosition(anchor));
+  };
+
+  const handleOpenAnnotationColorPicker = (
+    annotationId: string,
+    rgba: [number, number, number, number],
+    anchor: DOMRect,
+  ) => {
+    colorPickerTargetIdRef.current = annotationId;
+    setPickerHsva(
+      rgbaToHsva({
+        r: rgba[0],
+        g: rgba[1],
+        b: rgba[2],
+        a: rgba[3] / 255,
+      }),
+    );
+    setColorPickerPos(chromeColorPickerAnchorPosition(anchor));
+  };
 
   const waypointClipboardActions = (
     <>
@@ -94,74 +172,8 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     </>
   );
 
-  // Local state for color picker
-  const [showColorPicker, setShowColorPicker] = React.useState(false);
-  const [currentColor, setCurrentColor] = React.useState({
-    r: 255,
-    g: 255,
-    b: 255,
-    a: 1,
-  });
-  const [editingAnnotationId, setEditingAnnotationId] = React.useState<
-    string | null
-  >(null);
-
   const handleToolChangeLocal = (tool: string) => {
     handleToolChange(tool);
-  };
-
-  const handleColorPickerOpen = () => {
-    // Convert global color to ChromePicker format
-    setCurrentColor({
-      r: globalColor[0],
-      g: globalColor[1],
-      b: globalColor[2],
-      a: globalColor[3] / 255,
-    });
-    setShowColorPicker(true);
-  };
-
-  const handleColorChange = (color: { rgb: RGBA }) => {
-    setCurrentColor(color.rgb);
-  };
-
-  const handleColorChangeComplete = () => {
-    const newColor: [number, number, number, number] = [
-      Math.round(currentColor.r),
-      Math.round(currentColor.g),
-      Math.round(currentColor.b),
-      Math.round(currentColor.a * 255),
-    ];
-
-    setGlobalColor(newColor);
-
-    // If we're editing a specific annotation, update it
-    if (editingAnnotationId) {
-      updateAnnotation(editingAnnotationId, { color: newColor });
-      updateTextAnnotationColor(editingAnnotationId, newColor);
-      setEditingAnnotationId(null);
-    }
-
-    setShowColorPicker(false);
-  };
-
-  const handleColorPickerCancel = () => {
-    setShowColorPicker(false);
-    setEditingAnnotationId(null);
-  };
-
-  const handleOpenAnnotationColorPicker = (
-    annotationId: string,
-    currentColor: [number, number, number, number],
-  ) => {
-    setEditingAnnotationId(annotationId);
-    setCurrentColor({
-      r: currentColor[0],
-      g: currentColor[1],
-      b: currentColor[2],
-      a: currentColor[3] / 255,
-    });
-    setShowColorPicker(true);
   };
 
   const drawingToolbar = (
@@ -278,88 +290,28 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         ) : null}
       </div>
 
-      {/* Color Picker Modal */}
-      {showColorPicker && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "10px 20px",
-              borderRadius: "8px",
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
-              position: "relative",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "15px",
-              }}
-            >
-              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "bold" }}>
-                {editingAnnotationId
-                  ? "Change Annotation Color"
-                  : "Choose Drawing Color"}
-              </h3>
-              <button
-                type="button"
-                onClick={handleColorPickerCancel}
-                style={{
-                  background: "none",
-                  border: "none",
-                  fontSize: "18px",
-                  cursor: "pointer",
-                  color: "#666",
-                }}
-                title="Close"
-              >
-                ×
-              </button>
-            </div>
-
-            <ChromePicker color={currentColor} onChange={handleColorChange} />
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: "10px",
-                marginTop: "15px",
-              }}
-            >
-              <button
-                type="button"
-                onClick={handleColorChangeComplete}
-                style={{
-                  padding: "8px 16px",
-                  border: "none",
-                  backgroundColor: "#4CAF50",
-                  color: "white",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
-                Apply Color
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ChromeColorPickerPopover
+        position={colorPickerPos}
+        onClose={closeColorPicker}
+        color={pickerHsva}
+        showAlpha
+        onChange={(c) => {
+          setPickerHsva(c.hsva);
+          const { r, g, b, a } = c.rgba;
+          const newColor: [number, number, number, number] = [
+            Math.round(r),
+            Math.round(g),
+            Math.round(b),
+            Math.round(a * 255),
+          ];
+          const targetId = colorPickerTargetIdRef.current;
+          if (targetId) {
+            applyWaypointPickerColor(targetId, newColor);
+          } else {
+            setGlobalColor(newColor);
+          }
+        }}
+      />
     </div>
   );
 };

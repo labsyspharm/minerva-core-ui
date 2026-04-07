@@ -31,12 +31,23 @@ export type StoryShapePoint = {
   point: StoryPoint;
 };
 
-/** Segment in world pixels; arrow head at `to`. */
+/**
+ * Arrow tip + direction (legacy waypoint style). `angle` is degrees: bearing from
+ * tip toward tail. Import still accepts older JSON with `from`/`to` instead.
+ */
 export type StoryShapeArrow = {
   type: "arrow";
   uuid: string;
-  from: StoryPoint;
-  to: StoryPoint;
+  point: StoryPoint;
+  angle: number;
+  /** Optional caption; rendered toward the tail via `LineAnnotation.text`. */
+  label?: string;
+};
+
+/** Loose shape at load time (e.g. older exports with `from`/`to`). */
+type StoryShapeArrowIn = StoryShapeArrow & {
+  from?: StoryPoint;
+  to?: StoryPoint;
 };
 
 export type StoryShapePolygon = {
@@ -167,7 +178,16 @@ export function annotationToShape(ann: Annotation): StoryShape | null {
       const to = storyPointFromTuple(poly[1]);
       const arrowHead = a.hasArrowHead !== false;
       if (arrowHead) {
-        return { type: "arrow", uuid, from, to };
+        const label = a.text?.trim() || a.metadata?.label?.trim() || undefined;
+        const angleRad = Math.atan2(from.y - to.y, from.x - to.x);
+        const angleDeg = (angleRad * 180) / Math.PI;
+        return {
+          type: "arrow",
+          uuid,
+          point: to,
+          angle: angleDeg,
+          ...(label ? { label } : {}),
+        };
       }
       return {
         type: "polyline",
@@ -193,7 +213,47 @@ function tupleFromPoint(p: StoryPoint): [number, number] {
   return [p.x, p.y];
 }
 
-export function shapeToAnnotation(shape: StoryShape): Annotation {
+/** Caption for arrows; older JSON may use `text` instead of `label` — treat as `label`. */
+function arrowCaptionFromShape(shape: StoryShapeArrowIn): string | undefined {
+  const fromLabel = shape.label?.trim();
+  if (fromLabel) return fromLabel;
+  const loose = shape as StoryShapeArrowIn & { text?: unknown };
+  if (typeof loose.text === "string") {
+    const t = loose.text.trim();
+    return t || undefined;
+  }
+  return undefined;
+}
+
+function arrowPointAngleFromInput(shape: StoryShapeArrowIn): {
+  point: StoryPoint;
+  angle: number;
+} {
+  if (
+    shape.point &&
+    typeof shape.angle === "number" &&
+    Number.isFinite(shape.angle)
+  ) {
+    return { point: shape.point, angle: shape.angle };
+  }
+  if (shape.from && shape.to) {
+    const tip = shape.to;
+    const tail = shape.from;
+    const angleRad = Math.atan2(tail.y - tip.y, tail.x - tip.x);
+    return { point: tip, angle: (angleRad * 180) / Math.PI };
+  }
+  throw new Error(`minerva: invalid arrow shape (uuid ${shape.uuid})`);
+}
+
+export type ShapeToAnnotationContext = {
+  imageWidth: number;
+  imageHeight: number;
+};
+
+export function shapeToAnnotation(
+  shape: StoryShape,
+  context?: ShapeToAnnotationContext,
+): Annotation {
   switch (shape.type) {
     case "point":
       return {
@@ -233,15 +293,29 @@ export function shapeToAnnotation(shape: StoryShape): Annotation {
       } satisfies PolylineAnnotation;
     }
     case "arrow": {
-      const start = tupleFromPoint(shape.from);
-      const end = tupleFromPoint(shape.to);
+      const { point, angle } = arrowPointAngleFromInput(shape);
+      const tip = tupleFromPoint(point);
+      const angleRad = (angle * Math.PI) / 180;
+      const minDim = context
+        ? Math.min(context.imageWidth, context.imageHeight)
+        : 800;
+      const lineLength = minDim * 0.5;
+      const tail: [number, number] = [
+        tip[0] + Math.cos(angleRad) * lineLength,
+        tip[1] + Math.sin(angleRad) * lineLength,
+      ];
+      const caption = arrowCaptionFromShape(shape);
       return {
         id: shape.uuid,
         type: "line",
-        polygon: arrowLineDegeneratePolygon(start, end),
+        polygon: arrowLineDegeneratePolygon(tail, tip),
         hasArrowHead: true,
         style: { ...importedLineStyle },
-        metadata: { isImported: true },
+        ...(caption ? { text: caption } : {}),
+        metadata: {
+          isImported: true,
+          ...(caption ? { label: caption } : {}),
+        },
       } satisfies LineAnnotation;
     }
     default: {

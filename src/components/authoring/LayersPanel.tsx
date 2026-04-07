@@ -199,6 +199,14 @@ const getAnnotationRgba = (
   return [255, 255, 255, 255];
 };
 
+/** Arrows and standalone text use fixed colors; layers header color is disabled. */
+const isAnnotationLayerColorLocked = (annotation: Annotation): boolean => {
+  if (annotation.type === "text") return true;
+  if (annotation.type === "line" && annotation.hasArrowHead !== false)
+    return true;
+  return false;
+};
+
 interface LayersPanelProps {
   className?: string;
   itemListVariant?: ItemListVariant;
@@ -207,10 +215,11 @@ interface LayersPanelProps {
   /** Waypoint editor only: copy/paste icons (same handlers as Cmd/Ctrl+C/V). */
   waypointClipboardActions?: React.ReactNode;
   /** Used when no annotation is selected (or a group is selected) for the header color control */
-  onOpenGlobalColorPicker?: () => void;
+  onOpenGlobalColorPicker?: (anchor: DOMRect) => void;
   onOpenAnnotationColorPicker?: (
     annotationId: string,
     currentColor: [number, number, number, number],
+    anchor: DOMRect,
   ) => void;
 }
 
@@ -688,21 +697,39 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     }
   };
 
-  const handleHeaderColorClick = () => {
-    const ann = annotations.find((a) => a.id === selectedLayerId);
-    if (ann && onOpenAnnotationColorPicker) {
-      onOpenAnnotationColorPicker(ann.id, getAnnotationRgba(ann));
+  const headerSelectedAnnotation =
+    selectedLayerId == null
+      ? undefined
+      : annotations.find((a) => a.id === selectedLayerId);
+
+  const layerColorLocked =
+    headerSelectedAnnotation != null &&
+    isAnnotationLayerColorLocked(headerSelectedAnnotation);
+
+  const handleHeaderColorClick = (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    const anchor = event.currentTarget.getBoundingClientRect();
+    const ann = headerSelectedAnnotation;
+    if (ann && isAnnotationLayerColorLocked(ann)) {
       return;
     }
-    onOpenGlobalColorPicker?.();
+    if (ann && onOpenAnnotationColorPicker) {
+      onOpenAnnotationColorPicker(ann.id, getAnnotationRgba(ann), anchor);
+      return;
+    }
+    onOpenGlobalColorPicker?.(anchor);
   };
 
   const headerColorDisabled = (() => {
     if (!selectedLayerId) {
       return true;
     }
-    const ann = annotations.find((a) => a.id === selectedLayerId);
+    const ann = headerSelectedAnnotation;
     if (ann) {
+      if (isAnnotationLayerColorLocked(ann)) {
+        return true;
+      }
       return !onOpenAnnotationColorPicker && !onOpenGlobalColorPicker;
     }
     const grp = annotationGroups.find((g) => g.id === selectedLayerId);
@@ -916,11 +943,13 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         onClick={handleHeaderColorClick}
         disabled={headerColorDisabled}
         title={
-          headerColorDisabled
-            ? "Select a layer or group to change color"
-            : annotations.some((a) => a.id === selectedLayerId)
-              ? "Color — selected annotation"
-              : "Color — global (group selected)"
+          layerColorLocked
+            ? "Color is fixed for arrows and text annotations"
+            : headerColorDisabled
+              ? "Select a layer or group to change color"
+              : annotations.some((a) => a.id === selectedLayerId)
+                ? "Color — selected annotation"
+                : "Color — global (group selected)"
         }
       >
         <AnnotationColorIcon />

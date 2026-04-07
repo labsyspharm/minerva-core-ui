@@ -26,8 +26,11 @@ export function mergeAnnotationsAfterWaypointImport(
       )
     : state.hiddenLayers;
 
+  const existingIds = new Set(existingAnnotations.map((a) => a.id));
+  const appended = newAnnotations.filter((a) => !existingIds.has(a.id));
+
   return {
-    annotations: [...existingAnnotations, ...newAnnotations],
+    annotations: [...existingAnnotations, ...appended],
     hiddenLayers: newHiddenLayers,
   };
 }
