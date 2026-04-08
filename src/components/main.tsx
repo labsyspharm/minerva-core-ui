@@ -11,44 +11,45 @@ import type {
   ConfigWaypoint,
   ItemRegistryProps,
   MutableFields,
-} from "@/lib/config";
+} from "@/lib/authoring/config";
 import {
   extractChannels,
   extractDistributions,
   mutableItemRegistry,
-} from "@/lib/config";
-import { loadDicomWeb, parseDicomWeb } from "@/lib/dicom";
-import type { DicomIndex, DicomLoader } from "@/lib/dicom-index";
-import type {
-  ConfigGroup,
-  ExhibitConfig,
-  Waypoint as WaypointType,
-} from "@/lib/exhibit";
-import { readConfig } from "@/lib/exhibit";
-import {
-  storeStoryWaypointToConfigWaypoint,
-  storiesToConfigWaypoints,
-} from "@/lib/exportStory";
+} from "@/lib/authoring/config";
+import { loadDicomWeb, parseDicomWeb } from "@/lib/imaging/dicom.js";
+import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicom-index";
 import {
   hasFileSystemAccess,
   toLoader,
   toLoaderFromUrl,
-} from "@/lib/filesystem";
+} from "@/lib/imaging/filesystem";
 import {
   clearOmeHistogramCache,
   ensureOmeHistogramDistributions,
   mergeHistogramsIntoSourceChannels,
-} from "@/lib/histogramLazy";
-import { buildImageViewerSignature } from "@/lib/imageViewerSignature";
+} from "@/lib/imaging/histogramLazy";
+import { type Loader, toSettings } from "@/lib/imaging/viv";
+import { Pool } from "@/lib/imaging/workers/Pool";
+import type {
+  ConfigGroup,
+  ExhibitConfig,
+  Waypoint as WaypointType,
+} from "@/lib/legacy/exhibit";
+import { readConfig } from "@/lib/legacy/exhibit";
+import { useAppStore } from "@/lib/stores/app-store";
+import { useDocumentStore } from "@/lib/stores/document-store";
 import {
   configWaypointsHaveLegacyArrowsOrOverlays,
-  migrateLegacyWaypointAnnotations,
-} from "@/lib/legacyWaypointMigration";
-import { useOverlayStore } from "@/lib/stores";
-import { isOpts, validate } from "@/lib/validate";
-import { type Loader, toSettings } from "@/lib/viv";
-import { normalizeWaypointToBounds } from "@/lib/waypoint";
-import { Pool } from "@/lib/workers/Pool";
+  migrateLegacyWaypointShapes,
+} from "@/lib/story/legacyWaypointMigration";
+import {
+  storeStoryWaypointToConfigWaypoint,
+  waypointsToConfigWaypoints,
+} from "@/lib/story/storyDocument";
+import { isOpts, validate } from "@/lib/util/validate";
+import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
+import { normalizeWaypointToBounds } from "@/lib/waypoints/waypoint";
 import { author } from "@/minerva-author-ui/author";
 import { toAuthorElement } from "@/minerva-author-ui/index";
 
@@ -161,7 +162,7 @@ const getDistributions = async (SourceChannels, loader) => {
   const SourceDistributions = [...sourceDistributionMap.values()];
   const SourceChannelsWithDist = SourceChannels.map((sourceChannel) => ({
     ...sourceChannel,
-    SourceDistribution: sourceDistributionMap.get(sourceChannel.SourceIndex),
+    sourceDistribution: sourceDistributionMap.get(sourceChannel.SourceIndex),
   }));
   return { SourceChannelsWithDist, SourceDistributions };
 };
@@ -172,18 +173,22 @@ const Content = (props: Props) => {
   const [exhibit, setExhibit] = useState(firstExhibit);
   const [loaderOmeTiff, setLoaderOmeTiff] = useState(null);
   const [dicomIndexList, setDicomIndexList] = useState([] as DicomIndex[]);
-  // Active Group from Store
   const {
     setActiveChannelGroup,
     setChannelVisibilities,
     setGroupChannelLists,
     setGroupNames,
+  } = useAppStore();
+  const {
     setGroupChannelRange,
-    setGroups,
-    Groups,
+    setChannelGroups,
+    channelGroups,
     setSourceChannels,
-    SourceChannels,
-  } = useOverlayStore();
+    sourceChannels,
+  } = useDocumentStore();
+  const Groups = channelGroups;
+  const setGroups = setChannelGroups;
+  const SourceChannels = sourceChannels;
   const documentChannelsRef = React.useRef({ Groups, SourceChannels });
   documentChannelsRef.current = { Groups, SourceChannels };
   const [config, setConfig] = useState(() => ({
@@ -247,12 +252,10 @@ const Content = (props: Props) => {
   };
 
   const updateGroupChannelLists = ({ Groups, SourceChannels }) => {
-    setGroupNames(
-      Object.fromEntries(Groups.map(({ Name, UUID }) => [UUID, Name])),
-    );
+    setGroupNames(Object.fromEntries(Groups.map(({ Name, id }) => [id, Name])));
     const toChannelList = (GroupChannels) => {
-      return GroupChannels.map(({ SourceChannel }) =>
-        SourceChannels.find(({ UUID }) => UUID === SourceChannel.UUID),
+      return GroupChannels.map(({ sourceChannelId }) =>
+        SourceChannels.find(({ id }) => id === sourceChannelId),
       )
         .filter((x) => x)
         .map(({ Name }) => Name);
@@ -285,7 +288,7 @@ const Content = (props: Props) => {
     }));
     const { Groups } = ItemRegistry;
     if (Groups?.length > 0) {
-      setActiveChannelGroup(Groups[0].UUID);
+      setActiveChannelGroup(Groups[0].id);
     }
   };
 
@@ -311,17 +314,15 @@ const Content = (props: Props) => {
   const [importRevision, setImportRevision] = useState(0);
   const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
   const [isLoadingImage, setIsLoadingImage] = useState(hasDemo);
-  const showSquareViewportOverlay = useOverlayStore(
+  const showSquareViewportOverlay = useAppStore(
     (state) => state.showSquareViewportOverlay,
   );
-  const setShowSquareViewportOverlay = useOverlayStore(
+  const setShowSquareViewportOverlay = useAppStore(
     (state) => state.setShowSquareViewportOverlay,
   );
-  const viewerViewportSize = useOverlayStore(
-    (state) => state.viewerViewportSize,
-  );
-  const imageWidth = useOverlayStore((state) => state.imageWidth);
-  const imageHeight = useOverlayStore((state) => state.imageHeight);
+  const viewerViewportSize = useAppStore((state) => state.viewerViewportSize);
+  const imageWidth = useDocumentStore((state) => state.imageWidth);
+  const imageHeight = useDocumentStore((state) => state.imageHeight);
 
   useEffect(() => {
     const enabledFromConfig =
@@ -394,11 +395,11 @@ const Content = (props: Props) => {
       }
       // Restoring a previous file replaces the hardcoded demo, so clear
       // stories, waypoints, and overlays.
-      const store = useOverlayStore.getState();
+      const store = useAppStore.getState();
       store.setStories([]);
       store.clearOverlayLayers();
-      store.clearAnnotations();
-      store.setShapes([]);
+      store.clearShapes();
+      useDocumentStore.getState().setShapes([]);
       setConfig((prev) => ({
         ...prev,
         ItemRegistry: {
@@ -444,13 +445,13 @@ const Content = (props: Props) => {
     if (!willLoad) return;
 
     // When opening a new image (not the initial demo), clear hardcoded
-    // waypoints, stories, and overlay annotations.
+    // waypoints, stories, and overlay shapes.
     if (clearStories) {
-      const store = useOverlayStore.getState();
+      const store = useAppStore.getState();
       store.setStories([]);
       store.clearOverlayLayers();
-      store.clearAnnotations();
-      store.setShapes([]);
+      store.clearShapes();
+      useDocumentStore.getState().setShapes([]);
       setConfig((prev) => ({
         ...prev,
         ItemRegistry: {
@@ -572,11 +573,11 @@ const Content = (props: Props) => {
   const getSourceDistribution = React.useMemo(() => {
     return (source_uuid) => {
       const source_channel = SourceChannels.find((x) => {
-        return x.UUID === source_uuid;
+        return x.id === source_uuid;
       });
       if (source_channel) {
-        const { SourceDistribution } = source_channel;
-        return SourceDistribution;
+        const { sourceDistribution } = source_channel;
+        return sourceDistribution;
       }
       return null;
     };
@@ -745,12 +746,10 @@ const Content = (props: Props) => {
         const color = ((1 << 24) + (R << 16) + (G << 8) + B)
           .toString(16)
           .slice(1);
-        const { LowerRange, UpperRange } = group_channel;
-        const { SourceChannel } = group_channel;
+        const { LowerRange, UpperRange, sourceChannelId } = group_channel;
         const { Name } =
-          SC.find(
-            (source_channel) => source_channel.UUID === SourceChannel.UUID,
-          ) || defaults;
+          SC.find((source_channel) => source_channel.id === sourceChannelId) ||
+          defaults;
         return {
           color,
           name: Name,
@@ -787,10 +786,10 @@ const Content = (props: Props) => {
         sourceIndices,
       );
       if (map.size === 0) return;
-      const state = useOverlayStore.getState();
-      const next = mergeHistogramsIntoSourceChannels(state.SourceChannels, map);
-      if (next === state.SourceChannels) return;
-      state.setSourceChannels(next);
+      const doc = useDocumentStore.getState();
+      const next = mergeHistogramsIntoSourceChannels(doc.sourceChannels, map);
+      if (next === doc.sourceChannels) return;
+      doc.setSourceChannels(next);
       setItems({ SourceChannels: next });
     },
     [loaderOmeTiff, viewerImageKey, setItems],
@@ -893,21 +892,19 @@ const Content = (props: Props) => {
     dragState,
     hoverState,
     handleOverlayInteraction,
-    stories: _stories,
     activeStoryIndex,
     setActiveStory,
     setStories,
-  } = useOverlayStore();
+  } = useAppStore();
+  const _waypoints = useDocumentStore((s) => s.waypoints);
 
-  // Stories lifecycle: `index.tsx` waypoints are copied once into `config` (see
-  // `useState` initializer). After that, Zustand `stories` is authoritative;
-  // this effect only seeds an empty store or ensures Bounds on legacy waypoints
-  // (Pan/Zoom kept for viewport-accurate camera). The
-  // subscription below mirrors `stories` back into `config.ItemRegistry.Stories`
-  // for the legacy author panel — not back into `index.tsx`.
+  // Document waypoint lifecycle: `index.tsx` waypoints are copied once into
+  // `config` (see `useState` initializer). Then `useDocumentStore.waypoints` is
+  // authoritative; this effect seeds empty state or migrates legacy markers.
+  // The subscription mirrors waypoints + shapes into `config.ItemRegistry`.
   useEffect(() => {
     const configStories = config.ItemRegistry.Stories;
-    const storeStories = useOverlayStore.getState().stories;
+    const storeWaypoints = useDocumentStore.getState().waypoints;
 
     if (!configStories?.length) return;
     if (!viewerViewportSize?.width || !viewerViewportSize?.height) return;
@@ -928,7 +925,7 @@ const Content = (props: Props) => {
     // First paint: fill empty store from config only once image dimensions exist so
     // `Arrows` / `Overlays` can be converted to `ShapeIds` + registry (`Shapes`)
     // before anything enters Zustand.
-    if (storeStories.length === 0) {
+    if (storeWaypoints.length === 0) {
       if (imageWidth <= 0 || imageHeight <= 0) {
         return;
       }
@@ -937,7 +934,7 @@ const Content = (props: Props) => {
         stories: migrated,
         shapes: mergedShapes,
         didMigrate,
-      } = migrateLegacyWaypointAnnotations(
+      } = migrateLegacyWaypointShapes(
         configStories.map((s) => ({ ...s })),
         registry,
         imageWidth,
@@ -947,7 +944,7 @@ const Content = (props: Props) => {
         console.debug("[seed] legacy waypoint markers → shapes registry", {
           waypoints: migrated.length,
           shapesInRegistry: mergedShapes.length,
-          shapeIdsPerWp: migrated.map((w) => w.ShapeIds?.length ?? 0),
+          shapeIdsPerWp: migrated.map((w) => w.shapeIds?.length ?? 0),
         });
       }
       setStories(
@@ -955,7 +952,7 @@ const Content = (props: Props) => {
           normalizeWaypointToBounds(story, imageWidth, imageHeight, cw, ch),
         ),
       );
-      useOverlayStore.getState().setShapes(mergedShapes);
+      useDocumentStore.getState().setShapes(mergedShapes);
       return;
     }
 
@@ -964,18 +961,18 @@ const Content = (props: Props) => {
     // when the exhibit registry has data (even if ids are temporarily out of sync).
     if (
       (config.ItemRegistry.Shapes?.length ?? 0) > 0 &&
-      useOverlayStore.getState().Shapes.length === 0
+      useDocumentStore.getState().shapes.length === 0
     ) {
-      useOverlayStore.getState().setShapes(config.ItemRegistry.Shapes ?? []);
+      useDocumentStore.getState().setShapes(config.ItemRegistry.Shapes ?? []);
     }
 
     // Store rows and config `Stories` are different arrays; keep Pan/Zoom → Bounds
     // migration when image + viewer metrics are ready. Avoid clobbering the store
     // when exhibit `Stories` no longer match store waypoint ids (e.g. external swap).
     const configAlignedWithStore =
-      configStories.length === storeStories.length &&
-      configStories.every((c, i) => c.UUID === storeStories[i]?.id);
-    if (!configAlignedWithStore && storeStories.length > 0) {
+      configStories.length === storeWaypoints.length &&
+      configStories.every((c, i) => c.id === storeWaypoints[i]?.id);
+    if (!configAlignedWithStore && storeWaypoints.length > 0) {
       return;
     }
 
@@ -990,20 +987,20 @@ const Content = (props: Props) => {
       configAlignedWithStore &&
       configWaypointsHaveLegacyArrowsOrOverlays(configStories)
     ) {
-      const state = useOverlayStore.getState();
+      const doc = useDocumentStore.getState();
       setItemsRef.current({
-        Stories: storiesToConfigWaypoints(state.stories),
-        Shapes: state.Shapes,
+        Stories: waypointsToConfigWaypoints(doc.waypoints),
+        Shapes: doc.shapes,
       });
       return;
     }
 
     if (imageWidth > 0 && imageHeight > 0) {
-      const mask = storeStories.map((s) =>
+      const mask = storeWaypoints.map((s) =>
         needsPanMigration(storeStoryWaypointToConfigWaypoint(s)),
       );
       if (mask.some(Boolean)) {
-        const nextConfig = storeStories.map((s, i) => {
+        const nextConfig = storeWaypoints.map((s, i) => {
           const c = storeStoryWaypointToConfigWaypoint(s);
           return mask[i]
             ? normalizeWaypointToBounds(c, imageWidth, imageHeight, cw, ch)
@@ -1021,17 +1018,17 @@ const Content = (props: Props) => {
     setStories,
   ]);
 
-  // Sync store stories and shape registry back into config for persistence.
+  // Sync document waypoints + shapes into config for persistence.
   useEffect(() => {
-    const unsub = useOverlayStore.subscribe((state, prevState) => {
-      const storiesChanged = state.stories !== prevState.stories;
-      const shapesChanged = state.Shapes !== prevState.Shapes;
-      if (!storiesChanged && !shapesChanged) return;
+    const unsub = useDocumentStore.subscribe((state, prevState) => {
+      const waypointsChanged = state.waypoints !== prevState.waypoints;
+      const shapesChanged = state.shapes !== prevState.shapes;
+      if (!waypointsChanged && !shapesChanged) return;
       setItemsRef.current({
-        ...(storiesChanged
-          ? { Stories: storiesToConfigWaypoints(state.stories) }
+        ...(waypointsChanged
+          ? { Stories: waypointsToConfigWaypoints(state.waypoints) }
           : {}),
-        ...(shapesChanged ? { Shapes: state.Shapes } : {}),
+        ...(shapesChanged ? { Shapes: state.shapes } : {}),
       });
     });
     return () => unsub();
@@ -1039,15 +1036,18 @@ const Content = (props: Props) => {
 
   // Initialize to first active story index
   useEffect(() => {
-    const hasStories = _stories.length;
-    if (hasStories && activeStoryIndex === null) {
+    const hasWaypoints = _waypoints.length;
+    if (hasWaypoints && activeStoryIndex === null) {
       setActiveStory(0);
     }
-  }, [_stories, activeStoryIndex, setActiveStory]);
+  }, [_waypoints, activeStoryIndex, setActiveStory]);
 
   const enterPlaybackPreview = React.useCallback(() => {
-    const state = useOverlayStore.getState();
-    if (state.stories.length > 0 && state.activeStoryIndex === null) {
+    const state = useAppStore.getState();
+    if (
+      useDocumentStore.getState().waypoints.length > 0 &&
+      state.activeStoryIndex === null
+    ) {
       state.setActiveStory(0);
     }
     React.startTransition(() => {
@@ -1145,7 +1145,7 @@ const Content = (props: Props) => {
                     overlayLayers={overlayLayers}
                     activeTool={activeTool}
                     isDragging={dragState.isDragging}
-                    hoveredAnnotationId={hoverState.hoveredAnnotationId}
+                    hoveredShapeId={hoverState.hoveredShapeId}
                     onOverlayInteraction={handleOverlayInteraction}
                   />
                   <Upload {...uploadProps} />

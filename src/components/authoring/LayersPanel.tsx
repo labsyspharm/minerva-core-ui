@@ -15,8 +15,8 @@ import PointIcon from "@/components/shared/icons/point.svg?react";
 import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
 import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
-import type { Annotation } from "@/lib/stores";
-import { useOverlayStore } from "@/lib/stores";
+import type { Shape } from "@/lib/shapes/shapeModel";
+import { useAppStore } from "@/lib/stores/app-store";
 
 // Shared Text Edit Panel Component (same as in original LayersPanel)
 interface TextEditPanelProps {
@@ -181,7 +181,7 @@ const TrashIcon = () => (
 );
 
 const getAnnotationRgba = (
-  annotation: Annotation,
+  annotation: Shape,
 ): [number, number, number, number] => {
   if (annotation.type === "text") {
     return annotation.style.fontColor;
@@ -200,7 +200,7 @@ const getAnnotationRgba = (
 };
 
 /** Arrows and standalone text use fixed colors; layers header color is disabled. */
-const isAnnotationLayerColorLocked = (annotation: Annotation): boolean => {
+const isAnnotationLayerColorLocked = (annotation: Shape): boolean => {
   if (annotation.type === "text") return true;
   if (annotation.type === "line" && annotation.hasArrowHead !== false)
     return true;
@@ -232,48 +232,40 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   onOpenAnnotationColorPicker,
 }) => {
   const itemListRootRef = React.useRef<HTMLDivElement | null>(null);
-  // Subscribe to annotations and hidden layers from store
-  const annotations = useOverlayStore((state) => state.annotations);
-  const annotationGroups = useOverlayStore((state) => state.annotationGroups);
-  const hiddenLayers = useOverlayStore((state) => state.hiddenLayers);
-  const removeAnnotation = useOverlayStore((state) => state.removeAnnotation);
-  const updateShapeText = useOverlayStore((state) => state.updateShapeText);
-  const updateAnnotationLabel = useOverlayStore(
-    (state) => state.updateAnnotationLabel,
+  // Subscribe to shapes and hidden layers from store
+  const shapes = useAppStore((state) => state.shapes);
+  const shapeGroups = useAppStore((state) => state.shapeGroups);
+  const hiddenShapeIds = useAppStore((state) => state.hiddenShapeIds);
+  const removeShape = useAppStore((state) => state.removeShape);
+  const updateShapeText = useAppStore((state) => state.updateShapeText);
+  const updateShapeLabel = useAppStore((state) => state.updateShapeLabel);
+  const toggleShapeVisibility = useAppStore(
+    (state) => state.toggleShapeVisibility,
   );
-  const toggleLayerVisibility = useOverlayStore(
-    (state) => state.toggleLayerVisibility,
+  const createGroup = useAppStore((state) => state.createGroup);
+  const deleteGroup = useAppStore((state) => state.deleteGroup);
+  const removeShapeFromGroup = useAppStore(
+    (state) => state.removeShapeFromGroup,
   );
-  const createGroup = useOverlayStore((state) => state.createGroup);
-  const deleteGroup = useOverlayStore((state) => state.deleteGroup);
-  const removeAnnotationFromGroup = useOverlayStore(
-    (state) => state.removeAnnotationFromGroup,
+  const setLayersPanelSelectedShapeIds = useAppStore(
+    (state) => state.setLayersPanelSelectedShapeIds,
   );
-  const setLayersPanelSelectedAnnotationIds = useOverlayStore(
-    (state) => state.setLayersPanelSelectedAnnotationIds,
-  );
-  const setLayersPanelSelectedGroupId = useOverlayStore(
+  const setLayersPanelSelectedGroupId = useAppStore(
     (state) => state.setLayersPanelSelectedGroupId,
   );
-  const setSelectedAnnotation = useOverlayStore(
-    (state) => state.setSelectedAnnotation,
-  );
-  const layersPanelSelectionFlash = useOverlayStore(
+  const setSelectedShape = useAppStore((state) => state.setSelectedShape);
+  const layersPanelSelectionFlash = useAppStore(
     (state) => state.layersPanelSelectionFlash,
   );
-  const layersPanelSelectionRequest = useOverlayStore(
+  const layersPanelSelectionRequest = useAppStore(
     (state) => state.layersPanelSelectionRequest,
   );
-  const toggleGroupExpanded = useOverlayStore(
-    (state) => state.toggleGroupExpanded,
-  );
-  const addAnnotationToGroup = useOverlayStore(
-    (state) => state.addAnnotationToGroup,
-  );
-  const brushEditTargetId = useOverlayStore((state) => state.brushEditTargetId);
-  const brushEditMode = useOverlayStore((state) => state.brushEditMode);
-  const startBrushEdit = useOverlayStore((state) => state.startBrushEdit);
-  const stopBrushEdit = useOverlayStore((state) => state.stopBrushEdit);
+  const toggleGroupExpanded = useAppStore((state) => state.toggleGroupExpanded);
+  const addShapeToGroup = useAppStore((state) => state.addShapeToGroup);
+  const brushEditTargetId = useAppStore((state) => state.brushEditTargetId);
+  const brushEditMode = useAppStore((state) => state.brushEditMode);
+  const startBrushEdit = useAppStore((state) => state.startBrushEdit);
+  const stopBrushEdit = useAppStore((state) => state.stopBrushEdit);
 
   // Local state for text editing
   const [editingTextId, setEditingTextId] = React.useState<string | null>(null);
@@ -298,48 +290,46 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const [selectedGroupId, setSelectedGroupId] = React.useState<string | null>(
     null,
   );
-  const [selectedAnnotationIds, setSelectedAnnotationIds] = React.useState<
-    string[]
-  >([]);
+  const [selectedShapeIds, setSelectedShapeIds] = React.useState<string[]>([]);
 
   /** Anchor for Shift+click range selection (last plain or Cmd/Ctrl+click on an annotation). */
   const shiftRangeAnchorIdRef = React.useRef<string | null>(null);
 
-  const [flashAnnotationIds, setFlashAnnotationIds] = React.useState<
-    Set<string>
-  >(new Set());
+  const [flashShapeIds, setFlashShapeIds] = React.useState<Set<string>>(
+    new Set(),
+  );
   const [flashGroupId, setFlashGroupId] = React.useState<string | null>(null);
 
   /** Single id for header actions that expect one layer, or group id. */
   const selectedLayerId =
     selectedGroupId ??
-    (selectedAnnotationIds.length === 1 ? selectedAnnotationIds[0] : null);
+    (selectedShapeIds.length === 1 ? selectedShapeIds[0] : null);
 
   React.useEffect(() => {
-    setLayersPanelSelectedAnnotationIds(selectedAnnotationIds);
+    setLayersPanelSelectedShapeIds(selectedShapeIds);
     setLayersPanelSelectedGroupId(selectedGroupId);
-    if (selectedAnnotationIds.length === 1 && selectedGroupId === null) {
-      setSelectedAnnotation(selectedAnnotationIds[0]);
+    if (selectedShapeIds.length === 1 && selectedGroupId === null) {
+      setSelectedShape(selectedShapeIds[0]);
     } else {
-      setSelectedAnnotation(null);
+      setSelectedShape(null);
     }
   }, [
-    selectedAnnotationIds,
+    selectedShapeIds,
     selectedGroupId,
-    setLayersPanelSelectedAnnotationIds,
+    setLayersPanelSelectedShapeIds,
     setLayersPanelSelectedGroupId,
-    setSelectedAnnotation,
+    setSelectedShape,
   ]);
 
   React.useEffect(() => {
     if (!layersPanelSelectionFlash) return;
 
     setFlashGroupId(layersPanelSelectionFlash.groupId);
-    setFlashAnnotationIds(new Set(layersPanelSelectionFlash.annotationIds));
+    setFlashShapeIds(new Set(layersPanelSelectionFlash.shapeIds));
 
     const t = window.setTimeout(() => {
       setFlashGroupId(null);
-      setFlashAnnotationIds(new Set());
+      setFlashShapeIds(new Set());
     }, 600);
     return () => window.clearTimeout(t);
   }, [layersPanelSelectionFlash]);
@@ -347,9 +337,9 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   React.useEffect(() => {
     if (!layersPanelSelectionRequest) return;
     setSelectedGroupId(layersPanelSelectionRequest.groupId);
-    setSelectedAnnotationIds(layersPanelSelectionRequest.annotationIds);
+    setSelectedShapeIds(layersPanelSelectionRequest.shapeIds);
     shiftRangeAnchorIdRef.current =
-      layersPanelSelectionRequest.annotationIds.at(-1) ?? null;
+      layersPanelSelectionRequest.shapeIds.at(-1) ?? null;
     // Paste feedback: scroll after new items render. Pasting can enqueue multiple
     // state updates; use a few delayed attempts to catch the scroll container
     // once it becomes scrollable.
@@ -402,21 +392,21 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   React.useEffect(() => {
     if (
       selectedGroupId !== null &&
-      !annotationGroups.some((g) => g.id === selectedGroupId)
+      !shapeGroups.some((g) => g.id === selectedGroupId)
     ) {
       setSelectedGroupId(null);
     }
-    setSelectedAnnotationIds((prev) => {
-      const next = prev.filter((id) => annotations.some((a) => a.id === id));
+    setSelectedShapeIds((prev) => {
+      const next = prev.filter((id) => shapes.some((a) => a.id === id));
       return next.length === prev.length ? prev : next;
     });
     const anchor = shiftRangeAnchorIdRef.current;
-    if (anchor !== null && !annotations.some((a) => a.id === anchor)) {
+    if (anchor !== null && !shapes.some((a) => a.id === anchor)) {
       shiftRangeAnchorIdRef.current = null;
     }
-  }, [annotations, annotationGroups, selectedGroupId]);
+  }, [shapes, shapeGroups, selectedGroupId]);
 
-  const getLayerIcon = (annotation: Annotation) => {
+  const getLayerIcon = (annotation: Shape) => {
     const dim = { width: "14px", height: "14px" } as const;
     switch (annotation.type) {
       case "polygon":
@@ -437,18 +427,18 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   // Stable index-based default for "Untitled N" labels
   const annotationIndexMap = React.useMemo(() => {
     const map = new Map<string, number>();
-    annotations.forEach((annotation, index) => {
+    shapes.forEach((annotation, index) => {
       map.set(annotation.id, index + 1);
     });
     return map;
-  }, [annotations]);
+  }, [shapes]);
 
-  const getLayerName = (annotation: Annotation) => {
+  const getLayerName = (annotation: Shape) => {
     const index = annotationIndexMap.get(annotation.id);
     const defaultLabel = index !== undefined ? `Untitled ${index}` : "Untitled";
     const baseLabel = annotation.metadata?.label || defaultLabel;
 
-    // For pure text annotations, just show the label
+    // For pure text shapes, just show the label
     if (annotation.type === "text") {
       return baseLabel;
     }
@@ -466,7 +456,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   };
 
   // Text editing functions
-  const handleEditText = (annotation: Annotation) => {
+  const handleEditText = (annotation: Shape) => {
     let currentText = "";
     let currentFontSize = 14;
 
@@ -487,7 +477,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
 
   const handleSubmitTextEdit = () => {
     if (editingTextId) {
-      // Use updateShapeText which works for both text annotations and shapes with text
+      // Use updateShapeText which works for both text shapes and shapes with text
       updateShapeText(editingTextId, editTextValue?.trim() || "");
     }
     setEditingTextId(null);
@@ -497,14 +487,14 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   };
 
   // Name (label) editing functions
-  const handleEditLabel = (annotation: Annotation) => {
+  const handleEditLabel = (annotation: Shape) => {
     setEditLabelValue(annotation.metadata?.label || "");
     setEditingLabelId(annotation.id);
   };
 
   const handleSubmitLabelEdit = () => {
     if (editingLabelId) {
-      updateAnnotationLabel(editingLabelId, editLabelValue);
+      updateShapeLabel(editingLabelId, editLabelValue);
     }
     setEditingLabelId(null);
     setEditLabelValue("");
@@ -523,30 +513,30 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   };
 
   // Convert groups to ListItem format
-  const groupItems: ListItem[] = annotationGroups.map((group) => {
-    const groupAnnotations = annotations.filter((a) =>
-      group.annotationIds.includes(a.id),
+  const groupItems: ListItem[] = shapeGroups.map((group) => {
+    const groupAnnotations = shapes.filter((a) =>
+      group.shapeIds.includes(a.id),
     );
 
     const groupIsHidden =
       groupAnnotations.length > 0 &&
-      groupAnnotations.every((annotation) => hiddenLayers.has(annotation.id));
+      groupAnnotations.every((annotation) => hiddenShapeIds.has(annotation.id));
 
     const children: ListItem[] = groupAnnotations.map((annotation) => ({
       id: annotation.id,
       title: getLayerName(annotation),
-      isHidden: hiddenLayers.has(annotation.id),
+      isHidden: hiddenShapeIds.has(annotation.id),
       icon: getLayerIcon(annotation),
       isExpanded: group.isExpanded,
-      isActive: selectedAnnotationIds.includes(annotation.id),
-      pulse: flashAnnotationIds.has(annotation.id),
-      metadata: { annotation, type: "annotation" },
+      isActive: selectedShapeIds.includes(annotation.id),
+      pulse: flashShapeIds.has(annotation.id),
+      metadata: { shape: annotation, type: "shape" },
     }));
 
     return {
       id: group.id,
       title: group.name,
-      subtitle: `${groupAnnotations.length} annotations`,
+      subtitle: `${groupAnnotations.length} shapes`,
       isHidden: groupIsHidden,
       isExpanded: group.isExpanded,
       isActive: selectedGroupId === group.id,
@@ -557,77 +547,73 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     };
   });
 
-  // Convert ungrouped annotations to ListItem format
-  const ungroupedAnnotations = annotations.filter((annotation) => {
-    return !annotationGroups.some((group) =>
-      group.annotationIds.includes(annotation.id),
-    );
+  // Convert ungrouped shapes to ListItem format
+  const ungroupedAnnotations = shapes.filter((annotation) => {
+    return !shapeGroups.some((group) => group.shapeIds.includes(annotation.id));
   });
 
   const annotationItems: ListItem[] = ungroupedAnnotations.map(
     (annotation) => ({
       id: annotation.id,
       title: getLayerName(annotation),
-      isHidden: hiddenLayers.has(annotation.id),
+      isHidden: hiddenShapeIds.has(annotation.id),
       icon: getLayerIcon(annotation),
-      isActive: selectedAnnotationIds.includes(annotation.id),
-      pulse: flashAnnotationIds.has(annotation.id),
-      metadata: { annotation, type: "annotation" },
+      isActive: selectedShapeIds.includes(annotation.id),
+      pulse: flashShapeIds.has(annotation.id),
+      metadata: { shape: annotation, type: "shape" },
     }),
   );
 
-  // Combine groups and ungrouped annotations
+  // Combine groups and ungrouped shapes
   const allItems = [...groupItems, ...annotationItems];
 
   /** Flat annotation order as rendered (groups top-to-bottom, then ungrouped), for Shift+range select. */
   const orderedAnnotationIdsInPanel = React.useMemo(() => {
     const ids: string[] = [];
-    for (const group of annotationGroups) {
-      for (const a of annotations) {
-        if (group.annotationIds.includes(a.id)) ids.push(a.id);
+    for (const group of shapeGroups) {
+      for (const a of shapes) {
+        if (group.shapeIds.includes(a.id)) ids.push(a.id);
       }
     }
-    for (const a of annotations) {
-      const inGroup = annotationGroups.some((g) =>
-        g.annotationIds.includes(a.id),
-      );
+    for (const a of shapes) {
+      const inGroup = shapeGroups.some((g) => g.shapeIds.includes(a.id));
       if (!inGroup) ids.push(a.id);
     }
     return ids;
-  }, [annotations, annotationGroups]);
+  }, [shapes, shapeGroups]);
 
   const handleItemClick = (item: ListItem, event: React.MouseEvent) => {
     const meta = item.metadata;
     if (meta?.type === "group") {
       setSelectedGroupId(item.id);
-      setSelectedAnnotationIds([]);
+      setSelectedShapeIds([]);
       shiftRangeAnchorIdRef.current = null;
       return;
     }
-    if (meta?.type === "annotation") {
-      const annId = meta.annotation.id;
+    if (meta?.type === "shape") {
+      const annId = meta.shape.id;
       setSelectedGroupId(null);
 
       if (event.shiftKey) {
         const flat = orderedAnnotationIdsInPanel;
         const anchor =
-          shiftRangeAnchorIdRef.current ?? selectedAnnotationIds[0] ?? annId;
+          shiftRangeAnchorIdRef.current ?? selectedShapeIds[0] ?? annId;
         let i0 = flat.indexOf(anchor);
         let i1 = flat.indexOf(annId);
         if (i0 < 0) i0 = i1;
         if (i1 < 0) i1 = i0;
         if (i0 < 0 && i1 < 0) {
-          setSelectedAnnotationIds([annId]);
+          setSelectedShapeIds([annId]);
         } else {
           const lo = Math.min(i0, i1);
           const hi = Math.max(i0, i1);
-          setSelectedAnnotationIds(flat.slice(lo, hi + 1));
+          setSelectedShapeIds(flat.slice(lo, hi + 1));
         }
         return;
       }
 
       if (event.metaKey || event.ctrlKey) {
-        setSelectedAnnotationIds((prev) => {
+        setSelectedShapeIds((prev) => {
           const next = new Set(prev);
           if (next.has(annId)) {
             next.delete(annId);
@@ -640,67 +626,67 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         return;
       }
 
-      setSelectedAnnotationIds([annId]);
+      setSelectedShapeIds([annId]);
       shiftRangeAnchorIdRef.current = annId;
     }
   };
 
   const handleToggleVisibility = (itemId: string) => {
     // Find if it's a group or annotation
-    const group = annotationGroups.find((g) => g.id === itemId);
+    const group = shapeGroups.find((g) => g.id === itemId);
 
     if (group) {
       const allHidden =
-        group.annotationIds.length > 0 &&
-        group.annotationIds.every((annotationId) =>
-          hiddenLayers.has(annotationId),
+        group.shapeIds.length > 0 &&
+        group.shapeIds.every((annotationId) =>
+          hiddenShapeIds.has(annotationId),
         );
 
-      group.annotationIds.forEach((annotationId) => {
-        const isHidden = hiddenLayers.has(annotationId);
+      group.shapeIds.forEach((annotationId) => {
+        const isHidden = hiddenShapeIds.has(annotationId);
 
         // If any are visible, hide all; if all are hidden, show all.
         if (allHidden && isHidden) {
-          toggleLayerVisibility(annotationId);
+          toggleShapeVisibility(annotationId);
         } else if (!allHidden && !isHidden) {
-          toggleLayerVisibility(annotationId);
+          toggleShapeVisibility(annotationId);
         }
       });
     } else if (
-      selectedAnnotationIds.length > 1 &&
-      selectedAnnotationIds.includes(itemId)
+      selectedShapeIds.length > 1 &&
+      selectedShapeIds.includes(itemId)
     ) {
-      const ids = selectedAnnotationIds;
+      const ids = selectedShapeIds;
       const allHidden =
-        ids.length > 0 && ids.every((id) => hiddenLayers.has(id));
+        ids.length > 0 && ids.every((id) => hiddenShapeIds.has(id));
       ids.forEach((annotationId) => {
-        const isHidden = hiddenLayers.has(annotationId);
+        const isHidden = hiddenShapeIds.has(annotationId);
         if (allHidden && isHidden) {
-          toggleLayerVisibility(annotationId);
+          toggleShapeVisibility(annotationId);
         } else if (!allHidden && !isHidden) {
-          toggleLayerVisibility(annotationId);
+          toggleShapeVisibility(annotationId);
         }
       });
     } else {
       // Toggle visibility for individual annotation
-      toggleLayerVisibility(itemId);
+      toggleShapeVisibility(itemId);
     }
   };
 
   const handleDelete = (itemId: string) => {
     // Find if it's a group or annotation
-    const group = annotationGroups.find((g) => g.id === itemId);
+    const group = shapeGroups.find((g) => g.id === itemId);
     if (group) {
       deleteGroup(itemId);
     } else {
-      removeAnnotation(itemId);
+      removeShape(itemId);
     }
   };
 
   const headerSelectedAnnotation =
     selectedLayerId == null
       ? undefined
-      : annotations.find((a) => a.id === selectedLayerId);
+      : shapes.find((a) => a.id === selectedLayerId);
 
   const layerColorLocked =
     headerSelectedAnnotation != null &&
@@ -732,7 +718,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       }
       return !onOpenAnnotationColorPicker && !onOpenGlobalColorPicker;
     }
-    const grp = annotationGroups.find((g) => g.id === selectedLayerId);
+    const grp = shapeGroups.find((g) => g.id === selectedLayerId);
     if (grp) {
       return !onOpenGlobalColorPicker;
     }
@@ -743,30 +729,30 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     if (selectedGroupId) {
       deleteGroup(selectedGroupId);
       setSelectedGroupId(null);
-      setSelectedAnnotationIds([]);
+      setSelectedShapeIds([]);
       return;
     }
-    if (selectedAnnotationIds.length === 0) {
+    if (selectedShapeIds.length === 0) {
       return;
     }
-    for (const id of selectedAnnotationIds) {
-      removeAnnotation(id);
+    for (const id of selectedShapeIds) {
+      removeShape(id);
     }
-    setSelectedAnnotationIds([]);
+    setSelectedShapeIds([]);
   };
 
   const handleHeaderEditTextClick = () => {
-    if (selectedAnnotationIds.length !== 1) return;
-    const ann = annotations.find((a) => a.id === selectedAnnotationIds[0]);
+    if (selectedShapeIds.length !== 1) return;
+    const ann = shapes.find((a) => a.id === selectedShapeIds[0]);
     if (ann) {
       handleEditText(ann);
     }
   };
 
   const headerEditTextDisabled =
-    selectedAnnotationIds.length !== 1 ||
+    selectedShapeIds.length !== 1 ||
     selectedGroupId !== null ||
-    !annotations.some((a) => a.id === selectedAnnotationIds[0]);
+    !shapes.some((a) => a.id === selectedShapeIds[0]);
 
   const handleToggleExpand = (itemId: string) => {
     toggleGroupExpanded(itemId);
@@ -796,19 +782,19 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     // Handle drag and drop between groups
     if (draggedAnnotationId && draggedAnnotationId !== targetId) {
       // Find if target is a group
-      const targetGroup = annotationGroups.find((g) => g.id === targetId);
+      const targetGroup = shapeGroups.find((g) => g.id === targetId);
 
       if (targetGroup) {
         // First, remove the annotation from any groups it already belongs to
-        annotationGroups.forEach((group) => {
-          if (group.annotationIds.includes(draggedAnnotationId)) {
-            removeAnnotationFromGroup(group.id, draggedAnnotationId);
+        shapeGroups.forEach((group) => {
+          if (group.shapeIds.includes(draggedAnnotationId)) {
+            removeShapeFromGroup(group.id, draggedAnnotationId);
           }
         });
 
         // Then add it to the target group if not already present
-        if (!targetGroup.annotationIds.includes(draggedAnnotationId)) {
-          addAnnotationToGroup(targetId, draggedAnnotationId);
+        if (!targetGroup.shapeIds.includes(draggedAnnotationId)) {
+          addShapeToGroup(targetId, draggedAnnotationId);
         }
       }
     }
@@ -817,8 +803,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   };
 
   const itemActions = (item: ListItem) => {
-    if (item.metadata?.type === "annotation") {
-      const annotation = item.metadata.annotation;
+    if (item.metadata?.type === "shape") {
+      const annotation = item.metadata.shape;
       const isPolygon = annotation.type === "polygon";
       const isBrushActive =
         isPolygon &&
@@ -851,8 +837,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
                 e.stopPropagation();
 
                 // Ensure polygon is visible before editing
-                if (hiddenLayers.has(annotation.id)) {
-                  toggleLayerVisibility(annotation.id);
+                if (hiddenShapeIds.has(annotation.id)) {
+                  toggleShapeVisibility(annotation.id);
                 }
 
                 if (isBrushActive) {
@@ -887,8 +873,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
                 e.stopPropagation();
 
                 // Ensure polygon is visible before editing
-                if (hiddenLayers.has(annotation.id)) {
-                  toggleLayerVisibility(annotation.id);
+                if (hiddenShapeIds.has(annotation.id)) {
+                  toggleShapeVisibility(annotation.id);
                 }
 
                 if (isEraserActive) {
@@ -909,8 +895,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   };
 
   const handleItemDoubleClick = (item: ListItem) => {
-    if (item.metadata?.type === "annotation") {
-      handleEditLabel(item.metadata.annotation);
+    if (item.metadata?.type === "shape") {
+      handleEditLabel(item.metadata.shape);
     }
   };
 
@@ -944,10 +930,10 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         disabled={headerColorDisabled}
         title={
           layerColorLocked
-            ? "Color is fixed for arrows and text annotations"
+            ? "Color is fixed for arrows and text shapes"
             : headerColorDisabled
               ? "Select a layer or group to change color"
-              : annotations.some((a) => a.id === selectedLayerId)
+              : shapes.some((a) => a.id === selectedLayerId)
                 ? "Color — selected annotation"
                 : "Color — global (group selected)"
         }
@@ -958,11 +944,11 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         type="button"
         className={styles.toolButton}
         onClick={handleHeaderDeleteClick}
-        disabled={!selectedGroupId && selectedAnnotationIds.length === 0}
+        disabled={!selectedGroupId && selectedShapeIds.length === 0}
         title={
-          selectedGroupId || selectedAnnotationIds.length > 0
-            ? selectedAnnotationIds.length > 1
-              ? "Delete selected annotations"
+          selectedGroupId || selectedShapeIds.length > 0
+            ? selectedShapeIds.length > 1
+              ? "Delete selected shapes"
               : "Delete selected layer or group"
             : "Select a layer or group to delete"
         }
@@ -1019,7 +1005,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       {/* Text Edit Modal */}
       {editingTextId && (
         <TextEditPanel
-          title={editingIsShape ? "Edit Shape Label" : "Edit Text Annotation"}
+          title={editingIsShape ? "Edit Shape Label" : "Edit Text Shape"}
           textValue={editTextValue}
           fontSize={editFontSize}
           onTextChange={setEditTextValue}
@@ -1056,7 +1042,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
               fontWeight: "bold",
             }}
           >
-            Rename Annotation
+            Rename Shape
           </div>
           <input
             type="text"

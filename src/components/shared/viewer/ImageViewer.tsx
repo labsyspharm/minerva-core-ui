@@ -13,27 +13,31 @@ import "@deck.gl/widgets/stylesheet.css";
 import type { Layer } from "@deck.gl/core";
 import { PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
-import { useAnnotationLayers } from "@/lib/annotationLayers";
-import { ORTHO_VIEW_ID, SCALEBAR_VIEW_ID } from "@/lib/deckViewIds";
-import { createTileLayers, loadDicom } from "@/lib/dicom";
-import type { DicomIndex } from "@/lib/dicom-index";
-import { createDragHandlers } from "@/lib/dragHandlers";
-import type { Story } from "@/lib/exhibit";
+import { createTileLayers, loadDicom } from "@/lib/imaging/dicom.js";
+import type { DicomIndex } from "@/lib/imaging/dicom-index";
+import type { Config, Loader } from "@/lib/imaging/viv";
+import type { Story } from "@/lib/legacy/exhibit";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
-import type { ConfigGroup, OverlayLayer } from "@/lib/stores";
-import { useOverlayStore } from "@/lib/stores";
-import { useWindowSize } from "@/lib/useWindowSize";
+import { useShapeLayers } from "@/lib/shapes/shapeLayers";
+import type { OverlayLayer } from "@/lib/shapes/shapeModel";
+import { useAppStore } from "@/lib/stores/app-store";
+import {
+  type ConfigGroup,
+  useDocumentStore,
+} from "@/lib/stores/document-store";
+import { useWindowSize } from "@/lib/util/useWindowSize";
+import { ORTHO_VIEW_ID, SCALEBAR_VIEW_ID } from "@/lib/viewer/deckViewIds";
+import { createDragHandlers } from "@/lib/viewer/dragHandlers";
 import {
   getViewerViewportSnapshotFromDeck,
   orthographicZoomToNumber,
   registerViewerLiveSnapshotReader,
-} from "@/lib/viewerViewport";
-import type { Config, Loader } from "@/lib/viv";
-import { getWaypointViewState } from "@/lib/waypoint";
+} from "@/lib/viewer/viewerViewport";
+import { getWaypointViewState } from "@/lib/waypoints/waypoint";
 import {
   WAYPOINT_THUMBNAIL_JPEG_QUALITY,
   WAYPOINT_THUMBNAIL_PIXEL_SIZE,
-} from "@/lib/waypointThumbnail";
+} from "@/lib/waypoints/waypointThumbnail";
 
 type ItemRegistryChannel = {
   name: string;
@@ -56,7 +60,7 @@ export type ImageViewerProps = {
   overlayLayers?: OverlayLayer[];
   activeTool: string;
   isDragging?: boolean;
-  hoveredAnnotationId?: string | null;
+  hoveredShapeId?: string | null;
   onOverlayInteraction?: (
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
     coordinate: [number, number, number],
@@ -146,7 +150,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     overlayLayers = [],
     activeTool,
     isDragging = false,
-    hoveredAnnotationId = null,
+    hoveredShapeId = null,
     onOverlayInteraction,
     viewerConfig,
     showSquareViewportOverlay = false,
@@ -159,8 +163,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
     channelVisibilities,
     sam2Processing,
     authoringWaypointEditorOpen,
-  } = useOverlayStore();
-  useAnnotationLayers(authoringWaypointEditorOpen);
+  } = useAppStore();
+  useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [_canvas, _setCanvas] = useState(null);
   const rootRef = useRef<HTMLElement | null>(null);
@@ -177,7 +181,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         setViewportSize({ width, height });
         // Same tick as layout — avoids null viewerViewportSize before React commits.
         if (width > 0 && height > 0) {
-          useOverlayStore.getState().setViewerViewportSize({ width, height });
+          useAppStore.getState().setViewerViewportSize({ width, height });
         }
       }
     });
@@ -246,7 +250,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   // Memoize image shape computation
   const imageShape = useMemo(() => {
     if (firstLoader.data === null) {
-      // Do not use viewport size as a stand-in for image pixels: the overlay
+      // Do not use viewport size as a stand-in for image pixels: the document
       // store's imageWidth/imageHeight drive legacy waypoint migration and
       // shape import scaling. Wrong values here freeze incorrect coordinates
       // because migration is skipped once waypoint shape ids already exist.
@@ -270,11 +274,11 @@ export const ImageViewer = (props: ImageViewerProps) => {
     useState<OrthographicViewState>(initialViewState);
   const hasInitialized = useRef(false);
 
-  const setViewportZoom = useOverlayStore((state) => state.setViewportZoom);
-  const setImageDimensions = useOverlayStore(
+  const setViewportZoom = useAppStore((state) => state.setViewportZoom);
+  const setImageDimensions = useDocumentStore(
     (state) => state.setImageDimensions,
   );
-  const setBrushViewport = useOverlayStore((state) => state.setBrushViewport);
+  const setBrushViewport = useAppStore((state) => state.setBrushViewport);
 
   const viewRef = useRef({ viewState, viewportSize });
   viewRef.current = { viewState, viewportSize };
@@ -284,14 +288,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const ignoreNextViewStateChangeRef = useRef(false);
 
   // Get target waypoint view state for responding to waypoint selection
-  const targetWaypointCamera = useOverlayStore(
+  const targetWaypointCamera = useAppStore(
     (state) => state.targetWaypointCamera,
   );
-  const clearTargetWaypointCamera = useOverlayStore(
+  const clearTargetWaypointCamera = useAppStore(
     (state) => state.clearTargetWaypointCamera,
   );
-  const storeImageWidth = useOverlayStore((state) => state.imageWidth);
-  const storeImageHeight = useOverlayStore((state) => state.imageHeight);
+  const storeImageWidth = useDocumentStore((state) => state.imageWidth);
+  const storeImageHeight = useDocumentStore((state) => state.imageHeight);
 
   // Update viewState only on initial mount (not when loader changes)
   useEffect(() => {
@@ -330,20 +334,20 @@ export const ImageViewer = (props: ImageViewerProps) => {
     ];
     setBrushViewport(width, height, bounds);
   }, [viewState, viewportSize, setBrushViewport]);
-  const setViewerViewState = useOverlayStore((s) => s.setViewerViewState);
-  const setViewerViewportSize = useOverlayStore((s) => s.setViewerViewportSize);
-  const setSquareViewportThumbnailCapture = useOverlayStore(
+  const setViewerViewState = useAppStore((s) => s.setViewerViewState);
+  const setViewerViewportSize = useAppStore((s) => s.setViewerViewportSize);
+  const setSquareViewportThumbnailCapture = useAppStore(
     (s) => s.setSquareViewportThumbnailCapture,
   );
-  const setViewerImageLayersLoaded = useOverlayStore(
+  const setViewerImageLayersLoaded = useAppStore(
     (s) => s.setViewerImageLayersLoaded,
   );
 
   // Register SAM2 image fetcher for magic wand (OME-TIFF only)
   // Register SAM2 image fetcher for magic wand (OME-TIFF only)
-  const setSam2ImageFetcher = useOverlayStore((s) => s.setSam2ImageFetcher);
-  const setSam2ViewState = useOverlayStore((s) => s.setSam2ViewState);
-  const setSam2ViewportSize = useOverlayStore((s) => s.setSam2ViewportSize);
+  const setSam2ImageFetcher = useAppStore((s) => s.setSam2ImageFetcher);
+  const setSam2ViewState = useAppStore((s) => s.setSam2ViewState);
+  const setSam2ViewportSize = useAppStore((s) => s.setSam2ViewportSize);
   useEffect(() => {
     if (
       loaderOmeTiff &&
@@ -805,7 +809,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       if (sam2Processing) return "wait";
       if (isDragging && activeTool === "move") {
         return "grabbing";
-      } else if (activeTool === "move" && hoveredAnnotationId) {
+      } else if (activeTool === "move" && hoveredShapeId) {
         return "grab";
       } else if (activeTool === "rectangle") {
         return isDragging ? "grabbing" : "crosshair";
@@ -828,14 +832,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
       }
       return "default";
     },
-    [activeTool, hoveredAnnotationId, sam2Processing],
+    [activeTool, hoveredShapeId, sam2Processing],
   );
 
   // Memoize controller configuration
   // When move tool is active and hovering over an annotation, disable pan so drag moves the annotation
   const controllerConfig = useMemo(
     () => ({
-      dragPan: activeTool === "move" && !isDragging && !hoveredAnnotationId,
+      dragPan: activeTool === "move" && !isDragging && !hoveredShapeId,
       dragRotate: false,
       scrollZoom: true,
       doubleClickZoom: true,
@@ -843,7 +847,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       touchRotate: false,
       keyboard: false,
     }),
-    [activeTool, isDragging, hoveredAnnotationId],
+    [activeTool, isDragging, hoveredShapeId],
   );
 
   // Memoize view configuration — main image view + a fixed overlay for the scale bar
@@ -902,7 +906,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   useEffect(() => {
     return () => {
-      useOverlayStore.getState().setViewerImageLayersLoaded(false);
+      useAppStore.getState().setViewerImageLayersLoaded(false);
     };
   }, []);
 

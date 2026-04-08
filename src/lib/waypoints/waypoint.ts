@@ -1,7 +1,7 @@
 // Types
 
-import type { ConfigWaypoint } from "./config";
-import type { Story } from "./exhibit";
+import type { ConfigWaypoint } from "../authoring/config";
+import type { Story } from "../legacy/exhibit";
 // View state for deck.gl OrthographicView
 export interface WaypointViewState {
   zoom: number;

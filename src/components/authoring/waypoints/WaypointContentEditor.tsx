@@ -1,8 +1,8 @@
 import MDEditor from "@uiw/react-md-editor";
 import * as React from "react";
 import "@uiw/react-md-editor/markdown-editor.css";
-import type { StoreStoryWaypoint } from "@/lib/stores";
-import { useOverlayStore } from "@/lib/stores";
+import { useAppStore } from "@/lib/stores/app-store";
+import type { StoreStoryWaypoint } from "@/lib/story/storyDocument";
 import "./WaypointContentEditor.css";
 
 type PreviewMode = NonNullable<
@@ -34,7 +34,7 @@ const WaypointContentEditor: React.FC<WaypointContentEditorProps> = ({
   storyIndex,
   variant = "compact",
 }) => {
-  const updateStory = useOverlayStore((state) => state.updateStory);
+  const updateStory = useAppStore((state) => state.updateStory);
   const mdRef = React.useRef<MDEditorHandle | null>(null);
   const [previewMode, setPreviewMode] = React.useState<PreviewMode>("edit");
 

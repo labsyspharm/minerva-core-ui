@@ -1,8 +1,8 @@
 // Drag handlers for Deck.gl interactions
 // These handlers translate Deck.gl events into interaction events for the overlay system
 
+import { useAppStore } from "../stores/app-store";
 import { SCALEBAR_VIEW_ID } from "./deckViewIds";
-import { useOverlayStore } from "./stores";
 
 type InteractionType = "click" | "dragStart" | "drag" | "dragEnd" | "hover";
 type InteractionCallback = (
@@ -84,13 +84,13 @@ export const createDragHandlers = (
     return undefined;
   };
 
-  const store = useOverlayStore.getState;
+  const store = useAppStore.getState;
 
   return {
     onClick: (info: PickInfo) => {
       const coord = toCoord(info);
       // For brush tool, treat a simple click as a single stamped stroke that
-      // immediately finalizes into a circular annotation.
+      // immediately finalizes into a circular shape.
       if (coord && activeTool === "brush" && getScreenFromWorld) {
         const screen = getScreenFromWorld(coord[0], coord[1]);
         if (screen) {
@@ -132,23 +132,23 @@ export const createDragHandlers = (
       const layer = info.layer;
       const object = info.object;
 
-      // Detect if hovering over an annotation (only for move tool, and only
-      // while a waypoint is open for edit — annotation layers are not pickable otherwise).
+      // Detect if hovering over a shape (only for move tool, and only
+      // while a waypoint is open for edit — shape layers are not pickable otherwise).
       if (activeTool === "move" && store().authoringWaypointEditorOpen) {
-        if (layer?.id?.startsWith("annotation-") && object?.id) {
+        if (layer?.id?.startsWith("shape-") && object?.id) {
           // Use the picked object's id; strip -arrow or -text suffix for sub-layers
-          let annotationId = object.id;
-          if (annotationId.endsWith("-arrow")) {
-            annotationId = annotationId.replace("-arrow", "");
-          } else if (annotationId.endsWith("-text")) {
-            annotationId = annotationId.replace("-text", "");
+          let shapeId = object.id;
+          if (shapeId.endsWith("-arrow")) {
+            shapeId = shapeId.replace("-arrow", "");
+          } else if (shapeId.endsWith("-text")) {
+            shapeId = shapeId.replace("-text", "");
           }
-          useOverlayStore.getState().setHoveredAnnotation(annotationId);
+          useAppStore.getState().setHoveredShape(shapeId);
         } else {
-          useOverlayStore.getState().setHoveredAnnotation(null);
+          useAppStore.getState().setHoveredShape(null);
         }
       } else {
-        useOverlayStore.getState().setHoveredAnnotation(null);
+        useAppStore.getState().setHoveredShape(null);
       }
 
       // Emit hover coordinate for drawing tools

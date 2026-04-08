@@ -1,9 +1,4 @@
-/**
- * Canonical waypoint annotation geometry for persistence (`story.json` / `StoryShape`).
- * Waypoints reference records by UUID (`StoreStoryWaypoint.shapes`, exhibit `ShapeIds`);
- * full definitions live in Zustand `Shapes` / `ItemRegistry.Shapes` / `storyDocument.shapes`.
- * Coordinates are image / world pixels.
- */
+/** Viewer `Shape` ↔ persisted `StoryShape` in `storyJsonModel`. */
 
 import {
   importedLineStyle,
@@ -11,46 +6,32 @@ import {
   importedPolygonStyle,
   importedPolylineStyle,
   importedTextStyle,
-} from "./annotationDefaults";
-import { arrowLineDegeneratePolygon } from "./annotationGeometry";
+} from "../shapes/shapeDefaults";
+import { arrowLineDegeneratePolygon } from "../shapes/shapeGeometry";
 import type {
-  Annotation,
-  LineAnnotation,
-  PointAnnotation,
-  PolygonAnnotation,
-  PolylineAnnotation,
-  TextAnnotation,
-} from "./stores";
+  LineShape,
+  PointShape,
+  PolygonShape,
+  PolylineShape,
+  Shape,
+  TextShape,
+} from "../shapes/shapeModel";
+import type { StoryPoint, StoryShape, StoryShapeArrow } from "./storyJsonModel";
 
-/** A single point in image / world pixel space. */
-export type StoryPoint = { x: number; y: number };
+export type {
+  StoryPoint,
+  StoryShape,
+  StoryShapeArrow,
+  StoryShapePoint,
+  StoryShapePolygon,
+  StoryShapePolyline,
+  StoryShapeText,
+} from "./storyJsonModel";
 
-export type StoryShapePoint = {
-  type: "point";
-  uuid: string;
-  point: StoryPoint;
-};
-
-/**
- * Serialized arrow (matches `story.schema.json`).
- * Key order for `JSON.stringify` is: `type`, `point`, `angle`, optional `label`, `uuid`.
- *
- * `angle` is **radians**: bearing from tip toward tail (+x = 0, CCW), image pixels.
- * Loose JSON may still pass `angle` as a numeric string; it is parsed to a number.
- */
-export type StoryShapeArrow = {
-  type: "arrow";
-  point: StoryPoint;
-  angle: number;
-  label?: string;
-  uuid: string;
-};
-
-/** Build arrow shapes in canonical field order for exports (`angle` in radians). */
+/** Export arrow (`angle` radians); import tolerates string `angle` and legacy `from`/`to`/`text`. */
 export function buildStoryShapeArrow(parts: {
-  uuid: string;
+  id: string;
   point: StoryPoint;
-  /** Bearing from tip toward tail, radians (+x = 0, CCW). */
   angle: number;
   label?: string;
 }): StoryShapeArrow {
@@ -61,21 +42,22 @@ export function buildStoryShapeArrow(parts: {
       point: parts.point,
       angle: parts.angle,
       label: trimmed,
-      uuid: parts.uuid,
+      id: parts.id,
     };
   }
   return {
     type: "arrow",
     point: parts.point,
     angle: parts.angle,
-    uuid: parts.uuid,
+    id: parts.id,
   };
 }
 
 /** Loose arrow at load time (`angle` as number or numeric string, legacy `from`/`to`, `text` caption). */
 type StoryShapeArrowLoose = {
   type: "arrow";
-  uuid: string;
+  id?: string;
+  uuid?: string;
   point?: StoryPoint;
   angle?: number | string;
   label?: string;
@@ -84,8 +66,12 @@ type StoryShapeArrowLoose = {
   text?: unknown;
 };
 
+function storyShapeArrowLocalId(s: { id?: string; uuid?: string }): string {
+  return s.id ?? s.uuid ?? "";
+}
+
 /** Parsed angle in radians (for `point` + `angle` form only; not used for `from`/`to`). */
-function parseArrowAngleRadians(raw: unknown, uuid: string): number {
+function parseArrowAngleRadians(raw: unknown, shapeId: string): number {
   if (typeof raw === "number" && Number.isFinite(raw)) {
     return raw;
   }
@@ -95,34 +81,8 @@ function parseArrowAngleRadians(raw: unknown, uuid: string): number {
       return n;
     }
   }
-  throw new Error(`minerva: invalid arrow angle for uuid ${uuid}`);
+  throw new Error(`minerva: invalid arrow angle for shape id ${shapeId}`);
 }
-
-export type StoryShapePolygon = {
-  type: "polygon";
-  uuid: string;
-  points: StoryPoint[];
-};
-
-export type StoryShapePolyline = {
-  type: "polyline";
-  uuid: string;
-  points: StoryPoint[];
-};
-
-export type StoryShapeText = {
-  type: "text";
-  uuid: string;
-  content: string;
-  point: StoryPoint;
-};
-
-export type StoryShape =
-  | StoryShapePoint
-  | StoryShapeArrow
-  | StoryShapePolygon
-  | StoryShapePolyline
-  | StoryShapeText;
 
 export function storyPointFromTuple(p: [number, number]): StoryPoint {
   return { x: p[0], y: p[1] };
@@ -145,81 +105,83 @@ export function openPolylinePoints(
   return [...polygon];
 }
 
-/**
- * Merge the shape registry when persisting one waypoint's annotations.
- * Drops shapes that were only referenced by this waypoint's previous shape ids
- * (unless another waypoint still references them), then upserts new records.
- */
+/** After saving one waypoint: remove shapes only it used, merge in new geometry. */
 export function mergeShapesForWaypointPersist(params: {
-  stories: { shapes: string[] }[];
-  storyIndex: number;
+  waypoints: { shapeIds: string[] }[];
+  waypointIndex: number;
   prevShapes: StoryShape[];
   builtShapes: StoryShape[];
   newShapeIdsOrdered: string[];
 }): StoryShape[] {
-  const { stories, storyIndex, prevShapes, builtShapes, newShapeIdsOrdered } =
-    params;
-  const story = stories[storyIndex];
-  const oldIds = story?.shapes ?? [];
+  const {
+    waypoints,
+    waypointIndex,
+    prevShapes,
+    builtShapes,
+    newShapeIdsOrdered,
+  } = params;
+  const wp = waypoints[waypointIndex];
+  const oldIds = wp?.shapeIds ?? [];
   const newShapeIdSet = new Set(newShapeIdsOrdered);
 
   const otherRefs = new Set<string>();
-  for (let j = 0; j < stories.length; j++) {
-    if (j === storyIndex) continue;
-    for (const id of stories[j].shapes ?? []) {
+  for (let j = 0; j < waypoints.length; j++) {
+    if (j === waypointIndex) continue;
+    for (const id of waypoints[j].shapeIds ?? []) {
       otherRefs.add(id);
     }
   }
 
   const next = prevShapes.filter((s) => {
-    const wasOnThisStory = oldIds.includes(s.uuid);
+    const sid = s.id;
+    const wasOnThisStory = oldIds.includes(sid);
     if (!wasOnThisStory) return true;
-    if (newShapeIdSet.has(s.uuid)) return true;
-    if (otherRefs.has(s.uuid)) return true;
+    if (newShapeIdSet.has(sid)) return true;
+    if (otherRefs.has(sid)) return true;
     return false;
   });
 
-  const byUuid = new Map(next.map((shape) => [shape.uuid, shape]));
+  const byId = new Map(next.map((shape) => [shape.id, shape]));
   for (const s of builtShapes) {
-    byUuid.set(s.uuid, s);
+    byId.set(s.id, s);
   }
-  return [...byUuid.values()];
+  return [...byId.values()];
 }
 
-export function annotationToShape(ann: Annotation): StoryShape | null {
-  const uuid = ann.id;
-  switch (ann.type) {
+export function viewerShapeToStoryShape(viewer: Shape): StoryShape | null {
+  const id = viewer.id;
+  switch (viewer.type) {
     case "point": {
-      const a = ann as PointAnnotation;
+      const a = viewer as PointShape;
       return {
         type: "point",
-        uuid,
+        id,
         point: storyPointFromTuple(a.position),
       };
     }
     case "text": {
-      const a = ann as TextAnnotation;
+      const a = viewer as TextShape;
       return {
         type: "text",
-        uuid,
+        id,
         content: a.text ?? "",
         point: storyPointFromTuple(a.position),
       };
     }
     case "polyline": {
-      const a = ann as PolylineAnnotation;
+      const a = viewer as PolylineShape;
       const pts = openPolylinePoints(a.polygon).map(storyPointFromTuple);
       if (pts.length < 2) return null;
-      return { type: "polyline", uuid, points: pts };
+      return { type: "polyline", id, points: pts };
     }
     case "polygon": {
-      const a = ann as PolygonAnnotation;
+      const a = viewer as PolygonShape;
       const pts = a.polygon.map(storyPointFromTuple);
       if (pts.length < 3) return null;
-      return { type: "polygon", uuid, points: pts };
+      return { type: "polygon", id, points: pts };
     }
     case "line": {
-      const a = ann as LineAnnotation;
+      const a = viewer as LineShape;
       const poly = a.polygon;
       if (poly.length < 2) return null;
       const from = storyPointFromTuple(poly[0]);
@@ -229,7 +191,7 @@ export function annotationToShape(ann: Annotation): StoryShape | null {
         const label = a.text?.trim() || a.metadata?.label?.trim() || undefined;
         const angleRad = Math.atan2(from.y - to.y, from.x - to.x);
         return buildStoryShapeArrow({
-          uuid,
+          id,
           point: to,
           angle: angleRad,
           label,
@@ -237,7 +199,7 @@ export function annotationToShape(ann: Annotation): StoryShape | null {
       }
       return {
         type: "polyline",
-        uuid,
+        id,
         points: [from, to],
       };
     }
@@ -246,10 +208,10 @@ export function annotationToShape(ann: Annotation): StoryShape | null {
   }
 }
 
-export function annotationsToShapes(annotations: Annotation[]): StoryShape[] {
+export function viewerShapesToStoryShapes(shapes: Shape[]): StoryShape[] {
   const out: StoryShape[] = [];
-  for (const a of annotations) {
-    const s = annotationToShape(a);
+  for (const v of shapes) {
+    const s = viewerShapeToStoryShape(v);
     if (s) out.push(s);
   }
   return out;
@@ -284,7 +246,7 @@ function arrowPointAngleFromInput(shape: StoryShapeArrowLoose): {
   if (shape.point && hasAngleField) {
     return {
       point: shape.point,
-      angle: parseArrowAngleRadians(shape.angle, shape.uuid),
+      angle: parseArrowAngleRadians(shape.angle, storyShapeArrowLocalId(shape)),
     };
   }
   if (shape.from && shape.to) {
@@ -293,55 +255,57 @@ function arrowPointAngleFromInput(shape: StoryShapeArrowLoose): {
     const angleRad = Math.atan2(tail.y - tip.y, tail.x - tip.x);
     return { point: tip, angle: angleRad };
   }
-  throw new Error(`minerva: invalid arrow shape (uuid ${shape.uuid})`);
+  throw new Error(
+    `minerva: invalid arrow shape (id ${storyShapeArrowLocalId(shape)})`,
+  );
 }
 
-export type ShapeToAnnotationContext = {
+export type StoryShapeToViewerContext = {
   imageWidth: number;
   imageHeight: number;
 };
 
-export function shapeToAnnotation(
+export function storyShapeToViewer(
   shape: StoryShape,
-  context?: ShapeToAnnotationContext,
-): Annotation {
+  context?: StoryShapeToViewerContext,
+): Shape {
   switch (shape.type) {
     case "point":
       return {
-        id: shape.uuid,
+        id: shape.id,
         type: "point",
         position: tupleFromPoint(shape.point),
         style: { ...importedPointStyle },
         metadata: { isImported: true },
-      } satisfies PointAnnotation;
+      } satisfies PointShape;
     case "text":
       return {
-        id: shape.uuid,
+        id: shape.id,
         type: "text",
         position: tupleFromPoint(shape.point),
         text: shape.content ?? "",
         style: { ...importedTextStyle },
         metadata: { isImported: true, label: shape.content },
-      } satisfies TextAnnotation;
+      } satisfies TextShape;
     case "polygon": {
       const polygon = shape.points.map(tupleFromPoint) as [number, number][];
       return {
-        id: shape.uuid,
+        id: shape.id,
         type: "polygon",
         polygon,
         style: { ...importedPolygonStyle },
         metadata: { isImported: true },
-      } satisfies PolygonAnnotation;
+      } satisfies PolygonShape;
     }
     case "polyline": {
       const polygon = shape.points.map(tupleFromPoint) as [number, number][];
       return {
-        id: shape.uuid,
+        id: shape.id,
         type: "polyline",
         polygon,
         style: { ...importedPolylineStyle },
         metadata: { isImported: true },
-      } satisfies PolylineAnnotation;
+      } satisfies PolylineShape;
     }
     case "arrow": {
       const { point, angle: angleRad } = arrowPointAngleFromInput(shape);
@@ -356,7 +320,7 @@ export function shapeToAnnotation(
       ];
       const caption = arrowCaptionFromShape(shape);
       return {
-        id: shape.uuid,
+        id: shape.id,
         type: "line",
         polygon: arrowLineDegeneratePolygon(tail, tip),
         hasArrowHead: true,
@@ -366,7 +330,7 @@ export function shapeToAnnotation(
           isImported: true,
           ...(caption ? { label: caption } : {}),
         },
-      } satisfies LineAnnotation;
+      } satisfies LineShape;
     }
     default: {
       const _exhaustive: never = shape;

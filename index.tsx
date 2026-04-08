@@ -14,7 +14,7 @@ import "@/fonts.css";
 import "@fontsource/overpass/500.css";
 import { loremIpsum } from "react-lorem-ipsum";
 import { createGlobalStyle } from "styled-components";
-import type { ConfigWaypoint } from "@/lib/config";
+import type { ConfigWaypoint } from "@/lib/authoring/config";
 
 const fakeText = (p) => {
   return loremIpsum({ p, random: true }).join("\n\n");
@@ -1214,9 +1214,12 @@ const configWaypoints = [
       },
     ],
   },
-].map(({ Properties, ...wp }) => {
+].map(({ Properties, UUID, State, Arrows, Overlays }) => {
   return {
-    ...wp,
+    id: UUID,
+    State,
+    Arrows,
+    Overlays,
     ...Properties,
     Pan: [
       Number(Properties.Pan?.[0]) || 0,
@@ -1230,13 +1233,14 @@ const exhibit_config = {
   Name: "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer",
   Stories: [
     {
-      Waypoints: configWaypoints.map(({ Name, Content, Pan, Zoom, Group }) => {
+      Waypoints: configWaypoints.map((wp) => {
+        const w = wp as ConfigWaypoint & { Group?: string };
         return {
-          Name,
-          Description: Content,
-          Pan: Pan as [number, number],
-          Zoom,
-          Group,
+          Name: w.Name,
+          Description: w.Content,
+          Pan: w.Pan as [number, number],
+          Zoom: w.Zoom,
+          Group: w.Group ?? "",
         };
       }),
     },

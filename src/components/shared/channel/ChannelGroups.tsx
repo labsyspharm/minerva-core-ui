@@ -1,7 +1,8 @@
 import * as React from "react";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import { useOverlayStore } from "@/lib/stores";
+import { useAppStore } from "@/lib/stores/app-store";
+import { useDocumentStore } from "@/lib/stores/document-store";
 
 const WrapRows = styled.div`
   display: flex;
@@ -96,11 +97,12 @@ const GroupAltRow = styled.button`
   }
 `;
 
-const GroupRow = (props: { group: { name: string; UUID: string } }) => {
+const GroupRow = (props: { group: { name: string; id: string } }) => {
   const { group } = props;
   const { name } = group;
 
-  const { setActiveChannelGroup, Groups } = useOverlayStore();
+  const { setActiveChannelGroup } = useAppStore();
+  const Groups = useDocumentStore((s) => s.channelGroups);
   const row_group = React.useMemo(
     () => Groups.find(({ Name }) => Name === name) || Groups[0],
     [Groups, name],
@@ -108,7 +110,7 @@ const GroupRow = (props: { group: { name: string; UUID: string } }) => {
 
   const toGroup = () => {
     if (row_group) {
-      setActiveChannelGroup(row_group.UUID);
+      setActiveChannelGroup(row_group.id);
     }
   };
 
@@ -120,14 +122,15 @@ const GroupRow = (props: { group: { name: string; UUID: string } }) => {
 };
 
 export const ChannelGroups = (props: {
-  groups: { UUID: string; name: string }[];
+  groups: { id: string; name: string }[];
 }) => {
   const { groups } = props;
   const [expanded, setExpanded] = React.useState(false);
 
-  const { activeChannelGroupId, Groups } = useOverlayStore();
+  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
+  const Groups = useDocumentStore((s) => s.channelGroups);
   const activeGroup = React.useMemo(
-    () => Groups.find(({ UUID }) => UUID === activeChannelGroupId) || Groups[0],
+    () => Groups.find(({ id }) => id === activeChannelGroupId) || Groups[0],
     [Groups, activeChannelGroupId],
   );
 
@@ -160,7 +163,7 @@ export const ChannelGroups = (props: {
   }
 
   const otherGroups = expanded
-    ? groups.filter((g) => g.UUID !== activeGroup?.UUID)
+    ? groups.filter((g) => g.id !== activeGroup?.id)
     : [];
 
   return (
@@ -187,7 +190,7 @@ export const ChannelGroups = (props: {
       {otherGroups.length > 0 ? (
         <AlternateList>
           {otherGroups.map((group) => (
-            <GroupRow key={group.UUID} group={group} />
+            <GroupRow key={group.id} group={group} />
           ))}
         </AlternateList>
       ) : null}

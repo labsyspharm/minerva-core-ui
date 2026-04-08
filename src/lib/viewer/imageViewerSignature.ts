@@ -1,11 +1,11 @@
 import type {
   ConfigSourceChannel,
   ConfigGroup as DocConfigGroup,
-} from "@/lib/document-store";
+} from "@/lib/stores/document-store";
 
 /**
  * Snapshot of document fields that affect VIV layer settings (see `toSettings` in `viv.ts`).
- * Omit histogram payloads: merging `SourceDistribution` must not change this string, so memoized
+ * Omit histogram payloads: merging `sourceDistribution` must not change this string, so memoized
  * viewer props stay stable while curves load.
  */
 export function buildImageViewerSignature(
@@ -13,24 +13,24 @@ export function buildImageViewerSignature(
   SourceChannels: ConfigSourceChannel[],
 ): string {
   const sources = SourceChannels.map((sc) => ({
-    u: sc.UUID,
+    u: sc.id,
     i: sc.SourceIndex,
     n: sc.Name,
     s: sc.Samples,
-    img: sc.SourceImage.UUID,
-    dt: sc.SourceDataType.ID,
+    img: sc.sourceImageId,
+    dt: sc.sourceDataTypeId,
   }));
   const groups = Groups.map((g) => ({
-    u: g.UUID,
+    u: g.id,
     n: g.Name,
     e: g.State.Expanded,
     ch: g.GroupChannels.map((c) => ({
-      u: c.UUID,
+      u: c.id,
       lr: c.LowerRange,
       ur: c.UpperRange,
       rgb: [c.Color.R, c.Color.G, c.Color.B],
-      sc: c.SourceChannel.UUID,
-      gu: c.Group.UUID,
+      sc: c.sourceChannelId,
+      gu: c.groupId,
     })),
   }));
   return JSON.stringify({ sources, groups });

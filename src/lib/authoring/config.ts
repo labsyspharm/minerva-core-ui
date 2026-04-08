@@ -1,10 +1,13 @@
 import { getImageSize } from "@hms-dbmi/viv";
 import type { DTYPE_VALUES } from "@vivjs/constants";
-import type { ConfigGroup, ConfigSourceChannel } from "./document-store";
-import type { ConfigGroup as LegacyConfigGroup } from "./exhibit";
-import { histogramBinTile } from "./histogramBinPool";
-import type { StoryShape } from "./storyShapes";
-import type { Loader } from "./viv";
+import { histogramBinTile } from "../imaging/histogramBinPool";
+import type { Loader } from "../imaging/viv";
+import type { ConfigGroup as LegacyConfigGroup } from "../legacy/exhibit";
+import type {
+  ConfigGroup,
+  ConfigSourceChannel,
+} from "../stores/document-store";
+import type { StoryShape } from "../story/storyShapes";
 
 export type SupportedDtype = keyof typeof DTYPE_VALUES;
 export type SupportedTypedArray = InstanceType<
@@ -17,7 +20,6 @@ type WaypointState = {
   Expanded: boolean;
 };
 type ID = { ID: string };
-type UUID = { UUID: string };
 type NameProperty = { Name: string };
 type DistributionProperties = {
   UpperRange: number;
@@ -42,7 +44,6 @@ type WaypointProperties = NameProperty & {
   };
   /** Square JPEG data URL (`data:image/jpeg;base64,…`), 64×64px; see `waypointThumbnail.ts`. */
   ThumbnailDataUrl?: string;
-  Group?: string;
 };
 
 export type MutableFields = (keyof ItemRegistryProps)[];
@@ -51,7 +52,7 @@ export type ItemRegistryProps = {
   Groups: ConfigGroup[];
   /**
    * Narrative waypoint rows for the exhibit author (`Name`/`Bounds`/…); mirror of
-   * Zustand `stories` via `storiesToConfigWaypoints` / `storeStoryWaypointToConfigWaypoint`.
+   * Zustand `waypoints` via `waypointsToConfigWaypoints` / `storeStoryWaypointToConfigWaypoint`.
    */
   Stories: ConfigWaypoint[];
   /** Global shape registry → `story.json` root `shapes` / `storyDocument.shapes`. */
@@ -139,13 +140,17 @@ export type ConfigProps = {
   ID: string;
 };
 
-export type ConfigSourceDistribution = UUID & DistributionProperties;
-export type ConfigWaypoint = UUID &
-  WaypointProperties & {
-    State: WaypointState;
-    /** Ordered UUIDs into global `shapes` / story.json `waypoints[].shapes`. */
-    ShapeIds?: string[];
-  };
+export type ConfigSourceDistribution = DistributionProperties & {
+  id: string;
+};
+export type ConfigWaypoint = WaypointProperties & {
+  id: string;
+  State: WaypointState;
+  /** Ordered ids into global `shapes` / story.json `waypoints[].shapeIds`. */
+  shapeIds?: string[];
+  /** References {@link ConfigGroup.id}. */
+  groupId?: string;
+};
 
 type ExtractDistributions = (
   loader: Loader,
@@ -206,8 +211,6 @@ const GROUP_CHANNELS_CRC01 = {
 };
 
 const asID = (k: string): ID => ({ ID: k });
-const asUUID = (k: string): UUID => ({ UUID: k });
-const onlyUUID = (v: UUID): UUID => asUUID(v.UUID);
 
 /** Per-tile ceiling for histogram `getTile` (remote OME-TIFF); avoids hung lazy `getDistributions`. */
 const HISTOGRAM_TILE_TIMEOUT_MS = 10_000;
@@ -368,7 +371,7 @@ const extractDistributionsForSourceIndices = async (
       return [
         SourceIndex,
         {
-          UUID: crypto.randomUUID(),
+          id: crypto.randomUUID(),
           YValues,
           XScale: "log",
           YScale: "linear",
@@ -401,12 +404,12 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
   const stripCycif = (name: string) =>
     name.startsWith("CYCIF_") ? name.slice(6) : name;
   const SourceChannels = Channels.map((channel, index) => ({
-    UUID: crypto.randomUUID(),
+    id: crypto.randomUUID(),
     Name: stripCycif(channel.Name),
     Samples: channel.SamplesPerPixel,
     SourceIndex: init.indices[index].c,
-    SourceDataType: asID(Type),
-    SourceImage: asUUID(modality), //TODO
+    sourceDataTypeId: asID(Type).ID,
+    sourceImageId: modality,
   }));
   // Match hard-coded groups to existing channels. GROUP_CHANNELS_CRC01 maps Path →
   // indices into OME Pixels.Channels (same order as SourceChannels), not "Channel N" strings.
@@ -428,11 +431,11 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
       const new_name_map = { ...name_map };
       for (let i = 0; i < channel_indices.length; i++) {
         const idx = channel_indices[i];
-        new_name_map[g.Channels[i]] = SourceChannels[idx].UUID;
+        new_name_map[g.Channels[i]] = SourceChannels[idx].id;
       }
       const new_group_uuid = crypto.randomUUID();
       const new_group = {
-        UUID: new_group_uuid,
+        id: new_group_uuid,
         State: { Expanded: false },
         Name: g.Name,
         GroupChannels: g.Channels.reduce(
@@ -442,13 +445,13 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
             }
             const color = g.Colors[index];
             return new_group_channels.concat({
-              UUID: crypto.randomUUID(),
+              id: crypto.randomUUID(),
               State: { Expanded: true },
               LowerRange: g.Lows[index],
               UpperRange: g.Highs[index],
-              SourceChannel: asUUID(new_name_map[name]),
+              sourceChannelId: new_name_map[name],
               Color: hex_to_rgb(color),
-              Group: asUUID(new_group_uuid),
+              groupId: new_group_uuid,
             });
           },
           [] as ConfigGroup["GroupChannels"],
@@ -470,8 +473,8 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
   );
   if (Object.keys(name_map).length) {
     SourceChannels.forEach((sourceChannel) => {
-      if (sourceChannel.UUID in reverse_name_map) {
-        sourceChannel.Name = reverse_name_map[sourceChannel.UUID];
+      if (sourceChannel.id in reverse_name_map) {
+        sourceChannel.Name = reverse_name_map[sourceChannel.id];
       }
     });
     const { Groups } = hardcoded_crc01;
@@ -482,25 +485,25 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
   } else if (
     SourceChannels.length === 1 &&
     SourceChannels[0].Samples === 3 &&
-    SourceChannels[0].SourceDataType.ID === "Uint8"
+    SourceChannels[0].sourceDataTypeId === "Uint8"
   ) {
     const group_uuid = crypto.randomUUID();
     const groupName = "Hematoxylin & Eosin";
     const channelName = "H&E";
     const Groups = [
       {
-        UUID: group_uuid,
+        id: group_uuid,
         State: { Expanded: true },
         Name: groupName,
         GroupChannels: SourceChannels.map((channel, _index) => {
           return {
-            UUID: crypto.randomUUID(),
+            id: crypto.randomUUID(),
             State: { Expanded: true },
             LowerRange: 0,
             UpperRange: 255,
-            SourceChannel: onlyUUID(channel),
+            sourceChannelId: channel.id,
             Color: hex_to_rgb("cc00ff"),
-            Group: asUUID(group_uuid),
+            groupId: group_uuid,
           };
         }),
       },
@@ -519,7 +522,7 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
   ].map((group_index) => {
     const group_uuid = crypto.randomUUID();
     return {
-      UUID: group_uuid,
+      id: group_uuid,
       State: { Expanded: false },
       Name: `Group ${group_index}`,
       GroupChannels: SourceChannels.slice(
@@ -528,13 +531,13 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
       ).map((channel, index) => {
         const color_id = ["0dabff", "c3ff00", "ff8b00", "ff00c7"][index % 4];
         return {
-          UUID: crypto.randomUUID(),
+          id: crypto.randomUUID(),
           State: { Expanded: true },
           LowerRange: 2 ** 5, //TODO
           UpperRange: 2 ** 14, //TODO
-          SourceChannel: onlyUUID(channel),
+          sourceChannelId: channel.id,
           Color: hex_to_rgb(color_id),
-          Group: asUUID(group_uuid),
+          groupId: group_uuid,
         };
       }),
     };
@@ -622,7 +625,6 @@ const mutableItemRegistry = (
 };
 
 export {
-  onlyUUID,
   extractDistributions,
   extractDistributionsForSourceIndices,
   extractChannels,

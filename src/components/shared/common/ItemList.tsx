@@ -1,15 +1,15 @@
 import * as React from "react";
-import type { Annotation, AnnotationGroup } from "@/lib/stores";
+import type { Shape, ShapeGroup } from "@/lib/shapes/shapeModel";
 import styles from "./ItemList.module.css";
 
 type Metadata =
   | {
-      group: AnnotationGroup;
+      group: ShapeGroup;
       type: "group";
     }
   | {
-      annotation: Annotation;
-      type: "annotation";
+      shape: Shape;
+      type: "shape";
     };
 
 // Generic item interface that can be extended

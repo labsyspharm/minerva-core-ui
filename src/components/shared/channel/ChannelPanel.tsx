@@ -2,8 +2,9 @@ import type { ReactNode } from "react";
 import * as React from "react";
 import styled from "styled-components";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
-import type { ConfigProps } from "@/lib/config";
-import { useOverlayStore } from "@/lib/stores";
+import type { ConfigProps } from "@/lib/authoring/config";
+import { useAppStore } from "@/lib/stores/app-store";
+import { useDocumentStore } from "@/lib/stores/document-store";
 import { ChannelGroups } from "./ChannelGroups";
 import { ChannelGroupsMasterDetail } from "./ChannelGroupsMasterDetail";
 import { ChannelLegend } from "./ChannelLegend";
@@ -109,25 +110,21 @@ const OverlaySectionLabel = styled.div`
 export const ChannelPanel = (props: ChannelPanelProps) => {
   const hide = props.hiddenChannel;
   const hidden = props.retrievingMetadata || props.noLoader;
-  const { setActiveChannelGroup } = useOverlayStore();
-  const activeChannelGroupId = useOverlayStore((s) => s.activeChannelGroupId);
-  const channelVisibilities = useOverlayStore((s) => s.channelVisibilities);
-  const setChannelVisibilities = useOverlayStore(
-    (s) => s.setChannelVisibilities,
-  );
-  const Groups = useOverlayStore((s) => s.Groups);
-  const SourceChannels = useOverlayStore((s) => s.SourceChannels);
+  const { setActiveChannelGroup } = useAppStore();
+  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
+  const channelVisibilities = useAppStore((s) => s.channelVisibilities);
+  const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
+  const Groups = useDocumentStore((s) => s.channelGroups);
+  const SourceChannels = useDocumentStore((s) => s.sourceChannels);
 
   const groups = Groups.map((group, g) => {
     return {
       g,
-      UUID: group.UUID,
+      id: group.id,
       name: group.Name,
       channels: group.GroupChannels.map((channel) => {
-        const { SourceChannel, Color } = channel;
-        const found = SourceChannels.find(
-          ({ UUID }) => SourceChannel.UUID === UUID,
-        );
+        const { sourceChannelId, Color } = channel;
+        const found = SourceChannels.find(({ id }) => sourceChannelId === id);
         if (found) {
           const { R, G, B } = Color;
           const hex_color = [R, G, B]
@@ -141,9 +138,9 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
             upper_range: channel.UpperRange,
             name: found.Name,
             color: `${hex_color}`,
-            group_uuid: group.UUID,
-            source_uuid: found.UUID,
-            channel_uuid: channel.UUID,
+            group_uuid: group.id,
+            source_uuid: found.id,
+            channel_uuid: channel.id,
           };
         }
         return null;
@@ -151,8 +148,8 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     };
   });
   const activeGroup =
-    activeChannelGroupId || (groups.length > 0 ? groups[0].UUID : null);
-  const group = groups.find(({ UUID }) => UUID === activeGroup);
+    activeChannelGroupId || (groups.length > 0 ? groups[0].id : null);
+  const group = groups.find(({ id }) => id === activeGroup);
   const toggleChannel = ({ name }) => {
     setChannelVisibilities(
       Object.fromEntries(

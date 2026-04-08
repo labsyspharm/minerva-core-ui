@@ -1,54 +1,62 @@
-/**
- * `story.json` serialization: types aligned with `schema/story.schema.json`, plus
- * mapping between **`ConfigWaypoint`** (exhibit: `Name`, `Bounds`, `ShapeIds`, …)
- * and the serialized row (`title`, viewport corners, `shapes` UUID list, …).
- *
- * The overlay store keeps a live **`storyDocument`**; `syncStoryDocument` rebuilds
- * it from store **`stories`** (narrative rows) + **`Shapes`** + image and viewer size.
- * JSON **`waypoints`** are those rows’ serializable fields.
- *
- * `STORY_JSON_VERSION` must match the schema `version` field; change it when the
- * exported JSON shape changes.
- */
+/** `ConfigWaypoint` ↔ story.json (`storyJsonModel`): mapping + `exportStoryDocument` / download. */
 
-import type { ConfigWaypoint } from "./config";
-import type { StoryPoint, StoryShape } from "./storyShapes";
+import type { ConfigWaypoint } from "../authoring/config";
 import {
   getWaypointBounds,
   isWaypointBounds,
   type WaypointBounds,
-} from "./waypoint";
+} from "../waypoints/waypoint";
+import {
+  parseStoryDocument,
+  type StoryDocument,
+  type StoryShape,
+  type StoryViewport,
+  type StoryWaypoint,
+} from "./storyJsonModel";
 
-/** Canonical `version` string in `story.json`; keep in sync with `schema/story.schema.json`. */
-export const STORY_JSON_VERSION = "1" as const;
+export type { StoryDocument, StoryViewport, StoryWaypoint };
 
-export type StoryViewport = {
-  upperLeft: StoryPoint;
-  lowerRight: StoryPoint;
-};
-
-/** One waypoint row in `story.json`; maps to / from {@link ConfigWaypoint} fields. */
-export type StoryWaypoint = {
-  id: string;
-  title: string;
-  content: string;
-  /** Opaque string (often channel group name in the app). */
-  group?: string;
-  /** Image data URL; 64×64 capture uses JPEG (see `waypointThumbnail.ts`). */
-  thumbnail?: string;
-  viewport: StoryViewport;
-  shapes: string[];
-};
-
-/** Store row: serialized fields plus runtime / exhibit camera and UI state. */
+/** Serialized waypoint row + `ConfigWaypoint` camera fields. */
 export type StoreStoryWaypoint = StoryWaypoint &
   Pick<ConfigWaypoint, "State" | "ViewState" | "Pan" | "Zoom">;
 
-export type StoryDocument = {
-  version: typeof STORY_JSON_VERSION;
-  waypoints: StoryWaypoint[];
-  shapes: StoryShape[];
-};
+const UUID_LIKE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/** Normalize exhibit / legacy waypoint fields into current {@link ConfigWaypoint} shape. */
+export function hydrateConfigWaypoint(
+  wp: ConfigWaypoint,
+  channelGroups: { id: string; Name: string }[],
+): ConfigWaypoint {
+  const anyWp = wp as ConfigWaypoint & {
+    UUID?: string;
+    ShapeIds?: string[];
+    Group?: string;
+  };
+  const id = anyWp.id ?? anyWp.UUID ?? "";
+  const shapeIds = anyWp.shapeIds ?? anyWp.ShapeIds ?? [];
+  let groupId = anyWp.groupId;
+  const legacyGroup = anyWp.Group;
+  if (
+    groupId === undefined &&
+    legacyGroup !== undefined &&
+    legacyGroup !== ""
+  ) {
+    groupId = UUID_LIKE.test(legacyGroup)
+      ? legacyGroup
+      : (channelGroups.find((g) => g.Name === legacyGroup)?.id ?? legacyGroup);
+  }
+  const next = {
+    ...wp,
+    id,
+    shapeIds,
+    ...(groupId !== undefined ? { groupId } : {}),
+  } as ConfigWaypoint & Record<string, unknown>;
+  delete next.UUID;
+  delete next.ShapeIds;
+  delete next.Group;
+  return next as ConfigWaypoint;
+}
 
 export function boundsToStoryViewport(b: WaypointBounds): StoryViewport {
   const minX = Math.min(b.x0, b.x1);
@@ -101,14 +109,14 @@ export function configWaypointToStoryWaypoint(
   }
 
   const out: StoryWaypoint = {
-    id: wp.UUID,
+    id: wp.id,
     title: wp.Name,
     content: wp.Content ?? "",
     viewport: boundsToStoryViewport(bounds),
-    shapes: [...(wp.ShapeIds ?? [])],
+    shapeIds: [...(wp.shapeIds ?? [])],
   };
-  if (wp.Group) {
-    out.group = wp.Group;
+  if (wp.groupId) {
+    out.groupId = wp.groupId;
   }
   if (wp.ThumbnailDataUrl) {
     out.thumbnail = wp.ThumbnailDataUrl;
@@ -144,18 +152,18 @@ export function storeStoryWaypointToConfigWaypoint(
 ): ConfigWaypoint {
   const bounds = storyViewportToBounds(s.viewport);
   const out: ConfigWaypoint = {
-    UUID: s.id,
+    id: s.id,
     Name: s.title,
     Content: s.content,
     State: s.State,
     Bounds: bounds,
-    ShapeIds: [...s.shapes],
+    shapeIds: [...s.shapeIds],
     ViewState: s.ViewState,
     Pan: s.Pan,
     Zoom: s.Zoom,
   };
-  if (s.group !== undefined) {
-    out.Group = s.group;
+  if (s.groupId !== undefined) {
+    out.groupId = s.groupId;
   }
   if (s.thumbnail !== undefined) {
     out.ThumbnailDataUrl = s.thumbnail;
@@ -163,18 +171,19 @@ export function storeStoryWaypointToConfigWaypoint(
   return out;
 }
 
-export function storiesToConfigWaypoints(
-  stories: StoreStoryWaypoint[],
+/** Map store waypoint rows → exhibit `ConfigWaypoint` list (`ItemRegistry.Stories`). */
+export function waypointsToConfigWaypoints(
+  waypoints: StoreStoryWaypoint[],
 ): ConfigWaypoint[] {
-  return stories.map(storeStoryWaypointToConfigWaypoint);
+  return waypoints.map(storeStoryWaypointToConfigWaypoint);
 }
 
-/** Apply exported waypoint fields onto {@link ConfigWaypoint} (same `UUID` as `id`). */
+/** Merge `row` into `wp` when `row.id === wp.id`. */
 export function applyStoryWaypointToConfig(
   wp: ConfigWaypoint,
   row: StoryWaypoint,
 ): ConfigWaypoint {
-  if (row.id !== wp.UUID) {
+  if (row.id !== wp.id) {
     return wp;
   }
   const bounds = storyViewportToBounds(row.viewport);
@@ -183,12 +192,12 @@ export function applyStoryWaypointToConfig(
     Name: row.title,
     Content: row.content,
     Bounds: bounds,
-    ShapeIds: [...row.shapes],
+    shapeIds: [...row.shapeIds],
     Pan: undefined,
     Zoom: undefined,
   };
-  if (row.group !== undefined) {
-    next.Group = row.group;
+  if (row.groupId !== undefined) {
+    next.groupId = row.groupId;
   }
   if (row.thumbnail !== undefined) {
     next.ThumbnailDataUrl = row.thumbnail;
@@ -198,27 +207,22 @@ export function applyStoryWaypointToConfig(
   return next;
 }
 
+/** Serializable `story.json`: strip store camera fields, Zod-parse. */
 export function exportStoryDocument(
-  stories: StoreStoryWaypoint[],
-  shapes: StoryShape[],
-  imageWidth: number,
-  imageHeight: number,
-  viewerViewportSize: { width: number; height: number } | null,
+  waypointRows: StoreStoryWaypoint[],
+  shapeList: StoryShape[],
 ): StoryDocument {
-  const cw = viewerViewportSize?.width ?? 0;
-  const ch = viewerViewportSize?.height ?? 0;
-  const waypoints = stories.map((s) => {
-    const wp = storeStoryWaypointToConfigWaypoint(s);
-    return configWaypointToStoryWaypoint(wp, imageWidth, imageHeight, cw, ch);
+  return parseStoryDocument({
+    version: "2",
+    waypoints: waypointRows.map(({ State, ViewState, Pan, Zoom, ...w }) => ({
+      ...w,
+      shapeIds: [...w.shapeIds],
+    })),
+    shapes: [...shapeList],
   });
-  return {
-    version: STORY_JSON_VERSION,
-    waypoints,
-    shapes: shapes.map((shape) => shape),
-  };
 }
 
-/** Download a `story.json` blob (e.g. after `syncStoryDocument`). */
+/** Trigger a browser download of `story.json`. */
 export function downloadStoryDocument(
   doc: StoryDocument,
   filename = "story.json",

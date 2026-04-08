@@ -6,15 +6,19 @@ import {
   TextIcon,
 } from "@/components/shared/icons/OverlayIcons";
 // Types
-import type { ConfigWaypoint } from "@/lib/config";
-import { storeStoryWaypointToConfigWaypoint } from "@/lib/exportStory";
-import type { StoreStoryWaypoint } from "@/lib/stores";
-import { useOverlayStore } from "@/lib/stores";
+import type { ConfigWaypoint } from "@/lib/authoring/config";
+import { useAppStore } from "@/lib/stores/app-store";
+import { useDocumentStore } from "@/lib/stores/document-store";
+import {
+  downloadStoryDocument,
+  type StoreStoryWaypoint,
+  storeStoryWaypointToConfigWaypoint,
+} from "@/lib/story/storyDocument";
 import {
   getViewerBoundsFromSnapshot,
   getViewerViewportSnapshotFromStore,
   orthographicZoomToNumber,
-} from "@/lib/viewerViewport";
+} from "@/lib/viewer/viewerViewport";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { WaypointContentEditor } from "./WaypointContentEditor";
 import styles from "./WaypointsList.module.css";
@@ -24,7 +28,7 @@ import {
 } from "./WaypointsListMasterDetail";
 
 interface WaypointAnnotationEditorMetadata {
-  type: "annotations-panel";
+  type: "shapes-panel";
   story: StoreStoryWaypoint;
   storyIndex: number;
 }
@@ -42,34 +46,34 @@ type WaypointChildMetadata =
 type WaypointItemMetadata = StoreStoryWaypoint | WaypointChildMetadata;
 
 const WaypointsList = (_props: WaypointsListProps) => {
-  // Zustand narrative rows (`stories` → `storyDocument.waypoints` on export)
+  // Document store: narrative waypoint rows (`storyDocument.waypoints` on export)
+  const waypoints = useDocumentStore((s) => s.waypoints);
+  const shapes = useDocumentStore((s) => s.shapes);
+  const channelGroups = useDocumentStore((s) => s.channelGroups);
+  const imageWidth = useDocumentStore((s) => s.imageWidth);
+  const imageHeight = useDocumentStore((s) => s.imageHeight);
   const {
-    stories,
     activeStoryIndex,
     setActiveStory,
     setActiveChannelGroup,
     addStory,
     reorderStories,
-    importWaypointAnnotations,
-    Shapes,
+    importWaypointShapes,
     updateStory,
-    imageWidth,
-    imageHeight,
     setTargetWaypointCamera,
     editingViewstateWaypointIndex,
     setEditingViewstateWaypointIndex,
     removeStory,
-    persistImportedAnnotationsToStory,
-    Groups,
+    persistImportedShapesToStory,
     captureSquareViewportThumbnail,
-  } = useOverlayStore();
+  } = useAppStore();
 
   // Local state for markdown editing
   const [expandedMarkdownStories, setExpandedMarkdownStories] = React.useState<
     Set<string>
   >(new Set());
 
-  // Local state for annotations panel expansion
+  // Local state for shapes panel expansion
   const [expandedAnnotationsStories, setExpandedAnnotationsStories] =
     React.useState<Set<string>>(new Set());
 
@@ -84,51 +88,51 @@ const WaypointsList = (_props: WaypointsListProps) => {
 
   const className = [styles.center, styles.black].join(" ");
 
-  // Auto-import annotations for the active story (or first story on initial load)
+  // Auto-import shapes for the active story (or first story on initial load)
   // Also re-run when image dimensions become available
   React.useEffect(() => {
-    if (stories.length === 0) return;
+    if (waypoints.length === 0) return;
     // Wait for image dimensions to be set
     if (imageWidth === 0 || imageHeight === 0) return;
 
     // Determine which story to use - active story or default to first
     const storyIndex = activeStoryIndex ?? 0;
-    const story = stories[storyIndex];
+    const story = waypoints[storyIndex];
 
     if (story) {
       const prev = previousActiveStoryIndexRef.current;
-      const store = useOverlayStore.getState();
+      const store = useAppStore.getState();
       if (prev !== null && prev !== storyIndex) {
-        store.persistImportedAnnotationsToStory(prev);
+        store.persistImportedShapesToStory(prev);
       }
       previousActiveStoryIndexRef.current = storyIndex;
 
-      // Replace imported shapes from the story; keep user-drawn annotations (see `mergeAnnotationsAfterWaypointImport`).
-      importWaypointAnnotations(story, true, Shapes);
+      // Refresh imported overlays for this waypoint (see `mergeShapesAfterWaypointImport`).
+      importWaypointShapes(story, true, shapes);
     }
   }, [
-    stories,
+    waypoints,
     activeStoryIndex,
     imageWidth,
     imageHeight,
-    Shapes,
-    importWaypointAnnotations,
+    shapes,
+    importWaypointShapes,
   ]);
 
   React.useEffect(() => {
     return () => {
       const p = previousActiveStoryIndexRef.current;
       if (p !== null) {
-        const s = useOverlayStore.getState();
-        if (s.imageWidth > 0 && s.imageHeight > 0) {
-          s.persistImportedAnnotationsToStory(p);
+        const doc = useDocumentStore.getState();
+        if (doc.imageWidth > 0 && doc.imageHeight > 0) {
+          useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
     };
   }, []);
 
-  // Convert stories to ListItem format with inline editors and annotations panel
-  const listItems: ListItem<WaypointItemMetadata>[] = stories.map(
+  // Convert waypoints to ListItem format with inline editors and shapes panel
+  const listItems: ListItem<WaypointItemMetadata>[] = waypoints.map(
     (story, index) => {
       const storyId = story.id || `story-${index}`;
       const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
@@ -155,13 +159,13 @@ const WaypointsList = (_props: WaypointsListProps) => {
 
       if (isAnnotationsExpanded) {
         children.push({
-          id: `${storyId}-annotations-panel`,
+          id: `${storyId}-shapes-panel`,
           title: "Annotations Panel",
-          subtitle: "Overlays and annotations",
+          subtitle: "Overlays and shapes",
           isActive: false,
           isExpanded: false,
           metadata: {
-            type: "annotations-panel",
+            type: "shapes-panel",
             story,
             storyIndex: index,
           } as WaypointAnnotationEditorMetadata,
@@ -197,33 +201,35 @@ const WaypointsList = (_props: WaypointsListProps) => {
     // Only handle story clicks, not child panel clicks
     if (item.metadata && !("type" in item.metadata)) {
       const story = item.metadata as StoreStoryWaypoint;
-      const index = stories.findIndex((s) => s.id === story.id);
+      const index = waypoints.findIndex((s) => s.id === story.id);
       if (index !== -1) {
         setActiveStory(index);
+        const gid = story.groupId;
         const foundGroup =
-          Groups.find((group) => group.Name === story.group) || Groups[0];
+          (gid && channelGroups.find((group) => group.id === gid)) ||
+          channelGroups[0];
         if (foundGroup) {
-          setActiveChannelGroup(foundGroup.UUID);
+          setActiveChannelGroup(foundGroup.id);
         }
 
-        // Collapse all annotations panels when switching stories to avoid showing
-        // annotations from the new story under the old story's panel
+        // Collapse all shapes panels when switching waypoints to avoid showing
+        // shapes from the new waypoint under the old row's panel
         setExpandedAnnotationsStories(new Set());
 
         // Use the latest story from the store (authoritative) in case item.metadata is stale
-        const currentStory = useOverlayStore.getState().stories[index];
+        const currentStory = useDocumentStore.getState().waypoints[index];
         const navStory = currentStory ?? story;
         if (imageWidth > 0 && imageHeight > 0) {
           setTargetWaypointCamera(storeStoryWaypointToConfigWaypoint(navStory));
         }
 
-        // Note: annotations are imported automatically by the useEffect
+        // Note: shapes are imported automatically by the useEffect
         // that watches activeStoryIndex changes
       }
     }
   };
 
-  // Handle annotations panel toggle
+  // Handle shapes panel toggle
   const handleToggleAnnotationsPanel = (storyId: string) => {
     setExpandedAnnotationsStories((prev) => {
       const newSet = new Set(prev);
@@ -250,31 +256,30 @@ const WaypointsList = (_props: WaypointsListProps) => {
   };
 
   const handleAddWaypoint = () => {
-    const storyIndex = stories.length;
+    const storyIndex = waypoints.length;
     const newWaypoint: ConfigWaypoint = {
-      UUID: crypto.randomUUID(),
+      id: crypto.randomUUID(),
       State: { Expanded: true },
       Name: `Waypoint ${storyIndex + 1}`,
       Content: "",
-      Group:
-        Groups.find(
-          (group) =>
-            group.UUID === useOverlayStore.getState().activeChannelGroupId,
-        )?.Name ?? Groups[0]?.Name,
-      ShapeIds: [],
+      groupId:
+        channelGroups.find(
+          (group) => group.id === useAppStore.getState().activeChannelGroupId,
+        )?.id ?? channelGroups[0]?.id,
+      shapeIds: [],
     };
 
     addStory(newWaypoint);
     setActiveStory(storyIndex);
 
     // Open the text editor by default for quick editing
-    setExpandedMarkdownStories((prev) => new Set(prev).add(newWaypoint.UUID));
-    // Close annotations panels to keep UI simple on create
+    setExpandedMarkdownStories((prev) => new Set(prev).add(newWaypoint.id));
+    // Close shapes panels to keep UI simple on create
     setExpandedAnnotationsStories(new Set());
   };
 
   const handleStartEditViewstate = (storyId: string) => {
-    const index = stories.findIndex((s) => s.id === storyId);
+    const index = waypoints.findIndex((s) => s.id === storyId);
     if (index === -1) return;
     setActiveStory(index);
     setEditingViewstateWaypointIndex(index);
@@ -288,7 +293,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
     e?.stopPropagation();
     e?.preventDefault();
     const index = editingViewstateWaypointIndex;
-    if (index === null || index < 0 || index >= stories.length) {
+    if (index === null || index < 0 || index >= waypoints.length) {
       setEditingViewstateWaypointIndex(null);
       return;
     }
@@ -316,7 +321,8 @@ const WaypointsList = (_props: WaypointsListProps) => {
         : null;
 
     if (!bounds || !viewStateCanon) {
-      const st = useOverlayStore.getState();
+      const st = useAppStore.getState();
+      const doc = useDocumentStore.getState();
       console.warn(
         "[Minerva] waypoint view not saved: no bounds from viewer (camera/size not ready). " +
           "Try pan/zoom once or reload.",
@@ -324,15 +330,15 @@ const WaypointsList = (_props: WaypointsListProps) => {
           index,
           viewerViewState: st.viewerViewState,
           viewerViewportSize: st.viewerViewportSize,
-          imageWidth: st.imageWidth,
-          imageHeight: st.imageHeight,
+          imageWidth: doc.imageWidth,
+          imageHeight: doc.imageHeight,
         },
       );
       setEditingViewstateWaypointIndex(null);
       return;
     }
 
-    const loaded = useOverlayStore.getState().viewerImageLayersLoaded;
+    const loaded = useAppStore.getState().viewerImageLayersLoaded;
     const thumbnail = loaded ? captureSquareViewportThumbnail() : null;
     updateStory(index, {
       Bounds: bounds,
@@ -345,7 +351,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
     if (!loaded) {
       const tryThumb = (attempt: number) => {
         if (attempt > 100) return;
-        const s = useOverlayStore.getState();
+        const s = useAppStore.getState();
         if (s.activeStoryIndex !== index) return;
         if (!s.viewerImageLayersLoaded) {
           window.setTimeout(() => tryThumb(attempt + 1), 200);
@@ -357,18 +363,19 @@ const WaypointsList = (_props: WaypointsListProps) => {
       tryThumb(0);
     }
 
-    persistImportedAnnotationsToStory(index);
+    persistImportedShapesToStory(index);
 
-    useOverlayStore.getState().downloadStoryJsonFile();
+    useDocumentStore.getState().syncStoryDocument();
+    downloadStoryDocument(useDocumentStore.getState().storyDocument);
 
     setEditingViewstateWaypointIndex(null);
   };
 
   const handleDeleteWaypoint = (itemId: string) => {
-    const index = stories.findIndex((s) => s.id === itemId);
+    const index = waypoints.findIndex((s) => s.id === itemId);
     if (index === -1) return;
 
-    const storyId = stories[index]?.id;
+    const storyId = waypoints[index]?.id;
     removeStory(index);
 
     if (storyId) {
@@ -402,7 +409,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
     event.dataTransfer.dropEffect = "move";
 
     // Find the index of the target story
-    const targetIndex = stories.findIndex((story) => story.id === storyId);
+    const targetIndex = waypoints.findIndex((story) => story.id === storyId);
     if (targetIndex !== -1) {
       setDropTargetIndex(targetIndex);
     }
@@ -414,10 +421,12 @@ const WaypointsList = (_props: WaypointsListProps) => {
 
   const handleDrop = (targetStoryId: string, draggedStoryId: string) => {
     if (draggedStoryId && draggedStoryId !== targetStoryId) {
-      const fromIndex = stories.findIndex(
+      const fromIndex = waypoints.findIndex(
         (story) => story.id === draggedStoryId,
       );
-      const toIndex = stories.findIndex((story) => story.id === targetStoryId);
+      const toIndex = waypoints.findIndex(
+        (story) => story.id === targetStoryId,
+      );
 
       if (fromIndex !== -1 && toIndex !== -1) {
         reorderStories(fromIndex, toIndex);
@@ -427,7 +436,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
     setDropTargetIndex(null);
   };
 
-  // Custom item actions for stories
+  // Custom item actions for waypoints
   const storyItemActions = (item: ListItem<WaypointItemMetadata>) => {
     // Only show actions for story items, not child panel items
     if (item.metadata && "type" in item.metadata) {
@@ -438,7 +447,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
     const storyId = story.id || item.id;
     const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
     const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
-    const index = stories.findIndex((s) => s.id === storyId);
+    const index = waypoints.findIndex((s) => s.id === storyId);
     const isEditingViewstate =
       editingViewstateWaypointIndex !== null &&
       index !== -1 &&
@@ -494,9 +503,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
             handleToggleAnnotationsPanel(storyId);
           }}
           title={
-            isAnnotationsExpanded
-              ? "Hide annotations panel"
-              : "Show annotations panel"
+            isAnnotationsExpanded ? "Hide shapes panel" : "Show shapes panel"
           }
         >
           <PolylineIcon style={{ width: "14px", height: "14px" }} />
@@ -529,7 +536,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
     );
   };
 
-  // Custom child renderer for inline panels (annotations, markdown editor)
+  // Custom child renderer for inline panels (shapes, markdown editor)
   const customChildRenderer = (
     childItem: ListItem<WaypointItemMetadata>,
     _parentItem: ListItem<WaypointItemMetadata>,
@@ -543,7 +550,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
 
     const metadata = childItem.metadata as WaypointChildMetadata;
 
-    if (metadata.type === "annotations-panel") {
+    if (metadata.type === "shapes-panel") {
       const story = metadata.story;
 
       return (
@@ -595,8 +602,8 @@ const WaypointsList = (_props: WaypointsListProps) => {
           <span>
             Editing viewstate for{" "}
             <strong>
-              {stories[editingViewstateWaypointIndex]
-                ? stories[editingViewstateWaypointIndex].title
+              {waypoints[editingViewstateWaypointIndex]
+                ? waypoints[editingViewstateWaypointIndex].title
                 : "waypoint"}
             </strong>
             . Pan and zoom the image to set the view.
@@ -618,7 +625,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
                 e.preventDefault();
                 handleSaveEditViewstate(e);
               }}
-              title="Save camera to this waypoint, persist annotations, download story.json"
+              title="Save camera to this waypoint, persist shapes, download story.json"
             >
               Save
             </button>

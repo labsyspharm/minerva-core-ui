@@ -1,47 +1,44 @@
+import type { OrthographicViewState } from "@deck.gl/core";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { documentStore } from "./document-store";
-
-export type { ConfigGroup } from "./document-store";
-
-import type { OrthographicViewState } from "@deck.gl/core";
-import { arrowLineDegeneratePolygon } from "./annotationGeometry";
-import { mergeAnnotationsAfterWaypointImport } from "./annotationWaypointImport";
-import { buildBrushHull } from "./brushHull";
-import type { ConfigWaypoint } from "./config";
-import type { DocumentStore } from "./document-store";
+import type { ConfigWaypoint } from "../authoring/config";
+import { buildBrushHull } from "../shapes/brushHull";
+import { polygonDifference, polygonUnion } from "../shapes/polygonClipping";
+import { arrowLineDegeneratePolygon } from "../shapes/shapeGeometry";
+import {
+  type DragState,
+  type DrawingState,
+  ellipseToPolygon,
+  type HoverState,
+  type InteractionCoordinate,
+  type LineShape,
+  type OverlayLayer,
+  type PointShape,
+  type PolygonShape,
+  type PolylineShape,
+  rectangleToPolygon,
+  type Shape,
+  type ShapeGroup,
+  type TextShape,
+} from "../shapes/shapeModel";
+import { mergeShapesAfterWaypointImport } from "../shapes/shapeWaypointImport";
 import {
   configWaypointToStoreStoryWaypoint,
-  downloadStoryDocument,
-  exportStoryDocument,
-  STORY_JSON_VERSION,
+  hydrateConfigWaypoint,
   type StoreStoryWaypoint,
-  type StoryDocument,
   storeStoryWaypointToConfigWaypoint,
-} from "./exportStory";
-
-export type {
-  StoreStoryWaypoint,
-  StoryDocument,
-  StoryWaypoint,
-} from "./exportStory";
-
-import { polygonDifference, polygonUnion } from "./polygonClipping";
-import type { ViewportSize, ViewRect } from "./samViewport";
+} from "../story/storyDocument";
 import {
-  annotationsToShapes,
   mergeShapesForWaypointPersist,
   type StoryShape,
-  shapeToAnnotation,
-} from "./storyShapes";
+  storyShapeToViewer,
+  viewerShapesToStoryShapes,
+} from "../story/storyShapes";
+import type { ViewportSize, ViewRect } from "../viewer/samViewport";
+import { useDocumentStore } from "./document-store";
 
-function newAnnotationId(): string {
+function newShapeId(): string {
   return crypto.randomUUID();
-}
-
-// Types for the overlay store
-export interface OverlayLayer {
-  id: string;
 }
 
 type BrushMask = {
@@ -545,286 +542,16 @@ function computeBrushPolygon(
 
   return null;
 }
-
-// New annotation types - all using polygon coordinates internally
-type ColorRGBA = [number, number, number, number];
-
-/** Shared optional metadata on annotations (labels, import provenance). */
-export type AnnotationCommonMetadata = {
-  createdAt?: Date;
-  label?: string;
-  description?: string;
-  isImported?: boolean;
-};
-
-export interface PolygonAnnotation {
-  id: string;
-  type: "polygon";
-  polygon: [number, number][]; // Keep as polygon coordinates
-  style: {
-    fillColor: [number, number, number, number];
-    lineColor: [number, number, number, number];
-    lineWidth: number;
-  };
-  text?: string; // Optional text content to display within the shape
-  metadata?: AnnotationCommonMetadata;
-}
-
-export interface LineAnnotation {
-  id: string;
-  type: "line";
-  polygon: [number, number][]; // Simple line as degenerate polygon for stroke-based rendering
-  hasArrowHead?: boolean; // When true (default), render as arrow icon; when false, render as plain stroke
-  style: {
-    fillColor: [number, number, number, number];
-    lineColor: [number, number, number, number];
-    lineWidth: number;
-  };
-  text?: string; // Optional text content to display within the shape
-  metadata?: AnnotationCommonMetadata;
-}
-
-export interface PolylineAnnotation {
-  id: string;
-  type: "polyline";
-  polygon: [number, number][]; // Polyline points as polygon coordinates
-  style: {
-    lineColor: [number, number, number, number];
-    lineWidth: number;
-  };
-  text?: string; // Optional text content to display within the shape
-  metadata?: AnnotationCommonMetadata;
-}
-
-export interface TextAnnotation {
-  id: string;
-  type: "text";
-  position: [number, number]; // Text position
-  text: string; // The text content
-  style: {
-    fontSize: number;
-    fontColor: [number, number, number, number];
-    backgroundColor?: [number, number, number, number];
-    padding?: number;
-  };
-  metadata?: AnnotationCommonMetadata;
-}
-
-export interface PointAnnotation {
-  id: string;
-  type: "point";
-  position: [number, number]; // Point position
-  style: {
-    fillColor: [number, number, number, number];
-    strokeColor: [number, number, number, number];
-    radius: number; // Point radius in pixels
-  };
-  text?: string; // Optional text content to display within the shape
-  metadata?: AnnotationCommonMetadata;
-}
-
-export type Annotation = (
-  | PolygonAnnotation
-  | LineAnnotation
-  | PolylineAnnotation
-  | TextAnnotation
-  | PointAnnotation
-) & {
-  color?: [number, number, number, number];
-};
-
-// Annotation Group interface
-export interface AnnotationGroup {
-  id: string;
-  name: string;
-  annotationIds: string[]; // IDs of annotations in this group
-  isExpanded: boolean; // Whether the group is expanded in the UI
-  metadata?: {
-    createdAt?: Date;
-    color?: [number, number, number, number]; // Optional group color
-  };
-}
-
-// Helper functions to convert shapes to polygon coordinates
-export const rectangleToPolygon = (
-  start: [number, number],
-  end: [number, number],
-): [number, number][] => {
-  const [startX, startY] = start;
-  const [endX, endY] = end;
-
-  const minX = Math.min(startX, endX);
-  const maxX = Math.max(startX, endX);
-  const minY = Math.min(startY, endY);
-  const maxY = Math.max(startY, endY);
-
-  return [
-    [minX, minY],
-    [maxX, minY],
-    [maxX, maxY],
-    [minX, maxY],
-    [minX, minY], // Close the polygon
-  ];
-};
-
-// Helper function to convert bounding box to ellipse polygon
-export const ellipseToPolygon = (
-  start: [number, number],
-  end: [number, number],
-  segments: number = 64,
-): [number, number][] => {
-  const [startX, startY] = start;
-  const [endX, endY] = end;
-
-  // Calculate center and radii
-  const centerX = (startX + endX) / 2;
-  const centerY = (startY + endY) / 2;
-  const radiusX = Math.abs(endX - startX) / 2;
-  const radiusY = Math.abs(endY - startY) / 2;
-
-  // Generate points around the ellipse
-  const points: [number, number][] = [];
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * 2 * Math.PI;
-    const x = centerX + radiusX * Math.cos(angle);
-    const y = centerY + radiusY * Math.sin(angle);
-    points.push([x, y]);
-  }
-
-  return points;
-};
-
-export const lineToPolygon = (
-  start: [number, number],
-  end: [number, number],
-  lineWidth: number = 3,
-): [number, number][] => {
-  const [startX, startY] = start;
-  const [endX, endY] = end;
-
-  // Calculate perpendicular vector for line width
-  const dx = endX - startX;
-  const dy = endY - startY;
-  const length = Math.sqrt(dx * dx + dy * dy);
-
-  if (length === 0) {
-    // If line has no length, create a small square
-    const halfWidth = lineWidth / 2;
-    return [
-      [startX - halfWidth, startY - halfWidth],
-      [startX + halfWidth, startY - halfWidth],
-      [startX + halfWidth, startY + halfWidth],
-      [startX - halfWidth, startY + halfWidth],
-      [startX - halfWidth, startY - halfWidth],
-    ];
-  }
-
-  // Normalize and create perpendicular vector
-  const nx = -dy / length;
-  const ny = dx / length;
-  const halfWidth = lineWidth / 2;
-
-  return [
-    [startX + nx * halfWidth, startY + ny * halfWidth],
-    [endX + nx * halfWidth, endY + ny * halfWidth],
-    [endX - nx * halfWidth, endY - ny * halfWidth],
-    [startX - nx * halfWidth, startY - ny * halfWidth],
-    [startX + nx * halfWidth, startY + ny * halfWidth], // Close the polygon
-  ];
-};
-
-export const isPointInPolygon = (
-  point: [number, number],
-  polygon: [number, number][],
-): boolean => {
-  const [px, py] = point;
-  let inside = false;
-
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const [xi, yi] = polygon[i];
-    const [xj, yj] = polygon[j];
-
-    if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) {
-      inside = !inside;
-    }
-  }
-
-  return inside;
-};
-
-export const textToPolygon = (
-  position: [number, number],
-  text: string,
-  fontSize: number = 14,
-  _padding: number = 4,
-): [number, number][] => {
-  const [x, y] = position;
-
-  // Estimate text dimensions with better approximation
-  const charWidth = fontSize * 0.7; // More accurate character width
-  const textWidth = text.length * charWidth;
-  const textHeight = fontSize * 1.2; // Account for line height
-
-  // Add VERY generous padding for easy hit detection
-  // Make the hit area much larger than the actual text
-  const hitPadding = Math.max(fontSize * 2, 20); // Much larger padding - at least 2x font size or 20px
-  const halfWidth = (textWidth + hitPadding * 2) / 2;
-  const halfHeight = (textHeight + hitPadding * 2) / 2;
-
-  return [
-    [x - halfWidth, y - halfHeight],
-    [x + halfWidth, y - halfHeight],
-    [x + halfWidth, y + halfHeight],
-    [x - halfWidth, y + halfHeight],
-    [x - halfWidth, y - halfHeight], // Close the polygon
-  ];
-};
-
-export interface InteractionCoordinate {
-  type: "click" | "dragStart" | "drag" | "dragEnd" | "hover";
-  coordinate: [number, number, number];
-}
-
-export interface DrawingState {
-  isDrawing: boolean;
-  dragStart: [number, number] | null;
-  dragEnd: [number, number] | null;
-}
-
-export interface DragState {
-  isDragging: boolean;
-  draggedAnnotationId: string | null;
-  dragOffset: [number, number] | null;
-}
-
-export interface HoverState {
-  hoveredAnnotationId: string | null;
-}
-
 /**
- * Annotation / viewport UI state + story authoring.
+ * **Ephemeral UI state**: shapes, brush, overlay layers, SAM2, viewer bridge ( Deck viewState ),
+ * channel visibility mirrors, `activeStoryIndex`, etc.
  *
- * **Serializable story (`story.json`)** — not a separate Zustand slice: the
- * wire-shaped snapshot is **`storyDocument`** (`version`, `waypoints`, `shapes`).
- * It is derived-only: `syncStoryDocument()` calls {@link exportStoryDocument}.
+ * The durable **exhibit story** (channels, waypoints, shape registry, image pixel size, cached `story.json`)
+ * lives in {@link useDocumentStore}. Story **actions** on this store (`setStories`, …) update the document.
  *
- * **Sources for that export**
- * - **`stories`** — each row is {@link StoreStoryWaypoint}: serialized waypoint
- *   fields (`id`, `title`, `content`, `viewport`, `shapes` UUIDs, …) plus runtime
- *   camera keys from `ConfigWaypoint` (`State`, `Pan`, …). Mutators often accept
- *   `ConfigWaypoint` and convert internally.
- * - **`Shapes`** — merged in from {@link ./document-store.ts `DocumentStore`};
- *   global geometry registry keyed by UUID; referenced by each waypoint’s
- *   `shapes[]` list.
- *
- * Runtime-only layers (`annotations`, brush state, …) are **not** part of
- * `storyDocument`; they hydrate from a waypoint via `importWaypointAnnotations`.
- *
- * **Naming:** Zustand **`stories`** are narrative waypoint rows (one tab in the
- * author list ≈ one entry in `storyDocument.waypoints`). That is **not** the
- * exhibit playback type `Story[]` in `exhibit.ts`.
+ * **Zod** — `exportStoryDocument` → `parseStoryDocument` (`storyJsonModel.ts`).
  */
-export interface OverlayStore {
+export interface AppStore {
   // State
   overlayLayers: OverlayLayer[];
   activeTool: string;
@@ -832,9 +559,9 @@ export interface OverlayStore {
   drawingState: DrawingState;
   dragState: DragState; // New: drag state for move tool
   hoverState: HoverState; // New: hover state for move tool
-  annotations: Annotation[]; // New: persistent annotations
-  annotationGroups: AnnotationGroup[]; // New: annotation groups
-  hiddenLayers: Set<string>; // New: track hidden layers
+  shapes: Shape[]; // New: persistent shapes
+  shapeGroups: ShapeGroup[]; // New: annotation groups
+  hiddenShapeIds: Set<string>; // New: track hidden layers
   globalColor: [number, number, number, number]; // New: global drawing color
   viewportZoom: number; // Current viewport zoom level for line width scaling
   // Brush tool state
@@ -846,15 +573,19 @@ export interface OverlayStore {
   brushViewportHeight: number;
   brushViewBounds: [number, number, number, number] | null;
   brushLastScreenCoord: [number, number] | null;
-  selectedAnnotationId: string | null;
+  selectedShapeId: string | null;
   brushEditTargetId: string | null;
   brushEditMode: "add" | "subtract" | null;
 
-  /** See {@link OverlayStore} — source rows for `storyDocument.waypoints` + camera. */
-  stories: StoreStoryWaypoint[];
   activeStoryIndex: number | null;
 
-  // Channel Group and Channel State
+  /**
+   * Waypoint row index whose annotations panel is mounted (inline or master-detail).
+   * When set, shape mutations persist here even if `activeStoryIndex` differs.
+   */
+  authoringWaypointShapesIndex: number | null;
+  setAuthoringWaypointShapesIndex: (index: number | null) => void;
+
   activeChannelGroupId: string | null;
 
   /**
@@ -869,29 +600,29 @@ export interface OverlayStore {
   setAuthoringWaypointEditorOpen: (open: boolean) => void;
 
   /** Layers panel: selected annotation ids (multi-select) for copy / keyboard shortcuts. */
-  layersPanelSelectedAnnotationIds: string[];
-  setLayersPanelSelectedAnnotationIds: (ids: string[]) => void;
+  layersPanelSelectedShapeIds: string[];
+  setLayersPanelSelectedShapeIds: (ids: string[]) => void;
   /** Layers panel: selected group id (single-select) for copy/flash. */
   layersPanelSelectedGroupId: string | null;
   setLayersPanelSelectedGroupId: (id: string | null) => void;
   /** Layers panel: transient pulse/flash request (e.g. copy/paste feedback). */
   layersPanelSelectionFlash: {
     token: number;
-    annotationIds: string[];
+    shapeIds: string[];
     groupId: string | null;
   } | null;
   flashLayersPanelSelection: (payload: {
-    annotationIds: string[];
+    shapeIds: string[];
     groupId: string | null;
   }) => void;
   /** Layers panel: optional selection request for paste feedback. */
   layersPanelSelectionRequest: {
     token: number;
-    annotationIds: string[];
+    shapeIds: string[];
     groupId: string | null;
   } | null;
   requestLayersPanelSelection: (payload: {
-    annotationIds: string[];
+    shapeIds: string[];
     groupId: string | null;
   }) => void;
 
@@ -911,14 +642,11 @@ export interface OverlayStore {
   ) => void;
 
   // New annotation actions
-  addAnnotation: (annotation: Annotation) => void;
-  addAnnotationsBatch: (items: Annotation[]) => void;
-  removeAnnotation: (annotationId: string) => void;
-  updateAnnotation: (
-    annotationId: string,
-    updates: Partial<Annotation>,
-  ) => void;
-  clearAnnotations: () => void;
+  addShape: (shape: Shape) => void;
+  addShapesBatch: (items: Shape[]) => void;
+  removeShape: (shapeId: string) => void;
+  updateShape: (shapeId: string, updates: Partial<Shape>) => void;
+  clearShapes: () => void;
   finalizeRectangle: () => void; // Convert current drawing to annotation
 
   /**
@@ -991,28 +719,27 @@ export interface OverlayStore {
   finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
   finalizeLine: (hasArrowHead?: boolean) => void; // Convert current drawing to line annotation
   finalizePolyline: (points: [number, number][]) => void; // Convert polyline points to polyline annotation
-  createTextAnnotation: (
+  createTextShape: (
     position: [number, number],
     text: string,
     fontSize?: number,
   ) => void; // Create text annotation
-  createPointAnnotation: (position: [number, number], radius?: number) => void; // Create point annotation
-  updateTextAnnotation: (
-    annotationId: string,
+  createPointShape: (position: [number, number], radius?: number) => void; // Create point annotation
+  updateTextShape: (
+    shapeId: string,
     newText: string,
     fontSize?: number,
   ) => void; // Update text annotation content
-  updateTextAnnotationColor: (
-    annotationId: string,
+  updateTextShapeColor: (
+    shapeId: string,
     fontColor: [number, number, number, number],
   ) => void; // Update text annotation color
-  updateShapeText: (annotationId: string, newText: string) => void; // Update text field on any annotation (for shapes with text)
-  updateAnnotationLabel: (annotationId: string, newLabel: string) => void; // Update the metadata label (used as layer name)
+  updateShapeText: (shapeId: string, newText: string) => void; // Update text field on any annotation (for shapes with text)
+  updateShapeLabel: (shapeId: string, newLabel: string) => void; // Update the metadata label (used as layer name)
   setGlobalColor: (color: [number, number, number, number]) => void; // Set global drawing color
   setViewportZoom: (zoom: number) => void; // Set viewport zoom for line width scaling
   showSquareViewportOverlay: boolean;
   setShowSquareViewportOverlay: (show: boolean) => void;
-  toggleSquareViewportOverlay: () => void;
   setBrushRadiusPx: (radius: number) => void;
   setBrushMaskResolution: (res: number) => void;
   setBrushViewport: (
@@ -1024,63 +751,74 @@ export interface OverlayStore {
   brushPaintStart: (screenCoord: [number, number]) => void;
   brushPaint: (screenCoord: [number, number]) => void;
   brushPaintEnd: () => void;
-  startBrushEdit: (annotationId: string, mode: "add" | "subtract") => void;
+  startBrushEdit: (shapeId: string, mode: "add" | "subtract") => void;
   stopBrushEdit: () => void;
-  setSelectedAnnotation: (annotationId: string | null) => void;
+  setSelectedShape: (shapeId: string | null) => void;
   finalizeBrush: (
     strokePoints: [number, number][],
     precomputedHull?: [number, number][],
   ) => void;
 
   // New layer visibility actions
-  toggleLayerVisibility: (annotationId: string) => void;
-  showAllLayers: () => void;
-  hideAllLayers: () => void;
+  toggleShapeVisibility: (shapeId: string) => void;
+  showAllShapes: () => void;
+  hideAllShapes: () => void;
 
   // New drag actions for move tool
-  startDrag: (annotationId: string, offset: [number, number]) => void;
+  startDrag: (shapeId: string, offset: [number, number]) => void;
   updateDrag: (coordinate: [number, number, number]) => void;
   endDrag: () => void;
   resetDragState: () => void;
 
   // New hover actions for move tool
-  setHoveredAnnotation: (annotationId: string | null) => void;
+  setHoveredShape: (shapeId: string | null) => void;
   resetHoverState: () => void;
 
   // Group actions
   createGroup: (name?: string) => void;
   deleteGroup: (groupId: string) => void;
-  addAnnotationToGroup: (groupId: string, annotationId: string) => void;
-  removeAnnotationFromGroup: (groupId: string, annotationId: string) => void;
+  addShapeToGroup: (groupId: string, shapeId: string) => void;
+  removeShapeFromGroup: (groupId: string, shapeId: string) => void;
   toggleGroupExpanded: (groupId: string) => void;
 
-  // Import waypoint annotations actions
-  imageWidth: number;
-  imageHeight: number;
-  setImageDimensions: (width: number, height: number) => void;
-  importWaypointAnnotations: (
+  // Import waypoint shapes actions
+  importWaypointShapes: (
     story: StoreStoryWaypoint,
     clearExisting?: boolean,
-    /** When passed (e.g. from React), used for resolution so effects track `Shapes` explicitly. */
+    /** When passed (e.g. from React), used for resolution so effects track `shapes` explicitly. */
     shapeRegistry?: StoryShape[],
   ) => void;
-  clearImportedAnnotations: () => void;
-  /** Persist annotations into stories[index] (`shapes` + `ItemRegistry.Shapes`). */
-  persistImportedAnnotationsToStory: (storyIndex: number) => void;
-
-  /**
-   * Serializable `story.json` snapshot (`version` + `waypoints` + `shapes`).
-   * Kept in sync via `syncStoryDocument` after story/shape/export-input changes.
-   */
-  storyDocument: StoryDocument;
-  /** Rebuild `storyDocument` from `stories`, `Shapes`, `imageWidth`/`imageHeight`, `viewerViewportSize`. */
-  syncStoryDocument: () => void;
-  /** `syncStoryDocument` then download; avoids duplicating export inputs at call sites. */
-  downloadStoryJsonFile: (filename?: string) => void;
+  clearImportedShapes: () => void;
+  /** Persist shapes into `document.waypoints[index]` and `document.shapes`. */
+  persistImportedShapesToStory: (storyIndex: number) => void;
 
   // Waypoint camera (resolved inside ImageViewer for correct viewport coupling)
   setTargetWaypointCamera: (waypoint: ConfigWaypoint | null) => void;
   clearTargetWaypointCamera: () => void;
+}
+
+/** Persist canvas shapes to the waypoint row that is actually being annotated. */
+function maybePersistShapesAfterMutation(get: () => AppStore) {
+  const doc = useDocumentStore.getState();
+  if (
+    doc.waypoints.length === 0 ||
+    doc.imageWidth <= 0 ||
+    doc.imageHeight <= 0
+  ) {
+    return;
+  }
+  const state = get();
+  const authoring = state.authoringWaypointShapesIndex;
+  const active = state.activeStoryIndex;
+  const resolved =
+    authoring !== null ? authoring : active !== null ? active : null;
+  if (resolved === null) {
+    return;
+  }
+  if (resolved < 0 || resolved >= doc.waypoints.length) {
+    return;
+  }
+  get().persistImportedShapesToStory(resolved);
 }
 
 // Initial state for overlay store
@@ -1095,15 +833,15 @@ const overlayInitialState = {
   },
   dragState: {
     isDragging: false,
-    draggedAnnotationId: null,
+    draggedShapeId: null,
     dragOffset: null,
   },
   hoverState: {
-    hoveredAnnotationId: null,
+    hoveredShapeId: null,
   },
-  annotations: [], // New: empty annotations array
-  annotationGroups: [], // New: empty groups array
-  hiddenLayers: new Set<string>(), // New: empty hidden layers set
+  shapes: [], // New: empty shapes array
+  shapeGroups: [], // New: empty groups array
+  hiddenShapeIds: new Set<string>(), // New: empty hidden layers set
   globalColor: [255, 255, 255, 255], // New: default white color
   viewportZoom: 0, // Default zoom level
   showSquareViewportOverlay: false,
@@ -1115,25 +853,18 @@ const overlayInitialState = {
   brushViewportHeight: 0,
   brushViewBounds: null as [number, number, number, number] | null,
   brushLastScreenCoord: null as [number, number] | null,
-  selectedAnnotationId: null as string | null,
+  selectedShapeId: null as string | null,
   brushEditTargetId: null as string | null,
   brushEditMode: null as "add" | "subtract" | null,
-  stories: [], // New: empty stories array
-  storyDocument: {
-    version: STORY_JSON_VERSION,
-    waypoints: [],
-    shapes: [],
-  },
   activeStoryIndex: null, // New: no active story initially
+  authoringWaypointShapesIndex: null as number | null,
   activeChannelGroupId: null, // No channel group initially
-  imageWidth: 0,
-  imageHeight: 0,
   channelVisibilities: {},
   groupChannelLists: {},
   groupNames: {},
   targetWaypointCamera: null,
   authoringWaypointEditorOpen: false,
-  layersPanelSelectedAnnotationIds: [] as string[],
+  layersPanelSelectedShapeIds: [] as string[],
   layersPanelSelectedGroupId: null as string | null,
   layersPanelSelectionFlash: null,
   layersPanelSelectionRequest: null,
@@ -1149,34 +880,11 @@ const overlayInitialState = {
   editingViewstateWaypointIndex: null,
 };
 
-// Create the overlay store
-export const useOverlayStore = create<OverlayStore & DocumentStore>()(
+// App store (non-serialized UI + authoring actions; document lives in `useDocumentStore`).
+export const useAppStore = create<AppStore>()(
   devtools(
     (set, get) => ({
       ...overlayInitialState,
-      ...documentStore(set, get),
-      setShapes: (Shapes: StoryShape[]) => {
-        set({ Shapes });
-        get().syncStoryDocument();
-      },
-
-      syncStoryDocument: () => {
-        const s = get();
-        set({
-          storyDocument: exportStoryDocument(
-            s.stories,
-            s.Shapes ?? [],
-            s.imageWidth,
-            s.imageHeight,
-            s.viewerViewportSize,
-          ),
-        });
-      },
-
-      downloadStoryJsonFile: (filename = "story.json") => {
-        get().syncStoryDocument();
-        downloadStoryDocument(get().storyDocument, filename);
-      },
 
       setActiveTool: (tool: string) => {
         set({
@@ -1273,15 +981,15 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               break;
             case "click":
               // Click without drag: select annotation (e.g. for layers panel)
-              if (hoverState.hoveredAnnotationId) {
-                get().setSelectedAnnotation(hoverState.hoveredAnnotationId);
+              if (hoverState.hoveredShapeId) {
+                get().setSelectedShape(hoverState.hoveredShapeId);
               }
               break;
             case "dragStart":
               // Start drag if clicking on a hovered annotation
-              if (hoverState.hoveredAnnotationId) {
-                const annotation = get().annotations.find(
-                  (a) => a.id === hoverState.hoveredAnnotationId,
+              if (hoverState.hoveredShapeId) {
+                const annotation = get().shapes.find(
+                  (a) => a.id === hoverState.hoveredShapeId,
                 );
                 if (annotation) {
                   // Calculate offset between click position and annotation position
@@ -1297,12 +1005,12 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
                       y - annotation.position[1],
                     ];
                   } else {
-                    // For polygon-based annotations, calculate offset from first point
+                    // For polygon-based shapes, calculate offset from first point
                     const firstPoint = annotation.polygon[0];
                     offset = [x - firstPoint[0], y - firstPoint[1]];
                   }
 
-                  get().startDrag(hoverState.hoveredAnnotationId, offset);
+                  get().startDrag(hoverState.hoveredShapeId, offset);
                 }
               }
               break;
@@ -1367,30 +1075,30 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       },
 
       // New annotation actions
-      addAnnotation: (annotation: Annotation) => {
+      addShape: (shape: Shape) => {
         set((state) => ({
-          annotations: [...state.annotations, annotation],
+          shapes: [...state.shapes, shape],
         }));
+        maybePersistShapesAfterMutation(get);
       },
 
-      addAnnotationsBatch: (items: Annotation[]) => {
+      addShapesBatch: (items: Shape[]) => {
         if (items.length === 0) return;
         set((state) => ({
-          annotations: [...state.annotations, ...items],
+          shapes: [...state.shapes, ...items],
         }));
+        maybePersistShapesAfterMutation(get);
       },
 
-      removeAnnotation: (annotationId: string) => {
+      removeShape: (shapeId: string) => {
         set((state) => {
-          const newHiddenLayers = new Set(state.hiddenLayers);
-          newHiddenLayers.delete(annotationId);
+          const newHiddenLayers = new Set(state.hiddenShapeIds);
+          newHiddenLayers.delete(shapeId);
           const newSelected =
-            state.selectedAnnotationId === annotationId
-              ? null
-              : state.selectedAnnotationId;
+            state.selectedShapeId === shapeId ? null : state.selectedShapeId;
 
           const clearingBrushEdit =
-            state.brushEditTargetId === annotationId
+            state.brushEditTargetId === shapeId
               ? {
                   brushEditTargetId: null as string | null,
                   brushEditMode: null as "add" | "subtract" | null,
@@ -1398,27 +1106,25 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               : {};
 
           return {
-            annotations: state.annotations.filter((a) => a.id !== annotationId),
-            hiddenLayers: newHiddenLayers,
-            selectedAnnotationId: newSelected,
+            shapes: state.shapes.filter((a) => a.id !== shapeId),
+            hiddenShapeIds: newHiddenLayers,
+            selectedShapeId: newSelected,
             ...clearingBrushEdit,
           };
         });
+        maybePersistShapesAfterMutation(get);
       },
 
-      updateAnnotation: (
-        annotationId: string,
-        updates: Partial<Annotation>,
-      ) => {
+      updateShape: (shapeId: string, updates: Partial<Shape>) => {
         set((state) => ({
-          annotations: state.annotations.map((a) =>
-            a.id === annotationId ? ({ ...a, ...updates } as Annotation) : a,
+          shapes: state.shapes.map((a) =>
+            a.id === shapeId ? ({ ...a, ...updates } as Shape) : a,
           ),
         }));
       },
 
-      clearAnnotations: () => {
-        set({ annotations: [] });
+      clearShapes: () => {
+        set({ shapes: [] });
       },
 
       finalizeRectangle: () => {
@@ -1432,8 +1138,8 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           const [endX, endY] = drawingState.dragEnd;
 
           // Rectangle tool stores a closed polygon (same rendering path as lasso / brush).
-          const annotation: PolygonAnnotation = {
-            id: newAnnotationId(),
+          const annotation: PolygonShape = {
+            id: newShapeId(),
             type: "polygon",
             polygon: rectangleToPolygon([startX, startY], [endX, endY]),
             style: {
@@ -1447,12 +1153,12 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               lineWidth: 3,
             },
             metadata: {
-              label: `Untitled ${get().annotations.length + 1}`,
+              label: `Untitled ${get().shapes.length + 1}`,
             },
           };
 
           // Add the annotation
-          get().addAnnotation(annotation);
+          get().addShape(annotation);
 
           // Reset drawing state
           get().resetDrawingState();
@@ -1472,8 +1178,8 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           const [startX, startY] = drawingState.dragStart;
           const [endX, endY] = drawingState.dragEnd;
 
-          const annotation: PolygonAnnotation = {
-            id: newAnnotationId(),
+          const annotation: PolygonShape = {
+            id: newShapeId(),
             type: "polygon",
             polygon: ellipseToPolygon([startX, startY], [endX, endY]),
             style: {
@@ -1487,12 +1193,12 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               lineWidth: 3,
             },
             metadata: {
-              label: `Untitled ${get().annotations.length + 1}`,
+              label: `Untitled ${get().shapes.length + 1}`,
             },
           };
 
           // Add the annotation
-          get().addAnnotation(annotation);
+          get().addShape(annotation);
 
           // Reset drawing state
           get().resetDrawingState();
@@ -1505,8 +1211,8 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       finalizeLasso: (points: [number, number][]) => {
         if (points.length >= 3) {
           // Create a new polygon annotation
-          const annotation: PolygonAnnotation = {
-            id: newAnnotationId(),
+          const annotation: PolygonShape = {
+            id: newShapeId(),
             type: "polygon",
             polygon: points,
             style: {
@@ -1520,12 +1226,12 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               lineWidth: 3,
             },
             metadata: {
-              label: `Untitled ${get().annotations.length + 1}`,
+              label: `Untitled ${get().shapes.length + 1}`,
             },
           };
 
           // Add the annotation
-          get().addAnnotation(annotation);
+          get().addShape(annotation);
 
           // Remove the temporary drawing layer
           get().removeOverlayLayer("drawing-layer");
@@ -1535,8 +1241,8 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       finalizePolyline: (points: [number, number][]) => {
         if (points.length >= 2) {
           // Create a new polyline annotation
-          const annotation: PolylineAnnotation = {
-            id: newAnnotationId(),
+          const annotation: PolylineShape = {
+            id: newShapeId(),
             type: "polyline",
             polygon: points,
             style: {
@@ -1544,12 +1250,12 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               lineWidth: 3,
             },
             metadata: {
-              label: `Untitled ${get().annotations.length + 1}`,
+              label: `Untitled ${get().shapes.length + 1}`,
             },
           };
 
           // Add the annotation
-          get().addAnnotation(annotation);
+          get().addShape(annotation);
 
           // Remove the temporary drawing layer
           get().removeOverlayLayer("drawing-layer");
@@ -1570,8 +1276,8 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             [endX, endY],
           );
 
-          const annotation: LineAnnotation = {
-            id: newAnnotationId(),
+          const annotation: LineShape = {
+            id: newShapeId(),
             type: "line",
             polygon: linePolygon,
             hasArrowHead,
@@ -1581,12 +1287,12 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               lineWidth: 3,
             },
             metadata: {
-              label: `Untitled ${get().annotations.length + 1}`,
+              label: `Untitled ${get().shapes.length + 1}`,
             },
           };
 
           // Add the annotation
-          get().addAnnotation(annotation);
+          get().addShape(annotation);
 
           // Reset drawing state
           get().resetDrawingState();
@@ -1596,7 +1302,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         }
       },
 
-      createTextAnnotation: (
+      createTextShape: (
         position: [number, number],
         text: string,
         fontSize: number = 14,
@@ -1606,8 +1312,8 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         }
 
         // Create a new text annotation
-        const annotation: TextAnnotation = {
-          id: newAnnotationId(),
+        const annotation: TextShape = {
+          id: newShapeId(),
           type: "text",
           position: position,
           text: text.trim(),
@@ -1618,21 +1324,18 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             padding: 4,
           },
           metadata: {
-            label: `Untitled ${get().annotations.length + 1}`,
+            label: `Untitled ${get().shapes.length + 1}`,
           },
         };
 
         // Add the annotation
-        get().addAnnotation(annotation);
+        get().addShape(annotation);
       },
 
-      createPointAnnotation: (
-        position: [number, number],
-        radius: number = 5,
-      ) => {
+      createPointShape: (position: [number, number], radius: number = 5) => {
         // Create a new point annotation
-        const annotation: PointAnnotation = {
-          id: newAnnotationId(),
+        const annotation: PointShape = {
+          id: newShapeId(),
           type: "point",
           position: position,
           style: {
@@ -1641,16 +1344,16 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             radius: radius,
           },
           metadata: {
-            label: `Untitled ${get().annotations.length + 1}`,
+            label: `Untitled ${get().shapes.length + 1}`,
           },
         };
 
         // Add the annotation
-        get().addAnnotation(annotation);
+        get().addShape(annotation);
       },
 
-      updateTextAnnotation: (
-        annotationId: string,
+      updateTextShape: (
+        shapeId: string,
         newText: string,
         fontSize?: number,
       ) => {
@@ -1658,15 +1361,15 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           return;
         }
 
-        const annotations = get().annotations;
-        const annotation = annotations.find((a) => a.id === annotationId);
+        const shapes = get().shapes;
+        const annotation = shapes.find((a) => a.id === shapeId);
 
         if (!annotation || annotation.type !== "text") {
           return;
         }
 
         // Update the text content and optionally fontSize
-        const updates: Partial<TextAnnotation> = {
+        const updates: Partial<TextShape> = {
           text: newText.trim(),
         };
 
@@ -1677,60 +1380,60 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           };
         }
 
-        get().updateAnnotation(annotationId, updates);
+        get().updateShape(shapeId, updates);
       },
 
-      updateTextAnnotationColor: (
-        annotationId: string,
+      updateTextShapeColor: (
+        shapeId: string,
         fontColor: [number, number, number, number],
       ) => {
-        const annotations = get().annotations;
-        const annotation = annotations.find((a) => a.id === annotationId);
+        const shapes = get().shapes;
+        const annotation = shapes.find((a) => a.id === shapeId);
 
         if (!annotation || annotation.type !== "text") {
           return;
         }
 
         // Update the font color
-        const updates: Partial<TextAnnotation> = {
+        const updates: Partial<TextShape> = {
           style: {
             ...annotation.style,
             fontColor: fontColor,
           },
         };
 
-        get().updateAnnotation(annotationId, updates);
+        get().updateShape(shapeId, updates);
       },
 
-      updateShapeText: (annotationId: string, newText: string) => {
-        const annotations = get().annotations;
-        const annotation = annotations.find((a) => a.id === annotationId);
+      updateShapeText: (shapeId: string, newText: string) => {
+        const shapes = get().shapes;
+        const annotation = shapes.find((a) => a.id === shapeId);
 
         if (!annotation) {
           return;
         }
 
-        // For text annotations, use the existing updateTextAnnotation method
+        // For text shapes, use the existing updateTextShape method
         if (annotation.type === "text") {
-          get().updateTextAnnotation(annotationId, newText);
+          get().updateTextShape(shapeId, newText);
           return;
         }
 
         // Update the text field on the shape
         // Empty string removes the text field
-        const updates: Partial<Annotation> = {
+        const updates: Partial<Shape> = {
           text: newText.trim() || undefined,
         };
 
-        get().updateAnnotation(annotationId, updates);
+        get().updateShape(shapeId, updates);
       },
 
-      updateAnnotationLabel: (annotationId: string, newLabel: string) => {
+      updateShapeLabel: (shapeId: string, newLabel: string) => {
         const trimmed = newLabel.trim();
 
         set((state) => ({
-          annotations: state.annotations.map((annotation) => {
-            if (annotation.id !== annotationId) {
+          shapes: state.shapes.map((annotation) => {
+            if (annotation.id !== shapeId) {
               return annotation;
             }
 
@@ -1742,7 +1445,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             return {
               ...annotation,
               metadata: nextMetadata,
-            } as Annotation;
+            } as Shape;
           }),
         }));
       },
@@ -1757,12 +1460,6 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       setShowSquareViewportOverlay: (show: boolean) => {
         set({ showSquareViewportOverlay: show });
-      },
-
-      toggleSquareViewportOverlay: () => {
-        set((state) => ({
-          showSquareViewportOverlay: !state.showSquareViewportOverlay,
-        }));
       },
 
       setBrushRadiusPx: (radius: number) => {
@@ -1936,19 +1633,19 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         set({ brushLastScreenCoord: null });
       },
 
-      startBrushEdit: (annotationId: string, mode: "add" | "subtract") => {
+      startBrushEdit: (shapeId: string, mode: "add" | "subtract") => {
         set((state) => {
-          const newHiddenLayers = new Set(state.hiddenLayers);
-          if (newHiddenLayers.has(annotationId)) {
-            newHiddenLayers.delete(annotationId);
+          const newHiddenLayers = new Set(state.hiddenShapeIds);
+          if (newHiddenLayers.has(shapeId)) {
+            newHiddenLayers.delete(shapeId);
           }
 
           return {
             activeTool: "brush",
-            brushEditTargetId: annotationId,
+            brushEditTargetId: shapeId,
             brushEditMode: mode,
-            hiddenLayers: newHiddenLayers,
-            selectedAnnotationId: annotationId,
+            hiddenShapeIds: newHiddenLayers,
+            selectedShapeId: shapeId,
           };
         });
       },
@@ -1960,8 +1657,8 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         });
       },
 
-      setSelectedAnnotation: (annotationId: string | null) => {
-        set({ selectedAnnotationId: annotationId });
+      setSelectedShape: (shapeId: string | null) => {
+        set({ selectedShapeId: shapeId });
       },
 
       finalizeBrush: (
@@ -1976,7 +1673,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           brushViewBounds,
           brushEditTargetId,
           brushEditMode,
-          annotations,
+          shapes: brushShapes,
           globalColor,
         } = state;
 
@@ -1995,7 +1692,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         }
 
         if (brushEditTargetId && brushEditMode) {
-          const target = annotations.find((a) => a.id === brushEditTargetId);
+          const target = brushShapes.find((a) => a.id === brushEditTargetId);
           if (target && target.type === "polygon") {
             const basePolygon = target.polygon;
             const nextPolygon =
@@ -2019,14 +1716,14 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               nextPolygon.length >= 3 &&
               nextPolygon !== basePolygon
             ) {
-              get().updateAnnotation(brushEditTargetId, {
+              get().updateShape(brushEditTargetId, {
                 polygon: nextPolygon,
-              } as Partial<Annotation>);
+              } as Partial<Shape>);
             }
           }
         } else {
-          const annotation: PolygonAnnotation = {
-            id: newAnnotationId(),
+          const annotation: PolygonShape = {
+            id: newShapeId(),
             type: "polygon",
             polygon: overlayPolygon,
             style: {
@@ -2035,10 +1732,10 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               lineWidth: 3,
             },
             metadata: {
-              label: `Untitled ${annotations.length + 1}`,
+              label: `Untitled ${brushShapes.length + 1}`,
             },
           };
-          get().addAnnotation(annotation);
+          get().addShape(annotation);
         }
 
         get().removeOverlayLayer("drawing-layer");
@@ -2047,44 +1744,44 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       },
 
       // New layer visibility actions
-      toggleLayerVisibility: (annotationId: string) => {
+      toggleShapeVisibility: (shapeId: string) => {
         set((state) => {
-          const newHiddenLayers = new Set(state.hiddenLayers);
-          if (newHiddenLayers.has(annotationId)) {
-            newHiddenLayers.delete(annotationId);
+          const newHiddenLayers = new Set(state.hiddenShapeIds);
+          if (newHiddenLayers.has(shapeId)) {
+            newHiddenLayers.delete(shapeId);
           } else {
-            newHiddenLayers.add(annotationId);
+            newHiddenLayers.add(shapeId);
           }
-          return { hiddenLayers: newHiddenLayers };
+          return { hiddenShapeIds: newHiddenLayers };
         });
       },
 
-      showAllLayers: () => {
-        set({ hiddenLayers: new Set<string>() });
+      showAllShapes: () => {
+        set({ hiddenShapeIds: new Set<string>() });
       },
 
-      hideAllLayers: () => {
+      hideAllShapes: () => {
         set((state) => ({
-          hiddenLayers: new Set(state.annotations.map((a) => a.id)),
+          hiddenShapeIds: new Set(state.shapes.map((a) => a.id)),
         }));
       },
 
       // New drag actions for move tool
-      startDrag: (annotationId: string, offset: [number, number]) => {
+      startDrag: (shapeId: string, offset: [number, number]) => {
         set({
           dragState: {
             isDragging: true,
-            draggedAnnotationId: annotationId,
+            draggedShapeId: shapeId,
             dragOffset: offset,
           },
         });
       },
 
       updateDrag: (coordinate: [number, number, number]) => {
-        const { dragState, annotations } = get();
+        const { dragState, shapes: dragShapes } = get();
         if (
           dragState.isDragging &&
-          dragState.draggedAnnotationId &&
+          dragState.draggedShapeId &&
           dragState.dragOffset
         ) {
           const [x, y] = coordinate;
@@ -2095,22 +1792,19 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           const newY = y - offsetY;
 
           // Find the annotation being dragged
-          const annotation = annotations.find(
-            (a) => a.id === dragState.draggedAnnotationId,
+          const annotation = dragShapes.find(
+            (a) => a.id === dragState.draggedShapeId,
           );
           if (annotation) {
             if (annotation.type === "text" || annotation.type === "point") {
-              // For text and point annotations, update the position directly
+              // For text and point shapes, update the position directly
               const updatedAnnotation = {
                 ...annotation,
                 position: [newX, newY] as [number, number],
               };
-              get().updateAnnotation(
-                dragState.draggedAnnotationId,
-                updatedAnnotation,
-              );
+              get().updateShape(dragState.draggedShapeId, updatedAnnotation);
             } else {
-              // For polygon-based annotations (rectangle, polygon, line, polyline), calculate delta from first point
+              // For polygon-based shapes (rectangle, polygon, line, polyline), calculate delta from first point
               const deltaX = newX - annotation.polygon[0][0];
               const deltaY = newY - annotation.polygon[0][1];
 
@@ -2125,10 +1819,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
               };
 
               // Update the annotation in the store
-              get().updateAnnotation(
-                dragState.draggedAnnotationId,
-                updatedAnnotation,
-              );
+              get().updateShape(dragState.draggedShapeId, updatedAnnotation);
             }
           }
         }
@@ -2138,14 +1829,11 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         set({
           dragState: {
             isDragging: false,
-            draggedAnnotationId: null,
+            draggedShapeId: null,
             dragOffset: null,
           },
         });
-        const { activeStoryIndex } = get();
-        if (activeStoryIndex !== null) {
-          get().persistImportedAnnotationsToStory(activeStoryIndex);
-        }
+        maybePersistShapesAfterMutation(get);
       },
 
       resetDragState: () => {
@@ -2153,10 +1841,10 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       },
 
       // New hover actions for move tool
-      setHoveredAnnotation: (annotationId: string | null) => {
+      setHoveredShape: (shapeId: string | null) => {
         set({
           hoverState: {
-            hoveredAnnotationId: annotationId,
+            hoveredShapeId: shapeId,
           },
         });
       },
@@ -2177,8 +1865,12 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         }
       },
 
-      setLayersPanelSelectedAnnotationIds: (ids: string[]) => {
-        set({ layersPanelSelectedAnnotationIds: [...ids] });
+      setAuthoringWaypointShapesIndex: (index: number | null) => {
+        set({ authoringWaypointShapesIndex: index });
+      },
+
+      setLayersPanelSelectedShapeIds: (ids: string[]) => {
+        set({ layersPanelSelectedShapeIds: [...ids] });
       },
 
       setLayersPanelSelectedGroupId: (id: string | null) => {
@@ -2189,7 +1881,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         set({
           layersPanelSelectionFlash: {
             token: Date.now(),
-            annotationIds: [...payload.annotationIds],
+            shapeIds: [...payload.shapeIds],
             groupId: payload.groupId,
           },
         });
@@ -2199,7 +1891,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         set({
           layersPanelSelectionRequest: {
             token: Date.now(),
-            annotationIds: [...payload.annotationIds],
+            shapeIds: [...payload.shapeIds],
             groupId: payload.groupId,
           },
         });
@@ -2207,48 +1899,44 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       // Group actions
       createGroup: (name?: string) => {
-        const groupCount = get().annotationGroups.length;
-        const newGroup: AnnotationGroup = {
+        const groupCount = get().shapeGroups.length;
+        const newGroup: ShapeGroup = {
           id: `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           name: name || `Group ${groupCount + 1}`,
-          annotationIds: [],
+          shapeIds: [],
           isExpanded: true,
         };
         set((state) => ({
-          annotationGroups: [...state.annotationGroups, newGroup],
+          shapeGroups: [...state.shapeGroups, newGroup],
         }));
       },
 
       deleteGroup: (groupId: string) => {
         set((state) => ({
-          annotationGroups: state.annotationGroups.filter(
-            (g) => g.id !== groupId,
-          ),
+          shapeGroups: state.shapeGroups.filter((g) => g.id !== groupId),
         }));
       },
 
-      addAnnotationToGroup: (groupId: string, annotationId: string) => {
+      addShapeToGroup: (groupId: string, shapeId: string) => {
         set((state) => ({
-          annotationGroups: state.annotationGroups.map((group) =>
+          shapeGroups: state.shapeGroups.map((group) =>
             group.id === groupId
               ? {
                   ...group,
-                  annotationIds: [...group.annotationIds, annotationId],
+                  shapeIds: [...group.shapeIds, shapeId],
                 }
               : group,
           ),
         }));
       },
 
-      removeAnnotationFromGroup: (groupId: string, annotationId: string) => {
+      removeShapeFromGroup: (groupId: string, shapeId: string) => {
         set((state) => ({
-          annotationGroups: state.annotationGroups.map((group) =>
+          shapeGroups: state.shapeGroups.map((group) =>
             group.id === groupId
               ? {
                   ...group,
-                  annotationIds: group.annotationIds.filter(
-                    (id) => id !== annotationId,
-                  ),
+                  shapeIds: group.shapeIds.filter((id) => id !== shapeId),
                 }
               : group,
           ),
@@ -2257,7 +1945,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       toggleGroupExpanded: (groupId: string) => {
         set((state) => ({
-          annotationGroups: state.annotationGroups.map((group) =>
+          shapeGroups: state.shapeGroups.map((group) =>
             group.id === groupId
               ? { ...group, isExpanded: !group.isExpanded }
               : group,
@@ -2265,28 +1953,33 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         }));
       },
 
-      // Stories actions
+      // Narrative waypoint actions → `useDocumentStore.waypoints`
       setStories: (configWaypoints: ConfigWaypoint[]) => {
-        const s = get();
-        const iw = s.imageWidth;
-        const ih = s.imageHeight;
-        const cw = s.viewerViewportSize?.width ?? 0;
-        const ch = s.viewerViewportSize?.height ?? 0;
-        set({
-          stories: configWaypoints.map((w) =>
-            configWaypointToStoreStoryWaypoint(w, iw, ih, cw, ch),
+        const app = get();
+        const doc = useDocumentStore.getState();
+        const iw = doc.imageWidth;
+        const ih = doc.imageHeight;
+        const cw = app.viewerViewportSize?.width ?? 0;
+        const ch = app.viewerViewportSize?.height ?? 0;
+        useDocumentStore.setState({
+          waypoints: configWaypoints.map((w) =>
+            configWaypointToStoreStoryWaypoint(
+              hydrateConfigWaypoint(w, doc.channelGroups),
+              iw,
+              ih,
+              cw,
+              ch,
+            ),
           ),
-          activeStoryIndex: null,
         });
-        get().syncStoryDocument();
+        useDocumentStore.getState().syncStoryDocument();
+        set({ activeStoryIndex: null });
       },
 
       setStoryWaypointRows: (rows: StoreStoryWaypoint[]) => {
-        set({
-          stories: rows,
-          activeStoryIndex: null,
-        });
-        get().syncStoryDocument();
+        useDocumentStore.setState({ waypoints: rows });
+        useDocumentStore.getState().syncStoryDocument();
+        set({ activeStoryIndex: null });
       },
 
       setActiveStory: (index: number | null) => {
@@ -2294,28 +1987,31 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       },
 
       addStory: (configWaypoint: ConfigWaypoint) => {
-        const s = get();
+        const app = get();
+        const doc = useDocumentStore.getState();
         const row = configWaypointToStoreStoryWaypoint(
-          configWaypoint,
-          s.imageWidth,
-          s.imageHeight,
-          s.viewerViewportSize?.width ?? 0,
-          s.viewerViewportSize?.height ?? 0,
+          hydrateConfigWaypoint(configWaypoint, doc.channelGroups),
+          doc.imageWidth,
+          doc.imageHeight,
+          app.viewerViewportSize?.width ?? 0,
+          app.viewerViewportSize?.height ?? 0,
         );
-        set((state) => ({
-          stories: [...state.stories, row],
+        useDocumentStore.setState((d) => ({
+          waypoints: [...d.waypoints, row],
         }));
-        get().syncStoryDocument();
+        useDocumentStore.getState().syncStoryDocument();
       },
 
       updateStory: (index: number, updates: Partial<ConfigWaypoint>) => {
-        set((state) => {
-          const shouldDropLegacyViewKeys = Object.hasOwn(updates, "Bounds");
-          const iw = state.imageWidth;
-          const ih = state.imageHeight;
-          const cw = state.viewerViewportSize?.width ?? 0;
-          const ch = state.viewerViewportSize?.height ?? 0;
-          const newStories = state.stories.map((storyRow, i) => {
+        const app = get();
+        const doc0 = useDocumentStore.getState();
+        const shouldDropLegacyViewKeys = Object.hasOwn(updates, "Bounds");
+        const iw = doc0.imageWidth;
+        const ih = doc0.imageHeight;
+        const cw = app.viewerViewportSize?.width ?? 0;
+        const ch = app.viewerViewportSize?.height ?? 0;
+        useDocumentStore.setState((doc) => {
+          const nextWaypoints = doc.waypoints.map((storyRow, i) => {
             if (i !== index) return storyRow;
             const asConfig = storeStoryWaypointToConfigWaypoint(storyRow);
             let merged: ConfigWaypoint = { ...asConfig, ...updates };
@@ -2330,14 +2026,16 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             }
             return configWaypointToStoreStoryWaypoint(merged, iw, ih, cw, ch);
           });
-          return { stories: newStories };
+          return { waypoints: nextWaypoints };
         });
-        get().syncStoryDocument();
+        useDocumentStore.getState().syncStoryDocument();
       },
 
       removeStory: (index: number) => {
+        useDocumentStore.setState((doc) => ({
+          waypoints: doc.waypoints.filter((_, i) => i !== index),
+        }));
         set((state) => ({
-          stories: state.stories.filter((_, i) => i !== index),
           activeStoryIndex:
             state.activeStoryIndex === index
               ? null
@@ -2345,42 +2043,36 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
                 ? state.activeStoryIndex - 1
                 : state.activeStoryIndex,
         }));
-        get().syncStoryDocument();
+        useDocumentStore.getState().syncStoryDocument();
       },
 
       reorderStories: (fromIndex: number, toIndex: number) => {
+        useDocumentStore.setState((doc) => {
+          const next = [...doc.waypoints];
+          const [movedStory] = next.splice(fromIndex, 1);
+          next.splice(toIndex, 0, movedStory);
+          return { waypoints: next };
+        });
         set((state) => {
-          const newStories = [...state.stories];
-          const [movedStory] = newStories.splice(fromIndex, 1);
-          newStories.splice(toIndex, 0, movedStory);
-
-          // Update activeStoryIndex if it's affected by the reordering
           let newActiveStoryIndex = state.activeStoryIndex;
           if (state.activeStoryIndex !== null) {
             if (state.activeStoryIndex === fromIndex) {
-              // The active story was moved
               newActiveStoryIndex = toIndex;
             } else if (
               fromIndex < state.activeStoryIndex &&
               toIndex >= state.activeStoryIndex
             ) {
-              // Story moved from before active to after active
               newActiveStoryIndex = state.activeStoryIndex - 1;
             } else if (
               fromIndex > state.activeStoryIndex &&
               toIndex <= state.activeStoryIndex
             ) {
-              // Story moved from after active to before active
               newActiveStoryIndex = state.activeStoryIndex + 1;
             }
           }
-
-          return {
-            stories: newStories,
-            activeStoryIndex: newActiveStoryIndex,
-          };
+          return { activeStoryIndex: newActiveStoryIndex };
         });
-        get().syncStoryDocument();
+        useDocumentStore.getState().syncStoryDocument();
       },
       setGroupNames: (o: Record<string, string>) => {
         set({ groupNames: o });
@@ -2415,7 +2107,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       setViewerViewportSize: (size) => {
         set({ viewerViewportSize: size });
-        get().syncStoryDocument();
+        useDocumentStore.getState().syncStoryDocument();
       },
 
       setViewerImageLayersLoaded: (loaded) => {
@@ -2440,29 +2132,24 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         set({ channelVisibilities: vis });
       },
 
-      // Image dimensions actions
-      setImageDimensions: (width: number, height: number) => {
-        set({ imageWidth: width, imageHeight: height });
-        get().syncStoryDocument();
-      },
-
-      // Import waypoint annotations actions
-      importWaypointAnnotations: (
+      // Import waypoint shapes actions
+      importWaypointShapes: (
         story: StoreStoryWaypoint,
         clearExisting: boolean = false,
         shapeRegistry?: StoryShape[],
       ) => {
-        const { imageWidth, imageHeight } = get();
-        const fromStore = get().Shapes;
+        const doc0 = useDocumentStore.getState();
+        const { imageWidth, imageHeight } = doc0;
+        const fromStore = doc0.shapes;
         const shapesForLookup =
           shapeRegistry === undefined
             ? fromStore
             : (() => {
                 const merged = new Map(
-                  fromStore.map((s) => [s.uuid, s] as const),
+                  fromStore.map((s) => [s.id, s] as const),
                 );
                 for (const s of shapeRegistry) {
-                  merged.set(s.uuid, s);
+                  merged.set(s.id, s);
                 }
                 return [...merged.values()];
               })();
@@ -2471,7 +2158,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           return;
         }
 
-        const shapeIds = story.shapes ?? [];
+        const shapeIds = story.shapeIds ?? [];
         if (
           clearExisting &&
           shapeIds.length > 0 &&
@@ -2482,81 +2169,87 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           return;
         }
 
-        const shapeById = new Map(shapesForLookup.map((s) => [s.uuid, s]));
+        const shapeById = new Map(shapesForLookup.map((s) => [s.id, s]));
 
-        const newAnnotations: Annotation[] = [];
+        const newAnnotations: Shape[] = [];
         for (const id of shapeIds) {
           const sh = shapeById.get(id);
           if (sh)
             newAnnotations.push(
-              shapeToAnnotation(sh, { imageWidth, imageHeight }),
+              storyShapeToViewer(sh, { imageWidth, imageHeight }),
             );
         }
 
-        // Always remove prior `isImported` overlays when `clearExisting` (waypoint
-        // switch), even if `Shapes` is not fully loaded yet — otherwise annotations
-        // from the previous waypoint stay on canvas until the registry catches up.
-        // Resolved shapes are appended in waypoint `shapes` order; effects re-run when
-        // `Shapes` updates to add any entries that were still missing.
+        // Remove prior imported overlays when `clearExisting`; keep non-imported until
+        // persist marks them (see `persistImportedShapesToStory`). Re-run when `Shapes`
+        // updates to add missing ids.
         set((state) =>
-          mergeAnnotationsAfterWaypointImport(
-            state,
-            newAnnotations,
-            clearExisting,
-          ),
+          mergeShapesAfterWaypointImport(state, newAnnotations, clearExisting),
         );
       },
 
-      clearImportedAnnotations: () => {
-        set({ annotations: [], hiddenLayers: new Set() });
+      clearImportedShapes: () => {
+        set({ shapes: [], hiddenShapeIds: new Set() });
       },
 
-      persistImportedAnnotationsToStory: (storyIndex: number) => {
+      persistImportedShapesToStory: (storyIndex: number) => {
         const state = get();
-        const story = state.stories[storyIndex];
-        if (!story || state.imageWidth <= 0 || state.imageHeight <= 0) {
+        const doc = useDocumentStore.getState();
+        const row = doc.waypoints[storyIndex];
+        if (!row || doc.imageWidth <= 0 || doc.imageHeight <= 0) {
           return;
         }
-        const hadStored = (story.shapes?.length ?? 0) > 0;
-        if (state.annotations.length === 0 && !hadStored) {
+        const hadStored = (row.shapeIds?.length ?? 0) > 0;
+        if (state.shapes.length === 0 && !hadStored) {
           return;
         }
-        if (state.annotations.length === 0 && hadStored) {
+        if (state.shapes.length === 0 && hadStored) {
           const merged = mergeShapesForWaypointPersist({
-            stories: state.stories,
-            storyIndex,
-            prevShapes: state.Shapes,
+            waypoints: doc.waypoints,
+            waypointIndex: storyIndex,
+            prevShapes: doc.shapes,
             builtShapes: [],
             newShapeIdsOrdered: [],
           });
-          if (JSON.stringify(merged) !== JSON.stringify(state.Shapes)) {
-            set({ Shapes: merged });
+          if (JSON.stringify(merged) !== JSON.stringify(doc.shapes)) {
+            useDocumentStore.setState({ shapes: merged });
           }
           get().updateStory(storyIndex, {
-            ShapeIds: [],
+            shapeIds: [],
           });
           return;
         }
-        const builtShapes = annotationsToShapes(state.annotations);
-        const newShapeIdsOrdered = builtShapes.map((s) => s.uuid);
+        const builtShapes = viewerShapesToStoryShapes(state.shapes);
+        const newShapeIdsOrdered = builtShapes.map((s) => s.id);
         const merged = mergeShapesForWaypointPersist({
-          stories: state.stories,
-          storyIndex,
-          prevShapes: state.Shapes,
+          waypoints: doc.waypoints,
+          waypointIndex: storyIndex,
+          prevShapes: doc.shapes,
           builtShapes,
           newShapeIdsOrdered,
         });
-        const prevIds = JSON.stringify(story.shapes ?? []);
+        const prevIds = JSON.stringify(row.shapeIds ?? []);
         const nextIds = JSON.stringify(newShapeIdsOrdered);
-        const prevShapesJson = JSON.stringify(state.Shapes);
+        const prevShapesJson = JSON.stringify(doc.shapes);
         const nextShapesJson = JSON.stringify(merged);
         if (prevIds === nextIds && prevShapesJson === nextShapesJson) {
           return;
         }
-        set({ Shapes: merged });
+        useDocumentStore.setState({ shapes: merged });
         get().updateStory(storyIndex, {
-          ShapeIds: newShapeIdsOrdered,
+          shapeIds: newShapeIdsOrdered,
         });
+        const idSet = new Set(newShapeIdsOrdered);
+        set((s) => ({
+          shapes: s.shapes.map((shape) =>
+            idSet.has(shape.id)
+              ? ({
+                  ...shape,
+                  metadata: { ...shape.metadata, isImported: true },
+                } as Shape)
+              : shape,
+          ),
+        }));
       },
 
       // channel and group actions
@@ -2586,32 +2279,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       },
     }),
     {
-      name: "overlay-store",
+      name: "app-store",
     },
   ),
 );
-
-// Example of how to add more stores in the future:
-//
-// export interface UserStore {
-//   user: User | null;
-//   isAuthenticated: boolean;
-//   login: (credentials: LoginCredentials) => Promise<void>;
-//   logout: () => void;
-// }
-//
-// export const useUserStore = create<UserStore>()(
-//   devtools(
-//     (set) => ({
-//       user: null,
-//       isAuthenticated: false,
-//       login: async (credentials) => {
-//         // Login logic
-//       },
-//       logout: () => {
-//         set({ user: null, isAuthenticated: false });
-//       },
-//     }),
-//     { name: 'user-store' }
-//   )
-// );

@@ -7,10 +7,11 @@ import {
 } from "@deck.gl/layers";
 import * as React from "react";
 import ArrowDrawingIconUrl from "@/components/shared/icons/arrow-annotation-drawing.svg?url";
-import { arrowLineDegeneratePolygon } from "@/lib/annotationGeometry";
-import { ARROW_ICON_SIZE } from "@/lib/annotationLayers";
 import { useSam2 } from "@/lib/sam2/useSam2";
-import { ellipseToPolygon, lineToPolygon, useOverlayStore } from "@/lib/stores";
+import { arrowLineDegeneratePolygon } from "@/lib/shapes/shapeGeometry";
+import { ARROW_ICON_SIZE } from "@/lib/shapes/shapeLayers";
+import { ellipseToPolygon, lineToPolygon } from "@/lib/shapes/shapeModel";
+import { useAppStore } from "@/lib/stores/app-store";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {
@@ -203,16 +204,16 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     drawingState,
     finalizeLasso,
     finalizePolyline,
-    createTextAnnotation,
-    createPointAnnotation,
+    createTextShape,
+    createPointShape,
     globalColor,
     brushRadiusPx,
     viewportZoom,
-  } = useOverlayStore();
-  const brushMask = useOverlayStore((s) => s.brushMask);
-  const brushMaskVersion = useOverlayStore((s) => s.brushMaskVersion);
-  const brushViewBounds = useOverlayStore((s) => s.brushViewBounds);
-  const sam2DebugImages = useOverlayStore((s) => s.sam2DebugImages);
+  } = useAppStore();
+  const brushMask = useAppStore((s) => s.brushMask);
+  const brushMaskVersion = useAppStore((s) => s.brushMaskVersion);
+  const brushViewBounds = useAppStore((s) => s.brushViewBounds);
+  const sam2DebugImages = useAppStore((s) => s.sam2DebugImages);
   const { isDrawing, dragStart, dragEnd } = drawingState;
 
   // Local state for lasso tool
@@ -386,14 +387,12 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
           lineWidth: 3,
         },
         metadata: {
-          label: `Untitled ${
-            useOverlayStore.getState().annotations.length + 1
-          }`,
+          label: `Untitled ${useAppStore.getState().shapes.length + 1}`,
         },
       };
 
       // Add the annotation to the store
-      useOverlayStore.getState().addAnnotation(annotation);
+      useAppStore.getState().addShape(annotation);
 
       // Reset rectangle click state
       setRectangleFirstClick(null);
@@ -424,14 +423,12 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
           lineWidth: 3,
         },
         metadata: {
-          label: `Untitled ${
-            useOverlayStore.getState().annotations.length + 1
-          }`,
+          label: `Untitled ${useAppStore.getState().shapes.length + 1}`,
         },
       };
 
       // Add the annotation to the store
-      useOverlayStore.getState().addAnnotation(annotation);
+      useAppStore.getState().addShape(annotation);
 
       // Reset polygon click state
       setPolygonClickPoints([]);
@@ -464,13 +461,11 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
           lineWidth,
         },
         metadata: {
-          label: `Untitled ${
-            useOverlayStore.getState().annotations.length + 1
-          }`,
+          label: `Untitled ${useAppStore.getState().shapes.length + 1}`,
         },
       };
 
-      useOverlayStore.getState().addAnnotation(annotation);
+      useAppStore.getState().addShape(annotation);
 
       // Reset line click state
       setLineFirstClick(null);
@@ -503,14 +498,12 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
           lineWidth: 3,
         },
         metadata: {
-          label: `Untitled ${
-            useOverlayStore.getState().annotations.length + 1
-          }`,
+          label: `Untitled ${useAppStore.getState().shapes.length + 1}`,
         },
       };
 
       // Add the annotation to the store
-      useOverlayStore.getState().addAnnotation(annotation);
+      useAppStore.getState().addShape(annotation);
 
       // Reset ellipse click state
       setEllipseFirstClick(null);
@@ -746,7 +739,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       setTextInputValue("");
     } else if (activeTool === "point") {
       if (type === "click" || type === "dragEnd") {
-        createPointAnnotation([x, y], 5); // Default radius of 5 pixels
+        createPointShape([x, y], 5); // Default radius of 5 pixels
       }
     } else if (activeTool === "magic_wand") {
       if (type === "click" && !isSam2Processing) {
@@ -904,7 +897,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     lassoPoints,
     polylinePoints,
     finalizedPolylineSegmentCount,
-    createPointAnnotation,
+    createPointShape,
     finalizeClickRectangle,
     finalizeClickLine,
     finalizeClickEllipse,
@@ -919,11 +912,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   // Handle text input submission
   const handleTextSubmit = () => {
     if (textInputPosition && textInputValue.trim()) {
-      createTextAnnotation(
-        textInputPosition,
-        textInputValue.trim(),
-        textFontSize,
-      );
+      createTextShape(textInputPosition, textInputValue.trim(), textFontSize);
     }
     setShowTextInput(false);
     setTextInputPosition(null);
@@ -1376,74 +1365,74 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   // Add/remove brush cursor layer when brush tool is active
   React.useEffect(() => {
     if (brushCursorLayer) {
-      useOverlayStore.getState().addOverlayLayer(brushCursorLayer);
+      useAppStore.getState().addOverlayLayer(brushCursorLayer);
     }
     return () => {
-      useOverlayStore.getState().removeOverlayLayer("brush-cursor-layer");
+      useAppStore.getState().removeOverlayLayer("brush-cursor-layer");
     };
   }, [brushCursorLayer]);
 
   // Add/remove point hover preview layer
   React.useEffect(() => {
     if (pointHoverLayer) {
-      useOverlayStore.getState().addOverlayLayer(pointHoverLayer);
+      useAppStore.getState().addOverlayLayer(pointHoverLayer);
     }
     return () => {
-      useOverlayStore.getState().removeOverlayLayer("point-hover-preview");
+      useAppStore.getState().removeOverlayLayer("point-hover-preview");
     };
   }, [pointHoverLayer]);
 
   // Add/remove brush mask layer when brush tool is active
   React.useEffect(() => {
     if (brushMaskLayer) {
-      useOverlayStore.getState().addOverlayLayer(brushMaskLayer);
+      useAppStore.getState().addOverlayLayer(brushMaskLayer);
     }
     return () => {
-      useOverlayStore.getState().removeOverlayLayer("brush-mask-layer");
+      useAppStore.getState().removeOverlayLayer("brush-mask-layer");
     };
   }, [brushMaskLayer]);
 
   // Add/remove SAM2 preview polygon layer
   React.useEffect(() => {
     if (sam2PreviewLayer) {
-      useOverlayStore.getState().addOverlayLayer(sam2PreviewLayer);
+      useAppStore.getState().addOverlayLayer(sam2PreviewLayer);
     }
     return () => {
-      useOverlayStore.getState().removeOverlayLayer("sam2-preview-polygon");
+      useAppStore.getState().removeOverlayLayer("sam2-preview-polygon");
     };
   }, [sam2PreviewLayer]);
 
   // Add/remove SAM2 prompt point markers
   React.useEffect(() => {
     if (sam2PointsLayer) {
-      useOverlayStore.getState().addOverlayLayer(sam2PointsLayer);
+      useAppStore.getState().addOverlayLayer(sam2PointsLayer);
     }
     return () => {
-      useOverlayStore.getState().removeOverlayLayer("sam2-preview-points");
+      useAppStore.getState().removeOverlayLayer("sam2-preview-points");
     };
   }, [sam2PointsLayer]);
 
   // Add/remove arrow preview layer so it shows and updates as mouse moves
   React.useEffect(() => {
     if (arrowPreviewLayer) {
-      useOverlayStore.getState().addOverlayLayer(arrowPreviewLayer);
+      useAppStore.getState().addOverlayLayer(arrowPreviewLayer);
     }
     return () => {
-      useOverlayStore.getState().removeOverlayLayer("drawing-arrow-preview");
+      useAppStore.getState().removeOverlayLayer("drawing-arrow-preview");
     };
   }, [arrowPreviewLayer]);
 
   // Handle text placement marker layer
   React.useEffect(() => {
     if (textPlacementMarker) {
-      useOverlayStore.getState().addOverlayLayer(textPlacementMarker);
+      useAppStore.getState().addOverlayLayer(textPlacementMarker);
     } else {
-      useOverlayStore.getState().removeOverlayLayer("text-placement-marker");
+      useAppStore.getState().removeOverlayLayer("text-placement-marker");
     }
 
     // Cleanup on unmount
     return () => {
-      useOverlayStore.getState().removeOverlayLayer("text-placement-marker");
+      useAppStore.getState().removeOverlayLayer("text-placement-marker");
     };
   }, [textPlacementMarker]);
 
@@ -1562,7 +1551,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       {/* Text Input Modal */}
       {showTextInput && textInputPosition && (
         <TextEditPanel
-          title="Add Text Annotation"
+          title="Add Text Shape"
           textValue={textInputValue}
           fontSize={textFontSize}
           onTextChange={setTextInputValue}

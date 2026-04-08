@@ -1,7 +1,7 @@
 import { get, set } from "idb-keyval";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFile, toFile } from "@/lib/filesystem";
+import { findFile, toFile } from "@/lib/imaging/filesystem";
 
 const readWrite = { mode: "readwrite" } as const;
 

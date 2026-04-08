@@ -1,21 +1,18 @@
 /**
  * Lazy OME-TIFF histograms: `ChannelGroupsMasterDetail` requests indices →
  * `ensureOmeHistogramDistributions` (tile extract + in-memory cache) →
- * `mergeHistogramsIntoSourceChannels` patches `SourceDistribution` on the store.
+ * `mergeHistogramsIntoSourceChannels` patches `sourceDistribution` on the store.
  * DICOM still uses eager `extractDistributions` in `main.tsx` (`getDistributions`).
  */
-import type { ConfigSourceDistribution } from "./config";
-import { extractDistributionsForSourceIndices } from "./config";
-import type { ConfigSourceChannel } from "./document-store";
+import type { ConfigSourceDistribution } from "../authoring/config";
+import { extractDistributionsForSourceIndices } from "../authoring/config";
+import type { ConfigSourceChannel } from "../stores/document-store";
 import type { Loader } from "./viv";
 
-/** `SourceDistribution` is typed as UUID in document-store but holds curve data at runtime. */
 export function sourceDistributionYValuesLength(
   sc: ConfigSourceChannel,
 ): number {
-  const d = sc.SourceDistribution as unknown as
-    | { YValues?: number[] }
-    | undefined;
+  const d = sc.sourceDistribution;
   return d?.YValues?.length ?? 0;
 }
 
@@ -40,7 +37,7 @@ export function mergeHistogramsIntoSourceChannels(
     if (!dist) return sc;
     if (sourceDistributionYValuesLength(sc) > 0) return sc;
     changed = true;
-    return { ...sc, SourceDistribution: dist };
+    return { ...sc, sourceDistribution: dist };
   });
   return changed ? next : channels;
 }

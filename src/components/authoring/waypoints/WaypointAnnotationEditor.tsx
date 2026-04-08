@@ -22,12 +22,13 @@ import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
-import type { Annotation, StoreStoryWaypoint } from "@/lib/stores";
-import { useOverlayStore } from "@/lib/stores";
+import type { Shape } from "@/lib/shapes/shapeModel";
 import {
-  copySelectedWaypointAnnotations,
-  pasteWaypointAnnotationsFromClipboard,
-} from "@/lib/waypointAnnotationClipboard";
+  copySelectedWaypointShapes,
+  pasteWaypointShapesFromClipboard,
+} from "@/lib/shapes/waypointShapeClipboard";
+import { useAppStore } from "@/lib/stores/app-store";
+import type { StoreStoryWaypoint } from "@/lib/story/storyDocument";
 import styles from "./WaypointAnnotationEditor.module.css";
 
 /** Writes rgba into the fields the renderer reads (`style.*`). */
@@ -35,38 +36,38 @@ function applyWaypointPickerColor(
   annotationId: string,
   newColor: [number, number, number, number],
 ) {
-  const { annotations, updateAnnotation } = useOverlayStore.getState();
-  const ann = annotations.find((a) => a.id === annotationId);
+  const { shapes, updateShape } = useAppStore.getState();
+  const ann = shapes.find((a) => a.id === annotationId);
   if (!ann) return;
 
   if (ann.type === "polygon" || ann.type === "line") {
     const fillA = ann.style.fillColor[3];
-    updateAnnotation(annotationId, {
+    updateShape(annotationId, {
       style: {
         ...ann.style,
         lineColor: newColor,
         fillColor: [newColor[0], newColor[1], newColor[2], fillA],
       },
-    } as Partial<Annotation>);
+    } as Partial<Shape>);
     return;
   }
   if (ann.type === "polyline") {
-    updateAnnotation(annotationId, {
+    updateShape(annotationId, {
       style: {
         ...ann.style,
         lineColor: newColor,
       },
-    } as Partial<Annotation>);
+    } as Partial<Shape>);
     return;
   }
   if (ann.type === "point") {
-    updateAnnotation(annotationId, {
+    updateShape(annotationId, {
       style: {
         ...ann.style,
         fillColor: newColor,
         strokeColor: newColor,
       },
-    } as Partial<Annotation>);
+    } as Partial<Shape>);
   }
 }
 
@@ -94,16 +95,27 @@ export interface WaypointAnnotationEditorProps {
 
 const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
   embeddedInScrollParent,
+  storyIndex,
 }) => {
   const {
     activeTool,
     handleToolChange,
     globalColor,
     setGlobalColor,
-    layersPanelSelectedAnnotationIds,
+    layersPanelSelectedShapeIds,
     handleLayerCreate,
     currentInteraction,
-  } = useOverlayStore();
+    setAuthoringWaypointShapesIndex,
+  } = useAppStore();
+
+  // Master-detail sets authoring from WaypointsListMasterDetail so collapsed
+  // Annotations panel does not clear the persist target while drawing.
+  React.useEffect(() => {
+    if (embeddedInScrollParent) return;
+    if (storyIndex < 0) return;
+    setAuthoringWaypointShapesIndex(storyIndex);
+    return () => setAuthoringWaypointShapesIndex(null);
+  }, [embeddedInScrollParent, storyIndex, setAuthoringWaypointShapesIndex]);
 
   const [colorPickerPos, setColorPickerPos] = React.useState<{
     top: number;
@@ -154,17 +166,17 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
       <button
         type="button"
         className={styles.toolButton}
-        disabled={layersPanelSelectedAnnotationIds.length === 0}
-        title="Copy selected annotations to the clipboard"
-        onClick={() => void copySelectedWaypointAnnotations()}
+        disabled={layersPanelSelectedShapeIds.length === 0}
+        title="Copy selected shapes to the clipboard"
+        onClick={() => void copySelectedWaypointShapes()}
       >
         <CopyAnnotationsIcon />
       </button>
       <button
         type="button"
         className={styles.toolButton}
-        title="Paste annotations from the clipboard"
-        onClick={() => void pasteWaypointAnnotationsFromClipboard()}
+        title="Paste shapes from the clipboard"
+        onClick={() => void pasteWaypointShapesFromClipboard()}
       >
         <PasteAnnotationsIcon />
       </button>

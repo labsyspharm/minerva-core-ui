@@ -1,5 +1,5 @@
-import type { LoaderPlane } from "./config";
-import type { Roi } from "./roiParser";
+import type { LoaderPlane } from "../authoring/config";
+import type { Roi } from "../shapes/roiParser";
 
 type Selection = Record<"z" | "t" | "c", number>;
 type Color = [number, number, number];
@@ -113,7 +113,7 @@ const toSettings = (opts) => {
   return (activeChannelGroupId, modality, loader, channelVisibilities) => {
     const { Groups, SourceChannels } = opts;
     const group =
-      Groups.find(({ UUID }) => UUID === activeChannelGroupId) || Groups[0];
+      Groups.find(({ id }) => id === activeChannelGroupId) || Groups[0];
     const { GroupChannels: channels } = group || {
       GroupChannels: [],
     };
@@ -125,10 +125,10 @@ const toSettings = (opts) => {
     // TODO Simplify mapping of channel names to indices!
     const selections: Selection[] = channels.map((channel) => {
       const _source_channels = SourceChannels.map(
-        (source_channel) => source_channel.UUID,
+        (source_channel) => source_channel.id,
       );
       const source_channel = SourceChannels.find(
-        (source_channel) => channel.SourceChannel.UUID === source_channel.UUID,
+        (source_channel) => channel.sourceChannelId === source_channel.id,
       );
       const c = source_channel?.SourceIndex || 0;
       return { z: 0, t: 0, c };
@@ -143,11 +143,11 @@ const toSettings = (opts) => {
     });
     const channelsVisible: boolean[] = channels.map((c, _i: number) => {
       const source_channel = SourceChannels.find(
-        (source_channel) => c.SourceChannel.UUID === source_channel.UUID,
+        (source_channel) => c.sourceChannelId === source_channel.id,
       );
       if (!source_channel) return false;
       const { Name } = source_channel;
-      const image_id = source_channel.SourceImage.UUID;
+      const image_id = source_channel.sourceImageId;
       const _brightfield = modality === "Brightfield";
       //if (!channelVisibilities || brightfield ) {
       if (!channelVisibilities) {

@@ -1,20 +1,23 @@
 /**
  * One-time migration: legacy waypoint `Arrows` / `Overlays` (runtime-only props
- * on demo / old configs) → `ShapeIds` + `ItemRegistry.Shapes`.
+ * on demo / old configs) → `shapeIds` + `ItemRegistry.Shapes`.
  */
 
-import { importedLineStyle, importedPolygonStyle } from "./annotationDefaults";
-import { arrowLineDegeneratePolygon } from "./annotationGeometry";
-import type { ConfigWaypoint } from "./config";
+import type { ConfigWaypoint } from "../authoring/config";
+import {
+  importedLineStyle,
+  importedPolygonStyle,
+} from "../shapes/shapeDefaults";
+import { arrowLineDegeneratePolygon } from "../shapes/shapeGeometry";
 import type {
-  Annotation,
-  LineAnnotation,
-  PointAnnotation,
-  PolygonAnnotation,
-  TextAnnotation,
-} from "./stores";
-import { rectangleToPolygon } from "./stores";
-import { annotationToShape, type StoryShape } from "./storyShapes";
+  LineShape,
+  PointShape,
+  PolygonShape,
+  Shape,
+  TextShape,
+} from "../shapes/shapeModel";
+import { rectangleToPolygon } from "../shapes/shapeModel";
+import { type StoryShape, viewerShapeToStoryShape } from "./storyShapes";
 
 type LegacyArrow = {
   Angle: number;
@@ -46,11 +49,11 @@ function annotationsFromLegacyArrowsAndOverlays(
   overlays: LegacyOverlay[],
   imageWidth: number,
   imageHeight: number,
-): Annotation[] {
+): Shape[] {
   const maxDimension = Math.max(imageWidth, imageHeight);
   if (maxDimension <= 0) return [];
 
-  const newAnnotations: Annotation[] = [];
+  const newShapes: Shape[] = [];
 
   arrows.forEach((arrow, index) => {
     const [normX, normY] = arrow.Point;
@@ -58,7 +61,7 @@ function annotationsFromLegacyArrowsAndOverlays(
     const y = normY * maxDimension;
 
     if (arrow.IsPoint) {
-      const pointAnnotation: PointAnnotation = {
+      const pointShape: PointShape = {
         id: newShapeId(),
         type: "point",
         position: [x, y],
@@ -72,9 +75,9 @@ function annotationsFromLegacyArrowsAndOverlays(
           isImported: true,
         },
       };
-      newAnnotations.push(pointAnnotation);
+      newShapes.push(pointShape);
     } else if (arrow.HideArrow) {
-      const textAnnotation: TextAnnotation = {
+      const textShape: TextShape = {
         id: newShapeId(),
         type: "text",
         position: [x, y],
@@ -90,7 +93,7 @@ function annotationsFromLegacyArrowsAndOverlays(
           isImported: true,
         },
       };
-      newAnnotations.push(textAnnotation);
+      newShapes.push(textShape);
     } else {
       const angleRad = (arrow.Angle * Math.PI) / 180;
       const minDimension = Math.min(imageWidth, imageHeight);
@@ -104,7 +107,7 @@ function annotationsFromLegacyArrowsAndOverlays(
         [endX, endY],
       );
 
-      const lineAnnotation: LineAnnotation = {
+      const lineShape: LineShape = {
         id: newShapeId(),
         type: "line",
         polygon: linePolygon,
@@ -116,7 +119,7 @@ function annotationsFromLegacyArrowsAndOverlays(
           isImported: true,
         },
       };
-      newAnnotations.push(lineAnnotation);
+      newShapes.push(lineShape);
     }
   });
 
@@ -127,7 +130,7 @@ function annotationsFromLegacyArrowsAndOverlays(
     const height = overlay.height * maxDimension;
     const polygon = rectangleToPolygon([ox, oy], [ox + width, oy + height]);
 
-    const rectAnnotation: PolygonAnnotation = {
+    const rectShape: PolygonShape = {
       id: newShapeId(),
       type: "polygon",
       polygon,
@@ -137,10 +140,10 @@ function annotationsFromLegacyArrowsAndOverlays(
         isImported: true,
       },
     };
-    newAnnotations.push(rectAnnotation);
+    newShapes.push(rectShape);
   });
 
-  return newAnnotations;
+  return newShapes;
 }
 
 function stripLegacyKeys(wp: RuntimeWaypoint): ConfigWaypoint {
@@ -165,19 +168,19 @@ function mergeShapeLists(
   existing: StoryShape[],
   added: StoryShape[],
 ): StoryShape[] {
-  const byId = new Map(existing.map((s) => [s.uuid, s]));
+  const byId = new Map(existing.map((s) => [s.id, s]));
   for (const s of added) {
-    byId.set(s.uuid, s);
+    byId.set(s.id, s);
   }
   return [...byId.values()];
 }
 
 /**
  * If any waypoint still carries legacy `Arrows` / `Overlays`, convert them to
- * `ShapeIds` and return additional `StoryShape` records. Idempotent for waypoints
- * that already have `ShapeIds` (only strips stray legacy keys).
+ * `shapeIds` and return additional `StoryShape` records. Idempotent for waypoints
+ * that already have `shapeIds` (only strips stray legacy keys).
  */
-export function migrateLegacyWaypointAnnotations(
+export function migrateLegacyWaypointShapes(
   stories: RuntimeWaypoint[],
   existingShapes: StoryShape[],
   imageWidth: number,
@@ -191,7 +194,7 @@ export function migrateLegacyWaypointAnnotations(
     const hasLegacy =
       (wp.Arrows && wp.Arrows.length > 0) ||
       (wp.Overlays && wp.Overlays.length > 0);
-    const hasNew = (wp.ShapeIds?.length ?? 0) > 0;
+    const hasNew = (wp.shapeIds?.length ?? 0) > 0;
 
     if (hasNew) {
       if (hasLegacy) didMigrate = true;
@@ -211,11 +214,11 @@ export function migrateLegacyWaypointAnnotations(
     );
     const shapeIds: string[] = [];
     for (const ann of anns) {
-      const sh = annotationToShape(ann);
+      const sh = viewerShapeToStoryShape(ann);
       if (!sh) continue;
-      shapeIds.push(sh.uuid);
-      if (!addedByUuid.has(sh.uuid)) {
-        addedByUuid.set(sh.uuid, sh);
+      shapeIds.push(sh.id);
+      if (!addedByUuid.has(sh.id)) {
+        addedByUuid.set(sh.id, sh);
         addedShapes.push(sh);
       }
     }
@@ -223,7 +226,7 @@ export function migrateLegacyWaypointAnnotations(
     const stripped = stripLegacyKeys(wp);
     return {
       ...stripped,
-      ShapeIds: shapeIds,
+      shapeIds,
     };
   });
 

@@ -1,13 +1,13 @@
+import type { Loader } from "../imaging/viv";
 import type {
-  Annotation,
-  LineAnnotation,
-  PointAnnotation,
-  PolygonAnnotation,
-  PolylineAnnotation,
-  TextAnnotation,
-} from "./stores";
-import { lineToPolygon, rectangleToPolygon } from "./stores";
-import type { Loader } from "./viv";
+  LineShape,
+  PointShape,
+  PolygonShape,
+  PolylineShape,
+  Shape,
+  TextShape,
+} from "./shapeModel";
+import { lineToPolygon, rectangleToPolygon } from "./shapeModel";
 
 // Type definitions for ROI shapes from loader metadata (OME-XML compatible)
 interface Transform {
@@ -80,8 +80,9 @@ interface RoiLabelShape extends BaseRoiShape {
 }
 
 type Group = {
+  id: string;
   name: string;
-  annotationIds: string[];
+  shapeIds: string[];
   isExpanded: boolean;
   metadata?: {
     createdAt?: Date;
@@ -177,10 +178,10 @@ const getColors = (
 /**
  * Convert ROI rectangle shape to a closed polygon (same layer path as other regions).
  */
-const rectangleShapeToAnnotation = (
+const rectangleShapeToViewerShape = (
   shape: RoiRectangleShape,
   roi: Roi,
-): PolygonAnnotation => {
+): PolygonShape => {
   const { X, Y, Width, Height, Transform, ID, Text, Name } = shape;
 
   const topLeft = applyTransform(X, Y, Transform);
@@ -205,12 +206,12 @@ const rectangleShapeToAnnotation = (
 };
 
 /**
- * Convert ROI ellipse shape to PolygonAnnotation
+ * Convert ROI ellipse shape to PolygonShape
  */
-const ellipseShapeToAnnotation = (
+const ellipseShapeToViewerShape = (
   shape: RoiEllipseShape,
   roi: Roi,
-): PolygonAnnotation => {
+): PolygonShape => {
   const { X, Y, RadiusX, RadiusY, Transform, ID, Text, Name } = shape;
 
   // Convert ellipse to polygon approximation
@@ -233,12 +234,9 @@ const ellipseShapeToAnnotation = (
 };
 
 /**
- * Convert ROI line shape to LineAnnotation
+ * Convert ROI line shape to LineShape
  */
-const lineShapeToAnnotation = (
-  shape: RoiLineShape,
-  roi: Roi,
-): LineAnnotation => {
+const lineShapeToViewerShape = (shape: RoiLineShape, roi: Roi): LineShape => {
   const { X1, Y1, X2, Y2, Transform, ID, Text, Name } = shape;
 
   const start = applyTransform(X1, Y1, Transform);
@@ -270,12 +268,12 @@ const lineShapeToAnnotation = (
 };
 
 /**
- * Convert ROI point shape to PointAnnotation
+ * Convert ROI point shape to PointShape
  */
-const pointShapeToAnnotation = (
+const pointShapeToViewerShape = (
   shape: RoiPointShape,
   roi: Roi,
-): PointAnnotation => {
+): PointShape => {
   const { X, Y, Transform, ID, Text, Name } = shape;
 
   const position = applyTransform(X, Y, Transform);
@@ -302,12 +300,12 @@ const pointShapeToAnnotation = (
 };
 
 /**
- * Convert ROI polygon shape to PolygonAnnotation
+ * Convert ROI polygon shape to PolygonShape
  */
-const polygonShapeToAnnotation = (
+const polygonShapeToViewerShape = (
   shape: RoiPolygonShape,
   roi: Roi,
-): PolygonAnnotation => {
+): PolygonShape => {
   const { Points, Transform, ID, Text, Name } = shape;
 
   const polygon = parsePoints(Points, Transform);
@@ -329,12 +327,12 @@ const polygonShapeToAnnotation = (
 };
 
 /**
- * Convert ROI polyline shape to PolylineAnnotation
+ * Convert ROI polyline shape to PolylineShape
  */
-const polylineShapeToAnnotation = (
+const polylineShapeToViewerShape = (
   shape: RoiPolylineShape,
   roi: Roi,
-): PolylineAnnotation => {
+): PolylineShape => {
   const { Points, Transform, ID, Text, Name } = shape;
 
   const polygon = parsePoints(Points, Transform);
@@ -360,12 +358,9 @@ const polylineShapeToAnnotation = (
 };
 
 /**
- * Convert ROI label shape to TextAnnotation
+ * Convert ROI label shape to TextShape
  */
-const labelShapeToAnnotation = (
-  shape: RoiLabelShape,
-  roi: Roi,
-): TextAnnotation => {
+const labelShapeToViewerShape = (shape: RoiLabelShape, roi: Roi): TextShape => {
   const { X, Y, Text, ID, Name, Transform } = shape;
 
   const position = applyTransform(X, Y, Transform);
@@ -393,18 +388,18 @@ const labelShapeToAnnotation = (
 };
 
 /**
- * Parse ROIs from loader metadata and convert to annotations and groups
+ * Parse ROIs from loader metadata and convert to viewer shapes and groups
  */
 export const parseRoisFromLoader = (
   loader: Loader,
-): { annotations: Annotation[]; groups: Group[] } => {
-  const annotations: Annotation[] = [];
+): { shapes: Shape[]; groups: Group[] } => {
+  const shapes: Shape[] = [];
   const groups: Group[] = [];
 
   // Check if loader has metadata with ROIs
   if (!loader || !loader.metadata || !loader.metadata.ROIs) {
     console.log("No ROIs found in loader metadata");
-    return { annotations, groups };
+    return { shapes, groups };
   }
 
   const rois = loader.metadata.ROIs as Roi[];
@@ -418,56 +413,56 @@ export const parseRoisFromLoader = (
 
     // Create a group for this ROI
     const groupId = `roi-group-${roi.ID}`;
-    const roiAnnotationIds: string[] = [];
+    const roiShapeIds: string[] = [];
 
     // Process each shape in the ROI
     roi.shapes.forEach((shape) => {
       try {
-        let annotation: Annotation | null = null;
+        let viewerShape: Shape | null = null;
 
         switch (shape.type) {
           case "rectangle":
-            annotation = rectangleShapeToAnnotation(shape, roi);
-            console.log(`Created rectangle annotation: ${annotation.id}`);
+            viewerShape = rectangleShapeToViewerShape(shape, roi);
+            console.log(`Created rectangle shape: ${viewerShape.id}`);
             break;
 
           case "ellipse":
-            annotation = ellipseShapeToAnnotation(shape, roi);
-            console.log(`Created ellipse annotation: ${annotation.id}`);
+            viewerShape = ellipseShapeToViewerShape(shape, roi);
+            console.log(`Created ellipse shape: ${viewerShape.id}`);
             break;
 
           case "line":
-            annotation = lineShapeToAnnotation(shape, roi);
-            console.log(`Created line annotation: ${annotation.id}`);
+            viewerShape = lineShapeToViewerShape(shape, roi);
+            console.log(`Created line shape: ${viewerShape.id}`);
             break;
 
           case "point":
-            annotation = pointShapeToAnnotation(shape, roi);
-            console.log(`Created point annotation: ${annotation.id}`);
+            viewerShape = pointShapeToViewerShape(shape, roi);
+            console.log(`Created point shape: ${viewerShape.id}`);
             break;
 
           case "polygon":
-            annotation = polygonShapeToAnnotation(shape, roi);
-            console.log(`Created polygon annotation: ${annotation.id}`);
+            viewerShape = polygonShapeToViewerShape(shape, roi);
+            console.log(`Created polygon shape: ${viewerShape.id}`);
             break;
 
           case "polyline":
-            annotation = polylineShapeToAnnotation(shape, roi);
-            console.log(`Created polyline annotation: ${annotation.id}`);
+            viewerShape = polylineShapeToViewerShape(shape, roi);
+            console.log(`Created polyline shape: ${viewerShape.id}`);
             break;
 
           case "label":
-            annotation = labelShapeToAnnotation(shape, roi);
-            console.log(`Created text annotation: ${annotation.id}`);
+            viewerShape = labelShapeToViewerShape(shape, roi);
+            console.log(`Created text shape: ${viewerShape.id}`);
             break;
 
           default:
             console.warn(`Unknown shape: ${shape}`);
         }
 
-        if (annotation) {
-          annotations.push(annotation);
-          roiAnnotationIds.push(annotation.id);
+        if (viewerShape) {
+          shapes.push(viewerShape);
+          roiShapeIds.push(viewerShape.id);
         }
       } catch (error) {
         console.error(
@@ -477,22 +472,22 @@ export const parseRoisFromLoader = (
       }
     });
 
-    // Create a group for this ROI if it has any annotations
-    if (roiAnnotationIds.length > 0) {
+    // Create a group for this ROI if it has any shapes
+    if (roiShapeIds.length > 0) {
       const group = {
         id: groupId,
         name: roi.Name || `ROI ${roi.ID}`,
-        annotationIds: roiAnnotationIds,
+        shapeIds: roiShapeIds,
         isExpanded: true,
       };
       groups.push(group);
       console.log(
-        `Created group for ROI ${roi.ID} with ${roiAnnotationIds.length} annotations`,
+        `Created group for ROI ${roi.ID} with ${roiShapeIds.length} shapes`,
       );
     }
   });
 
-  console.log(`Total annotations created from ROIs: ${annotations.length}`);
+  console.log(`Total shapes created from ROIs: ${shapes.length}`);
   console.log(`Total groups created from ROIs: ${groups.length}`);
-  return { annotations, groups };
+  return { shapes, groups };
 };

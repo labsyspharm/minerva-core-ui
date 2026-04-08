@@ -1,4 +1,4 @@
-import { histogramBinFromPixels } from "@/lib/histogramBin";
+import { histogramBinFromPixels } from "./histogramBin";
 
 type OutMsg = {
   jobId: number;

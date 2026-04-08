@@ -1,9 +1,9 @@
 /**
- * Default styles for annotations rehydrated from waypoint / shape registry data.
- * Keeps import (`shapeToAnnotation`) aligned with story arrows (`point` + `angle` rad + `label`).
+ * Default styles for shapes rehydrated from waypoint / story registry data.
+ * Keeps import (`storyShapeToViewer`) aligned with story arrows (`point` + `angle` rad + `label`).
  */
 
-/** Region / rehydrated polygon (matches legacy overlay import and `shapeToAnnotation`). */
+/** Region / rehydrated polygon (legacy overlay import and `storyShapeToViewer`). */
 export const importedPolygonStyle = {
   fillColor: [255, 255, 255, 30] as [number, number, number, number],
   lineColor: [255, 255, 255, 200] as [number, number, number, number],
