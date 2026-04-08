@@ -7,7 +7,8 @@ import {
 } from "@/components/shared/icons/OverlayIcons";
 // Types
 import type { ConfigWaypoint } from "@/lib/config";
-import { downloadStoryJSON } from "@/lib/exportStory";
+import { storeStoryWaypointToConfigWaypoint } from "@/lib/exportStory";
+import type { StoreStoryWaypoint } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
 import {
   getViewerBoundsFromSnapshot,
@@ -24,13 +25,13 @@ import {
 
 interface WaypointAnnotationEditorMetadata {
   type: "annotations-panel";
-  story: ConfigWaypoint;
+  story: StoreStoryWaypoint;
   storyIndex: number;
 }
 
 interface WaypointMarkdownEditorMetadata {
   type: "markdown-editor";
-  story: ConfigWaypoint;
+  story: StoreStoryWaypoint;
   storyIndex: number;
 }
 
@@ -38,10 +39,10 @@ type WaypointChildMetadata =
   | WaypointAnnotationEditorMetadata
   | WaypointMarkdownEditorMetadata;
 
-type WaypointItemMetadata = ConfigWaypoint | WaypointChildMetadata;
+type WaypointItemMetadata = StoreStoryWaypoint | WaypointChildMetadata;
 
 const WaypointsList = (_props: WaypointsListProps) => {
-  // Use Zustand store for stories and waypoints management
+  // Zustand narrative rows (`stories` → `storyDocument.waypoints` on export)
   const {
     stories,
     activeStoryIndex,
@@ -50,6 +51,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
     addStory,
     reorderStories,
     importWaypointAnnotations,
+    Shapes,
     updateStory,
     imageWidth,
     imageHeight,
@@ -102,13 +104,14 @@ const WaypointsList = (_props: WaypointsListProps) => {
       previousActiveStoryIndexRef.current = storyIndex;
 
       // Replace imported shapes from the story; keep user-drawn annotations (see `mergeAnnotationsAfterWaypointImport`).
-      importWaypointAnnotations(story, true);
+      importWaypointAnnotations(story, true, Shapes);
     }
   }, [
     stories,
     activeStoryIndex,
     imageWidth,
     imageHeight,
+    Shapes,
     importWaypointAnnotations,
   ]);
 
@@ -127,7 +130,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
   // Convert stories to ListItem format with inline editors and annotations panel
   const listItems: ListItem<WaypointItemMetadata>[] = stories.map(
     (story, index) => {
-      const storyId = story.UUID || `story-${index}`;
+      const storyId = story.id || `story-${index}`;
       const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
       const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
       const isDragging = draggedStoryId === storyId;
@@ -167,11 +170,11 @@ const WaypointsList = (_props: WaypointsListProps) => {
 
       return {
         id: storyId,
-        title: story.Name,
-        subtitle: story.Content
-          ? story.Content.length > 30
-            ? `${story.Content.substring(0, 30)}...`
-            : story.Content
+        title: story.title,
+        subtitle: story.content
+          ? story.content.length > 30
+            ? `${story.content.substring(0, 30)}...`
+            : story.content
           : "Story",
         isActive: activeStoryIndex === index,
         isExpanded: isMarkdownExpanded || isAnnotationsExpanded,
@@ -193,12 +196,12 @@ const WaypointsList = (_props: WaypointsListProps) => {
 
     // Only handle story clicks, not child panel clicks
     if (item.metadata && !("type" in item.metadata)) {
-      const story = item.metadata as ConfigWaypoint;
-      const index = stories.findIndex((s) => s.UUID === story.UUID);
+      const story = item.metadata as StoreStoryWaypoint;
+      const index = stories.findIndex((s) => s.id === story.id);
       if (index !== -1) {
         setActiveStory(index);
         const foundGroup =
-          Groups.find((group) => group.Name === story.Group) || Groups[0];
+          Groups.find((group) => group.Name === story.group) || Groups[0];
         if (foundGroup) {
           setActiveChannelGroup(foundGroup.UUID);
         }
@@ -211,7 +214,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
         const currentStory = useOverlayStore.getState().stories[index];
         const navStory = currentStory ?? story;
         if (imageWidth > 0 && imageHeight > 0) {
-          setTargetWaypointCamera(navStory);
+          setTargetWaypointCamera(storeStoryWaypointToConfigWaypoint(navStory));
         }
 
         // Note: annotations are imported automatically by the useEffect
@@ -271,7 +274,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
   };
 
   const handleStartEditViewstate = (storyId: string) => {
-    const index = stories.findIndex((s) => s.UUID === storyId);
+    const index = stories.findIndex((s) => s.id === storyId);
     if (index === -1) return;
     setActiveStory(index);
     setEditingViewstateWaypointIndex(index);
@@ -356,23 +359,16 @@ const WaypointsList = (_props: WaypointsListProps) => {
 
     persistImportedAnnotationsToStory(index);
 
-    const st = useOverlayStore.getState();
-    downloadStoryJSON(
-      st.stories,
-      st.Shapes ?? [],
-      st.imageWidth,
-      st.imageHeight,
-      st.viewerViewportSize,
-    );
+    useOverlayStore.getState().downloadStoryJsonFile();
 
     setEditingViewstateWaypointIndex(null);
   };
 
   const handleDeleteWaypoint = (itemId: string) => {
-    const index = stories.findIndex((s) => s.UUID === itemId);
+    const index = stories.findIndex((s) => s.id === itemId);
     if (index === -1) return;
 
-    const storyId = stories[index]?.UUID;
+    const storyId = stories[index]?.id;
     removeStory(index);
 
     if (storyId) {
@@ -406,7 +402,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
     event.dataTransfer.dropEffect = "move";
 
     // Find the index of the target story
-    const targetIndex = stories.findIndex((story) => story.UUID === storyId);
+    const targetIndex = stories.findIndex((story) => story.id === storyId);
     if (targetIndex !== -1) {
       setDropTargetIndex(targetIndex);
     }
@@ -419,11 +415,9 @@ const WaypointsList = (_props: WaypointsListProps) => {
   const handleDrop = (targetStoryId: string, draggedStoryId: string) => {
     if (draggedStoryId && draggedStoryId !== targetStoryId) {
       const fromIndex = stories.findIndex(
-        (story) => story.UUID === draggedStoryId,
+        (story) => story.id === draggedStoryId,
       );
-      const toIndex = stories.findIndex(
-        (story) => story.UUID === targetStoryId,
-      );
+      const toIndex = stories.findIndex((story) => story.id === targetStoryId);
 
       if (fromIndex !== -1 && toIndex !== -1) {
         reorderStories(fromIndex, toIndex);
@@ -440,11 +434,11 @@ const WaypointsList = (_props: WaypointsListProps) => {
       return null;
     }
 
-    const story = item.metadata as ConfigWaypoint;
-    const storyId = story.UUID || item.id;
+    const story = item.metadata as StoreStoryWaypoint;
+    const storyId = story.id || item.id;
     const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
     const isMarkdownExpanded = expandedMarkdownStories.has(storyId);
-    const index = stories.findIndex((s) => s.UUID === storyId);
+    const index = stories.findIndex((s) => s.id === storyId);
     const isEditingViewstate =
       editingViewstateWaypointIndex !== null &&
       index !== -1 &&
@@ -602,7 +596,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
             Editing viewstate for{" "}
             <strong>
               {stories[editingViewstateWaypointIndex]
-                ? stories[editingViewstateWaypointIndex].Name
+                ? stories[editingViewstateWaypointIndex].title
                 : "waypoint"}
             </strong>
             . Pan and zoom the image to set the view.

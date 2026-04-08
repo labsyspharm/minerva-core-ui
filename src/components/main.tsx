@@ -26,6 +26,10 @@ import type {
 } from "@/lib/exhibit";
 import { readConfig } from "@/lib/exhibit";
 import {
+  storeStoryWaypointToConfigWaypoint,
+  storiesToConfigWaypoints,
+} from "@/lib/exportStory";
+import {
   hasFileSystemAccess,
   toLoader,
   toLoaderFromUrl,
@@ -36,7 +40,10 @@ import {
   mergeHistogramsIntoSourceChannels,
 } from "@/lib/histogramLazy";
 import { buildImageViewerSignature } from "@/lib/imageViewerSignature";
-import { migrateLegacyWaypointAnnotations } from "@/lib/legacyWaypointMigration";
+import {
+  configWaypointsHaveLegacyArrowsOrOverlays,
+  migrateLegacyWaypointAnnotations,
+} from "@/lib/legacyWaypointMigration";
 import { useOverlayStore } from "@/lib/stores";
 import { isOpts, validate } from "@/lib/validate";
 import { type Loader, toSettings } from "@/lib/viv";
@@ -389,7 +396,6 @@ const Content = (props: Props) => {
       // stories, waypoints, and overlays.
       const store = useOverlayStore.getState();
       store.setStories([]);
-      store.setWaypoints([]);
       store.clearOverlayLayers();
       store.clearAnnotations();
       store.setShapes([]);
@@ -442,7 +448,6 @@ const Content = (props: Props) => {
     if (clearStories) {
       const store = useOverlayStore.getState();
       store.setStories([]);
-      store.setWaypoints([]);
       store.clearOverlayLayers();
       store.clearAnnotations();
       store.setShapes([]);
@@ -892,7 +897,6 @@ const Content = (props: Props) => {
     activeStoryIndex,
     setActiveStory,
     setStories,
-    setWaypoints,
   } = useOverlayStore();
 
   // Stories lifecycle: `index.tsx` waypoints are copied once into `config` (see
@@ -921,45 +925,93 @@ const Content = (props: Props) => {
     const needsPanMigration = (s: ConfigWaypoint) =>
       (s.Pan != null || s.Zoom != null) && !hasAuthoritativeBounds(s);
 
-    // First paint: fill empty store from config (clone if image size not ready yet).
+    // First paint: fill empty store from config only once image dimensions exist so
+    // `Arrows` / `Overlays` can be converted to `ShapeIds` + registry (`Shapes`)
+    // before anything enters Zustand.
     if (storeStories.length === 0) {
-      if (imageWidth > 0 && imageHeight > 0) {
-        setStories(
-          configStories.map((story) =>
-            normalizeWaypointToBounds(story, imageWidth, imageHeight, cw, ch),
-          ),
-        );
-      } else {
-        setStories(configStories.map((s) => ({ ...s })));
+      if (imageWidth <= 0 || imageHeight <= 0) {
+        return;
       }
+      const registry = config.ItemRegistry.Shapes ?? [];
+      const {
+        stories: migrated,
+        shapes: mergedShapes,
+        didMigrate,
+      } = migrateLegacyWaypointAnnotations(
+        configStories.map((s) => ({ ...s })),
+        registry,
+        imageWidth,
+        imageHeight,
+      );
+      if (import.meta.env.DEV && didMigrate) {
+        console.debug("[seed] legacy waypoint markers → shapes registry", {
+          waypoints: migrated.length,
+          shapesInRegistry: mergedShapes.length,
+          shapeIdsPerWp: migrated.map((w) => w.ShapeIds?.length ?? 0),
+        });
+      }
+      setStories(
+        migrated.map((story) =>
+          normalizeWaypointToBounds(story, imageWidth, imageHeight, cw, ch),
+        ),
+      );
+      useOverlayStore.getState().setShapes(mergedShapes);
+      return;
+    }
+
+    // Exhibit `Shapes` can arrive after `Stories`, or the seed path may have seen `Shapes`
+    // as undefined. Hydrate **before** the alignment early-return so imports always resolve
+    // when the exhibit registry has data (even if ids are temporarily out of sync).
+    if (
+      (config.ItemRegistry.Shapes?.length ?? 0) > 0 &&
+      useOverlayStore.getState().Shapes.length === 0
+    ) {
       useOverlayStore.getState().setShapes(config.ItemRegistry.Shapes ?? []);
-      setWaypoints([]);
+    }
+
+    // Store rows and config `Stories` are different arrays; keep Pan/Zoom → Bounds
+    // migration when image + viewer metrics are ready. Avoid clobbering the store
+    // when exhibit `Stories` no longer match store waypoint ids (e.g. external swap).
+    const configAlignedWithStore =
+      configStories.length === storeStories.length &&
+      configStories.every((c, i) => c.UUID === storeStories[i]?.id);
+    if (!configAlignedWithStore && storeStories.length > 0) {
       return;
     }
 
-    // Typical case: React config already points at the same array as the store.
-    if (configStories === storeStories) {
-      if (
-        imageWidth > 0 &&
-        imageHeight > 0 &&
-        storeStories.some(needsPanMigration)
-      ) {
-        const nextStories = storeStories.map((s) =>
-          needsPanMigration(s)
-            ? normalizeWaypointToBounds(s, imageWidth, imageHeight, cw, ch)
-            : s,
-        );
-        const changed = nextStories.some((s, i) => s !== storeStories[i]);
-        if (changed) {
-          setStories(nextStories);
-          setWaypoints([]);
-        }
+    // `config` is initialized from `cloneConfigWaypoints`, which includes legacy
+    // `Arrows` / `Overlays`. Zustand is seeded via migration above, but React can
+    // reinstantiate `useState` (e.g. Strict Mode) while the store keeps migrated
+    // rows — UUIDs still match, so we never re-run seed. The subscription only
+    // fires when the *store* changes, so `ItemRegistry.Stories` can stay stale.
+    // Push canonical Stories + Shapes from Zustand whenever config still shows
+    // legacy markers while aligned with the store.
+    if (
+      configAlignedWithStore &&
+      configWaypointsHaveLegacyArrowsOrOverlays(configStories)
+    ) {
+      const state = useOverlayStore.getState();
+      setItemsRef.current({
+        Stories: storiesToConfigWaypoints(state.stories),
+        Shapes: state.Shapes,
+      });
+      return;
+    }
+
+    if (imageWidth > 0 && imageHeight > 0) {
+      const mask = storeStories.map((s) =>
+        needsPanMigration(storeStoryWaypointToConfigWaypoint(s)),
+      );
+      if (mask.some(Boolean)) {
+        const nextConfig = storeStories.map((s, i) => {
+          const c = storeStoryWaypointToConfigWaypoint(s);
+          return mask[i]
+            ? normalizeWaypointToBounds(c, imageWidth, imageHeight, cw, ch)
+            : c;
+        });
+        setStories(nextConfig);
       }
-      return;
     }
-
-    // Do not clobber an in-session store with a different Stories reference.
-    if (storeStories.length > 0) return;
   }, [
     config.ItemRegistry.Stories,
     config.ItemRegistry.Shapes,
@@ -967,30 +1019,7 @@ const Content = (props: Props) => {
     imageWidth,
     imageHeight,
     setStories,
-    setWaypoints,
   ]);
-
-  // Legacy demo configs may still carry `Arrows` / `Overlays` at runtime; migrate once
-  // image size is known so `ShapeIds` + `Shapes` are authoritative.
-  useEffect(() => {
-    if (imageWidth <= 0 || imageHeight <= 0) return;
-    if (!_stories.length) return;
-    const { Shapes, setShapes, setWaypoints } = useOverlayStore.getState();
-    const {
-      stories: nextStories,
-      shapes: nextShapes,
-      didMigrate,
-    } = migrateLegacyWaypointAnnotations(
-      _stories,
-      Shapes,
-      imageWidth,
-      imageHeight,
-    );
-    if (!didMigrate) return;
-    setStories(nextStories);
-    setShapes(nextShapes);
-    setWaypoints([]);
-  }, [imageWidth, imageHeight, _stories, setStories]);
 
   // Sync store stories and shape registry back into config for persistence.
   useEffect(() => {
@@ -999,7 +1028,9 @@ const Content = (props: Props) => {
       const shapesChanged = state.Shapes !== prevState.Shapes;
       if (!storiesChanged && !shapesChanged) return;
       setItemsRef.current({
-        ...(storiesChanged ? { Stories: state.stories } : {}),
+        ...(storiesChanged
+          ? { Stories: storiesToConfigWaypoints(state.stories) }
+          : {}),
         ...(shapesChanged ? { Shapes: state.Shapes } : {}),
       });
     });

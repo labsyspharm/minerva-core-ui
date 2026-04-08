@@ -49,8 +49,12 @@ export type MutableFields = (keyof ItemRegistryProps)[];
 export type ItemRegistryProps = {
   Name: string;
   Groups: ConfigGroup[];
+  /**
+   * Narrative waypoint rows for the exhibit author (`Name`/`Bounds`/…); mirror of
+   * Zustand `stories` via `storiesToConfigWaypoints` / `storeStoryWaypointToConfigWaypoint`.
+   */
   Stories: ConfigWaypoint[];
-  /** Global shape registry; same records serialized as story `shapes` on export. */
+  /** Global shape registry → `story.json` root `shapes` / `storyDocument.shapes`. */
   Shapes?: StoryShape[];
   SourceChannels: ConfigSourceChannel[];
   SourceDistributions: ConfigSourceDistribution[];
@@ -139,7 +143,7 @@ export type ConfigSourceDistribution = UUID & DistributionProperties;
 export type ConfigWaypoint = UUID &
   WaypointProperties & {
     State: WaypointState;
-    /** Ordered UUIDs into global `shapes` / wire `waypoints[].shapes`. */
+    /** Ordered UUIDs into global `shapes` / story.json `waypoints[].shapes`. */
     ShapeIds?: string[];
   };
 

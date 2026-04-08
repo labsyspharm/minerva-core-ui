@@ -22,8 +22,7 @@ import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
-import type { ConfigWaypoint } from "@/lib/config";
-import type { Annotation } from "@/lib/stores";
+import type { Annotation, StoreStoryWaypoint } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
 import {
   copySelectedWaypointAnnotations,
@@ -87,7 +86,7 @@ const TOOLS = {
 } as const;
 
 export interface WaypointAnnotationEditorProps {
-  story: ConfigWaypoint;
+  story: StoreStoryWaypoint;
   storyIndex: number;
   /** When true, do not cap height or add inner scroll — parent scrolls */
   embeddedInScrollParent?: boolean;

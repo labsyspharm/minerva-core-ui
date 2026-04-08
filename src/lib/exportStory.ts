@@ -1,14 +1,18 @@
 /**
  * `story.json` serialization: types aligned with `schema/story.schema.json`, plus
- * mapping between **`ConfigWaypoint`** (UI / exhibit: `Name`, `Bounds`, `ShapeIds`, …)
- * and the flatter exported shape (`title`, `viewport` corners, `shapes` UUID list, …).
+ * mapping between **`ConfigWaypoint`** (exhibit: `Name`, `Bounds`, `ShapeIds`, …)
+ * and the serialized row (`title`, viewport corners, `shapes` UUID list, …).
+ *
+ * The overlay store keeps a live **`storyDocument`**; `syncStoryDocument` rebuilds
+ * it from store **`stories`** (narrative rows) + **`Shapes`** + image and viewer size.
+ * JSON **`waypoints`** are those rows’ serializable fields.
  *
  * `STORY_JSON_VERSION` must match the schema `version` field; change it when the
  * exported JSON shape changes.
  */
 
 import type { ConfigWaypoint } from "./config";
-import type { StoryShape } from "./storyShapes";
+import type { StoryPoint, StoryShape } from "./storyShapes";
 import {
   getWaypointBounds,
   isWaypointBounds,
@@ -18,15 +22,13 @@ import {
 /** Canonical `version` string in `story.json`; keep in sync with `schema/story.schema.json`. */
 export const STORY_JSON_VERSION = "1" as const;
 
-export type StoryWirePoint = { x: number; y: number };
-
-export type StoryWireViewport = {
-  upperLeft: StoryWirePoint;
-  lowerRight: StoryWirePoint;
+export type StoryViewport = {
+  upperLeft: StoryPoint;
+  lowerRight: StoryPoint;
 };
 
-/** One waypoint row in `story.json`; maps to {@link ConfigWaypoint}. */
-export type StoryWireWaypoint = {
+/** One waypoint row in `story.json`; maps to / from {@link ConfigWaypoint} fields. */
+export type StoryWaypoint = {
   id: string;
   title: string;
   content: string;
@@ -34,17 +36,21 @@ export type StoryWireWaypoint = {
   group?: string;
   /** Image data URL; 64×64 capture uses JPEG (see `waypointThumbnail.ts`). */
   thumbnail?: string;
-  viewport: StoryWireViewport;
+  viewport: StoryViewport;
   shapes: string[];
 };
 
-export type StoryWireDocument = {
+/** Store row: serialized fields plus runtime / exhibit camera and UI state. */
+export type StoreStoryWaypoint = StoryWaypoint &
+  Pick<ConfigWaypoint, "State" | "ViewState" | "Pan" | "Zoom">;
+
+export type StoryDocument = {
   version: typeof STORY_JSON_VERSION;
-  waypoints: StoryWireWaypoint[];
+  waypoints: StoryWaypoint[];
   shapes: StoryShape[];
 };
 
-export function boundsToWireViewport(b: WaypointBounds): StoryWireViewport {
+export function boundsToStoryViewport(b: WaypointBounds): StoryViewport {
   const minX = Math.min(b.x0, b.x1);
   const maxX = Math.max(b.x0, b.x1);
   const minY = Math.min(b.y0, b.y1);
@@ -55,7 +61,7 @@ export function boundsToWireViewport(b: WaypointBounds): StoryWireViewport {
   };
 }
 
-export function wireViewportToBounds(v: StoryWireViewport): WaypointBounds {
+export function storyViewportToBounds(v: StoryViewport): WaypointBounds {
   const x0 = Math.min(v.upperLeft.x, v.lowerRight.x);
   const x1 = Math.max(v.upperLeft.x, v.lowerRight.x);
   const y0 = Math.min(v.upperLeft.y, v.lowerRight.y);
@@ -63,13 +69,13 @@ export function wireViewportToBounds(v: StoryWireViewport): WaypointBounds {
   return { x0, x1, y0, y1 };
 }
 
-export function configWaypointToWire(
+export function configWaypointToStoryWaypoint(
   wp: ConfigWaypoint,
   imageWidth: number,
   imageHeight: number,
   containerWidth: number,
   containerHeight: number,
-): StoryWireWaypoint {
+): StoryWaypoint {
   let bounds: WaypointBounds | null = null;
   if (isWaypointBounds(wp.Bounds)) {
     bounds = wp.Bounds;
@@ -94,11 +100,11 @@ export function configWaypointToWire(
     bounds = { x0: 0, y0: 0, x1: 1, y1: 1 };
   }
 
-  const out: StoryWireWaypoint = {
+  const out: StoryWaypoint = {
     id: wp.UUID,
     title: wp.Name,
     content: wp.Content ?? "",
-    viewport: boundsToWireViewport(bounds),
+    viewport: boundsToStoryViewport(bounds),
     shapes: [...(wp.ShapeIds ?? [])],
   };
   if (wp.Group) {
@@ -110,29 +116,82 @@ export function configWaypointToWire(
   return out;
 }
 
-/** Apply exported waypoint fields onto {@link ConfigWaypoint} (same `UUID` as `id`). */
-export function applyWireWaypointToConfig(
+export function configWaypointToStoreStoryWaypoint(
   wp: ConfigWaypoint,
-  wire: StoryWireWaypoint,
+  imageWidth: number,
+  imageHeight: number,
+  containerWidth: number,
+  containerHeight: number,
+): StoreStoryWaypoint {
+  const row = configWaypointToStoryWaypoint(
+    wp,
+    imageWidth,
+    imageHeight,
+    containerWidth,
+    containerHeight,
+  );
+  return {
+    ...row,
+    State: wp.State,
+    ViewState: wp.ViewState,
+    Pan: wp.Pan,
+    Zoom: wp.Zoom,
+  };
+}
+
+export function storeStoryWaypointToConfigWaypoint(
+  s: StoreStoryWaypoint,
 ): ConfigWaypoint {
-  if (wire.id !== wp.UUID) {
+  const bounds = storyViewportToBounds(s.viewport);
+  const out: ConfigWaypoint = {
+    UUID: s.id,
+    Name: s.title,
+    Content: s.content,
+    State: s.State,
+    Bounds: bounds,
+    ShapeIds: [...s.shapes],
+    ViewState: s.ViewState,
+    Pan: s.Pan,
+    Zoom: s.Zoom,
+  };
+  if (s.group !== undefined) {
+    out.Group = s.group;
+  }
+  if (s.thumbnail !== undefined) {
+    out.ThumbnailDataUrl = s.thumbnail;
+  }
+  return out;
+}
+
+export function storiesToConfigWaypoints(
+  stories: StoreStoryWaypoint[],
+): ConfigWaypoint[] {
+  return stories.map(storeStoryWaypointToConfigWaypoint);
+}
+
+/** Apply exported waypoint fields onto {@link ConfigWaypoint} (same `UUID` as `id`). */
+export function applyStoryWaypointToConfig(
+  wp: ConfigWaypoint,
+  row: StoryWaypoint,
+): ConfigWaypoint {
+  if (row.id !== wp.UUID) {
     return wp;
   }
-  const bounds = wireViewportToBounds(wire.viewport);
+  const bounds = storyViewportToBounds(row.viewport);
   const next: ConfigWaypoint = {
     ...wp,
-    Name: wire.title,
-    Content: wire.content,
+    Name: row.title,
+    Content: row.content,
     Bounds: bounds,
-    ShapeIds: [...wire.shapes],
+    ShapeIds: [...row.shapes],
     Pan: undefined,
     Zoom: undefined,
   };
-  if (wire.group !== undefined) {
-    next.Group = wire.group;
+  if (row.group !== undefined) {
+    next.Group = row.group;
   }
-  if (wire.thumbnail !== undefined) {
-    next.ThumbnailDataUrl = wire.thumbnail;
+  if (row.thumbnail !== undefined) {
+    next.ThumbnailDataUrl = row.thumbnail;
   } else {
     delete next.ThumbnailDataUrl;
   }
@@ -140,40 +199,31 @@ export function applyWireWaypointToConfig(
 }
 
 export function exportStoryDocument(
-  stories: ConfigWaypoint[],
+  stories: StoreStoryWaypoint[],
   shapes: StoryShape[],
   imageWidth: number,
   imageHeight: number,
   viewerViewportSize: { width: number; height: number } | null,
-): StoryWireDocument {
+): StoryDocument {
   const cw = viewerViewportSize?.width ?? 0;
   const ch = viewerViewportSize?.height ?? 0;
-  const waypoints = stories.map((s) =>
-    configWaypointToWire(s, imageWidth, imageHeight, cw, ch),
-  );
+  const waypoints = stories.map((s) => {
+    const wp = storeStoryWaypointToConfigWaypoint(s);
+    return configWaypointToStoryWaypoint(wp, imageWidth, imageHeight, cw, ch);
+  });
   return {
     version: STORY_JSON_VERSION,
     waypoints,
-    shapes: shapes.map((s) => s),
+    shapes: shapes.map((shape) => shape),
   };
 }
 
-export function downloadStoryJSON(
-  stories: ConfigWaypoint[],
-  shapes: StoryShape[],
-  imageWidth: number,
-  imageHeight: number,
-  viewerViewportSize: { width: number; height: number } | null,
+/** Download a `story.json` blob (e.g. after `syncStoryDocument`). */
+export function downloadStoryDocument(
+  doc: StoryDocument,
   filename = "story.json",
 ): void {
-  const data = exportStoryDocument(
-    stories,
-    shapes,
-    imageWidth,
-    imageHeight,
-    viewerViewportSize,
-  );
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
+  const blob = new Blob([JSON.stringify(doc, null, 2)], {
     type: "application/json",
   });
   const url = URL.createObjectURL(blob);

@@ -1,4 +1,4 @@
-/** Pixel width/height of saved waypoint preview images (`ThumbnailDataUrl` / wire `thumbnail`). */
+/** Pixel width/height of saved waypoint preview images (`ThumbnailDataUrl` / story `thumbnail`). */
 export const WAYPOINT_THUMBNAIL_PIXEL_SIZE = 64;
 
 /**

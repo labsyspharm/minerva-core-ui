@@ -6,13 +6,13 @@ settings:
 
 overrides:
   styled-components: ^5
-  '@vivjs/constants': github:simonwarchol/viv#path:packages/constants
-  '@vivjs/extensions': github:simonwarchol/viv#path:packages/extensions
-  '@vivjs/layers': github:simonwarchol/viv#path:packages/layers
-  '@vivjs/loaders': github:simonwarchol/viv#path:packages/loaders
-  '@vivjs/viewers': github:simonwarchol/viv#path:packages/viewers
-  '@vivjs/views': github:simonwarchol/viv#path:packages/views
-  '@vivjs/types': github:simonwarchol/viv#path:packages/types
+  '@vivjs/constants': github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/constants
+  '@vivjs/extensions': github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/extensions
+  '@vivjs/layers': github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/layers
+  '@vivjs/loaders': github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/loaders
+  '@vivjs/viewers': github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/viewers
+  '@vivjs/views': github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/views
+  '@vivjs/types': github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/types
   math.gl: ^4.1.0
   '@math.gl/core': ^4.1.0
   '@math.gl/web-mercator': ^4.1.0
@@ -90,7 +90,7 @@ importers:
         specifier: ^9.0.7
         version: 9.0.27
       '@hms-dbmi/viv':
-        specifier: github:simonwarchol/viv#path:packages/main
+        specifier: github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/main
         version: https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/main(199f3575cb57838fdb557aad0b4e67f4)
       '@lit/reactive-element':
         specifier: ^2.0.4
@@ -171,7 +171,7 @@ importers:
         specifier: ^24.4.3
         version: 24.7.7
       '@vivjs/constants':
-        specifier: github:simonwarchol/viv#path:packages/constants
+        specifier: github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/constants
         version: https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/constants
       dcmjs:
         specifier: ^0.41.0
@@ -310,8 +310,8 @@ importers:
         specifier: ^4.3.1
         version: 4.5.1(vite@5.4.19(@types/node@20.17.57))
       '@vivjs/types':
-        specifier: github:simonwarchol/viv#path:packages/types
-        version: https://codeload.github.com/simonwarchol/viv/tar.gz/bde1424912d35f5e3abe072de3d343da48f02f92#path:packages/types
+        specifier: github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/types
+        version: https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/types
       eslint:
         specifier: ^9.7.0
         version: 9.28.0
@@ -1841,10 +1841,6 @@ packages:
 
   '@vivjs/types@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/types':
     resolution: {path: packages/types, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134}
-    version: 0.20.0
-
-  '@vivjs/types@https://codeload.github.com/simonwarchol/viv/tar.gz/bde1424912d35f5e3abe072de3d343da48f02f92#path:packages/types':
-    resolution: {path: packages/types, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/bde1424912d35f5e3abe072de3d343da48f02f92}
     version: 0.20.0
 
   '@vivjs/viewers@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/viewers':
@@ -6213,11 +6209,6 @@ snapshots:
       zod: 3.25.76
 
   '@vivjs/types@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/types':
-    dependencies:
-      '@vivjs/constants': https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/constants
-      math.gl: 4.1.0
-
-  '@vivjs/types@https://codeload.github.com/simonwarchol/viv/tar.gz/bde1424912d35f5e3abe072de3d343da48f02f92#path:packages/types':
     dependencies:
       '@vivjs/constants': https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/constants
       math.gl: 4.1.0

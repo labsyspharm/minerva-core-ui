@@ -1,7 +1,8 @@
 /**
- * Canonical waypoint annotation geometry for persistence.
- * Waypoints reference records by UUID (`ShapeIds`); full definitions live in
- * `ItemRegistry.Shapes`. Coordinates are world / image pixels.
+ * Canonical waypoint annotation geometry for persistence (`story.json` / `StoryShape`).
+ * Waypoints reference records by UUID (`StoreStoryWaypoint.shapes`, exhibit `ShapeIds`);
+ * full definitions live in Zustand `Shapes` / `ItemRegistry.Shapes` / `storyDocument.shapes`.
+ * Coordinates are image / world pixels.
  */
 
 import {
@@ -146,11 +147,11 @@ export function openPolylinePoints(
 
 /**
  * Merge the shape registry when persisting one waypoint's annotations.
- * Drops shapes that were only referenced by this waypoint's previous `ShapeIds`
+ * Drops shapes that were only referenced by this waypoint's previous shape ids
  * (unless another waypoint still references them), then upserts new records.
  */
 export function mergeShapesForWaypointPersist(params: {
-  stories: { ShapeIds?: string[] }[];
+  stories: { shapes: string[] }[];
   storyIndex: number;
   prevShapes: StoryShape[];
   builtShapes: StoryShape[];
@@ -159,13 +160,13 @@ export function mergeShapesForWaypointPersist(params: {
   const { stories, storyIndex, prevShapes, builtShapes, newShapeIdsOrdered } =
     params;
   const story = stories[storyIndex];
-  const oldIds = story?.ShapeIds ?? [];
+  const oldIds = story?.shapes ?? [];
   const newShapeIdSet = new Set(newShapeIdsOrdered);
 
   const otherRefs = new Set<string>();
   for (let j = 0; j < stories.length; j++) {
     if (j === storyIndex) continue;
-    for (const id of stories[j].ShapeIds ?? []) {
+    for (const id of stories[j].shapes ?? []) {
       otherRefs.add(id);
     }
   }

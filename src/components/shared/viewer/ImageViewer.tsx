@@ -249,7 +249,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       // Do not use viewport size as a stand-in for image pixels: the overlay
       // store's imageWidth/imageHeight drive legacy waypoint migration and
       // shape import scaling. Wrong values here freeze incorrect coordinates
-      // because migration is skipped once ShapeIds already exist.
+      // because migration is skipped once waypoint shape ids already exist.
       return { x: 0, y: 0 };
     }
     const shape_labels = firstLoader.data[0].labels;

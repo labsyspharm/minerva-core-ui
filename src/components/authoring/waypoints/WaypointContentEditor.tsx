@@ -1,7 +1,7 @@
 import MDEditor from "@uiw/react-md-editor";
 import * as React from "react";
 import "@uiw/react-md-editor/markdown-editor.css";
-import type { ConfigWaypoint } from "@/lib/config";
+import type { StoreStoryWaypoint } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
 import "./WaypointContentEditor.css";
 
@@ -10,7 +10,7 @@ type PreviewMode = NonNullable<
 >;
 
 type WaypointContentEditorProps = {
-  story: ConfigWaypoint;
+  story: StoreStoryWaypoint;
   storyIndex: number;
   /** When "detail", editor grows to fit content and relies on the parent for scrolling */
   variant?: "compact" | "detail";
@@ -90,9 +90,9 @@ const WaypointContentEditor: React.FC<WaypointContentEditorProps> = ({
       }
     >
       <MDEditor
-        key={variant === "detail" ? story.UUID : storyIndex}
+        key={variant === "detail" ? story.id : storyIndex}
         ref={mdRef as React.Ref<MDEditorHandle & Record<string, unknown>>}
-        value={story.Content ?? ""}
+        value={story.content ?? ""}
         onChange={handleChange}
         preview={previewProp}
         height={height}

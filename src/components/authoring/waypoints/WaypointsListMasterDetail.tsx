@@ -7,7 +7,8 @@ import OverwriteViewIcon from "@/components/shared/icons/overwrite-view.svg?reac
 import PlayIcon from "@/components/shared/icons/play.svg?react";
 import type { ConfigWaypoint } from "@/lib/config";
 import type { ConfigGroup, ConfigSourceChannel } from "@/lib/document-store";
-import { downloadStoryJSON } from "@/lib/exportStory";
+import { storeStoryWaypointToConfigWaypoint } from "@/lib/exportStory";
+import type { StoreStoryWaypoint } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
 import {
   getViewerBoundsFromSnapshot,
@@ -54,8 +55,8 @@ const PlusIcon = () => (
   </svg>
 );
 
-const countWaypointAnnotations = (story: ConfigWaypoint) =>
-  story.ShapeIds?.length ?? 0;
+const countWaypointAnnotations = (story: StoreStoryWaypoint) =>
+  story.shapes?.length ?? 0;
 
 const annotationCountLabel = (count: number) =>
   `${count} ${count === 1 ? "annotation" : "annotations"}`;
@@ -85,6 +86,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     updateStory,
     reorderStories,
     importWaypointAnnotations,
+    Shapes,
     persistImportedAnnotationsToStory,
     imageWidth,
     imageHeight,
@@ -158,7 +160,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   const previousActiveStoryIndexRef = React.useRef<number | null>(null);
 
   const detailStoryIndex = detailStoryId
-    ? stories.findIndex((s) => s.UUID === detailStoryId)
+    ? stories.findIndex((s) => s.id === detailStoryId)
     : -1;
   const detailStory = detailStoryIndex >= 0 ? stories[detailStoryIndex] : null;
 
@@ -178,12 +180,13 @@ const WaypointsList = (props: WaypointsListProps) => {
     }
     previousActiveStoryIndexRef.current = storyIndex;
 
-    importWaypointAnnotations(story, true);
+    importWaypointAnnotations(story, true, Shapes);
   }, [
     stories,
     activeStoryIndex,
     imageWidth,
     imageHeight,
+    Shapes,
     importWaypointAnnotations,
   ]);
 
@@ -288,10 +291,10 @@ const WaypointsList = (props: WaypointsListProps) => {
   };
 
   const applyStoryChannelGroup = React.useCallback(
-    (story: ConfigWaypoint | undefined) => {
+    (story: StoreStoryWaypoint | undefined) => {
       if (!story || Groups.length === 0) return;
       const foundGroup =
-        Groups.find((group) => group.Name === story.Group) || Groups[0];
+        Groups.find((group) => group.Name === story.group) || Groups[0];
       if (foundGroup) {
         setActiveChannelGroup(foundGroup.UUID);
       }
@@ -317,7 +320,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       }
       const story = state.stories[index];
       if (!story) return;
-      if (!overwriteView && story.ThumbnailDataUrl) return;
+      if (!overwriteView && story.thumbnail) return;
       if (thumbnailOnly) {
         saveThumbnailOnlyToStory(index);
         return;
@@ -346,11 +349,11 @@ const WaypointsList = (props: WaypointsListProps) => {
     const storyForNav = storeNow.stories[index];
     applyStoryChannelGroup(storyForNav);
     if (storyForNav && imageWidth > 0 && imageHeight > 0) {
-      setTargetWaypointCamera(storyForNav);
+      setTargetWaypointCamera(storeStoryWaypointToConfigWaypoint(storyForNav));
     }
     // Only grab the preview image after the camera settles — never rewrite
     // Bounds/ViewState on row select (use save-view control on the row to persist camera).
-    if (shouldCaptureThumbnail && !storyForNav?.ThumbnailDataUrl) {
+    if (shouldCaptureThumbnail && !storyForNav?.thumbnail) {
       scheduleThumbnailCaptureForStory(index, false, true, 1100);
     }
   };
@@ -358,7 +361,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   const openDetailForStoryId = (storyId: string) => {
     if (!canEdit) return;
 
-    const index = stories.findIndex((s) => s.UUID === storyId);
+    const index = stories.findIndex((s) => s.id === storyId);
     if (index === -1) return;
 
     activateStoryIndex(index);
@@ -382,26 +385,12 @@ const WaypointsList = (props: WaypointsListProps) => {
     scheduleThumbnailCaptureForStory(index, true, true, 150);
     if (saved) {
       persistImportedAnnotationsToStory(index);
-      const st = useOverlayStore.getState();
-      downloadStoryJSON(
-        st.stories,
-        st.Shapes ?? [],
-        st.imageWidth,
-        st.imageHeight,
-        st.viewerViewportSize,
-      );
+      useOverlayStore.getState().downloadStoryJsonFile();
     }
   };
 
   const handleDownloadStory = () => {
-    const st = useOverlayStore.getState();
-    downloadStoryJSON(
-      st.stories,
-      st.Shapes ?? [],
-      st.imageWidth,
-      st.imageHeight,
-      st.viewerViewportSize,
-    );
+    useOverlayStore.getState().downloadStoryJsonFile();
   };
 
   const handleAddWaypoint = () => {
@@ -457,8 +446,8 @@ const WaypointsList = (props: WaypointsListProps) => {
     if (!canEdit) return;
     if (!draggedStoryId || draggedStoryId === targetStoryId) return;
 
-    const fromIndex = stories.findIndex((s) => s.UUID === draggedStoryId);
-    const toIndex = stories.findIndex((s) => s.UUID === targetStoryId);
+    const fromIndex = stories.findIndex((s) => s.id === draggedStoryId);
+    const toIndex = stories.findIndex((s) => s.id === targetStoryId);
     if (fromIndex !== -1 && toIndex !== -1) {
       reorderStories(fromIndex, toIndex);
     }
@@ -540,7 +529,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       ) : (
         <ul className={styles.rows}>
           {stories.map((story, index) => {
-            const storyId = story.UUID;
+            const storyId = story.id;
             const annotationCount = countWaypointAnnotations(story);
             const annotationTitle = annotationCountLabel(annotationCount);
             const isActive = activeStoryIndex === index;
@@ -593,10 +582,10 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <div className={styles.rowChevronSpacer} aria-hidden />
                 )}
 
-                {story.ThumbnailDataUrl ? (
+                {story.thumbnail ? (
                   <img
                     className={styles.rowThumbnail}
-                    src={story.ThumbnailDataUrl}
+                    src={story.thumbnail}
                     width={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
                     height={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
                     alt=""
@@ -610,14 +599,14 @@ const WaypointsList = (props: WaypointsListProps) => {
                   type="button"
                   {...rowDragProps}
                   className={styles.rowMainHit}
-                  aria-label={`Select waypoint: ${story.Name}`}
+                  aria-label={`Select waypoint: ${story.title}`}
                   onClick={() => activateStoryIndex(index, true)}
                   onDoubleClick={() => openDetailForStoryId(storyId)}
                 >
                   <div className={styles.rowTextStack}>
                     <div className={styles.rowTitleRow}>
-                      <span className={styles.rowTitle} title={story.Name}>
-                        {story.Name}
+                      <span className={styles.rowTitle} title={story.title}>
+                        {story.title}
                       </span>
                       <span
                         className={styles.annotationBadge}
@@ -637,9 +626,9 @@ const WaypointsList = (props: WaypointsListProps) => {
                     </div>
                     <span
                       className={styles.rowContent}
-                      title={story.Content ?? ""}
+                      title={story.content ?? ""}
                     >
-                      {story.Content ?? ""}
+                      {story.content ?? ""}
                     </span>
                   </div>
                 </button>
@@ -698,7 +687,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     };
 
     const selectedGroupUuid =
-      Groups.find((group) => group.Name === detailStory.Group)?.UUID ??
+      Groups.find((group) => group.Name === detailStory.group)?.UUID ??
       Groups[0].UUID;
     const selectedGroup =
       Groups.find((group) => group.UUID === selectedGroupUuid) ?? Groups[0];
@@ -732,8 +721,8 @@ const WaypointsList = (props: WaypointsListProps) => {
             />
             <span>Back</span>
           </button>
-          <div className={styles.detailTitle} title={detailStory.Name}>
-            {detailStory.Name}
+          <div className={styles.detailTitle} title={detailStory.title}>
+            {detailStory.title}
           </div>
         </div>
 
@@ -750,7 +739,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                 id={detailTitleFieldId}
                 className={styles.detailTitleInput}
                 type="text"
-                value={detailStory.Name ?? ""}
+                value={detailStory.title ?? ""}
                 onChange={(e) =>
                   updateStory(detailStoryIndex, { Name: e.target.value })
                 }
@@ -882,7 +871,7 @@ const WaypointsList = (props: WaypointsListProps) => {
               {detailMarkdownExpanded ? (
                 <div className={styles.detailCollapsibleBody}>
                   <WaypointContentEditor
-                    key={detailStory.UUID}
+                    key={detailStory.id}
                     variant="detail"
                     story={detailStory}
                     storyIndex={detailStoryIndex}

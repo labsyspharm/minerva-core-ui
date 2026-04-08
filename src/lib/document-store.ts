@@ -1,3 +1,8 @@
+/**
+ * Exhibit document slice merged into `useOverlayStore` (`Groups`, `SourceChannels`,
+ * `Shapes`). `Shapes` is the geometry registry for serialized stories; waypoint
+ * rows carry `ShapeIds` that reference these UUIDs (see `exportStory.ts`).
+ */
 import type { StoryShape } from "./storyShapes";
 
 type ExpandedState = {
@@ -44,6 +49,11 @@ export interface DocumentStore {
   SourceChannels: ConfigSourceChannel[];
   setSourceChannels: (source_channels: ConfigSourceChannel[]) => void;
   setGroupChannelRange: (SetGroupChannelRangeInput) => void;
+  /**
+   * Global story shape registry (serialized as `story.json` root `shapes`).
+   * Merged into `useOverlayStore`; `syncStoryDocument` reads this as
+   * `storyDocument.shapes`.
+   */
   Shapes: StoryShape[];
   setShapes: (shapes: StoryShape[]) => void;
 }

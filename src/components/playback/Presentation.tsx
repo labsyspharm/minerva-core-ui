@@ -3,13 +3,15 @@ import ReactMarkdown from "react-markdown";
 //import { theme } from "@/theme.module.css";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
+import { storeStoryWaypointToConfigWaypoint } from "@/lib/exportStory";
+import type { StoreStoryWaypoint } from "@/lib/stores";
 import { useOverlayStore } from "@/lib/stores";
 
 const _theme = {};
 
 // Types
 import type { MouseEvent, ReactElement } from "react";
-import type { ConfigProps, ConfigWaypoint } from "@/lib/config";
+import type { ConfigProps } from "@/lib/config";
 
 export type PresentationProps = {
   children: ReactElement;
@@ -282,6 +284,7 @@ export const Presentation = (props: PresentationProps) => {
     activeChannelGroupId,
     setActiveChannelGroup,
     importWaypointAnnotations,
+    Shapes,
     imageWidth,
     imageHeight,
     setTargetWaypointCamera,
@@ -311,9 +314,9 @@ export const Presentation = (props: PresentationProps) => {
       previousActiveStoryIndexRef.current = idx;
 
       // Import annotations from the story (clearing existing imported ones atomically)
-      importWaypointAnnotations(story, true);
+      importWaypointAnnotations(story, true, Shapes);
 
-      const wp = story as ConfigWaypoint;
+      const wp = storeStoryWaypointToConfigWaypoint(story);
       if (imageWidth > 0 && imageHeight > 0) {
         setTargetWaypointCamera(wp);
       }
@@ -332,6 +335,7 @@ export const Presentation = (props: PresentationProps) => {
     activeStoryIndex,
     imageWidth,
     imageHeight,
+    Shapes,
     importWaypointAnnotations,
     setTargetWaypointCamera,
     Groups,
@@ -352,7 +356,7 @@ export const Presentation = (props: PresentationProps) => {
 
   const updateGroup = (activeStory) => {
     const story = stories[activeStory];
-    const group_name = story.Group;
+    const group_name = story.group;
     // TODO -- use UUID in story
     const found_group =
       Groups.find(({ Name }) => Name === group_name) || Groups[0];
@@ -362,10 +366,10 @@ export const Presentation = (props: PresentationProps) => {
   };
 
   const updateViewState = (storyIndex: number) => {
-    const story = stories[storyIndex] as ConfigWaypoint | undefined;
+    const story = stories[storyIndex];
     if (!story) return;
     if (imageWidth > 0 && imageHeight > 0) {
-      setTargetWaypointCamera(story);
+      setTargetWaypointCamera(storeStoryWaypointToConfigWaypoint(story));
     }
   };
 
@@ -484,14 +488,14 @@ export const Presentation = (props: PresentationProps) => {
       <TocWrapper>
         <h2 className="h6">Table of Contents</h2>
         <ol>
-          {stories.map((wp: ConfigWaypoint, i: number) => {
+          {stories.map((wp: StoreStoryWaypoint, i: number) => {
             const goToStory = (e: MouseEvent) => {
               e.preventDefault();
               storyAt(i);
             };
             return (
-              <li key={wp.UUID} onMouseDown={goToStory}>
-                {wp.Name}
+              <li key={wp.id} onMouseDown={goToStory}>
+                {wp.title}
               </li>
             );
           })}
@@ -504,8 +508,8 @@ export const Presentation = (props: PresentationProps) => {
   const last_story = activeStoryIndex === stories.length - 1;
   const main_title = props.name;
   const story = stories[activeStoryIndex];
-  const story_title = story?.Name ?? `Waypoint ${activeStoryIndex + 1}`;
-  const story_content = story?.Content;
+  const story_title = story?.title ?? `Waypoint ${activeStoryIndex + 1}`;
+  const story_content = story?.content;
 
   // Scroll waypoint content back to top when changing to a different waypoint.
   const contentPaneRef = useRef(null);

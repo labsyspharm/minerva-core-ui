@@ -29,7 +29,7 @@ type LegacyOverlay = {
   y: number;
   width: number;
   height: number;
-  Group: string;
+  Group?: string;
 };
 
 type RuntimeWaypoint = ConfigWaypoint & {
@@ -146,6 +146,19 @@ function annotationsFromLegacyArrowsAndOverlays(
 function stripLegacyKeys(wp: RuntimeWaypoint): ConfigWaypoint {
   const { Arrows: _a, Overlays: _o, ...rest } = wp;
   return rest as ConfigWaypoint;
+}
+
+/** True if any waypoint still has runtime-only `Arrows` / `Overlays` (pre-migration). */
+export function configWaypointsHaveLegacyArrowsOrOverlays(
+  stories: ConfigWaypoint[],
+): boolean {
+  for (const wp of stories) {
+    const rw = wp as RuntimeWaypoint;
+    if ((rw.Arrows?.length ?? 0) > 0 || (rw.Overlays?.length ?? 0) > 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function mergeShapeLists(

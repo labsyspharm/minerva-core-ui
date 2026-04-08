@@ -10,11 +10,28 @@ import { mergeAnnotationsAfterWaypointImport } from "./annotationWaypointImport"
 import { buildBrushHull } from "./brushHull";
 import type { ConfigWaypoint } from "./config";
 import type { DocumentStore } from "./document-store";
+import {
+  configWaypointToStoreStoryWaypoint,
+  downloadStoryDocument,
+  exportStoryDocument,
+  STORY_JSON_VERSION,
+  type StoreStoryWaypoint,
+  type StoryDocument,
+  storeStoryWaypointToConfigWaypoint,
+} from "./exportStory";
+
+export type {
+  StoreStoryWaypoint,
+  StoryDocument,
+  StoryWaypoint,
+} from "./exportStory";
+
 import { polygonDifference, polygonUnion } from "./polygonClipping";
 import type { ViewportSize, ViewRect } from "./samViewport";
 import {
   annotationsToShapes,
   mergeShapesForWaypointPersist,
+  type StoryShape,
   shapeToAnnotation,
 } from "./storyShapes";
 
@@ -784,6 +801,29 @@ export interface HoverState {
   hoveredAnnotationId: string | null;
 }
 
+/**
+ * Annotation / viewport UI state + story authoring.
+ *
+ * **Serializable story (`story.json`)** — not a separate Zustand slice: the
+ * wire-shaped snapshot is **`storyDocument`** (`version`, `waypoints`, `shapes`).
+ * It is derived-only: `syncStoryDocument()` calls {@link exportStoryDocument}.
+ *
+ * **Sources for that export**
+ * - **`stories`** — each row is {@link StoreStoryWaypoint}: serialized waypoint
+ *   fields (`id`, `title`, `content`, `viewport`, `shapes` UUIDs, …) plus runtime
+ *   camera keys from `ConfigWaypoint` (`State`, `Pan`, …). Mutators often accept
+ *   `ConfigWaypoint` and convert internally.
+ * - **`Shapes`** — merged in from {@link ./document-store.ts `DocumentStore`};
+ *   global geometry registry keyed by UUID; referenced by each waypoint’s
+ *   `shapes[]` list.
+ *
+ * Runtime-only layers (`annotations`, brush state, …) are **not** part of
+ * `storyDocument`; they hydrate from a waypoint via `importWaypointAnnotations`.
+ *
+ * **Naming:** Zustand **`stories`** are narrative waypoint rows (one tab in the
+ * author list ≈ one entry in `storyDocument.waypoints`). That is **not** the
+ * exhibit playback type `Story[]` in `exhibit.ts`.
+ */
 export interface OverlayStore {
   // State
   overlayLayers: OverlayLayer[];
@@ -810,11 +850,9 @@ export interface OverlayStore {
   brushEditTargetId: string | null;
   brushEditMode: "add" | "subtract" | null;
 
-  // Stories state
-  stories: ConfigWaypoint[];
+  /** See {@link OverlayStore} — source rows for `storyDocument.waypoints` + camera. */
+  stories: StoreStoryWaypoint[];
   activeStoryIndex: number | null;
-  waypoints: ConfigWaypoint[]; // All waypoints from all stories
-  activeWaypointId: string | null;
 
   // Channel Group and Channel State
   activeChannelGroupId: string | null;
@@ -883,23 +921,20 @@ export interface OverlayStore {
   clearAnnotations: () => void;
   finalizeRectangle: () => void; // Convert current drawing to annotation
 
-  // Stories actions
-  setStories: (stories: ConfigWaypoint[]) => void;
+  /**
+   * Narrative waypoint row actions. Prefer {@link setStoryWaypointRows} when you
+   * already hold {@link StoreStoryWaypoint}[]; use these when bridging exhibit
+   * {@link ConfigWaypoint} rows (`ItemRegistry.Stories`).
+   */
+  /** Replace all rows from exhibit-shaped waypoints (converts to store rows). */
+  setStories: (configWaypoints: ConfigWaypoint[]) => void;
+  /** Replace rows without `ConfigWaypoint` round-trip (e.g. importers). */
+  setStoryWaypointRows: (rows: StoreStoryWaypoint[]) => void;
   setActiveStory: (index: number | null) => void;
-  addStory: (story: ConfigWaypoint) => void;
+  addStory: (configWaypoint: ConfigWaypoint) => void;
   updateStory: (index: number, updates: Partial<ConfigWaypoint>) => void;
   removeStory: (index: number) => void;
   reorderStories: (fromIndex: number, toIndex: number) => void;
-
-  // Waypoints actions
-  setWaypoints: (waypoints: ConfigWaypoint[]) => void;
-  setActiveWaypoint: (waypointId: string | null) => void;
-  addWaypoint: (waypoint: ConfigWaypoint) => void;
-  updateWaypoint: (
-    waypointId: string,
-    updates: Partial<ConfigWaypoint>,
-  ) => void;
-  removeWaypoint: (waypointId: string) => void;
 
   // SAM2 magic wand: image fetcher for visible viewport region (set by ImageViewer)
   sam2ImageFetcher:
@@ -1024,12 +1059,24 @@ export interface OverlayStore {
   imageHeight: number;
   setImageDimensions: (width: number, height: number) => void;
   importWaypointAnnotations: (
-    story: ConfigWaypoint,
+    story: StoreStoryWaypoint,
     clearExisting?: boolean,
+    /** When passed (e.g. from React), used for resolution so effects track `Shapes` explicitly. */
+    shapeRegistry?: StoryShape[],
   ) => void;
   clearImportedAnnotations: () => void;
-  /** Persist annotations into stories[index] (`ShapeIds` + `ItemRegistry.Shapes`). */
+  /** Persist annotations into stories[index] (`shapes` + `ItemRegistry.Shapes`). */
   persistImportedAnnotationsToStory: (storyIndex: number) => void;
+
+  /**
+   * Serializable `story.json` snapshot (`version` + `waypoints` + `shapes`).
+   * Kept in sync via `syncStoryDocument` after story/shape/export-input changes.
+   */
+  storyDocument: StoryDocument;
+  /** Rebuild `storyDocument` from `stories`, `Shapes`, `imageWidth`/`imageHeight`, `viewerViewportSize`. */
+  syncStoryDocument: () => void;
+  /** `syncStoryDocument` then download; avoids duplicating export inputs at call sites. */
+  downloadStoryJsonFile: (filename?: string) => void;
 
   // Waypoint camera (resolved inside ImageViewer for correct viewport coupling)
   setTargetWaypointCamera: (waypoint: ConfigWaypoint | null) => void;
@@ -1054,7 +1101,6 @@ const overlayInitialState = {
   hoverState: {
     hoveredAnnotationId: null,
   },
-  activeWaypoint: 0,
   annotations: [], // New: empty annotations array
   annotationGroups: [], // New: empty groups array
   hiddenLayers: new Set<string>(), // New: empty hidden layers set
@@ -1073,10 +1119,13 @@ const overlayInitialState = {
   brushEditTargetId: null as string | null,
   brushEditMode: null as "add" | "subtract" | null,
   stories: [], // New: empty stories array
+  storyDocument: {
+    version: STORY_JSON_VERSION,
+    waypoints: [],
+    shapes: [],
+  },
   activeStoryIndex: null, // New: no active story initially
   activeChannelGroupId: null, // No channel group initially
-  waypoints: [], // New: empty waypoints array
-  activeWaypointId: null, // New: no active waypoint initially
   imageWidth: 0,
   imageHeight: 0,
   channelVisibilities: {},
@@ -1106,6 +1155,28 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
     (set, get) => ({
       ...overlayInitialState,
       ...documentStore(set, get),
+      setShapes: (Shapes: StoryShape[]) => {
+        set({ Shapes });
+        get().syncStoryDocument();
+      },
+
+      syncStoryDocument: () => {
+        const s = get();
+        set({
+          storyDocument: exportStoryDocument(
+            s.stories,
+            s.Shapes ?? [],
+            s.imageWidth,
+            s.imageHeight,
+            s.viewerViewportSize,
+          ),
+        });
+      },
+
+      downloadStoryJsonFile: (filename = "story.json") => {
+        get().syncStoryDocument();
+        downloadStoryDocument(get().storyDocument, filename);
+      },
 
       setActiveTool: (tool: string) => {
         set({
@@ -2195,36 +2266,73 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
       },
 
       // Stories actions
-      setStories: (stories: ConfigWaypoint[]) => {
-        set({ stories, activeStoryIndex: null });
+      setStories: (configWaypoints: ConfigWaypoint[]) => {
+        const s = get();
+        const iw = s.imageWidth;
+        const ih = s.imageHeight;
+        const cw = s.viewerViewportSize?.width ?? 0;
+        const ch = s.viewerViewportSize?.height ?? 0;
+        set({
+          stories: configWaypoints.map((w) =>
+            configWaypointToStoreStoryWaypoint(w, iw, ih, cw, ch),
+          ),
+          activeStoryIndex: null,
+        });
+        get().syncStoryDocument();
+      },
+
+      setStoryWaypointRows: (rows: StoreStoryWaypoint[]) => {
+        set({
+          stories: rows,
+          activeStoryIndex: null,
+        });
+        get().syncStoryDocument();
       },
 
       setActiveStory: (index: number | null) => {
         set({ activeStoryIndex: index });
       },
 
-      addStory: (story: ConfigWaypoint) => {
+      addStory: (configWaypoint: ConfigWaypoint) => {
+        const s = get();
+        const row = configWaypointToStoreStoryWaypoint(
+          configWaypoint,
+          s.imageWidth,
+          s.imageHeight,
+          s.viewerViewportSize?.width ?? 0,
+          s.viewerViewportSize?.height ?? 0,
+        );
         set((state) => ({
-          stories: [...state.stories, story],
+          stories: [...state.stories, row],
         }));
+        get().syncStoryDocument();
       },
 
       updateStory: (index: number, updates: Partial<ConfigWaypoint>) => {
         set((state) => {
           const shouldDropLegacyViewKeys = Object.hasOwn(updates, "Bounds");
-          const newStories = state.stories.map((story, i) => {
-            if (i !== index) return story;
-            const mergedStory = { ...story, ...updates };
-            if (!shouldDropLegacyViewKeys) return mergedStory;
-            const { Pan: _pan, Zoom: _zoom, ...withoutPanZoom } = mergedStory;
-            if (Object.hasOwn(updates, "ViewState")) {
-              return withoutPanZoom as ConfigWaypoint;
+          const iw = state.imageWidth;
+          const ih = state.imageHeight;
+          const cw = state.viewerViewportSize?.width ?? 0;
+          const ch = state.viewerViewportSize?.height ?? 0;
+          const newStories = state.stories.map((storyRow, i) => {
+            if (i !== index) return storyRow;
+            const asConfig = storeStoryWaypointToConfigWaypoint(storyRow);
+            let merged: ConfigWaypoint = { ...asConfig, ...updates };
+            if (shouldDropLegacyViewKeys) {
+              const { Pan: _pan, Zoom: _zoom, ...withoutPanZoom } = merged;
+              if (Object.hasOwn(updates, "ViewState")) {
+                merged = withoutPanZoom as ConfigWaypoint;
+              } else {
+                const { ViewState: _vs, ...rest } = withoutPanZoom;
+                merged = rest as ConfigWaypoint;
+              }
             }
-            const { ViewState: _vs, ...rest } = withoutPanZoom;
-            return rest as ConfigWaypoint;
+            return configWaypointToStoreStoryWaypoint(merged, iw, ih, cw, ch);
           });
           return { stories: newStories };
         });
+        get().syncStoryDocument();
       },
 
       removeStory: (index: number) => {
@@ -2237,6 +2345,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
                 ? state.activeStoryIndex - 1
                 : state.activeStoryIndex,
         }));
+        get().syncStoryDocument();
       },
 
       reorderStories: (fromIndex: number, toIndex: number) => {
@@ -2271,6 +2380,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
             activeStoryIndex: newActiveStoryIndex,
           };
         });
+        get().syncStoryDocument();
       },
       setGroupNames: (o: Record<string, string>) => {
         set({ groupNames: o });
@@ -2305,6 +2415,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       setViewerViewportSize: (size) => {
         set({ viewerViewportSize: size });
+        get().syncStoryDocument();
       },
 
       setViewerImageLayersLoaded: (loaded) => {
@@ -2329,63 +2440,49 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         set({ channelVisibilities: vis });
       },
 
-      setWaypoints: (waypoints: ConfigWaypoint[]) => {
-        set({ waypoints, activeWaypointId: null });
-      },
-
-      setActiveWaypoint: (waypointId: string | null) => {
-        set({ activeWaypointId: waypointId });
-      },
-
-      addWaypoint: (waypoint: ConfigWaypoint) => {
-        set((state) => ({
-          waypoints: [...state.waypoints, waypoint],
-        }));
-      },
-
-      updateWaypoint: (
-        waypointId: string,
-        updates: Partial<ConfigWaypoint>,
-      ) => {
-        set((state) => ({
-          waypoints: state.waypoints.map((waypoint) =>
-            waypoint.UUID === waypointId
-              ? { ...waypoint, ...updates }
-              : waypoint,
-          ),
-        }));
-      },
-
-      removeWaypoint: (waypointId: string) => {
-        set((state) => ({
-          waypoints: state.waypoints.filter(
-            (waypoint) => waypoint.UUID !== waypointId,
-          ),
-          activeWaypointId:
-            state.activeWaypointId === waypointId
-              ? null
-              : state.activeWaypointId,
-        }));
-      },
-
       // Image dimensions actions
       setImageDimensions: (width: number, height: number) => {
         set({ imageWidth: width, imageHeight: height });
+        get().syncStoryDocument();
       },
 
       // Import waypoint annotations actions
       importWaypointAnnotations: (
-        story: ConfigWaypoint,
+        story: StoreStoryWaypoint,
         clearExisting: boolean = false,
+        shapeRegistry?: StoryShape[],
       ) => {
-        const { imageWidth, imageHeight, Shapes } = get();
+        const { imageWidth, imageHeight } = get();
+        const fromStore = get().Shapes;
+        const shapesForLookup =
+          shapeRegistry === undefined
+            ? fromStore
+            : (() => {
+                const merged = new Map(
+                  fromStore.map((s) => [s.uuid, s] as const),
+                );
+                for (const s of shapeRegistry) {
+                  merged.set(s.uuid, s);
+                }
+                return [...merged.values()];
+              })();
 
         if (imageWidth === 0 || imageHeight === 0) {
           return;
         }
 
-        const shapeIds = story.ShapeIds ?? [];
-        const shapeById = new Map(Shapes.map((s) => [s.uuid, s]));
+        const shapeIds = story.shapes ?? [];
+        if (
+          clearExisting &&
+          shapeIds.length > 0 &&
+          shapesForLookup.length === 0
+        ) {
+          // Registry not hydrated yet (e.g. ItemRegistry.Shapes after Stories); skip so we
+          // don't clear imported overlays and re-import nothing.
+          return;
+        }
+
+        const shapeById = new Map(shapesForLookup.map((s) => [s.uuid, s]));
 
         const newAnnotations: Annotation[] = [];
         for (const id of shapeIds) {
@@ -2399,7 +2496,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         // Always remove prior `isImported` overlays when `clearExisting` (waypoint
         // switch), even if `Shapes` is not fully loaded yet — otherwise annotations
         // from the previous waypoint stay on canvas until the registry catches up.
-        // Resolved shapes are appended in `ShapeIds` order; effects re-run when
+        // Resolved shapes are appended in waypoint `shapes` order; effects re-run when
         // `Shapes` updates to add any entries that were still missing.
         set((state) =>
           mergeAnnotationsAfterWaypointImport(
@@ -2420,7 +2517,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
         if (!story || state.imageWidth <= 0 || state.imageHeight <= 0) {
           return;
         }
-        const hadStored = (story.ShapeIds?.length ?? 0) > 0;
+        const hadStored = (story.shapes?.length ?? 0) > 0;
         if (state.annotations.length === 0 && !hadStored) {
           return;
         }
@@ -2449,7 +2546,7 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
           builtShapes,
           newShapeIdsOrdered,
         });
-        const prevIds = JSON.stringify(story.ShapeIds ?? []);
+        const prevIds = JSON.stringify(story.shapes ?? []);
         const nextIds = JSON.stringify(newShapeIdsOrdered);
         const prevShapesJson = JSON.stringify(state.Shapes);
         const nextShapesJson = JSON.stringify(merged);
