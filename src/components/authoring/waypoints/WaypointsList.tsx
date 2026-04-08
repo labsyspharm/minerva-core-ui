@@ -9,6 +9,11 @@ import {
 import type { ConfigWaypoint } from "@/lib/config";
 import { downloadStoryJSON } from "@/lib/exportStory";
 import { useOverlayStore } from "@/lib/stores";
+import {
+  getViewerBoundsFromSnapshot,
+  getViewerViewportSnapshotFromStore,
+  orthographicZoomToNumber,
+} from "@/lib/viewerViewport";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { WaypointContentEditor } from "./WaypointContentEditor";
 import styles from "./WaypointsList.module.css";
@@ -35,9 +40,7 @@ type WaypointChildMetadata =
 
 type WaypointItemMetadata = ConfigWaypoint | WaypointChildMetadata;
 
-const WaypointsList = (props: WaypointsListProps) => {
-  const { viewOnly } = props;
-
+const WaypointsList = (_props: WaypointsListProps) => {
   // Use Zustand store for stories and waypoints management
   const {
     stories,
@@ -47,14 +50,16 @@ const WaypointsList = (props: WaypointsListProps) => {
     addStory,
     reorderStories,
     importWaypointAnnotations,
+    updateStory,
     imageWidth,
     imageHeight,
     setTargetWaypointCamera,
     editingViewstateWaypointIndex,
     setEditingViewstateWaypointIndex,
     removeStory,
+    persistImportedAnnotationsToStory,
     Groups,
-    Shapes,
+    captureSquareViewportThumbnail,
   } = useOverlayStore();
 
   // Local state for markdown editing
@@ -279,7 +284,87 @@ const WaypointsList = (props: WaypointsListProps) => {
   const handleSaveEditViewstate = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     e?.preventDefault();
-    // Don't persist — just exit edit mode. Viewstate save/export deferred.
+    const index = editingViewstateWaypointIndex;
+    if (index === null || index < 0 || index >= stories.length) {
+      setEditingViewstateWaypointIndex(null);
+      return;
+    }
+
+    const snap = getViewerViewportSnapshotFromStore();
+    const bounds = snap ? getViewerBoundsFromSnapshot(snap) : null;
+    const zoom = snap ? orthographicZoomToNumber(snap.viewState.zoom) : null;
+    const target = snap?.viewState.target;
+    const viewStateCanon =
+      snap &&
+      zoom !== null &&
+      Array.isArray(target) &&
+      target.length >= 3 &&
+      typeof target[0] === "number" &&
+      typeof target[1] === "number" &&
+      typeof target[2] === "number"
+        ? {
+            zoom,
+            target: [target[0], target[1], target[2]] as [
+              number,
+              number,
+              number,
+            ],
+          }
+        : null;
+
+    if (!bounds || !viewStateCanon) {
+      const st = useOverlayStore.getState();
+      console.warn(
+        "[Minerva] waypoint view not saved: no bounds from viewer (camera/size not ready). " +
+          "Try pan/zoom once or reload.",
+        {
+          index,
+          viewerViewState: st.viewerViewState,
+          viewerViewportSize: st.viewerViewportSize,
+          imageWidth: st.imageWidth,
+          imageHeight: st.imageHeight,
+        },
+      );
+      setEditingViewstateWaypointIndex(null);
+      return;
+    }
+
+    const loaded = useOverlayStore.getState().viewerImageLayersLoaded;
+    const thumbnail = loaded ? captureSquareViewportThumbnail() : null;
+    updateStory(index, {
+      Bounds: bounds,
+      ViewState: viewStateCanon,
+      Pan: undefined,
+      Zoom: undefined,
+      ...(thumbnail ? { ThumbnailDataUrl: thumbnail } : {}),
+    });
+
+    if (!loaded) {
+      const tryThumb = (attempt: number) => {
+        if (attempt > 100) return;
+        const s = useOverlayStore.getState();
+        if (s.activeStoryIndex !== index) return;
+        if (!s.viewerImageLayersLoaded) {
+          window.setTimeout(() => tryThumb(attempt + 1), 200);
+          return;
+        }
+        const t = s.captureSquareViewportThumbnail();
+        if (t) s.updateStory(index, { ThumbnailDataUrl: t });
+      };
+      tryThumb(0);
+    }
+
+    persistImportedAnnotationsToStory(index);
+
+    const st = useOverlayStore.getState();
+    downloadStoryJSON(
+      st.stories,
+      st.Shapes ?? [],
+      st.imageWidth,
+      st.imageHeight,
+      st.viewerViewportSize,
+    );
+
     setEditingViewstateWaypointIndex(null);
   };
 
@@ -423,7 +508,7 @@ const WaypointsList = (props: WaypointsListProps) => {
           <PolylineIcon style={{ width: "14px", height: "14px" }} />
         </button>
 
-        {/* Viewstate Edit Button (Save does not persist — deferred) */}
+        {/* Viewstate edit: pin to enter mode; banner Save writes view + downloads story JSON */}
         <button
           type="button"
           style={{
@@ -539,7 +624,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                 e.preventDefault();
                 handleSaveEditViewstate(e);
               }}
-              title="Save waypoint viewstate (not persisted)"
+              title="Save camera to this waypoint, persist annotations, download story.json"
             >
               Save
             </button>
@@ -566,42 +651,23 @@ const WaypointsList = (props: WaypointsListProps) => {
         items={listItems}
         title="Waypoints"
         headerActions={
-          viewOnly ? null : (
-            <div style={{ display: "flex", gap: "6px" }}>
-              <button
-                type="button"
-                style={{
-                  background: "none",
-                  border: "1px solid #444",
-                  color: "#ccc",
-                  padding: "6px 10px",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-                onClick={() =>
-                  downloadStoryJSON(stories, Shapes, imageWidth, imageHeight)
-                }
-                title="Export story as JSON"
-              >
-                Export JSON
-              </button>
-              <button
-                type="button"
-                style={{
-                  background: "none",
-                  border: "1px solid #444",
-                  color: "#ccc",
-                  padding: "6px 10px",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-                onClick={handleAddWaypoint}
-                title="Add waypoint"
-              >
-                + Add
-              </button>
-            </div>
-          )
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button
+              type="button"
+              style={{
+                background: "none",
+                border: "1px solid #444",
+                color: "#ccc",
+                padding: "6px 10px",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+              onClick={handleAddWaypoint}
+              title="Add waypoint"
+            >
+              + Add
+            </button>
+          </div>
         }
         onItemClick={handleItemClick}
         onDragStart={handleDragStart}
@@ -610,13 +676,12 @@ const WaypointsList = (props: WaypointsListProps) => {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         showVisibilityToggle={false}
-        showDeleteButton={!viewOnly}
-        onDelete={viewOnly ? undefined : handleDeleteWaypoint}
+        showDeleteButton
+        onDelete={handleDeleteWaypoint}
         showExpandToggle={false}
         emptyMessage="No waypoints yet"
         customChildRenderer={customChildRenderer}
-        itemActions={viewOnly ? null : storyItemActions}
-        noHeader={viewOnly}
+        itemActions={storyItemActions}
       />
     </div>
   );

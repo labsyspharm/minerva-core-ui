@@ -253,4 +253,5 @@ export {
   getWaypointViewState,
   getWaypointBounds,
   normalizeWaypointToBounds,
+  isWaypointBounds,
 };

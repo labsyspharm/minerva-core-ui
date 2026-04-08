@@ -1,17 +1,20 @@
 import * as React from "react";
 import AnnotationsIcon from "@/components/shared/icons/annotations.svg?react";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
+import DownloadIcon from "@/components/shared/icons/download.svg?react";
 import JumpToViewIcon from "@/components/shared/icons/jump-to-view.svg?react";
 import OverwriteViewIcon from "@/components/shared/icons/overwrite-view.svg?react";
 import PlayIcon from "@/components/shared/icons/play.svg?react";
 import type { ConfigWaypoint } from "@/lib/config";
 import type { ConfigGroup, ConfigSourceChannel } from "@/lib/document-store";
+import { downloadStoryJSON } from "@/lib/exportStory";
 import { useOverlayStore } from "@/lib/stores";
 import {
   getViewerBoundsFromSnapshot,
   getViewerViewportSnapshotFromStore,
   orthographicZoomToNumber,
 } from "@/lib/viewerViewport";
+import { WAYPOINT_THUMBNAIL_PIXEL_SIZE } from "@/lib/waypointThumbnail";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { WaypointContentEditor } from "./WaypointContentEditor";
 import styles from "./WaypointsList.module.css";
@@ -82,6 +85,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     updateStory,
     reorderStories,
     importWaypointAnnotations,
+    persistImportedAnnotationsToStory,
     imageWidth,
     imageHeight,
     setTargetWaypointCamera,
@@ -212,7 +216,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     }, durationMs);
   };
 
-  const saveCurrentViewToStory = (index: number, source: string) => {
+  const saveCurrentViewToStory = (index: number, source: string): boolean => {
     const snap = getViewerViewportSnapshotFromStore();
     const bounds = snap ? getViewerBoundsFromSnapshot(snap) : null;
     const zoom = snap ? orthographicZoomToNumber(snap.viewState.zoom) : null;
@@ -249,9 +253,10 @@ const WaypointsList = (props: WaypointsListProps) => {
           imageHeight: st.imageHeight,
         },
       );
-      return;
+      return false;
     }
-    const thumbnail = captureSquareViewportThumbnail();
+    const loaded = useOverlayStore.getState().viewerImageLayersLoaded;
+    const thumbnail = loaded ? captureSquareViewportThumbnail() : null;
 
     updateStory(index, {
       Bounds: bounds,
@@ -260,9 +265,23 @@ const WaypointsList = (props: WaypointsListProps) => {
       Zoom: undefined,
       ...(thumbnail ? { ThumbnailDataUrl: thumbnail } : {}),
     });
+    if (!loaded) {
+      saveThumbnailOnlyToStory(index, 0);
+    }
+    return true;
   };
 
-  const saveThumbnailOnlyToStory = (index: number) => {
+  const saveThumbnailOnlyToStory = (index: number, attempt = 0) => {
+    if (attempt > 100) return;
+    const store = useOverlayStore.getState();
+    if (store.activeStoryIndex !== index) return;
+    if (!store.viewerImageLayersLoaded) {
+      window.setTimeout(
+        () => saveThumbnailOnlyToStory(index, attempt + 1),
+        200,
+      );
+      return;
+    }
     const thumbnail = captureSquareViewportThumbnail();
     if (!thumbnail) return;
     updateStory(index, { ThumbnailDataUrl: thumbnail });
@@ -330,7 +349,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       setTargetWaypointCamera(storyForNav);
     }
     // Only grab the preview image after the camera settles — never rewrite
-    // Bounds/ViewState on row select (use “Overwrite view” to persist camera).
+    // Bounds/ViewState on row select (use save-view control on the row to persist camera).
     if (shouldCaptureThumbnail && !storyForNav?.ThumbnailDataUrl) {
       scheduleThumbnailCaptureForStory(index, false, true, 1100);
     }
@@ -358,9 +377,31 @@ const WaypointsList = (props: WaypointsListProps) => {
     event.stopPropagation();
     event.preventDefault();
     setActiveStory(index);
-    saveCurrentViewToStory(index, "handleOverwriteView");
+    const saved = saveCurrentViewToStory(index, "handleOverwriteView");
     flashSquareOverlay();
     scheduleThumbnailCaptureForStory(index, true, true, 150);
+    if (saved) {
+      persistImportedAnnotationsToStory(index);
+      const st = useOverlayStore.getState();
+      downloadStoryJSON(
+        st.stories,
+        st.Shapes ?? [],
+        st.imageWidth,
+        st.imageHeight,
+        st.viewerViewportSize,
+      );
+    }
+  };
+
+  const handleDownloadStory = () => {
+    const st = useOverlayStore.getState();
+    downloadStoryJSON(
+      st.stories,
+      st.Shapes ?? [],
+      st.imageWidth,
+      st.imageHeight,
+      st.viewerViewportSize,
+    );
   };
 
   const handleAddWaypoint = () => {
@@ -462,6 +503,19 @@ const WaypointsList = (props: WaypointsListProps) => {
           </button>
         )}
 
+        {canEdit && (
+          <button
+            type="button"
+            className={styles.iconHeaderButton}
+            onClick={handleDownloadStory}
+            disabled={stories.length === 0}
+            title="Download story.json (waypoints + shapes)"
+            aria-label="Download story.json"
+          >
+            <DownloadIcon width={14} height={14} aria-hidden />
+          </button>
+        )}
+
         {canEdit && onEnterPlaybackPreview ? (
           <button
             type="button"
@@ -543,6 +597,8 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <img
                     className={styles.rowThumbnail}
                     src={story.ThumbnailDataUrl}
+                    width={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
+                    height={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
                     alt=""
                     aria-hidden
                   />
@@ -605,12 +661,12 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <button
                     type="button"
                     className={styles.rowViewportIconButton}
-                    title="Overwrite waypoint view with current viewport"
+                    title="Save waypoint view to story and download story.json"
                     onClick={(event) => handleOverwriteView(index, event)}
                   >
                     <OverwriteViewIcon width={14} height={14} aria-hidden />
                     <span className={styles.visuallyHidden}>
-                      Overwrite waypoint view
+                      Save waypoint view
                     </span>
                   </button>
                 </div>

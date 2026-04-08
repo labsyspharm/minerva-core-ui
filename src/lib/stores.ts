@@ -930,6 +930,9 @@ export interface OverlayStore {
   setViewerViewState: (vs: OrthographicViewState) => void;
   viewerViewportSize: ViewportSize | null;
   setViewerViewportSize: (size: ViewportSize) => void;
+  /** True when OME-TIFF / DICOM tile stack layers all report `isLoaded` (see ImageViewer). */
+  viewerImageLayersLoaded: boolean;
+  setViewerImageLayersLoaded: (loaded: boolean) => void;
   squareViewportThumbnailCapture: (() => string | null) | null;
   setSquareViewportThumbnailCapture: (
     capture: (() => string | null) | null,
@@ -1092,6 +1095,7 @@ const overlayInitialState = {
   sam2ViewportSize: null,
   viewerViewState: null,
   viewerViewportSize: null,
+  viewerImageLayersLoaded: false,
   squareViewportThumbnailCapture: null,
   editingViewstateWaypointIndex: null,
 };
@@ -2301,6 +2305,10 @@ export const useOverlayStore = create<OverlayStore & DocumentStore>()(
 
       setViewerViewportSize: (size) => {
         set({ viewerViewportSize: size });
+      },
+
+      setViewerImageLayersLoaded: (loaded) => {
+        set({ viewerImageLayersLoaded: loaded });
       },
 
       setSquareViewportThumbnailCapture: (capture) => {

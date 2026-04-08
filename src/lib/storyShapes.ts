@@ -1,8 +1,7 @@
 /**
- * Canonical waypoint annotation geometry for persistence and export.
+ * Canonical waypoint annotation geometry for persistence.
  * Waypoints reference records by UUID (`ShapeIds`); full definitions live in
- * `ItemRegistry.Shapes`. Coordinates are world / image pixels — the same form
- * used in serialized story JSON (`shapes` array).
+ * `ItemRegistry.Shapes`. Coordinates are world / image pixels.
  */
 
 import {
@@ -22,7 +21,7 @@ import type {
   TextAnnotation,
 } from "./stores";
 
-/** A single point in image / world pixel space (matches export `{ x, y }`). */
+/** A single point in image / world pixel space. */
 export type StoryPoint = { x: number; y: number };
 
 export type StoryShapePoint = {
@@ -32,23 +31,71 @@ export type StoryShapePoint = {
 };
 
 /**
- * Arrow tip + direction (legacy waypoint style). `angle` is degrees: bearing from
- * tip toward tail. Import still accepts older JSON with `from`/`to` instead.
+ * Serialized arrow (matches `story.schema.json`).
+ * Key order for `JSON.stringify` is: `type`, `point`, `angle`, optional `label`, `uuid`.
+ *
+ * `angle` is **radians**: bearing from tip toward tail (+x = 0, CCW), image pixels.
+ * Loose JSON may still pass `angle` as a numeric string; it is parsed to a number.
  */
 export type StoryShapeArrow = {
   type: "arrow";
-  uuid: string;
   point: StoryPoint;
   angle: number;
-  /** Optional caption; rendered toward the tail via `LineAnnotation.text`. */
   label?: string;
+  uuid: string;
 };
 
-/** Loose shape at load time (e.g. older exports with `from`/`to`). */
-type StoryShapeArrowIn = StoryShapeArrow & {
+/** Build arrow shapes in canonical field order for exports (`angle` in radians). */
+export function buildStoryShapeArrow(parts: {
+  uuid: string;
+  point: StoryPoint;
+  /** Bearing from tip toward tail, radians (+x = 0, CCW). */
+  angle: number;
+  label?: string;
+}): StoryShapeArrow {
+  const trimmed = parts.label?.trim();
+  if (trimmed) {
+    return {
+      type: "arrow",
+      point: parts.point,
+      angle: parts.angle,
+      label: trimmed,
+      uuid: parts.uuid,
+    };
+  }
+  return {
+    type: "arrow",
+    point: parts.point,
+    angle: parts.angle,
+    uuid: parts.uuid,
+  };
+}
+
+/** Loose arrow at load time (`angle` as number or numeric string, legacy `from`/`to`, `text` caption). */
+type StoryShapeArrowLoose = {
+  type: "arrow";
+  uuid: string;
+  point?: StoryPoint;
+  angle?: number | string;
+  label?: string;
   from?: StoryPoint;
   to?: StoryPoint;
+  text?: unknown;
 };
+
+/** Parsed angle in radians (for `point` + `angle` form only; not used for `from`/`to`). */
+function parseArrowAngleRadians(raw: unknown, uuid: string): number {
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return raw;
+  }
+  if (typeof raw === "string") {
+    const n = Number(raw.trim());
+    if (Number.isFinite(n)) {
+      return n;
+    }
+  }
+  throw new Error(`minerva: invalid arrow angle for uuid ${uuid}`);
+}
 
 export type StoryShapePolygon = {
   type: "polygon";
@@ -180,14 +227,12 @@ export function annotationToShape(ann: Annotation): StoryShape | null {
       if (arrowHead) {
         const label = a.text?.trim() || a.metadata?.label?.trim() || undefined;
         const angleRad = Math.atan2(from.y - to.y, from.x - to.x);
-        const angleDeg = (angleRad * 180) / Math.PI;
-        return {
-          type: "arrow",
+        return buildStoryShapeArrow({
           uuid,
           point: to,
-          angle: angleDeg,
-          ...(label ? { label } : {}),
-        };
+          angle: angleRad,
+          label,
+        });
       }
       return {
         type: "polyline",
@@ -214,33 +259,38 @@ function tupleFromPoint(p: StoryPoint): [number, number] {
 }
 
 /** Caption for arrows; older JSON may use `text` instead of `label` — treat as `label`. */
-function arrowCaptionFromShape(shape: StoryShapeArrowIn): string | undefined {
+function arrowCaptionFromShape(
+  shape: StoryShapeArrowLoose,
+): string | undefined {
   const fromLabel = shape.label?.trim();
   if (fromLabel) return fromLabel;
-  const loose = shape as StoryShapeArrowIn & { text?: unknown };
-  if (typeof loose.text === "string") {
-    const t = loose.text.trim();
+  if (typeof shape.text === "string") {
+    const t = shape.text.trim();
     return t || undefined;
   }
   return undefined;
 }
 
-function arrowPointAngleFromInput(shape: StoryShapeArrowIn): {
+function arrowPointAngleFromInput(shape: StoryShapeArrowLoose): {
   point: StoryPoint;
   angle: number;
 } {
-  if (
-    shape.point &&
-    typeof shape.angle === "number" &&
-    Number.isFinite(shape.angle)
-  ) {
-    return { point: shape.point, angle: shape.angle };
+  const hasAngleField =
+    shape.angle !== undefined &&
+    shape.angle !== null &&
+    !(typeof shape.angle === "string" && shape.angle.trim() === "");
+
+  if (shape.point && hasAngleField) {
+    return {
+      point: shape.point,
+      angle: parseArrowAngleRadians(shape.angle, shape.uuid),
+    };
   }
   if (shape.from && shape.to) {
     const tip = shape.to;
     const tail = shape.from;
     const angleRad = Math.atan2(tail.y - tip.y, tail.x - tip.x);
-    return { point: tip, angle: (angleRad * 180) / Math.PI };
+    return { point: tip, angle: angleRad };
   }
   throw new Error(`minerva: invalid arrow shape (uuid ${shape.uuid})`);
 }
@@ -293,9 +343,8 @@ export function shapeToAnnotation(
       } satisfies PolylineAnnotation;
     }
     case "arrow": {
-      const { point, angle } = arrowPointAngleFromInput(shape);
+      const { point, angle: angleRad } = arrowPointAngleFromInput(shape);
       const tip = tupleFromPoint(point);
-      const angleRad = (angle * Math.PI) / 180;
       const minDim = context
         ? Math.min(context.imageWidth, context.imageHeight)
         : 800;

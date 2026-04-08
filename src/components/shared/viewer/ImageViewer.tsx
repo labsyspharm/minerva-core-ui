@@ -30,6 +30,10 @@ import {
 } from "@/lib/viewerViewport";
 import type { Config, Loader } from "@/lib/viv";
 import { getWaypointViewState } from "@/lib/waypoint";
+import {
+  WAYPOINT_THUMBNAIL_JPEG_QUALITY,
+  WAYPOINT_THUMBNAIL_PIXEL_SIZE,
+} from "@/lib/waypointThumbnail";
 
 type ItemRegistryChannel = {
   name: string;
@@ -330,6 +334,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const setViewerViewportSize = useOverlayStore((s) => s.setViewerViewportSize);
   const setSquareViewportThumbnailCapture = useOverlayStore(
     (s) => s.setSquareViewportThumbnailCapture,
+  );
+  const setViewerImageLayersLoaded = useOverlayStore(
+    (s) => s.setViewerImageLayersLoaded,
   );
 
   // Register SAM2 image fetcher for magic wand (OME-TIFF only)
@@ -736,8 +743,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     if (!sourceCtx) return null;
     sourceCtx.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
 
-    const maxThumbSize = 160;
-    const outputSide = Math.max(1, Math.min(maxThumbSize, Math.min(sw, sh)));
+    const outputSide = WAYPOINT_THUMBNAIL_PIXEL_SIZE;
     const outputCanvas = document.createElement("canvas");
     outputCanvas.width = outputSide;
     outputCanvas.height = outputSide;
@@ -756,7 +762,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
       outputSide,
       outputSide,
     );
-    return outputCanvas.toDataURL("image/png");
+    return outputCanvas.toDataURL(
+      "image/jpeg",
+      WAYPOINT_THUMBNAIL_JPEG_QUALITY,
+    );
   }, [
     viewportSize.width,
     viewportSize.height,
@@ -880,12 +889,22 @@ export const ImageViewer = (props: ImageViewerProps) => {
     onRedraw: (params: { layers: Layer[] }) => void;
   }>(null);
 
-  // onAfterRender callback to call LoadingWidget's onRedraw
   const handleAfterRender = useCallback(() => {
     if (loadingWidgetRef.current) {
       loadingWidgetRef.current.onRedraw({ layers: allLayers });
     }
-  }, [allLayers]);
+    const imageStack = omeTiffLayers.length > 0 ? omeTiffLayers : dicomLayers;
+    const loaded =
+      imageStack.length > 0 &&
+      imageStack.every((layer) => (layer as { isLoaded?: boolean }).isLoaded);
+    setViewerImageLayersLoaded(loaded);
+  }, [allLayers, dicomLayers, omeTiffLayers, setViewerImageLayersLoaded]);
+
+  useEffect(() => {
+    return () => {
+      useOverlayStore.getState().setViewerImageLayersLoaded(false);
+    };
+  }, []);
 
   // Route scale bar to the fixed overlay view; everything else to the main view
   const layerFilter = useCallback(

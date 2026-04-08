@@ -165,12 +165,12 @@
 
 .compactRow {
   padding: 10px 10px;
-  min-height: 72px;
+  min-height: 84px;
   border-bottom: 1px solid #333;
   display: grid;
   align-items: start;
   box-sizing: border-box;
-  grid-template-columns: 24px 56px minmax(0, 1fr) 28px;
+  grid-template-columns: 24px 64px minmax(0, 1fr) 28px;
   gap: 10px;
   position: relative;
   user-select: none;
@@ -183,8 +183,8 @@
 }
 
 .rowThumbnail {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-radius: 3px;
   border: 1px solid #333;
   background-color: #000;

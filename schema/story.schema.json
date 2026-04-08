@@ -3,7 +3,11 @@
   "title": "Story",
   "type": "object",
   "properties": {
-    "version": { "type": "string", "const": "2" },
+    "version": {
+      "type": "string",
+      "const": "1",
+      "description": "Story JSON format; must match STORY_JSON_VERSION in exportStory.ts"
+    },
     "waypoints": {
       "type": "array",
       "items": { "$ref": "#/definitions/Waypoint" }
@@ -39,21 +43,21 @@
           "type": "object",
           "properties": {
             "type": { "const": "arrow" },
-            "uuid": { "type": "string" },
             "point": {
               "$ref": "#/definitions/StoryPoint",
               "description": "Arrow tip (image pixels)"
             },
             "angle": {
               "type": "number",
-              "description": "Degrees: bearing from tip toward tail (matches legacy waypoint arrow Angle)"
+              "description": "Radians: bearing from tip toward tail (+x = 0, CCW in image pixel space)."
             },
             "label": {
               "type": "string",
               "description": "Caption toward the arrow tail (same role as LineAnnotation.text)"
-            }
+            },
+            "uuid": { "type": "string" }
           },
-          "required": ["type", "uuid", "point", "angle"]
+          "required": ["type", "point", "angle", "uuid"]
         },
         {
           "type": "object",
@@ -95,42 +99,50 @@
       "type": "object",
       "properties": {
         "id": { "type": "string", "description": "UUID" },
-        "name": { "type": "string" },
+        "title": {
+          "type": "string",
+          "description": "Display title (maps to internal Name)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Legacy alias for title"
+        },
         "content": {
           "type": "string",
           "description": "Markdown narrative text"
         },
         "group": {
           "type": "string",
-          "description": "Channel group name (optional)"
+          "description": "Channel group key (optional; app may use name or uuid string)"
         },
-        "position": { "$ref": "#/definitions/Position" },
+        "thumbnail": {
+          "type": "string",
+          "description": "Optional image data URL for list previews (typically JPEG, 64×64 pixels)"
+        },
+        "viewport": { "$ref": "#/definitions/Viewport" },
         "shapes": {
           "type": "array",
           "description": "UUIDs of shapes used on this waypoint (see root shapes[])",
           "items": { "type": "string" }
         }
       },
-      "required": ["id", "name", "content", "position", "shapes"]
+      "allOf": [
+        {
+          "required": ["id", "content", "viewport", "shapes"]
+        },
+        {
+          "anyOf": [{ "required": ["title"] }, { "required": ["name"] }]
+        }
+      ]
     },
-    "Position": {
-      "description": "Viewport position in image pixel coordinates",
+    "Viewport": {
+      "description": "Visible image region in pixel coordinates (upperLeft / lowerRight corners)",
       "type": "object",
       "properties": {
-        "x": {
-          "type": "number",
-          "description": "Image pixel x of viewport center"
-        },
-        "y": {
-          "type": "number",
-          "description": "Image pixel y of viewport center"
-        },
-        "zoom": {
-          "type": "number",
-          "description": "deck.gl log2 zoom (0 = 1:1 pixel, negative = zoomed out)"
-        }
+        "upperLeft": { "$ref": "#/definitions/StoryPoint" },
+        "lowerRight": { "$ref": "#/definitions/StoryPoint" }
       },
-      "required": ["x", "y", "zoom"]
+      "required": ["upperLeft", "lowerRight"]
     }
   }
 }

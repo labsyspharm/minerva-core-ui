@@ -40,6 +40,7 @@ type WaypointProperties = NameProperty & {
     target: [number, number, number];
     zoom: number;
   };
+  /** Square JPEG data URL (`data:image/jpeg;base64,…`), 64×64px; see `waypointThumbnail.ts`. */
   ThumbnailDataUrl?: string;
   Group?: string;
 };
@@ -138,7 +139,7 @@ export type ConfigSourceDistribution = UUID & DistributionProperties;
 export type ConfigWaypoint = UUID &
   WaypointProperties & {
     State: WaypointState;
-    /** Ordered UUIDs into `ItemRegistry.Shapes` (same as export `waypoints[].shapes`). */
+    /** Ordered UUIDs into global `shapes` / wire `waypoints[].shapes`. */
     ShapeIds?: string[];
   };
 
