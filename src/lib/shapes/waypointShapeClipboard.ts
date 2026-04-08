@@ -1,4 +1,4 @@
-import { useAppStore } from "@/lib/stores/app-store";
+import { useAppStore } from "@/lib/stores/appStore";
 import {
   cloneShapesForPaste,
   readShapesFromSystemClipboard,

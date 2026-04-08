@@ -1,7 +1,7 @@
 import type {
   ConfigSourceChannel,
   ConfigGroup as DocConfigGroup,
-} from "@/lib/stores/document-store";
+} from "@/lib/stores/documentStore";
 
 /**
  * Snapshot of document fields that affect VIV layer settings (see `toSettings` in `viv.ts`).

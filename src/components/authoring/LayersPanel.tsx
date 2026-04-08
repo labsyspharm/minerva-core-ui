@@ -16,7 +16,7 @@ import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
 import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
 import type { Shape } from "@/lib/shapes/shapeModel";
-import { useAppStore } from "@/lib/stores/app-store";
+import { useAppStore } from "@/lib/stores/appStore";
 
 // Shared Text Edit Panel Component (same as in original LayersPanel)
 interface TextEditPanelProps {

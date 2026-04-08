@@ -10,8 +10,8 @@
  */
 
 import * as React from "react";
-import { useAppStore } from "@/lib/stores/app-store";
-import { useDocumentStore } from "@/lib/stores/document-store";
+import { useAppStore } from "@/lib/stores/appStore";
+import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   computeImageViewRect,
   computeSamTransform,

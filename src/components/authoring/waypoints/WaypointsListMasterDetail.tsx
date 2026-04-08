@@ -6,17 +6,17 @@ import OverwriteViewIcon from "@/components/shared/icons/overwrite-view.svg?reac
 import PlayIcon from "@/components/shared/icons/play.svg?react";
 import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
 import type { ConfigWaypoint } from "@/lib/authoring/config";
-import { useAppStore } from "@/lib/stores/app-store";
+import { useAppStore } from "@/lib/stores/appStore";
+import type { JsonExport } from "@/lib/stores/documentSchema";
 import {
   type ConfigGroup,
   type ConfigSourceChannel,
   useDocumentStore,
-} from "@/lib/stores/document-store";
+} from "@/lib/stores/documentStore";
 import {
-  downloadStoryDocument,
-  type StoreStoryWaypoint,
-  storeStoryWaypointToConfigWaypoint,
-} from "@/lib/story/storyDocument";
+  exportRowToConfigWaypoint,
+  type JsonExportWaypointRow,
+} from "@/lib/stores/storeUtils";
 import {
   getViewerBoundsFromSnapshot,
   getViewerViewportSnapshotFromStore,
@@ -26,6 +26,18 @@ import { WAYPOINT_THUMBNAIL_PIXEL_SIZE } from "@/lib/waypoints/waypointThumbnail
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { WaypointContentEditor } from "./WaypointContentEditor";
 import styles from "./WaypointsList.module.css";
+
+function triggerStoryJsonDownload(doc: JsonExport, filename = "story.json") {
+  const blob = new Blob([JSON.stringify(doc, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export type WaypointsListProps = {
   viewOnly?: boolean;
@@ -62,7 +74,7 @@ const PlusIcon = () => (
   </svg>
 );
 
-const countWaypointAnnotations = (story: StoreStoryWaypoint) =>
+const countWaypointAnnotations = (story: JsonExportWaypointRow) =>
   story.shapeIds?.length ?? 0;
 
 const annotationCountLabel = (count: number) =>
@@ -329,7 +341,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   };
 
   const applyStoryChannelGroup = React.useCallback(
-    (story: StoreStoryWaypoint | undefined) => {
+    (story: JsonExportWaypointRow | undefined) => {
       if (!story || channelGroups.length === 0) return;
       const foundGroup =
         (story.groupId &&
@@ -388,7 +400,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     const storyForNav = useDocumentStore.getState().waypoints[index];
     applyStoryChannelGroup(storyForNav);
     if (storyForNav && imageWidth > 0 && imageHeight > 0) {
-      setTargetWaypointCamera(storeStoryWaypointToConfigWaypoint(storyForNav));
+      setTargetWaypointCamera(exportRowToConfigWaypoint(storyForNav));
     }
     // Only grab the preview image after the camera settles — never rewrite
     // Bounds/ViewState on row select (use save-view control on the row to persist camera).
@@ -424,14 +436,13 @@ const WaypointsList = (props: WaypointsListProps) => {
     scheduleThumbnailCaptureForStory(index, true, true, 150);
     if (saved) {
       persistImportedShapesToStory(index);
-      useDocumentStore.getState().syncStoryDocument();
-      downloadStoryDocument(useDocumentStore.getState().storyDocument);
+      useDocumentStore.getState().syncJsonExport();
     }
   };
 
   const handleDownloadStory = () => {
-    useDocumentStore.getState().syncStoryDocument();
-    downloadStoryDocument(useDocumentStore.getState().storyDocument);
+    useDocumentStore.getState().syncJsonExport();
+    triggerStoryJsonDownload(useDocumentStore.getState().jsonExport);
   };
 
   const handleAddWaypoint = () => {
@@ -552,8 +563,8 @@ const WaypointsList = (props: WaypointsListProps) => {
             className={styles.iconHeaderButton}
             onClick={onEnterPlaybackPreview}
             disabled={waypoints.length === 0}
-            title="Preview narrative playback"
-            aria-label="Preview narrative playback"
+            title="Preview playback"
+            aria-label="Preview playback"
           >
             <PlayIcon width={14} height={14} aria-hidden />
           </button>

@@ -3,11 +3,8 @@ import type { DTYPE_VALUES } from "@vivjs/constants";
 import { histogramBinTile } from "../imaging/histogramBinPool";
 import type { Loader } from "../imaging/viv";
 import type { ConfigGroup as LegacyConfigGroup } from "../legacy/exhibit";
-import type {
-  ConfigGroup,
-  ConfigSourceChannel,
-} from "../stores/document-store";
-import type { StoryShape } from "../story/storyShapes";
+import type { ConfigGroup, ConfigSourceChannel } from "../stores/documentStore";
+import type { StoryShape } from "../stores/storeUtils";
 
 export type SupportedDtype = keyof typeof DTYPE_VALUES;
 export type SupportedTypedArray = InstanceType<
@@ -51,11 +48,11 @@ export type ItemRegistryProps = {
   Name: string;
   Groups: ConfigGroup[];
   /**
-   * Narrative waypoint rows for the exhibit author (`Name`/`Bounds`/…); mirror of
-   * Zustand `waypoints` via `waypointsToConfigWaypoints` / `storeStoryWaypointToConfigWaypoint`.
+   * Waypoint rows for the exhibit author (`Name`/`Bounds`/…); mirror of
+   * Zustand `waypoints` via `exportRowsToConfigWaypoints` / `exportRowToConfigWaypoint`.
    */
   Stories: ConfigWaypoint[];
-  /** Global shape registry → `story.json` root `shapes` / `storyDocument.shapes`. */
+  /** Global shape registry → `story.json` root `shapes` / cached `jsonExport.shapes`. */
   Shapes?: StoryShape[];
   SourceChannels: ConfigSourceChannel[];
   SourceDistributions: ConfigSourceDistribution[];

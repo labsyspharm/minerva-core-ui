@@ -7,13 +7,12 @@ import {
 } from "@/components/shared/icons/OverlayIcons";
 // Types
 import type { ConfigWaypoint } from "@/lib/authoring/config";
-import { useAppStore } from "@/lib/stores/app-store";
-import { useDocumentStore } from "@/lib/stores/document-store";
+import { useAppStore } from "@/lib/stores/appStore";
+import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
-  downloadStoryDocument,
-  type StoreStoryWaypoint,
-  storeStoryWaypointToConfigWaypoint,
-} from "@/lib/story/storyDocument";
+  exportRowToConfigWaypoint,
+  type JsonExportWaypointRow,
+} from "@/lib/stores/storeUtils";
 import {
   getViewerBoundsFromSnapshot,
   getViewerViewportSnapshotFromStore,
@@ -29,13 +28,13 @@ import {
 
 interface WaypointAnnotationEditorMetadata {
   type: "shapes-panel";
-  story: StoreStoryWaypoint;
+  story: JsonExportWaypointRow;
   storyIndex: number;
 }
 
 interface WaypointMarkdownEditorMetadata {
   type: "markdown-editor";
-  story: StoreStoryWaypoint;
+  story: JsonExportWaypointRow;
   storyIndex: number;
 }
 
@@ -43,10 +42,10 @@ type WaypointChildMetadata =
   | WaypointAnnotationEditorMetadata
   | WaypointMarkdownEditorMetadata;
 
-type WaypointItemMetadata = StoreStoryWaypoint | WaypointChildMetadata;
+type WaypointItemMetadata = JsonExportWaypointRow | WaypointChildMetadata;
 
 const WaypointsList = (_props: WaypointsListProps) => {
-  // Document store: narrative waypoint rows (`storyDocument.waypoints` on export)
+  // Document store rows match `jsonExport.waypoints` after sync
   const waypoints = useDocumentStore((s) => s.waypoints);
   const shapes = useDocumentStore((s) => s.shapes);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
@@ -200,7 +199,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
 
     // Only handle story clicks, not child panel clicks
     if (item.metadata && !("type" in item.metadata)) {
-      const story = item.metadata as StoreStoryWaypoint;
+      const story = item.metadata as JsonExportWaypointRow;
       const index = waypoints.findIndex((s) => s.id === story.id);
       if (index !== -1) {
         setActiveStory(index);
@@ -220,7 +219,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
         const currentStory = useDocumentStore.getState().waypoints[index];
         const navStory = currentStory ?? story;
         if (imageWidth > 0 && imageHeight > 0) {
-          setTargetWaypointCamera(storeStoryWaypointToConfigWaypoint(navStory));
+          setTargetWaypointCamera(exportRowToConfigWaypoint(navStory));
         }
 
         // Note: shapes are imported automatically by the useEffect
@@ -365,8 +364,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
 
     persistImportedShapesToStory(index);
 
-    useDocumentStore.getState().syncStoryDocument();
-    downloadStoryDocument(useDocumentStore.getState().storyDocument);
+    useDocumentStore.getState().syncJsonExport();
 
     setEditingViewstateWaypointIndex(null);
   };
@@ -443,7 +441,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
       return null;
     }
 
-    const story = item.metadata as StoreStoryWaypoint;
+    const story = item.metadata as JsonExportWaypointRow;
     const storyId = story.id || item.id;
     const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
     const isMarkdownExpanded = expandedMarkdownStories.has(storyId);

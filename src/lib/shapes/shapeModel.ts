@@ -1,4 +1,4 @@
-/** Viewer shape types and pure geometry helpers (no Zustand). Distinct from `StoryShape` in `storyJsonModel`. */
+/** Viewer shape types and pure geometry helpers (no Zustand). Distinct from persisted `StoryShape` in `documentSchema`. */
 
 export interface OverlayLayer {
   id: string;

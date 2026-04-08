@@ -11,7 +11,7 @@ import { useSam2 } from "@/lib/sam2/useSam2";
 import { arrowLineDegeneratePolygon } from "@/lib/shapes/shapeGeometry";
 import { ARROW_ICON_SIZE } from "@/lib/shapes/shapeLayers";
 import { ellipseToPolygon, lineToPolygon } from "@/lib/shapes/shapeModel";
-import { useAppStore } from "@/lib/stores/app-store";
+import { useAppStore } from "@/lib/stores/appStore";
 
 // Shared Text Edit Panel Component
 interface TextEditPanelProps {

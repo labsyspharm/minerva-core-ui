@@ -17,7 +17,7 @@ import {
 import * as React from "react";
 import ArrowIconUrl from "@/components/shared/icons/arrow-annotation.svg?url";
 import ArrowHoverIconUrl from "@/components/shared/icons/arrow-annotation-hover.svg?url";
-import { useAppStore } from "@/lib/stores/app-store";
+import { useAppStore } from "@/lib/stores/appStore";
 import type { Shape } from "./shapeModel";
 
 type ColorRGBA = [number, number, number, number];

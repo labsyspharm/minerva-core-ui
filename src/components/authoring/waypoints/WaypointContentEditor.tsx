@@ -1,8 +1,8 @@
 import MDEditor from "@uiw/react-md-editor";
 import * as React from "react";
 import "@uiw/react-md-editor/markdown-editor.css";
-import { useAppStore } from "@/lib/stores/app-store";
-import type { StoreStoryWaypoint } from "@/lib/story/storyDocument";
+import { useAppStore } from "@/lib/stores/appStore";
+import type { JsonExportWaypointRow } from "@/lib/stores/storeUtils";
 import "./WaypointContentEditor.css";
 
 type PreviewMode = NonNullable<
@@ -10,7 +10,7 @@ type PreviewMode = NonNullable<
 >;
 
 type WaypointContentEditorProps = {
-  story: StoreStoryWaypoint;
+  story: JsonExportWaypointRow;
   storyIndex: number;
   /** When "detail", editor grows to fit content and relies on the parent for scrolling */
   variant?: "compact" | "detail";

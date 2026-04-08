@@ -27,8 +27,8 @@ import {
   copySelectedWaypointShapes,
   pasteWaypointShapesFromClipboard,
 } from "@/lib/shapes/waypointShapeClipboard";
-import { useAppStore } from "@/lib/stores/app-store";
-import type { StoreStoryWaypoint } from "@/lib/story/storyDocument";
+import { useAppStore } from "@/lib/stores/appStore";
+import type { JsonExportWaypointRow } from "@/lib/stores/storeUtils";
 import styles from "./WaypointAnnotationEditor.module.css";
 
 /** Writes rgba into the fields the renderer reads (`style.*`). */
@@ -87,7 +87,7 @@ const TOOLS = {
 } as const;
 
 export interface WaypointAnnotationEditorProps {
-  story: StoreStoryWaypoint;
+  story: JsonExportWaypointRow;
   storyIndex: number;
   /** When true, do not cap height or add inner scroll — parent scrolls */
   embeddedInScrollParent?: boolean;

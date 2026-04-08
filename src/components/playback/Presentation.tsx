@@ -3,12 +3,12 @@ import ReactMarkdown from "react-markdown";
 //import { theme } from "@/theme.module.css";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import { useAppStore } from "@/lib/stores/app-store";
-import { useDocumentStore } from "@/lib/stores/document-store";
+import { useAppStore } from "@/lib/stores/appStore";
+import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
-  type StoreStoryWaypoint,
-  storeStoryWaypointToConfigWaypoint,
-} from "@/lib/story/storyDocument";
+  exportRowToConfigWaypoint,
+  type JsonExportWaypointRow,
+} from "@/lib/stores/storeUtils";
 
 const _theme = {};
 
@@ -319,7 +319,7 @@ export const Presentation = (props: PresentationProps) => {
       // Import shapes from the story (clearing existing imported ones atomically)
       importWaypointShapes(story, true, shapes);
 
-      const wp = storeStoryWaypointToConfigWaypoint(story);
+      const wp = exportRowToConfigWaypoint(story);
       if (imageWidth > 0 && imageHeight > 0) {
         setTargetWaypointCamera(wp);
       }
@@ -371,7 +371,7 @@ export const Presentation = (props: PresentationProps) => {
     const story = waypoints[storyIndex];
     if (!story) return;
     if (imageWidth > 0 && imageHeight > 0) {
-      setTargetWaypointCamera(storeStoryWaypointToConfigWaypoint(story));
+      setTargetWaypointCamera(exportRowToConfigWaypoint(story));
     }
   };
 
@@ -490,7 +490,7 @@ export const Presentation = (props: PresentationProps) => {
       <TocWrapper>
         <h2 className="h6">Table of Contents</h2>
         <ol>
-          {tocWaypoints.map((wp: StoreStoryWaypoint, i: number) => {
+          {tocWaypoints.map((wp: JsonExportWaypointRow, i: number) => {
             const goToStory = (e: MouseEvent) => {
               e.preventDefault();
               storyAt(i);

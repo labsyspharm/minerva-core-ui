@@ -1,5 +1,5 @@
 import type { Deck, OrthographicViewState } from "@deck.gl/core";
-import { useAppStore } from "@/lib/stores/app-store";
+import { useAppStore } from "@/lib/stores/appStore";
 
 export type ViewerBounds = {
   x0: number;

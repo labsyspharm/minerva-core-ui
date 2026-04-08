@@ -6,7 +6,7 @@
  */
 import type { ConfigSourceDistribution } from "../authoring/config";
 import { extractDistributionsForSourceIndices } from "../authoring/config";
-import type { ConfigSourceChannel } from "../stores/document-store";
+import type { ConfigSourceChannel } from "../stores/documentStore";
 import type { Loader } from "./viv";
 
 export function sourceDistributionYValuesLength(

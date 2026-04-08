@@ -22,20 +22,18 @@ import {
   type TextShape,
 } from "../shapes/shapeModel";
 import { mergeShapesAfterWaypointImport } from "../shapes/shapeWaypointImport";
+import type { ViewportSize, ViewRect } from "../viewer/samViewport";
+import { useDocumentStore } from "./documentStore";
 import {
-  configWaypointToStoreStoryWaypoint,
+  configWaypointToExportRow,
+  exportRowToConfigWaypoint,
   hydrateConfigWaypoint,
-  type StoreStoryWaypoint,
-  storeStoryWaypointToConfigWaypoint,
-} from "../story/storyDocument";
-import {
+  type JsonExportWaypointRow,
   mergeShapesForWaypointPersist,
   type StoryShape,
   storyShapeToViewer,
   viewerShapesToStoryShapes,
-} from "../story/storyShapes";
-import type { ViewportSize, ViewRect } from "../viewer/samViewport";
-import { useDocumentStore } from "./document-store";
+} from "./storeUtils";
 
 function newShapeId(): string {
   return crypto.randomUUID();
@@ -549,7 +547,7 @@ function computeBrushPolygon(
  * The durable **exhibit story** (channels, waypoints, shape registry, image pixel size, cached `story.json`)
  * lives in {@link useDocumentStore}. Story **actions** on this store (`setStories`, …) update the document.
  *
- * **Zod** — `exportStoryDocument` → `parseStoryDocument` (`storyJsonModel.ts`).
+ * **Zod** — `buildJsonExport` → `parseJsonExport` (`documentSchema.ts`).
  */
 export interface AppStore {
   // State
@@ -650,14 +648,14 @@ export interface AppStore {
   finalizeRectangle: () => void; // Convert current drawing to annotation
 
   /**
-   * Narrative waypoint row actions. Prefer {@link setStoryWaypointRows} when you
-   * already hold {@link StoreStoryWaypoint}[]; use these when bridging exhibit
+   * Waypoint rows for `story.json` export. Prefer {@link setJsonExportWaypointRows} when you
+   * already hold {@link JsonExportWaypointRow}[]; use these when bridging exhibit
    * {@link ConfigWaypoint} rows (`ItemRegistry.Stories`).
    */
   /** Replace all rows from exhibit-shaped waypoints (converts to store rows). */
   setStories: (configWaypoints: ConfigWaypoint[]) => void;
   /** Replace rows without `ConfigWaypoint` round-trip (e.g. importers). */
-  setStoryWaypointRows: (rows: StoreStoryWaypoint[]) => void;
+  setJsonExportWaypointRows: (rows: JsonExportWaypointRow[]) => void;
   setActiveStory: (index: number | null) => void;
   addStory: (configWaypoint: ConfigWaypoint) => void;
   updateStory: (index: number, updates: Partial<ConfigWaypoint>) => void;
@@ -783,7 +781,7 @@ export interface AppStore {
 
   // Import waypoint shapes actions
   importWaypointShapes: (
-    story: StoreStoryWaypoint,
+    story: JsonExportWaypointRow,
     clearExisting?: boolean,
     /** When passed (e.g. from React), used for resolution so effects track `shapes` explicitly. */
     shapeRegistry?: StoryShape[],
@@ -1953,7 +1951,7 @@ export const useAppStore = create<AppStore>()(
         }));
       },
 
-      // Narrative waypoint actions → `useDocumentStore.waypoints`
+      // Waypoint rows (export wire) → `useDocumentStore.waypoints`
       setStories: (configWaypoints: ConfigWaypoint[]) => {
         const app = get();
         const doc = useDocumentStore.getState();
@@ -1963,7 +1961,7 @@ export const useAppStore = create<AppStore>()(
         const ch = app.viewerViewportSize?.height ?? 0;
         useDocumentStore.setState({
           waypoints: configWaypoints.map((w) =>
-            configWaypointToStoreStoryWaypoint(
+            configWaypointToExportRow(
               hydrateConfigWaypoint(w, doc.channelGroups),
               iw,
               ih,
@@ -1972,13 +1970,13 @@ export const useAppStore = create<AppStore>()(
             ),
           ),
         });
-        useDocumentStore.getState().syncStoryDocument();
+        useDocumentStore.getState().syncJsonExport();
         set({ activeStoryIndex: null });
       },
 
-      setStoryWaypointRows: (rows: StoreStoryWaypoint[]) => {
+      setJsonExportWaypointRows: (rows: JsonExportWaypointRow[]) => {
         useDocumentStore.setState({ waypoints: rows });
-        useDocumentStore.getState().syncStoryDocument();
+        useDocumentStore.getState().syncJsonExport();
         set({ activeStoryIndex: null });
       },
 
@@ -1989,7 +1987,7 @@ export const useAppStore = create<AppStore>()(
       addStory: (configWaypoint: ConfigWaypoint) => {
         const app = get();
         const doc = useDocumentStore.getState();
-        const row = configWaypointToStoreStoryWaypoint(
+        const row = configWaypointToExportRow(
           hydrateConfigWaypoint(configWaypoint, doc.channelGroups),
           doc.imageWidth,
           doc.imageHeight,
@@ -1999,7 +1997,7 @@ export const useAppStore = create<AppStore>()(
         useDocumentStore.setState((d) => ({
           waypoints: [...d.waypoints, row],
         }));
-        useDocumentStore.getState().syncStoryDocument();
+        useDocumentStore.getState().syncJsonExport();
       },
 
       updateStory: (index: number, updates: Partial<ConfigWaypoint>) => {
@@ -2013,7 +2011,7 @@ export const useAppStore = create<AppStore>()(
         useDocumentStore.setState((doc) => {
           const nextWaypoints = doc.waypoints.map((storyRow, i) => {
             if (i !== index) return storyRow;
-            const asConfig = storeStoryWaypointToConfigWaypoint(storyRow);
+            const asConfig = exportRowToConfigWaypoint(storyRow);
             let merged: ConfigWaypoint = { ...asConfig, ...updates };
             if (shouldDropLegacyViewKeys) {
               const { Pan: _pan, Zoom: _zoom, ...withoutPanZoom } = merged;
@@ -2024,11 +2022,11 @@ export const useAppStore = create<AppStore>()(
                 merged = rest as ConfigWaypoint;
               }
             }
-            return configWaypointToStoreStoryWaypoint(merged, iw, ih, cw, ch);
+            return configWaypointToExportRow(merged, iw, ih, cw, ch);
           });
           return { waypoints: nextWaypoints };
         });
-        useDocumentStore.getState().syncStoryDocument();
+        useDocumentStore.getState().syncJsonExport();
       },
 
       removeStory: (index: number) => {
@@ -2043,7 +2041,7 @@ export const useAppStore = create<AppStore>()(
                 ? state.activeStoryIndex - 1
                 : state.activeStoryIndex,
         }));
-        useDocumentStore.getState().syncStoryDocument();
+        useDocumentStore.getState().syncJsonExport();
       },
 
       reorderStories: (fromIndex: number, toIndex: number) => {
@@ -2072,7 +2070,7 @@ export const useAppStore = create<AppStore>()(
           }
           return { activeStoryIndex: newActiveStoryIndex };
         });
-        useDocumentStore.getState().syncStoryDocument();
+        useDocumentStore.getState().syncJsonExport();
       },
       setGroupNames: (o: Record<string, string>) => {
         set({ groupNames: o });
@@ -2107,7 +2105,7 @@ export const useAppStore = create<AppStore>()(
 
       setViewerViewportSize: (size) => {
         set({ viewerViewportSize: size });
-        useDocumentStore.getState().syncStoryDocument();
+        useDocumentStore.getState().syncJsonExport();
       },
 
       setViewerImageLayersLoaded: (loaded) => {
@@ -2134,7 +2132,7 @@ export const useAppStore = create<AppStore>()(
 
       // Import waypoint shapes actions
       importWaypointShapes: (
-        story: StoreStoryWaypoint,
+        story: JsonExportWaypointRow,
         clearExisting: boolean = false,
         shapeRegistry?: StoryShape[],
       ) => {
@@ -2279,7 +2277,7 @@ export const useAppStore = create<AppStore>()(
       },
     }),
     {
-      name: "app-store",
+      name: "appStore",
     },
   ),
 );

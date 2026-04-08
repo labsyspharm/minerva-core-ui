@@ -14,17 +14,14 @@ import type { Layer } from "@deck.gl/core";
 import { PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import { createTileLayers, loadDicom } from "@/lib/imaging/dicom.js";
-import type { DicomIndex } from "@/lib/imaging/dicom-index";
+import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import type { Config, Loader } from "@/lib/imaging/viv";
 import type { Story } from "@/lib/legacy/exhibit";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
-import { useAppStore } from "@/lib/stores/app-store";
-import {
-  type ConfigGroup,
-  useDocumentStore,
-} from "@/lib/stores/document-store";
+import { useAppStore } from "@/lib/stores/appStore";
+import { type ConfigGroup, useDocumentStore } from "@/lib/stores/documentStore";
 import { useWindowSize } from "@/lib/util/useWindowSize";
 import { ORTHO_VIEW_ID, SCALEBAR_VIEW_ID } from "@/lib/viewer/deckViewIds";
 import { createDragHandlers } from "@/lib/viewer/dragHandlers";

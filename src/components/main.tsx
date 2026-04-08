@@ -18,7 +18,7 @@ import {
   mutableItemRegistry,
 } from "@/lib/authoring/config";
 import { loadDicomWeb, parseDicomWeb } from "@/lib/imaging/dicom.js";
-import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicom-index";
+import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
 import {
   hasFileSystemAccess,
   toLoader,
@@ -37,16 +37,14 @@ import type {
   Waypoint as WaypointType,
 } from "@/lib/legacy/exhibit";
 import { readConfig } from "@/lib/legacy/exhibit";
-import { useAppStore } from "@/lib/stores/app-store";
-import { useDocumentStore } from "@/lib/stores/document-store";
+import { useAppStore } from "@/lib/stores/appStore";
+import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   configWaypointsHaveLegacyArrowsOrOverlays,
+  exportRowsToConfigWaypoints,
+  exportRowToConfigWaypoint,
   migrateLegacyWaypointShapes,
-} from "@/lib/story/legacyWaypointMigration";
-import {
-  storeStoryWaypointToConfigWaypoint,
-  waypointsToConfigWaypoints,
-} from "@/lib/story/storyDocument";
+} from "@/lib/stores/storeUtils";
 import { isOpts, validate } from "@/lib/util/validate";
 import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import { normalizeWaypointToBounds } from "@/lib/waypoints/waypoint";
@@ -989,7 +987,7 @@ const Content = (props: Props) => {
     ) {
       const doc = useDocumentStore.getState();
       setItemsRef.current({
-        Stories: waypointsToConfigWaypoints(doc.waypoints),
+        Stories: exportRowsToConfigWaypoints(doc.waypoints),
         Shapes: doc.shapes,
       });
       return;
@@ -997,11 +995,11 @@ const Content = (props: Props) => {
 
     if (imageWidth > 0 && imageHeight > 0) {
       const mask = storeWaypoints.map((s) =>
-        needsPanMigration(storeStoryWaypointToConfigWaypoint(s)),
+        needsPanMigration(exportRowToConfigWaypoint(s)),
       );
       if (mask.some(Boolean)) {
         const nextConfig = storeWaypoints.map((s, i) => {
-          const c = storeStoryWaypointToConfigWaypoint(s);
+          const c = exportRowToConfigWaypoint(s);
           return mask[i]
             ? normalizeWaypointToBounds(c, imageWidth, imageHeight, cw, ch)
             : c;
@@ -1026,7 +1024,7 @@ const Content = (props: Props) => {
       if (!waypointsChanged && !shapesChanged) return;
       setItemsRef.current({
         ...(waypointsChanged
-          ? { Stories: waypointsToConfigWaypoints(state.waypoints) }
+          ? { Stories: exportRowsToConfigWaypoints(state.waypoints) }
           : {}),
         ...(shapesChanged ? { Shapes: state.shapes } : {}),
       });

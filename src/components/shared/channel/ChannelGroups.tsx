@@ -1,8 +1,8 @@
 import * as React from "react";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import { useAppStore } from "@/lib/stores/app-store";
-import { useDocumentStore } from "@/lib/stores/document-store";
+import { useAppStore } from "@/lib/stores/appStore";
+import { useDocumentStore } from "@/lib/stores/documentStore";
 
 const WrapRows = styled.div`
   display: flex;

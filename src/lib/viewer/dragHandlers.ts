@@ -1,7 +1,7 @@
 // Drag handlers for Deck.gl interactions
 // These handlers translate Deck.gl events into interaction events for the overlay system
 
-import { useAppStore } from "../stores/app-store";
+import { useAppStore } from "../stores/appStore";
 import { SCALEBAR_VIEW_ID } from "./deckViewIds";
 
 type InteractionType = "click" | "dragStart" | "drag" | "dragEnd" | "hover";

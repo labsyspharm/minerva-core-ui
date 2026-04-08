@@ -5,12 +5,12 @@ import {
 } from "@/components/shared/ChromeColorPickerPopover";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
-import { useAppStore } from "@/lib/stores/app-store";
+import { useAppStore } from "@/lib/stores/appStore";
 import type {
   ConfigGroup,
   ConfigSourceChannel,
-} from "@/lib/stores/document-store";
-import { useDocumentStore } from "@/lib/stores/document-store";
+} from "@/lib/stores/documentStore";
+import { useDocumentStore } from "@/lib/stores/documentStore";
 import styles from "./ChannelList.module.css";
 
 const TrashIcon = () => (

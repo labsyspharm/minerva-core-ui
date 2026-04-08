@@ -1,5 +1,5 @@
 /**
- * **Exhibit story document** in Zustand: one narrative over an image.
+ * **Exhibit document** in Zustand: channels, waypoints, and registries over an image.
  *
  * Naming is consistently **camelCase** here and in `story.json` wire types
  * (`groupId`, `shapeIds`, `StoryShape.id`, …). Legacy exhibit blobs may still
@@ -9,7 +9,7 @@
  * - **Geometry registry** — `shapes` (`StoryShape` entries keyed by `id`)
  * - **Waypoints** — `waypoints` (each row: `groupId`, `shapeIds`, …)
  * - **Image space** — `imageWidth`, `imageHeight`
- * - **Cached export** — `storyDocument`
+ * - **Cached JSON export** — `jsonExport` (`story.json` payload, see `util/jsonExport.ts`)
  *
  * Ephemeral UI stays in {@link useAppStore}.
  */
@@ -17,11 +17,11 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import {
-  exportStoryDocument,
-  type StoreStoryWaypoint,
-  type StoryDocument,
-} from "../story/storyDocument";
-import type { StoryShape } from "../story/storyShapes";
+  buildJsonExport,
+  type JsonExport,
+  type JsonExportWaypointRow,
+  type StoryShape,
+} from "./storeUtils";
 
 type ExpandedState = {
   Expanded: boolean;
@@ -87,7 +87,7 @@ export type SetGroupChannelRangePayload =
       channel_uuid: string;
     };
 
-const emptyStoryDocument: StoryDocument = {
+const emptyJsonExport: JsonExport = {
   version: "2",
   waypoints: [],
   shapes: [],
@@ -100,7 +100,7 @@ export interface DocumentStore {
   setSourceChannels: (channels: ConfigSourceChannel[]) => void;
   setGroupChannelRange: (input: SetGroupChannelRangePayload) => void;
 
-  waypoints: StoreStoryWaypoint[];
+  waypoints: JsonExportWaypointRow[];
   shapes: StoryShape[];
   setShapes: (shapes: StoryShape[]) => void;
 
@@ -108,8 +108,8 @@ export interface DocumentStore {
   imageHeight: number;
   setImageDimensions: (width: number, height: number) => void;
 
-  storyDocument: StoryDocument;
-  syncStoryDocument: () => void;
+  jsonExport: JsonExport;
+  syncJsonExport: () => void;
 }
 
 export const useDocumentStore = create<DocumentStore>()(
@@ -121,7 +121,7 @@ export const useDocumentStore = create<DocumentStore>()(
       shapes: [],
       imageWidth: 0,
       imageHeight: 0,
-      storyDocument: emptyStoryDocument,
+      jsonExport: emptyJsonExport,
 
       setChannelGroups: (channelGroups: ConfigGroup[]) => {
         set({ channelGroups });
@@ -163,21 +163,21 @@ export const useDocumentStore = create<DocumentStore>()(
 
       setShapes: (shapes: StoryShape[]) => {
         set({ shapes });
-        get().syncStoryDocument();
+        get().syncJsonExport();
       },
 
       setImageDimensions: (imageWidth: number, imageHeight: number) => {
         set({ imageWidth, imageHeight });
-        get().syncStoryDocument();
+        get().syncJsonExport();
       },
 
-      syncStoryDocument: () => {
+      syncJsonExport: () => {
         const { waypoints, shapes } = get();
         set({
-          storyDocument: exportStoryDocument(waypoints, shapes ?? []),
+          jsonExport: buildJsonExport(waypoints, shapes ?? []),
         });
       },
     }),
-    { name: "document-store" },
+    { name: "documentStore" },
   ),
 );
