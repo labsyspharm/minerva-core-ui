@@ -38,7 +38,15 @@ import type {
 } from "@/lib/legacy/exhibit";
 import { readConfig } from "@/lib/legacy/exhibit";
 import { useAppStore } from "@/lib/stores/appStore";
-import { useDocumentStore } from "@/lib/stores/documentStore";
+import {
+  selectOrderedChannels,
+  selectOrderedShapes,
+  selectOrderedWaypoints,
+  useDocumentStore,
+  useOrderedChannels,
+  useOrderedGroups,
+  useOrderedWaypoints,
+} from "@/lib/stores/documentStore";
 import {
   configWaypointsHaveLegacyArrowsOrOverlays,
   exportRowsToConfigWaypoints,
@@ -160,7 +168,7 @@ const getDistributions = async (SourceChannels, loader) => {
   const SourceDistributions = [...sourceDistributionMap.values()];
   const SourceChannelsWithDist = SourceChannels.map((sourceChannel) => ({
     ...sourceChannel,
-    sourceDistribution: sourceDistributionMap.get(sourceChannel.SourceIndex),
+    sourceDistribution: sourceDistributionMap.get(sourceChannel.index),
   }));
   return { SourceChannelsWithDist, SourceDistributions };
 };
@@ -177,16 +185,11 @@ const Content = (props: Props) => {
     setGroupChannelLists,
     setGroupNames,
   } = useAppStore();
-  const {
-    setGroupChannelRange,
-    setChannelGroups,
-    channelGroups,
-    setSourceChannels,
-    sourceChannels,
-  } = useDocumentStore();
-  const Groups = channelGroups;
-  const setGroups = setChannelGroups;
-  const SourceChannels = sourceChannels;
+  const setGroupChannelRange = useDocumentStore((s) => s.setGroupChannelRange);
+  const setGroups = useDocumentStore((s) => s.setGroups);
+  const setSourceChannels = useDocumentStore((s) => s.setSourceChannels);
+  const Groups = useOrderedGroups();
+  const SourceChannels = useOrderedChannels();
   const documentChannelsRef = React.useRef({ Groups, SourceChannels });
   documentChannelsRef.current = { Groups, SourceChannels };
   const [config, setConfig] = useState(() => ({
@@ -250,25 +253,26 @@ const Content = (props: Props) => {
   };
 
   const updateGroupChannelLists = ({ Groups, SourceChannels }) => {
-    setGroupNames(Object.fromEntries(Groups.map(({ Name, id }) => [id, Name])));
-    const toChannelList = (GroupChannels) => {
-      return GroupChannels.map(({ sourceChannelId }) =>
-        SourceChannels.find(({ id }) => id === sourceChannelId),
-      )
+    setGroupNames(Object.fromEntries(Groups.map(({ name, id }) => [id, name])));
+    const toChannelList = (groupChannels) => {
+      return groupChannels
+        .map(({ channelId }) =>
+          SourceChannels.find(({ id }) => id === channelId),
+        )
         .filter((x) => x)
-        .map(({ Name }) => Name);
+        .map(({ name: chName }) => chName);
     };
     const groupChannelLists = Object.fromEntries(
-      Groups.map(({ Name, GroupChannels }) => {
-        return [Name, toChannelList(GroupChannels)];
+      Groups.map(({ name, channels }) => {
+        return [name, toChannelList(channels)];
       }),
     );
     setGroupChannelLists(groupChannelLists);
     const defaultGroup = Groups[0] || {
-      GroupChannels: [],
-      Name: "",
+      channels: [],
+      name: "",
     };
-    const groupName = defaultGroup.Name;
+    const groupName = defaultGroup.name;
     const channelList = groupChannelLists[groupName] || [];
     setChannelVisibilities(
       Object.fromEntries(channelList.map((name) => [name, true])),
@@ -319,8 +323,8 @@ const Content = (props: Props) => {
     (state) => state.setShowSquareViewportOverlay,
   );
   const viewerViewportSize = useAppStore((state) => state.viewerViewportSize);
-  const imageWidth = useDocumentStore((state) => state.imageWidth);
-  const imageHeight = useDocumentStore((state) => state.imageHeight);
+  const imageWidth = useDocumentStore((state) => state.document.imageWidth);
+  const imageHeight = useDocumentStore((state) => state.document.imageHeight);
 
   useEffect(() => {
     const enabledFromConfig =
@@ -723,7 +727,7 @@ const Content = (props: Props) => {
 
   // Data transformation (from Index)
   const itemRegistryMarkerNames = SourceChannels.map(
-    (source_channel) => source_channel.Name,
+    (source_channel) => source_channel.name,
   );
 
   const imageViewerStateSignature = React.useMemo(
@@ -737,27 +741,27 @@ const Content = (props: Props) => {
       throw new Error("minerva: document channel ref/signature mismatch");
     }
     return G.map((group, g) => {
-      const { Name, GroupChannels } = group;
-      const channels = GroupChannels.map((group_channel) => {
-        const defaults = { Name: "" };
-        const { R, G, B } = group_channel.Color;
-        const color = ((1 << 24) + (R << 16) + (G << 8) + B)
+      const { name, channels: groupChannelsList, expanded } = group;
+      const channels = groupChannelsList.map((group_channel) => {
+        const defaults = { name: "" };
+        const { r, g: gg, b } = group_channel.color;
+        const color = ((1 << 24) + (r << 16) + (gg << 8) + b)
           .toString(16)
           .slice(1);
-        const { LowerRange, UpperRange, sourceChannelId } = group_channel;
-        const { Name } =
-          SC.find((source_channel) => source_channel.id === sourceChannelId) ||
+        const { lowerLimit, upperLimit, channelId } = group_channel;
+        const { name: chName } =
+          SC.find((source_channel) => source_channel.id === channelId) ||
           defaults;
         return {
           color,
-          name: Name,
-          contrast: [LowerRange, UpperRange] as [number, number],
+          name: chName,
+          contrast: [lowerLimit, upperLimit] as [number, number],
         };
       });
       return {
-        State: group.State,
+        State: { Expanded: expanded ?? false },
         g,
-        name: Name,
+        name,
         channels,
       };
     });
@@ -785,8 +789,9 @@ const Content = (props: Props) => {
       );
       if (map.size === 0) return;
       const doc = useDocumentStore.getState();
-      const next = mergeHistogramsIntoSourceChannels(doc.sourceChannels, map);
-      if (next === doc.sourceChannels) return;
+      const prevCh = selectOrderedChannels(doc);
+      const next = mergeHistogramsIntoSourceChannels(prevCh, map);
+      if (next === prevCh) return;
       doc.setSourceChannels(next);
       setItems({ SourceChannels: next });
     },
@@ -894,7 +899,7 @@ const Content = (props: Props) => {
     setActiveStory,
     setStories,
   } = useAppStore();
-  const _waypoints = useDocumentStore((s) => s.waypoints);
+  const _waypoints = useOrderedWaypoints();
 
   // Document waypoint lifecycle: `index.tsx` waypoints are copied once into
   // `config` (see `useState` initializer). Then `useDocumentStore.waypoints` is
@@ -902,7 +907,7 @@ const Content = (props: Props) => {
   // The subscription mirrors waypoints + shapes into `config.ItemRegistry`.
   useEffect(() => {
     const configStories = config.ItemRegistry.Stories;
-    const storeWaypoints = useDocumentStore.getState().waypoints;
+    const storeWaypoints = selectOrderedWaypoints(useDocumentStore.getState());
 
     if (!configStories?.length) return;
     if (!viewerViewportSize?.width || !viewerViewportSize?.height) return;
@@ -959,7 +964,7 @@ const Content = (props: Props) => {
     // when the exhibit registry has data (even if ids are temporarily out of sync).
     if (
       (config.ItemRegistry.Shapes?.length ?? 0) > 0 &&
-      useDocumentStore.getState().shapes.length === 0
+      selectOrderedShapes(useDocumentStore.getState()).length === 0
     ) {
       useDocumentStore.getState().setShapes(config.ItemRegistry.Shapes ?? []);
     }
@@ -987,19 +992,19 @@ const Content = (props: Props) => {
     ) {
       const doc = useDocumentStore.getState();
       setItemsRef.current({
-        Stories: exportRowsToConfigWaypoints(doc.waypoints),
-        Shapes: doc.shapes,
+        Stories: exportRowsToConfigWaypoints(selectOrderedWaypoints(doc)),
+        Shapes: selectOrderedShapes(doc),
       });
       return;
     }
 
     if (imageWidth > 0 && imageHeight > 0) {
-      const mask = storeWaypoints.map((s) =>
-        needsPanMigration(exportRowToConfigWaypoint(s)),
+      const mask = storeWaypoints.map((sw) =>
+        needsPanMigration(exportRowToConfigWaypoint(sw)),
       );
       if (mask.some(Boolean)) {
-        const nextConfig = storeWaypoints.map((s, i) => {
-          const c = exportRowToConfigWaypoint(s);
+        const nextConfig = storeWaypoints.map((sw, i) => {
+          const c = exportRowToConfigWaypoint(sw);
           return mask[i]
             ? normalizeWaypointToBounds(c, imageWidth, imageHeight, cw, ch)
             : c;
@@ -1019,14 +1024,22 @@ const Content = (props: Props) => {
   // Sync document waypoints + shapes into config for persistence.
   useEffect(() => {
     const unsub = useDocumentStore.subscribe((state, prevState) => {
-      const waypointsChanged = state.waypoints !== prevState.waypoints;
-      const shapesChanged = state.shapes !== prevState.shapes;
+      const waypointsChanged =
+        state.document.waypoints !== prevState.document.waypoints ||
+        state.document.waypointOrder !== prevState.document.waypointOrder;
+      const shapesChanged =
+        state.document.shapes !== prevState.document.shapes ||
+        state.document.shapeOrder !== prevState.document.shapeOrder;
       if (!waypointsChanged && !shapesChanged) return;
       setItemsRef.current({
         ...(waypointsChanged
-          ? { Stories: exportRowsToConfigWaypoints(state.waypoints) }
+          ? {
+              Stories: exportRowsToConfigWaypoints(
+                selectOrderedWaypoints(state),
+              ),
+            }
           : {}),
-        ...(shapesChanged ? { Shapes: state.shapes } : {}),
+        ...(shapesChanged ? { Shapes: selectOrderedShapes(state) } : {}),
       });
     });
     return () => unsub();
@@ -1043,7 +1056,7 @@ const Content = (props: Props) => {
   const enterPlaybackPreview = React.useCallback(() => {
     const state = useAppStore.getState();
     if (
-      useDocumentStore.getState().waypoints.length > 0 &&
+      selectOrderedWaypoints(useDocumentStore.getState()).length > 0 &&
       state.activeStoryIndex === null
     ) {
       state.setActiveStory(0);

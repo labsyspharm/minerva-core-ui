@@ -8,10 +8,14 @@ import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
 import type { ConfigWaypoint } from "@/lib/authoring/config";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { JsonExport } from "@/lib/stores/documentSchema";
+import type { Channel, Group } from "@/lib/stores/documentStore";
 import {
-  type ConfigGroup,
-  type ConfigSourceChannel,
+  selectOrderedWaypoints,
   useDocumentStore,
+  useOrderedChannels,
+  useOrderedGroups,
+  useOrderedShapes,
+  useOrderedWaypoints,
 } from "@/lib/stores/documentStore";
 import {
   exportRowToConfigWaypoint,
@@ -81,27 +85,25 @@ const annotationCountLabel = (count: number) =>
   `${count} ${count === 1 ? "shape" : "shapes"}`;
 
 function channelNamesForGroup(
-  group: ConfigGroup,
-  sourceChannels: ConfigSourceChannel[],
+  group: Group,
+  sourceChannels: Channel[],
 ): string[] {
-  return (group.GroupChannels ?? [])
-    .map(({ sourceChannelId }) =>
-      sourceChannels.find((sc) => sc.id === sourceChannelId),
-    )
-    .filter((sc): sc is ConfigSourceChannel => sc != null)
-    .map((sc) => sc.Name);
+  return (group.channels ?? [])
+    .map(({ channelId }) => sourceChannels.find((sc) => sc.id === channelId))
+    .filter((sc): sc is Channel => sc != null)
+    .map((sc) => sc.name);
 }
 
 const WaypointsList = (props: WaypointsListProps) => {
   const { viewOnly, onEnterPlaybackPreview } = props;
   const canEdit = !viewOnly;
 
-  const waypoints = useDocumentStore((s) => s.waypoints);
-  const shapes = useDocumentStore((s) => s.shapes);
-  const channelGroups = useDocumentStore((s) => s.channelGroups);
-  const sourceChannels = useDocumentStore((s) => s.sourceChannels);
-  const imageWidth = useDocumentStore((s) => s.imageWidth);
-  const imageHeight = useDocumentStore((s) => s.imageHeight);
+  const waypoints = useOrderedWaypoints();
+  const shapes = useOrderedShapes();
+  const groups = useOrderedGroups();
+  const sourceChannels = useOrderedChannels();
+  const imageWidth = useDocumentStore((s) => s.document.imageWidth);
+  const imageHeight = useDocumentStore((s) => s.document.imageHeight);
   const {
     activeStoryIndex,
     setActiveStory,
@@ -250,7 +252,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       const p = previousImportStoryIndexRef.current;
       if (p !== null) {
         const doc = useDocumentStore.getState();
-        if (doc.imageWidth > 0 && doc.imageHeight > 0) {
+        if (doc.document.imageWidth > 0 && doc.document.imageHeight > 0) {
           useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
@@ -302,8 +304,8 @@ const WaypointsList = (props: WaypointsListProps) => {
           index,
           viewerViewState: st.viewerViewState,
           viewerViewportSize: st.viewerViewportSize,
-          imageWidth: doc.imageWidth,
-          imageHeight: doc.imageHeight,
+          imageWidth: doc.document.imageWidth,
+          imageHeight: doc.document.imageHeight,
         },
       );
       return false;
@@ -342,16 +344,15 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   const applyStoryChannelGroup = React.useCallback(
     (story: JsonExportWaypointRow | undefined) => {
-      if (!story || channelGroups.length === 0) return;
+      if (!story || groups.length === 0) return;
       const foundGroup =
-        (story.groupId &&
-          channelGroups.find((group) => group.id === story.groupId)) ||
-        channelGroups[0];
+        (story.groupId && groups.find((group) => group.id === story.groupId)) ||
+        groups[0];
       if (foundGroup) {
         setActiveChannelGroup(foundGroup.id);
       }
     },
-    [channelGroups, setActiveChannelGroup],
+    [groups, setActiveChannelGroup],
   );
 
   const scheduleThumbnailCaptureForStory = (
@@ -370,7 +371,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       if (state.activeStoryIndex !== index) {
         return;
       }
-      const story = useDocumentStore.getState().waypoints[index];
+      const story = selectOrderedWaypoints(useDocumentStore.getState())[index];
       if (!story) return;
       if (!overwriteView && story.thumbnail) return;
       if (thumbnailOnly) {
@@ -397,7 +398,9 @@ const WaypointsList = (props: WaypointsListProps) => {
 
     setActiveStory(index);
 
-    const storyForNav = useDocumentStore.getState().waypoints[index];
+    const storyForNav = selectOrderedWaypoints(useDocumentStore.getState())[
+      index
+    ];
     applyStoryChannelGroup(storyForNav);
     if (storyForNav && imageWidth > 0 && imageHeight > 0) {
       setTargetWaypointCamera(exportRowToConfigWaypoint(storyForNav));
@@ -436,21 +439,19 @@ const WaypointsList = (props: WaypointsListProps) => {
     scheduleThumbnailCaptureForStory(index, true, true, 150);
     if (saved) {
       persistImportedShapesToStory(index);
-      useDocumentStore.getState().syncJsonExport();
     }
   };
 
   const handleDownloadStory = () => {
-    useDocumentStore.getState().syncJsonExport();
-    triggerStoryJsonDownload(useDocumentStore.getState().jsonExport);
+    triggerStoryJsonDownload(useDocumentStore.getState().toJsonExport());
   };
 
   const handleAddWaypoint = () => {
     const storyIndex = waypoints.length;
     const currentGroup =
-      channelGroups.find(
+      groups.find(
         (group) => group.id === useAppStore.getState().activeChannelGroupId,
-      ) || channelGroups[0];
+      ) || groups[0];
     const newWaypoint: ConfigWaypoint = {
       id: crypto.randomUUID(),
       State: { Expanded: true },
@@ -739,11 +740,10 @@ const WaypointsList = (props: WaypointsListProps) => {
     };
 
     const selectedGroupUuid =
-      channelGroups.find((group) => group.id === detailStory.groupId)?.id ??
-      channelGroups[0].id;
+      groups.find((group) => group.id === detailStory.groupId)?.id ??
+      groups[0].id;
     const selectedGroup =
-      channelGroups.find((group) => group.id === selectedGroupUuid) ??
-      channelGroups[0];
+      groups.find((group) => group.id === selectedGroupUuid) ?? groups[0];
     const selectedChannelNames = channelNamesForGroup(
       selectedGroup,
       sourceChannels,
@@ -751,9 +751,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     const selectedChannelsSubtitle = selectedChannelNames.join(", ");
 
     const selectChannelGroupByUuid = (nextGroupUuid: string) => {
-      const nextGroup = channelGroups.find(
-        (group) => group.id === nextGroupUuid,
-      );
+      const nextGroup = groups.find((group) => group.id === nextGroupUuid);
       if (!nextGroup) return;
       updateStory(detailStoryIndex, { groupId: nextGroup.id });
       setActiveChannelGroup(nextGroup.id);
@@ -806,7 +804,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                 placeholder="Waypoint title"
               />
             </div>
-            {channelGroups.length > 0 ? (
+            {groups.length > 0 ? (
               <div className={styles.detailTitleFieldWrap}>
                 <label
                   className={styles.detailTitleLabel}
@@ -829,7 +827,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                   >
                     <span className={styles.channelGroupDropdownTriggerMain}>
                       <span className={styles.channelGroupDropdownTitle}>
-                        {selectedGroup.Name}
+                        {selectedGroup.name}
                       </span>
                       <span className={styles.channelGroupDropdownChannels}>
                         {selectedChannelsSubtitle || "—"}
@@ -853,7 +851,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                       role="listbox"
                       aria-label="Channel groups"
                     >
-                      {channelGroups.map((group) => {
+                      {groups.map((group) => {
                         const names = channelNamesForGroup(
                           group,
                           sourceChannels,
@@ -882,7 +880,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                               <span
                                 className={styles.channelGroupDropdownTitle}
                               >
-                                {group.Name}
+                                {group.name}
                               </span>
                               <span
                                 className={styles.channelGroupDropdownChannels}

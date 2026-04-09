@@ -10,8 +10,7 @@
     "format": "prettier --ignore-path .eslintignore --write .",
     "build": "rm -rf build && tsc -b",
     "preview": "vite build && vite preview --port 2021",
-    "lint": "eslint src",
-    "test": "playwright test"
+    "lint": "eslint src"
   },
   "type": "module",
   "main": "build/main.js",
@@ -88,7 +87,6 @@
     "npm": "^11.5.2",
     "onnxruntime-web": "^1.24.1",
     "openseadragon": "^4.1.1",
-    "playwright": "^1.54.2",
     "polygon-clipping": "^0.15.7",
     "prop-types": "^15.8.1",
     "prosemirror-commands": "^1.5.2",
@@ -117,7 +115,6 @@
   "devDependencies": {
     "@babel/core": "^7.24.9",
     "@biomejs/biome": "2.3.14",
-    "@playwright/test": "^1.54.2",
     "@types/core-js": "^2.5.8",
     "@types/node": "^20.14.11",
     "@types/react": "^18.3.3",

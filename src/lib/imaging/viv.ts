@@ -114,9 +114,7 @@ const toSettings = (opts) => {
     const { Groups, SourceChannels } = opts;
     const group =
       Groups.find(({ id }) => id === activeChannelGroupId) || Groups[0];
-    const { GroupChannels: channels } = group || {
-      GroupChannels: [],
-    };
+    const { channels } = group || { channels: [] };
     // Defaults
     if (!loader) return toDefaultSettings(3);
     const full_level = loader.data[0];
@@ -128,32 +126,30 @@ const toSettings = (opts) => {
         (source_channel) => source_channel.id,
       );
       const source_channel = SourceChannels.find(
-        (source_channel) => channel.sourceChannelId === source_channel.id,
+        (source_channel) => channel.channelId === source_channel.id,
       );
-      const c = source_channel?.SourceIndex || 0;
+      const c = source_channel?.index || 0;
       return { z: 0, t: 0, c };
     });
     const colors: Color[] = channels.map((c, _i: number) => {
-      const { R, G, B } = c.Color;
-      return [R, G, B];
+      return [c.color.r, c.color.g, c.color.b];
     });
     const contrastLimits: Limit[] = channels.map((c) => {
-      const { LowerRange, UpperRange } = c;
-      return [LowerRange, UpperRange];
+      return [c.lowerLimit, c.upperLimit];
     });
     const channelsVisible: boolean[] = channels.map((c, _i: number) => {
       const source_channel = SourceChannels.find(
-        (source_channel) => c.sourceChannelId === source_channel.id,
+        (source_channel) => c.channelId === source_channel.id,
       );
       if (!source_channel) return false;
-      const { Name } = source_channel;
-      const image_id = source_channel.sourceImageId;
+      const { name } = source_channel;
+      const image_id = source_channel.imageId;
       const _brightfield = modality === "Brightfield";
       //if (!channelVisibilities || brightfield ) {
       if (!channelVisibilities) {
         return image_id === modality;
       }
-      return image_id === modality && channelVisibilities?.[Name];
+      return image_id === modality && channelVisibilities?.[name];
     });
     const n_channels = shape[c_idx] || 0;
     const out = {

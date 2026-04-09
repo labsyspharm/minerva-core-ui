@@ -23,11 +23,13 @@ import {
 } from "../shapes/shapeModel";
 import { mergeShapesAfterWaypointImport } from "../shapes/shapeWaypointImport";
 import type { ViewportSize, ViewRect } from "../viewer/samViewport";
-import { useDocumentStore } from "./documentStore";
 import {
-  configWaypointToExportRow,
-  exportRowToConfigWaypoint,
-  hydrateConfigWaypoint,
+  type AuthoringViewportPx,
+  selectOrderedShapes,
+  selectOrderedWaypoints,
+  useDocumentStore,
+} from "./documentStore";
+import {
   type JsonExportWaypointRow,
   mergeShapesForWaypointPersist,
   type StoryShape,
@@ -37,6 +39,11 @@ import {
 
 function newShapeId(): string {
   return crypto.randomUUID();
+}
+
+function authoringViewportForDoc(get: () => AppStore): AuthoringViewportPx {
+  const v = get().viewerViewportSize;
+  return { width: v?.width ?? 0, height: v?.height ?? 0 };
 }
 
 type BrushMask = {
@@ -557,7 +564,8 @@ export interface AppStore {
   drawingState: DrawingState;
   dragState: DragState; // New: drag state for move tool
   hoverState: HoverState; // New: hover state for move tool
-  shapes: Shape[]; // New: persistent shapes
+  /** Ephemeral viewer/canvas annotations; persisted story shapes live in `useDocumentStore.shapes`. */
+  shapes: Shape[];
   shapeGroups: ShapeGroup[]; // New: annotation groups
   hiddenShapeIds: Set<string>; // New: track hidden layers
   globalColor: [number, number, number, number]; // New: global drawing color
@@ -798,10 +806,11 @@ export interface AppStore {
 /** Persist canvas shapes to the waypoint row that is actually being annotated. */
 function maybePersistShapesAfterMutation(get: () => AppStore) {
   const doc = useDocumentStore.getState();
+  const orderedWp = selectOrderedWaypoints(doc);
   if (
-    doc.waypoints.length === 0 ||
-    doc.imageWidth <= 0 ||
-    doc.imageHeight <= 0
+    orderedWp.length === 0 ||
+    doc.document.imageWidth <= 0 ||
+    doc.document.imageHeight <= 0
   ) {
     return;
   }
@@ -813,7 +822,7 @@ function maybePersistShapesAfterMutation(get: () => AppStore) {
   if (resolved === null) {
     return;
   }
-  if (resolved < 0 || resolved >= doc.waypoints.length) {
+  if (resolved < 0 || resolved >= orderedWp.length) {
     return;
   }
   get().persistImportedShapesToStory(resolved);
@@ -1951,32 +1960,16 @@ export const useAppStore = create<AppStore>()(
         }));
       },
 
-      // Waypoint rows (export wire) → `useDocumentStore.waypoints`
+      // Waypoint rows / export: owned by `useDocumentStore`; app keeps selection only.
       setStories: (configWaypoints: ConfigWaypoint[]) => {
-        const app = get();
-        const doc = useDocumentStore.getState();
-        const iw = doc.imageWidth;
-        const ih = doc.imageHeight;
-        const cw = app.viewerViewportSize?.width ?? 0;
-        const ch = app.viewerViewportSize?.height ?? 0;
-        useDocumentStore.setState({
-          waypoints: configWaypoints.map((w) =>
-            configWaypointToExportRow(
-              hydrateConfigWaypoint(w, doc.channelGroups),
-              iw,
-              ih,
-              cw,
-              ch,
-            ),
-          ),
-        });
-        useDocumentStore.getState().syncJsonExport();
+        useDocumentStore
+          .getState()
+          .setStoriesFromConfig(configWaypoints, authoringViewportForDoc(get));
         set({ activeStoryIndex: null });
       },
 
       setJsonExportWaypointRows: (rows: JsonExportWaypointRow[]) => {
-        useDocumentStore.setState({ waypoints: rows });
-        useDocumentStore.getState().syncJsonExport();
+        useDocumentStore.getState().setWaypointRows(rows);
         set({ activeStoryIndex: null });
       },
 
@@ -1985,54 +1978,19 @@ export const useAppStore = create<AppStore>()(
       },
 
       addStory: (configWaypoint: ConfigWaypoint) => {
-        const app = get();
-        const doc = useDocumentStore.getState();
-        const row = configWaypointToExportRow(
-          hydrateConfigWaypoint(configWaypoint, doc.channelGroups),
-          doc.imageWidth,
-          doc.imageHeight,
-          app.viewerViewportSize?.width ?? 0,
-          app.viewerViewportSize?.height ?? 0,
-        );
-        useDocumentStore.setState((d) => ({
-          waypoints: [...d.waypoints, row],
-        }));
-        useDocumentStore.getState().syncJsonExport();
+        useDocumentStore
+          .getState()
+          .appendStoryFromConfig(configWaypoint, authoringViewportForDoc(get));
       },
 
       updateStory: (index: number, updates: Partial<ConfigWaypoint>) => {
-        const app = get();
-        const doc0 = useDocumentStore.getState();
-        const shouldDropLegacyViewKeys = Object.hasOwn(updates, "Bounds");
-        const iw = doc0.imageWidth;
-        const ih = doc0.imageHeight;
-        const cw = app.viewerViewportSize?.width ?? 0;
-        const ch = app.viewerViewportSize?.height ?? 0;
-        useDocumentStore.setState((doc) => {
-          const nextWaypoints = doc.waypoints.map((storyRow, i) => {
-            if (i !== index) return storyRow;
-            const asConfig = exportRowToConfigWaypoint(storyRow);
-            let merged: ConfigWaypoint = { ...asConfig, ...updates };
-            if (shouldDropLegacyViewKeys) {
-              const { Pan: _pan, Zoom: _zoom, ...withoutPanZoom } = merged;
-              if (Object.hasOwn(updates, "ViewState")) {
-                merged = withoutPanZoom as ConfigWaypoint;
-              } else {
-                const { ViewState: _vs, ...rest } = withoutPanZoom;
-                merged = rest as ConfigWaypoint;
-              }
-            }
-            return configWaypointToExportRow(merged, iw, ih, cw, ch);
-          });
-          return { waypoints: nextWaypoints };
-        });
-        useDocumentStore.getState().syncJsonExport();
+        useDocumentStore
+          .getState()
+          .updateStoryAtIndex(index, updates, authoringViewportForDoc(get));
       },
 
       removeStory: (index: number) => {
-        useDocumentStore.setState((doc) => ({
-          waypoints: doc.waypoints.filter((_, i) => i !== index),
-        }));
+        useDocumentStore.getState().removeWaypointAtIndex(index);
         set((state) => ({
           activeStoryIndex:
             state.activeStoryIndex === index
@@ -2041,16 +1999,10 @@ export const useAppStore = create<AppStore>()(
                 ? state.activeStoryIndex - 1
                 : state.activeStoryIndex,
         }));
-        useDocumentStore.getState().syncJsonExport();
       },
 
       reorderStories: (fromIndex: number, toIndex: number) => {
-        useDocumentStore.setState((doc) => {
-          const next = [...doc.waypoints];
-          const [movedStory] = next.splice(fromIndex, 1);
-          next.splice(toIndex, 0, movedStory);
-          return { waypoints: next };
-        });
+        useDocumentStore.getState().reorderWaypoints(fromIndex, toIndex);
         set((state) => {
           let newActiveStoryIndex = state.activeStoryIndex;
           if (state.activeStoryIndex !== null) {
@@ -2070,7 +2022,6 @@ export const useAppStore = create<AppStore>()(
           }
           return { activeStoryIndex: newActiveStoryIndex };
         });
-        useDocumentStore.getState().syncJsonExport();
       },
       setGroupNames: (o: Record<string, string>) => {
         set({ groupNames: o });
@@ -2105,7 +2056,6 @@ export const useAppStore = create<AppStore>()(
 
       setViewerViewportSize: (size) => {
         set({ viewerViewportSize: size });
-        useDocumentStore.getState().syncJsonExport();
       },
 
       setViewerImageLayersLoaded: (loaded) => {
@@ -2137,8 +2087,8 @@ export const useAppStore = create<AppStore>()(
         shapeRegistry?: StoryShape[],
       ) => {
         const doc0 = useDocumentStore.getState();
-        const { imageWidth, imageHeight } = doc0;
-        const fromStore = doc0.shapes;
+        const { imageWidth, imageHeight } = doc0.document;
+        const fromStore = selectOrderedShapes(doc0);
         const shapesForLookup =
           shapeRegistry === undefined
             ? fromStore
@@ -2193,8 +2143,13 @@ export const useAppStore = create<AppStore>()(
       persistImportedShapesToStory: (storyIndex: number) => {
         const state = get();
         const doc = useDocumentStore.getState();
-        const row = doc.waypoints[storyIndex];
-        if (!row || doc.imageWidth <= 0 || doc.imageHeight <= 0) {
+        const orderedWp = selectOrderedWaypoints(doc);
+        const row = orderedWp[storyIndex];
+        if (
+          !row ||
+          doc.document.imageWidth <= 0 ||
+          doc.document.imageHeight <= 0
+        ) {
           return;
         }
         const hadStored = (row.shapeIds?.length ?? 0) > 0;
@@ -2202,15 +2157,16 @@ export const useAppStore = create<AppStore>()(
           return;
         }
         if (state.shapes.length === 0 && hadStored) {
+          const prevShapesList = selectOrderedShapes(doc);
           const merged = mergeShapesForWaypointPersist({
-            waypoints: doc.waypoints,
+            waypoints: orderedWp,
             waypointIndex: storyIndex,
-            prevShapes: doc.shapes,
+            prevShapes: prevShapesList,
             builtShapes: [],
             newShapeIdsOrdered: [],
           });
-          if (JSON.stringify(merged) !== JSON.stringify(doc.shapes)) {
-            useDocumentStore.setState({ shapes: merged });
+          if (JSON.stringify(merged) !== JSON.stringify(prevShapesList)) {
+            useDocumentStore.getState().setShapes(merged);
           }
           get().updateStory(storyIndex, {
             shapeIds: [],
@@ -2219,21 +2175,22 @@ export const useAppStore = create<AppStore>()(
         }
         const builtShapes = viewerShapesToStoryShapes(state.shapes);
         const newShapeIdsOrdered = builtShapes.map((s) => s.id);
+        const prevShapesList = selectOrderedShapes(doc);
         const merged = mergeShapesForWaypointPersist({
-          waypoints: doc.waypoints,
+          waypoints: orderedWp,
           waypointIndex: storyIndex,
-          prevShapes: doc.shapes,
+          prevShapes: prevShapesList,
           builtShapes,
           newShapeIdsOrdered,
         });
         const prevIds = JSON.stringify(row.shapeIds ?? []);
         const nextIds = JSON.stringify(newShapeIdsOrdered);
-        const prevShapesJson = JSON.stringify(doc.shapes);
+        const prevShapesJson = JSON.stringify(prevShapesList);
         const nextShapesJson = JSON.stringify(merged);
         if (prevIds === nextIds && prevShapesJson === nextShapesJson) {
           return;
         }
-        useDocumentStore.setState({ shapes: merged });
+        useDocumentStore.getState().setShapes(merged);
         get().updateStory(storyIndex, {
           shapeIds: newShapeIdsOrdered,
         });

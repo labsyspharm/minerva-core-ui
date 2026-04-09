@@ -4,7 +4,13 @@ import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { useAppStore } from "@/lib/stores/appStore";
-import { useDocumentStore } from "@/lib/stores/documentStore";
+import {
+  useDocumentStore,
+  useOrderedChannels,
+  useOrderedGroups,
+  useOrderedShapes,
+  useOrderedWaypoints,
+} from "@/lib/stores/documentStore";
 import {
   exportRowToConfigWaypoint,
   type JsonExportWaypointRow,
@@ -280,12 +286,12 @@ const ChannelName = styled.span<{ color: string }>`
 `;
 
 export const Presentation = (props: PresentationProps) => {
-  const waypoints = useDocumentStore((s) => s.waypoints);
-  const shapes = useDocumentStore((s) => s.shapes);
-  const sourceChannels = useDocumentStore((s) => s.sourceChannels);
-  const channelGroups = useDocumentStore((s) => s.channelGroups);
-  const imageWidth = useDocumentStore((s) => s.imageWidth);
-  const imageHeight = useDocumentStore((s) => s.imageHeight);
+  const waypoints = useOrderedWaypoints();
+  const shapes = useOrderedShapes();
+  const sourceChannels = useOrderedChannels();
+  const groups = useOrderedGroups();
+  const imageWidth = useDocumentStore((s) => s.document.imageWidth);
+  const imageHeight = useDocumentStore((s) => s.document.imageHeight);
   const {
     activeStoryIndex,
     setActiveStory,
@@ -325,9 +331,8 @@ export const Presentation = (props: PresentationProps) => {
       }
 
       const gid = wp.groupId;
-      if (channelGroups.length > 0 && gid) {
-        const foundGroup =
-          channelGroups.find((g) => g.id === gid) || channelGroups[0];
+      if (groups.length > 0 && gid) {
+        const foundGroup = groups.find((g) => g.id === gid) || groups[0];
         if (foundGroup) {
           setActiveChannelGroup(foundGroup.id);
         }
@@ -341,7 +346,7 @@ export const Presentation = (props: PresentationProps) => {
     shapes,
     importWaypointShapes,
     setTargetWaypointCamera,
-    channelGroups,
+    groups,
     setActiveChannelGroup,
   ]);
 
@@ -350,7 +355,7 @@ export const Presentation = (props: PresentationProps) => {
       const p = previousActiveStoryIndexRef.current;
       if (p !== null) {
         const doc = useDocumentStore.getState();
-        if (doc.imageWidth > 0 && doc.imageHeight > 0) {
+        if (doc.document.imageWidth > 0 && doc.document.imageHeight > 0) {
           useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
@@ -361,7 +366,7 @@ export const Presentation = (props: PresentationProps) => {
     const story = waypoints[activeStory];
     const gid = story.groupId;
     const found_group =
-      (gid && channelGroups.find(({ id }) => id === gid)) || channelGroups[0];
+      (gid && groups.find(({ id }) => id === gid)) || groups[0];
     if (found_group) {
       setActiveChannelGroup(found_group.id);
     }
@@ -523,38 +528,36 @@ export const Presentation = (props: PresentationProps) => {
 
   // Process story content to highlight channel names
   const { processedContent, channelColors } = useMemo(() => {
-    const activeGroup = channelGroups.find(
-      (g) => g.id === activeChannelGroupId,
-    );
+    const activeGroup = groups.find((g) => g.id === activeChannelGroupId);
     if (!activeGroup || !story_content)
       return {
         processedContent: story_content || "",
         channelColors: new Map(),
       };
 
-    const channels = activeGroup?.GroupChannels || [];
+    const channels = activeGroup?.channels || [];
 
     let content = story_content;
     const colors = new Map();
 
     channels.forEach((channel) => {
-      const { Name } = sourceChannels.find(({ id }) => {
-        return id === channel.sourceChannelId;
-      }) || { Name: "unknown" };
+      const { name: chName } = sourceChannels.find(({ id }) => {
+        return id === channel.channelId;
+      }) || { name: "unknown" };
       // Escape special regex characters in channel name
-      const escapedName = Name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const escapedName = chName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       // Use word boundaries to match whole words only
       const regex = new RegExp(`\\b${escapedName}\\b`, "g");
-      content = content.replace(regex, `**${Name}**`);
-      const { R, G, B } = channel.Color;
-      const hex_color = [R, G, B]
+      content = content.replace(regex, `**${chName}**`);
+      const { r, g: gg, b } = channel.color;
+      const hex_color = [r, gg, b]
         .map((n) => n.toString(16).padStart(2, "0"))
         .join("");
-      colors.set(Name, `#${hex_color}`);
+      colors.set(chName, `#${hex_color}`);
     });
 
     return { processedContent: content, channelColors: colors };
-  }, [story_content, activeChannelGroupId, channelGroups, sourceChannels]);
+  }, [story_content, activeChannelGroupId, groups, sourceChannels]);
 
   return (
     <PresentationShell>

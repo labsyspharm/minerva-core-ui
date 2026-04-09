@@ -8,7 +8,13 @@ import {
 // Types
 import type { ConfigWaypoint } from "@/lib/authoring/config";
 import { useAppStore } from "@/lib/stores/appStore";
-import { useDocumentStore } from "@/lib/stores/documentStore";
+import {
+  selectOrderedWaypoints,
+  useDocumentStore,
+  useOrderedGroups,
+  useOrderedShapes,
+  useOrderedWaypoints,
+} from "@/lib/stores/documentStore";
 import {
   exportRowToConfigWaypoint,
   type JsonExportWaypointRow,
@@ -45,12 +51,12 @@ type WaypointChildMetadata =
 type WaypointItemMetadata = JsonExportWaypointRow | WaypointChildMetadata;
 
 const WaypointsList = (_props: WaypointsListProps) => {
-  // Document store rows match `jsonExport.waypoints` after sync
-  const waypoints = useDocumentStore((s) => s.waypoints);
-  const shapes = useDocumentStore((s) => s.shapes);
-  const channelGroups = useDocumentStore((s) => s.channelGroups);
-  const imageWidth = useDocumentStore((s) => s.imageWidth);
-  const imageHeight = useDocumentStore((s) => s.imageHeight);
+  // Document waypoints (ordered); wire slice matches `toJsonExport().waypoints`
+  const waypoints = useOrderedWaypoints();
+  const shapes = useOrderedShapes();
+  const groups = useOrderedGroups();
+  const imageWidth = useDocumentStore((s) => s.document.imageWidth);
+  const imageHeight = useDocumentStore((s) => s.document.imageHeight);
   const {
     activeStoryIndex,
     setActiveStory,
@@ -123,7 +129,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
       const p = previousActiveStoryIndexRef.current;
       if (p !== null) {
         const doc = useDocumentStore.getState();
-        if (doc.imageWidth > 0 && doc.imageHeight > 0) {
+        if (doc.document.imageWidth > 0 && doc.document.imageHeight > 0) {
           useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
@@ -205,8 +211,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
         setActiveStory(index);
         const gid = story.groupId;
         const foundGroup =
-          (gid && channelGroups.find((group) => group.id === gid)) ||
-          channelGroups[0];
+          (gid && groups.find((group) => group.id === gid)) || groups[0];
         if (foundGroup) {
           setActiveChannelGroup(foundGroup.id);
         }
@@ -216,7 +221,9 @@ const WaypointsList = (_props: WaypointsListProps) => {
         setExpandedAnnotationsStories(new Set());
 
         // Use the latest story from the store (authoritative) in case item.metadata is stale
-        const currentStory = useDocumentStore.getState().waypoints[index];
+        const currentStory = selectOrderedWaypoints(
+          useDocumentStore.getState(),
+        )[index];
         const navStory = currentStory ?? story;
         if (imageWidth > 0 && imageHeight > 0) {
           setTargetWaypointCamera(exportRowToConfigWaypoint(navStory));
@@ -262,9 +269,9 @@ const WaypointsList = (_props: WaypointsListProps) => {
       Name: `Waypoint ${storyIndex + 1}`,
       Content: "",
       groupId:
-        channelGroups.find(
+        groups.find(
           (group) => group.id === useAppStore.getState().activeChannelGroupId,
-        )?.id ?? channelGroups[0]?.id,
+        )?.id ?? groups[0]?.id,
       shapeIds: [],
     };
 
@@ -329,8 +336,8 @@ const WaypointsList = (_props: WaypointsListProps) => {
           index,
           viewerViewState: st.viewerViewState,
           viewerViewportSize: st.viewerViewportSize,
-          imageWidth: doc.imageWidth,
-          imageHeight: doc.imageHeight,
+          imageWidth: doc.document.imageWidth,
+          imageHeight: doc.document.imageHeight,
         },
       );
       setEditingViewstateWaypointIndex(null);
@@ -363,8 +370,6 @@ const WaypointsList = (_props: WaypointsListProps) => {
     }
 
     persistImportedShapesToStory(index);
-
-    useDocumentStore.getState().syncJsonExport();
 
     setEditingViewstateWaypointIndex(null);
   };

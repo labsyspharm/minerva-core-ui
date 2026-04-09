@@ -4,7 +4,10 @@ import styled from "styled-components";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 import type { ConfigProps } from "@/lib/authoring/config";
 import { useAppStore } from "@/lib/stores/appStore";
-import { useDocumentStore } from "@/lib/stores/documentStore";
+import {
+  useOrderedChannels,
+  useOrderedGroups,
+} from "@/lib/stores/documentStore";
 import { ChannelGroups } from "./ChannelGroups";
 import { ChannelGroupsMasterDetail } from "./ChannelGroupsMasterDetail";
 import { ChannelLegend } from "./ChannelLegend";
@@ -114,37 +117,39 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
-  const Groups = useDocumentStore((s) => s.channelGroups);
-  const SourceChannels = useDocumentStore((s) => s.sourceChannels);
+  const Groups = useOrderedGroups();
+  const SourceChannels = useOrderedChannels();
 
   const groups = Groups.map((group, g) => {
     return {
       g,
       id: group.id,
-      name: group.Name,
-      channels: group.GroupChannels.map((channel) => {
-        const { sourceChannelId, Color } = channel;
-        const found = SourceChannels.find(({ id }) => sourceChannelId === id);
-        if (found) {
-          const { R, G, B } = Color;
-          const hex_color = [R, G, B]
-            .map((n) => n.toString(16).padStart(2, "0"))
-            .join("");
-          return {
-            r: R,
-            g: G,
-            b: B,
-            lower_range: channel.LowerRange,
-            upper_range: channel.UpperRange,
-            name: found.Name,
-            color: `${hex_color}`,
-            group_uuid: group.id,
-            source_uuid: found.id,
-            channel_uuid: channel.id,
-          };
-        }
-        return null;
-      }).filter((x) => x),
+      name: group.name,
+      channels: group.channels
+        .map((channel) => {
+          const { channelId, color } = channel;
+          const found = SourceChannels.find(({ id }) => channelId === id);
+          if (found) {
+            const { r, g: gg, b } = color;
+            const hex_color = [r, gg, b]
+              .map((n) => n.toString(16).padStart(2, "0"))
+              .join("");
+            return {
+              r,
+              g: gg,
+              b,
+              lower_range: channel.lowerLimit,
+              upper_range: channel.upperLimit,
+              name: found.name,
+              color: `${hex_color}`,
+              group_uuid: group.id,
+              source_uuid: found.id,
+              channel_uuid: channel.id,
+            };
+          }
+          return null;
+        })
+        .filter((x) => x),
     };
   });
   const activeGroup =

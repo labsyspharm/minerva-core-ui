@@ -151,8 +151,8 @@ export function useSam2() {
   const finalizeLasso = useAppStore((s) => s.finalizeLasso);
   const setSam2Processing = useAppStore((s) => s.setSam2Processing);
   const setSam2DebugImages = useAppStore((s) => s.setSam2DebugImages);
-  const imageWidth = useDocumentStore((s) => s.imageWidth);
-  const imageHeight = useDocumentStore((s) => s.imageHeight);
+  const imageWidth = useDocumentStore((s) => s.document.imageWidth);
+  const imageHeight = useDocumentStore((s) => s.document.imageHeight);
 
   // ------- Worker lifecycle -------
 

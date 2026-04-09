@@ -1,7 +1,7 @@
 /**
  * **`story.json` export** — validated root ({@link JsonExport}), exhibit ↔ wire waypoints,
  * viewer shapes for the export `shapes` array, legacy Arrows/Overlays → wire.
- * Zod: `stores/documentSchema.ts`.
+ * Zod: `documentSchema.ts` ({@link JsonExport}).
  *
  * Not every helper is “export” literally: `hydrateConfigWaypoint` and legacy migration feed
  * the same wire shape used when building {@link buildJsonExport}; shape ↔ `StoryShape`
@@ -31,19 +31,21 @@ import {
   isWaypointBounds,
   type WaypointBounds,
 } from "../waypoints/waypoint";
-import {
-  type JsonExport,
-  parseJsonExport,
-  type StoryPoint,
-  type StoryShape,
-  type StoryShapeArrow,
-  type StoryShapePoint,
-  type StoryShapePolygon,
-  type StoryShapePolyline,
-  type StoryShapeText,
-  type StoryViewport,
-  type StoryWaypoint,
+import type {
+  Group,
+  JsonExport,
+  StoryPoint,
+  StoryShape,
+  StoryShapeArrow,
+  StoryShapePoint,
+  StoryShapePolygon,
+  StoryShapePolyline,
+  StoryShapeText,
+  StoryViewport,
+  StoryWaypoint,
 } from "./documentSchema";
+import { parseJsonExport } from "./documentSchema";
+import type { StoreWaypoint } from "./documentStoreTypes";
 
 export type {
   JsonExport,
@@ -60,9 +62,8 @@ export type {
 
 // --- Exhibit `ConfigWaypoint` ↔ `story.json` waypoint slice (for building JsonExport) -----
 
-/** Store waypoint row: wire `StoryWaypoint` + live `ConfigWaypoint` camera fields (not in JSON). */
-export type JsonExportWaypointRow = StoryWaypoint &
-  Pick<ConfigWaypoint, "State" | "ViewState" | "Pan" | "Zoom">;
+/** Store waypoint row: wire {@link StoryWaypoint} + optional authoring camera fields (not in JSON). */
+export type JsonExportWaypointRow = StoreWaypoint;
 
 const UUID_LIKE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -70,7 +71,7 @@ const UUID_LIKE =
 /** Normalize exhibit / legacy waypoint fields into current {@link ConfigWaypoint} shape. */
 export function hydrateConfigWaypoint(
   wp: ConfigWaypoint,
-  channelGroups: { id: string; Name: string }[],
+  groups: Array<Pick<Group, "id" | "name">>,
 ): ConfigWaypoint {
   const anyWp = wp as ConfigWaypoint & {
     UUID?: string;
@@ -88,7 +89,7 @@ export function hydrateConfigWaypoint(
   ) {
     groupId = UUID_LIKE.test(legacyGroup)
       ? legacyGroup
-      : (channelGroups.find((g) => g.Name === legacyGroup)?.id ?? legacyGroup);
+      : (groups.find((g) => g.name === legacyGroup)?.id ?? legacyGroup);
   }
   const next = {
     ...wp,
@@ -184,10 +185,12 @@ export function configWaypointToExportRow(
   );
   return {
     ...row,
-    State: wp.State,
-    ViewState: wp.ViewState,
-    Pan: wp.Pan,
-    Zoom: wp.Zoom,
+    authoring: {
+      State: wp.State,
+      ViewState: wp.ViewState,
+      Pan: wp.Pan,
+      Zoom: wp.Zoom,
+    },
   };
 }
 
@@ -195,16 +198,18 @@ export function exportRowToConfigWaypoint(
   row: JsonExportWaypointRow,
 ): ConfigWaypoint {
   const bounds = exportViewportToBounds(row.viewport);
+  const r = row as StoreWaypoint &
+    Partial<Pick<ConfigWaypoint, "State" | "ViewState" | "Pan" | "Zoom">>;
   const out: ConfigWaypoint = {
     id: row.id,
     Name: row.title,
     Content: row.content,
-    State: row.State,
+    State: r.authoring?.State ?? r.State ?? { Expanded: false },
     Bounds: bounds,
     shapeIds: [...row.shapeIds],
-    ViewState: row.ViewState,
-    Pan: row.Pan,
-    Zoom: row.Zoom,
+    ViewState: r.authoring?.ViewState ?? r.ViewState,
+    Pan: r.authoring?.Pan ?? r.Pan,
+    Zoom: r.authoring?.Zoom ?? r.Zoom,
   };
   if (row.groupId !== undefined) {
     out.groupId = row.groupId;
@@ -258,10 +263,13 @@ export function buildJsonExport(
 ): JsonExport {
   return parseJsonExport({
     version: "2",
-    waypoints: waypointRows.map(({ State, ViewState, Pan, Zoom, ...w }) => ({
-      ...w,
-      shapeIds: [...w.shapeIds],
-    })),
+    waypoints: waypointRows.map((row) => {
+      const { authoring: _a, ...w } = row;
+      return {
+        ...w,
+        shapeIds: [...w.shapeIds],
+      };
+    }),
     shapes: [...shapeList],
   });
 }

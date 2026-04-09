@@ -1,39 +1,143 @@
 /**
- * Zod validation for persisted `story.json` (synced on `useDocumentStore.jsonExport`).
- *
- * Wire-format types are inferred from these schemas (`z.infer`). {@link buildJsonExport}
- * in `util/jsonExport.ts` composes a payload and runs {@link parseJsonExport}.
+ * Canonical Zod schemas and types for exhibit/story document data (waypoints, shapes,
+ * channels, groups, images). Legacy wire keys are normalized in {@link preprocessDocumentDataRaw}
+ * / {@link normalizeWaypointRecord}; UUID coercion lives in `validateDocument.ts`.
  */
-
 import { z } from "zod";
 
-/** `discriminatedUnion` branches must be plain `z.object` nodes. */
-const storyPointZ = z.object({
+/* -------------------- shared primitives -------------------- */
+
+export const IdSchema = z.string().uuid();
+
+/** Channel.imageId may reference exhibit keys that are not UUIDs. */
+export const ImageKeySchema = z.string().min(1);
+
+export const PointSchema = z.object({
   x: z.number(),
   y: z.number(),
 });
 
-const storyViewportZ = z.object({
-  upperLeft: storyPointZ,
-  lowerRight: storyPointZ,
+export const ViewportSchema = z.object({
+  upperLeft: PointSchema,
+  lowerRight: PointSchema,
 });
 
-const storyWaypointObjectZ = z.object({
-  id: z.string(),
+export const ColorSchema = z.object({
+  r: z.number().int().min(0).max(255),
+  g: z.number().int().min(0).max(255),
+  b: z.number().int().min(0).max(255),
+});
+
+/* -------------------- shapes -------------------- */
+
+const BaseShapeSchema = z.object({
+  id: IdSchema,
+});
+
+export const PointShapeSchema = BaseShapeSchema.extend({
+  type: z.literal("point"),
+  point: PointSchema,
+});
+
+export const ArrowShapeSchema = BaseShapeSchema.extend({
+  type: z.literal("arrow"),
+  point: PointSchema,
+  angle: z.coerce.number(),
+  label: z.string().default(""),
+});
+
+export const PolygonShapeSchema = BaseShapeSchema.extend({
+  type: z.literal("polygon"),
+  points: z.array(PointSchema).min(3),
+});
+
+export const PolylineShapeSchema = BaseShapeSchema.extend({
+  type: z.literal("polyline"),
+  points: z.array(PointSchema).min(2),
+});
+
+export const TextShapeSchema = BaseShapeSchema.extend({
+  type: z.literal("text"),
+  point: PointSchema,
+  content: z.string(),
+});
+
+export const ShapeSchema = z.discriminatedUnion("type", [
+  PointShapeSchema,
+  ArrowShapeSchema,
+  PolygonShapeSchema,
+  PolylineShapeSchema,
+  TextShapeSchema,
+]);
+
+/* -------------------- images / channels / groups -------------------- */
+
+export const SourceDistributionSchema = z.object({
+  id: IdSchema,
+  YValues: z.array(z.number()),
+  XScale: z.string(),
+  YScale: z.string(),
+  LowerRange: z.number(),
+  UpperRange: z.number(),
+});
+
+export const ImageSchema = z.object({
+  id: IdSchema,
+  sizeX: z.number().int().positive(),
+  sizeY: z.number().int().positive(),
+  sizeC: z.number().int().nonnegative(),
+  omero: z
+    .object({
+      omeroServerName: z.string(),
+      imageIdentifier: z.number().int(),
+    })
+    .optional(),
+  omeXmlHash: z.string(),
+  basename: z.string(),
+});
+
+export const ChannelSchema = z.object({
+  id: IdSchema,
+  imageId: ImageKeySchema,
+  index: z.number().int().min(0),
+  name: z.string(),
+  samples: z.number().int().optional(),
+  sourceDataTypeId: z.string().optional(),
+  sourceDistribution: SourceDistributionSchema.optional(),
+});
+
+/** Group channel row: `id` is the stable row id (contrast slider / color picker target). */
+export const GroupChannelSchema = z.object({
+  id: IdSchema,
+  channelId: IdSchema,
+  color: ColorSchema,
+  lowerLimit: z.number(),
+  upperLimit: z.number(),
+});
+
+export const GroupSchema = z.object({
+  id: IdSchema,
+  name: z.string(),
+  expanded: z.boolean().optional(),
+  channels: z.array(GroupChannelSchema),
+});
+
+const waypointObjectZ = z.object({
+  id: IdSchema,
+  groupId: IdSchema.optional(),
+  thumbnail: z.string(),
   title: z.string(),
   name: z.string().optional(),
   content: z.string(),
-  groupId: z.string().optional(),
-  thumbnail: z.string().optional(),
-  viewport: storyViewportZ,
-  shapeIds: z.array(z.string()),
+  viewport: ViewportSchema,
+  shapeIds: z.array(IdSchema),
 });
 
-const StoryWaypointSchema = z.preprocess((raw) => {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    return raw;
-  }
-  const w = { ...(raw as Record<string, unknown>) };
+/** Legacy story.json / exhibit keys on a single waypoint object (`shapes` → `shapeIds`, etc.). */
+export function normalizeWaypointRecord(
+  raw: Record<string, unknown>,
+): Record<string, unknown> {
+  const w = { ...raw };
   if (
     !("shapeIds" in w) &&
     "shapes" in w &&
@@ -48,70 +152,66 @@ const StoryWaypointSchema = z.preprocess((raw) => {
   ) {
     w.groupId = (w as { group: string }).group;
   }
+  if (!("thumbnail" in w) || w.thumbnail == null) {
+    w.thumbnail = "";
+  }
   return w;
-}, storyWaypointObjectZ);
+}
 
-/** Output shape of {@link StoryWaypointSchema} (preprocess does not widen fields). */
-export type StoryWaypoint = z.infer<typeof storyWaypointObjectZ>;
+export const WaypointSchema = z.preprocess((raw) => {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    return raw;
+  }
+  return normalizeWaypointRecord(raw as Record<string, unknown>);
+}, waypointObjectZ);
 
-const storyShapePointZ = z.object({
-  type: z.literal("point"),
-  id: z.string(),
-  point: storyPointZ,
+export const DocumentDataSchema = z.object({
+  imageWidth: z.number(),
+  imageHeight: z.number(),
+  waypoints: z.array(WaypointSchema),
+  shapes: z.array(ShapeSchema),
+  groups: z.array(GroupSchema),
+  channels: z.array(ChannelSchema),
+  images: z.array(ImageSchema),
 });
 
-const storyShapeArrowZ = z.object({
-  type: z.literal("arrow"),
-  point: storyPointZ,
-  angle: z.coerce.number(),
-  label: z.string().optional(),
-  id: z.string(),
-});
+/* -------------------- types -------------------- */
 
-const storyShapePolygonZ = z.object({
-  type: z.literal("polygon"),
-  id: z.string(),
-  points: z.array(storyPointZ),
-});
+export type Id = z.infer<typeof IdSchema>;
+export type Point = z.infer<typeof PointSchema>;
+export type Viewport = z.infer<typeof ViewportSchema>;
+export type Color = z.infer<typeof ColorSchema>;
 
-const storyShapePolylineZ = z.object({
-  type: z.literal("polyline"),
-  id: z.string(),
-  points: z.array(storyPointZ),
-});
+export type PointShape = z.infer<typeof PointShapeSchema>;
+export type ArrowShape = z.infer<typeof ArrowShapeSchema>;
+export type PolygonShape = z.infer<typeof PolygonShapeSchema>;
+export type PolylineShape = z.infer<typeof PolylineShapeSchema>;
+export type TextShape = z.infer<typeof TextShapeSchema>;
+export type Shape = z.infer<typeof ShapeSchema>;
 
-const storyShapeTextZ = z.object({
-  type: z.literal("text"),
-  id: z.string(),
-  content: z.string(),
-  point: storyPointZ,
-});
+export type Image = z.infer<typeof ImageSchema>;
+export type Channel = z.infer<typeof ChannelSchema>;
+export type GroupChannel = z.infer<typeof GroupChannelSchema>;
+export type Group = z.infer<typeof GroupSchema>;
+export type Waypoint = z.infer<typeof WaypointSchema>;
+export type SourceDistributionData = z.infer<typeof SourceDistributionSchema>;
 
-export const StoryShapeSchema = z.discriminatedUnion("type", [
-  storyShapePointZ,
-  storyShapeArrowZ,
-  storyShapePolygonZ,
-  storyShapePolylineZ,
-  storyShapeTextZ,
-]);
+export type DocumentData = z.infer<typeof DocumentDataSchema>;
 
-export type StoryPoint = z.infer<typeof storyPointZ>;
-export type StoryViewport = z.infer<typeof storyViewportZ>;
-export type StoryShapePoint = z.infer<typeof storyShapePointZ>;
-export type StoryShapeArrow = z.infer<typeof storyShapeArrowZ>;
-export type StoryShapePolygon = z.infer<typeof storyShapePolygonZ>;
-export type StoryShapePolyline = z.infer<typeof storyShapePolylineZ>;
-export type StoryShapeText = z.infer<typeof storyShapeTextZ>;
+/** Back-compat aliases used across authoring / export helpers. */
+export type StoryPoint = Point;
+export type StoryViewport = Viewport;
+export type StoryShape = Shape;
+export type StoryWaypoint = Waypoint;
+export type StoryShapePoint = PointShape;
+export type StoryShapeArrow = ArrowShape;
+export type StoryShapePolygon = PolygonShape;
+export type StoryShapePolyline = PolylineShape;
+export type StoryShapeText = TextShape;
 
-/** Union of branch types so `switch (shape.type)` narrows correctly in TypeScript. */
-export type StoryShape =
-  | StoryShapePoint
-  | StoryShapeArrow
-  | StoryShapePolygon
-  | StoryShapePolyline
-  | StoryShapeText;
+export type ExhibitImage = Image;
 
-function normalizeRawStoryShape(shape: unknown): unknown {
+function normalizeRawShape(shape: unknown): unknown {
   if (shape === null || typeof shape !== "object" || Array.isArray(shape)) {
     return shape;
   }
@@ -158,7 +258,8 @@ function normalizeRawStoryShape(shape: unknown): unknown {
   return next;
 }
 
-function preprocessJsonExport(raw: unknown): unknown {
+/** Preprocess wire JSON (legacy keys, arrow `from`/`to`, etc.) before `DocumentDataSchema` / export parse. */
+export function preprocessDocumentDataRaw(raw: unknown): unknown {
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
     return raw;
   }
@@ -169,7 +270,7 @@ function preprocessJsonExport(raw: unknown): unknown {
   if (Array.isArray(shapes)) {
     next = {
       ...next,
-      shapes: shapes.map(normalizeRawStoryShape),
+      shapes: shapes.map(normalizeRawShape),
     };
   }
   if (Array.isArray(waypoints)) {
@@ -179,42 +280,62 @@ function preprocessJsonExport(raw: unknown): unknown {
         if (wp === null || typeof wp !== "object" || Array.isArray(wp)) {
           return wp;
         }
-        const w = { ...(wp as Record<string, unknown>) };
-        if (
-          !("shapeIds" in w) &&
-          "shapes" in w &&
-          Array.isArray((w as { shapes?: unknown }).shapes)
-        ) {
-          w.shapeIds = (w as { shapes: string[] }).shapes;
-        }
-        if (
-          !("groupId" in w) &&
-          "group" in w &&
-          typeof (w as { group?: unknown }).group === "string"
-        ) {
-          w.groupId = (w as { group: string }).group;
-        }
-        return w;
+        return normalizeWaypointRecord(wp as Record<string, unknown>);
       }),
     };
   }
   return next;
 }
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isUuid(id: string): boolean {
+  return UUID_RE.test(id);
+}
+
+/* -------------------- story.json root (version + waypoints + shapes) -------------------- */
+
 const jsonExportCoreSchema = z.object({
   version: z.union([z.literal("1"), z.literal("2")]),
-  waypoints: z.array(StoryWaypointSchema),
-  shapes: z.array(StoryShapeSchema),
+  waypoints: z.array(WaypointSchema),
+  shapes: z.array(ShapeSchema),
 });
 
-/** Root object validated for `story.json` export/import. */
 export type JsonExport = z.infer<typeof jsonExportCoreSchema>;
 export type StoryFormatVersion = JsonExport["version"];
 
-export const JsonExportSchema = z.preprocess(
-  preprocessJsonExport,
-  jsonExportCoreSchema,
-);
+function preprocessJsonExportRoot(raw: unknown): unknown {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    return raw;
+  }
+  const d = raw as Record<string, unknown>;
+  return preprocessDocumentDataRaw({
+    ...d,
+    imageWidth: 0,
+    imageHeight: 0,
+    groups: [],
+    channels: [],
+    images: [],
+  });
+}
+
+export const JsonExportSchema = z.preprocess((raw) => {
+  const expanded = preprocessJsonExportRoot(raw);
+  if (
+    expanded === null ||
+    typeof expanded !== "object" ||
+    Array.isArray(expanded)
+  ) {
+    return expanded;
+  }
+  const e = expanded as Record<string, unknown>;
+  return {
+    version: e.version,
+    waypoints: e.waypoints,
+    shapes: e.shapes,
+  };
+}, jsonExportCoreSchema);
 
 export function safeParseJsonExport(data: unknown) {
   return JsonExportSchema.safeParse(data);

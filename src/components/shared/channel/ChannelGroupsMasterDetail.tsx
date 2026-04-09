@@ -6,11 +6,14 @@ import {
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
 import { useAppStore } from "@/lib/stores/appStore";
-import type {
-  ConfigGroup,
-  ConfigSourceChannel,
+import type { Channel, Group } from "@/lib/stores/documentStore";
+import {
+  selectOrderedChannels,
+  selectOrderedGroups,
+  useDocumentStore,
+  useOrderedChannels,
+  useOrderedGroups,
 } from "@/lib/stores/documentStore";
-import { useDocumentStore } from "@/lib/stores/documentStore";
 import styles from "./ChannelList.module.css";
 
 const TrashIcon = () => (
@@ -57,15 +60,13 @@ const RemoveIcon = () => (
 );
 
 function channelNamesForGroup(
-  group: ConfigGroup,
-  sourceChannels: ConfigSourceChannel[],
+  group: Group,
+  sourceChannels: Channel[],
 ): string[] {
-  return (group.GroupChannels ?? [])
-    .map(({ sourceChannelId }) =>
-      sourceChannels.find((sc) => sc.id === sourceChannelId),
-    )
-    .filter((sc): sc is ConfigSourceChannel => sc != null)
-    .map((sc) => sc.Name);
+  return (group.channels ?? [])
+    .map(({ channelId }) => sourceChannels.find((sc) => sc.id === channelId))
+    .filter((sc): sc is Channel => sc != null)
+    .map((sc) => sc.name);
 }
 
 export type ChannelGroupsMasterDetailProps = {
@@ -81,9 +82,9 @@ export const ChannelGroupsMasterDetail = (
 ) => {
   const { setActiveChannelGroup } = useAppStore();
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
-  const Groups = useDocumentStore((s) => s.channelGroups);
-  const SourceChannels = useDocumentStore((s) => s.sourceChannels);
-  const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
+  const Groups = useOrderedGroups();
+  const SourceChannels = useOrderedChannels();
+  const setGroups = useDocumentStore((s) => s.setGroups);
   const setGroupNames = useAppStore((s) => s.setGroupNames);
   const setGroupChannelLists = useAppStore((s) => s.setGroupChannelLists);
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
@@ -131,28 +132,29 @@ export const ChannelGroupsMasterDetail = (
 
   // Sync derived store state after group mutations.
   const syncGroupState = React.useCallback(
-    (newGroups: ConfigGroup[]) => {
-      setChannelGroups(newGroups);
+    (newGroups: Group[]) => {
+      setGroups(newGroups);
       setGroupNames(
-        Object.fromEntries(newGroups.map(({ Name, id }) => [id, Name])),
+        Object.fromEntries(newGroups.map(({ name, id }) => [id, name])),
       );
       const lists = Object.fromEntries(
-        newGroups.map(({ Name, GroupChannels }) => [
-          Name,
-          GroupChannels.map(({ sourceChannelId }) =>
-            SourceChannels.find(({ id }) => id === sourceChannelId),
-          )
+        newGroups.map(({ name, channels }) => [
+          name,
+          channels
+            .map(({ channelId }) =>
+              SourceChannels.find(({ id }) => id === channelId),
+            )
             .filter(Boolean)
-            .map((sc) => sc?.Name),
+            .map((sc) => sc?.name),
         ]),
       );
       setGroupChannelLists(lists);
       const namesInUse = new Set<string>();
       for (const g of newGroups) {
-        for (const gc of g.GroupChannels) {
-          const sc = SourceChannels.find(({ id }) => id === gc.sourceChannelId);
-          if (sc?.Name) {
-            namesInUse.add(sc.Name);
+        for (const gc of g.channels) {
+          const sc = SourceChannels.find(({ id }) => id === gc.channelId);
+          if (sc?.name) {
+            namesInUse.add(sc.name);
           }
         }
       }
@@ -167,7 +169,7 @@ export const ChannelGroupsMasterDetail = (
     },
     [
       SourceChannels,
-      setChannelGroups,
+      setGroups,
       setGroupNames,
       setGroupChannelLists,
       setChannelVisibilities,
@@ -177,11 +179,11 @@ export const ChannelGroupsMasterDetail = (
   // --- Group CRUD ---
   const createGroup = () => {
     const name = `Group ${Groups.length + 1}`;
-    const newGroup: ConfigGroup = {
+    const newGroup: Group = {
       id: crypto.randomUUID(),
-      Name: name,
-      GroupChannels: [],
-      State: { Expanded: true },
+      name,
+      expanded: true,
+      channels: [],
     };
     const newGroups = [...Groups, newGroup];
     syncGroupState(newGroups);
@@ -206,7 +208,7 @@ export const ChannelGroupsMasterDetail = (
 
   const renameGroup = (groupId: string, newName: string) => {
     const newGroups = Groups.map((g) =>
-      g.id === groupId ? { ...g, Name: newName } : g,
+      g.id === groupId ? { ...g, name: newName } : g,
     );
     syncGroupState(newGroups);
   };
@@ -216,20 +218,18 @@ export const ChannelGroupsMasterDetail = (
     if (!sc) return;
     const newGroups = Groups.map((g) => {
       if (g.id !== groupId) return g;
-      const already = g.GroupChannels.some(
-        (gc) => gc.sourceChannelId === sourceChannelUUID,
+      const already = g.channels.some(
+        (gc) => gc.channelId === sourceChannelUUID,
       );
       if (already) return g;
       const newChannel = {
         id: crypto.randomUUID(),
-        LowerRange: 0,
-        UpperRange: 65535,
-        Color: { R: 255, G: 255, B: 255 },
-        sourceChannelId: sourceChannelUUID,
-        groupId,
-        State: { Expanded: true },
+        lowerLimit: 0,
+        upperLimit: 65535,
+        color: { r: 255, g: 255, b: 255 },
+        channelId: sourceChannelUUID,
       };
-      return { ...g, GroupChannels: [...g.GroupChannels, newChannel] };
+      return { ...g, channels: [...g.channels, newChannel] };
     });
     syncGroupState(newGroups);
   };
@@ -239,7 +239,7 @@ export const ChannelGroupsMasterDetail = (
       if (g.id !== groupId) return g;
       return {
         ...g,
-        GroupChannels: g.GroupChannels.filter((gc) => gc.id !== channelUUID),
+        channels: g.channels.filter((gc) => gc.id !== channelUUID),
       };
     });
     syncGroupState(newGroups);
@@ -254,9 +254,9 @@ export const ChannelGroupsMasterDetail = (
       if (g.id !== groupId) return g;
       return {
         ...g,
-        GroupChannels: g.GroupChannels.map((gc) => {
+        channels: g.channels.map((gc) => {
           if (gc.id !== oldChannelUUID) return gc;
-          return { ...gc, sourceChannelId: newSourceChannelUUID };
+          return { ...gc, channelId: newSourceChannelUUID };
         }),
       };
     });
@@ -266,12 +266,12 @@ export const ChannelGroupsMasterDetail = (
 
   const updateChannelColor = (
     channelUUID: string,
-    rgb: { R: number; G: number; B: number },
+    rgb: { r: number; g: number; b: number },
   ) => {
     const newGroups = Groups.map((g) => ({
       ...g,
-      GroupChannels: g.GroupChannels.map((gc) =>
-        gc.id === channelUUID ? { ...gc, Color: rgb } : gc,
+      channels: g.channels.map((gc) =>
+        gc.id === channelUUID ? { ...gc, color: rgb } : gc,
       ),
     }));
     syncGroupState(newGroups);
@@ -281,10 +281,10 @@ export const ChannelGroupsMasterDetail = (
   const pickingColorHex = React.useMemo(() => {
     if (!colorPickerChannelUUID) return null;
     for (const g of Groups) {
-      const gc = g.GroupChannels.find((c) => c.id === colorPickerChannelUUID);
+      const gc = g.channels.find((c) => c.id === colorPickerChannelUUID);
       if (gc) {
-        const { R, G, B } = gc.Color;
-        return [R, G, B].map((n) => n.toString(16).padStart(2, "0")).join("");
+        const { r, g: gg, b } = gc.color;
+        return [r, gg, b].map((n) => n.toString(16).padStart(2, "0")).join("");
       }
     }
     return null;
@@ -304,7 +304,7 @@ export const ChannelGroupsMasterDetail = (
     if (!detailGroupId) return "";
     const g = Groups.find((x) => x.id === detailGroupId);
     if (!g) return "";
-    return g.GroupChannels.map((gc) => gc.sourceChannelId).join("\0");
+    return g.channels.map((gc) => gc.channelId).join("\0");
   }, [detailGroupId, Groups]);
 
   React.useEffect(() => {
@@ -313,17 +313,18 @@ export const ChannelGroupsMasterDetail = (
     let cancelled = false;
     void (async () => {
       try {
-        const { channelGroups: gList, sourceChannels: scList } =
-          useDocumentStore.getState();
+        const st = useDocumentStore.getState();
+        const gList = selectOrderedGroups(st);
+        const scList = selectOrderedChannels(st);
         const g = gList.find((x) => x.id === detailGroupId);
         if (!g) return;
         const indices: number[] = [];
         const sourceIds: string[] = [];
-        for (const gc of g.GroupChannels) {
-          const sc = scList.find((s) => s.id === gc.sourceChannelId);
+        for (const gc of g.channels) {
+          const sc = scList.find((s) => s.id === gc.channelId);
           if (!sc) continue;
           if (sourceDistributionYValuesLength(sc) > 0) continue;
-          indices.push(sc.SourceIndex);
+          indices.push(sc.index);
           sourceIds.push(sc.id);
         }
         if (indices.length === 0 || cancelled) return;
@@ -363,7 +364,7 @@ export const ChannelGroupsMasterDetail = (
     if (!detailGroupId) return [];
     const g = Groups.find(({ id }) => id === detailGroupId);
     if (!g) return [];
-    const usedUUIDs = new Set(g.GroupChannels.map((gc) => gc.sourceChannelId));
+    const usedUUIDs = new Set(g.channels.map((gc) => gc.channelId));
     return SourceChannels.filter(({ id }) => !usedUUIDs.has(id));
   }, [detailGroupId, Groups, SourceChannels]);
 
@@ -439,13 +440,13 @@ export const ChannelGroupsMasterDetail = (
                 <button
                   type="button"
                   className={styles.groupRowMainHit}
-                  aria-label={`Select group: ${group.Name}`}
+                  aria-label={`Select group: ${group.name}`}
                   onClick={() => setActiveChannelGroup(group.id)}
                   onDoubleClick={() => openDetailForGroup(group.id)}
                 >
                   <div className={styles.rowTextStack}>
-                    <span className={styles.rowTitle} title={group.Name}>
-                      {group.Name}
+                    <span className={styles.rowTitle} title={group.name}>
+                      {group.name}
                     </span>
                     <span className={styles.rowContent} title={subtitle}>
                       {subtitle || "No channels"}
@@ -475,37 +476,35 @@ export const ChannelGroupsMasterDetail = (
       }
     };
 
-    const channels = detailGroup.GroupChannels.map((gc) => {
-      const sc = SourceChannels.find(({ id }) => id === gc.sourceChannelId);
-      const { R, G, B } = gc.Color;
-      const hex = [R, G, B]
+    const channels = detailGroup.channels.map((gc) => {
+      const sc = SourceChannels.find(({ id }) => id === gc.channelId);
+      const { r: rr, g: gg, b } = gc.color;
+      const hex = [rr, gg, b]
         .map((n) => n.toString(16).padStart(2, "0"))
         .join("");
       return {
         channelUUID: gc.id,
-        sourceUUID: gc.sourceChannelId,
-        name: sc?.Name ?? "Unknown",
+        sourceUUID: gc.channelId,
+        name: sc?.name ?? "Unknown",
         hex,
-        r: R,
-        g: G,
-        b: B,
+        r: rr,
+        g: gg,
+        b,
       };
     });
 
     const replaceOptions = (currentSourceUUID: string) =>
       SourceChannels.filter(({ id }) => id !== currentSourceUUID);
 
-    const channelItemAttrsFor = (
-      gc: (typeof detailGroup.GroupChannels)[0],
-    ) => ({
+    const channelItemAttrsFor = (gc: (typeof detailGroup.channels)[0]) => ({
       group_uuid: detailGroup.id,
       channel_uuid: gc.id,
-      source_uuid: gc.sourceChannelId,
-      r: String(gc.Color.R),
-      g: String(gc.Color.G),
-      b: String(gc.Color.B),
-      lower_range: String(gc.LowerRange),
-      upper_range: String(gc.UpperRange),
+      source_uuid: gc.channelId,
+      r: String(gc.color.r),
+      g: String(gc.color.g),
+      b: String(gc.color.b),
+      lower_range: String(gc.lowerLimit),
+      upper_range: String(gc.upperLimit),
     });
 
     return (
@@ -523,8 +522,8 @@ export const ChannelGroupsMasterDetail = (
             />
             <span>Back</span>
           </button>
-          <div className={styles.detailTitle} title={detailGroup.Name}>
-            {detailGroup.Name}
+          <div className={styles.detailTitle} title={detailGroup.name}>
+            {detailGroup.name}
           </div>
         </div>
 
@@ -542,7 +541,7 @@ export const ChannelGroupsMasterDetail = (
                 id={renameFieldId}
                 className={styles.detailTitleInput}
                 type="text"
-                value={detailGroup.Name ?? ""}
+                value={detailGroup.name ?? ""}
                 onChange={(e) => renameGroup(detailGroup.id, e.target.value)}
                 onBlur={handleTitleBlur}
                 maxLength={200}
@@ -563,7 +562,7 @@ export const ChannelGroupsMasterDetail = (
               <div className={styles.detailChannelsSectionBody}>
                 {channels.map((ch) => {
                   const isReplacing = replacingChannelUUID === ch.channelUUID;
-                  const gc = detailGroup.GroupChannels.find(
+                  const gc = detailGroup.channels.find(
                     (c) => c.id === ch.channelUUID,
                   );
                   const legacyChannelItem =
@@ -623,7 +622,7 @@ export const ChannelGroupsMasterDetail = (
                             </option>
                             {replaceOptions(ch.sourceUUID).map((sc) => (
                               <option key={sc.id} value={sc.id}>
-                                {sc.Name}
+                                {sc.name}
                               </option>
                             ))}
                           </select>
@@ -688,7 +687,7 @@ export const ChannelGroupsMasterDetail = (
                       </option>
                       {availableChannels.map((sc) => (
                         <option key={sc.id} value={sc.id}>
-                          {sc.Name}
+                          {sc.name}
                         </option>
                       ))}
                     </select>
@@ -718,7 +717,11 @@ export const ChannelGroupsMasterDetail = (
             const G = Number.parseInt(raw.slice(2, 4), 16);
             const B = Number.parseInt(raw.slice(4, 6), 16);
             if ([R, G, B].some((n) => Number.isNaN(n))) return;
-            updateChannelColor(colorPickerChannelUUID, { R, G, B });
+            updateChannelColor(colorPickerChannelUUID, {
+              r: R,
+              g: G,
+              b: B,
+            });
           }}
         />
       ) : null}

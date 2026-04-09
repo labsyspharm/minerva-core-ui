@@ -6,12 +6,10 @@
  */
 import type { ConfigSourceDistribution } from "../authoring/config";
 import { extractDistributionsForSourceIndices } from "../authoring/config";
-import type { ConfigSourceChannel } from "../stores/documentStore";
+import type { Channel } from "../stores/documentStore";
 import type { Loader } from "./viv";
 
-export function sourceDistributionYValuesLength(
-  sc: ConfigSourceChannel,
-): number {
+export function sourceDistributionYValuesLength(sc: Channel): number {
   const d = sc.sourceDistribution;
   return d?.YValues?.length ?? 0;
 }
@@ -28,12 +26,12 @@ export function clearOmeHistogramCache(): void {
 }
 
 export function mergeHistogramsIntoSourceChannels(
-  channels: ConfigSourceChannel[],
+  channels: Channel[],
   byIndex: Map<number, ConfigSourceDistribution>,
-): ConfigSourceChannel[] {
+): Channel[] {
   let changed = false;
   const next = channels.map((sc) => {
-    const dist = byIndex.get(sc.SourceIndex);
+    const dist = byIndex.get(sc.index);
     if (!dist) return sc;
     if (sourceDistributionYValuesLength(sc) > 0) return sc;
     changed = true;
@@ -44,7 +42,7 @@ export function mergeHistogramsIntoSourceChannels(
 
 /**
  * Resolve histogram distributions for OME source indices, using an in-memory cache
- * keyed by `{imageKey, SourceIndex}` (unique for a single multichannel OME-TIFF).
+ * keyed by `{imageKey, index}` (unique for a single multichannel OME-TIFF).
  */
 export async function ensureOmeHistogramDistributions(
   loader: Loader,

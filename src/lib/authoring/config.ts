@@ -3,7 +3,7 @@ import type { DTYPE_VALUES } from "@vivjs/constants";
 import { histogramBinTile } from "../imaging/histogramBinPool";
 import type { Loader } from "../imaging/viv";
 import type { ConfigGroup as LegacyConfigGroup } from "../legacy/exhibit";
-import type { ConfigGroup, ConfigSourceChannel } from "../stores/documentStore";
+import type { Channel, Group } from "../stores/documentSchema";
 import type { StoryShape } from "../stores/storeUtils";
 
 export type SupportedDtype = keyof typeof DTYPE_VALUES;
@@ -46,7 +46,7 @@ type WaypointProperties = NameProperty & {
 export type MutableFields = (keyof ItemRegistryProps)[];
 export type ItemRegistryProps = {
   Name: string;
-  Groups: ConfigGroup[];
+  Groups: Group[];
   /**
    * Waypoint rows for the exhibit author (`Name`/`Bounds`/…); mirror of
    * Zustand `waypoints` via `exportRowsToConfigWaypoints` / `exportRowToConfigWaypoint`.
@@ -54,7 +54,7 @@ export type ItemRegistryProps = {
   Stories: ConfigWaypoint[];
   /** Global shape registry → `story.json` root `shapes` / cached `jsonExport.shapes`. */
   Shapes?: StoryShape[];
-  SourceChannels: ConfigSourceChannel[];
+  SourceChannels: Channel[];
   SourceDistributions: ConfigSourceDistribution[];
 };
 type SetItems = (user: Partial<ItemRegistryProps>) => void;
@@ -145,7 +145,7 @@ export type ConfigWaypoint = WaypointProperties & {
   State: WaypointState;
   /** Ordered ids into global `shapes` / story.json `waypoints[].shapeIds`. */
   shapeIds?: string[];
-  /** References {@link ConfigGroup.id}. */
+  /** References {@link Group.id}. */
   groupId?: string;
 };
 
@@ -157,16 +157,17 @@ type ExtractChannels = (
   modality: string,
   groups: LegacyConfigGroup[],
 ) => {
-  SourceChannels: ConfigSourceChannel[];
-  Groups: ConfigGroup[];
+  SourceChannels: Channel[];
+  Groups: Group[];
 };
 
-const hex_to_rgb = (c) => {
+const hex_to_rgb = (c: string) => {
   const n = parseInt(c, 16);
-  const R = (n >> 16) & 255;
-  const G = (n >> 8) & 255;
-  const B = n & 255;
-  return { R, G, B };
+  return {
+    r: (n >> 16) & 255,
+    g: (n >> 8) & 255,
+    b: n & 255,
+  };
 };
 
 const GROUP_CHANNELS_CRC01 = {
@@ -402,11 +403,11 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
     name.startsWith("CYCIF_") ? name.slice(6) : name;
   const SourceChannels = Channels.map((channel, index) => ({
     id: crypto.randomUUID(),
-    Name: stripCycif(channel.Name),
-    Samples: channel.SamplesPerPixel,
-    SourceIndex: init.indices[index].c,
+    name: stripCycif(channel.Name),
+    samples: channel.SamplesPerPixel,
+    index: init.indices[index].c,
     sourceDataTypeId: asID(Type).ID,
-    sourceImageId: modality,
+    imageId: modality,
   }));
   // Match hard-coded groups to existing channels. GROUP_CHANNELS_CRC01 maps Path →
   // indices into OME Pixels.Channels (same order as SourceChannels), not "Channel N" strings.
@@ -431,11 +432,11 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
         new_name_map[g.Channels[i]] = SourceChannels[idx].id;
       }
       const new_group_uuid = crypto.randomUUID();
-      const new_group = {
+      const new_group: Group = {
         id: new_group_uuid,
-        State: { Expanded: false },
-        Name: g.Name,
-        GroupChannels: g.Channels.reduce(
+        expanded: false,
+        name: g.Name,
+        channels: g.Channels.reduce(
           (new_group_channels, name, index) => {
             if (!(name in new_name_map)) {
               return new_group_channels;
@@ -443,15 +444,13 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
             const color = g.Colors[index];
             return new_group_channels.concat({
               id: crypto.randomUUID(),
-              State: { Expanded: true },
-              LowerRange: g.Lows[index],
-              UpperRange: g.Highs[index],
-              sourceChannelId: new_name_map[name],
-              Color: hex_to_rgb(color),
-              groupId: new_group_uuid,
+              channelId: new_name_map[name],
+              color: hex_to_rgb(color),
+              lowerLimit: g.Lows[index],
+              upperLimit: g.Highs[index],
             });
           },
-          [] as ConfigGroup["GroupChannels"],
+          [] as Group["channels"],
         ),
       };
       return {
@@ -460,7 +459,7 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
       };
     },
     {
-      Groups: [] as ConfigGroup[],
+      Groups: [] as Group[],
       name_map: {} as Record<string, string>,
     },
   );
@@ -471,7 +470,7 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
   if (Object.keys(name_map).length) {
     SourceChannels.forEach((sourceChannel) => {
       if (sourceChannel.id in reverse_name_map) {
-        sourceChannel.Name = reverse_name_map[sourceChannel.id];
+        sourceChannel.name = reverse_name_map[sourceChannel.id];
       }
     });
     const { Groups } = hardcoded_crc01;
@@ -481,32 +480,30 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
     };
   } else if (
     SourceChannels.length === 1 &&
-    SourceChannels[0].Samples === 3 &&
+    SourceChannels[0].samples === 3 &&
     SourceChannels[0].sourceDataTypeId === "Uint8"
   ) {
     const group_uuid = crypto.randomUUID();
     const groupName = "Hematoxylin & Eosin";
     const channelName = "H&E";
-    const Groups = [
+    const Groups: Group[] = [
       {
         id: group_uuid,
-        State: { Expanded: true },
-        Name: groupName,
-        GroupChannels: SourceChannels.map((channel, _index) => {
+        expanded: true,
+        name: groupName,
+        channels: SourceChannels.map((channel, _index) => {
           return {
             id: crypto.randomUUID(),
-            State: { Expanded: true },
-            LowerRange: 0,
-            UpperRange: 255,
-            sourceChannelId: channel.id,
-            Color: hex_to_rgb("cc00ff"),
-            groupId: group_uuid,
+            channelId: channel.id,
+            color: hex_to_rgb("cc00ff"),
+            lowerLimit: 0,
+            upperLimit: 255,
           };
         }),
       },
     ];
     if (SourceChannels.length === 1) {
-      SourceChannels[0].Name = channelName;
+      SourceChannels[0].name = channelName;
     }
     return {
       SourceChannels,
@@ -514,27 +511,25 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
     };
   }
   const group_size = 4;
-  const Groups = [
+  const Groups: Group[] = [
     ...Array(Math.ceil(SourceChannels.length / group_size)).keys(),
   ].map((group_index) => {
     const group_uuid = crypto.randomUUID();
     return {
       id: group_uuid,
-      State: { Expanded: false },
-      Name: `Group ${group_index}`,
-      GroupChannels: SourceChannels.slice(
+      expanded: false,
+      name: `Group ${group_index}`,
+      channels: SourceChannels.slice(
         group_index * group_size,
         (group_index + 1) * group_size,
       ).map((channel, index) => {
         const color_id = ["0dabff", "c3ff00", "ff8b00", "ff00c7"][index % 4];
         return {
           id: crypto.randomUUID(),
-          State: { Expanded: true },
-          LowerRange: 2 ** 5, //TODO
-          UpperRange: 2 ** 14, //TODO
-          sourceChannelId: channel.id,
-          Color: hex_to_rgb(color_id),
-          groupId: group_uuid,
+          channelId: channel.id,
+          color: hex_to_rgb(color_id),
+          lowerLimit: 2 ** 5, //TODO
+          upperLimit: 2 ** 14, //TODO
         };
       }),
     };

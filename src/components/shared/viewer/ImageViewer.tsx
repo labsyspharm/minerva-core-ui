@@ -21,7 +21,7 @@ import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
-import { type ConfigGroup, useDocumentStore } from "@/lib/stores/documentStore";
+import { useDocumentStore } from "@/lib/stores/documentStore";
 import { useWindowSize } from "@/lib/util/useWindowSize";
 import { ORTHO_VIEW_ID, SCALEBAR_VIEW_ID } from "@/lib/viewer/deckViewIds";
 import { createDragHandlers } from "@/lib/viewer/dragHandlers";
@@ -43,7 +43,7 @@ type ItemRegistryChannel = {
 };
 
 type ItemRegistryGroup = {
-  State: ConfigGroup["State"];
+  State: { Expanded: boolean };
   channels: ItemRegistryChannel[];
   name: string;
   g: number;
@@ -291,8 +291,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const clearTargetWaypointCamera = useAppStore(
     (state) => state.clearTargetWaypointCamera,
   );
-  const storeImageWidth = useDocumentStore((state) => state.imageWidth);
-  const storeImageHeight = useDocumentStore((state) => state.imageHeight);
+  const storeImageWidth = useDocumentStore(
+    (state) => state.document.imageWidth,
+  );
+  const storeImageHeight = useDocumentStore(
+    (state) => state.document.imageHeight,
+  );
 
   // Update viewState only on initial mount (not when loader changes)
   useEffect(() => {
