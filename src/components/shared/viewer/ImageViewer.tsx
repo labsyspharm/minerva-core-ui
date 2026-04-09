@@ -524,12 +524,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
   // This prevents flash when switching channel groups
   const omeTiffPropsList = useMemo(() => {
     return mainSettingsList.map((mainSettings, i) => {
-      const contrastId = mainSettings.contrastLimits
-        ? mainSettings.contrastLimits.map(([l, u]) => `${l}-${u}`).join("-")
-        : "default";
+      const selectionId = (mainSettings.selections || [])
+        .map(({ c }) => c)
+        .join("-");
       return {
         ...viewportSize,
-        id: `mainLayer-${i}-${contrastId}`,
+        id: `mainLayer-${i}-${selectionId}`,
         ...mainSettings,
         loader: mainSettings.loader.data,
       };
