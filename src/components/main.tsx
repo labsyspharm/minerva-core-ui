@@ -39,6 +39,7 @@ import type {
 import { readConfig } from "@/lib/legacy/exhibit";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
+  findSourceChannel,
   selectOrderedChannels,
   selectOrderedShapes,
   selectOrderedWaypoints,
@@ -256,9 +257,7 @@ const Content = (props: Props) => {
     setGroupNames(Object.fromEntries(Groups.map(({ name, id }) => [id, name])));
     const toChannelList = (groupChannels) => {
       return groupChannels
-        .map(({ channelId }) =>
-          SourceChannels.find(({ id }) => id === channelId),
-        )
+        .map((gc) => findSourceChannel(SourceChannels, gc.channelId))
         .filter((x) => x)
         .map(({ name: chName }) => chName);
     };
@@ -748,10 +747,9 @@ const Content = (props: Props) => {
         const color = ((1 << 24) + (r << 16) + (gg << 8) + b)
           .toString(16)
           .slice(1);
-        const { lowerLimit, upperLimit, channelId } = group_channel;
-        const { name: chName } =
-          SC.find((source_channel) => source_channel.id === channelId) ||
-          defaults;
+        const { lowerLimit, upperLimit } = group_channel;
+        const flat = findSourceChannel(SC, group_channel.channelId);
+        const { name: chName } = flat || defaults;
         return {
           color,
           name: chName,

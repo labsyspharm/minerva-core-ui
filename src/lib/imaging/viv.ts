@@ -126,7 +126,7 @@ const toSettings = (opts) => {
         (source_channel) => source_channel.id,
       );
       const source_channel = SourceChannels.find(
-        (source_channel) => channel.channelId === source_channel.id,
+        (source_channel) => source_channel.id === channel.channelId,
       );
       const c = source_channel?.index || 0;
       return { z: 0, t: 0, c };
@@ -139,7 +139,7 @@ const toSettings = (opts) => {
     });
     const channelsVisible: boolean[] = channels.map((c, _i: number) => {
       const source_channel = SourceChannels.find(
-        (source_channel) => c.channelId === source_channel.id,
+        (source_channel) => source_channel.id === c.channelId,
       );
       if (!source_channel) return false;
       const { name } = source_channel;

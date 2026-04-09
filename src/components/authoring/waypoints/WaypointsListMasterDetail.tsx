@@ -10,6 +10,7 @@ import { useAppStore } from "@/lib/stores/appStore";
 import type { JsonExport } from "@/lib/stores/documentSchema";
 import type { Channel, Group } from "@/lib/stores/documentStore";
 import {
+  findSourceChannel,
   selectOrderedWaypoints,
   useDocumentStore,
   useOrderedChannels,
@@ -89,7 +90,7 @@ function channelNamesForGroup(
   sourceChannels: Channel[],
 ): string[] {
   return (group.channels ?? [])
-    .map(({ channelId }) => sourceChannels.find((sc) => sc.id === channelId))
+    .map((gc) => findSourceChannel(sourceChannels, gc.channelId))
     .filter((sc): sc is Channel => sc != null)
     .map((sc) => sc.name);
 }

@@ -9,9 +9,6 @@ import { z } from "zod";
 
 export const IdSchema = z.string().uuid();
 
-/** Channel.imageId may reference exhibit keys that are not UUIDs. */
-export const ImageKeySchema = z.string().min(1);
-
 export const PointSchema = z.object({
   x: z.number(),
   y: z.number(),
@@ -81,6 +78,16 @@ export const SourceDistributionSchema = z.object({
   UpperRange: z.number(),
 });
 
+/** One logical channel under an image (persisted). `id` is stable across the document. */
+export const ImageChannelSchema = z.object({
+  id: IdSchema,
+  index: z.number().int().min(0),
+  name: z.string(),
+  samples: z.number().int().optional(),
+  sourceDataTypeId: z.string().optional(),
+  sourceDistribution: SourceDistributionSchema.optional(),
+});
+
 export const ImageSchema = z.object({
   id: IdSchema,
   sizeX: z.number().int().positive(),
@@ -94,19 +101,10 @@ export const ImageSchema = z.object({
     .optional(),
   omeXmlHash: z.string(),
   basename: z.string(),
+  channels: z.array(ImageChannelSchema),
 });
 
-export const ChannelSchema = z.object({
-  id: IdSchema,
-  imageId: ImageKeySchema,
-  index: z.number().int().min(0),
-  name: z.string(),
-  samples: z.number().int().optional(),
-  sourceDataTypeId: z.string().optional(),
-  sourceDistribution: SourceDistributionSchema.optional(),
-});
-
-/** Group channel row: `id` is the stable row id (contrast slider / color picker target). */
+/** Group row: `channelId` is {@link ImageChannelSchema}`id`; `id` is the UI / range-slider row id. */
 export const GroupChannelSchema = z.object({
   id: IdSchema,
   channelId: IdSchema,
@@ -171,7 +169,6 @@ export const DocumentDataSchema = z.object({
   waypoints: z.array(WaypointSchema),
   shapes: z.array(ShapeSchema),
   groups: z.array(GroupSchema),
-  channels: z.array(ChannelSchema),
   images: z.array(ImageSchema),
 });
 
@@ -190,13 +187,58 @@ export type TextShape = z.infer<typeof TextShapeSchema>;
 export type Shape = z.infer<typeof ShapeSchema>;
 
 export type Image = z.infer<typeof ImageSchema>;
-export type Channel = z.infer<typeof ChannelSchema>;
+export type ImageChannel = z.infer<typeof ImageChannelSchema>;
+
+/** Flattened view of a nested channel plus parent `imageId` (for Viv / ItemRegistry). */
+export type Channel = ImageChannel & {
+  imageId: string;
+};
+
 export type GroupChannel = z.infer<typeof GroupChannelSchema>;
 export type Group = z.infer<typeof GroupSchema>;
 export type Waypoint = z.infer<typeof WaypointSchema>;
 export type SourceDistributionData = z.infer<typeof SourceDistributionSchema>;
 
 export type DocumentData = z.infer<typeof DocumentDataSchema>;
+
+/** Flat source-channel rows in document order (`imageOrder`, then each image’s channels). */
+export function sourceChannelsFromImages(
+  imageOrder: Id[],
+  images: Record<string, Image | undefined>,
+): Channel[] {
+  const out: Channel[] = [];
+  for (const imId of imageOrder) {
+    const im = images[imId];
+    if (!im) continue;
+    for (const ch of im.channels) {
+      out.push({
+        ...ch,
+        imageId: im.id,
+      });
+    }
+  }
+  return out;
+}
+
+/** Resolve a flat row by nested channel uuid (same id as on `Image.channels[].id`). */
+export function findSourceChannel(
+  channels: Channel[],
+  channelId: string,
+): Channel | undefined {
+  return channels.find((c) => c.id === channelId);
+}
+
+/** Search nested `Image.channels` (e.g. when you do not have the flattened list). */
+export function findChannelInImages(
+  images: Image[],
+  channelId: string,
+): (ImageChannel & { imageId: string }) | undefined {
+  for (const im of images) {
+    const ch = im.channels.find((c) => c.id === channelId);
+    if (ch) return { ...ch, imageId: im.id };
+  }
+  return undefined;
+}
 
 /** Back-compat aliases used across authoring / export helpers. */
 export type StoryPoint = Point;
@@ -315,7 +357,6 @@ function preprocessJsonExportRoot(raw: unknown): unknown {
     imageWidth: 0,
     imageHeight: 0,
     groups: [],
-    channels: [],
     images: [],
   });
 }

@@ -5,6 +5,7 @@ import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 import type { ConfigProps } from "@/lib/authoring/config";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
+  findSourceChannel,
   useOrderedChannels,
   useOrderedGroups,
 } from "@/lib/stores/documentStore";
@@ -127,8 +128,8 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       name: group.name,
       channels: group.channels
         .map((channel) => {
-          const { channelId, color } = channel;
-          const found = SourceChannels.find(({ id }) => channelId === id);
+          const { color } = channel;
+          const found = findSourceChannel(SourceChannels, channel.channelId);
           if (found) {
             const { r, g: gg, b } = color;
             const hex_color = [r, gg, b]

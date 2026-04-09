@@ -8,6 +8,7 @@ import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Channel, Group } from "@/lib/stores/documentStore";
 import {
+  findSourceChannel,
   selectOrderedChannels,
   selectOrderedGroups,
   useDocumentStore,
@@ -64,7 +65,7 @@ function channelNamesForGroup(
   sourceChannels: Channel[],
 ): string[] {
   return (group.channels ?? [])
-    .map(({ channelId }) => sourceChannels.find((sc) => sc.id === channelId))
+    .map((gc) => findSourceChannel(sourceChannels, gc.channelId))
     .filter((sc): sc is Channel => sc != null)
     .map((sc) => sc.name);
 }
@@ -141,9 +142,7 @@ export const ChannelGroupsMasterDetail = (
         newGroups.map(({ name, channels }) => [
           name,
           channels
-            .map(({ channelId }) =>
-              SourceChannels.find(({ id }) => id === channelId),
-            )
+            .map((gc) => findSourceChannel(SourceChannels, gc.channelId))
             .filter(Boolean)
             .map((sc) => sc?.name),
         ]),
@@ -152,7 +151,7 @@ export const ChannelGroupsMasterDetail = (
       const namesInUse = new Set<string>();
       for (const g of newGroups) {
         for (const gc of g.channels) {
-          const sc = SourceChannels.find(({ id }) => id === gc.channelId);
+          const sc = findSourceChannel(SourceChannels, gc.channelId);
           if (sc?.name) {
             namesInUse.add(sc.name);
           }
@@ -227,7 +226,7 @@ export const ChannelGroupsMasterDetail = (
         lowerLimit: 0,
         upperLimit: 65535,
         color: { r: 255, g: 255, b: 255 },
-        channelId: sourceChannelUUID,
+        channelId: sc.id,
       };
       return { ...g, channels: [...g.channels, newChannel] };
     });
@@ -250,13 +249,21 @@ export const ChannelGroupsMasterDetail = (
     oldChannelUUID: string,
     newSourceChannelUUID: string,
   ) => {
+    const newSc = SourceChannels.find(({ id }) => id === newSourceChannelUUID);
+    if (!newSc) {
+      setReplacingChannelUUID(null);
+      return;
+    }
     const newGroups = Groups.map((g) => {
       if (g.id !== groupId) return g;
       return {
         ...g,
         channels: g.channels.map((gc) => {
           if (gc.id !== oldChannelUUID) return gc;
-          return { ...gc, channelId: newSourceChannelUUID };
+          return {
+            ...gc,
+            channelId: newSc.id,
+          };
         }),
       };
     });
@@ -321,7 +328,7 @@ export const ChannelGroupsMasterDetail = (
         const indices: number[] = [];
         const sourceIds: string[] = [];
         for (const gc of g.channels) {
-          const sc = scList.find((s) => s.id === gc.channelId);
+          const sc = findSourceChannel(scList, gc.channelId);
           if (!sc) continue;
           if (sourceDistributionYValuesLength(sc) > 0) continue;
           indices.push(sc.index);
@@ -364,8 +371,8 @@ export const ChannelGroupsMasterDetail = (
     if (!detailGroupId) return [];
     const g = Groups.find(({ id }) => id === detailGroupId);
     if (!g) return [];
-    const usedUUIDs = new Set(g.channels.map((gc) => gc.channelId));
-    return SourceChannels.filter(({ id }) => !usedUUIDs.has(id));
+    const usedFlatIds = new Set(g.channels.map((gc) => gc.channelId));
+    return SourceChannels.filter(({ id }) => !usedFlatIds.has(id));
   }, [detailGroupId, Groups, SourceChannels]);
 
   // ── List view ──
@@ -477,14 +484,14 @@ export const ChannelGroupsMasterDetail = (
     };
 
     const channels = detailGroup.channels.map((gc) => {
-      const sc = SourceChannels.find(({ id }) => id === gc.channelId);
+      const sc = findSourceChannel(SourceChannels, gc.channelId);
       const { r: rr, g: gg, b } = gc.color;
       const hex = [rr, gg, b]
         .map((n) => n.toString(16).padStart(2, "0"))
         .join("");
       return {
         channelUUID: gc.id,
-        sourceUUID: gc.channelId,
+        sourceUUID: sc?.id ?? "",
         name: sc?.name ?? "Unknown",
         hex,
         r: rr,
@@ -496,16 +503,19 @@ export const ChannelGroupsMasterDetail = (
     const replaceOptions = (currentSourceUUID: string) =>
       SourceChannels.filter(({ id }) => id !== currentSourceUUID);
 
-    const channelItemAttrsFor = (gc: (typeof detailGroup.channels)[0]) => ({
-      group_uuid: detailGroup.id,
-      channel_uuid: gc.id,
-      source_uuid: gc.channelId,
-      r: String(gc.color.r),
-      g: String(gc.color.g),
-      b: String(gc.color.b),
-      lower_range: String(gc.lowerLimit),
-      upper_range: String(gc.upperLimit),
-    });
+    const channelItemAttrsFor = (gc: (typeof detailGroup.channels)[0]) => {
+      const flat = findSourceChannel(SourceChannels, gc.channelId);
+      return {
+        group_uuid: detailGroup.id,
+        channel_uuid: gc.id,
+        source_uuid: flat?.id ?? "",
+        r: String(gc.color.r),
+        g: String(gc.color.g),
+        b: String(gc.color.b),
+        lower_range: String(gc.lowerLimit),
+        upper_range: String(gc.upperLimit),
+      };
+    };
 
     return (
       <div className={styles.detailView}>

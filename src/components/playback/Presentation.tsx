@@ -5,6 +5,7 @@ import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
+  findSourceChannel,
   useDocumentStore,
   useOrderedChannels,
   useOrderedGroups,
@@ -541,9 +542,12 @@ export const Presentation = (props: PresentationProps) => {
     const colors = new Map();
 
     channels.forEach((channel) => {
-      const { name: chName } = sourceChannels.find(({ id }) => {
-        return id === channel.channelId;
-      }) || { name: "unknown" };
+      const { name: chName } = findSourceChannel(
+        sourceChannels,
+        channel.channelId,
+      ) || {
+        name: "unknown",
+      };
       // Escape special regex characters in channel name
       const escapedName = chName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       // Use word boundaries to match whole words only

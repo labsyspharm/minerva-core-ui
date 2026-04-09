@@ -7,7 +7,6 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { useShallow } from "zustand/react/shallow";
 import type { ConfigWaypoint } from "../authoring/config";
-import { type EntityMap, toEntityMap } from "./documentEntityMap";
 import type {
   Channel,
   DocumentData,
@@ -15,11 +14,12 @@ import type {
   GroupChannel,
   Id,
   Image,
+  ImageChannel,
   JsonExport,
   Shape,
   Waypoint,
 } from "./documentSchema";
-import { parseJsonExport } from "./documentSchema";
+import { parseJsonExport, sourceChannelsFromImages } from "./documentSchema";
 import type { StoreWaypoint } from "./documentStoreTypes";
 import {
   configWaypointToExportRow,
@@ -30,10 +30,21 @@ import {
 import { validateDocumentData } from "./validateDocument";
 
 export {
-  type EntityMap,
-  fromEntityMap,
-  toEntityMap,
-} from "./documentEntityMap";
+  findChannelInImages,
+  findSourceChannel,
+  sourceChannelsFromImages,
+} from "./documentSchema";
+
+/** Normalized document slice: entities keyed by `id` string. */
+export type EntityMap<T> = Record<string, T>;
+
+/** Keyed by each item's `id`. Callers must pass entities that have a string `id` at runtime. */
+export function toEntityMap<T>(items: T[]): EntityMap<T> {
+  return Object.fromEntries(
+    items.map((item) => [(item as { id: string }).id, item]),
+  );
+}
+
 export type {
   Channel,
   DocumentData,
@@ -42,6 +53,7 @@ export type {
   GroupChannel,
   Id,
   Image,
+  ImageChannel,
   JsonExport,
   Shape,
   SourceDistributionData,
@@ -73,13 +85,11 @@ export type AuthoringViewportPx = { width: number; height: number };
 export type DocumentState = {
   waypointOrder: Id[];
   groupOrder: Id[];
-  channelOrder: Id[];
   imageOrder: Id[];
   shapeOrder: Id[];
   waypoints: EntityMap<StoreWaypoint>;
   shapes: EntityMap<Shape>;
   groups: EntityMap<Group>;
-  channels: EntityMap<Channel>;
   images: EntityMap<Image>;
   imageWidth: number;
   imageHeight: number;
@@ -109,13 +119,11 @@ export type DocumentStore = {
   upsertWaypoint: (waypoint: StoreWaypoint) => void;
   upsertShape: (shape: Shape) => void;
   upsertGroup: (group: Group) => void;
-  upsertChannel: (channel: Channel) => void;
   upsertImage: (image: Image) => void;
 
   removeWaypoint: (id: Id) => void;
   removeShape: (id: Id) => void;
   removeGroup: (id: Id) => void;
-  removeChannel: (id: Id) => void;
   removeImage: (id: Id) => void;
 
   addShapeToWaypoint: (waypointId: Id, shapeId: Id) => void;
@@ -125,7 +133,12 @@ export type DocumentStore = {
   removeChannelFromGroup: (groupId: Id, channelEntryId: Id) => void;
 
   setGroups: (groups: Group[]) => void;
-  setChannels: (channels: Channel[]) => void;
+  /** Replace nested `channels` for one image (persisted slice). */
+  setImageChannels: (imageId: Id, channels: ImageChannel[]) => void;
+  /**
+   * Accepts flattened runtime rows (synthetic `id`) and writes nested `Image.channels`
+   * per `imageId` (OME / extractChannels output).
+   */
   setSourceChannels: (channels: Channel[]) => void;
   setGroupChannelRange: (input: SetGroupChannelRangePayload) => void;
 
@@ -162,13 +175,11 @@ function createEmptyDocumentState(): DocumentState {
   return {
     waypointOrder: [],
     groupOrder: [],
-    channelOrder: [],
     imageOrder: [],
     shapeOrder: [],
     waypoints: {},
     shapes: {},
     groups: {},
-    channels: {},
     images: {},
     imageWidth: 0,
     imageHeight: 0,
@@ -197,13 +208,11 @@ function hydrateDocumentFromData(data: DocumentData): DocumentState {
   return {
     waypointOrder: waypointsList.map((w) => w.id),
     groupOrder: data.groups.map((g) => g.id),
-    channelOrder: data.channels.map((c) => c.id),
     imageOrder: data.images.map((im) => im.id),
     shapeOrder: data.shapes.map((s) => s.id),
     waypoints: toEntityMap(waypointsList),
     shapes: toEntityMap(data.shapes),
     groups: toEntityMap(data.groups),
-    channels: toEntityMap(data.channels),
     images: toEntityMap(data.images),
     imageWidth: data.imageWidth,
     imageHeight: data.imageHeight,
@@ -224,7 +233,7 @@ export function selectOrderedGroups(s: DocumentStore): Group[] {
 }
 
 export function selectOrderedChannels(s: DocumentStore): Channel[] {
-  return orderedFromMap(s.document.channelOrder, s.document.channels);
+  return sourceChannelsFromImages(s.document.imageOrder, s.document.images);
 }
 
 export function selectOrderedShapes(s: DocumentStore): Shape[] {
@@ -257,7 +266,6 @@ export function takeStoryDocumentSnapshot(
       waypoints: { ...store.document.waypoints },
       shapes: { ...store.document.shapes },
       groups: { ...store.document.groups },
-      channels: { ...store.document.channels },
       images: { ...store.document.images },
     },
     ui: { ...store.ui },
@@ -286,7 +294,6 @@ export const useDocumentStore = create<DocumentStore>()(
         ),
         shapes: orderedFromMap(d.shapeOrder, d.shapes),
         groups: orderedFromMap(d.groupOrder, d.groups),
-        channels: orderedFromMap(d.channelOrder, d.channels),
         images: orderedFromMap(d.imageOrder, d.images),
       };
     },
@@ -360,21 +367,6 @@ export const useDocumentStore = create<DocumentStore>()(
             ...s.document,
             groupOrder,
             groups: { ...s.document.groups, [group.id]: group },
-          },
-        };
-      }),
-
-    upsertChannel: (channel) =>
-      set((s) => {
-        const had = s.document.channelOrder.includes(channel.id);
-        const channelOrder = had
-          ? s.document.channelOrder
-          : [...s.document.channelOrder, channel.id];
-        return {
-          document: {
-            ...s.document,
-            channelOrder,
-            channels: { ...s.document.channels, [channel.id]: channel },
           },
         };
       }),
@@ -461,44 +453,14 @@ export const useDocumentStore = create<DocumentStore>()(
         };
       }),
 
-    removeChannel: (id) =>
-      set((s) => {
-        const nextChannels = { ...s.document.channels };
-        delete nextChannels[id];
-        const nextGroupsEntries = Object.entries(s.document.groups).map(
-          ([gid, group]) => {
-            if (!group) return [gid, group] as const;
-            return [
-              gid,
-              {
-                ...group,
-                channels: group.channels.filter((e) => e.channelId !== id),
-              },
-            ] as const;
-          },
-        );
-        return {
-          document: {
-            ...s.document,
-            channels: nextChannels,
-            channelOrder: s.document.channelOrder.filter((x) => x !== id),
-            groups: Object.fromEntries(nextGroupsEntries),
-          },
-        };
-      }),
-
     removeImage: (id) =>
       set((s) => {
+        const removed = s.document.images[id];
+        const removedChannelIds = new Set(
+          (removed?.channels ?? []).map((c) => c.id),
+        );
         const nextImages = { ...s.document.images };
         delete nextImages[id];
-        const removedChannelIds = new Set(
-          Object.values(s.document.channels)
-            .filter((c): c is Channel => c != null && c.imageId === id)
-            .map((c) => c.id),
-        );
-        const nextChannelsEntries = Object.entries(s.document.channels).filter(
-          ([cid]) => !removedChannelIds.has(cid),
-        );
         const nextGroupsEntries = Object.entries(s.document.groups).map(
           ([gid, group]) => {
             if (!group) return [gid, group] as const;
@@ -518,10 +480,6 @@ export const useDocumentStore = create<DocumentStore>()(
             ...s.document,
             images: nextImages,
             imageOrder: s.document.imageOrder.filter((x) => x !== id),
-            channels: Object.fromEntries(nextChannelsEntries),
-            channelOrder: s.document.channelOrder.filter(
-              (cid) => !removedChannelIds.has(cid),
-            ),
             groups: Object.fromEntries(nextGroupsEntries),
           },
           ui: {
@@ -617,16 +575,74 @@ export const useDocumentStore = create<DocumentStore>()(
         },
       })),
 
-    setChannels: (channels) =>
-      set((s) => ({
-        document: {
-          ...s.document,
-          channels: toEntityMap(channels),
-          channelOrder: channels.map((c) => c.id),
-        },
-      })),
+    setImageChannels: (imageId, channels) =>
+      set((s) => {
+        const im = s.document.images[imageId];
+        if (!im) return s;
+        return {
+          document: {
+            ...s.document,
+            images: {
+              ...s.document.images,
+              [imageId]: { ...im, channels },
+            },
+          },
+        };
+      }),
 
-    setSourceChannels: (channels) => get().setChannels(channels),
+    setSourceChannels: (flat) =>
+      set((s) => {
+        const byImage = new Map<string, ImageChannel[]>();
+        for (const row of flat) {
+          const {
+            id,
+            imageId,
+            index,
+            name,
+            samples,
+            sourceDataTypeId,
+            sourceDistribution,
+          } = row;
+          const slice: ImageChannel = {
+            id: id && id.length > 0 ? id : crypto.randomUUID(),
+            index,
+            name,
+            ...(samples !== undefined ? { samples } : {}),
+            ...(sourceDataTypeId !== undefined ? { sourceDataTypeId } : {}),
+            ...(sourceDistribution !== undefined ? { sourceDistribution } : {}),
+          };
+          const list = byImage.get(imageId) ?? [];
+          list.push(slice);
+          byImage.set(imageId, list);
+        }
+        const nextImages = { ...s.document.images };
+        const nextOrder = [...s.document.imageOrder];
+        for (const [imId, chans] of byImage) {
+          chans.sort((a, b) => a.index - b.index);
+          const existing = nextImages[imId];
+          if (existing) {
+            nextImages[imId] = { ...existing, channels: chans };
+          } else {
+            nextImages[imId] = {
+              id: imId,
+              sizeX: 1,
+              sizeY: 1,
+              sizeC: chans.length,
+              omeXmlHash: "",
+              basename: "",
+              channels: chans,
+            };
+            if (!nextOrder.includes(imId)) nextOrder.push(imId);
+          }
+        }
+        return {
+          document: {
+            ...s.document,
+            images: nextImages,
+            imageOrder: nextOrder,
+          },
+        };
+      }),
 
     setGroupChannelRange: (raw) => {
       const lower = raw.LowerRange;
@@ -650,7 +666,7 @@ export const useDocumentStore = create<DocumentStore>()(
                 {
                   ...group,
                   channels: group.channels.map((e) =>
-                    e.id === channelEntryId || e.channelId === channelEntryId
+                    e.id === channelEntryId
                       ? { ...e, lowerLimit: lower, upperLimit: upper }
                       : e,
                   ),
