@@ -10,11 +10,8 @@ import type { Channel, Group, Waypoint } from "@/lib/stores/documentStore";
 import {
   documentWaypoints,
   findSourceChannel,
-  useDocumentGroups,
-  useDocumentShapes,
-  useDocumentSourceChannels,
+  flattenImageChannelsInDocumentOrder,
   useDocumentStore,
-  useDocumentWaypoints,
 } from "@/lib/stores/documentStore";
 import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
 import {
@@ -82,10 +79,14 @@ const WaypointsList = (props: WaypointsListProps) => {
   const { viewOnly, onEnterPlaybackPreview } = props;
   const canEdit = !viewOnly;
 
-  const waypoints = useDocumentWaypoints();
-  const shapes = useDocumentShapes();
-  const groups = useDocumentGroups();
-  const sourceChannels = useDocumentSourceChannels();
+  const waypoints = useDocumentStore((s) => s.waypoints);
+  const shapes = useDocumentStore((s) => s.shapes);
+  const groups = useDocumentStore((s) => s.groups);
+  const images = useDocumentStore((s) => s.images);
+  const sourceChannels = React.useMemo(
+    () => flattenImageChannelsInDocumentOrder(images),
+    [images],
+  );
   const imageWidth = useDocumentStore((s) => s.imageWidth);
   const imageHeight = useDocumentStore((s) => s.imageHeight);
   const {

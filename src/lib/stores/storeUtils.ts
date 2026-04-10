@@ -784,7 +784,8 @@ export function storyShapeToViewer(
 
 // --- Legacy exhibit `Arrows` / `Overlays` → wire ids + shapes (JsonExport-compatible) ---
 
-type LegacyArrow = {
+/** Legacy exhibit arrow / callout (normalized 0–1 coordinates). */
+export type LegacyExhibitArrow = {
   Angle: number;
   HideArrow: boolean;
   Point: [number, number];
@@ -792,7 +793,8 @@ type LegacyArrow = {
   IsPoint?: boolean;
 };
 
-type LegacyOverlay = {
+/** Legacy rectangle overlay (normalized 0–1 coordinates). */
+export type LegacyExhibitOverlay = {
   x: number;
   y: number;
   width: number;
@@ -800,9 +802,15 @@ type LegacyOverlay = {
   Group?: string;
 };
 
-type RuntimeWaypoint = ConfigWaypoint & {
-  Arrows?: LegacyArrow[];
-  Overlays?: LegacyOverlay[];
+/**
+ * Exhibit seed row that may still carry runtime-only `Arrows` / `Overlays`.
+ * After {@link migrateLegacyWaypointShapes}, only {@link ConfigWaypoint} fields remain.
+ */
+export type LegacyExhibitWaypoint = ConfigWaypoint & {
+  Arrows?: LegacyExhibitArrow[];
+  Overlays?: LegacyExhibitOverlay[];
+  /** Older JSON used `Group` naming; newer wire uses {@link ConfigWaypoint.groupId}. */
+  Group?: string;
 };
 
 function newLegacyShapeId(): string {
@@ -810,8 +818,8 @@ function newLegacyShapeId(): string {
 }
 
 function annotationsFromLegacyArrowsAndOverlays(
-  arrows: LegacyArrow[],
-  overlays: LegacyOverlay[],
+  arrows: LegacyExhibitArrow[],
+  overlays: LegacyExhibitOverlay[],
   imageWidth: number,
   imageHeight: number,
 ): Shape[] {
@@ -911,7 +919,7 @@ function annotationsFromLegacyArrowsAndOverlays(
   return newShapes;
 }
 
-function stripLegacyKeys(wp: RuntimeWaypoint): ConfigWaypoint {
+function stripLegacyKeys(wp: LegacyExhibitWaypoint): ConfigWaypoint {
   const { Arrows: _a, Overlays: _o, ...rest } = wp;
   return rest as ConfigWaypoint;
 }
@@ -921,7 +929,7 @@ export function configWaypointsHaveLegacyArrowsOrOverlays(
   stories: ConfigWaypoint[],
 ): boolean {
   for (const wp of stories) {
-    const rw = wp as RuntimeWaypoint;
+    const rw = wp as LegacyExhibitWaypoint;
     if ((rw.Arrows?.length ?? 0) > 0 || (rw.Overlays?.length ?? 0) > 0) {
       return true;
     }
@@ -946,7 +954,7 @@ function mergeMigratedShapeLists(
  * that already have `shapeIds` (only strips stray legacy keys).
  */
 export function migrateLegacyWaypointShapes(
-  stories: RuntimeWaypoint[],
+  stories: LegacyExhibitWaypoint[],
   existingShapes: StoryShape[],
   imageWidth: number,
   imageHeight: number,

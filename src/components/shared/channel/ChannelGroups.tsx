@@ -2,7 +2,7 @@ import * as React from "react";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { useAppStore } from "@/lib/stores/appStore";
-import { useDocumentGroups } from "@/lib/stores/documentStore";
+import { type Group, useDocumentStore } from "@/lib/stores/documentStore";
 
 const WrapRows = styled.div`
   display: flex;
@@ -97,15 +97,15 @@ const GroupAltRow = styled.button`
   }
 `;
 
-const GroupRow = (props: { group: { name: string; id: string } }) => {
+const GroupRow = (props: { group: Group }) => {
   const { group } = props;
   const { name } = group;
 
   const { setActiveChannelGroup } = useAppStore();
-  const Groups = useDocumentGroups();
+  const groups = useDocumentStore((s) => s.groups);
   const row_group = React.useMemo(
-    () => Groups.find((grp) => grp.name === name) || Groups[0],
-    [Groups, name],
+    () => groups.find((grp) => grp.name === name) || groups[0],
+    [groups, name],
   );
 
   const toGroup = () => {
@@ -122,16 +122,16 @@ const GroupRow = (props: { group: { name: string; id: string } }) => {
 };
 
 export const ChannelGroups = (props: {
-  groups: { id: string; name: string }[];
+  channelGroups: { id: string; name: string }[];
 }) => {
-  const { groups } = props;
+  const { channelGroups } = props;
   const [expanded, setExpanded] = React.useState(false);
 
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
-  const Groups = useDocumentGroups();
+  const groups = useDocumentStore((s) => s.groups);
   const activeGroup = React.useMemo(
-    () => Groups.find(({ id }) => id === activeChannelGroupId) || Groups[0],
-    [Groups, activeChannelGroupId],
+    () => groups.find(({ id }) => id === activeChannelGroupId) || groups[0],
+    [groups, activeChannelGroupId],
   );
 
   const prevGroupId = React.useRef(activeChannelGroupId);
@@ -144,7 +144,7 @@ export const ChannelGroups = (props: {
 
   const activeGroupName = activeGroup?.name || "No group";
 
-  if (groups.length <= 1) {
+  if (channelGroups.length <= 1) {
     return (
       <WrapRows>
         <ActiveGroupStatic title={activeGroupName}>

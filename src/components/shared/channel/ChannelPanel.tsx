@@ -6,8 +6,8 @@ import type { ConfigProps } from "@/lib/authoring/config";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
   findSourceChannel,
-  useDocumentGroups,
-  useDocumentSourceChannels,
+  flattenImageChannelsInDocumentOrder,
+  useDocumentStore,
 } from "@/lib/stores/documentStore";
 import { ChannelGroups } from "./ChannelGroups";
 import { ChannelGroupsMasterDetail } from "./ChannelGroupsMasterDetail";
@@ -118,10 +118,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
-  const Groups = useDocumentGroups();
-  const SourceChannels = useDocumentSourceChannels();
+  const groups = useDocumentStore((s) => s.groups);
+  const images = useDocumentStore((s) => s.images);
+  const sourceChannels = React.useMemo(
+    () => flattenImageChannelsInDocumentOrder(images),
+    [images],
+  );
 
-  const groups = Groups.map((group, g) => {
+  const channelGroups = groups.map((group, g) => {
     return {
       g,
       id: group.id,
@@ -129,7 +133,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       channels: group.channels
         .map((channel) => {
           const { color } = channel;
-          const found = findSourceChannel(SourceChannels, channel.channelId);
+          const found = findSourceChannel(sourceChannels, channel.channelId);
           if (found) {
             const { r, g: gg, b } = color;
             const hex_color = [r, gg, b]
@@ -154,8 +158,9 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     };
   });
   const activeGroup =
-    activeChannelGroupId || (groups.length > 0 ? groups[0].id : null);
-  const group = groups.find(({ id }) => id === activeGroup);
+    activeChannelGroupId ||
+    (channelGroups.length > 0 ? channelGroups[0].id : null);
+  const group = channelGroups.find(({ id }) => id === activeGroup);
   const toggleChannel = ({ name }) => {
     setChannelVisibilities(
       Object.fromEntries(
@@ -175,14 +180,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   };
   const hideClass = ["show core", "hide core"][+hide];
 
-  const total = groups.length;
+  const total = channelGroups.length;
   const groupProps = { ...props, total };
 
   const allGroups =
-    groups.length || props ? (
+    channelGroups.length || props ? (
       <>
         <OverlaySectionLabel>Group</OverlaySectionLabel>
-        <ChannelGroups {...{ ...groupProps, groups }} />
+        <ChannelGroups {...{ ...groupProps, channelGroups }} />
       </>
     ) : null;
 

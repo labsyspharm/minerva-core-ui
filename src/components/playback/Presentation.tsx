@@ -7,11 +7,8 @@ import { useAppStore } from "@/lib/stores/appStore";
 import type { Waypoint } from "@/lib/stores/documentStore";
 import {
   findSourceChannel,
-  useDocumentGroups,
-  useDocumentShapes,
-  useDocumentSourceChannels,
+  flattenImageChannelsInDocumentOrder,
   useDocumentStore,
-  useDocumentWaypoints,
 } from "@/lib/stores/documentStore";
 import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
 
@@ -285,10 +282,14 @@ const ChannelName = styled.span<{ color: string }>`
 `;
 
 export const Presentation = (props: PresentationProps) => {
-  const waypoints = useDocumentWaypoints();
-  const shapes = useDocumentShapes();
-  const sourceChannels = useDocumentSourceChannels();
-  const groups = useDocumentGroups();
+  const waypoints = useDocumentStore((s) => s.waypoints);
+  const shapes = useDocumentStore((s) => s.shapes);
+  const groups = useDocumentStore((s) => s.groups);
+  const images = useDocumentStore((s) => s.images);
+  const sourceChannels = useMemo(
+    () => flattenImageChannelsInDocumentOrder(images),
+    [images],
+  );
   const imageWidth = useDocumentStore((s) => s.imageWidth);
   const imageHeight = useDocumentStore((s) => s.imageHeight);
   const {

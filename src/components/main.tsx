@@ -1,6 +1,6 @@
 import type { FormEventHandler } from "react";
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
 import { FileHandler } from "@/components/shared/FileHandler";
@@ -43,15 +43,14 @@ import {
   documentSourceChannels,
   documentWaypoints,
   findSourceChannel,
-  useDocumentGroups,
-  useDocumentSourceChannels,
+  flattenImageChannelsInDocumentOrder,
   useDocumentStore,
-  useDocumentWaypoints,
 } from "@/lib/stores/documentStore";
 import {
   applyGroupChannelRange,
   applySourceChannelsToImages,
   configWaypointsHaveLegacyArrowsOrOverlays,
+  type LegacyExhibitWaypoint,
   migrateLegacyWaypointShapes,
   type SetGroupChannelRangePayload,
   waypointsToConfigWaypoints,
@@ -64,7 +63,8 @@ import { author } from "@/minerva-author-ui/author";
 import { toAuthorElement } from "@/minerva-author-ui/index";
 
 type Props = {
-  configWaypoints: ConfigWaypoint[];
+  /** Seed stories; may include legacy `Arrows` / `Overlays` until the image loads and migration runs. */
+  configWaypoints: LegacyExhibitWaypoint[];
   exhibit_config: ExhibitConfig;
   demo_dicom_web?: boolean;
   demo_url?: string;
@@ -74,11 +74,13 @@ type Props = {
 };
 
 /** Deep copy so `index.tsx` arrays are never mutated; session edits live in React config + Zustand. */
-const cloneConfigWaypoints = (stories: ConfigWaypoint[]): ConfigWaypoint[] => {
+const cloneConfigWaypoints = (
+  stories: LegacyExhibitWaypoint[],
+): LegacyExhibitWaypoint[] => {
   if (typeof structuredClone === "function") {
-    return structuredClone(stories) as ConfigWaypoint[];
+    return structuredClone(stories) as LegacyExhibitWaypoint[];
   }
-  return JSON.parse(JSON.stringify(stories)) as ConfigWaypoint[];
+  return JSON.parse(JSON.stringify(stories)) as LegacyExhibitWaypoint[];
 };
 
 const Wrapper = styled.div`
@@ -167,10 +169,10 @@ const removeKey = (container, key, idx) => {
   return { ...container, [key]: newList };
 };
 
-const getDistributions = async (SourceChannels, loader) => {
+const getDistributions = async (sourceChannels, loader) => {
   const sourceDistributionMap = await extractDistributions(loader);
   const SourceDistributions = [...sourceDistributionMap.values()];
-  const SourceChannelsWithDist = SourceChannels.map((sourceChannel) => ({
+  const SourceChannelsWithDist = sourceChannels.map((sourceChannel) => ({
     ...sourceChannel,
     sourceDistribution: sourceDistributionMap.get(sourceChannel.index),
   }));
@@ -191,15 +193,19 @@ const Content = (props: Props) => {
   } = useAppStore();
   const setGroups = useDocumentStore((s) => s.setGroups);
   const setImages = useDocumentStore((s) => s.setImages);
-  const Groups = useDocumentGroups();
-  const SourceChannels = useDocumentSourceChannels();
-  const documentChannelsRef = React.useRef({ Groups, SourceChannels });
-  documentChannelsRef.current = { Groups, SourceChannels };
+  const groups = useDocumentStore((s) => s.groups);
+  const images = useDocumentStore((s) => s.images);
+  const sourceChannels = useMemo(
+    () => flattenImageChannelsInDocumentOrder(images),
+    [images],
+  );
+  const documentChannelsRef = React.useRef({ groups, sourceChannels });
+  documentChannelsRef.current = { groups, sourceChannels };
   const [config, setConfig] = useState(() => ({
     ItemRegistry: {
       Name: "",
-      Groups,
-      SourceChannels,
+      Groups: groups,
+      SourceChannels: sourceChannels,
       SourceDistributions: [],
       Shapes: [],
       Stories: cloneConfigWaypoints(props.configWaypoints),
@@ -578,7 +584,7 @@ const Content = (props: Props) => {
 
   const getSourceDistribution = React.useMemo(() => {
     return (source_uuid) => {
-      const source_channel = SourceChannels.find((x) => {
+      const source_channel = sourceChannels.find((x) => {
         return x.id === source_uuid;
       });
       if (source_channel) {
@@ -587,7 +593,7 @@ const Content = (props: Props) => {
       }
       return null;
     };
-  }, [SourceChannels]);
+  }, [sourceChannels]);
 
   // Recreate the author web components only when config.ID changes (same behavior
   // as the previous useMemo([config.ID]) + ref, without hook dependency noise).
@@ -646,7 +652,7 @@ const Content = (props: Props) => {
     loaderOmeTiff === null && dicomIndexList.length === 0 && !hasDemo;
 
   // Exhibit editing operations (from Index)
-  const { name, groups, stories } = exhibit;
+  const { name, groups: exhibitGroups, stories } = exhibit;
 
   const updateWaypoint = (newWaypoint: WaypointType, { s, w }) => {
     const oldWaypoint = stories[s]?.waypoints[w];
@@ -689,7 +695,7 @@ const Content = (props: Props) => {
   };
 
   const popGroup = ({ g }) => {
-    if (groups.length <= 1) {
+    if (exhibitGroups.length <= 1) {
       throw "Unable to pop last group";
     }
     const ex = removeKey(exhibit, "groups", g);
@@ -708,7 +714,7 @@ const Content = (props: Props) => {
   };
 
   const updateChannel = (newChannel, { g, idx }) => {
-    const group = groups[g];
+    const group = exhibitGroups[g];
     if (!group?.channels[idx]) {
       throw `Cannot update channel. Channel ${idx} does not exist!`;
     }
@@ -717,7 +723,7 @@ const Content = (props: Props) => {
   };
 
   const pushChannel = (newChannel, { g }) => {
-    const group = groups[g];
+    const group = exhibitGroups[g];
     if (!group) {
       throw `Cannot push channel. Group ${g} does not exist!`;
     }
@@ -727,7 +733,7 @@ const Content = (props: Props) => {
   };
 
   const popChannel = ({ g, idx }) => {
-    const group = groups[g];
+    const group = exhibitGroups[g];
     const channels = group?.channels;
     if (channels.length <= 1) {
       throw "Unable to pop last channel";
@@ -738,17 +744,17 @@ const Content = (props: Props) => {
   };
 
   // Data transformation (from Index)
-  const itemRegistryMarkerNames = SourceChannels.map(
+  const itemRegistryMarkerNames = sourceChannels.map(
     (source_channel) => source_channel.name,
   );
 
   const imageViewerStateSignature = React.useMemo(
-    () => buildImageViewerSignature(Groups, SourceChannels),
-    [Groups, SourceChannels],
+    () => buildImageViewerSignature(groups, sourceChannels),
+    [groups, sourceChannels],
   );
 
   const itemRegistryGroups = React.useMemo(() => {
-    const { Groups: G, SourceChannels: SC } = documentChannelsRef.current;
+    const { groups: G, sourceChannels: SC } = documentChannelsRef.current;
     if (buildImageViewerSignature(G, SC) !== imageViewerStateSignature) {
       throw new Error("minerva: document channel ref/signature mismatch");
     }
@@ -851,7 +857,7 @@ const Content = (props: Props) => {
   };
 
   const viewerConfig = React.useMemo(() => {
-    const { Groups: G, SourceChannels: SC } = documentChannelsRef.current;
+    const { groups: G, sourceChannels: SC } = documentChannelsRef.current;
     if (buildImageViewerSignature(G, SC) !== imageViewerStateSignature) {
       throw new Error("minerva: document channel ref/signature mismatch");
     }
@@ -862,7 +868,7 @@ const Content = (props: Props) => {
         loader?: Loader,
         channelVisibilities?: Record<string, boolean>,
       ) => {
-        const { Groups: G, SourceChannels: SC } = documentChannelsRef.current;
+        const { groups: G, sourceChannels: SC } = documentChannelsRef.current;
         return toSettings({ Groups: G, SourceChannels: SC })(
           activeChannelGroupId,
           modality,
@@ -875,8 +881,8 @@ const Content = (props: Props) => {
 
   const imageProps = React.useMemo(() => {
     return {
-      Groups,
-      SourceChannels,
+      Groups: groups,
+      SourceChannels: sourceChannels,
       loaderOmeTiff,
       dicomIndexList,
       marker_names: itemRegistryMarkerNames,
@@ -887,8 +893,8 @@ const Content = (props: Props) => {
       viewerImageKey,
     };
   }, [
-    Groups,
-    SourceChannels,
+    groups,
+    sourceChannels,
     loaderOmeTiff,
     dicomIndexList,
     itemRegistryMarkerNames,
@@ -910,7 +916,7 @@ const Content = (props: Props) => {
     setActiveStory,
     setStories,
   } = useAppStore();
-  const _waypoints = useDocumentWaypoints();
+  const _waypoints = useDocumentStore((s) => s.waypoints);
 
   // Document waypoint lifecycle: `index.tsx` waypoints are copied once into
   // `config` (see `useState` initializer). Then `useDocumentStore.waypoints` is

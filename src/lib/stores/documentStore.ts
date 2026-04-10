@@ -5,10 +5,8 @@
  * No UI/ephemeral state -- selection and authoring bridges live in `appStore`.
  */
 
-import { useMemo } from "react";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { useShallow } from "zustand/react/shallow";
 import type {
   Channel,
   DocumentData,
@@ -81,29 +79,6 @@ export function documentSourceChannels(s: DocumentStore): Channel[] {
 
 export function documentShapes(s: DocumentStore): Shape[] {
   return s.shapes;
-}
-
-export function useDocumentWaypoints(): Waypoint[] {
-  return useDocumentStore(useShallow(documentWaypoints));
-}
-
-export function useDocumentGroups(): Group[] {
-  return useDocumentStore(useShallow(documentGroups));
-}
-
-/**
- * Flattened channel rows derived from `images`. Uses `useMemo` keyed on the
- * stable `images` reference rather than `useShallow` — `flattenImageChannelsInDocumentOrder`
- * creates new objects per call, which defeats shallow comparison and would
- * cause an infinite re-render loop with `useSyncExternalStore`.
- */
-export function useDocumentSourceChannels(): Channel[] {
-  const images = useDocumentStore((s) => s.images);
-  return useMemo(() => flattenImageChannelsInDocumentOrder(images), [images]);
-}
-
-export function useDocumentShapes(): Shape[] {
-  return useDocumentStore(useShallow(documentShapes));
 }
 
 export const useDocumentStore = create<DocumentStore>()(

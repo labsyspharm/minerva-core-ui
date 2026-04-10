@@ -10,10 +10,7 @@ import type { ConfigWaypoint } from "@/lib/authoring/config";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
   documentWaypoints,
-  useDocumentGroups,
-  useDocumentShapes,
   useDocumentStore,
-  useDocumentWaypoints,
   type Waypoint,
 } from "@/lib/stores/documentStore";
 import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
@@ -50,9 +47,9 @@ type WaypointItemMetadata = Waypoint | WaypointChildMetadata;
 
 const WaypointsList = (_props: WaypointsListProps) => {
   // Document waypoints (ordered); same ordering as `toDocumentData().waypoints`
-  const waypoints = useDocumentWaypoints();
-  const shapes = useDocumentShapes();
-  const groups = useDocumentGroups();
+  const waypoints = useDocumentStore((s) => s.waypoints);
+  const shapes = useDocumentStore((s) => s.shapes);
+  const groups = useDocumentStore((s) => s.groups);
   const imageWidth = useDocumentStore((s) => s.imageWidth);
   const imageHeight = useDocumentStore((s) => s.imageHeight);
   const {
