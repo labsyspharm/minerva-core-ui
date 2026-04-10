@@ -90,9 +90,7 @@ const toChannelItem = (
 
     get rangeTemplate() {
       const { distribution } = this;
-      const {
-        XScale, YValues, UpperRange, LowerRange
-      } = distribution;
+      const { XScale, UpperRange, LowerRange } = distribution;
       const style = () => {
         const R = parseInt(this.getAttribute("r"));
         const G = parseInt(this.getAttribute("g"));
@@ -107,7 +105,6 @@ const toChannelItem = (
           lower_range: () => this.getAttribute("lower_range"),
           upper_range: () => this.getAttribute("upper_range"),
           dist_scale: XScale,
-          dist_count: YValues.length,
           dist_max: UpperRange,
           dist_min: LowerRange,
           style,

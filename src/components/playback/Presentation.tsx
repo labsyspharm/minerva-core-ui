@@ -3,7 +3,10 @@ import ReactMarkdown from "react-markdown";
 //import { theme } from "@/theme.module.css";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import { useAppStore } from "@/lib/stores/appStore";
+import {
+  effectiveReferenceImagePixelSize,
+  useAppStore,
+} from "@/lib/stores/appStore";
 import type { Waypoint } from "@/lib/stores/documentStore";
 import {
   findSourceChannel,
@@ -290,8 +293,15 @@ export const Presentation = (props: PresentationProps) => {
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
-  const imageWidth = useDocumentStore((s) => s.imageWidth);
-  const imageHeight = useDocumentStore((s) => s.imageHeight);
+  const docImageWidth = useDocumentStore((s) => s.images[0]?.sizeX ?? 0);
+  const docImageHeight = useDocumentStore((s) => s.images[0]?.sizeY ?? 0);
+  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
+  const { width: imageWidth, height: imageHeight } =
+    effectiveReferenceImagePixelSize(
+      viewerRefSize,
+      docImageWidth,
+      docImageHeight,
+    );
   const {
     activeStoryIndex,
     setActiveStory,
@@ -356,7 +366,14 @@ export const Presentation = (props: PresentationProps) => {
       const p = previousActiveStoryIndexRef.current;
       if (p !== null) {
         const doc = useDocumentStore.getState();
-        if (doc.imageWidth > 0 && doc.imageHeight > 0) {
+        const st = useAppStore.getState();
+        const im = doc.images[0];
+        const { width: w, height: h } = effectiveReferenceImagePixelSize(
+          st.viewerReferenceImagePixelSize,
+          im?.sizeX ?? 0,
+          im?.sizeY ?? 0,
+        );
+        if (w > 0 && h > 0) {
           useAppStore.getState().persistImportedShapesToStory(p);
         }
       }

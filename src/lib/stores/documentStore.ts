@@ -10,6 +10,7 @@ import { devtools } from "zustand/middleware";
 import type {
   Channel,
   DocumentData,
+  DocumentMetadata,
   Group,
   Image,
   Shape,
@@ -20,6 +21,7 @@ import { validateDocumentData } from "./validateDocument";
 
 export type {
   Channel,
+  DocumentMetadata,
   Group,
   GroupChannel,
   Id,
@@ -37,20 +39,25 @@ export type DocumentState = {
   shapes: Shape[];
   groups: Group[];
   images: Image[];
-  imageWidth: number;
-  imageHeight: number;
+  metadata: DocumentMetadata;
 };
 
 export type DocumentStore = DocumentState & {
+  /**
+   * Replace the full document from wire JSON (validates via `validateDocumentData`).
+   * Use when adding file-open / import UX; not yet wired from UI.
+   */
   loadDocument: (input: unknown) => void;
   toDocumentData: () => DocumentData;
+  /** Clear to empty document. Use when adding “new story” / full reset UX. */
   resetDocument: () => void;
 
   setWaypoints: (waypoints: Waypoint[]) => void;
   setShapes: (shapes: Shape[]) => void;
   setGroups: (groups: Group[]) => void;
   setImages: (images: Image[]) => void;
-  setImageDimensions: (width: number, height: number) => void;
+  /** Merge into `metadata`; use when persisting exhibit title/version, etc. */
+  setMetadata: (metadata: Partial<DocumentMetadata>) => void;
 };
 
 function createEmptyDocumentState(): DocumentState {
@@ -59,8 +66,7 @@ function createEmptyDocumentState(): DocumentState {
     shapes: [],
     groups: [],
     images: [],
-    imageWidth: 0,
-    imageHeight: 0,
+    metadata: {},
   };
 }
 
@@ -92,16 +98,14 @@ export const useDocumentStore = create<DocumentStore>()(
         shapes: [...data.shapes],
         groups: [...data.groups],
         images: [...data.images],
-        imageWidth: data.imageWidth,
-        imageHeight: data.imageHeight,
+        metadata: { ...data.metadata },
       });
     },
 
     toDocumentData: () => {
       const s = get();
       return {
-        imageWidth: s.imageWidth,
-        imageHeight: s.imageHeight,
+        metadata: { ...s.metadata },
         waypoints: [...s.waypoints],
         shapes: [...s.shapes],
         groups: [...s.groups],
@@ -121,7 +125,7 @@ export const useDocumentStore = create<DocumentStore>()(
 
     setImages: (images) => set(() => ({ images: [...images] })),
 
-    setImageDimensions: (imageWidth, imageHeight) =>
-      set(() => ({ imageWidth, imageHeight })),
+    setMetadata: (metadata) =>
+      set((s) => ({ metadata: { ...s.metadata, ...metadata } })),
   })),
 );

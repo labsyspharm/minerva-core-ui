@@ -137,9 +137,51 @@ export const WaypointSchema = z.preprocess((raw) => {
   return normalizeWaypointRecord(raw as Record<string, unknown>);
 }, waypointObjectZ);
 
+/** Optional string or string[] → normalized string[] (import-friendly). */
+const optionalStringListSchema = z.preprocess((val) => {
+  if (val === undefined || val === null) return undefined;
+  if (Array.isArray(val)) {
+    return val.map((x) => String(x)).filter((s) => s.length > 0);
+  }
+  if (typeof val === "string" && val.trim()) return [val.trim()];
+  return undefined;
+}, z.array(z.string()).optional());
+
+/**
+ * Provenance, licensing, and discovery — not derived image geometry (see `images[].sizeX` / `sizeY`).
+ * All keys optional; unknown keys are stripped on parse.
+ */
+export const DocumentMetadataSchema = z.object({
+  title: z.string().optional(),
+  author: z.string().optional(),
+  /** Publication identifier (e.g. DOI string without requiring a URL). */
+  doi: z.string().optional(),
+  publicationUrl: z.string().optional(),
+  /** Human-readable citation line(s). */
+  citation: z.string().optional(),
+  /** SPDX id (e.g. CC-BY-4.0) or short license label. */
+  license: z.string().optional(),
+  /** ISO-8601 timestamps when known. */
+  created: z.string().optional(),
+  modified: z.string().optional(),
+  institution: z.string().optional(),
+  /** Freeform contact line (name, role, etc.). */
+  contact: z.string().optional(),
+  contactEmail: z.string().optional(),
+  specimenId: z.string().optional(),
+  accession: z.string().optional(),
+  keywords: optionalStringListSchema,
+  modalities: optionalStringListSchema,
+  /** Tooling / export format tag (distinct from story.json `version`). */
+  minervaVersion: z.string().optional(),
+  /** URI or prose describing primary image origin when not elsewhere in the doc. */
+  imageSource: z.string().optional(),
+  /** Markdown or plain overflow for dataset notes. */
+  notes: z.string().optional(),
+});
+
 export const DocumentDataSchema = z.object({
-  imageWidth: z.number(),
-  imageHeight: z.number(),
+  metadata: DocumentMetadataSchema.default({}),
   waypoints: z.array(WaypointSchema),
   shapes: z.array(ShapeSchema),
   groups: z.array(GroupSchema),
@@ -176,6 +218,7 @@ export type Group = z.infer<typeof GroupSchema>;
 export type Waypoint = z.infer<typeof WaypointSchema>;
 export type SourceDistributionData = z.infer<typeof SourceDistributionSchema>;
 
+export type DocumentMetadata = z.infer<typeof DocumentMetadataSchema>;
 export type DocumentData = z.infer<typeof DocumentDataSchema>;
 
 /** Aliases that disambiguate from viewer-side types with the same name. */

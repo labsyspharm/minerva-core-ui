@@ -16,6 +16,7 @@
  */
 
 import type { ConfigWaypoint } from "../authoring/config";
+import { type Loader, loaderPixelSizeXY } from "../imaging/viv";
 import {
   importedLineStyle,
   importedPointStyle,
@@ -78,6 +79,13 @@ export function normalizeWaypointRecord(
     typeof (w as { group?: unknown }).group === "string"
   ) {
     w.groupId = (w as { group: string }).group;
+  }
+  if (
+    !("groupId" in w) &&
+    "Group" in w &&
+    typeof (w as { Group?: unknown }).Group === "string"
+  ) {
+    w.groupId = (w as { Group: string }).Group;
   }
   if (!("thumbnail" in w) || w.thumbnail == null) {
     w.thumbnail = "";
@@ -179,8 +187,7 @@ export function preprocessJsonExportRoot(raw: unknown): unknown {
   const d = raw as Record<string, unknown>;
   return preprocessDocumentDataRaw({
     ...d,
-    imageWidth: 0,
-    imageHeight: 0,
+    metadata: {},
     groups: [],
     images: [],
   });
@@ -285,6 +292,21 @@ export function applySourceChannelsToImages(
     }
   }
   return nextImages;
+}
+
+/** Set `sizeX`/`sizeY` on the `Image` row matching `imageId` from the Viv loader pyramid/metadata. */
+export function applyLoaderPixelSizeToImage(
+  images: Image[],
+  imageId: string,
+  loader: Loader,
+): Image[] {
+  const dims = loaderPixelSizeXY(loader);
+  if (!dims) return [...images];
+  const idx = images.findIndex((im) => im.id === imageId);
+  if (idx < 0) return [...images];
+  const next = [...images];
+  next[idx] = { ...next[idx], sizeX: dims.sizeX, sizeY: dims.sizeY };
+  return next;
 }
 
 /** Normalize a polymorphic range payload and update the matching channel entry. */

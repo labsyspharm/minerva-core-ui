@@ -74,7 +74,7 @@ export type ChannelGroupsMasterDetailProps = {
   retrievingMetadata: boolean;
   noLoader: boolean;
   /** OME-TIFF: lazy-load histograms for visible source indices (see `histogramLazy.ts`). */
-  ensureChannelHistograms?: (sourceIndices: number[]) => Promise<void>;
+  ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
 };
 
 export const ChannelGroupsMasterDetail = (
@@ -328,22 +328,20 @@ export const ChannelGroupsMasterDetail = (
         const scList = documentSourceChannels(st);
         const g = gList.find((x) => x.id === detailGroupId);
         if (!g) return;
-        const indices: number[] = [];
-        const sourceIds: string[] = [];
+        const channelIds: string[] = [];
         for (const gc of g.channels) {
           const sc = findSourceChannel(scList, gc.channelId);
           if (!sc) continue;
           if (sourceDistributionYValuesLength(sc) > 0) continue;
-          indices.push(sc.index);
-          sourceIds.push(sc.id);
+          channelIds.push(sc.id);
         }
-        if (indices.length === 0 || cancelled) return;
-        setLoadingHistogramSourceIds(sourceIds);
+        if (channelIds.length === 0 || cancelled) return;
+        setLoadingHistogramSourceIds(channelIds);
         await new Promise<void>((r) => {
           requestAnimationFrame(() => r());
         });
         if (cancelled) return;
-        await ensureChannelHistograms(indices);
+        await ensureChannelHistograms(channelIds);
       } finally {
         if (!cancelled) {
           setLoadingHistogramSourceIds([]);

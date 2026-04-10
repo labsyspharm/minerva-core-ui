@@ -7,7 +7,10 @@ import {
 } from "@/components/shared/icons/OverlayIcons";
 // Types
 import type { ConfigWaypoint } from "@/lib/authoring/config";
-import { useAppStore } from "@/lib/stores/appStore";
+import {
+  effectiveReferenceImagePixelSize,
+  useAppStore,
+} from "@/lib/stores/appStore";
 import {
   documentWaypoints,
   useDocumentStore,
@@ -50,8 +53,15 @@ const WaypointsList = (_props: WaypointsListProps) => {
   const waypoints = useDocumentStore((s) => s.waypoints);
   const shapes = useDocumentStore((s) => s.shapes);
   const groups = useDocumentStore((s) => s.groups);
-  const imageWidth = useDocumentStore((s) => s.imageWidth);
-  const imageHeight = useDocumentStore((s) => s.imageHeight);
+  const docImageWidth = useDocumentStore((s) => s.images[0]?.sizeX ?? 0);
+  const docImageHeight = useDocumentStore((s) => s.images[0]?.sizeY ?? 0);
+  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
+  const { width: imageWidth, height: imageHeight } =
+    effectiveReferenceImagePixelSize(
+      viewerRefSize,
+      docImageWidth,
+      docImageHeight,
+    );
   const {
     activeStoryIndex,
     setActiveStory,
@@ -124,7 +134,14 @@ const WaypointsList = (_props: WaypointsListProps) => {
       const p = previousActiveStoryIndexRef.current;
       if (p !== null) {
         const doc = useDocumentStore.getState();
-        if (doc.imageWidth > 0 && doc.imageHeight > 0) {
+        const st = useAppStore.getState();
+        const im = doc.images[0];
+        const { width: w, height: h } = effectiveReferenceImagePixelSize(
+          st.viewerReferenceImagePixelSize,
+          im?.sizeX ?? 0,
+          im?.sizeY ?? 0,
+        );
+        if (w > 0 && h > 0) {
           useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
@@ -204,22 +221,20 @@ const WaypointsList = (_props: WaypointsListProps) => {
       const index = waypoints.findIndex((s) => s.id === story.id);
       if (index !== -1) {
         setActiveStory(index);
-        const gid = story.groupId;
-        const foundGroup =
-          (gid && groups.find((group) => group.id === gid)) || groups[0];
-        if (foundGroup) {
-          setActiveChannelGroup(foundGroup.id);
-        }
 
         // Collapse all shapes panels when switching waypoints to avoid showing
         // shapes from the new waypoint under the old row's panel
         setExpandedAnnotationsStories(new Set());
 
-        // Use the latest story from the store (authoritative) in case item.metadata is stale
-        const currentStory = documentWaypoints(useDocumentStore.getState())[
-          index
-        ];
-        const navStory = currentStory ?? story;
+        // Document store is authoritative for groupId (list metadata can lag)
+        const navStory =
+          documentWaypoints(useDocumentStore.getState())[index] ?? story;
+        const gid = navStory.groupId;
+        const foundGroup =
+          (gid && groups.find((group) => group.id === gid)) || groups[0];
+        if (foundGroup) {
+          setActiveChannelGroup(foundGroup.id);
+        }
         if (imageWidth > 0 && imageHeight > 0) {
           const auth = useAppStore
             .getState()
@@ -327,6 +342,12 @@ const WaypointsList = (_props: WaypointsListProps) => {
     if (!bounds || !viewStateCanon) {
       const st = useAppStore.getState();
       const doc = useDocumentStore.getState();
+      const im = doc.images[0];
+      const { width: iw, height: ih } = effectiveReferenceImagePixelSize(
+        st.viewerReferenceImagePixelSize,
+        im?.sizeX ?? 0,
+        im?.sizeY ?? 0,
+      );
       console.warn(
         "[Minerva] waypoint view not saved: no bounds from viewer (camera/size not ready). " +
           "Try pan/zoom once or reload.",
@@ -334,8 +355,9 @@ const WaypointsList = (_props: WaypointsListProps) => {
           index,
           viewerViewState: st.viewerViewState,
           viewerViewportSize: st.viewerViewportSize,
-          imageWidth: doc.imageWidth,
-          imageHeight: doc.imageHeight,
+          viewerReferenceImagePixelSize: st.viewerReferenceImagePixelSize,
+          imageWidth: iw,
+          imageHeight: ih,
         },
       );
       setEditingViewstateWaypointIndex(null);

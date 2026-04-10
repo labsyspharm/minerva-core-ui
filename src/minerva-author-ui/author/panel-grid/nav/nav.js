@@ -20,6 +20,7 @@ class Nav extends HTMLElement {
     `({
       type: "button",
       class: "hamburger",
+      title: "Menu",
       "aria-label": "Menu",
       "aria-expanded": () =>
         this.elementState.overflowMenuOpen ? "true" : "false",

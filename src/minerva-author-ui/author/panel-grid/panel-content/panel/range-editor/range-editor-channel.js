@@ -6,6 +6,9 @@ import rangeEditorChannelCSS from "./range-editor-channel.module.css" with {
 };
 import { RangeSlider } from "./range-slider.js";
 
+/** Same as range-editor-element: smooth dragging independent of histogram YValues length. */
+const SLIDER_DOMAIN_STEPS = 8192;
+
 class RangeEditorChannel extends sourceGroupChannels(
   useItemIdentifier(HTMLElement),
 ) {
@@ -48,7 +51,7 @@ class RangeEditorChannel extends sourceGroupChannels(
     const rangeInputElement = this.defineElement(RangeSlider, {});
     const dataType = this.dataType;
     const distribution = this.distribution;
-    const chart_x_steps = Math.max(2, distribution.YValues.length);
+    const chart_x_steps = SLIDER_DOMAIN_STEPS;
     const chart_x_max = distribution.UpperRange;
     const chart_x_origin = distribution.LowerRange;
     const chart_x_range = chart_x_max - chart_x_origin;

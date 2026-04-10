@@ -3,6 +3,9 @@ import globalCSS from "./global.module.css" with { type: "css" };
 import { html } from "@arrow-js/core";
 import { toElement } from "./lib/elements";
 
+/** Internal slider resolution; not tied to histogram bin count so handles move smoothly. */
+const SLIDER_DOMAIN_STEPS = 8192;
+
 const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
   const rangeInputElement = elements["range-slider"];
 
@@ -61,9 +64,8 @@ const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
 
     _scale() {
       const dataType = this.dataType;
-      const dist_count = parseInt(this.getAttribute("dist_count"), 10);
       const dist_scale = this.getAttribute("dist_scale");
-      const chart_x_steps = Math.max(2, dist_count);
+      const chart_x_steps = SLIDER_DOMAIN_STEPS;
       const chart_x_max = parseInt(this.getAttribute("dist_max"), 10);
       const chart_x_origin = parseInt(this.getAttribute("dist_min"), 10);
       const chart_x_range = chart_x_max - chart_x_origin;

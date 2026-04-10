@@ -6,8 +6,12 @@ import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
 import { FileHandler } from "@/components/shared/FileHandler";
 import type { ValidObj } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
-import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
+import {
+  ImageViewer,
+  type OmeLoaderEntry,
+} from "@/components/shared/viewer/ImageViewer";
 import type {
+  ConfigSourceDistribution,
   ConfigWaypoint,
   ItemRegistryProps,
   MutableFields,
@@ -27,7 +31,7 @@ import {
 import {
   clearOmeHistogramCache,
   ensureOmeHistogramDistributions,
-  mergeHistogramsIntoSourceChannels,
+  mergeHistogramsIntoSourceChannelsByChannelId,
 } from "@/lib/imaging/histogramLazy";
 import { type Loader, toSettings } from "@/lib/imaging/viv";
 import { Pool } from "@/lib/imaging/workers/Pool";
@@ -37,7 +41,11 @@ import type {
   Waypoint as WaypointType,
 } from "@/lib/legacy/exhibit";
 import { readConfig } from "@/lib/legacy/exhibit";
-import { useAppStore } from "@/lib/stores/appStore";
+import {
+  effectiveReferenceImagePixelSize,
+  useAppStore,
+} from "@/lib/stores/appStore";
+import type { Channel, Group } from "@/lib/stores/documentStore";
 import {
   documentShapes,
   documentSourceChannels,
@@ -48,6 +56,7 @@ import {
 } from "@/lib/stores/documentStore";
 import {
   applyGroupChannelRange,
+  applyLoaderPixelSizeToImage,
   applySourceChannelsToImages,
   configWaypointsHaveLegacyArrowsOrOverlays,
   type LegacyExhibitWaypoint,
@@ -183,7 +192,9 @@ const Content = (props: Props) => {
   const { handleKeys, useLaunchQueue = false } = props;
   const firstExhibit = readConfig(props.exhibit_config);
   const [exhibit, setExhibit] = useState(firstExhibit);
-  const [loaderOmeTiff, setLoaderOmeTiff] = useState(null);
+  const [omeLoaderEntries, setOmeLoaderEntries] = useState<OmeLoaderEntry[]>(
+    [],
+  );
   const [dicomIndexList, setDicomIndexList] = useState([] as DicomIndex[]);
   const {
     setActiveChannelGroup,
@@ -330,8 +341,19 @@ const Content = (props: Props) => {
     (state) => state.setShowSquareViewportOverlay,
   );
   const viewerViewportSize = useAppStore((state) => state.viewerViewportSize);
-  const imageWidth = useDocumentStore((state) => state.imageWidth);
-  const imageHeight = useDocumentStore((state) => state.imageHeight);
+  const docImageWidth = useDocumentStore(
+    (state) => state.images[0]?.sizeX ?? 0,
+  );
+  const docImageHeight = useDocumentStore(
+    (state) => state.images[0]?.sizeY ?? 0,
+  );
+  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
+  const { width: imageWidth, height: imageHeight } =
+    effectiveReferenceImagePixelSize(
+      viewerRefSize,
+      docImageWidth,
+      docImageHeight,
+    );
 
   useEffect(() => {
     const enabledFromConfig =
@@ -343,20 +365,46 @@ const Content = (props: Props) => {
 
   const onStartOmeTiff = async (in_f: string, handles: Handle.File[]) => {
     if (handles.length === 0) return;
-    const handle = handles[0]; // TODO
-    const loader = await toLoader({ handle, in_f, pool: new Pool() });
+    clearOmeHistogramCache();
+    setDicomIndexList([]);
     const exhibitGroups = props.exhibit_config.Groups ?? [];
     const relevant_groups = exhibitGroups.filter(
       ({ Image }) => Image.Method === "Colorimetric",
     );
-    const { SourceChannels, Groups } = extractChannels(
-      loader,
-      "Colorimetric",
-      relevant_groups,
-    );
-    clearOmeHistogramCache();
     const doc = useDocumentStore.getState();
-    setImages(applySourceChannelsToImages(doc.images, SourceChannels));
+    let nextImages = [...doc.images];
+    let registry = { SourceChannels: [] as Channel[], Groups: [] as Group[] };
+    const entries: OmeLoaderEntry[] = [];
+
+    for (let i = 0; i < handles.length; i++) {
+      const handle = handles[i];
+      const loader = await toLoader({
+        handle,
+        in_f: i === 0 ? in_f : handle.name,
+        pool: new Pool(),
+      });
+      const sourceImageId = crypto.randomUUID();
+      const { SourceChannels: sc, Groups: gr } = extractChannels(
+        loader,
+        "Colorimetric",
+        relevant_groups,
+        sourceImageId,
+      );
+      nextImages = applySourceChannelsToImages(nextImages, sc);
+      nextImages = applyLoaderPixelSizeToImage(
+        nextImages,
+        sourceImageId,
+        loader,
+      );
+      registry = {
+        SourceChannels: [...registry.SourceChannels, ...sc],
+        Groups: [...registry.Groups, ...gr],
+      };
+      entries.push({ loader, sourceImageId });
+    }
+
+    const { SourceChannels, Groups } = registry;
+    setImages(nextImages);
     setGroups(Groups);
     updateGroupChannelLists({
       Groups,
@@ -365,14 +413,19 @@ const Content = (props: Props) => {
     resetItems({
       SourceChannels,
     });
-    setLoaderOmeTiff(loader);
-    setFileName(in_f);
+    setOmeLoaderEntries(entries);
+    setFileName(
+      handles.length === 1
+        ? in_f
+        : handles.map((h) => h.name).join(", ") || in_f,
+    );
   };
 
   const onStartOmeTiffUrl = async (url: string) => {
     omeTiffUrlLoadGenerationRef.current += 1;
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
     clearOmeHistogramCache();
+    setDicomIndexList([]);
     const loader = await toLoaderFromUrl(url, new Pool());
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return;
@@ -381,17 +434,21 @@ const Content = (props: Props) => {
     const relevant_groups = exhibitGroups.filter(
       ({ Image }) => Image.Method === "Colorimetric",
     );
+    const sourceImageId = crypto.randomUUID();
     const { SourceChannels, Groups } = extractChannels(
       loader,
       "Colorimetric",
       relevant_groups,
+      sourceImageId,
     );
     const doc = useDocumentStore.getState();
-    setImages(applySourceChannelsToImages(doc.images, SourceChannels));
+    let nextImages = applySourceChannelsToImages(doc.images, SourceChannels);
+    nextImages = applyLoaderPixelSizeToImage(nextImages, sourceImageId, loader);
+    setImages(nextImages);
     setGroups(Groups);
     updateGroupChannelLists({ Groups, SourceChannels });
     resetItems({ SourceChannels });
-    setLoaderOmeTiff(loader);
+    setOmeLoaderEntries([{ loader, sourceImageId }]);
     setFileName(url.split("/").pop() || "remote.ome.tif");
   };
 
@@ -566,6 +623,7 @@ const Content = (props: Props) => {
     }
     console.log("[minerva] dicom: setting store state");
     const { SourceChannels, Groups } = registry;
+    setOmeLoaderEntries([]);
     const doc = useDocumentStore.getState();
     setImages(applySourceChannelsToImages(doc.images, SourceChannels));
     setGroups(Groups);
@@ -649,7 +707,7 @@ const Content = (props: Props) => {
   }, [props.demo_url]);
 
   const noLoader =
-    loaderOmeTiff === null && dicomIndexList.length === 0 && !hasDemo;
+    omeLoaderEntries.length === 0 && dicomIndexList.length === 0 && !hasDemo;
 
   // Exhibit editing operations (from Index)
   const { name, groups: exhibitGroups, stories } = exhibit;
@@ -785,34 +843,74 @@ const Content = (props: Props) => {
   }, [imageViewerStateSignature]);
 
   const viewerImageKey = React.useMemo(() => {
-    if (loaderOmeTiff !== null) {
-      return fileName || "ome-tiff";
+    if (omeLoaderEntries.length > 0) {
+      return `${fileName || "ome-tiff"}\0${omeLoaderEntries.map((e) => e.sourceImageId).join("\0")}`;
     }
     if (dicomIndexList.length > 0) {
       return dicomIndexList.map((d) => d.series).join("|");
     }
     return "";
-  }, [loaderOmeTiff, fileName, dicomIndexList]);
+  }, [omeLoaderEntries, fileName, dicomIndexList]);
 
   const onEnsureChannelHistograms = React.useCallback(
-    async (sourceIndices: number[]) => {
-      if (!loaderOmeTiff || sourceIndices.length === 0) return;
+    async (channelIds: string[]) => {
+      if (omeLoaderEntries.length === 0 || channelIds.length === 0) return;
       const imageKey = viewerImageKey;
       if (!imageKey) return;
-      const map = await ensureOmeHistogramDistributions(
-        loaderOmeTiff,
-        imageKey,
-        sourceIndices,
-      );
-      if (map.size === 0) return;
       const doc = useDocumentStore.getState();
       const prevCh = documentSourceChannels(doc);
-      const next = mergeHistogramsIntoSourceChannels(prevCh, map);
+      const loaderByImageId = new Map(
+        omeLoaderEntries.map((e) => [e.sourceImageId, e.loader] as const),
+      );
+
+      type Pair = { imageId: string; index: number; channelId: string };
+      const pairs: Pair[] = [];
+      for (const cid of channelIds) {
+        const sc = prevCh.find((c) => c.id === cid);
+        if (!sc) continue;
+        if (!loaderByImageId.has(sc.imageId)) continue;
+        pairs.push({
+          imageId: sc.imageId,
+          index: sc.index,
+          channelId: sc.id,
+        });
+      }
+      if (pairs.length === 0) return;
+
+      const byImage = new Map<string, Pair[]>();
+      for (const p of pairs) {
+        const list = byImage.get(p.imageId) ?? [];
+        list.push(p);
+        byImage.set(p.imageId, list);
+      }
+
+      const byChannelId = new Map<string, ConfigSourceDistribution>();
+      for (const [imageId, plist] of byImage) {
+        const loader = loaderByImageId.get(imageId);
+        if (!loader) continue;
+        const uniqueIdx = [...new Set(plist.map((p) => p.index))];
+        const map = await ensureOmeHistogramDistributions(
+          loader,
+          imageKey,
+          imageId,
+          uniqueIdx,
+        );
+        for (const p of plist) {
+          const dist = map.get(p.index);
+          if (dist) byChannelId.set(p.channelId, dist);
+        }
+      }
+
+      if (byChannelId.size === 0) return;
+      const next = mergeHistogramsIntoSourceChannelsByChannelId(
+        prevCh,
+        byChannelId,
+      );
       if (next === prevCh) return;
       doc.setImages(applySourceChannelsToImages(doc.images, next));
       setItems({ SourceChannels: next });
     },
-    [loaderOmeTiff, viewerImageKey, setItems],
+    [omeLoaderEntries, viewerImageKey, setItems],
   );
 
   const channelProps = {
@@ -867,6 +965,7 @@ const Content = (props: Props) => {
         modality: string,
         loader?: Loader,
         channelVisibilities?: Record<string, boolean>,
+        loaderSourceImageId?: string,
       ) => {
         const { groups: G, sourceChannels: SC } = documentChannelsRef.current;
         return toSettings({ Groups: G, SourceChannels: SC })(
@@ -874,6 +973,7 @@ const Content = (props: Props) => {
           modality,
           loader,
           channelVisibilities,
+          loaderSourceImageId,
         );
       },
     };
@@ -883,7 +983,7 @@ const Content = (props: Props) => {
     return {
       Groups: groups,
       SourceChannels: sourceChannels,
-      loaderOmeTiff,
+      omeLoaderEntries,
       dicomIndexList,
       marker_names: itemRegistryMarkerNames,
       groups: itemRegistryGroups,
@@ -895,7 +995,7 @@ const Content = (props: Props) => {
   }, [
     groups,
     sourceChannels,
-    loaderOmeTiff,
+    omeLoaderEntries,
     dicomIndexList,
     itemRegistryMarkerNames,
     itemRegistryGroups,

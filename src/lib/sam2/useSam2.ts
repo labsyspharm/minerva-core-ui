@@ -10,7 +10,10 @@
  */
 
 import * as React from "react";
-import { useAppStore } from "@/lib/stores/appStore";
+import {
+  effectiveReferenceImagePixelSize,
+  useAppStore,
+} from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   computeImageViewRect,
@@ -151,8 +154,15 @@ export function useSam2() {
   const finalizeLasso = useAppStore((s) => s.finalizeLasso);
   const setSam2Processing = useAppStore((s) => s.setSam2Processing);
   const setSam2DebugImages = useAppStore((s) => s.setSam2DebugImages);
-  const imageWidth = useDocumentStore((s) => s.imageWidth);
-  const imageHeight = useDocumentStore((s) => s.imageHeight);
+  const docImageWidth = useDocumentStore((s) => s.images[0]?.sizeX ?? 0);
+  const docImageHeight = useDocumentStore((s) => s.images[0]?.sizeY ?? 0);
+  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
+  const { width: imageWidth, height: imageHeight } =
+    effectiveReferenceImagePixelSize(
+      viewerRefSize,
+      docImageWidth,
+      docImageHeight,
+    );
 
   // ------- Worker lifecycle -------
 

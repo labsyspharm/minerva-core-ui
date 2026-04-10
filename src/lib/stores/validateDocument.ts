@@ -1,10 +1,14 @@
-import { type DocumentData, DocumentDataSchema } from "./documentSchema";
+import {
+  type DocumentData,
+  DocumentDataSchema,
+  DocumentMetadataSchema,
+} from "./documentSchema";
 import { isUuid, preprocessDocumentDataRaw } from "./storeUtils";
 
 const VERSIONS = new Set(["1", "2"]);
 
 /** story.json root: version + waypoints + shapes only. */
-export function isJsonExportRoot(raw: unknown): raw is {
+function isJsonExportRoot(raw: unknown): raw is {
   version: string;
   waypoints: unknown[];
   shapes: unknown[];
@@ -80,6 +84,11 @@ function normalizeOmero(
 }
 
 /** Fold legacy flat `channels[]` into `images[].channels` (each with `id`). */
+function parseMetadataField(raw: unknown): DocumentData["metadata"] {
+  const r = DocumentMetadataSchema.safeParse(raw);
+  return r.success ? r.data : {};
+}
+
 function foldTopLevelChannelsIntoImages(
   raw: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -177,7 +186,7 @@ function normalizeLegacySnapshot(raw: Record<string, unknown>): unknown {
   ) {
     const sourceChannels = raw.sourceChannels as LegacySourceChannel[];
 
-    const images = Array.isArray(raw.images)
+    let images = Array.isArray(raw.images)
       ? (raw.images as LegacyExhibitImage[]).map((im) => ({
           id: im.id ?? im.uuid ?? crypto.randomUUID(),
           sizeX: im.sizeX,
@@ -246,9 +255,19 @@ function normalizeLegacySnapshot(raw: Record<string, unknown>): unknown {
       };
     });
 
+    if (imageWidth > 0 && imageHeight > 0 && images.length > 0) {
+      images = [
+        {
+          ...images[0],
+          sizeX: imageWidth,
+          sizeY: imageHeight,
+        },
+        ...images.slice(1),
+      ];
+    }
+
     return {
-      imageWidth,
-      imageHeight,
+      metadata: {},
       waypoints,
       shapes: raw.shapes,
       groups,
@@ -372,7 +391,7 @@ function rewriteIds<T>(value: T, idMap: Map<string, string>): T {
   return walk(value) as T;
 }
 
-export function validateDocumentRelations(data: DocumentData): DocumentData {
+function validateDocumentRelations(data: DocumentData): DocumentData {
   const groupIds = new Set(data.groups.map((x) => x.id));
   const shapeIds = new Set(data.shapes.map((x) => x.id));
   const imageChannelIds = new Set<string>();
@@ -419,8 +438,7 @@ export function validateDocumentData(input: unknown): DocumentData {
 
   if (isJsonExportRoot(candidate)) {
     candidate = {
-      imageWidth: 0,
-      imageHeight: 0,
+      metadata: {},
       waypoints: candidate.waypoints,
       shapes: candidate.shapes,
       groups: [],
@@ -465,21 +483,38 @@ export function validateDocumentData(input: unknown): DocumentData {
     asRecord = foldTopLevelChannelsIntoImages(asRecord);
   }
 
+  const legacyW =
+    typeof asRecord.imageWidth === "number" ? asRecord.imageWidth : 0;
+  const legacyH =
+    typeof asRecord.imageHeight === "number" ? asRecord.imageHeight : 0;
+
+  let imagesDraft = (asRecord.images ?? []) as {
+    id: string;
+    sizeX?: number;
+    sizeY?: number;
+    channels?: unknown[];
+  }[];
+
+  if (legacyW > 0 && legacyH > 0 && imagesDraft.length > 0) {
+    imagesDraft = [
+      {
+        ...imagesDraft[0],
+        sizeX: legacyW,
+        sizeY: legacyH,
+      },
+      ...imagesDraft.slice(1),
+    ];
+  }
+
   const draft = {
-    imageWidth:
-      typeof asRecord.imageWidth === "number" ? asRecord.imageWidth : 0,
-    imageHeight:
-      typeof asRecord.imageHeight === "number" ? asRecord.imageHeight : 0,
+    metadata: parseMetadataField(asRecord.metadata),
     waypoints: (asRecord.waypoints ?? []) as Record<string, unknown>[],
     shapes: (asRecord.shapes ?? []) as Record<string, unknown>[],
     groups: (asRecord.groups ?? []) as {
       id: string;
       channels: Record<string, unknown>[];
     }[],
-    images: (asRecord.images ?? []) as {
-      id: string;
-      channels?: unknown[];
-    }[],
+    images: imagesDraft,
   };
 
   for (const im of draft.images) {
@@ -508,15 +543,4 @@ export function validateDocumentData(input: unknown): DocumentData {
 
   const parsed = DocumentDataSchema.parse(rewritten);
   return validateDocumentRelations(parsed);
-}
-
-export function safeParseDocumentData(input: unknown) {
-  try {
-    return { success: true as const, data: validateDocumentData(input) };
-  } catch (e) {
-    return {
-      success: false as const,
-      error: e instanceof Error ? e : new Error(String(e)),
-    };
-  }
 }

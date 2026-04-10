@@ -5,7 +5,10 @@ import OverwriteViewIcon from "@/components/shared/icons/overwrite-view.svg?reac
 import PlayIcon from "@/components/shared/icons/play.svg?react";
 import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
 import type { ConfigWaypoint } from "@/lib/authoring/config";
-import { useAppStore } from "@/lib/stores/appStore";
+import {
+  effectiveReferenceImagePixelSize,
+  useAppStore,
+} from "@/lib/stores/appStore";
 import type { Channel, Group, Waypoint } from "@/lib/stores/documentStore";
 import {
   documentWaypoints,
@@ -87,8 +90,15 @@ const WaypointsList = (props: WaypointsListProps) => {
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
-  const imageWidth = useDocumentStore((s) => s.imageWidth);
-  const imageHeight = useDocumentStore((s) => s.imageHeight);
+  const docImageWidth = useDocumentStore((s) => s.images[0]?.sizeX ?? 0);
+  const docImageHeight = useDocumentStore((s) => s.images[0]?.sizeY ?? 0);
+  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
+  const { width: imageWidth, height: imageHeight } =
+    effectiveReferenceImagePixelSize(
+      viewerRefSize,
+      docImageWidth,
+      docImageHeight,
+    );
   const {
     activeStoryIndex,
     setActiveStory,
@@ -237,7 +247,14 @@ const WaypointsList = (props: WaypointsListProps) => {
       const p = previousImportStoryIndexRef.current;
       if (p !== null) {
         const doc = useDocumentStore.getState();
-        if (doc.imageWidth > 0 && doc.imageHeight > 0) {
+        const st = useAppStore.getState();
+        const im = doc.images[0];
+        const { width: w, height: h } = effectiveReferenceImagePixelSize(
+          st.viewerReferenceImagePixelSize,
+          im?.sizeX ?? 0,
+          im?.sizeY ?? 0,
+        );
+        if (w > 0 && h > 0) {
           useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
@@ -281,6 +298,12 @@ const WaypointsList = (props: WaypointsListProps) => {
     if (!bounds || !viewStateCanon) {
       const st = useAppStore.getState();
       const doc = useDocumentStore.getState();
+      const im = doc.images[0];
+      const { width: iw, height: ih } = effectiveReferenceImagePixelSize(
+        st.viewerReferenceImagePixelSize,
+        im?.sizeX ?? 0,
+        im?.sizeY ?? 0,
+      );
       console.warn(
         "[Minerva] waypoint view not saved: no bounds from viewer (camera/size not ready). " +
           "Try pan/zoom once or reload.",
@@ -289,8 +312,9 @@ const WaypointsList = (props: WaypointsListProps) => {
           index,
           viewerViewState: st.viewerViewState,
           viewerViewportSize: st.viewerViewportSize,
-          imageWidth: doc.imageWidth,
-          imageHeight: doc.imageHeight,
+          viewerReferenceImagePixelSize: st.viewerReferenceImagePixelSize,
+          imageWidth: iw,
+          imageHeight: ih,
         },
       );
       return false;

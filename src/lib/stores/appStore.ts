@@ -27,6 +27,8 @@ import type { Waypoint } from "./documentSchema";
 import {
   documentShapes,
   documentWaypoints,
+  findSourceChannel,
+  flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "./documentStore";
 import {
@@ -42,6 +44,40 @@ import {
 
 function newShapeId(): string {
   return crypto.randomUUID();
+}
+
+/** Pixel size of the first stacked image as reported by `ImageViewer` (loader shape). */
+export type ReferenceImagePixelSize = { width: number; height: number };
+
+/**
+ * Prefer live viewer geometry (first stacked loader); fall back to `document.images[0]`
+ * when the viewer has not published yet (e.g. before mount).
+ */
+export function effectiveReferenceImagePixelSize(
+  viewerPublished: ReferenceImagePixelSize | null | undefined,
+  docWidth: number,
+  docHeight: number,
+): ReferenceImagePixelSize {
+  if (
+    viewerPublished &&
+    viewerPublished.width > 0 &&
+    viewerPublished.height > 0
+  ) {
+    return viewerPublished;
+  }
+  return { width: docWidth, height: docHeight };
+}
+
+function referenceImagePixelSizeForActions(
+  get: () => AppStore,
+): ReferenceImagePixelSize {
+  const doc = useDocumentStore.getState();
+  const im = doc.images[0];
+  return effectiveReferenceImagePixelSize(
+    get().viewerReferenceImagePixelSize,
+    im?.sizeX ?? 0,
+    im?.sizeY ?? 0,
+  );
 }
 
 function authoringViewportForDoc(get: () => AppStore) {
@@ -583,7 +619,6 @@ export interface AppStore {
 
   /** Ephemeral camera / UI-state per waypoint, keyed by waypoint id. */
   waypointAuthoring: Map<string, AuthoringWaypointExtra>;
-  getWaypointAuthoring: (id: string) => AuthoringWaypointExtra | undefined;
 
   /**
    * Waypoint row index whose annotations panel is mounted (inline or master-detail).
@@ -656,8 +691,6 @@ export interface AppStore {
 
   /** Replace all rows from exhibit-shaped waypoints (converts to store rows). */
   setStories: (configWaypoints: ConfigWaypoint[]) => void;
-  /** Replace waypoints directly (e.g. importers). */
-  setJsonExportWaypointRows: (rows: Waypoint[]) => void;
   setActiveStory: (index: number | null) => void;
   addStory: (configWaypoint: ConfigWaypoint) => void;
   updateStory: (index: number, updates: Partial<ConfigWaypoint>) => void;
@@ -693,6 +726,15 @@ export interface AppStore {
   setViewerViewState: (vs: OrthographicViewState) => void;
   viewerViewportSize: ViewportSize | null;
   setViewerViewportSize: (size: ViewportSize) => void;
+  /**
+   * Reference stack pixel size from the viewer (first loader `shape`), or null when
+   * the viewer is absent or has not loaded. Waypoint math should prefer this over
+   * `document.images[0]` so it stays aligned with Deck.
+   */
+  viewerReferenceImagePixelSize: ReferenceImagePixelSize | null;
+  setViewerReferenceImagePixelSize: (
+    size: ReferenceImagePixelSize | null,
+  ) => void;
   /** True when OME-TIFF / DICOM tile stack layers all report `isLoaded` (see ImageViewer). */
   viewerImageLayersLoaded: boolean;
   setViewerImageLayersLoaded: (loaded: boolean) => void;
@@ -730,10 +772,6 @@ export interface AppStore {
     newText: string,
     fontSize?: number,
   ) => void;
-  updateTextShapeColor: (
-    shapeId: string,
-    fontColor: [number, number, number, number],
-  ) => void;
   updateShapeText: (shapeId: string, newText: string) => void;
   updateShapeLabel: (shapeId: string, newLabel: string) => void;
   setGlobalColor: (color: [number, number, number, number]) => void;
@@ -741,7 +779,6 @@ export interface AppStore {
   showSquareViewportOverlay: boolean;
   setShowSquareViewportOverlay: (show: boolean) => void;
   setBrushRadiusPx: (radius: number) => void;
-  setBrushMaskResolution: (res: number) => void;
   setBrushViewport: (
     width: number,
     height: number,
@@ -760,8 +797,6 @@ export interface AppStore {
   ) => void;
 
   toggleShapeVisibility: (shapeId: string) => void;
-  showAllShapes: () => void;
-  hideAllShapes: () => void;
 
   startDrag: (shapeId: string, offset: [number, number]) => void;
   updateDrag: (coordinate: [number, number, number]) => void;
@@ -769,7 +804,6 @@ export interface AppStore {
   resetDragState: () => void;
 
   setHoveredShape: (shapeId: string | null) => void;
-  resetHoverState: () => void;
 
   // Group actions
   createGroup: (name?: string) => void;
@@ -785,7 +819,6 @@ export interface AppStore {
     /** When passed (e.g. from React), used for resolution so effects track `shapes` explicitly. */
     shapeRegistry?: StoryShape[],
   ) => void;
-  clearImportedShapes: () => void;
   /** Persist shapes into `document.waypoints[index]` and `document.shapes`. */
   persistImportedShapesToStory: (storyIndex: number) => void;
 
@@ -798,7 +831,8 @@ export interface AppStore {
 function maybePersistShapesAfterMutation(get: () => AppStore) {
   const doc = useDocumentStore.getState();
   const waypoints = documentWaypoints(doc);
-  if (waypoints.length === 0 || doc.imageWidth <= 0 || doc.imageHeight <= 0) {
+  const { width: iw, height: ih } = referenceImagePixelSizeForActions(get);
+  if (waypoints.length === 0 || iw <= 0 || ih <= 0) {
     return;
   }
   const state = get();
@@ -870,6 +904,7 @@ const overlayInitialState = {
   sam2ViewportSize: null,
   viewerViewState: null,
   viewerViewportSize: null,
+  viewerReferenceImagePixelSize: null,
   viewerImageLayersLoaded: false,
   squareViewportThumbnailCapture: null,
   editingViewstateWaypointIndex: null,
@@ -880,8 +915,6 @@ export const useAppStore = create<AppStore>()(
   devtools(
     (set, get) => ({
       ...overlayInitialState,
-
-      getWaypointAuthoring: (id: string) => get().waypointAuthoring.get(id),
 
       setActiveTool: (tool: string) => {
         set({
@@ -1330,27 +1363,6 @@ export const useAppStore = create<AppStore>()(
         get().updateShape(shapeId, updates);
       },
 
-      updateTextShapeColor: (
-        shapeId: string,
-        fontColor: [number, number, number, number],
-      ) => {
-        const shapes = get().shapes;
-        const annotation = shapes.find((a) => a.id === shapeId);
-
-        if (!annotation || annotation.type !== "text") {
-          return;
-        }
-
-        const updates: Partial<TextShape> = {
-          style: {
-            ...annotation.style,
-            fontColor: fontColor,
-          },
-        };
-
-        get().updateShape(shapeId, updates);
-      },
-
       updateShapeText: (shapeId: string, newText: string) => {
         const shapes = get().shapes;
         const annotation = shapes.find((a) => a.id === shapeId);
@@ -1402,10 +1414,6 @@ export const useAppStore = create<AppStore>()(
 
       setBrushRadiusPx: (radius: number) => {
         set({ brushRadiusPx: radius });
-      },
-
-      setBrushMaskResolution: (res: number) => {
-        set({ brushMaskMaxResolution: Math.max(1, Math.floor(res)) });
       },
 
       setBrushViewport: (
@@ -1693,16 +1701,6 @@ export const useAppStore = create<AppStore>()(
         });
       },
 
-      showAllShapes: () => {
-        set({ hiddenShapeIds: new Set<string>() });
-      },
-
-      hideAllShapes: () => {
-        set((state) => ({
-          hiddenShapeIds: new Set(state.shapes.map((a) => a.id)),
-        }));
-      },
-
       startDrag: (shapeId: string, offset: [number, number]) => {
         set({
           dragState: {
@@ -1775,10 +1773,6 @@ export const useAppStore = create<AppStore>()(
             hoveredShapeId: shapeId,
           },
         });
-      },
-
-      resetHoverState: () => {
-        set({ hoverState: overlayInitialState.hoverState });
       },
 
       setAuthoringWaypointEditorOpen: (open: boolean) => {
@@ -1883,13 +1877,15 @@ export const useAppStore = create<AppStore>()(
 
       setStories: (configWaypoints: ConfigWaypoint[]) => {
         const doc = useDocumentStore.getState();
+        const { width: iw, height: ih } =
+          referenceImagePixelSizeForActions(get);
         const vp = authoringViewportForDoc(get);
         const nextAuthoring = new Map<string, AuthoringWaypointExtra>();
         const waypoints = configWaypoints.map((w) => {
           const { waypoint, authoring } = configWaypointToWaypoint(
             hydrateConfigWaypoint(w, doc.groups),
-            doc.imageWidth,
-            doc.imageHeight,
+            iw,
+            ih,
             vp.width,
             vp.height,
           );
@@ -1900,22 +1896,19 @@ export const useAppStore = create<AppStore>()(
         set({ activeStoryIndex: null, waypointAuthoring: nextAuthoring });
       },
 
-      setJsonExportWaypointRows: (rows: Waypoint[]) => {
-        useDocumentStore.getState().setWaypoints(rows);
-        set({ activeStoryIndex: null });
-      },
-
       setActiveStory: (index: number | null) => {
         set({ activeStoryIndex: index });
       },
 
       addStory: (configWaypoint: ConfigWaypoint) => {
         const doc = useDocumentStore.getState();
+        const { width: iw, height: ih } =
+          referenceImagePixelSizeForActions(get);
         const vp = authoringViewportForDoc(get);
         const { waypoint, authoring } = configWaypointToWaypoint(
           hydrateConfigWaypoint(configWaypoint, doc.groups),
-          doc.imageWidth,
-          doc.imageHeight,
+          iw,
+          ih,
           vp.width,
           vp.height,
         );
@@ -1945,10 +1938,12 @@ export const useAppStore = create<AppStore>()(
             merged = rest as ConfigWaypoint;
           }
         }
+        const { width: iw, height: ih } =
+          referenceImagePixelSizeForActions(get);
         const { waypoint: nextWp, authoring } = configWaypointToWaypoint(
           merged,
-          doc.imageWidth,
-          doc.imageHeight,
+          iw,
+          ih,
           vp.width,
           vp.height,
         );
@@ -2044,6 +2039,10 @@ export const useAppStore = create<AppStore>()(
         set({ viewerViewportSize: size });
       },
 
+      setViewerReferenceImagePixelSize: (size) => {
+        set({ viewerReferenceImagePixelSize: size });
+      },
+
       setViewerImageLayersLoaded: (loaded) => {
         set({ viewerImageLayersLoaded: loaded });
       },
@@ -2073,7 +2072,8 @@ export const useAppStore = create<AppStore>()(
         shapeRegistry?: StoryShape[],
       ) => {
         const doc0 = useDocumentStore.getState();
-        const { imageWidth, imageHeight } = doc0;
+        const { width: imageWidth, height: imageHeight } =
+          referenceImagePixelSizeForActions(get);
         const fromStore = documentShapes(doc0);
         const shapesForLookup =
           shapeRegistry === undefined
@@ -2122,16 +2122,14 @@ export const useAppStore = create<AppStore>()(
         );
       },
 
-      clearImportedShapes: () => {
-        set({ shapes: [], hiddenShapeIds: new Set() });
-      },
-
       persistImportedShapesToStory: (storyIndex: number) => {
         const state = get();
         const doc = useDocumentStore.getState();
         const waypoints = documentWaypoints(doc);
         const row = waypoints[storyIndex];
-        if (!row || doc.imageWidth <= 0 || doc.imageHeight <= 0) {
+        const { width: iw, height: ih } =
+          referenceImagePixelSizeForActions(get);
+        if (!row || iw <= 0 || ih <= 0) {
           return;
         }
         const hadStored = (row.shapeIds?.length ?? 0) > 0;
@@ -2190,16 +2188,19 @@ export const useAppStore = create<AppStore>()(
       },
 
       setActiveChannelGroup: (channelGroupId: string) => {
-        set(({ groupChannelLists, groupNames }) => {
-          const name = groupNames[channelGroupId] || "";
-          const channels = groupChannelLists[name] || [];
-          const channelVisibilities = Object.fromEntries(
-            channels.map((name) => [name, true]),
-          );
-          return {
-            activeChannelGroupId: channelGroupId,
-            channelVisibilities,
-          };
+        const doc = useDocumentStore.getState();
+        const flat = flattenImageChannelsInDocumentOrder(doc.images);
+        const group = doc.groups.find((g) => g.id === channelGroupId);
+        const names: string[] = [];
+        if (group) {
+          for (const gc of group.channels) {
+            const sc = findSourceChannel(flat, gc.channelId);
+            if (sc?.name) names.push(sc.name);
+          }
+        }
+        set({
+          activeChannelGroupId: channelGroupId,
+          channelVisibilities: Object.fromEntries(names.map((n) => [n, true])),
         });
       },
 

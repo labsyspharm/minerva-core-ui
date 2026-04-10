@@ -161,6 +161,18 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  /* Match ChannelList / panel scrollers: explicit width, not OS default */
+  scrollbar-color: #555 transparent;
+  scrollbar-width: thin;
+}
+
+.rows::-webkit-scrollbar {
+  width: 8px;
+}
+
+.rows::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 4px;
 }
 
 .compactRow {
@@ -484,6 +496,17 @@
   overflow-y: auto;
   padding: 10px;
   box-sizing: border-box;
+  scrollbar-color: #555 transparent;
+  scrollbar-width: thin;
+}
+
+.detailBody::-webkit-scrollbar {
+  width: 8px;
+}
+
+.detailBody::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 4px;
 }
 
 .detailBodyInner {

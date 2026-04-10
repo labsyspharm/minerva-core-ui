@@ -156,6 +156,8 @@ type ExtractChannels = (
   loader: Loader,
   modality: string,
   groups: LegacyConfigGroup[],
+  /** OME: stable document `Image.id` for flat channels; defaults to `modality` (DICOM / legacy). */
+  sourceImageId?: string,
 ) => {
   SourceChannels: Channel[];
   Groups: Group[];
@@ -396,9 +398,15 @@ const extractDistributions: ExtractDistributions = async (loader) => {
   return extractDistributionsForSourceIndices(loader, allC);
 };
 
-const extractChannels: ExtractChannels = (loader, modality, groups) => {
+const extractChannels: ExtractChannels = (
+  loader,
+  modality,
+  groups,
+  sourceImageId,
+) => {
   const init = initialize({ planes: loader.data });
   const { Channels, Type } = loader.metadata.Pixels;
+  const channelImageId = sourceImageId ?? modality;
   const stripCycif = (name: string) =>
     name.startsWith("CYCIF_") ? name.slice(6) : name;
   const SourceChannels = Channels.map((channel, index) => ({
@@ -407,7 +415,7 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
     samples: channel.SamplesPerPixel,
     index: init.indices[index].c,
     sourceDataTypeId: asID(Type).ID,
-    imageId: modality,
+    imageId: channelImageId,
   }));
   // Match hard-coded groups to existing channels. GROUP_CHANNELS_CRC01 maps Path →
   // indices into OME Pixels.Channels (same order as SourceChannels), not "Channel N" strings.

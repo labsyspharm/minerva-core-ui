@@ -21,7 +21,6 @@ import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
-import { useDocumentStore } from "@/lib/stores/documentStore";
 import { useWindowSize } from "@/lib/util/useWindowSize";
 import { ORTHO_VIEW_ID, SCALEBAR_VIEW_ID } from "@/lib/viewer/deckViewIds";
 import { createDragHandlers } from "@/lib/viewer/dragHandlers";
@@ -49,8 +48,14 @@ type ItemRegistryGroup = {
   g: number;
 };
 
+/** One OME-TIFF pyramid + the document `Image.id` carried on flat source channels. */
+export type OmeLoaderEntry = {
+  loader: Loader;
+  sourceImageId: string;
+};
+
 export type ImageViewerProps = {
-  loaderOmeTiff: Loader;
+  omeLoaderEntries: OmeLoaderEntry[];
   stories: Story[];
   dicomIndexList: DicomIndex[];
   viewerConfig: Config;
@@ -125,23 +130,30 @@ const toSettingsInternal = (
   activeChannelGroupId,
   channelVisibilities,
   toSettings,
+  loaderSourceImageId?: string,
 ) => {
-  // Gets the default settings
   if (loader === null || !groups) {
-    return toSettings(activeChannelGroupId, modality);
+    return toSettings(
+      activeChannelGroupId,
+      modality,
+      undefined,
+      channelVisibilities,
+      loaderSourceImageId,
+    );
   }
   return toSettings(
     activeChannelGroupId,
     modality,
     loader,
     channelVisibilities,
+    loaderSourceImageId,
   );
 };
 
 export const ImageViewer = (props: ImageViewerProps) => {
   const windowSize = useWindowSize();
   const {
-    loaderOmeTiff,
+    omeLoaderEntries,
     dicomIndexList,
     groups,
     overlayLayers = [],
@@ -187,18 +199,21 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return () => resizeObserver.disconnect();
   }, []);
 
-  const mainSettingsOmeTiff = useMemo(() => {
+  const mainSettingsOmeList = useMemo(() => {
     const modality = "Colorimetric";
-    return toSettingsInternal(
-      loaderOmeTiff,
-      modality,
-      groups,
-      activeChannelGroupId,
-      channelVisibilities,
-      viewerConfig.toSettings,
+    return omeLoaderEntries.map(({ loader, sourceImageId }) =>
+      toSettingsInternal(
+        loader,
+        modality,
+        groups,
+        activeChannelGroupId,
+        channelVisibilities,
+        viewerConfig.toSettings,
+        sourceImageId,
+      ),
     );
   }, [
-    loaderOmeTiff,
+    omeLoaderEntries,
     groups,
     activeChannelGroupId,
     channelVisibilities,
@@ -225,14 +240,21 @@ export const ImageViewer = (props: ImageViewerProps) => {
     viewerConfig.toSettings,
   ]);
 
-  // Show only ome-tiff if available
   const mainSettingsList = useMemo(
     () =>
-      loaderOmeTiff !== null ? [mainSettingsOmeTiff] : mainSettingsDicomList,
-    [loaderOmeTiff, mainSettingsOmeTiff, mainSettingsDicomList],
+      omeLoaderEntries.length > 0 ? mainSettingsOmeList : mainSettingsDicomList,
+    [omeLoaderEntries, mainSettingsOmeList, mainSettingsDicomList],
   );
 
-  // TODO, assert all loaders match shape
+  /**
+   * Waypoints, overlays, SAM2, and initial pan/zoom use **only the first stacked
+   * image** (`mainSettingsList[0]`, i.e. first OME file or first DICOM series).
+   * Additional OME layers share the same world axes; different sizes are not registered.
+   */
+  const setViewerReferenceImagePixelSize = useAppStore(
+    (s) => s.setViewerReferenceImagePixelSize,
+  );
+
   const firstLoader = useMemo(
     () =>
       mainSettingsList.length > 0
@@ -247,16 +269,26 @@ export const ImageViewer = (props: ImageViewerProps) => {
   // Memoize image shape computation
   const imageShape = useMemo(() => {
     if (firstLoader.data === null) {
-      // Do not use viewport size as a stand-in for image pixels: the document
-      // store's imageWidth/imageHeight drive legacy waypoint migration and
-      // shape import scaling. Wrong values here freeze incorrect coordinates
-      // because migration is skipped once waypoint shape ids already exist.
       return { x: 0, y: 0 };
     }
     const shape_labels = firstLoader.data[0].labels;
     const shape_values = firstLoader.data[0].shape;
     return Object.fromEntries(shape_labels.map((k, i) => [k, shape_values[i]]));
   }, [firstLoader]);
+
+  useEffect(() => {
+    if (imageShape.x > 0 && imageShape.y > 0) {
+      setViewerReferenceImagePixelSize({
+        width: Number(imageShape.x),
+        height: Number(imageShape.y),
+      });
+    } else {
+      setViewerReferenceImagePixelSize(null);
+    }
+    return () => {
+      setViewerReferenceImagePixelSize(null);
+    };
+  }, [imageShape.x, imageShape.y, setViewerReferenceImagePixelSize]);
 
   // Memoize initial view state
   const initialViewState = useMemo(() => {
@@ -272,9 +304,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const hasInitialized = useRef(false);
 
   const setViewportZoom = useAppStore((state) => state.setViewportZoom);
-  const setImageDimensions = useDocumentStore(
-    (state) => state.setImageDimensions,
-  );
   const setBrushViewport = useAppStore((state) => state.setBrushViewport);
 
   const viewRef = useRef({ viewState, viewportSize });
@@ -291,8 +320,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const clearTargetWaypointCamera = useAppStore(
     (state) => state.clearTargetWaypointCamera,
   );
-  const storeImageWidth = useDocumentStore((state) => state.imageWidth);
-  const storeImageHeight = useDocumentStore((state) => state.imageHeight);
+  const refImageWidth = Number(imageShape.x) || 0;
+  const refImageHeight = Number(imageShape.y) || 0;
 
   // Update viewState only on initial mount (not when loader changes)
   useEffect(() => {
@@ -305,12 +334,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
       hasInitialized.current = true;
     }
   }, [initialViewState, firstLoader.data, setViewportZoom]);
-
-  useEffect(() => {
-    if (imageShape.x > 0 && imageShape.y > 0) {
-      setImageDimensions(imageShape.x, imageShape.y);
-    }
-  }, [imageShape, setImageDimensions]);
 
   // Sync viewport size and visible world bounds for brush (canvas-aligned mask)
   useEffect(() => {
@@ -340,14 +363,13 @@ export const ImageViewer = (props: ImageViewerProps) => {
     (s) => s.setViewerImageLayersLoaded,
   );
 
-  // Register SAM2 image fetcher for magic wand (OME-TIFF only)
-  // Register SAM2 image fetcher for magic wand (OME-TIFF only)
+  // Register SAM2 image fetcher for magic wand (first OME image only; reference frame).
   const setSam2ImageFetcher = useAppStore((s) => s.setSam2ImageFetcher);
   const setSam2ViewState = useAppStore((s) => s.setSam2ViewState);
   const setSam2ViewportSize = useAppStore((s) => s.setSam2ViewportSize);
   useEffect(() => {
     if (
-      loaderOmeTiff &&
+      omeLoaderEntries.length > 0 &&
       firstLoader?.data &&
       mainSettingsList.length > 0 &&
       imageShape.x > 0 &&
@@ -371,7 +393,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     }
     return () => setSam2ImageFetcher(null);
   }, [
-    loaderOmeTiff,
+    omeLoaderEntries,
     firstLoader,
     mainSettingsList,
     imageShape.x,
@@ -379,8 +401,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     setSam2ImageFetcher,
   ]);
 
-  // Keep SAM2 store in sync with current view so useSam2 can compute the
-  // visible region at click time without needing direct access to ImageViewer state.
   useEffect(() => {
     setSam2ViewState(viewState);
   }, [viewState, setSam2ViewState]);
@@ -388,40 +408,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
   useEffect(() => {
     setSam2ViewportSize(viewportSize);
   }, [viewportSize, setSam2ViewportSize]);
-
-  useEffect(() => {
-    if (
-      loaderOmeTiff &&
-      firstLoader?.data &&
-      mainSettingsList.length > 0 &&
-      imageShape.x > 0 &&
-      imageShape.y > 0
-    ) {
-      const settings = mainSettingsList[0];
-      const fetcher = createSam2ImageFetcher(
-        firstLoader,
-        {
-          selections: settings.selections,
-          colors: settings.colors,
-          contrastLimits: settings.contrastLimits,
-          channelsVisible: settings.channelsVisible,
-        },
-        imageShape.x,
-        imageShape.y,
-      );
-      setSam2ImageFetcher(fetcher);
-    } else {
-      setSam2ImageFetcher(null);
-    }
-    return () => setSam2ImageFetcher(null);
-  }, [
-    loaderOmeTiff,
-    firstLoader,
-    mainSettingsList,
-    imageShape.x,
-    imageShape.y,
-    setSam2ImageFetcher,
-  ]);
 
   // Keep SAM2 store in sync with current view so useSam2 can compute the
   // visible region at click time without needing direct access to ImageViewer state.
@@ -483,14 +469,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
       return;
     }
 
-    if (storeImageWidth <= 0 || storeImageHeight <= 0) {
+    if (refImageWidth <= 0 || refImageHeight <= 0) {
       return;
     }
 
     const vs = getWaypointViewState(
       targetWaypointCamera,
-      storeImageWidth,
-      storeImageHeight,
+      refImageWidth,
+      refImageHeight,
       viewportSize.width,
       viewportSize.height,
     );
@@ -527,8 +513,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }, [
     targetWaypointCamera,
     viewportSize,
-    storeImageWidth,
-    storeImageHeight,
+    refImageWidth,
+    refImageHeight,
     clearTargetWaypointCamera,
     setViewportZoom,
   ]);
@@ -568,7 +554,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // Memoize dicom layer
   const dicomLayers = useMemo(() => {
-    if (loaderOmeTiff !== null) {
+    if (omeLoaderEntries.length > 0) {
       return [];
     }
     return dicomSources.map((dicomSource, i) => {
@@ -584,17 +570,17 @@ export const ImageViewer = (props: ImageViewerProps) => {
         imageID,
       });
     });
-  }, [loaderOmeTiff, dicomSources, mainSettingsList]);
+  }, [omeLoaderEntries, dicomSources, mainSettingsList]);
 
   // Memoize image layers
   const omeTiffLayers = useMemo(
     () =>
-      loaderOmeTiff === null
+      omeLoaderEntries.length === 0
         ? []
         : omeTiffPropsList.map(
             (layerProps) => new MultiscaleImageLayer(layerProps),
           ),
-    [loaderOmeTiff, omeTiffPropsList],
+    [omeLoaderEntries, omeTiffPropsList],
   );
 
   // Memoize scale bar layer

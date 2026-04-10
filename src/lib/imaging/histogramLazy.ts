@@ -17,8 +17,12 @@ export function sourceDistributionYValuesLength(sc: Channel): number {
 /** Per-image OME pyramid; cleared when switching images. */
 const omeHistogramCache = new Map<string, ConfigSourceDistribution>();
 
-function cacheKey(imageKey: string, sourceIndex: number): string {
-  return `${imageKey}\u0000${sourceIndex}`;
+function cacheKey(
+  imageKey: string,
+  sourceImageId: string,
+  sourceIndex: number,
+): string {
+  return `${imageKey}\u0000${sourceImageId}\u0000${sourceIndex}`;
 }
 
 export function clearOmeHistogramCache(): void {
@@ -40,6 +44,22 @@ export function mergeHistogramsIntoSourceChannels(
   return changed ? next : channels;
 }
 
+/** Prefer this when OME channels from several images can share the same pyramid `index`. */
+export function mergeHistogramsIntoSourceChannelsByChannelId(
+  channels: Channel[],
+  byChannelId: Map<string, ConfigSourceDistribution>,
+): Channel[] {
+  let changed = false;
+  const next = channels.map((sc) => {
+    const dist = byChannelId.get(sc.id);
+    if (!dist) return sc;
+    if (sourceDistributionYValuesLength(sc) > 0) return sc;
+    changed = true;
+    return { ...sc, sourceDistribution: dist };
+  });
+  return changed ? next : channels;
+}
+
 /**
  * Resolve histogram distributions for OME source indices, using an in-memory cache
  * keyed by `{imageKey, index}` (unique for a single multichannel OME-TIFF).
@@ -47,6 +67,7 @@ export function mergeHistogramsIntoSourceChannels(
 export async function ensureOmeHistogramDistributions(
   loader: Loader,
   imageKey: string,
+  sourceImageId: string,
   sourceIndices: readonly number[],
 ): Promise<Map<number, ConfigSourceDistribution>> {
   const unique = [...new Set(sourceIndices)].filter(
@@ -56,7 +77,7 @@ export async function ensureOmeHistogramDistributions(
   const toCompute: number[] = [];
 
   for (const c of unique) {
-    const hit = omeHistogramCache.get(cacheKey(imageKey, c));
+    const hit = omeHistogramCache.get(cacheKey(imageKey, sourceImageId, c));
     if (hit) {
       result.set(c, hit);
     } else {
@@ -72,7 +93,7 @@ export async function ensureOmeHistogramDistributions(
   for (const c of toCompute) {
     const dist = fresh.get(c);
     if (dist) {
-      omeHistogramCache.set(cacheKey(imageKey, c), dist);
+      omeHistogramCache.set(cacheKey(imageKey, sourceImageId, c), dist);
       result.set(c, dist);
     }
   }
