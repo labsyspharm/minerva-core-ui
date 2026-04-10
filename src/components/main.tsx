@@ -39,20 +39,23 @@ import type {
 import { readConfig } from "@/lib/legacy/exhibit";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
+  documentShapes,
+  documentSourceChannels,
+  documentWaypoints,
   findSourceChannel,
-  selectOrderedChannels,
-  selectOrderedShapes,
-  selectOrderedWaypoints,
+  useDocumentGroups,
+  useDocumentSourceChannels,
   useDocumentStore,
-  useOrderedChannels,
-  useOrderedGroups,
-  useOrderedWaypoints,
+  useDocumentWaypoints,
 } from "@/lib/stores/documentStore";
 import {
+  applyGroupChannelRange,
+  applySourceChannelsToImages,
   configWaypointsHaveLegacyArrowsOrOverlays,
-  exportRowsToConfigWaypoints,
-  exportRowToConfigWaypoint,
   migrateLegacyWaypointShapes,
+  type SetGroupChannelRangePayload,
+  waypointsToConfigWaypoints,
+  waypointToConfigWaypoint,
 } from "@/lib/stores/storeUtils";
 import { isOpts, validate } from "@/lib/util/validate";
 import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
@@ -186,11 +189,10 @@ const Content = (props: Props) => {
     setGroupChannelLists,
     setGroupNames,
   } = useAppStore();
-  const setGroupChannelRange = useDocumentStore((s) => s.setGroupChannelRange);
   const setGroups = useDocumentStore((s) => s.setGroups);
-  const setSourceChannels = useDocumentStore((s) => s.setSourceChannels);
-  const Groups = useOrderedGroups();
-  const SourceChannels = useOrderedChannels();
+  const setImages = useDocumentStore((s) => s.setImages);
+  const Groups = useDocumentGroups();
+  const SourceChannels = useDocumentSourceChannels();
   const documentChannelsRef = React.useRef({ Groups, SourceChannels });
   documentChannelsRef.current = { Groups, SourceChannels };
   const [config, setConfig] = useState(() => ({
@@ -322,8 +324,8 @@ const Content = (props: Props) => {
     (state) => state.setShowSquareViewportOverlay,
   );
   const viewerViewportSize = useAppStore((state) => state.viewerViewportSize);
-  const imageWidth = useDocumentStore((state) => state.document.imageWidth);
-  const imageHeight = useDocumentStore((state) => state.document.imageHeight);
+  const imageWidth = useDocumentStore((state) => state.imageWidth);
+  const imageHeight = useDocumentStore((state) => state.imageHeight);
 
   useEffect(() => {
     const enabledFromConfig =
@@ -347,7 +349,8 @@ const Content = (props: Props) => {
       relevant_groups,
     );
     clearOmeHistogramCache();
-    setSourceChannels(SourceChannels);
+    const doc = useDocumentStore.getState();
+    setImages(applySourceChannelsToImages(doc.images, SourceChannels));
     setGroups(Groups);
     updateGroupChannelLists({
       Groups,
@@ -377,7 +380,8 @@ const Content = (props: Props) => {
       "Colorimetric",
       relevant_groups,
     );
-    setSourceChannels(SourceChannels);
+    const doc = useDocumentStore.getState();
+    setImages(applySourceChannelsToImages(doc.images, SourceChannels));
     setGroups(Groups);
     updateGroupChannelLists({ Groups, SourceChannels });
     resetItems({ SourceChannels });
@@ -556,7 +560,8 @@ const Content = (props: Props) => {
     }
     console.log("[minerva] dicom: setting store state");
     const { SourceChannels, Groups } = registry;
-    setSourceChannels(SourceChannels);
+    const doc = useDocumentStore.getState();
+    setImages(applySourceChannelsToImages(doc.images, SourceChannels));
     setGroups(Groups);
     updateGroupChannelLists({
       Groups,
@@ -603,6 +608,14 @@ const Content = (props: Props) => {
     };
   }
   const controlPanelElement = controlPanelCacheRef.current.element;
+
+  const setGroupChannelRange = React.useCallback(
+    (payload: SetGroupChannelRangePayload) => {
+      const doc = useDocumentStore.getState();
+      doc.setGroups(applyGroupChannelRange(doc.groups, payload));
+    },
+    [],
+  );
 
   // Define a WebComponent for a channel
   const channelItemElement = React.useMemo(() => {
@@ -787,10 +800,10 @@ const Content = (props: Props) => {
       );
       if (map.size === 0) return;
       const doc = useDocumentStore.getState();
-      const prevCh = selectOrderedChannels(doc);
+      const prevCh = documentSourceChannels(doc);
       const next = mergeHistogramsIntoSourceChannels(prevCh, map);
       if (next === prevCh) return;
-      doc.setSourceChannels(next);
+      doc.setImages(applySourceChannelsToImages(doc.images, next));
       setItems({ SourceChannels: next });
     },
     [loaderOmeTiff, viewerImageKey, setItems],
@@ -897,7 +910,7 @@ const Content = (props: Props) => {
     setActiveStory,
     setStories,
   } = useAppStore();
-  const _waypoints = useOrderedWaypoints();
+  const _waypoints = useDocumentWaypoints();
 
   // Document waypoint lifecycle: `index.tsx` waypoints are copied once into
   // `config` (see `useState` initializer). Then `useDocumentStore.waypoints` is
@@ -905,7 +918,7 @@ const Content = (props: Props) => {
   // The subscription mirrors waypoints + shapes into `config.ItemRegistry`.
   useEffect(() => {
     const configStories = config.ItemRegistry.Stories;
-    const storeWaypoints = selectOrderedWaypoints(useDocumentStore.getState());
+    const storeWaypoints = documentWaypoints(useDocumentStore.getState());
 
     if (!configStories?.length) return;
     if (!viewerViewportSize?.width || !viewerViewportSize?.height) return;
@@ -962,7 +975,7 @@ const Content = (props: Props) => {
     // when the exhibit registry has data (even if ids are temporarily out of sync).
     if (
       (config.ItemRegistry.Shapes?.length ?? 0) > 0 &&
-      selectOrderedShapes(useDocumentStore.getState()).length === 0
+      documentShapes(useDocumentStore.getState()).length === 0
     ) {
       useDocumentStore.getState().setShapes(config.ItemRegistry.Shapes ?? []);
     }
@@ -990,19 +1003,25 @@ const Content = (props: Props) => {
     ) {
       const doc = useDocumentStore.getState();
       setItemsRef.current({
-        Stories: exportRowsToConfigWaypoints(selectOrderedWaypoints(doc)),
-        Shapes: selectOrderedShapes(doc),
+        Stories: waypointsToConfigWaypoints(
+          documentWaypoints(doc),
+          useAppStore.getState().waypointAuthoring,
+        ),
+        Shapes: documentShapes(doc),
       });
       return;
     }
 
     if (imageWidth > 0 && imageHeight > 0) {
+      const authoringMap = useAppStore.getState().waypointAuthoring;
       const mask = storeWaypoints.map((sw) =>
-        needsPanMigration(exportRowToConfigWaypoint(sw)),
+        needsPanMigration(
+          waypointToConfigWaypoint(sw, authoringMap.get(sw.id)),
+        ),
       );
       if (mask.some(Boolean)) {
         const nextConfig = storeWaypoints.map((sw, i) => {
-          const c = exportRowToConfigWaypoint(sw);
+          const c = waypointToConfigWaypoint(sw, authoringMap.get(sw.id));
           return mask[i]
             ? normalizeWaypointToBounds(c, imageWidth, imageHeight, cw, ch)
             : c;
@@ -1022,22 +1041,19 @@ const Content = (props: Props) => {
   // Sync document waypoints + shapes into config for persistence.
   useEffect(() => {
     const unsub = useDocumentStore.subscribe((state, prevState) => {
-      const waypointsChanged =
-        state.document.waypoints !== prevState.document.waypoints ||
-        state.document.waypointOrder !== prevState.document.waypointOrder;
-      const shapesChanged =
-        state.document.shapes !== prevState.document.shapes ||
-        state.document.shapeOrder !== prevState.document.shapeOrder;
+      const waypointsChanged = state.waypoints !== prevState.waypoints;
+      const shapesChanged = state.shapes !== prevState.shapes;
       if (!waypointsChanged && !shapesChanged) return;
       setItemsRef.current({
         ...(waypointsChanged
           ? {
-              Stories: exportRowsToConfigWaypoints(
-                selectOrderedWaypoints(state),
+              Stories: waypointsToConfigWaypoints(
+                documentWaypoints(state),
+                useAppStore.getState().waypointAuthoring,
               ),
             }
           : {}),
-        ...(shapesChanged ? { Shapes: selectOrderedShapes(state) } : {}),
+        ...(shapesChanged ? { Shapes: documentShapes(state) } : {}),
       });
     });
     return () => unsub();
@@ -1054,7 +1070,7 @@ const Content = (props: Props) => {
   const enterPlaybackPreview = React.useCallback(() => {
     const state = useAppStore.getState();
     if (
-      selectOrderedWaypoints(useDocumentStore.getState()).length > 0 &&
+      documentWaypoints(useDocumentStore.getState()).length > 0 &&
       state.activeStoryIndex === null
     ) {
       state.setActiveStory(0);

@@ -9,16 +9,14 @@ import {
 import type { ConfigWaypoint } from "@/lib/authoring/config";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
-  selectOrderedWaypoints,
+  documentWaypoints,
+  useDocumentGroups,
+  useDocumentShapes,
   useDocumentStore,
-  useOrderedGroups,
-  useOrderedShapes,
-  useOrderedWaypoints,
+  useDocumentWaypoints,
+  type Waypoint,
 } from "@/lib/stores/documentStore";
-import {
-  exportRowToConfigWaypoint,
-  type JsonExportWaypointRow,
-} from "@/lib/stores/storeUtils";
+import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
 import {
   getViewerBoundsFromSnapshot,
   getViewerViewportSnapshotFromStore,
@@ -34,13 +32,13 @@ import {
 
 interface WaypointAnnotationEditorMetadata {
   type: "shapes-panel";
-  story: JsonExportWaypointRow;
+  story: Waypoint;
   storyIndex: number;
 }
 
 interface WaypointMarkdownEditorMetadata {
   type: "markdown-editor";
-  story: JsonExportWaypointRow;
+  story: Waypoint;
   storyIndex: number;
 }
 
@@ -48,15 +46,15 @@ type WaypointChildMetadata =
   | WaypointAnnotationEditorMetadata
   | WaypointMarkdownEditorMetadata;
 
-type WaypointItemMetadata = JsonExportWaypointRow | WaypointChildMetadata;
+type WaypointItemMetadata = Waypoint | WaypointChildMetadata;
 
 const WaypointsList = (_props: WaypointsListProps) => {
   // Document waypoints (ordered); wire slice matches `toJsonExport().waypoints`
-  const waypoints = useOrderedWaypoints();
-  const shapes = useOrderedShapes();
-  const groups = useOrderedGroups();
-  const imageWidth = useDocumentStore((s) => s.document.imageWidth);
-  const imageHeight = useDocumentStore((s) => s.document.imageHeight);
+  const waypoints = useDocumentWaypoints();
+  const shapes = useDocumentShapes();
+  const groups = useDocumentGroups();
+  const imageWidth = useDocumentStore((s) => s.imageWidth);
+  const imageHeight = useDocumentStore((s) => s.imageHeight);
   const {
     activeStoryIndex,
     setActiveStory,
@@ -129,7 +127,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
       const p = previousActiveStoryIndexRef.current;
       if (p !== null) {
         const doc = useDocumentStore.getState();
-        if (doc.document.imageWidth > 0 && doc.document.imageHeight > 0) {
+        if (doc.imageWidth > 0 && doc.imageHeight > 0) {
           useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
@@ -205,7 +203,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
 
     // Only handle story clicks, not child panel clicks
     if (item.metadata && !("type" in item.metadata)) {
-      const story = item.metadata as JsonExportWaypointRow;
+      const story = item.metadata as Waypoint;
       const index = waypoints.findIndex((s) => s.id === story.id);
       if (index !== -1) {
         setActiveStory(index);
@@ -221,12 +219,15 @@ const WaypointsList = (_props: WaypointsListProps) => {
         setExpandedAnnotationsStories(new Set());
 
         // Use the latest story from the store (authoritative) in case item.metadata is stale
-        const currentStory = selectOrderedWaypoints(
-          useDocumentStore.getState(),
-        )[index];
+        const currentStory = documentWaypoints(useDocumentStore.getState())[
+          index
+        ];
         const navStory = currentStory ?? story;
         if (imageWidth > 0 && imageHeight > 0) {
-          setTargetWaypointCamera(exportRowToConfigWaypoint(navStory));
+          const auth = useAppStore
+            .getState()
+            .waypointAuthoring.get(navStory.id);
+          setTargetWaypointCamera(waypointToConfigWaypoint(navStory, auth));
         }
 
         // Note: shapes are imported automatically by the useEffect
@@ -336,8 +337,8 @@ const WaypointsList = (_props: WaypointsListProps) => {
           index,
           viewerViewState: st.viewerViewState,
           viewerViewportSize: st.viewerViewportSize,
-          imageWidth: doc.document.imageWidth,
-          imageHeight: doc.document.imageHeight,
+          imageWidth: doc.imageWidth,
+          imageHeight: doc.imageHeight,
         },
       );
       setEditingViewstateWaypointIndex(null);
@@ -446,7 +447,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
       return null;
     }
 
-    const story = item.metadata as JsonExportWaypointRow;
+    const story = item.metadata as Waypoint;
     const storyId = story.id || item.id;
     const isAnnotationsExpanded = expandedAnnotationsStories.has(storyId);
     const isMarkdownExpanded = expandedMarkdownStories.has(storyId);

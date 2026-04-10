@@ -291,12 +291,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const clearTargetWaypointCamera = useAppStore(
     (state) => state.clearTargetWaypointCamera,
   );
-  const storeImageWidth = useDocumentStore(
-    (state) => state.document.imageWidth,
-  );
-  const storeImageHeight = useDocumentStore(
-    (state) => state.document.imageHeight,
-  );
+  const storeImageWidth = useDocumentStore((state) => state.imageWidth);
+  const storeImageHeight = useDocumentStore((state) => state.imageHeight);
 
   // Update viewState only on initial mount (not when loader changes)
   useEffect(() => {

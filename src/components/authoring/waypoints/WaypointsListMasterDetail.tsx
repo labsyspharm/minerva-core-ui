@@ -8,20 +8,17 @@ import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
 import type { ConfigWaypoint } from "@/lib/authoring/config";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { JsonExport } from "@/lib/stores/documentSchema";
-import type { Channel, Group } from "@/lib/stores/documentStore";
+import type { Channel, Group, Waypoint } from "@/lib/stores/documentStore";
 import {
+  documentWaypoints,
   findSourceChannel,
-  selectOrderedWaypoints,
+  useDocumentGroups,
+  useDocumentShapes,
+  useDocumentSourceChannels,
   useDocumentStore,
-  useOrderedChannels,
-  useOrderedGroups,
-  useOrderedShapes,
-  useOrderedWaypoints,
+  useDocumentWaypoints,
 } from "@/lib/stores/documentStore";
-import {
-  exportRowToConfigWaypoint,
-  type JsonExportWaypointRow,
-} from "@/lib/stores/storeUtils";
+import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
 import {
   getViewerBoundsFromSnapshot,
   getViewerViewportSnapshotFromStore,
@@ -79,7 +76,7 @@ const PlusIcon = () => (
   </svg>
 );
 
-const countWaypointAnnotations = (story: JsonExportWaypointRow) =>
+const countWaypointAnnotations = (story: Waypoint) =>
   story.shapeIds?.length ?? 0;
 
 const annotationCountLabel = (count: number) =>
@@ -99,12 +96,12 @@ const WaypointsList = (props: WaypointsListProps) => {
   const { viewOnly, onEnterPlaybackPreview } = props;
   const canEdit = !viewOnly;
 
-  const waypoints = useOrderedWaypoints();
-  const shapes = useOrderedShapes();
-  const groups = useOrderedGroups();
-  const sourceChannels = useOrderedChannels();
-  const imageWidth = useDocumentStore((s) => s.document.imageWidth);
-  const imageHeight = useDocumentStore((s) => s.document.imageHeight);
+  const waypoints = useDocumentWaypoints();
+  const shapes = useDocumentShapes();
+  const groups = useDocumentGroups();
+  const sourceChannels = useDocumentSourceChannels();
+  const imageWidth = useDocumentStore((s) => s.imageWidth);
+  const imageHeight = useDocumentStore((s) => s.imageHeight);
   const {
     activeStoryIndex,
     setActiveStory,
@@ -253,7 +250,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       const p = previousImportStoryIndexRef.current;
       if (p !== null) {
         const doc = useDocumentStore.getState();
-        if (doc.document.imageWidth > 0 && doc.document.imageHeight > 0) {
+        if (doc.imageWidth > 0 && doc.imageHeight > 0) {
           useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
@@ -305,8 +302,8 @@ const WaypointsList = (props: WaypointsListProps) => {
           index,
           viewerViewState: st.viewerViewState,
           viewerViewportSize: st.viewerViewportSize,
-          imageWidth: doc.document.imageWidth,
-          imageHeight: doc.document.imageHeight,
+          imageWidth: doc.imageWidth,
+          imageHeight: doc.imageHeight,
         },
       );
       return false;
@@ -344,7 +341,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   };
 
   const applyStoryChannelGroup = React.useCallback(
-    (story: JsonExportWaypointRow | undefined) => {
+    (story: Waypoint | undefined) => {
       if (!story || groups.length === 0) return;
       const foundGroup =
         (story.groupId && groups.find((group) => group.id === story.groupId)) ||
@@ -372,7 +369,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       if (state.activeStoryIndex !== index) {
         return;
       }
-      const story = selectOrderedWaypoints(useDocumentStore.getState())[index];
+      const story = documentWaypoints(useDocumentStore.getState())[index];
       if (!story) return;
       if (!overwriteView && story.thumbnail) return;
       if (thumbnailOnly) {
@@ -399,12 +396,11 @@ const WaypointsList = (props: WaypointsListProps) => {
 
     setActiveStory(index);
 
-    const storyForNav = selectOrderedWaypoints(useDocumentStore.getState())[
-      index
-    ];
+    const storyForNav = documentWaypoints(useDocumentStore.getState())[index];
     applyStoryChannelGroup(storyForNav);
     if (storyForNav && imageWidth > 0 && imageHeight > 0) {
-      setTargetWaypointCamera(exportRowToConfigWaypoint(storyForNav));
+      const auth = useAppStore.getState().waypointAuthoring.get(storyForNav.id);
+      setTargetWaypointCamera(waypointToConfigWaypoint(storyForNav, auth));
     }
     // Only grab the preview image after the camera settles — never rewrite
     // Bounds/ViewState on row select (use save-view control on the row to persist camera).

@@ -1,9 +1,5 @@
-import {
-  type DocumentData,
-  DocumentDataSchema,
-  isUuid,
-  preprocessDocumentDataRaw,
-} from "./documentSchema";
+import { type DocumentData, DocumentDataSchema } from "./documentSchema";
+import { isUuid, preprocessDocumentDataRaw } from "./storeUtils";
 
 const VERSIONS = new Set(["1", "2"]);
 

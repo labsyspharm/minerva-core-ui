@@ -8,12 +8,12 @@ import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Channel, Group } from "@/lib/stores/documentStore";
 import {
+  documentGroups,
+  documentSourceChannels,
   findSourceChannel,
-  selectOrderedChannels,
-  selectOrderedGroups,
+  useDocumentGroups,
+  useDocumentSourceChannels,
   useDocumentStore,
-  useOrderedChannels,
-  useOrderedGroups,
 } from "@/lib/stores/documentStore";
 import styles from "./ChannelList.module.css";
 
@@ -83,8 +83,8 @@ export const ChannelGroupsMasterDetail = (
 ) => {
   const { setActiveChannelGroup } = useAppStore();
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
-  const Groups = useOrderedGroups();
-  const SourceChannels = useOrderedChannels();
+  const Groups = useDocumentGroups();
+  const SourceChannels = useDocumentSourceChannels();
   const setGroups = useDocumentStore((s) => s.setGroups);
   const setGroupNames = useAppStore((s) => s.setGroupNames);
   const setGroupChannelLists = useAppStore((s) => s.setGroupChannelLists);
@@ -321,8 +321,8 @@ export const ChannelGroupsMasterDetail = (
     void (async () => {
       try {
         const st = useDocumentStore.getState();
-        const gList = selectOrderedGroups(st);
-        const scList = selectOrderedChannels(st);
+        const gList = documentGroups(st);
+        const scList = documentSourceChannels(st);
         const g = gList.find((x) => x.id === detailGroupId);
         if (!g) return;
         const indices: number[] = [];

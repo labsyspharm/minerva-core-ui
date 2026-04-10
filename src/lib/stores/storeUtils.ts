@@ -1,11 +1,18 @@
 /**
- * **`story.json` export** — validated root ({@link JsonExport}), exhibit ↔ wire waypoints,
- * viewer shapes for the export `shapes` array, legacy Arrows/Overlays → wire.
- * Zod: `documentSchema.ts` ({@link JsonExport}).
+ * Utilities shared across the stores layer:
  *
- * Not every helper is “export” literally: `hydrateConfigWaypoint` and legacy migration feed
- * the same wire shape used when building {@link buildJsonExport}; shape ↔ `StoryShape`
- * is the format inside the exported file.
+ * - **Wire preprocess** (`normalizeWaypointRecord`, `preprocessDocumentDataRaw`):
+ *   legacy key migration before Zod parse.
+ * - **Channel helpers** (`flattenImageChannelsInDocumentOrder`, `findSourceChannel`):
+ *   flatten nested `Image.channels` to flat {@link Channel} rows for Viv / UI.
+ * - **ConfigWaypoint bridge** (`configWaypointToWaypoint`, `waypointToConfigWaypoint`):
+ *   exhibit waypoints to/from the `story.json` wire format.
+ * - **Viewer shape conversion** (`storyShapeToViewer`, `viewerShapesToStoryShapes`):
+ *   document shapes to/from viewer annotation shapes.
+ * - **Legacy migration** (`migrateLegacyWaypointShapes`):
+ *   old Arrows/Overlays to shapeIds + StoryShape records.
+ *
+ * Uses only `import type` from `documentSchema` to avoid a runtime import cycle.
  */
 
 import type { ConfigWaypoint } from "../authoring/config";
@@ -32,41 +39,284 @@ import {
   type WaypointBounds,
 } from "../waypoints/waypoint";
 import type {
+  ArrowShape,
+  Channel,
   Group,
-  JsonExport,
-  StoryPoint,
+  Image,
+  ImageChannel,
+  Point,
   StoryShape,
-  StoryShapeArrow,
-  StoryShapePoint,
-  StoryShapePolygon,
-  StoryShapePolyline,
-  StoryShapeText,
-  StoryViewport,
   StoryWaypoint,
+  Viewport,
+  Waypoint,
 } from "./documentSchema";
-import { parseJsonExport } from "./documentSchema";
-import type { StoreWaypoint } from "./documentStoreTypes";
 
-export type {
-  JsonExport,
-  StoryPoint,
-  StoryShape,
-  StoryShapeArrow,
-  StoryShapePoint,
-  StoryShapePolygon,
-  StoryShapePolyline,
-  StoryShapeText,
-  StoryViewport,
-  StoryWaypoint,
-} from "./documentSchema";
+export type { JsonExport, StoryShape, StoryWaypoint } from "./documentSchema";
+
+export type AuthoringWaypointExtra = Pick<
+  ConfigWaypoint,
+  "State" | "ViewState" | "Pan" | "Zoom"
+>;
+
+/* -------------------- wire preprocess (before Zod) -------------------- */
+
+/** Legacy story.json / exhibit keys on a single waypoint object (`shapes` → `shapeIds`, etc.). */
+export function normalizeWaypointRecord(
+  raw: Record<string, unknown>,
+): Record<string, unknown> {
+  const w = { ...raw };
+  if (
+    !("shapeIds" in w) &&
+    "shapes" in w &&
+    Array.isArray((w as { shapes?: unknown }).shapes)
+  ) {
+    w.shapeIds = (w as { shapes: string[] }).shapes;
+  }
+  if (
+    !("groupId" in w) &&
+    "group" in w &&
+    typeof (w as { group?: unknown }).group === "string"
+  ) {
+    w.groupId = (w as { group: string }).group;
+  }
+  if (!("thumbnail" in w) || w.thumbnail == null) {
+    w.thumbnail = "";
+  }
+  return w;
+}
+
+function normalizeRawShape(shape: unknown): unknown {
+  if (shape === null || typeof shape !== "object" || Array.isArray(shape)) {
+    return shape;
+  }
+  const s = shape as Record<string, unknown>;
+  let next: Record<string, unknown> = { ...s };
+  if (typeof next.uuid === "string" && next.id === undefined) {
+    next = { ...next, id: next.uuid };
+  }
+  if (next.type !== "arrow") return next;
+  if (typeof next.text === "string" && next.label === undefined) {
+    next = { ...next, label: next.text };
+  }
+
+  const hasPoint =
+    next.point !== null &&
+    typeof next.point === "object" &&
+    !Array.isArray(next.point);
+  const angle = next.angle;
+  const hasAngle =
+    angle !== undefined &&
+    angle !== null &&
+    !(typeof angle === "string" && (angle as string).trim() === "");
+
+  if (hasPoint && hasAngle) {
+    return next;
+  }
+
+  const from = next.from as { x?: number; y?: number } | undefined;
+  const to = next.to as { x?: number; y?: number } | undefined;
+  if (
+    from &&
+    to &&
+    typeof from.x === "number" &&
+    typeof from.y === "number" &&
+    typeof to.x === "number" &&
+    typeof to.y === "number"
+  ) {
+    return {
+      ...next,
+      point: to,
+      angle: Math.atan2(from.y - to.y, from.x - to.x),
+    };
+  }
+  return next;
+}
+
+/** Preprocess wire JSON (legacy keys, arrow `from`/`to`, etc.) before `DocumentDataSchema` / export parse. */
+export function preprocessDocumentDataRaw(raw: unknown): unknown {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    return raw;
+  }
+  const d = raw as Record<string, unknown>;
+  const shapes = d.shapes;
+  const waypoints = d.waypoints;
+  let next = { ...d };
+  if (Array.isArray(shapes)) {
+    next = {
+      ...next,
+      shapes: shapes.map(normalizeRawShape),
+    };
+  }
+  if (Array.isArray(waypoints)) {
+    next = {
+      ...next,
+      waypoints: waypoints.map((wp) => {
+        if (wp === null || typeof wp !== "object" || Array.isArray(wp)) {
+          return wp;
+        }
+        return normalizeWaypointRecord(wp as Record<string, unknown>);
+      }),
+    };
+  }
+  return next;
+}
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isUuid(id: string): boolean {
+  return UUID_RE.test(id);
+}
+
+/**
+ * Expand minimal `story.json` root with synthetic full-document fields, then
+ * {@link preprocessDocumentDataRaw} (consumers: `JsonExportSchema` in `documentSchema.ts`).
+ */
+export function preprocessJsonExportRoot(raw: unknown): unknown {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    return raw;
+  }
+  const d = raw as Record<string, unknown>;
+  return preprocessDocumentDataRaw({
+    ...d,
+    imageWidth: 0,
+    imageHeight: 0,
+    groups: [],
+    images: [],
+  });
+}
+
+/**
+ * Flatten nested `Image.channels` into {@link Channel} rows: `images` array order, then each
+ * image’s `channels` order. Each row includes `imageId` for Viv and channel-group UI.
+ */
+export function flattenImageChannelsInDocumentOrder(
+  images: Image[],
+): Channel[] {
+  const out: Channel[] = [];
+  for (const im of images) {
+    for (const ch of im.channels) {
+      out.push({
+        ...ch,
+        imageId: im.id,
+      });
+    }
+  }
+  return out;
+}
+
+/** Resolve a flat row by nested channel id (same as `Image.channels[].id`). */
+export function findSourceChannel(
+  channels: Channel[],
+  channelId: string,
+): Channel | undefined {
+  return channels.find((c) => c.id === channelId);
+}
+
+// --- Pure transformations (formerly inline in documentStore actions) -------------------------
+
+export type SetGroupChannelRangeInput = {
+  LowerRange: number;
+  UpperRange: number;
+  groupId: string;
+  channelId: string;
+};
+
+export type SetGroupChannelRangePayload =
+  | SetGroupChannelRangeInput
+  | {
+      LowerRange: number;
+      UpperRange: number;
+      group_uuid: string;
+      channel_uuid: string;
+    };
+
+/** Apply a flat `Channel[]` back onto an `Image[]`, grouping by `imageId`. */
+export function applySourceChannelsToImages(
+  currentImages: Image[],
+  flatChannels: Channel[],
+): Image[] {
+  const byImage = new Map<string, ImageChannel[]>();
+  for (const row of flatChannels) {
+    const {
+      id,
+      imageId,
+      index,
+      name,
+      samples,
+      sourceDataTypeId,
+      sourceDistribution,
+    } = row;
+    const slice: ImageChannel = {
+      id: id && id.length > 0 ? id : crypto.randomUUID(),
+      index,
+      name,
+      ...(samples !== undefined ? { samples } : {}),
+      ...(sourceDataTypeId !== undefined ? { sourceDataTypeId } : {}),
+      ...(sourceDistribution !== undefined ? { sourceDistribution } : {}),
+    };
+    const list = byImage.get(imageId) ?? [];
+    list.push(slice);
+    byImage.set(imageId, list);
+  }
+  let nextImages = [...currentImages];
+  for (const [imId, chans] of byImage) {
+    chans.sort((a, b) => a.index - b.index);
+    const idx = nextImages.findIndex((im) => im.id === imId);
+    if (idx >= 0) {
+      nextImages = [
+        ...nextImages.slice(0, idx),
+        { ...nextImages[idx], channels: chans },
+        ...nextImages.slice(idx + 1),
+      ];
+    } else {
+      nextImages = [
+        ...nextImages,
+        {
+          id: imId,
+          sizeX: 1,
+          sizeY: 1,
+          sizeC: chans.length,
+          omeXmlHash: "",
+          basename: "",
+          channels: chans,
+        },
+      ];
+    }
+  }
+  return nextImages;
+}
+
+/** Normalize a polymorphic range payload and update the matching channel entry. */
+export function applyGroupChannelRange(
+  groups: Group[],
+  raw: SetGroupChannelRangePayload,
+): Group[] {
+  const lower = raw.LowerRange;
+  const upper = raw.UpperRange;
+  const groupId =
+    "groupId" in raw && raw.groupId !== undefined
+      ? raw.groupId
+      : (raw as { group_uuid: string }).group_uuid;
+  const channelEntryId =
+    "channelId" in raw && raw.channelId !== undefined
+      ? raw.channelId
+      : (raw as { channel_uuid: string }).channel_uuid;
+  return groups.map((group) =>
+    group.id !== groupId
+      ? group
+      : {
+          ...group,
+          channels: group.channels.map((e) =>
+            e.id === channelEntryId
+              ? { ...e, lowerLimit: lower, upperLimit: upper }
+              : e,
+          ),
+        },
+  );
+}
 
 // --- Exhibit `ConfigWaypoint` ↔ `story.json` waypoint slice (for building JsonExport) -----
-
-/** Store waypoint row: wire {@link StoryWaypoint} + optional authoring camera fields (not in JSON). */
-export type JsonExportWaypointRow = StoreWaypoint;
-
-const UUID_LIKE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /** Normalize exhibit / legacy waypoint fields into current {@link ConfigWaypoint} shape. */
 export function hydrateConfigWaypoint(
@@ -87,7 +337,7 @@ export function hydrateConfigWaypoint(
     legacyGroup !== undefined &&
     legacyGroup !== ""
   ) {
-    groupId = UUID_LIKE.test(legacyGroup)
+    groupId = UUID_RE.test(legacyGroup)
       ? legacyGroup
       : (groups.find((g) => g.name === legacyGroup)?.id ?? legacyGroup);
   }
@@ -103,7 +353,7 @@ export function hydrateConfigWaypoint(
   return next as ConfigWaypoint;
 }
 
-export function boundsToExportViewport(b: WaypointBounds): StoryViewport {
+function boundsToExportViewport(b: WaypointBounds): Viewport {
   const minX = Math.min(b.x0, b.x1);
   const maxX = Math.max(b.x0, b.x1);
   const minY = Math.min(b.y0, b.y1);
@@ -114,7 +364,7 @@ export function boundsToExportViewport(b: WaypointBounds): StoryViewport {
   };
 }
 
-export function exportViewportToBounds(v: StoryViewport): WaypointBounds {
+function exportViewportToBounds(v: Viewport): WaypointBounds {
   const x0 = Math.min(v.upperLeft.x, v.lowerRight.x);
   const x1 = Math.max(v.upperLeft.x, v.lowerRight.x);
   const y0 = Math.min(v.upperLeft.y, v.lowerRight.y);
@@ -122,7 +372,7 @@ export function exportViewportToBounds(v: StoryViewport): WaypointBounds {
   return { x0, x1, y0, y1 };
 }
 
-export function configWaypointToExportWaypoint(
+function configWaypointToExportWaypoint(
   wp: ConfigWaypoint,
   imageWidth: number,
   imageHeight: number,
@@ -169,14 +419,15 @@ export function configWaypointToExportWaypoint(
   return out;
 }
 
-export function configWaypointToExportRow(
+/** Convert a `ConfigWaypoint` to a schema `Waypoint` + an `AuthoringWaypointExtra` sidecar. */
+export function configWaypointToWaypoint(
   wp: ConfigWaypoint,
   imageWidth: number,
   imageHeight: number,
   containerWidth: number,
   containerHeight: number,
-): JsonExportWaypointRow {
-  const row = configWaypointToExportWaypoint(
+): { waypoint: Waypoint; authoring: AuthoringWaypointExtra } {
+  const waypoint: Waypoint = configWaypointToExportWaypoint(
     wp,
     imageWidth,
     imageHeight,
@@ -184,7 +435,7 @@ export function configWaypointToExportRow(
     containerHeight,
   );
   return {
-    ...row,
+    waypoint,
     authoring: {
       State: wp.State,
       ViewState: wp.ViewState,
@@ -194,95 +445,50 @@ export function configWaypointToExportRow(
   };
 }
 
-export function exportRowToConfigWaypoint(
-  row: JsonExportWaypointRow,
+/** Reconstruct a `ConfigWaypoint` from a schema `Waypoint` + optional authoring extras. */
+export function waypointToConfigWaypoint(
+  wp: Waypoint,
+  authoring?: AuthoringWaypointExtra,
 ): ConfigWaypoint {
-  const bounds = exportViewportToBounds(row.viewport);
-  const r = row as StoreWaypoint &
-    Partial<Pick<ConfigWaypoint, "State" | "ViewState" | "Pan" | "Zoom">>;
+  const bounds = exportViewportToBounds(wp.viewport);
   const out: ConfigWaypoint = {
-    id: row.id,
-    Name: row.title,
-    Content: row.content,
-    State: r.authoring?.State ?? r.State ?? { Expanded: false },
+    id: wp.id,
+    Name: wp.title,
+    Content: wp.content,
+    State: authoring?.State ?? { Expanded: false },
     Bounds: bounds,
-    shapeIds: [...row.shapeIds],
-    ViewState: r.authoring?.ViewState ?? r.ViewState,
-    Pan: r.authoring?.Pan ?? r.Pan,
-    Zoom: r.authoring?.Zoom ?? r.Zoom,
+    shapeIds: [...wp.shapeIds],
+    ViewState: authoring?.ViewState,
+    Pan: authoring?.Pan,
+    Zoom: authoring?.Zoom,
   };
-  if (row.groupId !== undefined) {
-    out.groupId = row.groupId;
+  if (wp.groupId !== undefined) {
+    out.groupId = wp.groupId;
   }
-  if (row.thumbnail !== undefined) {
-    out.ThumbnailDataUrl = row.thumbnail;
+  if (wp.thumbnail !== undefined) {
+    out.ThumbnailDataUrl = wp.thumbnail;
   }
   return out;
 }
 
-/** Map authoring waypoint rows → exhibit `ConfigWaypoint` list (`ItemRegistry.Stories`). */
-export function exportRowsToConfigWaypoints(
-  rows: JsonExportWaypointRow[],
+/** Map waypoints + authoring map → exhibit `ConfigWaypoint` list (`ItemRegistry.Stories`). */
+export function waypointsToConfigWaypoints(
+  waypoints: Waypoint[],
+  authoringMap: Map<string, AuthoringWaypointExtra>,
 ): ConfigWaypoint[] {
-  return rows.map(exportRowToConfigWaypoint);
-}
-
-/** Merge wire waypoint into exhibit row when `row.id === wp.id`. */
-export function applyExportWaypointToConfig(
-  wp: ConfigWaypoint,
-  row: StoryWaypoint,
-): ConfigWaypoint {
-  if (row.id !== wp.id) {
-    return wp;
-  }
-  const bounds = exportViewportToBounds(row.viewport);
-  const next: ConfigWaypoint = {
-    ...wp,
-    Name: row.title,
-    Content: row.content,
-    Bounds: bounds,
-    shapeIds: [...row.shapeIds],
-    Pan: undefined,
-    Zoom: undefined,
-  };
-  if (row.groupId !== undefined) {
-    next.groupId = row.groupId;
-  }
-  if (row.thumbnail !== undefined) {
-    next.ThumbnailDataUrl = row.thumbnail;
-  } else {
-    delete next.ThumbnailDataUrl;
-  }
-  return next;
-}
-
-/** Build validated {@link JsonExport} for `story.json` (camera fields stripped per row). */
-export function buildJsonExport(
-  waypointRows: JsonExportWaypointRow[],
-  shapeList: StoryShape[],
-): JsonExport {
-  return parseJsonExport({
-    version: "2",
-    waypoints: waypointRows.map((row) => {
-      const { authoring: _a, ...w } = row;
-      return {
-        ...w,
-        shapeIds: [...w.shapeIds],
-      };
-    }),
-    shapes: [...shapeList],
-  });
+  return waypoints.map((wp) =>
+    waypointToConfigWaypoint(wp, authoringMap.get(wp.id)),
+  );
 }
 
 // --- Viewer `Shape` ↔ `story.json` `shapes[]` (same wire as JsonExport) -------------------
 
-/** Export arrow (`angle` radians); import tolerates string `angle` and legacy `from`/`to`/`text`. */
-export function buildStoryShapeArrow(parts: {
+function buildArrowShape(parts: {
   id: string;
-  point: StoryPoint;
+  point: Point;
   angle: number;
   label?: string;
-}): StoryShapeArrow {
+}): ArrowShape {
   const trimmed = parts.label?.trim();
   if (trimmed) {
     return {
@@ -302,19 +508,19 @@ export function buildStoryShapeArrow(parts: {
 }
 
 /** Loose arrow at load time (`angle` as number or numeric string, legacy `from`/`to`, `text` caption). */
-type StoryShapeArrowLoose = {
+type ArrowShapeLoose = {
   type?: "arrow";
   id?: string;
   uuid?: string;
-  point?: StoryPoint;
+  point?: Point;
   angle?: number | string;
   label?: string;
-  from?: StoryPoint;
-  to?: StoryPoint;
+  from?: Point;
+  to?: Point;
   text?: unknown;
 };
 
-function storyShapeArrowLocalId(s: { id?: string; uuid?: string }): string {
+function arrowLocalId(s: { id?: string; uuid?: string }): string {
   return s.id ?? s.uuid ?? "";
 }
 
@@ -332,18 +538,11 @@ function parseArrowAngleRadians(raw: unknown, shapeId: string): number {
   throw new Error(`minerva: invalid arrow angle for shape id ${shapeId}`);
 }
 
-export function storyPointFromTuple(p: [number, number]): StoryPoint {
+function pointFromTuple(p: [number, number]): Point {
   return { x: p[0], y: p[1] };
 }
 
-export function tupleFromStoryPoint(p: StoryPoint): [number, number] {
-  return [p.x, p.y];
-}
-
-/** Drop closing vertex when it duplicates the first (closed rings). */
-export function openPolylinePoints(
-  polygon: [number, number][],
-): [number, number][] {
+function openPolylinePoints(polygon: [number, number][]): [number, number][] {
   if (polygon.length < 2) return [...polygon];
   const first = polygon[0];
   const last = polygon[polygon.length - 1];
@@ -396,7 +595,7 @@ export function mergeShapesForWaypointPersist(params: {
   return [...byId.values()];
 }
 
-export function viewerShapeToStoryShape(viewer: Shape): StoryShape | null {
+function viewerShapeToStoryShape(viewer: Shape): StoryShape | null {
   const id = viewer.id;
   switch (viewer.type) {
     case "point": {
@@ -404,7 +603,7 @@ export function viewerShapeToStoryShape(viewer: Shape): StoryShape | null {
       return {
         type: "point",
         id,
-        point: storyPointFromTuple(a.position),
+        point: pointFromTuple(a.position),
       };
     }
     case "text": {
@@ -413,18 +612,18 @@ export function viewerShapeToStoryShape(viewer: Shape): StoryShape | null {
         type: "text",
         id,
         content: a.text ?? "",
-        point: storyPointFromTuple(a.position),
+        point: pointFromTuple(a.position),
       };
     }
     case "polyline": {
       const a = viewer as PolylineShape;
-      const pts = openPolylinePoints(a.polygon).map(storyPointFromTuple);
+      const pts = openPolylinePoints(a.polygon).map(pointFromTuple);
       if (pts.length < 2) return null;
       return { type: "polyline", id, points: pts };
     }
     case "polygon": {
       const a = viewer as PolygonShape;
-      const pts = a.polygon.map(storyPointFromTuple);
+      const pts = a.polygon.map(pointFromTuple);
       if (pts.length < 3) return null;
       return { type: "polygon", id, points: pts };
     }
@@ -432,13 +631,13 @@ export function viewerShapeToStoryShape(viewer: Shape): StoryShape | null {
       const a = viewer as LineShape;
       const poly = a.polygon;
       if (poly.length < 2) return null;
-      const from = storyPointFromTuple(poly[0]);
-      const to = storyPointFromTuple(poly[1]);
+      const from = pointFromTuple(poly[0]);
+      const to = pointFromTuple(poly[1]);
       const arrowHead = a.hasArrowHead !== false;
       if (arrowHead) {
         const label = a.text?.trim() || a.metadata?.label?.trim() || undefined;
         const angleRad = Math.atan2(from.y - to.y, from.x - to.x);
-        return buildStoryShapeArrow({
+        return buildArrowShape({
           id,
           point: to,
           angle: angleRad,
@@ -465,14 +664,12 @@ export function viewerShapesToStoryShapes(shapes: Shape[]): StoryShape[] {
   return out;
 }
 
-function tupleFromPoint(p: StoryPoint): [number, number] {
+function tupleFromPoint(p: Point): [number, number] {
   return [p.x, p.y];
 }
 
 /** Caption for arrows; older JSON may use `text` instead of `label` — treat as `label`. */
-function arrowCaptionFromShape(
-  shape: StoryShapeArrowLoose,
-): string | undefined {
+function arrowCaptionFromShape(shape: ArrowShapeLoose): string | undefined {
   const fromLabel = shape.label?.trim();
   if (fromLabel) return fromLabel;
   if (typeof shape.text === "string") {
@@ -482,8 +679,8 @@ function arrowCaptionFromShape(
   return undefined;
 }
 
-function arrowPointAngleFromInput(shape: StoryShapeArrowLoose): {
-  point: StoryPoint;
+function arrowPointAngleFromInput(shape: ArrowShapeLoose): {
+  point: Point;
   angle: number;
 } {
   const hasAngleField =
@@ -494,7 +691,7 @@ function arrowPointAngleFromInput(shape: StoryShapeArrowLoose): {
   if (shape.point && hasAngleField) {
     return {
       point: shape.point,
-      angle: parseArrowAngleRadians(shape.angle, storyShapeArrowLocalId(shape)),
+      angle: parseArrowAngleRadians(shape.angle, arrowLocalId(shape)),
     };
   }
   if (shape.from && shape.to) {
@@ -503,12 +700,10 @@ function arrowPointAngleFromInput(shape: StoryShapeArrowLoose): {
     const angleRad = Math.atan2(tail.y - tip.y, tail.x - tip.x);
     return { point: tip, angle: angleRad };
   }
-  throw new Error(
-    `minerva: invalid arrow shape (id ${storyShapeArrowLocalId(shape)})`,
-  );
+  throw new Error(`minerva: invalid arrow shape (id ${arrowLocalId(shape)})`);
 }
 
-export type StoryShapeToViewerContext = {
+type StoryShapeToViewerContext = {
   imageWidth: number;
   imageHeight: number;
 };

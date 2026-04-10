@@ -6,8 +6,8 @@ import type { ConfigProps } from "@/lib/authoring/config";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
   findSourceChannel,
-  useOrderedChannels,
-  useOrderedGroups,
+  useDocumentGroups,
+  useDocumentSourceChannels,
 } from "@/lib/stores/documentStore";
 import { ChannelGroups } from "./ChannelGroups";
 import { ChannelGroupsMasterDetail } from "./ChannelGroupsMasterDetail";
@@ -118,8 +118,8 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
-  const Groups = useOrderedGroups();
-  const SourceChannels = useOrderedChannels();
+  const Groups = useDocumentGroups();
+  const SourceChannels = useDocumentSourceChannels();
 
   const groups = Groups.map((group, g) => {
     return {

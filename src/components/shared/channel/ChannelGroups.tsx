@@ -2,7 +2,7 @@ import * as React from "react";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { useAppStore } from "@/lib/stores/appStore";
-import { useOrderedGroups } from "@/lib/stores/documentStore";
+import { useDocumentGroups } from "@/lib/stores/documentStore";
 
 const WrapRows = styled.div`
   display: flex;
@@ -102,7 +102,7 @@ const GroupRow = (props: { group: { name: string; id: string } }) => {
   const { name } = group;
 
   const { setActiveChannelGroup } = useAppStore();
-  const Groups = useOrderedGroups();
+  const Groups = useDocumentGroups();
   const row_group = React.useMemo(
     () => Groups.find((grp) => grp.name === name) || Groups[0],
     [Groups, name],
@@ -128,7 +128,7 @@ export const ChannelGroups = (props: {
   const [expanded, setExpanded] = React.useState(false);
 
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
-  const Groups = useOrderedGroups();
+  const Groups = useDocumentGroups();
   const activeGroup = React.useMemo(
     () => Groups.find(({ id }) => id === activeChannelGroupId) || Groups[0],
     [Groups, activeChannelGroupId],

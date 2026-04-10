@@ -1,9 +1,13 @@
 /**
  * Canonical Zod schemas and types for exhibit/story document data (waypoints, shapes,
- * channels, groups, images). Legacy wire keys are normalized in {@link preprocessDocumentDataRaw}
- * / {@link normalizeWaypointRecord}; UUID coercion lives in `validateDocument.ts`.
+ * channels, groups, images). Legacy wire normalization: `storeUtils.ts` (`normalizeWaypointRecord`,
+ * `preprocessDocumentDataRaw`, …). UUID coercion: `validateDocument.ts`.
  */
 import { z } from "zod";
+import {
+  normalizeWaypointRecord,
+  preprocessJsonExportRoot,
+} from "./storeUtils";
 
 /* -------------------- shared primitives -------------------- */
 
@@ -131,31 +135,6 @@ const waypointObjectZ = z.object({
   shapeIds: z.array(IdSchema),
 });
 
-/** Legacy story.json / exhibit keys on a single waypoint object (`shapes` → `shapeIds`, etc.). */
-export function normalizeWaypointRecord(
-  raw: Record<string, unknown>,
-): Record<string, unknown> {
-  const w = { ...raw };
-  if (
-    !("shapeIds" in w) &&
-    "shapes" in w &&
-    Array.isArray((w as { shapes?: unknown }).shapes)
-  ) {
-    w.shapeIds = (w as { shapes: string[] }).shapes;
-  }
-  if (
-    !("groupId" in w) &&
-    "group" in w &&
-    typeof (w as { group?: unknown }).group === "string"
-  ) {
-    w.groupId = (w as { group: string }).group;
-  }
-  if (!("thumbnail" in w) || w.thumbnail == null) {
-    w.thumbnail = "";
-  }
-  return w;
-}
-
 export const WaypointSchema = z.preprocess((raw) => {
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
     return raw;
@@ -189,7 +168,10 @@ export type Shape = z.infer<typeof ShapeSchema>;
 export type Image = z.infer<typeof ImageSchema>;
 export type ImageChannel = z.infer<typeof ImageChannelSchema>;
 
-/** Flattened view of a nested channel plus parent `imageId` (for Viv / ItemRegistry). */
+/**
+ * Flattened view of a nested channel plus parent `imageId` (for Viv / ItemRegistry).
+ * Build lists with `flattenImageChannelsInDocumentOrder` in `storeUtils.ts`.
+ */
 export type Channel = ImageChannel & {
   imageId: string;
 };
@@ -201,140 +183,9 @@ export type SourceDistributionData = z.infer<typeof SourceDistributionSchema>;
 
 export type DocumentData = z.infer<typeof DocumentDataSchema>;
 
-/** Flat source-channel rows in document order (`imageOrder`, then each image’s channels). */
-export function sourceChannelsFromImages(
-  imageOrder: Id[],
-  images: Record<string, Image | undefined>,
-): Channel[] {
-  const out: Channel[] = [];
-  for (const imId of imageOrder) {
-    const im = images[imId];
-    if (!im) continue;
-    for (const ch of im.channels) {
-      out.push({
-        ...ch,
-        imageId: im.id,
-      });
-    }
-  }
-  return out;
-}
-
-/** Resolve a flat row by nested channel uuid (same id as on `Image.channels[].id`). */
-export function findSourceChannel(
-  channels: Channel[],
-  channelId: string,
-): Channel | undefined {
-  return channels.find((c) => c.id === channelId);
-}
-
-/** Search nested `Image.channels` (e.g. when you do not have the flattened list). */
-export function findChannelInImages(
-  images: Image[],
-  channelId: string,
-): (ImageChannel & { imageId: string }) | undefined {
-  for (const im of images) {
-    const ch = im.channels.find((c) => c.id === channelId);
-    if (ch) return { ...ch, imageId: im.id };
-  }
-  return undefined;
-}
-
-/** Back-compat aliases used across authoring / export helpers. */
-export type StoryPoint = Point;
-export type StoryViewport = Viewport;
+/** Aliases that disambiguate from viewer-side types with the same name. */
 export type StoryShape = Shape;
 export type StoryWaypoint = Waypoint;
-export type StoryShapePoint = PointShape;
-export type StoryShapeArrow = ArrowShape;
-export type StoryShapePolygon = PolygonShape;
-export type StoryShapePolyline = PolylineShape;
-export type StoryShapeText = TextShape;
-
-export type ExhibitImage = Image;
-
-function normalizeRawShape(shape: unknown): unknown {
-  if (shape === null || typeof shape !== "object" || Array.isArray(shape)) {
-    return shape;
-  }
-  const s = shape as Record<string, unknown>;
-  let next: Record<string, unknown> = { ...s };
-  if (typeof next.uuid === "string" && next.id === undefined) {
-    next = { ...next, id: next.uuid };
-  }
-  if (next.type !== "arrow") return next;
-  if (typeof next.text === "string" && next.label === undefined) {
-    next = { ...next, label: next.text };
-  }
-
-  const hasPoint =
-    next.point !== null &&
-    typeof next.point === "object" &&
-    !Array.isArray(next.point);
-  const angle = next.angle;
-  const hasAngle =
-    angle !== undefined &&
-    angle !== null &&
-    !(typeof angle === "string" && (angle as string).trim() === "");
-
-  if (hasPoint && hasAngle) {
-    return next;
-  }
-
-  const from = next.from as { x?: number; y?: number } | undefined;
-  const to = next.to as { x?: number; y?: number } | undefined;
-  if (
-    from &&
-    to &&
-    typeof from.x === "number" &&
-    typeof from.y === "number" &&
-    typeof to.x === "number" &&
-    typeof to.y === "number"
-  ) {
-    return {
-      ...next,
-      point: to,
-      angle: Math.atan2(from.y - to.y, from.x - to.x),
-    };
-  }
-  return next;
-}
-
-/** Preprocess wire JSON (legacy keys, arrow `from`/`to`, etc.) before `DocumentDataSchema` / export parse. */
-export function preprocessDocumentDataRaw(raw: unknown): unknown {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    return raw;
-  }
-  const d = raw as Record<string, unknown>;
-  const shapes = d.shapes;
-  const waypoints = d.waypoints;
-  let next = { ...d };
-  if (Array.isArray(shapes)) {
-    next = {
-      ...next,
-      shapes: shapes.map(normalizeRawShape),
-    };
-  }
-  if (Array.isArray(waypoints)) {
-    next = {
-      ...next,
-      waypoints: waypoints.map((wp) => {
-        if (wp === null || typeof wp !== "object" || Array.isArray(wp)) {
-          return wp;
-        }
-        return normalizeWaypointRecord(wp as Record<string, unknown>);
-      }),
-    };
-  }
-  return next;
-}
-
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-export function isUuid(id: string): boolean {
-  return UUID_RE.test(id);
-}
 
 /* -------------------- story.json root (version + waypoints + shapes) -------------------- */
 
@@ -345,21 +196,6 @@ const jsonExportCoreSchema = z.object({
 });
 
 export type JsonExport = z.infer<typeof jsonExportCoreSchema>;
-export type StoryFormatVersion = JsonExport["version"];
-
-function preprocessJsonExportRoot(raw: unknown): unknown {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    return raw;
-  }
-  const d = raw as Record<string, unknown>;
-  return preprocessDocumentDataRaw({
-    ...d,
-    imageWidth: 0,
-    imageHeight: 0,
-    groups: [],
-    images: [],
-  });
-}
 
 export const JsonExportSchema = z.preprocess((raw) => {
   const expanded = preprocessJsonExportRoot(raw);
@@ -378,10 +214,21 @@ export const JsonExportSchema = z.preprocess((raw) => {
   };
 }, jsonExportCoreSchema);
 
-export function safeParseJsonExport(data: unknown) {
-  return JsonExportSchema.safeParse(data);
-}
-
 export function parseJsonExport(data: unknown): JsonExport {
   return JsonExportSchema.parse(data);
+}
+
+/** Build validated {@link JsonExport} for `story.json`. */
+export function buildJsonExport(
+  waypointRows: StoryWaypoint[],
+  shapeList: StoryShape[],
+): JsonExport {
+  return JsonExportSchema.parse({
+    version: "2",
+    waypoints: waypointRows.map((w) => ({
+      ...w,
+      shapeIds: [...w.shapeIds],
+    })),
+    shapes: [...shapeList],
+  });
 }

@@ -49,7 +49,7 @@ export type ItemRegistryProps = {
   Groups: Group[];
   /**
    * Waypoint rows for the exhibit author (`Name`/`Bounds`/…); mirror of
-   * Zustand `waypoints` via `exportRowsToConfigWaypoints` / `exportRowToConfigWaypoint`.
+   * Zustand `waypoints` via `waypointsToConfigWaypoints` / `waypointToConfigWaypoint`.
    */
   Stories: ConfigWaypoint[];
   /** Global shape registry → `story.json` root `shapes` / cached `jsonExport.shapes`. */

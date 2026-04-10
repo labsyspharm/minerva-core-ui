@@ -23,25 +23,28 @@ import {
 } from "../shapes/shapeModel";
 import { mergeShapesAfterWaypointImport } from "../shapes/shapeWaypointImport";
 import type { ViewportSize, ViewRect } from "../viewer/samViewport";
+import type { Waypoint } from "./documentSchema";
 import {
-  type AuthoringViewportPx,
-  selectOrderedShapes,
-  selectOrderedWaypoints,
+  documentShapes,
+  documentWaypoints,
   useDocumentStore,
 } from "./documentStore";
 import {
-  type JsonExportWaypointRow,
+  type AuthoringWaypointExtra,
+  configWaypointToWaypoint,
+  hydrateConfigWaypoint,
   mergeShapesForWaypointPersist,
   type StoryShape,
   storyShapeToViewer,
   viewerShapesToStoryShapes,
+  waypointToConfigWaypoint,
 } from "./storeUtils";
 
 function newShapeId(): string {
   return crypto.randomUUID();
 }
 
-function authoringViewportForDoc(get: () => AppStore): AuthoringViewportPx {
+function authoringViewportForDoc(get: () => AppStore) {
   const v = get().viewerViewportSize;
   return { width: v?.width ?? 0, height: v?.height ?? 0 };
 }
@@ -51,10 +54,6 @@ type BrushMask = {
   height: number;
   data: Uint8Array;
 };
-
-// Legacy image-aligned brush helpers (kept for reference, currently unused).
-// function ensureBrushMask(...) { ... }
-// function paintCircleOnMask(...) { ... }
 
 /** Viewport-sized mask: one pixel per screen pixel. */
 function ensureBrushMaskViewport(
@@ -98,9 +97,6 @@ function paintCircleOnMaskScreen(
 }
 
 type Point2 = [number, number];
-
-// Legacy utility, no longer used.
-// function polygonArea(poly: Point2[]): number { ... }
 
 function pointToSegmentDistance(p: Point2, a: Point2, b: Point2): number {
   const [px, py] = p;
@@ -562,13 +558,13 @@ export interface AppStore {
   activeTool: string;
   currentInteraction: InteractionCoordinate | null;
   drawingState: DrawingState;
-  dragState: DragState; // New: drag state for move tool
-  hoverState: HoverState; // New: hover state for move tool
+  dragState: DragState;
+  hoverState: HoverState;
   /** Ephemeral viewer/canvas annotations; persisted story shapes live in `useDocumentStore.shapes`. */
   shapes: Shape[];
-  shapeGroups: ShapeGroup[]; // New: annotation groups
-  hiddenShapeIds: Set<string>; // New: track hidden layers
-  globalColor: [number, number, number, number]; // New: global drawing color
+  shapeGroups: ShapeGroup[];
+  hiddenShapeIds: Set<string>;
+  globalColor: [number, number, number, number];
   viewportZoom: number; // Current viewport zoom level for line width scaling
   // Brush tool state
   brushRadiusPx: number;
@@ -584,6 +580,10 @@ export interface AppStore {
   brushEditMode: "add" | "subtract" | null;
 
   activeStoryIndex: number | null;
+
+  /** Ephemeral camera / UI-state per waypoint, keyed by waypoint id. */
+  waypointAuthoring: Map<string, AuthoringWaypointExtra>;
+  getWaypointAuthoring: (id: string) => AuthoringWaypointExtra | undefined;
 
   /**
    * Waypoint row index whose annotations panel is mounted (inline or master-detail).
@@ -647,23 +647,17 @@ export interface AppStore {
     coordinate: [number, number, number],
   ) => void;
 
-  // New annotation actions
   addShape: (shape: Shape) => void;
   addShapesBatch: (items: Shape[]) => void;
   removeShape: (shapeId: string) => void;
   updateShape: (shapeId: string, updates: Partial<Shape>) => void;
   clearShapes: () => void;
-  finalizeRectangle: () => void; // Convert current drawing to annotation
+  finalizeRectangle: () => void;
 
-  /**
-   * Waypoint rows for `story.json` export. Prefer {@link setJsonExportWaypointRows} when you
-   * already hold {@link JsonExportWaypointRow}[]; use these when bridging exhibit
-   * {@link ConfigWaypoint} rows (`ItemRegistry.Stories`).
-   */
   /** Replace all rows from exhibit-shaped waypoints (converts to store rows). */
   setStories: (configWaypoints: ConfigWaypoint[]) => void;
-  /** Replace rows without `ConfigWaypoint` round-trip (e.g. importers). */
-  setJsonExportWaypointRows: (rows: JsonExportWaypointRow[]) => void;
+  /** Replace waypoints directly (e.g. importers). */
+  setJsonExportWaypointRows: (rows: Waypoint[]) => void;
   setActiveStory: (index: number | null) => void;
   addStory: (configWaypoint: ConfigWaypoint) => void;
   updateStory: (index: number, updates: Partial<ConfigWaypoint>) => void;
@@ -721,29 +715,29 @@ export interface AppStore {
   groupChannelLists: Record<string, string[]>;
   groupNames: Record<string, string>;
 
-  finalizeEllipse: () => void; // Convert current drawing to ellipse annotation
-  finalizeLasso: (points: [number, number][]) => void; // Convert lasso points to polygon annotation
-  finalizeLine: (hasArrowHead?: boolean) => void; // Convert current drawing to line annotation
-  finalizePolyline: (points: [number, number][]) => void; // Convert polyline points to polyline annotation
+  finalizeEllipse: () => void;
+  finalizeLasso: (points: [number, number][]) => void;
+  finalizeLine: (hasArrowHead?: boolean) => void;
+  finalizePolyline: (points: [number, number][]) => void;
   createTextShape: (
     position: [number, number],
     text: string,
     fontSize?: number,
-  ) => void; // Create text annotation
-  createPointShape: (position: [number, number], radius?: number) => void; // Create point annotation
+  ) => void;
+  createPointShape: (position: [number, number], radius?: number) => void;
   updateTextShape: (
     shapeId: string,
     newText: string,
     fontSize?: number,
-  ) => void; // Update text annotation content
+  ) => void;
   updateTextShapeColor: (
     shapeId: string,
     fontColor: [number, number, number, number],
-  ) => void; // Update text annotation color
-  updateShapeText: (shapeId: string, newText: string) => void; // Update text field on any annotation (for shapes with text)
-  updateShapeLabel: (shapeId: string, newLabel: string) => void; // Update the metadata label (used as layer name)
-  setGlobalColor: (color: [number, number, number, number]) => void; // Set global drawing color
-  setViewportZoom: (zoom: number) => void; // Set viewport zoom for line width scaling
+  ) => void;
+  updateShapeText: (shapeId: string, newText: string) => void;
+  updateShapeLabel: (shapeId: string, newLabel: string) => void;
+  setGlobalColor: (color: [number, number, number, number]) => void;
+  setViewportZoom: (zoom: number) => void;
   showSquareViewportOverlay: boolean;
   setShowSquareViewportOverlay: (show: boolean) => void;
   setBrushRadiusPx: (radius: number) => void;
@@ -765,18 +759,15 @@ export interface AppStore {
     precomputedHull?: [number, number][],
   ) => void;
 
-  // New layer visibility actions
   toggleShapeVisibility: (shapeId: string) => void;
   showAllShapes: () => void;
   hideAllShapes: () => void;
 
-  // New drag actions for move tool
   startDrag: (shapeId: string, offset: [number, number]) => void;
   updateDrag: (coordinate: [number, number, number]) => void;
   endDrag: () => void;
   resetDragState: () => void;
 
-  // New hover actions for move tool
   setHoveredShape: (shapeId: string | null) => void;
   resetHoverState: () => void;
 
@@ -789,7 +780,7 @@ export interface AppStore {
 
   // Import waypoint shapes actions
   importWaypointShapes: (
-    story: JsonExportWaypointRow,
+    story: Waypoint,
     clearExisting?: boolean,
     /** When passed (e.g. from React), used for resolution so effects track `shapes` explicitly. */
     shapeRegistry?: StoryShape[],
@@ -806,12 +797,8 @@ export interface AppStore {
 /** Persist canvas shapes to the waypoint row that is actually being annotated. */
 function maybePersistShapesAfterMutation(get: () => AppStore) {
   const doc = useDocumentStore.getState();
-  const orderedWp = selectOrderedWaypoints(doc);
-  if (
-    orderedWp.length === 0 ||
-    doc.document.imageWidth <= 0 ||
-    doc.document.imageHeight <= 0
-  ) {
+  const waypoints = documentWaypoints(doc);
+  if (waypoints.length === 0 || doc.imageWidth <= 0 || doc.imageHeight <= 0) {
     return;
   }
   const state = get();
@@ -822,7 +809,7 @@ function maybePersistShapesAfterMutation(get: () => AppStore) {
   if (resolved === null) {
     return;
   }
-  if (resolved < 0 || resolved >= orderedWp.length) {
+  if (resolved < 0 || resolved >= waypoints.length) {
     return;
   }
   get().persistImportedShapesToStory(resolved);
@@ -846,10 +833,10 @@ const overlayInitialState = {
   hoverState: {
     hoveredShapeId: null,
   },
-  shapes: [], // New: empty shapes array
-  shapeGroups: [], // New: empty groups array
-  hiddenShapeIds: new Set<string>(), // New: empty hidden layers set
-  globalColor: [255, 255, 255, 255], // New: default white color
+  shapes: [],
+  shapeGroups: [],
+  hiddenShapeIds: new Set<string>(),
+  globalColor: [255, 255, 255, 255],
   viewportZoom: 0, // Default zoom level
   showSquareViewportOverlay: false,
   brushRadiusPx: 30,
@@ -863,7 +850,8 @@ const overlayInitialState = {
   selectedShapeId: null as string | null,
   brushEditTargetId: null as string | null,
   brushEditMode: null as "add" | "subtract" | null,
-  activeStoryIndex: null, // New: no active story initially
+  activeStoryIndex: null,
+  waypointAuthoring: new Map<string, AuthoringWaypointExtra>(),
   authoringWaypointShapesIndex: null as number | null,
   activeChannelGroupId: null, // No channel group initially
   channelVisibilities: {},
@@ -892,6 +880,8 @@ export const useAppStore = create<AppStore>()(
   devtools(
     (set, get) => ({
       ...overlayInitialState,
+
+      getWaypointAuthoring: (id: string) => get().waypointAuthoring.get(id),
 
       setActiveTool: (tool: string) => {
         set({
@@ -938,12 +928,9 @@ export const useAppStore = create<AppStore>()(
 
       handleLayerCreate: (layer: OverlayLayer | null) => {
         if (layer === null) {
-          // Remove the drawing layer when tool is not active
           get().removeOverlayLayer("drawing-layer");
           return;
         }
-
-        // Add or update the layer
         get().addOverlayLayer(layer);
       },
 
@@ -953,14 +940,8 @@ export const useAppStore = create<AppStore>()(
           brushEditTargetId: null,
           brushEditMode: null,
         });
-
-        // Clear any partial drawing state when switching tools
         get().resetDrawingState();
-
-        // Clear any drag state when switching tools
         get().resetDragState();
-
-        // Remove the unified drawing layer and arrow preview
         get().removeOverlayLayer("drawing-layer");
         get().removeOverlayLayer("drawing-arrow-preview");
       },
@@ -975,7 +956,6 @@ export const useAppStore = create<AppStore>()(
         const { activeTool, drawingState, dragState } = get();
         const [x, y] = coordinate;
 
-        // Handle move tool interactions
         if (activeTool === "move") {
           if (!get().authoringWaypointEditorOpen) {
             return;
@@ -984,35 +964,28 @@ export const useAppStore = create<AppStore>()(
 
           switch (type) {
             case "hover":
-              // Hover detection is handled in dragHandlers.ts
               break;
             case "click":
-              // Click without drag: select annotation (e.g. for layers panel)
               if (hoverState.hoveredShapeId) {
                 get().setSelectedShape(hoverState.hoveredShapeId);
               }
               break;
             case "dragStart":
-              // Start drag if clicking on a hovered annotation
               if (hoverState.hoveredShapeId) {
                 const annotation = get().shapes.find(
                   (a) => a.id === hoverState.hoveredShapeId,
                 );
                 if (annotation) {
-                  // Calculate offset between click position and annotation position
                   let offset: [number, number] = [0, 0];
-
                   if (
                     annotation.type === "text" ||
                     annotation.type === "point"
                   ) {
-                    // For text and point, offset from position
                     offset = [
                       x - annotation.position[0],
                       y - annotation.position[1],
                     ];
                   } else {
-                    // For polygon-based shapes, calculate offset from first point
                     const firstPoint = annotation.polygon[0];
                     offset = [x - firstPoint[0], y - firstPoint[1]];
                   }
@@ -1022,13 +995,11 @@ export const useAppStore = create<AppStore>()(
               }
               break;
             case "drag":
-              // Update drag position
               if (dragState.isDragging) {
                 get().updateDrag(coordinate);
               }
               break;
             case "dragEnd":
-              // End drag
               if (dragState.isDragging) {
                 get().endDrag();
               }
@@ -1037,7 +1008,6 @@ export const useAppStore = create<AppStore>()(
           return;
         }
 
-        // Handle drawing state updates only for tools that use it (rectangle, ellipse, arrow, line)
         const usesDrawingState =
           activeTool === "rectangle" ||
           activeTool === "ellipse" ||
@@ -1081,7 +1051,6 @@ export const useAppStore = create<AppStore>()(
         }
       },
 
-      // New annotation actions
       addShape: (shape: Shape) => {
         set((state) => ({
           shapes: [...state.shapes, shape],
@@ -1144,7 +1113,6 @@ export const useAppStore = create<AppStore>()(
           const [startX, startY] = drawingState.dragStart;
           const [endX, endY] = drawingState.dragEnd;
 
-          // Rectangle tool stores a closed polygon (same rendering path as lasso / brush).
           const annotation: PolygonShape = {
             id: newShapeId(),
             type: "polygon",
@@ -1164,13 +1132,8 @@ export const useAppStore = create<AppStore>()(
             },
           };
 
-          // Add the annotation
           get().addShape(annotation);
-
-          // Reset drawing state
           get().resetDrawingState();
-
-          // Remove the temporary drawing layer
           get().removeOverlayLayer("drawing-layer");
         }
       },
@@ -1204,20 +1167,14 @@ export const useAppStore = create<AppStore>()(
             },
           };
 
-          // Add the annotation
           get().addShape(annotation);
-
-          // Reset drawing state
           get().resetDrawingState();
-
-          // Remove the temporary drawing layer
           get().removeOverlayLayer("drawing-layer");
         }
       },
 
       finalizeLasso: (points: [number, number][]) => {
         if (points.length >= 3) {
-          // Create a new polygon annotation
           const annotation: PolygonShape = {
             id: newShapeId(),
             type: "polygon",
@@ -1237,17 +1194,13 @@ export const useAppStore = create<AppStore>()(
             },
           };
 
-          // Add the annotation
           get().addShape(annotation);
-
-          // Remove the temporary drawing layer
           get().removeOverlayLayer("drawing-layer");
         }
       },
 
       finalizePolyline: (points: [number, number][]) => {
         if (points.length >= 2) {
-          // Create a new polyline annotation
           const annotation: PolylineShape = {
             id: newShapeId(),
             type: "polyline",
@@ -1261,10 +1214,7 @@ export const useAppStore = create<AppStore>()(
             },
           };
 
-          // Add the annotation
           get().addShape(annotation);
-
-          // Remove the temporary drawing layer
           get().removeOverlayLayer("drawing-layer");
         }
       },
@@ -1298,13 +1248,8 @@ export const useAppStore = create<AppStore>()(
             },
           };
 
-          // Add the annotation
           get().addShape(annotation);
-
-          // Reset drawing state
           get().resetDrawingState();
-
-          // Remove the temporary drawing layer
           get().removeOverlayLayer("drawing-layer");
         }
       },
@@ -1318,7 +1263,6 @@ export const useAppStore = create<AppStore>()(
           return;
         }
 
-        // Create a new text annotation
         const annotation: TextShape = {
           id: newShapeId(),
           type: "text",
@@ -1335,12 +1279,10 @@ export const useAppStore = create<AppStore>()(
           },
         };
 
-        // Add the annotation
         get().addShape(annotation);
       },
 
       createPointShape: (position: [number, number], radius: number = 5) => {
-        // Create a new point annotation
         const annotation: PointShape = {
           id: newShapeId(),
           type: "point",
@@ -1355,7 +1297,6 @@ export const useAppStore = create<AppStore>()(
           },
         };
 
-        // Add the annotation
         get().addShape(annotation);
       },
 
@@ -1375,7 +1316,6 @@ export const useAppStore = create<AppStore>()(
           return;
         }
 
-        // Update the text content and optionally fontSize
         const updates: Partial<TextShape> = {
           text: newText.trim(),
         };
@@ -1401,7 +1341,6 @@ export const useAppStore = create<AppStore>()(
           return;
         }
 
-        // Update the font color
         const updates: Partial<TextShape> = {
           style: {
             ...annotation.style,
@@ -1415,19 +1354,11 @@ export const useAppStore = create<AppStore>()(
       updateShapeText: (shapeId: string, newText: string) => {
         const shapes = get().shapes;
         const annotation = shapes.find((a) => a.id === shapeId);
-
-        if (!annotation) {
-          return;
-        }
-
-        // For text shapes, use the existing updateTextShape method
+        if (!annotation) return;
         if (annotation.type === "text") {
           get().updateTextShape(shapeId, newText);
           return;
         }
-
-        // Update the text field on the shape
-        // Empty string removes the text field
         const updates: Partial<Shape> = {
           text: newText.trim() || undefined,
         };
@@ -1750,7 +1681,6 @@ export const useAppStore = create<AppStore>()(
         set({ brushMask: null, brushMaskVersion: 0 });
       },
 
-      // New layer visibility actions
       toggleShapeVisibility: (shapeId: string) => {
         set((state) => {
           const newHiddenLayers = new Set(state.hiddenShapeIds);
@@ -1773,7 +1703,6 @@ export const useAppStore = create<AppStore>()(
         }));
       },
 
-      // New drag actions for move tool
       startDrag: (shapeId: string, offset: [number, number]) => {
         set({
           dragState: {
@@ -1804,29 +1733,22 @@ export const useAppStore = create<AppStore>()(
           );
           if (annotation) {
             if (annotation.type === "text" || annotation.type === "point") {
-              // For text and point shapes, update the position directly
               const updatedAnnotation = {
                 ...annotation,
                 position: [newX, newY] as [number, number],
               };
               get().updateShape(dragState.draggedShapeId, updatedAnnotation);
             } else {
-              // For polygon-based shapes (rectangle, polygon, line, polyline), calculate delta from first point
               const deltaX = newX - annotation.polygon[0][0];
               const deltaY = newY - annotation.polygon[0][1];
-
-              // Update all polygon points by the same delta
               const updatedPolygon = annotation.polygon.map(
                 ([px, py]) => [px + deltaX, py + deltaY] as [number, number],
               );
 
-              const updatedAnnotation = {
+              get().updateShape(dragState.draggedShapeId, {
                 ...annotation,
                 polygon: updatedPolygon,
-              };
-
-              // Update the annotation in the store
-              get().updateShape(dragState.draggedShapeId, updatedAnnotation);
+              });
             }
           }
         }
@@ -1847,7 +1769,6 @@ export const useAppStore = create<AppStore>()(
         set({ dragState: overlayInitialState.dragState });
       },
 
-      // New hover actions for move tool
       setHoveredShape: (shapeId: string | null) => {
         set({
           hoverState: {
@@ -1960,16 +1881,27 @@ export const useAppStore = create<AppStore>()(
         }));
       },
 
-      // Waypoint rows / export: owned by `useDocumentStore`; app keeps selection only.
       setStories: (configWaypoints: ConfigWaypoint[]) => {
-        useDocumentStore
-          .getState()
-          .setStoriesFromConfig(configWaypoints, authoringViewportForDoc(get));
-        set({ activeStoryIndex: null });
+        const doc = useDocumentStore.getState();
+        const vp = authoringViewportForDoc(get);
+        const nextAuthoring = new Map<string, AuthoringWaypointExtra>();
+        const waypoints = configWaypoints.map((w) => {
+          const { waypoint, authoring } = configWaypointToWaypoint(
+            hydrateConfigWaypoint(w, doc.groups),
+            doc.imageWidth,
+            doc.imageHeight,
+            vp.width,
+            vp.height,
+          );
+          nextAuthoring.set(waypoint.id, authoring);
+          return waypoint;
+        });
+        doc.setWaypoints(waypoints);
+        set({ activeStoryIndex: null, waypointAuthoring: nextAuthoring });
       },
 
-      setJsonExportWaypointRows: (rows: JsonExportWaypointRow[]) => {
-        useDocumentStore.getState().setWaypointRows(rows);
+      setJsonExportWaypointRows: (rows: Waypoint[]) => {
+        useDocumentStore.getState().setWaypoints(rows);
         set({ activeStoryIndex: null });
       },
 
@@ -1978,31 +1910,85 @@ export const useAppStore = create<AppStore>()(
       },
 
       addStory: (configWaypoint: ConfigWaypoint) => {
-        useDocumentStore
-          .getState()
-          .appendStoryFromConfig(configWaypoint, authoringViewportForDoc(get));
+        const doc = useDocumentStore.getState();
+        const vp = authoringViewportForDoc(get);
+        const { waypoint, authoring } = configWaypointToWaypoint(
+          hydrateConfigWaypoint(configWaypoint, doc.groups),
+          doc.imageWidth,
+          doc.imageHeight,
+          vp.width,
+          vp.height,
+        );
+        doc.setWaypoints([...doc.waypoints, waypoint]);
+        set((s) => {
+          const next = new Map(s.waypointAuthoring);
+          next.set(waypoint.id, authoring);
+          return { waypointAuthoring: next };
+        });
       },
 
       updateStory: (index: number, updates: Partial<ConfigWaypoint>) => {
-        useDocumentStore
-          .getState()
-          .updateStoryAtIndex(index, updates, authoringViewportForDoc(get));
+        const doc = useDocumentStore.getState();
+        const wp = doc.waypoints[index];
+        if (!wp) return;
+        const vp = authoringViewportForDoc(get);
+        const existingAuthoring = get().waypointAuthoring.get(wp.id);
+        const asConfig = waypointToConfigWaypoint(wp, existingAuthoring);
+        let merged: ConfigWaypoint = { ...asConfig, ...updates };
+        const shouldDropLegacyViewKeys = Object.hasOwn(updates, "Bounds");
+        if (shouldDropLegacyViewKeys) {
+          const { Pan: _pan, Zoom: _zoom, ...withoutPanZoom } = merged;
+          if (Object.hasOwn(updates, "ViewState")) {
+            merged = withoutPanZoom as ConfigWaypoint;
+          } else {
+            const { ViewState: _vs, ...rest } = withoutPanZoom;
+            merged = rest as ConfigWaypoint;
+          }
+        }
+        const { waypoint: nextWp, authoring } = configWaypointToWaypoint(
+          merged,
+          doc.imageWidth,
+          doc.imageHeight,
+          vp.width,
+          vp.height,
+        );
+        const waypoints = [...doc.waypoints];
+        waypoints[index] = nextWp;
+        doc.setWaypoints(waypoints);
+        set((s) => {
+          const next = new Map(s.waypointAuthoring);
+          next.set(nextWp.id, authoring);
+          return { waypointAuthoring: next };
+        });
       },
 
       removeStory: (index: number) => {
-        useDocumentStore.getState().removeWaypointAtIndex(index);
-        set((state) => ({
-          activeStoryIndex:
-            state.activeStoryIndex === index
-              ? null
-              : state.activeStoryIndex && state.activeStoryIndex > index
-                ? state.activeStoryIndex - 1
-                : state.activeStoryIndex,
-        }));
+        const doc = useDocumentStore.getState();
+        const removedId = doc.waypoints[index]?.id;
+        if (index >= 0 && index < doc.waypoints.length) {
+          doc.setWaypoints(doc.waypoints.filter((_, i) => i !== index));
+        }
+        set((state) => {
+          const next = new Map(state.waypointAuthoring);
+          if (removedId) next.delete(removedId);
+          return {
+            waypointAuthoring: next,
+            activeStoryIndex:
+              state.activeStoryIndex === index
+                ? null
+                : state.activeStoryIndex && state.activeStoryIndex > index
+                  ? state.activeStoryIndex - 1
+                  : state.activeStoryIndex,
+          };
+        });
       },
 
       reorderStories: (fromIndex: number, toIndex: number) => {
-        useDocumentStore.getState().reorderWaypoints(fromIndex, toIndex);
+        const doc = useDocumentStore.getState();
+        const next = [...doc.waypoints];
+        const [moved] = next.splice(fromIndex, 1);
+        next.splice(toIndex, 0, moved);
+        doc.setWaypoints(next);
         set((state) => {
           let newActiveStoryIndex = state.activeStoryIndex;
           if (state.activeStoryIndex !== null) {
@@ -2082,13 +2068,13 @@ export const useAppStore = create<AppStore>()(
 
       // Import waypoint shapes actions
       importWaypointShapes: (
-        story: JsonExportWaypointRow,
+        story: Waypoint,
         clearExisting: boolean = false,
         shapeRegistry?: StoryShape[],
       ) => {
         const doc0 = useDocumentStore.getState();
-        const { imageWidth, imageHeight } = doc0.document;
-        const fromStore = selectOrderedShapes(doc0);
+        const { imageWidth, imageHeight } = doc0;
+        const fromStore = documentShapes(doc0);
         const shapesForLookup =
           shapeRegistry === undefined
             ? fromStore
@@ -2143,13 +2129,9 @@ export const useAppStore = create<AppStore>()(
       persistImportedShapesToStory: (storyIndex: number) => {
         const state = get();
         const doc = useDocumentStore.getState();
-        const orderedWp = selectOrderedWaypoints(doc);
-        const row = orderedWp[storyIndex];
-        if (
-          !row ||
-          doc.document.imageWidth <= 0 ||
-          doc.document.imageHeight <= 0
-        ) {
+        const waypoints = documentWaypoints(doc);
+        const row = waypoints[storyIndex];
+        if (!row || doc.imageWidth <= 0 || doc.imageHeight <= 0) {
           return;
         }
         const hadStored = (row.shapeIds?.length ?? 0) > 0;
@@ -2157,9 +2139,9 @@ export const useAppStore = create<AppStore>()(
           return;
         }
         if (state.shapes.length === 0 && hadStored) {
-          const prevShapesList = selectOrderedShapes(doc);
+          const prevShapesList = documentShapes(doc);
           const merged = mergeShapesForWaypointPersist({
-            waypoints: orderedWp,
+            waypoints: waypoints,
             waypointIndex: storyIndex,
             prevShapes: prevShapesList,
             builtShapes: [],
@@ -2175,9 +2157,9 @@ export const useAppStore = create<AppStore>()(
         }
         const builtShapes = viewerShapesToStoryShapes(state.shapes);
         const newShapeIdsOrdered = builtShapes.map((s) => s.id);
-        const prevShapesList = selectOrderedShapes(doc);
+        const prevShapesList = documentShapes(doc);
         const merged = mergeShapesForWaypointPersist({
-          waypoints: orderedWp,
+          waypoints: waypoints,
           waypointIndex: storyIndex,
           prevShapes: prevShapesList,
           builtShapes,
@@ -2207,8 +2189,6 @@ export const useAppStore = create<AppStore>()(
         }));
       },
 
-      // channel and group actions
-      //
       setActiveChannelGroup: (channelGroupId: string) => {
         set(({ groupChannelLists, groupNames }) => {
           const name = groupNames[channelGroupId] || "";

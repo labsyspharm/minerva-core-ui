@@ -4,18 +4,16 @@ import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { useAppStore } from "@/lib/stores/appStore";
+import type { Waypoint } from "@/lib/stores/documentStore";
 import {
   findSourceChannel,
+  useDocumentGroups,
+  useDocumentShapes,
+  useDocumentSourceChannels,
   useDocumentStore,
-  useOrderedChannels,
-  useOrderedGroups,
-  useOrderedShapes,
-  useOrderedWaypoints,
+  useDocumentWaypoints,
 } from "@/lib/stores/documentStore";
-import {
-  exportRowToConfigWaypoint,
-  type JsonExportWaypointRow,
-} from "@/lib/stores/storeUtils";
+import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
 
 const _theme = {};
 
@@ -287,12 +285,12 @@ const ChannelName = styled.span<{ color: string }>`
 `;
 
 export const Presentation = (props: PresentationProps) => {
-  const waypoints = useOrderedWaypoints();
-  const shapes = useOrderedShapes();
-  const sourceChannels = useOrderedChannels();
-  const groups = useOrderedGroups();
-  const imageWidth = useDocumentStore((s) => s.document.imageWidth);
-  const imageHeight = useDocumentStore((s) => s.document.imageHeight);
+  const waypoints = useDocumentWaypoints();
+  const shapes = useDocumentShapes();
+  const sourceChannels = useDocumentSourceChannels();
+  const groups = useDocumentGroups();
+  const imageWidth = useDocumentStore((s) => s.imageWidth);
+  const imageHeight = useDocumentStore((s) => s.imageHeight);
   const {
     activeStoryIndex,
     setActiveStory,
@@ -326,7 +324,8 @@ export const Presentation = (props: PresentationProps) => {
       // Import shapes from the story (clearing existing imported ones atomically)
       importWaypointShapes(story, true, shapes);
 
-      const wp = exportRowToConfigWaypoint(story);
+      const authoringMap = useAppStore.getState().waypointAuthoring;
+      const wp = waypointToConfigWaypoint(story, authoringMap.get(story.id));
       if (imageWidth > 0 && imageHeight > 0) {
         setTargetWaypointCamera(wp);
       }
@@ -356,7 +355,7 @@ export const Presentation = (props: PresentationProps) => {
       const p = previousActiveStoryIndexRef.current;
       if (p !== null) {
         const doc = useDocumentStore.getState();
-        if (doc.document.imageWidth > 0 && doc.document.imageHeight > 0) {
+        if (doc.imageWidth > 0 && doc.imageHeight > 0) {
           useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
@@ -377,7 +376,8 @@ export const Presentation = (props: PresentationProps) => {
     const story = waypoints[storyIndex];
     if (!story) return;
     if (imageWidth > 0 && imageHeight > 0) {
-      setTargetWaypointCamera(exportRowToConfigWaypoint(story));
+      const auth = useAppStore.getState().waypointAuthoring.get(story.id);
+      setTargetWaypointCamera(waypointToConfigWaypoint(story, auth));
     }
   };
 
@@ -496,7 +496,7 @@ export const Presentation = (props: PresentationProps) => {
       <TocWrapper>
         <h2 className="h6">Table of Contents</h2>
         <ol>
-          {tocWaypoints.map((wp: JsonExportWaypointRow, i: number) => {
+          {tocWaypoints.map((wp: Waypoint, i: number) => {
             const goToStory = (e: MouseEvent) => {
               e.preventDefault();
               storyAt(i);
