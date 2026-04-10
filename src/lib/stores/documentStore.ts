@@ -66,20 +66,6 @@ function createEmptyDocumentState(): DocumentState {
   };
 }
 
-function hydrateDocumentFromData(data: DocumentData): DocumentState {
-  return {
-    waypoints: data.waypoints.map((w) => ({
-      ...w,
-      thumbnail: w.thumbnail ?? "",
-    })),
-    shapes: [...data.shapes],
-    groups: [...data.groups],
-    images: [...data.images],
-    imageWidth: data.imageWidth,
-    imageHeight: data.imageHeight,
-  };
-}
-
 export function documentWaypoints(s: DocumentStore): Waypoint[] {
   return s.waypoints;
 }
@@ -126,7 +112,14 @@ export const useDocumentStore = create<DocumentStore>()(
 
     loadDocument: (input) => {
       const data = validateDocumentData(input);
-      set(hydrateDocumentFromData(data));
+      set({
+        waypoints: [...data.waypoints],
+        shapes: [...data.shapes],
+        groups: [...data.groups],
+        images: [...data.images],
+        imageWidth: data.imageWidth,
+        imageHeight: data.imageHeight,
+      });
     },
 
     toDocumentData: () => {
