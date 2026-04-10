@@ -44,7 +44,7 @@ class PanelGrid extends HTMLElement {
 
   get elementTemplate() {
     const nav = this.defineElement(Nav, {
-      defaults: { overflowMenuOpen: false },
+      defaults: { overflowMenuOpen: false, storyDownloadDisabled: true },
     });
     const choose_content = (tab) => {
       return (

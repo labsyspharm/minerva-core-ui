@@ -27,7 +27,7 @@
     padding: 6px;
     margin: 0;
     border: none;
-    border-radius: var(--radius-0001, 4px);
+    border-radius: var(--radius-0001, 6px);
     background-color: var(--dark-main-glass);
     color: inherit;
     cursor: pointer;
@@ -35,6 +35,13 @@
   }
   .hamburger:hover {
     background-color: var(--dim-gray-glass);
+  }
+  .hamburger:focus {
+    outline: none;
+  }
+  .hamburger:focus-visible {
+    outline: 2px solid var(--light-focus-color, #6ae);
+    outline-offset: 2px;
   }
   .hamburger .bar {
     display: block;
@@ -48,16 +55,18 @@
     position: absolute;
     top: 100%;
     left: 0;
-    margin-top: 4px;
-    min-width: 140px;
+    margin-top: 6px;
+    min-width: 200px;
     z-index: 80;
-    padding: 4px 0;
-    border-radius: var(--radius-0001, 4px);
-    border: 1px solid color-mix(in srgb, var(--theme-glass-edge, #444) 75%, transparent);
-    background-color: color-mix(in srgb, var(--dark-glass, #1a1a1a) 92%, black);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    padding: 6px;
+    border-radius: var(--radius-0001, 8px);
+    border: 1px solid color-mix(in srgb, var(--theme-glass-edge, #444) 80%, transparent);
+    background-color: color-mix(in srgb, var(--dark-glass, #1a1a1a) 94%, black);
+    box-shadow:
+      0 6px 20px rgba(0, 0, 0, 0.45),
+      0 0 0 1px color-mix(in srgb, white 6%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
   .overflow-dropdown.open {
     display: block;
@@ -66,16 +75,36 @@
     display: block;
     width: 100%;
     margin: 0;
-    padding: 8px 14px;
+    padding: 10px 14px;
     border: none;
+    border-radius: var(--radius-0001, 6px);
     background: transparent;
     color: inherit;
     font: inherit;
+    font-size: 0.95em;
+    line-height: 1.35;
     text-align: left;
     cursor: pointer;
   }
-  .overflow-menu-item:hover {
+  .overflow-menu-item:hover:not(:disabled) {
     background-color: var(--dim-gray-glass);
+  }
+  .overflow-menu-item:focus {
+    outline: none;
+  }
+  .overflow-menu-item:focus-visible {
+    outline: 2px solid var(--light-focus-color, #6ae);
+    outline-offset: -2px;
+  }
+  .overflow-menu-item:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .overflow-menu-item-divided {
+    margin-top: 4px;
+    padding-top: 12px;
+    border-top: 1px solid
+      color-mix(in srgb, var(--theme-glass-edge, #444) 65%, transparent);
   }
   > div.contents > .tab-row > .tab-strip {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));

@@ -1,13 +1,11 @@
 import * as React from "react";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import DownloadIcon from "@/components/shared/icons/download.svg?react";
 import JumpToViewIcon from "@/components/shared/icons/jump-to-view.svg?react";
 import OverwriteViewIcon from "@/components/shared/icons/overwrite-view.svg?react";
 import PlayIcon from "@/components/shared/icons/play.svg?react";
 import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
 import type { ConfigWaypoint } from "@/lib/authoring/config";
 import { useAppStore } from "@/lib/stores/appStore";
-import type { JsonExport } from "@/lib/stores/documentSchema";
 import type { Channel, Group, Waypoint } from "@/lib/stores/documentStore";
 import {
   documentWaypoints,
@@ -28,18 +26,6 @@ import { WAYPOINT_THUMBNAIL_PIXEL_SIZE } from "@/lib/waypoints/waypointThumbnail
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { WaypointContentEditor } from "./WaypointContentEditor";
 import styles from "./WaypointsList.module.css";
-
-function triggerStoryJsonDownload(doc: JsonExport, filename = "story.json") {
-  const blob = new Blob([JSON.stringify(doc, null, 2)], {
-    type: "application/json",
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 export type WaypointsListProps = {
   viewOnly?: boolean;
@@ -439,10 +425,6 @@ const WaypointsList = (props: WaypointsListProps) => {
     }
   };
 
-  const handleDownloadStory = () => {
-    triggerStoryJsonDownload(useDocumentStore.getState().toJsonExport());
-  };
-
   const handleAddWaypoint = () => {
     const storyIndex = waypoints.length;
     const currentGroup =
@@ -539,19 +521,6 @@ const WaypointsList = (props: WaypointsListProps) => {
             title="Add waypoint"
           >
             <PlusIcon />
-          </button>
-        )}
-
-        {canEdit && (
-          <button
-            type="button"
-            className={styles.iconHeaderButton}
-            onClick={handleDownloadStory}
-            disabled={waypoints.length === 0}
-            title="Download story.json (waypoints + shapes)"
-            aria-label="Download story.json"
-          >
-            <DownloadIcon width={14} height={14} aria-hidden />
           </button>
         )}
 

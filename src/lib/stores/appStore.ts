@@ -550,7 +550,7 @@ function computeBrushPolygon(
  * The durable **exhibit story** (channels, waypoints, shape registry, image pixel size, cached `story.json`)
  * lives in {@link useDocumentStore}. Story **actions** on this store (`setStories`, …) update the document.
  *
- * **Zod** — `buildJsonExport` → `parseJsonExport` (`documentSchema.ts`).
+ * Durable story data validates as {@link DocumentData} (`validateDocumentData` / `DocumentDataSchema`).
  */
 export interface AppStore {
   // State

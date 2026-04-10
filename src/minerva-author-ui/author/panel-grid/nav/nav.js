@@ -1,3 +1,5 @@
+import { useDocumentStore } from "@/lib/stores/documentStore";
+import { downloadStoryJsonExport } from "@/lib/stores/downloadStoryJson";
 import navCSS from "./nav.module.css" with { type: "css" };
 import { toElement } from "../../../lib/elements";
 
@@ -23,8 +25,12 @@ class Nav extends HTMLElement {
         this.elementState.overflowMenuOpen ? "true" : "false",
       "@click": (event) => {
         event.stopPropagation();
-        this.elementState.overflowMenuOpen =
-          !this.elementState.overflowMenuOpen;
+        const willOpen = !this.elementState.overflowMenuOpen;
+        this.elementState.overflowMenuOpen = willOpen;
+        if (willOpen) {
+          this.elementState.storyDownloadDisabled =
+            useDocumentStore.getState().waypoints.length === 0;
+        }
       },
     });
 
@@ -36,6 +42,7 @@ class Nav extends HTMLElement {
     `({
       type: "button",
       class: "overflow-menu-item",
+      role: "menuitem",
       "@click": (event) => {
         event.stopPropagation();
         this.elementState.overflowMenuOpen = false;
@@ -43,8 +50,24 @@ class Nav extends HTMLElement {
       },
     });
 
+    const download_btn = toElement("button")`
+      <span>Save document as JSON</span>
+    `({
+      type: "button",
+      class: "overflow-menu-item overflow-menu-item-divided",
+      role: "menuitem",
+      disabled: () => this.elementState.storyDownloadDisabled,
+      "@click": (event) => {
+        event.stopPropagation();
+        if (useDocumentStore.getState().waypoints.length === 0) return;
+        this.elementState.overflowMenuOpen = false;
+        downloadStoryJsonExport(useDocumentStore.getState().toDocumentData());
+      },
+    });
+
     const dropdown = toElement("div")`
       ${export_btn}
+      ${download_btn}
     `({
       class: () =>
         this.elementState.overflowMenuOpen
@@ -52,6 +75,7 @@ class Nav extends HTMLElement {
           : "overflow-dropdown",
       "aria-hidden": () =>
         this.elementState.overflowMenuOpen ? "false" : "true",
+      role: "menu",
     });
 
     const overflow_wrap = toElement("div")`

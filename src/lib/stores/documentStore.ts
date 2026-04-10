@@ -14,11 +14,9 @@ import type {
   DocumentData,
   Group,
   Image,
-  JsonExport,
   Shape,
   Waypoint,
 } from "./documentSchema";
-import { buildJsonExport } from "./documentSchema";
 import { flattenImageChannelsInDocumentOrder } from "./storeUtils";
 import { validateDocumentData } from "./validateDocument";
 
@@ -48,7 +46,6 @@ export type DocumentState = {
 export type DocumentStore = DocumentState & {
   loadDocument: (input: unknown) => void;
   toDocumentData: () => DocumentData;
-  toJsonExport: () => JsonExport;
   resetDocument: () => void;
 
   setWaypoints: (waypoints: Waypoint[]) => void;
@@ -143,8 +140,6 @@ export const useDocumentStore = create<DocumentStore>()(
         images: [...s.images],
       };
     },
-
-    toJsonExport: () => buildJsonExport(get().waypoints, get().shapes),
 
     resetDocument: () => {
       set(createEmptyDocumentState());

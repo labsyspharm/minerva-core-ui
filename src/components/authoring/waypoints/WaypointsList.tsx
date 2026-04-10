@@ -49,7 +49,7 @@ type WaypointChildMetadata =
 type WaypointItemMetadata = Waypoint | WaypointChildMetadata;
 
 const WaypointsList = (_props: WaypointsListProps) => {
-  // Document waypoints (ordered); wire slice matches `toJsonExport().waypoints`
+  // Document waypoints (ordered); same ordering as `toDocumentData().waypoints`
   const waypoints = useDocumentWaypoints();
   const shapes = useDocumentShapes();
   const groups = useDocumentGroups();
