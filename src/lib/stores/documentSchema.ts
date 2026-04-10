@@ -1,8 +1,3 @@
-/**
- * Canonical Zod schemas and types for exhibit/story document data (waypoints, shapes,
- * channels, groups, images). Legacy wire normalization: `storeUtils.ts` (`normalizeWaypointRecord`,
- * `preprocessDocumentDataRaw`, …). UUID coercion: `validateDocument.ts`.
- */
 import { z } from "zod";
 import {
   normalizeWaypointRecord,
