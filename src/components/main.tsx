@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
 import { FileHandler } from "@/components/shared/FileHandler";
-import type { ValidObj } from "@/components/shared/Upload";
+import type { LoadedSourceSummary, ValidObj } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
 import {
   ImageViewer,
@@ -329,6 +329,8 @@ const Content = (props: Props) => {
   }, [setItems]);
 
   const [fileName, setFileName] = useState("");
+  /** Full URL of the last OME-TIFF-URL load (Images tab label); cleared for local/DICOM. */
+  const [lastOmeTiffUrl, setLastOmeTiffUrl] = useState<string | null>(null);
   /** Bumps on each OME-TIFF-URL load so a stale loader cannot commit after a newer URL starts. */
   const omeTiffUrlLoadGenerationRef = React.useRef(0);
   const [importRevision, setImportRevision] = useState(0);
@@ -367,6 +369,7 @@ const Content = (props: Props) => {
     if (handles.length === 0) return;
     clearOmeHistogramCache();
     setDicomIndexList([]);
+    setLastOmeTiffUrl(null);
     const exhibitGroups = props.exhibit_config.Groups ?? [];
     const relevant_groups = exhibitGroups.filter(
       ({ Image }) => Image.Method === "Colorimetric",
@@ -449,6 +452,7 @@ const Content = (props: Props) => {
     updateGroupChannelLists({ Groups, SourceChannels });
     resetItems({ SourceChannels });
     setOmeLoaderEntries([{ loader, sourceImageId }]);
+    setLastOmeTiffUrl(url);
     setFileName(url.split("/").pop() || "remote.ome.tif");
   };
 
@@ -489,7 +493,6 @@ const Content = (props: Props) => {
   const onStart = async (
     imagePropList: [string, string, string][],
     handles: Handle.File[],
-    { clearStories = false }: { clearStories?: boolean } = {},
   ) => {
     if (imagePropList.length === 0) {
       return;
@@ -511,25 +514,6 @@ const Content = (props: Props) => {
       (omeTiffPropList.length > 0 && handles.length > 0) ||
       omeTiffUrlList.length > 0;
     if (!willLoad) return;
-
-    // When opening a new image (not the initial demo), clear hardcoded
-    // waypoints, stories, and overlay shapes.
-    if (clearStories) {
-      const store = useAppStore.getState();
-      store.setStories([]);
-      store.clearOverlayLayers();
-      store.clearShapes();
-      useDocumentStore.getState().setShapes([]);
-      setConfig((prev) => ({
-        ...prev,
-        ItemRegistry: {
-          ...prev.ItemRegistry,
-          Stories: [],
-          Shapes: [],
-        },
-        ID: crypto.randomUUID(),
-      }));
-    }
 
     const t0 = performance.now();
     console.log("[minerva] onStart: will load, setting loading state");
@@ -574,6 +558,7 @@ const Content = (props: Props) => {
     groups: ConfigGroup[],
   ) => {
     clearOmeHistogramCache();
+    setLastOmeTiffUrl(null);
     console.log(
       "[minerva] dicom: fetching pyramids for",
       imagePropList.length,
@@ -601,6 +586,15 @@ const Content = (props: Props) => {
     );
     console.log("[minerva] dicom: all pyramids loaded, extracting channels");
     setDicomIndexList(indexList);
+    setFileName(
+      indexList.length > 0
+        ? indexList
+            .map((d) =>
+              d.modality ? `${d.series} (${d.modality})` : `${d.series}`,
+            )
+            .join(", ")
+        : "",
+    );
     let registry = { SourceChannels: [], Groups: [] };
     for (const { loader, modality } of indexList) {
       const relevant_groups = groups.filter(
@@ -946,6 +940,8 @@ const Content = (props: Props) => {
     setHiddenWaypoint: setHiddenWaypointWithLogic,
     retrievingMetadata,
     importRevision,
+    autoSelectStoryTabOnImport:
+      hasDemo && (config.ItemRegistry.Stories?.length ?? 0) > 0,
     startExport,
     stopExport,
     toggleEditor,
@@ -1227,7 +1223,7 @@ const Content = (props: Props) => {
           );
           const formOpts = {
             formOut,
-            onStart: (list) => onStart(list, handles, { clearStories: true }),
+            onStart: (list) => onStart(list, handles),
             handles,
           };
           if (isOpts(formOpts)) {
@@ -1240,6 +1236,63 @@ const Content = (props: Props) => {
         };
 
         const formProps = { onSubmit, valid };
+        const imageLoaded = !noLoader;
+        const handleNamesLabel = handles
+          .map((h) => h.name)
+          .filter(Boolean)
+          .join(", ");
+        let loadedSource: LoadedSourceSummary | undefined;
+        if (imageLoaded) {
+          const img = useDocumentStore.getState().images[0];
+          const w = img?.sizeX ?? 0;
+          const h = img?.sizeY ?? 0;
+          const ch = img?.sizeC ?? 0;
+          /** Only while demo bootstrap has not produced loaders yet — not “always” when demo_url is set. */
+          const isDemoBootstrap =
+            hasDemo &&
+            dicomIndexList.length === 0 &&
+            omeLoaderEntries.length === 0;
+          if (dicomIndexList.length > 0) {
+            loadedSource = {
+              kind: "dicom",
+              label:
+                fileName ||
+                dicomIndexList
+                  .map((d) =>
+                    d.modality ? `${d.series} (${d.modality})` : `${d.series}`,
+                  )
+                  .join(", ") ||
+                "DICOMweb",
+              width: w,
+              height: h,
+              channelCount: ch,
+              isDemo: isDemoBootstrap,
+            };
+          } else if (omeLoaderEntries.length > 0) {
+            const isUrlSource = handles.length === 0;
+            const label = isUrlSource
+              ? lastOmeTiffUrl || fileName || "Remote OME-TIFF"
+              : fileName || handleNamesLabel || "OME-TIFF";
+            loadedSource = {
+              kind: isUrlSource ? "ome-url" : "ome-local",
+              label,
+              width: w,
+              height: h,
+              channelCount: ch,
+              isDemo: isDemoBootstrap,
+            };
+          } else {
+            loadedSource = {
+              kind: "ome-url",
+              label:
+                lastOmeTiffUrl || fileName || handleNamesLabel || "Loading…",
+              width: w,
+              height: h,
+              channelCount: ch,
+              isDemo: isDemoBootstrap,
+            };
+          }
+        }
         const uploadProps = {
           handleKeys,
           formProps,
@@ -1247,6 +1300,8 @@ const Content = (props: Props) => {
           onAllow,
           onRecall,
           importRevision,
+          imageLoaded,
+          loadedSource,
         };
         // Update mainProps with actual handles
         const mainPropsWithHandle = {

@@ -4,7 +4,7 @@
     grid-row: 1;
     grid-column: 1;
     padding-top: var(--gap-small);
-    padding-bottom: var(--gap-small);
+    padding-bottom: 0;
     display: grid;
     grid-template-columns: auto 1fr;
     align-items: stretch;
@@ -17,7 +17,9 @@
     align-items: center;
     align-self: center;
     margin-inline-end: 2px;
+    margin-inline-start: 10px;
   }
+  /* Icon-only control: no panel/box behind the bars */
   .hamburger {
     display: flex;
     flex-direction: column;
@@ -25,79 +27,46 @@
     align-items: stretch;
     gap: 5px;
     box-sizing: border-box;
-    width: 40px;
-    height: 40px;
-    padding: 10px;
+    width: auto;
+    min-width: 28px;
+    height: auto;
+    padding: 6px 2px;
     margin: 0;
-    border: 1px solid
-      color-mix(in srgb, var(--theme-glass-edge, rgba(255, 255, 255, 0.45)) 42%, transparent);
-    border-radius: var(--radius-0001, 10px);
-    background-color: color-mix(
-      in srgb,
-      var(--dark-main-color, navy) 28%,
-      transparent
-    );
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    color: inherit;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.95);
     cursor: pointer;
     flex-shrink: 0;
-    box-shadow:
-      inset 0 1px 0 color-mix(in srgb, white 14%, transparent),
-      0 1px 3px rgba(0, 0, 0, 0.22);
-    transition:
-      background-color 0.15s ease,
-      border-color 0.15s ease,
-      box-shadow 0.15s ease,
-      transform 0.1s ease;
+    box-shadow: none;
+    transition: opacity 0.15s ease, transform 0.1s ease;
   }
   .hamburger:hover {
-    background-color: color-mix(
-      in srgb,
-      var(--dim-gray-glass, rgba(80, 80, 80, 0.45)) 75%,
-      transparent
-    );
-    border-color: color-mix(
-      in srgb,
-      var(--theme-glass-edge, rgba(255, 255, 255, 0.45)) 62%,
-      transparent
-    );
+    opacity: 0.88;
   }
   .hamburger[aria-expanded="true"] {
-    background-color: color-mix(
-      in srgb,
-      var(--dim-gray-glass, rgba(90, 90, 90, 0.5)) 88%,
-      transparent
-    );
-    border-color: color-mix(
-      in srgb,
-      var(--light-focus-color, white) 28%,
-      transparent
-    );
-    box-shadow:
-      inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
-      0 0 0 1px color-mix(in srgb, var(--light-focus-color, white) 12%, transparent);
+    opacity: 1;
   }
   .hamburger:active {
     transform: scale(0.97);
+    opacity: 0.82;
   }
   .hamburger:focus {
     outline: none;
   }
   .hamburger:focus-visible {
     outline: 2px solid var(--light-focus-color, #6ae);
-    outline-offset: 2px;
+    outline-offset: 3px;
   }
   .hamburger .bar {
     display: block;
     height: 2px;
-    width: 100%;
-    background: currentColor;
+    width: 20px;
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 2px;
-    opacity: 0.92;
   }
   .hamburger .bar:nth-child(2) {
-    width: 72%;
+    width: 14px;
     align-self: center;
   }
   .overflow-dropdown {
@@ -157,8 +126,11 @@
       color-mix(in srgb, var(--theme-glass-edge, #444) 65%, transparent);
   }
   > div.contents > .tab-row > .tab-strip {
+    box-sizing: border-box;
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     min-width: 0;
+    /* Match space between tabs (::before/::after use --gap-tiny each = --gap-small between cells) */
+    padding-inline-end: var(--gap-small);
   }
   > div.contents > .tab-row > .tab-strip > .grid {
     grid-template-columns: auto 1fr auto;
@@ -166,10 +138,6 @@
   > div.contents > .tab-row > .tab-strip > .grid > button {
     background-color: var(--dark-main-glass);
     color: inherit;
-  }
-  /* Extra room after the last label (e.g. Story) so the tab does not feel flush to the edge */
-  > div.contents > .tab-row > .tab-strip > .grid:last-child > button.tab {
-    padding-inline-end: max(1.35em, calc(var(--gap-medium) + 0.45em));
   }
   > div.contents > .tab-row > .tab-strip > .grid[chosen="true"] > button {
     color: var(--light-focus-color);

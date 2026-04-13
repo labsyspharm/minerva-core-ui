@@ -30,6 +30,11 @@ export type ChannelPanelProps = {
   /** Incremented after a successful image import. */
   importRevision?: number;
   /**
+   * When true with an `importRevision` bump, switch the author control panel to the Story tab
+   * after load (demo with seeded waypoints only; user imports clear stories and stay on Channels).
+   */
+  autoSelectStoryTabOnImport?: boolean;
+  /**
    * OME-TIFF only: fetch histogram tiles for these flat source-channel ids
    * when a group is expanded in the channel editor (cached per image).
    */
@@ -230,10 +235,12 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   React.useEffect(() => {
     const rev = props.importRevision ?? 0;
     if (rev > prevImportRevision.current) {
-      wantsStoryTab.current = true;
+      if (props.autoSelectStoryTabOnImport) {
+        wantsStoryTab.current = true;
+      }
     }
     prevImportRevision.current = rev;
-  }, [props.importRevision]);
+  }, [props.importRevision, props.autoSelectStoryTabOnImport]);
 
   // Try to apply the tab switch after the element stabilizes post-load.
   // React StrictMode + state changes from image loading can destroy and recreate
