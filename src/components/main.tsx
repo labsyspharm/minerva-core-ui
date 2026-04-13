@@ -939,9 +939,6 @@ const Content = (props: Props) => {
     hiddenWaypoint,
     setHiddenWaypoint: setHiddenWaypointWithLogic,
     retrievingMetadata,
-    importRevision,
-    autoSelectStoryTabOnImport:
-      hasDemo && (config.ItemRegistry.Stories?.length ?? 0) > 0,
     startExport,
     stopExport,
     toggleEditor,

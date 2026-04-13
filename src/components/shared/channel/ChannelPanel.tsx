@@ -27,13 +27,6 @@ export type ChannelPanelProps = {
   setHiddenChannel: (v: boolean) => void;
   /** Switch layout to playback / presentation (optional). */
   enterPlaybackPreview?: () => void;
-  /** Incremented after a successful image import. */
-  importRevision?: number;
-  /**
-   * When true with an `importRevision` bump, switch the author control panel to the Story tab
-   * after load (demo with seeded waypoints only; user imports clear stories and stay on Channels).
-   */
-  autoSelectStoryTabOnImport?: boolean;
   /**
    * OME-TIFF only: fetch histogram tiles for these flat source-channel ids
    * when a group is expanded in the channel editor (cached per image).
@@ -227,56 +220,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   );
 
   const controlPanelRef = React.useRef<HTMLElement>(null);
-
-  // Switch to Stories tab when loading finishes or importRevision changes.
-  const prevImportRevision = React.useRef(props.importRevision ?? 0);
-  const wantsStoryTab = React.useRef(false);
-
-  React.useEffect(() => {
-    const rev = props.importRevision ?? 0;
-    if (rev > prevImportRevision.current) {
-      if (props.autoSelectStoryTabOnImport) {
-        wantsStoryTab.current = true;
-      }
-    }
-    prevImportRevision.current = rev;
-  }, [props.importRevision, props.autoSelectStoryTabOnImport]);
-
-  // Try to apply the tab switch after the element stabilizes post-load.
-  // React StrictMode + state changes from image loading can destroy and recreate
-  // the custom element, resetting its tab to the default. We wait for the element
-  // to settle before switching.
-  React.useEffect(() => {
-    if (!wantsStoryTab.current) return;
-    let cancelled = false;
-    const clickStoryTab = (root: Element | ShadowRoot): boolean => {
-      const buttons = root.querySelectorAll('button[role="tab"]');
-      for (const btn of buttons) {
-        if (btn.textContent?.trim() === "Story") {
-          (btn as HTMLElement).click();
-          return true;
-        }
-      }
-      for (const child of root.querySelectorAll("*")) {
-        if (child.shadowRoot) {
-          if (clickStoryTab(child.shadowRoot)) return true;
-        }
-      }
-      return false;
-    };
-    // Wait for React to finish re-renders, then try clicking the tab
-    const timer = setTimeout(() => {
-      if (cancelled) return;
-      const el = controlPanelRef.current;
-      if (el?.shadowRoot && clickStoryTab(el.shadowRoot)) {
-        wantsStoryTab.current = false;
-      }
-    }, 2000);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  });
 
   const minerva_author_ui = React.createElement(
     props.controlPanelElement,
