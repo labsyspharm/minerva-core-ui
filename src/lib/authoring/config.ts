@@ -1,8 +1,10 @@
 import { getImageSize } from "@hms-dbmi/viv";
 import type { DTYPE_VALUES } from "@vivjs/constants";
-import type { ConfigGroup, ConfigSourceChannel } from "./document-store";
-import type { ConfigGroup as LegacyConfigGroup } from "./exhibit";
-import type { Loader } from "./viv";
+import { histogramBinTile } from "../imaging/histogramBinPool";
+import type { Loader } from "../imaging/viv";
+import type { ConfigGroup as LegacyConfigGroup } from "../legacy/exhibit";
+import type { Channel, Group } from "../stores/documentSchema";
+import type { StoryShape } from "../stores/storeUtils";
 
 export type SupportedDtype = keyof typeof DTYPE_VALUES;
 export type SupportedTypedArray = InstanceType<
@@ -15,7 +17,6 @@ type WaypointState = {
   Expanded: boolean;
 };
 type ID = { ID: string };
-type UUID = { UUID: string };
 type NameProperty = { Name: string };
 type DistributionProperties = {
   UpperRange: number;
@@ -38,34 +39,22 @@ type WaypointProperties = NameProperty & {
     target: [number, number, number];
     zoom: number;
   };
+  /** Square JPEG data URL (`data:image/jpeg;base64,…`), 64×64px; see `waypointThumbnail.ts`. */
   ThumbnailDataUrl?: string;
-  Group?: string;
-};
-
-// Arrow annotation from config
-export type ConfigWaypointArrow = {
-  Angle: number;
-  HideArrow: boolean;
-  Point: [number, number];
-  Text: string;
-  IsPoint?: boolean;
-};
-
-// Overlay (rectangle) annotation from config
-export type ConfigWaypointOverlay = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  Group: string;
 };
 
 export type MutableFields = (keyof ItemRegistryProps)[];
 export type ItemRegistryProps = {
   Name: string;
-  Groups: ConfigGroup[];
+  Groups: Group[];
+  /**
+   * Waypoint rows for the exhibit author (`Name`/`Bounds`/…); mirror of
+   * Zustand `waypoints` via `waypointsToConfigWaypoints` / `waypointToConfigWaypoint`.
+   */
   Stories: ConfigWaypoint[];
-  SourceChannels: ConfigSourceChannel[];
+  /** Global shape registry → `story.json` root `shapes` / cached `jsonExport.shapes`. */
+  Shapes?: StoryShape[];
+  SourceChannels: Channel[];
   SourceDistributions: ConfigSourceDistribution[];
 };
 type SetItems = (user: Partial<ItemRegistryProps>) => void;
@@ -148,13 +137,17 @@ export type ConfigProps = {
   ID: string;
 };
 
-export type ConfigSourceDistribution = UUID & DistributionProperties;
-export type ConfigWaypoint = UUID &
-  WaypointProperties & {
-    State: WaypointState;
-    Arrows?: ConfigWaypointArrow[];
-    Overlays?: ConfigWaypointOverlay[];
-  };
+export type ConfigSourceDistribution = DistributionProperties & {
+  id: string;
+};
+export type ConfigWaypoint = WaypointProperties & {
+  id: string;
+  State: WaypointState;
+  /** Ordered ids into global `shapes` / story.json `waypoints[].shapeIds`. */
+  shapeIds?: string[];
+  /** References {@link Group.id}. */
+  groupId?: string;
+};
 
 type ExtractDistributions = (
   loader: Loader,
@@ -163,17 +156,20 @@ type ExtractChannels = (
   loader: Loader,
   modality: string,
   groups: LegacyConfigGroup[],
+  /** OME: stable document `Image.id` for flat channels; defaults to `modality` (DICOM / legacy). */
+  sourceImageId?: string,
 ) => {
-  SourceChannels: ConfigSourceChannel[];
-  Groups: ConfigGroup[];
+  SourceChannels: Channel[];
+  Groups: Group[];
 };
 
-const hex_to_rgb = (c) => {
+const hex_to_rgb = (c: string) => {
   const n = parseInt(c, 16);
-  const R = (n >> 16) & 255;
-  const G = (n >> 8) & 255;
-  const B = n & 255;
-  return { R, G, B };
+  return {
+    r: (n >> 16) & 255,
+    g: (n >> 8) & 255,
+    b: n & 255,
+  };
 };
 
 const GROUP_CHANNELS_CRC01 = {
@@ -215,15 +211,53 @@ const GROUP_CHANNELS_CRC01 = {
 };
 
 const asID = (k: string): ID => ({ ID: k });
-const asUUID = (k: string): UUID => ({ UUID: k });
-const onlyUUID = (v: UUID): UUID => asUUID(v.UUID);
+
+/** Per-tile ceiling for histogram `getTile` (remote OME-TIFF); avoids hung lazy `getDistributions`. */
+const HISTOGRAM_TILE_TIMEOUT_MS = 10_000;
+
+/** Limit parallel `getTile`+bin work so remote OME-TIFF is less likely to hit timeouts / throttling. */
+const HISTOGRAM_EXTRACT_CONCURRENCY = 6;
+
+/**
+ * Bit depth passed to `histogramBinFromPixels` (log-spaced thresholds up to 2^bits).
+ * Integer dtypes parse from the Viv dtype string; float planes use a nominal depth
+ * so we still produce a curve instead of skipping (NaN from `parseInt` on "Float32").
+ */
+function histogramBitsFromDtype(dtype: string | undefined): number | null {
+  if (dtype == null || dtype === "") {
+    console.warn("[minerva] histogram: missing plane dtype");
+    return null;
+  }
+  const parsed = parseInt(dtype.replace(/.?int/, ""), 10);
+  if (!Number.isNaN(parsed)) return parsed;
+  if (/float/i.test(dtype)) {
+    return 16;
+  }
+  console.warn(
+    `[minerva] histogram: unsupported dtype "${dtype}" (expected Uint*/Int* or Float*)`,
+  );
+  return null;
+}
+
+async function mapIndicesInBatches<T>(
+  indices: Index[],
+  batchSize: number,
+  fn: (index: Index) => Promise<T>,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let i = 0; i < indices.length; i += batchSize) {
+    const batch = indices.slice(i, i + batchSize);
+    out.push(...(await Promise.all(batch.map(fn))));
+  }
+  return out;
+}
 
 const captureTile: CaptureTile = async (index, planes) => {
   const level = Math.abs(index.z);
   const z_plane = planes[level];
   const selection = { t: 0, z: 0, c: index.c };
-  const signal = AbortSignal.timeout(10 * 1000);
   const { x, y } = index;
+  const signal = AbortSignal.timeout(HISTOGRAM_TILE_TIMEOUT_MS);
   const tile = await z_plane.getTile({
     selection,
     x,
@@ -235,34 +269,8 @@ const captureTile: CaptureTile = async (index, planes) => {
 };
 
 const bin: Bin = async (inputs) => {
-  const n_bins = 50;
-  const max_power = inputs.bits;
-  const thresholds = [
-    ...new Set(
-      [...new Array(n_bins).keys()].map((x) => {
-        return Math.floor(2 ** ((max_power * x) / n_bins));
-      }),
-    ),
-  ];
-  thresholds.sort((a, b) => a - b);
-  // Load the image tile for given index
   const { data, width } = await captureTile(inputs.index, inputs.planes);
-  const step = 4;
-  // Sample along pixel grid of step size in x and y
-  let indices = [...new Array(data.length).keys()]
-    .filter((i) => i % step === 0 || Math.floor(i / width) % step === 0)
-    .filter((i) => data[i] > 0);
-  // Count indices with data between thresholds
-  return thresholds.reduce((binned, threshold, t) => {
-    if (t > 0 && thresholds[t - 1] === threshold) {
-      return binned.concat(binned.slice(-1));
-    }
-    const outside_indices = indices.filter((i) => data[i] > threshold);
-    const pixel_count = indices.length - outside_indices.length;
-    indices = outside_indices;
-    binned.push(pixel_count);
-    return binned;
-  }, []);
+  return histogramBinTile(inputs.bits, width, data);
 };
 
 const toTilePlane: ToTilePlane = (zoom, planes) => {
@@ -317,53 +325,97 @@ const initialize: Initialize = (inputs) => {
   return { indices, tileProps };
 };
 
-const extractDistributions: ExtractDistributions = async (loader) => {
+/**
+ * Histogram tiles for a subset of source channel indices (same `c` as `SourceChannel.SourceIndex`
+ * for a single OME-Z / pyramid loader). Used for lazy channel-panel fetching.
+ */
+const extractDistributionsForSourceIndices = async (
+  loader: Loader,
+  sourceIndices: readonly number[],
+): Promise<Map<number, ConfigSourceDistribution>> => {
   const init = initialize({ planes: loader.data });
-  const bits = parseInt(init.tileProps.dtype.replace(/.?int/, ""), 10);
-  const SourceDistributionEntries = await Promise.all(
-    init.indices.map(async (index) => {
+  const dtype = init.tileProps.dtype;
+  const bits = histogramBitsFromDtype(dtype);
+  const indexByC = new Map(init.indices.map((idx) => [idx.c, idx]));
+  const filtered = [...new Set(sourceIndices)].filter((c) => indexByC.has(c));
+  if (filtered.length === 0) {
+    return new Map();
+  }
+
+  let tileErrorCount = 0;
+  const indexObjs = filtered.flatMap((c) => {
+    const idx = indexByC.get(c);
+    return idx ? [idx] : [];
+  });
+  const entries = await mapIndicesInBatches(
+    indexObjs,
+    HISTOGRAM_EXTRACT_CONCURRENCY,
+    async (index) => {
       const SourceIndex = index.c;
       let YValues: number[] = [];
-      if (!Number.isNaN(bits)) {
+      if (bits != null) {
         try {
           YValues = await bin({
             bits,
             index,
             planes: loader.data,
           });
-        } catch {
-          // Tile fetch can fail for remote images; use empty distribution.
+        } catch (err) {
+          tileErrorCount += 1;
+          const msg = err instanceof Error ? err.message : String(err);
+          console.warn(
+            `[minerva] histogram: channel ${SourceIndex} tile/bin failed (${msg})`,
+          );
         }
       }
       return [
         SourceIndex,
         {
-          UUID: crypto.randomUUID(),
+          id: crypto.randomUUID(),
           YValues,
           XScale: "log",
           YScale: "linear",
           LowerRange: 0,
-          UpperRange: bits,
+          UpperRange: bits ?? 0,
         },
       ] as [number, ConfigSourceDistribution];
-    }),
+    },
   );
-  // Map from image channel to distribution
-  return new Map<number, ConfigSourceDistribution>(SourceDistributionEntries);
+
+  const nonEmpty = entries.filter(([, d]) => d.YValues.length > 0).length;
+  const emptyCurves = entries.length - nonEmpty;
+  const skippedNoBits = bits == null ? filtered.length : 0;
+  console.log(
+    `[minerva] histogram extract: dtype=${dtype} effectiveBits=${bits ?? "none"} requested=${sourceIndices.length} resolved=${filtered.length} nonEmpty=${nonEmpty} emptyCurve=${emptyCurves} tileErrors=${tileErrorCount} skippedNoBits=${skippedNoBits}`,
+  );
+
+  return new Map<number, ConfigSourceDistribution>(entries);
 };
 
-const extractChannels: ExtractChannels = (loader, modality, groups) => {
+const extractDistributions: ExtractDistributions = async (loader) => {
+  const init = initialize({ planes: loader.data });
+  const allC = init.indices.map((i) => i.c);
+  return extractDistributionsForSourceIndices(loader, allC);
+};
+
+const extractChannels: ExtractChannels = (
+  loader,
+  modality,
+  groups,
+  sourceImageId,
+) => {
   const init = initialize({ planes: loader.data });
   const { Channels, Type } = loader.metadata.Pixels;
+  const channelImageId = sourceImageId ?? modality;
   const stripCycif = (name: string) =>
     name.startsWith("CYCIF_") ? name.slice(6) : name;
   const SourceChannels = Channels.map((channel, index) => ({
-    UUID: crypto.randomUUID(),
-    Name: stripCycif(channel.Name),
-    Samples: channel.SamplesPerPixel,
-    SourceIndex: init.indices[index].c,
-    SourceDataType: asID(Type),
-    SourceImage: asUUID(modality), //TODO
+    id: crypto.randomUUID(),
+    name: stripCycif(channel.Name),
+    samples: channel.SamplesPerPixel,
+    index: init.indices[index].c,
+    sourceDataTypeId: asID(Type).ID,
+    imageId: channelImageId,
   }));
   // Match hard-coded groups to existing channels. GROUP_CHANNELS_CRC01 maps Path →
   // indices into OME Pixels.Channels (same order as SourceChannels), not "Channel N" strings.
@@ -385,30 +437,28 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
       const new_name_map = { ...name_map };
       for (let i = 0; i < channel_indices.length; i++) {
         const idx = channel_indices[i];
-        new_name_map[g.Channels[i]] = SourceChannels[idx].UUID;
+        new_name_map[g.Channels[i]] = SourceChannels[idx].id;
       }
       const new_group_uuid = crypto.randomUUID();
-      const new_group = {
-        UUID: new_group_uuid,
-        State: { Expanded: false },
-        Name: g.Name,
-        GroupChannels: g.Channels.reduce(
+      const new_group: Group = {
+        id: new_group_uuid,
+        expanded: false,
+        name: g.Name,
+        channels: g.Channels.reduce(
           (new_group_channels, name, index) => {
             if (!(name in new_name_map)) {
               return new_group_channels;
             }
             const color = g.Colors[index];
             return new_group_channels.concat({
-              UUID: crypto.randomUUID(),
-              State: { Expanded: true },
-              LowerRange: g.Lows[index],
-              UpperRange: g.Highs[index],
-              SourceChannel: asUUID(new_name_map[name]),
-              Color: hex_to_rgb(color),
-              Group: asUUID(new_group_uuid),
+              id: crypto.randomUUID(),
+              channelId: new_name_map[name],
+              color: hex_to_rgb(color),
+              lowerLimit: g.Lows[index],
+              upperLimit: g.Highs[index],
             });
           },
-          [] as ConfigGroup["GroupChannels"],
+          [] as Group["channels"],
         ),
       };
       return {
@@ -417,7 +467,7 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
       };
     },
     {
-      Groups: [] as ConfigGroup[],
+      Groups: [] as Group[],
       name_map: {} as Record<string, string>,
     },
   );
@@ -427,8 +477,8 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
   );
   if (Object.keys(name_map).length) {
     SourceChannels.forEach((sourceChannel) => {
-      if (sourceChannel.UUID in reverse_name_map) {
-        sourceChannel.Name = reverse_name_map[sourceChannel.UUID];
+      if (sourceChannel.id in reverse_name_map) {
+        sourceChannel.name = reverse_name_map[sourceChannel.id];
       }
     });
     const { Groups } = hardcoded_crc01;
@@ -438,32 +488,30 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
     };
   } else if (
     SourceChannels.length === 1 &&
-    SourceChannels[0].Samples === 3 &&
-    SourceChannels[0].SourceDataType.ID === "Uint8"
+    SourceChannels[0].samples === 3 &&
+    SourceChannels[0].sourceDataTypeId === "Uint8"
   ) {
     const group_uuid = crypto.randomUUID();
     const groupName = "Hematoxylin & Eosin";
     const channelName = "H&E";
-    const Groups = [
+    const Groups: Group[] = [
       {
-        UUID: group_uuid,
-        State: { Expanded: true },
-        Name: groupName,
-        GroupChannels: SourceChannels.map((channel, _index) => {
+        id: group_uuid,
+        expanded: true,
+        name: groupName,
+        channels: SourceChannels.map((channel, _index) => {
           return {
-            UUID: crypto.randomUUID(),
-            State: { Expanded: true },
-            LowerRange: 0,
-            UpperRange: 255,
-            SourceChannel: onlyUUID(channel),
-            Color: hex_to_rgb("cc00ff"),
-            Group: asUUID(group_uuid),
+            id: crypto.randomUUID(),
+            channelId: channel.id,
+            color: hex_to_rgb("cc00ff"),
+            lowerLimit: 0,
+            upperLimit: 255,
           };
         }),
       },
     ];
     if (SourceChannels.length === 1) {
-      SourceChannels[0].Name = channelName;
+      SourceChannels[0].name = channelName;
     }
     return {
       SourceChannels,
@@ -471,27 +519,25 @@ const extractChannels: ExtractChannels = (loader, modality, groups) => {
     };
   }
   const group_size = 4;
-  const Groups = [
+  const Groups: Group[] = [
     ...Array(Math.ceil(SourceChannels.length / group_size)).keys(),
   ].map((group_index) => {
     const group_uuid = crypto.randomUUID();
     return {
-      UUID: group_uuid,
-      State: { Expanded: false },
-      Name: `Group ${group_index}`,
-      GroupChannels: SourceChannels.slice(
+      id: group_uuid,
+      expanded: false,
+      name: `Group ${group_index}`,
+      channels: SourceChannels.slice(
         group_index * group_size,
         (group_index + 1) * group_size,
       ).map((channel, index) => {
         const color_id = ["0dabff", "c3ff00", "ff8b00", "ff00c7"][index % 4];
         return {
-          UUID: crypto.randomUUID(),
-          State: { Expanded: true },
-          LowerRange: 2 ** 5, //TODO
-          UpperRange: 2 ** 14, //TODO
-          SourceChannel: onlyUUID(channel),
-          Color: hex_to_rgb(color_id),
-          Group: asUUID(group_uuid),
+          id: crypto.randomUUID(),
+          channelId: channel.id,
+          color: hex_to_rgb(color_id),
+          lowerLimit: 2 ** 5, //TODO
+          upperLimit: 2 ** 14, //TODO
         };
       }),
     };
@@ -578,4 +624,9 @@ const mutableItemRegistry = (
   }, ItemRegistry);
 };
 
-export { onlyUUID, extractDistributions, extractChannels, mutableItemRegistry };
+export {
+  extractDistributions,
+  extractDistributionsForSourceIndices,
+  extractChannels,
+  mutableItemRegistry,
+};

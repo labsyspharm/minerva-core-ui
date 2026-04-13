@@ -1,7 +1,7 @@
 // Types
 
-import type { ConfigWaypoint } from "./config";
-import type { Story } from "./exhibit";
+import type { ConfigWaypoint } from "../authoring/config";
+import type { Story } from "../legacy/exhibit";
 // View state for deck.gl OrthographicView
 export interface WaypointViewState {
   zoom: number;
@@ -149,8 +149,10 @@ const boundsToViewState = (
  *
  * - Prefer Deck.gl `waypoint.ViewState` when present (exact camera; survives
  *   width-constrained bounds where many rectangles map to the same zoom/target).
+ * - Else legacy Minerva 1.5 `Pan`/`Zoom` — authoritative OSD parameters at any
+ *   viewport size. (`Bounds` from migration were baked at one container size;
+ *   using them here caused extra zoom when the viewer size later differed.)
  * - Else bounds-native `waypoint.Bounds` (fit rectangle to current viewport).
- * - Else legacy Minerva 1.5 `Pan`/`Zoom` conversion.
  */
 const getWaypointViewState = (
   waypoint: ConfigWaypoint,
@@ -162,16 +164,20 @@ const getWaypointViewState = (
   if (isWaypointViewState(waypoint.ViewState)) {
     return waypoint.ViewState;
   }
-  if (isWaypointBounds(waypoint.Bounds)) {
-    return boundsToViewState(waypoint.Bounds, containerWidth, containerHeight);
-  }
-  return convertWaypointToViewState(
+  const legacy = convertWaypointToViewState(
     waypoint.Pan,
     waypoint.Zoom,
     imageWidth,
     imageHeight,
     containerWidth,
   );
+  if (legacy) {
+    return legacy;
+  }
+  if (isWaypointBounds(waypoint.Bounds)) {
+    return boundsToViewState(waypoint.Bounds, containerWidth, containerHeight);
+  }
+  return null;
 };
 
 const getWaypointBounds = (
@@ -188,9 +194,6 @@ const getWaypointBounds = (
       containerHeight,
     );
   }
-  if (isWaypointBounds(waypoint.Bounds)) {
-    return waypoint.Bounds;
-  }
   const legacy = convertWaypointToViewState(
     waypoint.Pan,
     waypoint.Zoom,
@@ -198,8 +201,13 @@ const getWaypointBounds = (
     imageHeight,
     containerWidth,
   );
-  if (!legacy) return null;
-  return viewStateToBounds(legacy, containerWidth, containerHeight);
+  if (legacy) {
+    return viewStateToBounds(legacy, containerWidth, containerHeight);
+  }
+  if (isWaypointBounds(waypoint.Bounds)) {
+    return waypoint.Bounds;
+  }
+  return null;
 };
 
 const normalizeWaypointToBounds = (
@@ -220,8 +228,6 @@ const normalizeWaypointToBounds = (
   const next: ConfigWaypoint = {
     ...waypoint,
     Bounds: bounds,
-    Pan: undefined,
-    Zoom: undefined,
   };
   if (!isWaypointViewState(waypoint.ViewState)) {
     next.ViewState = undefined;
@@ -247,4 +253,5 @@ export {
   getWaypointViewState,
   getWaypointBounds,
   normalizeWaypointToBounds,
+  isWaypointBounds,
 };

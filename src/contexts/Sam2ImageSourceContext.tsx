@@ -3,7 +3,7 @@
  */
 
 import * as React from "react";
-import type { ViewRect } from "@/lib/samViewport";
+import type { ViewRect } from "@/lib/viewer/samViewport";
 
 export type GetCropForSam2 = (viewRect: ViewRect) => Promise<{
   float32Array: Float32Array;

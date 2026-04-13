@@ -61,7 +61,7 @@ const isAuthorImage = (img: unknown): img is AuthorImage => {
 };
 
 /*
- * Examples of Narrative Config Objects
+ * Examples of story config objects (exhibit / JSON export–compatible)
  * ___                  __       ___   ___
  * |__  \_/  /\   |\/| |__) |    |__  /__.
  * |___ / \ /~~\  |  | |    |___ |___ .__/

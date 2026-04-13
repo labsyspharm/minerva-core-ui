@@ -2,8 +2,13 @@ import type { ReactNode } from "react";
 import * as React from "react";
 import styled from "styled-components";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
-import type { ConfigProps } from "@/lib/config";
-import { useOverlayStore } from "@/lib/stores";
+import type { ConfigProps } from "@/lib/authoring/config";
+import { useAppStore } from "@/lib/stores/appStore";
+import {
+  findSourceChannel,
+  flattenImageChannelsInDocumentOrder,
+  useDocumentStore,
+} from "@/lib/stores/documentStore";
 import { ChannelGroups } from "./ChannelGroups";
 import { ChannelGroupsMasterDetail } from "./ChannelGroupsMasterDetail";
 import { ChannelLegend } from "./ChannelLegend";
@@ -24,6 +29,16 @@ export type ChannelPanelProps = {
   enterPlaybackPreview?: () => void;
   /** Incremented after a successful image import. */
   importRevision?: number;
+  /**
+   * When true with an `importRevision` bump, switch the author control panel to the Story tab
+   * after load (demo with seeded waypoints only; user imports clear stories and stay on Channels).
+   */
+  autoSelectStoryTabOnImport?: boolean;
+  /**
+   * OME-TIFF only: fetch histogram tiles for these flat source-channel ids
+   * when a group is expanded in the channel editor (cached per image).
+   */
+  ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
 };
 
 const TextWrap = styled.div`
@@ -31,12 +46,16 @@ const TextWrap = styled.div`
   height: 100%;
   min-height: 0;
   > div.core {
-    color: #eee;
+    color: #e6edf3;
     position: absolute;
     right: 0;
     top: 0;
-    width: 220px;
-    margin-bottom: 4px;
+    width: 200px;
+    max-height: min(100%, calc(100dvh - 12px));
+    margin-bottom: 2px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
     transition: transform 0.5s ease 0s;
   }
   > div.core.hide {
@@ -51,84 +70,102 @@ const TextOther = styled.div`
   background-color: transparent;
 `;
 
+const ChannelGroupsSlot = styled.div`
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+`;
+
 // Content layout styles (merged from content.tsx)
 const WrapContent = styled.div`
-  height: 100%;
-  display: grid;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   pointer-events: none;
-  grid-template-rows: auto auto 1fr;
-  grid-template-columns: 100%;
 `;
 
 const WrapCore = styled.div`
-  padding: 0.5em;
-  grid-column: 1;
-  grid-row: 1 / 3;
+  flex: 1;
+  min-height: 0;
+  padding: 6px 8px 7px;
   overflow: auto;
+  overscroll-behavior: contain;
   scrollbar-color: #888 var(--theme-dim-gray-color);
+  scrollbar-width: thin;
   pointer-events: all;
   word-wrap: break-word;
-  border: 2px solid var(--theme-glass-edge);
-  background-color: var(--dark-glass);
+  border: 1px solid color-mix(in srgb, var(--theme-glass-edge) 75%, transparent);
+  background-color: color-mix(in srgb, var(--dark-glass) 92%, black);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-0001);
+  font-size: 12px;
 `;
 
-const WrapColumns = styled.div`
-  grid-template-columns: auto 1fr;
-  display: grid;
-  gap: 0.25em;
-`;
-
-const Header = styled.h2`
+const OverlaySectionLabel = styled.div`
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--theme-light-contrast-color) 52%, transparent);
+  margin: 0 0 4px;
+  line-height: 1.2;
 `;
 
 export const ChannelPanel = (props: ChannelPanelProps) => {
   const hide = props.hiddenChannel;
   const hidden = props.retrievingMetadata || props.noLoader;
-  const { setActiveChannelGroup } = useOverlayStore();
-  const activeChannelGroupId = useOverlayStore((s) => s.activeChannelGroupId);
-  const channelVisibilities = useOverlayStore((s) => s.channelVisibilities);
-  const setChannelVisibilities = useOverlayStore(
-    (s) => s.setChannelVisibilities,
+  const { setActiveChannelGroup } = useAppStore();
+  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
+  const channelVisibilities = useAppStore((s) => s.channelVisibilities);
+  const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
+  const groups = useDocumentStore((s) => s.groups);
+  const images = useDocumentStore((s) => s.images);
+  const sourceChannels = React.useMemo(
+    () => flattenImageChannelsInDocumentOrder(images),
+    [images],
   );
-  const Groups = useOverlayStore((s) => s.Groups);
-  const SourceChannels = useOverlayStore((s) => s.SourceChannels);
 
-  const groups = Groups.map((group, g) => {
+  const channelGroups = groups.map((group, g) => {
     return {
       g,
-      UUID: group.UUID,
-      name: group.Name,
-      channels: group.GroupChannels.map((channel) => {
-        const { SourceChannel, Color } = channel;
-        const found = SourceChannels.find(
-          ({ UUID }) => SourceChannel.UUID === UUID,
-        );
-        if (found) {
-          const { R, G, B } = Color;
-          const hex_color = [R, G, B]
-            .map((n) => n.toString(16).padStart(2, "0"))
-            .join("");
-          return {
-            r: R,
-            g: G,
-            b: B,
-            lower_range: channel.LowerRange,
-            upper_range: channel.UpperRange,
-            name: found.Name,
-            color: `${hex_color}`,
-            group_uuid: group.UUID,
-            source_uuid: found.UUID,
-            channel_uuid: channel.UUID,
-          };
-        }
-        return null;
-      }).filter((x) => x),
+      id: group.id,
+      name: group.name,
+      channels: group.channels
+        .map((channel) => {
+          const { color } = channel;
+          const found = findSourceChannel(sourceChannels, channel.channelId);
+          if (found) {
+            const { r, g: gg, b } = color;
+            const hex_color = [r, gg, b]
+              .map((n) => n.toString(16).padStart(2, "0"))
+              .join("");
+            return {
+              r,
+              g: gg,
+              b,
+              lower_range: channel.lowerLimit,
+              upper_range: channel.upperLimit,
+              name: found.name,
+              color: `${hex_color}`,
+              group_uuid: group.id,
+              source_uuid: found.id,
+              channel_uuid: channel.id,
+            };
+          }
+          return null;
+        })
+        .filter((x) => x),
     };
   });
   const activeGroup =
-    activeChannelGroupId || (groups.length > 0 ? groups[0].UUID : null);
-  const group = groups.find(({ UUID }) => UUID === activeGroup);
+    activeChannelGroupId ||
+    (channelGroups.length > 0 ? channelGroups[0].id : null);
+  const group = channelGroups.find(({ id }) => id === activeGroup);
   const toggleChannel = ({ name }) => {
     setChannelVisibilities(
       Object.fromEntries(
@@ -148,18 +185,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   };
   const hideClass = ["show core", "hide core"][+hide];
 
-  const total = groups.length;
+  const total = channelGroups.length;
   const groupProps = { ...props, total };
 
   const allGroups =
-    groups.length || props ? (
+    channelGroups.length || props ? (
       <>
-        <Header className="h6">
-          <WrapColumns>
-            <span>Channel Group</span>
-          </WrapColumns>
-        </Header>
-        <ChannelGroups {...{ ...groupProps, groups }} />
+        <OverlaySectionLabel>Group</OverlaySectionLabel>
+        <ChannelGroups {...{ ...groupProps, channelGroups }} />
       </>
     ) : null;
 
@@ -183,11 +216,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   ) : null;
 
   const channel_list = (
-    <ChannelGroupsMasterDetail
-      channelItemElement={props.channelItemElement}
-      retrievingMetadata={props.retrievingMetadata}
-      noLoader={props.noLoader}
-    />
+    <ChannelGroupsSlot>
+      <ChannelGroupsMasterDetail
+        channelItemElement={props.channelItemElement}
+        retrievingMetadata={props.retrievingMetadata}
+        noLoader={props.noLoader}
+        ensureChannelHistograms={props.ensureChannelHistograms}
+      />
+    </ChannelGroupsSlot>
   );
 
   const controlPanelRef = React.useRef<HTMLElement>(null);
@@ -199,10 +235,12 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   React.useEffect(() => {
     const rev = props.importRevision ?? 0;
     if (rev > prevImportRevision.current) {
-      wantsStoryTab.current = true;
+      if (props.autoSelectStoryTabOnImport) {
+        wantsStoryTab.current = true;
+      }
     }
     prevImportRevision.current = rev;
-  }, [props.importRevision]);
+  }, [props.importRevision, props.autoSelectStoryTabOnImport]);
 
   // Try to apply the tab switch after the element stabilizes post-load.
   // React StrictMode + state changes from image loading can destroy and recreate

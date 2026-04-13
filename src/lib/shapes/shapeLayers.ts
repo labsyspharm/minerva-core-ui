@@ -1,7 +1,7 @@
 /**
- * Annotation layer utilities
+ * Shape layer utilities
  *
- * Contains deck.gl layer creation logic for rendering annotations, plus a hook
+ * Contains deck.gl layer creation logic for rendering viewer shapes, plus a hook
  * that syncs those layers into the overlay store.
  *
  * Kept in `src/lib/` because this is non-UI logic (it renders via deck.gl layers),
@@ -16,33 +16,34 @@ import {
 } from "@deck.gl/layers";
 import * as React from "react";
 import ArrowIconUrl from "@/components/shared/icons/arrow-annotation.svg?url";
-import type { Annotation } from "@/lib/stores";
-import { useOverlayStore } from "@/lib/stores";
+import ArrowHoverIconUrl from "@/components/shared/icons/arrow-annotation-hover.svg?url";
+import { useAppStore } from "@/lib/stores/appStore";
+import type { Shape } from "./shapeModel";
 
 type ColorRGBA = [number, number, number, number];
 type LayerType = PolygonLayer | TextLayer | ScatterplotLayer | IconLayer;
 
 // Arrow SVG icon (250x250) - positioned so center (125,125) is at target point
-// Exported for drawing preview (arrow tool)
+// Exported for drawing preview (arrow tool). Hover uses a separate asset (WebGL
+// IconLayer cannot be styled with CSS).
 export const ARROW_ICON_URL = ArrowIconUrl;
+export const ARROW_ICON_HOVER_URL = ArrowHoverIconUrl;
 export const ARROW_ICON_SIZE = 250;
 
 /**
- * Create all deck.gl layers for multiple annotations.
+ * Create all deck.gl layers for multiple viewer shapes.
  * Uses consolidated layers per type with arrays of data for better performance.
  *
  * Drawing hierarchy (bottom to top): shapes/points, arrows, labels.
  */
-export function createAllAnnotationLayers(
-  annotations: Annotation[],
-  hiddenLayers: Set<string>,
-  hoveredAnnotationId: string | null,
+export function createAllShapeLayers(
+  shapes: Shape[],
+  hiddenShapeIds: Set<string>,
+  hoveredShapeId: string | null,
   pickable: boolean = true,
   brushEditTargetId: string | null = null,
 ): LayerType[] {
-  const visibleAnnotations = annotations.filter(
-    (annotation) => !hiddenLayers.has(annotation.id),
-  );
+  const visibleShapes = shapes.filter((shape) => !hiddenShapeIds.has(shape.id));
 
   const layers: LayerType[] = [];
 
@@ -73,6 +74,7 @@ export function createAllAnnotationLayers(
     position: [number, number, number];
     angle: number;
     color: ColorRGBA;
+    iconUrl: string;
     id: string;
   }> = [];
   const labelData: Array<{
@@ -91,76 +93,79 @@ export function createAllAnnotationLayers(
     id: string;
   }> = [];
 
-  visibleAnnotations.forEach((annotation) => {
-    const isHovered = hoveredAnnotationId === annotation.id;
+  visibleShapes.forEach((shape) => {
+    const isHovered = hoveredShapeId === shape.id;
     const isBrushEditTarget =
       brushEditTargetId != null &&
-      annotation.id === brushEditTargetId &&
-      annotation.type === "polygon";
+      shape.id === brushEditTargetId &&
+      shape.type === "polygon";
 
-    if (annotation.type === "text") {
+    if (shape.type === "text") {
       const fontColor = isHovered
         ? ([0, 120, 255, 255] as ColorRGBA)
-        : annotation.style.fontColor;
+        : shape.style.fontColor;
 
       const backgroundColor = isHovered
         ? ([0, 120, 255, 150] as ColorRGBA)
-        : annotation.style.backgroundColor || ([0, 0, 0, 100] as ColorRGBA);
+        : shape.style.backgroundColor || ([0, 0, 0, 100] as ColorRGBA);
 
       textData.push({
-        text: annotation.text,
-        position: [annotation.position[0], annotation.position[1], 0],
+        text: shape.text,
+        position: [shape.position[0], shape.position[1], 0],
         color: fontColor,
         backgroundColor,
-        fontSize: annotation.style.fontSize,
-        id: annotation.id,
+        fontSize: shape.style.fontSize,
+        id: shape.id,
       });
       return;
     }
 
-    if (annotation.type === "point") {
+    if (shape.type === "point") {
       const fillColor = isHovered
         ? ([0, 120, 255, 255] as ColorRGBA)
-        : annotation.style.fillColor;
+        : shape.style.fillColor;
       const lineColor = isHovered
         ? ([0, 120, 255, 255] as ColorRGBA)
-        : annotation.style.strokeColor;
+        : shape.style.strokeColor;
 
       pointData.push({
-        position: [annotation.position[0], annotation.position[1], 0],
-        radius: annotation.style.radius,
+        position: [shape.position[0], shape.position[1], 0],
+        radius: shape.style.radius,
         fillColor,
         lineColor,
-        id: annotation.id,
+        id: shape.id,
       });
 
       // Add label text if present
-      if (annotation.text) {
+      if (shape.text) {
         const textColor =
-          annotation.style.strokeColor || ([255, 255, 255, 255] as ColorRGBA);
+          shape.style.strokeColor || ([255, 255, 255, 255] as ColorRGBA);
         labelData.push({
-          text: annotation.text,
-          position: [annotation.position[0], annotation.position[1], 0],
+          text: shape.text,
+          position: [shape.position[0], shape.position[1], 0],
           pixelOffset: [0, 0],
           color: textColor,
           textAnchor: "middle",
-          id: `${annotation.id}-text`,
+          id: `${shape.id}-text`,
         });
       }
 
       return;
     }
 
-    if (annotation.type === "line") {
-      const hasArrowHead = annotation.hasArrowHead !== false; // Default true for backward compat
+    if (shape.type === "line") {
+      const hasArrowHead = shape.hasArrowHead !== false; // Default true for backward compat
 
-      const lineColor = isHovered
-        ? ([0, 120, 255, 255] as ColorRGBA)
-        : annotation.style.lineColor;
+      const baseLineColor = shape.style.lineColor;
+      const lineColor = hasArrowHead
+        ? baseLineColor
+        : isHovered
+          ? ([0, 120, 255, 255] as ColorRGBA)
+          : baseLineColor;
 
       if (hasArrowHead) {
-        // Arrow annotations use IconLayer for the head/body glyph
-        const polygon = annotation.polygon;
+        // Arrow shapes use IconLayer for the head/body glyph
+        const polygon = shape.polygon;
         if (polygon.length >= 2) {
           const [startX, startY] = polygon[0];
           const [endX, endY] = polygon[1];
@@ -171,17 +176,31 @@ export function createAllAnnotationLayers(
           const angleRad = Math.atan2(dy, dx);
           const angleDeg = (angleRad * 180) / Math.PI + 90;
 
-          const iconColor = lineColor;
+          // Arrow color stays fixed (no hover tint); glyph swaps to hover asset.
+          const iconColor = baseLineColor;
+          const iconUrl = isHovered ? ArrowHoverIconUrl : ArrowIconUrl;
 
           arrowData.push({
             position: [endX, endY, 0],
             angle: angleDeg,
             color: iconColor,
-            id: `${annotation.id}-arrow`,
+            iconUrl,
+            id: `${shape.id}-arrow`,
+          });
+
+          // Wide invisible stroke along the segment for move-tool hover/drag on
+          // the shaft (hover appearance is the arrow SVG only).
+          const hitLineWidth = Math.max(shape.style.lineWidth, 12);
+          polygonData.push({
+            polygon: shape.polygon,
+            fillColor: [0, 0, 0, 0],
+            lineColor: [0, 0, 0, 0] as ColorRGBA,
+            lineWidth: hitLineWidth,
+            id: shape.id,
           });
 
           // Add label text if present
-          if (annotation.text) {
+          if (shape.text) {
             // Calculate direction from tip to tail (opposite of arrow direction)
             const labelDx = startX - endX;
             const labelDy = startY - endY;
@@ -194,16 +213,15 @@ export function createAllAnnotationLayers(
             const pixelOffsetY = dirY * pixelOffsetMagnitude;
 
             const textAnchor: "start" | "end" = labelDx > 0 ? "start" : "end";
-            const textColor =
-              annotation.style.lineColor || ([255, 255, 255, 255] as ColorRGBA);
+            const textColor = baseLineColor;
 
             labelData.push({
-              text: annotation.text,
+              text: shape.text,
               position: [endX, endY, 0],
               pixelOffset: [pixelOffsetX, pixelOffsetY],
               color: textColor,
               textAnchor,
-              id: `${annotation.id}-text`,
+              id: `${shape.id}-text`,
             });
           }
         }
@@ -211,22 +229,22 @@ export function createAllAnnotationLayers(
         // Plain line (no arrow head): render as stroke-only polygon using pixel
         // line width for consistent thickness with the orange preview mode.
         polygonData.push({
-          polygon: annotation.polygon,
+          polygon: shape.polygon,
           fillColor: [0, 0, 0, 0],
           lineColor,
-          lineWidth: annotation.style.lineWidth,
-          id: annotation.id,
+          lineWidth: shape.style.lineWidth,
+          id: shape.id,
         });
       }
 
       return;
     }
 
-    // Polygon-based annotations (rectangle, polygon, polyline, ellipse)
+    // Polygon-based shapes (closed polygons, polylines share stroke path)
     let fillColor: ColorRGBA = [255, 255, 255, 1];
-    let lineColor: ColorRGBA = annotation.style.lineColor;
+    let lineColor: ColorRGBA = shape.style.lineColor;
 
-    const isPolyline = annotation.type === "polyline";
+    const isPolyline = shape.type === "polyline";
     if (isPolyline) {
       fillColor = [0, 0, 0, 0]; // Transparent fill
     }
@@ -237,47 +255,47 @@ export function createAllAnnotationLayers(
     }
 
     polygonData.push({
-      polygon: annotation.polygon,
+      polygon: shape.polygon,
       fillColor,
       lineColor,
-      lineWidth: annotation.style.lineWidth,
-      id: annotation.id,
+      lineWidth: shape.style.lineWidth,
+      id: shape.id,
     });
 
     if (isBrushEditTarget) {
       brushEditOutlineData.push({
-        polygon: annotation.polygon,
+        polygon: shape.polygon,
         lineColor: [255, 165, 0, 255],
-        lineWidth: Math.max(annotation.style.lineWidth, 3),
-        id: `${annotation.id}-brush-outline`,
+        lineWidth: Math.max(shape.style.lineWidth, 3),
+        id: `${shape.id}-brush-outline`,
       });
     }
 
     // Add label text if present
-    if (annotation.text) {
-      const polygon = annotation.polygon;
+    if (shape.text) {
+      const polygon = shape.polygon;
       const centerX = polygon.reduce((sum, [x]) => sum + x, 0) / polygon.length;
       const centerY =
         polygon.reduce((sum, [, y]) => sum + y, 0) / polygon.length;
       const textColor =
-        annotation.style.lineColor || ([255, 255, 255, 255] as ColorRGBA);
+        shape.style.lineColor || ([255, 255, 255, 255] as ColorRGBA);
 
       labelData.push({
-        text: annotation.text,
+        text: shape.text,
         position: [centerX, centerY, 0],
         pixelOffset: [0, 0],
         color: textColor,
         textAnchor: "middle",
-        id: `${annotation.id}-text`,
+        id: `${shape.id}-text`,
       });
     }
   });
 
-  // 1. Polygons layer (rectangles, polygons, polylines, ellipses)
+  // 1. Polygons layer (filled polygons + stroked polylines)
   if (polygonData.length > 0) {
     layers.push(
       new PolygonLayer({
-        id: "annotation-polygons",
+        id: "shape-polygons",
         data: polygonData,
         getPolygon: (d) => d.polygon,
         getFillColor: (d) => d.fillColor,
@@ -299,7 +317,7 @@ export function createAllAnnotationLayers(
   if (brushEditOutlineData.length > 0) {
     layers.push(
       new PolygonLayer({
-        id: "annotation-brush-edit-outline",
+        id: "shape-brush-edit-outline",
         data: brushEditOutlineData,
         getPolygon: (d) => d.polygon,
         getFillColor: [0, 0, 0, 0] as ColorRGBA,
@@ -320,7 +338,7 @@ export function createAllAnnotationLayers(
   if (pointData.length > 0) {
     layers.push(
       new ScatterplotLayer({
-        id: "annotation-points",
+        id: "shape-points",
         data: pointData,
         getPosition: (d) => d.position,
         getRadius: (d) => d.radius,
@@ -334,11 +352,11 @@ export function createAllAnnotationLayers(
     );
   }
 
-  // 3. Text annotations layer
+  // 3. Text shapes layer
   if (textData.length > 0) {
     layers.push(
       new TextLayer({
-        id: "annotation-texts",
+        id: "shape-texts",
         data: textData,
         getText: (d) => d.text,
         getPosition: (d) => d.position,
@@ -355,15 +373,15 @@ export function createAllAnnotationLayers(
     );
   }
 
-  // 4. Arrows layer
+  // 4. Line arrowheads (IconLayer)
   if (arrowData.length > 0) {
     layers.push(
       new IconLayer({
-        id: "annotation-arrows",
+        id: "shape-arrows",
         data: arrowData,
         getPosition: (d) => d.position,
-        getIcon: () => ({
-          url: ARROW_ICON_URL,
+        getIcon: (d) => ({
+          url: d.iconUrl,
           width: ARROW_ICON_SIZE,
           height: ARROW_ICON_SIZE,
           anchorX: ARROW_ICON_SIZE / 2,
@@ -385,7 +403,7 @@ export function createAllAnnotationLayers(
   if (labelData.length > 0) {
     layers.push(
       new TextLayer({
-        id: "annotation-labels",
+        id: "shape-labels",
         data: labelData,
         getText: (d) => d.text,
         getPosition: (d) => d.position,
@@ -398,7 +416,7 @@ export function createAllAnnotationLayers(
         fontFamily: "Arial, sans-serif",
         fontWeight: "normal",
         backgroundPadding: [6, 6],
-        pickable: false,
+        pickable,
         getTextAnchor: (d) => d.textAnchor,
       }),
     );
@@ -408,54 +426,48 @@ export function createAllAnnotationLayers(
 }
 
 /**
- * Hook that creates deck.gl layers from annotations in the store and syncs them
+ * Hook that creates deck.gl layers from viewer shapes in the store and syncs them
  * to the overlay layers.
  *
  * @param pickable - Whether layers should be pickable/interactive (default true).
  *                  Set false for presenter mode.
  */
-export function useAnnotationLayers(pickable: boolean = true) {
-  const annotations = useOverlayStore((state) => state.annotations);
-  const hiddenLayers = useOverlayStore((state) => state.hiddenLayers);
-  const hoveredAnnotationId = useOverlayStore(
-    (state) => state.hoverState.hoveredAnnotationId,
+export function useShapeLayers(pickable: boolean = true) {
+  const shapes = useAppStore((state) => state.shapes);
+  const hiddenShapeIds = useAppStore((state) => state.hiddenShapeIds);
+  const hoveredShapeId = useAppStore(
+    (state) => state.hoverState.hoveredShapeId,
   );
-  const brushEditTargetId = useOverlayStore((state) => state.brushEditTargetId);
+  const brushEditTargetId = useAppStore((state) => state.brushEditTargetId);
 
-  const annotationLayers = React.useMemo(() => {
-    return createAllAnnotationLayers(
-      annotations,
-      hiddenLayers,
-      hoveredAnnotationId,
+  const shapeLayers = React.useMemo(() => {
+    return createAllShapeLayers(
+      shapes,
+      hiddenShapeIds,
+      hoveredShapeId,
       pickable,
       brushEditTargetId,
     );
-  }, [
-    annotations,
-    hiddenLayers,
-    hoveredAnnotationId,
-    pickable,
-    brushEditTargetId,
-  ]);
+  }, [shapes, hiddenShapeIds, hoveredShapeId, pickable, brushEditTargetId]);
 
   React.useEffect(() => {
     const consolidatedLayerIds = [
-      "annotation-polygons",
-      "annotation-brush-edit-outline",
-      "annotation-points",
-      "annotation-texts",
-      "annotation-arrows",
-      "annotation-labels",
+      "shape-polygons",
+      "shape-brush-edit-outline",
+      "shape-points",
+      "shape-texts",
+      "shape-arrows",
+      "shape-labels",
     ];
 
     consolidatedLayerIds.forEach((layerId) => {
-      useOverlayStore.getState().removeOverlayLayer(layerId);
+      useAppStore.getState().removeOverlayLayer(layerId);
     });
 
-    annotationLayers.forEach((layer) => {
-      useOverlayStore.getState().addOverlayLayer(layer);
+    shapeLayers.forEach((layer) => {
+      useAppStore.getState().addOverlayLayer(layer);
     });
-  }, [annotationLayers]);
+  }, [shapeLayers]);
 
-  return annotationLayers;
+  return shapeLayers;
 }

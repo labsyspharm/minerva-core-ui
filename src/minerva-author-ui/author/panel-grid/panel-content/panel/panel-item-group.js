@@ -70,7 +70,7 @@ class PanelItemGroup extends sourceGroupChannels(
       const rangeEditor = () => {
         return toElement(rangeEditorElement)``({
           GroupUUID: () => this.itemIdentifiers.GroupUUID,
-          UUID: () => channel.UUID,
+          UUID: () => channel.id ?? channel.UUID,
           style,
           class: "full",
         });
@@ -88,7 +88,7 @@ class PanelItemGroup extends sourceGroupChannels(
       `({
         expanded: String(channel.State.Expanded),
         group_uuid: () => this.itemIdentifiers.GroupUUID,
-        channel_uuid: () => channel.UUID,
+        channel_uuid: () => channel.id ?? channel.UUID,
         accordion: "true",
         class: "inner",
       });

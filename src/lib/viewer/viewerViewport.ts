@@ -1,5 +1,5 @@
 import type { Deck, OrthographicViewState } from "@deck.gl/core";
-import { useOverlayStore } from "@/lib/stores";
+import { useAppStore } from "@/lib/stores/appStore";
 
 export type ViewerBounds = {
   x0: number;
@@ -71,7 +71,7 @@ const getViewerViewportSnapshotFromStore =
         return live;
       }
     }
-    const { viewerViewState, viewerViewportSize } = useOverlayStore.getState();
+    const { viewerViewState, viewerViewportSize } = useAppStore.getState();
     if (!viewerViewState || !viewerViewportSize) return null;
     if (viewerViewportSize.width <= 0 || viewerViewportSize.height <= 0)
       return null;

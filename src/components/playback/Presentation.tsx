@@ -3,14 +3,23 @@ import ReactMarkdown from "react-markdown";
 //import { theme } from "@/theme.module.css";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import { useOverlayStore } from "@/lib/stores";
-import { getWaypointViewState } from "@/lib/waypoint";
+import {
+  effectiveReferenceImagePixelSize,
+  useAppStore,
+} from "@/lib/stores/appStore";
+import type { Waypoint } from "@/lib/stores/documentStore";
+import {
+  findSourceChannel,
+  flattenImageChannelsInDocumentOrder,
+  useDocumentStore,
+} from "@/lib/stores/documentStore";
+import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
 
 const _theme = {};
 
 // Types
 import type { MouseEvent, ReactElement } from "react";
-import type { ConfigProps, ConfigWaypoint } from "@/lib/config";
+import type { ConfigProps } from "@/lib/authoring/config";
 
 export type PresentationProps = {
   children: ReactElement;
@@ -276,92 +285,79 @@ const ChannelName = styled.span<{ color: string }>`
 `;
 
 export const Presentation = (props: PresentationProps) => {
+  const waypoints = useDocumentStore((s) => s.waypoints);
+  const shapes = useDocumentStore((s) => s.shapes);
+  const groups = useDocumentStore((s) => s.groups);
+  const images = useDocumentStore((s) => s.images);
+  const sourceChannels = useMemo(
+    () => flattenImageChannelsInDocumentOrder(images),
+    [images],
+  );
+  const docImageWidth = useDocumentStore((s) => s.images[0]?.sizeX ?? 0);
+  const docImageHeight = useDocumentStore((s) => s.images[0]?.sizeY ?? 0);
+  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
+  const { width: imageWidth, height: imageHeight } =
+    effectiveReferenceImagePixelSize(
+      viewerRefSize,
+      docImageWidth,
+      docImageHeight,
+    );
   const {
-    stories,
     activeStoryIndex,
     setActiveStory,
     activeChannelGroupId,
     setActiveChannelGroup,
-    importWaypointAnnotations,
-    clearImportedAnnotations,
-    imageWidth,
-    imageHeight,
-    setTargetWaypointViewState,
-    viewerViewportSize,
-    SourceChannels,
-    Groups,
-  } = useOverlayStore();
+    importWaypointShapes,
+    setTargetWaypointCamera,
+  } = useAppStore();
 
   const previousActiveStoryIndexRef = useRef<number | null>(null);
 
-  // Auto-import annotations for the active story
-  // Re-run when image dimensions become available or active story changes
+  // Auto-import shapes for the active story when dimensions / selection / groups change.
   useEffect(() => {
-    if (stories.length === 0) return;
+    if (waypoints.length === 0) return;
     // Wait for image dimensions to be set
     if (imageWidth === 0 || imageHeight === 0) return;
     // Wait for active story to be explicitly set (avoid duplicate imports)
     if (activeStoryIndex === null) return;
 
-    const story = stories[activeStoryIndex];
+    const story = waypoints[activeStoryIndex];
 
     if (story) {
       const idx = activeStoryIndex;
       const prev = previousActiveStoryIndexRef.current;
-      const store = useOverlayStore.getState();
+      const store = useAppStore.getState();
       if (prev !== null && prev !== idx) {
-        store.persistImportedAnnotationsToStory(prev);
+        store.persistImportedShapesToStory(prev);
       }
       previousActiveStoryIndexRef.current = idx;
 
-      // Import annotations from the story (clearing existing imported ones atomically)
-      const arrows = story.Arrows || [];
-      const overlays = story.Overlays || [];
-      if (arrows.length > 0 || overlays.length > 0) {
-        importWaypointAnnotations(arrows, overlays, true); // true = clear existing imported annotations
-      } else {
-        // If no annotations to import, just clear existing ones
-        clearImportedAnnotations();
+      // Import shapes from the story (clearing existing imported ones atomically)
+      importWaypointShapes(story, true, shapes);
+
+      const authoringMap = useAppStore.getState().waypointAuthoring;
+      const wp = waypointToConfigWaypoint(story, authoringMap.get(story.id));
+      if (imageWidth > 0 && imageHeight > 0) {
+        setTargetWaypointCamera(wp);
       }
 
-      const wp = story as ConfigWaypoint;
-      let viewState = null;
-      if (
-        viewerViewportSize?.width &&
-        viewerViewportSize?.height &&
-        imageWidth > 0 &&
-        imageHeight > 0
-      ) {
-        viewState = getWaypointViewState(
-          wp,
-          imageWidth,
-          imageHeight,
-          viewerViewportSize.width,
-          viewerViewportSize.height,
-        );
-      }
-      if (viewState) setTargetWaypointViewState(viewState);
-
-      const groupName = wp.Group;
-      if (Groups.length > 0) {
-        const foundGroup =
-          Groups.find((g) => g.Name === groupName) || Groups[0];
+      const gid = wp.groupId;
+      if (groups.length > 0 && gid) {
+        const foundGroup = groups.find((g) => g.id === gid) || groups[0];
         if (foundGroup) {
-          setActiveChannelGroup(foundGroup.UUID);
+          setActiveChannelGroup(foundGroup.id);
         }
       }
     }
   }, [
-    stories,
+    waypoints,
     activeStoryIndex,
     imageWidth,
     imageHeight,
-    viewerViewportSize?.width,
-    viewerViewportSize?.height,
-    importWaypointAnnotations,
-    clearImportedAnnotations,
-    setTargetWaypointViewState,
-    Groups,
+    shapes,
+    importWaypointShapes,
+    setTargetWaypointCamera,
+    groups,
     setActiveChannelGroup,
   ]);
 
@@ -369,44 +365,38 @@ export const Presentation = (props: PresentationProps) => {
     return () => {
       const p = previousActiveStoryIndexRef.current;
       if (p !== null) {
-        const s = useOverlayStore.getState();
-        if (s.imageWidth > 0 && s.imageHeight > 0) {
-          s.persistImportedAnnotationsToStory(p);
+        const doc = useDocumentStore.getState();
+        const st = useAppStore.getState();
+        const im = doc.images[0];
+        const { width: w, height: h } = effectiveReferenceImagePixelSize(
+          st.viewerReferenceImagePixelSize,
+          im?.sizeX ?? 0,
+          im?.sizeY ?? 0,
+        );
+        if (w > 0 && h > 0) {
+          useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
     };
   }, []);
 
   const updateGroup = (activeStory) => {
-    const story = stories[activeStory];
-    const group_name = story.Group;
-    // TODO -- use UUID in story
+    const story = waypoints[activeStory];
+    const gid = story.groupId;
     const found_group =
-      Groups.find(({ Name }) => Name === group_name) || Groups[0];
+      (gid && groups.find(({ id }) => id === gid)) || groups[0];
     if (found_group) {
-      setActiveChannelGroup(found_group.UUID);
+      setActiveChannelGroup(found_group.id);
     }
   };
 
   const updateViewState = (storyIndex: number) => {
-    const story = stories[storyIndex] as ConfigWaypoint | undefined;
+    const story = waypoints[storyIndex];
     if (!story) return;
-    let viewState = null;
-    if (
-      viewerViewportSize?.width &&
-      viewerViewportSize?.height &&
-      imageWidth > 0 &&
-      imageHeight > 0
-    ) {
-      viewState = getWaypointViewState(
-        story,
-        imageWidth,
-        imageHeight,
-        viewerViewportSize.width,
-        viewerViewportSize.height,
-      );
+    if (imageWidth > 0 && imageHeight > 0) {
+      const auth = useAppStore.getState().waypointAuthoring.get(story.id);
+      setTargetWaypointCamera(waypointToConfigWaypoint(story, auth));
     }
-    if (viewState) setTargetWaypointViewState(viewState);
   };
 
   const storyFirst = () => {
@@ -421,13 +411,13 @@ export const Presentation = (props: PresentationProps) => {
     updateViewState(active_story);
   };
   const storyRight = () => {
-    const active_story = Math.min(stories.length - 1, activeStoryIndex + 1);
+    const active_story = Math.min(waypoints.length - 1, activeStoryIndex + 1);
     setActiveStory(active_story);
     updateGroup(active_story);
     updateViewState(active_story);
   };
   const storyAt = (i: number) => {
-    const active_story = Math.min(stories.length - 1, Math.max(0, i));
+    const active_story = Math.min(waypoints.length - 1, Math.max(0, i));
     setActiveStory(active_story);
     updateGroup(active_story);
     updateViewState(active_story);
@@ -483,7 +473,7 @@ export const Presentation = (props: PresentationProps) => {
     <Count className="count">
       <div title="Current waypoint">{activeStoryIndex + 1}</div>
       <div>{"⁄"}</div>
-      <div title="Number of waypoints">{stories.length}</div>
+      <div title="Number of waypoints">{waypoints.length}</div>
     </Count>
   );
   const StoryRight = (props) => {
@@ -519,19 +509,19 @@ export const Presentation = (props: PresentationProps) => {
     </p>
   );
   const TableOfContents = (props) => {
-    const { stories } = props;
+    const { waypoints: tocWaypoints } = props;
     return (
       <TocWrapper>
         <h2 className="h6">Table of Contents</h2>
         <ol>
-          {stories.map((wp: ConfigWaypoint, i: number) => {
+          {tocWaypoints.map((wp: Waypoint, i: number) => {
             const goToStory = (e: MouseEvent) => {
               e.preventDefault();
               storyAt(i);
             };
             return (
-              <li key={wp.UUID} onMouseDown={goToStory}>
-                {wp.Name}
+              <li key={wp.id} onMouseDown={goToStory}>
+                {wp.title}
               </li>
             );
           })}
@@ -541,11 +531,11 @@ export const Presentation = (props: PresentationProps) => {
   };
 
   const first_story = activeStoryIndex === 0;
-  const last_story = activeStoryIndex === stories.length - 1;
+  const last_story = activeStoryIndex === waypoints.length - 1;
   const main_title = props.name;
-  const story = stories[activeStoryIndex];
-  const story_title = story?.Name ?? `Waypoint ${activeStoryIndex + 1}`;
-  const story_content = story?.Content;
+  const story = waypoints[activeStoryIndex];
+  const story_title = story?.title ?? `Waypoint ${activeStoryIndex + 1}`;
+  const story_content = story?.content;
 
   // Scroll waypoint content back to top when changing to a different waypoint.
   const contentPaneRef = useRef(null);
@@ -557,36 +547,39 @@ export const Presentation = (props: PresentationProps) => {
 
   // Process story content to highlight channel names
   const { processedContent, channelColors } = useMemo(() => {
-    const activeGroup = Groups.find((g) => g.UUID === activeChannelGroupId);
+    const activeGroup = groups.find((g) => g.id === activeChannelGroupId);
     if (!activeGroup || !story_content)
       return {
         processedContent: story_content || "",
         channelColors: new Map(),
       };
 
-    const channels = activeGroup?.GroupChannels || [];
+    const channels = activeGroup?.channels || [];
 
     let content = story_content;
     const colors = new Map();
 
     channels.forEach((channel) => {
-      const { Name } = SourceChannels.find(({ UUID }) => {
-        return UUID === channel.SourceChannel.UUID;
-      }) || { Name: "unknown" };
+      const { name: chName } = findSourceChannel(
+        sourceChannels,
+        channel.channelId,
+      ) || {
+        name: "unknown",
+      };
       // Escape special regex characters in channel name
-      const escapedName = Name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const escapedName = chName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       // Use word boundaries to match whole words only
       const regex = new RegExp(`\\b${escapedName}\\b`, "g");
-      content = content.replace(regex, `**${Name}**`);
-      const { R, G, B } = channel.Color;
-      const hex_color = [R, G, B]
+      content = content.replace(regex, `**${chName}**`);
+      const { r, g: gg, b } = channel.color;
+      const hex_color = [r, gg, b]
         .map((n) => n.toString(16).padStart(2, "0"))
         .join("");
-      colors.set(Name, `#${hex_color}`);
+      colors.set(chName, `#${hex_color}`);
     });
 
     return { processedContent: content, channelColors: colors };
-  }, [story_content, activeChannelGroupId, Groups, SourceChannels]);
+  }, [story_content, activeChannelGroupId, groups, sourceChannels]);
 
   return (
     <PresentationShell>
@@ -630,7 +623,7 @@ export const Presentation = (props: PresentationProps) => {
             >
               {processedContent}
             </ReactMarkdown>
-            {first_story && <TableOfContents {...{ stories }} />}
+            {first_story && <TableOfContents waypoints={waypoints} />}
             <InlineNext>
               {last_story ? (
                 <p>End</p>

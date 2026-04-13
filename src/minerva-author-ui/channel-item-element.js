@@ -11,6 +11,45 @@ const toChannelItem = (
 
     static eventHandlerKeys = [ ];
 
+    static get observedAttributes() {
+      return ["r", "g", "b", "histogram_loading"];
+    }
+
+    _updateHistogramLoadingOverlay() {
+      const el = this.shadowRoot?.querySelector(
+        "[data-histogram-loading-overlay]",
+      );
+      if (!el) return;
+      if (this.getAttribute("histogram_loading") === "true") {
+        el.classList.add("is-visible");
+      } else {
+        el.classList.remove("is-visible");
+      }
+    }
+
+    _syncRangeEditorSliderColor() {
+      const el = this.shadowRoot?.querySelector(
+        "[data-contrast-range-editor]",
+      );
+      if (!el) return;
+      const R = parseInt(this.getAttribute("r"), 10);
+      const G = parseInt(this.getAttribute("g"), 10);
+      const B = parseInt(this.getAttribute("b"), 10);
+      const r = Number.isFinite(R) ? R : 0;
+      const g = Number.isFinite(G) ? G : 0;
+      const b = Number.isFinite(B) ? B : 0;
+      el.style.setProperty("--slider-background", `rgb(${r},${g},${b})`);
+    }
+
+    attributeChangedCallback(name, _old, _new) {
+      if (name === "r" || name === "g" || name === "b") {
+        this._syncRangeEditorSliderColor();
+      }
+      if (name === "histogram_loading") {
+        this._updateHistogramLoadingOverlay();
+      }
+    }
+
     addStyles() {
       const shadow = this.shadowRoot;
       shadow.adoptedStyleSheets = [
@@ -25,11 +64,24 @@ const toChannelItem = (
       this.attachShadow({ mode: "open" });
       const shadow = this.addStyles();
       html`${this.elementTemplate}`(shadow);
+      queueMicrotask(() => {
+        this._syncRangeEditorSliderColor();
+        this._updateHistogramLoadingOverlay();
+      });
     }
 
     get elementTemplate() {
       return toElement("div")`
-        ${this.chartTemplate}
+        <div class="histogram-chart-host">
+          ${this.chartTemplate}
+          <div
+            class="histogram-loading-overlay"
+            data-histogram-loading-overlay
+            title="Loading histogram"
+          >
+            <div class="histogram-loading-spinner"></div>
+          </div>
+        </div>
         ${this.rangeTemplate}
       `({
         class: "center grid"
@@ -38,9 +90,7 @@ const toChannelItem = (
 
     get rangeTemplate() {
       const { distribution } = this;
-      const {
-        XScale, YValues, UpperRange, LowerRange
-      } = distribution;
+      const { XScale, UpperRange, LowerRange } = distribution;
       const style = () => {
         const R = parseInt(this.getAttribute("r"));
         const G = parseInt(this.getAttribute("g"));
@@ -55,11 +105,11 @@ const toChannelItem = (
           lower_range: () => this.getAttribute("lower_range"),
           upper_range: () => this.getAttribute("upper_range"),
           dist_scale: XScale,
-          dist_count: YValues.length,
           dist_max: UpperRange,
           dist_min: LowerRange,
           style,
           class: "full",
+          "data-contrast-range-editor": "",
         });
       };
       return rangeEditor;
@@ -67,8 +117,8 @@ const toChannelItem = (
 
     get chartTemplate() {
       const width = 100;
-      const height = 15;
-      const stroke = 1.5;
+      const height = 11;
+      const stroke = 1.15;
       const d = () => {
         const { YValues: values } = this.distribution;
         const line = [0, ...(values || []), 0];
@@ -95,10 +145,10 @@ const toChannelItem = (
 
     get groupChannel() {
       const group = (ItemRegistry?.Groups || []).find((x) => {
-        return x.UUID == this.getAttribute("group_uuid");
+        return (x.id ?? x.UUID) == this.getAttribute("group_uuid");
       }) || null;
       return (group?.GroupChannels || []).find((x) => {
-        return x.UUID == this.getAttribute("channel_uuid");
+        return (x.id ?? x.UUID) == this.getAttribute("channel_uuid");
       }) || null;
     }
 
@@ -111,7 +161,7 @@ const toChannelItem = (
           XScale: "log",
           YScale: "linear",
           YValues: [],
-          LowerRange: 1,
+          LowerRange: 0,
           UpperRange: 16,
         }
       );

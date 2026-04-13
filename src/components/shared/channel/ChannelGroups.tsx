@@ -1,89 +1,139 @@
 import * as React from "react";
 import styled from "styled-components";
-import { useOverlayStore } from "@/lib/stores";
+import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
+import { useAppStore } from "@/lib/stores/appStore";
+import { type Group, useDocumentStore } from "@/lib/stores/documentStore";
 
 const WrapRows = styled.div`
-  grid-auto-rows: auto;
-  display: grid;
-  gap: 0.25em;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 `;
 
-const GroupName = styled.div`
-  outline: 1px solid ${({ outline }) => outline};
-  background-color: ${({ color }) => color};
-  cursor: pointer;
-  border-radius: 2px;
-  margin-bottom: 0.15em;
-  padding: 2px 2px 2px 21px;
-  text-indent: -1em;
-  line-height: 1.2em;
-
-  :hover {
-    text-decoration: underline;
-  }
+const activeHeaderStyles = `
+  box-sizing: border-box;
+  width: 100%;
+  border-radius: 5px;
+  padding: 5px 7px;
+  line-height: 1.25;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--theme-light-contrast-color);
+  border: 1px solid color-mix(in srgb, var(--theme-glass-edge) 65%, transparent);
+  background: color-mix(in srgb, var(--theme-dark-main-color) 35%, transparent);
 `;
 
-const ActiveGroupName = styled.div`
-  cursor: pointer;
-  border-radius: 2px;
-  padding: 4px 8px;
-  line-height: 1.2em;
-  margin-bottom: 0.5em;
-  outline: 1px solid var(--theme-glass-edge);
-  background-color: var(--theme-dark-main-color);
+const ActiveGroupStatic = styled.div`
+  ${activeHeaderStyles}
+  cursor: default;
+`;
+
+const ActiveGroupTrigger = styled.button`
+  all: unset;
+  ${activeHeaderStyles}
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 5px;
+  cursor: pointer;
+  text-align: left;
 
-  :hover {
-    text-decoration: underline;
+  &:hover {
+    border-color: color-mix(in srgb, var(--theme-glass-edge) 90%, transparent);
+    background: color-mix(in srgb, var(--theme-dark-main-color) 28%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--theme-light-focus-color) 75%, transparent);
+    outline-offset: 1px;
   }
 `;
 
-const Arrow = styled.span`
-  font-size: 0.7em;
-  margin-right: 4px;
-  transition: transform 0.2s ease;
+const ChevronWrap = styled.span<{ expanded: boolean }>`
+  display: flex;
+  flex-shrink: 0;
+  line-height: 0;
+  opacity: 0.72;
+  transition: transform 0.18s ease;
   transform: rotate(${({ expanded }) => (expanded ? "180deg" : "0deg")});
 `;
 
-const GroupRow = (props) => {
+const ChevronIcon = styled(ChevronDownIcon)`
+  width: 12px;
+  height: 12px;
+`;
+
+const AlternateList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 1px;
+  padding: 3px;
+  border-radius: 5px;
+  background: color-mix(in srgb, black 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-glass-edge) 40%, transparent);
+`;
+
+const GroupAltRow = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1.3;
+  padding: 4px 6px;
+  border-radius: 3px;
+  color: color-mix(in srgb, var(--theme-light-contrast-color) 88%, transparent);
+  text-align: left;
+
+  &:hover {
+    background: color-mix(in srgb, white 8%, transparent);
+    color: var(--theme-light-contrast-color);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--theme-light-focus-color) 65%, transparent);
+    outline-offset: 0;
+  }
+`;
+
+const GroupRow = (props: { group: Group }) => {
   const { group } = props;
   const { name } = group;
 
-  const { setActiveChannelGroup, activeChannelGroupId, Groups } =
-    useOverlayStore();
+  const { setActiveChannelGroup } = useAppStore();
+  const groups = useDocumentStore((s) => s.groups);
   const row_group = React.useMemo(
-    () => Groups.find(({ Name }) => Name === name) || Groups[0],
-    [Groups, name],
+    () => groups.find((grp) => grp.name === name) || groups[0],
+    [groups, name],
   );
 
   const toGroup = () => {
     if (row_group) {
-      setActiveChannelGroup(row_group.UUID);
+      setActiveChannelGroup(row_group.id);
     }
   };
 
-  const nameProps = { color: "none", outline: "none" };
-
   return (
-    <GroupName {...nameProps} onClick={toGroup}>
+    <GroupAltRow type="button" onClick={toGroup}>
       {name}
-    </GroupName>
+    </GroupAltRow>
   );
 };
 
-export const ChannelGroups = (props) => {
-  const { groups } = props;
+export const ChannelGroups = (props: {
+  channelGroups: { id: string; name: string }[];
+}) => {
+  const { channelGroups } = props;
   const [expanded, setExpanded] = React.useState(false);
 
-  const { activeChannelGroupId, Groups } = useOverlayStore();
+  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
+  const groups = useDocumentStore((s) => s.groups);
   const activeGroup = React.useMemo(
-    () => Groups.find(({ UUID }) => UUID === activeChannelGroupId) || Groups[0],
-    [Groups, activeChannelGroupId],
+    () => groups.find(({ id }) => id === activeChannelGroupId) || groups[0],
+    [groups, activeChannelGroupId],
   );
 
-  // Collapse dropdown when active group changes (e.g. waypoint navigation)
   const prevGroupId = React.useRef(activeChannelGroupId);
   React.useEffect(() => {
     if (prevGroupId.current !== activeChannelGroupId) {
@@ -92,33 +142,58 @@ export const ChannelGroups = (props) => {
     }
   });
 
-  const activeGroupName = activeGroup?.Name || "No group";
+  const activeGroupName = activeGroup?.name || "No group";
 
-  // Only one group — just show the name, no dropdown
-  if (groups.length <= 1) {
+  if (channelGroups.length <= 1) {
     return (
       <WrapRows>
-        <ActiveGroupName>
-          <span>{activeGroupName}</span>
-        </ActiveGroupName>
+        <ActiveGroupStatic title={activeGroupName}>
+          <span
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {activeGroupName}
+          </span>
+        </ActiveGroupStatic>
       </WrapRows>
     );
   }
 
   const otherGroups = expanded
-    ? groups.filter((g) => g.UUID !== activeGroup?.UUID)
+    ? groups.filter((g) => g.id !== activeGroup?.id)
     : [];
 
   return (
     <WrapRows>
-      <ActiveGroupName onClick={() => setExpanded(!expanded)}>
-        <span>{activeGroupName}</span>
-        <Arrow expanded={expanded}>▼</Arrow>
-      </ActiveGroupName>
-      {otherGroups.map((group) => {
-        const groupProps = { ...props, group };
-        return <GroupRow key={group.name} {...groupProps} />;
-      })}
+      <ActiveGroupTrigger
+        type="button"
+        aria-expanded={expanded}
+        onClick={() => setExpanded(!expanded)}
+      >
+        <span
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            minWidth: 0,
+          }}
+        >
+          {activeGroupName}
+        </span>
+        <ChevronWrap expanded={expanded} aria-hidden>
+          <ChevronIcon />
+        </ChevronWrap>
+      </ActiveGroupTrigger>
+      {otherGroups.length > 0 ? (
+        <AlternateList>
+          {otherGroups.map((group) => (
+            <GroupRow key={group.id} group={group} />
+          ))}
+        </AlternateList>
+      ) : null}
     </WrapRows>
   );
 };

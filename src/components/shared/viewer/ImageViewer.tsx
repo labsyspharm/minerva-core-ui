@@ -11,22 +11,29 @@ import styled from "styled-components";
 import "@deck.gl/widgets/stylesheet.css";
 
 import type { Layer } from "@deck.gl/core";
+import { PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
-import { useAnnotationLayers } from "@/lib/annotationLayers";
-import { createTileLayers, loadDicom } from "@/lib/dicom";
-import type { DicomIndex } from "@/lib/dicom-index";
-import { createDragHandlers } from "@/lib/dragHandlers";
-import type { Story } from "@/lib/exhibit";
+import { createTileLayers, loadDicom } from "@/lib/imaging/dicom.js";
+import type { DicomIndex } from "@/lib/imaging/dicomIndex";
+import type { Config, Loader } from "@/lib/imaging/viv";
+import type { Story } from "@/lib/legacy/exhibit";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
-import type { ConfigGroup, OverlayLayer } from "@/lib/stores";
-import { useOverlayStore } from "@/lib/stores";
-import { useWindowSize } from "@/lib/useWindowSize";
+import { useShapeLayers } from "@/lib/shapes/shapeLayers";
+import type { OverlayLayer } from "@/lib/shapes/shapeModel";
+import { useAppStore } from "@/lib/stores/appStore";
+import { useWindowSize } from "@/lib/util/useWindowSize";
+import { ORTHO_VIEW_ID, SCALEBAR_VIEW_ID } from "@/lib/viewer/deckViewIds";
+import { createDragHandlers } from "@/lib/viewer/dragHandlers";
 import {
   getViewerViewportSnapshotFromDeck,
   orthographicZoomToNumber,
   registerViewerLiveSnapshotReader,
-} from "@/lib/viewerViewport";
-import type { Config, Loader } from "@/lib/viv";
+} from "@/lib/viewer/viewerViewport";
+import { getWaypointViewState } from "@/lib/waypoints/waypoint";
+import {
+  WAYPOINT_THUMBNAIL_JPEG_QUALITY,
+  WAYPOINT_THUMBNAIL_PIXEL_SIZE,
+} from "@/lib/waypoints/waypointThumbnail";
 
 type ItemRegistryChannel = {
   name: string;
@@ -35,21 +42,27 @@ type ItemRegistryChannel = {
 };
 
 type ItemRegistryGroup = {
-  State: ConfigGroup["State"];
+  State: { Expanded: boolean };
   channels: ItemRegistryChannel[];
   name: string;
   g: number;
 };
 
+/** One OME-TIFF pyramid + the document `Image.id` carried on flat source channels. */
+export type OmeLoaderEntry = {
+  loader: Loader;
+  sourceImageId: string;
+};
+
 export type ImageViewerProps = {
-  loaderOmeTiff: Loader;
+  omeLoaderEntries: OmeLoaderEntry[];
   stories: Story[];
   dicomIndexList: DicomIndex[];
   viewerConfig: Config;
   overlayLayers?: OverlayLayer[];
   activeTool: string;
   isDragging?: boolean;
-  hoveredAnnotationId?: string | null;
+  hoveredShapeId?: string | null;
   onOverlayInteraction?: (
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
     coordinate: [number, number, number],
@@ -117,29 +130,36 @@ const toSettingsInternal = (
   activeChannelGroupId,
   channelVisibilities,
   toSettings,
+  loaderSourceImageId?: string,
 ) => {
-  // Gets the default settings
   if (loader === null || !groups) {
-    return toSettings(activeChannelGroupId, modality);
+    return toSettings(
+      activeChannelGroupId,
+      modality,
+      undefined,
+      channelVisibilities,
+      loaderSourceImageId,
+    );
   }
   return toSettings(
     activeChannelGroupId,
     modality,
     loader,
     channelVisibilities,
+    loaderSourceImageId,
   );
 };
 
 export const ImageViewer = (props: ImageViewerProps) => {
   const windowSize = useWindowSize();
   const {
-    loaderOmeTiff,
+    omeLoaderEntries,
     dicomIndexList,
     groups,
     overlayLayers = [],
     activeTool,
     isDragging = false,
-    hoveredAnnotationId = null,
+    hoveredShapeId = null,
     onOverlayInteraction,
     viewerConfig,
     showSquareViewportOverlay = false,
@@ -152,8 +172,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
     channelVisibilities,
     sam2Processing,
     authoringWaypointEditorOpen,
-  } = useOverlayStore();
-  useAnnotationLayers(authoringWaypointEditorOpen);
+  } = useAppStore();
+  useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [_canvas, _setCanvas] = useState(null);
   const rootRef = useRef<HTMLElement | null>(null);
@@ -170,7 +190,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         setViewportSize({ width, height });
         // Same tick as layout — avoids null viewerViewportSize before React commits.
         if (width > 0 && height > 0) {
-          useOverlayStore.getState().setViewerViewportSize({ width, height });
+          useAppStore.getState().setViewerViewportSize({ width, height });
         }
       }
     });
@@ -179,18 +199,21 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return () => resizeObserver.disconnect();
   }, []);
 
-  const mainSettingsOmeTiff = useMemo(() => {
+  const mainSettingsOmeList = useMemo(() => {
     const modality = "Colorimetric";
-    return toSettingsInternal(
-      loaderOmeTiff,
-      modality,
-      groups,
-      activeChannelGroupId,
-      channelVisibilities,
-      viewerConfig.toSettings,
+    return omeLoaderEntries.map(({ loader, sourceImageId }) =>
+      toSettingsInternal(
+        loader,
+        modality,
+        groups,
+        activeChannelGroupId,
+        channelVisibilities,
+        viewerConfig.toSettings,
+        sourceImageId,
+      ),
     );
   }, [
-    loaderOmeTiff,
+    omeLoaderEntries,
     groups,
     activeChannelGroupId,
     channelVisibilities,
@@ -217,14 +240,21 @@ export const ImageViewer = (props: ImageViewerProps) => {
     viewerConfig.toSettings,
   ]);
 
-  // Show only ome-tiff if available
   const mainSettingsList = useMemo(
     () =>
-      loaderOmeTiff !== null ? [mainSettingsOmeTiff] : mainSettingsDicomList,
-    [loaderOmeTiff, mainSettingsOmeTiff, mainSettingsDicomList],
+      omeLoaderEntries.length > 0 ? mainSettingsOmeList : mainSettingsDicomList,
+    [omeLoaderEntries, mainSettingsOmeList, mainSettingsDicomList],
   );
 
-  // TODO, assert all loaders match shape
+  /**
+   * Waypoints, overlays, SAM2, and initial pan/zoom use **only the first stacked
+   * image** (`mainSettingsList[0]`, i.e. first OME file or first DICOM series).
+   * Additional OME layers share the same world axes; different sizes are not registered.
+   */
+  const setViewerReferenceImagePixelSize = useAppStore(
+    (s) => s.setViewerReferenceImagePixelSize,
+  );
+
   const firstLoader = useMemo(
     () =>
       mainSettingsList.length > 0
@@ -239,15 +269,26 @@ export const ImageViewer = (props: ImageViewerProps) => {
   // Memoize image shape computation
   const imageShape = useMemo(() => {
     if (firstLoader.data === null) {
-      return {
-        x: viewportSize.width,
-        y: viewportSize.height,
-      };
+      return { x: 0, y: 0 };
     }
     const shape_labels = firstLoader.data[0].labels;
     const shape_values = firstLoader.data[0].shape;
     return Object.fromEntries(shape_labels.map((k, i) => [k, shape_values[i]]));
-  }, [viewportSize.width, viewportSize.height, firstLoader]);
+  }, [firstLoader]);
+
+  useEffect(() => {
+    if (imageShape.x > 0 && imageShape.y > 0) {
+      setViewerReferenceImagePixelSize({
+        width: Number(imageShape.x),
+        height: Number(imageShape.y),
+      });
+    } else {
+      setViewerReferenceImagePixelSize(null);
+    }
+    return () => {
+      setViewerReferenceImagePixelSize(null);
+    };
+  }, [imageShape.x, imageShape.y, setViewerReferenceImagePixelSize]);
 
   // Memoize initial view state
   const initialViewState = useMemo(() => {
@@ -262,11 +303,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
     useState<OrthographicViewState>(initialViewState);
   const hasInitialized = useRef(false);
 
-  const setViewportZoom = useOverlayStore((state) => state.setViewportZoom);
-  const setImageDimensions = useOverlayStore(
-    (state) => state.setImageDimensions,
-  );
-  const setBrushViewport = useOverlayStore((state) => state.setBrushViewport);
+  const setViewportZoom = useAppStore((state) => state.setViewportZoom);
+  const setBrushViewport = useAppStore((state) => state.setBrushViewport);
 
   const viewRef = useRef({ viewState, viewportSize });
   viewRef.current = { viewState, viewportSize };
@@ -276,12 +314,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const ignoreNextViewStateChangeRef = useRef(false);
 
   // Get target waypoint view state for responding to waypoint selection
-  const targetWaypointViewState = useOverlayStore(
-    (state) => state.targetWaypointViewState,
+  const targetWaypointCamera = useAppStore(
+    (state) => state.targetWaypointCamera,
   );
-  const clearTargetWaypointViewState = useOverlayStore(
-    (state) => state.clearTargetWaypointViewState,
+  const clearTargetWaypointCamera = useAppStore(
+    (state) => state.clearTargetWaypointCamera,
   );
+  const refImageWidth = Number(imageShape.x) || 0;
+  const refImageHeight = Number(imageShape.y) || 0;
 
   // Update viewState only on initial mount (not when loader changes)
   useEffect(() => {
@@ -294,12 +334,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
       hasInitialized.current = true;
     }
   }, [initialViewState, firstLoader.data, setViewportZoom]);
-
-  useEffect(() => {
-    if (imageShape.x > 0 && imageShape.y > 0) {
-      setImageDimensions(imageShape.x, imageShape.y);
-    }
-  }, [imageShape, setImageDimensions]);
 
   // Sync viewport size and visible world bounds for brush (canvas-aligned mask)
   useEffect(() => {
@@ -320,20 +354,22 @@ export const ImageViewer = (props: ImageViewerProps) => {
     ];
     setBrushViewport(width, height, bounds);
   }, [viewState, viewportSize, setBrushViewport]);
-  const setViewerViewState = useOverlayStore((s) => s.setViewerViewState);
-  const setViewerViewportSize = useOverlayStore((s) => s.setViewerViewportSize);
-  const setSquareViewportThumbnailCapture = useOverlayStore(
+  const setViewerViewState = useAppStore((s) => s.setViewerViewState);
+  const setViewerViewportSize = useAppStore((s) => s.setViewerViewportSize);
+  const setSquareViewportThumbnailCapture = useAppStore(
     (s) => s.setSquareViewportThumbnailCapture,
   );
+  const setViewerImageLayersLoaded = useAppStore(
+    (s) => s.setViewerImageLayersLoaded,
+  );
 
-  // Register SAM2 image fetcher for magic wand (OME-TIFF only)
-  // Register SAM2 image fetcher for magic wand (OME-TIFF only)
-  const setSam2ImageFetcher = useOverlayStore((s) => s.setSam2ImageFetcher);
-  const setSam2ViewState = useOverlayStore((s) => s.setSam2ViewState);
-  const setSam2ViewportSize = useOverlayStore((s) => s.setSam2ViewportSize);
+  // Register SAM2 image fetcher for magic wand (first OME image only; reference frame).
+  const setSam2ImageFetcher = useAppStore((s) => s.setSam2ImageFetcher);
+  const setSam2ViewState = useAppStore((s) => s.setSam2ViewState);
+  const setSam2ViewportSize = useAppStore((s) => s.setSam2ViewportSize);
   useEffect(() => {
     if (
-      loaderOmeTiff &&
+      omeLoaderEntries.length > 0 &&
       firstLoader?.data &&
       mainSettingsList.length > 0 &&
       imageShape.x > 0 &&
@@ -357,7 +393,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     }
     return () => setSam2ImageFetcher(null);
   }, [
-    loaderOmeTiff,
+    omeLoaderEntries,
     firstLoader,
     mainSettingsList,
     imageShape.x,
@@ -365,8 +401,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     setSam2ImageFetcher,
   ]);
 
-  // Keep SAM2 store in sync with current view so useSam2 can compute the
-  // visible region at click time without needing direct access to ImageViewer state.
   useEffect(() => {
     setSam2ViewState(viewState);
   }, [viewState, setSam2ViewState]);
@@ -374,40 +408,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
   useEffect(() => {
     setSam2ViewportSize(viewportSize);
   }, [viewportSize, setSam2ViewportSize]);
-
-  useEffect(() => {
-    if (
-      loaderOmeTiff &&
-      firstLoader?.data &&
-      mainSettingsList.length > 0 &&
-      imageShape.x > 0 &&
-      imageShape.y > 0
-    ) {
-      const settings = mainSettingsList[0];
-      const fetcher = createSam2ImageFetcher(
-        firstLoader,
-        {
-          selections: settings.selections,
-          colors: settings.colors,
-          contrastLimits: settings.contrastLimits,
-          channelsVisible: settings.channelsVisible,
-        },
-        imageShape.x,
-        imageShape.y,
-      );
-      setSam2ImageFetcher(fetcher);
-    } else {
-      setSam2ImageFetcher(null);
-    }
-    return () => setSam2ImageFetcher(null);
-  }, [
-    loaderOmeTiff,
-    firstLoader,
-    mainSettingsList,
-    imageShape.x,
-    imageShape.y,
-    setSam2ImageFetcher,
-  ]);
 
   // Keep SAM2 store in sync with current view so useSam2 can compute the
   // visible region at click time without needing direct access to ImageViewer state.
@@ -458,10 +458,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return () => registerViewerLiveSnapshotReader(null);
   }, []);
 
-  // Apply waypoint view state when target is set (from waypoint selection)
+  // Apply waypoint camera when requested — resolve with this viewer's live size
+  // so author vs preview layout changes cannot mix stale width/height with Deck.
   useEffect(() => {
-    // Skip if no target is set
-    if (targetWaypointViewState === null) {
+    if (targetWaypointCamera === null) {
       return;
     }
 
@@ -469,7 +469,21 @@ export const ImageViewer = (props: ImageViewerProps) => {
       return;
     }
 
-    const vs = targetWaypointViewState;
+    if (refImageWidth <= 0 || refImageHeight <= 0) {
+      return;
+    }
+
+    const vs = getWaypointViewState(
+      targetWaypointCamera,
+      refImageWidth,
+      refImageHeight,
+      viewportSize.width,
+      viewportSize.height,
+    );
+    if (!vs) {
+      clearTargetWaypointCamera();
+      return;
+    }
 
     // Cancel any ongoing transition first
     setViewState(
@@ -480,7 +494,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
         }) as OrthographicViewState,
     );
 
-    // Start animated transition to the new waypoint view
     const clearId = window.setTimeout(() => {
       const viewStateWithTransition = {
         ...vs,
@@ -491,16 +504,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
       setViewState(viewStateWithTransition as OrthographicViewState);
       setViewportZoom(vs.zoom);
-      clearTargetWaypointViewState();
+      clearTargetWaypointCamera();
     }, 0);
 
     return () => {
       window.clearTimeout(clearId);
     };
   }, [
-    targetWaypointViewState,
+    targetWaypointCamera,
     viewportSize,
-    clearTargetWaypointViewState,
+    refImageWidth,
+    refImageHeight,
+    clearTargetWaypointCamera,
     setViewportZoom,
   ]);
 
@@ -539,7 +554,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // Memoize dicom layer
   const dicomLayers = useMemo(() => {
-    if (loaderOmeTiff !== null) {
+    if (omeLoaderEntries.length > 0) {
       return [];
     }
     return dicomSources.map((dicomSource, i) => {
@@ -555,17 +570,17 @@ export const ImageViewer = (props: ImageViewerProps) => {
         imageID,
       });
     });
-  }, [loaderOmeTiff, dicomSources, mainSettingsList]);
+  }, [omeLoaderEntries, dicomSources, mainSettingsList]);
 
   // Memoize image layers
   const omeTiffLayers = useMemo(
     () =>
-      loaderOmeTiff === null
+      omeLoaderEntries.length === 0
         ? []
         : omeTiffPropsList.map(
             (layerProps) => new MultiscaleImageLayer(layerProps),
           ),
-    [loaderOmeTiff, omeTiffPropsList],
+    [omeLoaderEntries, omeTiffPropsList],
   );
 
   // Memoize scale bar layer
@@ -619,18 +634,47 @@ export const ImageViewer = (props: ImageViewerProps) => {
     } as ConstructorParameters<typeof ScaleBarLayer>[0]);
   }, [viewState, firstLoader, viewportSize.width, viewportSize.height]);
 
-  // Memoize layer combination
-  const allLayers = useMemo(() => {
-    const layers =
-      0 === omeTiffLayers.length
-        ? [...dicomLayers, ...overlayLayers]
-        : [...omeTiffLayers, ...overlayLayers];
+  // Invisible layer under the image so gutter picks have geometry (see dragHandlers toCoord).
+  const worldPickSurfaceLayer = useMemo(() => {
+    const w = Number(imageShape.x) || 0;
+    const h = Number(imageShape.y) || 0;
+    const cx = w > 0 ? w / 2 : 0;
+    const cy = h > 0 ? h / 2 : 0;
+    const R = Math.min(Math.max(Math.max(w, h, 4096) * 8, 512_000), 50_000_000);
+    const polygon: [number, number][] = [
+      [cx - R, cy - R],
+      [cx + R, cy - R],
+      [cx + R, cy + R],
+      [cx - R, cy + R],
+    ];
+    return new PolygonLayer({
+      id: "world-pick-surface",
+      data: [{ polygon }],
+      getPolygon: (d: { polygon: [number, number][] }) => d.polygon,
+      pickable: true,
+      filled: true,
+      stroked: false,
+      getFillColor: [0, 0, 0, 0],
+      getLineWidth: 0,
+    });
+  }, [imageShape.x, imageShape.y]);
 
-    if (scaleBarLayer) {
-      layers.push(scaleBarLayer);
-    }
+  const allLayers = useMemo(() => {
+    const imageStack = omeTiffLayers.length > 0 ? omeTiffLayers : dicomLayers;
+    const layers: Layer[] = [
+      worldPickSurfaceLayer,
+      ...imageStack,
+      ...overlayLayers,
+    ];
+    if (scaleBarLayer) layers.push(scaleBarLayer);
     return layers;
-  }, [dicomLayers, omeTiffLayers, overlayLayers, scaleBarLayer]);
+  }, [
+    dicomLayers,
+    omeTiffLayers,
+    overlayLayers,
+    scaleBarLayer,
+    worldPickSurfaceLayer,
+  ]);
 
   const squareViewportStyle = useMemo(() => {
     const side = Math.max(
@@ -686,8 +730,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     if (!sourceCtx) return null;
     sourceCtx.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
 
-    const maxThumbSize = 160;
-    const outputSide = Math.max(1, Math.min(maxThumbSize, Math.min(sw, sh)));
+    const outputSide = WAYPOINT_THUMBNAIL_PIXEL_SIZE;
     const outputCanvas = document.createElement("canvas");
     outputCanvas.width = outputSide;
     outputCanvas.height = outputSide;
@@ -706,7 +749,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
       outputSide,
       outputSide,
     );
-    return outputCanvas.toDataURL("image/png");
+    return outputCanvas.toDataURL(
+      "image/jpeg",
+      WAYPOINT_THUMBNAIL_JPEG_QUALITY,
+    );
   }, [
     viewportSize.width,
     viewportSize.height,
@@ -746,7 +792,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       if (sam2Processing) return "wait";
       if (isDragging && activeTool === "move") {
         return "grabbing";
-      } else if (activeTool === "move" && hoveredAnnotationId) {
+      } else if (activeTool === "move" && hoveredShapeId) {
         return "grab";
       } else if (activeTool === "rectangle") {
         return isDragging ? "grabbing" : "crosshair";
@@ -769,14 +815,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
       }
       return "default";
     },
-    [activeTool, hoveredAnnotationId, sam2Processing],
+    [activeTool, hoveredShapeId, sam2Processing],
   );
 
   // Memoize controller configuration
   // When move tool is active and hovering over an annotation, disable pan so drag moves the annotation
   const controllerConfig = useMemo(
     () => ({
-      dragPan: activeTool === "move" && !isDragging && !hoveredAnnotationId,
+      dragPan: activeTool === "move" && !isDragging && !hoveredShapeId,
       dragRotate: false,
       scrollZoom: true,
       doubleClickZoom: true,
@@ -784,14 +830,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
       touchRotate: false,
       keyboard: false,
     }),
-    [activeTool, isDragging, hoveredAnnotationId],
+    [activeTool, isDragging, hoveredShapeId],
   );
 
   // Memoize view configuration — main image view + a fixed overlay for the scale bar
   const views = useMemo(
     () => [
-      new OrthographicView({ id: "ortho", controller: true }),
-      new OrthographicView({ id: "scalebar-overlay", controller: false }),
+      new OrthographicView({ id: ORTHO_VIEW_ID, controller: true }),
+      new OrthographicView({ id: SCALEBAR_VIEW_ID, controller: false }),
     ],
     [],
   );
@@ -830,20 +876,30 @@ export const ImageViewer = (props: ImageViewerProps) => {
     onRedraw: (params: { layers: Layer[] }) => void;
   }>(null);
 
-  // onAfterRender callback to call LoadingWidget's onRedraw
   const handleAfterRender = useCallback(() => {
     if (loadingWidgetRef.current) {
       loadingWidgetRef.current.onRedraw({ layers: allLayers });
     }
-  }, [allLayers]);
+    const imageStack = omeTiffLayers.length > 0 ? omeTiffLayers : dicomLayers;
+    const loaded =
+      imageStack.length > 0 &&
+      imageStack.every((layer) => (layer as { isLoaded?: boolean }).isLoaded);
+    setViewerImageLayersLoaded(loaded);
+  }, [allLayers, dicomLayers, omeTiffLayers, setViewerImageLayersLoaded]);
+
+  useEffect(() => {
+    return () => {
+      useAppStore.getState().setViewerImageLayersLoaded(false);
+    };
+  }, []);
 
   // Route scale bar to the fixed overlay view; everything else to the main view
   const layerFilter = useCallback(
     ({ layer, viewport }: { layer: Layer; viewport: { id: string } }) => {
       if (layer.id.startsWith("scale-bar")) {
-        return viewport.id === "scalebar-overlay";
+        return viewport.id === SCALEBAR_VIEW_ID;
       }
-      return viewport.id === "ortho";
+      return viewport.id === ORTHO_VIEW_ID;
     },
     [],
   );
@@ -865,8 +921,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
           },
         }}
         viewState={{
-          ortho: viewState,
-          "scalebar-overlay": {
+          [ORTHO_VIEW_ID]: viewState,
+          [SCALEBAR_VIEW_ID]: {
             zoom: 0,
             target: [viewportSize.width / 2, viewportSize.height / 2, 0],
           } as Record<string, unknown>,

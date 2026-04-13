@@ -1,6 +1,6 @@
-import UI5Slider from "@ui5/webcomponents/dist/RangeSlider.js";
+import { MinervaRangeSlider } from "../../../../../range-slider-element.js";
 
-class RangeSlider extends UI5Slider {
+class RangeSlider extends MinervaRangeSlider {
   static name = "range-slider";
 }
 

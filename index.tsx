@@ -14,13 +14,17 @@ import "@/fonts.css";
 import "@fontsource/overpass/500.css";
 import { loremIpsum } from "react-lorem-ipsum";
 import { createGlobalStyle } from "styled-components";
-import type { ConfigWaypoint } from "@/lib/config";
+import type {
+  LegacyExhibitArrow,
+  LegacyExhibitOverlay,
+  LegacyExhibitWaypoint,
+} from "@/lib/stores/storeUtils";
 
 const fakeText = (p) => {
   return loremIpsum({ p, random: true }).join("\n\n");
 };
 
-const configWaypoints = [
+const configWaypoints: LegacyExhibitWaypoint[] = [
   {
     UUID: "8320f08c-9456-49a3-a104-8ab3d5daab2a",
     State: {
@@ -1214,35 +1218,30 @@ const configWaypoints = [
       },
     ],
   },
-].map(({ Properties, ...wp }) => {
-  return {
-    ...wp,
-    ...Properties,
-    Pan: [
-      Number(Properties.Pan?.[0]) || 0,
-      Number(Properties.Pan?.[1]) || 0,
-    ] as [number, number],
-  } as ConfigWaypoint;
-});
+].map(({ Properties, UUID, State, Arrows, Overlays }) => ({
+  id: UUID,
+  State,
+  ...(Arrows?.length ? { Arrows: Arrows as LegacyExhibitArrow[] } : {}),
+  ...(Overlays?.length ? { Overlays: Overlays as LegacyExhibitOverlay[] } : {}),
+  ...Properties,
+  Pan: [Number(Properties.Pan?.[0]) || 0, Number(Properties.Pan?.[1]) || 0] as [
+    number,
+    number,
+  ],
+}));
 
 // TODO: remove legacy exhibit data structure
 const exhibit_config = {
   Name: "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer",
   Stories: [
     {
-      Waypoints: configWaypoints.map(
-        ({ Arrows, Overlays, Name, Content, Pan, Zoom, Group }) => {
-          return {
-            Name,
-            Description: Content,
-            Pan: Pan as [number, number],
-            Zoom,
-            Group,
-            Arrows,
-            Overlays,
-          };
-        },
-      ),
+      Waypoints: configWaypoints.map((wp) => ({
+        Name: wp.Name,
+        Description: wp.Content,
+        Pan: wp.Pan as [number, number],
+        Zoom: wp.Zoom,
+        Group: wp.Group ?? "",
+      })),
     },
   ],
   Groups: [

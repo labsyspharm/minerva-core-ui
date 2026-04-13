@@ -6,8 +6,8 @@
  * everything the user sees.
  */
 
-import type { LoaderPlane } from "@/lib/config";
-import type { ViewRect } from "@/lib/samViewport";
+import type { LoaderPlane } from "@/lib/authoring/config";
+import type { ViewRect } from "@/lib/viewer/samViewport";
 import { canvasToFloat32Array } from "./imageUtils";
 
 export type Sam2Settings = {

@@ -1,7 +1,43 @@
 :host {
   div.grid {
-    gap: 2px;
-    padding-bottom: var(--gap-small);
+    gap: 1px;
+    padding-bottom: 2px;
+  }
+}
+
+/* Histogram strip only (matches deck LoadingWidget: 24px / 3px rings) */
+.histogram-chart-host {
+  position: relative;
+  width: 100%;
+}
+
+.histogram-loading-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 17, 23, 0.55);
+  border-radius: 4px;
+}
+
+.histogram-loading-overlay.is-visible {
+  display: flex;
+}
+
+.histogram-loading-spinner {
+  width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  animation: histogram-deck-spin 1s linear infinite;
+}
+
+@keyframes histogram-deck-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 svg {

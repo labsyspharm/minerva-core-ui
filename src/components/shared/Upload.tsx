@@ -31,6 +31,20 @@ export type FormProps = {
 export type FullFormProps = FormProps & {
   handles: Handle.File[];
 };
+/** How the current viewport image was sourced (for Images tab summary). */
+export type LoadedImageKind = "ome-local" | "ome-url" | "dicom";
+
+export type LoadedSourceSummary = {
+  kind: LoadedImageKind;
+  /** Primary display name (filename, series list, URL basename, etc.) */
+  label: string;
+  width: number;
+  height: number;
+  channelCount: number;
+  /** Set when running demo_url / demo_dicom_web bootstrap */
+  isDemo?: boolean;
+};
+
 export type UploadProps = {
   handleKeys: string[];
   handles: Handle.File[];
@@ -39,6 +53,10 @@ export type UploadProps = {
   formProps: Omit<FormProps, "handles">;
   /** Bumps after a successful image import (`onStart` / restore); closes format picker. */
   importRevision: number;
+  /** True when the viewer has image data (same idea as `!noLoader` in main). */
+  imageLoaded: boolean;
+  /** Present when `imageLoaded`; dimensions may be 0 briefly while metadata arrives. */
+  loadedSource?: LoadedSourceSummary;
 };
 export type ValidObj = {
   [s: string]: boolean;
@@ -58,15 +76,48 @@ interface HasValidation {
   hasValidation: boolean;
 }
 
-const TwoColumn = styled.div`
-  button {
-    border: none;
-    outline: 1px solid var(--theme-glass-edge);
-    background-color: var(--theme-dark-main-color);
+/** Matches Story / Channels: grey-on-black controls */
+const DarkPrimaryButton = styled(Button).attrs({ variant: "primary" })`
+  &&& {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    color: #e6edf3;
+    font-size: 12px;
+    padding: 0.45rem 0.75rem;
+    min-height: 2.25rem;
+    line-height: 1.2;
+    box-shadow: none;
   }
-  grid-template-columns: 1fr 1fr;
+  &&&:hover:not(:disabled),
+  &&&:focus:not(:disabled) {
+    background-color: #333;
+    border-color: #555;
+    color: #fff;
+  }
+  &&&:active:not(:disabled) {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+  }
+  &&&:disabled {
+    opacity: 0.45;
+  }
+`;
+
+/** Update + optional “Use recent” — one column when only Update (image already loaded). */
+const UpdateActionsRow = styled.div<{ $twoColumns: boolean }>`
   display: grid;
-  gap: 2em;
+  gap: 0.65em;
+  width: 100%;
+  align-items: stretch;
+  grid-template-columns: ${({ $twoColumns }) =>
+    $twoColumns ? "1fr 1fr" : "1fr"};
+
+  & > * {
+    width: 100%;
+  }
 `;
 const _FullHeightText = styled.div`
   grid-template-columns: auto 2em 1fr;
@@ -77,22 +128,72 @@ const _FullHeightText = styled.div`
 const ImagesTabShell = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1rem 1.25rem 1.5rem;
+  gap: 0.75rem;
+  padding: 10px 8px 10px;
   box-sizing: border-box;
-  color: #eee;
   width: 100%;
   max-width: 100%;
   min-width: 0;
   min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  color: #e6edf3;
+  font-size: 12px;
+  background: #000;
+  scrollbar-color: #555 #000;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #000;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+  }
 
   form {
     max-width: 100%;
   }
 
+  .form-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--theme-light-contrast-color) 52%, transparent);
+    margin-bottom: 0.35rem;
+  }
+
   .form-control,
   .form-select {
     max-width: 100%;
+    background-color: #2c2c2c;
+    border: 1px solid #444;
+    color: #e6edf3;
+    font-size: 12px;
+  }
+  .form-control::placeholder {
+    color: #8899aa;
+    opacity: 1;
+  }
+  .form-control:focus,
+  .form-select:focus {
+    background-color: #2c2c2c;
+    border-color: #666;
+    color: #e6edf3;
+    box-shadow: 0 0 0 0.15rem rgb(255 255 255 / 0.12);
+  }
+  .form-select option {
+    background: #2c2c2c;
+    color: #e6edf3;
+  }
+  .invalid-feedback,
+  .valid-feedback {
+    font-size: 11px;
   }
 `;
 
@@ -112,20 +213,20 @@ const ImagesBackButton = styled.button`
   align-self: flex-start;
   gap: 6px;
   flex-shrink: 0;
-  background: rgb(0 0 0 / 0.2);
-  border: 1px solid rgb(255 255 255 / 0.2);
-  color: rgb(248 250 252 / 0.95);
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #e6edf3;
   padding: 6px 12px;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.2;
   font-family: inherit;
   font-weight: 500;
 
   &:hover {
-    background: rgb(0 0 0 / 0.3);
-    border-color: rgb(255 255 255 / 0.28);
+    background: #2a2a2a;
+    border-color: #444;
     color: #fff;
   }
 
@@ -138,11 +239,114 @@ const ImagesBackButton = styled.button`
 const ImagesLoadedStack = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.6rem;
   width: 100%;
   min-width: 0;
   padding: 0;
 `;
+
+const CurrentImageBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+`;
+
+const CurrentImageSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #121212;
+  border: 1px solid #252525;
+  min-width: 0;
+`;
+
+const CurrentImageTitle = styled.div`
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--theme-light-contrast-color) 48%, transparent);
+`;
+
+const ImageLabel = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  word-break: break-word;
+  color: #f0f4f8;
+`;
+
+const ImageMetaRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 8px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #8b949e;
+`;
+
+const KindHint = styled.span`
+  color: #6e7681;
+  font-weight: 500;
+`;
+
+const MetaSep = styled.span`
+  color: #484f58;
+  user-select: none;
+`;
+
+const ImageMetaText = styled.span`
+  color: #8b949e;
+`;
+
+const DisclosureButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #c8d0d8;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: #2a2a2a;
+    border-color: #444;
+    color: #e6edf3;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-light-focus-color, hwb(45 90% 0%));
+    outline-offset: 2px;
+  }
+`;
+
+const FormatGridHint = styled.div`
+  font-size: 11px;
+  line-height: 1.35;
+  color: #888;
+  min-width: 0;
+`;
+
+/** Short line for the metadata row (no pill badge). */
+const kindHint = (kind: LoadedImageKind): string => {
+  switch (kind) {
+    case "ome-local":
+      return "Local file · OME-TIFF";
+    case "ome-url":
+      return "OME-TIFF · URL";
+    case "dicom":
+      return "DICOMweb";
+  }
+};
 
 const FullWidthGrid = styled.div`
   grid-template-columns: auto 1fr;
@@ -150,13 +354,10 @@ const FullWidthGrid = styled.div`
   grid-column: 1 / -1;
   align-items: center;
   display: grid;
-  column-gap: 1em;
-  row-gap: 0.65em;
+  column-gap: 0.65em;
+  row-gap: 0.5em;
 `;
 
-const shadow_gray = "rgb(0 0 0 / 20%)";
-const _sh_4_8 = `0 4px 8px 0 ${shadow_gray}`;
-const _sh_6_20 = `0 6px 20px 0 ${shadow_gray}`;
 const UploadDiv = styled.div`
   display: grid;
   align-items: start;
@@ -166,11 +367,9 @@ const UploadDiv = styled.div`
   grid-template-columns: auto minmax(240px, 1fr);
   grid-template-rows: auto;
   gap: 0.65em;
-  button {
-    border: none;
+  /* Layout only — colors come from DarkPrimaryButton */
+  button:not(.dicom-toggle) {
     grid-column: 1 / -1;
-    outline: 1px solid var(--theme-glass-edge);
-    background-color: var(--theme-dark-main-color);
   }
   button.dicom-toggle {
     grid-column: 1;
@@ -197,14 +396,9 @@ const _PathGrid = styled.div`
   }
 `;
 const FormGrid = styled.div`
-  button {
-    border: none;
-    outline: 1px solid var(--theme-glass-edge);
-    background-color: var(--theme-dark-main-color);
-  }
-  margin-top: 2em;
+  margin-top: 1.25rem;
   display: grid;
-  gap: 1em;
+  gap: 0.75rem;
 `;
 const FormGridRow = styled.div<HasValidation>`
   position: relative;
@@ -295,9 +489,7 @@ const FormOmeTiffUrl = (props: FormProps) => {
         </FormGridRow>
       </Form.Group>
       <FormGrid>
-        <Button type="submit" variant="primary">
-          Load
-        </Button>
+        <DarkPrimaryButton type="submit">Load</DarkPrimaryButton>
       </FormGrid>
     </Form>
   );
@@ -361,9 +553,7 @@ const FormDicom = (props: FormProps) => {
         </FormGrid>
       </Form.Group>
       <FormGrid>
-        <Button type="submit" variant="primary">
-          Submit
-        </Button>
+        <DarkPrimaryButton type="submit">Submit</DarkPrimaryButton>
       </FormGrid>
     </Form>
   );
@@ -520,36 +710,49 @@ const FormAny = (props: FullFormProps) => {
         </Form.Group>
       </FormGrid>
       <FormGrid>
-        <Button type="submit" variant="primary">
-          Submit
-        </Button>
+        <DarkPrimaryButton type="submit">Submit</DarkPrimaryButton>
       </FormGrid>
     </Form>
   );
 };
 
+const formatDims = (w: number, h: number, c: number) => {
+  const dims =
+    w > 0 && h > 0 ? `${w.toLocaleString()} × ${h.toLocaleString()} px` : null;
+  const ch = c > 0 ? `${c} channel${c === 1 ? "" : "s"}` : null;
+  return [dims, ch].filter(Boolean).join(" · ") || null;
+};
+
 const Upload = (props: UploadProps) => {
   const [imageFormat, setImageFormat] = useState("");
   const [updatePickerOpen, setUpdatePickerOpen] = useState(false);
+  const [mappingExpanded, setMappingExpanded] = useState(false);
   const prevImportRev = useRef(props.importRevision);
-  const { formProps, handles, onAllow, onRecall, importRevision } = props;
+  const {
+    formProps,
+    handles,
+    onAllow,
+    onRecall,
+    importRevision,
+    imageLoaded,
+    loadedSource,
+  } = props;
 
   useEffect(() => {
     if (prevImportRev.current !== importRevision) {
       prevImportRev.current = importRevision;
       setUpdatePickerOpen(false);
       setImageFormat("");
+      setMappingExpanded(false);
     }
   }, [importRevision]);
 
   const allowProps = {
     onClick: onAllow,
-    variant: "primary" as const,
     className: "mb-3",
   };
   const recallProps = {
     onClick: onRecall,
-    variant: "primary" as const,
     className: "mb-3",
   };
   const selectDicomWebFormat = () => {
@@ -567,8 +770,8 @@ const Upload = (props: UploadProps) => {
   if (imageFormat === "OME-TIFF") {
     possibleActions = (
       <>
-        <Button {...allowProps}>Select Image</Button>
-        <Button {...recallProps}>Use recent Image</Button>
+        <DarkPrimaryButton {...allowProps}>Select Image</DarkPrimaryButton>
+        <DarkPrimaryButton {...recallProps}>Use recent Image</DarkPrimaryButton>
       </>
     );
   }
@@ -581,42 +784,77 @@ const Upload = (props: UploadProps) => {
 
   const fullFormProps = { ...formProps, handles };
 
+  const showFormAny =
+    handles.length > 0 &&
+    (!imageLoaded || handles.length > 1 || mappingExpanded);
+
+  const currentImageSummary = imageLoaded ? (
+    loadedSource ? (
+      <CurrentImageBlock>
+        <CurrentImageTitle>Current image</CurrentImageTitle>
+        <CurrentImageSection>
+          <ImageLabel title={loadedSource.label}>
+            {loadedSource.label}
+          </ImageLabel>
+          <ImageMetaRow>
+            <KindHint>
+              {kindHint(loadedSource.kind)}
+              {loadedSource.isDemo ? " · Demo" : ""}
+            </KindHint>
+            <MetaSep aria-hidden>·</MetaSep>
+            <ImageMetaText>
+              {formatDims(
+                loadedSource.width,
+                loadedSource.height,
+                loadedSource.channelCount,
+              ) ?? "Dimensions loading…"}
+            </ImageMetaText>
+          </ImageMetaRow>
+        </CurrentImageSection>
+      </CurrentImageBlock>
+    ) : (
+      <CurrentImageBlock>
+        <CurrentImageTitle>Current image</CurrentImageTitle>
+        <CurrentImageSection>
+          <ImageMetaText>Loading details…</ImageMetaText>
+        </CurrentImageSection>
+      </CurrentImageBlock>
+    )
+  ) : null;
+
   const formatPickerGrid = (
     <FullWidthGrid>
-      <Button onClick={selectDicomWebFormat} className="dicom-toggle">
+      <DarkPrimaryButton
+        onClick={selectDicomWebFormat}
+        className="dicom-toggle"
+      >
         <span>DicomWeb</span>
-      </Button>
-      <div>{"Connect to a DICOMweb™ Proxy"}</div>
-      <Button onClick={selectOmeTiffFormat} className="dicom-toggle">
+      </DarkPrimaryButton>
+      <FormatGridHint>Connect to a DICOMweb™ Proxy</FormatGridHint>
+      <DarkPrimaryButton onClick={selectOmeTiffFormat} className="dicom-toggle">
         <span>OME-TIFF</span>
-      </Button>
-      <div>{"Open an OME-TIFF from a local file"}</div>
-      <Button onClick={selectOmeTiffUrlFormat} className="dicom-toggle">
+      </DarkPrimaryButton>
+      <FormatGridHint>Open an OME-TIFF from a local file</FormatGridHint>
+      <DarkPrimaryButton
+        onClick={selectOmeTiffUrlFormat}
+        className="dicom-toggle"
+      >
         <span>OME-TIFF URL</span>
-      </Button>
-      <div>{"Load an OME-TIFF from a URL"}</div>
+      </DarkPrimaryButton>
+      <FormatGridHint>Load an OME-TIFF from a URL</FormatGridHint>
     </FullWidthGrid>
   );
-
-  if (handles.length === 0) {
-    return (
-      <ImagesTabShell slot="images">
-        <UploadDiv>
-          {formatPickerGrid}
-          {possibleActions}
-        </UploadDiv>
-      </ImagesTabShell>
-    );
-  }
 
   const closeUpdatePicker = () => {
     setUpdatePickerOpen(false);
     setImageFormat("");
   };
 
+  const showUseRecentInUpdateRow = handles.length > 0 && !imageLoaded;
+
   const updateImageRow = (
-    <TwoColumn>
-      <Button
+    <UpdateActionsRow $twoColumns={showUseRecentInUpdateRow}>
+      <DarkPrimaryButton
         type="button"
         onClick={() => {
           setUpdatePickerOpen(true);
@@ -624,9 +862,27 @@ const Upload = (props: UploadProps) => {
         }}
       >
         Update Image
-      </Button>
-    </TwoColumn>
+      </DarkPrimaryButton>
+      {showUseRecentInUpdateRow ? (
+        <DarkPrimaryButton type="button" onClick={onRecall}>
+          Use recent Image
+        </DarkPrimaryButton>
+      ) : null}
+    </UpdateActionsRow>
   );
+
+  const mappingDisclosure =
+    imageLoaded && handles.length === 1 ? (
+      <DisclosureButton
+        type="button"
+        onClick={() => setMappingExpanded((e) => !e)}
+        aria-expanded={mappingExpanded}
+      >
+        {mappingExpanded
+          ? "Hide channel / mask / CSV mapping"
+          : "Edit channel / mask / CSV mapping"}
+      </DisclosureButton>
+    ) : null;
 
   if (updatePickerOpen) {
     return (
@@ -639,11 +895,36 @@ const Upload = (props: UploadProps) => {
           <ImagesBackChevron aria-hidden />
           <span>Back</span>
         </ImagesBackButton>
+        {imageLoaded ? currentImageSummary : null}
         <UploadDiv>
           {imageFormat === "" ? formatPickerGrid : null}
           {possibleActions}
           {imageFormat === "OME-TIFF" ? <FormAny {...fullFormProps} /> : null}
         </UploadDiv>
+      </ImagesTabShell>
+    );
+  }
+
+  if (!imageLoaded && handles.length === 0) {
+    return (
+      <ImagesTabShell slot="images">
+        <UploadDiv>
+          {formatPickerGrid}
+          {possibleActions}
+        </UploadDiv>
+      </ImagesTabShell>
+    );
+  }
+
+  if (imageLoaded) {
+    return (
+      <ImagesTabShell slot="images">
+        <ImagesLoadedStack>
+          {currentImageSummary}
+          {updateImageRow}
+          {mappingDisclosure}
+          {showFormAny ? <FormAny {...fullFormProps} /> : null}
+        </ImagesLoadedStack>
       </ImagesTabShell>
     );
   }

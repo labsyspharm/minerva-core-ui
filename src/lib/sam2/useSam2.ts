@@ -11,11 +11,15 @@
 
 import * as React from "react";
 import {
+  effectiveReferenceImagePixelSize,
+  useAppStore,
+} from "@/lib/stores/appStore";
+import { useDocumentStore } from "@/lib/stores/documentStore";
+import {
   computeImageViewRect,
   computeSamTransform,
   type SamTransform,
-} from "@/lib/samViewport";
-import { useOverlayStore } from "@/lib/stores";
+} from "@/lib/viewer/samViewport";
 import {
   maskFloatToCanvas,
   maskToPolygon,
@@ -146,12 +150,19 @@ export function useSam2() {
     sessionRef.current = session;
   }, [session]);
 
-  const sam2ImageFetcher = useOverlayStore((s) => s.sam2ImageFetcher);
-  const finalizeLasso = useOverlayStore((s) => s.finalizeLasso);
-  const setSam2Processing = useOverlayStore((s) => s.setSam2Processing);
-  const setSam2DebugImages = useOverlayStore((s) => s.setSam2DebugImages);
-  const imageWidth = useOverlayStore((s) => s.imageWidth);
-  const imageHeight = useOverlayStore((s) => s.imageHeight);
+  const sam2ImageFetcher = useAppStore((s) => s.sam2ImageFetcher);
+  const finalizeLasso = useAppStore((s) => s.finalizeLasso);
+  const setSam2Processing = useAppStore((s) => s.setSam2Processing);
+  const setSam2DebugImages = useAppStore((s) => s.setSam2DebugImages);
+  const docImageWidth = useDocumentStore((s) => s.images[0]?.sizeX ?? 0);
+  const docImageHeight = useDocumentStore((s) => s.images[0]?.sizeY ?? 0);
+  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
+  const { width: imageWidth, height: imageHeight } =
+    effectiveReferenceImagePixelSize(
+      viewerRefSize,
+      docImageWidth,
+      docImageHeight,
+    );
 
   // ------- Worker lifecycle -------
 
@@ -198,7 +209,7 @@ export function useSam2() {
         setError(msg.message);
         setIsLoading(false);
         setIsProcessing(false);
-        useOverlayStore.getState().setSam2Processing(false);
+        useAppStore.getState().setSam2Processing(false);
         encodeWaiterRef.current?.reject(new Error(msg.message));
         encodeWaiterRef.current = null;
         resolveDecodeRef.current = null;
@@ -209,7 +220,7 @@ export function useSam2() {
       setError(e.message || "Worker error");
       setIsLoading(false);
       setIsProcessing(false);
-      useOverlayStore.getState().setSam2Processing(false);
+      useAppStore.getState().setSam2Processing(false);
 
       // Reject any pending operations so callers don't proceed to decode.
       const err = new Error(e.message || "Worker error");
@@ -287,14 +298,14 @@ export function useSam2() {
   const warmup = React.useCallback(async () => {
     setError(null);
     setIsLoading(true);
-    useOverlayStore.getState().setSam2Processing(true);
+    useAppStore.getState().setSam2Processing(true);
     try {
       await ensureReady();
     } catch (e) {
       setError(e instanceof Error ? e.message : "SAM2 load failed");
     } finally {
       setIsLoading(false);
-      useOverlayStore.getState().setSam2Processing(false);
+      useAppStore.getState().setSam2Processing(false);
     }
   }, [ensureReady]);
 
@@ -358,7 +369,7 @@ export function useSam2() {
       if (isDebug()) {
         const maskCanvas = maskFloatToCanvas(mask256, MASK_SIZE, MASK_SIZE);
         setSam2DebugImages({
-          encoded: useOverlayStore.getState().sam2DebugImages?.encoded ?? "",
+          encoded: useAppStore.getState().sam2DebugImages?.encoded ?? "",
           mask: maskCanvas.toDataURL("image/png"),
         });
         console.log(
@@ -380,7 +391,7 @@ export function useSam2() {
         return false;
       }
 
-      const { sam2ViewState, sam2ViewportSize } = useOverlayStore.getState();
+      const { sam2ViewState, sam2ViewportSize } = useAppStore.getState();
       if (!sam2ViewState || !sam2ViewportSize) {
         setError("Viewer state not available");
         return false;

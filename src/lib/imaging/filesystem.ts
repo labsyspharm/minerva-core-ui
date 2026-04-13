@@ -1,5 +1,5 @@
 import { loadOmeTiff } from "@hms-dbmi/viv";
-import type { HasTile } from "./config";
+import type { HasTile } from "../authoring/config";
 import type { Loader } from "./viv";
 import type { PoolClass } from "./workers/Pool";
 

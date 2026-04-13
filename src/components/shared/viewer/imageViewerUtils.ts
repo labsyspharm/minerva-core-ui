@@ -1,4 +1,4 @@
-import { toSettings } from "@/lib/viv";
+import { toSettings } from "@/lib/imaging/viv";
 
 export const toImageProps = (opts: { props: any; buttons: any }) => {
   const { props, buttons } = opts;

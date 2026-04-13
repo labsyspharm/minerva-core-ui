@@ -1,6 +1,6 @@
 import type { ValidObj } from "@/components/shared/Upload";
-import { findFile } from "@/lib/filesystem";
-import { findDicomWeb } from "../lib/dicom";
+import { findDicomWeb } from "@/lib/imaging/dicom.js";
+import { findFile } from "@/lib/imaging/filesystem";
 
 type FormOutDicom = {
   url: string;

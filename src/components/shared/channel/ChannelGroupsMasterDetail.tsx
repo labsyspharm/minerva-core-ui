@@ -1,9 +1,19 @@
-import { Chrome } from "@uiw/react-color";
 import * as React from "react";
-import { createPortal } from "react-dom";
+import {
+  ChromeColorPickerPopover,
+  chromeColorPickerAnchorPosition,
+} from "@/components/shared/ChromeColorPickerPopover";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import type { ConfigGroup, ConfigSourceChannel } from "@/lib/document-store";
-import { useOverlayStore } from "@/lib/stores";
+import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
+import { useAppStore } from "@/lib/stores/appStore";
+import type { Channel, Group } from "@/lib/stores/documentStore";
+import {
+  documentGroups,
+  documentSourceChannels,
+  findSourceChannel,
+  flattenImageChannelsInDocumentOrder,
+  useDocumentStore,
+} from "@/lib/stores/documentStore";
 import styles from "./ChannelList.module.css";
 
 const TrashIcon = () => (
@@ -50,45 +60,53 @@ const RemoveIcon = () => (
 );
 
 function channelNamesForGroup(
-  group: ConfigGroup,
-  sourceChannels: ConfigSourceChannel[],
+  group: Group,
+  sourceChannels: Channel[],
 ): string[] {
-  return (group.GroupChannels ?? [])
-    .map(({ SourceChannel }) =>
-      sourceChannels.find((sc) => sc.UUID === SourceChannel.UUID),
-    )
-    .filter((sc): sc is ConfigSourceChannel => sc != null)
-    .map((sc) => sc.Name);
+  return (group.channels ?? [])
+    .map((gc) => findSourceChannel(sourceChannels, gc.channelId))
+    .filter((sc): sc is Channel => sc != null)
+    .map((sc) => sc.name);
 }
 
 export type ChannelGroupsMasterDetailProps = {
   channelItemElement: string;
   retrievingMetadata: boolean;
   noLoader: boolean;
+  /** OME-TIFF: lazy-load histograms for visible source indices (see `histogramLazy.ts`). */
+  ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
 };
 
 export const ChannelGroupsMasterDetail = (
   props: ChannelGroupsMasterDetailProps,
 ) => {
-  const { setActiveChannelGroup } = useOverlayStore();
-  const activeChannelGroupId = useOverlayStore((s) => s.activeChannelGroupId);
-  const Groups = useOverlayStore((s) => s.Groups);
-  const SourceChannels = useOverlayStore((s) => s.SourceChannels);
-  const setGroups = useOverlayStore((s) => s.setGroups);
-  const setGroupNames = useOverlayStore((s) => s.setGroupNames);
-  const setGroupChannelLists = useOverlayStore((s) => s.setGroupChannelLists);
+  const { setActiveChannelGroup } = useAppStore();
+  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
+  const groups = useDocumentStore((s) => s.groups);
+  const images = useDocumentStore((s) => s.images);
+  const sourceChannels = React.useMemo(
+    () => flattenImageChannelsInDocumentOrder(images),
+    [images],
+  );
+  const setGroups = useDocumentStore((s) => s.setGroups);
+  const setGroupNames = useAppStore((s) => s.setGroupNames);
+  const setGroupChannelLists = useAppStore((s) => s.setGroupChannelLists);
+  const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
 
   const detailBodyRef = React.useRef<HTMLDivElement | null>(null);
   const renameFieldId = React.useId();
 
   // Master-detail state
   const [detailGroupId, setDetailGroupId] = React.useState<string | null>(null);
-  const [channelsExpanded, setChannelsExpanded] = React.useState(true);
+  /** Source channel UUIDs currently fetching histogram tiles (spinner on each chart). */
+  const [loadingHistogramSourceIds, setLoadingHistogramSourceIds] =
+    React.useState<string[]>([]);
 
   // Editing state
   const [replacingChannelUUID, setReplacingChannelUUID] = React.useState<
     string | null
   >(null);
+  const replaceChannelSelectRef = React.useRef<HTMLSelectElement | null>(null);
   const [colorPickerChannelUUID, setColorPickerChannelUUID] = React.useState<
     string | null
   >(null);
@@ -100,61 +118,90 @@ export const ChannelGroupsMasterDetail = (
   // Reset detail state when switching groups
   React.useEffect(() => {
     if (detailGroupId) {
-      setChannelsExpanded(true);
       setReplacingChannelUUID(null);
     }
   }, [detailGroupId]);
 
+  React.useEffect(() => {
+    if (replacingChannelUUID === null) return;
+    const id = window.requestAnimationFrame(() => {
+      replaceChannelSelectRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [replacingChannelUUID]);
+
   const detailGroup = detailGroupId
-    ? (Groups.find((g) => g.UUID === detailGroupId) ?? null)
+    ? (groups.find((g) => g.id === detailGroupId) ?? null)
     : null;
 
   // Sync derived store state after group mutations.
   const syncGroupState = React.useCallback(
-    (newGroups: ConfigGroup[]) => {
+    (newGroups: Group[]) => {
       setGroups(newGroups);
       setGroupNames(
-        Object.fromEntries(newGroups.map(({ Name, UUID }) => [UUID, Name])),
+        Object.fromEntries(newGroups.map(({ name, id }) => [id, name])),
       );
       const lists = Object.fromEntries(
-        newGroups.map(({ Name, GroupChannels }) => [
-          Name,
-          GroupChannels.map(({ SourceChannel }) =>
-            SourceChannels.find(({ UUID }) => UUID === SourceChannel.UUID),
-          )
+        newGroups.map(({ name, channels }) => [
+          name,
+          channels
+            .map((gc) => findSourceChannel(sourceChannels, gc.channelId))
             .filter(Boolean)
-            .map((sc) => sc?.Name),
+            .map((sc) => sc?.name),
         ]),
       );
       setGroupChannelLists(lists);
+      const namesInUse = new Set<string>();
+      for (const g of newGroups) {
+        for (const gc of g.channels) {
+          const sc = findSourceChannel(sourceChannels, gc.channelId);
+          if (sc?.name) {
+            namesInUse.add(sc.name);
+          }
+        }
+      }
+      const prev = useAppStore.getState().channelVisibilities;
+      const merged = { ...prev };
+      for (const name of namesInUse) {
+        if (merged[name] === undefined) {
+          merged[name] = true;
+        }
+      }
+      setChannelVisibilities(merged);
     },
-    [SourceChannels, setGroups, setGroupNames, setGroupChannelLists],
+    [
+      sourceChannels,
+      setGroups,
+      setGroupNames,
+      setGroupChannelLists,
+      setChannelVisibilities,
+    ],
   );
 
   // --- Group CRUD ---
   const createGroup = () => {
-    const name = `Group ${Groups.length + 1}`;
-    const newGroup: ConfigGroup = {
-      UUID: crypto.randomUUID(),
-      Name: name,
-      GroupChannels: [],
-      State: { Expanded: true },
+    const name = `Group ${groups.length + 1}`;
+    const newGroup: Group = {
+      id: crypto.randomUUID(),
+      name,
+      expanded: true,
+      channels: [],
     };
-    const newGroups = [...Groups, newGroup];
+    const newGroups = [...groups, newGroup];
     syncGroupState(newGroups);
-    setActiveChannelGroup(newGroup.UUID);
-    setDetailGroupId(newGroup.UUID);
+    setActiveChannelGroup(newGroup.id);
+    setDetailGroupId(newGroup.id);
     requestAnimationFrame(() => {
       detailBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
     });
   };
 
   const deleteGroup = (groupId: string) => {
-    if (Groups.length <= 1) return;
-    const newGroups = Groups.filter(({ UUID }) => UUID !== groupId);
+    if (groups.length <= 1) return;
+    const newGroups = groups.filter(({ id }) => id !== groupId);
     syncGroupState(newGroups);
     if (activeChannelGroupId === groupId) {
-      setActiveChannelGroup(newGroups[0].UUID);
+      setActiveChannelGroup(newGroups[0].id);
     }
     if (detailGroupId === groupId) {
       setDetailGroupId(null);
@@ -162,41 +209,39 @@ export const ChannelGroupsMasterDetail = (
   };
 
   const renameGroup = (groupId: string, newName: string) => {
-    const newGroups = Groups.map((g) =>
-      g.UUID === groupId ? { ...g, Name: newName } : g,
+    const newGroups = groups.map((g) =>
+      g.id === groupId ? { ...g, name: newName } : g,
     );
     syncGroupState(newGroups);
   };
 
   const addChannelToGroup = (groupId: string, sourceChannelUUID: string) => {
-    const sc = SourceChannels.find(({ UUID }) => UUID === sourceChannelUUID);
+    const sc = sourceChannels.find(({ id }) => id === sourceChannelUUID);
     if (!sc) return;
-    const newGroups = Groups.map((g) => {
-      if (g.UUID !== groupId) return g;
-      const already = g.GroupChannels.some(
-        (gc) => gc.SourceChannel.UUID === sourceChannelUUID,
+    const newGroups = groups.map((g) => {
+      if (g.id !== groupId) return g;
+      const already = g.channels.some(
+        (gc) => gc.channelId === sourceChannelUUID,
       );
       if (already) return g;
       const newChannel = {
-        UUID: crypto.randomUUID(),
-        LowerRange: 0,
-        UpperRange: 65535,
-        Color: { R: 255, G: 255, B: 255 },
-        SourceChannel: { UUID: sourceChannelUUID },
-        Group: { UUID: groupId },
-        State: { Expanded: true },
+        id: crypto.randomUUID(),
+        lowerLimit: 0,
+        upperLimit: 65535,
+        color: { r: 255, g: 255, b: 255 },
+        channelId: sc.id,
       };
-      return { ...g, GroupChannels: [...g.GroupChannels, newChannel] };
+      return { ...g, channels: [...g.channels, newChannel] };
     });
     syncGroupState(newGroups);
   };
 
   const removeChannelFromGroup = (groupId: string, channelUUID: string) => {
-    const newGroups = Groups.map((g) => {
-      if (g.UUID !== groupId) return g;
+    const newGroups = groups.map((g) => {
+      if (g.id !== groupId) return g;
       return {
         ...g,
-        GroupChannels: g.GroupChannels.filter((gc) => gc.UUID !== channelUUID),
+        channels: g.channels.filter((gc) => gc.id !== channelUUID),
       };
     });
     syncGroupState(newGroups);
@@ -207,13 +252,21 @@ export const ChannelGroupsMasterDetail = (
     oldChannelUUID: string,
     newSourceChannelUUID: string,
   ) => {
-    const newGroups = Groups.map((g) => {
-      if (g.UUID !== groupId) return g;
+    const newSc = sourceChannels.find(({ id }) => id === newSourceChannelUUID);
+    if (!newSc) {
+      setReplacingChannelUUID(null);
+      return;
+    }
+    const newGroups = groups.map((g) => {
+      if (g.id !== groupId) return g;
       return {
         ...g,
-        GroupChannels: g.GroupChannels.map((gc) => {
-          if (gc.UUID !== oldChannelUUID) return gc;
-          return { ...gc, SourceChannel: { UUID: newSourceChannelUUID } };
+        channels: g.channels.map((gc) => {
+          if (gc.id !== oldChannelUUID) return gc;
+          return {
+            ...gc,
+            channelId: newSc.id,
+          };
         }),
       };
     });
@@ -223,12 +276,12 @@ export const ChannelGroupsMasterDetail = (
 
   const updateChannelColor = (
     channelUUID: string,
-    rgb: { R: number; G: number; B: number },
+    rgb: { r: number; g: number; b: number },
   ) => {
-    const newGroups = Groups.map((g) => ({
+    const newGroups = groups.map((g) => ({
       ...g,
-      GroupChannels: g.GroupChannels.map((gc) =>
-        gc.UUID === channelUUID ? { ...gc, Color: rgb } : gc,
+      channels: g.channels.map((gc) =>
+        gc.id === channelUUID ? { ...gc, color: rgb } : gc,
       ),
     }));
     syncGroupState(newGroups);
@@ -237,32 +290,74 @@ export const ChannelGroupsMasterDetail = (
   // Color picker helpers
   const pickingColorHex = React.useMemo(() => {
     if (!colorPickerChannelUUID) return null;
-    for (const g of Groups) {
-      const gc = g.GroupChannels.find((c) => c.UUID === colorPickerChannelUUID);
+    for (const g of groups) {
+      const gc = g.channels.find((c) => c.id === colorPickerChannelUUID);
       if (gc) {
-        const { R, G, B } = gc.Color;
-        return [R, G, B].map((n) => n.toString(16).padStart(2, "0")).join("");
+        const { r, g: gg, b } = gc.color;
+        return [r, gg, b].map((n) => n.toString(16).padStart(2, "0")).join("");
       }
     }
     return null;
-  }, [Groups, colorPickerChannelUUID]);
+  }, [groups, colorPickerChannelUUID]);
 
   const closeColorPicker = React.useCallback(() => {
     setColorPickerChannelUUID(null);
     setColorPickerPos(null);
   }, []);
 
-  React.useEffect(() => {
-    if (!colorPickerChannelUUID) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeColorPicker();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [colorPickerChannelUUID, closeColorPicker]);
-
   const activeGroup =
-    activeChannelGroupId || (Groups.length > 0 ? Groups[0].UUID : null);
+    activeChannelGroupId || (groups.length > 0 ? groups[0].id : null);
+
+  const { ensureChannelHistograms } = props;
+
+  const detailGroupSourcesKey = React.useMemo(() => {
+    if (!detailGroupId) return "";
+    const g = groups.find((x) => x.id === detailGroupId);
+    if (!g) return "";
+    return g.channels.map((gc) => gc.channelId).join("\0");
+  }, [detailGroupId, groups]);
+
+  React.useEffect(() => {
+    void detailGroupSourcesKey;
+    if (!detailGroupId || !ensureChannelHistograms || props.noLoader) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const st = useDocumentStore.getState();
+        const gList = documentGroups(st);
+        const scList = documentSourceChannels(st);
+        const g = gList.find((x) => x.id === detailGroupId);
+        if (!g) return;
+        const channelIds: string[] = [];
+        for (const gc of g.channels) {
+          const sc = findSourceChannel(scList, gc.channelId);
+          if (!sc) continue;
+          if (sourceDistributionYValuesLength(sc) > 0) continue;
+          channelIds.push(sc.id);
+        }
+        if (channelIds.length === 0 || cancelled) return;
+        setLoadingHistogramSourceIds(channelIds);
+        await new Promise<void>((r) => {
+          requestAnimationFrame(() => r());
+        });
+        if (cancelled) return;
+        await ensureChannelHistograms(channelIds);
+      } finally {
+        if (!cancelled) {
+          setLoadingHistogramSourceIds([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+      setLoadingHistogramSourceIds([]);
+    };
+  }, [
+    detailGroupId,
+    detailGroupSourcesKey,
+    ensureChannelHistograms,
+    props.noLoader,
+  ]);
 
   const openDetailForGroup = (groupId: string) => {
     setActiveChannelGroup(groupId);
@@ -275,13 +370,11 @@ export const ChannelGroupsMasterDetail = (
   // Available channels not yet in the detail group
   const availableChannels = React.useMemo(() => {
     if (!detailGroupId) return [];
-    const g = Groups.find(({ UUID }) => UUID === detailGroupId);
+    const g = groups.find(({ id }) => id === detailGroupId);
     if (!g) return [];
-    const usedUUIDs = new Set(
-      g.GroupChannels.map((gc) => gc.SourceChannel.UUID),
-    );
-    return SourceChannels.filter(({ UUID }) => !usedUUIDs.has(UUID));
-  }, [detailGroupId, Groups, SourceChannels]);
+    const usedFlatIds = new Set(g.channels.map((gc) => gc.channelId));
+    return sourceChannels.filter(({ id }) => !usedFlatIds.has(id));
+  }, [detailGroupId, groups, sourceChannels]);
 
   // ── List view ──
 
@@ -289,18 +382,18 @@ export const ChannelGroupsMasterDetail = (
     <div className={styles.compactHeader}>
       <div className={styles.headerTitle}>
         <span>Channel Groups</span>
-        <span className={styles.headerCount}>({Groups.length})</span>
+        <span className={styles.headerCount}>({groups.length})</span>
       </div>
       <div className={styles.headerActions}>
         <button
           type="button"
           className={styles.iconHeaderButton}
           onClick={() => {
-            if (Groups.length <= 1) return;
+            if (groups.length <= 1) return;
             if (!activeGroup) return;
             deleteGroup(activeGroup);
           }}
-          disabled={Groups.length <= 1}
+          disabled={groups.length <= 1}
           title="Delete active group"
         >
           <TrashIcon />
@@ -320,18 +413,18 @@ export const ChannelGroupsMasterDetail = (
   const renderList = () => (
     <div className={styles.panel}>
       {listHeader}
-      {Groups.length === 0 ? (
+      {groups.length === 0 ? (
         <div className={styles.emptyMessage}>No groups yet</div>
       ) : (
         <ul className={styles.rows}>
-          {Groups.map((group) => {
-            const isActive = activeGroup === group.UUID;
-            const channelNames = channelNamesForGroup(group, SourceChannels);
+          {groups.map((group) => {
+            const isActive = activeGroup === group.id;
+            const channelNames = channelNamesForGroup(group, sourceChannels);
             const subtitle = channelNames.join(", ");
 
             return (
               <li
-                key={group.UUID}
+                key={group.id}
                 className={[
                   styles.groupRow,
                   isActive ? styles.groupRowActive : "",
@@ -343,7 +436,7 @@ export const ChannelGroupsMasterDetail = (
                   title="Edit group"
                   onClick={(e) => {
                     e.stopPropagation();
-                    openDetailForGroup(group.UUID);
+                    openDetailForGroup(group.id);
                   }}
                 >
                   <ChevronDownIcon
@@ -352,30 +445,22 @@ export const ChannelGroupsMasterDetail = (
                   />
                 </button>
 
-                {/* biome-ignore lint/a11y/useSemanticElements: row needs nested interactive */}
-                <div
+                <button
+                  type="button"
                   className={styles.groupRowMainHit}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Select group: ${group.Name}`}
-                  onClick={() => setActiveChannelGroup(group.UUID)}
-                  onDoubleClick={() => openDetailForGroup(group.UUID)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      setActiveChannelGroup(group.UUID);
-                    }
-                  }}
+                  aria-label={`Select group: ${group.name}`}
+                  onClick={() => setActiveChannelGroup(group.id)}
+                  onDoubleClick={() => openDetailForGroup(group.id)}
                 >
                   <div className={styles.rowTextStack}>
-                    <span className={styles.rowTitle} title={group.Name}>
-                      {group.Name}
+                    <span className={styles.rowTitle} title={group.name}>
+                      {group.name}
                     </span>
                     <span className={styles.rowContent} title={subtitle}>
                       {subtitle || "No channels"}
                     </span>
                   </div>
-                </div>
+                </button>
               </li>
             );
           })}
@@ -393,46 +478,45 @@ export const ChannelGroupsMasterDetail = (
       const raw = event.target.value;
       const trimmed = raw.trim();
       if (trimmed === "") {
-        renameGroup(detailGroup.UUID, "Untitled group");
+        renameGroup(detailGroup.id, "Untitled group");
       } else if (trimmed !== raw) {
-        renameGroup(detailGroup.UUID, trimmed);
+        renameGroup(detailGroup.id, trimmed);
       }
     };
 
-    const channels = detailGroup.GroupChannels.map((gc) => {
-      const sc = SourceChannels.find(
-        ({ UUID }) => UUID === gc.SourceChannel.UUID,
-      );
-      const { R, G, B } = gc.Color;
-      const hex = [R, G, B]
+    const channels = detailGroup.channels.map((gc) => {
+      const sc = findSourceChannel(sourceChannels, gc.channelId);
+      const { r: rr, g: gg, b } = gc.color;
+      const hex = [rr, gg, b]
         .map((n) => n.toString(16).padStart(2, "0"))
         .join("");
       return {
-        channelUUID: gc.UUID,
-        sourceUUID: gc.SourceChannel.UUID,
-        name: sc?.Name ?? "Unknown",
+        channelUUID: gc.id,
+        sourceUUID: sc?.id ?? "",
+        name: sc?.name ?? "Unknown",
         hex,
-        r: R,
-        g: G,
-        b: B,
+        r: rr,
+        g: gg,
+        b,
       };
     });
 
     const replaceOptions = (currentSourceUUID: string) =>
-      SourceChannels.filter(({ UUID }) => UUID !== currentSourceUUID);
+      sourceChannels.filter(({ id }) => id !== currentSourceUUID);
 
-    const channelItemAttrsFor = (
-      gc: (typeof detailGroup.GroupChannels)[0],
-    ) => ({
-      group_uuid: detailGroup.UUID,
-      channel_uuid: gc.UUID,
-      source_uuid: gc.SourceChannel.UUID,
-      r: String(gc.Color.R),
-      g: String(gc.Color.G),
-      b: String(gc.Color.B),
-      lower_range: String(gc.LowerRange),
-      upper_range: String(gc.UpperRange),
-    });
+    const channelItemAttrsFor = (gc: (typeof detailGroup.channels)[0]) => {
+      const flat = findSourceChannel(sourceChannels, gc.channelId);
+      return {
+        group_uuid: detailGroup.id,
+        channel_uuid: gc.id,
+        source_uuid: flat?.id ?? "",
+        r: String(gc.color.r),
+        g: String(gc.color.g),
+        b: String(gc.color.b),
+        lower_range: String(gc.lowerLimit),
+        upper_range: String(gc.upperLimit),
+      };
+    };
 
     return (
       <div className={styles.detailView}>
@@ -449,8 +533,8 @@ export const ChannelGroupsMasterDetail = (
             />
             <span>Back</span>
           </button>
-          <div className={styles.detailTitle} title={detailGroup.Name}>
-            {detailGroup.Name}
+          <div className={styles.detailTitle} title={detailGroup.name}>
+            {detailGroup.name}
           </div>
         </div>
 
@@ -468,8 +552,8 @@ export const ChannelGroupsMasterDetail = (
                 id={renameFieldId}
                 className={styles.detailTitleInput}
                 type="text"
-                value={detailGroup.Name ?? ""}
-                onChange={(e) => renameGroup(detailGroup.UUID, e.target.value)}
+                value={detailGroup.name ?? ""}
+                onChange={(e) => renameGroup(detailGroup.id, e.target.value)}
                 onBlur={handleTitleBlur}
                 maxLength={200}
                 autoComplete="off"
@@ -478,178 +562,149 @@ export const ChannelGroupsMasterDetail = (
               />
             </div>
 
-            {/* Channels collapsible section */}
-            <div
-              className={[
-                styles.detailCollapsible,
-                !channelsExpanded ? styles.detailCollapsibleCollapsed : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              <button
-                type="button"
-                className={styles.detailCollapsibleHeader}
-                aria-expanded={channelsExpanded}
-                onClick={() => setChannelsExpanded((prev) => !prev)}
-              >
-                <ChevronDownIcon
-                  className={styles.detailCollapsibleChevron}
-                  aria-hidden
-                />
-                <span className={styles.detailCollapsibleTitle}>
-                  Channels{" "}
-                  <span className={styles.detailCollapsibleCount}>
-                    ({channels.length})
-                  </span>
+            {/* Channels — always visible (detail view is only this group + channels) */}
+            <div className={styles.detailChannelsSection}>
+              <div className={styles.detailChannelsSectionTitle}>
+                Channels{" "}
+                <span className={styles.detailCollapsibleCount}>
+                  ({channels.length})
                 </span>
-              </button>
-              {channelsExpanded ? (
-                <div className={styles.detailCollapsibleBody}>
-                  {channels.map((ch) => {
-                    const isReplacing = replacingChannelUUID === ch.channelUUID;
-                    const gc = detailGroup.GroupChannels.find(
-                      (c) => c.UUID === ch.channelUUID,
-                    );
-                    const legacyChannelItem =
-                      gc &&
-                      !props.retrievingMetadata &&
-                      !props.noLoader &&
-                      React.createElement(props.channelItemElement, {
-                        key: `embed-${ch.channelUUID}`,
-                        ...channelItemAttrsFor(gc),
-                      });
+              </div>
+              <div className={styles.detailChannelsSectionBody}>
+                {channels.map((ch) => {
+                  const isReplacing = replacingChannelUUID === ch.channelUUID;
+                  const gc = detailGroup.channels.find(
+                    (c) => c.id === ch.channelUUID,
+                  );
+                  const legacyChannelItem =
+                    gc &&
+                    !props.retrievingMetadata &&
+                    !props.noLoader &&
+                    React.createElement(props.channelItemElement, {
+                      key: `embed-${ch.channelUUID}-${ch.sourceUUID}`,
+                      ...channelItemAttrsFor(gc),
+                      histogram_loading: loadingHistogramSourceIds.includes(
+                        ch.sourceUUID,
+                      )
+                        ? "true"
+                        : "false",
+                    });
 
-                    return (
-                      <div key={ch.channelUUID}>
-                        <div className={styles.channelRow}>
-                          <button
-                            type="button"
-                            className={styles.channelColorSwatch}
-                            style={{ backgroundColor: `#${ch.hex}` }}
-                            title={`Pick color for ${ch.name}`}
-                            aria-label={`Pick color for ${ch.name}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const rect =
-                                e.currentTarget.getBoundingClientRect();
-                              setColorPickerChannelUUID(ch.channelUUID);
-                              setColorPickerPos({
-                                top: Math.min(
-                                  rect.bottom + 4,
-                                  window.innerHeight - 280,
-                                ),
-                                left: Math.min(
-                                  rect.left,
-                                  window.innerWidth - 240,
-                                ),
-                              });
+                  return (
+                    <div
+                      key={ch.channelUUID}
+                      className={styles.detailChannelBlock}
+                    >
+                      <div className={styles.channelRow}>
+                        <button
+                          type="button"
+                          className={styles.channelColorSwatch}
+                          style={{ backgroundColor: `#${ch.hex}` }}
+                          title={`Pick color for ${ch.name}`}
+                          aria-label={`Pick color for ${ch.name}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const rect =
+                              e.currentTarget.getBoundingClientRect();
+                            setColorPickerChannelUUID(ch.channelUUID);
+                            setColorPickerPos(
+                              chromeColorPickerAnchorPosition(rect),
+                            );
+                          }}
+                        />
+                        {isReplacing ? (
+                          <select
+                            ref={replaceChannelSelectRef}
+                            className={styles.addChannelSelect}
+                            defaultValue=""
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                replaceChannelInGroup(
+                                  detailGroup.id,
+                                  ch.channelUUID,
+                                  e.target.value,
+                                );
+                              }
                             }}
-                          />
-                          {isReplacing ? (
-                            <select
-                              className={styles.addChannelSelect}
-                              defaultValue=""
-                              onChange={(e) => {
-                                if (e.target.value) {
-                                  replaceChannelInGroup(
-                                    detailGroup.UUID,
-                                    ch.channelUUID,
-                                    e.target.value,
-                                  );
-                                }
-                              }}
-                              onBlur={() => setReplacingChannelUUID(null)}
-                              // biome-ignore lint/a11y/noAutofocus: replace dropdown
-                              autoFocus
-                            >
-                              <option value="" disabled>
-                                Replace with...
+                            onBlur={() => setReplacingChannelUUID(null)}
+                          >
+                            <option value="" disabled>
+                              Replace with...
+                            </option>
+                            {replaceOptions(ch.sourceUUID).map((sc) => (
+                              <option key={sc.id} value={sc.id}>
+                                {sc.name}
                               </option>
-                              {replaceOptions(ch.sourceUUID).map((sc) => (
-                                <option key={sc.UUID} value={sc.UUID}>
-                                  {sc.Name}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <span className={styles.channelName}>
-                              {ch.name}
-                            </span>
-                          )}
-                          <button
-                            type="button"
-                            className={styles.channelActionButton}
-                            title="Replace channel"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setReplacingChannelUUID(
-                                isReplacing ? null : ch.channelUUID,
-                              );
-                            }}
-                          >
-                            <ReplaceIcon />
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.channelActionButton}
-                            title="Remove channel"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeChannelFromGroup(
-                                detailGroup.UUID,
-                                ch.channelUUID,
-                              );
-                            }}
-                          >
-                            <RemoveIcon />
-                          </button>
-                        </div>
-                        {legacyChannelItem ? (
-                          <div
-                            style={{
-                              padding: "0 10px 6px",
-                              width: "100%",
-                              minWidth: 0,
-                              boxSizing: "border-box",
-                            }}
-                          >
-                            {legacyChannelItem}
-                          </div>
-                        ) : null}
+                            ))}
+                          </select>
+                        ) : (
+                          <span className={styles.channelName}>{ch.name}</span>
+                        )}
+                        <button
+                          type="button"
+                          className={styles.channelActionButton}
+                          title="Replace channel"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReplacingChannelUUID(
+                              isReplacing ? null : ch.channelUUID,
+                            );
+                          }}
+                        >
+                          <ReplaceIcon />
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.channelActionButton}
+                          title="Remove channel"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeChannelFromGroup(
+                              detailGroup.id,
+                              ch.channelUUID,
+                            );
+                          }}
+                        >
+                          <RemoveIcon />
+                        </button>
                       </div>
-                    );
-                  })}
-                  {/* Add channel */}
-                  <div className={styles.addChannelRow}>
-                    {availableChannels.length === 0 ? (
-                      <span className={styles.allChannelsNote}>
-                        All channels in group
-                      </span>
-                    ) : (
-                      <select
-                        className={styles.addChannelSelect}
-                        defaultValue=""
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            addChannelToGroup(detailGroup.UUID, e.target.value);
-                            e.target.value = "";
-                          }
-                        }}
-                      >
-                        <option value="" disabled>
-                          Add channel...
+                      {legacyChannelItem ? (
+                        <div className={styles.detailChannelItemEmbed}>
+                          {legacyChannelItem}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+                {/* Add channel */}
+                <div className={styles.addChannelRow}>
+                  {availableChannels.length === 0 ? (
+                    <span className={styles.allChannelsNote}>
+                      All channels in group
+                    </span>
+                  ) : (
+                    <select
+                      className={styles.addChannelSelect}
+                      defaultValue=""
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          addChannelToGroup(detailGroup.id, e.target.value);
+                          e.target.value = "";
+                        }
+                      }}
+                    >
+                      <option value="" disabled>
+                        Add channel...
+                      </option>
+                      {availableChannels.map((sc) => (
+                        <option key={sc.id} value={sc.id}>
+                          {sc.name}
                         </option>
-                        {availableChannels.map((sc) => (
-                          <option key={sc.UUID} value={sc.UUID}>
-                            {sc.Name}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
+                      ))}
+                    </select>
+                  )}
                 </div>
-              ) : null}
+              </div>
             </div>
           </div>
         </div>
@@ -657,61 +712,30 @@ export const ChannelGroupsMasterDetail = (
     );
   };
 
-  // ── Color picker portal ──
-  const colorPickerPortal =
-    colorPickerChannelUUID &&
-    colorPickerPos &&
-    pickingColorHex &&
-    typeof document !== "undefined"
-      ? createPortal(
-          <>
-            <button
-              type="button"
-              aria-label="Close color picker"
-              style={{
-                position: "fixed",
-                inset: 0,
-                zIndex: 9998,
-                margin: 0,
-                padding: 0,
-                border: "none",
-                background: "transparent",
-                cursor: "default",
-              }}
-              onClick={closeColorPicker}
-            />
-            <div
-              style={{
-                position: "fixed",
-                top: colorPickerPos.top,
-                left: colorPickerPos.left,
-                zIndex: 9999,
-                boxShadow: "0 4px 24px rgba(0,0,0,0.45)",
-              }}
-            >
-              <Chrome
-                color={`#${pickingColorHex}`}
-                showAlpha={false}
-                onChange={(c) => {
-                  const raw = c.hex.replace(/^#/, "").slice(0, 6);
-                  if (raw.length < 6) return;
-                  const R = Number.parseInt(raw.slice(0, 2), 16);
-                  const G = Number.parseInt(raw.slice(2, 4), 16);
-                  const B = Number.parseInt(raw.slice(4, 6), 16);
-                  if ([R, G, B].some((n) => Number.isNaN(n))) return;
-                  updateChannelColor(colorPickerChannelUUID, { R, G, B });
-                }}
-              />
-            </div>
-          </>,
-          document.body,
-        )
-      : null;
-
   return (
     <div className={[styles.panel, styles.black].join(" ")}>
       {detailGroupId ? renderDetail() : renderList()}
-      {colorPickerPortal}
+      {colorPickerChannelUUID && colorPickerPos && pickingColorHex ? (
+        <ChromeColorPickerPopover
+          position={colorPickerPos}
+          onClose={closeColorPicker}
+          color={`#${pickingColorHex}`}
+          showAlpha={false}
+          onChange={(c) => {
+            const raw = c.hex.replace(/^#/, "").slice(0, 6);
+            if (raw.length < 6) return;
+            const R = Number.parseInt(raw.slice(0, 2), 16);
+            const G = Number.parseInt(raw.slice(2, 4), 16);
+            const B = Number.parseInt(raw.slice(4, 6), 16);
+            if ([R, G, B].some((n) => Number.isNaN(n))) return;
+            updateChannelColor(colorPickerChannelUUID, {
+              r: R,
+              g: G,
+              b: B,
+            });
+          }}
+        />
+      ) : null}
     </div>
   );
 };

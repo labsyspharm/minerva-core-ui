@@ -6,6 +6,9 @@ import rangeEditorChannelCSS from "./range-editor-channel.module.css" with {
 };
 import { RangeSlider } from "./range-slider.js";
 
+/** Same as range-editor-element: smooth dragging independent of histogram YValues length. */
+const SLIDER_DOMAIN_STEPS = 8192;
+
 class RangeEditorChannel extends sourceGroupChannels(
   useItemIdentifier(HTMLElement),
 ) {
@@ -28,7 +31,7 @@ class RangeEditorChannel extends sourceGroupChannels(
         XScale: "log",
         YScale: "linear",
         YValues: [],
-        LowerRange: 1,
+        LowerRange: 0,
         UpperRange: 16,
       }
     );
@@ -48,24 +51,35 @@ class RangeEditorChannel extends sourceGroupChannels(
     const rangeInputElement = this.defineElement(RangeSlider, {});
     const dataType = this.dataType;
     const distribution = this.distribution;
-    const chart_x_steps = Math.max(2, distribution.YValues.length);
+    const chart_x_steps = SLIDER_DOMAIN_STEPS;
     const chart_x_max = distribution.UpperRange;
     const chart_x_origin = distribution.LowerRange;
     const chart_x_range = chart_x_max - chart_x_origin;
     const chart_x_scale = chart_x_steps / chart_x_range;
     const from_input = (value) => {
-      value = chart_x_origin + value / chart_x_scale;
+      let v_linear = chart_x_origin + value / chart_x_scale;
+      let out = v_linear;
       if (distribution.XScale === "log") {
-        value = 2 ** value;
+        if (v_linear <= chart_x_origin) {
+          out = chart_x_origin === 0 ? 0 : 2 ** chart_x_origin;
+        } else {
+          out = 2 ** v_linear;
+        }
       }
       return Math.max(
         dataType.LowerRange,
-        Math.min(dataType.UpperRange, value),
+        Math.min(dataType.UpperRange, out),
       );
     };
     const to_input = (value) => {
       if (distribution.XScale === "log") {
-        value = Math.log2(Math.max(1, value));
+        if (chart_x_origin === 0 && value <= 0) {
+          value = 0;
+        } else {
+          const minPositive =
+            chart_x_origin === 0 ? 1 : 2 ** chart_x_origin;
+          value = Math.log2(Math.max(minPositive, value));
+        }
       }
       return Math.round(
         chart_x_scale *

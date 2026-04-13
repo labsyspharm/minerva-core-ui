@@ -1,18 +1,28 @@
 import * as React from "react";
-import AnnotationsIcon from "@/components/shared/icons/annotations.svg?react";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import JumpToViewIcon from "@/components/shared/icons/jump-to-view.svg?react";
 import OverwriteViewIcon from "@/components/shared/icons/overwrite-view.svg?react";
 import PlayIcon from "@/components/shared/icons/play.svg?react";
-import type { ConfigWaypoint } from "@/lib/config";
-import type { ConfigGroup, ConfigSourceChannel } from "@/lib/document-store";
-import { useOverlayStore } from "@/lib/stores";
+import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
+import type { ConfigWaypoint } from "@/lib/authoring/config";
+import {
+  effectiveReferenceImagePixelSize,
+  useAppStore,
+} from "@/lib/stores/appStore";
+import type { Channel, Group, Waypoint } from "@/lib/stores/documentStore";
+import {
+  documentWaypoints,
+  findSourceChannel,
+  flattenImageChannelsInDocumentOrder,
+  useDocumentStore,
+} from "@/lib/stores/documentStore";
+import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
 import {
   getViewerBoundsFromSnapshot,
   getViewerViewportSnapshotFromStore,
   orthographicZoomToNumber,
-} from "@/lib/viewerViewport";
-import { getWaypointViewState } from "@/lib/waypoint";
+} from "@/lib/viewer/viewerViewport";
+import { WAYPOINT_THUMBNAIL_PIXEL_SIZE } from "@/lib/waypoints/waypointThumbnail";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { WaypointContentEditor } from "./WaypointContentEditor";
 import styles from "./WaypointsList.module.css";
@@ -52,49 +62,62 @@ const PlusIcon = () => (
   </svg>
 );
 
-const countWaypointAnnotations = (story: ConfigWaypoint) => {
-  return (story.Arrows?.length ?? 0) + (story.Overlays?.length ?? 0);
-};
+const countWaypointAnnotations = (story: Waypoint) =>
+  story.shapeIds?.length ?? 0;
 
 const annotationCountLabel = (count: number) =>
-  `${count} ${count === 1 ? "annotation" : "annotations"}`;
+  `${count} ${count === 1 ? "shape" : "shapes"}`;
 
 function channelNamesForGroup(
-  group: ConfigGroup,
-  sourceChannels: ConfigSourceChannel[],
+  group: Group,
+  sourceChannels: Channel[],
 ): string[] {
-  return (group.GroupChannels ?? [])
-    .map(({ SourceChannel }) =>
-      sourceChannels.find((sc) => sc.UUID === SourceChannel.UUID),
-    )
-    .filter((sc): sc is ConfigSourceChannel => sc != null)
-    .map((sc) => sc.Name);
+  return (group.channels ?? [])
+    .map((gc) => findSourceChannel(sourceChannels, gc.channelId))
+    .filter((sc): sc is Channel => sc != null)
+    .map((sc) => sc.name);
 }
 
 const WaypointsList = (props: WaypointsListProps) => {
   const { viewOnly, onEnterPlaybackPreview } = props;
   const canEdit = !viewOnly;
 
+  const waypoints = useDocumentStore((s) => s.waypoints);
+  const shapes = useDocumentStore((s) => s.shapes);
+  const groups = useDocumentStore((s) => s.groups);
+  const images = useDocumentStore((s) => s.images);
+  const sourceChannels = React.useMemo(
+    () => flattenImageChannelsInDocumentOrder(images),
+    [images],
+  );
+  const docImageWidth = useDocumentStore((s) => s.images[0]?.sizeX ?? 0);
+  const docImageHeight = useDocumentStore((s) => s.images[0]?.sizeY ?? 0);
+  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
+  const { width: imageWidth, height: imageHeight } =
+    effectiveReferenceImagePixelSize(
+      viewerRefSize,
+      docImageWidth,
+      docImageHeight,
+    );
   const {
-    stories,
     activeStoryIndex,
     setActiveStory,
     setActiveChannelGroup,
     addStory,
     updateStory,
     reorderStories,
-    importWaypointAnnotations,
-    clearImportedAnnotations,
-    imageWidth,
-    imageHeight,
-    setTargetWaypointViewState,
+    importWaypointShapes,
+    persistImportedShapesToStory,
+    setTargetWaypointCamera,
     captureSquareViewportThumbnail,
     removeStory,
     setShowSquareViewportOverlay,
     setAuthoringWaypointEditorOpen,
-    Groups,
-    SourceChannels,
-  } = useOverlayStore();
+    setAuthoringWaypointShapesIndex,
+    handleToolChange,
+  } = useAppStore();
+
+  const previousDetailStoryIdRef = React.useRef<string | null>(null);
 
   const detailBodyRef = React.useRef<HTMLDivElement | null>(null);
   const detailTitleFieldId = React.useId();
@@ -115,6 +138,14 @@ const WaypointsList = (props: WaypointsListProps) => {
     setAuthoringWaypointEditorOpen(detailStoryId != null);
     return () => setAuthoringWaypointEditorOpen(false);
   }, [detailStoryId, setAuthoringWaypointEditorOpen]);
+
+  React.useEffect(() => {
+    const prev = previousDetailStoryIdRef.current;
+    if (prev != null && detailStoryId == null) {
+      handleToolChange("move");
+    }
+    previousDetailStoryIdRef.current = detailStoryId;
+  }, [detailStoryId, handleToolChange]);
 
   React.useEffect(() => {
     if (detailStoryId) {
@@ -154,43 +185,55 @@ const WaypointsList = (props: WaypointsListProps) => {
   >(null);
   const pendingThumbnailCaptureTimeoutRef = React.useRef<number | null>(null);
   const overlayFlashTimeoutRef = React.useRef<number | null>(null);
-  const previousActiveStoryIndexRef = React.useRef<number | null>(null);
+  /** Last waypoint index we ran import for (persist this before switching). */
+  const previousImportStoryIndexRef = React.useRef<number | null>(null);
 
   const detailStoryIndex = detailStoryId
-    ? stories.findIndex((s) => s.UUID === detailStoryId)
+    ? waypoints.findIndex((s) => s.id === detailStoryId)
     : -1;
-  const detailStory = detailStoryIndex >= 0 ? stories[detailStoryIndex] : null;
+  const detailStory =
+    detailStoryIndex >= 0 ? waypoints[detailStoryIndex] : null;
 
-  // Auto-import annotations for the active story (or first story on initial load).
+  // Scope canvas shape persist to the waypoint open in detail — even if the
+  // Annotations accordion is collapsed (drawing tools may still be active).
   React.useEffect(() => {
-    if (stories.length === 0) return;
+    if (detailStoryId == null || detailStoryIndex < 0) {
+      setAuthoringWaypointShapesIndex(null);
+      return;
+    }
+    setAuthoringWaypointShapesIndex(detailStoryIndex);
+    return () => setAuthoringWaypointShapesIndex(null);
+  }, [detailStoryId, detailStoryIndex, setAuthoringWaypointShapesIndex]);
+
+  // Auto-import shapes for the waypoint in detail (if open), else the active list row.
+  React.useEffect(() => {
+    if (waypoints.length === 0) return;
     if (imageWidth === 0 || imageHeight === 0) return;
 
-    const storyIndex = activeStoryIndex ?? 0;
-    const story = stories[storyIndex];
+    const storyIndex =
+      detailStoryId != null && detailStoryIndex >= 0
+        ? detailStoryIndex
+        : (activeStoryIndex ?? 0);
+    const story = waypoints[storyIndex];
     if (!story) return;
 
-    const prev = previousActiveStoryIndexRef.current;
-    const store = useOverlayStore.getState();
+    const prev = previousImportStoryIndexRef.current;
+    const store = useAppStore.getState();
     if (prev !== null && prev !== storyIndex) {
-      store.persistImportedAnnotationsToStory(prev);
+      store.persistImportedShapesToStory(prev);
     }
-    previousActiveStoryIndexRef.current = storyIndex;
+    previousImportStoryIndexRef.current = storyIndex;
 
-    clearImportedAnnotations();
-
-    const arrows = story.Arrows || [];
-    const overlays = story.Overlays || [];
-    if (arrows.length > 0 || overlays.length > 0) {
-      importWaypointAnnotations(arrows, overlays);
-    }
+    importWaypointShapes(story, true, shapes);
   }, [
-    stories,
+    waypoints,
     activeStoryIndex,
+    detailStoryId,
+    detailStoryIndex,
     imageWidth,
     imageHeight,
-    clearImportedAnnotations,
-    importWaypointAnnotations,
+    shapes,
+    importWaypointShapes,
   ]);
 
   React.useEffect(() => {
@@ -201,11 +244,18 @@ const WaypointsList = (props: WaypointsListProps) => {
       if (overlayFlashTimeoutRef.current !== null) {
         window.clearTimeout(overlayFlashTimeoutRef.current);
       }
-      const p = previousActiveStoryIndexRef.current;
+      const p = previousImportStoryIndexRef.current;
       if (p !== null) {
-        const s = useOverlayStore.getState();
-        if (s.imageWidth > 0 && s.imageHeight > 0) {
-          s.persistImportedAnnotationsToStory(p);
+        const doc = useDocumentStore.getState();
+        const st = useAppStore.getState();
+        const im = doc.images[0];
+        const { width: w, height: h } = effectiveReferenceImagePixelSize(
+          st.viewerReferenceImagePixelSize,
+          im?.sizeX ?? 0,
+          im?.sizeY ?? 0,
+        );
+        if (w > 0 && h > 0) {
+          useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
     };
@@ -222,7 +272,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     }, durationMs);
   };
 
-  const saveCurrentViewToStory = (index: number, source: string) => {
+  const saveCurrentViewToStory = (index: number, source: string): boolean => {
     const snap = getViewerViewportSnapshotFromStore();
     const bounds = snap ? getViewerBoundsFromSnapshot(snap) : null;
     const zoom = snap ? orthographicZoomToNumber(snap.viewState.zoom) : null;
@@ -246,7 +296,14 @@ const WaypointsList = (props: WaypointsListProps) => {
         : null;
 
     if (!bounds || !viewStateCanon) {
-      const st = useOverlayStore.getState();
+      const st = useAppStore.getState();
+      const doc = useDocumentStore.getState();
+      const im = doc.images[0];
+      const { width: iw, height: ih } = effectiveReferenceImagePixelSize(
+        st.viewerReferenceImagePixelSize,
+        im?.sizeX ?? 0,
+        im?.sizeY ?? 0,
+      );
       console.warn(
         "[Minerva] waypoint view not saved: no bounds from viewer (camera/size not ready). " +
           "Try pan/zoom once or reload.",
@@ -255,13 +312,15 @@ const WaypointsList = (props: WaypointsListProps) => {
           index,
           viewerViewState: st.viewerViewState,
           viewerViewportSize: st.viewerViewportSize,
-          imageWidth: st.imageWidth,
-          imageHeight: st.imageHeight,
+          viewerReferenceImagePixelSize: st.viewerReferenceImagePixelSize,
+          imageWidth: iw,
+          imageHeight: ih,
         },
       );
-      return;
+      return false;
     }
-    const thumbnail = captureSquareViewportThumbnail();
+    const loaded = useAppStore.getState().viewerImageLayersLoaded;
+    const thumbnail = loaded ? captureSquareViewportThumbnail() : null;
 
     updateStory(index, {
       Bounds: bounds,
@@ -270,24 +329,39 @@ const WaypointsList = (props: WaypointsListProps) => {
       Zoom: undefined,
       ...(thumbnail ? { ThumbnailDataUrl: thumbnail } : {}),
     });
+    if (!loaded) {
+      saveThumbnailOnlyToStory(index, 0);
+    }
+    return true;
   };
 
-  const saveThumbnailOnlyToStory = (index: number) => {
+  const saveThumbnailOnlyToStory = (index: number, attempt = 0) => {
+    if (attempt > 100) return;
+    const store = useAppStore.getState();
+    if (store.activeStoryIndex !== index) return;
+    if (!store.viewerImageLayersLoaded) {
+      window.setTimeout(
+        () => saveThumbnailOnlyToStory(index, attempt + 1),
+        200,
+      );
+      return;
+    }
     const thumbnail = captureSquareViewportThumbnail();
     if (!thumbnail) return;
     updateStory(index, { ThumbnailDataUrl: thumbnail });
   };
 
   const applyStoryChannelGroup = React.useCallback(
-    (story: ConfigWaypoint | undefined) => {
-      if (!story || Groups.length === 0) return;
+    (story: Waypoint | undefined) => {
+      if (!story || groups.length === 0) return;
       const foundGroup =
-        Groups.find((group) => group.Name === story.Group) || Groups[0];
+        (story.groupId && groups.find((group) => group.id === story.groupId)) ||
+        groups[0];
       if (foundGroup) {
-        setActiveChannelGroup(foundGroup.UUID);
+        setActiveChannelGroup(foundGroup.id);
       }
     },
-    [Groups, setActiveChannelGroup],
+    [groups, setActiveChannelGroup],
   );
 
   const scheduleThumbnailCaptureForStory = (
@@ -302,13 +376,13 @@ const WaypointsList = (props: WaypointsListProps) => {
     }
     pendingThumbnailCaptureTimeoutRef.current = window.setTimeout(() => {
       pendingThumbnailCaptureTimeoutRef.current = null;
-      const state = useOverlayStore.getState();
+      const state = useAppStore.getState();
       if (state.activeStoryIndex !== index) {
         return;
       }
-      const story = state.stories[index];
+      const story = documentWaypoints(useDocumentStore.getState())[index];
       if (!story) return;
-      if (!overwriteView && story.ThumbnailDataUrl) return;
+      if (!overwriteView && story.thumbnail) return;
       if (thumbnailOnly) {
         saveThumbnailOnlyToStory(index);
         return;
@@ -321,7 +395,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     index: number,
     shouldCaptureThumbnail = false,
   ) => {
-    const priorActive = useOverlayStore.getState().activeStoryIndex;
+    const priorActive = useAppStore.getState().activeStoryIndex;
     if (
       priorActive !== null &&
       priorActive !== index &&
@@ -333,26 +407,15 @@ const WaypointsList = (props: WaypointsListProps) => {
 
     setActiveStory(index);
 
-    const storeNow = useOverlayStore.getState();
-    const storyForNav = storeNow.stories[index];
+    const storyForNav = documentWaypoints(useDocumentStore.getState())[index];
     applyStoryChannelGroup(storyForNav);
-    const viewerSnapshot = getViewerViewportSnapshotFromStore();
-    let viewState = null;
-    if (storyForNav && viewerSnapshot && imageWidth > 0 && imageHeight > 0) {
-      viewState = getWaypointViewState(
-        storyForNav,
-        imageWidth,
-        imageHeight,
-        viewerSnapshot.viewportSize.width,
-        viewerSnapshot.viewportSize.height,
-      );
-    }
-    if (viewState) {
-      setTargetWaypointViewState(viewState);
+    if (storyForNav && imageWidth > 0 && imageHeight > 0) {
+      const auth = useAppStore.getState().waypointAuthoring.get(storyForNav.id);
+      setTargetWaypointCamera(waypointToConfigWaypoint(storyForNav, auth));
     }
     // Only grab the preview image after the camera settles — never rewrite
-    // Bounds/ViewState on row select (use “Overwrite view” to persist camera).
-    if (shouldCaptureThumbnail && !storyForNav?.ThumbnailDataUrl) {
+    // Bounds/ViewState on row select (use save-view control on the row to persist camera).
+    if (shouldCaptureThumbnail && !storyForNav?.thumbnail) {
       scheduleThumbnailCaptureForStory(index, false, true, 1100);
     }
   };
@@ -360,7 +423,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   const openDetailForStoryId = (storyId: string) => {
     if (!canEdit) return;
 
-    const index = stories.findIndex((s) => s.UUID === storyId);
+    const index = waypoints.findIndex((s) => s.id === storyId);
     if (index === -1) return;
 
     activateStoryIndex(index);
@@ -379,31 +442,32 @@ const WaypointsList = (props: WaypointsListProps) => {
     event.stopPropagation();
     event.preventDefault();
     setActiveStory(index);
-    saveCurrentViewToStory(index, "handleOverwriteView");
+    const saved = saveCurrentViewToStory(index, "handleOverwriteView");
     flashSquareOverlay();
     scheduleThumbnailCaptureForStory(index, true, true, 150);
+    if (saved) {
+      persistImportedShapesToStory(index);
+    }
   };
 
   const handleAddWaypoint = () => {
-    const storyIndex = stories.length;
+    const storyIndex = waypoints.length;
     const currentGroup =
-      Groups.find(
-        (group) =>
-          group.UUID === useOverlayStore.getState().activeChannelGroupId,
-      ) || Groups[0];
+      groups.find(
+        (group) => group.id === useAppStore.getState().activeChannelGroupId,
+      ) || groups[0];
     const newWaypoint: ConfigWaypoint = {
-      UUID: crypto.randomUUID(),
+      id: crypto.randomUUID(),
       State: { Expanded: true },
       Name: `Waypoint ${storyIndex + 1}`,
       Content: "",
-      Group: currentGroup?.Name,
-      Arrows: [],
-      Overlays: [],
+      groupId: currentGroup?.id,
+      shapeIds: [],
     };
 
     addStory(newWaypoint);
     activateStoryIndex(storyIndex);
-    setDetailStoryId(newWaypoint.UUID);
+    setDetailStoryId(newWaypoint.id);
 
     requestAnimationFrame(() => {
       detailBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
@@ -438,8 +502,8 @@ const WaypointsList = (props: WaypointsListProps) => {
     if (!canEdit) return;
     if (!draggedStoryId || draggedStoryId === targetStoryId) return;
 
-    const fromIndex = stories.findIndex((s) => s.UUID === draggedStoryId);
-    const toIndex = stories.findIndex((s) => s.UUID === targetStoryId);
+    const fromIndex = waypoints.findIndex((s) => s.id === draggedStoryId);
+    const toIndex = waypoints.findIndex((s) => s.id === targetStoryId);
     if (fromIndex !== -1 && toIndex !== -1) {
       reorderStories(fromIndex, toIndex);
     }
@@ -452,7 +516,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     <div className={styles.compactHeader}>
       <div className={styles.headerTitle}>
         <span>Waypoints</span>
-        <span className={styles.headerCount}>({stories.length})</span>
+        <span className={styles.headerCount}>({waypoints.length})</span>
       </div>
 
       <div className={styles.headerActions}>
@@ -461,12 +525,13 @@ const WaypointsList = (props: WaypointsListProps) => {
             type="button"
             className={styles.iconHeaderButton}
             onClick={() => {
-              if (stories.length === 0) return;
+              if (waypoints.length === 0) return;
               const indexToRemove = activeStoryIndex ?? 0;
-              if (indexToRemove < 0 || indexToRemove >= stories.length) return;
+              if (indexToRemove < 0 || indexToRemove >= waypoints.length)
+                return;
               removeStory(indexToRemove);
             }}
-            disabled={stories.length === 0}
+            disabled={waypoints.length === 0}
             title="Delete active waypoint"
           >
             <TrashIcon />
@@ -489,9 +554,9 @@ const WaypointsList = (props: WaypointsListProps) => {
             type="button"
             className={styles.iconHeaderButton}
             onClick={onEnterPlaybackPreview}
-            disabled={stories.length === 0}
-            title="Preview narrative playback"
-            aria-label="Preview narrative playback"
+            disabled={waypoints.length === 0}
+            title="Preview playback"
+            aria-label="Preview playback"
           >
             <PlayIcon width={14} height={14} aria-hidden />
           </button>
@@ -503,12 +568,12 @@ const WaypointsList = (props: WaypointsListProps) => {
   const renderList = () => (
     <div className={styles.panel}>
       {listHeader}
-      {stories.length === 0 ? (
+      {waypoints.length === 0 ? (
         <div className={styles.emptyMessage}>No waypoints yet</div>
       ) : (
         <ul className={styles.rows}>
-          {stories.map((story, index) => {
-            const storyId = story.UUID;
+          {waypoints.map((story, index) => {
+            const storyId = story.id;
             const annotationCount = countWaypointAnnotations(story);
             const annotationTitle = annotationCountLabel(annotationCount);
             const isActive = activeStoryIndex === index;
@@ -561,10 +626,12 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <div className={styles.rowChevronSpacer} aria-hidden />
                 )}
 
-                {story.ThumbnailDataUrl ? (
+                {story.thumbnail ? (
                   <img
                     className={styles.rowThumbnail}
-                    src={story.ThumbnailDataUrl}
+                    src={story.thumbnail}
+                    width={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
+                    height={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
                     alt=""
                     aria-hidden
                   />
@@ -572,26 +639,18 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <div className={styles.rowThumbnail} aria-hidden />
                 )}
 
-                {/* biome-ignore lint/a11y/useSemanticElements: Nested Jump <button> cannot sit inside a <button>. */}
-                <div
+                <button
+                  type="button"
                   {...rowDragProps}
                   className={styles.rowMainHit}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Select waypoint: ${story.Name}`}
+                  aria-label={`Select waypoint: ${story.title}`}
                   onClick={() => activateStoryIndex(index, true)}
                   onDoubleClick={() => openDetailForStoryId(storyId)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      activateStoryIndex(index, true);
-                    }
-                  }}
                 >
                   <div className={styles.rowTextStack}>
                     <div className={styles.rowTitleRow}>
-                      <span className={styles.rowTitle} title={story.Name}>
-                        {story.Name}
+                      <span className={styles.rowTitle} title={story.title}>
+                        {story.title}
                       </span>
                       <span
                         className={styles.annotationBadge}
@@ -611,12 +670,12 @@ const WaypointsList = (props: WaypointsListProps) => {
                     </div>
                     <span
                       className={styles.rowContent}
-                      title={story.Content ?? ""}
+                      title={story.content ?? ""}
                     >
-                      {story.Content ?? ""}
+                      {story.content ?? ""}
                     </span>
                   </div>
-                </div>
+                </button>
                 <div className={styles.rowViewportActions}>
                   <button
                     type="button"
@@ -635,12 +694,12 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <button
                     type="button"
                     className={styles.rowViewportIconButton}
-                    title="Overwrite waypoint view with current viewport"
+                    title="Save waypoint view to story and download story.json"
                     onClick={(event) => handleOverwriteView(index, event)}
                   >
                     <OverwriteViewIcon width={14} height={14} aria-hidden />
                     <span className={styles.visuallyHidden}>
-                      Overwrite waypoint view
+                      Save waypoint view
                     </span>
                   </button>
                 </div>
@@ -672,21 +731,21 @@ const WaypointsList = (props: WaypointsListProps) => {
     };
 
     const selectedGroupUuid =
-      Groups.find((group) => group.Name === detailStory.Group)?.UUID ??
-      Groups[0].UUID;
+      groups.find((group) => group.id === detailStory.groupId)?.id ??
+      groups[0].id;
     const selectedGroup =
-      Groups.find((group) => group.UUID === selectedGroupUuid) ?? Groups[0];
+      groups.find((group) => group.id === selectedGroupUuid) ?? groups[0];
     const selectedChannelNames = channelNamesForGroup(
       selectedGroup,
-      SourceChannels,
+      sourceChannels,
     );
     const selectedChannelsSubtitle = selectedChannelNames.join(", ");
 
     const selectChannelGroupByUuid = (nextGroupUuid: string) => {
-      const nextGroup = Groups.find((group) => group.UUID === nextGroupUuid);
+      const nextGroup = groups.find((group) => group.id === nextGroupUuid);
       if (!nextGroup) return;
-      updateStory(detailStoryIndex, { Group: nextGroup.Name });
-      setActiveChannelGroup(nextGroup.UUID);
+      updateStory(detailStoryIndex, { groupId: nextGroup.id });
+      setActiveChannelGroup(nextGroup.id);
       setChannelGroupMenuOpen(false);
       scheduleThumbnailCaptureForStory(detailStoryIndex, true, true, 1100);
     };
@@ -706,8 +765,8 @@ const WaypointsList = (props: WaypointsListProps) => {
             />
             <span>Back</span>
           </button>
-          <div className={styles.detailTitle} title={detailStory.Name}>
-            {detailStory.Name}
+          <div className={styles.detailTitle} title={detailStory.title}>
+            {detailStory.title}
           </div>
         </div>
 
@@ -724,7 +783,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                 id={detailTitleFieldId}
                 className={styles.detailTitleInput}
                 type="text"
-                value={detailStory.Name ?? ""}
+                value={detailStory.title ?? ""}
                 onChange={(e) =>
                   updateStory(detailStoryIndex, { Name: e.target.value })
                 }
@@ -736,7 +795,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                 placeholder="Waypoint title"
               />
             </div>
-            {Groups.length > 0 ? (
+            {groups.length > 0 ? (
               <div className={styles.detailTitleFieldWrap}>
                 <label
                   className={styles.detailTitleLabel}
@@ -759,7 +818,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                   >
                     <span className={styles.channelGroupDropdownTriggerMain}>
                       <span className={styles.channelGroupDropdownTitle}>
-                        {selectedGroup.Name}
+                        {selectedGroup.name}
                       </span>
                       <span className={styles.channelGroupDropdownChannels}>
                         {selectedChannelsSubtitle || "—"}
@@ -783,16 +842,16 @@ const WaypointsList = (props: WaypointsListProps) => {
                       role="listbox"
                       aria-label="Channel groups"
                     >
-                      {Groups.map((group) => {
+                      {groups.map((group) => {
                         const names = channelNamesForGroup(
                           group,
-                          SourceChannels,
+                          sourceChannels,
                         );
                         const subtitle = names.join(", ");
-                        const isSelected = group.UUID === selectedGroupUuid;
+                        const isSelected = group.id === selectedGroupUuid;
                         return (
                           <div
-                            key={group.UUID}
+                            key={group.id}
                             className={styles.channelGroupDropdownItem}
                           >
                             <button
@@ -807,14 +866,12 @@ const WaypointsList = (props: WaypointsListProps) => {
                               ]
                                 .filter(Boolean)
                                 .join(" ")}
-                              onClick={() =>
-                                selectChannelGroupByUuid(group.UUID)
-                              }
+                              onClick={() => selectChannelGroupByUuid(group.id)}
                             >
                               <span
                                 className={styles.channelGroupDropdownTitle}
                               >
-                                {group.Name}
+                                {group.name}
                               </span>
                               <span
                                 className={styles.channelGroupDropdownChannels}
@@ -856,7 +913,7 @@ const WaypointsList = (props: WaypointsListProps) => {
               {detailMarkdownExpanded ? (
                 <div className={styles.detailCollapsibleBody}>
                   <WaypointContentEditor
-                    key={detailStory.UUID}
+                    key={detailStory.id}
                     variant="detail"
                     story={detailStory}
                     storyIndex={detailStoryIndex}
