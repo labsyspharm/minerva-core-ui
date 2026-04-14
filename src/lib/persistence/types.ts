@@ -1,19 +1,20 @@
 import type { DocumentData } from "@/lib/stores/documentSchema";
 
-/** Row in Dexie `stories` table (full document + listing metadata). */
+/** Row in Dexie `stories` table — canonical document only (no denormalized listing fields). */
 export type StoryRecord = {
+  id: string;
+  createdAt: string;
+  modifiedAt: string;
+  data: DocumentData;
+};
+
+/** Listing projection derived from `StoryRecord.data` when needed (e.g. story picker). */
+export type StorySummary = {
   id: string;
   title: string;
   createdAt: string;
   modifiedAt: string;
   thumbnail?: string;
-  data: DocumentData;
 };
-
-/** Lightweight row for future story-picker UI (no full `data` blob). */
-export type StorySummary = Pick<
-  StoryRecord,
-  "id" | "title" | "createdAt" | "modifiedAt" | "thumbnail"
->;
 
 export const SETTINGS_ACTIVE_STORY_KEY = "activeStoryId";

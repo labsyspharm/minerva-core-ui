@@ -126,26 +126,36 @@ export const useDocumentStore = create<DocumentStore>()(
 
     hydrateFromDocument: (input, activeStoryId) => {
       const data = validateDocumentData(input);
+      const m = data.metadata;
       set({
         activeStoryId,
         waypoints: [...data.waypoints],
         shapes: [...data.shapes],
         channelGroups: [...data.channelGroups],
         images: [...data.images],
-        metadata: { ...data.metadata },
+        metadata: {
+          ...m,
+          id: m.id ?? activeStoryId,
+        },
       });
     },
 
     loadDocument: (input) => {
       const data = validateDocumentData(input);
-      set((state) => ({
-        waypoints: [...data.waypoints],
-        shapes: [...data.shapes],
-        channelGroups: [...data.channelGroups],
-        images: [...data.images],
-        metadata: { ...data.metadata },
-        activeStoryId: state.activeStoryId,
-      }));
+      set((state) => {
+        const m = data.metadata;
+        return {
+          waypoints: [...data.waypoints],
+          shapes: [...data.shapes],
+          channelGroups: [...data.channelGroups],
+          images: [...data.images],
+          metadata: {
+            ...m,
+            id: m.id ?? state.activeStoryId ?? undefined,
+          },
+          activeStoryId: state.activeStoryId,
+        };
+      });
     },
 
     toDocumentData: () => {
@@ -252,7 +262,10 @@ export const useDocumentStore = create<DocumentStore>()(
 
     setImages: (images) => set(() => ({ images: [...images] })),
 
-    setMetadata: (metadata) =>
-      set((s) => ({ metadata: { ...s.metadata, ...metadata } })),
+    /** Prefer `get()` + object `set` (not `set(fn)`) so devtools middleware always merges metadata reliably. */
+    setMetadata: (patch) => {
+      const s = get();
+      set({ metadata: { ...s.metadata, ...patch } });
+    },
   })),
 );

@@ -174,12 +174,17 @@ const optionalStringListSchema = z.preprocess((val) => {
   return undefined;
 }, z.array(z.string()).optional());
 
-/**
- * Provenance, licensing, and discovery — not derived image geometry (see `images[].sizeX` / `sizeY`).
- * All keys optional; unknown keys are stripped on parse.
- */
-export const DocumentMetadataSchema = z.object({
+const documentMetadataObjectSchema = z.object({
+  /**
+   * Stable UUID for this story (matches the IndexedDB row id and `activeStoryId` in the app).
+   */
+  id: IdSchema.optional(),
+  /** Display title for the story document. */
   title: z.string().optional(),
+  /** ISO-8601 when the story was first created. */
+  createdAt: z.string().optional(),
+  /** ISO-8601 when the story was last saved / modified. */
+  modifiedAt: z.string().optional(),
   author: z.string().optional(),
   /** Publication identifier (e.g. DOI string without requiring a URL). */
   doi: z.string().optional(),
@@ -188,9 +193,6 @@ export const DocumentMetadataSchema = z.object({
   citation: z.string().optional(),
   /** SPDX id (e.g. CC-BY-4.0) or short license label. */
   license: z.string().optional(),
-  /** ISO-8601 timestamps when known. */
-  created: z.string().optional(),
-  modified: z.string().optional(),
   institution: z.string().optional(),
   /** Freeform contact line (name, role, etc.). */
   contact: z.string().optional(),
@@ -206,6 +208,24 @@ export const DocumentMetadataSchema = z.object({
   /** Markdown or plain overflow for dataset notes. */
   notes: z.string().optional(),
 });
+
+/**
+ * Story document metadata: identity, title, and lifecycle timestamps live here (single source of truth).
+ * Legacy `created` / `modified` are normalized to `createdAt` / `modifiedAt` on parse.
+ */
+export const DocumentMetadataSchema = z.preprocess((raw) => {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    return raw;
+  }
+  const r = { ...(raw as Record<string, unknown>) };
+  if (r.createdAt == null && typeof r.created === "string") {
+    r.createdAt = r.created;
+  }
+  if (r.modifiedAt == null && typeof r.modified === "string") {
+    r.modifiedAt = r.modified;
+  }
+  return r;
+}, documentMetadataObjectSchema);
 
 export const DocumentDataSchema = z.preprocess(
   (raw) => {

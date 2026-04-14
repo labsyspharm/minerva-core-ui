@@ -3,6 +3,7 @@ import type { FormEventHandler } from "react";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
+import { AppStoryTitleBar } from "@/components/authoring/AppStoryTitleBar";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
 import { FileHandler } from "@/components/shared/FileHandler";
 import type { LoadedSourceSummary, ValidObj } from "@/components/shared/Upload";
@@ -109,13 +110,17 @@ const cloneConfigWaypoints = (
 
 const Wrapper = styled.div`
   height: 100%;
-  display: grid;
-  grid-template-columns: 1fr; 
-  grid-template-rows: 1fr; 
+  position: relative;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 `;
 
 const Full = styled.div`
+  flex: 1;
+  min-height: 0;
   max-height: 100vh;
+  overflow: hidden;
 `;
 
 const Scrollable = styled.div`
@@ -288,11 +293,21 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
   return { omeLoaderEntries, dicomIndexList };
 }
 
+const APP_TAB_TITLE_PREFIX =
+  import.meta.env.MODE === "demo" ? "Minerva 2.0 Demo" : "Minerva";
+
 const Content = (props: Props) => {
   const { handleKeys, useLaunchQueue = false } = props;
   /** Remote demo image / DICOM bootstrap from `index.tsx` (`pnpm run demo` only). */
   const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
   useStoryAutoSave();
+  const storyTitleForTab = useDocumentStore((s) => s.metadata.title ?? "");
+  React.useEffect(() => {
+    const label = storyTitleForTab.trim()
+      ? storyTitleForTab.trim()
+      : "Untitled story";
+    document.title = `${APP_TAB_TITLE_PREFIX} | ${label}`;
+  }, [storyTitleForTab]);
   const viewerImageLayersLoaded = useAppStore((s) => s.viewerImageLayersLoaded);
   const prevImageLayersLoadedRef = React.useRef(false);
   React.useEffect(() => {
@@ -1554,7 +1569,12 @@ const Content = (props: Props) => {
           </Full>
         );
 
-        return <Wrapper>{imager}</Wrapper>;
+        return (
+          <Wrapper>
+            <AppStoryTitleBar editable={!presenting} />
+            {imager}
+          </Wrapper>
+        );
       }}
     </FileHandler>
   );

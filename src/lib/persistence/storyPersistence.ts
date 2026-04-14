@@ -1,4 +1,7 @@
-import type { DocumentData } from "@/lib/stores/documentSchema";
+import type {
+  DocumentData,
+  DocumentMetadata,
+} from "@/lib/stores/documentSchema";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
 import { storyDb } from "./db";
 import type { StoryRecord, StorySummary } from "./types";
@@ -24,19 +27,31 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
-function deriveTitle(data: DocumentData): string {
+export function deriveTitle(data: DocumentData): string {
   const t = data.metadata?.title?.trim();
   return t && t.length > 0 ? t : UNTITLED;
 }
 
 /** Listing preview: first non-empty `waypoint.thumbnail` (any row), not only index 0. */
-function deriveThumbnail(data: DocumentData): string | undefined {
+export function deriveThumbnail(data: DocumentData): string | undefined {
   for (const w of data.waypoints) {
     if (typeof w?.thumbnail === "string" && w.thumbnail.length > 0) {
       return w.thumbnail;
     }
   }
   return undefined;
+}
+
+function toSummary(r: StoryRecord): StorySummary {
+  const data = r.data;
+  const m = data.metadata;
+  return {
+    id: m.id ?? r.id,
+    title: deriveTitle(data),
+    createdAt: m.createdAt ?? r.createdAt,
+    modifiedAt: m.modifiedAt ?? r.modifiedAt,
+    thumbnail: deriveThumbnail(data),
+  };
 }
 
 export function emptyDocumentData(): DocumentData {
@@ -69,13 +84,7 @@ export async function setActiveStoryId(id: string | null): Promise<void> {
 
 export async function listStorySummaries(): Promise<StorySummary[]> {
   const rows = await storyDb.stories.orderBy("modifiedAt").reverse().toArray();
-  return rows.map((r) => ({
-    id: r.id,
-    title: r.title,
-    createdAt: r.createdAt,
-    modifiedAt: r.modifiedAt,
-    thumbnail: r.thumbnail,
-  }));
+  return rows.map((r) => toSummary(r));
 }
 
 export async function getStoryRecord(
@@ -85,55 +94,61 @@ export async function getStoryRecord(
 }
 
 /**
- * Upserts the story row and refreshes listing metadata from `data`.
+ * Merges canonical story fields into `data.metadata` (id, createdAt, modifiedAt) and persists.
+ * Row-level timestamps mirror `metadata` for Dexie indexing.
  */
 export async function saveStoryDocument(
   id: string,
   data: DocumentData,
 ): Promise<void> {
-  const validated = validateDocumentData(data);
   const existing = await storyDb.stories.get(id);
-  const modifiedAt = nowIso();
-  const title = deriveTitle(validated);
-  const derivedThumb = deriveThumbnail(validated);
-  const thumbnail =
-    derivedThumb !== undefined && derivedThumb.length > 0
-      ? derivedThumb
-      : existing?.thumbnail;
-  if (existing) {
-    await storyDb.stories.put({
-      ...existing,
-      title,
-      thumbnail,
-      modifiedAt,
-      data: validated,
-    });
-  } else {
-    await storyDb.stories.put({
+  const t = nowIso();
+  const m = data.metadata ?? {};
+  const createdAt =
+    m.createdAt ??
+    existing?.data?.metadata?.createdAt ??
+    existing?.createdAt ??
+    t;
+  const next: DocumentData = {
+    ...data,
+    metadata: {
+      ...m,
       id,
-      title,
-      createdAt: modifiedAt,
-      modifiedAt,
-      thumbnail,
-      data: validated,
-    });
-  }
+      createdAt,
+      modifiedAt: t,
+    },
+  };
+  const validated = validateDocumentData(next);
+  const md = validated.metadata;
+  const rowCreated = md.createdAt ?? t;
+  const rowModified = md.modifiedAt ?? t;
+  await storyDb.stories.put({
+    id,
+    createdAt: rowCreated,
+    modifiedAt: rowModified,
+    data: validated,
+  });
 }
 
 export async function createStoryRecord(title?: string): Promise<StoryRecord> {
   const id = crypto.randomUUID();
   const t = nowIso();
-  let data = emptyDocumentData();
-  if (title !== undefined && title.trim().length > 0) {
-    data = { ...data, metadata: { ...data.metadata, title: title.trim() } };
-  }
-  data = validateDocumentData(data);
-  const row: StoryRecord = {
+  const metadata: DocumentMetadata = {
     id,
-    title: deriveTitle(data),
     createdAt: t,
     modifiedAt: t,
-    thumbnail: deriveThumbnail(data),
+    ...(title !== undefined && title.trim().length > 0
+      ? { title: title.trim() }
+      : {}),
+  };
+  const data = validateDocumentData({
+    ...emptyDocumentData(),
+    metadata,
+  });
+  const row: StoryRecord = {
+    id,
+    createdAt: t,
+    modifiedAt: t,
     data,
   };
   await storyDb.stories.put(row);
