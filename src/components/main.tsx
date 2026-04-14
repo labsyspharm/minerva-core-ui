@@ -1553,18 +1553,16 @@ const Content = (props: Props) => {
         ) : (
           <Full>
             <PlaybackRouter {...mainPropsWithHandle}>
-              <>
-                <ImageViewer
-                  {...imageProps}
-                  viewerConfig={viewerConfig}
-                  overlayLayers={overlayLayers}
-                  activeTool={activeTool}
-                  isDragging={dragState.isDragging}
-                  hoveredShapeId={hoverState.hoveredShapeId}
-                  onOverlayInteraction={handleOverlayInteraction}
-                />
-                <Upload {...uploadProps} />
-              </>
+              <ImageViewer
+                {...imageProps}
+                viewerConfig={viewerConfig}
+                overlayLayers={overlayLayers}
+                activeTool={activeTool}
+                isDragging={dragState.isDragging}
+                hoveredShapeId={hoverState.hoveredShapeId}
+                onOverlayInteraction={handleOverlayInteraction}
+              />
+              <Upload {...uploadProps} />
             </PlaybackRouter>
           </Full>
         );
