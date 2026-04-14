@@ -21,8 +21,7 @@ export type ChannelPanelProps = {
   startExport: () => void;
   channelItemElement: string;
   controlPanelElement: string;
-  retrievingMetadata: boolean;
-  /** When true, image/data is not loaded yet — hide channel chrome that needs channels. */
+  /** When true, no OME/DICOM pipeline — hide channel overlay chrome. */
   noLoader: boolean;
   setHiddenChannel: (v: boolean) => void;
   /** Switch layout to playback / presentation (optional). */
@@ -111,7 +110,7 @@ const OverlaySectionLabel = styled.div`
 
 export const ChannelPanel = (props: ChannelPanelProps) => {
   const hide = props.hiddenChannel;
-  const hidden = props.retrievingMetadata || props.noLoader;
+  const hidden = props.noLoader;
   const { setActiveChannelGroup } = useAppStore();
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
@@ -201,18 +200,13 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   );
 
   const waypointsPanel = props.authorMode ? (
-    props.retrievingMetadata ? (
-      <div style={{ padding: "1em", color: "#aaa" }}>Loading image data...</div>
-    ) : (
-      <WaypointsList onEnterPlaybackPreview={props.enterPlaybackPreview} />
-    )
+    <WaypointsList onEnterPlaybackPreview={props.enterPlaybackPreview} />
   ) : null;
 
   const channel_list = (
     <ChannelGroupsSlot>
       <ChannelGroupsMasterDetail
         channelItemElement={props.channelItemElement}
-        retrievingMetadata={props.retrievingMetadata}
         noLoader={props.noLoader}
         ensureChannelHistograms={props.ensureChannelHistograms}
       />

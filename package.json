@@ -70,6 +70,7 @@
     "@luma.gl/webgl": "9.1.9",
     "@math.gl/core": "^4.1.0",
     "@math.gl/web-mercator": "^4.1.0",
+    "@tanstack/react-router": "^1.168.21",
     "@types/wicg-file-system-access": "^2023.10.5",
     "@ui5/webcomponents": "2.2.0",
     "@uiw/react-color": "^2.9.6",

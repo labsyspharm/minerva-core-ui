@@ -77,6 +77,10 @@ import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import { normalizeWaypointToBounds } from "@/lib/waypoints/waypoint";
 import { author } from "@/minerva-author-ui/author";
 import { toAuthorElement } from "@/minerva-author-ui/index";
+import {
+  parsePreferredStoryIdFromLocation,
+  StoryIdUrlSync,
+} from "@/router/appRouter";
 
 type Props = {
   /** Seed stories; may include legacy `Arrows` / `Overlays` until the image loads and migration runs. */
@@ -139,12 +143,18 @@ const RetrievingWrapper = styled.div`
 const StoryPersistenceRoot = ({ children }: { children: React.ReactNode }) => {
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    void bootstrapStoryPersistence().then(() => setReady(true));
+    const preferred = parsePreferredStoryIdFromLocation();
+    void bootstrapStoryPersistence(preferred).then(() => setReady(true));
   }, []);
   if (!ready) {
     return <RetrievingWrapper>Loading stories…</RetrievingWrapper>;
   }
-  return <>{children}</>;
+  return (
+    <>
+      <StoryIdUrlSync />
+      {children}
+    </>
+  );
 };
 
 const setContainer = ({ container, idx, key, newItem }) => {
@@ -283,6 +293,35 @@ const Content = (props: Props) => {
   /** Remote demo image / DICOM bootstrap from `index.tsx` (`pnpm run demo` only). */
   const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
   useStoryAutoSave();
+  const viewerImageLayersLoaded = useAppStore((s) => s.viewerImageLayersLoaded);
+  const prevImageLayersLoadedRef = React.useRef(false);
+  React.useEffect(() => {
+    const wasLoaded = prevImageLayersLoadedRef.current;
+    prevImageLayersLoadedRef.current = viewerImageLayersLoaded;
+    if (wasLoaded || !viewerImageLayersLoaded) return;
+    let cancelled = false;
+    let id2: number | undefined;
+    const id1 = requestAnimationFrame(() => {
+      id2 = requestAnimationFrame(() => {
+        if (cancelled) return;
+        const s = useAppStore.getState();
+        if (!s.viewerImageLayersLoaded) return;
+        const t = s.captureSquareViewportThumbnail();
+        if (!t) return;
+        const doc = useDocumentStore.getState();
+        const idx = s.activeStoryIndex;
+        if (idx === null || idx < 0 || idx >= doc.waypoints.length) return;
+        const wp = doc.waypoints[idx];
+        if (wp?.thumbnail && wp.thumbnail.length > 0) return;
+        s.updateStory(idx, { ThumbnailDataUrl: t });
+      });
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(id1);
+      if (id2 !== undefined) cancelAnimationFrame(id2);
+    };
+  }, [viewerImageLayersLoaded]);
   const activeStoryId = useDocumentStore((s) => s.activeStoryId);
   const namespacedHandleKeys = React.useMemo(
     () =>
@@ -605,28 +644,17 @@ const Content = (props: Props) => {
   const onStartOmeTiffRef = React.useRef(onStartOmeTiff);
   onStartOmeTiffRef.current = onStartOmeTiff;
 
+  /** Shared by FileHandler: auto-restore on mount, “Use recent”, and PWA launch — same rules. */
   const onRestoredOmeHandles = React.useCallback(
     async (restored: Handle.File[]) => {
       if (restored.length === 0) {
         document.getElementById("global-loader")?.remove();
         return;
       }
-      // Restoring a previous file replaces the hardcoded demo, so clear
-      // stories, waypoints, and overlays.
-      const store = useAppStore.getState();
-      store.setStories([]);
-      store.clearOverlayLayers();
-      store.clearShapes();
-      useDocumentStore.getState().setShapes([]);
-      setConfig((prev) => ({
-        ...prev,
-        ItemRegistry: {
-          ...prev.ItemRegistry,
-          Stories: [],
-          Shapes: [],
-        },
-        ID: crypto.randomUUID(),
-      }));
+      // Story/waypoints/shapes come from Dexie (bootstrap already ran). Do not call
+      // setStories, document setShapes/setWaypoints, setConfig clearing Stories/Shapes, or
+      // resetDocument — only transient viewer state + OME reconnect below.
+      useAppStore.getState().clearOverlayLayers();
       const file = await restored[0].getFile();
       await onStartOmeTiffRef.current(file.name, restored);
       setImportRevision((r) => r + 1);
@@ -1124,8 +1152,6 @@ const Content = (props: Props) => {
     ensureChannelHistograms: onEnsureChannelHistograms,
   };
 
-  const retrievingMetadata = isLoadingImage;
-
   const mainProps = {
     ...channelProps,
     in_f: fileName,
@@ -1135,7 +1161,6 @@ const Content = (props: Props) => {
     presenting,
     hiddenWaypoint,
     setHiddenWaypoint: setHiddenWaypointWithLogic,
-    retrievingMetadata,
     startExport,
     stopExport,
     toggleEditor,
@@ -1391,10 +1416,6 @@ const Content = (props: Props) => {
     }
   }, [isLoadingImage]);
 
-  const retrieving_status = (
-    <RetrievingWrapper>Loading image data...</RetrievingWrapper>
-  );
-
   return (
     <FileHandler
       handleKeys={namespacedHandleKeys}
@@ -1517,22 +1538,18 @@ const Content = (props: Props) => {
         ) : (
           <Full>
             <PlaybackRouter {...mainPropsWithHandle}>
-              {retrievingMetadata ? (
-                retrieving_status
-              ) : (
-                <>
-                  <ImageViewer
-                    {...imageProps}
-                    viewerConfig={viewerConfig}
-                    overlayLayers={overlayLayers}
-                    activeTool={activeTool}
-                    isDragging={dragState.isDragging}
-                    hoveredShapeId={hoverState.hoveredShapeId}
-                    onOverlayInteraction={handleOverlayInteraction}
-                  />
-                  <Upload {...uploadProps} />
-                </>
-              )}
+              <>
+                <ImageViewer
+                  {...imageProps}
+                  viewerConfig={viewerConfig}
+                  overlayLayers={overlayLayers}
+                  activeTool={activeTool}
+                  isDragging={dragState.isDragging}
+                  hoveredShapeId={hoverState.hoveredShapeId}
+                  onOverlayInteraction={handleOverlayInteraction}
+                />
+                <Upload {...uploadProps} />
+              </>
             </PlaybackRouter>
           </Full>
         );

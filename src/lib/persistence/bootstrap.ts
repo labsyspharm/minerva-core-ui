@@ -10,7 +10,7 @@ import {
 
 let inflight: Promise<void> | null = null;
 
-async function runBootstrap(): Promise<void> {
+async function runBootstrap(preferredStoryId: string | null): Promise<void> {
   const summaries = await listStorySummaries();
 
   if (summaries.length === 0) {
@@ -20,7 +20,13 @@ async function runBootstrap(): Promise<void> {
     return;
   }
 
-  let activeId = await resolveActiveStoryIdForBootstrap(summaries);
+  const preferredOk =
+    preferredStoryId !== null &&
+    summaries.some((s) => s.id === preferredStoryId);
+
+  let activeId: string | null = preferredOk
+    ? preferredStoryId
+    : await resolveActiveStoryIdForBootstrap(summaries);
   if (!activeId) {
     const first = summaries[0];
     if (!first) {
@@ -29,10 +35,9 @@ async function runBootstrap(): Promise<void> {
     activeId = first.id;
   }
 
-  // Repair shared Dexie "global active" only when missing or pointing at a deleted story.
   const global = await getActiveStoryId();
   const globalValid = global && summaries.some((s) => s.id === global);
-  if (!globalValid) {
+  if (!globalValid || preferredOk) {
     await setActiveStoryId(activeId);
   }
 
@@ -52,9 +57,12 @@ async function runBootstrap(): Promise<void> {
  * Call once before the main authoring UI mounts. Concurrent callers share one run
  * (avoids duplicate stories under React Strict Mode).
  */
-export async function bootstrapStoryPersistence(): Promise<void> {
+export async function bootstrapStoryPersistence(
+  preferredStoryId?: string | null,
+): Promise<void> {
   if (inflight) return inflight;
-  inflight = runBootstrap().finally(() => {
+  const preferred = preferredStoryId ?? null;
+  inflight = runBootstrap(preferred).finally(() => {
     inflight = null;
   });
   return inflight;

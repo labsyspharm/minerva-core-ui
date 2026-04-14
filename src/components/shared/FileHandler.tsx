@@ -20,7 +20,14 @@ export type FileHandlerProps = {
    * then call `onRestoredHandles` when permission is granted and the file still exists.
    */
   autoRestoreOnMount?: boolean;
-  /** After a successful mount restore or file-handler launch; use to load the image without the upload form. */
+  /**
+   * After a successful restore: mount auto-restore, “Use recent Image” (`onRecall`), or PWA
+   * `launchQueue`. Use this to reconnect the image pipeline (loaders, channels) without the
+   * upload form.
+   *
+   * **Do not** clear persisted document state here (Dexie story: waypoints, shapes, channel
+   * groups, etc.) — story bootstrap has already run; wiping the store will autosave empty data.
+   */
   onRestoredHandles?: (handles: Handle.File[]) => void | Promise<void>;
   /** Register `window.launchQueue` (PWA file handling). Requires manifest `file_handlers`. */
   useLaunchQueue?: boolean;

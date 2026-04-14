@@ -378,8 +378,9 @@ const WaypointsList = (_props: WaypointsListProps) => {
     if (!loaded) {
       const tryThumb = (attempt: number) => {
         if (attempt > 100) return;
+        const doc = useDocumentStore.getState();
+        if (index < 0 || index >= doc.waypoints.length) return;
         const s = useAppStore.getState();
-        if (s.activeStoryIndex !== index) return;
         if (!s.viewerImageLayersLoaded) {
           window.setTimeout(() => tryThumb(attempt + 1), 200);
           return;

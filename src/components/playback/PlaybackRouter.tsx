@@ -9,7 +9,6 @@ export type PlaybackRouterProps = ChannelPanelProps & {
   name: string;
   ioState: null | string;
   stopExport: () => void;
-  retrievingMetadata: boolean;
   presenting: boolean;
   handles: Handle.File[];
   in_f: string;

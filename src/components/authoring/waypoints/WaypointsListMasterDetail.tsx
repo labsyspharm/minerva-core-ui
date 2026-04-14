@@ -341,8 +341,9 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   const saveThumbnailOnlyToStory = (index: number, attempt = 0) => {
     if (attempt > 100) return;
+    const doc = useDocumentStore.getState();
+    if (index < 0 || index >= doc.waypoints.length) return;
     const store = useAppStore.getState();
-    if (store.activeStoryIndex !== index) return;
     if (!store.viewerImageLayersLoaded) {
       window.setTimeout(
         () => saveThumbnailOnlyToStory(index, attempt + 1),

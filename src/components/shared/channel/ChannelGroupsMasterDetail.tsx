@@ -71,7 +71,6 @@ function channelNamesForGroup(
 
 export type ChannelGroupsMasterDetailProps = {
   channelItemElement: string;
-  retrievingMetadata: boolean;
   noLoader: boolean;
   /** OME-TIFF: lazy-load histograms for visible source indices (see `histogramLazy.ts`). */
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
@@ -579,8 +578,6 @@ export const ChannelGroupsMasterDetail = (
                   );
                   const legacyChannelItem =
                     gc &&
-                    !props.retrievingMetadata &&
-                    !props.noLoader &&
                     React.createElement(props.channelItemElement, {
                       key: `embed-${ch.channelUUID}-${ch.sourceUUID}`,
                       ...channelItemAttrsFor(gc),

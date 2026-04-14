@@ -29,11 +29,14 @@ function deriveTitle(data: DocumentData): string {
   return t && t.length > 0 ? t : UNTITLED;
 }
 
+/** Listing preview: first non-empty `waypoint.thumbnail` (any row), not only index 0. */
 function deriveThumbnail(data: DocumentData): string | undefined {
-  const w = data.waypoints[0];
-  return typeof w?.thumbnail === "string" && w.thumbnail.length > 0
-    ? w.thumbnail
-    : undefined;
+  for (const w of data.waypoints) {
+    if (typeof w?.thumbnail === "string" && w.thumbnail.length > 0) {
+      return w.thumbnail;
+    }
+  }
+  return undefined;
 }
 
 export function emptyDocumentData(): DocumentData {
@@ -92,7 +95,11 @@ export async function saveStoryDocument(
   const existing = await storyDb.stories.get(id);
   const modifiedAt = nowIso();
   const title = deriveTitle(validated);
-  const thumbnail = deriveThumbnail(validated);
+  const derivedThumb = deriveThumbnail(validated);
+  const thumbnail =
+    derivedThumb !== undefined && derivedThumb.length > 0
+      ? derivedThumb
+      : existing?.thumbnail;
   if (existing) {
     await storyDb.stories.put({
       ...existing,

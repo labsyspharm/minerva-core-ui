@@ -1,8 +1,10 @@
 import { SimpleIconsetStore } from "@haxtheweb/simple-icon/lib/simple-iconset.js";
+// import { Main } from "./src/main";
+import { RouterProvider } from "@tanstack/react-router";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-// import { Main } from "./src/main";
 import { Main } from "@/components/main";
+import { createAppRouter } from "@/router/appRouter";
 import "@fontsource/overpass/200.css";
 
 // Base path for deployment (e.g. /minerva-annotation-demo/ or /)
@@ -1561,15 +1563,17 @@ const emptyExhibitConfig: ExhibitConfig = {
 const DEMO_CRC_OME_TIFF_URL =
   "https://lsp-public-data.s3.amazonaws.com/lin-2021-crc-atlas/CRC01-096-097.ome.tif";
 
+const appRouter = createAppRouter(Main, {
+  handleKeys: OME_TIFF_HANDLE_KEYS,
+  demo_dicom_web: false,
+  demo_url: ENABLE_DEMO_CONTENT ? DEMO_CRC_OME_TIFF_URL : undefined,
+  exhibit_config: ENABLE_DEMO_CONTENT ? exhibit_config : emptyExhibitConfig,
+  configWaypoints: ENABLE_DEMO_CONTENT ? configWaypoints : [],
+});
+
 root.render(
   <React.StrictMode>
-    <Main
-      handleKeys={OME_TIFF_HANDLE_KEYS}
-      demo_dicom_web={false}
-      demo_url={ENABLE_DEMO_CONTENT ? DEMO_CRC_OME_TIFF_URL : undefined}
-      exhibit_config={ENABLE_DEMO_CONTENT ? exhibit_config : emptyExhibitConfig}
-      configWaypoints={ENABLE_DEMO_CONTENT ? configWaypoints : []}
-    />
+    <RouterProvider router={appRouter} />
     <MainStyle />
   </React.StrictMode>,
 );
