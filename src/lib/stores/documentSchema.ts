@@ -66,7 +66,7 @@ export const ShapeSchema = z.discriminatedUnion("type", [
   TextShapeSchema,
 ]);
 
-/* -------------------- images / channels / groups -------------------- */
+/* -------------------- images / channels / channel groups -------------------- */
 
 export const SourceDistributionSchema = z.object({
   id: IdSchema,
@@ -87,6 +87,32 @@ export const ImageChannelSchema = z.object({
   sourceDistribution: SourceDistributionSchema.optional(),
 });
 
+/**
+ * How to reopen pixel data after refresh. Handles are stored separately in IndexedDB
+ * (see `handleKey`); only the key is persisted on the document.
+ */
+export const ImageSourceUrlSchema = z.object({
+  kind: z.literal("url"),
+  url: z.string().min(1),
+});
+
+export const ImageSourceLocalSchema = z.object({
+  kind: z.literal("local"),
+  handleKey: z.string().min(1),
+});
+
+export const ImageSourceDicomWebSchema = z.object({
+  kind: z.literal("dicomWeb"),
+  series: z.string(),
+  modality: z.string(),
+});
+
+export const ImageSourceSchema = z.discriminatedUnion("kind", [
+  ImageSourceUrlSchema,
+  ImageSourceLocalSchema,
+  ImageSourceDicomWebSchema,
+]);
+
 export const ImageSchema = z.object({
   id: IdSchema,
   sizeX: z.number().int().positive(),
@@ -101,10 +127,11 @@ export const ImageSchema = z.object({
   omeXmlHash: z.string(),
   basename: z.string(),
   channels: z.array(ImageChannelSchema),
+  source: ImageSourceSchema.optional(),
 });
 
-/** Group row: `channelId` is {@link ImageChannelSchema}`id`; `id` is the UI / range-slider row id. */
-export const GroupChannelSchema = z.object({
+/** Row under a channel group: `channelId` is {@link ImageChannelSchema}`id`; `id` is the UI / range-slider row id. */
+export const ChannelGroupChannelSchema = z.object({
   id: IdSchema,
   channelId: IdSchema,
   color: ColorSchema,
@@ -112,11 +139,11 @@ export const GroupChannelSchema = z.object({
   upperLimit: z.number(),
 });
 
-export const GroupSchema = z.object({
+export const ChannelGroupSchema = z.object({
   id: IdSchema,
   name: z.string(),
   expanded: z.boolean().optional(),
-  channels: z.array(GroupChannelSchema),
+  channels: z.array(ChannelGroupChannelSchema),
 });
 
 const waypointObjectZ = z.object({
@@ -180,13 +207,26 @@ export const DocumentMetadataSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const DocumentDataSchema = z.object({
-  metadata: DocumentMetadataSchema.default({}),
-  waypoints: z.array(WaypointSchema),
-  shapes: z.array(ShapeSchema),
-  groups: z.array(GroupSchema),
-  images: z.array(ImageSchema),
-});
+export const DocumentDataSchema = z.preprocess(
+  (raw) => {
+    if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+      return raw;
+    }
+    const r = raw as Record<string, unknown>;
+    if ("groups" in r && !("channelGroups" in r)) {
+      const { groups, ...rest } = r;
+      return { ...rest, channelGroups: groups };
+    }
+    return raw;
+  },
+  z.object({
+    metadata: DocumentMetadataSchema.default({}),
+    waypoints: z.array(WaypointSchema),
+    shapes: z.array(ShapeSchema),
+    channelGroups: z.array(ChannelGroupSchema),
+    images: z.array(ImageSchema),
+  }),
+);
 
 /* -------------------- types -------------------- */
 
@@ -203,6 +243,7 @@ export type TextShape = z.infer<typeof TextShapeSchema>;
 export type Shape = z.infer<typeof ShapeSchema>;
 
 export type Image = z.infer<typeof ImageSchema>;
+export type ImageSource = z.infer<typeof ImageSourceSchema>;
 export type ImageChannel = z.infer<typeof ImageChannelSchema>;
 
 /**
@@ -213,8 +254,8 @@ export type Channel = ImageChannel & {
   imageId: string;
 };
 
-export type GroupChannel = z.infer<typeof GroupChannelSchema>;
-export type Group = z.infer<typeof GroupSchema>;
+export type ChannelGroupChannel = z.infer<typeof ChannelGroupChannelSchema>;
+export type ChannelGroup = z.infer<typeof ChannelGroupSchema>;
 export type Waypoint = z.infer<typeof WaypointSchema>;
 export type SourceDistributionData = z.infer<typeof SourceDistributionSchema>;
 

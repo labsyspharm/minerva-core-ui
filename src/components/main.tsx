@@ -1,6 +1,7 @@
+import { get as idbGet, set as idbSet } from "idb-keyval";
 import type { FormEventHandler } from "react";
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
 import { FileHandler } from "@/components/shared/FileHandler";
@@ -24,6 +25,7 @@ import {
 import { loadDicomWeb, parseDicomWeb } from "@/lib/imaging/dicom.js";
 import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
 import {
+  findFile,
   hasFileSystemAccess,
   toLoader,
   toLoaderFromUrl,
@@ -41,11 +43,15 @@ import type {
   Waypoint as WaypointType,
 } from "@/lib/legacy/exhibit";
 import { readConfig } from "@/lib/legacy/exhibit";
+import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
+import { imageHandleStorageKey } from "@/lib/persistence/imageHandles";
+import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
 import {
   effectiveReferenceImagePixelSize,
   useAppStore,
 } from "@/lib/stores/appStore";
-import type { Channel, Group } from "@/lib/stores/documentStore";
+import type { Image } from "@/lib/stores/documentSchema";
+import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
 import {
   documentShapes,
   documentSourceChannels,
@@ -62,6 +68,7 @@ import {
   type LegacyExhibitWaypoint,
   migrateLegacyWaypointShapes,
   type SetGroupChannelRangePayload,
+  setImageSource,
   waypointsToConfigWaypoints,
   waypointToConfigWaypoint,
 } from "@/lib/stores/storeUtils";
@@ -75,6 +82,10 @@ type Props = {
   /** Seed stories; may include legacy `Arrows` / `Overlays` until the image loads and migration runs. */
   configWaypoints: LegacyExhibitWaypoint[];
   exhibit_config: ExhibitConfig;
+  /**
+   * When set, auto-loads this remote OME-TIFF on mount (and `hasDemo` loading state).
+   * Omit for `pnpm run dev` — pass only from `pnpm run demo` in `index.tsx`.
+   */
   demo_dicom_web?: boolean;
   demo_url?: string;
   handleKeys: string[];
@@ -124,6 +135,17 @@ const RetrievingWrapper = styled.div`
   justify-items: center;
   align-items: center;
 `;
+
+const StoryPersistenceRoot = ({ children }: { children: React.ReactNode }) => {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    void bootstrapStoryPersistence().then(() => setReady(true));
+  }, []);
+  if (!ready) {
+    return <RetrievingWrapper>Loading stories…</RetrievingWrapper>;
+  }
+  return <>{children}</>;
+};
 
 const setContainer = ({ container, idx, key, newItem }) => {
   const extra = idx >= container[key].length ? [newItem] : [];
@@ -188,8 +210,87 @@ const getDistributions = async (sourceChannels, loader) => {
   return { SourceChannelsWithDist, SourceDistributions };
 };
 
+const readWriteHydrate = { mode: "readwrite" } as const;
+
+async function hydrateFilePermission(handle: Handle.File): Promise<boolean> {
+  const ok = (p: PermissionState) => p === "granted";
+  return (
+    ok(await handle.queryPermission(readWriteHydrate)) ||
+    ok(await handle.requestPermission(readWriteHydrate))
+  );
+}
+
+/** Rebuild Viv / DICOM loaders from persisted image rows (after Dexie load / refresh). */
+async function hydrateLoadersFromImages(images: Image[]): Promise<{
+  omeLoaderEntries: OmeLoaderEntry[];
+  dicomIndexList: DicomIndex[];
+}> {
+  const omeLoaderEntries: OmeLoaderEntry[] = [];
+  const dicomIndexList: DicomIndex[] = [];
+  const pool = new Pool();
+  const dicomSeriesSeen = new Set<string>();
+
+  for (const im of images) {
+    if (!im.source) continue;
+    switch (im.source.kind) {
+      case "url": {
+        const loader = await toLoaderFromUrl(im.source.url, pool);
+        omeLoaderEntries.push({ loader, sourceImageId: im.id });
+        break;
+      }
+      case "local": {
+        const handle = (await idbGet(im.source.handleKey)) as
+          | Handle.File
+          | undefined;
+        if (!handle) break;
+        if (!(await hydrateFilePermission(handle))) break;
+        if (!(await findFile({ handle }))) break;
+        const file = await handle.getFile();
+        const loader = await toLoader({
+          handle,
+          in_f: file.name,
+          pool,
+        });
+        omeLoaderEntries.push({ loader, sourceImageId: im.id });
+        break;
+      }
+      case "dicomWeb": {
+        const { series, modality } = im.source;
+        if (dicomSeriesSeen.has(series)) break;
+        dicomSeriesSeen.add(series);
+        const pyramids = await loadDicomWeb(series);
+        const loader = parseDicomWeb({
+          pyramids,
+          series,
+          little_endian: true,
+        }) as DicomLoader;
+        dicomIndexList.push({
+          series,
+          pyramids,
+          modality,
+          loader,
+        });
+        break;
+      }
+    }
+  }
+
+  return { omeLoaderEntries, dicomIndexList };
+}
+
 const Content = (props: Props) => {
   const { handleKeys, useLaunchQueue = false } = props;
+  /** Remote demo image / DICOM bootstrap from `index.tsx` (`pnpm run demo` only). */
+  const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
+  useStoryAutoSave();
+  const activeStoryId = useDocumentStore((s) => s.activeStoryId);
+  const namespacedHandleKeys = React.useMemo(
+    () =>
+      handleKeys.map((k) =>
+        activeStoryId ? `story:${activeStoryId}:${k}` : k,
+      ),
+    [handleKeys, activeStoryId],
+  );
   const firstExhibit = readConfig(props.exhibit_config);
   const [exhibit, setExhibit] = useState(firstExhibit);
   const [omeLoaderEntries, setOmeLoaderEntries] = useState<OmeLoaderEntry[]>(
@@ -202,20 +303,20 @@ const Content = (props: Props) => {
     setGroupChannelLists,
     setGroupNames,
   } = useAppStore();
-  const setGroups = useDocumentStore((s) => s.setGroups);
+  const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
   const setImages = useDocumentStore((s) => s.setImages);
-  const groups = useDocumentStore((s) => s.groups);
+  const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const sourceChannels = useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
-  const documentChannelsRef = React.useRef({ groups, sourceChannels });
-  documentChannelsRef.current = { groups, sourceChannels };
+  const documentChannelsRef = React.useRef({ channelGroups, sourceChannels });
+  documentChannelsRef.current = { channelGroups, sourceChannels };
   const [config, setConfig] = useState(() => ({
     ItemRegistry: {
       Name: "",
-      Groups: groups,
+      ChannelGroups: channelGroups,
       SourceChannels: sourceChannels,
       SourceDistributions: [],
       Shapes: [],
@@ -272,30 +373,52 @@ const Content = (props: Props) => {
     setHideWaypoint(v);
   };
 
-  const updateGroupChannelLists = ({ Groups, SourceChannels }) => {
-    setGroupNames(Object.fromEntries(Groups.map(({ name, id }) => [id, name])));
-    const toChannelList = (groupChannels) => {
-      return groupChannels
-        .map((gc) => findSourceChannel(SourceChannels, gc.channelId))
-        .filter((x) => x)
-        .map(({ name: chName }) => chName);
-    };
-    const groupChannelLists = Object.fromEntries(
-      Groups.map(({ name, channels }) => {
-        return [name, toChannelList(channels)];
-      }),
-    );
-    setGroupChannelLists(groupChannelLists);
-    const defaultGroup = Groups[0] || {
-      channels: [],
-      name: "",
-    };
-    const groupName = defaultGroup.name;
-    const channelList = groupChannelLists[groupName] || [];
-    setChannelVisibilities(
-      Object.fromEntries(channelList.map((name) => [name, true])),
-    );
-  };
+  const updateGroupChannelLists = useCallback(
+    ({ ChannelGroups, SourceChannels }) => {
+      setGroupNames(
+        Object.fromEntries(ChannelGroups.map(({ name, id }) => [id, name])),
+      );
+      const toChannelList = (groupChannels) => {
+        return groupChannels
+          .map((gc) => findSourceChannel(SourceChannels, gc.channelId))
+          .filter((x) => x)
+          .map(({ name: chName }) => chName);
+      };
+      const groupChannelLists = Object.fromEntries(
+        ChannelGroups.map(({ name, channels }) => {
+          return [name, toChannelList(channels)];
+        }),
+      );
+      setGroupChannelLists(groupChannelLists);
+      const defaultGroup = ChannelGroups[0] || {
+        channels: [],
+        name: "",
+      };
+      const groupName = defaultGroup.name;
+      const channelList = groupChannelLists[groupName] || [];
+      setChannelVisibilities(
+        Object.fromEntries(channelList.map((name) => [name, true])),
+      );
+    },
+    [setGroupNames, setGroupChannelLists, setChannelVisibilities],
+  );
+
+  /** After reload, app store resets while channel groups persist — select first group and sync lists/visibilities. */
+  useEffect(() => {
+    if (channelGroups.length === 0 || sourceChannels.length === 0) return;
+    const active = useAppStore.getState().activeChannelGroupId;
+    if (active != null && channelGroups.some((g) => g.id === active)) return;
+    updateGroupChannelLists({
+      ChannelGroups: channelGroups,
+      SourceChannels: sourceChannels,
+    });
+    setActiveChannelGroup(channelGroups[0].id);
+  }, [
+    channelGroups,
+    sourceChannels,
+    updateGroupChannelLists,
+    setActiveChannelGroup,
+  ]);
 
   const resetItems = (ItemRegistry) => {
     setConfig((config) => ({
@@ -306,9 +429,9 @@ const Content = (props: Props) => {
       },
       ID: crypto.randomUUID(),
     }));
-    const { Groups } = ItemRegistry;
-    if (Groups?.length > 0) {
-      setActiveChannelGroup(Groups[0].id);
+    const { ChannelGroups } = ItemRegistry;
+    if (ChannelGroups?.length > 0) {
+      setActiveChannelGroup(ChannelGroups[0].id);
     }
   };
 
@@ -334,7 +457,6 @@ const Content = (props: Props) => {
   /** Bumps on each OME-TIFF-URL load so a stale loader cannot commit after a newer URL starts. */
   const omeTiffUrlLoadGenerationRef = React.useRef(0);
   const [importRevision, setImportRevision] = useState(0);
-  const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
   const [isLoadingImage, setIsLoadingImage] = useState(hasDemo);
   const showSquareViewportOverlay = useAppStore(
     (state) => state.showSquareViewportOverlay,
@@ -370,13 +492,15 @@ const Content = (props: Props) => {
     clearOmeHistogramCache();
     setDicomIndexList([]);
     setLastOmeTiffUrl(null);
-    const exhibitGroups = props.exhibit_config.Groups ?? [];
-    const relevant_groups = exhibitGroups.filter(
-      ({ Image }) => Image.Method === "Colorimetric",
-    );
+    // Bundled CRC channel-group definitions in index.tsx apply only to the remote
+    // demo URL — never for local / “Open with” OME files.
+    const relevant_groups = [] as ConfigGroup[];
     const doc = useDocumentStore.getState();
     let nextImages = [...doc.images];
-    let registry = { SourceChannels: [] as Channel[], Groups: [] as Group[] };
+    let registry = {
+      SourceChannels: [] as Channel[],
+      ChannelGroups: [] as ChannelGroup[],
+    };
     const entries: OmeLoaderEntry[] = [];
 
     for (let i = 0; i < handles.length; i++) {
@@ -387,7 +511,7 @@ const Content = (props: Props) => {
         pool: new Pool(),
       });
       const sourceImageId = crypto.randomUUID();
-      const { SourceChannels: sc, Groups: gr } = extractChannels(
+      const { SourceChannels: sc, ChannelGroups: gr } = extractChannels(
         loader,
         "Colorimetric",
         relevant_groups,
@@ -401,20 +525,35 @@ const Content = (props: Props) => {
       );
       registry = {
         SourceChannels: [...registry.SourceChannels, ...sc],
-        Groups: [...registry.Groups, ...gr],
+        ChannelGroups: [...registry.ChannelGroups, ...gr],
       };
       entries.push({ loader, sourceImageId });
     }
 
-    const { SourceChannels, Groups } = registry;
+    const storyId = useDocumentStore.getState().activeStoryId;
+    if (storyId) {
+      for (let i = 0; i < entries.length; i++) {
+        const { sourceImageId } = entries[i];
+        const handle = handles[i];
+        const key = imageHandleStorageKey(storyId, sourceImageId);
+        await idbSet(key, handle);
+        nextImages = setImageSource(nextImages, sourceImageId, {
+          kind: "local",
+          handleKey: key,
+        });
+      }
+    }
+
+    const { SourceChannels, ChannelGroups } = registry;
     setImages(nextImages);
-    setGroups(Groups);
+    setChannelGroups(ChannelGroups);
     updateGroupChannelLists({
-      Groups,
+      ChannelGroups,
       SourceChannels,
     });
     resetItems({
       SourceChannels,
+      ChannelGroups,
     });
     setOmeLoaderEntries(entries);
     setFileName(
@@ -433,12 +572,15 @@ const Content = (props: Props) => {
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return;
     }
-    const exhibitGroups = props.exhibit_config.Groups ?? [];
-    const relevant_groups = exhibitGroups.filter(
-      ({ Image }) => Image.Method === "Colorimetric",
-    );
+    // index.tsx CRC templates are for the bundled demo image only, not arbitrary URLs.
+    const relevant_groups =
+      props.demo_url != null && url === props.demo_url
+        ? (props.exhibit_config.Groups ?? []).filter(
+            ({ Image }) => Image.Method === "Colorimetric",
+          )
+        : ([] as ConfigGroup[]);
     const sourceImageId = crypto.randomUUID();
-    const { SourceChannels, Groups } = extractChannels(
+    const { SourceChannels, ChannelGroups } = extractChannels(
       loader,
       "Colorimetric",
       relevant_groups,
@@ -447,10 +589,14 @@ const Content = (props: Props) => {
     const doc = useDocumentStore.getState();
     let nextImages = applySourceChannelsToImages(doc.images, SourceChannels);
     nextImages = applyLoaderPixelSizeToImage(nextImages, sourceImageId, loader);
+    nextImages = setImageSource(nextImages, sourceImageId, {
+      kind: "url",
+      url,
+    });
     setImages(nextImages);
-    setGroups(Groups);
-    updateGroupChannelLists({ Groups, SourceChannels });
-    resetItems({ SourceChannels });
+    setChannelGroups(ChannelGroups);
+    updateGroupChannelLists({ ChannelGroups, SourceChannels });
+    resetItems({ SourceChannels, ChannelGroups });
     setOmeLoaderEntries([{ loader, sourceImageId }]);
     setLastOmeTiffUrl(url);
     setFileName(url.split("/").pop() || "remote.ome.tif");
@@ -524,7 +670,10 @@ const Content = (props: Props) => {
     try {
       if (dicomPropList.length > 0) {
         const t1 = performance.now();
-        await onStartDicomWeb(dicomPropList, props.exhibit_config.Groups);
+        await onStartDicomWeb(
+          dicomPropList,
+          props.demo_dicom_web ? (props.exhibit_config.Groups ?? []) : [],
+        );
         console.log(
           `[minerva] onStartDicomWeb: ${(performance.now() - t1).toFixed(0)}ms`,
         );
@@ -595,12 +744,12 @@ const Content = (props: Props) => {
             .join(", ")
         : "",
     );
-    let registry = { SourceChannels: [], Groups: [] };
+    let registry = { SourceChannels: [], ChannelGroups: [] as ChannelGroup[] };
     for (const { loader, modality } of indexList) {
       const relevant_groups = groups.filter(
         ({ Image }) => Image.Method === modality,
       );
-      const { SourceChannels: sc, Groups: gr } = extractChannels(
+      const { SourceChannels: sc, ChannelGroups: gr } = extractChannels(
         loader,
         modality,
         relevant_groups,
@@ -612,17 +761,25 @@ const Content = (props: Props) => {
       );
       registry = {
         SourceChannels: [...registry.SourceChannels, ...SourceChannelsWithDist],
-        Groups: [...registry.Groups, ...gr],
+        ChannelGroups: [...registry.ChannelGroups, ...gr],
       };
     }
     console.log("[minerva] dicom: setting store state");
-    const { SourceChannels, Groups } = registry;
+    const { SourceChannels, ChannelGroups } = registry;
     setOmeLoaderEntries([]);
     const doc = useDocumentStore.getState();
-    setImages(applySourceChannelsToImages(doc.images, SourceChannels));
-    setGroups(Groups);
+    let nextDocImages = applySourceChannelsToImages(doc.images, SourceChannels);
+    for (const { series, modality } of indexList) {
+      nextDocImages = setImageSource(nextDocImages, modality, {
+        kind: "dicomWeb",
+        series,
+        modality,
+      });
+    }
+    setImages(nextDocImages);
+    setChannelGroups(ChannelGroups);
     updateGroupChannelLists({
-      Groups,
+      ChannelGroups,
       SourceChannels,
     });
   };
@@ -670,7 +827,7 @@ const Content = (props: Props) => {
   const setGroupChannelRange = React.useCallback(
     (payload: SetGroupChannelRangePayload) => {
       const doc = useDocumentStore.getState();
-      doc.setGroups(applyGroupChannelRange(doc.groups, payload));
+      doc.setChannelGroups(applyGroupChannelRange(doc.channelGroups, payload));
     },
     [],
   );
@@ -691,6 +848,13 @@ const Content = (props: Props) => {
 
   useEffect(() => {
     if (!props.demo_url) return;
+    if (useDocumentStore.getState().images.length > 0) {
+      // Persisted story already has image metadata (e.g. after refresh); do not
+      // re-fetch URL, but clear loading — otherwise `isLoadingImage` stays true
+      // from `useState(hasDemo)` and the global HTML loader never dismisses.
+      setIsLoadingImage(false);
+      return;
+    }
     console.log("[minerva] demo_url effect fired");
     void (async () => {
       await onStartRef.current(
@@ -699,6 +863,38 @@ const Content = (props: Props) => {
       );
     })();
   }, [props.demo_url]);
+
+  const loaderHydrationGenRef = React.useRef(0);
+  useEffect(() => {
+    if (omeLoaderEntries.length > 0 || dicomIndexList.length > 0) return;
+    if (!images.some((im) => im.source)) return;
+    const gen = ++loaderHydrationGenRef.current;
+    let cancelled = false;
+    void (async () => {
+      setIsLoadingImage(true);
+      try {
+        const { omeLoaderEntries: ome, dicomIndexList: dicom } =
+          await hydrateLoadersFromImages(images);
+        if (cancelled || gen !== loaderHydrationGenRef.current) return;
+        setOmeLoaderEntries(ome);
+        setDicomIndexList(dicom);
+        const urlIm = images.find((i) => i.source?.kind === "url");
+        if (urlIm?.source?.kind === "url") {
+          setLastOmeTiffUrl(urlIm.source.url);
+          setFileName(urlIm.source.url.split("/").pop() ?? "remote.ome.tif");
+        }
+      } catch (e) {
+        console.error("[minerva] hydrate loaders failed", e);
+      } finally {
+        if (!cancelled && gen === loaderHydrationGenRef.current) {
+          setIsLoadingImage(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [images, omeLoaderEntries.length, dicomIndexList.length]);
 
   const noLoader =
     omeLoaderEntries.length === 0 && dicomIndexList.length === 0 && !hasDemo;
@@ -801,12 +997,13 @@ const Content = (props: Props) => {
   );
 
   const imageViewerStateSignature = React.useMemo(
-    () => buildImageViewerSignature(groups, sourceChannels),
-    [groups, sourceChannels],
+    () => buildImageViewerSignature(channelGroups, sourceChannels),
+    [channelGroups, sourceChannels],
   );
 
   const itemRegistryGroups = React.useMemo(() => {
-    const { groups: G, sourceChannels: SC } = documentChannelsRef.current;
+    const { channelGroups: G, sourceChannels: SC } =
+      documentChannelsRef.current;
     if (buildImageViewerSignature(G, SC) !== imageViewerStateSignature) {
       throw new Error("minerva: document channel ref/signature mismatch");
     }
@@ -948,7 +1145,8 @@ const Content = (props: Props) => {
   };
 
   const viewerConfig = React.useMemo(() => {
-    const { groups: G, sourceChannels: SC } = documentChannelsRef.current;
+    const { channelGroups: G, sourceChannels: SC } =
+      documentChannelsRef.current;
     if (buildImageViewerSignature(G, SC) !== imageViewerStateSignature) {
       throw new Error("minerva: document channel ref/signature mismatch");
     }
@@ -960,8 +1158,9 @@ const Content = (props: Props) => {
         channelVisibilities?: Record<string, boolean>,
         loaderSourceImageId?: string,
       ) => {
-        const { groups: G, sourceChannels: SC } = documentChannelsRef.current;
-        return toSettings({ Groups: G, SourceChannels: SC })(
+        const { channelGroups: G, sourceChannels: SC } =
+          documentChannelsRef.current;
+        return toSettings({ channelGroups: G, SourceChannels: SC })(
           activeChannelGroupId,
           modality,
           loader,
@@ -974,7 +1173,7 @@ const Content = (props: Props) => {
 
   const imageProps = React.useMemo(() => {
     return {
-      Groups: groups,
+      ChannelGroups: channelGroups,
       SourceChannels: sourceChannels,
       omeLoaderEntries,
       dicomIndexList,
@@ -986,7 +1185,7 @@ const Content = (props: Props) => {
       viewerImageKey,
     };
   }, [
-    groups,
+    channelGroups,
     sourceChannels,
     omeLoaderEntries,
     dicomIndexList,
@@ -1185,12 +1384,12 @@ const Content = (props: Props) => {
     });
   }, []);
 
-  // Remove the global HTML loader once React is rendering and no async load is pending.
+  // Remove the global HTML loader once no async image load is pending (dev, demo, or restored doc).
   useEffect(() => {
-    if (!hasDemo && !isLoadingImage) {
+    if (!isLoadingImage) {
       document.getElementById("global-loader")?.remove();
     }
-  }, [hasDemo, isLoadingImage]);
+  }, [isLoadingImage]);
 
   const retrieving_status = (
     <RetrievingWrapper>Loading image data...</RetrievingWrapper>
@@ -1198,7 +1397,7 @@ const Content = (props: Props) => {
 
   return (
     <FileHandler
-      handleKeys={handleKeys}
+      handleKeys={namespacedHandleKeys}
       autoRestoreOnMount={!hasDemo}
       useLaunchQueue={useLaunchQueue}
       onRestoredHandles={hasDemo ? undefined : onRestoredOmeHandles}
@@ -1291,7 +1490,7 @@ const Content = (props: Props) => {
           }
         }
         const uploadProps = {
-          handleKeys,
+          handleKeys: namespacedHandleKeys,
           formProps,
           handles,
           onAllow,
@@ -1346,7 +1545,11 @@ const Content = (props: Props) => {
 
 const Main = (props: Props) => {
   if (props.demo_dicom_web || props.demo_url || hasFileSystemAccess()) {
-    return <Content {...props} />;
+    return (
+      <StoryPersistenceRoot>
+        <Content {...props} />
+      </StoryPersistenceRoot>
+    );
   } else {
     return (
       <div>

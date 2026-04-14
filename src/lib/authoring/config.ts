@@ -3,7 +3,7 @@ import type { DTYPE_VALUES } from "@vivjs/constants";
 import { histogramBinTile } from "../imaging/histogramBinPool";
 import type { Loader } from "../imaging/viv";
 import type { ConfigGroup as LegacyConfigGroup } from "../legacy/exhibit";
-import type { Channel, Group } from "../stores/documentSchema";
+import type { Channel, ChannelGroup } from "../stores/documentSchema";
 import type { StoryShape } from "../stores/storeUtils";
 
 export type SupportedDtype = keyof typeof DTYPE_VALUES;
@@ -46,7 +46,7 @@ type WaypointProperties = NameProperty & {
 export type MutableFields = (keyof ItemRegistryProps)[];
 export type ItemRegistryProps = {
   Name: string;
-  Groups: Group[];
+  ChannelGroups: ChannelGroup[];
   /**
    * Waypoint rows for the exhibit author (`Name`/`Bounds`/…); mirror of
    * Zustand `waypoints` via `waypointsToConfigWaypoints` / `waypointToConfigWaypoint`.
@@ -145,7 +145,7 @@ export type ConfigWaypoint = WaypointProperties & {
   State: WaypointState;
   /** Ordered ids into global `shapes` / story.json `waypoints[].shapeIds`. */
   shapeIds?: string[];
-  /** References {@link Group.id}. */
+  /** References {@link ChannelGroup.id}. */
   groupId?: string;
 };
 
@@ -160,7 +160,7 @@ type ExtractChannels = (
   sourceImageId?: string,
 ) => {
   SourceChannels: Channel[];
-  Groups: Group[];
+  ChannelGroups: ChannelGroup[];
 };
 
 const hex_to_rgb = (c: string) => {
@@ -420,19 +420,19 @@ const extractChannels: ExtractChannels = (
   // Match hard-coded groups to existing channels. GROUP_CHANNELS_CRC01 maps Path →
   // indices into OME Pixels.Channels (same order as SourceChannels), not "Channel N" strings.
   const hardcoded_crc01 = groups.reduce(
-    ({ name_map, Groups }, g) => {
+    ({ name_map, ChannelGroups }, g) => {
       if (!(g.Path in GROUP_CHANNELS_CRC01)) {
-        return { name_map, Groups };
+        return { name_map, ChannelGroups };
       }
       const channel_indices = GROUP_CHANNELS_CRC01[g.Path];
       if (g.Channels.length !== channel_indices.length) {
-        return { name_map, Groups };
+        return { name_map, ChannelGroups };
       }
       const outOfRange = channel_indices.filter(
         (idx) => idx < 0 || idx >= SourceChannels.length,
       );
       if (outOfRange.length > 0) {
-        return { name_map, Groups };
+        return { name_map, ChannelGroups };
       }
       const new_name_map = { ...name_map };
       for (let i = 0; i < channel_indices.length; i++) {
@@ -440,7 +440,7 @@ const extractChannels: ExtractChannels = (
         new_name_map[g.Channels[i]] = SourceChannels[idx].id;
       }
       const new_group_uuid = crypto.randomUUID();
-      const new_group: Group = {
+      const new_group: ChannelGroup = {
         id: new_group_uuid,
         expanded: false,
         name: g.Name,
@@ -458,16 +458,16 @@ const extractChannels: ExtractChannels = (
               upperLimit: g.Highs[index],
             });
           },
-          [] as Group["channels"],
+          [] as ChannelGroup["channels"],
         ),
       };
       return {
         name_map: new_name_map,
-        Groups: Groups.concat([new_group]),
+        ChannelGroups: ChannelGroups.concat([new_group]),
       };
     },
     {
-      Groups: [] as Group[],
+      ChannelGroups: [] as ChannelGroup[],
       name_map: {} as Record<string, string>,
     },
   );
@@ -481,10 +481,10 @@ const extractChannels: ExtractChannels = (
         sourceChannel.name = reverse_name_map[sourceChannel.id];
       }
     });
-    const { Groups } = hardcoded_crc01;
+    const { ChannelGroups } = hardcoded_crc01;
     return {
       SourceChannels,
-      Groups,
+      ChannelGroups,
     };
   } else if (
     SourceChannels.length === 1 &&
@@ -494,7 +494,7 @@ const extractChannels: ExtractChannels = (
     const group_uuid = crypto.randomUUID();
     const groupName = "Hematoxylin & Eosin";
     const channelName = "H&E";
-    const Groups: Group[] = [
+    const ChannelGroups: ChannelGroup[] = [
       {
         id: group_uuid,
         expanded: true,
@@ -515,11 +515,11 @@ const extractChannels: ExtractChannels = (
     }
     return {
       SourceChannels,
-      Groups,
+      ChannelGroups,
     };
   }
   const group_size = 4;
-  const Groups: Group[] = [
+  const ChannelGroups: ChannelGroup[] = [
     ...Array(Math.ceil(SourceChannels.length / group_size)).keys(),
   ].map((group_index) => {
     const group_uuid = crypto.randomUUID();
@@ -544,7 +544,7 @@ const extractChannels: ExtractChannels = (
   });
   return {
     SourceChannels,
-    Groups,
+    ChannelGroups,
   };
 };
 

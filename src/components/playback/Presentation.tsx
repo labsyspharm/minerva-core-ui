@@ -287,7 +287,7 @@ const ChannelName = styled.span<{ color: string }>`
 export const Presentation = (props: PresentationProps) => {
   const waypoints = useDocumentStore((s) => s.waypoints);
   const shapes = useDocumentStore((s) => s.shapes);
-  const groups = useDocumentStore((s) => s.groups);
+  const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const sourceChannels = useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
@@ -313,7 +313,7 @@ export const Presentation = (props: PresentationProps) => {
 
   const previousActiveStoryIndexRef = useRef<number | null>(null);
 
-  // Auto-import shapes for the active story when dimensions / selection / groups change.
+  // Auto-import shapes for the active story when dimensions / selection / channel groups change.
   useEffect(() => {
     if (waypoints.length === 0) return;
     // Wait for image dimensions to be set
@@ -342,8 +342,9 @@ export const Presentation = (props: PresentationProps) => {
       }
 
       const gid = wp.groupId;
-      if (groups.length > 0 && gid) {
-        const foundGroup = groups.find((g) => g.id === gid) || groups[0];
+      if (channelGroups.length > 0 && gid) {
+        const foundGroup =
+          channelGroups.find((g) => g.id === gid) || channelGroups[0];
         if (foundGroup) {
           setActiveChannelGroup(foundGroup.id);
         }
@@ -357,7 +358,7 @@ export const Presentation = (props: PresentationProps) => {
     shapes,
     importWaypointShapes,
     setTargetWaypointCamera,
-    groups,
+    channelGroups,
     setActiveChannelGroup,
   ]);
 
@@ -384,7 +385,7 @@ export const Presentation = (props: PresentationProps) => {
     const story = waypoints[activeStory];
     const gid = story.groupId;
     const found_group =
-      (gid && groups.find(({ id }) => id === gid)) || groups[0];
+      (gid && channelGroups.find(({ id }) => id === gid)) || channelGroups[0];
     if (found_group) {
       setActiveChannelGroup(found_group.id);
     }
@@ -547,7 +548,9 @@ export const Presentation = (props: PresentationProps) => {
 
   // Process story content to highlight channel names
   const { processedContent, channelColors } = useMemo(() => {
-    const activeGroup = groups.find((g) => g.id === activeChannelGroupId);
+    const activeGroup = channelGroups.find(
+      (g) => g.id === activeChannelGroupId,
+    );
     if (!activeGroup || !story_content)
       return {
         processedContent: story_content || "",
@@ -579,7 +582,7 @@ export const Presentation = (props: PresentationProps) => {
     });
 
     return { processedContent: content, channelColors: colors };
-  }, [story_content, activeChannelGroupId, groups, sourceChannels]);
+  }, [story_content, activeChannelGroupId, channelGroups, sourceChannels]);
 
   return (
     <PresentationShell>

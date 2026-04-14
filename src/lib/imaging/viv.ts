@@ -145,9 +145,10 @@ const toSettings = (opts) => {
     channelVisibilities,
     loaderSourceImageId,
   ) => {
-    const { Groups, SourceChannels } = opts;
+    const { channelGroups, SourceChannels } = opts;
     const group =
-      Groups.find(({ id }) => id === activeChannelGroupId) || Groups[0];
+      channelGroups.find(({ id }) => id === activeChannelGroupId) ||
+      channelGroups[0];
     const { channels } = group || { channels: [] };
     // Defaults
     if (!loader) return toDefaultSettings(3);

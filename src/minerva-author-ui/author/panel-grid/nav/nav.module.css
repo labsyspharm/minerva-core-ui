@@ -21,15 +21,12 @@
   }
   /* Icon-only control: no panel/box behind the bars */
   .hamburger {
-    display: flex;
-    flex-direction: column;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
-    align-items: stretch;
-    gap: 5px;
     box-sizing: border-box;
     width: auto;
     min-width: 28px;
-    height: auto;
     padding: 6px 2px;
     margin: 0;
     border: none;
@@ -38,8 +35,13 @@
     color: rgba(255, 255, 255, 0.95);
     cursor: pointer;
     flex-shrink: 0;
+    line-height: 0;
     box-shadow: none;
     transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+  .hamburger .hamburger-icon {
+    display: block;
+    flex-shrink: 0;
   }
   .hamburger:hover {
     opacity: 0.88;
@@ -57,17 +59,6 @@
   .hamburger:focus-visible {
     outline: 2px solid var(--light-focus-color, #6ae);
     outline-offset: 3px;
-  }
-  .hamburger .bar {
-    display: block;
-    height: 2px;
-    width: 20px;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 2px;
-  }
-  .hamburger .bar:nth-child(2) {
-    width: 14px;
-    align-self: center;
   }
   .overflow-dropdown {
     display: none;

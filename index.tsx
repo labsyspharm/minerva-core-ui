@@ -14,6 +14,7 @@ import "@/fonts.css";
 import "@fontsource/overpass/500.css";
 import { loremIpsum } from "react-lorem-ipsum";
 import { createGlobalStyle } from "styled-components";
+import type { ExhibitConfig } from "@/lib/legacy/exhibit";
 import type {
   LegacyExhibitArrow,
   LegacyExhibitOverlay,
@@ -1546,14 +1547,28 @@ const root = createRoot(rootElement);
 // Stable array reference — FileHandler restore effect deps stay stable across renders.
 const OME_TIFF_HANDLE_KEYS = ["img-1"];
 
+/** Bundled CRC channel groups, waypoints, and remote OME-TIFF only for `pnpm run demo` (`vite --mode demo`). */
+const ENABLE_DEMO_CONTENT = import.meta.env.MODE === "demo";
+
+document.title = ENABLE_DEMO_CONTENT ? "Minerva 2.0 Demo" : "Minerva";
+
+const emptyExhibitConfig: ExhibitConfig = {
+  Name: "",
+  Stories: [],
+  Groups: [],
+};
+
+const DEMO_CRC_OME_TIFF_URL =
+  "https://lsp-public-data.s3.amazonaws.com/lin-2021-crc-atlas/CRC01-096-097.ome.tif";
+
 root.render(
   <React.StrictMode>
     <Main
       handleKeys={OME_TIFF_HANDLE_KEYS}
       demo_dicom_web={false}
-      demo_url="https://lsp-public-data.s3.amazonaws.com/lin-2021-crc-atlas/CRC01-096-097.ome.tif"
-      exhibit_config={exhibit_config}
-      configWaypoints={configWaypoints}
+      demo_url={ENABLE_DEMO_CONTENT ? DEMO_CRC_OME_TIFF_URL : undefined}
+      exhibit_config={ENABLE_DEMO_CONTENT ? exhibit_config : emptyExhibitConfig}
+      configWaypoints={ENABLE_DEMO_CONTENT ? configWaypoints : []}
     />
     <MainStyle />
   </React.StrictMode>,

@@ -9,7 +9,11 @@ import {
   effectiveReferenceImagePixelSize,
   useAppStore,
 } from "@/lib/stores/appStore";
-import type { Channel, Group, Waypoint } from "@/lib/stores/documentStore";
+import type {
+  Channel,
+  ChannelGroup,
+  Waypoint,
+} from "@/lib/stores/documentStore";
 import {
   documentWaypoints,
   findSourceChannel,
@@ -69,7 +73,7 @@ const annotationCountLabel = (count: number) =>
   `${count} ${count === 1 ? "shape" : "shapes"}`;
 
 function channelNamesForGroup(
-  group: Group,
+  group: ChannelGroup,
   sourceChannels: Channel[],
 ): string[] {
   return (group.channels ?? [])
@@ -84,7 +88,7 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   const waypoints = useDocumentStore((s) => s.waypoints);
   const shapes = useDocumentStore((s) => s.shapes);
-  const groups = useDocumentStore((s) => s.groups);
+  const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const sourceChannels = React.useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
@@ -353,15 +357,16 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   const applyStoryChannelGroup = React.useCallback(
     (story: Waypoint | undefined) => {
-      if (!story || groups.length === 0) return;
+      if (!story || channelGroups.length === 0) return;
       const foundGroup =
-        (story.groupId && groups.find((group) => group.id === story.groupId)) ||
-        groups[0];
+        (story.groupId &&
+          channelGroups.find((group) => group.id === story.groupId)) ||
+        channelGroups[0];
       if (foundGroup) {
         setActiveChannelGroup(foundGroup.id);
       }
     },
-    [groups, setActiveChannelGroup],
+    [channelGroups, setActiveChannelGroup],
   );
 
   const scheduleThumbnailCaptureForStory = (
@@ -453,9 +458,9 @@ const WaypointsList = (props: WaypointsListProps) => {
   const handleAddWaypoint = () => {
     const storyIndex = waypoints.length;
     const currentGroup =
-      groups.find(
+      channelGroups.find(
         (group) => group.id === useAppStore.getState().activeChannelGroupId,
-      ) || groups[0];
+      ) || channelGroups[0];
     const newWaypoint: ConfigWaypoint = {
       id: crypto.randomUUID(),
       State: { Expanded: true },
@@ -731,10 +736,11 @@ const WaypointsList = (props: WaypointsListProps) => {
     };
 
     const selectedGroupUuid =
-      groups.find((group) => group.id === detailStory.groupId)?.id ??
-      groups[0].id;
+      channelGroups.find((group) => group.id === detailStory.groupId)?.id ??
+      channelGroups[0].id;
     const selectedGroup =
-      groups.find((group) => group.id === selectedGroupUuid) ?? groups[0];
+      channelGroups.find((group) => group.id === selectedGroupUuid) ??
+      channelGroups[0];
     const selectedChannelNames = channelNamesForGroup(
       selectedGroup,
       sourceChannels,
@@ -742,7 +748,9 @@ const WaypointsList = (props: WaypointsListProps) => {
     const selectedChannelsSubtitle = selectedChannelNames.join(", ");
 
     const selectChannelGroupByUuid = (nextGroupUuid: string) => {
-      const nextGroup = groups.find((group) => group.id === nextGroupUuid);
+      const nextGroup = channelGroups.find(
+        (group) => group.id === nextGroupUuid,
+      );
       if (!nextGroup) return;
       updateStory(detailStoryIndex, { groupId: nextGroup.id });
       setActiveChannelGroup(nextGroup.id);
@@ -795,7 +803,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                 placeholder="Waypoint title"
               />
             </div>
-            {groups.length > 0 ? (
+            {channelGroups.length > 0 ? (
               <div className={styles.detailTitleFieldWrap}>
                 <label
                   className={styles.detailTitleLabel}
@@ -842,7 +850,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                       role="listbox"
                       aria-label="Channel groups"
                     >
-                      {groups.map((group) => {
+                      {channelGroups.map((group) => {
                         const names = channelNamesForGroup(
                           group,
                           sourceChannels,

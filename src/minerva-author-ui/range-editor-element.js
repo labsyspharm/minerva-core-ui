@@ -268,7 +268,7 @@ const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
     }
 
     get groupChannel() {
-      const group = (ItemRegistry?.Groups || []).find((x) => {
+      const group = (ItemRegistry?.ChannelGroups || []).find((x) => {
         return (x.id ?? x.UUID) == this.getAttribute("group_uuid");
       }) || null;
       return (

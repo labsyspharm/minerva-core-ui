@@ -6,9 +6,9 @@ import {
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
 import { useAppStore } from "@/lib/stores/appStore";
-import type { Channel, Group } from "@/lib/stores/documentStore";
+import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
 import {
-  documentGroups,
+  documentChannelGroups,
   documentSourceChannels,
   findSourceChannel,
   flattenImageChannelsInDocumentOrder,
@@ -60,7 +60,7 @@ const RemoveIcon = () => (
 );
 
 function channelNamesForGroup(
-  group: Group,
+  group: ChannelGroup,
   sourceChannels: Channel[],
 ): string[] {
   return (group.channels ?? [])
@@ -82,13 +82,13 @@ export const ChannelGroupsMasterDetail = (
 ) => {
   const { setActiveChannelGroup } = useAppStore();
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
-  const groups = useDocumentStore((s) => s.groups);
+  const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const sourceChannels = React.useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
-  const setGroups = useDocumentStore((s) => s.setGroups);
+  const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
   const setGroupNames = useAppStore((s) => s.setGroupNames);
   const setGroupChannelLists = useAppStore((s) => s.setGroupChannelLists);
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
@@ -115,7 +115,7 @@ export const ChannelGroupsMasterDetail = (
     left: number;
   } | null>(null);
 
-  // Reset detail state when switching groups
+  // Reset detail state when switching channel groups
   React.useEffect(() => {
     if (detailGroupId) {
       setReplacingChannelUUID(null);
@@ -131,13 +131,13 @@ export const ChannelGroupsMasterDetail = (
   }, [replacingChannelUUID]);
 
   const detailGroup = detailGroupId
-    ? (groups.find((g) => g.id === detailGroupId) ?? null)
+    ? (channelGroups.find((g) => g.id === detailGroupId) ?? null)
     : null;
 
   // Sync derived store state after group mutations.
   const syncGroupState = React.useCallback(
-    (newGroups: Group[]) => {
-      setGroups(newGroups);
+    (newGroups: ChannelGroup[]) => {
+      setChannelGroups(newGroups);
       setGroupNames(
         Object.fromEntries(newGroups.map(({ name, id }) => [id, name])),
       );
@@ -171,7 +171,7 @@ export const ChannelGroupsMasterDetail = (
     },
     [
       sourceChannels,
-      setGroups,
+      setChannelGroups,
       setGroupNames,
       setGroupChannelLists,
       setChannelVisibilities,
@@ -180,14 +180,14 @@ export const ChannelGroupsMasterDetail = (
 
   // --- Group CRUD ---
   const createGroup = () => {
-    const name = `Group ${groups.length + 1}`;
-    const newGroup: Group = {
+    const name = `Group ${channelGroups.length + 1}`;
+    const newGroup: ChannelGroup = {
       id: crypto.randomUUID(),
       name,
       expanded: true,
       channels: [],
     };
-    const newGroups = [...groups, newGroup];
+    const newGroups = [...channelGroups, newGroup];
     syncGroupState(newGroups);
     setActiveChannelGroup(newGroup.id);
     setDetailGroupId(newGroup.id);
@@ -197,8 +197,8 @@ export const ChannelGroupsMasterDetail = (
   };
 
   const deleteGroup = (groupId: string) => {
-    if (groups.length <= 1) return;
-    const newGroups = groups.filter(({ id }) => id !== groupId);
+    if (channelGroups.length <= 1) return;
+    const newGroups = channelGroups.filter(({ id }) => id !== groupId);
     syncGroupState(newGroups);
     if (activeChannelGroupId === groupId) {
       setActiveChannelGroup(newGroups[0].id);
@@ -209,7 +209,7 @@ export const ChannelGroupsMasterDetail = (
   };
 
   const renameGroup = (groupId: string, newName: string) => {
-    const newGroups = groups.map((g) =>
+    const newGroups = channelGroups.map((g) =>
       g.id === groupId ? { ...g, name: newName } : g,
     );
     syncGroupState(newGroups);
@@ -218,7 +218,7 @@ export const ChannelGroupsMasterDetail = (
   const addChannelToGroup = (groupId: string, sourceChannelUUID: string) => {
     const sc = sourceChannels.find(({ id }) => id === sourceChannelUUID);
     if (!sc) return;
-    const newGroups = groups.map((g) => {
+    const newGroups = channelGroups.map((g) => {
       if (g.id !== groupId) return g;
       const already = g.channels.some(
         (gc) => gc.channelId === sourceChannelUUID,
@@ -237,7 +237,7 @@ export const ChannelGroupsMasterDetail = (
   };
 
   const removeChannelFromGroup = (groupId: string, channelUUID: string) => {
-    const newGroups = groups.map((g) => {
+    const newGroups = channelGroups.map((g) => {
       if (g.id !== groupId) return g;
       return {
         ...g,
@@ -257,7 +257,7 @@ export const ChannelGroupsMasterDetail = (
       setReplacingChannelUUID(null);
       return;
     }
-    const newGroups = groups.map((g) => {
+    const newGroups = channelGroups.map((g) => {
       if (g.id !== groupId) return g;
       return {
         ...g,
@@ -278,7 +278,7 @@ export const ChannelGroupsMasterDetail = (
     channelUUID: string,
     rgb: { r: number; g: number; b: number },
   ) => {
-    const newGroups = groups.map((g) => ({
+    const newGroups = channelGroups.map((g) => ({
       ...g,
       channels: g.channels.map((gc) =>
         gc.id === channelUUID ? { ...gc, color: rgb } : gc,
@@ -290,7 +290,7 @@ export const ChannelGroupsMasterDetail = (
   // Color picker helpers
   const pickingColorHex = React.useMemo(() => {
     if (!colorPickerChannelUUID) return null;
-    for (const g of groups) {
+    for (const g of channelGroups) {
       const gc = g.channels.find((c) => c.id === colorPickerChannelUUID);
       if (gc) {
         const { r, g: gg, b } = gc.color;
@@ -298,7 +298,7 @@ export const ChannelGroupsMasterDetail = (
       }
     }
     return null;
-  }, [groups, colorPickerChannelUUID]);
+  }, [channelGroups, colorPickerChannelUUID]);
 
   const closeColorPicker = React.useCallback(() => {
     setColorPickerChannelUUID(null);
@@ -306,16 +306,17 @@ export const ChannelGroupsMasterDetail = (
   }, []);
 
   const activeGroup =
-    activeChannelGroupId || (groups.length > 0 ? groups[0].id : null);
+    activeChannelGroupId ||
+    (channelGroups.length > 0 ? channelGroups[0].id : null);
 
   const { ensureChannelHistograms } = props;
 
   const detailGroupSourcesKey = React.useMemo(() => {
     if (!detailGroupId) return "";
-    const g = groups.find((x) => x.id === detailGroupId);
+    const g = channelGroups.find((x) => x.id === detailGroupId);
     if (!g) return "";
     return g.channels.map((gc) => gc.channelId).join("\0");
-  }, [detailGroupId, groups]);
+  }, [detailGroupId, channelGroups]);
 
   React.useEffect(() => {
     void detailGroupSourcesKey;
@@ -324,7 +325,7 @@ export const ChannelGroupsMasterDetail = (
     void (async () => {
       try {
         const st = useDocumentStore.getState();
-        const gList = documentGroups(st);
+        const gList = documentChannelGroups(st);
         const scList = documentSourceChannels(st);
         const g = gList.find((x) => x.id === detailGroupId);
         if (!g) return;
@@ -370,11 +371,11 @@ export const ChannelGroupsMasterDetail = (
   // Available channels not yet in the detail group
   const availableChannels = React.useMemo(() => {
     if (!detailGroupId) return [];
-    const g = groups.find(({ id }) => id === detailGroupId);
+    const g = channelGroups.find(({ id }) => id === detailGroupId);
     if (!g) return [];
     const usedFlatIds = new Set(g.channels.map((gc) => gc.channelId));
     return sourceChannels.filter(({ id }) => !usedFlatIds.has(id));
-  }, [detailGroupId, groups, sourceChannels]);
+  }, [detailGroupId, channelGroups, sourceChannels]);
 
   // ── List view ──
 
@@ -382,18 +383,18 @@ export const ChannelGroupsMasterDetail = (
     <div className={styles.compactHeader}>
       <div className={styles.headerTitle}>
         <span>Channel Groups</span>
-        <span className={styles.headerCount}>({groups.length})</span>
+        <span className={styles.headerCount}>({channelGroups.length})</span>
       </div>
       <div className={styles.headerActions}>
         <button
           type="button"
           className={styles.iconHeaderButton}
           onClick={() => {
-            if (groups.length <= 1) return;
+            if (channelGroups.length <= 1) return;
             if (!activeGroup) return;
             deleteGroup(activeGroup);
           }}
-          disabled={groups.length <= 1}
+          disabled={channelGroups.length <= 1}
           title="Delete active group"
         >
           <TrashIcon />
@@ -413,11 +414,11 @@ export const ChannelGroupsMasterDetail = (
   const renderList = () => (
     <div className={styles.panel}>
       {listHeader}
-      {groups.length === 0 ? (
-        <div className={styles.emptyMessage}>No groups yet</div>
+      {channelGroups.length === 0 ? (
+        <div className={styles.emptyMessage}>No channel groups yet</div>
       ) : (
         <ul className={styles.rows}>
-          {groups.map((group) => {
+          {channelGroups.map((group) => {
             const isActive = activeGroup === group.id;
             const channelNames = channelNamesForGroup(group, sourceChannels);
             const subtitle = channelNames.join(", ");

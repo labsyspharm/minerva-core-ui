@@ -14,9 +14,18 @@ class Nav extends HTMLElement {
     const tab_items = this.itemsTemplate(tab_order, "tab");
 
     const overflow_trigger = toElement("button")`
-      <span class="bar"></span>
-      <span class="bar"></span>
-      <span class="bar"></span>
+      <svg
+        class="hamburger-icon"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 14"
+        width="20"
+        height="14"
+        aria-hidden="true"
+      >
+        <rect x="0" y="0" width="20" height="2" rx="1" fill="currentColor" />
+        <rect x="0" y="6" width="20" height="2" rx="1" fill="currentColor" />
+        <rect x="0" y="12" width="20" height="2" rx="1" fill="currentColor" />
+      </svg>
     `({
       type: "button",
       class: "hamburger",

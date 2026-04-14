@@ -1,4 +1,4 @@
-import type { Channel, Group } from "@/lib/stores/documentStore";
+import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
 
 /**
  * Snapshot of document fields that affect VIV layer settings (see `toSettings` in `viv.ts`).
@@ -6,7 +6,7 @@ import type { Channel, Group } from "@/lib/stores/documentStore";
  * viewer props stay stable while curves load.
  */
 export function buildImageViewerSignature(
-  Groups: Group[],
+  channelGroups: ChannelGroup[],
   SourceChannels: Channel[],
 ): string {
   const sources = SourceChannels.map((sc) => ({
@@ -17,7 +17,7 @@ export function buildImageViewerSignature(
     img: sc.imageId,
     dt: sc.sourceDataTypeId,
   }));
-  const groups = Groups.map((g) => ({
+  const groups = channelGroups.map((g) => ({
     u: g.id,
     n: g.name,
     e: g.expanded ?? false,

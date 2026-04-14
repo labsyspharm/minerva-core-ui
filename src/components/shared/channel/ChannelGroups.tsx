@@ -2,7 +2,10 @@ import * as React from "react";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { useAppStore } from "@/lib/stores/appStore";
-import { type Group, useDocumentStore } from "@/lib/stores/documentStore";
+import {
+  type ChannelGroup,
+  useDocumentStore,
+} from "@/lib/stores/documentStore";
 
 const WrapRows = styled.div`
   display: flex;
@@ -97,15 +100,16 @@ const GroupAltRow = styled.button`
   }
 `;
 
-const GroupRow = (props: { group: Group }) => {
+const GroupRow = (props: { group: ChannelGroup }) => {
   const { group } = props;
   const { name } = group;
 
   const { setActiveChannelGroup } = useAppStore();
-  const groups = useDocumentStore((s) => s.groups);
+  const docChannelGroups = useDocumentStore((s) => s.channelGroups);
   const row_group = React.useMemo(
-    () => groups.find((grp) => grp.name === name) || groups[0],
-    [groups, name],
+    () =>
+      docChannelGroups.find((grp) => grp.name === name) || docChannelGroups[0],
+    [docChannelGroups, name],
   );
 
   const toGroup = () => {
@@ -128,10 +132,12 @@ export const ChannelGroups = (props: {
   const [expanded, setExpanded] = React.useState(false);
 
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
-  const groups = useDocumentStore((s) => s.groups);
+  const docChannelGroups = useDocumentStore((s) => s.channelGroups);
   const activeGroup = React.useMemo(
-    () => groups.find(({ id }) => id === activeChannelGroupId) || groups[0],
-    [groups, activeChannelGroupId],
+    () =>
+      docChannelGroups.find(({ id }) => id === activeChannelGroupId) ||
+      docChannelGroups[0],
+    [docChannelGroups, activeChannelGroupId],
   );
 
   const prevGroupId = React.useRef(activeChannelGroupId);
@@ -163,7 +169,7 @@ export const ChannelGroups = (props: {
   }
 
   const otherGroups = expanded
-    ? groups.filter((g) => g.id !== activeGroup?.id)
+    ? docChannelGroups.filter((g) => g.id !== activeGroup?.id)
     : [];
 
   return (

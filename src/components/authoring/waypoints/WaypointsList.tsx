@@ -52,7 +52,7 @@ const WaypointsList = (_props: WaypointsListProps) => {
   // Document waypoints (ordered); same ordering as `toDocumentData().waypoints`
   const waypoints = useDocumentStore((s) => s.waypoints);
   const shapes = useDocumentStore((s) => s.shapes);
-  const groups = useDocumentStore((s) => s.groups);
+  const channelGroups = useDocumentStore((s) => s.channelGroups);
   const docImageWidth = useDocumentStore((s) => s.images[0]?.sizeX ?? 0);
   const docImageHeight = useDocumentStore((s) => s.images[0]?.sizeY ?? 0);
   const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
@@ -231,7 +231,8 @@ const WaypointsList = (_props: WaypointsListProps) => {
           documentWaypoints(useDocumentStore.getState())[index] ?? story;
         const gid = navStory.groupId;
         const foundGroup =
-          (gid && groups.find((group) => group.id === gid)) || groups[0];
+          (gid && channelGroups.find((group) => group.id === gid)) ||
+          channelGroups[0];
         if (foundGroup) {
           setActiveChannelGroup(foundGroup.id);
         }
@@ -282,9 +283,9 @@ const WaypointsList = (_props: WaypointsListProps) => {
       Name: `Waypoint ${storyIndex + 1}`,
       Content: "",
       groupId:
-        groups.find(
+        channelGroups.find(
           (group) => group.id === useAppStore.getState().activeChannelGroupId,
-        )?.id ?? groups[0]?.id,
+        )?.id ?? channelGroups[0]?.id,
       shapeIds: [],
     };
 

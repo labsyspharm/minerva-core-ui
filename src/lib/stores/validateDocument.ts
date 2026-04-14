@@ -161,11 +161,13 @@ function foldTopLevelChannelsIntoImages(
     im.channels = channels;
   }
 
-  const groupsIn = Array.isArray(raw.groups)
-    ? (raw.groups as Record<string, unknown>[])
-    : [];
-  const { channels: _removed, ...rest } = raw;
-  return { ...rest, images: imagesIn, groups: groupsIn };
+  const channelGroupsIn = Array.isArray(raw.channelGroups)
+    ? (raw.channelGroups as Record<string, unknown>[])
+    : Array.isArray(raw.groups)
+      ? (raw.groups as Record<string, unknown>[])
+      : [];
+  const { channels: _removed, groups: _legacyGroups, ...rest } = raw;
+  return { ...rest, images: imagesIn, channelGroups: channelGroupsIn };
 }
 
 function normalizeLegacySnapshot(raw: Record<string, unknown>): unknown {
@@ -180,7 +182,7 @@ function normalizeLegacySnapshot(raw: Record<string, unknown>): unknown {
   if (
     Array.isArray(raw.waypoints) &&
     Array.isArray(raw.shapes) &&
-    Array.isArray(raw.groups) &&
+    (Array.isArray(raw.groups) || Array.isArray(raw.channelGroups)) &&
     Array.isArray(raw.sourceChannels) &&
     !hasNewNested
   ) {
@@ -233,7 +235,10 @@ function normalizeLegacySnapshot(raw: Record<string, unknown>): unknown {
       }
     }
 
-    const groups = (raw.groups as LegacyGroup[]).map((g) => ({
+    const legacyGroupRows = (
+      Array.isArray(raw.channelGroups) ? raw.channelGroups : raw.groups
+    ) as LegacyGroup[];
+    const channelGroups = legacyGroupRows.map((g) => ({
       id: g.id,
       name: g.Name,
       expanded: g.State?.Expanded,
@@ -270,7 +275,7 @@ function normalizeLegacySnapshot(raw: Record<string, unknown>): unknown {
       metadata: {},
       waypoints,
       shapes: raw.shapes,
-      groups,
+      channelGroups,
       images,
     };
   }
@@ -291,10 +296,10 @@ function ensureImageChannelIds(images: { id: string; channels?: unknown[] }[]) {
 
 /** Older documents used `imageId` + `channelIndex` on group rows; resolve to nested `channelId`. */
 function migrateGroupChannelsToChannelId(
-  groups: { channels?: unknown[] }[],
+  channelGroups: { channels?: unknown[] }[],
   images: { id: string; channels?: { id?: string; index?: number }[] }[],
 ) {
-  for (const g of groups) {
+  for (const g of channelGroups) {
     for (const rawGc of g.channels ?? []) {
       const gc = rawGc as Record<string, unknown>;
       if (typeof gc.channelId === "string" && gc.channelId.length > 0) {
@@ -319,7 +324,7 @@ function migrateGroupChannelsToChannelId(
 function buildIdReplacementMap(data: {
   waypoints: Record<string, unknown>[];
   shapes: Record<string, unknown>[];
-  groups: {
+  channelGroups: {
     id: string;
     channels?: unknown[];
   }[];
@@ -343,7 +348,7 @@ function buildIdReplacementMap(data: {
       if (row?.sourceDistribution?.id != null) note(row.sourceDistribution.id);
     }
   }
-  for (const g of data.groups) {
+  for (const g of data.channelGroups) {
     note(g?.id);
     for (const rawGc of g.channels ?? []) {
       const gc = rawGc as { id?: string; channelId?: string };
@@ -392,7 +397,7 @@ function rewriteIds<T>(value: T, idMap: Map<string, string>): T {
 }
 
 function validateDocumentRelations(data: DocumentData): DocumentData {
-  const groupIds = new Set(data.groups.map((x) => x.id));
+  const groupIds = new Set(data.channelGroups.map((x) => x.id));
   const shapeIds = new Set(data.shapes.map((x) => x.id));
   const imageChannelIds = new Set<string>();
   for (const im of data.images) {
@@ -401,7 +406,7 @@ function validateDocumentRelations(data: DocumentData): DocumentData {
     }
   }
 
-  for (const group of data.groups) {
+  for (const group of data.channelGroups) {
     for (const entry of group.channels) {
       if (!imageChannelIds.has(entry.channelId)) {
         throw new Error(
@@ -441,7 +446,7 @@ export function validateDocumentData(input: unknown): DocumentData {
       metadata: {},
       waypoints: candidate.waypoints,
       shapes: candidate.shapes,
-      groups: [],
+      channelGroups: [],
       images: [],
     };
   } else if (
@@ -450,7 +455,8 @@ export function validateDocumentData(input: unknown): DocumentData {
     !Array.isArray(candidate) &&
     Array.isArray((candidate as Record<string, unknown>).waypoints) &&
     Array.isArray((candidate as Record<string, unknown>).shapes) &&
-    Array.isArray((candidate as Record<string, unknown>).groups) &&
+    (Array.isArray((candidate as Record<string, unknown>).groups) ||
+      Array.isArray((candidate as Record<string, unknown>).channelGroups)) &&
     Array.isArray((candidate as Record<string, unknown>).sourceChannels) &&
     !(
       Array.isArray((candidate as Record<string, unknown>).images) &&
@@ -506,11 +512,12 @@ export function validateDocumentData(input: unknown): DocumentData {
     ];
   }
 
+  const rawCg = asRecord.channelGroups ?? asRecord.groups;
   const draft = {
     metadata: parseMetadataField(asRecord.metadata),
     waypoints: (asRecord.waypoints ?? []) as Record<string, unknown>[],
     shapes: (asRecord.shapes ?? []) as Record<string, unknown>[],
-    groups: (asRecord.groups ?? []) as {
+    channelGroups: (Array.isArray(rawCg) ? rawCg : []) as {
       id: string;
       channels: Record<string, unknown>[];
     }[],
@@ -522,9 +529,9 @@ export function validateDocumentData(input: unknown): DocumentData {
   }
 
   ensureImageChannelIds(draft.images);
-  migrateGroupChannelsToChannelId(draft.groups, draft.images);
+  migrateGroupChannelsToChannelId(draft.channelGroups, draft.images);
 
-  for (const g of draft.groups) {
+  for (const g of draft.channelGroups) {
     for (const rawGc of g.channels ?? []) {
       const gc = rawGc as Record<string, unknown>;
       if (typeof gc.id !== "string" || gc.id.length === 0) {

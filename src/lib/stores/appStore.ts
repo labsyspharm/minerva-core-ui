@@ -1883,7 +1883,7 @@ export const useAppStore = create<AppStore>()(
         const nextAuthoring = new Map<string, AuthoringWaypointExtra>();
         const waypoints = configWaypoints.map((w) => {
           const { waypoint, authoring } = configWaypointToWaypoint(
-            hydrateConfigWaypoint(w, doc.groups),
+            hydrateConfigWaypoint(w, doc.channelGroups),
             iw,
             ih,
             vp.width,
@@ -1906,7 +1906,7 @@ export const useAppStore = create<AppStore>()(
           referenceImagePixelSizeForActions(get);
         const vp = authoringViewportForDoc(get);
         const { waypoint, authoring } = configWaypointToWaypoint(
-          hydrateConfigWaypoint(configWaypoint, doc.groups),
+          hydrateConfigWaypoint(configWaypoint, doc.channelGroups),
           iw,
           ih,
           vp.width,
@@ -2190,7 +2190,7 @@ export const useAppStore = create<AppStore>()(
       setActiveChannelGroup: (channelGroupId: string) => {
         const doc = useDocumentStore.getState();
         const flat = flattenImageChannelsInDocumentOrder(doc.images);
-        const group = doc.groups.find((g) => g.id === channelGroupId);
+        const group = doc.channelGroups.find((g) => g.id === channelGroupId);
         const names: string[] = [];
         if (group) {
           for (const gc of group.channels) {

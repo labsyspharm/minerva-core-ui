@@ -144,7 +144,7 @@ const toChannelItem = (
     }
 
     get groupChannel() {
-      const group = (ItemRegistry?.Groups || []).find((x) => {
+      const group = (ItemRegistry?.ChannelGroups || []).find((x) => {
         return (x.id ?? x.UUID) == this.getAttribute("group_uuid");
       }) || null;
       return (group?.GroupChannels || []).find((x) => {

@@ -4,7 +4,8 @@
   "description": "A microscopy viewer for non-experts",
   "scripts": {
     "prepare": "lefthook install",
-    "demo": "vite",
+    "dev": "vite --mode development",
+    "demo": "vite --mode demo",
     "pages": "tsc && vite build",
     "schema": "typescript-json-schema -o 'schema/generic.schema.json' 'src/config/generic.ts' Config",
     "format": "prettier --ignore-path .eslintignore --write .",
@@ -77,6 +78,7 @@
     "@vaadin/text-field": "^24.4.3",
     "@vivjs/constants": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/constants",
     "dcmjs": "^0.41.0",
+    "dexie": "^4.4.2",
     "foobar-ipsum": "^1.0.3",
     "geotiff": "2.1.4-beta.0",
     "gl-matrix": "^3.4.3",

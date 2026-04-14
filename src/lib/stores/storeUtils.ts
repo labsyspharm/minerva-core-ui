@@ -42,9 +42,10 @@ import {
 import type {
   ArrowShape,
   Channel,
-  Group,
+  ChannelGroup,
   Image,
   ImageChannel,
+  ImageSource,
   Point,
   StoryShape,
   StoryWaypoint,
@@ -146,9 +147,13 @@ export function preprocessDocumentDataRaw(raw: unknown): unknown {
     return raw;
   }
   const d = raw as Record<string, unknown>;
-  const shapes = d.shapes;
-  const waypoints = d.waypoints;
-  let next = { ...d };
+  let next: Record<string, unknown> = { ...d };
+  if ("groups" in next && !("channelGroups" in next)) {
+    next.channelGroups = next.groups;
+    delete next.groups;
+  }
+  const shapes = next.shapes;
+  const waypoints = next.waypoints;
   if (Array.isArray(shapes)) {
     next = {
       ...next,
@@ -188,7 +193,7 @@ export function preprocessJsonExportRoot(raw: unknown): unknown {
   return preprocessDocumentDataRaw({
     ...d,
     metadata: {},
-    groups: [],
+    channelGroups: [],
     images: [],
   });
 }
@@ -309,11 +314,24 @@ export function applyLoaderPixelSizeToImage(
   return next;
 }
 
+/** Attach {@link ImageSource} to the row matching `imageId` (for persistence / reload). */
+export function setImageSource(
+  images: Image[],
+  imageId: string,
+  source: ImageSource,
+): Image[] {
+  const idx = images.findIndex((im) => im.id === imageId);
+  if (idx < 0) return [...images];
+  const next = [...images];
+  next[idx] = { ...next[idx], source };
+  return next;
+}
+
 /** Normalize a polymorphic range payload and update the matching channel entry. */
 export function applyGroupChannelRange(
-  groups: Group[],
+  channelGroups: ChannelGroup[],
   raw: SetGroupChannelRangePayload,
-): Group[] {
+): ChannelGroup[] {
   const lower = raw.LowerRange;
   const upper = raw.UpperRange;
   const groupId =
@@ -324,7 +342,7 @@ export function applyGroupChannelRange(
     "channelId" in raw && raw.channelId !== undefined
       ? raw.channelId
       : (raw as { channel_uuid: string }).channel_uuid;
-  return groups.map((group) =>
+  return channelGroups.map((group) =>
     group.id !== groupId
       ? group
       : {
@@ -343,7 +361,7 @@ export function applyGroupChannelRange(
 /** Normalize exhibit / legacy waypoint fields into current {@link ConfigWaypoint} shape. */
 export function hydrateConfigWaypoint(
   wp: ConfigWaypoint,
-  groups: Array<Pick<Group, "id" | "name">>,
+  channelGroups: Array<Pick<ChannelGroup, "id" | "name">>,
 ): ConfigWaypoint {
   const anyWp = wp as ConfigWaypoint & {
     UUID?: string;
@@ -361,7 +379,7 @@ export function hydrateConfigWaypoint(
   ) {
     groupId = UUID_RE.test(legacyGroup)
       ? legacyGroup
-      : (groups.find((g) => g.name === legacyGroup)?.id ?? legacyGroup);
+      : (channelGroups.find((g) => g.name === legacyGroup)?.id ?? legacyGroup);
   }
   const next = {
     ...wp,

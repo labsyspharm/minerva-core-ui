@@ -4,7 +4,7 @@ import { sourceColors } from "./source-colors";
 const sourceGroupChannels = (element = Object) =>
   class extends element {
     get itemSources() {
-      const groups = this.elementState.item_registry?.Groups;
+      const groups = this.elementState.item_registry?.ChannelGroups;
       const group = Object.values(groups).find(({ UUID }) => {
         return UUID == this.itemIdentifiers.GroupUUID;
       }) || null;

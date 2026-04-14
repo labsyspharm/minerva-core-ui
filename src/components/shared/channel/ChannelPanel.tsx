@@ -116,14 +116,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
-  const groups = useDocumentStore((s) => s.groups);
+  const docChannelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const sourceChannels = React.useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
 
-  const channelGroups = groups.map((group, g) => {
+  const channelGroups = docChannelGroups.map((group, g) => {
     return {
       g,
       id: group.id,
@@ -184,7 +184,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const allGroups =
     channelGroups.length || props ? (
       <>
-        <OverlaySectionLabel>Group</OverlaySectionLabel>
+        <OverlaySectionLabel>Channel groups</OverlaySectionLabel>
         <ChannelGroups {...{ ...groupProps, channelGroups }} />
       </>
     ) : null;

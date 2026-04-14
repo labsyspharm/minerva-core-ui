@@ -121,7 +121,7 @@ const to_item_registry = () => {
       to_story(false, 4),
     ],
     SourceChannels: source_channels,
-    Groups: groups,
+    ChannelGroups: groups,
     Images: [image],
     DataTypes: [data_type],
     Hyperlinks: [],

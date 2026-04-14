@@ -70,7 +70,7 @@ const toMainSettings = (ItemRegistry, testPyramids, hash) => {
   })(
     hash,
     loader,
-    ItemRegistry.Groups.map((group, g) => {
+    ItemRegistry.ChannelGroups.map((group, g) => {
       const { Name, GroupChannels } = group;
       const { SourceChannels } = ItemRegistry;
       Channels.map((group_channel) => {
