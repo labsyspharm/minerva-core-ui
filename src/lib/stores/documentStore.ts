@@ -4,9 +4,8 @@
  * and pass them in; transformation logic lives in pure utilities (`storeUtils`).
  * No UI/ephemeral state -- selection and authoring bridges live in `appStore`.
  *
- * `activeStoryId` is the current story. Dexie also stores a global “last active” id shared
- * across tabs; per-tab `sessionStorage` (see `setTabActiveStoryId`) wins on load so
- * refresh keeps this tab’s story when multiple tabs are open.
+ * `activeStoryId` is the current story. Dexie stores a global “last active” id shared
+ * across tabs.
  */
 
 import { create } from "zustand";
@@ -18,7 +17,6 @@ import {
   listStorySummaries,
   setActiveStoryId as persistActiveStoryId,
   saveStoryDocument,
-  setTabActiveStoryId,
 } from "../persistence/storyPersistence";
 import type {
   Channel,
@@ -258,11 +256,3 @@ export const useDocumentStore = create<DocumentStore>()(
       set((s) => ({ metadata: { ...s.metadata, ...metadata } })),
   })),
 );
-
-/** Keep per-tab sessionStorage in sync so refresh restores this tab’s story, not another tab’s Dexie write. */
-useDocumentStore.subscribe((state, prev) => {
-  if (prev !== undefined && state.activeStoryId === prev.activeStoryId) {
-    return;
-  }
-  setTabActiveStoryId(state.activeStoryId);
-});

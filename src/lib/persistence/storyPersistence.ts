@@ -6,43 +6,15 @@ import { SETTINGS_ACTIVE_STORY_KEY } from "./types";
 
 const UNTITLED = "Untitled Story";
 
-/** Per-tab last active story (IndexedDB `activeStoryId` is shared across tabs). */
-const TAB_ACTIVE_STORY_SESSION_KEY = "minerva.tabActiveStoryId";
-
-export function getTabActiveStoryId(): string | null {
-  if (typeof sessionStorage === "undefined") return null;
-  try {
-    const v = sessionStorage.getItem(TAB_ACTIVE_STORY_SESSION_KEY);
-    return v != null && v.length > 0 ? v : null;
-  } catch {
-    return null;
-  }
-}
-
-export function setTabActiveStoryId(id: string | null): void {
-  if (typeof sessionStorage === "undefined") return;
-  try {
-    if (id == null) {
-      sessionStorage.removeItem(TAB_ACTIVE_STORY_SESSION_KEY);
-    } else {
-      sessionStorage.setItem(TAB_ACTIVE_STORY_SESSION_KEY, id);
-    }
-  } catch {
-    // ignore quota / private mode
-  }
-}
-
 /**
- * Which story to load on startup: this tab’s last selection (session), else Dexie
- * global active id, else first story in the list.
+ * Which story to load on startup: Dexie global active id (shared across tabs),
+ * else first story in the list.
  */
 export async function resolveActiveStoryIdForBootstrap(
   summaries: StorySummary[],
 ): Promise<string | null> {
   if (summaries.length === 0) return null;
   const ids = new Set(summaries.map((s) => s.id));
-  const tabId = getTabActiveStoryId();
-  if (tabId && ids.has(tabId)) return tabId;
   const global = await getActiveStoryId();
   if (global && ids.has(global)) return global;
   return summaries[0]?.id ?? null;
