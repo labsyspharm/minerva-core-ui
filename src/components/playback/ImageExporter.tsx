@@ -99,8 +99,8 @@ const capture: Capture = async (index, loader) => {
   const imageData = clampArray(
     ctx.createImageData(width, height),
     data,
-    index.min,
-    index.max,
+    index.lowerLimit,
+    index.upperLimit,
   );
   canvas.width = width;
   canvas.height = height;
@@ -119,12 +119,10 @@ const save: Save = async (inputs) => {
   const create = { create: true };
   const { index, loader, directory_handle } = inputs;
   const { output, filename } = await capture(index, loader);
-  const { channelId, min, max } = index;
-  const opts = { channelId, min, max };
+  const encoded_data = new TextEncoder().encode(index.encoded);
   const sha256 = new Uint8Array(
-    await crypto.subtle.digest("SHA-256", new TextEncoder().encode(hash(opts))),
+    await crypto.subtle.digest("SHA-256", encoded_data),
   ).toHex();
-  console.log(hash(opts), sha256);
   const dh = await directory_handle.getDirectoryHandle(sha256, create);
   const fh = await dh.getFileHandle(filename, create);
   const write = await fh.createWritable();
@@ -155,9 +153,9 @@ type Index = {
   y: number;
   z: number;
   c: number;
-  min: number;
-  max: number;
-  channelId: string;
+  lowerLimit: number;
+  upperLimit: number;
+  encoded: string;
 };
 type FullState = {
   indices: Index[];
@@ -220,7 +218,15 @@ const initialize: Initialize = (inputs) => {
   const mz = Math.abs(tileProps.minZoom || 0) + 1;
   const zoomRange = [...new Array(mz).keys()];
   const zr = zoomRange.reverse().map((z) => -z);
-  console.log(cRange);
+  const cRangeUnique = [] as Index[];
+  const cEncodedSet = new Set();
+  for (const index of cRange) {
+    if (!cEncodedSet.has(index.encoded)) {
+      cEncodedSet.add(index.encoded);
+      cRangeUnique.push(index);
+    }
+  }
+  console.log(cRange, cRangeUnique);
   const indices = ([] as Index[]).concat(
     ...zr.map((zoom) => {
       const counts = toTileCounts({ zoom, tileProps });
@@ -228,9 +234,9 @@ const initialize: Initialize = (inputs) => {
       const yRange = [...new Array(counts.y).keys()];
       return ([] as Index[]).concat(
         ...xRange.map((x) => {
-          return ([] as Index).concat(
+          return ([] as Index[]).concat(
             ...yRange.map((y) => {
-              return cRange.map((opts) => {
+              return cRangeUnique.map((opts) => {
                 return { ...opts, z: zoom, x, y };
               });
             }),
@@ -350,14 +356,16 @@ export const ImageExporter = (props: ImageExporterProps) => {
             if (c === undefined) {
               return null;
             }
+            const opts = { channelId, lowerLimit, upperLimit };
+            const encoded = hash(opts);
             return {
               z: 0,
               x: 0,
               y: 0,
               c,
-              channelId,
-              min: lowerLimit,
-              max: upperLimit,
+              encoded,
+              lowerLimit,
+              upperLimit,
             };
           })
           .filter((v) => v),
