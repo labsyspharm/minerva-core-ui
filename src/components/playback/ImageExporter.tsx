@@ -2,7 +2,9 @@ import type { TiffPixelSource } from "@hms-dbmi/viv";
 import { getImageSize, loadOmeTiff } from "@hms-dbmi/viv";
 import * as React from "react";
 import { useState } from "react";
+import hash from "stable-hash";
 import styled from "styled-components";
+import { useDocumentStore } from "@/lib/stores/documentStore";
 
 ///
 
@@ -79,10 +81,9 @@ const clampArray = (imageData, tile_u16, min, max) => {
 
 const capture: Capture = async (index, loader) => {
   const filename = toFilename(index);
-
   const level = Math.abs(index.z);
   const z_loader = loader[level];
-  const selection = { t: 0, z: 0, c: 0 };
+  const selection = { t: 0, z: 0, c: index.c };
   const signal = AbortSignal.timeout(10 * 1000);
   const { x, y } = index;
   const tile = await z_loader.getTile({
@@ -98,8 +99,8 @@ const capture: Capture = async (index, loader) => {
   const imageData = clampArray(
     ctx.createImageData(width, height),
     data,
-    1000,
-    30000,
+    index.min,
+    index.max,
   );
   canvas.width = width;
   canvas.height = height;
@@ -118,7 +119,14 @@ const save: Save = async (inputs) => {
   const create = { create: true };
   const { index, loader, directory_handle } = inputs;
   const { output, filename } = await capture(index, loader);
-  const fh = await directory_handle.getFileHandle(filename, create);
+  const { channelId, min, max } = index;
+  const opts = { channelId, min, max };
+  const sha256 = new Uint8Array(
+    await crypto.subtle.digest("SHA-256", new TextEncoder().encode(hash(opts))),
+  ).toHex();
+  console.log(hash(opts), sha256);
+  const dh = await directory_handle.getDirectoryHandle(sha256, create);
+  const fh = await dh.getFileHandle(filename, create);
   const write = await fh.createWritable();
   await write.write(output);
   await write.close();
@@ -146,13 +154,17 @@ type Index = {
   x: number;
   y: number;
   z: number;
+  c: number;
+  min: number;
+  max: number;
+  channelId: string;
 };
 type FullState = {
   indices: Index[];
   tileProps: TileProps;
 };
 type MainState = null | FullState;
-type Initialize = (i: InitIn) => Partial<FullState>;
+type Initialize = (i: InitIn, c: Index[]) => Partial<FullState>;
 
 type One = [number];
 type Two = [number, number];
@@ -203,11 +215,12 @@ const toTileCounts: ToTileCounts = ({ zoom, tileProps }) => {
 };
 
 const initialize: Initialize = (inputs) => {
-  const { loader } = inputs;
+  const { loader, cRange } = inputs;
   const tileProps = toTileLayer(loader);
   const mz = Math.abs(tileProps.minZoom || 0) + 1;
   const zoomRange = [...new Array(mz).keys()];
   const zr = zoomRange.reverse().map((z) => -z);
+  console.log(cRange);
   const indices = ([] as Index[]).concat(
     ...zr.map((zoom) => {
       const counts = toTileCounts({ zoom, tileProps });
@@ -215,9 +228,13 @@ const initialize: Initialize = (inputs) => {
       const yRange = [...new Array(counts.y).keys()];
       return ([] as Index[]).concat(
         ...xRange.map((x) => {
-          return yRange.map((y) => {
-            return { z: zoom, x, y };
-          });
+          return ([] as Index).concat(
+            ...yRange.map((y) => {
+              return cRange.map((opts) => {
+                return { ...opts, z: zoom, x, y };
+              });
+            }),
+          );
         }),
       );
     }),
@@ -307,6 +324,15 @@ export const ImageExporter = (props: ImageExporterProps) => {
 
   const { handles, directory_handle } = props;
   const handle = handles ? handles[0] : null; //TODO
+  const channelGroups = useDocumentStore((s) => s.channelGroups);
+  const images = useDocumentStore((s) => s.images);
+  const imageChannels = Object.fromEntries(
+    [].concat(
+      ...images.map(({ channels }) => {
+        return channels.map(({ id, index }) => [id, index]);
+      }),
+    ),
+  );
 
   const [state, setState] = useState(null as MainState);
   const [loader, setLoader] = useState([] as LoaderPlane[]);
@@ -315,18 +341,42 @@ export const ImageExporter = (props: ImageExporterProps) => {
     step: 0,
   });
 
+  const cRange = ([] as Index[]).concat(
+    ...channelGroups.map(({ channels }) => {
+      return ([] as Index).concat(
+        ...channels
+          .map(({ channelId, lowerLimit, upperLimit }) => {
+            const c = imageChannels[channelId];
+            if (c === undefined) {
+              return null;
+            }
+            return {
+              z: 0,
+              x: 0,
+              y: 0,
+              c,
+              channelId,
+              min: lowerLimit,
+              max: upperLimit,
+            };
+          })
+          .filter((v) => v),
+      );
+    }),
+  );
+
   React.useEffect(() => {
     getLoader({ handle }).then((loader) => {
       if (loader === null) {
         return;
       }
-      const init = initialize({ loader });
+      const init = initialize({ loader, cRange });
       if (isFullState(init) && loader?.length) {
         setLoader(loader);
         setState(init);
       }
     });
-  }, [handle]);
+  }, [handle, cRange]);
 
   const { step, done } = stepSignal;
   const index = (() => {

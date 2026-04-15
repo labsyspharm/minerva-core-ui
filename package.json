@@ -109,6 +109,7 @@
     "react-is": "^18.3.1",
     "react-markdown": "^10.1.0",
     "react-textarea-autosize": "^8.5.3",
+    "stable-hash": "^0.0.6",
     "vite-plugin-standard-css-modules": "^0.0.11",
     "vite-plugin-svgr": "^4.3.0",
     "web-dialog": "^0.0.11",
