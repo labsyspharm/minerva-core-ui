@@ -396,17 +396,58 @@ function rewriteIds<T>(value: T, idMap: Map<string, string>): T {
   return walk(value) as T;
 }
 
-function validateDocumentRelations(data: DocumentData): DocumentData {
-  const groupIds = new Set(data.channelGroups.map((x) => x.id));
-  const shapeIds = new Set(data.shapes.map((x) => x.id));
+function collectImageChannelIds(data: DocumentData): Set<string> {
   const imageChannelIds = new Set<string>();
   for (const im of data.images) {
     for (const ch of im.channels) {
       imageChannelIds.add(ch.id);
     }
   }
+  return imageChannelIds;
+}
 
-  for (const group of data.channelGroups) {
+/**
+ * Removes references that can occur after edits (e.g. deleted channel group) so
+ * {@link validateDocumentRelations} and persistence do not fail on drift.
+ */
+function repairDocumentReferenceDrift(data: DocumentData): DocumentData {
+  const imageChannelIds = collectImageChannelIds(data);
+
+  const channelGroups = data.channelGroups.map((g) => {
+    const channels = g.channels.filter((e) => imageChannelIds.has(e.channelId));
+    if (channels.length === g.channels.length) return g;
+    return { ...g, channels };
+  });
+
+  const groupIds = new Set(channelGroups.map((g) => g.id));
+  const shapeIds = new Set(data.shapes.map((s) => s.id));
+
+  const waypoints = data.waypoints.map((wp) => {
+    const groupId =
+      wp.groupId != null && !groupIds.has(wp.groupId) ? undefined : wp.groupId;
+    const shapeIdsFiltered = wp.shapeIds.filter((id) => shapeIds.has(id));
+    if (
+      groupId === wp.groupId &&
+      shapeIdsFiltered.length === wp.shapeIds.length
+    ) {
+      return wp;
+    }
+    return { ...wp, groupId, shapeIds: shapeIdsFiltered };
+  });
+
+  const cgSame = channelGroups.every((g, i) => g === data.channelGroups[i]);
+  const wpSame = waypoints.every((w, i) => w === data.waypoints[i]);
+  if (cgSame && wpSame) return data;
+  return { ...data, channelGroups, waypoints };
+}
+
+function validateDocumentRelations(data: DocumentData): DocumentData {
+  const repaired = repairDocumentReferenceDrift(data);
+  const groupIds = new Set(repaired.channelGroups.map((x) => x.id));
+  const shapeIds = new Set(repaired.shapes.map((x) => x.id));
+  const imageChannelIds = collectImageChannelIds(repaired);
+
+  for (const group of repaired.channelGroups) {
     for (const entry of group.channels) {
       if (!imageChannelIds.has(entry.channelId)) {
         throw new Error(
@@ -416,7 +457,7 @@ function validateDocumentRelations(data: DocumentData): DocumentData {
     }
   }
 
-  for (const waypoint of data.waypoints) {
+  for (const waypoint of repaired.waypoints) {
     if (waypoint.groupId != null && !groupIds.has(waypoint.groupId)) {
       throw new Error(
         `minerva: waypoint ${waypoint.id} references missing groupId ${waypoint.groupId}`,
@@ -431,7 +472,7 @@ function validateDocumentRelations(data: DocumentData): DocumentData {
     }
   }
 
-  return data;
+  return repaired;
 }
 
 /**

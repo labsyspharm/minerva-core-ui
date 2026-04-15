@@ -1,3 +1,4 @@
+import { RETURN_TO_LIBRARY_EVENT } from "@/lib/navigation/returnToLibraryEvent";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { downloadStoryJsonExport } from "@/lib/stores/downloadStoryJson";
 import navCSS from "./nav.module.css" with { type: "css" };
@@ -44,6 +45,19 @@ class Nav extends HTMLElement {
       },
     });
 
+    const return_library_btn = toElement("button")`
+      <span>Return to Library</span>
+    `({
+      type: "button",
+      class: "overflow-menu-item",
+      role: "menuitem",
+      "@click": (event) => {
+        event.stopPropagation();
+        this.elementState.overflowMenuOpen = false;
+        window.dispatchEvent(new CustomEvent(RETURN_TO_LIBRARY_EVENT));
+      },
+    });
+
     const export_btn = toElement("button")`
       <span>${() => {
         const { nav_config } = this.elementState;
@@ -51,7 +65,7 @@ class Nav extends HTMLElement {
       }}</span>
     `({
       type: "button",
-      class: "overflow-menu-item",
+      class: "overflow-menu-item overflow-menu-item-divided",
       role: "menuitem",
       "@click": (event) => {
         event.stopPropagation();
@@ -76,6 +90,7 @@ class Nav extends HTMLElement {
     });
 
     const dropdown = toElement("div")`
+      ${return_library_btn}
       ${export_btn}
       ${download_btn}
     `({

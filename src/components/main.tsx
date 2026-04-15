@@ -3,8 +3,10 @@ import type { FormEventHandler } from "react";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import { AppStoryTitleBar } from "@/components/authoring/AppStoryTitleBar";
+import { StoryTitleBar } from "@/components/authoring/StoryTitleBar";
+import { MinervaLibraryPage } from "@/components/library/MinervaLibraryPage";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
+import { StoryReturnToLibraryBridge } from "@/components/StoryReturnToLibraryBridge";
 import { FileHandler } from "@/components/shared/FileHandler";
 import type { LoadedSourceSummary, ValidObj } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
@@ -80,6 +82,7 @@ import { author } from "@/minerva-author-ui/author";
 import { toAuthorElement } from "@/minerva-author-ui/index";
 import {
   parsePreferredStoryIdFromLocation,
+  rootRouteApi,
   StoryIdUrlSync,
 } from "@/router/appRouter";
 
@@ -151,6 +154,11 @@ const StoryPersistenceRoot = ({ children }: { children: React.ReactNode }) => {
     const preferred = parsePreferredStoryIdFromLocation();
     void bootstrapStoryPersistence(preferred).then(() => setReady(true));
   }, []);
+  /** Minerva Library mounts without `Content` (no FileHandler); the HTML shell loader must still be cleared. */
+  useEffect(() => {
+    if (!ready) return;
+    document.getElementById("global-loader")?.remove();
+  }, [ready]);
   if (!ready) {
     return <RetrievingWrapper>Loading stories…</RetrievingWrapper>;
   }
@@ -1569,7 +1577,7 @@ const Content = (props: Props) => {
 
         return (
           <Wrapper>
-            <AppStoryTitleBar editable={!presenting} />
+            <StoryTitleBar authorMode={!presenting} />
             {imager}
           </Wrapper>
         );
@@ -1578,11 +1586,24 @@ const Content = (props: Props) => {
   );
 };
 
+const LibraryOrAuthor = (props: Props) => {
+  const { storyid } = rootRouteApi.useSearch();
+  if (!storyid) {
+    return <MinervaLibraryPage />;
+  }
+  return (
+    <>
+      <StoryReturnToLibraryBridge />
+      <Content {...props} />
+    </>
+  );
+};
+
 const Main = (props: Props) => {
   if (props.demo_dicom_web || props.demo_url || hasFileSystemAccess()) {
     return (
       <StoryPersistenceRoot>
-        <Content {...props} />
+        <LibraryOrAuthor {...props} />
       </StoryPersistenceRoot>
     );
   } else {

@@ -1,61 +1,50 @@
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
-  createStoryRecord,
-  getActiveStoryId,
   getStoryRecord,
   listStorySummaries,
-  resolveActiveStoryIdForBootstrap,
   setActiveStoryId,
 } from "./storyPersistence";
 
 let inflight: Promise<void> | null = null;
 
-async function runBootstrap(preferredStoryId: string | null): Promise<void> {
+async function runLibraryBootstrap(): Promise<void> {
+  await setActiveStoryId(null);
+  useDocumentStore.getState().clearForLibraryView();
+}
+
+async function runAuthorBootstrap(preferredStoryId: string): Promise<void> {
   const summaries = await listStorySummaries();
-
-  if (summaries.length === 0) {
-    const rec = await createStoryRecord("Untitled Story");
-    await setActiveStoryId(rec.id);
-    useDocumentStore.getState().hydrateFromDocument(rec.data, rec.id);
+  const ok = summaries.some((s) => s.id === preferredStoryId);
+  if (!ok) {
+    await runLibraryBootstrap();
     return;
   }
 
-  const preferredOk =
-    preferredStoryId !== null &&
-    summaries.some((s) => s.id === preferredStoryId);
-
-  let activeId: string | null = preferredOk
-    ? preferredStoryId
-    : await resolveActiveStoryIdForBootstrap(summaries);
-  if (!activeId) {
-    const first = summaries[0];
-    if (!first) {
-      return;
-    }
-    activeId = first.id;
-  }
-
-  const global = await getActiveStoryId();
-  const globalValid = global && summaries.some((s) => s.id === global);
-  if (!globalValid || preferredOk) {
-    await setActiveStoryId(activeId);
-  }
-
-  const rec = await getStoryRecord(activeId);
+  const rec = await getStoryRecord(preferredStoryId);
   if (!rec) {
-    const created = await createStoryRecord("Untitled Story");
-    await setActiveStoryId(created.id);
-    useDocumentStore.getState().hydrateFromDocument(created.data, created.id);
+    await runLibraryBootstrap();
     return;
   }
 
+  await setActiveStoryId(preferredStoryId);
   useDocumentStore.getState().hydrateFromDocument(rec.data, rec.id);
 }
 
+async function runBootstrap(preferredStoryId: string | null): Promise<void> {
+  if (preferredStoryId !== null && preferredStoryId !== "") {
+    await runAuthorBootstrap(preferredStoryId);
+    return;
+  }
+  await runLibraryBootstrap();
+}
+
 /**
- * Load or create the active story from Dexie and hydrate {@link useDocumentStore}.
- * Call once before the main authoring UI mounts. Concurrent callers share one run
- * (avoids duplicate stories under React Strict Mode).
+ * Load persisted state for {@link useDocumentStore}.
+ * - No `storyid` in the URL → Minerva Library: clear active story and document slices.
+ * - With `storyid` → hydrate that story from Dexie (or fall back to Library if missing).
+ *
+ * Call once before the main UI mounts. Concurrent callers share one run
+ * (avoids duplicate work under React Strict Mode).
  */
 export async function bootstrapStoryPersistence(
   preferredStoryId?: string | null,

@@ -1,5 +1,6 @@
 import * as React from "react";
 import styled from "styled-components";
+import { saveStoryDocument } from "@/lib/persistence/storyPersistence";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 
 /** Matches `grid-template-columns` first track in `author.module.css` (author shell). */
@@ -105,17 +106,20 @@ const TitleReadonly = styled.div`
   max-width: 100%;
 `;
 
-export type AppStoryTitleBarProps = {
-  /** When false, show read-only title (e.g. presentation / playback preview). */
-  editable: boolean;
+export type StoryTitleBarProps = {
+  /**
+   * When true: editable title. When false: read-only title (e.g. presentation / playback preview).
+   */
+  authorMode: boolean;
 };
 
 /**
- * Centered document story title (`metadata.title`) overlaid at the top of the app shell.
- * In author mode: click to edit, blur to lock.
+ * Centered story title (`metadata.title`) overlaid at the top of the app shell.
+ * In author mode: click to edit, blur to lock. Return to the library via the hamburger menu.
  */
-export function AppStoryTitleBar(props: AppStoryTitleBarProps) {
-  const { editable } = props;
+export function StoryTitleBar(props: StoryTitleBarProps) {
+  const { authorMode } = props;
+  const editable = authorMode;
   /** Subscribe to the title primitive so updates re-render even if metadata identity were ever reused. */
   const titleText = useDocumentStore((s) => s.metadata.title ?? "");
   const setMetadata = useDocumentStore((s) => s.setMetadata);
@@ -220,6 +224,12 @@ export function AppStoryTitleBar(props: AppStoryTitleBarProps) {
               const raw = e.target.value;
               const trimmed = raw.trim();
               if (trimmed !== raw) setMetadata({ title: trimmed });
+              void (async () => {
+                const s = useDocumentStore.getState();
+                const id = s.activeStoryId;
+                if (!id) return;
+                await saveStoryDocument(id, s.toDocumentData());
+              })();
             }}
             autoComplete="off"
             spellCheck={false}

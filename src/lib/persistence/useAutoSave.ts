@@ -2,11 +2,14 @@ import { useEffect, useRef } from "react";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { saveStoryDocument } from "./storyPersistence";
 
+/** Waypoints / images / etc. — heavier; longer debounce. */
 const DEBOUNCE_MS = 2000;
+/** Title and other metadata — short debounce so a quick refresh keeps edits. */
+const METADATA_DEBOUNCE_MS = 400;
 
 /**
  * Debounced persistence of {@link useDocumentStore} to Dexie (document slices only).
- * Flushes on tab close / hide.
+ * Flushes when the tab is hidden (often completes before unload) and on unload.
  */
 export function useStoryAutoSave(): void {
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -24,10 +27,10 @@ export function useStoryAutoSave(): void {
       void saveStoryDocument(id, s.toDocumentData());
     };
 
-    const schedule = () => {
+    const schedule = (delayMs: number) => {
       const t = timerRef.current;
       if (t !== undefined) clearTimeout(t);
-      timerRef.current = setTimeout(flush, DEBOUNCE_MS);
+      timerRef.current = setTimeout(flush, delayMs);
     };
 
     const unsub = useDocumentStore.subscribe((state, prev) => {
@@ -42,7 +45,13 @@ export function useStoryAutoSave(): void {
         state.metadata !== prev.metadata;
       if (!docChanged) return;
       if (!state.activeStoryId) return;
-      schedule();
+      const metadataOnly =
+        state.metadata !== prev.metadata &&
+        state.waypoints === prev.waypoints &&
+        state.shapes === prev.shapes &&
+        state.channelGroups === prev.channelGroups &&
+        state.images === prev.images;
+      schedule(metadataOnly ? METADATA_DEBOUNCE_MS : DEBOUNCE_MS);
     });
 
     const onBeforeUnload = () => {
@@ -51,9 +60,13 @@ export function useStoryAutoSave(): void {
     const onPageHide = () => {
       flush();
     };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
 
     window.addEventListener("beforeunload", onBeforeUnload);
     window.addEventListener("pagehide", onPageHide);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
       unsub();
@@ -61,6 +74,7 @@ export function useStoryAutoSave(): void {
       if (t !== undefined) clearTimeout(t);
       window.removeEventListener("beforeunload", onBeforeUnload);
       window.removeEventListener("pagehide", onPageHide);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       flush();
     };
   }, []);

@@ -66,6 +66,8 @@ export type DocumentStore = DocumentState & {
   toDocumentData: () => DocumentData;
   /** Clear document slices; keeps `activeStoryId`. */
   resetDocument: () => void;
+  /** Clear all document slices and `activeStoryId` (Minerva Library landing). */
+  clearForLibraryView: () => void;
 
   setActiveStoryId: (id: string | null) => void;
 
@@ -174,6 +176,13 @@ export const useDocumentStore = create<DocumentStore>()(
         ...createEmptyDocumentSlices(),
         activeStoryId: state.activeStoryId,
       }));
+    },
+
+    clearForLibraryView: () => {
+      set({
+        ...createEmptyDocumentSlices(),
+        activeStoryId: null,
+      });
     },
 
     switchStory: async (id) => {

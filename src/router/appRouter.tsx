@@ -33,11 +33,11 @@ export function parsePreferredStoryIdFromLocation(): string | null {
   return r.success ? r.data : null;
 }
 
-const rootRouteApi = getRouteApi("__root__");
+export const rootRouteApi = getRouteApi("__root__");
 
 /**
- * Keeps `?storyid=<Dexie story uuid>` in sync with {@link useDocumentStore}'s `activeStoryId`.
- * Must render under `RouterProvider` after story persistence has hydrated the document store.
+ * Keeps `?storyid=<Dexie story uuid>` in sync with {@link useDocumentStore}'s `activeStoryId`
+ * while a story is open. Does **not** write `storyid` when `activeStoryId` is null (Minerva Library).
  */
 export function StoryIdUrlSync() {
   const search = rootRouteApi.useSearch();
@@ -48,10 +48,34 @@ export function StoryIdUrlSync() {
   React.useEffect(() => {
     const sid = search.storyid;
     if (sid === undefined) return;
-    if (activeStoryId === null) return;
-    if (sid === activeStoryId) return;
-    void switchStory(sid).catch(() => {});
-  }, [search.storyid, activeStoryId, switchStory]);
+    if (activeStoryId === sid) return;
+    /**
+     * Library / cleared document: store has no active story but the URL still has
+     * `?storyid=` (e.g. right after "Return to Library" before navigate). Strip the
+     * param — do not call `switchStory`, which would reload the story we left.
+     */
+    if (activeStoryId === null) {
+      navigate({
+        search: (prev: { storyid?: string }) => {
+          const next = { ...prev };
+          delete next.storyid;
+          return next;
+        },
+        replace: true,
+      } as never);
+      return;
+    }
+    void switchStory(sid).catch(() => {
+      navigate({
+        search: (prev: { storyid?: string }) => {
+          const next = { ...prev };
+          delete next.storyid;
+          return next;
+        },
+        replace: true,
+      } as never);
+    });
+  }, [search.storyid, activeStoryId, switchStory, navigate]);
 
   React.useEffect(() => {
     if (activeStoryId === null) return;
