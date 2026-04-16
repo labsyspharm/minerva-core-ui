@@ -226,7 +226,6 @@ const initialize: Initialize = (inputs) => {
       cRangeUnique.push(index);
     }
   }
-  console.log(cRange, cRangeUnique);
   const indices = ([] as Index[]).concat(
     ...zr.map((zoom) => {
       const counts = toTileCounts({ zoom, tileProps });
