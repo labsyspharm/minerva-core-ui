@@ -135,8 +135,13 @@ const doStep: DoStep = async (inputs) => {
   const { index, next } = inputs;
   const { step, done } = inputs.stepSignal;
   if (done) return null;
-
-  save({ step, directory_handle, loader, index });
+  try {
+    save({ step, directory_handle, loader, index });
+  } catch (e) {
+    // REDO
+    console.error(e.message);
+    return { done: false, step };
+  }
   return { done: next === 0, step: next };
 };
 
@@ -267,9 +272,13 @@ const ImageExporterDiv = styled.div`
 
 const ProgressBar = styled.div<ProgressBarProps>`
   display: grid;
-  grid-template-columns ${(props) => to_fr(props.$ratio || 0)};
-  > div {
+  grid-template-columns ${(props) => to_fr(props.$ratio || 0)} auto;
+  > div:first-child {
     background-color: ${(props) => to_color(props.$done) || "white"};
+  }
+  > div:last-child {
+    padding: 0.25em;
+    font-family: monospace;
   }
 `;
 
@@ -391,7 +400,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
     if (state.indices.length === 0) return null;
     return state.indices[step];
   })();
-
   React.useEffect(() => {
     if (done) {
       //TODO
@@ -424,6 +432,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     <ImageExporterDiv>
       <ProgressBar $ratio={ratio} $done={done}>
         <div></div>
+        <div> {`${Math.floor(ratio * 1000) / 10}%`} </div>
       </ProgressBar>
     </ImageExporterDiv>
   );
