@@ -41,7 +41,7 @@ type ItemRegistryChannel = {
   contrast: [number, number];
 };
 
-type ItemRegistryGroup = {
+export type ItemRegistryGroup = {
   State: { Expanded: boolean };
   channels: ItemRegistryChannel[];
   name: string;

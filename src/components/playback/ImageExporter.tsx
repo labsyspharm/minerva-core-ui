@@ -1,9 +1,19 @@
 import type { TiffPixelSource } from "@hms-dbmi/viv";
-import { getImageSize, loadOmeTiff } from "@hms-dbmi/viv";
+import { getImageSize } from "@hms-dbmi/viv";
 import * as React from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import hash from "stable-hash";
 import styled from "styled-components";
+import type {
+  ItemRegistryGroup,
+  OmeLoaderEntry,
+} from "@/components/shared/viewer/ImageViewer";
+import type { DicomIndex } from "@/lib/imaging/dicomIndex";
+import { toLoader } from "@/lib/imaging/filesystem";
+import type { Config } from "@/lib/imaging/viv";
+import type { PoolClass } from "@/lib/imaging/workers/Pool";
+import { Pool } from "@/lib/imaging/workers/Pool";
+import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 
 ///
@@ -57,6 +67,33 @@ type CaptureOut = {
 };
 type Capture = (i: Index, loader: LoaderPlane[]) => Promise<CaptureOut>;
 
+const toSettingsInternal = (
+  loader,
+  modality,
+  groups,
+  activeChannelGroupId,
+  channelVisibilities,
+  toSettings,
+  loaderSourceImageId?: string,
+) => {
+  if (loader === null || !groups) {
+    return toSettings(
+      activeChannelGroupId,
+      modality,
+      undefined,
+      channelVisibilities,
+      loaderSourceImageId,
+    );
+  }
+  return toSettings(
+    activeChannelGroupId,
+    modality,
+    loader,
+    channelVisibilities,
+    loaderSourceImageId,
+  );
+};
+
 const toFilename = (index: Index) => {
   const level = -index.z;
   const { x, y } = index;
@@ -84,7 +121,7 @@ const capture: Capture = async (index, loader) => {
   const level = Math.abs(index.z);
   const z_loader = loader[level];
   const selection = { t: 0, z: 0, c: index.c };
-  const signal = AbortSignal.timeout(10 * 1000);
+  const signal = AbortSignal.timeout(30 * 1000);
   const { x, y } = index;
   const tile = await z_loader.getTile({
     selection,
@@ -294,40 +331,37 @@ const to_color = (done) => {
   return "hwb(220 10% 20% / .5)";
 };
 
-type LoaderIn = {
-  handle: Handle.File;
-};
-type LoaderOut = {
-  data: LoaderPlane[];
-};
 type LoaderOpts = {
-  in_f: string;
+  pool: PoolClass;
   handle: Handle.File | null;
 };
-type ToLoader = (i: LoaderIn) => Promise<LoaderOut>;
 interface ProgressBarProps {
   $ratio: number;
   $done: boolean;
 }
 
-const toLoader: ToLoader = async ({ handle }) => {
-  const in_file = await handle.getFile();
-  const in_tiff = await loadOmeTiff(in_file);
-  const { data } = in_tiff;
-  return { data };
-};
-
 const getLoader = async (opts: LoaderOpts) => {
-  const { handle } = opts;
+  const { handle, pool } = opts;
   if (handle === null) return null;
-  const data = await toLoader({ handle });
-  return data.data;
+  const in_file = await handle.getFile();
+  const in_f = in_file.name;
+  const loader = await toLoader({
+    handle,
+    in_f,
+    pool,
+  });
+  const { data } = loader;
+  return data;
 };
 
 export type ImageExporterProps = {
   in_f: string;
   directory_handle: Handle.Dir;
   stopExport: () => void;
+  groups: ItemRegistryGroup[];
+  dicomIndexList: DicomIndex[];
+  omeLoaderEntries: OmeLoaderEntry[];
+  viewerConfig: Config;
 };
 
 export const ImageExporter = (props: ImageExporterProps) => {
@@ -335,6 +369,57 @@ export const ImageExporter = (props: ImageExporterProps) => {
     variant: "primary",
     className: "mb-3",
   };
+  const { groups, viewerConfig } = props;
+  const { omeLoaderEntries, dicomIndexList } = props;
+
+  const { activeChannelGroupId, channelVisibilities } = useAppStore();
+
+  const mainSettingsOmeList = useMemo(() => {
+    const modality = "Colorimetric";
+    return omeLoaderEntries.map(({ loader, sourceImageId }) =>
+      toSettingsInternal(
+        loader,
+        modality,
+        groups,
+        activeChannelGroupId,
+        channelVisibilities,
+        viewerConfig.toSettings,
+        sourceImageId,
+      ),
+    );
+  }, [
+    omeLoaderEntries,
+    groups,
+    activeChannelGroupId,
+    channelVisibilities,
+    viewerConfig.toSettings,
+  ]);
+
+  const mainSettingsDicomList = useMemo(() => {
+    return dicomIndexList.map((dicomIndex) => {
+      const { modality } = dicomIndex;
+      return toSettingsInternal(
+        dicomIndex.loader,
+        modality,
+        groups,
+        activeChannelGroupId,
+        channelVisibilities,
+        viewerConfig.toSettings,
+      );
+    });
+  }, [
+    dicomIndexList,
+    groups,
+    activeChannelGroupId,
+    channelVisibilities,
+    viewerConfig.toSettings,
+  ]);
+
+  const mainSettingsList = useMemo(
+    () =>
+      omeLoaderEntries.length > 0 ? mainSettingsOmeList : mainSettingsDicomList,
+    [omeLoaderEntries, mainSettingsOmeList, mainSettingsDicomList],
+  );
 
   const { handles, directory_handle } = props;
   const handle = handles ? handles[0] : null; //TODO
@@ -347,9 +432,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
       }),
     ),
   );
-
-  const [state, setState] = useState(null as MainState);
-  const [loader, setLoader] = useState([] as LoaderPlane[]);
   const [stepSignal, setStepSignal] = useState({
     done: false,
     step: 0,
@@ -381,18 +463,22 @@ export const ImageExporter = (props: ImageExporterProps) => {
     }),
   );
 
-  React.useEffect(() => {
-    getLoader({ handle }).then((loader) => {
-      if (loader === null) {
-        return;
-      }
-      const init = initialize({ loader, cRange });
-      if (isFullState(init) && loader?.length) {
-        setLoader(loader);
-        setState(init);
-      }
-    });
-  }, [handle, cRange]);
+  const loader = useMemo(
+    () =>
+      mainSettingsList.length > 0 ? mainSettingsList[0].loader.data : null,
+    [mainSettingsList],
+  );
+
+  const state: MainState = useMemo(() => {
+    if (loader === null) {
+      return null;
+    }
+    const init = initialize({ loader, cRange });
+    if (isFullState(init) && loader?.length) {
+      return init;
+    }
+    return null;
+  }, [loader, cRange]);
 
   const { step, done } = stepSignal;
   const index = (() => {

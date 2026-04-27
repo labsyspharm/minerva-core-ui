@@ -1551,6 +1551,9 @@ const Content = (props: Props) => {
           ...mainProps,
           noLoader,
           handles,
+          viewerConfig,
+          dicomIndexList,
+          omeLoaderEntries,
           enterPlaybackPreview,
           exitPlaybackPreview,
         };
