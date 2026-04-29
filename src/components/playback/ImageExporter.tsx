@@ -201,6 +201,7 @@ const createCRange = async (
                     2,
                   ),
                 );
+                await write.close();
                 return {
                   z: 0,
                   x: 0,
