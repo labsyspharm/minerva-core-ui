@@ -40,8 +40,10 @@ type ToTileCounts = (i: TileCountsIn) => TileCounts;
 
 type InitIn = {
   loader: LoaderPlane[];
+  cRange: Index[];
 };
-type CommonIn = InitIn & {
+type CommonIn = {
+  loader: LoaderPlane[];
   directory_handle: FileSystemDirectoryHandle;
   index: Index;
 };
@@ -66,7 +68,7 @@ type StepOut = {
 type DoStep = (o: StepIn) => Promise<StepOut | null>;
 
 type CaptureOut = {
-  output: Uint8Array;
+  output: Uint8Array<ArrayBuffer>;
   filename: string;
 };
 type Capture = (i: Index, loader: LoaderPlane[]) => Promise<CaptureOut>;
@@ -176,7 +178,7 @@ const createCRange = async (
     await Promise.all(
       ([] as Index[]).concat(
         ...channelGroups.map(({ channels }) => {
-          return ([] as Index).concat(
+          return ([] as Index[]).concat(
             ...channels
               .map(async ({ channelId, lowerLimit, upperLimit }) => {
                 const c = imageChannels[channelId];
@@ -269,7 +271,7 @@ type FullState = {
   tileProps: TileProps;
 };
 type MainState = null | FullState;
-type Initialize = (i: InitIn, c: Index[]) => Partial<FullState>;
+type Initialize = (i: InitIn) => Partial<FullState>;
 
 type One = [number];
 type Two = [number, number];
@@ -421,6 +423,7 @@ const getLoader = async (opts: LoaderOpts) => {
 
 export type ImageExporterProps = {
   in_f: string;
+  handles: Handle.File[];
   directory_handle: Handle.Dir;
   stopExport: () => void;
   groups: ItemRegistryGroup[];

@@ -413,7 +413,7 @@ const Content = (props: Props) => {
   }, [handleResize]);
 
   const startExport = async () => {
-    const dirHandle = await showDirectoryPicker({ _preferPolyfill: true });
+    const dirHandle = await showDirectoryPicker();
     setDirectoryHandle(dirHandle);
     setIoState("EXPORTING");
   };
