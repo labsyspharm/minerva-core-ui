@@ -38,6 +38,10 @@ class Dialog extends HTMLElement {
     const actions = () => {
       return config().actions.map(({ label, className }) => {
         const { dialog, dialog_notices } = this.elementState;
+        const { startExport } = this.elementState.actions;
+        const actions_map = new Map([
+          ["EXPORT-NOTICE", startExport]
+        ]);
         const notice = dialog_notices[dialog];
         return toElement("input")``({
           value: () => {
@@ -46,10 +50,14 @@ class Dialog extends HTMLElement {
           class: () => {
             return ["button", className || ""].join(" ");
           },
-          "@click": () => {
+          "@click": async () => {
             this.elementState.dialog = "";
             if (notice) {
-              this.elementState.notice = notice;
+//              this.elementState.notice = notice; TODO
+              const fn = actions_map.get(notice);
+              if (notice && fn) {
+                await fn();
+              }
             }
           },
           type: "submit",

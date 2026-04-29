@@ -1,9 +1,12 @@
 import styled from "styled-components";
+import { ImageExporter } from "@/components/playback/ImageExporter";
 import { Presentation } from "@/components/playback/Presentation";
-// Types
 import type { ChannelPanelProps } from "@/components/shared/channel/ChannelPanel";
-//import { ImageExporter } from "@/components/playback/ImageExporter";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
+import type { OmeLoaderEntry } from "@/components/shared/viewer/ImageViewer";
+import type { DicomIndex } from "@/lib/imaging/dicomIndex";
+// Types
+import type { Config } from "@/lib/imaging/viv";
 
 export type PlaybackRouterProps = ChannelPanelProps & {
   name: string;
@@ -12,7 +15,10 @@ export type PlaybackRouterProps = ChannelPanelProps & {
   presenting: boolean;
   handles: Handle.File[];
   in_f: string;
+  viewerConfig: Config;
   exitPlaybackPreview?: () => void;
+  dicomIndexList: DicomIndex[];
+  omeLoaderEntries: OmeLoaderEntry[];
 };
 
 const _ImageDiv = styled.div`
@@ -49,14 +55,17 @@ export const PlaybackRouter = (props: PlaybackRouterProps) => {
     out = <ChannelPanel {...props}>{props.children}</ChannelPanel>;
   } else if (props.ioState === "EXPORTING") {
     // TODO: no UI yet for user selection of directory_handle
-    /*
     const exporterProps = {
       in_f: props.in_f,
+      groups: props.groups,
+      handles: props.handles,
       stopExport: props.stopExport,
-      directory_handle: props.directory_handle
+      viewerConfig: props.viewerConfig,
+      dicomIndexList: props.dicomIndexList,
+      omeLoaderEntries: props.omeLoaderEntries,
+      directory_handle: props.directory_handle,
     };
     out = <ImageExporter {...exporterProps} />;
-    */
   }
   const modeKey = props.presenting
     ? "presenting"
