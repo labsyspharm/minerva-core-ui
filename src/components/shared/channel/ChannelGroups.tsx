@@ -36,7 +36,7 @@ const ActiveGroupTrigger = styled.button`
   ${activeHeaderStyles}
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 5px;
   cursor: pointer;
   text-align: left;
@@ -179,8 +179,12 @@ export const ChannelGroups = (props: {
         aria-expanded={expanded}
         onClick={() => setExpanded(!expanded)}
       >
+        <ChevronWrap expanded={expanded} aria-hidden>
+          <ChevronIcon />
+        </ChevronWrap>
         <span
           style={{
+            flex: 1,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
@@ -189,9 +193,6 @@ export const ChannelGroups = (props: {
         >
           {activeGroupName}
         </span>
-        <ChevronWrap expanded={expanded} aria-hidden>
-          <ChevronIcon />
-        </ChevronWrap>
       </ActiveGroupTrigger>
       {otherGroups.length > 0 ? (
         <AlternateList>

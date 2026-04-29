@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 //import { theme } from "@/theme.module.css";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
+import { storyChromeBannerBarCss } from "@/components/shared/storyChromeBanner";
 import {
   effectiveReferenceImagePixelSize,
   useAppStore,
@@ -43,27 +44,11 @@ const PresentationShell = styled.div`
 `;
 
 const PreviewRibbon = styled.div`
-  flex-shrink: 0;
   position: relative;
   /* Above SplitGrid (later in DOM); channel chrome is absolutely positioned and was painting over */
   z-index: 2;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 5px 10px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
   justify-content: flex-start;
-  gap: 10px;
-  /* Author tabs / panels use --dark-main-glass from index.html */
-  background: var(
-    --dark-main-glass,
-    color-mix(in xyz, var(--theme-dark-main-color, navy), transparent 20%)
-  );
-  border-bottom: 1px solid rgb(255 255 255 / 0.18);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.06),
-    inset 0 -1px 0 rgb(0 0 0 / 0.15);
+  ${storyChromeBannerBarCss}
 `;
 
 const PreviewBackButton = styled.button`
@@ -105,22 +90,31 @@ const PreviewRibbonChevron = styled(ChevronDownIcon)`
   opacity: 0.95;
 `;
 
-const PreviewRibbonLabel = styled.span`
-  display: inline-flex;
-  align-items: center;
+/** Document title — shares the ribbon with the “Story preview” badge. */
+const PreviewRibbonDocumentTitle = styled.span`
+  display: block;
+  flex: 1;
+  min-width: 0;
   font-size: 1.0625rem;
   font-weight: 600;
-  font-style: normal;
   line-height: 1.2;
   color: rgb(255 255 255 / 0.94);
   letter-spacing: 0.02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 0;
-  flex: 1;
   border-left: 1px solid rgb(255 255 255 / 0.14);
   padding-left: 10px;
+`;
+
+const PreviewRibbonPreviewBadge = styled.span`
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.55);
 `;
 
 const SplitGrid = styled.div`
@@ -285,6 +279,7 @@ const ChannelName = styled.span<{ color: string }>`
 `;
 
 export const Presentation = (props: PresentationProps) => {
+  const documentTitle = useDocumentStore((s) => s.metadata.title ?? "");
   const waypoints = useDocumentStore((s) => s.waypoints);
   const shapes = useDocumentStore((s) => s.shapes);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
@@ -537,6 +532,9 @@ export const Presentation = (props: PresentationProps) => {
   const story = waypoints[activeStoryIndex];
   const story_title = story?.title ?? `Waypoint ${activeStoryIndex + 1}`;
   const story_content = story?.content;
+  const ribbonDocTitle = documentTitle.trim()
+    ? documentTitle.trim()
+    : "Untitled story";
 
   // Scroll waypoint content back to top when changing to a different waypoint.
   const contentPaneRef = useRef(null);
@@ -597,7 +595,10 @@ export const Presentation = (props: PresentationProps) => {
             <PreviewRibbonChevron aria-hidden />
             <span>Back</span>
           </PreviewBackButton>
-          <PreviewRibbonLabel>Story preview</PreviewRibbonLabel>
+          <PreviewRibbonDocumentTitle title={ribbonDocTitle}>
+            {ribbonDocTitle}
+          </PreviewRibbonDocumentTitle>
+          <PreviewRibbonPreviewBadge>Story preview</PreviewRibbonPreviewBadge>
         </PreviewRibbon>
       ) : null}
       <SplitGrid>

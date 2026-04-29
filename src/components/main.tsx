@@ -1,4 +1,3 @@
-import { get as idbGet, set as idbSet } from "idb-keyval";
 import type { FormEventHandler } from "react";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -47,8 +46,11 @@ import type {
 } from "@/lib/legacy/exhibit";
 import { readConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
+import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
 import { imageHandleStorageKey } from "@/lib/persistence/imageHandles";
 import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
+import { applyOmeRoisFromLoaderToFirstWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
+import { getOmeTiffImageDescriptionOmeXml } from "@/lib/shapes/omeTiffOmeDescription";
 import {
   effectiveReferenceImagePixelSize,
   useAppStore,
@@ -77,6 +79,7 @@ import {
 } from "@/lib/stores/storeUtils";
 import { isOpts, validate } from "@/lib/util/validate";
 import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
+import { ensureDefaultWaypointForImageImport } from "@/lib/waypoints/ensureDefaultWaypointForImageImport";
 import { normalizeWaypointToBounds } from "@/lib/waypoints/waypoint";
 import { author } from "@/minerva-author-ui/author";
 import { toAuthorElement } from "@/minerva-author-ui/index";
@@ -262,9 +265,7 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
         break;
       }
       case "local": {
-        const handle = (await idbGet(im.source.handleKey)) as
-          | Handle.File
-          | undefined;
+        const handle = await getFileHandle(im.source.handleKey);
         if (!handle) break;
         if (!(await hydrateFilePermission(handle))) break;
         if (!(await findFile({ handle }))) break;
@@ -598,7 +599,7 @@ const Content = (props: Props) => {
         const { sourceImageId } = entries[i];
         const handle = handles[i];
         const key = imageHandleStorageKey(storyId, sourceImageId);
-        await idbSet(key, handle);
+        await putFileHandle(key, handle);
         nextImages = setImageSource(nextImages, sourceImageId, {
           kind: "local",
           handleKey: key,
@@ -617,7 +618,17 @@ const Content = (props: Props) => {
       SourceChannels,
       ChannelGroups,
     });
+    ensureDefaultWaypointForImageImport();
     setOmeLoaderEntries(entries);
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const handle = handles[i];
+      if (!entry || !handle) continue;
+      const { loader } = entry;
+      const file = await handle.getFile();
+      const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
+      applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+    }
     setFileName(
       handles.length === 1
         ? in_f
@@ -659,7 +670,10 @@ const Content = (props: Props) => {
     setChannelGroups(ChannelGroups);
     updateGroupChannelLists({ ChannelGroups, SourceChannels });
     resetItems({ SourceChannels, ChannelGroups });
+    ensureDefaultWaypointForImageImport();
     setOmeLoaderEntries([{ loader, sourceImageId }]);
+    const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
+    applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
     setLastOmeTiffUrl(url);
     setFileName(url.split("/").pop() || "remote.ome.tif");
   };
@@ -833,6 +847,7 @@ const Content = (props: Props) => {
       ChannelGroups,
       SourceChannels,
     });
+    ensureDefaultWaypointForImageImport();
   };
 
   const mutableFields: MutableFields = [];
@@ -1577,7 +1592,12 @@ const Content = (props: Props) => {
 
         return (
           <Wrapper>
-            <StoryTitleBar authorMode={!presenting} />
+            {!presenting ? (
+              <StoryTitleBar
+                onEnterPlaybackPreview={enterPlaybackPreview}
+                playbackPreviewDisabled={_waypoints.length === 0}
+              />
+            ) : null}
             {imager}
           </Wrapper>
         );

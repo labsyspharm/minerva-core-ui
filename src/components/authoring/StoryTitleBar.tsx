@@ -1,70 +1,36 @@
 import * as React from "react";
 import styled from "styled-components";
+import PlayIcon from "@/components/shared/icons/play.svg?react";
+import { storyChromeBannerBarCss } from "@/components/shared/storyChromeBanner";
 import { saveStoryDocument } from "@/lib/persistence/storyPersistence";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 
-/** Matches `grid-template-columns` first track in `author.module.css` (author shell). */
-const AUTHOR_PANEL_EM = 30;
-
-/**
- * Flush to the top of the shell. Horizontally centered by default; in author mode, nudges
- * right only when the bar would overlap the left authoring column (see overlap effect).
- */
-const Overlay = styled.div<{ $nudgeX: number }>`
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(calc(-50% + ${(p) => p.$nudgeX}px));
-  max-width: calc(100% - 32px);
-  width: fit-content;
-  min-width: 0;
+const BannerShell = styled.div`
+  position: relative;
   z-index: 20;
-  pointer-events: none;
-  box-sizing: border-box;
-
-  & > * {
-    pointer-events: auto;
-  }
+  ${storyChromeBannerBarCss}
 `;
 
-const TitleShell = styled.div`
-  position: relative;
-  display: inline-block;
-  vertical-align: top;
-  max-width: 100%;
-`;
-
-const TitleBody = styled.div<{ $editable: boolean }>`
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  max-width: 100%;
+const TitleFieldWrap = styled.div`
+  flex: 1;
   min-width: 0;
-  min-height: 40px;
-  box-sizing: border-box;
-  background: rgb(0 0 0);
-  border: 2px solid rgb(255 255 255 / 0.24);
-  border-top: none;
-  border-radius: 0 0 20px 20px;
-  padding: 0;
-  cursor: ${(p) => (p.$editable ? "text" : "default")};
+  display: flex;
+  justify-content: center;
 `;
 
 const TitleInput = styled.input`
   box-sizing: border-box;
   margin: 0;
-  padding: 5px 10px;
-  min-width: 15ch;
-  width: auto;
-  max-width: 100%;
+  padding: 2px 6px;
+  width: 100%;
+  min-width: 0;
+  max-width: min(720px, 100%);
   field-sizing: content;
   background: transparent;
   border: none;
-  border-radius: 0 0 18px 18px;
+  border-radius: 6px;
   color: rgb(248 250 252 / 0.98);
-  font-size: 15px;
+  font-size: 1.0625rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   text-align: center;
@@ -84,93 +50,70 @@ const TitleInput = styled.input`
     cursor: text;
   }
 
+  &:focus-visible {
+    outline: 2px solid var(--theme-light-focus-color, hwb(45 90% 0%));
+    outline-offset: 2px;
+  }
+
   &:read-only {
     cursor: text;
     user-select: none;
   }
 `;
 
-const TitleReadonly = styled.div`
+const BannerPreviewButton = styled.button`
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   box-sizing: border-box;
-  margin: 0;
-  padding: 10px 10px 12px;
-  color: rgb(248 250 252 / 0.96);
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-align: center;
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
+  background: rgb(0 0 0 / 0.16);
+  border: 1px solid rgb(255 255 255 / 0.22);
+  border-radius: 5px;
+  color: rgb(248 250 252 / 0.98);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: rgb(0 0 0 / 0.26);
+    border-color: rgb(255 255 255 / 0.28);
+    color: #fff;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-light-focus-color, hwb(45 90% 0%));
+    outline-offset: 2px;
+  }
 `;
 
 export type StoryTitleBarProps = {
-  /**
-   * When true: editable title. When false: read-only title (e.g. presentation / playback preview).
-   */
-  authorMode: boolean;
+  onEnterPlaybackPreview?: () => void;
+  /** When true, disables the preview control (e.g. no waypoints). */
+  playbackPreviewDisabled?: boolean;
 };
 
 /**
- * Centered story title (`metadata.title`) overlaid at the top of the app shell.
- * In author mode: click to edit, blur to lock. Return to the library via the hamburger menu.
+ * Full-width story title (`metadata.title`) at the top of the shell, matching the preview ribbon.
+ * Editable in author mode only — when playback preview is active, the title is shown in
+ * `Presentation`’s ribbon instead; this component is not mounted then.
  */
 export function StoryTitleBar(props: StoryTitleBarProps) {
-  const { authorMode } = props;
-  const editable = authorMode;
+  const { onEnterPlaybackPreview, playbackPreviewDisabled } = props;
   /** Subscribe to the title primitive so updates re-render even if metadata identity were ever reused. */
   const titleText = useDocumentStore((s) => s.metadata.title ?? "");
   const setMetadata = useDocumentStore((s) => s.setMetadata);
   const fieldId = React.useId();
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const overlayRef = React.useRef<HTMLDivElement>(null);
-  const [nudgeX, setNudgeX] = React.useState(0);
   const [editing, setEditing] = React.useState(false);
   /** Approximate width for browsers without `field-sizing: content` on `<input>`. */
   const inputSize = Math.min(200, Math.max(14, titleText.length || 13));
-
-  /** Center on the shell by default; nudge right only when math says the centered pill would overlap the 30em author column. ResizeObserver picks up title width changes. */
-  React.useLayoutEffect(() => {
-    if (!editable) {
-      setNudgeX(0);
-      return;
-    }
-    const el = overlayRef.current;
-    if (!el) return;
-
-    const gapPx = 8;
-    /** Nudge so the island stays right of the author column; derived from centered geometry (stable, no feedback loop). */
-    const measure = () => {
-      const rootFont =
-        parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-      const panelPx = AUTHOR_PANEL_EM * rootFont;
-      const threshold = gapPx + panelPx;
-      const parent = el.offsetParent ?? el.parentElement;
-      if (!parent) return;
-      const pr = parent.getBoundingClientRect();
-      const shellW = el.getBoundingClientRect().width;
-      const pillW = shellW;
-      const leftIfViewportCentered = pr.left + pr.width / 2 - pillW / 2;
-      const next =
-        leftIfViewportCentered < threshold
-          ? Math.ceil(threshold - leftIfViewportCentered)
-          : 0;
-      setNudgeX(next);
-    };
-
-    measure();
-    const ro = new ResizeObserver(() => {
-      requestAnimationFrame(measure);
-    });
-    ro.observe(el);
-    window.addEventListener("resize", measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, [editable]);
 
   React.useEffect(() => {
     if (!editing) return;
@@ -181,61 +124,50 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
     el.setSelectionRange(n, n);
   }, [editing]);
 
-  if (!editable) {
-    return (
-      <Overlay $nudgeX={0} role="region" aria-label="Story title">
-        <TitleShell>
-          <TitleBody $editable={false}>
-            <TitleReadonly>
-              {titleText.trim() ? titleText.trim() : "Untitled story"}
-            </TitleReadonly>
-          </TitleBody>
-        </TitleShell>
-      </Overlay>
-    );
-  }
-
   return (
-    <Overlay
-      ref={overlayRef}
-      $nudgeX={nudgeX}
-      role="region"
-      aria-label="Story title"
-    >
-      <TitleShell>
-        <TitleBody
-          $editable
-          onClick={() => {
-            if (!editing) setEditing(true);
+    <BannerShell role="region" aria-label="Story title">
+      <TitleFieldWrap
+        onClick={() => {
+          if (!editing) setEditing(true);
+        }}
+      >
+        <TitleInput
+          ref={inputRef}
+          id={fieldId}
+          type="text"
+          size={inputSize}
+          readOnly={!editing}
+          value={titleText}
+          placeholder="Untitled story"
+          aria-label="Story title"
+          onChange={(e) => setMetadata({ title: e.target.value })}
+          onBlur={(e) => {
+            setEditing(false);
+            const raw = e.target.value;
+            const trimmed = raw.trim();
+            if (trimmed !== raw) setMetadata({ title: trimmed });
+            void (async () => {
+              const s = useDocumentStore.getState();
+              const id = s.activeStoryId;
+              if (!id) return;
+              await saveStoryDocument(id, s.toDocumentData());
+            })();
           }}
+          autoComplete="off"
+          spellCheck={false}
+        />
+      </TitleFieldWrap>
+      {onEnterPlaybackPreview ? (
+        <BannerPreviewButton
+          type="button"
+          onClick={onEnterPlaybackPreview}
+          disabled={playbackPreviewDisabled}
+          title="Preview playback"
+          aria-label="Preview playback"
         >
-          <TitleInput
-            ref={inputRef}
-            id={fieldId}
-            type="text"
-            size={inputSize}
-            readOnly={!editing}
-            value={titleText}
-            placeholder="Untitled story"
-            aria-label="Story title"
-            onChange={(e) => setMetadata({ title: e.target.value })}
-            onBlur={(e) => {
-              setEditing(false);
-              const raw = e.target.value;
-              const trimmed = raw.trim();
-              if (trimmed !== raw) setMetadata({ title: trimmed });
-              void (async () => {
-                const s = useDocumentStore.getState();
-                const id = s.activeStoryId;
-                if (!id) return;
-                await saveStoryDocument(id, s.toDocumentData());
-              })();
-            }}
-            autoComplete="off"
-            spellCheck={false}
-          />
-        </TitleBody>
-      </TitleShell>
-    </Overlay>
+          <PlayIcon width={14} height={14} aria-hidden />
+        </BannerPreviewButton>
+      ) : null}
+    </BannerShell>
   );
 }

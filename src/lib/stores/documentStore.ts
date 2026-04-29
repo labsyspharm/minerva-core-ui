@@ -11,6 +11,11 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import {
+  deleteFileHandlesForStory,
+  getFileHandle as loadFileHandleFromDb,
+  putFileHandle as persistFileHandleToDb,
+} from "../persistence/fileHandles";
+import {
   createStoryRecord,
   deleteStoryRecord,
   getStoryRecord,
@@ -84,6 +89,14 @@ export type DocumentStore = DocumentState & {
   setImages: (images: Image[]) => void;
   /** Merge into `metadata`; use when persisting exhibit title/version, etc. */
   setMetadata: (metadata: Partial<DocumentMetadata>) => void;
+
+  /**
+   * Store a {@link FileSystemFileHandle} in Dexie `handles` (same IDB as stories).
+   * Document JSON only keeps `handleKey` on `Image.source`.
+   */
+  persistFileHandle: (key: string, handle: Handle.File) => Promise<void>;
+  /** Load a handle by key (migrates legacy idb-keyval on first read if needed). */
+  getFileHandle: (key: string) => Promise<Handle.File | undefined>;
 };
 
 function createEmptyDocumentSlices(): Omit<DocumentState, "activeStoryId"> {
@@ -225,6 +238,7 @@ export const useDocumentStore = create<DocumentStore>()(
 
     deleteStory: async (id) => {
       await deleteStoryRecord(id);
+      await deleteFileHandlesForStory(id);
       const current = get().activeStoryId;
       if (current !== id) return;
 
@@ -276,5 +290,9 @@ export const useDocumentStore = create<DocumentStore>()(
       const s = get();
       set({ metadata: { ...s.metadata, ...patch } });
     },
+
+    persistFileHandle: (key, handle) => persistFileHandleToDb(key, handle),
+
+    getFileHandle: (key) => loadFileHandleFromDb(key),
   })),
 );

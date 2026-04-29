@@ -1,6 +1,12 @@
 import type { DocumentData } from "@/lib/stores/documentSchema";
 
-/** Row in Dexie `stories` table — canonical document only (no denormalized listing fields). */
+/** Row in Dexie `handles` table — {@link FileSystemFileHandle} for `Image.source.handleKey`. */
+export type FileHandleRow = {
+  id: string;
+  handle: Handle.File;
+};
+
+/** Row in Dexie `stories` table — canonical document only (no file handles on this type). */
 export type StoryRecord = {
   id: string;
   createdAt: string;

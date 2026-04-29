@@ -2,7 +2,6 @@ import * as React from "react";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import JumpToViewIcon from "@/components/shared/icons/jump-to-view.svg?react";
 import OverwriteViewIcon from "@/components/shared/icons/overwrite-view.svg?react";
-import PlayIcon from "@/components/shared/icons/play.svg?react";
 import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
 import type { ConfigWaypoint } from "@/lib/authoring/config";
 import {
@@ -33,8 +32,6 @@ import styles from "./WaypointsList.module.css";
 
 export type WaypointsListProps = {
   viewOnly?: boolean;
-  /** Open playback/presentation layout for the current waypoint (author mode). */
-  onEnterPlaybackPreview?: () => void;
 };
 
 const TrashIcon = () => (
@@ -83,7 +80,7 @@ function channelNamesForGroup(
 }
 
 const WaypointsList = (props: WaypointsListProps) => {
-  const { viewOnly, onEnterPlaybackPreview } = props;
+  const { viewOnly } = props;
   const canEdit = !viewOnly;
 
   const waypoints = useDocumentStore((s) => s.waypoints);
@@ -554,19 +551,6 @@ const WaypointsList = (props: WaypointsListProps) => {
             <PlusIcon />
           </button>
         )}
-
-        {canEdit && onEnterPlaybackPreview ? (
-          <button
-            type="button"
-            className={styles.iconHeaderButton}
-            onClick={onEnterPlaybackPreview}
-            disabled={waypoints.length === 0}
-            title="Preview playback"
-            aria-label="Preview playback"
-          >
-            <PlayIcon width={14} height={14} aria-hidden />
-          </button>
-        ) : null}
       </div>
     </div>
   );

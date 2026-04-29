@@ -1,9 +1,10 @@
-import type { FormEventHandler, ReactNode } from "react";
+import type { ChangeEventHandler, FormEventHandler, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
+import { applyOmeRoisFromAnnotationXmlString } from "@/lib/shapes/applyOmeRoisToDocument";
 
 type Choices = {
   csv: string[];
@@ -301,6 +302,32 @@ const MetaSep = styled.span`
 
 const ImageMetaText = styled.span`
   color: #8b949e;
+`;
+
+const XmlImportMessage = styled.div<{ $err: boolean }>`
+  font-size: 11px;
+  line-height: 1.4;
+  color: ${(p) => (p.$err ? "#f85149" : "color-mix(in srgb, #7ee787 92%, #fff 8%)")};
+`;
+
+const XmlImportBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+
+  input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
 `;
 
 const DisclosureButton = styled.button`
@@ -727,6 +754,11 @@ const Upload = (props: UploadProps) => {
   const [imageFormat, setImageFormat] = useState("");
   const [updatePickerOpen, setUpdatePickerOpen] = useState(false);
   const [mappingExpanded, setMappingExpanded] = useState(false);
+  const [xmlImportFeedback, setXmlImportFeedback] = useState<{
+    type: "ok" | "err";
+    text: string;
+  } | null>(null);
+  const xmlFileInputRef = useRef<HTMLInputElement | null>(null);
   const prevImportRev = useRef(props.importRevision);
   const {
     formProps,
@@ -744,8 +776,57 @@ const Upload = (props: UploadProps) => {
       setUpdatePickerOpen(false);
       setImageFormat("");
       setMappingExpanded(false);
+      setXmlImportFeedback(null);
     }
   }, [importRevision]);
+
+  const onAnnotationXmlSelected: ChangeEventHandler<HTMLInputElement> = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    file
+      .text()
+      .then((text) => {
+        const r = applyOmeRoisFromAnnotationXmlString(text);
+        if (r.success === false) {
+          setXmlImportFeedback({ type: "err", text: r.error });
+          return;
+        }
+        setXmlImportFeedback({
+          type: "ok",
+          text: `Imported ${r.shapeCount} annotation${r.shapeCount === 1 ? "" : "s"}.`,
+        });
+      })
+      .catch((err: unknown) => {
+        setXmlImportFeedback({
+          type: "err",
+          text: err instanceof Error ? err.message : "Could not read the file.",
+        });
+      });
+  };
+
+  const annotationXmlPanel = imageLoaded ? (
+    <XmlImportBlock>
+      <input
+        ref={xmlFileInputRef}
+        type="file"
+        accept=".xml,application/xml,text/xml"
+        aria-label="OME-XML annotations file"
+        onChange={onAnnotationXmlSelected}
+      />
+      <DarkPrimaryButton
+        type="button"
+        onClick={() => xmlFileInputRef.current?.click()}
+      >
+        Import annotations (XML)
+      </DarkPrimaryButton>
+      {xmlImportFeedback ? (
+        <XmlImportMessage $err={xmlImportFeedback.type === "err"}>
+          {xmlImportFeedback.text}
+        </XmlImportMessage>
+      ) : null}
+    </XmlImportBlock>
+  ) : null;
 
   const allowProps = {
     onClick: onAllow,
@@ -896,6 +977,7 @@ const Upload = (props: UploadProps) => {
           <span>Back</span>
         </ImagesBackButton>
         {imageLoaded ? currentImageSummary : null}
+        {annotationXmlPanel}
         <UploadDiv>
           {imageFormat === "" ? formatPickerGrid : null}
           {possibleActions}
@@ -922,6 +1004,7 @@ const Upload = (props: UploadProps) => {
         <ImagesLoadedStack>
           {currentImageSummary}
           {updateImageRow}
+          {annotationXmlPanel}
           {mappingDisclosure}
           {showFormAny ? <FormAny {...fullFormProps} /> : null}
         </ImagesLoadedStack>

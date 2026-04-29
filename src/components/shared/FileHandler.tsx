@@ -1,7 +1,7 @@
-import { get, set } from "idb-keyval";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { findFile, toFile } from "@/lib/imaging/filesystem";
+import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
 
 const readWrite = { mode: "readwrite" } as const;
 
@@ -60,7 +60,7 @@ export const FileHandler = ({
       if (!(await findFile({ handle: newHandle }))) return;
       if (aborted()) return;
       setHandles([newHandle]);
-      await set(storageKey, newHandle);
+      await putFileHandle(storageKey, newHandle);
       if (aborted()) return;
       await onRestoredHandlesRef.current?.([newHandle]);
     },
@@ -71,12 +71,12 @@ export const FileHandler = ({
     const newHandles = await toFile();
     if (newHandles.length > 0) {
       setHandles(newHandles);
-      await set(storageKey, newHandles[0]);
+      await putFileHandle(storageKey, newHandles[0]);
     }
   };
 
   const onRecall = async () => {
-    const newHandle = await get(storageKey);
+    const newHandle = await getFileHandle(storageKey);
     if (!newHandle) return;
     try {
       await applyRestoredHandle(newHandle);
@@ -89,7 +89,7 @@ export const FileHandler = ({
     if (!autoRestoreOnMount || !storageKey) return;
     const ac = new AbortController();
     void (async () => {
-      const newHandle = await get(storageKey);
+      const newHandle = await getFileHandle(storageKey);
       if (!newHandle || ac.signal.aborted) return;
       try {
         await applyRestoredHandle(newHandle, ac.signal);

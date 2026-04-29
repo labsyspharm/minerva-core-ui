@@ -165,8 +165,9 @@ function buildBays(summaries: StorySummary[] | null): BaySlot[] {
   const count = Math.max(TARGET_BAYS, summaries.length);
   const out: BaySlot[] = [];
   for (let i = 0; i < count; i++) {
-    if (i < summaries.length) {
-      out.push({ kind: "story", story: summaries[i]! });
+    const story = i < summaries.length ? summaries[i] : undefined;
+    if (story !== undefined) {
+      out.push({ kind: "story", story });
     } else {
       out.push({ kind: "empty" });
     }

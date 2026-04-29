@@ -1,6 +1,5 @@
 /**
- * IndexedDB keys for {@link FileSystemFileHandle}s (structured clone).
- * Document `Image.source` stores `handleKey` only, not the handle object.
+ * Keys for Dexie `handles` (same `minerva-stories` DB as stories). Document `Image.source` stores `handleKey` only in JSON.
  */
 export function imageHandleStorageKey(
   storyId: string,

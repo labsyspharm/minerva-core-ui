@@ -89,7 +89,7 @@ type Group = {
   };
 };
 
-type RoiShape =
+export type RoiShape =
   | RoiRectangleShape
   | RoiEllipseShape
   | RoiLineShape
@@ -387,23 +387,18 @@ const labelShapeToViewerShape = (shape: RoiLabelShape, roi: Roi): TextShape => {
   };
 };
 
-/**
- * Parse ROIs from loader metadata and convert to viewer shapes and groups
- */
-export const parseRoisFromLoader = (
-  loader: Loader,
+/** Convert structured ROI data (e.g. from OME-XML or Viv metadata) to viewer shapes. */
+export const parseRoisFromRoiList = (
+  rois: Roi[] | null | undefined,
 ): { shapes: Shape[]; groups: Group[] } => {
   const shapes: Shape[] = [];
   const groups: Group[] = [];
 
-  // Check if loader has metadata with ROIs
-  if (!loader || !loader.metadata || !loader.metadata.ROIs) {
-    console.log("No ROIs found in loader metadata");
+  if (!rois || rois.length === 0) {
     return { shapes, groups };
   }
 
-  const rois = loader.metadata.ROIs as Roi[];
-  console.log(`Found ${rois.length} ROIs in loader metadata`);
+  console.log(`Found ${rois.length} ROIs in ROI list`);
 
   // Process each ROI
   rois.forEach((roi) => {
@@ -490,4 +485,17 @@ export const parseRoisFromLoader = (
   console.log(`Total shapes created from ROIs: ${shapes.length}`);
   console.log(`Total groups created from ROIs: ${groups.length}`);
   return { shapes, groups };
+};
+
+/**
+ * Parse ROIs from loader metadata and convert to viewer shapes and groups
+ */
+export const parseRoisFromLoader = (
+  loader: Loader,
+): { shapes: Shape[]; groups: Group[] } => {
+  if (!loader || !loader.metadata || !loader.metadata.ROIs) {
+    console.log("No ROIs found in loader metadata");
+    return { shapes: [], groups: [] };
+  }
+  return parseRoisFromRoiList(loader.metadata.ROIs as Roi[]);
 };

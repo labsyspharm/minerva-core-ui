@@ -95,7 +95,7 @@ export async function getStoryRecord(
 
 /**
  * Merges canonical story fields into `data.metadata` (id, createdAt, modifiedAt) and persists.
- * Row-level timestamps mirror `metadata` for Dexie indexing.
+ * File handles live in the separate `handles` object store, not on this row.
  */
 export async function saveStoryDocument(
   id: string,
