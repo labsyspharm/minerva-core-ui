@@ -1,7 +1,7 @@
 name: Github Pages
 on:
   push:
-    branches: ["dicom-pages", "annotation"]
+    branches: ["dicom-pages", "annotation", "main"]
 
 jobs:
   build:
