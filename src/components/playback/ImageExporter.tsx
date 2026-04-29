@@ -50,6 +50,10 @@ type SaveIn = CommonIn & {
   step: number;
 };
 type Save = (i: SaveIn) => Promise<void>;
+type ToSaveDirectory = (
+  d: FileSystemDirectoryHandle,
+  s: string,
+) => Promise<FileSystemDirectoryHandle>;
 
 type StepIn = CommonIn & {
   stepSignal: StepOut;
@@ -152,16 +156,75 @@ const capture: Capture = async (index, loader) => {
   return { output, filename };
 };
 
-const save: Save = async (inputs) => {
+const toSaveDirectory: ToSaveDirectory = async (directory_handle, encoded) => {
   const create = { create: true };
-  const { index, loader, directory_handle } = inputs;
-  const { output, filename } = await capture(index, loader);
-  const encoded_data = new TextEncoder().encode(index.encoded);
+  const encoded_data = new TextEncoder().encode(encoded);
   const sha256 = new Uint8Array(
     await crypto.subtle.digest("SHA-256", encoded_data),
   ).toHex();
   const dh = await directory_handle.getDirectoryHandle(sha256, create);
-  const fh = await dh.getFileHandle(filename, create);
+  return dh;
+};
+
+const createCRange = async (
+  setCRange,
+  channelGroups,
+  imageChannels,
+  directory_handle,
+) => {
+  setCRange(
+    await Promise.all(
+      ([] as Index[]).concat(
+        ...channelGroups.map(({ channels }) => {
+          return ([] as Index).concat(
+            ...channels
+              .map(async ({ channelId, lowerLimit, upperLimit }) => {
+                const c = imageChannels[channelId];
+                if (c === undefined) {
+                  return null;
+                }
+                const opts = { channelId, lowerLimit, upperLimit };
+                const encoded = hash(opts);
+                const dh = await toSaveDirectory(directory_handle, encoded);
+                const fh = await dh.getFileHandle("settings.json", {
+                  create: true,
+                });
+                const write = await fh.createWritable();
+                await write.write(
+                  JSON.stringify(
+                    {
+                      channel: c,
+                      lowerLimit,
+                      upperLimit,
+                    },
+                    null,
+                    2,
+                  ),
+                );
+                return {
+                  z: 0,
+                  x: 0,
+                  y: 0,
+                  c,
+                  dh,
+                  encoded,
+                  lowerLimit,
+                  upperLimit,
+                };
+              })
+              .filter((v) => v),
+          );
+        }),
+      ),
+    ),
+  );
+};
+
+const save: Save = async (inputs) => {
+  const create = { create: true };
+  const { index, loader, directory_handle } = inputs;
+  const { output, filename } = await capture(index, loader);
+  const fh = await index.dh.getFileHandle(filename, create);
   const write = await fh.createWritable();
   await write.write(output);
   await write.close();
@@ -173,7 +236,7 @@ const doStep: DoStep = async (inputs) => {
   const { step, done } = inputs.stepSignal;
   if (done) return null;
   try {
-    save({ step, directory_handle, loader, index });
+    await save({ step, directory_handle, loader, index });
   } catch (e) {
     // REDO
     console.error(e.message);
@@ -195,9 +258,10 @@ type Index = {
   y: number;
   z: number;
   c: number;
+  encoded: string;
   lowerLimit: number;
   upperLimit: number;
-  encoded: string;
+  dh: FileSystemDirectoryHandle;
 };
 type FullState = {
   indices: Index[];
@@ -425,44 +489,24 @@ export const ImageExporter = (props: ImageExporterProps) => {
   const handle = handles ? handles[0] : null; //TODO
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
-  const imageChannels = Object.fromEntries(
-    [].concat(
-      ...images.map(({ channels }) => {
-        return channels.map(({ id, index }) => [id, index]);
-      }),
-    ),
-  );
+  const imageChannels = useMemo(() => {
+    return Object.fromEntries(
+      [].concat(
+        ...images.map(({ channels }) => {
+          return channels.map(({ id, index }) => [id, index]);
+        }),
+      ),
+    );
+  }, [images]);
   const [stepSignal, setStepSignal] = useState({
     done: false,
     step: 0,
   });
+  const [cRange, setCRange] = useState(null);
 
-  const cRange = ([] as Index[]).concat(
-    ...channelGroups.map(({ channels }) => {
-      return ([] as Index).concat(
-        ...channels
-          .map(({ channelId, lowerLimit, upperLimit }) => {
-            const c = imageChannels[channelId];
-            if (c === undefined) {
-              return null;
-            }
-            const opts = { channelId, lowerLimit, upperLimit };
-            const encoded = hash(opts);
-            return {
-              z: 0,
-              x: 0,
-              y: 0,
-              c,
-              encoded,
-              lowerLimit,
-              upperLimit,
-            };
-          })
-          .filter((v) => v),
-      );
-    }),
-  );
-
+  React.useEffect(() => {
+    createCRange(setCRange, channelGroups, imageChannels, directory_handle);
+  }, [channelGroups, imageChannels, directory_handle]);
   const loader = useMemo(
     () =>
       mainSettingsList.length > 0 ? mainSettingsList[0].loader.data : null,
@@ -470,7 +514,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
   );
 
   const state: MainState = useMemo(() => {
-    if (loader === null) {
+    if (loader === null || cRange === null) {
       return null;
     }
     const init = initialize({ loader, cRange });
