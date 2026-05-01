@@ -1,5 +1,6 @@
 import * as React from "react";
 import styled from "styled-components";
+import { StoryAuthorOverflowMenu } from "@/components/authoring/StoryAuthorOverflowMenu";
 import PlayIcon from "@/components/shared/icons/play.svg?react";
 import { storyChromeBannerBarCss } from "@/components/shared/storyChromeBanner";
 import { saveStoryDocument } from "@/lib/persistence/storyPersistence";
@@ -94,18 +95,22 @@ const BannerPreviewButton = styled.button`
 `;
 
 export type StoryTitleBarProps = {
+  /** Registered `author-*` custom element tag; powers export dialog + overflow menu. */
+  authorUiTagName?: string;
   onEnterPlaybackPreview?: () => void;
   /** When true, disables the preview control (e.g. no waypoints). */
   playbackPreviewDisabled?: boolean;
 };
 
 /**
- * Full-width story title (`metadata.title`) at the top of the shell, matching the preview ribbon.
+ * Full-width story title (`metadata.title`) at the top of the shell, matching the preview ribbon,
+ * plus author-only overflow (library / export / JSON) beside the playback control row.
  * Editable in author mode only — when playback preview is active, the title is shown in
  * `Presentation`’s ribbon instead; this component is not mounted then.
  */
 export function StoryTitleBar(props: StoryTitleBarProps) {
-  const { onEnterPlaybackPreview, playbackPreviewDisabled } = props;
+  const { authorUiTagName, onEnterPlaybackPreview, playbackPreviewDisabled } =
+    props;
   /** Subscribe to the title primitive so updates re-render even if metadata identity were ever reused. */
   const titleText = useDocumentStore((s) => s.metadata.title ?? "");
   const setMetadata = useDocumentStore((s) => s.setMetadata);
@@ -126,6 +131,9 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
 
   return (
     <BannerShell role="region" aria-label="Story title">
+      {authorUiTagName ? (
+        <StoryAuthorOverflowMenu authorUiTagName={authorUiTagName} />
+      ) : null}
       <TitleFieldWrap
         onClick={() => {
           if (!editing) setEditing(true);

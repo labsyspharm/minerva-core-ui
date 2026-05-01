@@ -8,7 +8,7 @@ import { useDocumentStore } from "@/lib/stores/documentStore";
 import { rootRouteApi } from "@/router/appRouter";
 
 /**
- * Listens for {@link RETURN_TO_LIBRARY_EVENT} (e.g. from the author hamburger menu) and
+ * Listens for {@link RETURN_TO_LIBRARY_EVENT} (e.g. from the author title-bar overflow menu) and
  * performs the same save + URL clear as the former top-left Library control.
  */
 export function StoryReturnToLibraryBridge() {

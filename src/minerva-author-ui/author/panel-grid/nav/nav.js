@@ -1,11 +1,5 @@
-import { RETURN_TO_LIBRARY_EVENT } from "@/lib/navigation/returnToLibraryEvent";
-import { useDocumentStore } from "@/lib/stores/documentStore";
-import { downloadStoryJsonExport } from "@/lib/stores/downloadStoryJson";
 import navCSS from "./nav.module.css" with { type: "css" };
 import { toElement } from "../../../lib/elements";
-
-/** Opens the export dialog; kept in sync with `nav-config` / `dialog_notices`. */
-const EXPORT_DIALOG_ID = "EXPORT-DIALOG";
 
 class Nav extends HTMLElement {
   static name = "nav";
@@ -14,105 +8,8 @@ class Nav extends HTMLElement {
     const { tab_order } = this.elementState;
     const tab_items = this.itemsTemplate(tab_order, "tab");
 
-    const overflow_trigger = toElement("button")`
-      <svg
-        class="hamburger-icon"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 20 14"
-        width="20"
-        height="14"
-        aria-hidden="true"
-      >
-        <rect x="0" y="0" width="20" height="2" rx="1" fill="currentColor" />
-        <rect x="0" y="6" width="20" height="2" rx="1" fill="currentColor" />
-        <rect x="0" y="12" width="20" height="2" rx="1" fill="currentColor" />
-      </svg>
-    `({
-      type: "button",
-      class: "hamburger",
-      title: "Menu",
-      "aria-label": "Menu",
-      "aria-expanded": () =>
-        this.elementState.overflowMenuOpen ? "true" : "false",
-      "@click": (event) => {
-        event.stopPropagation();
-        const willOpen = !this.elementState.overflowMenuOpen;
-        this.elementState.overflowMenuOpen = willOpen;
-        if (willOpen) {
-          this.elementState.storyDownloadDisabled =
-            useDocumentStore.getState().waypoints.length === 0;
-        }
-      },
-    });
-
-    const return_library_btn = toElement("button")`
-      <span>Return to Library</span>
-    `({
-      type: "button",
-      class: "overflow-menu-item",
-      role: "menuitem",
-      "@click": (event) => {
-        event.stopPropagation();
-        this.elementState.overflowMenuOpen = false;
-        window.dispatchEvent(new CustomEvent(RETURN_TO_LIBRARY_EVENT));
-      },
-    });
-
-    const export_btn = toElement("button")`
-      <span>${() => {
-        const { nav_config } = this.elementState;
-        return nav_config[EXPORT_DIALOG_ID].label;
-      }}</span>
-    `({
-      type: "button",
-      class: "overflow-menu-item overflow-menu-item-divided",
-      role: "menuitem",
-      "@click": (event) => {
-        event.stopPropagation();
-        this.elementState.overflowMenuOpen = false;
-        this.elementState.dialog = EXPORT_DIALOG_ID;
-      },
-    });
-
-    const download_btn = toElement("button")`
-      <span>Save document as JSON</span>
-    `({
-      type: "button",
-      class: "overflow-menu-item overflow-menu-item-divided",
-      role: "menuitem",
-      disabled: () => this.elementState.storyDownloadDisabled,
-      "@click": (event) => {
-        event.stopPropagation();
-        if (useDocumentStore.getState().waypoints.length === 0) return;
-        this.elementState.overflowMenuOpen = false;
-        downloadStoryJsonExport(useDocumentStore.getState().toDocumentData());
-      },
-    });
-
-    const dropdown = toElement("div")`
-      ${return_library_btn}
-      ${export_btn}
-      ${download_btn}
-    `({
-      class: () =>
-        this.elementState.overflowMenuOpen
-          ? "overflow-dropdown open"
-          : "overflow-dropdown",
-      "aria-hidden": () =>
-        this.elementState.overflowMenuOpen ? "false" : "true",
-      role: "menu",
-    });
-
-    const overflow_wrap = toElement("div")`
-      ${overflow_trigger}
-      ${dropdown}
-    `({
-      class: "overflow-wrap",
-    });
-
     return toElement("div")`
       <div class="stretch grid menu tabs tab-row">
-        ${overflow_wrap}
         <div class="stretch grid menu tabs tab-strip">
           ${() => tab_items}
         </div>

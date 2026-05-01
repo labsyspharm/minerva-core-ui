@@ -1,8 +1,20 @@
 import type { TiffPixelSource } from "@hms-dbmi/viv";
-import { getImageSize, loadOmeTiff } from "@hms-dbmi/viv";
+import { getImageSize } from "@hms-dbmi/viv";
 import * as React from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import hash from "stable-hash";
 import styled from "styled-components";
+import type {
+  ItemRegistryGroup,
+  OmeLoaderEntry,
+} from "@/components/shared/viewer/ImageViewer";
+import type { DicomIndex } from "@/lib/imaging/dicomIndex";
+import { toLoader } from "@/lib/imaging/filesystem";
+import type { Config } from "@/lib/imaging/viv";
+import type { PoolClass } from "@/lib/imaging/workers/Pool";
+import { Pool } from "@/lib/imaging/workers/Pool";
+import { useAppStore } from "@/lib/stores/appStore";
+import { useDocumentStore } from "@/lib/stores/documentStore";
 
 ///
 
@@ -28,9 +40,11 @@ type ToTileCounts = (i: TileCountsIn) => TileCounts;
 
 type InitIn = {
   loader: LoaderPlane[];
+  cRange: Index[];
 };
-type CommonIn = InitIn & {
-  handle: FileSystemDirectoryHandle;
+type CommonIn = {
+  loader: LoaderPlane[];
+  directory_handle: FileSystemDirectoryHandle;
   index: Index;
 };
 
@@ -38,6 +52,10 @@ type SaveIn = CommonIn & {
   step: number;
 };
 type Save = (i: SaveIn) => Promise<void>;
+type ToSaveDirectory = (
+  d: FileSystemDirectoryHandle,
+  s: string,
+) => Promise<FileSystemDirectoryHandle>;
 
 type StepIn = CommonIn & {
   stepSignal: StepOut;
@@ -50,10 +68,37 @@ type StepOut = {
 type DoStep = (o: StepIn) => Promise<StepOut | null>;
 
 type CaptureOut = {
-  output: Uint8Array;
+  output: Uint8Array<ArrayBuffer>;
   filename: string;
 };
 type Capture = (i: Index, loader: LoaderPlane[]) => Promise<CaptureOut>;
+
+const toSettingsInternal = (
+  loader,
+  modality,
+  groups,
+  activeChannelGroupId,
+  channelVisibilities,
+  toSettings,
+  loaderSourceImageId?: string,
+) => {
+  if (loader === null || !groups) {
+    return toSettings(
+      activeChannelGroupId,
+      modality,
+      undefined,
+      channelVisibilities,
+      loaderSourceImageId,
+    );
+  }
+  return toSettings(
+    activeChannelGroupId,
+    modality,
+    loader,
+    channelVisibilities,
+    loaderSourceImageId,
+  );
+};
 
 const toFilename = (index: Index) => {
   const level = -index.z;
@@ -79,11 +124,10 @@ const clampArray = (imageData, tile_u16, min, max) => {
 
 const capture: Capture = async (index, loader) => {
   const filename = toFilename(index);
-
   const level = Math.abs(index.z);
   const z_loader = loader[level];
-  const selection = { t: 0, z: 0, c: 0 };
-  const signal = AbortSignal.timeout(10 * 1000);
+  const selection = { t: 0, z: 0, c: index.c };
+  const signal = AbortSignal.timeout(30 * 1000);
   const { x, y } = index;
   const tile = await z_loader.getTile({
     selection,
@@ -98,8 +142,8 @@ const capture: Capture = async (index, loader) => {
   const imageData = clampArray(
     ctx.createImageData(width, height),
     data,
-    1000,
-    30000,
+    index.lowerLimit,
+    index.upperLimit,
   );
   canvas.width = width;
   canvas.height = height;
@@ -114,23 +158,93 @@ const capture: Capture = async (index, loader) => {
   return { output, filename };
 };
 
+const toSaveDirectory: ToSaveDirectory = async (directory_handle, encoded) => {
+  const create = { create: true };
+  const encoded_data = new TextEncoder().encode(encoded);
+  const sha256 = new Uint8Array(
+    await crypto.subtle.digest("SHA-256", encoded_data),
+  ).toHex();
+  const dh = await directory_handle.getDirectoryHandle(sha256, create);
+  return dh;
+};
+
+const createCRange = async (
+  setCRange,
+  channelGroups,
+  imageChannels,
+  directory_handle,
+) => {
+  setCRange(
+    await Promise.all(
+      ([] as Index[]).concat(
+        ...channelGroups.map(({ channels }) => {
+          return ([] as Index[]).concat(
+            ...channels
+              .map(async ({ channelId, lowerLimit, upperLimit }) => {
+                const c = imageChannels[channelId];
+                if (c === undefined) {
+                  return null;
+                }
+                const opts = { channelId, lowerLimit, upperLimit };
+                const encoded = hash(opts);
+                const dh = await toSaveDirectory(directory_handle, encoded);
+                const fh = await dh.getFileHandle("settings.json", {
+                  create: true,
+                });
+                const write = await fh.createWritable();
+                await write.write(
+                  JSON.stringify(
+                    {
+                      channel: c,
+                      lowerLimit,
+                      upperLimit,
+                    },
+                    null,
+                    2,
+                  ),
+                );
+                await write.close();
+                return {
+                  z: 0,
+                  x: 0,
+                  y: 0,
+                  c,
+                  dh,
+                  encoded,
+                  lowerLimit,
+                  upperLimit,
+                };
+              })
+              .filter((v) => v),
+          );
+        }),
+      ),
+    ),
+  );
+};
+
 const save: Save = async (inputs) => {
   const create = { create: true };
-  const { index, loader, handle } = inputs;
+  const { index, loader, directory_handle } = inputs;
   const { output, filename } = await capture(index, loader);
-  const fh = await handle.getFileHandle(filename, create);
+  const fh = await index.dh.getFileHandle(filename, create);
   const write = await fh.createWritable();
   await write.write(output);
   await write.close();
 };
 
 const doStep: DoStep = async (inputs) => {
-  const { loader, handle } = inputs;
+  const { loader, directory_handle } = inputs;
   const { index, next } = inputs;
   const { step, done } = inputs.stepSignal;
   if (done) return null;
-
-  save({ step, handle, loader, index });
+  try {
+    await save({ step, directory_handle, loader, index });
+  } catch (e) {
+    // REDO
+    console.error(e.message);
+    return { done: false, step };
+  }
   return { done: next === 0, step: next };
 };
 
@@ -146,6 +260,11 @@ type Index = {
   x: number;
   y: number;
   z: number;
+  c: number;
+  encoded: string;
+  lowerLimit: number;
+  upperLimit: number;
+  dh: FileSystemDirectoryHandle;
 };
 type FullState = {
   indices: Index[];
@@ -203,11 +322,19 @@ const toTileCounts: ToTileCounts = ({ zoom, tileProps }) => {
 };
 
 const initialize: Initialize = (inputs) => {
-  const { loader } = inputs;
+  const { loader, cRange } = inputs;
   const tileProps = toTileLayer(loader);
   const mz = Math.abs(tileProps.minZoom || 0) + 1;
   const zoomRange = [...new Array(mz).keys()];
   const zr = zoomRange.reverse().map((z) => -z);
+  const cRangeUnique = [] as Index[];
+  const cEncodedSet = new Set();
+  for (const index of cRange) {
+    if (!cEncodedSet.has(index.encoded)) {
+      cEncodedSet.add(index.encoded);
+      cRangeUnique.push(index);
+    }
+  }
   const indices = ([] as Index[]).concat(
     ...zr.map((zoom) => {
       const counts = toTileCounts({ zoom, tileProps });
@@ -215,9 +342,13 @@ const initialize: Initialize = (inputs) => {
       const yRange = [...new Array(counts.y).keys()];
       return ([] as Index[]).concat(
         ...xRange.map((x) => {
-          return yRange.map((y) => {
-            return { z: zoom, x, y };
-          });
+          return ([] as Index[]).concat(
+            ...yRange.map((y) => {
+              return cRangeUnique.map((opts) => {
+                return { ...opts, z: zoom, x, y };
+              });
+            }),
+          );
         }),
       );
     }),
@@ -245,9 +376,13 @@ const ImageExporterDiv = styled.div`
 
 const ProgressBar = styled.div<ProgressBarProps>`
   display: grid;
-  grid-template-columns ${(props) => to_fr(props.$ratio || 0)};
-  > div {
+  grid-template-columns ${(props) => to_fr(props.$ratio || 0)} auto;
+  > div:first-child {
     background-color: ${(props) => to_color(props.$done) || "white"};
+  }
+  > div:last-child {
+    padding: 0.25em;
+    font-family: monospace;
   }
 `;
 
@@ -263,42 +398,38 @@ const to_color = (done) => {
   return "hwb(220 10% 20% / .5)";
 };
 
-type LoaderIn = {
-  in_f: string;
-  handle: Handle.Dir;
-};
-type LoaderOut = {
-  data: LoaderPlane[];
-};
 type LoaderOpts = {
-  in_f: string;
-  handle: Handle.Dir | null;
+  pool: PoolClass;
+  handle: Handle.File | null;
 };
-type ToLoader = (i: LoaderIn) => Promise<LoaderOut>;
 interface ProgressBarProps {
   $ratio: number;
   $done: boolean;
 }
 
-const toLoader: ToLoader = async ({ in_f, handle }) => {
-  const in_fh = await handle.getFileHandle(in_f);
-  const in_file = await in_fh.getFile();
-  const in_tiff = await loadOmeTiff(in_file);
-  const { data } = in_tiff;
-  return { data };
-};
-
 const getLoader = async (opts: LoaderOpts) => {
-  const { handle, in_f } = opts;
-  if (handle === null) return;
-  const data = await toLoader({ in_f, handle });
-  return data.data;
+  const { handle, pool } = opts;
+  if (handle === null) return null;
+  const in_file = await handle.getFile();
+  const in_f = in_file.name;
+  const loader = await toLoader({
+    handle,
+    in_f,
+    pool,
+  });
+  const { data } = loader;
+  return data;
 };
 
 export type ImageExporterProps = {
   in_f: string;
-  handle: Handle.Dir;
+  handles: Handle.File[];
+  directory_handle: Handle.Dir;
   stopExport: () => void;
+  groups: ItemRegistryGroup[];
+  dicomIndexList: DicomIndex[];
+  omeLoaderEntries: OmeLoaderEntry[];
+  viewerConfig: Config;
 };
 
 export const ImageExporter = (props: ImageExporterProps) => {
@@ -306,25 +437,96 @@ export const ImageExporter = (props: ImageExporterProps) => {
     variant: "primary",
     className: "mb-3",
   };
+  const { groups, viewerConfig } = props;
+  const { omeLoaderEntries, dicomIndexList } = props;
 
-  const { in_f, handle } = props;
+  const { activeChannelGroupId, channelVisibilities } = useAppStore();
 
-  const [state, setState] = useState(null as MainState);
-  const [loader, setLoader] = useState([] as LoaderPlane[]);
+  const mainSettingsOmeList = useMemo(() => {
+    const modality = "Colorimetric";
+    return omeLoaderEntries.map(({ loader, sourceImageId }) =>
+      toSettingsInternal(
+        loader,
+        modality,
+        groups,
+        activeChannelGroupId,
+        channelVisibilities,
+        viewerConfig.toSettings,
+        sourceImageId,
+      ),
+    );
+  }, [
+    omeLoaderEntries,
+    groups,
+    activeChannelGroupId,
+    channelVisibilities,
+    viewerConfig.toSettings,
+  ]);
+
+  const mainSettingsDicomList = useMemo(() => {
+    return dicomIndexList.map((dicomIndex) => {
+      const { modality } = dicomIndex;
+      return toSettingsInternal(
+        dicomIndex.loader,
+        modality,
+        groups,
+        activeChannelGroupId,
+        channelVisibilities,
+        viewerConfig.toSettings,
+      );
+    });
+  }, [
+    dicomIndexList,
+    groups,
+    activeChannelGroupId,
+    channelVisibilities,
+    viewerConfig.toSettings,
+  ]);
+
+  const mainSettingsList = useMemo(
+    () =>
+      omeLoaderEntries.length > 0 ? mainSettingsOmeList : mainSettingsDicomList,
+    [omeLoaderEntries, mainSettingsOmeList, mainSettingsDicomList],
+  );
+
+  const { handles, directory_handle } = props;
+  const handle = handles ? handles[0] : null; //TODO
+  const channelGroups = useDocumentStore((s) => s.channelGroups);
+  const images = useDocumentStore((s) => s.images);
+  const imageChannels = useMemo(() => {
+    return Object.fromEntries(
+      [].concat(
+        ...images.map(({ channels }) => {
+          return channels.map(({ id, index }) => [id, index]);
+        }),
+      ),
+    );
+  }, [images]);
   const [stepSignal, setStepSignal] = useState({
     done: false,
     step: 0,
   });
+  const [cRange, setCRange] = useState(null);
 
   React.useEffect(() => {
-    getLoader({ handle, in_f }).then((loader) => {
-      const init = initialize({ loader });
-      if (isFullState(init) && loader.length) {
-        setLoader(loader);
-        setState(init);
-      }
-    });
-  }, [in_f, handle]);
+    createCRange(setCRange, channelGroups, imageChannels, directory_handle);
+  }, [channelGroups, imageChannels, directory_handle]);
+  const loader = useMemo(
+    () =>
+      mainSettingsList.length > 0 ? mainSettingsList[0].loader.data : null,
+    [mainSettingsList],
+  );
+
+  const state: MainState = useMemo(() => {
+    if (loader === null || cRange === null) {
+      return null;
+    }
+    const init = initialize({ loader, cRange });
+    if (isFullState(init) && loader?.length) {
+      return init;
+    }
+    return null;
+  }, [loader, cRange]);
 
   const { step, done } = stepSignal;
   const index = (() => {
@@ -332,7 +534,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
     if (state.indices.length === 0) return null;
     return state.indices[step];
   })();
-
   React.useEffect(() => {
     if (done) {
       //TODO
@@ -340,10 +541,10 @@ export const ImageExporter = (props: ImageExporterProps) => {
         props.stopExport();
       }, 2000);
     } else {
-      if (!state || !loader.length) return;
+      if (!state || !loader?.length) return;
       const next = (step + 1) % state.indices.length;
       doStep({
-        handle,
+        directory_handle,
         loader,
         index,
         next,
@@ -354,7 +555,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
         }
       });
     }
-  }, [state, step, done, handle, index, loader, props, stepSignal]);
+  }, [state, step, done, directory_handle, index, loader, props, stepSignal]);
 
   const _tileShape = { width: 1024, height: 1024 }; // TODO
   let ratio = done ? 1 : 0;
@@ -365,6 +566,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     <ImageExporterDiv>
       <ProgressBar $ratio={ratio} $done={done}>
         <div></div>
+        <div> {`${Math.floor(ratio * 1000) / 10}%`} </div>
       </ProgressBar>
     </ImageExporterDiv>
   );

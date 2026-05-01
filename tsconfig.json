@@ -10,6 +10,7 @@
     "outDir": "./build",
     "jsx": "react-jsx",
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {

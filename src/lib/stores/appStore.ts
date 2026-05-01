@@ -983,10 +983,19 @@ export const useAppStore = create<AppStore>()(
         type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
         coordinate: [number, number, number],
       ) => {
+        const { activeTool } = get();
+        // Move-tool hover only updates `hoveredShapeId` via `createDragHandlers`; the move branch
+        // below ignores `hover`. Writing `currentInteraction` on every pointermove forces
+        // `WaypointAnnotationEditor`'s unfiltered `useAppStore()` subscription to re-render the
+        // full panel (e.g. Layers with thousands of ROIs) together with Deck picking work.
+        if (type === "hover" && activeTool === "move") {
+          return;
+        }
+
         const interaction: InteractionCoordinate = { type, coordinate };
         set({ currentInteraction: interaction });
 
-        const { activeTool, drawingState, dragState } = get();
+        const { drawingState, dragState } = get();
         const [x, y] = coordinate;
 
         if (activeTool === "move") {
@@ -1768,6 +1777,7 @@ export const useAppStore = create<AppStore>()(
       },
 
       setHoveredShape: (shapeId: string | null) => {
+        if (get().hoverState.hoveredShapeId === shapeId) return;
         set({
           hoverState: {
             hoveredShapeId: shapeId,

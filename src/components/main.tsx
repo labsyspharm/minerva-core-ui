@@ -390,6 +390,9 @@ const Content = (props: Props) => {
 
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
+  const [directory_handle, setDirectoryHandle] = useState(
+    null as Handle.Dir | null,
+  );
   const [presenting, setPresenting] = useState(false);
   const [editable, setEditable] = useState(false);
   const checkWindow = React.useCallback(() => window.innerWidth > 600, []);
@@ -418,7 +421,11 @@ const Content = (props: Props) => {
     };
   }, [handleResize]);
 
-  const startExport = () => setIoState("EXPORTING");
+  const startExport = async () => {
+    const dirHandle = await showDirectoryPicker();
+    setDirectoryHandle(dirHandle);
+    setIoState("EXPORTING");
+  };
   const stopExport = () => setIoState("IDLE");
   const toggleEditor = () => setEditable(!editable);
 
@@ -885,6 +892,9 @@ const Content = (props: Props) => {
       element: author({
         ...config,
         ItemRegistry,
+        actions: {
+          startExport,
+        },
       }),
     };
   }
@@ -1195,6 +1205,7 @@ const Content = (props: Props) => {
     in_f: fileName,
     name,
     handles: [] as Handle.File[],
+    directory_handle,
     ioState,
     presenting,
     hiddenWaypoint,
@@ -1563,6 +1574,9 @@ const Content = (props: Props) => {
           ...mainProps,
           noLoader,
           handles,
+          viewerConfig,
+          dicomIndexList,
+          omeLoaderEntries,
           enterPlaybackPreview,
           exitPlaybackPreview,
         };
@@ -1594,6 +1608,7 @@ const Content = (props: Props) => {
           <Wrapper>
             {!presenting ? (
               <StoryTitleBar
+                authorUiTagName={controlPanelElement}
                 onEnterPlaybackPreview={enterPlaybackPreview}
                 playbackPreviewDisabled={_waypoints.length === 0}
               />
