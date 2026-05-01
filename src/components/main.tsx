@@ -38,6 +38,7 @@ import {
   mergeHistogramsIntoSourceChannelsByChannelId,
 } from "@/lib/imaging/histogramLazy";
 import { type Loader, toSettings } from "@/lib/imaging/viv";
+import { Pool } from "@/lib/imaging/workers/Pool";
 import type {
   ConfigGroup,
   ExhibitConfig,
