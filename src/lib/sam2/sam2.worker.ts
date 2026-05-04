@@ -4,19 +4,29 @@
 
 import * as ort from "onnxruntime-web";
 import "onnxruntime-web/webgpu";
-import { sliceTensorMask } from "./imageUtils";
 import { SAM2, type Sam2Point } from "./sam2";
 
-// Normalize base: avoid "." which would produce origin + "." => "https://example.com." (invalid)
-const rawBase =
-  typeof import.meta.env?.BASE_URL === "string"
-    ? import.meta.env.BASE_URL
-    : "/";
-const basePath =
-  rawBase === "." || rawBase === "" ? "/" : rawBase.replace(/\/?$/, "/");
-// Use an absolute URL so Vite treats this as a network fetch (not a module import),
-// while still respecting the configured base path.
-ort.env.wasm.wasmPaths = `${self.location.origin}${basePath}wasm/`;
+// Resolve `/wasm/` from this worker script URL (`/assets/…` vs `/<repo>/assets/…` vs `./` site root).
+const { pathname: workerPathname, origin: workerOrigin } = self.location;
+const assetsIx = workerPathname.indexOf("/assets/");
+let wasmPaths: string;
+if (assetsIx >= 0) {
+  const mount =
+    assetsIx === 0 ? "" : workerPathname.slice(0, assetsIx).replace(/\/$/, "");
+  wasmPaths = `${workerOrigin}${mount}/wasm/`;
+} else {
+  const rawBase =
+    typeof import.meta.env?.BASE_URL === "string"
+      ? import.meta.env.BASE_URL
+      : "/";
+  const basePath =
+    rawBase === "." || rawBase === "./" || rawBase === ""
+      ? "/"
+      : rawBase.replace(/\/?$/, "/");
+  const prefix = basePath === "/" ? "" : basePath.replace(/\/$/, "");
+  wasmPaths = `${workerOrigin}${prefix}/wasm/`;
+}
+ort.env.wasm.wasmPaths = wasmPaths;
 
 let sam2: SAM2 | null = null;
 

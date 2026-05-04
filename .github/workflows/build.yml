@@ -28,12 +28,12 @@ jobs:
           version: 10
           run_install: true
 
-      # annotation -> /minerva-annotation-demo/ …
-      # main -> /<repo>/ for this repo’s GitHub Project Pages …
-      # dicom-pages -> '' (site is pushed to lsp-idc-minerva, usually at domain root)
+      # main + annotation: Vite `base: './'` so one build works at both
+      # `*.github.io/<repo>/` (relative to that path) and custom-domain apex (`/assets/...`).
+      # dicom-pages: unset → same output as local `vite build` (also relative assets).
       - name: Build with pnpm
         env:
-          BASE_PATH: ${{ github.ref == 'refs/heads/annotation' && '/minerva-annotation-demo/' || github.ref == 'refs/heads/main' && format('/{0}/', github.event.repository.name) || '' }}
+          BASE_PATH: ${{ (github.ref == 'refs/heads/annotation' || github.ref == 'refs/heads/main') && './' || '' }}
         run: |
           pnpm run pages
 

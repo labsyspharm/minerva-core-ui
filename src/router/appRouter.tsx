@@ -97,6 +97,14 @@ function routerBasepath(): string {
     typeof import.meta.env?.BASE_URL === "string"
       ? import.meta.env.BASE_URL
       : "/";
+  /** Vite `base: './'` — basename must match runtime URL (/ on custom domain apex, /<repo> on *.github.io). */
+  if (b === "./") {
+    if (typeof window === "undefined") return "/";
+    const path = window.location.pathname.replace(/\/$/, "") || "/";
+    if (path === "/") return "/";
+    const first = path.split("/").filter(Boolean)[0];
+    return first ? `/${first}` : "/";
+  }
   const trimmed = b.replace(/\/$/, "");
   return trimmed === "" ? "/" : trimmed;
 }
