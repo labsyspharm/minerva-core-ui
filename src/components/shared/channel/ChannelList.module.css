@@ -77,6 +77,100 @@
 }
 
 /* Compact header (narrower than ItemList header) */
+.channelPanelTabRow {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  background-color: #111;
+  border-bottom: 1px solid #444;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.channelPanelTab {
+  flex: 1;
+  margin: 0;
+  padding: 8px 8px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #aaa;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.channelPanelTab:hover {
+  color: #e6edf3;
+  background: rgb(255 255 255 / 0.04);
+}
+
+.channelPanelTabActive {
+  color: #e6edf3;
+  border-bottom-color: var(--theme-light-focus-color, #6ae);
+  background: rgb(255 255 255 / 0.06);
+}
+
+.channelNamesPanel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.channelNamesRows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-color: #555 transparent;
+  scrollbar-width: thin;
+}
+
+.channelNamesRows::-webkit-scrollbar {
+  width: 8px;
+}
+
+.channelNamesRows::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 4px;
+}
+
+.channelNameRow {
+  padding: 8px 10px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.channelNameLabel {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.channelNameIndex {
+  flex: 0 0 auto;
+  min-width: 1.5em;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b949e;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.channelNameInput {
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
+}
+
 .compactHeader {
   background-color: #1a1a1a;
   border-bottom: 1px solid #444;

@@ -642,8 +642,9 @@ const FormAny = (props: FullFormProps) => {
     });
   }, [csv, handles, mask, path, sC, sM, sN, sP, choices]);
   const pathOptions = { label: "Image", vals: choices.path };
-  const maskOptions = { label: "Mask", vals: choices.mask };
-  const csvOptions = { label: "CSV", vals: choices.csv };
+  // Mask / CSV mapping UI hidden — import flow targets channel TIFFs only
+  // const maskOptions = { label: "Mask", vals: choices.mask };
+  // const csvOptions = { label: "CSV", vals: choices.csv };
   return (
     <Form {...fProps} noValidate>
       <Form.Group {...toGroupProps("name")}>
@@ -690,6 +691,7 @@ const FormAny = (props: FullFormProps) => {
             <br />
           </FormGridRow>
         </Form.Group>
+        {/*
         <Form.Group {...toGroupProps("mask")}>
           <Form.Label>Segmentation File Path:</Form.Label>
           <FormGridRow hasValidation>
@@ -735,6 +737,7 @@ const FormAny = (props: FullFormProps) => {
             <Form.Control.Feedback type="valid">Valid.</Form.Control.Feedback>
           </FormGridRow>
         </Form.Group>
+        */}
       </FormGrid>
       <FormGrid>
         <DarkPrimaryButton type="submit">Submit</DarkPrimaryButton>
@@ -960,8 +963,8 @@ const Upload = (props: UploadProps) => {
         aria-expanded={mappingExpanded}
       >
         {mappingExpanded
-          ? "Hide channel / mask / CSV mapping"
-          : "Edit channel / mask / CSV mapping"}
+          ? "Hide channel file mapping"
+          : "Edit channel file mapping"}
       </DisclosureButton>
     ) : null;
 

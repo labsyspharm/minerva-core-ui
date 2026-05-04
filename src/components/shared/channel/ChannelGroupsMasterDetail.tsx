@@ -87,7 +87,37 @@ export const ChannelGroupsMasterDetail = (
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
+
+  /** One listing per `Channel.id` (first occurrence in image order) — avoids duplicate rows if the same id appears twice after hydrate/reload. */
+  const uniqueSourceChannels = React.useMemo(() => {
+    const seen = new Set<string>();
+    const out: Channel[] = [];
+    for (const sc of sourceChannels) {
+      if (seen.has(sc.id)) continue;
+      seen.add(sc.id);
+      out.push(sc);
+    }
+    return out;
+  }, [sourceChannels]);
+
+  /**
+   * One row per distinct display name. Each image in the document often has its own
+   * channel UUIDs with the same labels as other images; listing by id repeats the
+   * entire block once per image (mistaken for “duplicates” or HMR bugs).
+   */
+  const channelNamesTabRows = React.useMemo(() => {
+    const seenName = new Set<string>();
+    const out: Channel[] = [];
+    for (const sc of uniqueSourceChannels) {
+      if (seenName.has(sc.name)) continue;
+      seenName.add(sc.name);
+      out.push(sc);
+    }
+    return out;
+  }, [uniqueSourceChannels]);
+
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
+  const setImages = useDocumentStore((s) => s.setImages);
   const setGroupNames = useAppStore((s) => s.setGroupNames);
   const setGroupChannelLists = useAppStore((s) => s.setGroupChannelLists);
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
@@ -97,6 +127,10 @@ export const ChannelGroupsMasterDetail = (
 
   // Master-detail state
   const [detailGroupId, setDetailGroupId] = React.useState<string | null>(null);
+  /** Left column: group membership vs renaming source-channel display names */
+  const [channelPanelTab, setChannelPanelTab] = React.useState<
+    "groups" | "names"
+  >("groups");
   /** Source channel UUIDs currently fetching histogram tiles (spinner on each chart). */
   const [loadingHistogramSourceIds, setLoadingHistogramSourceIds] =
     React.useState<string[]>([]);
@@ -175,6 +209,55 @@ export const ChannelGroupsMasterDetail = (
       setGroupChannelLists,
       setChannelVisibilities,
     ],
+  );
+
+  /** Persisted source channel label for one `ImageChannel.id`; updates visibility (name keys) and group lists. */
+  const renameSourceChannelDisplayName = React.useCallback(
+    (channelId: string, rawName: string) => {
+      const trimmed = rawName.trim();
+      if (!trimmed) return;
+      const doc = useDocumentStore.getState();
+      const flatBefore = flattenImageChannelsInDocumentOrder(doc.images);
+      const prev = findSourceChannel(flatBefore, channelId);
+      if (!prev || prev.name === trimmed) return;
+
+      const oldName = prev.name;
+
+      const nextImages = doc.images.map((im) => ({
+        ...im,
+        channels: im.channels.map((ch) =>
+          ch.id === channelId ? { ...ch, name: trimmed } : ch,
+        ),
+      }));
+      setImages(nextImages);
+
+      const flatAfter = flattenImageChannelsInDocumentOrder(nextImages);
+      const stillUsesOldName = flatAfter.some((c) => c.name === oldName);
+
+      const vis = useAppStore.getState().channelVisibilities;
+      const nextVis = { ...vis };
+      if (nextVis[trimmed] === undefined) {
+        nextVis[trimmed] = nextVis[oldName] ?? true;
+      }
+      if (!stillUsesOldName && oldName !== trimmed) {
+        delete nextVis[oldName];
+      }
+      setChannelVisibilities(nextVis);
+
+      const groups = useDocumentStore.getState().channelGroups;
+      setGroupChannelLists(
+        Object.fromEntries(
+          groups.map(({ name, channels }) => [
+            name,
+            channels
+              .map((gc) => findSourceChannel(flatAfter, gc.channelId))
+              .filter(Boolean)
+              .map((sc) => sc?.name as string),
+          ]),
+        ),
+      );
+    },
+    [setImages, setChannelVisibilities, setGroupChannelLists],
   );
 
   // --- Group CRUD ---
@@ -376,13 +459,67 @@ export const ChannelGroupsMasterDetail = (
     return sourceChannels.filter(({ id }) => !usedFlatIds.has(id));
   }, [detailGroupId, channelGroups, sourceChannels]);
 
+  const renderChannelNamesPanel = () => {
+    if (channelNamesTabRows.length === 0) {
+      return (
+        <div className={[styles.panel, styles.channelNamesPanel].join(" ")}>
+          <div className={styles.emptyMessage}>No channels loaded</div>
+        </div>
+      );
+    }
+
+    return (
+      <div className={[styles.panel, styles.channelNamesPanel].join(" ")}>
+        <ul className={styles.channelNamesRows}>
+          {channelNamesTabRows.map((sc) => {
+            const im = images.find((i) => i.id === sc.imageId);
+            const meta = im?.basename
+              ? `${im.basename} · index ${sc.index}`
+              : `Index ${sc.index}`;
+            const nameInputId = `ch-name-${sc.id}`;
+            return (
+              <li key={sc.id} className={styles.channelNameRow}>
+                <div className={styles.channelNameLabel}>
+                  <span className={styles.channelNameIndex} title={meta}>
+                    {sc.index}
+                  </span>
+                  <input
+                    id={nameInputId}
+                    className={`${styles.detailTitleInput} ${styles.channelNameInput}`}
+                    type="text"
+                    defaultValue={sc.name}
+                    maxLength={200}
+                    autoComplete="off"
+                    spellCheck={false}
+                    aria-label={`Channel name (${meta})`}
+                    onBlur={(e) =>
+                      renameSourceChannelDisplayName(sc.id, e.target.value)
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
+                  />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  };
+
   // ── List view ──
 
   const listHeader = (
     <div className={styles.compactHeader}>
       <div className={styles.headerTitle}>
-        <span>Channel Groups</span>
-        <span className={styles.headerCount}>({channelGroups.length})</span>
+        <span className={styles.headerCount}>
+          {channelGroups.length}{" "}
+          {channelGroups.length === 1 ? "group" : "groups"}
+        </span>
       </div>
       <div className={styles.headerActions}>
         <button
@@ -712,7 +849,46 @@ export const ChannelGroupsMasterDetail = (
 
   return (
     <div className={[styles.panel, styles.black].join(" ")}>
-      {detailGroupId ? renderDetail() : renderList()}
+      <div
+        className={styles.channelPanelTabRow}
+        role="tablist"
+        aria-label="Channel panel"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={channelPanelTab === "groups"}
+          className={
+            channelPanelTab === "groups"
+              ? `${styles.channelPanelTab} ${styles.channelPanelTabActive}`
+              : styles.channelPanelTab
+          }
+          onClick={() => setChannelPanelTab("groups")}
+        >
+          Channel groups
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={channelPanelTab === "names"}
+          className={
+            channelPanelTab === "names"
+              ? `${styles.channelPanelTab} ${styles.channelPanelTabActive}`
+              : styles.channelPanelTab
+          }
+          onClick={() => {
+            setChannelPanelTab("names");
+            setDetailGroupId(null);
+          }}
+        >
+          Channel names
+        </button>
+      </div>
+      {channelPanelTab === "names"
+        ? renderChannelNamesPanel()
+        : detailGroupId
+          ? renderDetail()
+          : renderList()}
       {colorPickerChannelUUID && colorPickerPos && pickingColorHex ? (
         <ChromeColorPickerPopover
           position={colorPickerPos}
