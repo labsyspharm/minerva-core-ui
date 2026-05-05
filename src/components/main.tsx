@@ -1635,6 +1635,11 @@ const LibraryOrAuthor = (props: Props) => {
 };
 
 const Main = (props: Props) => {
+  /** Remove HTML shell splash for all entry paths (`StoryPersistenceRoot` only mounts when FS API exists). */
+  React.useEffect(() => {
+    document.getElementById("global-loader")?.remove();
+  }, []);
+
   if (props.demo_dicom_web || props.demo_url || hasFileSystemAccess()) {
     return (
       <StoryPersistenceRoot>
