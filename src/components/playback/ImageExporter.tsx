@@ -8,11 +8,13 @@ import type {
   ItemRegistryGroup,
   OmeLoaderEntry,
 } from "@/components/shared/viewer/ImageViewer";
+import type { Getter, Index } from "@/lib/export/save";
+//import { save } from "@/lib/export/save";
+import { save } from "@/lib/export/savePool";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import { toLoader } from "@/lib/imaging/filesystem";
 import type { Config } from "@/lib/imaging/viv";
 import type { PoolClass } from "@/lib/imaging/workers/Pool";
-import { Pool } from "@/lib/imaging/workers/Pool";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 
@@ -48,10 +50,6 @@ type CommonIn = {
   index: Index;
 };
 
-type SaveIn = CommonIn & {
-  step: number;
-};
-type Save = (i: SaveIn) => Promise<void>;
 type ToSaveDirectory = (
   d: FileSystemDirectoryHandle,
   s: string,
@@ -66,12 +64,6 @@ type StepOut = {
   done: boolean;
 };
 type DoStep = (o: StepIn) => Promise<StepOut | null>;
-
-type CaptureOut = {
-  output: Uint8Array<ArrayBuffer>;
-  filename: string;
-};
-type Capture = (i: Index, loader: LoaderPlane[]) => Promise<CaptureOut>;
 
 const toSettingsInternal = (
   loader,
@@ -98,64 +90,6 @@ const toSettingsInternal = (
     channelVisibilities,
     loaderSourceImageId,
   );
-};
-
-const toFilename = (index: Index) => {
-  const level = -index.z;
-  const { x, y } = index;
-  return `${level}_${x}_${y}.jpg`;
-};
-
-const clampValue = (x, min, max) => {
-  return Math.min(255, Math.max(0, (255 * (x - min)) / (max - min)));
-};
-
-const clampArray = (imageData, tile_u16, min, max) => {
-  var _tile_u8 = new Uint8Array(tile_u16.length);
-  for (let i = 0; i < tile_u16.length; i++) {
-    const clamped = clampValue(tile_u16[i], min, max);
-    imageData.data[i * 4] = clamped;
-    imageData.data[i * 4 + 1] = clamped;
-    imageData.data[i * 4 + 2] = clamped;
-    imageData.data[i * 4 + 3] = 255; // Alpha
-  }
-  return imageData;
-};
-
-const capture: Capture = async (index, loader) => {
-  const filename = toFilename(index);
-  const level = Math.abs(index.z);
-  const z_loader = loader[level];
-  const selection = { t: 0, z: 0, c: index.c };
-  const signal = AbortSignal.timeout(30 * 1000);
-  const { x, y } = index;
-  const tile = await z_loader.getTile({
-    selection,
-    x,
-    y,
-    signal,
-  });
-  const { width, height, data } = tile;
-
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  const imageData = clampArray(
-    ctx.createImageData(width, height),
-    data,
-    index.lowerLimit,
-    index.upperLimit,
-  );
-  canvas.width = width;
-  canvas.height = height;
-  ctx.putImageData(imageData, 0, 0);
-
-  const blob = await new Promise((r: BlobCallback) => {
-    canvas.toBlob(r, "image/jpeg", 0.5);
-  });
-
-  const buff = await blob.arrayBuffer();
-  const output = new Uint8Array(buff);
-  return { output, filename };
 };
 
 const toSaveDirectory: ToSaveDirectory = async (directory_handle, encoded) => {
@@ -223,23 +157,16 @@ const createCRange = async (
   );
 };
 
-const save: Save = async (inputs) => {
-  const create = { create: true };
-  const { index, loader, directory_handle } = inputs;
-  const { output, filename } = await capture(index, loader);
-  const fh = await index.dh.getFileHandle(filename, create);
-  const write = await fh.createWritable();
-  await write.write(output);
-  await write.close();
-};
-
 const doStep: DoStep = async (inputs) => {
   const { loader, directory_handle } = inputs;
   const { index, next } = inputs;
   const { step, done } = inputs.stepSignal;
   if (done) return null;
+  const tileGetters: Getter[] = loader.map(() => {
+    return (opts) => loader.getTile(opts);
+  });
   try {
-    await save({ step, directory_handle, loader, index });
+    await save({ directory_handle, tileGetters, index });
   } catch (e) {
     // REDO
     console.error(e.message);
@@ -255,16 +182,6 @@ type TileProps = {
   minZoom?: number;
   maxZoom?: number;
   extent?: [number, number, number, number];
-};
-type Index = {
-  x: number;
-  y: number;
-  z: number;
-  c: number;
-  encoded: string;
-  lowerLimit: number;
-  upperLimit: number;
-  dh: FileSystemDirectoryHandle;
 };
 type FullState = {
   indices: Index[];
