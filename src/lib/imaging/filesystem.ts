@@ -85,10 +85,12 @@ function isPersistableFileHandle(handle: Handle.File): boolean {
   );
 }
 
+/** True if we can still read bytes from disk (real handle) or the chosen File (ephemeral). */
 const findFile: FindFile = async (opts) => {
   const { handle } = opts;
   try {
-    handle.createWritable();
+    await handle.getFile();
+    return true;
   } catch (e: unknown) {
     const name =
       e !== null && typeof e === "object" && "name" in e
@@ -97,8 +99,8 @@ const findFile: FindFile = async (opts) => {
     if (name === "NotFoundError") {
       return false;
     }
+    throw e;
   }
-  return true;
 };
 
 const toFile: ToFiles = async () => {
