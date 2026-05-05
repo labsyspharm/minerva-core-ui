@@ -28,7 +28,9 @@ import { loadDicomWeb, parseDicomWeb } from "@/lib/imaging/dicom.js";
 import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
 import {
   findFile,
-  hasFileSystemAccess,
+  hasAuthorShellSupport,
+  hasDirectoryPickerAccess,
+  isPersistableFileHandle,
   toLoader,
   toLoaderFromUrl,
 } from "@/lib/imaging/filesystem";
@@ -422,6 +424,12 @@ const Content = (props: Props) => {
   }, [handleResize]);
 
   const startExport = async () => {
+    if (!hasDirectoryPickerAccess()) {
+      window.alert(
+        "Export to a folder needs the File System Access API (directory picker). Try Chrome or Edge, or use “OME-TIFF URL” workflows in other browsers.",
+      );
+      return;
+    }
     const dirHandle = await showDirectoryPicker();
     setDirectoryHandle(dirHandle);
     setIoState("EXPORTING");
@@ -605,6 +613,7 @@ const Content = (props: Props) => {
       for (let i = 0; i < entries.length; i++) {
         const { sourceImageId } = entries[i];
         const handle = handles[i];
+        if (!isPersistableFileHandle(handle)) continue;
         const key = imageHandleStorageKey(storyId, sourceImageId);
         await putFileHandle(key, handle);
         nextImages = setImageSource(nextImages, sourceImageId, {
@@ -1635,12 +1644,12 @@ const LibraryOrAuthor = (props: Props) => {
 };
 
 const Main = (props: Props) => {
-  /** Remove HTML shell splash for all entry paths (`StoryPersistenceRoot` only mounts when FS API exists). */
+  /** Remove HTML shell splash whenever Main mounts (library / author shell). */
   React.useEffect(() => {
     document.getElementById("global-loader")?.remove();
   }, []);
 
-  if (props.demo_dicom_web || props.demo_url || hasFileSystemAccess()) {
+  if (props.demo_dicom_web || props.demo_url || hasAuthorShellSupport()) {
     return (
       <StoryPersistenceRoot>
         <LibraryOrAuthor {...props} />
@@ -1649,7 +1658,10 @@ const Main = (props: Props) => {
   } else {
     return (
       <div>
-        <p>Unable to access FileSystem API.</p>
+        <p>
+          Minerva needs a secure context (HTTPS or localhost). Serve this app
+          over HTTPS and reload.
+        </p>
       </div>
     );
   }

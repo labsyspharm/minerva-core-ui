@@ -78,6 +78,7 @@
     "@vaadin/form-layout": "^24.4.3",
     "@vaadin/text-field": "^24.4.3",
     "@vivjs/constants": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/constants",
+    "browser-fs-access": "^0.38.0",
     "dcmjs": "^0.41.0",
     "dexie": "^4.4.2",
     "foobar-ipsum": "^1.0.3",
