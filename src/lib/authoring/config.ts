@@ -407,11 +407,9 @@ const extractChannels: ExtractChannels = (
   const init = initialize({ planes: loader.data });
   const { Channels, Type } = loader.metadata.Pixels;
   const channelImageId = sourceImageId ?? modality;
-  const stripCycif = (name: string) =>
-    name.startsWith("CYCIF_") ? name.slice(6) : name;
   const SourceChannels = Channels.map((channel, index) => ({
     id: crypto.randomUUID(),
-    name: stripCycif(channel.Name),
+    name: channel?.Name || `Channel ${index + 1}`,
     samples: channel.SamplesPerPixel,
     index: init.indices[index].c,
     sourceDataTypeId: asID(Type).ID,
