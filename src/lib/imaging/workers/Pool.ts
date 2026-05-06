@@ -25,7 +25,7 @@ export declare class PoolClass {
 // We need to give a different way of getting this for safari, so 4 is probably a safe bet
 // for parallel processing in the meantime.  More can't really hurt since they'll just block
 // each other and not the UI thread, which is the real benefit.
-const defaultPoolSize = globalThis?.navigator?.hardwareConcurrency ?? 4;
+const defaultPoolSize = globalThis?.navigator?.hardwareConcurrency ?? 1;
 
 function createWorker() {
   return new DecoderWorker();
@@ -37,8 +37,8 @@ class Pool extends GeotiffPool {
   size: 1;
   messageId: 0;
 
-  constructor(numWorkers = 1) {
-    super(numWorkers || defaultPoolSize, createWorker);
+  constructor(numWorkers = defaultPoolSize) {
+    super(numWorkers, createWorker);
   }
 
   decode(fileDirectory, buffer) {
