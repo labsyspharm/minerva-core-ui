@@ -12,7 +12,6 @@ import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import { toLoader } from "@/lib/imaging/filesystem";
 import type { Config } from "@/lib/imaging/viv";
 import type { PoolClass } from "@/lib/imaging/workers/Pool";
-import { Pool } from "@/lib/imaging/workers/Pool";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 
@@ -566,7 +565,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     <ImageExporterDiv>
       <ProgressBar $ratio={ratio} $done={done}>
         <div></div>
-        <div> {`${Math.floor(ratio * 1000) / 10}%`} </div>
+        <div> {`${(ratio * 1000).toFixed(3)}%`} </div>
       </ProgressBar>
     </ImageExporterDiv>
   );
