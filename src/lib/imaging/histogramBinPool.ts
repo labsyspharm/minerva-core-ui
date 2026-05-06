@@ -8,7 +8,7 @@ type OutMsg = {
 };
 
 const poolSize = () =>
-  Math.min(4, Math.max(1, globalThis.navigator?.hardwareConcurrency ?? 4));
+  Math.min(4, globalThis.navigator?.hardwareConcurrency ?? 1);
 
 export class HistogramBinPool {
   private workers: Worker[] = [];
