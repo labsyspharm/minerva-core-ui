@@ -1,4 +1,5 @@
 import { histogramBinFromPixels } from "./histogramBin";
+import HistogramWorker from "./workers/histogram.worker.ts?worker";
 
 type OutMsg = {
   jobId: number;
@@ -19,9 +20,8 @@ export class HistogramBinPool {
   private rr = 0;
 
   constructor(size: number) {
-    const url = new URL("./workers/histogram.worker.ts", import.meta.url);
     for (let i = 0; i < size; i++) {
-      const w = new Worker(url, { type: "module" });
+      const w = new HistogramWorker();
       w.onmessage = (ev: MessageEvent<OutMsg>) => {
         const { jobId, y, error } = ev.data;
         const p = this.pending.get(jobId);
