@@ -1,4 +1,5 @@
 import { Pool as GeotiffPool } from "geotiff";
+import DecoderWorker from "./decoder.worker.ts?worker";
 
 export declare class PoolClass {
   /**
@@ -27,9 +28,7 @@ export declare class PoolClass {
 const defaultPoolSize = globalThis?.navigator?.hardwareConcurrency ?? 4;
 
 function createWorker() {
-  return new Worker(new URL("./decoder.worker.ts", import.meta.url), {
-    type: "module",
-  });
+  return new DecoderWorker();
 }
 
 class Pool extends GeotiffPool {
