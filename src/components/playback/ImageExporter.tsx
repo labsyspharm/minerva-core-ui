@@ -162,9 +162,34 @@ const doStep: DoStep = async (inputs) => {
   const { index, next } = inputs;
   const { step, done } = inputs.stepSignal;
   if (done) return null;
-  const tileGetters: Getter[] = loader.map(() => {
-    return (opts) => loader.getTile(opts);
-  });
+  const all_x = [...new Array(100).keys()];
+  const all_y = [...new Array(100).keys()];
+  const all_c = [...new Array(40).keys()];
+  const all_xy = [].concat(...all_x.map((x) => all_y.map((y) => ({ x, y }))));
+  const tileGetters: Getter[] = await Promise.all(
+    loader.map(async (tileLoader) => {
+      const { tileSize } = tileLoader;
+      const tileExtents = Object.fromEntries(
+        all_xy.map(({ x, y }) => {
+          const extent = tileLoader._getTileExtent(x, y);
+          return [`${x}-${y}`, extent];
+        }),
+      );
+      const tileImages = Object.fromEntries(
+        await Promise.all(
+          all_c.map(async (c) => {
+            const image = await tileLoader._indexer({ c, t: 0, z: 0 });
+            return [c, image];
+          }),
+        ),
+      );
+      return {
+        tileExtents,
+        tileImages,
+        tileSize,
+      };
+    }),
+  );
   try {
     await save({ directory_handle, tileGetters, index });
   } catch (e) {

@@ -39,19 +39,18 @@ export class SavePool {
 
   run(inputs: SaveIn): Promise<void> {
     const { index, tileGetters, directory_handle } = inputs;
+    const loaderData = tileGetters; // TODO
     const jobId = this.nextId++;
     const w = this.workers[this.rr++ % this.workers.length];
     return new Promise((resolve, reject) => {
       this.pending.set(jobId, { resolve, reject });
       w.postMessage(
-        { jobId, index, tileGetters, directory_handle },
+        { jobId, index, loaderData, directory_handle },
         // TODO --
         // these getTile functions can not be cloned
         // these getTile functions can't be transferred
         // The same issues apply to the bound loader instances
-        [
-          /*tileGetters*/
-        ],
+        [],
       );
     });
   }
