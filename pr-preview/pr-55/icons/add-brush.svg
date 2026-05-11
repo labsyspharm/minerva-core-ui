@@ -1,0 +1,18 @@
+<svg fill="currentColor" viewBox="0 0 16 16">
+  <!-- Generator: Adobe Illustrator 30.1.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 136)  -->
+  <path d="M12,2L4,10l2,2L14,4l-2-2Z"/>
+  <path  d="M4,10l-2,4,4-2"/>
+  <line 
+    x1="13.33" y1="12.67" 
+    x2="8.33" y2="12.67"
+    stroke="currentColor"
+    stroke-width="1"
+  />
+
+  <line 
+    x1="10.83" y1="15.17" 
+    x2="10.83" y2="10.17"
+    stroke="currentColor"
+    stroke-width="1"
+  />
+</svg> 
