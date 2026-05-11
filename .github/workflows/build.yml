@@ -14,7 +14,6 @@ jobs:
     environment: lsp-idc-minerva
     permissions:
       contents: read
-      actions: write # upload-artifact → deploy-site
     steps:
       - uses: actions/checkout@v6
 
@@ -38,13 +37,13 @@ jobs:
         run: |
           pnpm run pages
 
-      # main -> artifact for branch deploy job (GitHub Pages source must be branch `gh-pages`;
-      # see companion job `deploy-site` and Settings → Pages → Deploy from branch.)
-      - name: Upload dist for gh-pages deploy
+      # main → GitHub Pages when Settings → Pages → **Source = GitHub Actions**
+      # (`upload-pages-artifact` + `deploy` job below). Your site 404s if Source is still Actions but this job was missing,
+      # or if Source is **Deploy from branch** while only Actions uploads run — pick one mode and match Settings.
+      - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-pages-artifact@v5
         with:
-          name: site-dist
           path: dist
 
       # dicom-pages -> lsp-idc-minerva
@@ -85,35 +84,17 @@ jobs:
           git commit -m update --allow-empty
           git push -f
 
-  # Production `main` deploy: push `dist/` to the **root** of branch `gh-pages` (no subfolder).
-  # Repo Settings → Pages → Deploy from branch → `gh-pages` → `/ (root)` so the live site URL is your
-  # normal Pages root (`https://<org>.github.io/<repo>/` or custom domain apex). PR previews stay under
-  # `pr-preview/**` and are preserved via `clean-exclude`. Serialized with `pr-preview.yml` (`gh-pages` concurrency).
-  deploy-site:
+  deploy:
     if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
-    concurrency:
-      group: gh-pages
-      cancel-in-progress: false
     permissions:
-      contents: write
-      actions: read # download-artifact from build job
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Download built site
-        uses: actions/download-artifact@v8
-        with:
-          name: site-dist
-          path: dist
-
-      - name: Push production site to gh-pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages
-          folder: dist
-          force: false
-          clean: true
-          clean-exclude: |
-            pr-preview/**
+      - id: deployment
+        name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
