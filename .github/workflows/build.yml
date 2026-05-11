@@ -4,6 +4,9 @@ on:
     branches: ["dicom-pages", "annotation", "main"]
 
 # Pages: one deploy at a time (avoid overlapping deployments on rapid pushes)
+# Production + PR previews both publish to branch `gh-pages`. Repo Settings → Pages → **Deploy from branch**
+# → **gh-pages** → `/ (root)`. GitHub Actions–only Pages (`deploy-pages`) does **not** serve files pushed by
+# rossjrw/pr-preview-action — previews must use branch mode ([upstream README](https://github.com/rossjrw/pr-preview-action)).
 concurrency:
   group: pages-${{ github.ref }}
   cancel-in-progress: false
@@ -14,6 +17,7 @@ jobs:
     environment: lsp-idc-minerva
     permissions:
       contents: read
+      actions: write # upload-artifact for main → publish-gh-pages
     steps:
       - uses: actions/checkout@v6
 
@@ -38,12 +42,12 @@ jobs:
         run: |
           pnpm run pages
 
-      # Requires repo Settings → Pages → **Source: GitHub Actions**. If Source is “Deploy from branch”
-      # → `/docs`, GitHub runs **Jekyll** (`jekyll-build-pages`) and fails — this app ships via this workflow only.
-      - name: Upload Pages artifact
+      # Package main build for the gh-pages publish job (cannot combine contents: read + git push in one job).
+      - name: Upload dist for gh-pages (main only)
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
+          name: site-dist
           path: dist
 
       # dicom-pages -> lsp-idc-minerva
@@ -84,17 +88,32 @@ jobs:
           git commit -m update --allow-empty
           git push -f
 
-  deploy:
+  publish-gh-pages:
     if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
+    concurrency:
+      group: gh-pages
+      cancel-in-progress: false
     permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      contents: write
+      actions: read
     steps:
-      - id: deployment
-        name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v6
+
+      - name: Download built site
+        uses: actions/download-artifact@v8
+        with:
+          name: site-dist
+          path: dist
+
+      # Preserve PR previews under pr-preview/** ([rossjrw/pr-preview-action](https://github.com/rossjrw/pr-preview-action)).
+      - name: Publish production site to gh-pages branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: dist
+          force: false
+          clean: true
+          clean-exclude: |
+            pr-preview/**

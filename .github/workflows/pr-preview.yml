@@ -1,3 +1,4 @@
+# Requires Pages source **Deploy from branch → gh-pages** (same branch this action writes). “GitHub Actions” Pages does not serve `gh-pages` commits ([see README](https://github.com/rossjrw/pr-preview-action)).
 name: Deploy PR Preview
 
 on:
