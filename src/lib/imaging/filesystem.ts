@@ -126,7 +126,8 @@ const toFile: ToFiles = async () => {
 const toLoader: ToLoader = async ({ handle, pool = null }) => {
   const in_file = await handle.getFile();
   if (pool) {
-    return await loadOmeTiff(in_file, { pool });
+    // @vivjs/loaders types geotiff@2.1.3 Pool; app uses geotiff@2.1.4-beta (different .d.ts).
+    return await loadOmeTiff(in_file, { pool: pool as never });
   }
   return await loadOmeTiff(in_file);
 };
@@ -136,7 +137,7 @@ const toLoaderFromUrl = async (
   pool?: PoolClass,
 ): Promise<Loader> => {
   if (pool) {
-    return await loadOmeTiff(url, { pool });
+    return await loadOmeTiff(url, { pool: pool as never });
   }
   return await loadOmeTiff(url);
 };

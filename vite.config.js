@@ -57,6 +57,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
     dedupe: [
+      "geotiff",
       "@luma.gl/core",
       "@luma.gl/constants",
       "@luma.gl/engine",
