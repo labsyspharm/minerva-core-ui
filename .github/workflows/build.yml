@@ -1,4 +1,7 @@
 name: Github Pages
+env:
+  # Production (`main`) is served at https://demo.minerva.im/ — Vite `base` must be `/`.
+  PAGES_BASE_MAIN: "/"
 on:
   push:
     branches: ["dicom-pages", "annotation", "main"]
@@ -28,12 +31,11 @@ jobs:
           version: 10
           run_install: true
 
-      # main + annotation: Vite `base: './'` so assets resolve from the deployed URL root
-      # (`https://*.github.io/<repo>/`, custom domain apex, etc.).
-      # dicom-pages: unset → same output as local `vite build`.
+      # main: base `/` for https://demo.minerva.im/ (GitHub Pages custom domain).
+      # annotation: `./` for external demo repos. dicom-pages: unset (`vite` default base).
       - name: Build with pnpm
         env:
-          BASE_PATH: ${{ (github.ref == 'refs/heads/annotation' || github.ref == 'refs/heads/main') && './' || '' }}
+          BASE_PATH: ${{ github.ref == 'refs/heads/main' && env.PAGES_BASE_MAIN || (github.ref == 'refs/heads/annotation' && './' || '') }}
         run: |
           pnpm run pages
 
