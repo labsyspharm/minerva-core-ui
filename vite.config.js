@@ -6,7 +6,14 @@ import { standardCssModules } from "vite-plugin-standard-css-modules";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import svgr from "vite-plugin-svgr";
 
+/** ISO UTC time baked into each bundle; override in CI with `VITE_APP_BUILD_TIME` (ISO-8601). */
+const BUILD_TIME_ISO =
+  process.env.VITE_APP_BUILD_TIME ?? new Date().toISOString();
+
 export default defineConfig({
+  define: {
+    __BUILD_TIME_ISO__: JSON.stringify(BUILD_TIME_ISO),
+  },
   assetsInclude: ["**/*.wasm"],
   worker: {
     format: "es",

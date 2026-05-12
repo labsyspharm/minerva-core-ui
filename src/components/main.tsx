@@ -6,6 +6,7 @@ import { StoryTitleBar } from "@/components/authoring/StoryTitleBar";
 import { MinervaLibraryPage } from "@/components/library/MinervaLibraryPage";
 import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
 import { StoryReturnToLibraryBridge } from "@/components/StoryReturnToLibraryBridge";
+import { BuildStamp } from "@/components/shared/BuildStamp";
 import { FileHandler } from "@/components/shared/FileHandler";
 import type { LoadedSourceSummary, ValidObj } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
@@ -1651,18 +1652,24 @@ const Main = (props: Props) => {
 
   if (props.demo_dicom_web || props.demo_url || hasAuthorShellSupport()) {
     return (
-      <StoryPersistenceRoot>
-        <LibraryOrAuthor {...props} />
-      </StoryPersistenceRoot>
+      <>
+        <StoryPersistenceRoot>
+          <LibraryOrAuthor {...props} />
+        </StoryPersistenceRoot>
+        <BuildStamp />
+      </>
     );
   } else {
     return (
-      <div>
-        <p>
-          Minerva needs a secure context (HTTPS or localhost). Serve this app
-          over HTTPS and reload.
-        </p>
-      </div>
+      <>
+        <div>
+          <p>
+            Minerva needs a secure context (HTTPS or localhost). Serve this app
+            over HTTPS and reload.
+          </p>
+        </div>
+        <BuildStamp />
+      </>
     );
   }
 };

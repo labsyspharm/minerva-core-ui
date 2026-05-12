@@ -9,6 +9,8 @@ declare module "deck.gl" {
 import "wicg-file-system-access";
 declare var showOpenFilePicker: ShowOpenFilePicker;
 declare global {
+  /** Set in `vite.config.js` via `define` on each bundle (dev restart / `vite build`). */
+  const __BUILD_TIME_ISO__: string;
   namespace Handle {
     type File = FileSystemFileHandle;
     type Dir = FileSystemDirectoryHandle;
