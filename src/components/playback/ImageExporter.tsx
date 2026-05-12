@@ -565,7 +565,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     <ImageExporterDiv>
       <ProgressBar $ratio={ratio} $done={done}>
         <div></div>
-        <div> {`${(ratio * 1000).toFixed(3)}%`} </div>
+        <div> {`${(ratio * 100).toFixed(3)}%`} </div>
       </ProgressBar>
     </ImageExporterDiv>
   );
