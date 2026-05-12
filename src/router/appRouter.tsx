@@ -92,18 +92,44 @@ export function StoryIdUrlSync() {
   return null;
 }
 
+/** Strip trailing slash and trailing `/index.html` (GitHub Pages). */
+function normalizeLoadedPathname(pathname: string): string {
+  let path = pathname.replace(/\/$/, "") || "/";
+  if (path.endsWith("/index.html")) {
+    path = path.slice(0, -"/index.html".length).replace(/\/$/, "") || "/";
+  }
+  return path === "" ? "/" : path;
+}
+
+/**
+ * With `base: './'`, TanStack `basepath` must be the **static deploy directory**, not extra pathname segments.
+ * This app only uses query (`?storyid=`), so `/repo/extra` should still use basename `/repo`.
+ * Exception: GitHub Pages PR previews live under `…/pr-preview/pr-<n>/` ([rossjrw/pr-preview-action]), which must be kept in full.
+ */
+function deploymentBasenameFromNormalizedPath(normalizedPath: string): string {
+  if (normalizedPath === "/") return "/";
+  const segments = normalizedPath.split("/").filter(Boolean);
+  if (segments.length === 0) return "/";
+
+  const prPreviewIdx = segments.indexOf("pr-preview");
+  const next = segments[prPreviewIdx + 1];
+  if (prPreviewIdx >= 0 && next !== undefined && /^pr-\d+$/.test(next)) {
+    return `/${segments.slice(0, prPreviewIdx + 2).join("/")}`;
+  }
+
+  return `/${segments[0]}`;
+}
+
 function routerBasepath(): string {
   const b =
-    typeof import.meta.env?.BASE_URL === "string"
+    typeof import.meta.env.BASE_URL === "string"
       ? import.meta.env.BASE_URL
       : "/";
-  /** Vite `base: './'` — basename must match runtime URL (/ on custom domain apex, /<repo> on *.github.io). */
+  // `base: './'` — derive deploy folder from `location` (see TanStack basepath).
   if (b === "./") {
     if (typeof window === "undefined") return "/";
-    const path = window.location.pathname.replace(/\/$/, "") || "/";
-    if (path === "/") return "/";
-    const first = path.split("/").filter(Boolean)[0];
-    return first ? `/${first}` : "/";
+    const path = normalizeLoadedPathname(window.location.pathname);
+    return deploymentBasenameFromNormalizedPath(path);
   }
   const trimmed = b.replace(/\/$/, "");
   return trimmed === "" ? "/" : trimmed;
