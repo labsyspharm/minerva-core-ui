@@ -5,6 +5,7 @@ import {
 } from "@/components/shared/ChromeColorPickerPopover";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
+import type { ChannelRendering } from "@/lib/stores/appStore";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
 import {
@@ -67,6 +68,38 @@ function channelNamesForGroup(
     .map((gc) => findSourceChannel(sourceChannels, gc.channelId))
     .filter((sc): sc is Channel => sc != null)
     .map((sc) => sc.name);
+}
+
+/** Active color-only in-flight render for this group/channel, if any. */
+function colorRenderingFor(
+  live: ChannelRendering | null,
+  groupId: string,
+  channelId: string,
+): Extract<ChannelRendering, { kind: "color" }> | null {
+  if (
+    live?.kind === "color" &&
+    live.groupId === groupId &&
+    live.channelId === channelId
+  ) {
+    return live;
+  }
+  return null;
+}
+
+/** Active contrast-only in-flight render for this group/channel, if any. */
+function contrastRenderingFor(
+  live: ChannelRendering | null,
+  groupId: string,
+  channelId: string,
+): Extract<ChannelRendering, { kind: "contrast" }> | null {
+  if (
+    live?.kind === "contrast" &&
+    live.groupId === groupId &&
+    live.channelId === channelId
+  ) {
+    return live;
+  }
+  return null;
 }
 
 export type ChannelGroupsMasterDetailProps = {
@@ -143,16 +176,27 @@ export const ChannelGroupsMasterDetail = (
   const [colorPickerChannelUUID, setColorPickerChannelUUID] = React.useState<
     string | null
   >(null);
+  const [colorPickerGroupId, setColorPickerGroupId] = React.useState<
+    string | null
+  >(null);
   const [colorPickerPos, setColorPickerPos] = React.useState<{
     top: number;
     left: number;
   } | null>(null);
 
-  // Reset detail state when switching channel groups
+  const channelRendering = useAppStore((s) => s.channelRendering);
+
+  // When opening or switching the detail group, close the replace-channel control.
+  // When detail context changes at all (including back to list), drop in-flight color
+  // rendering and close the picker — those are scoped to the detail editor.
   React.useEffect(() => {
     if (detailGroupId) {
       setReplacingChannelUUID(null);
     }
+    useAppStore.getState().clearChannelRendering();
+    setColorPickerChannelUUID(null);
+    setColorPickerGroupId(null);
+    setColorPickerPos(null);
   }, [detailGroupId]);
 
   React.useEffect(() => {
@@ -356,22 +400,26 @@ export const ChannelGroupsMasterDetail = (
     setReplacingChannelUUID(null);
   };
 
-  const updateChannelColor = (
-    channelUUID: string,
-    rgb: { r: number; g: number; b: number },
-  ) => {
-    const newGroups = channelGroups.map((g) => ({
-      ...g,
-      channels: g.channels.map((gc) =>
-        gc.id === channelUUID ? { ...gc, color: rgb } : gc,
-      ),
-    }));
-    syncGroupState(newGroups);
-  };
-
-  // Color picker helpers
   const pickingColorHex = React.useMemo(() => {
     if (!colorPickerChannelUUID) return null;
+    if (colorPickerGroupId) {
+      const live = colorRenderingFor(
+        channelRendering,
+        colorPickerGroupId,
+        colorPickerChannelUUID,
+      );
+      if (live) {
+        const { r, g, b } = live;
+        return [r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("");
+      }
+      const g = channelGroups.find((cg) => cg.id === colorPickerGroupId);
+      const gc = g?.channels.find((c) => c.id === colorPickerChannelUUID);
+      if (gc) {
+        const { r, g: gg, b } = gc.color;
+        return [r, gg, b].map((n) => n.toString(16).padStart(2, "0")).join("");
+      }
+      return null;
+    }
     for (const g of channelGroups) {
       const gc = g.channels.find((c) => c.id === colorPickerChannelUUID);
       if (gc) {
@@ -380,12 +428,45 @@ export const ChannelGroupsMasterDetail = (
       }
     }
     return null;
-  }, [channelGroups, colorPickerChannelUUID]);
+  }, [
+    channelGroups,
+    colorPickerChannelUUID,
+    colorPickerGroupId,
+    channelRendering,
+  ]);
 
   const closeColorPicker = React.useCallback(() => {
+    const live =
+      colorPickerChannelUUID && colorPickerGroupId
+        ? colorRenderingFor(
+            useAppStore.getState().channelRendering,
+            colorPickerGroupId,
+            colorPickerChannelUUID,
+          )
+        : null;
+    if (live && colorPickerGroupId && colorPickerChannelUUID) {
+      const groupId = colorPickerGroupId;
+      const channelId = colorPickerChannelUUID;
+      const doc = useDocumentStore.getState().channelGroups;
+      const newGroups = doc.map((g) =>
+        g.id !== groupId
+          ? g
+          : {
+              ...g,
+              channels: g.channels.map((gc) =>
+                gc.id === channelId
+                  ? { ...gc, color: { r: live.r, g: live.g, b: live.b } }
+                  : gc,
+              ),
+            },
+      );
+      syncGroupState(newGroups);
+    }
+    useAppStore.getState().clearChannelRendering();
     setColorPickerChannelUUID(null);
+    setColorPickerGroupId(null);
     setColorPickerPos(null);
-  }, []);
+  }, [colorPickerChannelUUID, colorPickerGroupId, syncGroupState]);
 
   const activeGroup =
     activeChannelGroupId ||
@@ -623,8 +704,20 @@ export const ChannelGroupsMasterDetail = (
 
     const channels = detailGroup.channels.map((gc) => {
       const sc = findSourceChannel(sourceChannels, gc.channelId);
-      const { r: rr, g: gg, b } = gc.color;
-      const hex = [rr, gg, b]
+      let rr = gc.color.r;
+      let gCol = gc.color.g;
+      let bb = gc.color.b;
+      const liveColor = colorRenderingFor(
+        channelRendering,
+        detailGroup.id,
+        gc.id,
+      );
+      if (liveColor) {
+        rr = liveColor.r;
+        gCol = liveColor.g;
+        bb = liveColor.b;
+      }
+      const hex = [rr, gCol, bb]
         .map((n) => n.toString(16).padStart(2, "0"))
         .join("");
       return {
@@ -633,8 +726,8 @@ export const ChannelGroupsMasterDetail = (
         name: sc?.name ?? "Unknown",
         hex,
         r: rr,
-        g: gg,
-        b,
+        g: gCol,
+        b: bb,
       };
     });
 
@@ -643,15 +736,39 @@ export const ChannelGroupsMasterDetail = (
 
     const channelItemAttrsFor = (gc: (typeof detailGroup.channels)[0]) => {
       const flat = findSourceChannel(sourceChannels, gc.channelId);
+      let pr = gc.color.r;
+      let pg = gc.color.g;
+      let pb = gc.color.b;
+      const liveColor = colorRenderingFor(
+        channelRendering,
+        detailGroup.id,
+        gc.id,
+      );
+      if (liveColor) {
+        pr = liveColor.r;
+        pg = liveColor.g;
+        pb = liveColor.b;
+      }
+      let lower = gc.lowerLimit;
+      let upper = gc.upperLimit;
+      const liveContrast = contrastRenderingFor(
+        channelRendering,
+        detailGroup.id,
+        gc.id,
+      );
+      if (liveContrast) {
+        lower = liveContrast.lower;
+        upper = liveContrast.upper;
+      }
       return {
         group_uuid: detailGroup.id,
         channel_uuid: gc.id,
         source_uuid: flat?.id ?? "",
-        r: String(gc.color.r),
-        g: String(gc.color.g),
-        b: String(gc.color.b),
-        lower_range: String(gc.lowerLimit),
-        upper_range: String(gc.upperLimit),
+        r: String(pr),
+        g: String(pg),
+        b: String(pb),
+        lower_range: String(lower),
+        upper_range: String(upper),
       };
     };
 
@@ -741,6 +858,7 @@ export const ChannelGroupsMasterDetail = (
                             e.stopPropagation();
                             const rect =
                               e.currentTarget.getBoundingClientRect();
+                            setColorPickerGroupId(detailGroup.id);
                             setColorPickerChannelUUID(ch.channelUUID);
                             setColorPickerPos(
                               chromeColorPickerAnchorPosition(rect),
@@ -902,7 +1020,11 @@ export const ChannelGroupsMasterDetail = (
             const G = Number.parseInt(raw.slice(2, 4), 16);
             const B = Number.parseInt(raw.slice(4, 6), 16);
             if ([R, G, B].some((n) => Number.isNaN(n))) return;
-            updateChannelColor(colorPickerChannelUUID, {
+            if (!colorPickerGroupId || !colorPickerChannelUUID) return;
+            useAppStore.getState().setChannelRendering({
+              kind: "color",
+              groupId: colorPickerGroupId,
+              channelId: colorPickerChannelUUID,
               r: R,
               g: G,
               b: B,

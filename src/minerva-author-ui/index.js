@@ -13,8 +13,12 @@ const toAuthorElement = (name, opts) => {
   );
   */
   if (name === "channel-item") {
-    const { 
-      setGroupChannelRange, getSourceDistribution
+    const {
+      setGroupChannelRange,
+      setChannelRendering,
+      clearChannelRendering,
+      clearContrastPreviewIfOwnedBy,
+      getSourceDistribution,
     } = opts;
     const channelItemElement = `channel-item-${ID}`;
     const rangeEditorElement = `range-editor-${ID}`;
@@ -26,9 +30,15 @@ const toAuthorElement = (name, opts) => {
       rangeEditorElement, (
         toRangeEditor(
           ItemRegistry,
-          setGroupChannelRange, {
-          "range-slider": rangeSliderElement
-          }
+          {
+            setGroupChannelRange,
+            setChannelRendering,
+            clearChannelRendering,
+            clearContrastPreviewIfOwnedBy,
+          },
+          {
+            "range-slider": rangeSliderElement,
+          },
         )
       )
     );

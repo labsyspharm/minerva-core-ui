@@ -6,11 +6,20 @@ import { toElement } from "./lib/elements";
 /** Internal slider resolution; not tied to histogram bin count so handles move smoothly. */
 const SLIDER_DOMAIN_STEPS = 8192;
 
-const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
+const toRangeEditor = (ItemRegistry, channelActions, elements) => {
   const rangeInputElement = elements["range-slider"];
+  const {
+    setGroupChannelRange,
+    setChannelRendering,
+    clearChannelRendering,
+    clearContrastPreviewIfOwnedBy,
+  } = channelActions;
 
   class RangeEditor extends HTMLElement {
     static eventHandlerKeys = [];
+
+    /** @type {(() => void) | null} */
+    _contrastCommitHandler = null;
 
     static get observedAttributes() {
       return ["lower_range", "upper_range"];
@@ -30,7 +39,41 @@ const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
       this.attachShadow({ mode: "open" });
       const shadow = this.addStyles();
       html`${this.elementTemplate}`(shadow);
-      queueMicrotask(() => this._syncHandlePositionsFromState());
+      queueMicrotask(() => {
+        this._syncHandlePositionsFromState();
+        this._attachContrastCommitListeners(shadow);
+      });
+    }
+
+    disconnectedCallback() {
+      const slider = this.shadowRoot?.getElementById("contrast-range-slider");
+      const handler = this._contrastCommitHandler;
+      if (slider && handler) {
+        slider.removeEventListener("pointerup", handler);
+        slider.removeEventListener("pointercancel", handler);
+        slider.removeEventListener("change", handler);
+      }
+      this._contrastCommitHandler = null;
+      const groupUuid = this.getAttribute("group_uuid") ?? "";
+      const channelUuid = this.getAttribute("channel_uuid") ?? "";
+      clearContrastPreviewIfOwnedBy(groupUuid, channelUuid);
+    }
+
+    _attachContrastCommitListeners(shadow) {
+      const slider = shadow.getElementById("contrast-range-slider");
+      if (!slider) return;
+      this._contrastCommitHandler = () => {
+        const el = shadow.getElementById("contrast-range-slider");
+        if (!el) return;
+        const { from_input } = this._scale();
+        const lo = Math.round(from_input(el.startValue));
+        const hi = Math.round(from_input(el.endValue));
+        this._commitRange(lo, hi);
+      };
+      const h = this._contrastCommitHandler;
+      slider.addEventListener("pointerup", h);
+      slider.addEventListener("pointercancel", h);
+      slider.addEventListener("change", h);
     }
 
     _setHandleFracVars(startVal, endVal, maxSteps) {
@@ -114,13 +157,31 @@ const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
       };
     }
 
-    _pushRange(lower, upper) {
-      setGroupChannelRange({
-        LowerRange: lower,
-        UpperRange: upper,
-        group_uuid: this.getAttribute("group_uuid"),
-        channel_uuid: this.getAttribute("channel_uuid"),
+    _previewRange(lower, upper) {
+      const groupId = this.getAttribute("group_uuid") ?? "";
+      const channelId = this.getAttribute("channel_uuid") ?? "";
+      setChannelRendering({
+        kind: "contrast",
+        groupId,
+        channelId,
+        lower,
+        upper,
       });
+    }
+
+    /** Persist limits to document, then clear in-flight channel rendering. */
+    _commitRange(lower, upper) {
+      const groupUuid = this.getAttribute("group_uuid") ?? "";
+      const channelUuid = this.getAttribute("channel_uuid") ?? "";
+      if (groupUuid && channelUuid) {
+        setGroupChannelRange({
+          LowerRange: lower,
+          UpperRange: upper,
+          group_uuid: groupUuid,
+          channel_uuid: channelUuid,
+        });
+      }
+      clearChannelRendering();
     }
 
     _syncInputsUi(lo, hi) {
@@ -171,7 +232,7 @@ const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
         const UpperRange = Math.round(from_input(end));
         self._setHandleFracVars(start, end, chart_x_steps);
         self._syncInputsUi(LowerRange, UpperRange);
-        self._pushRange(LowerRange, UpperRange);
+        self._previewRange(LowerRange, UpperRange);
       };
 
       const onLimitBlur = () => {
@@ -191,7 +252,7 @@ const toRangeEditor = (ItemRegistry, setGroupChannelRange, elements) => {
         }
         self._syncInputsUi(lo, hi);
         self._syncSliderUi(lo, hi);
-        self._pushRange(lo, hi);
+        self._commitRange(lo, hi);
       };
 
       const onLimitKeydown = (e) => {

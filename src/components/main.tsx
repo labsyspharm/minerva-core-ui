@@ -55,6 +55,7 @@ import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
 import { applyOmeRoisFromLoaderToFirstWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
 import { getOmeTiffImageDescriptionOmeXml } from "@/lib/shapes/omeTiffOmeDescription";
 import {
+  type ChannelRendering,
   effectiveReferenceImagePixelSize,
   useAppStore,
 } from "@/lib/stores/appStore";
@@ -918,14 +919,39 @@ const Content = (props: Props) => {
     [],
   );
 
-  // Define a WebComponent for a channel
+  const clearContrastPreviewIfOwnedBy = React.useCallback(
+    (groupId: string, channelId: string) => {
+      const { channelRendering, clearChannelRendering } =
+        useAppStore.getState();
+      if (
+        channelRendering?.kind === "contrast" &&
+        channelRendering.groupId === groupId &&
+        channelRendering.channelId === channelId
+      ) {
+        clearChannelRendering();
+      }
+    },
+    [],
+  );
+
   const channelItemElement = React.useMemo(() => {
     return toAuthorElement("channel-item", {
       ID: crypto.randomUUID(),
       setGroupChannelRange,
+      setChannelRendering: (rendering: ChannelRendering) => {
+        useAppStore.getState().setChannelRendering(rendering);
+      },
+      clearChannelRendering: () => {
+        useAppStore.getState().clearChannelRendering();
+      },
+      clearContrastPreviewIfOwnedBy,
       getSourceDistribution,
     });
-  }, [getSourceDistribution, setGroupChannelRange]);
+  }, [
+    clearContrastPreviewIfOwnedBy,
+    getSourceDistribution,
+    setGroupChannelRange,
+  ]);
 
   const [valid, setValid] = useState({} as ValidObj);
 
