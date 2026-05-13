@@ -15,6 +15,7 @@ import { PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import { createTileLayers, loadDicom } from "@/lib/imaging/dicom.js";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
+import { createJpegLayers, loadJpeg } from "@/lib/imaging/jpeg.js";
 import type { Config, Loader } from "@/lib/imaging/viv";
 import type { Story } from "@/lib/legacy/exhibit";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
@@ -623,6 +624,27 @@ export const ImageViewer = (props: ImageViewerProps) => {
     });
   }, [dicomIndexList]);
 
+  const jpegLayers = useMemo(() => {
+    if (mainSettingsList.length === 0) {
+      return [];
+    }
+    const imageHeight = 27120; //TODO
+    const imageWidth = 26139; //TODO
+    const imagePath = "crc-export";
+    const jpegLoader = loadJpeg({
+      imagePath,
+      imageHeight,
+      imageWidth,
+    });
+    return [
+      createJpegLayers({
+        jpegLoader: jpegLoader,
+        settings: mainSettingsList[0],
+        imagePath: imagePath,
+      }),
+    ];
+  }, [mainSettingsList]);
+
   // Memoize dicom layer
   const dicomLayers = useMemo(() => {
     if (omeLoaderEntries.length > 0) {
@@ -731,7 +753,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }, [imageShape.x, imageShape.y]);
 
   const allLayers = useMemo(() => {
-    const imageStack = omeTiffLayers.length > 0 ? omeTiffLayers : dicomLayers;
+    const imageStack =
+      jpegLayers.length > 0
+        ? jpegLayers
+        : omeTiffLayers.length > 0
+          ? omeTiffLayers
+          : dicomLayers;
     const layers: Layer[] = [
       worldPickSurfaceLayer,
       ...imageStack,
@@ -741,6 +768,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return layers;
   }, [
     dicomLayers,
+    jpegLayers,
     omeTiffLayers,
     overlayLayers,
     scaleBarLayer,
