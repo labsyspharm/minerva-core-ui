@@ -1,0 +1,8 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <rect x=".87" y=".87" width="7.69" height="7.69"/>
+  <!-- <circle cx="7.93" cy="7.93" r="3.85"/> -->
+  <line x1="7.69" y1="15.38" x2="15.39" y2="7.69"/>
+  <polyline points="12.82 7.69 15.39 7.69 15.39 10.26"/>
+  <path d="M17.85,5.45"/>
+  <path d="M4.09.87"/>
+</svg>
