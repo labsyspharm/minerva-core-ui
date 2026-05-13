@@ -900,6 +900,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
       touchZoom: true,
       touchRotate: false,
       keyboard: false,
+      /** Pan / pinch coast after release; `true` → Deck default (~300ms). Use a number for custom ms. */
+      inertia: true,
     }),
     [activeTool, isDragging, hoveredShapeId],
   );
