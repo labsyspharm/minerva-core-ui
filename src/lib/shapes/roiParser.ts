@@ -1,4 +1,5 @@
 import type { Loader } from "../imaging/viv";
+import { importedTextStyle } from "./shapeDefaults";
 import type {
   LineShape,
   PointShape,
@@ -387,6 +388,102 @@ const labelShapeToViewerShape = (shape: RoiLabelShape, roi: Roi): TextShape => {
   };
 };
 
+/** World-space sample points used to place an import-time centroid label. */
+function collectRoiShapeWorldPoints(shape: RoiShape): [number, number][] {
+  const T = shape.Transform;
+  switch (shape.type) {
+    case "rectangle": {
+      const { X, Y, Width, Height } = shape;
+      return [
+        applyTransform(X, Y, T),
+        applyTransform(X + Width, Y, T),
+        applyTransform(X + Width, Y + Height, T),
+        applyTransform(X, Y + Height, T),
+      ];
+    }
+    case "ellipse":
+      return ellipseToPolygon(
+        shape.X,
+        shape.Y,
+        shape.RadiusX,
+        shape.RadiusY,
+        T,
+        24,
+      );
+    case "line":
+      return [
+        applyTransform(shape.X1, shape.Y1, T),
+        applyTransform(shape.X2, shape.Y2, T),
+      ];
+    case "point":
+      return [applyTransform(shape.X, shape.Y, T)];
+    case "polygon":
+    case "polyline":
+      return parsePoints(shape.Points, T);
+    case "label":
+      return [applyTransform(shape.X, shape.Y, T)];
+    default:
+      return [];
+  }
+}
+
+/** Center of axis-aligned bbox over ROI geometry; omits `<Label>` anchors when other shapes exist. */
+function importRoiCentroidPosition(roi: Roi): [number, number] | null {
+  const hasNonLabel = roi.shapes.some((s) => s.type !== "label");
+  const pts: [number, number][] = [];
+  for (const s of roi.shapes) {
+    if (hasNonLabel && s.type === "label") continue;
+    pts.push(...collectRoiShapeWorldPoints(s));
+  }
+  if (pts.length === 0) return null;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const [x, y] of pts) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+  return [(minX + maxX) / 2, (minY + maxY) / 2];
+}
+
+function importRoiCentroidLabelText(roi: Roi): string {
+  const name = roi.Name?.trim();
+  if (name) return name;
+  const desc = roi.Description?.trim();
+  if (desc) {
+    const line = desc.split(/\r?\n/)[0]?.trim() ?? "";
+    if (line) return line.length > 120 ? `${line.slice(0, 117)}…` : line;
+  }
+  const id = roi.ID.trim();
+  if (id.includes(":")) {
+    const tail = id.split(":").pop();
+    if (tail) return tail;
+  }
+  return id || "ROI";
+}
+
+function makeImportCentroidTextShape(
+  roi: Roi,
+  position: [number, number],
+): TextShape {
+  const text = importRoiCentroidLabelText(roi);
+  return {
+    id: `roi-${roi.ID}__import-centroid-label`,
+    type: "text",
+    position,
+    text,
+    style: { ...importedTextStyle },
+    metadata: {
+      label: text,
+      description: `Auto centroid label for imported ROI ${roi.ID}`,
+      isImported: true,
+    },
+  };
+}
+
 /** Convert structured ROI data (e.g. from OME-XML or Viv metadata) to viewer shapes. */
 export const parseRoisFromRoiList = (
   rois: Roi[] | null | undefined,
@@ -466,6 +563,17 @@ export const parseRoisFromRoiList = (
         );
       }
     });
+
+    const labelOnlyRoi =
+      roi.shapes.length > 0 && roi.shapes.every((s) => s.type === "label");
+    if (roiShapeIds.length > 0 && !labelOnlyRoi) {
+      const centroidPos = importRoiCentroidPosition(roi);
+      if (centroidPos) {
+        const centroidShape = makeImportCentroidTextShape(roi, centroidPos);
+        shapes.push(centroidShape);
+        roiShapeIds.push(centroidShape.id);
+      }
+    }
 
     // Create a group for this ROI if it has any shapes
     if (roiShapeIds.length > 0) {
