@@ -31,7 +31,12 @@ export function mergeShapesAfterWaypointImport(
     : state.hiddenShapeIds;
 
   const existingIds = new Set(existingShapes.map((s) => s.id));
-  const appended = newShapes.filter((s) => !existingIds.has(s.id));
+  const seenIncoming = new Set<string>();
+  const appended = newShapes.filter((s) => {
+    if (seenIncoming.has(s.id)) return false;
+    seenIncoming.add(s.id);
+    return !existingIds.has(s.id);
+  });
 
   return {
     shapes: [...existingShapes, ...appended],
