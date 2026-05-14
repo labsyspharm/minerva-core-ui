@@ -3,6 +3,8 @@
  * Thin state container with slice-level setters; callers build new arrays
  * and pass them in; transformation logic lives in pure utilities (`storeUtils`).
  * No UI/ephemeral state -- selection and authoring bridges live in `appStore`.
+ * While dragging contrast or color, live values use `appStore.channelRendering` and are
+ * merged in `ImageViewer`; `channelGroups` here update only on commit.
  *
  * `activeStoryId` is the current story. Dexie stores a global “last active” id shared
  * across tabs.

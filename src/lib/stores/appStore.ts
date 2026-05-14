@@ -588,6 +588,27 @@ function computeBrushPolygon(
  *
  * Durable story data validates as {@link DocumentData} (`validateDocumentData` / `DocumentDataSchema`).
  */
+/**
+ * In‑flight contrast or color for one channel (what Viv should render before commit).
+ * Not persisted: commit updates {@link useDocumentStore} `channelGroups`, then clear this.
+ */
+export type ChannelRendering =
+  | {
+      kind: "contrast";
+      groupId: string;
+      channelId: string;
+      lower: number;
+      upper: number;
+    }
+  | {
+      kind: "color";
+      groupId: string;
+      channelId: string;
+      r: number;
+      g: number;
+      b: number;
+    };
+
 export interface AppStore {
   // State
   overlayLayers: OverlayLayer[];
@@ -753,6 +774,10 @@ export interface AppStore {
   setChannelVisibilities: (vis: Record<string, boolean>) => void;
   setGroupChannelLists: (l: Record<string, string[]>) => void;
   setGroupNames: (l: Record<string, string>) => void;
+  /** See {@link ChannelRendering}; folded into Viv settings in ImageViewer until cleared. */
+  channelRendering: ChannelRendering | null;
+  setChannelRendering: (rendering: ChannelRendering) => void;
+  clearChannelRendering: () => void;
   channelVisibilities: Record<string, boolean>;
   groupChannelLists: Record<string, string[]>;
   groupNames: Record<string, string>;
@@ -888,6 +913,7 @@ const overlayInitialState = {
   waypointAuthoring: new Map<string, AuthoringWaypointExtra>(),
   authoringWaypointShapesIndex: null as number | null,
   activeChannelGroupId: null, // No channel group initially
+  channelRendering: null,
   channelVisibilities: {},
   groupChannelLists: {},
   groupNames: {},
@@ -2073,6 +2099,14 @@ export const useAppStore = create<AppStore>()(
 
       setChannelVisibilities: (vis: Record<string, boolean>) => {
         set({ channelVisibilities: vis });
+      },
+
+      setChannelRendering: (rendering) => {
+        set({ channelRendering: rendering });
+      },
+
+      clearChannelRendering: () => {
+        set({ channelRendering: null });
       },
 
       // Import waypoint shapes actions

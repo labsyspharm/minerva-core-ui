@@ -20,7 +20,10 @@ import type { Story } from "@/lib/legacy/exhibit";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
+import type { ChannelRendering } from "@/lib/stores/appStore";
 import { useAppStore } from "@/lib/stores/appStore";
+import type { ChannelGroup } from "@/lib/stores/documentStore";
+import { useDocumentStore } from "@/lib/stores/documentStore";
 import { useWindowSize } from "@/lib/util/useWindowSize";
 import { ORTHO_VIEW_ID, SCALEBAR_VIEW_ID } from "@/lib/viewer/deckViewIds";
 import { createDragHandlers } from "@/lib/viewer/dragHandlers";
@@ -150,6 +153,48 @@ const toSettingsInternal = (
   );
 };
 
+/** Fold {@link ChannelRendering} into Viv settings without touching the document store. */
+function applyChannelRendering<
+  S extends {
+    contrastLimits: readonly [number, number][];
+    colors: readonly [number, number, number][];
+  },
+>(
+  settings: S,
+  live: ChannelRendering | null,
+  activeChannelGroupId: string | null,
+  channelGroups: ChannelGroup[],
+): S {
+  if (!live) return settings;
+  const active =
+    channelGroups.find((g) => g.id === activeChannelGroupId) ??
+    channelGroups[0];
+  if (!active || active.id !== live.groupId) return settings;
+  const idx = active.channels.findIndex((c) => c.id === live.channelId);
+  if (idx < 0) return settings;
+  if (live.kind === "contrast") {
+    if (idx >= settings.contrastLimits.length) return settings;
+    const lo = Math.round(live.lower);
+    const hi = Math.round(live.upper);
+    const contrastLimits = settings.contrastLimits.map((pair, i) =>
+      i === idx
+        ? ([lo, hi] as [number, number])
+        : ([pair[0], pair[1]] as [number, number]),
+    );
+    return { ...settings, contrastLimits };
+  }
+  if (idx >= settings.colors.length) return settings;
+  const r = Math.round(Math.max(0, Math.min(255, live.r)));
+  const g = Math.round(Math.max(0, Math.min(255, live.g)));
+  const b = Math.round(Math.max(0, Math.min(255, live.b)));
+  const colors = settings.colors.map((triple, i) =>
+    i === idx
+      ? ([r, g, b] as [number, number, number])
+      : ([triple[0], triple[1], triple[2]] as [number, number, number]),
+  );
+  return { ...settings, colors };
+}
+
 export const ImageViewer = (props: ImageViewerProps) => {
   const windowSize = useWindowSize();
   const {
@@ -173,6 +218,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
     sam2Processing,
     authoringWaypointEditorOpen,
   } = useAppStore();
+  const channelRendering = useAppStore((s) => s.channelRendering);
+  const channelGroups = useDocumentStore((s) => s.channelGroups);
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [_canvas, _setCanvas] = useState(null);
@@ -199,7 +246,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return () => resizeObserver.disconnect();
   }, []);
 
-  const mainSettingsOmeList = useMemo(() => {
+  const documentMainSettingsOmeList = useMemo(() => {
     const modality = "Colorimetric";
     return omeLoaderEntries.map(({ loader, sourceImageId }) =>
       toSettingsInternal(
@@ -220,7 +267,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     viewerConfig.toSettings,
   ]);
 
-  const mainSettingsDicomList = useMemo(() => {
+  const documentMainSettingsDicomList = useMemo(() => {
     return dicomIndexList.map((dicomIndex) => {
       const { modality } = dicomIndex;
       return toSettingsInternal(
@@ -240,10 +287,34 @@ export const ImageViewer = (props: ImageViewerProps) => {
     viewerConfig.toSettings,
   ]);
 
+  const documentMainSettingsList = useMemo(
+    () =>
+      omeLoaderEntries.length > 0
+        ? documentMainSettingsOmeList
+        : documentMainSettingsDicomList,
+    [
+      omeLoaderEntries,
+      documentMainSettingsOmeList,
+      documentMainSettingsDicomList,
+    ],
+  );
+
   const mainSettingsList = useMemo(
     () =>
-      omeLoaderEntries.length > 0 ? mainSettingsOmeList : mainSettingsDicomList,
-    [omeLoaderEntries, mainSettingsOmeList, mainSettingsDicomList],
+      documentMainSettingsList.map((settings) =>
+        applyChannelRendering(
+          settings,
+          channelRendering,
+          activeChannelGroupId,
+          channelGroups,
+        ),
+      ),
+    [
+      documentMainSettingsList,
+      channelRendering,
+      activeChannelGroupId,
+      channelGroups,
+    ],
   );
 
   /**
