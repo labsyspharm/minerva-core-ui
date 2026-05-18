@@ -101,6 +101,7 @@
     "prosemirror-state": "^1.4.3",
     "prosemirror-transform": "^1.9.0",
     "prosemirror-view": "^1.33.9",
+    "psudo": "0.2.6",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.4",
     "react-color": "^2.19.3",
@@ -142,7 +143,9 @@
     "typescript-plugin-styled-components": "^3.0.0",
     "vite": "^5.3.4",
     "vite-plugin-mkcert": "^1.17.5",
-    "vite-plugin-static-copy": "^3.3.0"
+    "vite-plugin-static-copy": "^3.3.0",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.6.0"
   },
   "resolutions": {
     "styled-components": "^5"

@@ -5,6 +5,16 @@ import {
 } from "@/components/shared/ChromeColorPickerPopover";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
+import {
+  applyOptimizedColorsToChannelGroup,
+  IMPORT_DEFAULT_LOWER_LIMIT,
+  IMPORT_DEFAULT_UPPER_LIMIT,
+  isGroupEligibleForPsudoOptimize,
+  lockedRowIdsForGroup,
+  optimizeChannelGroupWithLocks,
+  seedRgbForGroupChannelIndex,
+  warmupPsudoPalette,
+} from "@/lib/imaging/psudoPalette";
 import type { ChannelRendering } from "@/lib/stores/appStore";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
@@ -59,6 +69,20 @@ const RemoveIcon = () => (
     <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
   </svg>
 );
+
+const PinIcon = () => (
+  <svg
+    aria-hidden="true"
+    width="12"
+    height="12"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+  >
+    <path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z" />
+  </svg>
+);
+
+const EMPTY_LOCKED_ROW_IDS = new Set<string>();
 
 function channelNamesForGroup(
   group: ChannelGroup,
@@ -183,6 +207,13 @@ export const ChannelGroupsMasterDetail = (
     top: number;
     left: number;
   } | null>(null);
+  const [optimizePaletteBusy, setOptimizePaletteBusy] = React.useState(false);
+  const [optimizePaletteMessage, setOptimizePaletteMessage] = React.useState<
+    string | null
+  >(null);
+  /** Per-group channel row ids with locked pseudocolors (session-only). */
+  const [lockedColorRowIdsByGroup, setLockedColorRowIdsByGroup] =
+    React.useState<Map<string, Set<string>>>(() => new Map());
 
   const channelRendering = useAppStore((s) => s.channelRendering);
 
@@ -197,6 +228,7 @@ export const ChannelGroupsMasterDetail = (
     setColorPickerChannelUUID(null);
     setColorPickerGroupId(null);
     setColorPickerPos(null);
+    setOptimizePaletteMessage(null);
   }, [detailGroupId]);
 
   React.useEffect(() => {
@@ -210,6 +242,94 @@ export const ChannelGroupsMasterDetail = (
   const detailGroup = detailGroupId
     ? (channelGroups.find((g) => g.id === detailGroupId) ?? null)
     : null;
+
+  const detailGroupPsudoEligible = detailGroup
+    ? isGroupEligibleForPsudoOptimize(detailGroup, sourceChannels)
+    : false;
+
+  const detailGroupLockedRowIds = detailGroup
+    ? (lockedColorRowIdsByGroup.get(detailGroup.id) ?? EMPTY_LOCKED_ROW_IDS)
+    : EMPTY_LOCKED_ROW_IDS;
+
+  const detailGroupAllColorsLocked =
+    detailGroup != null &&
+    detailGroup.channels.length > 0 &&
+    detailGroup.channels.every((gc) => detailGroupLockedRowIds.has(gc.id));
+
+  const setGroupColorLocks = React.useCallback(
+    (groupId: string, next: Set<string>) => {
+      setLockedColorRowIdsByGroup((prev) => {
+        const map = new Map(prev);
+        if (next.size === 0) {
+          map.delete(groupId);
+        } else {
+          map.set(groupId, next);
+        }
+        return map;
+      });
+    },
+    [],
+  );
+
+  const toggleColorLock = React.useCallback(
+    (groupId: string, rowId: string) => {
+      setLockedColorRowIdsByGroup((prev) => {
+        const map = new Map(prev);
+        const current = new Set(map.get(groupId) ?? []);
+        if (current.has(rowId)) {
+          current.delete(rowId);
+        } else {
+          current.add(rowId);
+        }
+        if (current.size === 0) {
+          map.delete(groupId);
+        } else {
+          map.set(groupId, current);
+        }
+        return map;
+      });
+    },
+    [],
+  );
+
+  const lockAllColorsInGroup = React.useCallback(
+    (groupId: string) => {
+      const g = useDocumentStore
+        .getState()
+        .channelGroups.find((x) => x.id === groupId);
+      if (!g) return;
+      setGroupColorLocks(groupId, new Set(g.channels.map((gc) => gc.id)));
+    },
+    [setGroupColorLocks],
+  );
+
+  const unlockAllColorsInGroup = React.useCallback(
+    (groupId: string) => {
+      setGroupColorLocks(groupId, new Set());
+    },
+    [setGroupColorLocks],
+  );
+
+  const pruneColorLock = React.useCallback((groupId: string, rowId: string) => {
+    setLockedColorRowIdsByGroup((prev) => {
+      const current = prev.get(groupId);
+      if (!current?.has(rowId)) return prev;
+      const map = new Map(prev);
+      const next = new Set(current);
+      next.delete(rowId);
+      if (next.size === 0) {
+        map.delete(groupId);
+      } else {
+        map.set(groupId, next);
+      }
+      return map;
+    });
+  }, []);
+
+  React.useEffect(() => {
+    if (!detailGroupId || !detailGroupPsudoEligible) return;
+    void warmupPsudoPalette();
+  }, [detailGroupId, detailGroupPsudoEligible]);
 
   // Sync derived store state after group mutations.
   const syncGroupState = React.useCallback(
@@ -254,6 +374,64 @@ export const ChannelGroupsMasterDetail = (
       setChannelVisibilities,
     ],
   );
+
+  const runOptimizePalette = React.useCallback(async () => {
+    if (!detailGroup || optimizePaletteBusy) return;
+    if (!isGroupEligibleForPsudoOptimize(detailGroup, sourceChannels)) {
+      setOptimizePaletteMessage(
+        "Need at least two non-RGB channels to optimize colors.",
+      );
+      return;
+    }
+    const lockedIds =
+      lockedColorRowIdsByGroup.get(detailGroup.id) ?? EMPTY_LOCKED_ROW_IDS;
+    if (
+      detailGroup.channels.length > 0 &&
+      detailGroup.channels.every((gc) => lockedIds.has(gc.id))
+    ) {
+      setOptimizePaletteMessage("Unlock at least one channel to optimize.");
+      return;
+    }
+    useAppStore.getState().clearChannelRendering();
+    setOptimizePaletteBusy(true);
+    setOptimizePaletteMessage(null);
+    try {
+      const group =
+        useDocumentStore
+          .getState()
+          .channelGroups.find((g) => g.id === detailGroup.id) ?? detailGroup;
+      const colors = await optimizeChannelGroupWithLocks(
+        group,
+        sourceChannels,
+        lockedIds,
+      );
+      const newGroups = applyOptimizedColorsToChannelGroup(
+        useDocumentStore.getState().channelGroups,
+        detailGroup.id,
+        colors,
+        { lockedChannelRowIds: lockedIds },
+      );
+      syncGroupState(newGroups);
+      const nLocked = lockedIds.size;
+      setOptimizePaletteMessage(
+        nLocked > 0
+          ? `Palette optimized (${nLocked} locked).`
+          : "Palette optimized.",
+      );
+    } catch (e) {
+      setOptimizePaletteMessage(
+        e instanceof Error ? e.message : "Could not optimize palette.",
+      );
+    } finally {
+      setOptimizePaletteBusy(false);
+    }
+  }, [
+    detailGroup,
+    optimizePaletteBusy,
+    sourceChannels,
+    syncGroupState,
+    lockedColorRowIdsByGroup,
+  ]);
 
   /** Persisted source channel label for one `ImageChannel.id`; updates visibility (name keys) and group lists. */
   const renameSourceChannelDisplayName = React.useCallback(
@@ -341,26 +519,68 @@ export const ChannelGroupsMasterDetail = (
     syncGroupState(newGroups);
   };
 
-  const addChannelToGroup = (groupId: string, sourceChannelUUID: string) => {
-    const sc = sourceChannels.find(({ id }) => id === sourceChannelUUID);
-    if (!sc) return;
-    const newGroups = channelGroups.map((g) => {
-      if (g.id !== groupId) return g;
-      const already = g.channels.some(
-        (gc) => gc.channelId === sourceChannelUUID,
-      );
-      if (already) return g;
+  const addChannelToGroup = React.useCallback(
+    async (groupId: string, sourceChannelUUID: string) => {
+      if (optimizePaletteBusy) return;
+      const group = channelGroups.find((g) => g.id === groupId);
+      if (!group) return;
+      const sc = sourceChannels.find(({ id }) => id === sourceChannelUUID);
+      if (!sc) return;
+      if (group.channels.some((gc) => gc.channelId === sourceChannelUUID)) {
+        return;
+      }
+
+      const lockedIds = lockedRowIdsForGroup(group);
+      const slotIndex = group.channels.length;
+      const seed = seedRgbForGroupChannelIndex(slotIndex);
       const newChannel = {
         id: crypto.randomUUID(),
-        lowerLimit: 0,
-        upperLimit: 65535,
-        color: { r: 255, g: 255, b: 255 },
+        lowerLimit: IMPORT_DEFAULT_LOWER_LIMIT,
+        upperLimit: IMPORT_DEFAULT_UPPER_LIMIT,
+        color: { r: seed.r, g: seed.g, b: seed.b },
         channelId: sc.id,
       };
-      return { ...g, channels: [...g.channels, newChannel] };
-    });
-    syncGroupState(newGroups);
-  };
+
+      const newGroups = channelGroups.map((g) => {
+        if (g.id !== groupId) return g;
+        return { ...g, channels: [...g.channels, newChannel] };
+      });
+
+      const updatedGroup = newGroups.find((g) => g.id === groupId);
+      if (
+        !updatedGroup ||
+        !isGroupEligibleForPsudoOptimize(updatedGroup, sourceChannels)
+      ) {
+        syncGroupState(newGroups);
+        return;
+      }
+
+      setOptimizePaletteBusy(true);
+      useAppStore.getState().clearChannelRendering();
+      try {
+        const colors = await optimizeChannelGroupWithLocks(
+          updatedGroup,
+          sourceChannels,
+          lockedIds,
+        );
+        const optimizedGroups = applyOptimizedColorsToChannelGroup(
+          newGroups,
+          groupId,
+          colors,
+          { lockedChannelRowIds: lockedIds },
+        );
+        syncGroupState(optimizedGroups);
+      } catch (e) {
+        if (import.meta.env.DEV) {
+          console.warn("[psudo] add-channel palette optimization failed", e);
+        }
+        syncGroupState(newGroups);
+      } finally {
+        setOptimizePaletteBusy(false);
+      }
+    },
+    [channelGroups, sourceChannels, syncGroupState, optimizePaletteBusy],
+  );
 
   const removeChannelFromGroup = (groupId: string, channelUUID: string) => {
     const newGroups = channelGroups.map((g) => {
@@ -371,6 +591,7 @@ export const ChannelGroupsMasterDetail = (
       };
     });
     syncGroupState(newGroups);
+    pruneColorLock(groupId, channelUUID);
   };
 
   const replaceChannelInGroup = (
@@ -818,12 +1039,60 @@ export const ChannelGroupsMasterDetail = (
 
             {/* Channels — always visible (detail view is only this group + channels) */}
             <div className={styles.detailChannelsSection}>
-              <div className={styles.detailChannelsSectionTitle}>
-                Channels{" "}
-                <span className={styles.detailCollapsibleCount}>
-                  ({channels.length})
-                </span>
+              <div className={styles.detailChannelsSectionHeader}>
+                <div className={styles.detailChannelsSectionTitle}>
+                  Channels{" "}
+                  <span className={styles.detailCollapsibleCount}>
+                    ({channels.length})
+                  </span>
+                </div>
+                <div className={styles.paletteLockActions}>
+                  <button
+                    type="button"
+                    className={styles.paletteLockAllButton}
+                    disabled={channels.length === 0}
+                    title="Lock all channel colors in this group"
+                    onClick={() => lockAllColorsInGroup(detailGroup.id)}
+                  >
+                    Lock all
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.paletteLockAllButton}
+                    disabled={detailGroupLockedRowIds.size === 0}
+                    title="Unlock all channel colors in this group"
+                    onClick={() => unlockAllColorsInGroup(detailGroup.id)}
+                  >
+                    Unlock all
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.optimizePaletteButton}
+                    disabled={
+                      !detailGroupPsudoEligible ||
+                      optimizePaletteBusy ||
+                      detailGroupAllColorsLocked
+                    }
+                    title={
+                      detailGroupAllColorsLocked
+                        ? "Unlock at least one channel to optimize"
+                        : detailGroupPsudoEligible
+                          ? detailGroupLockedRowIds.size > 0
+                            ? `Optimize unlocked channels (${detailGroupLockedRowIds.size} locked)`
+                            : "Optimize channel colors with psudo (perceptual palette)"
+                          : "Need at least two non-RGB channels"
+                    }
+                    onClick={() => void runOptimizePalette()}
+                  >
+                    {optimizePaletteBusy ? "Optimizing…" : "Optimize colors"}
+                  </button>
+                </div>
               </div>
+              {optimizePaletteMessage ? (
+                <output className={styles.optimizePaletteMessage}>
+                  {optimizePaletteMessage}
+                </output>
+              ) : null}
               <div className={styles.detailChannelsSectionBody}>
                 {channels.map((ch) => {
                   const isReplacing = replacingChannelUUID === ch.channelUUID;
@@ -842,12 +1111,22 @@ export const ChannelGroupsMasterDetail = (
                         : "false",
                     });
 
+                  const colorLocked = detailGroupLockedRowIds.has(
+                    ch.channelUUID,
+                  );
+
                   return (
                     <div
                       key={ch.channelUUID}
                       className={styles.detailChannelBlock}
                     >
-                      <div className={styles.channelRow}>
+                      <div
+                        className={
+                          colorLocked
+                            ? `${styles.channelRow} ${styles.detailChannelRowLocked}`
+                            : styles.channelRow
+                        }
+                      >
                         <button
                           type="button"
                           className={styles.channelColorSwatch}
@@ -865,6 +1144,31 @@ export const ChannelGroupsMasterDetail = (
                             );
                           }}
                         />
+                        <button
+                          type="button"
+                          className={
+                            colorLocked
+                              ? `${styles.colorLockButton} ${styles.colorLockButtonLocked}`
+                              : styles.colorLockButton
+                          }
+                          aria-pressed={colorLocked}
+                          title={
+                            colorLocked
+                              ? "Unlock color — included when optimizing"
+                              : "Lock color — won't change when optimizing"
+                          }
+                          aria-label={
+                            colorLocked
+                              ? `Unlock color for ${ch.name}`
+                              : `Lock color for ${ch.name}`
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleColorLock(detailGroup.id, ch.channelUUID);
+                          }}
+                        >
+                          <PinIcon />
+                        </button>
                         {isReplacing ? (
                           <select
                             ref={replaceChannelSelectRef}
@@ -939,15 +1243,21 @@ export const ChannelGroupsMasterDetail = (
                     <select
                       className={styles.addChannelSelect}
                       defaultValue=""
+                      disabled={optimizePaletteBusy}
                       onChange={(e) => {
                         if (e.target.value) {
-                          addChannelToGroup(detailGroup.id, e.target.value);
+                          void addChannelToGroup(
+                            detailGroup.id,
+                            e.target.value,
+                          );
                           e.target.value = "";
                         }
                       }}
                     >
                       <option value="" disabled>
-                        Add channel...
+                        {optimizePaletteBusy
+                          ? "Optimizing color…"
+                          : "Add channel..."}
                       </option>
                       {availableChannels.map((sc) => (
                         <option key={sc.id} value={sc.id}>

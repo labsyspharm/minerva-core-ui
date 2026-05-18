@@ -740,19 +740,93 @@
   box-sizing: border-box;
 }
 
+.detailChannelsSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  border-bottom: 1px solid #30363d;
+  background-color: #0d1117;
+  box-sizing: border-box;
+}
+
 .detailChannelsSectionTitle {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 5px 10px;
-  border-bottom: 1px solid #30363d;
-  background-color: #0d1117;
   color: #c9d1d9;
   font-size: 12px;
   font-weight: 600;
   line-height: 1.2;
   user-select: none;
+  min-width: 0;
+}
+
+.paletteLockActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.paletteLockAllButton {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid #444;
+  color: #8b949e;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.paletteLockAllButton:hover:not(:disabled) {
+  background-color: #2a2a2a;
+  color: #e6edf3;
+}
+
+.paletteLockAllButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.optimizePaletteButton {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid #444;
+  color: #ccc;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.optimizePaletteButton:hover:not(:disabled) {
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
+.optimizePaletteButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.optimizePaletteMessage {
+  display: block;
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #8b949e;
+  border-bottom: 1px solid #30363d;
 }
 
 .detailChannelsSectionBody {
@@ -1074,6 +1148,37 @@
   border-radius: 2px;
   flex-shrink: 0;
   cursor: pointer;
+}
+
+.colorLockButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #6e7681;
+  cursor: pointer;
+}
+
+.colorLockButton:hover {
+  color: #c9d1d9;
+  background-color: #21262d;
+  border-color: #30363d;
+}
+
+.colorLockButtonLocked {
+  color: #58a6ff;
+  border-color: #388bfd66;
+  background-color: #388bfd1a;
+}
+
+.detailChannelRowLocked .channelColorSwatch {
+  box-shadow: 0 0 0 1px #388bfd66;
 }
 
 .channelRow {

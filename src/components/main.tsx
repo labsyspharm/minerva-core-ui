@@ -40,6 +40,7 @@ import {
   ensureOmeHistogramDistributions,
   mergeHistogramsIntoSourceChannelsByChannelId,
 } from "@/lib/imaging/histogramLazy";
+import { applySharedImportPaletteToChannelGroups } from "@/lib/imaging/psudoPalette";
 import { type Loader, toSettings } from "@/lib/imaging/viv";
 import { Pool } from "@/lib/imaging/workers/Pool";
 import type {
@@ -625,7 +626,11 @@ const Content = (props: Props) => {
       }
     }
 
-    const { SourceChannels, ChannelGroups } = registry;
+    const { SourceChannels } = registry;
+    const ChannelGroups = await applySharedImportPaletteToChannelGroups(
+      registry.ChannelGroups,
+      SourceChannels,
+    );
     setImages(nextImages);
     setChannelGroups(ChannelGroups);
     updateGroupChannelLists({
@@ -671,11 +676,16 @@ const Content = (props: Props) => {
           )
         : ([] as ConfigGroup[]);
     const sourceImageId = crypto.randomUUID();
-    const { SourceChannels, ChannelGroups } = extractChannels(
+    const extracted = extractChannels(
       loader,
       "Colorimetric",
       relevant_groups,
       sourceImageId,
+    );
+    const { SourceChannels } = extracted;
+    const ChannelGroups = await applySharedImportPaletteToChannelGroups(
+      extracted.ChannelGroups,
+      SourceChannels,
     );
     const doc = useDocumentStore.getState();
     let nextImages = applySourceChannelsToImages(doc.images, SourceChannels);
@@ -848,7 +858,11 @@ const Content = (props: Props) => {
       };
     }
     console.log("[minerva] dicom: setting store state");
-    const { SourceChannels, ChannelGroups } = registry;
+    const { SourceChannels } = registry;
+    const ChannelGroups = await applySharedImportPaletteToChannelGroups(
+      registry.ChannelGroups,
+      SourceChannels,
+    );
     setOmeLoaderEntries([]);
     const doc = useDocumentStore.getState();
     let nextDocImages = applySourceChannelsToImages(doc.images, SourceChannels);
