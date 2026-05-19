@@ -412,12 +412,7 @@ export const ChannelGroupsMasterDetail = (
         { lockedChannelRowIds: lockedIds },
       );
       syncGroupState(newGroups);
-      const nLocked = lockedIds.size;
-      setOptimizePaletteMessage(
-        nLocked > 0
-          ? `Palette optimized (${nLocked} locked).`
-          : "Palette optimized.",
-      );
+      setOptimizePaletteMessage("Palette optimized.");
     } catch (e) {
       setOptimizePaletteMessage(
         e instanceof Error ? e.message : "Could not optimize palette.",
@@ -1039,6 +1034,22 @@ export const ChannelGroupsMasterDetail = (
 
             {/* Channels — always visible (detail view is only this group + channels) */}
             <div className={styles.detailChannelsSection}>
+              <div
+                className={
+                  optimizePaletteBusy
+                    ? `${styles.optimizePaletteBusyOverlay} ${styles.optimizePaletteBusyOverlayVisible}`
+                    : styles.optimizePaletteBusyOverlay
+                }
+                aria-hidden={!optimizePaletteBusy}
+              >
+                <span
+                  className={styles.optimizePaletteOverlaySpinner}
+                  aria-hidden="true"
+                />
+                <span className={styles.optimizePaletteOverlayLabel}>
+                  Optimizing palette…
+                </span>
+              </div>
               <div className={styles.detailChannelsSectionHeader}>
                 <div className={styles.detailChannelsSectionTitle}>
                   Channels{" "}
@@ -1083,8 +1094,19 @@ export const ChannelGroupsMasterDetail = (
                           : "Need at least two non-RGB channels"
                     }
                     onClick={() => void runOptimizePalette()}
+                    aria-busy={optimizePaletteBusy}
                   >
-                    {optimizePaletteBusy ? "Optimizing…" : "Optimize colors"}
+                    {optimizePaletteBusy ? (
+                      <>
+                        <span
+                          className={styles.optimizePaletteSpinner}
+                          aria-hidden="true"
+                        />
+                        Optimizing…
+                      </>
+                    ) : (
+                      "Optimize colors"
+                    )}
                   </button>
                 </div>
               </div>

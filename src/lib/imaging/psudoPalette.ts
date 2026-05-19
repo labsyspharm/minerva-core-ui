@@ -18,6 +18,10 @@ const DEFAULT_EXCLUDED_COLORS = [
  * perceptual separation only (no spatial channel overlap).
  */
 export const PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP = false;
+export const PSUDO_MAX_ITERS = 3000;
+export const PSUDO_CONFUSION_BASELINE_SAMPLES = 32; // only matters if spatial on
+export const PSUDO_NUM_RESTARTS = 6;
+/** Passed to `psudo.optimize` (color-only path; lower = faster). */
 
 /** Per-channel contrast passed to psudo (full uint16 range; matches palette study / README). */
 const PSUDO_CONTRAST_MIN = 0;
@@ -122,10 +126,13 @@ function linearToDisplayRgb(
   };
 }
 
-let psudoWarmupPromise: Promise<boolean> | null = null;
+let psudoWarmupPromise: Promise<boolean[]> | null = null;
 
-/** Preload psudo WASM in its shared module worker (optional; safe to call multiple times). */
-export function warmupPsudoPalette(): Promise<boolean> {
+/**
+ * Preload psudo WASM in the worker pool (psudo 0.4+; one boolean per worker).
+ * Safe to call multiple times; deduped until the first call settles.
+ */
+export function warmupPsudoPalette(): Promise<boolean[]> {
   if (!psudoWarmupPromise) {
     psudoWarmupPromise = import("psudo").then((m) => m.warmup());
   }
@@ -149,10 +156,10 @@ async function invokePsudoOptimize(
     inputs.luminance,
     inputs.excluded,
     inputs.colorNames,
-    undefined,
-    undefined,
+    PSUDO_MAX_ITERS,
+    PSUDO_CONFUSION_BASELINE_SAMPLES,
     PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP,
-    undefined,
+    PSUDO_NUM_RESTARTS,
   );
   return optimized instanceof Float32Array
     ? optimized

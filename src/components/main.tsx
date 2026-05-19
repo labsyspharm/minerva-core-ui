@@ -40,7 +40,10 @@ import {
   ensureOmeHistogramDistributions,
   mergeHistogramsIntoSourceChannelsByChannelId,
 } from "@/lib/imaging/histogramLazy";
-import { applySharedImportPaletteToChannelGroups } from "@/lib/imaging/psudoPalette";
+import {
+  applySharedImportPaletteToChannelGroups,
+  warmupPsudoPalette,
+} from "@/lib/imaging/psudoPalette";
 import { type Loader, toSettings } from "@/lib/imaging/viv";
 import { Pool } from "@/lib/imaging/workers/Pool";
 import type {
@@ -1688,6 +1691,15 @@ const Main = (props: Props) => {
   /** Remove HTML shell splash whenever Main mounts (library / author shell). */
   React.useEffect(() => {
     document.getElementById("global-loader")?.remove();
+  }, []);
+
+  /** Preload psudo worker pool WASM once (avoids cold-start on first Optimize). */
+  React.useEffect(() => {
+    void warmupPsudoPalette().catch((e) => {
+      if (import.meta.env.DEV) {
+        console.warn("[psudo] warmup failed", e);
+      }
+    });
   }, []);
 
   if (props.demo_dicom_web || props.demo_url || hasAuthorShellSupport()) {
