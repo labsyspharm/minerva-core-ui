@@ -40,6 +40,10 @@ import {
   ensureOmeHistogramDistributions,
   mergeHistogramsIntoSourceChannelsByChannelId,
 } from "@/lib/imaging/histogramLazy";
+import {
+  applySharedImportPaletteToChannelGroups,
+  warmupPsudoPalette,
+} from "@/lib/imaging/psudoPalette";
 import { type Loader, toSettings } from "@/lib/imaging/viv";
 import { Pool } from "@/lib/imaging/workers/Pool";
 import type {
@@ -625,7 +629,11 @@ const Content = (props: Props) => {
       }
     }
 
-    const { SourceChannels, ChannelGroups } = registry;
+    const { SourceChannels } = registry;
+    const ChannelGroups = await applySharedImportPaletteToChannelGroups(
+      registry.ChannelGroups,
+      SourceChannels,
+    );
     setImages(nextImages);
     setChannelGroups(ChannelGroups);
     updateGroupChannelLists({
@@ -671,11 +679,16 @@ const Content = (props: Props) => {
           )
         : ([] as ConfigGroup[]);
     const sourceImageId = crypto.randomUUID();
-    const { SourceChannels, ChannelGroups } = extractChannels(
+    const extracted = extractChannels(
       loader,
       "Colorimetric",
       relevant_groups,
       sourceImageId,
+    );
+    const { SourceChannels } = extracted;
+    const ChannelGroups = await applySharedImportPaletteToChannelGroups(
+      extracted.ChannelGroups,
+      SourceChannels,
     );
     const doc = useDocumentStore.getState();
     let nextImages = applySourceChannelsToImages(doc.images, SourceChannels);
@@ -848,7 +861,11 @@ const Content = (props: Props) => {
       };
     }
     console.log("[minerva] dicom: setting store state");
-    const { SourceChannels, ChannelGroups } = registry;
+    const { SourceChannels } = registry;
+    const ChannelGroups = await applySharedImportPaletteToChannelGroups(
+      registry.ChannelGroups,
+      SourceChannels,
+    );
     setOmeLoaderEntries([]);
     const doc = useDocumentStore.getState();
     let nextDocImages = applySourceChannelsToImages(doc.images, SourceChannels);
@@ -1674,6 +1691,15 @@ const Main = (props: Props) => {
   /** Remove HTML shell splash whenever Main mounts (library / author shell). */
   React.useEffect(() => {
     document.getElementById("global-loader")?.remove();
+  }, []);
+
+  /** Preload psudo worker pool WASM once (avoids cold-start on first Optimize). */
+  React.useEffect(() => {
+    void warmupPsudoPalette().catch((e) => {
+      if (import.meta.env.DEV) {
+        console.warn("[psudo] warmup failed", e);
+      }
+    });
   }, []);
 
   if (props.demo_dicom_web || props.demo_url || hasAuthorShellSupport()) {

@@ -5,6 +5,8 @@ import mkcert from "vite-plugin-mkcert";
 import { standardCssModules } from "vite-plugin-standard-css-modules";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import svgr from "vite-plugin-svgr";
+import topLevelAwait from "vite-plugin-top-level-await";
+import wasm from "vite-plugin-wasm";
 
 /** ISO UTC time baked into each bundle; override in CI with `VITE_APP_BUILD_TIME` (ISO-8601). */
 const BUILD_TIME_ISO =
@@ -17,6 +19,7 @@ export default defineConfig({
   assetsInclude: ["**/*.wasm"],
   worker: {
     format: "es",
+    plugins: () => [wasm(), topLevelAwait()],
   },
   server: {
     https: true,
@@ -26,6 +29,8 @@ export default defineConfig({
   },
   base: process.env.BASE_PATH ?? "",
   plugins: [
+    wasm(),
+    topLevelAwait(),
     react(),
     mkcert(),
     svgr({
@@ -46,7 +51,7 @@ export default defineConfig({
     }),
   ],
   optimizeDeps: {
-    exclude: ["minerva-author-ui", "onnxruntime-web"],
+    exclude: ["minerva-author-ui", "onnxruntime-web", "psudo"],
     include: [
       "@luma.gl/core",
       "@luma.gl/constants",
