@@ -5,6 +5,7 @@
   "scripts": {
     "prepare": "lefthook install",
     "dev": "vite --mode development",
+    "jpeg": "vite --mode demo-jpeg",
     "demo": "vite --mode demo",
     "pages": "tsc && vite build",
     "schema": "typescript-json-schema -o 'schema/generic.schema.json' 'src/config/generic.ts' Config",

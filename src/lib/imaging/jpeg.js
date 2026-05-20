@@ -69,7 +69,24 @@ const loadJpeg = (meta) => {
       }),
     );
   });
-  return data;
+  return {
+    data,
+    metadata: {
+      Pixels: {
+        Channels: [
+          {
+            Name: "DNA1",
+            SamplesPerPixel: 1,
+          },
+          {
+            Name: "AF488",
+            SamplesPerPixel: 1,
+          },
+        ],
+        Type: "Uint16",
+      },
+    },
+  };
 };
 
 export { createJpegLayers, loadJpeg };

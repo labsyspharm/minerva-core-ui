@@ -58,6 +58,10 @@ export type OmeLoaderEntry = {
   sourceImageId: string;
 };
 
+export type JpegLoaderEntry = {
+  loader: Loader;
+};
+
 export type ImageViewerProps = {
   omeLoaderEntries: OmeLoaderEntry[];
   stories: Story[];
@@ -299,6 +303,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       documentMainSettingsDicomList,
     ],
   );
+  console.log({ documentMainSettingsList });
 
   const mainSettingsList = useMemo(
     () =>
@@ -638,7 +643,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     });
     return [
       createJpegLayers({
-        jpegLoader: jpegLoader,
+        jpegLoader: jpegLoader.data,
         settings: mainSettingsList[0],
         imagePath: imagePath,
       }),
@@ -753,6 +758,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }, [imageShape.x, imageShape.y]);
 
   const allLayers = useMemo(() => {
+    console.log({ jpegLayers });
     const imageStack =
       jpegLayers.length > 0
         ? jpegLayers

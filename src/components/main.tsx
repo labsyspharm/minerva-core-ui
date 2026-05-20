@@ -12,6 +12,7 @@ import type { LoadedSourceSummary, ValidObj } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
 import {
   ImageViewer,
+  type JpegLoaderEntry,
   type OmeLoaderEntry,
 } from "@/components/shared/viewer/ImageViewer";
 import type {
@@ -40,6 +41,7 @@ import {
   ensureOmeHistogramDistributions,
   mergeHistogramsIntoSourceChannelsByChannelId,
 } from "@/lib/imaging/histogramLazy";
+import { loadJpeg } from "@/lib/imaging/jpeg.js";
 import { type Loader, toSettings } from "@/lib/imaging/viv";
 import { Pool } from "@/lib/imaging/workers/Pool";
 import type {
@@ -102,6 +104,7 @@ type Props = {
    * Omit for `pnpm run dev` — pass only from `pnpm run demo` in `index.tsx`.
    */
   demo_dicom_web?: boolean;
+  demo_jpeg?: boolean;
   demo_url?: string;
   handleKeys: string[];
   /** PWA “Open with” / `launchQueue` (needs manifest `file_handlers`). */
@@ -252,9 +255,11 @@ async function hydrateFilePermission(handle: Handle.File): Promise<boolean> {
 
 /** Rebuild Viv / DICOM loaders from persisted image rows (after Dexie load / refresh). */
 async function hydrateLoadersFromImages(images: Image[]): Promise<{
+  jpegLoaderEntries: JpegLoaderEntry[];
   omeLoaderEntries: OmeLoaderEntry[];
   dicomIndexList: DicomIndex[];
 }> {
+  const jpegLoaderEntries: JpegLoaderEntry[] = [];
   const omeLoaderEntries: OmeLoaderEntry[] = [];
   const dicomIndexList: DicomIndex[] = [];
   const pool = new Pool();
@@ -262,6 +267,19 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
 
   for (const im of images) {
     if (!im.source) continue;
+    if (im.source?.url === "crc-export") {
+      // TODO
+      const imageHeight = 27120; //TODO
+      const imageWidth = 26139; //TODO
+      const imagePath = "crc-export";
+      const loader = loadJpeg({
+        imagePath,
+        imageHeight,
+        imageWidth,
+      });
+      jpegLoaderEntries.push({ loader, sourceImageId: im.id });
+      break;
+    }
     switch (im.source.kind) {
       case "url": {
         const loader = await toLoaderFromUrl(im.source.url, pool);
@@ -303,7 +321,7 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
     }
   }
 
-  return { omeLoaderEntries, dicomIndexList };
+  return { jpegLoaderEntries, omeLoaderEntries, dicomIndexList };
 }
 
 const APP_TAB_TITLE_PREFIX =
@@ -360,6 +378,9 @@ const Content = (props: Props) => {
   );
   const firstExhibit = readConfig(props.exhibit_config);
   const [exhibit, setExhibit] = useState(firstExhibit);
+  const [jpegLoaderEntries, setJpegLoaderEntries] = useState<JpegLoaderEntry[]>(
+    [],
+  );
   const [omeLoaderEntries, setOmeLoaderEntries] = useState<OmeLoaderEntry[]>(
     [],
   );
@@ -536,6 +557,7 @@ const Content = (props: Props) => {
   const [lastOmeTiffUrl, setLastOmeTiffUrl] = useState<string | null>(null);
   /** Bumps on each OME-TIFF-URL load so a stale loader cannot commit after a newer URL starts. */
   const omeTiffUrlLoadGenerationRef = React.useRef(0);
+  const jpegUrlLoadGenerationRef = React.useRef(0);
   const [importRevision, setImportRevision] = useState(0);
   const [isLoadingImage, setIsLoadingImage] = useState(hasDemo);
   const showSquareViewportOverlay = useAppStore(
@@ -654,6 +676,43 @@ const Content = (props: Props) => {
     );
   };
 
+  const onStartJpegUrl = async (url: string) => {
+    jpegUrlLoadGenerationRef.current += 1;
+    const loadGeneration = jpegUrlLoadGenerationRef.current;
+    setDicomIndexList([]);
+    setOmeLoaderEntries([]);
+    // TODO
+    const relevant_groups = props.exhibit_config.Groups;
+    const sourceImageId = crypto.randomUUID();
+    const imageHeight = 27120; //TODO
+    const imageWidth = 26139; //TODO
+    const imagePath = "crc-export";
+    const loader = loadJpeg({
+      imagePath,
+      imageHeight,
+      imageWidth,
+    });
+    const { SourceChannels, ChannelGroups } = extractChannels(
+      loader,
+      "Colorimetric",
+      relevant_groups,
+      sourceImageId,
+    );
+    const doc = useDocumentStore.getState();
+    let nextImages = applySourceChannelsToImages(doc.images, SourceChannels);
+    nextImages = applyLoaderPixelSizeToImage(nextImages, sourceImageId, loader);
+    nextImages = setImageSource(nextImages, sourceImageId, {
+      kind: "url",
+      url,
+    });
+    setImages(nextImages);
+    setChannelGroups(ChannelGroups);
+    updateGroupChannelLists({ ChannelGroups, SourceChannels });
+    resetItems({ SourceChannels, ChannelGroups });
+    ensureDefaultWaypointForImageImport();
+    setJpegLoaderEntries([{ loader, sourceImageId }]);
+  };
+
   const onStartOmeTiffUrl = async (url: string) => {
     omeTiffUrlLoadGenerationRef.current += 1;
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
@@ -734,6 +793,10 @@ const Content = (props: Props) => {
     const omeTiffPropList = imagePropList
       .filter(([_path, _modality, type]) => type === "OME-TIFF")
       .map(([path]) => [path]);
+    // JPEG
+    const jpegUrlList = imagePropList
+      .filter(([_url, _modality, type]) => type === "JPEG-URL")
+      .map(([url]) => url);
     // OME-TIFF loaded from a remote URL
     const omeTiffUrlList = imagePropList
       .filter(([_url, _modality, type]) => type === "OME-TIFF-URL")
@@ -741,7 +804,8 @@ const Content = (props: Props) => {
     const willLoad =
       dicomPropList.length > 0 ||
       (omeTiffPropList.length > 0 && handles.length > 0) ||
-      omeTiffUrlList.length > 0;
+      omeTiffUrlList.length > 0 ||
+      jpegUrlList.length > 0;
     if (!willLoad) return;
 
     const t0 = performance.now();
@@ -766,6 +830,13 @@ const Content = (props: Props) => {
         await onStartOmeTiff(omeTiffPropList[0][0], handles);
         console.log(
           `[minerva] onStartOmeTiff: ${(performance.now() - t1).toFixed(0)}ms`,
+        );
+      }
+      if (jpegUrlList.length > 0) {
+        const t1 = performance.now();
+        await onStartJpegUrl(jpegUrlList[0]);
+        console.log(
+          `[minerva] onStartOmeTiffUrl: ${(performance.now() - t1).toFixed(0)}ms`,
         );
       }
       if (omeTiffUrlList.length > 0) {
@@ -968,17 +1039,31 @@ const Content = (props: Props) => {
       return;
     }
     console.log("[minerva] demo_url effect fired");
+    if (props.demo_jpeg) {
+      void (async () => {
+        await onStartRef.current(
+          [[props.demo_url, "Colorimetric", "JPEG-URL"]],
+          [] as Handle.File[],
+        );
+      })();
+      return;
+    }
     void (async () => {
       await onStartRef.current(
         [[props.demo_url, "Colorimetric", "OME-TIFF-URL"]],
         [] as Handle.File[],
       );
     })();
-  }, [props.demo_url]);
+  }, [props.demo_url, props.demo_jpeg]);
 
   const loaderHydrationGenRef = React.useRef(0);
   useEffect(() => {
-    if (omeLoaderEntries.length > 0 || dicomIndexList.length > 0) return;
+    if (
+      jpegLoaderEntries.length > 0 ||
+      omeLoaderEntries.length > 0 ||
+      dicomIndexList.length > 0
+    )
+      return;
     if (!images.some((im) => im.source)) return;
     const gen = ++loaderHydrationGenRef.current;
     let cancelled = false;
@@ -1006,10 +1091,18 @@ const Content = (props: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [images, omeLoaderEntries.length, dicomIndexList.length]);
+  }, [
+    images,
+    jpegLoaderEntries.length,
+    omeLoaderEntries.length,
+    dicomIndexList.length,
+  ]);
 
   const noLoader =
-    omeLoaderEntries.length === 0 && dicomIndexList.length === 0 && !hasDemo;
+    jpegLoaderEntries.length === 0 &&
+    omeLoaderEntries.length === 0 &&
+    dicomIndexList.length === 0 &&
+    !hasDemo;
 
   // Exhibit editing operations (from Index)
   const { name, groups: exhibitGroups, stories } = exhibit;
@@ -1146,6 +1239,9 @@ const Content = (props: Props) => {
   }, [imageViewerStateSignature]);
 
   const viewerImageKey = React.useMemo(() => {
+    if (jpegLoaderEntries.length > 0) {
+      return "jpeg"; // TODO
+    }
     if (omeLoaderEntries.length > 0) {
       return `${fileName || "ome-tiff"}\0${omeLoaderEntries.map((e) => e.sourceImageId).join("\0")}`;
     }
@@ -1153,7 +1249,7 @@ const Content = (props: Props) => {
       return dicomIndexList.map((d) => d.series).join("|");
     }
     return "";
-  }, [omeLoaderEntries, fileName, dicomIndexList]);
+  }, [jpegLoaderEntries, omeLoaderEntries, fileName, dicomIndexList]);
 
   const onEnsureChannelHistograms = React.useCallback(
     async (channelIds: string[]) => {
@@ -1285,6 +1381,7 @@ const Content = (props: Props) => {
     return {
       ChannelGroups: channelGroups,
       SourceChannels: sourceChannels,
+      jpegLoaderEntries,
       omeLoaderEntries,
       dicomIndexList,
       marker_names: itemRegistryMarkerNames,
@@ -1297,6 +1394,7 @@ const Content = (props: Props) => {
   }, [
     channelGroups,
     sourceChannels,
+    jpegLoaderEntries,
     omeLoaderEntries,
     dicomIndexList,
     itemRegistryMarkerNames,

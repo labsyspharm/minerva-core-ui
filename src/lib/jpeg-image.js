@@ -23,17 +23,19 @@ class JpegImage {
     ][Math.min(this.c, 1)]; // TODO
     const fname = `${zoom}_${x}_${y}.jpg`;
     const url = ipath + "/" + lpath + "/" + fname;
-    const response = await fetch(url);
+    /*    const response = await fetch(url);
     const decoder = new ImageDecoder({
       data: response.body,
       type: "image/jpeg",
     });
     const { image } = await decoder.decode();
     const in_data = new Uint8Array(4 * 1024 * 1024); // TODO
+    */
     const data = new Uint16Array(1024 * 1024); // TODO
-    image.copyTo(in_data);
+    //image.copyTo(in_data);
     for (let i = 0; i < data.length; i += 1) {
-      data[i] = in_data[i * 4] * 256;
+      //data[i] = in_data[i * 4] * 256;
+      data[i] = Math.round(Math.random() * 65535);
     }
     return { x, y, sample, data };
   }

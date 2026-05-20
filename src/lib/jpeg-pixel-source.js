@@ -3,6 +3,7 @@ class JpegPixelSource {
     this._indexer = indexer;
     this.tileSize = tileSize;
     this.tileCache = {};
+    this.labels = ["z", "c", "t", "y", "x"];
     this.shape = shape;
   }
 

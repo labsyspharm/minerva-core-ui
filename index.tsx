@@ -1481,54 +1481,33 @@ const exhibit_config = {
     },
   ],
 };
-
-// TODO Warning: hard-coded for LUNG-3-PR_40X.ome.tif
-const marker_names = [
-  "DNA_1",
-  "AF488",
-  "AF555",
-  "AF647",
-  "DNA_2",
-  "A488 background",
-  "A555 background",
-  "A647 background",
-  "DNA_3",
-  "A488 background",
-  "LAG3",
-  "ARL13B",
-  "DNA_4",
-  "KI67",
-  "Keratin",
-  "PD1",
-  "DNA_5",
-  "CD45RB",
-  "CD3D",
-  "PD-L1",
-  "DNA_6",
-  "CD4",
-  "CD45",
-  "CD8A",
-  "DNA_7",
-  "CD163",
-  "CD68",
-  "CD14",
-  "DNA_8",
-  "CD11B",
-  "FOXP3",
-  "CD21",
-  "DNA_9",
-  "IBA1",
-  "α-SMA",
-  "CD20",
-  "DNA_10",
-  "CD19",
-  "GFAP",
-  "GTUBULIN",
-  "DNA_11",
-  "LAMINAC",
-  "BANF1",
-  "LAMINB",
-];
+const jpeg_exhibit_config = {
+  Name: "JPEG demo",
+  Stories: [
+    {
+      Waypoints: configWaypoints.map((wp) => ({
+        Name: wp.Name,
+        Description: wp.Content,
+        Pan: wp.Pan as [number, number],
+        Zoom: wp.Zoom,
+        Group: wp.Group ?? "",
+      })),
+    },
+  ],
+  Groups: [
+    {
+      Image: {
+        Method: "",
+      },
+      Channels: ["DNA1", "AF488"],
+      Colors: ["0000ff", "ffffff"],
+      Name: "DemoGroup",
+      Path: "DemoGroup_0__DNA1--1__AF488",
+      Highs: [30000, 40000],
+      Lows: [500, 500],
+    },
+  ],
+};
 
 const color = "black";
 const fontColor = "eeeeee";
@@ -1550,7 +1529,8 @@ const root = createRoot(rootElement);
 const OME_TIFF_HANDLE_KEYS = ["img-1"];
 
 /** Bundled CRC channel groups, waypoints, and remote OME-TIFF only for `pnpm run demo` (`vite --mode demo`). */
-const ENABLE_DEMO_CONTENT = import.meta.env.MODE === "demo";
+const ENABLE_JPEG_DEMO = import.meta.env.MODE === "demo-jpeg";
+const ENABLE_DEMO_CONTENT = ENABLE_JPEG_DEMO || import.meta.env.MODE === "demo";
 
 document.title = ENABLE_DEMO_CONTENT ? "Minerva 2.0 Demo" : "Minerva";
 
@@ -1560,15 +1540,26 @@ const emptyExhibitConfig: ExhibitConfig = {
   Groups: [],
 };
 
+const DEMO_JPEG_URL = "crc-export";
 const DEMO_CRC_OME_TIFF_URL =
   "https://lsp-public-data.s3.amazonaws.com/lin-2021-crc-atlas/CRC01-096-097.ome.tif";
 
 const appRouter = createAppRouter(Main, {
   handleKeys: OME_TIFF_HANDLE_KEYS,
   demo_dicom_web: false,
-  demo_url: ENABLE_DEMO_CONTENT ? DEMO_CRC_OME_TIFF_URL : undefined,
-  exhibit_config: ENABLE_DEMO_CONTENT ? exhibit_config : emptyExhibitConfig,
-  configWaypoints: ENABLE_DEMO_CONTENT ? configWaypoints : [],
+  demo_jpeg: ENABLE_JPEG_DEMO,
+  demo_url: ENABLE_DEMO_CONTENT
+    ? ENABLE_JPEG_DEMO
+      ? DEMO_JPEG_URL
+      : DEMO_CRC_OME_TIFF_URL
+    : undefined,
+  exhibit_config: ENABLE_DEMO_CONTENT
+    ? ENABLE_JPEG_DEMO
+      ? jpeg_exhibit_config
+      : exhibit_config
+    : emptyExhibitConfig,
+  configWaypoints:
+    ENABLE_DEMO_CONTENT && !ENABLE_JPEG_DEMO ? configWaypoints : [],
 });
 
 root.render(

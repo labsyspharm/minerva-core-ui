@@ -91,6 +91,11 @@ export const ImageChannelSchema = z.object({
  * How to reopen pixel data after refresh. Live handles are in Dexie `handles` (same DB as stories);
  * only `handleKey` is stored in `DocumentData` JSON.
  */
+export const ImageSourceJpegSchema = z.object({
+  kind: z.literal("jpeg"),
+  url: z.string().min(1),
+});
+
 export const ImageSourceUrlSchema = z.object({
   kind: z.literal("url"),
   url: z.string().min(1),
@@ -108,6 +113,7 @@ export const ImageSourceDicomWebSchema = z.object({
 });
 
 export const ImageSourceSchema = z.discriminatedUnion("kind", [
+  ImageSourceJpegSchema,
   ImageSourceUrlSchema,
   ImageSourceLocalSchema,
   ImageSourceDicomWebSchema,
