@@ -258,6 +258,7 @@ export function applySourceChannelsToImages(
       samples,
       sourceDataTypeId,
       sourceDistribution,
+      gmmContrastLimits,
     } = row;
     const slice: ImageChannel = {
       id: id && id.length > 0 ? id : crypto.randomUUID(),
@@ -266,6 +267,7 @@ export function applySourceChannelsToImages(
       ...(samples !== undefined ? { samples } : {}),
       ...(sourceDataTypeId !== undefined ? { sourceDataTypeId } : {}),
       ...(sourceDistribution !== undefined ? { sourceDistribution } : {}),
+      ...(gmmContrastLimits !== undefined ? { gmmContrastLimits } : {}),
     };
     const list = byImage.get(imageId) ?? [];
     list.push(slice);

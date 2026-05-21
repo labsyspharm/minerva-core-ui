@@ -10,13 +10,20 @@ import { useDocumentStore } from "@/lib/stores/documentStore";
 
 const storySearchSchema = z.object({
   storyid: z.string().uuid().optional(),
+  /** Open standalone cellular gating workspace. */
+  gating: z.literal("1").optional(),
+  gatingid: z.string().uuid().optional(),
 });
 
 /** Root route search: optional Dexie story UUID in `storyid`. */
 export function parseRootSearch(raw: Record<string, unknown>) {
   const r = storySearchSchema.safeParse(raw);
   if (!r.success) return {};
-  return { storyid: r.data.storyid } as { storyid?: string };
+  return {
+    storyid: r.data.storyid,
+    gating: r.data.gating,
+    gatingid: r.data.gatingid,
+  } as { storyid?: string; gating?: "1"; gatingid?: string };
 }
 
 const uuidParamSchema = z.string().uuid();

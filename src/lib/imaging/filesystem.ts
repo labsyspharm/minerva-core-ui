@@ -123,6 +123,45 @@ const toFile: ToFiles = async () => {
   }
 };
 
+export type PickKind = "ome-tiff" | "csv";
+
+type PickFileIn = {
+  kind: PickKind;
+  description?: string;
+};
+
+/**
+ * Pick a single file of a given role (OME-TIFF or CSV). Falls back to a
+ * legacy `File`-backed handle on browsers without File System Access.
+ */
+export async function pickFileForRole({
+  kind,
+  description,
+}: PickFileIn): Promise<Handle.File | null> {
+  const config =
+    kind === "csv"
+      ? {
+          description: description ?? "Cell quantification CSV",
+          mimeTypes: ["text/csv", "text/plain"],
+          extensions: [".csv", ".tsv", ".txt"],
+          multiple: false as const,
+        }
+      : {
+          description: description ?? "OME-TIFF image",
+          mimeTypes: ["image/tiff"],
+          extensions: [".tif", ".tiff", ".ome.tif", ".ome.tiff"],
+          multiple: false as const,
+        };
+  try {
+    const file = await fileOpen(config);
+    if (file.handle) return file.handle;
+    return ephemeralFileHandleFromFile(file);
+  } catch (e: unknown) {
+    if (isAbortError(e)) return null;
+    throw e;
+  }
+}
+
 const toLoader: ToLoader = async ({ handle, pool = null }) => {
   const in_file = await handle.getFile();
   if (pool) {
@@ -143,6 +182,7 @@ const toLoaderFromUrl = async (
 };
 
 export {
+  ephemeralFileHandleFromFile,
   hasAuthorShellSupport,
   hasDirectoryPickerAccess,
   isPersistableFileHandle,

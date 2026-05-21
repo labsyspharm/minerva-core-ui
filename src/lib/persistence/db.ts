@@ -1,4 +1,6 @@
 import Dexie, { type Table } from "dexie";
+import type { GatingDatasetRecord } from "@/lib/gating/persistence";
+import type { GatingPreset } from "@/lib/gating/types";
 import type { FileHandleRow, StoryRecord } from "./types";
 
 export type SettingsRow = {
@@ -16,6 +18,8 @@ class MinervaStoriesDB extends Dexie {
   settings!: Table<SettingsRow, string>;
   /** Local file handles keyed by `handleKey` (separate object store from `stories`). */
   handles!: Table<FileHandleRow, string>;
+  gatingDatasets!: Table<GatingDatasetRecord, string>;
+  gatingPresets!: Table<GatingPreset, string>;
 
   constructor() {
     super("minerva-stories");
@@ -86,6 +90,13 @@ class MinervaStoriesDB extends Dexie {
           await storyTable.put(rest as StoryRecord);
         }
       });
+    this.version(5).stores({
+      stories: "id, modifiedAt",
+      settings: "key",
+      handles: "id",
+      gatingDatasets: "id, modifiedAt",
+      gatingPresets: "id, datasetId",
+    });
   }
 }
 

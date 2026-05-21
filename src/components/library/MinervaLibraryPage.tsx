@@ -1,4 +1,5 @@
 import * as React from "react";
+import { listGatingDatasetSummaries } from "@/lib/gating/persistence";
 import { listStorySummaries } from "@/lib/persistence/storyPersistence";
 import type { StorySummary } from "@/lib/persistence/types";
 import { useDocumentStore } from "@/lib/stores/documentStore";
@@ -265,6 +266,26 @@ export function MinervaLibraryPage() {
   );
 
   const bays = React.useMemo(() => buildBays(summaries), [summaries]);
+  const [gatingSets, setGatingSets] = React.useState<
+    { id: string; name: string; modifiedAt: string }[]
+  >([]);
+
+  React.useEffect(() => {
+    void listGatingDatasetSummaries().then(setGatingSets);
+  }, []);
+
+  const openGating = React.useCallback(
+    (gatingid?: string) => {
+      navigate({
+        search: (prev: { gating?: string; gatingid?: string }) => ({
+          ...prev,
+          gating: "1",
+          gatingid,
+        }),
+      } as never);
+    },
+    [navigate],
+  );
 
   return (
     <div className={styles.root}>
@@ -272,19 +293,61 @@ export function MinervaLibraryPage() {
 
       <div className={styles.shelfToolbar}>
         <h1 className={styles.wordmark}>Minerva Library</h1>
-        <button
-          type="button"
-          className={styles.newVolume}
-          disabled={creating}
-          onClick={() => void handleNew()}
-          aria-label="Add a new story"
-        >
-          <span className={styles.newGlyph} aria-hidden>
-            +
-          </span>
-          <span className={styles.newLabel}>{creating ? "…" : "New"}</span>
-        </button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button
+            type="button"
+            className={styles.newVolume}
+            onClick={() => openGating()}
+            aria-label="Open cellular gating"
+            title="Cellular gating workspace"
+          >
+            <span className={styles.newGlyph} aria-hidden>
+              ⊞
+            </span>
+            <span className={styles.newLabel}>Gating</span>
+          </button>
+          <button
+            type="button"
+            className={styles.newVolume}
+            disabled={creating}
+            onClick={() => void handleNew()}
+            aria-label="Add a new story"
+          >
+            <span className={styles.newGlyph} aria-hidden>
+              +
+            </span>
+            <span className={styles.newLabel}>{creating ? "…" : "New"}</span>
+          </button>
+        </div>
       </div>
+
+      {gatingSets.length > 0 ? (
+        <section
+          className={styles.bookcase}
+          aria-label="Gating datasets"
+          style={{ marginBottom: 16 }}
+        >
+          <h2 className={styles.whisper} style={{ padding: "0 12px" }}>
+            Gating datasets
+          </h2>
+          <ul style={{ listStyle: "none", padding: "0 12px", margin: 0 }}>
+            {gatingSets.map((g) => (
+              <li key={g.id} style={{ marginBottom: 6 }}>
+                <button
+                  type="button"
+                  className={styles.inlineLink}
+                  onClick={() => openGating(g.id)}
+                >
+                  {g.name}
+                </button>
+                <span className={styles.rowDate} style={{ marginLeft: 8 }}>
+                  {formatShortDate(g.modifiedAt)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className={styles.bookcase} aria-label="Bookshelf">
         <div className={styles.bookcaseInner}>

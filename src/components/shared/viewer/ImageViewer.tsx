@@ -13,8 +13,10 @@ import "@deck.gl/widgets/stylesheet.css";
 import type { Layer } from "@deck.gl/core";
 import { PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
+import { createGatingMaskLayers } from "@/lib/gating/gatingMaskLayers";
 import { createTileLayers, loadDicom } from "@/lib/imaging/dicom.js";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
+import { isGroupGmmReady } from "@/lib/imaging/psudoPalette";
 import type { Config, Loader } from "@/lib/imaging/viv";
 import type { Story } from "@/lib/legacy/exhibit";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
@@ -23,7 +25,11 @@ import type { OverlayLayer } from "@/lib/shapes/shapeModel";
 import type { ChannelRendering } from "@/lib/stores/appStore";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { ChannelGroup } from "@/lib/stores/documentStore";
-import { useDocumentStore } from "@/lib/stores/documentStore";
+import {
+  flattenImageChannelsInDocumentOrder,
+  useDocumentStore,
+} from "@/lib/stores/documentStore";
+import { useGatingStore } from "@/lib/stores/gatingStore";
 import { useWindowSize } from "@/lib/util/useWindowSize";
 import { ORTHO_VIEW_ID, SCALEBAR_VIEW_ID } from "@/lib/viewer/deckViewIds";
 import { createDragHandlers } from "@/lib/viewer/dragHandlers";
@@ -93,6 +99,56 @@ const SquareViewportOverlay = styled.div`
   transform: translate(-50%, -50%);
   box-sizing: border-box;
 `;
+
+const GmmGateWrap = styled.div`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  color: rgba(230, 237, 243, 0.85);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  background: rgba(13, 17, 23, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+`;
+
+const GmmGateInner = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: rgba(13, 17, 23, 0.85);
+  border: 1px solid rgba(48, 54, 61, 0.85);
+`;
+
+const GmmGateSpinner = styled.span`
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: inline-block;
+  animation: gmm-gate-spin 0.9s linear infinite;
+  @keyframes gmm-gate-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const GmmGateOverlay = () => (
+  <GmmGateWrap aria-live="polite" aria-label="Computing channel contrast">
+    <GmmGateInner>
+      <GmmGateSpinner aria-hidden="true" />
+      <span>Fitting contrast limits…</span>
+    </GmmGateInner>
+  </GmmGateWrap>
+);
 
 const _isElement = (x = {}): x is HTMLElement => {
   return ["Width", "Height"].every((k) => `client${k}` in x);
@@ -220,6 +276,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   } = useAppStore();
   const channelRendering = useAppStore((s) => s.channelRendering);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
+  const images = useDocumentStore((s) => s.images);
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [_canvas, _setCanvas] = useState(null);
@@ -643,15 +700,52 @@ export const ImageViewer = (props: ImageViewerProps) => {
     });
   }, [omeLoaderEntries, dicomSources, mainSettingsList]);
 
+  /**
+   * Suppress the OME image layer while the active group's GMM contrast limits
+   * are still being fit, so users don't see a flash at the import-default
+   * `[2^5, 2^14]` range before psudo settles. Computed from the source-channel
+   * cache (`Channel.gmmContrastLimits`) so it tracks the eager fit kicked off
+   * in `main.tsx`. A watchdog timer (`GMM_WAIT_TIMEOUT_MS`) ensures we don't
+   * wait forever if a fit fails or never gets scheduled.
+   */
+  const sourceChannelsFlat = useMemo(
+    () => flattenImageChannelsInDocumentOrder(images),
+    [images],
+  );
+  const activeGroupForGate = useMemo(
+    () =>
+      channelGroups.find((g) => g.id === activeChannelGroupId) ??
+      channelGroups[0] ??
+      null,
+    [channelGroups, activeChannelGroupId],
+  );
+  const activeGroupGmmReady = useMemo(
+    () => isGroupGmmReady(activeGroupForGate, sourceChannelsFlat),
+    [activeGroupForGate, sourceChannelsFlat],
+  );
+  const [gmmGateExpired, setGmmGateExpired] = useState(false);
+  const gmmGateKey = useMemo(() => {
+    if (omeLoaderEntries.length === 0) return "";
+    return `${omeLoaderEntries.map((e) => e.sourceImageId).join("\0")}|${activeGroupForGate?.id ?? ""}`;
+  }, [omeLoaderEntries, activeGroupForGate]);
+  useEffect(() => {
+    setGmmGateExpired(false);
+    if (!gmmGateKey) return;
+    const id = window.setTimeout(() => setGmmGateExpired(true), 8000);
+    return () => window.clearTimeout(id);
+  }, [gmmGateKey]);
+  const waitingForGmm =
+    omeLoaderEntries.length > 0 && !activeGroupGmmReady && !gmmGateExpired;
+
   // Memoize image layers
   const omeTiffLayers = useMemo(
     () =>
-      omeLoaderEntries.length === 0
+      omeLoaderEntries.length === 0 || waitingForGmm
         ? []
         : omeTiffPropsList.map(
             (layerProps) => new MultiscaleImageLayer(layerProps),
           ),
-    [omeLoaderEntries, omeTiffPropsList],
+    [omeLoaderEntries, omeTiffPropsList, waitingForGmm],
   );
 
   // Memoize scale bar layer
@@ -730,11 +824,47 @@ export const ImageViewer = (props: ImageViewerProps) => {
     });
   }, [imageShape.x, imageShape.y]);
 
+  const gatingMaskLoader = useGatingStore((s) => s.maskLoader);
+  const gatingCellTable = useGatingStore((s) => s.cellTable);
+  const gatingActive = useGatingStore((s) => s.active);
+  const gatingGates = useGatingStore((s) => s.gates);
+  const gatingEvalMode = useGatingStore((s) => s.evalMode);
+  const gatingOutlines = useGatingStore((s) => s.outlines);
+  const gatingDrawMode = useGatingStore((s) => s.drawMode);
+  const gatingSelection = useGatingStore((s) => s.selectionRowIndices);
+  const gatingTextureRevision = useGatingStore((s) => s.textureRevision);
+
+  const gatingMaskLayers = useMemo(() => {
+    if (!gatingActive || !gatingMaskLoader || !gatingCellTable) return [];
+    return createGatingMaskLayers({
+      maskLoader: gatingMaskLoader,
+      cellTable: gatingCellTable,
+      gates: gatingGates,
+      evalMode: gatingEvalMode,
+      selection: gatingSelection,
+      outlines: gatingOutlines,
+      drawMode: gatingDrawMode,
+      revision: gatingTextureRevision,
+      id: "gating-mask-overlay",
+    });
+  }, [
+    gatingActive,
+    gatingMaskLoader,
+    gatingCellTable,
+    gatingGates,
+    gatingEvalMode,
+    gatingSelection,
+    gatingOutlines,
+    gatingDrawMode,
+    gatingTextureRevision,
+  ]);
+
   const allLayers = useMemo(() => {
     const imageStack = omeTiffLayers.length > 0 ? omeTiffLayers : dicomLayers;
     const layers: Layer[] = [
       worldPickSurfaceLayer,
       ...imageStack,
+      ...gatingMaskLayers,
       ...overlayLayers,
     ];
     if (scaleBarLayer) layers.push(scaleBarLayer);
@@ -742,6 +872,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }, [
     dicomLayers,
     omeTiffLayers,
+    gatingMaskLayers,
     overlayLayers,
     scaleBarLayer,
     worldPickSurfaceLayer,
@@ -1011,6 +1142,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         views={views}
       />
       <LoadingWidget ref={loadingWidgetRef} />
+      {waitingForGmm && <GmmGateOverlay />}
       {showSquareViewportOverlay && (
         <SquareViewportOverlay style={squareViewportStyle} />
       )}
