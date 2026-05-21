@@ -42,6 +42,11 @@ import {
 } from "@/lib/imaging/histogramLazy";
 import {
   applySharedImportPaletteToChannelGroups,
+  type ContrastLimits,
+  clearOmeGmmContrastCache,
+  ensureOmeGmmContrastLimits,
+  looksLikeImportDefaultLimits,
+  mergeGmmContrastLimitsIntoSourceChannelsByChannelId,
   warmupPsudoPalette,
 } from "@/lib/imaging/psudoPalette";
 import { type Loader, toSettings } from "@/lib/imaging/viv";
@@ -574,6 +579,7 @@ const Content = (props: Props) => {
   const onStartOmeTiff = async (in_f: string, handles: Handle.File[]) => {
     if (handles.length === 0) return;
     clearOmeHistogramCache();
+    clearOmeGmmContrastCache();
     setDicomIndexList([]);
     setLastOmeTiffUrl(null);
     // Bundled CRC channel-group definitions in index.tsx apply only to the remote
@@ -666,6 +672,7 @@ const Content = (props: Props) => {
     omeTiffUrlLoadGenerationRef.current += 1;
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
     clearOmeHistogramCache();
+    clearOmeGmmContrastCache();
     setDicomIndexList([]);
     const loader = await toLoaderFromUrl(url, new Pool());
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
@@ -803,6 +810,7 @@ const Content = (props: Props) => {
     groups: ConfigGroup[],
   ) => {
     clearOmeHistogramCache();
+    clearOmeGmmContrastCache();
     setLastOmeTiffUrl(null);
     console.log(
       "[minerva] dicom: fetching pyramids for",
@@ -1233,6 +1241,168 @@ const Content = (props: Props) => {
     [omeLoaderEntries, viewerImageKey, setItems],
   );
 
+  /**
+   * Resolve auto contrast limits for the given OME source-channel ids.
+   *
+   * Like `onEnsureChannelHistograms`, the **source of truth lives on the
+   * source channel** (`Channel.gmmContrastLimits`). After fitting we:
+   *   1. patch the fitted limits onto matching source channels via the
+   *      `mergeGmmContrastLimitsIntoSourceChannelsByChannelId` helper, and
+   *   2. as a one-shot convenience, copy the fitted limits onto any
+   *      channel-group rows whose `lower/upperLimit` still look like import
+   *      defaults (so newly auto-created groups update their UI / viewer
+   *      contrast as soon as the fit returns).
+   *
+   * Channel-group rows that have been hand-tuned (or already auto-fitted) keep
+   * their existing limits unless `overwriteExistingLimits` is set.
+   */
+  const onEnsureChannelGmmContrastLimits = React.useCallback(
+    async (
+      channelIds: string[],
+      opts?: { overwriteExistingLimits?: boolean },
+    ): Promise<Map<string, ContrastLimits>> => {
+      const empty = new Map<string, ContrastLimits>();
+      if (omeLoaderEntries.length === 0 || channelIds.length === 0) {
+        return empty;
+      }
+      const imageKey = viewerImageKey;
+      if (!imageKey) return empty;
+      const doc = useDocumentStore.getState();
+      const prevCh = documentSourceChannels(doc);
+      const loaderByImageId = new Map(
+        omeLoaderEntries.map((e) => [e.sourceImageId, e.loader] as const),
+      );
+
+      type Pair = { imageId: string; index: number; channelId: string };
+      const pairs: Pair[] = [];
+      const overwrite = !!opts?.overwriteExistingLimits;
+      for (const cid of channelIds) {
+        const sc = prevCh.find((c) => c.id === cid);
+        if (!sc) continue;
+        if (!loaderByImageId.has(sc.imageId)) continue;
+        if (!overwrite && sc.gmmContrastLimits) {
+          // already fitted — surface cached value but skip refit
+          continue;
+        }
+        pairs.push({
+          imageId: sc.imageId,
+          index: sc.index,
+          channelId: sc.id,
+        });
+      }
+
+      const byChannelId = new Map<string, ContrastLimits>();
+      if (pairs.length > 0) {
+        const byImage = new Map<string, Pair[]>();
+        for (const p of pairs) {
+          const list = byImage.get(p.imageId) ?? [];
+          list.push(p);
+          byImage.set(p.imageId, list);
+        }
+        for (const [imageId, plist] of byImage) {
+          const loader = loaderByImageId.get(imageId);
+          if (!loader) continue;
+          const uniqueIdx = [...new Set(plist.map((p) => p.index))];
+          const map = await ensureOmeGmmContrastLimits(
+            loader,
+            imageKey,
+            imageId,
+            uniqueIdx,
+          );
+          for (const p of plist) {
+            const limits = map.get(p.index);
+            if (limits) byChannelId.set(p.channelId, limits);
+          }
+        }
+      }
+
+      // Surface any cached values that came from already-fitted source
+      // channels (so callers like `addChannelToGroup` see them even if the
+      // refit pass above was skipped).
+      for (const cid of channelIds) {
+        if (byChannelId.has(cid)) continue;
+        const sc = prevCh.find((c) => c.id === cid);
+        const cached = sc?.gmmContrastLimits;
+        if (cached && cached.lower != null && cached.upper != null) {
+          byChannelId.set(cid, { lower: cached.lower, upper: cached.upper });
+        }
+      }
+
+      if (byChannelId.size === 0) return empty;
+
+      // 1) Update source channels (source of truth).
+      const docNow = useDocumentStore.getState();
+      const prevChNow = documentSourceChannels(docNow);
+      const nextCh = mergeGmmContrastLimitsIntoSourceChannelsByChannelId(
+        prevChNow,
+        byChannelId,
+        { overwrite },
+      );
+      if (nextCh !== prevChNow) {
+        docNow.setImages(applySourceChannelsToImages(docNow.images, nextCh));
+        setItems({ SourceChannels: nextCh });
+      }
+
+      // 2) Propagate to default-looking channel-group rows so the viewer
+      // updates without waiting for the user to hand-edit.
+      const docAfterCh = useDocumentStore.getState();
+      const groupsNow = docAfterCh.channelGroups;
+      let groupsChanged = false;
+      const nextGroups = groupsNow.map((g) => {
+        const channels = g.channels.map((gc) => {
+          const fit = byChannelId.get(gc.channelId);
+          if (!fit) return gc;
+          if (
+            !overwrite &&
+            !looksLikeImportDefaultLimits(gc.lowerLimit, gc.upperLimit)
+          ) {
+            return gc;
+          }
+          groupsChanged = true;
+          return { ...gc, lowerLimit: fit.lower, upperLimit: fit.upper };
+        });
+        return { ...g, channels };
+      });
+      if (groupsChanged) {
+        docAfterCh.setChannelGroups(nextGroups);
+      }
+      return byChannelId;
+    },
+    [omeLoaderEntries, viewerImageKey, setItems],
+  );
+
+  /**
+   * Eager auto contrast on image import. Fires once per `viewerImageKey` change once
+   * OME loaders are in state, kicking off `onEnsureChannelGmmContrastLimits`
+   * for every source channel in the document. Fire-and-forget; writes back to
+   * `Channel.gmmContrastLimits` as each coarse-plane histogram completes.
+   */
+  const lastEagerGmmKeyRef = React.useRef<string>("");
+  React.useEffect(() => {
+    if (!viewerImageKey || omeLoaderEntries.length === 0) return;
+    if (lastEagerGmmKeyRef.current === viewerImageKey) return;
+    lastEagerGmmKeyRef.current = viewerImageKey;
+    const doc = useDocumentStore.getState();
+    const scs = documentSourceChannels(doc);
+    const loaderImageIds = new Set(
+      omeLoaderEntries.map((e) => e.sourceImageId),
+    );
+    const ids = scs
+      .filter(
+        (sc) =>
+          loaderImageIds.has(sc.imageId) &&
+          sc.samples !== 3 &&
+          !sc.gmmContrastLimits,
+      )
+      .map((sc) => sc.id);
+    if (ids.length === 0) return;
+    void onEnsureChannelGmmContrastLimits(ids).catch((e) => {
+      if (import.meta.env.DEV) {
+        console.warn("[psudo] eager auto contrast on import failed", e);
+      }
+    });
+  }, [viewerImageKey, omeLoaderEntries, onEnsureChannelGmmContrastLimits]);
+
   const channelProps = {
     name,
     stories,
@@ -1251,6 +1421,7 @@ const Content = (props: Props) => {
     pushChannel,
     popChannel,
     ensureChannelHistograms: onEnsureChannelHistograms,
+    ensureChannelGmmContrastLimits: onEnsureChannelGmmContrastLimits,
   };
 
   const mainProps = {

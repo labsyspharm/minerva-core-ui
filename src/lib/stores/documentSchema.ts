@@ -77,6 +77,17 @@ export const SourceDistributionSchema = z.object({
   UpperRange: z.number(),
 });
 
+/**
+ * Per-source-channel auto-fitted contrast limits (histogram percentiles on the
+ * coarse pyramid plane; see `psudoPalette.ts`). Cached on the source channel so
+ * newly created channel-group rows (and the detail-view UI) can pull a sensible
+ * default without re-fitting. Field name keeps compatibility with persisted docs.
+ */
+export const GmmContrastLimitsSchema = z.object({
+  lower: z.number(),
+  upper: z.number(),
+});
+
 /** One logical channel under an image (persisted). `id` is stable across the document. */
 export const ImageChannelSchema = z.object({
   id: IdSchema,
@@ -85,6 +96,7 @@ export const ImageChannelSchema = z.object({
   samples: z.number().int().optional(),
   sourceDataTypeId: z.string().optional(),
   sourceDistribution: SourceDistributionSchema.optional(),
+  gmmContrastLimits: GmmContrastLimitsSchema.optional(),
 });
 
 /**
@@ -278,6 +290,7 @@ export type ChannelGroupChannel = z.infer<typeof ChannelGroupChannelSchema>;
 export type ChannelGroup = z.infer<typeof ChannelGroupSchema>;
 export type Waypoint = z.infer<typeof WaypointSchema>;
 export type SourceDistributionData = z.infer<typeof SourceDistributionSchema>;
+export type GmmContrastLimits = z.infer<typeof GmmContrastLimitsSchema>;
 
 export type DocumentMetadata = z.infer<typeof DocumentMetadataSchema>;
 export type DocumentData = z.infer<typeof DocumentDataSchema>;

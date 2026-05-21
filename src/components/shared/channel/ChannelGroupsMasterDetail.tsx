@@ -7,6 +7,7 @@ import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
 import {
   applyOptimizedColorsToChannelGroup,
+  type ContrastLimits,
   IMPORT_DEFAULT_LOWER_LIMIT,
   IMPORT_DEFAULT_UPPER_LIMIT,
   isGroupEligibleForPsudoOptimize,
@@ -82,6 +83,24 @@ const PinIcon = () => (
   </svg>
 );
 
+const FitContrastIcon = () => (
+  <svg
+    aria-hidden="true"
+    width="12"
+    height="12"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <title>Fit contrast (auto)</title>
+    <path d="M4 12c2-5 6-7 8-7s6 2 8 7-6 7-8 7-6-2-8-7z" />
+    <circle cx="12" cy="12" r="2.5" />
+  </svg>
+);
+
 const EMPTY_LOCKED_ROW_IDS = new Set<string>();
 
 function channelNamesForGroup(
@@ -131,6 +150,15 @@ export type ChannelGroupsMasterDetailProps = {
   noLoader: boolean;
   /** OME-TIFF: lazy-load histograms for visible source indices (see `histogramLazy.ts`). */
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
+  /**
+   * OME-TIFF: resolve auto contrast limits for these source-channel ids (histogram
+   * percentiles on the coarse plane; see `psudoPalette.ts`). Applies limits to
+   * matching group-channel rows and returns them by source channel id.
+   */
+  ensureChannelGmmContrastLimits?: (
+    channelIds: string[],
+    opts?: { overwriteExistingLimits?: boolean },
+  ) => Promise<Map<string, ContrastLimits>>;
 };
 
 export const ChannelGroupsMasterDetail = (
@@ -214,6 +242,10 @@ export const ChannelGroupsMasterDetail = (
   /** Per-group channel row ids with locked pseudocolors (session-only). */
   const [lockedColorRowIdsByGroup, setLockedColorRowIdsByGroup] =
     React.useState<Map<string, Set<string>>>(() => new Map());
+  /** Channel-row UUIDs currently re-fitting auto contrast (spinner on the button). */
+  const [gmmFittingRowIds, setGmmFittingRowIds] = React.useState<Set<string>>(
+    () => new Set(),
+  );
 
   const channelRendering = useAppStore((s) => s.channelRendering);
 
@@ -514,6 +546,84 @@ export const ChannelGroupsMasterDetail = (
     syncGroupState(newGroups);
   };
 
+  const { ensureChannelGmmContrastLimits } = props;
+  const [fitAllBusy, setFitAllBusy] = React.useState(false);
+
+  /**
+   * Re-fit a single channel's `lowerLimit/upperLimit` from the auto contrast
+   * pass. Overwrites whatever was there (manual tune included) so the button is an
+   * explicit "redo auto contrast" affordance.
+   */
+  const runFitChannelContrast = React.useCallback(
+    async (groupId: string, channelRowId: string, sourceChannelId: string) => {
+      if (!ensureChannelGmmContrastLimits) return;
+      if (gmmFittingRowIds.has(channelRowId)) return;
+      setGmmFittingRowIds((prev) => {
+        const next = new Set(prev);
+        next.add(channelRowId);
+        return next;
+      });
+      try {
+        await ensureChannelGmmContrastLimits([sourceChannelId], {
+          overwriteExistingLimits: true,
+        });
+      } catch (e) {
+        if (import.meta.env.DEV) {
+          console.warn("[psudo] manual channel auto contrast failed", e);
+        }
+      } finally {
+        setGmmFittingRowIds((prev) => {
+          if (!prev.has(channelRowId)) return prev;
+          const next = new Set(prev);
+          next.delete(channelRowId);
+          return next;
+        });
+      }
+      void groupId;
+    },
+    [ensureChannelGmmContrastLimits, gmmFittingRowIds],
+  );
+
+  /**
+   * Re-fit every channel in the active detail group (auto contrast). Used for the
+   * "Fit all" bulk action; overwrites existing limits.
+   */
+  const runFitAllChannelContrast = React.useCallback(
+    async (groupId: string) => {
+      if (!ensureChannelGmmContrastLimits || fitAllBusy) return;
+      const group = useDocumentStore
+        .getState()
+        .channelGroups.find((g) => g.id === groupId);
+      if (!group || group.channels.length === 0) return;
+      const sourceIds = group.channels.map((gc) => gc.channelId);
+      const rowIds = group.channels.map((gc) => gc.id);
+      setFitAllBusy(true);
+      setGmmFittingRowIds((prev) => {
+        const next = new Set(prev);
+        for (const id of rowIds) next.add(id);
+        return next;
+      });
+      try {
+        await ensureChannelGmmContrastLimits(sourceIds, {
+          overwriteExistingLimits: true,
+        });
+      } catch (e) {
+        if (import.meta.env.DEV) {
+          console.warn("[psudo] fit-all channel auto contrast failed", e);
+        }
+      } finally {
+        setGmmFittingRowIds((prev) => {
+          if (rowIds.every((id) => !prev.has(id))) return prev;
+          const next = new Set(prev);
+          for (const id of rowIds) next.delete(id);
+          return next;
+        });
+        setFitAllBusy(false);
+      }
+    },
+    [ensureChannelGmmContrastLimits, fitAllBusy],
+  );
+
   const addChannelToGroup = React.useCallback(
     async (groupId: string, sourceChannelUUID: string) => {
       if (optimizePaletteBusy) return;
@@ -528,15 +638,38 @@ export const ChannelGroupsMasterDetail = (
       const lockedIds = lockedRowIdsForGroup(group);
       const slotIndex = group.channels.length;
       const seed = seedRgbForGroupChannelIndex(slotIndex);
+
+      // Use the source channel's cached auto contrast limits when present so we
+      // don't refit on every add. If the eager-on-import pass hasn't filled it
+      // in yet (or the user explicitly added a channel before the fit finished),
+      // ask the callback to fit-or-resolve once. Falls back to import defaults
+      // when no loader / no fit is available.
+      let fittedLimits: ContrastLimits | null = sc.gmmContrastLimits
+        ? {
+            lower: sc.gmmContrastLimits.lower,
+            upper: sc.gmmContrastLimits.upper,
+          }
+        : null;
+      if (!fittedLimits && ensureChannelGmmContrastLimits) {
+        try {
+          const map = await ensureChannelGmmContrastLimits([sc.id]);
+          fittedLimits = map.get(sc.id) ?? null;
+        } catch (e) {
+          if (import.meta.env.DEV) {
+            console.warn("[psudo] add-channel auto contrast failed", e);
+          }
+        }
+      }
+
       const newChannel = {
         id: crypto.randomUUID(),
-        lowerLimit: IMPORT_DEFAULT_LOWER_LIMIT,
-        upperLimit: IMPORT_DEFAULT_UPPER_LIMIT,
+        lowerLimit: fittedLimits?.lower ?? IMPORT_DEFAULT_LOWER_LIMIT,
+        upperLimit: fittedLimits?.upper ?? IMPORT_DEFAULT_UPPER_LIMIT,
         color: { r: seed.r, g: seed.g, b: seed.b },
         channelId: sc.id,
       };
 
-      const newGroups = channelGroups.map((g) => {
+      const newGroups = useDocumentStore.getState().channelGroups.map((g) => {
         if (g.id !== groupId) return g;
         return { ...g, channels: [...g.channels, newChannel] };
       });
@@ -574,7 +707,13 @@ export const ChannelGroupsMasterDetail = (
         setOptimizePaletteBusy(false);
       }
     },
-    [channelGroups, sourceChannels, syncGroupState, optimizePaletteBusy],
+    [
+      channelGroups,
+      sourceChannels,
+      syncGroupState,
+      optimizePaletteBusy,
+      ensureChannelGmmContrastLimits,
+    ],
   );
 
   const removeChannelFromGroup = (groupId: string, channelUUID: string) => {
@@ -736,6 +875,51 @@ export const ChannelGroupsMasterDetail = (
     detailGroupId,
     detailGroupSourcesKey,
     ensureChannelHistograms,
+    props.noLoader,
+  ]);
+
+  /**
+   * Lazy auto-contrast when a detail group is opened. The eager pass in
+   * `main.tsx` should normally have populated `Channel.gmmContrastLimits`
+   * already, but if (e.g.) the group was opened mid-fit or the eager pass was
+   * skipped for any reason, this catches up. Only requests rows whose source
+   * channel does not yet have cached limits.
+   */
+  React.useEffect(() => {
+    void detailGroupSourcesKey;
+    if (!detailGroupId || !ensureChannelGmmContrastLimits || props.noLoader) {
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const st = useDocumentStore.getState();
+      const gList = documentChannelGroups(st);
+      const scList = documentSourceChannels(st);
+      const g = gList.find((x) => x.id === detailGroupId);
+      if (!g) return;
+      const channelIds: string[] = [];
+      for (const gc of g.channels) {
+        const sc = findSourceChannel(scList, gc.channelId);
+        if (!sc) continue;
+        if (sc.gmmContrastLimits) continue;
+        channelIds.push(gc.channelId);
+      }
+      if (channelIds.length === 0 || cancelled) return;
+      try {
+        await ensureChannelGmmContrastLimits(channelIds);
+      } catch (e) {
+        if (import.meta.env.DEV) {
+          console.warn("[psudo] detail-open auto contrast failed", e);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    detailGroupId,
+    detailGroupSourcesKey,
+    ensureChannelGmmContrastLimits,
     props.noLoader,
   ]);
 
@@ -1076,6 +1260,30 @@ export const ChannelGroupsMasterDetail = (
                   >
                     Unlock all
                   </button>
+                  {ensureChannelGmmContrastLimits ? (
+                    <button
+                      type="button"
+                      className={styles.paletteLockAllButton}
+                      disabled={channels.length === 0 || fitAllBusy}
+                      title="Fit contrast limits for every channel (0.1%–99.9% on coarse plane)"
+                      aria-busy={fitAllBusy}
+                      onClick={() =>
+                        void runFitAllChannelContrast(detailGroup.id)
+                      }
+                    >
+                      {fitAllBusy ? (
+                        <>
+                          <span
+                            className={styles.optimizePaletteSpinner}
+                            aria-hidden="true"
+                          />
+                          Fitting…
+                        </>
+                      ) : (
+                        "Fit contrast"
+                      )}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     className={styles.optimizePaletteButton}
@@ -1191,6 +1399,34 @@ export const ChannelGroupsMasterDetail = (
                         >
                           <PinIcon />
                         </button>
+                        {ensureChannelGmmContrastLimits ? (
+                          <button
+                            type="button"
+                            className={styles.channelActionButton}
+                            disabled={gmmFittingRowIds.has(ch.channelUUID)}
+                            aria-busy={gmmFittingRowIds.has(ch.channelUUID)}
+                            title="Fit contrast limits (histogram percentiles on coarse plane)"
+                            aria-label={`Fit contrast for ${ch.name}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!ch.sourceUUID) return;
+                              void runFitChannelContrast(
+                                detailGroup.id,
+                                ch.channelUUID,
+                                ch.sourceUUID,
+                              );
+                            }}
+                          >
+                            {gmmFittingRowIds.has(ch.channelUUID) ? (
+                              <span
+                                className={styles.optimizePaletteSpinner}
+                                aria-hidden="true"
+                              />
+                            ) : (
+                              <FitContrastIcon />
+                            )}
+                          </button>
+                        ) : null}
                         {isReplacing ? (
                           <select
                             ref={replaceChannelSelectRef}

@@ -101,7 +101,7 @@
     "prosemirror-state": "^1.4.3",
     "prosemirror-transform": "^1.9.0",
     "prosemirror-view": "^1.33.9",
-    "psudo": "0.4.0",
+    "psudo": "0.4.1",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.4",
     "react-color": "^2.19.3",

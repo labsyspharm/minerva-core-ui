@@ -3,6 +3,7 @@ import * as React from "react";
 import styled from "styled-components";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 import type { ConfigProps } from "@/lib/authoring/config";
+import type { ContrastLimits } from "@/lib/imaging/psudoPalette";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
   findSourceChannel,
@@ -29,6 +30,15 @@ export type ChannelPanelProps = {
    * when a group is expanded in the channel editor (cached per image).
    */
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
+  /**
+   * OME-TIFF only: fit psudo GMM contrast limits for these source-channel ids
+   * and apply them to matching group-channel rows. Returns the fitted limits
+   * by channel id so callers (add-channel) can use the values immediately.
+   */
+  ensureChannelGmmContrastLimits?: (
+    channelIds: string[],
+    opts?: { overwriteExistingLimits?: boolean },
+  ) => Promise<Map<string, ContrastLimits>>;
 };
 
 const TextWrap = styled.div`
@@ -205,6 +215,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         channelItemElement={props.channelItemElement}
         noLoader={props.noLoader}
         ensureChannelHistograms={props.ensureChannelHistograms}
+        ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
       />
     </ChannelGroupsSlot>
   );
