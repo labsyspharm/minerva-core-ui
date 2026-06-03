@@ -690,8 +690,9 @@ const WaypointsList = (_props: WaypointsListProps) => {
               }}
               onClick={handleAddWaypoint}
               title="Add waypoint"
+              aria-label="Add waypoint"
             >
-              + Add
+              Add waypoint
             </button>
           </div>
         }

@@ -171,6 +171,26 @@
   width: auto;
 }
 
+.channelTextStack {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1px;
+}
+
+.channelImageSubtitle {
+  display: block;
+  font-size: 10px;
+  line-height: 1.2;
+  color: #7d868f;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-left: 2px;
+}
+
 .compactHeader {
   background-color: #1a1a1a;
   border-bottom: 1px solid #444;
@@ -201,6 +221,28 @@
   align-items: center;
   gap: 6px;
   margin-left: auto;
+}
+
+/* Matches Upload tab header actions (Add image / Add mask). */
+.headerActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  color: #e6edf3;
+  font-size: 12px;
+  padding: 0.45rem 0.75rem;
+  min-height: 2.25rem;
+  line-height: 1.2;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.headerActionButton:hover:not(:disabled) {
+  background-color: #333;
+  border-color: #555;
+  color: #fff;
 }
 
 .headerButton {
@@ -406,7 +448,8 @@
 }
 
 .waypointChevronRight,
-.waypointChevronLeft {
+.waypointChevronLeft,
+.waypointChevronDown {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
@@ -930,7 +973,7 @@
 }
 
 .detailChannelItemEmbed {
-  padding: 0 0 4px;
+  padding: 0 8px 4px 4px;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -1193,7 +1236,32 @@
   outline-offset: 1px;
 }
 
-/* Channel color swatch in detail view */
+.channelVisibilityButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #c9d1d9;
+  cursor: pointer;
+}
+
+.channelVisibilityButton:hover {
+  color: #e6edf3;
+  background-color: #21262d;
+  border-color: #30363d;
+}
+
+.channelVisibilityButtonHidden {
+  color: #6e7681;
+}
+
+/* Channel color square (opens picker) */
 .channelColorSwatch {
   width: 14px;
   height: 14px;
@@ -1202,6 +1270,10 @@
   border-radius: 2px;
   flex-shrink: 0;
   cursor: pointer;
+}
+
+.channelColorSwatch:hover {
+  border-color: #8b949e;
 }
 
 .colorLockButton {
@@ -1289,4 +1361,293 @@
 .allChannelsNote {
   color: #8b949e;
   font-size: 12px;
+}
+
+.channelKindSectionLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--theme-light-contrast-color) 48%, transparent);
+  padding: 8px 10px 4px;
+}
+
+.maskVizToggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.maskVizOption {
+  padding: 2px 6px;
+  font-size: 10px;
+  line-height: 1.3;
+  background: #161b22;
+  color: #8b949e;
+  border: none;
+  cursor: pointer;
+}
+
+.maskVizOption:hover {
+  color: #e6edf3;
+}
+
+.maskVizOptionActive {
+  background: #21262d;
+  color: #e6edf3;
+}
+
+/* Photoshop-style channel tree */
+.treeScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-color: #555 transparent;
+  scrollbar-width: thin;
+}
+
+.treeScroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.treeScroll::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 4px;
+}
+
+.groupFolders {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.groupFolder {
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #141414;
+  margin: 0 6px;
+}
+
+.groupFolderActive {
+  border-color: color-mix(in srgb, var(--theme-light-focus-color, #6ae) 55%, #333);
+}
+
+.dropTargetActive {
+  border-color: var(--theme-light-focus-color, #6ae);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme-light-focus-color, #6ae) 40%, transparent);
+}
+
+.groupFolderHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  min-height: 32px;
+  box-sizing: border-box;
+}
+
+.groupFolderChevron {
+  all: unset;
+  display: flex;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: #8b949e;
+  line-height: 0;
+}
+
+.groupFolderChevron:hover {
+  color: #e6edf3;
+}
+
+.groupFolderName {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.groupFolderActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.groupFolderBody {
+  border-top: 1px solid #2a2a2a;
+  padding: 2px 0 6px;
+}
+
+.groupChildList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.groupChildBlock {
+  border-bottom: 1px solid #222;
+}
+
+.groupChildBlock:last-of-type {
+  border-bottom: none;
+}
+
+.groupChildRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 2px 4px;
+  min-height: 0;
+  cursor: grab;
+}
+
+.groupChildRow .dragHandle {
+  height: 22px;
+  width: 14px;
+}
+
+.groupChildRow .channelNameInput,
+.rootChannelRow .channelNameInput {
+  box-sizing: border-box;
+  height: 22px;
+  padding: 2px 6px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.groupChildRow:active {
+  cursor: grabbing;
+}
+
+.groupChildName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #e6edf3;
+}
+
+.dragHandle {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 22px;
+  color: #555;
+  cursor: grab;
+  align-self: center;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.treeSeparator {
+  margin: 8px 10px 4px;
+  padding: 4px 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8b949e;
+  border-top: 1px solid #333;
+}
+
+.treeSeparatorHint {
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #6e7681;
+}
+
+.rootChannelList {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rootChannelBlock {
+  border-bottom: 1px solid #2a2a2a;
+  cursor: grab;
+}
+
+.rootChannelBlock:active {
+  cursor: grabbing;
+}
+
+.rootChannelRow {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  column-gap: 4px;
+  row-gap: 0;
+  align-items: center;
+  padding: 4px 8px 2px 4px;
+}
+
+.rootChannelRow .channelVisibilityButton {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+}
+
+.rootChannelRow .channelTextStack {
+  display: contents;
+}
+
+.rootChannelRow .channelNameInput {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+}
+
+.rootChannelRow .channelImageSubtitle {
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: 1px;
+  line-height: 1.15;
+}
+
+.rootChannelRow .channelColorSwatch,
+.rootChannelRow .maskVizToggle {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: center;
+}
+
+.rootChannelBlock .channelTextStack {
+  gap: 0;
+}
+
+/** Selection mask row: flex (not the name/subtitle grid). */
+.rootChannelRowInline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rootChannelBlockCompact {
+  opacity: 0.85;
+}
+
+.rootChannelCompactName {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  min-width: 0;
+  font-size: 12px;
+  color: #8b949e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

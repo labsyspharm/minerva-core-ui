@@ -9,14 +9,11 @@ type FormOutDicom = {
 type FormOutAny = {
   name: string;
   path: string;
-  mask?: string;
-  csv?: string;
 };
 type FormOutOmeTiffUrl = {
   ome_tiff_url: string;
 };
 type Format = "DICOM-WEB" | "OME-TIFF" | "OME-TIFF-URL";
-type AnyKey = keyof Required<FormOutAny>;
 type DicomKey = keyof Required<FormOutDicom>;
 type ValidateIn<T> = {
   formOut: T;
@@ -48,20 +45,26 @@ export function isOpts(o: MaybeOpts) {
   return false;
 }
 
+function isDicomOpts(o: MaybeOpts): o is FormDicomOpts {
+  if (!("formOut" in o)) return false;
+  return "url" in (o.formOut as Record<string, unknown>);
+}
+
+function isAnyOpts(o: MaybeOpts): o is FormAnyOpts {
+  if (!("onStart" in o) || typeof o.onStart !== "function") return false;
+  if (!("handles" in o) || !Array.isArray(o.handles)) return false;
+  if (!("formOut" in o)) return false;
+  const fo = o.formOut as Record<string, unknown>;
+  return !("url" in fo) && !("ome_tiff_url" in fo);
+}
+
+function isOmeTiffUrlOpts(o: MaybeOpts): o is FormOmeTiffUrlOpts {
+  if (!("formOut" in o)) return false;
+  return "ome_tiff_url" in (o.formOut as Record<string, unknown>);
+}
+
 function isFormOpts(o: MaybeOpts): o is FormOpts {
-  if (isOpts(o)) {
-    const fo = (o.formOut || {}) as MaybeOpts;
-    return "name" in fo || "url" in fo || "ome_tiff_url" in fo;
-  }
-  return false;
-}
-function isAnyOpts(o: FormOpts): o is FormAnyOpts {
-  if (!isFormOpts(o)) return false;
-  return "path" in o.formOut;
-}
-function isOmeTiffUrlOpts(o: FormOpts): o is FormOmeTiffUrlOpts {
-  if (!isFormOpts(o)) return false;
-  return "ome_tiff_url" in o.formOut;
+  return isAnyOpts(o) || isOmeTiffUrlOpts(o) || isDicomOpts(o);
 }
 
 const toValid: ToValid = (need_keys, keys) => {
@@ -107,38 +110,18 @@ const validateDicom: Validate<FormDicomOpts> = async (opts) => {
 };
 
 const validateAny: Validate<FormAnyOpts> = async (opts) => {
-  const { handles, formOut, onStart } = opts;
-  const need_keys = ["name", "path"];
-  const all = [...need_keys, "mask", "csv"];
-  const valid_keys = await all.reduce(
-    async (memo, k) => {
-      const v = k in formOut ? formOut[k as AnyKey] : "";
-      const out = await memo;
-      if (typeof v !== "string") return out;
-      switch (k) {
-        case "name":
-          if (v.length === 0) return out;
-          return [...out, k];
-        case "path": {
-          if (handles.length === 0) {
-            return out;
-          }
-          const handle = handles[0]; // TODO
-          const found = await findFile({ handle });
-          return found ? [...out, k] : out;
-        }
-      }
-      return out;
-    },
-    Promise.resolve([] as string[]),
-  );
-  const validated = need_keys.every((k) => {
-    return valid_keys.includes(k as AnyKey);
-  });
-  if (validated && "path" in formOut) {
-    onStart([[formOut.path, "Colorimetric", "OME-TIFF"]]);
+  const { handles, onStart } = opts;
+  if (handles.length === 0) {
+    return toValid(["path"], []);
   }
-  return toValid(need_keys, valid_keys);
+  const handle = handles[0];
+  const found = await findFile({ handle });
+  if (!found) {
+    return toValid(["path"], []);
+  }
+  const path = handle.name;
+  onStart([[path, "Colorimetric", "OME-TIFF"]]);
+  return toValid(["path"], ["path"]);
 };
 
 const validateOmeTiffUrl: Validate<FormOmeTiffUrlOpts> = async (opts) => {
@@ -158,7 +141,7 @@ const validateOmeTiffUrl: Validate<FormOmeTiffUrlOpts> = async (opts) => {
 
 const validate: Validate<MaybeOpts> = async (opts: MaybeOpts) => {
   if (!isFormOpts(opts)) {
-    return toValid(["name"], []);
+    return toValid(["path"], []);
   }
   if (isOmeTiffUrlOpts(opts)) {
     return await validateOmeTiffUrl(opts);

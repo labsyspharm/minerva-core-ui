@@ -1551,14 +1551,14 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
       {/* Text Input Modal */}
       {showTextInput && textInputPosition && (
         <TextEditPanel
-          title="Add Text Shape"
+          title="Add text"
           textValue={textInputValue}
           fontSize={textFontSize}
           onTextChange={setTextInputValue}
           onFontSizeChange={setTextFontSize}
           onSubmit={handleTextSubmit}
           onCancel={handleTextCancel}
-          submitButtonText="Add Text"
+          submitButtonText="Add text"
         />
       )}
     </>

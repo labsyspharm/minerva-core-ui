@@ -78,6 +78,7 @@ const toSettingsInternal = (
   groups,
   activeChannelGroupId,
   channelVisibilities,
+  channelGroupRowVisibilities,
   toSettings,
   loaderSourceImageId?: string,
 ) => {
@@ -88,6 +89,7 @@ const toSettingsInternal = (
       undefined,
       channelVisibilities,
       loaderSourceImageId,
+      channelGroupRowVisibilities,
     );
   }
   return toSettings(
@@ -96,6 +98,7 @@ const toSettingsInternal = (
     loader,
     channelVisibilities,
     loaderSourceImageId,
+    channelGroupRowVisibilities,
   );
 };
 
@@ -439,7 +442,11 @@ export const ImageExporter = (props: ImageExporterProps) => {
   const { groups, viewerConfig } = props;
   const { omeLoaderEntries, dicomIndexList } = props;
 
-  const { activeChannelGroupId, channelVisibilities } = useAppStore();
+  const {
+    activeChannelGroupId,
+    channelVisibilities,
+    channelGroupRowVisibilities,
+  } = useAppStore();
 
   const mainSettingsOmeList = useMemo(() => {
     const modality = "Colorimetric";
@@ -450,6 +457,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
         groups,
         activeChannelGroupId,
         channelVisibilities,
+        channelGroupRowVisibilities,
         viewerConfig.toSettings,
         sourceImageId,
       ),
@@ -459,6 +467,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     groups,
     activeChannelGroupId,
     channelVisibilities,
+    channelGroupRowVisibilities,
     viewerConfig.toSettings,
   ]);
 
@@ -471,6 +480,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
         groups,
         activeChannelGroupId,
         channelVisibilities,
+        channelGroupRowVisibilities,
         viewerConfig.toSettings,
       );
     });
@@ -479,6 +489,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     groups,
     activeChannelGroupId,
     channelVisibilities,
+    channelGroupRowVisibilities,
     viewerConfig.toSettings,
   ]);
 

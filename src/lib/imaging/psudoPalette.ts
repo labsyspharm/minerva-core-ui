@@ -1,4 +1,11 @@
-import type { LoaderPlane, SupportedTypedArray } from "@/lib/authoring/config";
+import {
+  DEFAULT_VISIBLE_INTENSITY_CHANNELS,
+  isImageChannel,
+} from "@/lib/imaging/channelKind";
+import {
+  fetchPlaneRaster,
+  rasterToUint16Array,
+} from "@/lib/imaging/maskChannelRaster";
 import type { Loader } from "@/lib/imaging/viv";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
 import { findSourceChannel } from "@/lib/stores/documentStore";
@@ -20,10 +27,10 @@ const PSUDO_CONTRAST_MIN = 0;
 const PSUDO_CONTRAST_MAX = 65535;
 
 /** Channels per group from `extractChannels` default import path. */
-export const IMPORT_GROUP_CHANNEL_COUNT = 4;
+export const IMPORT_GROUP_CHANNEL_COUNT = DEFAULT_VISIBLE_INTENSITY_CHANNELS;
 
 /** Default hex seeds from `extractChannels` (before psudo). */
-const IMPORT_DEFAULT_SEED_HEX = [
+export const IMPORT_DEFAULT_SEED_HEX = [
   "0dabff",
   "c3ff00",
   "ff8b00",
@@ -51,28 +58,6 @@ export function looksLikeImportDefaultLimits(
   if (lower === 0 && upper === 65535) return true;
   if (lower === 0 && upper === 255) return true;
   return false;
-}
-
-/**
- * True when every non-RGB channel in `group` either has a cached
- * `gmmContrastLimits` on its source channel or its group-row limits look
- * hand-tuned (non-default). Used by `ImageViewer` to delay rendering until
- * the active group's auto contrast resolves have landed.
- */
-export function isGroupGmmReady(
-  group: ChannelGroup | null | undefined,
-  sourceChannels: Channel[],
-): boolean {
-  if (!group || group.channels.length === 0) return true;
-  for (const gc of group.channels) {
-    const sc = findSourceChannel(sourceChannels, gc.channelId);
-    if (!sc) continue;
-    if (sc.samples === 3) continue;
-    if (sc.gmmContrastLimits) continue;
-    if (!looksLikeImportDefaultLimits(gc.lowerLimit, gc.upperLimit)) continue;
-    return false;
-  }
-  return true;
 }
 
 export type RgbColor = { r: number; g: number; b: number };
@@ -243,13 +228,13 @@ export function isGroupEligibleForPsudoOptimize(
   group: ChannelGroup,
   sourceChannels: Channel[],
 ): boolean {
-  const rows = group.channels ?? [];
-  if (rows.length < 2) return false;
-  for (const gc of rows) {
+  let imageChannelCount = 0;
+  for (const gc of group.channels ?? []) {
     const sc = findSourceChannel(sourceChannels, gc.channelId);
-    if (sc?.samples === 3) return false;
+    if (!sc || sc.samples === 3 || !isImageChannel(sc)) continue;
+    imageChannelCount++;
   }
-  return true;
+  return imageChannelCount >= 2;
 }
 
 /** Row ids for every channel slot in a group (used to lock existing colors on add). */
@@ -320,7 +305,7 @@ export function applyOptimizedColorsToChannelGroup(
   });
 }
 
-function hexToRgb(hex: string): RgbColor {
+export function hexToRgb(hex: string): RgbColor {
   const n = Number.parseInt(hex.replace("#", ""), 16);
   return {
     r: (n >> 16) & 255,
@@ -467,6 +452,24 @@ export async function applySharedImportPaletteToChannelGroups(
   }
 }
 
+/** On generic import (no auto groups): seed psudo palette colors on source channels. */
+export async function applySharedImportPaletteToSourceChannels(
+  sourceChannels: Channel[],
+): Promise<Channel[]> {
+  const { seedDefaultSourceChannelStyles } = await import(
+    "./sourceChannelStyle"
+  );
+  try {
+    const palette = await optimizeImportPaletteFour(sourceChannels);
+    return seedDefaultSourceChannelStyles(sourceChannels, palette);
+  } catch (e) {
+    if (import.meta.env.DEV) {
+      console.warn("[psudo] import source palette optimization failed", e);
+    }
+    return seedDefaultSourceChannelStyles(sourceChannels);
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Auto contrast limits (histogram percentiles on the coarsest pyramid plane)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -494,38 +497,6 @@ function gmmCacheKey(
 
 export function clearOmeGmmContrastCache(): void {
   omeGmmCache.clear();
-}
-
-/**
- * Pick the lowest-resolution pyramid level (smallest, fits in memory). We only
- * need the marginal intensity distribution for auto contrast, not full detail.
- */
-function pickLowestResolutionPlane(loader: Loader): LoaderPlane | null {
-  const planes = loader.data;
-  if (!planes || planes.length === 0) return null;
-  return planes[planes.length - 1];
-}
-
-/**
- * Coerce raster pixels into `Uint16Array` for histogram / display-scale analysis.
- * Uint8 is upscaled (`<<8`); other dtypes clamp to uint16.
- */
-function rasterToUint16Array(data: SupportedTypedArray): Uint16Array {
-  if (data instanceof Uint16Array) return data;
-  const out = new Uint16Array(data.length);
-  if (data instanceof Uint8Array || data instanceof Uint8ClampedArray) {
-    for (let i = 0; i < data.length; i++) out[i] = data[i] << 8;
-    return out;
-  }
-  for (let i = 0; i < data.length; i++) {
-    const v = (data as ArrayLike<number>)[i];
-    if (!Number.isFinite(v)) {
-      out[i] = 0;
-    } else {
-      out[i] = Math.max(0, Math.min(65535, Math.round(v)));
-    }
-  }
-  return out;
 }
 
 function sanitizeGmmLimits(vmin: number, vmax: number): ContrastLimits | null {
@@ -579,22 +550,11 @@ async function fitChannelGmmContrastForSourceIndex(
   loader: Loader,
   sourceIndex: number,
 ): Promise<ContrastLimits | null> {
-  const plane = pickLowestResolutionPlane(loader);
-  if (!plane) return null;
-  let raster: { data: SupportedTypedArray };
-  try {
-    raster = (await plane.getRaster({
-      selection: { t: 0, z: 0, c: sourceIndex },
-    })) as { data: SupportedTypedArray };
-  } catch (e) {
-    if (import.meta.env.DEV) {
-      console.warn(
-        `[psudo] auto contrast: getRaster failed for c=${sourceIndex}`,
-        e,
-      );
-    }
-    return null;
-  }
+  const hit = await fetchPlaneRaster(loader, sourceIndex, {
+    preferCoarsest: true,
+  });
+  if (!hit) return null;
+  const { raster } = hit;
   if (!raster?.data || raster.data.length === 0) return null;
 
   const u16 = rasterToUint16Array(raster.data);

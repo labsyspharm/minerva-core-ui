@@ -277,12 +277,10 @@ export function MinervaLibraryPage() {
           className={styles.newVolume}
           disabled={creating}
           onClick={() => void handleNew()}
-          aria-label="Add a new story"
+          aria-label="Add story"
+          title="Add story"
         >
-          <span className={styles.newGlyph} aria-hidden>
-            +
-          </span>
-          <span className={styles.newLabel}>{creating ? "…" : "New"}</span>
+          {creating ? "…" : "Add story"}
         </button>
       </div>
 
@@ -316,7 +314,7 @@ export function MinervaLibraryPage() {
                         onClick={() => void handleNew()}
                         disabled={creating}
                       >
-                        Create a new story.
+                        Add story.
                       </button>
                     </p>
                   ) : null}

@@ -5,6 +5,16 @@ import {
 } from "@/components/authoring/tools/ActionButtons";
 import { EditableText } from "@/components/authoring/tools/EditableText";
 import { EditModeSwitcher } from "@/components/authoring/tools/EditModeSwitcher";
+import {
+  isGroupRowVisible,
+  isStackVisible,
+} from "@/lib/imaging/channelCompositor";
+import {
+  effectiveSourceColor,
+  effectiveSourceLimits,
+} from "@/lib/imaging/sourceChannelStyle";
+import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
+import { basenameImportLabel } from "@/lib/stores/storeUtils";
 
 /** Matches nested list styling in `ChannelGroups` so the overlay reads as one column. */
 const ChannelsSection = styled.div`
@@ -20,7 +30,7 @@ const ChannelsSectionHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  padding: 4px 6px;
+  padding: 3px 6px;
   border-bottom: 1px solid
     color-mix(in srgb, var(--theme-glass-edge) 35%, transparent);
 `;
@@ -45,21 +55,48 @@ const ToolbarSlot = styled.div`
   line-height: 0;
 `;
 
+const LegendBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 2px 3px 3px;
+  gap: 0;
+`;
+
+const ImageSection = styled.div`
+  &:not(:first-child) {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid
+      color-mix(in srgb, var(--theme-glass-edge) 28%, transparent);
+  }
+`;
+
+const ImageSectionLabel = styled.div`
+  padding: 1px 4px 2px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--theme-light-contrast-color) 42%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
 const ChannelList = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 2px;
   gap: 0;
 `;
 
 const LegendRowWrap = styled.div`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   width: 100%;
-  min-height: 22px;
-  padding: 3px 5px;
-  border-radius: 3px;
+  min-height: 18px;
+  padding: 1px 3px;
+  border-radius: 2px;
   box-sizing: border-box;
 
   &:hover {
@@ -67,11 +104,11 @@ const LegendRowWrap = styled.div`
   }
 `;
 
-const RowClickArea = styled.div<{ color: string }>`
-  color: ${({ color }) => color};
+const RowClickArea = styled.div`
+  color: rgb(230, 237, 243);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   flex: 1;
   min-width: 0;
   cursor: pointer;
@@ -79,21 +116,16 @@ const RowClickArea = styled.div<{ color: string }>`
   &:hover .channel-legend-name {
     text-decoration: underline;
     text-underline-offset: 2px;
-    text-decoration-color: color-mix(
-      in srgb,
-      currentColor 35%,
-      transparent
-    );
+    text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
   }
 `;
 
 const Swatch = styled.div`
   background-color: #${({ color }) => color};
-  outline: ${({ outline }) => outline};
-  height: 11px;
-  width: 11px;
+  height: 10px;
+  width: 10px;
   flex-shrink: 0;
-  border-radius: 3px;
+  border-radius: 2px;
   box-shadow:
     0 0 0 1px color-mix(in srgb, white 14%, transparent) inset,
     0 0 0 1px color-mix(in srgb, black 35%, transparent);
@@ -103,8 +135,8 @@ const NameSlot = styled.span`
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  font-size: 12px;
-  line-height: 1.25;
+  font-size: 11px;
+  line-height: 1.2;
 
   &.channel-legend-name {
     display: block;
@@ -120,12 +152,119 @@ export const defaultChannels = [
   { color: "FFFFFF", name: "White" },
 ];
 
-const LegendRow = (props) => {
-  const { channel, channelVisibilities } = props;
+export type LegendChannel = {
+  r: number;
+  g: number;
+  b: number;
+  lower_range: number;
+  upper_range: number;
+  name: string;
+  color: string;
+  group_uuid: string;
+  source_uuid: string;
+  channel_uuid: string;
+};
+
+export type LegendSection = {
+  imageId: string;
+  label: string;
+  channels: LegendChannel[];
+};
+
+/** Legend swatch matching what the viewer draws (group row or stack source). */
+export function legendChannelFromLayer(
+  sc: Channel,
+  gc: ChannelGroupChannel | null,
+  activeGroupId: string | null,
+  colorIndex: number,
+): LegendChannel {
+  if (gc) {
+    const { r, g, b } = gc.color;
+    const hex_color = [r, g, b]
+      .map((n) => n.toString(16).padStart(2, "0"))
+      .join("");
+    return {
+      r,
+      g,
+      b,
+      lower_range: gc.lowerLimit,
+      upper_range: gc.upperLimit,
+      name: sc.name,
+      color: hex_color,
+      group_uuid: activeGroupId ?? "",
+      source_uuid: sc.id,
+      channel_uuid: gc.id,
+    };
+  }
+  return legendChannelFromSource(sc, colorIndex);
+}
+
+export function legendChannelFromSource(
+  sc: Channel,
+  colorIndex: number,
+): LegendChannel {
+  const { r, g, b } = effectiveSourceColor(sc, colorIndex);
+  const hex_color = [r, g, b]
+    .map((n) => n.toString(16).padStart(2, "0"))
+    .join("");
+  const [lo, hi] = effectiveSourceLimits(sc);
+  return {
+    r,
+    g,
+    b,
+    lower_range: lo,
+    upper_range: hi,
+    name: sc.name,
+    color: hex_color,
+    group_uuid: "",
+    source_uuid: sc.id,
+    channel_uuid: sc.id,
+  };
+}
+
+export function legendLabelForImage(basename: string): string {
+  const trimmed = basename.trim();
+  if (!trimmed) return "Image";
+  return basenameImportLabel(trimmed) || trimmed;
+}
+
+function legendRowVisible(
+  channel: LegendChannel,
+  channelVisibilities: Record<string, boolean>,
+  channelGroupRowVisibilities: Record<string, boolean>,
+): boolean {
+  if (channel.group_uuid && channel.channel_uuid) {
+    return isGroupRowVisible(channelGroupRowVisibilities, channel.channel_uuid);
+  }
+  return isStackVisible(channelVisibilities, channel.name);
+}
+
+type LegendRowProps = {
+  channel: LegendChannel;
+  idx: number;
+  g: number;
+  total: number;
+  editable?: boolean;
+  channelVisibilities: Record<string, boolean>;
+  channelGroupRowVisibilities: Record<string, boolean>;
+  toggleChannel: (c: LegendChannel) => void;
+  updateChannel: (
+    channel: LegendChannel,
+    ctx: { idx: number; g: number },
+  ) => void;
+  popChannel: (ctx: { g: number; idx: number }) => void;
+};
+
+const LegendRow = (props: LegendRowProps & { onClick: () => void }) => {
+  const { channel } = props;
   const channelName = channel.name;
-  const visible = channelVisibilities[channelName];
   const { idx, g, onClick } = props;
-  const setInput = (t) => {
+  const rowVisible = legendRowVisible(
+    channel,
+    props.channelVisibilities,
+    props.channelGroupRowVisibilities,
+  );
+  const setInput = (t: string) => {
     props.updateChannel({ ...channel, name: t }, { idx, g });
   };
   const onPop = () => {
@@ -142,22 +281,14 @@ const LegendRow = (props) => {
     uuid,
   };
 
-  const wrapProps = {
-    color: "rgb(230, 237, 243)",
-    onClick,
-  };
-  const boxProps = {
-    ...props.channel,
-    outline: "none",
-  };
-  if (!visible) {
-    boxProps.color = "0d1117";
-    wrapProps.color = "rgb(139, 148, 158)";
-    boxProps.outline = "1px solid color-mix(in srgb, white 28%, transparent)";
-  }
   const coreUI = (
-    <RowClickArea {...wrapProps} className="channel-legend-row">
-      <Swatch {...boxProps} />
+    <RowClickArea
+      onClick={onClick}
+      className="channel-legend-row"
+      title={rowVisible ? `Hide ${channelName}` : `Show ${channelName}`}
+      style={{ opacity: rowVisible ? 1 : 0.42 }}
+    >
+      <Swatch color={channel.color} style={{ opacity: rowVisible ? 1 : 0.5 }} />
       <NameSlot className="channel-legend-name">
         <EditableText {...statusProps}>{channelName}</EditableText>
       </NameSlot>
@@ -175,38 +306,92 @@ const LegendRow = (props) => {
   return <LegendRowWrap>{extraUI}</LegendRowWrap>;
 };
 
-export const ChannelLegend = (props) => {
-  const { g, pushChannel, toggleChannel } = props;
-  const channels = props.channels || [];
-  const total = channels.length;
+type ChannelLegendProps = {
+  sections: LegendSection[];
+  channelVisibilities: Record<string, boolean>;
+  channelGroupRowVisibilities?: Record<string, boolean>;
+  toggleChannel: (c: LegendChannel) => void;
+  editable?: boolean;
+  g?: number;
+  pushChannel?: (
+    channel: { color: string; name: string },
+    ctx: { g: number },
+  ) => void;
+  updateChannel?: LegendRowProps["updateChannel"];
+  popChannel?: LegendRowProps["popChannel"];
+};
+
+export const ChannelLegend = (props: ChannelLegendProps) => {
+  const g = props.g ?? 0;
+  const pushChannel = props.pushChannel;
+  const { sections } = props;
+  const channelGroupRowVisibilities = props.channelGroupRowVisibilities ?? {};
+  const total = sections.reduce((n, s) => n + s.channels.length, 0);
   const nextIdx = total + 1;
   const newChannel = defaultChannels[nextIdx % defaultChannels.length];
   const onPush = () => {
-    pushChannel(newChannel, { g });
+    pushChannel?.(newChannel, { g });
   };
   const editSwitch = [
     ["div", {}],
     [PushChannel, { onPush }],
   ];
-  const addChannelUI = <EditModeSwitcher {...{ ...props, editSwitch }} />;
+  const addChannelUI = pushChannel ? (
+    <EditModeSwitcher {...{ ...props, editSwitch }} />
+  ) : null;
 
-  const rows = channels.map((c, k) => {
-    const rowProps = {
-      ...props,
-      total,
-      channel: c,
-      idx: k,
-      onClick: () => toggleChannel(c),
-    };
-    return <LegendRow key={c.channel_uuid ?? `${c.name}-${k}`} {...rowProps} />;
-  });
+  if (sections.length === 0) {
+    return (
+      <ChannelsSection>
+        <ChannelsSectionHeader>
+          <SectionLabel>Channels</SectionLabel>
+          <ToolbarSlot>{addChannelUI}</ToolbarSlot>
+        </ChannelsSectionHeader>
+      </ChannelsSection>
+    );
+  }
+
+  let rowIdx = 0;
   return (
     <ChannelsSection>
       <ChannelsSectionHeader>
         <SectionLabel>Channels</SectionLabel>
         <ToolbarSlot>{addChannelUI}</ToolbarSlot>
       </ChannelsSectionHeader>
-      <ChannelList>{rows}</ChannelList>
+      <LegendBody>
+        {sections.map((section) => (
+          <ImageSection key={section.imageId}>
+            <ImageSectionLabel title={section.label}>
+              {section.label}
+            </ImageSectionLabel>
+            <ChannelList>
+              {section.channels.map((c) => {
+                const k = rowIdx;
+                rowIdx += 1;
+                const rowProps: LegendRowProps & { onClick: () => void } = {
+                  channel: c,
+                  idx: k,
+                  g,
+                  total,
+                  editable: props.editable,
+                  channelVisibilities: props.channelVisibilities,
+                  channelGroupRowVisibilities,
+                  toggleChannel: props.toggleChannel,
+                  updateChannel: props.updateChannel ?? (() => {}),
+                  popChannel: props.popChannel ?? (() => {}),
+                  onClick: () => props.toggleChannel(c),
+                };
+                return (
+                  <LegendRow
+                    key={c.channel_uuid ?? `${c.name}-${k}`}
+                    {...rowProps}
+                  />
+                );
+              })}
+            </ChannelList>
+          </ImageSection>
+        ))}
+      </LegendBody>
     </ChannelsSection>
   );
 };

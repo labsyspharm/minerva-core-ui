@@ -46,23 +46,6 @@ const TrashIcon = () => (
   </svg>
 );
 
-const PlusIcon = () => (
-  <svg
-    aria-hidden="true"
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M12 5v14" />
-    <path d="M5 12h14" />
-  </svg>
-);
-
 const countWaypointAnnotations = (story: Waypoint) =>
   story.shapeIds?.length ?? 0;
 
@@ -116,6 +99,8 @@ const WaypointsList = (props: WaypointsListProps) => {
     setAuthoringWaypointEditorOpen,
     setAuthoringWaypointShapesIndex,
     handleToolChange,
+    setImageSelectionMaskFromWaypoint,
+    layersPanelSelectedShapeIds,
   } = useAppStore();
 
   const previousDetailStoryIdRef = React.useRef<string | null>(null);
@@ -544,11 +529,12 @@ const WaypointsList = (props: WaypointsListProps) => {
         {canEdit && (
           <button
             type="button"
-            className={styles.iconHeaderButton}
+            className={styles.headerButton}
             onClick={handleAddWaypoint}
             title="Add waypoint"
+            aria-label="Add waypoint"
           >
-            <PlusIcon />
+            Add waypoint
           </button>
         )}
       </div>
@@ -945,6 +931,29 @@ const WaypointsList = (props: WaypointsListProps) => {
               </button>
               {detailAnnotationsExpanded ? (
                 <div className={styles.detailCollapsibleBody}>
+                  {detailAnnotationCount > 0 ? (
+                    <div className={styles.detailSelectionActions}>
+                      <button
+                        type="button"
+                        className={styles.detailSelectionButton}
+                        title="Use a waypoint annotation as the spatial selection mask (prefers the selected shape in the layers list)"
+                        onClick={() => {
+                          const shapeIds = detailStory.shapeIds ?? [];
+                          const ok = setImageSelectionMaskFromWaypoint(
+                            shapeIds,
+                            layersPanelSelectedShapeIds,
+                          );
+                          if (!ok && import.meta.env.DEV) {
+                            console.warn(
+                              "[selection] no maskable annotation on this waypoint",
+                            );
+                          }
+                        }}
+                      >
+                        Use annotation as selection
+                      </button>
+                    </div>
+                  ) : null}
                   <WaypointAnnotationEditor
                     embeddedInScrollParent
                     story={detailStory}

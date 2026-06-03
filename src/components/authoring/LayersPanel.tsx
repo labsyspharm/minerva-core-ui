@@ -907,6 +907,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         className={styles.toolButton}
         onClick={() => createGroup()}
         title="Add group"
+        aria-label="Add group"
       >
         <FolderIcon />
       </button>

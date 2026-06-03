@@ -1,5 +1,23 @@
+import type {
+  ChannelGroup,
+  Channel as SourceChannel,
+} from "@/lib/stores/documentStore";
 import type { LoaderPlane } from "../authoring/config";
 import type { Roi } from "../shapes/roiParser";
+import { buildCompositedIntensityLayers } from "./channelCompositor";
+import { isImageChannel } from "./channelKind";
+import {
+  effectiveSourceColor,
+  effectiveSourceLimits,
+} from "./sourceChannelStyle";
+
+/**
+ * Viv's `XRLayer` shader compiles with a fixed `MAX_CHANNELS_PER_LAYER` (6).
+ * Passing more than that crashes the WebGL draw with “undefined channels passed
+ * in, but only 6 are allowed”. We cap visible intensity layers at this limit
+ * and warn so the panel can surface a hint.
+ */
+export const MAX_VIV_INTENSITY_CHANNELS = 6;
 
 type Selection = Record<"z" | "t" | "c", number>;
 type Color = [number, number, number];
@@ -16,9 +34,11 @@ type Settings = {
   contrastLimits: Limit[];
   loader: Loader | null;
   colors: Color[];
+  /** Parallel to selections — source channel ids for live preview mapping. */
+  sourceChannelIds?: string[];
 };
 
-type Channel = {
+type OmeChannelMeta = {
   ID: string;
   SamplesPerPixel: number;
   Name: string;
@@ -36,7 +56,7 @@ type TiffDatum = {
 };
 
 type Pixels = {
-  Channels: Channel[];
+  Channels: OmeChannelMeta[];
   ID: string;
   DimensionOrder: string;
   Type: string;
@@ -70,6 +90,7 @@ export type Config = {
     channelVisibilities?: Record<string, boolean>,
     /** When set (OME multi-image UUID), channel visibility matches this instead of `modality`. */
     loaderSourceImageId?: string,
+    channelGroupRowVisibilities?: Record<string, boolean>,
   ) => Settings;
 };
 
@@ -125,31 +146,25 @@ const toDefaultSettings = (n) => {
         return n < n_shown;
       })
       .slice(0, n_sub),
+    sourceChannelIds: [] as string[],
   };
 };
 
-const _hexToRGB = (hex: string) => {
-  // Remove leading # if it exists
-  hex = hex.replace("#", "");
-  const r = parseInt(hex.slice(0, 2), 16);
-  const g = parseInt(hex.slice(2, 4), 16);
-  const b = parseInt(hex.slice(4, 6), 16);
-  return [r, g, b];
+type ToSettingsOpts = {
+  SourceChannels: SourceChannel[];
+  channelGroups?: ChannelGroup[];
 };
 
-const toSettings = (opts) => {
+const toSettings = (opts: ToSettingsOpts) => {
   return (
-    activeChannelGroupId,
-    modality,
-    loader,
-    channelVisibilities,
-    loaderSourceImageId,
+    _activeChannelGroupId: string | null,
+    modality: string,
+    loader: Loader | undefined,
+    channelVisibilities?: Record<string, boolean>,
+    loaderSourceImageId?: string,
+    channelGroupRowVisibilities: Record<string, boolean> = {},
   ) => {
-    const { channelGroups, SourceChannels } = opts;
-    const group =
-      channelGroups.find(({ id }) => id === activeChannelGroupId) ||
-      channelGroups[0];
-    const { channels } = group || { channels: [] };
+    const { SourceChannels, channelGroups = [] } = opts;
     // Defaults
     if (!loader) return toDefaultSettings(3);
     const full_level = loader.data[0];
@@ -159,44 +174,67 @@ const toSettings = (opts) => {
       loaderSourceImageId !== undefined && loaderSourceImageId !== ""
         ? image_id === loaderSourceImageId
         : image_id === modality;
-    // TODO Simplify mapping of channel names to indices!
-    const selections: Selection[] = channels.map((channel) => {
-      const _source_channels = SourceChannels.map(
-        (source_channel) => source_channel.id,
+
+    // Only intensity sources on this loader image. Masks are rendered by
+    // ImageViewer via a separate BitmapLayer and must NOT be added to the
+    // XRLayer channel slots.
+    const onLoader = SourceChannels.filter(
+      (sc) => sourceImageMatches(sc.imageId) && isImageChannel(sc),
+    );
+
+    const activeGroup = _activeChannelGroupId
+      ? channelGroups.find((g) => g.id === _activeChannelGroupId)
+      : undefined;
+
+    const hasVisibilityMap =
+      channelVisibilities != null &&
+      Object.keys(channelVisibilities).length > 0;
+    const composited = buildCompositedIntensityLayers({
+      onLoader,
+      activeGroup,
+      stackVisibilities: channelVisibilities ?? {},
+      groupRowVisibilities: channelGroupRowVisibilities,
+      hasVisibilityMap,
+    });
+
+    // Viv's XRLayer hard caps at MAX_VIV_INTENSITY_CHANNELS visible channels.
+    const layersAll = composited;
+    const layers = layersAll.slice(0, MAX_VIV_INTENSITY_CHANNELS);
+    if (layersAll.length > MAX_VIV_INTENSITY_CHANNELS && import.meta.env.DEV) {
+      console.warn(
+        `[viv] ${layersAll.length} visible intensity channels exceeds ` +
+          `MAX_VIV_INTENSITY_CHANNELS=${MAX_VIV_INTENSITY_CHANNELS}; ` +
+          "extra channels are hidden until you toggle some off.",
       );
-      const source_channel = SourceChannels.find(
-        (source_channel) => source_channel.id === channel.channelId,
-      );
-      const c = source_channel?.index || 0;
-      return { z: 0, t: 0, c };
-    });
-    const colors: Color[] = channels.map((c, _i: number) => {
-      return [c.color.r, c.color.g, c.color.b];
-    });
-    const contrastLimits: Limit[] = channels.map((c) => {
-      return [c.lowerLimit, c.upperLimit];
-    });
-    const channelsVisible: boolean[] = channels.map((c, _i: number) => {
-      const source_channel = SourceChannels.find(
-        (source_channel) => source_channel.id === c.channelId,
-      );
-      if (!source_channel) return false;
-      const { name } = source_channel;
-      const image_id = source_channel.imageId;
-      const _brightfield = modality === "Brightfield";
-      //if (!channelVisibilities || brightfield ) {
-      if (!channelVisibilities) {
-        return sourceImageMatches(image_id);
-      }
-      return sourceImageMatches(image_id) && channelVisibilities?.[name];
-    });
-    const n_channels = shape[c_idx] || 0;
+    }
+
+    const selections: Selection[] = [];
+    const colors: Color[] = [];
+    const contrastLimits: Limit[] = [];
+    const channelsVisible: boolean[] = [];
+    const sourceChannelIds: string[] = [];
+
+    for (let i = 0; i < layers.length; i++) {
+      const { sc, gc } = layers[i];
+      const [lo, hi] = gc
+        ? [gc.lowerLimit, gc.upperLimit]
+        : effectiveSourceLimits(sc);
+      const { r, g, b } = gc ? gc.color : effectiveSourceColor(sc, i);
+      selections.push({ z: 0, t: 0, c: sc.index });
+      colors.push([r, g, b]);
+      contrastLimits.push([lo, hi]);
+      channelsVisible.push(true);
+      sourceChannelIds.push(sc.id);
+    }
+
+    const n_channels = c_idx >= 0 ? shape[c_idx] || 0 : 1;
     const out = {
       ...toDefaultSettings(n_channels),
       selections,
       colors,
       contrastLimits,
       channelsVisible,
+      sourceChannelIds,
       loader,
     };
     return out;

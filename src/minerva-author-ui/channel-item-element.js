@@ -102,6 +102,7 @@ const toChannelItem = (
         return toElement(rangeEditorElement)``({
           group_uuid: () => this.getAttribute("group_uuid"),
           channel_uuid: () => this.getAttribute("channel_uuid"),
+          source_uuid: () => this.getAttribute("source_uuid"),
           lower_range: () => this.getAttribute("lower_range"),
           upper_range: () => this.getAttribute("upper_range"),
           dist_scale: XScale,

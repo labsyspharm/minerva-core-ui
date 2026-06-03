@@ -1,21 +1,12 @@
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ensureFileHandlePermission,
   findFile,
   isPersistableFileHandle,
   toFile,
 } from "@/lib/imaging/filesystem";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
-
-const readWrite = { mode: "readwrite" } as const;
-
-async function permissionGranted(handle: Handle.File): Promise<boolean> {
-  const ok = (p: PermissionState) => p === "granted";
-  return (
-    ok(await handle.queryPermission(readWrite)) ||
-    ok(await handle.requestPermission(readWrite))
-  );
-}
 
 export type FileHandlerProps = {
   handleKeys: string[];
@@ -37,8 +28,12 @@ export type FileHandlerProps = {
   useLaunchQueue?: boolean;
   children: (props: {
     handles: Handle.File[];
-    onAllow: () => Promise<void>;
-    onRecall: () => Promise<void>;
+    onAllow: () => Promise<Handle.File[]>;
+    onRecall: (options?: {
+      notifyRestored?: boolean;
+    }) => Promise<Handle.File[]>;
+    /** True when a recent file handle is persisted for `handleKeys[0]`. */
+    hasRecent: boolean;
   }) => React.ReactNode;
 };
 
@@ -50,47 +45,82 @@ export const FileHandler = ({
   children,
 }: FileHandlerProps) => {
   const [handles, setHandles] = useState<Handle.File[]>([]);
+  const [hasRecent, setHasRecent] = useState(false);
   const storageKey = handleKeys[0];
   const onRestoredHandlesRef = useRef(onRestoredHandles);
   onRestoredHandlesRef.current = onRestoredHandles;
 
+  /** Refresh `hasRecent` from IndexedDB; safe to call any time. */
+  const refreshHasRecent = useCallback(async () => {
+    if (!storageKey) {
+      setHasRecent(false);
+      return;
+    }
+    try {
+      const h = await getFileHandle(storageKey);
+      setHasRecent(Boolean(h));
+    } catch {
+      setHasRecent(false);
+    }
+  }, [storageKey]);
+
+  useEffect(() => {
+    void refreshHasRecent();
+  }, [refreshHasRecent]);
+
   const applyRestoredHandle = useCallback(
-    async (newHandle: Handle.File, signal?: AbortSignal) => {
-      if (!storageKey) return;
+    async (
+      newHandle: Handle.File,
+      signal?: AbortSignal,
+      options?: { notifyRestored?: boolean },
+    ): Promise<Handle.File[]> => {
+      if (!storageKey) return [];
       const aborted = () => signal?.aborted ?? false;
-      if (aborted()) return;
-      if (!(await permissionGranted(newHandle))) return;
-      if (aborted()) return;
-      if (!(await findFile({ handle: newHandle }))) return;
-      if (aborted()) return;
+      if (aborted()) return [];
+      if (!(await ensureFileHandlePermission(newHandle))) return [];
+      if (aborted()) return [];
+      if (!(await findFile({ handle: newHandle }))) return [];
+      if (aborted()) return [];
       setHandles([newHandle]);
       if (isPersistableFileHandle(newHandle)) {
         await putFileHandle(storageKey, newHandle);
+        setHasRecent(true);
       }
-      if (aborted()) return;
-      await onRestoredHandlesRef.current?.([newHandle]);
+      if (aborted()) return [];
+      if (options?.notifyRestored !== false) {
+        await onRestoredHandlesRef.current?.([newHandle]);
+      }
+      return [newHandle];
     },
     [storageKey],
   );
 
-  const onAllow = async () => {
+  const onAllow = async (): Promise<Handle.File[]> => {
     const newHandles = await toFile();
     if (newHandles.length > 0) {
       setHandles(newHandles);
       if (isPersistableFileHandle(newHandles[0])) {
         await putFileHandle(storageKey, newHandles[0]);
+        setHasRecent(true);
       }
     }
+    return newHandles;
   };
 
-  const onRecall = async () => {
+  const onRecall = async (options?: {
+    notifyRestored?: boolean;
+  }): Promise<Handle.File[]> => {
     const newHandle = await getFileHandle(storageKey);
-    if (!newHandle) return;
+    if (!newHandle) {
+      setHasRecent(false);
+      return [];
+    }
     try {
-      await applyRestoredHandle(newHandle);
+      return await applyRestoredHandle(newHandle, undefined, options);
     } catch {
       /* stale handle or permission denied */
     }
+    return [];
   };
 
   useEffect(() => {
@@ -136,5 +166,5 @@ export const FileHandler = ({
     });
   }, [useLaunchQueue, applyRestoredHandle]);
 
-  return <>{children({ handles, onAllow, onRecall })}</>;
+  return <>{children({ handles, onAllow, onRecall, hasRecent })}</>;
 };

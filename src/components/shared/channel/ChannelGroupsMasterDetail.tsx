@@ -3,8 +3,29 @@ import {
   ChromeColorPickerPopover,
   chromeColorPickerAnchorPosition,
 } from "@/components/shared/ChromeColorPickerPopover";
+import { ChannelRow, rgbToHex } from "@/components/shared/channel/ChannelRow";
+import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
+import {
+  channelItemAttrsForGroupRow,
+  channelItemAttrsForSource,
+  colorRenderingForSource,
+  colorToHex,
+} from "@/components/shared/channel/channelLiveRendering";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
+import {
+  buildCompositedIntensityLayers,
+  isGroupRowVisible,
+  isShownFirstInAllChannelsList,
+  isStackVisible,
+} from "@/lib/imaging/channelCompositor";
+import {
+  DEFAULT_MASK_VISUALIZATION,
+  isImageChannel,
+  isMaskChannel,
+  type MaskVisualization,
+} from "@/lib/imaging/channelKind";
 import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
+import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/imageSelectionMask";
 import {
   applyOptimizedColorsToChannelGroup,
   type ContrastLimits,
@@ -14,19 +35,37 @@ import {
   lockedRowIdsForGroup,
   optimizeChannelGroupWithLocks,
   seedRgbForGroupChannelIndex,
-  warmupPsudoPalette,
 } from "@/lib/imaging/psudoPalette";
-import type { ChannelRendering } from "@/lib/stores/appStore";
-import { useAppStore } from "@/lib/stores/appStore";
-import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
 import {
-  documentChannelGroups,
-  documentSourceChannels,
+  effectiveMaskVisualization,
+  effectiveSourceColor,
+  effectiveSourceLimits,
+} from "@/lib/imaging/sourceChannelStyle";
+import { MAX_VIV_INTENSITY_CHANNELS } from "@/lib/imaging/viv";
+import { useAppStore } from "@/lib/stores/appStore";
+import type {
+  Channel,
+  ChannelGroup,
+  ChannelGroupChannel,
+} from "@/lib/stores/documentStore";
+import {
   findSourceChannel,
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
+import { patchSourceChannelOnImages } from "@/lib/stores/storeUtils";
 import styles from "./ChannelList.module.css";
+
+const CHANNEL_DRAG_MIME = "application/x-minerva-channel-ref";
+
+type ChannelDragPayload = {
+  sourceId: string;
+  fromGroupId?: string;
+};
+
+type ColorPickerTarget =
+  | { scope: "source"; sourceId: string }
+  | { scope: "group"; groupId: string; rowId: string };
 
 const TrashIcon = () => (
   <svg
@@ -40,121 +79,59 @@ const TrashIcon = () => (
   </svg>
 );
 
-const PlusIcon = () => (
-  <svg
-    aria-hidden="true"
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M12 5v14" />
-    <path d="M5 12h14" />
-  </svg>
-);
-
-const ReplaceIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-    <title>Replace channel</title>
-    <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
-  </svg>
-);
-
 const RemoveIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-    <title>Remove channel</title>
+    <title>Remove from group</title>
     <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-  </svg>
-);
-
-const PinIcon = () => (
-  <svg
-    aria-hidden="true"
-    width="12"
-    height="12"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-  >
-    <path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z" />
-  </svg>
-);
-
-const FitContrastIcon = () => (
-  <svg
-    aria-hidden="true"
-    width="12"
-    height="12"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <title>Fit contrast (auto)</title>
-    <path d="M4 12c2-5 6-7 8-7s6 2 8 7-6 7-8 7-6-2-8-7z" />
-    <circle cx="12" cy="12" r="2.5" />
   </svg>
 );
 
 const EMPTY_LOCKED_ROW_IDS = new Set<string>();
 
-function channelNamesForGroup(
-  group: ChannelGroup,
+function readDragPayload(e: React.DragEvent): ChannelDragPayload | null {
+  const raw = e.dataTransfer.getData(CHANNEL_DRAG_MIME);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as ChannelDragPayload;
+  } catch {
+    return null;
+  }
+}
+
+function startChannelDrag(e: React.DragEvent, payload: ChannelDragPayload) {
+  e.dataTransfer.setData(CHANNEL_DRAG_MIME, JSON.stringify(payload));
+  e.dataTransfer.effectAllowed = "copy";
+}
+
+/** Group row copy of a source channel (independent color/limits from the source). */
+function makeGroupChannelRow(
+  sc: Channel,
+  slotIndex: number,
   sourceChannels: Channel[],
-): string[] {
-  return (group.channels ?? [])
-    .map((gc) => findSourceChannel(sourceChannels, gc.channelId))
-    .filter((sc): sc is Channel => sc != null)
-    .map((sc) => sc.name);
-}
-
-/** Active color-only in-flight render for this group/channel, if any. */
-function colorRenderingFor(
-  live: ChannelRendering | null,
-  groupId: string,
-  channelId: string,
-): Extract<ChannelRendering, { kind: "color" }> | null {
-  if (
-    live?.kind === "color" &&
-    live.groupId === groupId &&
-    live.channelId === channelId
-  ) {
-    return live;
-  }
-  return null;
-}
-
-/** Active contrast-only in-flight render for this group/channel, if any. */
-function contrastRenderingFor(
-  live: ChannelRendering | null,
-  groupId: string,
-  channelId: string,
-): Extract<ChannelRendering, { kind: "contrast" }> | null {
-  if (
-    live?.kind === "contrast" &&
-    live.groupId === groupId &&
-    live.channelId === channelId
-  ) {
-    return live;
-  }
-  return null;
+): ChannelGroupChannel {
+  const [srcLo, srcHi] = effectiveSourceLimits(sc);
+  const idx = sourceChannels.findIndex((c) => c.id === sc.id);
+  const srcColor = effectiveSourceColor(sc, idx >= 0 ? idx : 0);
+  const seed = seedRgbForGroupChannelIndex(slotIndex);
+  const isMask = isMaskChannel(sc);
+  return {
+    id: crypto.randomUUID(),
+    lowerLimit: sc.lowerLimit ?? srcLo ?? IMPORT_DEFAULT_LOWER_LIMIT,
+    upperLimit: sc.upperLimit ?? srcHi ?? IMPORT_DEFAULT_UPPER_LIMIT,
+    color: sc.color ?? seed ?? srcColor,
+    channelId: sc.id,
+    ...(isMask
+      ? {
+          maskVisualization: sc.maskVisualization ?? DEFAULT_MASK_VISUALIZATION,
+        }
+      : {}),
+  };
 }
 
 export type ChannelGroupsMasterDetailProps = {
   channelItemElement: string;
   noLoader: boolean;
-  /** OME-TIFF: lazy-load histograms for visible source indices (see `histogramLazy.ts`). */
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
-  /**
-   * OME-TIFF: resolve auto contrast limits for these source-channel ids (histogram
-   * percentiles on the coarse plane; see `psudoPalette.ts`). Applies limits to
-   * matching group-channel rows and returns them by source channel id.
-   */
   ensureChannelGmmContrastLimits?: (
     channelIds: string[],
     opts?: { overwriteExistingLimits?: boolean },
@@ -164,16 +141,34 @@ export type ChannelGroupsMasterDetailProps = {
 export const ChannelGroupsMasterDetail = (
   props: ChannelGroupsMasterDetailProps,
 ) => {
-  const { setActiveChannelGroup } = useAppStore();
+  const {
+    setActiveChannelGroup,
+    clearImageSelectionMask,
+    setImageSelectionMaskVisualization,
+  } = useAppStore();
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
+  const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
+  const channelVisibilities = useAppStore((s) => s.channelVisibilities);
+  const channelGroupRowVisibilities = useAppStore(
+    (s) => s.channelGroupRowVisibilities,
+  );
+  const setChannelGroupRowVisibilities = useAppStore(
+    (s) => s.setChannelGroupRowVisibilities,
+  );
+  const channelRendering = useAppStore((s) => s.channelRendering);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
+  const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
+  const setImages = useDocumentStore((s) => s.setImages);
+  const setGroupNames = useAppStore((s) => s.setGroupNames);
+  const setGroupChannelLists = useAppStore((s) => s.setGroupChannelLists);
+  const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
+
   const sourceChannels = React.useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
 
-  /** One listing per `Channel.id` (first occurrence in image order) — avoids duplicate rows if the same id appears twice after hydrate/reload. */
   const uniqueSourceChannels = React.useMemo(() => {
     const seen = new Set<string>();
     const out: Channel[] = [];
@@ -185,52 +180,43 @@ export const ChannelGroupsMasterDetail = (
     return out;
   }, [sourceChannels]);
 
-  /**
-   * One row per distinct display name. Each image in the document often has its own
-   * channel UUIDs with the same labels as other images; listing by id repeats the
-   * entire block once per image (mistaken for “duplicates” or HMR bugs).
-   */
-  const channelNamesTabRows = React.useMemo(() => {
-    const seenName = new Set<string>();
-    const out: Channel[] = [];
+  const activeChannelGroup = React.useMemo(
+    () =>
+      activeChannelGroupId
+        ? channelGroups.find((g) => g.id === activeChannelGroupId)
+        : undefined,
+    [channelGroups, activeChannelGroupId],
+  );
+
+  const allChannelsOrdered = React.useMemo(() => {
+    const first: Channel[] = [];
+    const rest: Channel[] = [];
     for (const sc of uniqueSourceChannels) {
-      if (seenName.has(sc.name)) continue;
-      seenName.add(sc.name);
-      out.push(sc);
+      if (
+        isShownFirstInAllChannelsList(
+          sc,
+          channelVisibilities,
+          activeChannelGroup,
+          channelGroupRowVisibilities,
+        )
+      ) {
+        first.push(sc);
+      } else {
+        rest.push(sc);
+      }
     }
-    return out;
-  }, [uniqueSourceChannels]);
+    return [...first, ...rest];
+  }, [
+    uniqueSourceChannels,
+    channelVisibilities,
+    activeChannelGroup,
+    channelGroupRowVisibilities,
+  ]);
 
-  const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
-  const setImages = useDocumentStore((s) => s.setImages);
-  const setGroupNames = useAppStore((s) => s.setGroupNames);
-  const setGroupChannelLists = useAppStore((s) => s.setGroupChannelLists);
-  const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
-
-  const detailBodyRef = React.useRef<HTMLDivElement | null>(null);
-  const renameFieldId = React.useId();
-
-  // Master-detail state
-  const [detailGroupId, setDetailGroupId] = React.useState<string | null>(null);
-  /** Left column: group membership vs renaming source-channel display names */
-  const [channelPanelTab, setChannelPanelTab] = React.useState<
-    "groups" | "names"
-  >("groups");
-  /** Source channel UUIDs currently fetching histogram tiles (spinner on each chart). */
   const [loadingHistogramSourceIds, setLoadingHistogramSourceIds] =
     React.useState<string[]>([]);
-
-  // Editing state
-  const [replacingChannelUUID, setReplacingChannelUUID] = React.useState<
-    string | null
-  >(null);
-  const replaceChannelSelectRef = React.useRef<HTMLSelectElement | null>(null);
-  const [colorPickerChannelUUID, setColorPickerChannelUUID] = React.useState<
-    string | null
-  >(null);
-  const [colorPickerGroupId, setColorPickerGroupId] = React.useState<
-    string | null
-  >(null);
+  const [colorPickerTarget, setColorPickerTarget] =
+    React.useState<ColorPickerTarget | null>(null);
   const [colorPickerPos, setColorPickerPos] = React.useState<{
     top: number;
     left: number;
@@ -239,131 +225,15 @@ export const ChannelGroupsMasterDetail = (
   const [optimizePaletteMessage, setOptimizePaletteMessage] = React.useState<
     string | null
   >(null);
-  /** Per-group channel row ids with locked pseudocolors (session-only). */
+  const [dragOverGroupId, setDragOverGroupId] = React.useState<string | null>(
+    null,
+  );
   const [lockedColorRowIdsByGroup, setLockedColorRowIdsByGroup] =
     React.useState<Map<string, Set<string>>>(() => new Map());
-  /** Channel-row UUIDs currently re-fitting auto contrast (spinner on the button). */
-  const [gmmFittingRowIds, setGmmFittingRowIds] = React.useState<Set<string>>(
-    () => new Set(),
-  );
 
-  const channelRendering = useAppStore((s) => s.channelRendering);
+  const selectionMaskVisible =
+    channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true;
 
-  // When opening or switching the detail group, close the replace-channel control.
-  // When detail context changes at all (including back to list), drop in-flight color
-  // rendering and close the picker — those are scoped to the detail editor.
-  React.useEffect(() => {
-    if (detailGroupId) {
-      setReplacingChannelUUID(null);
-    }
-    useAppStore.getState().clearChannelRendering();
-    setColorPickerChannelUUID(null);
-    setColorPickerGroupId(null);
-    setColorPickerPos(null);
-    setOptimizePaletteMessage(null);
-  }, [detailGroupId]);
-
-  React.useEffect(() => {
-    if (replacingChannelUUID === null) return;
-    const id = window.requestAnimationFrame(() => {
-      replaceChannelSelectRef.current?.focus();
-    });
-    return () => window.cancelAnimationFrame(id);
-  }, [replacingChannelUUID]);
-
-  const detailGroup = detailGroupId
-    ? (channelGroups.find((g) => g.id === detailGroupId) ?? null)
-    : null;
-
-  const detailGroupPsudoEligible = detailGroup
-    ? isGroupEligibleForPsudoOptimize(detailGroup, sourceChannels)
-    : false;
-
-  const detailGroupLockedRowIds = detailGroup
-    ? (lockedColorRowIdsByGroup.get(detailGroup.id) ?? EMPTY_LOCKED_ROW_IDS)
-    : EMPTY_LOCKED_ROW_IDS;
-
-  const detailGroupAllColorsLocked =
-    detailGroup != null &&
-    detailGroup.channels.length > 0 &&
-    detailGroup.channels.every((gc) => detailGroupLockedRowIds.has(gc.id));
-
-  const setGroupColorLocks = React.useCallback(
-    (groupId: string, next: Set<string>) => {
-      setLockedColorRowIdsByGroup((prev) => {
-        const map = new Map(prev);
-        if (next.size === 0) {
-          map.delete(groupId);
-        } else {
-          map.set(groupId, next);
-        }
-        return map;
-      });
-    },
-    [],
-  );
-
-  const toggleColorLock = React.useCallback(
-    (groupId: string, rowId: string) => {
-      setLockedColorRowIdsByGroup((prev) => {
-        const map = new Map(prev);
-        const current = new Set(map.get(groupId) ?? []);
-        if (current.has(rowId)) {
-          current.delete(rowId);
-        } else {
-          current.add(rowId);
-        }
-        if (current.size === 0) {
-          map.delete(groupId);
-        } else {
-          map.set(groupId, current);
-        }
-        return map;
-      });
-    },
-    [],
-  );
-
-  const lockAllColorsInGroup = React.useCallback(
-    (groupId: string) => {
-      const g = useDocumentStore
-        .getState()
-        .channelGroups.find((x) => x.id === groupId);
-      if (!g) return;
-      setGroupColorLocks(groupId, new Set(g.channels.map((gc) => gc.id)));
-    },
-    [setGroupColorLocks],
-  );
-
-  const unlockAllColorsInGroup = React.useCallback(
-    (groupId: string) => {
-      setGroupColorLocks(groupId, new Set());
-    },
-    [setGroupColorLocks],
-  );
-
-  const pruneColorLock = React.useCallback((groupId: string, rowId: string) => {
-    setLockedColorRowIdsByGroup((prev) => {
-      const current = prev.get(groupId);
-      if (!current?.has(rowId)) return prev;
-      const map = new Map(prev);
-      const next = new Set(current);
-      next.delete(rowId);
-      if (next.size === 0) {
-        map.delete(groupId);
-      } else {
-        map.set(groupId, next);
-      }
-      return map;
-    });
-  }, []);
-
-  React.useEffect(() => {
-    if (!detailGroupId || !detailGroupPsudoEligible) return;
-    void warmupPsudoPalette();
-  }, [detailGroupId, detailGroupPsudoEligible]);
-
-  // Sync derived store state after group mutations.
   const syncGroupState = React.useCallback(
     (newGroups: ChannelGroup[]) => {
       setChannelGroups(newGroups);
@@ -380,87 +250,10 @@ export const ChannelGroupsMasterDetail = (
         ]),
       );
       setGroupChannelLists(lists);
-      const namesInUse = new Set<string>();
-      for (const g of newGroups) {
-        for (const gc of g.channels) {
-          const sc = findSourceChannel(sourceChannels, gc.channelId);
-          if (sc?.name) {
-            namesInUse.add(sc.name);
-          }
-        }
-      }
-      const prev = useAppStore.getState().channelVisibilities;
-      const merged = { ...prev };
-      for (const name of namesInUse) {
-        if (merged[name] === undefined) {
-          merged[name] = true;
-        }
-      }
-      setChannelVisibilities(merged);
     },
-    [
-      sourceChannels,
-      setChannelGroups,
-      setGroupNames,
-      setGroupChannelLists,
-      setChannelVisibilities,
-    ],
+    [sourceChannels, setChannelGroups, setGroupNames, setGroupChannelLists],
   );
 
-  const runOptimizePalette = React.useCallback(async () => {
-    if (!detailGroup || optimizePaletteBusy) return;
-    if (!isGroupEligibleForPsudoOptimize(detailGroup, sourceChannels)) {
-      setOptimizePaletteMessage(
-        "Need at least two non-RGB channels to optimize colors.",
-      );
-      return;
-    }
-    const lockedIds =
-      lockedColorRowIdsByGroup.get(detailGroup.id) ?? EMPTY_LOCKED_ROW_IDS;
-    if (
-      detailGroup.channels.length > 0 &&
-      detailGroup.channels.every((gc) => lockedIds.has(gc.id))
-    ) {
-      setOptimizePaletteMessage("Unlock at least one channel to optimize.");
-      return;
-    }
-    useAppStore.getState().clearChannelRendering();
-    setOptimizePaletteBusy(true);
-    setOptimizePaletteMessage(null);
-    try {
-      const group =
-        useDocumentStore
-          .getState()
-          .channelGroups.find((g) => g.id === detailGroup.id) ?? detailGroup;
-      const colors = await optimizeChannelGroupWithLocks(
-        group,
-        sourceChannels,
-        lockedIds,
-      );
-      const newGroups = applyOptimizedColorsToChannelGroup(
-        useDocumentStore.getState().channelGroups,
-        detailGroup.id,
-        colors,
-        { lockedChannelRowIds: lockedIds },
-      );
-      syncGroupState(newGroups);
-      setOptimizePaletteMessage("Palette optimized.");
-    } catch (e) {
-      setOptimizePaletteMessage(
-        e instanceof Error ? e.message : "Could not optimize palette.",
-      );
-    } finally {
-      setOptimizePaletteBusy(false);
-    }
-  }, [
-    detailGroup,
-    optimizePaletteBusy,
-    sourceChannels,
-    syncGroupState,
-    lockedColorRowIdsByGroup,
-  ]);
-
-  /** Persisted source channel label for one `ImageChannel.id`; updates visibility (name keys) and group lists. */
   const renameSourceChannelDisplayName = React.useCallback(
     (channelId: string, rawName: string) => {
       const trimmed = rawName.trim();
@@ -469,9 +262,7 @@ export const ChannelGroupsMasterDetail = (
       const flatBefore = flattenImageChannelsInDocumentOrder(doc.images);
       const prev = findSourceChannel(flatBefore, channelId);
       if (!prev || prev.name === trimmed) return;
-
       const oldName = prev.name;
-
       const nextImages = doc.images.map((im) => ({
         ...im,
         channels: im.channels.map((ch) =>
@@ -479,20 +270,15 @@ export const ChannelGroupsMasterDetail = (
         ),
       }));
       setImages(nextImages);
-
       const flatAfter = flattenImageChannelsInDocumentOrder(nextImages);
       const stillUsesOldName = flatAfter.some((c) => c.name === oldName);
-
       const vis = useAppStore.getState().channelVisibilities;
       const nextVis = { ...vis };
       if (nextVis[trimmed] === undefined) {
         nextVis[trimmed] = nextVis[oldName] ?? true;
       }
-      if (!stillUsesOldName && oldName !== trimmed) {
-        delete nextVis[oldName];
-      }
+      if (!stillUsesOldName && oldName !== trimmed) delete nextVis[oldName];
       setChannelVisibilities(nextVis);
-
       const groups = useDocumentStore.getState().channelGroups;
       setGroupChannelLists(
         Object.fromEntries(
@@ -509,120 +295,75 @@ export const ChannelGroupsMasterDetail = (
     [setImages, setChannelVisibilities, setGroupChannelLists],
   );
 
-  // --- Group CRUD ---
   const createGroup = () => {
-    const name = `Group ${channelGroups.length + 1}`;
+    const seedingFirst = channelGroups.length === 0;
+    const toSeed = seedingFirst
+      ? uniqueSourceChannels.filter((sc) =>
+          isStackVisible(channelVisibilities, sc.name),
+        )
+      : [];
+    const seededChannels = seedingFirst
+      ? toSeed.map((sc, i) => makeGroupChannelRow(sc, i, sourceChannels))
+      : [];
     const newGroup: ChannelGroup = {
       id: crypto.randomUUID(),
-      name,
+      name: `Group ${channelGroups.length + 1}`,
       expanded: true,
-      channels: [],
+      channels: seededChannels,
     };
-    const newGroups = [...channelGroups, newGroup];
-    syncGroupState(newGroups);
+    syncGroupState([...channelGroups, newGroup]);
     setActiveChannelGroup(newGroup.id);
-    setDetailGroupId(newGroup.id);
-    requestAnimationFrame(() => {
-      detailBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
-    });
+    if (seedingFirst && seededChannels.length > 0) {
+      const stackOff = { ...useAppStore.getState().channelVisibilities };
+      for (const gc of seededChannels) {
+        const sc = findSourceChannel(sourceChannels, gc.channelId);
+        if (sc) stackOff[sc.name] = false;
+      }
+      setChannelVisibilities(stackOff);
+      setChannelGroupRowVisibilities({
+        ...useAppStore.getState().channelGroupRowVisibilities,
+        ...Object.fromEntries(seededChannels.map((gc) => [gc.id, true])),
+      });
+    }
   };
 
   const deleteGroup = (groupId: string) => {
-    if (channelGroups.length <= 1) return;
     const newGroups = channelGroups.filter(({ id }) => id !== groupId);
     syncGroupState(newGroups);
     if (activeChannelGroupId === groupId) {
-      setActiveChannelGroup(newGroups[0].id);
-    }
-    if (detailGroupId === groupId) {
-      setDetailGroupId(null);
+      const next = newGroups[0]?.id;
+      if (next) setActiveChannelGroup(next);
+      else useAppStore.setState({ activeChannelGroupId: null });
     }
   };
 
   const renameGroup = (groupId: string, newName: string) => {
-    const newGroups = channelGroups.map((g) =>
-      g.id === groupId ? { ...g, name: newName } : g,
+    syncGroupState(
+      channelGroups.map((g) =>
+        g.id === groupId ? { ...g, name: newName } : g,
+      ),
     );
-    syncGroupState(newGroups);
   };
 
-  const { ensureChannelGmmContrastLimits } = props;
-  const [fitAllBusy, setFitAllBusy] = React.useState(false);
+  const toggleGroupExpanded = (groupId: string) => {
+    syncGroupState(
+      channelGroups.map((g) =>
+        g.id === groupId ? { ...g, expanded: !(g.expanded ?? true) } : g,
+      ),
+    );
+  };
 
-  /**
-   * Re-fit a single channel's `lowerLimit/upperLimit` from the auto contrast
-   * pass. Overwrites whatever was there (manual tune included) so the button is an
-   * explicit "redo auto contrast" affordance.
-   */
-  const runFitChannelContrast = React.useCallback(
-    async (groupId: string, channelRowId: string, sourceChannelId: string) => {
-      if (!ensureChannelGmmContrastLimits) return;
-      if (gmmFittingRowIds.has(channelRowId)) return;
-      setGmmFittingRowIds((prev) => {
-        const next = new Set(prev);
-        next.add(channelRowId);
-        return next;
-      });
-      try {
-        await ensureChannelGmmContrastLimits([sourceChannelId], {
-          overwriteExistingLimits: true,
-        });
-      } catch (e) {
-        if (import.meta.env.DEV) {
-          console.warn("[psudo] manual channel auto contrast failed", e);
-        }
-      } finally {
-        setGmmFittingRowIds((prev) => {
-          if (!prev.has(channelRowId)) return prev;
-          const next = new Set(prev);
-          next.delete(channelRowId);
-          return next;
-        });
-      }
-      void groupId;
-    },
-    [ensureChannelGmmContrastLimits, gmmFittingRowIds],
-  );
+  const toggleGroupMasterVisibility = (group: ChannelGroup) => {
+    if (group.channels.length === 0) return;
+    const allOn = group.channels.every((gc) =>
+      isGroupRowVisible(channelGroupRowVisibilities, gc.id),
+    );
+    const next = { ...channelGroupRowVisibilities };
+    for (const gc of group.channels) next[gc.id] = !allOn;
+    setChannelGroupRowVisibilities(next);
+  };
 
-  /**
-   * Re-fit every channel in the active detail group (auto contrast). Used for the
-   * "Fit all" bulk action; overwrites existing limits.
-   */
-  const runFitAllChannelContrast = React.useCallback(
-    async (groupId: string) => {
-      if (!ensureChannelGmmContrastLimits || fitAllBusy) return;
-      const group = useDocumentStore
-        .getState()
-        .channelGroups.find((g) => g.id === groupId);
-      if (!group || group.channels.length === 0) return;
-      const sourceIds = group.channels.map((gc) => gc.channelId);
-      const rowIds = group.channels.map((gc) => gc.id);
-      setFitAllBusy(true);
-      setGmmFittingRowIds((prev) => {
-        const next = new Set(prev);
-        for (const id of rowIds) next.add(id);
-        return next;
-      });
-      try {
-        await ensureChannelGmmContrastLimits(sourceIds, {
-          overwriteExistingLimits: true,
-        });
-      } catch (e) {
-        if (import.meta.env.DEV) {
-          console.warn("[psudo] fit-all channel auto contrast failed", e);
-        }
-      } finally {
-        setGmmFittingRowIds((prev) => {
-          if (rowIds.every((id) => !prev.has(id))) return prev;
-          const next = new Set(prev);
-          for (const id of rowIds) next.delete(id);
-          return next;
-        });
-        setFitAllBusy(false);
-      }
-    },
-    [ensureChannelGmmContrastLimits, fitAllBusy],
-  );
+  const { ensureChannelGmmContrastLimits, ensureChannelHistograms } = props;
 
   const addChannelToGroup = React.useCallback(
     async (groupId: string, sourceChannelUUID: string) => {
@@ -631,52 +372,46 @@ export const ChannelGroupsMasterDetail = (
       if (!group) return;
       const sc = sourceChannels.find(({ id }) => id === sourceChannelUUID);
       if (!sc) return;
-      if (group.channels.some((gc) => gc.channelId === sourceChannelUUID)) {
-        return;
-      }
-
       const lockedIds = lockedRowIdsForGroup(group);
       const slotIndex = group.channels.length;
-      const seed = seedRgbForGroupChannelIndex(slotIndex);
-
-      // Use the source channel's cached auto contrast limits when present so we
-      // don't refit on every add. If the eager-on-import pass hasn't filled it
-      // in yet (or the user explicitly added a channel before the fit finished),
-      // ask the callback to fit-or-resolve once. Falls back to import defaults
-      // when no loader / no fit is available.
-      let fittedLimits: ContrastLimits | null = sc.gmmContrastLimits
-        ? {
-            lower: sc.gmmContrastLimits.lower,
-            upper: sc.gmmContrastLimits.upper,
-          }
-        : null;
-      if (!fittedLimits && ensureChannelGmmContrastLimits) {
-        try {
-          const map = await ensureChannelGmmContrastLimits([sc.id]);
-          fittedLimits = map.get(sc.id) ?? null;
-        } catch (e) {
-          if (import.meta.env.DEV) {
-            console.warn("[psudo] add-channel auto contrast failed", e);
+      const isMask = isMaskChannel(sc);
+      let fittedLimits: ContrastLimits | null = null;
+      if (!isMask) {
+        fittedLimits = sc.gmmContrastLimits
+          ? {
+              lower: sc.gmmContrastLimits.lower,
+              upper: sc.gmmContrastLimits.upper,
+            }
+          : null;
+        if (!fittedLimits && ensureChannelGmmContrastLimits) {
+          try {
+            const map = await ensureChannelGmmContrastLimits([sc.id]);
+            fittedLimits = map.get(sc.id) ?? null;
+          } catch {
+            /* ignore */
           }
         }
       }
 
-      const newChannel = {
-        id: crypto.randomUUID(),
-        lowerLimit: fittedLimits?.lower ?? IMPORT_DEFAULT_LOWER_LIMIT,
-        upperLimit: fittedLimits?.upper ?? IMPORT_DEFAULT_UPPER_LIMIT,
-        color: { r: seed.r, g: seed.g, b: seed.b },
-        channelId: sc.id,
-      };
+      const newChannel = makeGroupChannelRow(sc, slotIndex, sourceChannels);
+      if (fittedLimits) {
+        newChannel.lowerLimit = fittedLimits.lower;
+        newChannel.upperLimit = fittedLimits.upper;
+      }
 
-      const newGroups = useDocumentStore.getState().channelGroups.map((g) => {
-        if (g.id !== groupId) return g;
-        return { ...g, channels: [...g.channels, newChannel] };
-      });
+      const newGroups = channelGroups.map((g) =>
+        g.id !== groupId ? g : { ...g, channels: [...g.channels, newChannel] },
+      );
 
       const updatedGroup = newGroups.find((g) => g.id === groupId);
+      setChannelGroupRowVisibilities({
+        ...useAppStore.getState().channelGroupRowVisibilities,
+        [newChannel.id]: true,
+      });
+
       if (
         !updatedGroup ||
+        isMask ||
         !isGroupEligibleForPsudoOptimize(updatedGroup, sourceChannels)
       ) {
         syncGroupState(newGroups);
@@ -691,17 +426,12 @@ export const ChannelGroupsMasterDetail = (
           sourceChannels,
           lockedIds,
         );
-        const optimizedGroups = applyOptimizedColorsToChannelGroup(
-          newGroups,
-          groupId,
-          colors,
-          { lockedChannelRowIds: lockedIds },
+        syncGroupState(
+          applyOptimizedColorsToChannelGroup(newGroups, groupId, colors, {
+            lockedChannelRowIds: lockedIds,
+          }),
         );
-        syncGroupState(optimizedGroups);
-      } catch (e) {
-        if (import.meta.env.DEV) {
-          console.warn("[psudo] add-channel palette optimization failed", e);
-        }
+      } catch {
         syncGroupState(newGroups);
       } finally {
         setOptimizePaletteBusy(false);
@@ -713,869 +443,723 @@ export const ChannelGroupsMasterDetail = (
       syncGroupState,
       optimizePaletteBusy,
       ensureChannelGmmContrastLimits,
+      setChannelGroupRowVisibilities,
     ],
   );
 
-  const removeChannelFromGroup = (groupId: string, channelUUID: string) => {
-    const newGroups = channelGroups.map((g) => {
-      if (g.id !== groupId) return g;
-      return {
-        ...g,
-        channels: g.channels.filter((gc) => gc.id !== channelUUID),
-      };
-    });
-    syncGroupState(newGroups);
-    pruneColorLock(groupId, channelUUID);
+  const removeChannelFromGroup = (groupId: string, rowId: string) => {
+    syncGroupState(
+      channelGroups.map((g) =>
+        g.id !== groupId
+          ? g
+          : { ...g, channels: g.channels.filter((gc) => gc.id !== rowId) },
+      ),
+    );
   };
 
-  const replaceChannelInGroup = (
+  const setGroupMaskVisualization = (
     groupId: string,
-    oldChannelUUID: string,
-    newSourceChannelUUID: string,
+    rowId: string,
+    viz: MaskVisualization,
   ) => {
-    const newSc = sourceChannels.find(({ id }) => id === newSourceChannelUUID);
-    if (!newSc) {
-      setReplacingChannelUUID(null);
-      return;
-    }
-    const newGroups = channelGroups.map((g) => {
-      if (g.id !== groupId) return g;
-      return {
-        ...g,
-        channels: g.channels.map((gc) => {
-          if (gc.id !== oldChannelUUID) return gc;
-          return {
-            ...gc,
-            channelId: newSc.id,
-          };
-        }),
-      };
-    });
-    syncGroupState(newGroups);
-    setReplacingChannelUUID(null);
-  };
-
-  const pickingColorHex = React.useMemo(() => {
-    if (!colorPickerChannelUUID) return null;
-    if (colorPickerGroupId) {
-      const live = colorRenderingFor(
-        channelRendering,
-        colorPickerGroupId,
-        colorPickerChannelUUID,
-      );
-      if (live) {
-        const { r, g, b } = live;
-        return [r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("");
-      }
-      const g = channelGroups.find((cg) => cg.id === colorPickerGroupId);
-      const gc = g?.channels.find((c) => c.id === colorPickerChannelUUID);
-      if (gc) {
-        const { r, g: gg, b } = gc.color;
-        return [r, gg, b].map((n) => n.toString(16).padStart(2, "0")).join("");
-      }
-      return null;
-    }
-    for (const g of channelGroups) {
-      const gc = g.channels.find((c) => c.id === colorPickerChannelUUID);
-      if (gc) {
-        const { r, g: gg, b } = gc.color;
-        return [r, gg, b].map((n) => n.toString(16).padStart(2, "0")).join("");
-      }
-    }
-    return null;
-  }, [
-    channelGroups,
-    colorPickerChannelUUID,
-    colorPickerGroupId,
-    channelRendering,
-  ]);
-
-  const closeColorPicker = React.useCallback(() => {
-    const live =
-      colorPickerChannelUUID && colorPickerGroupId
-        ? colorRenderingFor(
-            useAppStore.getState().channelRendering,
-            colorPickerGroupId,
-            colorPickerChannelUUID,
-          )
-        : null;
-    if (live && colorPickerGroupId && colorPickerChannelUUID) {
-      const groupId = colorPickerGroupId;
-      const channelId = colorPickerChannelUUID;
-      const doc = useDocumentStore.getState().channelGroups;
-      const newGroups = doc.map((g) =>
+    const groups = useDocumentStore.getState().channelGroups;
+    const row = groups
+      .find((g) => g.id === groupId)
+      ?.channels.find((gc) => gc.id === rowId);
+    const sourceId = row?.channelId;
+    syncGroupState(
+      groups.map((g) =>
         g.id !== groupId
           ? g
           : {
               ...g,
               channels: g.channels.map((gc) =>
-                gc.id === channelId
-                  ? { ...gc, color: { r: live.r, g: live.g, b: live.b } }
-                  : gc,
+                gc.id === rowId ? { ...gc, maskVisualization: viz } : gc,
               ),
             },
+      ),
+    );
+    if (sourceId) {
+      const doc = useDocumentStore.getState();
+      setImages(
+        patchSourceChannelOnImages(doc.images, sourceId, {
+          maskVisualization: viz,
+        }),
       );
-      syncGroupState(newGroups);
     }
+  };
+
+  const setSourceMaskVisualization = (
+    sourceId: string,
+    viz: MaskVisualization,
+  ) => {
+    const doc = useDocumentStore.getState();
+    setImages(
+      patchSourceChannelOnImages(doc.images, sourceId, {
+        maskVisualization: viz,
+      }),
+    );
+    const groups = useDocumentStore.getState().channelGroups;
+    syncGroupState(
+      groups.map((g) => ({
+        ...g,
+        channels: g.channels.map((gc) =>
+          gc.channelId === sourceId ? { ...gc, maskVisualization: viz } : gc,
+        ),
+      })),
+    );
+  };
+
+  const runOptimizePaletteForGroup = async (groupId: string) => {
+    if (optimizePaletteBusy) return;
+    const group = channelGroups.find((g) => g.id === groupId);
+    if (!group || !isGroupEligibleForPsudoOptimize(group, sourceChannels)) {
+      setOptimizePaletteMessage(
+        "Need at least two non-RGB channels to optimize colors.",
+      );
+      return;
+    }
+    const lockedIds =
+      lockedColorRowIdsByGroup.get(groupId) ?? EMPTY_LOCKED_ROW_IDS;
+    setOptimizePaletteBusy(true);
+    setOptimizePaletteMessage(null);
     useAppStore.getState().clearChannelRendering();
-    setColorPickerChannelUUID(null);
-    setColorPickerGroupId(null);
-    setColorPickerPos(null);
-  }, [colorPickerChannelUUID, colorPickerGroupId, syncGroupState]);
+    try {
+      const colors = await optimizeChannelGroupWithLocks(
+        group,
+        sourceChannels,
+        lockedIds,
+      );
+      syncGroupState(
+        applyOptimizedColorsToChannelGroup(
+          useDocumentStore.getState().channelGroups,
+          groupId,
+          colors,
+          { lockedChannelRowIds: lockedIds },
+        ),
+      );
+      setOptimizePaletteMessage("Palette optimized.");
+    } catch (e) {
+      setOptimizePaletteMessage(
+        e instanceof Error ? e.message : "Could not optimize palette.",
+      );
+    } finally {
+      setOptimizePaletteBusy(false);
+    }
+  };
 
-  const activeGroup =
-    activeChannelGroupId ||
-    (channelGroups.length > 0 ? channelGroups[0].id : null);
+  const handleDropOnGroup = (groupId: string, e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverGroupId(null);
+    const payload = readDragPayload(e);
+    if (!payload?.sourceId) return;
+    void addChannelToGroup(groupId, payload.sourceId);
+  };
 
-  const { ensureChannelHistograms } = props;
-
-  const detailGroupSourcesKey = React.useMemo(() => {
-    if (!detailGroupId) return "";
-    const g = channelGroups.find((x) => x.id === detailGroupId);
-    if (!g) return "";
-    return g.channels.map((gc) => gc.channelId).join("\0");
-  }, [detailGroupId, channelGroups]);
+  /**
+   * Only fetch histograms for currently visible source channels. Keying by the
+   * sorted list of visible ids that don't yet have a distribution avoids
+   * re-firing the effect when other (hidden) channels change.
+   */
+  const visibleHistogramTargets = React.useMemo(() => {
+    const ids: string[] = [];
+    for (const sc of uniqueSourceChannels) {
+      if (!isStackVisible(channelVisibilities, sc.name)) continue;
+      if (!isImageChannel(sc)) continue;
+      if (sourceDistributionYValuesLength(sc) > 0) continue;
+      ids.push(sc.id);
+    }
+    return ids;
+  }, [uniqueSourceChannels, channelVisibilities]);
 
   React.useEffect(() => {
-    void detailGroupSourcesKey;
-    if (!detailGroupId || !ensureChannelHistograms || props.noLoader) return;
+    if (!ensureChannelHistograms || props.noLoader) return;
+    if (visibleHistogramTargets.length === 0) {
+      setLoadingHistogramSourceIds([]);
+      return;
+    }
     let cancelled = false;
+    const targets = visibleHistogramTargets;
+    setLoadingHistogramSourceIds(targets);
     void (async () => {
       try {
-        const st = useDocumentStore.getState();
-        const gList = documentChannelGroups(st);
-        const scList = documentSourceChannels(st);
-        const g = gList.find((x) => x.id === detailGroupId);
-        if (!g) return;
-        const channelIds: string[] = [];
-        for (const gc of g.channels) {
-          const sc = findSourceChannel(scList, gc.channelId);
-          if (!sc) continue;
-          if (sourceDistributionYValuesLength(sc) > 0) continue;
-          channelIds.push(sc.id);
-        }
-        if (channelIds.length === 0 || cancelled) return;
-        setLoadingHistogramSourceIds(channelIds);
-        await new Promise<void>((r) => {
-          requestAnimationFrame(() => r());
-        });
-        if (cancelled) return;
-        await ensureChannelHistograms(channelIds);
+        await ensureChannelHistograms(targets);
       } finally {
-        if (!cancelled) {
-          setLoadingHistogramSourceIds([]);
-        }
+        if (!cancelled) setLoadingHistogramSourceIds([]);
       }
     })();
     return () => {
       cancelled = true;
       setLoadingHistogramSourceIds([]);
     };
-  }, [
-    detailGroupId,
-    detailGroupSourcesKey,
-    ensureChannelHistograms,
-    props.noLoader,
-  ]);
+  }, [visibleHistogramTargets, ensureChannelHistograms, props.noLoader]);
 
-  /**
-   * Lazy auto-contrast when a detail group is opened. The eager pass in
-   * `main.tsx` should normally have populated `Channel.gmmContrastLimits`
-   * already, but if (e.g.) the group was opened mid-fit or the eager pass was
-   * skipped for any reason, this catches up. Only requests rows whose source
-   * channel does not yet have cached limits.
-   */
-  React.useEffect(() => {
-    void detailGroupSourcesKey;
-    if (!detailGroupId || !ensureChannelGmmContrastLimits || props.noLoader) {
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      const st = useDocumentStore.getState();
-      const gList = documentChannelGroups(st);
-      const scList = documentSourceChannels(st);
-      const g = gList.find((x) => x.id === detailGroupId);
-      if (!g) return;
-      const channelIds: string[] = [];
-      for (const gc of g.channels) {
-        const sc = findSourceChannel(scList, gc.channelId);
-        if (!sc) continue;
-        if (sc.gmmContrastLimits) continue;
-        channelIds.push(gc.channelId);
-      }
-      if (channelIds.length === 0 || cancelled) return;
-      try {
-        await ensureChannelGmmContrastLimits(channelIds);
-      } catch (e) {
-        if (import.meta.env.DEV) {
-          console.warn("[psudo] detail-open auto contrast failed", e);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    detailGroupId,
-    detailGroupSourcesKey,
-    ensureChannelGmmContrastLimits,
-    props.noLoader,
-  ]);
-
-  const openDetailForGroup = (groupId: string) => {
-    setActiveChannelGroup(groupId);
-    setDetailGroupId(groupId);
-    requestAnimationFrame(() => {
-      detailBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
-    });
-  };
-
-  // Available channels not yet in the detail group
-  const availableChannels = React.useMemo(() => {
-    if (!detailGroupId) return [];
-    const g = channelGroups.find(({ id }) => id === detailGroupId);
-    if (!g) return [];
-    const usedFlatIds = new Set(g.channels.map((gc) => gc.channelId));
-    return sourceChannels.filter(({ id }) => !usedFlatIds.has(id));
-  }, [detailGroupId, channelGroups, sourceChannels]);
-
-  const renderChannelNamesPanel = () => {
-    if (channelNamesTabRows.length === 0) {
-      return (
-        <div className={[styles.panel, styles.channelNamesPanel].join(" ")}>
-          <div className={styles.emptyMessage}>No channels loaded</div>
-        </div>
+  const pickingColorHex = React.useMemo(() => {
+    if (!colorPickerTarget) return null;
+    if (colorPickerTarget.scope === "source") {
+      const live = colorRenderingForSource(
+        channelRendering,
+        colorPickerTarget.sourceId,
       );
+      if (live) return colorToHex(live);
+      const sc = findSourceChannel(sourceChannels, colorPickerTarget.sourceId);
+      if (!sc) return null;
+      const idx = sourceChannels.findIndex((c) => c.id === sc.id);
+      return colorToHex(effectiveSourceColor(sc, idx >= 0 ? idx : 0));
     }
+    const g = channelGroups.find((x) => x.id === colorPickerTarget.groupId);
+    const gc = g?.channels.find((c) => c.id === colorPickerTarget.rowId);
+    if (!gc) return null;
+    const live = colorRenderingForSource(channelRendering, gc.channelId);
+    if (live) return colorToHex(live);
+    return colorToHex(gc.color);
+  }, [colorPickerTarget, channelRendering, sourceChannels, channelGroups]);
+
+  const closeColorPicker = React.useCallback(() => {
+    const target = colorPickerTarget;
+    const live = useAppStore.getState().channelRendering;
+    if (target?.scope === "source") {
+      const colorLive = colorRenderingForSource(live, target.sourceId);
+      if (colorLive) {
+        const doc = useDocumentStore.getState();
+        setImages(
+          patchSourceChannelOnImages(doc.images, target.sourceId, {
+            color: { r: colorLive.r, g: colorLive.g, b: colorLive.b },
+          }),
+        );
+      }
+    } else if (target?.scope === "group") {
+      const row = useDocumentStore
+        .getState()
+        .channelGroups.find((g) => g.id === target.groupId)
+        ?.channels.find((gc) => gc.id === target.rowId);
+      const colorLive = row
+        ? colorRenderingForSource(live, row.channelId)
+        : null;
+      if (colorLive) {
+        syncGroupState(
+          useDocumentStore.getState().channelGroups.map((g) =>
+            g.id !== target.groupId
+              ? g
+              : {
+                  ...g,
+                  channels: g.channels.map((gc) =>
+                    gc.id === target.rowId
+                      ? {
+                          ...gc,
+                          color: {
+                            r: colorLive.r,
+                            g: colorLive.g,
+                            b: colorLive.b,
+                          },
+                        }
+                      : gc,
+                  ),
+                },
+          ),
+        );
+      }
+    }
+    useAppStore.getState().clearChannelRendering();
+    setColorPickerTarget(null);
+    setColorPickerPos(null);
+  }, [colorPickerTarget, setImages, syncGroupState]);
+
+  const compositedIntensityLayers = React.useMemo(
+    () =>
+      buildCompositedIntensityLayers({
+        onLoader: uniqueSourceChannels.filter((sc) => isImageChannel(sc)),
+        activeGroup: activeChannelGroupId
+          ? channelGroups.find((g) => g.id === activeChannelGroupId)
+          : undefined,
+        stackVisibilities: channelVisibilities,
+        groupRowVisibilities: channelGroupRowVisibilities,
+        hasVisibilityMap: Object.keys(channelVisibilities).length > 0,
+      }),
+    [
+      uniqueSourceChannels,
+      activeChannelGroupId,
+      channelGroups,
+      channelVisibilities,
+      channelGroupRowVisibilities,
+    ],
+  );
+
+  const visibleIntensitySourceIds = new Set<string>();
+  for (let i = 0; i < compositedIntensityLayers.length; i++) {
+    if (i < MAX_VIV_INTENSITY_CHANNELS) {
+      visibleIntensitySourceIds.add(compositedIntensityLayers[i].sc.id);
+    }
+  }
+
+  // Show which image each channel came from only when more than one image
+  // is loaded. With a single image the badge would be redundant noise.
+  const showImageBadge = images.length > 1;
+
+  const renderGroupFolder = (group: ChannelGroup) => {
+    const expanded = group.expanded ?? true;
+    const isActive = activeChannelGroupId === group.id;
+    const isDropTarget = dragOverGroupId === group.id;
+    const masterVisible =
+      group.channels.length === 0 ||
+      group.channels.some((gc) =>
+        isGroupRowVisible(channelGroupRowVisibilities, gc.id),
+      );
+    const addable = uniqueSourceChannels;
+    const psudoEligible = isGroupEligibleForPsudoOptimize(
+      group,
+      sourceChannels,
+    );
+
+    const folderDropProps = {
+      onDragOver: (e: React.DragEvent) => {
+        if (!e.dataTransfer.types.includes(CHANNEL_DRAG_MIME)) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+        setDragOverGroupId(group.id);
+      },
+      onDragLeave: () => {
+        if (dragOverGroupId === group.id) setDragOverGroupId(null);
+      },
+      onDrop: (e: React.DragEvent) => handleDropOnGroup(group.id, e),
+    };
 
     return (
-      <div className={[styles.panel, styles.channelNamesPanel].join(" ")}>
-        <ul className={styles.channelNamesRows}>
-          {channelNamesTabRows.map((sc) => {
-            const im = images.find((i) => i.id === sc.imageId);
-            const meta = im?.basename
-              ? `${im.basename} · index ${sc.index}`
-              : `Index ${sc.index}`;
-            const nameInputId = `ch-name-${sc.id}`;
-            return (
-              <li key={sc.id} className={styles.channelNameRow}>
-                <div className={styles.channelNameLabel}>
-                  <span className={styles.channelNameIndex} title={meta}>
-                    {sc.index}
-                  </span>
-                  <input
-                    id={nameInputId}
-                    className={`${styles.detailTitleInput} ${styles.channelNameInput}`}
-                    type="text"
-                    defaultValue={sc.name}
-                    maxLength={200}
-                    autoComplete="off"
-                    spellCheck={false}
-                    aria-label={`Channel name (${meta})`}
-                    onBlur={(e) =>
-                      renameSourceChannelDisplayName(sc.id, e.target.value)
+      <div
+        key={group.id}
+        className={[
+          styles.groupFolder,
+          isActive ? styles.groupFolderActive : "",
+          isDropTarget ? styles.dropTargetActive : "",
+        ].join(" ")}
+        {...folderDropProps}
+      >
+        <div className={styles.groupFolderHeader}>
+          <button
+            type="button"
+            className={styles.groupFolderChevron}
+            aria-expanded={expanded}
+            title={expanded ? "Collapse group" : "Expand group"}
+            onClick={() => toggleGroupExpanded(group.id)}
+          >
+            <ChevronDownIcon
+              className={
+                expanded
+                  ? styles.waypointChevronDown
+                  : styles.waypointChevronRight
+              }
+              aria-hidden
+            />
+          </button>
+          <ChannelVisibilitySwatch
+            visible={masterVisible}
+            title="Toggle visibility for all channels in this group"
+            ariaLabel={`Toggle visibility for group ${group.name}`}
+            onClick={() => toggleGroupMasterVisibility(group)}
+          />
+          <input
+            className={`${styles.detailTitleInput} ${styles.groupFolderName}`}
+            type="text"
+            defaultValue={group.name}
+            maxLength={200}
+            autoComplete="off"
+            spellCheck={false}
+            aria-label="Group name"
+            onClick={() => setActiveChannelGroup(group.id)}
+            onBlur={(e) => {
+              const trimmed = e.target.value.trim();
+              renameGroup(group.id, trimmed || "Untitled group");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+          />
+          <div className={styles.groupFolderActions}>
+            {psudoEligible ? (
+              <button
+                type="button"
+                className={styles.headerButton}
+                disabled={optimizePaletteBusy}
+                title="Optimize colors in this group"
+                onClick={() => void runOptimizePaletteForGroup(group.id)}
+              >
+                Optimize
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className={styles.iconHeaderButton}
+              title="Delete group"
+              onClick={() => deleteGroup(group.id)}
+            >
+              <TrashIcon />
+            </button>
+          </div>
+        </div>
+        {expanded ? (
+          <div className={styles.groupFolderBody}>
+            <ul className={styles.groupChildList}>
+              {group.channels.map((gc) => {
+                const sc = findSourceChannel(sourceChannels, gc.channelId);
+                const name = sc?.name ?? "Unknown";
+                const visible = isGroupRowVisible(
+                  channelGroupRowVisibilities,
+                  gc.id,
+                );
+                const hex = rgbToHex(gc.color);
+                const kind = sc
+                  ? isMaskChannel(sc)
+                    ? "mask"
+                    : "channel"
+                  : "channel";
+                const legacyItem =
+                  sc && isImageChannel(sc) && visible
+                    ? React.createElement(props.channelItemElement, {
+                        key: `grp-${group.id}-${gc.id}`,
+                        ...channelItemAttrsForGroupRow(
+                          channelRendering,
+                          group.id,
+                          gc,
+                          sc,
+                        ),
+                        histogram_loading: loadingHistogramSourceIds.includes(
+                          sc.id,
+                        )
+                          ? "true"
+                          : "false",
+                      })
+                    : null;
+
+                const imageSubtitle =
+                  showImageBadge && sc
+                    ? images
+                        .find((i) => i.id === sc.imageId)
+                        ?.basename?.trim() || null
+                    : null;
+
+                return (
+                  <li
+                    key={gc.id}
+                    className={styles.groupChildBlock}
+                    draggable
+                    onDragStart={(e) =>
+                      startChannelDrag(e, {
+                        sourceId: gc.channelId,
+                        fromGroupId: group.id,
+                      })
                     }
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        (e.target as HTMLInputElement).blur();
+                  >
+                    <ChannelRow
+                      rowClassName={styles.groupChildRow}
+                      visible={visible}
+                      visibilityTitle={
+                        visible ? `Hide ${name}` : `Show ${name}`
                       }
-                    }}
-                  />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                      visibilityAriaLabel={`Toggle visibility for ${name}`}
+                      onToggleVisibility={() => {
+                        setChannelGroupRowVisibilities({
+                          ...channelGroupRowVisibilities,
+                          [gc.id]: !visible,
+                        });
+                      }}
+                      name={{
+                        mode: "label",
+                        name,
+                        title: name,
+                        className: styles.groupChildName,
+                      }}
+                      imageSubtitle={imageSubtitle}
+                      isMask={kind === "mask"}
+                      maskVisualization={effectiveMaskVisualization(gc)}
+                      maskAriaLabel={`Mask display for ${name}`}
+                      onMaskVisualizationChange={(viz) =>
+                        setGroupMaskVisualization(group.id, gc.id, viz)
+                      }
+                      colorHex={hex}
+                      colorTitle={`Pick color for ${name} in this group`}
+                      colorAriaLabel={`Pick color for ${name} in this group`}
+                      onColorClick={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setColorPickerTarget({
+                          scope: "group",
+                          groupId: group.id,
+                          rowId: gc.id,
+                        });
+                        setColorPickerPos(
+                          chromeColorPickerAnchorPosition(rect),
+                        );
+                      }}
+                      trailing={
+                        <button
+                          type="button"
+                          className={styles.channelActionButton}
+                          title="Remove from group"
+                          aria-label={`Remove ${name} from group`}
+                          onClick={() =>
+                            removeChannelFromGroup(group.id, gc.id)
+                          }
+                        >
+                          <RemoveIcon />
+                        </button>
+                      }
+                    />
+                    {legacyItem ? (
+                      <div className={styles.detailChannelItemEmbed}>
+                        {legacyItem}
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+            <div className={styles.addChannelRow}>
+              <select
+                className={styles.addChannelSelect}
+                defaultValue=""
+                disabled={optimizePaletteBusy || addable.length === 0}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    void addChannelToGroup(group.id, e.target.value);
+                    e.target.value = "";
+                  }
+                }}
+              >
+                <option value="" disabled>
+                  {optimizePaletteBusy ? "Optimizing…" : "Add channel…"}
+                </option>
+                {addable.map((sc) => (
+                  <option key={sc.id} value={sc.id}>
+                    {sc.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   };
 
-  // ── List view ──
+  const stackLayerTitle = (sc: Channel, stackOn: boolean) => {
+    if (!activeChannelGroupId) {
+      return stackOn ? `Hide ${sc.name}` : `Show ${sc.name}`;
+    }
+    return stackOn
+      ? `Hide ${sc.name} layer on top of active group`
+      : `Show ${sc.name} on top of active group`;
+  };
 
-  const listHeader = (
-    <div className={styles.compactHeader}>
-      <div className={styles.headerTitle}>
-        <span className={styles.headerCount}>
-          {channelGroups.length}{" "}
-          {channelGroups.length === 1 ? "group" : "groups"}
-        </span>
-      </div>
-      <div className={styles.headerActions}>
-        <button
-          type="button"
-          className={styles.iconHeaderButton}
-          onClick={() => {
-            if (channelGroups.length <= 1) return;
-            if (!activeGroup) return;
-            deleteGroup(activeGroup);
-          }}
-          disabled={channelGroups.length <= 1}
-          title="Delete active group"
+  const renderAllChannelsRow = (sc: Channel) => {
+    const stackOn = isStackVisible(channelVisibilities, sc.name);
+    const capped =
+      isImageChannel(sc) && stackOn && !visibleIntensitySourceIds.has(sc.id);
+    const colorIdx = sourceChannels.findIndex((c) => c.id === sc.id);
+    const c = effectiveSourceColor(sc, colorIdx >= 0 ? colorIdx : 0);
+    const hex = rgbToHex(c);
+    const im = images.find((i) => i.id === sc.imageId);
+    const imageLabel = im?.basename?.trim() ?? "";
+    const meta = imageLabel
+      ? `${imageLabel} · index ${sc.index}`
+      : `Index ${sc.index}`;
+
+    if (!stackOn) {
+      return (
+        <li
+          key={`all-${sc.id}`}
+          className={[
+            styles.rootChannelBlock,
+            styles.rootChannelBlockCompact,
+          ].join(" ")}
+          draggable
+          onDragStart={(e) => startChannelDrag(e, { sourceId: sc.id })}
         >
-          <TrashIcon />
-        </button>
-        <button
-          type="button"
-          className={styles.iconHeaderButton}
-          onClick={createGroup}
-          title="Add group"
-        >
-          <PlusIcon />
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderList = () => (
-    <div className={styles.panel}>
-      {listHeader}
-      {channelGroups.length === 0 ? (
-        <div className={styles.emptyMessage}>No channel groups yet</div>
-      ) : (
-        <ul className={styles.rows}>
-          {channelGroups.map((group) => {
-            const isActive = activeGroup === group.id;
-            const channelNames = channelNamesForGroup(group, sourceChannels);
-            const subtitle = channelNames.join(", ");
-
-            return (
-              <li
-                key={group.id}
-                className={[
-                  styles.groupRow,
-                  isActive ? styles.groupRowActive : "",
-                ].join(" ")}
-              >
-                <button
-                  type="button"
-                  className={styles.rowOpenDetailButton}
-                  title="Edit group"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openDetailForGroup(group.id);
-                  }}
-                >
-                  <ChevronDownIcon
-                    className={styles.waypointChevronRight}
-                    aria-hidden
-                  />
-                </button>
-
-                <button
-                  type="button"
-                  className={styles.groupRowMainHit}
-                  aria-label={`Select group: ${group.name}`}
-                  onClick={() => setActiveChannelGroup(group.id)}
-                  onDoubleClick={() => openDetailForGroup(group.id)}
-                >
-                  <div className={styles.rowTextStack}>
-                    <span className={styles.rowTitle} title={group.name}>
-                      {group.name}
-                    </span>
-                    <span className={styles.rowContent} title={subtitle}>
-                      {subtitle || "No channels"}
-                    </span>
-                  </div>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
-
-  // ── Detail view ──
-
-  const renderDetail = () => {
-    if (!detailGroup) return renderList();
-
-    const handleTitleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-      const raw = event.target.value;
-      const trimmed = raw.trim();
-      if (trimmed === "") {
-        renameGroup(detailGroup.id, "Untitled group");
-      } else if (trimmed !== raw) {
-        renameGroup(detailGroup.id, trimmed);
-      }
-    };
-
-    const channels = detailGroup.channels.map((gc) => {
-      const sc = findSourceChannel(sourceChannels, gc.channelId);
-      let rr = gc.color.r;
-      let gCol = gc.color.g;
-      let bb = gc.color.b;
-      const liveColor = colorRenderingFor(
-        channelRendering,
-        detailGroup.id,
-        gc.id,
+          <ChannelRow
+            rowClassName={styles.rootChannelRow}
+            compact
+            visible={false}
+            visibilityTitle={stackLayerTitle(sc, false)}
+            visibilityAriaLabel={`Toggle layer for ${sc.name}`}
+            onToggleVisibility={() => {
+              setChannelVisibilities({
+                ...channelVisibilities,
+                [sc.name]: true,
+              });
+            }}
+            name={{
+              mode: "label",
+              name: sc.name,
+              title: meta,
+              className: styles.rootChannelCompactName,
+            }}
+          />
+        </li>
       );
-      if (liveColor) {
-        rr = liveColor.r;
-        gCol = liveColor.g;
-        bb = liveColor.b;
-      }
-      const hex = [rr, gCol, bb]
-        .map((n) => n.toString(16).padStart(2, "0"))
-        .join("");
-      return {
-        channelUUID: gc.id,
-        sourceUUID: sc?.id ?? "",
-        name: sc?.name ?? "Unknown",
-        hex,
-        r: rr,
-        g: gCol,
-        b: bb,
-      };
-    });
+    }
 
-    const replaceOptions = (currentSourceUUID: string) =>
-      sourceChannels.filter(({ id }) => id !== currentSourceUUID);
-
-    const channelItemAttrsFor = (gc: (typeof detailGroup.channels)[0]) => {
-      const flat = findSourceChannel(sourceChannels, gc.channelId);
-      let pr = gc.color.r;
-      let pg = gc.color.g;
-      let pb = gc.color.b;
-      const liveColor = colorRenderingFor(
-        channelRendering,
-        detailGroup.id,
-        gc.id,
-      );
-      if (liveColor) {
-        pr = liveColor.r;
-        pg = liveColor.g;
-        pb = liveColor.b;
-      }
-      let lower = gc.lowerLimit;
-      let upper = gc.upperLimit;
-      const liveContrast = contrastRenderingFor(
-        channelRendering,
-        detailGroup.id,
-        gc.id,
-      );
-      if (liveContrast) {
-        lower = liveContrast.lower;
-        upper = liveContrast.upper;
-      }
-      return {
-        group_uuid: detailGroup.id,
-        channel_uuid: gc.id,
-        source_uuid: flat?.id ?? "",
-        r: String(pr),
-        g: String(pg),
-        b: String(pb),
-        lower_range: String(lower),
-        upper_range: String(upper),
-      };
-    };
+    const showHistogramEmbed = isImageChannel(sc);
+    const legacyItem = showHistogramEmbed
+      ? React.createElement(props.channelItemElement, {
+          key: `all-${sc.id}`,
+          ...channelItemAttrsForSource(
+            channelRendering,
+            sc,
+            effectiveSourceColor(sc, colorIdx >= 0 ? colorIdx : 0),
+            effectiveSourceLimits(sc),
+          ),
+          histogram_loading: loadingHistogramSourceIds.includes(sc.id)
+            ? "true"
+            : "false",
+        })
+      : null;
 
     return (
-      <div className={styles.detailView}>
-        <div className={styles.detailHeader}>
-          <button
-            type="button"
-            className={styles.backButton}
-            onClick={() => setDetailGroupId(null)}
-            title="Back to group list"
-          >
-            <ChevronDownIcon
-              className={styles.waypointChevronLeft}
-              aria-hidden
-            />
-            <span>Back</span>
-          </button>
-          <div className={styles.detailTitle} title={detailGroup.name}>
-            {detailGroup.name}
-          </div>
-        </div>
-
-        <div className={styles.detailBody} ref={detailBodyRef}>
-          <div className={styles.detailBodyInner}>
-            {/* Rename field */}
-            <div className={styles.detailTitleFieldWrap}>
-              <label
-                className={styles.detailTitleLabel}
-                htmlFor={renameFieldId}
-              >
-                Name
-              </label>
-              <input
-                id={renameFieldId}
-                className={styles.detailTitleInput}
-                type="text"
-                value={detailGroup.name ?? ""}
-                onChange={(e) => renameGroup(detailGroup.id, e.target.value)}
-                onBlur={handleTitleBlur}
-                maxLength={200}
-                autoComplete="off"
-                spellCheck={false}
-                placeholder="Group name"
-              />
-            </div>
-
-            {/* Channels — always visible (detail view is only this group + channels) */}
-            <div className={styles.detailChannelsSection}>
-              <div
-                className={
-                  optimizePaletteBusy
-                    ? `${styles.optimizePaletteBusyOverlay} ${styles.optimizePaletteBusyOverlayVisible}`
-                    : styles.optimizePaletteBusyOverlay
-                }
-                aria-hidden={!optimizePaletteBusy}
-              >
-                <span
-                  className={styles.optimizePaletteOverlaySpinner}
-                  aria-hidden="true"
-                />
-                <span className={styles.optimizePaletteOverlayLabel}>
-                  Optimizing palette…
-                </span>
-              </div>
-              <div className={styles.detailChannelsSectionHeader}>
-                <div className={styles.detailChannelsSectionTitle}>
-                  Channels{" "}
-                  <span className={styles.detailCollapsibleCount}>
-                    ({channels.length})
-                  </span>
-                </div>
-                <div className={styles.paletteLockActions}>
-                  <button
-                    type="button"
-                    className={styles.paletteLockAllButton}
-                    disabled={channels.length === 0}
-                    title="Lock all channel colors in this group"
-                    onClick={() => lockAllColorsInGroup(detailGroup.id)}
-                  >
-                    Lock all
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.paletteLockAllButton}
-                    disabled={detailGroupLockedRowIds.size === 0}
-                    title="Unlock all channel colors in this group"
-                    onClick={() => unlockAllColorsInGroup(detailGroup.id)}
-                  >
-                    Unlock all
-                  </button>
-                  {ensureChannelGmmContrastLimits ? (
-                    <button
-                      type="button"
-                      className={styles.paletteLockAllButton}
-                      disabled={channels.length === 0 || fitAllBusy}
-                      title="Fit contrast limits for every channel (0.1%–99.9% on coarse plane)"
-                      aria-busy={fitAllBusy}
-                      onClick={() =>
-                        void runFitAllChannelContrast(detailGroup.id)
-                      }
-                    >
-                      {fitAllBusy ? (
-                        <>
-                          <span
-                            className={styles.optimizePaletteSpinner}
-                            aria-hidden="true"
-                          />
-                          Fitting…
-                        </>
-                      ) : (
-                        "Fit contrast"
-                      )}
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    className={styles.optimizePaletteButton}
-                    disabled={
-                      !detailGroupPsudoEligible ||
-                      optimizePaletteBusy ||
-                      detailGroupAllColorsLocked
-                    }
-                    title={
-                      detailGroupAllColorsLocked
-                        ? "Unlock at least one channel to optimize"
-                        : detailGroupPsudoEligible
-                          ? detailGroupLockedRowIds.size > 0
-                            ? `Optimize unlocked channels (${detailGroupLockedRowIds.size} locked)`
-                            : "Optimize channel colors with psudo (perceptual palette)"
-                          : "Need at least two non-RGB channels"
-                    }
-                    onClick={() => void runOptimizePalette()}
-                    aria-busy={optimizePaletteBusy}
-                  >
-                    {optimizePaletteBusy ? (
-                      <>
-                        <span
-                          className={styles.optimizePaletteSpinner}
-                          aria-hidden="true"
-                        />
-                        Optimizing…
-                      </>
-                    ) : (
-                      "Optimize colors"
-                    )}
-                  </button>
-                </div>
-              </div>
-              {optimizePaletteMessage ? (
-                <output className={styles.optimizePaletteMessage}>
-                  {optimizePaletteMessage}
-                </output>
-              ) : null}
-              <div className={styles.detailChannelsSectionBody}>
-                {channels.map((ch) => {
-                  const isReplacing = replacingChannelUUID === ch.channelUUID;
-                  const gc = detailGroup.channels.find(
-                    (c) => c.id === ch.channelUUID,
-                  );
-                  const legacyChannelItem =
-                    gc &&
-                    React.createElement(props.channelItemElement, {
-                      key: `embed-${ch.channelUUID}-${ch.sourceUUID}`,
-                      ...channelItemAttrsFor(gc),
-                      histogram_loading: loadingHistogramSourceIds.includes(
-                        ch.sourceUUID,
-                      )
-                        ? "true"
-                        : "false",
-                    });
-
-                  const colorLocked = detailGroupLockedRowIds.has(
-                    ch.channelUUID,
-                  );
-
-                  return (
-                    <div
-                      key={ch.channelUUID}
-                      className={styles.detailChannelBlock}
-                    >
-                      <div
-                        className={
-                          colorLocked
-                            ? `${styles.channelRow} ${styles.detailChannelRowLocked}`
-                            : styles.channelRow
-                        }
-                      >
-                        <button
-                          type="button"
-                          className={styles.channelColorSwatch}
-                          style={{ backgroundColor: `#${ch.hex}` }}
-                          title={`Pick color for ${ch.name}`}
-                          aria-label={`Pick color for ${ch.name}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const rect =
-                              e.currentTarget.getBoundingClientRect();
-                            setColorPickerGroupId(detailGroup.id);
-                            setColorPickerChannelUUID(ch.channelUUID);
-                            setColorPickerPos(
-                              chromeColorPickerAnchorPosition(rect),
-                            );
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className={
-                            colorLocked
-                              ? `${styles.colorLockButton} ${styles.colorLockButtonLocked}`
-                              : styles.colorLockButton
-                          }
-                          aria-pressed={colorLocked}
-                          title={
-                            colorLocked
-                              ? "Unlock color — included when optimizing"
-                              : "Lock color — won't change when optimizing"
-                          }
-                          aria-label={
-                            colorLocked
-                              ? `Unlock color for ${ch.name}`
-                              : `Lock color for ${ch.name}`
-                          }
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleColorLock(detailGroup.id, ch.channelUUID);
-                          }}
-                        >
-                          <PinIcon />
-                        </button>
-                        {ensureChannelGmmContrastLimits ? (
-                          <button
-                            type="button"
-                            className={styles.channelActionButton}
-                            disabled={gmmFittingRowIds.has(ch.channelUUID)}
-                            aria-busy={gmmFittingRowIds.has(ch.channelUUID)}
-                            title="Fit contrast limits (histogram percentiles on coarse plane)"
-                            aria-label={`Fit contrast for ${ch.name}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!ch.sourceUUID) return;
-                              void runFitChannelContrast(
-                                detailGroup.id,
-                                ch.channelUUID,
-                                ch.sourceUUID,
-                              );
-                            }}
-                          >
-                            {gmmFittingRowIds.has(ch.channelUUID) ? (
-                              <span
-                                className={styles.optimizePaletteSpinner}
-                                aria-hidden="true"
-                              />
-                            ) : (
-                              <FitContrastIcon />
-                            )}
-                          </button>
-                        ) : null}
-                        {isReplacing ? (
-                          <select
-                            ref={replaceChannelSelectRef}
-                            className={styles.addChannelSelect}
-                            defaultValue=""
-                            onChange={(e) => {
-                              if (e.target.value) {
-                                replaceChannelInGroup(
-                                  detailGroup.id,
-                                  ch.channelUUID,
-                                  e.target.value,
-                                );
-                              }
-                            }}
-                            onBlur={() => setReplacingChannelUUID(null)}
-                          >
-                            <option value="" disabled>
-                              Replace with...
-                            </option>
-                            {replaceOptions(ch.sourceUUID).map((sc) => (
-                              <option key={sc.id} value={sc.id}>
-                                {sc.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <span className={styles.channelName}>{ch.name}</span>
-                        )}
-                        <button
-                          type="button"
-                          className={styles.channelActionButton}
-                          title="Replace channel"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setReplacingChannelUUID(
-                              isReplacing ? null : ch.channelUUID,
-                            );
-                          }}
-                        >
-                          <ReplaceIcon />
-                        </button>
-                        <button
-                          type="button"
-                          className={styles.channelActionButton}
-                          title="Remove channel"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeChannelFromGroup(
-                              detailGroup.id,
-                              ch.channelUUID,
-                            );
-                          }}
-                        >
-                          <RemoveIcon />
-                        </button>
-                      </div>
-                      {legacyChannelItem ? (
-                        <div className={styles.detailChannelItemEmbed}>
-                          {legacyChannelItem}
-                        </div>
-                      ) : null}
-                    </div>
-                  );
-                })}
-                {/* Add channel */}
-                <div className={styles.addChannelRow}>
-                  {availableChannels.length === 0 ? (
-                    <span className={styles.allChannelsNote}>
-                      All channels in group
-                    </span>
-                  ) : (
-                    <select
-                      className={styles.addChannelSelect}
-                      defaultValue=""
-                      disabled={optimizePaletteBusy}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          void addChannelToGroup(
-                            detailGroup.id,
-                            e.target.value,
-                          );
-                          e.target.value = "";
-                        }
-                      }}
-                    >
-                      <option value="" disabled>
-                        {optimizePaletteBusy
-                          ? "Optimizing color…"
-                          : "Add channel..."}
-                      </option>
-                      {availableChannels.map((sc) => (
-                        <option key={sc.id} value={sc.id}>
-                          {sc.name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <li
+        key={`all-${sc.id}`}
+        className={styles.rootChannelBlock}
+        draggable
+        onDragStart={(e) => startChannelDrag(e, { sourceId: sc.id })}
+      >
+        <ChannelRow
+          rowClassName={styles.rootChannelRow}
+          visible
+          visibilityTitle={
+            capped
+              ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) — hide another channel`
+              : stackLayerTitle(sc, true)
+          }
+          visibilityAriaLabel={`Toggle layer for ${sc.name}`}
+          onToggleVisibility={() => {
+            setChannelVisibilities({
+              ...channelVisibilities,
+              [sc.name]: false,
+            });
+          }}
+          name={{
+            mode: "editable",
+            name: sc.name,
+            meta,
+            onBlur: (value) => renameSourceChannelDisplayName(sc.id, value),
+          }}
+          imageSubtitle={showImageBadge && imageLabel ? imageLabel : null}
+          isMask={isMaskChannel(sc)}
+          maskVisualization={effectiveMaskVisualization(sc)}
+          maskAriaLabel={`Mask display for ${sc.name}`}
+          onMaskVisualizationChange={(viz) =>
+            setSourceMaskVisualization(sc.id, viz)
+          }
+          colorHex={hex}
+          colorTitle={`Pick color for ${sc.name}`}
+          colorAriaLabel={`Pick color for ${sc.name}`}
+          onColorClick={(e) => {
+            e.stopPropagation();
+            const rect = e.currentTarget.getBoundingClientRect();
+            setColorPickerTarget({ scope: "source", sourceId: sc.id });
+            setColorPickerPos(chromeColorPickerAnchorPosition(rect));
+          }}
+        />
+        {legacyItem ? (
+          <div className={styles.detailChannelItemEmbed}>{legacyItem}</div>
+        ) : null}
+      </li>
     );
   };
 
   return (
     <div className={[styles.panel, styles.black].join(" ")}>
-      <div
-        className={styles.channelPanelTabRow}
-        role="tablist"
-        aria-label="Channel panel"
-      >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={channelPanelTab === "groups"}
-          className={
-            channelPanelTab === "groups"
-              ? `${styles.channelPanelTab} ${styles.channelPanelTabActive}`
-              : styles.channelPanelTab
-          }
-          onClick={() => setChannelPanelTab("groups")}
-        >
-          Channel groups
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={channelPanelTab === "names"}
-          className={
-            channelPanelTab === "names"
-              ? `${styles.channelPanelTab} ${styles.channelPanelTabActive}`
-              : styles.channelPanelTab
-          }
-          onClick={() => {
-            setChannelPanelTab("names");
-            setDetailGroupId(null);
-          }}
-        >
-          Channel names
-        </button>
+      <div className={styles.compactHeader}>
+        <div className={styles.headerTitle}>
+          <span className={styles.headerCount}>Channels</span>
+        </div>
+        <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.headerActionButton}
+            onClick={createGroup}
+            title="Add group"
+            aria-label="Add group"
+          >
+            Add group
+          </button>
+        </div>
       </div>
-      {channelPanelTab === "names"
-        ? renderChannelNamesPanel()
-        : detailGroupId
-          ? renderDetail()
-          : renderList()}
-      {colorPickerChannelUUID && colorPickerPos && pickingColorHex ? (
+
+      {optimizePaletteMessage ? (
+        <output className={styles.optimizePaletteMessage}>
+          {optimizePaletteMessage}
+        </output>
+      ) : null}
+
+      <div className={styles.treeScroll}>
+        {channelGroups.length > 0 ? (
+          <div className={styles.groupFolders}>
+            {channelGroups.map(renderGroupFolder)}
+          </div>
+        ) : null}
+
+        <div className={styles.treeSeparator}>All Channels</div>
+
+        {uniqueSourceChannels.length === 0 ? (
+          <div className={styles.emptyMessage}>No channels loaded</div>
+        ) : (
+          <ul className={styles.rootChannelList}>
+            {allChannelsOrdered.map(renderAllChannelsRow)}
+          </ul>
+        )}
+
+        {imageSelectionMask ? (
+          <ChannelRow
+            rowClassName={[
+              styles.rootChannelRow,
+              styles.rootChannelRowInline,
+            ].join(" ")}
+            visible={selectionMaskVisible}
+            visibilityTitle="Toggle selection mask visibility"
+            visibilityAriaLabel="Toggle selection mask visibility"
+            onToggleVisibility={() => {
+              setChannelVisibilities({
+                ...channelVisibilities,
+                [SELECTION_MASK_CHANNEL_KEY]: !selectionMaskVisible,
+              });
+            }}
+            name={{
+              mode: "label",
+              className: styles.groupChildName,
+              name: `${SELECTION_MASK_CHANNEL_KEY}${
+                imageSelectionMask.sourceShapeLabel
+                  ? ` (${imageSelectionMask.sourceShapeLabel})`
+                  : ""
+              }`,
+            }}
+            isMask
+            maskVisualization={
+              imageSelectionMask.maskVisualization ?? DEFAULT_MASK_VISUALIZATION
+            }
+            maskAriaLabel="Selection mask display"
+            onMaskVisualizationChange={setImageSelectionMaskVisualization}
+            fixedColorHex="ffcc00"
+            colorHex="ffcc00"
+            colorTitle=""
+            colorAriaLabel=""
+            onColorClick={() => {}}
+            trailing={
+              <button
+                type="button"
+                className={styles.channelActionButton}
+                title="Clear selection"
+                aria-label="Clear selection"
+                onClick={() => clearImageSelectionMask()}
+              >
+                <RemoveIcon />
+              </button>
+            }
+          />
+        ) : null}
+      </div>
+
+      {colorPickerTarget && colorPickerPos && pickingColorHex ? (
         <ChromeColorPickerPopover
           position={colorPickerPos}
           onClose={closeColorPicker}
@@ -1588,11 +1172,20 @@ export const ChannelGroupsMasterDetail = (
             const G = Number.parseInt(raw.slice(2, 4), 16);
             const B = Number.parseInt(raw.slice(4, 6), 16);
             if ([R, G, B].some((n) => Number.isNaN(n))) return;
-            if (!colorPickerGroupId || !colorPickerChannelUUID) return;
+            const sourceId =
+              colorPickerTarget.scope === "source"
+                ? colorPickerTarget.sourceId
+                : useDocumentStore
+                    .getState()
+                    .channelGroups.find(
+                      (g) => g.id === colorPickerTarget.groupId,
+                    )
+                    ?.channels.find((gc) => gc.id === colorPickerTarget.rowId)
+                    ?.channelId;
+            if (!sourceId) return;
             useAppStore.getState().setChannelRendering({
               kind: "color",
-              groupId: colorPickerGroupId,
-              channelId: colorPickerChannelUUID,
+              sourceChannelId: sourceId,
               r: R,
               g: G,
               b: B,

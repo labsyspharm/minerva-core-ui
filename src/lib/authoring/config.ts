@@ -158,6 +158,8 @@ type ExtractChannels = (
   groups: LegacyConfigGroup[],
   /** OME: stable document `Image.id` for flat channels; defaults to `modality` (DICOM / legacy). */
   sourceImageId?: string,
+  /** Default persisted kind for every extracted channel (import-only). */
+  defaultChannelKind?: "channel" | "mask",
 ) => {
   SourceChannels: Channel[];
   ChannelGroups: ChannelGroup[];
@@ -283,7 +285,8 @@ const toTileLayer = (planes: LoaderPlane[]): TileProps => {
   const { height, width } = getImageSize(plane as VivImageSizeInput);
   const extent: Four = [0, 0, width, height];
   const { tileSize, dtype } = plane;
-  const n_channels = plane.shape[Math.max(1, plane.labels.indexOf("c"))];
+  const cIdx = plane.labels.indexOf("c");
+  const n_channels = cIdx >= 0 ? plane.shape[cIdx] : 1;
   const props = {
     id,
     dtype,
@@ -403,18 +406,23 @@ const extractChannels: ExtractChannels = (
   modality,
   groups,
   sourceImageId,
+  defaultChannelKind = "channel",
 ) => {
   const init = initialize({ planes: loader.data });
   const { Channels, Type } = loader.metadata.Pixels;
   const channelImageId = sourceImageId ?? modality;
-  const SourceChannels = Channels.map((channel, index) => ({
-    id: crypto.randomUUID(),
-    name: channel?.Name || `Channel ${index + 1}`,
-    samples: channel.SamplesPerPixel,
-    index: init.indices[index].c,
-    sourceDataTypeId: asID(Type).ID,
-    imageId: channelImageId,
-  }));
+  const SourceChannels = Channels.map((channel, index) => {
+    const name = channel?.Name || `Channel ${index + 1}`;
+    return {
+      id: crypto.randomUUID(),
+      name,
+      kind: defaultChannelKind,
+      samples: channel.SamplesPerPixel,
+      index: init.indices[index].c,
+      sourceDataTypeId: asID(Type).ID,
+      imageId: channelImageId,
+    };
+  });
   // Match hard-coded groups to existing channels. GROUP_CHANNELS_CRC01 maps Path →
   // indices into OME Pixels.Channels (same order as SourceChannels), not "Channel N" strings.
   const hardcoded_crc01 = groups.reduce(
@@ -509,40 +517,23 @@ const extractChannels: ExtractChannels = (
       },
     ];
     if (SourceChannels.length === 1) {
-      SourceChannels[0].name = channelName;
+      const row: Channel = {
+        ...SourceChannels[0],
+        name: channelName,
+        color: hex_to_rgb("cc00ff"),
+        lowerLimit: 0,
+        upperLimit: 255,
+      };
+      SourceChannels[0] = row as (typeof SourceChannels)[0];
     }
     return {
       SourceChannels,
       ChannelGroups,
     };
   }
-  const group_size = 4;
-  const ChannelGroups: ChannelGroup[] = [
-    ...Array(Math.ceil(SourceChannels.length / group_size)).keys(),
-  ].map((group_index) => {
-    const group_uuid = crypto.randomUUID();
-    return {
-      id: group_uuid,
-      expanded: false,
-      name: `Group ${group_index}`,
-      channels: SourceChannels.slice(
-        group_index * group_size,
-        (group_index + 1) * group_size,
-      ).map((channel, index) => {
-        const color_id = ["0dabff", "c3ff00", "ff8b00", "ff00c7"][index % 4];
-        return {
-          id: crypto.randomUUID(),
-          channelId: channel.id,
-          color: hex_to_rgb(color_id),
-          lowerLimit: 2 ** 5, //TODO
-          upperLimit: 2 ** 14, //TODO
-        };
-      }),
-    };
-  });
   return {
     SourceChannels,
-    ChannelGroups,
+    ChannelGroups: [] as ChannelGroup[],
   };
 };
 

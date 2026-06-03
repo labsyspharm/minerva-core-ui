@@ -10,6 +10,7 @@ const toRangeEditor = (ItemRegistry, channelActions, elements) => {
   const rangeInputElement = elements["range-slider"];
   const {
     setGroupChannelRange,
+    setSourceChannelRange,
     setChannelRendering,
     clearChannelRendering,
     clearContrastPreviewIfOwnedBy,
@@ -54,9 +55,8 @@ const toRangeEditor = (ItemRegistry, channelActions, elements) => {
         slider.removeEventListener("change", handler);
       }
       this._contrastCommitHandler = null;
-      const groupUuid = this.getAttribute("group_uuid") ?? "";
-      const channelUuid = this.getAttribute("channel_uuid") ?? "";
-      clearContrastPreviewIfOwnedBy(groupUuid, channelUuid);
+      const sourceUuid = this._sourceChannelIdForPreview();
+      if (sourceUuid) clearContrastPreviewIfOwnedBy(sourceUuid);
     }
 
     _attachContrastCommitListeners(shadow) {
@@ -157,13 +157,21 @@ const toRangeEditor = (ItemRegistry, channelActions, elements) => {
       };
     }
 
+    /** Viv matches layers by source channel id, not group row id. */
+    _sourceChannelIdForPreview() {
+      return (
+        this.getAttribute("source_uuid") ||
+        this.getAttribute("channel_uuid") ||
+        ""
+      );
+    }
+
     _previewRange(lower, upper) {
-      const groupId = this.getAttribute("group_uuid") ?? "";
-      const channelId = this.getAttribute("channel_uuid") ?? "";
+      const sourceChannelId = this._sourceChannelIdForPreview();
+      if (!sourceChannelId) return;
       setChannelRendering({
         kind: "contrast",
-        groupId,
-        channelId,
+        sourceChannelId,
         lower,
         upper,
       });
@@ -173,12 +181,22 @@ const toRangeEditor = (ItemRegistry, channelActions, elements) => {
     _commitRange(lower, upper) {
       const groupUuid = this.getAttribute("group_uuid") ?? "";
       const channelUuid = this.getAttribute("channel_uuid") ?? "";
-      if (groupUuid && channelUuid) {
+      if (!channelUuid) {
+        clearChannelRendering();
+        return;
+      }
+      if (groupUuid) {
         setGroupChannelRange({
           LowerRange: lower,
           UpperRange: upper,
           group_uuid: groupUuid,
           channel_uuid: channelUuid,
+        });
+      } else if (setSourceChannelRange) {
+        setSourceChannelRange({
+          LowerRange: lower,
+          UpperRange: upper,
+          sourceChannelId: channelUuid,
         });
       }
       clearChannelRendering();

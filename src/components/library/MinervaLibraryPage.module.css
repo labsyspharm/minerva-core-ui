@@ -77,17 +77,6 @@
   cursor: wait;
 }
 
-.newGlyph {
-  font-size: 1.1rem;
-  font-weight: 300;
-  line-height: 1;
-  opacity: 0.85;
-}
-
-.newLabel {
-  font-size: 0.62rem;
-}
-
 .error {
   margin: 0 0 16px;
   padding: 10px 14px;

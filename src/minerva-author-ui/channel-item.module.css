@@ -1,14 +1,28 @@
 :host {
-  div.grid {
-    gap: 1px;
-    padding-bottom: 2px;
-  }
+  display: block;
+}
+
+:host .center.grid {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 0;
 }
 
 /* Histogram strip only (matches deck LoadingWidget: 24px / 3px rings) */
 .histogram-chart-host {
   position: relative;
   width: 100%;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+}
+
+.histogram-chart-host svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .histogram-loading-overlay {
@@ -48,7 +62,7 @@ svg {
   fill: white;
 }
 .full.histogram {
-  margin: var(--gap-medium) 0;
+  margin: 0;
   width: 100%;
 }
 .one-line {
