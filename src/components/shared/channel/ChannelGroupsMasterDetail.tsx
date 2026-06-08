@@ -700,11 +700,13 @@ export const ChannelGroupsMasterDetail = (
     const expanded = group.expanded ?? true;
     const isActive = activeChannelGroupId === group.id;
     const isDropTarget = dragOverGroupId === group.id;
-    const masterVisible =
+    const rowsVisible =
       group.channels.length === 0 ||
       group.channels.some((gc) =>
         isGroupRowVisible(channelGroupRowVisibilities, gc.id),
       );
+    // Inactive groups are not composited — show the master eye as off until selected.
+    const masterVisible = isActive && rowsVisible;
     const addable = uniqueSourceChannels;
     const psudoEligible = isGroupEligibleForPsudoOptimize(
       group,
@@ -839,6 +841,11 @@ export const ChannelGroupsMasterDetail = (
                         .find((i) => i.id === sc.imageId)
                         ?.basename?.trim() || null
                     : null;
+                const channelMeta = sc
+                  ? imageSubtitle
+                    ? `${imageSubtitle} · index ${sc.index}`
+                    : `Index ${sc.index}`
+                  : "";
 
                 return (
                   <li
@@ -865,12 +872,22 @@ export const ChannelGroupsMasterDetail = (
                           [gc.id]: !visible,
                         });
                       }}
-                      name={{
-                        mode: "label",
-                        name,
-                        title: name,
-                        className: styles.groupChildName,
-                      }}
+                      name={
+                        sc
+                          ? {
+                              mode: "editable",
+                              name,
+                              meta: channelMeta,
+                              onBlur: (value) =>
+                                renameSourceChannelDisplayName(sc.id, value),
+                            }
+                          : {
+                              mode: "label",
+                              name,
+                              title: name,
+                              className: styles.groupChildName,
+                            }
+                      }
                       imageSubtitle={imageSubtitle}
                       isMask={kind === "mask"}
                       maskVisualization={effectiveMaskVisualization(gc)}
