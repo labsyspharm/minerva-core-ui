@@ -134,10 +134,17 @@ export function defaultVisibilitiesForSources(
   sourceChannels: Channel[],
   prev: Record<string, boolean> = {},
 ): Record<string, boolean> {
-  const sourceNames = new Set(sourceChannels.map((sc) => sc.name));
-  const hasHiddenSource = sourceChannels.some((sc) => prev[sc.name] === false);
+  const sourceIds = new Set(sourceChannels.map((sc) => sc.id));
+  const prevVisibility = (sc: Channel): boolean | undefined => {
+    if (prev[sc.id] !== undefined) return prev[sc.id];
+    if (prev[sc.name] !== undefined) return prev[sc.name];
+    return undefined;
+  };
+  const hasHiddenSource = sourceChannels.some(
+    (sc) => prevVisibility(sc) === false,
+  );
   const visibleIntensityCount = sourceChannels.filter(
-    (sc) => isImageChannel(sc) && prev[sc.name] !== false,
+    (sc) => isImageChannel(sc) && prevVisibility(sc) !== false,
   ).length;
 
   // Old sessions/import paths may have persisted every channel as visible. That
@@ -148,26 +155,29 @@ export function defaultVisibilitiesForSources(
     visibleIntensityCount <= DEFAULT_VISIBLE_INTENSITY_CHANNELS;
 
   const out: Record<string, boolean> = {};
-  for (const [name, visible] of Object.entries(prev)) {
-    if (!sourceNames.has(name)) out[name] = visible;
-    else if (shouldPreserveExisting) out[name] = visible;
+  for (const [key, visible] of Object.entries(prev)) {
+    if (sourceIds.has(key)) continue;
+    if (sourceChannels.some((sc) => sc.name === key)) continue;
+    out[key] = visible;
   }
   let intensitySeen = 0;
   for (const sc of sourceChannels) {
-    if (out[sc.name] !== undefined) {
-      if (out[sc.name] !== false && isImageChannel(sc)) intensitySeen++;
+    const existing = prevVisibility(sc);
+    if (existing !== undefined && shouldPreserveExisting) {
+      if (existing !== false && isImageChannel(sc)) intensitySeen++;
+      out[sc.id] = existing;
       continue;
     }
     if (isMaskChannel(sc)) {
-      out[sc.name] = true;
+      out[sc.id] = true;
       continue;
     }
     if (isImageChannel(sc)) {
       const shouldShow = intensitySeen < DEFAULT_VISIBLE_INTENSITY_CHANNELS;
-      out[sc.name] = shouldShow;
+      out[sc.id] = shouldShow;
       if (shouldShow) intensitySeen++;
     } else {
-      out[sc.name] = true;
+      out[sc.id] = true;
     }
   }
   return out;

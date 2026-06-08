@@ -8,9 +8,9 @@ import { DEFAULT_VISIBLE_INTENSITY_CHANNELS } from "./channelKind";
 /** Stack (All Channels) eye — layer overlay on the active group composite. */
 export function isStackVisible(
   stackVisibilities: Record<string, boolean>,
-  channelName: string,
+  sourceChannelId: string,
 ): boolean {
-  return stackVisibilities[channelName] !== false;
+  return stackVisibilities[sourceChannelId] !== false;
 }
 
 /** Per group-row eye — member of the active group look. */
@@ -34,7 +34,7 @@ export function isShownFirstInAllChannelsList(
   activeGroup: ChannelGroup | undefined,
   groupRowVisibilities: Record<string, boolean>,
 ): boolean {
-  if (isStackVisible(stackVisibilities, sc.name)) return true;
+  if (isStackVisible(stackVisibilities, sc.id)) return true;
   if (!activeGroup) return false;
   return activeGroup.channels.some(
     (gc) =>
@@ -64,7 +64,7 @@ export function buildCompositedIntensityLayers(
 
   if (!activeGroup) {
     const layers = hasVisibilityMap
-      ? onLoader.filter((sc) => isStackVisible(stackVisibilities, sc.name))
+      ? onLoader.filter((sc) => isStackVisible(stackVisibilities, sc.id))
       : onLoader.slice(0, DEFAULT_VISIBLE_INTENSITY_CHANNELS);
     return layers.map((sc) => ({ sc, gc: null }));
   }
@@ -76,7 +76,7 @@ export function buildCompositedIntensityLayers(
     if (!sc) continue;
     const rowOn = isGroupRowVisible(groupRowVisibilities, gc.id);
     const stackOn =
-      !hasVisibilityMap || isStackVisible(stackVisibilities, sc.name);
+      !hasVisibilityMap || isStackVisible(stackVisibilities, sc.id);
     if (!rowOn && !stackOn) continue;
     if (rowOn) ordered.push({ sc, gc });
     if (stackOn) ordered.push({ sc, gc: null });
@@ -85,7 +85,7 @@ export function buildCompositedIntensityLayers(
   for (const sc of onLoader) {
     const inGroup = activeGroup.channels.some((gc) => gc.channelId === sc.id);
     if (inGroup) continue;
-    if (hasVisibilityMap && !isStackVisible(stackVisibilities, sc.name)) {
+    if (hasVisibilityMap && !isStackVisible(stackVisibilities, sc.id)) {
       continue;
     }
     if (!hasVisibilityMap) continue;
@@ -102,7 +102,7 @@ export function isMaskSourceRendered(args: {
   groupRowVisibilities: Record<string, boolean>;
 }): boolean {
   const { sc, activeGroup, stackVisibilities, groupRowVisibilities } = args;
-  const stackOn = isStackVisible(stackVisibilities, sc.name);
+  const stackOn = isStackVisible(stackVisibilities, sc.id);
   if (!activeGroup) return stackOn;
   const rows = activeGroup.channels.filter((gc) => gc.channelId === sc.id);
   if (rows.length === 0) return stackOn;

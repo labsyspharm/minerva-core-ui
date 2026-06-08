@@ -262,7 +262,6 @@ export const ChannelGroupsMasterDetail = (
       const flatBefore = flattenImageChannelsInDocumentOrder(doc.images);
       const prev = findSourceChannel(flatBefore, channelId);
       if (!prev || prev.name === trimmed) return;
-      const oldName = prev.name;
       const nextImages = doc.images.map((im) => ({
         ...im,
         channels: im.channels.map((ch) =>
@@ -271,14 +270,6 @@ export const ChannelGroupsMasterDetail = (
       }));
       setImages(nextImages);
       const flatAfter = flattenImageChannelsInDocumentOrder(nextImages);
-      const stillUsesOldName = flatAfter.some((c) => c.name === oldName);
-      const vis = useAppStore.getState().channelVisibilities;
-      const nextVis = { ...vis };
-      if (nextVis[trimmed] === undefined) {
-        nextVis[trimmed] = nextVis[oldName] ?? true;
-      }
-      if (!stillUsesOldName && oldName !== trimmed) delete nextVis[oldName];
-      setChannelVisibilities(nextVis);
       const groups = useDocumentStore.getState().channelGroups;
       setGroupChannelLists(
         Object.fromEntries(
@@ -292,14 +283,14 @@ export const ChannelGroupsMasterDetail = (
         ),
       );
     },
-    [setImages, setChannelVisibilities, setGroupChannelLists],
+    [setImages, setGroupChannelLists],
   );
 
   const createGroup = () => {
     const seedingFirst = channelGroups.length === 0;
     const toSeed = seedingFirst
       ? uniqueSourceChannels.filter((sc) =>
-          isStackVisible(channelVisibilities, sc.name),
+          isStackVisible(channelVisibilities, sc.id),
         )
       : [];
     const seededChannels = seedingFirst
@@ -317,7 +308,7 @@ export const ChannelGroupsMasterDetail = (
       const stackOff = { ...useAppStore.getState().channelVisibilities };
       for (const gc of seededChannels) {
         const sc = findSourceChannel(sourceChannels, gc.channelId);
-        if (sc) stackOff[sc.name] = false;
+        if (sc) stackOff[sc.id] = false;
       }
       setChannelVisibilities(stackOff);
       setChannelGroupRowVisibilities({
@@ -564,7 +555,7 @@ export const ChannelGroupsMasterDetail = (
   const visibleHistogramTargets = React.useMemo(() => {
     const ids: string[] = [];
     for (const sc of uniqueSourceChannels) {
-      if (!isStackVisible(channelVisibilities, sc.name)) continue;
+      if (!isStackVisible(channelVisibilities, sc.id)) continue;
       if (!isImageChannel(sc)) continue;
       if (sourceDistributionYValuesLength(sc) > 0) continue;
       ids.push(sc.id);
@@ -970,7 +961,7 @@ export const ChannelGroupsMasterDetail = (
   };
 
   const renderAllChannelsRow = (sc: Channel) => {
-    const stackOn = isStackVisible(channelVisibilities, sc.name);
+    const stackOn = isStackVisible(channelVisibilities, sc.id);
     const capped =
       isImageChannel(sc) && stackOn && !visibleIntensitySourceIds.has(sc.id);
     const colorIdx = sourceChannels.findIndex((c) => c.id === sc.id);
@@ -1002,7 +993,7 @@ export const ChannelGroupsMasterDetail = (
             onToggleVisibility={() => {
               setChannelVisibilities({
                 ...channelVisibilities,
-                [sc.name]: true,
+                [sc.id]: true,
               });
             }}
             name={{
@@ -1051,7 +1042,7 @@ export const ChannelGroupsMasterDetail = (
           onToggleVisibility={() => {
             setChannelVisibilities({
               ...channelVisibilities,
-              [sc.name]: false,
+              [sc.id]: false,
             });
           }}
           name={{

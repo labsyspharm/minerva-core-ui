@@ -236,7 +236,7 @@ function legendRowVisible(
   if (channel.group_uuid && channel.channel_uuid) {
     return isGroupRowVisible(channelGroupRowVisibilities, channel.channel_uuid);
   }
-  return isStackVisible(channelVisibilities, channel.name);
+  return isStackVisible(channelVisibilities, channel.source_uuid);
 }
 
 type LegendRowProps = {

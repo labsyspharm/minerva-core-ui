@@ -287,7 +287,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     }
     setChannelVisibilities({
       ...channelVisibilities,
-      [c.name]: !(channelVisibilities[c.name] ?? true),
+      [c.source_uuid]: !(channelVisibilities[c.source_uuid] ?? true),
     });
   };
 
