@@ -9,6 +9,7 @@ export interface DicomLoader extends Loader {
 export type DicomIndex = {
   series: string;
   modality: string;
+  sourceImageId: string;
   loader: DicomLoader;
   pyramids: {
     [k: string]: {

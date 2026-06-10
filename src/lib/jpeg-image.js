@@ -22,7 +22,7 @@ class JpegImage {
       "f62cdd1d845de7d402cbe0775627238038e6eebc1a5377fc7c431450eca491e3",
     ][Math.min(this.c, 1)]; // TODO
     const fname = `${zoom}_${x}_${y}.jpg`;
-    const url = ipath + "/" + lpath + "/" + fname;
+    const url = `${ipath}/${lpath}/${fname}`;
     /*    const response = await fetch(url);
     const decoder = new ImageDecoder({
       data: response.body,
@@ -40,13 +40,13 @@ class JpegImage {
     return { x, y, sample, data };
   }
 
-  async _readRaster({ x, y, width, height, sample, signal }) {
+  async _readRaster({ x, y, width, height, sample }) {
     const { tileHeight, tileWidth } = this;
     const imageHeight = this.imageHeight;
     const imageWidth = this.imageWidth;
     const origin_x = x * this.tileWidth;
     const origin_y = y * this.tileHeight;
-    return await this.getTileOrStrip(x, y, sample, signal).then((tile) => {
+    return await this.getTileOrStrip(x, y, sample).then((tile) => {
       const fullTile = tileHeight * tileWidth;
       const ymax = Math.min(tileHeight, height, imageHeight - origin_y);
       const xmax = Math.min(tileWidth, width, imageWidth - origin_x);
@@ -87,7 +87,6 @@ class JpegImage {
       width,
       height,
       sample,
-      signal,
     });
     return raster;
   }

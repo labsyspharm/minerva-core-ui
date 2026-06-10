@@ -1,8 +1,9 @@
 /** Viewer shape types and pure geometry helpers (no Zustand). Distinct from persisted `StoryShape` in `documentSchema`. */
+import type { Layer } from "@deck.gl/core";
 
-export interface OverlayLayer {
+export type OverlayLayer = Layer & {
   id: string;
-}
+};
 
 export type ShapeCommonMetadata = {
   createdAt?: Date;

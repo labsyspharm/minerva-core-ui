@@ -75,16 +75,40 @@ const loadJpeg = (meta) => {
       Pixels: {
         Channels: [
           {
+            ID: "DNA1",
             Name: "DNA1",
             SamplesPerPixel: 1,
           },
           {
+            ID: "AF488",
             Name: "AF488",
             SamplesPerPixel: 1,
           },
         ],
         Type: "Uint16",
+        // TODO  -- using placeholder data
+        ID: "TODO",
+        DimensionOrder: "TCZYX",
+        SamplesPerPixel: 1,
+        SizeT: 1,
+        SizeC: 2,
+        SizeZ: 1,
+        SizeY: height,
+        SizeX: width,
+        PhysicalSizeX: width,
+        PhysicalSizeY: height,
+        PhysicalSizeZ: 1,
+        PhysicalSizeXUnit: "µm",
+        PhysicalSizeYUnit: "µm",
+        PhysicalSizeZUnit: "µm",
+        BigEndian: false,
+        TiffData: null,
       },
+      // TODO  -- using placeholder data
+      ID: "TODO",
+      AquisitionDate: new Date().toISOString().split("T")[0],
+      Description: "",
+      ROIs: [],
     },
   };
 };

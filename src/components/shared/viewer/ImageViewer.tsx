@@ -3,8 +3,9 @@ import {
   OrthographicView,
   type OrthographicViewState,
 } from "@deck.gl/core";
+import type { TileLayer } from "@deck.gl/geo-layers";
 import Deck, { type DeckGLRef } from "@deck.gl/react";
-import { MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
+import { type MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 
@@ -13,8 +14,6 @@ import "@deck.gl/widgets/stylesheet.css";
 import type { Layer } from "@deck.gl/core";
 import { PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
-import { createTileLayers, loadDicom } from "@/lib/imaging/dicom.js";
-import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import { createJpegLayers, loadJpeg } from "@/lib/imaging/jpeg.js";
 import type { Config, Loader } from "@/lib/imaging/viv";
 import type { Story } from "@/lib/legacy/exhibit";
@@ -39,6 +38,8 @@ import {
   WAYPOINT_THUMBNAIL_PIXEL_SIZE,
 } from "@/lib/waypoints/waypointThumbnail";
 
+type ImageLayer = TileLayer | typeof MultiscaleImageLayer;
+
 type ItemRegistryChannel = {
   name: string;
   color: string;
@@ -60,12 +61,36 @@ export type OmeLoaderEntry = {
 
 export type JpegLoaderEntry = {
   loader: Loader;
+  sourceImageId: string;
 };
 
+export type LoaderListItem = {
+  loader: Loader;
+  modality: string;
+  sourceImageId?: string;
+};
+export type LoaderList = LoaderListItem[];
+
+type MainSettings = {
+  selections: readonly { c: number }[];
+  contrastLimits: readonly [number, number][];
+  colors: readonly [number, number, number][];
+};
+
+type LayerArgs = {
+  mainSettings: MainSettings;
+  viewportSize: {
+    width: number;
+    height: number;
+  };
+};
+type AnyLayer = Layer | OverlayLayer;
+type LayerFunction = (a: LayerArgs) => Layer;
+
 export type ImageViewerProps = {
-  omeLoaderEntries: OmeLoaderEntry[];
   stories: Story[];
-  dicomIndexList: DicomIndex[];
+  layerFunctions: LayerFunction[];
+  loaderList: LoaderList;
   viewerConfig: Config;
   overlayLayers?: OverlayLayer[];
   activeTool: string;
@@ -159,12 +184,7 @@ const toSettingsInternal = (
 };
 
 /** Fold {@link ChannelRendering} into Viv settings without touching the document store. */
-function applyChannelRendering<
-  S extends {
-    contrastLimits: readonly [number, number][];
-    colors: readonly [number, number, number][];
-  },
->(
+function applyChannelRendering<S extends MainSettings>(
   settings: S,
   live: ChannelRendering | null,
   activeChannelGroupId: string | null,
@@ -203,8 +223,8 @@ function applyChannelRendering<
 export const ImageViewer = (props: ImageViewerProps) => {
   const windowSize = useWindowSize();
   const {
-    omeLoaderEntries,
-    dicomIndexList,
+    loaderList,
+    layerFunctions,
     groups,
     overlayLayers = [],
     activeTool,
@@ -217,6 +237,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
     squareViewportBorderWidth = 2,
   } = props;
+  console.log({
+    loaderList,
+    ok: "ok",
+  });
   const {
     activeChannelGroupId,
     channelVisibilities,
@@ -251,9 +275,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return () => resizeObserver.disconnect();
   }, []);
 
-  const documentMainSettingsOmeList = useMemo(() => {
-    const modality = "Colorimetric";
-    return omeLoaderEntries.map(({ loader, sourceImageId }) =>
+  const documentMainSettingsJpegList = useMemo(() => {
+    return [];
+  }, []);
+
+  const documentMainSettingsList = useMemo(() => {
+    return loaderList.map(({ loader, modality, sourceImageId }) =>
       toSettingsInternal(
         loader,
         modality,
@@ -265,45 +292,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
       ),
     );
   }, [
-    omeLoaderEntries,
+    loaderList,
     groups,
     activeChannelGroupId,
     channelVisibilities,
     viewerConfig.toSettings,
   ]);
-
-  const documentMainSettingsDicomList = useMemo(() => {
-    return dicomIndexList.map((dicomIndex) => {
-      const { modality } = dicomIndex;
-      return toSettingsInternal(
-        dicomIndex.loader,
-        modality,
-        groups,
-        activeChannelGroupId,
-        channelVisibilities,
-        viewerConfig.toSettings,
-      );
-    });
-  }, [
-    dicomIndexList,
-    groups,
-    activeChannelGroupId,
-    channelVisibilities,
-    viewerConfig.toSettings,
-  ]);
-
-  const documentMainSettingsList = useMemo(
-    () =>
-      omeLoaderEntries.length > 0
-        ? documentMainSettingsOmeList
-        : documentMainSettingsDicomList,
-    [
-      omeLoaderEntries,
-      documentMainSettingsOmeList,
-      documentMainSettingsDicomList,
-    ],
-  );
-  console.log({ documentMainSettingsList });
 
   const mainSettingsList = useMemo(
     () =>
@@ -323,6 +317,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
     ],
   );
 
+  console.log({ mainSettingsList, documentMainSettingsList });
+
   /**
    * Waypoints, overlays, SAM2, and initial pan/zoom use **only the first stacked
    * image** (`mainSettingsList[0]`, i.e. first OME file or first DICOM series).
@@ -333,23 +329,17 @@ export const ImageViewer = (props: ImageViewerProps) => {
   );
 
   const firstLoader = useMemo(
-    () =>
-      mainSettingsList.length > 0
-        ? mainSettingsList[0].loader
-        : {
-            data: null,
-            metadata: null,
-          },
-    [mainSettingsList],
+    () => (loaderList.length > 0 ? loaderList[0] : null),
+    [loaderList],
   );
 
   // Memoize image shape computation
   const imageShape = useMemo(() => {
-    if (firstLoader.data === null) {
+    if (firstLoader === null) {
       return { x: 0, y: 0 };
     }
-    const shape_labels = firstLoader.data[0].labels;
-    const shape_values = firstLoader.data[0].shape;
+    const shape_labels = firstLoader.loader.data[0].labels;
+    const shape_values = firstLoader.loader.data[0].shape;
     return Object.fromEntries(shape_labels.map((k, i) => [k, shape_values[i]]));
   }, [firstLoader]);
 
@@ -369,12 +359,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // Memoize initial view state
   const initialViewState = useMemo(() => {
-    const n_levels = firstLoader.data === null ? 1 : firstLoader.data.length;
+    const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
     return {
       zoom: -n_levels,
       target: [imageShape.x / 2, imageShape.y / 2, 0],
     } as OrthographicViewState;
-  }, [firstLoader.data, imageShape]);
+  }, [firstLoader, imageShape]);
 
   const [viewState, setViewState] =
     useState<OrthographicViewState>(initialViewState);
@@ -402,7 +392,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // Update viewState only on initial mount (not when loader changes)
   useEffect(() => {
-    if (firstLoader.data !== null && !hasInitialized.current) {
+    if (firstLoader !== null && !hasInitialized.current) {
       setViewState(initialViewState);
       // Set initial viewport zoom for line width calculations
       if (typeof initialViewState.zoom === "number") {
@@ -410,7 +400,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       }
       hasInitialized.current = true;
     }
-  }, [initialViewState, firstLoader.data, setViewportZoom]);
+  }, [initialViewState, firstLoader, setViewportZoom]);
 
   // Sync viewport size and visible world bounds for brush (canvas-aligned mask)
   useEffect(() => {
@@ -446,15 +436,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const setSam2ViewportSize = useAppStore((s) => s.setSam2ViewportSize);
   useEffect(() => {
     if (
-      omeLoaderEntries.length > 0 &&
-      firstLoader?.data &&
+      firstLoader?.loader &&
       mainSettingsList.length > 0 &&
       imageShape.x > 0 &&
       imageShape.y > 0
     ) {
       const settings = mainSettingsList[0];
       const fetcher = createSam2ImageFetcher(
-        firstLoader,
+        { data: firstLoader.loader.data },
         {
           selections: settings.selections,
           colors: settings.colors,
@@ -464,19 +453,15 @@ export const ImageViewer = (props: ImageViewerProps) => {
         imageShape.x,
         imageShape.y,
       );
-      setSam2ImageFetcher(fetcher);
+      //TODO
+      //setSam2ImageFetcher(fetcher);
     } else {
-      setSam2ImageFetcher(null);
+      //TODO
+      //setSam2ImageFetcher(null);
     }
-    return () => setSam2ImageFetcher(null);
-  }, [
-    omeLoaderEntries,
-    firstLoader,
-    mainSettingsList,
-    imageShape.x,
-    imageShape.y,
-    setSam2ImageFetcher,
-  ]);
+    //TODO
+    //return () => setSam2ImageFetcher(null);
+  }, [firstLoader, mainSettingsList, imageShape.x, imageShape.y]);
 
   useEffect(() => {
     setSam2ViewState(viewState);
@@ -596,39 +581,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     setViewportZoom,
   ]);
 
-  // Memoize main props to prevent unnecessary layer recreation
-  // Include contrast limits in ID to force layer recreation when they change
-  // This prevents flash when switching channel groups
-  const omeTiffPropsList = useMemo(() => {
-    return mainSettingsList.map((mainSettings, i) => {
-      const selectionId = (mainSettings.selections || [])
-        .map(({ c }) => c)
-        .join("-");
-      return {
-        ...viewportSize,
-        id: `mainLayer-${i}-${selectionId}`,
-        ...mainSettings,
-        loader: mainSettings.loader.data,
-      };
-    });
-  }, [viewportSize, mainSettingsList]);
-
-  const dicomSources = useMemo(() => {
-    return dicomIndexList.map((opts) => {
-      const { series, pyramids, modality } = opts;
-      return {
-        series,
-        pyramids,
-        modality,
-        dicomLoader: loadDicom({
-          pyramids,
-          series,
-          little_endian: true,
-        }),
-      };
-    });
-  }, [dicomIndexList]);
-
   const jpegLayers = useMemo(() => {
     if (mainSettingsList.length === 0) {
       return [];
@@ -650,42 +602,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
     ];
   }, [mainSettingsList]);
 
-  // Memoize dicom layer
-  const dicomLayers = useMemo(() => {
-    if (omeLoaderEntries.length > 0) {
-      return [];
-    }
-    return dicomSources.map((dicomSource, i) => {
-      const { series, pyramids, modality } = dicomSource;
-      const rgbImage = modality === "Brightfield";
-      // Use deterministic ID based on series to prevent layer recreation on settings change
-      const imageID = `dicom-${series}-${i}`;
-      return createTileLayers({
-        pyramids,
-        dicomLoader: dicomSource.dicomLoader,
-        settings: mainSettingsList[i],
-        rgbImage,
-        imageID,
-      });
-    });
-  }, [omeLoaderEntries, dicomSources, mainSettingsList]);
-
-  // Memoize image layers
-  const omeTiffLayers = useMemo(
-    () =>
-      omeLoaderEntries.length === 0
-        ? []
-        : omeTiffPropsList.map(
-            (layerProps) => new MultiscaleImageLayer(layerProps),
-          ),
-    [omeLoaderEntries, omeTiffPropsList],
-  );
-
   // Memoize scale bar layer
   const scaleBarLayer = useMemo(() => {
     // Get physical size from loader metadata if available
-    const physicalSize = firstLoader.metadata?.Pixels?.PhysicalSizeX;
-    const unit = firstLoader.metadata?.Pixels?.PhysicalSizeXUnit || "µm";
+    const pixels = firstLoader?.loader?.metadata?.Pixels;
+    const physicalSize = pixels?.PhysicalSizeX;
+    const unit = pixels?.PhysicalSizeXUnit || "µm";
     const units = new Set(
       [
         "Y",
@@ -758,27 +680,26 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }, [imageShape.x, imageShape.y]);
 
   const allLayers = useMemo(() => {
-    console.log({ jpegLayers });
-    const imageStack =
-      jpegLayers.length > 0
-        ? jpegLayers
-        : omeTiffLayers.length > 0
-          ? omeTiffLayers
-          : dicomLayers;
-    const layers: Layer[] = [
+    const layers: AnyLayer[] = [
       worldPickSurfaceLayer,
-      ...imageStack,
+      ...layerFunctions.map((fn, i) => {
+        const mainSettings = mainSettingsList[i];
+        return fn({
+          mainSettings,
+          viewportSize,
+        });
+      }),
       ...overlayLayers,
     ];
     if (scaleBarLayer) layers.push(scaleBarLayer);
     return layers;
   }, [
-    dicomLayers,
-    jpegLayers,
-    omeTiffLayers,
+    layerFunctions,
     overlayLayers,
     scaleBarLayer,
     worldPickSurfaceLayer,
+    mainSettingsList,
+    viewportSize,
   ]);
 
   const squareViewportStyle = useMemo(() => {
@@ -980,19 +901,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // LoadingWidget ref for onRedraw callback
   const loadingWidgetRef = useRef<{
-    onRedraw: (params: { layers: Layer[] }) => void;
+    onRedraw: (params: { layers: AnyLayer[] }) => void;
   }>(null);
 
   const handleAfterRender = useCallback(() => {
     if (loadingWidgetRef.current) {
       loadingWidgetRef.current.onRedraw({ layers: allLayers });
     }
-    const imageStack = omeTiffLayers.length > 0 ? omeTiffLayers : dicomLayers;
     const loaded =
-      imageStack.length > 0 &&
-      imageStack.every((layer) => (layer as { isLoaded?: boolean }).isLoaded);
+      allLayers.length > 0 &&
+      allLayers.every((layer) => (layer as { isLoaded?: boolean }).isLoaded);
     setViewerImageLayersLoaded(loaded);
-  }, [allLayers, dicomLayers, omeTiffLayers, setViewerImageLayersLoaded]);
+  }, [allLayers, setViewerImageLayersLoaded]);
 
   useEffect(() => {
     return () => {
@@ -1015,6 +935,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return null;
   }
 
+  console.log({ allLayers });
   return (
     <Main slot="image" ref={rootRef}>
       <Deck

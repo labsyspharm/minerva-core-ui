@@ -1,3 +1,4 @@
+import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 import type { FormEventHandler } from "react";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -13,6 +14,7 @@ import { Upload } from "@/components/shared/Upload";
 import {
   ImageViewer,
   type JpegLoaderEntry,
+  type LoaderList,
   type OmeLoaderEntry,
 } from "@/components/shared/viewer/ImageViewer";
 import type {
@@ -26,7 +28,11 @@ import {
   extractDistributions,
   mutableItemRegistry,
 } from "@/lib/authoring/config";
-import { loadDicomWeb, parseDicomWeb } from "@/lib/imaging/dicom.js";
+import {
+  createTileLayers,
+  loadDicomWeb,
+  parseDicomWeb,
+} from "@/lib/imaging/dicom.js";
 import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
 import {
   findFile,
@@ -267,7 +273,7 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
 
   for (const im of images) {
     if (!im.source) continue;
-    if (im.source?.url === "crc-export") {
+    if ("url" in im.source && im.source.url === "crc-export") {
       // TODO
       const imageHeight = 27120; //TODO
       const imageWidth = 26139; //TODO
@@ -315,6 +321,7 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
           pyramids,
           modality,
           loader,
+          sourceImageId: "", // TODO
         });
         break;
       }
@@ -884,6 +891,7 @@ const Content = (props: Props) => {
           pyramids,
           modality,
           loader,
+          sourceImageId: "", // TODO
         };
       }),
     );
@@ -1377,13 +1385,64 @@ const Content = (props: Props) => {
     };
   }, [imageViewerStateSignature]);
 
+  const loaderList: LoaderList = [].concat(
+    dicomIndexList.map(({ sourceImageId, loader, modality }) => {
+      return {
+        sourceImageId,
+        loader,
+        modality,
+        Pixels: {
+          PhysicalSizeX: 1, //TODO
+          PhysicalSizeXUnit: "µm", //TODO
+        },
+      };
+    }),
+    omeLoaderEntries.map(({ sourceImageId, loader }) => {
+      return {
+        sourceImageId,
+        loader,
+        modality: "Colorimetric",
+      };
+    }),
+  );
+  const layerFunctions = React.useMemo(() => {
+    return [].concat(
+      dicomIndexList.map((dicomSource, i) => {
+        const { series, pyramids, loader, modality } = dicomSource;
+        const rgbImage = modality === "Brightfield";
+        // Use deterministic ID based on series to prevent layer recreation on settings change
+        const imageID = `dicom-${series}-${i}`;
+        return ({ mainSettings }) => {
+          return createTileLayers({
+            pyramids,
+            dicomLoader: loader,
+            settings: mainSettings,
+            rgbImage,
+            imageID,
+          });
+        };
+      }),
+      omeLoaderEntries.map(({ loader }, i) => {
+        return ({ mainSettings, viewportSize }) => {
+          const selections = mainSettings.selections || [];
+          const selectionId = selections.map(({ c }) => c).join("-");
+          return new MultiscaleImageLayer({
+            ...viewportSize,
+            id: `mainLayer-${i}-${selectionId}`,
+            ...mainSettings,
+            loader: loader.data,
+          });
+        };
+      }),
+    );
+  }, [dicomIndexList, omeLoaderEntries]);
   const imageProps = React.useMemo(() => {
     return {
       ChannelGroups: channelGroups,
       SourceChannels: sourceChannels,
       jpegLoaderEntries,
-      omeLoaderEntries,
-      dicomIndexList,
+      loaderList,
+      layerFunctions,
       marker_names: itemRegistryMarkerNames,
       groups: itemRegistryGroups,
       stories,
@@ -1395,14 +1454,14 @@ const Content = (props: Props) => {
     channelGroups,
     sourceChannels,
     jpegLoaderEntries,
-    omeLoaderEntries,
-    dicomIndexList,
     itemRegistryMarkerNames,
     itemRegistryGroups,
     stories,
     name,
     showSquareViewportOverlay,
     viewerImageKey,
+    layerFunctions,
+    loaderList,
   ]);
 
   // Use Zustand store for overlay state management

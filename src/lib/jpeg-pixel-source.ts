@@ -1,14 +1,49 @@
+import type { JpegImage } from "./jpeg-image";
+
+type Dtype =
+  | "Uint8"
+  | "Uint16"
+  | "Uint32"
+  | "Int8"
+  | "Int16"
+  | "Int32"
+  | "Float32"
+  | "Float64";
+type Selection = Record<"z" | "t" | "c", number>;
+type Labels = [...("y" | "x" | "z" | "t" | "c")[], "y", "x"];
+type Shape = [number, number, number, number, number];
+type ReadRasterProps = {
+  x?: number;
+  y?: number;
+  height?: number;
+  width?: number;
+};
+
 class JpegPixelSource {
+  _indexer: (s: Selection) => Promise<typeof JpegImage>;
+  tileSize: number;
+  tileCache: Record<
+    string,
+    {
+      data: Uint16Array<ArrayBuffer>;
+      width: number;
+      height: number;
+    }
+  >;
+  labels: Labels;
+  shape: Shape;
+  dtype: Dtype;
+
   constructor(indexer, tileSize, shape) {
     this._indexer = indexer;
     this.tileSize = tileSize;
     this.tileCache = {};
     this.labels = ["z", "c", "t", "y", "x"];
+    this.dtype = "Uint16";
     this.shape = shape;
   }
 
   async getRaster({ selection, signal }) {
-    const _image = await this._indexer(selection);
     return await this.getTile({ x: 0, y: 0, selection, signal });
   }
 
@@ -19,7 +54,7 @@ class JpegPixelSource {
     return this._readRasters(image, { x, y, width, height, signal });
   }
 
-  async _readRasters(image, props = {}) {
+  async _readRasters(image: typeof JpegImage, props: ReadRasterProps = {}) {
     const index = [image.c, props.x, props.y].join("-");
     let raster = this.tileCache[index];
     if (!raster) {
