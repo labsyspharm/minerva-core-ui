@@ -459,8 +459,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
       //TODO
       //setSam2ImageFetcher(null);
     }
-    //TODO
-    //return () => setSam2ImageFetcher(null);
   }, [firstLoader, mainSettingsList, imageShape.x, imageShape.y]);
 
   useEffect(() => {

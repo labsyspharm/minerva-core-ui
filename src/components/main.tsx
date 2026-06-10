@@ -1423,11 +1423,10 @@ const Content = (props: Props) => {
         };
       }),
       omeLoaderEntries.map(({ loader }, i) => {
-        return ({ mainSettings, viewportSize }) => {
+        return ({ mainSettings }) => {
           const selections = mainSettings.selections || [];
           const selectionId = selections.map(({ c }) => c).join("-");
           return new MultiscaleImageLayer({
-            ...viewportSize,
             id: `mainLayer-${i}-${selectionId}`,
             ...mainSettings,
             loader: loader.data,
