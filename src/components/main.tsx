@@ -70,6 +70,10 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import {
+  setDocumentExternalSyncCallback,
+  useDocumentUndoKeyboard,
+} from "@/lib/stores/documentUndo";
+import {
   applyGroupChannelRange,
   applyLoaderPixelSizeToImage,
   applySourceChannelsToImages,
@@ -314,6 +318,7 @@ const Content = (props: Props) => {
   /** Remote demo image / DICOM bootstrap from `index.tsx` (`pnpm run demo` only). */
   const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
   useStoryAutoSave();
+  useDocumentUndoKeyboard();
   const storyTitleForTab = useDocumentStore((s) => s.metadata.title ?? "");
   React.useEffect(() => {
     const label = storyTitleForTab.trim()
@@ -530,6 +535,23 @@ const Content = (props: Props) => {
   useEffect(() => {
     setItemsRef.current = setItems;
   }, [setItems]);
+
+  /** Keep legacy `config.ItemRegistry` aligned when undo/redo restores document slices. */
+  useEffect(() => {
+    setDocumentExternalSyncCallback(() => {
+      const doc = useDocumentStore.getState();
+      setItemsRef.current({
+        ChannelGroups: doc.channelGroups,
+        SourceChannels: flattenImageChannelsInDocumentOrder(doc.images),
+        Stories: waypointsToConfigWaypoints(
+          documentWaypoints(doc),
+          useAppStore.getState().waypointAuthoring,
+        ),
+        Shapes: documentShapes(doc),
+      });
+    });
+    return () => setDocumentExternalSyncCallback(null);
+  }, []);
 
   const [fileName, setFileName] = useState("");
   /** Full URL of the last OME-TIFF-URL load (Images tab label); cleared for local/DICOM. */

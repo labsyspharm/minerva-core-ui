@@ -8,8 +8,12 @@
  *
  * `activeStoryId` is the current story. Dexie stores a global “last active” id shared
  * across tabs.
+ *
+ * Undo/redo (zundo `temporal`) tracks document slices only; see `documentUndo.ts`.
  */
 
+import hash from "stable-hash";
+import { temporal } from "zundo";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import {
@@ -135,166 +139,208 @@ export function documentShapes(s: DocumentStore): Shape[] {
   return s.shapes;
 }
 
+export type DocumentUndoState = Pick<
+  DocumentState,
+  "waypoints" | "shapes" | "channelGroups" | "images" | "metadata"
+>;
+
+function documentUndoEquality(
+  past: DocumentUndoState,
+  current: DocumentUndoState,
+): boolean {
+  return hash(past) === hash(current);
+}
+
+const documentTemporalOptions = {
+  partialize: (state: DocumentStore): DocumentUndoState => ({
+    waypoints: state.waypoints,
+    shapes: state.shapes,
+    channelGroups: state.channelGroups,
+    images: state.images,
+    metadata: state.metadata,
+  }),
+  limit: 100,
+  equality: documentUndoEquality,
+};
+
 export const useDocumentStore = create<DocumentStore>()(
-  devtools((set, get) => ({
-    ...createEmptyDocumentState(),
+  devtools(
+    temporal(
+      (set, get) => ({
+        ...createEmptyDocumentState(),
 
-    setActiveStoryId: (id) => set({ activeStoryId: id }),
+        setActiveStoryId: (id) => set({ activeStoryId: id }),
 
-    hydrateFromDocument: (input, activeStoryId) => {
-      const data = validateDocumentData(input);
-      const m = data.metadata;
-      set({
-        activeStoryId,
-        waypoints: [...data.waypoints],
-        shapes: [...data.shapes],
-        channelGroups: [...data.channelGroups],
-        images: [...data.images],
-        metadata: {
-          ...m,
-          id: m.id ?? activeStoryId,
+        hydrateFromDocument: (input, activeStoryId) => {
+          const data = validateDocumentData(input);
+          const m = data.metadata;
+          set({
+            activeStoryId,
+            waypoints: [...data.waypoints],
+            shapes: [...data.shapes],
+            channelGroups: [...data.channelGroups],
+            images: [...data.images],
+            metadata: {
+              ...m,
+              id: m.id ?? activeStoryId,
+            },
+          });
+          clearDocumentHistory();
         },
-      });
-    },
 
-    loadDocument: (input) => {
-      const data = validateDocumentData(input);
-      set((state) => {
-        const m = data.metadata;
-        return {
-          waypoints: [...data.waypoints],
-          shapes: [...data.shapes],
-          channelGroups: [...data.channelGroups],
-          images: [...data.images],
-          metadata: {
-            ...m,
-            id: m.id ?? state.activeStoryId ?? undefined,
-          },
-          activeStoryId: state.activeStoryId,
-        };
-      });
-    },
+        loadDocument: (input) => {
+          const data = validateDocumentData(input);
+          set((state) => {
+            const m = data.metadata;
+            return {
+              waypoints: [...data.waypoints],
+              shapes: [...data.shapes],
+              channelGroups: [...data.channelGroups],
+              images: [...data.images],
+              metadata: {
+                ...m,
+                id: m.id ?? state.activeStoryId ?? undefined,
+              },
+              activeStoryId: state.activeStoryId,
+            };
+          });
+          clearDocumentHistory();
+        },
 
-    toDocumentData: () => {
-      const s = get();
-      return {
-        metadata: { ...s.metadata },
-        waypoints: [...s.waypoints],
-        shapes: [...s.shapes],
-        channelGroups: [...s.channelGroups],
-        images: [...s.images],
-      };
-    },
+        toDocumentData: () => {
+          const s = get();
+          return {
+            metadata: { ...s.metadata },
+            waypoints: [...s.waypoints],
+            shapes: [...s.shapes],
+            channelGroups: [...s.channelGroups],
+            images: [...s.images],
+          };
+        },
 
-    resetDocument: () => {
-      set((state) => ({
-        ...createEmptyDocumentSlices(),
-        activeStoryId: state.activeStoryId,
-      }));
-    },
+        resetDocument: () => {
+          set((state) => ({
+            ...createEmptyDocumentSlices(),
+            activeStoryId: state.activeStoryId,
+          }));
+          clearDocumentHistory();
+        },
 
-    clearForLibraryView: () => {
-      set({
-        ...createEmptyDocumentSlices(),
-        activeStoryId: null,
-      });
-    },
+        clearForLibraryView: () => {
+          set({
+            ...createEmptyDocumentSlices(),
+            activeStoryId: null,
+          });
+          clearDocumentHistory();
+        },
 
-    switchStory: async (id) => {
-      const s = get();
-      if (s.activeStoryId) {
-        await saveStoryDocument(s.activeStoryId, s.toDocumentData());
-      }
-      const rec = await getStoryRecord(id);
-      if (!rec) {
-        throw new Error(`Story not found: ${id}`);
-      }
-      await persistActiveStoryId(rec.id);
-      set({
-        activeStoryId: rec.id,
-        waypoints: [...rec.data.waypoints],
-        shapes: [...rec.data.shapes],
-        channelGroups: [...rec.data.channelGroups],
-        images: [...rec.data.images],
-        metadata: { ...rec.data.metadata },
-      });
-    },
+        switchStory: async (id) => {
+          const s = get();
+          if (s.activeStoryId) {
+            await saveStoryDocument(s.activeStoryId, s.toDocumentData());
+          }
+          const rec = await getStoryRecord(id);
+          if (!rec) {
+            throw new Error(`Story not found: ${id}`);
+          }
+          await persistActiveStoryId(rec.id);
+          set({
+            activeStoryId: rec.id,
+            waypoints: [...rec.data.waypoints],
+            shapes: [...rec.data.shapes],
+            channelGroups: [...rec.data.channelGroups],
+            images: [...rec.data.images],
+            metadata: { ...rec.data.metadata },
+          });
+          clearDocumentHistory();
+        },
 
-    createStory: async (title) => {
-      const s = get();
-      if (s.activeStoryId) {
-        await saveStoryDocument(s.activeStoryId, s.toDocumentData());
-      }
-      const rec = await createStoryRecord(title);
-      await persistActiveStoryId(rec.id);
-      set({
-        activeStoryId: rec.id,
-        waypoints: [...rec.data.waypoints],
-        shapes: [...rec.data.shapes],
-        channelGroups: [...rec.data.channelGroups],
-        images: [...rec.data.images],
-        metadata: { ...rec.data.metadata },
-      });
-      return rec.id;
-    },
+        createStory: async (title) => {
+          const s = get();
+          if (s.activeStoryId) {
+            await saveStoryDocument(s.activeStoryId, s.toDocumentData());
+          }
+          const rec = await createStoryRecord(title);
+          await persistActiveStoryId(rec.id);
+          set({
+            activeStoryId: rec.id,
+            waypoints: [...rec.data.waypoints],
+            shapes: [...rec.data.shapes],
+            channelGroups: [...rec.data.channelGroups],
+            images: [...rec.data.images],
+            metadata: { ...rec.data.metadata },
+          });
+          clearDocumentHistory();
+          return rec.id;
+        },
 
-    deleteStory: async (id) => {
-      await deleteStoryRecord(id);
-      await deleteFileHandlesForStory(id);
-      const current = get().activeStoryId;
-      if (current !== id) return;
+        deleteStory: async (id) => {
+          await deleteStoryRecord(id);
+          await deleteFileHandlesForStory(id);
+          const current = get().activeStoryId;
+          if (current !== id) return;
 
-      const summaries = await listStorySummaries();
-      if (summaries.length === 0) {
-        const rec = await createStoryRecord("Untitled Story");
-        await persistActiveStoryId(rec.id);
-        set({
-          activeStoryId: rec.id,
-          waypoints: [...rec.data.waypoints],
-          shapes: [...rec.data.shapes],
-          channelGroups: [...rec.data.channelGroups],
-          images: [...rec.data.images],
-          metadata: { ...rec.data.metadata },
-        });
-        return;
-      }
+          const summaries = await listStorySummaries();
+          if (summaries.length === 0) {
+            const rec = await createStoryRecord("Untitled Story");
+            await persistActiveStoryId(rec.id);
+            set({
+              activeStoryId: rec.id,
+              waypoints: [...rec.data.waypoints],
+              shapes: [...rec.data.shapes],
+              channelGroups: [...rec.data.channelGroups],
+              images: [...rec.data.images],
+              metadata: { ...rec.data.metadata },
+            });
+            clearDocumentHistory();
+            return;
+          }
 
-      const next = summaries[0];
-      if (!next) {
-        throw new Error("deleteStory: expected a remaining story");
-      }
-      const rec = await getStoryRecord(next.id);
-      if (!rec) {
-        throw new Error(`Story record missing after delete: ${next.id}`);
-      }
-      await persistActiveStoryId(rec.id);
-      set({
-        activeStoryId: rec.id,
-        waypoints: [...rec.data.waypoints],
-        shapes: [...rec.data.shapes],
-        channelGroups: [...rec.data.channelGroups],
-        images: [...rec.data.images],
-        metadata: { ...rec.data.metadata },
-      });
-    },
+          const next = summaries[0];
+          if (!next) {
+            throw new Error("deleteStory: expected a remaining story");
+          }
+          const rec = await getStoryRecord(next.id);
+          if (!rec) {
+            throw new Error(`Story record missing after delete: ${next.id}`);
+          }
+          await persistActiveStoryId(rec.id);
+          set({
+            activeStoryId: rec.id,
+            waypoints: [...rec.data.waypoints],
+            shapes: [...rec.data.shapes],
+            channelGroups: [...rec.data.channelGroups],
+            images: [...rec.data.images],
+            metadata: { ...rec.data.metadata },
+          });
+          clearDocumentHistory();
+        },
 
-    setWaypoints: (waypoints) => set(() => ({ waypoints: [...waypoints] })),
+        setWaypoints: (waypoints) => set(() => ({ waypoints: [...waypoints] })),
 
-    setShapes: (shapes) => set(() => ({ shapes: [...shapes] })),
+        setShapes: (shapes) => set(() => ({ shapes: [...shapes] })),
 
-    setChannelGroups: (channelGroups) =>
-      set(() => ({ channelGroups: [...channelGroups] })),
+        setChannelGroups: (channelGroups) =>
+          set(() => ({ channelGroups: [...channelGroups] })),
 
-    setImages: (images) => set(() => ({ images: [...images] })),
+        setImages: (images) => set(() => ({ images: [...images] })),
 
-    /** Prefer `get()` + object `set` (not `set(fn)`) so devtools middleware always merges metadata reliably. */
-    setMetadata: (patch) => {
-      const s = get();
-      set({ metadata: { ...s.metadata, ...patch } });
-    },
+        /** Prefer `get()` + object `set` (not `set(fn)`) so devtools middleware always merges metadata reliably. */
+        setMetadata: (patch) => {
+          const s = get();
+          set({ metadata: { ...s.metadata, ...patch } });
+        },
 
-    persistFileHandle: (key, handle) => persistFileHandleToDb(key, handle),
+        persistFileHandle: (key, handle) => persistFileHandleToDb(key, handle),
 
-    getFileHandle: (key) => loadFileHandleFromDb(key),
-  })),
+        getFileHandle: (key) => loadFileHandleFromDb(key),
+      }),
+      documentTemporalOptions,
+    ),
+    { name: "documentStore" },
+  ),
 );
+
+export function clearDocumentHistory(): void {
+  useDocumentStore.temporal.getState().clear();
+}

@@ -12,7 +12,7 @@ const toChannelItem = (
     static eventHandlerKeys = [ ];
 
     static get observedAttributes() {
-      return ["r", "g", "b", "histogram_loading"];
+      return ["r", "g", "b", "histogram_loading", "lower_range", "upper_range"];
     }
 
     _updateHistogramLoadingOverlay() {
@@ -27,10 +27,12 @@ const toChannelItem = (
       }
     }
 
+    _rangeEditorEl() {
+      return this.shadowRoot?.querySelector("[data-contrast-range-editor]");
+    }
+
     _syncRangeEditorSliderColor() {
-      const el = this.shadowRoot?.querySelector(
-        "[data-contrast-range-editor]",
-      );
+      const el = this._rangeEditorEl();
       if (!el) return;
       const R = parseInt(this.getAttribute("r"), 10);
       const G = parseInt(this.getAttribute("g"), 10);
@@ -41,9 +43,22 @@ const toChannelItem = (
       el.style.setProperty("--slider-background", `rgb(${r},${g},${b})`);
     }
 
+    /** Push contrast limits into the nested range editor (e.g. document undo/redo). */
+    _syncRangeEditorLimits() {
+      const el = this._rangeEditorEl();
+      if (!el) return;
+      const lo = this.getAttribute("lower_range");
+      const hi = this.getAttribute("upper_range");
+      if (lo != null) el.setAttribute("lower_range", lo);
+      if (hi != null) el.setAttribute("upper_range", hi);
+    }
+
     attributeChangedCallback(name, _old, _new) {
       if (name === "r" || name === "g" || name === "b") {
         this._syncRangeEditorSliderColor();
+      }
+      if (name === "lower_range" || name === "upper_range") {
+        this._syncRangeEditorLimits();
       }
       if (name === "histogram_loading") {
         this._updateHistogramLoadingOverlay();

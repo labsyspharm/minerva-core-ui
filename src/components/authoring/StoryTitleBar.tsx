@@ -1,5 +1,6 @@
 import * as React from "react";
 import styled from "styled-components";
+import { DocumentUndoControls } from "@/components/authoring/DocumentUndoControls";
 import { StoryAuthorOverflowMenu } from "@/components/authoring/StoryAuthorOverflowMenu";
 import PlayIcon from "@/components/shared/icons/play.svg?react";
 import { storyChromeBannerBarCss } from "@/components/shared/storyChromeBanner";
@@ -134,6 +135,7 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
       {authorUiTagName ? (
         <StoryAuthorOverflowMenu authorUiTagName={authorUiTagName} />
       ) : null}
+      <DocumentUndoControls />
       <TitleFieldWrap
         onClick={() => {
           if (!editing) setEditing(true);

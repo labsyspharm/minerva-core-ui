@@ -115,6 +115,7 @@
     "vite-plugin-svgr": "^4.3.0",
     "web-dialog": "^0.0.11",
     "zod": "^3.25.76",
+    "zundo": "^2.3.0",
     "zustand": "^5.0.8"
   },
   "devDependencies": {

@@ -833,7 +833,7 @@ export const ChannelGroupsMasterDetail = (
                   const legacyChannelItem =
                     gc &&
                     React.createElement(props.channelItemElement, {
-                      key: `embed-${ch.channelUUID}-${ch.sourceUUID}`,
+                      key: `embed-${ch.channelUUID}`,
                       ...channelItemAttrsFor(gc),
                       histogram_loading: loadingHistogramSourceIds.includes(
                         ch.sourceUUID,
