@@ -1,2 +1,3 @@
 onlyBuiltDependencies:
   - "@vivjs/extensions"
+  - "@vivjs/extensions@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/extensions"
