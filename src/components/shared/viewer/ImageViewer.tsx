@@ -14,7 +14,6 @@ import "@deck.gl/widgets/stylesheet.css";
 import type { Layer } from "@deck.gl/core";
 import { PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
-import { createJpegLayers, loadJpeg } from "@/lib/imaging/jpeg.js";
 import type { Config, Loader } from "@/lib/imaging/viv";
 import type { Story } from "@/lib/legacy/exhibit";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
@@ -237,10 +236,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
     squareViewportBorderWidth = 2,
   } = props;
-  console.log({
-    loaderList,
-    ok: "ok",
-  });
   const {
     activeChannelGroupId,
     channelVisibilities,
@@ -273,10 +268,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
     resizeObserver.observe(element);
     return () => resizeObserver.disconnect();
-  }, []);
-
-  const documentMainSettingsJpegList = useMemo(() => {
-    return [];
   }, []);
 
   const documentMainSettingsList = useMemo(() => {
@@ -316,8 +307,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
       channelGroups,
     ],
   );
-
-  console.log({ mainSettingsList, documentMainSettingsList });
 
   /**
    * Waypoints, overlays, SAM2, and initial pan/zoom use **only the first stacked
@@ -579,26 +568,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
     setViewportZoom,
   ]);
 
-  const jpegLayers = useMemo(() => {
-    if (mainSettingsList.length === 0) {
-      return [];
-    }
-    const imageHeight = 27120; //TODO
-    const imageWidth = 26139; //TODO
-    const imagePath = "crc-export";
-    const jpegLoader = loadJpeg({
-      imagePath,
-      imageHeight,
-      imageWidth,
-    });
-    return [
-      createJpegLayers({
-        jpegLoader: jpegLoader.data,
-        settings: mainSettingsList[0],
-        imagePath: imagePath,
+  const imageLayers = useMemo(() => {
+    return layerFunctions.map((fn, i) =>
+      fn({
+        mainSettings: mainSettingsList[i],
+        viewportSize,
       }),
-    ];
-  }, [mainSettingsList]);
+    );
+  }, [layerFunctions, mainSettingsList, viewportSize]);
 
   // Memoize scale bar layer
   const scaleBarLayer = useMemo(() => {
@@ -680,25 +657,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const allLayers = useMemo(() => {
     const layers: AnyLayer[] = [
       worldPickSurfaceLayer,
-      ...layerFunctions.map((fn, i) => {
-        const mainSettings = mainSettingsList[i];
-        return fn({
-          mainSettings,
-          viewportSize,
-        });
-      }),
+      ...imageLayers,
       ...overlayLayers,
     ];
     if (scaleBarLayer) layers.push(scaleBarLayer);
     return layers;
-  }, [
-    layerFunctions,
-    overlayLayers,
-    scaleBarLayer,
-    worldPickSurfaceLayer,
-    mainSettingsList,
-    viewportSize,
-  ]);
+  }, [worldPickSurfaceLayer, imageLayers, overlayLayers, scaleBarLayer]);
 
   const squareViewportStyle = useMemo(() => {
     const side = Math.max(
@@ -901,6 +865,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const loadingWidgetRef = useRef<{
     onRedraw: (params: { layers: AnyLayer[] }) => void;
   }>(null);
+  const imageLayersLoadedRef = useRef<boolean | null>(null);
 
   const handleAfterRender = useCallback(() => {
     if (loadingWidgetRef.current) {
@@ -909,7 +874,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
     const loaded =
       allLayers.length > 0 &&
       allLayers.every((layer) => (layer as { isLoaded?: boolean }).isLoaded);
-    setViewerImageLayersLoaded(loaded);
+    if (imageLayersLoadedRef.current !== loaded) {
+      imageLayersLoadedRef.current = loaded;
+      setViewerImageLayersLoaded(loaded);
+    }
   }, [allLayers, setViewerImageLayersLoaded]);
 
   useEffect(() => {
@@ -933,7 +901,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return null;
   }
 
-  console.log({ allLayers });
   return (
     <Main slot="image" ref={rootRef}>
       <Deck

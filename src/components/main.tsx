@@ -47,7 +47,7 @@ import {
   ensureOmeHistogramDistributions,
   mergeHistogramsIntoSourceChannelsByChannelId,
 } from "@/lib/imaging/histogramLazy";
-import { loadJpeg } from "@/lib/imaging/jpeg.js";
+import { createJpegLayers, loadJpeg } from "@/lib/imaging/jpeg.js";
 import { type Loader, toSettings } from "@/lib/imaging/viv";
 import { Pool } from "@/lib/imaging/workers/Pool";
 import type {
@@ -1078,9 +1078,13 @@ const Content = (props: Props) => {
     void (async () => {
       setIsLoadingImage(true);
       try {
-        const { omeLoaderEntries: ome, dicomIndexList: dicom } =
-          await hydrateLoadersFromImages(images);
+        const {
+          jpegLoaderEntries: jpeg,
+          omeLoaderEntries: ome,
+          dicomIndexList: dicom,
+        } = await hydrateLoadersFromImages(images);
         if (cancelled || gen !== loaderHydrationGenRef.current) return;
+        setJpegLoaderEntries(jpeg);
         setOmeLoaderEntries(ome);
         setDicomIndexList(dicom);
         const urlIm = images.find((i) => i.source?.kind === "url");
@@ -1385,25 +1389,36 @@ const Content = (props: Props) => {
     };
   }, [imageViewerStateSignature]);
 
-  const loaderList: LoaderList = [].concat(
-    dicomIndexList.map(({ sourceImageId, loader, modality }) => {
-      return {
-        sourceImageId,
-        loader,
-        modality,
-        Pixels: {
-          PhysicalSizeX: 1, //TODO
-          PhysicalSizeXUnit: "µm", //TODO
-        },
-      };
-    }),
-    omeLoaderEntries.map(({ sourceImageId, loader }) => {
-      return {
-        sourceImageId,
-        loader,
-        modality: "Colorimetric",
-      };
-    }),
+  const loaderList: LoaderList = React.useMemo(
+    () =>
+      [].concat(
+        dicomIndexList.map(({ sourceImageId, loader, modality }) => {
+          return {
+            sourceImageId,
+            loader,
+            modality,
+            Pixels: {
+              PhysicalSizeX: 1, //TODO
+              PhysicalSizeXUnit: "µm", //TODO
+            },
+          };
+        }),
+        omeLoaderEntries.map(({ sourceImageId, loader }) => {
+          return {
+            sourceImageId,
+            loader,
+            modality: "Colorimetric",
+          };
+        }),
+        jpegLoaderEntries.map(({ sourceImageId, loader }) => {
+          return {
+            sourceImageId,
+            loader,
+            modality: "Colorimetric",
+          };
+        }),
+      ),
+    [dicomIndexList, omeLoaderEntries, jpegLoaderEntries],
   );
   const layerFunctions = React.useMemo(() => {
     return [].concat(
@@ -1433,8 +1448,17 @@ const Content = (props: Props) => {
           });
         };
       }),
+      jpegLoaderEntries.map(({ loader }) => {
+        const imagePath = "crc-export"; // TODO: from image source metadata
+        return ({ mainSettings }) =>
+          createJpegLayers({
+            jpegLoader: loader.data,
+            settings: mainSettings,
+            imagePath,
+          });
+      }),
     );
-  }, [dicomIndexList, omeLoaderEntries]);
+  }, [dicomIndexList, omeLoaderEntries, jpegLoaderEntries]);
   const imageProps = React.useMemo(() => {
     return {
       ChannelGroups: channelGroups,

@@ -20,7 +20,6 @@ function createJpegLayers(meta) {
     contrastLimits,
     selections,
   };
-  console.log(imageProps.loader, "jpeg");
   return new MultiscaleImageLayer(imageProps);
 }
 
