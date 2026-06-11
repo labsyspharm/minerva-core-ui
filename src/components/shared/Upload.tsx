@@ -193,26 +193,6 @@ const XmlImportMessage = styled.div<{ $err: boolean }>`
   color: ${(p) => (p.$err ? "#f85149" : "color-mix(in srgb, #7ee787 92%, #fff 8%)")};
 `;
 
-const XmlImportBlock = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  min-width: 0;
-  align-items: stretch;
-
-  input[type="file"] {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
-  }
-`;
-
 const FullWidthGrid = styled.div`
   grid-column: 1 / -1;
   display: flex;
@@ -776,29 +756,6 @@ const Upload = (props: UploadProps) => {
     return null;
   };
 
-  const annotationImportBlock = imageLoaded ? (
-    <XmlImportBlock>
-      <input
-        ref={xmlFileInputRef}
-        type="file"
-        accept=".xml,application/xml,text/xml"
-        aria-label="OME-XML annotations file"
-        onChange={onAnnotationXmlSelected}
-      />
-      <DarkPrimaryButton
-        type="button"
-        onClick={() => xmlFileInputRef.current?.click()}
-      >
-        Import annotations (XML)
-      </DarkPrimaryButton>
-      {xmlImportFeedback ? (
-        <XmlImportMessage $err={xmlImportFeedback.type === "err"}>
-          {xmlImportFeedback.text}
-        </XmlImportMessage>
-      ) : null}
-    </XmlImportBlock>
-  ) : null;
-
   const renderImageCard = (im: Image, index: number) => {
     const title = imageDisplayLabel(im, index, labelOpts);
     const role = roleBadgeLabel(
@@ -847,6 +804,27 @@ const Upload = (props: UploadProps) => {
       <div className={styles.header}>
         <span className={styles.headerTitle}>Images</span>
         <div className={styles.headerActions}>
+          {imageLoaded ? (
+            <>
+              <input
+                ref={xmlFileInputRef}
+                className={styles.hiddenFileInput}
+                type="file"
+                accept=".xml,application/xml,text/xml"
+                aria-label="OME-XML annotations file"
+                onChange={onAnnotationXmlSelected}
+              />
+              <button
+                type="button"
+                className={styles.headerActionButton}
+                aria-label="Import annotations"
+                title="Import annotations"
+                onClick={() => xmlFileInputRef.current?.click()}
+              >
+                Import annotations
+              </button>
+            </>
+          ) : null}
           <button
             type="button"
             className={
@@ -921,7 +899,11 @@ const Upload = (props: UploadProps) => {
 
         {imageCards}
 
-        {annotationImportBlock}
+        {xmlImportFeedback ? (
+          <XmlImportMessage $err={xmlImportFeedback.type === "err"}>
+            {xmlImportFeedback.text}
+          </XmlImportMessage>
+        ) : null}
       </div>
     </ImagesTabShell>
   );

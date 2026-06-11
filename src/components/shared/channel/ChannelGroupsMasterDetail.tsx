@@ -22,6 +22,7 @@ import {
   DEFAULT_MASK_VISUALIZATION,
   isImageChannel,
   isMaskChannel,
+  isRgbDisplayChannel,
   type MaskVisualization,
 } from "@/lib/imaging/channelKind";
 import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
@@ -557,11 +558,12 @@ export const ChannelGroupsMasterDetail = (
     for (const sc of uniqueSourceChannels) {
       if (!isStackVisible(channelVisibilities, sc.id)) continue;
       if (!isImageChannel(sc)) continue;
+      if (isRgbDisplayChannel(sc, sourceChannels)) continue;
       if (sourceDistributionYValuesLength(sc) > 0) continue;
       ids.push(sc.id);
     }
     return ids;
-  }, [uniqueSourceChannels, channelVisibilities]);
+  }, [uniqueSourceChannels, channelVisibilities, sourceChannels]);
 
   React.useEffect(() => {
     if (!ensureChannelHistograms || props.noLoader) return;
@@ -808,8 +810,11 @@ export const ChannelGroupsMasterDetail = (
                     ? "mask"
                     : "channel"
                   : "channel";
+                const rgbDisplay = sc
+                  ? isRgbDisplayChannel(sc, sourceChannels)
+                  : false;
                 const legacyItem =
-                  sc && isImageChannel(sc) && visible
+                  sc && isImageChannel(sc) && visible && !rgbDisplay
                     ? React.createElement(props.channelItemElement, {
                         key: `grp-${group.id}-${gc.id}`,
                         ...channelItemAttrsForGroupRow(
@@ -850,70 +855,118 @@ export const ChannelGroupsMasterDetail = (
                       })
                     }
                   >
-                    <ChannelRow
-                      rowClassName={styles.groupChildRow}
-                      visible={visible}
-                      visibilityTitle={
-                        visible ? `Hide ${name}` : `Show ${name}`
-                      }
-                      visibilityAriaLabel={`Toggle visibility for ${name}`}
-                      onToggleVisibility={() => {
-                        setChannelGroupRowVisibilities({
-                          ...channelGroupRowVisibilities,
-                          [gc.id]: !visible,
-                        });
-                      }}
-                      name={
-                        sc
-                          ? {
-                              mode: "editable",
-                              name,
-                              meta: channelMeta,
-                              onBlur: (value) =>
-                                renameSourceChannelDisplayName(sc.id, value),
+                    {rgbDisplay ? (
+                      <ChannelRow
+                        rowClassName={styles.groupChildRow}
+                        compact
+                        visible={visible}
+                        visibilityTitle={
+                          visible ? `Hide ${name}` : `Show ${name}`
+                        }
+                        visibilityAriaLabel={`Toggle visibility for ${name}`}
+                        onToggleVisibility={() => {
+                          setChannelGroupRowVisibilities({
+                            ...channelGroupRowVisibilities,
+                            [gc.id]: !visible,
+                          });
+                        }}
+                        name={
+                          sc
+                            ? {
+                                mode: "editable",
+                                name,
+                                meta: channelMeta,
+                                onBlur: (value) =>
+                                  renameSourceChannelDisplayName(sc.id, value),
+                              }
+                            : {
+                                mode: "label",
+                                name,
+                                title: name,
+                                className: styles.groupChildName,
+                              }
+                        }
+                        imageSubtitle={imageSubtitle}
+                        trailing={
+                          <button
+                            type="button"
+                            className={styles.channelActionButton}
+                            title="Remove from group"
+                            aria-label={`Remove ${name} from group`}
+                            onClick={() =>
+                              removeChannelFromGroup(group.id, gc.id)
                             }
-                          : {
-                              mode: "label",
-                              name,
-                              title: name,
-                              className: styles.groupChildName,
+                          >
+                            <RemoveIcon />
+                          </button>
+                        }
+                      />
+                    ) : (
+                      <ChannelRow
+                        rowClassName={styles.groupChildRow}
+                        visible={visible}
+                        visibilityTitle={
+                          visible ? `Hide ${name}` : `Show ${name}`
+                        }
+                        visibilityAriaLabel={`Toggle visibility for ${name}`}
+                        onToggleVisibility={() => {
+                          setChannelGroupRowVisibilities({
+                            ...channelGroupRowVisibilities,
+                            [gc.id]: !visible,
+                          });
+                        }}
+                        name={
+                          sc
+                            ? {
+                                mode: "editable",
+                                name,
+                                meta: channelMeta,
+                                onBlur: (value) =>
+                                  renameSourceChannelDisplayName(sc.id, value),
+                              }
+                            : {
+                                mode: "label",
+                                name,
+                                title: name,
+                                className: styles.groupChildName,
+                              }
+                        }
+                        imageSubtitle={imageSubtitle}
+                        isMask={kind === "mask"}
+                        maskVisualization={effectiveMaskVisualization(gc)}
+                        maskAriaLabel={`Mask display for ${name}`}
+                        onMaskVisualizationChange={(viz) =>
+                          setGroupMaskVisualization(group.id, gc.id, viz)
+                        }
+                        colorHex={hex}
+                        colorTitle={`Pick color for ${name} in this group`}
+                        colorAriaLabel={`Pick color for ${name} in this group`}
+                        onColorClick={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setColorPickerTarget({
+                            scope: "group",
+                            groupId: group.id,
+                            rowId: gc.id,
+                          });
+                          setColorPickerPos(
+                            chromeColorPickerAnchorPosition(rect),
+                          );
+                        }}
+                        trailing={
+                          <button
+                            type="button"
+                            className={styles.channelActionButton}
+                            title="Remove from group"
+                            aria-label={`Remove ${name} from group`}
+                            onClick={() =>
+                              removeChannelFromGroup(group.id, gc.id)
                             }
-                      }
-                      imageSubtitle={imageSubtitle}
-                      isMask={kind === "mask"}
-                      maskVisualization={effectiveMaskVisualization(gc)}
-                      maskAriaLabel={`Mask display for ${name}`}
-                      onMaskVisualizationChange={(viz) =>
-                        setGroupMaskVisualization(group.id, gc.id, viz)
-                      }
-                      colorHex={hex}
-                      colorTitle={`Pick color for ${name} in this group`}
-                      colorAriaLabel={`Pick color for ${name} in this group`}
-                      onColorClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setColorPickerTarget({
-                          scope: "group",
-                          groupId: group.id,
-                          rowId: gc.id,
-                        });
-                        setColorPickerPos(
-                          chromeColorPickerAnchorPosition(rect),
-                        );
-                      }}
-                      trailing={
-                        <button
-                          type="button"
-                          className={styles.channelActionButton}
-                          title="Remove from group"
-                          aria-label={`Remove ${name} from group`}
-                          onClick={() =>
-                            removeChannelFromGroup(group.id, gc.id)
-                          }
-                        >
-                          <RemoveIcon />
-                        </button>
-                      }
-                    />
+                          >
+                            <RemoveIcon />
+                          </button>
+                        }
+                      />
+                    )}
                     {legacyItem ? (
                       <div className={styles.detailChannelItemEmbed}>
                         {legacyItem}
@@ -1007,7 +1060,8 @@ export const ChannelGroupsMasterDetail = (
       );
     }
 
-    const showHistogramEmbed = isImageChannel(sc);
+    const rgbDisplay = isRgbDisplayChannel(sc, sourceChannels);
+    const showHistogramEmbed = isImageChannel(sc) && !rgbDisplay;
     const legacyItem = showHistogramEmbed
       ? React.createElement(props.channelItemElement, {
           key: `all-${sc.id}`,
@@ -1030,44 +1084,71 @@ export const ChannelGroupsMasterDetail = (
         draggable
         onDragStart={(e) => startChannelDrag(e, { sourceId: sc.id })}
       >
-        <ChannelRow
-          rowClassName={styles.rootChannelRow}
-          visible
-          visibilityTitle={
-            capped
-              ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) — hide another channel`
-              : stackLayerTitle(sc, true)
-          }
-          visibilityAriaLabel={`Toggle layer for ${sc.name}`}
-          onToggleVisibility={() => {
-            setChannelVisibilities({
-              ...channelVisibilities,
-              [sc.id]: false,
-            });
-          }}
-          name={{
-            mode: "editable",
-            name: sc.name,
-            meta,
-            onBlur: (value) => renameSourceChannelDisplayName(sc.id, value),
-          }}
-          imageSubtitle={showImageBadge && imageLabel ? imageLabel : null}
-          isMask={isMaskChannel(sc)}
-          maskVisualization={effectiveMaskVisualization(sc)}
-          maskAriaLabel={`Mask display for ${sc.name}`}
-          onMaskVisualizationChange={(viz) =>
-            setSourceMaskVisualization(sc.id, viz)
-          }
-          colorHex={hex}
-          colorTitle={`Pick color for ${sc.name}`}
-          colorAriaLabel={`Pick color for ${sc.name}`}
-          onColorClick={(e) => {
-            e.stopPropagation();
-            const rect = e.currentTarget.getBoundingClientRect();
-            setColorPickerTarget({ scope: "source", sourceId: sc.id });
-            setColorPickerPos(chromeColorPickerAnchorPosition(rect));
-          }}
-        />
+        {rgbDisplay ? (
+          <ChannelRow
+            rowClassName={styles.rootChannelRow}
+            compact
+            visible
+            visibilityTitle={
+              capped
+                ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) — hide another channel`
+                : stackLayerTitle(sc, true)
+            }
+            visibilityAriaLabel={`Toggle layer for ${sc.name}`}
+            onToggleVisibility={() => {
+              setChannelVisibilities({
+                ...channelVisibilities,
+                [sc.id]: false,
+              });
+            }}
+            name={{
+              mode: "editable",
+              name: sc.name,
+              meta,
+              onBlur: (value) => renameSourceChannelDisplayName(sc.id, value),
+            }}
+            imageSubtitle={showImageBadge && imageLabel ? imageLabel : null}
+          />
+        ) : (
+          <ChannelRow
+            rowClassName={styles.rootChannelRow}
+            visible
+            visibilityTitle={
+              capped
+                ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) — hide another channel`
+                : stackLayerTitle(sc, true)
+            }
+            visibilityAriaLabel={`Toggle layer for ${sc.name}`}
+            onToggleVisibility={() => {
+              setChannelVisibilities({
+                ...channelVisibilities,
+                [sc.id]: false,
+              });
+            }}
+            name={{
+              mode: "editable",
+              name: sc.name,
+              meta,
+              onBlur: (value) => renameSourceChannelDisplayName(sc.id, value),
+            }}
+            imageSubtitle={showImageBadge && imageLabel ? imageLabel : null}
+            isMask={isMaskChannel(sc)}
+            maskVisualization={effectiveMaskVisualization(sc)}
+            maskAriaLabel={`Mask display for ${sc.name}`}
+            onMaskVisualizationChange={(viz) =>
+              setSourceMaskVisualization(sc.id, viz)
+            }
+            colorHex={hex}
+            colorTitle={`Pick color for ${sc.name}`}
+            colorAriaLabel={`Pick color for ${sc.name}`}
+            onColorClick={(e) => {
+              e.stopPropagation();
+              const rect = e.currentTarget.getBoundingClientRect();
+              setColorPickerTarget({ scope: "source", sourceId: sc.id });
+              setColorPickerPos(chromeColorPickerAnchorPosition(rect));
+            }}
+          />
+        )}
         {legacyItem ? (
           <div className={styles.detailChannelItemEmbed}>{legacyItem}</div>
         ) : null}

@@ -48,6 +48,45 @@ export function isImageChannel(channel: { kind?: string }): boolean {
   return effectiveChannelKind(channel) === "channel";
 }
 
+type RgbDisplayChannelFields = {
+  kind?: string;
+  samples?: number;
+  sourceDataTypeId?: string;
+  imageId?: string;
+};
+
+/**
+ * True for interleaved RGB (SamplesPerPixel=3) or planar uint8 RGB (3×SPP=1).
+ * These are shown as a single color image, not multiplex fluorescence.
+ */
+export function isRgbDisplaySource(
+  channels: readonly RgbDisplayChannelFields[],
+): boolean {
+  const intensity = channels.filter(isImageChannel);
+  if (intensity.length === 0) return false;
+  if (intensity.length === 1 && intensity[0].samples === 3) return true;
+  return (
+    intensity.length === 3 &&
+    intensity.every(
+      (c) =>
+        (c.samples ?? 1) === 1 &&
+        (c.sourceDataTypeId === "Uint8" || c.sourceDataTypeId === "uint8"),
+    )
+  );
+}
+
+/** Whether histogram / contrast controls should be hidden for this channel. */
+export function isRgbDisplayChannel(
+  channel: RgbDisplayChannelFields,
+  allChannels: readonly RgbDisplayChannelFields[],
+): boolean {
+  if (!isImageChannel(channel)) return false;
+  if (channel.samples === 3) return true;
+  if (channel.imageId == null) return false;
+  const onImage = allChannels.filter((c) => c.imageId === channel.imageId);
+  return isRgbDisplaySource(onImage);
+}
+
 /** Document-level role inferred from persisted channel kinds on one image row. */
 export type ImageSourceRole = "intensity" | "segmentation" | "mixed";
 
