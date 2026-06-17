@@ -15,6 +15,7 @@ import {
   ImageViewer,
   type JpegLoaderEntry,
   type LoaderList,
+  type MainSettings,
   type OmeLoaderEntry,
 } from "@/components/shared/viewer/ImageViewer";
 import type {
@@ -334,6 +335,70 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
 const APP_TAB_TITLE_PREFIX =
   import.meta.env.MODE === "demo" ? "Minerva 2.0 Demo" : "Minerva";
 
+/** Fold {@link ChannelRendering} into Viv settings without touching the document store. */
+function applyChannelRendering<S extends MainSettings>(
+  settings: S,
+  live: ChannelRendering | null,
+  activeChannelGroupId: string | null,
+  channelGroups: ChannelGroup[],
+): S {
+  if (!live) return settings;
+  const active =
+    channelGroups.find((g) => g.id === activeChannelGroupId) ??
+    channelGroups[0];
+  if (!active || active.id !== live.groupId) return settings;
+  const idx = active.channels.findIndex((c) => c.id === live.channelId);
+  if (idx < 0) return settings;
+  if (live.kind === "contrast") {
+    if (idx >= settings.contrastLimits.length) return settings;
+    const lo = Math.round(live.lower);
+    const hi = Math.round(live.upper);
+    const contrastLimits = settings.contrastLimits.map((pair, i) =>
+      i === idx
+        ? ([lo, hi] as [number, number])
+        : ([pair[0], pair[1]] as [number, number]),
+    );
+    return { ...settings, contrastLimits };
+  }
+  if (idx >= settings.colors.length) return settings;
+  const r = Math.round(Math.max(0, Math.min(255, live.r)));
+  const g = Math.round(Math.max(0, Math.min(255, live.g)));
+  const b = Math.round(Math.max(0, Math.min(255, live.b)));
+  const colors = settings.colors.map((triple, i) =>
+    i === idx
+      ? ([r, g, b] as [number, number, number])
+      : ([triple[0], triple[1], triple[2]] as [number, number, number]),
+  );
+  return { ...settings, colors };
+}
+
+const toSettingsInternal = (
+  loader,
+  modality,
+  groups,
+  activeChannelGroupId,
+  channelVisibilities,
+  toSettings,
+  loaderSourceImageId?: string,
+) => {
+  if (loader === null || !groups) {
+    return toSettings(
+      activeChannelGroupId,
+      modality,
+      undefined,
+      channelVisibilities,
+      loaderSourceImageId,
+    );
+  }
+  return toSettings(
+    activeChannelGroupId,
+    modality,
+    loader,
+    channelVisibilities,
+    loaderSourceImageId,
+  );
+};
+
 const Content = (props: Props) => {
   const { handleKeys, useLaunchQueue = false } = props;
   /** Remote demo image / DICOM bootstrap from `index.tsx` (`pnpm run demo` only). */
@@ -396,6 +461,9 @@ const Content = (props: Props) => {
     setActiveChannelGroup,
     setChannelVisibilities,
     setGroupChannelLists,
+    activeChannelGroupId,
+    channelVisibilities,
+    channelRendering,
     setGroupNames,
   } = useAppStore();
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
@@ -1420,6 +1488,42 @@ const Content = (props: Props) => {
       ),
     [dicomIndexList, omeLoaderEntries, jpegLoaderEntries],
   );
+  const documentMainSettingsList = useMemo(() => {
+    return loaderList.map(({ loader, modality, sourceImageId }) =>
+      toSettingsInternal(
+        loader,
+        modality,
+        itemRegistryGroups,
+        activeChannelGroupId,
+        channelVisibilities,
+        viewerConfig.toSettings,
+        sourceImageId,
+      ),
+    );
+  }, [
+    loaderList,
+    itemRegistryGroups,
+    activeChannelGroupId,
+    channelVisibilities,
+    viewerConfig.toSettings,
+  ]);
+  const mainSettingsList = useMemo(
+    () =>
+      documentMainSettingsList.map((settings) =>
+        applyChannelRendering(
+          settings,
+          channelRendering,
+          activeChannelGroupId,
+          channelGroups,
+        ),
+      ),
+    [
+      documentMainSettingsList,
+      channelRendering,
+      activeChannelGroupId,
+      channelGroups,
+    ],
+  );
   const layerFunctions = React.useMemo(() => {
     return [].concat(
       dicomIndexList.map((dicomSource, i) => {
@@ -1459,13 +1563,22 @@ const Content = (props: Props) => {
       }),
     );
   }, [dicomIndexList, omeLoaderEntries, jpegLoaderEntries]);
+  const imageLayers = useMemo(() => {
+    return layerFunctions.map((fn, i) =>
+      fn({
+        mainSettings: mainSettingsList[i],
+      }),
+    );
+  }, [layerFunctions, mainSettingsList]);
+
   const imageProps = React.useMemo(() => {
     return {
       ChannelGroups: channelGroups,
       SourceChannels: sourceChannels,
       jpegLoaderEntries,
       loaderList,
-      layerFunctions,
+      mainSettingsList,
+      imageLayers,
       marker_names: itemRegistryMarkerNames,
       groups: itemRegistryGroups,
       stories,
@@ -1483,7 +1596,8 @@ const Content = (props: Props) => {
     name,
     showSquareViewportOverlay,
     viewerImageKey,
-    layerFunctions,
+    mainSettingsList,
+    imageLayers,
     loaderList,
   ]);
 

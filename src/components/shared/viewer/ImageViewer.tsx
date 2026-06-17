@@ -19,9 +19,7 @@ import type { Story } from "@/lib/legacy/exhibit";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
-import type { ChannelRendering } from "@/lib/stores/appStore";
 import { useAppStore } from "@/lib/stores/appStore";
-import type { ChannelGroup } from "@/lib/stores/documentStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { useWindowSize } from "@/lib/util/useWindowSize";
 import { ORTHO_VIEW_ID, SCALEBAR_VIEW_ID } from "@/lib/viewer/deckViewIds";
@@ -70,25 +68,18 @@ export type LoaderListItem = {
 };
 export type LoaderList = LoaderListItem[];
 
-type MainSettings = {
+type AnyLayer = Layer | OverlayLayer;
+
+export type MainSettings = {
   selections: readonly { c: number }[];
   contrastLimits: readonly [number, number][];
   colors: readonly [number, number, number][];
 };
 
-type LayerArgs = {
-  mainSettings: MainSettings;
-  viewportSize: {
-    width: number;
-    height: number;
-  };
-};
-type AnyLayer = Layer | OverlayLayer;
-type LayerFunction = (a: LayerArgs) => Layer;
-
 export type ImageViewerProps = {
   stories: Story[];
-  layerFunctions: LayerFunction[];
+  layers: Layer[];
+  mainSettingsList: MainSettings[];
   loaderList: LoaderList;
   viewerConfig: Config;
   overlayLayers?: OverlayLayer[];
@@ -155,75 +146,12 @@ const toFlatViewState = (
   };
 };
 
-const toSettingsInternal = (
-  loader,
-  modality,
-  groups,
-  activeChannelGroupId,
-  channelVisibilities,
-  toSettings,
-  loaderSourceImageId?: string,
-) => {
-  if (loader === null || !groups) {
-    return toSettings(
-      activeChannelGroupId,
-      modality,
-      undefined,
-      channelVisibilities,
-      loaderSourceImageId,
-    );
-  }
-  return toSettings(
-    activeChannelGroupId,
-    modality,
-    loader,
-    channelVisibilities,
-    loaderSourceImageId,
-  );
-};
-
-/** Fold {@link ChannelRendering} into Viv settings without touching the document store. */
-function applyChannelRendering<S extends MainSettings>(
-  settings: S,
-  live: ChannelRendering | null,
-  activeChannelGroupId: string | null,
-  channelGroups: ChannelGroup[],
-): S {
-  if (!live) return settings;
-  const active =
-    channelGroups.find((g) => g.id === activeChannelGroupId) ??
-    channelGroups[0];
-  if (!active || active.id !== live.groupId) return settings;
-  const idx = active.channels.findIndex((c) => c.id === live.channelId);
-  if (idx < 0) return settings;
-  if (live.kind === "contrast") {
-    if (idx >= settings.contrastLimits.length) return settings;
-    const lo = Math.round(live.lower);
-    const hi = Math.round(live.upper);
-    const contrastLimits = settings.contrastLimits.map((pair, i) =>
-      i === idx
-        ? ([lo, hi] as [number, number])
-        : ([pair[0], pair[1]] as [number, number]),
-    );
-    return { ...settings, contrastLimits };
-  }
-  if (idx >= settings.colors.length) return settings;
-  const r = Math.round(Math.max(0, Math.min(255, live.r)));
-  const g = Math.round(Math.max(0, Math.min(255, live.g)));
-  const b = Math.round(Math.max(0, Math.min(255, live.b)));
-  const colors = settings.colors.map((triple, i) =>
-    i === idx
-      ? ([r, g, b] as [number, number, number])
-      : ([triple[0], triple[1], triple[2]] as [number, number, number]),
-  );
-  return { ...settings, colors };
-}
-
 export const ImageViewer = (props: ImageViewerProps) => {
   const windowSize = useWindowSize();
   const {
     loaderList,
-    layerFunctions,
+    mainSettingsList,
+    imageLayers,
     groups,
     overlayLayers = [],
     activeTool,
@@ -269,44 +197,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     resizeObserver.observe(element);
     return () => resizeObserver.disconnect();
   }, []);
-
-  const documentMainSettingsList = useMemo(() => {
-    return loaderList.map(({ loader, modality, sourceImageId }) =>
-      toSettingsInternal(
-        loader,
-        modality,
-        groups,
-        activeChannelGroupId,
-        channelVisibilities,
-        viewerConfig.toSettings,
-        sourceImageId,
-      ),
-    );
-  }, [
-    loaderList,
-    groups,
-    activeChannelGroupId,
-    channelVisibilities,
-    viewerConfig.toSettings,
-  ]);
-
-  const mainSettingsList = useMemo(
-    () =>
-      documentMainSettingsList.map((settings) =>
-        applyChannelRendering(
-          settings,
-          channelRendering,
-          activeChannelGroupId,
-          channelGroups,
-        ),
-      ),
-    [
-      documentMainSettingsList,
-      channelRendering,
-      activeChannelGroupId,
-      channelGroups,
-    ],
-  );
 
   /**
    * Waypoints, overlays, SAM2, and initial pan/zoom use **only the first stacked
@@ -567,15 +457,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     clearTargetWaypointCamera,
     setViewportZoom,
   ]);
-
-  const imageLayers = useMemo(() => {
-    return layerFunctions.map((fn, i) =>
-      fn({
-        mainSettings: mainSettingsList[i],
-        viewportSize,
-      }),
-    );
-  }, [layerFunctions, mainSettingsList, viewportSize]);
 
   // Memoize scale bar layer
   const scaleBarLayer = useMemo(() => {
