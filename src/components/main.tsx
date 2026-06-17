@@ -1116,6 +1116,7 @@ const Content = (props: Props) => {
     }
     console.log("[minerva] demo_url effect fired");
     if (props.demo_jpeg) {
+      console.log(props.demo_jpeg, "demo_jpeg");
       void (async () => {
         await onStartRef.current(
           [[props.demo_url, "Colorimetric", "JPEG-URL"]],
