@@ -29,11 +29,16 @@ class JpegImage {
     const { image } = await decoder.decode();
     const { displayWidth, displayHeight } = image;
     const data_length = displayWidth * displayHeight;
+    console.log({ image });
     const in_data = new Uint8Array(4 * data_length);
-    const data = new Uint16Array(data_length); // TODO
+    const data = new Uint16Array(1024 * 1024); // TODO
     image.copyTo(in_data);
-    for (let i = 0; i < data_length; i += 1) {
-      data[i] = in_data[i * 4] * 256;
+    for (let h = 0; h < displayHeight; h += 1) {
+      for (let w = 0; w < displayWidth; w += 1) {
+        const i = displayWidth * h + w;
+        const j = 1024 * h + w;
+        data[j] = in_data[i * 4] * 256;
+      }
     }
     return { x, y, sample, data };
   }
