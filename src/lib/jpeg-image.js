@@ -47,14 +47,13 @@ class JpegImage {
 
   async _readRaster({ x, y, /*width, height,*/ sample }) {
     const { tileHeight, tileWidth } = this;
-    return await this.getTileOrStrip(x, y, sample).then((tile) => {
-      const data = new Uint16Array(tile.data.buffer);
-      return {
-        data,
-        width: tileWidth,
-        height: tileHeight,
-      };
-    });
+    const tile = await this.getTileOrStrip(x, y, sample);
+    const data = new Uint16Array(tile.data.buffer);
+    return {
+      data,
+      width: tileWidth,
+      height: tileHeight,
+    };
   }
 
   async readRasters(options = {}) {
