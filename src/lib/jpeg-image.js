@@ -3,16 +3,16 @@ class JpegImage {
     const { tileSize } = { tileSize: 1024 }; //TODO
     this.level = opts.level;
     this.c = opts.c;
+    this.tileSize = tileSize;
     this.imagePath = opts.imagePath;
     this.tileWidth = tileSize;
     this.tileHeight = tileSize;
     this.imageHeight = 27120; //TODO
     this.imageWidth = 26139; //TODO
-    this.n_levels = 5; //TODO
   }
 
   async getTileOrStrip(x, y, sample) {
-    const level = Math.min(this.n_levels, this.level);
+    const level = this.level; //TODO
     const ipath = this.imagePath;
     // TODO TODO TODO
     const lpath = [
@@ -22,6 +22,7 @@ class JpegImage {
     const fname = `${level}_${x}_${y}.jpg`;
     const url = `${ipath}/${lpath}/${fname}`;
     const response = await fetch(url);
+    console.log({ url });
     const decoder = new ImageDecoder({
       data: response.body,
       type: "image/jpeg",
@@ -30,49 +31,28 @@ class JpegImage {
     const { displayWidth, displayHeight } = image;
     const data_length = displayWidth * displayHeight;
     console.log({ image });
+    const tileSize = this.tileSize;
     const in_data = new Uint8Array(4 * data_length);
-    const data = new Uint16Array(1024 * 1024); // TODO
+    const data = new Uint16Array(tileSize ** 2); // TODO
     image.copyTo(in_data);
     for (let h = 0; h < displayHeight; h += 1) {
       for (let w = 0; w < displayWidth; w += 1) {
         const i = displayWidth * h + w;
-        const j = 1024 * h + w;
+        const j = tileSize * h + w;
         data[j] = in_data[i * 4] * 256;
       }
     }
     return { x, y, sample, data };
   }
 
-  async _readRaster({ x, y, width, height, sample }) {
+  async _readRaster({ x, y, /*width, height,*/ sample }) {
     const { tileHeight, tileWidth } = this;
-    const imageHeight = this.imageHeight;
-    const imageWidth = this.imageWidth;
-    const origin_x = x * this.tileWidth;
-    const origin_y = y * this.tileHeight;
     return await this.getTileOrStrip(x, y, sample).then((tile) => {
-      const fullTile = tileHeight * tileWidth;
-      const ymax = Math.min(tileHeight, height, imageHeight - origin_y);
-      const xmax = Math.min(tileWidth, width, imageWidth - origin_x);
       const data = new Uint16Array(tile.data.buffer);
-      const full = data.length === fullTile;
-      // Blackout missing data
-      for (let pixel_y = ymax; pixel_y < tileHeight; ++pixel_y) {
-        for (let pixel_x = 0; pixel_x < tileWidth; ++pixel_x) {
-          const windowCoordinate = pixel_y * tileWidth + pixel_x;
-          data[windowCoordinate] = 0;
-        }
-      }
-      // Blackout missing data
-      for (let pixel_x = xmax; pixel_x < tileWidth; ++pixel_x) {
-        for (let pixel_y = 0; pixel_y < tileHeight; ++pixel_y) {
-          const windowCoordinate = pixel_y * tileWidth + pixel_x;
-          data[windowCoordinate] = 0;
-        }
-      }
       return {
         data,
-        width: full ? tileWidth : xmax,
-        height: full ? tileHeight : ymax,
+        width: tileWidth,
+        height: tileHeight,
       };
     });
   }
@@ -94,11 +74,13 @@ class JpegImage {
   }
 
   getWidth() {
-    return this.imageWidth;
+    const scale = 2 ** (this.level - 1);
+    return Math.round(this.imageWidth / scale);
   }
 
   getHeight() {
-    return this.imageHeight;
+    const scale = 2 ** (this.level - 1);
+    return Math.round(this.imageHeight / scale);
   }
 }
 

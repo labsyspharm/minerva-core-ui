@@ -22,14 +22,6 @@ type ReadRasterProps = {
 class JpegPixelSource {
   _indexer: (s: Selection) => Promise<typeof JpegImage>;
   tileSize: number;
-  tileCache: Record<
-    string,
-    {
-      data: Uint16Array<ArrayBuffer>;
-      width: number;
-      height: number;
-    }
-  >;
   labels: Labels;
   shape: Shape;
   dtype: Dtype;
@@ -37,7 +29,6 @@ class JpegPixelSource {
   constructor(indexer, tileSize, shape) {
     this._indexer = indexer;
     this.tileSize = tileSize;
-    this.tileCache = {};
     this.labels = ["z", "c", "t", "y", "x"];
     this.dtype = "Uint16";
     this.shape = shape;
@@ -56,13 +47,9 @@ class JpegPixelSource {
 
   async _readRasters(image: typeof JpegImage, props: ReadRasterProps = {}) {
     const index = [image.c, props.x, props.y].join("-");
-    let raster = this.tileCache[index];
-    if (!raster) {
-      raster = await image.readRasters({
-        ...props,
-      });
-      this.tileCache[index] = raster;
-    }
+    const raster = await image.readRasters({
+      ...props,
+    });
 
     if (props.signal?.aborted) {
       throw "__vivSignalAborted";
@@ -76,19 +63,9 @@ class JpegPixelSource {
     };
   }
 
-  _getTileExtent(x, y) {
-    const [zoomLevelHeight, zoomLevelWidth] = this.shape.slice(-2);
-    let height = this.tileSize;
-    let width = this.tileSize;
-    const maxXTileCoord = Math.floor(zoomLevelWidth / this.tileSize);
-    const maxYTileCoord = Math.floor(zoomLevelHeight / this.tileSize);
-
-    if (x === maxXTileCoord) {
-      width = zoomLevelWidth % this.tileSize;
-    }
-    if (y === maxYTileCoord) {
-      height = zoomLevelHeight % this.tileSize;
-    }
+  _getTileExtent(_x, _y) {
+    const height = this.tileSize;
+    const width = this.tileSize;
     return { height, width };
   }
 

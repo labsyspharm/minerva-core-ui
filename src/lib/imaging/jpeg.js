@@ -7,11 +7,12 @@ function createJpegLayers(meta) {
   const visible = channelsVisible.some((x) => x);
   const { imagePath, jpegLoader } = meta;
   const imageID = imagePath.replace("/", "-");
+  console.log({ imageID, TODO: "TODO", channelsVisible });
   const imageProps = {
     visible,
     loader: jpegLoader,
     // https://deck.gl/docs/api-reference/geo-layers/tile-layer#refinementstrategy
-    refinementStrategy: "best-available",
+    refinementStrategy: "no-overlap",
     // Include contrast limits in ID to force layer recreation when they change
     // This prevents flash when switching channel groups
     id: `${imageID}-${contrastLimits.map(([l, u]) => `${l}-${u}`).join("-")}`,
@@ -50,7 +51,7 @@ const loadJpeg = (meta) => {
   const height = imageHeight;
   const nChannels = 2; // TODO
   const tileSize = 1024; // TODO
-  const levels = [0, 1, 2, 3, 4, 5, 6]; // TODO
+  const levels = [0, 1, 2, 3, 4, 5]; // TODO
   const pyramidIndexer = toIndexer({
     imagePath,
   });
