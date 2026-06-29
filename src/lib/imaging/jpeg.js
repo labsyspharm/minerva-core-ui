@@ -51,7 +51,7 @@ const loadJpeg = (meta) => {
   const height = imageHeight;
   const nChannels = 2; // TODO
   const tileSize = 1024; // TODO
-  const levels = [0, 1, 2, 3, 4, 5]; // TODO
+  const levels = [0, 1, 2]; // TODO
   const pyramidIndexer = toIndexer({
     imagePath,
   });

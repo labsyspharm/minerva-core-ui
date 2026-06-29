@@ -274,11 +274,11 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
 
   for (const im of images) {
     if (!im.source) continue;
-    if ("url" in im.source && im.source.url === "crc-export") {
+    if ("url" in im.source && im.source.url === "jpeg-test") {
       // TODO
-      const imageHeight = 27120; //TODO
-      const imageWidth = 26139; //TODO
-      const imagePath = "crc-export";
+      const imageHeight = 4096; //TODO
+      const imageWidth = 4096; //TODO
+      const imagePath = "jpeg-test";
       const loader = loadJpeg({
         imagePath,
         imageHeight,
@@ -759,9 +759,9 @@ const Content = (props: Props) => {
     // TODO
     const relevant_groups = props.exhibit_config.Groups;
     const sourceImageId = crypto.randomUUID();
-    const imageHeight = 27120; //TODO
-    const imageWidth = 26139; //TODO
-    const imagePath = "crc-export";
+    const imageHeight = 4096; //TODO
+    const imageWidth = 4096; //TODO
+    const imagePath = "jpeg-test";
     const loader = loadJpeg({
       imagePath,
       imageHeight,
@@ -1554,7 +1554,7 @@ const Content = (props: Props) => {
         };
       }),
       jpegLoaderEntries.map(({ loader }) => {
-        const imagePath = "crc-export"; // TODO: from image source metadata
+        const imagePath = "jpeg-test"; // TODO: from image source metadata
         return ({ mainSettings }) =>
           createJpegLayers({
             jpegLoader: loader.data,
