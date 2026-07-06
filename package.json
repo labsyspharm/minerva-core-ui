@@ -14,6 +14,7 @@
     "lint": "eslint src"
   },
   "type": "module",
+  "packageManager": "pnpm@10.34.4",
   "main": "build/main.js",
   "types": "build/main.d.ts",
   "author": "John T. Hoffer",
@@ -152,7 +153,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "@vivjs/extensions"
+      "@vivjs/extensions@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/extensions"
     ],
     "overrides": {
       "@vivjs/constants": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/constants",
