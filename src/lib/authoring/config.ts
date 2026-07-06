@@ -217,8 +217,8 @@ const asID = (k: string): ID => ({ ID: k });
 /** Per-tile ceiling for histogram `getTile` (remote OME-TIFF); avoids hung lazy `getDistributions`. */
 const HISTOGRAM_TILE_TIMEOUT_MS = 10_000;
 
-/** Limit parallel `getTile`+bin work so remote OME-TIFF is less likely to hit timeouts / throttling. */
-const HISTOGRAM_EXTRACT_CONCURRENCY = 6;
+/** Limit parallel `getTile`+bin work so viewer tile loads are not starved. */
+const HISTOGRAM_EXTRACT_CONCURRENCY = 2;
 
 /**
  * Bit depth passed to `histogramBinFromPixels` (log-spaced thresholds up to 2^bits).

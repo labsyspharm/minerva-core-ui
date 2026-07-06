@@ -4,6 +4,7 @@ import {
   DEFAULT_VISIBLE_INTENSITY_CHANNELS,
   isImageChannel,
   isMaskChannel,
+  planarRgbDisplayColor,
 } from "@/lib/imaging/channelKind";
 import type { RgbColor } from "@/lib/imaging/psudoPalette";
 import {
@@ -13,7 +14,7 @@ import {
   IMPORT_DEFAULT_UPPER_LIMIT,
 } from "@/lib/imaging/psudoPalette";
 import type { ChannelGroup, Color } from "@/lib/stores/documentSchema";
-import type { Channel } from "@/lib/stores/documentStore";
+import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
 
 function defaultSeedColorForIndex(index: number): Color {
   return hexToRgb(
@@ -24,12 +25,31 @@ function defaultSeedColorForIndex(index: number): Color {
 export function effectiveSourceColor(
   channel: Channel,
   indexInList: number,
+  allChannels?: readonly Channel[],
 ): Color {
   if (channel.color) return channel.color;
+  if (allChannels) {
+    const planar = planarRgbDisplayColor(channel, allChannels);
+    if (planar) return planar;
+  }
   if (channel.samples === 3) {
     return { r: 204, g: 0, b: 255 };
   }
   return defaultSeedColorForIndex(indexInList);
+}
+
+/** Viewer / panel tint: planar RGB slot, then group row, then source defaults. */
+export function effectiveDisplayColor(
+  channel: Channel,
+  allChannels: readonly Channel[],
+  groupRow?: ChannelGroupChannel | null,
+  indexInList = 0,
+): Color {
+  return (
+    planarRgbDisplayColor(channel, allChannels) ??
+    groupRow?.color ??
+    effectiveSourceColor(channel, indexInList, allChannels)
+  );
 }
 
 export function effectiveSourceLimits(channel: Channel): [number, number] {
@@ -103,10 +123,12 @@ export function seedDefaultSourceChannelStyles(
         upperLimit: sc.upperLimit ?? 255,
       };
     }
+    const planar = planarRgbDisplayColor(sc, sourceChannels);
     const idx = intensityIndex++;
     const fromPalette = palette?.[idx % (palette?.length ?? 1)];
     const color =
       sc.color ??
+      planar ??
       (fromPalette
         ? { r: fromPalette.r, g: fromPalette.g, b: fromPalette.b }
         : defaultSeedColorForIndex(idx));
@@ -133,8 +155,13 @@ export function seedDefaultSourceChannelStyles(
 export function defaultVisibilitiesForSources(
   sourceChannels: Channel[],
   prev: Record<string, boolean> = {},
+  channelGroups: ChannelGroup[] = [],
 ): Record<string, boolean> {
   const sourceIds = new Set(sourceChannels.map((sc) => sc.id));
+  const groupedSourceIds = new Set(
+    channelGroups.flatMap((g) => g.channels.map((gc) => gc.channelId)),
+  );
+  const hasDocumentGroups = channelGroups.length > 0;
   const prevVisibility = (sc: Channel): boolean | undefined => {
     if (prev[sc.id] !== undefined) return prev[sc.id];
     if (prev[sc.name] !== undefined) return prev[sc.name];
@@ -150,9 +177,11 @@ export function defaultVisibilitiesForSources(
   // Old sessions/import paths may have persisted every channel as visible. That
   // is indistinguishable from an unseeded default, so reset it to the first four.
   // If any current source is explicitly hidden, preserve the user's choices.
+  // With channel groups, the active group defines the initial look — not stack layers.
   const shouldPreserveExisting =
     hasHiddenSource ||
-    visibleIntensityCount <= DEFAULT_VISIBLE_INTENSITY_CHANNELS;
+    (!hasDocumentGroups &&
+      visibleIntensityCount <= DEFAULT_VISIBLE_INTENSITY_CHANNELS);
 
   const out: Record<string, boolean> = {};
   for (const [key, visible] of Object.entries(prev)) {
@@ -173,6 +202,15 @@ export function defaultVisibilitiesForSources(
       continue;
     }
     if (isImageChannel(sc)) {
+      // Stack overlay is for ungrouped channels only; group members use row eyes.
+      if (hasDocumentGroups && groupedSourceIds.has(sc.id)) {
+        out[sc.id] = false;
+        continue;
+      }
+      if (hasDocumentGroups) {
+        out[sc.id] = false;
+        continue;
+      }
       const shouldShow = intensitySeen < DEFAULT_VISIBLE_INTENSITY_CHANNELS;
       out[sc.id] = shouldShow;
       if (shouldShow) intensitySeen++;

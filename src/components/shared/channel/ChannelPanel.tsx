@@ -228,12 +228,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     const intensityLayers = buildCompositedIntensityLayers({
       onLoader: sourceChannels.filter((sc) => isImageChannel(sc)),
       activeGroup: undefined,
+      channelGroups: docChannelGroups,
       stackVisibilities: channelVisibilities,
       groupRowVisibilities: channelGroupRowVisibilities,
       hasVisibilityMap: Object.keys(channelVisibilities).length > 0,
     });
     const maskArgs = {
       activeGroup: undefined,
+      channelGroups: docChannelGroups,
       stackVisibilities: channelVisibilities,
       groupRowVisibilities: channelGroupRowVisibilities,
     };
@@ -250,7 +252,10 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         if (
           !isMaskSourceRendered({
             sc,
-            ...maskArgs,
+            activeGroup,
+            channelGroups: docChannelGroups,
+            stackVisibilities: channelVisibilities,
+            groupRowVisibilities: channelGroupRowVisibilities,
           })
         ) {
           continue;

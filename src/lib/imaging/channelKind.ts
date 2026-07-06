@@ -53,10 +53,39 @@ type RgbDisplayChannelFields = {
   samples?: number;
   sourceDataTypeId?: string;
   imageId?: string;
+  name?: string;
+  index?: number;
+  id?: string;
 };
 
+function isPlanarIntensityDtype(dtype: string | undefined): boolean {
+  if (dtype == null || dtype === "") return false;
+  return /uint/i.test(dtype);
+}
+
+/** Pseudocolor tints for planar R/G/B channels in the viewer and channel panel. */
+export const PLANAR_RGB_DISPLAY_COLORS = [
+  { r: 255, g: 0, b: 0 },
+  { r: 0, g: 255, b: 0 },
+  { r: 0, g: 0, b: 255 },
+] as const;
+
+function planarRgbSlotFromName(name: string): 0 | 1 | 2 | null {
+  const n = name.toLowerCase();
+  if (n.endsWith("_r") || n.endsWith("-r") || n.endsWith("[r]") || n === "r") {
+    return 0;
+  }
+  if (n.endsWith("_g") || n.endsWith("-g") || n.endsWith("[g]") || n === "g") {
+    return 1;
+  }
+  if (n.endsWith("_b") || n.endsWith("-b") || n.endsWith("[b]") || n === "b") {
+    return 2;
+  }
+  return null;
+}
+
 /**
- * True for interleaved RGB (SamplesPerPixel=3) or planar uint8 RGB (3×SPP=1).
+ * True for interleaved RGB (SamplesPerPixel=3) or planar RGB (3×SPP=1, e.g. H&E HE_r/g/b).
  * These are shown as a single color image, not multiplex fluorescence.
  */
 export function isRgbDisplaySource(
@@ -65,14 +94,46 @@ export function isRgbDisplaySource(
   const intensity = channels.filter(isImageChannel);
   if (intensity.length === 0) return false;
   if (intensity.length === 1 && intensity[0].samples === 3) return true;
-  return (
-    intensity.length === 3 &&
-    intensity.every(
+  const planar = intensity.filter((c) => (c.samples ?? 1) === 1);
+  if (planar.length !== 3) return false;
+  if (planar.every((c) => planarRgbSlotFromName(c.name ?? "") != null)) {
+    return true;
+  }
+  return planar.every((c) => isPlanarIntensityDtype(c.sourceDataTypeId));
+}
+
+/** 0 = red, 1 = green, 2 = blue within a planar RGB source triplet. */
+export function planarRgbSlotIndex(
+  channel: RgbDisplayChannelFields,
+  allChannels: readonly RgbDisplayChannelFields[],
+): number | null {
+  if (!isRgbDisplayChannel(channel, allChannels)) return null;
+  if (channel.samples === 3) return null;
+  const byName = planarRgbSlotFromName(channel.name ?? "");
+  if (byName != null) return byName;
+  const onImage = allChannels
+    .filter(
       (c) =>
-        (c.samples ?? 1) === 1 &&
-        (c.sourceDataTypeId === "Uint8" || c.sourceDataTypeId === "uint8"),
+        c.imageId === channel.imageId &&
+        isImageChannel(c) &&
+        (c.samples ?? 1) === 1,
     )
+    .sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+  if (onImage.length !== 3) return null;
+  const pos = onImage.findIndex(
+    (c) =>
+      (channel.id != null && c.id === channel.id) || c.index === channel.index,
   );
+  return pos >= 0 && pos < 3 ? pos : null;
+}
+
+export function planarRgbDisplayColor(
+  channel: RgbDisplayChannelFields,
+  allChannels: readonly RgbDisplayChannelFields[],
+): { r: number; g: number; b: number } | null {
+  const slot = planarRgbSlotIndex(channel, allChannels);
+  if (slot == null) return null;
+  return PLANAR_RGB_DISPLAY_COLORS[slot];
 }
 
 /** Whether histogram / contrast controls should be hidden for this channel. */

@@ -526,7 +526,11 @@ const Content = (props: Props) => {
     if (sourceChannels.length === 0) return;
     const active = useAppStore.getState().activeChannelGroupId;
     const prev = useAppStore.getState().channelVisibilities;
-    const next = defaultVisibilitiesForSources(sourceChannels, prev);
+    const next = defaultVisibilitiesForSources(
+      sourceChannels,
+      prev,
+      channelGroups,
+    );
     const visibilityChanged =
       Object.keys(next).length !== Object.keys(prev).length ||
       Object.entries(next).some(([name, visible]) => prev[name] !== visible);
@@ -602,7 +606,9 @@ const Content = (props: Props) => {
       const prev = opts.mergeVisibilities
         ? useAppStore.getState().channelVisibilities
         : undefined;
-      setChannelVisibilities(defaultVisibilitiesForSources(flat, prev));
+      setChannelVisibilities(
+        defaultVisibilitiesForSources(flat, prev, nextChannelGroups),
+      );
     },
     [
       setImages,
@@ -1020,9 +1026,10 @@ const Content = (props: Props) => {
     }
     let ChannelGroups = mergedGroups;
     if (intensityGroups.length > 0) {
+      ChannelGroups = [...mergedGroups, ...intensityGroups];
       const flat = flattenImageChannelsInDocumentOrder(nextImages);
       ChannelGroups = await applySharedImportPaletteToChannelGroups(
-        mergedGroups,
+        ChannelGroups,
         flat,
       );
     }
@@ -1073,6 +1080,7 @@ const Content = (props: Props) => {
             defaultVisibilitiesForSources(
               flat,
               useAppStore.getState().channelVisibilities,
+              doc.channelGroups,
             ),
           );
         } finally {

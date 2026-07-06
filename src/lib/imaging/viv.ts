@@ -5,8 +5,9 @@ import type {
 import type { LoaderPlane } from "../authoring/config";
 import type { Roi } from "../shapes/roiParser";
 import { buildCompositedIntensityLayers } from "./channelCompositor";
-import { isImageChannel } from "./channelKind";
+import { isImageChannel, planarRgbDisplayColor } from "./channelKind";
 import {
+  effectiveDisplayColor,
   effectiveSourceColor,
   effectiveSourceLimits,
 } from "./sourceChannelStyle";
@@ -192,6 +193,7 @@ const toSettings = (opts: ToSettingsOpts) => {
     const composited = buildCompositedIntensityLayers({
       onLoader,
       activeGroup,
+      channelGroups,
       stackVisibilities: channelVisibilities ?? {},
       groupRowVisibilities: channelGroupRowVisibilities,
       hasVisibilityMap,
@@ -219,7 +221,10 @@ const toSettings = (opts: ToSettingsOpts) => {
       const [lo, hi] = gc
         ? [gc.lowerLimit, gc.upperLimit]
         : effectiveSourceLimits(sc);
-      const { r, g, b } = gc ? gc.color : effectiveSourceColor(sc, i);
+      const planar = planarRgbDisplayColor(sc, SourceChannels);
+      const { r, g, b } = gc
+        ? effectiveDisplayColor(sc, SourceChannels, gc, i)
+        : effectiveSourceColor(sc, i, SourceChannels);
       selections.push({ z: 0, t: 0, c: sc.index });
       colors.push([r, g, b]);
       contrastLimits.push([lo, hi]);

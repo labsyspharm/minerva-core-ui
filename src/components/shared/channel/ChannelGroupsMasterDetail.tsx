@@ -14,6 +14,7 @@ import {
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import {
   buildCompositedIntensityLayers,
+  isDisplayedViaActiveGroup,
   isGroupRowVisible,
   isShownFirstInAllChannelsList,
   isStackVisible,
@@ -24,8 +25,12 @@ import {
   isMaskChannel,
   isRgbDisplayChannel,
   type MaskVisualization,
+  planarRgbDisplayColor,
 } from "@/lib/imaging/channelKind";
-import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
+import {
+  scheduleBackgroundTask,
+  sourceDistributionYValuesLength,
+} from "@/lib/imaging/histogramLazy";
 import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/imageSelectionMask";
 import {
   applyOptimizedColorsToChannelGroup,
@@ -38,6 +43,7 @@ import {
   seedRgbForGroupChannelIndex,
 } from "@/lib/imaging/psudoPalette";
 import {
+  effectiveDisplayColor,
   effectiveMaskVisualization,
   effectiveSourceColor,
   effectiveSourceLimits,
@@ -112,8 +118,10 @@ function makeGroupChannelRow(
 ): ChannelGroupChannel {
   const [srcLo, srcHi] = effectiveSourceLimits(sc);
   const idx = sourceChannels.findIndex((c) => c.id === sc.id);
-  const srcColor = effectiveSourceColor(sc, idx >= 0 ? idx : 0);
-  const seed = seedRgbForGroupChannelIndex(slotIndex);
+  const srcColor = effectiveSourceColor(sc, idx >= 0 ? idx : 0, sourceChannels);
+  const seed =
+    planarRgbDisplayColor(sc, sourceChannels) ??
+    seedRgbForGroupChannelIndex(slotIndex);
   const isMask = isMaskChannel(sc);
   return {
     id: crypto.randomUUID(),
@@ -573,16 +581,20 @@ export const ChannelGroupsMasterDetail = (
     }
     let cancelled = false;
     const targets = visibleHistogramTargets;
-    setLoadingHistogramSourceIds(targets);
-    void (async () => {
-      try {
-        await ensureChannelHistograms(targets);
-      } finally {
-        if (!cancelled) setLoadingHistogramSourceIds([]);
-      }
-    })();
+    const idleHandle = scheduleBackgroundTask(() => {
+      if (cancelled) return;
+      setLoadingHistogramSourceIds(targets);
+      void (async () => {
+        try {
+          await ensureChannelHistograms(targets);
+        } finally {
+          if (!cancelled) setLoadingHistogramSourceIds([]);
+        }
+      })();
+    });
     return () => {
       cancelled = true;
+      idleHandle.cancel();
       setLoadingHistogramSourceIds([]);
     };
   }, [visibleHistogramTargets, ensureChannelHistograms, props.noLoader]);
@@ -598,14 +610,19 @@ export const ChannelGroupsMasterDetail = (
       const sc = findSourceChannel(sourceChannels, colorPickerTarget.sourceId);
       if (!sc) return null;
       const idx = sourceChannels.findIndex((c) => c.id === sc.id);
-      return colorToHex(effectiveSourceColor(sc, idx >= 0 ? idx : 0));
+      return colorToHex(
+        effectiveSourceColor(sc, idx >= 0 ? idx : 0, sourceChannels),
+      );
     }
     const g = channelGroups.find((x) => x.id === colorPickerTarget.groupId);
     const gc = g?.channels.find((c) => c.id === colorPickerTarget.rowId);
     if (!gc) return null;
+    const sc = findSourceChannel(sourceChannels, gc.channelId);
     const live = colorRenderingForSource(channelRendering, gc.channelId);
     if (live) return colorToHex(live);
-    return colorToHex(gc.color);
+    return colorToHex(
+      sc ? effectiveDisplayColor(sc, sourceChannels, gc) : gc.color,
+    );
   }, [colorPickerTarget, channelRendering, sourceChannels, channelGroups]);
 
   const closeColorPicker = React.useCallback(() => {
@@ -665,6 +682,7 @@ export const ChannelGroupsMasterDetail = (
         activeGroup: activeChannelGroupId
           ? channelGroups.find((g) => g.id === activeChannelGroupId)
           : undefined,
+        channelGroups,
         stackVisibilities: channelVisibilities,
         groupRowVisibilities: channelGroupRowVisibilities,
         hasVisibilityMap: Object.keys(channelVisibilities).length > 0,
@@ -804,7 +822,9 @@ export const ChannelGroupsMasterDetail = (
                   channelGroupRowVisibilities,
                   gc.id,
                 );
-                const hex = rgbToHex(gc.color);
+                const hex = rgbToHex(
+                  sc ? effectiveDisplayColor(sc, sourceChannels, gc) : gc.color,
+                );
                 const kind = sc
                   ? isMaskChannel(sc)
                     ? "mask"
@@ -1013,12 +1033,44 @@ export const ChannelGroupsMasterDetail = (
       : `Show ${sc.name} on top of active group`;
   };
 
+  const allChannelsLayerTitle = (
+    sc: Channel,
+    shown: boolean,
+    viaActiveGroup: boolean,
+  ) => {
+    if (viaActiveGroup) {
+      return shown
+        ? `Hide ${sc.name} in active group`
+        : `Show ${sc.name} in active group`;
+    }
+    return stackLayerTitle(sc, shown);
+  };
+
   const renderAllChannelsRow = (sc: Channel) => {
     const stackOn = isStackVisible(channelVisibilities, sc.id);
+    const activeRow = activeChannelGroup?.channels.find(
+      (gc) => gc.channelId === sc.id,
+    );
+    const inActiveGroup = activeRow != null;
+    const viaActiveGroup = isDisplayedViaActiveGroup(
+      sc.id,
+      activeChannelGroup,
+      channelGroupRowVisibilities,
+    );
+    const shownInViewer = viaActiveGroup || stackOn;
     const capped =
       isImageChannel(sc) && stackOn && !visibleIntensitySourceIds.has(sc.id);
     const colorIdx = sourceChannels.findIndex((c) => c.id === sc.id);
-    const c = effectiveSourceColor(sc, colorIdx >= 0 ? colorIdx : 0);
+    const displayColor = effectiveDisplayColor(
+      sc,
+      sourceChannels,
+      activeRow ?? null,
+      colorIdx >= 0 ? colorIdx : 0,
+    );
+    const displayLimits: [number, number] = activeRow
+      ? [activeRow.lowerLimit, activeRow.upperLimit]
+      : effectiveSourceLimits(sc);
+    const c = displayColor;
     const hex = rgbToHex(c);
     const im = images.find((i) => i.id === sc.imageId);
     const imageLabel = im?.basename?.trim() ?? "";
@@ -1026,7 +1078,7 @@ export const ChannelGroupsMasterDetail = (
       ? `${imageLabel} · index ${sc.index}`
       : `Index ${sc.index}`;
 
-    if (!stackOn) {
+    if (!shownInViewer) {
       return (
         <li
           key={`all-${sc.id}`}
@@ -1041,9 +1093,16 @@ export const ChannelGroupsMasterDetail = (
             rowClassName={styles.rootChannelRow}
             compact
             visible={false}
-            visibilityTitle={stackLayerTitle(sc, false)}
+            visibilityTitle={allChannelsLayerTitle(sc, false, inActiveGroup)}
             visibilityAriaLabel={`Toggle layer for ${sc.name}`}
             onToggleVisibility={() => {
+              if (activeRow) {
+                setChannelGroupRowVisibilities({
+                  ...channelGroupRowVisibilities,
+                  [activeRow.id]: true,
+                });
+                return;
+              }
               setChannelVisibilities({
                 ...channelVisibilities,
                 [sc.id]: true,
@@ -1068,8 +1127,8 @@ export const ChannelGroupsMasterDetail = (
           ...channelItemAttrsForSource(
             channelRendering,
             sc,
-            effectiveSourceColor(sc, colorIdx >= 0 ? colorIdx : 0),
-            effectiveSourceLimits(sc),
+            displayColor,
+            displayLimits,
           ),
           histogram_loading: loadingHistogramSourceIds.includes(sc.id)
             ? "true"
@@ -1092,10 +1151,17 @@ export const ChannelGroupsMasterDetail = (
             visibilityTitle={
               capped
                 ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) — hide another channel`
-                : stackLayerTitle(sc, true)
+                : allChannelsLayerTitle(sc, true, viaActiveGroup)
             }
             visibilityAriaLabel={`Toggle layer for ${sc.name}`}
             onToggleVisibility={() => {
+              if (viaActiveGroup && activeRow) {
+                setChannelGroupRowVisibilities({
+                  ...channelGroupRowVisibilities,
+                  [activeRow.id]: false,
+                });
+                return;
+              }
               setChannelVisibilities({
                 ...channelVisibilities,
                 [sc.id]: false,
@@ -1116,10 +1182,17 @@ export const ChannelGroupsMasterDetail = (
             visibilityTitle={
               capped
                 ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) — hide another channel`
-                : stackLayerTitle(sc, true)
+                : allChannelsLayerTitle(sc, true, inActiveGroup)
             }
             visibilityAriaLabel={`Toggle layer for ${sc.name}`}
             onToggleVisibility={() => {
+              if (viaActiveGroup && activeRow) {
+                setChannelGroupRowVisibilities({
+                  ...channelGroupRowVisibilities,
+                  [activeRow.id]: false,
+                });
+                return;
+              }
               setChannelVisibilities({
                 ...channelVisibilities,
                 [sc.id]: false,

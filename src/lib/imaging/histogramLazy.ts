@@ -14,6 +14,40 @@ export function sourceDistributionYValuesLength(sc: Channel): number {
   return d?.YValues?.length ?? 0;
 }
 
+export type BackgroundTaskHandle = { cancel: () => void };
+
+/** Defer work until the browser is idle so pyramid tile loading stays responsive. */
+export function scheduleBackgroundTask(
+  fn: () => void,
+  opts?: { timeout?: number },
+): BackgroundTaskHandle {
+  const timeout = opts?.timeout ?? 2500;
+  let cancelled = false;
+  let idleId: number | undefined;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  const run = () => {
+    if (cancelled) return;
+    fn();
+  };
+
+  if (typeof requestIdleCallback !== "undefined") {
+    idleId = requestIdleCallback(run, { timeout });
+  } else {
+    timeoutId = setTimeout(run, 16);
+  }
+
+  return {
+    cancel: () => {
+      cancelled = true;
+      if (idleId != null && typeof cancelIdleCallback !== "undefined") {
+        cancelIdleCallback(idleId);
+      }
+      if (timeoutId != null) clearTimeout(timeoutId);
+    },
+  };
+}
+
 /** Per-image OME pyramid; cleared when switching images. */
 const omeHistogramCache = new Map<string, ConfigSourceDistribution>();
 
