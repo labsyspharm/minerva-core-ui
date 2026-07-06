@@ -151,6 +151,9 @@
     "styled-components": "^5"
   },
   "pnpm": {
+    "onlyBuiltDependencies": [
+      "@vivjs/extensions"
+    ],
     "overrides": {
       "@vivjs/constants": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/constants",
       "@vivjs/extensions": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/extensions",
