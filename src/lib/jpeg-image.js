@@ -22,26 +22,27 @@ class JpegImage {
     const fname = `${level}_${x}_${y}.jpg`;
     const url = `${ipath}/${lpath}/${fname}`;
     const response = await fetch(url);
-    console.log({ url });
     const decoder = new ImageDecoder({
       data: response.body,
       type: "image/jpeg",
     });
     const { image } = await decoder.decode();
     const { displayWidth, displayHeight } = image;
-    const data_length = displayWidth * displayHeight;
-    console.log({ image });
     const tileSize = this.tileSize;
-    const in_data = new Uint8Array(4 * data_length);
+    const copyOptions = {
+      format: "BGRX",
+      layout: [{ offset: 0, stride: tileSize * 4 }],
+    };
+    const in_data = new Uint8Array(image.allocationSize(copyOptions));
     const data = new Uint16Array(tileSize ** 2); // TODO
-    await image.copyTo(in_data, { format: "RGBA" });
-    for (let h = 0; h < displayHeight; h += 1) {
-      for (let w = 0; w < displayWidth; w += 1) {
-        const i = displayWidth * h + w;
-        const j = tileSize * h + w;
-        data[j] = in_data[i * 4] * 256;
-      }
+    await image.copyTo(in_data, copyOptions);
+    for (let i = 0; i < displayHeight * displayWidth; i += 1) {
+      const row = (i / displayWidth) | 0;
+      const col = i % displayWidth;
+      data[row * tileSize + col] = in_data[row * tileSize * 4 + col * 4] << 8;
     }
+    image.close();
+    decoder.close();
     return { x, y, sample, data };
   }
 
