@@ -74,11 +74,12 @@ export type MainSettings = {
   selections: readonly { c: number }[];
   contrastLimits: readonly [number, number][];
   colors: readonly [number, number, number][];
+  channelsVisible?: readonly boolean[];
 };
 
 export type ImageViewerProps = {
   stories: Story[];
-  layers: Layer[];
+  imageLayers: Layer[];
   mainSettingsList: MainSettings[];
   loaderList: LoaderList;
   viewerConfig: Config;
@@ -324,10 +325,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
       const fetcher = createSam2ImageFetcher(
         { data: firstLoader.loader.data },
         {
-          selections: settings.selections,
-          colors: settings.colors,
-          contrastLimits: settings.contrastLimits,
-          channelsVisible: settings.channelsVisible,
+          selections: settings.selections.map((s) => ({
+            z: 0,
+            t: 0,
+            c: s.c,
+          })),
+          colors: [...settings.colors],
+          contrastLimits: [...settings.contrastLimits],
+          channelsVisible: [...(settings.channelsVisible ?? [])],
         },
         imageShape.x,
         imageShape.y,

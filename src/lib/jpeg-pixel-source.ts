@@ -17,16 +17,21 @@ type ReadRasterProps = {
   y?: number;
   height?: number;
   width?: number;
+  signal?: AbortSignal;
 };
 
 class JpegPixelSource {
-  _indexer: (s: Selection) => Promise<typeof JpegImage>;
+  _indexer: (s: Selection) => JpegImage;
   tileSize: number;
   labels: Labels;
   shape: Shape;
   dtype: Dtype;
 
-  constructor(indexer, tileSize, shape) {
+  constructor(
+    indexer: (s: Selection) => JpegImage,
+    tileSize: number,
+    shape: Shape,
+  ) {
     this._indexer = indexer;
     this.tileSize = tileSize;
     this.labels = ["z", "c", "t", "y", "x"];
@@ -41,12 +46,11 @@ class JpegPixelSource {
   async getTile({ x, y, selection, signal }) {
     const { height, width } = this._getTileExtent(x, y);
 
-    const image = await this._indexer(selection);
+    const image = this._indexer(selection);
     return this._readRasters(image, { x, y, width, height, signal });
   }
 
-  async _readRasters(image: typeof JpegImage, props: ReadRasterProps = {}) {
-    const index = [image.c, props.x, props.y].join("-");
+  async _readRasters(image: JpegImage, props: ReadRasterProps = {}) {
     const raster = await image.readRasters({
       ...props,
     });
@@ -63,7 +67,7 @@ class JpegPixelSource {
     };
   }
 
-  _getTileExtent(_x, _y) {
+  _getTileExtent(_x: number, _y: number) {
     const height = this.tileSize;
     const width = this.tileSize;
     return { height, width };
