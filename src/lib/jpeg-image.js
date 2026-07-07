@@ -34,7 +34,7 @@ class JpegImage {
     const tileSize = this.tileSize;
     const in_data = new Uint8Array(4 * data_length);
     const data = new Uint16Array(tileSize ** 2); // TODO
-    image.copyTo(in_data);
+    await image.copyTo(in_data, { format: "RGBA" });
     for (let h = 0; h < displayHeight; h += 1) {
       for (let w = 0; w < displayWidth; w += 1) {
         const i = displayWidth * h + w;
