@@ -15,6 +15,7 @@
     "lint": "eslint src"
   },
   "type": "module",
+  "packageManager": "pnpm@10.34.4",
   "main": "build/main.js",
   "types": "build/main.d.ts",
   "author": "John T. Hoffer",

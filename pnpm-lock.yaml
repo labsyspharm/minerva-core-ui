@@ -3053,7 +3053,7 @@ packages:
     hasBin: true
 
   lensing@https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9:
-    resolution: {tarball: https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9}
+    resolution: {integrity: sha512-uf/bKB672xgeetb10K5RHJlXJZT0HI8l+WaDsjPsl710J23GOkPTu1B6AvKbb/xVknuR/E8dn4Gijr340jM2jg==, tarball: https://github.com/jessupjs/lensing/tarball/f800a9d67155db599f8054922cb6d45b673fe5c9}
     version: 1.0.32
 
   lerc@3.0.0:
