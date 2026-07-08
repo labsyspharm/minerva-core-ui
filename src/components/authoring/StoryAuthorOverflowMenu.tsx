@@ -1,6 +1,5 @@
 import * as React from "react";
 import styled from "styled-components";
-import { openAuthorExportDialog } from "@/lib/navigation/authorExportDialog";
 import { RETURN_TO_LIBRARY_EVENT } from "@/lib/navigation/returnToLibraryEvent";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { downloadStoryJsonExport } from "@/lib/stores/downloadStoryJson";
@@ -116,7 +115,7 @@ const MenuItemDivided = styled(MenuItem)`
 `;
 
 export type StoryAuthorOverflowMenuProps = {
-  authorUiTagName: string;
+  onExport: () => void;
   exportLabel?: string;
 };
 
@@ -125,7 +124,7 @@ export type StoryAuthorOverflowMenuProps = {
  * story chrome; behavior matches the former nav tab-row menu.
  */
 export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
-  const { authorUiTagName, exportLabel = "Export" } = props;
+  const { onExport, exportLabel = "Export" } = props;
   const [open, setOpen] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const waypointsOk = useDocumentStore((s) => s.waypoints.length > 0);
@@ -185,7 +184,7 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
           onClick={(e) => {
             e.stopPropagation();
             close();
-            openAuthorExportDialog(authorUiTagName);
+            onExport();
           }}
         >
           {exportLabel}

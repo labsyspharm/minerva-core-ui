@@ -47,11 +47,11 @@ function hasDirectoryPickerAccess(): boolean {
 }
 
 /**
- * Author shell (Dexie, workers, remote image URLs) runs in a secure context.
+ * Authoring (Dexie, workers, remote image URLs) runs in a secure context.
  * Do not gate on `showDirectoryPicker`: Firefox lacks it while still supporting URL/DICOM
  * workflows and (via fallback picker) single-session local TIFF picks.
  */
-function hasAuthorShellSupport(): boolean {
+function hasFilesystemAuthorSupport(): boolean {
   return typeof window !== "undefined" && window.isSecureContext;
 }
 
@@ -143,7 +143,7 @@ const toLoaderFromUrl = async (
 };
 
 export {
-  hasAuthorShellSupport,
+  hasFilesystemAuthorSupport,
   hasDirectoryPickerAccess,
   isPersistableFileHandle,
   findFile,

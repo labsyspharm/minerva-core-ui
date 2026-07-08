@@ -1,10 +1,6 @@
 import styled from "styled-components";
-import {
-  PopUpdate as PopUpdateChannel,
-  Push as PushChannel,
-} from "@/components/authoring/tools/ActionButtons";
 import { EditableText } from "@/components/authoring/tools/EditableText";
-import { EditModeSwitcher } from "@/components/authoring/tools/EditModeSwitcher";
+import { renameSourceChannelDisplayName } from "@/lib/channel/channelGroupMutations";
 
 /** Matches nested list styling in `ChannelGroups` so the overlay reads as one column. */
 const ChannelsSection = styled.div`
@@ -15,16 +11,6 @@ const ChannelsSection = styled.div`
   overflow: hidden;
 `;
 
-const ChannelsSectionHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 4px 6px;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--theme-glass-edge) 35%, transparent);
-`;
-
 const SectionLabel = styled.div`
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -33,16 +19,9 @@ const SectionLabel = styled.div`
   color: color-mix(in srgb, var(--theme-light-contrast-color) 52%, transparent);
   line-height: 1.2;
   margin: 0;
-  flex: 1;
-  min-width: 0;
-`;
-
-const ToolbarSlot = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-shrink: 0;
-  line-height: 0;
+  padding: 4px 6px;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--theme-glass-edge) 35%, transparent);
 `;
 
 const ChannelList = styled.div`
@@ -113,28 +92,28 @@ const NameSlot = styled.span`
   }
 `;
 
-export const defaultChannels = [
-  { color: "0000FF", name: "DNA" },
-  { color: "FF0000", name: "Red" },
-  { color: "00FF00", name: "Green" },
-  { color: "FFFFFF", name: "White" },
-];
+type LegendChannelRow = {
+  name: string;
+  color: string;
+  source_uuid: string;
+};
 
-const LegendRow = (props) => {
+type LegendRowProps = {
+  channel: LegendChannelRow;
+  channelVisibilities: Record<string, boolean>;
+  onClick: () => void;
+};
+
+const LegendRow = (props: LegendRowProps) => {
   const { channel, channelVisibilities } = props;
   const channelName = channel.name;
   const visible = channelVisibilities[channelName];
-  const { idx, g, onClick } = props;
-  const setInput = (t) => {
-    props.updateChannel({ ...channel, name: t }, { idx, g });
-  };
-  const onPop = () => {
-    props.popChannel({ g, idx });
+  const setInput = (t: string) => {
+    renameSourceChannelDisplayName(channel.source_uuid, t);
   };
 
-  const uuid = `group/channel/name/${idx}`;
+  const uuid = `group/channel/name/${channel.source_uuid}`;
   const statusProps = {
-    ...props,
     md: false,
     setInput,
     updateCache: () => null,
@@ -144,68 +123,49 @@ const LegendRow = (props) => {
 
   const wrapProps = {
     color: "rgb(230, 237, 243)",
-    onClick,
+    onClick: props.onClick,
   };
   const boxProps = {
-    ...props.channel,
-    outline: "none",
+    color: props.channel.color,
+    outline: "none" as string | undefined,
   };
   if (!visible) {
     boxProps.color = "0d1117";
     wrapProps.color = "rgb(139, 148, 158)";
     boxProps.outline = "1px solid color-mix(in srgb, white 28%, transparent)";
   }
-  const coreUI = (
-    <RowClickArea {...wrapProps} className="channel-legend-row">
-      <Swatch {...boxProps} />
-      <NameSlot className="channel-legend-name">
-        <EditableText {...statusProps}>{channelName}</EditableText>
-      </NameSlot>
-    </RowClickArea>
-  );
-  const editSwitch = [
-    ["div", { children: coreUI }],
-    [PopUpdateChannel, { children: coreUI, onPop }],
-  ];
-  const canPop = props.editable && props.total > 1;
-  const extraUI = (
-    <EditModeSwitcher {...{ ...props, editable: canPop, editSwitch }} />
-  );
 
-  return <LegendRowWrap>{extraUI}</LegendRowWrap>;
+  return (
+    <LegendRowWrap>
+      <RowClickArea {...wrapProps} className="channel-legend-row">
+        <Swatch {...boxProps} />
+        <NameSlot className="channel-legend-name">
+          <EditableText {...statusProps}>{channelName}</EditableText>
+        </NameSlot>
+      </RowClickArea>
+    </LegendRowWrap>
+  );
 };
 
-export const ChannelLegend = (props) => {
-  const { g, pushChannel, toggleChannel } = props;
-  const channels = props.channels || [];
-  const total = channels.length;
-  const nextIdx = total + 1;
-  const newChannel = defaultChannels[nextIdx % defaultChannels.length];
-  const onPush = () => {
-    pushChannel(newChannel, { g });
-  };
-  const editSwitch = [
-    ["div", {}],
-    [PushChannel, { onPush }],
-  ];
-  const addChannelUI = <EditModeSwitcher {...{ ...props, editSwitch }} />;
+export type ChannelLegendProps = {
+  channels: LegendChannelRow[];
+  channelVisibilities: Record<string, boolean>;
+  toggleChannel: (channel: { name: string }) => void;
+};
 
-  const rows = channels.map((c, k) => {
-    const rowProps = {
-      ...props,
-      total,
-      channel: c,
-      idx: k,
-      onClick: () => toggleChannel(c),
-    };
-    return <LegendRow key={c.channel_uuid ?? `${c.name}-${k}`} {...rowProps} />;
-  });
+/** Compact overlay: visibility toggle + rename. Group membership editing lives in the sidebar. */
+export const ChannelLegend = (props: ChannelLegendProps) => {
+  const rows = props.channels.map((c) => (
+    <LegendRow
+      key={c.source_uuid}
+      channel={c}
+      channelVisibilities={props.channelVisibilities}
+      onClick={() => props.toggleChannel(c)}
+    />
+  ));
   return (
     <ChannelsSection>
-      <ChannelsSectionHeader>
-        <SectionLabel>Channels</SectionLabel>
-        <ToolbarSlot>{addChannelUI}</ToolbarSlot>
-      </ChannelsSectionHeader>
+      <SectionLabel>Channels</SectionLabel>
       <ChannelList>{rows}</ChannelList>
     </ChannelsSection>
   );

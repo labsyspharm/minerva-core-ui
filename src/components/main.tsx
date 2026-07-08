@@ -21,14 +21,8 @@ import {
 import type {
   ConfigSourceDistribution,
   ConfigWaypoint,
-  ItemRegistryProps,
-  MutableFields,
 } from "@/lib/authoring/config";
-import {
-  extractChannels,
-  extractDistributions,
-  mutableItemRegistry,
-} from "@/lib/authoring/config";
+import { extractChannels, extractDistributions } from "@/lib/authoring/config";
 import {
   createTileLayers,
   loadDicomWeb,
@@ -37,8 +31,8 @@ import {
 import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
 import {
   findFile,
-  hasAuthorShellSupport,
   hasDirectoryPickerAccess,
+  hasFilesystemAuthorSupport,
   isPersistableFileHandle,
   toLoader,
   toLoaderFromUrl,
@@ -51,11 +45,7 @@ import {
 import { createJpegLayers, loadJpeg } from "@/lib/imaging/jpeg.js";
 import { type Loader, toSettings } from "@/lib/imaging/viv";
 import { Pool } from "@/lib/imaging/workers/Pool";
-import type {
-  ConfigGroup,
-  ExhibitConfig,
-  Waypoint as WaypointType,
-} from "@/lib/legacy/exhibit";
+import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { readConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
@@ -79,23 +69,18 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import {
-  applyGroupChannelRange,
   applyLoaderPixelSizeToImage,
   applySourceChannelsToImages,
-  configWaypointsHaveLegacyArrowsOrOverlays,
   type LegacyExhibitWaypoint,
   migrateLegacyWaypointShapes,
-  type SetGroupChannelRangePayload,
+  type StoryShape,
   setImageSource,
-  waypointsToConfigWaypoints,
   waypointToConfigWaypoint,
 } from "@/lib/stores/storeUtils";
 import { isOpts, validate } from "@/lib/util/validate";
 import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import { ensureDefaultWaypointForImageImport } from "@/lib/waypoints/ensureDefaultWaypointForImageImport";
 import { normalizeWaypointToBounds } from "@/lib/waypoints/waypoint";
-import { author } from "@/minerva-author-ui/author";
-import { toAuthorElement } from "@/minerva-author-ui/index";
 import {
   parsePreferredStoryIdFromLocation,
   rootRouteApi,
@@ -185,59 +170,6 @@ const StoryPersistenceRoot = ({ children }: { children: React.ReactNode }) => {
       {children}
     </>
   );
-};
-
-const setContainer = ({ container, idx, key, newItem }) => {
-  const extra = idx >= container[key].length ? [newItem] : [];
-  const newItems = container[key].concat(extra).map((item, i) => {
-    return i === idx ? newItem : item;
-  });
-  return { ...container, [key]: newItems };
-};
-
-const setStory = ({ exhibit, s, newStory }) => {
-  return setContainer({
-    newItem: newStory,
-    container: exhibit,
-    key: "stories",
-    idx: s,
-  });
-};
-
-const setWaypoint = ({ exhibit, s, w, newWaypoint }) => {
-  const story = exhibit.stories[s];
-  const newStory = setContainer({
-    newItem: newWaypoint,
-    container: story,
-    key: "waypoints",
-    idx: w,
-  });
-  return setStory({ exhibit, s, newStory });
-};
-
-const setGroup = ({ exhibit, g, newGroup }) => {
-  return setContainer({
-    newItem: newGroup,
-    container: exhibit,
-    key: "groups",
-    idx: g,
-  });
-};
-
-const setChannel = ({ exhibit, g, idx, newChannel }) => {
-  const group = exhibit.groups[g];
-  const newGroup = setContainer({
-    newItem: newChannel,
-    container: group,
-    key: "channels",
-    idx,
-  });
-  return setGroup({ exhibit, g, newGroup });
-};
-
-const removeKey = (container, key, idx) => {
-  const newList = container[key].filter((_, i) => i !== idx);
-  return { ...container, [key]: newList };
 };
 
 const getDistributions = async (sourceChannels, loader) => {
@@ -449,7 +381,7 @@ const Content = (props: Props) => {
     [handleKeys, activeStoryId],
   );
   const firstExhibit = readConfig(props.exhibit_config);
-  const [exhibit, setExhibit] = useState(firstExhibit);
+  const [exhibit] = useState(firstExhibit);
   const [jpegLoaderEntries, setJpegLoaderEntries] = useState<JpegLoaderEntry[]>(
     [],
   );
@@ -459,12 +391,9 @@ const Content = (props: Props) => {
   const [dicomIndexList, setDicomIndexList] = useState([] as DicomIndex[]);
   const {
     setActiveChannelGroup,
-    setChannelVisibilities,
-    setGroupChannelLists,
     activeChannelGroupId,
     channelVisibilities,
     channelRendering,
-    setGroupNames,
   } = useAppStore();
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
   const setImages = useDocumentStore((s) => s.setImages);
@@ -476,17 +405,11 @@ const Content = (props: Props) => {
   );
   const documentChannelsRef = React.useRef({ channelGroups, sourceChannels });
   documentChannelsRef.current = { channelGroups, sourceChannels };
-  const [config, setConfig] = useState(() => ({
-    ItemRegistry: {
-      Name: "",
-      ChannelGroups: channelGroups,
-      SourceChannels: sourceChannels,
-      SourceDistributions: [],
-      Shapes: [],
-      Stories: cloneConfigWaypoints(props.configWaypoints),
-    } as ItemRegistryProps,
-    ID: crypto.randomUUID(),
-  }));
+  /** One-time seed from exhibit props; document store is authoritative after hydration. */
+  const seedStoriesRef = React.useRef(
+    cloneConfigWaypoints(props.configWaypoints),
+  );
+  const seedShapesRef = React.useRef<StoryShape[]>([]);
 
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
@@ -494,21 +417,13 @@ const Content = (props: Props) => {
     null as Handle.Dir | null,
   );
   const [presenting, setPresenting] = useState(false);
-  const [editable, setEditable] = useState(false);
   const checkWindow = React.useCallback(() => window.innerWidth > 600, []);
-
-  const [twoNavOk, setTwoNavOk] = useState(checkWindow());
-  const [hiddenWaypoint, setHideWaypoint] = useState(false);
-  const [hiddenChannel, setHideChannel] = useState(!twoNavOk);
+  const [hiddenChannel, setHideChannel] = useState(() => !checkWindow());
 
   const handleResize = React.useCallback(() => {
-    const twoNavPossible = checkWindow();
-
-    if (!twoNavPossible) {
-      setHideWaypoint(false);
+    if (!checkWindow()) {
       setHideChannel(true);
     }
-    setTwoNavOk(twoNavPossible);
   }, [checkWindow]);
 
   React.useEffect(() => {
@@ -533,99 +448,23 @@ const Content = (props: Props) => {
     setIoState("EXPORTING");
   };
   const stopExport = () => setIoState("IDLE");
-  const toggleEditor = () => setEditable(!editable);
 
-  const setHiddenChannelWithLogic = (v: boolean) => {
-    if (!twoNavOk && !v) {
-      setHideWaypoint(true);
-    }
-    setHideChannel(v);
-  };
-
-  const setHiddenWaypointWithLogic = (v: boolean) => {
-    if (!twoNavOk && !v) {
-      setHideChannel(true);
-    }
-    setHideWaypoint(v);
-  };
-
-  const updateGroupChannelLists = useCallback(
-    ({ ChannelGroups, SourceChannels }) => {
-      setGroupNames(
-        Object.fromEntries(ChannelGroups.map(({ name, id }) => [id, name])),
-      );
-      const toChannelList = (groupChannels) => {
-        return groupChannels
-          .map((gc) => findSourceChannel(SourceChannels, gc.channelId))
-          .filter((x) => x)
-          .map(({ name: chName }) => chName);
-      };
-      const groupChannelLists = Object.fromEntries(
-        ChannelGroups.map(({ name, channels }) => {
-          return [name, toChannelList(channels)];
-        }),
-      );
-      setGroupChannelLists(groupChannelLists);
-      const defaultGroup = ChannelGroups[0] || {
-        channels: [],
-        name: "",
-      };
-      const groupName = defaultGroup.name;
-      const channelList = groupChannelLists[groupName] || [];
-      setChannelVisibilities(
-        Object.fromEntries(channelList.map((name) => [name, true])),
-      );
-    },
-    [setGroupNames, setGroupChannelLists, setChannelVisibilities],
-  );
-
-  /** After reload, app store resets while channel groups persist — select first group and sync lists/visibilities. */
+  /** After reload, app store resets while channel groups persist — select first group and sync visibilities. */
   useEffect(() => {
-    if (channelGroups.length === 0 || sourceChannels.length === 0) return;
+    if (channelGroups.length === 0) return;
     const active = useAppStore.getState().activeChannelGroupId;
     if (active != null && channelGroups.some((g) => g.id === active)) return;
-    updateGroupChannelLists({
-      ChannelGroups: channelGroups,
-      SourceChannels: sourceChannels,
-    });
     setActiveChannelGroup(channelGroups[0].id);
-  }, [
-    channelGroups,
-    sourceChannels,
-    updateGroupChannelLists,
-    setActiveChannelGroup,
-  ]);
+  }, [channelGroups, setActiveChannelGroup]);
 
-  const resetItems = (ItemRegistry) => {
-    setConfig((config) => ({
-      ...config,
-      ItemRegistry: {
-        ...config.ItemRegistry,
-        ...ItemRegistry,
-      },
-      ID: crypto.randomUUID(),
-    }));
-    const { ChannelGroups } = ItemRegistry;
-    if (ChannelGroups?.length > 0) {
-      setActiveChannelGroup(ChannelGroups[0].id);
-    }
-  };
-
-  const setItems = React.useCallback((ItemRegistry) => {
-    setConfig((config) => ({
-      ...config,
-      ItemRegistry: {
-        ...config.ItemRegistry,
-        ...ItemRegistry,
-      },
-    }));
-  }, []);
-
-  // Keep a stable reference for store subscriptions.
-  const setItemsRef = React.useRef(setItems);
-  useEffect(() => {
-    setItemsRef.current = setItems;
-  }, [setItems]);
+  const selectFirstChannelGroup = useCallback(
+    (groups: typeof channelGroups) => {
+      if (groups.length > 0) {
+        setActiveChannelGroup(groups[0].id);
+      }
+    },
+    [setActiveChannelGroup],
+  );
 
   const [fileName, setFileName] = useState("");
   /** Full URL of the last OME-TIFF-URL load (Images tab label); cleared for local/DICOM. */
@@ -725,14 +564,7 @@ const Content = (props: Props) => {
     const { SourceChannels, ChannelGroups } = registry;
     setImages(nextImages);
     setChannelGroups(ChannelGroups);
-    updateGroupChannelLists({
-      ChannelGroups,
-      SourceChannels,
-    });
-    resetItems({
-      SourceChannels,
-      ChannelGroups,
-    });
+    selectFirstChannelGroup(ChannelGroups);
     ensureDefaultWaypointForImageImport();
     setOmeLoaderEntries(entries);
     for (let i = 0; i < entries.length; i++) {
@@ -782,8 +614,7 @@ const Content = (props: Props) => {
     });
     setImages(nextImages);
     setChannelGroups(ChannelGroups);
-    updateGroupChannelLists({ ChannelGroups, SourceChannels });
-    resetItems({ SourceChannels, ChannelGroups });
+    selectFirstChannelGroup(ChannelGroups);
     ensureDefaultWaypointForImageImport();
     setJpegLoaderEntries([{ loader, sourceImageId }]);
   };
@@ -820,8 +651,7 @@ const Content = (props: Props) => {
     });
     setImages(nextImages);
     setChannelGroups(ChannelGroups);
-    updateGroupChannelLists({ ChannelGroups, SourceChannels });
-    resetItems({ SourceChannels, ChannelGroups });
+    selectFirstChannelGroup(ChannelGroups);
     ensureDefaultWaypointForImageImport();
     setOmeLoaderEntries([{ loader, sourceImageId }]);
     const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
@@ -841,13 +671,12 @@ const Content = (props: Props) => {
         return;
       }
       // Story/waypoints/shapes come from Dexie (bootstrap already ran). Do not call
-      // setStories, document setShapes/setWaypoints, setConfig clearing Stories/Shapes, or
-      // resetDocument — only transient viewer state + OME reconnect below.
+      // setStories, document setShapes/setWaypoints, or resetDocument — only transient
+      // viewer state + OME reconnect below.
       useAppStore.getState().clearOverlayLayers();
       const file = await restored[0].getFile();
       await onStartOmeTiffRef.current(file.name, restored);
       setImportRevision((r) => r + 1);
-      setHideWaypoint(false);
       document.getElementById("global-loader")?.remove();
     },
     [],
@@ -887,7 +716,6 @@ const Content = (props: Props) => {
     console.log("[minerva] onStart: will load, setting loading state");
     // Switch to waypoints tab and show loading immediately.
     setImportRevision((r) => r + 1);
-    setHiddenWaypointWithLogic(false);
     setIsLoadingImage(true);
     try {
       if (dicomPropList.length > 0) {
@@ -1008,97 +836,9 @@ const Content = (props: Props) => {
     }
     setImages(nextDocImages);
     setChannelGroups(ChannelGroups);
-    updateGroupChannelLists({
-      ChannelGroups,
-      SourceChannels,
-    });
+    selectFirstChannelGroup(ChannelGroups);
     ensureDefaultWaypointForImageImport();
   };
-
-  const mutableFields: MutableFields = [];
-  const ItemRegistry = mutableItemRegistry(
-    config.ItemRegistry,
-    setItems,
-    mutableFields,
-  );
-
-  const getSourceDistribution = React.useMemo(() => {
-    return (source_uuid) => {
-      const source_channel = sourceChannels.find((x) => {
-        return x.id === source_uuid;
-      });
-      if (source_channel) {
-        const { sourceDistribution } = source_channel;
-        return sourceDistribution;
-      }
-      return null;
-    };
-  }, [sourceChannels]);
-
-  // Recreate the author web components only when config.ID changes (same behavior
-  // as the previous useMemo([config.ID]) + ref, without hook dependency noise).
-  const controlPanelCacheRef = React.useRef<{
-    configId: string;
-    element: string;
-  } | null>(null);
-  if (
-    !controlPanelCacheRef.current ||
-    controlPanelCacheRef.current.configId !== config.ID
-  ) {
-    controlPanelCacheRef.current = {
-      configId: config.ID,
-      element: author({
-        ...config,
-        ItemRegistry,
-        actions: {
-          startExport,
-        },
-      }),
-    };
-  }
-  const controlPanelElement = controlPanelCacheRef.current.element;
-
-  const setGroupChannelRange = React.useCallback(
-    (payload: SetGroupChannelRangePayload) => {
-      const doc = useDocumentStore.getState();
-      doc.setChannelGroups(applyGroupChannelRange(doc.channelGroups, payload));
-    },
-    [],
-  );
-
-  const clearContrastPreviewIfOwnedBy = React.useCallback(
-    (groupId: string, channelId: string) => {
-      const { channelRendering, clearChannelRendering } =
-        useAppStore.getState();
-      if (
-        channelRendering?.kind === "contrast" &&
-        channelRendering.groupId === groupId &&
-        channelRendering.channelId === channelId
-      ) {
-        clearChannelRendering();
-      }
-    },
-    [],
-  );
-
-  const channelItemElement = React.useMemo(() => {
-    return toAuthorElement("channel-item", {
-      ID: crypto.randomUUID(),
-      setGroupChannelRange,
-      setChannelRendering: (rendering: ChannelRendering) => {
-        useAppStore.getState().setChannelRendering(rendering);
-      },
-      clearChannelRendering: () => {
-        useAppStore.getState().clearChannelRendering();
-      },
-      clearContrastPreviewIfOwnedBy,
-      getSourceDistribution,
-    });
-  }, [
-    clearContrastPreviewIfOwnedBy,
-    getSourceDistribution,
-    setGroupChannelRange,
-  ]);
 
   const [valid, setValid] = useState({} as ValidObj);
 
@@ -1185,103 +925,9 @@ const Content = (props: Props) => {
     dicomIndexList.length === 0 &&
     !hasDemo;
 
-  // Exhibit editing operations (from Index)
-  const { name, groups: exhibitGroups, stories } = exhibit;
-
-  const updateWaypoint = (newWaypoint: WaypointType, { s, w }) => {
-    const oldWaypoint = stories[s]?.waypoints[w];
-    if (!oldWaypoint) {
-      throw `Cannot update waypoint. Waypoint ${w} does not exist!`;
-    }
-    const ex = setWaypoint({ exhibit, s, w, newWaypoint });
-    setExhibit(ex);
-  };
-
-  const pushWaypoint = (newWaypoint: WaypointType, { s }) => {
-    if (!stories[s]) {
-      throw `Cannot push waypoint. Story ${s} does not exist!`;
-    }
-    const w = stories[s].waypoints.length;
-    const ex = setWaypoint({ exhibit, s, w, newWaypoint });
-    setExhibit(ex);
-  };
-
-  const popWaypoint = ({ s, w }) => {
-    const story = stories[s];
-    const oldWaypoints = story?.waypoints;
-    if (oldWaypoints?.length <= 1) {
-      throw "Unable to pop last waypoint";
-    }
-    const newStory = removeKey(story, "waypoints", w);
-    const ex = setStory({ exhibit, s, newStory });
-    setExhibit(ex);
-  };
-
-  const updateGroup = (newGroup, { g }) => {
-    const ex = setGroup({ exhibit, g, newGroup });
-    setExhibit(ex);
-  };
-
-  const pushGroup = (newGroup) => {
-    const g = exhibit.groups.length;
-    const ex = setGroup({ exhibit, g, newGroup });
-    setExhibit(ex);
-  };
-
-  const popGroup = ({ g }) => {
-    if (exhibitGroups.length <= 1) {
-      throw "Unable to pop last group";
-    }
-    const ex = removeKey(exhibit, "groups", g);
-    const newGroups = ex.groups.map((group) => {
-      const gNext = group.g >= g ? group.g - 1 : group.g;
-      return { ...group, g: gNext };
-    });
-    const newStories = ex.stories.map((story) => {
-      const newWaypoints = story.waypoints.map((waypoint) => {
-        const gNext = waypoint.g >= g ? 0 : g;
-        return { ...waypoint, g: gNext };
-      });
-      return { ...story, waypoints: newWaypoints };
-    });
-    setExhibit({ ...ex, groups: newGroups, stories: newStories });
-  };
-
-  const updateChannel = (newChannel, { g, idx }) => {
-    const group = exhibitGroups[g];
-    if (!group?.channels[idx]) {
-      throw `Cannot update channel. Channel ${idx} does not exist!`;
-    }
-    const ex = setChannel({ exhibit, g, idx, newChannel });
-    setExhibit(ex);
-  };
-
-  const pushChannel = (newChannel, { g }) => {
-    const group = exhibitGroups[g];
-    if (!group) {
-      throw `Cannot push channel. Group ${g} does not exist!`;
-    }
-    const idx = group.channels.length;
-    const ex = setChannel({ exhibit, g, idx, newChannel });
-    setExhibit(ex);
-  };
-
-  const popChannel = ({ g, idx }) => {
-    const group = exhibitGroups[g];
-    const channels = group?.channels;
-    if (channels.length <= 1) {
-      throw "Unable to pop last channel";
-    }
-    const newGroup = removeKey(group, "channels", idx);
-    const ex = setGroup({ exhibit, g, newGroup });
-    setExhibit(ex);
-  };
+  const { name } = exhibit;
 
   // Data transformation (from Index)
-  const itemRegistryMarkerNames = sourceChannels.map(
-    (source_channel) => source_channel.name,
-  );
-
   const imageViewerStateSignature = React.useMemo(
     () => buildImageViewerSignature(channelGroups, sourceChannels),
     [channelGroups, sourceChannels],
@@ -1388,47 +1034,22 @@ const Content = (props: Props) => {
       );
       if (next === prevCh) return;
       doc.setImages(applySourceChannelsToImages(doc.images, next));
-      setItems({ SourceChannels: next });
     },
-    [omeLoaderEntries, viewerImageKey, setItems],
+    [omeLoaderEntries, viewerImageKey],
   );
 
-  const channelProps = {
-    name,
-    stories,
-    authorMode: !presenting,
-    groups: itemRegistryGroups,
-    controlPanelElement,
-    channelItemElement,
-    config: config,
-    editable,
+  const playbackRouterProps = {
     hiddenChannel,
-    setHiddenChannel: setHiddenChannelWithLogic,
-    updateGroup,
-    pushGroup,
-    popGroup,
-    updateChannel,
-    pushChannel,
-    popChannel,
+    noLoader,
     ensureChannelHistograms: onEnsureChannelHistograms,
-  };
-
-  const mainProps = {
-    ...channelProps,
     in_f: fileName,
     name,
     handles: [] as Handle.File[],
     directory_handle,
     ioState,
     presenting,
-    hiddenWaypoint,
-    setHiddenWaypoint: setHiddenWaypointWithLogic,
-    startExport,
     stopExport,
-    toggleEditor,
-    updateWaypoint,
-    pushWaypoint,
-    popWaypoint,
+    groups: itemRegistryGroups,
   };
 
   const viewerConfig = React.useMemo(() => {
@@ -1574,33 +1195,12 @@ const Content = (props: Props) => {
 
   const imageProps = React.useMemo(() => {
     return {
-      ChannelGroups: channelGroups,
-      SourceChannels: sourceChannels,
-      jpegLoaderEntries,
       loaderList,
       mainSettingsList,
       imageLayers,
-      marker_names: itemRegistryMarkerNames,
-      groups: itemRegistryGroups,
-      stories,
-      name,
       showSquareViewportOverlay,
-      viewerImageKey,
     };
-  }, [
-    channelGroups,
-    sourceChannels,
-    jpegLoaderEntries,
-    itemRegistryMarkerNames,
-    itemRegistryGroups,
-    stories,
-    name,
-    showSquareViewportOverlay,
-    viewerImageKey,
-    mainSettingsList,
-    imageLayers,
-    loaderList,
-  ]);
+  }, [loaderList, mainSettingsList, imageLayers, showSquareViewportOverlay]);
 
   // Use Zustand store for overlay state management
   const {
@@ -1615,12 +1215,9 @@ const Content = (props: Props) => {
   } = useAppStore();
   const _waypoints = useDocumentStore((s) => s.waypoints);
 
-  // Document waypoint lifecycle: `index.tsx` waypoints are copied once into
-  // `config` (see `useState` initializer). Then `useDocumentStore.waypoints` is
-  // authoritative; this effect seeds empty state or migrates legacy markers.
-  // The subscription mirrors waypoints + shapes into `config.ItemRegistry`.
+  // Document waypoint lifecycle: seed from exhibit props once, then Zustand is authoritative.
   useEffect(() => {
-    const configStories = config.ItemRegistry.Stories;
+    const configStories = seedStoriesRef.current;
     const storeWaypoints = documentWaypoints(useDocumentStore.getState());
 
     if (!configStories?.length) return;
@@ -1639,14 +1236,11 @@ const Content = (props: Props) => {
     const needsPanMigration = (s: ConfigWaypoint) =>
       (s.Pan != null || s.Zoom != null) && !hasAuthoritativeBounds(s);
 
-    // First paint: fill empty store from config only once image dimensions exist so
-    // `Arrows` / `Overlays` can be converted to `ShapeIds` + registry (`Shapes`)
-    // before anything enters Zustand.
     if (storeWaypoints.length === 0) {
       if (imageWidth <= 0 || imageHeight <= 0) {
         return;
       }
-      const registry = config.ItemRegistry.Shapes ?? [];
+      const registry = seedShapesRef.current;
       const {
         stories: migrated,
         shapes: mergedShapes,
@@ -1673,45 +1267,17 @@ const Content = (props: Props) => {
       return;
     }
 
-    // Exhibit `Shapes` can arrive after `Stories`, or the seed path may have seen `Shapes`
-    // as undefined. Hydrate **before** the alignment early-return so imports always resolve
-    // when the exhibit registry has data (even if ids are temporarily out of sync).
     if (
-      (config.ItemRegistry.Shapes?.length ?? 0) > 0 &&
+      seedShapesRef.current.length > 0 &&
       documentShapes(useDocumentStore.getState()).length === 0
     ) {
-      useDocumentStore.getState().setShapes(config.ItemRegistry.Shapes ?? []);
+      useDocumentStore.getState().setShapes(seedShapesRef.current);
     }
 
-    // Store rows and config `Stories` are different arrays; keep Pan/Zoom → Bounds
-    // migration when image + viewer metrics are ready. Avoid clobbering the store
-    // when exhibit `Stories` no longer match store waypoint ids (e.g. external swap).
     const configAlignedWithStore =
       configStories.length === storeWaypoints.length &&
       configStories.every((c, i) => c.id === storeWaypoints[i]?.id);
     if (!configAlignedWithStore && storeWaypoints.length > 0) {
-      return;
-    }
-
-    // `config` is initialized from `cloneConfigWaypoints`, which includes legacy
-    // `Arrows` / `Overlays`. Zustand is seeded via migration above, but React can
-    // reinstantiate `useState` (e.g. Strict Mode) while the store keeps migrated
-    // rows — UUIDs still match, so we never re-run seed. The subscription only
-    // fires when the *store* changes, so `ItemRegistry.Stories` can stay stale.
-    // Push canonical Stories + Shapes from Zustand whenever config still shows
-    // legacy markers while aligned with the store.
-    if (
-      configAlignedWithStore &&
-      configWaypointsHaveLegacyArrowsOrOverlays(configStories)
-    ) {
-      const doc = useDocumentStore.getState();
-      setItemsRef.current({
-        Stories: waypointsToConfigWaypoints(
-          documentWaypoints(doc),
-          useAppStore.getState().waypointAuthoring,
-        ),
-        Shapes: documentShapes(doc),
-      });
       return;
     }
 
@@ -1732,35 +1298,7 @@ const Content = (props: Props) => {
         setStories(nextConfig);
       }
     }
-  }, [
-    config.ItemRegistry.Stories,
-    config.ItemRegistry.Shapes,
-    viewerViewportSize,
-    imageWidth,
-    imageHeight,
-    setStories,
-  ]);
-
-  // Sync document waypoints + shapes into config for persistence.
-  useEffect(() => {
-    const unsub = useDocumentStore.subscribe((state, prevState) => {
-      const waypointsChanged = state.waypoints !== prevState.waypoints;
-      const shapesChanged = state.shapes !== prevState.shapes;
-      if (!waypointsChanged && !shapesChanged) return;
-      setItemsRef.current({
-        ...(waypointsChanged
-          ? {
-              Stories: waypointsToConfigWaypoints(
-                documentWaypoints(state),
-                useAppStore.getState().waypointAuthoring,
-              ),
-            }
-          : {}),
-        ...(shapesChanged ? { Shapes: documentShapes(state) } : {}),
-      });
-    });
-    return () => unsub();
-  }, []);
+  }, [viewerViewportSize, imageWidth, imageHeight, setStories]);
 
   // Initialize to first active story index
   useEffect(() => {
@@ -1901,37 +1439,35 @@ const Content = (props: Props) => {
           loadedSource,
         };
         // Update mainProps with actual handles
-        const mainPropsWithHandle = {
-          ...mainProps,
+        const routerProps = {
+          ...playbackRouterProps,
           noLoader,
           handles,
           viewerConfig,
           dicomIndexList,
           omeLoaderEntries,
-          enterPlaybackPreview,
           exitPlaybackPreview,
         };
         // Actual image viewer
-        const imager = noLoader ? (
+        const imagesPanel = <Upload {...uploadProps} />;
+        const viewer = noLoader ? null : (
+          <ImageViewer
+            {...imageProps}
+            viewerConfig={viewerConfig}
+            overlayLayers={overlayLayers}
+            activeTool={activeTool}
+            isDragging={dragState.isDragging}
+            hoveredShapeId={hoverState.hoveredShapeId}
+            onOverlayInteraction={handleOverlayInteraction}
+          />
+        );
+        const imager = (
           <Full>
-            <PlaybackRouter {...mainPropsWithHandle}>
-              <Upload {...uploadProps} />
-            </PlaybackRouter>
-          </Full>
-        ) : (
-          <Full>
-            <PlaybackRouter {...mainPropsWithHandle}>
-              <ImageViewer
-                {...imageProps}
-                viewerConfig={viewerConfig}
-                overlayLayers={overlayLayers}
-                activeTool={activeTool}
-                isDragging={dragState.isDragging}
-                hoveredShapeId={hoverState.hoveredShapeId}
-                onOverlayInteraction={handleOverlayInteraction}
-              />
-              <Upload {...uploadProps} />
-            </PlaybackRouter>
+            <PlaybackRouter
+              {...routerProps}
+              viewer={viewer}
+              imagesPanel={imagesPanel}
+            />
           </Full>
         );
 
@@ -1939,7 +1475,7 @@ const Content = (props: Props) => {
           <Wrapper>
             {!presenting ? (
               <StoryTitleBar
-                authorUiTagName={controlPanelElement}
+                onExport={startExport}
                 onEnterPlaybackPreview={enterPlaybackPreview}
                 playbackPreviewDisabled={_waypoints.length === 0}
               />
@@ -1971,7 +1507,7 @@ const Main = (props: Props) => {
     document.getElementById("global-loader")?.remove();
   }, []);
 
-  if (props.demo_dicom_web || props.demo_url || hasAuthorShellSupport()) {
+  if (props.demo_dicom_web || props.demo_url || hasFilesystemAuthorSupport()) {
     return (
       <>
         <StoryPersistenceRoot>

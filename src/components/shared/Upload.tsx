@@ -970,7 +970,7 @@ const Upload = (props: UploadProps) => {
 
   if (updatePickerOpen) {
     return (
-      <ImagesTabShell slot="images">
+      <ImagesTabShell>
         <ImagesBackButton
           type="button"
           onClick={closeUpdatePicker}
@@ -992,7 +992,7 @@ const Upload = (props: UploadProps) => {
 
   if (!imageLoaded && handles.length === 0) {
     return (
-      <ImagesTabShell slot="images">
+      <ImagesTabShell>
         <UploadDiv>
           {formatPickerGrid}
           {possibleActions}
@@ -1003,7 +1003,7 @@ const Upload = (props: UploadProps) => {
 
   if (imageLoaded) {
     return (
-      <ImagesTabShell slot="images">
+      <ImagesTabShell>
         <ImagesLoadedStack>
           {currentImageSummary}
           {updateImageRow}
@@ -1016,7 +1016,7 @@ const Upload = (props: UploadProps) => {
   }
 
   return (
-    <ImagesTabShell slot="images">
+    <ImagesTabShell>
       <ImagesLoadedStack>
         {updateImageRow}
         <FormAny {...fullFormProps} />

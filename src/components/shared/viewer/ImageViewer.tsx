@@ -15,7 +15,6 @@ import type { Layer } from "@deck.gl/core";
 import { PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import type { Config, Loader } from "@/lib/imaging/viv";
-import type { Story } from "@/lib/legacy/exhibit";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
@@ -78,7 +77,6 @@ export type MainSettings = {
 };
 
 export type ImageViewerProps = {
-  stories: Story[];
   imageLayers: Layer[];
   mainSettingsList: MainSettings[];
   loaderList: LoaderList;
@@ -91,14 +89,10 @@ export type ImageViewerProps = {
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
     coordinate: [number, number, number],
   ) => void;
-  groups: ItemRegistryGroup[];
-  zoomInButton?: HTMLElement | null;
-  zoomOutButton?: HTMLElement | null;
   showSquareViewportOverlay?: boolean;
   squareViewportScale?: number;
   squareViewportColor?: string;
   squareViewportBorderWidth?: number;
-  [key: string]: unknown;
 };
 
 const Main = styled.div`
@@ -153,7 +147,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     loaderList,
     mainSettingsList,
     imageLayers,
-    groups,
     overlayLayers = [],
     activeTool,
     isDragging = false,
@@ -788,7 +781,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }
 
   return (
-    <Main slot="image" ref={rootRef}>
+    <Main ref={rootRef}>
       <Deck
         ref={deckRef}
         getCursor={getCursor}

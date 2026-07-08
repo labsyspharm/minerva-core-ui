@@ -4,6 +4,12 @@ import {
   chromeColorPickerAnchorPosition,
 } from "@/components/shared/ChromeColorPickerPopover";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
+import {
+  addSourceChannelToGroup,
+  removeGroupChannel,
+  renameSourceChannelDisplayName,
+  syncChannelGroupState,
+} from "@/lib/channel/channelGroupMutations";
 import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
 import type { ChannelRendering } from "@/lib/stores/appStore";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -15,6 +21,7 @@ import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
+import { ChannelContrastEditor } from "./ChannelContrastEditor";
 import styles from "./ChannelList.module.css";
 
 const TrashIcon = () => (
@@ -103,7 +110,6 @@ function contrastRenderingFor(
 }
 
 export type ChannelGroupsMasterDetailProps = {
-  channelItemElement: string;
   noLoader: boolean;
   /** OME-TIFF: lazy-load histograms for visible source indices (see `histogramLazy.ts`). */
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
@@ -149,11 +155,12 @@ export const ChannelGroupsMasterDetail = (
     return out;
   }, [uniqueSourceChannels]);
 
-  const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
-  const setImages = useDocumentStore((s) => s.setImages);
-  const setGroupNames = useAppStore((s) => s.setGroupNames);
-  const setGroupChannelLists = useAppStore((s) => s.setGroupChannelLists);
-  const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
+  const syncGroupState = React.useCallback(
+    (newGroups: ChannelGroup[]) => {
+      syncChannelGroupState(newGroups, sourceChannels);
+    },
+    [sourceChannels],
+  );
 
   const detailBodyRef = React.useRef<HTMLDivElement | null>(null);
   const renameFieldId = React.useId();
@@ -211,99 +218,6 @@ export const ChannelGroupsMasterDetail = (
     ? (channelGroups.find((g) => g.id === detailGroupId) ?? null)
     : null;
 
-  // Sync derived store state after group mutations.
-  const syncGroupState = React.useCallback(
-    (newGroups: ChannelGroup[]) => {
-      setChannelGroups(newGroups);
-      setGroupNames(
-        Object.fromEntries(newGroups.map(({ name, id }) => [id, name])),
-      );
-      const lists = Object.fromEntries(
-        newGroups.map(({ name, channels }) => [
-          name,
-          channels
-            .map((gc) => findSourceChannel(sourceChannels, gc.channelId))
-            .filter(Boolean)
-            .map((sc) => sc?.name),
-        ]),
-      );
-      setGroupChannelLists(lists);
-      const namesInUse = new Set<string>();
-      for (const g of newGroups) {
-        for (const gc of g.channels) {
-          const sc = findSourceChannel(sourceChannels, gc.channelId);
-          if (sc?.name) {
-            namesInUse.add(sc.name);
-          }
-        }
-      }
-      const prev = useAppStore.getState().channelVisibilities;
-      const merged = { ...prev };
-      for (const name of namesInUse) {
-        if (merged[name] === undefined) {
-          merged[name] = true;
-        }
-      }
-      setChannelVisibilities(merged);
-    },
-    [
-      sourceChannels,
-      setChannelGroups,
-      setGroupNames,
-      setGroupChannelLists,
-      setChannelVisibilities,
-    ],
-  );
-
-  /** Persisted source channel label for one `ImageChannel.id`; updates visibility (name keys) and group lists. */
-  const renameSourceChannelDisplayName = React.useCallback(
-    (channelId: string, rawName: string) => {
-      const trimmed = rawName.trim();
-      if (!trimmed) return;
-      const doc = useDocumentStore.getState();
-      const flatBefore = flattenImageChannelsInDocumentOrder(doc.images);
-      const prev = findSourceChannel(flatBefore, channelId);
-      if (!prev || prev.name === trimmed) return;
-
-      const oldName = prev.name;
-
-      const nextImages = doc.images.map((im) => ({
-        ...im,
-        channels: im.channels.map((ch) =>
-          ch.id === channelId ? { ...ch, name: trimmed } : ch,
-        ),
-      }));
-      setImages(nextImages);
-
-      const flatAfter = flattenImageChannelsInDocumentOrder(nextImages);
-      const stillUsesOldName = flatAfter.some((c) => c.name === oldName);
-
-      const vis = useAppStore.getState().channelVisibilities;
-      const nextVis = { ...vis };
-      if (nextVis[trimmed] === undefined) {
-        nextVis[trimmed] = nextVis[oldName] ?? true;
-      }
-      if (!stillUsesOldName && oldName !== trimmed) {
-        delete nextVis[oldName];
-      }
-      setChannelVisibilities(nextVis);
-
-      const groups = useDocumentStore.getState().channelGroups;
-      setGroupChannelLists(
-        Object.fromEntries(
-          groups.map(({ name, channels }) => [
-            name,
-            channels
-              .map((gc) => findSourceChannel(flatAfter, gc.channelId))
-              .filter(Boolean)
-              .map((sc) => sc?.name as string),
-          ]),
-        ),
-      );
-    },
-    [setImages, setChannelVisibilities, setGroupChannelLists],
-  );
-
   // --- Group CRUD ---
   const createGroup = () => {
     const name = `Group ${channelGroups.length + 1}`;
@@ -338,38 +252,6 @@ export const ChannelGroupsMasterDetail = (
     const newGroups = channelGroups.map((g) =>
       g.id === groupId ? { ...g, name: newName } : g,
     );
-    syncGroupState(newGroups);
-  };
-
-  const addChannelToGroup = (groupId: string, sourceChannelUUID: string) => {
-    const sc = sourceChannels.find(({ id }) => id === sourceChannelUUID);
-    if (!sc) return;
-    const newGroups = channelGroups.map((g) => {
-      if (g.id !== groupId) return g;
-      const already = g.channels.some(
-        (gc) => gc.channelId === sourceChannelUUID,
-      );
-      if (already) return g;
-      const newChannel = {
-        id: crypto.randomUUID(),
-        lowerLimit: 0,
-        upperLimit: 65535,
-        color: { r: 255, g: 255, b: 255 },
-        channelId: sc.id,
-      };
-      return { ...g, channels: [...g.channels, newChannel] };
-    });
-    syncGroupState(newGroups);
-  };
-
-  const removeChannelFromGroup = (groupId: string, channelUUID: string) => {
-    const newGroups = channelGroups.map((g) => {
-      if (g.id !== groupId) return g;
-      return {
-        ...g,
-        channels: g.channels.filter((gc) => gc.id !== channelUUID),
-      };
-    });
     syncGroupState(newGroups);
   };
 
@@ -734,7 +616,7 @@ export const ChannelGroupsMasterDetail = (
     const replaceOptions = (currentSourceUUID: string) =>
       sourceChannels.filter(({ id }) => id !== currentSourceUUID);
 
-    const channelItemAttrsFor = (gc: (typeof detailGroup.channels)[0]) => {
+    const contrastEditorPropsFor = (gc: (typeof detailGroup.channels)[0]) => {
       const flat = findSourceChannel(sourceChannels, gc.channelId);
       let pr = gc.color.r;
       let pg = gc.color.g;
@@ -761,14 +643,15 @@ export const ChannelGroupsMasterDetail = (
         upper = liveContrast.upper;
       }
       return {
-        group_uuid: detailGroup.id,
-        channel_uuid: gc.id,
-        source_uuid: flat?.id ?? "",
-        r: String(pr),
-        g: String(pg),
-        b: String(pb),
-        lower_range: String(lower),
-        upper_range: String(upper),
+        groupId: detailGroup.id,
+        channelId: gc.id,
+        sourceChannelId: flat?.id ?? "",
+        r: pr,
+        g: pg,
+        b: pb,
+        lowerLimit: lower,
+        upperLimit: upper,
+        distribution: flat?.sourceDistribution ?? null,
       };
     };
 
@@ -830,17 +713,15 @@ export const ChannelGroupsMasterDetail = (
                   const gc = detailGroup.channels.find(
                     (c) => c.id === ch.channelUUID,
                   );
-                  const legacyChannelItem =
-                    gc &&
-                    React.createElement(props.channelItemElement, {
-                      key: `embed-${ch.channelUUID}-${ch.sourceUUID}`,
-                      ...channelItemAttrsFor(gc),
-                      histogram_loading: loadingHistogramSourceIds.includes(
+                  const contrastEditor = gc ? (
+                    <ChannelContrastEditor
+                      key={`embed-${ch.channelUUID}-${ch.sourceUUID}`}
+                      {...contrastEditorPropsFor(gc)}
+                      histogramLoading={loadingHistogramSourceIds.includes(
                         ch.sourceUUID,
-                      )
-                        ? "true"
-                        : "false",
-                    });
+                      )}
+                    />
+                  ) : null;
 
                   return (
                     <div
@@ -912,18 +793,15 @@ export const ChannelGroupsMasterDetail = (
                           title="Remove channel"
                           onClick={(e) => {
                             e.stopPropagation();
-                            removeChannelFromGroup(
-                              detailGroup.id,
-                              ch.channelUUID,
-                            );
+                            removeGroupChannel(detailGroup.id, ch.channelUUID);
                           }}
                         >
                           <RemoveIcon />
                         </button>
                       </div>
-                      {legacyChannelItem ? (
+                      {contrastEditor ? (
                         <div className={styles.detailChannelItemEmbed}>
-                          {legacyChannelItem}
+                          {contrastEditor}
                         </div>
                       ) : null}
                     </div>
@@ -941,7 +819,10 @@ export const ChannelGroupsMasterDetail = (
                       defaultValue=""
                       onChange={(e) => {
                         if (e.target.value) {
-                          addChannelToGroup(detailGroup.id, e.target.value);
+                          addSourceChannelToGroup(
+                            detailGroup.id,
+                            e.target.value,
+                          );
                           e.target.value = "";
                         }
                       }}

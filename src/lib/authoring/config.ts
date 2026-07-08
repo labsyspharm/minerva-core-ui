@@ -4,7 +4,6 @@ import { histogramBinTile } from "../imaging/histogramBinPool";
 import type { Loader } from "../imaging/viv";
 import type { ConfigGroup as LegacyConfigGroup } from "../legacy/exhibit";
 import type { Channel, ChannelGroup } from "../stores/documentSchema";
-import type { StoryShape } from "../stores/storeUtils";
 
 export type SupportedDtype = keyof typeof DTYPE_VALUES;
 export type SupportedTypedArray = InstanceType<
@@ -42,22 +41,6 @@ type WaypointProperties = NameProperty & {
   /** Square JPEG data URL (`data:image/jpeg;base64,…`), 64×64px; see `waypointThumbnail.ts`. */
   ThumbnailDataUrl?: string;
 };
-
-export type MutableFields = (keyof ItemRegistryProps)[];
-export type ItemRegistryProps = {
-  Name: string;
-  ChannelGroups: ChannelGroup[];
-  /**
-   * Waypoint rows for the exhibit author (`Name`/`Bounds`/…); mirror of
-   * Zustand `waypoints` via `waypointsToConfigWaypoints` / `waypointToConfigWaypoint`.
-   */
-  Stories: ConfigWaypoint[];
-  /** Global shape registry → `story.json` root `shapes` / cached `jsonExport.shapes`. */
-  Shapes?: StoryShape[];
-  SourceChannels: Channel[];
-  SourceDistributions: ConfigSourceDistribution[];
-};
-type SetItems = (user: Partial<ItemRegistryProps>) => void;
 
 type Dtype =
   | "Uint8"
@@ -131,11 +114,6 @@ export type HasTile = {
   width: number;
 };
 type CaptureTile = (i: Index, planes: LoaderPlane[]) => Promise<HasTile>;
-
-export type ConfigProps = {
-  ItemRegistry: ItemRegistryProps;
-  ID: string;
-};
 
 export type ConfigSourceDistribution = DistributionProperties & {
   id: string;
@@ -546,85 +524,8 @@ const extractChannels: ExtractChannels = (
   };
 };
 
-const mutableConfigArrayItem = (array, receiver, index) => (namespace) => {
-  const item = array[index][namespace];
-  return [
-    namespace,
-    new Proxy(item, {
-      set(...args) {
-        Reflect.set(...args);
-        receiver.splice(index, 1, array[index]);
-        return true;
-      },
-    }),
-  ];
-};
-
-const mutableConfigArray = (target_array, set_state) => {
-  const methods = [
-    "pop",
-    "push",
-    "shift",
-    "unshift",
-    "splice",
-    "sort",
-    "reverse",
-    "fill",
-    "copyWithin",
-  ];
-  const namespaces = ["State"];
-  return new Proxy(target_array, {
-    get(target, key, receiver) {
-      const array = target;
-      const item = array[key];
-      // Specific methods will update the state
-      if (methods.includes(String(key))) {
-        return new Proxy(item, {
-          apply(fn, _, args) {
-            const new_state = [...array];
-            const output = fn.apply(new_state, args);
-            set_state(new_state);
-            return output;
-          },
-        });
-      }
-      if (
-        typeof key !== "string" ||
-        typeof item !== "object" ||
-        Number.isNaN(parseInt(key, 10))
-      ) {
-        return item;
-      }
-      // Setting values will update the state
-      return {
-        ...item,
-        ...Object.fromEntries(
-          namespaces.map(
-            mutableConfigArrayItem(array, receiver, parseInt(key, 10)),
-          ),
-        ),
-      };
-    },
-  });
-};
-
-const mutableItemRegistry = (
-  ItemRegistry: ItemRegistryProps,
-  setItems: SetItems,
-  fields: MutableFields,
-) => {
-  // Transform certain fields into mutable arrays
-  return fields.reduce((registry, field) => {
-    registry[field] = mutableConfigArray(ItemRegistry[field], (updated) => {
-      setItems({ [field]: updated });
-    });
-    return registry;
-  }, ItemRegistry);
-};
-
 export {
   extractDistributions,
   extractDistributionsForSourceIndices,
   extractChannels,
-  mutableItemRegistry,
 };
