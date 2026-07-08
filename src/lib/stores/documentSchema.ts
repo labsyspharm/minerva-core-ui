@@ -77,14 +77,41 @@ export const SourceDistributionSchema = z.object({
   UpperRange: z.number(),
 });
 
+/**
+ * Per-source-channel auto-fitted contrast limits (histogram percentiles on the
+ * coarse pyramid plane; see `psudoPalette.ts`). Cached on the source channel so
+ * newly created channel-group rows (and the detail-view UI) can pull a sensible
+ * default without re-fitting. Field name keeps compatibility with persisted docs.
+ */
+export const GmmContrastLimitsSchema = z.object({
+  lower: z.number(),
+  upper: z.number(),
+});
+
+/** `channel` = intensity (pseudocolor); `mask` = labels / segmentation. */
+export const ImageChannelKindSchema = z.preprocess(
+  (v) => (v === "field" ? "channel" : v),
+  z.enum(["channel", "mask"]),
+);
+
+/** Mask display mode in the viewer (not used for intensity channels). */
+export const MaskVisualizationSchema = z.enum(["outline", "randomColors"]);
+
 /** One logical channel under an image (persisted). `id` is stable across the document. */
 export const ImageChannelSchema = z.object({
   id: IdSchema,
   index: z.number().int().min(0),
   name: z.string(),
+  kind: ImageChannelKindSchema.optional(),
   samples: z.number().int().optional(),
   sourceDataTypeId: z.string().optional(),
   sourceDistribution: SourceDistributionSchema.optional(),
+  gmmContrastLimits: GmmContrastLimitsSchema.optional(),
+  /** Pseudocolor / mask display (napari-style layer list; persisted on source). */
+  color: ColorSchema.optional(),
+  lowerLimit: z.number().optional(),
+  upperLimit: z.number().optional(),
+  maskVisualization: MaskVisualizationSchema.optional(),
 });
 
 /**
@@ -132,6 +159,8 @@ export const ImageSchema = z.object({
     .optional(),
   omeXmlHash: z.string(),
   basename: z.string(),
+  /** Import intent: intensity stack vs segmentation labels (persisted for Images tab). */
+  contentRole: z.enum(["intensity", "segmentation"]).optional(),
   channels: z.array(ImageChannelSchema),
   source: ImageSourceSchema.optional(),
 });
@@ -143,6 +172,8 @@ export const ChannelGroupChannelSchema = z.object({
   color: ColorSchema,
   lowerLimit: z.number(),
   upperLimit: z.number(),
+  /** When {@link ImageChannelSchema.kind} is `mask`, controls outline vs per-label colors. */
+  maskVisualization: MaskVisualizationSchema.optional(),
 });
 
 export const ChannelGroupSchema = z.object({
@@ -271,6 +302,9 @@ export type Shape = z.infer<typeof ShapeSchema>;
 export type Image = z.infer<typeof ImageSchema>;
 export type ImageSource = z.infer<typeof ImageSourceSchema>;
 export type ImageChannel = z.infer<typeof ImageChannelSchema>;
+export type ImageChannelKind = z.infer<typeof ImageChannelKindSchema>;
+export type MaskVisualization = z.infer<typeof MaskVisualizationSchema>;
+export type GmmContrastLimits = z.infer<typeof GmmContrastLimitsSchema>;
 
 /**
  * Flattened view of a nested channel plus parent `imageId` (for Viv / ItemRegistry).

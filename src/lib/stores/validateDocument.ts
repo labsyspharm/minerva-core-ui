@@ -103,6 +103,7 @@ function foldTopLevelChannelsIntoImages(
     samples?: number;
     sourceDataTypeId?: string;
     sourceDistribution?: DocumentData["images"][0]["channels"][0]["sourceDistribution"];
+    gmmContrastLimits?: DocumentData["images"][0]["channels"][0]["gmmContrastLimits"];
   };
 
   const flat = chList as FlatCh[];
@@ -155,6 +156,9 @@ function foldTopLevelChannelsIntoImages(
           : {}),
         ...(c.sourceDistribution != null
           ? { sourceDistribution: c.sourceDistribution }
+          : {}),
+        ...(c.gmmContrastLimits != null
+          ? { gmmContrastLimits: c.gmmContrastLimits }
           : {}),
       });
     }

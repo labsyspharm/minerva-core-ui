@@ -3,6 +3,12 @@ import * as React from "react";
 import styled from "styled-components";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 import type { ConfigProps } from "@/lib/authoring/config";
+import type { ContrastLimits } from "@/lib/imaging/autoContrast";
+import {
+  buildCompositedIntensityLayers,
+  isMaskSourceRendered,
+} from "@/lib/imaging/channelCompositor";
+import { isImageChannel, isMaskChannel } from "@/lib/imaging/channelKind";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
   findSourceChannel,
@@ -11,7 +17,13 @@ import {
 } from "@/lib/stores/documentStore";
 import { ChannelGroups } from "./ChannelGroups";
 import { ChannelGroupsMasterDetail } from "./ChannelGroupsMasterDetail";
-import { ChannelLegend } from "./ChannelLegend";
+import {
+  ChannelLegend,
+  type LegendSection,
+  legendChannelFromLayer,
+  legendChannelFromSource,
+  legendLabelForImage,
+} from "./ChannelLegend";
 
 export type ChannelPanelProps = {
   children: ReactNode;
@@ -29,6 +41,15 @@ export type ChannelPanelProps = {
    * when a group is expanded in the channel editor (cached per image).
    */
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
+  /**
+   * OME-TIFF only: fit psudo GMM contrast limits for these source-channel ids
+   * and apply them to matching group-channel rows. Returns the fitted limits
+   * by channel id so callers (add-channel) can use the values immediately.
+   */
+  ensureChannelGmmContrastLimits?: (
+    channelIds: string[],
+    opts?: { overwriteExistingLimits?: boolean },
+  ) => Promise<Map<string, ContrastLimits>>;
 };
 
 const TextWrap = styled.div`
@@ -112,7 +133,13 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const { setActiveChannelGroup } = useAppStore();
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
+  const channelGroupRowVisibilities = useAppStore(
+    (s) => s.channelGroupRowVisibilities,
+  );
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
+  const setChannelGroupRowVisibilities = useAppStore(
+    (s) => s.setChannelGroupRowVisibilities,
+  );
   const docChannelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const sourceChannels = React.useMemo(
@@ -152,25 +179,128 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         .filter((x) => x),
     };
   });
-  const activeGroup =
-    activeChannelGroupId ||
-    (channelGroups.length > 0 ? channelGroups[0].id : null);
-  const group = channelGroups.find(({ id }) => id === activeGroup);
-  const toggleChannel = ({ name }) => {
-    setChannelVisibilities(
-      Object.fromEntries(
-        Object.entries(channelVisibilities).map(([k, v]) => [
-          k,
-          k === name ? !v : v,
-        ]),
+  const channelGroupsStyleKey = React.useMemo(
+    () =>
+      JSON.stringify(
+        docChannelGroups.map((g) =>
+          g.channels.map((gc) => [
+            gc.id,
+            gc.channelId,
+            gc.color,
+            gc.lowerLimit,
+            gc.upperLimit,
+          ]),
+        ),
       ),
+    [docChannelGroups],
+  );
+
+  const legendSections = React.useMemo((): LegendSection[] => {
+    const indexById = new Map(
+      sourceChannels.map((sc, idx) => [sc.id, idx] as const),
     );
+    const activeGroup = activeChannelGroupId
+      ? docChannelGroups.find((g) => g.id === activeChannelGroupId)
+      : undefined;
+    const sections: LegendSection[] = [];
+
+    if (activeGroup) {
+      for (const im of images) {
+        const channels: LegendSection["channels"] = [];
+        for (const gc of activeGroup.channels) {
+          const sc = findSourceChannel(sourceChannels, gc.channelId);
+          if (!sc || sc.imageId !== im.id) continue;
+          const colorIdx = indexById.get(sc.id) ?? 0;
+          channels.push(
+            legendChannelFromLayer(sc, gc, activeChannelGroupId, colorIdx),
+          );
+        }
+        if (channels.length === 0) continue;
+        sections.push({
+          imageId: im.id,
+          label: legendLabelForImage(im.basename ?? ""),
+          channels,
+        });
+      }
+      return sections;
+    }
+
+    const intensityLayers = buildCompositedIntensityLayers({
+      onLoader: sourceChannels.filter((sc) => isImageChannel(sc)),
+      activeGroup: undefined,
+      channelGroups: docChannelGroups,
+      stackVisibilities: channelVisibilities,
+      groupRowVisibilities: channelGroupRowVisibilities,
+      hasVisibilityMap: Object.keys(channelVisibilities).length > 0,
+    });
+    const maskArgs = {
+      activeGroup: undefined,
+      channelGroups: docChannelGroups,
+      stackVisibilities: channelVisibilities,
+      groupRowVisibilities: channelGroupRowVisibilities,
+    };
+    for (const im of images) {
+      const channels: LegendSection["channels"] = [];
+      for (const { sc, gc } of intensityLayers) {
+        if (sc.imageId !== im.id) continue;
+        const colorIdx = indexById.get(sc.id) ?? 0;
+        channels.push(legendChannelFromLayer(sc, gc, null, colorIdx));
+      }
+      for (const ch of im.channels) {
+        const sc = findSourceChannel(sourceChannels, ch.id);
+        if (!sc || !isMaskChannel(sc)) continue;
+        if (
+          !isMaskSourceRendered({
+            sc,
+            activeGroup,
+            channelGroups: docChannelGroups,
+            stackVisibilities: channelVisibilities,
+            groupRowVisibilities: channelGroupRowVisibilities,
+          })
+        ) {
+          continue;
+        }
+        const colorIdx = indexById.get(sc.id) ?? 0;
+        channels.push(legendChannelFromSource(sc, colorIdx));
+      }
+      if (channels.length === 0) continue;
+      sections.push({
+        imageId: im.id,
+        label: legendLabelForImage(im.basename ?? ""),
+        channels,
+      });
+    }
+    return sections;
+  }, [
+    images,
+    sourceChannels,
+    docChannelGroups,
+    activeChannelGroupId,
+    channelVisibilities,
+    channelGroupRowVisibilities,
+  ]);
+
+  const toggleChannel = (c: LegendSection["channels"][number]) => {
+    if (c.group_uuid && c.channel_uuid) {
+      setChannelGroupRowVisibilities({
+        ...channelGroupRowVisibilities,
+        [c.channel_uuid]: !(
+          channelGroupRowVisibilities[c.channel_uuid] ?? true
+        ),
+      });
+      return;
+    }
+    setChannelVisibilities({
+      ...channelVisibilities,
+      [c.source_uuid]: !(channelVisibilities[c.source_uuid] ?? true),
+    });
   };
 
   const legendProps = {
     ...props,
-    ...group,
+    sections: legendSections,
     channelVisibilities,
+    channelGroupRowVisibilities,
     toggleChannel,
   };
   const hideClass = ["show core", "hide core"][+hide];
@@ -205,6 +335,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         channelItemElement={props.channelItemElement}
         noLoader={props.noLoader}
         ensureChannelHistograms={props.ensureChannelHistograms}
+        ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
       />
     </ChannelGroupsSlot>
   );

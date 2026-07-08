@@ -1,6 +1,7 @@
 import { loadOmeTiff } from "@hms-dbmi/viv";
 import { fileOpen } from "browser-fs-access";
-import type { HasTile } from "../authoring/config";
+import { fromBlob } from "geotiff";
+import type { HasTile, LoaderPlane } from "../authoring/config";
 import type { Loader } from "./viv";
 import type { PoolClass } from "./workers/Pool";
 
@@ -15,6 +16,7 @@ type LoaderIn = {
   pool?: PoolClass;
 };
 type ToLoader = (i: LoaderIn) => Promise<Loader>;
+type ToMaskLoader = (i: LoaderIn) => Promise<Loader>;
 export type Selection = {
   t: number;
   z: number;
@@ -35,10 +37,83 @@ export type Dtype =
   | "Int32"
   | "Float32"
   | "Float64";
-export interface LoaderPlane {
-  dtype: Dtype;
-  tileSize: number;
-  getTile: (s: TileConfig) => Promise<HasTile>;
+type OmePixelMetadata = Loader["metadata"]["Pixels"];
+
+function dtypeFromTiffDirectory(fileDirectory: {
+  BitsPerSample?: number[];
+  SampleFormat?: number[];
+}): Dtype {
+  const bits = fileDirectory.BitsPerSample?.[0] ?? 16;
+  const sampleFormat = fileDirectory.SampleFormat?.[0] ?? 1;
+  if (sampleFormat === 3) return bits === 64 ? "Float64" : "Float32";
+  if (sampleFormat === 2) {
+    if (bits <= 8) return "Int8";
+    if (bits <= 16) return "Int16";
+    return "Int32";
+  }
+  if (bits <= 8) return "Uint8";
+  if (bits <= 16) return "Uint16";
+  return "Uint32";
+}
+
+function parseFirstOmeImagePixels(
+  imageDescription: unknown,
+): Partial<OmePixelMetadata> | null {
+  if (typeof imageDescription !== "string" || imageDescription.trim() === "") {
+    return null;
+  }
+  const doc = new DOMParser().parseFromString(
+    imageDescription,
+    "application/xml",
+  );
+  const image = doc.querySelector("Image");
+  const pixels = image?.querySelector("Pixels");
+  if (!pixels) return null;
+  const attrNum = (name: string) => {
+    const value = pixels.getAttribute(name);
+    return value == null ? undefined : Number(value);
+  };
+  const channels = Array.from(pixels.querySelectorAll("Channel"));
+  return {
+    ID: pixels.getAttribute("ID") ?? "Pixels:0",
+    DimensionOrder: pixels.getAttribute("DimensionOrder") ?? "XYZCT",
+    Type: pixels.getAttribute("Type") ?? "uint16",
+    SizeT: attrNum("SizeT") ?? 1,
+    SizeC: attrNum("SizeC") ?? Math.max(1, channels.length),
+    SizeZ: attrNum("SizeZ") ?? 1,
+    SizeY: attrNum("SizeY") ?? 0,
+    SizeX: attrNum("SizeX") ?? 0,
+    PhysicalSizeX: attrNum("PhysicalSizeX") ?? 1,
+    PhysicalSizeY: attrNum("PhysicalSizeY") ?? 1,
+    PhysicalSizeXUnit: pixels.getAttribute("PhysicalSizeXUnit") ?? "µm",
+    PhysicalSizeYUnit: pixels.getAttribute("PhysicalSizeYUnit") ?? "µm",
+    PhysicalSizeZUnit: pixels.getAttribute("PhysicalSizeZUnit") ?? "µm",
+    BigEndian: false,
+    TiffData: [],
+    Channels:
+      channels.length > 0
+        ? channels.map((ch, i) => ({
+            ID: ch.getAttribute("ID") ?? `Channel:0:${i}`,
+            Name: ch.getAttribute("Name") ?? `Mask ${i + 1}`,
+            SamplesPerPixel: Number(ch.getAttribute("SamplesPerPixel") ?? 1),
+          }))
+        : [],
+  };
+}
+
+async function readTiffRaster(
+  image: Awaited<ReturnType<Awaited<ReturnType<typeof fromBlob>>["getImage"]>>,
+  sample: number,
+): Promise<HasTile> {
+  const raster = (await image.readRasters({
+    samples: [sample],
+    interleave: true,
+  })) as ArrayLike<number> & { width?: number; height?: number };
+  return {
+    data: raster as unknown as HasTile["data"],
+    width: raster.width ?? image.getWidth(),
+    height: raster.height ?? image.getHeight(),
+  };
 }
 
 /** Directory picker — required for batch export to a chosen folder (Chromium-class browsers). */
@@ -83,6 +158,23 @@ function isPersistableFileHandle(handle: Handle.File): boolean {
     typeof FileSystemFileHandle !== "undefined" &&
     handle instanceof FileSystemFileHandle
   );
+}
+
+const readWrite = { mode: "readwrite" } as const;
+
+/** Request read access for a persisted or picked file handle before `getFile()`. */
+async function ensureFileHandlePermission(
+  handle: Handle.File,
+): Promise<boolean> {
+  const ok = (p: PermissionState) => p === "granted";
+  try {
+    return (
+      ok(await handle.queryPermission(readWrite)) ||
+      ok(await handle.requestPermission(readWrite))
+    );
+  } catch {
+    return false;
+  }
 }
 
 /** True if we can still read bytes from disk (real handle) or the chosen File (ephemeral). */
@@ -132,6 +224,84 @@ const toLoader: ToLoader = async ({ handle, pool = null }) => {
   return await loadOmeTiff(in_file);
 };
 
+/**
+ * Mask files sometimes carry OME-XML copied from a multi-image source while the
+ * TIFF payload itself contains only image 0. Viv interprets those extra OME
+ * `Image` entries as pyramid levels and calls `getImage(1)`, which throws.
+ * For mask overlays we only need the first raster, so build a minimal loader
+ * directly from GeoTIFF image 0 and the first OME Pixels block.
+ */
+const toMaskLoader: ToMaskLoader = async ({ handle }) => {
+  const inFile = await handle.getFile();
+  const tiff = await fromBlob(inFile);
+  const image = await tiff.getImage(0);
+  const fd = image.fileDirectory;
+  const width = image.getWidth();
+  const height = image.getHeight();
+  const samples = fd.SamplesPerPixel ?? 1;
+  const dtype = dtypeFromTiffDirectory(fd);
+  const omePixels = parseFirstOmeImagePixels(fd.ImageDescription);
+  const sizeC = Math.max(1, omePixels?.SizeC ?? samples);
+  // OME XML may have been copied from a multi-channel source whose channel
+  // names ("Channel 0", ...) collide with intensity images. Names are
+  // refined later by the import pipeline using the file basename; here we
+  // just emit unambiguous generic mask labels.
+  const channels = Array.from({ length: sizeC }, (_, i) => ({
+    ID: omePixels?.Channels?.[i]?.ID ?? `Channel:0:${i}`,
+    Name: sizeC === 1 ? "Mask" : `Mask ${i + 1}`,
+    SamplesPerPixel: 1,
+  }));
+  const pixels: OmePixelMetadata = {
+    ID: omePixels?.ID ?? "Pixels:0",
+    DimensionOrder: "XYZCT",
+    Type: omePixels?.Type ?? dtype,
+    SizeT: 1,
+    SizeC: channels.length,
+    SizeZ: 1,
+    SizeY: height,
+    SizeX: width,
+    PhysicalSizeX: omePixels?.PhysicalSizeX ?? 1,
+    PhysicalSizeY: omePixels?.PhysicalSizeY ?? 1,
+    PhysicalSizeXUnit: omePixels?.PhysicalSizeXUnit ?? "µm",
+    PhysicalSizeYUnit: omePixels?.PhysicalSizeYUnit ?? "µm",
+    PhysicalSizeZUnit: omePixels?.PhysicalSizeZUnit ?? "µm",
+    BigEndian: omePixels?.BigEndian ?? false,
+    TiffData: [],
+    Channels: channels.map((ch, i) => ({
+      ID: ch.ID ?? `Channel:0:${i}`,
+      Name: ch.Name ?? (channels.length === 1 ? "Mask" : `Mask ${i + 1}`),
+      SamplesPerPixel: ch.SamplesPerPixel ?? 1,
+    })),
+  };
+  const plane: LoaderPlane = {
+    dtype,
+    shape: [1, channels.length, 1, height, width],
+    tileSize: fd.TileWidth ?? fd.ImageWidth ?? width,
+    labels: ["t", "c", "z", "y", "x"],
+    onTileError: () => undefined,
+    getRaster: ({ selection }) =>
+      readTiffRaster(
+        image,
+        Math.max(0, Math.min(channels.length - 1, selection.c)),
+      ),
+    getTile: ({ selection }) =>
+      readTiffRaster(
+        image,
+        Math.max(0, Math.min(channels.length - 1, selection.c)),
+      ),
+  };
+  return {
+    data: [plane],
+    metadata: {
+      ID: "Image:0",
+      AquisitionDate: "",
+      Description: "",
+      Pixels: pixels,
+      ROIs: [],
+    },
+  } as Loader;
+};
+
 const toLoaderFromUrl = async (
   url: string,
   pool?: PoolClass,
@@ -146,8 +316,10 @@ export {
   hasAuthorShellSupport,
   hasDirectoryPickerAccess,
   isPersistableFileHandle,
+  ensureFileHandlePermission,
   findFile,
   toLoader,
+  toMaskLoader,
   toLoaderFromUrl,
   toFile,
 };

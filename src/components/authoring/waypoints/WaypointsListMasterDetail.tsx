@@ -116,6 +116,8 @@ const WaypointsList = (props: WaypointsListProps) => {
     setAuthoringWaypointEditorOpen,
     setAuthoringWaypointShapesIndex,
     handleToolChange,
+    setImageSelectionMaskFromWaypoint,
+    layersPanelSelectedShapeIds,
   } = useAppStore();
 
   const previousDetailStoryIdRef = React.useRef<string | null>(null);
@@ -945,6 +947,29 @@ const WaypointsList = (props: WaypointsListProps) => {
               </button>
               {detailAnnotationsExpanded ? (
                 <div className={styles.detailCollapsibleBody}>
+                  {detailAnnotationCount > 0 ? (
+                    <div className={styles.detailSelectionActions}>
+                      <button
+                        type="button"
+                        className={styles.detailSelectionButton}
+                        title="Use a waypoint annotation as the spatial selection mask (prefers the selected shape in the layers list)"
+                        onClick={() => {
+                          const shapeIds = detailStory.shapeIds ?? [];
+                          const ok = setImageSelectionMaskFromWaypoint(
+                            shapeIds,
+                            layersPanelSelectedShapeIds,
+                          );
+                          if (!ok && import.meta.env.DEV) {
+                            console.warn(
+                              "[selection] no maskable annotation on this waypoint",
+                            );
+                          }
+                        }}
+                      >
+                        Use annotation as selection
+                      </button>
+                    </div>
+                  ) : null}
                   <WaypointAnnotationEditor
                     embeddedInScrollParent
                     story={detailStory}

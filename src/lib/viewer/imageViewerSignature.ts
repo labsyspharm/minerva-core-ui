@@ -16,6 +16,11 @@ export function buildImageViewerSignature(
     s: sc.samples,
     img: sc.imageId,
     dt: sc.sourceDataTypeId,
+    k: sc.kind,
+    lr: sc.lowerLimit,
+    ur: sc.upperLimit,
+    rgb: sc.color ? [sc.color.r, sc.color.g, sc.color.b] : undefined,
+    mv: sc.maskVisualization,
   }));
   const groups = channelGroups.map((g) => ({
     u: g.id,
@@ -27,6 +32,7 @@ export function buildImageViewerSignature(
       ur: c.upperLimit,
       rgb: [c.color.r, c.color.g, c.color.b],
       sc: c.channelId,
+      mv: c.maskVisualization,
     })),
   }));
   return JSON.stringify({ sources, groups });
