@@ -260,20 +260,6 @@ async function hydrateFilePermission(handle: Handle.File): Promise<boolean> {
   );
 }
 
-/** Bundled pyramid under `public/jpeg-test` (4096², 1024 tiles). */
-const JPEG_TEST_IMAGE_PATH = "jpeg-test";
-
-function isJpegTestImage(im: Image): boolean {
-  const src = im.source;
-  if (!src) return false;
-  if (src.kind === "jpeg") return true;
-  // Legacy: demo bootstrap stored kind:"url" with the exhibit label, not a fetchable OME URL.
-  return (
-    src.kind === "url" &&
-    (src.url === JPEG_TEST_IMAGE_PATH || src.url === "crc-export")
-  );
-}
-
 /** Rebuild Viv / DICOM loaders from persisted image rows (after Dexie load / refresh). */
 async function hydrateLoadersFromImages(images: Image[]): Promise<{
   jpegLoaderEntries: JpegLoaderEntry[];
@@ -288,11 +274,13 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
 
   for (const im of images) {
     if (!im.source) continue;
-    if (isJpegTestImage(im)) {
+    if ("url" in im.source && im.source.url === "jpeg-test") {
+      // TODO
       const imageHeight = 4096; //TODO
       const imageWidth = 4096; //TODO
+      const imagePath = "jpeg-test";
       const loader = loadJpeg({
-        imagePath: JPEG_TEST_IMAGE_PATH,
+        imagePath,
         imageHeight,
         imageWidth,
       });
@@ -763,7 +751,7 @@ const Content = (props: Props) => {
     );
   };
 
-  const onStartJpegUrl = async (_url: string) => {
+  const onStartJpegUrl = async (url: string) => {
     jpegUrlLoadGenerationRef.current += 1;
     const loadGeneration = jpegUrlLoadGenerationRef.current;
     setDicomIndexList([]);
@@ -789,8 +777,8 @@ const Content = (props: Props) => {
     let nextImages = applySourceChannelsToImages(doc.images, SourceChannels);
     nextImages = applyLoaderPixelSizeToImage(nextImages, sourceImageId, loader);
     nextImages = setImageSource(nextImages, sourceImageId, {
-      kind: "jpeg",
-      url: JPEG_TEST_IMAGE_PATH,
+      kind: "url",
+      url,
     });
     setImages(nextImages);
     setChannelGroups(ChannelGroups);

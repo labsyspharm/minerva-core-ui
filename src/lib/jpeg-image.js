@@ -36,10 +36,8 @@ class JpegImage {
     const in_data = new Uint8Array(image.allocationSize(copyOptions));
     const data = new Uint16Array(tileSize ** 2); // TODO
     await image.copyTo(in_data, copyOptions);
-    for (let i = 0; i < displayHeight * displayWidth; i += 1) {
-      const row = (i / displayWidth) | 0;
-      const col = i % displayWidth;
-      data[row * tileSize + col] = in_data[row * tileSize * 4 + col * 4] << 8;
+    for (let i = 0; i < tileSize * displayHeight; i += 1) {
+      data[i] = in_data[i * 4] << 8;
     }
     image.close();
     decoder.close();
