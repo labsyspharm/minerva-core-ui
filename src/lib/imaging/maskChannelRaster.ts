@@ -1,6 +1,11 @@
 import type { LoaderPlane, SupportedTypedArray } from "@/lib/authoring/config";
 import type { Loader } from "@/lib/imaging/viv";
 
+/**
+ * OME plane raster fetch (histogram auto-contrast + mask label overlays).
+ * File name is historical; not mask-specific.
+ */
+
 type PlaneRasterPrefs = { preferCoarsest?: boolean };
 
 /**

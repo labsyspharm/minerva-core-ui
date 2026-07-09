@@ -9,6 +9,8 @@ import {
 import type { Loader } from "@/lib/imaging/viv";
 import type { Channel } from "@/lib/stores/documentStore";
 
+/** Histogram percentile auto-contrast for OME channels (names retain `Gmm` for document schema). */
+
 export type ContrastLimits = { lower: number; upper: number };
 
 /**

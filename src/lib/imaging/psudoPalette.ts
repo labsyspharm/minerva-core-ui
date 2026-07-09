@@ -27,7 +27,7 @@ const PSUDO_CONTRAST_MIN = 0;
 const PSUDO_CONTRAST_MAX = 65535;
 
 /** Channels per group from `extractChannels` default import path. */
-export const IMPORT_GROUP_CHANNEL_COUNT = DEFAULT_VISIBLE_INTENSITY_CHANNELS;
+const IMPORT_GROUP_SLOT_COUNT = DEFAULT_VISIBLE_INTENSITY_CHANNELS;
 
 export type PsudoOptimizeInputs = {
   colors: Uint16Array;
@@ -314,7 +314,7 @@ export function usesDefaultFourChannelGrouping(
     (g) =>
       /^Group \d+$/.test(g.name) &&
       g.channels.length >= 1 &&
-      g.channels.length <= IMPORT_GROUP_CHANNEL_COUNT,
+      g.channels.length <= IMPORT_GROUP_SLOT_COUNT,
   );
 }
 
@@ -329,13 +329,12 @@ function importPaletteSourceChannels(sourceChannels: Channel[]): Channel[] {
     fromFirst.length > 0
       ? fromFirst
       : sourceChannels.filter((sc) => sc.samples !== 3);
-  return pool.slice(0, IMPORT_GROUP_CHANNEL_COUNT);
+  return pool.slice(0, IMPORT_GROUP_SLOT_COUNT);
 }
 
 /**
  * Run psudo once for import palette slots (non-spatial). Optimizes one slot per
- * real channel on the first image, up to {@link IMPORT_GROUP_CHANNEL_COUNT}
- * (default four); remaining palette entries fall back to default hex seeds.
+ * real channel on the first image, up to four slots by default.
  */
 export async function optimizeImportPaletteFour(
   sourceChannels: Channel[],
@@ -345,7 +344,7 @@ export async function optimizeImportPaletteFour(
     return IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex));
   }
 
-  const slotCount = Math.min(IMPORT_GROUP_CHANNEL_COUNT, picked.length);
+  const slotCount = Math.min(IMPORT_GROUP_SLOT_COUNT, picked.length);
   const slots: ImportPaletteSlot[] = [];
   for (let i = 0; i < slotCount; i++) {
     slots.push({
@@ -357,7 +356,7 @@ export async function optimizeImportPaletteFour(
     buildOptimizeInputsFromSlots(slots),
   );
   const palette: RgbColor[] = [];
-  for (let i = 0; i < IMPORT_GROUP_CHANNEL_COUNT; i++) {
+  for (let i = 0; i < IMPORT_GROUP_SLOT_COUNT; i++) {
     const fallback = hexToRgb(IMPORT_DEFAULT_SEED_HEX[i]);
     palette.push(optimized[i] ?? slots[i]?.seed ?? fallback);
   }

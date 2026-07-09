@@ -987,27 +987,36 @@ export const ChannelGroupsMasterDetail = (
                                 }
                           }
                           imageSubtitle={imageSubtitle}
-                          isMask={kind === "mask"}
-                          maskVisualization={effectiveMaskVisualization(gc)}
-                          maskAriaLabel={`Mask display for ${name}`}
-                          onMaskVisualizationChange={(viz) =>
-                            setGroupMaskVisualization(group.id, gc.id, viz)
-                          }
-                          colorHex={hex}
-                          colorTitle={`Pick color for ${name} in this group`}
-                          colorAriaLabel={`Pick color for ${name} in this group`}
-                          onColorClick={(e) => {
-                            const rect =
-                              e.currentTarget.getBoundingClientRect();
-                            setColorPickerTarget({
-                              scope: "group",
-                              groupId: group.id,
-                              rowId: gc.id,
-                            });
-                            setColorPickerPos(
-                              chromeColorPickerAnchorPosition(rect),
-                            );
-                          }}
+                          {...(kind === "mask"
+                            ? {
+                                isMask: true as const,
+                                maskVisualization:
+                                  effectiveMaskVisualization(gc),
+                                maskAriaLabel: `Mask display for ${name}`,
+                                onMaskVisualizationChange: (viz) =>
+                                  setGroupMaskVisualization(
+                                    group.id,
+                                    gc.id,
+                                    viz,
+                                  ),
+                              }
+                            : {
+                                colorHex: hex,
+                                colorTitle: `Pick color for ${name} in this group`,
+                                colorAriaLabel: `Pick color for ${name} in this group`,
+                                onColorClick: (e) => {
+                                  const rect =
+                                    e.currentTarget.getBoundingClientRect();
+                                  setColorPickerTarget({
+                                    scope: "group",
+                                    groupId: group.id,
+                                    rowId: gc.id,
+                                  });
+                                  setColorPickerPos(
+                                    chromeColorPickerAnchorPosition(rect),
+                                  );
+                                },
+                              })}
                           trailing={
                             <button
                               type="button"
@@ -1260,21 +1269,28 @@ export const ChannelGroupsMasterDetail = (
                 onBlur: (value) => renameSourceChannelDisplayName(sc.id, value),
               }}
               imageSubtitle={showImageBadge && imageLabel ? imageLabel : null}
-              isMask={isMaskChannel(sc)}
-              maskVisualization={effectiveMaskVisualization(sc)}
-              maskAriaLabel={`Mask display for ${sc.name}`}
-              onMaskVisualizationChange={(viz) =>
-                setSourceMaskVisualization(sc.id, viz)
-              }
-              colorHex={hex}
-              colorTitle={`Pick color for ${sc.name}`}
-              colorAriaLabel={`Pick color for ${sc.name}`}
-              onColorClick={(e) => {
-                e.stopPropagation();
-                const rect = e.currentTarget.getBoundingClientRect();
-                setColorPickerTarget({ scope: "source", sourceId: sc.id });
-                setColorPickerPos(chromeColorPickerAnchorPosition(rect));
-              }}
+              {...(isMaskChannel(sc)
+                ? {
+                    isMask: true as const,
+                    maskVisualization: effectiveMaskVisualization(sc),
+                    maskAriaLabel: `Mask display for ${sc.name}`,
+                    onMaskVisualizationChange: (viz) =>
+                      setSourceMaskVisualization(sc.id, viz),
+                  }
+                : {
+                    colorHex: hex,
+                    colorTitle: `Pick color for ${sc.name}`,
+                    colorAriaLabel: `Pick color for ${sc.name}`,
+                    onColorClick: (e) => {
+                      e.stopPropagation();
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setColorPickerTarget({
+                        scope: "source",
+                        sourceId: sc.id,
+                      });
+                      setColorPickerPos(chromeColorPickerAnchorPosition(rect));
+                    },
+                  })}
             />
           )}
         </div>
@@ -1358,10 +1374,6 @@ export const ChannelGroupsMasterDetail = (
             maskAriaLabel="Selection mask display"
             onMaskVisualizationChange={setImageSelectionMaskVisualization}
             fixedColorHex="ffcc00"
-            colorHex="ffcc00"
-            colorTitle=""
-            colorAriaLabel=""
-            onColorClick={() => {}}
             trailing={
               <button
                 type="button"

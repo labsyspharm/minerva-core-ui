@@ -66,18 +66,24 @@ type ChannelRowNameProps =
       onBlur: (value: string) => void;
     };
 
-type ChannelRowStyleProps = {
-  isMask: boolean;
+type MaskRowStyleProps = {
+  isMask: true;
   maskVisualization: MaskVisualization;
   onMaskVisualizationChange: (viz: MaskVisualization) => void;
   maskAriaLabel: string;
-  /** Non-interactive swatch (e.g. selection mask). */
+  /** Non-interactive swatch when the row has no color picker (e.g. selection mask). */
   fixedColorHex?: string;
+};
+
+type IntensityRowStyleProps = {
+  isMask?: false;
   colorHex: string;
   colorTitle: string;
   colorAriaLabel: string;
   onColorClick: MouseEventHandler<HTMLButtonElement>;
 };
+
+type ChannelRowStyleProps = MaskRowStyleProps | IntensityRowStyleProps;
 
 export type ChannelRowProps = {
   rowClassName: string;
@@ -91,6 +97,12 @@ export type ChannelRowProps = {
   compact?: boolean;
   trailing?: React.ReactNode;
 } & ({ compact: true } | ({ compact?: false } & ChannelRowStyleProps));
+
+function isIntensityRowStyle(
+  props: ChannelRowStyleProps,
+): props is IntensityRowStyleProps {
+  return !props.isMask;
+}
 
 function channelRowHasStyleControls(
   props: ChannelRowProps,
@@ -166,7 +178,7 @@ export function ChannelRow(props: ChannelRowProps) {
       ) : (
         <ChannelRowName {...name} />
       )}
-      {styleControls?.fixedColorHex ? (
+      {styleControls?.isMask && styleControls.fixedColorHex ? (
         <span
           className={styles.channelColorSwatch}
           style={{ backgroundColor: `#${styleControls.fixedColorHex}` }}
@@ -180,14 +192,14 @@ export function ChannelRow(props: ChannelRowProps) {
             ariaLabel={styleControls.maskAriaLabel}
             onChange={styleControls.onMaskVisualizationChange}
           />
-        ) : (
+        ) : isIntensityRowStyle(styleControls) ? (
           <ChannelColorSwatchButton
             hex={styleControls.colorHex}
             title={styleControls.colorTitle}
             ariaLabel={styleControls.colorAriaLabel}
             onClick={styleControls.onColorClick}
           />
-        )
+        ) : null
       ) : null}
       {trailing}
     </div>

@@ -374,6 +374,11 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
   return { jpegLoaderEntries, omeLoaderEntries, dicomIndexList };
 }
 
+function clearOmeDerivedCaches(): void {
+  clearOmeHistogramCache();
+  clearOmeGmmContrastCache();
+}
+
 const APP_TAB_TITLE_PREFIX =
   import.meta.env.MODE === "demo" ? "Minerva 2.0 Demo" : "Minerva";
 
@@ -753,8 +758,7 @@ const Content = (props: Props) => {
     role: OmeImportRequest["role"] = "intensity",
   ) => {
     if (handles.length === 0) return;
-    clearOmeHistogramCache();
-    clearOmeGmmContrastCache();
+    clearOmeDerivedCaches();
     setDicomIndexList([]);
     setLastOmeTiffUrl(null);
     const relevant_groups = [] as ConfigGroup[];
@@ -860,8 +864,7 @@ const Content = (props: Props) => {
     if (handles.length === 0) {
       return { ok: false, error: "Choose a mask file first." };
     }
-    clearOmeHistogramCache();
-    clearOmeGmmContrastCache();
+    clearOmeDerivedCaches();
     const doc = useDocumentStore.getState();
     let mergedGroups = [...doc.channelGroups];
     let nextImages = [...doc.images];
@@ -1004,8 +1007,7 @@ const Content = (props: Props) => {
   ) => {
     omeTiffUrlLoadGenerationRef.current += 1;
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
-    clearOmeHistogramCache();
-    clearOmeGmmContrastCache();
+    clearOmeDerivedCaches();
     setDicomIndexList([]);
     const loader = await toLoaderFromUrl(url, new Pool());
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
@@ -1074,8 +1076,7 @@ const Content = (props: Props) => {
   ): Promise<OmeImportResult> => {
     omeTiffUrlLoadGenerationRef.current += 1;
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
-    clearOmeHistogramCache();
-    clearOmeGmmContrastCache();
+    clearOmeDerivedCaches();
     const loader = await toLoaderFromUrl(url, new Pool());
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return { ok: false, error: "Import was superseded by a newer request." };
@@ -1278,7 +1279,7 @@ const Content = (props: Props) => {
     imagePropList: [string, string][],
     groups: ConfigGroup[],
   ) => {
-    clearOmeHistogramCache();
+    clearOmeDerivedCaches();
     setLastOmeTiffUrl(null);
     console.log(
       "[minerva] dicom: fetching pyramids for",
