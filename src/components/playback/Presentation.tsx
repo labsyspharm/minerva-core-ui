@@ -1,3 +1,4 @@
+import type { MouseEvent, ReactElement } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 //import { theme } from "@/theme.module.css";
@@ -18,19 +19,9 @@ import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
 
 const _theme = {};
 
-// Types
-import type { MouseEvent, ReactElement } from "react";
-import type { ConfigProps } from "@/lib/authoring/config";
-
 export type PresentationProps = {
   children: ReactElement;
   name: string;
-  config: ConfigProps;
-  hiddenChannel: boolean;
-  startExport: () => void;
-  channelItemElement: string;
-  controlPanelElement: string;
-  setHiddenChannel: (v: boolean) => void;
   exitPlaybackPreview?: () => void;
 };
 

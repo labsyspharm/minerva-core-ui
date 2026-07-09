@@ -1,9 +1,6 @@
 import type { ReactNode } from "react";
 import * as React from "react";
 import styled from "styled-components";
-import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
-import type { ConfigProps } from "@/lib/authoring/config";
-import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import {
   buildCompositedIntensityLayers,
   isMaskSourceRendered,
@@ -16,7 +13,6 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import { ChannelGroups } from "./ChannelGroups";
-import { ChannelGroupsMasterDetail } from "./ChannelGroupsMasterDetail";
 import {
   ChannelLegend,
   type LegendChannel,
@@ -29,29 +25,8 @@ import {
 
 export type ChannelPanelProps = {
   children: ReactNode;
-  config: ConfigProps;
-  authorMode: boolean;
   hiddenChannel: boolean;
-  startExport: () => void;
-  channelItemElement: string;
-  controlPanelElement: string;
-  /** When true, no OME/DICOM pipeline — hide channel overlay chrome. */
   noLoader: boolean;
-  setHiddenChannel: (v: boolean) => void;
-  /**
-   * OME-TIFF only: fetch histogram tiles for these flat source-channel ids
-   * when a group is expanded in the channel editor (cached per image).
-   */
-  ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
-  /**
-   * OME-TIFF only: fit psudo GMM contrast limits for these source-channel ids
-   * and apply them to matching group-channel rows. Returns the fitted limits
-   * by channel id so callers (add-channel) can use the values immediately.
-   */
-  ensureChannelGmmContrastLimits?: (
-    channelIds: string[],
-    opts?: { overwriteExistingLimits?: boolean },
-  ) => Promise<Map<string, ContrastLimits>>;
 };
 
 const TextWrap = styled.div`
@@ -72,27 +47,13 @@ const TextWrap = styled.div`
     transition: transform 0.5s ease 0s;
   }
   > div.core.hide {
-    transform: translateX(100%); 
+    transform: translateX(100%);
   }
   .dim {
     color: #aaa;
   }
 `;
 
-const TextOther = styled.div`
-  background-color: transparent;
-`;
-
-const ChannelGroupsSlot = styled.div`
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-`;
-
-// Content layout styles (merged from content.tsx)
 const WrapContent = styled.div`
   flex: 1;
   min-height: 0;
@@ -132,7 +93,6 @@ const OverlaySectionLabel = styled.div`
 export const ChannelPanel = (props: ChannelPanelProps) => {
   const hide = props.hiddenChannel;
   const hidden = props.noLoader;
-  const { setActiveChannelGroup } = useAppStore();
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
   const channelGroupRowVisibilities = useAppStore(
@@ -149,53 +109,34 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     [images],
   );
 
-  const channelGroups = docChannelGroups.map((group, g) => {
-    return {
-      g,
-      id: group.id,
-      name: group.name,
-      channels: group.channels
-        .map((channel) => {
-          const { color } = channel;
-          const found = findSourceChannel(sourceChannels, channel.channelId);
-          if (found) {
-            const { r, g: gg, b } = color;
-            const hex_color = [r, gg, b]
-              .map((n) => n.toString(16).padStart(2, "0"))
-              .join("");
-            return {
-              r,
-              g: gg,
-              b,
-              lower_range: channel.lowerLimit,
-              upper_range: channel.upperLimit,
-              name: found.name,
-              color: `${hex_color}`,
-              group_uuid: group.id,
-              source_uuid: found.id,
-              channel_uuid: channel.id,
-            };
-          }
-          return null;
-        })
-        .filter((x) => x),
-    };
-  });
-  const channelGroupsStyleKey = React.useMemo(
-    () =>
-      JSON.stringify(
-        docChannelGroups.map((g) =>
-          g.channels.map((gc) => [
-            gc.id,
-            gc.channelId,
-            gc.color,
-            gc.lowerLimit,
-            gc.upperLimit,
-          ]),
-        ),
-      ),
-    [docChannelGroups],
-  );
+  const channelGroups = docChannelGroups.map((group, g) => ({
+    g,
+    id: group.id,
+    name: group.name,
+    channels: group.channels
+      .map((channel) => {
+        const { color } = channel;
+        const found = findSourceChannel(sourceChannels, channel.channelId);
+        if (!found) return null;
+        const { r, g: gg, b } = color;
+        const hex_color = [r, gg, b]
+          .map((n) => n.toString(16).padStart(2, "0"))
+          .join("");
+        return {
+          r,
+          g: gg,
+          b,
+          lower_range: channel.lowerLimit,
+          upper_range: channel.upperLimit,
+          name: found.name,
+          color: hex_color,
+          group_uuid: group.id,
+          source_uuid: found.id,
+          channel_uuid: channel.id,
+        };
+      })
+      .filter((x) => x != null),
+  }));
 
   const legendSections = React.useMemo((): LegendSection[] => {
     const indexById = new Map(
@@ -318,23 +259,13 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     });
   };
 
-  const legendProps = {
-    ...props,
-    sections: legendSections,
-    channelVisibilities,
-    channelGroupRowVisibilities,
-    toggleChannel,
-  };
   const hideClass = ["show core", "hide core"][+hide];
 
-  const total = channelGroups.length;
-  const groupProps = { ...props, total };
-
   const allGroups =
-    channelGroups.length || props ? (
+    channelGroups.length > 0 ? (
       <>
         <OverlaySectionLabel>Channel groups</OverlaySectionLabel>
-        <ChannelGroups {...{ ...groupProps, channelGroups }} />
+        <ChannelGroups channelGroups={channelGroups} />
       </>
     ) : null;
 
@@ -343,57 +274,20 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       <WrapContent>
         <WrapCore>
           {allGroups}
-          <ChannelLegend {...legendProps} />
+          <ChannelLegend
+            sections={legendSections}
+            channelVisibilities={channelVisibilities}
+            channelGroupRowVisibilities={channelGroupRowVisibilities}
+            toggleChannel={toggleChannel}
+          />
         </WrapCore>
       </WrapContent>
     </div>
   );
 
-  const waypointsPanel = props.authorMode ? <WaypointsList /> : null;
-
-  const channel_list = (
-    <ChannelGroupsSlot>
-      <ChannelGroupsMasterDetail
-        channelItemElement={props.channelItemElement}
-        noLoader={props.noLoader}
-        ensureChannelHistograms={props.ensureChannelHistograms}
-        ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
-      />
-    </ChannelGroupsSlot>
-  );
-
-  const controlPanelRef = React.useRef<HTMLElement>(null);
-
-  const minerva_author_ui = React.createElement(
-    props.controlPanelElement,
-    { ref: controlPanelRef },
-    <>
-      {props.children}
-      {waypointsPanel}
-      <div
-        slot="groups"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          minHeight: 0,
-          overflow: "hidden",
-        }}
-      >
-        {channel_list}
-      </div>
-    </>,
-  );
-
-  const content = props.authorMode ? (
-    <TextOther>{minerva_author_ui}</TextOther>
-  ) : (
-    props.children
-  );
-
   return (
     <TextWrap>
-      {content}
+      {props.children}
       {hidden ? "" : channelMenu}
     </TextWrap>
   );

@@ -95,8 +95,7 @@ const BannerPreviewButton = styled.button`
 `;
 
 export type StoryTitleBarProps = {
-  /** Registered `author-*` custom element tag; powers export dialog + overflow menu. */
-  authorUiTagName?: string;
+  onExport?: () => void;
   onEnterPlaybackPreview?: () => void;
   /** When true, disables the preview control (e.g. no waypoints). */
   playbackPreviewDisabled?: boolean;
@@ -109,8 +108,7 @@ export type StoryTitleBarProps = {
  * `Presentation`’s ribbon instead; this component is not mounted then.
  */
 export function StoryTitleBar(props: StoryTitleBarProps) {
-  const { authorUiTagName, onEnterPlaybackPreview, playbackPreviewDisabled } =
-    props;
+  const { onExport, onEnterPlaybackPreview, playbackPreviewDisabled } = props;
   /** Subscribe to the title primitive so updates re-render even if metadata identity were ever reused. */
   const titleText = useDocumentStore((s) => s.metadata.title ?? "");
   const setMetadata = useDocumentStore((s) => s.setMetadata);
@@ -131,9 +129,7 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
 
   return (
     <BannerShell role="region" aria-label="Story title">
-      {authorUiTagName ? (
-        <StoryAuthorOverflowMenu authorUiTagName={authorUiTagName} />
-      ) : null}
+      {onExport ? <StoryAuthorOverflowMenu onExport={onExport} /> : null}
       <TitleFieldWrap
         onClick={() => {
           if (!editing) setEditing(true);

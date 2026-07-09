@@ -1,5 +1,6 @@
 import type { ChannelRendering } from "@/lib/stores/appStore";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
+import type { ChannelContrastEditorProps } from "./ChannelContrastEditor";
 
 export function colorRenderingForSource(
   live: ChannelRendering | null,
@@ -21,92 +22,47 @@ export function contrastRenderingForSource(
   return null;
 }
 
-export function webComponentChannelAttrs(args: {
-  group_uuid: string;
-  channel_uuid: string;
-  source_uuid: string;
-  r: number;
-  g: number;
-  b: number;
-  lower: number;
-  upper: number;
-}) {
-  return {
-    group_uuid: args.group_uuid,
-    channel_uuid: args.channel_uuid,
-    source_uuid: args.source_uuid,
-    r: String(args.r),
-    g: String(args.g),
-    b: String(args.b),
-    lower_range: String(args.lower),
-    upper_range: String(args.upper),
-  };
-}
-
-type ChannelItemAttrsArgs = {
-  channelRendering: ChannelRendering | null;
-  groupId: string;
-  rowId: string;
-  sourceId: string;
-  color: { r?: number; g?: number; b?: number };
-  lower: number;
-  upper: number;
-};
-
-/** Web component attrs for a stack or group-row channel histogram editor. */
-export function channelItemAttrsFor(args: ChannelItemAttrsArgs) {
-  const liveColor = colorRenderingForSource(
-    args.channelRendering,
-    args.sourceId,
-  );
-  const c = liveColor ?? args.color;
-  const liveContrast = contrastRenderingForSource(
-    args.channelRendering,
-    args.sourceId,
-  );
-  return webComponentChannelAttrs({
-    group_uuid: args.groupId,
-    channel_uuid: args.rowId,
-    source_uuid: args.sourceId,
-    r: c.r ?? 0,
-    g: c.g ?? 0,
-    b: c.b ?? 0,
-    lower: liveContrast ? liveContrast.lower : args.lower,
-    upper: liveContrast ? liveContrast.upper : args.upper,
-  });
-}
-
-export function channelItemAttrsForSource(
+export function contrastEditorPropsForSource(
   channelRendering: ChannelRendering | null,
   sc: Channel,
   color: { r?: number; g?: number; b?: number },
   limits: [number, number],
-) {
-  return channelItemAttrsFor({
-    channelRendering,
+): ChannelContrastEditorProps {
+  const liveColor = colorRenderingForSource(channelRendering, sc.id);
+  const c = liveColor ?? color;
+  const liveContrast = contrastRenderingForSource(channelRendering, sc.id);
+  return {
     groupId: "",
-    rowId: sc.id,
-    sourceId: sc.id,
-    color,
-    lower: limits[0],
-    upper: limits[1],
-  });
+    channelId: sc.id,
+    sourceChannelId: sc.id,
+    r: c.r ?? 0,
+    g: c.g ?? 0,
+    b: c.b ?? 0,
+    lowerLimit: liveContrast ? liveContrast.lower : limits[0],
+    upperLimit: liveContrast ? liveContrast.upper : limits[1],
+    distribution: sc.sourceDistribution ?? null,
+  };
 }
 
-export function channelItemAttrsForGroupRow(
+export function contrastEditorPropsForGroupRow(
   channelRendering: ChannelRendering | null,
   groupId: string,
   gc: ChannelGroupChannel,
   sc: Channel | undefined,
-) {
+): ChannelContrastEditorProps {
   const sourceId = sc?.id ?? gc.channelId;
-  return channelItemAttrsFor({
-    channelRendering,
+  const liveColor = colorRenderingForSource(channelRendering, sourceId);
+  const c = liveColor ?? gc.color;
+  const liveContrast = contrastRenderingForSource(channelRendering, sourceId);
+  return {
     groupId,
-    rowId: gc.id,
-    sourceId,
-    color: gc.color,
-    lower: gc.lowerLimit,
-    upper: gc.upperLimit,
-  });
+    channelId: gc.id,
+    sourceChannelId: sourceId,
+    r: c.r ?? 0,
+    g: c.g ?? 0,
+    b: c.b ?? 0,
+    lowerLimit: liveContrast ? liveContrast.lower : gc.lowerLimit,
+    upperLimit: liveContrast ? liveContrast.upper : gc.upperLimit,
+    distribution: sc?.sourceDistribution ?? null,
+  };
 }

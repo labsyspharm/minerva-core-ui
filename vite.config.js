@@ -2,7 +2,6 @@ import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import mkcert from "vite-plugin-mkcert";
-import { standardCssModules } from "vite-plugin-standard-css-modules";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import svgr from "vite-plugin-svgr";
 import topLevelAwait from "vite-plugin-top-level-await";
@@ -46,12 +45,9 @@ export default defineConfig({
         },
       ],
     }),
-    standardCssModules({
-      include: ["/**/minerva-author-ui/**/*.css"],
-    }),
   ],
   optimizeDeps: {
-    exclude: ["minerva-author-ui", "onnxruntime-web", "psudo"],
+    exclude: ["onnxruntime-web", "psudo"],
     include: [
       "@luma.gl/core",
       "@luma.gl/constants",

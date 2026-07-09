@@ -107,14 +107,12 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import {
-  applyGroupChannelRange,
   applyLoaderPixelSizeToImage,
   applySourceChannelsToImages,
   configWaypointsHaveLegacyArrowsOrOverlays,
   dedupeImagesForImport,
   type LegacyExhibitWaypoint,
   migrateLegacyWaypointShapes,
-  type SetGroupChannelRangePayload,
   setImageSource,
   waypointsToConfigWaypoints,
   waypointToConfigWaypoint,
@@ -123,8 +121,6 @@ import { isOpts, validate } from "@/lib/util/validate";
 import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import { ensureDefaultWaypointForImageImport } from "@/lib/waypoints/ensureDefaultWaypointForImageImport";
 import { normalizeWaypointToBounds } from "@/lib/waypoints/waypoint";
-import { author } from "@/minerva-author-ui/author";
-import { toAuthorElement } from "@/minerva-author-ui/index";
 import {
   parsePreferredStoryIdFromLocation,
   rootRouteApi,
@@ -581,13 +577,6 @@ const Content = (props: Props) => {
   };
   const stopExport = () => setIoState("IDLE");
   const toggleEditor = () => setEditable(!editable);
-
-  const setHiddenChannelWithLogic = (v: boolean) => {
-    if (!twoNavOk && !v) {
-      setHideWaypoint(true);
-    }
-    setHideChannel(v);
-  };
 
   const setHiddenWaypointWithLogic = (v: boolean) => {
     if (!twoNavOk && !v) {
@@ -1370,83 +1359,6 @@ const Content = (props: Props) => {
     mutableFields,
   );
 
-  const getSourceDistribution = React.useMemo(() => {
-    return (source_uuid) => {
-      const source_channel = sourceChannels.find((x) => {
-        return x.id === source_uuid;
-      });
-      if (source_channel) {
-        const { sourceDistribution } = source_channel;
-        return sourceDistribution;
-      }
-      return null;
-    };
-  }, [sourceChannels]);
-
-  // Recreate the author web components only when config.ID changes (same behavior
-  // as the previous useMemo([config.ID]) + ref, without hook dependency noise).
-  const controlPanelCacheRef = React.useRef<{
-    configId: string;
-    element: string;
-  } | null>(null);
-  if (
-    !controlPanelCacheRef.current ||
-    controlPanelCacheRef.current.configId !== config.ID
-  ) {
-    controlPanelCacheRef.current = {
-      configId: config.ID,
-      element: author({
-        ...config,
-        ItemRegistry,
-        actions: {
-          startExport,
-        },
-      }),
-    };
-  }
-  const controlPanelElement = controlPanelCacheRef.current.element;
-
-  const setGroupChannelRange = React.useCallback(
-    (payload: SetGroupChannelRangePayload) => {
-      const doc = useDocumentStore.getState();
-      doc.setChannelGroups(applyGroupChannelRange(doc.channelGroups, payload));
-    },
-    [],
-  );
-
-  const clearContrastPreviewIfOwnedBy = React.useCallback(
-    (sourceChannelId: string) => {
-      const { channelRendering, clearChannelRendering } =
-        useAppStore.getState();
-      if (
-        channelRendering?.kind === "contrast" &&
-        channelRendering.sourceChannelId === sourceChannelId
-      ) {
-        clearChannelRendering();
-      }
-    },
-    [],
-  );
-
-  const channelItemElement = React.useMemo(() => {
-    return toAuthorElement("channel-item", {
-      ID: crypto.randomUUID(),
-      setGroupChannelRange,
-      setChannelRendering: (rendering: ChannelRendering) => {
-        useAppStore.getState().setChannelRendering(rendering);
-      },
-      clearChannelRendering: () => {
-        useAppStore.getState().clearChannelRendering();
-      },
-      clearContrastPreviewIfOwnedBy,
-      getSourceDistribution,
-    });
-  }, [
-    clearContrastPreviewIfOwnedBy,
-    getSourceDistribution,
-    setGroupChannelRange,
-  ]);
-
   const [valid, setValid] = useState({} as ValidObj);
 
   const onStartRef = React.useRef(onStart);
@@ -1877,22 +1789,7 @@ const Content = (props: Props) => {
   }, [viewerImageKey, omeLoaderEntries, onEnsureChannelGmmContrastLimits]);
 
   const channelProps = {
-    name,
-    stories,
-    authorMode: !presenting,
-    groups: itemRegistryGroups,
-    controlPanelElement,
-    channelItemElement,
-    config: config,
-    editable,
     hiddenChannel,
-    setHiddenChannel: setHiddenChannelWithLogic,
-    updateGroup,
-    pushGroup,
-    popGroup,
-    updateChannel,
-    pushChannel,
-    popChannel,
     ensureChannelHistograms: onEnsureChannelHistograms,
     ensureChannelGmmContrastLimits: onEnsureChannelGmmContrastLimits,
   };
@@ -1905,14 +1802,8 @@ const Content = (props: Props) => {
     directory_handle,
     ioState,
     presenting,
-    hiddenWaypoint,
-    setHiddenWaypoint: setHiddenWaypointWithLogic,
-    startExport,
+    groups: itemRegistryGroups,
     stopExport,
-    toggleEditor,
-    updateWaypoint,
-    pushWaypoint,
-    popWaypoint,
   };
 
   const viewerConfig = React.useMemo(() => {
@@ -2424,38 +2315,34 @@ const Content = (props: Props) => {
           lastOmeTiffUrl,
           onImportOme: importOme,
         };
-        // Update mainProps with actual handles
-        const mainPropsWithHandle = {
+        const routerProps = {
           ...mainProps,
           noLoader,
           handles,
           viewerConfig,
           dicomIndexList,
           omeLoaderEntries,
-          enterPlaybackPreview,
           exitPlaybackPreview,
         };
-        // Actual image viewer
-        const imager = noLoader ? (
+        const imagesPanel = <Upload {...uploadProps} />;
+        const viewer = noLoader ? null : (
+          <ImageViewer
+            {...imageProps}
+            viewerConfig={viewerConfig}
+            overlayLayers={overlayLayers}
+            activeTool={activeTool}
+            isDragging={dragState.isDragging}
+            hoveredShapeId={hoverState.hoveredShapeId}
+            onOverlayInteraction={handleOverlayInteraction}
+          />
+        );
+        const imager = (
           <Full>
-            <PlaybackRouter {...mainPropsWithHandle}>
-              <Upload {...uploadProps} />
-            </PlaybackRouter>
-          </Full>
-        ) : (
-          <Full>
-            <PlaybackRouter {...mainPropsWithHandle}>
-              <ImageViewer
-                {...imageProps}
-                viewerConfig={viewerConfig}
-                overlayLayers={overlayLayers}
-                activeTool={activeTool}
-                isDragging={dragState.isDragging}
-                hoveredShapeId={hoverState.hoveredShapeId}
-                onOverlayInteraction={handleOverlayInteraction}
-              />
-              <Upload {...uploadProps} />
-            </PlaybackRouter>
+            <PlaybackRouter
+              {...routerProps}
+              viewer={viewer}
+              imagesPanel={imagesPanel}
+            />
           </Full>
         );
 
@@ -2463,7 +2350,7 @@ const Content = (props: Props) => {
           <Wrapper>
             {!presenting ? (
               <StoryTitleBar
-                authorUiTagName={controlPanelElement}
+                onExport={startExport}
                 onEnterPlaybackPreview={enterPlaybackPreview}
                 playbackPreviewDisabled={_waypoints.length === 0}
               />

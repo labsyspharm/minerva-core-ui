@@ -1,16 +1,27 @@
+import type { ReactNode } from "react";
 import styled from "styled-components";
+import { AuthorView } from "@/components/authoring/AuthorSidebar";
 import { ImageExporter } from "@/components/playback/ImageExporter";
 import { Presentation } from "@/components/playback/Presentation";
-import type { ChannelPanelProps } from "@/components/shared/channel/ChannelPanel";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 import type {
   ItemRegistryGroup,
   OmeLoaderEntry,
 } from "@/components/shared/viewer/ImageViewer";
+import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import type { Config } from "@/lib/imaging/viv";
 
-export type PlaybackRouterProps = ChannelPanelProps & {
+export type PlaybackRouterProps = {
+  viewer: ReactNode;
+  imagesPanel: ReactNode;
+  hiddenChannel: boolean;
+  noLoader: boolean;
+  ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
+  ensureChannelGmmContrastLimits?: (
+    channelIds: string[],
+    opts?: { overwriteExistingLimits?: boolean },
+  ) => Promise<Map<string, ContrastLimits>>;
   name: string;
   ioState: null | string;
   stopExport: () => void;
@@ -20,17 +31,10 @@ export type PlaybackRouterProps = ChannelPanelProps & {
   viewerConfig: Config;
   groups: ItemRegistryGroup[];
   directory_handle: FileSystemDirectoryHandle;
-  enterPlaybackPreview?: () => void;
   exitPlaybackPreview?: () => void;
   dicomIndexList: DicomIndex[];
   omeLoaderEntries: OmeLoaderEntry[];
 };
-
-const _ImageDiv = styled.div`
-  background-color: white;
-  width: 100%;
-  height: 100%;
-`;
 
 const ModeViewport = styled.div`
   height: 100%;
@@ -49,15 +53,33 @@ const ModeViewport = styled.div`
 `;
 
 export const PlaybackRouter = (props: PlaybackRouterProps) => {
+  const channelPanelProps = {
+    hiddenChannel: props.hiddenChannel,
+    noLoader: props.noLoader,
+  };
+
   let out = <></>;
   if (props.presenting) {
     out = (
-      <Presentation {...props}>
-        <ChannelPanel {...props}>{props.children}</ChannelPanel>
+      <Presentation
+        name={props.name}
+        exitPlaybackPreview={props.exitPlaybackPreview}
+      >
+        <ChannelPanel {...channelPanelProps}>{props.viewer}</ChannelPanel>
       </Presentation>
     );
   } else if (props.ioState === "IDLE") {
-    out = <ChannelPanel {...props}>{props.children}</ChannelPanel>;
+    out = (
+      <AuthorView
+        imagesPanel={props.imagesPanel}
+        noLoader={props.noLoader}
+        ensureChannelHistograms={props.ensureChannelHistograms}
+        ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
+        viewer={
+          <ChannelPanel {...channelPanelProps}>{props.viewer}</ChannelPanel>
+        }
+      />
+    );
   } else if (props.ioState === "EXPORTING") {
     const exporterProps = {
       in_f: props.in_f,

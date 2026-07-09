@@ -108,7 +108,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     setAuthoringWaypointShapesIndex,
   } = useAppStore();
 
-  // Master-detail sets authoring from WaypointsListMasterDetail so collapsed
+  // Master-detail sets authoring from WaypointsList so collapsed
   // Annotations panel does not clear the persist target while drawing.
   React.useEffect(() => {
     if (embeddedInScrollParent) return;

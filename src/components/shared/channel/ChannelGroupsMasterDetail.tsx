@@ -3,12 +3,13 @@ import {
   ChromeColorPickerPopover,
   chromeColorPickerAnchorPosition,
 } from "@/components/shared/ChromeColorPickerPopover";
+import { ChannelContrastEditor } from "@/components/shared/channel/ChannelContrastEditor";
 import { ChannelRow, rgbToHex } from "@/components/shared/channel/ChannelRow";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import {
-  channelItemAttrsForGroupRow,
-  channelItemAttrsForSource,
   colorRenderingForSource,
+  contrastEditorPropsForGroupRow,
+  contrastEditorPropsForSource,
 } from "@/components/shared/channel/channelLiveRendering";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
@@ -158,7 +159,6 @@ function makeGroupChannelRow(
 }
 
 export type ChannelGroupsMasterDetailProps = {
-  channelItemElement: string;
   noLoader: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
   ensureChannelGmmContrastLimits?: (
@@ -862,23 +862,21 @@ export const ChannelGroupsMasterDetail = (
                 const rgbDisplay = sc
                   ? isRgbDisplayChannel(sc, sourceChannels)
                   : false;
-                const legacyItem =
-                  sc && isImageChannel(sc) && visible && !rgbDisplay
-                    ? React.createElement(props.channelItemElement, {
-                        key: `grp-${group.id}-${gc.id}`,
-                        ...channelItemAttrsForGroupRow(
-                          channelRendering,
-                          group.id,
-                          gc,
-                          sc,
-                        ),
-                        histogram_loading: loadingHistogramSourceIds.includes(
-                          sc.id,
-                        )
-                          ? "true"
-                          : "false",
-                      })
-                    : null;
+                const contrastEditor =
+                  sc && isImageChannel(sc) && visible && !rgbDisplay ? (
+                    <ChannelContrastEditor
+                      key={`grp-${group.id}-${gc.id}`}
+                      {...contrastEditorPropsForGroupRow(
+                        channelRendering,
+                        group.id,
+                        gc,
+                        sc,
+                      )}
+                      histogramLoading={loadingHistogramSourceIds.includes(
+                        sc.id,
+                      )}
+                    />
+                  ) : null;
 
                 const imageSubtitle =
                   showImageBadge && sc
@@ -1033,9 +1031,9 @@ export const ChannelGroupsMasterDetail = (
                         />
                       )}
                     </div>
-                    {legacyItem ? (
+                    {contrastEditor ? (
                       <div className={styles.detailChannelItemEmbed}>
-                        {legacyItem}
+                        {contrastEditor}
                       </div>
                     ) : null}
                   </li>
@@ -1218,20 +1216,18 @@ export const ChannelGroupsMasterDetail = (
 
     const rgbDisplay = isRgbDisplayChannel(sc, sourceChannels);
     const showHistogramEmbed = isImageChannel(sc) && !rgbDisplay;
-    const legacyItem = showHistogramEmbed
-      ? React.createElement(props.channelItemElement, {
-          key: `all-${sc.id}`,
-          ...channelItemAttrsForSource(
-            channelRendering,
-            sc,
-            displayColor,
-            displayLimits,
-          ),
-          histogram_loading: loadingHistogramSourceIds.includes(sc.id)
-            ? "true"
-            : "false",
-        })
-      : null;
+    const contrastEditor = showHistogramEmbed ? (
+      <ChannelContrastEditor
+        key={`all-${sc.id}`}
+        {...contrastEditorPropsForSource(
+          channelRendering,
+          sc,
+          displayColor,
+          displayLimits,
+        )}
+        histogramLoading={loadingHistogramSourceIds.includes(sc.id)}
+      />
+    ) : null;
 
     return (
       <li key={`all-${sc.id}`} className={styles.rootChannelBlock}>
@@ -1300,8 +1296,8 @@ export const ChannelGroupsMasterDetail = (
             />
           )}
         </div>
-        {legacyItem ? (
-          <div className={styles.detailChannelItemEmbed}>{legacyItem}</div>
+        {contrastEditor ? (
+          <div className={styles.detailChannelItemEmbed}>{contrastEditor}</div>
         ) : null}
       </li>
     );
