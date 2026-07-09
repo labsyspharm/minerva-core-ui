@@ -54,9 +54,11 @@ const toRangeEditor = (ItemRegistry, channelActions, elements) => {
         slider.removeEventListener("change", handler);
       }
       this._contrastCommitHandler = null;
-      const groupUuid = this.getAttribute("group_uuid") ?? "";
-      const channelUuid = this.getAttribute("channel_uuid") ?? "";
-      clearContrastPreviewIfOwnedBy(groupUuid, channelUuid);
+      const sourceChannelId =
+        this.getAttribute("source_uuid") ||
+        this.getAttribute("channel_uuid") ||
+        "";
+      clearContrastPreviewIfOwnedBy(sourceChannelId);
     }
 
     _attachContrastCommitListeners(shadow) {
@@ -158,12 +160,14 @@ const toRangeEditor = (ItemRegistry, channelActions, elements) => {
     }
 
     _previewRange(lower, upper) {
-      const groupId = this.getAttribute("group_uuid") ?? "";
-      const channelId = this.getAttribute("channel_uuid") ?? "";
+      const sourceChannelId =
+        this.getAttribute("source_uuid") ||
+        this.getAttribute("channel_uuid") ||
+        "";
+      if (!sourceChannelId) return;
       setChannelRendering({
         kind: "contrast",
-        groupId,
-        channelId,
+        sourceChannelId,
         lower,
         upper,
       });

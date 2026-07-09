@@ -16,6 +16,7 @@
  */
 
 import type { ConfigWaypoint } from "../authoring/config";
+import { resolveImageImportRole } from "../imaging/channelKind";
 import { type Loader, loaderPixelSizeXY } from "../imaging/viv";
 import {
   importedLineStyle,
@@ -255,17 +256,29 @@ export function applySourceChannelsToImages(
       imageId,
       index,
       name,
+      kind,
       samples,
       sourceDataTypeId,
       sourceDistribution,
+      gmmContrastLimits,
+      color,
+      lowerLimit,
+      upperLimit,
+      maskVisualization,
     } = row;
     const slice: ImageChannel = {
       id: id && id.length > 0 ? id : crypto.randomUUID(),
       index,
       name,
+      ...(kind !== undefined ? { kind } : {}),
       ...(samples !== undefined ? { samples } : {}),
       ...(sourceDataTypeId !== undefined ? { sourceDataTypeId } : {}),
       ...(sourceDistribution !== undefined ? { sourceDistribution } : {}),
+      ...(gmmContrastLimits !== undefined ? { gmmContrastLimits } : {}),
+      ...(color !== undefined ? { color } : {}),
+      ...(lowerLimit !== undefined ? { lowerLimit } : {}),
+      ...(upperLimit !== undefined ? { upperLimit } : {}),
+      ...(maskVisualization !== undefined ? { maskVisualization } : {}),
     };
     const list = byImage.get(imageId) ?? [];
     list.push(slice);
@@ -312,6 +325,135 @@ export function applyLoaderPixelSizeToImage(
   const next = [...images];
   next[idx] = { ...next[idx], sizeX: dims.sizeX, sizeY: dims.sizeY };
   return next;
+}
+
+/** Set import role on one image row (Intensity vs Segmentation file). */
+export function setImageContentRole(
+  images: Image[],
+  imageId: string,
+  contentRole: "intensity" | "segmentation",
+): Image[] {
+  const idx = images.findIndex((im) => im.id === imageId);
+  if (idx < 0) return images;
+  const next = [...images];
+  next[idx] = { ...next[idx], contentRole };
+  return next;
+}
+
+/** Set display basename on one image row (local filename, URL leaf, etc.). */
+export function setImageBasename(
+  images: Image[],
+  imageId: string,
+  basename: string,
+): Image[] {
+  const idx = images.findIndex((im) => im.id === imageId);
+  if (idx < 0) return images;
+  const next = [...images];
+  next[idx] = { ...next[idx], basename: basename.trim() };
+  return next;
+}
+
+/** Drop an existing row before re-importing the same basename + role. */
+export function dedupeImagesForImport(
+  images: Image[],
+  basename: string,
+  contentRole: "intensity" | "segmentation",
+): { images: Image[]; removedImageIds: string[] } {
+  const key = basename.trim().toLowerCase();
+  if (!key) return { images, removedImageIds: [] };
+  const removedImageIds: string[] = [];
+  const next = images.filter((im) => {
+    const base = im.basename.trim().toLowerCase();
+    if (!base || base !== key) return true;
+    const role = resolveImageImportRole({
+      contentRole: im.contentRole,
+      channels: im.channels ?? [],
+    });
+    if (role === contentRole) {
+      removedImageIds.push(im.id);
+      return false;
+    }
+    return true;
+  });
+  return { images: next, removedImageIds };
+}
+
+/** Strip the OME-TIFF extension to derive a short import label from a basename. */
+export function basenameImportLabel(basename: string): string {
+  const trimmed = basename.trim();
+  if (!trimmed) return "Mask";
+  return trimmed.replace(/\.ome\.tiff?$/i, "").replace(/\.tiff?$/i, "");
+}
+
+/**
+ * Rename mask source channels so they don't collide with intensity channels
+ * (whose visibility / styling is keyed by `name`). Uses the file basename as
+ * the base label, numbers within a multi-channel mask, and suffixes with
+ * "(2)", "(3)", … if the label is already in use across the document.
+ */
+export function uniquifyMaskChannelNames<T extends { name?: string }>(
+  channels: T[],
+  basename: string,
+  existingNames: Set<string>,
+): T[] {
+  if (channels.length === 0) return channels;
+  const base = basenameImportLabel(basename) || "Mask";
+  return channels.map((ch, i) => {
+    const preferred = channels.length === 1 ? base : `${base} #${i + 1}`;
+    let candidate = preferred;
+    let suffix = 2;
+    while (existingNames.has(candidate)) {
+      candidate = `${preferred} (${suffix})`;
+      suffix += 1;
+    }
+    existingNames.add(candidate);
+    return { ...ch, name: candidate };
+  });
+}
+
+/** Update contrast limits on a source channel row (napari layer list). */
+export function applySourceChannelRange(
+  images: Image[],
+  sourceChannelId: string,
+  lower: number,
+  upper: number,
+): Image[] {
+  return images.map((im) => ({
+    ...im,
+    channels: im.channels.map((ch) =>
+      ch.id === sourceChannelId
+        ? {
+            ...ch,
+            lowerLimit: lower,
+            upperLimit: upper,
+            gmmContrastLimits: { lower, upper },
+          }
+        : ch,
+    ),
+  }));
+}
+
+export function patchSourceChannelOnImages(
+  images: Image[],
+  sourceChannelId: string,
+  patch: Partial<
+    Pick<
+      ImageChannel,
+      | "color"
+      | "lowerLimit"
+      | "upperLimit"
+      | "maskVisualization"
+      | "name"
+      | "kind"
+    >
+  >,
+): Image[] {
+  return images.map((im) => ({
+    ...im,
+    channels: im.channels.map((ch) =>
+      ch.id === sourceChannelId ? { ...ch, ...patch } : ch,
+    ),
+  }));
 }
 
 /** Attach {@link ImageSource} to the row matching `imageId` (for persistence / reload). */

@@ -95,6 +95,7 @@
     "openseadragon": "^4.1.1",
     "polygon-clipping": "^0.15.7",
     "prop-types": "^15.8.1",
+    "psudo": "0.4.1",
     "prosemirror-commands": "^1.5.2",
     "prosemirror-history": "^1.4.1",
     "prosemirror-keymap": "^1.2.2",
@@ -144,7 +145,9 @@
     "typescript-plugin-styled-components": "^3.0.0",
     "vite": "^5.3.4",
     "vite-plugin-mkcert": "^1.17.5",
-    "vite-plugin-static-copy": "^3.3.0"
+    "vite-plugin-static-copy": "^3.3.0",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.6.0"
   },
   "resolutions": {
     "styled-components": "^5"

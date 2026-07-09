@@ -12,15 +12,30 @@ import styled from "styled-components";
 import "@deck.gl/widgets/stylesheet.css";
 
 import type { Layer } from "@deck.gl/core";
-import { PolygonLayer } from "@deck.gl/layers";
+import { MaskExtension } from "@deck.gl/extensions";
+import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
+import { isMaskSourceRendered } from "@/lib/imaging/channelCompositor";
+import { isMaskChannel } from "@/lib/imaging/channelKind";
+import { fetchLabelRasterForSourceIndex } from "@/lib/imaging/maskChannelRaster";
+import {
+  IMAGE_SELECTION_MASK_LAYER_ID,
+  labelRasterToRgba,
+  SELECTION_MASK_CHANNEL_KEY,
+  selectionMaskBinaryImageData,
+  selectionMaskDisplayImageData,
+} from "@/lib/imaging/maskLayers";
+import { effectiveMaskVisualizationForSource } from "@/lib/imaging/sourceChannelStyle";
 import type { Config, Loader } from "@/lib/imaging/viv";
 import type { Story } from "@/lib/legacy/exhibit";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
-import { useDocumentStore } from "@/lib/stores/documentStore";
+import {
+  flattenImageChannelsInDocumentOrder,
+  useDocumentStore,
+} from "@/lib/stores/documentStore";
 import { useWindowSize } from "@/lib/util/useWindowSize";
 import { ORTHO_VIEW_ID, SCALEBAR_VIEW_ID } from "@/lib/viewer/deckViewIds";
 import { createDragHandlers } from "@/lib/viewer/dragHandlers";
@@ -75,9 +90,11 @@ export type MainSettings = {
   contrastLimits: readonly [number, number][];
   colors: readonly [number, number, number][];
   channelsVisible?: readonly boolean[];
+  sourceChannelIds?: readonly string[];
 };
 
 export type ImageViewerProps = {
+  omeLoaderEntries: OmeLoaderEntry[];
   stories: Story[];
   imageLayers: Layer[];
   mainSettingsList: MainSettings[];
@@ -153,6 +170,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     loaderList,
     mainSettingsList,
     imageLayers,
+    omeLoaderEntries,
     groups,
     overlayLayers = [],
     activeTool,
@@ -168,11 +186,19 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const {
     activeChannelGroupId,
     channelVisibilities,
+    channelGroupRowVisibilities,
     sam2Processing,
     authoringWaypointEditorOpen,
   } = useAppStore();
   const channelRendering = useAppStore((s) => s.channelRendering);
+  const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
+  const images = useDocumentStore((s) => s.images);
+  const [maskDisplayLayers, setMaskDisplayLayers] = useState<Layer[]>([]);
+  const selectionMaskActive =
+    imageSelectionMask != null &&
+    (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
+  const maskExtension = useMemo(() => new MaskExtension(), []);
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [_canvas, _setCanvas] = useState(null);
@@ -236,6 +262,92 @@ export const ImageViewer = (props: ImageViewerProps) => {
       setViewerReferenceImagePixelSize(null);
     };
   }, [imageShape.x, imageShape.y, setViewerReferenceImagePixelSize]);
+
+  const visibleMaskSources = useMemo(() => {
+    const activeGroup = activeChannelGroupId
+      ? channelGroups.find((g) => g.id === activeChannelGroupId)
+      : undefined;
+    return flattenImageChannelsInDocumentOrder(images).filter((sc) => {
+      if (!isMaskChannel(sc)) return false;
+      return isMaskSourceRendered({
+        sc,
+        activeGroup,
+        channelGroups,
+        stackVisibilities: channelVisibilities ?? {},
+        groupRowVisibilities: channelGroupRowVisibilities,
+      });
+    });
+  }, [
+    images,
+    channelVisibilities,
+    channelGroupRowVisibilities,
+    activeChannelGroupId,
+    channelGroups,
+  ]);
+
+  useEffect(() => {
+    if (visibleMaskSources.length === 0 || omeLoaderEntries.length === 0) {
+      setMaskDisplayLayers([]);
+      return;
+    }
+    const imgW = Number(imageShape.x) || 0;
+    const imgH = Number(imageShape.y) || 0;
+    if (imgW <= 0 || imgH <= 0) {
+      setMaskDisplayLayers([]);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const layers: Layer[] = [];
+      const bounds: [number, number, number, number] = [0, imgH, imgW, 0];
+      for (const sc of visibleMaskSources) {
+        const entry = omeLoaderEntries.find(
+          (e) => e.sourceImageId === sc.imageId,
+        );
+        if (!entry?.loader) continue;
+        const raster = await fetchLabelRasterForSourceIndex(
+          entry.loader,
+          sc.index,
+        );
+        if (!raster || cancelled) continue;
+        const viz = effectiveMaskVisualizationForSource(
+          sc,
+          channelGroups,
+          activeChannelGroupId,
+        );
+        const image = labelRasterToRgba(
+          raster.data,
+          raster.width,
+          raster.height,
+          viz,
+        );
+        layers.push(
+          new BitmapLayer({
+            id: `mask-channel-${sc.id}`,
+            bounds,
+            image,
+            pickable: false,
+            textureParameters: {
+              magFilter: "nearest",
+              minFilter: "linear",
+              mipmapFilter: "linear",
+            },
+          }),
+        );
+      }
+      if (!cancelled) setMaskDisplayLayers(layers);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    visibleMaskSources,
+    omeLoaderEntries,
+    imageShape.x,
+    imageShape.y,
+    channelGroups,
+    activeChannelGroupId,
+  ]);
 
   // Memoize initial view state
   const initialViewState = useMemo(() => {
@@ -540,15 +652,60 @@ export const ImageViewer = (props: ImageViewerProps) => {
     });
   }, [imageShape.x, imageShape.y]);
 
+  const selectionMaskDeckLayers = useMemo(() => {
+    if (!imageSelectionMask) return [] as Layer[];
+    const [minX, minY, maxX, maxY] = imageSelectionMask.bounds;
+    const bounds: [number, number, number, number] = [minX, minY, maxX, maxY];
+    const layers: Layer[] = [
+      new BitmapLayer({
+        id: IMAGE_SELECTION_MASK_LAYER_ID,
+        operation: "mask",
+        bounds,
+        image: selectionMaskBinaryImageData(imageSelectionMask),
+        pickable: false,
+      }),
+    ];
+    if (selectionMaskActive) {
+      layers.push(
+        new BitmapLayer({
+          id: "image-selection-display",
+          bounds,
+          image: selectionMaskDisplayImageData(imageSelectionMask),
+          pickable: false,
+        }),
+      );
+    }
+    return layers;
+  }, [imageSelectionMask, selectionMaskActive]);
+
+  const clippedImageLayers = useMemo(() => {
+    if (!selectionMaskActive || !imageSelectionMask) return imageLayers;
+    return imageLayers.map((layer) =>
+      layer.clone({
+        extensions: [maskExtension],
+        maskId: IMAGE_SELECTION_MASK_LAYER_ID,
+      } as Parameters<typeof layer.clone>[0]),
+    );
+  }, [imageLayers, selectionMaskActive, imageSelectionMask, maskExtension]);
+
   const allLayers = useMemo(() => {
     const layers: AnyLayer[] = [
       worldPickSurfaceLayer,
-      ...imageLayers,
+      ...selectionMaskDeckLayers,
+      ...clippedImageLayers,
+      ...maskDisplayLayers,
       ...overlayLayers,
     ];
     if (scaleBarLayer) layers.push(scaleBarLayer);
     return layers;
-  }, [worldPickSurfaceLayer, imageLayers, overlayLayers, scaleBarLayer]);
+  }, [
+    worldPickSurfaceLayer,
+    selectionMaskDeckLayers,
+    clippedImageLayers,
+    maskDisplayLayers,
+    overlayLayers,
+    scaleBarLayer,
+  ]);
 
   const squareViewportStyle = useMemo(() => {
     const side = Math.max(
@@ -758,13 +915,13 @@ export const ImageViewer = (props: ImageViewerProps) => {
       loadingWidgetRef.current.onRedraw({ layers: allLayers });
     }
     const loaded =
-      allLayers.length > 0 &&
-      allLayers.every((layer) => (layer as { isLoaded?: boolean }).isLoaded);
+      imageLayers.length > 0 &&
+      imageLayers.every((layer) => (layer as { isLoaded?: boolean }).isLoaded);
     if (imageLayersLoadedRef.current !== loaded) {
       imageLayersLoadedRef.current = loaded;
       setViewerImageLayersLoaded(loaded);
     }
-  }, [allLayers, setViewerImageLayersLoaded]);
+  }, [allLayers, imageLayers, setViewerImageLayersLoaded]);
 
   useEffect(() => {
     return () => {

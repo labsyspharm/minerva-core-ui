@@ -9,6 +9,40 @@ import { extractDistributionsForSourceIndices } from "../authoring/config";
 import type { Channel } from "../stores/documentStore";
 import type { Loader } from "./viv";
 
+export type BackgroundTaskHandle = { cancel: () => void };
+
+/** Defer work until the browser is idle (histogram fetch, etc.). */
+export function scheduleBackgroundTask(
+  fn: () => void,
+  opts?: { timeout?: number },
+): BackgroundTaskHandle {
+  const timeout = opts?.timeout ?? 2500;
+  let cancelled = false;
+  let idleId: number | undefined;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  const run = () => {
+    if (cancelled) return;
+    fn();
+  };
+
+  if (typeof requestIdleCallback !== "undefined") {
+    idleId = requestIdleCallback(run, { timeout });
+  } else {
+    timeoutId = setTimeout(run, 16);
+  }
+
+  return {
+    cancel: () => {
+      cancelled = true;
+      if (idleId != null && typeof cancelIdleCallback !== "undefined") {
+        cancelIdleCallback(idleId);
+      }
+      if (timeoutId != null) clearTimeout(timeoutId);
+    },
+  };
+}
+
 export function sourceDistributionYValuesLength(sc: Channel): number {
   const d = sc.sourceDistribution;
   return d?.YValues?.length ?? 0;

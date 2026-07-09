@@ -637,6 +637,26 @@
   flex-shrink: 0;
 }
 
+.detailSelectionActions {
+  padding: 0 0 8px;
+}
+
+.detailSelectionButton {
+  width: 100%;
+  background: color-mix(in srgb, #007acc 22%, transparent);
+  border: 1px solid color-mix(in srgb, #007acc 55%, #444);
+  color: #e6edf3;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+}
+
+.detailSelectionButton:hover {
+  background: color-mix(in srgb, #007acc 35%, transparent);
+}
+
 .subtleBanner {
   background-color: #151515;
   border: 1px solid #444;

@@ -1,7 +1,7 @@
 :host {
   --handle-width: 0.75rem;
   --slider-track-height: 4px;
-  --slider-row-height: 18px;
+  --slider-row-height: 14px;
   --range-start-frac: 0;
   --range-end-frac: 1;
   /** Narrow inputs; vw cap keeps them usable in tight overlay / mobile */
@@ -36,24 +36,28 @@
 }
 
 .range-controls-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  position: relative;
   width: 100%;
   box-sizing: border-box;
+  padding-bottom: 13px;
 }
 
 .range-slider-row {
   width: 100%;
   min-width: 0;
+  height: var(--slider-row-height);
 }
 
 .range-limits-track {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 10px;
   width: 100%;
   min-width: 0;
-  min-height: 24px;
-  margin-top: 1px;
+  height: 13px;
+  min-height: 13px;
+  margin-top: 0;
   box-sizing: border-box;
 }
 
@@ -103,7 +107,7 @@
   font-family: var(--font-family);
   font-size: 9px;
   line-height: 1.2;
-  padding: 2px 3px;
+  padding: 1px 3px;
   margin: 0;
   overflow-x: auto;
   text-align: center;
