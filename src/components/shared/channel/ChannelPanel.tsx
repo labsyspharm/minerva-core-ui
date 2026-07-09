@@ -19,6 +19,8 @@ import { ChannelGroups } from "./ChannelGroups";
 import { ChannelGroupsMasterDetail } from "./ChannelGroupsMasterDetail";
 import {
   ChannelLegend,
+  type LegendChannel,
+  type LegendEntry,
   type LegendSection,
   legendChannelFromLayer,
   legendChannelFromSource,
@@ -202,72 +204,92 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     const activeGroup = activeChannelGroupId
       ? docChannelGroups.find((g) => g.id === activeChannelGroupId)
       : undefined;
-    const sections: LegendSection[] = [];
-
-    if (activeGroup) {
-      for (const im of images) {
-        const channels: LegendSection["channels"] = [];
-        for (const gc of activeGroup.channels) {
-          const sc = findSourceChannel(sourceChannels, gc.channelId);
-          if (!sc || sc.imageId !== im.id) continue;
-          const colorIdx = indexById.get(sc.id) ?? 0;
-          channels.push(
-            legendChannelFromLayer(sc, gc, activeChannelGroupId, colorIdx),
-          );
-        }
-        if (channels.length === 0) continue;
-        sections.push({
-          imageId: im.id,
-          label: legendLabelForImage(im.basename ?? ""),
-          channels,
-        });
-      }
-      return sections;
-    }
-
     const intensityLayers = buildCompositedIntensityLayers({
       onLoader: sourceChannels.filter((sc) => isImageChannel(sc)),
-      activeGroup: undefined,
+      activeGroup,
       channelGroups: docChannelGroups,
       stackVisibilities: channelVisibilities,
       groupRowVisibilities: channelGroupRowVisibilities,
       hasVisibilityMap: Object.keys(channelVisibilities).length > 0,
     });
-    const maskArgs = {
-      activeGroup: undefined,
+    const maskRenderArgs = {
+      activeGroup,
       channelGroups: docChannelGroups,
       stackVisibilities: channelVisibilities,
       groupRowVisibilities: channelGroupRowVisibilities,
     };
+    const sections: LegendSection[] = [];
+
     for (const im of images) {
-      const channels: LegendSection["channels"] = [];
-      for (const { sc, gc } of intensityLayers) {
-        if (sc.imageId !== im.id) continue;
-        const colorIdx = indexById.get(sc.id) ?? 0;
-        channels.push(legendChannelFromLayer(sc, gc, null, colorIdx));
-      }
-      for (const ch of im.channels) {
-        const sc = findSourceChannel(sourceChannels, ch.id);
-        if (!sc || !isMaskChannel(sc)) continue;
-        if (
-          !isMaskSourceRendered({
-            sc,
-            activeGroup,
-            channelGroups: docChannelGroups,
-            stackVisibilities: channelVisibilities,
-            groupRowVisibilities: channelGroupRowVisibilities,
-          })
-        ) {
-          continue;
+      const entries: LegendEntry[] = [];
+
+      if (activeGroup) {
+        const groupChannels: LegendChannel[] = [];
+        for (const gc of activeGroup.channels) {
+          const sc = findSourceChannel(sourceChannels, gc.channelId);
+          if (!sc || sc.imageId !== im.id) continue;
+          const colorIdx = indexById.get(sc.id) ?? 0;
+          groupChannels.push(
+            legendChannelFromLayer(sc, gc, activeChannelGroupId, colorIdx),
+          );
         }
-        const colorIdx = indexById.get(sc.id) ?? 0;
-        channels.push(legendChannelFromSource(sc, colorIdx));
+
+        const overlayChannels: LegendChannel[] = [];
+        for (const { sc, gc } of intensityLayers) {
+          if (sc.imageId !== im.id || gc != null) continue;
+          const colorIdx = indexById.get(sc.id) ?? 0;
+          overlayChannels.push(
+            legendChannelFromLayer(sc, null, null, colorIdx),
+          );
+        }
+
+        const groupSourceIds = new Set(
+          activeGroup.channels.map((gc) => gc.channelId),
+        );
+        for (const ch of im.channels) {
+          const sc = findSourceChannel(sourceChannels, ch.id);
+          if (!sc || !isMaskChannel(sc)) continue;
+          if (groupSourceIds.has(sc.id)) continue;
+          if (!isMaskSourceRendered({ sc, ...maskRenderArgs })) continue;
+          const colorIdx = indexById.get(sc.id) ?? 0;
+          overlayChannels.push(legendChannelFromSource(sc, colorIdx));
+        }
+
+        for (const c of groupChannels) {
+          entries.push({ type: "channel", channel: c });
+        }
+        if (groupChannels.length > 0 && overlayChannels.length > 0) {
+          entries.push({ type: "divider" });
+        }
+        for (const c of overlayChannels) {
+          entries.push({ type: "channel", channel: c });
+        }
+      } else {
+        for (const { sc, gc } of intensityLayers) {
+          if (sc.imageId !== im.id) continue;
+          const colorIdx = indexById.get(sc.id) ?? 0;
+          entries.push({
+            type: "channel",
+            channel: legendChannelFromLayer(sc, gc, null, colorIdx),
+          });
+        }
+        for (const ch of im.channels) {
+          const sc = findSourceChannel(sourceChannels, ch.id);
+          if (!sc || !isMaskChannel(sc)) continue;
+          if (!isMaskSourceRendered({ sc, ...maskRenderArgs })) continue;
+          const colorIdx = indexById.get(sc.id) ?? 0;
+          entries.push({
+            type: "channel",
+            channel: legendChannelFromSource(sc, colorIdx),
+          });
+        }
       }
-      if (channels.length === 0) continue;
+
+      if (entries.length === 0) continue;
       sections.push({
         imageId: im.id,
         label: legendLabelForImage(im.basename ?? ""),
-        channels,
+        entries,
       });
     }
     return sections;
@@ -280,7 +302,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     channelGroupRowVisibilities,
   ]);
 
-  const toggleChannel = (c: LegendSection["channels"][number]) => {
+  const toggleChannel = (c: LegendChannel) => {
     if (c.group_uuid && c.channel_uuid) {
       setChannelGroupRowVisibilities({
         ...channelGroupRowVisibilities,

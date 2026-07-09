@@ -1103,7 +1103,11 @@ export const ChannelGroupsMasterDetail = (
       activeChannelGroup,
       channelGroupRowVisibilities,
     );
-    const shownInViewer = viaActiveGroup || stackOn;
+    const shownInViewer = inAnyGroup
+      ? activeRow
+        ? viaActiveGroup
+        : false
+      : viaActiveGroup || stackOn;
     const im = images.find((i) => i.id === sc.imageId);
     const imageLabel = im?.basename?.trim() ?? "";
     const meta = imageLabel
@@ -1111,7 +1115,7 @@ export const ChannelGroupsMasterDetail = (
       : `Index ${sc.index}`;
 
     const toggleAllChannelsVisibility = (nextVisible: boolean) => {
-      if (viaActiveGroup && activeRow) {
+      if (activeRow) {
         setChannelGroupRowVisibilities({
           ...channelGroupRowVisibilities,
           [activeRow.id]: nextVisible,
@@ -1147,11 +1151,13 @@ export const ChannelGroupsMasterDetail = (
               rowClassName={styles.rootChannelRow}
               compact
               visible={shownInViewer}
-              visibilityTitle={allChannelsLayerTitle(
-                sc,
-                shownInViewer,
-                viaActiveGroup,
-              )}
+              visibilityTitle={
+                activeRow
+                  ? shownInViewer
+                    ? `Hide ${sc.name} in active group`
+                    : `Show ${sc.name} in active group`
+                  : allChannelsLayerTitle(sc, shownInViewer, viaActiveGroup)
+              }
               visibilityAriaLabel={`Toggle layer for ${sc.name}`}
               onToggleVisibility={() =>
                 toggleAllChannelsVisibility(!shownInViewer)

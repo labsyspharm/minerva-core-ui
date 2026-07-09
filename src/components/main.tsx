@@ -57,9 +57,7 @@ import {
   hasAuthorShellSupport,
   hasDirectoryPickerAccess,
   isPersistableFileHandle,
-  toLoader,
-  toLoaderFromUrl,
-  toMaskLoader,
+  loadOmeLoaderForRole,
 } from "@/lib/imaging/filesystem";
 import {
   clearOmeHistogramCache,
@@ -303,6 +301,14 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
   const pool = new Pool();
   const dicomSeriesSeen = new Set<string>();
 
+  const omeLoaderRole = (im: Image): "intensity" | "segmentation" =>
+    resolveImageContentRole({
+      contentRole: im.contentRole,
+      channels: im.channels ?? [],
+    }) === "segmentation"
+      ? "segmentation"
+      : "intensity";
+
   for (const im of images) {
     if (!im.source) continue;
     if ("url" in im.source && im.source.url === "jpeg-test") {
@@ -320,7 +326,11 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
     }
     switch (im.source.kind) {
       case "url": {
-        const loader = await toLoaderFromUrl(im.source.url, pool);
+        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
+          kind: "url",
+          url: im.source.url,
+          pool,
+        });
         omeLoaderEntries.push({ loader, sourceImageId: im.id });
         break;
       }
@@ -330,22 +340,12 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
         if (!(await hydrateFilePermission(handle))) break;
         if (!(await findFile({ handle }))) break;
         const file = await handle.getFile();
-        const role = resolveImageContentRole({
-          contentRole: im.contentRole,
-          channels: im.channels ?? [],
+        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
+          kind: "local",
+          handle,
+          in_f: file.name,
+          pool,
         });
-        const loader =
-          role === "segmentation"
-            ? await toMaskLoader({
-                handle,
-                in_f: file.name,
-                pool,
-              })
-            : await toLoader({
-                handle,
-                in_f: file.name,
-                pool,
-              });
         omeLoaderEntries.push({ loader, sourceImageId: im.id });
         break;
       }
@@ -771,18 +771,12 @@ const Content = (props: Props) => {
 
     for (let i = 0; i < handles.length; i++) {
       const handle = handles[i];
-      const loader =
-        role === "segmentation"
-          ? await toMaskLoader({
-              handle,
-              in_f: i === 0 ? in_f : handle.name,
-              pool: new Pool(),
-            })
-          : await toLoader({
-              handle,
-              in_f: i === 0 ? in_f : handle.name,
-              pool: new Pool(),
-            });
+      const loader = await loadOmeLoaderForRole(role, {
+        kind: "local",
+        handle,
+        in_f: i === 0 ? in_f : handle.name,
+        pool: new Pool(),
+      });
       const sourceImageId = crypto.randomUUID();
       const basename = i === 0 ? in_f : handle.name;
       const extractedFresh = extractChannels(
@@ -808,7 +802,7 @@ const Content = (props: Props) => {
         scForDoc,
       );
       registry = {
-        SourceChannels: [...registry.SourceChannels, ...sc],
+        SourceChannels: [...registry.SourceChannels, ...scForDoc],
       };
       entries.push({ loader, sourceImageId });
     }
@@ -882,18 +876,12 @@ const Content = (props: Props) => {
       nextImages = deduped.images;
       removedLoaderIds = [...removedLoaderIds, ...deduped.removedImageIds];
 
-      const loader =
-        role === "segmentation"
-          ? await toMaskLoader({
-              handle,
-              in_f: basename,
-              pool: new Pool(),
-            })
-          : await toLoader({
-              handle,
-              in_f: basename,
-              pool: new Pool(),
-            });
+      const loader = await loadOmeLoaderForRole(role, {
+        kind: "local",
+        handle,
+        in_f: basename,
+        pool: new Pool(),
+      });
       const sourceImageId = crypto.randomUUID();
       const extractedAppend = extractChannels(
         loader,
@@ -1009,7 +997,11 @@ const Content = (props: Props) => {
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
     clearOmeDerivedCaches();
     setDicomIndexList([]);
-    const loader = await toLoaderFromUrl(url, new Pool());
+    const loader = await loadOmeLoaderForRole(role, {
+      kind: "url",
+      url,
+      pool: new Pool(),
+    });
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return;
     }
@@ -1077,7 +1069,11 @@ const Content = (props: Props) => {
     omeTiffUrlLoadGenerationRef.current += 1;
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
     clearOmeDerivedCaches();
-    const loader = await toLoaderFromUrl(url, new Pool());
+    const loader = await loadOmeLoaderForRole(role, {
+      kind: "url",
+      url,
+      pool: new Pool(),
+    });
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return { ok: false, error: "Import was superseded by a newer request." };
     }
@@ -1159,8 +1155,12 @@ const Content = (props: Props) => {
         useAppStore.getState().clearOverlayLayers();
         setIsLoadingImage(true);
         try {
-          const { omeLoaderEntries: ome, dicomIndexList: dicom } =
-            await hydrateLoadersFromImages(doc.images);
+          const {
+            jpegLoaderEntries: jpeg,
+            omeLoaderEntries: ome,
+            dicomIndexList: dicom,
+          } = await hydrateLoadersFromImages(doc.images);
+          setJpegLoaderEntries(jpeg);
           setOmeLoaderEntries(ome);
           setDicomIndexList(dicom);
           const flat = flattenImageChannelsInDocumentOrder(doc.images);

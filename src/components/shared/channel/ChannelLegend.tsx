@@ -120,15 +120,30 @@ const RowClickArea = styled.div`
   }
 `;
 
-const Swatch = styled.div`
-  background-color: #${({ color }) => color};
+const Swatch = styled.div<{ color: string; $outline?: boolean }>`
   height: 10px;
   width: 10px;
   flex-shrink: 0;
   border-radius: 2px;
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, white 14%, transparent) inset,
-    0 0 0 1px color-mix(in srgb, black 35%, transparent);
+  ${({ color, $outline }) =>
+    $outline
+      ? `
+    background: transparent;
+    border: 1.5px solid #${color};
+    box-shadow: 0 0 0 1px color-mix(in srgb, black 25%, transparent);
+  `
+      : `
+    background-color: #${color};
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, white 14%, transparent) inset,
+      0 0 0 1px color-mix(in srgb, black 35%, transparent);
+  `}
+`;
+
+const LegendDivider = styled.div`
+  margin: 3px 2px 2px;
+  border-top: 1px solid
+    color-mix(in srgb, var(--theme-glass-edge) 50%, transparent);
 `;
 
 const NameSlot = styled.span`
@@ -165,10 +180,14 @@ export type LegendChannel = {
   channel_uuid: string;
 };
 
+export type LegendEntry =
+  | { type: "channel"; channel: LegendChannel }
+  | { type: "divider" };
+
 export type LegendSection = {
   imageId: string;
   label: string;
-  channels: LegendChannel[];
+  entries: LegendEntry[];
 };
 
 /** Legend swatch matching what the viewer draws (group row or stack source). */
@@ -247,6 +266,8 @@ type LegendRowProps = {
   editable?: boolean;
   channelVisibilities: Record<string, boolean>;
   channelGroupRowVisibilities: Record<string, boolean>;
+  /** Group member hidden in the viewer — stroked swatch, still listed. */
+  hiddenInViewer?: boolean;
   toggleChannel: (c: LegendChannel) => void;
   updateChannel: (
     channel: LegendChannel,
@@ -259,11 +280,14 @@ const LegendRow = (props: LegendRowProps & { onClick: () => void }) => {
   const { channel } = props;
   const channelName = channel.name;
   const { idx, g, onClick } = props;
-  const rowVisible = legendRowVisible(
-    channel,
-    props.channelVisibilities,
-    props.channelGroupRowVisibilities,
-  );
+  const rowVisible = props.hiddenInViewer
+    ? false
+    : legendRowVisible(
+        channel,
+        props.channelVisibilities,
+        props.channelGroupRowVisibilities,
+      );
+  const outlineSwatch = props.hiddenInViewer === true;
   const setInput = (t: string) => {
     props.updateChannel({ ...channel, name: t }, { idx, g });
   };
@@ -286,9 +310,13 @@ const LegendRow = (props: LegendRowProps & { onClick: () => void }) => {
       onClick={onClick}
       className="channel-legend-row"
       title={rowVisible ? `Hide ${channelName}` : `Show ${channelName}`}
-      style={{ opacity: rowVisible ? 1 : 0.42 }}
+      style={{ opacity: rowVisible ? 1 : outlineSwatch ? 0.72 : 0.42 }}
     >
-      <Swatch color={channel.color} style={{ opacity: rowVisible ? 1 : 0.5 }} />
+      <Swatch
+        color={channel.color}
+        $outline={outlineSwatch}
+        style={outlineSwatch ? undefined : { opacity: rowVisible ? 1 : 0.5 }}
+      />
       <NameSlot className="channel-legend-name">
         <EditableText {...statusProps}>{channelName}</EditableText>
       </NameSlot>
@@ -326,7 +354,10 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
   const pushChannel = props.pushChannel;
   const { sections } = props;
   const channelGroupRowVisibilities = props.channelGroupRowVisibilities ?? {};
-  const total = sections.reduce((n, s) => n + s.channels.length, 0);
+  const total = sections.reduce(
+    (n, s) => n + s.entries.filter((e) => e.type === "channel").length,
+    0,
+  );
   const nextIdx = total + 1;
   const newChannel = defaultChannels[nextIdx % defaultChannels.length];
   const onPush = () => {
@@ -365,9 +396,21 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
               {section.label}
             </ImageSectionLabel>
             <ChannelList>
-              {section.channels.map((c) => {
+              {section.entries.map((entry, entryIdx) => {
+                if (entry.type === "divider") {
+                  return (
+                    <LegendDivider key={`div-${section.imageId}-${entryIdx}`} />
+                  );
+                }
+                const c = entry.channel;
                 const k = rowIdx;
                 rowIdx += 1;
+                const hiddenInViewer =
+                  !!c.group_uuid &&
+                  !isGroupRowVisible(
+                    channelGroupRowVisibilities,
+                    c.channel_uuid,
+                  );
                 const rowProps: LegendRowProps & { onClick: () => void } = {
                   channel: c,
                   idx: k,
@@ -376,6 +419,7 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
                   editable: props.editable,
                   channelVisibilities: props.channelVisibilities,
                   channelGroupRowVisibilities,
+                  hiddenInViewer,
                   toggleChannel: props.toggleChannel,
                   updateChannel: props.updateChannel ?? (() => {}),
                   popChannel: props.popChannel ?? (() => {}),

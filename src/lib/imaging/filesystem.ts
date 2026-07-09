@@ -231,8 +231,7 @@ const toLoader: ToLoader = async ({ handle, pool = null }) => {
  * For mask overlays we only need the first raster, so build a minimal loader
  * directly from GeoTIFF image 0 and the first OME Pixels block.
  */
-const toMaskLoader: ToMaskLoader = async ({ handle }) => {
-  const inFile = await handle.getFile();
+async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
   const tiff = await fromBlob(inFile);
   const image = await tiff.getImage(0);
   const fd = image.fileDirectory;
@@ -300,7 +299,47 @@ const toMaskLoader: ToMaskLoader = async ({ handle }) => {
       ROIs: [],
     },
   } as Loader;
+}
+
+const toMaskLoader: ToMaskLoader = async ({ handle }) => {
+  return maskLoaderFromBlob(await handle.getFile());
 };
+
+const toMaskLoaderFromUrl = async (url: string): Promise<Loader> => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch mask OME-TIFF (${response.status})`);
+  }
+  return maskLoaderFromBlob(await response.blob());
+};
+
+export type OmeLoaderRole = "intensity" | "segmentation";
+
+/** Pick Viv vs minimal mask loader for local file or remote URL. */
+export async function loadOmeLoaderForRole(
+  role: OmeLoaderRole,
+  source:
+    | { kind: "local"; handle: Handle.File; in_f: string; pool?: PoolClass }
+    | { kind: "url"; url: string; pool?: PoolClass },
+): Promise<Loader> {
+  const isMask = role === "segmentation";
+  if (source.kind === "local") {
+    return isMask
+      ? toMaskLoader({
+          handle: source.handle,
+          in_f: source.in_f,
+          pool: source.pool,
+        })
+      : toLoader({
+          handle: source.handle,
+          in_f: source.in_f,
+          pool: source.pool,
+        });
+  }
+  return isMask
+    ? toMaskLoaderFromUrl(source.url)
+    : toLoaderFromUrl(source.url, source.pool);
+}
 
 const toLoaderFromUrl = async (
   url: string,
@@ -320,6 +359,7 @@ export {
   findFile,
   toLoader,
   toMaskLoader,
+  toMaskLoaderFromUrl,
   toLoaderFromUrl,
   toFile,
 };
