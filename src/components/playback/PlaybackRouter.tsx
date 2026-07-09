@@ -37,8 +37,17 @@ export type PlaybackRouterProps = {
 };
 
 const ModeViewport = styled.div`
-  height: 100%;
+  position: relative;
+  flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  > * {
+    flex: 1;
+    min-height: 0;
+  }
+
   animation: modeViewportIn 0.2s ease-out;
 
   @keyframes modeViewportIn {

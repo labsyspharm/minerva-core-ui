@@ -1,7 +1,7 @@
 import * as React from "react";
 import {
   buildContrastScale,
-  histogramSparklinePath,
+  histogramSparklinePaths,
 } from "@/lib/imaging/contrastScale";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { SourceDistributionData } from "@/lib/stores/documentSchema";
@@ -176,8 +176,114 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const minFrac = sliderMin / scale.sliderSteps;
   const maxFrac = sliderMax / scale.sliderSteps;
   const handleHalf = 0.375;
+  const sliderRowRef = React.useRef<HTMLDivElement>(null);
+  const panDragRef = React.useRef<{
+    active: boolean;
+    pointerId: number;
+    startX: number;
+    startMin: number;
+    startMax: number;
+  } | null>(null);
+  const panMovedRef = React.useRef(false);
 
-  const histPath = histogramSparklinePath(dist.YValues);
+  const { linePath: histLinePath, fillPath: histFillPath } =
+    histogramSparklinePaths(dist.YValues);
+
+  const stepFromClientX = React.useCallback(
+    (clientX: number) => {
+      const row = sliderRowRef.current;
+      if (!row) return 0;
+      const rect = row.getBoundingClientRect();
+      const handlePx =
+        Number.parseFloat(
+          getComputedStyle(row).getPropertyValue("--handle-width"),
+        ) * 16 || 12;
+      const trackWidth = Math.max(1, rect.width - handlePx);
+      const x = clientX - rect.left - handlePx / 2;
+      const frac = Math.min(1, Math.max(0, x / trackWidth));
+      return Math.round(frac * scale.sliderSteps);
+    },
+    [scale.sliderSteps],
+  );
+
+  const onRangePanPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    panMovedRef.current = false;
+    panDragRef.current = {
+      active: true,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startMin: sliderMin,
+      startMax: sliderMax,
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const onRangePanPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const drag = panDragRef.current;
+    if (!drag?.active || drag.pointerId !== e.pointerId) return;
+    if (Math.abs(e.clientX - drag.startX) > 2) {
+      panMovedRef.current = true;
+    }
+    const row = sliderRowRef.current;
+    if (!row) return;
+    const rect = row.getBoundingClientRect();
+    const handlePx =
+      Number.parseFloat(
+        getComputedStyle(row).getPropertyValue("--handle-width"),
+      ) * 16 || 12;
+    const trackWidth = Math.max(1, rect.width - handlePx);
+    const deltaSteps = Math.round(
+      ((e.clientX - drag.startX) / trackWidth) * scale.sliderSteps,
+    );
+    const span = drag.startMax - drag.startMin;
+    let lo = drag.startMin + deltaSteps;
+    let hi = drag.startMax + deltaSteps;
+    if (lo < 0) {
+      lo = 0;
+      hi = span;
+    }
+    if (hi > scale.sliderSteps) {
+      hi = scale.sliderSteps;
+      lo = scale.sliderSteps - span;
+    }
+    setSliderMin(lo);
+    setSliderMax(hi);
+    syncFromSliders(lo, hi, false);
+  };
+
+  const endRangePan = (e: React.PointerEvent<HTMLDivElement>) => {
+    const drag = panDragRef.current;
+    if (!drag?.active || drag.pointerId !== e.pointerId) return;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    if (!panMovedRef.current) {
+      const step = stepFromClientX(e.clientX);
+      const span = drag.startMax - drag.startMin;
+      let lo = Math.round(step - span / 2);
+      let hi = lo + span;
+      if (lo < 0) {
+        lo = 0;
+        hi = span;
+      }
+      if (hi > scale.sliderSteps) {
+        hi = scale.sliderSteps;
+        lo = scale.sliderSteps - span;
+      }
+      setSliderMin(lo);
+      setSliderMax(hi);
+      syncFromSliders(lo, hi, true);
+    } else {
+      onSliderCommit();
+    }
+    panDragRef.current = null;
+    panMovedRef.current = false;
+  };
+
+  const panLeft = `calc(${handleHalf}rem + ${minFrac} * (100% - ${handleHalf}rem))`;
+  const panWidth = `calc((${maxFrac} - ${minFrac}) * (100% - ${handleHalf}rem))`;
 
   return (
     <div className={styles.wrap}>
@@ -189,7 +295,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
           role="img"
           aria-label="Channel intensity histogram"
         >
-          <path d={histPath} strokeLinejoin="round" />
+          <path className={styles.histogramFill} d={histFillPath} />
+          <path className={styles.histogramLine} d={histLinePath} />
         </svg>
         <div
           className={[
@@ -211,8 +318,19 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
           } as React.CSSProperties
         }
       >
-        <div className={styles.sliderRow}>
+        <div ref={sliderRowRef} className={styles.sliderRow}>
           <div className={styles.track} />
+          {sliderMax > sliderMin ? (
+            <div
+              className={styles.rangePan}
+              style={{ left: panLeft, width: panWidth }}
+              onPointerDown={onRangePanPointerDown}
+              onPointerMove={onRangePanPointerMove}
+              onPointerUp={endRangePan}
+              onPointerCancel={endRangePan}
+              aria-hidden
+            />
+          ) : null}
           <input
             type="range"
             className={styles.rangeInput}

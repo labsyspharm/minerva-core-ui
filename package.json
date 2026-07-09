@@ -87,7 +87,6 @@
     "prop-types": "^15.8.1",
     "psudo": "0.4.1",
     "react": "^18.3.1",
-    "react-bootstrap": "^2.10.4",
     "react-color": "^2.19.3",
     "react-datalist-input": "^3.2.1",
     "react-dom": "^18.3.1",

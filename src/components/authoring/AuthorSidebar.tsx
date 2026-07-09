@@ -3,6 +3,7 @@ import * as React from "react";
 import styled from "styled-components";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 import { ChannelGroupsMasterDetail } from "@/components/shared/channel/ChannelGroupsMasterDetail";
+import { GlassTabBar } from "@/components/shared/GlassTabBar";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 
@@ -22,26 +23,33 @@ const TAB_DESCRIPTIONS: Record<AuthorTab, string> = {
   story: "",
 };
 
+const TAB_ITEMS = TAB_ORDER.map((id) => ({ id, label: TAB_LABELS[id] }));
+
 export const AuthorSidebarHost = styled.div<{ $collapsed: boolean }>`
   grid-column: 1;
   grid-row: 1;
+  align-self: stretch;
+  position: relative;
   min-height: 0;
+  min-width: 0;
+  height: 100%;
   width: 30em;
+  display: flex;
+  flex-direction: column;
+  --author-tab-header-height: 2.35rem;
   transition: transform 0.5s ease;
   transform: ${({ $collapsed }) =>
-    $collapsed ? "translate(-27em, 0)" : "translate(0, 0)"};
+    $collapsed ? "translateX(-100%)" : "translateX(0)"};
+  pointer-events: ${({ $collapsed }) => ($collapsed ? "none" : "auto")};
 `;
 
-const Sidebar = styled.div<{ $collapsed: boolean }>`
+const Sidebar = styled.div`
   width: 30em;
-  height: 100%;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  grid-template-columns: 1fr;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   pointer-events: all;
-  transition: transform 0.5s ease;
-  transform: ${({ $collapsed }) =>
-    $collapsed ? "translate(-3em, 0)" : "translate(0, 0)"};
 `;
 
 const PanelOuter = styled.div`
@@ -59,7 +67,7 @@ const PanelOuter = styled.div`
   display: grid;
   grid-template-rows: auto auto 1fr;
   grid-template-columns: 1fr;
-  height: 100%;
+  flex: 1;
   min-height: 0;
   border-radius: 0;
   backdrop-filter: var(--theme-glass-filter, blur(32px));
@@ -73,95 +81,58 @@ const PanelOuter = styled.div`
 
 const TabRow = styled.div`
   grid-row: 1;
-  padding-top: calc(var(--theme-gap-tiny, 0.3em) * 2);
-  padding-bottom: 0;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: start;
+  display: flex;
+  align-items: stretch;
+  gap: 0.35em;
   min-width: 0;
+  min-height: var(--author-tab-header-height, 2.35rem);
+  box-sizing: border-box;
+  padding: 0.35em 2.4rem 0 0.35em;
   font-size: 0.75em;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--theme-glass-edge, rgba(255, 255, 255, 0.5)) 55%, transparent);
 `;
 
-const TabStrip = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  min-width: 0;
-  padding-inline-end: calc(var(--theme-gap-tiny, 0.3em) * 2);
-  gap: var(--theme-gap-tiny, 0.3em);
-`;
-
-const TabCell = styled.div`
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-
-  &::before,
-  &::after {
-    width: var(--theme-gap-tiny, 0.3em);
-    content: "";
-    box-shadow: inset 0em -1px var(--theme-glass-edge, rgba(255, 255, 255, 0.5));
-  }
-
-  &:first-child::before,
-  &:last-child::after {
-    width: 0;
-  }
-`;
-
-const TabButton = styled.button<{ $active?: boolean }>`
+const SidebarExpandControl = styled.button<{ $expanded: boolean }>`
+  grid-column: 1;
+  grid-row: 1;
+  z-index: 6;
+  justify-self: ${({ $expanded }) => ($expanded ? "end" : "center")};
+  align-self: start;
+  margin-top: calc((var(--author-tab-header-height, 2.35rem) - 24px) / 2);
+  margin-right: ${({ $expanded }) => ($expanded ? "0.35rem" : "0")};
   background-color: color-mix(
     in xyz,
     var(--theme-dark-main-color, navy),
     transparent 60%
   );
-  color: inherit;
-  border: none;
-  padding: 0.45em 0.6em;
+  padding: 0;
+  border: 1px solid var(--theme-glass-edge, rgba(255, 255, 255, 0.5));
+  border-radius: 50%;
   cursor: pointer;
-  font: inherit;
-  font-size: inherit;
-  width: 100%;
-  text-align: center;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  line-height: 0;
+  flex-shrink: 0;
+  transition:
+    background-color 0.05s ease,
+    border-color 0.05s ease;
 
-  ${({ $active }) =>
-    $active
-      ? `
-    color: var(--theme-light-focus-color, white);
-    box-shadow: inset 1px 1px 1px var(--theme-glass-edge, rgba(255, 255, 255, 0.5));
-    text-shadow: var(--theme-dark-focus-color, black) 0 0 4px;
+  &:hover {
     background-color: color-mix(
       in xyz,
       var(--theme-dim-gray-color, black),
-      transparent 60%
+      transparent 52%
     );
-  `
-      : ""}
-`;
-
-const ExpandButtonWrap = styled.div<{ $expanded: boolean }>`
-  grid-row: 1;
-  align-self: start;
-  justify-self: end;
-  margin: 0.3em 0.4em 0 0;
-  z-index: 1;
-
-  button {
-    background-color: ${({ $expanded }) =>
-      $expanded
-        ? "color-mix(in xyz, var(--theme-dark-main-color, navy), transparent 60%)"
-        : "var(--theme-dark-accept-color, darkslategray)"};
-    padding: var(--theme-gap-tiny, 0.3em);
-    transform: ${({ $expanded }) =>
-      $expanded ? "scaleX(1) rotate(90deg)" : "scaleX(-1) rotate(90deg)"};
-    border: 1px solid var(--theme-glass-edge, rgba(255, 255, 255, 0.5));
-    border-radius: 50%;
-    cursor: pointer;
-    color: inherit;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    transition: 0.05s;
+    border-color: color-mix(
+      in srgb,
+      var(--theme-light-focus-color, white) 55%,
+      var(--theme-glass-edge, rgba(255, 255, 255, 0.5))
+    );
   }
 `;
 
@@ -191,7 +162,9 @@ const PanelContent = styled.div`
 const PanelContentInner = styled.div`
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   padding: var(--theme-gap-tiny, 0.3em);
 `;
 
@@ -204,10 +177,23 @@ const ChannelsPanelSlot = styled.div`
   overflow: hidden;
 `;
 
-const ExpandChevron = styled(ChevronDownIcon)`
-  width: 18px;
-  height: 18px;
+const StoryPanelSlot = styled.div`
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+`;
+
+const ExpandChevron = styled(ChevronDownIcon)<{ $expanded: boolean }>`
+  width: 14px;
+  height: 14px;
   display: block;
+  flex-shrink: 0;
+  transform: ${({ $expanded }) =>
+    $expanded ? "rotate(90deg)" : "rotate(-90deg)"};
+  transform-origin: center center;
 `;
 
 export type AuthorSidebarProps = {
@@ -219,12 +205,11 @@ export type AuthorSidebarProps = {
     opts?: { overwriteExistingLimits?: boolean },
   ) => Promise<Map<string, ContrastLimits>>;
   expanded: boolean;
-  onExpandedChange: (expanded: boolean) => void;
 };
 
 export function AuthorSidebar(props: AuthorSidebarProps) {
   const [activeTab, setActiveTab] = React.useState<AuthorTab>("images");
-  const { expanded, onExpandedChange } = props;
+  const { expanded } = props;
 
   const activePanel =
     activeTab === "images" ? (
@@ -238,42 +223,24 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
         />
       </ChannelsPanelSlot>
     ) : (
-      <WaypointsList />
+      <StoryPanelSlot>
+        <WaypointsList />
+      </StoryPanelSlot>
     );
 
   const description = TAB_DESCRIPTIONS[activeTab];
 
   return (
     <AuthorSidebarHost $collapsed={!expanded}>
-      <Sidebar $collapsed={!expanded}>
+      <Sidebar>
         <PanelOuter>
           <TabRow>
-            <TabStrip role="tablist">
-              {TAB_ORDER.map((tab) => (
-                <TabCell key={tab}>
-                  <TabButton
-                    type="button"
-                    role="tab"
-                    aria-selected={activeTab === tab}
-                    $active={activeTab === tab}
-                    onClick={() => setActiveTab(tab)}
-                  >
-                    {TAB_LABELS[tab]}
-                  </TabButton>
-                </TabCell>
-              ))}
-            </TabStrip>
-            <ExpandButtonWrap $expanded={expanded}>
-              <button
-                type="button"
-                title={expanded ? "Collapse panel" : "Expand panel"}
-                aria-label={expanded ? "Collapse panel" : "Expand panel"}
-                aria-expanded={expanded}
-                onClick={() => onExpandedChange(!expanded)}
-              >
-                <ExpandChevron aria-hidden />
-              </button>
-            </ExpandButtonWrap>
+            <GlassTabBar<AuthorTab>
+              tabs={TAB_ITEMS}
+              value={activeTab}
+              onChange={setActiveTab}
+              aria-label="Author panels"
+            />
           </TabRow>
           {description ? (
             <PanelDescription>{description}</PanelDescription>
@@ -288,14 +255,19 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
 }
 
 export const AuthorViewport = styled.div<{ $collapsed: boolean }>`
+  --author-collapsed-rail: 2.5rem;
+  --author-tab-header-height: 2.35rem;
   font-family: var(--theme-font-family, "lato", sans-serif);
   color: var(--theme-light-contrast-color, white);
-  position: absolute;
-  inset: 0;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
   overflow: hidden;
   display: grid;
-  grid-template-columns: ${({ $collapsed }) => ($collapsed ? "3em" : "30em")} 1fr;
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-columns: ${({ $collapsed }) =>
+    $collapsed ? "var(--author-collapsed-rail, 2.5rem)" : "30em"} 1fr;
+  grid-template-rows: 1fr;
   transition: grid-template-columns 0.5s ease;
 `;
 
@@ -305,6 +277,7 @@ export const AuthorViewerRegion = styled.div`
   min-height: 0;
   min-width: 0;
   position: relative;
+  overflow: hidden;
 `;
 
 export type AuthorViewProps = {
@@ -329,8 +302,17 @@ export function AuthorView(props: AuthorViewProps) {
         ensureChannelHistograms={props.ensureChannelHistograms}
         ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
         expanded={expanded}
-        onExpandedChange={setExpanded}
       />
+      <SidebarExpandControl
+        type="button"
+        $expanded={expanded}
+        title={expanded ? "Collapse panel" : "Expand panel"}
+        aria-label={expanded ? "Collapse panel" : "Expand panel"}
+        aria-expanded={expanded}
+        onClick={() => setExpanded((open) => !open)}
+      >
+        <ExpandChevron $expanded={expanded} aria-hidden />
+      </SidebarExpandControl>
       <AuthorViewerRegion>{props.viewer}</AuthorViewerRegion>
     </AuthorViewport>
   );

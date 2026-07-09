@@ -805,6 +805,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   const itemActions = (item: ListItem) => {
     if (item.metadata?.type === "shape") {
       const annotation = item.metadata.shape;
+      if (!annotation) return null;
       const isPolygon = annotation.type === "polygon";
       const isBrushActive =
         isPolygon &&

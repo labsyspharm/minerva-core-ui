@@ -1,7 +1,5 @@
 import type { ChangeEventHandler, FormEventHandler } from "react";
 import { useEffect, useRef, useState } from "react";
-import Button from "react-bootstrap/Button";
-import Form from "react-bootstrap/Form";
 import styled from "styled-components";
 import { resolveImageContentRole } from "@/lib/imaging/channelKind";
 import {
@@ -84,40 +82,6 @@ type SetState = (s: string) => void;
 type SetTargetState = FormEventHandler;
 type UseTargetState = (init: string) => [string, SetState, SetTargetState];
 
-interface HasValidation {
-  hasValidation: boolean;
-}
-
-/** Matches Story / Channels: grey-on-black controls */
-const DarkPrimaryButton = styled(Button).attrs({ variant: "primary" })`
-  &&& {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #2a2a2a;
-    border: 1px solid #444;
-    color: #e6edf3;
-    font-size: 12px;
-    padding: 0.45rem 0.75rem;
-    min-height: 2.25rem;
-    line-height: 1.2;
-    box-shadow: none;
-  }
-  &&&:hover:not(:disabled),
-  &&&:focus:not(:disabled) {
-    background-color: #333;
-    border-color: #555;
-    color: #fff;
-  }
-  &&&:active:not(:disabled) {
-    background-color: #1a1a1a !important;
-    border-color: #444 !important;
-  }
-  &&&:disabled {
-    opacity: 0.45;
-  }
-`;
-
 const ImagesTabShell = styled.div`
   display: flex;
   flex-direction: column;
@@ -147,47 +111,6 @@ const ImagesTabShell = styled.div`
     background: #555;
     border-radius: 4px;
   }
-
-  form {
-    max-width: 100%;
-  }
-
-  .form-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--theme-light-contrast-color) 52%, transparent);
-    margin-bottom: 0.35rem;
-  }
-
-  .form-control,
-  .form-select {
-    max-width: 100%;
-    background-color: #2c2c2c;
-    border: 1px solid #444;
-    color: #e6edf3;
-    font-size: 12px;
-  }
-  .form-control::placeholder {
-    color: #8899aa;
-    opacity: 1;
-  }
-  .form-control:focus,
-  .form-select:focus {
-    background-color: #2c2c2c;
-    border-color: #666;
-    color: #e6edf3;
-    box-shadow: 0 0 0 0.15rem rgb(255 255 255 / 0.12);
-  }
-  .form-select option {
-    background: #2c2c2c;
-    color: #e6edf3;
-  }
-  .invalid-feedback,
-  .valid-feedback {
-    font-size: 11px;
-  }
 `;
 
 const XmlImportMessage = styled.div<{ $err: boolean }>`
@@ -196,27 +119,6 @@ const XmlImportMessage = styled.div<{ $err: boolean }>`
   color: ${(p) => (p.$err ? "#f85149" : "color-mix(in srgb, #7ee787 92%, #fff 8%)")};
 `;
 
-const FullWidthGrid = styled.div`
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-  width: 100%;
-`;
-
-const FormGrid = styled.div`
-  margin-top: 1.25rem;
-  display: grid;
-  gap: 0.75rem;
-`;
-const FormGridRow = styled.div<HasValidation>`
-  position: relative;
-  .valid-feedback,
-  .invalid-feedback {
-    position: absolute;
-    font-size: 0.75em;
-  }
-`;
 const _useState: UseTargetState = (init) => {
   const [val, set] = useState(init);
   const new_set: SetTargetState = (e) => {
@@ -225,6 +127,7 @@ const _useState: UseTargetState = (init) => {
   };
   return [val, set, new_set];
 };
+
 const validation: Validation = (key) => {
   return (valid) => {
     if (key in valid) {
@@ -232,10 +135,6 @@ const validation: Validation = (key) => {
     }
     return null;
   };
-};
-
-const toGroupProps = (n: string) => {
-  return { controlId: n };
 };
 
 const validate: Validate = (valid, fn) => {
@@ -247,67 +146,82 @@ const validate: Validate = (valid, fn) => {
   return { [opt]: true };
 };
 
+function validationInputClass(v: ValidOut): string {
+  const parts = [styles.textInput];
+  if (v.isInvalid) parts.push(styles.textInputInvalid);
+  if (v.isValid) parts.push(styles.textInputValid);
+  return parts.join(" ");
+}
+
 const FormDicom = (props: FormProps) => {
   const { valid, onSubmit } = props;
   const [url, _sU, setURL] = _useState("");
   const [name, _sN, setName] = _useState("");
-  const fProps = { onSubmit, className: "full-width" };
+  const urlValidation = validate(valid, ({ url: validEndpoint }) => {
+    if (validEndpoint === undefined) {
+      return null;
+    }
+    return (
+      validEndpoint &&
+      /^https?:\/\/.+\/studies\/[^/]+\/series\/[^/]+$/.test(url)
+    );
+  });
+  const nameValidation = validate(valid, validation("name"));
+
   return (
-    <Form {...fProps} noValidate>
-      <Form.Group {...toGroupProps("url")}>
-        <Form.Label>DICOMweb™ URL:</Form.Label>
-        <FormGridRow hasValidation>
-          <Form.Control
-            {...{
-              type: "text",
-              required: true,
-              value: url,
-              name: "url",
-              onChange: setURL,
-              ...validate(valid, ({ url: validEndpoint }) => {
-                // DICOMweb data found at endpoint
-                if (validEndpoint === undefined) {
-                  return null;
-                }
-                // URL matches expectations
-                return (
-                  validEndpoint &&
-                  /^https?:\/\/.+\/studies\/[^/]+\/series\/[^/]+$/.test(url)
-                );
-              }),
-            }}
+    <form onSubmit={onSubmit} noValidate className={styles.dicomForm}>
+      <div className={styles.fieldGroup}>
+        <label htmlFor="dicom-url" className={styles.fieldLabel}>
+          DICOMweb™ URL:
+        </label>
+        <div className={styles.fieldRow}>
+          <input
+            id="dicom-url"
+            type="text"
+            required
+            value={url}
+            name="url"
+            onChange={setURL}
+            className={validationInputClass(urlValidation)}
+            aria-invalid={urlValidation.isInvalid ?? undefined}
           />
-          <Form.Control.Feedback type="invalid">
-            Invalid DICOMweb™ URL
-          </Form.Control.Feedback>
-          <Form.Control.Feedback type="valid">Valid.</Form.Control.Feedback>
-          <br />
-        </FormGridRow>
-        <FormGrid>
-          <Form.Label>Dataset Name:</Form.Label>
-          <FormGridRow hasValidation>
-            <Form.Control
-              {...{
-                type: "text",
-                required: true,
-                value: name,
-                name: "name",
-                onChange: setName,
-                ...validate(valid, validation("name")),
-              }}
-            />
-            <Form.Control.Feedback type="invalid">
+          {urlValidation.isInvalid && (
+            <div className={styles.invalidFeedback}>Invalid DICOMweb™ URL</div>
+          )}
+          {urlValidation.isValid && (
+            <div className={styles.validFeedback}>Valid.</div>
+          )}
+        </div>
+      </div>
+      <div className={styles.fieldGroup}>
+        <label htmlFor="dicom-name" className={styles.fieldLabel}>
+          Dataset Name:
+        </label>
+        <div className={styles.fieldRow}>
+          <input
+            id="dicom-name"
+            type="text"
+            required
+            value={name}
+            name="name"
+            onChange={setName}
+            className={validationInputClass(nameValidation)}
+            aria-invalid={nameValidation.isInvalid ?? undefined}
+          />
+          {nameValidation.isInvalid && (
+            <div className={styles.invalidFeedback}>
               Please name the dataset.
-            </Form.Control.Feedback>
-            <Form.Control.Feedback type="valid">Valid.</Form.Control.Feedback>
-            <br />
-          </FormGridRow>
-        </FormGrid>
-      </Form.Group>
-      <FormGrid>
-        <DarkPrimaryButton type="submit">Submit</DarkPrimaryButton>
-      </FormGrid>
-    </Form>
+            </div>
+          )}
+          {nameValidation.isValid && (
+            <div className={styles.validFeedback}>Valid.</div>
+          )}
+        </div>
+      </div>
+      <button type="submit" className={styles.primaryButton}>
+        Submit
+      </button>
+    </form>
   );
 };
 
@@ -363,14 +277,14 @@ const OmeTiffUrlImport = (props: {
   } = props;
   return (
     <div className={rowClassName}>
-      <Form.Control
+      <input
         type="text"
         required
         value={url}
         name="ome_tiff_url"
         placeholder=""
         onChange={onUrlChange}
-        className={inputClassName}
+        className={`${styles.textInput} ${inputClassName}`}
       />
       <button
         type="button"
@@ -729,7 +643,7 @@ const Upload = (props: UploadProps) => {
     ) : null;
 
   return (
-    <ImagesTabShell slot="images">
+    <ImagesTabShell>
       <div className={styles.header}>
         <span className={styles.headerTitle}>Images</span>
         <div className={styles.headerActions}>

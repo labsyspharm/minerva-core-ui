@@ -67,22 +67,37 @@ export function buildContrastScale(input: ContrastScaleInput): ContrastScale {
   };
 }
 
-/** Build SVG path `d` for histogram sparkline (channel-item-element chartTemplate). */
-export function histogramSparklinePath(
+export type HistogramSparklinePaths = {
+  linePath: string;
+  fillPath: string;
+};
+
+/** Build SVG paths for histogram sparkline (channel-item-element chartTemplate). */
+export function histogramSparklinePaths(
   values: number[] | undefined,
   width = 100,
   height = 11,
-): string {
-  const stroke = 1.15;
+): HistogramSparklinePaths {
   const line = [0, ...(values || []), 0];
   const flat = line.slice(1, -1).every((v) => v === line[1]);
   const max = Math.max(1, ...(flat ? [2 * line[1]] : line));
   const len = Math.max(2, line.length);
-  return line.reduce((d, v, index) => {
+  const linePath = line.reduce((d, v, index) => {
     const i = Math.min(Math.max(index, 1), len - 2) - 1;
     const x = Math.min(Math.max(i / (len - 3), 0), 1);
     const y = Math.min(Math.max(1 - v / max, 0), 1);
     const action = d.length ? "L" : "M";
     return `${d} ${action} ${width * x} ${2 + (height - 2) * y}`;
   }, "");
+  const fillPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
+  return { linePath, fillPath };
+}
+
+/** @deprecated Use {@link histogramSparklinePaths} */
+export function histogramSparklinePath(
+  values: number[] | undefined,
+  width = 100,
+  height = 11,
+): string {
+  return histogramSparklinePaths(values, width, height).linePath;
 }

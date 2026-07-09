@@ -112,32 +112,17 @@ const RowClickArea = styled.div`
   flex: 1;
   min-width: 0;
   cursor: pointer;
-
-  &:hover .channel-legend-name {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
-  }
 `;
 
-const Swatch = styled.div<{ color: string; $outline?: boolean }>`
+const Swatch = styled.div<{ color: string; $filled: boolean }>`
   height: 10px;
   width: 10px;
   flex-shrink: 0;
   border-radius: 2px;
-  ${({ color, $outline }) =>
-    $outline
-      ? `
-    background: transparent;
-    border: 1.5px solid #${color};
-    box-shadow: 0 0 0 1px color-mix(in srgb, black 25%, transparent);
-  `
-      : `
-    background-color: #${color};
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, white 14%, transparent) inset,
-      0 0 0 1px color-mix(in srgb, black 35%, transparent);
-  `}
+  box-sizing: border-box;
+  border: 1.5px solid #${(p) => p.color};
+  background-color: ${(p) => (p.$filled ? `#${p.color}` : "transparent")};
+  box-shadow: 0 0 0 1px color-mix(in srgb, black 25%, transparent);
 `;
 
 const LegendDivider = styled.div`
@@ -149,15 +134,10 @@ const LegendDivider = styled.div`
 const NameSlot = styled.span`
   flex: 1;
   min-width: 0;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
   font-size: 11px;
   line-height: 1.2;
-
-  &.channel-legend-name {
-    display: block;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
 `;
 
 export const defaultChannels = [
@@ -287,7 +267,6 @@ const LegendRow = (props: LegendRowProps & { onClick: () => void }) => {
         props.channelVisibilities,
         props.channelGroupRowVisibilities,
       );
-  const outlineSwatch = props.hiddenInViewer === true;
   const setInput = (t: string) => {
     props.updateChannel({ ...channel, name: t }, { idx, g });
   };
@@ -310,13 +289,9 @@ const LegendRow = (props: LegendRowProps & { onClick: () => void }) => {
       onClick={onClick}
       className="channel-legend-row"
       title={rowVisible ? `Hide ${channelName}` : `Show ${channelName}`}
-      style={{ opacity: rowVisible ? 1 : outlineSwatch ? 0.72 : 0.42 }}
+      style={{ opacity: rowVisible ? 1 : 0.55 }}
     >
-      <Swatch
-        color={channel.color}
-        $outline={outlineSwatch}
-        style={outlineSwatch ? undefined : { opacity: rowVisible ? 1 : 0.5 }}
-      />
+      <Swatch color={channel.color} $filled={rowVisible} />
       <NameSlot className="channel-legend-name">
         <EditableText {...statusProps}>{channelName}</EditableText>
       </NameSlot>

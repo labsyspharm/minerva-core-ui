@@ -154,6 +154,7 @@ const cloneConfigWaypoints = (
 };
 
 const Wrapper = styled.div`
+  flex: 1;
   height: 100%;
   position: relative;
   min-height: 0;
@@ -162,9 +163,11 @@ const Wrapper = styled.div`
 `;
 
 const Full = styled.div`
+  position: relative;
   flex: 1;
   min-height: 0;
-  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 `;
 
@@ -279,10 +282,13 @@ const readWriteHydrate = { mode: "readwrite" } as const;
 
 async function hydrateFilePermission(handle: Handle.File): Promise<boolean> {
   const ok = (p: PermissionState) => p === "granted";
-  return (
-    ok(await handle.queryPermission(readWriteHydrate)) ||
-    ok(await handle.requestPermission(readWriteHydrate))
-  );
+  if (ok(await handle.queryPermission(readWriteHydrate))) return true;
+  try {
+    return ok(await handle.requestPermission(readWriteHydrate));
+  } catch {
+    // File System Access API requires a user gesture to request permission.
+    return false;
+  }
 }
 
 /** Rebuild Viv / DICOM loaders from persisted image rows (after Dexie load / refresh). */

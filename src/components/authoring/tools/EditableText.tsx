@@ -1,5 +1,4 @@
 import React from "react";
-import TextareaAutosize from "react-textarea-autosize";
 import styled from "styled-components";
 
 const parseEvent = (e) => e.target.value;
@@ -8,20 +7,32 @@ const handleText = ({ setInput }) => {
   return (e) => setInput(parseEvent(e));
 };
 
-const Mono = styled.div`
-  textarea {
-    resize: none;
-    display: grid;
-    width: 100%;
-    padding: 0.333em;
-    font-size: 1em;
-    align-items: center;
-    word-spacing: -0.333em;
-    font-family: monospace;
-    border-radius: 0.333em;
-    color: rgb(244, 255, 244);
-    background-color: rgb(0, 0, 0, 0);
-    border-bottom: 0.5em ridge rgba(244, 255, 244, 0.5);
+const FieldWrap = styled.div`
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+`;
+
+const StyledInput = styled.input`
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  font: inherit;
+  line-height: 1.2;
+  color: inherit;
+  background: transparent;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:focus {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
   }
 `;
 
@@ -36,21 +47,19 @@ const EditableText = (props) => {
   const onChange = handleText({ setInput });
 
   const inputProps = {
+    type: "text",
     value: text,
-    minRows: 1,
     onChange,
   };
 
   const El = React.Fragment;
   const content = editable ? (
-    <Mono>
-      <TextareaAutosize {...inputProps} />
-    </Mono>
+    <StyledInput {...inputProps} title={text} />
   ) : (
     <El>{text}</El>
   );
 
-  return <div>{content}</div>;
+  return <FieldWrap>{content}</FieldWrap>;
 };
 
 export { EditableText };

@@ -558,10 +558,17 @@ export function validateDocumentData(input: unknown): DocumentData {
   }
 
   const rawCg = asRecord.channelGroups ?? asRecord.groups;
+  const shapesIn = Array.isArray(asRecord.shapes) ? asRecord.shapes : [];
   const draft = {
     metadata: parseMetadataField(asRecord.metadata),
     waypoints: (asRecord.waypoints ?? []) as Record<string, unknown>[],
-    shapes: (asRecord.shapes ?? []) as Record<string, unknown>[],
+    shapes: shapesIn.filter(
+      (s): s is Record<string, unknown> =>
+        s != null &&
+        typeof s === "object" &&
+        !Array.isArray(s) &&
+        typeof (s as Record<string, unknown>).type === "string",
+    ),
     channelGroups: (Array.isArray(rawCg) ? rawCg : []) as {
       id: string;
       channels: Record<string, unknown>[];

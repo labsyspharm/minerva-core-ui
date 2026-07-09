@@ -988,7 +988,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   };
 
   return (
-    <div slot="waypoints" className={[styles.panel, styles.black].join(" ")}>
+    <div className={[styles.panel, styles.black].join(" ")}>
       {detailStoryId ? renderDetail() : renderList()}
     </div>
   );

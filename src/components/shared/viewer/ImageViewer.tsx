@@ -945,7 +945,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }
 
   return (
-    <Main slot="image" ref={rootRef}>
+    <Main ref={rootRef}>
       <Deck
         ref={deckRef}
         getCursor={getCursor}
