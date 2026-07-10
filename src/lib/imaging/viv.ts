@@ -2,10 +2,10 @@ import type {
   ChannelGroup,
   Channel as SourceChannel,
 } from "@/lib/stores/documentStore";
-import type { LoaderPlane } from "../authoring/config";
 import type { Roi } from "../shapes/roiParser";
 import { buildCompositedIntensityLayers } from "./channelCompositor";
 import { isImageChannel } from "./channelKind";
+import type { LoaderPlane } from "./loaderTypes";
 import {
   effectiveDisplayColor,
   effectiveSourceColor,

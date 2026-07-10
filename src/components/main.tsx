@@ -1,4 +1,5 @@
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
+import { fromBlob, fromUrl } from "geotiff";
 import type { FormEventHandler } from "react";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -90,7 +91,6 @@ import { imageHandleStorageKey } from "@/lib/persistence/imageHandles";
 import { saveStoryDocument } from "@/lib/persistence/storyPersistence";
 import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
 import { applyOmeRoisFromLoaderToFirstWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
-import { getOmeTiffImageDescriptionOmeXml } from "@/lib/shapes/omeTiffOmeDescription";
 import {
   type ChannelRendering,
   effectiveReferenceImagePixelSize,
@@ -111,6 +111,7 @@ import {
   applySourceChannelsToImages,
   configWaypointsHaveLegacyArrowsOrOverlays,
   dedupeImagesForImport,
+  hydrateConfigWaypoint,
   type LegacyExhibitWaypoint,
   migrateLegacyWaypointShapes,
   setImageSource,
@@ -118,14 +119,103 @@ import {
   waypointToConfigWaypoint,
 } from "@/lib/stores/storeUtils";
 import { isOpts, validate } from "@/lib/util/validate";
-import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
-import { ensureDefaultWaypointForImageImport } from "@/lib/waypoints/ensureDefaultWaypointForImageImport";
 import { normalizeWaypointToBounds } from "@/lib/waypoints/waypoint";
 import {
   parsePreferredStoryIdFromLocation,
   rootRouteApi,
   StoryIdUrlSync,
 } from "@/router/appRouter";
+
+/**
+ * Snapshot of document fields that affect VIV layer settings (see `toSettings` in `viv.ts`).
+ * Omit histogram payloads so memoized viewer props stay stable while curves load.
+ */
+function buildImageViewerSignature(
+  channelGroups: ChannelGroup[],
+  SourceChannels: Channel[],
+): string {
+  const sources = SourceChannels.map((sc) => ({
+    u: sc.id,
+    i: sc.index,
+    n: sc.name,
+    s: sc.samples,
+    img: sc.imageId,
+    dt: sc.sourceDataTypeId,
+    k: sc.kind,
+    lr: sc.lowerLimit,
+    ur: sc.upperLimit,
+    rgb: sc.color ? [sc.color.r, sc.color.g, sc.color.b] : undefined,
+    mv: sc.maskVisualization,
+  }));
+  const groups = channelGroups.map((g) => ({
+    u: g.id,
+    n: g.name,
+    e: g.expanded ?? false,
+    ch: g.channels.map((c) => ({
+      u: c.id,
+      lr: c.lowerLimit,
+      ur: c.upperLimit,
+      rgb: [c.color.r, c.color.g, c.color.b],
+      sc: c.channelId,
+      mv: c.maskVisualization,
+    })),
+  }));
+  return JSON.stringify({ sources, groups });
+}
+
+/** When the story has no waypoints yet, add a default row for image import to attach to. */
+function ensureDefaultWaypointForImageImport(): void {
+  const doc = useDocumentStore.getState();
+  if (doc.waypoints.length > 0) return;
+
+  const groupId = doc.channelGroups[0]?.id;
+  const raw: ConfigWaypoint = {
+    id: crypto.randomUUID(),
+    State: { Expanded: true },
+    Name: "Waypoint 1",
+    Content: "",
+    shapeIds: [],
+    ...(groupId !== undefined ? { groupId } : {}),
+  };
+  const app = useAppStore.getState();
+  app.addStory(hydrateConfigWaypoint(raw, doc.channelGroups));
+  app.setActiveStory(0);
+}
+
+type GeoTiffWithImage = {
+  getImage: (i: number) => Promise<{
+    fileDirectory?: { ImageDescription?: string | undefined };
+  }>;
+};
+
+/** Read OME-XML from OME-TIFF ImageDescription without loading pixels. */
+async function getOmeTiffImageDescriptionOmeXml(
+  source: File | string,
+  urlOptions: Parameters<typeof fromUrl>[1] = {},
+  signal?: AbortSignal,
+): Promise<string | null> {
+  try {
+    const tiff: GeoTiffWithImage = (
+      typeof source === "string"
+        ? await fromUrl(source, urlOptions, signal)
+        : await fromBlob(source, signal)
+    ) as GeoTiffWithImage;
+    const first = await tiff.getImage(0);
+    const desc = first.fileDirectory?.ImageDescription;
+    if (typeof desc !== "string" || !desc.trim()) {
+      return null;
+    }
+    return /OME|openmicroscopy|Pixels/i.test(desc) ? desc : null;
+  } catch (e) {
+    if (import.meta.env.DEV) {
+      console.warn(
+        "[ome-roi] could not read ImageDescription from OME-TIFF",
+        e,
+      );
+    }
+    return null;
+  }
+}
 
 type Props = {
   /** Seed stories; may include legacy `Arrows` / `Overlays` until the image loads and migration runs. */

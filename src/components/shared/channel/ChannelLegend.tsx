@@ -2,9 +2,9 @@ import styled from "styled-components";
 import {
   PopUpdate as PopUpdateChannel,
   Push as PushChannel,
-} from "@/components/authoring/tools/ActionButtons";
-import { EditableText } from "@/components/authoring/tools/EditableText";
-import { EditModeSwitcher } from "@/components/authoring/tools/EditModeSwitcher";
+} from "@/components/shared/tools/ActionButtons";
+import { EditableText } from "@/components/shared/tools/EditableText";
+import { EditModeSwitcher } from "@/components/shared/tools/EditModeSwitcher";
 import {
   isGroupRowVisible,
   isStackVisible,

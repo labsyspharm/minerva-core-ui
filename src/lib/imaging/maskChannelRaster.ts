@@ -1,5 +1,5 @@
-import type { LoaderPlane, SupportedTypedArray } from "@/lib/authoring/config";
 import type { Loader } from "@/lib/imaging/viv";
+import type { LoaderPlane, SupportedTypedArray } from "./loaderTypes";
 
 /**
  * OME plane raster fetch (histogram auto-contrast + mask label overlays).

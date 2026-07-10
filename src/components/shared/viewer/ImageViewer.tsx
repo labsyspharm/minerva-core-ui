@@ -36,9 +36,11 @@ import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
-import { useWindowSize } from "@/lib/util/useWindowSize";
-import { ORTHO_VIEW_ID, SCALEBAR_VIEW_ID } from "@/lib/viewer/deckViewIds";
-import { createDragHandlers } from "@/lib/viewer/dragHandlers";
+import {
+  createDragHandlers,
+  ORTHO_VIEW_ID,
+  SCALEBAR_VIEW_ID,
+} from "@/lib/viewer/dragHandlers";
 import {
   getViewerViewportSnapshotFromDeck,
   orthographicZoomToNumber,
@@ -49,6 +51,37 @@ import {
   WAYPOINT_THUMBNAIL_JPEG_QUALITY,
   WAYPOINT_THUMBNAIL_PIXEL_SIZE,
 } from "@/lib/waypoints/waypointThumbnail";
+
+/** Keep in sync with OrthographicView ids exported from dragHandlers. */
+const debounceResize = (fn: () => void, wait: number) => {
+  let timeout: number | null = null;
+  return () => {
+    if (timeout != null) clearTimeout(timeout);
+    timeout = window.setTimeout(() => {
+      timeout = null;
+      fn();
+    }, wait);
+  };
+};
+
+const getWindowSize = ({ innerWidth, innerHeight } = window) => ({
+  width: innerWidth,
+  height: innerHeight,
+});
+
+const useWindowSize = () => {
+  const [windowSize, setWindowSize] = useState(getWindowSize);
+
+  useEffect(() => {
+    const handle = debounceResize(() => {
+      setWindowSize(getWindowSize());
+    }, 250);
+    window.addEventListener("resize", handle);
+    return () => window.removeEventListener("resize", handle);
+  }, []);
+
+  return windowSize;
+};
 
 type ImageLayer = TileLayer | typeof MultiscaleImageLayer;
 

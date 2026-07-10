@@ -1,6 +1,10 @@
-import type { ValidObj } from "@/components/shared/Upload";
 import { findDicomWeb } from "@/lib/imaging/dicom.js";
 import { findFile } from "@/lib/imaging/filesystem";
+
+/** Field-validity map used by upload form validation. */
+export type ValidObj = {
+  [s: string]: boolean;
+};
 
 type FormOutDicom = {
   url: string;

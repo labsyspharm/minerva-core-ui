@@ -5,6 +5,7 @@ import {
   type ItemListVariant,
   type ListItem,
 } from "@/components/shared/common/ItemList";
+import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import AddBrushIcon from "@/components/shared/icons/add-brush.svg?react";
 import AnnotationColorIcon from "@/components/shared/icons/annotation-color.svg?react";
 import CursorIcon from "@/components/shared/icons/cursor.svg?react";
@@ -15,170 +16,9 @@ import PointIcon from "@/components/shared/icons/point.svg?react";
 import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
 import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
+import { TextEditPanel } from "@/components/shared/tools/TextEditPanel";
 import type { Shape } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
-
-// Shared Text Edit Panel Component (same as in original LayersPanel)
-interface TextEditPanelProps {
-  title: string;
-  textValue: string;
-  fontSize: number;
-  onTextChange: (text: string) => void;
-  onFontSizeChange: (fontSize: number) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-  submitButtonText: string;
-  allowEmpty?: boolean; // Allow empty text (for removing labels from shapes)
-}
-
-const TextEditPanel: React.FC<TextEditPanelProps> = ({
-  title,
-  textValue,
-  fontSize,
-  onTextChange,
-  onFontSizeChange,
-  onSubmit,
-  onCancel,
-  submitButtonText,
-  allowEmpty = false,
-}) => {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        backgroundColor: "#2c2c2c",
-        border: "2px solid #444",
-        borderRadius: "8px",
-        padding: "20px",
-        zIndex: 1000,
-        minWidth: "300px",
-        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.5)",
-      }}
-    >
-      <div
-        style={{
-          marginBottom: "15px",
-          color: "white",
-          fontSize: "16px",
-          fontWeight: "bold",
-        }}
-      >
-        {title}
-      </div>
-
-      {/* Font Size Input */}
-      <div style={{ marginBottom: "15px" }}>
-        <label
-          htmlFor="fontSizeInput"
-          style={{
-            color: "white",
-            fontSize: "14px",
-            marginBottom: "5px",
-            display: "block",
-          }}
-        >
-          Font Size:
-        </label>
-        <input
-          id="fontSizeInput"
-          type="number"
-          value={fontSize}
-          onChange={(e) => onFontSizeChange(parseInt(e.target.value, 10) || 14)}
-          min="8"
-          max="72"
-          style={{
-            width: "80px",
-            padding: "5px",
-            border: "1px solid #555",
-            borderRadius: "4px",
-            backgroundColor: "#1a1a1a",
-            color: "white",
-            fontSize: "14px",
-            outline: "none",
-          }}
-        />
-      </div>
-
-      {/* Text Input */}
-      <textarea
-        value={textValue}
-        onChange={(e) => onTextChange(e.target.value)}
-        placeholder="Enter your text here..."
-        style={{
-          width: "100%",
-          minHeight: "80px",
-          padding: "10px",
-          border: "1px solid #555",
-          borderRadius: "4px",
-          backgroundColor: "#1a1a1a",
-          color: "white",
-          fontSize: "14px",
-          fontFamily: "Arial, sans-serif",
-          resize: "vertical",
-          outline: "none",
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && e.ctrlKey) {
-            onSubmit();
-          } else if (e.key === "Escape") {
-            onCancel();
-          }
-        }}
-      />
-
-      <div
-        style={{
-          marginTop: "15px",
-          display: "flex",
-          gap: "10px",
-          justifyContent: "flex-end",
-        }}
-      >
-        <button
-          type="button"
-          onClick={onCancel}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: "#555",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontSize: "14px",
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={!allowEmpty && !textValue?.trim()}
-          style={{
-            padding: "8px 16px",
-            backgroundColor:
-              allowEmpty || textValue?.trim() ? "#4CAF50" : "#666",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: allowEmpty || textValue?.trim() ? "pointer" : "not-allowed",
-            fontSize: "14px",
-          }}
-        >
-          {submitButtonText}
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const TrashIcon = () => (
-  <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-  </svg>
-);
 
 const getAnnotationRgba = (
   annotation: Shape,

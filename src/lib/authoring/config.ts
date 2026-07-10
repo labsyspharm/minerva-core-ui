@@ -1,15 +1,25 @@
 import { getImageSize } from "@hms-dbmi/viv";
-import type { DTYPE_VALUES } from "@vivjs/constants";
 import { histogramBinTile } from "../imaging/histogramBinPool";
+import type {
+  HasTile,
+  LoaderPlane,
+  VivLoaderPlane,
+} from "../imaging/loaderTypes";
 import type { Loader } from "../imaging/viv";
 import type { ConfigGroup as LegacyConfigGroup } from "../legacy/exhibit";
-import type { Channel, ChannelGroup } from "../stores/documentSchema";
-import type { StoryShape } from "../stores/storeUtils";
+import type {
+  Channel,
+  ChannelGroup,
+  StoryShape,
+} from "../stores/documentSchema";
 
-export type SupportedDtype = keyof typeof DTYPE_VALUES;
-export type SupportedTypedArray = InstanceType<
-  (typeof globalThis)[`${SupportedDtype}Array`]
->;
+export type {
+  HasTile,
+  LoaderPlane,
+  SupportedDtype,
+  SupportedTypedArray,
+  VivLoaderPlane,
+} from "../imaging/loaderTypes";
 
 type VivImageSizeInput = Parameters<typeof getImageSize>[0];
 
@@ -59,15 +69,6 @@ export type ItemRegistryProps = {
 };
 type SetItems = (user: Partial<ItemRegistryProps>) => void;
 
-type Dtype =
-  | "Uint8"
-  | "Uint16"
-  | "Uint32"
-  | "Int8"
-  | "Int16"
-  | "Int32"
-  | "Float32"
-  | "Float64";
 type Index = {
   x: number;
   y: number;
@@ -77,38 +78,12 @@ type Index = {
 type Four = [number, number, number, number];
 type TileProps = {
   id: string;
-  dtype?: Dtype;
+  dtype?: string;
   channels: number;
   tileSize: number;
   minZoom?: number;
   maxZoom?: number;
   extent?: Four;
-};
-type SelectionConfig = {
-  signal?: AbortSignal;
-  selection: {
-    t: number;
-    z: number;
-    c: number;
-  };
-};
-type TileConfig = SelectionConfig & {
-  x: number;
-  y: number;
-};
-export type LoaderPlane = {
-  dtype: Dtype;
-  shape: number[];
-  tileSize: number;
-  labels:
-    | [...("t" | "c" | "z" | "y" | "x" | "_c")[], "y", "x", "_c"]
-    | [...("t" | "c" | "z" | "y" | "x")[], "y", "x"];
-  onTileError: (e: Error) => void;
-  getRaster: (s: SelectionConfig) => Promise<HasTile>;
-  getTile: (s: TileConfig) => Promise<HasTile>;
-};
-export type VivLoaderPlane = LoaderPlane & {
-  labels: ["t", "c", "z", "y", "x"];
 };
 type ToTilePlane = (z: number, l: LoaderPlane[]) => LoaderPlane;
 type FullState = {
@@ -124,12 +99,6 @@ type BinIn = InitIn & {
   index: Index;
 };
 type Bin = (i: BinIn) => Promise<number[]>;
-
-export type HasTile = {
-  data: SupportedTypedArray;
-  height: number;
-  width: number;
-};
 type CaptureTile = (i: Index, planes: LoaderPlane[]) => Promise<HasTile>;
 
 export type ConfigProps = {

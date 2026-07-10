@@ -1,8 +1,26 @@
 import * as React from "react";
 import styled from "styled-components";
 import { RETURN_TO_LIBRARY_EVENT } from "@/lib/navigation/returnToLibraryEvent";
+import type { DocumentData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
-import { downloadStoryJsonExport } from "@/lib/stores/downloadStoryJson";
+import { validateDocumentData } from "@/lib/stores/validateDocument";
+
+function downloadStoryJsonExport(
+  data: DocumentData,
+  filename = "document.json",
+): void {
+  const clone = JSON.parse(JSON.stringify(data)) as unknown;
+  const doc = validateDocumentData(clone);
+  const blob = new Blob([JSON.stringify(doc, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 const MenuWrap = styled.div`
   position: relative;

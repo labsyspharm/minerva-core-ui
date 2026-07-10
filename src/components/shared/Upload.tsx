@@ -10,7 +10,10 @@ import {
 import { applyOmeRoisFromAnnotationXmlString } from "@/lib/shapes/applyOmeRoisToDocument";
 import type { Image } from "@/lib/stores/documentStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
+import type { ValidObj } from "@/lib/util/validate";
 import styles from "./Upload.module.css";
+
+export type { ValidObj } from "@/lib/util/validate";
 
 export type FormProps = {
   valid: ValidObj;
@@ -67,9 +70,6 @@ export type UploadProps = {
   onImportOme?: (
     req: OmeImportRequest,
   ) => Promise<OmeImportResult | undefined> | OmeImportResult | undefined;
-};
-export type ValidObj = {
-  [s: string]: boolean;
 };
 type ValidationFunction = (v: ValidObj) => boolean | null;
 type Validation = (s: string) => ValidationFunction;

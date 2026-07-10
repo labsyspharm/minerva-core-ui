@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   normalizeWaypointRecord,
   preprocessJsonExportRoot,
-} from "./storeUtils";
+} from "./wirePreprocess";
 
 /* -------------------- shared primitives -------------------- */
 

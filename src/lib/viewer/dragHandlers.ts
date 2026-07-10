@@ -2,7 +2,10 @@
 // These handlers translate Deck.gl events into interaction events for the overlay system
 
 import { useAppStore } from "../stores/appStore";
-import { SCALEBAR_VIEW_ID } from "./deckViewIds";
+
+/** Keep in sync with `OrthographicView({ id })` in ImageViewer. */
+export const ORTHO_VIEW_ID = "ortho";
+export const SCALEBAR_VIEW_ID = "scalebar-overlay";
 
 type InteractionType = "click" | "dragStart" | "drag" | "dragEnd" | "hover";
 type InteractionCallback = (

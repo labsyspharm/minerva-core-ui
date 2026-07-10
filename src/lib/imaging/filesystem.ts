@@ -1,7 +1,7 @@
 import { loadOmeTiff } from "@hms-dbmi/viv";
 import { fileOpen } from "browser-fs-access";
 import { fromBlob } from "geotiff";
-import type { HasTile, LoaderPlane } from "../authoring/config";
+import type { HasTile, LoaderPlane } from "./loaderTypes";
 import type { Loader } from "./viv";
 import type { PoolClass } from "./workers/Pool";
 

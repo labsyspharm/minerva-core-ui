@@ -3,14 +3,13 @@ import {
   ChromeColorPickerPopover,
   chromeColorPickerAnchorPosition,
 } from "@/components/shared/ChromeColorPickerPopover";
-import { ChannelContrastEditor } from "@/components/shared/channel/ChannelContrastEditor";
+import {
+  ChannelContrastEditor,
+  type ChannelContrastEditorProps,
+} from "@/components/shared/channel/ChannelContrastEditor";
 import { ChannelRow, rgbToHex } from "@/components/shared/channel/ChannelRow";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
-import {
-  colorRenderingForSource,
-  contrastEditorPropsForGroupRow,
-  contrastEditorPropsForSource,
-} from "@/components/shared/channel/channelLiveRendering";
+import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import {
@@ -48,7 +47,7 @@ import {
   effectiveSourceLimits,
 } from "@/lib/imaging/sourceChannelStyle";
 import { MAX_VIV_INTENSITY_CHANNELS } from "@/lib/imaging/viv";
-import { useAppStore } from "@/lib/stores/appStore";
+import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
 import type {
   Channel,
   ChannelGroup,
@@ -64,6 +63,71 @@ import styles from "./ChannelList.module.css";
 
 const CHANNEL_DRAG_MIME = "application/x-minerva-channel-ref";
 
+function colorRenderingForSource(
+  live: ChannelRendering | null,
+  sourceChannelId: string,
+): Extract<ChannelRendering, { kind: "color" }> | null {
+  if (live?.kind === "color" && live.sourceChannelId === sourceChannelId) {
+    return live;
+  }
+  return null;
+}
+
+function contrastRenderingForSource(
+  live: ChannelRendering | null,
+  sourceChannelId: string,
+): Extract<ChannelRendering, { kind: "contrast" }> | null {
+  if (live?.kind === "contrast" && live.sourceChannelId === sourceChannelId) {
+    return live;
+  }
+  return null;
+}
+
+function contrastEditorPropsForSource(
+  channelRendering: ChannelRendering | null,
+  sc: Channel,
+  color: { r?: number; g?: number; b?: number },
+  limits: [number, number],
+): ChannelContrastEditorProps {
+  const liveColor = colorRenderingForSource(channelRendering, sc.id);
+  const c = liveColor ?? color;
+  const liveContrast = contrastRenderingForSource(channelRendering, sc.id);
+  return {
+    groupId: "",
+    channelId: sc.id,
+    sourceChannelId: sc.id,
+    r: c.r ?? 0,
+    g: c.g ?? 0,
+    b: c.b ?? 0,
+    lowerLimit: liveContrast ? liveContrast.lower : limits[0],
+    upperLimit: liveContrast ? liveContrast.upper : limits[1],
+    distribution: sc.sourceDistribution ?? null,
+  };
+}
+
+function contrastEditorPropsForGroupRow(
+  channelRendering: ChannelRendering | null,
+  groupId: string,
+  gc: ChannelGroupChannel,
+  sc: Channel | undefined,
+): ChannelContrastEditorProps {
+  const sourceId = sc?.id ?? gc.channelId;
+  const liveColor = colorRenderingForSource(channelRendering, sourceId);
+  const c = liveColor ?? gc.color;
+  const liveContrast = contrastRenderingForSource(channelRendering, sourceId);
+  return {
+    groupId,
+    channelId: gc.id,
+    sourceChannelId: sourceId,
+    r: c.r ?? 0,
+    g: c.g ?? 0,
+    b: c.b ?? 0,
+    lowerLimit: liveContrast ? liveContrast.lower : gc.lowerLimit,
+    upperLimit: liveContrast ? liveContrast.upper : gc.upperLimit,
+    distribution: sc?.sourceDistribution ?? null,
+  };
+}
+
 type ChannelDragPayload = {
   sourceId: string;
   fromGroupId?: string;
@@ -72,19 +136,6 @@ type ChannelDragPayload = {
 type ColorPickerTarget =
   | { scope: "source"; sourceId: string }
   | { scope: "group"; groupId: string; rowId: string };
-
-const TrashIcon = (props: { title: string; size?: number }) => (
-  <svg
-    width={props.size ?? 14}
-    height={props.size ?? 14}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    aria-hidden
-  >
-    <title>{props.title}</title>
-    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-  </svg>
-);
 
 const EMPTY_LOCKED_ROW_IDS = new Set<string>();
 
