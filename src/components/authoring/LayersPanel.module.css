@@ -1,0 +1,64 @@
+.black {
+  background-color: black;
+}
+
+.layersPanel {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* One strip: drawing tools + layers meta (count, add group, color, delete) */
+.layersUnifiedTop {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  align-content: flex-start;
+  gap: 8px;
+  row-gap: 4px;
+  background-color: #0d1117;
+  border-bottom: 1px solid #30363d;
+  border-radius: 3px 3px 0 0;
+  padding: 3px 4px;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+/*
+ * One size for primary toolbar + meta action icons only.
+ * Do not use `.layersUnifiedTop svg` — it also resized the ToolSubmenu chevron
+ * and blew up the LHS vs the single-icon RHS buttons.
+ */
+.layersToolbarSlot > button > svg,
+.layersToolbarSlot > div > button > svg,
+.layersMetaCluster > button > svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.layersToolbarSlot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-content: flex-start;
+  align-items: center;
+  gap: 2px;
+  /* Natural width only; meta cluster uses margin-left: auto to sit on the right */
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.layersMetaCluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  margin-left: auto;
+}

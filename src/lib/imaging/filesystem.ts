@@ -358,8 +358,5 @@ export {
   ensureFileHandlePermission,
   findFile,
   toLoader,
-  toMaskLoader,
-  toMaskLoaderFromUrl,
-  toLoaderFromUrl,
   toFile,
 };

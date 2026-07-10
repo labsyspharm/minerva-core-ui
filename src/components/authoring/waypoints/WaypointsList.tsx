@@ -1,9 +1,13 @@
 import * as React from "react";
+import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
+import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
-import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import JumpToViewIcon from "@/components/shared/icons/jump-to-view.svg?react";
 import OverwriteViewIcon from "@/components/shared/icons/overwrite-view.svg?react";
 import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
+import { CompactHeader } from "@/components/shared/panel/CompactHeader";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
+import chrome from "@/components/shared/panel/panelChrome.module.css";
 import type { ConfigWaypoint } from "@/lib/authoring/config";
 import {
   effectiveReferenceImagePixelSize,
@@ -34,23 +38,6 @@ import styles from "./WaypointsList.module.css";
 export type WaypointsListProps = {
   viewOnly?: boolean;
 };
-
-const PlusIcon = () => (
-  <svg
-    aria-hidden="true"
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M12 5v14" />
-    <path d="M5 12h14" />
-  </svg>
-);
 
 const countWaypointAnnotations = (story: Waypoint) =>
   story.shapeIds?.length ?? 0;
@@ -507,43 +494,32 @@ const WaypointsList = (props: WaypointsListProps) => {
   };
 
   const listHeader = (
-    <div className={styles.compactHeader}>
-      <div className={styles.headerTitle}>
-        <span>Waypoints</span>
-        <span className={styles.headerCount}>({waypoints.length})</span>
-      </div>
-
-      <div className={styles.headerActions}>
-        {canEdit && (
-          <button
-            type="button"
-            className={styles.iconHeaderButton}
-            onClick={() => {
-              if (waypoints.length === 0) return;
-              const indexToRemove = activeStoryIndex ?? 0;
-              if (indexToRemove < 0 || indexToRemove >= waypoints.length)
-                return;
-              removeStory(indexToRemove);
-            }}
-            disabled={waypoints.length === 0}
-            title="Delete active waypoint"
-          >
-            <TrashIcon />
-          </button>
-        )}
-
-        {canEdit && (
-          <button
-            type="button"
-            className={styles.iconHeaderButton}
-            onClick={handleAddWaypoint}
-            title="Add waypoint"
-          >
-            <PlusIcon />
-          </button>
-        )}
-      </div>
-    </div>
+    <CompactHeader
+      title="Waypoints"
+      count={`(${waypoints.length})`}
+      actions={
+        canEdit ? (
+          <>
+            <PanelIconButton
+              onClick={() => {
+                if (waypoints.length === 0) return;
+                const indexToRemove = activeStoryIndex ?? 0;
+                if (indexToRemove < 0 || indexToRemove >= waypoints.length)
+                  return;
+                removeStory(indexToRemove);
+              }}
+              disabled={waypoints.length === 0}
+              title="Delete active waypoint"
+            >
+              <TrashIcon />
+            </PanelIconButton>
+            <PanelIconButton onClick={handleAddWaypoint} title="Add waypoint">
+              <PlusIcon />
+            </PanelIconButton>
+          </>
+        ) : undefined
+      }
+    />
   );
 
   const renderList = () => (
@@ -552,7 +528,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       {waypoints.length === 0 ? (
         <div className={styles.emptyMessage}>No waypoints yet</div>
       ) : (
-        <ul className={styles.rows}>
+        <ul className={[styles.rows, chrome.thinScrollbar].join(" ")}>
           {waypoints.map((story, index) => {
             const storyId = story.id;
             const annotationCount = countWaypointAnnotations(story);
@@ -598,10 +574,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                       openDetailForStoryId(storyId);
                     }}
                   >
-                    <ChevronDownIcon
-                      className={styles.waypointChevronRight}
-                      aria-hidden
-                    />
+                    <ChevronIcon direction="right" />
                   </button>
                 ) : (
                   <div className={styles.rowChevronSpacer} aria-hidden />
@@ -660,7 +633,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                 <div className={styles.rowViewportActions}>
                   <button
                     type="button"
-                    className={styles.rowViewportIconButton}
+                    className={chrome.rowIconButton}
                     title="Jump to waypoint view"
                     onClick={(event) => {
                       event.stopPropagation();
@@ -674,7 +647,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                   </button>
                   <button
                     type="button"
-                    className={styles.rowViewportIconButton}
+                    className={chrome.rowIconButton}
                     title="Save waypoint view to story and download story.json"
                     onClick={(event) => handleOverwriteView(index, event)}
                   >
@@ -746,10 +719,7 @@ const WaypointsList = (props: WaypointsListProps) => {
             onClick={() => setDetailStoryId(null)}
             title="Back to waypoint list"
           >
-            <ChevronDownIcon
-              className={styles.waypointChevronLeft}
-              aria-hidden
-            />
+            <ChevronIcon direction="left" />
             <span>Back</span>
           </button>
           <div className={styles.detailTitle} title={detailStory.title}>
@@ -757,7 +727,10 @@ const WaypointsList = (props: WaypointsListProps) => {
           </div>
         </div>
 
-        <div className={styles.detailBody} ref={detailBodyRef}>
+        <div
+          className={[styles.detailBody, chrome.thinScrollbar].join(" ")}
+          ref={detailBodyRef}
+        >
           <div className={styles.detailBodyInner}>
             <div className={styles.detailTitleFieldWrap}>
               <label
@@ -791,41 +764,34 @@ const WaypointsList = (props: WaypointsListProps) => {
                   Channel group
                 </label>
                 <div
-                  className={styles.channelGroupDropdown}
+                  className={chrome.channelGroupDropdown}
                   ref={channelGroupDropdownRef}
                 >
                   <button
                     type="button"
                     id={detailGroupFieldId}
-                    className={styles.channelGroupDropdownTrigger}
+                    className={chrome.channelGroupDropdownTrigger}
                     aria-haspopup="listbox"
                     aria-expanded={channelGroupMenuOpen}
                     disabled={!canEdit}
                     onClick={() => setChannelGroupMenuOpen((open) => !open)}
                   >
-                    <span className={styles.channelGroupDropdownTriggerMain}>
-                      <span className={styles.channelGroupDropdownTitle}>
+                    <span className={chrome.channelGroupDropdownTriggerMain}>
+                      <span className={chrome.channelGroupDropdownTitle}>
                         {selectedGroup.name}
                       </span>
-                      <span className={styles.channelGroupDropdownChannels}>
+                      <span className={chrome.channelGroupDropdownChannels}>
                         {selectedChannelsSubtitle || "—"}
                       </span>
                     </span>
-                    <ChevronDownIcon
-                      className={[
-                        styles.channelGroupDropdownChevron,
-                        channelGroupMenuOpen
-                          ? styles.channelGroupDropdownChevronOpen
-                          : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      aria-hidden
+                    <ChevronIcon
+                      direction={channelGroupMenuOpen ? "up" : "down"}
+                      className={chrome.channelGroupDropdownChevron}
                     />
                   </button>
                   {channelGroupMenuOpen ? (
                     <div
-                      className={styles.channelGroupDropdownMenu}
+                      className={chrome.channelGroupDropdownMenu}
                       role="listbox"
                       aria-label="Channel groups"
                     >
@@ -839,16 +805,16 @@ const WaypointsList = (props: WaypointsListProps) => {
                         return (
                           <div
                             key={group.id}
-                            className={styles.channelGroupDropdownItem}
+                            className={chrome.channelGroupDropdownItem}
                           >
                             <button
                               type="button"
                               role="option"
                               aria-selected={isSelected}
                               className={[
-                                styles.channelGroupDropdownOption,
+                                chrome.channelGroupDropdownOption,
                                 isSelected
-                                  ? styles.channelGroupDropdownOptionSelected
+                                  ? chrome.channelGroupDropdownOptionSelected
                                   : "",
                               ]
                                 .filter(Boolean)
@@ -856,12 +822,12 @@ const WaypointsList = (props: WaypointsListProps) => {
                               onClick={() => selectChannelGroupByUuid(group.id)}
                             >
                               <span
-                                className={styles.channelGroupDropdownTitle}
+                                className={chrome.channelGroupDropdownTitle}
                               >
                                 {group.name}
                               </span>
                               <span
-                                className={styles.channelGroupDropdownChannels}
+                                className={chrome.channelGroupDropdownChannels}
                               >
                                 {subtitle || "—"}
                               </span>
@@ -876,10 +842,10 @@ const WaypointsList = (props: WaypointsListProps) => {
             ) : null}
             <div
               className={[
-                styles.detailCollapsible,
+                chrome.detailCollapsible,
                 styles.detailMarkdownSection,
                 !detailMarkdownExpanded
-                  ? styles.detailCollapsibleCollapsed
+                  ? chrome.detailCollapsibleCollapsed
                   : "",
               ]
                 .filter(Boolean)
@@ -887,18 +853,15 @@ const WaypointsList = (props: WaypointsListProps) => {
             >
               <button
                 type="button"
-                className={styles.detailCollapsibleHeader}
+                className={chrome.detailCollapsibleHeader}
                 aria-expanded={detailMarkdownExpanded}
                 onClick={() => setDetailMarkdownExpanded((prev) => !prev)}
               >
-                <ChevronDownIcon
-                  className={styles.detailCollapsibleChevron}
-                  aria-hidden
-                />
-                <span className={styles.detailCollapsibleTitle}>Markdown</span>
+                <ChevronIcon className={chrome.detailCollapsibleChevron} />
+                <span className={chrome.detailCollapsibleTitle}>Markdown</span>
               </button>
               {detailMarkdownExpanded ? (
-                <div className={styles.detailCollapsibleBody}>
+                <div className={chrome.detailCollapsibleBody}>
                   <WaypointContentEditor
                     key={detailStory.id}
                     variant="detail"
@@ -910,10 +873,10 @@ const WaypointsList = (props: WaypointsListProps) => {
             </div>
             <div
               className={[
-                styles.detailCollapsible,
+                chrome.detailCollapsible,
                 styles.detailAnnotationsSection,
                 !detailAnnotationsExpanded
-                  ? styles.detailCollapsibleCollapsed
+                  ? chrome.detailCollapsibleCollapsed
                   : "",
               ]
                 .filter(Boolean)
@@ -921,24 +884,21 @@ const WaypointsList = (props: WaypointsListProps) => {
             >
               <button
                 type="button"
-                className={styles.detailCollapsibleHeader}
+                className={chrome.detailCollapsibleHeader}
                 aria-expanded={detailAnnotationsExpanded}
                 title={detailAnnotationText}
                 onClick={() => setDetailAnnotationsExpanded((prev) => !prev)}
               >
-                <ChevronDownIcon
-                  className={styles.detailCollapsibleChevron}
-                  aria-hidden
-                />
-                <span className={styles.detailCollapsibleTitle}>
+                <ChevronIcon className={chrome.detailCollapsibleChevron} />
+                <span className={chrome.detailCollapsibleTitle}>
                   Annotations{" "}
-                  <span className={styles.detailCollapsibleCount}>
+                  <span className={chrome.detailCollapsibleCount}>
                     ({detailAnnotationCount})
                   </span>
                 </span>
               </button>
               {detailAnnotationsExpanded ? (
-                <div className={styles.detailCollapsibleBody}>
+                <div className={chrome.detailCollapsibleBody}>
                   {detailAnnotationCount > 0 ? (
                     <div className={styles.detailSelectionActions}>
                       <button

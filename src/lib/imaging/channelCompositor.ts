@@ -46,7 +46,7 @@ export function isShownFirstInAllChannelsList(
   );
 }
 
-export function activeGroupRowForSource(
+function activeGroupRowForSource(
   activeGroup: ChannelGroup | undefined,
   sourceId: string,
 ): ChannelGroupChannel | undefined {

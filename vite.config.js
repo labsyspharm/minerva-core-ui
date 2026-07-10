@@ -2,7 +2,6 @@ import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import mkcert from "vite-plugin-mkcert";
-import { viteStaticCopy } from "vite-plugin-static-copy";
 import svgr from "vite-plugin-svgr";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
@@ -36,14 +35,6 @@ export default defineConfig({
       svgrOptions: {
         icon: true,
       },
-    }),
-    viteStaticCopy({
-      targets: [
-        {
-          src: "src/components/shared/icons/*.svg",
-          dest: "icons",
-        },
-      ],
     }),
   ],
   optimizeDeps: {

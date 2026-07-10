@@ -26,7 +26,7 @@ export type ImageSelectionMask = {
 };
 
 /** Stable RGB from a string seed (label id, shape id, channel name). */
-export function colorFromSeed(seed: string): [number, number, number] {
+function colorFromSeed(seed: string): [number, number, number] {
   let h = 2166136261;
   for (let i = 0; i < seed.length; i++) {
     h ^= seed.charCodeAt(i);
@@ -163,7 +163,7 @@ export function labelRasterToRgba(
 }
 
 /** Binary mask (`data[i]` 0/1) for annotation selections. */
-export function binaryMaskToRgba(
+function binaryMaskToRgba(
   data: Uint8Array,
   width: number,
   height: number,

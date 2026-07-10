@@ -2,7 +2,10 @@ import * as React from "react";
 import styled from "styled-components";
 import { StoryAuthorOverflowMenu } from "@/components/authoring/StoryAuthorOverflowMenu";
 import PlayIcon from "@/components/shared/icons/play.svg?react";
-import { storyChromeBannerBarCss } from "@/components/shared/storyChromeBanner";
+import {
+  storyChromeBannerBarCss,
+  storyChromeTitleTextCss,
+} from "@/components/shared/storyChromeBanner";
 import { saveStoryDocument } from "@/lib/persistence/storyPersistence";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 
@@ -16,13 +19,16 @@ const TitleFieldWrap = styled.div`
   flex: 1;
   min-width: 0;
   display: flex;
+  align-items: center;
   justify-content: center;
+  min-height: 28px;
 `;
 
 const TitleInput = styled.input`
   box-sizing: border-box;
   margin: 0;
-  padding: 2px 6px;
+  padding: 0 6px;
+  height: 28px;
   width: 100%;
   min-width: 0;
   max-width: min(720px, 100%);
@@ -31,12 +37,10 @@ const TitleInput = styled.input`
   border: none;
   border-radius: 6px;
   color: rgb(248 250 252 / 0.98);
-  font-size: 1.0625rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  ${storyChromeTitleTextCss}
+  /* Match height so the glyph box is centered in the control (WebKit/input quirk) */
+  line-height: 28px;
   text-align: center;
-  font-family: inherit;
-  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

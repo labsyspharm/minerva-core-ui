@@ -1,4 +1,7 @@
 import * as React from "react";
+import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
+import { TrashIcon } from "@/components/shared/common/TrashIcon";
+import chrome from "@/components/shared/panel/panelChrome.module.css";
 import type { Shape, ShapeGroup } from "@/lib/shapes/shapeModel";
 import styles from "./ItemList.module.css";
 
@@ -238,17 +241,7 @@ const ItemList = <T = React.Component>({
               onToggleExpand?.(item.id);
             }}
           >
-            <svg
-              aria-labelledby="expand-title"
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className={`${styles.expandIcon} ${item.isExpanded ? styles.expandIconExpanded : ""}`}
-            >
-              <title id="expand-title">expand</title>
-              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
-            </svg>
+            <ChevronIcon direction={item.isExpanded ? "down" : "right"} />
           </button>
         )}
 
@@ -283,16 +276,7 @@ const ItemList = <T = React.Component>({
               }}
               title="Delete"
             >
-              <svg
-                aria-labelledby="delete-title"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <title id="delete-title">delete</title>
-                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-              </svg>
+              <TrashIcon title="Delete" size={14} />
             </button>
           )}
         </div>
@@ -329,7 +313,7 @@ const ItemList = <T = React.Component>({
       {items.length === 0 ? (
         <div className={styles.emptyMessage}>{emptyMessage}</div>
       ) : (
-        <ul className={styles.list}>
+        <ul className={[styles.list, chrome.thinScrollbar].join(" ")}>
           {items.map((item) => (
             <React.Fragment key={item.id}>
               {renderItem(item)}

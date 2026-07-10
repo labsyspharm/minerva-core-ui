@@ -1,6 +1,6 @@
 import * as React from "react";
 import styled from "styled-components";
-import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
+import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
   type ChannelGroup,
@@ -52,18 +52,11 @@ const ActiveGroupTrigger = styled.button`
   }
 `;
 
-const ChevronWrap = styled.span<{ expanded: boolean }>`
+const ChevronWrap = styled.span`
   display: flex;
   flex-shrink: 0;
   line-height: 0;
   opacity: 0.72;
-  transition: transform 0.18s ease;
-  transform: rotate(${({ expanded }) => (expanded ? "180deg" : "0deg")});
-`;
-
-const ChevronIcon = styled(ChevronDownIcon)`
-  width: 12px;
-  height: 12px;
 `;
 
 const AlternateList = styled.div`
@@ -179,8 +172,8 @@ export const ChannelGroups = (props: {
         aria-expanded={expanded}
         onClick={() => setExpanded(!expanded)}
       >
-        <ChevronWrap expanded={expanded} aria-hidden>
-          <ChevronIcon />
+        <ChevronWrap aria-hidden>
+          <ChevronIcon direction={expanded ? "up" : "down"} />
         </ChevronWrap>
         <span
           style={{

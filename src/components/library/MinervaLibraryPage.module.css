@@ -112,11 +112,6 @@
   color: rgb(170 164 152 / 0.5);
 }
 
-.emptyHint {
-  margin: 0;
-  font-size: 0.88rem;
-  color: rgb(255 255 255 / 0.32);
-}
 
 .inlineLink {
   margin: 0;

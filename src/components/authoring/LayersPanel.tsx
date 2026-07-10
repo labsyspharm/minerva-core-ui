@@ -1,5 +1,5 @@
 import * as React from "react";
-import styles from "@/components/authoring/DrawingPanel.module.css";
+import styles from "@/components/authoring/LayersPanel.module.css";
 import {
   ItemList,
   type ItemListVariant,
@@ -16,6 +16,7 @@ import PointIcon from "@/components/shared/icons/point.svg?react";
 import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
 import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
+import chrome from "@/components/shared/panel/panelChrome.module.css";
 import { TextEditPanel } from "@/components/shared/tools/TextEditPanel";
 import type { Shape } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -745,7 +746,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     <>
       <button
         type="button"
-        className={styles.toolButton}
+        className={chrome.toolButton}
         onClick={() => createGroup()}
         title="Add group"
       >
@@ -753,7 +754,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       </button>
       <button
         type="button"
-        className={styles.toolButton}
+        className={chrome.toolButton}
         onClick={handleHeaderEditTextClick}
         disabled={headerEditTextDisabled}
         title={
@@ -766,7 +767,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       </button>
       <button
         type="button"
-        className={styles.toolButton}
+        className={chrome.toolButton}
         onClick={handleHeaderColorClick}
         disabled={headerColorDisabled}
         title={
@@ -783,7 +784,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       </button>
       <button
         type="button"
-        className={styles.toolButton}
+        className={chrome.toolButton}
         onClick={handleHeaderDeleteClick}
         disabled={!selectedGroupId && selectedShapeIds.length === 0}
         title={
@@ -860,95 +861,17 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
 
       {/* Name (label) Edit Modal */}
       {editingLabelId && (
-        <div
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            backgroundColor: "#2c2c2c",
-            border: "2px solid #444",
-            borderRadius: "8px",
-            padding: "20px",
-            zIndex: 1000,
-            minWidth: "300px",
-            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.5)",
-          }}
-        >
-          <div
-            style={{
-              marginBottom: "15px",
-              color: "white",
-              fontSize: "16px",
-              fontWeight: "bold",
-            }}
-          >
-            Rename Shape
-          </div>
-          <input
-            type="text"
-            value={editLabelValue}
-            onChange={(e) => setEditLabelValue(e.target.value)}
-            placeholder="Enter layer name"
-            style={{
-              width: "100%",
-              padding: "8px",
-              border: "1px solid #555",
-              borderRadius: "4px",
-              backgroundColor: "#1a1a1a",
-              color: "white",
-              fontSize: "14px",
-              outline: "none",
-              marginBottom: "15px",
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSubmitLabelEdit();
-              } else if (e.key === "Escape") {
-                handleCancelLabelEdit();
-              }
-            }}
-          />
-          <div
-            style={{
-              marginTop: "15px",
-              display: "flex",
-              gap: "10px",
-              justifyContent: "flex-end",
-            }}
-          >
-            <button
-              type="button"
-              onClick={handleCancelLabelEdit}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#555",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "14px",
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSubmitLabelEdit}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#4CAF50",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "14px",
-              }}
-            >
-              Save
-            </button>
-          </div>
-        </div>
+        <TextEditPanel
+          title="Rename Shape"
+          textValue={editLabelValue}
+          onTextChange={setEditLabelValue}
+          onSubmit={handleSubmitLabelEdit}
+          onCancel={handleCancelLabelEdit}
+          submitButtonText="Save"
+          showFontSize={false}
+          singleLine
+          placeholder="Enter layer name"
+        />
       )}
     </div>
   );

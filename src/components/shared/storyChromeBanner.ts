@@ -22,3 +22,16 @@ export const storyChromeBannerBarCss = css`
     inset 0 1px 0 rgb(255 255 255 / 0.06),
     inset 0 -1px 0 rgb(0 0 0 / 0.15);
 `;
+
+/**
+ * Title type metrics shared by author input + preview ribbon label.
+ * Use line-height: 1 — larger line-boxes leave empty descender space that
+ * makes glyphs look high when the box is flex-centered in the bar.
+ */
+export const storyChromeTitleTextCss = css`
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  font-family: inherit;
+`;

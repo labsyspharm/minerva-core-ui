@@ -1,10 +1,12 @@
 import type { MouseEvent, ReactElement } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-//import { theme } from "@/theme.module.css";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import { storyChromeBannerBarCss } from "@/components/shared/storyChromeBanner";
+import {
+  storyChromeBannerBarCss,
+  storyChromeTitleTextCss,
+} from "@/components/shared/storyChromeBanner";
 import {
   effectiveReferenceImagePixelSize,
   useAppStore,
@@ -48,14 +50,16 @@ const PreviewBackButton = styled.button`
   justify-content: center;
   gap: 6px;
   flex-shrink: 0;
+  box-sizing: border-box;
+  height: 28px;
   background: rgb(0 0 0 / 0.16);
   border: 1px solid rgb(255 255 255 / 0.22);
   color: rgb(248 250 252 / 0.98);
-  padding: 3px 10px;
+  padding: 0 10px;
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
-  line-height: 1.2;
+  line-height: 1;
   font-family: inherit;
   font-weight: 500;
 
@@ -71,26 +75,28 @@ const PreviewBackButton = styled.button`
   }
 `;
 
+/** Left-pointing chevron (down icon rotated); keep as a single SVG for optical centering. */
 const PreviewRibbonChevron = styled(ChevronDownIcon)`
   width: 14px;
   height: 14px;
   flex-shrink: 0;
   display: block;
   transform: rotate(90deg);
+  transform-origin: center;
   color: inherit;
   opacity: 0.95;
 `;
 
 /** Document title — shares the ribbon with the “Story preview” badge. */
 const PreviewRibbonDocumentTitle = styled.span`
-  display: block;
+  display: flex;
+  align-items: center;
   flex: 1;
   min-width: 0;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  line-height: 1.2;
+  height: 28px;
+  box-sizing: border-box;
   color: rgb(255 255 255 / 0.94);
-  letter-spacing: 0.02em;
+  ${storyChromeTitleTextCss}
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -100,9 +106,12 @@ const PreviewRibbonDocumentTitle = styled.span`
 
 const PreviewRibbonPreviewBadge = styled.span`
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  height: 28px;
   font-size: 0.8125rem;
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: rgb(255 255 255 / 0.55);
@@ -180,8 +189,10 @@ const StoryTitle = styled.div`
 const Toolbar = styled.div`
   display: grid;
   overflow: hidden;
+  align-items: center;
   grid-template-rows: 1fr;
   grid-template-columns: 30px 1fr 30px 50px 30px;
+
   > .table-of-contents {
     grid-column: 1;
     text-align: left;
@@ -195,6 +206,27 @@ const Toolbar = styled.div`
   > .right {
     grid-column: 5;
   }
+
+  > button {
+    all: unset;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  > button:focus-visible {
+    outline: 1px solid var(--theme-light-focus-color, hwb(45 90% 0%));
+    outline-offset: 1px;
+  }
+
+  > button.inactive {
+    cursor: default;
+    pointer-events: none;
   }
 `;
 
@@ -205,6 +237,7 @@ const ContentWrap = styled.div`
 const InlineNext = styled.div`
   display: grid;
   grid-template-columns: 1fr 30px;
+  align-items: center;
   margin-bottom: 1em;
   > :nth-child(1) {
     grid-column: 1;
@@ -220,6 +253,21 @@ const InlineNext = styled.div`
   }
   .right:hover {
     text-decoration: underline;
+  }
+
+  > button {
+    all: unset;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  > button.inactive {
+    cursor: default;
+    pointer-events: none;
   }
 `;
 

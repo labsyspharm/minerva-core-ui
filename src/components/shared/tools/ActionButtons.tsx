@@ -1,22 +1,54 @@
-import {
-  faMinus as faPop,
-  faPlus as faPush,
-  faCheck as faSelect,
-} from "@fortawesome/free-solid-svg-icons";
+import type { ReactNode } from "react";
 import styled from "styled-components";
-import { Icon } from "@/components/shared/common/Icon";
+import CheckIcon from "@/components/shared/icons/check.svg?react";
+import MinusIcon from "@/components/shared/icons/minus.svg?react";
+import PlusIconSvg from "@/components/shared/icons/plus.svg?react";
 
-const defineIcon = ({ icon, onClick, color }) => {
-  return {
-    size: "1em",
-    color,
-    icon,
-    onClick,
-  };
+type GlassIconButtonProps = {
+  color: string;
+  onClick?: () => void;
+  children: ReactNode;
+  "aria-label"?: string;
 };
 
-const SimpleButton = (props) => {
-  return <Icon {...defineIcon(props)} />;
+const GlassIconButton = styled.button<{ $color: string; $clickable: boolean }>`
+  svg {
+    width: 1em;
+    height: 1em;
+    display: block;
+    transform: scale(1, 0.9);
+  }
+  justify-items: center;
+  align-items: center;
+  display: grid;
+  border: none;
+  font: inherit;
+  border-radius: 50%;
+  outline: 1px solid var(--theme-glass-edge) !important;
+  background-color: var(--theme-dark-main-color);
+  margin-bottom: calc(2 * var(--theme-gap-tiny));
+  color: ${({ $color }) => $color};
+  font-size: 1em;
+  height: 1em;
+  width: 1em;
+  padding: 0;
+  opacity: ${({ $clickable }) => ($clickable ? "1" : "0.5")};
+  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
+`;
+
+const IconButton = (props: GlassIconButtonProps) => {
+  const { color, onClick, children, "aria-label": ariaLabel } = props;
+  return (
+    <GlassIconButton
+      type="button"
+      $color={color}
+      $clickable={!!onClick}
+      onClick={onClick}
+      aria-label={ariaLabel}
+    >
+      {children}
+    </GlassIconButton>
+  );
 };
 
 const WrapColumn = styled.div`
@@ -27,33 +59,31 @@ const WrapColumn = styled.div`
   gap: 0.25em;
 `;
 
-const Push = (props) => {
-  const pushProps = {
-    ...props,
-    onClick: props.onPush,
-    icon: faPush,
-    color: "#2e5",
-  };
-  return <SimpleButton {...pushProps} />;
-};
+const Push = (props: { onPush?: () => void }) => (
+  <IconButton color="#2e5" onClick={props.onPush} aria-label="Add channel">
+    <PlusIconSvg />
+  </IconButton>
+);
 
-const PopUpdate = (props) => {
+const PopUpdate = (props: { onPop?: () => void; children?: ReactNode }) => {
   const { onPop, children } = props;
-  const popProps = { ...props, onClick: onPop, icon: faPop, color: "#e25" };
   return (
     <WrapColumn>
-      <SimpleButton {...popProps} />
+      <IconButton color="#e25" onClick={onPop} aria-label="Remove channel">
+        <MinusIcon />
+      </IconButton>
       {children}
     </WrapColumn>
   );
 };
 
-const Update = (props) => {
+const Update = (props: { onUpdate?: () => void; children?: ReactNode }) => {
   const { onUpdate, children } = props;
-  const updateProps = { ...props, onClick: onUpdate };
   return (
     <WrapColumn>
-      <SimpleButton {...{ ...updateProps, icon: faSelect, color: "#fff" }} />
+      <IconButton color="#fff" onClick={onUpdate} aria-label="Confirm">
+        <CheckIcon />
+      </IconButton>
       {children}
     </WrapColumn>
   );

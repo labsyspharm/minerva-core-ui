@@ -21,6 +21,7 @@ import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
+import chrome from "@/components/shared/panel/panelChrome.module.css";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import type { Shape } from "@/lib/shapes/shapeModel";
 import {
@@ -165,7 +166,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     <>
       <button
         type="button"
-        className={styles.toolButton}
+        className={chrome.toolButton}
         disabled={layersPanelSelectedShapeIds.length === 0}
         title="Copy selected shapes to the clipboard"
         onClick={() => void copySelectedWaypointShapes()}
@@ -174,7 +175,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
       </button>
       <button
         type="button"
-        className={styles.toolButton}
+        className={chrome.toolButton}
         title="Paste shapes from the clipboard"
         onClick={() => void pasteWaypointShapesFromClipboard()}
       >
@@ -191,7 +192,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     <>
       <button
         type="button"
-        className={`${styles.toolButton} ${activeTool === TOOLS.MOVE ? styles.active : ""}`}
+        className={`${chrome.toolButton} ${activeTool === TOOLS.MOVE ? chrome.active : ""}`}
         title="Move Tool"
         onClick={() => handleToolChangeLocal(TOOLS.MOVE)}
       >
@@ -216,8 +217,8 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<ShapesIcon />}
         parentTitle="Shapes"
-        buttonClassName={styles.toolButton}
-        activeClassName={styles.active}
+        buttonClassName={chrome.toolButton}
+        activeClassName={chrome.active}
       />
 
       <ToolSubmenu
@@ -230,13 +231,13 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<LinesIcon />}
         parentTitle="Lines"
-        buttonClassName={styles.toolButton}
-        activeClassName={styles.active}
+        buttonClassName={chrome.toolButton}
+        activeClassName={chrome.active}
       />
 
       <button
         type="button"
-        className={`${styles.toolButton} ${activeTool === TOOLS.BRUSH ? styles.active : ""}`}
+        className={`${chrome.toolButton} ${activeTool === TOOLS.BRUSH ? chrome.active : ""}`}
         title="Brush"
         onClick={() => handleToolChangeLocal(TOOLS.BRUSH)}
       >
@@ -245,7 +246,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${styles.toolButton} ${activeTool === TOOLS.TEXT ? styles.active : ""}`}
+        className={`${chrome.toolButton} ${activeTool === TOOLS.TEXT ? chrome.active : ""}`}
         title="Text Tool"
         onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
       >
@@ -254,7 +255,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${styles.toolButton} ${activeTool === TOOLS.POINT ? styles.active : ""}`}
+        className={`${chrome.toolButton} ${activeTool === TOOLS.POINT ? chrome.active : ""}`}
         title="Point Tool"
         onClick={() => handleToolChangeLocal(TOOLS.POINT)}
       >
@@ -263,7 +264,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${styles.toolButton} ${activeTool === TOOLS.MAGIC_WAND ? styles.active : ""}`}
+        className={`${chrome.toolButton} ${activeTool === TOOLS.MAGIC_WAND ? chrome.active : ""}`}
         title="Magic Wand"
         onClick={() => handleToolChangeLocal(TOOLS.MAGIC_WAND)}
       >

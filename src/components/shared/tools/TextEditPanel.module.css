@@ -1,0 +1,108 @@
+.panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #2c2c2c;
+  border: 2px solid var(--panel-border, #444);
+  border-radius: 8px;
+  padding: 20px;
+  z-index: 1000;
+  min-width: 300px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.title {
+  margin-bottom: 15px;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.field {
+  margin-bottom: 15px;
+}
+
+.label {
+  color: white;
+  font-size: 14px;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.numberInput {
+  width: 80px;
+  padding: 5px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background-color: var(--panel-surface, #1a1a1a);
+  color: white;
+  font-size: 14px;
+  outline: none;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background-color: var(--panel-surface, #1a1a1a);
+  color: white;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.textInput {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background-color: var(--panel-surface, #1a1a1a);
+  color: white;
+  font-size: 14px;
+  outline: none;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+}
+
+.actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.buttonCancel,
+.buttonSubmit,
+.buttonSubmitDisabled {
+  padding: 8px 16px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.buttonCancel {
+  background-color: #555;
+  cursor: pointer;
+}
+
+.buttonSubmit {
+  background-color: #4caf50;
+  cursor: pointer;
+}
+
+.buttonSubmitDisabled {
+  background-color: #666;
+  cursor: not-allowed;
+}
+
+.hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--panel-muted, #999);
+}

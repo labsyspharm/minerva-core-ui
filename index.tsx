@@ -1,17 +1,9 @@
-import { SimpleIconsetStore } from "@haxtheweb/simple-icon/lib/simple-iconset.js";
-// import { Main } from "./src/main";
 import { RouterProvider } from "@tanstack/react-router";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { Main } from "@/components/main";
 import { createAppRouter } from "@/router/appRouter";
 import "@fontsource/overpass/200.css";
-
-// Base path for deployment (e.g. /minerva-annotation-demo/ or /)
-const base = (
-  typeof import.meta.env?.BASE_URL === "string" ? import.meta.env.BASE_URL : "/"
-).replace(/\/?$/, "/");
-SimpleIconsetStore.registerIconset("icons", `${base}icons/`);
 import "@/fonts.css";
 import "@fontsource/overpass/500.css";
 

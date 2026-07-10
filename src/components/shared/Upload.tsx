@@ -1,6 +1,9 @@
 import type { ChangeEventHandler, FormEventHandler } from "react";
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
+import { CompactHeader } from "@/components/shared/panel/CompactHeader";
+import { PanelActionButton } from "@/components/shared/panel/PanelButtons";
+import chrome from "@/components/shared/panel/panelChrome.module.css";
 import { resolveImageContentRole } from "@/lib/imaging/channelKind";
 import {
   ensureFileHandlePermission,
@@ -97,20 +100,7 @@ const ImagesTabShell = styled.div`
   overflow-x: hidden;
   color: #e6edf3;
   font-size: 12px;
-  background: #000;
-  scrollbar-color: #555 #000;
-  scrollbar-width: thin;
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-  &::-webkit-scrollbar-track {
-    background: #000;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #555;
-    border-radius: 4px;
-  }
+  background: var(--theme-dim-gray-color, #111);
 `;
 
 const XmlImportMessage = styled.div<{ $err: boolean }>`
@@ -643,61 +633,51 @@ const Upload = (props: UploadProps) => {
     ) : null;
 
   return (
-    <ImagesTabShell>
-      <div className={styles.header}>
-        <span className={styles.headerTitle}>Images</span>
-        <div className={styles.headerActions}>
-          {imageLoaded ? (
-            <>
-              <input
-                ref={xmlFileInputRef}
-                className={styles.hiddenFileInput}
-                type="file"
-                accept=".xml,application/xml,text/xml"
-                aria-label="OME-XML annotations file"
-                onChange={onAnnotationXmlSelected}
-              />
-              <button
-                type="button"
-                className={styles.headerActionButton}
-                aria-label="Import annotations"
-                title="Import annotations"
-                onClick={() => xmlFileInputRef.current?.click()}
-              >
-                Import annotations
-              </button>
-            </>
-          ) : null}
-          <button
-            type="button"
-            className={
-              addMaskActive
-                ? `${styles.headerActionButton} ${styles.headerActionButtonActive}`
-                : styles.headerActionButton
-            }
-            aria-pressed={addMaskActive}
-            aria-label="Add mask"
-            title="Add mask"
-            onClick={() => openAddPanel("segmentation")}
-          >
-            Add mask
-          </button>
-          <button
-            type="button"
-            className={
-              addImageActive
-                ? `${styles.headerActionButton} ${styles.headerActionButtonActive}`
-                : styles.headerActionButton
-            }
-            aria-pressed={addImageActive}
-            aria-label="Add image"
-            title="Add image"
-            onClick={() => openAddPanel("intensity")}
-          >
-            Add image
-          </button>
-        </div>
-      </div>
+    <ImagesTabShell className={chrome.thinScrollbar}>
+      <CompactHeader
+        title="Images"
+        actions={
+          <>
+            {imageLoaded ? (
+              <>
+                <input
+                  ref={xmlFileInputRef}
+                  className={styles.hiddenFileInput}
+                  type="file"
+                  accept=".xml,application/xml,text/xml"
+                  aria-label="OME-XML annotations file"
+                  onChange={onAnnotationXmlSelected}
+                />
+                <PanelActionButton
+                  aria-label="Import annotations"
+                  title="Import annotations"
+                  onClick={() => xmlFileInputRef.current?.click()}
+                >
+                  Import annotations
+                </PanelActionButton>
+              </>
+            ) : null}
+            <PanelActionButton
+              active={addMaskActive}
+              aria-pressed={addMaskActive}
+              aria-label="Add mask"
+              title="Add mask"
+              onClick={() => openAddPanel("segmentation")}
+            >
+              Add mask
+            </PanelActionButton>
+            <PanelActionButton
+              active={addImageActive}
+              aria-pressed={addImageActive}
+              aria-label="Add image"
+              title="Add image"
+              onClick={() => openAddPanel("intensity")}
+            >
+              Add image
+            </PanelActionButton>
+          </>
+        }
+      />
 
       <div className={styles.stack}>
         {addPanelOpen ? (

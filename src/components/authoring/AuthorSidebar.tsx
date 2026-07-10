@@ -3,8 +3,8 @@ import * as React from "react";
 import styled from "styled-components";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 import { ChannelGroupsMasterDetail } from "@/components/shared/channel/ChannelGroupsMasterDetail";
+import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import { GlassTabBar } from "@/components/shared/GlassTabBar";
-import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 
 type AuthorTab = "images" | "channels" | "story";
@@ -186,16 +186,6 @@ const StoryPanelSlot = styled.div`
   overflow: hidden;
 `;
 
-const ExpandChevron = styled(ChevronDownIcon)<{ $expanded: boolean }>`
-  width: 14px;
-  height: 14px;
-  display: block;
-  flex-shrink: 0;
-  transform: ${({ $expanded }) =>
-    $expanded ? "rotate(90deg)" : "rotate(-90deg)"};
-  transform-origin: center center;
-`;
-
 export type AuthorSidebarProps = {
   imagesPanel: ReactNode;
   noLoader: boolean;
@@ -311,7 +301,7 @@ export function AuthorView(props: AuthorViewProps) {
         aria-expanded={expanded}
         onClick={() => setExpanded((open) => !open)}
       >
-        <ExpandChevron $expanded={expanded} aria-hidden />
+        <ChevronIcon direction={expanded ? "left" : "right"} />
       </SidebarExpandControl>
       <AuthorViewerRegion>{props.viewer}</AuthorViewerRegion>
     </AuthorViewport>

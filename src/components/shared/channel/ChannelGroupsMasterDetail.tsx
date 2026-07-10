@@ -9,8 +9,14 @@ import {
 } from "@/components/shared/channel/ChannelContrastEditor";
 import { ChannelRow, rgbToHex } from "@/components/shared/channel/ChannelRow";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
+import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
-import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
+import { CompactHeader } from "@/components/shared/panel/CompactHeader";
+import {
+  PanelActionButton,
+  PanelIconButton,
+} from "@/components/shared/panel/PanelButtons";
+import chrome from "@/components/shared/panel/panelChrome.module.css";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import {
   buildCompositedIntensityLayers,
@@ -834,14 +840,7 @@ export const ChannelGroupsMasterDetail = (
             title={expanded ? "Collapse group" : "Expand group"}
             onClick={() => toggleGroupExpanded(group.id)}
           >
-            <ChevronDownIcon
-              className={
-                expanded
-                  ? styles.waypointChevronDown
-                  : styles.waypointChevronRight
-              }
-              aria-hidden
-            />
+            <ChevronIcon direction={expanded ? "down" : "right"} />
           </button>
           <ChannelVisibilitySwatch
             visible={masterVisible}
@@ -874,7 +873,7 @@ export const ChannelGroupsMasterDetail = (
             {psudoEligible ? (
               <button
                 type="button"
-                className={styles.headerButton}
+                className={chrome.headerButton}
                 disabled={optimizePaletteBusy}
                 title="Optimize colors in this group"
                 onClick={() => void runOptimizePaletteForGroup(group.id)}
@@ -882,14 +881,12 @@ export const ChannelGroupsMasterDetail = (
                 Optimize
               </button>
             ) : null}
-            <button
-              type="button"
-              className={styles.iconHeaderButton}
+            <PanelIconButton
               title="Delete group"
               onClick={() => deleteGroup(group.id)}
             >
               <TrashIcon title="Delete group" />
-            </button>
+            </PanelIconButton>
           </div>
         </div>
         {expanded ? (
@@ -1356,22 +1353,18 @@ export const ChannelGroupsMasterDetail = (
 
   return (
     <div className={[styles.panel, styles.black].join(" ")}>
-      <div className={styles.compactHeader}>
-        <div className={styles.headerTitle}>
-          <span className={styles.headerCount}>Channels</span>
-        </div>
-        <div className={styles.headerActions}>
-          <button
-            type="button"
-            className={styles.headerActionButton}
+      <CompactHeader
+        title="Channels"
+        actions={
+          <PanelActionButton
             onClick={createGroup}
             title="Add group"
             aria-label="Add group"
           >
             Add group
-          </button>
-        </div>
-      </div>
+          </PanelActionButton>
+        }
+      />
 
       {optimizePaletteMessage ? (
         <output className={styles.optimizePaletteMessage}>
@@ -1379,7 +1372,7 @@ export const ChannelGroupsMasterDetail = (
         </output>
       ) : null}
 
-      <div className={styles.treeScroll}>
+      <div className={[styles.treeScroll, chrome.thinScrollbar].join(" ")}>
         {channelGroups.length > 0 ? (
           <div className={styles.groupFolders}>
             {channelGroups.map(renderGroupFolder)}

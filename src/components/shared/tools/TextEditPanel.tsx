@@ -1,158 +1,117 @@
 import type { FC } from "react";
+import styles from "./TextEditPanel.module.css";
 
 export interface TextEditPanelProps {
   title: string;
   textValue: string;
-  fontSize: number;
   onTextChange: (text: string) => void;
-  onFontSizeChange: (fontSize: number) => void;
   onSubmit: () => void;
   onCancel: () => void;
   submitButtonText: string;
   /** Allow empty text (for removing labels from shapes). */
   allowEmpty?: boolean;
+  /** Show font-size field (default true). */
+  showFontSize?: boolean;
+  fontSize?: number;
+  onFontSizeChange?: (fontSize: number) => void;
+  /** Use a single-line input instead of textarea (e.g. rename). */
+  singleLine?: boolean;
+  placeholder?: string;
 }
 
 export const TextEditPanel: FC<TextEditPanelProps> = ({
   title,
   textValue,
-  fontSize,
+  fontSize = 14,
   onTextChange,
   onFontSizeChange,
   onSubmit,
   onCancel,
   submitButtonText,
   allowEmpty = false,
+  showFontSize = true,
+  singleLine = false,
+  placeholder = "Enter your text here...",
 }) => {
+  const canSubmit = allowEmpty || !!textValue?.trim();
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        backgroundColor: "#2c2c2c",
-        border: "2px solid #444",
-        borderRadius: "8px",
-        padding: "20px",
-        zIndex: 1000,
-        minWidth: "300px",
-        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.5)",
-      }}
-    >
-      <div
-        style={{
-          marginBottom: "15px",
-          color: "white",
-          fontSize: "16px",
-          fontWeight: "bold",
-        }}
-      >
-        {title}
-      </div>
+    <div className={styles.panel}>
+      <div className={styles.title}>{title}</div>
 
-      <div style={{ marginBottom: "15px" }}>
-        <label
-          htmlFor="fontSizeInput"
-          style={{
-            color: "white",
-            fontSize: "14px",
-            marginBottom: "5px",
-            display: "block",
-          }}
-        >
-          Font Size:
-        </label>
+      {showFontSize ? (
+        <div className={styles.field}>
+          <label htmlFor="fontSizeInput" className={styles.label}>
+            Font Size:
+          </label>
+          <input
+            aria-label="Font Size"
+            id="fontSizeInput"
+            type="number"
+            value={fontSize}
+            onChange={(e) =>
+              onFontSizeChange?.(parseInt(e.target.value, 10) || 14)
+            }
+            min="8"
+            max="72"
+            className={styles.numberInput}
+          />
+        </div>
+      ) : null}
+
+      {singleLine ? (
         <input
-          aria-label="Font Size"
-          id="fontSizeInput"
-          type="number"
-          value={fontSize}
-          onChange={(e) => onFontSizeChange(parseInt(e.target.value, 10) || 14)}
-          min="8"
-          max="72"
-          style={{
-            width: "80px",
-            padding: "5px",
-            border: "1px solid #555",
-            borderRadius: "4px",
-            backgroundColor: "#1a1a1a",
-            color: "white",
-            fontSize: "14px",
-            outline: "none",
+          type="text"
+          value={textValue}
+          onChange={(e) => onTextChange(e.target.value)}
+          placeholder={placeholder}
+          className={styles.textInput}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              onSubmit();
+            } else if (e.key === "Escape") {
+              onCancel();
+            }
           }}
         />
-      </div>
+      ) : (
+        <textarea
+          value={textValue}
+          onChange={(e) => onTextChange(e.target.value)}
+          placeholder={placeholder}
+          className={styles.textarea}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && e.ctrlKey) {
+              onSubmit();
+            } else if (e.key === "Escape") {
+              onCancel();
+            }
+          }}
+        />
+      )}
 
-      <textarea
-        value={textValue}
-        onChange={(e) => onTextChange(e.target.value)}
-        placeholder="Enter your text here..."
-        style={{
-          width: "100%",
-          minHeight: "80px",
-          padding: "10px",
-          border: "1px solid #555",
-          borderRadius: "4px",
-          backgroundColor: "#1a1a1a",
-          color: "white",
-          fontSize: "14px",
-          fontFamily: "Arial, sans-serif",
-          resize: "vertical",
-          outline: "none",
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && e.ctrlKey) {
-            onSubmit();
-          } else if (e.key === "Escape") {
-            onCancel();
-          }
-        }}
-      />
-
-      <div
-        style={{
-          marginTop: "15px",
-          display: "flex",
-          gap: "10px",
-          justifyContent: "flex-end",
-        }}
-      >
+      <div className={styles.actions}>
         <button
           type="button"
           onClick={onCancel}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: "#555",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontSize: "14px",
-          }}
+          className={styles.buttonCancel}
         >
           Cancel
         </button>
         <button
           type="button"
           onClick={onSubmit}
-          disabled={!allowEmpty && !textValue?.trim()}
-          style={{
-            padding: "8px 16px",
-            backgroundColor:
-              allowEmpty || textValue?.trim() ? "#4CAF50" : "#666",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: allowEmpty || textValue?.trim() ? "pointer" : "not-allowed",
-            fontSize: "14px",
-          }}
+          disabled={!canSubmit}
+          className={
+            canSubmit ? styles.buttonSubmit : styles.buttonSubmitDisabled
+          }
         >
           {submitButtonText}
         </button>
       </div>
-      <div style={{ marginTop: "10px", fontSize: "12px", color: "#999" }}>
-        Press Ctrl+Enter to submit, Escape to cancel
+      <div className={styles.hint}>
+        {singleLine
+          ? "Press Enter to submit, Escape to cancel"
+          : "Press Ctrl+Enter to submit, Escape to cancel"}
       </div>
     </div>
   );
