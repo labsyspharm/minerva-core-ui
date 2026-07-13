@@ -285,10 +285,17 @@ const readWriteHydrate = { mode: "readwrite" } as const;
 
 async function hydrateFilePermission(handle: Handle.File): Promise<boolean> {
   const ok = (p: PermissionState) => p === "granted";
-  return (
-    ok(await handle.queryPermission(readWriteHydrate)) ||
-    ok(await handle.requestPermission(readWriteHydrate))
-  );
+  try {
+    if (ok(await handle.queryPermission(readWriteHydrate))) return true;
+  } catch {
+    return false;
+  }
+  try {
+    // Requires a transient user activation; auto-hydrate on refresh has none.
+    return ok(await handle.requestPermission(readWriteHydrate));
+  } catch {
+    return false;
+  }
 }
 
 /** Rebuild Viv / DICOM loaders from persisted image rows (after Dexie load / refresh). */
@@ -574,6 +581,14 @@ const Content = (props: Props) => {
     if (!hasDirectoryPickerAccess()) {
       window.alert(
         "Export to a folder needs the File System Access API (directory picker). Try Chrome or Edge, or use “OME-TIFF URL” workflows in other browsers.",
+      );
+      return;
+    }
+    const groups = useDocumentStore.getState().channelGroups;
+    const hasChannels = groups.some((g) => g.channels.length > 0);
+    if (groups.length === 0 || !hasChannels) {
+      window.alert(
+        "Add a channel group with at least one channel before exporting a JPEG pyramid.",
       );
       return;
     }
