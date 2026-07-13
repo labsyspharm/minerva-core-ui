@@ -15,6 +15,7 @@ const toAuthorElement = (name, opts) => {
   if (name === "channel-item") {
     const {
       setGroupChannelRange,
+      setSourceChannelRange,
       setChannelRendering,
       clearChannelRendering,
       clearContrastPreviewIfOwnedBy,
@@ -32,6 +33,7 @@ const toAuthorElement = (name, opts) => {
           ItemRegistry,
           {
             setGroupChannelRange,
+            setSourceChannelRange,
             setChannelRendering,
             clearChannelRendering,
             clearContrastPreviewIfOwnedBy,

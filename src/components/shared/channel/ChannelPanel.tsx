@@ -44,9 +44,10 @@ export type ChannelPanelProps = {
    */
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
   /**
-   * OME-TIFF only: fit psudo GMM contrast limits for these source-channel ids
-   * and apply them to matching group-channel rows. Returns the fitted limits
-   * by channel id so callers (add-channel) can use the values immediately.
+   * OME-TIFF only: fit contrast limits for these source-channel ids via
+   * `psudo.channel_gmm` (see `autoContrast.ts`) and apply them to matching
+   * group-channel rows. Returns the fitted limits by channel id so callers
+   * (add-channel) can use the values immediately.
    */
   ensureChannelGmmContrastLimits?: (
     channelIds: string[],

@@ -19,6 +19,9 @@ export function buildImageViewerSignature(
     k: sc.kind,
     lr: sc.lowerLimit,
     ur: sc.upperLimit,
+    // Stack / ungrouped layers read `effectiveSourceLimits` → gmmContrastLimits.
+    glr: sc.gmmContrastLimits?.lower,
+    gur: sc.gmmContrastLimits?.upper,
     rgb: sc.color ? [sc.color.r, sc.color.g, sc.color.b] : undefined,
     mv: sc.maskVisualization,
   }));

@@ -136,6 +136,7 @@ function makeGroupChannelRow(
   slotIndex: number,
   sourceChannels: Channel[],
 ): ChannelGroupChannel {
+  // Prefer fitted auto-contrast (`gmmContrastLimits`) over import seed limits.
   const [srcLo, srcHi] = effectiveSourceLimits(sc);
   const idx = sourceChannels.findIndex((c) => c.id === sc.id);
   const srcColor = effectiveSourceColor(sc, idx >= 0 ? idx : 0, sourceChannels);
@@ -145,8 +146,8 @@ function makeGroupChannelRow(
   const isMask = isMaskChannel(sc);
   return {
     id: crypto.randomUUID(),
-    lowerLimit: sc.lowerLimit ?? srcLo,
-    upperLimit: sc.upperLimit ?? srcHi,
+    lowerLimit: srcLo,
+    upperLimit: srcHi,
     color: sc.color ?? seed ?? srcColor,
     channelId: sc.id,
     ...(isMask
@@ -254,6 +255,9 @@ export const ChannelGroupsMasterDetail = (
   const [optimizePaletteMessage, setOptimizePaletteMessage] = React.useState<
     string | null
   >(null);
+  const [refittingContrastIds, setRefittingContrastIds] = React.useState(
+    () => new Set<string>(),
+  );
   const [dragOverGroupId, setDragOverGroupId] = React.useState<string | null>(
     null,
   );
@@ -319,15 +323,38 @@ export const ChannelGroupsMasterDetail = (
     [setImages, setGroupChannelLists],
   );
 
-  const createGroup = () => {
+  const createGroup = async () => {
     const seedingFirst = channelGroups.length === 0;
     const toSeed = seedingFirst
       ? uniqueSourceChannels.filter((sc) =>
           isStackVisible(channelVisibilities, sc.id),
         )
       : [];
+
+    // First group is seeded from the currently visible stack channels — ensure
+    // auto-contrast has run so we don't bake in import-default limits.
+    if (seedingFirst && toSeed.length > 0 && ensureChannelGmmContrastLimits) {
+      const needFit = toSeed.filter(
+        (sc) => !isMaskChannel(sc) && !sc.gmmContrastLimits,
+      );
+      if (needFit.length > 0) {
+        try {
+          await ensureChannelGmmContrastLimits(needFit.map((sc) => sc.id));
+        } catch {
+          /* ignore — fall back to whatever limits are on the source */
+        }
+      }
+    }
+
+    const sourcesNow = flattenImageChannelsInDocumentOrder(
+      useDocumentStore.getState().images,
+    );
     const seededChannels = seedingFirst
-      ? toSeed.map((sc, i) => makeGroupChannelRow(sc, i, sourceChannels))
+      ? toSeed.map((sc) => {
+          const fresh = sourcesNow.find((c) => c.id === sc.id) ?? sc;
+          const i = toSeed.findIndex((s) => s.id === sc.id);
+          return makeGroupChannelRow(fresh, i, sourcesNow);
+        })
       : [];
     const newGroup: ChannelGroup = {
       id: crypto.randomUUID(),
@@ -340,7 +367,7 @@ export const ChannelGroupsMasterDetail = (
     if (seedingFirst && seededChannels.length > 0) {
       const stackOff = { ...useAppStore.getState().channelVisibilities };
       for (const gc of seededChannels) {
-        const sc = findSourceChannel(sourceChannels, gc.channelId);
+        const sc = findSourceChannel(sourcesNow, gc.channelId);
         if (sc) stackOff[sc.id] = false;
       }
       setChannelVisibilities(stackOff);
@@ -388,6 +415,60 @@ export const ChannelGroupsMasterDetail = (
   };
 
   const { ensureChannelGmmContrastLimits, ensureChannelHistograms } = props;
+
+  const refitAutoContrast = React.useCallback(
+    async (sourceChannelId: string) => {
+      if (!ensureChannelGmmContrastLimits) return;
+      const sc = sourceChannels.find((c) => c.id === sourceChannelId);
+      if (!sc || isMaskChannel(sc) || isRgbDisplayChannel(sc, sourceChannels)) {
+        return;
+      }
+      setRefittingContrastIds((prev) => {
+        const next = new Set(prev);
+        next.add(sourceChannelId);
+        return next;
+      });
+      useAppStore.getState().clearChannelRendering();
+      try {
+        await ensureChannelGmmContrastLimits([sourceChannelId], {
+          overwriteExistingLimits: true,
+        });
+      } catch {
+        /* ignore — keep prior limits */
+      } finally {
+        setRefittingContrastIds((prev) => {
+          const next = new Set(prev);
+          next.delete(sourceChannelId);
+          return next;
+        });
+      }
+    },
+    [ensureChannelGmmContrastLimits, sourceChannels],
+  );
+
+  const autoContrastActionButton = (sc: Channel | undefined, name: string) => {
+    if (
+      !sc ||
+      !ensureChannelGmmContrastLimits ||
+      isMaskChannel(sc) ||
+      isRgbDisplayChannel(sc, sourceChannels)
+    ) {
+      return null;
+    }
+    const busy = refittingContrastIds.has(sc.id);
+    return (
+      <button
+        type="button"
+        className={styles.channelActionButton}
+        disabled={busy}
+        title="Re-fit contrast with psudo GMM (resets manual limits)"
+        aria-label={`Re-fit GMM contrast for ${name}`}
+        onClick={() => void refitAutoContrast(sc.id)}
+      >
+        {busy ? "…" : "Fit"}
+      </button>
+    );
+  };
 
   const addChannelToGroup = React.useCallback(
     async (groupId: string, sourceChannelUUID: string) => {
@@ -940,17 +1021,23 @@ export const ChannelGroupsMasterDetail = (
                           }
                           imageSubtitle={imageSubtitle}
                           trailing={
-                            <button
-                              type="button"
-                              className={styles.channelActionButton}
-                              title="Remove from group"
-                              aria-label={`Remove ${name} from group`}
-                              onClick={() =>
-                                removeChannelFromGroup(group.id, gc.id)
-                              }
-                            >
-                              <TrashIcon title="Remove from group" size={12} />
-                            </button>
+                            <div className={styles.channelActionCluster}>
+                              {autoContrastActionButton(sc, name)}
+                              <button
+                                type="button"
+                                className={styles.channelActionButton}
+                                title="Remove from group"
+                                aria-label={`Remove ${name} from group`}
+                                onClick={() =>
+                                  removeChannelFromGroup(group.id, gc.id)
+                                }
+                              >
+                                <TrashIcon
+                                  title="Remove from group"
+                                  size={12}
+                                />
+                              </button>
+                            </div>
                           }
                         />
                       ) : (
@@ -1018,17 +1105,25 @@ export const ChannelGroupsMasterDetail = (
                                 },
                               })}
                           trailing={
-                            <button
-                              type="button"
-                              className={styles.channelActionButton}
-                              title="Remove from group"
-                              aria-label={`Remove ${name} from group`}
-                              onClick={() =>
-                                removeChannelFromGroup(group.id, gc.id)
-                              }
-                            >
-                              <TrashIcon title="Remove from group" size={12} />
-                            </button>
+                            <div className={styles.channelActionCluster}>
+                              {kind === "mask"
+                                ? null
+                                : autoContrastActionButton(sc, name)}
+                              <button
+                                type="button"
+                                className={styles.channelActionButton}
+                                title="Remove from group"
+                                aria-label={`Remove ${name} from group`}
+                                onClick={() =>
+                                  removeChannelFromGroup(group.id, gc.id)
+                                }
+                              >
+                                <TrashIcon
+                                  title="Remove from group"
+                                  size={12}
+                                />
+                              </button>
+                            </div>
                           }
                         />
                       )}
@@ -1297,6 +1392,7 @@ export const ChannelGroupsMasterDetail = (
                       setColorPickerPos(chromeColorPickerAnchorPosition(rect));
                     },
                   })}
+              trailing={autoContrastActionButton(sc, sc.name)}
             />
           )}
         </div>

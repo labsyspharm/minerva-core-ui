@@ -38,6 +38,7 @@ import {
   type ContrastLimits,
   clearOmeGmmContrastCache,
   ensureOmeGmmContrastLimits,
+  invalidateOmeGmmContrastCache,
   looksLikeImportDefaultLimits,
   mergeGmmContrastLimitsIntoSourceChannelsByChannelId,
 } from "@/lib/imaging/autoContrast";
@@ -109,6 +110,7 @@ import {
 import {
   applyGroupChannelRange,
   applyLoaderPixelSizeToImage,
+  applySourceChannelRange,
   applySourceChannelsToImages,
   configWaypointsHaveLegacyArrowsOrOverlays,
   dedupeImagesForImport,
@@ -1414,6 +1416,25 @@ const Content = (props: Props) => {
     [],
   );
 
+  const setSourceChannelRange = React.useCallback(
+    (payload: {
+      sourceChannelId: string;
+      LowerRange: number;
+      UpperRange: number;
+    }) => {
+      const doc = useDocumentStore.getState();
+      doc.setImages(
+        applySourceChannelRange(
+          doc.images,
+          payload.sourceChannelId,
+          payload.LowerRange,
+          payload.UpperRange,
+        ),
+      );
+    },
+    [],
+  );
+
   const clearContrastPreviewIfOwnedBy = React.useCallback(
     (sourceChannelId: string) => {
       const { channelRendering, clearChannelRendering } =
@@ -1432,6 +1453,7 @@ const Content = (props: Props) => {
     return toAuthorElement("channel-item", {
       ID: crypto.randomUUID(),
       setGroupChannelRange,
+      setSourceChannelRange,
       setChannelRendering: (rendering: ChannelRendering) => {
         useAppStore.getState().setChannelRendering(rendering);
       },
@@ -1445,6 +1467,7 @@ const Content = (props: Props) => {
     clearContrastPreviewIfOwnedBy,
     getSourceDistribution,
     setGroupChannelRange,
+    setSourceChannelRange,
   ]);
 
   const [valid, setValid] = useState({} as ValidObj);
@@ -1787,6 +1810,9 @@ const Content = (props: Props) => {
           const loader = loaderByImageId.get(imageId);
           if (!loader) continue;
           const uniqueIdx = [...new Set(plist.map((p) => p.index))];
+          if (overwrite) {
+            invalidateOmeGmmContrastCache(imageKey, imageId, uniqueIdx);
+          }
           const map = await ensureOmeGmmContrastLimits(
             loader,
             imageKey,
@@ -1853,7 +1879,6 @@ const Content = (props: Props) => {
   React.useEffect(() => {
     if (!viewerImageKey || omeLoaderEntries.length === 0) return;
     if (lastEagerGmmKeyRef.current === viewerImageKey) return;
-    lastEagerGmmKeyRef.current = viewerImageKey;
     const doc = useDocumentStore.getState();
     const scs = documentSourceChannels(doc);
     const loaderImageIds = new Set(
@@ -1868,6 +1893,9 @@ const Content = (props: Props) => {
           !sc.gmmContrastLimits,
       )
       .map((sc) => sc.id);
+    // Only mark this image as handled once there are channels to fit (or none needed).
+    if (scs.length === 0) return;
+    lastEagerGmmKeyRef.current = viewerImageKey;
     if (ids.length === 0) return;
     void onEnsureChannelGmmContrastLimits(ids).catch((e) => {
       if (import.meta.env.DEV) {
@@ -2023,6 +2051,8 @@ const Content = (props: Props) => {
         return ({ mainSettings }) => {
           const selections = mainSettings.selections || [];
           const selectionId = selections.map(({ c }) => c).join("-");
+          // Keep id stable across contrast/color tweaks so Viv updates props
+          // in place (live drag). Selection changes still remount the layer.
           return new MultiscaleImageLayer({
             id: `mainLayer-${i}-${selectionId}`,
             ...mainSettings,

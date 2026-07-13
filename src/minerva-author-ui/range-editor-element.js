@@ -10,6 +10,7 @@ const toRangeEditor = (ItemRegistry, channelActions, elements) => {
   const rangeInputElement = elements["range-slider"];
   const {
     setGroupChannelRange,
+    setSourceChannelRange,
     setChannelRendering,
     clearChannelRendering,
     clearContrastPreviewIfOwnedBy,
@@ -177,12 +178,23 @@ const toRangeEditor = (ItemRegistry, channelActions, elements) => {
     _commitRange(lower, upper) {
       const groupUuid = this.getAttribute("group_uuid") ?? "";
       const channelUuid = this.getAttribute("channel_uuid") ?? "";
+      const sourceUuid =
+        this.getAttribute("source_uuid") ||
+        this.getAttribute("channel_uuid") ||
+        "";
       if (groupUuid && channelUuid) {
         setGroupChannelRange({
           LowerRange: lower,
           UpperRange: upper,
           group_uuid: groupUuid,
           channel_uuid: channelUuid,
+        });
+      } else if (sourceUuid && typeof setSourceChannelRange === "function") {
+        // All Channels / ungrouped stack rows have no group_uuid.
+        setSourceChannelRange({
+          sourceChannelId: sourceUuid,
+          LowerRange: lower,
+          UpperRange: upper,
         });
       }
       clearChannelRendering();

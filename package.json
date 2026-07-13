@@ -95,7 +95,7 @@
     "openseadragon": "^4.1.1",
     "polygon-clipping": "^0.15.7",
     "prop-types": "^15.8.1",
-    "psudo": "0.4.1",
+    "psudo": "0.4.2",
     "prosemirror-commands": "^1.5.2",
     "prosemirror-history": "^1.4.1",
     "prosemirror-keymap": "^1.2.2",

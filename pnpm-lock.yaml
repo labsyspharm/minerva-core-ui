@@ -246,8 +246,8 @@ importers:
         specifier: ^1.33.9
         version: 1.40.0
       psudo:
-        specifier: 0.4.1
-        version: 0.4.1
+        specifier: 0.4.2
+        version: 0.4.2
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -3760,8 +3760,8 @@ packages:
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
 
-  psudo@0.4.1:
-    resolution: {integrity: sha512-Joe29V/JfmfWV5sq7BFkvphSgxsvYkiDPKL0G6ndwdcHGnJ+h1DWO5MAvvwSUGJjAw7bpEutYAFdCR98Mm/1sg==}
+  psudo@0.4.2:
+    resolution: {integrity: sha512-X8G/JxZkh9YpmmoM7oFdTC1l4we1kG9AAJwJaOWu+5Mft8jctoxffenjYFs1PNrlX471cdCWHjDjZa3hfo8FYQ==}
 
   punycode.js@2.3.1:
     resolution: {integrity: sha512-uxFIHU0YlHYhDQtV4R9J6a52SLx28BCjT+4ieh7IGbgwVJWO+km431c4yRlREUAsAmt/uMjQUyQHNEPf0M39CA==}
@@ -8708,7 +8708,7 @@ snapshots:
 
   proxy-from-env@1.1.0: {}
 
-  psudo@0.4.1: {}
+  psudo@0.4.2: {}
 
   punycode.js@2.3.1: {}
 
