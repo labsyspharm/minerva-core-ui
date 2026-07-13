@@ -33,6 +33,7 @@ const _ImageDiv = styled.div`
 `;
 
 const ModeViewport = styled.div`
+  position: relative;
   height: 100%;
   min-height: 0;
   animation: modeViewportIn 0.2s ease-out;
@@ -48,38 +49,53 @@ const ModeViewport = styled.div`
   }
 `;
 
+/** Keep Deck mounted under export UI so WebGL layer state is not destroyed. */
+const AuthorViewport = styled.div<{ $hidden: boolean }>`
+  height: 100%;
+  min-height: 0;
+  visibility: ${(p) => (p.$hidden ? "hidden" : "visible")};
+  pointer-events: ${(p) => (p.$hidden ? "none" : "auto")};
+`;
+
+const ExportOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+`;
+
 export const PlaybackRouter = (props: PlaybackRouterProps) => {
-  let out = <></>;
   if (props.presenting) {
-    out = (
-      <Presentation {...props}>
-        <ChannelPanel {...props}>{props.children}</ChannelPanel>
-      </Presentation>
+    return (
+      <ModeViewport key="presenting" data-mode="presenting">
+        <Presentation {...props}>
+          <ChannelPanel {...props}>{props.children}</ChannelPanel>
+        </Presentation>
+      </ModeViewport>
     );
-  } else if (props.ioState === "IDLE") {
-    out = <ChannelPanel {...props}>{props.children}</ChannelPanel>;
-  } else if (props.ioState === "EXPORTING") {
-    const exporterProps = {
-      in_f: props.in_f,
-      groups: props.groups,
-      handles: props.handles,
-      stopExport: props.stopExport,
-      viewerConfig: props.viewerConfig,
-      dicomIndexList: props.dicomIndexList,
-      omeLoaderEntries: props.omeLoaderEntries,
-      directory_handle: props.directory_handle,
-    };
-    out = <ImageExporter {...exporterProps} />;
   }
-  const modeKey = props.presenting
-    ? "presenting"
-    : props.ioState === "IDLE"
-      ? "author"
-      : "other";
+
+  const exporting = props.ioState === "EXPORTING";
+  const exporterProps = {
+    in_f: props.in_f,
+    groups: props.groups,
+    handles: props.handles,
+    stopExport: props.stopExport,
+    viewerConfig: props.viewerConfig,
+    dicomIndexList: props.dicomIndexList,
+    omeLoaderEntries: props.omeLoaderEntries,
+    directory_handle: props.directory_handle,
+  };
 
   return (
-    <ModeViewport key={modeKey} data-mode={modeKey}>
-      {out}
+    <ModeViewport key="author" data-mode={exporting ? "exporting" : "author"}>
+      <AuthorViewport $hidden={exporting}>
+        <ChannelPanel {...props}>{props.children}</ChannelPanel>
+      </AuthorViewport>
+      {exporting ? (
+        <ExportOverlay>
+          <ImageExporter {...exporterProps} />
+        </ExportOverlay>
+      ) : null}
     </ModeViewport>
   );
 };
