@@ -447,7 +447,7 @@ const extractChannels: ExtractChannels = (
       const new_group_uuid = crypto.randomUUID();
       const new_group: ChannelGroup = {
         id: new_group_uuid,
-        expanded: false,
+        expanded: ChannelGroups.length === 0,
         name: g.Name,
         channels: g.Channels.reduce(
           (new_group_channels, name, index) => {

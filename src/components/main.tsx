@@ -1895,6 +1895,12 @@ const Content = (props: Props) => {
     if (!viewerImageKey || omeLoaderEntries.length === 0) return;
     if (lastEagerGmmKeyRef.current === viewerImageKey) return;
     const doc = useDocumentStore.getState();
+    // Existing channel groups already carry contrast limits — only eager-fit
+    // when there are no groups yet (or first group creation will fit).
+    if (doc.channelGroups.length > 0) {
+      lastEagerGmmKeyRef.current = viewerImageKey;
+      return;
+    }
     const scs = documentSourceChannels(doc);
     const loaderImageIds = new Set(
       omeLoaderEntries.map((e) => e.sourceImageId),

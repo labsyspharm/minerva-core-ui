@@ -246,14 +246,20 @@
 }
 
 .headerButton {
+  box-sizing: border-box;
+  height: 30px;
   background: none;
   border: 1px solid #444;
   color: #ccc;
-  padding: 4px 8px;
+  padding: 0 8px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 .headerButton:hover:not(:disabled) {
@@ -267,6 +273,7 @@
 }
 
 .iconHeaderButton {
+  box-sizing: border-box;
   width: 30px;
   height: 30px;
   padding: 0;
