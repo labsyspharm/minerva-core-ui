@@ -546,6 +546,7 @@ const Content = (props: Props) => {
 
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
+  const [viewerRemountKey, setViewerRemountKey] = useState(0);
   const [directory_handle, setDirectoryHandle] = useState(
     null as Handle.Dir | null,
   );
@@ -596,7 +597,11 @@ const Content = (props: Props) => {
     setDirectoryHandle(dirHandle);
     setIoState("EXPORTING");
   };
-  const stopExport = () => setIoState("IDLE");
+  const stopExport = () => {
+    setIoState("IDLE");
+    // Recreate Viv/deck layers in case GL state was disturbed during export.
+    setViewerRemountKey((k) => k + 1);
+  };
   const toggleEditor = () => setEditable(!editable);
 
   const setHiddenChannelWithLogic = (v: boolean) => {
@@ -2057,7 +2062,7 @@ const Content = (props: Props) => {
         const { series, pyramids, loader, modality } = dicomSource;
         const rgbImage = modality === "Brightfield";
         // Use deterministic ID based on series to prevent layer recreation on settings change
-        const imageID = `dicom-${series}-${i}`;
+        const imageID = `dicom-${series}-${i}-r${viewerRemountKey}`;
         return ({ mainSettings }) => {
           return createTileLayers({
             pyramids,
@@ -2074,8 +2079,9 @@ const Content = (props: Props) => {
           const selectionId = selections.map(({ c }) => c).join("-");
           // Keep id stable across contrast/color tweaks so Viv updates props
           // in place (live drag). Selection changes still remount the layer.
+          // viewerRemountKey forces new layer instances after JPEG export.
           return new MultiscaleImageLayer({
-            id: `mainLayer-${i}-${selectionId}`,
+            id: `mainLayer-${i}-${selectionId}-r${viewerRemountKey}`,
             ...mainSettings,
             loader: loader.data,
           });
@@ -2091,7 +2097,7 @@ const Content = (props: Props) => {
           });
       }),
     );
-  }, [dicomIndexList, omeLoaderEntries, jpegLoaderEntries]);
+  }, [dicomIndexList, omeLoaderEntries, jpegLoaderEntries, viewerRemountKey]);
   const imageLayers = useMemo(() => {
     return layerFunctions.map((fn, i) =>
       fn({
@@ -2497,6 +2503,7 @@ const Content = (props: Props) => {
           <Full>
             <PlaybackRouter {...mainPropsWithHandle}>
               <ImageViewer
+                key={viewerRemountKey}
                 {...imageProps}
                 viewerConfig={viewerConfig}
                 overlayLayers={overlayLayers}
