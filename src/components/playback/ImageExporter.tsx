@@ -10,6 +10,10 @@ import type {
 } from "@/components/shared/viewer/ImageViewer";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import { toLoader } from "@/lib/imaging/filesystem";
+import {
+  encodeTileJpeg,
+  jpegExportConcurrency,
+} from "@/lib/imaging/jpegExportPool";
 import type { Config } from "@/lib/imaging/viv";
 import type { PoolClass } from "@/lib/imaging/workers/Pool";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -41,36 +45,17 @@ type InitIn = {
   loader: LoaderPlane[];
   cRange: Index[];
 };
-type CommonIn = {
-  loader: LoaderPlane[];
-  directory_handle: FileSystemDirectoryHandle;
-  index: Index;
-};
 
-type SaveIn = CommonIn & {
-  step: number;
-};
-type Save = (i: SaveIn) => Promise<void>;
 type ToSaveDirectory = (
   d: FileSystemDirectoryHandle,
   s: string,
 ) => Promise<FileSystemDirectoryHandle>;
 
-type StepIn = CommonIn & {
-  stepSignal: StepOut;
-  next: number;
-};
-type StepOut = {
-  step: number;
+type Progress = {
+  completed: number;
+  total: number;
   done: boolean;
 };
-type DoStep = (o: StepIn) => Promise<StepOut | null>;
-
-type CaptureOut = {
-  output: Uint8Array<ArrayBuffer>;
-  filename: string;
-};
-type Capture = (i: Index, loader: LoaderPlane[]) => Promise<CaptureOut>;
 
 const toSettingsInternal = (
   loader,
@@ -108,28 +93,15 @@ const toFilename = (index: Index) => {
   return `${level}_${x}_${y}.jpg`;
 };
 
-const clampValue = (x, min, max) => {
-  return Math.min(255, Math.max(0, (255 * (x - min)) / (max - min)));
-};
-
-const clampArray = (imageData, tile_u16, min, max) => {
-  var _tile_u8 = new Uint8Array(tile_u16.length);
-  for (let i = 0; i < tile_u16.length; i++) {
-    const clamped = clampValue(tile_u16[i], min, max);
-    imageData.data[i * 4] = clamped;
-    imageData.data[i * 4 + 1] = clamped;
-    imageData.data[i * 4 + 2] = clamped;
-    imageData.data[i * 4 + 3] = 255; // Alpha
-  }
-  return imageData;
-};
-
-const capture: Capture = async (index, loader) => {
+const exportTile = async (
+  index: Index,
+  loader: LoaderPlane[],
+  signal: AbortSignal,
+) => {
   const filename = toFilename(index);
   const level = Math.abs(index.z);
   const z_loader = loader[level];
   const selection = { t: 0, z: 0, c: index.c };
-  const signal = AbortSignal.timeout(30 * 1000);
   const { x, y } = index;
   const tile = await z_loader.getTile({
     selection,
@@ -137,27 +109,24 @@ const capture: Capture = async (index, loader) => {
     y,
     signal,
   });
+  if (signal.aborted) return;
   const { width, height, data } = tile;
-
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  const imageData = clampArray(
-    ctx.createImageData(width, height),
-    data,
-    index.lowerLimit,
-    index.upperLimit,
-  );
-  canvas.width = width;
-  canvas.height = height;
-  ctx.putImageData(imageData, 0, 0);
-
-  const blob = await new Promise((r: BlobCallback) => {
-    canvas.toBlob(r, "image/jpeg", 0.5);
+  const jpeg = await encodeTileJpeg({
+    width,
+    height,
+    data: data as ArrayLike<number> & {
+      buffer: ArrayBufferLike;
+      byteOffset: number;
+      byteLength: number;
+    },
+    lowerLimit: index.lowerLimit,
+    upperLimit: index.upperLimit,
   });
-
-  const buff = await blob.arrayBuffer();
-  const output = new Uint8Array(buff);
-  return { output, filename };
+  if (signal.aborted) return;
+  const fh = await index.dh.getFileHandle(filename, { create: true });
+  const write = await fh.createWritable();
+  await write.write(jpeg);
+  await write.close();
 };
 
 const toSaveDirectory: ToSaveDirectory = async (directory_handle, encoded) => {
@@ -176,78 +145,45 @@ const createCRange = async (
   imageChannels,
   directory_handle,
 ) => {
-  setCRange(
-    await Promise.all(
-      ([] as Index[]).concat(
-        ...channelGroups.map(({ channels }) => {
-          return ([] as Index[]).concat(
-            ...channels
-              .map(async ({ channelId, lowerLimit, upperLimit }) => {
-                const c = imageChannels[channelId];
-                if (c === undefined) {
-                  return null;
-                }
-                const opts = { channelId, lowerLimit, upperLimit };
-                const encoded = hash(opts);
-                const dh = await toSaveDirectory(directory_handle, encoded);
-                const fh = await dh.getFileHandle("settings.json", {
-                  create: true,
-                });
-                const write = await fh.createWritable();
-                await write.write(
-                  JSON.stringify(
-                    {
-                      channel: c,
-                      lowerLimit,
-                      upperLimit,
-                    },
-                    null,
-                    2,
-                  ),
-                );
-                await write.close();
-                return {
-                  z: 0,
-                  x: 0,
-                  y: 0,
-                  c,
-                  dh,
-                  encoded,
-                  lowerLimit,
-                  upperLimit,
-                };
-              })
-              .filter((v) => v),
-          );
-        }),
-      ),
-    ),
+  const pending = channelGroups.flatMap(({ channels }) =>
+    channels.map(async ({ channelId, lowerLimit, upperLimit }) => {
+      const c = imageChannels[channelId];
+      if (c === undefined) {
+        return null;
+      }
+      const opts = { channelId, lowerLimit, upperLimit };
+      const encoded = hash(opts);
+      const dh = await toSaveDirectory(directory_handle, encoded);
+      const fh = await dh.getFileHandle("settings.json", {
+        create: true,
+      });
+      const write = await fh.createWritable();
+      await write.write(
+        JSON.stringify(
+          {
+            channel: c,
+            lowerLimit,
+            upperLimit,
+          },
+          null,
+          2,
+        ),
+      );
+      await write.close();
+      return {
+        z: 0,
+        x: 0,
+        y: 0,
+        c,
+        dh,
+        encoded,
+        lowerLimit,
+        upperLimit,
+      } as Index;
+    }),
   );
-};
-
-const save: Save = async (inputs) => {
-  const create = { create: true };
-  const { index, loader, directory_handle } = inputs;
-  const { output, filename } = await capture(index, loader);
-  const fh = await index.dh.getFileHandle(filename, create);
-  const write = await fh.createWritable();
-  await write.write(output);
-  await write.close();
-};
-
-const doStep: DoStep = async (inputs) => {
-  const { loader, directory_handle } = inputs;
-  const { index, next } = inputs;
-  const { step, done } = inputs.stepSignal;
-  if (done) return null;
-  try {
-    await save({ step, directory_handle, loader, index });
-  } catch (e) {
-    // REDO
-    console.error(e.message);
-    return { done: false, step };
-  }
-  return { done: next === 0, step: next };
+  const resolved = await Promise.all(pending);
+  setCRange(resolved.filter((v): v is Index => v !== null));
 };
 
 type TileProps = {
@@ -332,6 +268,7 @@ const initialize: Initialize = (inputs) => {
   const cRangeUnique = [] as Index[];
   const cEncodedSet = new Set();
   for (const index of cRange) {
+    if (!index) continue;
     if (!cEncodedSet.has(index.encoded)) {
       cEncodedSet.add(index.encoded);
       cRangeUnique.push(index);
@@ -386,6 +323,14 @@ const ProgressBar = styled.div<ProgressBarProps>`
     padding: 0.25em;
     font-family: monospace;
   }
+`;
+
+const ExportMessage = styled.div`
+  grid-row: 2;
+  grid-column: 2;
+  padding: 0.5em 0.75em;
+  font-family: monospace;
+  text-align: center;
 `;
 
 const to_fr = (ratio) => {
@@ -512,15 +457,29 @@ export const ImageExporter = (props: ImageExporterProps) => {
       ),
     );
   }, [images]);
-  const [stepSignal, setStepSignal] = useState({
+  const [progress, setProgress] = useState<Progress>({
+    completed: 0,
+    total: 0,
     done: false,
-    step: 0,
   });
-  const [cRange, setCRange] = useState(null);
+  const [cRange, setCRange] = useState<Index[] | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const hasChannelGroup =
+    channelGroups.length > 0 &&
+    channelGroups.some((g) => g.channels.length > 0);
 
   React.useEffect(() => {
+    if (!hasChannelGroup) {
+      setCRange([]);
+      setExportError(
+        "Add a channel group with at least one channel before exporting.",
+      );
+      return;
+    }
+    setExportError(null);
     createCRange(setCRange, channelGroups, imageChannels, directory_handle);
-  }, [channelGroups, imageChannels, directory_handle]);
+  }, [channelGroups, imageChannels, directory_handle, hasChannelGroup]);
   const loader = useMemo(
     () =>
       mainSettingsList.length > 0 ? mainSettingsList[0].loader.data : null,
@@ -538,46 +497,104 @@ export const ImageExporter = (props: ImageExporterProps) => {
     return null;
   }, [loader, cRange]);
 
-  const { step, done } = stepSignal;
-  const index = (() => {
-    if (!state || !isFullState(state)) return null;
-    if (state.indices.length === 0) return null;
-    return state.indices[step];
-  })();
+  const stopExport = props.stopExport;
   React.useEffect(() => {
-    if (done) {
-      //TODO
-      setTimeout(() => {
-        props.stopExport();
-      }, 2000);
-    } else {
-      if (!state || !loader?.length) return;
-      const next = (step + 1) % state.indices.length;
-      doStep({
-        directory_handle,
-        loader,
-        index,
-        next,
-        stepSignal,
-      }).then((nextStepSignal) => {
-        if (nextStepSignal !== null) {
-          setStepSignal(nextStepSignal);
-        }
-      });
+    if (exportError) {
+      const t = setTimeout(() => stopExport(), 2000);
+      return () => clearTimeout(t);
     }
-  }, [state, step, done, directory_handle, index, loader, props, stepSignal]);
+    if (!state || !loader?.length) return;
+    if (cRange !== null && cRange.length === 0) {
+      setExportError("No exportable channels in the current channel groups.");
+      return;
+    }
+    if (state.indices.length === 0) {
+      setExportError("No exportable channels in the current channel groups.");
+      return;
+    }
 
-  const _tileShape = { width: 1024, height: 1024 }; // TODO
+    let cancelled = false;
+    let finishedOk = false;
+    const abort = new AbortController();
+    const indices = state.indices;
+    const total = indices.length;
+    const wallStart = performance.now();
+
+    setProgress({ completed: 0, total, done: false });
+
+    const run = async () => {
+      let nextIndex = 0;
+      let completed = 0;
+      const concurrency = Math.min(jpegExportConcurrency(), total);
+
+      const workerLoop = async () => {
+        while (!cancelled && !abort.signal.aborted) {
+          const i = nextIndex++;
+          if (i >= total) return;
+          const index = indices[i];
+          try {
+            await exportTile(index, loader, abort.signal);
+          } catch (e) {
+            if (abort.signal.aborted || cancelled) return;
+            console.error(e instanceof Error ? e.message : e);
+            try {
+              await exportTile(index, loader, abort.signal);
+            } catch (e2) {
+              console.error(e2 instanceof Error ? e2.message : e2);
+            }
+          }
+          if (cancelled) return;
+          completed += 1;
+          setProgress({
+            completed,
+            total,
+            done: completed >= total,
+          });
+        }
+      };
+
+      await Promise.all(
+        Array.from({ length: concurrency }, () => workerLoop()),
+      );
+
+      if (!cancelled) {
+        finishedOk = true;
+        console.log(
+          `[minerva] jpeg-export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (${concurrency} workers, ${total} tiles)`,
+        );
+        setProgress({ completed: total, total, done: true });
+        setTimeout(() => stopExport(), 2000);
+      }
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+      // Avoid aborting the shared Viv loader after a successful export.
+      if (!finishedOk) abort.abort();
+    };
+  }, [state, loader, stopExport, cRange, exportError]);
+
+  const { completed, total, done } = progress;
   let ratio = done ? 1 : 0;
-  if (!done && state !== null) {
-    ratio = step / (state.indices.length - 1);
+  if (!done && total > 1) {
+    ratio = completed / total;
+  } else if (!done && total === 1 && completed === 1) {
+    ratio = 1;
+  } else if (!done && total === 1) {
+    ratio = 0;
   }
   return (
     <ImageExporterDiv>
-      <ProgressBar $ratio={ratio} $done={done}>
-        <div></div>
-        <div> {`${(ratio * 100).toFixed(3)}%`} </div>
-      </ProgressBar>
+      {exportError ? (
+        <ExportMessage>{exportError}</ExportMessage>
+      ) : (
+        <ProgressBar $ratio={ratio} $done={done}>
+          <div></div>
+          <div> {`${(ratio * 100).toFixed(3)}%`} </div>
+        </ProgressBar>
+      )}
     </ImageExporterDiv>
   );
 };

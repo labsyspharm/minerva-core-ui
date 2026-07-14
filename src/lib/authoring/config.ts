@@ -143,7 +143,8 @@ const hex_to_rgb = (c: string) => {
   };
 };
 
-const GROUP_CHANNELS_CRC01 = {
+/** Path → OME channel indices for the Lin 2021 CRC01 demo exhibit groups. */
+export const GROUP_CHANNELS_CRC01 = {
   "Histology_40__HE-r--41__HE-g--42__HE-b": [40, 41, 42],
   "Tissue-Structure_0__DNA1--14__PanCK--15__ASMA--35__CD31--18__CD45": [
     0, 14, 15, 35, 18,
@@ -416,7 +417,7 @@ const extractChannels: ExtractChannels = (
       const new_group_uuid = crypto.randomUUID();
       const new_group: ChannelGroup = {
         id: new_group_uuid,
-        expanded: false,
+        expanded: ChannelGroups.length === 0,
         name: g.Name,
         channels: g.Channels.reduce(
           (new_group_channels, name, index) => {

@@ -523,12 +523,18 @@ const WaypointsList = (props: WaypointsListProps) => {
   );
 
   const renderList = () => (
-    <div className={styles.panel}>
+    <>
       {listHeader}
       {waypoints.length === 0 ? (
         <div className={styles.emptyMessage}>No waypoints yet</div>
       ) : (
-        <ul className={[styles.rows, chrome.thinScrollbar].join(" ")}>
+        <ul
+          className={[
+            styles.rows,
+            chrome.authorPanelBody,
+            chrome.thinScrollbar,
+          ].join(" ")}
+        >
           {waypoints.map((story, index) => {
             const storyId = story.id;
             const annotationCount = countWaypointAnnotations(story);
@@ -662,7 +668,7 @@ const WaypointsList = (props: WaypointsListProps) => {
           })}
         </ul>
       )}
-    </div>
+    </>
   );
 
   const renderDetail = () => {
@@ -937,7 +943,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   };
 
   return (
-    <div className={[styles.panel, styles.black].join(" ")}>
+    <div className={chrome.authorPanel}>
       {detailStoryId ? renderDetail() : renderList()}
     </div>
   );

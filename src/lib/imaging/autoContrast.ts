@@ -2,6 +2,7 @@ import {
   fetchPlaneRaster,
   rasterToUint16Array,
 } from "@/lib/imaging/maskChannelRaster";
+import { warmupPsudoPalette } from "@/lib/imaging/psudoPalette";
 import {
   IMPORT_DEFAULT_LOWER_LIMIT,
   IMPORT_DEFAULT_UPPER_LIMIT,
@@ -9,7 +10,7 @@ import {
 import type { Loader } from "@/lib/imaging/viv";
 import type { Channel } from "@/lib/stores/documentStore";
 
-/** Histogram percentile auto-contrast for OME channels (names retain `Gmm` for document schema). */
+/** Auto-contrast for OME channels via `psudo.channel_gmm` (schema field still `gmmContrastLimits`). */
 
 export type ContrastLimits = { lower: number; upper: number };
 
@@ -47,6 +48,17 @@ export function clearOmeGmmContrastCache(): void {
   omeGmmCache.clear();
 }
 
+/** Drop cached fits so a manual re-run recomputes from the raster. */
+export function invalidateOmeGmmContrastCache(
+  imageKey: string,
+  sourceImageId: string,
+  sourceIndices: readonly number[],
+): void {
+  for (const c of sourceIndices) {
+    omeGmmCache.delete(gmmCacheKey(imageKey, sourceImageId, c));
+  }
+}
+
 function sanitizeGmmLimits(vmin: number, vmax: number): ContrastLimits | null {
   if (!Number.isFinite(vmin) || !Number.isFinite(vmax)) return null;
   const lower = Math.max(0, Math.min(65535, Math.round(vmin)));
@@ -56,7 +68,11 @@ function sanitizeGmmLimits(vmin: number, vmax: number): ContrastLimits | null {
   return { lower, upper };
 }
 
-/** 0.1% / 99.9% histogram ranks in uint16 space (stable vs psudo GMM). */
+/**
+ * Fallback when `psudo.channel_gmm` panics (linfa MinMaxError on some planes).
+ * 0.1% / 99.9% ranks; if a heavy zero peak would pin lower at 0, fit on
+ * positive pixels instead.
+ */
 function approximateAutoContrastFromUint16Histogram(
   u16: Uint16Array,
 ): ContrastLimits | null {
@@ -64,27 +80,39 @@ function approximateAutoContrastFromUint16Histogram(
   if (n === 0) return null;
 
   const hist = new Uint32Array(65536);
+  let positive = 0;
   for (let i = 0; i < n; i++) {
-    hist[u16[i]]++;
+    const v = u16[i];
+    hist[v]++;
+    if (v > 0) positive++;
   }
 
-  const idxLo = Math.max(0, Math.floor(0.001 * (n - 1)));
-  const idxHi = Math.min(n - 1, Math.ceil(0.999 * (n - 1)));
+  const zeroHeavy = hist[0] / n >= 0.001 && positive >= 64;
+  const mass = zeroHeavy ? positive : n;
+  const startV = zeroHeavy ? 1 : 0;
+
+  const idxLo = Math.max(0, Math.floor(0.001 * (mass - 1)));
+  const idxHi = Math.min(mass - 1, Math.ceil(0.999 * (mass - 1)));
 
   const valuePastSortedIndex = (idx: number): number => {
     let cum = 0;
-    for (let v = 0; v < 65536; v++) {
+    for (let v = startV; v < 65536; v++) {
       cum += hist[v];
       if (cum > idx) return v;
     }
     return 65535;
   };
 
-  const lower = valuePastSortedIndex(idxLo);
-  const upper = valuePastSortedIndex(idxHi);
-  return sanitizeGmmLimits(lower, upper);
+  return sanitizeGmmLimits(
+    valuePastSortedIndex(idxLo),
+    valuePastSortedIndex(idxHi),
+  );
 }
 
+/**
+ * Fit contrast with `psudo.channel_gmm` (tri-modal log-space GMM → [min, max]).
+ * Falls back to histogram percentiles if WASM throws or returns a bad pair.
+ */
 async function fitChannelGmmContrastForSourceIndex(
   loader: Loader,
   sourceIndex: number,
@@ -97,7 +125,44 @@ async function fitChannelGmmContrastForSourceIndex(
   if (!raster?.data || raster.data.length === 0) return null;
 
   const u16 = rasterToUint16Array(raster.data);
-  return approximateAutoContrastFromUint16Histogram(u16);
+
+  try {
+    const psudo = await import("psudo");
+    await warmupPsudoPalette();
+    const result = await psudo.channel_gmm(u16);
+    if (result && result.length >= 2) {
+      const limits = sanitizeGmmLimits(result[0], result[1]);
+      if (limits) {
+        if (import.meta.env.DEV) {
+          console.log("[psudo] channel_gmm", {
+            c: sourceIndex,
+            pixels: u16.length,
+            lower: limits.lower,
+            upper: limits.upper,
+          });
+        }
+        return limits;
+      }
+    }
+  } catch (e) {
+    if (import.meta.env.DEV) {
+      console.warn(
+        `[psudo] channel_gmm failed for c=${sourceIndex}; using histogram fallback`,
+        e,
+      );
+    }
+  }
+
+  const fallback = approximateAutoContrastFromUint16Histogram(u16);
+  if (import.meta.env.DEV && fallback) {
+    console.log("[psudo] auto contrast (histogram fallback)", {
+      c: sourceIndex,
+      pixels: u16.length,
+      lower: fallback.lower,
+      upper: fallback.upper,
+    });
+  }
+  return fallback;
 }
 
 export function mergeGmmContrastLimitsIntoSourceChannelsByChannelId(
@@ -113,7 +178,12 @@ export function mergeGmmContrastLimitsIntoSourceChannelsByChannelId(
     if (!fit) return sc;
     if (!overwrite && sc.gmmContrastLimits) return sc;
     changed = true;
-    return { ...sc, gmmContrastLimits: { lower: fit.lower, upper: fit.upper } };
+    return {
+      ...sc,
+      gmmContrastLimits: { lower: fit.lower, upper: fit.upper },
+      lowerLimit: fit.lower,
+      upperLimit: fit.upper,
+    };
   });
   return changed ? next : channels;
 }

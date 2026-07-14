@@ -18,65 +18,49 @@ const List = styled.div`
   flex: 1;
   min-width: 0;
   align-items: stretch;
-  gap: 3px;
+  gap: 0;
 `;
 
 const Tab = styled.button<{ $active: boolean }>`
   flex: 1;
   min-width: 0;
   margin: 0;
-  padding: 0.5em 0.35em;
-  border: 1px solid
+  padding: 0.65em 0.5em 0.55em;
+  border: none;
+  border-bottom: 2px solid
     ${({ $active }) =>
-      $active
-        ? "color-mix(in srgb, var(--theme-glass-edge, rgba(255, 255, 255, 0.5)) 70%, transparent)"
-        : "transparent"};
-  border-radius: 5px 5px 0 0;
-  background: ${({ $active }) =>
-    $active
-      ? "color-mix(in xyz, var(--theme-dim-gray-color, black), transparent 40%)"
-      : "color-mix(in xyz, var(--theme-dark-main-color, navy), transparent 60%)"};
+      $active ? "var(--panel-accent, #58a6ff)" : "transparent"};
+  border-radius: 0;
+  background: transparent;
   color: ${({ $active }) =>
     $active
-      ? "var(--theme-light-focus-color, white)"
-      : "color-mix(in srgb, var(--theme-light-contrast-color, white) 78%, transparent)"};
+      ? "var(--theme-light-focus-color, #fff)"
+      : "color-mix(in srgb, var(--theme-light-contrast-color, white) 62%, transparent)"};
   font: inherit;
   font-size: inherit;
-  line-height: 1.25;
+  font-weight: ${({ $active }) => ($active ? 600 : 500)};
+  letter-spacing: 0.01em;
+  line-height: 1.2;
   cursor: pointer;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
-
-  ${({ $active }) =>
-    $active
-      ? `
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14);
-    text-shadow: 0 0 4px var(--theme-dark-focus-color, black);
-  `
-      : ""}
+    color 0.12s ease,
+    border-color 0.12s ease;
 
   &:hover {
-    color: var(--theme-light-focus-color, white);
-    background: color-mix(
-      in xyz,
-      var(--theme-dim-gray-color, black),
-      transparent 52%
-    );
+    color: var(--theme-light-focus-color, #fff);
   }
 
   &:focus-visible {
     outline: 2px solid var(--theme-light-focus-color, hwb(45 90% 0%));
-    outline-offset: 1px;
+    outline-offset: -2px;
   }
 `;
 
-/** Author-style glass tab strip (ported from legacy minerva-author-ui nav). */
+/** Compact underline tab strip for authoring sidebar panels. */
 export function GlassTabBar<T extends string>(props: GlassTabBarProps<T>) {
   const { tabs, value, onChange, className, "aria-label": ariaLabel } = props;
 

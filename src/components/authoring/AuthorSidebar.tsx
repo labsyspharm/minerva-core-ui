@@ -17,12 +17,6 @@ const TAB_LABELS: Record<AuthorTab, string> = {
   story: "Story",
 };
 
-const TAB_DESCRIPTIONS: Record<AuthorTab, string> = {
-  images: "Image Sources",
-  channels: "Channel Groups",
-  story: "",
-};
-
 const TAB_ITEMS = TAB_ORDER.map((id) => ({ id, label: TAB_LABELS[id] }));
 
 export const AuthorSidebarHost = styled.div<{ $collapsed: boolean }>`
@@ -65,7 +59,7 @@ const PanelOuter = styled.div`
   );
 
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto 1fr;
   grid-template-columns: 1fr;
   flex: 1;
   min-height: 0;
@@ -83,14 +77,17 @@ const TabRow = styled.div`
   grid-row: 1;
   display: flex;
   align-items: stretch;
-  gap: 0.35em;
   min-width: 0;
   min-height: var(--author-tab-header-height, 2.35rem);
   box-sizing: border-box;
-  padding: 0.35em 2.4rem 0 0.35em;
-  font-size: 0.75em;
+  padding: 0 2.4rem 0 0.25em;
+  font-size: 0.8em;
   border-bottom: 1px solid
-    color-mix(in srgb, var(--theme-glass-edge, rgba(255, 255, 255, 0.5)) 55%, transparent);
+    color-mix(
+      in srgb,
+      var(--theme-glass-edge, rgba(255, 255, 255, 0.5)) 40%,
+      transparent
+    );
 `;
 
 const SidebarExpandControl = styled.button<{ $expanded: boolean }>`
@@ -136,27 +133,14 @@ const SidebarExpandControl = styled.button<{ $expanded: boolean }>`
   }
 `;
 
-const PanelDescription = styled.h2`
-  grid-row: 2;
-  margin: 0;
-  padding: var(--theme-gap-tiny, 0.3em) 0 0 1em;
-  font-size: 0.75em;
-  font-weight: 600;
-`;
-
 const PanelContent = styled.div`
-  grid-row: 3;
+  grid-row: 2;
   min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background-color: color-mix(
-    in xyz,
-    var(--theme-dim-gray-color, black),
-    transparent 60%
-  );
+  background-color: #000;
   font-size: 0.75em;
-  border-top: none;
 `;
 
 const PanelContentInner = styled.div`
@@ -165,19 +149,9 @@ const PanelContentInner = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: var(--theme-gap-tiny, 0.3em);
 `;
 
-const ChannelsPanelSlot = styled.div`
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-`;
-
-const StoryPanelSlot = styled.div`
+const PanelSlot = styled.div`
   position: relative;
   flex: 1;
   min-height: 0;
@@ -205,20 +179,14 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
     activeTab === "images" ? (
       props.imagesPanel
     ) : activeTab === "channels" ? (
-      <ChannelsPanelSlot>
-        <ChannelGroupsMasterDetail
-          noLoader={props.noLoader}
-          ensureChannelHistograms={props.ensureChannelHistograms}
-          ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
-        />
-      </ChannelsPanelSlot>
+      <ChannelGroupsMasterDetail
+        noLoader={props.noLoader}
+        ensureChannelHistograms={props.ensureChannelHistograms}
+        ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
+      />
     ) : (
-      <StoryPanelSlot>
-        <WaypointsList />
-      </StoryPanelSlot>
+      <WaypointsList />
     );
-
-  const description = TAB_DESCRIPTIONS[activeTab];
 
   return (
     <AuthorSidebarHost $collapsed={!expanded}>
@@ -232,11 +200,10 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
               aria-label="Author panels"
             />
           </TabRow>
-          {description ? (
-            <PanelDescription>{description}</PanelDescription>
-          ) : null}
           <PanelContent role="tabpanel">
-            <PanelContentInner>{activePanel}</PanelContentInner>
+            <PanelContentInner>
+              <PanelSlot>{activePanel}</PanelSlot>
+            </PanelContentInner>
           </PanelContent>
         </PanelOuter>
       </Sidebar>

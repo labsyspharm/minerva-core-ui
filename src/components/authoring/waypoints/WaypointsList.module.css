@@ -1,15 +1,3 @@
-.black {
-  background-color: black;
-}
-
-.panel {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-height: 0;
-  flex: 1;
-}
-
 .rows {
   flex: 1;
   overflow-y: auto;

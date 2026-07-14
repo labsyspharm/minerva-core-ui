@@ -1,8 +1,11 @@
 import type { ChangeEventHandler, FormEventHandler } from "react";
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
+import { PlusIcon } from "@/components/shared/common/PlusIcon";
+import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
+import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
 import { CompactHeader } from "@/components/shared/panel/CompactHeader";
-import { PanelActionButton } from "@/components/shared/panel/PanelButtons";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import chrome from "@/components/shared/panel/panelChrome.module.css";
 import { resolveImageContentRole } from "@/lib/imaging/channelKind";
 import {
@@ -84,24 +87,6 @@ type Validate = (v: ValidObj, fn: ValidationFunction) => ValidOut;
 type SetState = (s: string) => void;
 type SetTargetState = FormEventHandler;
 type UseTargetState = (init: string) => [string, SetState, SetTargetState];
-
-const ImagesTabShell = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 10px 8px 10px;
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  min-height: 0;
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  color: #e6edf3;
-  font-size: 12px;
-  background: var(--theme-dim-gray-color, #111);
-`;
 
 const XmlImportMessage = styled.div<{ $err: boolean }>`
   font-size: 11px;
@@ -633,9 +618,8 @@ const Upload = (props: UploadProps) => {
     ) : null;
 
   return (
-    <ImagesTabShell className={chrome.thinScrollbar}>
+    <div className={chrome.authorPanel}>
       <CompactHeader
-        title="Images"
         actions={
           <>
             {imageLoaded ? (
@@ -648,38 +632,44 @@ const Upload = (props: UploadProps) => {
                   aria-label="OME-XML annotations file"
                   onChange={onAnnotationXmlSelected}
                 />
-                <PanelActionButton
+                <PanelIconButton
                   aria-label="Import annotations"
                   title="Import annotations"
                   onClick={() => xmlFileInputRef.current?.click()}
                 >
-                  Import annotations
-                </PanelActionButton>
+                  <AnnotationsIcon width={14} height={14} aria-hidden />
+                </PanelIconButton>
               </>
             ) : null}
-            <PanelActionButton
+            <PanelIconButton
               active={addMaskActive}
               aria-pressed={addMaskActive}
               aria-label="Add mask"
               title="Add mask"
               onClick={() => openAddPanel("segmentation")}
             >
-              Add mask
-            </PanelActionButton>
-            <PanelActionButton
+              <RectangleIcon width={14} height={14} aria-hidden />
+            </PanelIconButton>
+            <PanelIconButton
               active={addImageActive}
               aria-pressed={addImageActive}
               aria-label="Add image"
               title="Add image"
               onClick={() => openAddPanel("intensity")}
             >
-              Add image
-            </PanelActionButton>
+              <PlusIcon />
+            </PanelIconButton>
           </>
         }
       />
 
-      <div className={styles.stack}>
+      <div
+        className={[
+          styles.stack,
+          chrome.authorPanelBody,
+          chrome.thinScrollbar,
+        ].join(" ")}
+      >
         {addPanelOpen ? (
           <div className={styles.addPanel}>
             <div className={styles.addPanelToolbar}>
@@ -728,7 +718,7 @@ const Upload = (props: UploadProps) => {
           </XmlImportMessage>
         ) : null}
       </div>
-    </ImagesTabShell>
+    </div>
   );
 };
 

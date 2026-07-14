@@ -28,17 +28,13 @@ import type {
   ConfigSourceDistribution,
   ConfigWaypoint,
   ItemRegistryProps,
-  MutableFields,
 } from "@/lib/authoring/config";
-import {
-  extractChannels,
-  extractDistributions,
-  mutableItemRegistry,
-} from "@/lib/authoring/config";
+import { extractChannels, extractDistributions } from "@/lib/authoring/config";
 import {
   type ContrastLimits,
   clearOmeGmmContrastCache,
   ensureOmeGmmContrastLimits,
+  invalidateOmeGmmContrastCache,
   looksLikeImportDefaultLimits,
   mergeGmmContrastLimitsIntoSourceChannelsByChannelId,
 } from "@/lib/imaging/autoContrast";
@@ -86,6 +82,7 @@ import type {
 } from "@/lib/legacy/exhibit";
 import { readConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
+import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
 import { imageHandleStorageKey } from "@/lib/persistence/imageHandles";
 import { saveStoryDocument } from "@/lib/persistence/storyPersistence";
@@ -119,49 +116,13 @@ import {
   waypointToConfigWaypoint,
 } from "@/lib/stores/storeUtils";
 import { isOpts, validate } from "@/lib/util/validate";
+import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import { normalizeWaypointToBounds } from "@/lib/waypoints/waypoint";
 import {
   parsePreferredStoryIdFromLocation,
   rootRouteApi,
   StoryIdUrlSync,
 } from "@/router/appRouter";
-
-/**
- * Snapshot of document fields that affect VIV layer settings (see `toSettings` in `viv.ts`).
- * Omit histogram payloads so memoized viewer props stay stable while curves load.
- */
-function buildImageViewerSignature(
-  channelGroups: ChannelGroup[],
-  SourceChannels: Channel[],
-): string {
-  const sources = SourceChannels.map((sc) => ({
-    u: sc.id,
-    i: sc.index,
-    n: sc.name,
-    s: sc.samples,
-    img: sc.imageId,
-    dt: sc.sourceDataTypeId,
-    k: sc.kind,
-    lr: sc.lowerLimit,
-    ur: sc.upperLimit,
-    rgb: sc.color ? [sc.color.r, sc.color.g, sc.color.b] : undefined,
-    mv: sc.maskVisualization,
-  }));
-  const groups = channelGroups.map((g) => ({
-    u: g.id,
-    n: g.name,
-    e: g.expanded ?? false,
-    ch: g.channels.map((c) => ({
-      u: c.id,
-      lr: c.lowerLimit,
-      ur: c.upperLimit,
-      rgb: [c.color.r, c.color.g, c.color.b],
-      sc: c.channelId,
-      mv: c.maskVisualization,
-    })),
-  }));
-  return JSON.stringify({ sources, groups });
-}
 
 /** When the story has no waypoints yet, add a default row for image import to attach to. */
 function ensureDefaultWaypointForImageImport(): void {
@@ -372,11 +333,15 @@ const readWriteHydrate = { mode: "readwrite" } as const;
 
 async function hydrateFilePermission(handle: Handle.File): Promise<boolean> {
   const ok = (p: PermissionState) => p === "granted";
-  if (ok(await handle.queryPermission(readWriteHydrate))) return true;
   try {
+    if (ok(await handle.queryPermission(readWriteHydrate))) return true;
+  } catch {
+    return false;
+  }
+  try {
+    // Requires a transient user activation; auto-hydrate on refresh has none.
     return ok(await handle.requestPermission(readWriteHydrate));
   } catch {
-    // File System Access API requires a user gesture to request permission.
     return false;
   }
 }
@@ -471,8 +436,7 @@ function clearOmeDerivedCaches(): void {
   clearOmeGmmContrastCache();
 }
 
-const APP_TAB_TITLE_PREFIX =
-  import.meta.env.MODE === "demo" ? "Minerva 2.0 Demo" : "Minerva";
+const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
 
 /** Fold {@link ChannelRendering} into Viv settings without touching the document store. */
 function applyChannelRendering<S extends MainSettings>(
@@ -629,6 +593,7 @@ const Content = (props: Props) => {
 
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
+  const [viewerRemountKey, setViewerRemountKey] = useState(0);
   const [directory_handle, setDirectoryHandle] = useState(
     null as Handle.Dir | null,
   );
@@ -667,11 +632,23 @@ const Content = (props: Props) => {
       );
       return;
     }
+    const groups = useDocumentStore.getState().channelGroups;
+    const hasChannels = groups.some((g) => g.channels.length > 0);
+    if (groups.length === 0 || !hasChannels) {
+      window.alert(
+        "Add a channel group with at least one channel before exporting a JPEG pyramid.",
+      );
+      return;
+    }
     const dirHandle = await showDirectoryPicker();
     setDirectoryHandle(dirHandle);
     setIoState("EXPORTING");
   };
-  const stopExport = () => setIoState("IDLE");
+  const stopExport = () => {
+    setIoState("IDLE");
+    // Recreate Viv/deck layers in case GL state was disturbed during export.
+    setViewerRemountKey((k) => k + 1);
+  };
   const toggleEditor = () => setEditable(!editable);
 
   const setHiddenWaypointWithLogic = (v: boolean) => {
@@ -1448,13 +1425,6 @@ const Content = (props: Props) => {
     ensureDefaultWaypointForImageImport();
   };
 
-  const mutableFields: MutableFields = [];
-  const ItemRegistry = mutableItemRegistry(
-    config.ItemRegistry,
-    setItems,
-    mutableFields,
-  );
-
   const [valid, setValid] = useState({} as ValidObj);
 
   const onStartRef = React.useRef(onStart);
@@ -1795,6 +1765,9 @@ const Content = (props: Props) => {
           const loader = loaderByImageId.get(imageId);
           if (!loader) continue;
           const uniqueIdx = [...new Set(plist.map((p) => p.index))];
+          if (overwrite) {
+            invalidateOmeGmmContrastCache(imageKey, imageId, uniqueIdx);
+          }
           const map = await ensureOmeGmmContrastLimits(
             loader,
             imageKey,
@@ -1861,8 +1834,13 @@ const Content = (props: Props) => {
   React.useEffect(() => {
     if (!viewerImageKey || omeLoaderEntries.length === 0) return;
     if (lastEagerGmmKeyRef.current === viewerImageKey) return;
-    lastEagerGmmKeyRef.current = viewerImageKey;
     const doc = useDocumentStore.getState();
+    // Existing channel groups already carry contrast limits — only eager-fit
+    // when there are no groups yet (or first group creation will fit).
+    if (doc.channelGroups.length > 0) {
+      lastEagerGmmKeyRef.current = viewerImageKey;
+      return;
+    }
     const scs = documentSourceChannels(doc);
     const loaderImageIds = new Set(
       omeLoaderEntries.map((e) => e.sourceImageId),
@@ -1876,6 +1854,9 @@ const Content = (props: Props) => {
           !sc.gmmContrastLimits,
       )
       .map((sc) => sc.id);
+    // Only mark this image as handled once there are channels to fit (or none needed).
+    if (scs.length === 0) return;
+    lastEagerGmmKeyRef.current = viewerImageKey;
     if (ids.length === 0) return;
     void onEnsureChannelGmmContrastLimits(ids).catch((e) => {
       if (import.meta.env.DEV) {
@@ -1995,7 +1976,7 @@ const Content = (props: Props) => {
         const { series, pyramids, loader, modality } = dicomSource;
         const rgbImage = modality === "Brightfield";
         // Use deterministic ID based on series to prevent layer recreation on settings change
-        const imageID = `dicom-${series}-${i}`;
+        const imageID = `dicom-${series}-${i}-r${viewerRemountKey}`;
         return ({ mainSettings }) => {
           return createTileLayers({
             pyramids,
@@ -2010,8 +1991,11 @@ const Content = (props: Props) => {
         return ({ mainSettings }) => {
           const selections = mainSettings.selections || [];
           const selectionId = selections.map(({ c }) => c).join("-");
+          // Keep id stable across contrast/color tweaks so Viv updates props
+          // in place (live drag). Selection changes still remount the layer.
+          // viewerRemountKey forces new layer instances after JPEG export.
           return new MultiscaleImageLayer({
-            id: `mainLayer-${i}-${selectionId}`,
+            id: `mainLayer-${i}-${selectionId}-r${viewerRemountKey}`,
             ...mainSettings,
             loader: loader.data,
           });
@@ -2027,7 +2011,7 @@ const Content = (props: Props) => {
           });
       }),
     );
-  }, [dicomIndexList, omeLoaderEntries, jpegLoaderEntries]);
+  }, [dicomIndexList, omeLoaderEntries, jpegLoaderEntries, viewerRemountKey]);
   const imageLayers = useMemo(() => {
     return layerFunctions.map((fn, i) =>
       fn({
@@ -2423,6 +2407,7 @@ const Content = (props: Props) => {
         const imagesPanel = <Upload {...uploadProps} />;
         const viewer = noLoader ? null : (
           <ImageViewer
+            key={viewerRemountKey}
             {...imageProps}
             viewerConfig={viewerConfig}
             overlayLayers={overlayLayers}

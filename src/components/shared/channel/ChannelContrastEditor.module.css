@@ -87,11 +87,7 @@
   transform: translateY(-50%);
   height: var(--slider-track-height);
   border-radius: 2px;
-  background: color-mix(
-    in srgb,
-    var(--slider-background, #888) 55%,
-    transparent
-  );
+  background: #30363d;
   pointer-events: none;
 }
 
@@ -100,6 +96,24 @@
   top: 0;
   height: 100%;
   border-radius: 2px;
+  /* Color only the track strip; full row height stays the grab target. */
+  background: linear-gradient(
+    to bottom,
+    transparent calc(50% - var(--slider-track-height) / 2),
+    color-mix(
+      in srgb,
+      var(--slider-background, #888) 70%,
+      transparent
+    )
+      calc(50% - var(--slider-track-height) / 2),
+    color-mix(
+      in srgb,
+      var(--slider-background, #888) 70%,
+      transparent
+    )
+      calc(50% + var(--slider-track-height) / 2),
+    transparent calc(50% + var(--slider-track-height) / 2)
+  );
   cursor: grab;
   touch-action: none;
   z-index: 1;

@@ -61,56 +61,76 @@ const ModeViewport = styled.div`
   }
 `;
 
+/** Keep Deck mounted under export UI so WebGL layer state is not destroyed. */
+const AuthorViewport = styled.div<{ $hidden: boolean }>`
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  visibility: ${(p) => (p.$hidden ? "hidden" : "visible")};
+  pointer-events: ${(p) => (p.$hidden ? "none" : "auto")};
+
+  > * {
+    flex: 1;
+    min-height: 0;
+  }
+`;
+
+const ExportOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+`;
+
 export const PlaybackRouter = (props: PlaybackRouterProps) => {
   const channelPanelProps = {
     hiddenChannel: props.hiddenChannel,
     noLoader: props.noLoader,
   };
 
-  let out = <></>;
   if (props.presenting) {
-    out = (
-      <Presentation
-        name={props.name}
-        exitPlaybackPreview={props.exitPlaybackPreview}
-      >
-        <ChannelPanel {...channelPanelProps}>{props.viewer}</ChannelPanel>
-      </Presentation>
-    );
-  } else if (props.ioState === "IDLE") {
-    out = (
-      <AuthorView
-        imagesPanel={props.imagesPanel}
-        noLoader={props.noLoader}
-        ensureChannelHistograms={props.ensureChannelHistograms}
-        ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
-        viewer={
+    return (
+      <ModeViewport key="presenting" data-mode="presenting">
+        <Presentation
+          name={props.name}
+          exitPlaybackPreview={props.exitPlaybackPreview}
+        >
           <ChannelPanel {...channelPanelProps}>{props.viewer}</ChannelPanel>
-        }
-      />
+        </Presentation>
+      </ModeViewport>
     );
-  } else if (props.ioState === "EXPORTING") {
-    const exporterProps = {
-      in_f: props.in_f,
-      groups: props.groups,
-      handles: props.handles,
-      stopExport: props.stopExport,
-      viewerConfig: props.viewerConfig,
-      dicomIndexList: props.dicomIndexList,
-      omeLoaderEntries: props.omeLoaderEntries,
-      directory_handle: props.directory_handle,
-    };
-    out = <ImageExporter {...exporterProps} />;
   }
-  const modeKey = props.presenting
-    ? "presenting"
-    : props.ioState === "IDLE"
-      ? "author"
-      : "other";
+
+  const exporting = props.ioState === "EXPORTING";
+  const exporterProps = {
+    in_f: props.in_f,
+    groups: props.groups,
+    handles: props.handles,
+    stopExport: props.stopExport,
+    viewerConfig: props.viewerConfig,
+    dicomIndexList: props.dicomIndexList,
+    omeLoaderEntries: props.omeLoaderEntries,
+    directory_handle: props.directory_handle,
+  };
 
   return (
-    <ModeViewport key={modeKey} data-mode={modeKey}>
-      {out}
+    <ModeViewport key="author" data-mode={exporting ? "exporting" : "author"}>
+      <AuthorViewport $hidden={exporting}>
+        <AuthorView
+          imagesPanel={props.imagesPanel}
+          noLoader={props.noLoader}
+          ensureChannelHistograms={props.ensureChannelHistograms}
+          ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
+          viewer={
+            <ChannelPanel {...channelPanelProps}>{props.viewer}</ChannelPanel>
+          }
+        />
+      </AuthorViewport>
+      {exporting ? (
+        <ExportOverlay>
+          <ImageExporter {...exporterProps} />
+        </ExportOverlay>
+      ) : null}
     </ModeViewport>
   );
 };

@@ -78,9 +78,9 @@ export const SourceDistributionSchema = z.object({
 });
 
 /**
- * Per-source-channel auto-fitted contrast limits (histogram percentiles on the
- * coarse pyramid plane; see `psudoPalette.ts`). Cached on the source channel so
- * newly created channel-group rows (and the detail-view UI) can pull a sensible
+ * Per-source-channel auto-fitted contrast limits (`psudo.channel_gmm` on the
+ * coarse pyramid plane; histogram percentiles if GMM fails). Cached on the
+ * source channel so newly created channel-group rows can pull a sensible
  * default without re-fitting. Field name keeps compatibility with persisted docs.
  */
 export const GmmContrastLimitsSchema = z.object({

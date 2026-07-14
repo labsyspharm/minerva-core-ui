@@ -4,6 +4,8 @@
   gap: 10px;
   width: 100%;
   min-width: 0;
+  padding: 10px;
+  box-sizing: border-box;
 }
 
 .addPanel {
