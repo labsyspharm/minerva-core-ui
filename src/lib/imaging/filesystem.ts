@@ -160,18 +160,24 @@ function isPersistableFileHandle(handle: Handle.File): boolean {
   );
 }
 
-const readWrite = { mode: "readwrite" } as const;
+/** Viewing only needs read (picker grants read; readwrite caused false denials). */
+const readPermission = { mode: "read" } as const;
 
-/** Request read access for a persisted or picked file handle before `getFile()`. */
+async function hasFileHandlePermission(handle: Handle.File): Promise<boolean> {
+  try {
+    return (await handle.queryPermission(readPermission)) === "granted";
+  } catch {
+    return false;
+  }
+}
+
+/** Query, then request read if needed (requires a user gesture when prompting). */
 async function ensureFileHandlePermission(
   handle: Handle.File,
 ): Promise<boolean> {
-  const ok = (p: PermissionState) => p === "granted";
+  if (await hasFileHandlePermission(handle)) return true;
   try {
-    return (
-      ok(await handle.queryPermission(readWrite)) ||
-      ok(await handle.requestPermission(readWrite))
-    );
+    return (await handle.requestPermission(readPermission)) === "granted";
   } catch {
     return false;
   }
@@ -203,9 +209,7 @@ const toFile: ToFiles = async () => {
       extensions: [".tif", ".tiff", ".ome.tif", ".ome.tiff"],
       multiple: false,
     });
-    if (file.handle) {
-      return [file.handle];
-    }
+    if (file.handle) return [file.handle];
     return [ephemeralFileHandleFromFile(file)];
   } catch (e: unknown) {
     if (isAbortError(e)) {
@@ -355,6 +359,7 @@ export {
   hasAuthorShellSupport,
   hasDirectoryPickerAccess,
   isPersistableFileHandle,
+  hasFileHandlePermission,
   ensureFileHandlePermission,
   findFile,
   toLoader,

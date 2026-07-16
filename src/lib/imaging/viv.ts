@@ -227,7 +227,7 @@ const toSettings = (opts: ToSettingsOpts) => {
     }
 
     const n_channels = c_idx >= 0 ? shape[c_idx] || 0 : 1;
-    const out = {
+    return {
       ...toDefaultSettings(n_channels),
       selections,
       colors,
@@ -236,7 +236,6 @@ const toSettings = (opts: ToSettingsOpts) => {
       sourceChannelIds,
       loader,
     };
-    return out;
   };
 };
 

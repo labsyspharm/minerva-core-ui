@@ -69,6 +69,9 @@ export type UploadProps = {
   onImportOme?: (
     req: OmeImportRequest,
   ) => Promise<OmeImportResult | undefined> | OmeImportResult | undefined;
+  /** Local handles present but Chrome revoked access after reload. */
+  needsFileAccess?: boolean;
+  onRequestFileAccess?: () => void | Promise<void>;
 };
 export type ValidObj = {
   [s: string]: boolean;
@@ -449,6 +452,8 @@ const Upload = (props: UploadProps) => {
     fileName = "",
     lastOmeTiffUrl = null,
     onImportOme,
+    needsFileAccess = false,
+    onRequestFileAccess,
   } = props;
 
   useEffect(() => {
@@ -697,6 +702,8 @@ const Upload = (props: UploadProps) => {
       role,
       formatDims(im.sizeX, im.sizeY, im.sizeC ?? im.channels.length),
     ].filter(Boolean);
+    const showAccessOverlay =
+      needsFileAccess && !!onRequestFileAccess && im.source?.kind === "local";
 
     return (
       <article key={im.id} className={styles.imageCard}>
@@ -706,6 +713,18 @@ const Upload = (props: UploadProps) => {
           </div>
           <div className={styles.imageCardMeta}>{metaParts.join(" · ")}</div>
         </div>
+        {showAccessOverlay ? (
+          <div className={styles.fileAccessOverlay}>
+            <span className={styles.fileAccessError}>File access needed</span>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={() => void onRequestFileAccess()}
+            >
+              Allow file access
+            </button>
+          </div>
+        ) : null}
       </article>
     );
   };

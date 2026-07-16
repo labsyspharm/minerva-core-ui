@@ -54,9 +54,11 @@ import {
 } from "@/lib/imaging/dicom.js";
 import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
 import {
+  ensureFileHandlePermission,
   findFile,
   hasAuthorShellSupport,
   hasDirectoryPickerAccess,
+  hasFileHandlePermission,
   isPersistableFileHandle,
   loadOmeLoaderForRole,
 } from "@/lib/imaging/filesystem";
@@ -281,34 +283,25 @@ const getDistributions = async (sourceChannels, loader) => {
   return { SourceChannelsWithDist, SourceDistributions };
 };
 
-const readWriteHydrate = { mode: "readwrite" } as const;
-
-async function hydrateFilePermission(handle: Handle.File): Promise<boolean> {
-  const ok = (p: PermissionState) => p === "granted";
-  try {
-    if (ok(await handle.queryPermission(readWriteHydrate))) return true;
-  } catch {
-    return false;
-  }
-  try {
-    // Requires a transient user activation; auto-hydrate on refresh has none.
-    return ok(await handle.requestPermission(readWriteHydrate));
-  } catch {
-    return false;
-  }
-}
-
 /** Rebuild Viv / DICOM loaders from persisted image rows (after Dexie load / refresh). */
-async function hydrateLoadersFromImages(images: Image[]): Promise<{
+async function hydrateLoadersFromImages(
+  images: Image[],
+  requestPermission = false,
+): Promise<{
   jpegLoaderEntries: JpegLoaderEntry[];
   omeLoaderEntries: OmeLoaderEntry[];
   dicomIndexList: DicomIndex[];
+  deniedHandleKeys: string[];
 }> {
   const jpegLoaderEntries: JpegLoaderEntry[] = [];
   const omeLoaderEntries: OmeLoaderEntry[] = [];
   const dicomIndexList: DicomIndex[] = [];
+  const deniedHandleKeys: string[] = [];
   const pool = new Pool();
   const dicomSeriesSeen = new Set<string>();
+  const canAccess = requestPermission
+    ? ensureFileHandlePermission
+    : hasFileHandlePermission;
 
   const omeLoaderRole = (im: Image): "intensity" | "segmentation" =>
     resolveImageContentRole({
@@ -346,7 +339,10 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
       case "local": {
         const handle = await getFileHandle(im.source.handleKey);
         if (!handle) break;
-        if (!(await hydrateFilePermission(handle))) break;
+        if (!(await canAccess(handle))) {
+          deniedHandleKeys.push(im.source.handleKey);
+          break;
+        }
         if (!(await findFile({ handle }))) break;
         const file = await handle.getFile();
         const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
@@ -380,7 +376,12 @@ async function hydrateLoadersFromImages(images: Image[]): Promise<{
     }
   }
 
-  return { jpegLoaderEntries, omeLoaderEntries, dicomIndexList };
+  return {
+    jpegLoaderEntries,
+    omeLoaderEntries,
+    dicomIndexList,
+    deniedHandleKeys,
+  };
 }
 
 function clearOmeDerivedCaches(): void {
@@ -512,6 +513,9 @@ const Content = (props: Props) => {
     [],
   );
   const [dicomIndexList, setDicomIndexList] = useState([] as DicomIndex[]);
+  const [deniedHandleKeys, setDeniedHandleKeys] = useState<string[]>([]);
+  /** Skip auto-hydrate while import sets loaders (avoids racing publishChannelState). */
+  const skipLoaderHydrateRef = React.useRef(false);
   const {
     setActiveChannelGroup,
     setChannelVisibilities,
@@ -852,9 +856,11 @@ const Content = (props: Props) => {
         await applySharedImportPaletteToSourceChannels(SourceChannels);
       nextImages = applySourceChannelsToImages(nextImages, styled);
     }
+    skipLoaderHydrateRef.current = true;
+    setOmeLoaderEntries(entries);
+    setDeniedHandleKeys([]);
     publishChannelState(nextImages, ChannelGroups, { resetRegistry: true });
     ensureDefaultWaypointForImageImport();
-    setOmeLoaderEntries(entries);
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
       const handle = handles[i];
@@ -962,15 +968,15 @@ const Content = (props: Props) => {
         flat,
       );
     }
+    skipLoaderHydrateRef.current = true;
+    setOmeLoaderEntries((prev) => {
+      const drop = new Set(removedLoaderIds);
+      return [...prev.filter((e) => !drop.has(e.sourceImageId)), ...newEntries];
+    });
     publishChannelState(nextImages, ChannelGroups, {
       resetRegistry: false,
       mergeVisibilities: true,
     });
-    const drop = new Set(removedLoaderIds);
-    setOmeLoaderEntries((prev) => [
-      ...prev.filter((e) => !drop.has(e.sourceImageId)),
-      ...newEntries,
-    ]);
     return { ok: true };
   };
 
@@ -1075,9 +1081,11 @@ const Content = (props: Props) => {
       kind: "url",
       url,
     });
+    skipLoaderHydrateRef.current = true;
+    setOmeLoaderEntries([{ loader, sourceImageId }]);
+    setDeniedHandleKeys([]);
     publishChannelState(nextImages, ChannelGroups, { resetRegistry: true });
     ensureDefaultWaypointForImageImport();
-    setOmeLoaderEntries([{ loader, sourceImageId }]);
     const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
     applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
     setLastOmeTiffUrl(url);
@@ -1150,20 +1158,80 @@ const Content = (props: Props) => {
         flat,
       );
     }
+    skipLoaderHydrateRef.current = true;
+    setOmeLoaderEntries((prev) => {
+      const drop = new Set(deduped.removedImageIds);
+      return [
+        ...prev.filter((e) => !drop.has(e.sourceImageId)),
+        { loader, sourceImageId },
+      ];
+    });
     publishChannelState(nextImages, ChannelGroups, {
       resetRegistry: false,
       mergeVisibilities: true,
     });
-    const drop = new Set(deduped.removedImageIds);
-    setOmeLoaderEntries((prev) => [
-      ...prev.filter((e) => !drop.has(e.sourceImageId)),
-      { loader, sourceImageId },
-    ]);
     return { ok: true };
   };
 
   const onStartOmeTiffRef = React.useRef(onStartOmeTiff);
   onStartOmeTiffRef.current = onStartOmeTiff;
+
+  const applyHydratedLoaders = React.useCallback(
+    (result: Awaited<ReturnType<typeof hydrateLoadersFromImages>>) => {
+      setJpegLoaderEntries(result.jpegLoaderEntries);
+      setOmeLoaderEntries(result.omeLoaderEntries);
+      setDicomIndexList(result.dicomIndexList);
+      setDeniedHandleKeys(result.deniedHandleKeys);
+    },
+    [],
+  );
+
+  const syncRegistryFromDocument = React.useCallback(() => {
+    const doc = useDocumentStore.getState();
+    const flat = flattenImageChannelsInDocumentOrder(doc.images);
+    setItemsRef.current({
+      SourceChannels: flat,
+      ChannelGroups: doc.channelGroups,
+    });
+    updateGroupChannelLists({
+      ChannelGroups: doc.channelGroups,
+      SourceChannels: flat,
+    });
+    setChannelVisibilities(
+      defaultVisibilitiesForSources(
+        flat,
+        useAppStore.getState().channelVisibilities,
+        doc.channelGroups,
+      ),
+    );
+  }, [updateGroupChannelLists, setChannelVisibilities]);
+
+  /** Chrome needs a click to re-grant File System Access after refresh. */
+  const requestLoaderFileAccess = React.useCallback(async () => {
+    setIsLoadingImage(true);
+    try {
+      const result = await hydrateLoadersFromImages(
+        useDocumentStore.getState().images,
+        true,
+      );
+      applyHydratedLoaders(result);
+      if (
+        result.omeLoaderEntries.length +
+          result.jpegLoaderEntries.length +
+          result.dicomIndexList.length >
+        0
+      ) {
+        syncRegistryFromDocument();
+        setImportRevision((r) => r + 1);
+        setHideWaypoint(false);
+      }
+    } catch (e) {
+      console.error("[minerva] requestLoaderFileAccess failed", e);
+    } finally {
+      setIsLoadingImage(false);
+      document.getElementById("global-loader")?.remove();
+    }
+  }, [applyHydratedLoaders, syncRegistryFromDocument]);
 
   /** Shared by FileHandler: auto-restore on mount, “Use recent”, and PWA launch — same rules. */
   const onRestoredOmeHandles = React.useCallback(
@@ -1177,30 +1245,9 @@ const Content = (props: Props) => {
         useAppStore.getState().clearOverlayLayers();
         setIsLoadingImage(true);
         try {
-          const {
-            jpegLoaderEntries: jpeg,
-            omeLoaderEntries: ome,
-            dicomIndexList: dicom,
-          } = await hydrateLoadersFromImages(doc.images);
-          setJpegLoaderEntries(jpeg);
-          setOmeLoaderEntries(ome);
-          setDicomIndexList(dicom);
-          const flat = flattenImageChannelsInDocumentOrder(doc.images);
-          setItemsRef.current({
-            SourceChannels: flat,
-            ChannelGroups: doc.channelGroups,
-          });
-          updateGroupChannelLists({
-            ChannelGroups: doc.channelGroups,
-            SourceChannels: flat,
-          });
-          setChannelVisibilities(
-            defaultVisibilitiesForSources(
-              flat,
-              useAppStore.getState().channelVisibilities,
-              doc.channelGroups,
-            ),
-          );
+          // FileHandler already requested permission on the click path.
+          applyHydratedLoaders(await hydrateLoadersFromImages(doc.images));
+          syncRegistryFromDocument();
         } finally {
           setIsLoadingImage(false);
         }
@@ -1216,7 +1263,7 @@ const Content = (props: Props) => {
       setHideWaypoint(false);
       document.getElementById("global-loader")?.remove();
     },
-    [updateGroupChannelLists, setChannelVisibilities],
+    [applyHydratedLoaders, syncRegistryFromDocument],
   );
 
   const onStart = async (
@@ -1529,23 +1576,26 @@ const Content = (props: Props) => {
       jpegLoaderEntries.length > 0 ||
       omeLoaderEntries.length > 0 ||
       dicomIndexList.length > 0
-    )
+    ) {
+      skipLoaderHydrateRef.current = false;
       return;
+    }
+    if (skipLoaderHydrateRef.current) return;
     if (!images.some((im) => im.source)) return;
     const gen = ++loaderHydrationGenRef.current;
     let cancelled = false;
     void (async () => {
       setIsLoadingImage(true);
       try {
-        const {
-          jpegLoaderEntries: jpeg,
-          omeLoaderEntries: ome,
-          dicomIndexList: dicom,
-        } = await hydrateLoadersFromImages(images);
-        if (cancelled || gen !== loaderHydrationGenRef.current) return;
-        setJpegLoaderEntries(jpeg);
-        setOmeLoaderEntries(ome);
-        setDicomIndexList(dicom);
+        const result = await hydrateLoadersFromImages(images);
+        if (
+          cancelled ||
+          gen !== loaderHydrationGenRef.current ||
+          skipLoaderHydrateRef.current
+        ) {
+          return;
+        }
+        applyHydratedLoaders(result);
         const urlIm = images.find((i) => i.source?.kind === "url");
         if (urlIm?.source?.kind === "url") {
           setLastOmeTiffUrl(urlIm.source.url);
@@ -1567,6 +1617,7 @@ const Content = (props: Props) => {
     jpegLoaderEntries.length,
     omeLoaderEntries.length,
     dicomIndexList.length,
+    applyHydratedLoaders,
   ]);
 
   const noLoader =
@@ -2480,6 +2531,8 @@ const Content = (props: Props) => {
           fileName,
           lastOmeTiffUrl,
           onImportOme: importOme,
+          needsFileAccess: deniedHandleKeys.length > 0 && !imageLoaded,
+          onRequestFileAccess: requestLoaderFileAccess,
         };
         // Update mainProps with actual handles
         const mainPropsWithHandle = {
