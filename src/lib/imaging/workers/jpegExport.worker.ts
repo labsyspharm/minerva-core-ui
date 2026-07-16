@@ -4,7 +4,7 @@ import {
   PIXEL_CTORS,
 } from "../jpegExportEncode";
 
-export type JpegExportInMsg = {
+type MessageData = {
   jobId: number;
   width: number;
   height: number;
@@ -15,20 +15,14 @@ export type JpegExportInMsg = {
   quality?: number;
 };
 
-export type JpegExportOutMsg = {
-  jobId: number;
-  jpeg?: ArrayBuffer;
-  error?: string;
+type Message = MessageEvent & {
+  data: MessageData;
 };
 
-type WorkerGlobal = typeof globalThis & {
-  onmessage: ((e: MessageEvent<JpegExportInMsg>) => void) | null;
-  postMessage(message: unknown, transfer?: Transferable[]): void;
-};
+// @ts-expect-error - We are in a worker context
+const worker: ServiceWorker = self;
 
-const w = globalThis as WorkerGlobal;
-
-w.onmessage = async (e: MessageEvent<JpegExportInMsg>) => {
+worker.addEventListener("message", async (e: Message) => {
   const {
     jobId,
     width,
@@ -42,7 +36,7 @@ w.onmessage = async (e: MessageEvent<JpegExportInMsg>) => {
   try {
     const Ctor = PIXEL_CTORS[arrayCtorName];
     if (!Ctor) {
-      throw new Error(`jpegExport.worker: unsupported array ${arrayCtorName}`);
+      throw new Error(`unsupported pixel array ${arrayCtorName}`);
     }
     const pixels = new Ctor(buffer);
     const jpeg = await encodeGrayscaleJpeg(
@@ -53,11 +47,11 @@ w.onmessage = async (e: MessageEvent<JpegExportInMsg>) => {
       upperLimit,
       quality,
     );
-    w.postMessage({ jobId, jpeg } satisfies JpegExportOutMsg, [jpeg]);
+    worker.postMessage({ jpeg, jobId }, [jpeg]);
   } catch (err) {
-    w.postMessage({
+    worker.postMessage({
       jobId,
       error: err instanceof Error ? err.message : String(err),
-    } satisfies JpegExportOutMsg);
+    });
   }
-};
+});
