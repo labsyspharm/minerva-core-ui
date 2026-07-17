@@ -1,0 +1,9 @@
+# Single-package workspace so pnpm 10 can apply onlyBuiltDependencies to
+# git-hosted prepare scripts (see ERR_PNPM_GIT_DEP_PREPARE_NOT_ALLOWED).
+packages:
+  - "."
+
+onlyBuiltDependencies:
+  - "@vivjs/monorepo"
+  - "@vivjs/monorepo@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134"
+  - "@vivjs/extensions@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/extensions"
