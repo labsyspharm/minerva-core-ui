@@ -1,4 +1,3 @@
-import type { Loader } from "../imaging/viv";
 import { importedTextStyle } from "./shapeDefaults";
 import type {
   LineShape,
@@ -596,14 +595,15 @@ export const parseRoisFromRoiList = (
 };
 
 /**
- * Parse ROIs from loader metadata and convert to viewer shapes and groups
+ * Parse ROIs from loader metadata and convert to viewer shapes and groups.
+ * Accepts a structural loader shape so this module does not import viv (cycle).
  */
 export const parseRoisFromLoader = (
-  loader: Loader,
+  loader: { metadata?: { ROIs?: Roi[] | null } } | null | undefined,
 ): { shapes: Shape[]; groups: Group[] } => {
   if (!loader || !loader.metadata || !loader.metadata.ROIs) {
     console.log("No ROIs found in loader metadata");
     return { shapes: [], groups: [] };
   }
-  return parseRoisFromRoiList(loader.metadata.ROIs as Roi[]);
+  return parseRoisFromRoiList(loader.metadata.ROIs);
 };
