@@ -1,4 +1,4 @@
-import type { JpegImage } from "./jpeg-image";
+import type { JpegImage } from "./jpeg-image.js";
 
 type Dtype =
   | "Uint8"

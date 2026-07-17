@@ -7,7 +7,9 @@
     "dev": "vite --mode development",
     "jpeg": "vite --mode demo-jpeg",
     "demo": "vite --mode demo",
-    "pages": "tsc && vite build",
+    "pages": "tsc && vite build && vite build --config vite.bundle.config.ts",
+    "build:bundle": "vite build --config vite.bundle.config.ts",
+    "serve:bundle": "http-server bundle -p 4173 --cors -c-1",
     "schema": "typescript-json-schema -o 'schema/generic.schema.json' 'src/config/generic.ts' Config",
     "format": "prettier --ignore-path .eslintignore --write .",
     "build": "rm -rf build && tsc -b",
@@ -18,14 +20,18 @@
   "packageManager": "pnpm@10.34.4",
   "main": "build/main.js",
   "types": "build/main.d.ts",
+  "unpkg": "bundle/minerva.js",
+  "jsdelivr": "bundle/minerva.js",
   "author": "John T. Hoffer",
   "repository": "github:labsyspharm/minerva-core-ui",
   "license": "MIT",
   "exports": {
-    ".": "./build/main.js"
+    ".": "./build/main.js",
+    "./bundle": "./bundle/minerva.js"
   },
   "files": [
-    "build"
+    "build",
+    "bundle"
   ],
   "keywords": [
     "microscopy",
@@ -95,7 +101,6 @@
     "openseadragon": "^4.1.1",
     "polygon-clipping": "^0.15.7",
     "prop-types": "^15.8.1",
-    "psudo": "0.4.2",
     "prosemirror-commands": "^1.5.2",
     "prosemirror-history": "^1.4.1",
     "prosemirror-keymap": "^1.2.2",
@@ -104,6 +109,7 @@
     "prosemirror-state": "^1.4.3",
     "prosemirror-transform": "^1.9.0",
     "prosemirror-view": "^1.33.9",
+    "psudo": "0.4.2",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.4",
     "react-color": "^2.19.3",
@@ -133,6 +139,7 @@
     "@vivjs/types": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/types",
     "eslint": "^9.7.0",
     "eslint-plugin-react": "^7.34.4",
+    "http-server": "^14.1.1",
     "path-vars": "^1.0.0",
     "prettier": "^3.3.3",
     "react-lorem-ipsum": "^1.4.10",

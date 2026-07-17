@@ -118,14 +118,16 @@ const MenuItemDivided = styled(MenuItem)`
 export type StoryAuthorOverflowMenuProps = {
   authorUiTagName: string;
   exportLabel?: string;
+  /** Shown when the story can keep remote OME-TIFF URLs instead of baking pyramids. */
+  onExportRemoteUrl?: () => void;
 };
 
 /**
  * Hamburger + overflow actions (library, export dialog, JSON download) aligned with the top
- * story chrome; behavior matches the former nav tab-row menu.
+ * story banner; behavior matches the former nav tab-row menu.
  */
 export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
-  const { authorUiTagName, exportLabel = "Export" } = props;
+  const { authorUiTagName, exportLabel = "Export", onExportRemoteUrl } = props;
   const [open, setOpen] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const waypointsOk = useDocumentStore((s) => s.waypoints.length > 0);
@@ -190,6 +192,19 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
         >
           {exportLabel}
         </MenuItemDivided>
+        {onExportRemoteUrl ? (
+          <MenuItem
+            type="button"
+            role="menuitem"
+            onClick={(e) => {
+              e.stopPropagation();
+              close();
+              onExportRemoteUrl();
+            }}
+          >
+            Export with remote OME URL
+          </MenuItem>
+        ) : null}
         <MenuItemDivided
           type="button"
           role="menuitem"

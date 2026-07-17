@@ -2,7 +2,6 @@ import type { TiffPixelSource } from "@hms-dbmi/viv";
 import { getImageSize } from "@hms-dbmi/viv";
 import * as React from "react";
 import { useMemo, useState } from "react";
-import hash from "stable-hash";
 import styled from "styled-components";
 import type {
   ItemRegistryGroup,
@@ -14,10 +13,15 @@ import {
   encodeTileJpeg,
   jpegExportConcurrency,
 } from "@/lib/imaging/jpegExportPool";
+import { jpegPyramidFolderName } from "@/lib/imaging/jpegPyramid";
 import type { Config } from "@/lib/imaging/viv";
 import type { PoolClass } from "@/lib/imaging/workers/Pool";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
+import {
+  type StoryExportMode,
+  writeStoryBundleSidecars,
+} from "@/lib/storyExport/storyBundle";
 
 ///
 
@@ -45,11 +49,6 @@ type InitIn = {
   loader: LoaderPlane[];
   cRange: Index[];
 };
-
-type ToSaveDirectory = (
-  d: FileSystemDirectoryHandle,
-  s: string,
-) => Promise<FileSystemDirectoryHandle>;
 
 type Progress = {
   completed: number;
@@ -152,16 +151,6 @@ const exportTile = async (
   await write.close();
 };
 
-const toSaveDirectory: ToSaveDirectory = async (directory_handle, encoded) => {
-  const create = { create: true };
-  const encoded_data = new TextEncoder().encode(encoded);
-  const sha256 = new Uint8Array(
-    await crypto.subtle.digest("SHA-256", encoded_data),
-  ).toHex();
-  const dh = await directory_handle.getDirectoryHandle(sha256, create);
-  return dh;
-};
-
 const createCRange = async (
   setCRange,
   channelGroups,
@@ -174,9 +163,14 @@ const createCRange = async (
       if (c === undefined) {
         return null;
       }
-      const opts = { channelId, lowerLimit, upperLimit };
-      const encoded = hash(opts);
-      const dh = await toSaveDirectory(directory_handle, encoded);
+      const folderName = await jpegPyramidFolderName(
+        channelId,
+        lowerLimit,
+        upperLimit,
+      );
+      const dh = await directory_handle.getDirectoryHandle(folderName, {
+        create: true,
+      });
       const fh = await dh.getFileHandle("settings.json", {
         create: true,
       });
@@ -185,6 +179,7 @@ const createCRange = async (
         JSON.stringify(
           {
             channel: c,
+            channelId,
             lowerLimit,
             upperLimit,
           },
@@ -199,7 +194,7 @@ const createCRange = async (
         y: 0,
         c,
         dh,
-        encoded,
+        encoded: folderName,
         lowerLimit,
         upperLimit,
       } as Index;
@@ -423,6 +418,8 @@ export type ImageExporterProps = {
   dicomIndexList: DicomIndex[];
   omeLoaderEntries: OmeLoaderEntry[];
   viewerConfig: Config;
+  /** Default: bake JPEG pyramids. `remote-url` writes sidecars only. */
+  exportMode?: StoryExportMode;
 };
 
 export const ImageExporter = (props: ImageExporterProps) => {
@@ -432,6 +429,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
   };
   const { groups, viewerConfig } = props;
   const { omeLoaderEntries, dicomIndexList } = props;
+  const exportMode: StoryExportMode = props.exportMode ?? "jpeg-pyramid";
 
   const {
     activeChannelGroupId,
@@ -518,6 +516,10 @@ export const ImageExporter = (props: ImageExporterProps) => {
     channelGroups.some((g) => g.channels.length > 0);
 
   React.useEffect(() => {
+    if (exportMode === "remote-url") {
+      setCRange([]);
+      return;
+    }
     if (!hasChannelGroup) {
       setCRange([]);
       setExportError(
@@ -527,7 +529,13 @@ export const ImageExporter = (props: ImageExporterProps) => {
     }
     setExportError(null);
     createCRange(setCRange, channelGroups, imageChannels, directory_handle);
-  }, [channelGroups, imageChannels, directory_handle, hasChannelGroup]);
+  }, [
+    channelGroups,
+    imageChannels,
+    directory_handle,
+    hasChannelGroup,
+    exportMode,
+  ]);
   const loader = useMemo(
     () =>
       mainSettingsList.length > 0 ? mainSettingsList[0].loader.data : null,
@@ -535,6 +543,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
   );
 
   const state: MainState = useMemo(() => {
+    if (exportMode === "remote-url") return null;
     if (loader === null || cRange === null) {
       return null;
     }
@@ -543,10 +552,51 @@ export const ImageExporter = (props: ImageExporterProps) => {
       return init;
     }
     return null;
-  }, [loader, cRange]);
+  }, [loader, cRange, exportMode]);
 
   const stopExport = props.stopExport;
+
   React.useEffect(() => {
+    if (exportMode !== "remote-url") return;
+    if (exportError) {
+      const t = setTimeout(() => stopExport(), 2000);
+      return () => clearTimeout(t);
+    }
+    let cancelled = false;
+    const wallStart = performance.now();
+    setProgress({ completed: 0, total: 1, done: false, startedAt: wallStart });
+    void (async () => {
+      try {
+        await writeStoryBundleSidecars(
+          directory_handle,
+          useDocumentStore.getState().toDocumentData(),
+          { mode: "remote-url" },
+        );
+        if (cancelled) return;
+        setProgress({
+          completed: 1,
+          total: 1,
+          done: true,
+          startedAt: wallStart,
+        });
+        setTimeout(() => stopExport(), 1500);
+      } catch (e) {
+        if (cancelled) return;
+        console.error("[minerva] failed to write story bundle sidecars", e);
+        setExportError(
+          e instanceof Error
+            ? e.message
+            : "Failed to write document.json / index.html",
+        );
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [exportMode, directory_handle, stopExport, exportError]);
+
+  React.useEffect(() => {
+    if (exportMode === "remote-url") return;
     if (exportError) {
       const t = setTimeout(() => stopExport(), 2000);
       return () => clearTimeout(t);
@@ -615,6 +665,21 @@ export const ImageExporter = (props: ImageExporterProps) => {
         console.log(
           `[minerva] jpeg-export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (${concurrency} workers, ${total} tiles)`,
         );
+        try {
+          await writeStoryBundleSidecars(
+            directory_handle,
+            useDocumentStore.getState().toDocumentData(),
+            { mode: "jpeg-pyramid" },
+          );
+        } catch (e) {
+          console.error("[minerva] failed to write story bundle sidecars", e);
+          setExportError(
+            e instanceof Error
+              ? e.message
+              : "Failed to write document.json / index.html",
+          );
+          return;
+        }
         setProgress({
           completed: total,
           total,
@@ -633,7 +698,15 @@ export const ImageExporter = (props: ImageExporterProps) => {
       // Avoid aborting the shared Viv loader after a successful export.
       if (!finishedOk) abort.abort();
     };
-  }, [state, loader, stopExport, cRange, exportError]);
+  }, [
+    state,
+    loader,
+    stopExport,
+    cRange,
+    exportError,
+    directory_handle,
+    exportMode,
+  ]);
 
   const { completed, total, done, startedAt } = progress;
   let ratio = done ? 1 : 0;
@@ -665,6 +738,14 @@ export const ImageExporter = (props: ImageExporterProps) => {
     <ImageExporterDiv>
       {exportError ? (
         <ExportMessage>{exportError}</ExportMessage>
+      ) : exportMode === "remote-url" ? (
+        <ExportStatus>
+          <ExportMessage>
+            {done
+              ? "Exported document.json + index.html (remote URLs)"
+              : "Writing document.json + index.html…"}
+          </ExportMessage>
+        </ExportStatus>
       ) : (
         <ExportStatus>
           <ProgressBar $ratio={ratio} $done={done}>

@@ -9,6 +9,7 @@ import type {
 } from "@/components/shared/viewer/ImageViewer";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import type { Config } from "@/lib/imaging/viv";
+import type { StoryExportMode } from "@/lib/storyExport/storyBundle";
 
 export type PlaybackRouterProps = ChannelPanelProps & {
   name: string;
@@ -24,6 +25,7 @@ export type PlaybackRouterProps = ChannelPanelProps & {
   exitPlaybackPreview?: () => void;
   dicomIndexList: DicomIndex[];
   omeLoaderEntries: OmeLoaderEntry[];
+  exportMode?: StoryExportMode;
 };
 
 const _ImageDiv = styled.div`
@@ -67,7 +69,10 @@ export const PlaybackRouter = (props: PlaybackRouterProps) => {
   if (props.presenting) {
     return (
       <ModeViewport key="presenting" data-mode="presenting">
-        <Presentation {...props}>
+        <Presentation
+          name={props.name}
+          exitPlaybackPreview={props.exitPlaybackPreview}
+        >
           <ChannelPanel {...props}>{props.children}</ChannelPanel>
         </Presentation>
       </ModeViewport>
@@ -84,6 +89,7 @@ export const PlaybackRouter = (props: PlaybackRouterProps) => {
     dicomIndexList: props.dicomIndexList,
     omeLoaderEntries: props.omeLoaderEntries,
     directory_handle: props.directory_handle,
+    exportMode: props.exportMode,
   };
 
   return (

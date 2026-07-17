@@ -1,9 +1,12 @@
+import type { MouseEvent, ReactElement } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-//import { theme } from "@/theme.module.css";
 import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import { storyChromeBannerBarCss } from "@/components/shared/storyChromeBanner";
+import {
+  STORY_BANNER_CONTROL_SIZE_PX,
+  storyBannerBarCss,
+} from "@/components/shared/storyBannerBar";
 import {
   effectiveReferenceImagePixelSize,
   useAppStore,
@@ -15,26 +18,27 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
+/** Fonts + theme tokens + prose — shared by authoring preview and CDN export. */
+import "./presentationShell.css";
 
-const _theme = {};
-
-// Types
-import type { MouseEvent, ReactElement } from "react";
-import type { ConfigProps } from "@/lib/authoring/config";
-
+/** Shared by authoring preview and the CDN `StoryPlayerApp` bundle. */
 export type PresentationProps = {
   children: ReactElement;
+  /** Shown in the left nav (story / exhibit name). */
   name: string;
-  config: ConfigProps;
-  hiddenChannel: boolean;
-  startExport: () => void;
-  channelItemElement: string;
-  controlPanelElement: string;
-  setHiddenChannel: (v: boolean) => void;
+  /** When set, shows the authoring “Back / Story preview” ribbon. */
   exitPlaybackPreview?: () => void;
+  /**
+   * When true (CDN player), show the document title in the top ribbon without
+   * authoring “Back” / “Story preview” controls.
+   */
+  showDocumentTitle?: boolean;
 };
 
-/** Preview mode: full-width ribbon (author tab tint) + two-column body */
+/**
+ * Layout only — fonts/tokens/type live in `presentationShell.css`
+ * (`.minerva-presentation`) so preview and export cannot drift.
+ */
 const PresentationShell = styled.div`
   display: flex;
   flex-direction: column;
@@ -45,10 +49,10 @@ const PresentationShell = styled.div`
 
 const PreviewRibbon = styled.div`
   position: relative;
-  /* Above SplitGrid (later in DOM); channel chrome is absolutely positioned and was painting over */
+  /* Above SplitGrid (later in DOM); channel overlay is absolutely positioned and was painting over */
   z-index: 2;
   justify-content: flex-start;
-  ${storyChromeBannerBarCss}
+  ${storyBannerBarCss}
 `;
 
 const PreviewBackButton = styled.button`
@@ -57,14 +61,16 @@ const PreviewBackButton = styled.button`
   justify-content: center;
   gap: 6px;
   flex-shrink: 0;
+  box-sizing: border-box;
+  height: ${STORY_BANNER_CONTROL_SIZE_PX}px;
   background: rgb(0 0 0 / 0.16);
   border: 1px solid rgb(255 255 255 / 0.22);
   color: rgb(248 250 252 / 0.98);
-  padding: 3px 10px;
+  padding: 0 10px;
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
-  line-height: 1.2;
+  line-height: 1;
   font-family: inherit;
   font-weight: 500;
 
@@ -91,7 +97,7 @@ const PreviewRibbonChevron = styled(ChevronDownIcon)`
 `;
 
 /** Document title — shares the ribbon with the “Story preview” badge. */
-const PreviewRibbonDocumentTitle = styled.span`
+const PreviewRibbonDocumentTitle = styled.span<{ $flush?: boolean }>`
   display: block;
   flex: 1;
   min-width: 0;
@@ -103,8 +109,9 @@ const PreviewRibbonDocumentTitle = styled.span`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-left: 1px solid rgb(255 255 255 / 0.14);
-  padding-left: 10px;
+  border-left: ${(p) =>
+    p.$flush ? "none" : "1px solid rgb(255 255 255 / 0.14)"};
+  padding-left: ${(p) => (p.$flush ? "0" : "10px")};
 `;
 
 const PreviewRibbonPreviewBadge = styled.span`
@@ -148,33 +155,64 @@ const PresentationViewerRegion = styled.div`
   overflow: hidden;
 `;
 
-const NavPane = styled.div`
+/** TOC / chevron SVGs are 16px; row must clear icons with equal vertical padding. */
+const STORY_TOOLBAR_ROW_PX = 36;
+
+const NavPane = styled.div<{ $hasStoryName?: boolean }>`
   border-right: 2px solid var(--theme-glass-edge);
   background: var(--theme-dim-gray-color);
   display: grid;
-  gap: 0.4em;
+  /* No gap — it sat between toolbar and content’s border-top as empty space. */
+  gap: 0;
   z-index: 1;
   overflow: hidden;
-  grid-template-rows: auto 24px 1fr;
+  /* Title row only when not already shown in the top ribbon (preview / CDN). */
+  grid-template-rows: ${(p) =>
+    p.$hasStoryName
+      ? `auto ${STORY_TOOLBAR_ROW_PX}px 1fr`
+      : `${STORY_TOOLBAR_ROW_PX}px 1fr`};
   grid-template-columns: 1fr;
-  > :nth-child(1) {
+  > .story-name {
     grid-column: 1;
     grid-row: 1;
+    padding: 8px 8px 4px;
+    margin: 0;
   }
-  > :nth-child(2) {
+  > .story-toolbar {
     grid-column: 1;
-    grid-row: 2;
-    padding-top: 0;
+    grid-row: ${(p) => (p.$hasStoryName ? 2 : 1)};
+    /* Symmetric padding — previous \`8px 8px 0\` in a 24px row clipped the icons. */
+    padding: 0 8px;
+    margin: 0;
   }
-  > :nth-child(3) {
+  > .story-content {
     overflow-y: auto;
     grid-column: 1;
-    grid-row: 3;
+    grid-row: ${(p) => (p.$hasStoryName ? 3 : 2)};
     border-top: 2px solid var(--theme-glass-edge);
-  }
-  > * {
+    /* Fixed padding — same whether StoryTitle row is present or not. */
     padding: 8px 8px 0;
     margin: 0;
+  }
+  /* Same button reset in preview (Bootstrap) and CDN (native). */
+  button {
+    all: unset;
+    box-sizing: border-box;
+    color: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+  }
+  /* Inline SVG baseline gap otherwise lifts glyphs toward the top of the row. */
+  button svg {
+    display: block;
+    flex-shrink: 0;
+  }
+  button:focus-visible {
+    outline: 2px solid var(--theme-light-focus-color);
+    outline-offset: 2px;
   }
   .inactive {
     color: #444;
@@ -186,9 +224,11 @@ const StoryTitle = styled.div`
   min-width: 0;
 `;
 
-const Toolbar = styled.div`
+const Toolbar = styled.div.attrs({ className: "story-toolbar" })`
   display: grid;
+  height: 100%;
   overflow: hidden;
+  align-items: center;
   grid-template-rows: 1fr;
   grid-template-columns: 30px 1fr 30px 50px 30px;
   > .table-of-contents {
@@ -204,10 +244,9 @@ const Toolbar = styled.div`
   > .right {
     grid-column: 5;
   }
-  }
 `;
 
-const ContentWrap = styled.div`
+const ContentWrap = styled.div.attrs({ className: "story-content" })`
   scrollbar-color: #888 var(--theme-dim-gray-color);
 `;
 
@@ -235,6 +274,9 @@ const InlineNext = styled.div`
 const Count = styled.div`
   text-align: center;
   display: grid;
+  align-items: center;
+  line-height: 1;
+  font-size: 14px;
   grid-template-columns: 2fr 1fr 2fr;
   > :nth-child(1) {
     grid-column: 1;
@@ -247,16 +289,28 @@ const Count = styled.div`
   }
 `;
 
-const SVG = (props) => {
+/** Square viewBox so the glyph’s visual center matches the SVG box center. */
+const NavChevron = (props: { dir: "left" | "right"; px: number }) => {
+  const d =
+    props.dir === "left"
+      ? "M10.5 3.5 L5.5 8 l5 4.5"
+      : "M5.5 3.5 L10.5 8 l-5 4.5";
   return (
     <svg
-      viewBox="-3 0 20 40"
-      height={`${props.px}px`}
-      width={`${props.px * 1.5}px`}
+      viewBox="0 0 16 16"
+      width={props.px}
+      height={props.px}
       aria-hidden="true"
       focusable="false"
     >
-      <path d={props.d} fill="currentColor" />
+      <path
+        d={d}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 };
@@ -418,7 +472,7 @@ export const Presentation = (props: PresentationProps) => {
     updateGroup(active_story);
     updateViewState(active_story);
   };
-  const buttonHeight = 20;
+  const iconPx = 16;
   const toc_button = (
     <button
       type="button"
@@ -430,18 +484,21 @@ export const Presentation = (props: PresentationProps) => {
       }}
     >
       <svg
-        viewBox="0 0 30 20"
-        height={`${buttonHeight}px`}
-        width={`${buttonHeight * 1.5}px`}
+        viewBox="0 0 16 16"
+        width={iconPx}
+        height={iconPx}
         aria-hidden="true"
         focusable="false"
       >
-        <circle cx="4" cy="4" r="2" fill="currentColor" />
-        <circle cx="4" cy="10" r="2" fill="currentColor" />
-        <circle cx="4" cy="16" r="2" fill="currentColor" />
-        <path d="M 9 4 H 24" stroke="currentColor" strokeWidth="3" />
-        <path d="M 9 10 H 24" stroke="currentColor" strokeWidth="3" />
-        <path d="M 9 16 H 24" stroke="currentColor" strokeWidth="3" />
+        <circle cx="2.5" cy="4" r="1.25" fill="currentColor" />
+        <circle cx="2.5" cy="8" r="1.25" fill="currentColor" />
+        <circle cx="2.5" cy="12" r="1.25" fill="currentColor" />
+        <path
+          d="M6 4 H14 M6 8 H14 M6 12 H14"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+        />
       </svg>
     </button>
   );
@@ -458,10 +515,7 @@ export const Presentation = (props: PresentationProps) => {
         title="View previous waypoint"
         onMouseDown={handleMouseDown}
       >
-        <SVG
-          d="M 14 7 L 12 0 l -12 18 l 12 17 l 2 -7 L 8 18 z"
-          px={buttonHeight}
-        />
+        <NavChevron dir="left" px={iconPx} />
       </button>
     );
   };
@@ -485,10 +539,7 @@ export const Presentation = (props: PresentationProps) => {
         title="View next waypoint"
         onMouseDown={handleMouseDown}
       >
-        <SVG
-          d="M 0 7 L 2 0 l 12 18 l -12 17 l -2 -7 L 6 18 z"
-          px={buttonHeight}
-        />
+        <NavChevron dir="right" px={iconPx} />
       </button>
     );
   };
@@ -582,28 +633,44 @@ export const Presentation = (props: PresentationProps) => {
     return { processedContent: content, channelColors: colors };
   }, [story_content, activeChannelGroupId, channelGroups, sourceChannels]);
 
+  const showRibbon = Boolean(
+    props.exitPlaybackPreview || props.showDocumentTitle,
+  );
+  /** Left-nav name only when there is no top ribbon (ribbon already shows the title). */
+  const navStoryName =
+    !showRibbon && main_title.trim() ? main_title.trim() : "";
+
   return (
-    <PresentationShell>
-      {props.exitPlaybackPreview ? (
+    <PresentationShell className="minerva-presentation">
+      {showRibbon ? (
         <PreviewRibbon>
-          <PreviewBackButton
-            type="button"
-            onClick={props.exitPlaybackPreview}
-            title="Back to editing"
-            aria-label="Back to editing"
+          {props.exitPlaybackPreview ? (
+            <PreviewBackButton
+              type="button"
+              onClick={props.exitPlaybackPreview}
+              title="Back to editing"
+              aria-label="Back to editing"
+            >
+              <PreviewRibbonChevron aria-hidden />
+              <span>Back</span>
+            </PreviewBackButton>
+          ) : null}
+          <PreviewRibbonDocumentTitle
+            title={ribbonDocTitle}
+            $flush={!props.exitPlaybackPreview}
           >
-            <PreviewRibbonChevron aria-hidden />
-            <span>Back</span>
-          </PreviewBackButton>
-          <PreviewRibbonDocumentTitle title={ribbonDocTitle}>
             {ribbonDocTitle}
           </PreviewRibbonDocumentTitle>
-          <PreviewRibbonPreviewBadge>Story preview</PreviewRibbonPreviewBadge>
+          {props.exitPlaybackPreview ? (
+            <PreviewRibbonPreviewBadge>Story preview</PreviewRibbonPreviewBadge>
+          ) : null}
         </PreviewRibbon>
       ) : null}
       <SplitGrid>
-        <NavPane>
-          <StoryTitle className="h5">{main_title}</StoryTitle>
+        <NavPane $hasStoryName={Boolean(navStoryName)}>
+          {navStoryName ? (
+            <StoryTitle className="h5 story-name">{navStoryName}</StoryTitle>
+          ) : null}
           <Toolbar>
             {toc_button}
             <StoryLeft active={!first_story} />

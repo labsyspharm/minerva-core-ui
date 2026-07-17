@@ -1,0 +1,106 @@
+/**
+ * Isolated Story presentation shell — authoring preview AND CDN export.
+ * Imported only from Presentation.tsx.
+ *
+ * Sealed styling boundary: parent Bootstrap / Overpass / author-ui globals
+ * must not change layout inside `.minerva-presentation`.
+ */
+
+@import "../../latoFaces.css";
+
+/* Tokens on every descendant so author-ui `* { --dark-main-glass: … }` cannot win.
+ * Values intentionally diverge slightly from theme.module.css (dim-gray #111,
+ * softer glass-edge) so preview/CDN match the nav surface. */
+.minerva-presentation,
+.minerva-presentation * {
+  --theme-font-family: "lato", system-ui, sans-serif;
+  --theme-dark-main-color: hwb(240 10% 50%);
+  --theme-light-focus-color: hwb(45 90% 0%);
+  --theme-light-contrast-color: hwb(45 99% 0%);
+  --theme-glass-edge: color-mix(in xyz, white 20%, transparent);
+  --theme-dim-gray-color: #111;
+  --theme-dark-gray-color: color-mix(in xyz, navy 2%, black);
+  --theme-gap-tiny: 0.3em;
+  --bs-link-color: #6ea8fe;
+  --radius-0001: 0 0 0 4px;
+  --dark-main-glass: color-mix(
+    in xyz,
+    var(--theme-dark-main-color),
+    transparent 60%
+  );
+  --dark-glass: color-mix(in xyz, var(--theme-dim-gray-color), transparent 20%);
+  --dark-main-color: var(--theme-dark-main-color);
+  --light-focus-color: var(--theme-light-focus-color);
+  --light-contrast-color: var(--theme-light-contrast-color);
+  --glass-edge: var(--theme-glass-edge);
+  --dim-gray-color: var(--theme-dim-gray-color);
+}
+
+/* Bootstrap-equivalent box model (authoring loads Bootstrap; CDN does not). */
+.minerva-presentation,
+.minerva-presentation *,
+.minerva-presentation *::before,
+.minerva-presentation *::after {
+  box-sizing: border-box;
+}
+
+.minerva-presentation {
+  color: #e8e8e8;
+  font-family: var(--theme-font-family);
+  /* Author shell sets Overpass weight 200 on #react-output — do not inherit it. */
+  font-weight: 400;
+  font-size: 16px;
+  line-height: normal;
+  background: #111;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.minerva-presentation .h5 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.minerva-presentation .h6 {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.2;
+  margin: 0 0 0.5em;
+}
+
+/*
+ * Prose only in the waypoint pane — never the channel legend / viewer overlays
+ * (those use their own 11–12px metrics; a root line-height: 1.5 bloated them).
+ */
+.minerva-presentation .story-content {
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.minerva-presentation .story-content p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.minerva-presentation .story-content ul,
+.minerva-presentation .story-content ol {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  padding-left: 2rem;
+}
+
+.minerva-presentation .story-content a {
+  color: var(--bs-link-color);
+  text-decoration: underline;
+}
+
+.minerva-presentation .story-content a:hover {
+  color: color-mix(in srgb, var(--bs-link-color) 80%, white);
+}
+
+.minerva-presentation .story-content strong {
+  font-weight: bold;
+}

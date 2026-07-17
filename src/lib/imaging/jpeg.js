@@ -1,21 +1,26 @@
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 import { JpegImage } from "../jpeg-image";
 import { JpegPixelSource } from "../jpeg-pixel-source";
+import {
+  JPEG_BAKED_CONTRAST_LIMIT,
+  JPEG_PYRAMID_TILE_SIZE,
+  jpegPyramidLevels,
+} from "./jpegPyramid";
 
 function createJpegLayers(meta) {
-  const { channelsVisible, colors, contrastLimits, selections } = meta.settings;
+  const { channelsVisible, colors, selections } = meta.settings;
   const visible = channelsVisible.some((x) => x);
-  const { imagePath, jpegLoader } = meta;
-  const imageID = imagePath.replace("/", "-");
-  console.log({ imageID, TODO: "TODO", channelsVisible });
+  const { imagePath, jpegLoader, channelFolders } = meta;
+  const imageID = String(imagePath).replace(/\//g, "-");
+  // Contrast is baked into tiles; keep Viv at full range.
+  const contrastLimits = (meta.settings.contrastLimits || []).map(
+    () => JPEG_BAKED_CONTRAST_LIMIT,
+  );
   const imageProps = {
     visible,
     loader: jpegLoader,
-    // https://deck.gl/docs/api-reference/geo-layers/tile-layer#refinementstrategy
     refinementStrategy: "no-overlap",
-    // Include contrast limits in ID to force layer recreation when they change
-    // This prevents flash when switching channel groups
-    id: `${imageID}-${contrastLimits.map(([l, u]) => `${l}-${u}`).join("-")}`,
+    id: `${imageID}-${Object.values(channelFolders || {}).join("-")}-${selections?.map((s) => s.c).join("-")}`,
     channelsVisible,
     colors,
     contrastLimits,
@@ -25,12 +30,28 @@ function createJpegLayers(meta) {
 }
 
 const toIndexer = (opts) => {
-  const { imagePath } = opts;
+  const {
+    imagePath,
+    channelFolders,
+    imageWidth,
+    imageHeight,
+    tileSize,
+    fetchTile,
+  } = opts;
   return (sel, level) => {
+    const folder = channelFolders[sel.c];
+    if (!folder) {
+      throw new Error(`jpeg: no pyramid folder for channel index ${sel.c}`);
+    }
     return new JpegImage({
       imagePath,
       level,
-      ...sel,
+      c: sel.c,
+      folder,
+      imageWidth,
+      imageHeight,
+      tileSize,
+      fetchTile,
     });
   };
 };
@@ -46,14 +67,26 @@ const getShapeForBinaryDownsampleLevel = (options) => {
 };
 
 const loadJpeg = (meta) => {
-  const { imagePath, imageWidth, imageHeight } = meta;
+  const {
+    imagePath,
+    imageWidth,
+    imageHeight,
+    channels,
+    channelFolders,
+    tileSize = JPEG_PYRAMID_TILE_SIZE,
+    fetchTile,
+  } = meta;
   const width = imageWidth;
   const height = imageHeight;
-  const nChannels = 2; // TODO
-  const tileSize = 1024; // TODO
-  const levels = [0, 1, 2]; // TODO
+  const nChannels = Math.max(1, channels?.length ?? 1);
+  const levels = meta.levels ?? jpegPyramidLevels(width, height, tileSize);
   const pyramidIndexer = toIndexer({
     imagePath,
+    channelFolders,
+    imageWidth: width,
+    imageHeight: height,
+    tileSize,
+    fetchTile,
   });
   const data = levels.map((level) => {
     const axes = {
@@ -69,34 +102,35 @@ const loadJpeg = (meta) => {
       }),
     );
   });
+  const omeChannels = (channels ?? []).map((ch, i) => ({
+    ID: ch.id ?? `Channel:${i}`,
+    Name: ch.name || `Channel ${i}`,
+    SamplesPerPixel: 1,
+  }));
+  while (omeChannels.length < nChannels) {
+    const i = omeChannels.length;
+    omeChannels.push({
+      ID: `Channel:${i}`,
+      Name: `Channel ${i}`,
+      SamplesPerPixel: 1,
+    });
+  }
   return {
     data,
     metadata: {
       Pixels: {
-        Channels: [
-          {
-            ID: "DNA1",
-            Name: "DNA1",
-            SamplesPerPixel: 1,
-          },
-          {
-            ID: "AF488",
-            Name: "AF488",
-            SamplesPerPixel: 1,
-          },
-        ],
+        Channels: omeChannels,
         Type: "Uint16",
-        // TODO  -- using placeholder data
-        ID: "TODO",
+        ID: "JpegPixels",
         DimensionOrder: "TCZYX",
         SamplesPerPixel: 1,
         SizeT: 1,
-        SizeC: 2,
+        SizeC: nChannels,
         SizeZ: 1,
         SizeY: height,
         SizeX: width,
-        PhysicalSizeX: width,
-        PhysicalSizeY: height,
+        PhysicalSizeX: 1,
+        PhysicalSizeY: 1,
         PhysicalSizeZ: 1,
         PhysicalSizeXUnit: "µm",
         PhysicalSizeYUnit: "µm",
@@ -104,8 +138,7 @@ const loadJpeg = (meta) => {
         BigEndian: false,
         TiffData: null,
       },
-      // TODO  -- using placeholder data
-      ID: "TODO",
+      ID: "JpegImage",
       AquisitionDate: new Date().toISOString().split("T")[0],
       Description: "",
       ROIs: [],

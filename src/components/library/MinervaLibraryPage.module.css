@@ -37,6 +37,13 @@
   box-sizing: border-box;
 }
 
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
 .wordmark {
   margin: 0;
   font-size: clamp(0.95rem, 2vw, 1.1rem);

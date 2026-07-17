@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
@@ -8,6 +9,9 @@ import svgr from "vite-plugin-svgr";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 
+const require = createRequire(import.meta.url);
+const { version: PACKAGE_VERSION } = require("./package.json");
+
 /** ISO UTC time baked into each bundle; override in CI with `VITE_APP_BUILD_TIME` (ISO-8601). */
 const BUILD_TIME_ISO =
   process.env.VITE_APP_BUILD_TIME ?? new Date().toISOString();
@@ -15,6 +19,7 @@ const BUILD_TIME_ISO =
 export default defineConfig({
   define: {
     __BUILD_TIME_ISO__: JSON.stringify(BUILD_TIME_ISO),
+    __MINERVA_PACKAGE_VERSION__: JSON.stringify(PACKAGE_VERSION),
   },
   assetsInclude: ["**/*.wasm"],
   worker: {
