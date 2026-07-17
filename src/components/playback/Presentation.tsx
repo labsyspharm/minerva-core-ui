@@ -327,7 +327,7 @@ const TocWrapper = styled.div`
 
 const ChannelName = styled.span<{ color: string }>`
   text-decoration: underline;
-  text-decoration-color: #${(props) => props.color};
+  text-decoration-color: ${(props) => props.color};
   text-decoration-thickness: 2px;
   text-underline-offset: 2px;
 `;
@@ -432,6 +432,7 @@ export const Presentation = (props: PresentationProps) => {
 
   const updateGroup = (activeStory) => {
     const story = waypoints[activeStory];
+    if (!story) return;
     const gid = story.groupId;
     const found_group =
       (gid && channelGroups.find(({ id }) => id === gid)) || channelGroups[0];

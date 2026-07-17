@@ -27,7 +27,8 @@ function inlineWorkersForCdn(): Plugin {
  * Output: bundle/minerva.js → global `MinervaStory` with `.play(...)`.
  *
  * Omits wasm/top-level-await plugins (incompatible with lib IIFE).
- * Story playback does not need ONNX/psudo WASM.
+ * psudo (authoring-only GMM/palette) is external — never bundled into the
+ * player; SAM2/ONNX stays stubbed.
  */
 export default defineConfig({
   define: {
@@ -61,10 +62,6 @@ export default defineConfig({
         find: "@",
         replacement: path.resolve(__dirname, "./src"),
       },
-      {
-        find: "psudo",
-        replacement: path.resolve(__dirname, "./node_modules/psudo/index.js"),
-      },
     ],
   },
   // Do not copy `public/` (demo tiles, wasm, etc.) into the CDN artifact.
@@ -87,6 +84,9 @@ export default defineConfig({
       fileName: () => "minerva.js",
     },
     rollupOptions: {
+      // Authoring-only psudo (dynamic import, never hit in the player) stays out
+      // of the player bundle instead of inlining ~3.4MB of WASM.
+      external: ["psudo"],
       output: {
         exports: "named",
         inlineDynamicImports: true,

@@ -4,8 +4,15 @@ import styled from "styled-components";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 import type { ConfigProps } from "@/lib/authoring/config";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
-import { sourceChannelInAnyGroup } from "@/lib/imaging/channelCompositor";
-import { isImageChannel, isMaskChannel } from "@/lib/imaging/channelKind";
+import {
+  defaultVisibilitiesForSources,
+  isStackVisible,
+} from "@/lib/imaging/channelCompositor";
+import {
+  DEFAULT_VISIBLE_INTENSITY_CHANNELS,
+  isImageChannel,
+  isMaskChannel,
+} from "@/lib/imaging/channelKind";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
   findSourceChannel,
@@ -192,17 +199,15 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     const activeGroup = activeChannelGroupId
       ? docChannelGroups.find((g) => g.id === activeChannelGroupId)
       : undefined;
-    /**
-     * Membership is document structure only. Eye state dims rows in
-     * ChannelLegend — do not reuse the Viv compositor here or toggled-off
-     * channels disappear from the list (preview seeds a visibility map; CDN
-     * often does not).
-     */
     const hasStackVisibilityMap = Object.keys(channelVisibilities).length > 0;
     const sections: LegendSection[] = [];
 
     for (const im of images) {
       const entries: LegendEntry[] = [];
+      const imageSources = sourceChannels.filter(
+        (sc) =>
+          sc.imageId === im.id && (isImageChannel(sc) || isMaskChannel(sc)),
+      );
 
       if (activeGroup) {
         const groupChannels: LegendChannel[] = [];
@@ -216,13 +221,12 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         }
 
         const overlayChannels: LegendChannel[] = [];
-        // Stack overlays only appear once a visibility map exists (authoring).
-        // CDN typically has an empty map and shows group rows alone.
+        // Active-group rows always remain listed so their eye can be toggled
+        // back on. All Channels rows are overlays and remain only while their
+        // independent stack eye is on.
         if (hasStackVisibilityMap) {
-          for (const sc of sourceChannels) {
-            if (sc.imageId !== im.id) continue;
-            if (sourceChannelInAnyGroup(docChannelGroups, sc.id)) continue;
-            if (!isImageChannel(sc) && !isMaskChannel(sc)) continue;
+          for (const sc of imageSources) {
+            if (!isStackVisible(channelVisibilities, sc.id)) continue;
             const colorIdx = indexById.get(sc.id) ?? 0;
             overlayChannels.push(legendChannelFromSource(sc, colorIdx));
           }
@@ -238,9 +242,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
           entries.push({ type: "channel", channel: c });
         }
       } else {
-        for (const sc of sourceChannels) {
-          if (sc.imageId !== im.id) continue;
-          if (!isImageChannel(sc) && !isMaskChannel(sc)) continue;
+        let defaultIntensitySeen = 0;
+        for (const sc of imageSources) {
+          const visible = hasStackVisibilityMap
+            ? isStackVisible(channelVisibilities, sc.id)
+            : isMaskChannel(sc) ||
+              defaultIntensitySeen < DEFAULT_VISIBLE_INTENSITY_CHANNELS;
+          if (isImageChannel(sc)) defaultIntensitySeen += 1;
+          if (!visible) continue;
           const colorIdx = indexById.get(sc.id) ?? 0;
           entries.push({
             type: "channel",
@@ -275,9 +284,13 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       });
       return;
     }
+    const stackVisibilities =
+      Object.keys(channelVisibilities).length > 0
+        ? channelVisibilities
+        : defaultVisibilitiesForSources(sourceChannels, {}, docChannelGroups);
     setChannelVisibilities({
-      ...channelVisibilities,
-      [c.source_uuid]: !(channelVisibilities[c.source_uuid] ?? true),
+      ...stackVisibilities,
+      [c.source_uuid]: !isStackVisible(stackVisibilities, c.source_uuid),
     });
   };
 

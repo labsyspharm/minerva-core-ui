@@ -54,8 +54,8 @@ import {
   hasAuthorShellSupport,
   hasDirectoryPickerAccess,
   hasFileHandlePermission,
-  isPersistableFileHandle,
   loadOmeLoaderForRole,
+  toFile,
 } from "@/lib/imaging/filesystem";
 import {
   clearOmeHistogramCache,
@@ -307,11 +307,14 @@ async function hydrateLoadersFromImages(
   omeLoaderEntries: OmeLoaderEntry[];
   dicomIndexList: DicomIndex[];
   deniedHandleKeys: string[];
+  /** Local source present but no handle in IDB/session (typical after Firefox refresh). */
+  missingHandleKeys: string[];
 }> {
   const jpegLoaderEntries: JpegLoaderEntry[] = [];
   const omeLoaderEntries: OmeLoaderEntry[] = [];
   const dicomIndexList: DicomIndex[] = [];
   const deniedHandleKeys: string[] = [];
+  const missingHandleKeys: string[] = [];
   const pool = new Pool();
   const dicomSeriesSeen = new Set<string>();
   const canAccess = requestPermission
@@ -355,7 +358,10 @@ async function hydrateLoadersFromImages(
       }
       case "local": {
         const handle = await getFileHandle(im.source.handleKey);
-        if (!handle) break;
+        if (!handle) {
+          missingHandleKeys.push(im.source.handleKey);
+          break;
+        }
         if (!(await canAccess(handle))) {
           deniedHandleKeys.push(im.source.handleKey);
           break;
@@ -398,6 +404,7 @@ async function hydrateLoadersFromImages(
     omeLoaderEntries,
     dicomIndexList,
     deniedHandleKeys,
+    missingHandleKeys,
   };
 }
 
@@ -531,6 +538,7 @@ const Content = (props: Props) => {
   );
   const [dicomIndexList, setDicomIndexList] = useState([] as DicomIndex[]);
   const [deniedHandleKeys, setDeniedHandleKeys] = useState<string[]>([]);
+  const [missingHandleKeys, setMissingHandleKeys] = useState<string[]>([]);
   /** Skip auto-hydrate while import sets loaders (avoids racing publishChannelState). */
   const skipLoaderHydrateRef = React.useRef(false);
   const {
@@ -866,8 +874,9 @@ const Content = (props: Props) => {
       for (let i = 0; i < entries.length; i++) {
         const { sourceImageId } = entries[i];
         const handle = handles[i];
-        if (!isPersistableFileHandle(handle)) continue;
         const key = imageHandleStorageKey(storyId, sourceImageId);
+        // Always record local source so refresh can prompt re-select (Firefox) or
+        // re-grant (Chrome). putFileHandle no-ops IDB for ephemeral handles.
         await putFileHandle(key, handle);
         nextImages = setImageSource(nextImages, sourceImageId, {
           kind: "local",
@@ -887,6 +896,7 @@ const Content = (props: Props) => {
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries(entries);
     setDeniedHandleKeys([]);
+    setMissingHandleKeys([]);
     publishChannelState(nextImages, ChannelGroups, { resetRegistry: true });
     ensureDefaultWaypointForImageImport();
     for (let i = 0; i < entries.length; i++) {
@@ -965,7 +975,7 @@ const Content = (props: Props) => {
       newEntries.push({ loader, sourceImageId });
 
       const storyId = useDocumentStore.getState().activeStoryId;
-      if (storyId && isPersistableFileHandle(handle)) {
+      if (storyId) {
         const key = imageHandleStorageKey(storyId, sourceImageId);
         await putFileHandle(key, handle);
         nextImages = setImageSource(nextImages, sourceImageId, {
@@ -1213,6 +1223,7 @@ const Content = (props: Props) => {
       setOmeLoaderEntries(result.omeLoaderEntries);
       setDicomIndexList(result.dicomIndexList);
       setDeniedHandleKeys(result.deniedHandleKeys);
+      setMissingHandleKeys(result.missingHandleKeys);
     },
     [],
   );
@@ -1264,6 +1275,52 @@ const Content = (props: Props) => {
       document.getElementById("global-loader")?.remove();
     }
   }, [applyHydratedLoaders, syncRegistryFromDocument]);
+
+  /**
+   * Firefox (and any browser without persistable handles): pick the file again after
+   * refresh, bind it to the image's handleKey (session map), then hydrate loaders.
+   */
+  const reselectLoaderFile = React.useCallback(
+    async (imageId: string) => {
+      setIsLoadingImage(true);
+      try {
+        const picked = await toFile();
+        if (picked.length === 0) return;
+        const handle = picked[0];
+        if (!(await ensureFileHandlePermission(handle))) return;
+        if (!(await findFile({ handle }))) return;
+
+        const doc = useDocumentStore.getState();
+        const im = doc.images.find((i) => i.id === imageId);
+        if (!im?.source || im.source.kind !== "local") return;
+
+        await putFileHandle(im.source.handleKey, handle);
+        const result = await hydrateLoadersFromImages(doc.images, true, {
+          channelGroups: doc.channelGroups,
+          documentUrl: window.location.href,
+        });
+        applyHydratedLoaders(result);
+        if (
+          result.omeLoaderEntries.length +
+            result.jpegLoaderEntries.length +
+            result.dicomIndexList.length >
+          0
+        ) {
+          syncRegistryFromDocument();
+          setImportRevision((r) => r + 1);
+          setHideWaypoint(false);
+          const file = await handle.getFile();
+          setFileName(file.name);
+        }
+      } catch (e) {
+        console.error("[minerva] reselectLoaderFile failed", e);
+      } finally {
+        setIsLoadingImage(false);
+        document.getElementById("global-loader")?.remove();
+      }
+    },
+    [applyHydratedLoaders, syncRegistryFromDocument],
+  );
 
   /** Shared by FileHandler: auto-restore on mount, “Use recent”, and PWA launch — same rules. */
   const onRestoredOmeHandles = React.useCallback(
@@ -2035,7 +2092,8 @@ const Content = (props: Props) => {
     controlPanelElement,
     channelItemElement,
     config: config,
-    editable,
+    // Preview matches CDN: legend names are not editable while presenting.
+    editable: presenting ? false : editable,
     hiddenChannel,
     setHiddenChannel: setHiddenChannelWithLogic,
     updateGroup,
@@ -2546,8 +2604,10 @@ const Content = (props: Props) => {
           fileName,
           lastOmeTiffUrl,
           onImportOme: importOme,
-          needsFileAccess: deniedHandleKeys.length > 0 && !imageLoaded,
+          needsFileAccess: deniedHandleKeys.length > 0,
           onRequestFileAccess: requestLoaderFileAccess,
+          missingHandleKeys,
+          onReselectFile: reselectLoaderFile,
         };
         // Update mainProps with actual handles
         const mainPropsWithHandle = {

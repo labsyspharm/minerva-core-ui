@@ -854,7 +854,7 @@ packages:
     resolution: {integrity: sha512-17trb46MhB8SPhePdx+4bIQQfVACamWj5dZoVGPOyrRY91RADbMh4+fkkgJiU06Jk0HwrvUSR1jNardB4+QdJg==}
 
   '@hms-dbmi/viv@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/main':
-    resolution: {gitHosted: true, path: packages/main, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134}
+    resolution: {gitHosted: true, integrity: sha512-/dCNe4QWFBYsmeTZqSH8/QSF2CBD38IAhWw8iamVhFOzZKlKxNFPYjuHIbl0n7BB7Gy9JvnBtFJScimpGr1GJA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134}
     version: 0.20.0
 
   '@humanfs/core@0.19.1':
@@ -1971,7 +1971,7 @@ packages:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0
 
   '@vivjs/constants@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/constants':
-    resolution: {gitHosted: true, path: packages/constants, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134}
+    resolution: {gitHosted: true, integrity: sha512-/dCNe4QWFBYsmeTZqSH8/QSF2CBD38IAhWw8iamVhFOzZKlKxNFPYjuHIbl0n7BB7Gy9JvnBtFJScimpGr1GJA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134}
     version: 0.20.0
 
   '@vivjs/extensions@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/extensions':
@@ -1998,7 +1998,7 @@ packages:
     version: 0.20.0
 
   '@vivjs/types@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/types':
-    resolution: {gitHosted: true, path: packages/types, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134}
+    resolution: {gitHosted: true, integrity: sha512-/dCNe4QWFBYsmeTZqSH8/QSF2CBD38IAhWw8iamVhFOzZKlKxNFPYjuHIbl0n7BB7Gy9JvnBtFJScimpGr1GJA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134}
     version: 0.20.0
 
   '@vivjs/viewers@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/viewers':

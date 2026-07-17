@@ -8,7 +8,7 @@ export const JPEG_BAKED_CONTRAST_LIMIT: [number, number] = [0, 65535];
 
 /**
  * Folder name under the story root for one exported channel+contrast combo.
- * Must match {@link ImageExporter} `toSaveDirectory`.
+ * Must stay in sync with {@link ImageExporter} pyramid folder naming.
  */
 export async function jpegPyramidFolderName(
   channelId: string,
@@ -18,7 +18,8 @@ export async function jpegPyramidFolderName(
   const encoded = hash({ channelId, lowerLimit, upperLimit });
   const bytes = new TextEncoder().encode(encoded);
   const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
-  return digest.toHex();
+  // Manual hex — `Uint8Array.prototype.toHex` is still too new for some browsers.
+  return Array.from(digest, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /** Map OME channel index → pyramid folder for the given group rows. */

@@ -15,6 +15,7 @@
 }
 
 .headerActions {
+  position: relative;
   display: flex;
   gap: 6px;
   flex-shrink: 0;
@@ -29,27 +30,32 @@
 }
 
 .addPanel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* Hug the format chips; expand only when URL/DICOM body needs space. */
+  width: max-content;
+  max-width: min(420px, calc(100vw - 32px));
   padding: 10px 12px;
   border-radius: 8px;
   background: #121212;
   border: 1px solid #252525;
+  box-shadow: 0 10px 28px rgb(0 0 0 / 55%);
 }
 
-.addPanelToolbar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
+.addActionAnchor {
+  position: relative;
+  display: inline-flex;
 }
 
 .formatRow {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  flex: 1;
   min-width: 0;
 }
 
@@ -76,21 +82,6 @@
   color: #fff;
 }
 
-.cancelLink {
-  background: none;
-  border: none;
-  color: #8b949e;
-  font-size: 11px;
-  cursor: pointer;
-  padding: 0.35rem 0.2rem;
-  flex-shrink: 0;
-  line-height: 1.2;
-}
-
-.cancelLink:hover {
-  color: #c9d1d9;
-}
-
 .addPanelBody {
   display: flex;
   flex-direction: column;
@@ -99,16 +90,12 @@
   border-top: 1px solid #252525;
 }
 
-.fileRow,
 .urlRow {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-}
-
-.urlRow {
-  width: 100%;
+  width: min(360px, calc(100vw - 56px));
 }
 
 .urlInput {
@@ -163,14 +150,6 @@
   font-size: 11px;
   line-height: 1.4;
   color: #f85149;
-}
-
-.fileNameHint {
-  font-size: 11px;
-  color: #8b949e;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .imageCard {

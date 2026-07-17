@@ -77,8 +77,8 @@ export async function importStoryFolderFromPicker(): Promise<string> {
   const data = await readDocumentJson(root);
   const title = data.metadata.title?.trim() || root.name || "Imported Story";
   const rec = await createStoryRecord(title);
-  // Remote-URL exports keep OME/DICOM sources; only JPEG-pyramid bundles
-  // need portable `{ kind: "jpeg", url: "." }` roots.
+  // Remote-URL exports keep existing `kind: "url"` sources; JPEG-pyramid
+  // bundles rewrite intensity roots to `{ kind: "jpeg", url: "." }`.
   const images =
     data.metadata.imageSource === "remote-url"
       ? data.images

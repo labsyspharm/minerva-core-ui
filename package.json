@@ -1,6 +1,6 @@
 {
   "name": "minerva-core-ui",
-  "version": "1.0.0-alpha.5",
+  "version": "1.0.0-alpha.7",
   "description": "A microscopy viewer for non-experts",
   "scripts": {
     "prepare": "lefthook install",
@@ -27,7 +27,8 @@
   "license": "MIT",
   "exports": {
     ".": "./build/main.js",
-    "./bundle": "./bundle/minerva.js"
+    "./bundle": "./bundle/minerva.js",
+    "./bundle/minerva.css": "./bundle/minerva.css"
   },
   "files": [
     "build",
