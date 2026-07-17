@@ -1,13 +1,7 @@
-import { createRequire } from "node:module";
 import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 import svgr from "vite-plugin-svgr";
-
-const require = createRequire(import.meta.url);
-const { version: PACKAGE_VERSION } = require("./package.json") as {
-  version: string;
-};
 
 /** Force `?worker` → `?worker&inline` so CDN pages do not fetch `/assets/*.js`. */
 function inlineWorkersForCdn(): Plugin {
@@ -37,7 +31,6 @@ export default defineConfig({
     __BUILD_TIME_ISO__: JSON.stringify(
       process.env.VITE_APP_BUILD_TIME ?? new Date().toISOString(),
     ),
-    __MINERVA_PACKAGE_VERSION__: JSON.stringify(PACKAGE_VERSION),
   },
   plugins: [
     inlineWorkersForCdn(),

@@ -1,12 +1,6 @@
 import type { DocumentData, Image } from "@/lib/stores/documentSchema";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
-
-/** From package.json via Vite `define`; string fallback for `tsc` builds. */
-const MINERVA_VERSION =
-  typeof __MINERVA_PACKAGE_VERSION__ === "string" &&
-  __MINERVA_PACKAGE_VERSION__.length > 0
-    ? __MINERVA_PACKAGE_VERSION__
-    : "1.0.0-alpha.5";
+import { version as MINERVA_VERSION } from "../../../package.json";
 
 function minervaCdnUrls(version: string): { js: string; css: string } {
   const base = `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version}/bundle`;
