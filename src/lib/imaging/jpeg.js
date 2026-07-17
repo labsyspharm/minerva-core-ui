@@ -39,15 +39,17 @@ const toIndexer = (opts) => {
     fetchTile,
   } = opts;
   return (sel, level) => {
-    const folder = channelFolders[sel.c];
+    const folder = channelFolders?.[sel.c];
     if (!folder) {
-      throw new Error(`jpeg: no pyramid folder for channel index ${sel.c}`);
+      // Do not throw here — that aborts the whole JPEG layer. Warn and let tile
+      // fetch fail for this channel until channelFolders is populated/synced.
+      console.warn(`jpeg: no pyramid folder for channel index ${sel.c}`);
     }
     return new JpegImage({
       imagePath,
       level,
       c: sel.c,
-      folder,
+      folder: folder ?? "",
       imageWidth,
       imageHeight,
       tileSize,

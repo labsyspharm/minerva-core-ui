@@ -3,7 +3,10 @@ import type { JpegLoaderEntry } from "@/components/shared/viewer/ImageViewer";
 import type { JpegTileFetcher } from "@/lib/jpeg-image";
 import type { Image } from "@/lib/stores/documentSchema";
 import { loadJpeg } from "./jpeg.js";
-import { folderByChannelIndexFromGroup } from "./jpegPyramid";
+import {
+  folderByChannelIndexFromGroup,
+  folderByChannelIndexFromImageChannels,
+} from "./jpegPyramid";
 
 type GroupChannelRow = {
   channelId: string;
@@ -69,6 +72,31 @@ function channelFoldersEqual(
   return aKeys.every((k) => a[Number(k)] === b[Number(k)]);
 }
 
+async function resolveChannelFolders(opts: {
+  groupChannels: GroupChannelRow[];
+  image: Image;
+}): Promise<Record<number, string>> {
+  const channelIndexById = Object.fromEntries(
+    opts.image.channels.map((ch) => [ch.id, ch.index]),
+  );
+  if (opts.groupChannels.length > 0) {
+    return folderByChannelIndexFromGroup({
+      channels: opts.groupChannels,
+      channelIndexById,
+    });
+  }
+  // No channel group yet — still map every image channel so tile indexing
+  // does not throw "no pyramid folder for channel index".
+  return folderByChannelIndexFromImageChannels(
+    opts.image.channels.map((ch) => ({
+      id: ch.id,
+      index: ch.index,
+      lowerLimit: ch.lowerLimit,
+      upperLimit: ch.upperLimit,
+    })),
+  );
+}
+
 /**
  * Align each entry's channelFolders with the active group's contrast keys.
  * Mutates the existing folder map in place (loadJpeg closes over that object),
@@ -90,11 +118,9 @@ async function syncJpegEntryChannelFolders(
       if (!entry.channelFolders) return entry;
       const im = images.find((i) => i.id === entry.sourceImageId);
       if (!im) return entry;
-      const folders = await folderByChannelIndexFromGroup({
-        channels,
-        channelIndexById: Object.fromEntries(
-          im.channels.map((ch) => [ch.id, ch.index]),
-        ),
+      const folders = await resolveChannelFolders({
+        groupChannels: channels,
+        image: im,
       });
       if (channelFoldersEqual(entry.channelFolders, folders)) {
         return entry;
@@ -123,8 +149,8 @@ export function useSyncJpegChannelFolders(
     const group = activeChannelGroupId
       ? channelGroups.find((g) => g.id === activeChannelGroupId)
       : channelGroups[0];
-    const channels = group?.channels;
-    if (!channels) return;
+    // Empty / missing group channels still sync via image-channel fallback.
+    const channels = group?.channels ?? [];
     let cancelled = false;
     void (async () => {
       const next = await syncJpegEntryChannelFolders(
@@ -169,12 +195,9 @@ export async function jpegLoaderEntriesFromImages(opts: {
   for (const im of opts.images) {
     if (im.source?.kind !== "jpeg") continue;
     const storyRootUrl = resolveJpegStoryRoot(opts.documentUrl, im.source.url);
-    const channelIndexById = Object.fromEntries(
-      im.channels.map((ch) => [ch.id, ch.index]),
-    );
-    const channelFolders = await folderByChannelIndexFromGroup({
-      channels: groupChannels,
-      channelIndexById,
+    const channelFolders = await resolveChannelFolders({
+      groupChannels,
+      image: im,
     });
     const loader = loadJpeg({
       imagePath: storyRootUrl,
