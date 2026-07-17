@@ -61,17 +61,23 @@ class JpegImage {
       type: "image/jpeg",
     });
     const { image } = await decoder.decode();
-    const { displayHeight } = image;
+    const { displayWidth, displayHeight } = image;
     const tileSize = this.tileSize;
     const copyOptions = {
       format: "BGRX" as const,
-      layout: [{ offset: 0, stride: tileSize * 4 }],
+      layout: [{ offset: 0, stride: displayWidth * 4 }],
     };
     const in_data = new Uint8Array(image.allocationSize(copyOptions));
+    // Viv expects a full tile buffer; pad short edge tiles with zeros.
     const data = new Uint16Array(tileSize ** 2);
     await image.copyTo(in_data, copyOptions);
-    for (let i = 0; i < tileSize * displayHeight; i += 1) {
-      data[i] = in_data[i * 4] << 8;
+    const rowWidth = Math.min(displayWidth, tileSize);
+    const rowCount = Math.min(displayHeight, tileSize);
+    for (let row = 0; row < rowCount; row += 1) {
+      for (let col = 0; col < rowWidth; col += 1) {
+        data[row * tileSize + col] =
+          in_data[(row * displayWidth + col) * 4] << 8;
+      }
     }
     image.close();
     decoder.close();

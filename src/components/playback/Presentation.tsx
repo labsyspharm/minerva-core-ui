@@ -109,6 +109,8 @@ const PreviewRibbonDocumentTitle = styled.span<{ $flush?: boolean }>`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* CDN title-only: center like StoryTitleBar. Preview mode: sit after Back. */
+  text-align: ${(p) => (p.$flush ? "center" : "start")};
   border-left: ${(p) =>
     p.$flush ? "none" : "1px solid rgb(255 255 255 / 0.14)"};
   padding-left: ${(p) => (p.$flush ? "0" : "10px")};

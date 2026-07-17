@@ -262,10 +262,12 @@ export function MinervaLibraryPage() {
         replace: true,
       } as never);
     } catch (e: unknown) {
-      if (e instanceof DOMException && e.name === "AbortError") return;
-      setError(
-        e instanceof Error ? e.message : "Could not import story folder",
-      );
+      // AbortError = user cancelled the picker; finally still clears `importing`.
+      if (!(e instanceof DOMException && e.name === "AbortError")) {
+        setError(
+          e instanceof Error ? e.message : "Could not import story folder",
+        );
+      }
     } finally {
       setImporting(false);
     }

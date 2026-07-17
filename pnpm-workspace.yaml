@@ -1,9 +1,10 @@
 # Single-package workspace so pnpm 10 can apply onlyBuiltDependencies to
 # git-hosted prepare scripts (see ERR_PNPM_GIT_DEP_PREPARE_NOT_ALLOWED).
+# Only @vivjs/extensions needs prepare (colormap codegen). Do not allowlist
+# @vivjs/monorepo — its old "publish" lifecycle script rebuilt the whole
+# monorepo during install.
 packages:
   - "."
 
 onlyBuiltDependencies:
-  - "@vivjs/monorepo"
-  - "@vivjs/monorepo@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134"
-  - "@vivjs/extensions@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/extensions"
+  - "@vivjs/extensions@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/extensions"
