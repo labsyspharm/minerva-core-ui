@@ -122,12 +122,15 @@ export function buildImageLayers(args: {
   const omeSettingsList = args.omeSettingsList ?? [];
   const jpegSettingsList = args.jpegSettingsList ?? [];
 
+  // One global index across DICOM → OME → JPEG so layer ids stay unique and
+  // align with loaderList / mainSettingsList order.
+  let nextIndex = 0;
   return [
     ...dicomIndexList.map((entry, i) =>
       createDicomTileLayer({
         entry,
         settings: dicomSettingsList[i],
-        index: i,
+        index: nextIndex++,
         remountKey: args.remountKey,
       }),
     ),
@@ -135,7 +138,7 @@ export function buildImageLayers(args: {
       createMultiscaleLayer({
         loader,
         settings: omeSettingsList[i] as MainSettings,
-        index: i,
+        index: nextIndex++,
         remountKey: args.remountKey,
       }),
     ),

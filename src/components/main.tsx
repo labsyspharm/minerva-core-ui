@@ -2191,17 +2191,21 @@ const Content = (props: Props) => {
     [documentMainSettingsList, channelRendering],
   );
   const layerFunctions = React.useMemo(() => {
+    // Cumulative index across loader types (matches mainSettingsList order).
+    let nextIndex = 0;
     return [
-      ...dicomIndexList.map((entry, i) => {
+      ...dicomIndexList.map((entry) => {
+        const index = nextIndex++;
         return ({ mainSettings }) =>
           createDicomTileLayer({
             entry,
             settings: mainSettings,
-            index: i,
+            index,
             remountKey: viewerRemountKey,
           });
       }),
-      ...omeLoaderEntries.map(({ loader }, i) => {
+      ...omeLoaderEntries.map(({ loader }) => {
+        const index = nextIndex++;
         return ({ mainSettings }) =>
           // Keep id stable across contrast/color tweaks so Viv updates props
           // in place (live drag). Selection changes still remount the layer.
@@ -2209,7 +2213,7 @@ const Content = (props: Props) => {
           createMultiscaleLayer({
             loader,
             settings: mainSettings,
-            index: i,
+            index,
             remountKey: viewerRemountKey,
           });
       }),
