@@ -854,7 +854,7 @@ packages:
     resolution: {integrity: sha512-17trb46MhB8SPhePdx+4bIQQfVACamWj5dZoVGPOyrRY91RADbMh4+fkkgJiU06Jk0HwrvUSR1jNardB4+QdJg==}
 
   '@hms-dbmi/viv@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/main':
-    resolution: {gitHosted: true, integrity: sha512-ne/ORwHiTtP1s7jbFa+3F+hUO6qfDeN7jEUcUf6WbZj8C8L1MRZ3rMAjV9KkcPKczF5T9jhqLTm8MfkRMTfJkA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
+    resolution: {gitHosted: true, path: packages/main, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
     version: 0.20.0
 
   '@humanfs/core@0.19.1':
@@ -1971,17 +1971,17 @@ packages:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0
 
   '@vivjs/constants@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/constants':
-    resolution: {gitHosted: true, integrity: sha512-ne/ORwHiTtP1s7jbFa+3F+hUO6qfDeN7jEUcUf6WbZj8C8L1MRZ3rMAjV9KkcPKczF5T9jhqLTm8MfkRMTfJkA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
+    resolution: {gitHosted: true, path: packages/constants, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
     version: 0.20.0
 
   '@vivjs/extensions@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/extensions':
-    resolution: {gitHosted: true, integrity: sha512-ne/ORwHiTtP1s7jbFa+3F+hUO6qfDeN7jEUcUf6WbZj8C8L1MRZ3rMAjV9KkcPKczF5T9jhqLTm8MfkRMTfJkA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
+    resolution: {gitHosted: true, path: packages/extensions, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
     version: 0.20.0
     peerDependencies:
       '@deck.gl/core': 9.1.11
 
   '@vivjs/layers@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/layers':
-    resolution: {gitHosted: true, integrity: sha512-ne/ORwHiTtP1s7jbFa+3F+hUO6qfDeN7jEUcUf6WbZj8C8L1MRZ3rMAjV9KkcPKczF5T9jhqLTm8MfkRMTfJkA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
+    resolution: {gitHosted: true, path: packages/layers, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
     version: 0.20.0
     peerDependencies:
       '@deck.gl/core': 9.1.11
@@ -1994,22 +1994,22 @@ packages:
       '@luma.gl/webgl': 9.1.9
 
   '@vivjs/loaders@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/loaders':
-    resolution: {gitHosted: true, integrity: sha512-ne/ORwHiTtP1s7jbFa+3F+hUO6qfDeN7jEUcUf6WbZj8C8L1MRZ3rMAjV9KkcPKczF5T9jhqLTm8MfkRMTfJkA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
+    resolution: {gitHosted: true, path: packages/loaders, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
     version: 0.20.0
 
   '@vivjs/types@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/types':
-    resolution: {gitHosted: true, integrity: sha512-ne/ORwHiTtP1s7jbFa+3F+hUO6qfDeN7jEUcUf6WbZj8C8L1MRZ3rMAjV9KkcPKczF5T9jhqLTm8MfkRMTfJkA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
+    resolution: {gitHosted: true, path: packages/types, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
     version: 0.20.0
 
   '@vivjs/viewers@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/viewers':
-    resolution: {gitHosted: true, integrity: sha512-ne/ORwHiTtP1s7jbFa+3F+hUO6qfDeN7jEUcUf6WbZj8C8L1MRZ3rMAjV9KkcPKczF5T9jhqLTm8MfkRMTfJkA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
+    resolution: {gitHosted: true, path: packages/viewers, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
     version: 0.20.0
     peerDependencies:
       '@deck.gl/react': 9.1.11
       react: 'catalog:'
 
   '@vivjs/views@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/views':
-    resolution: {gitHosted: true, integrity: sha512-ne/ORwHiTtP1s7jbFa+3F+hUO6qfDeN7jEUcUf6WbZj8C8L1MRZ3rMAjV9KkcPKczF5T9jhqLTm8MfkRMTfJkA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
+    resolution: {gitHosted: true, path: packages/views, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
     version: 0.20.0
     peerDependencies:
       '@deck.gl/core': 9.1.11
