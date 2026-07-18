@@ -15,10 +15,6 @@ concurrency:
 jobs:
   deploy-preview:
     runs-on: ubuntu-latest
-    # Viv git deps run a nested `pnpm install` during prepare; puppeteer there is
-    # only for Viv’s own tests — skip Chrome download so CI install can finish.
-    env:
-      PUPPETEER_SKIP_DOWNLOAD: "1"
     concurrency:
       group: gh-pages
       cancel-in-progress: false

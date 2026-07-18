@@ -6,13 +6,13 @@ settings:
 
 overrides:
   styled-components: ^5
-  '@vivjs/constants': github:simonwarchol/viv#3b4909c60442a7dafdf15a6b022d2afb57ea1157&path:packages/constants
-  '@vivjs/extensions': github:simonwarchol/viv#3b4909c60442a7dafdf15a6b022d2afb57ea1157&path:packages/extensions
-  '@vivjs/layers': github:simonwarchol/viv#3b4909c60442a7dafdf15a6b022d2afb57ea1157&path:packages/layers
-  '@vivjs/loaders': github:simonwarchol/viv#3b4909c60442a7dafdf15a6b022d2afb57ea1157&path:packages/loaders
-  '@vivjs/viewers': github:simonwarchol/viv#3b4909c60442a7dafdf15a6b022d2afb57ea1157&path:packages/viewers
-  '@vivjs/views': github:simonwarchol/viv#3b4909c60442a7dafdf15a6b022d2afb57ea1157&path:packages/views
-  '@vivjs/types': github:simonwarchol/viv#3b4909c60442a7dafdf15a6b022d2afb57ea1157&path:packages/types
+  '@vivjs/constants': 0.20.1
+  '@vivjs/extensions': 0.20.1
+  '@vivjs/layers': 0.20.1
+  '@vivjs/loaders': 0.20.1
+  '@vivjs/viewers': 0.20.1
+  '@vivjs/views': 0.20.1
+  '@vivjs/types': 0.20.1
   math.gl: ^4.1.0
   '@math.gl/core': ^4.1.0
   '@math.gl/web-mercator': ^4.1.0
@@ -90,8 +90,8 @@ importers:
         specifier: ^9.0.7
         version: 9.0.27
       '@hms-dbmi/viv':
-        specifier: github:simonwarchol/viv#3b4909c60442a7dafdf15a6b022d2afb57ea1157&path:packages/main
-        version: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/main(199f3575cb57838fdb557aad0b4e67f4)
+        specifier: 0.20.1
+        version: 0.20.1(199f3575cb57838fdb557aad0b4e67f4)
       '@lit/reactive-element':
         specifier: ^2.0.4
         version: 2.1.0
@@ -174,8 +174,8 @@ importers:
         specifier: ^24.4.3
         version: 24.7.7
       '@vivjs/constants':
-        specifier: github:simonwarchol/viv#3b4909c60442a7dafdf15a6b022d2afb57ea1157&path:packages/constants
-        version: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/constants
+        specifier: 0.20.1
+        version: 0.20.1
       browser-fs-access:
         specifier: ^0.38.0
         version: 0.38.0
@@ -322,8 +322,8 @@ importers:
         specifier: ^4.3.1
         version: 4.5.1(vite@5.4.19(@types/node@20.17.57))
       '@vivjs/types':
-        specifier: github:simonwarchol/viv#3b4909c60442a7dafdf15a6b022d2afb57ea1157&path:packages/types
-        version: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/types
+        specifier: 0.20.1
+        version: 0.20.1
       eslint:
         specifier: ^9.7.0
         version: 9.28.0
@@ -853,9 +853,8 @@ packages:
   '@haxtheweb/utils@9.0.22':
     resolution: {integrity: sha512-17trb46MhB8SPhePdx+4bIQQfVACamWj5dZoVGPOyrRY91RADbMh4+fkkgJiU06Jk0HwrvUSR1jNardB4+QdJg==}
 
-  '@hms-dbmi/viv@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/main':
-    resolution: {gitHosted: true, path: packages/main, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
-    version: 0.20.0
+  '@hms-dbmi/viv@0.20.1':
+    resolution: {integrity: sha512-Q7x6MeXrOQe9RwwqpxNe3Aw+CBRCC6fYNZ33I5m22N1F/soBB7fFi67YDlJmBIwXtA1i+ApPY5AWb34XgcuHPQ==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -1970,19 +1969,16 @@ packages:
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0
 
-  '@vivjs/constants@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/constants':
-    resolution: {gitHosted: true, path: packages/constants, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
-    version: 0.20.0
+  '@vivjs/constants@0.20.1':
+    resolution: {integrity: sha512-VYtQnT/3bO/kVx2RTspTCzX7lrTyeYMojDBzVy1zgJ/4co8iBan3Xtnbz7HlhvFFGBe3AssFTjNwwb6XdA8Cbw==}
 
-  '@vivjs/extensions@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/extensions':
-    resolution: {gitHosted: true, path: packages/extensions, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
-    version: 0.20.0
+  '@vivjs/extensions@0.20.1':
+    resolution: {integrity: sha512-ZWTqVHosSc0NIrteAL0yjQj1CWqpOtsm2K3SK/w3L6nLA/HMCIfbBcgRfkYerLFcUb8hRD86BNkGgV9kN2Iejg==}
     peerDependencies:
       '@deck.gl/core': 9.1.11
 
-  '@vivjs/layers@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/layers':
-    resolution: {gitHosted: true, path: packages/layers, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
-    version: 0.20.0
+  '@vivjs/layers@0.20.1':
+    resolution: {integrity: sha512-DrB68BgLCTymmX/3sKd0h11K/ubA4x3Vy6TRUUOK3sX83j3a+SAsx0RHr2g/b7ethc0C/ZnQFBFJX6hTXHYzsA==}
     peerDependencies:
       '@deck.gl/core': 9.1.11
       '@deck.gl/geo-layers': 9.1.11
@@ -1993,24 +1989,20 @@ packages:
       '@luma.gl/shadertools': 9.1.9
       '@luma.gl/webgl': 9.1.9
 
-  '@vivjs/loaders@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/loaders':
-    resolution: {gitHosted: true, path: packages/loaders, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
-    version: 0.20.0
+  '@vivjs/loaders@0.20.1':
+    resolution: {integrity: sha512-7F9uYXkoFPH945o+A+YO/2DIv2WO0LJYGFHiz0ZhO0THl1mBw8NaHO1YodwzM/sqoT4X+5oGCh+5E91YX87t7g==}
 
-  '@vivjs/types@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/types':
-    resolution: {gitHosted: true, path: packages/types, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
-    version: 0.20.0
+  '@vivjs/types@0.20.1':
+    resolution: {integrity: sha512-VfWhqv893UDHii3Lr4UbWiSafDtqjXp2zsojYDAiabnLA7n4Q7bSk/BCoTt6CaehwwI7t8o3J6m9Axb2cLH4nQ==}
 
-  '@vivjs/viewers@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/viewers':
-    resolution: {gitHosted: true, path: packages/viewers, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
-    version: 0.20.0
+  '@vivjs/viewers@0.20.1':
+    resolution: {integrity: sha512-4x9arLqI6beI6vp1hoSJ8JViG/k1WW0paC1sK92zKD/Ed0tfTZyAH69RwZf9I7TU/o+yGjNlMm3rH8HgowCHBQ==}
     peerDependencies:
       '@deck.gl/react': 9.1.11
-      react: 'catalog:'
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  '@vivjs/views@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/views':
-    resolution: {gitHosted: true, path: packages/views, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157}
-    version: 0.20.0
+  '@vivjs/views@0.20.1':
+    resolution: {integrity: sha512-cVtI4ILdfQ+vw/7VtHw5NPcrwz/sXlI5l3kU9pKjJ6Wp248OuJGvcOE8lAKdmb8nWSDbq1i0un+mQET1IVRERQ==}
     peerDependencies:
       '@deck.gl/core': 9.1.11
       '@deck.gl/layers': 9.1.11
@@ -3266,6 +3258,9 @@ packages:
 
   lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
   loglevel@1.9.2:
     resolution: {integrity: sha512-HgMmCqIJSAKqo68l0rS2AanEWfkxaZ5wNiEFb5ggm08lDs9Xl2KxBlX3PTcaD2chBM1gXAYf491/M2Rv8Jwayg==}
@@ -5122,15 +5117,15 @@ snapshots:
 
   '@haxtheweb/utils@9.0.22': {}
 
-  '@hms-dbmi/viv@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/main(199f3575cb57838fdb557aad0b4e67f4)':
+  '@hms-dbmi/viv@0.20.1(199f3575cb57838fdb557aad0b4e67f4)':
     dependencies:
-      '@vivjs/constants': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/constants
-      '@vivjs/extensions': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/extensions(@deck.gl/core@9.1.11)
-      '@vivjs/layers': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/layers(a3f615a66ab0441c4f564e161f267978)
-      '@vivjs/loaders': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/loaders
-      '@vivjs/types': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/types
-      '@vivjs/viewers': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/viewers(199f3575cb57838fdb557aad0b4e67f4)
-      '@vivjs/views': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/views(a3f615a66ab0441c4f564e161f267978)
+      '@vivjs/constants': 0.20.1
+      '@vivjs/extensions': 0.20.1(@deck.gl/core@9.1.11)
+      '@vivjs/layers': 0.20.1(a3f615a66ab0441c4f564e161f267978)
+      '@vivjs/loaders': 0.20.1
+      '@vivjs/types': 0.20.1
+      '@vivjs/viewers': 0.20.1(199f3575cb57838fdb557aad0b4e67f4)
+      '@vivjs/views': 0.20.1(a3f615a66ab0441c4f564e161f267978)
     transitivePeerDependencies:
       - '@deck.gl/core'
       - '@deck.gl/geo-layers'
@@ -6531,16 +6526,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vivjs/constants@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/constants':
+  '@vivjs/constants@0.20.1':
     dependencies:
       '@luma.gl/constants': 9.1.9
 
-  '@vivjs/extensions@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/extensions(@deck.gl/core@9.1.11)':
+  '@vivjs/extensions@0.20.1(@deck.gl/core@9.1.11)':
     dependencies:
       '@deck.gl/core': 9.1.11
-      '@vivjs/constants': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/constants
+      '@vivjs/constants': 0.20.1
 
-  '@vivjs/layers@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/layers(a3f615a66ab0441c4f564e161f267978)':
+  '@vivjs/layers@0.20.1(a3f615a66ab0441c4f564e161f267978)':
     dependencies:
       '@deck.gl/core': 9.1.11
       '@deck.gl/geo-layers': 9.1.11(@deck.gl/core@9.1.11)(@deck.gl/extensions@9.1.11(@deck.gl/core@9.1.11)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9))))(@deck.gl/layers@9.1.11(@deck.gl/core@9.1.11)(@loaders.gl/core@3.4.13)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9))))(@deck.gl/mesh-layers@9.1.11(@deck.gl/core@9.1.11)(@loaders.gl/core@3.4.13)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9))))(@loaders.gl/core@3.4.13)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9)))
@@ -6552,33 +6547,33 @@ snapshots:
       '@luma.gl/webgl': 9.1.9(@luma.gl/core@9.1.9)
       '@math.gl/core': 4.1.0
       '@math.gl/culling': 4.1.0
-      '@vivjs/constants': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/constants
-      '@vivjs/extensions': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/extensions(@deck.gl/core@9.1.11)
-      '@vivjs/loaders': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/loaders
-      '@vivjs/types': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/types
+      '@vivjs/constants': 0.20.1
+      '@vivjs/extensions': 0.20.1(@deck.gl/core@9.1.11)
+      '@vivjs/loaders': 0.20.1
+      '@vivjs/types': 0.20.1
 
-  '@vivjs/loaders@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/loaders':
+  '@vivjs/loaders@0.20.1':
     dependencies:
-      '@vivjs/types': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/types
+      '@vivjs/types': 0.20.1
       geotiff: 2.1.3
       lzw-tiff-decoder: 0.1.1
       quickselect: 2.0.0
       zarrita: 0.5.4
       zod: 3.25.76
 
-  '@vivjs/types@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/types':
+  '@vivjs/types@0.20.1':
     dependencies:
-      '@vivjs/constants': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/constants
+      '@vivjs/constants': 0.20.1
       math.gl: 4.1.0
 
-  '@vivjs/viewers@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/viewers(199f3575cb57838fdb557aad0b4e67f4)':
+  '@vivjs/viewers@0.20.1(199f3575cb57838fdb557aad0b4e67f4)':
     dependencies:
       '@deck.gl/react': 9.1.11(@deck.gl/core@9.1.11)(@deck.gl/widgets@9.1.11(@deck.gl/core@9.1.11))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@vivjs/constants': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/constants
-      '@vivjs/extensions': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/extensions(@deck.gl/core@9.1.11)
-      '@vivjs/views': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/views(a3f615a66ab0441c4f564e161f267978)
+      '@vivjs/constants': 0.20.1
+      '@vivjs/extensions': 0.20.1(@deck.gl/core@9.1.11)
+      '@vivjs/views': 0.20.1(a3f615a66ab0441c4f564e161f267978)
       fast-deep-equal: 3.1.3
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
     transitivePeerDependencies:
       - '@deck.gl/core'
@@ -6590,13 +6585,13 @@ snapshots:
       - '@luma.gl/shadertools'
       - '@luma.gl/webgl'
 
-  '@vivjs/views@https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/views(a3f615a66ab0441c4f564e161f267978)':
+  '@vivjs/views@0.20.1(a3f615a66ab0441c4f564e161f267978)':
     dependencies:
       '@deck.gl/core': 9.1.11
       '@deck.gl/layers': 9.1.11(@deck.gl/core@9.1.11)(@loaders.gl/core@3.4.13)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9)))
       '@math.gl/core': 4.1.0
-      '@vivjs/layers': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/layers(a3f615a66ab0441c4f564e161f267978)
-      '@vivjs/loaders': https://codeload.github.com/simonwarchol/viv/tar.gz/3b4909c60442a7dafdf15a6b022d2afb57ea1157#path:packages/loaders
+      '@vivjs/layers': 0.20.1(a3f615a66ab0441c4f564e161f267978)
+      '@vivjs/loaders': 0.20.1
       math.gl: 4.1.0
     transitivePeerDependencies:
       - '@deck.gl/geo-layers'
@@ -8135,6 +8130,8 @@ snapshots:
   lodash.merge@4.6.2: {}
 
   lodash@4.17.21: {}
+
+  lodash@4.18.1: {}
 
   loglevel@1.9.2: {}
 
