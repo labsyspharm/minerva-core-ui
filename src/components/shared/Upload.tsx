@@ -76,6 +76,15 @@ export type UploadProps = {
   onImportOme?: (
     req: OmeImportRequest,
   ) => Promise<OmeImportResult | undefined> | OmeImportResult | undefined;
+  /** Local handles present but Chrome revoked access after reload. */
+  needsFileAccess?: boolean;
+  onRequestFileAccess?: () => void | Promise<void>;
+  /**
+   * Local `source` exists but the handle was never persisted (Firefox) or was
+   * cleared — user must pick the file again.
+   */
+  missingHandleKeys?: string[];
+  onReselectFile?: (imageId: string) => void | Promise<void>;
 };
 type ValidationFunction = (v: ValidObj) => boolean | null;
 type Validation = (s: string) => ValidationFunction;
@@ -338,6 +347,10 @@ const Upload = (props: UploadProps) => {
     fileName = "",
     lastOmeTiffUrl = null,
     onImportOme,
+    needsFileAccess = false,
+    onRequestFileAccess,
+    missingHandleKeys = [],
+    onReselectFile,
   } = props;
 
   useEffect(() => {
@@ -586,6 +599,16 @@ const Upload = (props: UploadProps) => {
       role,
       formatDims(im.sizeX, im.sizeY, im.sizeC ?? im.channels.length),
     ].filter(Boolean);
+    const localKey =
+      im.source?.kind === "local" ? im.source.handleKey : undefined;
+    const needsReselect =
+      !!localKey && missingHandleKeys.includes(localKey) && !!onReselectFile;
+    const needsPermission =
+      needsFileAccess &&
+      !!onRequestFileAccess &&
+      im.source?.kind === "local" &&
+      !needsReselect;
+    const showAccessOverlay = needsReselect || needsPermission;
 
     return (
       <article key={im.id} className={styles.imageCard}>
@@ -595,6 +618,21 @@ const Upload = (props: UploadProps) => {
           </div>
           <div className={styles.imageCardMeta}>{metaParts.join(" · ")}</div>
         </div>
+        {showAccessOverlay ? (
+          <div className={styles.fileAccessOverlay}>
+            <span className={styles.fileAccessError}>File access needed</span>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={() => {
+                if (needsReselect) void onReselectFile?.(im.id);
+                else void onRequestFileAccess?.();
+              }}
+            >
+              Allow file access
+            </button>
+          </div>
+        ) : null}
       </article>
     );
   };
