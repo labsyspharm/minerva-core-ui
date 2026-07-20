@@ -22,7 +22,7 @@ import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
 /** Fonts + theme tokens + prose — shared by authoring preview and CDN export. */
 import "./presentationShell.css";
 
-/** Shared by authoring preview and the CDN `StoryPlayerApp` bundle. */
+/** Shared by authoring preview and the CDN story player bundle. */
 export type PresentationProps = {
   children: ReactElement;
   /** When set, shows the authoring “Back / Story preview” ribbon. */

@@ -1849,6 +1849,8 @@ const Content = (props: Props) => {
           viewerConfig,
           dicomIndexList,
           omeLoaderEntries,
+          jpegLoaderEntries,
+          setJpegLoaderEntries,
           exitPlaybackPreview,
         };
         const imagesPanel = <Upload {...uploadProps} />;

@@ -3,14 +3,16 @@ import styled from "styled-components";
 import { AuthorView } from "@/components/authoring/AuthorSidebar";
 import { ImageExporter } from "@/components/playback/ImageExporter";
 import { Presentation } from "@/components/playback/Presentation";
+import { StoryPlaybackView } from "@/components/playback/StoryPlaybackView";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
-import type { OmeLoaderEntry } from "@/components/shared/viewer/ImageViewer";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
+import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Config } from "@/lib/imaging/viv";
 import type { StoryExportMode } from "@/lib/storyExport/storyBundle";
+import type { StoryPlaybackLoaders } from "./useStoryPlaybackLayers";
 
-export type PlaybackRouterProps = {
+export type PlaybackRouterProps = StoryPlaybackLoaders & {
   viewer: ReactNode;
   imagesPanel: ReactNode;
   hiddenChannel: boolean;
@@ -89,7 +91,12 @@ export const PlaybackRouter = (props: PlaybackRouterProps) => {
     return (
       <ModeViewport key="presenting" data-mode="presenting">
         <Presentation exitPlaybackPreview={props.exitPlaybackPreview}>
-          <ChannelPanel {...channelPanelProps}>{props.viewer}</ChannelPanel>
+          <StoryPlaybackView
+            jpegLoaderEntries={props.jpegLoaderEntries}
+            setJpegLoaderEntries={props.setJpegLoaderEntries}
+            omeLoaderEntries={props.omeLoaderEntries}
+            dicomIndexList={props.dicomIndexList}
+          />
         </Presentation>
       </ModeViewport>
     );
