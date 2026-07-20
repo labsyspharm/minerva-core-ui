@@ -277,6 +277,9 @@ const LegendRow = (props: LegendRowProps & { onClick: () => void }) => {
   const uuid = `group/channel/name/${idx}`;
   const statusProps = {
     ...props,
+    // Must be explicit: EditableText defaults `editable` to true (bordered
+    // textarea). Playback / CDN pass undefined and must stay read-only.
+    editable: props.editable === true,
     md: false,
     setInput,
     updateCache: () => null,

@@ -3,16 +3,17 @@ import styled from "styled-components";
 import { StoryAuthorOverflowMenu } from "@/components/authoring/StoryAuthorOverflowMenu";
 import PlayIcon from "@/components/shared/icons/play.svg?react";
 import {
-  storyChromeBannerBarCss,
-  storyChromeTitleTextCss,
-} from "@/components/shared/storyChromeBanner";
+  STORY_BANNER_CONTROL_SIZE_PX,
+  storyBannerBarCss,
+  storyBannerTitleTextCss,
+} from "@/components/shared/storyBannerBar";
 import { saveStoryDocument } from "@/lib/persistence/storyPersistence";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 
 const BannerShell = styled.div`
   position: relative;
   z-index: 20;
-  ${storyChromeBannerBarCss}
+  ${storyBannerBarCss}
 `;
 
 const TitleFieldWrap = styled.div`
@@ -37,7 +38,7 @@ const TitleInput = styled.input`
   border: none;
   border-radius: 6px;
   color: rgb(248 250 252 / 0.98);
-  ${storyChromeTitleTextCss}
+  ${storyBannerTitleTextCss}
   /* Match height so the glyph box is centered in the control (WebKit/input quirk) */
   line-height: 28px;
   text-align: center;
@@ -71,8 +72,8 @@ const BannerPreviewButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: ${STORY_BANNER_CONTROL_SIZE_PX}px;
+  height: ${STORY_BANNER_CONTROL_SIZE_PX}px;
   padding: 0;
   box-sizing: border-box;
   background: rgb(0 0 0 / 0.16);
@@ -100,6 +101,8 @@ const BannerPreviewButton = styled.button`
 
 export type StoryTitleBarProps = {
   onExport?: () => void;
+  /** When set, overflow menu offers “Export with remote OME URL”. */
+  onExportRemoteUrl?: () => void;
   onEnterPlaybackPreview?: () => void;
   /** When true, disables the preview control (e.g. no waypoints). */
   playbackPreviewDisabled?: boolean;
@@ -112,7 +115,12 @@ export type StoryTitleBarProps = {
  * `Presentation`’s ribbon instead; this component is not mounted then.
  */
 export function StoryTitleBar(props: StoryTitleBarProps) {
-  const { onExport, onEnterPlaybackPreview, playbackPreviewDisabled } = props;
+  const {
+    onExport,
+    onExportRemoteUrl,
+    onEnterPlaybackPreview,
+    playbackPreviewDisabled,
+  } = props;
   /** Subscribe to the title primitive so updates re-render even if metadata identity were ever reused. */
   const titleText = useDocumentStore((s) => s.metadata.title ?? "");
   const setMetadata = useDocumentStore((s) => s.setMetadata);
@@ -133,7 +141,12 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
 
   return (
     <BannerShell role="region" aria-label="Story title">
-      {onExport ? <StoryAuthorOverflowMenu onExport={onExport} /> : null}
+      {onExport ? (
+        <StoryAuthorOverflowMenu
+          onExport={onExport}
+          onExportRemoteUrl={onExportRemoteUrl}
+        />
+      ) : null}
       <TitleFieldWrap
         onClick={() => {
           if (!editing) setEditing(true);

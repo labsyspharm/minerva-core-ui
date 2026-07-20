@@ -10,83 +10,90 @@ import wasm from "vite-plugin-wasm";
 const BUILD_TIME_ISO =
   process.env.VITE_APP_BUILD_TIME ?? new Date().toISOString();
 
-export default defineConfig({
-  define: {
-    __BUILD_TIME_ISO__: JSON.stringify(BUILD_TIME_ISO),
-  },
-  assetsInclude: ["**/*.wasm"],
-  worker: {
-    format: "es",
-    plugins: () => [wasm(), topLevelAwait()],
-  },
-  server: {
-    https: true,
-    hmr: {
-      overlay: true,
+export default defineConfig(({ command }) => {
+  const useMkcert =
+    command === "serve" &&
+    process.env.CI !== "true" &&
+    !process.argv.includes("build");
+
+  return {
+    define: {
+      __BUILD_TIME_ISO__: JSON.stringify(BUILD_TIME_ISO),
     },
-  },
-  base: process.env.BASE_PATH ?? "",
-  plugins: [
-    wasm(),
-    topLevelAwait(),
-    react(),
-    mkcert(),
-    svgr({
-      svgrOptions: {
-        icon: true,
-      },
-    }),
-  ],
-  optimizeDeps: {
-    exclude: ["onnxruntime-web", "psudo"],
-    include: [
-      "@luma.gl/core",
-      "@luma.gl/constants",
-      "@luma.gl/engine",
-      "@luma.gl/shadertools",
-      "@luma.gl/webgl",
-      "@luma.gl/gltf",
-      "@deck.gl/core",
-      "@deck.gl/layers",
-      "@deck.gl/react",
-    ],
-  },
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-      psudo: path.resolve(__dirname, "./node_modules/psudo/index.js"),
+    assetsInclude: ["**/*.wasm"],
+    worker: {
+      format: "es",
+      plugins: () => [wasm(), topLevelAwait()],
     },
-    dedupe: [
-      "geotiff",
-      "@luma.gl/core",
-      "@luma.gl/constants",
-      "@luma.gl/engine",
-      "@luma.gl/shadertools",
-      "@luma.gl/webgl",
-      "@luma.gl/gltf",
-      "@deck.gl/core",
-      "@deck.gl/layers",
-      "@deck.gl/extensions",
-      "@deck.gl/geo-layers",
-      "@deck.gl/mesh-layers",
-      "@deck.gl/react",
-      "@deck.gl/widgets",
-    ],
-  },
-  build: {
-    minify: false,
-    sourcemap: false,
-    assetsInlineLimit: 0,
-    rollupOptions: {
-      onwarn(warning, warn) {
-        if (warning.code === "MODULE_LEVEL_DIRECTIVE") {
-          return;
-        }
-        warn(warning);
-      },
-      output: {
-        format: "es",
+    server: {
+      https: true,
+      hmr: {
+        overlay: true,
       },
     },
-  },
+    base: process.env.BASE_PATH ?? "",
+    plugins: [
+      wasm(),
+      topLevelAwait(),
+      react(),
+      useMkcert && mkcert(),
+      svgr({
+        svgrOptions: {
+          icon: true,
+        },
+      }),
+    ].filter(Boolean),
+    optimizeDeps: {
+      exclude: ["onnxruntime-web", "psudo"],
+      include: [
+        "@luma.gl/core",
+        "@luma.gl/constants",
+        "@luma.gl/engine",
+        "@luma.gl/shadertools",
+        "@luma.gl/webgl",
+        "@luma.gl/gltf",
+        "@deck.gl/core",
+        "@deck.gl/layers",
+        "@deck.gl/react",
+      ],
+    },
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+        psudo: path.resolve(__dirname, "./node_modules/psudo/index.js"),
+      },
+      dedupe: [
+        "geotiff",
+        "@luma.gl/core",
+        "@luma.gl/constants",
+        "@luma.gl/engine",
+        "@luma.gl/shadertools",
+        "@luma.gl/webgl",
+        "@luma.gl/gltf",
+        "@deck.gl/core",
+        "@deck.gl/layers",
+        "@deck.gl/extensions",
+        "@deck.gl/geo-layers",
+        "@deck.gl/mesh-layers",
+        "@deck.gl/react",
+        "@deck.gl/widgets",
+      ],
+    },
+    build: {
+      minify: false,
+      sourcemap: false,
+      assetsInlineLimit: 0,
+      rollupOptions: {
+        onwarn(warning, warn) {
+          if (warning.code === "MODULE_LEVEL_DIRECTIVE") {
+            return;
+          }
+          warn(warning);
+        },
+        output: {
+          format: "es",
+        },
+      },
+    },
+  };
 });

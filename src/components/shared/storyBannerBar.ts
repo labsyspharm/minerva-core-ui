@@ -1,21 +1,27 @@
 import { css } from "styled-components";
 
 /**
- * Shared top “story chrome” strip (author title bar + preview-mode ribbon).
+ * Shared top story banner strip (author title bar + preview-mode ribbon).
  * One source of truth for padding/height so author and preview match.
+ * {@link STORY_BANNER_CONTROL_SIZE_PX} is the play / Back control height.
  */
-export const storyChromeBannerBarCss = css`
+export const STORY_BANNER_CONTROL_SIZE_PX = 28;
+
+export const storyBannerBarCss = css`
   flex-shrink: 0;
   width: 100%;
   box-sizing: border-box;
+  /* 5 + 28 + 5 — same total height whether the bar has Back / play / title-only. */
+  min-height: ${5 + STORY_BANNER_CONTROL_SIZE_PX + 5}px;
   padding: 5px 10px;
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 10px;
+  /* Solid fallback so CDN (no author-ui globals) never drops the ribbon bar. */
   background: var(
     --dark-main-glass,
-    color-mix(in xyz, var(--theme-dark-main-color, navy), transparent 20%)
+    color-mix(in xyz, var(--theme-dark-main-color, hwb(240 10% 50%)), transparent 60%)
   );
   border-bottom: 1px solid rgb(255 255 255 / 0.18);
   box-shadow:
@@ -28,7 +34,7 @@ export const storyChromeBannerBarCss = css`
  * Use line-height: 1 — larger line-boxes leave empty descender space that
  * makes glyphs look high when the box is flex-centered in the bar.
  */
-export const storyChromeTitleTextCss = css`
+export const storyBannerTitleTextCss = css`
   font-size: 1.0625rem;
   font-weight: 600;
   letter-spacing: 0.02em;

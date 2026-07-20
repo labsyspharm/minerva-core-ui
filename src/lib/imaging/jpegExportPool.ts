@@ -4,44 +4,95 @@ import {
   JPEG_EXPORT_QUALITY,
   typedArrayCtorName,
 } from "./jpegExportEncode";
-import type { JpegExportOutMsg } from "./workers/jpegExport.worker";
 import JpegExportWorker from "./workers/jpegExport.worker.ts?worker";
 
-const poolSize = () => globalThis.navigator?.hardwareConcurrency ?? 4;
-
-export class JpegExportPool {
-  private workers: Worker[] = [];
-  private pending = new Map<
+/**
+ * Same job protocol as the decoder {@link Pool} (`submitJob` / `jobId`).
+ */
+class WorkerWrapper {
+  worker: Worker;
+  private jobIdCounter = 0;
+  private jobs = new Map<
     number,
-    { resolve: (jpeg: ArrayBuffer) => void; reject: (e: unknown) => void }
+    {
+      resolve: (v: { jpeg: ArrayBuffer }) => void;
+      reject: (e: unknown) => void;
+    }
   >();
-  private nextId = 1;
-  private rr = 0;
 
-  constructor(size: number) {
-    for (let i = 0; i < size; i++) {
-      const w = new JpegExportWorker();
-      w.onmessage = (ev: MessageEvent<JpegExportOutMsg>) => {
-        const { jobId, jpeg, error } = ev.data;
-        const p = this.pending.get(jobId);
-        if (!p) return;
-        this.pending.delete(jobId);
-        if (error) p.reject(new Error(error));
-        else if (jpeg) p.resolve(jpeg);
-        else p.reject(new Error("jpegExport worker returned empty result"));
-      };
-      w.onmessageerror = (ev) => {
-        console.warn("[minerva] jpegExport worker messageerror:", ev);
-      };
-      this.workers.push(w);
+  constructor(worker: Worker) {
+    this.worker = worker;
+    this.worker.addEventListener("message", (e) => this.onWorkerMessage(e));
+  }
+
+  getJobCount() {
+    return this.jobs.size;
+  }
+
+  private onWorkerMessage(e: MessageEvent) {
+    const { jobId, error, ...result } = e.data as {
+      jobId: number;
+      error?: string;
+      jpeg?: ArrayBuffer;
+    };
+    const job = this.jobs.get(jobId);
+    this.jobs.delete(jobId);
+    if (!job) return;
+
+    if (error) job.reject(new Error(error));
+    else if (result.jpeg) job.resolve({ jpeg: result.jpeg });
+    else job.reject(new Error("jpegExport worker returned empty result"));
+  }
+
+  submitJob(message: object, transferables?: Transferable[]) {
+    const jobId = this.jobIdCounter++;
+    const promise = new Promise<{ jpeg: ArrayBuffer }>((resolve, reject) => {
+      this.jobs.set(jobId, { resolve, reject });
+    });
+    this.worker.postMessage({ ...message, jobId }, transferables);
+    return promise;
+  }
+
+  private rejectAllPending(reason: Error) {
+    for (const job of this.jobs.values()) {
+      job.reject(reason);
+    }
+    this.jobs.clear();
+  }
+
+  terminate() {
+    this.rejectAllPending(new Error("JpegExportPool destroyed"));
+    this.worker.terminate();
+  }
+}
+
+const defaultPoolSize = globalThis?.navigator?.hardwareConcurrency ?? 4;
+
+/**
+ * JPEG export encode pool: same shape as the decoder {@link Pool}
+ * (`encode` / `destroy`), least-loaded worker selection.
+ */
+export class JpegExportPool {
+  private workerWrappers: Promise<WorkerWrapper[]> | null = null;
+  readonly size: number;
+
+  constructor(
+    size = defaultPoolSize,
+    createWorker: () => Worker = () => new JpegExportWorker(),
+  ) {
+    this.size = size;
+    if (size) {
+      this.workerWrappers = (async () => {
+        const wrappers: WorkerWrapper[] = [];
+        for (let i = 0; i < size; i++) {
+          wrappers.push(new WorkerWrapper(createWorker()));
+        }
+        return wrappers;
+      })();
     }
   }
 
-  get size() {
-    return this.workers.length;
-  }
-
-  run(
+  async encode(
     width: number,
     height: number,
     buffer: ArrayBuffer,
@@ -50,35 +101,36 @@ export class JpegExportPool {
     upperLimit: number,
     quality = JPEG_EXPORT_QUALITY,
   ): Promise<ArrayBuffer> {
-    const jobId = this.nextId++;
-    const w = this.workers[this.rr++ % this.workers.length];
-    return new Promise((resolve, reject) => {
-      this.pending.set(jobId, { resolve, reject });
-      w.postMessage(
-        {
-          jobId,
-          width,
-          height,
-          buffer,
-          arrayCtorName,
-          lowerLimit,
-          upperLimit,
-          quality,
-        },
-        [buffer],
-      );
-    });
+    const workerWrappersPromise = this.workerWrappers;
+    if (!workerWrappersPromise) {
+      throw new Error("JpegExportPool has no workers");
+    }
+    const wrappers = await workerWrappersPromise;
+    const workerWrapper = wrappers.reduce((a, b) =>
+      a.getJobCount() < b.getJobCount() ? a : b,
+    );
+    const { jpeg } = await workerWrapper.submitJob(
+      {
+        width,
+        height,
+        buffer,
+        arrayCtorName,
+        lowerLimit,
+        upperLimit,
+        quality,
+      },
+      [buffer],
+    );
+    return jpeg;
   }
 
-  destroy() {
-    for (const p of this.pending.values()) {
-      p.reject(new Error("JpegExportPool destroyed"));
-    }
-    this.pending.clear();
-    for (const w of this.workers) {
+  async destroy() {
+    if (!this.workerWrappers) return;
+    const wrappers = await this.workerWrappers;
+    this.workerWrappers = null;
+    for (const w of wrappers) {
       w.terminate();
     }
-    this.workers = [];
   }
 }
 
@@ -93,7 +145,7 @@ function workersSupported(): boolean {
 export function getJpegExportPool(): JpegExportPool | null {
   if (!workersSupported()) return null;
   if (!singleton) {
-    singleton = new JpegExportPool(poolSize());
+    singleton = new JpegExportPool();
   }
   return singleton;
 }
@@ -130,7 +182,7 @@ export async function encodeTileJpeg(
   if (pool) {
     try {
       const copy = copyPixelBuffer(data);
-      return await pool.run(
+      return await pool.encode(
         width,
         height,
         copy,
@@ -160,5 +212,5 @@ export async function encodeTileJpeg(
 export function jpegExportConcurrency(): number {
   const pool = getJpegExportPool();
   if (pool) return pool.size;
-  return poolSize();
+  return defaultPoolSize;
 }

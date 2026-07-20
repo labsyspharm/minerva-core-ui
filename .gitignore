@@ -5,6 +5,7 @@ node_modules
 pages
 build
 dist
+bundle
 *.tif
 
 .*.swp

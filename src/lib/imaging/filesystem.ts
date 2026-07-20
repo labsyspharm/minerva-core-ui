@@ -17,6 +17,11 @@ type LoaderIn = {
 };
 type ToLoader = (i: LoaderIn) => Promise<Loader>;
 type ToMaskLoader = (i: LoaderIn) => Promise<Loader>;
+
+/** Viv's published OME metadata types are looser than our app `Loader` shape. */
+function asAppLoader(image: Awaited<ReturnType<typeof loadOmeTiff>>): Loader {
+  return image as Loader;
+}
 export type Selection = {
   t: number;
   z: number;
@@ -160,18 +165,24 @@ function isPersistableFileHandle(handle: Handle.File): boolean {
   );
 }
 
-const readWrite = { mode: "readwrite" } as const;
+/** Viewing only needs read (picker grants read; readwrite caused false denials). */
+const readPermission = { mode: "read" } as const;
 
-/** Request read access for a persisted or picked file handle before `getFile()`. */
+async function hasFileHandlePermission(handle: Handle.File): Promise<boolean> {
+  try {
+    return (await handle.queryPermission(readPermission)) === "granted";
+  } catch {
+    return false;
+  }
+}
+
+/** Query, then request read if needed (requires a user gesture when prompting). */
 async function ensureFileHandlePermission(
   handle: Handle.File,
 ): Promise<boolean> {
-  const ok = (p: PermissionState) => p === "granted";
+  if (await hasFileHandlePermission(handle)) return true;
   try {
-    return (
-      ok(await handle.queryPermission(readWrite)) ||
-      ok(await handle.requestPermission(readWrite))
-    );
+    return (await handle.requestPermission(readPermission)) === "granted";
   } catch {
     return false;
   }
@@ -203,9 +214,7 @@ const toFile: ToFiles = async () => {
       extensions: [".tif", ".tiff", ".ome.tif", ".ome.tiff"],
       multiple: false,
     });
-    if (file.handle) {
-      return [file.handle];
-    }
+    if (file.handle) return [file.handle];
     return [ephemeralFileHandleFromFile(file)];
   } catch (e: unknown) {
     if (isAbortError(e)) {
@@ -219,9 +228,9 @@ const toLoader: ToLoader = async ({ handle, pool = null }) => {
   const in_file = await handle.getFile();
   if (pool) {
     // @vivjs/loaders types geotiff@2.1.3 Pool; app uses geotiff@2.1.4-beta (different .d.ts).
-    return await loadOmeTiff(in_file, { pool: pool as never });
+    return asAppLoader(await loadOmeTiff(in_file, { pool: pool as never }));
   }
-  return await loadOmeTiff(in_file);
+  return asAppLoader(await loadOmeTiff(in_file));
 };
 
 /**
@@ -346,15 +355,16 @@ const toLoaderFromUrl = async (
   pool?: PoolClass,
 ): Promise<Loader> => {
   if (pool) {
-    return await loadOmeTiff(url, { pool: pool as never });
+    return asAppLoader(await loadOmeTiff(url, { pool: pool as never }));
   }
-  return await loadOmeTiff(url);
+  return asAppLoader(await loadOmeTiff(url));
 };
 
 export {
   hasAuthorShellSupport,
   hasDirectoryPickerAccess,
   isPersistableFileHandle,
+  hasFileHandlePermission,
   ensureFileHandlePermission,
   findFile,
   toLoader,

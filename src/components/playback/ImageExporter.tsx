@@ -2,7 +2,6 @@ import type { TiffPixelSource } from "@hms-dbmi/viv";
 import { getImageSize } from "@hms-dbmi/viv";
 import * as React from "react";
 import { useMemo, useState } from "react";
-import hash from "stable-hash";
 import styled from "styled-components";
 import type {
   ItemRegistryGroup,
@@ -14,10 +13,15 @@ import {
   encodeTileJpeg,
   jpegExportConcurrency,
 } from "@/lib/imaging/jpegExportPool";
+import { jpegPyramidFolderName } from "@/lib/imaging/jpegPyramid";
 import type { Config } from "@/lib/imaging/viv";
 import type { PoolClass } from "@/lib/imaging/workers/Pool";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
+import {
+  type StoryExportMode,
+  writeStoryBundleSidecars,
+} from "@/lib/storyExport/storyBundle";
 
 ///
 
@@ -46,15 +50,33 @@ type InitIn = {
   cRange: Index[];
 };
 
-type ToSaveDirectory = (
-  d: FileSystemDirectoryHandle,
-  s: string,
-) => Promise<FileSystemDirectoryHandle>;
-
 type Progress = {
   completed: number;
   total: number;
   done: boolean;
+  startedAt: number | null;
+};
+
+const formatMinutesLeft = (ms: number): string => {
+  const mins = Math.round(ms / 60000);
+  if (mins < 1) return "<1m left";
+  if (mins < 60) return `~${mins}m left`;
+  const h = Math.floor(mins / 60);
+  const rm = mins % 60;
+  return rm > 0 ? `~${h}h ${rm}m left` : `~${h}h left`;
+};
+
+/** Remaining time from average tile throughput so far; null until first tile finishes. */
+const estimateRemainingMs = (
+  completed: number,
+  total: number,
+  startedAt: number | null,
+  now: number,
+): number | null => {
+  if (startedAt === null || completed <= 0 || total <= completed) return null;
+  const elapsed = now - startedAt;
+  if (elapsed <= 0) return null;
+  return ((total - completed) * elapsed) / completed;
 };
 
 const toSettingsInternal = (
@@ -129,16 +151,6 @@ const exportTile = async (
   await write.close();
 };
 
-const toSaveDirectory: ToSaveDirectory = async (directory_handle, encoded) => {
-  const create = { create: true };
-  const encoded_data = new TextEncoder().encode(encoded);
-  const sha256 = new Uint8Array(
-    await crypto.subtle.digest("SHA-256", encoded_data),
-  ).toHex();
-  const dh = await directory_handle.getDirectoryHandle(sha256, create);
-  return dh;
-};
-
 const createCRange = async (
   setCRange,
   channelGroups,
@@ -151,9 +163,14 @@ const createCRange = async (
       if (c === undefined) {
         return null;
       }
-      const opts = { channelId, lowerLimit, upperLimit };
-      const encoded = hash(opts);
-      const dh = await toSaveDirectory(directory_handle, encoded);
+      const folderName = await jpegPyramidFolderName(
+        channelId,
+        lowerLimit,
+        upperLimit,
+      );
+      const dh = await directory_handle.getDirectoryHandle(folderName, {
+        create: true,
+      });
       const fh = await dh.getFileHandle("settings.json", {
         create: true,
       });
@@ -162,6 +179,7 @@ const createCRange = async (
         JSON.stringify(
           {
             channel: c,
+            channelId,
             lowerLimit,
             upperLimit,
           },
@@ -176,7 +194,7 @@ const createCRange = async (
         y: 0,
         c,
         dh,
-        encoded,
+        encoded: folderName,
         lowerLimit,
         upperLimit,
       } as Index;
@@ -305,24 +323,52 @@ function isFullState(o: Partial<FullState>): o is FullState {
 const ImageExporterDiv = styled.div`
   height: 100%;
   display: grid;
-  grid-template-rows: 1fr 30px 1fr;
-  grid-template-columns: 1fr 300px 1fr;
+  grid-template-rows: 1fr auto 1fr;
+  grid-template-columns: 1fr minmax(300px, 420px) 1fr;
   > div {
     grid-row: 2;
     grid-column: 2;
   }
 `;
 
+const ExportStatus = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+`;
+
 const ProgressBar = styled.div<ProgressBarProps>`
   display: grid;
-  grid-template-columns ${(props) => to_fr(props.$ratio || 0)} auto;
+  grid-template-columns: 1fr auto;
+  gap: 0.5em;
+  align-items: center;
+
   > div:first-child {
-    background-color: ${(props) => to_color(props.$done) || "white"};
+    box-sizing: border-box;
+    height: 1.25em;
+    border: 1px solid color-mix(in srgb, currentColor 85%, transparent);
+    background-color: transparent;
+    overflow: hidden;
+
+    > div {
+      height: 100%;
+      width: ${(props) => `${Math.min(100, Math.max(0, props.$ratio * 100))}%`};
+      background-color: ${(props) => to_color(props.$done) || "white"};
+    }
   }
+
   > div:last-child {
     padding: 0.25em;
     font-family: monospace;
+    white-space: nowrap;
   }
+`;
+
+const EtaLine = styled.div`
+  font-family: monospace;
+  font-size: 0.9em;
+  text-align: center;
+  opacity: 0.85;
 `;
 
 const ExportMessage = styled.div`
@@ -332,11 +378,6 @@ const ExportMessage = styled.div`
   font-family: monospace;
   text-align: center;
 `;
-
-const to_fr = (ratio) => {
-  const percent = Math.round(parseFloat(ratio) * 100);
-  return `${percent}fr ${100 - percent}fr`;
-};
 
 const to_color = (done) => {
   if (done) {
@@ -377,6 +418,8 @@ export type ImageExporterProps = {
   dicomIndexList: DicomIndex[];
   omeLoaderEntries: OmeLoaderEntry[];
   viewerConfig: Config;
+  /** Default: bake JPEG pyramids. `remote-url` writes sidecars only. */
+  exportMode?: StoryExportMode;
 };
 
 export const ImageExporter = (props: ImageExporterProps) => {
@@ -386,6 +429,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
   };
   const { groups, viewerConfig } = props;
   const { omeLoaderEntries, dicomIndexList } = props;
+  const exportMode: StoryExportMode = props.exportMode ?? "jpeg-pyramid";
 
   const {
     activeChannelGroupId,
@@ -461,7 +505,9 @@ export const ImageExporter = (props: ImageExporterProps) => {
     completed: 0,
     total: 0,
     done: false,
+    startedAt: null,
   });
+  const [nowMs, setNowMs] = useState(() => performance.now());
   const [cRange, setCRange] = useState<Index[] | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -470,6 +516,10 @@ export const ImageExporter = (props: ImageExporterProps) => {
     channelGroups.some((g) => g.channels.length > 0);
 
   React.useEffect(() => {
+    if (exportMode === "remote-url") {
+      setCRange([]);
+      return;
+    }
     if (!hasChannelGroup) {
       setCRange([]);
       setExportError(
@@ -479,7 +529,13 @@ export const ImageExporter = (props: ImageExporterProps) => {
     }
     setExportError(null);
     createCRange(setCRange, channelGroups, imageChannels, directory_handle);
-  }, [channelGroups, imageChannels, directory_handle, hasChannelGroup]);
+  }, [
+    channelGroups,
+    imageChannels,
+    directory_handle,
+    hasChannelGroup,
+    exportMode,
+  ]);
   const loader = useMemo(
     () =>
       mainSettingsList.length > 0 ? mainSettingsList[0].loader.data : null,
@@ -487,6 +543,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
   );
 
   const state: MainState = useMemo(() => {
+    if (exportMode === "remote-url") return null;
     if (loader === null || cRange === null) {
       return null;
     }
@@ -495,10 +552,51 @@ export const ImageExporter = (props: ImageExporterProps) => {
       return init;
     }
     return null;
-  }, [loader, cRange]);
+  }, [loader, cRange, exportMode]);
 
   const stopExport = props.stopExport;
+
   React.useEffect(() => {
+    if (exportMode !== "remote-url") return;
+    if (exportError) {
+      const t = setTimeout(() => stopExport(), 2000);
+      return () => clearTimeout(t);
+    }
+    let cancelled = false;
+    const wallStart = performance.now();
+    setProgress({ completed: 0, total: 1, done: false, startedAt: wallStart });
+    void (async () => {
+      try {
+        await writeStoryBundleSidecars(
+          directory_handle,
+          useDocumentStore.getState().toDocumentData(),
+          { mode: "remote-url" },
+        );
+        if (cancelled) return;
+        setProgress({
+          completed: 1,
+          total: 1,
+          done: true,
+          startedAt: wallStart,
+        });
+        setTimeout(() => stopExport(), 1500);
+      } catch (e) {
+        if (cancelled) return;
+        console.error("[minerva] failed to write story bundle sidecars", e);
+        setExportError(
+          e instanceof Error
+            ? e.message
+            : "Failed to write document.json / index.html",
+        );
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [exportMode, directory_handle, stopExport, exportError]);
+
+  React.useEffect(() => {
+    if (exportMode === "remote-url") return;
     if (exportError) {
       const t = setTimeout(() => stopExport(), 2000);
       return () => clearTimeout(t);
@@ -520,7 +618,11 @@ export const ImageExporter = (props: ImageExporterProps) => {
     const total = indices.length;
     const wallStart = performance.now();
 
-    setProgress({ completed: 0, total, done: false });
+    setProgress({ completed: 0, total, done: false, startedAt: wallStart });
+
+    const etaInterval = window.setInterval(() => {
+      if (!cancelled) setNowMs(performance.now());
+    }, 1000);
 
     const run = async () => {
       let nextIndex = 0;
@@ -549,6 +651,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
             completed,
             total,
             done: completed >= total,
+            startedAt: wallStart,
           });
         }
       };
@@ -562,7 +665,27 @@ export const ImageExporter = (props: ImageExporterProps) => {
         console.log(
           `[minerva] jpeg-export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (${concurrency} workers, ${total} tiles)`,
         );
-        setProgress({ completed: total, total, done: true });
+        try {
+          await writeStoryBundleSidecars(
+            directory_handle,
+            useDocumentStore.getState().toDocumentData(),
+            { mode: "jpeg-pyramid" },
+          );
+        } catch (e) {
+          console.error("[minerva] failed to write story bundle sidecars", e);
+          setExportError(
+            e instanceof Error
+              ? e.message
+              : "Failed to write document.json / index.html",
+          );
+          return;
+        }
+        setProgress({
+          completed: total,
+          total,
+          done: true,
+          startedAt: wallStart,
+        });
         setTimeout(() => stopExport(), 2000);
       }
     };
@@ -571,12 +694,21 @@ export const ImageExporter = (props: ImageExporterProps) => {
 
     return () => {
       cancelled = true;
+      window.clearInterval(etaInterval);
       // Avoid aborting the shared Viv loader after a successful export.
       if (!finishedOk) abort.abort();
     };
-  }, [state, loader, stopExport, cRange, exportError]);
+  }, [
+    state,
+    loader,
+    stopExport,
+    cRange,
+    exportError,
+    directory_handle,
+    exportMode,
+  ]);
 
-  const { completed, total, done } = progress;
+  const { completed, total, done, startedAt } = progress;
   let ratio = done ? 1 : 0;
   if (!done && total > 1) {
     ratio = completed / total;
@@ -585,15 +717,45 @@ export const ImageExporter = (props: ImageExporterProps) => {
   } else if (!done && total === 1) {
     ratio = 0;
   }
+
+  const remainingMs = estimateRemainingMs(
+    completed,
+    total,
+    startedAt,
+    Math.max(nowMs, performance.now()),
+  );
+  const percentLabel = `${(ratio * 100).toFixed(3)}%`;
+  let etaLabel = "";
+  if (done) {
+    etaLabel = "done";
+  } else if (remainingMs !== null) {
+    etaLabel = formatMinutesLeft(remainingMs);
+  } else if (total > 0) {
+    etaLabel = "estimating…";
+  }
+
   return (
     <ImageExporterDiv>
       {exportError ? (
         <ExportMessage>{exportError}</ExportMessage>
+      ) : exportMode === "remote-url" ? (
+        <ExportStatus>
+          <ExportMessage>
+            {done
+              ? "Exported document.json + index.html (remote URLs)"
+              : "Writing document.json + index.html…"}
+          </ExportMessage>
+        </ExportStatus>
       ) : (
-        <ProgressBar $ratio={ratio} $done={done}>
-          <div></div>
-          <div> {`${(ratio * 100).toFixed(3)}%`} </div>
-        </ProgressBar>
+        <ExportStatus>
+          <ProgressBar $ratio={ratio} $done={done}>
+            <div>
+              <div></div>
+            </div>
+            <div> {percentLabel} </div>
+          </ProgressBar>
+          {etaLabel ? <EtaLine>{etaLabel}</EtaLine> : null}
+        </ExportStatus>
       )}
     </ImageExporterDiv>
   );

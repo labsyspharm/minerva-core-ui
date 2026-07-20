@@ -80,7 +80,8 @@ type Metadata = {
   AquisitionDate: string;
   Description: string;
   Pixels: Pixels;
-  ROIs: Roi[];
+  /** Present when OME-XML embeds ROIs; Viv's OmeTiff metadata often omits this. */
+  ROIs?: Roi[];
 };
 
 export type Config = {
@@ -227,7 +228,7 @@ const toSettings = (opts: ToSettingsOpts) => {
     }
 
     const n_channels = c_idx >= 0 ? shape[c_idx] || 0 : 1;
-    const out = {
+    return {
       ...toDefaultSettings(n_channels),
       selections,
       colors,
@@ -236,7 +237,6 @@ const toSettings = (opts: ToSettingsOpts) => {
       sourceChannelIds,
       loader,
     };
-    return out;
   };
 };
 

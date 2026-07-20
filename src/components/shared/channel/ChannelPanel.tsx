@@ -2,10 +2,14 @@ import type { ReactNode } from "react";
 import * as React from "react";
 import styled from "styled-components";
 import {
-  buildCompositedIntensityLayers,
-  isMaskSourceRendered,
+  defaultVisibilitiesForSources,
+  isStackVisible,
 } from "@/lib/imaging/channelCompositor";
-import { isImageChannel, isMaskChannel } from "@/lib/imaging/channelKind";
+import {
+  DEFAULT_VISIBLE_INTENSITY_CHANNELS,
+  isImageChannel,
+  isMaskChannel,
+} from "@/lib/imaging/channelKind";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
   findSourceChannel,
@@ -77,7 +81,11 @@ const WrapCore = styled.div`
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-0001);
+  /* Explicit metrics — do not inherit presentation prose line-height / font-size. */
+  box-sizing: border-box;
   font-size: 12px;
+  font-weight: 400;
+  line-height: 1.25;
 `;
 
 const OverlaySectionLabel = styled.div`
@@ -137,7 +145,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       })
       .filter((x) => x != null),
   }));
-
   const legendSections = React.useMemo((): LegendSection[] => {
     const indexById = new Map(
       sourceChannels.map((sc, idx) => [sc.id, idx] as const),
@@ -145,24 +152,15 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     const activeGroup = activeChannelGroupId
       ? docChannelGroups.find((g) => g.id === activeChannelGroupId)
       : undefined;
-    const intensityLayers = buildCompositedIntensityLayers({
-      onLoader: sourceChannels.filter((sc) => isImageChannel(sc)),
-      activeGroup,
-      channelGroups: docChannelGroups,
-      stackVisibilities: channelVisibilities,
-      groupRowVisibilities: channelGroupRowVisibilities,
-      hasVisibilityMap: Object.keys(channelVisibilities).length > 0,
-    });
-    const maskRenderArgs = {
-      activeGroup,
-      channelGroups: docChannelGroups,
-      stackVisibilities: channelVisibilities,
-      groupRowVisibilities: channelGroupRowVisibilities,
-    };
+    const hasStackVisibilityMap = Object.keys(channelVisibilities).length > 0;
     const sections: LegendSection[] = [];
 
     for (const im of images) {
       const entries: LegendEntry[] = [];
+      const imageSources = sourceChannels.filter(
+        (sc) =>
+          sc.imageId === im.id && (isImageChannel(sc) || isMaskChannel(sc)),
+      );
 
       if (activeGroup) {
         const groupChannels: LegendChannel[] = [];
@@ -176,24 +174,15 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         }
 
         const overlayChannels: LegendChannel[] = [];
-        for (const { sc, gc } of intensityLayers) {
-          if (sc.imageId !== im.id || gc != null) continue;
-          const colorIdx = indexById.get(sc.id) ?? 0;
-          overlayChannels.push(
-            legendChannelFromLayer(sc, null, null, colorIdx),
-          );
-        }
-
-        const groupSourceIds = new Set(
-          activeGroup.channels.map((gc) => gc.channelId),
-        );
-        for (const ch of im.channels) {
-          const sc = findSourceChannel(sourceChannels, ch.id);
-          if (!sc || !isMaskChannel(sc)) continue;
-          if (groupSourceIds.has(sc.id)) continue;
-          if (!isMaskSourceRendered({ sc, ...maskRenderArgs })) continue;
-          const colorIdx = indexById.get(sc.id) ?? 0;
-          overlayChannels.push(legendChannelFromSource(sc, colorIdx));
+        // Active-group rows always remain listed so their eye can be toggled
+        // back on. All Channels rows are overlays and remain only while their
+        // independent stack eye is on.
+        if (hasStackVisibilityMap) {
+          for (const sc of imageSources) {
+            if (!isStackVisible(channelVisibilities, sc.id)) continue;
+            const colorIdx = indexById.get(sc.id) ?? 0;
+            overlayChannels.push(legendChannelFromSource(sc, colorIdx));
+          }
         }
 
         for (const c of groupChannels) {
@@ -206,18 +195,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
           entries.push({ type: "channel", channel: c });
         }
       } else {
-        for (const { sc, gc } of intensityLayers) {
-          if (sc.imageId !== im.id) continue;
-          const colorIdx = indexById.get(sc.id) ?? 0;
-          entries.push({
-            type: "channel",
-            channel: legendChannelFromLayer(sc, gc, null, colorIdx),
-          });
-        }
-        for (const ch of im.channels) {
-          const sc = findSourceChannel(sourceChannels, ch.id);
-          if (!sc || !isMaskChannel(sc)) continue;
-          if (!isMaskSourceRendered({ sc, ...maskRenderArgs })) continue;
+        let defaultIntensitySeen = 0;
+        for (const sc of imageSources) {
+          const visible = hasStackVisibilityMap
+            ? isStackVisible(channelVisibilities, sc.id)
+            : isMaskChannel(sc) ||
+              defaultIntensitySeen < DEFAULT_VISIBLE_INTENSITY_CHANNELS;
+          if (isImageChannel(sc)) defaultIntensitySeen += 1;
+          if (!visible) continue;
           const colorIdx = indexById.get(sc.id) ?? 0;
           entries.push({
             type: "channel",
@@ -240,7 +225,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     docChannelGroups,
     activeChannelGroupId,
     channelVisibilities,
-    channelGroupRowVisibilities,
   ]);
 
   const toggleChannel = (c: LegendChannel) => {
@@ -253,9 +237,13 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       });
       return;
     }
+    const stackVisibilities =
+      Object.keys(channelVisibilities).length > 0
+        ? channelVisibilities
+        : defaultVisibilitiesForSources(sourceChannels, {}, docChannelGroups);
     setChannelVisibilities({
-      ...channelVisibilities,
-      [c.source_uuid]: !(channelVisibilities[c.source_uuid] ?? true),
+      ...stackVisibilities,
+      [c.source_uuid]: !isStackVisible(stackVisibilities, c.source_uuid),
     });
   };
 

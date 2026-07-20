@@ -11,6 +11,7 @@ import type {
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import type { Config } from "@/lib/imaging/viv";
+import type { StoryExportMode } from "@/lib/storyExport/storyBundle";
 
 export type PlaybackRouterProps = {
   viewer: ReactNode;
@@ -34,6 +35,7 @@ export type PlaybackRouterProps = {
   exitPlaybackPreview?: () => void;
   dicomIndexList: DicomIndex[];
   omeLoaderEntries: OmeLoaderEntry[];
+  exportMode?: StoryExportMode;
 };
 
 const ModeViewport = styled.div`
@@ -111,6 +113,7 @@ export const PlaybackRouter = (props: PlaybackRouterProps) => {
     dicomIndexList: props.dicomIndexList,
     omeLoaderEntries: props.omeLoaderEntries,
     directory_handle: props.directory_handle,
+    exportMode: props.exportMode,
   };
 
   return (
