@@ -1,38 +1,28 @@
 import styled from "styled-components";
 import { ImageExporter } from "@/components/playback/ImageExporter";
 import { Presentation } from "@/components/playback/Presentation";
+import { StoryPlaybackView } from "@/components/playback/StoryPlaybackView";
 import type { ChannelPanelProps } from "@/components/shared/channel/ChannelPanel";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
-import type {
-  ItemRegistryGroup,
-  OmeLoaderEntry,
-} from "@/components/shared/viewer/ImageViewer";
-import type { DicomIndex } from "@/lib/imaging/dicomIndex";
+import type { ItemRegistryGroup } from "@/components/shared/viewer/ImageViewer";
 import type { Config } from "@/lib/imaging/viv";
 import type { StoryExportMode } from "@/lib/storyExport/storyBundle";
+import type { StoryPlaybackLoaders } from "./useStoryPlaybackLayers";
 
-export type PlaybackRouterProps = ChannelPanelProps & {
-  name: string;
-  ioState: null | string;
-  stopExport: () => void;
-  presenting: boolean;
-  handles: Handle.File[];
-  in_f: string;
-  viewerConfig: Config;
-  groups: ItemRegistryGroup[];
-  directory_handle: FileSystemDirectoryHandle;
-  enterPlaybackPreview?: () => void;
-  exitPlaybackPreview?: () => void;
-  dicomIndexList: DicomIndex[];
-  omeLoaderEntries: OmeLoaderEntry[];
-  exportMode?: StoryExportMode;
-};
-
-const _ImageDiv = styled.div`
-  background-color: white;
-  width: 100%;
-  height: 100%;
-`;
+export type PlaybackRouterProps = ChannelPanelProps &
+  StoryPlaybackLoaders & {
+    name: string;
+    ioState: null | string;
+    stopExport: () => void;
+    presenting: boolean;
+    handles: Handle.File[];
+    in_f: string;
+    viewerConfig: Config;
+    groups: ItemRegistryGroup[];
+    directory_handle: FileSystemDirectoryHandle;
+    exitPlaybackPreview?: () => void;
+    exportMode?: StoryExportMode;
+  };
 
 const ModeViewport = styled.div`
   position: relative;
@@ -73,25 +63,18 @@ export const PlaybackRouter = (props: PlaybackRouterProps) => {
           name={props.name}
           exitPlaybackPreview={props.exitPlaybackPreview}
         >
-          <ChannelPanel {...props}>{props.children}</ChannelPanel>
+          <StoryPlaybackView
+            jpegLoaderEntries={props.jpegLoaderEntries}
+            setJpegLoaderEntries={props.setJpegLoaderEntries}
+            omeLoaderEntries={props.omeLoaderEntries}
+            dicomIndexList={props.dicomIndexList}
+          />
         </Presentation>
       </ModeViewport>
     );
   }
 
   const exporting = props.ioState === "EXPORTING";
-  const exporterProps = {
-    in_f: props.in_f,
-    groups: props.groups,
-    handles: props.handles,
-    stopExport: props.stopExport,
-    viewerConfig: props.viewerConfig,
-    dicomIndexList: props.dicomIndexList,
-    omeLoaderEntries: props.omeLoaderEntries,
-    directory_handle: props.directory_handle,
-    exportMode: props.exportMode,
-  };
-
   return (
     <ModeViewport key="author" data-mode={exporting ? "exporting" : "author"}>
       <AuthorViewport $hidden={exporting}>
@@ -99,7 +82,17 @@ export const PlaybackRouter = (props: PlaybackRouterProps) => {
       </AuthorViewport>
       {exporting ? (
         <ExportOverlay>
-          <ImageExporter {...exporterProps} />
+          <ImageExporter
+            in_f={props.in_f}
+            groups={props.groups}
+            handles={props.handles}
+            stopExport={props.stopExport}
+            viewerConfig={props.viewerConfig}
+            dicomIndexList={props.dicomIndexList}
+            omeLoaderEntries={props.omeLoaderEntries}
+            directory_handle={props.directory_handle}
+            exportMode={props.exportMode}
+          />
         </ExportOverlay>
       ) : null}
     </ModeViewport>

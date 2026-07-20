@@ -2621,7 +2621,8 @@ const Content = (props: Props) => {
           viewerConfig,
           dicomIndexList,
           omeLoaderEntries,
-          enterPlaybackPreview,
+          jpegLoaderEntries,
+          setJpegLoaderEntries,
           exitPlaybackPreview,
         };
         // Actual image viewer

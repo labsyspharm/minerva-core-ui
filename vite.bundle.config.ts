@@ -71,7 +71,7 @@ export default defineConfig({
     emptyOutDir: true,
     outDir: "bundle",
     lib: {
-      entry: path.resolve(__dirname, "src/app/entry.tsx"),
+      entry: path.resolve(__dirname, "src/player/entry.tsx"),
       name: "MinervaStory",
       formats: ["iife"],
       fileName: () => "minerva.js",
