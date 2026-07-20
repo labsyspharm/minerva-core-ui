@@ -749,7 +749,9 @@ const Content = (props: Props) => {
     const storyRoot = url.replace(/\/$/, "");
     const documentUrl = `${storyRoot}/document.json`;
     // Before hydrate: otherwise auto-hydrate races while jpeg entries are empty.
-    // Always clear on early exit / failure so a superseded load cannot stick.
+    // Only the *current* generation may clear skip — a superseded load must not
+    // unlock hydrate while a newer request is still between document write and
+    // setJpegLoaderEntries.
     skipLoaderHydrateRef.current = true;
     try {
       const res = await fetch(documentUrl);
@@ -757,6 +759,7 @@ const Content = (props: Props) => {
         throw new Error(`Failed to load ${documentUrl} (${res.status})`);
       }
       const data = validateDocumentData(await res.json());
+      if (loadGeneration !== jpegUrlLoadGenerationRef.current) return;
       const storyId =
         useDocumentStore.getState().activeStoryId ??
         data.metadata.id ??
@@ -782,15 +785,16 @@ const Content = (props: Props) => {
       });
       if (loadGeneration !== jpegUrlLoadGenerationRef.current) return;
       setJpegLoaderEntries(jpegEntries);
+      // Empty success would otherwise leave skip stuck (hydrate effect only
+      // clears when some loader list is non-empty).
+      if (jpegEntries.length === 0) {
+        skipLoaderHydrateRef.current = false;
+      }
     } catch (e) {
       if (loadGeneration === jpegUrlLoadGenerationRef.current) {
         skipLoaderHydrateRef.current = false;
       }
       throw e;
-    } finally {
-      if (loadGeneration !== jpegUrlLoadGenerationRef.current) {
-        skipLoaderHydrateRef.current = false;
-      }
     }
   };
 
