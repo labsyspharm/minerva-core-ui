@@ -2,13 +2,13 @@
  * Isolated Story presentation shell — authoring preview AND CDN export.
  * Imported only from Presentation.tsx.
  *
- * Sealed styling boundary: parent Bootstrap / Overpass / author-ui globals
+ * Sealed styling boundary: parent Bootstrap / Overpass / app-shell globals
  * must not change layout inside `.minerva-presentation`.
  */
 
 @import "../../latoFaces.css";
 
-/* Tokens on every descendant so author-ui `* { --dark-main-glass: … }` cannot win.
+/* Tokens on every descendant so parent-shell `* { --dark-main-glass: … }` cannot win.
  * Values intentionally diverge slightly from theme.module.css (dim-gray #111,
  * softer glass-edge) so preview/CDN match the nav surface. */
 .minerva-presentation,

@@ -18,7 +18,7 @@ export const storyBannerBarCss = css`
   flex-direction: row;
   align-items: center;
   gap: 10px;
-  /* Solid fallback so CDN (no author-ui globals) never drops the ribbon bar. */
+  /* Solid fallback so CDN (no parent theme globals) never drops the ribbon bar. */
   background: var(
     --dark-main-glass,
     color-mix(in xyz, var(--theme-dark-main-color, hwb(240 10% 50%)), transparent 60%)

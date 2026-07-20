@@ -1,19 +1,14 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { Presentation } from "@/components/playback/Presentation";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
+import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
+import type { DicomIndex } from "@/lib/imaging/dicomIndex";
+import { hydrateDocumentLoaders } from "@/lib/imaging/hydrateDocumentLoaders";
 import type {
   JpegLoaderEntry,
   OmeLoaderEntry,
-} from "@/components/shared/viewer/ImageViewer";
-import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
-import { resolveImageContentRole } from "@/lib/imaging/channelKind";
-import { loadDicomWeb, parseDicomWeb } from "@/lib/imaging/dicom.js";
-import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
-import { loadOmeLoaderForRole } from "@/lib/imaging/filesystem";
-import {
-  jpegLoaderEntriesFromImages,
-  useSyncJpegChannelFolders,
-} from "@/lib/imaging/loadJpegFromDocument";
+} from "@/lib/imaging/loaderEntries";
+import { useSyncJpegChannelFolders } from "@/lib/imaging/loadJpegFromDocument";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
 import { Pool } from "@/lib/imaging/workers/Pool";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -42,8 +37,6 @@ export function StoryPlayerApp(props: { documentUrl: string }) {
 
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
-  /** Same empty→“Untitled story” ribbon logic as Presentation; do not invent a second name. */
-  const title = useDocumentStore((s) => s.metadata.title ?? "");
   const sourceChannels = useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
@@ -73,56 +66,21 @@ export function StoryPlayerApp(props: { documentUrl: string }) {
         const data = validateDocumentData(await res.json());
         const storyId = data.metadata.id ?? crypto.randomUUID();
         useDocumentStore.getState().hydrateFromDocument(data, storyId);
-        const jpegEntries = await jpegLoaderEntriesFromImages({
-          images: data.images,
-          channelGroups: data.channelGroups,
-          documentUrl,
-        });
         // Pool(0) = main-thread geotiff decode. CDN IIFE workers resolve to
         // `/assets/...` on the story host (wrong); avoid spawning them here.
         const omePool = data.images.some((im) => im.source?.kind === "url")
           ? new Pool(0)
           : null;
-        const omeEntries: OmeLoaderEntry[] = [];
-        const dicomEntries: DicomIndex[] = [];
-        const dicomSeriesSeen = new Set<string>();
-        for (const im of data.images) {
-          if (!im.source) continue;
-          if (im.source.kind === "url") {
-            const role =
-              resolveImageContentRole({
-                contentRole: im.contentRole,
-                channels: im.channels ?? [],
-              }) === "segmentation"
-                ? "segmentation"
-                : "intensity";
-            const loader = await loadOmeLoaderForRole(role, {
-              kind: "url",
-              url: im.source.url,
-              ...(omePool ? { pool: omePool } : {}),
-            });
-            omeEntries.push({ loader, sourceImageId: im.id });
-            continue;
-          }
-          if (im.source.kind === "dicomWeb") {
-            const { series, modality } = im.source;
-            if (dicomSeriesSeen.has(series)) continue;
-            dicomSeriesSeen.add(series);
-            const pyramids = await loadDicomWeb(series);
-            const loader = parseDicomWeb({
-              pyramids,
-              series,
-              little_endian: true,
-            }) as DicomLoader;
-            dicomEntries.push({
-              series,
-              pyramids,
-              modality,
-              loader,
-              sourceImageId: im.id,
-            });
-          }
-        }
+        const {
+          jpegLoaderEntries: jpegEntries,
+          omeLoaderEntries: omeEntries,
+          dicomIndexList: dicomEntries,
+        } = await hydrateDocumentLoaders(data.images, {
+          channelGroups: data.channelGroups,
+          documentUrl,
+          pool: omePool,
+          includeLocal: false,
+        });
         if (cancelled) return;
         setJpegLoaderEntries(jpegEntries);
         setOmeLoaderEntries(omeEntries);
@@ -191,7 +149,7 @@ export function StoryPlayerApp(props: { documentUrl: string }) {
   }
 
   return (
-    <Presentation name={title} showDocumentTitle>
+    <Presentation showDocumentTitle>
       <ChannelPanel noLoader={false} hiddenChannel={false}>
         <ImageViewer
           omeLoaderEntries={omeLoaderEntries}
@@ -204,7 +162,6 @@ export function StoryPlayerApp(props: { documentUrl: string }) {
           isDragging={dragState.isDragging}
           hoveredShapeId={hoverState.hoveredShapeId}
           onOverlayInteraction={handleOverlayInteraction}
-          groups={[]}
         />
       </ChannelPanel>
     </Presentation>

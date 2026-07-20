@@ -20,13 +20,12 @@
   },
   "type": "module",
   "packageManager": "pnpm@10.34.4",
-  "main": "build/main.js",
-  "types": "build/main.d.ts",
+  "main": "build/src/components/main.js",
   "author": "John T. Hoffer",
   "repository": "github:labsyspharm/minerva-core-ui",
   "license": "MIT",
   "exports": {
-    ".": "./build/main.js",
+    ".": "./build/src/components/main.js",
     "./bundle": "./bundle/minerva.js",
     "./bundle/minerva.css": "./bundle/minerva.css"
   },

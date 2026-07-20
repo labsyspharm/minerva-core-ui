@@ -3,10 +3,7 @@ import { getImageSize } from "@hms-dbmi/viv";
 import * as React from "react";
 import { useMemo, useState } from "react";
 import styled from "styled-components";
-import type {
-  ItemRegistryGroup,
-  OmeLoaderEntry,
-} from "@/components/shared/viewer/ImageViewer";
+import type { OmeLoaderEntry } from "@/components/shared/viewer/ImageViewer";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import { toLoader } from "@/lib/imaging/filesystem";
 import {
@@ -82,14 +79,13 @@ const estimateRemainingMs = (
 const toSettingsInternal = (
   loader,
   modality,
-  groups,
   activeChannelGroupId,
   channelVisibilities,
   channelGroupRowVisibilities,
   toSettings,
   loaderSourceImageId?: string,
 ) => {
-  if (loader === null || !groups) {
+  if (loader === null) {
     return toSettings(
       activeChannelGroupId,
       modality,
@@ -414,7 +410,6 @@ export type ImageExporterProps = {
   handles: Handle.File[];
   directory_handle: Handle.Dir;
   stopExport: () => void;
-  groups: ItemRegistryGroup[];
   dicomIndexList: DicomIndex[];
   omeLoaderEntries: OmeLoaderEntry[];
   viewerConfig: Config;
@@ -427,7 +422,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     variant: "primary",
     className: "mb-3",
   };
-  const { groups, viewerConfig } = props;
+  const { viewerConfig } = props;
   const { omeLoaderEntries, dicomIndexList } = props;
   const exportMode: StoryExportMode = props.exportMode ?? "jpeg-pyramid";
 
@@ -443,7 +438,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
       toSettingsInternal(
         loader,
         modality,
-        groups,
         activeChannelGroupId,
         channelVisibilities,
         channelGroupRowVisibilities,
@@ -453,7 +447,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
     );
   }, [
     omeLoaderEntries,
-    groups,
     activeChannelGroupId,
     channelVisibilities,
     channelGroupRowVisibilities,
@@ -466,7 +459,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
       return toSettingsInternal(
         dicomIndex.loader,
         modality,
-        groups,
         activeChannelGroupId,
         channelVisibilities,
         channelGroupRowVisibilities,
@@ -475,7 +467,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
     });
   }, [
     dicomIndexList,
-    groups,
     activeChannelGroupId,
     channelVisibilities,
     channelGroupRowVisibilities,

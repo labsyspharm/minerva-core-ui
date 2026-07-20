@@ -3,9 +3,8 @@ import {
   OrthographicView,
   type OrthographicViewState,
 } from "@deck.gl/core";
-import type { TileLayer } from "@deck.gl/geo-layers";
 import Deck, { type DeckGLRef } from "@deck.gl/react";
-import { type MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
+import { ScaleBarLayer } from "@hms-dbmi/viv";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 
@@ -26,8 +25,7 @@ import {
   selectionMaskDisplayImageData,
 } from "@/lib/imaging/maskLayers";
 import { effectiveMaskVisualizationForSource } from "@/lib/imaging/sourceChannelStyle";
-import type { Config, Loader } from "@/lib/imaging/viv";
-import type { Story } from "@/lib/legacy/exhibit";
+import type { Config } from "@/lib/imaging/viv";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
@@ -83,56 +81,24 @@ const useWindowSize = () => {
   return windowSize;
 };
 
-type ImageLayer = TileLayer | typeof MultiscaleImageLayer;
+import type {
+  LoaderList,
+  MainSettings,
+  OmeLoaderEntry,
+} from "@/lib/imaging/loaderEntries";
 
-type ItemRegistryChannel = {
-  name: string;
-  color: string;
-  contrast: [number, number];
-};
-
-export type ItemRegistryGroup = {
-  State: { Expanded: boolean };
-  channels: ItemRegistryChannel[];
-  name: string;
-  g: number;
-};
-
-/** One OME-TIFF pyramid + the document `Image.id` carried on flat source channels. */
-export type OmeLoaderEntry = {
-  loader: Loader;
-  sourceImageId: string;
-};
-
-export type JpegLoaderEntry = {
-  loader: Loader;
-  sourceImageId: string;
-  /** OME channel index → pyramid folder (map mutated in place; entry shell replaced to re-render). */
-  channelFolders?: Record<number, string>;
-  imagePath?: string;
-};
-
-export type LoaderListItem = {
-  loader: Loader;
-  modality: string;
-  sourceImageId?: string;
-};
-export type LoaderList = LoaderListItem[];
+export type {
+  JpegLoaderEntry,
+  LoaderList,
+  LoaderListItem,
+  MainSettings,
+  OmeLoaderEntry,
+} from "@/lib/imaging/loaderEntries";
 
 type AnyLayer = Layer | OverlayLayer;
 
-export type MainSettings = {
-  selections: readonly { c: number }[];
-  contrastLimits: readonly [number, number][];
-  colors: readonly [number, number, number][];
-  channelsVisible?: readonly boolean[];
-  sourceChannelIds?: readonly string[];
-};
-
 export type ImageViewerProps = {
   omeLoaderEntries: OmeLoaderEntry[];
-  /** Legacy exhibit stories; document waypoints live in the store. */
-  stories?: Story[];
   imageLayers: Layer[];
   mainSettingsList: MainSettings[];
   loaderList: LoaderList;
@@ -145,14 +111,12 @@ export type ImageViewerProps = {
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
     coordinate: [number, number, number],
   ) => void;
-  groups: ItemRegistryGroup[];
   zoomInButton?: HTMLElement | null;
   zoomOutButton?: HTMLElement | null;
   showSquareViewportOverlay?: boolean;
   squareViewportScale?: number;
   squareViewportColor?: string;
   squareViewportBorderWidth?: number;
-  [key: string]: unknown;
 };
 
 const Main = styled.div`
@@ -208,7 +172,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     mainSettingsList,
     imageLayers,
     omeLoaderEntries,
-    groups,
     overlayLayers = [],
     activeTool,
     isDragging = false,
@@ -227,7 +190,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     sam2Processing,
     authoringWaypointEditorOpen,
   } = useAppStore();
-  const channelRendering = useAppStore((s) => s.channelRendering);
+  // Live contrast/color preview is folded in `useViewerLayers`, not here.
   const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);

@@ -25,8 +25,6 @@ import "./presentationShell.css";
 /** Shared by authoring preview and the CDN `StoryPlayerApp` bundle. */
 export type PresentationProps = {
   children: ReactElement;
-  /** Shown in the left nav (story / exhibit name). */
-  name: string;
   /** When set, shows the authoring “Back / Story preview” ribbon. */
   exitPlaybackPreview?: () => void;
   /**
@@ -627,7 +625,6 @@ export const Presentation = (props: PresentationProps) => {
 
   const first_story = activeStoryIndex === 0;
   const last_story = activeStoryIndex === waypoints.length - 1;
-  const main_title = props.name;
   const story = waypoints[activeStoryIndex];
   const story_title = story?.title ?? `Waypoint ${activeStoryIndex + 1}`;
   const story_content = story?.content;
@@ -684,9 +681,9 @@ export const Presentation = (props: PresentationProps) => {
   const showRibbon = Boolean(
     props.exitPlaybackPreview || props.showDocumentTitle,
   );
-  /** Left-nav name only when there is no top ribbon (ribbon already shows the title). */
+  /** Left-nav title only when there is no top ribbon (ribbon already shows it). */
   const navStoryName =
-    !showRibbon && main_title.trim() ? main_title.trim() : "";
+    !showRibbon && documentTitle.trim() ? documentTitle.trim() : "";
 
   return (
     <PresentationShell className="minerva-presentation">

@@ -16,17 +16,10 @@ import type {
   ValidObj,
 } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
-import {
-  ImageViewer,
-  type JpegLoaderEntry,
-  type LoaderList,
-  type MainSettings,
-  type OmeLoaderEntry,
-} from "@/components/shared/viewer/ImageViewer";
+import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
 import type {
   ConfigSourceDistribution,
   ConfigWaypoint,
-  ItemRegistryProps,
 } from "@/lib/authoring/config";
 import { extractChannels, extractDistributions } from "@/lib/authoring/config";
 import {
@@ -38,10 +31,7 @@ import {
   mergeGmmContrastLimitsIntoSourceChannelsByChannelId,
 } from "@/lib/imaging/autoContrast";
 import { defaultVisibilitiesForSources } from "@/lib/imaging/channelCompositor";
-import {
-  isImageChannel,
-  resolveImageContentRole,
-} from "@/lib/imaging/channelKind";
+import { isImageChannel } from "@/lib/imaging/channelKind";
 import { loadDicomWeb, parseDicomWeb } from "@/lib/imaging/dicom.js";
 import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
 import {
@@ -49,7 +39,6 @@ import {
   findFile,
   hasAuthorShellSupport,
   hasDirectoryPickerAccess,
-  hasFileHandlePermission,
   loadOmeLoaderForRole,
   toFile,
 } from "@/lib/imaging/filesystem";
@@ -58,44 +47,34 @@ import {
   ensureOmeHistogramDistributions,
   mergeHistogramsIntoSourceChannelsByChannelId,
 } from "@/lib/imaging/histogramLazy";
+import { hydrateDocumentLoaders } from "@/lib/imaging/hydrateDocumentLoaders";
+import type {
+  JpegLoaderEntry,
+  OmeLoaderEntry,
+} from "@/lib/imaging/loaderEntries";
 import {
   jpegLoaderEntriesFromImages,
   useSyncJpegChannelFolders,
 } from "@/lib/imaging/loadJpegFromDocument";
+import { validateMaskBasenameForAppend } from "@/lib/imaging/omeImport";
 import {
-  mergeExtractedChannelsIntoImages,
-  prepareImportedSourceChannels,
-  validateMaskBasenameForAppend,
-} from "@/lib/imaging/omeImport";
-import {
-  applySharedImportPaletteToChannelGroups,
-  applySharedImportPaletteToSourceChannels,
-  warmupPsudoPalette,
-} from "@/lib/imaging/psudoPalette";
-import { styleSourceChannelsForRole } from "@/lib/imaging/sourceChannelStyle";
-import {
-  createDicomTileLayer,
-  createEncodedImageLayer,
-  createMultiscaleLayer,
-  loaderListFromEntries,
-} from "@/lib/imaging/viewerLayers";
-import { type Loader, toSettings } from "@/lib/imaging/viv";
+  applyPaletteToFlatImportImages,
+  applyPaletteToGroupedImport,
+  buildOmeImportSlice,
+  finalizeAppendedIntensityGroups,
+} from "@/lib/imaging/omeImportPipeline";
+import { warmupPsudoPalette } from "@/lib/imaging/psudoPalette";
+import { useViewerLayers } from "@/lib/imaging/viewerLayers";
 import { Pool } from "@/lib/imaging/workers/Pool";
-import type {
-  ConfigGroup,
-  ExhibitConfig,
-  Waypoint as WaypointType,
-} from "@/lib/legacy/exhibit";
-import { readConfig } from "@/lib/legacy/exhibit";
+import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
-import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
+import { putFileHandle } from "@/lib/persistence/fileHandles";
 import { imageHandleStorageKey } from "@/lib/persistence/imageHandles";
 import { saveStoryDocument } from "@/lib/persistence/storyPersistence";
 import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
 import { applyOmeRoisFromLoaderToFirstWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
 import {
-  type ChannelRendering,
   effectiveReferenceImagePixelSize,
   useAppStore,
 } from "@/lib/stores/appStore";
@@ -111,14 +90,11 @@ import {
 } from "@/lib/stores/documentStore";
 import {
   applySourceChannelsToImages,
-  configWaypointsHaveLegacyArrowsOrOverlays,
   dedupeImagesForImport,
   hydrateConfigWaypoint,
   type LegacyExhibitWaypoint,
-  migrateLegacyWaypointShapes,
   setImageSource,
   waypointsToConfigWaypoints,
-  waypointToConfigWaypoint,
 } from "@/lib/stores/storeUtils";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
 import { tileFetcherForStory } from "@/lib/storyExport/importStoryFolder";
@@ -127,8 +103,11 @@ import {
   type StoryExportMode,
 } from "@/lib/storyExport/storyBundle";
 import { isOpts, validate } from "@/lib/util/validate";
-import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
-import { normalizeWaypointToBounds } from "@/lib/waypoints/waypoint";
+import {
+  applyWaypointSeedAction,
+  planWaypointConfigSeedTick,
+  type WaypointSeedMirror,
+} from "@/lib/waypoints/seedWaypointConfig";
 import {
   parsePreferredStoryIdFromLocation,
   rootRouteApi,
@@ -233,19 +212,6 @@ const Full = styled.div`
   overflow: hidden;
 `;
 
-const Scrollable = styled.div`
-  z-index: 2;
-  grid-column: 2;
-  grid-row: 1 / -1;
-  overflow-y: scroll;
-  border-radius: 12px;
-  outline: 1px solid var(--theme-glass-edge);
-  background-color: var(--dark-main-glass);
-  font-size: 20px;
-  padding: 5vh;
-  margin: 5vh;
-`;
-
 const RetrievingWrapper = styled.div`
   height: 100%;
   display: grid;
@@ -277,59 +243,6 @@ const StoryPersistenceRoot = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const setContainer = ({ container, idx, key, newItem }) => {
-  const extra = idx >= container[key].length ? [newItem] : [];
-  const newItems = container[key].concat(extra).map((item, i) => {
-    return i === idx ? newItem : item;
-  });
-  return { ...container, [key]: newItems };
-};
-
-const setStory = ({ exhibit, s, newStory }) => {
-  return setContainer({
-    newItem: newStory,
-    container: exhibit,
-    key: "stories",
-    idx: s,
-  });
-};
-
-const setWaypoint = ({ exhibit, s, w, newWaypoint }) => {
-  const story = exhibit.stories[s];
-  const newStory = setContainer({
-    newItem: newWaypoint,
-    container: story,
-    key: "waypoints",
-    idx: w,
-  });
-  return setStory({ exhibit, s, newStory });
-};
-
-const setGroup = ({ exhibit, g, newGroup }) => {
-  return setContainer({
-    newItem: newGroup,
-    container: exhibit,
-    key: "groups",
-    idx: g,
-  });
-};
-
-const setChannel = ({ exhibit, g, idx, newChannel }) => {
-  const group = exhibit.groups[g];
-  const newGroup = setContainer({
-    newItem: newChannel,
-    container: group,
-    key: "channels",
-    idx,
-  });
-  return setGroup({ exhibit, g, newGroup });
-};
-
-const removeKey = (container, key, idx) => {
-  const newList = container[key].filter((_, i) => i !== idx);
-  return { ...container, [key]: newList };
-};
-
 const getDistributions = async (sourceChannels, loader) => {
   const sourceDistributionMap = await extractDistributions(loader);
   const SourceDistributions = [...sourceDistributionMap.values()];
@@ -346,114 +259,20 @@ async function hydrateLoadersFromImages(
   requestPermission = false,
   opts?: {
     channelGroups?: Parameters<
-      typeof jpegLoaderEntriesFromImages
-    >[0]["channelGroups"];
+      typeof hydrateDocumentLoaders
+    >[1]["channelGroups"];
     documentUrl?: string;
   },
-): Promise<{
-  jpegLoaderEntries: JpegLoaderEntry[];
-  omeLoaderEntries: OmeLoaderEntry[];
-  dicomIndexList: DicomIndex[];
-  deniedHandleKeys: string[];
-  /** Local source present but no handle in IDB/session (typical after Firefox refresh). */
-  missingHandleKeys: string[];
-}> {
-  const jpegLoaderEntries: JpegLoaderEntry[] = [];
-  const omeLoaderEntries: OmeLoaderEntry[] = [];
-  const dicomIndexList: DicomIndex[] = [];
-  const deniedHandleKeys: string[] = [];
-  const missingHandleKeys: string[] = [];
-  const pool = new Pool();
-  const dicomSeriesSeen = new Set<string>();
-  const canAccess = requestPermission
-    ? ensureFileHandlePermission
-    : hasFileHandlePermission;
-  const channelGroups = opts?.channelGroups ?? [];
-  const documentUrl = opts?.documentUrl ?? window.location.href;
-
-  const omeLoaderRole = (im: Image): "intensity" | "segmentation" =>
-    resolveImageContentRole({
-      contentRole: im.contentRole,
-      channels: im.channels ?? [],
-    }) === "segmentation"
-      ? "segmentation"
-      : "intensity";
-
-  {
-    const storyId = useDocumentStore.getState().activeStoryId;
-    jpegLoaderEntries.push(
-      ...(await jpegLoaderEntriesFromImages({
-        images,
-        channelGroups,
-        documentUrl,
-        fetchTile: await tileFetcherForStory(storyId),
-      })),
-    );
-  }
-
-  for (const im of images) {
-    if (!im.source) continue;
-    if (im.source.kind === "jpeg") continue;
-    switch (im.source.kind) {
-      case "url": {
-        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-          kind: "url",
-          url: im.source.url,
-          pool,
-        });
-        omeLoaderEntries.push({ loader, sourceImageId: im.id });
-        break;
-      }
-      case "local": {
-        const handle = await getFileHandle(im.source.handleKey);
-        if (!handle) {
-          missingHandleKeys.push(im.source.handleKey);
-          break;
-        }
-        if (!(await canAccess(handle))) {
-          deniedHandleKeys.push(im.source.handleKey);
-          break;
-        }
-        if (!(await findFile({ handle }))) break;
-        const file = await handle.getFile();
-        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-          kind: "local",
-          handle,
-          in_f: file.name,
-          pool,
-        });
-        omeLoaderEntries.push({ loader, sourceImageId: im.id });
-        break;
-      }
-      case "dicomWeb": {
-        const { series, modality } = im.source;
-        if (dicomSeriesSeen.has(series)) break;
-        dicomSeriesSeen.add(series);
-        const pyramids = await loadDicomWeb(series);
-        const loader = parseDicomWeb({
-          pyramids,
-          series,
-          little_endian: true,
-        }) as DicomLoader;
-        dicomIndexList.push({
-          series,
-          pyramids,
-          modality,
-          loader,
-          sourceImageId: "", // TODO
-        });
-        break;
-      }
-    }
-  }
-
-  return {
-    jpegLoaderEntries,
-    omeLoaderEntries,
-    dicomIndexList,
-    deniedHandleKeys,
-    missingHandleKeys,
-  };
+): Promise<Awaited<ReturnType<typeof hydrateDocumentLoaders>>> {
+  const storyId = useDocumentStore.getState().activeStoryId;
+  return hydrateDocumentLoaders(images, {
+    channelGroups: opts?.channelGroups ?? [],
+    documentUrl: opts?.documentUrl ?? window.location.href,
+    pool: new Pool(),
+    requestPermission,
+    includeLocal: true,
+    fetchTile: await tileFetcherForStory(storyId),
+  });
 }
 
 function clearOmeDerivedCaches(): void {
@@ -462,69 +281,6 @@ function clearOmeDerivedCaches(): void {
 }
 
 const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
-
-/** Fold {@link ChannelRendering} into Viv settings without touching the document store. */
-function applyChannelRendering<S extends MainSettings>(
-  settings: S,
-  live: ChannelRendering | null,
-): S {
-  if (!live) return settings;
-  const ids = settings.sourceChannelIds;
-  if (!ids?.length) return settings;
-  const idx = ids.indexOf(live.sourceChannelId);
-  if (idx < 0) return settings;
-  if (live.kind === "contrast") {
-    if (idx >= settings.contrastLimits.length) return settings;
-    const lo = Math.round(live.lower);
-    const hi = Math.round(live.upper);
-    const contrastLimits = settings.contrastLimits.map((pair, i) =>
-      i === idx
-        ? ([lo, hi] as [number, number])
-        : ([pair[0], pair[1]] as [number, number]),
-    );
-    return { ...settings, contrastLimits };
-  }
-  if (idx >= settings.colors.length) return settings;
-  const r = Math.round(Math.max(0, Math.min(255, live.r)));
-  const g = Math.round(Math.max(0, Math.min(255, live.g)));
-  const b = Math.round(Math.max(0, Math.min(255, live.b)));
-  const colors = settings.colors.map((triple, i) =>
-    i === idx
-      ? ([r, g, b] as [number, number, number])
-      : ([triple[0], triple[1], triple[2]] as [number, number, number]),
-  );
-  return { ...settings, colors };
-}
-
-const toSettingsInternal = (
-  loader,
-  modality,
-  groups,
-  activeChannelGroupId,
-  channelVisibilities,
-  channelGroupRowVisibilities,
-  toSettings,
-  loaderSourceImageId?: string,
-) => {
-  if (loader === null || !groups) {
-    return toSettings(
-      activeChannelGroupId,
-      modality,
-      undefined,
-      channelVisibilities,
-      loaderSourceImageId,
-      channelGroupRowVisibilities,
-    );
-  }
-  return toSettings(
-    activeChannelGroupId,
-    modality,
-    loader,
-    channelVisibilities,
-    loaderSourceImageId,
-    channelGroupRowVisibilities,
-  );
-};
 
 const Content = (props: Props) => {
   const { handleKeys, useLaunchQueue = false } = props;
@@ -575,8 +331,6 @@ const Content = (props: Props) => {
       ),
     [handleKeys, activeStoryId],
   );
-  const firstExhibit = readConfig(props.exhibit_config);
-  const [exhibit, setExhibit] = useState(firstExhibit);
   const [jpegLoaderEntries, setJpegLoaderEntries] = useState<JpegLoaderEntry[]>(
     [],
   );
@@ -606,19 +360,13 @@ const Content = (props: Props) => {
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
-  const documentChannelsRef = React.useRef({ channelGroups, sourceChannels });
-  documentChannelsRef.current = { channelGroups, sourceChannels };
-  const [config, setConfig] = useState(() => ({
-    ItemRegistry: {
-      Name: "",
-      ChannelGroups: channelGroups,
-      SourceChannels: sourceChannels,
-      SourceDistributions: [],
+  /** Stories/Shapes seed + migration mirror only — channels live in documentStore. */
+  const [waypointMirror, setWaypointMirror] = useState<WaypointSeedMirror>(
+    () => ({
       Shapes: [],
       Stories: cloneConfigWaypoints(props.configWaypoints),
-    } as ItemRegistryProps,
-    ID: crypto.randomUUID(),
-  }));
+    }),
+  );
 
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
@@ -631,14 +379,18 @@ const Content = (props: Props) => {
   const checkWindow = React.useCallback(() => window.innerWidth > 600, []);
 
   const [twoNavOk, setTwoNavOk] = useState(checkWindow());
-  const [hiddenWaypoint, setHideWaypoint] = useState(false);
   const [hiddenChannel, setHideChannel] = useState(!twoNavOk);
+
+  const revealWaypointOnNarrow = React.useCallback(() => {
+    if (!twoNavOk) {
+      setHideChannel(true);
+    }
+  }, [twoNavOk]);
 
   const handleResize = React.useCallback(() => {
     const twoNavPossible = checkWindow();
 
     if (!twoNavPossible) {
-      setHideWaypoint(false);
       setHideChannel(true);
     }
     setTwoNavOk(twoNavPossible);
@@ -689,13 +441,6 @@ const Content = (props: Props) => {
     setViewerRemountKey((k) => k + 1);
   };
 
-  const setHiddenWaypointWithLogic = (v: boolean) => {
-    if (!twoNavOk && !v) {
-      setHideChannel(true);
-    }
-    setHideWaypoint(v);
-  };
-
   const updateGroupChannelLists = useCallback(
     ({ ChannelGroups, SourceChannels }) => {
       setGroupNames(
@@ -741,33 +486,11 @@ const Content = (props: Props) => {
     setActiveChannelGroup,
   ]);
 
-  const resetItems = useCallback(
-    (ItemRegistry) => {
-      setConfig((config) => ({
-        ...config,
-        ItemRegistry: {
-          ...config.ItemRegistry,
-          ...ItemRegistry,
-        },
-        ID: crypto.randomUUID(),
-      }));
-      const { ChannelGroups } = ItemRegistry;
-      if (ChannelGroups?.length > 0) {
-        setActiveChannelGroup(ChannelGroups[0].id);
-      } else {
-        useAppStore.setState({ activeChannelGroupId: null });
-      }
-    },
-    [setActiveChannelGroup],
-  );
-
-  const setItems = React.useCallback((ItemRegistry) => {
-    setConfig((config) => ({
-      ...config,
-      ItemRegistry: {
-        ...config.ItemRegistry,
-        ...ItemRegistry,
-      },
+  /** Stories/Shapes only — do not mirror channels into React config. */
+  const setItems = React.useCallback((patch: Partial<WaypointSeedMirror>) => {
+    setWaypointMirror((prev) => ({
+      ...prev,
+      ...patch,
     }));
   }, []);
 
@@ -775,23 +498,20 @@ const Content = (props: Props) => {
     (
       nextImages: Image[],
       nextChannelGroups: ChannelGroup[],
-      opts: { resetRegistry: boolean; mergeVisibilities?: boolean },
+      opts: { resetActiveGroup: boolean; mergeVisibilities?: boolean },
     ) => {
       const flat = flattenImageChannelsInDocumentOrder(nextImages);
       setImages(nextImages);
       setChannelGroups(nextChannelGroups);
       if (nextChannelGroups.length === 0) {
         useAppStore.setState({ activeChannelGroupId: null });
+      } else if (opts.resetActiveGroup) {
+        setActiveChannelGroup(nextChannelGroups[0].id);
       }
       updateGroupChannelLists({
         ChannelGroups: nextChannelGroups,
         SourceChannels: flat,
       });
-      if (opts.resetRegistry) {
-        resetItems({ SourceChannels: flat, ChannelGroups: nextChannelGroups });
-      } else {
-        setItems({ SourceChannels: flat, ChannelGroups: nextChannelGroups });
-      }
       const prev = opts.mergeVisibilities
         ? useAppStore.getState().channelVisibilities
         : undefined;
@@ -803,9 +523,8 @@ const Content = (props: Props) => {
       setImages,
       setChannelGroups,
       updateGroupChannelLists,
-      setItems,
       setChannelVisibilities,
-      resetItems,
+      setActiveChannelGroup,
     ],
   );
 
@@ -867,7 +586,6 @@ const Content = (props: Props) => {
       SourceChannels: [] as Channel[],
     };
     const entries: OmeLoaderEntry[] = [];
-    const defaultKind = role === "segmentation" ? "mask" : "channel";
 
     for (let i = 0; i < handles.length; i++) {
       const handle = handles[i];
@@ -879,30 +597,17 @@ const Content = (props: Props) => {
       });
       const sourceImageId = crypto.randomUUID();
       const basename = i === 0 ? in_f : handle.name;
-      const extractedFresh = extractChannels(
+      const slice = buildOmeImportSlice({
         loader,
-        "Colorimetric",
-        relevant_groups,
-        sourceImageId,
-        defaultKind,
-      );
-      const sc = prepareImportedSourceChannels(
-        extractedFresh.SourceChannels,
         role,
         basename,
-        nextImages,
-      );
-      const scForDoc = styleSourceChannelsForRole(sc, role);
-      nextImages = mergeExtractedChannelsIntoImages(
-        nextImages,
         sourceImageId,
-        loader,
-        basename,
-        role,
-        scForDoc,
-      );
+        existingImages: nextImages,
+        relevantGroups: relevant_groups,
+      });
+      nextImages = slice.nextImages;
       registry = {
-        SourceChannels: [...registry.SourceChannels, ...scForDoc],
+        SourceChannels: [...registry.SourceChannels, ...slice.sourceChannels],
       };
       entries.push({ loader, sourceImageId });
     }
@@ -927,15 +632,16 @@ const Content = (props: Props) => {
     // Fresh local replace: flat channels + shared palette; user creates groups in the panel.
     const ChannelGroups: ChannelGroup[] = [];
     if (role !== "segmentation") {
-      const styled =
-        await applySharedImportPaletteToSourceChannels(SourceChannels);
-      nextImages = applySourceChannelsToImages(nextImages, styled);
+      nextImages = await applyPaletteToFlatImportImages(
+        nextImages,
+        SourceChannels,
+      );
     }
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries(entries);
     setDeniedHandleKeys([]);
     setMissingHandleKeys([]);
-    publishChannelState(nextImages, ChannelGroups, { resetRegistry: true });
+    publishChannelState(nextImages, ChannelGroups, { resetActiveGroup: true });
     ensureDefaultWaypointForImageImport();
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
@@ -964,12 +670,11 @@ const Content = (props: Props) => {
     }
     clearOmeDerivedCaches();
     const doc = useDocumentStore.getState();
-    let mergedGroups = [...doc.channelGroups];
+    const mergedGroups = [...doc.channelGroups];
     let nextImages = [...doc.images];
     let removedLoaderIds: string[] = [];
     const newEntries: OmeLoaderEntry[] = [];
     const newIntensityGroups: ChannelGroup[] = [];
-    const defaultKind = role === "segmentation" ? "mask" : "channel";
 
     for (let i = 0; i < handles.length; i++) {
       const handle = handles[i];
@@ -987,29 +692,14 @@ const Content = (props: Props) => {
         pool: new Pool(),
       });
       const sourceImageId = crypto.randomUUID();
-      const extractedAppend = extractChannels(
+      const slice = buildOmeImportSlice({
         loader,
-        "Colorimetric",
-        [],
-        sourceImageId,
-        defaultKind,
-      );
-      const gr = extractedAppend.ChannelGroups;
-      const sc = prepareImportedSourceChannels(
-        extractedAppend.SourceChannels,
         role,
         basename,
-        nextImages,
-      );
-      const scForDoc = styleSourceChannelsForRole(sc, role);
-      nextImages = mergeExtractedChannelsIntoImages(
-        nextImages,
         sourceImageId,
-        loader,
-        basename,
-        role,
-        scForDoc,
-      );
+        existingImages: nextImages,
+      });
+      nextImages = slice.nextImages;
       newEntries.push({ loader, sourceImageId });
 
       const storyId = useDocumentStore.getState().activeStoryId;
@@ -1023,34 +713,29 @@ const Content = (props: Props) => {
       }
 
       if (role !== "segmentation") {
-        if (gr.length > 0) {
-          newIntensityGroups.push(...gr);
+        if (slice.extractedGroups.length > 0) {
+          newIntensityGroups.push(...slice.extractedGroups);
         } else {
-          const styled = await applySharedImportPaletteToSourceChannels(sc);
-          nextImages = applySourceChannelsToImages(nextImages, styled);
+          nextImages = await applyPaletteToFlatImportImages(
+            nextImages,
+            slice.sourceChannels,
+          );
         }
       }
     }
 
-    if (role === "intensity" && newIntensityGroups.length > 0) {
-      mergedGroups = [...mergedGroups, ...newIntensityGroups];
-    }
-
-    let ChannelGroups = mergedGroups;
-    if (newIntensityGroups.length > 0) {
-      const flat = flattenImageChannelsInDocumentOrder(nextImages);
-      ChannelGroups = await applySharedImportPaletteToChannelGroups(
-        mergedGroups,
-        flat,
-      );
-    }
+    const ChannelGroups = await finalizeAppendedIntensityGroups({
+      mergedGroups,
+      newIntensityGroups: role === "intensity" ? newIntensityGroups : [],
+      nextImages,
+    });
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries((prev) => {
       const drop = new Set(removedLoaderIds);
       return [...prev.filter((e) => !drop.has(e.sourceImageId)), ...newEntries];
     });
     publishChannelState(nextImages, ChannelGroups, {
-      resetRegistry: false,
+      resetActiveGroup: false,
       mergeVisibilities: true,
     });
     return { ok: true };
@@ -1063,37 +748,50 @@ const Content = (props: Props) => {
     setOmeLoaderEntries([]);
     const storyRoot = url.replace(/\/$/, "");
     const documentUrl = `${storyRoot}/document.json`;
-    const res = await fetch(documentUrl);
-    if (!res.ok) {
-      throw new Error(`Failed to load ${documentUrl} (${res.status})`);
-    }
-    const data = validateDocumentData(await res.json());
-    const storyId =
-      useDocumentStore.getState().activeStoryId ??
-      data.metadata.id ??
-      crypto.randomUUID();
     // Before hydrate: otherwise auto-hydrate races while jpeg entries are empty.
+    // Always clear on early exit / failure so a superseded load cannot stick.
     skipLoaderHydrateRef.current = true;
-    useDocumentStore.getState().hydrateFromDocument(data, storyId);
-    const flat = flattenImageChannelsInDocumentOrder(data.images);
-    setImages(data.images);
-    setChannelGroups(data.channelGroups);
-    updateGroupChannelLists({
-      ChannelGroups: data.channelGroups,
-      SourceChannels: flat,
-    });
-    resetItems({
-      SourceChannels: flat,
-      ChannelGroups: data.channelGroups,
-    });
-    ensureDefaultWaypointForImageImport();
-    const jpegEntries = await jpegLoaderEntriesFromImages({
-      images: data.images,
-      channelGroups: data.channelGroups,
-      documentUrl,
-    });
-    if (loadGeneration !== jpegUrlLoadGenerationRef.current) return;
-    setJpegLoaderEntries(jpegEntries);
+    try {
+      const res = await fetch(documentUrl);
+      if (!res.ok) {
+        throw new Error(`Failed to load ${documentUrl} (${res.status})`);
+      }
+      const data = validateDocumentData(await res.json());
+      const storyId =
+        useDocumentStore.getState().activeStoryId ??
+        data.metadata.id ??
+        crypto.randomUUID();
+      useDocumentStore.getState().hydrateFromDocument(data, storyId);
+      const flat = flattenImageChannelsInDocumentOrder(data.images);
+      setImages(data.images);
+      setChannelGroups(data.channelGroups);
+      updateGroupChannelLists({
+        ChannelGroups: data.channelGroups,
+        SourceChannels: flat,
+      });
+      if (data.channelGroups.length > 0) {
+        setActiveChannelGroup(data.channelGroups[0].id);
+      } else {
+        useAppStore.setState({ activeChannelGroupId: null });
+      }
+      ensureDefaultWaypointForImageImport();
+      const jpegEntries = await jpegLoaderEntriesFromImages({
+        images: data.images,
+        channelGroups: data.channelGroups,
+        documentUrl,
+      });
+      if (loadGeneration !== jpegUrlLoadGenerationRef.current) return;
+      setJpegLoaderEntries(jpegEntries);
+    } catch (e) {
+      if (loadGeneration === jpegUrlLoadGenerationRef.current) {
+        skipLoaderHydrateRef.current = false;
+      }
+      throw e;
+    } finally {
+      if (loadGeneration !== jpegUrlLoadGenerationRef.current) {
+        skipLoaderHydrateRef.current = false;
+      }
+    }
   };
 
   const onStartOmeTiffUrl = async (
@@ -1120,42 +818,32 @@ const Content = (props: Props) => {
         : ([] as ConfigGroup[]);
     const sourceImageId = crypto.randomUUID();
     const basename = url.split("/").pop() || "remote.ome.tif";
-    const defaultKind = role === "segmentation" ? "mask" : "channel";
-    const extracted = extractChannels(
+    const slice = buildOmeImportSlice({
       loader,
-      "Colorimetric",
-      relevant_groups,
-      sourceImageId,
-      defaultKind,
-    );
-    let SourceChannels = prepareImportedSourceChannels(
-      extracted.SourceChannels,
       role,
       basename,
-      [],
-    );
+      sourceImageId,
+      existingImages: [],
+      relevantGroups: relevant_groups,
+    });
+    let SourceChannels = slice.sourceChannels;
+    let nextImages = slice.nextImages;
     let ChannelGroups: ChannelGroup[];
     if (role === "segmentation") {
-      SourceChannels = styleSourceChannelsForRole(SourceChannels, role);
       ChannelGroups = [];
-    } else if (extracted.ChannelGroups.length > 0) {
-      ChannelGroups = await applySharedImportPaletteToChannelGroups(
-        extracted.ChannelGroups,
+    } else if (slice.extractedGroups.length > 0) {
+      ChannelGroups = await applyPaletteToGroupedImport(
+        slice.extractedGroups,
         SourceChannels,
       );
     } else {
-      SourceChannels =
-        await applySharedImportPaletteToSourceChannels(SourceChannels);
+      nextImages = await applyPaletteToFlatImportImages(
+        nextImages,
+        SourceChannels,
+      );
+      SourceChannels = flattenImageChannelsInDocumentOrder(nextImages);
       ChannelGroups = [];
     }
-    let nextImages = mergeExtractedChannelsIntoImages(
-      [],
-      sourceImageId,
-      loader,
-      basename,
-      role,
-      SourceChannels,
-    );
     nextImages = setImageSource(nextImages, sourceImageId, {
       kind: "url",
       url,
@@ -1163,7 +851,7 @@ const Content = (props: Props) => {
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries([{ loader, sourceImageId }]);
     setDeniedHandleKeys([]);
-    publishChannelState(nextImages, ChannelGroups, { resetRegistry: true });
+    publishChannelState(nextImages, ChannelGroups, { resetActiveGroup: true });
     ensureDefaultWaypointForImageImport();
     const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
     applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
@@ -1194,49 +882,29 @@ const Content = (props: Props) => {
     const deduped = dedupeImagesForImport(doc.images, basename, role);
     let nextImages = deduped.images;
     const sourceImageId = crypto.randomUUID();
-    const extracted = extractChannels(
+    const slice = buildOmeImportSlice({
       loader,
-      "Colorimetric",
-      [],
-      sourceImageId,
-      role === "segmentation" ? "mask" : "channel",
-    );
-    const { ChannelGroups: intensityGroups } = extracted;
-    let SourceChannels = prepareImportedSourceChannels(
-      extracted.SourceChannels,
       role,
       basename,
-      nextImages,
-    );
-    if (role === "segmentation") {
-      SourceChannels = styleSourceChannelsForRole(SourceChannels, role);
-    }
-    nextImages = mergeExtractedChannelsIntoImages(
-      nextImages,
       sourceImageId,
-      loader,
-      basename,
-      role,
-      SourceChannels,
-    );
+      existingImages: nextImages,
+    });
+    nextImages = slice.nextImages;
     nextImages = setImageSource(nextImages, sourceImageId, {
       kind: "url",
       url,
     });
-    if (role !== "segmentation") {
-      const styled =
-        await applySharedImportPaletteToSourceChannels(SourceChannels);
-      nextImages = applySourceChannelsToImages(nextImages, styled);
-    }
-    let ChannelGroups = mergedGroups;
-    if (intensityGroups.length > 0) {
-      ChannelGroups = [...mergedGroups, ...intensityGroups];
-      const flat = flattenImageChannelsInDocumentOrder(nextImages);
-      ChannelGroups = await applySharedImportPaletteToChannelGroups(
-        ChannelGroups,
-        flat,
+    if (role !== "segmentation" && slice.extractedGroups.length === 0) {
+      nextImages = await applyPaletteToFlatImportImages(
+        nextImages,
+        slice.sourceChannels,
       );
     }
+    const ChannelGroups = await finalizeAppendedIntensityGroups({
+      mergedGroups,
+      newIntensityGroups: role !== "segmentation" ? slice.extractedGroups : [],
+      nextImages,
+    });
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries((prev) => {
       const drop = new Set(deduped.removedImageIds);
@@ -1246,7 +914,7 @@ const Content = (props: Props) => {
       ];
     });
     publishChannelState(nextImages, ChannelGroups, {
-      resetRegistry: false,
+      resetActiveGroup: false,
       mergeVisibilities: true,
     });
     return { ok: true };
@@ -1269,10 +937,6 @@ const Content = (props: Props) => {
   const syncRegistryFromDocument = React.useCallback(() => {
     const doc = useDocumentStore.getState();
     const flat = flattenImageChannelsInDocumentOrder(doc.images);
-    setItemsRef.current({
-      SourceChannels: flat,
-      ChannelGroups: doc.channelGroups,
-    });
     updateGroupChannelLists({
       ChannelGroups: doc.channelGroups,
       SourceChannels: flat,
@@ -1304,7 +968,7 @@ const Content = (props: Props) => {
       ) {
         syncRegistryFromDocument();
         setImportRevision((r) => r + 1);
-        setHideWaypoint(false);
+        revealWaypointOnNarrow();
       }
     } catch (e) {
       console.error("[minerva] requestLoaderFileAccess failed", e);
@@ -1312,7 +976,7 @@ const Content = (props: Props) => {
       setIsLoadingImage(false);
       document.getElementById("global-loader")?.remove();
     }
-  }, [applyHydratedLoaders, syncRegistryFromDocument]);
+  }, [applyHydratedLoaders, syncRegistryFromDocument, revealWaypointOnNarrow]);
 
   /**
    * Firefox (and any browser without persistable handles): pick the file again after
@@ -1346,7 +1010,7 @@ const Content = (props: Props) => {
         ) {
           syncRegistryFromDocument();
           setImportRevision((r) => r + 1);
-          setHideWaypoint(false);
+          revealWaypointOnNarrow();
           const file = await handle.getFile();
           setFileName(file.name);
         }
@@ -1357,7 +1021,7 @@ const Content = (props: Props) => {
         document.getElementById("global-loader")?.remove();
       }
     },
-    [applyHydratedLoaders, syncRegistryFromDocument],
+    [applyHydratedLoaders, syncRegistryFromDocument, revealWaypointOnNarrow],
   );
 
   /** Shared by FileHandler: auto-restore on mount, “Use recent”, and PWA launch — same rules. */
@@ -1384,7 +1048,7 @@ const Content = (props: Props) => {
           setIsLoadingImage(false);
         }
         setImportRevision((r) => r + 1);
-        setHideWaypoint(false);
+        revealWaypointOnNarrow();
         document.getElementById("global-loader")?.remove();
         return;
       }
@@ -1392,10 +1056,10 @@ const Content = (props: Props) => {
       const file = await restored[0].getFile();
       await onStartOmeTiffRef.current(file.name, restored);
       setImportRevision((r) => r + 1);
-      setHideWaypoint(false);
+      revealWaypointOnNarrow();
       document.getElementById("global-loader")?.remove();
     },
-    [applyHydratedLoaders, syncRegistryFromDocument],
+    [applyHydratedLoaders, syncRegistryFromDocument, revealWaypointOnNarrow],
   );
 
   const onStart = async (
@@ -1432,7 +1096,7 @@ const Content = (props: Props) => {
     console.log("[minerva] onStart: will load, setting loading state");
     // Switch to waypoints tab and show loading immediately.
     setImportRevision((r) => r + 1);
-    setHiddenWaypointWithLogic(false);
+    revealWaypointOnNarrow();
     setIsLoadingImage(true);
     try {
       if (dicomPropList.length > 0) {
@@ -1504,7 +1168,8 @@ const Content = (props: Props) => {
           pyramids,
           modality,
           loader,
-          sourceImageId: "", // TODO
+          // Fresh DICOM import keys document images by modality (see setImageSource below).
+          sourceImageId: modality,
         };
       }),
     );
@@ -1541,7 +1206,7 @@ const Content = (props: Props) => {
     }
     console.log("[minerva] dicom: setting store state");
     const { SourceChannels } = registry;
-    const ChannelGroups = await applySharedImportPaletteToChannelGroups(
+    const ChannelGroups = await applyPaletteToGroupedImport(
       registry.ChannelGroups,
       SourceChannels,
     );
@@ -1662,140 +1327,6 @@ const Content = (props: Props) => {
     setJpegLoaderEntries,
   );
 
-  // Exhibit editing operations (from Index)
-  const { name, groups: exhibitGroups, stories } = exhibit;
-
-  const updateWaypoint = (newWaypoint: WaypointType, { s, w }) => {
-    const oldWaypoint = stories[s]?.waypoints[w];
-    if (!oldWaypoint) {
-      throw `Cannot update waypoint. Waypoint ${w} does not exist!`;
-    }
-    const ex = setWaypoint({ exhibit, s, w, newWaypoint });
-    setExhibit(ex);
-  };
-
-  const pushWaypoint = (newWaypoint: WaypointType, { s }) => {
-    if (!stories[s]) {
-      throw `Cannot push waypoint. Story ${s} does not exist!`;
-    }
-    const w = stories[s].waypoints.length;
-    const ex = setWaypoint({ exhibit, s, w, newWaypoint });
-    setExhibit(ex);
-  };
-
-  const popWaypoint = ({ s, w }) => {
-    const story = stories[s];
-    const oldWaypoints = story?.waypoints;
-    if (oldWaypoints?.length <= 1) {
-      throw "Unable to pop last waypoint";
-    }
-    const newStory = removeKey(story, "waypoints", w);
-    const ex = setStory({ exhibit, s, newStory });
-    setExhibit(ex);
-  };
-
-  const updateGroup = (newGroup, { g }) => {
-    const ex = setGroup({ exhibit, g, newGroup });
-    setExhibit(ex);
-  };
-
-  const pushGroup = (newGroup) => {
-    const g = exhibit.groups.length;
-    const ex = setGroup({ exhibit, g, newGroup });
-    setExhibit(ex);
-  };
-
-  const popGroup = ({ g }) => {
-    if (exhibitGroups.length <= 1) {
-      throw "Unable to pop last group";
-    }
-    const ex = removeKey(exhibit, "groups", g);
-    const newGroups = ex.groups.map((group) => {
-      const gNext = group.g >= g ? group.g - 1 : group.g;
-      return { ...group, g: gNext };
-    });
-    const newStories = ex.stories.map((story) => {
-      const newWaypoints = story.waypoints.map((waypoint) => {
-        const gNext = waypoint.g >= g ? 0 : g;
-        return { ...waypoint, g: gNext };
-      });
-      return { ...story, waypoints: newWaypoints };
-    });
-    setExhibit({ ...ex, groups: newGroups, stories: newStories });
-  };
-
-  const updateChannel = (newChannel, { g, idx }) => {
-    const group = exhibitGroups[g];
-    if (!group?.channels[idx]) {
-      throw `Cannot update channel. Channel ${idx} does not exist!`;
-    }
-    const ex = setChannel({ exhibit, g, idx, newChannel });
-    setExhibit(ex);
-  };
-
-  const pushChannel = (newChannel, { g }) => {
-    const group = exhibitGroups[g];
-    if (!group) {
-      throw `Cannot push channel. Group ${g} does not exist!`;
-    }
-    const idx = group.channels.length;
-    const ex = setChannel({ exhibit, g, idx, newChannel });
-    setExhibit(ex);
-  };
-
-  const popChannel = ({ g, idx }) => {
-    const group = exhibitGroups[g];
-    const channels = group?.channels;
-    if (channels.length <= 1) {
-      throw "Unable to pop last channel";
-    }
-    const newGroup = removeKey(group, "channels", idx);
-    const ex = setGroup({ exhibit, g, newGroup });
-    setExhibit(ex);
-  };
-
-  // Data transformation (from Index)
-  const itemRegistryMarkerNames = sourceChannels.map(
-    (source_channel) => source_channel.name,
-  );
-
-  const imageViewerStateSignature = React.useMemo(
-    () => buildImageViewerSignature(channelGroups, sourceChannels),
-    [channelGroups, sourceChannels],
-  );
-
-  const itemRegistryGroups = React.useMemo(() => {
-    const { channelGroups: G, sourceChannels: SC } =
-      documentChannelsRef.current;
-    if (buildImageViewerSignature(G, SC) !== imageViewerStateSignature) {
-      throw new Error("minerva: document channel ref/signature mismatch");
-    }
-    return G.map((group, g) => {
-      const { name, channels: groupChannelsList, expanded } = group;
-      const channels = groupChannelsList.map((group_channel) => {
-        const defaults = { name: "" };
-        const { r, g: gg, b } = group_channel.color;
-        const color = ((1 << 24) + (r << 16) + (gg << 8) + b)
-          .toString(16)
-          .slice(1);
-        const { lowerLimit, upperLimit } = group_channel;
-        const flat = findSourceChannel(SC, group_channel.channelId);
-        const { name: chName } = flat || defaults;
-        return {
-          color,
-          name: chName,
-          contrast: [lowerLimit, upperLimit] as [number, number],
-        };
-      });
-      return {
-        State: { Expanded: expanded ?? false },
-        g,
-        name,
-        channels,
-      };
-    });
-  }, [imageViewerStateSignature]);
-
   const viewerImageKey = React.useMemo(() => {
     if (jpegLoaderEntries.length > 0) {
       return "jpeg"; // TODO
@@ -1865,9 +1396,8 @@ const Content = (props: Props) => {
       );
       if (next === prevCh) return;
       doc.setImages(applySourceChannelsToImages(doc.images, next));
-      setItems({ SourceChannels: next });
     },
-    [omeLoaderEntries, viewerImageKey, setItems],
+    [omeLoaderEntries, viewerImageKey],
   );
 
   const onEnsureChannelGmmContrastLimits = React.useCallback(
@@ -1953,7 +1483,6 @@ const Content = (props: Props) => {
       );
       if (nextCh !== prevChNow) {
         docNow.setImages(applySourceChannelsToImages(docNow.images, nextCh));
-        setItems({ SourceChannels: nextCh });
       }
 
       const docAfterCh = useDocumentStore.getState();
@@ -1979,7 +1508,7 @@ const Content = (props: Props) => {
       }
       return byChannelId;
     },
-    [omeLoaderEntries, viewerImageKey, setItems],
+    [omeLoaderEntries, viewerImageKey],
   );
 
   const lastEagerGmmKeyRef = React.useRef<string>("");
@@ -2026,151 +1555,38 @@ const Content = (props: Props) => {
   const mainProps = {
     ...channelProps,
     in_f: fileName,
-    name,
     handles: [] as Handle.File[],
     directory_handle,
     ioState,
     exportMode,
     presenting,
-    groups: itemRegistryGroups,
     stopExport,
   };
 
-  const viewerConfig = React.useMemo(() => {
-    const { channelGroups: G, sourceChannels: SC } =
-      documentChannelsRef.current;
-    if (buildImageViewerSignature(G, SC) !== imageViewerStateSignature) {
-      throw new Error("minerva: document channel ref/signature mismatch");
-    }
-    return {
-      toSettings: (
-        activeChannelGroupId: string | null,
-        modality: string,
-        loader?: Loader,
-        channelVisibilities?: Record<string, boolean>,
-        loaderSourceImageId?: string,
-      ) => {
-        const { channelGroups: G, sourceChannels: SC } =
-          documentChannelsRef.current;
-        return toSettings({ channelGroups: G, SourceChannels: SC })(
-          activeChannelGroupId,
-          modality,
-          loader,
-          channelVisibilities,
-          loaderSourceImageId,
-          useAppStore.getState().channelGroupRowVisibilities,
-        );
-      },
-    };
-  }, [imageViewerStateSignature]);
-
-  const loaderList: LoaderList = React.useMemo(
-    () =>
-      loaderListFromEntries({
-        dicomIndexList,
-        omeLoaderEntries,
-        jpegLoaderEntries,
-      }),
-    [dicomIndexList, omeLoaderEntries, jpegLoaderEntries],
-  );
-  const documentMainSettingsList = useMemo(() => {
-    return loaderList.map(({ loader, modality, sourceImageId }) =>
-      toSettingsInternal(
-        loader,
-        modality,
-        itemRegistryGroups,
-        activeChannelGroupId,
-        channelVisibilities,
-        channelGroupRowVisibilities,
-        viewerConfig.toSettings,
-        sourceImageId,
-      ),
-    );
-  }, [
-    loaderList,
-    itemRegistryGroups,
-    activeChannelGroupId,
-    channelVisibilities,
-    channelGroupRowVisibilities,
-    viewerConfig.toSettings,
-  ]);
-  const mainSettingsList = useMemo(
-    () =>
-      documentMainSettingsList.map((settings) =>
-        applyChannelRendering(settings, channelRendering),
-      ),
-    [documentMainSettingsList, channelRendering],
-  );
-  const layerFunctions = React.useMemo(() => {
-    // Cumulative index across loader types (matches mainSettingsList order).
-    let nextIndex = 0;
-    return [
-      ...dicomIndexList.map((entry) => {
-        const index = nextIndex++;
-        return ({ mainSettings }) =>
-          createDicomTileLayer({
-            entry,
-            settings: mainSettings,
-            index,
-            remountKey: viewerRemountKey,
-          });
-      }),
-      ...omeLoaderEntries.map(({ loader }) => {
-        const index = nextIndex++;
-        return ({ mainSettings }) =>
-          // Keep id stable across contrast/color tweaks so Viv updates props
-          // in place (live drag). Selection changes still remount the layer.
-          // viewerRemountKey forces new layer instances after JPEG export.
-          createMultiscaleLayer({
-            loader,
-            settings: mainSettings,
-            index,
-            remountKey: viewerRemountKey,
-          });
-      }),
-      ...jpegLoaderEntries.map((entry) => {
-        return ({ mainSettings }) =>
-          createEncodedImageLayer({
-            entry,
-            settings: mainSettings,
-          });
-      }),
-    ];
-  }, [dicomIndexList, omeLoaderEntries, jpegLoaderEntries, viewerRemountKey]);
-  const imageLayers = useMemo(() => {
-    return layerFunctions.map((fn, i) =>
-      fn({
-        mainSettings: mainSettingsList[i],
-      }),
-    );
-  }, [layerFunctions, mainSettingsList]);
+  const { viewerConfig, loaderList, mainSettingsList, imageLayers } =
+    useViewerLayers({
+      dicomIndexList,
+      omeLoaderEntries,
+      jpegLoaderEntries,
+      sourceChannels,
+      channelGroups,
+      activeChannelGroupId,
+      channelVisibilities,
+      channelGroupRowVisibilities,
+      channelRendering,
+      remountKey: viewerRemountKey,
+    });
 
   const imageProps = React.useMemo(() => {
     return {
-      ChannelGroups: channelGroups,
-      SourceChannels: sourceChannels,
-      jpegLoaderEntries,
       loaderList,
       mainSettingsList,
       imageLayers,
       omeLoaderEntries,
-      marker_names: itemRegistryMarkerNames,
-      groups: itemRegistryGroups,
-      stories,
-      name,
       showSquareViewportOverlay,
-      viewerImageKey,
     };
   }, [
-    channelGroups,
-    sourceChannels,
-    jpegLoaderEntries,
-    itemRegistryMarkerNames,
-    itemRegistryGroups,
-    stories,
-    name,
     showSquareViewportOverlay,
-    viewerImageKey,
     mainSettingsList,
     imageLayers,
     loaderList,
@@ -2190,133 +1606,31 @@ const Content = (props: Props) => {
   } = useAppStore();
   const _waypoints = useDocumentStore((s) => s.waypoints);
 
-  // Document waypoint lifecycle: `index.tsx` waypoints are copied once into
-  // `config` (see `useState` initializer). Then `useDocumentStore.waypoints` is
-  // authoritative; this effect seeds empty state or migrates legacy markers.
-  // The subscription mirrors waypoints + shapes into `config.ItemRegistry`.
+  // Document waypoint lifecycle: props waypoints seed a thin mirror; documentStore
+  // is authoritative after migration. Logic lives in seedWaypointConfig.
   useEffect(() => {
-    const configStories = config.ItemRegistry.Stories;
-    const storeWaypoints = documentWaypoints(useDocumentStore.getState());
-
-    if (!configStories?.length) return;
     if (!viewerViewportSize?.width || !viewerViewportSize?.height) return;
-
-    const cw = viewerViewportSize.width;
-    const ch = viewerViewportSize.height;
-
-    const hasAuthoritativeBounds = (s: ConfigWaypoint) =>
-      s.Bounds != null &&
-      typeof s.Bounds.x0 === "number" &&
-      typeof s.Bounds.x1 === "number" &&
-      typeof s.Bounds.y0 === "number" &&
-      typeof s.Bounds.y1 === "number";
-
-    const needsPanMigration = (s: ConfigWaypoint) =>
-      (s.Pan != null || s.Zoom != null) && !hasAuthoritativeBounds(s);
-
-    // First paint: fill empty store from config only once image dimensions exist so
-    // `Arrows` / `Overlays` can be converted to `ShapeIds` + registry (`Shapes`)
-    // before anything enters Zustand.
-    if (storeWaypoints.length === 0) {
-      if (imageWidth <= 0 || imageHeight <= 0) {
-        return;
-      }
-      const registry = config.ItemRegistry.Shapes ?? [];
-      const {
-        stories: migrated,
-        shapes: mergedShapes,
-        didMigrate,
-      } = migrateLegacyWaypointShapes(
-        configStories.map((s) => ({ ...s })),
-        registry,
-        imageWidth,
-        imageHeight,
-      );
-      if (import.meta.env.DEV && didMigrate) {
-        console.debug("[seed] legacy waypoint markers → shapes registry", {
-          waypoints: migrated.length,
-          shapesInRegistry: mergedShapes.length,
-          shapeIdsPerWp: migrated.map((w) => w.shapeIds?.length ?? 0),
-        });
-      }
-      setStories(
-        migrated.map((story) =>
-          normalizeWaypointToBounds(story, imageWidth, imageHeight, cw, ch),
-        ),
-      );
-      useDocumentStore.getState().setShapes(mergedShapes);
-      return;
-    }
-
-    // Exhibit `Shapes` can arrive after `Stories`, or the seed path may have seen `Shapes`
-    // as undefined. Hydrate **before** the alignment early-return so imports always resolve
-    // when the exhibit registry has data (even if ids are temporarily out of sync).
-    if (
-      (config.ItemRegistry.Shapes?.length ?? 0) > 0 &&
-      documentShapes(useDocumentStore.getState()).length === 0
-    ) {
-      useDocumentStore.getState().setShapes(config.ItemRegistry.Shapes ?? []);
-    }
-
-    // Store rows and config `Stories` are different arrays; keep Pan/Zoom → Bounds
-    // migration when image + viewer metrics are ready. Avoid clobbering the store
-    // when exhibit `Stories` no longer match store waypoint ids (e.g. external swap).
-    const configAlignedWithStore =
-      configStories.length === storeWaypoints.length &&
-      configStories.every((c, i) => c.id === storeWaypoints[i]?.id);
-    if (!configAlignedWithStore && storeWaypoints.length > 0) {
-      return;
-    }
-
-    // `config` is initialized from `cloneConfigWaypoints`, which includes legacy
-    // `Arrows` / `Overlays`. Zustand is seeded via migration above, but React can
-    // reinstantiate `useState` (e.g. Strict Mode) while the store keeps migrated
-    // rows — UUIDs still match, so we never re-run seed. The subscription only
-    // fires when the *store* changes, so `ItemRegistry.Stories` can stay stale.
-    // Push canonical Stories + Shapes from Zustand whenever config still shows
-    // legacy markers while aligned with the store.
-    if (
-      configAlignedWithStore &&
-      configWaypointsHaveLegacyArrowsOrOverlays(configStories)
-    ) {
-      const doc = useDocumentStore.getState();
-      setItemsRef.current({
-        Stories: waypointsToConfigWaypoints(
-          documentWaypoints(doc),
-          useAppStore.getState().waypointAuthoring,
-        ),
-        Shapes: documentShapes(doc),
-      });
-      return;
-    }
-
-    if (imageWidth > 0 && imageHeight > 0) {
-      const authoringMap = useAppStore.getState().waypointAuthoring;
-      const mask = storeWaypoints.map((sw) =>
-        needsPanMigration(
-          waypointToConfigWaypoint(sw, authoringMap.get(sw.id)),
-        ),
-      );
-      if (mask.some(Boolean)) {
-        const nextConfig = storeWaypoints.map((sw, i) => {
-          const c = waypointToConfigWaypoint(sw, authoringMap.get(sw.id));
-          return mask[i]
-            ? normalizeWaypointToBounds(c, imageWidth, imageHeight, cw, ch)
-            : c;
-        });
-        setStories(nextConfig);
-      }
-    }
+    const action = planWaypointConfigSeedTick({
+      mirror: waypointMirror,
+      viewportWidth: viewerViewportSize.width,
+      viewportHeight: viewerViewportSize.height,
+      imageWidth,
+      imageHeight,
+    });
+    applyWaypointSeedAction(action, {
+      setStories,
+      setMirror: setItems,
+    });
   }, [
-    config.ItemRegistry.Stories,
-    config.ItemRegistry.Shapes,
+    waypointMirror,
     viewerViewportSize,
     imageWidth,
     imageHeight,
     setStories,
+    setItems,
   ]);
 
-  // Sync document waypoints + shapes into config for persistence.
+  // Keep the Stories/Shapes mirror warm for Strict Mode / legacy-marker checks.
   useEffect(() => {
     const unsub = useDocumentStore.subscribe((state, prevState) => {
       const waypointsChanged = state.waypoints !== prevState.waypoints;
@@ -2492,7 +1806,7 @@ const Content = (props: Props) => {
               await onStartOmeTiffUrl(req.source.url, req.role);
             }
             setImportRevision((r) => r + 1);
-            setHiddenWaypointWithLogic(false);
+            revealWaypointOnNarrow();
             const storyId = useDocumentStore.getState().activeStoryId;
             if (storyId) {
               await saveStoryDocument(
