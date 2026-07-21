@@ -1,5 +1,5 @@
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
-import { ImageViewer } from "@/components/shared/viewer/ImageViewer/ImageViewer";
+import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
   type StoryPlaybackLoaders,

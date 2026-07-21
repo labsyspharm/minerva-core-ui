@@ -16,7 +16,7 @@ import PointIcon from "@/components/shared/icons/point.svg?react";
 import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
 import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
-import chrome from "@/components/shared/panel/panelChrome.module.css";
+import toolButton from "@/components/shared/panel/toolButton.module.css";
 import { TextEditPanel } from "@/components/shared/tools/TextEditPanel";
 import type { Shape } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -382,7 +382,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       isExpanded: group.isExpanded,
       isActive: selectedGroupId === group.id,
       pulse: flashGroupId === group.id,
-      icon: <FolderIcon style={{ width: "14px", height: "14px" }} />,
+      icon: <FolderIcon className={styles.metaIcon} />,
       children,
       metadata: { group, type: "group" },
     };
@@ -658,23 +658,17 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         brushEditMode === "subtract";
 
       return (
-        <div style={{ display: "flex", gap: "4px" }}>
+        <div className={styles.brushEditActions}>
           {/* Brush add mode */}
           {isPolygon && (
             <button
               type="button"
-              style={{
-                background: isBrushActive ? "#444" : "none",
-                border: "none",
-                color: "#ccc",
-                cursor: "pointer",
-                padding: "4px",
-                borderRadius: "3px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "all 0.2s ease",
-              }}
+              className={[
+                styles.brushEditButton,
+                isBrushActive ? styles.brushEditButtonActive : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
               onClick={(e) => {
                 e.stopPropagation();
 
@@ -691,7 +685,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
               }}
               title="Brush add to polygon"
             >
-              <AddBrushIcon style={{ width: "14px", height: "14px" }} />
+              <AddBrushIcon className={styles.brushEditIcon} />
             </button>
           )}
 
@@ -699,18 +693,12 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
           {isPolygon && (
             <button
               type="button"
-              style={{
-                background: isEraserActive ? "#444" : "none",
-                border: "none",
-                color: "#ccc",
-                cursor: "pointer",
-                padding: "4px",
-                borderRadius: "3px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "all 0.2s ease",
-              }}
+              className={[
+                styles.brushEditButton,
+                isEraserActive ? styles.brushEditButtonActive : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
               onClick={(e) => {
                 e.stopPropagation();
 
@@ -727,7 +715,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
               }}
               title="Brush subtract from polygon"
             >
-              <EraserIcon style={{ width: "14px", height: "14px" }} />
+              <EraserIcon className={styles.brushEditIcon} />
             </button>
           )}
         </div>
@@ -746,7 +734,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     <>
       <button
         type="button"
-        className={chrome.toolButton}
+        className={toolButton.toolButton}
         onClick={() => createGroup()}
         title="Add group"
       >
@@ -754,7 +742,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       </button>
       <button
         type="button"
-        className={chrome.toolButton}
+        className={toolButton.toolButton}
         onClick={handleHeaderEditTextClick}
         disabled={headerEditTextDisabled}
         title={
@@ -767,7 +755,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       </button>
       <button
         type="button"
-        className={chrome.toolButton}
+        className={toolButton.toolButton}
         onClick={handleHeaderColorClick}
         disabled={headerColorDisabled}
         title={
@@ -784,7 +772,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       </button>
       <button
         type="button"
-        className={chrome.toolButton}
+        className={toolButton.toolButton}
         onClick={handleHeaderDeleteClick}
         disabled={!selectedGroupId && selectedShapeIds.length === 0}
         title={
@@ -812,7 +800,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         </div>
       ) : null}
 
-      <div ref={itemListRootRef} style={{ minHeight: 0 }}>
+      <div ref={itemListRootRef} className={styles.itemListRoot}>
         <ItemList
           className={className}
           variant={itemListVariant}

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import styled from "styled-components";
 import { loadStoryDocument } from "@/components/playback/loadStoryDocument";
 import { Presentation } from "@/components/playback/Presentation";
 import { StoryPlaybackView } from "@/components/playback/StoryPlaybackView";
@@ -8,6 +7,7 @@ import type {
   JpegLoaderEntry,
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
+import styles from "./StoryPlayerApp.module.css";
 
 /**
  * CDN story player. Same Presentation → StoryPlaybackView tree as authoring
@@ -51,14 +51,14 @@ export function StoryPlayerApp({ documentUrl }: { documentUrl: string }) {
   const sourceCount =
     jpegLoaderEntries.length + omeLoaderEntries.length + dicomIndexList.length;
 
-  if (loading) return <Status>Loading story…</Status>;
-  if (error) return <Status>{error}</Status>;
+  if (loading) return <div className={styles.status}>Loading story…</div>;
+  if (error) return <div className={styles.status}>{error}</div>;
   if (sourceCount === 0) {
     return (
-      <Status>
+      <div className={styles.status}>
         No image sources in document.json. Re-export the story from Minerva
         Author.
-      </Status>
+      </div>
     );
   }
 
@@ -73,13 +73,3 @@ export function StoryPlayerApp({ documentUrl }: { documentUrl: string }) {
     </Presentation>
   );
 }
-
-const Status = styled.div`
-  display: grid;
-  place-items: center;
-  height: 100%;
-  color: #aaa;
-  padding: 24px;
-  text-align: center;
-  background: #111;
-`;

@@ -1,12 +1,11 @@
 import type { ChangeEventHandler, FormEventHandler } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import styled from "styled-components";
 import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
 import { CompactHeader } from "@/components/shared/panel/CompactHeader";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
-import chrome from "@/components/shared/panel/panelChrome.module.css";
+import panel from "@/components/shared/panel/panelShared.module.css";
 import { resolveImageContentRole } from "@/lib/imaging/channelKind";
 import {
   ensureFileHandlePermission,
@@ -96,12 +95,6 @@ type Validate = (v: ValidObj, fn: ValidationFunction) => ValidOut;
 type SetState = (s: string) => void;
 type SetTargetState = FormEventHandler;
 type UseTargetState = (init: string) => [string, SetState, SetTargetState];
-
-const XmlImportMessage = styled.div<{ $err: boolean }>`
-  font-size: 11px;
-  line-height: 1.4;
-  color: ${(p) => (p.$err ? "#f85149" : "color-mix(in srgb, #7ee787 92%, #fff 8%)")};
-`;
 
 const _useState: UseTargetState = (init) => {
   const [val, set] = useState(init);
@@ -664,7 +657,7 @@ const Upload = (props: UploadProps) => {
   ) : null;
 
   return (
-    <div className={chrome.authorPanel}>
+    <div className={panel.authorPanel}>
       <CompactHeader
         actions={
           <div className={styles.headerActionsWrap}>
@@ -717,16 +710,22 @@ const Upload = (props: UploadProps) => {
       <div
         className={[
           styles.stack,
-          chrome.authorPanelBody,
-          chrome.thinScrollbar,
+          panel.authorPanelBody,
+          panel.thinScrollbar,
         ].join(" ")}
       >
         {imageCards}
 
         {xmlImportFeedback ? (
-          <XmlImportMessage $err={xmlImportFeedback.type === "err"}>
+          <div
+            className={
+              xmlImportFeedback.type === "err"
+                ? styles.importError
+                : styles.importSuccess
+            }
+          >
             {xmlImportFeedback.text}
-          </XmlImportMessage>
+          </div>
         ) : null}
       </div>
     </div>

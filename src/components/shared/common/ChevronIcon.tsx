@@ -1,5 +1,5 @@
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import styles from "@/components/shared/panel/panelChrome.module.css";
+import styles from "./ChevronIcon.module.css";
 
 export type ChevronDirection = "right" | "left" | "down" | "up";
 

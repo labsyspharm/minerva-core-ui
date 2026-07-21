@@ -1,0 +1,9 @@
+.status {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #aaa;
+  padding: 24px;
+  text-align: center;
+  background: #111;
+}

@@ -106,7 +106,6 @@
     "eslint-plugin-react": "^7.34.4",
     "prettier": "^3.3.3",
     "react-refresh": "^0.14.2",
-    "styled-components": "^6.1.12",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
     "typescript-json-schema": "^0.64.0",
@@ -116,9 +115,6 @@
     "vite-plugin-wasm": "^3.6.0",
     "vitest": "^3.2.7",
     "http-server": "^14.1.1"
-  },
-  "resolutions": {
-    "styled-components": "^5"
   },
   "pnpm": {
     "overrides": {

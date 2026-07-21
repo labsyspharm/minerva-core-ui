@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import styled from "styled-components";
 import { AuthorView } from "@/components/authoring/AuthorSidebar";
 import { ImageExporter } from "@/components/playback/ImageExporter";
 import { Presentation } from "@/components/playback/Presentation";
@@ -10,6 +9,7 @@ import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Config } from "@/lib/imaging/viv";
 import type { StoryExportMode } from "@/lib/storyExport/storyBundle";
+import styles from "./PlaybackModeView.module.css";
 import type { StoryPlaybackLoaders } from "./useStoryPlaybackLayers";
 
 export type PlaybackModeViewProps = StoryPlaybackLoaders & {
@@ -35,52 +35,6 @@ export type PlaybackModeViewProps = StoryPlaybackLoaders & {
   exportMode?: StoryExportMode;
 };
 
-const ModeViewport = styled.div`
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-
-  > * {
-    flex: 1;
-    min-height: 0;
-  }
-
-  animation: modeViewportIn 0.2s ease-out;
-
-  @keyframes modeViewportIn {
-    from {
-      opacity: 0.88;
-    }
-
-    to {
-      opacity: 1;
-    }
-  }
-`;
-
-/** Keep Deck mounted under export UI so WebGL layer state is not destroyed. */
-const AuthorViewport = styled.div<{ $hidden: boolean }>`
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  visibility: ${(p) => (p.$hidden ? "hidden" : "visible")};
-  pointer-events: ${(p) => (p.$hidden ? "none" : "auto")};
-
-  > * {
-    flex: 1;
-    min-height: 0;
-  }
-`;
-
-const ExportOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-`;
-
 export const PlaybackModeView = (props: PlaybackModeViewProps) => {
   const channelPanelProps = {
     hiddenChannel: props.hiddenChannel,
@@ -89,7 +43,11 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
 
   if (props.presenting) {
     return (
-      <ModeViewport key="presenting" data-mode="presenting">
+      <div
+        key="presenting"
+        className={styles.modeViewport}
+        data-mode="presenting"
+      >
         <Presentation exitPlaybackPreview={props.exitPlaybackPreview}>
           <StoryPlaybackView
             jpegLoaderEntries={props.jpegLoaderEntries}
@@ -98,7 +56,7 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
             dicomIndexList={props.dicomIndexList}
           />
         </Presentation>
-      </ModeViewport>
+      </div>
     );
   }
 
@@ -115,8 +73,19 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
   };
 
   return (
-    <ModeViewport key="author" data-mode={exporting ? "exporting" : "author"}>
-      <AuthorViewport $hidden={exporting}>
+    <div
+      key="author"
+      className={styles.modeViewport}
+      data-mode={exporting ? "exporting" : "author"}
+    >
+      <div
+        className={[
+          styles.authorViewport,
+          exporting ? styles.authorViewportHidden : null,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         <AuthorView
           imagesPanel={props.imagesPanel}
           noLoader={props.noLoader}
@@ -126,12 +95,12 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
             <ChannelPanel {...channelPanelProps}>{props.viewer}</ChannelPanel>
           }
         />
-      </AuthorViewport>
+      </div>
       {exporting ? (
-        <ExportOverlay>
+        <div className={styles.exportOverlay}>
           <ImageExporter {...exporterProps} />
-        </ExportOverlay>
+        </div>
       ) : null}
-    </ModeViewport>
+    </div>
   );
 };

@@ -19,7 +19,7 @@ import {
   PanelActionButton,
   PanelIconButton,
 } from "@/components/shared/panel/PanelButtons";
-import chrome from "@/components/shared/panel/panelChrome.module.css";
+import panel from "@/components/shared/panel/panelShared.module.css";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import {
   buildCompositedIntensityLayers,
@@ -68,7 +68,8 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import { patchSourceChannelOnImages } from "@/lib/stores/storeUtils";
-import styles from "./channelShared.module.css";
+import styles from "./ChannelGroupsMasterDetail.module.css";
+import row from "./ChannelRow.module.css";
 
 const CHANNEL_DRAG_MIME = "application/x-minerva-channel-ref";
 
@@ -997,7 +998,7 @@ export const ChannelGroupsMasterDetail = (
             onClick={() => toggleGroupMasterVisibility(group)}
           />
           <input
-            className={`${styles.detailTitleInput} ${styles.groupFolderName}`}
+            className={`${row.detailTitleInput} ${styles.groupFolderName}`}
             type="text"
             defaultValue={group.name}
             maxLength={200}
@@ -1075,7 +1076,7 @@ export const ChannelGroupsMasterDetail = (
                     key={gc.id}
                     className={[
                       styles.groupChildBlock,
-                      colorLocked ? styles.detailChannelRowLocked : "",
+                      colorLocked ? row.detailChannelRowLocked : "",
                     ].join(" ")}
                   >
                     <div className={styles.groupChildRowWrap}>
@@ -1090,7 +1091,7 @@ export const ChannelGroupsMasterDetail = (
                       />
                       {rgbDisplay ? (
                         <ChannelRow
-                          rowClassName={styles.groupChildRow}
+                          rowClassName={row.groupChildRow}
                           compact
                           visible={visible}
                           visibilityTitle={
@@ -1145,7 +1146,7 @@ export const ChannelGroupsMasterDetail = (
                         />
                       ) : (
                         <ChannelRow
-                          rowClassName={styles.groupChildRow}
+                          rowClassName={row.groupChildRow}
                           visible={visible}
                           visibilityTitle={
                             visible ? `Hide ${name}` : `Show ${name}`
@@ -1383,7 +1384,7 @@ export const ChannelGroupsMasterDetail = (
           <div className={styles.rootChannelRowWrap}>
             {dragHandle}
             <ChannelRow
-              rowClassName={styles.rootChannelRow}
+              rowClassName={row.rootChannelRow}
               compact
               visible={shownInViewer}
               visibilityTitle={
@@ -1433,7 +1434,7 @@ export const ChannelGroupsMasterDetail = (
           <div className={styles.rootChannelRowWrap}>
             {dragHandle}
             <ChannelRow
-              rowClassName={styles.rootChannelRow}
+              rowClassName={row.rootChannelRow}
               compact
               visible={false}
               visibilityTitle={stackLayerTitle(sc, false)}
@@ -1472,7 +1473,7 @@ export const ChannelGroupsMasterDetail = (
           {dragHandle}
           {rgbDisplay ? (
             <ChannelRow
-              rowClassName={styles.rootChannelRow}
+              rowClassName={row.rootChannelRow}
               compact
               visible
               visibilityTitle={
@@ -1492,7 +1493,7 @@ export const ChannelGroupsMasterDetail = (
             />
           ) : (
             <ChannelRow
-              rowClassName={styles.rootChannelRow}
+              rowClassName={row.rootChannelRow}
               visible
               visibilityTitle={
                 capped
@@ -1547,7 +1548,7 @@ export const ChannelGroupsMasterDetail = (
     isGroupEligibleForPsudoOptimize(activeGroup, sourceChannels);
 
   return (
-    <div className={chrome.authorPanel}>
+    <div className={panel.authorPanel}>
       <CompactHeader
         title="Channel Groups"
         actions={
@@ -1591,7 +1592,7 @@ export const ChannelGroupsMasterDetail = (
         }
       />
 
-      <div className={[chrome.authorPanelBody, chrome.thinScrollbar].join(" ")}>
+      <div className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}>
         {channelGroups.length > 0 ? (
           <div className={styles.groupFolders}>
             {channelGroups.map((group, i) => renderGroupFolder(group, i))}
@@ -1610,10 +1611,9 @@ export const ChannelGroupsMasterDetail = (
 
         {imageSelectionMask ? (
           <ChannelRow
-            rowClassName={[
-              styles.rootChannelRow,
-              styles.rootChannelRowInline,
-            ].join(" ")}
+            rowClassName={[row.rootChannelRow, row.rootChannelRowInline].join(
+              " ",
+            )}
             visible={selectionMaskVisible}
             visibilityTitle="Toggle selection mask visibility"
             visibilityAriaLabel="Toggle selection mask visibility"

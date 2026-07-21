@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import type { CSSProperties } from "react";
 import {
   PopUpdate as PopUpdateChannel,
   Push as PushChannel,
@@ -15,130 +15,7 @@ import {
 } from "@/lib/imaging/sourceChannelStyle";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
 import { basenameImportLabel } from "@/lib/stores/storeUtils";
-
-/** Matches nested list styling in `ChannelGroups` so the overlay reads as one column. */
-const ChannelsSection = styled.div`
-  margin-top: 4px;
-  border-radius: 5px;
-  background: color-mix(in srgb, black 28%, transparent);
-  border: 1px solid color-mix(in srgb, var(--theme-glass-edge) 40%, transparent);
-  overflow: hidden;
-`;
-
-const ChannelsSectionHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 3px 6px;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--theme-glass-edge) 35%, transparent);
-`;
-
-const SectionLabel = styled.div`
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-size: 10px;
-  color: color-mix(in srgb, var(--theme-light-contrast-color) 52%, transparent);
-  line-height: 1.2;
-  margin: 0;
-  flex: 1;
-  min-width: 0;
-`;
-
-const ToolbarSlot = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-shrink: 0;
-  line-height: 0;
-`;
-
-const LegendBody = styled.div`
-  display: flex;
-  flex-direction: column;
-  padding: 2px 3px 3px;
-  gap: 0;
-`;
-
-const ImageSection = styled.div`
-  &:not(:first-child) {
-    margin-top: 4px;
-    padding-top: 4px;
-    border-top: 1px solid
-      color-mix(in srgb, var(--theme-glass-edge) 28%, transparent);
-  }
-`;
-
-const ImageSectionLabel = styled.div`
-  padding: 1px 4px 2px;
-  font-size: 9px;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: 0.02em;
-  color: color-mix(in srgb, var(--theme-light-contrast-color) 42%, transparent);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const ChannelList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-`;
-
-const LegendRowWrap = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  width: 100%;
-  min-height: 18px;
-  padding: 1px 3px;
-  border-radius: 2px;
-  box-sizing: border-box;
-
-  &:hover {
-    background: color-mix(in srgb, white 7%, transparent);
-  }
-`;
-
-const RowClickArea = styled.div`
-  color: rgb(230, 237, 243);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex: 1;
-  min-width: 0;
-  cursor: pointer;
-`;
-
-const Swatch = styled.div<{ color: string; $filled: boolean }>`
-  height: 10px;
-  width: 10px;
-  flex-shrink: 0;
-  border-radius: 2px;
-  box-sizing: border-box;
-  border: 1.5px solid #${(p) => p.color};
-  background-color: ${(p) => (p.$filled ? `#${p.color}` : "transparent")};
-  box-shadow: 0 0 0 1px color-mix(in srgb, black 25%, transparent);
-`;
-
-const LegendDivider = styled.div`
-  margin: 3px 2px 2px;
-  border-top: 1px solid
-    color-mix(in srgb, var(--theme-glass-edge) 50%, transparent);
-`;
-
-const NameSlot = styled.span`
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  font-size: 11px;
-  line-height: 1.2;
-`;
+import styles from "./ChannelLegend.module.css";
 
 export const defaultChannels = [
   { color: "0000FF", name: "DNA" },
@@ -288,17 +165,23 @@ const LegendRow = (props: LegendRowProps & { onClick: () => void }) => {
   };
 
   const coreUI = (
-    <RowClickArea
+    <button
+      type="button"
       onClick={onClick}
-      className="channel-legend-row"
+      className={styles.rowClickArea}
       title={rowVisible ? `Hide ${channelName}` : `Show ${channelName}`}
       style={{ opacity: rowVisible ? 1 : 0.55 }}
     >
-      <Swatch color={channel.color} $filled={rowVisible} />
-      <NameSlot className="channel-legend-name">
+      <div
+        className={[styles.swatch, rowVisible ? styles.swatchFilled : null]
+          .filter(Boolean)
+          .join(" ")}
+        style={{ "--swatch-color": `#${channel.color}` } as CSSProperties}
+      />
+      <span className={styles.nameSlot}>
         <EditableText {...statusProps}>{channelName}</EditableText>
-      </NameSlot>
-    </RowClickArea>
+      </span>
+    </button>
   );
   const editSwitch = [
     ["div", { children: coreUI }],
@@ -309,7 +192,7 @@ const LegendRow = (props: LegendRowProps & { onClick: () => void }) => {
     <EditModeSwitcher {...{ ...props, editable: canPop, editSwitch }} />
   );
 
-  return <LegendRowWrap>{extraUI}</LegendRowWrap>;
+  return <div className={styles.legendRowWrap}>{extraUI}</div>;
 };
 
 type ChannelLegendProps = {
@@ -351,33 +234,36 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
 
   if (sections.length === 0) {
     return (
-      <ChannelsSection>
-        <ChannelsSectionHeader>
-          <SectionLabel>Channels</SectionLabel>
-          <ToolbarSlot>{addChannelUI}</ToolbarSlot>
-        </ChannelsSectionHeader>
-      </ChannelsSection>
+      <div className={styles.channelsSection}>
+        <div className={styles.channelsSectionHeader}>
+          <div className={styles.sectionLabel}>Channels</div>
+          <div className={styles.toolbarSlot}>{addChannelUI}</div>
+        </div>
+      </div>
     );
   }
 
   let rowIdx = 0;
   return (
-    <ChannelsSection>
-      <ChannelsSectionHeader>
-        <SectionLabel>Channels</SectionLabel>
-        <ToolbarSlot>{addChannelUI}</ToolbarSlot>
-      </ChannelsSectionHeader>
-      <LegendBody>
+    <div className={styles.channelsSection}>
+      <div className={styles.channelsSectionHeader}>
+        <div className={styles.sectionLabel}>Channels</div>
+        <div className={styles.toolbarSlot}>{addChannelUI}</div>
+      </div>
+      <div className={styles.legendBody}>
         {sections.map((section) => (
-          <ImageSection key={section.imageId}>
-            <ImageSectionLabel title={section.label}>
+          <div className={styles.imageSection} key={section.imageId}>
+            <div className={styles.imageSectionLabel} title={section.label}>
               {section.label}
-            </ImageSectionLabel>
-            <ChannelList>
+            </div>
+            <div className={styles.channelList}>
               {section.entries.map((entry, entryIdx) => {
                 if (entry.type === "divider") {
                   return (
-                    <LegendDivider key={`div-${section.imageId}-${entryIdx}`} />
+                    <div
+                      className={styles.legendDivider}
+                      key={`div-${section.imageId}-${entryIdx}`}
+                    />
                   );
                 }
                 const c = entry.channel;
@@ -410,10 +296,10 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
                   />
                 );
               })}
-            </ChannelList>
-          </ImageSection>
+            </div>
+          </div>
         ))}
-      </LegendBody>
-    </ChannelsSection>
+      </div>
+    </div>
   );
 };

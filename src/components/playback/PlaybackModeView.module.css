@@ -1,0 +1,49 @@
+.modeViewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  animation: modeViewportIn 0.2s ease-out;
+}
+
+.modeViewport > * {
+  flex: 1;
+  min-height: 0;
+}
+
+@keyframes modeViewportIn {
+  from {
+    opacity: 0.88;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/** Keep Deck mounted under export UI so WebGL layer state is not destroyed. */
+.authorViewport {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.authorViewport > * {
+  flex: 1;
+  min-height: 0;
+}
+
+.authorViewportHidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.exportOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}

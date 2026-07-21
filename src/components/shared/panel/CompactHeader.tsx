@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import styles from "./panelChrome.module.css";
+import styles from "./CompactHeader.module.css";
 
 export type CompactHeaderProps = {
   /** Omit when the tab label already names the panel (e.g. Images). */

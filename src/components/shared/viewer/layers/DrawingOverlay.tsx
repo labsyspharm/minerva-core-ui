@@ -13,6 +13,7 @@ import { arrowLineDegeneratePolygon } from "@/lib/shapes/shapeGeometry";
 import { ARROW_ICON_SIZE } from "@/lib/shapes/shapeLayers";
 import { ellipseToPolygon, lineToPolygon } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
+import styles from "./DrawingOverlay.module.css";
 
 export type CreatableLayer = PolygonLayer | TextLayer | null;
 
@@ -1284,59 +1285,25 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     <>
       {/* SAM2 error toast */}
       {sam2Error && activeTool === "magic_wand" && !sam2Session && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 16,
-            left: "50%",
-            transform: "translateX(-50%)",
-            backgroundColor: "#c62828",
-            color: "white",
-            padding: "8px 16px",
-            borderRadius: 8,
-            fontSize: 14,
-            zIndex: 1000,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-          }}
-        >
-          {sam2Error}
-        </div>
+        <div className={styles.errorToast}>{sam2Error}</div>
       )}
 
       {/* SAM2 session hint bar */}
       {sam2Session && activeTool === "magic_wand" && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 16,
-            left: "50%",
-            transform: "translateX(-50%)",
-            backgroundColor: "rgba(30,30,30,0.9)",
-            color: "#ddd",
-            padding: "8px 20px",
-            borderRadius: 8,
-            fontSize: 13,
-            zIndex: 1000,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
-            display: "flex",
-            gap: 16,
-            alignItems: "center",
-            whiteSpace: "nowrap",
-          }}
-        >
+        <div className={styles.hintBar}>
           <span>
-            <strong style={{ color: "#4caf50" }}>Click</strong> to add
+            <strong className={styles.hintAdd}>Click</strong> to add
           </span>
           <span>
-            <strong style={{ color: "#ef5350" }}>Shift+Click</strong> to remove
+            <strong className={styles.hintRemove}>Shift+Click</strong> to remove
           </span>
           <span>
-            <strong style={{ color: "#90caf9" }}>Enter</strong> to confirm
+            <strong className={styles.hintConfirm}>Enter</strong> to confirm
           </span>
           <span>
-            <strong style={{ color: "#999" }}>Esc</strong> to cancel
+            <strong className={styles.hintCancel}>Esc</strong> to cancel
           </span>
-          <span style={{ color: "#888", fontSize: 12 }}>
+          <span className={styles.hintCount}>
             ({sam2Session.points.length} point
             {sam2Session.points.length !== 1 ? "s" : ""})
           </span>
@@ -1345,49 +1312,30 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
 
       {/* SAM2 debug overlay - images shown when localStorage sam2_debug=1 */}
       {sam2DebugImages && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 16,
-            left: 16,
-            display: "flex",
-            gap: 12,
-            backgroundColor: "rgba(0,0,0,0.85)",
-            padding: 12,
-            borderRadius: 8,
-            zIndex: 1001,
-            maxWidth: "90vw",
-          }}
-        >
+        <div className={styles.debugOverlay}>
           {sam2DebugImages.encoded ? (
             <div>
-              <div style={{ color: "#ccc", fontSize: 12, marginBottom: 4 }}>
-                Encoded (1024×1024)
-              </div>
+              <div className={styles.debugLabel}>Encoded (1024×1024)</div>
               <img
                 src={sam2DebugImages.encoded}
                 alt="SAM2 encoded"
-                style={{ maxWidth: 256, maxHeight: 256, display: "block" }}
+                className={styles.debugImage}
                 title="Right-click → Save image as"
               />
             </div>
           ) : null}
           {sam2DebugImages.mask ? (
             <div>
-              <div style={{ color: "#ccc", fontSize: 12, marginBottom: 4 }}>
-                Mask (256×256)
-              </div>
+              <div className={styles.debugLabel}>Mask (256×256)</div>
               <img
                 src={sam2DebugImages.mask}
                 alt="SAM2 mask"
-                style={{ maxWidth: 256, maxHeight: 256, display: "block" }}
+                className={styles.debugImage}
                 title="Right-click → Save image as"
               />
             </div>
           ) : (
-            <div style={{ color: "#888", fontSize: 12 }}>
-              Mask: waiting for decode…
-            </div>
+            <div className={styles.debugWaiting}>Mask: waiting for decode…</div>
           )}
         </div>
       )}

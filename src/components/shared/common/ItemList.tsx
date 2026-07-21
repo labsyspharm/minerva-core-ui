@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
-import chrome from "@/components/shared/panel/panelChrome.module.css";
+import panel from "@/components/shared/panel/panelShared.module.css";
 import type { Shape, ShapeGroup } from "@/lib/shapes/shapeModel";
 import styles from "./ItemList.module.css";
 
@@ -32,7 +32,7 @@ export interface ListItem<T = Metadata> {
   isExpanded?: boolean;
 }
 
-export type ItemListVariant = "default" | "markdownEditorChrome";
+export type ItemListVariant = "default" | "markdownEditor";
 
 export interface ItemListProps<T = Metadata> {
   items: ListItem<T>[];
@@ -297,7 +297,7 @@ const ItemList = <T = React.Component>({
 
   const rootClass = [
     styles.itemList,
-    variant === "markdownEditorChrome" ? styles.itemListMarkdownChrome : "",
+    variant === "markdownEditor" ? styles.itemListMarkdownEditor : "",
     compactRows ? styles.itemListCompact : "",
     className,
   ]
@@ -313,7 +313,7 @@ const ItemList = <T = React.Component>({
       {items.length === 0 ? (
         <div className={styles.emptyMessage}>{emptyMessage}</div>
       ) : (
-        <ul className={[styles.list, chrome.thinScrollbar].join(" ")}>
+        <ul className={[styles.list, panel.thinScrollbar].join(" ")}>
           {items.map((item) => (
             <React.Fragment key={item.id}>
               {renderItem(item)}

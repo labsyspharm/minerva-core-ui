@@ -1,8 +1,7 @@
 import type { TiffPixelSource } from "@hms-dbmi/viv";
 import { getImageSize } from "@hms-dbmi/viv";
 import * as React from "react";
-import { useMemo, useState } from "react";
-import styled from "styled-components";
+import { type CSSProperties, useMemo, useState } from "react";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import { toLoader } from "@/lib/imaging/filesystem";
 import {
@@ -19,6 +18,7 @@ import {
   type StoryExportMode,
   writeStoryBundleSidecars,
 } from "@/lib/storyExport/storyBundle";
+import styles from "./ImageExporter.module.css";
 
 ///
 
@@ -316,80 +316,10 @@ function isFullState(o: Partial<FullState>): o is FullState {
 
 ///
 
-const ImageExporterDiv = styled.div`
-  height: 100%;
-  display: grid;
-  grid-template-rows: 1fr auto 1fr;
-  grid-template-columns: 1fr minmax(300px, 420px) 1fr;
-  > div {
-    grid-row: 2;
-    grid-column: 2;
-  }
-`;
-
-const ExportStatus = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.25em;
-`;
-
-const ProgressBar = styled.div<ProgressBarProps>`
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.5em;
-  align-items: center;
-
-  > div:first-child {
-    box-sizing: border-box;
-    height: 1.25em;
-    border: 1px solid color-mix(in srgb, currentColor 85%, transparent);
-    background-color: transparent;
-    overflow: hidden;
-
-    > div {
-      height: 100%;
-      width: ${(props) => `${Math.min(100, Math.max(0, props.$ratio * 100))}%`};
-      background-color: ${(props) => to_color(props.$done) || "white"};
-    }
-  }
-
-  > div:last-child {
-    padding: 0.25em;
-    font-family: monospace;
-    white-space: nowrap;
-  }
-`;
-
-const EtaLine = styled.div`
-  font-family: monospace;
-  font-size: 0.9em;
-  text-align: center;
-  opacity: 0.85;
-`;
-
-const ExportMessage = styled.div`
-  grid-row: 2;
-  grid-column: 2;
-  padding: 0.5em 0.75em;
-  font-family: monospace;
-  text-align: center;
-`;
-
-const to_color = (done) => {
-  if (done) {
-    return "hwb(220 70% 30% / .9)";
-  }
-  return "hwb(220 10% 20% / .5)";
-};
-
 type LoaderOpts = {
   pool: PoolClass;
   handle: Handle.File | null;
 };
-interface ProgressBarProps {
-  $ratio: number;
-  $done: boolean;
-}
 
 const getLoader = async (opts: LoaderOpts) => {
   const { handle, pool } = opts;
@@ -725,29 +655,39 @@ export const ImageExporter = (props: ImageExporterProps) => {
     etaLabel = "estimating…";
   }
 
+  const clampedRatio = Math.min(1, Math.max(0, ratio));
+
   return (
-    <ImageExporterDiv>
+    <div className={styles.imageExporter}>
       {exportError ? (
-        <ExportMessage>{exportError}</ExportMessage>
+        <div className={styles.exportMessage}>{exportError}</div>
       ) : exportMode === "remote-url" ? (
-        <ExportStatus>
-          <ExportMessage>
+        <div className={styles.exportStatus}>
+          <div className={styles.exportMessage}>
             {done
               ? "Exported document.json + index.html (remote URLs)"
               : "Writing document.json + index.html…"}
-          </ExportMessage>
-        </ExportStatus>
+          </div>
+        </div>
       ) : (
-        <ExportStatus>
-          <ProgressBar $ratio={ratio} $done={done}>
+        <div className={styles.exportStatus}>
+          <div
+            className={[
+              styles.progressBar,
+              done ? styles.progressBarDone : null,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            style={{ "--progress-ratio": clampedRatio } as CSSProperties}
+          >
             <div>
               <div></div>
             </div>
             <div> {percentLabel} </div>
-          </ProgressBar>
-          {etaLabel ? <EtaLine>{etaLabel}</EtaLine> : null}
-        </ExportStatus>
+          </div>
+          {etaLabel ? <div className={styles.etaLine}>{etaLabel}</div> : null}
+        </div>
       )}
-    </ImageExporterDiv>
+    </div>
   );
 };

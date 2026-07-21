@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import styles from "./panelChrome.module.css";
+import styles from "./PanelButtons.module.css";
 
 export type PanelIconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;

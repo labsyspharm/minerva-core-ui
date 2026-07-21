@@ -122,6 +122,12 @@
   color: #f85149;
 }
 
+.importSuccess {
+  font-size: 11px;
+  line-height: 1.4;
+  color: color-mix(in srgb, #7ee787 92%, #fff 8%);
+}
+
 .imageCard {
   position: relative;
   display: flex;

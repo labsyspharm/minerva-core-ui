@@ -6,7 +6,6 @@ import {
 import Deck, { type DeckGLRef } from "@deck.gl/react";
 import { ScaleBarLayer } from "@hms-dbmi/viv";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import styled from "styled-components";
 
 import "@deck.gl/widgets/stylesheet.css";
 
@@ -49,6 +48,7 @@ import {
   ORTHO_VIEW_ID,
   SCALEBAR_VIEW_ID,
 } from "./dragHandlers";
+import styles from "./ImageViewer.module.css";
 
 /** Keep in sync with OrthographicView ids exported from dragHandlers. */
 const debounceResize = (fn: () => void, wait: number) => {
@@ -119,20 +119,6 @@ export type ImageViewerProps = {
   squareViewportBorderWidth?: number;
 };
 
-const Main = styled.div`
-  position: relative;
-  height: 100%;
-`;
-
-const SquareViewportOverlay = styled.div`
-  position: absolute;
-  pointer-events: none;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  box-sizing: border-box;
-`;
-
 const _isElement = (x = {}): x is HTMLElement => {
   return ["Width", "Height"].every((k) => `client${k}` in x);
 };
@@ -202,7 +188,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [_canvas, _setCanvas] = useState(null);
-  const rootRef = useRef<HTMLElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const deckRef = useRef<DeckGLRef | null>(null);
 
   // Set up ResizeObserver to track viewport size changes
@@ -945,7 +931,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }
 
   return (
-    <Main ref={rootRef}>
+    <div className={styles.main} ref={rootRef}>
       <Deck
         ref={deckRef}
         getCursor={getCursor}
@@ -975,9 +961,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
       />
       <LoadingWidget ref={loadingWidgetRef} />
       {showSquareViewportOverlay && (
-        <SquareViewportOverlay style={squareViewportStyle} />
+        <div
+          className={styles.squareViewportOverlay}
+          style={squareViewportStyle}
+        />
       )}
-    </Main>
+    </div>
   );
 };
 

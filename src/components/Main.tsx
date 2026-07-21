@@ -2,7 +2,6 @@ import { fromBlob, fromUrl } from "geotiff";
 import type { FormEventHandler } from "react";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
 import { StoryTitleBar } from "@/components/authoring/StoryTitleBar";
 import { MinervaLibraryPage } from "@/components/library/MinervaLibraryPage";
 import { PlaybackModeView } from "@/components/playback/PlaybackModeView";
@@ -15,7 +14,7 @@ import type {
   ValidObj,
 } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
-import { ImageViewer } from "@/components/shared/viewer/ImageViewer/ImageViewer";
+import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
 import type {
   ConfigSourceDistribution,
   ConfigWaypoint,
@@ -116,6 +115,8 @@ import {
   StoryIdUrlSync,
 } from "@/router/appRouter";
 
+import styles from "./Main.module.css";
+
 /** When the story has no waypoints yet, add a default row for image import to attach to. */
 function ensureDefaultWaypointForImageImport(): void {
   const doc = useDocumentStore.getState();
@@ -196,33 +197,6 @@ const cloneConfigWaypoints = (
   return JSON.parse(JSON.stringify(stories)) as LegacyExhibitWaypoint[];
 };
 
-const Wrapper = styled.div`
-  flex: 1;
-  height: 100%;
-  position: relative;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-`;
-
-const Full = styled.div`
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-`;
-
-const RetrievingWrapper = styled.div`
-  height: 100%;
-  display: grid;
-  grid-template-columns: 1fr; 
-  grid-template-rows: 1fr; 
-  justify-items: center;
-  align-items: center;
-`;
-
 const StoryPersistenceRoot = ({ children }: { children: React.ReactNode }) => {
   const [ready, setReady] = useState(false);
   useEffect(() => {
@@ -235,7 +209,7 @@ const StoryPersistenceRoot = ({ children }: { children: React.ReactNode }) => {
     document.getElementById("global-loader")?.remove();
   }, [ready]);
   if (!ready) {
-    return <RetrievingWrapper>Loading stories…</RetrievingWrapper>;
+    return <div className={styles.retrieving}>Loading stories…</div>;
   }
   return (
     <>
@@ -1888,17 +1862,17 @@ const Content = (props: Props) => {
           />
         );
         const imager = (
-          <Full>
+          <div className={styles.full}>
             <PlaybackModeView
               {...routerProps}
               viewer={viewer}
               imagesPanel={imagesPanel}
             />
-          </Full>
+          </div>
         );
 
         return (
-          <Wrapper>
+          <div className={styles.wrapper}>
             {!presenting ? (
               <StoryTitleBar
                 onReturnToLibrary={returnToLibrary}
@@ -1913,7 +1887,7 @@ const Content = (props: Props) => {
               />
             ) : null}
             {imager}
-          </Wrapper>
+          </div>
         );
       }}
     </FileHandler>

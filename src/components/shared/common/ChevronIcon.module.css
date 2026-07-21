@@ -1,0 +1,26 @@
+.chevronRight,
+.chevronLeft,
+.chevronDown,
+.chevronUp {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  display: block;
+  color: inherit;
+}
+
+.chevronRight {
+  transform: rotate(-90deg);
+}
+
+.chevronLeft {
+  transform: rotate(90deg);
+}
+
+.chevronDown {
+  transform: rotate(0deg);
+}
+
+.chevronUp {
+  transform: rotate(180deg);
+}

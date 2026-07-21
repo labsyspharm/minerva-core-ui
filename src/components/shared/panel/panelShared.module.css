@@ -1,0 +1,40 @@
+/* Shared authoring-panel shell. */
+
+.authorPanel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  background-color: #000;
+  color: #e6edf3;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.authorPanelBody {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Thin dark scrollbar used by panel list scrollers */
+.thinScrollbar {
+  scrollbar-color: #555 transparent;
+  scrollbar-width: thin;
+}
+
+.thinScrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.thinScrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.thinScrollbar::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 4px;
+}

@@ -25,7 +25,7 @@ import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
-import chrome from "@/components/shared/panel/panelChrome.module.css";
+import toolButton from "@/components/shared/panel/toolButton.module.css";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import type { Shape } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -166,7 +166,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     <>
       <button
         type="button"
-        className={chrome.toolButton}
+        className={toolButton.toolButton}
         disabled={layersPanelSelectedShapeIds.length === 0}
         title="Copy selected shapes to the clipboard"
         onClick={() => void copySelectedWaypointShapes()}
@@ -175,7 +175,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
       </button>
       <button
         type="button"
-        className={chrome.toolButton}
+        className={toolButton.toolButton}
         title="Paste shapes from the clipboard"
         onClick={() => void pasteWaypointShapesFromClipboard()}
       >
@@ -192,7 +192,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     <>
       <button
         type="button"
-        className={`${chrome.toolButton} ${activeTool === TOOLS.MOVE ? chrome.active : ""}`}
+        className={`${toolButton.toolButton} ${activeTool === TOOLS.MOVE ? toolButton.active : ""}`}
         title="Move Tool"
         onClick={() => handleToolChangeLocal(TOOLS.MOVE)}
       >
@@ -217,8 +217,8 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<ShapesIcon />}
         parentTitle="Shapes"
-        buttonClassName={chrome.toolButton}
-        activeClassName={chrome.active}
+        buttonClassName={toolButton.toolButton}
+        activeClassName={toolButton.active}
       />
 
       <ToolSubmenu
@@ -231,13 +231,13 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<LinesIcon />}
         parentTitle="Lines"
-        buttonClassName={chrome.toolButton}
-        activeClassName={chrome.active}
+        buttonClassName={toolButton.toolButton}
+        activeClassName={toolButton.active}
       />
 
       <button
         type="button"
-        className={`${chrome.toolButton} ${activeTool === TOOLS.BRUSH ? chrome.active : ""}`}
+        className={`${toolButton.toolButton} ${activeTool === TOOLS.BRUSH ? toolButton.active : ""}`}
         title="Brush"
         onClick={() => handleToolChangeLocal(TOOLS.BRUSH)}
       >
@@ -246,7 +246,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${chrome.toolButton} ${activeTool === TOOLS.TEXT ? chrome.active : ""}`}
+        className={`${toolButton.toolButton} ${activeTool === TOOLS.TEXT ? toolButton.active : ""}`}
         title="Text Tool"
         onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
       >
@@ -255,7 +255,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${chrome.toolButton} ${activeTool === TOOLS.POINT ? chrome.active : ""}`}
+        className={`${toolButton.toolButton} ${activeTool === TOOLS.POINT ? toolButton.active : ""}`}
         title="Point Tool"
         onClick={() => handleToolChangeLocal(TOOLS.POINT)}
       >
@@ -264,7 +264,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${chrome.toolButton} ${activeTool === TOOLS.MAGIC_WAND ? chrome.active : ""}`}
+        className={`${toolButton.toolButton} ${activeTool === TOOLS.MAGIC_WAND ? toolButton.active : ""}`}
         title="Magic Wand"
         onClick={() => handleToolChangeLocal(TOOLS.MAGIC_WAND)}
       >
@@ -285,7 +285,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         <div className={styles.layersContainer}>
           <LayersPanel
             itemListVariant={
-              embeddedInScrollParent ? "markdownEditorChrome" : "default"
+              embeddedInScrollParent ? "markdownEditor" : "default"
             }
             toolbarSlot={drawingToolbar}
             waypointClipboardActions={waypointClipboardActions}

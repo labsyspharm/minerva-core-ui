@@ -29,7 +29,7 @@ Grounded in git history since `51e3bfefda077b21102001022994f0fde436187e` (merge 
 
 ## 2. Shared viewer and rendering stack
 
-- **Core component:** `ImageViewer/ImageViewer.tsx` — Deck.gl **OrthographicView**, VIV **MultiscaleImageLayer**, scale bar, loading widget, lensing integration.
+- **Core component:** `viewer/ImageViewer.tsx` — Deck.gl **OrthographicView**, VIV **MultiscaleImageLayer**, scale bar, loading widget, lensing integration.
 - **State bridges:** Viewport size → Zustand (`viewerViewportSize`, brush bounds, SAM viewport, programmatic waypoint navigation via `targetWaypointViewState`).
 - **Coordinate model:** `waypoint.ts` documents **Minerva 1.5 (OpenSeadragon Pan/Zoom) → Minerva 2.0 (deck.gl view state)**; runtime migration from **Pan/Zoom-only** waypoints to **Bounds / ViewState** when image dimensions exist (`main.tsx` effects).
 

@@ -1,0 +1,31 @@
+.compactHeader {
+  background-color: var(--panel-surface, #1a1a1a);
+  border-bottom: 1px solid var(--panel-border, #444);
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  box-sizing: border-box;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.headerCount {
+  font-weight: normal;
+  color: var(--panel-muted, #999);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
