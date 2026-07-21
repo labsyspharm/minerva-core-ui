@@ -3,10 +3,6 @@ import * as React from "react";
 import { LayersPanel } from "@/components/authoring/LayersPanel";
 import { ToolSubmenu } from "@/components/authoring/ToolSubmenu";
 import {
-  copySelectedWaypointShapes,
-  pasteWaypointShapesFromClipboard,
-} from "@/components/authoring/waypoints/waypointShapeClipboard";
-import {
   ChromeColorPickerPopover,
   chromeColorPickerAnchorPosition,
 } from "@/components/shared/ChromeColorPickerPopover";
@@ -27,10 +23,69 @@ import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
 import toolButton from "@/components/shared/panel/toolButton.module.css";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
+import {
+  cloneShapesForPaste,
+  readShapesFromSystemClipboard,
+  writeShapesToSystemClipboard,
+} from "@/lib/shapes/shapeClipboard";
 import type { Shape } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Waypoint } from "@/lib/stores/documentStore";
 import styles from "./WaypointAnnotationEditor.module.css";
+
+async function copySelectedWaypointShapes(): Promise<void> {
+  const {
+    shapes,
+    shapeGroups,
+    layersPanelSelectedShapeIds,
+    layersPanelSelectedGroupId,
+    flashLayersPanelSelection,
+  } = useAppStore.getState();
+
+  const selectedIds =
+    layersPanelSelectedGroupId != null
+      ? (shapeGroups.find((g) => g.id === layersPanelSelectedGroupId)
+          ?.shapeIds ?? [])
+      : layersPanelSelectedShapeIds;
+
+  flashLayersPanelSelection({
+    shapeIds: selectedIds,
+    groupId: layersPanelSelectedGroupId,
+  });
+
+  const selected = new Set(selectedIds);
+  if (selected.size === 0) return;
+  const toCopy = shapes.filter((s) => selected.has(s.id));
+  if (toCopy.length === 0) return;
+  try {
+    await writeShapesToSystemClipboard(toCopy);
+  } catch (e) {
+    console.warn("Copy shapes to clipboard failed", e);
+  }
+}
+
+async function pasteWaypointShapesFromClipboard(): Promise<void> {
+  let raw: Awaited<ReturnType<typeof readShapesFromSystemClipboard>>;
+  try {
+    raw = await readShapesFromSystemClipboard();
+  } catch (e) {
+    console.warn("Read shapes from clipboard failed", e);
+    return;
+  }
+  if (!raw?.length) return;
+  const cloned = cloneShapesForPaste(raw);
+  const {
+    addShapesBatch,
+    flashLayersPanelSelection,
+    requestLayersPanelSelection,
+  } = useAppStore.getState();
+
+  addShapesBatch(cloned);
+
+  const ids = cloned.map((a) => a.id);
+  requestLayersPanelSelection({ shapeIds: ids, groupId: null });
+  flashLayersPanelSelection({ shapeIds: ids, groupId: null });
+}
 
 /** Writes rgba into the fields the renderer reads (`style.*`). */
 function applyWaypointPickerColor(

@@ -2,7 +2,10 @@ import type { ReactNode } from "react";
 import { AuthorView } from "@/components/authoring/AuthorSidebar";
 import { ImageExporter } from "@/components/playback/ImageExporter";
 import { Presentation } from "@/components/playback/Presentation";
-import { StoryPlaybackView } from "@/components/playback/StoryPlaybackView";
+import {
+  type StoryPlaybackLoaders,
+  StoryPlaybackView,
+} from "@/components/playback/StoryPlaybackView";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
@@ -10,7 +13,6 @@ import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Config } from "@/lib/imaging/viv";
 import type { StoryExportMode } from "@/lib/storyExport/storyBundle";
 import styles from "./PlaybackModeView.module.css";
-import type { StoryPlaybackLoaders } from "./useStoryPlaybackLayers";
 
 export type PlaybackModeViewProps = StoryPlaybackLoaders & {
   viewer: ReactNode;

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { loadStoryDocument } from "@/components/playback/loadStoryDocument";
 import { Presentation } from "@/components/playback/Presentation";
 import { StoryPlaybackView } from "@/components/playback/StoryPlaybackView";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
@@ -7,6 +6,7 @@ import type {
   JpegLoaderEntry,
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
+import { loadStoryDocument } from "@/lib/story/loadStoryDocument";
 import styles from "./StoryPlayerApp.module.css";
 
 /**
