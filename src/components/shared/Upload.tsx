@@ -1,5 +1,5 @@
 import type { ChangeEventHandler, FormEventHandler } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
@@ -327,9 +327,11 @@ const Upload = (props: UploadProps) => {
     type: "ok" | "err";
     text: string;
   } | null>(null);
-  const [maskHandles, setMaskHandles] = useState<Handle.File[]>([]);
   const [importError, setImportError] = useState<string | null>(null);
   const xmlFileInputRef = useRef<HTMLInputElement | null>(null);
+  const addPanelRef = useRef<HTMLDivElement | null>(null);
+  const addImageAnchorRef = useRef<HTMLDivElement | null>(null);
+  const addMaskAnchorRef = useRef<HTMLDivElement | null>(null);
   const prevImportRev = useRef(props.importRevision);
   const localImportInFlightRef = useRef(false);
 
@@ -339,8 +341,6 @@ const Upload = (props: UploadProps) => {
     formProps,
     handles,
     onAllow,
-    onRecall,
-    hasRecent,
     importRevision,
     imageLoaded,
     loadedSource,
@@ -353,6 +353,13 @@ const Upload = (props: UploadProps) => {
     onReselectFile,
   } = props;
 
+  const closeAddPanel = useCallback(() => {
+    setAddPanelOpen(false);
+    setImportRole("intensity");
+    setImageFormat("");
+    setImportError(null);
+  }, []);
+
   useEffect(() => {
     if (prevImportRev.current !== importRevision) {
       prevImportRev.current = importRevision;
@@ -360,18 +367,39 @@ const Upload = (props: UploadProps) => {
       setImportRole("intensity");
       setImageFormat("");
       _setOmeTiffUrl("");
-      setMaskHandles([]);
       setImportError(null);
       setXmlImportFeedback(null);
     }
   }, [importRevision, _setOmeTiffUrl]);
+
+  useEffect(() => {
+    if (!addPanelOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const anchor =
+        importRole === "segmentation"
+          ? addMaskAnchorRef.current
+          : addImageAnchorRef.current;
+      const target = event.target as Node;
+      if (!anchor?.contains(target) && !addPanelRef.current?.contains(target)) {
+        closeAddPanel();
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeAddPanel();
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [addPanelOpen, importRole, closeAddPanel]);
 
   const labelOpts = { fileName, lastOmeTiffUrl };
   const append = imageLoaded;
   const isMaskImport = importRole === "segmentation";
   const importLabel = isMaskImport ? "Import mask" : "Import";
   const urlReady = /^https?:\/\/.+/.test(omeTiffUrl.trim());
-  const activeLocalHandles = isMaskImport ? maskHandles : handles;
 
   const runUrlImport = async () => {
     if (!onImportOme || imageFormat !== "OME-TIFF-URL" || !urlReady) return;
@@ -415,7 +443,6 @@ const Upload = (props: UploadProps) => {
       setImportError("Could not read the selected file.");
       return;
     }
-    setMaskHandles(picked);
     await importLocalOmeTiff("segmentation", picked);
   };
 
@@ -444,12 +471,6 @@ const Upload = (props: UploadProps) => {
     await importIntensityFromHandles(picked);
   };
 
-  const recallIntensityFile = async () => {
-    setImportError(null);
-    const picked = await onRecall({ notifyRestored: false });
-    await importIntensityFromHandles(picked);
-  };
-
   const openAddPanel = (role: OmeImportRole) => {
     if (addPanelOpen && importRole === role) {
       closeAddPanel();
@@ -458,22 +479,12 @@ const Upload = (props: UploadProps) => {
     setImportRole(role);
     setAddPanelOpen(true);
     setImageFormat("");
-    setMaskHandles([]);
-    setImportError(null);
-  };
-
-  const closeAddPanel = () => {
-    setAddPanelOpen(false);
-    setImportRole("intensity");
-    setImageFormat("");
-    setMaskHandles([]);
     setImportError(null);
   };
 
   const selectFormat = (format: ImageFormatChoice) => {
     setImportError(null);
     const next = imageFormat === format ? "" : format;
-    if (isMaskImport) setMaskHandles([]);
     setImageFormat(next);
     if (next !== "OME-TIFF") return;
     if (isMaskImport) {
@@ -484,9 +495,7 @@ const Upload = (props: UploadProps) => {
       void importIntensityFromHandles(handles);
       return;
     }
-    if (!hasRecent) {
-      void chooseIntensityFile();
-    }
+    void chooseIntensityFile();
   };
 
   const onAnnotationXmlSelected: ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -518,45 +527,13 @@ const Upload = (props: UploadProps) => {
   const addMaskActive = addPanelOpen && importRole === "segmentation";
 
   const renderAddPanelBody = () => {
+    // OME-TIFF opens the OS picker immediately — no body row under the chips.
     if (imageFormat === "OME-TIFF") {
-      const fileLabel =
-        activeLocalHandles.length === 1
-          ? activeLocalHandles[0].name
-          : activeLocalHandles.length > 1
-            ? `${activeLocalHandles.length} files`
-            : null;
-      return (
+      return importError ? (
         <div className={styles.addPanelBody}>
-          <div className={styles.fileRow}>
-            <button
-              type="button"
-              className={styles.secondaryButton}
-              onClick={isMaskImport ? chooseMaskFile : chooseIntensityFile}
-            >
-              Choose file
-            </button>
-            {!isMaskImport && hasRecent ? (
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                onClick={() => {
-                  void recallIntensityFile();
-                }}
-              >
-                Recent
-              </button>
-            ) : null}
-          </div>
-          {fileLabel ? (
-            <div className={styles.fileNameHint} title={fileLabel}>
-              {fileLabel}
-            </div>
-          ) : null}
-          {importError ? (
-            <div className={styles.importError}>{importError}</div>
-          ) : null}
+          <div className={styles.importError}>{importError}</div>
         </div>
-      );
+      ) : null;
     }
     if (imageFormat === "OME-TIFF-URL") {
       return (
@@ -655,11 +632,42 @@ const Upload = (props: UploadProps) => {
       </article>
     ) : null;
 
+  const addPanel = addPanelOpen ? (
+    <div ref={addPanelRef} className={styles.addPanel}>
+      <div className={styles.formatRow}>
+        {importRole === "intensity" ? (
+          <FormatChip
+            label="DicomWeb"
+            selected={imageFormat === "DICOM-WEB"}
+            onClick={() => selectFormat("DICOM-WEB")}
+            chipClass={styles.formatChip}
+            chipActiveClass={styles.formatChipActive}
+          />
+        ) : null}
+        <FormatChip
+          label="OmeTiff File"
+          selected={imageFormat === "OME-TIFF"}
+          onClick={() => selectFormat("OME-TIFF")}
+          chipClass={styles.formatChip}
+          chipActiveClass={styles.formatChipActive}
+        />
+        <FormatChip
+          label="OmeTiff URL"
+          selected={imageFormat === "OME-TIFF-URL"}
+          onClick={() => selectFormat("OME-TIFF-URL")}
+          chipClass={styles.formatChip}
+          chipActiveClass={styles.formatChipActive}
+        />
+      </div>
+      {renderAddPanelBody()}
+    </div>
+  ) : null;
+
   return (
     <div className={chrome.authorPanel}>
       <CompactHeader
         actions={
-          <>
+          <div className={styles.headerActionsWrap}>
             {imageLoaded ? (
               <>
                 <input
@@ -679,25 +687,30 @@ const Upload = (props: UploadProps) => {
                 </PanelIconButton>
               </>
             ) : null}
-            <PanelIconButton
-              active={addMaskActive}
-              aria-pressed={addMaskActive}
-              aria-label="Add mask"
-              title="Add mask"
-              onClick={() => openAddPanel("segmentation")}
-            >
-              <RectangleIcon width={14} height={14} aria-hidden />
-            </PanelIconButton>
-            <PanelIconButton
-              active={addImageActive}
-              aria-pressed={addImageActive}
-              aria-label="Add image"
-              title="Add image"
-              onClick={() => openAddPanel("intensity")}
-            >
-              <PlusIcon />
-            </PanelIconButton>
-          </>
+            <div ref={addMaskAnchorRef} className={styles.addActionAnchor}>
+              <PanelIconButton
+                active={addMaskActive}
+                aria-pressed={addMaskActive}
+                aria-label="Add mask"
+                title="Add mask"
+                onClick={() => openAddPanel("segmentation")}
+              >
+                <RectangleIcon width={14} height={14} aria-hidden />
+              </PanelIconButton>
+            </div>
+            <div ref={addImageAnchorRef} className={styles.addActionAnchor}>
+              <PanelIconButton
+                active={addImageActive}
+                aria-pressed={addImageActive}
+                aria-label="Add image"
+                title="Add image"
+                onClick={() => openAddPanel("intensity")}
+              >
+                <PlusIcon />
+              </PanelIconButton>
+            </div>
+            {addPanel}
+          </div>
         }
       />
 
@@ -708,46 +721,6 @@ const Upload = (props: UploadProps) => {
           chrome.thinScrollbar,
         ].join(" ")}
       >
-        {addPanelOpen ? (
-          <div className={styles.addPanel}>
-            <div className={styles.addPanelToolbar}>
-              <div className={styles.formatRow}>
-                {importRole === "intensity" ? (
-                  <FormatChip
-                    label="DicomWeb"
-                    selected={imageFormat === "DICOM-WEB"}
-                    onClick={() => selectFormat("DICOM-WEB")}
-                    chipClass={styles.formatChip}
-                    chipActiveClass={styles.formatChipActive}
-                  />
-                ) : null}
-                <FormatChip
-                  label="OmeTiff File"
-                  selected={imageFormat === "OME-TIFF"}
-                  onClick={() => selectFormat("OME-TIFF")}
-                  chipClass={styles.formatChip}
-                  chipActiveClass={styles.formatChipActive}
-                />
-                <FormatChip
-                  label="OmeTiff URL"
-                  selected={imageFormat === "OME-TIFF-URL"}
-                  onClick={() => selectFormat("OME-TIFF-URL")}
-                  chipClass={styles.formatChip}
-                  chipActiveClass={styles.formatChipActive}
-                />
-              </div>
-              <button
-                type="button"
-                className={styles.cancelLink}
-                onClick={closeAddPanel}
-              >
-                Cancel
-              </button>
-            </div>
-            {renderAddPanelBody()}
-          </div>
-        ) : null}
-
         {imageCards}
 
         {xmlImportFeedback ? (
