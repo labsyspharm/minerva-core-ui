@@ -13,3 +13,4 @@ bundle
 .pnpm-store
 .claude
 CLAUDE.md
+.cursor
