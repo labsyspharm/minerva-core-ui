@@ -12,7 +12,7 @@ import type { Config } from "@/lib/imaging/viv";
 import type { StoryExportMode } from "@/lib/storyExport/storyBundle";
 import type { StoryPlaybackLoaders } from "./useStoryPlaybackLayers";
 
-export type PlaybackRouterProps = StoryPlaybackLoaders & {
+export type PlaybackModeViewProps = StoryPlaybackLoaders & {
   viewer: ReactNode;
   imagesPanel: ReactNode;
   hiddenChannel: boolean;
@@ -81,7 +81,7 @@ const ExportOverlay = styled.div`
   z-index: 2;
 `;
 
-export const PlaybackRouter = (props: PlaybackRouterProps) => {
+export const PlaybackModeView = (props: PlaybackModeViewProps) => {
   const channelPanelProps = {
     hiddenChannel: props.hiddenChannel,
     noLoader: props.noLoader,

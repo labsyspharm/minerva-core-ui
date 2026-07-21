@@ -2,7 +2,7 @@ import * as React from "react";
 import {
   buildContrastScale,
   histogramSparklinePaths,
-} from "@/lib/imaging/contrastScale";
+} from "@/components/shared/channel/contrastScale";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { SourceDistributionData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";

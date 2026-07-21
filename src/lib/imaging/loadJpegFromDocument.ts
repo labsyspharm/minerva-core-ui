@@ -1,6 +1,6 @@
 import { type Dispatch, type SetStateAction, useEffect } from "react";
+import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import type { JpegLoaderEntry } from "@/lib/imaging/loaderEntries";
-import type { JpegTileFetcher } from "@/lib/jpeg-image";
 import type { Image } from "@/lib/stores/documentSchema";
 import { loadJpeg } from "./jpeg.js";
 import {

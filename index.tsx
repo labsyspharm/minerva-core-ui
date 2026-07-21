@@ -1,7 +1,7 @@
 import { RouterProvider } from "@tanstack/react-router";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { Main } from "@/components/main";
+import { Main } from "@/components/Main";
 import { createAppRouter } from "@/router/appRouter";
 import "@fontsource/overpass/200.css";
 import "@/fonts.css";

@@ -1,9 +1,9 @@
-import { useAppStore } from "@/lib/stores/appStore";
 import {
   cloneShapesForPaste,
   readShapesFromSystemClipboard,
   writeShapesToSystemClipboard,
-} from "./shapeClipboard";
+} from "@/lib/shapes/shapeClipboard";
+import { useAppStore } from "@/lib/stores/appStore";
 
 export async function copySelectedWaypointShapes(): Promise<void> {
   const {

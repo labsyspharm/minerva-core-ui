@@ -13,7 +13,7 @@ import {
 import {
   applySharedImportPaletteToChannelGroups,
   applySharedImportPaletteToSourceChannels,
-} from "./psudoPalette";
+} from "./pseudoPalette";
 import { styleSourceChannelsForRole } from "./sourceChannelStyle";
 
 export type BuiltOmeImportSlice = {

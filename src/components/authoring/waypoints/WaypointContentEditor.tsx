@@ -3,7 +3,7 @@ import * as React from "react";
 import "@uiw/react-md-editor/markdown-editor.css";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Waypoint } from "@/lib/stores/documentStore";
-import "./WaypointContentEditor.css";
+import "./WaypointContentEditor.global.css";
 
 type PreviewMode = NonNullable<
   React.ComponentProps<typeof MDEditor>["preview"]

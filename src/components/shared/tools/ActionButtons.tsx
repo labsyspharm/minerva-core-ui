@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import styled from "styled-components";
+import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import CheckIcon from "@/components/shared/icons/check.svg?react";
 import MinusIcon from "@/components/shared/icons/minus.svg?react";
-import PlusIconSvg from "@/components/shared/icons/plus.svg?react";
 
 type GlassIconButtonProps = {
   color: string;
@@ -61,7 +61,7 @@ const WrapColumn = styled.div`
 
 const Push = (props: { onPush?: () => void }) => (
   <IconButton color="#2e5" onClick={props.onPush} aria-label="Add channel">
-    <PlusIconSvg />
+    <PlusIcon size={14} />
   </IconButton>
 );
 

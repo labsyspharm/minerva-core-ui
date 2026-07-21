@@ -35,11 +35,6 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import {
-  createDragHandlers,
-  ORTHO_VIEW_ID,
-  SCALEBAR_VIEW_ID,
-} from "@/lib/viewer/dragHandlers";
-import {
   getViewerViewportSnapshotFromDeck,
   orthographicZoomToNumber,
   registerViewerLiveSnapshotReader,
@@ -49,6 +44,11 @@ import {
   WAYPOINT_THUMBNAIL_JPEG_QUALITY,
   WAYPOINT_THUMBNAIL_PIXEL_SIZE,
 } from "@/lib/waypoints/waypointThumbnail";
+import {
+  createDragHandlers,
+  ORTHO_VIEW_ID,
+  SCALEBAR_VIEW_ID,
+} from "./dragHandlers";
 
 /** Keep in sync with OrthographicView ids exported from dragHandlers. */
 const debounceResize = (fn: () => void, wait: number) => {

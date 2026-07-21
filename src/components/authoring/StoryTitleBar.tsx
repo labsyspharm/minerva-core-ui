@@ -100,6 +100,7 @@ const BannerPreviewButton = styled.button`
 `;
 
 export type StoryTitleBarProps = {
+  onReturnToLibrary: () => void;
   onExport?: () => void;
   /** When set, overflow menu offers “Export with remote OME URL”. */
   onExportRemoteUrl?: () => void;
@@ -116,6 +117,7 @@ export type StoryTitleBarProps = {
  */
 export function StoryTitleBar(props: StoryTitleBarProps) {
   const {
+    onReturnToLibrary,
     onExport,
     onExportRemoteUrl,
     onEnterPlaybackPreview,
@@ -143,6 +145,7 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
     <BannerShell role="region" aria-label="Story title">
       {onExport ? (
         <StoryAuthorOverflowMenu
+          onReturnToLibrary={onReturnToLibrary}
           onExport={onExport}
           onExportRemoteUrl={onExportRemoteUrl}
         />

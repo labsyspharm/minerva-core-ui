@@ -5,8 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { StoryTitleBar } from "@/components/authoring/StoryTitleBar";
 import { MinervaLibraryPage } from "@/components/library/MinervaLibraryPage";
-import { PlaybackRouter } from "@/components/playback/PlaybackRouter";
-import { StoryReturnToLibraryBridge } from "@/components/StoryReturnToLibraryBridge";
+import { PlaybackModeView } from "@/components/playback/PlaybackModeView";
 import { BuildStamp } from "@/components/shared/BuildStamp";
 import { FileHandler } from "@/components/shared/FileHandler";
 import type {
@@ -16,7 +15,7 @@ import type {
   ValidObj,
 } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
-import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
+import { ImageViewer } from "@/components/shared/viewer/ImageViewer/ImageViewer";
 import type {
   ConfigSourceDistribution,
   ConfigWaypoint,
@@ -63,15 +62,18 @@ import {
   buildOmeImportSlice,
   finalizeAppendedIntensityGroups,
 } from "@/lib/imaging/omeImportPipeline";
-import { warmupPsudoPalette } from "@/lib/imaging/psudoPalette";
+import { warmupPsudoPalette } from "@/lib/imaging/pseudoPalette";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
-import { Pool } from "@/lib/imaging/workers/Pool";
+import { Pool } from "@/lib/imaging/workers/pool";
 import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { putFileHandle } from "@/lib/persistence/fileHandles";
 import { imageHandleStorageKey } from "@/lib/persistence/imageHandles";
-import { saveStoryDocument } from "@/lib/persistence/storyPersistence";
+import {
+  saveStoryDocument,
+  setActiveStoryId,
+} from "@/lib/persistence/storyPersistence";
 import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
 import { applyOmeRoisFromLoaderToFirstWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
 import {
@@ -102,7 +104,7 @@ import {
   canExportWithRemoteUrls,
   type StoryExportMode,
 } from "@/lib/storyExport/storyBundle";
-import { isOpts, validate } from "@/lib/util/validate";
+import { isOpts, validate } from "@/lib/validate";
 import {
   applyWaypointSeedAction,
   planWaypointConfigSeedTick,
@@ -287,6 +289,25 @@ const Content = (props: Props) => {
   /** Remote demo image / DICOM bootstrap from `index.tsx` (`pnpm run demo` only). */
   const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
   useStoryAutoSave();
+  const navigate = rootRouteApi.useNavigate();
+  const returnToLibrary = React.useCallback(() => {
+    void (async () => {
+      const s = useDocumentStore.getState();
+      if (s.activeStoryId) {
+        await saveStoryDocument(s.activeStoryId, s.toDocumentData());
+      }
+      await setActiveStoryId(null);
+      s.clearForLibraryView();
+      navigate({
+        search: (prev: { storyid?: string }) => {
+          const next = { ...prev };
+          delete next.storyid;
+          return next;
+        },
+        replace: true,
+      } as never);
+    })();
+  }, [navigate]);
   const storyTitleForTab = useDocumentStore((s) => s.metadata.title ?? "");
   React.useEffect(() => {
     const label = storyTitleForTab.trim()
@@ -1868,7 +1889,7 @@ const Content = (props: Props) => {
         );
         const imager = (
           <Full>
-            <PlaybackRouter
+            <PlaybackModeView
               {...routerProps}
               viewer={viewer}
               imagesPanel={imagesPanel}
@@ -1880,6 +1901,7 @@ const Content = (props: Props) => {
           <Wrapper>
             {!presenting ? (
               <StoryTitleBar
+                onReturnToLibrary={returnToLibrary}
                 onExport={startExport}
                 onExportRemoteUrl={
                   canExportWithRemoteUrls(images)
@@ -1903,12 +1925,7 @@ const LibraryOrAuthor = (props: Props) => {
   if (!storyid) {
     return <MinervaLibraryPage />;
   }
-  return (
-    <>
-      <StoryReturnToLibraryBridge />
-      <Content {...props} />
-    </>
-  );
+  return <Content {...props} />;
 };
 
 const Main = (props: Props) => {

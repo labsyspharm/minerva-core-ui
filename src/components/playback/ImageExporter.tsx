@@ -3,7 +3,6 @@ import { getImageSize } from "@hms-dbmi/viv";
 import * as React from "react";
 import { useMemo, useState } from "react";
 import styled from "styled-components";
-import type { OmeLoaderEntry } from "@/components/shared/viewer/ImageViewer";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import { toLoader } from "@/lib/imaging/filesystem";
 import {
@@ -11,8 +10,9 @@ import {
   jpegExportConcurrency,
 } from "@/lib/imaging/jpegExportPool";
 import { jpegPyramidFolderName } from "@/lib/imaging/jpegPyramid";
+import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Config } from "@/lib/imaging/viv";
-import type { PoolClass } from "@/lib/imaging/workers/Pool";
+import type { PoolClass } from "@/lib/imaging/workers/pool";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {

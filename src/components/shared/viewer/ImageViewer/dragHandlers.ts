@@ -1,7 +1,7 @@
 // Drag handlers for Deck.gl interactions
 // These handlers translate Deck.gl events into interaction events for the overlay system
 
-import { useAppStore } from "../stores/appStore";
+import { useAppStore } from "@/lib/stores/appStore";
 
 /** Keep in sync with `OrthographicView({ id })` in ImageViewer. */
 export const ORTHO_VIEW_ID = "ortho";

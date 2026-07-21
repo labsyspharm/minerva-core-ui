@@ -3,7 +3,7 @@ import { fileOpen } from "browser-fs-access";
 import { fromBlob } from "geotiff";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
 import type { Loader } from "./viv";
-import type { PoolClass } from "./workers/Pool";
+import type { PoolClass } from "./workers/pool";
 
 type FindFileIn = {
   handle: Handle.File;

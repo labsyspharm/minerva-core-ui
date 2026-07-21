@@ -4,7 +4,7 @@ import {
   ChannelVisibilitySwatch,
 } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
-import styles from "./ChannelList.module.css";
+import styles from "./channelShared.module.css";
 
 export function rgbToHex(color: {
   r?: number;

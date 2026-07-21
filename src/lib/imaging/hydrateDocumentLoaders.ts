@@ -7,16 +7,16 @@ import {
   hasFileHandlePermission,
   loadOmeLoaderForRole,
 } from "@/lib/imaging/filesystem";
+import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import {
   type GroupLike,
   jpegLoaderEntriesFromImages,
 } from "@/lib/imaging/loadJpegFromDocument";
-import type { JpegTileFetcher } from "@/lib/jpeg-image";
 import { getFileHandle } from "@/lib/persistence/fileHandles";
 import type { Image } from "@/lib/stores/documentSchema";
 import type { JpegLoaderEntry, OmeLoaderEntry } from "./loaderEntries";
-import type { PoolClass } from "./workers/Pool";
-import { Pool } from "./workers/Pool";
+import type { PoolClass } from "./workers/pool";
+import { Pool } from "./workers/pool";
 
 export type HydrateDocumentLoadersResult = {
   jpegLoaderEntries: JpegLoaderEntry[];

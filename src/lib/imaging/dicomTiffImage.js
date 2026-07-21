@@ -1,4 +1,4 @@
-import { fetchFrame } from "./fetch-frame";
+import { fetchFrame } from "./fetchFrame";
 
 const littleEndianPlatform = (() => {
   const uint16 = new Uint16Array(1);

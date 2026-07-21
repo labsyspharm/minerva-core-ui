@@ -1,4 +1,4 @@
-import type { Shape } from "./shapeModel";
+import type { Shape } from "@/lib/shapes/shapeModel";
 
 /** Current clipboard wire format. */
 export const CLIPBOARD_KIND = "minerva-shapes" as const;

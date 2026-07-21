@@ -1,5 +1,5 @@
 import type { MouseEventHandler } from "react";
-import styles from "./ChannelList.module.css";
+import styles from "./channelShared.module.css";
 
 const EyeIcon = () => (
   <svg

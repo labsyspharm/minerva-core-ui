@@ -2,8 +2,8 @@ import { TileLayer } from "@deck.gl/geo-layers";
 import { BitmapLayer } from "@deck.gl/layers";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 import * as dcmjs from "dcmjs";
-import { DicomPixelSource } from "./dicom-pixel-source";
-import { DicomTIFFImage } from "./dicom-tiff-image";
+import { DicomPixelSource } from "./dicomPixelSource";
+import { DicomTIFFImage } from "./dicomTiffImage";
 
 const { naturalizeDataset } = dcmjs.data.DicomMetaDictionary;
 

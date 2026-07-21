@@ -3,6 +3,10 @@ import * as React from "react";
 import { LayersPanel } from "@/components/authoring/LayersPanel";
 import { ToolSubmenu } from "@/components/authoring/ToolSubmenu";
 import {
+  copySelectedWaypointShapes,
+  pasteWaypointShapesFromClipboard,
+} from "@/components/authoring/waypoints/waypointShapeClipboard";
+import {
   ChromeColorPickerPopover,
   chromeColorPickerAnchorPosition,
 } from "@/components/shared/ChromeColorPickerPopover";
@@ -24,10 +28,6 @@ import TextIcon from "@/components/shared/icons/text.svg?react";
 import chrome from "@/components/shared/panel/panelChrome.module.css";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import type { Shape } from "@/lib/shapes/shapeModel";
-import {
-  copySelectedWaypointShapes,
-  pasteWaypointShapesFromClipboard,
-} from "@/lib/shapes/waypointShapeClipboard";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Waypoint } from "@/lib/stores/documentStore";
 import styles from "./WaypointAnnotationEditor.module.css";

@@ -16,10 +16,10 @@ import {
 import { applyOmeRoisFromAnnotationXmlString } from "@/lib/shapes/applyOmeRoisToDocument";
 import type { Image } from "@/lib/stores/documentStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
-import type { ValidObj } from "@/lib/util/validate";
+import type { ValidObj } from "@/lib/validate";
 import styles from "./Upload.module.css";
 
-export type { ValidObj } from "@/lib/util/validate";
+export type { ValidObj } from "@/lib/validate";
 
 export type FormProps = {
   valid: ValidObj;

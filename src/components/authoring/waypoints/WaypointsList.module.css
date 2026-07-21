@@ -5,7 +5,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  }
+}
 
 .compactRow {
   padding: 10px 10px;
@@ -275,10 +275,7 @@
   overflow-y: auto;
   padding: 10px;
   box-sizing: border-box;
-
 }
-
-
 
 .detailBodyInner {
   display: flex;

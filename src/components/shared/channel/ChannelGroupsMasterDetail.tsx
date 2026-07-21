@@ -48,7 +48,7 @@ import {
   lockedRowIdsForGroup,
   optimizeChannelGroupWithLocks,
   seedRgbForGroupChannelIndex,
-} from "@/lib/imaging/psudoPalette";
+} from "@/lib/imaging/pseudoPalette";
 import {
   effectiveDisplayColor,
   effectiveMaskVisualization,
@@ -68,7 +68,7 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import { patchSourceChannelOnImages } from "@/lib/stores/storeUtils";
-import styles from "./ChannelList.module.css";
+import styles from "./channelShared.module.css";
 
 const CHANNEL_DRAG_MIME = "application/x-minerva-channel-ref";
 

@@ -1,6 +1,5 @@
 import * as React from "react";
 import styled from "styled-components";
-import { RETURN_TO_LIBRARY_EVENT } from "@/lib/navigation/returnToLibraryEvent";
 import type { DocumentData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
@@ -133,6 +132,7 @@ const MenuItemDivided = styled(MenuItem)`
 `;
 
 export type StoryAuthorOverflowMenuProps = {
+  onReturnToLibrary: () => void;
   onExport: () => void;
   exportLabel?: string;
   /** Shown when the story can keep remote OME-TIFF URLs instead of baking pyramids. */
@@ -144,7 +144,12 @@ export type StoryAuthorOverflowMenuProps = {
  * story banner; behavior matches the former nav tab-row menu.
  */
 export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
-  const { onExport, exportLabel = "Export", onExportRemoteUrl } = props;
+  const {
+    onReturnToLibrary,
+    onExport,
+    exportLabel = "Export",
+    onExportRemoteUrl,
+  } = props;
   const [open, setOpen] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const waypointsOk = useDocumentStore((s) => s.waypoints.length > 0);
@@ -193,7 +198,7 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
           onClick={(e) => {
             e.stopPropagation();
             close();
-            window.dispatchEvent(new CustomEvent(RETURN_TO_LIBRARY_EVENT));
+            onReturnToLibrary();
           }}
         >
           Return to Library

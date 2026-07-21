@@ -100,17 +100,9 @@
   background: linear-gradient(
     to bottom,
     transparent calc(50% - var(--slider-track-height) / 2),
-    color-mix(
-      in srgb,
-      var(--slider-background, #888) 70%,
-      transparent
-    )
+    color-mix(in srgb, var(--slider-background, #888) 70%, transparent)
       calc(50% - var(--slider-track-height) / 2),
-    color-mix(
-      in srgb,
-      var(--slider-background, #888) 70%,
-      transparent
-    )
+    color-mix(in srgb, var(--slider-background, #888) 70%, transparent)
       calc(50% + var(--slider-track-height) / 2),
     transparent calc(50% + var(--slider-track-height) / 2)
   );

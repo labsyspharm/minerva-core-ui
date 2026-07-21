@@ -20,6 +20,16 @@ import {
  */
 export const MAX_VIV_INTENSITY_CHANNELS = 6;
 
+/**
+ * Shared Viv `MultiscaleImageLayer` / TileLayer fetch tuning.
+ * Default Viv uses maxRequests=10 and debounceTime=0, which under continuous
+ * zoom starts then aborts many mid-LOD tiles. A short debounce lets the camera
+ * settle before fetching; a slightly lower concurrency reduces thrash when
+ * each tile fans out across multiple channel selections.
+ */
+export const VIV_TILE_MAX_REQUESTS = 6;
+export const VIV_TILE_DEBOUNCE_MS = 75;
+
 type Selection = Record<"z" | "t" | "c", number>;
 type Color = [number, number, number];
 type Limit = [number, number];

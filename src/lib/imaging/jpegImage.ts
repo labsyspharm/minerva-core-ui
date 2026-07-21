@@ -1,4 +1,4 @@
-import { JPEG_PYRAMID_TILE_SIZE } from "./imaging/jpegPyramid";
+import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
 
 export type JpegTileFetcher = (
   folder: string,

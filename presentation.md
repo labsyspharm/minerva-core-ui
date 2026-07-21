@@ -9,8 +9,8 @@ Grounded in git history since `51e3bfefda077b21102001022994f0fde436187e` (merge 
 ### Structural change
 
 - **Old entry/layout:** Monolithic `src/components/index.tsx` and split concerns (`imageView`, `vivView`, channel/info panels, etc.) — largely **removed or replaced**.
-- **New spine:** `src/components/main.tsx` owns exhibit/config lifecycle, loaders, and wires **one** `ImageViewer` plus chrome.
-- **Mode routing:** `PlaybackRouter` chooses:
+- **New spine:** `src/components/Main.tsx` owns exhibit/config lifecycle, loaders, and wires **one** `ImageViewer` plus chrome.
+- **Mode routing:** `PlaybackModeView` chooses:
   - **Authoring:** `ChannelPanel` wrapping the same children (upload + viewer when loaded).
   - **Presentation / preview:** `Presentation` wraps `ChannelPanel` + viewer — narrative sidebar, markdown content, waypoint-driven view.
 - **Flags:** `presenting` vs `authorMode: !presenting`, `enterPlaybackPreview` / `exitPlaybackPreview`, responsive behavior (`twoNavOk`, hiding channel vs waypoint panels on small widths).
@@ -29,7 +29,7 @@ Grounded in git history since `51e3bfefda077b21102001022994f0fde436187e` (merge 
 
 ## 2. Shared viewer and rendering stack
 
-- **Core component:** `ImageViewer.tsx` — Deck.gl **OrthographicView**, VIV **MultiscaleImageLayer**, scale bar, loading widget, lensing integration.
+- **Core component:** `ImageViewer/ImageViewer.tsx` — Deck.gl **OrthographicView**, VIV **MultiscaleImageLayer**, scale bar, loading widget, lensing integration.
 - **State bridges:** Viewport size → Zustand (`viewerViewportSize`, brush bounds, SAM viewport, programmatic waypoint navigation via `targetWaypointViewState`).
 - **Coordinate model:** `waypoint.ts` documents **Minerva 1.5 (OpenSeadragon Pan/Zoom) → Minerva 2.0 (deck.gl view state)**; runtime migration from **Pan/Zoom-only** waypoints to **Bounds / ViewState** when image dimensions exist (`main.tsx` effects).
 

@@ -4,7 +4,7 @@ import type {
   JpegLoaderEntry,
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
-import { Pool } from "@/lib/imaging/workers/Pool";
+import { Pool } from "@/lib/imaging/workers/pool";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { DocumentData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
