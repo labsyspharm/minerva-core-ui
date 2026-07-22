@@ -445,9 +445,15 @@ const Content = (props: Props) => {
     const doc = useDocumentStore.getState();
     const storyId = doc.activeStoryId;
     if (mode === "jpeg-pyramid") {
-      const needed = await neededJpegPyramidFolderNames(doc.channelGroups);
+      const needed = await neededJpegPyramidFolderNames(
+        doc.channelGroups,
+        doc.images,
+      );
       const existing = await listExistingPyramidFolders(dirHandle);
-      if ([...needed].every((name) => existing.has(name))) {
+      if (
+        needed.size === 0 ||
+        [...needed].every((name) => existing.has(name))
+      ) {
         try {
           await writeStoryBundleSidecars(dirHandle, doc.toDocumentData(), {
             mode: "jpeg-pyramid",

@@ -94,8 +94,13 @@ export async function tileFetcherForStory(
   return root ? tileFetcherForDirectory(root) : undefined;
 }
 
+/**
+ * Folder names jpeg-pyramid export would write. Prefer channel groups; if none
+ * contribute folders, fall back to image-level channels (same as import checks).
+ */
 export async function neededJpegPyramidFolderNames(
   channelGroups: ReadonlyArray<DocumentData["channelGroups"][number]>,
+  images?: DocumentData["images"],
 ): Promise<Set<string>> {
   const names = new Set<string>();
   await Promise.all(
@@ -111,6 +116,23 @@ export async function neededJpegPyramidFolderNames(
       ),
     ),
   );
+  if (names.size === 0 && images) {
+    for (const im of images) {
+      if (im.source?.kind !== "jpeg" && im.source?.kind !== "local") continue;
+      const channelIndexById = Object.fromEntries(
+        im.channels.map((ch) => [ch.id, ch.index]),
+      );
+      const folders = await folderByChannelIndexFromGroup({
+        channels: im.channels.map((ch) => ({
+          channelId: ch.id,
+          lowerLimit: ch.lowerLimit ?? 2 ** 5,
+          upperLimit: ch.upperLimit ?? 2 ** 14,
+        })),
+        channelIndexById,
+      });
+      for (const name of Object.values(folders)) names.add(name);
+    }
+  }
   return names;
 }
 
@@ -131,24 +153,10 @@ async function assertPyramidFoldersExist(
   data: DocumentData,
 ): Promise<void> {
   if (data.metadata.imageSource === "remote-url") return;
-  const needed = await neededJpegPyramidFolderNames(data.channelGroups);
-  if (needed.size === 0) {
-    for (const im of data.images) {
-      if (im.source?.kind !== "jpeg" && im.source?.kind !== "local") continue;
-      const channelIndexById = Object.fromEntries(
-        im.channels.map((ch) => [ch.id, ch.index]),
-      );
-      const folders = await folderByChannelIndexFromGroup({
-        channels: im.channels.map((ch) => ({
-          channelId: ch.id,
-          lowerLimit: ch.lowerLimit ?? 2 ** 5,
-          upperLimit: ch.upperLimit ?? 2 ** 14,
-        })),
-        channelIndexById,
-      });
-      for (const name of Object.values(folders)) needed.add(name);
-    }
-  }
+  const needed = await neededJpegPyramidFolderNames(
+    data.channelGroups,
+    data.images,
+  );
   if (needed.size === 0) return;
   const existing = await listExistingPyramidFolders(root);
   const missing = [...needed].filter((name) => !existing.has(name));

@@ -112,9 +112,16 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
         <button
           type="button"
           role="menuitem"
-          className={`${styles.menuItem} ${styles.menuItemDivided}`}
+          className={styles.menuItem}
+          disabled={!waypointsOk}
+          title={
+            waypointsOk
+              ? "Save a playable story folder (index.html + images)"
+              : "Add a waypoint before exporting"
+          }
           onClick={(e) => {
             e.stopPropagation();
+            if (!waypointsOk) return;
             close();
             onExport();
           }}

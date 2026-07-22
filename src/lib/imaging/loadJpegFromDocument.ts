@@ -90,14 +90,27 @@ function pickAvailableChannelFolders(opts: {
   groupChannelFolders: Readonly<
     Record<string, Readonly<Record<number, string>>>
   >;
+  /**
+   * When false and `activeGroupId` is set, do not fall back to a different
+   * group's map (avoids leaving the wrong baked contrast after a group switch).
+   * Initial hydrate passes true so any on-disk group can seed the loader.
+   */
+  allowOtherGroupFallback?: boolean;
 }): Record<number, string> | null {
-  const { desired, available, activeGroupId, groupChannelFolders } = opts;
+  const {
+    desired,
+    available,
+    activeGroupId,
+    groupChannelFolders,
+    allowOtherGroupFallback = true,
+  } = opts;
   if (folderNamesAvailable(desired, available)) return desired;
   if (activeGroupId) {
     const snapshot = groupChannelFolders[activeGroupId];
     if (snapshot && folderNamesAvailable(snapshot, available)) {
       return { ...snapshot };
     }
+    if (!allowOtherGroupFallback) return null;
   }
   for (const snapshot of Object.values(groupChannelFolders)) {
     if (folderNamesAvailable(snapshot, available)) return { ...snapshot };
@@ -178,6 +191,7 @@ async function syncJpegEntryChannelFolders(
         available: entry.availablePyramidFolders,
         activeGroupId,
         groupChannelFolders: entry.groupChannelFolders ?? {},
+        allowOtherGroupFallback: false,
       });
       if (!folders) return entry;
       const applied = applyChannelFoldersInPlace(entry, folders);
@@ -239,7 +253,11 @@ export async function jpegLoaderEntriesFromImages(opts: {
   /** Prefer this group's contrast for initial folder map (defaults to first). */
   activeGroupId?: string | null;
   fetchTile?: JpegTileFetcher;
-  /** Disk listing; when omitted, hydrate-time group hashes count as available. */
+  /**
+   * Disk listing of pyramid folders. Merged with hydrate-time group hashes so
+   * sync can retarget onto any channel group present in the document; when
+   * omitted, only those hydrate hashes count as available.
+   */
   existingPyramidFolders?: ReadonlySet<string>;
 }): Promise<JpegLoaderEntry[]> {
   const activeGroup =
@@ -252,7 +270,7 @@ export async function jpegLoaderEntriesFromImages(opts: {
     if (im.source?.kind !== "jpeg") continue;
     const storyRootUrl = resolveJpegStoryRoot(opts.documentUrl, im.source.url);
     const groupChannelFolders: Record<string, Record<number, string>> = {};
-    const hydrateFolderUnion = new Set<string>();
+    const availablePyramidFolders = new Set<string>();
     for (const group of opts.channelGroups) {
       if (typeof group.id !== "string") continue;
       const rows = toGroupChannelRows(group.channels ?? []);
@@ -263,15 +281,14 @@ export async function jpegLoaderEntriesFromImages(opts: {
       });
       groupChannelFolders[group.id] = folders;
       for (const name of Object.values(folders)) {
-        hydrateFolderUnion.add(name.toLowerCase());
+        availablePyramidFolders.add(name.toLowerCase());
       }
     }
-    const availablePyramidFolders =
-      opts.existingPyramidFolders && opts.existingPyramidFolders.size > 0
-        ? new Set(
-            [...opts.existingPyramidFolders].map((name) => name.toLowerCase()),
-          )
-        : hydrateFolderUnion;
+    if (opts.existingPyramidFolders) {
+      for (const name of opts.existingPyramidFolders) {
+        availablePyramidFolders.add(name.toLowerCase());
+      }
+    }
     const desired = await resolveChannelFolders({
       groupChannels,
       image: im,
