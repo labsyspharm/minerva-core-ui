@@ -1,4 +1,4 @@
-import type { LoaderPlane } from "../authoring/config";
+import type { LoaderPlane } from "./loaderTypes";
 import type { Loader } from "./viv";
 
 export interface DicomLoader extends Loader {

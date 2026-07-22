@@ -3,11 +3,9 @@ import {
   OrthographicView,
   type OrthographicViewState,
 } from "@deck.gl/core";
-import type { TileLayer } from "@deck.gl/geo-layers";
 import Deck, { type DeckGLRef } from "@deck.gl/react";
-import { type MultiscaleImageLayer, ScaleBarLayer } from "@hms-dbmi/viv";
+import { ScaleBarLayer } from "@hms-dbmi/viv";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import styled from "styled-components";
 
 import "@deck.gl/widgets/stylesheet.css";
 
@@ -26,8 +24,7 @@ import {
   selectionMaskDisplayImageData,
 } from "@/lib/imaging/maskLayers";
 import { effectiveMaskVisualizationForSource } from "@/lib/imaging/sourceChannelStyle";
-import type { Config, Loader } from "@/lib/imaging/viv";
-import type { Story } from "@/lib/legacy/exhibit";
+import type { Config } from "@/lib/imaging/viv";
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
@@ -36,9 +33,6 @@ import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
-import { useWindowSize } from "@/lib/util/useWindowSize";
-import { ORTHO_VIEW_ID, SCALEBAR_VIEW_ID } from "@/lib/viewer/deckViewIds";
-import { createDragHandlers } from "@/lib/viewer/dragHandlers";
 import {
   getViewerViewportSnapshotFromDeck,
   orthographicZoomToNumber,
@@ -49,57 +43,225 @@ import {
   WAYPOINT_THUMBNAIL_JPEG_QUALITY,
   WAYPOINT_THUMBNAIL_PIXEL_SIZE,
 } from "@/lib/waypoints/waypointThumbnail";
+import styles from "./ImageViewer.module.css";
 
-type ImageLayer = TileLayer | typeof MultiscaleImageLayer;
+/** Keep in sync with `OrthographicView({ id })` below. */
+const ORTHO_VIEW_ID = "ortho";
+const SCALEBAR_VIEW_ID = "scalebar-overlay";
 
-type ItemRegistryChannel = {
-  name: string;
-  color: string;
-  contrast: [number, number];
+type InteractionType = "click" | "dragStart" | "drag" | "dragEnd" | "hover";
+type InteractionCallback = (
+  type: InteractionType,
+  coordinate: number[],
+) => void;
+
+/** Compatible with Deck.gl PickingInfo */
+type PickInfo = {
+  coordinate?: number[] | [number, number, number];
+  layer?: {
+    id: string;
+  };
+  object?: { id?: string };
+  x?: number;
+  y?: number;
+  z?: number;
+  viewport?: {
+    id?: string;
+    x: number;
+    y: number;
+    unproject: (position: number[], opts?: { topLeft?: boolean }) => number[];
+  };
 };
 
-export type ItemRegistryGroup = {
-  State: { Expanded: boolean };
-  channels: ItemRegistryChannel[];
-  name: string;
-  g: number;
+/** (worldX, worldY) -> [screenX, screenY] in canvas pixels; used for brush. */
+type WorldToScreen = (
+  worldX: number,
+  worldY: number,
+) => [number, number] | undefined;
+
+/** Translate Deck.gl pick events into overlay / brush interactions. */
+const createDragHandlers = (
+  activeTool: string,
+  onInteraction?: InteractionCallback,
+  getScreenFromWorld?: WorldToScreen,
+) => {
+  if (!onInteraction) {
+    return {
+      onClick: undefined,
+      onDragStart: undefined,
+      onDrag: undefined,
+      onDragEnd: undefined,
+      onHover: undefined,
+    };
+  }
+
+  const emit = (type: InteractionType, coordinate?: number[]) => {
+    if (coordinate) {
+      onInteraction(type, coordinate);
+    }
+  };
+
+  const xyFinite = (p: number[] | null | undefined): p is number[] =>
+    !!p && p.length >= 2 && Number.isFinite(p[0]) && Number.isFinite(p[1]);
+
+  // Prefer viewport unproject on the slide (any view that is not the scale bar).
+  // Fall back to layer `coordinate` — MultiscaleImageLayer can lie outside tiles.
+  const toCoord = (info: PickInfo): [number, number, number] | undefined => {
+    const vp = info.viewport;
+    const { x, y } = info;
+    if (
+      vp &&
+      vp.id !== SCALEBAR_VIEW_ID &&
+      typeof x === "number" &&
+      typeof y === "number" &&
+      Number.isFinite(x) &&
+      Number.isFinite(y)
+    ) {
+      const u = vp.unproject([x - vp.x, y - vp.y]);
+      if (xyFinite(u)) {
+        return [u[0], u[1], u[2] ?? 0];
+      }
+    }
+    const c = info.coordinate;
+    if (xyFinite(c)) {
+      return [c[0], c[1], c[2] ?? 0];
+    }
+    return undefined;
+  };
+
+  const store = useAppStore.getState;
+
+  return {
+    onClick: (info: PickInfo) => {
+      const coord = toCoord(info);
+      // For brush tool, treat a simple click as a single stamped stroke that
+      // immediately finalizes into a circular shape.
+      if (coord && activeTool === "brush" && getScreenFromWorld) {
+        const screen = getScreenFromWorld(coord[0], coord[1]);
+        if (screen) {
+          store().brushPaintStart(screen);
+          store().brushPaintEnd();
+        }
+      }
+      if (coord) emit("click", coord);
+    },
+
+    onDragStart: (info: PickInfo) => {
+      const coord = toCoord(info);
+      if (coord && activeTool === "brush" && getScreenFromWorld) {
+        const screen = getScreenFromWorld(coord[0], coord[1]);
+        if (screen) store().brushPaintStart(screen);
+      }
+      if (coord) emit("dragStart", coord);
+    },
+
+    onDrag: (info: PickInfo) => {
+      const coord = toCoord(info);
+      if (coord && activeTool === "brush" && getScreenFromWorld) {
+        const screen = getScreenFromWorld(coord[0], coord[1]);
+        if (screen) store().brushPaint(screen);
+      }
+      if (coord) emit("drag", coord);
+    },
+
+    onDragEnd: (info: PickInfo) => {
+      const coord = toCoord(info);
+      if (activeTool === "brush") store().brushPaintEnd();
+      if (coord) emit("dragEnd", coord);
+    },
+
+    onHover: (info: PickInfo) => {
+      const coordinate = toCoord(info) ?? null;
+      const layer = info.layer;
+      const object = info.object;
+
+      // Detect if hovering over a shape (only for move tool, and only
+      // while a waypoint is open for edit — shape layers are not pickable otherwise).
+      if (activeTool === "move" && store().authoringWaypointEditorOpen) {
+        if (layer?.id?.startsWith("shape-") && object?.id) {
+          let shapeId = object.id;
+          if (shapeId.endsWith("-arrow")) {
+            shapeId = shapeId.replace("-arrow", "");
+          } else if (shapeId.endsWith("-text")) {
+            shapeId = shapeId.replace("-text", "");
+          }
+          useAppStore.getState().setHoveredShape(shapeId);
+        } else {
+          useAppStore.getState().setHoveredShape(null);
+        }
+      } else {
+        useAppStore.getState().setHoveredShape(null);
+      }
+
+      if (
+        activeTool === "move" ||
+        activeTool === "text" ||
+        activeTool === "polyline" ||
+        activeTool === "rectangle" ||
+        activeTool === "ellipse" ||
+        activeTool === "arrow" ||
+        activeTool === "line" ||
+        activeTool === "lasso" ||
+        activeTool === "magic_wand" ||
+        activeTool === "brush" ||
+        activeTool === "point"
+      ) {
+        if (coordinate) {
+          emit("hover", coordinate);
+        }
+      }
+    },
+  };
 };
 
-/** One OME-TIFF pyramid + the document `Image.id` carried on flat source channels. */
-export type OmeLoaderEntry = {
-  loader: Loader;
-  sourceImageId: string;
+const debounceResize = (fn: () => void, wait: number) => {
+  let timeout: number | null = null;
+  return () => {
+    if (timeout != null) clearTimeout(timeout);
+    timeout = window.setTimeout(() => {
+      timeout = null;
+      fn();
+    }, wait);
+  };
 };
 
-export type JpegLoaderEntry = {
-  loader: Loader;
-  sourceImageId: string;
-  /** OME channel index → pyramid folder (map mutated in place; entry shell replaced to re-render). */
-  channelFolders?: Record<number, string>;
-  imagePath?: string;
+const getWindowSize = ({ innerWidth, innerHeight } = window) => ({
+  width: innerWidth,
+  height: innerHeight,
+});
+
+const useWindowSize = () => {
+  const [windowSize, setWindowSize] = useState(getWindowSize);
+
+  useEffect(() => {
+    const handle = debounceResize(() => {
+      setWindowSize(getWindowSize());
+    }, 250);
+    window.addEventListener("resize", handle);
+    return () => window.removeEventListener("resize", handle);
+  }, []);
+
+  return windowSize;
 };
 
-export type LoaderListItem = {
-  loader: Loader;
-  modality: string;
-  sourceImageId?: string;
-};
-export type LoaderList = LoaderListItem[];
+import type {
+  LoaderList,
+  MainSettings,
+  OmeLoaderEntry,
+} from "@/lib/imaging/loaderEntries";
+
+export type {
+  JpegLoaderEntry,
+  LoaderList,
+  LoaderListItem,
+  MainSettings,
+  OmeLoaderEntry,
+} from "@/lib/imaging/loaderEntries";
 
 type AnyLayer = Layer | OverlayLayer;
 
-export type MainSettings = {
-  selections: readonly { c: number }[];
-  contrastLimits: readonly [number, number][];
-  colors: readonly [number, number, number][];
-  channelsVisible?: readonly boolean[];
-  sourceChannelIds?: readonly string[];
-};
-
 export type ImageViewerProps = {
   omeLoaderEntries: OmeLoaderEntry[];
-  /** Legacy exhibit stories; document waypoints live in the store. */
-  stories?: Story[];
   imageLayers: Layer[];
   mainSettingsList: MainSettings[];
   loaderList: LoaderList;
@@ -112,29 +274,13 @@ export type ImageViewerProps = {
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
     coordinate: [number, number, number],
   ) => void;
-  groups: ItemRegistryGroup[];
   zoomInButton?: HTMLElement | null;
   zoomOutButton?: HTMLElement | null;
   showSquareViewportOverlay?: boolean;
   squareViewportScale?: number;
   squareViewportColor?: string;
   squareViewportBorderWidth?: number;
-  [key: string]: unknown;
 };
-
-const Main = styled.div`
-  position: relative;
-  height: 100%;
-`;
-
-const SquareViewportOverlay = styled.div`
-  position: absolute;
-  pointer-events: none;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  box-sizing: border-box;
-`;
 
 const _isElement = (x = {}): x is HTMLElement => {
   return ["Width", "Height"].every((k) => `client${k}` in x);
@@ -175,7 +321,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     mainSettingsList,
     imageLayers,
     omeLoaderEntries,
-    groups,
     overlayLayers = [],
     activeTool,
     isDragging = false,
@@ -194,7 +339,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     sam2Processing,
     authoringWaypointEditorOpen,
   } = useAppStore();
-  const channelRendering = useAppStore((s) => s.channelRendering);
+  // Live contrast/color preview is folded in `useViewerLayers`, not here.
   const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
@@ -206,7 +351,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   const [_canvas, _setCanvas] = useState(null);
-  const rootRef = useRef<HTMLElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const deckRef = useRef<DeckGLRef | null>(null);
 
   // Set up ResizeObserver to track viewport size changes
@@ -949,7 +1094,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }
 
   return (
-    <Main slot="image" ref={rootRef}>
+    <div className={styles.main} ref={rootRef}>
       <Deck
         ref={deckRef}
         getCursor={getCursor}
@@ -979,9 +1124,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
       />
       <LoadingWidget ref={loadingWidgetRef} />
       {showSquareViewportOverlay && (
-        <SquareViewportOverlay style={squareViewportStyle} />
+        <div
+          className={styles.squareViewportOverlay}
+          style={squareViewportStyle}
+        />
       )}
-    </Main>
+    </div>
   );
 };
 

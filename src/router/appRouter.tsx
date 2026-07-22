@@ -136,7 +136,7 @@ function routerBasepath(): string {
 }
 
 /**
- * `Main` is passed from the entry module so this file does not import `@/components/main`
+ * `Main` is passed from the entry module so this file does not import `@/components/Main`
  * (avoids a circular dependency with `main.tsx` importing from here).
  */
 export function createAppRouter<P extends object>(

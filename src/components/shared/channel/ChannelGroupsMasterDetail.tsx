@@ -3,16 +3,23 @@ import {
   ChromeColorPickerPopover,
   chromeColorPickerAnchorPosition,
 } from "@/components/shared/ChromeColorPickerPopover";
+import {
+  ChannelContrastEditor,
+  type ChannelContrastEditorProps,
+} from "@/components/shared/channel/ChannelContrastEditor";
 import { ChannelRow, rgbToHex } from "@/components/shared/channel/ChannelRow";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
-import {
-  channelItemAttrsForGroupRow,
-  channelItemAttrsForSource,
-  colorRenderingForSource,
-} from "@/components/shared/channel/channelLiveRendering";
-import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
+import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
+import { PlusIcon } from "@/components/shared/common/PlusIcon";
+import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import LockIcon from "@/components/shared/icons/lock.svg?react";
 import LockOpenIcon from "@/components/shared/icons/lock-open.svg?react";
+import { CompactHeader } from "@/components/shared/panel/CompactHeader";
+import {
+  PanelActionButton,
+  PanelIconButton,
+} from "@/components/shared/panel/PanelButtons";
+import panel from "@/components/shared/panel/panelShared.module.css";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import {
   buildCompositedIntensityLayers,
@@ -41,7 +48,7 @@ import {
   lockedRowIdsForGroup,
   optimizeChannelGroupWithLocks,
   seedRgbForGroupChannelIndex,
-} from "@/lib/imaging/psudoPalette";
+} from "@/lib/imaging/pseudoPalette";
 import {
   effectiveDisplayColor,
   effectiveMaskVisualization,
@@ -49,7 +56,7 @@ import {
   effectiveSourceLimits,
 } from "@/lib/imaging/sourceChannelStyle";
 import { MAX_VIV_INTENSITY_CHANNELS } from "@/lib/imaging/viv";
-import { useAppStore } from "@/lib/stores/appStore";
+import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
 import type {
   Channel,
   ChannelGroup,
@@ -61,9 +68,75 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import { patchSourceChannelOnImages } from "@/lib/stores/storeUtils";
-import styles from "./ChannelList.module.css";
+import styles from "./ChannelGroupsMasterDetail.module.css";
+import row from "./ChannelRow.module.css";
 
 const CHANNEL_DRAG_MIME = "application/x-minerva-channel-ref";
+
+function colorRenderingForSource(
+  live: ChannelRendering | null,
+  sourceChannelId: string,
+): Extract<ChannelRendering, { kind: "color" }> | null {
+  if (live?.kind === "color" && live.sourceChannelId === sourceChannelId) {
+    return live;
+  }
+  return null;
+}
+
+function contrastRenderingForSource(
+  live: ChannelRendering | null,
+  sourceChannelId: string,
+): Extract<ChannelRendering, { kind: "contrast" }> | null {
+  if (live?.kind === "contrast" && live.sourceChannelId === sourceChannelId) {
+    return live;
+  }
+  return null;
+}
+
+function contrastEditorPropsForSource(
+  channelRendering: ChannelRendering | null,
+  sc: Channel,
+  color: { r?: number; g?: number; b?: number },
+  limits: [number, number],
+): ChannelContrastEditorProps {
+  const liveColor = colorRenderingForSource(channelRendering, sc.id);
+  const c = liveColor ?? color;
+  const liveContrast = contrastRenderingForSource(channelRendering, sc.id);
+  return {
+    groupId: "",
+    channelId: sc.id,
+    sourceChannelId: sc.id,
+    r: c.r ?? 0,
+    g: c.g ?? 0,
+    b: c.b ?? 0,
+    lowerLimit: liveContrast ? liveContrast.lower : limits[0],
+    upperLimit: liveContrast ? liveContrast.upper : limits[1],
+    distribution: sc.sourceDistribution ?? null,
+  };
+}
+
+function contrastEditorPropsForGroupRow(
+  channelRendering: ChannelRendering | null,
+  groupId: string,
+  gc: ChannelGroupChannel,
+  sc: Channel | undefined,
+): ChannelContrastEditorProps {
+  const sourceId = sc?.id ?? gc.channelId;
+  const liveColor = colorRenderingForSource(channelRendering, sourceId);
+  const c = liveColor ?? gc.color;
+  const liveContrast = contrastRenderingForSource(channelRendering, sourceId);
+  return {
+    groupId,
+    channelId: gc.id,
+    sourceChannelId: sourceId,
+    r: c.r ?? 0,
+    g: c.g ?? 0,
+    b: c.b ?? 0,
+    lowerLimit: liveContrast ? liveContrast.lower : gc.lowerLimit,
+    upperLimit: liveContrast ? liveContrast.upper : gc.upperLimit,
+    distribution: sc?.sourceDistribution ?? null,
+  };
+}
 
 type ChannelDragPayload = {
   sourceId: string;
@@ -73,19 +146,6 @@ type ChannelDragPayload = {
 type ColorPickerTarget =
   | { scope: "source"; sourceId: string }
   | { scope: "group"; groupId: string; rowId: string };
-
-const TrashIcon = (props: { title: string; size?: number }) => (
-  <svg
-    width={props.size ?? 14}
-    height={props.size ?? 14}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    aria-hidden
-  >
-    <title>{props.title}</title>
-    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-  </svg>
-);
 
 const EMPTY_LOCKED_ROW_IDS = new Set<string>();
 
@@ -161,7 +221,6 @@ function makeGroupChannelRow(
 }
 
 export type ChannelGroupsMasterDetailProps = {
-  channelItemElement: string;
   noLoader: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
   ensureChannelGmmContrastLimits?: (
@@ -314,8 +373,15 @@ export const ChannelGroupsMasterDetail = (
   const activateGroup = React.useCallback(
     (groupId: string) => {
       setActiveChannelGroup(groupId);
+      const groups = useDocumentStore.getState().channelGroups;
+      syncGroupState(
+        groups.map((g) => ({
+          ...g,
+          expanded: g.id === groupId,
+        })),
+      );
     },
-    [setActiveChannelGroup],
+    [setActiveChannelGroup, syncGroupState],
   );
 
   const renameSourceChannelDisplayName = React.useCallback(
@@ -386,10 +452,13 @@ export const ChannelGroupsMasterDetail = (
     const newGroup: ChannelGroup = {
       id: crypto.randomUUID(),
       name: `Group ${channelGroups.length + 1}`,
-      expanded: channelGroups.length === 0,
+      expanded: true,
       channels: seededChannels,
     };
-    syncGroupState([...channelGroups, newGroup]);
+    syncGroupState([
+      ...channelGroups.map((g) => ({ ...g, expanded: false })),
+      newGroup,
+    ]);
     setActiveChannelGroup(newGroup.id);
     if (seedingFirst && seededChannels.length > 0) {
       const stackOff = { ...useAppStore.getState().channelVisibilities };
@@ -416,7 +485,7 @@ export const ChannelGroupsMasterDetail = (
     });
     if (activeChannelGroupId === groupId) {
       const next = newGroups[0]?.id;
-      if (next) setActiveChannelGroup(next);
+      if (next) activateGroup(next);
       else useAppStore.setState({ activeChannelGroupId: null });
     }
   };
@@ -908,19 +977,19 @@ export const ChannelGroupsMasterDetail = (
         <div className={styles.groupFolderHeader}>
           <button
             type="button"
+            className={styles.groupFolderActivate}
+            aria-label={`Select group ${group.name}`}
+            aria-pressed={isActive}
+            onClick={() => activateGroup(group.id)}
+          />
+          <button
+            type="button"
             className={styles.groupFolderChevron}
             aria-expanded={expanded}
             title={expanded ? "Collapse group" : "Expand group"}
             onClick={() => toggleGroupExpanded(group.id)}
           >
-            <ChevronDownIcon
-              className={
-                expanded
-                  ? styles.waypointChevronDown
-                  : styles.waypointChevronRight
-              }
-              aria-hidden
-            />
+            <ChevronIcon direction={expanded ? "down" : "right"} />
           </button>
           <ChannelVisibilitySwatch
             visible={masterVisible}
@@ -929,7 +998,7 @@ export const ChannelGroupsMasterDetail = (
             onClick={() => toggleGroupMasterVisibility(group)}
           />
           <input
-            className={`${styles.detailTitleInput} ${styles.groupFolderName}`}
+            className={`${row.detailTitleInput} ${styles.groupFolderName}`}
             type="text"
             defaultValue={group.name}
             maxLength={200}
@@ -937,6 +1006,7 @@ export const ChannelGroupsMasterDetail = (
             spellCheck={false}
             aria-label="Group name"
             onClick={() => activateGroup(group.id)}
+            onFocus={() => activateGroup(group.id)}
             onBlur={(e) => {
               const trimmed = e.target.value.trim() || "Untitled group";
               if (trimmed === group.name) return;
@@ -971,23 +1041,21 @@ export const ChannelGroupsMasterDetail = (
                 const rgbDisplay = sc
                   ? isRgbDisplayChannel(sc, sourceChannels)
                   : false;
-                const legacyItem =
-                  sc && isImageChannel(sc) && visible && !rgbDisplay
-                    ? React.createElement(props.channelItemElement, {
-                        key: `grp-${group.id}-${gc.id}`,
-                        ...channelItemAttrsForGroupRow(
-                          channelRendering,
-                          group.id,
-                          gc,
-                          sc,
-                        ),
-                        histogram_loading: loadingHistogramSourceIds.includes(
-                          sc.id,
-                        )
-                          ? "true"
-                          : "false",
-                      })
-                    : null;
+                const contrastEditor =
+                  sc && isImageChannel(sc) && visible && !rgbDisplay ? (
+                    <ChannelContrastEditor
+                      key={`grp-${group.id}-${gc.id}`}
+                      {...contrastEditorPropsForGroupRow(
+                        channelRendering,
+                        group.id,
+                        gc,
+                        sc,
+                      )}
+                      histogramLoading={loadingHistogramSourceIds.includes(
+                        sc.id,
+                      )}
+                    />
+                  ) : null;
 
                 const imageSubtitle =
                   showImageBadge && sc
@@ -1008,7 +1076,7 @@ export const ChannelGroupsMasterDetail = (
                     key={gc.id}
                     className={[
                       styles.groupChildBlock,
-                      colorLocked ? styles.detailChannelRowLocked : "",
+                      colorLocked ? row.detailChannelRowLocked : "",
                     ].join(" ")}
                   >
                     <div className={styles.groupChildRowWrap}>
@@ -1023,7 +1091,7 @@ export const ChannelGroupsMasterDetail = (
                       />
                       {rgbDisplay ? (
                         <ChannelRow
-                          rowClassName={styles.groupChildRow}
+                          rowClassName={row.groupChildRow}
                           compact
                           visible={visible}
                           visibilityTitle={
@@ -1078,7 +1146,7 @@ export const ChannelGroupsMasterDetail = (
                         />
                       ) : (
                         <ChannelRow
-                          rowClassName={styles.groupChildRow}
+                          rowClassName={row.groupChildRow}
                           visible={visible}
                           visibilityTitle={
                             visible ? `Hide ${name}` : `Show ${name}`
@@ -1146,15 +1214,13 @@ export const ChannelGroupsMasterDetail = (
                                 <button
                                   type="button"
                                   className={[
-                                    styles.colorLockButton,
+                                    styles.channelActionButton,
                                     colorLocked
                                       ? styles.colorLockButtonLocked
                                       : "",
                                   ].join(" ")}
                                   title={
-                                    colorLocked
-                                      ? "Unlock color (Optimize may change it)"
-                                      : "Lock color (Optimize keeps it fixed)"
+                                    colorLocked ? "Unlock color" : "Lock color"
                                   }
                                   aria-label={
                                     colorLocked
@@ -1203,9 +1269,9 @@ export const ChannelGroupsMasterDetail = (
                         />
                       )}
                     </div>
-                    {legacyItem ? (
+                    {contrastEditor ? (
                       <div className={styles.detailChannelItemEmbed}>
-                        {legacyItem}
+                        {contrastEditor}
                       </div>
                     ) : null}
                   </li>
@@ -1318,7 +1384,7 @@ export const ChannelGroupsMasterDetail = (
           <div className={styles.rootChannelRowWrap}>
             {dragHandle}
             <ChannelRow
-              rowClassName={styles.rootChannelRow}
+              rowClassName={row.rootChannelRow}
               compact
               visible={shownInViewer}
               visibilityTitle={
@@ -1368,7 +1434,7 @@ export const ChannelGroupsMasterDetail = (
           <div className={styles.rootChannelRowWrap}>
             {dragHandle}
             <ChannelRow
-              rowClassName={styles.rootChannelRow}
+              rowClassName={row.rootChannelRow}
               compact
               visible={false}
               visibilityTitle={stackLayerTitle(sc, false)}
@@ -1388,20 +1454,18 @@ export const ChannelGroupsMasterDetail = (
 
     const rgbDisplay = isRgbDisplayChannel(sc, sourceChannels);
     const showHistogramEmbed = isImageChannel(sc) && !rgbDisplay;
-    const legacyItem = showHistogramEmbed
-      ? React.createElement(props.channelItemElement, {
-          key: `all-${sc.id}`,
-          ...channelItemAttrsForSource(
-            channelRendering,
-            sc,
-            displayColor,
-            displayLimits,
-          ),
-          histogram_loading: loadingHistogramSourceIds.includes(sc.id)
-            ? "true"
-            : "false",
-        })
-      : null;
+    const contrastEditor = showHistogramEmbed ? (
+      <ChannelContrastEditor
+        key={`all-${sc.id}`}
+        {...contrastEditorPropsForSource(
+          channelRendering,
+          sc,
+          displayColor,
+          displayLimits,
+        )}
+        histogramLoading={loadingHistogramSourceIds.includes(sc.id)}
+      />
+    ) : null;
 
     return (
       <li key={`all-${sc.id}`} className={styles.rootChannelBlock}>
@@ -1409,7 +1473,7 @@ export const ChannelGroupsMasterDetail = (
           {dragHandle}
           {rgbDisplay ? (
             <ChannelRow
-              rowClassName={styles.rootChannelRow}
+              rowClassName={row.rootChannelRow}
               compact
               visible
               visibilityTitle={
@@ -1429,7 +1493,7 @@ export const ChannelGroupsMasterDetail = (
             />
           ) : (
             <ChannelRow
-              rowClassName={styles.rootChannelRow}
+              rowClassName={row.rootChannelRow}
               visible
               visibilityTitle={
                 capped
@@ -1471,8 +1535,8 @@ export const ChannelGroupsMasterDetail = (
             />
           )}
         </div>
-        {legacyItem ? (
-          <div className={styles.detailChannelItemEmbed}>{legacyItem}</div>
+        {contrastEditor ? (
+          <div className={styles.detailChannelItemEmbed}>{contrastEditor}</div>
         ) : null}
       </li>
     );
@@ -1484,52 +1548,51 @@ export const ChannelGroupsMasterDetail = (
     isGroupEligibleForPsudoOptimize(activeGroup, sourceChannels);
 
   return (
-    <div className={[styles.panel, styles.black].join(" ")}>
-      <div className={styles.compactHeader}>
-        <div className={styles.headerTitle}>
-          <span className={styles.headerCount}>Channels</span>
-        </div>
-        <div className={styles.headerActions}>
-          {activeGroup ? (
-            <button
-              type="button"
-              className={styles.headerActionButton}
+    <div className={panel.authorPanel}>
+      <CompactHeader
+        title="Channel Groups"
+        actions={
+          <>
+            <PanelActionButton
               disabled={!canOptimizeActiveGroup || optimizePaletteBusy}
               title={
-                canOptimizeActiveGroup
-                  ? "Optimize unlocked colors in the active group"
-                  : "Need at least two non-RGB channels to optimize"
+                !activeGroup
+                  ? "Select a group first"
+                  : canOptimizeActiveGroup
+                    ? "Optimize colors"
+                    : "Need at least two non-RGB channels"
               }
               aria-label="Optimize colors"
-              onClick={() => void runOptimizePaletteForGroup(activeGroup.id)}
+              onClick={() => {
+                if (!activeGroup) return;
+                void runOptimizePaletteForGroup(activeGroup.id);
+              }}
             >
               Optimize colors
-            </button>
-          ) : null}
-          {activeGroup ? (
-            <button
-              type="button"
-              className={styles.headerActionButton}
+            </PanelActionButton>
+            <PanelIconButton
               title="Delete active group"
               aria-label="Delete group"
-              onClick={() => deleteGroup(activeGroup.id)}
+              disabled={!activeGroup}
+              onClick={() => {
+                if (!activeGroup) return;
+                deleteGroup(activeGroup.id);
+              }}
             >
-              Delete group
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className={styles.headerActionButton}
-            onClick={createGroup}
-            title="Add group"
-            aria-label="Add group"
-          >
-            Add group
-          </button>
-        </div>
-      </div>
+              <TrashIcon />
+            </PanelIconButton>
+            <PanelIconButton
+              title="Add group"
+              aria-label="Add group"
+              onClick={createGroup}
+            >
+              <PlusIcon />
+            </PanelIconButton>
+          </>
+        }
+      />
 
-      <div className={styles.treeScroll}>
+      <div className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}>
         {channelGroups.length > 0 ? (
           <div className={styles.groupFolders}>
             {channelGroups.map((group, i) => renderGroupFolder(group, i))}
@@ -1548,10 +1611,9 @@ export const ChannelGroupsMasterDetail = (
 
         {imageSelectionMask ? (
           <ChannelRow
-            rowClassName={[
-              styles.rootChannelRow,
-              styles.rootChannelRowInline,
-            ].join(" ")}
+            rowClassName={[row.rootChannelRow, row.rootChannelRowInline].join(
+              " ",
+            )}
             visible={selectionMaskVisible}
             visibilityTitle="Toggle selection mask visibility"
             visibilityAriaLabel="Toggle selection mask visibility"

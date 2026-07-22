@@ -1,105 +1,17 @@
 import * as React from "react";
-import styled from "styled-components";
 import { StoryAuthorOverflowMenu } from "@/components/authoring/StoryAuthorOverflowMenu";
 import PlayIcon from "@/components/shared/icons/play.svg?react";
 import {
-  STORY_BANNER_CONTROL_SIZE_PX,
-  storyBannerBarCss,
-} from "@/components/shared/storyBannerBar";
+  StoryBannerBar,
+  storyBannerTitleClassName,
+} from "@/components/shared/StoryBannerBar";
 import { saveStoryDocument } from "@/lib/persistence/storyPersistence";
 import { useDocumentStore } from "@/lib/stores/documentStore";
-
-const BannerShell = styled.div`
-  position: relative;
-  z-index: 20;
-  ${storyBannerBarCss}
-`;
-
-const TitleFieldWrap = styled.div`
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  justify-content: center;
-`;
-
-const TitleInput = styled.input`
-  box-sizing: border-box;
-  margin: 0;
-  padding: 2px 6px;
-  width: 100%;
-  min-width: 0;
-  max-width: min(720px, 100%);
-  field-sizing: content;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  color: rgb(248 250 252 / 0.98);
-  font-size: 1.0625rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-align: center;
-  font-family: inherit;
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  &::placeholder {
-    color: rgb(255 255 255 / 0.4);
-    font-weight: 500;
-  }
-
-  &:focus {
-    outline: none;
-    cursor: text;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--theme-light-focus-color, hwb(45 90% 0%));
-    outline-offset: 2px;
-  }
-
-  &:read-only {
-    cursor: text;
-    user-select: none;
-  }
-`;
-
-const BannerPreviewButton = styled.button`
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: ${STORY_BANNER_CONTROL_SIZE_PX}px;
-  height: ${STORY_BANNER_CONTROL_SIZE_PX}px;
-  padding: 0;
-  box-sizing: border-box;
-  background: rgb(0 0 0 / 0.16);
-  border: 1px solid rgb(255 255 255 / 0.22);
-  border-radius: 5px;
-  color: rgb(248 250 252 / 0.98);
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background: rgb(0 0 0 / 0.26);
-    border-color: rgb(255 255 255 / 0.28);
-    color: #fff;
-  }
-
-  &:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--theme-light-focus-color, hwb(45 90% 0%));
-    outline-offset: 2px;
-  }
-`;
+import styles from "./StoryTitleBar.module.css";
 
 export type StoryTitleBarProps = {
-  /** Registered `author-*` custom element tag; powers export dialog + overflow menu. */
-  authorUiTagName?: string;
+  onReturnToLibrary: () => void;
+  onExport?: () => void;
   /** When set, overflow menu offers “Export with remote OME URL”. */
   onExportRemoteUrl?: () => void;
   onEnterPlaybackPreview?: () => void;
@@ -115,7 +27,8 @@ export type StoryTitleBarProps = {
  */
 export function StoryTitleBar(props: StoryTitleBarProps) {
   const {
-    authorUiTagName,
+    onReturnToLibrary,
+    onExport,
     onExportRemoteUrl,
     onEnterPlaybackPreview,
     playbackPreviewDisabled,
@@ -139,27 +52,32 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
   }, [editing]);
 
   return (
-    <BannerShell role="region" aria-label="Story title">
-      {authorUiTagName ? (
+    <StoryBannerBar
+      as="section"
+      className={styles.bannerShell}
+      aria-label="Story title"
+    >
+      {onExport ? (
         <StoryAuthorOverflowMenu
-          authorUiTagName={authorUiTagName}
+          onReturnToLibrary={onReturnToLibrary}
+          onExport={onExport}
           onExportRemoteUrl={onExportRemoteUrl}
         />
       ) : null}
-      <TitleFieldWrap
-        onClick={() => {
-          if (!editing) setEditing(true);
-        }}
-      >
-        <TitleInput
+      <label className={styles.titleFieldWrap} htmlFor={fieldId}>
+        <input
           ref={inputRef}
           id={fieldId}
+          className={`${storyBannerTitleClassName} ${styles.titleInput}`}
           type="text"
           size={inputSize}
           readOnly={!editing}
           value={titleText}
           placeholder="Untitled story"
           aria-label="Story title"
+          onFocus={() => {
+            if (!editing) setEditing(true);
+          }}
           onChange={(e) => setMetadata({ title: e.target.value })}
           onBlur={(e) => {
             setEditing(false);
@@ -176,18 +94,19 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
           autoComplete="off"
           spellCheck={false}
         />
-      </TitleFieldWrap>
+      </label>
       {onEnterPlaybackPreview ? (
-        <BannerPreviewButton
+        <button
           type="button"
+          className={styles.previewButton}
           onClick={onEnterPlaybackPreview}
           disabled={playbackPreviewDisabled}
           title="Preview playback"
           aria-label="Preview playback"
         >
           <PlayIcon width={14} height={14} aria-hidden />
-        </BannerPreviewButton>
+        </button>
       ) : null}
-    </BannerShell>
+    </StoryBannerBar>
   );
 }

@@ -1,0 +1,58 @@
+/* Drawing / layers toolbar tool buttons */
+
+.toolButton {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 22px;
+  min-height: 22px;
+  height: 22px;
+  padding: 2px 4px;
+  margin: 0;
+  border: none;
+  border-radius: 2px;
+  background: transparent;
+  color: #c9d1d9;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+  line-height: 0;
+}
+
+.toolButton:hover,
+.toolButton:focus-visible {
+  background-color: rgba(110, 118, 129, 0.35);
+  color: #f0f6fc;
+  outline: none;
+}
+
+.toolButton:active {
+  background-color: rgba(110, 118, 129, 0.5);
+}
+
+.toolButton.active {
+  background-color: var(--panel-accent, #58a6ff);
+  color: #fff;
+}
+
+.toolButton.active:hover,
+.toolButton.active:focus-visible {
+  background-color: #1f8ad6;
+  color: #fff;
+}
+
+.toolButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  color: #8b949e;
+}
+
+.toolButton:disabled:hover,
+.toolButton:disabled:focus-visible,
+.toolButton:disabled:active {
+  background-color: transparent;
+  color: #8b949e;
+}

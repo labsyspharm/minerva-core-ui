@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**/*", "!src/minerva-author-ui"]
+    "includes": ["**/*"]
   },
   "formatter": {
     "enabled": true,

@@ -1,0 +1,91 @@
+/* Text CTA (Add group / Add image) — same height as iconHeaderButton */
+.headerActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background-color: #2a2a2a;
+  border: 1px solid var(--panel-border, #444);
+  color: #e6edf3;
+  font-size: 12px;
+  padding: 0 0.75rem;
+  height: 30px;
+  min-height: 30px;
+  line-height: 1;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.headerActionButton:hover:not(:disabled) {
+  background-color: #333;
+  border-color: #555;
+  color: #fff;
+}
+
+.headerActionButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.headerActionButtonActive {
+  border-color: var(--panel-accent, #58a6ff);
+  background: #1f2a3a;
+  color: #fff;
+}
+
+/* 30×30 square icon button in compact headers */
+.iconHeaderButton {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--panel-border, #444);
+  color: #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.iconHeaderButton:hover:not(:disabled) {
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
+.iconHeaderButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.iconHeaderButtonActive {
+  border-color: var(--panel-accent, #58a6ff);
+  background: #1f2a3a;
+  color: #fff;
+}
+
+/* 24×24 pill icon button (row viewport actions) */
+.rowIconButton {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #333;
+  border-radius: 999px;
+  background: #151515;
+  color: #ccc;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.rowIconButton:hover {
+  color: #fff;
+  border-color: #555;
+}
+
+.rowIconButton:focus-visible {
+  outline: 1px solid var(--panel-accent, #58a6ff);
+  outline-offset: 1px;
+}

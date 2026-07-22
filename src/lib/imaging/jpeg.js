@@ -1,11 +1,12 @@
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
-import { JpegImage } from "../jpeg-image";
-import { JpegPixelSource } from "../jpeg-pixel-source";
+import { JpegImage } from "./jpegImage";
+import { JpegPixelSource } from "./jpegPixelSource";
 import {
   JPEG_BAKED_CONTRAST_LIMIT,
   JPEG_PYRAMID_TILE_SIZE,
   jpegPyramidLevels,
 } from "./jpegPyramid";
+import { VIV_TILE_DEBOUNCE_MS, VIV_TILE_MAX_REQUESTS } from "./viv";
 
 function createJpegLayers(meta) {
   const { channelsVisible, colors, selections } = meta.settings;
@@ -20,6 +21,8 @@ function createJpegLayers(meta) {
     visible,
     loader: jpegLoader,
     refinementStrategy: "no-overlap",
+    maxRequests: VIV_TILE_MAX_REQUESTS,
+    debounceTime: VIV_TILE_DEBOUNCE_MS,
     id: `${imageID}-${Object.values(channelFolders || {}).join("-")}-${selections?.map((s) => s.c).join("-")}`,
     channelsVisible,
     colors,

@@ -1,17 +1,52 @@
 import type { Layer } from "@deck.gl/core";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import type {
   JpegLoaderEntry,
   LoaderList,
   MainSettings,
   OmeLoaderEntry,
-} from "@/components/shared/viewer/ImageViewer";
+} from "@/lib/imaging/loaderEntries";
+import type { ChannelRendering } from "@/lib/stores/appStore";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
+import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
 import { createJpegLayers } from "./jpeg.js";
 import { type Config, type Loader, toSettings } from "./viv";
+
+/** Fold live channel drag preview into Viv settings without writing the document. */
+export function applyChannelRendering<S extends MainSettings>(
+  settings: S,
+  live: ChannelRendering | null | undefined,
+): S {
+  if (!live) return settings;
+  const ids = settings.sourceChannelIds;
+  if (!ids?.length) return settings;
+  const idx = ids.indexOf(live.sourceChannelId);
+  if (idx < 0) return settings;
+  if (live.kind === "contrast") {
+    if (idx >= settings.contrastLimits.length) return settings;
+    const lo = Math.round(live.lower);
+    const hi = Math.round(live.upper);
+    const contrastLimits = settings.contrastLimits.map((pair, i) =>
+      i === idx
+        ? ([lo, hi] as [number, number])
+        : ([pair[0], pair[1]] as [number, number]),
+    );
+    return { ...settings, contrastLimits };
+  }
+  if (idx >= settings.colors.length) return settings;
+  const r = Math.round(Math.max(0, Math.min(255, live.r)));
+  const g = Math.round(Math.max(0, Math.min(255, live.g)));
+  const b = Math.round(Math.max(0, Math.min(255, live.b)));
+  const colors = settings.colors.map((triple, i) =>
+    i === idx
+      ? ([r, g, b] as [number, number, number])
+      : ([triple[0], triple[1], triple[2]] as [number, number, number]),
+  );
+  return { ...settings, colors };
+}
 
 export type ViewerLoaderSources = {
   dicomIndexList?: DicomIndex[];
@@ -151,7 +186,7 @@ export function buildImageLayers(args: {
   ];
 }
 
-/** Settings, loader list, and layers for document-backed playback. */
+/** Settings, loader list, and layers for document-backed playback / authoring. */
 export function useViewerLayers(args: {
   dicomIndexList?: DicomIndex[];
   omeLoaderEntries: OmeLoaderEntry[];
@@ -161,6 +196,10 @@ export function useViewerLayers(args: {
   activeChannelGroupId: string | null;
   channelVisibilities: Record<string, boolean>;
   channelGroupRowVisibilities: Record<string, boolean>;
+  /** Authoring: live contrast/color drag preview (CDN omits). */
+  channelRendering?: ChannelRendering | null;
+  /** Authoring: bump after export to recreate GL layers (CDN omits). */
+  remountKey?: string | number;
 }) {
   const {
     dicomIndexList = [],
@@ -171,12 +210,29 @@ export function useViewerLayers(args: {
     activeChannelGroupId,
     channelVisibilities,
     channelGroupRowVisibilities,
+    channelRendering = null,
+    remountKey,
   } = args;
 
-  const viewerConfig = useMemo(
-    () => createViewerConfigFromDocument({ sourceChannels, channelGroups }),
-    [sourceChannels, channelGroups],
+  // Histogram merges rewrite `sourceChannels` identity without changing Viv paint
+  // inputs. Key config/settings/layers on a signature that omits distributions.
+  const channelsSignature = buildImageViewerSignature(
+    channelGroups,
+    sourceChannels,
   );
+  const channelsRef = useRef({ sourceChannels, channelGroups });
+  channelsRef.current = { sourceChannels, channelGroups };
+
+  const viewerConfig = useMemo(() => {
+    // `channelsSignature` is the intentional memo key (histogram-stable).
+    // Read channels from the ref so we close over the arrays from this signature.
+    void channelsSignature;
+    const { sourceChannels: sc, channelGroups: cg } = channelsRef.current;
+    return createViewerConfigFromDocument({
+      sourceChannels: sc,
+      channelGroups: cg,
+    });
+  }, [channelsSignature]);
 
   const loaderList = useMemo(
     () =>
@@ -251,9 +307,37 @@ export function useViewerLayers(args: {
     ],
   );
 
+  const dicomSettingsWithLive = useMemo(
+    () =>
+      dicomSettingsList.map((settings) =>
+        applyChannelRendering(settings as MainSettings, channelRendering),
+      ),
+    [dicomSettingsList, channelRendering],
+  );
+
+  const omeSettingsWithLive = useMemo(
+    () =>
+      omeSettingsList.map((settings) =>
+        applyChannelRendering(settings as MainSettings, channelRendering),
+      ),
+    [omeSettingsList, channelRendering],
+  );
+
+  const jpegSettingsWithLive = useMemo(
+    () =>
+      jpegSettingsList.map((settings) =>
+        applyChannelRendering(settings as MainSettings, channelRendering),
+      ),
+    [jpegSettingsList, channelRendering],
+  );
+
   const mainSettingsList = useMemo(
-    () => [...dicomSettingsList, ...omeSettingsList, ...jpegSettingsList],
-    [dicomSettingsList, omeSettingsList, jpegSettingsList],
+    () => [
+      ...dicomSettingsWithLive,
+      ...omeSettingsWithLive,
+      ...jpegSettingsWithLive,
+    ],
+    [dicomSettingsWithLive, omeSettingsWithLive, jpegSettingsWithLive],
   );
 
   const imageLayers = useMemo(
@@ -262,17 +346,20 @@ export function useViewerLayers(args: {
         dicomIndexList,
         omeLoaderEntries,
         jpegLoaderEntries,
-        dicomSettingsList,
-        omeSettingsList,
-        jpegSettingsList,
+        // Live rendering must reach layers (not only mainSettingsList props).
+        dicomSettingsList: dicomSettingsWithLive,
+        omeSettingsList: omeSettingsWithLive,
+        jpegSettingsList: jpegSettingsWithLive,
+        remountKey,
       }),
     [
       dicomIndexList,
       omeLoaderEntries,
       jpegLoaderEntries,
-      dicomSettingsList,
-      omeSettingsList,
-      jpegSettingsList,
+      dicomSettingsWithLive,
+      omeSettingsWithLive,
+      jpegSettingsWithLive,
+      remountKey,
     ],
   );
 

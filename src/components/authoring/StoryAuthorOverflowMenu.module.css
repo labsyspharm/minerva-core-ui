@@ -1,0 +1,112 @@
+.menuWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/** Icon-only match to author nav `.hamburger` (no border / focus ring) */
+.hamburgButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: auto;
+  min-width: 28px;
+  padding: 6px 2px;
+  margin: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+  line-height: 0;
+  flex-shrink: 0;
+  box-shadow: none;
+  transition:
+    opacity 0.15s ease,
+    transform 0.1s ease;
+}
+
+.hamburgButton:hover {
+  opacity: 0.88;
+}
+
+.hamburgButton[aria-expanded="true"] {
+  opacity: 1;
+}
+
+.hamburgButton:active {
+  transform: scale(0.97);
+  opacity: 0.82;
+}
+
+.hamburgButton:focus,
+.hamburgButton:focus-visible {
+  outline: none;
+}
+
+.dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  min-width: 200px;
+  z-index: 50;
+  padding: 6px;
+  border-radius: var(--radius-0001, 8px);
+  border: 1px solid
+    color-mix(in srgb, var(--theme-glass-edge, #444) 80%, transparent);
+  background-color: color-mix(in srgb, var(--dark-glass, #1a1a1a) 94%, black);
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.45),
+    0 0 0 1px color-mix(in srgb, white 6%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.dropdownOpen {
+  display: block;
+}
+
+.menuItem {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 10px 14px;
+  border: none;
+  border-radius: var(--radius-0001, 6px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.95em;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menuItem:hover:not(:disabled) {
+  background-color: var(--dim-gray-glass);
+}
+
+.menuItem:focus {
+  outline: none;
+}
+
+.menuItem:focus-visible {
+  outline: 2px solid var(--theme-light-focus-color, #6ae);
+  outline-offset: -2px;
+}
+
+.menuItem:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.menuItemDivided {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid
+    color-mix(in srgb, var(--theme-glass-edge, #444) 65%, transparent);
+}

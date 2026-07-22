@@ -82,10 +82,6 @@ export function applyOmeRoisFromLoaderToFirstWaypoint(
   appendImportedStoryShapesDeduped(storyShapes);
 }
 
-/** @deprecated Use applyOmeRoisFromLoaderToFirstWaypoint */
-export const applyOmeRoisFromLoaderToActiveWaypoint =
-  applyOmeRoisFromLoaderToFirstWaypoint;
-
 /**
  * Import annotations from an OME-XML file (e.g. companion to the image) and attach to the first waypoint.
  */

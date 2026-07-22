@@ -1,0 +1,13 @@
+.stamp {
+  position: fixed;
+  right: max(10px, env(safe-area-inset-right));
+  bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 99999;
+  pointer-events: none;
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 400;
+  letter-spacing: 0.015em;
+  opacity: 0.28;
+  color: rgba(238, 238, 238, 0.85);
+}

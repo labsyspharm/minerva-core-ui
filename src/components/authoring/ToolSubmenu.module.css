@@ -3,7 +3,7 @@
   display: inline-block;
 }
 
-/* Visuals come from parent toolButton (DrawingPanel); keep layout only */
+/* Visuals come from parent toolButton (LayersPanel); keep layout only */
 .toggle {
   display: flex;
   align-items: center;
@@ -83,7 +83,7 @@
 }
 
 .menuItemActive {
-  background-color: #007acc;
+  background-color: var(--panel-accent, #58a6ff);
   color: #fff;
 }
 

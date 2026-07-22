@@ -36,7 +36,7 @@ export const ARROW_ICON_SIZE = 250;
  *
  * Drawing hierarchy (bottom to top): shapes/points, arrows, labels.
  */
-export function createAllShapeLayers(
+function createAllShapeLayers(
   shapes: Shape[],
   hiddenShapeIds: Set<string>,
   hoveredShapeId: string | null,

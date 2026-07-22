@@ -1,5 +1,5 @@
 import { hasDirectoryPickerAccess } from "@/lib/imaging/filesystem";
-import type { JpegTileFetcher } from "@/lib/jpeg-image";
+import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
 import {
   createStoryRecord,

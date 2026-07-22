@@ -1,0 +1,11 @@
+/* App root (`#react-output`) — Vite author entry only. */
+#react-output {
+  background-color: black;
+  font-family: "Overpass", sans-serif;
+  font-weight: 200;
+  color: #eeeeee;
+  height: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

@@ -6,7 +6,7 @@
  * everything the user sees.
  */
 
-import type { LoaderPlane } from "@/lib/authoring/config";
+import type { LoaderPlane } from "@/lib/imaging/loaderTypes";
 import type { ViewRect } from "@/lib/viewer/samViewport";
 import { canvasToFloat32Array } from "./imageUtils";
 

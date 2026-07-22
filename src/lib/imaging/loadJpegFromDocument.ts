@@ -1,6 +1,6 @@
 import { type Dispatch, type SetStateAction, useEffect } from "react";
-import type { JpegLoaderEntry } from "@/components/shared/viewer/ImageViewer";
-import type { JpegTileFetcher } from "@/lib/jpeg-image";
+import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
+import type { JpegLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Image } from "@/lib/stores/documentSchema";
 import { loadJpeg } from "./jpeg.js";
 import {
@@ -14,7 +14,7 @@ type GroupChannelRow = {
   upperLimit: number;
 };
 
-type GroupLike = {
+export type GroupLike = {
   id?: string;
   channels?: ReadonlyArray<{
     channelId?: string;

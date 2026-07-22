@@ -1,0 +1,128 @@
+.channelsSection {
+  margin-top: 4px;
+  border-radius: 5px;
+  background: color-mix(in srgb, black 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-glass-edge) 40%, transparent);
+  overflow: hidden;
+}
+
+.channelsSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 6px;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--theme-glass-edge) 35%, transparent);
+}
+
+.sectionLabel {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 10px;
+  color: color-mix(in srgb, var(--theme-light-contrast-color) 52%, transparent);
+  line-height: 1.2;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.toolbarSlot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.legendBody {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 3px 3px;
+  gap: 0;
+}
+
+.imageSection:not(:first-child) {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid
+    color-mix(in srgb, var(--theme-glass-edge) 28%, transparent);
+}
+
+.imageSectionLabel {
+  padding: 1px 4px 2px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--theme-light-contrast-color) 42%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channelList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.legendRowWrap {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  min-height: 18px;
+  padding: 1px 3px;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+.legendRowWrap:hover {
+  background: color-mix(in srgb, white 7%, transparent);
+}
+
+.rowClickArea {
+  all: unset;
+  box-sizing: border-box;
+  color: rgb(230, 237, 243);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.swatch {
+  height: 10px;
+  width: 10px;
+  flex-shrink: 0;
+  border-radius: 2px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--swatch-color);
+  background-color: transparent;
+  box-shadow: 0 0 0 1px color-mix(in srgb, black 25%, transparent);
+}
+
+.swatchFilled {
+  background-color: var(--swatch-color);
+}
+
+.legendDivider {
+  margin: 3px 2px 2px;
+  border-top: 1px solid
+    color-mix(in srgb, var(--theme-glass-edge) 50%, transparent);
+}
+
+.nameSlot {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  line-height: 1.2;
+}

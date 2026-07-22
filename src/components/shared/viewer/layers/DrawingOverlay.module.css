@@ -1,0 +1,82 @@
+.errorToast {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #c62828;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.hintBar {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(30, 30, 30, 0.9);
+  color: #ddd;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.hintAdd {
+  color: #4caf50;
+}
+
+.hintRemove {
+  color: #ef5350;
+}
+
+.hintConfirm {
+  color: #90caf9;
+}
+
+.hintCancel {
+  color: #999;
+}
+
+.hintCount {
+  color: #888;
+  font-size: 12px;
+}
+
+.debugOverlay {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  gap: 12px;
+  background-color: rgba(0, 0, 0, 0.85);
+  padding: 12px;
+  border-radius: 8px;
+  z-index: 1001;
+  max-width: 90vw;
+}
+
+.debugLabel {
+  color: #ccc;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.debugImage {
+  max-width: 256px;
+  max-height: 256px;
+  display: block;
+}
+
+.debugWaiting {
+  color: #888;
+  font-size: 12px;
+}

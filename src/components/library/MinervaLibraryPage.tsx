@@ -1,5 +1,6 @@
 import * as React from "react";
 import { hasDirectoryPickerAccess } from "@/lib/imaging/filesystem";
+import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { listStorySummaries } from "@/lib/persistence/storyPersistence";
 import type { StorySummary } from "@/lib/persistence/types";
 import { useDocumentStore } from "@/lib/stores/documentStore";
@@ -7,8 +8,7 @@ import { importStoryFolderFromPicker } from "@/lib/storyExport/importStoryFolder
 import { rootRouteApi } from "@/router/appRouter";
 import styles from "./MinervaLibraryPage.module.css";
 
-const APP_TAB_TITLE_PREFIX =
-  import.meta.env.MODE === "demo" ? "Minerva 2.0 Demo" : "Minerva";
+const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
 
 /** Left-edge accent per story — muted cloth / leather. */
 function rowAccent(id: string): React.CSSProperties {

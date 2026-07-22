@@ -1,12 +1,11 @@
-import type { MouseEvent, ReactElement } from "react";
+import type { CSSProperties, MouseEvent, ReactElement } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import styled from "styled-components";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import {
-  STORY_BANNER_CONTROL_SIZE_PX,
-  storyBannerBarCss,
-} from "@/components/shared/storyBannerBar";
+  StoryBannerBar,
+  storyBannerTitleClassName,
+} from "@/components/shared/StoryBannerBar";
 import {
   effectiveReferenceImagePixelSize,
   useAppStore,
@@ -18,14 +17,11 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
-/** Fonts + theme tokens + prose — shared by authoring preview and CDN export. */
-import "./presentationShell.css";
+import styles from "./Presentation.module.css";
 
 /** Shared by authoring preview and the CDN story player bundle. */
 export type PresentationProps = {
   children: ReactElement;
-  /** Shown in the left nav (story / exhibit name). */
-  name: string;
   /** When set, shows the authoring “Back / Story preview” ribbon. */
   exitPlaybackPreview?: () => void;
   /**
@@ -34,262 +30,6 @@ export type PresentationProps = {
    */
   showDocumentTitle?: boolean;
 };
-
-/**
- * Layout only — fonts/tokens/type live in `presentationShell.css`
- * (`.minerva-presentation`) so preview and export cannot drift.
- */
-const PresentationShell = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-`;
-
-const PreviewRibbon = styled.div`
-  position: relative;
-  /* Above SplitGrid (later in DOM); channel overlay is absolutely positioned and was painting over */
-  z-index: 2;
-  justify-content: flex-start;
-  ${storyBannerBarCss}
-`;
-
-const PreviewBackButton = styled.button`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  height: ${STORY_BANNER_CONTROL_SIZE_PX}px;
-  background: rgb(0 0 0 / 0.16);
-  border: 1px solid rgb(255 255 255 / 0.22);
-  color: rgb(248 250 252 / 0.98);
-  padding: 0 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
-  font-family: inherit;
-  font-weight: 500;
-
-  &:hover {
-    background: rgb(0 0 0 / 0.26);
-    border-color: rgb(255 255 255 / 0.28);
-    color: #fff;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--theme-light-focus-color, hwb(45 90% 0%));
-    outline-offset: 2px;
-  }
-`;
-
-const PreviewRibbonChevron = styled(ChevronDownIcon)`
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  display: block;
-  transform: rotate(90deg);
-  color: inherit;
-  opacity: 0.95;
-`;
-
-/** Document title — shares the ribbon with the “Story preview” badge. */
-const PreviewRibbonDocumentTitle = styled.span<{ $flush?: boolean }>`
-  display: block;
-  flex: 1;
-  min-width: 0;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  line-height: 1.2;
-  color: rgb(255 255 255 / 0.94);
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  /* CDN title-only: center like StoryTitleBar. Preview mode: sit after Back. */
-  text-align: ${(p) => (p.$flush ? "center" : "start")};
-  border-left: ${(p) =>
-    p.$flush ? "none" : "1px solid rgb(255 255 255 / 0.14)"};
-  padding-left: ${(p) => (p.$flush ? "0" : "10px")};
-`;
-
-const PreviewRibbonPreviewBadge = styled.span`
-  flex-shrink: 0;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgb(255 255 255 / 0.55);
-`;
-
-const SplitGrid = styled.div`
-  flex: 1;
-  min-height: 0;
-  position: relative;
-  z-index: 0;
-  display: grid;
-  overflow: hidden;
-  grid-template-columns: 350px 1fr;
-  grid-template-rows: 1fr;
-  > :nth-child(1) {
-    grid-column: 1;
-    grid-row: 1;
-    min-height: 0;
-  }
-  > :nth-child(2) {
-    grid-column: 2;
-    grid-row: 1;
-    min-height: 0;
-    /* Bound to grid cell — not 100vh, so story preview ribbon frees space below */
-    max-height: 100%;
-  }
-`;
-
-/** Positioned containing block so author .root.grid (absolute + inset 0) fills viewer area only */
-const PresentationViewerRegion = styled.div`
-  position: relative;
-  min-height: 0;
-  height: 100%;
-  overflow: hidden;
-`;
-
-/** TOC / chevron SVGs are 16px; row must clear icons with equal vertical padding. */
-const STORY_TOOLBAR_ROW_PX = 36;
-
-const NavPane = styled.div<{ $hasStoryName?: boolean }>`
-  border-right: 2px solid var(--theme-glass-edge);
-  background: var(--theme-dim-gray-color);
-  display: grid;
-  /* No gap — it sat between toolbar and content’s border-top as empty space. */
-  gap: 0;
-  z-index: 1;
-  overflow: hidden;
-  /* Title row only when not already shown in the top ribbon (preview / CDN). */
-  grid-template-rows: ${(p) =>
-    p.$hasStoryName
-      ? `auto ${STORY_TOOLBAR_ROW_PX}px 1fr`
-      : `${STORY_TOOLBAR_ROW_PX}px 1fr`};
-  grid-template-columns: 1fr;
-  > .story-name {
-    grid-column: 1;
-    grid-row: 1;
-    padding: 8px 8px 4px;
-    margin: 0;
-  }
-  > .story-toolbar {
-    grid-column: 1;
-    grid-row: ${(p) => (p.$hasStoryName ? 2 : 1)};
-    /* Symmetric padding — previous \`8px 8px 0\` in a 24px row clipped the icons. */
-    padding: 0 8px;
-    margin: 0;
-  }
-  > .story-content {
-    overflow-y: auto;
-    grid-column: 1;
-    grid-row: ${(p) => (p.$hasStoryName ? 3 : 2)};
-    border-top: 2px solid var(--theme-glass-edge);
-    /* Fixed padding — same whether StoryTitle row is present or not. */
-    padding: 8px 8px 0;
-    margin: 0;
-  }
-  /* Same button reset in preview (Bootstrap) and CDN (native). */
-  button {
-    all: unset;
-    box-sizing: border-box;
-    color: inherit;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 0;
-  }
-  /* Inline SVG baseline gap otherwise lifts glyphs toward the top of the row. */
-  button svg {
-    display: block;
-    flex-shrink: 0;
-  }
-  button:focus-visible {
-    outline: 2px solid var(--theme-light-focus-color);
-    outline-offset: 2px;
-  }
-  .inactive {
-    color: #444;
-  }
-`;
-
-const StoryTitle = styled.div`
-  line-height: 1.1;
-  min-width: 0;
-`;
-
-const Toolbar = styled.div.attrs({ className: "story-toolbar" })`
-  display: grid;
-  height: 100%;
-  overflow: hidden;
-  align-items: center;
-  grid-template-rows: 1fr;
-  grid-template-columns: 30px 1fr 30px 50px 30px;
-  > .table-of-contents {
-    grid-column: 1;
-    text-align: left;
-  }
-  > .left {
-    grid-column: 3;
-  }
-  > .count {
-    grid-column: 4;
-  }
-  > .right {
-    grid-column: 5;
-  }
-`;
-
-const ContentWrap = styled.div.attrs({ className: "story-content" })`
-  scrollbar-color: #888 var(--theme-dim-gray-color);
-`;
-
-const InlineNext = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 30px;
-  margin-bottom: 1em;
-  > :nth-child(1) {
-    grid-column: 1;
-    text-align: right;
-    font-style: italic;
-    margin: 0;
-  }
-  > :nth-child(2) {
-    grid-column: 2;
-  }
-  .right {
-    cursor: pointer;
-  }
-  .right:hover {
-    text-decoration: underline;
-  }
-`;
-
-const Count = styled.div`
-  text-align: center;
-  display: grid;
-  align-items: center;
-  line-height: 1;
-  font-size: 14px;
-  grid-template-columns: 2fr 1fr 2fr;
-  > :nth-child(1) {
-    grid-column: 1;
-  }
-  > :nth-child(2) {
-    grid-column: 2;
-  }
-  > :nth-child(3) {
-    grid-column: 3;
-  }
-`;
 
 /** Square viewBox so the glyph’s visual center matches the SVG box center. */
 const NavChevron = (props: { dir: "left" | "right"; px: number }) => {
@@ -316,23 +56,6 @@ const NavChevron = (props: { dir: "left" | "right"; px: number }) => {
     </svg>
   );
 };
-
-const TocWrapper = styled.div`
-  li {
-    color: var(--bs-link-color);
-    cursor: pointer;
-  }
-  li:hover {
-    text-decoration: underline;
-  }
-`;
-
-const ChannelName = styled.span<{ color: string }>`
-  text-decoration: underline;
-  text-decoration-color: ${(props) => props.color};
-  text-decoration-thickness: 2px;
-  text-underline-offset: 2px;
-`;
 
 export const Presentation = (props: PresentationProps) => {
   const documentTitle = useDocumentStore((s) => s.metadata.title ?? "");
@@ -479,7 +202,7 @@ export const Presentation = (props: PresentationProps) => {
   const toc_button = (
     <button
       type="button"
-      className="table-of-contents"
+      className={styles.tocButton}
       title="View table of contents"
       onMouseDown={(e) => {
         e.preventDefault();
@@ -506,7 +229,6 @@ export const Presentation = (props: PresentationProps) => {
     </button>
   );
   const StoryLeft = (props) => {
-    const activeClass = props.active ? "" : "inactive";
     const handleMouseDown = (e: MouseEvent) => {
       e.preventDefault(); // Prevent any default behavior
       storyLeft();
@@ -514,7 +236,9 @@ export const Presentation = (props: PresentationProps) => {
     return (
       <button
         type="button"
-        className={`left ${activeClass}`}
+        className={[styles.navLeft, props.active ? null : styles.navInactive]
+          .filter(Boolean)
+          .join(" ")}
         title="View previous waypoint"
         onMouseDown={handleMouseDown}
       >
@@ -523,14 +247,13 @@ export const Presentation = (props: PresentationProps) => {
     );
   };
   const count = (
-    <Count className="count">
+    <div className={styles.count}>
       <div title="Current waypoint">{activeStoryIndex + 1}</div>
       <div>{"⁄"}</div>
       <div title="Number of waypoints">{waypoints.length}</div>
-    </Count>
+    </div>
   );
   const StoryRight = (props) => {
-    const activeClass = props.active ? "" : "inactive";
     const handleMouseDown = (e: MouseEvent) => {
       e.preventDefault(); // Prevent any default behavior
       storyRight();
@@ -538,7 +261,9 @@ export const Presentation = (props: PresentationProps) => {
     return (
       <button
         type="button"
-        className={`right ${activeClass}`}
+        className={[styles.navRight, props.active ? null : styles.navInactive]
+          .filter(Boolean)
+          .join(" ")}
         title="View next waypoint"
         onMouseDown={handleMouseDown}
       >
@@ -548,7 +273,7 @@ export const Presentation = (props: PresentationProps) => {
   };
   const story_next = (
     <p
-      className="right"
+      className={styles.nextLink}
       title="View next waypoint"
       onMouseDown={(e) => {
         e.preventDefault();
@@ -561,8 +286,8 @@ export const Presentation = (props: PresentationProps) => {
   const TableOfContents = (props) => {
     const { waypoints: tocWaypoints } = props;
     return (
-      <TocWrapper>
-        <h2 className="h6">Table of Contents</h2>
+      <div className={styles.tocWrapper}>
+        <h2 className={styles.heading}>Table of Contents</h2>
         <ol>
           {tocWaypoints.map((wp: Waypoint, i: number) => {
             const goToStory = (e: MouseEvent) => {
@@ -576,13 +301,12 @@ export const Presentation = (props: PresentationProps) => {
             );
           })}
         </ol>
-      </TocWrapper>
+      </div>
     );
   };
 
   const first_story = activeStoryIndex === 0;
   const last_story = activeStoryIndex === waypoints.length - 1;
-  const main_title = props.name;
   const story = waypoints[activeStoryIndex];
   const story_title = story?.title ?? `Waypoint ${activeStoryIndex + 1}`;
   const story_content = story?.content;
@@ -591,7 +315,7 @@ export const Presentation = (props: PresentationProps) => {
     : "Untitled story";
 
   // Scroll waypoint content back to top when changing to a different waypoint.
-  const contentPaneRef = useRef(null);
+  const contentPaneRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (contentPaneRef.current && activeStoryIndex != null) {
       contentPaneRef.current.scrollTop = 0;
@@ -639,56 +363,81 @@ export const Presentation = (props: PresentationProps) => {
   const showRibbon = Boolean(
     props.exitPlaybackPreview || props.showDocumentTitle,
   );
-  /** Left-nav name only when there is no top ribbon (ribbon already shows the title). */
+  /** Left-nav title only when there is no top ribbon (ribbon already shows it). */
   const navStoryName =
-    !showRibbon && main_title.trim() ? main_title.trim() : "";
+    !showRibbon && documentTitle.trim() ? documentTitle.trim() : "";
+  const flushTitle = !props.exitPlaybackPreview;
 
   return (
-    <PresentationShell className="minerva-presentation">
+    <div className={styles.presentationShell}>
       {showRibbon ? (
-        <PreviewRibbon>
+        <StoryBannerBar className={styles.previewRibbon}>
           {props.exitPlaybackPreview ? (
-            <PreviewBackButton
+            <button
               type="button"
+              className={styles.previewBackButton}
               onClick={props.exitPlaybackPreview}
               title="Back to editing"
               aria-label="Back to editing"
             >
-              <PreviewRibbonChevron aria-hidden />
+              <ChevronDownIcon
+                className={styles.previewRibbonChevron}
+                aria-hidden
+              />
               <span>Back</span>
-            </PreviewBackButton>
+            </button>
           ) : null}
-          <PreviewRibbonDocumentTitle
+          <span
             title={ribbonDocTitle}
-            $flush={!props.exitPlaybackPreview}
+            className={[
+              storyBannerTitleClassName,
+              styles.previewRibbonDocumentTitle,
+              flushTitle ? styles.previewRibbonDocumentTitleFlush : null,
+            ]
+              .filter(Boolean)
+              .join(" ")}
           >
             {ribbonDocTitle}
-          </PreviewRibbonDocumentTitle>
+          </span>
           {props.exitPlaybackPreview ? (
-            <PreviewRibbonPreviewBadge>Story preview</PreviewRibbonPreviewBadge>
+            <span className={styles.previewRibbonPreviewBadge}>
+              Story preview
+            </span>
           ) : null}
-        </PreviewRibbon>
+        </StoryBannerBar>
       ) : null}
-      <SplitGrid>
-        <NavPane $hasStoryName={Boolean(navStoryName)}>
+      <div className={styles.splitGrid}>
+        <div
+          className={[
+            styles.navPane,
+            navStoryName ? styles.navPaneHasStoryName : null,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
           {navStoryName ? (
-            <StoryTitle className="h5 story-name">{navStoryName}</StoryTitle>
+            <div className={styles.storyTitle}>{navStoryName}</div>
           ) : null}
-          <Toolbar>
+          <div className={styles.toolbar}>
             {toc_button}
             <StoryLeft active={!first_story} />
             {count}
             <StoryRight active={!last_story} />
-          </Toolbar>
-          <ContentWrap ref={contentPaneRef}>
-            <h2 className="h6">{story_title}</h2>
+          </div>
+          <div ref={contentPaneRef} className={styles.contentWrap}>
+            <h2 className={styles.heading}>{story_title}</h2>
             <ReactMarkdown
               components={{
                 strong: ({ children }) => {
                   const text = String(children);
                   const color = channelColors.get(text);
                   return color ? (
-                    <ChannelName color={color}>{text}</ChannelName>
+                    <span
+                      className={styles.channelName}
+                      style={{ "--channel-color": color } as CSSProperties}
+                    >
+                      {text}
+                    </span>
                   ) : (
                     <strong>{children}</strong>
                   );
@@ -698,7 +447,7 @@ export const Presentation = (props: PresentationProps) => {
               {processedContent}
             </ReactMarkdown>
             {first_story && <TableOfContents waypoints={waypoints} />}
-            <InlineNext>
+            <div className={styles.inlineNext}>
               {last_story ? (
                 <p>End</p>
               ) : (
@@ -706,11 +455,11 @@ export const Presentation = (props: PresentationProps) => {
                   {story_next} <StoryRight active={!last_story} />
                 </>
               )}
-            </InlineNext>
-          </ContentWrap>
-        </NavPane>
-        <PresentationViewerRegion>{props.children}</PresentationViewerRegion>
-      </SplitGrid>
-    </PresentationShell>
+            </div>
+          </div>
+        </div>
+        <div className={styles.presentationViewerRegion}>{props.children}</div>
+      </div>
+    </div>
   );
 };

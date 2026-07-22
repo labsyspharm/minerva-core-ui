@@ -1,0 +1,256 @@
+/* ChannelGroupsMasterDetail tree / folder chrome. */
+
+.detailChannelItemEmbed {
+  padding: 0 8px 4px 20px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.emptyMessage {
+  padding: 16px;
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+}
+
+.channelActionButton {
+  background: none;
+  border: none;
+  color: #8b949e;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.channelActionButton:hover {
+  color: #e6edf3;
+}
+
+.channelActionButton.colorLockButtonLocked {
+  color: #58a6ff;
+}
+
+.channelActionButton.colorLockButtonLocked:hover {
+  color: #79b8ff;
+}
+
+.channelActionCluster {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.addChannelRow {
+  padding: 6px 10px;
+}
+
+.addChannelSelect {
+  width: 100%;
+  padding: 4px 6px;
+  background: #161b22;
+  color: #e6edf3;
+  border: 1px solid #30363d;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.groupFolders {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.groupFolder {
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #141414;
+  margin: 0 6px;
+}
+
+.groupFolderActive {
+  border-color: color-mix(
+    in srgb,
+    var(--theme-light-focus-color, #6ae) 55%,
+    #333
+  );
+}
+
+.dropTargetActive {
+  border-color: var(--theme-light-focus-color, #6ae);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--theme-light-focus-color, #6ae) 40%, transparent);
+}
+
+.groupFolderHeader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 8px;
+  min-height: 32px;
+  box-sizing: border-box;
+}
+
+.groupFolderActivate {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.groupFolderActivate:focus-visible {
+  outline: 2px solid var(--panel-accent, #58a6ff);
+  outline-offset: -2px;
+}
+
+.groupFolderHeader > :not(.groupFolderActivate) {
+  position: relative;
+  z-index: 1;
+}
+
+.groupFolderChevron {
+  all: unset;
+  display: flex;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: #8b949e;
+  line-height: 0;
+}
+
+.groupFolderChevron:hover {
+  color: #e6edf3;
+}
+
+.groupFolderName {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.groupFolderBody {
+  border-top: 1px solid #2a2a2a;
+  padding: 2px 0 6px;
+}
+
+.groupChildList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.groupChildBlock {
+  border-bottom: 1px solid #222;
+}
+
+.groupChildBlock:last-of-type {
+  border-bottom: none;
+}
+
+.groupChildRowWrap,
+.rootChannelRowWrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.groupChildRowWrap > *,
+.rootChannelRowWrap > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.groupChildRowWrap > button:first-child,
+.rootChannelRowWrap > button:first-child {
+  flex: 0 0 auto;
+}
+
+.groupChildName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #e6edf3;
+}
+
+.dragHandle {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 22px;
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #555;
+  cursor: grab;
+  user-select: none;
+  font-size: 10px;
+  letter-spacing: -0.12em;
+  line-height: 1;
+  align-self: flex-start;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.treeSeparator {
+  margin: 8px 10px 4px;
+  padding: 4px 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8b949e;
+  border-top: 1px solid #333;
+}
+
+.rootChannelList {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rootChannelBlock {
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.rootChannelBlock:active {
+  cursor: default;
+}
+
+.rootChannelBlockCompact {
+  opacity: 0.85;
+}
+
+.rootChannelCompactName {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  min-width: 0;
+  font-size: 12px;
+  color: #8b949e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

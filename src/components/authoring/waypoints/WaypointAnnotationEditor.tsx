@@ -21,15 +21,71 @@ import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
+import toolButton from "@/components/shared/panel/toolButton.module.css";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
-import type { Shape } from "@/lib/shapes/shapeModel";
 import {
-  copySelectedWaypointShapes,
-  pasteWaypointShapesFromClipboard,
-} from "@/lib/shapes/waypointShapeClipboard";
+  cloneShapesForPaste,
+  readShapesFromSystemClipboard,
+  writeShapesToSystemClipboard,
+} from "@/lib/shapes/shapeClipboard";
+import type { Shape } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Waypoint } from "@/lib/stores/documentStore";
 import styles from "./WaypointAnnotationEditor.module.css";
+
+async function copySelectedWaypointShapes(): Promise<void> {
+  const {
+    shapes,
+    shapeGroups,
+    layersPanelSelectedShapeIds,
+    layersPanelSelectedGroupId,
+    flashLayersPanelSelection,
+  } = useAppStore.getState();
+
+  const selectedIds =
+    layersPanelSelectedGroupId != null
+      ? (shapeGroups.find((g) => g.id === layersPanelSelectedGroupId)
+          ?.shapeIds ?? [])
+      : layersPanelSelectedShapeIds;
+
+  flashLayersPanelSelection({
+    shapeIds: selectedIds,
+    groupId: layersPanelSelectedGroupId,
+  });
+
+  const selected = new Set(selectedIds);
+  if (selected.size === 0) return;
+  const toCopy = shapes.filter((s) => selected.has(s.id));
+  if (toCopy.length === 0) return;
+  try {
+    await writeShapesToSystemClipboard(toCopy);
+  } catch (e) {
+    console.warn("Copy shapes to clipboard failed", e);
+  }
+}
+
+async function pasteWaypointShapesFromClipboard(): Promise<void> {
+  let raw: Awaited<ReturnType<typeof readShapesFromSystemClipboard>>;
+  try {
+    raw = await readShapesFromSystemClipboard();
+  } catch (e) {
+    console.warn("Read shapes from clipboard failed", e);
+    return;
+  }
+  if (!raw?.length) return;
+  const cloned = cloneShapesForPaste(raw);
+  const {
+    addShapesBatch,
+    flashLayersPanelSelection,
+    requestLayersPanelSelection,
+  } = useAppStore.getState();
+
+  addShapesBatch(cloned);
+
+  const ids = cloned.map((a) => a.id);
+  requestLayersPanelSelection({ shapeIds: ids, groupId: null });
+  flashLayersPanelSelection({ shapeIds: ids, groupId: null });
+}
 
 /** Writes rgba into the fields the renderer reads (`style.*`). */
 function applyWaypointPickerColor(
@@ -108,7 +164,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     setAuthoringWaypointShapesIndex,
   } = useAppStore();
 
-  // Master-detail sets authoring from WaypointsListMasterDetail so collapsed
+  // Master-detail sets authoring from WaypointsList so collapsed
   // Annotations panel does not clear the persist target while drawing.
   React.useEffect(() => {
     if (embeddedInScrollParent) return;
@@ -165,7 +221,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     <>
       <button
         type="button"
-        className={styles.toolButton}
+        className={toolButton.toolButton}
         disabled={layersPanelSelectedShapeIds.length === 0}
         title="Copy selected shapes to the clipboard"
         onClick={() => void copySelectedWaypointShapes()}
@@ -174,7 +230,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
       </button>
       <button
         type="button"
-        className={styles.toolButton}
+        className={toolButton.toolButton}
         title="Paste shapes from the clipboard"
         onClick={() => void pasteWaypointShapesFromClipboard()}
       >
@@ -191,7 +247,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     <>
       <button
         type="button"
-        className={`${styles.toolButton} ${activeTool === TOOLS.MOVE ? styles.active : ""}`}
+        className={`${toolButton.toolButton} ${activeTool === TOOLS.MOVE ? toolButton.active : ""}`}
         title="Move Tool"
         onClick={() => handleToolChangeLocal(TOOLS.MOVE)}
       >
@@ -216,8 +272,8 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<ShapesIcon />}
         parentTitle="Shapes"
-        buttonClassName={styles.toolButton}
-        activeClassName={styles.active}
+        buttonClassName={toolButton.toolButton}
+        activeClassName={toolButton.active}
       />
 
       <ToolSubmenu
@@ -230,13 +286,13 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<LinesIcon />}
         parentTitle="Lines"
-        buttonClassName={styles.toolButton}
-        activeClassName={styles.active}
+        buttonClassName={toolButton.toolButton}
+        activeClassName={toolButton.active}
       />
 
       <button
         type="button"
-        className={`${styles.toolButton} ${activeTool === TOOLS.BRUSH ? styles.active : ""}`}
+        className={`${toolButton.toolButton} ${activeTool === TOOLS.BRUSH ? toolButton.active : ""}`}
         title="Brush"
         onClick={() => handleToolChangeLocal(TOOLS.BRUSH)}
       >
@@ -245,7 +301,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${styles.toolButton} ${activeTool === TOOLS.TEXT ? styles.active : ""}`}
+        className={`${toolButton.toolButton} ${activeTool === TOOLS.TEXT ? toolButton.active : ""}`}
         title="Text Tool"
         onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
       >
@@ -254,7 +310,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${styles.toolButton} ${activeTool === TOOLS.POINT ? styles.active : ""}`}
+        className={`${toolButton.toolButton} ${activeTool === TOOLS.POINT ? toolButton.active : ""}`}
         title="Point Tool"
         onClick={() => handleToolChangeLocal(TOOLS.POINT)}
       >
@@ -263,7 +319,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${styles.toolButton} ${activeTool === TOOLS.MAGIC_WAND ? styles.active : ""}`}
+        className={`${toolButton.toolButton} ${activeTool === TOOLS.MAGIC_WAND ? toolButton.active : ""}`}
         title="Magic Wand"
         onClick={() => handleToolChangeLocal(TOOLS.MAGIC_WAND)}
       >
@@ -284,7 +340,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         <div className={styles.layersContainer}>
           <LayersPanel
             itemListVariant={
-              embeddedInScrollParent ? "markdownEditorChrome" : "default"
+              embeddedInScrollParent ? "markdownEditor" : "default"
             }
             toolbarSlot={drawingToolbar}
             waypointClipboardActions={waypointClipboardActions}

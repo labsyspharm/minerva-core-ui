@@ -2,7 +2,7 @@ import {
   fetchPlaneRaster,
   rasterToUint16Array,
 } from "@/lib/imaging/maskChannelRaster";
-import { warmupPsudoPalette } from "@/lib/imaging/psudoPalette";
+import { warmupPsudoPalette } from "@/lib/imaging/pseudoPalette";
 import {
   IMPORT_DEFAULT_LOWER_LIMIT,
   IMPORT_DEFAULT_UPPER_LIMIT,

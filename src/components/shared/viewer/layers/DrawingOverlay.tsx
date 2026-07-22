@@ -7,168 +7,13 @@ import {
 } from "@deck.gl/layers";
 import * as React from "react";
 import ArrowDrawingIconUrl from "@/components/shared/icons/arrow-annotation-drawing.svg?url";
+import { TextEditPanel } from "@/components/shared/tools/TextEditPanel";
 import { useSam2 } from "@/lib/sam2/useSam2";
 import { arrowLineDegeneratePolygon } from "@/lib/shapes/shapeGeometry";
 import { ARROW_ICON_SIZE } from "@/lib/shapes/shapeLayers";
 import { ellipseToPolygon, lineToPolygon } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
-
-// Shared Text Edit Panel Component
-interface TextEditPanelProps {
-  title: string;
-  textValue: string;
-  fontSize: number;
-  onTextChange: (text: string) => void;
-  onFontSizeChange: (fontSize: number) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-  submitButtonText: string;
-}
-
-const TextEditPanel: React.FC<TextEditPanelProps> = ({
-  title,
-  textValue,
-  fontSize,
-  onTextChange,
-  onFontSizeChange,
-  onSubmit,
-  onCancel,
-  submitButtonText,
-}) => {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        backgroundColor: "#2c2c2c",
-        border: "2px solid #444",
-        borderRadius: "8px",
-        padding: "20px",
-        zIndex: 1000,
-        minWidth: "300px",
-        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.5)",
-      }}
-    >
-      <div
-        style={{
-          marginBottom: "15px",
-          color: "white",
-          fontSize: "16px",
-          fontWeight: "bold",
-        }}
-      >
-        {title}
-      </div>
-
-      {/* Font Size Input */}
-      <div style={{ marginBottom: "15px" }}>
-        <label
-          htmlFor="fontSizeInput"
-          style={{
-            color: "white",
-            fontSize: "14px",
-            marginBottom: "5px",
-            display: "block",
-          }}
-        >
-          Font Size:
-        </label>
-        <input
-          aria-label="Font Size"
-          id="fontSizeInput"
-          type="number"
-          value={fontSize}
-          onChange={(e) => onFontSizeChange(parseInt(e.target.value, 10) || 14)}
-          min="8"
-          max="72"
-          style={{
-            width: "80px",
-            padding: "5px",
-            border: "1px solid #555",
-            borderRadius: "4px",
-            backgroundColor: "#1a1a1a",
-            color: "white",
-            fontSize: "14px",
-            outline: "none",
-          }}
-        />
-      </div>
-
-      {/* Text Input */}
-      <textarea
-        value={textValue}
-        onChange={(e) => onTextChange(e.target.value)}
-        placeholder="Enter your text here..."
-        style={{
-          width: "100%",
-          minHeight: "80px",
-          padding: "10px",
-          border: "1px solid #555",
-          borderRadius: "4px",
-          backgroundColor: "#1a1a1a",
-          color: "white",
-          fontSize: "14px",
-          fontFamily: "Arial, sans-serif",
-          resize: "vertical",
-          outline: "none",
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && e.ctrlKey) {
-            onSubmit();
-          } else if (e.key === "Escape") {
-            onCancel();
-          }
-        }}
-      />
-
-      <div
-        style={{
-          marginTop: "15px",
-          display: "flex",
-          gap: "10px",
-          justifyContent: "flex-end",
-        }}
-      >
-        <button
-          type="button"
-          onClick={onCancel}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: "#555",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontSize: "14px",
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={!textValue.trim()}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: textValue.trim() ? "#4CAF50" : "#666",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: textValue.trim() ? "pointer" : "not-allowed",
-            fontSize: "14px",
-          }}
-        >
-          {submitButtonText}
-        </button>
-      </div>
-      <div style={{ marginTop: "10px", fontSize: "12px", color: "#999" }}>
-        Press Ctrl+Enter to submit, Escape to cancel
-      </div>
-    </div>
-  );
-};
+import styles from "./DrawingOverlay.module.css";
 
 export type CreatableLayer = PolygonLayer | TextLayer | null;
 
@@ -1440,59 +1285,25 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     <>
       {/* SAM2 error toast */}
       {sam2Error && activeTool === "magic_wand" && !sam2Session && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 16,
-            left: "50%",
-            transform: "translateX(-50%)",
-            backgroundColor: "#c62828",
-            color: "white",
-            padding: "8px 16px",
-            borderRadius: 8,
-            fontSize: 14,
-            zIndex: 1000,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-          }}
-        >
-          {sam2Error}
-        </div>
+        <div className={styles.errorToast}>{sam2Error}</div>
       )}
 
       {/* SAM2 session hint bar */}
       {sam2Session && activeTool === "magic_wand" && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 16,
-            left: "50%",
-            transform: "translateX(-50%)",
-            backgroundColor: "rgba(30,30,30,0.9)",
-            color: "#ddd",
-            padding: "8px 20px",
-            borderRadius: 8,
-            fontSize: 13,
-            zIndex: 1000,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
-            display: "flex",
-            gap: 16,
-            alignItems: "center",
-            whiteSpace: "nowrap",
-          }}
-        >
+        <div className={styles.hintBar}>
           <span>
-            <strong style={{ color: "#4caf50" }}>Click</strong> to add
+            <strong className={styles.hintAdd}>Click</strong> to add
           </span>
           <span>
-            <strong style={{ color: "#ef5350" }}>Shift+Click</strong> to remove
+            <strong className={styles.hintRemove}>Shift+Click</strong> to remove
           </span>
           <span>
-            <strong style={{ color: "#90caf9" }}>Enter</strong> to confirm
+            <strong className={styles.hintConfirm}>Enter</strong> to confirm
           </span>
           <span>
-            <strong style={{ color: "#999" }}>Esc</strong> to cancel
+            <strong className={styles.hintCancel}>Esc</strong> to cancel
           </span>
-          <span style={{ color: "#888", fontSize: 12 }}>
+          <span className={styles.hintCount}>
             ({sam2Session.points.length} point
             {sam2Session.points.length !== 1 ? "s" : ""})
           </span>
@@ -1501,49 +1312,30 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
 
       {/* SAM2 debug overlay - images shown when localStorage sam2_debug=1 */}
       {sam2DebugImages && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 16,
-            left: 16,
-            display: "flex",
-            gap: 12,
-            backgroundColor: "rgba(0,0,0,0.85)",
-            padding: 12,
-            borderRadius: 8,
-            zIndex: 1001,
-            maxWidth: "90vw",
-          }}
-        >
+        <div className={styles.debugOverlay}>
           {sam2DebugImages.encoded ? (
             <div>
-              <div style={{ color: "#ccc", fontSize: 12, marginBottom: 4 }}>
-                Encoded (1024×1024)
-              </div>
+              <div className={styles.debugLabel}>Encoded (1024×1024)</div>
               <img
                 src={sam2DebugImages.encoded}
                 alt="SAM2 encoded"
-                style={{ maxWidth: 256, maxHeight: 256, display: "block" }}
+                className={styles.debugImage}
                 title="Right-click → Save image as"
               />
             </div>
           ) : null}
           {sam2DebugImages.mask ? (
             <div>
-              <div style={{ color: "#ccc", fontSize: 12, marginBottom: 4 }}>
-                Mask (256×256)
-              </div>
+              <div className={styles.debugLabel}>Mask (256×256)</div>
               <img
                 src={sam2DebugImages.mask}
                 alt="SAM2 mask"
-                style={{ maxWidth: 256, maxHeight: 256, display: "block" }}
+                className={styles.debugImage}
                 title="Right-click → Save image as"
               />
             </div>
           ) : (
-            <div style={{ color: "#888", fontSize: 12 }}>
-              Mask: waiting for decode…
-            </div>
+            <div className={styles.debugWaiting}>Mask: waiting for decode…</div>
           )}
         </div>
       )}

@@ -1,0 +1,63 @@
+.imageExporter {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  grid-template-columns: 1fr minmax(300px, 420px) 1fr;
+}
+
+.imageExporter > div {
+  grid-row: 2;
+  grid-column: 2;
+}
+
+.exportStatus {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+.progressBar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5em;
+  align-items: center;
+}
+
+.progressBar > div:first-child {
+  box-sizing: border-box;
+  height: 1.25em;
+  border: 1px solid color-mix(in srgb, currentColor 85%, transparent);
+  background-color: transparent;
+  overflow: hidden;
+}
+
+.progressBar > div:first-child > div {
+  height: 100%;
+  width: calc(var(--progress-ratio, 0) * 100%);
+  background-color: hwb(220 10% 20% / 0.5);
+}
+
+.progressBarDone > div:first-child > div {
+  background-color: hwb(220 70% 30% / 0.9);
+}
+
+.progressBar > div:last-child {
+  padding: 0.25em;
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+.etaLine {
+  font-family: monospace;
+  font-size: 0.9em;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.exportMessage {
+  grid-row: 2;
+  grid-column: 2;
+  padding: 0.5em 0.75em;
+  font-family: monospace;
+  text-align: center;
+}

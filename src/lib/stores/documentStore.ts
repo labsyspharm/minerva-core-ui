@@ -122,10 +122,6 @@ export function documentWaypoints(s: DocumentStore): Waypoint[] {
   return s.waypoints;
 }
 
-export function documentChannelGroups(s: DocumentStore): ChannelGroup[] {
-  return s.channelGroups;
-}
-
 /** Flattened channel rows for Viv / UI (derived from `images`). */
 export function documentSourceChannels(s: DocumentStore): Channel[] {
   return flattenImageChannelsInDocumentOrder(s.images);

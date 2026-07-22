@@ -1,8 +1,11 @@
 import type { ChangeEventHandler, FormEventHandler } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Button from "react-bootstrap/Button";
-import Form from "react-bootstrap/Form";
-import styled from "styled-components";
+import { PlusIcon } from "@/components/shared/common/PlusIcon";
+import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
+import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
+import { CompactHeader } from "@/components/shared/panel/CompactHeader";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
+import panel from "@/components/shared/panel/panelShared.module.css";
 import { resolveImageContentRole } from "@/lib/imaging/channelKind";
 import {
   ensureFileHandlePermission,
@@ -12,7 +15,10 @@ import {
 import { applyOmeRoisFromAnnotationXmlString } from "@/lib/shapes/applyOmeRoisToDocument";
 import type { Image } from "@/lib/stores/documentStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
+import type { ValidObj } from "@/lib/validate";
 import styles from "./Upload.module.css";
+
+export type { ValidObj } from "@/lib/validate";
 
 export type FormProps = {
   valid: ValidObj;
@@ -79,9 +85,6 @@ export type UploadProps = {
   missingHandleKeys?: string[];
   onReselectFile?: (imageId: string) => void | Promise<void>;
 };
-export type ValidObj = {
-  [s: string]: boolean;
-};
 type ValidationFunction = (v: ValidObj) => boolean | null;
 type Validation = (s: string) => ValidationFunction;
 type ValidOut = Partial<{
@@ -93,139 +96,6 @@ type SetState = (s: string) => void;
 type SetTargetState = FormEventHandler;
 type UseTargetState = (init: string) => [string, SetState, SetTargetState];
 
-interface HasValidation {
-  hasValidation: boolean;
-}
-
-/** Matches Story / Channels: grey-on-black controls */
-const DarkPrimaryButton = styled(Button).attrs({ variant: "primary" })`
-  &&& {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #2a2a2a;
-    border: 1px solid #444;
-    color: #e6edf3;
-    font-size: 12px;
-    padding: 0.45rem 0.75rem;
-    min-height: 2.25rem;
-    line-height: 1.2;
-    box-shadow: none;
-  }
-  &&&:hover:not(:disabled),
-  &&&:focus:not(:disabled) {
-    background-color: #333;
-    border-color: #555;
-    color: #fff;
-  }
-  &&&:active:not(:disabled) {
-    background-color: #1a1a1a !important;
-    border-color: #444 !important;
-  }
-  &&&:disabled {
-    opacity: 0.45;
-  }
-`;
-
-const ImagesTabShell = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 10px 8px 10px;
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  min-height: 0;
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  color: #e6edf3;
-  font-size: 12px;
-  background: #000;
-  scrollbar-color: #555 #000;
-  scrollbar-width: thin;
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-  &::-webkit-scrollbar-track {
-    background: #000;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #555;
-    border-radius: 4px;
-  }
-
-  form {
-    max-width: 100%;
-  }
-
-  .form-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--theme-light-contrast-color) 52%, transparent);
-    margin-bottom: 0.35rem;
-  }
-
-  .form-control,
-  .form-select {
-    max-width: 100%;
-    background-color: #2c2c2c;
-    border: 1px solid #444;
-    color: #e6edf3;
-    font-size: 12px;
-  }
-  .form-control::placeholder {
-    color: #8899aa;
-    opacity: 1;
-  }
-  .form-control:focus,
-  .form-select:focus {
-    background-color: #2c2c2c;
-    border-color: #666;
-    color: #e6edf3;
-    box-shadow: 0 0 0 0.15rem rgb(255 255 255 / 0.12);
-  }
-  .form-select option {
-    background: #2c2c2c;
-    color: #e6edf3;
-  }
-  .invalid-feedback,
-  .valid-feedback {
-    font-size: 11px;
-  }
-`;
-
-const XmlImportMessage = styled.div<{ $err: boolean }>`
-  font-size: 11px;
-  line-height: 1.4;
-  color: ${(p) => (p.$err ? "#f85149" : "color-mix(in srgb, #7ee787 92%, #fff 8%)")};
-`;
-
-const FullWidthGrid = styled.div`
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-  width: 100%;
-`;
-
-const FormGrid = styled.div`
-  margin-top: 1.25rem;
-  display: grid;
-  gap: 0.75rem;
-`;
-const FormGridRow = styled.div<HasValidation>`
-  position: relative;
-  .valid-feedback,
-  .invalid-feedback {
-    position: absolute;
-    font-size: 0.75em;
-  }
-`;
 const _useState: UseTargetState = (init) => {
   const [val, set] = useState(init);
   const new_set: SetTargetState = (e) => {
@@ -234,6 +104,7 @@ const _useState: UseTargetState = (init) => {
   };
   return [val, set, new_set];
 };
+
 const validation: Validation = (key) => {
   return (valid) => {
     if (key in valid) {
@@ -241,10 +112,6 @@ const validation: Validation = (key) => {
     }
     return null;
   };
-};
-
-const toGroupProps = (n: string) => {
-  return { controlId: n };
 };
 
 const validate: Validate = (valid, fn) => {
@@ -256,67 +123,82 @@ const validate: Validate = (valid, fn) => {
   return { [opt]: true };
 };
 
+function validationInputClass(v: ValidOut): string {
+  const parts = [styles.textInput];
+  if (v.isInvalid) parts.push(styles.textInputInvalid);
+  if (v.isValid) parts.push(styles.textInputValid);
+  return parts.join(" ");
+}
+
 const FormDicom = (props: FormProps) => {
   const { valid, onSubmit } = props;
   const [url, _sU, setURL] = _useState("");
   const [name, _sN, setName] = _useState("");
-  const fProps = { onSubmit, className: "full-width" };
+  const urlValidation = validate(valid, ({ url: validEndpoint }) => {
+    if (validEndpoint === undefined) {
+      return null;
+    }
+    return (
+      validEndpoint &&
+      /^https?:\/\/.+\/studies\/[^/]+\/series\/[^/]+$/.test(url)
+    );
+  });
+  const nameValidation = validate(valid, validation("name"));
+
   return (
-    <Form {...fProps} noValidate>
-      <Form.Group {...toGroupProps("url")}>
-        <Form.Label>DICOMweb™ URL:</Form.Label>
-        <FormGridRow hasValidation>
-          <Form.Control
-            {...{
-              type: "text",
-              required: true,
-              value: url,
-              name: "url",
-              onChange: setURL,
-              ...validate(valid, ({ url: validEndpoint }) => {
-                // DICOMweb data found at endpoint
-                if (validEndpoint === undefined) {
-                  return null;
-                }
-                // URL matches expectations
-                return (
-                  validEndpoint &&
-                  /^https?:\/\/.+\/studies\/[^/]+\/series\/[^/]+$/.test(url)
-                );
-              }),
-            }}
+    <form onSubmit={onSubmit} noValidate className={styles.dicomForm}>
+      <div className={styles.fieldGroup}>
+        <label htmlFor="dicom-url" className={styles.fieldLabel}>
+          DICOMweb™ URL:
+        </label>
+        <div className={styles.fieldRow}>
+          <input
+            id="dicom-url"
+            type="text"
+            required
+            value={url}
+            name="url"
+            onChange={setURL}
+            className={validationInputClass(urlValidation)}
+            aria-invalid={urlValidation.isInvalid ?? undefined}
           />
-          <Form.Control.Feedback type="invalid">
-            Invalid DICOMweb™ URL
-          </Form.Control.Feedback>
-          <Form.Control.Feedback type="valid">Valid.</Form.Control.Feedback>
-          <br />
-        </FormGridRow>
-        <FormGrid>
-          <Form.Label>Dataset Name:</Form.Label>
-          <FormGridRow hasValidation>
-            <Form.Control
-              {...{
-                type: "text",
-                required: true,
-                value: name,
-                name: "name",
-                onChange: setName,
-                ...validate(valid, validation("name")),
-              }}
-            />
-            <Form.Control.Feedback type="invalid">
+          {urlValidation.isInvalid && (
+            <div className={styles.invalidFeedback}>Invalid DICOMweb™ URL</div>
+          )}
+          {urlValidation.isValid && (
+            <div className={styles.validFeedback}>Valid.</div>
+          )}
+        </div>
+      </div>
+      <div className={styles.fieldGroup}>
+        <label htmlFor="dicom-name" className={styles.fieldLabel}>
+          Dataset Name:
+        </label>
+        <div className={styles.fieldRow}>
+          <input
+            id="dicom-name"
+            type="text"
+            required
+            value={name}
+            name="name"
+            onChange={setName}
+            className={validationInputClass(nameValidation)}
+            aria-invalid={nameValidation.isInvalid ?? undefined}
+          />
+          {nameValidation.isInvalid && (
+            <div className={styles.invalidFeedback}>
               Please name the dataset.
-            </Form.Control.Feedback>
-            <Form.Control.Feedback type="valid">Valid.</Form.Control.Feedback>
-            <br />
-          </FormGridRow>
-        </FormGrid>
-      </Form.Group>
-      <FormGrid>
-        <DarkPrimaryButton type="submit">Submit</DarkPrimaryButton>
-      </FormGrid>
-    </Form>
+            </div>
+          )}
+          {nameValidation.isValid && (
+            <div className={styles.validFeedback}>Valid.</div>
+          )}
+        </div>
+      </div>
+      <button type="submit" className={styles.primaryButton}>
+        Submit
+      </button>
+    </form>
   );
 };
 
@@ -372,14 +254,14 @@ const OmeTiffUrlImport = (props: {
   } = props;
   return (
     <div className={rowClassName}>
-      <Form.Control
+      <input
         type="text"
         required
         value={url}
         name="ome_tiff_url"
         placeholder=""
         onChange={onUrlChange}
-        className={inputClassName}
+        className={`${styles.textInput} ${inputClassName}`}
       />
       <button
         type="button"
@@ -450,9 +332,8 @@ const Upload = (props: UploadProps) => {
 
   const {
     formProps,
+    handles,
     onAllow,
-    onRecall,
-    hasRecent,
     importRevision,
     imageLoaded,
     loadedSource,
@@ -512,6 +393,7 @@ const Upload = (props: UploadProps) => {
   const isMaskImport = importRole === "segmentation";
   const importLabel = isMaskImport ? "Import mask" : "Import";
   const urlReady = /^https?:\/\/.+/.test(omeTiffUrl.trim());
+
   const runUrlImport = async () => {
     if (!onImportOme || imageFormat !== "OME-TIFF-URL" || !urlReady) return;
     setImportError(null);
@@ -582,12 +464,6 @@ const Upload = (props: UploadProps) => {
     await importIntensityFromHandles(picked);
   };
 
-  const recallIntensityFile = async () => {
-    setImportError(null);
-    const picked = await onRecall({ notifyRestored: false });
-    await importIntensityFromHandles(picked);
-  };
-
   const openAddPanel = (role: OmeImportRole) => {
     if (addPanelOpen && importRole === role) {
       closeAddPanel();
@@ -606,6 +482,10 @@ const Upload = (props: UploadProps) => {
     if (next !== "OME-TIFF") return;
     if (isMaskImport) {
       void chooseMaskFile();
+      return;
+    }
+    if (handles.length > 0) {
+      void importIntensityFromHandles(handles);
       return;
     }
     void chooseIntensityFile();
@@ -764,17 +644,6 @@ const Upload = (props: UploadProps) => {
           chipClass={styles.formatChip}
           chipActiveClass={styles.formatChipActive}
         />
-        {!isMaskImport && hasRecent ? (
-          <FormatChip
-            label="Use recent file"
-            selected={false}
-            onClick={() => {
-              void recallIntensityFile();
-            }}
-            chipClass={styles.formatChip}
-            chipActiveClass={styles.formatChipActive}
-          />
-        ) : null}
         <FormatChip
           label="OmeTiff URL"
           selected={imageFormat === "OME-TIFF-URL"}
@@ -788,77 +657,78 @@ const Upload = (props: UploadProps) => {
   ) : null;
 
   return (
-    <ImagesTabShell slot="images">
-      <div className={styles.header}>
-        <span className={styles.headerTitle}>Images</span>
-        <div className={styles.headerActions}>
-          {imageLoaded ? (
-            <>
-              <input
-                ref={xmlFileInputRef}
-                className={styles.hiddenFileInput}
-                type="file"
-                accept=".xml,application/xml,text/xml"
-                aria-label="OME-XML annotations file"
-                onChange={onAnnotationXmlSelected}
-              />
-              <button
-                type="button"
-                className={styles.headerActionButton}
-                aria-label="Import annotations"
-                title="Import annotations"
-                onClick={() => xmlFileInputRef.current?.click()}
+    <div className={panel.authorPanel}>
+      <CompactHeader
+        actions={
+          <div className={styles.headerActionsWrap}>
+            {imageLoaded ? (
+              <>
+                <input
+                  ref={xmlFileInputRef}
+                  className={styles.hiddenFileInput}
+                  type="file"
+                  accept=".xml,application/xml,text/xml"
+                  aria-label="OME-XML annotations file"
+                  onChange={onAnnotationXmlSelected}
+                />
+                <PanelIconButton
+                  aria-label="Import annotations"
+                  title="Import annotations"
+                  onClick={() => xmlFileInputRef.current?.click()}
+                >
+                  <AnnotationsIcon width={14} height={14} aria-hidden />
+                </PanelIconButton>
+              </>
+            ) : null}
+            <div ref={addMaskAnchorRef} className={styles.addActionAnchor}>
+              <PanelIconButton
+                active={addMaskActive}
+                aria-pressed={addMaskActive}
+                aria-label="Add mask"
+                title="Add mask"
+                onClick={() => openAddPanel("segmentation")}
               >
-                Import annotations
-              </button>
-            </>
-          ) : null}
-          <div ref={addMaskAnchorRef} className={styles.addActionAnchor}>
-            <button
-              type="button"
-              className={
-                addMaskActive
-                  ? `${styles.headerActionButton} ${styles.headerActionButtonActive}`
-                  : styles.headerActionButton
-              }
-              aria-pressed={addMaskActive}
-              aria-label="Add mask"
-              title="Add mask"
-              onClick={() => openAddPanel("segmentation")}
-            >
-              Add mask
-            </button>
+                <RectangleIcon width={14} height={14} aria-hidden />
+              </PanelIconButton>
+            </div>
+            <div ref={addImageAnchorRef} className={styles.addActionAnchor}>
+              <PanelIconButton
+                active={addImageActive}
+                aria-pressed={addImageActive}
+                aria-label="Add image"
+                title="Add image"
+                onClick={() => openAddPanel("intensity")}
+              >
+                <PlusIcon />
+              </PanelIconButton>
+            </div>
+            {addPanel}
           </div>
-          <div ref={addImageAnchorRef} className={styles.addActionAnchor}>
-            <button
-              type="button"
-              className={
-                addImageActive
-                  ? `${styles.headerActionButton} ${styles.headerActionButtonActive}`
-                  : styles.headerActionButton
-              }
-              aria-pressed={addImageActive}
-              aria-label="Add image"
-              title="Add image"
-              onClick={() => openAddPanel("intensity")}
-            >
-              Add image
-            </button>
-          </div>
-          {addPanel}
-        </div>
-      </div>
+        }
+      />
 
-      <div className={styles.stack}>
+      <div
+        className={[
+          styles.stack,
+          panel.authorPanelBody,
+          panel.thinScrollbar,
+        ].join(" ")}
+      >
         {imageCards}
 
         {xmlImportFeedback ? (
-          <XmlImportMessage $err={xmlImportFeedback.type === "err"}>
+          <div
+            className={
+              xmlImportFeedback.type === "err"
+                ? styles.importError
+                : styles.importSuccess
+            }
+          >
             {xmlImportFeedback.text}
-          </XmlImportMessage>
+          </div>
         ) : null}
       </div>
-    </ImagesTabShell>
+    </div>
   );
 };
 
