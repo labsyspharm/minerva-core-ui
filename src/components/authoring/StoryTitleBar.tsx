@@ -2,14 +2,17 @@ import * as React from "react";
 import styled from "styled-components";
 import { StoryAuthorOverflowMenu } from "@/components/authoring/StoryAuthorOverflowMenu";
 import PlayIcon from "@/components/shared/icons/play.svg?react";
-import { storyChromeBannerBarCss } from "@/components/shared/storyChromeBanner";
+import {
+  STORY_BANNER_CONTROL_SIZE_PX,
+  storyBannerBarCss,
+} from "@/components/shared/storyBannerBar";
 import { saveStoryDocument } from "@/lib/persistence/storyPersistence";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 
 const BannerShell = styled.div`
   position: relative;
   z-index: 20;
-  ${storyChromeBannerBarCss}
+  ${storyBannerBarCss}
 `;
 
 const TitleFieldWrap = styled.div`
@@ -67,8 +70,8 @@ const BannerPreviewButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: ${STORY_BANNER_CONTROL_SIZE_PX}px;
+  height: ${STORY_BANNER_CONTROL_SIZE_PX}px;
   padding: 0;
   box-sizing: border-box;
   background: rgb(0 0 0 / 0.16);
@@ -97,6 +100,8 @@ const BannerPreviewButton = styled.button`
 export type StoryTitleBarProps = {
   /** Registered `author-*` custom element tag; powers export dialog + overflow menu. */
   authorUiTagName?: string;
+  /** When set, overflow menu offers “Export with remote OME URL”. */
+  onExportRemoteUrl?: () => void;
   onEnterPlaybackPreview?: () => void;
   /** When true, disables the preview control (e.g. no waypoints). */
   playbackPreviewDisabled?: boolean;
@@ -109,8 +114,12 @@ export type StoryTitleBarProps = {
  * `Presentation`’s ribbon instead; this component is not mounted then.
  */
 export function StoryTitleBar(props: StoryTitleBarProps) {
-  const { authorUiTagName, onEnterPlaybackPreview, playbackPreviewDisabled } =
-    props;
+  const {
+    authorUiTagName,
+    onExportRemoteUrl,
+    onEnterPlaybackPreview,
+    playbackPreviewDisabled,
+  } = props;
   /** Subscribe to the title primitive so updates re-render even if metadata identity were ever reused. */
   const titleText = useDocumentStore((s) => s.metadata.title ?? "");
   const setMetadata = useDocumentStore((s) => s.setMetadata);
@@ -132,7 +141,10 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
   return (
     <BannerShell role="region" aria-label="Story title">
       {authorUiTagName ? (
-        <StoryAuthorOverflowMenu authorUiTagName={authorUiTagName} />
+        <StoryAuthorOverflowMenu
+          authorUiTagName={authorUiTagName}
+          onExportRemoteUrl={onExportRemoteUrl}
+        />
       ) : null}
       <TitleFieldWrap
         onClick={() => {

@@ -13,7 +13,8 @@ const configure = (id) => {
         ],
         fields: [
           {
-            label: "Path for the exported story",
+            label:
+              "Folder for index.html, document.json, and JPEG pyramids. (Stories loaded from OME-TIFF URLs can instead use “Export with remote OME URL” in the menu.)",
           },
         ],
       };
@@ -40,7 +41,7 @@ const configure = (id) => {
         id,
         label: "Export",
         title: "Exported Story",
-        success: "Exported Minerva Story",
+        success: "Exported Minerva Story (index.html + document.json)",
       };
     case "SAVEAS-DIALOG":
       return {

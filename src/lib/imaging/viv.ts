@@ -80,7 +80,8 @@ type Metadata = {
   AquisitionDate: string;
   Description: string;
   Pixels: Pixels;
-  ROIs: Roi[];
+  /** Present when OME-XML embeds ROIs; Viv's OmeTiff metadata often omits this. */
+  ROIs?: Roi[];
 };
 
 export type Config = {

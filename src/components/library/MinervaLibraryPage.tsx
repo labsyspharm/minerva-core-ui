@@ -1,7 +1,9 @@
 import * as React from "react";
+import { hasDirectoryPickerAccess } from "@/lib/imaging/filesystem";
 import { listStorySummaries } from "@/lib/persistence/storyPersistence";
 import type { StorySummary } from "@/lib/persistence/types";
 import { useDocumentStore } from "@/lib/stores/documentStore";
+import { importStoryFolderFromPicker } from "@/lib/storyExport/importStoryFolder";
 import { rootRouteApi } from "@/router/appRouter";
 import styles from "./MinervaLibraryPage.module.css";
 
@@ -185,6 +187,8 @@ export function MinervaLibraryPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [busyId, setBusyId] = React.useState<string | null>(null);
   const [creating, setCreating] = React.useState(false);
+  const [importing, setImporting] = React.useState(false);
+  const canImportFolder = hasDirectoryPickerAccess();
 
   const refresh = React.useCallback(() => {
     setError(null);
@@ -245,6 +249,30 @@ export function MinervaLibraryPage() {
     }
   }, [createStory, navigate]);
 
+  const handleImportFolder = React.useCallback(async () => {
+    setImporting(true);
+    setError(null);
+    try {
+      const id = await importStoryFolderFromPicker();
+      navigate({
+        search: (prev: { storyid?: string }) => ({
+          ...prev,
+          storyid: id,
+        }),
+        replace: true,
+      } as never);
+    } catch (e: unknown) {
+      // AbortError = user cancelled the picker; finally still clears `importing`.
+      if (!(e instanceof DOMException && e.name === "AbortError")) {
+        setError(
+          e instanceof Error ? e.message : "Could not import story folder",
+        );
+      }
+    } finally {
+      setImporting(false);
+    }
+  }, [navigate]);
+
   const handleDelete = React.useCallback(
     (id: string, title: string) => {
       if (!window.confirm(`Remove “${title}” from the shelf?`)) return;
@@ -272,18 +300,33 @@ export function MinervaLibraryPage() {
 
       <div className={styles.shelfToolbar}>
         <h1 className={styles.wordmark}>Minerva Library</h1>
-        <button
-          type="button"
-          className={styles.newVolume}
-          disabled={creating}
-          onClick={() => void handleNew()}
-          aria-label="Add a new story"
-        >
-          <span className={styles.newGlyph} aria-hidden>
-            +
-          </span>
-          <span className={styles.newLabel}>{creating ? "…" : "New"}</span>
-        </button>
+        <div className={styles.toolbarActions}>
+          {canImportFolder ? (
+            <button
+              type="button"
+              className={styles.newVolume}
+              disabled={importing || creating}
+              onClick={() => void handleImportFolder()}
+              aria-label="Import a story folder"
+            >
+              <span className={styles.newLabel}>
+                {importing ? "…" : "Import"}
+              </span>
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className={styles.newVolume}
+            disabled={creating || importing}
+            onClick={() => void handleNew()}
+            aria-label="Add a new story"
+          >
+            <span className={styles.newGlyph} aria-hidden>
+              +
+            </span>
+            <span className={styles.newLabel}>{creating ? "…" : "New"}</span>
+          </button>
+        </div>
       </div>
 
       <section className={styles.bookcase} aria-label="Bookshelf">

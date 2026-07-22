@@ -1,13 +1,15 @@
 {
   "name": "minerva-core-ui",
-  "version": "1.0.0-alpha.5",
+  "version": "1.0.0-alpha.7",
   "description": "A microscopy viewer for non-experts",
   "scripts": {
     "prepare": "lefthook install",
     "dev": "vite --mode development",
     "jpeg": "vite --mode demo-jpeg",
     "demo": "vite --mode demo",
-    "pages": "tsc && vite build",
+    "pages": "tsc && vite build && vite build --config vite.bundle.config.ts",
+    "build:bundle": "vite build --config vite.bundle.config.ts",
+    "serve:bundle": "http-server bundle -p 4173 --cors -c-1",
     "schema": "typescript-json-schema -o 'schema/generic.schema.json' 'src/config/generic.ts' Config",
     "format": "prettier --ignore-path .eslintignore --write .",
     "build": "rm -rf build && tsc -b",
@@ -18,14 +20,19 @@
   "packageManager": "pnpm@10.34.4",
   "main": "build/main.js",
   "types": "build/main.d.ts",
+  "unpkg": "bundle/minerva.js",
+  "jsdelivr": "bundle/minerva.js",
   "author": "John T. Hoffer",
   "repository": "github:labsyspharm/minerva-core-ui",
   "license": "MIT",
   "exports": {
-    ".": "./build/main.js"
+    ".": "./build/main.js",
+    "./bundle": "./bundle/minerva.js",
+    "./bundle/minerva.css": "./bundle/minerva.css"
   },
   "files": [
-    "build"
+    "build",
+    "bundle"
   ],
   "keywords": [
     "microscopy",
@@ -51,7 +58,7 @@
     "@haxtheweb/lrndesign-chart": "^9.0.7",
     "@haxtheweb/simple-colors": "^9.0.7",
     "@haxtheweb/simple-icon": "^9.0.7",
-    "@hms-dbmi/viv": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/main",
+    "@hms-dbmi/viv": "0.20.1",
     "@lit/reactive-element": "^2.0.4",
     "@loaders.gl/3d-tiles": "3.4.13",
     "@loaders.gl/core": "3.4.13",
@@ -79,7 +86,7 @@
     "@uiw/react-md-editor": "^4.0.11",
     "@vaadin/form-layout": "^24.4.3",
     "@vaadin/text-field": "^24.4.3",
-    "@vivjs/constants": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/constants",
+    "@vivjs/constants": "0.20.1",
     "browser-fs-access": "^0.38.0",
     "dcmjs": "^0.41.0",
     "dexie": "^4.4.2",
@@ -95,7 +102,6 @@
     "openseadragon": "^4.1.1",
     "polygon-clipping": "^0.15.7",
     "prop-types": "^15.8.1",
-    "psudo": "0.4.2",
     "prosemirror-commands": "^1.5.2",
     "prosemirror-history": "^1.4.1",
     "prosemirror-keymap": "^1.2.2",
@@ -104,6 +110,7 @@
     "prosemirror-state": "^1.4.3",
     "prosemirror-transform": "^1.9.0",
     "prosemirror-view": "^1.33.9",
+    "psudo": "0.4.2",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.4",
     "react-color": "^2.19.3",
@@ -130,9 +137,10 @@
     "@typescript-eslint/eslint-plugin": "^8.33.1",
     "@typescript-eslint/parser": "^8.33.1",
     "@vitejs/plugin-react": "^4.3.1",
-    "@vivjs/types": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/types",
+    "@vivjs/types": "0.20.1",
     "eslint": "^9.7.0",
     "eslint-plugin-react": "^7.34.4",
+    "http-server": "^14.1.1",
     "path-vars": "^1.0.0",
     "prettier": "^3.3.3",
     "react-lorem-ipsum": "^1.4.10",
@@ -153,17 +161,14 @@
     "styled-components": "^5"
   },
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "@vivjs/extensions@https://codeload.github.com/simonwarchol/viv/tar.gz/8673f95a0cf5a5da01c3b6b7b8c13579b944a134#path:packages/extensions"
-    ],
     "overrides": {
-      "@vivjs/constants": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/constants",
-      "@vivjs/extensions": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/extensions",
-      "@vivjs/layers": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/layers",
-      "@vivjs/loaders": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/loaders",
-      "@vivjs/viewers": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/viewers",
-      "@vivjs/views": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/views",
-      "@vivjs/types": "github:simonwarchol/viv#8673f95a0cf5a5da01c3b6b7b8c13579b944a134&path:packages/types",
+      "@vivjs/constants": "0.20.1",
+      "@vivjs/extensions": "0.20.1",
+      "@vivjs/layers": "0.20.1",
+      "@vivjs/loaders": "0.20.1",
+      "@vivjs/viewers": "0.20.1",
+      "@vivjs/views": "0.20.1",
+      "@vivjs/types": "0.20.1",
       "math.gl": "^4.1.0",
       "@math.gl/core": "^4.1.0",
       "@math.gl/web-mercator": "^4.1.0",

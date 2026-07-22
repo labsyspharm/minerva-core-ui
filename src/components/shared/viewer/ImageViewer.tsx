@@ -74,6 +74,9 @@ export type OmeLoaderEntry = {
 export type JpegLoaderEntry = {
   loader: Loader;
   sourceImageId: string;
+  /** OME channel index → pyramid folder (map mutated in place; entry shell replaced to re-render). */
+  channelFolders?: Record<number, string>;
+  imagePath?: string;
 };
 
 export type LoaderListItem = {
@@ -95,7 +98,8 @@ export type MainSettings = {
 
 export type ImageViewerProps = {
   omeLoaderEntries: OmeLoaderEntry[];
-  stories: Story[];
+  /** Legacy exhibit stories; document waypoints live in the store. */
+  stories?: Story[];
   imageLayers: Layer[];
   mainSettingsList: MainSettings[];
   loaderList: LoaderList;
