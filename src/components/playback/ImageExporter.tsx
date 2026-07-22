@@ -479,10 +479,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
 
   React.useEffect(() => {
     if (exportMode !== "remote-url") return;
-    if (exportError) {
-      const t = setTimeout(() => stopExport(), 2000);
-      return () => clearTimeout(t);
-    }
+    if (exportError) return;
     let cancelled = false;
     const wallStart = performance.now();
     setProgress({ completed: 0, total: 1, done: false, startedAt: wallStart });
@@ -500,7 +497,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
           done: true,
           startedAt: wallStart,
         });
-        setTimeout(() => stopExport(), 1500);
       } catch (e) {
         if (cancelled) return;
         console.error("[minerva] failed to write story bundle sidecars", e);
@@ -514,14 +510,11 @@ export const ImageExporter = (props: ImageExporterProps) => {
     return () => {
       cancelled = true;
     };
-  }, [exportMode, directory_handle, stopExport, exportError]);
+  }, [exportMode, directory_handle, exportError]);
 
   React.useEffect(() => {
     if (exportMode === "remote-url") return;
-    if (exportError) {
-      const t = setTimeout(() => stopExport(), 2000);
-      return () => clearTimeout(t);
-    }
+    if (exportError) return;
     if (!state || !loader?.length) return;
     if (cRange !== null && cRange.length === 0) {
       setExportError("No exportable channels in the current channel groups.");
@@ -607,7 +600,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
           done: true,
           startedAt: wallStart,
         });
-        setTimeout(() => stopExport(), 2000);
       }
     };
 
@@ -619,15 +611,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
       // Avoid aborting the shared Viv loader after a successful export.
       if (!finishedOk) abort.abort();
     };
-  }, [
-    state,
-    loader,
-    stopExport,
-    cRange,
-    exportError,
-    directory_handle,
-    exportMode,
-  ]);
+  }, [state, loader, cRange, exportError, directory_handle, exportMode]);
 
   const { completed, total, done, startedAt } = progress;
   let ratio = done ? 1 : 0;
@@ -660,7 +644,18 @@ export const ImageExporter = (props: ImageExporterProps) => {
   return (
     <div className={styles.imageExporter}>
       {exportError ? (
-        <div className={styles.exportMessage}>{exportError}</div>
+        <div className={styles.exportStatus}>
+          <div className={styles.exportMessage}>
+            Export failed: {exportError}
+          </div>
+          <button
+            type="button"
+            className={styles.dismissButton}
+            onClick={stopExport}
+          >
+            Dismiss
+          </button>
+        </div>
       ) : exportMode === "remote-url" ? (
         <div className={styles.exportStatus}>
           <div className={styles.exportMessage}>
@@ -668,6 +663,15 @@ export const ImageExporter = (props: ImageExporterProps) => {
               ? "Exported document.json + index.html (remote URLs)"
               : "Writing document.json + index.html…"}
           </div>
+          {done ? (
+            <button
+              type="button"
+              className={styles.dismissButton}
+              onClick={stopExport}
+            >
+              Dismiss
+            </button>
+          ) : null}
         </div>
       ) : (
         <div className={styles.exportStatus}>
@@ -686,6 +690,15 @@ export const ImageExporter = (props: ImageExporterProps) => {
             <div> {percentLabel} </div>
           </div>
           {etaLabel ? <div className={styles.etaLine}>{etaLabel}</div> : null}
+          {done ? (
+            <button
+              type="button"
+              className={styles.dismissButton}
+              onClick={stopExport}
+            >
+              Dismiss
+            </button>
+          ) : null}
         </div>
       )}
     </div>

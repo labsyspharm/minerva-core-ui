@@ -37,6 +37,7 @@ export type HydrateDocumentLoadersOpts = {
   /** When false, skip `local` file-handle sources (CDN / URL-only stories). */
   includeLocal?: boolean;
   fetchTile?: JpegTileFetcher;
+  existingPyramidFolders?: ReadonlySet<string>;
 };
 
 const omeLoaderRole = (im: Image): "intensity" | "segmentation" =>
@@ -73,6 +74,9 @@ export async function hydrateDocumentLoaders(
       channelGroups,
       documentUrl,
       ...(opts.fetchTile ? { fetchTile: opts.fetchTile } : {}),
+      ...(opts.existingPyramidFolders
+        ? { existingPyramidFolders: opts.existingPyramidFolders }
+        : {}),
     })),
   );
 
@@ -91,11 +95,12 @@ export async function hydrateDocumentLoaders(
       }
       case "local": {
         if (!includeLocal) break;
-        const handle = await getFileHandle(im.source.handleKey);
-        if (!handle) {
+        const stored = await getFileHandle(im.source.handleKey);
+        if (!stored || stored.kind !== "file") {
           missingHandleKeys.push(im.source.handleKey);
           break;
         }
+        const handle = stored as Handle.File;
         if (!(await canAccess(handle))) {
           deniedHandleKeys.push(im.source.handleKey);
           break;

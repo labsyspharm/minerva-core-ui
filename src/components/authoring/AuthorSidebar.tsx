@@ -51,6 +51,7 @@ export type AuthorSidebarProps = {
     channelIds: string[],
     opts?: { overwriteExistingLimits?: boolean },
   ) => Promise<Map<string, ContrastLimits>>;
+  contrastEditable?: boolean;
   expanded: boolean;
 };
 
@@ -66,6 +67,7 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
         noLoader={props.noLoader}
         ensureChannelHistograms={props.ensureChannelHistograms}
         ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
+        contrastEditable={props.contrastEditable}
       />
     ) : (
       <WaypointsList />
@@ -143,6 +145,7 @@ export type AuthorViewProps = {
     channelIds: string[],
     opts?: { overwriteExistingLimits?: boolean },
   ) => Promise<Map<string, ContrastLimits>>;
+  contrastEditable?: boolean;
 };
 
 export function AuthorView(props: AuthorViewProps) {
@@ -155,6 +158,7 @@ export function AuthorView(props: AuthorViewProps) {
         noLoader={props.noLoader}
         ensureChannelHistograms={props.ensureChannelHistograms}
         ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
+        contrastEditable={props.contrastEditable}
         expanded={expanded}
       />
       <button

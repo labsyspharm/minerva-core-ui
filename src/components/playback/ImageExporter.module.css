@@ -16,6 +16,16 @@
   gap: 0.25em;
 }
 
+.dismissButton {
+  align-self: center;
+  padding: 0.4em 0.8em;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
 .progressBar {
   display: grid;
   grid-template-columns: 1fr auto;

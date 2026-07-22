@@ -12,8 +12,6 @@ import styles from "./StoryTitleBar.module.css";
 export type StoryTitleBarProps = {
   onReturnToLibrary: () => void;
   onExport?: () => void;
-  /** When set, overflow menu offers “Export with remote OME URL”. */
-  onExportRemoteUrl?: () => void;
   onEnterPlaybackPreview?: () => void;
   /** When true, disables the preview control (e.g. no waypoints). */
   playbackPreviewDisabled?: boolean;
@@ -29,7 +27,6 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
   const {
     onReturnToLibrary,
     onExport,
-    onExportRemoteUrl,
     onEnterPlaybackPreview,
     playbackPreviewDisabled,
   } = props;
@@ -61,7 +58,6 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
         <StoryAuthorOverflowMenu
           onReturnToLibrary={onReturnToLibrary}
           onExport={onExport}
-          onExportRemoteUrl={onExportRemoteUrl}
         />
       ) : null}
       <label className={styles.titleFieldWrap} htmlFor={fieldId}>

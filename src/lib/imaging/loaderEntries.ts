@@ -12,6 +12,12 @@ export type JpegLoaderEntry = {
   /** OME channel index → pyramid folder (map mutated in place; entry shell replaced to re-render). */
   channelFolders?: Record<number, string>;
   imagePath?: string;
+  /** Pyramid folders found at the story root, normalized to lowercase. */
+  availablePyramidFolders?: ReadonlySet<string>;
+  /** Contrast-hash folder maps captured for each persisted channel group. */
+  groupChannelFolders?: Readonly<
+    Record<string, Readonly<Record<number, string>>>
+  >;
 };
 
 export type LoaderListItem = {

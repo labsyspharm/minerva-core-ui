@@ -84,6 +84,9 @@ export type UploadProps = {
    */
   missingHandleKeys?: string[];
   onReselectFile?: (imageId: string) => void | Promise<void>;
+  /** JPEG-pyramid story needs its export directory re-selected. */
+  needsStoryRootReconnect?: boolean;
+  onReconnectStoryRoot?: () => void | Promise<void>;
 };
 type ValidationFunction = (v: ValidObj) => boolean | null;
 type Validation = (s: string) => ValidationFunction;
@@ -344,6 +347,8 @@ const Upload = (props: UploadProps) => {
     onRequestFileAccess,
     missingHandleKeys = [],
     onReselectFile,
+    needsStoryRootReconnect = false,
+    onReconnectStoryRoot,
   } = props;
 
   const closeAddPanel = useCallback(() => {
@@ -578,7 +583,11 @@ const Upload = (props: UploadProps) => {
       !!onRequestFileAccess &&
       im.source?.kind === "local" &&
       !needsReselect;
-    const showAccessOverlay = needsReselect || needsPermission;
+    const needsStoryDir =
+      needsStoryRootReconnect &&
+      !!onReconnectStoryRoot &&
+      im.source?.kind === "jpeg";
+    const showAccessOverlay = needsReselect || needsPermission || needsStoryDir;
 
     return (
       <article key={im.id} className={styles.imageCard}>
@@ -590,16 +599,19 @@ const Upload = (props: UploadProps) => {
         </div>
         {showAccessOverlay ? (
           <div className={styles.fileAccessOverlay}>
-            <span className={styles.fileAccessError}>File access needed</span>
+            <span className={styles.fileAccessError}>
+              {needsStoryDir ? "Story folder needed" : "File access needed"}
+            </span>
             <button
               type="button"
               className={styles.primaryButton}
               onClick={() => {
-                if (needsReselect) void onReselectFile?.(im.id);
+                if (needsStoryDir) void onReconnectStoryRoot?.();
+                else if (needsReselect) void onReselectFile?.(im.id);
                 else void onRequestFileAccess?.();
               }}
             >
-              Allow file access
+              {needsStoryDir ? "Choose story folder" : "Allow file access"}
             </button>
           </div>
         ) : null}
