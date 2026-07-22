@@ -60,6 +60,13 @@ function resolveJpegStoryRoot(documentUrl: string, sourceUrl: string): string {
   return new URL(sourceUrl, doc).href.replace(/\/$/, "");
 }
 
+/** Relative / empty jpeg `source.url` needs a persisted story directory handle. */
+export function jpegSourceNeedsLocalRoot(url: string): boolean {
+  return (
+    url === "." || url === "./" || url === "" || !/^https?:\/\//i.test(url)
+  );
+}
+
 function channelFoldersEqual(
   a: Record<number, string> | undefined,
   b: Record<number, string> | undefined,
@@ -254,9 +261,9 @@ export async function jpegLoaderEntriesFromImages(opts: {
   activeGroupId?: string | null;
   fetchTile?: JpegTileFetcher;
   /**
-   * Disk listing of pyramid folders. Merged with hydrate-time group hashes so
-   * sync can retarget onto any channel group present in the document; when
-   * omitted, only those hydrate hashes count as available.
+   * On-disk pyramid folder names from the story root. When set, only these
+   * names count as available (so sync cannot target missing hashes). When
+   * omitted (remote URL pyramids), document group hashes are treated as available.
    */
   existingPyramidFolders?: ReadonlySet<string>;
 }): Promise<JpegLoaderEntry[]> {
@@ -268,25 +275,29 @@ export async function jpegLoaderEntriesFromImages(opts: {
   const entries: JpegLoaderEntry[] = [];
   for (const im of opts.images) {
     if (im.source?.kind !== "jpeg") continue;
+    // Local-root sources need a directory tile fetcher; skip until reconnect.
+    if (jpegSourceNeedsLocalRoot(im.source.url) && !opts.fetchTile) continue;
     const storyRootUrl = resolveJpegStoryRoot(opts.documentUrl, im.source.url);
     const groupChannelFolders: Record<string, Record<number, string>> = {};
-    const availablePyramidFolders = new Set<string>();
     for (const group of opts.channelGroups) {
       if (typeof group.id !== "string") continue;
       const rows = toGroupChannelRows(group.channels ?? []);
       if (rows.length === 0) continue;
-      const folders = await resolveChannelFolders({
+      groupChannelFolders[group.id] = await resolveChannelFolders({
         groupChannels: rows,
         image: im,
       });
-      groupChannelFolders[group.id] = folders;
-      for (const name of Object.values(folders)) {
-        availablePyramidFolders.add(name.toLowerCase());
-      }
     }
+    const availablePyramidFolders = new Set<string>();
     if (opts.existingPyramidFolders) {
       for (const name of opts.existingPyramidFolders) {
         availablePyramidFolders.add(name.toLowerCase());
+      }
+    } else {
+      for (const folders of Object.values(groupChannelFolders)) {
+        for (const name of Object.values(folders)) {
+          availablePyramidFolders.add(name.toLowerCase());
+        }
       }
     }
     const desired = await resolveChannelFolders({

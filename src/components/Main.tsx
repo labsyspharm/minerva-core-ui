@@ -100,14 +100,12 @@ import {
 import { validateDocumentData } from "@/lib/stores/validateDocument";
 import {
   getStoryRootHandle,
-  jpegSourceNeedsLocalRoot,
   listExistingPyramidFolders,
   neededJpegPyramidFolderNames,
   reconnectStoryRootFromPicker,
   setStoryRootHandle,
   storyNeedsLocalJpegRoot,
   tileFetcherForDirectory,
-  tileFetcherForStory,
 } from "@/lib/storyExport/importStoryFolder";
 import {
   canExportWithRemoteUrls,
@@ -258,38 +256,21 @@ async function hydrateLoadersFromImages(
   const storyId = useDocumentStore.getState().activeStoryId;
   const rootOpts = { requestPermission, mode: "read" as const };
   const root = await getStoryRootHandle(storyId, rootOpts);
-  if (storyNeedsLocalJpegRoot(images) && !root) {
-    const result = await hydrateDocumentLoaders(images, {
-      channelGroups: opts?.channelGroups ?? [],
-      documentUrl: opts?.documentUrl ?? window.location.href,
-      pool: new Pool(),
-      requestPermission,
-      includeLocal: true,
-    });
-    // Keep absolute-URL JPEG pyramids; only drop entries that need the story root.
-    const jpegByImageId = new Map(images.map((im) => [im.id, im]));
-    const jpegLoaderEntries = result.jpegLoaderEntries.filter((entry) => {
-      const im = jpegByImageId.get(entry.sourceImageId);
-      return (
-        im?.source?.kind === "jpeg" && !jpegSourceNeedsLocalRoot(im.source.url)
-      );
-    });
-    return { ...result, jpegLoaderEntries, missingStoryRoot: true };
-  }
+  const missingStoryRoot = storyNeedsLocalJpegRoot(images) && !root;
   const result = await hydrateDocumentLoaders(images, {
     channelGroups: opts?.channelGroups ?? [],
     documentUrl: opts?.documentUrl ?? window.location.href,
     pool: new Pool(),
     requestPermission,
     includeLocal: true,
-    fetchTile: root
-      ? tileFetcherForDirectory(root)
-      : await tileFetcherForStory(storyId, rootOpts),
     ...(root
-      ? { existingPyramidFolders: await listExistingPyramidFolders(root) }
+      ? {
+          fetchTile: tileFetcherForDirectory(root),
+          existingPyramidFolders: await listExistingPyramidFolders(root),
+        }
       : {}),
   });
-  return { ...result, missingStoryRoot: false };
+  return { ...result, missingStoryRoot };
 }
 
 function clearOmeDerivedCaches(): void {

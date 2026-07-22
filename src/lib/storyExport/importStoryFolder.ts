@@ -4,6 +4,7 @@ import {
   folderByChannelIndexFromGroup,
   jpegPyramidFolderName,
 } from "@/lib/imaging/jpegPyramid";
+import { jpegSourceNeedsLocalRoot } from "@/lib/imaging/loadJpegFromDocument";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
 import {
   createStoryRecord,
@@ -15,13 +16,13 @@ import { useDocumentStore } from "@/lib/stores/documentStore";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
 import { withPortableJpegSources } from "./storyBundle";
 
+export { jpegSourceNeedsLocalRoot };
+
 const STORY_ROOT_HANDLE_SUFFIX = ":storyRoot";
 
 function storyRootHandleKey(storyId: string): string {
   return `story:${storyId}${STORY_ROOT_HANDLE_SUFFIX}`;
 }
-
-const rootHandles = new Map<string, FileSystemDirectoryHandle>();
 
 function isDirectoryHandle(
   handle: FileSystemHandle | undefined,
@@ -34,7 +35,6 @@ export async function setStoryRootHandle(
   storyId: string,
   handle: FileSystemDirectoryHandle,
 ): Promise<void> {
-  rootHandles.set(storyId, handle);
   await putFileHandle(storyRootHandleKey(storyId), handle);
 }
 
@@ -63,16 +63,10 @@ export async function getStoryRootHandle(
   opts: GetStoryRootHandleOptions = {},
 ): Promise<FileSystemDirectoryHandle | undefined> {
   if (!storyId) return undefined;
-  let root = rootHandles.get(storyId);
-  if (!root) {
-    const stored = await getFileHandle(storyRootHandleKey(storyId));
-    if (isDirectoryHandle(stored)) {
-      root = stored;
-      rootHandles.set(storyId, root);
-    }
-  }
-  if (!root || !(await ensureDirectoryPermission(root, opts))) return undefined;
-  return root;
+  const stored = await getFileHandle(storyRootHandleKey(storyId));
+  if (!isDirectoryHandle(stored)) return undefined;
+  if (!(await ensureDirectoryPermission(stored, opts))) return undefined;
+  return stored;
 }
 
 export function tileFetcherForDirectory(
@@ -83,15 +77,6 @@ export function tileFetcherForDirectory(
     const file = await dir.getFileHandle(filename);
     return file.getFile();
   };
-}
-
-/** Resolve a tile fetcher for an imported story's directory handle (memory or Dexie). */
-export async function tileFetcherForStory(
-  storyId: string | null | undefined,
-  opts: GetStoryRootHandleOptions = {},
-): Promise<JpegTileFetcher | undefined> {
-  const root = await getStoryRootHandle(storyId, opts);
-  return root ? tileFetcherForDirectory(root) : undefined;
 }
 
 /**
@@ -236,12 +221,6 @@ export async function reconnectStoryRootFromPicker(
 }
 
 /** Relative / empty jpeg `source.url` needs a persisted story directory handle. */
-export function jpegSourceNeedsLocalRoot(url: string): boolean {
-  return (
-    url === "." || url === "./" || url === "" || !/^https?:\/\//i.test(url)
-  );
-}
-
 export function storyNeedsLocalJpegRoot(
   images: DocumentData["images"],
 ): boolean {
