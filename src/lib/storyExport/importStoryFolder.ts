@@ -2,6 +2,8 @@ import { hasDirectoryPickerAccess } from "@/lib/imaging/filesystem";
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import {
   folderByChannelIndexFromGroup,
+  JPEG_FALLBACK_LOWER_LIMIT,
+  JPEG_FALLBACK_UPPER_LIMIT,
   jpegPyramidFolderName,
 } from "@/lib/imaging/jpegPyramid";
 import { jpegSourceNeedsLocalRoot } from "@/lib/imaging/loadJpegFromDocument";
@@ -94,8 +96,10 @@ export async function neededJpegPyramidFolderNames(
         names.add(
           await jpegPyramidFolderName(
             ch.channelId,
-            ch.lowerLimit,
-            ch.upperLimit,
+            // Match export / folderByChannelIndexFromImageChannels defaults so
+            // missing limits still hash to the on-disk pyramid folder name.
+            ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
+            ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
           ),
         ),
       ),
@@ -110,8 +114,8 @@ export async function neededJpegPyramidFolderNames(
       const folders = await folderByChannelIndexFromGroup({
         channels: im.channels.map((ch) => ({
           channelId: ch.id,
-          lowerLimit: ch.lowerLimit ?? 2 ** 5,
-          upperLimit: ch.upperLimit ?? 2 ** 14,
+          lowerLimit: ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
+          upperLimit: ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
         })),
         channelIndexById,
       });

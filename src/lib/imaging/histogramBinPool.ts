@@ -1,5 +1,5 @@
 import { histogramBinFromPixels } from "./histogramBin";
-import HistogramWorker from "./workers/histogram.worker.ts?worker";
+import HistogramWorker from "./workers/histogram.worker?worker";
 
 type OutMsg = {
   jobId: number;

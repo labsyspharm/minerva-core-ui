@@ -4,7 +4,7 @@ import {
   JPEG_EXPORT_QUALITY,
   typedArrayCtorName,
 } from "./jpegExportEncode";
-import JpegExportWorker from "./workers/jpegExport.worker.ts?worker";
+import JpegExportWorker from "./workers/jpegExport.worker?worker";
 
 /**
  * Same job protocol as the decoder {@link Pool} (`submitJob` / `jobId`).

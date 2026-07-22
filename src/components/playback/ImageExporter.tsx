@@ -8,7 +8,11 @@ import {
   encodeTileJpeg,
   jpegExportConcurrency,
 } from "@/lib/imaging/jpegExportPool";
-import { jpegPyramidFolderName } from "@/lib/imaging/jpegPyramid";
+import {
+  JPEG_FALLBACK_LOWER_LIMIT,
+  JPEG_FALLBACK_UPPER_LIMIT,
+  jpegPyramidFolderName,
+} from "@/lib/imaging/jpegPyramid";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Config } from "@/lib/imaging/viv";
 import type { PoolClass } from "@/lib/imaging/workers/pool";
@@ -159,11 +163,10 @@ const createCRange = async (
       if (c === undefined) {
         return null;
       }
-      const folderName = await jpegPyramidFolderName(
-        channelId,
-        lowerLimit,
-        upperLimit,
-      );
+      // Keep in sync with neededJpegPyramidFolderNames / image-channel fallbacks.
+      const lo = lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT;
+      const hi = upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT;
+      const folderName = await jpegPyramidFolderName(channelId, lo, hi);
       const dh = await directory_handle.getDirectoryHandle(folderName, {
         create: true,
       });
@@ -176,8 +179,8 @@ const createCRange = async (
           {
             channel: c,
             channelId,
-            lowerLimit,
-            upperLimit,
+            lowerLimit: lo,
+            upperLimit: hi,
           },
           null,
           2,
@@ -191,8 +194,8 @@ const createCRange = async (
         c,
         dh,
         encoded: folderName,
-        lowerLimit,
-        upperLimit,
+        lowerLimit: lo,
+        upperLimit: hi,
       } as Index;
     }),
   );

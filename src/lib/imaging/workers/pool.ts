@@ -1,5 +1,5 @@
 import { getDecoder } from "geotiff";
-import DecoderWorker from "./decoder.worker.ts?worker";
+import DecoderWorker from "./decoder.worker?worker";
 
 export declare class PoolClass {
   constructor(
