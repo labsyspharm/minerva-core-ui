@@ -235,15 +235,18 @@ export async function reconnectStoryRootFromPicker(
   return root;
 }
 
+/** Relative / empty jpeg `source.url` needs a persisted story directory handle. */
+export function jpegSourceNeedsLocalRoot(url: string): boolean {
+  return (
+    url === "." || url === "./" || url === "" || !/^https?:\/\//i.test(url)
+  );
+}
+
 export function storyNeedsLocalJpegRoot(
   images: DocumentData["images"],
 ): boolean {
   return images.some(
     (im) =>
-      im.source?.kind === "jpeg" &&
-      (im.source.url === "." ||
-        im.source.url === "./" ||
-        im.source.url === "" ||
-        !/^https?:\/\//i.test(im.source.url)),
+      im.source?.kind === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url),
   );
 }

@@ -100,6 +100,7 @@ import {
 import { validateDocumentData } from "@/lib/stores/validateDocument";
 import {
   getStoryRootHandle,
+  jpegSourceNeedsLocalRoot,
   listExistingPyramidFolders,
   neededJpegPyramidFolderNames,
   reconnectStoryRootFromPicker,
@@ -265,7 +266,15 @@ async function hydrateLoadersFromImages(
       requestPermission,
       includeLocal: true,
     });
-    return { ...result, jpegLoaderEntries: [], missingStoryRoot: true };
+    // Keep absolute-URL JPEG pyramids; only drop entries that need the story root.
+    const jpegByImageId = new Map(images.map((im) => [im.id, im]));
+    const jpegLoaderEntries = result.jpegLoaderEntries.filter((entry) => {
+      const im = jpegByImageId.get(entry.sourceImageId);
+      return (
+        im?.source?.kind === "jpeg" && !jpegSourceNeedsLocalRoot(im.source.url)
+      );
+    });
+    return { ...result, jpegLoaderEntries, missingStoryRoot: true };
   }
   const result = await hydrateDocumentLoaders(images, {
     channelGroups: opts?.channelGroups ?? [],

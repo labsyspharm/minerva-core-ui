@@ -15,6 +15,7 @@ import {
 import { applyOmeRoisFromAnnotationXmlString } from "@/lib/shapes/applyOmeRoisToDocument";
 import type { Image } from "@/lib/stores/documentStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
+import { jpegSourceNeedsLocalRoot } from "@/lib/storyExport/importStoryFolder";
 import type { ValidObj } from "@/lib/validate";
 import styles from "./Upload.module.css";
 
@@ -586,7 +587,8 @@ const Upload = (props: UploadProps) => {
     const needsStoryDir =
       needsStoryRootReconnect &&
       !!onReconnectStoryRoot &&
-      im.source?.kind === "jpeg";
+      im.source?.kind === "jpeg" &&
+      jpegSourceNeedsLocalRoot(im.source.url);
     const showAccessOverlay = needsReselect || needsPermission || needsStoryDir;
 
     return (
