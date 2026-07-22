@@ -165,6 +165,18 @@ function isPersistableFileHandle(handle: Handle.File): boolean {
   );
 }
 
+/** Chromium can store file and directory handles in IndexedDB. */
+function isPersistableFsHandle(
+  handle: FileSystemHandle | Handle.File,
+): boolean {
+  if (typeof FileSystemHandle === "undefined") return false;
+  if (handle instanceof FileSystemFileHandle) return true;
+  return (
+    typeof FileSystemDirectoryHandle !== "undefined" &&
+    handle instanceof FileSystemDirectoryHandle
+  );
+}
+
 /** Viewing only needs read (picker grants read; readwrite caused false denials). */
 const readPermission = { mode: "read" } as const;
 
@@ -364,6 +376,7 @@ export {
   hasAuthorShellSupport,
   hasDirectoryPickerAccess,
   isPersistableFileHandle,
+  isPersistableFsHandle,
   hasFileHandlePermission,
   ensureFileHandlePermission,
   findFile,

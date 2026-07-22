@@ -98,10 +98,19 @@ import {
   waypointsToConfigWaypoints,
 } from "@/lib/stores/storeUtils";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
-import { tileFetcherForStory } from "@/lib/storyExport/importStoryFolder";
+import {
+  getStoryRootHandle,
+  listExistingPyramidFolders,
+  neededJpegPyramidFolderNames,
+  reconnectStoryRootFromPicker,
+  setStoryRootHandle,
+  storyNeedsLocalJpegRoot,
+  tileFetcherForDirectory,
+} from "@/lib/storyExport/importStoryFolder";
 import {
   canExportWithRemoteUrls,
   type StoryExportMode,
+  writeStoryBundleSidecars,
 } from "@/lib/storyExport/storyBundle";
 import { isOpts, validate } from "@/lib/validate";
 import {
@@ -239,16 +248,29 @@ async function hydrateLoadersFromImages(
     >[1]["channelGroups"];
     documentUrl?: string;
   },
-): Promise<Awaited<ReturnType<typeof hydrateDocumentLoaders>>> {
+): Promise<
+  Awaited<ReturnType<typeof hydrateDocumentLoaders>> & {
+    missingStoryRoot: boolean;
+  }
+> {
   const storyId = useDocumentStore.getState().activeStoryId;
-  return hydrateDocumentLoaders(images, {
+  const rootOpts = { requestPermission, mode: "read" as const };
+  const root = await getStoryRootHandle(storyId, rootOpts);
+  const missingStoryRoot = storyNeedsLocalJpegRoot(images) && !root;
+  const result = await hydrateDocumentLoaders(images, {
     channelGroups: opts?.channelGroups ?? [],
     documentUrl: opts?.documentUrl ?? window.location.href,
     pool: new Pool(),
     requestPermission,
     includeLocal: true,
-    fetchTile: await tileFetcherForStory(storyId),
+    ...(root
+      ? {
+          fetchTile: tileFetcherForDirectory(root),
+          existingPyramidFolders: await listExistingPyramidFolders(root),
+        }
+      : {}),
   });
+  return { ...result, missingStoryRoot };
 }
 
 function clearOmeDerivedCaches(): void {
@@ -335,6 +357,7 @@ const Content = (props: Props) => {
   const [dicomIndexList, setDicomIndexList] = useState([] as DicomIndex[]);
   const [deniedHandleKeys, setDeniedHandleKeys] = useState<string[]>([]);
   const [missingHandleKeys, setMissingHandleKeys] = useState<string[]>([]);
+  const [missingStoryRoot, setMissingStoryRoot] = useState(false);
   /** Skip auto-hydrate while import sets loaders (avoids racing publishChannelState). */
   const skipLoaderHydrateRef = React.useRef(false);
   const {
@@ -370,6 +393,10 @@ const Content = (props: Props) => {
   const [directory_handle, setDirectoryHandle] = useState(
     null as Handle.Dir | null,
   );
+  const [exportFolderPrompt, setExportFolderPrompt] = useState<{
+    mode: StoryExportMode;
+    root: FileSystemDirectoryHandle;
+  } | null>(null);
   const [presenting, setPresenting] = useState(false);
   const checkWindow = React.useCallback(() => window.innerWidth > 600, []);
 
@@ -401,6 +428,65 @@ const Content = (props: Props) => {
     };
   }, [handleResize]);
 
+  const beginExportToFolder = async (
+    mode: StoryExportMode,
+    dirHandle: FileSystemDirectoryHandle,
+  ) => {
+    const doc = useDocumentStore.getState();
+    const storyId = doc.activeStoryId;
+    if (mode === "jpeg-pyramid") {
+      const needed = await neededJpegPyramidFolderNames(
+        doc.channelGroups,
+        doc.images,
+      );
+      const existing = await listExistingPyramidFolders(dirHandle);
+      if (
+        needed.size === 0 ||
+        [...needed].every((name) => existing.has(name))
+      ) {
+        try {
+          await writeStoryBundleSidecars(dirHandle, doc.toDocumentData(), {
+            mode: "jpeg-pyramid",
+          });
+          if (storyId) await setStoryRootHandle(storyId, dirHandle);
+          window.alert("Updated document.json in the export folder.");
+        } catch (e) {
+          console.error("[minerva] sidecar-only export failed", e);
+          window.alert(
+            e instanceof Error ? e.message : "Failed to update document.json.",
+          );
+        }
+        return;
+      }
+      if (omeLoaderEntries.length === 0 && dicomIndexList.length === 0) {
+        window.alert(
+          "Channel contrast changed. Re-export needs the original image, or match the existing pyramid contrast.",
+        );
+        return;
+      }
+    }
+    if (storyId) {
+      try {
+        await setStoryRootHandle(storyId, dirHandle);
+      } catch (e) {
+        console.warn("[minerva] could not persist story root after export", e);
+      }
+    }
+    setExportMode(mode);
+    setDirectoryHandle(dirHandle);
+    setIoState("EXPORTING");
+  };
+
+  const pickExportFolder =
+    async (): Promise<FileSystemDirectoryHandle | null> => {
+      try {
+        return await showDirectoryPicker({ mode: "readwrite" });
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return null;
+        throw e;
+      }
+    };
+
   const startExport = async (mode: StoryExportMode = "jpeg-pyramid") => {
     if (!hasDirectoryPickerAccess()) {
       window.alert(
@@ -425,15 +511,56 @@ const Content = (props: Props) => {
         return;
       }
     }
-    const dirHandle = await showDirectoryPicker();
-    setExportMode(mode);
-    setDirectoryHandle(dirHandle);
-    setIoState("EXPORTING");
+    const storyId = doc.activeStoryId;
+    const existingRoot =
+      mode === "jpeg-pyramid" && storyId
+        ? await getStoryRootHandle(storyId, {
+            requestPermission: true,
+            mode: "readwrite",
+          })
+        : undefined;
+    if (existingRoot) {
+      setExportFolderPrompt({ mode, root: existingRoot });
+      return;
+    }
+    const dirHandle = await pickExportFolder();
+    if (!dirHandle) return;
+    await beginExportToFolder(mode, dirHandle);
   };
   const stopExport = () => {
     setIoState("IDLE");
-    // Recreate Viv/deck layers in case GL state was disturbed during export.
-    setViewerRemountKey((k) => k + 1);
+    const modeAtStop = exportMode;
+    const directoryAtStop = directory_handle;
+    const activeGroupIdAtStop = useAppStore.getState().activeChannelGroupId;
+    void (async () => {
+      if (modeAtStop === "jpeg-pyramid") {
+        try {
+          const doc = useDocumentStore.getState();
+          const root =
+            directoryAtStop ??
+            (doc.activeStoryId
+              ? await getStoryRootHandle(doc.activeStoryId, {
+                  requestPermission: true,
+                  mode: "read",
+                })
+              : undefined);
+          if (root && doc.images.some((im) => im.source?.kind === "jpeg")) {
+            const entries = await jpegLoaderEntriesFromImages({
+              images: doc.images,
+              channelGroups: doc.channelGroups,
+              documentUrl: window.location.href,
+              activeGroupId: activeGroupIdAtStop,
+              fetchTile: tileFetcherForDirectory(root),
+              existingPyramidFolders: await listExistingPyramidFolders(root),
+            });
+            if (entries.length > 0) setJpegLoaderEntries(entries);
+          }
+        } catch (e) {
+          console.warn("[minerva] post-export jpeg refresh failed", e);
+        }
+      }
+      setViewerRemountKey((k) => k + 1);
+    })();
   };
 
   const updateGroupChannelLists = useCallback(
@@ -929,6 +1056,7 @@ const Content = (props: Props) => {
       setDicomIndexList(result.dicomIndexList);
       setDeniedHandleKeys(result.deniedHandleKeys);
       setMissingHandleKeys(result.missingHandleKeys);
+      setMissingStoryRoot(result.missingStoryRoot);
     },
     [],
   );
@@ -948,6 +1076,36 @@ const Content = (props: Props) => {
       ),
     );
   }, [updateGroupChannelLists, setChannelVisibilities]);
+
+  const reconnectStoryRoot = React.useCallback(async () => {
+    const storyId = useDocumentStore.getState().activeStoryId;
+    if (!storyId) return;
+    setIsLoadingImage(true);
+    try {
+      await reconnectStoryRootFromPicker(storyId);
+      const doc = useDocumentStore.getState();
+      const result = await hydrateLoadersFromImages(doc.images, true, {
+        channelGroups: doc.channelGroups,
+        documentUrl: window.location.href,
+      });
+      applyHydratedLoaders(result);
+      if (result.jpegLoaderEntries.length > 0) {
+        syncRegistryFromDocument();
+        setImportRevision((revision) => revision + 1);
+        revealWaypointOnNarrow();
+      }
+    } catch (e) {
+      if (!(e instanceof DOMException && e.name === "AbortError")) {
+        console.error("[minerva] reconnectStoryRoot failed", e);
+        window.alert(
+          e instanceof Error ? e.message : "Could not open story folder",
+        );
+      }
+    } finally {
+      setIsLoadingImage(false);
+      document.getElementById("global-loader")?.remove();
+    }
+  }, [applyHydratedLoaders, syncRegistryFromDocument, revealWaypointOnNarrow]);
 
   /** Chrome needs a click to re-grant File System Access after refresh. */
   const requestLoaderFileAccess = React.useCallback(async () => {
@@ -1545,8 +1703,11 @@ const Content = (props: Props) => {
     });
   }, [viewerImageKey, omeLoaderEntries, onEnsureChannelGmmContrastLimits]);
 
+  const contrastEditable =
+    omeLoaderEntries.length > 0 || dicomIndexList.length > 0;
   const channelProps = {
     hiddenChannel,
+    contrastEditable,
     ensureChannelHistograms: onEnsureChannelHistograms,
     ensureChannelGmmContrastLimits: onEnsureChannelGmmContrastLimits,
   };
@@ -1560,6 +1721,26 @@ const Content = (props: Props) => {
     exportMode,
     presenting,
     stopExport,
+    exportFolderPrompt: exportFolderPrompt
+      ? {
+          folderName: exportFolderPrompt.root.name,
+          onUpdateExisting: () => {
+            const prompt = exportFolderPrompt;
+            setExportFolderPrompt(null);
+            void beginExportToFolder(prompt.mode, prompt.root);
+          },
+          onChooseDifferent: () => {
+            const prompt = exportFolderPrompt;
+            setExportFolderPrompt(null);
+            void (async () => {
+              const dirHandle = await pickExportFolder();
+              if (!dirHandle) return;
+              await beginExportToFolder(prompt.mode, dirHandle);
+            })();
+          },
+          onCancel: () => setExportFolderPrompt(null),
+        }
+      : null,
   };
 
   const { viewerConfig, loaderList, mainSettingsList, imageLayers } =
@@ -1836,6 +2017,8 @@ const Content = (props: Props) => {
           onRequestFileAccess: requestLoaderFileAccess,
           missingHandleKeys,
           onReselectFile: reselectLoaderFile,
+          needsStoryRootReconnect: missingStoryRoot,
+          onReconnectStoryRoot: reconnectStoryRoot,
         };
         const routerProps = {
           ...mainProps,
@@ -1876,11 +2059,12 @@ const Content = (props: Props) => {
             {!presenting ? (
               <StoryTitleBar
                 onReturnToLibrary={returnToLibrary}
-                onExport={startExport}
-                onExportRemoteUrl={
-                  canExportWithRemoteUrls(images)
-                    ? () => void startExport("remote-url")
-                    : undefined
+                onExport={() =>
+                  void startExport(
+                    canExportWithRemoteUrls(images)
+                      ? "remote-url"
+                      : "jpeg-pyramid",
+                  )
                 }
                 onEnterPlaybackPreview={enterPlaybackPreview}
                 playbackPreviewDisabled={_waypoints.length === 0}

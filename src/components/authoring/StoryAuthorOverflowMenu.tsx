@@ -24,9 +24,6 @@ function downloadStoryJsonExport(
 export type StoryAuthorOverflowMenuProps = {
   onReturnToLibrary: () => void;
   onExport: () => void;
-  exportLabel?: string;
-  /** Shown when the story can keep remote OME-TIFF URLs instead of baking pyramids. */
-  onExportRemoteUrl?: () => void;
 };
 
 /**
@@ -34,12 +31,7 @@ export type StoryAuthorOverflowMenuProps = {
  * story banner; behavior matches the former nav tab-row menu.
  */
 export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
-  const {
-    onReturnToLibrary,
-    onExport,
-    exportLabel = "Export",
-    onExportRemoteUrl,
-  } = props;
+  const { onReturnToLibrary, onExport } = props;
   const [open, setOpen] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const waypointsOk = useDocumentStore((s) => s.waypoints.length > 0);
@@ -105,32 +97,6 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
           type="button"
           role="menuitem"
           className={`${styles.menuItem} ${styles.menuItemDivided}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            close();
-            onExport();
-          }}
-        >
-          {exportLabel}
-        </button>
-        {onExportRemoteUrl ? (
-          <button
-            type="button"
-            role="menuitem"
-            className={styles.menuItem}
-            onClick={(e) => {
-              e.stopPropagation();
-              close();
-              onExportRemoteUrl();
-            }}
-          >
-            Export with remote OME URL
-          </button>
-        ) : null}
-        <button
-          type="button"
-          role="menuitem"
-          className={`${styles.menuItem} ${styles.menuItemDivided}`}
           disabled={!waypointsOk}
           onClick={(e) => {
             e.stopPropagation();
@@ -141,7 +107,26 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
             );
           }}
         >
-          Save document as JSON
+          Save Config
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          className={styles.menuItem}
+          disabled={!waypointsOk}
+          title={
+            waypointsOk
+              ? "Save a playable story folder (index.html + images)"
+              : "Add a waypoint before exporting"
+          }
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!waypointsOk) return;
+            close();
+            onExport();
+          }}
+        >
+          Export Story
         </button>
       </div>
     </div>

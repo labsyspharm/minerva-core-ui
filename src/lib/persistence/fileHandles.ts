@@ -1,12 +1,15 @@
 import { del as kvDel, get as kvGet } from "idb-keyval";
-import { isPersistableFileHandle } from "@/lib/imaging/filesystem";
+import {
+  isPersistableFileHandle,
+  isPersistableFsHandle,
+} from "@/lib/imaging/filesystem";
 import { storyDb } from "./db";
 
 /**
  * Same-tab handles for browsers that cannot store {@link FileSystemFileHandle}
  * in IndexedDB (Firefox ephemeral `File` wrappers). Cleared on full page reload.
  */
-const sessionHandles = new Map<string, Handle.File>();
+const sessionHandles = new Map<string, FileSystemHandle>();
 
 /**
  * Persist a {@link FileSystemFileHandle} in Dexie `handles` (same IDB database as `stories`).
@@ -15,10 +18,10 @@ const sessionHandles = new Map<string, Handle.File>();
  */
 export async function putFileHandle(
   id: string,
-  handle: Handle.File,
+  handle: FileSystemHandle | Handle.File,
 ): Promise<void> {
   sessionHandles.set(id, handle);
-  if (!isPersistableFileHandle(handle)) return;
+  if (!isPersistableFsHandle(handle)) return;
   await storyDb.handles.put({ id, handle });
 }
 
@@ -27,7 +30,7 @@ export async function putFileHandle(
  */
 export async function getFileHandle(
   id: string,
-): Promise<Handle.File | undefined> {
+): Promise<FileSystemHandle | undefined> {
   const session = sessionHandles.get(id);
   if (session) return session;
 
@@ -47,6 +50,19 @@ export async function getFileHandle(
     /* ignore */
   }
   return legacy;
+}
+
+/** Typed helper when the caller expects a file handle (OME local sources). */
+export async function getPersistedFileHandle(
+  id: string,
+): Promise<Handle.File | undefined> {
+  const handle = await getFileHandle(id);
+  if (!handle) return undefined;
+  if (isPersistableFileHandle(handle as Handle.File)) {
+    return handle as Handle.File;
+  }
+  if (handle.kind === "file") return handle as FileSystemFileHandle;
+  return undefined;
 }
 
 export async function deleteFileHandle(id: string): Promise<void> {

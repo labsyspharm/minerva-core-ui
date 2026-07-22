@@ -24,6 +24,7 @@ export type PlaybackModeViewProps = StoryPlaybackLoaders & {
     channelIds: string[],
     opts?: { overwriteExistingLimits?: boolean },
   ) => Promise<Map<string, ContrastLimits>>;
+  contrastEditable?: boolean;
   ioState: null | string;
   stopExport: () => void;
   presenting: boolean;
@@ -35,6 +36,13 @@ export type PlaybackModeViewProps = StoryPlaybackLoaders & {
   dicomIndexList: DicomIndex[];
   omeLoaderEntries: OmeLoaderEntry[];
   exportMode?: StoryExportMode;
+  /** When set, ask where to write before starting the exporter. */
+  exportFolderPrompt?: {
+    folderName: string;
+    onUpdateExisting: () => void;
+    onChooseDifferent: () => void;
+    onCancel: () => void;
+  } | null;
 };
 
 export const PlaybackModeView = (props: PlaybackModeViewProps) => {
@@ -63,6 +71,8 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
   }
 
   const exporting = props.ioState === "EXPORTING";
+  const folderPrompt = props.exportFolderPrompt;
+  const overlayOpen = exporting || !!folderPrompt;
   const exporterProps = {
     in_f: props.in_f,
     handles: props.handles,
@@ -78,12 +88,14 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
     <div
       key="author"
       className={styles.modeViewport}
-      data-mode={exporting ? "exporting" : "author"}
+      data-mode={
+        exporting ? "exporting" : folderPrompt ? "export-dest" : "author"
+      }
     >
       <div
         className={[
           styles.authorViewport,
-          exporting ? styles.authorViewportHidden : null,
+          overlayOpen ? styles.authorViewportHidden : null,
         ]
           .filter(Boolean)
           .join(" ")}
@@ -93,12 +105,38 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
           noLoader={props.noLoader}
           ensureChannelHistograms={props.ensureChannelHistograms}
           ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
+          contrastEditable={props.contrastEditable}
           viewer={
             <ChannelPanel {...channelPanelProps}>{props.viewer}</ChannelPanel>
           }
         />
       </div>
-      {exporting ? (
+      {folderPrompt ? (
+        <div className={styles.exportOverlay}>
+          <div className={styles.folderPrompt} role="dialog" aria-modal="true">
+            <div className={styles.folderPromptTitle}>Export story</div>
+            <div className={styles.folderPromptBody}>
+              Update the existing folder “{folderPrompt.folderName}”, or pick a
+              different one?
+            </div>
+            <div className={styles.folderPromptActions}>
+              <button
+                type="button"
+                className={styles.folderPromptPrimary}
+                onClick={folderPrompt.onUpdateExisting}
+              >
+                Update “{folderPrompt.folderName}”
+              </button>
+              <button type="button" onClick={folderPrompt.onChooseDifferent}>
+                Choose different folder…
+              </button>
+              <button type="button" onClick={folderPrompt.onCancel}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : exporting ? (
         <div className={styles.exportOverlay}>
           <ImageExporter {...exporterProps} />
         </div>

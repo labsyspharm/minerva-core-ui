@@ -1,5 +1,12 @@
 import { hasDirectoryPickerAccess } from "@/lib/imaging/filesystem";
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
+import {
+  folderByChannelIndexFromGroup,
+  JPEG_FALLBACK_LOWER_LIMIT,
+  JPEG_FALLBACK_UPPER_LIMIT,
+  jpegPyramidFolderName,
+} from "@/lib/imaging/jpegPyramid";
+import { jpegSourceNeedsLocalRoot } from "@/lib/imaging/loadJpegFromDocument";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
 import {
   createStoryRecord,
@@ -11,22 +18,60 @@ import { useDocumentStore } from "@/lib/stores/documentStore";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
 import { withPortableJpegSources } from "./storyBundle";
 
+export { jpegSourceNeedsLocalRoot };
+
 const STORY_ROOT_HANDLE_SUFFIX = ":storyRoot";
 
 function storyRootHandleKey(storyId: string): string {
   return `story:${storyId}${STORY_ROOT_HANDLE_SUFFIX}`;
 }
 
-const rootHandles = new Map<string, FileSystemDirectoryHandle>();
-
-function rememberStoryRootHandle(
-  storyId: string,
-  handle: FileSystemDirectoryHandle,
-): void {
-  rootHandles.set(storyId, handle);
+function isDirectoryHandle(
+  handle: FileSystemHandle | undefined,
+): handle is FileSystemDirectoryHandle {
+  return !!handle && handle.kind === "directory";
 }
 
-function tileFetcherForDirectory(
+/** Remember + persist the story export/import root directory. */
+export async function setStoryRootHandle(
+  storyId: string,
+  handle: FileSystemDirectoryHandle,
+): Promise<void> {
+  await putFileHandle(storyRootHandleKey(storyId), handle);
+}
+
+export type GetStoryRootHandleOptions = {
+  requestPermission?: boolean;
+  mode?: "read" | "readwrite";
+};
+
+async function ensureDirectoryPermission(
+  handle: FileSystemDirectoryHandle,
+  opts: GetStoryRootHandleOptions,
+): Promise<boolean> {
+  const mode = { mode: opts.mode ?? "read" } as const;
+  try {
+    if ((await handle.queryPermission(mode)) === "granted") return true;
+    return opts.requestPermission
+      ? (await handle.requestPermission(mode)) === "granted"
+      : false;
+  } catch {
+    return false;
+  }
+}
+
+export async function getStoryRootHandle(
+  storyId: string | null | undefined,
+  opts: GetStoryRootHandleOptions = {},
+): Promise<FileSystemDirectoryHandle | undefined> {
+  if (!storyId) return undefined;
+  const stored = await getFileHandle(storyRootHandleKey(storyId));
+  if (!isDirectoryHandle(stored)) return undefined;
+  if (!(await ensureDirectoryPermission(stored, opts))) return undefined;
+  return stored;
+}
+
+export function tileFetcherForDirectory(
   root: FileSystemDirectoryHandle,
 ): JpegTileFetcher {
   return async (folder, filename) => {
@@ -36,20 +81,79 @@ function tileFetcherForDirectory(
   };
 }
 
-/** Resolve a tile fetcher for an imported story's directory handle (memory or Dexie). */
-export async function tileFetcherForStory(
-  storyId: string | null | undefined,
-): Promise<JpegTileFetcher | undefined> {
-  if (!storyId) return undefined;
-  let root = rootHandles.get(storyId);
-  if (!root) {
-    const stored = await getFileHandle(storyRootHandleKey(storyId));
-    if (stored && "getDirectoryHandle" in stored) {
-      root = stored as unknown as FileSystemDirectoryHandle;
-      rootHandles.set(storyId, root);
+/**
+ * Folder names jpeg-pyramid export would write. Prefer channel groups; if none
+ * contribute folders, fall back to image-level channels (same as import checks).
+ */
+export async function neededJpegPyramidFolderNames(
+  channelGroups: ReadonlyArray<DocumentData["channelGroups"][number]>,
+  images?: DocumentData["images"],
+): Promise<Set<string>> {
+  const names = new Set<string>();
+  await Promise.all(
+    channelGroups.flatMap((g) =>
+      g.channels.map(async (ch) =>
+        names.add(
+          await jpegPyramidFolderName(
+            ch.channelId,
+            // Match export / folderByChannelIndexFromImageChannels defaults so
+            // missing limits still hash to the on-disk pyramid folder name.
+            ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
+            ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
+          ),
+        ),
+      ),
+    ),
+  );
+  if (names.size === 0 && images) {
+    for (const im of images) {
+      if (im.source?.kind !== "jpeg" && im.source?.kind !== "local") continue;
+      const channelIndexById = Object.fromEntries(
+        im.channels.map((ch) => [ch.id, ch.index]),
+      );
+      const folders = await folderByChannelIndexFromGroup({
+        channels: im.channels.map((ch) => ({
+          channelId: ch.id,
+          lowerLimit: ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
+          upperLimit: ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
+        })),
+        channelIndexById,
+      });
+      for (const name of Object.values(folders)) names.add(name);
     }
   }
-  return root ? tileFetcherForDirectory(root) : undefined;
+  return names;
+}
+
+export async function listExistingPyramidFolders(
+  root: FileSystemDirectoryHandle,
+): Promise<Set<string>> {
+  const names = new Set<string>();
+  for await (const [name, handle] of root.entries()) {
+    if (handle.kind === "directory" && /^[0-9a-f]{64}$/i.test(name)) {
+      names.add(name.toLowerCase());
+    }
+  }
+  return names;
+}
+
+async function assertPyramidFoldersExist(
+  root: FileSystemDirectoryHandle,
+  data: DocumentData,
+): Promise<void> {
+  if (data.metadata.imageSource === "remote-url") return;
+  const needed = await neededJpegPyramidFolderNames(
+    data.channelGroups,
+    data.images,
+  );
+  if (needed.size === 0) return;
+  const existing = await listExistingPyramidFolders(root);
+  const missing = [...needed].filter((name) => !existing.has(name));
+  if (missing.length > 0) {
+    throw new Error(
+      "Missing JPEG pyramid folders. Pick the folder created by Export (document.json plus channel directories).",
+    );
+  }
 }
 
 async function readDocumentJson(
@@ -75,6 +179,7 @@ export async function importStoryFolderFromPicker(): Promise<string> {
     mode: "read",
   });
   const data = await readDocumentJson(root);
+  await assertPyramidFoldersExist(root, data);
   const title = data.metadata.title?.trim() || root.name || "Imported Story";
   const rec = await createStoryRecord(title);
   // Remote-URL exports keep existing `kind: "url"` sources; JPEG-pyramid
@@ -93,16 +198,38 @@ export async function importStoryFolderFromPicker(): Promise<string> {
     images,
   });
   await saveStoryDocument(rec.id, next);
-  rememberStoryRootHandle(rec.id, root);
-  try {
-    await putFileHandle(
-      storyRootHandleKey(rec.id),
-      root as unknown as Handle.File,
-    );
-  } catch (e) {
-    console.warn("[minerva] could not persist story root directory handle", e);
-  }
+  await setStoryRootHandle(rec.id, root);
   useDocumentStore.getState().hydrateFromDocument(next, rec.id);
   await setActiveStoryId(rec.id);
   return rec.id;
+}
+
+export async function reconnectStoryRootFromPicker(
+  storyId: string,
+): Promise<FileSystemDirectoryHandle> {
+  if (!hasDirectoryPickerAccess()) {
+    throw new Error(
+      "Reconnecting a story folder needs the File System Access API (Chrome or Edge).",
+    );
+  }
+  const root = await window.showDirectoryPicker({
+    id: "minerva-story-import",
+    mode: "read",
+  });
+  await assertPyramidFoldersExist(
+    root,
+    useDocumentStore.getState().toDocumentData(),
+  );
+  await setStoryRootHandle(storyId, root);
+  return root;
+}
+
+/** Relative / empty jpeg `source.url` needs a persisted story directory handle. */
+export function storyNeedsLocalJpegRoot(
+  images: DocumentData["images"],
+): boolean {
+  return images.some(
+    (im) =>
+      im.source?.kind === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url),
+  );
 }

@@ -46,4 +46,61 @@
   position: absolute;
   inset: 0;
   z-index: 2;
+  background: #111;
+  color: #e8e8e8;
+  display: grid;
+  place-items: center;
+}
+
+.folderPrompt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85em;
+  max-width: 22rem;
+  padding: 1.25em 1.5em;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  background: color-mix(in srgb, #1a1a1a 92%, transparent);
+}
+
+.folderPromptTitle {
+  font-size: 1.05em;
+  font-weight: 600;
+  text-align: center;
+}
+
+.folderPromptBody {
+  font-size: 0.95em;
+  line-height: 1.4;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.folderPromptActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin-top: 0.25em;
+}
+
+.folderPromptActions button {
+  appearance: none;
+  padding: 0.55em 1em;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.folderPromptActions button:hover {
+  background: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.folderPromptActions button:focus-visible {
+  outline: 2px solid hwb(45 90% 0%);
+  outline-offset: 2px;
+}
+
+.folderPromptPrimary {
+  background: color-mix(in srgb, currentColor 22%, transparent) !important;
 }

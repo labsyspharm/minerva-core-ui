@@ -12,6 +12,15 @@ export type JpegLoaderEntry = {
   /** OME channel index → pyramid folder (map mutated in place; entry shell replaced to re-render). */
   channelFolders?: Record<number, string>;
   imagePath?: string;
+  /**
+   * Pyramid folders treated as loadable (disk listing ∪ hydrate-time group
+   * hashes), normalized to lowercase. Sync only switches onto maps in this set.
+   */
+  availablePyramidFolders?: ReadonlySet<string>;
+  /** Contrast-hash folder maps captured for each persisted channel group. */
+  groupChannelFolders?: Readonly<
+    Record<string, Readonly<Record<number, string>>>
+  >;
 };
 
 export type LoaderListItem = {

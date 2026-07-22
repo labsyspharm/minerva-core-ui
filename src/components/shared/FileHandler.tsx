@@ -6,7 +6,10 @@ import {
   isPersistableFileHandle,
   toFile,
 } from "@/lib/imaging/filesystem";
-import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
+import {
+  getPersistedFileHandle,
+  putFileHandle,
+} from "@/lib/persistence/fileHandles";
 
 export type FileHandlerProps = {
   handleKeys: string[];
@@ -57,7 +60,7 @@ export const FileHandler = ({
       return;
     }
     try {
-      const h = await getFileHandle(storageKey);
+      const h = await getPersistedFileHandle(storageKey);
       setHasRecent(Boolean(h));
     } catch {
       setHasRecent(false);
@@ -110,7 +113,7 @@ export const FileHandler = ({
   const onRecall = async (options?: {
     notifyRestored?: boolean;
   }): Promise<Handle.File[]> => {
-    const newHandle = await getFileHandle(storageKey);
+    const newHandle = await getPersistedFileHandle(storageKey);
     if (!newHandle) {
       setHasRecent(false);
       return [];
@@ -127,7 +130,7 @@ export const FileHandler = ({
     if (!autoRestoreOnMount || !storageKey) return;
     const ac = new AbortController();
     void (async () => {
-      const newHandle = await getFileHandle(storageKey);
+      const newHandle = await getPersistedFileHandle(storageKey);
       if (!newHandle || ac.signal.aborted) return;
       try {
         await applyRestoredHandle(newHandle, ac.signal);

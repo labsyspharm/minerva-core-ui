@@ -222,6 +222,8 @@ function makeGroupChannelRow(
 
 export type ChannelGroupsMasterDetailProps = {
   noLoader: boolean;
+  /** JPEG pyramids are pre-baked at exported contrast, so their controls are read-only. */
+  contrastEditable?: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
   ensureChannelGmmContrastLimits?: (
     channelIds: string[],
@@ -552,6 +554,7 @@ export const ChannelGroupsMasterDetail = (
 
   const autoContrastActionButton = (sc: Channel | undefined, name: string) => {
     if (
+      !props.contrastEditable ||
       !sc ||
       !ensureChannelGmmContrastLimits ||
       isMaskChannel(sc) ||
@@ -1042,7 +1045,11 @@ export const ChannelGroupsMasterDetail = (
                   ? isRgbDisplayChannel(sc, sourceChannels)
                   : false;
                 const contrastEditor =
-                  sc && isImageChannel(sc) && visible && !rgbDisplay ? (
+                  props.contrastEditable &&
+                  sc &&
+                  isImageChannel(sc) &&
+                  visible &&
+                  !rgbDisplay ? (
                     <ChannelContrastEditor
                       key={`grp-${group.id}-${gc.id}`}
                       {...contrastEditorPropsForGroupRow(
@@ -1453,7 +1460,8 @@ export const ChannelGroupsMasterDetail = (
     }
 
     const rgbDisplay = isRgbDisplayChannel(sc, sourceChannels);
-    const showHistogramEmbed = isImageChannel(sc) && !rgbDisplay;
+    const showHistogramEmbed =
+      props.contrastEditable && isImageChannel(sc) && !rgbDisplay;
     const contrastEditor = showHistogramEmbed ? (
       <ChannelContrastEditor
         key={`all-${sc.id}`}

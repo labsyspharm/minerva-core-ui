@@ -1,9 +1,9 @@
 import type { DocumentData } from "@/lib/stores/documentSchema";
 
-/** Row in Dexie `handles` table — {@link FileSystemFileHandle} for `Image.source.handleKey`. */
+/** Row in Dexie `handles` table — file or story-root directory handle. */
 export type FileHandleRow = {
   id: string;
-  handle: Handle.File;
+  handle: FileSystemHandle;
 };
 
 /** Row in Dexie `stories` table — canonical document only (no file handles on this type). */
