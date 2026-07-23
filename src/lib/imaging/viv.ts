@@ -23,12 +23,40 @@ export const MAX_VIV_INTENSITY_CHANNELS = 6;
 /**
  * Shared Viv `MultiscaleImageLayer` / TileLayer fetch tuning.
  * Default Viv uses maxRequests=10 and debounceTime=0, which under continuous
- * zoom starts then aborts many mid-LOD tiles. A short debounce lets the camera
- * settle before fetching; a slightly lower concurrency reduces thrash when
- * each tile fans out across multiple channel selections.
+ * zoom starts then aborts many mid-LOD tiles. Keep concurrency low: each tile
+ * fans out across multi-channel selections, and completions still hit main
+ * thread for GPU upload.
  */
-export const VIV_TILE_MAX_REQUESTS = 6;
-export const VIV_TILE_DEBOUNCE_MS = 75;
+export const VIV_TILE_MAX_REQUESTS = 3;
+export const VIV_TILE_DEBOUNCE_MS = 150;
+
+/**
+ * Must match ImageViewer `OrthographicView({ id })` for the image camera.
+ * Passed as `viewportId` so dual views (image + scale-bar) do not double-drive tilesets.
+ */
+export const VIV_IMAGE_VIEWPORT_ID = "ortho";
+
+/**
+ * Spread onto every Viv `MultiscaleImageLayer` (OME / JPEG / DICOM).
+ * One place to tune navigation tile behavior for all pyramid loaders.
+ *
+ * `refinementStrategy: "best-available"` is intentional for all formats
+ * (including JPEG, which previously used `"no-overlap"`): keep coarser LOD
+ * tiles visible while finer tiles load so continuous zoom does not blank.
+ */
+export const VIV_MULTISCALE_TILE_PROPS = {
+  refinementStrategy: "best-available" as const,
+  maxRequests: VIV_TILE_MAX_REQUESTS,
+  debounceTime: VIV_TILE_DEBOUNCE_MS,
+  viewportId: VIV_IMAGE_VIEWPORT_ID,
+};
+
+/** Deck `TileLayer` fetch/refine knobs shared with Viv (no `viewportId`). */
+export const VIV_TILE_LAYER_PROPS = {
+  refinementStrategy: VIV_MULTISCALE_TILE_PROPS.refinementStrategy,
+  maxRequests: VIV_MULTISCALE_TILE_PROPS.maxRequests,
+  debounceTime: VIV_MULTISCALE_TILE_PROPS.debounceTime,
+};
 
 type Selection = Record<"z" | "t" | "c", number>;
 type Color = [number, number, number];

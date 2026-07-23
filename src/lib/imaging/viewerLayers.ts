@@ -13,7 +13,12 @@ import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
 import { createJpegLayers } from "./jpeg.js";
-import { type Config, type Loader, toSettings } from "./viv";
+import {
+  type Config,
+  type Loader,
+  toSettings,
+  VIV_MULTISCALE_TILE_PROPS,
+} from "./viv";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
 export function applyChannelRendering<S extends MainSettings>(
@@ -126,6 +131,7 @@ export function createMultiscaleLayer(args: {
     id: `mainLayer-${args.index}-${selectionId}${remount}`,
     ...args.settings,
     loader: args.loader.data,
+    ...VIV_MULTISCALE_TILE_PROPS,
   } as never);
 }
 

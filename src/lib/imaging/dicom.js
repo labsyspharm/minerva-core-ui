@@ -4,6 +4,7 @@ import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 import * as dcmjs from "dcmjs";
 import { DicomPixelSource } from "./dicomPixelSource";
 import { DicomTIFFImage } from "./dicomTiffImage";
+import { VIV_MULTISCALE_TILE_PROPS, VIV_TILE_LAYER_PROPS } from "./viv";
 
 const { naturalizeDataset } = dcmjs.data.DicomMetaDictionary;
 
@@ -620,7 +621,7 @@ function createTileLayers(meta) {
         console.log({ x, y, z, level }, source, tile);
         return tile;
       },
-      refinementStrategy: "best-available",
+      ...VIV_TILE_LAYER_PROPS,
       tileSize: 1024,
       minZoom: minZoom,
       maxZoom: 0,
@@ -661,8 +662,7 @@ function createTileLayers(meta) {
   const imageProps = {
     visible,
     loader: dicomLoader,
-    // https://deck.gl/docs/api-reference/geo-layers/tile-layer#refinementstrategy
-    refinementStrategy: "best-available",
+    ...VIV_MULTISCALE_TILE_PROPS,
     // Include contrast limits in ID to force layer recreation when they change
     // This prevents flash when switching channel groups
     id: `${imageID}-${contrastLimits.map(([l, u]) => `${l}-${u}`).join("-")}`,

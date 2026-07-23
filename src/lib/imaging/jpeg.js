@@ -6,7 +6,7 @@ import {
   JPEG_PYRAMID_TILE_SIZE,
   jpegPyramidLevels,
 } from "./jpegPyramid";
-import { VIV_TILE_DEBOUNCE_MS, VIV_TILE_MAX_REQUESTS } from "./viv";
+import { VIV_MULTISCALE_TILE_PROPS } from "./viv";
 
 function createJpegLayers(meta) {
   const { channelsVisible, colors, selections } = meta.settings;
@@ -20,9 +20,7 @@ function createJpegLayers(meta) {
   const imageProps = {
     visible,
     loader: jpegLoader,
-    refinementStrategy: "no-overlap",
-    maxRequests: VIV_TILE_MAX_REQUESTS,
-    debounceTime: VIV_TILE_DEBOUNCE_MS,
+    ...VIV_MULTISCALE_TILE_PROPS,
     id: `${imageID}-${Object.values(channelFolders || {}).join("-")}-${selections?.map((s) => s.c).join("-")}`,
     channelsVisible,
     colors,
