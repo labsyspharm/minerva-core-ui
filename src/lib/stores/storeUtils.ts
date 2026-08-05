@@ -223,6 +223,87 @@ export function setImageBasename(
   return next;
 }
 
+/**
+ * Copy stable channel ids (+ persisted styling) from `previous` onto
+ * `incoming` by sorted OME index. Channel groups / waypoints keep working
+ * because they key off channel UUID, not image id.
+ */
+export function rebindReplacementImageChannels(
+  previous: Image,
+  incoming: Image,
+): Image | { error: string } {
+  if (previous.channels.length !== incoming.channels.length) {
+    return {
+      error: `Channel count mismatch: expected ${previous.channels.length}, got ${incoming.channels.length}.`,
+    };
+  }
+  const prevByIndex = [...previous.channels].sort((a, b) => a.index - b.index);
+  const nextByIndex = [...incoming.channels].sort((a, b) => a.index - b.index);
+  const channels = nextByIndex.map((ch, i) => {
+    const prev = prevByIndex[i];
+    return {
+      ...ch,
+      id: prev.id,
+      name: prev.name,
+      kind: prev.kind ?? ch.kind,
+      color: prev.color ?? ch.color,
+      lowerLimit: prev.lowerLimit ?? ch.lowerLimit,
+      upperLimit: prev.upperLimit ?? ch.upperLimit,
+      gmmContrastLimits: prev.gmmContrastLimits ?? ch.gmmContrastLimits,
+      maskVisualization: prev.maskVisualization ?? ch.maskVisualization,
+    };
+  });
+  return {
+    ...incoming,
+    channels,
+    contentRole: previous.contentRole ?? incoming.contentRole,
+  };
+}
+
+/** Swap one image row for a replacement (same list position). */
+export function replaceImageRowInDocument(
+  images: Image[],
+  oldImageId: string,
+  replacement: Image,
+): Image[] {
+  const idx = images.findIndex((im) => im.id === oldImageId);
+  if (idx < 0) return images;
+  const next = [...images];
+  next[idx] = replacement;
+  return next;
+}
+
+/**
+ * Remove one document image and drop channel-group rows that referenced its
+ * channels. Empty groups are removed.
+ */
+export function removeImageFromDocument(
+  images: Image[],
+  channelGroups: ChannelGroup[],
+  imageId: string,
+): {
+  images: Image[];
+  channelGroups: ChannelGroup[];
+  removedChannelIds: string[];
+} {
+  const image = images.find((im) => im.id === imageId);
+  if (!image) {
+    return { images, channelGroups, removedChannelIds: [] };
+  }
+  const removedChannelIds = image.channels.map((ch) => ch.id);
+  const removed = new Set(removedChannelIds);
+  return {
+    images: images.filter((im) => im.id !== imageId),
+    channelGroups: channelGroups
+      .map((g) => ({
+        ...g,
+        channels: g.channels.filter((gc) => !removed.has(gc.channelId)),
+      }))
+      .filter((g) => g.channels.length > 0),
+    removedChannelIds,
+  };
+}
+
 /** Drop an existing row before re-importing the same basename + role. */
 export function dedupeImagesForImport(
   images: Image[],

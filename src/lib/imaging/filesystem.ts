@@ -336,6 +336,19 @@ const toMaskLoaderFromUrl = async (url: string): Promise<Loader> => {
 
 export type OmeLoaderRole = "intensity" | "segmentation";
 
+/**
+ * Open the OME-TIFF file picker, then verify permission and that the file
+ * still resolves. Returns null on cancel / denied / missing.
+ */
+export async function pickLocalOmeTiffHandle(): Promise<Handle.File | null> {
+  const picked = await toFile();
+  if (picked.length === 0) return null;
+  const handle = picked[0];
+  if (!(await ensureFileHandlePermission(handle))) return null;
+  if (!(await findFile({ handle }))) return null;
+  return handle;
+}
+
 /** Pick Viv vs minimal mask loader for local file or remote URL. */
 export async function loadOmeLoaderForRole(
   role: OmeLoaderRole,

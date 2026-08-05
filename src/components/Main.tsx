@@ -33,12 +33,10 @@ import { isImageChannel } from "@/lib/imaging/channelKind";
 import { loadDicomWeb, parseDicomWeb } from "@/lib/imaging/dicom.js";
 import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
 import {
-  ensureFileHandlePermission,
-  findFile,
   hasAuthorShellSupport,
   hasDirectoryPickerAccess,
   loadOmeLoaderForRole,
-  toFile,
+  pickLocalOmeTiffHandle,
 } from "@/lib/imaging/filesystem";
 import {
   clearOmeHistogramCache,
@@ -60,6 +58,7 @@ import {
   applyPaletteToGroupedImport,
   buildOmeImportSlice,
   finalizeAppendedIntensityGroups,
+  replaceOmeLocalImageInDocument,
 } from "@/lib/imaging/omeImportPipeline";
 import { warmupPsudoPalette } from "@/lib/imaging/pseudoPalette";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
@@ -67,8 +66,11 @@ import { Pool } from "@/lib/imaging/workers/pool";
 import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
-import { putFileHandle } from "@/lib/persistence/fileHandles";
-import { imageHandleStorageKey } from "@/lib/persistence/imageHandles";
+import { deleteFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
+import {
+  imageHandleStorageKey,
+  persistLocalImageHandle,
+} from "@/lib/persistence/imageHandles";
 import {
   saveStoryDocument,
   setActiveStoryId,
@@ -94,6 +96,7 @@ import {
   dedupeImagesForImport,
   hydrateConfigWaypoint,
   type LegacyExhibitWaypoint,
+  removeImageFromDocument,
   setImageSource,
   waypointsToConfigWaypoints,
 } from "@/lib/stores/storeUtils";
@@ -659,11 +662,144 @@ const Content = (props: Props) => {
   const [fileName, setFileName] = useState("");
   /** Full URL of the last OME-TIFF-URL load (Images tab label); cleared for local/DICOM. */
   const [lastOmeTiffUrl, setLastOmeTiffUrl] = useState<string | null>(null);
+
+  const onRemoveImage = useCallback(
+    async (imageId: string) => {
+      const doc = useDocumentStore.getState();
+      const removed = doc.images.find((im) => im.id === imageId);
+      if (!removed) return;
+      const localHandleKey =
+        removed.source?.kind === "local" ? removed.source.handleKey : undefined;
+
+      const result = removeImageFromDocument(
+        doc.images,
+        doc.channelGroups,
+        imageId,
+      );
+      if (result.images.length === doc.images.length) return;
+
+      if (localHandleKey) {
+        await deleteFileHandle(localHandleKey);
+        setMissingHandleKeys((prev) =>
+          prev.filter((k) => k !== localHandleKey),
+        );
+        setDeniedHandleKeys((prev) => prev.filter((k) => k !== localHandleKey));
+      }
+
+      clearOmeDerivedCaches();
+      setOmeLoaderEntries((prev) =>
+        prev.filter((e) => e.sourceImageId !== imageId),
+      );
+      setJpegLoaderEntries((prev) =>
+        prev.filter((e) => e.sourceImageId !== imageId),
+      );
+      setDicomIndexList((prev) =>
+        prev.filter((d) => d.sourceImageId !== imageId),
+      );
+
+      const activeId = useAppStore.getState().activeChannelGroupId;
+      const activeStillExists = result.channelGroups.some(
+        (g) => g.id === activeId,
+      );
+      publishChannelState(result.images, result.channelGroups, {
+        resetActiveGroup: !activeStillExists,
+        mergeVisibilities: true,
+      });
+
+      if (result.images.length === 0) {
+        setFileName("");
+        setLastOmeTiffUrl(null);
+      } else {
+        setFileName(result.images.map((im) => im.basename).join(", "));
+        const firstUrl = result.images.find((im) => im.source?.kind === "url");
+        setLastOmeTiffUrl(
+          firstUrl?.source?.kind === "url" ? firstUrl.source.url : null,
+        );
+      }
+      setViewerRemountKey((k) => k + 1);
+    },
+    [publishChannelState],
+  );
+
   /** Bumps on each OME-TIFF-URL load so a stale loader cannot commit after a newer URL starts. */
   const omeTiffUrlLoadGenerationRef = React.useRef(0);
   const jpegUrlLoadGenerationRef = React.useRef(0);
   const [importRevision, setImportRevision] = useState(0);
   const [isLoadingImage, setIsLoadingImage] = useState(hasDemo);
+
+  /**
+   * Swap an image's pixel source for a new OME-TIFF. New image id, same channel
+   * ids (by index) so groups and waypoints keep their links.
+   */
+  const onReplaceImage = useCallback(
+    async (imageId: string) => {
+      setIsLoadingImage(true);
+      try {
+        const handle = await pickLocalOmeTiffHandle();
+        if (!handle) return;
+
+        const doc = useDocumentStore.getState();
+        clearOmeDerivedCaches();
+        const prep = await replaceOmeLocalImageInDocument({
+          images: doc.images,
+          imageId,
+          handle,
+          pool: new Pool(),
+        });
+        if (prep.ok === false) {
+          if (prep.error) window.alert(prep.error);
+          return;
+        }
+
+        const nextImages = await persistLocalImageHandle({
+          storyId: useDocumentStore.getState().activeStoryId,
+          imageId: prep.newImageId,
+          handle,
+          images: prep.nextImages,
+          previousHandleKey: prep.oldLocalHandleKey,
+        });
+
+        skipLoaderHydrateRef.current = true;
+        setOmeLoaderEntries((prev) => [
+          ...prev.filter((e) => e.sourceImageId !== prep.oldImageId),
+          { loader: prep.loader, sourceImageId: prep.newImageId },
+        ]);
+        setJpegLoaderEntries((prev) =>
+          prev.filter((e) => e.sourceImageId !== prep.oldImageId),
+        );
+        setDicomIndexList((prev) =>
+          prev.filter((d) => d.sourceImageId !== prep.oldImageId),
+        );
+        setDeniedHandleKeys([]);
+        if (prep.oldLocalHandleKey) {
+          setMissingHandleKeys((prev) =>
+            prev.filter((k) => k !== prep.oldLocalHandleKey),
+          );
+        }
+
+        publishChannelState(nextImages, doc.channelGroups, {
+          resetActiveGroup: false,
+          mergeVisibilities: true,
+        });
+        setFileName(prep.basename);
+        setLastOmeTiffUrl(null);
+        setViewerRemountKey((k) => k + 1);
+        setImportRevision((r) => r + 1);
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === "AbortError")) {
+          console.error("[minerva] onReplaceImage failed", e);
+          window.alert(
+            e instanceof Error ? e.message : "Could not replace image",
+          );
+        }
+      } finally {
+        setIsLoadingImage(false);
+        document.getElementById("global-loader")?.remove();
+      }
+    },
+    [publishChannelState],
+  );
+
   const showSquareViewportOverlay = useAppStore(
     (state) => state.showSquareViewportOverlay,
   );
@@ -1143,11 +1279,8 @@ const Content = (props: Props) => {
     async (imageId: string) => {
       setIsLoadingImage(true);
       try {
-        const picked = await toFile();
-        if (picked.length === 0) return;
-        const handle = picked[0];
-        if (!(await ensureFileHandlePermission(handle))) return;
-        if (!(await findFile({ handle }))) return;
+        const handle = await pickLocalOmeTiffHandle();
+        if (!handle) return;
 
         const doc = useDocumentStore.getState();
         const im = doc.images.find((i) => i.id === imageId);
@@ -2019,6 +2152,8 @@ const Content = (props: Props) => {
           onReselectFile: reselectLoaderFile,
           needsStoryRootReconnect: missingStoryRoot,
           onReconnectStoryRoot: reconnectStoryRoot,
+          onRemoveImage,
+          onReplaceImage,
         };
         const routerProps = {
           ...mainProps,
