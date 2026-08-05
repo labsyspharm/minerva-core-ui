@@ -6139,7 +6139,7 @@ body[data-color-mode*='light'] {
   opacity: 0.28;
   color: rgba(238, 238, 238, 0.85);
 }
-._stack_cx9ev_1 {
+._stack_ajz18_1 {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -6149,14 +6149,14 @@ body[data-color-mode*='light'] {
   box-sizing: border-box;
 }
 
-._headerActionsWrap_cx9ev_11 {
+._headerActionsWrap_ajz18_11 {
   position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-._addPanel_cx9ev_18 {
+._addPanel_ajz18_18 {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
@@ -6174,19 +6174,19 @@ body[data-color-mode*='light'] {
   box-shadow: 0 10px 28px rgb(0 0 0 / 55%);
 }
 
-._addActionAnchor_cx9ev_36 {
+._addActionAnchor_ajz18_36 {
   position: relative;
   display: inline-flex;
 }
 
-._formatRow_cx9ev_41 {
+._formatRow_ajz18_41 {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   min-width: 0;
 }
 
-._formatChip_cx9ev_48 {
+._formatChip_ajz18_48 {
   font-size: 11px;
   font-weight: 600;
   padding: 0.35rem 0.65rem;
@@ -6198,18 +6198,18 @@ body[data-color-mode*='light'] {
   line-height: 1.2;
 }
 
-._formatChip_cx9ev_48:hover {
+._formatChip_ajz18_48:hover {
   border-color: #666;
   color: #fff;
 }
 
-._formatChipActive_cx9ev_65 {
+._formatChipActive_ajz18_65 {
   border-color: var(--panel-accent, #58a6ff);
   background: #1f2a3a;
   color: #fff;
 }
 
-._addPanelBody_cx9ev_71 {
+._addPanelBody_ajz18_71 {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -6217,7 +6217,7 @@ body[data-color-mode*='light'] {
   border-top: 1px solid #252525;
 }
 
-._urlRow_cx9ev_79 {
+._urlRow_ajz18_79 {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -6225,12 +6225,12 @@ body[data-color-mode*='light'] {
   width: min(360px, calc(100vw - 56px));
 }
 
-._urlInput_cx9ev_87 {
+._urlInput_ajz18_87 {
   flex: 1;
   min-width: 120px;
 }
 
-._primaryButton_cx9ev_92 {
+._primaryButton_ajz18_92 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -6247,29 +6247,29 @@ body[data-color-mode*='light'] {
   color: #fff;
 }
 
-._primaryButton_cx9ev_92:hover:not(:disabled) {
+._primaryButton_ajz18_92:hover:not(:disabled) {
   background: #333;
   border-color: #666;
 }
 
-._primaryButton_cx9ev_92:disabled {
+._primaryButton_ajz18_92:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-._importError_cx9ev_119 {
+._importError_ajz18_119 {
   font-size: 11px;
   line-height: 1.4;
   color: #f85149;
 }
 
-._importSuccess_cx9ev_125 {
+._importSuccess_ajz18_125 {
   font-size: 11px;
   line-height: 1.4;
   color: color-mix(in srgb, #7ee787 92%, #fff 8%);
 }
 
-._imageCard_cx9ev_131 {
+._imageCard_ajz18_131 {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -6281,9 +6281,10 @@ body[data-color-mode*='light'] {
   min-width: 0;
 }
 
-._fileAccessOverlay_cx9ev_143 {
+._fileAccessOverlay_ajz18_143 {
   position: absolute;
   inset: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -6294,7 +6295,7 @@ body[data-color-mode*='light'] {
   border: 1px solid #6e2a2a;
 }
 
-._fileAccessError_cx9ev_156 {
+._fileAccessError_ajz18_157 {
   font-size: 11px;
   font-weight: 600;
   line-height: 1.3;
@@ -6302,14 +6303,23 @@ body[data-color-mode*='light'] {
   text-align: center;
 }
 
-._imageCardHeader_cx9ev_164 {
+._imageCardHeader_ajz18_165 {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   padding: 12px 14px;
 }
 
-._imageCardTitle_cx9ev_171 {
+._imageCardText_ajz18_173 {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+._imageCardTitle_ajz18_181 {
   font-size: 14px;
   font-weight: 600;
   line-height: 1.3;
@@ -6317,13 +6327,47 @@ body[data-color-mode*='light'] {
   color: #f0f4f8;
 }
 
-._imageCardMeta_cx9ev_179 {
+._imageCardMeta_ajz18_189 {
   font-size: 11px;
   line-height: 1.45;
   color: #8b949e;
 }
 
-._hiddenFileInput_cx9ev_185 {
+._imageCardActions_ajz18_195 {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: -6px;
+}
+
+._imageCardAction_ajz18_195 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #8b949e;
+  cursor: pointer;
+}
+
+._imageCardAction_ajz18_195:hover {
+  color: #e6edf3;
+  background: color-mix(in srgb, #fff 8%, transparent);
+}
+
+._imageCardActionDanger_ajz18_224:hover {
+  color: #f85149;
+  background: color-mix(in srgb, #f85149 12%, transparent);
+}
+
+._hiddenFileInput_ajz18_229 {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -6334,20 +6378,20 @@ body[data-color-mode*='light'] {
   border: 0;
 }
 
-._dicomForm_cx9ev_196 {
+._dicomForm_ajz18_240 {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   max-width: 100%;
 }
 
-._fieldGroup_cx9ev_203 {
+._fieldGroup_ajz18_247 {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
 }
 
-._fieldLabel_cx9ev_209 {
+._fieldLabel_ajz18_253 {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -6355,11 +6399,11 @@ body[data-color-mode*='light'] {
   color: color-mix(in srgb, var(--theme-light-contrast-color) 52%, transparent);
 }
 
-._fieldRow_cx9ev_217 {
+._fieldRow_ajz18_261 {
   position: relative;
 }
 
-._textInput_cx9ev_221 {
+._textInput_ajz18_265 {
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
@@ -6372,32 +6416,32 @@ body[data-color-mode*='light'] {
   line-height: 1.2;
 }
 
-._textInput_cx9ev_221::placeholder {
+._textInput_ajz18_265::placeholder {
   color: #8899aa;
 }
 
-._textInput_cx9ev_221:focus {
+._textInput_ajz18_265:focus {
   outline: none;
   border-color: #666;
   box-shadow: 0 0 0 0.15rem rgb(255 255 255 / 0.12);
 }
 
-._textInputInvalid_cx9ev_244 {
+._textInputInvalid_ajz18_288 {
   border-color: #f85149;
 }
 
-._textInputValid_cx9ev_248 {
+._textInputValid_ajz18_292 {
   border-color: #3fb950;
 }
 
-._invalidFeedback_cx9ev_252 {
+._invalidFeedback_ajz18_296 {
   font-size: 11px;
   line-height: 1.3;
   color: #f85149;
   margin-top: 0.25rem;
 }
 
-._validFeedback_cx9ev_259 {
+._validFeedback_ajz18_303 {
   font-size: 11px;
   line-height: 1.3;
   color: #3fb950;

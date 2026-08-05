@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DwG7tC8J.js","./pako.esm-KbdoS3Oq.js","./lerc-DlaIsHUV.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DTgnLIds.js","./pako.esm-KbdoS3Oq.js","./lerc-BD6EMjxu.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-LNrqdsuA.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-UX_clejm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-Ch6LRJvr.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-DXt4krfD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-Cmqmd1Ms.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-b3owvKhm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DwG7tC8J.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DnnH5IJN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-DlaIsHUV.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DTgnLIds.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-HcoabY5R.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BD6EMjxu.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CzXdwdM4.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BvyE9oos.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CpwZXlqf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-E5MWNPBD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -75791,6 +75791,16 @@ void main() {
     }
     return maskLoaderFromBlob(await response.blob());
   };
+  async function pickLocalOmeTiffHandle() {
+    const picked = await toFile();
+    if (picked.length === 0) return null;
+    const handle2 = picked[0];
+    if (!await ensureFileHandlePermission(handle2)) return null;
+    if (!await findFile({
+      handle: handle2
+    })) return null;
+    return handle2;
+  }
   async function loadOmeLoaderForRole(role, source2) {
     const isMask = role === "segmentation";
     if (source2.kind === "local") {
@@ -80037,6 +80047,10 @@ void main() {
     if (handle2.kind === "file") return handle2;
     return void 0;
   }
+  async function deleteFileHandle(id2) {
+    sessionHandles.delete(id2);
+    await storyDb.handles.delete(id2);
+  }
   async function deleteFileHandlesForStory(storyId) {
     const prefix = `story:${storyId}:`;
     for (const id2 of sessionHandles.keys()) {
@@ -81352,6 +81366,67 @@ void main() {
       basename: basename2.trim()
     };
     return next2;
+  }
+  function rebindReplacementImageChannels(previous2, incoming) {
+    if (previous2.channels.length !== incoming.channels.length) {
+      return {
+        error: `Channel count mismatch: expected ${previous2.channels.length}, got ${incoming.channels.length}.`
+      };
+    }
+    const prevByIndex = [
+      ...previous2.channels
+    ].sort((a2, b2) => a2.index - b2.index);
+    const nextByIndex = [
+      ...incoming.channels
+    ].sort((a2, b2) => a2.index - b2.index);
+    const channels2 = nextByIndex.map((ch2, i2) => {
+      const prev = prevByIndex[i2];
+      return {
+        ...ch2,
+        id: prev.id,
+        name: prev.name,
+        kind: prev.kind ?? ch2.kind,
+        color: prev.color ?? ch2.color,
+        lowerLimit: prev.lowerLimit ?? ch2.lowerLimit,
+        upperLimit: prev.upperLimit ?? ch2.upperLimit,
+        gmmContrastLimits: prev.gmmContrastLimits ?? ch2.gmmContrastLimits,
+        maskVisualization: prev.maskVisualization ?? ch2.maskVisualization
+      };
+    });
+    return {
+      ...incoming,
+      channels: channels2,
+      contentRole: previous2.contentRole ?? incoming.contentRole
+    };
+  }
+  function replaceImageRowInDocument(images, oldImageId, replacement) {
+    const idx = images.findIndex((im) => im.id === oldImageId);
+    if (idx < 0) return images;
+    const next2 = [
+      ...images
+    ];
+    next2[idx] = replacement;
+    return next2;
+  }
+  function removeImageFromDocument(images, channelGroups, imageId) {
+    const image2 = images.find((im) => im.id === imageId);
+    if (!image2) {
+      return {
+        images,
+        channelGroups,
+        removedChannelIds: []
+      };
+    }
+    const removedChannelIds = image2.channels.map((ch2) => ch2.id);
+    const removed = new Set(removedChannelIds);
+    return {
+      images: images.filter((im) => im.id !== imageId),
+      channelGroups: channelGroups.map((g2) => ({
+        ...g2,
+        channels: g2.channels.filter((gc2) => !removed.has(gc2.channelId))
+      })).filter((g2) => g2.channels.length > 0),
+      removedChannelIds
+    };
   }
   function dedupeImagesForImport(images, basename2, contentRole) {
     const key2 = basename2.trim().toLowerCase();
@@ -244255,12 +244330,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-07-22T21:49:52.968Z");
+    const label2 = utcShort("2026-08-05T16:53:36.464Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-07-22T21:49:52.968Z",
+      title: "2026-08-05T16:53:36.464Z",
       children: [
         "Updated ",
         label2,
@@ -245223,35 +245298,39 @@ void main() {
       shapeCount: added
     };
   }
-  const stack = "_stack_cx9ev_1";
-  const headerActionsWrap = "_headerActionsWrap_cx9ev_11";
-  const addPanel = "_addPanel_cx9ev_18";
-  const addActionAnchor = "_addActionAnchor_cx9ev_36";
-  const formatRow = "_formatRow_cx9ev_41";
-  const formatChip = "_formatChip_cx9ev_48";
-  const formatChipActive = "_formatChipActive_cx9ev_65";
-  const addPanelBody = "_addPanelBody_cx9ev_71";
-  const urlRow = "_urlRow_cx9ev_79";
-  const urlInput = "_urlInput_cx9ev_87";
-  const primaryButton = "_primaryButton_cx9ev_92";
-  const importError = "_importError_cx9ev_119";
-  const importSuccess = "_importSuccess_cx9ev_125";
-  const imageCard = "_imageCard_cx9ev_131";
-  const fileAccessOverlay = "_fileAccessOverlay_cx9ev_143";
-  const fileAccessError = "_fileAccessError_cx9ev_156";
-  const imageCardHeader = "_imageCardHeader_cx9ev_164";
-  const imageCardTitle = "_imageCardTitle_cx9ev_171";
-  const imageCardMeta = "_imageCardMeta_cx9ev_179";
-  const hiddenFileInput = "_hiddenFileInput_cx9ev_185";
-  const dicomForm = "_dicomForm_cx9ev_196";
-  const fieldGroup = "_fieldGroup_cx9ev_203";
-  const fieldLabel = "_fieldLabel_cx9ev_209";
-  const fieldRow = "_fieldRow_cx9ev_217";
-  const textInput = "_textInput_cx9ev_221";
-  const textInputInvalid = "_textInputInvalid_cx9ev_244";
-  const textInputValid = "_textInputValid_cx9ev_248";
-  const invalidFeedback = "_invalidFeedback_cx9ev_252";
-  const validFeedback = "_validFeedback_cx9ev_259";
+  const stack = "_stack_ajz18_1";
+  const headerActionsWrap = "_headerActionsWrap_ajz18_11";
+  const addPanel = "_addPanel_ajz18_18";
+  const addActionAnchor = "_addActionAnchor_ajz18_36";
+  const formatRow = "_formatRow_ajz18_41";
+  const formatChip = "_formatChip_ajz18_48";
+  const formatChipActive = "_formatChipActive_ajz18_65";
+  const addPanelBody = "_addPanelBody_ajz18_71";
+  const urlRow = "_urlRow_ajz18_79";
+  const urlInput = "_urlInput_ajz18_87";
+  const primaryButton = "_primaryButton_ajz18_92";
+  const importError = "_importError_ajz18_119";
+  const importSuccess = "_importSuccess_ajz18_125";
+  const imageCard = "_imageCard_ajz18_131";
+  const fileAccessOverlay = "_fileAccessOverlay_ajz18_143";
+  const fileAccessError = "_fileAccessError_ajz18_157";
+  const imageCardHeader = "_imageCardHeader_ajz18_165";
+  const imageCardText = "_imageCardText_ajz18_173";
+  const imageCardTitle = "_imageCardTitle_ajz18_181";
+  const imageCardMeta = "_imageCardMeta_ajz18_189";
+  const imageCardActions = "_imageCardActions_ajz18_195";
+  const imageCardAction = "_imageCardAction_ajz18_195";
+  const imageCardActionDanger = "_imageCardActionDanger_ajz18_224";
+  const hiddenFileInput = "_hiddenFileInput_ajz18_229";
+  const dicomForm = "_dicomForm_ajz18_240";
+  const fieldGroup = "_fieldGroup_ajz18_247";
+  const fieldLabel = "_fieldLabel_ajz18_253";
+  const fieldRow = "_fieldRow_ajz18_261";
+  const textInput = "_textInput_ajz18_265";
+  const textInputInvalid = "_textInputInvalid_ajz18_288";
+  const textInputValid = "_textInputValid_ajz18_292";
+  const invalidFeedback = "_invalidFeedback_ajz18_296";
+  const validFeedback = "_validFeedback_ajz18_303";
   const styles$1 = {
     stack,
     headerActionsWrap,
@@ -245270,8 +245349,12 @@ void main() {
     fileAccessOverlay,
     fileAccessError,
     imageCardHeader,
+    imageCardText,
     imageCardTitle,
     imageCardMeta,
+    imageCardActions,
+    imageCardAction,
+    imageCardActionDanger,
     hiddenFileInput,
     dicomForm,
     fieldGroup,
@@ -245283,6 +245366,24 @@ void main() {
     invalidFeedback,
     validFeedback
   };
+  function ReplaceIcon({ title: title7, size = 14 }) {
+    const label2 = title7 ?? "Replace";
+    return jsxRuntimeExports.jsxs("svg", {
+      "aria-hidden": title7 ? void 0 : true,
+      width: size,
+      height: size,
+      viewBox: "0 0 24 24",
+      fill: "currentColor",
+      children: [
+        jsxRuntimeExports.jsx("title", {
+          children: label2
+        }),
+        jsxRuntimeExports.jsx("path", {
+          d: "M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l1.46 1.46C18.69 15.33 19 14.2 19 13c0-3.87-3.13-7-7-7zm0 10c-2.76 0-5-2.24-5-5 0-.65.13-1.26.36-1.83L5.9 7.71C5.31 8.67 5 9.8 5 11c0 3.87 3.13 7 7 7v3l4-4-4-4v3z"
+        })
+      ]
+    });
+  }
   const _useState = (init) => {
     const [val, set2] = reactExports.useState(init);
     const new_set = (e2) => {
@@ -245496,7 +245597,7 @@ void main() {
     const prevImportRev = reactExports.useRef(props.importRevision);
     const localImportInFlightRef = reactExports.useRef(false);
     const images = useDocumentStore((s2) => s2.images);
-    const { formProps, handles, onAllow, importRevision, imageLoaded, loadedSource, fileName = "", lastOmeTiffUrl = null, onImportOme, needsFileAccess = false, onRequestFileAccess, missingHandleKeys = [], onReselectFile, needsStoryRootReconnect = false, onReconnectStoryRoot } = props;
+    const { formProps, handles, onAllow, importRevision, imageLoaded, loadedSource, fileName = "", lastOmeTiffUrl = null, onImportOme, needsFileAccess = false, onRequestFileAccess, missingHandleKeys = [], onReselectFile, needsStoryRootReconnect = false, onReconnectStoryRoot, onRemoveImage, onReplaceImage } = props;
     const closeAddPanel = reactExports.useCallback(() => {
       setAddPanelOpen(false);
       setImportRole("intensity");
@@ -245712,7 +245813,7 @@ void main() {
       return null;
     };
     const renderImageCard = (im, index2) => {
-      var _a2, _b2, _c2;
+      var _a2, _b2, _c2, _d2, _e3;
       const title7 = imageDisplayLabel(im, index2, labelOpts);
       const role = roleBadgeLabel(resolveImageContentRole({
         contentRole: im.contentRole,
@@ -245733,15 +245834,47 @@ void main() {
           jsxRuntimeExports.jsxs("div", {
             className: styles$1.imageCardHeader,
             children: [
-              jsxRuntimeExports.jsx("div", {
-                className: styles$1.imageCardTitle,
-                title: title7,
-                children: title7
+              jsxRuntimeExports.jsxs("div", {
+                className: styles$1.imageCardText,
+                children: [
+                  jsxRuntimeExports.jsx("div", {
+                    className: styles$1.imageCardTitle,
+                    title: title7,
+                    children: title7
+                  }),
+                  jsxRuntimeExports.jsx("div", {
+                    className: styles$1.imageCardMeta,
+                    children: metaParts.join(" \xB7 ")
+                  })
+                ]
               }),
-              jsxRuntimeExports.jsx("div", {
-                className: styles$1.imageCardMeta,
-                children: metaParts.join(" \xB7 ")
-              })
+              onReplaceImage || onRemoveImage ? jsxRuntimeExports.jsxs("div", {
+                className: styles$1.imageCardActions,
+                children: [
+                  onReplaceImage && ((_d2 = im.source) == null ? void 0 : _d2.kind) !== "jpeg" && ((_e3 = im.source) == null ? void 0 : _e3.kind) !== "dicomWeb" ? jsxRuntimeExports.jsx("button", {
+                    type: "button",
+                    className: styles$1.imageCardAction,
+                    title: `Replace ${title7} with another OME-TIFF`,
+                    "aria-label": `Replace ${title7}`,
+                    onClick: () => void onReplaceImage(im.id),
+                    children: jsxRuntimeExports.jsx(ReplaceIcon, {
+                      title: "Replace image",
+                      size: 14
+                    })
+                  }) : null,
+                  onRemoveImage ? jsxRuntimeExports.jsx("button", {
+                    type: "button",
+                    className: `${styles$1.imageCardAction} ${styles$1.imageCardActionDanger}`,
+                    title: `Remove ${title7}`,
+                    "aria-label": `Remove ${title7}`,
+                    onClick: () => void onRemoveImage(im.id),
+                    children: jsxRuntimeExports.jsx(TrashIcon, {
+                      title: "Remove image",
+                      size: 14
+                    })
+                  }) : null
+                ]
+              }) : null
             ]
           }),
           showAccessOverlay ? jsxRuntimeExports.jsxs("div", {
@@ -245768,18 +245901,21 @@ void main() {
     };
     const imageCards = images.length > 0 ? images.map((im, i2) => renderImageCard(im, i2)) : imageLoaded && loadedSource ? jsxRuntimeExports.jsx("article", {
       className: styles$1.imageCard,
-      children: jsxRuntimeExports.jsxs("div", {
+      children: jsxRuntimeExports.jsx("div", {
         className: styles$1.imageCardHeader,
-        children: [
-          jsxRuntimeExports.jsx("div", {
-            className: styles$1.imageCardTitle,
-            children: loadedSource.label
-          }),
-          jsxRuntimeExports.jsx("div", {
-            className: styles$1.imageCardMeta,
-            children: formatDims(loadedSource.width, loadedSource.height, loadedSource.channelCount) ?? "Loading dimensions\u2026"
-          })
-        ]
+        children: jsxRuntimeExports.jsxs("div", {
+          className: styles$1.imageCardText,
+          children: [
+            jsxRuntimeExports.jsx("div", {
+              className: styles$1.imageCardTitle,
+              children: loadedSource.label
+            }),
+            jsxRuntimeExports.jsx("div", {
+              className: styles$1.imageCardMeta,
+              children: formatDims(loadedSource.width, loadedSource.height, loadedSource.channelCount) ?? "Loading dimensions\u2026"
+            })
+          ]
+        })
       })
     }) : null;
     const addPanel2 = addPanelOpen ? jsxRuntimeExports.jsxs("div", {
@@ -246287,6 +246423,67 @@ void main() {
   async function applyPaletteToGroupedImport(groups, sourceChannels) {
     return applySharedImportPaletteToChannelGroups(groups, sourceChannels);
   }
+  async function replaceOmeLocalImageInDocument(args) {
+    var _a2, _b2, _c2;
+    const { images, imageId, handle: handle2, pool } = args;
+    const oldImage = images.find((im) => im.id === imageId);
+    if (!oldImage) return {
+      ok: false,
+      reason: "missing"
+    };
+    if (((_a2 = oldImage.source) == null ? void 0 : _a2.kind) === "jpeg" || ((_b2 = oldImage.source) == null ? void 0 : _b2.kind) === "dicomWeb") {
+      return {
+        ok: false,
+        reason: "unsupported"
+      };
+    }
+    const oldLocalHandleKey = ((_c2 = oldImage.source) == null ? void 0 : _c2.kind) === "local" ? oldImage.source.handleKey : void 0;
+    const file = await handle2.getFile();
+    const role = resolveImageImportRole({
+      contentRole: oldImage.contentRole,
+      channels: oldImage.channels ?? []
+    });
+    const loader = await loadOmeLoaderForRole(role, {
+      kind: "local",
+      handle: handle2,
+      in_f: file.name,
+      pool
+    });
+    const newImageId = crypto.randomUUID();
+    const withoutOld = images.filter((im) => im.id !== imageId);
+    const slice = buildOmeImportSlice({
+      loader,
+      role,
+      basename: file.name,
+      sourceImageId: newImageId,
+      existingImages: withoutOld
+    });
+    const incoming = slice.nextImages.find((im) => im.id === newImageId);
+    if (!incoming) {
+      return {
+        ok: false,
+        reason: "error",
+        error: "Replacement image was not created."
+      };
+    }
+    const rebound = rebindReplacementImageChannels(oldImage, incoming);
+    if ("error" in rebound) {
+      return {
+        ok: false,
+        reason: "error",
+        error: rebound.error
+      };
+    }
+    return {
+      ok: true,
+      oldImageId: imageId,
+      newImageId,
+      loader,
+      basename: file.name,
+      nextImages: replaceImageRowInDocument(images, imageId, rebound),
+      oldLocalHandleKey
+    };
+  }
   let inflight = null;
   async function runLibraryBootstrap() {
     await setActiveStoryId(null);
@@ -246324,7 +246521,20 @@ void main() {
     return inflight;
   }
   function imageHandleStorageKey(storyId, imageId) {
-    return `story:${storyId}:image:${imageId}`;
+    return storyId ? `story:${storyId}:image:${imageId}` : `image:${imageId}`;
+  }
+  async function persistLocalImageHandle(args) {
+    const { storyId, imageId, handle: handle2, images, previousHandleKey } = args;
+    const key2 = imageHandleStorageKey(storyId, imageId);
+    await putFileHandle(key2, handle2);
+    const next2 = setImageSource(images, imageId, {
+      kind: "local",
+      handleKey: key2
+    });
+    if (previousHandleKey && previousHandleKey !== key2) {
+      await deleteFileHandle(previousHandleKey);
+    }
+    return next2;
   }
   const DEBOUNCE_MS = 2e3;
   const METADATA_DEBOUNCE_MS = 400;
@@ -247074,10 +247284,107 @@ void main() {
     ]);
     const [fileName, setFileName] = reactExports.useState("");
     const [lastOmeTiffUrl, setLastOmeTiffUrl] = reactExports.useState(null);
+    const onRemoveImage = reactExports.useCallback(async (imageId) => {
+      var _a2, _b2;
+      const doc = useDocumentStore.getState();
+      const removed = doc.images.find((im) => im.id === imageId);
+      if (!removed) return;
+      const localHandleKey = ((_a2 = removed.source) == null ? void 0 : _a2.kind) === "local" ? removed.source.handleKey : void 0;
+      const result = removeImageFromDocument(doc.images, doc.channelGroups, imageId);
+      if (result.images.length === doc.images.length) return;
+      if (localHandleKey) {
+        await deleteFileHandle(localHandleKey);
+        setMissingHandleKeys((prev) => prev.filter((k2) => k2 !== localHandleKey));
+        setDeniedHandleKeys((prev) => prev.filter((k2) => k2 !== localHandleKey));
+      }
+      clearOmeDerivedCaches();
+      setOmeLoaderEntries((prev) => prev.filter((e2) => e2.sourceImageId !== imageId));
+      setJpegLoaderEntries((prev) => prev.filter((e2) => e2.sourceImageId !== imageId));
+      setDicomIndexList((prev) => prev.filter((d2) => d2.sourceImageId !== imageId));
+      const activeId = useAppStore.getState().activeChannelGroupId;
+      const activeStillExists = result.channelGroups.some((g2) => g2.id === activeId);
+      publishChannelState(result.images, result.channelGroups, {
+        resetActiveGroup: !activeStillExists,
+        mergeVisibilities: true
+      });
+      if (result.images.length === 0) {
+        setFileName("");
+        setLastOmeTiffUrl(null);
+      } else {
+        setFileName(result.images.map((im) => im.basename).join(", "));
+        const firstUrl = result.images.find((im) => {
+          var _a3;
+          return ((_a3 = im.source) == null ? void 0 : _a3.kind) === "url";
+        });
+        setLastOmeTiffUrl(((_b2 = firstUrl == null ? void 0 : firstUrl.source) == null ? void 0 : _b2.kind) === "url" ? firstUrl.source.url : null);
+      }
+      setViewerRemountKey((k2) => k2 + 1);
+    }, [
+      publishChannelState
+    ]);
     const omeTiffUrlLoadGenerationRef = reactExports.useRef(0);
     const jpegUrlLoadGenerationRef = reactExports.useRef(0);
     const [importRevision, setImportRevision] = reactExports.useState(0);
     const [isLoadingImage, setIsLoadingImage] = reactExports.useState(hasDemo);
+    const onReplaceImage = reactExports.useCallback(async (imageId) => {
+      var _a2;
+      setIsLoadingImage(true);
+      try {
+        const handle2 = await pickLocalOmeTiffHandle();
+        if (!handle2) return;
+        const doc = useDocumentStore.getState();
+        clearOmeDerivedCaches();
+        const prep = await replaceOmeLocalImageInDocument({
+          images: doc.images,
+          imageId,
+          handle: handle2,
+          pool: new Pool()
+        });
+        if (prep.ok === false) {
+          if (prep.error) window.alert(prep.error);
+          return;
+        }
+        const nextImages = await persistLocalImageHandle({
+          storyId: useDocumentStore.getState().activeStoryId,
+          imageId: prep.newImageId,
+          handle: handle2,
+          images: prep.nextImages,
+          previousHandleKey: prep.oldLocalHandleKey
+        });
+        skipLoaderHydrateRef.current = true;
+        setOmeLoaderEntries((prev) => [
+          ...prev.filter((e2) => e2.sourceImageId !== prep.oldImageId),
+          {
+            loader: prep.loader,
+            sourceImageId: prep.newImageId
+          }
+        ]);
+        setJpegLoaderEntries((prev) => prev.filter((e2) => e2.sourceImageId !== prep.oldImageId));
+        setDicomIndexList((prev) => prev.filter((d2) => d2.sourceImageId !== prep.oldImageId));
+        setDeniedHandleKeys([]);
+        if (prep.oldLocalHandleKey) {
+          setMissingHandleKeys((prev) => prev.filter((k2) => k2 !== prep.oldLocalHandleKey));
+        }
+        publishChannelState(nextImages, doc.channelGroups, {
+          resetActiveGroup: false,
+          mergeVisibilities: true
+        });
+        setFileName(prep.basename);
+        setLastOmeTiffUrl(null);
+        setViewerRemountKey((k2) => k2 + 1);
+        setImportRevision((r2) => r2 + 1);
+      } catch (e2) {
+        if (!(e2 instanceof DOMException && e2.name === "AbortError")) {
+          console.error("[minerva] onReplaceImage failed", e2);
+          window.alert(e2 instanceof Error ? e2.message : "Could not replace image");
+        }
+      } finally {
+        setIsLoadingImage(false);
+        (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
+      }
+    }, [
+      publishChannelState
+    ]);
     const showSquareViewportOverlay = useAppStore((state) => state.showSquareViewportOverlay);
     const setShowSquareViewportOverlay = useAppStore((state) => state.setShowSquareViewportOverlay);
     const viewerViewportSize = useAppStore((state) => state.viewerViewportSize);
@@ -247517,13 +247824,8 @@ void main() {
       var _a2;
       setIsLoadingImage(true);
       try {
-        const picked = await toFile();
-        if (picked.length === 0) return;
-        const handle2 = picked[0];
-        if (!await ensureFileHandlePermission(handle2)) return;
-        if (!await findFile({
-          handle: handle2
-        })) return;
+        const handle2 = await pickLocalOmeTiffHandle();
+        if (!handle2) return;
         const doc = useDocumentStore.getState();
         const im = doc.images.find((i2) => i2.id === imageId);
         if (!(im == null ? void 0 : im.source) || im.source.kind !== "local") return;
@@ -248232,7 +248534,9 @@ void main() {
           missingHandleKeys,
           onReselectFile: reselectLoaderFile,
           needsStoryRootReconnect: missingStoryRoot,
-          onReconnectStoryRoot: reconnectStoryRoot
+          onReconnectStoryRoot: reconnectStoryRoot,
+          onRemoveImage,
+          onReplaceImage
         };
         const routerProps = {
           ...mainProps,
