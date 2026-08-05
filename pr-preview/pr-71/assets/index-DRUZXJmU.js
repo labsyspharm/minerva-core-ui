@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CMHR2bt-.js","./pako.esm-KbdoS3Oq.js","./lerc-DXAYvuL8.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-gGENu2pL.js","./pako.esm-KbdoS3Oq.js","./lerc-ByXlVRQU.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DozGfwub.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DTheXj2M.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CNwuSSb_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Dt_1FVt6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-x0QIi_6I.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BDwamwcz.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-CMHR2bt-.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CJkX9q9x.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-DXAYvuL8.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-gGENu2pL.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits--M7YNhhi.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-ByXlVRQU.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-D3TOu9aj.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-1a7CVC1A.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BKISTdab.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-C-bVmKJg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -75791,6 +75791,16 @@ void main() {
     }
     return maskLoaderFromBlob(await response.blob());
   };
+  async function pickLocalOmeTiffHandle() {
+    const picked = await toFile();
+    if (picked.length === 0) return null;
+    const handle2 = picked[0];
+    if (!await ensureFileHandlePermission(handle2)) return null;
+    if (!await findFile({
+      handle: handle2
+    })) return null;
+    return handle2;
+  }
   async function loadOmeLoaderForRole(role, source2) {
     const isMask = role === "segmentation";
     if (source2.kind === "local") {
@@ -244320,12 +244330,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-05T16:19:11.501Z");
+    const label2 = utcShort("2026-08-05T16:41:37.108Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-05T16:19:11.501Z",
+      title: "2026-08-05T16:41:37.108Z",
       children: [
         "Updated ",
         label2,
@@ -244460,24 +244470,6 @@ void main() {
       })
     });
   };
-  function ReplaceIcon({ title: title7, size = 14 }) {
-    const label2 = title7 ?? "Replace";
-    return jsxRuntimeExports.jsxs("svg", {
-      "aria-hidden": title7 ? void 0 : true,
-      width: size,
-      height: size,
-      viewBox: "0 0 24 24",
-      fill: "currentColor",
-      children: [
-        jsxRuntimeExports.jsx("title", {
-          children: label2
-        }),
-        jsxRuntimeExports.jsx("path", {
-          d: "M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l1.46 1.46C18.69 15.33 19 14.2 19 13c0-3.87-3.13-7-7-7zm0 10c-2.76 0-5-2.24-5-5 0-.65.13-1.26.36-1.83L5.9 7.71C5.31 8.67 5 9.8 5 11c0 3.87 3.13 7 7 7v3l4-4-4-4v3z"
-        })
-      ]
-    });
-  }
   const attr = (el2, ...keys2) => {
     for (const k2 of keys2) {
       const v2 = el2.getAttribute(k2);
@@ -245374,6 +245366,24 @@ void main() {
     invalidFeedback,
     validFeedback
   };
+  function ReplaceIcon({ title: title7, size = 14 }) {
+    const label2 = title7 ?? "Replace";
+    return jsxRuntimeExports.jsxs("svg", {
+      "aria-hidden": title7 ? void 0 : true,
+      width: size,
+      height: size,
+      viewBox: "0 0 24 24",
+      fill: "currentColor",
+      children: [
+        jsxRuntimeExports.jsx("title", {
+          children: label2
+        }),
+        jsxRuntimeExports.jsx("path", {
+          d: "M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l1.46 1.46C18.69 15.33 19 14.2 19 13c0-3.87-3.13-7-7-7zm0 10c-2.76 0-5-2.24-5-5 0-.65.13-1.26.36-1.83L5.9 7.71C5.31 8.67 5 9.8 5 11c0 3.87 3.13 7 7 7v3l4-4-4-4v3z"
+        })
+      ]
+    });
+  }
   const _useState = (init) => {
     const [val, set2] = reactExports.useState(init);
     const new_set = (e2) => {
@@ -245891,18 +245901,21 @@ void main() {
     };
     const imageCards = images.length > 0 ? images.map((im, i2) => renderImageCard(im, i2)) : imageLoaded && loadedSource ? jsxRuntimeExports.jsx("article", {
       className: styles$1.imageCard,
-      children: jsxRuntimeExports.jsxs("div", {
+      children: jsxRuntimeExports.jsx("div", {
         className: styles$1.imageCardHeader,
-        children: [
-          jsxRuntimeExports.jsx("div", {
-            className: styles$1.imageCardTitle,
-            children: loadedSource.label
-          }),
-          jsxRuntimeExports.jsx("div", {
-            className: styles$1.imageCardMeta,
-            children: formatDims(loadedSource.width, loadedSource.height, loadedSource.channelCount) ?? "Loading dimensions\u2026"
-          })
-        ]
+        children: jsxRuntimeExports.jsxs("div", {
+          className: styles$1.imageCardText,
+          children: [
+            jsxRuntimeExports.jsx("div", {
+              className: styles$1.imageCardTitle,
+              children: loadedSource.label
+            }),
+            jsxRuntimeExports.jsx("div", {
+              className: styles$1.imageCardMeta,
+              children: formatDims(loadedSource.width, loadedSource.height, loadedSource.channelCount) ?? "Loading dimensions\u2026"
+            })
+          ]
+        })
       })
     }) : null;
     const addPanel2 = addPanelOpen ? jsxRuntimeExports.jsxs("div", {
@@ -246410,6 +246423,67 @@ void main() {
   async function applyPaletteToGroupedImport(groups, sourceChannels) {
     return applySharedImportPaletteToChannelGroups(groups, sourceChannels);
   }
+  async function replaceOmeLocalImageInDocument(args) {
+    var _a2, _b2, _c2;
+    const { images, imageId, handle: handle2, pool } = args;
+    const oldImage = images.find((im) => im.id === imageId);
+    if (!oldImage) return {
+      ok: false,
+      reason: "missing"
+    };
+    if (((_a2 = oldImage.source) == null ? void 0 : _a2.kind) === "jpeg" || ((_b2 = oldImage.source) == null ? void 0 : _b2.kind) === "dicomWeb") {
+      return {
+        ok: false,
+        reason: "unsupported"
+      };
+    }
+    const oldLocalHandleKey = ((_c2 = oldImage.source) == null ? void 0 : _c2.kind) === "local" ? oldImage.source.handleKey : void 0;
+    const file = await handle2.getFile();
+    const role = resolveImageImportRole({
+      contentRole: oldImage.contentRole,
+      channels: oldImage.channels ?? []
+    });
+    const loader = await loadOmeLoaderForRole(role, {
+      kind: "local",
+      handle: handle2,
+      in_f: file.name,
+      pool
+    });
+    const newImageId = crypto.randomUUID();
+    const withoutOld = images.filter((im) => im.id !== imageId);
+    const slice = buildOmeImportSlice({
+      loader,
+      role,
+      basename: file.name,
+      sourceImageId: newImageId,
+      existingImages: withoutOld
+    });
+    const incoming = slice.nextImages.find((im) => im.id === newImageId);
+    if (!incoming) {
+      return {
+        ok: false,
+        reason: "error",
+        error: "Replacement image was not created."
+      };
+    }
+    const rebound = rebindReplacementImageChannels(oldImage, incoming);
+    if ("error" in rebound) {
+      return {
+        ok: false,
+        reason: "error",
+        error: rebound.error
+      };
+    }
+    return {
+      ok: true,
+      oldImageId: imageId,
+      newImageId,
+      loader,
+      basename: file.name,
+      nextImages: replaceImageRowInDocument(images, imageId, rebound),
+      oldLocalHandleKey
+    };
+  }
   let inflight = null;
   async function runLibraryBootstrap() {
     await setActiveStoryId(null);
@@ -246447,7 +246521,20 @@ void main() {
     return inflight;
   }
   function imageHandleStorageKey(storyId, imageId) {
-    return `story:${storyId}:image:${imageId}`;
+    return storyId ? `story:${storyId}:image:${imageId}` : `image:${imageId}`;
+  }
+  async function persistLocalImageHandle(args) {
+    const { storyId, imageId, handle: handle2, images, previousHandleKey } = args;
+    const key2 = imageHandleStorageKey(storyId, imageId);
+    await putFileHandle(key2, handle2);
+    const next2 = setImageSource(images, imageId, {
+      kind: "local",
+      handleKey: key2
+    });
+    if (previousHandleKey && previousHandleKey !== key2) {
+      await deleteFileHandle(previousHandleKey);
+    }
+    return next2;
   }
   const DEBOUNCE_MS = 2e3;
   const METADATA_DEBOUNCE_MS = 400;
@@ -247240,81 +247327,49 @@ void main() {
     const [importRevision, setImportRevision] = reactExports.useState(0);
     const [isLoadingImage, setIsLoadingImage] = reactExports.useState(hasDemo);
     const onReplaceImage = reactExports.useCallback(async (imageId) => {
-      var _a2, _b2, _c2;
-      const doc = useDocumentStore.getState();
-      const oldImage = doc.images.find((im) => im.id === imageId);
-      if (!oldImage) return;
-      if (((_a2 = oldImage.source) == null ? void 0 : _a2.kind) === "jpeg") return;
-      const oldLocalHandleKey = ((_b2 = oldImage.source) == null ? void 0 : _b2.kind) === "local" ? oldImage.source.handleKey : void 0;
+      var _a2;
       setIsLoadingImage(true);
       try {
-        const picked = await toFile();
-        if (picked.length === 0) return;
-        const handle2 = picked[0];
-        if (!await ensureFileHandlePermission(handle2)) return;
-        if (!await findFile({
-          handle: handle2
-        })) return;
-        const file = await handle2.getFile();
-        const role = resolveImageImportRole({
-          contentRole: oldImage.contentRole,
-          channels: oldImage.channels ?? []
-        });
+        const handle2 = await pickLocalOmeTiffHandle();
+        if (!handle2) return;
+        const doc = useDocumentStore.getState();
         clearOmeDerivedCaches();
-        const loader = await loadOmeLoaderForRole(role, {
-          kind: "local",
+        const prep = await replaceOmeLocalImageInDocument({
+          images: doc.images,
+          imageId,
           handle: handle2,
-          in_f: file.name,
           pool: new Pool()
         });
-        const newImageId = crypto.randomUUID();
-        const withoutOld = doc.images.filter((im) => im.id !== imageId);
-        const slice = buildOmeImportSlice({
-          loader,
-          role,
-          basename: file.name,
-          sourceImageId: newImageId,
-          existingImages: withoutOld
-        });
-        const incoming = slice.nextImages.find((im) => im.id === newImageId);
-        if (!incoming) return;
-        const rebound = rebindReplacementImageChannels(oldImage, incoming);
-        if ("error" in rebound) {
-          window.alert(rebound.error);
+        if (prep.ok === false) {
+          if (prep.error) window.alert(prep.error);
           return;
         }
-        let nextImages = replaceImageRowInDocument(doc.images, imageId, rebound);
-        const storyId = useDocumentStore.getState().activeStoryId;
-        if (storyId) {
-          const key2 = imageHandleStorageKey(storyId, newImageId);
-          await putFileHandle(key2, handle2);
-          nextImages = setImageSource(nextImages, newImageId, {
-            kind: "local",
-            handleKey: key2
-          });
-          if (oldLocalHandleKey) {
-            await deleteFileHandle(oldLocalHandleKey);
-          }
-        }
+        const nextImages = await persistLocalImageHandle({
+          storyId: useDocumentStore.getState().activeStoryId,
+          imageId: prep.newImageId,
+          handle: handle2,
+          images: prep.nextImages,
+          previousHandleKey: prep.oldLocalHandleKey
+        });
         skipLoaderHydrateRef.current = true;
         setOmeLoaderEntries((prev) => [
-          ...prev.filter((e2) => e2.sourceImageId !== imageId),
+          ...prev.filter((e2) => e2.sourceImageId !== prep.oldImageId),
           {
-            loader,
-            sourceImageId: newImageId
+            loader: prep.loader,
+            sourceImageId: prep.newImageId
           }
         ]);
-        setJpegLoaderEntries((prev) => prev.filter((e2) => e2.sourceImageId !== imageId));
-        setDicomIndexList((prev) => prev.filter((d2) => d2.sourceImageId !== imageId));
+        setJpegLoaderEntries((prev) => prev.filter((e2) => e2.sourceImageId !== prep.oldImageId));
+        setDicomIndexList((prev) => prev.filter((d2) => d2.sourceImageId !== prep.oldImageId));
         setDeniedHandleKeys([]);
-        if (oldLocalHandleKey) {
-          setMissingHandleKeys((prev) => prev.filter((k2) => k2 !== oldLocalHandleKey));
+        if (prep.oldLocalHandleKey) {
+          setMissingHandleKeys((prev) => prev.filter((k2) => k2 !== prep.oldLocalHandleKey));
         }
         publishChannelState(nextImages, doc.channelGroups, {
           resetActiveGroup: false,
           mergeVisibilities: true
         });
-        setFileName(file.name);
+        setFileName(prep.basename);
         setLastOmeTiffUrl(null);
         setViewerRemountKey((k2) => k2 + 1);
         setImportRevision((r2) => r2 + 1);
@@ -247325,7 +247380,7 @@ void main() {
         }
       } finally {
         setIsLoadingImage(false);
-        (_c2 = document.getElementById("global-loader")) == null ? void 0 : _c2.remove();
+        (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
       }
     }, [
       publishChannelState
@@ -247769,13 +247824,8 @@ void main() {
       var _a2;
       setIsLoadingImage(true);
       try {
-        const picked = await toFile();
-        if (picked.length === 0) return;
-        const handle2 = picked[0];
-        if (!await ensureFileHandlePermission(handle2)) return;
-        if (!await findFile({
-          handle: handle2
-        })) return;
+        const handle2 = await pickLocalOmeTiffHandle();
+        if (!handle2) return;
         const doc = useDocumentStore.getState();
         const im = doc.images.find((i2) => i2.id === imageId);
         if (!(im == null ? void 0 : im.source) || im.source.kind !== "local") return;
