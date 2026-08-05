@@ -182,7 +182,8 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     });
   };
 
-  const hideClass = ["show core", "hide core"][+hide];
+  const hideClass = [hide ? styles.hide : "", styles.core].join(" ");
+  console.log(hideClass);
 
   const allGroups =
     channelGroups.length > 0 ? (

@@ -401,35 +401,6 @@ const Content = (props: Props) => {
     root: FileSystemDirectoryHandle;
   } | null>(null);
   const [presenting, setPresenting] = useState(false);
-  const checkWindow = React.useCallback(() => window.innerWidth > 600, []);
-
-  const [twoNavOk, setTwoNavOk] = useState(checkWindow());
-  const [hiddenChannel, setHideChannel] = useState(!twoNavOk);
-
-  const revealWaypointOnNarrow = React.useCallback(() => {
-    if (!twoNavOk) {
-      setHideChannel(true);
-    }
-  }, [twoNavOk]);
-
-  const handleResize = React.useCallback(() => {
-    const twoNavPossible = checkWindow();
-
-    if (!twoNavPossible) {
-      setHideChannel(true);
-    }
-    setTwoNavOk(twoNavPossible);
-  }, [checkWindow]);
-
-  React.useEffect(() => {
-    // sync once on mount (and when handleResize changes)
-    handleResize();
-
-    window.addEventListener("resize", handleResize, false);
-    return () => {
-      window.removeEventListener("resize", handleResize, false);
-    };
-  }, [handleResize]);
 
   const beginExportToFolder = async (
     mode: StoryExportMode,
@@ -1228,7 +1199,6 @@ const Content = (props: Props) => {
       if (result.jpegLoaderEntries.length > 0) {
         syncRegistryFromDocument();
         setImportRevision((revision) => revision + 1);
-        revealWaypointOnNarrow();
       }
     } catch (e) {
       if (!(e instanceof DOMException && e.name === "AbortError")) {
@@ -1241,7 +1211,7 @@ const Content = (props: Props) => {
       setIsLoadingImage(false);
       document.getElementById("global-loader")?.remove();
     }
-  }, [applyHydratedLoaders, syncRegistryFromDocument, revealWaypointOnNarrow]);
+  }, [applyHydratedLoaders, syncRegistryFromDocument]);
 
   /** Chrome needs a click to re-grant File System Access after refresh. */
   const requestLoaderFileAccess = React.useCallback(async () => {
@@ -1261,7 +1231,6 @@ const Content = (props: Props) => {
       ) {
         syncRegistryFromDocument();
         setImportRevision((r) => r + 1);
-        revealWaypointOnNarrow();
       }
     } catch (e) {
       console.error("[minerva] requestLoaderFileAccess failed", e);
@@ -1269,7 +1238,7 @@ const Content = (props: Props) => {
       setIsLoadingImage(false);
       document.getElementById("global-loader")?.remove();
     }
-  }, [applyHydratedLoaders, syncRegistryFromDocument, revealWaypointOnNarrow]);
+  }, [applyHydratedLoaders, syncRegistryFromDocument]);
 
   /**
    * Firefox (and any browser without persistable handles): pick the file again after
@@ -1300,7 +1269,6 @@ const Content = (props: Props) => {
         ) {
           syncRegistryFromDocument();
           setImportRevision((r) => r + 1);
-          revealWaypointOnNarrow();
           const file = await handle.getFile();
           setFileName(file.name);
         }
@@ -1311,7 +1279,7 @@ const Content = (props: Props) => {
         document.getElementById("global-loader")?.remove();
       }
     },
-    [applyHydratedLoaders, syncRegistryFromDocument, revealWaypointOnNarrow],
+    [applyHydratedLoaders, syncRegistryFromDocument],
   );
 
   /** Shared by FileHandler: auto-restore on mount, “Use recent”, and PWA launch — same rules. */
@@ -1338,7 +1306,6 @@ const Content = (props: Props) => {
           setIsLoadingImage(false);
         }
         setImportRevision((r) => r + 1);
-        revealWaypointOnNarrow();
         document.getElementById("global-loader")?.remove();
         return;
       }
@@ -1346,10 +1313,9 @@ const Content = (props: Props) => {
       const file = await restored[0].getFile();
       await onStartOmeTiffRef.current(file.name, restored);
       setImportRevision((r) => r + 1);
-      revealWaypointOnNarrow();
       document.getElementById("global-loader")?.remove();
     },
-    [applyHydratedLoaders, syncRegistryFromDocument, revealWaypointOnNarrow],
+    [applyHydratedLoaders, syncRegistryFromDocument],
   );
 
   const onStart = async (
@@ -1386,7 +1352,6 @@ const Content = (props: Props) => {
     console.log("[minerva] onStart: will load, setting loading state");
     // Switch to waypoints tab and show loading immediately.
     setImportRevision((r) => r + 1);
-    revealWaypointOnNarrow();
     setIsLoadingImage(true);
     try {
       if (dicomPropList.length > 0) {
@@ -1839,7 +1804,7 @@ const Content = (props: Props) => {
   const contrastEditable =
     omeLoaderEntries.length > 0 || dicomIndexList.length > 0;
   const channelProps = {
-    hiddenChannel,
+    hiddenChannel: true,
     contrastEditable,
     ensureChannelHistograms: onEnsureChannelHistograms,
     ensureChannelGmmContrastLimits: onEnsureChannelGmmContrastLimits,
@@ -2119,7 +2084,6 @@ const Content = (props: Props) => {
               await onStartOmeTiffUrl(req.source.url, req.role);
             }
             setImportRevision((r) => r + 1);
-            revealWaypointOnNarrow();
             const storyId = useDocumentStore.getState().activeStoryId;
             if (storyId) {
               await saveStoryDocument(
