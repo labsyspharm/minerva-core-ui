@@ -751,17 +751,13 @@ const Content = (props: Props) => {
           return;
         }
 
-        let nextImages = prep.nextImages;
-        const storyId = useDocumentStore.getState().activeStoryId;
-        if (storyId) {
-          nextImages = await persistLocalImageHandle({
-            storyId,
-            imageId: prep.newImageId,
-            handle,
-            images: nextImages,
-            previousHandleKey: prep.oldLocalHandleKey,
-          });
-        }
+        const nextImages = await persistLocalImageHandle({
+          storyId: useDocumentStore.getState().activeStoryId,
+          imageId: prep.newImageId,
+          handle,
+          images: prep.nextImages,
+          previousHandleKey: prep.oldLocalHandleKey,
+        });
 
         skipLoaderHydrateRef.current = true;
         setOmeLoaderEntries((prev) => [

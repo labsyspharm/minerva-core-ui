@@ -3,21 +3,23 @@ import type { Image } from "@/lib/stores/documentSchema";
 import { setImageSource } from "@/lib/stores/storeUtils";
 
 /**
- * Keys for Dexie `handles` (same `minerva-stories` DB as stories). Document `Image.source` stores `handleKey` only in JSON.
+ * Keys for Dexie `handles` (same `minerva-stories` DB as stories). Document
+ * `Image.source` stores `handleKey` only in JSON. Without an active story,
+ * use a session-scoped key so local imports still carry source metadata.
  */
 export function imageHandleStorageKey(
-  storyId: string,
+  storyId: string | null | undefined,
   imageId: string,
 ): string {
-  return `story:${storyId}:image:${imageId}`;
+  return storyId ? `story:${storyId}:image:${imageId}` : `image:${imageId}`;
 }
 
 /**
  * Bind a local file handle to `imageId` (new key). Optionally delete the
- * previous handle key after a replace.
+ * previous handle key after a replace. Works with or without an active story.
  */
 export async function persistLocalImageHandle(args: {
-  storyId: string;
+  storyId?: string | null;
   imageId: string;
   handle: Handle.File;
   images: Image[];
