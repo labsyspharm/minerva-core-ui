@@ -1,6 +1,8 @@
 import type { ChangeEventHandler, FormEventHandler } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PlusIcon } from "@/components/shared/common/PlusIcon";
+import { ReplaceIcon } from "@/components/shared/common/ReplaceIcon";
+import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
 import { CompactHeader } from "@/components/shared/panel/CompactHeader";
@@ -88,6 +90,13 @@ export type UploadProps = {
   /** JPEG-pyramid story needs its export directory re-selected. */
   needsStoryRootReconnect?: boolean;
   onReconnectStoryRoot?: () => void | Promise<void>;
+  /** Remove a document image (and its loaders / group rows). */
+  onRemoveImage?: (imageId: string) => void | Promise<void>;
+  /**
+   * Replace pixels for an image with a new OME-TIFF. Keeps channel ids so
+   * groups and waypoints stay linked; assigns a new image id.
+   */
+  onReplaceImage?: (imageId: string) => void | Promise<void>;
 };
 type ValidationFunction = (v: ValidObj) => boolean | null;
 type Validation = (s: string) => ValidationFunction;
@@ -350,6 +359,8 @@ const Upload = (props: UploadProps) => {
     onReselectFile,
     needsStoryRootReconnect = false,
     onReconnectStoryRoot,
+    onRemoveImage,
+    onReplaceImage,
   } = props;
 
   const closeAddPanel = useCallback(() => {
@@ -594,10 +605,40 @@ const Upload = (props: UploadProps) => {
     return (
       <article key={im.id} className={styles.imageCard}>
         <div className={styles.imageCardHeader}>
-          <div className={styles.imageCardTitle} title={title}>
-            {title}
+          <div className={styles.imageCardText}>
+            <div className={styles.imageCardTitle} title={title}>
+              {title}
+            </div>
+            <div className={styles.imageCardMeta}>{metaParts.join(" · ")}</div>
           </div>
-          <div className={styles.imageCardMeta}>{metaParts.join(" · ")}</div>
+          {onReplaceImage || onRemoveImage ? (
+            <div className={styles.imageCardActions}>
+              {onReplaceImage &&
+              im.source?.kind !== "jpeg" &&
+              im.source?.kind !== "dicomWeb" ? (
+                <button
+                  type="button"
+                  className={styles.imageCardAction}
+                  title={`Replace ${title} with another OME-TIFF`}
+                  aria-label={`Replace ${title}`}
+                  onClick={() => void onReplaceImage(im.id)}
+                >
+                  <ReplaceIcon title="Replace image" size={14} />
+                </button>
+              ) : null}
+              {onRemoveImage ? (
+                <button
+                  type="button"
+                  className={`${styles.imageCardAction} ${styles.imageCardActionDanger}`}
+                  title={`Remove ${title}`}
+                  aria-label={`Remove ${title}`}
+                  onClick={() => void onRemoveImage(im.id)}
+                >
+                  <TrashIcon title="Remove image" size={14} />
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
         {showAccessOverlay ? (
           <div className={styles.fileAccessOverlay}>

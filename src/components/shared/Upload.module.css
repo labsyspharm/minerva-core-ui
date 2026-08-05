@@ -143,6 +143,7 @@
 .fileAccessOverlay {
   position: absolute;
   inset: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -163,9 +164,18 @@
 
 .imageCardHeader {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.imageCardText {
+  display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 12px 14px;
+  min-width: 0;
+  flex: 1;
 }
 
 .imageCardTitle {
@@ -180,6 +190,40 @@
   font-size: 11px;
   line-height: 1.45;
   color: #8b949e;
+}
+
+.imageCardActions {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: -6px;
+}
+
+.imageCardAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #8b949e;
+  cursor: pointer;
+}
+
+.imageCardAction:hover {
+  color: #e6edf3;
+  background: color-mix(in srgb, #fff 8%, transparent);
+}
+
+.imageCardActionDanger:hover {
+  color: #f85149;
+  background: color-mix(in srgb, #f85149 12%, transparent);
 }
 
 .hiddenFileInput {
