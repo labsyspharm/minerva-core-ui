@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DTgnLIds.js","./pako.esm-KbdoS3Oq.js","./lerc-BD6EMjxu.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DfNqALs3.js","./pako.esm-KbdoS3Oq.js","./lerc-BKESXR4Q.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-Ch6LRJvr.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DXt4krfD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-C0TEhGPL.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BwiZFL1C.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-b3owvKhm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-Bwb7f7Zw.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DTgnLIds.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-HcoabY5R.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BD6EMjxu.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DfNqALs3.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-09-2m51X.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BKESXR4Q.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BvyE9oos.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BvJ3Y1dm.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-E5MWNPBD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DIbttxsT.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -102593,7 +102593,7 @@ void main() {
     "button"
   ]);
   const own$c = {}.hasOwnProperty;
-  function core$1(schema, defaultTagName, caseSensitive) {
+  function core$2(schema, defaultTagName, caseSensitive) {
     const h2 = function(selector, properties2, ...children) {
       let index2 = -1;
       let node2;
@@ -102729,7 +102729,7 @@ void main() {
     }
     return result.join("; ");
   }
-  const h$1 = core$1(html$6, "div");
+  const h$1 = core$2(html$6, "div");
   const characterEntitiesLegacy = [
     "AElig",
     "AMP",
@@ -144254,7 +144254,7 @@ void main() {
   const controlCharactersRegex = /[\x01-\t\v\f\x0E-\x1F\x7F\x81\x8D\x8F\x90\x9D\xA0-\uFFFF]/g;
   const regexEscapeRegex = /[|\\{}()[\]^$+*?.]/g;
   const subsetToRegexCache = /* @__PURE__ */ new WeakMap();
-  function core(value, options) {
+  function core$1(value, options) {
     value = value.replace(options.subset ? charactersToExpressionCached(options.subset) : defaultSubsetRegex, basic2);
     if (options.subset || options.escapeOnly) {
       return value;
@@ -144593,7 +144593,7 @@ void main() {
     return named && (!options.useShortestReferences || named.length < numeric.length) ? named : numeric;
   }
   function stringifyEntities(value, options) {
-    return core(value, Object.assign({
+    return core$1(value, Object.assign({
       format: formatSmart
     }, options));
   }
@@ -172439,17 +172439,21 @@ void main() {
     });
   };
   const textWrap = "_textWrap_1o7ya_1";
+  const core = "_core_1o7ya_7";
+  const hide = "_hide_1o7ya_21";
   const wrapContent = "_wrapContent_1o7ya_25";
   const wrapCore = "_wrapCore_1o7ya_33";
   const overlaySectionLabel = "_overlaySectionLabel_1o7ya_54";
   const styles$5 = {
     textWrap,
+    core,
+    hide,
     wrapContent,
     wrapCore,
     overlaySectionLabel
   };
   const ChannelPanel = (props) => {
-    const hide = props.hiddenChannel;
+    const hide2 = props.hiddenChannel;
     const hidden = props.noLoader;
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const channelVisibilities = useAppStore((s2) => s2.channelVisibilities);
@@ -172576,9 +172580,10 @@ void main() {
       });
     };
     const hideClass = [
-      "show core",
-      "hide core"
-    ][+hide];
+      hide2 ? styles$5.hide : "",
+      styles$5.core
+    ].join(" ");
+    console.log(hideClass);
     const allGroups = channelGroups.length > 0 ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         jsxRuntimeExports.jsx("div", {
@@ -244330,12 +244335,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-05T16:53:36.464Z");
+    const label2 = utcShort("2026-08-05T17:46:30.605Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-05T16:53:36.464Z",
+      title: "2026-08-05T17:46:30.605Z",
       children: [
         "Updated ",
         label2,
@@ -247067,34 +247072,6 @@ void main() {
     const [directory_handle, setDirectoryHandle] = reactExports.useState(null);
     const [exportFolderPrompt, setExportFolderPrompt] = reactExports.useState(null);
     const [presenting, setPresenting] = reactExports.useState(false);
-    const checkWindow = reactExports.useCallback(() => window.innerWidth > 600, []);
-    const [twoNavOk, setTwoNavOk] = reactExports.useState(checkWindow());
-    const [hiddenChannel, setHideChannel] = reactExports.useState(!twoNavOk);
-    const revealWaypointOnNarrow = reactExports.useCallback(() => {
-      if (!twoNavOk) {
-        setHideChannel(true);
-      }
-    }, [
-      twoNavOk
-    ]);
-    const handleResize = reactExports.useCallback(() => {
-      const twoNavPossible = checkWindow();
-      if (!twoNavPossible) {
-        setHideChannel(true);
-      }
-      setTwoNavOk(twoNavPossible);
-    }, [
-      checkWindow
-    ]);
-    reactExports.useEffect(() => {
-      handleResize();
-      window.addEventListener("resize", handleResize, false);
-      return () => {
-        window.removeEventListener("resize", handleResize, false);
-      };
-    }, [
-      handleResize
-    ]);
     const beginExportToFolder = async (mode, dirHandle) => {
       const doc = useDocumentStore.getState();
       const storyId = doc.activeStoryId;
@@ -247778,7 +247755,6 @@ void main() {
         if (result.jpegLoaderEntries.length > 0) {
           syncRegistryFromDocument();
           setImportRevision((revision) => revision + 1);
-          revealWaypointOnNarrow();
         }
       } catch (e2) {
         if (!(e2 instanceof DOMException && e2.name === "AbortError")) {
@@ -247791,8 +247767,7 @@ void main() {
       }
     }, [
       applyHydratedLoaders,
-      syncRegistryFromDocument,
-      revealWaypointOnNarrow
+      syncRegistryFromDocument
     ]);
     const requestLoaderFileAccess = reactExports.useCallback(async () => {
       var _a2;
@@ -247807,7 +247782,6 @@ void main() {
         if (result.omeLoaderEntries.length + result.jpegLoaderEntries.length + result.dicomIndexList.length > 0) {
           syncRegistryFromDocument();
           setImportRevision((r2) => r2 + 1);
-          revealWaypointOnNarrow();
         }
       } catch (e2) {
         console.error("[minerva] requestLoaderFileAccess failed", e2);
@@ -247817,8 +247791,7 @@ void main() {
       }
     }, [
       applyHydratedLoaders,
-      syncRegistryFromDocument,
-      revealWaypointOnNarrow
+      syncRegistryFromDocument
     ]);
     const reselectLoaderFile = reactExports.useCallback(async (imageId) => {
       var _a2;
@@ -247838,7 +247811,6 @@ void main() {
         if (result.omeLoaderEntries.length + result.jpegLoaderEntries.length + result.dicomIndexList.length > 0) {
           syncRegistryFromDocument();
           setImportRevision((r2) => r2 + 1);
-          revealWaypointOnNarrow();
           const file = await handle2.getFile();
           setFileName(file.name);
         }
@@ -247850,8 +247822,7 @@ void main() {
       }
     }, [
       applyHydratedLoaders,
-      syncRegistryFromDocument,
-      revealWaypointOnNarrow
+      syncRegistryFromDocument
     ]);
     const onRestoredOmeHandles = reactExports.useCallback(async (restored) => {
       var _a2, _b2, _c2;
@@ -247873,7 +247844,6 @@ void main() {
           setIsLoadingImage(false);
         }
         setImportRevision((r2) => r2 + 1);
-        revealWaypointOnNarrow();
         (_b2 = document.getElementById("global-loader")) == null ? void 0 : _b2.remove();
         return;
       }
@@ -247881,12 +247851,10 @@ void main() {
       const file = await restored[0].getFile();
       await onStartOmeTiffRef.current(file.name, restored);
       setImportRevision((r2) => r2 + 1);
-      revealWaypointOnNarrow();
       (_c2 = document.getElementById("global-loader")) == null ? void 0 : _c2.remove();
     }, [
       applyHydratedLoaders,
-      syncRegistryFromDocument,
-      revealWaypointOnNarrow
+      syncRegistryFromDocument
     ]);
     const onStart = async (imagePropList, handles) => {
       var _a2;
@@ -247907,7 +247875,6 @@ void main() {
       const t0 = performance.now();
       console.log("[minerva] onStart: will load, setting loading state");
       setImportRevision((r2) => r2 + 1);
-      revealWaypointOnNarrow();
       setIsLoadingImage(true);
       try {
         if (dicomPropList.length > 0) {
@@ -248279,7 +248246,7 @@ void main() {
     ]);
     const contrastEditable = omeLoaderEntries.length > 0 || dicomIndexList.length > 0;
     const channelProps = {
-      hiddenChannel,
+      hiddenChannel: true,
       contrastEditable,
       ensureChannelHistograms: onEnsureChannelHistograms,
       ensureChannelGmmContrastLimits: onEnsureChannelGmmContrastLimits
@@ -248504,7 +248471,6 @@ void main() {
               await onStartOmeTiffUrl(req.source.url, req.role);
             }
             setImportRevision((r2) => r2 + 1);
-            revealWaypointOnNarrow();
             const storyId = useDocumentStore.getState().activeStoryId;
             if (storyId) {
               await saveStoryDocument(storyId, useDocumentStore.getState().toDocumentData());
