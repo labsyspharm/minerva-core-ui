@@ -29,19 +29,14 @@ import {
   mergeGmmContrastLimitsIntoSourceChannelsByChannelId,
 } from "@/lib/imaging/autoContrast";
 import { defaultVisibilitiesForSources } from "@/lib/imaging/channelCompositor";
-import {
-  isImageChannel,
-  resolveImageImportRole,
-} from "@/lib/imaging/channelKind";
+import { isImageChannel } from "@/lib/imaging/channelKind";
 import { loadDicomWeb, parseDicomWeb } from "@/lib/imaging/dicom.js";
 import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
 import {
-  ensureFileHandlePermission,
-  findFile,
   hasAuthorShellSupport,
   hasDirectoryPickerAccess,
   loadOmeLoaderForRole,
-  toFile,
+  pickLocalOmeTiffHandle,
 } from "@/lib/imaging/filesystem";
 import {
   clearOmeHistogramCache,
@@ -63,6 +58,7 @@ import {
   applyPaletteToGroupedImport,
   buildOmeImportSlice,
   finalizeAppendedIntensityGroups,
+  replaceOmeLocalImageInDocument,
 } from "@/lib/imaging/omeImportPipeline";
 import { warmupPsudoPalette } from "@/lib/imaging/pseudoPalette";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
@@ -71,7 +67,10 @@ import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { deleteFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
-import { imageHandleStorageKey } from "@/lib/persistence/imageHandles";
+import {
+  imageHandleStorageKey,
+  persistLocalImageHandle,
+} from "@/lib/persistence/imageHandles";
 import {
   saveStoryDocument,
   setActiveStoryId,
@@ -97,9 +96,7 @@ import {
   dedupeImagesForImport,
   hydrateConfigWaypoint,
   type LegacyExhibitWaypoint,
-  rebindReplacementImageChannels,
   removeImageFromDocument,
-  replaceImageRowInDocument,
   setImageSource,
   waypointsToConfigWaypoints,
 } from "@/lib/stores/storeUtils";
@@ -736,86 +733,51 @@ const Content = (props: Props) => {
    */
   const onReplaceImage = useCallback(
     async (imageId: string) => {
-      const doc = useDocumentStore.getState();
-      const oldImage = doc.images.find((im) => im.id === imageId);
-      if (!oldImage) return;
-      if (oldImage.source?.kind === "jpeg") return;
-      const oldLocalHandleKey =
-        oldImage.source?.kind === "local"
-          ? oldImage.source.handleKey
-          : undefined;
-
       setIsLoadingImage(true);
       try {
-        const picked = await toFile();
-        if (picked.length === 0) return;
-        const handle = picked[0];
-        if (!(await ensureFileHandlePermission(handle))) return;
-        if (!(await findFile({ handle }))) return;
+        const handle = await pickLocalOmeTiffHandle();
+        if (!handle) return;
 
-        const file = await handle.getFile();
-        const role = resolveImageImportRole({
-          contentRole: oldImage.contentRole,
-          channels: oldImage.channels ?? [],
-        });
+        const doc = useDocumentStore.getState();
         clearOmeDerivedCaches();
-        const loader = await loadOmeLoaderForRole(role, {
-          kind: "local",
+        const prep = await replaceOmeLocalImageInDocument({
+          images: doc.images,
+          imageId,
           handle,
-          in_f: file.name,
           pool: new Pool(),
         });
-        const newImageId = crypto.randomUUID();
-        const withoutOld = doc.images.filter((im) => im.id !== imageId);
-        const slice = buildOmeImportSlice({
-          loader,
-          role,
-          basename: file.name,
-          sourceImageId: newImageId,
-          existingImages: withoutOld,
-        });
-        const incoming = slice.nextImages.find((im) => im.id === newImageId);
-        if (!incoming) return;
-
-        const rebound = rebindReplacementImageChannels(oldImage, incoming);
-        if ("error" in rebound) {
-          window.alert(rebound.error);
+        if (prep.ok === false) {
+          if (prep.error) window.alert(prep.error);
           return;
         }
 
-        let nextImages = replaceImageRowInDocument(
-          doc.images,
-          imageId,
-          rebound,
-        );
+        let nextImages = prep.nextImages;
         const storyId = useDocumentStore.getState().activeStoryId;
         if (storyId) {
-          const key = imageHandleStorageKey(storyId, newImageId);
-          await putFileHandle(key, handle);
-          nextImages = setImageSource(nextImages, newImageId, {
-            kind: "local",
-            handleKey: key,
+          nextImages = await persistLocalImageHandle({
+            storyId,
+            imageId: prep.newImageId,
+            handle,
+            images: nextImages,
+            previousHandleKey: prep.oldLocalHandleKey,
           });
-          if (oldLocalHandleKey) {
-            await deleteFileHandle(oldLocalHandleKey);
-          }
         }
 
         skipLoaderHydrateRef.current = true;
         setOmeLoaderEntries((prev) => [
-          ...prev.filter((e) => e.sourceImageId !== imageId),
-          { loader, sourceImageId: newImageId },
+          ...prev.filter((e) => e.sourceImageId !== prep.oldImageId),
+          { loader: prep.loader, sourceImageId: prep.newImageId },
         ]);
         setJpegLoaderEntries((prev) =>
-          prev.filter((e) => e.sourceImageId !== imageId),
+          prev.filter((e) => e.sourceImageId !== prep.oldImageId),
         );
         setDicomIndexList((prev) =>
-          prev.filter((d) => d.sourceImageId !== imageId),
+          prev.filter((d) => d.sourceImageId !== prep.oldImageId),
         );
         setDeniedHandleKeys([]);
-        if (oldLocalHandleKey) {
+        if (prep.oldLocalHandleKey) {
           setMissingHandleKeys((prev) =>
-            prev.filter((k) => k !== oldLocalHandleKey),
+            prev.filter((k) => k !== prep.oldLocalHandleKey),
           );
         }
 
@@ -823,7 +785,7 @@ const Content = (props: Props) => {
           resetActiveGroup: false,
           mergeVisibilities: true,
         });
-        setFileName(file.name);
+        setFileName(prep.basename);
         setLastOmeTiffUrl(null);
         setViewerRemountKey((k) => k + 1);
         setImportRevision((r) => r + 1);
@@ -1321,11 +1283,8 @@ const Content = (props: Props) => {
     async (imageId: string) => {
       setIsLoadingImage(true);
       try {
-        const picked = await toFile();
-        if (picked.length === 0) return;
-        const handle = picked[0];
-        if (!(await ensureFileHandlePermission(handle))) return;
-        if (!(await findFile({ handle }))) return;
+        const handle = await pickLocalOmeTiffHandle();
+        if (!handle) return;
 
         const doc = useDocumentStore.getState();
         const im = doc.images.find((i) => i.id === imageId);
