@@ -254,7 +254,6 @@ export const ChannelGroupsMasterDetail = (
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
   const setImages = useDocumentStore((s) => s.setImages);
   const setGroupNames = useAppStore((s) => s.setGroupNames);
-  const setGroupChannelLists = useAppStore((s) => s.setGroupChannelLists);
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
 
   const sourceChannels = React.useMemo(
@@ -358,18 +357,8 @@ export const ChannelGroupsMasterDetail = (
       setGroupNames(
         Object.fromEntries(normalized.map(({ name, id }) => [id, name])),
       );
-      const lists = Object.fromEntries(
-        normalized.map(({ name, channels }) => [
-          name,
-          channels
-            .map((gc) => findSourceChannel(sourceChannels, gc.channelId))
-            .filter(Boolean)
-            .map((sc) => sc?.name),
-        ]),
-      );
-      setGroupChannelLists(lists);
     },
-    [sourceChannels, setChannelGroups, setGroupNames, setGroupChannelLists],
+    [setChannelGroups, setGroupNames],
   );
 
   const activateGroup = React.useCallback(
@@ -401,21 +390,8 @@ export const ChannelGroupsMasterDetail = (
         ),
       }));
       setImages(nextImages);
-      const flatAfter = flattenImageChannelsInDocumentOrder(nextImages);
-      const groups = useDocumentStore.getState().channelGroups;
-      setGroupChannelLists(
-        Object.fromEntries(
-          groups.map(({ name, channels }) => [
-            name,
-            channels
-              .map((gc) => findSourceChannel(flatAfter, gc.channelId))
-              .filter(Boolean)
-              .map((sc) => sc?.name as string),
-          ]),
-        ),
-      );
     },
-    [setImages, setGroupChannelLists],
+    [setImages],
   );
 
   const createGroup = async () => {

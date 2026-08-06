@@ -1,4 +1,10 @@
+import { rgbaToHsva } from "@uiw/react-color";
 import type { CSSProperties } from "react";
+import * as React from "react";
+import {
+  ChromeColorPickerPopover,
+  chromeColorPickerAnchorPosition,
+} from "@/components/shared/ChromeColorPickerPopover";
 import {
   PopUpdate as PopUpdateChannel,
   Push as PushChannel,
@@ -13,6 +19,7 @@ import {
   effectiveSourceColor,
   effectiveSourceLimits,
 } from "@/lib/imaging/sourceChannelStyle";
+import { useAppStore } from "@/lib/stores/appStore";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
 import { basenameImportLabel } from "@/lib/stores/storeUtils";
 import styles from "./ChannelLegend.module.css";
@@ -126,10 +133,7 @@ type LegendRowProps = {
   /** Group member hidden in the viewer — stroked swatch, still listed. */
   hiddenInViewer?: boolean;
   toggleChannel: (c: LegendChannel) => void;
-  updateChannel: (
-    channel: LegendChannel,
-    ctx: { idx: number; g: number },
-  ) => void;
+  updateChannel: (id: string, c: Partial<ChannelGroupChannel>) => void;
   popChannel: (ctx: { g: number; idx: number }) => void;
 };
 
@@ -144,9 +148,6 @@ const LegendRow = (props: LegendRowProps & { onClick: () => void }) => {
         props.channelVisibilities,
         props.channelGroupRowVisibilities,
       );
-  const setInput = (t: string) => {
-    props.updateChannel({ ...channel, name: t }, { idx, g });
-  };
   const onPop = () => {
     props.popChannel({ g, idx });
   };
@@ -158,7 +159,7 @@ const LegendRow = (props: LegendRowProps & { onClick: () => void }) => {
     // textarea). Playback / CDN pass undefined and must stay read-only.
     editable: props.editable === true,
     md: false,
-    setInput,
+    setInput: () => null,
     updateCache: () => null,
     cache: new Map(),
     uuid,
@@ -231,6 +232,34 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
   const addChannelUI = pushChannel ? (
     <EditModeSwitcher {...{ ...props, editSwitch }} />
   ) : null;
+  const { globalColor, setGlobalColor } = useAppStore();
+  const [colorPickerPos, setColorPickerPos] = React.useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const [pickerHsva, setPickerHsva] = React.useState(() =>
+    rgbaToHsva({ r: 255, g: 255, b: 255, a: 1 }),
+  );
+  const [colorPickerChannel, setColorPickerChannel] =
+    React.useState<LegendChannel | null>(null);
+
+  const closeColorPicker = React.useCallback(() => {
+    setColorPickerChannel(null);
+    setColorPickerPos(null);
+  }, []);
+
+  const handleColorPickerOpen = (anchor: DOMRect, c: LegendChannel) => {
+    setColorPickerChannel(c);
+    setPickerHsva(
+      rgbaToHsva({
+        r: globalColor[0],
+        g: globalColor[1],
+        b: globalColor[2],
+        a: globalColor[3] / 255,
+      }),
+    );
+    setColorPickerPos(chromeColorPickerAnchorPosition(anchor));
+  };
 
   if (sections.length === 0) {
     return (
@@ -287,7 +316,10 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
                   toggleChannel: props.toggleChannel,
                   updateChannel: props.updateChannel ?? (() => {}),
                   popChannel: props.popChannel ?? (() => {}),
-                  onClick: () => props.toggleChannel(c),
+                  onClick: (e) => {
+                    const anchor = e.currentTarget.getBoundingClientRect();
+                    handleColorPickerOpen(anchor, c);
+                  },
                 };
                 return (
                   <LegendRow
@@ -300,6 +332,28 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
           </div>
         ))}
       </div>
+      <ChromeColorPickerPopover
+        position={colorPickerPos}
+        onClose={closeColorPicker}
+        color={pickerHsva}
+        showAlpha
+        onChange={(c) => {
+          setPickerHsva(c.hsva);
+          const { r, g, b, a } = c.rgba;
+          const color = { r, g, b };
+          const newColor: [number, number, number, number] = [
+            Math.round(r),
+            Math.round(g),
+            Math.round(b),
+            Math.round(a * 255),
+          ];
+          if (colorPickerChannel !== null) {
+            const channel = colorPickerChannel;
+            const channelId = channel.source_uuid;
+            props.updateChannel(channelId, { color });
+          }
+        }}
+      />
     </div>
   );
 };

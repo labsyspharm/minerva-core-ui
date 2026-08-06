@@ -10,6 +10,7 @@ import {
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
 import { useAppStore } from "@/lib/stores/appStore";
+import type { ChannelGroup } from "@/lib/stores/documentStore";
 import {
   findSourceChannel,
   flattenImageChannelsInDocumentOrder,
@@ -162,6 +163,37 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     channelVisibilities,
   ]);
 
+  const groups = useDocumentStore((s) => s.channelGroups);
+  const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
+  const setGroupNames = useAppStore((s) => s.setGroupNames);
+
+  const syncGroupState = React.useCallback(
+    (newGroups: ChannelGroup[]) => {
+      setChannelGroups(newGroups);
+      setGroupNames(
+        Object.fromEntries(newGroups.map(({ name, id }) => [id, name])),
+      );
+    },
+    [setChannelGroups, setGroupNames],
+  );
+
+  const updateChannel = React.useCallback(
+    (channelId, newChannel) => {
+      syncGroupState(
+        groups.map((g) => ({
+          ...g,
+          channels: g.channels.map((gc) => {
+            if (gc.channelId === channelId) {
+              return { ...gc, ...newChannel };
+            }
+            return gc;
+          }),
+        })),
+      );
+    },
+    [groups, syncGroupState],
+  );
+
   const toggleChannel = (c: LegendChannel) => {
     if (c.group_uuid && c.channel_uuid) {
       setChannelGroupRowVisibilities({
@@ -183,7 +215,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   };
 
   const hideClass = [hide ? styles.hide : "", styles.core].join(" ");
-  console.log(hideClass);
 
   const allGroups =
     channelGroups.length > 0 ? (
@@ -203,6 +234,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
             channelVisibilities={channelVisibilities}
             channelGroupRowVisibilities={channelGroupRowVisibilities}
             toggleChannel={toggleChannel}
+            updateChannel={updateChannel}
           />
         </div>
       </div>
