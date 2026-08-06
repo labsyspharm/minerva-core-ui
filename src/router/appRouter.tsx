@@ -6,6 +6,7 @@ import {
 import type { ComponentType } from "react";
 import * as React from "react";
 import { z } from "zod";
+import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 
 const storySearchSchema = z.object({
@@ -65,16 +66,21 @@ export function StoryIdUrlSync() {
       } as never);
       return;
     }
-    void switchStory(sid).catch(() => {
-      navigate({
-        search: (prev: { storyid?: string }) => {
-          const next = { ...prev };
-          delete next.storyid;
-          return next;
-        },
-        replace: true,
-      } as never);
-    });
+    void (async () => {
+      useAppStore.getState().resetStoryViewerSession();
+      try {
+        await switchStory(sid);
+      } catch {
+        navigate({
+          search: (prev: { storyid?: string }) => {
+            const next = { ...prev };
+            delete next.storyid;
+            return next;
+          },
+          replace: true,
+        } as never);
+      }
+    })();
   }, [search.storyid, activeStoryId, switchStory, navigate]);
 
   React.useEffect(() => {

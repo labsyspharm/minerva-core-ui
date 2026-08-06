@@ -3,6 +3,7 @@ import { hasDirectoryPickerAccess } from "@/lib/imaging/filesystem";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { listStorySummaries } from "@/lib/persistence/storyPersistence";
 import type { StorySummary } from "@/lib/persistence/types";
+import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { importStoryFolderFromPicker } from "@/lib/storyExport/importStoryFolder";
 import { rootRouteApi } from "@/router/appRouter";
@@ -213,6 +214,7 @@ export function MinervaLibraryPage() {
       setBusyId(id);
       setError(null);
       try {
+        useAppStore.getState().resetStoryViewerSession();
         await switchStory(id);
         navigate({
           search: (prev: { storyid?: string }) => ({
@@ -234,6 +236,7 @@ export function MinervaLibraryPage() {
     setCreating(true);
     setError(null);
     try {
+      useAppStore.getState().resetStoryViewerSession();
       const id = await createStory();
       navigate({
         search: (prev: { storyid?: string }) => ({
@@ -253,6 +256,7 @@ export function MinervaLibraryPage() {
     setImporting(true);
     setError(null);
     try {
+      useAppStore.getState().resetStoryViewerSession();
       const id = await importStoryFolderFromPicker();
       navigate({
         search: (prev: { storyid?: string }) => ({

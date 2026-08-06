@@ -194,7 +194,10 @@ const WaypointsList = (props: WaypointsListProps) => {
         ? detailStoryIndex
         : (activeStoryIndex ?? 0);
     const story = waypoints[storyIndex];
-    if (!story) return;
+    if (!story) {
+      useAppStore.getState().clearShapes();
+      return;
+    }
 
     const prev = previousImportStoryIndexRef.current;
     const store = useAppStore.getState();

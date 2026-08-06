@@ -296,6 +296,7 @@ const Content = (props: Props) => {
         await saveStoryDocument(s.activeStoryId, s.toDocumentData());
       }
       await setActiveStoryId(null);
+      useAppStore.getState().resetStoryViewerSession();
       s.clearForLibraryView();
       navigate({
         search: (prev: { storyid?: string }) => {
@@ -1929,10 +1930,13 @@ const Content = (props: Props) => {
     return () => unsub();
   }, []);
 
-  // Initialize to first active story index
+  // Initialize / clamp active waypoint index for the open document
   useEffect(() => {
     const hasWaypoints = _waypoints.length;
-    if (hasWaypoints && activeStoryIndex === null) {
+    if (
+      hasWaypoints &&
+      (activeStoryIndex === null || activeStoryIndex >= _waypoints.length)
+    ) {
       setActiveStory(0);
     }
   }, [_waypoints, activeStoryIndex, setActiveStory]);

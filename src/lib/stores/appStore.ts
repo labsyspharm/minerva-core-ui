@@ -726,6 +726,11 @@ export interface AppStore {
   removeShape: (shapeId: string) => void;
   updateShape: (shapeId: string, updates: Partial<Shape>) => void;
   clearShapes: () => void;
+  /**
+   * Drop the viewer working copy and story-scoped UI so the next document can
+   * import cleanly from its waypoints. Does not touch persisted document shapes.
+   */
+  resetStoryViewerSession: () => void;
   finalizeRectangle: () => void;
 
   /** Replace all rows from exhibit-shaped waypoints (converts to store rows). */
@@ -1192,6 +1197,37 @@ export const useAppStore = create<AppStore>()(
 
       clearShapes: () => {
         set({ shapes: [] });
+      },
+
+      resetStoryViewerSession: () => {
+        const vis = { ...get().channelVisibilities };
+        delete vis[SELECTION_MASK_CHANNEL_KEY];
+        set({
+          shapes: [],
+          shapeGroups: [],
+          hiddenShapeIds: new Set<string>(),
+          selectedShapeId: null,
+          brushEditTargetId: null,
+          brushEditMode: null,
+          brushMask: null,
+          brushMaskVersion: 0,
+          brushLastScreenCoord: null,
+          imageSelectionMask: null,
+          channelVisibilities: vis,
+          activeStoryIndex: null,
+          waypointAuthoring: new Map(),
+          authoringWaypointShapesIndex: null,
+          authoringWaypointEditorOpen: false,
+          targetWaypointCamera: null,
+          layersPanelSelectedShapeIds: [],
+          layersPanelSelectedGroupId: null,
+          layersPanelSelectionFlash: null,
+          layersPanelSelectionRequest: null,
+          drawingState: overlayInitialState.drawingState,
+          dragState: overlayInitialState.dragState,
+          hoverState: overlayInitialState.hoverState,
+          currentInteraction: null,
+        });
       },
 
       finalizeRectangle: () => {
