@@ -247,7 +247,7 @@
 /* Bookshelf: CSS border frame (even stroke) + inset white shelf boards — one bay per story */
 
 /* Bounded viewport height so many shelves scroll inside the page shell (not clipped). */
-._root_1gti7_4 {
+._root_dp4yy_4 {
   box-sizing: border-box;
   min-height: 100dvh;
   max-height: 100dvh;
@@ -271,7 +271,7 @@
  * Align with text/shelves inside the frame: bookcase padding (14px) +
  * bookcaseInner horizontal padding — matches where shelf content starts.
  */
-._shelfToolbar_1gti7_28 {
+._shelfToolbar_dp4yy_28 {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -283,14 +283,60 @@
   box-sizing: border-box;
 }
 
-._toolbarActions_1gti7_40 {
+._toolbarActions_dp4yy_40 {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
 }
 
-._wordmark_1gti7_47 {
+._importMenu_dp4yy_47 {
+  position: relative;
+}
+
+._importMenu_dp4yy_47 > summary {
+  list-style: none;
+}
+
+._importMenu_dp4yy_47 > summary::-webkit-details-marker {
+  display: none;
+}
+
+._disabledAction_dp4yy_59 {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+._importChoices_dp4yy_64 {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 5px);
+  right: 0;
+  min-width: 9rem;
+  padding: 4px;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  background: #211d18;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.45);
+}
+
+._importChoices_dp4yy_64 button {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  color: rgb(200 194 182 / 0.9);
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+._importChoices_dp4yy_64 button:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.07);
+}
+
+._wordmark_dp4yy_93 {
   margin: 0;
   font-size: clamp(0.95rem, 2vw, 1.1rem);
   font-weight: 500;
@@ -299,7 +345,7 @@
   color: rgb(188 180 168 / 0.88);
 }
 
-._newVolume_1gti7_56 {
+._newVolume_dp4yy_102 {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -319,29 +365,29 @@
     background 0.2s ease;
 }
 
-._newVolume_1gti7_56:hover:not(:disabled) {
+._newVolume_dp4yy_102:hover:not(:disabled) {
   border-color: rgb(255 255 255 / 0.32);
   color: rgb(215 208 195);
   background: rgb(255 255 255 / 0.04);
 }
 
-._newVolume_1gti7_56:disabled {
+._newVolume_dp4yy_102:disabled {
   opacity: 0.4;
   cursor: wait;
 }
 
-._newGlyph_1gti7_87 {
+._newGlyph_dp4yy_133 {
   font-size: 1.1rem;
   font-weight: 300;
   line-height: 1;
   opacity: 0.85;
 }
 
-._newLabel_1gti7_94 {
+._newLabel_dp4yy_140 {
   font-size: 0.62rem;
 }
 
-._error_1gti7_98 {
+._error_dp4yy_144 {
   margin: 0 0 16px;
   padding: 10px 14px;
   font-size: 0.85rem;
@@ -350,14 +396,14 @@
   background: rgb(40 28 24 / 0.35);
 }
 
-._whisper_1gti7_107 {
+._whisper_dp4yy_153 {
   margin: 0;
   font-size: 0.85rem;
   letter-spacing: 0.05em;
   color: rgb(255 255 255 / 0.26);
 }
 
-._emptyLine_1gti7_114 {
+._emptyLine_dp4yy_160 {
   margin: 0;
   margin-left: -0.25rem;
   font-size: 0.95rem;
@@ -365,7 +411,7 @@
   color: rgb(170 164 152 / 0.5);
 }
 
-._inlineLink_1gti7_122 {
+._inlineLink_dp4yy_168 {
   margin: 0;
   padding: 0;
   border: none;
@@ -377,17 +423,17 @@
   font: inherit;
 }
 
-._inlineLink_1gti7_122:hover:not(:disabled) {
+._inlineLink_dp4yy_168:hover:not(:disabled) {
   color: rgb(220 212 198);
 }
 
-._inlineLink_1gti7_122:disabled {
+._inlineLink_dp4yy_168:disabled {
   opacity: 0.5;
   cursor: wait;
 }
 
 /* Wooden bookcase frame with layered box-shadows for depth */
-._bookcase_1gti7_144 {
+._bookcase_dp4yy_190 {
   max-width: 52rem;
   margin: 0 auto;
   min-height: 12rem;
@@ -410,7 +456,7 @@
     0 1px 3px rgb(0 0 0 / 0.3);
 }
 
-._bookcaseInner_1gti7_167 {
+._bookcaseInner_dp4yy_213 {
   padding: clamp(10px, 3%, 16px) clamp(10px, 3%, 18px);
   box-sizing: border-box;
   border-radius: 4px;
@@ -428,17 +474,17 @@
 }
 
 /* One compartment per story; shelf board below each bay */
-._shelfBay_1gti7_185 {
+._shelfBay_dp4yy_231 {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-._shelfBay_1gti7_185 + ._shelfBay_1gti7_185 {
+._shelfBay_dp4yy_231 + ._shelfBay_dp4yy_231 {
   margin-top: 0;
 }
 
-._bayContent_1gti7_195 {
+._bayContent_dp4yy_241 {
   position: relative;
   display: flex;
   align-items: stretch;
@@ -447,19 +493,19 @@
   padding: 6px 0 10px;
 }
 
-._bayContentEmptyPrompt_1gti7_204 {
+._bayContentEmptyPrompt_dp4yy_250 {
   padding: 14px 0 10px;
 }
 
 /* Unused shelf tiers — one row of ghost spines */
-._bayContentEmpty_1gti7_204 {
+._bayContentEmpty_dp4yy_250 {
   min-height: 44px;
   padding: 0;
   box-sizing: border-box;
 }
 
 /* Ghost book cluster — single row, no wrap */
-._ghostShelf_1gti7_216 {
+._ghostShelf_dp4yy_262 {
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-end;
@@ -470,7 +516,7 @@
   overflow: hidden;
 }
 
-._ghostBook_1gti7_227 {
+._ghostBook_dp4yy_273 {
   flex: 0 0 auto;
   border-radius: 1px 1px 0 0;
   box-shadow:
@@ -479,7 +525,7 @@
 }
 
 /* Compact stroked “volume” sitting on the shelf */
-._storyRow_1gti7_236 {
+._storyRow_dp4yy_282 {
   display: flex;
   align-items: center;
   gap: 2px;
@@ -495,7 +541,7 @@
 }
 
 /* Wooden shelf plank with bevel and shadow */
-._shelfBoard_1gti7_252 {
+._shelfBoard_dp4yy_298 {
   flex: 0 0 auto;
   height: 8px;
   width: 100%;
@@ -522,7 +568,7 @@
     0 1px 2px rgb(0 0 0 / 0.3);
 }
 
-._rowOpen_1gti7_279 {
+._rowOpen_dp4yy_325 {
   --row-accent: hsl(28 14% 28%);
   flex: 1 1 auto;
   display: flex;
@@ -543,20 +589,20 @@
     box-shadow 0.15s ease;
 }
 
-._rowOpen_1gti7_279:hover:not(:disabled) {
+._rowOpen_dp4yy_325:hover:not(:disabled) {
   background: rgb(180 150 100 / 0.06);
 }
 
-._rowOpen_1gti7_279:active:not(:disabled) {
+._rowOpen_dp4yy_325:active:not(:disabled) {
   background: rgb(180 150 100 / 0.1);
 }
 
-._rowOpen_1gti7_279:disabled {
+._rowOpen_dp4yy_325:disabled {
   opacity: 0.45;
   cursor: wait;
 }
 
-._rowThumb_1gti7_313 {
+._rowThumb_dp4yy_359 {
   flex: 0 0 auto;
   width: 32px;
   height: 32px;
@@ -565,7 +611,7 @@
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
 }
 
-._rowThumbImg_1gti7_322 {
+._rowThumbImg_dp4yy_368 {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -574,7 +620,7 @@
   filter: saturate(0.9) contrast(1.03);
 }
 
-._rowThumbBlank_1gti7_331 {
+._rowThumbBlank_dp4yy_377 {
   display: block;
   width: 100%;
   height: 100%;
@@ -582,7 +628,7 @@
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
 }
 
-._rowText_1gti7_339 {
+._rowText_dp4yy_385 {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
@@ -591,7 +637,7 @@
   gap: 10px;
 }
 
-._rowTitle_1gti7_348 {
+._rowTitle_dp4yy_394 {
   font-size: 0.8125rem;
   font-weight: 550;
   letter-spacing: 0.02em;
@@ -601,7 +647,7 @@
   white-space: nowrap;
 }
 
-._rowDate_1gti7_358 {
+._rowDate_dp4yy_404 {
   flex: 0 0 auto;
   font-size: 0.65rem;
   letter-spacing: 0.03em;
@@ -609,11 +655,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-._storyRow_1gti7_236:focus-within ._scrap_1gti7_366 {
+._storyRow_dp4yy_282:focus-within ._scrap_dp4yy_412 {
   opacity: 1;
 }
 
-._scrap_1gti7_366 {
+._scrap_dp4yy_412 {
   flex: 0 0 auto;
   align-self: center;
   width: 22px;
@@ -633,44 +679,44 @@
     background 0.15s ease;
 }
 
-._storyRow_1gti7_236:hover ._scrap_1gti7_366 {
+._storyRow_dp4yy_282:hover ._scrap_dp4yy_412 {
   opacity: 1;
 }
 
-._scrap_1gti7_366:hover:not(:disabled) {
+._scrap_dp4yy_412:hover:not(:disabled) {
   color: rgb(210 160 150);
   background: rgb(45 32 28 / 0.6);
 }
 
-._scrap_1gti7_366:disabled {
+._scrap_dp4yy_412:disabled {
   opacity: 0.25;
   cursor: wait;
 }
 
 @media (max-width: 540px) {
-  ._rowText_1gti7_339 {
+  ._rowText_dp4yy_385 {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
 
-  ._rowDate_1gti7_358 {
+  ._rowDate_dp4yy_404 {
     font-size: 0.68rem;
   }
 
-  ._shelfToolbar_1gti7_28 {
+  ._shelfToolbar_dp4yy_28 {
     flex-direction: column;
     align-items: flex-start;
     padding-left: calc(14px + 6%);
     padding-right: calc(14px + 6%);
   }
 
-  ._bookcaseInner_1gti7_167 {
+  ._bookcaseInner_dp4yy_213 {
     padding-left: 6%;
     padding-right: 6%;
   }
 
-  ._shelfBoard_1gti7_252 {
+  ._shelfBoard_dp4yy_298 {
     width: 100%;
   }
 }

@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DfNqALs3.js","./pako.esm-KbdoS3Oq.js","./lerc-BKESXR4Q.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-89_dhgcO.js","./pako.esm-KbdoS3Oq.js","./lerc-ovMmcLJ0.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-C0TEhGPL.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BwiZFL1C.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CP2Tr7vI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-SkJuVujZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-Bwb7f7Zw.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-n9SbhTzW.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DfNqALs3.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-09-2m51X.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BKESXR4Q.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-89_dhgcO.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-Ck4p-Ch9.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-ovMmcLJ0.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BvJ3Y1dm.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd--x3IFsgf.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DIbttxsT.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-D4GzxrDz.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -86009,1569 +86009,6 @@ void main() {
       configWaypoints: enabled2 && !jpeg ? configWaypoints : []
     };
   }
-  const o = /* @__PURE__ */ new WeakMap();
-  let u$4 = 0;
-  function stableHash(t2) {
-    const i2 = typeof t2, s2 = t2 && t2.constructor, c2 = s2 === Date;
-    if (Object(t2) === t2 && !c2 && s2 != RegExp) {
-      let e2 = o.get(t2);
-      if (e2) return e2;
-      e2 = ++u$4 + "~", o.set(t2, e2);
-      let n2;
-      if (s2 === Array) {
-        for (e2 = "@", n2 = 0; n2 < t2.length; n2++) e2 += stableHash(t2[n2]) + ",";
-        o.set(t2, e2);
-      } else if (s2 === Object) {
-        e2 = "#";
-        const f2 = Object.keys(t2).sort();
-        for (; (n2 = f2.pop()) !== void 0; ) t2[n2] !== void 0 && (e2 += n2 + ":" + stableHash(t2[n2]) + ",");
-        o.set(t2, e2);
-      }
-      return e2;
-    }
-    return c2 ? t2.toJSON() : i2 === "symbol" ? t2.toString() : i2 === "string" ? JSON.stringify(t2) : "" + t2;
-  }
-  const JPEG_PYRAMID_TILE_SIZE = 1024;
-  const JPEG_BAKED_CONTRAST_LIMIT = [
-    0,
-    65535
-  ];
-  const JPEG_FALLBACK_LOWER_LIMIT = 2 ** 5;
-  const JPEG_FALLBACK_UPPER_LIMIT = 2 ** 14;
-  async function jpegPyramidFolderName(channelId, lowerLimit, upperLimit) {
-    const encoded = stableHash({
-      channelId,
-      lowerLimit,
-      upperLimit
-    });
-    const bytes = new TextEncoder().encode(encoded);
-    const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
-    return Array.from(digest, (b2) => b2.toString(16).padStart(2, "0")).join("");
-  }
-  async function folderByChannelIndexFromGroup(opts) {
-    const out = {};
-    await Promise.all(opts.channels.map(async (row2) => {
-      const index2 = opts.channelIndexById[row2.channelId];
-      if (index2 === void 0) return;
-      out[index2] = await jpegPyramidFolderName(row2.channelId, row2.lowerLimit, row2.upperLimit);
-    }));
-    return out;
-  }
-  async function folderByChannelIndexFromImageChannels(channels2) {
-    const out = {};
-    await Promise.all(channels2.map(async (ch2) => {
-      out[ch2.index] = await jpegPyramidFolderName(ch2.id, ch2.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT, ch2.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT);
-    }));
-    return out;
-  }
-  function jpegPyramidLevels(width, height, tileSize = JPEG_PYRAMID_TILE_SIZE) {
-    let w2 = width;
-    let h2 = height;
-    let n2 = 1;
-    while ((w2 > tileSize || h2 > tileSize) && n2 < 32) {
-      w2 = Math.max(1, w2 >> 1);
-      h2 = Math.max(1, h2 >> 1);
-      n2 += 1;
-    }
-    return Array.from({
-      length: n2
-    }, (_2, i2) => i2);
-  }
-  class JpegImage {
-    constructor(opts) {
-      __publicField(this, "level");
-      __publicField(this, "c");
-      __publicField(this, "tileSize");
-      __publicField(this, "imagePath");
-      __publicField(this, "folder");
-      __publicField(this, "tileWidth");
-      __publicField(this, "tileHeight");
-      __publicField(this, "imageHeight");
-      __publicField(this, "imageWidth");
-      __publicField(this, "fetchTile");
-      const tileSize = opts.tileSize ?? JPEG_PYRAMID_TILE_SIZE;
-      this.level = opts.level;
-      this.c = opts.c;
-      this.tileSize = tileSize;
-      this.imagePath = opts.imagePath.replace(/\/$/, "");
-      this.folder = opts.folder;
-      this.tileWidth = tileSize;
-      this.tileHeight = tileSize;
-      this.imageHeight = opts.imageHeight;
-      this.imageWidth = opts.imageWidth;
-      this.fetchTile = opts.fetchTile ?? (async (folder, filename2) => {
-        const url = `${this.imagePath}/${folder}/${filename2}`;
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`jpeg tile ${response.status}: ${url}`);
-        }
-        return response.blob();
-      });
-    }
-    async getTileOrStrip(x2, y2, sample) {
-      const fname = `${this.level}_${x2}_${y2}.jpg`;
-      const blob = await this.fetchTile(this.folder, fname);
-      const decoder = new ImageDecoder({
-        data: await blob.arrayBuffer(),
-        type: "image/jpeg"
-      });
-      const { image: image2 } = await decoder.decode();
-      const { displayWidth, displayHeight } = image2;
-      const tileSize = this.tileSize;
-      const copyOptions = {
-        format: "BGRX",
-        layout: [
-          {
-            offset: 0,
-            stride: displayWidth * 4
-          }
-        ]
-      };
-      const in_data = new Uint8Array(image2.allocationSize(copyOptions));
-      const data2 = new Uint16Array(tileSize ** 2);
-      await image2.copyTo(in_data, copyOptions);
-      const rowWidth = Math.min(displayWidth, tileSize);
-      const rowCount = Math.min(displayHeight, tileSize);
-      for (let row2 = 0; row2 < rowCount; row2 += 1) {
-        for (let col = 0; col < rowWidth; col += 1) {
-          data2[row2 * tileSize + col] = in_data[(row2 * displayWidth + col) * 4] << 8;
-        }
-      }
-      image2.close();
-      decoder.close();
-      return {
-        x: x2,
-        y: y2,
-        sample,
-        data: data2
-      };
-    }
-    async _readRaster({ x: x2, y: y2, sample }) {
-      const { tileHeight, tileWidth } = this;
-      const tile = await this.getTileOrStrip(x2, y2, sample);
-      const data2 = new Uint16Array(tile.data.buffer);
-      return {
-        data: data2,
-        width: tileWidth,
-        height: tileHeight
-      };
-    }
-    async readRasters(options = {}) {
-      const { x: x2 = 0, y: y2 = 0 } = options;
-      const samples = options.samples ?? [
-        0
-      ];
-      const sample = samples[0];
-      return this._readRaster({
-        x: x2,
-        y: y2,
-        sample
-      });
-    }
-    getWidth() {
-      const scale2 = 2 ** this.level;
-      return Math.round(this.imageWidth / scale2);
-    }
-    getHeight() {
-      const scale2 = 2 ** this.level;
-      return Math.round(this.imageHeight / scale2);
-    }
-  }
-  class JpegPixelSource {
-    constructor(indexer, tileSize, shape) {
-      __publicField(this, "_indexer");
-      __publicField(this, "tileSize");
-      __publicField(this, "labels");
-      __publicField(this, "shape");
-      __publicField(this, "dtype");
-      this._indexer = indexer;
-      this.tileSize = tileSize;
-      this.labels = [
-        "z",
-        "c",
-        "t",
-        "y",
-        "x"
-      ];
-      this.dtype = "Uint16";
-      this.shape = shape;
-    }
-    async getRaster({ selection, signal }) {
-      return await this.getTile({
-        x: 0,
-        y: 0,
-        selection,
-        signal
-      });
-    }
-    async getTile({ x: x2, y: y2, selection, signal }) {
-      const { height, width } = this._getTileExtent(x2, y2);
-      const image2 = this._indexer(selection);
-      return this._readRasters(image2, {
-        x: x2,
-        y: y2,
-        width,
-        height,
-        signal
-      });
-    }
-    async _readRasters(image2, props = {}) {
-      var _a2;
-      const raster = await image2.readRasters({
-        ...props
-      });
-      if ((_a2 = props.signal) == null ? void 0 : _a2.aborted) {
-        throw "__vivSignalAborted";
-      }
-      const { data: data2, width, height } = raster;
-      return {
-        data: data2,
-        width,
-        height
-      };
-    }
-    _getTileExtent(_x, _y) {
-      const height = this.tileSize;
-      const width = this.tileSize;
-      return {
-        height,
-        width
-      };
-    }
-    onTileError(err2) {
-      console.error(err2);
-    }
-  }
-  function createJpegLayers(meta) {
-    const { channelsVisible, colors, selections } = meta.settings;
-    const visible = channelsVisible.some((x2) => x2);
-    const { imagePath, jpegLoader, channelFolders } = meta;
-    const imageID = String(imagePath).replace(/\//g, "-");
-    const contrastLimits = (meta.settings.contrastLimits || []).map(() => JPEG_BAKED_CONTRAST_LIMIT);
-    const imageProps = {
-      visible,
-      loader: jpegLoader,
-      refinementStrategy: "no-overlap",
-      maxRequests: VIV_TILE_MAX_REQUESTS,
-      debounceTime: VIV_TILE_DEBOUNCE_MS,
-      id: `${imageID}-${Object.values(channelFolders || {}).join("-")}-${selections == null ? void 0 : selections.map((s2) => s2.c).join("-")}`,
-      channelsVisible,
-      colors,
-      contrastLimits,
-      selections
-    };
-    return new MultiscaleImageLayer(imageProps);
-  }
-  const toIndexer$1 = (opts) => {
-    const { imagePath, channelFolders, imageWidth, imageHeight, tileSize, fetchTile } = opts;
-    return (sel, level) => {
-      const folder = channelFolders == null ? void 0 : channelFolders[sel.c];
-      if (!folder) {
-        console.warn(`jpeg: no pyramid folder for channel index ${sel.c}`);
-      }
-      return new JpegImage({
-        imagePath,
-        level,
-        c: sel.c,
-        folder: folder ?? "",
-        imageWidth,
-        imageHeight,
-        tileSize,
-        fetchTile
-      });
-    };
-  };
-  const getShapeForBinaryDownsampleLevel$1 = (options) => {
-    const { axes, level } = options;
-    const xIndex = axes.labels.indexOf("x");
-    const yIndex = axes.labels.indexOf("y");
-    const resolutionShape = axes.shape.slice();
-    resolutionShape[xIndex] = axes.shape[xIndex] >> level;
-    resolutionShape[yIndex] = axes.shape[yIndex] >> level;
-    return resolutionShape;
-  };
-  const loadJpeg = (meta) => {
-    const { imagePath, imageWidth, imageHeight, channels: channels2, channelFolders, tileSize = JPEG_PYRAMID_TILE_SIZE, fetchTile } = meta;
-    const width = imageWidth;
-    const height = imageHeight;
-    const nChannels = Math.max(1, (channels2 == null ? void 0 : channels2.length) ?? 1);
-    const levels = meta.levels ?? jpegPyramidLevels(width, height, tileSize);
-    const pyramidIndexer = toIndexer$1({
-      imagePath,
-      channelFolders,
-      imageWidth: width,
-      imageHeight: height,
-      tileSize,
-      fetchTile
-    });
-    const data2 = levels.map((level) => {
-      const axes = {
-        labels: [
-          "t",
-          "c",
-          "z",
-          "y",
-          "x"
-        ],
-        shape: [
-          1,
-          nChannels,
-          1,
-          height,
-          width
-        ]
-      };
-      return new JpegPixelSource((sel) => pyramidIndexer(sel, level), tileSize, getShapeForBinaryDownsampleLevel$1({
-        axes,
-        level
-      }));
-    });
-    const omeChannels = (channels2 ?? []).map((ch2, i2) => ({
-      ID: ch2.id ?? `Channel:${i2}`,
-      Name: ch2.name || `Channel ${i2}`,
-      SamplesPerPixel: 1
-    }));
-    while (omeChannels.length < nChannels) {
-      const i2 = omeChannels.length;
-      omeChannels.push({
-        ID: `Channel:${i2}`,
-        Name: `Channel ${i2}`,
-        SamplesPerPixel: 1
-      });
-    }
-    return {
-      data: data2,
-      metadata: {
-        Pixels: {
-          Channels: omeChannels,
-          Type: "Uint16",
-          ID: "JpegPixels",
-          DimensionOrder: "TCZYX",
-          SamplesPerPixel: 1,
-          SizeT: 1,
-          SizeC: nChannels,
-          SizeZ: 1,
-          SizeY: height,
-          SizeX: width,
-          PhysicalSizeX: 1,
-          PhysicalSizeY: 1,
-          PhysicalSizeZ: 1,
-          PhysicalSizeXUnit: "\xB5m",
-          PhysicalSizeYUnit: "\xB5m",
-          PhysicalSizeZUnit: "\xB5m",
-          BigEndian: false,
-          TiffData: null
-        },
-        ID: "JpegImage",
-        AquisitionDate: (/* @__PURE__ */ new Date()).toISOString().split("T")[0],
-        Description: "",
-        ROIs: []
-      }
-    };
-  };
-  function toGroupChannelRows(channels2) {
-    const rows2 = [];
-    for (const c2 of channels2) {
-      if (typeof c2.channelId !== "string" || typeof c2.lowerLimit !== "number" || typeof c2.upperLimit !== "number") {
-        continue;
-      }
-      rows2.push({
-        channelId: c2.channelId,
-        lowerLimit: c2.lowerLimit,
-        upperLimit: c2.upperLimit
-      });
-    }
-    return rows2;
-  }
-  function resolveJpegStoryRoot(documentUrl, sourceUrl) {
-    if (/^https?:\/\//i.test(sourceUrl)) {
-      return sourceUrl.replace(/\/$/, "");
-    }
-    const doc = new URL(documentUrl, window.location.href);
-    if (sourceUrl === "." || sourceUrl === "./" || sourceUrl === "") {
-      const path2 = doc.pathname.replace(/\/[^/]*$/, "/");
-      return new URL(path2, doc).href.replace(/\/$/, "");
-    }
-    return new URL(sourceUrl, doc).href.replace(/\/$/, "");
-  }
-  function jpegSourceNeedsLocalRoot(url) {
-    return url === "." || url === "./" || url === "" || !/^https?:\/\//i.test(url);
-  }
-  function channelFoldersEqual(a2, b2) {
-    if (a2 === b2) return true;
-    if (!a2 || !b2) return false;
-    const aKeys = Object.keys(a2);
-    const bKeys = Object.keys(b2);
-    if (aKeys.length !== bKeys.length) return false;
-    return aKeys.every((k2) => a2[Number(k2)] === b2[Number(k2)]);
-  }
-  function folderNamesAvailable(folders, available) {
-    if (!available || available.size === 0) return false;
-    const names = Object.values(folders);
-    return names.length > 0 && names.every((name2) => available.has(name2.toLowerCase()));
-  }
-  function pickAvailableChannelFolders(opts) {
-    const { desired, available, activeGroupId, groupChannelFolders, allowOtherGroupFallback = true } = opts;
-    if (folderNamesAvailable(desired, available)) return desired;
-    if (activeGroupId) {
-      const snapshot = groupChannelFolders[activeGroupId];
-      if (snapshot && folderNamesAvailable(snapshot, available)) {
-        return {
-          ...snapshot
-        };
-      }
-      if (!allowOtherGroupFallback) return null;
-    }
-    for (const snapshot of Object.values(groupChannelFolders)) {
-      if (folderNamesAvailable(snapshot, available)) return {
-        ...snapshot
-      };
-    }
-    return null;
-  }
-  function applyChannelFoldersInPlace(entry, folders) {
-    if (!entry.channelFolders || channelFoldersEqual(entry.channelFolders, folders)) {
-      return entry;
-    }
-    for (const key2 of Object.keys(entry.channelFolders)) {
-      delete entry.channelFolders[Number(key2)];
-    }
-    Object.assign(entry.channelFolders, folders);
-    return {
-      ...entry
-    };
-  }
-  async function resolveChannelFolders(opts) {
-    const channelIndexById = Object.fromEntries(opts.image.channels.map((ch2) => [
-      ch2.id,
-      ch2.index
-    ]));
-    if (opts.groupChannels.length > 0) {
-      return folderByChannelIndexFromGroup({
-        channels: opts.groupChannels,
-        channelIndexById
-      });
-    }
-    return folderByChannelIndexFromImageChannels(opts.image.channels.map((ch2) => ({
-      id: ch2.id,
-      index: ch2.index,
-      lowerLimit: ch2.lowerLimit,
-      upperLimit: ch2.upperLimit
-    })));
-  }
-  async function syncJpegEntryChannelFolders(entries, images, groupChannels, activeGroupId) {
-    const channels2 = toGroupChannelRows(groupChannels);
-    let changed = false;
-    const next2 = await Promise.all(entries.map(async (entry) => {
-      if (!entry.channelFolders) return entry;
-      const im = images.find((i2) => i2.id === entry.sourceImageId);
-      if (!im) return entry;
-      const desired = await resolveChannelFolders({
-        groupChannels: channels2,
-        image: im
-      });
-      const folders = pickAvailableChannelFolders({
-        desired,
-        available: entry.availablePyramidFolders,
-        activeGroupId,
-        groupChannelFolders: entry.groupChannelFolders ?? {},
-        allowOtherGroupFallback: false
-      });
-      if (!folders) return entry;
-      const applied = applyChannelFoldersInPlace(entry, folders);
-      if (applied !== entry) changed = true;
-      return applied;
-    }));
-    return changed ? next2 : entries;
-  }
-  function useSyncJpegChannelFolders(jpegLoaderEntries, images, activeChannelGroupId, channelGroups, setJpegLoaderEntries) {
-    reactExports.useEffect(() => {
-      if (jpegLoaderEntries.length === 0) return;
-      const group2 = activeChannelGroupId ? channelGroups.find((g2) => g2.id === activeChannelGroupId) : channelGroups[0];
-      const channels2 = (group2 == null ? void 0 : group2.channels) ?? [];
-      const groupId = (group2 == null ? void 0 : group2.id) ?? activeChannelGroupId;
-      let cancelled = false;
-      void (async () => {
-        const next2 = await syncJpegEntryChannelFolders(jpegLoaderEntries, images, channels2, groupId);
-        if (cancelled) return;
-        setJpegLoaderEntries((prev) => prev.length === next2.length && prev.every((e2, i2) => e2 === next2[i2]) ? prev : next2);
-      })();
-      return () => {
-        cancelled = true;
-      };
-    }, [
-      activeChannelGroupId,
-      channelGroups,
-      jpegLoaderEntries,
-      images,
-      setJpegLoaderEntries
-    ]);
-  }
-  async function jpegLoaderEntriesFromImages(opts) {
-    var _a2;
-    const activeGroup = (opts.activeGroupId ? opts.channelGroups.find((g2) => g2.id === opts.activeGroupId) : void 0) ?? opts.channelGroups[0];
-    const groupChannels = toGroupChannelRows((activeGroup == null ? void 0 : activeGroup.channels) ?? []);
-    const entries = [];
-    for (const im of opts.images) {
-      if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "jpeg") continue;
-      if (jpegSourceNeedsLocalRoot(im.source.url) && !opts.fetchTile) continue;
-      const storyRootUrl = resolveJpegStoryRoot(opts.documentUrl, im.source.url);
-      const groupChannelFolders = {};
-      for (const group2 of opts.channelGroups) {
-        if (typeof group2.id !== "string") continue;
-        const rows2 = toGroupChannelRows(group2.channels ?? []);
-        if (rows2.length === 0) continue;
-        groupChannelFolders[group2.id] = await resolveChannelFolders({
-          groupChannels: rows2,
-          image: im
-        });
-      }
-      const availablePyramidFolders = /* @__PURE__ */ new Set();
-      if (opts.existingPyramidFolders) {
-        for (const name2 of opts.existingPyramidFolders) {
-          availablePyramidFolders.add(name2.toLowerCase());
-        }
-      } else {
-        for (const folders of Object.values(groupChannelFolders)) {
-          for (const name2 of Object.values(folders)) {
-            availablePyramidFolders.add(name2.toLowerCase());
-          }
-        }
-      }
-      const desired = await resolveChannelFolders({
-        groupChannels,
-        image: im
-      });
-      const channelFolders = pickAvailableChannelFolders({
-        desired,
-        available: availablePyramidFolders,
-        activeGroupId: activeGroup == null ? void 0 : activeGroup.id,
-        groupChannelFolders
-      }) ?? desired;
-      const loader = loadJpeg({
-        imagePath: storyRootUrl,
-        imageWidth: im.sizeX,
-        imageHeight: im.sizeY,
-        channels: im.channels.map((ch2) => ({
-          id: ch2.id,
-          name: ch2.name,
-          index: ch2.index
-        })),
-        channelFolders,
-        fetchTile: opts.fetchTile
-      });
-      entries.push({
-        loader,
-        sourceImageId: im.id,
-        channelFolders,
-        imagePath: storyRootUrl,
-        availablePyramidFolders,
-        groupChannelFolders
-      });
-    }
-    return entries;
-  }
-  const version = "1.0.0-alpha.7";
-  function minervaCdnUrls(version2) {
-    const base2 = `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version2}/bundle`;
-    return {
-      js: `${base2}/minerva.js`,
-      css: `${base2}/minerva.css`
-    };
-  }
-  function canExportWithRemoteUrls(images) {
-    const withSource = images.filter((im) => im.source);
-    if (withSource.length === 0) return false;
-    return withSource.every((im) => {
-      var _a2;
-      return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "url";
-    });
-  }
-  function withPortableJpegSources(images) {
-    return images.map((im) => {
-      if (!im.source || im.source.kind !== "jpeg" && im.source.kind !== "local" && im.source.kind !== "url") {
-        return im;
-      }
-      return {
-        ...im,
-        source: {
-          kind: "jpeg",
-          url: "."
-        }
-      };
-    });
-  }
-  function toExportedStoryDocument(data2, mode) {
-    const images = mode === "remote-url" ? data2.images : withPortableJpegSources(data2.images);
-    return validateDocumentData({
-      ...data2,
-      images,
-      metadata: {
-        ...data2.metadata,
-        minervaVersion: version,
-        imageSource: mode === "remote-url" ? "remote-url" : data2.metadata.imageSource ?? "jpeg-pyramid"
-      }
-    });
-  }
-  function storyIndexHtml(title7, version$12 = version) {
-    const { js, css: css2 } = minervaCdnUrls(version$12);
-    const safeTitle = ((title7 == null ? void 0 : title7.trim()) || "Minerva Story").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    return `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${safeTitle}</title>
-    <link rel="stylesheet" href="${css2}" />
-    <style>
-      html, body, #minerva-root { height: 100%; margin: 0; background: #111; }
-    </style>
-  </head>
-  <body>
-    <div id="minerva-root"></div>
-    <script src="${js}"><\/script>
-    <script>
-      MinervaStory.play({
-        documentUrl: "document.json",
-        root: document.getElementById("minerva-root"),
-      });
-    <\/script>
-  </body>
-</html>
-`;
-  }
-  async function writeTextFile(directory, name2, text2) {
-    const fh2 = await directory.getFileHandle(name2, {
-      create: true
-    });
-    const write = await fh2.createWritable();
-    await write.write(text2);
-    await write.close();
-  }
-  async function writeStoryBundleSidecars(directory, data2, opts) {
-    const mode = (opts == null ? void 0 : opts.mode) ?? "jpeg-pyramid";
-    if (mode === "remote-url" && !canExportWithRemoteUrls(data2.images)) {
-      throw new Error("Remote URL export requires all images to use OME-TIFF URLs (no local files).");
-    }
-    const exported = toExportedStoryDocument(data2, mode);
-    await writeTextFile(directory, "document.json", JSON.stringify(exported, null, 2));
-    await writeTextFile(directory, "index.html", storyIndexHtml(exported.metadata.title, exported.metadata.minervaVersion ?? version));
-  }
-  const STORY_ROOT_HANDLE_SUFFIX = ":storyRoot";
-  function storyRootHandleKey(storyId) {
-    return `story:${storyId}${STORY_ROOT_HANDLE_SUFFIX}`;
-  }
-  function isDirectoryHandle(handle2) {
-    return !!handle2 && handle2.kind === "directory";
-  }
-  async function setStoryRootHandle(storyId, handle2) {
-    await putFileHandle(storyRootHandleKey(storyId), handle2);
-  }
-  async function ensureDirectoryPermission(handle2, opts) {
-    const mode = {
-      mode: opts.mode ?? "read"
-    };
-    try {
-      if (await handle2.queryPermission(mode) === "granted") return true;
-      return opts.requestPermission ? await handle2.requestPermission(mode) === "granted" : false;
-    } catch {
-      return false;
-    }
-  }
-  async function getStoryRootHandle(storyId, opts = {}) {
-    if (!storyId) return void 0;
-    const stored = await getFileHandle(storyRootHandleKey(storyId));
-    if (!isDirectoryHandle(stored)) return void 0;
-    if (!await ensureDirectoryPermission(stored, opts)) return void 0;
-    return stored;
-  }
-  function tileFetcherForDirectory(root2) {
-    return async (folder, filename2) => {
-      const dir2 = await root2.getDirectoryHandle(folder);
-      const file = await dir2.getFileHandle(filename2);
-      return file.getFile();
-    };
-  }
-  async function neededJpegPyramidFolderNames(channelGroups, images) {
-    var _a2, _b2;
-    const names = /* @__PURE__ */ new Set();
-    await Promise.all(channelGroups.flatMap((g2) => g2.channels.map(async (ch2) => names.add(await jpegPyramidFolderName(ch2.channelId, ch2.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT, ch2.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT)))));
-    if (names.size === 0 && images) {
-      for (const im of images) {
-        if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "jpeg" && ((_b2 = im.source) == null ? void 0 : _b2.kind) !== "local") continue;
-        const channelIndexById = Object.fromEntries(im.channels.map((ch2) => [
-          ch2.id,
-          ch2.index
-        ]));
-        const folders = await folderByChannelIndexFromGroup({
-          channels: im.channels.map((ch2) => ({
-            channelId: ch2.id,
-            lowerLimit: ch2.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
-            upperLimit: ch2.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT
-          })),
-          channelIndexById
-        });
-        for (const name2 of Object.values(folders)) names.add(name2);
-      }
-    }
-    return names;
-  }
-  async function listExistingPyramidFolders(root2) {
-    const names = /* @__PURE__ */ new Set();
-    for await (const [name2, handle2] of root2.entries()) {
-      if (handle2.kind === "directory" && /^[0-9a-f]{64}$/i.test(name2)) {
-        names.add(name2.toLowerCase());
-      }
-    }
-    return names;
-  }
-  async function assertPyramidFoldersExist(root2, data2) {
-    if (data2.metadata.imageSource === "remote-url") return;
-    const needed = await neededJpegPyramidFolderNames(data2.channelGroups, data2.images);
-    if (needed.size === 0) return;
-    const existing = await listExistingPyramidFolders(root2);
-    const missing = [
-      ...needed
-    ].filter((name2) => !existing.has(name2));
-    if (missing.length > 0) {
-      throw new Error("Missing JPEG pyramid folders. Pick the folder created by Export (document.json plus channel directories).");
-    }
-  }
-  async function readDocumentJson(root2) {
-    const fh2 = await root2.getFileHandle("document.json");
-    const file = await fh2.getFile();
-    return validateDocumentData(JSON.parse(await file.text()));
-  }
-  async function importStoryFolderFromPicker() {
-    var _a2;
-    if (!hasDirectoryPickerAccess()) {
-      throw new Error("Importing a story folder needs the File System Access API (Chrome or Edge).");
-    }
-    const root2 = await window.showDirectoryPicker({
-      id: "minerva-story-import",
-      mode: "read"
-    });
-    const data2 = await readDocumentJson(root2);
-    await assertPyramidFoldersExist(root2, data2);
-    const title7 = ((_a2 = data2.metadata.title) == null ? void 0 : _a2.trim()) || root2.name || "Imported Story";
-    const rec = await createStoryRecord(title7);
-    const images = data2.metadata.imageSource === "remote-url" ? data2.images : withPortableJpegSources(data2.images);
-    const next2 = validateDocumentData({
-      ...data2,
-      metadata: {
-        ...data2.metadata,
-        id: rec.id,
-        title: data2.metadata.title ?? title7
-      },
-      images
-    });
-    await saveStoryDocument(rec.id, next2);
-    await setStoryRootHandle(rec.id, root2);
-    useDocumentStore.getState().hydrateFromDocument(next2, rec.id);
-    await setActiveStoryId(rec.id);
-    return rec.id;
-  }
-  async function reconnectStoryRootFromPicker(storyId) {
-    if (!hasDirectoryPickerAccess()) {
-      throw new Error("Reconnecting a story folder needs the File System Access API (Chrome or Edge).");
-    }
-    const root2 = await window.showDirectoryPicker({
-      id: "minerva-story-import",
-      mode: "read"
-    });
-    await assertPyramidFoldersExist(root2, useDocumentStore.getState().toDocumentData());
-    await setStoryRootHandle(storyId, root2);
-    return root2;
-  }
-  function storyNeedsLocalJpegRoot(images) {
-    return images.some((im) => {
-      var _a2;
-      return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
-    });
-  }
-  const storySearchSchema = objectType({
-    storyid: stringType().uuid().optional()
-  });
-  function parseRootSearch(raw2) {
-    const r2 = storySearchSchema.safeParse(raw2);
-    if (!r2.success) return {};
-    return {
-      storyid: r2.data.storyid
-    };
-  }
-  const uuidParamSchema = stringType().uuid();
-  function parsePreferredStoryIdFromLocation() {
-    if (typeof window === "undefined") return null;
-    const raw2 = new URLSearchParams(window.location.search).get("storyid");
-    if (raw2 === null || raw2 === "") return null;
-    const r2 = uuidParamSchema.safeParse(raw2);
-    return r2.success ? r2.data : null;
-  }
-  const rootRouteApi = getRouteApi("__root__");
-  function StoryIdUrlSync() {
-    const search2 = rootRouteApi.useSearch();
-    const navigate = rootRouteApi.useNavigate();
-    const activeStoryId = useDocumentStore((s2) => s2.activeStoryId);
-    const switchStory = useDocumentStore((s2) => s2.switchStory);
-    reactExports.useEffect(() => {
-      const sid = search2.storyid;
-      if (sid === void 0) return;
-      if (activeStoryId === sid) return;
-      if (activeStoryId === null) {
-        navigate({
-          search: (prev) => {
-            const next2 = {
-              ...prev
-            };
-            delete next2.storyid;
-            return next2;
-          },
-          replace: true
-        });
-        return;
-      }
-      void switchStory(sid).catch(() => {
-        navigate({
-          search: (prev) => {
-            const next2 = {
-              ...prev
-            };
-            delete next2.storyid;
-            return next2;
-          },
-          replace: true
-        });
-      });
-    }, [
-      search2.storyid,
-      activeStoryId,
-      switchStory,
-      navigate
-    ]);
-    reactExports.useEffect(() => {
-      if (activeStoryId === null) return;
-      if (search2.storyid === activeStoryId) return;
-      navigate({
-        search: (prev) => ({
-          ...prev,
-          storyid: activeStoryId
-        }),
-        replace: true
-      });
-    }, [
-      activeStoryId,
-      navigate,
-      search2.storyid
-    ]);
-    return null;
-  }
-  function normalizeLoadedPathname(pathname) {
-    let path2 = pathname.replace(/\/$/, "") || "/";
-    if (path2.endsWith("/index.html")) {
-      path2 = path2.slice(0, -"/index.html".length).replace(/\/$/, "") || "/";
-    }
-    return path2 === "" ? "/" : path2;
-  }
-  function deploymentBasenameFromNormalizedPath(normalizedPath) {
-    if (normalizedPath === "/") return "/";
-    const segments = normalizedPath.split("/").filter(Boolean);
-    if (segments.length === 0) return "/";
-    const prPreviewIdx = segments.indexOf("pr-preview");
-    const next2 = segments[prPreviewIdx + 1];
-    if (prPreviewIdx >= 0 && next2 !== void 0 && /^pr-\d+$/.test(next2)) {
-      return `/${segments.slice(0, prPreviewIdx + 2).join("/")}`;
-    }
-    return `/${segments[0]}`;
-  }
-  function routerBasepath() {
-    {
-      if (typeof window === "undefined") return "/";
-      const path2 = normalizeLoadedPathname(window.location.pathname);
-      return deploymentBasenameFromNormalizedPath(path2);
-    }
-  }
-  function createAppRouter(MainComponent, mainProps) {
-    const rootRoute = createRootRoute({
-      validateSearch: parseRootSearch,
-      component: function RootLayout() {
-        return jsxRuntimeExports.jsx(MainComponent, {
-          ...mainProps
-        });
-      }
-    });
-    return createRouter({
-      routeTree: rootRoute,
-      basepath: routerBasepath()
-    });
-  }
-  const root$8 = "_root_1gti7_4";
-  const shelfToolbar = "_shelfToolbar_1gti7_28";
-  const toolbarActions = "_toolbarActions_1gti7_40";
-  const wordmark = "_wordmark_1gti7_47";
-  const newVolume = "_newVolume_1gti7_56";
-  const newGlyph = "_newGlyph_1gti7_87";
-  const newLabel = "_newLabel_1gti7_94";
-  const error = "_error_1gti7_98";
-  const whisper = "_whisper_1gti7_107";
-  const emptyLine = "_emptyLine_1gti7_114";
-  const inlineLink = "_inlineLink_1gti7_122";
-  const bookcase = "_bookcase_1gti7_144";
-  const bookcaseInner = "_bookcaseInner_1gti7_167";
-  const shelfBay = "_shelfBay_1gti7_185";
-  const bayContent = "_bayContent_1gti7_195";
-  const bayContentEmptyPrompt = "_bayContentEmptyPrompt_1gti7_204";
-  const bayContentEmpty = "_bayContentEmpty_1gti7_204";
-  const ghostShelf = "_ghostShelf_1gti7_216";
-  const ghostBook = "_ghostBook_1gti7_227";
-  const storyRow = "_storyRow_1gti7_236";
-  const shelfBoard = "_shelfBoard_1gti7_252";
-  const rowOpen = "_rowOpen_1gti7_279";
-  const rowThumb = "_rowThumb_1gti7_313";
-  const rowThumbImg = "_rowThumbImg_1gti7_322";
-  const rowThumbBlank = "_rowThumbBlank_1gti7_331";
-  const rowText = "_rowText_1gti7_339";
-  const rowTitle$1 = "_rowTitle_1gti7_348";
-  const rowDate = "_rowDate_1gti7_358";
-  const scrap = "_scrap_1gti7_366";
-  const styles$q = {
-    root: root$8,
-    shelfToolbar,
-    toolbarActions,
-    wordmark,
-    newVolume,
-    newGlyph,
-    newLabel,
-    error,
-    whisper,
-    emptyLine,
-    inlineLink,
-    bookcase,
-    bookcaseInner,
-    shelfBay,
-    bayContent,
-    bayContentEmptyPrompt,
-    bayContentEmpty,
-    ghostShelf,
-    ghostBook,
-    storyRow,
-    shelfBoard,
-    rowOpen,
-    rowThumb,
-    rowThumbImg,
-    rowThumbBlank,
-    rowText,
-    rowTitle: rowTitle$1,
-    rowDate,
-    scrap
-  };
-  const APP_TAB_TITLE_PREFIX$1 = getDemoDocumentTitle();
-  function rowAccent(id2) {
-    let n2 = 0;
-    for (let i2 = 0; i2 < id2.length; i2++) n2 += id2.charCodeAt(i2) * (i2 + 1);
-    const h2 = 16 + n2 % 42;
-    const s2 = 12 + n2 % 14;
-    const l2 = 22 + n2 % 10;
-    return {
-      ["--row-accent"]: `hsl(${h2} ${s2}% ${l2}%)`
-    };
-  }
-  function formatShortDate(iso) {
-    try {
-      const d2 = new Date(iso);
-      if (Number.isNaN(d2.getTime())) return "";
-      return d2.toLocaleDateString(void 0, {
-        month: "short",
-        day: "numeric",
-        year: d2.getFullYear() !== (/* @__PURE__ */ new Date()).getFullYear() ? "numeric" : void 0
-      });
-    } catch {
-      return "";
-    }
-  }
-  function ShelfBoard() {
-    return jsxRuntimeExports.jsx("div", {
-      className: styles$q.shelfBoard,
-      "aria-hidden": true
-    });
-  }
-  const GHOST_PALETTE = [
-    "hsl(10 20% 30%)",
-    "hsl(28 16% 28%)",
-    "hsl(45 14% 32%)",
-    "hsl(150 12% 26%)",
-    "hsl(210 14% 28%)",
-    "hsl(30 10% 26%)",
-    "hsl(0 10% 30%)",
-    "hsl(180 10% 26%)",
-    "hsl(260 12% 28%)",
-    "hsl(55 12% 28%)"
-  ];
-  const GHOST_SLOT_PX = 12;
-  function seededRand(seed) {
-    let s2 = seed;
-    return () => {
-      s2 = (s2 * 16807 + 11) % 2147483647;
-      return (s2 & 2147483647) / 2147483647;
-    };
-  }
-  function readInnerWidthPx(el2) {
-    const cs = getComputedStyle(el2);
-    const pl2 = Number.parseFloat(cs.paddingLeft) || 0;
-    const pr = Number.parseFloat(cs.paddingRight) || 0;
-    return el2.clientWidth - pl2 - pr;
-  }
-  function GhostBooks({ bayIndex }) {
-    const shelfRef = reactExports.useRef(null);
-    const [innerW, setInnerW] = reactExports.useState(0);
-    reactExports.useLayoutEffect(() => {
-      const el2 = shelfRef.current;
-      if (!el2) return;
-      const measure = () => {
-        setInnerW(readInnerWidthPx(el2));
-      };
-      measure();
-      const ro = new ResizeObserver(measure);
-      ro.observe(el2);
-      return () => ro.disconnect();
-    }, []);
-    const books = reactExports.useMemo(() => {
-      const rand = seededRand(bayIndex * 997 + 42);
-      const maxSlots = innerW > 0 ? Math.max(1, Math.floor(innerW / GHOST_SLOT_PX)) : 0;
-      const fill = 1 - (1 - rand()) * (1 - rand());
-      const count2 = maxSlots <= 0 ? 0 : Math.min(maxSlots, Math.floor(fill * (maxSlots + 1)));
-      return Array.from({
-        length: count2
-      }, (_2, i2) => {
-        const width = 6 + Math.floor(rand() * 11);
-        const height = 20 + Math.floor(rand() * 18);
-        const color2 = GHOST_PALETTE[Math.floor(rand() * GHOST_PALETTE.length)] ?? GHOST_PALETTE[0];
-        const gap2 = 1 + Math.floor(rand() * 4);
-        const opacity = 0.2 + rand() * 0.14;
-        const tilt = rand() > 0.88 ? rand() > 0.5 ? 2 : -2 : 0;
-        return {
-          key: i2,
-          width,
-          height,
-          color: color2,
-          gap: gap2,
-          opacity,
-          tilt
-        };
-      });
-    }, [
-      bayIndex,
-      innerW
-    ]);
-    return jsxRuntimeExports.jsx("div", {
-      ref: shelfRef,
-      className: styles$q.ghostShelf,
-      "aria-hidden": true,
-      children: books.map((b2) => jsxRuntimeExports.jsx("div", {
-        className: styles$q.ghostBook,
-        style: {
-          width: b2.width,
-          height: b2.height,
-          background: b2.color,
-          opacity: b2.opacity,
-          marginRight: b2.gap,
-          transform: b2.tilt ? `rotate(${b2.tilt}deg)` : void 0,
-          transformOrigin: "bottom center"
-        }
-      }, b2.key))
-    });
-  }
-  const TARGET_BAYS = 8;
-  function buildBays(summaries) {
-    if (summaries === null) {
-      return [
-        {
-          kind: "loading"
-        },
-        ...Array.from({
-          length: TARGET_BAYS - 1
-        }, () => ({
-          kind: "empty"
-        }))
-      ];
-    }
-    if (summaries.length === 0) {
-      return [
-        {
-          kind: "emptyPrompt"
-        },
-        ...Array.from({
-          length: TARGET_BAYS - 1
-        }, () => ({
-          kind: "empty"
-        }))
-      ];
-    }
-    const count2 = Math.max(TARGET_BAYS, summaries.length);
-    const out = [];
-    for (let i2 = 0; i2 < count2; i2++) {
-      const story = i2 < summaries.length ? summaries[i2] : void 0;
-      if (story !== void 0) {
-        out.push({
-          kind: "story",
-          story
-        });
-      } else {
-        out.push({
-          kind: "empty"
-        });
-      }
-    }
-    return out;
-  }
-  function MinervaLibraryPage() {
-    const navigate = rootRouteApi.useNavigate();
-    const switchStory = useDocumentStore((s2) => s2.switchStory);
-    const createStory = useDocumentStore((s2) => s2.createStory);
-    const deleteStory = useDocumentStore((s2) => s2.deleteStory);
-    const [summaries, setSummaries] = reactExports.useState(null);
-    const [error2, setError] = reactExports.useState(null);
-    const [busyId, setBusyId] = reactExports.useState(null);
-    const [creating, setCreating] = reactExports.useState(false);
-    const [importing, setImporting] = reactExports.useState(false);
-    const canImportFolder = hasDirectoryPickerAccess();
-    const refresh = reactExports.useCallback(() => {
-      setError(null);
-      void listStorySummaries().then(setSummaries).catch((e2) => {
-        setSummaries([]);
-        setError(e2 instanceof Error ? e2.message : "Failed to load stories");
-      });
-    }, []);
-    reactExports.useEffect(() => {
-      refresh();
-    }, [
-      refresh
-    ]);
-    reactExports.useEffect(() => {
-      document.title = `${APP_TAB_TITLE_PREFIX$1} | Minerva Library`;
-    }, []);
-    const openStory = reactExports.useCallback(async (id2) => {
-      setBusyId(id2);
-      setError(null);
-      try {
-        await switchStory(id2);
-        navigate({
-          search: (prev) => ({
-            ...prev,
-            storyid: id2
-          }),
-          replace: true
-        });
-      } catch (e2) {
-        setError(e2 instanceof Error ? e2.message : "Could not open story");
-      } finally {
-        setBusyId(null);
-      }
-    }, [
-      navigate,
-      switchStory
-    ]);
-    const handleNew = reactExports.useCallback(async () => {
-      setCreating(true);
-      setError(null);
-      try {
-        const id2 = await createStory();
-        navigate({
-          search: (prev) => ({
-            ...prev,
-            storyid: id2
-          }),
-          replace: true
-        });
-      } catch (e2) {
-        setError(e2 instanceof Error ? e2.message : "Could not create story");
-      } finally {
-        setCreating(false);
-      }
-    }, [
-      createStory,
-      navigate
-    ]);
-    const handleImportFolder = reactExports.useCallback(async () => {
-      setImporting(true);
-      setError(null);
-      try {
-        const id2 = await importStoryFolderFromPicker();
-        navigate({
-          search: (prev) => ({
-            ...prev,
-            storyid: id2
-          }),
-          replace: true
-        });
-      } catch (e2) {
-        if (!(e2 instanceof DOMException && e2.name === "AbortError")) {
-          setError(e2 instanceof Error ? e2.message : "Could not import story folder");
-        }
-      } finally {
-        setImporting(false);
-      }
-    }, [
-      navigate
-    ]);
-    const handleDelete2 = reactExports.useCallback((id2, title7) => {
-      if (!window.confirm(`Remove \u201C${title7}\u201D from the shelf?`)) return;
-      setBusyId(id2);
-      setError(null);
-      void (async () => {
-        try {
-          await deleteStory(id2);
-          refresh();
-        } catch (e2) {
-          setError(e2 instanceof Error ? e2.message : "Could not delete");
-        } finally {
-          setBusyId(null);
-        }
-      })();
-    }, [
-      deleteStory,
-      refresh
-    ]);
-    const bays = reactExports.useMemo(() => buildBays(summaries), [
-      summaries
-    ]);
-    return jsxRuntimeExports.jsxs("div", {
-      className: styles$q.root,
-      children: [
-        error2 ? jsxRuntimeExports.jsx("p", {
-          className: styles$q.error,
-          children: error2
-        }) : null,
-        jsxRuntimeExports.jsxs("div", {
-          className: styles$q.shelfToolbar,
-          children: [
-            jsxRuntimeExports.jsx("h1", {
-              className: styles$q.wordmark,
-              children: "Minerva Library"
-            }),
-            jsxRuntimeExports.jsxs("div", {
-              className: styles$q.toolbarActions,
-              children: [
-                canImportFolder ? jsxRuntimeExports.jsx("button", {
-                  type: "button",
-                  className: styles$q.newVolume,
-                  disabled: importing || creating,
-                  onClick: () => void handleImportFolder(),
-                  "aria-label": "Import a story folder",
-                  children: jsxRuntimeExports.jsx("span", {
-                    className: styles$q.newLabel,
-                    children: importing ? "\u2026" : "Import"
-                  })
-                }) : null,
-                jsxRuntimeExports.jsxs("button", {
-                  type: "button",
-                  className: styles$q.newVolume,
-                  disabled: creating || importing,
-                  onClick: () => void handleNew(),
-                  "aria-label": "Add a new story",
-                  children: [
-                    jsxRuntimeExports.jsx("span", {
-                      className: styles$q.newGlyph,
-                      "aria-hidden": true,
-                      children: "+"
-                    }),
-                    jsxRuntimeExports.jsx("span", {
-                      className: styles$q.newLabel,
-                      children: creating ? "\u2026" : "New"
-                    })
-                  ]
-                })
-              ]
-            })
-          ]
-        }),
-        jsxRuntimeExports.jsx("section", {
-          className: styles$q.bookcase,
-          "aria-label": "Bookshelf",
-          children: jsxRuntimeExports.jsx("div", {
-            className: styles$q.bookcaseInner,
-            children: bays.map((bay, index2) => {
-              const key2 = bay.kind === "story" ? bay.story.id : `bay-${index2}`;
-              return jsxRuntimeExports.jsxs("div", {
-                className: styles$q.shelfBay,
-                children: [
-                  jsxRuntimeExports.jsxs("div", {
-                    className: bay.kind === "empty" ? `${styles$q.bayContent} ${styles$q.bayContentEmpty}` : bay.kind === "emptyPrompt" ? `${styles$q.bayContent} ${styles$q.bayContentEmptyPrompt}` : styles$q.bayContent,
-                    "aria-hidden": bay.kind === "empty" ? true : void 0,
-                    children: [
-                      bay.kind === "empty" ? jsxRuntimeExports.jsx(GhostBooks, {
-                        bayIndex: index2
-                      }) : null,
-                      bay.kind === "loading" ? jsxRuntimeExports.jsx("p", {
-                        className: styles$q.whisper,
-                        children: "Opening the stacks\u2026"
-                      }) : null,
-                      bay.kind === "emptyPrompt" ? jsxRuntimeExports.jsx("p", {
-                        className: styles$q.emptyLine,
-                        children: jsxRuntimeExports.jsx("button", {
-                          type: "button",
-                          className: styles$q.inlineLink,
-                          onClick: () => void handleNew(),
-                          disabled: creating,
-                          children: "Create a new story."
-                        })
-                      }) : null,
-                      bay.kind === "story" ? jsxRuntimeExports.jsxs("div", {
-                        className: styles$q.storyRow,
-                        children: [
-                          jsxRuntimeExports.jsxs("button", {
-                            type: "button",
-                            className: styles$q.rowOpen,
-                            style: rowAccent(bay.story.id),
-                            disabled: busyId === bay.story.id,
-                            onClick: () => void openStory(bay.story.id),
-                            children: [
-                              jsxRuntimeExports.jsx("span", {
-                                className: styles$q.rowThumb,
-                                "aria-hidden": true,
-                                children: bay.story.thumbnail ? jsxRuntimeExports.jsx("img", {
-                                  src: bay.story.thumbnail,
-                                  alt: "",
-                                  className: styles$q.rowThumbImg
-                                }) : jsxRuntimeExports.jsx("span", {
-                                  className: styles$q.rowThumbBlank
-                                })
-                              }),
-                              jsxRuntimeExports.jsxs("span", {
-                                className: styles$q.rowText,
-                                children: [
-                                  jsxRuntimeExports.jsx("span", {
-                                    className: styles$q.rowTitle,
-                                    children: bay.story.title
-                                  }),
-                                  jsxRuntimeExports.jsx("span", {
-                                    className: styles$q.rowDate,
-                                    children: formatShortDate(bay.story.modifiedAt)
-                                  })
-                                ]
-                              })
-                            ]
-                          }),
-                          jsxRuntimeExports.jsx("button", {
-                            type: "button",
-                            className: styles$q.scrap,
-                            disabled: busyId === bay.story.id,
-                            "aria-label": `Remove ${bay.story.title}`,
-                            onClick: (e2) => {
-                              e2.stopPropagation();
-                              handleDelete2(bay.story.id, bay.story.title);
-                            },
-                            children: "\xD7"
-                          })
-                        ]
-                      }) : null
-                    ]
-                  }),
-                  jsxRuntimeExports.jsx(ShelfBoard, {})
-                ]
-              }, key2);
-            })
-          })
-        })
-      ]
-    });
-  }
-  const SvgChevronDown = (props) => reactExports.createElement("svg", {
-    width: "1em",
-    height: "1em",
-    viewBox: "0 0 12 12",
-    fill: "currentColor",
-    ...props
-  }, reactExports.createElement("path", {
-    d: "M2 4L6 8L10 4",
-    stroke: "currentColor",
-    strokeWidth: 2,
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    fill: "none"
-  }));
-  const chevronRight = "_chevronRight_m5cf6_1";
-  const chevronLeft = "_chevronLeft_m5cf6_2";
-  const chevronDown = "_chevronDown_m5cf6_3";
-  const chevronUp = "_chevronUp_m5cf6_4";
-  const styles$p = {
-    chevronRight,
-    chevronLeft,
-    chevronDown,
-    chevronUp
-  };
-  const DIRECTION_CLASS = {
-    right: styles$p.chevronRight,
-    left: styles$p.chevronLeft,
-    down: styles$p.chevronDown,
-    up: styles$p.chevronUp
-  };
-  function ChevronIcon({ direction: direction2 = "down", className: className2 }) {
-    return jsxRuntimeExports.jsx(SvgChevronDown, {
-      className: [
-        DIRECTION_CLASS[direction2],
-        className2
-      ].filter(Boolean).join(" "),
-      "aria-hidden": true
-    });
-  }
-  const SvgPlus = (props) => reactExports.createElement("svg", {
-    viewBox: "0 0 24 24",
-    xmlns: "http://www.w3.org/2000/svg",
-    width: "1em",
-    height: "1em",
-    ...props
-  }, reactExports.createElement("path", {
-    fill: "currentColor",
-    d: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"
-  }));
-  function PlusIcon({ title: title7, size = 14 }) {
-    return jsxRuntimeExports.jsx(SvgPlus, {
-      "aria-hidden": title7 ? void 0 : true,
-      "aria-label": title7,
-      width: size,
-      height: size
-    });
-  }
-  function TrashIcon({ title: title7, size = 14 }) {
-    const label2 = title7 ?? "Delete";
-    return jsxRuntimeExports.jsxs("svg", {
-      "aria-hidden": title7 ? void 0 : true,
-      width: size,
-      height: size,
-      viewBox: "0 0 24 24",
-      fill: "currentColor",
-      children: [
-        jsxRuntimeExports.jsx("title", {
-          children: label2
-        }),
-        jsxRuntimeExports.jsx("path", {
-          d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
-        })
-      ]
-    });
-  }
-  const SvgJumpToView = (props) => reactExports.createElement("svg", {
-    width: "1em",
-    height: "1em",
-    viewBox: "0 0 16 16",
-    fill: "currentColor",
-    stroke: "none",
-    ...props
-  }, reactExports.createElement("path", {
-    d: "M7.38,14.99v-2.57l-.57.57-.87-.87,2.06-2.06,2.06,2.06-.87.87-.57-.57v2.57h-1.23ZM3.89,10.06l-.87-.87.57-.57H1.01v-1.23h2.57l-.57-.57.87-.87,2.06,2.06-2.06,2.06ZM12.11,10.06l-2.06-2.06,2.06-2.06.87.87-.57.57h2.57v1.23h-2.57l.57.57-.87.87ZM8,9.03c-.29,0-.53-.1-.73-.3s-.3-.44-.3-.73.1-.53.3-.73c.2-.2.44-.3.73-.3s.53.1.73.3c.2.2.3.44.3.73s-.1.53-.3.73c-.2.2-.44.3-.73.3ZM8,5.94l-2.06-2.06.87-.87.57.57V1.01h1.23v2.57l.57-.57.87.87-2.06,2.06Z"
-  }));
-  const SvgOverwriteView = (props) => reactExports.createElement("svg", {
-    width: "1em",
-    height: "1em",
-    viewBox: "0 0 16 16",
-    fill: "currentColor",
-    stroke: "none",
-    ...props
-  }, reactExports.createElement("path", {
-    d: "M6.69,9.31c-.36-.36-.54-.8-.54-1.31s.18-.95.54-1.31.8-.54,1.31-.54.95.18,1.31.54.54.8.54,1.31-.18.95-.54,1.31c-.36.36-.8.54-1.31.54s-.95-.18-1.31-.54ZM8.33,8.33c.09-.09.13-.2.13-.33s-.04-.24-.13-.33-.2-.13-.33-.13-.24.04-.33.13-.13.2-.13.33.04.24.13.33.2.13.33.13.24-.04.33-.13ZM2.92,14.46c-.38,0-.71-.14-.98-.41-.27-.27-.41-.6-.41-.98v-3.23h1.38v3.23h3.23v1.38h-3.22ZM9.85,14.46v-1.38h3.23v-3.23h1.38v3.23c0,.38-.14.71-.41.98s-.6.41-.98.41h-3.23.01ZM1.54,6.15v-3.23c0-.38.14-.71.41-.98.27-.27.6-.41.98-.41h3.23v1.38h-3.24v3.23h-1.38ZM13.08,6.15v-3.23h-3.23v-1.38h3.23c.38,0,.71.14.98.41.27.27.41.6.41.98v3.23h-1.39Z"
-  }));
-  const SvgShapes = (props) => reactExports.createElement("svg", {
-    width: "1em",
-    height: "1em",
-    viewBox: "0 0 16 16",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.5,
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    ...props
-  }, reactExports.createElement("rect", {
-    x: 0.87,
-    y: 0.87,
-    width: 9.58,
-    height: 9.58
-  }), reactExports.createElement("circle", {
-    cx: 10.33,
-    cy: 10.33,
-    r: 4.79
-  }));
-  const compactHeader = "_compactHeader_t0v1l_1";
-  const headerTitle = "_headerTitle_t0v1l_12";
-  const headerCount = "_headerCount_t0v1l_21";
-  const headerActions = "_headerActions_t0v1l_26";
-  const styles$o = {
-    compactHeader,
-    headerTitle,
-    headerCount,
-    headerActions
-  };
-  function CompactHeader({ title: title7, count: count2, actions: actions2, className: className2 }) {
-    const showTitle = title7 != null && title7 !== "";
-    return jsxRuntimeExports.jsxs("div", {
-      className: [
-        styles$o.compactHeader,
-        className2
-      ].filter(Boolean).join(" "),
-      children: [
-        showTitle ? jsxRuntimeExports.jsxs("div", {
-          className: styles$o.headerTitle,
-          children: [
-            jsxRuntimeExports.jsx("span", {
-              children: title7
-            }),
-            count2 != null ? jsxRuntimeExports.jsx("span", {
-              className: styles$o.headerCount,
-              children: count2
-            }) : null
-          ]
-        }) : null,
-        actions2 != null ? jsxRuntimeExports.jsx("div", {
-          className: styles$o.headerActions,
-          children: actions2
-        }) : null
-      ]
-    });
-  }
-  const headerActionButton = "_headerActionButton_q643e_2";
-  const headerActionButtonActive = "_headerActionButtonActive_q643e_30";
-  const iconHeaderButton = "_iconHeaderButton_q643e_37";
-  const iconHeaderButtonActive = "_iconHeaderButtonActive_q643e_61";
-  const rowIconButton = "_rowIconButton_q643e_68";
-  const styles$n = {
-    headerActionButton,
-    headerActionButtonActive,
-    iconHeaderButton,
-    iconHeaderButtonActive,
-    rowIconButton
-  };
-  function PanelIconButton({ children, variant = "header", active: active2, className: className2, type = "button", ...rest2 }) {
-    const base2 = variant === "row" ? styles$n.rowIconButton : styles$n.iconHeaderButton;
-    return jsxRuntimeExports.jsx("button", {
-      type,
-      className: [
-        base2,
-        active2 ? styles$n.iconHeaderButtonActive : null,
-        className2
-      ].filter(Boolean).join(" "),
-      ...rest2,
-      children
-    });
-  }
-  function PanelActionButton({ children, active: active2, className: className2, type = "button", ...rest2 }) {
-    return jsxRuntimeExports.jsx("button", {
-      type,
-      className: [
-        styles$n.headerActionButton,
-        active2 ? styles$n.headerActionButtonActive : null,
-        className2
-      ].filter(Boolean).join(" "),
-      ...rest2,
-      children
-    });
-  }
-  const authorPanel = "_authorPanel_15zar_3";
-  const authorPanelBody = "_authorPanelBody_15zar_16";
-  const thinScrollbar = "_thinScrollbar_15zar_24";
-  const panel$1 = {
-    authorPanel,
-    authorPanelBody,
-    thinScrollbar
-  };
   const SELECTION_MASK_CHANNEL_KEY = "Selection";
   const IMAGE_SELECTION_MASK_LAYER_ID = "image-selection-mask";
   function colorFromSeed(seed) {
@@ -87887,7 +86324,7 @@ void main() {
   function d$2(n2, t2) {
     return n2 > t2 ? 1 : n2 < t2 ? -1 : 0;
   }
-  function u$3(n2, t2, e2) {
+  function u$4(n2, t2, e2) {
     const r2 = new f$2(null, null);
     let l2 = r2, i2 = r2;
     for (; ; ) {
@@ -87913,14 +86350,14 @@ void main() {
   function c$4(n2, t2, e2, r2) {
     const l2 = new f$2(n2, t2);
     if (e2 === null) return l2.left = l2.right = null, l2;
-    e2 = u$3(n2, e2, r2);
+    e2 = u$4(n2, e2, r2);
     const i2 = r2(n2, e2.key);
     return i2 < 0 ? (l2.left = e2.left, l2.right = e2, e2.left = null) : i2 >= 0 && (l2.right = e2.right, l2.left = e2, e2.right = null), l2;
   }
   function m(n2, t2, e2) {
     let r2 = null, l2 = null;
     if (t2) {
-      t2 = u$3(n2, t2, e2);
+      t2 = u$4(n2, t2, e2);
       const i2 = e2(t2.key, n2);
       i2 === 0 ? (r2 = t2.left, l2 = t2.right) : i2 < 0 ? (l2 = t2.right, t2.right = null, r2 = t2) : (r2 = t2.left, t2.left = null, l2 = t2);
     }
@@ -87930,7 +86367,7 @@ void main() {
     };
   }
   function w(n2, t2, e2) {
-    return t2 === null ? n2 : (n2 === null || (t2 = u$3(n2.key, t2, e2), t2.left = n2), t2);
+    return t2 === null ? n2 : (n2 === null || (t2 = u$4(n2.key, t2, e2), t2.left = n2), t2);
   }
   function _$2(n2, t2, e2, r2, l2) {
     if (n2) {
@@ -87950,7 +86387,7 @@ void main() {
     add(t2, e2) {
       const r2 = new f$2(t2, e2);
       this._root === null && (r2.left = r2.right = null, this._size++, this._root = r2);
-      const l2 = this._comparator, i2 = u$3(t2, this._root, l2), o2 = l2(t2, i2.key);
+      const l2 = this._comparator, i2 = u$4(t2, this._root, l2), o2 = l2(t2, i2.key);
       return o2 === 0 ? this._root = i2 : (o2 < 0 ? (r2.left = i2.left, r2.right = i2, i2.left = null) : o2 > 0 && (r2.right = i2.right, r2.left = i2, i2.right = null), this._size++, this._root = r2), this._root;
     }
     remove(t2) {
@@ -87958,13 +86395,13 @@ void main() {
     }
     _remove(t2, e2, r2) {
       let l2;
-      return e2 === null ? null : (e2 = u$3(t2, e2, r2), r2(t2, e2.key) === 0 ? (e2.left === null ? l2 = e2.right : (l2 = u$3(t2, e2.left, r2), l2.right = e2.right), this._size--, l2) : e2);
+      return e2 === null ? null : (e2 = u$4(t2, e2, r2), r2(t2, e2.key) === 0 ? (e2.left === null ? l2 = e2.right : (l2 = u$4(t2, e2.left, r2), l2.right = e2.right), this._size--, l2) : e2);
     }
     pop() {
       let t2 = this._root;
       if (t2) {
         for (; t2.left; ) t2 = t2.left;
-        return this._root = u$3(t2.key, this._root, this._comparator), this._root = this._remove(t2.key, this._root, this._comparator), {
+        return this._root = u$4(t2.key, this._root, this._comparator), this._root = this._remove(t2.key, this._root, this._comparator), {
           key: t2.key,
           data: t2.data
         };
@@ -87982,7 +86419,7 @@ void main() {
       return null;
     }
     find(t2) {
-      return this._root && (this._root = u$3(t2, this._root, this._comparator), this._comparator(t2, this._root.key) !== 0) ? null : this._root;
+      return this._root && (this._root = u$4(t2, this._root, this._comparator), this._comparator(t2, this._root.key) !== 0) ? null : this._root;
     }
     contains(t2) {
       let e2 = this._root;
@@ -88265,7 +86702,7 @@ void main() {
   const C1 = vec(8);
   const C2 = vec(12);
   const D = vec(16);
-  const u$2 = vec(4);
+  const u$3 = vec(4);
   function orient2dadapt(ax, ay, bx, by, cx, cy, detsum) {
     let acxtail, acytail, bcxtail, bcytail;
     let bvirt, c2, ahi, alo, bhi, blo, _i, _j, _0, s1, s0, t1, t0, u3;
@@ -88339,18 +86776,18 @@ void main() {
     t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
     _i = s0 - t0;
     bvirt = s0 - _i;
-    u$2[0] = s0 - (_i + bvirt) + (bvirt - t0);
+    u$3[0] = s0 - (_i + bvirt) + (bvirt - t0);
     _j = s1 + _i;
     bvirt = _j - s1;
     _0 = s1 - (_j - bvirt) + (_i - bvirt);
     _i = _0 - t1;
     bvirt = _0 - _i;
-    u$2[1] = _0 - (_i + bvirt) + (bvirt - t1);
+    u$3[1] = _0 - (_i + bvirt) + (bvirt - t1);
     u3 = _j + _i;
     bvirt = u3 - _j;
-    u$2[2] = _j - (u3 - bvirt) + (_i - bvirt);
-    u$2[3] = u3;
-    const C1len = sum(4, B, 4, u$2, C1);
+    u$3[2] = _j - (u3 - bvirt) + (_i - bvirt);
+    u$3[3] = u3;
+    const C1len = sum(4, B, 4, u$3, C1);
     s1 = acx * bcytail;
     c2 = splitter * acx;
     ahi = c2 - (c2 - acx);
@@ -88369,18 +86806,18 @@ void main() {
     t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
     _i = s0 - t0;
     bvirt = s0 - _i;
-    u$2[0] = s0 - (_i + bvirt) + (bvirt - t0);
+    u$3[0] = s0 - (_i + bvirt) + (bvirt - t0);
     _j = s1 + _i;
     bvirt = _j - s1;
     _0 = s1 - (_j - bvirt) + (_i - bvirt);
     _i = _0 - t1;
     bvirt = _0 - _i;
-    u$2[1] = _0 - (_i + bvirt) + (bvirt - t1);
+    u$3[1] = _0 - (_i + bvirt) + (bvirt - t1);
     u3 = _j + _i;
     bvirt = u3 - _j;
-    u$2[2] = _j - (u3 - bvirt) + (_i - bvirt);
-    u$2[3] = u3;
-    const C2len = sum(C1len, C1, 4, u$2, C2);
+    u$3[2] = _j - (u3 - bvirt) + (_i - bvirt);
+    u$3[3] = u3;
+    const C2len = sum(C1len, C1, 4, u$3, C2);
     s1 = acxtail * bcytail;
     c2 = splitter * acxtail;
     ahi = c2 - (c2 - acxtail);
@@ -88399,18 +86836,18 @@ void main() {
     t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
     _i = s0 - t0;
     bvirt = s0 - _i;
-    u$2[0] = s0 - (_i + bvirt) + (bvirt - t0);
+    u$3[0] = s0 - (_i + bvirt) + (bvirt - t0);
     _j = s1 + _i;
     bvirt = _j - s1;
     _0 = s1 - (_j - bvirt) + (_i - bvirt);
     _i = _0 - t1;
     bvirt = _0 - _i;
-    u$2[1] = _0 - (_i + bvirt) + (bvirt - t1);
+    u$3[1] = _0 - (_i + bvirt) + (bvirt - t1);
     u3 = _j + _i;
     bvirt = u3 - _j;
-    u$2[2] = _j - (u3 - bvirt) + (_i - bvirt);
-    u$2[3] = u3;
-    const Dlen = sum(C2len, C2, 4, u$2, D);
+    u$3[2] = _j - (u3 - bvirt) + (_i - bvirt);
+    u$3[3] = u3;
+    const Dlen = sum(C2len, C2, 4, u$3, D);
     return D[Dlen - 1];
   }
   function orient2d(ax, ay, bx, by, cx, cy) {
@@ -90455,6 +88892,38 @@ void main() {
         shapes: []
       });
     },
+    resetStoryViewerSession: () => {
+      const vis = {
+        ...get2().channelVisibilities
+      };
+      delete vis[SELECTION_MASK_CHANNEL_KEY];
+      set2({
+        shapes: [],
+        shapeGroups: [],
+        hiddenShapeIds: /* @__PURE__ */ new Set(),
+        selectedShapeId: null,
+        brushEditTargetId: null,
+        brushEditMode: null,
+        brushMask: null,
+        brushMaskVersion: 0,
+        brushLastScreenCoord: null,
+        imageSelectionMask: null,
+        channelVisibilities: vis,
+        activeStoryIndex: null,
+        waypointAuthoring: /* @__PURE__ */ new Map(),
+        authoringWaypointShapesIndex: null,
+        authoringWaypointEditorOpen: false,
+        targetWaypointCamera: null,
+        layersPanelSelectedShapeIds: [],
+        layersPanelSelectedGroupId: null,
+        layersPanelSelectionFlash: null,
+        layersPanelSelectionRequest: null,
+        drawingState: overlayInitialState.drawingState,
+        dragState: overlayInitialState.dragState,
+        hoverState: overlayInitialState.hoverState,
+        currentInteraction: null
+      });
+    },
     finalizeRectangle: () => {
       const { drawingState } = get2();
       if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
@@ -91486,6 +89955,1669 @@ void main() {
   }), {
     name: "appStore"
   }));
+  const o = /* @__PURE__ */ new WeakMap();
+  let u$2 = 0;
+  function stableHash(t2) {
+    const i2 = typeof t2, s2 = t2 && t2.constructor, c2 = s2 === Date;
+    if (Object(t2) === t2 && !c2 && s2 != RegExp) {
+      let e2 = o.get(t2);
+      if (e2) return e2;
+      e2 = ++u$2 + "~", o.set(t2, e2);
+      let n2;
+      if (s2 === Array) {
+        for (e2 = "@", n2 = 0; n2 < t2.length; n2++) e2 += stableHash(t2[n2]) + ",";
+        o.set(t2, e2);
+      } else if (s2 === Object) {
+        e2 = "#";
+        const f2 = Object.keys(t2).sort();
+        for (; (n2 = f2.pop()) !== void 0; ) t2[n2] !== void 0 && (e2 += n2 + ":" + stableHash(t2[n2]) + ",");
+        o.set(t2, e2);
+      }
+      return e2;
+    }
+    return c2 ? t2.toJSON() : i2 === "symbol" ? t2.toString() : i2 === "string" ? JSON.stringify(t2) : "" + t2;
+  }
+  const JPEG_PYRAMID_TILE_SIZE = 1024;
+  const JPEG_BAKED_CONTRAST_LIMIT = [
+    0,
+    65535
+  ];
+  const JPEG_FALLBACK_LOWER_LIMIT = 2 ** 5;
+  const JPEG_FALLBACK_UPPER_LIMIT = 2 ** 14;
+  async function jpegPyramidFolderName(channelId, lowerLimit, upperLimit) {
+    const encoded = stableHash({
+      channelId,
+      lowerLimit,
+      upperLimit
+    });
+    const bytes = new TextEncoder().encode(encoded);
+    const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+    return Array.from(digest, (b2) => b2.toString(16).padStart(2, "0")).join("");
+  }
+  async function folderByChannelIndexFromGroup(opts) {
+    const out = {};
+    await Promise.all(opts.channels.map(async (row2) => {
+      const index2 = opts.channelIndexById[row2.channelId];
+      if (index2 === void 0) return;
+      out[index2] = await jpegPyramidFolderName(row2.channelId, row2.lowerLimit, row2.upperLimit);
+    }));
+    return out;
+  }
+  async function folderByChannelIndexFromImageChannels(channels2) {
+    const out = {};
+    await Promise.all(channels2.map(async (ch2) => {
+      out[ch2.index] = await jpegPyramidFolderName(ch2.id, ch2.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT, ch2.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT);
+    }));
+    return out;
+  }
+  function jpegPyramidLevels(width, height, tileSize = JPEG_PYRAMID_TILE_SIZE) {
+    let w2 = width;
+    let h2 = height;
+    let n2 = 1;
+    while ((w2 > tileSize || h2 > tileSize) && n2 < 32) {
+      w2 = Math.max(1, w2 >> 1);
+      h2 = Math.max(1, h2 >> 1);
+      n2 += 1;
+    }
+    return Array.from({
+      length: n2
+    }, (_2, i2) => i2);
+  }
+  class JpegImage {
+    constructor(opts) {
+      __publicField(this, "level");
+      __publicField(this, "c");
+      __publicField(this, "tileSize");
+      __publicField(this, "imagePath");
+      __publicField(this, "folder");
+      __publicField(this, "tileWidth");
+      __publicField(this, "tileHeight");
+      __publicField(this, "imageHeight");
+      __publicField(this, "imageWidth");
+      __publicField(this, "fetchTile");
+      const tileSize = opts.tileSize ?? JPEG_PYRAMID_TILE_SIZE;
+      this.level = opts.level;
+      this.c = opts.c;
+      this.tileSize = tileSize;
+      this.imagePath = opts.imagePath.replace(/\/$/, "");
+      this.folder = opts.folder;
+      this.tileWidth = tileSize;
+      this.tileHeight = tileSize;
+      this.imageHeight = opts.imageHeight;
+      this.imageWidth = opts.imageWidth;
+      this.fetchTile = opts.fetchTile ?? (async (folder, filename2) => {
+        const url = `${this.imagePath}/${folder}/${filename2}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`jpeg tile ${response.status}: ${url}`);
+        }
+        return response.blob();
+      });
+    }
+    async getTileOrStrip(x2, y2, sample) {
+      const fname = `${this.level}_${x2}_${y2}.jpg`;
+      const blob = await this.fetchTile(this.folder, fname);
+      const decoder = new ImageDecoder({
+        data: await blob.arrayBuffer(),
+        type: "image/jpeg"
+      });
+      const { image: image2 } = await decoder.decode();
+      const { displayWidth, displayHeight } = image2;
+      const tileSize = this.tileSize;
+      const copyOptions = {
+        format: "BGRX",
+        layout: [
+          {
+            offset: 0,
+            stride: displayWidth * 4
+          }
+        ]
+      };
+      const in_data = new Uint8Array(image2.allocationSize(copyOptions));
+      const data2 = new Uint16Array(tileSize ** 2);
+      await image2.copyTo(in_data, copyOptions);
+      const rowWidth = Math.min(displayWidth, tileSize);
+      const rowCount = Math.min(displayHeight, tileSize);
+      for (let row2 = 0; row2 < rowCount; row2 += 1) {
+        for (let col = 0; col < rowWidth; col += 1) {
+          data2[row2 * tileSize + col] = in_data[(row2 * displayWidth + col) * 4] << 8;
+        }
+      }
+      image2.close();
+      decoder.close();
+      return {
+        x: x2,
+        y: y2,
+        sample,
+        data: data2
+      };
+    }
+    async _readRaster({ x: x2, y: y2, sample }) {
+      const { tileHeight, tileWidth } = this;
+      const tile = await this.getTileOrStrip(x2, y2, sample);
+      const data2 = new Uint16Array(tile.data.buffer);
+      return {
+        data: data2,
+        width: tileWidth,
+        height: tileHeight
+      };
+    }
+    async readRasters(options = {}) {
+      const { x: x2 = 0, y: y2 = 0 } = options;
+      const samples = options.samples ?? [
+        0
+      ];
+      const sample = samples[0];
+      return this._readRaster({
+        x: x2,
+        y: y2,
+        sample
+      });
+    }
+    getWidth() {
+      const scale2 = 2 ** this.level;
+      return Math.round(this.imageWidth / scale2);
+    }
+    getHeight() {
+      const scale2 = 2 ** this.level;
+      return Math.round(this.imageHeight / scale2);
+    }
+  }
+  class JpegPixelSource {
+    constructor(indexer, tileSize, shape) {
+      __publicField(this, "_indexer");
+      __publicField(this, "tileSize");
+      __publicField(this, "labels");
+      __publicField(this, "shape");
+      __publicField(this, "dtype");
+      this._indexer = indexer;
+      this.tileSize = tileSize;
+      this.labels = [
+        "z",
+        "c",
+        "t",
+        "y",
+        "x"
+      ];
+      this.dtype = "Uint16";
+      this.shape = shape;
+    }
+    async getRaster({ selection, signal }) {
+      return await this.getTile({
+        x: 0,
+        y: 0,
+        selection,
+        signal
+      });
+    }
+    async getTile({ x: x2, y: y2, selection, signal }) {
+      const { height, width } = this._getTileExtent(x2, y2);
+      const image2 = this._indexer(selection);
+      return this._readRasters(image2, {
+        x: x2,
+        y: y2,
+        width,
+        height,
+        signal
+      });
+    }
+    async _readRasters(image2, props = {}) {
+      var _a2;
+      const raster = await image2.readRasters({
+        ...props
+      });
+      if ((_a2 = props.signal) == null ? void 0 : _a2.aborted) {
+        throw "__vivSignalAborted";
+      }
+      const { data: data2, width, height } = raster;
+      return {
+        data: data2,
+        width,
+        height
+      };
+    }
+    _getTileExtent(_x, _y) {
+      const height = this.tileSize;
+      const width = this.tileSize;
+      return {
+        height,
+        width
+      };
+    }
+    onTileError(err2) {
+      console.error(err2);
+    }
+  }
+  function createJpegLayers(meta) {
+    const { channelsVisible, colors, selections } = meta.settings;
+    const visible = channelsVisible.some((x2) => x2);
+    const { imagePath, jpegLoader, channelFolders } = meta;
+    const imageID = String(imagePath).replace(/\//g, "-");
+    const contrastLimits = (meta.settings.contrastLimits || []).map(() => JPEG_BAKED_CONTRAST_LIMIT);
+    const imageProps = {
+      visible,
+      loader: jpegLoader,
+      refinementStrategy: "no-overlap",
+      maxRequests: VIV_TILE_MAX_REQUESTS,
+      debounceTime: VIV_TILE_DEBOUNCE_MS,
+      id: `${imageID}-${Object.values(channelFolders || {}).join("-")}-${selections == null ? void 0 : selections.map((s2) => s2.c).join("-")}`,
+      channelsVisible,
+      colors,
+      contrastLimits,
+      selections
+    };
+    return new MultiscaleImageLayer(imageProps);
+  }
+  const toIndexer$1 = (opts) => {
+    const { imagePath, channelFolders, imageWidth, imageHeight, tileSize, fetchTile } = opts;
+    return (sel, level) => {
+      const folder = channelFolders == null ? void 0 : channelFolders[sel.c];
+      if (!folder) {
+        console.warn(`jpeg: no pyramid folder for channel index ${sel.c}`);
+      }
+      return new JpegImage({
+        imagePath,
+        level,
+        c: sel.c,
+        folder: folder ?? "",
+        imageWidth,
+        imageHeight,
+        tileSize,
+        fetchTile
+      });
+    };
+  };
+  const getShapeForBinaryDownsampleLevel$1 = (options) => {
+    const { axes, level } = options;
+    const xIndex = axes.labels.indexOf("x");
+    const yIndex = axes.labels.indexOf("y");
+    const resolutionShape = axes.shape.slice();
+    resolutionShape[xIndex] = axes.shape[xIndex] >> level;
+    resolutionShape[yIndex] = axes.shape[yIndex] >> level;
+    return resolutionShape;
+  };
+  const loadJpeg = (meta) => {
+    const { imagePath, imageWidth, imageHeight, channels: channels2, channelFolders, tileSize = JPEG_PYRAMID_TILE_SIZE, fetchTile } = meta;
+    const width = imageWidth;
+    const height = imageHeight;
+    const nChannels = Math.max(1, (channels2 == null ? void 0 : channels2.length) ?? 1);
+    const levels = meta.levels ?? jpegPyramidLevels(width, height, tileSize);
+    const pyramidIndexer = toIndexer$1({
+      imagePath,
+      channelFolders,
+      imageWidth: width,
+      imageHeight: height,
+      tileSize,
+      fetchTile
+    });
+    const data2 = levels.map((level) => {
+      const axes = {
+        labels: [
+          "t",
+          "c",
+          "z",
+          "y",
+          "x"
+        ],
+        shape: [
+          1,
+          nChannels,
+          1,
+          height,
+          width
+        ]
+      };
+      return new JpegPixelSource((sel) => pyramidIndexer(sel, level), tileSize, getShapeForBinaryDownsampleLevel$1({
+        axes,
+        level
+      }));
+    });
+    const omeChannels = (channels2 ?? []).map((ch2, i2) => ({
+      ID: ch2.id ?? `Channel:${i2}`,
+      Name: ch2.name || `Channel ${i2}`,
+      SamplesPerPixel: 1
+    }));
+    while (omeChannels.length < nChannels) {
+      const i2 = omeChannels.length;
+      omeChannels.push({
+        ID: `Channel:${i2}`,
+        Name: `Channel ${i2}`,
+        SamplesPerPixel: 1
+      });
+    }
+    return {
+      data: data2,
+      metadata: {
+        Pixels: {
+          Channels: omeChannels,
+          Type: "Uint16",
+          ID: "JpegPixels",
+          DimensionOrder: "TCZYX",
+          SamplesPerPixel: 1,
+          SizeT: 1,
+          SizeC: nChannels,
+          SizeZ: 1,
+          SizeY: height,
+          SizeX: width,
+          PhysicalSizeX: 1,
+          PhysicalSizeY: 1,
+          PhysicalSizeZ: 1,
+          PhysicalSizeXUnit: "\xB5m",
+          PhysicalSizeYUnit: "\xB5m",
+          PhysicalSizeZUnit: "\xB5m",
+          BigEndian: false,
+          TiffData: null
+        },
+        ID: "JpegImage",
+        AquisitionDate: (/* @__PURE__ */ new Date()).toISOString().split("T")[0],
+        Description: "",
+        ROIs: []
+      }
+    };
+  };
+  function toGroupChannelRows(channels2) {
+    const rows2 = [];
+    for (const c2 of channels2) {
+      if (typeof c2.channelId !== "string" || typeof c2.lowerLimit !== "number" || typeof c2.upperLimit !== "number") {
+        continue;
+      }
+      rows2.push({
+        channelId: c2.channelId,
+        lowerLimit: c2.lowerLimit,
+        upperLimit: c2.upperLimit
+      });
+    }
+    return rows2;
+  }
+  function resolveJpegStoryRoot(documentUrl, sourceUrl) {
+    if (/^https?:\/\//i.test(sourceUrl)) {
+      return sourceUrl.replace(/\/$/, "");
+    }
+    const doc = new URL(documentUrl, window.location.href);
+    if (sourceUrl === "." || sourceUrl === "./" || sourceUrl === "") {
+      const path2 = doc.pathname.replace(/\/[^/]*$/, "/");
+      return new URL(path2, doc).href.replace(/\/$/, "");
+    }
+    return new URL(sourceUrl, doc).href.replace(/\/$/, "");
+  }
+  function jpegSourceNeedsLocalRoot(url) {
+    return url === "." || url === "./" || url === "" || !/^https?:\/\//i.test(url);
+  }
+  function channelFoldersEqual(a2, b2) {
+    if (a2 === b2) return true;
+    if (!a2 || !b2) return false;
+    const aKeys = Object.keys(a2);
+    const bKeys = Object.keys(b2);
+    if (aKeys.length !== bKeys.length) return false;
+    return aKeys.every((k2) => a2[Number(k2)] === b2[Number(k2)]);
+  }
+  function folderNamesAvailable(folders, available) {
+    if (!available || available.size === 0) return false;
+    const names = Object.values(folders);
+    return names.length > 0 && names.every((name2) => available.has(name2.toLowerCase()));
+  }
+  function pickAvailableChannelFolders(opts) {
+    const { desired, available, activeGroupId, groupChannelFolders, allowOtherGroupFallback = true } = opts;
+    if (folderNamesAvailable(desired, available)) return desired;
+    if (activeGroupId) {
+      const snapshot = groupChannelFolders[activeGroupId];
+      if (snapshot && folderNamesAvailable(snapshot, available)) {
+        return {
+          ...snapshot
+        };
+      }
+      if (!allowOtherGroupFallback) return null;
+    }
+    for (const snapshot of Object.values(groupChannelFolders)) {
+      if (folderNamesAvailable(snapshot, available)) return {
+        ...snapshot
+      };
+    }
+    return null;
+  }
+  function applyChannelFoldersInPlace(entry, folders) {
+    if (!entry.channelFolders || channelFoldersEqual(entry.channelFolders, folders)) {
+      return entry;
+    }
+    for (const key2 of Object.keys(entry.channelFolders)) {
+      delete entry.channelFolders[Number(key2)];
+    }
+    Object.assign(entry.channelFolders, folders);
+    return {
+      ...entry
+    };
+  }
+  async function resolveChannelFolders(opts) {
+    const channelIndexById = Object.fromEntries(opts.image.channels.map((ch2) => [
+      ch2.id,
+      ch2.index
+    ]));
+    if (opts.groupChannels.length > 0) {
+      return folderByChannelIndexFromGroup({
+        channels: opts.groupChannels,
+        channelIndexById
+      });
+    }
+    return folderByChannelIndexFromImageChannels(opts.image.channels.map((ch2) => ({
+      id: ch2.id,
+      index: ch2.index,
+      lowerLimit: ch2.lowerLimit,
+      upperLimit: ch2.upperLimit
+    })));
+  }
+  async function syncJpegEntryChannelFolders(entries, images, groupChannels, activeGroupId) {
+    const channels2 = toGroupChannelRows(groupChannels);
+    let changed = false;
+    const next2 = await Promise.all(entries.map(async (entry) => {
+      if (!entry.channelFolders) return entry;
+      const im = images.find((i2) => i2.id === entry.sourceImageId);
+      if (!im) return entry;
+      const desired = await resolveChannelFolders({
+        groupChannels: channels2,
+        image: im
+      });
+      const folders = pickAvailableChannelFolders({
+        desired,
+        available: entry.availablePyramidFolders,
+        activeGroupId,
+        groupChannelFolders: entry.groupChannelFolders ?? {},
+        allowOtherGroupFallback: false
+      });
+      if (!folders) return entry;
+      const applied = applyChannelFoldersInPlace(entry, folders);
+      if (applied !== entry) changed = true;
+      return applied;
+    }));
+    return changed ? next2 : entries;
+  }
+  function useSyncJpegChannelFolders(jpegLoaderEntries, images, activeChannelGroupId, channelGroups, setJpegLoaderEntries) {
+    reactExports.useEffect(() => {
+      if (jpegLoaderEntries.length === 0) return;
+      const group2 = activeChannelGroupId ? channelGroups.find((g2) => g2.id === activeChannelGroupId) : channelGroups[0];
+      const channels2 = (group2 == null ? void 0 : group2.channels) ?? [];
+      const groupId = (group2 == null ? void 0 : group2.id) ?? activeChannelGroupId;
+      let cancelled = false;
+      void (async () => {
+        const next2 = await syncJpegEntryChannelFolders(jpegLoaderEntries, images, channels2, groupId);
+        if (cancelled) return;
+        setJpegLoaderEntries((prev) => prev.length === next2.length && prev.every((e2, i2) => e2 === next2[i2]) ? prev : next2);
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [
+      activeChannelGroupId,
+      channelGroups,
+      jpegLoaderEntries,
+      images,
+      setJpegLoaderEntries
+    ]);
+  }
+  async function jpegLoaderEntriesFromImages(opts) {
+    var _a2;
+    const activeGroup = (opts.activeGroupId ? opts.channelGroups.find((g2) => g2.id === opts.activeGroupId) : void 0) ?? opts.channelGroups[0];
+    const groupChannels = toGroupChannelRows((activeGroup == null ? void 0 : activeGroup.channels) ?? []);
+    const entries = [];
+    for (const im of opts.images) {
+      if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "jpeg") continue;
+      if (jpegSourceNeedsLocalRoot(im.source.url) && !opts.fetchTile) continue;
+      const storyRootUrl = resolveJpegStoryRoot(opts.documentUrl, im.source.url);
+      const groupChannelFolders = {};
+      for (const group2 of opts.channelGroups) {
+        if (typeof group2.id !== "string") continue;
+        const rows2 = toGroupChannelRows(group2.channels ?? []);
+        if (rows2.length === 0) continue;
+        groupChannelFolders[group2.id] = await resolveChannelFolders({
+          groupChannels: rows2,
+          image: im
+        });
+      }
+      const availablePyramidFolders = /* @__PURE__ */ new Set();
+      if (opts.existingPyramidFolders) {
+        for (const name2 of opts.existingPyramidFolders) {
+          availablePyramidFolders.add(name2.toLowerCase());
+        }
+      } else {
+        for (const folders of Object.values(groupChannelFolders)) {
+          for (const name2 of Object.values(folders)) {
+            availablePyramidFolders.add(name2.toLowerCase());
+          }
+        }
+      }
+      const desired = await resolveChannelFolders({
+        groupChannels,
+        image: im
+      });
+      const channelFolders = pickAvailableChannelFolders({
+        desired,
+        available: availablePyramidFolders,
+        activeGroupId: activeGroup == null ? void 0 : activeGroup.id,
+        groupChannelFolders
+      }) ?? desired;
+      const loader = loadJpeg({
+        imagePath: storyRootUrl,
+        imageWidth: im.sizeX,
+        imageHeight: im.sizeY,
+        channels: im.channels.map((ch2) => ({
+          id: ch2.id,
+          name: ch2.name,
+          index: ch2.index
+        })),
+        channelFolders,
+        fetchTile: opts.fetchTile
+      });
+      entries.push({
+        loader,
+        sourceImageId: im.id,
+        channelFolders,
+        imagePath: storyRootUrl,
+        availablePyramidFolders,
+        groupChannelFolders
+      });
+    }
+    return entries;
+  }
+  function imageHandleStorageKey(storyId, imageId) {
+    return storyId ? `story:${storyId}:image:${imageId}` : `image:${imageId}`;
+  }
+  async function persistLocalImageHandle(args) {
+    const { storyId, imageId, handle: handle2, images, previousHandleKey } = args;
+    const key2 = imageHandleStorageKey(storyId, imageId);
+    await putFileHandle(key2, handle2);
+    const next2 = setImageSource(images, imageId, {
+      kind: "local",
+      handleKey: key2
+    });
+    if (previousHandleKey && previousHandleKey !== key2) {
+      await deleteFileHandle(previousHandleKey);
+    }
+    return next2;
+  }
+  const version = "1.0.0-alpha.7";
+  function minervaCdnUrls(version2) {
+    const base2 = `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version2}/bundle`;
+    return {
+      js: `${base2}/minerva.js`,
+      css: `${base2}/minerva.css`
+    };
+  }
+  function canExportWithRemoteUrls(images) {
+    const withSource = images.filter((im) => im.source);
+    if (withSource.length === 0) return false;
+    return withSource.every((im) => {
+      var _a2;
+      return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "url";
+    });
+  }
+  function withPortableJpegSources(images) {
+    return images.map((im) => {
+      if (!im.source || im.source.kind !== "jpeg" && im.source.kind !== "local" && im.source.kind !== "url") {
+        return im;
+      }
+      return {
+        ...im,
+        source: {
+          kind: "jpeg",
+          url: "."
+        }
+      };
+    });
+  }
+  function toExportedStoryDocument(data2, mode) {
+    const images = mode === "remote-url" ? data2.images : withPortableJpegSources(data2.images);
+    return validateDocumentData({
+      ...data2,
+      images,
+      metadata: {
+        ...data2.metadata,
+        minervaVersion: version,
+        imageSource: mode === "remote-url" ? "remote-url" : data2.metadata.imageSource ?? "jpeg-pyramid"
+      }
+    });
+  }
+  function storyIndexHtml(title7, version$12 = version) {
+    const { js, css: css2 } = minervaCdnUrls(version$12);
+    const safeTitle = ((title7 == null ? void 0 : title7.trim()) || "Minerva Story").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${safeTitle}</title>
+    <link rel="stylesheet" href="${css2}" />
+    <style>
+      html, body, #minerva-root { height: 100%; margin: 0; background: #111; }
+    </style>
+  </head>
+  <body>
+    <div id="minerva-root"></div>
+    <script src="${js}"><\/script>
+    <script>
+      MinervaStory.play({
+        documentUrl: "document.json",
+        root: document.getElementById("minerva-root"),
+      });
+    <\/script>
+  </body>
+</html>
+`;
+  }
+  async function writeTextFile(directory, name2, text2) {
+    const fh2 = await directory.getFileHandle(name2, {
+      create: true
+    });
+    const write = await fh2.createWritable();
+    await write.write(text2);
+    await write.close();
+  }
+  async function writeStoryBundleSidecars(directory, data2, opts) {
+    const mode = (opts == null ? void 0 : opts.mode) ?? "jpeg-pyramid";
+    if (mode === "remote-url" && !canExportWithRemoteUrls(data2.images)) {
+      throw new Error("Remote URL export requires all images to use OME-TIFF URLs (no local files).");
+    }
+    const exported = toExportedStoryDocument(data2, mode);
+    await writeTextFile(directory, "document.json", JSON.stringify(exported, null, 2));
+    await writeTextFile(directory, "index.html", storyIndexHtml(exported.metadata.title, exported.metadata.minervaVersion ?? version));
+  }
+  const STORY_ROOT_HANDLE_SUFFIX = ":storyRoot";
+  function storyRootHandleKey(storyId) {
+    return `story:${storyId}${STORY_ROOT_HANDLE_SUFFIX}`;
+  }
+  function isDirectoryHandle(handle2) {
+    return !!handle2 && handle2.kind === "directory";
+  }
+  async function setStoryRootHandle(storyId, handle2) {
+    await putFileHandle(storyRootHandleKey(storyId), handle2);
+  }
+  async function ensureDirectoryPermission(handle2, opts) {
+    const mode = {
+      mode: opts.mode ?? "read"
+    };
+    try {
+      if (await handle2.queryPermission(mode) === "granted") return true;
+      return opts.requestPermission ? await handle2.requestPermission(mode) === "granted" : false;
+    } catch {
+      return false;
+    }
+  }
+  async function getStoryRootHandle(storyId, opts = {}) {
+    if (!storyId) return void 0;
+    const stored = await getFileHandle(storyRootHandleKey(storyId));
+    if (!isDirectoryHandle(stored)) return void 0;
+    if (!await ensureDirectoryPermission(stored, opts)) return void 0;
+    return stored;
+  }
+  function tileFetcherForDirectory(root2) {
+    return async (folder, filename2) => {
+      const dir2 = await root2.getDirectoryHandle(folder);
+      const file = await dir2.getFileHandle(filename2);
+      return file.getFile();
+    };
+  }
+  async function neededJpegPyramidFolderNames(channelGroups, images) {
+    var _a2, _b2;
+    const names = /* @__PURE__ */ new Set();
+    await Promise.all(channelGroups.flatMap((g2) => g2.channels.map(async (ch2) => names.add(await jpegPyramidFolderName(ch2.channelId, ch2.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT, ch2.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT)))));
+    if (names.size === 0 && images) {
+      for (const im of images) {
+        if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "jpeg" && ((_b2 = im.source) == null ? void 0 : _b2.kind) !== "local") continue;
+        const channelIndexById = Object.fromEntries(im.channels.map((ch2) => [
+          ch2.id,
+          ch2.index
+        ]));
+        const folders = await folderByChannelIndexFromGroup({
+          channels: im.channels.map((ch2) => ({
+            channelId: ch2.id,
+            lowerLimit: ch2.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
+            upperLimit: ch2.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT
+          })),
+          channelIndexById
+        });
+        for (const name2 of Object.values(folders)) names.add(name2);
+      }
+    }
+    return names;
+  }
+  async function listExistingPyramidFolders(root2) {
+    const names = /* @__PURE__ */ new Set();
+    for await (const [name2, handle2] of root2.entries()) {
+      if (handle2.kind === "directory" && /^[0-9a-f]{64}$/i.test(name2)) {
+        names.add(name2.toLowerCase());
+      }
+    }
+    return names;
+  }
+  async function assertPyramidFoldersExist(root2, data2) {
+    if (data2.metadata.imageSource === "remote-url") return;
+    const needed = await neededJpegPyramidFolderNames(data2.channelGroups, data2.images);
+    if (needed.size === 0) return;
+    const existing = await listExistingPyramidFolders(root2);
+    const missing = [
+      ...needed
+    ].filter((name2) => !existing.has(name2));
+    if (missing.length > 0) {
+      throw new Error("Missing JPEG pyramid folders. Pick the folder created by Export (document.json plus channel directories).");
+    }
+  }
+  async function readDocumentJson(root2) {
+    const fh2 = await root2.getFileHandle("document.json");
+    const file = await fh2.getFile();
+    return validateDocumentData(JSON.parse(await file.text()));
+  }
+  async function persistImportedStory(data2, titleFallback, root2) {
+    var _a2;
+    const title7 = ((_a2 = data2.metadata.title) == null ? void 0 : _a2.trim()) || titleFallback || "Imported Story";
+    const hasLocalSources = data2.images.some((im) => {
+      var _a3;
+      return ((_a3 = im.source) == null ? void 0 : _a3.kind) === "local";
+    });
+    const imagesBase = data2.metadata.imageSource === "remote-url" || hasLocalSources ? data2.images : withPortableJpegSources(data2.images);
+    const rec = await createStoryRecord(title7);
+    const images = hasLocalSources ? imagesBase.map((im) => {
+      var _a3;
+      if (((_a3 = im.source) == null ? void 0 : _a3.kind) !== "local") return im;
+      return {
+        ...im,
+        source: {
+          kind: "local",
+          handleKey: imageHandleStorageKey(rec.id, im.id)
+        }
+      };
+    }) : imagesBase;
+    const next2 = validateDocumentData({
+      ...data2,
+      metadata: {
+        ...data2.metadata,
+        id: rec.id,
+        title: title7
+      },
+      images
+    });
+    await saveStoryDocument(rec.id, next2);
+    if (root2) await setStoryRootHandle(rec.id, root2);
+    useDocumentStore.getState().hydrateFromDocument(next2, rec.id);
+    await setActiveStoryId(rec.id);
+    return rec.id;
+  }
+  async function importStoryJsonFromPicker() {
+    const file = await n$1({
+      description: "Minerva story JSON",
+      mimeTypes: [
+        "application/json"
+      ],
+      extensions: [
+        ".json"
+      ],
+      multiple: false
+    });
+    const data2 = validateDocumentData(JSON.parse(await file.text()));
+    let root2;
+    if (storyNeedsLocalJpegRoot(data2.images)) {
+      if (!hasDirectoryPickerAccess()) {
+        throw new Error("This story uses local JPEG pyramids. Open it in Chrome or Edge and choose the story folder to grant access.");
+      }
+      root2 = await window.showDirectoryPicker({
+        id: "minerva-story-import",
+        mode: "read"
+      });
+      await assertPyramidFoldersExist(root2, data2);
+    }
+    const base2 = file.name.replace(/\.json$/i, "").trim();
+    const fallback = /^(document|story)$/i.test(base2) ? "Imported Story" : base2;
+    return persistImportedStory(data2, fallback, root2);
+  }
+  async function importStoryFolderFromPicker() {
+    var _a2;
+    if (!hasDirectoryPickerAccess()) {
+      throw new Error("Importing a story folder needs the File System Access API (Chrome or Edge).");
+    }
+    const root2 = await window.showDirectoryPicker({
+      id: "minerva-story-import",
+      mode: "read"
+    });
+    const data2 = await readDocumentJson(root2);
+    await assertPyramidFoldersExist(root2, data2);
+    const title7 = ((_a2 = data2.metadata.title) == null ? void 0 : _a2.trim()) || root2.name || "Imported Story";
+    return persistImportedStory(data2, title7, root2);
+  }
+  async function reconnectStoryRootFromPicker(storyId) {
+    if (!hasDirectoryPickerAccess()) {
+      throw new Error("Reconnecting a story folder needs the File System Access API (Chrome or Edge).");
+    }
+    const root2 = await window.showDirectoryPicker({
+      id: "minerva-story-import",
+      mode: "read"
+    });
+    await assertPyramidFoldersExist(root2, useDocumentStore.getState().toDocumentData());
+    await setStoryRootHandle(storyId, root2);
+    return root2;
+  }
+  function storyNeedsLocalJpegRoot(images) {
+    return images.some((im) => {
+      var _a2;
+      return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
+    });
+  }
+  const storySearchSchema = objectType({
+    storyid: stringType().uuid().optional()
+  });
+  function parseRootSearch(raw2) {
+    const r2 = storySearchSchema.safeParse(raw2);
+    if (!r2.success) return {};
+    return {
+      storyid: r2.data.storyid
+    };
+  }
+  const uuidParamSchema = stringType().uuid();
+  function parsePreferredStoryIdFromLocation() {
+    if (typeof window === "undefined") return null;
+    const raw2 = new URLSearchParams(window.location.search).get("storyid");
+    if (raw2 === null || raw2 === "") return null;
+    const r2 = uuidParamSchema.safeParse(raw2);
+    return r2.success ? r2.data : null;
+  }
+  const rootRouteApi = getRouteApi("__root__");
+  function StoryIdUrlSync() {
+    const search2 = rootRouteApi.useSearch();
+    const navigate = rootRouteApi.useNavigate();
+    const activeStoryId = useDocumentStore((s2) => s2.activeStoryId);
+    const switchStory = useDocumentStore((s2) => s2.switchStory);
+    reactExports.useEffect(() => {
+      const sid = search2.storyid;
+      if (sid === void 0) return;
+      if (activeStoryId === sid) return;
+      if (activeStoryId === null) {
+        navigate({
+          search: (prev) => {
+            const next2 = {
+              ...prev
+            };
+            delete next2.storyid;
+            return next2;
+          },
+          replace: true
+        });
+        return;
+      }
+      void (async () => {
+        useAppStore.getState().resetStoryViewerSession();
+        try {
+          await switchStory(sid);
+        } catch {
+          navigate({
+            search: (prev) => {
+              const next2 = {
+                ...prev
+              };
+              delete next2.storyid;
+              return next2;
+            },
+            replace: true
+          });
+        }
+      })();
+    }, [
+      search2.storyid,
+      activeStoryId,
+      switchStory,
+      navigate
+    ]);
+    reactExports.useEffect(() => {
+      if (activeStoryId === null) return;
+      if (search2.storyid === activeStoryId) return;
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          storyid: activeStoryId
+        }),
+        replace: true
+      });
+    }, [
+      activeStoryId,
+      navigate,
+      search2.storyid
+    ]);
+    return null;
+  }
+  function normalizeLoadedPathname(pathname) {
+    let path2 = pathname.replace(/\/$/, "") || "/";
+    if (path2.endsWith("/index.html")) {
+      path2 = path2.slice(0, -"/index.html".length).replace(/\/$/, "") || "/";
+    }
+    return path2 === "" ? "/" : path2;
+  }
+  function deploymentBasenameFromNormalizedPath(normalizedPath) {
+    if (normalizedPath === "/") return "/";
+    const segments = normalizedPath.split("/").filter(Boolean);
+    if (segments.length === 0) return "/";
+    const prPreviewIdx = segments.indexOf("pr-preview");
+    const next2 = segments[prPreviewIdx + 1];
+    if (prPreviewIdx >= 0 && next2 !== void 0 && /^pr-\d+$/.test(next2)) {
+      return `/${segments.slice(0, prPreviewIdx + 2).join("/")}`;
+    }
+    return `/${segments[0]}`;
+  }
+  function routerBasepath() {
+    {
+      if (typeof window === "undefined") return "/";
+      const path2 = normalizeLoadedPathname(window.location.pathname);
+      return deploymentBasenameFromNormalizedPath(path2);
+    }
+  }
+  function createAppRouter(MainComponent, mainProps) {
+    const rootRoute = createRootRoute({
+      validateSearch: parseRootSearch,
+      component: function RootLayout() {
+        return jsxRuntimeExports.jsx(MainComponent, {
+          ...mainProps
+        });
+      }
+    });
+    return createRouter({
+      routeTree: rootRoute,
+      basepath: routerBasepath()
+    });
+  }
+  const root$8 = "_root_dp4yy_4";
+  const shelfToolbar = "_shelfToolbar_dp4yy_28";
+  const toolbarActions = "_toolbarActions_dp4yy_40";
+  const importMenu = "_importMenu_dp4yy_47";
+  const disabledAction = "_disabledAction_dp4yy_59";
+  const importChoices = "_importChoices_dp4yy_64";
+  const wordmark = "_wordmark_dp4yy_93";
+  const newVolume = "_newVolume_dp4yy_102";
+  const newGlyph = "_newGlyph_dp4yy_133";
+  const newLabel = "_newLabel_dp4yy_140";
+  const error = "_error_dp4yy_144";
+  const whisper = "_whisper_dp4yy_153";
+  const emptyLine = "_emptyLine_dp4yy_160";
+  const inlineLink = "_inlineLink_dp4yy_168";
+  const bookcase = "_bookcase_dp4yy_190";
+  const bookcaseInner = "_bookcaseInner_dp4yy_213";
+  const shelfBay = "_shelfBay_dp4yy_231";
+  const bayContent = "_bayContent_dp4yy_241";
+  const bayContentEmptyPrompt = "_bayContentEmptyPrompt_dp4yy_250";
+  const bayContentEmpty = "_bayContentEmpty_dp4yy_250";
+  const ghostShelf = "_ghostShelf_dp4yy_262";
+  const ghostBook = "_ghostBook_dp4yy_273";
+  const storyRow = "_storyRow_dp4yy_282";
+  const shelfBoard = "_shelfBoard_dp4yy_298";
+  const rowOpen = "_rowOpen_dp4yy_325";
+  const rowThumb = "_rowThumb_dp4yy_359";
+  const rowThumbImg = "_rowThumbImg_dp4yy_368";
+  const rowThumbBlank = "_rowThumbBlank_dp4yy_377";
+  const rowText = "_rowText_dp4yy_385";
+  const rowTitle$1 = "_rowTitle_dp4yy_394";
+  const rowDate = "_rowDate_dp4yy_404";
+  const scrap = "_scrap_dp4yy_412";
+  const styles$q = {
+    root: root$8,
+    shelfToolbar,
+    toolbarActions,
+    importMenu,
+    disabledAction,
+    importChoices,
+    wordmark,
+    newVolume,
+    newGlyph,
+    newLabel,
+    error,
+    whisper,
+    emptyLine,
+    inlineLink,
+    bookcase,
+    bookcaseInner,
+    shelfBay,
+    bayContent,
+    bayContentEmptyPrompt,
+    bayContentEmpty,
+    ghostShelf,
+    ghostBook,
+    storyRow,
+    shelfBoard,
+    rowOpen,
+    rowThumb,
+    rowThumbImg,
+    rowThumbBlank,
+    rowText,
+    rowTitle: rowTitle$1,
+    rowDate,
+    scrap
+  };
+  const APP_TAB_TITLE_PREFIX$1 = getDemoDocumentTitle();
+  function rowAccent(id2) {
+    let n2 = 0;
+    for (let i2 = 0; i2 < id2.length; i2++) n2 += id2.charCodeAt(i2) * (i2 + 1);
+    const h2 = 16 + n2 % 42;
+    const s2 = 12 + n2 % 14;
+    const l2 = 22 + n2 % 10;
+    return {
+      ["--row-accent"]: `hsl(${h2} ${s2}% ${l2}%)`
+    };
+  }
+  function formatShortDate(iso) {
+    try {
+      const d2 = new Date(iso);
+      if (Number.isNaN(d2.getTime())) return "";
+      return d2.toLocaleDateString(void 0, {
+        month: "short",
+        day: "numeric",
+        year: d2.getFullYear() !== (/* @__PURE__ */ new Date()).getFullYear() ? "numeric" : void 0
+      });
+    } catch {
+      return "";
+    }
+  }
+  function ShelfBoard() {
+    return jsxRuntimeExports.jsx("div", {
+      className: styles$q.shelfBoard,
+      "aria-hidden": true
+    });
+  }
+  const GHOST_PALETTE = [
+    "hsl(10 20% 30%)",
+    "hsl(28 16% 28%)",
+    "hsl(45 14% 32%)",
+    "hsl(150 12% 26%)",
+    "hsl(210 14% 28%)",
+    "hsl(30 10% 26%)",
+    "hsl(0 10% 30%)",
+    "hsl(180 10% 26%)",
+    "hsl(260 12% 28%)",
+    "hsl(55 12% 28%)"
+  ];
+  const GHOST_SLOT_PX = 12;
+  function seededRand(seed) {
+    let s2 = seed;
+    return () => {
+      s2 = (s2 * 16807 + 11) % 2147483647;
+      return (s2 & 2147483647) / 2147483647;
+    };
+  }
+  function readInnerWidthPx(el2) {
+    const cs = getComputedStyle(el2);
+    const pl2 = Number.parseFloat(cs.paddingLeft) || 0;
+    const pr = Number.parseFloat(cs.paddingRight) || 0;
+    return el2.clientWidth - pl2 - pr;
+  }
+  function GhostBooks({ bayIndex }) {
+    const shelfRef = reactExports.useRef(null);
+    const [innerW, setInnerW] = reactExports.useState(0);
+    reactExports.useLayoutEffect(() => {
+      const el2 = shelfRef.current;
+      if (!el2) return;
+      const measure = () => {
+        setInnerW(readInnerWidthPx(el2));
+      };
+      measure();
+      const ro = new ResizeObserver(measure);
+      ro.observe(el2);
+      return () => ro.disconnect();
+    }, []);
+    const books = reactExports.useMemo(() => {
+      const rand = seededRand(bayIndex * 997 + 42);
+      const maxSlots = innerW > 0 ? Math.max(1, Math.floor(innerW / GHOST_SLOT_PX)) : 0;
+      const fill = 1 - (1 - rand()) * (1 - rand());
+      const count2 = maxSlots <= 0 ? 0 : Math.min(maxSlots, Math.floor(fill * (maxSlots + 1)));
+      return Array.from({
+        length: count2
+      }, (_2, i2) => {
+        const width = 6 + Math.floor(rand() * 11);
+        const height = 20 + Math.floor(rand() * 18);
+        const color2 = GHOST_PALETTE[Math.floor(rand() * GHOST_PALETTE.length)] ?? GHOST_PALETTE[0];
+        const gap2 = 1 + Math.floor(rand() * 4);
+        const opacity = 0.2 + rand() * 0.14;
+        const tilt = rand() > 0.88 ? rand() > 0.5 ? 2 : -2 : 0;
+        return {
+          key: i2,
+          width,
+          height,
+          color: color2,
+          gap: gap2,
+          opacity,
+          tilt
+        };
+      });
+    }, [
+      bayIndex,
+      innerW
+    ]);
+    return jsxRuntimeExports.jsx("div", {
+      ref: shelfRef,
+      className: styles$q.ghostShelf,
+      "aria-hidden": true,
+      children: books.map((b2) => jsxRuntimeExports.jsx("div", {
+        className: styles$q.ghostBook,
+        style: {
+          width: b2.width,
+          height: b2.height,
+          background: b2.color,
+          opacity: b2.opacity,
+          marginRight: b2.gap,
+          transform: b2.tilt ? `rotate(${b2.tilt}deg)` : void 0,
+          transformOrigin: "bottom center"
+        }
+      }, b2.key))
+    });
+  }
+  const TARGET_BAYS = 8;
+  function buildBays(summaries) {
+    if (summaries === null) {
+      return [
+        {
+          kind: "loading"
+        },
+        ...Array.from({
+          length: TARGET_BAYS - 1
+        }, () => ({
+          kind: "empty"
+        }))
+      ];
+    }
+    if (summaries.length === 0) {
+      return [
+        {
+          kind: "emptyPrompt"
+        },
+        ...Array.from({
+          length: TARGET_BAYS - 1
+        }, () => ({
+          kind: "empty"
+        }))
+      ];
+    }
+    const count2 = Math.max(TARGET_BAYS, summaries.length);
+    const out = [];
+    for (let i2 = 0; i2 < count2; i2++) {
+      const story = i2 < summaries.length ? summaries[i2] : void 0;
+      if (story !== void 0) {
+        out.push({
+          kind: "story",
+          story
+        });
+      } else {
+        out.push({
+          kind: "empty"
+        });
+      }
+    }
+    return out;
+  }
+  function MinervaLibraryPage() {
+    const navigate = rootRouteApi.useNavigate();
+    const switchStory = useDocumentStore((s2) => s2.switchStory);
+    const createStory = useDocumentStore((s2) => s2.createStory);
+    const deleteStory = useDocumentStore((s2) => s2.deleteStory);
+    const [summaries, setSummaries] = reactExports.useState(null);
+    const [error2, setError] = reactExports.useState(null);
+    const [busyId, setBusyId] = reactExports.useState(null);
+    const [creating, setCreating] = reactExports.useState(false);
+    const [importing, setImporting] = reactExports.useState(false);
+    const importMenuRef = reactExports.useRef(null);
+    const canImportFolder = hasDirectoryPickerAccess();
+    const refresh = reactExports.useCallback(() => {
+      setError(null);
+      void listStorySummaries().then(setSummaries).catch((e2) => {
+        setSummaries([]);
+        setError(e2 instanceof Error ? e2.message : "Failed to load stories");
+      });
+    }, []);
+    reactExports.useEffect(() => {
+      refresh();
+    }, [
+      refresh
+    ]);
+    reactExports.useEffect(() => {
+      document.title = `${APP_TAB_TITLE_PREFIX$1} | Minerva Library`;
+    }, []);
+    const openStory = reactExports.useCallback(async (id2) => {
+      setBusyId(id2);
+      setError(null);
+      try {
+        useAppStore.getState().resetStoryViewerSession();
+        await switchStory(id2);
+        navigate({
+          search: (prev) => ({
+            ...prev,
+            storyid: id2
+          }),
+          replace: true
+        });
+      } catch (e2) {
+        setError(e2 instanceof Error ? e2.message : "Could not open story");
+      } finally {
+        setBusyId(null);
+      }
+    }, [
+      navigate,
+      switchStory
+    ]);
+    const handleNew = reactExports.useCallback(async () => {
+      setCreating(true);
+      setError(null);
+      try {
+        useAppStore.getState().resetStoryViewerSession();
+        const id2 = await createStory();
+        navigate({
+          search: (prev) => ({
+            ...prev,
+            storyid: id2
+          }),
+          replace: true
+        });
+      } catch (e2) {
+        setError(e2 instanceof Error ? e2.message : "Could not create story");
+      } finally {
+        setCreating(false);
+      }
+    }, [
+      createStory,
+      navigate
+    ]);
+    const handleImport = reactExports.useCallback(async (kind) => {
+      var _a2;
+      (_a2 = importMenuRef.current) == null ? void 0 : _a2.removeAttribute("open");
+      setImporting(true);
+      setError(null);
+      try {
+        useAppStore.getState().resetStoryViewerSession();
+        const id2 = kind === "json" ? await importStoryJsonFromPicker() : await importStoryFolderFromPicker();
+        navigate({
+          search: (prev) => ({
+            ...prev,
+            storyid: id2
+          }),
+          replace: true
+        });
+      } catch (e2) {
+        if (!(e2 instanceof DOMException && e2.name === "AbortError")) {
+          setError(e2 instanceof Error ? e2.message : "Could not import story");
+        }
+      } finally {
+        setImporting(false);
+      }
+    }, [
+      navigate
+    ]);
+    const handleDelete2 = reactExports.useCallback((id2, title7) => {
+      if (!window.confirm(`Remove \u201C${title7}\u201D from the shelf?`)) return;
+      setBusyId(id2);
+      setError(null);
+      void (async () => {
+        try {
+          await deleteStory(id2);
+          refresh();
+        } catch (e2) {
+          setError(e2 instanceof Error ? e2.message : "Could not delete");
+        } finally {
+          setBusyId(null);
+        }
+      })();
+    }, [
+      deleteStory,
+      refresh
+    ]);
+    const bays = reactExports.useMemo(() => buildBays(summaries), [
+      summaries
+    ]);
+    return jsxRuntimeExports.jsxs("div", {
+      className: styles$q.root,
+      children: [
+        error2 ? jsxRuntimeExports.jsx("p", {
+          className: styles$q.error,
+          children: error2
+        }) : null,
+        jsxRuntimeExports.jsxs("div", {
+          className: styles$q.shelfToolbar,
+          children: [
+            jsxRuntimeExports.jsx("h1", {
+              className: styles$q.wordmark,
+              children: "Minerva Library"
+            }),
+            jsxRuntimeExports.jsxs("div", {
+              className: styles$q.toolbarActions,
+              children: [
+                jsxRuntimeExports.jsxs("details", {
+                  ref: importMenuRef,
+                  className: styles$q.importMenu,
+                  children: [
+                    jsxRuntimeExports.jsx("summary", {
+                      className: `${styles$q.newVolume} ${importing || creating ? styles$q.disabledAction : ""}`,
+                      "aria-label": "Import a story",
+                      children: jsxRuntimeExports.jsx("span", {
+                        className: styles$q.newLabel,
+                        children: importing ? "\u2026" : "Import"
+                      })
+                    }),
+                    jsxRuntimeExports.jsxs("div", {
+                      className: styles$q.importChoices,
+                      children: [
+                        jsxRuntimeExports.jsx("button", {
+                          type: "button",
+                          disabled: importing || creating,
+                          onClick: () => void handleImport("json"),
+                          children: "JSON file"
+                        }),
+                        canImportFolder ? jsxRuntimeExports.jsx("button", {
+                          type: "button",
+                          disabled: importing || creating,
+                          onClick: () => void handleImport("folder"),
+                          children: "Story folder"
+                        }) : null
+                      ]
+                    })
+                  ]
+                }),
+                jsxRuntimeExports.jsxs("button", {
+                  type: "button",
+                  className: styles$q.newVolume,
+                  disabled: creating || importing,
+                  onClick: () => void handleNew(),
+                  "aria-label": "Add a new story",
+                  children: [
+                    jsxRuntimeExports.jsx("span", {
+                      className: styles$q.newGlyph,
+                      "aria-hidden": true,
+                      children: "+"
+                    }),
+                    jsxRuntimeExports.jsx("span", {
+                      className: styles$q.newLabel,
+                      children: creating ? "\u2026" : "New"
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        }),
+        jsxRuntimeExports.jsx("section", {
+          className: styles$q.bookcase,
+          "aria-label": "Bookshelf",
+          children: jsxRuntimeExports.jsx("div", {
+            className: styles$q.bookcaseInner,
+            children: bays.map((bay, index2) => {
+              const key2 = bay.kind === "story" ? bay.story.id : `bay-${index2}`;
+              return jsxRuntimeExports.jsxs("div", {
+                className: styles$q.shelfBay,
+                children: [
+                  jsxRuntimeExports.jsxs("div", {
+                    className: bay.kind === "empty" ? `${styles$q.bayContent} ${styles$q.bayContentEmpty}` : bay.kind === "emptyPrompt" ? `${styles$q.bayContent} ${styles$q.bayContentEmptyPrompt}` : styles$q.bayContent,
+                    "aria-hidden": bay.kind === "empty" ? true : void 0,
+                    children: [
+                      bay.kind === "empty" ? jsxRuntimeExports.jsx(GhostBooks, {
+                        bayIndex: index2
+                      }) : null,
+                      bay.kind === "loading" ? jsxRuntimeExports.jsx("p", {
+                        className: styles$q.whisper,
+                        children: "Opening the stacks\u2026"
+                      }) : null,
+                      bay.kind === "emptyPrompt" ? jsxRuntimeExports.jsx("p", {
+                        className: styles$q.emptyLine,
+                        children: jsxRuntimeExports.jsx("button", {
+                          type: "button",
+                          className: styles$q.inlineLink,
+                          onClick: () => void handleNew(),
+                          disabled: creating,
+                          children: "Create a new story."
+                        })
+                      }) : null,
+                      bay.kind === "story" ? jsxRuntimeExports.jsxs("div", {
+                        className: styles$q.storyRow,
+                        children: [
+                          jsxRuntimeExports.jsxs("button", {
+                            type: "button",
+                            className: styles$q.rowOpen,
+                            style: rowAccent(bay.story.id),
+                            disabled: busyId === bay.story.id,
+                            onClick: () => void openStory(bay.story.id),
+                            children: [
+                              jsxRuntimeExports.jsx("span", {
+                                className: styles$q.rowThumb,
+                                "aria-hidden": true,
+                                children: bay.story.thumbnail ? jsxRuntimeExports.jsx("img", {
+                                  src: bay.story.thumbnail,
+                                  alt: "",
+                                  className: styles$q.rowThumbImg
+                                }) : jsxRuntimeExports.jsx("span", {
+                                  className: styles$q.rowThumbBlank
+                                })
+                              }),
+                              jsxRuntimeExports.jsxs("span", {
+                                className: styles$q.rowText,
+                                children: [
+                                  jsxRuntimeExports.jsx("span", {
+                                    className: styles$q.rowTitle,
+                                    children: bay.story.title
+                                  }),
+                                  jsxRuntimeExports.jsx("span", {
+                                    className: styles$q.rowDate,
+                                    children: formatShortDate(bay.story.modifiedAt)
+                                  })
+                                ]
+                              })
+                            ]
+                          }),
+                          jsxRuntimeExports.jsx("button", {
+                            type: "button",
+                            className: styles$q.scrap,
+                            disabled: busyId === bay.story.id,
+                            "aria-label": `Remove ${bay.story.title}`,
+                            onClick: (e2) => {
+                              e2.stopPropagation();
+                              handleDelete2(bay.story.id, bay.story.title);
+                            },
+                            children: "\xD7"
+                          })
+                        ]
+                      }) : null
+                    ]
+                  }),
+                  jsxRuntimeExports.jsx(ShelfBoard, {})
+                ]
+              }, key2);
+            })
+          })
+        })
+      ]
+    });
+  }
+  const SvgChevronDown = (props) => reactExports.createElement("svg", {
+    width: "1em",
+    height: "1em",
+    viewBox: "0 0 12 12",
+    fill: "currentColor",
+    ...props
+  }, reactExports.createElement("path", {
+    d: "M2 4L6 8L10 4",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    fill: "none"
+  }));
+  const chevronRight = "_chevronRight_m5cf6_1";
+  const chevronLeft = "_chevronLeft_m5cf6_2";
+  const chevronDown = "_chevronDown_m5cf6_3";
+  const chevronUp = "_chevronUp_m5cf6_4";
+  const styles$p = {
+    chevronRight,
+    chevronLeft,
+    chevronDown,
+    chevronUp
+  };
+  const DIRECTION_CLASS = {
+    right: styles$p.chevronRight,
+    left: styles$p.chevronLeft,
+    down: styles$p.chevronDown,
+    up: styles$p.chevronUp
+  };
+  function ChevronIcon({ direction: direction2 = "down", className: className2 }) {
+    return jsxRuntimeExports.jsx(SvgChevronDown, {
+      className: [
+        DIRECTION_CLASS[direction2],
+        className2
+      ].filter(Boolean).join(" "),
+      "aria-hidden": true
+    });
+  }
+  const SvgPlus = (props) => reactExports.createElement("svg", {
+    viewBox: "0 0 24 24",
+    xmlns: "http://www.w3.org/2000/svg",
+    width: "1em",
+    height: "1em",
+    ...props
+  }, reactExports.createElement("path", {
+    fill: "currentColor",
+    d: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"
+  }));
+  function PlusIcon({ title: title7, size = 14 }) {
+    return jsxRuntimeExports.jsx(SvgPlus, {
+      "aria-hidden": title7 ? void 0 : true,
+      "aria-label": title7,
+      width: size,
+      height: size
+    });
+  }
+  function TrashIcon({ title: title7, size = 14 }) {
+    const label2 = title7 ?? "Delete";
+    return jsxRuntimeExports.jsxs("svg", {
+      "aria-hidden": title7 ? void 0 : true,
+      width: size,
+      height: size,
+      viewBox: "0 0 24 24",
+      fill: "currentColor",
+      children: [
+        jsxRuntimeExports.jsx("title", {
+          children: label2
+        }),
+        jsxRuntimeExports.jsx("path", {
+          d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+        })
+      ]
+    });
+  }
+  const SvgJumpToView = (props) => reactExports.createElement("svg", {
+    width: "1em",
+    height: "1em",
+    viewBox: "0 0 16 16",
+    fill: "currentColor",
+    stroke: "none",
+    ...props
+  }, reactExports.createElement("path", {
+    d: "M7.38,14.99v-2.57l-.57.57-.87-.87,2.06-2.06,2.06,2.06-.87.87-.57-.57v2.57h-1.23ZM3.89,10.06l-.87-.87.57-.57H1.01v-1.23h2.57l-.57-.57.87-.87,2.06,2.06-2.06,2.06ZM12.11,10.06l-2.06-2.06,2.06-2.06.87.87-.57.57h2.57v1.23h-2.57l.57.57-.87.87ZM8,9.03c-.29,0-.53-.1-.73-.3s-.3-.44-.3-.73.1-.53.3-.73c.2-.2.44-.3.73-.3s.53.1.73.3c.2.2.3.44.3.73s-.1.53-.3.73c-.2.2-.44.3-.73.3ZM8,5.94l-2.06-2.06.87-.87.57.57V1.01h1.23v2.57l.57-.57.87.87-2.06,2.06Z"
+  }));
+  const SvgOverwriteView = (props) => reactExports.createElement("svg", {
+    width: "1em",
+    height: "1em",
+    viewBox: "0 0 16 16",
+    fill: "currentColor",
+    stroke: "none",
+    ...props
+  }, reactExports.createElement("path", {
+    d: "M6.69,9.31c-.36-.36-.54-.8-.54-1.31s.18-.95.54-1.31.8-.54,1.31-.54.95.18,1.31.54.54.8.54,1.31-.18.95-.54,1.31c-.36.36-.8.54-1.31.54s-.95-.18-1.31-.54ZM8.33,8.33c.09-.09.13-.2.13-.33s-.04-.24-.13-.33-.2-.13-.33-.13-.24.04-.33.13-.13.2-.13.33.04.24.13.33.2.13.33.13.24-.04.33-.13ZM2.92,14.46c-.38,0-.71-.14-.98-.41-.27-.27-.41-.6-.41-.98v-3.23h1.38v3.23h3.23v1.38h-3.22ZM9.85,14.46v-1.38h3.23v-3.23h1.38v3.23c0,.38-.14.71-.41.98s-.6.41-.98.41h-3.23.01ZM1.54,6.15v-3.23c0-.38.14-.71.41-.98.27-.27.6-.41.98-.41h3.23v1.38h-3.24v3.23h-1.38ZM13.08,6.15v-3.23h-3.23v-1.38h3.23c.38,0,.71.14.98.41.27.27.41.6.41.98v3.23h-1.39Z"
+  }));
+  const SvgShapes = (props) => reactExports.createElement("svg", {
+    width: "1em",
+    height: "1em",
+    viewBox: "0 0 16 16",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.5,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    ...props
+  }, reactExports.createElement("rect", {
+    x: 0.87,
+    y: 0.87,
+    width: 9.58,
+    height: 9.58
+  }), reactExports.createElement("circle", {
+    cx: 10.33,
+    cy: 10.33,
+    r: 4.79
+  }));
+  const compactHeader = "_compactHeader_t0v1l_1";
+  const headerTitle = "_headerTitle_t0v1l_12";
+  const headerCount = "_headerCount_t0v1l_21";
+  const headerActions = "_headerActions_t0v1l_26";
+  const styles$o = {
+    compactHeader,
+    headerTitle,
+    headerCount,
+    headerActions
+  };
+  function CompactHeader({ title: title7, count: count2, actions: actions2, className: className2 }) {
+    const showTitle = title7 != null && title7 !== "";
+    return jsxRuntimeExports.jsxs("div", {
+      className: [
+        styles$o.compactHeader,
+        className2
+      ].filter(Boolean).join(" "),
+      children: [
+        showTitle ? jsxRuntimeExports.jsxs("div", {
+          className: styles$o.headerTitle,
+          children: [
+            jsxRuntimeExports.jsx("span", {
+              children: title7
+            }),
+            count2 != null ? jsxRuntimeExports.jsx("span", {
+              className: styles$o.headerCount,
+              children: count2
+            }) : null
+          ]
+        }) : null,
+        actions2 != null ? jsxRuntimeExports.jsx("div", {
+          className: styles$o.headerActions,
+          children: actions2
+        }) : null
+      ]
+    });
+  }
+  const headerActionButton = "_headerActionButton_q643e_2";
+  const headerActionButtonActive = "_headerActionButtonActive_q643e_30";
+  const iconHeaderButton = "_iconHeaderButton_q643e_37";
+  const iconHeaderButtonActive = "_iconHeaderButtonActive_q643e_61";
+  const rowIconButton = "_rowIconButton_q643e_68";
+  const styles$n = {
+    headerActionButton,
+    headerActionButtonActive,
+    iconHeaderButton,
+    iconHeaderButtonActive,
+    rowIconButton
+  };
+  function PanelIconButton({ children, variant = "header", active: active2, className: className2, type = "button", ...rest2 }) {
+    const base2 = variant === "row" ? styles$n.rowIconButton : styles$n.iconHeaderButton;
+    return jsxRuntimeExports.jsx("button", {
+      type,
+      className: [
+        base2,
+        active2 ? styles$n.iconHeaderButtonActive : null,
+        className2
+      ].filter(Boolean).join(" "),
+      ...rest2,
+      children
+    });
+  }
+  function PanelActionButton({ children, active: active2, className: className2, type = "button", ...rest2 }) {
+    return jsxRuntimeExports.jsx("button", {
+      type,
+      className: [
+        styles$n.headerActionButton,
+        active2 ? styles$n.headerActionButtonActive : null,
+        className2
+      ].filter(Boolean).join(" "),
+      ...rest2,
+      children
+    });
+  }
+  const authorPanel = "_authorPanel_15zar_3";
+  const authorPanelBody = "_authorPanelBody_15zar_16";
+  const thinScrollbar = "_thinScrollbar_15zar_24";
+  const panel$1 = {
+    authorPanel,
+    authorPanelBody,
+    thinScrollbar
+  };
   let viewerLiveSnapshotReader = null;
   const getViewerViewportSnapshotFromDeck = (deck) => {
     if (!(deck == null ? void 0 : deck.isInitialized)) return null;
@@ -167353,7 +167485,10 @@ void main() {
       if (imageWidth === 0 || imageHeight === 0) return;
       const storyIndex = detailStoryId != null && detailStoryIndex >= 0 ? detailStoryIndex : activeStoryIndex ?? 0;
       const story = waypoints[storyIndex];
-      if (!story) return;
+      if (!story) {
+        useAppStore.getState().clearShapes();
+        return;
+      }
       const prev = previousImportStoryIndexRef.current;
       const store = useAppStore.getState();
       if (prev !== null && prev !== storyIndex) {
@@ -244335,12 +244470,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-05T17:46:30.605Z");
+    const label2 = utcShort("2026-08-07T15:39:49.359Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-05T17:46:30.605Z",
+      title: "2026-08-07T15:39:49.359Z",
       children: [
         "Updated ",
         label2,
@@ -246525,22 +246660,6 @@ void main() {
     });
     return inflight;
   }
-  function imageHandleStorageKey(storyId, imageId) {
-    return storyId ? `story:${storyId}:image:${imageId}` : `image:${imageId}`;
-  }
-  async function persistLocalImageHandle(args) {
-    const { storyId, imageId, handle: handle2, images, previousHandleKey } = args;
-    const key2 = imageHandleStorageKey(storyId, imageId);
-    await putFileHandle(key2, handle2);
-    const next2 = setImageSource(images, imageId, {
-      kind: "local",
-      handleKey: key2
-    });
-    if (previousHandleKey && previousHandleKey !== key2) {
-      await deleteFileHandle(previousHandleKey);
-    }
-    return next2;
-  }
   const DEBOUNCE_MS = 2e3;
   const METADATA_DEBOUNCE_MS = 400;
   function useStoryAutoSave() {
@@ -246987,6 +247106,7 @@ void main() {
           await saveStoryDocument(s2.activeStoryId, s2.toDocumentData());
         }
         await setActiveStoryId(null);
+        useAppStore.getState().resetStoryViewerSession();
         s2.clearForLibraryView();
         navigate({
           search: (prev) => {
@@ -248347,7 +248467,7 @@ void main() {
     }, []);
     reactExports.useEffect(() => {
       const hasWaypoints = _waypoints.length;
-      if (hasWaypoints && activeStoryIndex === null) {
+      if (hasWaypoints && (activeStoryIndex === null || activeStoryIndex >= _waypoints.length)) {
         setActiveStory(0);
       }
     }, [
