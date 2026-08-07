@@ -1,3 +1,4 @@
+import type { JpegExportTransfer } from "./cubeRootEncoding";
 import {
   copyPixelBuffer,
   encodeGrayscaleJpeg,
@@ -100,6 +101,7 @@ export class JpegExportPool {
     lowerLimit: number,
     upperLimit: number,
     quality = JPEG_EXPORT_QUALITY,
+    transfer: JpegExportTransfer = "contrast",
   ): Promise<ArrayBuffer> {
     const workerWrappersPromise = this.workerWrappers;
     if (!workerWrappersPromise) {
@@ -118,6 +120,7 @@ export class JpegExportPool {
         lowerLimit,
         upperLimit,
         quality,
+        transfer,
       },
       [buffer],
     );
@@ -161,6 +164,7 @@ export type EncodeTilePixelsIn = {
   lowerLimit: number;
   upperLimit: number;
   quality?: number;
+  transfer?: JpegExportTransfer;
 };
 
 /**
@@ -177,6 +181,7 @@ export async function encodeTileJpeg(
     lowerLimit,
     upperLimit,
     quality = JPEG_EXPORT_QUALITY,
+    transfer = "contrast",
   } = input;
   const pool = getJpegExportPool();
   if (pool) {
@@ -190,6 +195,7 @@ export async function encodeTileJpeg(
         lowerLimit,
         upperLimit,
         quality,
+        transfer,
       );
     } catch (err) {
       console.warn(
@@ -205,6 +211,7 @@ export async function encodeTileJpeg(
     lowerLimit,
     upperLimit,
     quality,
+    transfer,
   );
 }
 

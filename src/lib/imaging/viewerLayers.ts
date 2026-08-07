@@ -138,6 +138,7 @@ export function createEncodedImageLayer(args: {
     settings: args.settings,
     imagePath: args.entry.imagePath ?? ".",
     channelFolders: args.entry.channelFolders ?? {},
+    transfer: args.entry.transfer ?? "contrast",
   });
 }
 

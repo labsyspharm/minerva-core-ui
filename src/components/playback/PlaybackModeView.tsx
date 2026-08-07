@@ -36,6 +36,8 @@ export type PlaybackModeViewProps = StoryPlaybackLoaders & {
   dicomIndexList: DicomIndex[];
   omeLoaderEntries: OmeLoaderEntry[];
   exportMode?: StoryExportMode;
+  /** When set, JPEG confirm UI can write document.json without re-encoding. */
+  onDocumentOnlyUpdate?: () => Promise<void>;
   /** When set, ask where to write before starting the exporter. */
   exportFolderPrompt?: {
     folderName: string;
@@ -82,6 +84,7 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
     omeLoaderEntries: props.omeLoaderEntries,
     directory_handle: props.directory_handle,
     exportMode: props.exportMode,
+    onDocumentOnlyUpdate: props.onDocumentOnlyUpdate,
   };
 
   return (

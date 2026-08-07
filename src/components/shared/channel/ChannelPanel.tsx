@@ -183,7 +183,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   };
 
   const hideClass = [hide ? styles.hide : "", styles.core].join(" ");
-  console.log(hideClass);
 
   const allGroups =
     channelGroups.length > 0 ? (

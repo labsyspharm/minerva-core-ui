@@ -14,6 +14,7 @@ import {
 } from "@/lib/imaging/loadJpegFromDocument";
 import { getFileHandle } from "@/lib/persistence/fileHandles";
 import type { Image } from "@/lib/stores/documentSchema";
+import type { JpegExportTransfer } from "./cubeRootEncoding";
 import type { JpegLoaderEntry, OmeLoaderEntry } from "./loaderEntries";
 import type { PoolClass } from "./workers/pool";
 import { Pool } from "./workers/pool";
@@ -38,6 +39,7 @@ export type HydrateDocumentLoadersOpts = {
   includeLocal?: boolean;
   fetchTile?: JpegTileFetcher;
   existingPyramidFolders?: ReadonlySet<string>;
+  transfer?: JpegExportTransfer;
 };
 
 const omeLoaderRole = (im: Image): "intensity" | "segmentation" =>
@@ -73,6 +75,7 @@ export async function hydrateDocumentLoaders(
       images,
       channelGroups,
       documentUrl,
+      transfer: opts.transfer ?? "contrast",
       ...(opts.fetchTile ? { fetchTile: opts.fetchTile } : {}),
       ...(opts.existingPyramidFolders
         ? { existingPyramidFolders: opts.existingPyramidFolders }

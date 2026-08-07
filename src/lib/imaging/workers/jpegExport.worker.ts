@@ -1,3 +1,4 @@
+import type { JpegExportTransfer } from "../cubeRootEncoding";
 import {
   encodeGrayscaleJpeg,
   JPEG_EXPORT_QUALITY,
@@ -13,6 +14,7 @@ type MessageData = {
   lowerLimit: number;
   upperLimit: number;
   quality?: number;
+  transfer?: JpegExportTransfer;
 };
 
 type Message = MessageEvent & {
@@ -32,6 +34,7 @@ worker.addEventListener("message", async (e: Message) => {
     lowerLimit,
     upperLimit,
     quality = JPEG_EXPORT_QUALITY,
+    transfer = "contrast",
   } = e.data;
   try {
     const Ctor = PIXEL_CTORS[arrayCtorName];
@@ -46,6 +49,7 @@ worker.addEventListener("message", async (e: Message) => {
       lowerLimit,
       upperLimit,
       quality,
+      transfer,
     );
     worker.postMessage({ jpeg, jobId }, [jpeg]);
   } catch (err) {

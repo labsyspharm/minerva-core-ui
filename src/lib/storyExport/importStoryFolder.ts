@@ -1,4 +1,9 @@
 import { fileOpen } from "browser-fs-access";
+import {
+  folderLimitsForTransfer,
+  type JpegExportTransfer,
+  jpegTransferFromImageSource,
+} from "@/lib/imaging/cubeRootEncoding";
 import { hasDirectoryPickerAccess } from "@/lib/imaging/filesystem";
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import {
@@ -90,21 +95,21 @@ export function tileFetcherForDirectory(
 export async function neededJpegPyramidFolderNames(
   channelGroups: ReadonlyArray<DocumentData["channelGroups"][number]>,
   images?: DocumentData["images"],
+  transfer: JpegExportTransfer = "contrast",
 ): Promise<Set<string>> {
   const names = new Set<string>();
   await Promise.all(
     channelGroups.flatMap((g) =>
-      g.channels.map(async (ch) =>
+      g.channels.map(async (ch) => {
+        const { lowerLimit, upperLimit } = folderLimitsForTransfer(
+          transfer,
+          ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
+          ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
+        );
         names.add(
-          await jpegPyramidFolderName(
-            ch.channelId,
-            // Match export / folderByChannelIndexFromImageChannels defaults so
-            // missing limits still hash to the on-disk pyramid folder name.
-            ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
-            ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
-          ),
-        ),
-      ),
+          await jpegPyramidFolderName(ch.channelId, lowerLimit, upperLimit),
+        );
+      }),
     ),
   );
   if (names.size === 0 && images) {
@@ -114,11 +119,14 @@ export async function neededJpegPyramidFolderNames(
         im.channels.map((ch) => [ch.id, ch.index]),
       );
       const folders = await folderByChannelIndexFromGroup({
-        channels: im.channels.map((ch) => ({
-          channelId: ch.id,
-          lowerLimit: ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
-          upperLimit: ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
-        })),
+        channels: im.channels.map((ch) => {
+          const { lowerLimit, upperLimit } = folderLimitsForTransfer(
+            transfer,
+            ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
+            ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
+          );
+          return { channelId: ch.id, lowerLimit, upperLimit };
+        }),
         channelIndexById,
       });
       for (const name of Object.values(folders)) names.add(name);
@@ -131,12 +139,34 @@ export async function listExistingPyramidFolders(
   root: FileSystemDirectoryHandle,
 ): Promise<Set<string>> {
   const names = new Set<string>();
-  for await (const [name, handle] of root.entries()) {
-    if (handle.kind === "directory" && /^[0-9a-f]{64}$/i.test(name)) {
-      names.add(name.toLowerCase());
+  try {
+    for await (const [name, handle] of root.entries()) {
+      if (handle.kind === "directory" && /^[0-9a-f]{64}$/i.test(name)) {
+        names.add(name.toLowerCase());
+      }
     }
+  } catch (e) {
+    // Stale / moved story-root handles throw NotFoundError from the FS Access API.
+    if (e instanceof DOMException && e.name === "NotFoundError") {
+      return names;
+    }
+    throw e;
   }
   return names;
+}
+
+/** False when the persisted directory handle no longer points at a real folder. */
+export async function isStoryRootHandleUsable(
+  root: FileSystemDirectoryHandle,
+): Promise<boolean> {
+  try {
+    // `entries()` touches the directory; permission alone can succeed on a dead handle.
+    await root.entries().next();
+    return true;
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "NotFoundError") return false;
+    throw e;
+  }
 }
 
 async function assertPyramidFoldersExist(
@@ -147,6 +177,7 @@ async function assertPyramidFoldersExist(
   const needed = await neededJpegPyramidFolderNames(
     data.channelGroups,
     data.images,
+    jpegTransferFromImageSource(data.metadata.imageSource),
   );
   if (needed.size === 0) return;
   const existing = await listExistingPyramidFolders(root);

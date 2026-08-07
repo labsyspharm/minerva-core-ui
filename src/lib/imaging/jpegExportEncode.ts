@@ -1,3 +1,6 @@
+import type { JpegExportTransfer } from "./cubeRootEncoding";
+import { encodeCubeRootU16ToU8 } from "./cubeRootEncoding";
+
 export const JPEG_EXPORT_QUALITY = 0.5;
 
 export const PIXEL_CTORS: Record<
@@ -35,6 +38,20 @@ export function clampPixelsToRgba(
     out[o] = clamped;
     out[o + 1] = clamped;
     out[o + 2] = clamped;
+    out[o + 3] = 255;
+  }
+}
+
+function cubeRootPixelsToRgba(
+  out: Uint8ClampedArray,
+  pixels: ArrayLike<number>,
+): void {
+  for (let i = 0; i < pixels.length; i++) {
+    const v = encodeCubeRootU16ToU8(pixels[i]);
+    const o = i * 4;
+    out[o] = v;
+    out[o + 1] = v;
+    out[o + 2] = v;
     out[o + 3] = 255;
   }
 }
@@ -78,20 +95,12 @@ async function blobFromCanvas(
   return blob.arrayBuffer();
 }
 
-/** Encode clamped grayscale pixels to JPEG. Prefer OffscreenCanvas when available. */
-export async function encodeGrayscaleJpeg(
+async function encodeRgbaToJpeg(
   width: number,
   height: number,
-  pixels: ArrayLike<number>,
-  lowerLimit: number,
-  upperLimit: number,
-  quality = JPEG_EXPORT_QUALITY,
+  rgba: Uint8ClampedArray<ArrayBuffer>,
+  quality: number,
 ): Promise<ArrayBuffer> {
-  const rgba = new Uint8ClampedArray(
-    new ArrayBuffer(width * height * 4),
-  ) as Uint8ClampedArray<ArrayBuffer>;
-  clampPixelsToRgba(rgba, pixels, lowerLimit, upperLimit);
-
   if (typeof OffscreenCanvas !== "undefined") {
     return blobFromCanvas(
       new OffscreenCanvas(width, height),
@@ -113,6 +122,27 @@ export async function encodeGrayscaleJpeg(
   }
 
   throw new Error("jpegExportEncode: no canvas available");
+}
+
+/** Encode grayscale pixels to JPEG (contrast-windowed or cube-root transfer). */
+export async function encodeGrayscaleJpeg(
+  width: number,
+  height: number,
+  pixels: ArrayLike<number>,
+  lowerLimit: number,
+  upperLimit: number,
+  quality = JPEG_EXPORT_QUALITY,
+  transfer: JpegExportTransfer = "contrast",
+): Promise<ArrayBuffer> {
+  const rgba = new Uint8ClampedArray(
+    new ArrayBuffer(width * height * 4),
+  ) as Uint8ClampedArray<ArrayBuffer>;
+  if (transfer === "cube-root") {
+    cubeRootPixelsToRgba(rgba, pixels);
+  } else {
+    clampPixelsToRgba(rgba, pixels, lowerLimit, upperLimit);
+  }
+  return encodeRgbaToJpeg(width, height, rgba, quality);
 }
 
 export function typedArrayCtorName(data: ArrayLike<number>): string {

@@ -1,3 +1,7 @@
+import {
+  decodeCubeRootU8ToU16,
+  type JpegExportTransfer,
+} from "./cubeRootEncoding";
 import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
 
 export type JpegTileFetcher = (
@@ -16,6 +20,7 @@ export type JpegImageOpts = {
   tileSize?: number;
   /** Defaults to HTTP fetch under `imagePath/folder/filename`. */
   fetchTile?: JpegTileFetcher;
+  transfer?: JpegExportTransfer;
 };
 
 class JpegImage {
@@ -29,6 +34,7 @@ class JpegImage {
   imageHeight: number;
   imageWidth: number;
   fetchTile: JpegTileFetcher;
+  transfer: JpegExportTransfer;
 
   constructor(opts: JpegImageOpts) {
     const tileSize = opts.tileSize ?? JPEG_PYRAMID_TILE_SIZE;
@@ -41,6 +47,7 @@ class JpegImage {
     this.tileHeight = tileSize;
     this.imageHeight = opts.imageHeight;
     this.imageWidth = opts.imageWidth;
+    this.transfer = opts.transfer ?? "contrast";
     this.fetchTile =
       opts.fetchTile ??
       (async (folder, filename) => {
@@ -75,8 +82,11 @@ class JpegImage {
     const rowCount = Math.min(displayHeight, tileSize);
     for (let row = 0; row < rowCount; row += 1) {
       for (let col = 0; col < rowWidth; col += 1) {
+        const byte = in_data[(row * displayWidth + col) * 4];
         data[row * tileSize + col] =
-          in_data[(row * displayWidth + col) * 4] << 8;
+          this.transfer === "cube-root"
+            ? decodeCubeRootU8ToU16(byte)
+            : byte << 8;
       }
     }
     image.close();

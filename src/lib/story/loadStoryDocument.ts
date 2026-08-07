@@ -1,3 +1,4 @@
+import { jpegTransferFromImageSource } from "@/lib/imaging/cubeRootEncoding";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import { hydrateDocumentLoaders } from "@/lib/imaging/hydrateDocumentLoaders";
 import type {
@@ -51,6 +52,7 @@ export async function loadStoryDocument(
       documentUrl,
       pool: omePool,
       includeLocal: false,
+      transfer: jpegTransferFromImageSource(data.metadata.imageSource),
     });
 
   seedPlaybackSession(data);

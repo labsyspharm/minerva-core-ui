@@ -13,10 +13,12 @@ function createJpegLayers(meta) {
   const visible = channelsVisible.some((x) => x);
   const { imagePath, jpegLoader, channelFolders } = meta;
   const imageID = String(imagePath).replace(/\//g, "-");
-  // Contrast is baked into tiles; keep Viv at full range.
-  const contrastLimits = (meta.settings.contrastLimits || []).map(
-    () => JPEG_BAKED_CONTRAST_LIMIT,
-  );
+  const contrastLimits =
+    meta.transfer === "cube-root"
+      ? meta.settings.contrastLimits || []
+      : (meta.settings.contrastLimits || []).map(
+          () => JPEG_BAKED_CONTRAST_LIMIT,
+        );
   const imageProps = {
     visible,
     loader: jpegLoader,
@@ -40,6 +42,7 @@ const toIndexer = (opts) => {
     imageHeight,
     tileSize,
     fetchTile,
+    transfer,
   } = opts;
   return (sel, level) => {
     const folder = channelFolders?.[sel.c];
@@ -57,6 +60,7 @@ const toIndexer = (opts) => {
       imageHeight,
       tileSize,
       fetchTile,
+      transfer,
     });
   };
 };
@@ -80,6 +84,7 @@ const loadJpeg = (meta) => {
     channelFolders,
     tileSize = JPEG_PYRAMID_TILE_SIZE,
     fetchTile,
+    transfer = "contrast",
   } = meta;
   const width = imageWidth;
   const height = imageHeight;
@@ -92,6 +97,7 @@ const loadJpeg = (meta) => {
     imageHeight: height,
     tileSize,
     fetchTile,
+    transfer,
   });
   const data = levels.map((level) => {
     const axes = {

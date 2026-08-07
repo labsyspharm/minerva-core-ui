@@ -71,3 +71,21 @@
   font-family: monospace;
   text-align: center;
 }
+
+.transferToggle {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35em 0.75em;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 0.5em;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding-top: 0.35em;
+}

@@ -2,6 +2,12 @@ import type { TiffPixelSource } from "@hms-dbmi/viv";
 import { getImageSize } from "@hms-dbmi/viv";
 import * as React from "react";
 import { type CSSProperties, useMemo, useState } from "react";
+import {
+  folderLimitsForTransfer,
+  imageSourceFromJpegTransfer,
+  type JpegExportTransfer,
+  jpegTransferFromImageSource,
+} from "@/lib/imaging/cubeRootEncoding";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import { toLoader } from "@/lib/imaging/filesystem";
 import {
@@ -119,6 +125,7 @@ const exportTile = async (
   index: Index,
   loader: LoaderPlane[],
   signal: AbortSignal,
+  transfer: JpegExportTransfer,
 ) => {
   const filename = toFilename(index);
   const level = Math.abs(index.z);
@@ -143,6 +150,7 @@ const exportTile = async (
     },
     lowerLimit: index.lowerLimit,
     upperLimit: index.upperLimit,
+    transfer,
   });
   if (signal.aborted) return;
   const fh = await index.dh.getFileHandle(filename, { create: true });
@@ -152,11 +160,11 @@ const exportTile = async (
 };
 
 const createCRange = async (
-  setCRange,
   channelGroups,
   imageChannels,
   directory_handle,
-) => {
+  transfer: JpegExportTransfer,
+): Promise<Index[]> => {
   const pending = channelGroups.flatMap(({ channels }) =>
     channels.map(async ({ channelId, lowerLimit, upperLimit }) => {
       const c = imageChannels[channelId];
@@ -166,7 +174,12 @@ const createCRange = async (
       // Keep in sync with neededJpegPyramidFolderNames / image-channel fallbacks.
       const lo = lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT;
       const hi = upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT;
-      const folderName = await jpegPyramidFolderName(channelId, lo, hi);
+      const folderLimits = folderLimitsForTransfer(transfer, lo, hi);
+      const folderName = await jpegPyramidFolderName(
+        channelId,
+        folderLimits.lowerLimit,
+        folderLimits.upperLimit,
+      );
       const dh = await directory_handle.getDirectoryHandle(folderName, {
         create: true,
       });
@@ -200,7 +213,7 @@ const createCRange = async (
     }),
   );
   const resolved = await Promise.all(pending);
-  setCRange(resolved.filter((v): v is Index => v !== null));
+  return resolved.filter((v): v is Index => v !== null);
 };
 
 type TileProps = {
@@ -348,6 +361,8 @@ export type ImageExporterProps = {
   viewerConfig: Config;
   /** Default: bake JPEG pyramids. `remote-url` writes sidecars only. */
   exportMode?: StoryExportMode;
+  /** When set, offer a document.json-only update (current transfer only). */
+  onDocumentOnlyUpdate?: () => Promise<void>;
 };
 
 export const ImageExporter = (props: ImageExporterProps) => {
@@ -434,6 +449,17 @@ export const ImageExporter = (props: ImageExporterProps) => {
   const [nowMs, setNowMs] = useState(() => performance.now());
   const [cRange, setCRange] = useState<Index[] | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [jpegTransfer, setJpegTransfer] = useState<JpegExportTransfer>(() =>
+    jpegTransferFromImageSource(
+      useDocumentStore.getState().metadata.imageSource,
+    ),
+  );
+  const [exportArmed, setExportArmed] = useState(false);
+  const docImageSource = useDocumentStore((s) => s.metadata.imageSource);
+  const docTransfer = jpegTransferFromImageSource(docImageSource);
+  /** Document-only must not apply a different transfer without re-encoding. */
+  const canUpdateDocumentOnly =
+    !!props.onDocumentOnlyUpdate && jpegTransfer === docTransfer;
 
   const hasChannelGroup =
     channelGroups.length > 0 &&
@@ -444,6 +470,10 @@ export const ImageExporter = (props: ImageExporterProps) => {
       setCRange([]);
       return;
     }
+    if (!exportArmed) {
+      setCRange(null);
+      return;
+    }
     if (!hasChannelGroup) {
       setCRange([]);
       setExportError(
@@ -452,13 +482,34 @@ export const ImageExporter = (props: ImageExporterProps) => {
       return;
     }
     setExportError(null);
-    createCRange(setCRange, channelGroups, imageChannels, directory_handle);
+    let cancelled = false;
+    void createCRange(
+      channelGroups,
+      imageChannels,
+      directory_handle,
+      jpegTransfer,
+    )
+      .then((range) => {
+        if (!cancelled) setCRange(range);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        console.error("[minerva] jpeg export setup failed", e);
+        setExportError(
+          e instanceof Error ? e.message : "Failed to prepare JPEG export",
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [
     channelGroups,
     imageChannels,
     directory_handle,
     hasChannelGroup,
     exportMode,
+    exportArmed,
+    jpegTransfer,
   ]);
   const loader = useMemo(
     () =>
@@ -468,6 +519,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
 
   const state: MainState = useMemo(() => {
     if (exportMode === "remote-url") return null;
+    if (!exportArmed) return null;
     if (loader === null || cRange === null) {
       return null;
     }
@@ -476,7 +528,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
       return init;
     }
     return null;
-  }, [loader, cRange, exportMode]);
+  }, [loader, cRange, exportMode, exportArmed]);
 
   const stopExport = props.stopExport;
 
@@ -517,6 +569,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
 
   React.useEffect(() => {
     if (exportMode === "remote-url") return;
+    if (!exportArmed) return;
     if (exportError) return;
     if (!state || !loader?.length) return;
     if (cRange !== null && cRange.length === 0) {
@@ -552,12 +605,12 @@ export const ImageExporter = (props: ImageExporterProps) => {
           if (i >= total) return;
           const index = indices[i];
           try {
-            await exportTile(index, loader, abort.signal);
+            await exportTile(index, loader, abort.signal, jpegTransfer);
           } catch (e) {
             if (abort.signal.aborted || cancelled) return;
             console.error(e instanceof Error ? e.message : e);
             try {
-              await exportTile(index, loader, abort.signal);
+              await exportTile(index, loader, abort.signal, jpegTransfer);
             } catch (e2) {
               console.error(e2 instanceof Error ? e2.message : e2);
             }
@@ -580,14 +633,20 @@ export const ImageExporter = (props: ImageExporterProps) => {
       if (!cancelled) {
         finishedOk = true;
         console.log(
-          `[minerva] jpeg-export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (${concurrency} workers, ${total} tiles)`,
+          `[minerva] jpeg-export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (${concurrency} workers, ${total} tiles, transfer=${jpegTransfer})`,
         );
         try {
+          const nextSource = imageSourceFromJpegTransfer(jpegTransfer);
+          const doc = useDocumentStore.getState().toDocumentData();
           await writeStoryBundleSidecars(
             directory_handle,
-            useDocumentStore.getState().toDocumentData(),
+            {
+              ...doc,
+              metadata: { ...doc.metadata, imageSource: nextSource },
+            },
             { mode: "jpeg-pyramid" },
           );
+          useDocumentStore.getState().setMetadata({ imageSource: nextSource });
         } catch (e) {
           console.error("[minerva] failed to write story bundle sidecars", e);
           setExportError(
@@ -614,7 +673,16 @@ export const ImageExporter = (props: ImageExporterProps) => {
       // Avoid aborting the shared Viv loader after a successful export.
       if (!finishedOk) abort.abort();
     };
-  }, [state, loader, cRange, exportError, directory_handle, exportMode]);
+  }, [
+    state,
+    loader,
+    cRange,
+    exportError,
+    directory_handle,
+    exportMode,
+    exportArmed,
+    jpegTransfer,
+  ]);
 
   const { completed, total, done, startedAt } = progress;
   let ratio = done ? 1 : 0;
@@ -675,6 +743,57 @@ export const ImageExporter = (props: ImageExporterProps) => {
               Dismiss
             </button>
           ) : null}
+        </div>
+      ) : !exportArmed ? (
+        <div className={styles.exportStatus}>
+          <div className={styles.exportMessage}>Export JPEG pyramid</div>
+          <label className={styles.transferToggle}>
+            <input
+              type="checkbox"
+              checked={jpegTransfer === "cube-root"}
+              onChange={(e) =>
+                setJpegTransfer(e.target.checked ? "cube-root" : "contrast")
+              }
+            />
+            <span>Cube-root intensity encoding</span>
+          </label>
+          <div className={styles.confirmActions}>
+            <button
+              type="button"
+              className={styles.dismissButton}
+              onClick={() => setExportArmed(true)}
+            >
+              Start export
+            </button>
+            {canUpdateDocumentOnly ? (
+              <button
+                type="button"
+                className={styles.dismissButton}
+                onClick={() => {
+                  void props.onDocumentOnlyUpdate?.().catch((e) => {
+                    console.error(
+                      "[minerva] failed to write story bundle sidecars",
+                      e,
+                    );
+                    setExportError(
+                      e instanceof Error
+                        ? e.message
+                        : "Failed to write document.json / index.html",
+                    );
+                  });
+                }}
+              >
+                Update document.json only
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className={styles.dismissButton}
+              onClick={stopExport}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       ) : (
         <div className={styles.exportStatus}>

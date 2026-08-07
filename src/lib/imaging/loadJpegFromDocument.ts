@@ -2,10 +2,16 @@ import { type Dispatch, type SetStateAction, useEffect } from "react";
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import type { JpegLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Image } from "@/lib/stores/documentSchema";
+import {
+  folderLimitsForTransfer,
+  type JpegExportTransfer,
+} from "./cubeRootEncoding";
 import { loadJpeg } from "./jpeg.js";
 import {
   folderByChannelIndexFromGroup,
   folderByChannelIndexFromImageChannels,
+  JPEG_FALLBACK_LOWER_LIMIT,
+  JPEG_FALLBACK_UPPER_LIMIT,
 } from "./jpegPyramid";
 
 type GroupChannelRow = {
@@ -145,25 +151,40 @@ function applyChannelFoldersInPlace(
 async function resolveChannelFolders(opts: {
   groupChannels: GroupChannelRow[];
   image: Image;
+  transfer: JpegExportTransfer;
 }): Promise<Record<number, string>> {
   const channelIndexById = Object.fromEntries(
     opts.image.channels.map((ch) => [ch.id, ch.index]),
   );
   if (opts.groupChannels.length > 0) {
     return folderByChannelIndexFromGroup({
-      channels: opts.groupChannels,
+      channels: opts.groupChannels.map((row) => ({
+        channelId: row.channelId,
+        ...folderLimitsForTransfer(
+          opts.transfer,
+          row.lowerLimit,
+          row.upperLimit,
+        ),
+      })),
       channelIndexById,
     });
   }
   // No channel group yet — still map every image channel so tile indexing
   // does not throw "no pyramid folder for channel index".
   return folderByChannelIndexFromImageChannels(
-    opts.image.channels.map((ch) => ({
-      id: ch.id,
-      index: ch.index,
-      lowerLimit: ch.lowerLimit,
-      upperLimit: ch.upperLimit,
-    })),
+    opts.image.channels.map((ch) => {
+      const { lowerLimit, upperLimit } = folderLimitsForTransfer(
+        opts.transfer,
+        ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
+        ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
+      );
+      return {
+        id: ch.id,
+        index: ch.index,
+        lowerLimit,
+        upperLimit,
+      };
+    }),
   );
 }
 
@@ -186,12 +207,15 @@ async function syncJpegEntryChannelFolders(
   let changed = false;
   const next = await Promise.all(
     entries.map(async (entry) => {
+      // Cube-root folders are contrast-stable; do not remount on contrast edits.
+      if (entry.transfer === "cube-root") return entry;
       if (!entry.channelFolders) return entry;
       const im = images.find((i) => i.id === entry.sourceImageId);
       if (!im) return entry;
       const desired = await resolveChannelFolders({
         groupChannels: channels,
         image: im,
+        transfer: entry.transfer ?? "contrast",
       });
       const folders = pickAvailableChannelFolders({
         desired,
@@ -260,6 +284,7 @@ export async function jpegLoaderEntriesFromImages(opts: {
   /** Prefer this group's contrast for initial folder map (defaults to first). */
   activeGroupId?: string | null;
   fetchTile?: JpegTileFetcher;
+  transfer?: JpegExportTransfer;
   /**
    * On-disk pyramid folder names from the story root. When set, only these
    * names count as available (so sync cannot target missing hashes). When
@@ -267,6 +292,7 @@ export async function jpegLoaderEntriesFromImages(opts: {
    */
   existingPyramidFolders?: ReadonlySet<string>;
 }): Promise<JpegLoaderEntry[]> {
+  const transfer = opts.transfer ?? "contrast";
   const activeGroup =
     (opts.activeGroupId
       ? opts.channelGroups.find((g) => g.id === opts.activeGroupId)
@@ -286,6 +312,7 @@ export async function jpegLoaderEntriesFromImages(opts: {
       groupChannelFolders[group.id] = await resolveChannelFolders({
         groupChannels: rows,
         image: im,
+        transfer,
       });
     }
     const availablePyramidFolders = new Set<string>();
@@ -303,6 +330,7 @@ export async function jpegLoaderEntriesFromImages(opts: {
     const desired = await resolveChannelFolders({
       groupChannels,
       image: im,
+      transfer,
     });
     const channelFolders =
       pickAvailableChannelFolders({
@@ -322,12 +350,14 @@ export async function jpegLoaderEntriesFromImages(opts: {
       })),
       channelFolders,
       fetchTile: opts.fetchTile,
+      transfer,
     });
     entries.push({
       loader,
       sourceImageId: im.id,
       channelFolders,
       imagePath: storyRootUrl,
+      transfer,
       availablePyramidFolders,
       groupChannelFolders,
     });
