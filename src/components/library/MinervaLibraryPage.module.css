@@ -44,6 +44,52 @@
   flex-shrink: 0;
 }
 
+.importMenu {
+  position: relative;
+}
+
+.importMenu > summary {
+  list-style: none;
+}
+
+.importMenu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.disabledAction {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.importChoices {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 5px);
+  right: 0;
+  min-width: 9rem;
+  padding: 4px;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  background: #211d18;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.45);
+}
+
+.importChoices button {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  color: rgb(200 194 182 / 0.9);
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.importChoices button:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.07);
+}
+
 .wordmark {
   margin: 0;
   font-size: clamp(0.95rem, 2vw, 1.1rem);

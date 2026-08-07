@@ -1,3 +1,4 @@
+import { fileOpen } from "browser-fs-access";
 import { hasDirectoryPickerAccess } from "@/lib/imaging/filesystem";
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import {
@@ -8,6 +9,7 @@ import {
 } from "@/lib/imaging/jpegPyramid";
 import { jpegSourceNeedsLocalRoot } from "@/lib/imaging/loadJpegFromDocument";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
+import { imageHandleStorageKey } from "@/lib/persistence/imageHandles";
 import {
   createStoryRecord,
   saveStoryDocument,
@@ -164,6 +166,79 @@ async function readDocumentJson(
   return validateDocumentData(JSON.parse(await file.text()) as unknown);
 }
 
+async function persistImportedStory(
+  data: DocumentData,
+  titleFallback: string,
+  root?: FileSystemDirectoryHandle,
+): Promise<string> {
+  const title =
+    data.metadata.title?.trim() || titleFallback || "Imported Story";
+  const hasLocalSources = data.images.some((im) => im.source?.kind === "local");
+  // Remote-URL exports keep `kind: "url"`. JPEG-pyramid bundles rewrite to
+  // `{ kind: "jpeg", url: "." }`. Local OME handleKeys cannot be transferred in
+  // JSON — keep them (reminted below) so the UI can ask the user to locate files.
+  const imagesBase =
+    data.metadata.imageSource === "remote-url" || hasLocalSources
+      ? data.images
+      : withPortableJpegSources(data.images);
+  const rec = await createStoryRecord(title);
+  const images = hasLocalSources
+    ? imagesBase.map((im) => {
+        if (im.source?.kind !== "local") return im;
+        return {
+          ...im,
+          source: {
+            kind: "local" as const,
+            handleKey: imageHandleStorageKey(rec.id, im.id),
+          },
+        };
+      })
+    : imagesBase;
+  const next = validateDocumentData({
+    ...data,
+    metadata: {
+      ...data.metadata,
+      id: rec.id,
+      title,
+    },
+    images,
+  });
+  await saveStoryDocument(rec.id, next);
+  if (root) await setStoryRootHandle(rec.id, root);
+  useDocumentStore.getState().hydrateFromDocument(next, rec.id);
+  await setActiveStoryId(rec.id);
+  return rec.id;
+}
+
+/** Pick and import a complete story document JSON. Remote sources need no extra prompt. */
+export async function importStoryJsonFromPicker(): Promise<string> {
+  const file = await fileOpen({
+    description: "Minerva story JSON",
+    mimeTypes: ["application/json"],
+    extensions: [".json"],
+    multiple: false,
+  });
+  const data = validateDocumentData(JSON.parse(await file.text()) as unknown);
+
+  let root: FileSystemDirectoryHandle | undefined;
+  if (storyNeedsLocalJpegRoot(data.images)) {
+    if (!hasDirectoryPickerAccess()) {
+      throw new Error(
+        "This story uses local JPEG pyramids. Open it in Chrome or Edge and choose the story folder to grant access.",
+      );
+    }
+    root = await window.showDirectoryPicker({
+      id: "minerva-story-import",
+      mode: "read",
+    });
+    await assertPyramidFoldersExist(root, data);
+  }
+
+  const base = file.name.replace(/\.json$/i, "").trim();
+  const fallback = /^(document|story)$/i.test(base) ? "Imported Story" : base;
+  return persistImportedStory(data, fallback, root);
+}
+
 /**
  * Pick a story export folder, import `document.json` into Dexie, and open it.
  * Returns the new story id.
@@ -181,27 +256,7 @@ export async function importStoryFolderFromPicker(): Promise<string> {
   const data = await readDocumentJson(root);
   await assertPyramidFoldersExist(root, data);
   const title = data.metadata.title?.trim() || root.name || "Imported Story";
-  const rec = await createStoryRecord(title);
-  // Remote-URL exports keep existing `kind: "url"` sources; JPEG-pyramid
-  // bundles rewrite intensity roots to `{ kind: "jpeg", url: "." }`.
-  const images =
-    data.metadata.imageSource === "remote-url"
-      ? data.images
-      : withPortableJpegSources(data.images);
-  const next = validateDocumentData({
-    ...data,
-    metadata: {
-      ...data.metadata,
-      id: rec.id,
-      title: data.metadata.title ?? title,
-    },
-    images,
-  });
-  await saveStoryDocument(rec.id, next);
-  await setStoryRootHandle(rec.id, root);
-  useDocumentStore.getState().hydrateFromDocument(next, rec.id);
-  await setActiveStoryId(rec.id);
-  return rec.id;
+  return persistImportedStory(data, title, root);
 }
 
 export async function reconnectStoryRootFromPicker(

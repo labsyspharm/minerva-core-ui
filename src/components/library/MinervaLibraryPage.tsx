@@ -5,7 +5,10 @@ import { listStorySummaries } from "@/lib/persistence/storyPersistence";
 import type { StorySummary } from "@/lib/persistence/types";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
-import { importStoryFolderFromPicker } from "@/lib/storyExport/importStoryFolder";
+import {
+  importStoryFolderFromPicker,
+  importStoryJsonFromPicker,
+} from "@/lib/storyExport/importStoryFolder";
 import { rootRouteApi } from "@/router/appRouter";
 import styles from "./MinervaLibraryPage.module.css";
 
@@ -189,6 +192,7 @@ export function MinervaLibraryPage() {
   const [busyId, setBusyId] = React.useState<string | null>(null);
   const [creating, setCreating] = React.useState(false);
   const [importing, setImporting] = React.useState(false);
+  const importMenuRef = React.useRef<HTMLDetailsElement>(null);
   const canImportFolder = hasDirectoryPickerAccess();
 
   const refresh = React.useCallback(() => {
@@ -252,30 +256,35 @@ export function MinervaLibraryPage() {
     }
   }, [createStory, navigate]);
 
-  const handleImportFolder = React.useCallback(async () => {
-    setImporting(true);
-    setError(null);
-    try {
-      useAppStore.getState().resetStoryViewerSession();
-      const id = await importStoryFolderFromPicker();
-      navigate({
-        search: (prev: { storyid?: string }) => ({
-          ...prev,
-          storyid: id,
-        }),
-        replace: true,
-      } as never);
-    } catch (e: unknown) {
-      // AbortError = user cancelled the picker; finally still clears `importing`.
-      if (!(e instanceof DOMException && e.name === "AbortError")) {
-        setError(
-          e instanceof Error ? e.message : "Could not import story folder",
-        );
+  const handleImport = React.useCallback(
+    async (kind: "json" | "folder") => {
+      importMenuRef.current?.removeAttribute("open");
+      setImporting(true);
+      setError(null);
+      try {
+        useAppStore.getState().resetStoryViewerSession();
+        const id =
+          kind === "json"
+            ? await importStoryJsonFromPicker()
+            : await importStoryFolderFromPicker();
+        navigate({
+          search: (prev: { storyid?: string }) => ({
+            ...prev,
+            storyid: id,
+          }),
+          replace: true,
+        } as never);
+      } catch (e: unknown) {
+        // AbortError = user cancelled the picker; finally still clears `importing`.
+        if (!(e instanceof DOMException && e.name === "AbortError")) {
+          setError(e instanceof Error ? e.message : "Could not import story");
+        }
+      } finally {
+        setImporting(false);
       }
-    } finally {
-      setImporting(false);
-    }
-  }, [navigate]);
+    },
+    [navigate],
+  );
 
   const handleDelete = React.useCallback(
     (id: string, title: string) => {
@@ -305,19 +314,34 @@ export function MinervaLibraryPage() {
       <div className={styles.shelfToolbar}>
         <h1 className={styles.wordmark}>Minerva Library</h1>
         <div className={styles.toolbarActions}>
-          {canImportFolder ? (
-            <button
-              type="button"
-              className={styles.newVolume}
-              disabled={importing || creating}
-              onClick={() => void handleImportFolder()}
-              aria-label="Import a story folder"
+          <details ref={importMenuRef} className={styles.importMenu}>
+            <summary
+              className={`${styles.newVolume} ${importing || creating ? styles.disabledAction : ""}`}
+              aria-label="Import a story"
             >
               <span className={styles.newLabel}>
                 {importing ? "…" : "Import"}
               </span>
-            </button>
-          ) : null}
+            </summary>
+            <div className={styles.importChoices}>
+              <button
+                type="button"
+                disabled={importing || creating}
+                onClick={() => void handleImport("json")}
+              >
+                JSON file
+              </button>
+              {canImportFolder ? (
+                <button
+                  type="button"
+                  disabled={importing || creating}
+                  onClick={() => void handleImport("folder")}
+                >
+                  Story folder
+                </button>
+              ) : null}
+            </div>
+          </details>
           <button
             type="button"
             className={styles.newVolume}
