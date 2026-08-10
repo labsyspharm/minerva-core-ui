@@ -26,13 +26,13 @@ export const PIXEL_CTORS: Record<
   Float64Array,
 };
 
-export function clampValue(x: number, min: number, max: number): number {
+function clampValue(x: number, min: number, max: number): number {
   if (max === min) return 0;
   return Math.min(255, Math.max(0, (255 * (x - min)) / (max - min)));
 }
 
 /** Fill grayscale RGBA into a preallocated buffer (length = width * height * 4). */
-export function clampPixelsToRgba(
+function clampPixelsToRgba(
   out: Uint8ClampedArray,
   pixels: ArrayLike<number>,
   min: number,
@@ -66,7 +66,7 @@ function cubeRootPixelsToRgba(
  * Pad edge tiles so JPEG SOF dimensions match declared TIFF TileWidth/TileLength.
  * Input is grayscale RGBA (R=G=B=intensity). Output is tileW×tileH RGBA.
  */
-export function padGrayscaleRgbaToTile(
+function padGrayscaleRgbaToTile(
   rgba: Uint8ClampedArray,
   width: number,
   height: number,

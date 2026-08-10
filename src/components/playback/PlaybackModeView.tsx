@@ -28,8 +28,6 @@ export type PlaybackModeViewProps = StoryPlaybackLoaders & {
   ioState: null | string;
   stopExport: () => void;
   presenting: boolean;
-  handles: Handle.File[];
-  in_f: string;
   viewerConfig: Config;
   directory_handle: FileSystemDirectoryHandle;
   exitPlaybackPreview?: () => void;
@@ -76,8 +74,6 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
   const folderPrompt = props.exportFolderPrompt;
   const overlayOpen = exporting || !!folderPrompt;
   const exporterProps = {
-    in_f: props.in_f,
-    handles: props.handles,
     stopExport: props.stopExport,
     viewerConfig: props.viewerConfig,
     dicomIndexList: props.dicomIndexList,

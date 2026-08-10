@@ -8,10 +8,11 @@ import type { OmeLoaderEntry } from "./loaderEntries";
 import {
   createFileWritableSink,
   type JpegTiffChannelPlan,
-  StreamingJpegBigTiffWriter,
+  StreamingJpegTiffWriter,
   tileCountForSize,
   tilesAcross,
-} from "./streamingJpegBigTiff";
+  tilesDown,
+} from "./streamingJpegTiff";
 
 type LoaderPlane = TiffPixelSource<string[]>;
 
@@ -98,7 +99,7 @@ function buildJobs(
     for (let level = 0; level < levels.length; level++) {
       const { width, height, tileSize } = levels[level];
       const nx = tilesAcross(width, tileSize);
-      const ny = Math.ceil(height / tileSize);
+      const ny = tilesDown(height, tileSize);
       for (let y = 0; y < ny; y++) {
         for (let x = 0; x < nx; x++) {
           jobs.push({
@@ -120,7 +121,7 @@ export type ExportJpegOmeTiffImageResult = {
   sourceImageId: string;
 };
 
-export type ExportJpegOmeTiffOpts = {
+type ExportJpegOmeTiffOpts = {
   directory: FileSystemDirectoryHandle;
   entry: OmeLoaderEntry;
   image: Image;
@@ -130,7 +131,7 @@ export type ExportJpegOmeTiffOpts = {
 };
 
 /** Write one multi-channel JPEG pyramidal OME-TIFF (cube-root uint8 codes). */
-export async function exportJpegOmeTiffImage(
+async function exportJpegOmeTiffImage(
   opts: ExportJpegOmeTiffOpts,
 ): Promise<ExportJpegOmeTiffImageResult> {
   const { directory, entry, image, fileName, signal, onProgress } = opts;
@@ -154,7 +155,7 @@ export async function exportJpegOmeTiffImage(
   const fh = await directory.getFileHandle(fileName, { create: true });
   const writable = await fh.createWritable();
   const sink = createFileWritableSink(writable);
-  const writer = new StreamingJpegBigTiffWriter(sink, {
+  const writer = new StreamingJpegTiffWriter(sink, {
     channels: channelPlans,
   });
   await writer.begin();
@@ -293,7 +294,6 @@ export async function exportJpegOmeTiffStory(
     entry: OmeLoaderEntry;
     image: Image;
     fileName: string;
-    tileCount: number;
   }[] = [];
 
   for (const entry of omeLoaderEntries) {
@@ -304,18 +304,15 @@ export async function exportJpegOmeTiffStory(
     const loaderData = entry.loader.data as LoaderPlane[] | undefined;
     if (!loaderData?.length) continue;
     const levels = planeLevels(loaderData);
-    let tileCount = 0;
     for (const l of levels) {
-      tileCount +=
+      totalTiles +=
         tileCountForSize(l.width, l.height, l.tileSize, l.tileSize) *
         channels.length;
     }
-    totalTiles += tileCount;
     work.push({
       entry,
       image,
       fileName: omeTiffExportFileName(image, usedNames),
-      tileCount,
     });
   }
 

@@ -16,7 +16,6 @@ import { getFileHandle } from "@/lib/persistence/fileHandles";
 import type { Image } from "@/lib/stores/documentSchema";
 import {
   isJpegOmeTiffImageSource,
-  type JpegExportTransfer,
   jpegTransferFromImageSource,
 } from "./cubeRootEncoding";
 import type { JpegLoaderEntry, OmeLoaderEntry } from "./loaderEntries";
@@ -44,7 +43,6 @@ export type HydrateDocumentLoadersOpts = {
   includeLocal?: boolean;
   fetchTile?: JpegTileFetcher;
   existingPyramidFolders?: ReadonlySet<string>;
-  transfer?: JpegExportTransfer;
   /** When set, wrap OME loaders for cube-root JPEG OME-TIFF decode. */
   imageSource?: string;
 };
@@ -77,8 +75,7 @@ export async function hydrateDocumentLoaders(
   const channelGroups = opts.channelGroups ?? [];
   const documentUrl = opts.documentUrl ?? window.location.href;
   const wrapOmeCubeRoot = isJpegOmeTiffImageSource(opts.imageSource);
-  const transfer =
-    opts.transfer ?? jpegTransferFromImageSource(opts.imageSource);
+  const transfer = jpegTransferFromImageSource(opts.imageSource);
 
   jpegLoaderEntries.push(
     ...(await jpegLoaderEntriesFromImages({

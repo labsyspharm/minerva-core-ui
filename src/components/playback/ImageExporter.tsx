@@ -31,8 +31,6 @@ import {
 } from "@/lib/storyExport/storyBundle";
 import styles from "./ImageExporter.module.css";
 
-///
-
 type Dtype =
   | "Uint8"
   | "Uint16"
@@ -332,8 +330,6 @@ function isFullState(o: Partial<FullState>): o is FullState {
 }
 
 export type ImageExporterProps = {
-  in_f: string;
-  handles: Handle.File[];
   directory_handle: Handle.Dir;
   stopExport: () => void;
   dicomIndexList: DicomIndex[];
@@ -406,10 +402,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
   const { directory_handle } = props;
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
-  const omeLoaderEntriesRef = React.useRef(omeLoaderEntries);
-  const dicomIndexListRef = React.useRef(dicomIndexList);
-  omeLoaderEntriesRef.current = omeLoaderEntries;
-  dicomIndexListRef.current = dicomIndexList;
   const imageChannels = useMemo(() => {
     return Object.fromEntries(
       [].concat(
@@ -433,27 +425,34 @@ export const ImageExporter = (props: ImageExporterProps) => {
       useDocumentStore.getState().metadata.imageSource,
     ),
   );
+  /** Session mode: props.exportMode, or jpeg-ome-tiff when that option is checked. */
+  const [mode, setMode] = useState<StoryExportMode>(exportMode);
   const [exportArmed, setExportArmed] = useState(false);
-  /** Prefer single-file OME-TIFF over per-channel JPEG folders. */
-  const [writeOmeTiff, setWriteOmeTiff] = useState(false);
-  const docImageSource = useDocumentStore((s) => s.metadata.imageSource);
-  const docTransfer = jpegTransferFromImageSource(docImageSource);
-  /** Document-only must not apply a different transfer without re-encoding. */
+  /** Frozen at Start so post-export store updates cannot re-trigger the job. */
+  const armedSnapshotRef = React.useRef<{
+    omeLoaderEntries: OmeLoaderEntry[];
+    dicomIndexList: DicomIndex[];
+  } | null>(null);
+
+  const docTransfer = jpegTransferFromImageSource(
+    useDocumentStore((s) => s.metadata.imageSource),
+  );
   const canUpdateDocumentOnly =
     !!props.onDocumentOnlyUpdate &&
-    !writeOmeTiff &&
+    mode === "jpeg-pyramid" &&
     jpegTransfer === docTransfer;
 
-  const containerMode: StoryExportMode = writeOmeTiff
-    ? "jpeg-ome-tiff"
-    : exportMode;
+  const armExport = () => {
+    armedSnapshotRef.current = { omeLoaderEntries, dicomIndexList };
+    setExportArmed(true);
+  };
 
   const hasChannelGroup =
     channelGroups.length > 0 &&
     channelGroups.some((g) => g.channels.length > 0);
 
   React.useEffect(() => {
-    if (containerMode === "remote-url" || containerMode === "jpeg-ome-tiff") {
+    if (mode === "remote-url" || mode === "jpeg-ome-tiff") {
       setCRange([]);
       return;
     }
@@ -494,7 +493,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     imageChannels,
     directory_handle,
     hasChannelGroup,
-    containerMode,
+    mode,
     exportArmed,
     jpegTransfer,
   ]);
@@ -505,10 +504,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
   );
 
   const state: MainState = useMemo(() => {
-    if (containerMode === "remote-url" || containerMode === "jpeg-ome-tiff") {
-      return null;
-    }
-    if (!exportArmed) return null;
+    if (mode !== "jpeg-pyramid" || !exportArmed) return null;
     if (loader === null || cRange === null) {
       return null;
     }
@@ -517,12 +513,12 @@ export const ImageExporter = (props: ImageExporterProps) => {
       return init;
     }
     return null;
-  }, [loader, cRange, containerMode, exportArmed]);
+  }, [loader, cRange, mode, exportArmed]);
 
   const stopExport = props.stopExport;
 
   React.useEffect(() => {
-    if (containerMode !== "remote-url") return;
+    if (mode !== "remote-url") return;
     if (exportError) return;
     let cancelled = false;
     const wallStart = performance.now();
@@ -554,31 +550,28 @@ export const ImageExporter = (props: ImageExporterProps) => {
     return () => {
       cancelled = true;
     };
-  }, [containerMode, directory_handle, exportError]);
+  }, [mode, directory_handle, exportError]);
 
   React.useEffect(() => {
-    if (containerMode !== "jpeg-ome-tiff") return;
-    if (!exportArmed) return;
-    if (exportError) return;
+    if (mode !== "jpeg-ome-tiff" || !exportArmed || exportError) return;
+
+    const snap = armedSnapshotRef.current;
+    if (!snap) return;
 
     let cancelled = false;
     let finishedOk = false;
     const abort = new AbortController();
     const wallStart = performance.now();
-    // Snapshot once — do not depend on `images` / loader arrays or post-export
-    // store updates (setImages / setMetadata) will re-enter and restart.
-    const imagesSnapshot = useDocumentStore.getState().images;
-    const currentOme = omeLoaderEntriesRef.current;
-    const currentDicom = dicomIndexListRef.current;
     const loaderEntries: OmeLoaderEntry[] =
-      currentOme.length > 0
-        ? currentOme
-        : currentDicom
+      snap.omeLoaderEntries.length > 0
+        ? snap.omeLoaderEntries
+        : snap.dicomIndexList
             .filter((d) => d.sourceImageId)
             .map((d) => ({
               loader: d.loader as OmeLoaderEntry["loader"],
               sourceImageId: d.sourceImageId as string,
             }));
+    const imagesSnapshot = useDocumentStore.getState().images;
 
     setProgress({ completed: 0, total: 1, done: false, startedAt: wallStart });
 
@@ -640,14 +633,10 @@ export const ImageExporter = (props: ImageExporterProps) => {
       window.clearInterval(etaInterval);
       if (!finishedOk) abort.abort();
     };
-    // Intentionally omit images / omeLoaderEntries / dicomIndexList: those change
-    // when the export finishes (and on hydrate), which would abort and restart.
-  }, [containerMode, exportArmed, exportError, directory_handle]);
+  }, [mode, exportArmed, exportError, directory_handle]);
 
   React.useEffect(() => {
-    if (containerMode !== "jpeg-pyramid") return;
-    if (!exportArmed) return;
-    if (exportError) return;
+    if (mode !== "jpeg-pyramid" || !exportArmed || exportError) return;
     if (!state || !loader?.length) return;
     if (cRange !== null && cRange.length === 0) {
       setExportError("No exportable channels in the current channel groups.");
@@ -775,7 +764,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     cRange,
     exportError,
     directory_handle,
-    containerMode,
+    mode,
     exportArmed,
     jpegTransfer,
   ]);
@@ -823,7 +812,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
             Dismiss
           </button>
         </div>
-      ) : containerMode === "remote-url" ? (
+      ) : mode === "remote-url" ? (
         <div className={styles.exportStatus}>
           <div className={styles.exportMessage}>
             {done
@@ -843,16 +832,21 @@ export const ImageExporter = (props: ImageExporterProps) => {
       ) : !exportArmed ? (
         <div className={styles.exportStatus}>
           <div className={styles.exportMessage}>
-            {writeOmeTiff ? "Export JPEG OME-TIFF" : "Export JPEG pyramid"}
+            {mode === "jpeg-ome-tiff"
+              ? "Export JPEG OME-TIFF"
+              : "Export JPEG pyramid"}
           </div>
           <label className={styles.transferToggle}>
             <input
               type="checkbox"
-              checked={writeOmeTiff}
+              checked={mode === "jpeg-ome-tiff"}
               onChange={(e) => {
-                const on = e.target.checked;
-                setWriteOmeTiff(on);
-                if (on) setJpegTransfer("cube-root");
+                if (e.target.checked) {
+                  setMode("jpeg-ome-tiff");
+                  setJpegTransfer("cube-root");
+                } else {
+                  setMode("jpeg-pyramid");
+                }
               }}
             />
             <span>Single-file OME-TIFF (cube-root)</span>
@@ -861,7 +855,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
             <input
               type="checkbox"
               checked={jpegTransfer === "cube-root"}
-              disabled={writeOmeTiff}
+              disabled={mode === "jpeg-ome-tiff"}
               onChange={(e) =>
                 setJpegTransfer(e.target.checked ? "cube-root" : "contrast")
               }
@@ -872,7 +866,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
             <button
               type="button"
               className={styles.dismissButton}
-              onClick={() => setExportArmed(true)}
+              onClick={armExport}
             >
               Start export
             </button>

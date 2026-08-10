@@ -1,7 +1,7 @@
 /**
- * Streaming BigTIFF writer for JPEG-compressed tiles (Compression=7).
+ * Streaming TIFF writer for JPEG-compressed tiles (Compression=7).
  *
- * Layout: BigTIFF header → reserved IFD/overflow metadata → appended JPEG tiles
+ * Layout: TIFF header (64-bit offsets) → reserved IFD/overflow metadata → appended JPEG tiles
  * (completion order). TileOffsets / TileByteCounts are patched in {@link finish}.
  *
  * IFD/tag layout ideas adapted from @fideus-labs/fiff (MIT), with fixed
@@ -11,11 +11,10 @@
 import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
 
 /** TIFF Compression tag value for JPEG (Tech Note 2). */
-export const TIFF_COMPRESSION_JPEG = 7;
+const TIFF_COMPRESSION_JPEG = 7;
 /** PhotometricInterpretation BlackIsZero (grayscale). */
-export const TIFF_PHOTOMETRIC_BLACK_IS_ZERO = 1;
+const TIFF_PHOTOMETRIC_BLACK_IS_ZERO = 1;
 
-const TIFF_TYPE_ASCII = 2;
 const TIFF_TYPE_SHORT = 3;
 const TIFF_TYPE_LONG = 4;
 const TIFF_TYPE_LONG8 = 16;
@@ -26,7 +25,6 @@ const TAG_IMAGE_LENGTH = 257;
 const TAG_BITS_PER_SAMPLE = 258;
 const TAG_COMPRESSION = 259;
 const TAG_PHOTOMETRIC = 262;
-const TAG_IMAGE_DESCRIPTION = 270;
 const TAG_SAMPLES_PER_PIXEL = 277;
 const TAG_PLANAR_CONFIGURATION = 284;
 const TAG_TILE_WIDTH = 322;
@@ -36,11 +34,11 @@ const TAG_TILE_BYTE_COUNTS = 325;
 const TAG_SUB_IFDS = 330;
 const TAG_SAMPLE_FORMAT = 339;
 
-const BIGTIFF_HEADER_SIZE = 16;
-const BIGTIFF_IFD_ENTRY_SIZE = 20;
+const TIFF_HEADER_SIZE = 16;
+const TIFF_IFD_ENTRY_SIZE = 20;
 const INLINE_THRESHOLD = 8;
 
-export function align8(n: number): number {
+function align8(n: number): number {
   return (n + 7) & ~7;
 }
 
@@ -74,10 +72,8 @@ export type JpegTiffChannelPlan = {
   levels: JpegTiffLevelPlan[];
 };
 
-export type StreamingJpegBigTiffPlan = {
+export type StreamingJpegTiffPlan = {
   channels: JpegTiffChannelPlan[];
-  /** Optional ASCII ImageDescription on the first full-resolution IFD. */
-  imageDescription?: string;
 };
 
 /** Seekable byte sink (memory or FileSystemWritableFileStream). */
@@ -86,45 +82,6 @@ export type RandomAccessSink = {
   truncate?(size: number): Promise<void>;
   close(): Promise<void>;
 };
-
-export type MemorySink = RandomAccessSink & {
-  /** Current logical end (max written end). */
-  size(): number;
-  /** Snapshot of written bytes (dense from 0). */
-  toArrayBuffer(): ArrayBuffer;
-};
-
-export function createMemorySink(): MemorySink {
-  const chunks = new Map<number, Uint8Array>();
-  let end = 0;
-
-  return {
-    async write(position, data) {
-      const copy = new Uint8Array(data.byteLength);
-      copy.set(data);
-      chunks.set(position, copy);
-      end = Math.max(end, position + copy.byteLength);
-    },
-    async truncate(size) {
-      end = size;
-      for (const [pos, buf] of chunks) {
-        if (pos >= size) chunks.delete(pos);
-        else if (pos + buf.byteLength > size) {
-          chunks.set(pos, buf.subarray(0, size - pos));
-        }
-      }
-    },
-    async close() {},
-    size: () => end,
-    toArrayBuffer() {
-      const out = new Uint8Array(end);
-      for (const [pos, buf] of chunks) {
-        out.set(buf, pos);
-      }
-      return out.buffer;
-    },
-  };
-}
 
 /** Adapter for Chromium File System Access writable streams. */
 export function createFileWritableSink(
@@ -163,7 +120,6 @@ type IfdSlot = {
   tileLength: number;
   tileCount: number;
   newSubfileType: number;
-  imageDescription?: string;
   /** Absolute IFD entry-block offset. */
   ifdOffset: number;
   nextIfdOffset: number;
@@ -183,13 +139,6 @@ function setBigUint64LE(view: DataView, offset: number, value: number): void {
   const hi = Math.floor(value / 0x1_0000_0000) >>> 0;
   view.setUint32(offset, lo, true);
   view.setUint32(offset + 4, hi, true);
-}
-
-function encodeAsciiNull(s: string): Uint8Array {
-  const body = new TextEncoder().encode(s);
-  const out = new Uint8Array(body.length + 1);
-  out.set(body);
-  return out;
 }
 
 function shortTag(tag: number, value: number): ResolvedTag {
@@ -213,18 +162,8 @@ function long8ArrayTag(tag: number, count: number): ResolvedTag {
   };
 }
 
-function asciiTag(tag: number, text: string): ResolvedTag {
-  const valueBytes = encodeAsciiNull(text);
-  return {
-    tag,
-    type: TIFF_TYPE_ASCII,
-    count: valueBytes.length,
-    valueBytes,
-  };
-}
-
 function ifdEntryBlockSize(numTags: number): number {
-  return 8 + numTags * BIGTIFF_IFD_ENTRY_SIZE + 8;
+  return 8 + numTags * TIFF_IFD_ENTRY_SIZE + 8;
 }
 
 /** Offset tables are patched after tiles land — never store them inline. */
@@ -256,9 +195,6 @@ function buildUserTags(slot: IfdSlot, subIfdCount: number): ResolvedTag[] {
     long8ArrayTag(TAG_TILE_BYTE_COUNTS, slot.tileCount),
     shortTag(TAG_SAMPLE_FORMAT, 1),
   ];
-  if (slot.imageDescription) {
-    tags.push(asciiTag(TAG_IMAGE_DESCRIPTION, slot.imageDescription));
-  }
   if (subIfdCount > 0) {
     tags.push(long8ArrayTag(TAG_SUB_IFDS, subIfdCount));
   }
@@ -266,7 +202,7 @@ function buildUserTags(slot: IfdSlot, subIfdCount: number): ResolvedTag[] {
   return tags;
 }
 
-export class StreamingJpegBigTiffWriter {
+export class StreamingJpegTiffWriter {
   private readonly mainSlots: IfdSlot[] = [];
   /** Flat list for tile addressing: channel → level → slot */
   private readonly slotsByChannelLevel: IfdSlot[][] = [];
@@ -278,28 +214,23 @@ export class StreamingJpegBigTiffWriter {
 
   constructor(
     private readonly sink: RandomAccessSink,
-    private readonly plan: StreamingJpegBigTiffPlan,
+    private readonly plan: StreamingJpegTiffPlan,
   ) {
     if (!plan.channels.length) {
-      throw new Error("StreamingJpegBigTiffWriter: no channels");
+      throw new Error("StreamingJpegTiffWriter: no channels");
     }
     for (const ch of plan.channels) {
       if (!ch.levels?.length) {
-        throw new Error("StreamingJpegBigTiffWriter: channel has no levels");
+        throw new Error("StreamingJpegTiffWriter: channel has no levels");
       }
     }
-  }
-
-  /** Absolute offset where tile payloads begin. */
-  get tileDataStart(): number {
-    return this.metadataEnd;
   }
 
   getIfdSlot(channelIndex: number, levelIndex: number): IfdSlot {
     const slot = this.slotsByChannelLevel[channelIndex]?.[levelIndex];
     if (!slot) {
       throw new Error(
-        `StreamingJpegBigTiffWriter: missing IFD c=${channelIndex} l=${levelIndex}`,
+        `StreamingJpegTiffWriter: missing IFD c=${channelIndex} l=${levelIndex}`,
       );
     }
     return slot;
@@ -307,8 +238,7 @@ export class StreamingJpegBigTiffWriter {
 
   /** Write header + placeholder IFDs / offset tables. */
   async begin(): Promise<void> {
-    if (this.begun)
-      throw new Error("StreamingJpegBigTiffWriter: already begun");
+    if (this.begun) throw new Error("StreamingJpegTiffWriter: already begun");
     this.planLayout();
     const meta = this.serializeMetadataPlaceholders();
     await this.sink.write(0, meta);
@@ -326,24 +256,22 @@ export class StreamingJpegBigTiffWriter {
     jpeg: ArrayBuffer | Uint8Array,
   ): Promise<void> {
     if (!this.begun || this.finished) {
-      throw new Error(
-        "StreamingJpegBigTiffWriter: call begin() before writeTile",
-      );
+      throw new Error("StreamingJpegTiffWriter: call begin() before writeTile");
     }
     const slot = this.getIfdSlot(channelIndex, levelIndex);
     if (tileIndex < 0 || tileIndex >= slot.tileCount) {
       throw new Error(
-        `StreamingJpegBigTiffWriter: tileIndex ${tileIndex} out of range 0..${slot.tileCount - 1}`,
+        `StreamingJpegTiffWriter: tileIndex ${tileIndex} out of range 0..${slot.tileCount - 1}`,
       );
     }
     if (slot.tileOffsets[tileIndex] !== 0) {
       throw new Error(
-        `StreamingJpegBigTiffWriter: tile c=${channelIndex} l=${levelIndex} i=${tileIndex} already written`,
+        `StreamingJpegTiffWriter: tile c=${channelIndex} l=${levelIndex} i=${tileIndex} already written`,
       );
     }
     const bytes = jpeg instanceof Uint8Array ? jpeg : new Uint8Array(jpeg);
     if (bytes.byteLength === 0) {
-      throw new Error("StreamingJpegBigTiffWriter: empty JPEG tile");
+      throw new Error("StreamingJpegTiffWriter: empty JPEG tile");
     }
 
     const run = async () => {
@@ -361,7 +289,7 @@ export class StreamingJpegBigTiffWriter {
   /** Patch TileOffsets / TileByteCounts and close the sink. */
   async finish(): Promise<void> {
     if (!this.begun || this.finished) {
-      throw new Error("StreamingJpegBigTiffWriter: invalid finish()");
+      throw new Error("StreamingJpegTiffWriter: invalid finish()");
     }
     await this.writeQueue;
 
@@ -369,7 +297,7 @@ export class StreamingJpegBigTiffWriter {
       for (const slot of channel) {
         if (slot.tilesWritten !== slot.tileCount) {
           throw new Error(
-            `StreamingJpegBigTiffWriter: channel ${slot.channelIndex} level ${slot.levelIndex}: wrote ${slot.tilesWritten}/${slot.tileCount} tiles`,
+            `StreamingJpegTiffWriter: channel ${slot.channelIndex} level ${slot.levelIndex}: wrote ${slot.tilesWritten}/${slot.tileCount} tiles`,
           );
         }
         await this.patchLong8Array(
@@ -391,7 +319,7 @@ export class StreamingJpegBigTiffWriter {
   }
 
   private planLayout(): void {
-    let cursor = BIGTIFF_HEADER_SIZE;
+    let cursor = TIFF_HEADER_SIZE;
     this.mainSlots.length = 0;
     this.slotsByChannelLevel.length = 0;
 
@@ -418,10 +346,6 @@ export class StreamingJpegBigTiffWriter {
           tileLength,
           tileCount: count,
           newSubfileType: levelIndex === 0 ? 0 : 1,
-          imageDescription:
-            c === 0 && levelIndex === 0
-              ? this.plan.imageDescription
-              : undefined,
           ifdOffset: 0,
           nextIfdOffset: 0,
           tileOffsetsFileOffset: 0,
@@ -484,7 +408,7 @@ export class StreamingJpegBigTiffWriter {
     const buf = new Uint8Array(this.metadataEnd);
     const view = new DataView(buf.buffer);
 
-    // BigTIFF header (little-endian)
+    // TIFF header (little-endian)
     view.setUint16(0, 0x4949, true);
     view.setUint16(2, 43, true);
     view.setUint16(4, 8, true);
@@ -524,7 +448,7 @@ export class StreamingJpegBigTiffWriter {
           }
           overflowCursor += t.valueBytes.length;
         }
-        pos += BIGTIFF_IFD_ENTRY_SIZE;
+        pos += TIFF_IFD_ENTRY_SIZE;
       }
 
       setBigUint64LE(view, pos, slot.nextIfdOffset);

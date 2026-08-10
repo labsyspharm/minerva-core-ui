@@ -68,14 +68,18 @@ function toExportedStoryDocument(
     metadata: {
       ...data.metadata,
       minervaVersion: MINERVA_VERSION,
-      imageSource:
-        mode === "remote-url"
-          ? "remote-url"
-          : mode === "jpeg-ome-tiff"
-            ? JPEG_OME_TIFF_IMAGE_SOURCE
-            : (data.metadata.imageSource ?? "jpeg-pyramid"),
+      imageSource: imageSourceForExportMode(mode, data.metadata.imageSource),
     },
   });
+}
+
+function imageSourceForExportMode(
+  mode: StoryExportMode,
+  current?: string,
+): string {
+  if (mode === "remote-url") return "remote-url";
+  if (mode === "jpeg-ome-tiff") return JPEG_OME_TIFF_IMAGE_SOURCE;
+  return current ?? "jpeg-pyramid";
 }
 
 function storyIndexHtml(title?: string, version = MINERVA_VERSION): string {

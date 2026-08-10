@@ -428,9 +428,6 @@ const Content = (props: Props) => {
         needed.size === 0 || [...needed].every((name) => existing.has(name));
       const canReencode =
         omeLoaderEntries.length > 0 || dicomIndexList.length > 0;
-      // Sidecar-only when pyramids already match and we cannot re-encode
-      // (jpeg-only). If OME/DICOM is available, open the exporter so the
-      // user can switch transfer (e.g. contrast → cube-root).
       if (foldersReady && !canReencode) {
         try {
           await writeStoryBundleSidecars(dirHandle, doc.toDocumentData(), {
@@ -1850,8 +1847,6 @@ const Content = (props: Props) => {
 
   const mainProps = {
     ...channelProps,
-    in_f: fileName,
-    handles: [] as Handle.File[],
     directory_handle,
     ioState,
     exportMode,
