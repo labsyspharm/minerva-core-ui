@@ -1,6 +1,11 @@
+import encodeJpeg, { init as initJpegEncode } from "@jsquash/jpeg/encode";
 import type { JpegExportTransfer } from "./cubeRootEncoding";
 import { encodeCubeRootU16ToU8 } from "./cubeRootEncoding";
 
+/** MozJpegColorSpace.GRAYSCALE — const enum is erased at runtime. */
+const MOZJPEG_COLORSPACE_GRAYSCALE = 1;
+
+/** Historical 0–1 scale (Canvas); MozJPEG uses 0–100 via {@link mozJpegQuality}. */
 export const JPEG_EXPORT_QUALITY = 0.5;
 
 export const PIXEL_CTORS: Record<
@@ -56,43 +61,20 @@ function cubeRootPixelsToRgba(
   }
 }
 
-type CanvasLike = {
-  width: number;
-  height: number;
-  getContext(contextId: "2d"): {
-    putImageData(imageData: ImageData, dx: number, dy: number): void;
-  } | null;
-  convertToBlob?(options?: { type?: string; quality?: number }): Promise<Blob>;
-};
+/** Accept legacy 0–1 quality or MozJPEG 0–100. */
+function mozJpegQuality(quality: number): number {
+  if (!Number.isFinite(quality)) return 50;
+  return quality <= 1 ? Math.round(quality * 100) : Math.round(quality);
+}
 
-async function blobFromCanvas(
-  canvas: CanvasLike,
-  width: number,
-  height: number,
-  rgba: Uint8ClampedArray<ArrayBuffer>,
-  quality: number,
-): Promise<ArrayBuffer> {
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("jpegExportEncode: 2d context unavailable");
-  const imageData = new ImageData(rgba, width, height);
-  ctx.putImageData(imageData, 0, 0);
+let jsquashReady: Promise<void> | null = null;
 
-  let blob: Blob | null;
-  if (typeof canvas.convertToBlob === "function") {
-    blob = await canvas.convertToBlob({
-      type: "image/jpeg",
-      quality,
-    });
-  } else {
-    const htmlCanvas = canvas as unknown as HTMLCanvasElement;
-    blob = await new Promise<Blob | null>((resolve) => {
-      htmlCanvas.toBlob(resolve, "image/jpeg", quality);
-    });
+/** Pre-warm MozJPEG WASM (once per worker / main thread). */
+export function ensureJpegEncoderReady(): Promise<void> {
+  if (!jsquashReady) {
+    jsquashReady = initJpegEncode().then(() => undefined);
   }
-  if (!blob) throw new Error("jpegExportEncode: JPEG blob is null");
-  return blob.arrayBuffer();
+  return jsquashReady;
 }
 
 async function encodeRgbaToJpeg(
@@ -101,27 +83,16 @@ async function encodeRgbaToJpeg(
   rgba: Uint8ClampedArray<ArrayBuffer>,
   quality: number,
 ): Promise<ArrayBuffer> {
-  if (typeof OffscreenCanvas !== "undefined") {
-    return blobFromCanvas(
-      new OffscreenCanvas(width, height),
-      width,
-      height,
-      rgba,
-      quality,
-    );
-  }
-
-  if (typeof document !== "undefined") {
-    return blobFromCanvas(
-      document.createElement("canvas"),
-      width,
-      height,
-      rgba,
-      quality,
-    );
-  }
-
-  throw new Error("jpegExportEncode: no canvas available");
+  await ensureJpegEncoderReady();
+  const imageData = new ImageData(rgba, width, height);
+  return encodeJpeg(imageData, {
+    quality: mozJpegQuality(quality),
+    color_space: MOZJPEG_COLORSPACE_GRAYSCALE,
+    baseline: true,
+    progressive: false,
+    arithmetic: false,
+    optimize_coding: false,
+  });
 }
 
 /** Encode grayscale pixels to JPEG (contrast-windowed or cube-root transfer). */

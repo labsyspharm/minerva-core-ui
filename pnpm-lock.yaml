@@ -61,6 +61,9 @@ importers:
       '@hms-dbmi/viv':
         specifier: 0.20.1
         version: 0.20.1(199f3575cb57838fdb557aad0b4e67f4)
+      '@jsquash/jpeg':
+        specifier: ^1.6.0
+        version: 1.6.0
       '@loaders.gl/3d-tiles':
         specifier: 3.4.13
         version: 3.4.13(@loaders.gl/core@3.4.13)
@@ -686,6 +689,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
+
+  '@jsquash/jpeg@1.6.0':
+    resolution: {integrity: sha512-zwN46Awh1VM6gXlIcALwb5WzqK5H2e6+Awcs1QP8AvS8ohsK/sbE4esvmH4jhlhW7+CgiUUww66vg0aTnlSIMA==}
 
   '@loaders.gl/3d-tiles@3.4.13':
     resolution: {integrity: sha512-osbs+83xoWZlx4D5QfWUNkJ13ChDKSEZw0SXbC/mhG//q+jHngEZR0aOvsTZ99U2Jl5KejrAGzoJ7yYkusBfqA==}
@@ -4339,6 +4345,8 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
+
+  '@jsquash/jpeg@1.6.0': {}
 
   '@loaders.gl/3d-tiles@3.4.13(@loaders.gl/core@3.4.13)':
     dependencies:

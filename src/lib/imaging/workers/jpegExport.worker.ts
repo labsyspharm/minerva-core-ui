@@ -1,6 +1,7 @@
 import type { JpegExportTransfer } from "../cubeRootEncoding";
 import {
   encodeGrayscaleJpeg,
+  ensureJpegEncoderReady,
   JPEG_EXPORT_QUALITY,
   PIXEL_CTORS,
 } from "../jpegExportEncode";
@@ -23,6 +24,10 @@ type Message = MessageEvent & {
 
 // @ts-expect-error - We are in a worker context
 const worker: ServiceWorker = self;
+
+void ensureJpegEncoderReady().catch((err) => {
+  console.warn("[minerva] jpegExport worker encoder init failed:", err);
+});
 
 worker.addEventListener("message", async (e: Message) => {
   const {

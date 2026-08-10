@@ -7,6 +7,13 @@ import {
 } from "./jpegExportEncode";
 import JpegExportWorker from "./workers/jpegExport.worker?worker";
 
+/** Cap WASM workers so MozJPEG memory stays bounded. */
+const MAX_JPEG_EXPORT_WORKERS = 8;
+const defaultPoolSize = Math.min(
+  MAX_JPEG_EXPORT_WORKERS,
+  globalThis?.navigator?.hardwareConcurrency ?? 4,
+);
+
 /**
  * Same job protocol as the decoder {@link Pool} (`submitJob` / `jobId`).
  */
@@ -66,8 +73,6 @@ class WorkerWrapper {
     this.worker.terminate();
   }
 }
-
-const defaultPoolSize = globalThis?.navigator?.hardwareConcurrency ?? 4;
 
 /**
  * JPEG export encode pool: same shape as the decoder {@link Pool}
@@ -140,9 +145,7 @@ export class JpegExportPool {
 let singleton: JpegExportPool | null = null;
 
 function workersSupported(): boolean {
-  return (
-    typeof Worker !== "undefined" && typeof OffscreenCanvas !== "undefined"
-  );
+  return typeof Worker !== "undefined";
 }
 
 export function getJpegExportPool(): JpegExportPool | null {
@@ -168,8 +171,8 @@ export type EncodeTilePixelsIn = {
 };
 
 /**
- * Prefer workers; fall back to main-thread canvas encode if workers are
- * unavailable or fail.
+ * Prefer workers; fall back to main-thread @jsquash/jpeg encode if workers
+ * are unavailable or fail.
  */
 export async function encodeTileJpeg(
   input: EncodeTilePixelsIn,
