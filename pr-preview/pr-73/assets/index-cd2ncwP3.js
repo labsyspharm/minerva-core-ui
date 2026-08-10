@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-wC2mXChy.js","./pako.esm-KbdoS3Oq.js","./lerc-D7LDi_lA.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BHi9Pc8F.js","./pako.esm-KbdoS3Oq.js","./lerc-oQ80zb2F.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-CdHbBqcF.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw--tzsPKsK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-VtUWjSxU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-DyXYDLwy.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-C50gNFxm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CpOYmtUu.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-wC2mXChy.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-Do-9Zqsw.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-D7LDi_lA.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BHi9Pc8F.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-9zTWQlG3.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-oQ80zb2F.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-fMJJHAKS.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DMe_1CFL.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-C0rFNHEU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-COp-W6o1.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -90640,9 +90640,14 @@ void main() {
       metadata: {
         ...data2.metadata,
         minervaVersion: version,
-        imageSource: mode === "remote-url" ? "remote-url" : mode === "jpeg-ome-tiff" ? JPEG_OME_TIFF_IMAGE_SOURCE : data2.metadata.imageSource ?? "jpeg-pyramid"
+        imageSource: imageSourceForExportMode(mode, data2.metadata.imageSource)
       }
     });
+  }
+  function imageSourceForExportMode(mode, current) {
+    if (mode === "remote-url") return "remote-url";
+    if (mode === "jpeg-ome-tiff") return JPEG_OME_TIFF_IMAGE_SOURCE;
+    return current ?? "jpeg-pyramid";
   }
   function storyIndexHtml(title7, version$12 = version) {
     const { js, css: css2 } = minervaCdnUrls(version$12);
@@ -172579,7 +172584,6 @@ void main() {
   }
   const TIFF_COMPRESSION_JPEG = 7;
   const TIFF_PHOTOMETRIC_BLACK_IS_ZERO = 1;
-  const TIFF_TYPE_ASCII = 2;
   const TIFF_TYPE_SHORT = 3;
   const TIFF_TYPE_LONG = 4;
   const TIFF_TYPE_LONG8 = 16;
@@ -172589,7 +172593,6 @@ void main() {
   const TAG_BITS_PER_SAMPLE = 258;
   const TAG_COMPRESSION = 259;
   const TAG_PHOTOMETRIC = 262;
-  const TAG_IMAGE_DESCRIPTION = 270;
   const TAG_SAMPLES_PER_PIXEL = 277;
   const TAG_PLANAR_CONFIGURATION = 284;
   const TAG_TILE_WIDTH = 322;
@@ -172598,8 +172601,8 @@ void main() {
   const TAG_TILE_BYTE_COUNTS = 325;
   const TAG_SUB_IFDS = 330;
   const TAG_SAMPLE_FORMAT = 339;
-  const BIGTIFF_HEADER_SIZE = 16;
-  const BIGTIFF_IFD_ENTRY_SIZE = 20;
+  const TIFF_HEADER_SIZE = 16;
+  const TIFF_IFD_ENTRY_SIZE = 20;
   const INLINE_THRESHOLD = 8;
   function align8(n2) {
     return n2 + 7 & -8;
@@ -172636,12 +172639,6 @@ void main() {
     view.setUint32(offset, lo, true);
     view.setUint32(offset + 4, hi2, true);
   }
-  function encodeAsciiNull(s2) {
-    const body2 = new TextEncoder().encode(s2);
-    const out = new Uint8Array(body2.length + 1);
-    out.set(body2);
-    return out;
-  }
   function shortTag(tag, value) {
     const valueBytes = new Uint8Array(2);
     new DataView(valueBytes.buffer).setUint16(0, value, true);
@@ -172670,17 +172667,8 @@ void main() {
       valueBytes: new Uint8Array(count2 * 8)
     };
   }
-  function asciiTag(tag, text2) {
-    const valueBytes = encodeAsciiNull(text2);
-    return {
-      tag,
-      type: TIFF_TYPE_ASCII,
-      count: valueBytes.length,
-      valueBytes
-    };
-  }
   function ifdEntryBlockSize(numTags) {
-    return 8 + numTags * BIGTIFF_IFD_ENTRY_SIZE + 8;
+    return 8 + numTags * TIFF_IFD_ENTRY_SIZE + 8;
   }
   function tagMustOverflow(tag) {
     return tag === TAG_TILE_OFFSETS || tag === TAG_TILE_BYTE_COUNTS || tag === TAG_SUB_IFDS;
@@ -172704,16 +172692,13 @@ void main() {
       long8ArrayTag(TAG_TILE_BYTE_COUNTS, slot.tileCount),
       shortTag(TAG_SAMPLE_FORMAT, 1)
     ];
-    if (slot.imageDescription) {
-      tags.push(asciiTag(TAG_IMAGE_DESCRIPTION, slot.imageDescription));
-    }
     if (subIfdCount > 0) {
       tags.push(long8ArrayTag(TAG_SUB_IFDS, subIfdCount));
     }
     tags.sort((a2, b2) => a2.tag - b2.tag);
     return tags;
   }
-  class StreamingJpegBigTiffWriter {
+  class StreamingJpegTiffWriter {
     constructor(sink, plan) {
       __publicField(this, "mainSlots", []);
       __publicField(this, "slotsByChannelLevel", []);
@@ -172726,27 +172711,24 @@ void main() {
       this.sink = sink;
       this.plan = plan;
       if (!plan.channels.length) {
-        throw new Error("StreamingJpegBigTiffWriter: no channels");
+        throw new Error("StreamingJpegTiffWriter: no channels");
       }
       for (const ch2 of plan.channels) {
         if (!((_a2 = ch2.levels) == null ? void 0 : _a2.length)) {
-          throw new Error("StreamingJpegBigTiffWriter: channel has no levels");
+          throw new Error("StreamingJpegTiffWriter: channel has no levels");
         }
       }
-    }
-    get tileDataStart() {
-      return this.metadataEnd;
     }
     getIfdSlot(channelIndex, levelIndex) {
       var _a2;
       const slot = (_a2 = this.slotsByChannelLevel[channelIndex]) == null ? void 0 : _a2[levelIndex];
       if (!slot) {
-        throw new Error(`StreamingJpegBigTiffWriter: missing IFD c=${channelIndex} l=${levelIndex}`);
+        throw new Error(`StreamingJpegTiffWriter: missing IFD c=${channelIndex} l=${levelIndex}`);
       }
       return slot;
     }
     async begin() {
-      if (this.begun) throw new Error("StreamingJpegBigTiffWriter: already begun");
+      if (this.begun) throw new Error("StreamingJpegTiffWriter: already begun");
       this.planLayout();
       const meta = this.serializeMetadataPlaceholders();
       await this.sink.write(0, meta);
@@ -172754,18 +172736,18 @@ void main() {
     }
     async writeTile(channelIndex, levelIndex, tileIndex, jpeg) {
       if (!this.begun || this.finished) {
-        throw new Error("StreamingJpegBigTiffWriter: call begin() before writeTile");
+        throw new Error("StreamingJpegTiffWriter: call begin() before writeTile");
       }
       const slot = this.getIfdSlot(channelIndex, levelIndex);
       if (tileIndex < 0 || tileIndex >= slot.tileCount) {
-        throw new Error(`StreamingJpegBigTiffWriter: tileIndex ${tileIndex} out of range 0..${slot.tileCount - 1}`);
+        throw new Error(`StreamingJpegTiffWriter: tileIndex ${tileIndex} out of range 0..${slot.tileCount - 1}`);
       }
       if (slot.tileOffsets[tileIndex] !== 0) {
-        throw new Error(`StreamingJpegBigTiffWriter: tile c=${channelIndex} l=${levelIndex} i=${tileIndex} already written`);
+        throw new Error(`StreamingJpegTiffWriter: tile c=${channelIndex} l=${levelIndex} i=${tileIndex} already written`);
       }
       const bytes = jpeg instanceof Uint8Array ? jpeg : new Uint8Array(jpeg);
       if (bytes.byteLength === 0) {
-        throw new Error("StreamingJpegBigTiffWriter: empty JPEG tile");
+        throw new Error("StreamingJpegTiffWriter: empty JPEG tile");
       }
       const run = async () => {
         const offset = this.dataCursor;
@@ -172780,13 +172762,13 @@ void main() {
     }
     async finish() {
       if (!this.begun || this.finished) {
-        throw new Error("StreamingJpegBigTiffWriter: invalid finish()");
+        throw new Error("StreamingJpegTiffWriter: invalid finish()");
       }
       await this.writeQueue;
       for (const channel of this.slotsByChannelLevel) {
         for (const slot of channel) {
           if (slot.tilesWritten !== slot.tileCount) {
-            throw new Error(`StreamingJpegBigTiffWriter: channel ${slot.channelIndex} level ${slot.levelIndex}: wrote ${slot.tilesWritten}/${slot.tileCount} tiles`);
+            throw new Error(`StreamingJpegTiffWriter: channel ${slot.channelIndex} level ${slot.levelIndex}: wrote ${slot.tilesWritten}/${slot.tileCount} tiles`);
           }
           await this.patchLong8Array(slot.tileOffsetsFileOffset, slot.tileOffsets);
           await this.patchLong8Array(slot.tileByteCountsFileOffset, slot.tileByteCounts);
@@ -172799,7 +172781,7 @@ void main() {
       this.finished = true;
     }
     planLayout() {
-      let cursor = BIGTIFF_HEADER_SIZE;
+      let cursor = TIFF_HEADER_SIZE;
       this.mainSlots.length = 0;
       this.slotsByChannelLevel.length = 0;
       for (let c2 = 0; c2 < this.plan.channels.length; c2++) {
@@ -172819,7 +172801,6 @@ void main() {
             tileLength,
             tileCount: count2,
             newSubfileType: levelIndex === 0 ? 0 : 1,
-            imageDescription: c2 === 0 && levelIndex === 0 ? this.plan.imageDescription : void 0,
             ifdOffset: 0,
             nextIfdOffset: 0,
             tileOffsetsFileOffset: 0,
@@ -172903,7 +172884,7 @@ void main() {
             }
             overflowCursor += t2.valueBytes.length;
           }
-          pos += BIGTIFF_IFD_ENTRY_SIZE;
+          pos += TIFF_IFD_ENTRY_SIZE;
         }
         setBigUint64LE(view, pos, slot.nextIfdOffset);
         for (const sub2 of slot.subIfds) {
@@ -172978,7 +172959,7 @@ void main() {
       for (let level = 0; level < levels.length; level++) {
         const { width, height, tileSize } = levels[level];
         const nx = tilesAcross(width, tileSize);
-        const ny = Math.ceil(height / tileSize);
+        const ny = tilesDown(height, tileSize);
         for (let y2 = 0; y2 < ny; y2++) {
           for (let x2 = 0; x2 < nx; x2++) {
             jobs.push({
@@ -173013,7 +172994,7 @@ void main() {
     });
     const writable = await fh2.createWritable();
     const sink = createFileWritableSink(writable);
-    const writer = new StreamingJpegBigTiffWriter(sink, {
+    const writer = new StreamingJpegTiffWriter(sink, {
       channels: channelPlans
     });
     await writer.begin();
@@ -173124,16 +173105,13 @@ void main() {
       const loaderData = entry.loader.data;
       if (!(loaderData == null ? void 0 : loaderData.length)) continue;
       const levels = planeLevels(loaderData);
-      let tileCount = 0;
       for (const l2 of levels) {
-        tileCount += tileCountForSize(l2.width, l2.height, l2.tileSize, l2.tileSize) * channels2.length;
+        totalTiles += tileCountForSize(l2.width, l2.height, l2.tileSize, l2.tileSize) * channels2.length;
       }
-      totalTiles += tileCount;
       work.push({
         entry,
         image: image2,
-        fileName: omeTiffExportFileName(image2, usedNames),
-        tileCount
+        fileName: omeTiffExportFileName(image2, usedNames)
       });
     }
     if (work.length === 0) {
@@ -173406,10 +173384,6 @@ void main() {
     const { directory_handle } = props;
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
-    const omeLoaderEntriesRef = reactExports.useRef(omeLoaderEntries);
-    const dicomIndexListRef = reactExports.useRef(dicomIndexList);
-    omeLoaderEntriesRef.current = omeLoaderEntries;
-    dicomIndexListRef.current = dicomIndexList;
     const imageChannels = reactExports.useMemo(() => {
       return Object.fromEntries([].concat(...images.map(({ channels: channels2 }) => {
         return channels2.map(({ id: id2, index: index2 }) => [
@@ -173430,15 +173404,21 @@ void main() {
     const [cRange, setCRange] = reactExports.useState(null);
     const [exportError, setExportError] = reactExports.useState(null);
     const [jpegTransfer, setJpegTransfer] = reactExports.useState(() => jpegTransferFromImageSource(useDocumentStore.getState().metadata.imageSource));
+    const [mode, setMode] = reactExports.useState(exportMode);
     const [exportArmed, setExportArmed] = reactExports.useState(false);
-    const [writeOmeTiff, setWriteOmeTiff] = reactExports.useState(false);
-    const docImageSource = useDocumentStore((s2) => s2.metadata.imageSource);
-    const docTransfer = jpegTransferFromImageSource(docImageSource);
-    const canUpdateDocumentOnly = !!props.onDocumentOnlyUpdate && !writeOmeTiff && jpegTransfer === docTransfer;
-    const containerMode = writeOmeTiff ? "jpeg-ome-tiff" : exportMode;
+    const armedSnapshotRef = reactExports.useRef(null);
+    const docTransfer = jpegTransferFromImageSource(useDocumentStore((s2) => s2.metadata.imageSource));
+    const canUpdateDocumentOnly = !!props.onDocumentOnlyUpdate && mode === "jpeg-pyramid" && jpegTransfer === docTransfer;
+    const armExport = () => {
+      armedSnapshotRef.current = {
+        omeLoaderEntries,
+        dicomIndexList
+      };
+      setExportArmed(true);
+    };
     const hasChannelGroup = channelGroups.length > 0 && channelGroups.some((g2) => g2.channels.length > 0);
     reactExports.useEffect(() => {
-      if (containerMode === "remote-url" || containerMode === "jpeg-ome-tiff") {
+      if (mode === "remote-url" || mode === "jpeg-ome-tiff") {
         setCRange([]);
         return;
       }
@@ -173468,7 +173448,7 @@ void main() {
       imageChannels,
       directory_handle,
       hasChannelGroup,
-      containerMode,
+      mode,
       exportArmed,
       jpegTransfer
     ]);
@@ -173476,10 +173456,7 @@ void main() {
       mainSettingsList
     ]);
     const state = reactExports.useMemo(() => {
-      if (containerMode === "remote-url" || containerMode === "jpeg-ome-tiff") {
-        return null;
-      }
-      if (!exportArmed) return null;
+      if (mode !== "jpeg-pyramid" || !exportArmed) return null;
       if (loader === null || cRange === null) {
         return null;
       }
@@ -173494,12 +173471,12 @@ void main() {
     }, [
       loader,
       cRange,
-      containerMode,
+      mode,
       exportArmed
     ]);
     const stopExport = props.stopExport;
     reactExports.useEffect(() => {
-      if (containerMode !== "remote-url") return;
+      if (mode !== "remote-url") return;
       if (exportError) return;
       let cancelled = false;
       const wallStart = performance.now();
@@ -173531,25 +173508,23 @@ void main() {
         cancelled = true;
       };
     }, [
-      containerMode,
+      mode,
       directory_handle,
       exportError
     ]);
     reactExports.useEffect(() => {
-      if (containerMode !== "jpeg-ome-tiff") return;
-      if (!exportArmed) return;
-      if (exportError) return;
+      if (mode !== "jpeg-ome-tiff" || !exportArmed || exportError) return;
+      const snap = armedSnapshotRef.current;
+      if (!snap) return;
       let cancelled = false;
       let finishedOk = false;
       const abort = new AbortController();
       const wallStart = performance.now();
-      const imagesSnapshot = useDocumentStore.getState().images;
-      const currentOme = omeLoaderEntriesRef.current;
-      const currentDicom = dicomIndexListRef.current;
-      const loaderEntries = currentOme.length > 0 ? currentOme : currentDicom.filter((d2) => d2.sourceImageId).map((d2) => ({
+      const loaderEntries = snap.omeLoaderEntries.length > 0 ? snap.omeLoaderEntries : snap.dicomIndexList.filter((d2) => d2.sourceImageId).map((d2) => ({
         loader: d2.loader,
         sourceImageId: d2.sourceImageId
       }));
+      const imagesSnapshot = useDocumentStore.getState().images;
       setProgress({
         completed: 0,
         total: 1,
@@ -173610,15 +173585,13 @@ void main() {
         if (!finishedOk) abort.abort();
       };
     }, [
-      containerMode,
+      mode,
       exportArmed,
       exportError,
       directory_handle
     ]);
     reactExports.useEffect(() => {
-      if (containerMode !== "jpeg-pyramid") return;
-      if (!exportArmed) return;
-      if (exportError) return;
+      if (mode !== "jpeg-pyramid" || !exportArmed || exportError) return;
       if (!state || !(loader == null ? void 0 : loader.length)) return;
       if (cRange !== null && cRange.length === 0) {
         setExportError("No exportable channels in the current channel groups.");
@@ -173735,7 +173708,7 @@ void main() {
       cRange,
       exportError,
       directory_handle,
-      containerMode,
+      mode,
       exportArmed,
       jpegTransfer
     ]);
@@ -173778,7 +173751,7 @@ void main() {
             children: "Dismiss"
           })
         ]
-      }) : containerMode === "remote-url" ? jsxRuntimeExports.jsxs("div", {
+      }) : mode === "remote-url" ? jsxRuntimeExports.jsxs("div", {
         className: styles$b.exportStatus,
         children: [
           jsxRuntimeExports.jsx("div", {
@@ -173797,18 +173770,21 @@ void main() {
         children: [
           jsxRuntimeExports.jsx("div", {
             className: styles$b.exportMessage,
-            children: writeOmeTiff ? "Export JPEG OME-TIFF" : "Export JPEG pyramid"
+            children: mode === "jpeg-ome-tiff" ? "Export JPEG OME-TIFF" : "Export JPEG pyramid"
           }),
           jsxRuntimeExports.jsxs("label", {
             className: styles$b.transferToggle,
             children: [
               jsxRuntimeExports.jsx("input", {
                 type: "checkbox",
-                checked: writeOmeTiff,
+                checked: mode === "jpeg-ome-tiff",
                 onChange: (e2) => {
-                  const on = e2.target.checked;
-                  setWriteOmeTiff(on);
-                  if (on) setJpegTransfer("cube-root");
+                  if (e2.target.checked) {
+                    setMode("jpeg-ome-tiff");
+                    setJpegTransfer("cube-root");
+                  } else {
+                    setMode("jpeg-pyramid");
+                  }
                 }
               }),
               jsxRuntimeExports.jsx("span", {
@@ -173822,7 +173798,7 @@ void main() {
               jsxRuntimeExports.jsx("input", {
                 type: "checkbox",
                 checked: jpegTransfer === "cube-root",
-                disabled: writeOmeTiff,
+                disabled: mode === "jpeg-ome-tiff",
                 onChange: (e2) => setJpegTransfer(e2.target.checked ? "cube-root" : "contrast")
               }),
               jsxRuntimeExports.jsx("span", {
@@ -173836,7 +173812,7 @@ void main() {
               jsxRuntimeExports.jsx("button", {
                 type: "button",
                 className: styles$b.dismissButton,
-                onClick: () => setExportArmed(true),
+                onClick: armExport,
                 children: "Start export"
               }),
               canUpdateDocumentOnly ? jsxRuntimeExports.jsx("button", {
@@ -246872,8 +246848,6 @@ void main() {
     const folderPrompt2 = props.exportFolderPrompt;
     const overlayOpen = exporting || !!folderPrompt2;
     const exporterProps = {
-      in_f: props.in_f,
-      handles: props.handles,
       stopExport: props.stopExport,
       viewerConfig: props.viewerConfig,
       dicomIndexList: props.dicomIndexList,
@@ -246968,12 +246942,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-10T18:29:50.719Z");
+    const label2 = utcShort("2026-08-10T19:09:52.605Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-10T18:29:50.719Z",
+      title: "2026-08-10T19:09:52.605Z",
       children: [
         "Updated ",
         label2,
@@ -248942,7 +248916,7 @@ void main() {
     const channelGroups = opts.channelGroups ?? [];
     const documentUrl = opts.documentUrl ?? window.location.href;
     const wrapOmeCubeRoot = isJpegOmeTiffImageSource(opts.imageSource);
-    const transfer = opts.transfer ?? jpegTransferFromImageSource(opts.imageSource);
+    const transfer = jpegTransferFromImageSource(opts.imageSource);
     jpegLoaderEntries.push(...await jpegLoaderEntriesFromImages({
       images,
       channelGroups,
@@ -250925,8 +250899,6 @@ void main() {
     };
     const mainProps = {
       ...channelProps,
-      in_f: fileName,
-      handles: [],
       directory_handle,
       ioState,
       exportMode,
