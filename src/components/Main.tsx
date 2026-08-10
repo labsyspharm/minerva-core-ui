@@ -272,9 +272,7 @@ async function hydrateLoadersFromImages(
     pool: new Pool(),
     requestPermission,
     includeLocal: true,
-    transfer: jpegTransferFromImageSource(
-      useDocumentStore.getState().metadata.imageSource,
-    ),
+    imageSource: useDocumentStore.getState().metadata.imageSource,
     ...(root
       ? {
           fetchTile: tileFetcherForDirectory(root),
@@ -504,9 +502,17 @@ const Content = (props: Props) => {
         return;
       }
     }
+    if (mode === "jpeg-ome-tiff") {
+      if (omeLoaderEntries.length === 0 && dicomIndexList.length === 0) {
+        window.alert(
+          "OME-TIFF export needs the original OME-TIFF or DICOM image loaded (not a JPEG-only story).",
+        );
+        return;
+      }
+    }
     const storyId = doc.activeStoryId;
     const storedRoot =
-      mode === "jpeg-pyramid" && storyId
+      (mode === "jpeg-pyramid" || mode === "jpeg-ome-tiff") && storyId
         ? await getStoryRootHandle(storyId, {
             requestPermission: true,
             mode: "readwrite",

@@ -1,6 +1,7 @@
 import { fileOpen } from "browser-fs-access";
 import {
   folderLimitsForTransfer,
+  isJpegOmeTiffImageSource,
   type JpegExportTransfer,
   jpegTransferFromImageSource,
 } from "@/lib/imaging/cubeRootEncoding";
@@ -174,6 +175,7 @@ async function assertPyramidFoldersExist(
   data: DocumentData,
 ): Promise<void> {
   if (data.metadata.imageSource === "remote-url") return;
+  if (isJpegOmeTiffImageSource(data.metadata.imageSource)) return;
   const needed = await neededJpegPyramidFolderNames(
     data.channelGroups,
     data.images,
@@ -187,6 +189,12 @@ async function assertPyramidFoldersExist(
       "Missing JPEG pyramid folders. Pick the folder created by Export (document.json plus channel directories).",
     );
   }
+}
+
+function isRelativeOmeTiffUrl(url: string): boolean {
+  const u = url.trim();
+  if (!u || /^https?:\/\//i.test(u) || u.startsWith("blob:")) return false;
+  return /\.ome\.tiff?$/i.test(u) || /\.tiff?$/i.test(u);
 }
 
 async function readDocumentJson(
@@ -205,15 +213,18 @@ async function persistImportedStory(
   const title =
     data.metadata.title?.trim() || titleFallback || "Imported Story";
   const hasLocalSources = data.images.some((im) => im.source?.kind === "local");
+  const omeTiffBundle = isJpegOmeTiffImageSource(data.metadata.imageSource);
   // Remote-URL exports keep `kind: "url"`. JPEG-pyramid bundles rewrite to
-  // `{ kind: "jpeg", url: "." }`. Local OME handleKeys cannot be transferred in
-  // JSON — keep them (reminted below) so the UI can ask the user to locate files.
+  // `{ kind: "jpeg", url: "." }`. JPEG OME-TIFF bundles use relative `.ome.tif`
+  // URLs (bound to local handles below when `root` is set).
   const imagesBase =
-    data.metadata.imageSource === "remote-url" || hasLocalSources
+    data.metadata.imageSource === "remote-url" ||
+    hasLocalSources ||
+    omeTiffBundle
       ? data.images
       : withPortableJpegSources(data.images);
   const rec = await createStoryRecord(title);
-  const images = hasLocalSources
+  let images = hasLocalSources
     ? imagesBase.map((im) => {
         if (im.source?.kind !== "local") return im;
         return {
@@ -225,6 +236,25 @@ async function persistImportedStory(
         };
       })
     : imagesBase;
+
+  if (root && omeTiffBundle) {
+    const next: typeof images = [];
+    for (const im of images) {
+      if (im.source?.kind === "url" && isRelativeOmeTiffUrl(im.source.url)) {
+        const fh = await root.getFileHandle(im.source.url);
+        const handleKey = imageHandleStorageKey(rec.id, im.id);
+        await putFileHandle(handleKey, fh);
+        next.push({
+          ...im,
+          source: { kind: "local", handleKey },
+        });
+      } else {
+        next.push(im);
+      }
+    }
+    images = next;
+  }
+
   const next = validateDocumentData({
     ...data,
     metadata: {
@@ -252,10 +282,17 @@ export async function importStoryJsonFromPicker(): Promise<string> {
   const data = validateDocumentData(JSON.parse(await file.text()) as unknown);
 
   let root: FileSystemDirectoryHandle | undefined;
-  if (storyNeedsLocalJpegRoot(data.images)) {
+  if (
+    storyNeedsLocalJpegRoot(data.images) ||
+    (isJpegOmeTiffImageSource(data.metadata.imageSource) &&
+      data.images.some(
+        (im) =>
+          im.source?.kind === "url" && isRelativeOmeTiffUrl(im.source.url),
+      ))
+  ) {
     if (!hasDirectoryPickerAccess()) {
       throw new Error(
-        "This story uses local JPEG pyramids. Open it in Chrome or Edge and choose the story folder to grant access.",
+        "This story uses local image files. Open it in Chrome or Edge and choose the story folder to grant access.",
       );
     }
     root = await window.showDirectoryPicker({

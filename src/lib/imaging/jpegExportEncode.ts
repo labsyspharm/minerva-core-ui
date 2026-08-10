@@ -1,6 +1,7 @@
 import encodeJpeg, { init as initJpegEncode } from "@jsquash/jpeg/encode";
 import type { JpegExportTransfer } from "./cubeRootEncoding";
 import { encodeCubeRootU16ToU8 } from "./cubeRootEncoding";
+import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
 
 /** MozJpegColorSpace.GRAYSCALE — const enum is erased at runtime. */
 const MOZJPEG_COLORSPACE_GRAYSCALE = 1;
@@ -61,6 +62,35 @@ function cubeRootPixelsToRgba(
   }
 }
 
+/**
+ * Pad edge tiles so JPEG SOF dimensions match declared TIFF TileWidth/TileLength.
+ * Input is grayscale RGBA (R=G=B=intensity). Output is tileW×tileH RGBA.
+ */
+export function padGrayscaleRgbaToTile(
+  rgba: Uint8ClampedArray,
+  width: number,
+  height: number,
+  tileWidth = JPEG_PYRAMID_TILE_SIZE,
+  tileLength = JPEG_PYRAMID_TILE_SIZE,
+): Uint8ClampedArray<ArrayBuffer> {
+  if (width === tileWidth && height === tileLength) {
+    return rgba.buffer instanceof ArrayBuffer
+      ? (rgba as Uint8ClampedArray<ArrayBuffer>)
+      : (new Uint8ClampedArray(rgba) as Uint8ClampedArray<ArrayBuffer>);
+  }
+  const out = new Uint8ClampedArray(
+    new ArrayBuffer(tileWidth * tileLength * 4),
+  ) as Uint8ClampedArray<ArrayBuffer>;
+  const copyW = Math.min(width, tileWidth);
+  const copyH = Math.min(height, tileLength);
+  for (let row = 0; row < copyH; row++) {
+    const src = row * width * 4;
+    const dst = row * tileWidth * 4;
+    out.set(rgba.subarray(src, src + copyW * 4), dst);
+  }
+  return out;
+}
+
 /** Accept legacy 0–1 quality or MozJPEG 0–100. */
 function mozJpegQuality(quality: number): number {
   if (!Number.isFinite(quality)) return 50;
@@ -104,6 +134,8 @@ export async function encodeGrayscaleJpeg(
   upperLimit: number,
   quality = JPEG_EXPORT_QUALITY,
   transfer: JpegExportTransfer = "contrast",
+  padTileWidth?: number,
+  padTileLength?: number,
 ): Promise<ArrayBuffer> {
   const rgba = new Uint8ClampedArray(
     new ArrayBuffer(width * height * 4),
@@ -113,7 +145,13 @@ export async function encodeGrayscaleJpeg(
   } else {
     clampPixelsToRgba(rgba, pixels, lowerLimit, upperLimit);
   }
-  return encodeRgbaToJpeg(width, height, rgba, quality);
+  const padW = padTileWidth ?? width;
+  const padH = padTileLength ?? height;
+  if (padW === width && padH === height) {
+    return encodeRgbaToJpeg(width, height, rgba, quality);
+  }
+  const padded = padGrayscaleRgbaToTile(rgba, width, height, padW, padH);
+  return encodeRgbaToJpeg(padW, padH, padded, quality);
 }
 
 export function typedArrayCtorName(data: ArrayLike<number>): string {

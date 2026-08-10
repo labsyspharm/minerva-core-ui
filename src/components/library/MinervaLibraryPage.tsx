@@ -367,9 +367,7 @@ export function MinervaLibraryPage() {
                   className={
                     bay.kind === "empty"
                       ? `${styles.bayContent} ${styles.bayContentEmpty}`
-                      : bay.kind === "emptyPrompt"
-                        ? `${styles.bayContent} ${styles.bayContentEmptyPrompt}`
-                        : styles.bayContent
+                      : styles.bayContent
                   }
                   aria-hidden={bay.kind === "empty" ? true : undefined}
                 >

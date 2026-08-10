@@ -3,10 +3,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { fromArrayBuffer } from "geotiff";
 import { describe, expect, it } from "vitest";
+import { padGrayscaleRgbaToTile } from "./jpegExportEncode";
 import {
   align8,
   createMemorySink,
-  padGrayscaleRgbaToTile,
   StreamingJpegBigTiffWriter,
   tileCountForSize,
 } from "./streamingJpegBigTiff";

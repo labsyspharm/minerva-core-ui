@@ -5,11 +5,12 @@ import { type CSSProperties, useMemo, useState } from "react";
 import {
   folderLimitsForTransfer,
   imageSourceFromJpegTransfer,
+  JPEG_OME_TIFF_IMAGE_SOURCE,
   type JpegExportTransfer,
   jpegTransferFromImageSource,
 } from "@/lib/imaging/cubeRootEncoding";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
-import { toLoader } from "@/lib/imaging/filesystem";
+import { exportJpegOmeTiffStory } from "@/lib/imaging/exportJpegOmeTiff";
 import {
   encodeTileJpeg,
   jpegExportConcurrency,
@@ -21,11 +22,11 @@ import {
 } from "@/lib/imaging/jpegPyramid";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Config } from "@/lib/imaging/viv";
-import type { PoolClass } from "@/lib/imaging/workers/pool";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   type StoryExportMode,
+  withPortableOmeTiffSources,
   writeStoryBundleSidecars,
 } from "@/lib/storyExport/storyBundle";
 import styles from "./ImageExporter.module.css";
@@ -330,27 +331,6 @@ function isFullState(o: Partial<FullState>): o is FullState {
   return needs.every((x: string) => x in o && o[x] !== null);
 }
 
-///
-
-type LoaderOpts = {
-  pool: PoolClass;
-  handle: Handle.File | null;
-};
-
-const getLoader = async (opts: LoaderOpts) => {
-  const { handle, pool } = opts;
-  if (handle === null) return null;
-  const in_file = await handle.getFile();
-  const in_f = in_file.name;
-  const loader = await toLoader({
-    handle,
-    in_f,
-    pool,
-  });
-  const { data } = loader;
-  return data;
-};
-
 export type ImageExporterProps = {
   in_f: string;
   handles: Handle.File[];
@@ -366,10 +346,6 @@ export type ImageExporterProps = {
 };
 
 export const ImageExporter = (props: ImageExporterProps) => {
-  const _exportProps = {
-    variant: "primary",
-    className: "mb-3",
-  };
   const { viewerConfig } = props;
   const { omeLoaderEntries, dicomIndexList } = props;
   const exportMode: StoryExportMode = props.exportMode ?? "jpeg-pyramid";
@@ -427,10 +403,13 @@ export const ImageExporter = (props: ImageExporterProps) => {
     [omeLoaderEntries, mainSettingsOmeList, mainSettingsDicomList],
   );
 
-  const { handles, directory_handle } = props;
-  const handle = handles ? handles[0] : null; //TODO
+  const { directory_handle } = props;
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
+  const omeLoaderEntriesRef = React.useRef(omeLoaderEntries);
+  const dicomIndexListRef = React.useRef(dicomIndexList);
+  omeLoaderEntriesRef.current = omeLoaderEntries;
+  dicomIndexListRef.current = dicomIndexList;
   const imageChannels = useMemo(() => {
     return Object.fromEntries(
       [].concat(
@@ -455,18 +434,26 @@ export const ImageExporter = (props: ImageExporterProps) => {
     ),
   );
   const [exportArmed, setExportArmed] = useState(false);
+  /** Prefer single-file OME-TIFF over per-channel JPEG folders. */
+  const [writeOmeTiff, setWriteOmeTiff] = useState(false);
   const docImageSource = useDocumentStore((s) => s.metadata.imageSource);
   const docTransfer = jpegTransferFromImageSource(docImageSource);
   /** Document-only must not apply a different transfer without re-encoding. */
   const canUpdateDocumentOnly =
-    !!props.onDocumentOnlyUpdate && jpegTransfer === docTransfer;
+    !!props.onDocumentOnlyUpdate &&
+    !writeOmeTiff &&
+    jpegTransfer === docTransfer;
+
+  const containerMode: StoryExportMode = writeOmeTiff
+    ? "jpeg-ome-tiff"
+    : exportMode;
 
   const hasChannelGroup =
     channelGroups.length > 0 &&
     channelGroups.some((g) => g.channels.length > 0);
 
   React.useEffect(() => {
-    if (exportMode === "remote-url") {
+    if (containerMode === "remote-url" || containerMode === "jpeg-ome-tiff") {
       setCRange([]);
       return;
     }
@@ -507,7 +494,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     imageChannels,
     directory_handle,
     hasChannelGroup,
-    exportMode,
+    containerMode,
     exportArmed,
     jpegTransfer,
   ]);
@@ -518,7 +505,9 @@ export const ImageExporter = (props: ImageExporterProps) => {
   );
 
   const state: MainState = useMemo(() => {
-    if (exportMode === "remote-url") return null;
+    if (containerMode === "remote-url" || containerMode === "jpeg-ome-tiff") {
+      return null;
+    }
     if (!exportArmed) return null;
     if (loader === null || cRange === null) {
       return null;
@@ -528,12 +517,12 @@ export const ImageExporter = (props: ImageExporterProps) => {
       return init;
     }
     return null;
-  }, [loader, cRange, exportMode, exportArmed]);
+  }, [loader, cRange, containerMode, exportArmed]);
 
   const stopExport = props.stopExport;
 
   React.useEffect(() => {
-    if (exportMode !== "remote-url") return;
+    if (containerMode !== "remote-url") return;
     if (exportError) return;
     let cancelled = false;
     const wallStart = performance.now();
@@ -565,10 +554,98 @@ export const ImageExporter = (props: ImageExporterProps) => {
     return () => {
       cancelled = true;
     };
-  }, [exportMode, directory_handle, exportError]);
+  }, [containerMode, directory_handle, exportError]);
 
   React.useEffect(() => {
-    if (exportMode === "remote-url") return;
+    if (containerMode !== "jpeg-ome-tiff") return;
+    if (!exportArmed) return;
+    if (exportError) return;
+
+    let cancelled = false;
+    let finishedOk = false;
+    const abort = new AbortController();
+    const wallStart = performance.now();
+    // Snapshot once — do not depend on `images` / loader arrays or post-export
+    // store updates (setImages / setMetadata) will re-enter and restart.
+    const imagesSnapshot = useDocumentStore.getState().images;
+    const currentOme = omeLoaderEntriesRef.current;
+    const currentDicom = dicomIndexListRef.current;
+    const loaderEntries: OmeLoaderEntry[] =
+      currentOme.length > 0
+        ? currentOme
+        : currentDicom
+            .filter((d) => d.sourceImageId)
+            .map((d) => ({
+              loader: d.loader as OmeLoaderEntry["loader"],
+              sourceImageId: d.sourceImageId as string,
+            }));
+
+    setProgress({ completed: 0, total: 1, done: false, startedAt: wallStart });
+
+    const etaInterval = window.setInterval(() => {
+      if (!cancelled) setNowMs(performance.now());
+    }, 1000);
+
+    void (async () => {
+      try {
+        const results = await exportJpegOmeTiffStory({
+          directory: directory_handle,
+          omeLoaderEntries: loaderEntries,
+          images: imagesSnapshot,
+          signal: abort.signal,
+          onProgress: (completed, total) => {
+            if (cancelled) return;
+            setProgress({
+              completed,
+              total: Math.max(total, 1),
+              done: false,
+              startedAt: wallStart,
+            });
+          },
+        });
+        if (cancelled) return;
+        finishedOk = true;
+        const omeTiffFiles = new Map(
+          results.map((r) => [r.sourceImageId, r.fileName]),
+        );
+        const doc = useDocumentStore.getState().toDocumentData();
+        await writeStoryBundleSidecars(directory_handle, doc, {
+          mode: "jpeg-ome-tiff",
+          omeTiffFiles,
+        });
+        const store = useDocumentStore.getState();
+        store.setImages(withPortableOmeTiffSources(store.images, omeTiffFiles));
+        store.setMetadata({
+          imageSource: JPEG_OME_TIFF_IMAGE_SOURCE,
+        });
+        console.log(
+          `[minerva] jpeg-ome-tiff export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (${results.length} file(s))`,
+        );
+        setProgress((p) => ({
+          ...p,
+          done: true,
+          completed: p.total,
+        }));
+      } catch (e) {
+        if (cancelled || abort.signal.aborted) return;
+        console.error("[minerva] jpeg-ome-tiff export failed", e);
+        setExportError(
+          e instanceof Error ? e.message : "Failed to export OME-TIFF",
+        );
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(etaInterval);
+      if (!finishedOk) abort.abort();
+    };
+    // Intentionally omit images / omeLoaderEntries / dicomIndexList: those change
+    // when the export finishes (and on hydrate), which would abort and restart.
+  }, [containerMode, exportArmed, exportError, directory_handle]);
+
+  React.useEffect(() => {
+    if (containerMode !== "jpeg-pyramid") return;
     if (!exportArmed) return;
     if (exportError) return;
     if (!state || !loader?.length) return;
@@ -597,7 +674,15 @@ export const ImageExporter = (props: ImageExporterProps) => {
     const run = async () => {
       let nextIndex = 0;
       let completed = 0;
+      let exportFailed: Error | null = null;
       const concurrency = Math.min(jpegExportConcurrency(), total);
+
+      const failExport = (e: unknown) => {
+        if (exportFailed || cancelled) return;
+        exportFailed =
+          e instanceof Error ? e : new Error(String(e ?? "JPEG export failed"));
+        abort.abort();
+      };
 
       const workerLoop = async () => {
         while (!cancelled && !abort.signal.aborted) {
@@ -613,9 +698,11 @@ export const ImageExporter = (props: ImageExporterProps) => {
               await exportTile(index, loader, abort.signal, jpegTransfer);
             } catch (e2) {
               console.error(e2 instanceof Error ? e2.message : e2);
+              failExport(e2);
+              return;
             }
           }
-          if (cancelled) return;
+          if (cancelled || abort.signal.aborted) return;
           completed += 1;
           setProgress({
             completed,
@@ -630,42 +717,51 @@ export const ImageExporter = (props: ImageExporterProps) => {
         Array.from({ length: concurrency }, () => workerLoop()),
       );
 
-      if (!cancelled) {
-        finishedOk = true;
-        console.log(
-          `[minerva] jpeg-export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (${concurrency} workers, ${total} tiles, transfer=${jpegTransfer})`,
-        );
-        try {
-          const nextSource = imageSourceFromJpegTransfer(jpegTransfer);
-          const doc = useDocumentStore.getState().toDocumentData();
-          await writeStoryBundleSidecars(
-            directory_handle,
-            {
-              ...doc,
-              metadata: { ...doc.metadata, imageSource: nextSource },
-            },
-            { mode: "jpeg-pyramid" },
-          );
-          useDocumentStore.getState().setMetadata({ imageSource: nextSource });
-        } catch (e) {
-          console.error("[minerva] failed to write story bundle sidecars", e);
-          setExportError(
-            e instanceof Error
-              ? e.message
-              : "Failed to write document.json / index.html",
-          );
-          return;
-        }
-        setProgress({
-          completed: total,
-          total,
-          done: true,
-          startedAt: wallStart,
-        });
+      if (cancelled) return;
+      if (exportFailed) {
+        console.error("[minerva] jpeg-export failed", exportFailed);
+        setExportError(exportFailed.message);
+        return;
       }
+
+      finishedOk = true;
+      console.log(
+        `[minerva] jpeg-export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (${concurrency} workers, ${total} tiles, transfer=${jpegTransfer}, encoder=jsquash)`,
+      );
+      try {
+        const nextSource = imageSourceFromJpegTransfer(jpegTransfer);
+        const doc = useDocumentStore.getState().toDocumentData();
+        await writeStoryBundleSidecars(
+          directory_handle,
+          {
+            ...doc,
+            metadata: { ...doc.metadata, imageSource: nextSource },
+          },
+          { mode: "jpeg-pyramid" },
+        );
+        useDocumentStore.getState().setMetadata({ imageSource: nextSource });
+      } catch (e) {
+        console.error("[minerva] failed to write story bundle sidecars", e);
+        setExportError(
+          e instanceof Error
+            ? e.message
+            : "Failed to write document.json / index.html",
+        );
+        return;
+      }
+      setProgress({
+        completed: total,
+        total,
+        done: true,
+        startedAt: wallStart,
+      });
     };
 
-    run();
+    void run().catch((e) => {
+      if (cancelled) return;
+      console.error("[minerva] jpeg-export failed", e);
+      setExportError(e instanceof Error ? e.message : "JPEG export failed");
+    });
 
     return () => {
       cancelled = true;
@@ -679,7 +775,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     cRange,
     exportError,
     directory_handle,
-    exportMode,
+    containerMode,
     exportArmed,
     jpegTransfer,
   ]);
@@ -727,7 +823,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
             Dismiss
           </button>
         </div>
-      ) : exportMode === "remote-url" ? (
+      ) : containerMode === "remote-url" ? (
         <div className={styles.exportStatus}>
           <div className={styles.exportMessage}>
             {done
@@ -746,11 +842,26 @@ export const ImageExporter = (props: ImageExporterProps) => {
         </div>
       ) : !exportArmed ? (
         <div className={styles.exportStatus}>
-          <div className={styles.exportMessage}>Export JPEG pyramid</div>
+          <div className={styles.exportMessage}>
+            {writeOmeTiff ? "Export JPEG OME-TIFF" : "Export JPEG pyramid"}
+          </div>
+          <label className={styles.transferToggle}>
+            <input
+              type="checkbox"
+              checked={writeOmeTiff}
+              onChange={(e) => {
+                const on = e.target.checked;
+                setWriteOmeTiff(on);
+                if (on) setJpegTransfer("cube-root");
+              }}
+            />
+            <span>Single-file OME-TIFF (cube-root)</span>
+          </label>
           <label className={styles.transferToggle}>
             <input
               type="checkbox"
               checked={jpegTransfer === "cube-root"}
+              disabled={writeOmeTiff}
               onChange={(e) =>
                 setJpegTransfer(e.target.checked ? "cube-root" : "contrast")
               }

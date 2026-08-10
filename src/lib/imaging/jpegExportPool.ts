@@ -107,6 +107,8 @@ export class JpegExportPool {
     upperLimit: number,
     quality = JPEG_EXPORT_QUALITY,
     transfer: JpegExportTransfer = "contrast",
+    padTileWidth?: number,
+    padTileLength?: number,
   ): Promise<ArrayBuffer> {
     const workerWrappersPromise = this.workerWrappers;
     if (!workerWrappersPromise) {
@@ -126,6 +128,8 @@ export class JpegExportPool {
         upperLimit,
         quality,
         transfer,
+        padTileWidth,
+        padTileLength,
       },
       [buffer],
     );
@@ -168,6 +172,8 @@ export type EncodeTilePixelsIn = {
   upperLimit: number;
   quality?: number;
   transfer?: JpegExportTransfer;
+  padTileWidth?: number;
+  padTileLength?: number;
 };
 
 /**
@@ -185,6 +191,8 @@ export async function encodeTileJpeg(
     upperLimit,
     quality = JPEG_EXPORT_QUALITY,
     transfer = "contrast",
+    padTileWidth,
+    padTileLength,
   } = input;
   const pool = getJpegExportPool();
   if (pool) {
@@ -199,6 +207,8 @@ export async function encodeTileJpeg(
         upperLimit,
         quality,
         transfer,
+        padTileWidth,
+        padTileLength,
       );
     } catch (err) {
       console.warn(
@@ -215,6 +225,8 @@ export async function encodeTileJpeg(
     upperLimit,
     quality,
     transfer,
+    padTileWidth,
+    padTileLength,
   );
 }
 

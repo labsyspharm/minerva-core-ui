@@ -14,10 +14,15 @@ import {
 } from "@/lib/imaging/loadJpegFromDocument";
 import { getFileHandle } from "@/lib/persistence/fileHandles";
 import type { Image } from "@/lib/stores/documentSchema";
-import type { JpegExportTransfer } from "./cubeRootEncoding";
+import {
+  isJpegOmeTiffImageSource,
+  type JpegExportTransfer,
+  jpegTransferFromImageSource,
+} from "./cubeRootEncoding";
 import type { JpegLoaderEntry, OmeLoaderEntry } from "./loaderEntries";
 import type { PoolClass } from "./workers/pool";
 import { Pool } from "./workers/pool";
+import { wrapOmeLoaderCubeRoot } from "./wrapOmeLoaderCubeRoot";
 
 export type HydrateDocumentLoadersResult = {
   jpegLoaderEntries: JpegLoaderEntry[];
@@ -40,6 +45,8 @@ export type HydrateDocumentLoadersOpts = {
   fetchTile?: JpegTileFetcher;
   existingPyramidFolders?: ReadonlySet<string>;
   transfer?: JpegExportTransfer;
+  /** When set, wrap OME loaders for cube-root JPEG OME-TIFF decode. */
+  imageSource?: string;
 };
 
 const omeLoaderRole = (im: Image): "intensity" | "segmentation" =>
@@ -69,13 +76,16 @@ export async function hydrateDocumentLoaders(
     : hasFileHandlePermission;
   const channelGroups = opts.channelGroups ?? [];
   const documentUrl = opts.documentUrl ?? window.location.href;
+  const wrapOmeCubeRoot = isJpegOmeTiffImageSource(opts.imageSource);
+  const transfer =
+    opts.transfer ?? jpegTransferFromImageSource(opts.imageSource);
 
   jpegLoaderEntries.push(
     ...(await jpegLoaderEntriesFromImages({
       images,
       channelGroups,
       documentUrl,
-      transfer: opts.transfer ?? "contrast",
+      transfer,
       ...(opts.fetchTile ? { fetchTile: opts.fetchTile } : {}),
       ...(opts.existingPyramidFolders
         ? { existingPyramidFolders: opts.existingPyramidFolders }
@@ -93,7 +103,10 @@ export async function hydrateDocumentLoaders(
           url: im.source.url,
           ...(pool ? { pool } : {}),
         });
-        omeLoaderEntries.push({ loader, sourceImageId: im.id });
+        omeLoaderEntries.push({
+          loader: wrapOmeCubeRoot ? wrapOmeLoaderCubeRoot(loader) : loader,
+          sourceImageId: im.id,
+        });
         break;
       }
       case "local": {
@@ -116,7 +129,10 @@ export async function hydrateDocumentLoaders(
           in_f: file.name,
           ...(pool ? { pool } : {}),
         });
-        omeLoaderEntries.push({ loader, sourceImageId: im.id });
+        omeLoaderEntries.push({
+          loader: wrapOmeCubeRoot ? wrapOmeLoaderCubeRoot(loader) : loader,
+          sourceImageId: im.id,
+        });
         break;
       }
       case "dicomWeb": {

@@ -76,7 +76,7 @@ export type JpegTiffChannelPlan = {
 
 export type StreamingJpegBigTiffPlan = {
   channels: JpegTiffChannelPlan[];
-  /** Written on the first full-resolution IFD (OME-XML later). */
+  /** Optional ASCII ImageDescription on the first full-resolution IFD. */
   imageDescription?: string;
 };
 
@@ -264,35 +264,6 @@ function buildUserTags(slot: IfdSlot, subIfdCount: number): ResolvedTag[] {
   }
   tags.sort((a, b) => a.tag - b.tag);
   return tags;
-}
-
-/**
- * Pad edge tiles so JPEG SOF dimensions match declared TIFF tile size.
- * Input is grayscale RGBA (R=G=B=intensity). Output is tileW×tileH RGBA.
- */
-export function padGrayscaleRgbaToTile(
-  rgba: Uint8ClampedArray,
-  width: number,
-  height: number,
-  tileWidth = JPEG_PYRAMID_TILE_SIZE,
-  tileLength = JPEG_PYRAMID_TILE_SIZE,
-): Uint8ClampedArray<ArrayBuffer> {
-  if (width === tileWidth && height === tileLength) {
-    return rgba.buffer instanceof ArrayBuffer
-      ? (rgba as Uint8ClampedArray<ArrayBuffer>)
-      : (new Uint8ClampedArray(rgba) as Uint8ClampedArray<ArrayBuffer>);
-  }
-  const out = new Uint8ClampedArray(
-    new ArrayBuffer(tileWidth * tileLength * 4),
-  ) as Uint8ClampedArray<ArrayBuffer>;
-  const copyW = Math.min(width, tileWidth);
-  const copyH = Math.min(height, tileLength);
-  for (let row = 0; row < copyH; row++) {
-    const src = row * width * 4;
-    const dst = row * tileWidth * 4;
-    out.set(rgba.subarray(src, src + copyW * 4), dst);
-  }
-  return out;
 }
 
 export class StreamingJpegBigTiffWriter {
