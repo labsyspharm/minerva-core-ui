@@ -185,8 +185,8 @@ importers:
         specifier: ^0.0.6
         version: 0.0.6
       tiffwriter:
-        specifier: ^0.1.5
-        version: 0.1.5
+        specifier: ^0.1.6
+        version: 0.1.6
       vite-plugin-svgr:
         specifier: ^4.3.0
         version: 4.5.0(rollup@4.41.1)(typescript@6.0.3)(vite@5.4.19(@types/node@20.17.57))
@@ -3555,8 +3555,8 @@ packages:
     resolution: {integrity: sha512-dStVgoaQ11mA5htJ+RzZ51ZxIZqNOgWKAIvtjLrW1AliQQLCmrDqNzQZ8Jh91YealQ95DXt4MEduLzJmbs6lig==}
     hasBin: true
 
-  tiffwriter@0.1.5:
-    resolution: {integrity: sha512-NZTsm0Hud2BmJHCCMjPN0YJiluqsYKQkhr7iB8a+To4I4bh2/PpXFadk5czDo3jqgSmUHGbOm5MU7v+HkENz1Q==}
+  tiffwriter@0.1.6:
+    resolution: {integrity: sha512-SnyZwCGkyMjgCygJtpO9Ryn7pu5BQqcnuPrN6xxrAQYvbzrgvTllIcTcq40hM0J6izRdwAg1j1leGBa5jtfP6A==}
     engines: {node: '>=18'}
 
   tinybench@2.9.0:
@@ -8053,7 +8053,7 @@ snapshots:
       argparse: 1.0.10
       image-size: 0.7.5
 
-  tiffwriter@0.1.5: {}
+  tiffwriter@0.1.6: {}
 
   tinybench@2.9.0: {}
 
