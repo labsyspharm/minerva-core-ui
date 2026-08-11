@@ -112,6 +112,20 @@ function planeLevels(loaderData: LoaderPlane[]): LevelSize[] {
   });
 }
 
+function tileCountForLevels(
+  levels: readonly LevelSize[],
+  channelCount: number,
+): number {
+  let n = 0;
+  for (const level of levels) {
+    n +=
+      Math.ceil(level.width / level.tileSize) *
+      Math.ceil(level.height / level.tileSize) *
+      channelCount;
+  }
+  return n;
+}
+
 function escapeXmlAttr(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -470,10 +484,7 @@ export async function exportJpegOmeTiffStory(
     const loaderData = entry.loader.data as LoaderPlane[] | undefined;
     if (!loaderData?.length) continue;
     const levels = planeLevels(loaderData);
-    totalTiles += planPyramid({
-      levels,
-      channelCount: channels.length,
-    }).jobs.length;
+    totalTiles += tileCountForLevels(levels, channels.length);
     work.push({
       entry,
       image,
