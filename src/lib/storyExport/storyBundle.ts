@@ -1,4 +1,7 @@
-import { JPEG_OME_TIFF_IMAGE_SOURCE } from "@/lib/imaging/cubeRootEncoding";
+import {
+  isJpegOmeTiffImageSource,
+  JPEG_OME_TIFF_IMAGE_SOURCE,
+} from "@/lib/imaging/cubeRootEncoding";
 import type { DocumentData, Image } from "@/lib/stores/documentSchema";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
 import { version as MINERVA_VERSION } from "../../../package.json";
@@ -14,11 +17,14 @@ function minervaCdnUrls(version: string): { js: string; css: string } {
 /** How pixel data is referenced in an exported story folder. */
 export type StoryExportMode = "jpeg-pyramid" | "jpeg-ome-tiff" | "remote-url";
 
-/** True when every intensity source is a remote URL (no local file handles). */
+/** True when every intensity source is an absolute http(s) URL (no local / relative files). */
 export function canExportWithRemoteUrls(images: Image[]): boolean {
   const withSource = images.filter((im) => im.source);
   if (withSource.length === 0) return false;
-  return withSource.every((im) => im.source?.kind === "url");
+  return withSource.every((im) => {
+    if (im.source?.kind !== "url") return false;
+    return /^https?:\/\//i.test(im.source.url.trim());
+  });
 }
 
 /** Point intensity images at the story-folder JPEG root. */
@@ -36,31 +42,13 @@ export function withPortableJpegSources(images: Image[]): Image[] {
   });
 }
 
-/** Point intensity images at relative OME-TIFF files in the export folder. */
-export function withPortableOmeTiffSources(
-  images: Image[],
-  fileNameByImageId: ReadonlyMap<string, string>,
-): Image[] {
-  return images.map((im) => {
-    const fileName = fileNameByImageId.get(im.id);
-    if (!fileName) return im;
-    return {
-      ...im,
-      source: { kind: "url" as const, url: fileName },
-    };
-  });
-}
-
 function toExportedStoryDocument(
   data: DocumentData,
   mode: StoryExportMode,
-  omeTiffFiles?: ReadonlyMap<string, string>,
 ): DocumentData {
   let images = data.images;
   if (mode === "jpeg-pyramid") {
     images = withPortableJpegSources(data.images);
-  } else if (mode === "jpeg-ome-tiff") {
-    images = withPortableOmeTiffSources(data.images, omeTiffFiles ?? new Map());
   }
   return validateDocumentData({
     ...data,
@@ -78,7 +66,11 @@ function imageSourceForExportMode(
   current?: string,
 ): string {
   if (mode === "remote-url") return "remote-url";
-  if (mode === "jpeg-ome-tiff") return JPEG_OME_TIFF_IMAGE_SOURCE;
+  if (mode === "jpeg-ome-tiff") {
+    // Preserve contrast vs cube-root variant set by the exporter.
+    if (current && isJpegOmeTiffImageSource(current)) return current;
+    return JPEG_OME_TIFF_IMAGE_SOURCE;
+  }
   return current ?? "jpeg-pyramid";
 }
 
@@ -127,8 +119,6 @@ async function writeTextFile(
 
 export type WriteStoryBundleOptions = {
   mode?: StoryExportMode;
-  /** image.id → relative `.ome.tif` filename when mode is `jpeg-ome-tiff`. */
-  omeTiffFiles?: ReadonlyMap<string, string>;
 };
 
 /** Write `document.json` + CDN-backed `index.html` into an export directory. */
@@ -143,7 +133,7 @@ export async function writeStoryBundleSidecars(
       "Remote URL export requires all images to use OME-TIFF URLs (no local files).",
     );
   }
-  const exported = toExportedStoryDocument(data, mode, opts?.omeTiffFiles);
+  const exported = toExportedStoryDocument(data, mode);
   await writeTextFile(
     directory,
     "document.json",

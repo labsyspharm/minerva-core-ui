@@ -1,9 +1,22 @@
-/** Cube-root intensity transfer for JPEG pyramid / OME-TIFF encode/decode. */
+/** Intensity transfer for JPEG pyramid / OME-TIFF encode/decode. */
 
 export type JpegExportTransfer = "contrast" | "cube-root";
 
-/** Metadata.imageSource for cube-root JPEG OME-TIFF story bundles. */
+/**
+ * Metadata.imageSource for JPEG OME-TIFF story bundles.
+ * Legacy `jpeg-ome-tiff` means cube-root (first ship).
+ */
 export const JPEG_OME_TIFF_IMAGE_SOURCE = "jpeg-ome-tiff";
+export const JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE = "jpeg-ome-tiff-contrast";
+
+export function isJpegOmeTiffImageSource(
+  imageSource: string | undefined,
+): boolean {
+  return (
+    imageSource === JPEG_OME_TIFF_IMAGE_SOURCE ||
+    imageSource === JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE
+  );
+}
 
 export function jpegTransferFromImageSource(
   imageSource: string | undefined,
@@ -23,10 +36,12 @@ export function imageSourceFromJpegTransfer(
   return transfer === "cube-root" ? "jpeg-pyramid-cube-root" : "jpeg-pyramid";
 }
 
-export function isJpegOmeTiffImageSource(
-  imageSource: string | undefined,
-): boolean {
-  return imageSource === JPEG_OME_TIFF_IMAGE_SOURCE;
+export function imageSourceFromOmeTiffTransfer(
+  transfer: JpegExportTransfer,
+): string {
+  return transfer === "cube-root"
+    ? JPEG_OME_TIFF_IMAGE_SOURCE
+    : JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE;
 }
 
 /** Contrast used in pyramid folder hashes (cube-root folders are contrast-stable). */

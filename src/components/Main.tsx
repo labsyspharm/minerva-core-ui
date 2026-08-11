@@ -30,7 +30,10 @@ import {
 } from "@/lib/imaging/autoContrast";
 import { defaultVisibilitiesForSources } from "@/lib/imaging/channelCompositor";
 import { isImageChannel } from "@/lib/imaging/channelKind";
-import { jpegTransferFromImageSource } from "@/lib/imaging/cubeRootEncoding";
+import {
+  JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE,
+  jpegTransferFromImageSource,
+} from "@/lib/imaging/cubeRootEncoding";
 import { loadDicomWeb, parseDicomWeb } from "@/lib/imaging/dicom.js";
 import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
 import {
@@ -290,6 +293,15 @@ function clearOmeDerivedCaches(): void {
 
 const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
 
+async function pickExportFolder(): Promise<FileSystemDirectoryHandle | null> {
+  try {
+    return await showDirectoryPicker({ mode: "readwrite" });
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") return null;
+    throw e;
+  }
+}
+
 const Content = (props: Props) => {
   const { handleKeys, useLaunchQueue = false } = props;
   /** Remote demo image / DICOM bootstrap from `index.tsx` (`pnpm run demo` only). */
@@ -417,6 +429,8 @@ const Content = (props: Props) => {
   ) => {
     const doc = useDocumentStore.getState();
     const storyId = doc.activeStoryId;
+    // Always open ImageExporter (format picker). Document-only is offered when
+    // matching pyramid folders already exist.
     if (mode === "jpeg-pyramid") {
       const needed = await neededJpegPyramidFolderNames(
         doc.channelGroups,
@@ -426,29 +440,6 @@ const Content = (props: Props) => {
       const existing = await listExistingPyramidFolders(dirHandle);
       const foldersReady =
         needed.size === 0 || [...needed].every((name) => existing.has(name));
-      const canReencode =
-        omeLoaderEntries.length > 0 || dicomIndexList.length > 0;
-      if (foldersReady && !canReencode) {
-        try {
-          await writeStoryBundleSidecars(dirHandle, doc.toDocumentData(), {
-            mode: "jpeg-pyramid",
-          });
-          if (storyId) await setStoryRootHandle(storyId, dirHandle);
-          window.alert("Updated document.json in the export folder.");
-        } catch (e) {
-          console.error("[minerva] sidecar-only export failed", e);
-          window.alert(
-            e instanceof Error ? e.message : "Failed to update document.json.",
-          );
-        }
-        return;
-      }
-      if (!foldersReady && !canReencode) {
-        window.alert(
-          "Pyramid folders are missing or out of date. Re-export needs the original image, or pick a folder that already contains the matching JPEG pyramid.",
-        );
-        return;
-      }
       setExportAllowDocumentOnly(foldersReady);
     } else {
       setExportAllowDocumentOnly(false);
@@ -464,16 +455,6 @@ const Content = (props: Props) => {
     setDirectoryHandle(dirHandle);
     setIoState("EXPORTING");
   };
-
-  const pickExportFolder =
-    async (): Promise<FileSystemDirectoryHandle | null> => {
-      try {
-        return await showDirectoryPicker({ mode: "readwrite" });
-      } catch (e) {
-        if (e instanceof DOMException && e.name === "AbortError") return null;
-        throw e;
-      }
-    };
 
   const startExport = async (mode: StoryExportMode = "jpeg-pyramid") => {
     if (!hasDirectoryPickerAccess()) {
@@ -1834,10 +1815,12 @@ const Content = (props: Props) => {
   }, [viewerImageKey, omeLoaderEntries, onEnsureChannelGmmContrastLimits]);
 
   const storyImageSource = useDocumentStore((s) => s.metadata.imageSource);
+  // Contrast-baked JPEG OME-TIFF matches jpeg-pyramid: display-only, not re-windowed.
   const contrastEditable =
-    omeLoaderEntries.length > 0 ||
-    dicomIndexList.length > 0 ||
-    jpegTransferFromImageSource(storyImageSource) === "cube-root";
+    storyImageSource !== JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE &&
+    (omeLoaderEntries.length > 0 ||
+      dicomIndexList.length > 0 ||
+      jpegTransferFromImageSource(storyImageSource) === "cube-root");
   const channelProps = {
     hiddenChannel: true,
     contrastEditable,

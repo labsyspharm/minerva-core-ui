@@ -9,8 +9,7 @@ import { hasDirectoryPickerAccess } from "@/lib/imaging/filesystem";
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import {
   folderByChannelIndexFromGroup,
-  JPEG_FALLBACK_LOWER_LIMIT,
-  JPEG_FALLBACK_UPPER_LIMIT,
+  JPEG_BAKED_CONTRAST_LIMIT,
   jpegPyramidFolderName,
 } from "@/lib/imaging/jpegPyramid";
 import { jpegSourceNeedsLocalRoot } from "@/lib/imaging/loadJpegFromDocument";
@@ -104,8 +103,8 @@ export async function neededJpegPyramidFolderNames(
       g.channels.map(async (ch) => {
         const { lowerLimit, upperLimit } = folderLimitsForTransfer(
           transfer,
-          ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
-          ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
+          ch.lowerLimit,
+          ch.upperLimit,
         );
         names.add(
           await jpegPyramidFolderName(ch.channelId, lowerLimit, upperLimit),
@@ -123,8 +122,8 @@ export async function neededJpegPyramidFolderNames(
         channels: im.channels.map((ch) => {
           const { lowerLimit, upperLimit } = folderLimitsForTransfer(
             transfer,
-            ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
-            ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
+            ch.lowerLimit ?? JPEG_BAKED_CONTRAST_LIMIT[0],
+            ch.upperLimit ?? JPEG_BAKED_CONTRAST_LIMIT[1],
           );
           return { channelId: ch.id, lowerLimit, upperLimit };
         }),

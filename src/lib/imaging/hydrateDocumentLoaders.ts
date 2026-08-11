@@ -21,7 +21,7 @@ import {
 import type { JpegLoaderEntry, OmeLoaderEntry } from "./loaderEntries";
 import type { PoolClass } from "./workers/pool";
 import { Pool } from "./workers/pool";
-import { wrapOmeLoaderCubeRoot } from "./wrapOmeLoaderCubeRoot";
+import { wrapOmeLoaderJpegExport } from "./wrapOmeLoaderCubeRoot";
 
 export type HydrateDocumentLoadersResult = {
   jpegLoaderEntries: JpegLoaderEntry[];
@@ -55,6 +55,22 @@ const omeLoaderRole = (im: Image): "intensity" | "segmentation" =>
     ? "segmentation"
     : "intensity";
 
+/**
+ * Viv's `loadOmeTiff` does `new URL(source)` with no base, so relative
+ * export paths (`foo.ome.tif`) must be resolved against document.json.
+ */
+function resolveOmeSourceUrl(documentUrl: string, sourceUrl: string): string {
+  const trimmed = sourceUrl.trim();
+  if (
+    /^https?:\/\//i.test(trimmed) ||
+    trimmed.startsWith("blob:") ||
+    trimmed.startsWith("file:")
+  ) {
+    return trimmed;
+  }
+  return new URL(trimmed, new URL(documentUrl, window.location.href)).href;
+}
+
 /** Rebuild Viv / DICOM loaders from persisted document image rows. */
 export async function hydrateDocumentLoaders(
   images: Image[],
@@ -74,8 +90,8 @@ export async function hydrateDocumentLoaders(
     : hasFileHandlePermission;
   const channelGroups = opts.channelGroups ?? [];
   const documentUrl = opts.documentUrl ?? window.location.href;
-  const wrapOmeCubeRoot = isJpegOmeTiffImageSource(opts.imageSource);
   const transfer = jpegTransferFromImageSource(opts.imageSource);
+  const wrapOmeJpeg = isJpegOmeTiffImageSource(opts.imageSource);
 
   jpegLoaderEntries.push(
     ...(await jpegLoaderEntriesFromImages({
@@ -97,12 +113,15 @@ export async function hydrateDocumentLoaders(
       case "url": {
         const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
           kind: "url",
-          url: im.source.url,
+          url: resolveOmeSourceUrl(documentUrl, im.source.url),
           ...(pool ? { pool } : {}),
         });
         omeLoaderEntries.push({
-          loader: wrapOmeCubeRoot ? wrapOmeLoaderCubeRoot(loader) : loader,
+          loader: wrapOmeJpeg
+            ? wrapOmeLoaderJpegExport(loader, transfer)
+            : loader,
           sourceImageId: im.id,
+          ...(wrapOmeJpeg ? { transfer } : {}),
         });
         break;
       }
@@ -127,8 +146,11 @@ export async function hydrateDocumentLoaders(
           ...(pool ? { pool } : {}),
         });
         omeLoaderEntries.push({
-          loader: wrapOmeCubeRoot ? wrapOmeLoaderCubeRoot(loader) : loader,
+          loader: wrapOmeJpeg
+            ? wrapOmeLoaderJpegExport(loader, transfer)
+            : loader,
           sourceImageId: im.id,
+          ...(wrapOmeJpeg ? { transfer } : {}),
         });
         break;
       }

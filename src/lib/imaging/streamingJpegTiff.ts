@@ -15,9 +15,12 @@ const TIFF_COMPRESSION_JPEG = 7;
 /** PhotometricInterpretation BlackIsZero (grayscale). */
 const TIFF_PHOTOMETRIC_BLACK_IS_ZERO = 1;
 
+const TIFF_TYPE_ASCII = 2;
 const TIFF_TYPE_SHORT = 3;
 const TIFF_TYPE_LONG = 4;
 const TIFF_TYPE_LONG8 = 16;
+/** BigTIFF IFD offset type — required for SubIFDs (Bio-Formats / QuPath). */
+const TIFF_TYPE_IFD8 = 18;
 
 const TAG_NEW_SUBFILE_TYPE = 254;
 const TAG_IMAGE_WIDTH = 256;
@@ -25,6 +28,8 @@ const TAG_IMAGE_LENGTH = 257;
 const TAG_BITS_PER_SAMPLE = 258;
 const TAG_COMPRESSION = 259;
 const TAG_PHOTOMETRIC = 262;
+/** ImageDescription — OME-XML for Viv `loadOmeTiff`. */
+const TAG_IMAGE_DESCRIPTION = 270;
 const TAG_SAMPLES_PER_PIXEL = 277;
 const TAG_PLANAR_CONFIGURATION = 284;
 const TAG_TILE_WIDTH = 322;
@@ -74,6 +79,11 @@ export type JpegTiffChannelPlan = {
 
 export type StreamingJpegTiffPlan = {
   channels: JpegTiffChannelPlan[];
+  /**
+   * OME-XML written as TIFF ImageDescription on the first IFD.
+   * Required for Viv `loadOmeTiff` (it calls `ImageDescription.replace`).
+   */
+  omeXml?: string;
 };
 
 /** Seekable byte sink (memory or FileSystemWritableFileStream). */
@@ -83,26 +93,43 @@ export type RandomAccessSink = {
   close(): Promise<void>;
 };
 
-/** Adapter for Chromium File System Access writable streams. */
+/**
+ * Adapter for Chromium File System Access writable streams.
+ * Sequential writes at the current cursor append without seeking; random
+ * positions (IFD patches) still seek.
+ */
 export function createFileWritableSink(
   stream: FileSystemWritableFileStream,
 ): RandomAccessSink {
+  let cursor = 0;
   return {
     async write(position, data) {
-      await stream.write({
-        type: "write",
-        position,
-        data: data as BufferSource,
-      });
+      if (position === cursor) {
+        await stream.write({
+          type: "write",
+          data: data as BufferSource,
+        });
+      } else {
+        await stream.write({
+          type: "write",
+          position,
+          data: data as BufferSource,
+        });
+      }
+      cursor = position + data.byteLength;
     },
     async truncate(size) {
       await stream.truncate(size);
+      cursor = size;
     },
     async close() {
       await stream.close();
     },
   };
 }
+
+/** Cap encoded-but-not-yet-written JPEG bytes so encode cannot race ahead unboundedly. */
+const DEFAULT_JPEG_TIFF_PENDING_BUDGET = 48 * 1024 * 1024;
 
 type ResolvedTag = {
   tag: number;
@@ -162,24 +189,47 @@ function long8ArrayTag(tag: number, count: number): ResolvedTag {
   };
 }
 
+/** SubIFD pointer array (BigTIFF IFD8 offsets). */
+function ifd8ArrayTag(tag: number, count: number): ResolvedTag {
+  return {
+    tag,
+    type: TIFF_TYPE_IFD8,
+    count,
+    valueBytes: new Uint8Array(count * 8),
+  };
+}
+
+/** TIFF ASCII values are NUL-terminated; `count` includes the terminator. */
+function asciiTag(tag: number, text: string): ResolvedTag {
+  const encoded = new TextEncoder().encode(text);
+  const valueBytes = new Uint8Array(encoded.length + 1);
+  valueBytes.set(encoded);
+  return {
+    tag,
+    type: TIFF_TYPE_ASCII,
+    count: valueBytes.length,
+    valueBytes,
+  };
+}
+
 function ifdEntryBlockSize(numTags: number): number {
   return 8 + numTags * TIFF_IFD_ENTRY_SIZE + 8;
 }
 
-/** Offset tables are patched after tiles land — never store them inline. */
-function tagMustOverflow(tag: number): boolean {
-  return (
-    tag === TAG_TILE_OFFSETS ||
-    tag === TAG_TILE_BYTE_COUNTS ||
-    tag === TAG_SUB_IFDS
-  );
-}
-
+/**
+ * BigTIFF stores values inline when `count * typeSize <= 8`. Forcing a pointer
+ * in that case is invalid: readers treat the pointer bytes as the value
+ * (e.g. TileOffsets[0] = overflow address → SOI not found).
+ */
 function tagIsOutOfLine(t: ResolvedTag): boolean {
-  return t.valueBytes.length > INLINE_THRESHOLD || tagMustOverflow(t.tag);
+  return t.valueBytes.length > INLINE_THRESHOLD;
 }
 
-function buildUserTags(slot: IfdSlot, subIfdCount: number): ResolvedTag[] {
+function buildUserTags(
+  slot: IfdSlot,
+  subIfdCount: number,
+  imageDescription?: string,
+): ResolvedTag[] {
   const tags: ResolvedTag[] = [
     shortTag(TAG_NEW_SUBFILE_TYPE, slot.newSubfileType),
     longTag(TAG_IMAGE_WIDTH, slot.width),
@@ -195,12 +245,20 @@ function buildUserTags(slot: IfdSlot, subIfdCount: number): ResolvedTag[] {
     long8ArrayTag(TAG_TILE_BYTE_COUNTS, slot.tileCount),
     shortTag(TAG_SAMPLE_FORMAT, 1),
   ];
+  if (imageDescription) {
+    tags.push(asciiTag(TAG_IMAGE_DESCRIPTION, imageDescription));
+  }
   if (subIfdCount > 0) {
-    tags.push(long8ArrayTag(TAG_SUB_IFDS, subIfdCount));
+    tags.push(ifd8ArrayTag(TAG_SUB_IFDS, subIfdCount));
   }
   tags.sort((a, b) => a.tag - b.tag);
   return tags;
 }
+
+export type StreamingJpegTiffWriterOpts = {
+  /** Invoked once when a queued write fails. */
+  onWriteError?: (error: Error) => void;
+};
 
 export class StreamingJpegTiffWriter {
   private readonly mainSlots: IfdSlot[] = [];
@@ -211,11 +269,20 @@ export class StreamingJpegTiffWriter {
   private begun = false;
   private finished = false;
   private writeQueue: Promise<void> = Promise.resolve();
+  private pendingBytes = 0;
+  private readonly pendingBudget: number;
+  private readonly onWriteError?: (error: Error) => void;
+  private writeError: Error | null = null;
+  private writeErrorReported = false;
+  private readonly pendingWaiters: Array<() => void> = [];
 
   constructor(
     private readonly sink: RandomAccessSink,
     private readonly plan: StreamingJpegTiffPlan,
+    opts?: StreamingJpegTiffWriterOpts,
   ) {
+    this.pendingBudget = DEFAULT_JPEG_TIFF_PENDING_BUDGET;
+    this.onWriteError = opts?.onWriteError;
     if (!plan.channels.length) {
       throw new Error("StreamingJpegTiffWriter: no channels");
     }
@@ -245,19 +312,58 @@ export class StreamingJpegTiffWriter {
     this.begun = true;
   }
 
+  private reportWriteError(error: Error): void {
+    if (!this.writeError) this.writeError = error;
+    while (this.pendingWaiters.length > 0) {
+      this.pendingWaiters.shift()?.();
+    }
+    if (this.writeErrorReported) return;
+    this.writeErrorReported = true;
+    this.onWriteError?.(this.writeError);
+  }
+
+  private releasePending(bytes: number): void {
+    this.pendingBytes = Math.max(0, this.pendingBytes - bytes);
+    while (
+      this.pendingWaiters.length > 0 &&
+      this.pendingBytes < this.pendingBudget
+    ) {
+      const wake = this.pendingWaiters.shift();
+      wake?.();
+    }
+  }
+
+  private async waitForBudget(bytes: number): Promise<void> {
+    while (
+      this.pendingBytes + bytes > this.pendingBudget &&
+      this.pendingBytes > 0
+    ) {
+      if (this.writeError) throw this.writeError;
+      await new Promise<void>((resolve) => {
+        this.pendingWaiters.push(resolve);
+      });
+    }
+    if (this.writeError) throw this.writeError;
+  }
+
   /**
-   * Append one JPEG tile (self-contained baseline grayscale).
-   * Physical order may be completion order; `tileIndex` is row-major logical index.
+   * Queue one JPEG tile for append. Resolves after backpressure allows enqueue
+   * (not after the disk write). Physical order may be completion order;
+   * `tileIndex` is row-major logical index.
    */
-  async writeTile(
+  async enqueueTile(
     channelIndex: number,
     levelIndex: number,
     tileIndex: number,
     jpeg: ArrayBuffer | Uint8Array,
   ): Promise<void> {
     if (!this.begun || this.finished) {
-      throw new Error("StreamingJpegTiffWriter: call begin() before writeTile");
+      throw new Error(
+        "StreamingJpegTiffWriter: call begin() before enqueueTile",
+      );
     }
+    if (this.writeError) throw this.writeError;
+
     const slot = this.getIfdSlot(channelIndex, levelIndex);
     if (tileIndex < 0 || tileIndex >= slot.tileCount) {
       throw new Error(
@@ -269,21 +375,56 @@ export class StreamingJpegTiffWriter {
         `StreamingJpegTiffWriter: tile c=${channelIndex} l=${levelIndex} i=${tileIndex} already written`,
       );
     }
-    const bytes = jpeg instanceof Uint8Array ? jpeg : new Uint8Array(jpeg);
-    if (bytes.byteLength === 0) {
+    const src = jpeg instanceof Uint8Array ? jpeg : new Uint8Array(jpeg);
+    if (src.byteLength === 0) {
       throw new Error("StreamingJpegTiffWriter: empty JPEG tile");
     }
+    // Own the buffer so callers can reuse memory after enqueue returns.
+    const bytes = new Uint8Array(src);
+
+    await this.waitForBudget(bytes.byteLength);
+    if (this.writeError) throw this.writeError;
+
+    // Reserve slot synchronously so concurrent encoders cannot double-write.
+    slot.tileOffsets[tileIndex] = -1;
+    this.pendingBytes += bytes.byteLength;
 
     const run = async () => {
-      const offset = this.dataCursor;
-      await this.sink.write(offset, bytes);
-      slot.tileOffsets[tileIndex] = offset;
-      slot.tileByteCounts[tileIndex] = bytes.byteLength;
-      slot.tilesWritten += 1;
-      this.dataCursor = align8(offset + bytes.byteLength);
+      if (this.writeError) {
+        this.releasePending(bytes.byteLength);
+        return;
+      }
+      try {
+        const offset = this.dataCursor;
+        await this.sink.write(offset, bytes);
+        const aligned = align8(offset + bytes.byteLength);
+        const pad = aligned - (offset + bytes.byteLength);
+        if (pad > 0) {
+          await this.sink.write(offset + bytes.byteLength, new Uint8Array(pad));
+        }
+        slot.tileOffsets[tileIndex] = offset;
+        slot.tileByteCounts[tileIndex] = bytes.byteLength;
+        slot.tilesWritten += 1;
+        this.dataCursor = aligned;
+      } catch (e) {
+        const err =
+          e instanceof Error ? e : new Error(String(e ?? "tile write failed"));
+        this.reportWriteError(err);
+        throw err;
+      } finally {
+        this.releasePending(bytes.byteLength);
+      }
     };
-    this.writeQueue = this.writeQueue.then(run, run);
-    await this.writeQueue;
+
+    this.writeQueue = this.writeQueue.then(run, (prevErr) => {
+      const err =
+        prevErr instanceof Error
+          ? prevErr
+          : new Error(String(prevErr ?? "tile write failed"));
+      this.reportWriteError(err);
+      this.releasePending(bytes.byteLength);
+      return Promise.reject(err);
+    });
   }
 
   /** Patch TileOffsets / TileByteCounts and close the sink. */
@@ -291,7 +432,12 @@ export class StreamingJpegTiffWriter {
     if (!this.begun || this.finished) {
       throw new Error("StreamingJpegTiffWriter: invalid finish()");
     }
-    await this.writeQueue;
+    try {
+      await this.writeQueue;
+    } catch {
+      /* writeError recorded below */
+    }
+    if (this.writeError) throw this.writeError;
 
     for (const channel of this.slotsByChannelLevel) {
       for (const slot of channel) {
@@ -322,6 +468,7 @@ export class StreamingJpegTiffWriter {
     let cursor = TIFF_HEADER_SIZE;
     this.mainSlots.length = 0;
     this.slotsByChannelLevel.length = 0;
+    const omeXml = this.plan.omeXml?.trim() || undefined;
 
     for (let c = 0; c < this.plan.channels.length; c++) {
       const levels = this.plan.channels[c].levels;
@@ -364,24 +511,36 @@ export class StreamingJpegTiffWriter {
       }
 
       const placeSlot = (slot: IfdSlot) => {
-        const tags = buildUserTags(slot, slot.subIfds.length);
+        const description =
+          slot.channelIndex === 0 && slot.levelIndex === 0 ? omeXml : undefined;
+        const tags = buildUserTags(slot, slot.subIfds.length, description);
         const entrySize = ifdEntryBlockSize(tags.length);
         slot.ifdOffset = cursor;
+        let entryPos = cursor + 8;
         cursor += entrySize;
 
-        // Overflow: assign file offsets for out-of-line arrays while walking tags.
+        // Record patch sites (inline value field or overflow) while walking tags.
         let overflowCursor = cursor;
         for (const t of tags) {
-          if (!tagIsOutOfLine(t)) continue;
-          overflowCursor = align8(overflowCursor);
-          if (t.tag === TAG_TILE_OFFSETS) {
-            slot.tileOffsetsFileOffset = overflowCursor;
+          const valueField = entryPos + 12;
+          if (tagIsOutOfLine(t)) {
+            overflowCursor = align8(overflowCursor);
+            if (t.tag === TAG_TILE_OFFSETS) {
+              slot.tileOffsetsFileOffset = overflowCursor;
+            } else if (t.tag === TAG_TILE_BYTE_COUNTS) {
+              slot.tileByteCountsFileOffset = overflowCursor;
+            } else if (t.tag === TAG_SUB_IFDS) {
+              slot.subIfdsFileOffset = overflowCursor;
+            }
+            overflowCursor += t.valueBytes.length;
+          } else if (t.tag === TAG_TILE_OFFSETS) {
+            slot.tileOffsetsFileOffset = valueField;
           } else if (t.tag === TAG_TILE_BYTE_COUNTS) {
-            slot.tileByteCountsFileOffset = overflowCursor;
+            slot.tileByteCountsFileOffset = valueField;
           } else if (t.tag === TAG_SUB_IFDS) {
-            slot.subIfdsFileOffset = overflowCursor;
+            slot.subIfdsFileOffset = valueField;
           }
-          overflowCursor += t.valueBytes.length;
+          entryPos += TIFF_IFD_ENTRY_SIZE;
         }
         cursor = align8(overflowCursor);
 
@@ -407,6 +566,7 @@ export class StreamingJpegTiffWriter {
   private serializeMetadataPlaceholders(): Uint8Array {
     const buf = new Uint8Array(this.metadataEnd);
     const view = new DataView(buf.buffer);
+    const omeXml = this.plan.omeXml?.trim() || undefined;
 
     // TIFF header (little-endian)
     view.setUint16(0, 0x4949, true);
@@ -416,7 +576,9 @@ export class StreamingJpegTiffWriter {
     setBigUint64LE(view, 8, this.mainSlots[0]?.ifdOffset ?? 0);
 
     const writeSlot = (slot: IfdSlot) => {
-      const tags = buildUserTags(slot, slot.subIfds.length);
+      const description =
+        slot.channelIndex === 0 && slot.levelIndex === 0 ? omeXml : undefined;
+      const tags = buildUserTags(slot, slot.subIfds.length, description);
       let pos = slot.ifdOffset;
       setBigUint64LE(view, pos, tags.length);
       pos += 8;
@@ -429,22 +591,24 @@ export class StreamingJpegTiffWriter {
         setBigUint64LE(view, pos + 4, t.count);
         const valueField = pos + 12;
 
+        const fillSubIfdPointers = (at: number) => {
+          const subView = new DataView(buf.buffer, at, slot.subIfds.length * 8);
+          for (let i = 0; i < slot.subIfds.length; i++) {
+            setBigUint64LE(subView, i * 8, slot.subIfds[i].ifdOffset);
+          }
+        };
+
         if (!tagIsOutOfLine(t)) {
           buf.set(t.valueBytes, valueField);
+          if (t.tag === TAG_SUB_IFDS) {
+            fillSubIfdPointers(valueField);
+          }
         } else {
           overflowCursor = align8(overflowCursor);
           setBigUint64LE(view, valueField, overflowCursor);
           buf.set(t.valueBytes, overflowCursor);
-          if (t.tag === TAG_SUB_IFDS && slot.subIfdsFileOffset !== null) {
-            // Fill SubIFD pointer array with child IFD offsets.
-            const subView = new DataView(
-              buf.buffer,
-              overflowCursor,
-              slot.subIfds.length * 8,
-            );
-            for (let i = 0; i < slot.subIfds.length; i++) {
-              setBigUint64LE(subView, i * 8, slot.subIfds[i].ifdOffset);
-            }
+          if (t.tag === TAG_SUB_IFDS) {
+            fillSubIfdPointers(overflowCursor);
           }
           overflowCursor += t.valueBytes.length;
         }

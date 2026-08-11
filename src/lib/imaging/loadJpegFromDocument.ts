@@ -10,8 +10,7 @@ import { loadJpeg } from "./jpeg.js";
 import {
   folderByChannelIndexFromGroup,
   folderByChannelIndexFromImageChannels,
-  JPEG_FALLBACK_LOWER_LIMIT,
-  JPEG_FALLBACK_UPPER_LIMIT,
+  JPEG_BAKED_CONTRAST_LIMIT,
 } from "./jpegPyramid";
 
 type GroupChannelRow = {
@@ -175,8 +174,8 @@ async function resolveChannelFolders(opts: {
     opts.image.channels.map((ch) => {
       const { lowerLimit, upperLimit } = folderLimitsForTransfer(
         opts.transfer,
-        ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
-        ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
+        ch.lowerLimit ?? JPEG_BAKED_CONTRAST_LIMIT[0],
+        ch.upperLimit ?? JPEG_BAKED_CONTRAST_LIMIT[1],
       );
       return {
         id: ch.id,
@@ -301,8 +300,12 @@ export async function jpegLoaderEntriesFromImages(opts: {
   const entries: JpegLoaderEntry[] = [];
   for (const im of opts.images) {
     if (im.source?.kind !== "jpeg") continue;
-    // Local-root sources need a directory tile fetcher; skip until reconnect.
-    if (jpegSourceNeedsLocalRoot(im.source.url) && !opts.fetchTile) continue;
+    // Relative "." needs a directory fetchTile, or a document.json URL so the
+    // default HTTP fetcher can load pyramids next to the story (CDN player).
+    if (jpegSourceNeedsLocalRoot(im.source.url) && !opts.fetchTile) {
+      const path = new URL(opts.documentUrl, window.location.href).pathname;
+      if (!/\/document\.json$/i.test(path)) continue;
+    }
     const storyRootUrl = resolveJpegStoryRoot(opts.documentUrl, im.source.url);
     const groupChannelFolders: Record<string, Record<number, string>> = {};
     for (const group of opts.channelGroups) {

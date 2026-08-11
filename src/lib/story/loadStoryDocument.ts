@@ -41,9 +41,9 @@ export async function loadStoryDocument(
     .getState()
     .hydrateFromDocument(data, data.metadata.id ?? crypto.randomUUID());
 
-  // Pool(0): main-thread decode — CDN IIFE workers hit the wrong /assets path.
+  // CDN IIFE build inlines decoder workers as blob URLs (vite.bundle.config).
   const omePool = data.images.some((im) => im.source?.kind === "url")
-    ? new Pool(0)
+    ? new Pool()
     : null;
   const { jpegLoaderEntries, omeLoaderEntries, dicomIndexList } =
     await hydrateDocumentLoaders(data.images, {

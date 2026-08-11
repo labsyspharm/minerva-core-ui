@@ -5,6 +5,8 @@ import type { Loader } from "./viv";
 export type OmeLoaderEntry = {
   loader: Loader;
   sourceImageId: string;
+  /** Set when loader wraps a Minerva JPEG OME-TIFF export. */
+  transfer?: JpegExportTransfer;
 };
 
 export type JpegLoaderEntry = {

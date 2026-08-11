@@ -7,7 +7,7 @@ import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
 const MOZJPEG_COLORSPACE_GRAYSCALE = 1;
 
 /** Historical 0–1 scale (Canvas); MozJPEG uses 0–100 via {@link mozJpegQuality}. */
-export const JPEG_EXPORT_QUALITY = 0.5;
+export const JPEG_EXPORT_QUALITY = 0.95;
 
 export const PIXEL_CTORS: Record<
   string,
@@ -63,29 +63,28 @@ function cubeRootPixelsToRgba(
 }
 
 /**
- * Pad edge tiles so JPEG SOF dimensions match declared TIFF TileWidth/TileLength.
- * Input is grayscale RGBA (R=G=B=intensity). Output is tileW×tileH RGBA.
+ * Pad edge tiles so JPEG SOF dimensions match the declared (square) TIFF tile
+ * size. Input is grayscale RGBA (R=G=B=intensity). Output is tile×tile RGBA.
  */
 function padGrayscaleRgbaToTile(
   rgba: Uint8ClampedArray,
   width: number,
   height: number,
-  tileWidth = JPEG_PYRAMID_TILE_SIZE,
-  tileLength = JPEG_PYRAMID_TILE_SIZE,
+  tileSize = JPEG_PYRAMID_TILE_SIZE,
 ): Uint8ClampedArray<ArrayBuffer> {
-  if (width === tileWidth && height === tileLength) {
+  if (width === tileSize && height === tileSize) {
     return rgba.buffer instanceof ArrayBuffer
       ? (rgba as Uint8ClampedArray<ArrayBuffer>)
       : (new Uint8ClampedArray(rgba) as Uint8ClampedArray<ArrayBuffer>);
   }
   const out = new Uint8ClampedArray(
-    new ArrayBuffer(tileWidth * tileLength * 4),
+    new ArrayBuffer(tileSize * tileSize * 4),
   ) as Uint8ClampedArray<ArrayBuffer>;
-  const copyW = Math.min(width, tileWidth);
-  const copyH = Math.min(height, tileLength);
+  const copyW = Math.min(width, tileSize);
+  const copyH = Math.min(height, tileSize);
   for (let row = 0; row < copyH; row++) {
     const src = row * width * 4;
-    const dst = row * tileWidth * 4;
+    const dst = row * tileSize * 4;
     out.set(rgba.subarray(src, src + copyW * 4), dst);
   }
   return out;
@@ -134,8 +133,7 @@ export async function encodeGrayscaleJpeg(
   upperLimit: number,
   quality = JPEG_EXPORT_QUALITY,
   transfer: JpegExportTransfer = "contrast",
-  padTileWidth?: number,
-  padTileLength?: number,
+  padTileSize?: number,
 ): Promise<ArrayBuffer> {
   const rgba = new Uint8ClampedArray(
     new ArrayBuffer(width * height * 4),
@@ -145,13 +143,14 @@ export async function encodeGrayscaleJpeg(
   } else {
     clampPixelsToRgba(rgba, pixels, lowerLimit, upperLimit);
   }
-  const padW = padTileWidth ?? width;
-  const padH = padTileLength ?? height;
-  if (padW === width && padH === height) {
+  if (
+    padTileSize === undefined ||
+    (width === padTileSize && height === padTileSize)
+  ) {
     return encodeRgbaToJpeg(width, height, rgba, quality);
   }
-  const padded = padGrayscaleRgbaToTile(rgba, width, height, padW, padH);
-  return encodeRgbaToJpeg(padW, padH, padded, quality);
+  const padded = padGrayscaleRgbaToTile(rgba, width, height, padTileSize);
+  return encodeRgbaToJpeg(padTileSize, padTileSize, padded, quality);
 }
 
 export function typedArrayCtorName(data: ArrayLike<number>): string {

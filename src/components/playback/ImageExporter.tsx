@@ -5,7 +5,8 @@ import { type CSSProperties, useMemo, useState } from "react";
 import {
   folderLimitsForTransfer,
   imageSourceFromJpegTransfer,
-  JPEG_OME_TIFF_IMAGE_SOURCE,
+  imageSourceFromOmeTiffTransfer,
+  isJpegOmeTiffImageSource,
   type JpegExportTransfer,
   jpegTransferFromImageSource,
 } from "@/lib/imaging/cubeRootEncoding";
@@ -15,18 +16,13 @@ import {
   encodeTileJpeg,
   jpegExportConcurrency,
 } from "@/lib/imaging/jpegExportPool";
-import {
-  JPEG_FALLBACK_LOWER_LIMIT,
-  JPEG_FALLBACK_UPPER_LIMIT,
-  jpegPyramidFolderName,
-} from "@/lib/imaging/jpegPyramid";
+import { jpegPyramidFolderName } from "@/lib/imaging/jpegPyramid";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Config } from "@/lib/imaging/viv";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   type StoryExportMode,
-  withPortableOmeTiffSources,
   writeStoryBundleSidecars,
 } from "@/lib/storyExport/storyBundle";
 import styles from "./ImageExporter.module.css";
@@ -94,20 +90,10 @@ const toSettingsInternal = (
   toSettings,
   loaderSourceImageId?: string,
 ) => {
-  if (loader === null) {
-    return toSettings(
-      activeChannelGroupId,
-      modality,
-      undefined,
-      channelVisibilities,
-      loaderSourceImageId,
-      channelGroupRowVisibilities,
-    );
-  }
   return toSettings(
     activeChannelGroupId,
     modality,
-    loader,
+    loader ?? undefined,
     channelVisibilities,
     loaderSourceImageId,
     channelGroupRowVisibilities,
@@ -170,10 +156,11 @@ const createCRange = async (
       if (c === undefined) {
         return null;
       }
-      // Keep in sync with neededJpegPyramidFolderNames / image-channel fallbacks.
-      const lo = lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT;
-      const hi = upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT;
-      const folderLimits = folderLimitsForTransfer(transfer, lo, hi);
+      const folderLimits = folderLimitsForTransfer(
+        transfer,
+        lowerLimit,
+        upperLimit,
+      );
       const folderName = await jpegPyramidFolderName(
         channelId,
         folderLimits.lowerLimit,
@@ -191,8 +178,8 @@ const createCRange = async (
           {
             channel: c,
             channelId,
-            lowerLimit: lo,
-            upperLimit: hi,
+            lowerLimit,
+            upperLimit,
           },
           null,
           2,
@@ -206,8 +193,8 @@ const createCRange = async (
         c,
         dh,
         encoded: folderName,
-        lowerLimit: lo,
-        upperLimit: hi,
+        lowerLimit,
+        upperLimit,
       } as Index;
     }),
   );
@@ -240,20 +227,10 @@ type FullState = {
 type MainState = null | FullState;
 type Initialize = (i: InitIn) => Partial<FullState>;
 
-type One = [number];
-type Two = [number, number];
-type Three = [number, number, number];
 type Four = [number, number, number, number];
 
-function toTileScale(zoom: number, ...vals: One): One;
-function toTileScale(zoom: number, ...vals: Two): Two;
-function toTileScale(zoom: number, ...vals: Three): Three;
-function toTileScale(zoom: number, ...vals: Four): Four;
-function toTileScale(zoom: number, ...vals: number[]): number[] {
-  const scale = 2 ** Math.abs(zoom);
-  return vals.map((v) => {
-    return v * scale;
-  });
+function toTileScale(zoom: number, value: number): number {
+  return value * 2 ** Math.abs(zoom);
 }
 
 const toTilePlane: ToTilePlane = (zoom, loaders) => {
@@ -282,7 +259,7 @@ const toTileCounts: ToTileCounts = ({ zoom, tileProps }) => {
   const { tileSize } = tileProps;
   const width = tileProps.extent[2];
   const height = tileProps.extent[3];
-  const [ts] = toTileScale(zoom, tileSize);
+  const ts = toTileScale(zoom, tileSize);
   const y = Math.ceil(height / ts);
   const x = Math.ceil(width / ts);
   return { x, y };
@@ -426,7 +403,17 @@ export const ImageExporter = (props: ImageExporterProps) => {
     ),
   );
   /** Session mode: props.exportMode, or jpeg-ome-tiff when that option is checked. */
-  const [mode, setMode] = useState<StoryExportMode>(exportMode);
+  const [mode, setMode] = useState<StoryExportMode>(() => {
+    if (exportMode === "remote-url") return "remote-url";
+    // Prefer last published format so re-export still shows the confirm UI
+    // with the previous choice preselected.
+    if (
+      isJpegOmeTiffImageSource(useDocumentStore.getState().metadata.imageSource)
+    ) {
+      return "jpeg-ome-tiff";
+    }
+    return exportMode;
+  });
   const [exportArmed, setExportArmed] = useState(false);
   /** Frozen at Start so post-export store updates cannot re-trigger the job. */
   const armedSnapshotRef = React.useRef<{
@@ -572,6 +559,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
               sourceImageId: d.sourceImageId as string,
             }));
     const imagesSnapshot = useDocumentStore.getState().images;
+    const channelGroupsSnapshot = useDocumentStore.getState().channelGroups;
 
     setProgress({ completed: 0, total: 1, done: false, startedAt: wallStart });
 
@@ -581,10 +569,12 @@ export const ImageExporter = (props: ImageExporterProps) => {
 
     void (async () => {
       try {
-        const results = await exportJpegOmeTiffStory({
+        const remappedImages = await exportJpegOmeTiffStory({
           directory: directory_handle,
           omeLoaderEntries: loaderEntries,
           images: imagesSnapshot,
+          channelGroups: channelGroupsSnapshot,
+          transfer: jpegTransfer,
           signal: abort.signal,
           onProgress: (completed, total) => {
             if (cancelled) return;
@@ -598,21 +588,26 @@ export const ImageExporter = (props: ImageExporterProps) => {
         });
         if (cancelled) return;
         finishedOk = true;
-        const omeTiffFiles = new Map(
-          results.map((r) => [r.sourceImageId, r.fileName]),
-        );
-        const doc = useDocumentStore.getState().toDocumentData();
+        const nextSource = imageSourceFromOmeTiffTransfer(jpegTransfer);
+        const baseDoc = useDocumentStore.getState().toDocumentData();
+        const doc = {
+          ...baseDoc,
+          images: remappedImages,
+          metadata: {
+            ...baseDoc.metadata,
+            imageSource: nextSource,
+          },
+        };
         await writeStoryBundleSidecars(directory_handle, doc, {
           mode: "jpeg-ome-tiff",
-          omeTiffFiles,
         });
         const store = useDocumentStore.getState();
-        store.setImages(withPortableOmeTiffSources(store.images, omeTiffFiles));
+        store.setImages(remappedImages);
         store.setMetadata({
-          imageSource: JPEG_OME_TIFF_IMAGE_SOURCE,
+          imageSource: nextSource,
         });
         console.log(
-          `[minerva] jpeg-ome-tiff export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (${results.length} file(s))`,
+          `[minerva] jpeg-ome-tiff export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (transfer=${jpegTransfer})`,
         );
         setProgress((p) => ({
           ...p,
@@ -633,7 +628,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
       window.clearInterval(etaInterval);
       if (!finishedOk) abort.abort();
     };
-  }, [mode, exportArmed, exportError, directory_handle]);
+  }, [mode, exportArmed, exportError, directory_handle, jpegTransfer]);
 
   React.useEffect(() => {
     if (mode !== "jpeg-pyramid" || !exportArmed || exportError) return;
@@ -843,19 +838,17 @@ export const ImageExporter = (props: ImageExporterProps) => {
               onChange={(e) => {
                 if (e.target.checked) {
                   setMode("jpeg-ome-tiff");
-                  setJpegTransfer("cube-root");
                 } else {
                   setMode("jpeg-pyramid");
                 }
               }}
             />
-            <span>Single-file OME-TIFF (cube-root)</span>
+            <span>Single-file OME-TIFF</span>
           </label>
           <label className={styles.transferToggle}>
             <input
               type="checkbox"
               checked={jpegTransfer === "cube-root"}
-              disabled={mode === "jpeg-ome-tiff"}
               onChange={(e) =>
                 setJpegTransfer(e.target.checked ? "cube-root" : "contrast")
               }

@@ -16,8 +16,7 @@ type MessageData = {
   upperLimit: number;
   quality?: number;
   transfer?: JpegExportTransfer;
-  padTileWidth?: number;
-  padTileLength?: number;
+  padTileSize?: number;
 };
 
 type Message = MessageEvent & {
@@ -42,8 +41,7 @@ worker.addEventListener("message", async (e: Message) => {
     upperLimit,
     quality = JPEG_EXPORT_QUALITY,
     transfer = "contrast",
-    padTileWidth,
-    padTileLength,
+    padTileSize,
   } = e.data;
   try {
     const Ctor = PIXEL_CTORS[arrayCtorName];
@@ -59,8 +57,7 @@ worker.addEventListener("message", async (e: Message) => {
       upperLimit,
       quality,
       transfer,
-      padTileWidth,
-      padTileLength,
+      padTileSize,
     );
     worker.postMessage({ jpeg, jobId }, [jpeg]);
   } catch (err) {
