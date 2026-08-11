@@ -3,12 +3,9 @@ import { getImageSize } from "@hms-dbmi/viv";
 import {
   browserFileSink,
   createTiffWriter,
-  type TiffImageLayout,
-  type TiffTag,
-  tiffTag,
-  tileCountForSize,
-  tilesAcross,
-  tilesDown,
+  grayscaleJpegTags,
+  type PlanPyramidJob,
+  planPyramid,
 } from "tiffwriter";
 import { effectiveChannelKind } from "@/lib/imaging/channelKind";
 import type {
@@ -29,25 +26,6 @@ type LevelSize = {
   height: number;
   tileSize: number;
 };
-
-/** One encode+write unit for the addressed TIFF writer. */
-type OmeTiffExportJob = {
-  channelIndex: number;
-  levelIndex: number;
-  tileIndex: number;
-  x: number;
-  y: number;
-};
-
-/** 8-bit grayscale JPEG tiles (Compression=7). Structural tags are owned by tiffwriter. */
-const JPEG_GRAYSCALE_TAGS: readonly TiffTag[] = [
-  tiffTag("BitsPerSample", "SHORT", 8),
-  tiffTag("Compression", "SHORT", 7),
-  tiffTag("PhotometricInterpretation", "SHORT", 1),
-  tiffTag("SamplesPerPixel", "SHORT", 1),
-  tiffTag("PlanarConfiguration", "SHORT", 1),
-  tiffTag("SampleFormat", "SHORT", 1),
-];
 
 function omeTiffExportFileName(image: Image, used: Set<string>): string {
   const raw =
@@ -250,48 +228,6 @@ function buildJpegOmeTiffXml(opts: {
   );
 }
 
-/** Global job list: all channels × levels × tiles (completion-order friendly). */
-function buildExportJobs(
-  levels: LevelSize[],
-  channelCount: number,
-): OmeTiffExportJob[] {
-  const jobs: OmeTiffExportJob[] = [];
-  for (let c = 0; c < channelCount; c++) {
-    for (let level = 0; level < levels.length; level++) {
-      const { width, height, tileSize } = levels[level];
-      const nx = tilesAcross(width, tileSize);
-      const ny = tilesDown(height, tileSize);
-      for (let y = 0; y < ny; y++) {
-        for (let x = 0; x < nx; x++) {
-          jobs.push({
-            channelIndex: c,
-            levelIndex: level,
-            tileIndex: y * nx + x,
-            x,
-            y,
-          });
-        }
-      }
-    }
-  }
-  return jobs;
-}
-
-/** Addressed IFD path: full-res `[channel]`, SubIFD `[channel, level-1]`. */
-function segmentAddressFor(
-  channelIndex: number,
-  levelIndex: number,
-  tileIndex: number,
-) {
-  return {
-    ifd:
-      levelIndex === 0
-        ? ([channelIndex] as const)
-        : ([channelIndex, levelIndex - 1] as const),
-    index: tileIndex,
-  };
-}
-
 type ExportJpegOmeTiffOpts = {
   directory: FileSystemDirectoryHandle;
   entry: OmeLoaderEntry;
@@ -332,7 +268,6 @@ async function exportJpegOmeTiffImage(
   }
 
   const levels = planeLevels(loaderData);
-  const jobs = buildExportJobs(levels, channels.length);
   const channelLimits = channels.map((ch) => {
     const lim = contrastLimitsForExportedChannel(ch, channelGroups);
     return folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
@@ -347,35 +282,11 @@ async function exportJpegOmeTiffImage(
     pixels: entry.loader.metadata?.Pixels ?? null,
   });
 
-  const layouts: TiffImageLayout[] = channels.map((_, channelIndex) => {
-    const full = levels[0];
-    const fullTags: TiffTag[] = [
-      ...(channelIndex === 0
-        ? [tiffTag("ImageDescription", "ASCII", omeXml)]
-        : []),
-      tiffTag("NewSubfileType", "LONG", 0),
-      ...JPEG_GRAYSCALE_TAGS,
-    ];
-    return {
-      width: full.width,
-      height: full.height,
-      segments: {
-        kind: "tiles" as const,
-        tileWidth: full.tileSize,
-        tileHeight: full.tileSize,
-      },
-      tags: fullTags,
-      subImages: levels.slice(1).map((level) => ({
-        width: level.width,
-        height: level.height,
-        segments: {
-          kind: "tiles" as const,
-          tileWidth: level.tileSize,
-          tileHeight: level.tileSize,
-        },
-        tags: [tiffTag("NewSubfileType", "LONG", 1), ...JPEG_GRAYSCALE_TAGS],
-      })),
-    };
+  const { layouts, jobs } = planPyramid({
+    levels,
+    channelCount: channels.length,
+    baseTags: grayscaleJpegTags(),
+    imageDescription: omeXml,
   });
 
   const fh = await directory.getFileHandle(fileName, { create: true });
@@ -421,7 +332,7 @@ async function exportJpegOmeTiffImage(
   );
   let next = 0;
 
-  const runJob = async (job: OmeTiffExportJob) => {
+  const runJob = async (job: PlanPyramidJob) => {
     if (workSignal.aborted) return;
     const plane = loaderData[job.levelIndex];
     const tileSize = levels[job.levelIndex].tileSize;
@@ -449,11 +360,7 @@ async function exportJpegOmeTiffImage(
       padTileSize: tileSize,
     });
     if (workSignal.aborted) return;
-    const bytes = new Uint8Array(jpeg);
-    await writer.writeSegment(
-      segmentAddressFor(job.channelIndex, job.levelIndex, job.tileIndex),
-      bytes,
-    );
+    await writer.writeSegment(job.address, new Uint8Array(jpeg));
     onProgress?.(1);
   };
 
@@ -563,11 +470,10 @@ export async function exportJpegOmeTiffStory(
     const loaderData = entry.loader.data as LoaderPlane[] | undefined;
     if (!loaderData?.length) continue;
     const levels = planeLevels(loaderData);
-    for (const l of levels) {
-      totalTiles +=
-        tileCountForSize(l.width, l.height, l.tileSize, l.tileSize) *
-        channels.length;
-    }
+    totalTiles += planPyramid({
+      levels,
+      channelCount: channels.length,
+    }).jobs.length;
     work.push({
       entry,
       image,
