@@ -1,5 +1,15 @@
 import type { TiffPixelSource } from "@hms-dbmi/viv";
 import { getImageSize } from "@hms-dbmi/viv";
+import {
+  browserFileSink,
+  createTiffWriter,
+  type TiffImageLayout,
+  type TiffTag,
+  tiffTag,
+  tileCountForSize,
+  tilesAcross,
+  tilesDown,
+} from "tiffwriter";
 import { effectiveChannelKind } from "@/lib/imaging/channelKind";
 import type {
   ChannelGroup,
@@ -11,17 +21,16 @@ import { folderLimitsForTransfer } from "./cubeRootEncoding";
 import { encodeTileJpeg, jpegExportConcurrency } from "./jpegExportPool";
 import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
 import type { OmeLoaderEntry } from "./loaderEntries";
-import {
-  createFileWritableSink,
-  type JpegTiffChannelPlan,
-  StreamingJpegTiffWriter,
-  tileCountForSize,
-  tilesAcross,
-  tilesDown,
-} from "./streamingJpegTiff";
 
 type LoaderPlane = TiffPixelSource<string[]>;
 
+type LevelSize = {
+  width: number;
+  height: number;
+  tileSize: number;
+};
+
+/** One encode+write unit for the addressed TIFF writer. */
 type OmeTiffExportJob = {
   channelIndex: number;
   levelIndex: number;
@@ -29,6 +38,16 @@ type OmeTiffExportJob = {
   x: number;
   y: number;
 };
+
+/** 8-bit grayscale JPEG tiles (Compression=7). Structural tags are owned by tiffwriter. */
+const JPEG_GRAYSCALE_TAGS: readonly TiffTag[] = [
+  tiffTag("BitsPerSample", "SHORT", 8),
+  tiffTag("Compression", "SHORT", 7),
+  tiffTag("PhotometricInterpretation", "SHORT", 1),
+  tiffTag("SamplesPerPixel", "SHORT", 1),
+  tiffTag("PlanarConfiguration", "SHORT", 1),
+  tiffTag("SampleFormat", "SHORT", 1),
+];
 
 function omeTiffExportFileName(image: Image, used: Set<string>): string {
   const raw =
@@ -104,11 +123,7 @@ function remappedImageForOmeTiffExport(
   };
 }
 
-function planeLevels(loaderData: LoaderPlane[]): {
-  width: number;
-  height: number;
-  tileSize: number;
-}[] {
+function planeLevels(loaderData: LoaderPlane[]): LevelSize[] {
   return loaderData.map((plane) => {
     const { width, height } = getImageSize(plane);
     const tileSize =
@@ -117,21 +132,6 @@ function planeLevels(loaderData: LoaderPlane[]): {
         : JPEG_PYRAMID_TILE_SIZE;
     return { width, height, tileSize };
   });
-}
-
-function buildChannelPlans(
-  levels: { width: number; height: number; tileSize: number }[],
-  channelCount: number,
-): JpegTiffChannelPlan[] {
-  const levelPlans = levels.map((l) => ({
-    width: l.width,
-    height: l.height,
-    tileWidth: l.tileSize,
-    tileLength: l.tileSize,
-  }));
-  return Array.from({ length: channelCount }, () => ({
-    levels: levelPlans,
-  }));
 }
 
 function escapeXmlAttr(value: string): string {
@@ -250,8 +250,9 @@ function buildJpegOmeTiffXml(opts: {
   );
 }
 
-function buildJobs(
-  levels: { width: number; height: number; tileSize: number }[],
+/** Global job list: all channels × levels × tiles (completion-order friendly). */
+function buildExportJobs(
+  levels: LevelSize[],
   channelCount: number,
 ): OmeTiffExportJob[] {
   const jobs: OmeTiffExportJob[] = [];
@@ -274,6 +275,21 @@ function buildJobs(
     }
   }
   return jobs;
+}
+
+/** Addressed IFD path: full-res `[channel]`, SubIFD `[channel, level-1]`. */
+function segmentAddressFor(
+  channelIndex: number,
+  levelIndex: number,
+  tileIndex: number,
+) {
+  return {
+    ifd:
+      levelIndex === 0
+        ? ([channelIndex] as const)
+        : ([channelIndex, levelIndex - 1] as const),
+    index: tileIndex,
+  };
 }
 
 type ExportJpegOmeTiffOpts = {
@@ -316,16 +332,54 @@ async function exportJpegOmeTiffImage(
   }
 
   const levels = planeLevels(loaderData);
-  const channelPlans = buildChannelPlans(levels, channels.length);
-  const jobs = buildJobs(levels, channels.length);
+  const jobs = buildExportJobs(levels, channels.length);
   const channelLimits = channels.map((ch) => {
     const lim = contrastLimitsForExportedChannel(ch, channelGroups);
     return folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
   });
 
+  const omeXml = buildJpegOmeTiffXml({
+    image,
+    channels,
+    width: levels[0].width,
+    height: levels[0].height,
+    fileName,
+    pixels: entry.loader.metadata?.Pixels ?? null,
+  });
+
+  const layouts: TiffImageLayout[] = channels.map((_, channelIndex) => {
+    const full = levels[0];
+    const fullTags: TiffTag[] = [
+      ...(channelIndex === 0
+        ? [tiffTag("ImageDescription", "ASCII", omeXml)]
+        : []),
+      tiffTag("NewSubfileType", "LONG", 0),
+      ...JPEG_GRAYSCALE_TAGS,
+    ];
+    return {
+      width: full.width,
+      height: full.height,
+      segments: {
+        kind: "tiles" as const,
+        tileWidth: full.tileSize,
+        tileHeight: full.tileSize,
+      },
+      tags: fullTags,
+      subImages: levels.slice(1).map((level) => ({
+        width: level.width,
+        height: level.height,
+        segments: {
+          kind: "tiles" as const,
+          tileWidth: level.tileSize,
+          tileHeight: level.tileSize,
+        },
+        tags: [tiffTag("NewSubfileType", "LONG", 1), ...JPEG_GRAYSCALE_TAGS],
+      })),
+    };
+  });
+
   const fh = await directory.getFileHandle(fileName, { create: true });
   const writable = await fh.createWritable();
-  const sink = createFileWritableSink(writable);
 
   let exportFailed: Error | null = null;
   const localAbort = new AbortController();
@@ -344,22 +398,22 @@ async function exportJpegOmeTiffImage(
     localAbort.abort();
   };
 
-  const writer = new StreamingJpegTiffWriter(
-    sink,
-    {
-      channels: channelPlans,
-      omeXml: buildJpegOmeTiffXml({
-        image,
-        channels,
-        width: levels[0].width,
-        height: levels[0].height,
-        fileName,
-        pixels: entry.loader.metadata?.Pixels ?? null,
-      }),
-    },
-    { onWriteError: failExport },
-  );
-  await writer.begin();
+  let writer: Awaited<ReturnType<typeof createTiffWriter>>;
+  try {
+    writer = await createTiffWriter({
+      sink: browserFileSink(writable),
+      signal: workSignal,
+      images: layouts,
+    });
+  } catch (e) {
+    signal.removeEventListener("abort", onOuterAbort);
+    try {
+      await writable.abort?.();
+    } catch {
+      /* ignore */
+    }
+    throw e;
+  }
 
   const concurrency = Math.min(
     jpegExportConcurrency(),
@@ -395,12 +449,10 @@ async function exportJpegOmeTiffImage(
       padTileSize: tileSize,
     });
     if (workSignal.aborted) return;
-    // Enqueue only (backpressure); do not await the disk write queue.
-    await writer.enqueueTile(
-      job.channelIndex,
-      job.levelIndex,
-      job.tileIndex,
-      jpeg,
+    const bytes = new Uint8Array(jpeg);
+    await writer.writeSegment(
+      segmentAddressFor(job.channelIndex, job.levelIndex, job.tileIndex),
+      bytes,
     );
     onProgress?.(1);
   };
@@ -427,14 +479,17 @@ async function exportJpegOmeTiffImage(
 
   try {
     await Promise.all(Array.from({ length: concurrency }, () => workerLoop()));
-    if (exportFailed) {
-      throw exportFailed;
-    }
+    if (exportFailed) throw exportFailed;
     if (signal.aborted || workSignal.aborted) {
       throw new DOMException("Aborted", "AbortError");
     }
     await writer.finish();
   } catch (e) {
+    try {
+      await writer.abort(e);
+    } catch {
+      /* ignore */
+    }
     try {
       await writable.abort?.();
     } catch {
