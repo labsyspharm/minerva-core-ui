@@ -133,7 +133,11 @@ type LegendRowProps = {
   /** Group member hidden in the viewer — stroked swatch, still listed. */
   hiddenInViewer?: boolean;
   toggleChannel: (c: LegendChannel) => void;
-  updateChannel: (id: string, c: Partial<ChannelGroupChannel>) => void;
+  updateChannel: (
+    gid: string,
+    cid: string,
+    c: Partial<ChannelGroupChannel>,
+  ) => void;
   popChannel: (ctx: { g: number; idx: number }) => void;
 };
 
@@ -349,8 +353,9 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
           ];
           if (colorPickerChannel !== null) {
             const channel = colorPickerChannel;
+            const groupId = channel.group_uuid;
             const channelId = channel.source_uuid;
-            props.updateChannel(channelId, { color });
+            props.updateChannel(groupId, channelId, { color });
           }
         }}
       />
