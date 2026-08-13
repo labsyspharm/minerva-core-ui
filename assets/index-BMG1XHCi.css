@@ -247,7 +247,7 @@
 /* Bookshelf: CSS border frame (even stroke) + inset white shelf boards — one bay per story */
 
 /* Bounded viewport height so many shelves scroll inside the page shell (not clipped). */
-._root_dp4yy_4 {
+._root_1c2by_4 {
   box-sizing: border-box;
   min-height: 100dvh;
   max-height: 100dvh;
@@ -271,7 +271,7 @@
  * Align with text/shelves inside the frame: bookcase padding (14px) +
  * bookcaseInner horizontal padding — matches where shelf content starts.
  */
-._shelfToolbar_dp4yy_28 {
+._shelfToolbar_1c2by_28 {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -283,31 +283,31 @@
   box-sizing: border-box;
 }
 
-._toolbarActions_dp4yy_40 {
+._toolbarActions_1c2by_40 {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
 }
 
-._importMenu_dp4yy_47 {
+._importMenu_1c2by_47 {
   position: relative;
 }
 
-._importMenu_dp4yy_47 > summary {
+._importMenu_1c2by_47 > summary {
   list-style: none;
 }
 
-._importMenu_dp4yy_47 > summary::-webkit-details-marker {
+._importMenu_1c2by_47 > summary::-webkit-details-marker {
   display: none;
 }
 
-._disabledAction_dp4yy_59 {
+._disabledAction_1c2by_59 {
   opacity: 0.4;
   pointer-events: none;
 }
 
-._importChoices_dp4yy_64 {
+._importChoices_1c2by_64 {
   position: absolute;
   z-index: 2;
   top: calc(100% + 5px);
@@ -319,7 +319,7 @@
   box-shadow: 0 8px 20px rgb(0 0 0 / 0.45);
 }
 
-._importChoices_dp4yy_64 button {
+._importChoices_1c2by_64 button {
   display: block;
   width: 100%;
   padding: 8px 10px;
@@ -332,11 +332,11 @@
   cursor: pointer;
 }
 
-._importChoices_dp4yy_64 button:hover:not(:disabled) {
+._importChoices_1c2by_64 button:hover:not(:disabled) {
   background: rgb(255 255 255 / 0.07);
 }
 
-._wordmark_dp4yy_93 {
+._wordmark_1c2by_93 {
   margin: 0;
   font-size: clamp(0.95rem, 2vw, 1.1rem);
   font-weight: 500;
@@ -345,7 +345,7 @@
   color: rgb(188 180 168 / 0.88);
 }
 
-._newVolume_dp4yy_102 {
+._newVolume_1c2by_102 {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -365,29 +365,29 @@
     background 0.2s ease;
 }
 
-._newVolume_dp4yy_102:hover:not(:disabled) {
+._newVolume_1c2by_102:hover:not(:disabled) {
   border-color: rgb(255 255 255 / 0.32);
   color: rgb(215 208 195);
   background: rgb(255 255 255 / 0.04);
 }
 
-._newVolume_dp4yy_102:disabled {
+._newVolume_1c2by_102:disabled {
   opacity: 0.4;
   cursor: wait;
 }
 
-._newGlyph_dp4yy_133 {
+._newGlyph_1c2by_133 {
   font-size: 1.1rem;
   font-weight: 300;
   line-height: 1;
   opacity: 0.85;
 }
 
-._newLabel_dp4yy_140 {
+._newLabel_1c2by_140 {
   font-size: 0.62rem;
 }
 
-._error_dp4yy_144 {
+._error_1c2by_144 {
   margin: 0 0 16px;
   padding: 10px 14px;
   font-size: 0.85rem;
@@ -396,22 +396,23 @@
   background: rgb(40 28 24 / 0.35);
 }
 
-._whisper_dp4yy_153 {
+._whisper_1c2by_153 {
   margin: 0;
+  padding: 4px 6px;
   font-size: 0.85rem;
   letter-spacing: 0.05em;
   color: rgb(255 255 255 / 0.26);
 }
 
-._emptyLine_dp4yy_160 {
+._emptyLine_1c2by_161 {
   margin: 0;
-  margin-left: -0.25rem;
+  padding: 4px 6px 4px 0;
   font-size: 0.95rem;
   letter-spacing: 0.03em;
   color: rgb(170 164 152 / 0.5);
 }
 
-._inlineLink_dp4yy_168 {
+._inlineLink_1c2by_169 {
   margin: 0;
   padding: 0;
   border: none;
@@ -423,17 +424,17 @@
   font: inherit;
 }
 
-._inlineLink_dp4yy_168:hover:not(:disabled) {
+._inlineLink_1c2by_169:hover:not(:disabled) {
   color: rgb(220 212 198);
 }
 
-._inlineLink_dp4yy_168:disabled {
+._inlineLink_1c2by_169:disabled {
   opacity: 0.5;
   cursor: wait;
 }
 
 /* Wooden bookcase frame with layered box-shadows for depth */
-._bookcase_dp4yy_190 {
+._bookcase_1c2by_191 {
   max-width: 52rem;
   margin: 0 auto;
   min-height: 12rem;
@@ -456,7 +457,7 @@
     0 1px 3px rgb(0 0 0 / 0.3);
 }
 
-._bookcaseInner_dp4yy_213 {
+._bookcaseInner_1c2by_214 {
   padding: clamp(10px, 3%, 16px) clamp(10px, 3%, 18px);
   box-sizing: border-box;
   border-radius: 4px;
@@ -474,38 +475,34 @@
 }
 
 /* One compartment per story; shelf board below each bay */
-._shelfBay_dp4yy_231 {
+._shelfBay_1c2by_232 {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-._shelfBay_dp4yy_231 + ._shelfBay_dp4yy_231 {
+._shelfBay_1c2by_232 + ._shelfBay_1c2by_232 {
   margin-top: 0;
 }
 
-._bayContent_dp4yy_241 {
+._bayContent_1c2by_242 {
   position: relative;
   display: flex;
   align-items: stretch;
   gap: 0;
   min-height: 2.5rem;
-  padding: 6px 0 10px;
-}
-
-._bayContentEmptyPrompt_dp4yy_250 {
-  padding: 14px 0 10px;
+  padding: 0;
 }
 
 /* Unused shelf tiers — one row of ghost spines */
-._bayContentEmpty_dp4yy_250 {
+._bayContentEmpty_1c2by_252 {
   min-height: 44px;
   padding: 0;
   box-sizing: border-box;
 }
 
 /* Ghost book cluster — single row, no wrap */
-._ghostShelf_dp4yy_262 {
+._ghostShelf_1c2by_259 {
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-end;
@@ -516,7 +513,7 @@
   overflow: hidden;
 }
 
-._ghostBook_dp4yy_273 {
+._ghostBook_1c2by_270 {
   flex: 0 0 auto;
   border-radius: 1px 1px 0 0;
   box-shadow:
@@ -525,7 +522,7 @@
 }
 
 /* Compact stroked “volume” sitting on the shelf */
-._storyRow_dp4yy_282 {
+._storyRow_1c2by_279 {
   display: flex;
   align-items: center;
   gap: 2px;
@@ -541,7 +538,7 @@
 }
 
 /* Wooden shelf plank with bevel and shadow */
-._shelfBoard_dp4yy_298 {
+._shelfBoard_1c2by_295 {
   flex: 0 0 auto;
   height: 8px;
   width: 100%;
@@ -568,7 +565,7 @@
     0 1px 2px rgb(0 0 0 / 0.3);
 }
 
-._rowOpen_dp4yy_325 {
+._rowOpen_1c2by_322 {
   --row-accent: hsl(28 14% 28%);
   flex: 1 1 auto;
   display: flex;
@@ -589,20 +586,20 @@
     box-shadow 0.15s ease;
 }
 
-._rowOpen_dp4yy_325:hover:not(:disabled) {
+._rowOpen_1c2by_322:hover:not(:disabled) {
   background: rgb(180 150 100 / 0.06);
 }
 
-._rowOpen_dp4yy_325:active:not(:disabled) {
+._rowOpen_1c2by_322:active:not(:disabled) {
   background: rgb(180 150 100 / 0.1);
 }
 
-._rowOpen_dp4yy_325:disabled {
+._rowOpen_1c2by_322:disabled {
   opacity: 0.45;
   cursor: wait;
 }
 
-._rowThumb_dp4yy_359 {
+._rowThumb_1c2by_356 {
   flex: 0 0 auto;
   width: 32px;
   height: 32px;
@@ -611,7 +608,7 @@
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
 }
 
-._rowThumbImg_dp4yy_368 {
+._rowThumbImg_1c2by_365 {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -620,7 +617,7 @@
   filter: saturate(0.9) contrast(1.03);
 }
 
-._rowThumbBlank_dp4yy_377 {
+._rowThumbBlank_1c2by_374 {
   display: block;
   width: 100%;
   height: 100%;
@@ -628,7 +625,7 @@
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
 }
 
-._rowText_dp4yy_385 {
+._rowText_1c2by_382 {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
@@ -637,7 +634,7 @@
   gap: 10px;
 }
 
-._rowTitle_dp4yy_394 {
+._rowTitle_1c2by_391 {
   font-size: 0.8125rem;
   font-weight: 550;
   letter-spacing: 0.02em;
@@ -647,7 +644,7 @@
   white-space: nowrap;
 }
 
-._rowDate_dp4yy_404 {
+._rowDate_1c2by_401 {
   flex: 0 0 auto;
   font-size: 0.65rem;
   letter-spacing: 0.03em;
@@ -655,11 +652,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-._storyRow_dp4yy_282:focus-within ._scrap_dp4yy_412 {
+._storyRow_1c2by_279:focus-within ._scrap_1c2by_409 {
   opacity: 1;
 }
 
-._scrap_dp4yy_412 {
+._scrap_1c2by_409 {
   flex: 0 0 auto;
   align-self: center;
   width: 22px;
@@ -679,44 +676,44 @@
     background 0.15s ease;
 }
 
-._storyRow_dp4yy_282:hover ._scrap_dp4yy_412 {
+._storyRow_1c2by_279:hover ._scrap_1c2by_409 {
   opacity: 1;
 }
 
-._scrap_dp4yy_412:hover:not(:disabled) {
+._scrap_1c2by_409:hover:not(:disabled) {
   color: rgb(210 160 150);
   background: rgb(45 32 28 / 0.6);
 }
 
-._scrap_dp4yy_412:disabled {
+._scrap_1c2by_409:disabled {
   opacity: 0.25;
   cursor: wait;
 }
 
 @media (max-width: 540px) {
-  ._rowText_dp4yy_385 {
+  ._rowText_1c2by_382 {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
 
-  ._rowDate_dp4yy_404 {
+  ._rowDate_1c2by_401 {
     font-size: 0.68rem;
   }
 
-  ._shelfToolbar_dp4yy_28 {
+  ._shelfToolbar_1c2by_28 {
     flex-direction: column;
     align-items: flex-start;
     padding-left: calc(14px + 6%);
     padding-right: calc(14px + 6%);
   }
 
-  ._bookcaseInner_dp4yy_213 {
+  ._bookcaseInner_1c2by_214 {
     padding-left: 6%;
     padding-right: 6%;
   }
 
-  ._shelfBoard_dp4yy_298 {
+  ._shelfBoard_1c2by_295 {
     width: 100%;
   }
 }
@@ -4988,25 +4985,25 @@ body[data-color-mode*='light'] {
   position: relative;
   overflow: hidden;
 }
-._imageExporter_13d1j_1 {
+._imageExporter_1anwt_1 {
   height: 100%;
   display: grid;
   grid-template-rows: 1fr auto 1fr;
   grid-template-columns: 1fr minmax(300px, 420px) 1fr;
 }
 
-._imageExporter_13d1j_1 > div {
+._imageExporter_1anwt_1 > div {
   grid-row: 2;
   grid-column: 2;
 }
 
-._exportStatus_13d1j_13 {
+._exportStatus_1anwt_13 {
   display: flex;
   flex-direction: column;
   gap: 0.25em;
 }
 
-._dismissButton_13d1j_19 {
+._dismissButton_1anwt_19 {
   align-self: center;
   padding: 0.4em 0.8em;
   border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
@@ -5016,14 +5013,14 @@ body[data-color-mode*='light'] {
   font: inherit;
 }
 
-._progressBar_13d1j_29 {
+._progressBar_1anwt_29 {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 0.5em;
   align-items: center;
 }
 
-._progressBar_13d1j_29 > div:first-child {
+._progressBar_1anwt_29 > div:first-child {
   box-sizing: border-box;
   height: 1.25em;
   border: 1px solid color-mix(in srgb, currentColor 85%, transparent);
@@ -5031,35 +5028,53 @@ body[data-color-mode*='light'] {
   overflow: hidden;
 }
 
-._progressBar_13d1j_29 > div:first-child > div {
+._progressBar_1anwt_29 > div:first-child > div {
   height: 100%;
   width: calc(var(--progress-ratio, 0) * 100%);
   background-color: hwb(220 10% 20% / 0.5);
 }
 
-._progressBarDone_13d1j_50 > div:first-child > div {
+._progressBarDone_1anwt_50 > div:first-child > div {
   background-color: hwb(220 70% 30% / 0.9);
 }
 
-._progressBar_13d1j_29 > div:last-child {
+._progressBar_1anwt_29 > div:last-child {
   padding: 0.25em;
   font-family: monospace;
   white-space: nowrap;
 }
 
-._etaLine_13d1j_60 {
+._etaLine_1anwt_60 {
   font-family: monospace;
   font-size: 0.9em;
   text-align: center;
   opacity: 0.85;
 }
 
-._exportMessage_13d1j_67 {
+._exportMessage_1anwt_67 {
   grid-row: 2;
   grid-column: 2;
   padding: 0.5em 0.75em;
   font-family: monospace;
   text-align: center;
+}
+
+._transferToggle_1anwt_75 {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35em 0.75em;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+._confirmActions_1anwt_85 {
+  display: flex;
+  gap: 0.5em;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding-top: 0.35em;
 }
 /**
  * Story presentation shell — authoring preview AND CDN export.

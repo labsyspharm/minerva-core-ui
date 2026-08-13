@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-89_dhgcO.js","./pako.esm-KbdoS3Oq.js","./lerc-ovMmcLJ0.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-XdUKPM5L.js","./pako.esm-KbdoS3Oq.js","./lerc-qmxGSRAe.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -1774,7 +1774,7 @@ let __tla = (async () => {
       });
     });
   }
-  function encode$2(obj, stringify2 = String) {
+  function encode$3(obj, stringify2 = String) {
     const result = new URLSearchParams();
     for (const key2 in obj) {
       const val = obj[key2];
@@ -1833,7 +1833,7 @@ let __tla = (async () => {
       return val;
     }
     return (search2) => {
-      const searchStr = encode$2(search2, stringifyValue);
+      const searchStr = encode$3(search2, stringifyValue);
       return searchStr ? `?${searchStr}` : "";
     };
   }
@@ -1916,7 +1916,7 @@ let __tla = (async () => {
     return url;
   }
   function createRouterStores(initialState, config2) {
-    const { createMutableStore, createReadonlyStore, batch: batch2, init } = config2;
+    const { createMutableStore, createReadonlyStore, batch: batch2, init: init2 } = config2;
     const matchStores = /* @__PURE__ */ new Map();
     const pendingMatchStores = /* @__PURE__ */ new Map();
     const cachedMatchStores = /* @__PURE__ */ new Map();
@@ -2001,7 +2001,7 @@ let __tla = (async () => {
       setCached
     };
     setMatches(initialState.matches);
-    init == null ? void 0 : init(store);
+    init2 == null ? void 0 : init2(store);
     function setMatches(nextMatches) {
       reconcileMatchPool(nextMatches, matchStores, matchesId, createMutableStore, batch2);
     }
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-CP2Tr7vI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-SkJuVujZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-C3wklIdD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CwWdPXtJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-n9SbhTzW.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BxqtMpaJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-89_dhgcO.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-Ck4p-Ch9.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-ovMmcLJ0.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-XdUKPM5L.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BqNE3b67.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-qmxGSRAe.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd--x3IFsgf.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DXCMO3s5.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-D4GzxrDz.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DP50wBHQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -34672,7 +34672,7 @@ float smoothedge(float edge, float x) {
   }
   const STOP = 1;
   const FORCED_STOP = 2;
-  const defaultOptions = {
+  const defaultOptions$1 = {
     touchAction: "compute",
     enable: true,
     inputTarget: null,
@@ -34686,10 +34686,10 @@ float smoothedge(float edge, float x) {
   class Manager {
     constructor(element2, options) {
       this.options = {
-        ...defaultOptions,
+        ...defaultOptions$1,
         ...options,
         cssProps: {
-          ...defaultOptions.cssProps,
+          ...defaultOptions$1.cssProps,
           ...options.cssProps
         },
         inputTarget: options.inputTarget || element2
@@ -85788,12 +85788,12 @@ void main() {
     };
   };
   const extractDistributionsForSourceIndices = async (loader, sourceIndices) => {
-    const init = initialize$1({
+    const init2 = initialize$1({
       planes: loader.data
     });
-    const dtype = init.tileProps.dtype;
+    const dtype = init2.tileProps.dtype;
     const bits = histogramBitsFromDtype(dtype);
-    const indexByC = new Map(init.indices.map((idx) => [
+    const indexByC = new Map(init2.indices.map((idx) => [
       idx.c,
       idx
     ]));
@@ -85845,14 +85845,14 @@ void main() {
     return new Map(entries);
   };
   const extractDistributions = async (loader) => {
-    const init = initialize$1({
+    const init2 = initialize$1({
       planes: loader.data
     });
-    const allC = init.indices.map((i2) => i2.c);
+    const allC = init2.indices.map((i2) => i2.c);
     return extractDistributionsForSourceIndices(loader, allC);
   };
   const extractChannels = (loader, modality, groups, sourceImageId, defaultChannelKind = "channel") => {
-    const init = initialize$1({
+    const init2 = initialize$1({
       planes: loader.data
     });
     const { Channels, Type } = loader.metadata.Pixels;
@@ -85864,7 +85864,7 @@ void main() {
         name: name2,
         kind: defaultChannelKind,
         samples: channel.SamplesPerPixel,
-        index: init.indices[index2].c,
+        index: init2.indices[index2].c,
         sourceDataTypeId: asID(Type).ID,
         imageId: channelImageId
       };
@@ -89955,6 +89955,43 @@ void main() {
   }), {
     name: "appStore"
   }));
+  const JPEG_OME_TIFF_IMAGE_SOURCE = "jpeg-ome-tiff";
+  const JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE = "jpeg-ome-tiff-contrast";
+  function isJpegOmeTiffImageSource(imageSource) {
+    return imageSource === JPEG_OME_TIFF_IMAGE_SOURCE || imageSource === JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE;
+  }
+  function jpegTransferFromImageSource(imageSource) {
+    if (imageSource === "jpeg-pyramid-cube-root" || imageSource === JPEG_OME_TIFF_IMAGE_SOURCE) {
+      return "cube-root";
+    }
+    return "contrast";
+  }
+  function imageSourceFromJpegTransfer(transfer) {
+    return transfer === "cube-root" ? "jpeg-pyramid-cube-root" : "jpeg-pyramid";
+  }
+  function imageSourceFromOmeTiffTransfer(transfer) {
+    return transfer === "cube-root" ? JPEG_OME_TIFF_IMAGE_SOURCE : JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE;
+  }
+  function folderLimitsForTransfer(transfer, lowerLimit, upperLimit) {
+    if (transfer === "cube-root") {
+      return {
+        lowerLimit: 0,
+        upperLimit: 65535
+      };
+    }
+    return {
+      lowerLimit,
+      upperLimit
+    };
+  }
+  function encodeCubeRootU16ToU8(pixel) {
+    if (!Number.isFinite(pixel) || pixel <= 0) return 0;
+    return Math.min(255, Math.max(0, Math.round((pixel / 65536) ** (1 / 3) * 256)));
+  }
+  function decodeCubeRootU8ToU16(byte) {
+    if (!Number.isFinite(byte) || byte <= 0) return 0;
+    return Math.min(65535, Math.max(0, Math.round((byte / 256) ** 3 * 65536)));
+  }
   const o = /* @__PURE__ */ new WeakMap();
   let u$2 = 0;
   function stableHash(t2) {
@@ -89982,8 +90019,6 @@ void main() {
     0,
     65535
   ];
-  const JPEG_FALLBACK_LOWER_LIMIT = 2 ** 5;
-  const JPEG_FALLBACK_UPPER_LIMIT = 2 ** 14;
   async function jpegPyramidFolderName(channelId, lowerLimit, upperLimit) {
     const encoded = stableHash({
       channelId,
@@ -90006,7 +90041,7 @@ void main() {
   async function folderByChannelIndexFromImageChannels(channels2) {
     const out = {};
     await Promise.all(channels2.map(async (ch2) => {
-      out[ch2.index] = await jpegPyramidFolderName(ch2.id, ch2.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT, ch2.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT);
+      out[ch2.index] = await jpegPyramidFolderName(ch2.id, ch2.lowerLimit, ch2.upperLimit);
     }));
     return out;
   }
@@ -90035,6 +90070,7 @@ void main() {
       __publicField(this, "imageHeight");
       __publicField(this, "imageWidth");
       __publicField(this, "fetchTile");
+      __publicField(this, "transfer");
       const tileSize = opts.tileSize ?? JPEG_PYRAMID_TILE_SIZE;
       this.level = opts.level;
       this.c = opts.c;
@@ -90045,6 +90081,7 @@ void main() {
       this.tileHeight = tileSize;
       this.imageHeight = opts.imageHeight;
       this.imageWidth = opts.imageWidth;
+      this.transfer = opts.transfer ?? "contrast";
       this.fetchTile = opts.fetchTile ?? (async (folder, filename2) => {
         const url = `${this.imagePath}/${folder}/${filename2}`;
         const response = await fetch(url);
@@ -90080,7 +90117,8 @@ void main() {
       const rowCount = Math.min(displayHeight, tileSize);
       for (let row2 = 0; row2 < rowCount; row2 += 1) {
         for (let col = 0; col < rowWidth; col += 1) {
-          data2[row2 * tileSize + col] = in_data[(row2 * displayWidth + col) * 4] << 8;
+          const byte = in_data[(row2 * displayWidth + col) * 4];
+          data2[row2 * tileSize + col] = this.transfer === "cube-root" ? decodeCubeRootU8ToU16(byte) : byte << 8;
         }
       }
       image2.close();
@@ -90193,7 +90231,7 @@ void main() {
     const visible = channelsVisible.some((x2) => x2);
     const { imagePath, jpegLoader, channelFolders } = meta;
     const imageID = String(imagePath).replace(/\//g, "-");
-    const contrastLimits = (meta.settings.contrastLimits || []).map(() => JPEG_BAKED_CONTRAST_LIMIT);
+    const contrastLimits = meta.transfer === "cube-root" ? meta.settings.contrastLimits || [] : (meta.settings.contrastLimits || []).map(() => JPEG_BAKED_CONTRAST_LIMIT);
     const imageProps = {
       visible,
       loader: jpegLoader,
@@ -90209,7 +90247,7 @@ void main() {
     return new MultiscaleImageLayer(imageProps);
   }
   const toIndexer$1 = (opts) => {
-    const { imagePath, channelFolders, imageWidth, imageHeight, tileSize, fetchTile } = opts;
+    const { imagePath, channelFolders, imageWidth, imageHeight, tileSize, fetchTile, transfer } = opts;
     return (sel, level) => {
       const folder = channelFolders == null ? void 0 : channelFolders[sel.c];
       if (!folder) {
@@ -90223,7 +90261,8 @@ void main() {
         imageWidth,
         imageHeight,
         tileSize,
-        fetchTile
+        fetchTile,
+        transfer
       });
     };
   };
@@ -90237,7 +90276,7 @@ void main() {
     return resolutionShape;
   };
   const loadJpeg = (meta) => {
-    const { imagePath, imageWidth, imageHeight, channels: channels2, channelFolders, tileSize = JPEG_PYRAMID_TILE_SIZE, fetchTile } = meta;
+    const { imagePath, imageWidth, imageHeight, channels: channels2, channelFolders, tileSize = JPEG_PYRAMID_TILE_SIZE, fetchTile, transfer = "contrast" } = meta;
     const width = imageWidth;
     const height = imageHeight;
     const nChannels = Math.max(1, (channels2 == null ? void 0 : channels2.length) ?? 1);
@@ -90248,7 +90287,8 @@ void main() {
       imageWidth: width,
       imageHeight: height,
       tileSize,
-      fetchTile
+      fetchTile,
+      transfer
     });
     const data2 = levels.map((level) => {
       const axes = {
@@ -90394,27 +90434,35 @@ void main() {
     ]));
     if (opts.groupChannels.length > 0) {
       return folderByChannelIndexFromGroup({
-        channels: opts.groupChannels,
+        channels: opts.groupChannels.map((row2) => ({
+          channelId: row2.channelId,
+          ...folderLimitsForTransfer(opts.transfer, row2.lowerLimit, row2.upperLimit)
+        })),
         channelIndexById
       });
     }
-    return folderByChannelIndexFromImageChannels(opts.image.channels.map((ch2) => ({
-      id: ch2.id,
-      index: ch2.index,
-      lowerLimit: ch2.lowerLimit,
-      upperLimit: ch2.upperLimit
-    })));
+    return folderByChannelIndexFromImageChannels(opts.image.channels.map((ch2) => {
+      const { lowerLimit, upperLimit } = folderLimitsForTransfer(opts.transfer, ch2.lowerLimit ?? JPEG_BAKED_CONTRAST_LIMIT[0], ch2.upperLimit ?? JPEG_BAKED_CONTRAST_LIMIT[1]);
+      return {
+        id: ch2.id,
+        index: ch2.index,
+        lowerLimit,
+        upperLimit
+      };
+    }));
   }
   async function syncJpegEntryChannelFolders(entries, images, groupChannels, activeGroupId) {
     const channels2 = toGroupChannelRows(groupChannels);
     let changed = false;
     const next2 = await Promise.all(entries.map(async (entry) => {
+      if (entry.transfer === "cube-root") return entry;
       if (!entry.channelFolders) return entry;
       const im = images.find((i2) => i2.id === entry.sourceImageId);
       if (!im) return entry;
       const desired = await resolveChannelFolders({
         groupChannels: channels2,
-        image: im
+        image: im,
+        transfer: entry.transfer ?? "contrast"
       });
       const folders = pickAvailableChannelFolders({
         desired,
@@ -90455,12 +90503,16 @@ void main() {
   }
   async function jpegLoaderEntriesFromImages(opts) {
     var _a2;
+    const transfer = opts.transfer ?? "contrast";
     const activeGroup = (opts.activeGroupId ? opts.channelGroups.find((g2) => g2.id === opts.activeGroupId) : void 0) ?? opts.channelGroups[0];
     const groupChannels = toGroupChannelRows((activeGroup == null ? void 0 : activeGroup.channels) ?? []);
     const entries = [];
     for (const im of opts.images) {
       if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "jpeg") continue;
-      if (jpegSourceNeedsLocalRoot(im.source.url) && !opts.fetchTile) continue;
+      if (jpegSourceNeedsLocalRoot(im.source.url) && !opts.fetchTile) {
+        const path2 = new URL(opts.documentUrl, window.location.href).pathname;
+        if (!/\/document\.json$/i.test(path2)) continue;
+      }
       const storyRootUrl = resolveJpegStoryRoot(opts.documentUrl, im.source.url);
       const groupChannelFolders = {};
       for (const group2 of opts.channelGroups) {
@@ -90469,7 +90521,8 @@ void main() {
         if (rows2.length === 0) continue;
         groupChannelFolders[group2.id] = await resolveChannelFolders({
           groupChannels: rows2,
-          image: im
+          image: im,
+          transfer
         });
       }
       const availablePyramidFolders = /* @__PURE__ */ new Set();
@@ -90486,7 +90539,8 @@ void main() {
       }
       const desired = await resolveChannelFolders({
         groupChannels,
-        image: im
+        image: im,
+        transfer
       });
       const channelFolders = pickAvailableChannelFolders({
         desired,
@@ -90504,13 +90558,15 @@ void main() {
           index: ch2.index
         })),
         channelFolders,
-        fetchTile: opts.fetchTile
+        fetchTile: opts.fetchTile,
+        transfer
       });
       entries.push({
         loader,
         sourceImageId: im.id,
         channelFolders,
         imagePath: storyRootUrl,
+        transfer,
         availablePyramidFolders,
         groupChannelFolders
       });
@@ -90546,7 +90602,8 @@ void main() {
     if (withSource.length === 0) return false;
     return withSource.every((im) => {
       var _a2;
-      return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "url";
+      if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "url") return false;
+      return /^https?:\/\//i.test(im.source.url.trim());
     });
   }
   function withPortableJpegSources(images) {
@@ -90564,16 +90621,27 @@ void main() {
     });
   }
   function toExportedStoryDocument(data2, mode) {
-    const images = mode === "remote-url" ? data2.images : withPortableJpegSources(data2.images);
+    let images = data2.images;
+    if (mode === "jpeg-pyramid") {
+      images = withPortableJpegSources(data2.images);
+    }
     return validateDocumentData({
       ...data2,
       images,
       metadata: {
         ...data2.metadata,
         minervaVersion: version,
-        imageSource: mode === "remote-url" ? "remote-url" : data2.metadata.imageSource ?? "jpeg-pyramid"
+        imageSource: imageSourceForExportMode(mode, data2.metadata.imageSource)
       }
     });
+  }
+  function imageSourceForExportMode(mode, current) {
+    if (mode === "remote-url") return "remote-url";
+    if (mode === "jpeg-ome-tiff") {
+      if (current && isJpegOmeTiffImageSource(current)) return current;
+      return JPEG_OME_TIFF_IMAGE_SOURCE;
+    }
+    return current ?? "jpeg-pyramid";
   }
   function storyIndexHtml(title7, version$12 = version) {
     const { js, css: css2 } = minervaCdnUrls(version$12);
@@ -90654,10 +90722,13 @@ void main() {
       return file.getFile();
     };
   }
-  async function neededJpegPyramidFolderNames(channelGroups, images) {
+  async function neededJpegPyramidFolderNames(channelGroups, images, transfer = "contrast") {
     var _a2, _b2;
     const names = /* @__PURE__ */ new Set();
-    await Promise.all(channelGroups.flatMap((g2) => g2.channels.map(async (ch2) => names.add(await jpegPyramidFolderName(ch2.channelId, ch2.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT, ch2.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT)))));
+    await Promise.all(channelGroups.flatMap((g2) => g2.channels.map(async (ch2) => {
+      const { lowerLimit, upperLimit } = folderLimitsForTransfer(transfer, ch2.lowerLimit, ch2.upperLimit);
+      names.add(await jpegPyramidFolderName(ch2.channelId, lowerLimit, upperLimit));
+    })));
     if (names.size === 0 && images) {
       for (const im of images) {
         if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "jpeg" && ((_b2 = im.source) == null ? void 0 : _b2.kind) !== "local") continue;
@@ -90666,11 +90737,14 @@ void main() {
           ch2.index
         ]));
         const folders = await folderByChannelIndexFromGroup({
-          channels: im.channels.map((ch2) => ({
-            channelId: ch2.id,
-            lowerLimit: ch2.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
-            upperLimit: ch2.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT
-          })),
+          channels: im.channels.map((ch2) => {
+            const { lowerLimit, upperLimit } = folderLimitsForTransfer(transfer, ch2.lowerLimit ?? JPEG_BAKED_CONTRAST_LIMIT[0], ch2.upperLimit ?? JPEG_BAKED_CONTRAST_LIMIT[1]);
+            return {
+              channelId: ch2.id,
+              lowerLimit,
+              upperLimit
+            };
+          }),
           channelIndexById
         });
         for (const name2 of Object.values(folders)) names.add(name2);
@@ -90680,16 +90754,33 @@ void main() {
   }
   async function listExistingPyramidFolders(root2) {
     const names = /* @__PURE__ */ new Set();
-    for await (const [name2, handle2] of root2.entries()) {
-      if (handle2.kind === "directory" && /^[0-9a-f]{64}$/i.test(name2)) {
-        names.add(name2.toLowerCase());
+    try {
+      for await (const [name2, handle2] of root2.entries()) {
+        if (handle2.kind === "directory" && /^[0-9a-f]{64}$/i.test(name2)) {
+          names.add(name2.toLowerCase());
+        }
       }
+    } catch (e2) {
+      if (e2 instanceof DOMException && e2.name === "NotFoundError") {
+        return names;
+      }
+      throw e2;
     }
     return names;
   }
+  async function isStoryRootHandleUsable(root2) {
+    try {
+      await root2.entries().next();
+      return true;
+    } catch (e2) {
+      if (e2 instanceof DOMException && e2.name === "NotFoundError") return false;
+      throw e2;
+    }
+  }
   async function assertPyramidFoldersExist(root2, data2) {
     if (data2.metadata.imageSource === "remote-url") return;
-    const needed = await neededJpegPyramidFolderNames(data2.channelGroups, data2.images);
+    if (isJpegOmeTiffImageSource(data2.metadata.imageSource)) return;
+    const needed = await neededJpegPyramidFolderNames(data2.channelGroups, data2.images, jpegTransferFromImageSource(data2.metadata.imageSource));
     if (needed.size === 0) return;
     const existing = await listExistingPyramidFolders(root2);
     const missing = [
@@ -90699,21 +90790,27 @@ void main() {
       throw new Error("Missing JPEG pyramid folders. Pick the folder created by Export (document.json plus channel directories).");
     }
   }
+  function isRelativeOmeTiffUrl(url) {
+    const u2 = url.trim();
+    if (!u2 || /^https?:\/\//i.test(u2) || u2.startsWith("blob:")) return false;
+    return /\.ome\.tiff?$/i.test(u2) || /\.tiff?$/i.test(u2);
+  }
   async function readDocumentJson(root2) {
     const fh2 = await root2.getFileHandle("document.json");
     const file = await fh2.getFile();
     return validateDocumentData(JSON.parse(await file.text()));
   }
   async function persistImportedStory(data2, titleFallback, root2) {
-    var _a2;
+    var _a2, _b2;
     const title7 = ((_a2 = data2.metadata.title) == null ? void 0 : _a2.trim()) || titleFallback || "Imported Story";
     const hasLocalSources = data2.images.some((im) => {
       var _a3;
       return ((_a3 = im.source) == null ? void 0 : _a3.kind) === "local";
     });
-    const imagesBase = data2.metadata.imageSource === "remote-url" || hasLocalSources ? data2.images : withPortableJpegSources(data2.images);
+    const omeTiffBundle = isJpegOmeTiffImageSource(data2.metadata.imageSource);
+    const imagesBase = data2.metadata.imageSource === "remote-url" || hasLocalSources || omeTiffBundle ? data2.images : withPortableJpegSources(data2.images);
     const rec = await createStoryRecord(title7);
-    const images = hasLocalSources ? imagesBase.map((im) => {
+    let images = hasLocalSources ? imagesBase.map((im) => {
       var _a3;
       if (((_a3 = im.source) == null ? void 0 : _a3.kind) !== "local") return im;
       return {
@@ -90724,6 +90821,26 @@ void main() {
         }
       };
     }) : imagesBase;
+    if (root2 && omeTiffBundle) {
+      const next22 = [];
+      for (const im of images) {
+        if (((_b2 = im.source) == null ? void 0 : _b2.kind) === "url" && isRelativeOmeTiffUrl(im.source.url)) {
+          const fh2 = await root2.getFileHandle(im.source.url);
+          const handleKey = imageHandleStorageKey(rec.id, im.id);
+          await putFileHandle(handleKey, fh2);
+          next22.push({
+            ...im,
+            source: {
+              kind: "local",
+              handleKey
+            }
+          });
+        } else {
+          next22.push(im);
+        }
+      }
+      images = next22;
+    }
     const next2 = validateDocumentData({
       ...data2,
       metadata: {
@@ -90752,9 +90869,12 @@ void main() {
     });
     const data2 = validateDocumentData(JSON.parse(await file.text()));
     let root2;
-    if (storyNeedsLocalJpegRoot(data2.images)) {
+    if (storyNeedsLocalJpegRoot(data2.images) || isJpegOmeTiffImageSource(data2.metadata.imageSource) && data2.images.some((im) => {
+      var _a2;
+      return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "url" && isRelativeOmeTiffUrl(im.source.url);
+    })) {
       if (!hasDirectoryPickerAccess()) {
-        throw new Error("This story uses local JPEG pyramids. Open it in Chrome or Edge and choose the story folder to grant access.");
+        throw new Error("This story uses local image files. Open it in Chrome or Edge and choose the story folder to grant access.");
       }
       root2 = await window.showDirectoryPicker({
         id: "minerva-story-import",
@@ -90918,38 +91038,37 @@ void main() {
       basepath: routerBasepath()
     });
   }
-  const root$8 = "_root_dp4yy_4";
-  const shelfToolbar = "_shelfToolbar_dp4yy_28";
-  const toolbarActions = "_toolbarActions_dp4yy_40";
-  const importMenu = "_importMenu_dp4yy_47";
-  const disabledAction = "_disabledAction_dp4yy_59";
-  const importChoices = "_importChoices_dp4yy_64";
-  const wordmark = "_wordmark_dp4yy_93";
-  const newVolume = "_newVolume_dp4yy_102";
-  const newGlyph = "_newGlyph_dp4yy_133";
-  const newLabel = "_newLabel_dp4yy_140";
-  const error = "_error_dp4yy_144";
-  const whisper = "_whisper_dp4yy_153";
-  const emptyLine = "_emptyLine_dp4yy_160";
-  const inlineLink = "_inlineLink_dp4yy_168";
-  const bookcase = "_bookcase_dp4yy_190";
-  const bookcaseInner = "_bookcaseInner_dp4yy_213";
-  const shelfBay = "_shelfBay_dp4yy_231";
-  const bayContent = "_bayContent_dp4yy_241";
-  const bayContentEmptyPrompt = "_bayContentEmptyPrompt_dp4yy_250";
-  const bayContentEmpty = "_bayContentEmpty_dp4yy_250";
-  const ghostShelf = "_ghostShelf_dp4yy_262";
-  const ghostBook = "_ghostBook_dp4yy_273";
-  const storyRow = "_storyRow_dp4yy_282";
-  const shelfBoard = "_shelfBoard_dp4yy_298";
-  const rowOpen = "_rowOpen_dp4yy_325";
-  const rowThumb = "_rowThumb_dp4yy_359";
-  const rowThumbImg = "_rowThumbImg_dp4yy_368";
-  const rowThumbBlank = "_rowThumbBlank_dp4yy_377";
-  const rowText = "_rowText_dp4yy_385";
-  const rowTitle$1 = "_rowTitle_dp4yy_394";
-  const rowDate = "_rowDate_dp4yy_404";
-  const scrap = "_scrap_dp4yy_412";
+  const root$8 = "_root_1c2by_4";
+  const shelfToolbar = "_shelfToolbar_1c2by_28";
+  const toolbarActions = "_toolbarActions_1c2by_40";
+  const importMenu = "_importMenu_1c2by_47";
+  const disabledAction = "_disabledAction_1c2by_59";
+  const importChoices = "_importChoices_1c2by_64";
+  const wordmark = "_wordmark_1c2by_93";
+  const newVolume = "_newVolume_1c2by_102";
+  const newGlyph = "_newGlyph_1c2by_133";
+  const newLabel = "_newLabel_1c2by_140";
+  const error = "_error_1c2by_144";
+  const whisper = "_whisper_1c2by_153";
+  const emptyLine = "_emptyLine_1c2by_161";
+  const inlineLink = "_inlineLink_1c2by_169";
+  const bookcase = "_bookcase_1c2by_191";
+  const bookcaseInner = "_bookcaseInner_1c2by_214";
+  const shelfBay = "_shelfBay_1c2by_232";
+  const bayContent = "_bayContent_1c2by_242";
+  const bayContentEmpty = "_bayContentEmpty_1c2by_252";
+  const ghostShelf = "_ghostShelf_1c2by_259";
+  const ghostBook = "_ghostBook_1c2by_270";
+  const storyRow = "_storyRow_1c2by_279";
+  const shelfBoard = "_shelfBoard_1c2by_295";
+  const rowOpen = "_rowOpen_1c2by_322";
+  const rowThumb = "_rowThumb_1c2by_356";
+  const rowThumbImg = "_rowThumbImg_1c2by_365";
+  const rowThumbBlank = "_rowThumbBlank_1c2by_374";
+  const rowText = "_rowText_1c2by_382";
+  const rowTitle$1 = "_rowTitle_1c2by_391";
+  const rowDate = "_rowDate_1c2by_401";
+  const scrap = "_scrap_1c2by_409";
   const styles$q = {
     root: root$8,
     shelfToolbar,
@@ -90969,7 +91088,6 @@ void main() {
     bookcaseInner,
     shelfBay,
     bayContent,
-    bayContentEmptyPrompt,
     bayContentEmpty,
     ghostShelf,
     ghostBook,
@@ -91341,7 +91459,7 @@ void main() {
                 className: styles$q.shelfBay,
                 children: [
                   jsxRuntimeExports.jsxs("div", {
-                    className: bay.kind === "empty" ? `${styles$q.bayContent} ${styles$q.bayContentEmpty}` : bay.kind === "emptyPrompt" ? `${styles$q.bayContent} ${styles$q.bayContentEmptyPrompt}` : styles$q.bayContent,
+                    className: bay.kind === "empty" ? `${styles$q.bayContent} ${styles$q.bayContentEmpty}` : styles$q.bayContent,
                     "aria-hidden": bay.kind === "empty" ? true : void 0,
                     children: [
                       bay.kind === "empty" ? jsxRuntimeExports.jsx(GhostBooks, {
@@ -103566,7 +103684,7 @@ void main() {
   refractor$1.alias = alias$1;
   refractor$1.registered = registered$1;
   refractor$1.listLanguages = listLanguages$1;
-  refractor$1.util.encode = encode$1;
+  refractor$1.util.encode = encode$2;
   refractor$1.Token.stringify = stringify$1;
   function highlight$1(value, language) {
     if (typeof value !== "string") {
@@ -103677,7 +103795,7 @@ void main() {
     refractor$1.hooks.run("wrap", env2);
     return h$1(env2.tag + "." + env2.classes.join("."), attributes$1(env2.attributes), env2.content);
   }
-  function encode$1(tokens) {
+  function encode$2(tokens) {
     return tokens;
   }
   function attributes$1(record) {
@@ -148815,7 +148933,7 @@ void main() {
   refractor.alias = alias;
   refractor.registered = registered;
   refractor.listLanguages = listLanguages;
-  refractor.util.encode = encode;
+  refractor.util.encode = encode$1;
   refractor.Token.stringify = stringify;
   function highlight(value, language) {
     if (typeof value !== "string") {
@@ -148926,7 +149044,7 @@ void main() {
     refractor.hooks.run("wrap", env2);
     return h(env2.tag + "." + env2.classes.join("."), attributes(env2.attributes), env2.content);
   }
-  function encode(tokens) {
+  function encode$1(tokens) {
     return tokens;
   }
   function attributes(record) {
@@ -170687,7 +170805,2692 @@ void main() {
       ]
     });
   }
-  const JPEG_EXPORT_QUALITY = 0.5;
+  class ClassicTiffOverflowError extends Error {
+    constructor(message2) {
+      super(`${message2} Retry with format: "bigtiff" (the default).`);
+      __publicField(this, "code", "CLASSIC_TIFF_OVERFLOW");
+      this.name = "ClassicTiffOverflowError";
+    }
+  }
+  class TiffWriterError extends Error {
+    constructor(code2, message2) {
+      super(message2);
+      __publicField(this, "code");
+      this.name = "TiffWriterError";
+      this.code = code2;
+    }
+  }
+  function isLittleEndian(byteOrder) {
+    return byteOrder === "little-endian";
+  }
+  function tilesAcross(width, tileWidth) {
+    return Math.ceil(width / tileWidth);
+  }
+  function tilesDown(height, tileHeight) {
+    return Math.ceil(height / tileHeight);
+  }
+  function tileCountForSize(width, height, tileWidth, tileHeight) {
+    return tilesAcross(width, tileWidth) * tilesDown(height, tileHeight);
+  }
+  function align8(n2) {
+    return n2 + 7n & ~7n;
+  }
+  function assertPositiveSafeInt(name2, value) {
+    if (!Number.isSafeInteger(value) || value <= 0) {
+      throw new TiffWriterError("INVALID_DIMENSION", `${name2} must be a positive safe integer (got ${value})`);
+    }
+  }
+  function assertUint32Dimension(name2, value) {
+    assertPositiveSafeInt(name2, value);
+    if (value > 4294967295) {
+      throw new TiffWriterError("INVALID_DIMENSION", `${name2} must fit in a 32-bit TIFF LONG (got ${value})`);
+    }
+  }
+  const HEADER_SIZE$1 = 16;
+  const ENTRY_COUNT_SIZE$1 = 8;
+  const IFD_ENTRY_SIZE$1 = 20;
+  const VALUE_FIELD_OFFSET$1 = 12;
+  const INLINE_VALUE_SIZE$1 = 8;
+  const NEXT_IFD_SIZE$1 = 8;
+  const bigTiffDialect = {
+    format: "bigtiff",
+    headerSize: HEADER_SIZE$1,
+    entryCountSize: ENTRY_COUNT_SIZE$1,
+    ifdEntrySize: IFD_ENTRY_SIZE$1,
+    valueFieldOffset: VALUE_FIELD_OFFSET$1,
+    inlineValueSize: INLINE_VALUE_SIZE$1,
+    offsetWidth: 8,
+    offsetTagType: "LONG8",
+    ifdOffsetTagType: "IFD8",
+    ifdEntryBlockSize(numTags) {
+      return ENTRY_COUNT_SIZE$1 + numTags * IFD_ENTRY_SIZE$1 + NEXT_IFD_SIZE$1;
+    },
+    writeHeader(buf, firstIfdOffset, byteOrder) {
+      const le2 = isLittleEndian(byteOrder);
+      const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+      view.setUint16(0, le2 ? 18761 : 19789, le2);
+      view.setUint16(2, 43, le2);
+      view.setUint16(4, 8, le2);
+      view.setUint16(6, 0, le2);
+      view.setBigUint64(8, firstIfdOffset, le2);
+    },
+    writeEntryCount(view, offset, count2, le2) {
+      view.setBigUint64(offset, BigInt(count2), le2);
+      return offset + ENTRY_COUNT_SIZE$1;
+    },
+    writeTagEntry(view, buf, offset, tag, valueOrPointer, inline, le2) {
+      view.setUint16(offset, tag.id, le2);
+      view.setUint16(offset + 2, tag.typeCode, le2);
+      view.setBigUint64(offset + 4, BigInt(tag.count), le2);
+      const valueField = offset + VALUE_FIELD_OFFSET$1;
+      if (inline) {
+        buf.fill(0, valueField, valueField + INLINE_VALUE_SIZE$1);
+        buf.set(tag.valueBytes, valueField);
+      } else {
+        view.setBigUint64(valueField, valueOrPointer, le2);
+      }
+      return offset + IFD_ENTRY_SIZE$1;
+    },
+    writeNextIfdOffset(view, offset, next2, le2) {
+      view.setBigUint64(offset, next2, le2);
+      return offset + NEXT_IFD_SIZE$1;
+    },
+    writeOffsetArray(values, le2) {
+      const bytes = new Uint8Array(values.length * 8);
+      const view = new DataView(bytes.buffer);
+      for (let i2 = 0; i2 < values.length; i2++) {
+        view.setBigUint64(i2 * 8, values[i2], le2);
+      }
+      return bytes;
+    },
+    writeIfdPointer(view, offset, value, le2) {
+      view.setBigUint64(offset, value, le2);
+    },
+    validateOffset() {
+    },
+    validateCount() {
+    }
+  };
+  const HEADER_SIZE = 8;
+  const ENTRY_COUNT_SIZE = 2;
+  const IFD_ENTRY_SIZE = 12;
+  const VALUE_FIELD_OFFSET = 8;
+  const INLINE_VALUE_SIZE = 4;
+  const NEXT_IFD_SIZE = 4;
+  const MAX_U32 = 0xffffffffn;
+  const MAX_U16 = 65535;
+  function assertU32(value, label2) {
+    if (value < 0n || value > MAX_U32) {
+      throw new ClassicTiffOverflowError(`Classic TIFF ${label2} ${value} does not fit in 32 bits.`);
+    }
+    return Number(value);
+  }
+  function assertU16(value, label2) {
+    if (!Number.isInteger(value) || value < 0 || value > MAX_U16) {
+      throw new ClassicTiffOverflowError(`Classic TIFF ${label2} ${value} does not fit in 16 bits.`);
+    }
+    return value;
+  }
+  const classicTiffDialect = {
+    format: "classic",
+    headerSize: HEADER_SIZE,
+    entryCountSize: ENTRY_COUNT_SIZE,
+    ifdEntrySize: IFD_ENTRY_SIZE,
+    valueFieldOffset: VALUE_FIELD_OFFSET,
+    inlineValueSize: INLINE_VALUE_SIZE,
+    offsetWidth: 4,
+    offsetTagType: "LONG",
+    ifdOffsetTagType: "IFD",
+    ifdEntryBlockSize(numTags) {
+      return ENTRY_COUNT_SIZE + numTags * IFD_ENTRY_SIZE + NEXT_IFD_SIZE;
+    },
+    writeHeader(buf, firstIfdOffset, byteOrder) {
+      const le2 = isLittleEndian(byteOrder);
+      const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+      view.setUint16(0, le2 ? 18761 : 19789, le2);
+      view.setUint16(2, 42, le2);
+      view.setUint32(4, assertU32(firstIfdOffset, "first IFD offset"), le2);
+    },
+    writeEntryCount(view, offset, count2, le2) {
+      view.setUint16(offset, assertU16(count2, "IFD entry count"), le2);
+      return offset + ENTRY_COUNT_SIZE;
+    },
+    writeTagEntry(view, buf, offset, tag, valueOrPointer, inline, le2) {
+      view.setUint16(offset, tag.id, le2);
+      view.setUint16(offset + 2, tag.typeCode, le2);
+      view.setUint32(offset + 4, assertU32(BigInt(tag.count), "tag count"), le2);
+      const valueField = offset + VALUE_FIELD_OFFSET;
+      if (inline) {
+        buf.fill(0, valueField, valueField + INLINE_VALUE_SIZE);
+        buf.set(tag.valueBytes, valueField);
+      } else {
+        view.setUint32(valueField, assertU32(valueOrPointer, `tag ${tag.id} value offset`), le2);
+      }
+      return offset + IFD_ENTRY_SIZE;
+    },
+    writeNextIfdOffset(view, offset, next2, le2) {
+      view.setUint32(offset, assertU32(next2, "next IFD offset"), le2);
+      return offset + NEXT_IFD_SIZE;
+    },
+    writeOffsetArray(values, le2) {
+      const bytes = new Uint8Array(values.length * 4);
+      const view = new DataView(bytes.buffer);
+      for (let i2 = 0; i2 < values.length; i2++) {
+        view.setUint32(i2 * 4, assertU32(values[i2], "offset/byteCount"), le2);
+      }
+      return bytes;
+    },
+    writeIfdPointer(view, offset, value, le2) {
+      view.setUint32(offset, assertU32(value, "SubIFD offset"), le2);
+    },
+    validateOffset(value, label2) {
+      assertU32(value, label2);
+    },
+    validateCount(value, label2) {
+      assertU16(value, label2);
+    }
+  };
+  function tagIsOutOfLine(tag, inlineValueSize) {
+    return tag.valueBytes.length > inlineValueSize;
+  }
+  const TIFF_TYPE_CODE = {
+    BYTE: 1,
+    ASCII: 2,
+    SHORT: 3,
+    LONG: 4,
+    RATIONAL: 5,
+    SBYTE: 6,
+    UNDEFINED: 7,
+    SSHORT: 8,
+    SLONG: 9,
+    SRATIONAL: 10,
+    FLOAT: 11,
+    DOUBLE: 12,
+    IFD: 13,
+    LONG8: 16,
+    SLONG8: 17,
+    IFD8: 18
+  };
+  const TIFF_TYPE_SIZE = {
+    BYTE: 1,
+    ASCII: 1,
+    SHORT: 2,
+    LONG: 4,
+    RATIONAL: 8,
+    SBYTE: 1,
+    UNDEFINED: 1,
+    SSHORT: 2,
+    SLONG: 4,
+    SRATIONAL: 8,
+    FLOAT: 4,
+    DOUBLE: 8,
+    IFD: 4,
+    LONG8: 8,
+    SLONG8: 8,
+    IFD8: 8
+  };
+  const TIFF_TAG_IDS = {
+    NewSubfileType: 254,
+    ImageWidth: 256,
+    ImageLength: 257,
+    BitsPerSample: 258,
+    Compression: 259,
+    PhotometricInterpretation: 262,
+    ImageDescription: 270,
+    SamplesPerPixel: 277,
+    PlanarConfiguration: 284,
+    TileWidth: 322,
+    TileLength: 323,
+    TileOffsets: 324,
+    TileByteCounts: 325,
+    SubIFDs: 330,
+    SampleFormat: 339
+  };
+  const WRITER_OWNED_TAG_IDS = /* @__PURE__ */ new Set([
+    TIFF_TAG_IDS.ImageWidth,
+    TIFF_TAG_IDS.ImageLength,
+    TIFF_TAG_IDS.TileWidth,
+    TIFF_TAG_IDS.TileLength,
+    TIFF_TAG_IDS.TileOffsets,
+    TIFF_TAG_IDS.TileByteCounts,
+    TIFF_TAG_IDS.SubIFDs
+  ]);
+  function resolveTagId(idOrName) {
+    if (typeof idOrName === "number") {
+      if (!Number.isInteger(idOrName) || idOrName < 0 || idOrName > 65535) {
+        throw new TiffWriterError("INVALID_TAG_ID", `Tag id must be an integer in 0..65535 (got ${idOrName})`);
+      }
+      return idOrName;
+    }
+    return TIFF_TAG_IDS[idOrName];
+  }
+  function tiffTag(idOrName, type, value) {
+    return {
+      id: resolveTagId(idOrName),
+      type,
+      value
+    };
+  }
+  function assertIntegerInRange(value, min2, max2, label2) {
+    if (!Number.isInteger(value) || value < min2 || value > max2) {
+      throw new TiffWriterError("INVALID_TAG_VALUE", `${label2} must be an integer in ${min2}..${max2} (got ${value})`);
+    }
+    return value;
+  }
+  function numberFromTagNumberOrBigInt(value) {
+    if (typeof value === "number") return value;
+    if (value < BigInt(Number.MIN_SAFE_INTEGER) || value > BigInt(Number.MAX_SAFE_INTEGER)) {
+      throw new TiffWriterError("INVALID_TAG_VALUE", `Tag numeric value ${value} exceeds Number.MAX_SAFE_INTEGER; use a 64-bit tag type`);
+    }
+    return Number(value);
+  }
+  function asNumberArray(value) {
+    if (typeof value === "number" || typeof value === "bigint") {
+      return [
+        numberFromTagNumberOrBigInt(value)
+      ];
+    }
+    if (Array.isArray(value)) {
+      return value.map((v2) => {
+        if (typeof v2 === "number" || typeof v2 === "bigint") {
+          return numberFromTagNumberOrBigInt(v2);
+        }
+        throw new TiffWriterError("INVALID_TAG_VALUE", `Expected number array element, got ${typeof v2}`);
+      });
+    }
+    throw new TiffWriterError("INVALID_TAG_VALUE", `Expected number or number[], got ${typeof value}`);
+  }
+  function asBigIntArray(value) {
+    if (typeof value === "bigint") return [
+      value
+    ];
+    if (typeof value === "number") {
+      if (!Number.isInteger(value)) {
+        throw new TiffWriterError("INVALID_TAG_VALUE", `Expected integer for 64-bit tag, got ${value}`);
+      }
+      return [
+        BigInt(value)
+      ];
+    }
+    if (Array.isArray(value)) {
+      return value.map((v2) => {
+        if (typeof v2 === "bigint") return v2;
+        if (typeof v2 === "number" && Number.isInteger(v2)) return BigInt(v2);
+        throw new TiffWriterError("INVALID_TAG_VALUE", `Expected bigint/integer array element, got ${typeof v2}`);
+      });
+    }
+    throw new TiffWriterError("INVALID_TAG_VALUE", `Expected bigint/number or array, got ${typeof value}`);
+  }
+  function encodeAscii(text2) {
+    const encoded = new TextEncoder().encode(text2);
+    const out = new Uint8Array(encoded.length + 1);
+    out.set(encoded);
+    return out;
+  }
+  function parseRationalPairs(value) {
+    if (Array.isArray(value) && value.length === 2 && typeof value[0] === "number" && typeof value[1] === "number") {
+      return [
+        [
+          value[0],
+          value[1]
+        ]
+      ];
+    }
+    if (!Array.isArray(value)) {
+      throw new TiffWriterError("INVALID_TAG_VALUE", "RATIONAL tags require [num, den] or an array of pairs");
+    }
+    const pairs = [];
+    for (const item2 of value) {
+      if (!Array.isArray(item2) || item2.length !== 2 || typeof item2[0] !== "number" || typeof item2[1] !== "number") {
+        throw new TiffWriterError("INVALID_TAG_VALUE", "RATIONAL tags require [num, den] or an array of pairs");
+      }
+      pairs.push([
+        item2[0],
+        item2[1]
+      ]);
+    }
+    for (const [, den] of pairs) {
+      if (den === 0) {
+        throw new TiffWriterError("INVALID_TAG_VALUE", "RATIONAL denominator must be nonzero");
+      }
+    }
+    return pairs;
+  }
+  function encodeNumericTag(nums, elementSize, write) {
+    const valueBytes = new Uint8Array(nums.length * elementSize);
+    const view = new DataView(valueBytes.buffer);
+    for (let i2 = 0; i2 < nums.length; i2++) {
+      write(view, i2 * elementSize, nums[i2]);
+    }
+    return valueBytes;
+  }
+  function encodeUint16Values(nums, le2) {
+    return encodeNumericTag(nums, 2, (v2, o2, n2) => {
+      v2.setUint16(o2, assertIntegerInRange(n2, 0, 65535, "SHORT"), le2);
+    });
+  }
+  function encodeInt16Values(nums, le2) {
+    return encodeNumericTag(nums, 2, (v2, o2, n2) => {
+      v2.setInt16(o2, assertIntegerInRange(n2, -32768, 32767, "SSHORT"), le2);
+    });
+  }
+  function encodeUint32Values(nums, le2) {
+    return encodeNumericTag(nums, 4, (v2, o2, n2) => {
+      v2.setUint32(o2, assertIntegerInRange(n2, 0, 4294967295, "LONG"), le2);
+    });
+  }
+  function encodeInt32Values(nums, le2) {
+    return encodeNumericTag(nums, 4, (v2, o2, n2) => {
+      v2.setInt32(o2, assertIntegerInRange(n2, -2147483648, 2147483647, "SLONG"), le2);
+    });
+  }
+  function resolveUserTag(tag, byteOrder, format = "bigtiff") {
+    if (WRITER_OWNED_TAG_IDS.has(tag.id)) {
+      throw new TiffWriterError("STRUCTURAL_TAG_OVERRIDE", `Tag ${tag.id} is owned by the writer and cannot be supplied by the caller`);
+    }
+    if (format === "classic" && (tag.type === "LONG8" || tag.type === "SLONG8" || tag.type === "IFD8")) {
+      throw new TiffWriterError("INVALID_TAG_TYPE", `${tag.type} is not valid in classic TIFF; use format: "bigtiff"`);
+    }
+    const le2 = isLittleEndian(byteOrder);
+    const typeCode = TIFF_TYPE_CODE[tag.type];
+    let valueBytes;
+    let count2;
+    switch (tag.type) {
+      case "ASCII": {
+        if (typeof tag.value !== "string") {
+          throw new TiffWriterError("INVALID_TAG_VALUE", "ASCII tags require a string value");
+        }
+        valueBytes = encodeAscii(tag.value);
+        count2 = valueBytes.length;
+        break;
+      }
+      case "BYTE":
+      case "UNDEFINED":
+      case "SBYTE": {
+        if (tag.value instanceof Uint8Array) {
+          valueBytes = new Uint8Array(tag.value);
+        } else {
+          const nums = asNumberArray(tag.value);
+          valueBytes = Uint8Array.from(nums.map((n2) => tag.type === "SBYTE" ? assertIntegerInRange(n2, -128, 127, "SBYTE") & 255 : assertIntegerInRange(n2, 0, 255, "BYTE")));
+        }
+        count2 = valueBytes.length;
+        break;
+      }
+      case "SHORT": {
+        const nums = asNumberArray(tag.value);
+        valueBytes = encodeUint16Values(nums, le2);
+        count2 = nums.length;
+        break;
+      }
+      case "SSHORT": {
+        const nums = asNumberArray(tag.value);
+        valueBytes = encodeInt16Values(nums, le2);
+        count2 = nums.length;
+        break;
+      }
+      case "LONG":
+      case "IFD": {
+        const nums = asNumberArray(tag.value);
+        valueBytes = encodeUint32Values(nums, le2);
+        count2 = nums.length;
+        break;
+      }
+      case "SLONG": {
+        const nums = asNumberArray(tag.value);
+        valueBytes = encodeInt32Values(nums, le2);
+        count2 = nums.length;
+        break;
+      }
+      case "FLOAT": {
+        const nums = asNumberArray(tag.value);
+        valueBytes = encodeNumericTag(nums, 4, (v2, o2, n2) => v2.setFloat32(o2, n2, le2));
+        count2 = nums.length;
+        break;
+      }
+      case "DOUBLE": {
+        const nums = asNumberArray(tag.value);
+        valueBytes = encodeNumericTag(nums, 8, (v2, o2, n2) => v2.setFloat64(o2, n2, le2));
+        count2 = nums.length;
+        break;
+      }
+      case "RATIONAL":
+      case "SRATIONAL": {
+        const pairs = parseRationalPairs(tag.value);
+        valueBytes = new Uint8Array(pairs.length * 8);
+        const view = new DataView(valueBytes.buffer);
+        for (let i2 = 0; i2 < pairs.length; i2++) {
+          const [num2, den] = pairs[i2];
+          if (tag.type === "RATIONAL") {
+            view.setUint32(i2 * 8, assertIntegerInRange(num2, 0, 4294967295, "RATIONAL numerator"), le2);
+            view.setUint32(i2 * 8 + 4, assertIntegerInRange(den, 0, 4294967295, "RATIONAL denominator"), le2);
+          } else {
+            view.setInt32(i2 * 8, assertIntegerInRange(num2, -2147483648, 2147483647, "SRATIONAL numerator"), le2);
+            view.setInt32(i2 * 8 + 4, assertIntegerInRange(den, -2147483648, 2147483647, "SRATIONAL denominator"), le2);
+          }
+        }
+        count2 = pairs.length;
+        break;
+      }
+      case "LONG8":
+      case "IFD8": {
+        const nums = asBigIntArray(tag.value);
+        valueBytes = new Uint8Array(nums.length * 8);
+        const view = new DataView(valueBytes.buffer);
+        for (let i2 = 0; i2 < nums.length; i2++) {
+          view.setBigUint64(i2 * 8, nums[i2], le2);
+        }
+        count2 = nums.length;
+        break;
+      }
+      case "SLONG8": {
+        const nums = asBigIntArray(tag.value);
+        valueBytes = new Uint8Array(nums.length * 8);
+        const view = new DataView(valueBytes.buffer);
+        for (let i2 = 0; i2 < nums.length; i2++) {
+          view.setBigInt64(i2 * 8, nums[i2], le2);
+        }
+        count2 = nums.length;
+        break;
+      }
+      default: {
+        const _exhaustive = tag.type;
+        throw new TiffWriterError("INVALID_TAG_TYPE", `Unhandled TIFF tag type: ${String(_exhaustive)}`);
+      }
+    }
+    if (count2 <= 0) {
+      throw new TiffWriterError("INVALID_TAG_VALUE", `Tag ${tag.id} has empty value`);
+    }
+    return {
+      id: tag.id,
+      type: tag.type,
+      typeCode,
+      count: count2,
+      valueBytes
+    };
+  }
+  function placeholderArrayTag(id2, type, count2) {
+    return {
+      id: id2,
+      type,
+      typeCode: TIFF_TYPE_CODE[type],
+      count: count2,
+      valueBytes: new Uint8Array(count2 * TIFF_TYPE_SIZE[type])
+    };
+  }
+  function encodeUint32Tag(id2, value, byteOrder) {
+    const clamped = assertIntegerInRange(value, 0, 4294967295, `Tag ${id2}`);
+    const valueBytes = new Uint8Array(4);
+    new DataView(valueBytes.buffer).setUint32(0, clamped, isLittleEndian(byteOrder));
+    return {
+      id: id2,
+      type: "LONG",
+      typeCode: TIFF_TYPE_CODE.LONG,
+      count: 1,
+      valueBytes
+    };
+  }
+  function validateTileCount(tileCount) {
+    if (!Number.isSafeInteger(tileCount) || tileCount <= 0 || tileCount > 2147483647) {
+      throw new TiffWriterError("INVALID_DIMENSION", `Tile count must be a positive safe array length (got ${tileCount})`);
+    }
+  }
+  function validateImageTree(images, seen2) {
+    var _a2;
+    for (const image2 of images) {
+      if (seen2.has(image2)) {
+        throw new TiffWriterError("CYCLIC_IMAGE_GRAPH", "TiffImage graph must be a tree; reused image objects are not allowed");
+      }
+      seen2.add(image2);
+      assertUint32Dimension("width", image2.width);
+      assertUint32Dimension("height", image2.height);
+      if (image2.segments.kind !== "tiles") {
+        throw new TiffWriterError("UNSUPPORTED_SEGMENTS", `Unsupported segments kind: ${image2.segments.kind}`);
+      }
+      assertUint32Dimension("tileWidth", image2.segments.tileWidth);
+      assertUint32Dimension("tileHeight", image2.segments.tileHeight);
+      const tileCount = tileCountForSize(image2.width, image2.height, image2.segments.tileWidth, image2.segments.tileHeight);
+      validateTileCount(tileCount);
+      if ((_a2 = image2.subImages) == null ? void 0 : _a2.length) {
+        validateImageTree(image2.subImages, seen2);
+      }
+    }
+  }
+  function makeSlot(image2, path2) {
+    const { tileWidth, tileHeight } = image2.segments;
+    const tileCount = tileCountForSize(image2.width, image2.height, tileWidth, tileHeight);
+    validateTileCount(tileCount);
+    return {
+      path: path2,
+      width: image2.width,
+      height: image2.height,
+      tileWidth,
+      tileHeight,
+      tileCount,
+      ifdOffset: 0n,
+      nextIfdOffset: 0n,
+      tileOffsetsFileOffset: 0n,
+      tileByteCountsFileOffset: 0n,
+      segments: Array.from({
+        length: tileCount
+      }, () => ({
+        status: "missing"
+      })),
+      userTags: image2.tags ?? [],
+      subIfds: (image2.subImages ?? []).map((sub2, i2) => makeSlot(sub2, [
+        ...path2,
+        i2
+      ])),
+      resolvedTags: []
+    };
+  }
+  function buildResolvedTags(slot, dialect, byteOrder) {
+    const tags = [
+      encodeUint32Tag(TIFF_TAG_IDS.ImageWidth, slot.width, byteOrder),
+      encodeUint32Tag(TIFF_TAG_IDS.ImageLength, slot.height, byteOrder),
+      encodeUint32Tag(TIFF_TAG_IDS.TileWidth, slot.tileWidth, byteOrder),
+      encodeUint32Tag(TIFF_TAG_IDS.TileLength, slot.tileHeight, byteOrder),
+      placeholderArrayTag(TIFF_TAG_IDS.TileOffsets, dialect.offsetTagType, slot.tileCount),
+      placeholderArrayTag(TIFF_TAG_IDS.TileByteCounts, dialect.offsetTagType, slot.tileCount)
+    ];
+    if (slot.subIfds.length > 0) {
+      tags.push(placeholderArrayTag(TIFF_TAG_IDS.SubIFDs, dialect.ifdOffsetTagType, slot.subIfds.length));
+    }
+    const seen2 = new Set(tags.map((t2) => t2.id));
+    for (const user of slot.userTags) {
+      const resolved = resolveUserTag(user, byteOrder, dialect.format);
+      if (seen2.has(resolved.id)) {
+        throw new TiffWriterError("DUPLICATE_TAG", `Duplicate tag id ${resolved.id} in IFD`);
+      }
+      seen2.add(resolved.id);
+      tags.push(resolved);
+    }
+    tags.sort((a2, b2) => a2.id - b2.id);
+    dialect.validateCount(tags.length, "IFD entry count");
+    return tags;
+  }
+  function recordPatchSite(slot, tagId, fileOffset) {
+    if (tagId === TIFF_TAG_IDS.TileOffsets) {
+      slot.tileOffsetsFileOffset = fileOffset;
+    } else if (tagId === TIFF_TAG_IDS.TileByteCounts) {
+      slot.tileByteCountsFileOffset = fileOffset;
+    }
+  }
+  function planLayout(images, dialect, byteOrder) {
+    if (!images.length) {
+      throw new TiffWriterError("NO_IMAGES", "At least one top-level image is required");
+    }
+    validateImageTree(images, /* @__PURE__ */ new WeakSet());
+    const mainSlots = images.map((image2, i2) => makeSlot(image2, [
+      i2
+    ]));
+    let cursor = BigInt(dialect.headerSize);
+    const writeOrder = [];
+    const placeSlot = (slot) => {
+      slot.resolvedTags = buildResolvedTags(slot, dialect, byteOrder);
+      const entryBlock = BigInt(dialect.ifdEntryBlockSize(slot.resolvedTags.length));
+      slot.ifdOffset = cursor;
+      dialect.validateOffset(slot.ifdOffset, "IFD offset");
+      let entryPos = cursor + BigInt(dialect.entryCountSize);
+      cursor += entryBlock;
+      let overflowCursor = cursor;
+      for (const tag of slot.resolvedTags) {
+        const valueField = entryPos + BigInt(dialect.valueFieldOffset);
+        if (tagIsOutOfLine(tag, dialect.inlineValueSize)) {
+          overflowCursor = align8(overflowCursor);
+          dialect.validateOffset(overflowCursor, "overflow offset");
+          recordPatchSite(slot, tag.id, overflowCursor);
+          overflowCursor += BigInt(tag.valueBytes.length);
+        } else {
+          recordPatchSite(slot, tag.id, valueField);
+        }
+        entryPos += BigInt(dialect.ifdEntrySize);
+      }
+      cursor = align8(overflowCursor);
+      writeOrder.push(slot);
+      for (const sub2 of slot.subIfds) placeSlot(sub2);
+    };
+    for (const main2 of mainSlots) placeSlot(main2);
+    for (let i2 = 0; i2 < mainSlots.length - 1; i2++) {
+      mainSlots[i2].nextIfdOffset = mainSlots[i2 + 1].ifdOffset;
+    }
+    const metadataEnd = align8(cursor);
+    dialect.validateOffset(metadataEnd, "metadata end / data start");
+    return {
+      mainSlots,
+      writeOrder,
+      metadataEnd
+    };
+  }
+  function resolveIfdPath(mainSlots, path2) {
+    if (!path2.length) {
+      throw new TiffWriterError("INVALID_IFD_PATH", "SegmentAddress.ifd must be a non-empty path");
+    }
+    let slot = mainSlots[path2[0]];
+    if (!slot || path2[0] < 0 || !Number.isInteger(path2[0])) {
+      throw new TiffWriterError("INVALID_IFD_PATH", `No top-level image at index ${path2[0]}`);
+    }
+    for (let depth = 1; depth < path2.length; depth++) {
+      const idx = path2[depth];
+      if (!Number.isInteger(idx) || idx < 0 || idx >= slot.subIfds.length) {
+        throw new TiffWriterError("INVALID_IFD_PATH", `No SubIFD at path [${path2.slice(0, depth + 1).join(", ")}]`);
+      }
+      slot = slot.subIfds[idx];
+    }
+    return slot;
+  }
+  function serializeMetadataPlaceholders(plan, dialect, byteOrder) {
+    var _a2;
+    const le2 = isLittleEndian(byteOrder);
+    const size = Number(plan.metadataEnd);
+    if (!Number.isSafeInteger(size)) {
+      throw new TiffWriterError("METADATA_TOO_LARGE", "Metadata region exceeds Number.MAX_SAFE_INTEGER");
+    }
+    const buf = new Uint8Array(size);
+    const view = new DataView(buf.buffer);
+    const firstIfd = ((_a2 = plan.mainSlots[0]) == null ? void 0 : _a2.ifdOffset) ?? 0n;
+    dialect.writeHeader(buf.subarray(0, dialect.headerSize), firstIfd, byteOrder);
+    const writeSlot = (slot) => {
+      let pos = Number(slot.ifdOffset);
+      pos = dialect.writeEntryCount(view, pos, slot.resolvedTags.length, le2);
+      let overflowCursor = slot.ifdOffset + BigInt(dialect.ifdEntryBlockSize(slot.resolvedTags.length));
+      for (const tag of slot.resolvedTags) {
+        const inline = !tagIsOutOfLine(tag, dialect.inlineValueSize);
+        const fillSubIfdPointers = (at2) => {
+          for (let i2 = 0; i2 < slot.subIfds.length; i2++) {
+            const off = slot.subIfds[i2].ifdOffset;
+            dialect.validateOffset(off, "SubIFD offset");
+            dialect.writeIfdPointer(view, at2 + i2 * dialect.offsetWidth, off, le2);
+          }
+        };
+        if (inline) {
+          pos = dialect.writeTagEntry(view, buf, pos, tag, 0n, true, le2);
+          if (tag.id === TIFF_TAG_IDS.SubIFDs) {
+            fillSubIfdPointers(pos - dialect.inlineValueSize);
+          }
+        } else {
+          overflowCursor = align8(overflowCursor);
+          pos = dialect.writeTagEntry(view, buf, pos, tag, overflowCursor, false, le2);
+          const at2 = Number(overflowCursor);
+          buf.set(tag.valueBytes, at2);
+          if (tag.id === TIFF_TAG_IDS.SubIFDs) {
+            fillSubIfdPointers(at2);
+          }
+          overflowCursor += BigInt(tag.valueBytes.length);
+        }
+      }
+      dialect.writeNextIfdOffset(view, pos, slot.nextIfdOffset, le2);
+      for (const sub2 of slot.subIfds) writeSlot(sub2);
+    };
+    for (const main2 of plan.mainSlots) writeSlot(main2);
+    return buf;
+  }
+  function encodeOffsetArray(dialect, values, byteOrder) {
+    return dialect.writeOffsetArray(values, isLittleEndian(byteOrder));
+  }
+  function getDialect(format) {
+    switch (format) {
+      case "bigtiff":
+        return bigTiffDialect;
+      case "classic":
+        return classicTiffDialect;
+      default: {
+        const _exhaustive = format;
+        throw new TiffWriterError("UNSUPPORTED_FORMAT", `Unsupported TIFF format: ${String(_exhaustive)}`);
+      }
+    }
+  }
+  class TiffWriterImpl {
+    constructor(sink, dialect, byteOrder, format, closeSink, plan, signal, unlinkAbort) {
+      __publicField(this, "sink");
+      __publicField(this, "dialect");
+      __publicField(this, "byteOrder");
+      __publicField(this, "format");
+      __publicField(this, "closeSink");
+      __publicField(this, "plan");
+      __publicField(this, "signal");
+      __publicField(this, "writerState", "opening");
+      __publicField(this, "writeChain", Promise.resolve());
+      __publicField(this, "cursor");
+      __publicField(this, "primaryError", null);
+      __publicField(this, "unlinkAbort");
+      this.sink = sink;
+      this.dialect = dialect;
+      this.byteOrder = byteOrder;
+      this.format = format;
+      this.closeSink = closeSink;
+      this.plan = plan;
+      this.signal = signal;
+      this.cursor = plan.metadataEnd;
+      this.unlinkAbort = unlinkAbort;
+    }
+    get state() {
+      return this.writerState;
+    }
+    static async open(options) {
+      const format = options.format ?? "bigtiff";
+      const byteOrder = options.byteOrder ?? "little-endian";
+      const closeSink = options.closeSink !== false;
+      const dialect = getDialect(format);
+      const { sink, images, signal } = options;
+      const runAbort = new AbortController();
+      const unlinkAbort = linkAbortSignals(signal, runAbort);
+      let writer = null;
+      try {
+        throwIfAborted(runAbort.signal);
+        const plan = planLayout(images, dialect, byteOrder);
+        await sink.writeAt(0n, serializeMetadataPlaceholders(plan, dialect, byteOrder));
+        writer = new TiffWriterImpl(sink, dialect, byteOrder, format, closeSink, plan, runAbort.signal, unlinkAbort);
+        writer.writerState = "open";
+        return writer;
+      } catch (error2) {
+        unlinkAbort();
+        if (closeSink) await abortOwnedSink(sink, error2);
+        throw error2;
+      }
+    }
+    async writeSegment(address, bytes) {
+      this.assertAcceptingWrites();
+      throwIfAborted(this.signal);
+      if (!(bytes instanceof Uint8Array)) {
+        throw new TiffWriterError("INVALID_SEGMENT", "Segment bytes must be a Uint8Array");
+      }
+      if (bytes.byteLength === 0) {
+        throw new TiffWriterError("EMPTY_SEGMENT", "Segment bytes must be non-empty");
+      }
+      const slot = resolveIfdPath(this.plan.mainSlots, address.ifd);
+      const index2 = address.index;
+      if (!Number.isInteger(index2) || index2 < 0 || index2 >= slot.tileCount) {
+        throw new TiffWriterError("INVALID_TILE_INDEX", `Tile index ${index2} out of range 0..${slot.tileCount - 1}`);
+      }
+      const current = slot.segments[index2];
+      if (current.status !== "missing") {
+        throw new TiffWriterError("DUPLICATE_TILE", `Segment at ifd=[${address.ifd.join(", ")}] index=${index2} was already submitted`);
+      }
+      slot.segments[index2] = {
+        status: "reserved"
+      };
+      const run = async () => {
+        this.assertQueueWritable();
+        throwIfAborted(this.signal);
+        const offset = this.cursor;
+        this.dialect.validateOffset(offset, "tile data offset");
+        await this.sink.writeAt(offset, bytes);
+        const end = offset + BigInt(bytes.byteLength);
+        const aligned = align8(end);
+        const pad = Number(aligned - end);
+        if (pad > 0) await this.sink.writeAt(end, new Uint8Array(pad));
+        slot.segments[index2] = {
+          status: "written",
+          offset,
+          byteCount: BigInt(bytes.byteLength)
+        };
+        this.cursor = aligned;
+      };
+      const tracked = this.writeChain.then(run, (prev) => {
+        const err2 = toError(prev);
+        this.enterFailed(err2);
+        return Promise.reject(err2);
+      });
+      this.writeChain = tracked.catch(() => {
+      });
+      try {
+        await tracked;
+      } catch (error2) {
+        this.enterFailed(toError(error2));
+        throw error2;
+      }
+    }
+    async finish() {
+      if (this.writerState === "finished") {
+        throw new TiffWriterError("WRITER_STATE", "finish() has already completed");
+      }
+      if (this.writerState === "finishing") {
+        throw new TiffWriterError("WRITER_STATE", "finish() is already in progress");
+      }
+      if (this.writerState === "failed" || this.writerState === "aborted" || this.writerState === "opening") {
+        throw new TiffWriterError("WRITER_STATE", `Cannot finish() while writer is ${this.writerState}`);
+      }
+      this.writerState = "finishing";
+      try {
+        throwIfAborted(this.signal);
+        await this.drainQueue();
+        assertAllWritten(this.plan.writeOrder);
+        for (const slot of this.plan.writeOrder) {
+          const offsets = slot.segments.map((s2) => s2.status === "written" ? s2.offset : 0n);
+          const counts = slot.segments.map((s2) => s2.status === "written" ? s2.byteCount : 0n);
+          for (const off of offsets) this.dialect.validateOffset(off, "tile offset");
+          for (const bc2 of counts) {
+            this.dialect.validateOffset(bc2, "tile byte count");
+          }
+          await this.sink.writeAt(slot.tileOffsetsFileOffset, encodeOffsetArray(this.dialect, offsets, this.byteOrder));
+          await this.sink.writeAt(slot.tileByteCountsFileOffset, encodeOffsetArray(this.dialect, counts, this.byteOrder));
+        }
+        this.dialect.validateOffset(this.cursor, "final file size");
+        if (this.sink.truncate) await this.sink.truncate(this.cursor);
+        if (this.closeSink && this.sink.close) await this.sink.close();
+        this.writerState = "finished";
+        this.unlinkAbort();
+        return {
+          format: this.format,
+          byteLength: this.cursor,
+          imageCount: this.plan.mainSlots.length,
+          segmentCount: this.plan.writeOrder.reduce((n2, s2) => n2 + s2.tileCount, 0)
+        };
+      } catch (error2) {
+        this.enterFailed(toError(error2));
+        if (this.closeSink) await abortOwnedSink(this.sink, error2);
+        this.unlinkAbort();
+        throw error2;
+      }
+    }
+    async abort(reason2) {
+      if (this.writerState === "finished" || this.writerState === "aborted") {
+        return;
+      }
+      const err2 = toError(reason2 ?? new TiffWriterError("WRITE_FAILED", "aborted"));
+      this.writerState = "aborted";
+      if (!this.primaryError) this.primaryError = err2;
+      await this.drainQueue({
+        allowFailure: true
+      });
+      if (this.closeSink) await abortOwnedSink(this.sink, err2);
+      this.unlinkAbort();
+    }
+    assertAcceptingWrites() {
+      if (this.writerState !== "open") {
+        throw new TiffWriterError("WRITER_STATE", `Cannot writeSegment() while writer is ${this.writerState}`);
+      }
+      if (this.primaryError) throw this.primaryError;
+    }
+    assertQueueWritable() {
+      if (this.writerState === "failed" || this.writerState === "aborted" || this.primaryError) {
+        throw this.primaryError ?? new TiffWriterError("WRITE_FAILED", "Writer is no longer writable");
+      }
+    }
+    enterFailed(error2) {
+      if (!this.primaryError) this.primaryError = error2;
+      if (this.writerState !== "finished" && this.writerState !== "aborted") {
+        this.writerState = "failed";
+      }
+    }
+    async drainQueue(options) {
+      try {
+        await this.writeChain;
+      } catch {
+      }
+      if (!(options == null ? void 0 : options.allowFailure) && this.primaryError) throw this.primaryError;
+    }
+  }
+  function assertAllWritten(slots) {
+    for (const slot of slots) {
+      const ifd = `ifd=[${slot.path.join(", ")}]`;
+      for (let i2 = 0; i2 < slot.segments.length; i2++) {
+        const state = slot.segments[i2];
+        if (state.status === "missing") {
+          throw new TiffWriterError("TOO_FEW_SEGMENTS", `Missing segment ${ifd} index=${i2} (tileCount=${slot.tileCount})`);
+        }
+        if (state.status === "reserved") {
+          throw new TiffWriterError("INCOMPLETE_IFD", `Segment ${ifd} index=${i2} was reserved but not written`);
+        }
+      }
+    }
+  }
+  function throwIfAborted(signal) {
+    if (!(signal == null ? void 0 : signal.aborted)) return;
+    throw signal.reason instanceof Error ? signal.reason : new DOMException("tiffwriter aborted", "AbortError");
+  }
+  function linkAbortSignals(external, internal) {
+    if (!external) return () => {
+    };
+    if (external.aborted) {
+      internal.abort(external.reason);
+      return () => {
+      };
+    }
+    const onAbort = () => internal.abort(external.reason);
+    external.addEventListener("abort", onAbort, {
+      once: true
+    });
+    return () => external.removeEventListener("abort", onAbort);
+  }
+  function toError(value) {
+    return value instanceof Error ? value : new Error(String(value));
+  }
+  async function abortOwnedSink(sink, error2) {
+    try {
+      if (sink.abort) await sink.abort(error2);
+      else if (sink.close) await sink.close();
+    } catch {
+    }
+  }
+  async function createTiffWriter(options) {
+    return TiffWriterImpl.open(options);
+  }
+  function resolveLevel(level, levelIndex) {
+    assertUint32Dimension(`levels[${levelIndex}].width`, level.width);
+    assertUint32Dimension(`levels[${levelIndex}].height`, level.height);
+    const hasWidth = level.tileWidth != null;
+    const hasHeight = level.tileHeight != null;
+    if (hasWidth !== hasHeight) {
+      throw new TiffWriterError("INVALID_DIMENSION", `planPyramid: levels[${levelIndex}] must set both tileWidth and tileHeight, or tileSize alone`);
+    }
+    let tileWidth;
+    let tileHeight;
+    if (hasWidth && hasHeight) {
+      tileWidth = level.tileWidth;
+      tileHeight = level.tileHeight;
+      if (level.tileSize != null && (level.tileSize !== tileWidth || level.tileSize !== tileHeight)) {
+        throw new TiffWriterError("INVALID_DIMENSION", `planPyramid: levels[${levelIndex}] tileSize conflicts with tileWidth/tileHeight`);
+      }
+    } else if (level.tileSize != null) {
+      tileWidth = level.tileSize;
+      tileHeight = level.tileSize;
+    } else {
+      throw new TiffWriterError("INVALID_DIMENSION", `planPyramid: levels[${levelIndex}] needs tileSize or tileWidth+tileHeight`);
+    }
+    assertUint32Dimension(`levels[${levelIndex}].tileWidth`, tileWidth);
+    assertUint32Dimension(`levels[${levelIndex}].tileHeight`, tileHeight);
+    return {
+      width: level.width,
+      height: level.height,
+      tileWidth,
+      tileHeight
+    };
+  }
+  function* forEachTile(width, height, tileWidth, tileHeight) {
+    const nx = tilesAcross(width, tileWidth);
+    const ny = tilesDown(height, tileHeight);
+    for (let y2 = 0; y2 < ny; y2++) {
+      for (let x2 = 0; x2 < nx; x2++) {
+        yield {
+          index: y2 * nx + x2,
+          x: x2,
+          y: y2
+        };
+      }
+    }
+  }
+  function subIfdAddress(topIndex, levelIndex, tileIndex) {
+    return {
+      ifd: levelIndex === 0 ? [
+        topIndex
+      ] : [
+        topIndex,
+        levelIndex - 1
+      ],
+      index: tileIndex
+    };
+  }
+  function buildLayouts(levels, channelCount, baseTags, imageDescription) {
+    const full2 = levels[0];
+    const reduced = levels.slice(1);
+    return Array.from({
+      length: channelCount
+    }, (_2, channelIndex) => {
+      const fullTags = [
+        ...channelIndex === 0 && imageDescription != null ? [
+          tiffTag("ImageDescription", "ASCII", imageDescription)
+        ] : [],
+        tiffTag("NewSubfileType", "LONG", 0),
+        ...baseTags
+      ];
+      return {
+        width: full2.width,
+        height: full2.height,
+        segments: {
+          kind: "tiles",
+          tileWidth: full2.tileWidth,
+          tileHeight: full2.tileHeight
+        },
+        tags: fullTags,
+        subImages: reduced.map((level) => ({
+          width: level.width,
+          height: level.height,
+          segments: {
+            kind: "tiles",
+            tileWidth: level.tileWidth,
+            tileHeight: level.tileHeight
+          },
+          tags: [
+            tiffTag("NewSubfileType", "LONG", 1),
+            ...baseTags
+          ]
+        }))
+      };
+    });
+  }
+  function buildJobs(levels, channelCount) {
+    const jobs = [];
+    for (let c2 = 0; c2 < channelCount; c2++) {
+      for (let level = 0; level < levels.length; level++) {
+        const { width, height, tileWidth, tileHeight } = levels[level];
+        for (const tile of forEachTile(width, height, tileWidth, tileHeight)) {
+          jobs.push({
+            channelIndex: c2,
+            levelIndex: level,
+            index: tile.index,
+            x: tile.x,
+            y: tile.y,
+            address: subIfdAddress(c2, level, tile.index)
+          });
+        }
+      }
+    }
+    return jobs;
+  }
+  function planPyramid(options) {
+    const channelCount = options.channelCount ?? 1;
+    const baseTags = options.baseTags ?? [];
+    if (!options.levels.length) {
+      throw new TiffWriterError("NO_IMAGES", "planPyramid: at least one pyramid level is required");
+    }
+    if (!Number.isInteger(channelCount) || channelCount <= 0) {
+      throw new TiffWriterError("INVALID_DIMENSION", "planPyramid: channelCount must be a positive integer");
+    }
+    const levels = options.levels.map(resolveLevel);
+    return {
+      layouts: buildLayouts(levels, channelCount, baseTags, options.imageDescription),
+      jobs: buildJobs(levels, channelCount)
+    };
+  }
+  function grayscaleJpegTags() {
+    return [
+      tiffTag("BitsPerSample", "SHORT", 8),
+      tiffTag("Compression", "SHORT", 7),
+      tiffTag("PhotometricInterpretation", "SHORT", 1),
+      tiffTag("SamplesPerPixel", "SHORT", 1),
+      tiffTag("PlanarConfiguration", "SHORT", 1),
+      tiffTag("SampleFormat", "SHORT", 1)
+    ];
+  }
+  function assertSafeNumberOffset$1(offset) {
+    if (offset < 0n || offset > BigInt(Number.MAX_SAFE_INTEGER)) {
+      throw new Error(`Sink offset ${offset} exceeds Number.MAX_SAFE_INTEGER; this adapter cannot represent it`);
+    }
+    return Number(offset);
+  }
+  function browserFileSink(stream) {
+    let cursor = 0n;
+    return {
+      async writeAt(offset, data2) {
+        const position2 = assertSafeNumberOffset$1(offset);
+        if (offset === cursor) {
+          await stream.write({
+            type: "write",
+            data: data2
+          });
+        } else {
+          await stream.write({
+            type: "write",
+            position: position2,
+            data: data2
+          });
+        }
+        cursor = offset + BigInt(data2.byteLength);
+      },
+      async truncate(size) {
+        await stream.truncate(assertSafeNumberOffset$1(size));
+        cursor = size;
+      },
+      async close() {
+        await stream.close();
+      },
+      async abort(reason2) {
+        await stream.abort(reason2);
+      }
+    };
+  }
+  var Module = (() => {
+    var _scriptDir = import.meta.url;
+    return function(moduleArg = {}) {
+      var Module2 = moduleArg;
+      var readyPromiseResolve, readyPromiseReject;
+      var readyPromise = new Promise((resolve, reject) => {
+        readyPromiseResolve = resolve;
+        readyPromiseReject = reject;
+      });
+      const isServiceWorker = globalThis.ServiceWorkerGlobalScope !== void 0;
+      const isRunningInCloudFlareWorkers = isServiceWorker && typeof self !== "undefined" && globalThis.caches && globalThis.caches.default !== void 0;
+      const isRunningInNode = typeof process === "object" && process.release && process.release.name === "node";
+      if (isRunningInCloudFlareWorkers || isRunningInNode) {
+        if (!globalThis.ImageData) {
+          globalThis.ImageData = class ImageData {
+            constructor(data2, width, height) {
+              this.data = data2;
+              this.width = width;
+              this.height = height;
+            }
+          };
+        }
+        if (import.meta.url === void 0) {
+          import.meta.url = "https://localhost";
+        }
+        if (typeof self !== "undefined" && self.location === void 0) {
+          self.location = {
+            href: ""
+          };
+        }
+      }
+      var moduleOverrides = Object.assign({}, Module2);
+      var thisProgram = "./this.program";
+      var quit_ = (status, toThrow) => {
+        throw toThrow;
+      };
+      var ENVIRONMENT_IS_WEB = typeof window == "object";
+      var ENVIRONMENT_IS_WORKER = typeof importScripts == "function";
+      typeof process == "object" && typeof process.versions == "object" && typeof process.versions.node == "string";
+      var scriptDirectory = "";
+      function locateFile(path2) {
+        if (Module2["locateFile"]) {
+          return Module2["locateFile"](path2, scriptDirectory);
+        }
+        return scriptDirectory + path2;
+      }
+      var readBinary;
+      if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
+        if (ENVIRONMENT_IS_WORKER) {
+          scriptDirectory = self.location.href;
+        } else if (typeof document != "undefined" && document.currentScript) {
+          scriptDirectory = document.currentScript.src;
+        }
+        if (_scriptDir) {
+          scriptDirectory = _scriptDir;
+        }
+        if (scriptDirectory.startsWith("blob:")) {
+          scriptDirectory = "";
+        } else {
+          scriptDirectory = scriptDirectory.substr(0, scriptDirectory.replace(/[?#].*/, "").lastIndexOf("/") + 1);
+        }
+        {
+          if (ENVIRONMENT_IS_WORKER) {
+            readBinary = (url) => {
+              var xhr = new XMLHttpRequest();
+              xhr.open("GET", url, false);
+              xhr.responseType = "arraybuffer";
+              xhr.send(null);
+              return new Uint8Array(xhr.response);
+            };
+          }
+        }
+      }
+      var out = Module2["print"] || console.log.bind(console);
+      var err2 = Module2["printErr"] || console.error.bind(console);
+      Object.assign(Module2, moduleOverrides);
+      moduleOverrides = null;
+      if (Module2["arguments"]) Module2["arguments"];
+      if (Module2["thisProgram"]) thisProgram = Module2["thisProgram"];
+      if (Module2["quit"]) quit_ = Module2["quit"];
+      var wasmBinary;
+      if (Module2["wasmBinary"]) wasmBinary = Module2["wasmBinary"];
+      var wasmMemory;
+      var ABORT = false;
+      var HEAP8, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPU32, HEAPF32, HEAPF64;
+      function updateMemoryViews() {
+        var b2 = wasmMemory.buffer;
+        Module2["HEAP8"] = HEAP8 = new Int8Array(b2);
+        Module2["HEAP16"] = HEAP16 = new Int16Array(b2);
+        Module2["HEAPU8"] = HEAPU8 = new Uint8Array(b2);
+        Module2["HEAPU16"] = HEAPU16 = new Uint16Array(b2);
+        Module2["HEAP32"] = HEAP32 = new Int32Array(b2);
+        Module2["HEAPU32"] = HEAPU32 = new Uint32Array(b2);
+        Module2["HEAPF32"] = HEAPF32 = new Float32Array(b2);
+        Module2["HEAPF64"] = HEAPF64 = new Float64Array(b2);
+      }
+      var __ATPRERUN__ = [];
+      var __ATINIT__ = [];
+      var __ATPOSTRUN__ = [];
+      function preRun() {
+        if (Module2["preRun"]) {
+          if (typeof Module2["preRun"] == "function") Module2["preRun"] = [
+            Module2["preRun"]
+          ];
+          while (Module2["preRun"].length) {
+            addOnPreRun(Module2["preRun"].shift());
+          }
+        }
+        callRuntimeCallbacks(__ATPRERUN__);
+      }
+      function initRuntime() {
+        callRuntimeCallbacks(__ATINIT__);
+      }
+      function postRun() {
+        if (Module2["postRun"]) {
+          if (typeof Module2["postRun"] == "function") Module2["postRun"] = [
+            Module2["postRun"]
+          ];
+          while (Module2["postRun"].length) {
+            addOnPostRun(Module2["postRun"].shift());
+          }
+        }
+        callRuntimeCallbacks(__ATPOSTRUN__);
+      }
+      function addOnPreRun(cb2) {
+        __ATPRERUN__.unshift(cb2);
+      }
+      function addOnInit(cb2) {
+        __ATINIT__.unshift(cb2);
+      }
+      function addOnPostRun(cb2) {
+        __ATPOSTRUN__.unshift(cb2);
+      }
+      var runDependencies = 0;
+      var dependenciesFulfilled = null;
+      function addRunDependency(id2) {
+        var _a2;
+        runDependencies++;
+        (_a2 = Module2["monitorRunDependencies"]) == null ? void 0 : _a2.call(Module2, runDependencies);
+      }
+      function removeRunDependency(id2) {
+        var _a2;
+        runDependencies--;
+        (_a2 = Module2["monitorRunDependencies"]) == null ? void 0 : _a2.call(Module2, runDependencies);
+        if (runDependencies == 0) {
+          if (dependenciesFulfilled) {
+            var callback = dependenciesFulfilled;
+            dependenciesFulfilled = null;
+            callback();
+          }
+        }
+      }
+      function abort(what) {
+        var _a2;
+        (_a2 = Module2["onAbort"]) == null ? void 0 : _a2.call(Module2, what);
+        what = "Aborted(" + what + ")";
+        err2(what);
+        ABORT = true;
+        what += ". Build with -sASSERTIONS for more info.";
+        var e2 = new WebAssembly.RuntimeError(what);
+        readyPromiseReject(e2);
+        throw e2;
+      }
+      var dataURIPrefix = "data:application/octet-stream;base64,";
+      var isDataURI = (filename2) => filename2.startsWith(dataURIPrefix);
+      var wasmBinaryFile;
+      if (Module2["locateFile"]) {
+        wasmBinaryFile = "mozjpeg_enc.wasm";
+        if (!isDataURI(wasmBinaryFile)) {
+          wasmBinaryFile = locateFile(wasmBinaryFile);
+        }
+      } else {
+        wasmBinaryFile = new URL("" + new URL("mozjpeg_enc-DO-zoExo.wasm", import.meta.url).href, import.meta.url).href;
+      }
+      function getBinarySync(file) {
+        if (file == wasmBinaryFile && wasmBinary) {
+          return new Uint8Array(wasmBinary);
+        }
+        if (readBinary) {
+          return readBinary(file);
+        }
+        throw "both async and sync fetching of the wasm failed";
+      }
+      function getBinaryPromise(binaryFile) {
+        if (!wasmBinary && (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER)) {
+          if (typeof fetch == "function") {
+            return fetch(binaryFile, {
+              credentials: "same-origin"
+            }).then((response) => {
+              if (!response["ok"]) {
+                throw `failed to load wasm binary file at '${binaryFile}'`;
+              }
+              return response["arrayBuffer"]();
+            }).catch(() => getBinarySync(binaryFile));
+          }
+        }
+        return Promise.resolve().then(() => getBinarySync(binaryFile));
+      }
+      function instantiateArrayBuffer(binaryFile, imports, receiver) {
+        return getBinaryPromise(binaryFile).then((binary) => WebAssembly.instantiate(binary, imports)).then(receiver, (reason2) => {
+          err2(`failed to asynchronously prepare wasm: ${reason2}`);
+          abort(reason2);
+        });
+      }
+      function instantiateAsync(binary, binaryFile, imports, callback) {
+        if (!binary && typeof WebAssembly.instantiateStreaming == "function" && !isDataURI(binaryFile) && typeof fetch == "function") {
+          return fetch(binaryFile, {
+            credentials: "same-origin"
+          }).then((response) => {
+            var result = WebAssembly.instantiateStreaming(response, imports);
+            return result.then(callback, function(reason2) {
+              err2(`wasm streaming compile failed: ${reason2}`);
+              err2("falling back to ArrayBuffer instantiation");
+              return instantiateArrayBuffer(binaryFile, imports, callback);
+            });
+          });
+        }
+        return instantiateArrayBuffer(binaryFile, imports, callback);
+      }
+      function createWasm() {
+        var info = {
+          "a": wasmImports
+        };
+        function receiveInstance(instance, module) {
+          wasmExports = instance.exports;
+          wasmMemory = wasmExports["C"];
+          updateMemoryViews();
+          wasmTable = wasmExports["H"];
+          addOnInit(wasmExports["D"]);
+          removeRunDependency();
+          return wasmExports;
+        }
+        addRunDependency();
+        function receiveInstantiationResult(result) {
+          receiveInstance(result["instance"]);
+        }
+        if (Module2["instantiateWasm"]) {
+          try {
+            return Module2["instantiateWasm"](info, receiveInstance);
+          } catch (e2) {
+            err2(`Module.instantiateWasm callback failed with error: ${e2}`);
+            readyPromiseReject(e2);
+          }
+        }
+        instantiateAsync(wasmBinary, wasmBinaryFile, info, receiveInstantiationResult).catch(readyPromiseReject);
+        return {};
+      }
+      function ExitStatus(status) {
+        this.name = "ExitStatus";
+        this.message = `Program terminated with exit(${status})`;
+        this.status = status;
+      }
+      var callRuntimeCallbacks = (callbacks) => {
+        while (callbacks.length > 0) {
+          callbacks.shift()(Module2);
+        }
+      };
+      Module2["noExitRuntime"] || true;
+      class ExceptionInfo {
+        constructor(excPtr) {
+          this.excPtr = excPtr;
+          this.ptr = excPtr - 24;
+        }
+        set_type(type) {
+          HEAPU32[this.ptr + 4 >> 2] = type;
+        }
+        get_type() {
+          return HEAPU32[this.ptr + 4 >> 2];
+        }
+        set_destructor(destructor) {
+          HEAPU32[this.ptr + 8 >> 2] = destructor;
+        }
+        get_destructor() {
+          return HEAPU32[this.ptr + 8 >> 2];
+        }
+        set_caught(caught) {
+          caught = caught ? 1 : 0;
+          HEAP8[this.ptr + 12] = caught;
+        }
+        get_caught() {
+          return HEAP8[this.ptr + 12] != 0;
+        }
+        set_rethrown(rethrown) {
+          rethrown = rethrown ? 1 : 0;
+          HEAP8[this.ptr + 13] = rethrown;
+        }
+        get_rethrown() {
+          return HEAP8[this.ptr + 13] != 0;
+        }
+        init(type, destructor) {
+          this.set_adjusted_ptr(0);
+          this.set_type(type);
+          this.set_destructor(destructor);
+        }
+        set_adjusted_ptr(adjustedPtr) {
+          HEAPU32[this.ptr + 16 >> 2] = adjustedPtr;
+        }
+        get_adjusted_ptr() {
+          return HEAPU32[this.ptr + 16 >> 2];
+        }
+        get_exception_ptr() {
+          var isPointer = ___cxa_is_pointer_type(this.get_type());
+          if (isPointer) {
+            return HEAPU32[this.excPtr >> 2];
+          }
+          var adjusted = this.get_adjusted_ptr();
+          if (adjusted !== 0) return adjusted;
+          return this.excPtr;
+        }
+      }
+      var exceptionLast = 0;
+      var ___cxa_throw = (ptr, type, destructor) => {
+        var info = new ExceptionInfo(ptr);
+        info.init(type, destructor);
+        exceptionLast = ptr;
+        throw exceptionLast;
+      };
+      var structRegistrations = {};
+      var runDestructors = (destructors) => {
+        while (destructors.length) {
+          var ptr = destructors.pop();
+          var del2 = destructors.pop();
+          del2(ptr);
+        }
+      };
+      function readPointer(pointer) {
+        return this["fromWireType"](HEAPU32[pointer >> 2]);
+      }
+      var awaitingDependencies = {};
+      var registeredTypes = {};
+      var typeDependencies = {};
+      var InternalError;
+      var throwInternalError = (message2) => {
+        throw new InternalError(message2);
+      };
+      var whenDependentTypesAreResolved = (myTypes, dependentTypes, getTypeConverters) => {
+        myTypes.forEach(function(type) {
+          typeDependencies[type] = dependentTypes;
+        });
+        function onComplete(typeConverters2) {
+          var myTypeConverters = getTypeConverters(typeConverters2);
+          if (myTypeConverters.length !== myTypes.length) {
+            throwInternalError("Mismatched type converter count");
+          }
+          for (var i2 = 0; i2 < myTypes.length; ++i2) {
+            registerType(myTypes[i2], myTypeConverters[i2]);
+          }
+        }
+        var typeConverters = new Array(dependentTypes.length);
+        var unregisteredTypes = [];
+        var registered2 = 0;
+        dependentTypes.forEach((dt2, i2) => {
+          if (registeredTypes.hasOwnProperty(dt2)) {
+            typeConverters[i2] = registeredTypes[dt2];
+          } else {
+            unregisteredTypes.push(dt2);
+            if (!awaitingDependencies.hasOwnProperty(dt2)) {
+              awaitingDependencies[dt2] = [];
+            }
+            awaitingDependencies[dt2].push(() => {
+              typeConverters[i2] = registeredTypes[dt2];
+              ++registered2;
+              if (registered2 === unregisteredTypes.length) {
+                onComplete(typeConverters);
+              }
+            });
+          }
+        });
+        if (0 === unregisteredTypes.length) {
+          onComplete(typeConverters);
+        }
+      };
+      var __embind_finalize_value_object = (structType) => {
+        var reg = structRegistrations[structType];
+        delete structRegistrations[structType];
+        var rawConstructor = reg.rawConstructor;
+        var rawDestructor = reg.rawDestructor;
+        var fieldRecords = reg.fields;
+        var fieldTypes2 = fieldRecords.map((field2) => field2.getterReturnType).concat(fieldRecords.map((field2) => field2.setterArgumentType));
+        whenDependentTypesAreResolved([
+          structType
+        ], fieldTypes2, (fieldTypes3) => {
+          var fields = {};
+          fieldRecords.forEach((field2, i2) => {
+            var fieldName = field2.fieldName;
+            var getterReturnType = fieldTypes3[i2];
+            var getter = field2.getter;
+            var getterContext = field2.getterContext;
+            var setterArgumentType = fieldTypes3[i2 + fieldRecords.length];
+            var setter = field2.setter;
+            var setterContext = field2.setterContext;
+            fields[fieldName] = {
+              read: (ptr) => getterReturnType["fromWireType"](getter(getterContext, ptr)),
+              write: (ptr, o2) => {
+                var destructors = [];
+                setter(setterContext, ptr, setterArgumentType["toWireType"](destructors, o2));
+                runDestructors(destructors);
+              }
+            };
+          });
+          return [
+            {
+              name: reg.name,
+              "fromWireType": (ptr) => {
+                var rv = {};
+                for (var i2 in fields) {
+                  rv[i2] = fields[i2].read(ptr);
+                }
+                rawDestructor(ptr);
+                return rv;
+              },
+              "toWireType": (destructors, o2) => {
+                for (var fieldName in fields) {
+                  if (!(fieldName in o2)) {
+                    throw new TypeError(`Missing field: "${fieldName}"`);
+                  }
+                }
+                var ptr = rawConstructor();
+                for (fieldName in fields) {
+                  fields[fieldName].write(ptr, o2[fieldName]);
+                }
+                if (destructors !== null) {
+                  destructors.push(rawDestructor, ptr);
+                }
+                return ptr;
+              },
+              "argPackAdvance": GenericWireTypeSize,
+              "readValueFromPointer": readPointer,
+              destructorFunction: rawDestructor
+            }
+          ];
+        });
+      };
+      var __embind_register_bigint = (primitiveType, name2, size, minRange, maxRange) => {
+      };
+      var embind_init_charCodes = () => {
+        var codes = new Array(256);
+        for (var i2 = 0; i2 < 256; ++i2) {
+          codes[i2] = String.fromCharCode(i2);
+        }
+        embind_charCodes = codes;
+      };
+      var embind_charCodes;
+      var readLatin1String = (ptr) => {
+        var ret = "";
+        var c2 = ptr;
+        while (HEAPU8[c2]) {
+          ret += embind_charCodes[HEAPU8[c2++]];
+        }
+        return ret;
+      };
+      var BindingError;
+      var throwBindingError = (message2) => {
+        throw new BindingError(message2);
+      };
+      function sharedRegisterType(rawType, registeredInstance, options = {}) {
+        var name2 = registeredInstance.name;
+        if (!rawType) {
+          throwBindingError(`type "${name2}" must have a positive integer typeid pointer`);
+        }
+        if (registeredTypes.hasOwnProperty(rawType)) {
+          if (options.ignoreDuplicateRegistrations) {
+            return;
+          } else {
+            throwBindingError(`Cannot register type '${name2}' twice`);
+          }
+        }
+        registeredTypes[rawType] = registeredInstance;
+        delete typeDependencies[rawType];
+        if (awaitingDependencies.hasOwnProperty(rawType)) {
+          var callbacks = awaitingDependencies[rawType];
+          delete awaitingDependencies[rawType];
+          callbacks.forEach((cb2) => cb2());
+        }
+      }
+      function registerType(rawType, registeredInstance, options = {}) {
+        if (!("argPackAdvance" in registeredInstance)) {
+          throw new TypeError("registerType registeredInstance requires argPackAdvance");
+        }
+        return sharedRegisterType(rawType, registeredInstance, options);
+      }
+      var GenericWireTypeSize = 8;
+      var __embind_register_bool = (rawType, name2, trueValue, falseValue) => {
+        name2 = readLatin1String(name2);
+        registerType(rawType, {
+          name: name2,
+          "fromWireType": function(wt) {
+            return !!wt;
+          },
+          "toWireType": function(destructors, o2) {
+            return o2 ? trueValue : falseValue;
+          },
+          "argPackAdvance": GenericWireTypeSize,
+          "readValueFromPointer": function(pointer) {
+            return this["fromWireType"](HEAPU8[pointer]);
+          },
+          destructorFunction: null
+        });
+      };
+      var emval_freelist = [];
+      var emval_handles = [];
+      var __emval_decref = (handle2) => {
+        if (handle2 > 9 && 0 === --emval_handles[handle2 + 1]) {
+          emval_handles[handle2] = void 0;
+          emval_freelist.push(handle2);
+        }
+      };
+      var count_emval_handles = () => emval_handles.length / 2 - 5 - emval_freelist.length;
+      var init_emval = () => {
+        emval_handles.push(0, 1, void 0, 1, null, 1, true, 1, false, 1);
+        Module2["count_emval_handles"] = count_emval_handles;
+      };
+      var Emval = {
+        toValue: (handle2) => {
+          if (!handle2) {
+            throwBindingError("Cannot use deleted val. handle = " + handle2);
+          }
+          return emval_handles[handle2];
+        },
+        toHandle: (value) => {
+          switch (value) {
+            case void 0:
+              return 2;
+            case null:
+              return 4;
+            case true:
+              return 6;
+            case false:
+              return 8;
+            default: {
+              const handle2 = emval_freelist.pop() || emval_handles.length;
+              emval_handles[handle2] = value;
+              emval_handles[handle2 + 1] = 1;
+              return handle2;
+            }
+          }
+        }
+      };
+      var EmValType = {
+        name: "emscripten::val",
+        "fromWireType": (handle2) => {
+          var rv = Emval.toValue(handle2);
+          __emval_decref(handle2);
+          return rv;
+        },
+        "toWireType": (destructors, value) => Emval.toHandle(value),
+        "argPackAdvance": GenericWireTypeSize,
+        "readValueFromPointer": readPointer,
+        destructorFunction: null
+      };
+      var __embind_register_emval = (rawType) => registerType(rawType, EmValType);
+      var floatReadValueFromPointer = (name2, width) => {
+        switch (width) {
+          case 4:
+            return function(pointer) {
+              return this["fromWireType"](HEAPF32[pointer >> 2]);
+            };
+          case 8:
+            return function(pointer) {
+              return this["fromWireType"](HEAPF64[pointer >> 3]);
+            };
+          default:
+            throw new TypeError(`invalid float width (${width}): ${name2}`);
+        }
+      };
+      var __embind_register_float = (rawType, name2, size) => {
+        name2 = readLatin1String(name2);
+        registerType(rawType, {
+          name: name2,
+          "fromWireType": (value) => value,
+          "toWireType": (destructors, value) => value,
+          "argPackAdvance": GenericWireTypeSize,
+          "readValueFromPointer": floatReadValueFromPointer(name2, size),
+          destructorFunction: null
+        });
+      };
+      var createNamedFunction = (name2, body2) => Object.defineProperty(body2, "name", {
+        value: name2
+      });
+      function usesDestructorStack(argTypes) {
+        for (var i2 = 1; i2 < argTypes.length; ++i2) {
+          if (argTypes[i2] !== null && argTypes[i2].destructorFunction === void 0) {
+            return true;
+          }
+        }
+        return false;
+      }
+      function craftInvokerFunction(humanName, argTypes, classType, cppInvokerFunc, cppTargetFunc, isAsync2) {
+        var argCount = argTypes.length;
+        if (argCount < 2) {
+          throwBindingError("argTypes array size mismatch! Must at least get return value and 'this' types!");
+        }
+        argTypes[1] !== null && classType !== null;
+        var needsDestructorStack = usesDestructorStack(argTypes);
+        var returns = argTypes[0].name !== "void";
+        var expectedArgCount = argCount - 2;
+        var argsWired = new Array(expectedArgCount);
+        var invokerFuncArgs = [];
+        var destructors = [];
+        var invokerFn = function(...args) {
+          if (args.length !== expectedArgCount) {
+            throwBindingError(`function ${humanName} called with ${args.length} arguments, expected ${expectedArgCount}`);
+          }
+          destructors.length = 0;
+          var thisWired;
+          invokerFuncArgs.length = 1;
+          invokerFuncArgs[0] = cppTargetFunc;
+          for (var i2 = 0; i2 < expectedArgCount; ++i2) {
+            argsWired[i2] = argTypes[i2 + 2]["toWireType"](destructors, args[i2]);
+            invokerFuncArgs.push(argsWired[i2]);
+          }
+          var rv = cppInvokerFunc(...invokerFuncArgs);
+          function onDone(rv2) {
+            if (needsDestructorStack) {
+              runDestructors(destructors);
+            } else {
+              for (var i3 = 2; i3 < argTypes.length; i3++) {
+                var param = i3 === 1 ? thisWired : argsWired[i3 - 2];
+                if (argTypes[i3].destructorFunction !== null) {
+                  argTypes[i3].destructorFunction(param);
+                }
+              }
+            }
+            if (returns) {
+              return argTypes[0]["fromWireType"](rv2);
+            }
+          }
+          return onDone(rv);
+        };
+        return createNamedFunction(humanName, invokerFn);
+      }
+      var ensureOverloadTable = (proto2, methodName, humanName) => {
+        if (void 0 === proto2[methodName].overloadTable) {
+          var prevFunc = proto2[methodName];
+          proto2[methodName] = function(...args) {
+            if (!proto2[methodName].overloadTable.hasOwnProperty(args.length)) {
+              throwBindingError(`Function '${humanName}' called with an invalid number of arguments (${args.length}) - expects one of (${proto2[methodName].overloadTable})!`);
+            }
+            return proto2[methodName].overloadTable[args.length].apply(this, args);
+          };
+          proto2[methodName].overloadTable = [];
+          proto2[methodName].overloadTable[prevFunc.argCount] = prevFunc;
+        }
+      };
+      var exposePublicSymbol = (name2, value, numArguments) => {
+        if (Module2.hasOwnProperty(name2)) {
+          if (void 0 === numArguments || void 0 !== Module2[name2].overloadTable && void 0 !== Module2[name2].overloadTable[numArguments]) {
+            throwBindingError(`Cannot register public name '${name2}' twice`);
+          }
+          ensureOverloadTable(Module2, name2, name2);
+          if (Module2.hasOwnProperty(numArguments)) {
+            throwBindingError(`Cannot register multiple overloads of a function with the same number of arguments (${numArguments})!`);
+          }
+          Module2[name2].overloadTable[numArguments] = value;
+        } else {
+          Module2[name2] = value;
+          if (void 0 !== numArguments) {
+            Module2[name2].numArguments = numArguments;
+          }
+        }
+      };
+      var heap32VectorToArray = (count2, firstElement) => {
+        var array = [];
+        for (var i2 = 0; i2 < count2; i2++) {
+          array.push(HEAPU32[firstElement + i2 * 4 >> 2]);
+        }
+        return array;
+      };
+      var replacePublicSymbol = (name2, value, numArguments) => {
+        if (!Module2.hasOwnProperty(name2)) {
+          throwInternalError("Replacing nonexistent public symbol");
+        }
+        if (void 0 !== Module2[name2].overloadTable && void 0 !== numArguments) {
+          Module2[name2].overloadTable[numArguments] = value;
+        } else {
+          Module2[name2] = value;
+          Module2[name2].argCount = numArguments;
+        }
+      };
+      var dynCallLegacy = (sig, ptr, args) => {
+        sig = sig.replace(/p/g, "i");
+        var f2 = Module2["dynCall_" + sig];
+        return f2(ptr, ...args);
+      };
+      var wasmTableMirror = [];
+      var wasmTable;
+      var getWasmTableEntry = (funcPtr) => {
+        var func = wasmTableMirror[funcPtr];
+        if (!func) {
+          if (funcPtr >= wasmTableMirror.length) wasmTableMirror.length = funcPtr + 1;
+          wasmTableMirror[funcPtr] = func = wasmTable.get(funcPtr);
+        }
+        return func;
+      };
+      var dynCall = (sig, ptr, args = []) => {
+        if (sig.includes("j")) {
+          return dynCallLegacy(sig, ptr, args);
+        }
+        var rtn = getWasmTableEntry(ptr)(...args);
+        return rtn;
+      };
+      var getDynCaller = (sig, ptr) => (...args) => dynCall(sig, ptr, args);
+      var embind__requireFunction = (signature, rawFunction) => {
+        signature = readLatin1String(signature);
+        function makeDynCaller() {
+          if (signature.includes("j")) {
+            return getDynCaller(signature, rawFunction);
+          }
+          return getWasmTableEntry(rawFunction);
+        }
+        var fp = makeDynCaller();
+        if (typeof fp != "function") {
+          throwBindingError(`unknown function pointer with signature ${signature}: ${rawFunction}`);
+        }
+        return fp;
+      };
+      var extendError = (baseErrorType, errorName) => {
+        var errorClass = createNamedFunction(errorName, function(message2) {
+          this.name = errorName;
+          this.message = message2;
+          var stack2 = new Error(message2).stack;
+          if (stack2 !== void 0) {
+            this.stack = this.toString() + "\n" + stack2.replace(/^Error(:[^\n]*)?\n/, "");
+          }
+        });
+        errorClass.prototype = Object.create(baseErrorType.prototype);
+        errorClass.prototype.constructor = errorClass;
+        errorClass.prototype.toString = function() {
+          if (this.message === void 0) {
+            return this.name;
+          } else {
+            return `${this.name}: ${this.message}`;
+          }
+        };
+        return errorClass;
+      };
+      var UnboundTypeError;
+      var getTypeName = (type) => {
+        var ptr = ___getTypeName(type);
+        var rv = readLatin1String(ptr);
+        _free(ptr);
+        return rv;
+      };
+      var throwUnboundTypeError = (message2, types2) => {
+        var unboundTypes = [];
+        var seen2 = {};
+        function visit2(type) {
+          if (seen2[type]) {
+            return;
+          }
+          if (registeredTypes[type]) {
+            return;
+          }
+          if (typeDependencies[type]) {
+            typeDependencies[type].forEach(visit2);
+            return;
+          }
+          unboundTypes.push(type);
+          seen2[type] = true;
+        }
+        types2.forEach(visit2);
+        throw new UnboundTypeError(`${message2}: ` + unboundTypes.map(getTypeName).join([
+          ", "
+        ]));
+      };
+      var getFunctionName = (signature) => {
+        signature = signature.trim();
+        const argsIndex = signature.indexOf("(");
+        if (argsIndex !== -1) {
+          return signature.substr(0, argsIndex);
+        } else {
+          return signature;
+        }
+      };
+      var __embind_register_function = (name2, argCount, rawArgTypesAddr, signature, rawInvoker, fn, isAsync2) => {
+        var argTypes = heap32VectorToArray(argCount, rawArgTypesAddr);
+        name2 = readLatin1String(name2);
+        name2 = getFunctionName(name2);
+        rawInvoker = embind__requireFunction(signature, rawInvoker);
+        exposePublicSymbol(name2, function() {
+          throwUnboundTypeError(`Cannot call ${name2} due to unbound types`, argTypes);
+        }, argCount - 1);
+        whenDependentTypesAreResolved([], argTypes, (argTypes2) => {
+          var invokerArgsArray = [
+            argTypes2[0],
+            null
+          ].concat(argTypes2.slice(1));
+          replacePublicSymbol(name2, craftInvokerFunction(name2, invokerArgsArray, null, rawInvoker, fn), argCount - 1);
+          return [];
+        });
+      };
+      var integerReadValueFromPointer = (name2, width, signed) => {
+        switch (width) {
+          case 1:
+            return signed ? (pointer) => HEAP8[pointer] : (pointer) => HEAPU8[pointer];
+          case 2:
+            return signed ? (pointer) => HEAP16[pointer >> 1] : (pointer) => HEAPU16[pointer >> 1];
+          case 4:
+            return signed ? (pointer) => HEAP32[pointer >> 2] : (pointer) => HEAPU32[pointer >> 2];
+          default:
+            throw new TypeError(`invalid integer width (${width}): ${name2}`);
+        }
+      };
+      var __embind_register_integer = (primitiveType, name2, size, minRange, maxRange) => {
+        name2 = readLatin1String(name2);
+        var fromWireType = (value) => value;
+        if (minRange === 0) {
+          var bitshift = 32 - 8 * size;
+          fromWireType = (value) => value << bitshift >>> bitshift;
+        }
+        var isUnsignedType = name2.includes("unsigned");
+        var checkAssertions = (value, toTypeName) => {
+        };
+        var toWireType;
+        if (isUnsignedType) {
+          toWireType = function(destructors, value) {
+            checkAssertions(value, this.name);
+            return value >>> 0;
+          };
+        } else {
+          toWireType = function(destructors, value) {
+            checkAssertions(value, this.name);
+            return value;
+          };
+        }
+        registerType(primitiveType, {
+          name: name2,
+          "fromWireType": fromWireType,
+          "toWireType": toWireType,
+          "argPackAdvance": GenericWireTypeSize,
+          "readValueFromPointer": integerReadValueFromPointer(name2, size, minRange !== 0),
+          destructorFunction: null
+        });
+      };
+      var __embind_register_memory_view = (rawType, dataTypeIndex, name2) => {
+        var typeMapping = [
+          Int8Array,
+          Uint8Array,
+          Int16Array,
+          Uint16Array,
+          Int32Array,
+          Uint32Array,
+          Float32Array,
+          Float64Array
+        ];
+        var TA = typeMapping[dataTypeIndex];
+        function decodeMemoryView(handle2) {
+          var size = HEAPU32[handle2 >> 2];
+          var data2 = HEAPU32[handle2 + 4 >> 2];
+          return new TA(HEAP8.buffer, data2, size);
+        }
+        name2 = readLatin1String(name2);
+        registerType(rawType, {
+          name: name2,
+          "fromWireType": decodeMemoryView,
+          "argPackAdvance": GenericWireTypeSize,
+          "readValueFromPointer": decodeMemoryView
+        }, {
+          ignoreDuplicateRegistrations: true
+        });
+      };
+      var stringToUTF8Array = (str2, heap, outIdx, maxBytesToWrite) => {
+        if (!(maxBytesToWrite > 0)) return 0;
+        var startIdx = outIdx;
+        var endIdx = outIdx + maxBytesToWrite - 1;
+        for (var i2 = 0; i2 < str2.length; ++i2) {
+          var u2 = str2.charCodeAt(i2);
+          if (u2 >= 55296 && u2 <= 57343) {
+            var u1 = str2.charCodeAt(++i2);
+            u2 = 65536 + ((u2 & 1023) << 10) | u1 & 1023;
+          }
+          if (u2 <= 127) {
+            if (outIdx >= endIdx) break;
+            heap[outIdx++] = u2;
+          } else if (u2 <= 2047) {
+            if (outIdx + 1 >= endIdx) break;
+            heap[outIdx++] = 192 | u2 >> 6;
+            heap[outIdx++] = 128 | u2 & 63;
+          } else if (u2 <= 65535) {
+            if (outIdx + 2 >= endIdx) break;
+            heap[outIdx++] = 224 | u2 >> 12;
+            heap[outIdx++] = 128 | u2 >> 6 & 63;
+            heap[outIdx++] = 128 | u2 & 63;
+          } else {
+            if (outIdx + 3 >= endIdx) break;
+            heap[outIdx++] = 240 | u2 >> 18;
+            heap[outIdx++] = 128 | u2 >> 12 & 63;
+            heap[outIdx++] = 128 | u2 >> 6 & 63;
+            heap[outIdx++] = 128 | u2 & 63;
+          }
+        }
+        heap[outIdx] = 0;
+        return outIdx - startIdx;
+      };
+      var stringToUTF8 = (str2, outPtr, maxBytesToWrite) => stringToUTF8Array(str2, HEAPU8, outPtr, maxBytesToWrite);
+      var lengthBytesUTF8 = (str2) => {
+        var len2 = 0;
+        for (var i2 = 0; i2 < str2.length; ++i2) {
+          var c2 = str2.charCodeAt(i2);
+          if (c2 <= 127) {
+            len2++;
+          } else if (c2 <= 2047) {
+            len2 += 2;
+          } else if (c2 >= 55296 && c2 <= 57343) {
+            len2 += 4;
+            ++i2;
+          } else {
+            len2 += 3;
+          }
+        }
+        return len2;
+      };
+      var UTF8ArrayToString = (heapOrArray, idx, maxBytesToRead) => {
+        var endIdx = idx + maxBytesToRead;
+        var str2 = "";
+        while (!(idx >= endIdx)) {
+          var u0 = heapOrArray[idx++];
+          if (!u0) return str2;
+          if (!(u0 & 128)) {
+            str2 += String.fromCharCode(u0);
+            continue;
+          }
+          var u1 = heapOrArray[idx++] & 63;
+          if ((u0 & 224) == 192) {
+            str2 += String.fromCharCode((u0 & 31) << 6 | u1);
+            continue;
+          }
+          var u2 = heapOrArray[idx++] & 63;
+          if ((u0 & 240) == 224) {
+            u0 = (u0 & 15) << 12 | u1 << 6 | u2;
+          } else {
+            u0 = (u0 & 7) << 18 | u1 << 12 | u2 << 6 | heapOrArray[idx++] & 63;
+          }
+          if (u0 < 65536) {
+            str2 += String.fromCharCode(u0);
+          } else {
+            var ch2 = u0 - 65536;
+            str2 += String.fromCharCode(55296 | ch2 >> 10, 56320 | ch2 & 1023);
+          }
+        }
+        return str2;
+      };
+      var UTF8ToString = (ptr, maxBytesToRead) => ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead) : "";
+      var __embind_register_std_string = (rawType, name2) => {
+        name2 = readLatin1String(name2);
+        var stdStringIsUTF8 = name2 === "std::string";
+        registerType(rawType, {
+          name: name2,
+          "fromWireType"(value) {
+            var length2 = HEAPU32[value >> 2];
+            var payload = value + 4;
+            var str2;
+            if (stdStringIsUTF8) {
+              var decodeStartPtr = payload;
+              for (var i2 = 0; i2 <= length2; ++i2) {
+                var currentBytePtr = payload + i2;
+                if (i2 == length2 || HEAPU8[currentBytePtr] == 0) {
+                  var maxRead = currentBytePtr - decodeStartPtr;
+                  var stringSegment = UTF8ToString(decodeStartPtr, maxRead);
+                  if (str2 === void 0) {
+                    str2 = stringSegment;
+                  } else {
+                    str2 += String.fromCharCode(0);
+                    str2 += stringSegment;
+                  }
+                  decodeStartPtr = currentBytePtr + 1;
+                }
+              }
+            } else {
+              var a2 = new Array(length2);
+              for (var i2 = 0; i2 < length2; ++i2) {
+                a2[i2] = String.fromCharCode(HEAPU8[payload + i2]);
+              }
+              str2 = a2.join("");
+            }
+            _free(value);
+            return str2;
+          },
+          "toWireType"(destructors, value) {
+            if (value instanceof ArrayBuffer) {
+              value = new Uint8Array(value);
+            }
+            var length2;
+            var valueIsOfTypeString = typeof value == "string";
+            if (!(valueIsOfTypeString || value instanceof Uint8Array || value instanceof Uint8ClampedArray || value instanceof Int8Array)) {
+              throwBindingError("Cannot pass non-string to std::string");
+            }
+            if (stdStringIsUTF8 && valueIsOfTypeString) {
+              length2 = lengthBytesUTF8(value);
+            } else {
+              length2 = value.length;
+            }
+            var base2 = _malloc(4 + length2 + 1);
+            var ptr = base2 + 4;
+            HEAPU32[base2 >> 2] = length2;
+            if (stdStringIsUTF8 && valueIsOfTypeString) {
+              stringToUTF8(value, ptr, length2 + 1);
+            } else {
+              if (valueIsOfTypeString) {
+                for (var i2 = 0; i2 < length2; ++i2) {
+                  var charCode = value.charCodeAt(i2);
+                  if (charCode > 255) {
+                    _free(ptr);
+                    throwBindingError("String has UTF-16 code units that do not fit in 8 bits");
+                  }
+                  HEAPU8[ptr + i2] = charCode;
+                }
+              } else {
+                for (var i2 = 0; i2 < length2; ++i2) {
+                  HEAPU8[ptr + i2] = value[i2];
+                }
+              }
+            }
+            if (destructors !== null) {
+              destructors.push(_free, base2);
+            }
+            return base2;
+          },
+          "argPackAdvance": GenericWireTypeSize,
+          "readValueFromPointer": readPointer,
+          destructorFunction(ptr) {
+            _free(ptr);
+          }
+        });
+      };
+      var UTF16ToString = (ptr, maxBytesToRead) => {
+        var str2 = "";
+        for (var i2 = 0; !(i2 >= maxBytesToRead / 2); ++i2) {
+          var codeUnit = HEAP16[ptr + i2 * 2 >> 1];
+          if (codeUnit == 0) break;
+          str2 += String.fromCharCode(codeUnit);
+        }
+        return str2;
+      };
+      var stringToUTF16 = (str2, outPtr, maxBytesToWrite) => {
+        maxBytesToWrite ?? (maxBytesToWrite = 2147483647);
+        if (maxBytesToWrite < 2) return 0;
+        maxBytesToWrite -= 2;
+        var startPtr = outPtr;
+        var numCharsToWrite = maxBytesToWrite < str2.length * 2 ? maxBytesToWrite / 2 : str2.length;
+        for (var i2 = 0; i2 < numCharsToWrite; ++i2) {
+          var codeUnit = str2.charCodeAt(i2);
+          HEAP16[outPtr >> 1] = codeUnit;
+          outPtr += 2;
+        }
+        HEAP16[outPtr >> 1] = 0;
+        return outPtr - startPtr;
+      };
+      var lengthBytesUTF16 = (str2) => str2.length * 2;
+      var UTF32ToString = (ptr, maxBytesToRead) => {
+        var i2 = 0;
+        var str2 = "";
+        while (!(i2 >= maxBytesToRead / 4)) {
+          var utf32 = HEAP32[ptr + i2 * 4 >> 2];
+          if (utf32 == 0) break;
+          ++i2;
+          if (utf32 >= 65536) {
+            var ch2 = utf32 - 65536;
+            str2 += String.fromCharCode(55296 | ch2 >> 10, 56320 | ch2 & 1023);
+          } else {
+            str2 += String.fromCharCode(utf32);
+          }
+        }
+        return str2;
+      };
+      var stringToUTF32 = (str2, outPtr, maxBytesToWrite) => {
+        maxBytesToWrite ?? (maxBytesToWrite = 2147483647);
+        if (maxBytesToWrite < 4) return 0;
+        var startPtr = outPtr;
+        var endPtr = startPtr + maxBytesToWrite - 4;
+        for (var i2 = 0; i2 < str2.length; ++i2) {
+          var codeUnit = str2.charCodeAt(i2);
+          if (codeUnit >= 55296 && codeUnit <= 57343) {
+            var trailSurrogate = str2.charCodeAt(++i2);
+            codeUnit = 65536 + ((codeUnit & 1023) << 10) | trailSurrogate & 1023;
+          }
+          HEAP32[outPtr >> 2] = codeUnit;
+          outPtr += 4;
+          if (outPtr + 4 > endPtr) break;
+        }
+        HEAP32[outPtr >> 2] = 0;
+        return outPtr - startPtr;
+      };
+      var lengthBytesUTF32 = (str2) => {
+        var len2 = 0;
+        for (var i2 = 0; i2 < str2.length; ++i2) {
+          var codeUnit = str2.charCodeAt(i2);
+          if (codeUnit >= 55296 && codeUnit <= 57343) ++i2;
+          len2 += 4;
+        }
+        return len2;
+      };
+      var __embind_register_std_wstring = (rawType, charSize, name2) => {
+        name2 = readLatin1String(name2);
+        var decodeString2, encodeString, readCharAt, lengthBytesUTF;
+        if (charSize === 2) {
+          decodeString2 = UTF16ToString;
+          encodeString = stringToUTF16;
+          lengthBytesUTF = lengthBytesUTF16;
+          readCharAt = (pointer) => HEAPU16[pointer >> 1];
+        } else if (charSize === 4) {
+          decodeString2 = UTF32ToString;
+          encodeString = stringToUTF32;
+          lengthBytesUTF = lengthBytesUTF32;
+          readCharAt = (pointer) => HEAPU32[pointer >> 2];
+        }
+        registerType(rawType, {
+          name: name2,
+          "fromWireType": (value) => {
+            var length2 = HEAPU32[value >> 2];
+            var str2;
+            var decodeStartPtr = value + 4;
+            for (var i2 = 0; i2 <= length2; ++i2) {
+              var currentBytePtr = value + 4 + i2 * charSize;
+              if (i2 == length2 || readCharAt(currentBytePtr) == 0) {
+                var maxReadBytes = currentBytePtr - decodeStartPtr;
+                var stringSegment = decodeString2(decodeStartPtr, maxReadBytes);
+                if (str2 === void 0) {
+                  str2 = stringSegment;
+                } else {
+                  str2 += String.fromCharCode(0);
+                  str2 += stringSegment;
+                }
+                decodeStartPtr = currentBytePtr + charSize;
+              }
+            }
+            _free(value);
+            return str2;
+          },
+          "toWireType": (destructors, value) => {
+            if (!(typeof value == "string")) {
+              throwBindingError(`Cannot pass non-string to C++ string type ${name2}`);
+            }
+            var length2 = lengthBytesUTF(value);
+            var ptr = _malloc(4 + length2 + charSize);
+            HEAPU32[ptr >> 2] = length2 / charSize;
+            encodeString(value, ptr + 4, length2 + charSize);
+            if (destructors !== null) {
+              destructors.push(_free, ptr);
+            }
+            return ptr;
+          },
+          "argPackAdvance": GenericWireTypeSize,
+          "readValueFromPointer": readPointer,
+          destructorFunction(ptr) {
+            _free(ptr);
+          }
+        });
+      };
+      var __embind_register_value_object = (rawType, name2, constructorSignature, rawConstructor, destructorSignature, rawDestructor) => {
+        structRegistrations[rawType] = {
+          name: readLatin1String(name2),
+          rawConstructor: embind__requireFunction(constructorSignature, rawConstructor),
+          rawDestructor: embind__requireFunction(destructorSignature, rawDestructor),
+          fields: []
+        };
+      };
+      var __embind_register_value_object_field = (structType, fieldName, getterReturnType, getterSignature, getter, getterContext, setterArgumentType, setterSignature, setter, setterContext) => {
+        structRegistrations[structType].fields.push({
+          fieldName: readLatin1String(fieldName),
+          getterReturnType,
+          getter: embind__requireFunction(getterSignature, getter),
+          getterContext,
+          setterArgumentType,
+          setter: embind__requireFunction(setterSignature, setter),
+          setterContext
+        });
+      };
+      var __embind_register_void = (rawType, name2) => {
+        name2 = readLatin1String(name2);
+        registerType(rawType, {
+          isVoid: true,
+          name: name2,
+          "argPackAdvance": 0,
+          "fromWireType": () => void 0,
+          "toWireType": (destructors, o2) => void 0
+        });
+      };
+      var __emscripten_memcpy_js = (dest, src, num2) => HEAPU8.copyWithin(dest, src, src + num2);
+      var emval_methodCallers = [];
+      var __emval_call = (caller, handle2, destructorsRef, args) => {
+        caller = emval_methodCallers[caller];
+        handle2 = Emval.toValue(handle2);
+        return caller(null, handle2, destructorsRef, args);
+      };
+      var emval_symbols = {};
+      var getStringOrSymbol = (address) => {
+        var symbol = emval_symbols[address];
+        if (symbol === void 0) {
+          return readLatin1String(address);
+        }
+        return symbol;
+      };
+      var emval_get_global = () => {
+        if (typeof globalThis == "object") {
+          return globalThis;
+        }
+        function testGlobal(obj) {
+          obj["$$$embind_global$$$"] = obj;
+          var success = typeof $$$embind_global$$$ == "object" && obj["$$$embind_global$$$"] == obj;
+          if (!success) {
+            delete obj["$$$embind_global$$$"];
+          }
+          return success;
+        }
+        if (typeof $$$embind_global$$$ == "object") {
+          return $$$embind_global$$$;
+        }
+        if (typeof global == "object" && testGlobal(global)) {
+          $$$embind_global$$$ = global;
+        } else if (typeof self == "object" && testGlobal(self)) {
+          $$$embind_global$$$ = self;
+        }
+        if (typeof $$$embind_global$$$ == "object") {
+          return $$$embind_global$$$;
+        }
+        throw Error("unable to get global object.");
+      };
+      var __emval_get_global = (name2) => {
+        if (name2 === 0) {
+          return Emval.toHandle(emval_get_global());
+        } else {
+          name2 = getStringOrSymbol(name2);
+          return Emval.toHandle(emval_get_global()[name2]);
+        }
+      };
+      var emval_addMethodCaller = (caller) => {
+        var id2 = emval_methodCallers.length;
+        emval_methodCallers.push(caller);
+        return id2;
+      };
+      var requireRegisteredType = (rawType, humanName) => {
+        var impl = registeredTypes[rawType];
+        if (void 0 === impl) {
+          throwBindingError(`${humanName} has unknown type ${getTypeName(rawType)}`);
+        }
+        return impl;
+      };
+      var emval_lookupTypes = (argCount, argTypes) => {
+        var a2 = new Array(argCount);
+        for (var i2 = 0; i2 < argCount; ++i2) {
+          a2[i2] = requireRegisteredType(HEAPU32[argTypes + i2 * 4 >> 2], "parameter " + i2);
+        }
+        return a2;
+      };
+      var reflectConstruct = Reflect.construct;
+      var emval_returnValue = (returnType, destructorsRef, handle2) => {
+        var destructors = [];
+        var result = returnType["toWireType"](destructors, handle2);
+        if (destructors.length) {
+          HEAPU32[destructorsRef >> 2] = Emval.toHandle(destructors);
+        }
+        return result;
+      };
+      var __emval_get_method_caller = (argCount, argTypes, kind) => {
+        var types2 = emval_lookupTypes(argCount, argTypes);
+        var retType = types2.shift();
+        argCount--;
+        var argN = new Array(argCount);
+        var invokerFunction = (obj, func, destructorsRef, args) => {
+          var offset = 0;
+          for (var i2 = 0; i2 < argCount; ++i2) {
+            argN[i2] = types2[i2]["readValueFromPointer"](args + offset);
+            offset += types2[i2]["argPackAdvance"];
+          }
+          var rv = kind === 1 ? reflectConstruct(func, argN) : func.apply(obj, argN);
+          return emval_returnValue(retType, destructorsRef, rv);
+        };
+        var functionName = `methodCaller<(${types2.map((t2) => t2.name).join(", ")}) => ${retType.name}>`;
+        return emval_addMethodCaller(createNamedFunction(functionName, invokerFunction));
+      };
+      var __emval_run_destructors = (handle2) => {
+        var destructors = Emval.toValue(handle2);
+        runDestructors(destructors);
+        __emval_decref(handle2);
+      };
+      var _abort = () => {
+        abort("");
+      };
+      var getHeapMax = () => 2147483648;
+      var growMemory = (size) => {
+        var b2 = wasmMemory.buffer;
+        var pages = (size - b2.byteLength + 65535) / 65536;
+        try {
+          wasmMemory.grow(pages);
+          updateMemoryViews();
+          return 1;
+        } catch (e2) {
+        }
+      };
+      var _emscripten_resize_heap = (requestedSize) => {
+        var oldSize = HEAPU8.length;
+        requestedSize >>>= 0;
+        var maxHeapSize = getHeapMax();
+        if (requestedSize > maxHeapSize) {
+          return false;
+        }
+        var alignUp = (x2, multiple) => x2 + (multiple - x2 % multiple) % multiple;
+        for (var cutDown = 1; cutDown <= 4; cutDown *= 2) {
+          var overGrownHeapSize = oldSize * (1 + 0.2 / cutDown);
+          overGrownHeapSize = Math.min(overGrownHeapSize, requestedSize + 100663296);
+          var newSize = Math.min(maxHeapSize, alignUp(Math.max(requestedSize, overGrownHeapSize), 65536));
+          var replacement = growMemory(newSize);
+          if (replacement) {
+            return true;
+          }
+        }
+        return false;
+      };
+      var ENV = {};
+      var getExecutableName = () => thisProgram || "./this.program";
+      var getEnvStrings = () => {
+        if (!getEnvStrings.strings) {
+          var lang2 = (typeof navigator == "object" && navigator.languages && navigator.languages[0] || "C").replace("-", "_") + ".UTF-8";
+          var env2 = {
+            "USER": "web_user",
+            "LOGNAME": "web_user",
+            "PATH": "/",
+            "PWD": "/",
+            "HOME": "/home/web_user",
+            "LANG": lang2,
+            "_": getExecutableName()
+          };
+          for (var x2 in ENV) {
+            if (ENV[x2] === void 0) delete env2[x2];
+            else env2[x2] = ENV[x2];
+          }
+          var strings2 = [];
+          for (var x2 in env2) {
+            strings2.push(`${x2}=${env2[x2]}`);
+          }
+          getEnvStrings.strings = strings2;
+        }
+        return getEnvStrings.strings;
+      };
+      var stringToAscii = (str2, buffer2) => {
+        for (var i2 = 0; i2 < str2.length; ++i2) {
+          HEAP8[buffer2++] = str2.charCodeAt(i2);
+        }
+        HEAP8[buffer2] = 0;
+      };
+      var _environ_get = (__environ, environ_buf) => {
+        var bufSize = 0;
+        getEnvStrings().forEach((string2, i2) => {
+          var ptr = environ_buf + bufSize;
+          HEAPU32[__environ + i2 * 4 >> 2] = ptr;
+          stringToAscii(string2, ptr);
+          bufSize += string2.length + 1;
+        });
+        return 0;
+      };
+      var _environ_sizes_get = (penviron_count, penviron_buf_size) => {
+        var strings2 = getEnvStrings();
+        HEAPU32[penviron_count >> 2] = strings2.length;
+        var bufSize = 0;
+        strings2.forEach((string2) => bufSize += string2.length + 1);
+        HEAPU32[penviron_buf_size >> 2] = bufSize;
+        return 0;
+      };
+      var _proc_exit = (code2) => {
+        quit_(code2, new ExitStatus(code2));
+      };
+      var exitJS = (status, implicit) => {
+        _proc_exit(status);
+      };
+      var _exit = exitJS;
+      var _fd_close = (fd2) => 52;
+      function _fd_seek(fd2, offset_low, offset_high, whence, newOffset) {
+        return 70;
+      }
+      var printCharBuffers = [
+        null,
+        [],
+        []
+      ];
+      var printChar = (stream, curr) => {
+        var buffer2 = printCharBuffers[stream];
+        if (curr === 0 || curr === 10) {
+          (stream === 1 ? out : err2)(UTF8ArrayToString(buffer2, 0));
+          buffer2.length = 0;
+        } else {
+          buffer2.push(curr);
+        }
+      };
+      var _fd_write = (fd2, iov, iovcnt, pnum) => {
+        var num2 = 0;
+        for (var i2 = 0; i2 < iovcnt; i2++) {
+          var ptr = HEAPU32[iov >> 2];
+          var len2 = HEAPU32[iov + 4 >> 2];
+          iov += 8;
+          for (var j2 = 0; j2 < len2; j2++) {
+            printChar(fd2, HEAPU8[ptr + j2]);
+          }
+          num2 += len2;
+        }
+        HEAPU32[pnum >> 2] = num2;
+        return 0;
+      };
+      InternalError = Module2["InternalError"] = class InternalError extends Error {
+        constructor(message2) {
+          super(message2);
+          this.name = "InternalError";
+        }
+      };
+      embind_init_charCodes();
+      BindingError = Module2["BindingError"] = class BindingError extends Error {
+        constructor(message2) {
+          super(message2);
+          this.name = "BindingError";
+        }
+      };
+      init_emval();
+      UnboundTypeError = Module2["UnboundTypeError"] = extendError(Error, "UnboundTypeError");
+      var wasmImports = {
+        j: ___cxa_throw,
+        k: __embind_finalize_value_object,
+        n: __embind_register_bigint,
+        h: __embind_register_bool,
+        z: __embind_register_emval,
+        f: __embind_register_float,
+        e: __embind_register_function,
+        c: __embind_register_integer,
+        a: __embind_register_memory_view,
+        g: __embind_register_std_string,
+        d: __embind_register_std_wstring,
+        l: __embind_register_value_object,
+        b: __embind_register_value_object_field,
+        i: __embind_register_void,
+        s: __emscripten_memcpy_js,
+        y: __emval_call,
+        u: __emval_decref,
+        A: __emval_get_global,
+        x: __emval_get_method_caller,
+        w: __emval_run_destructors,
+        o: _abort,
+        p: _emscripten_resize_heap,
+        q: _environ_get,
+        r: _environ_sizes_get,
+        B: _exit,
+        t: _fd_close,
+        m: _fd_seek,
+        v: _fd_write
+      };
+      var wasmExports = createWasm();
+      var ___getTypeName = (a0) => (___getTypeName = wasmExports["E"])(a0);
+      var _malloc = (a0) => (_malloc = wasmExports["F"])(a0);
+      var _free = (a0) => (_free = wasmExports["G"])(a0);
+      var ___cxa_is_pointer_type = (a0) => (___cxa_is_pointer_type = wasmExports["I"])(a0);
+      Module2["dynCall_jiji"] = (a0, a1, a2, a3, a4) => (Module2["dynCall_jiji"] = wasmExports["J"])(a0, a1, a2, a3, a4);
+      var calledRun;
+      dependenciesFulfilled = function runCaller() {
+        if (!calledRun) run();
+        if (!calledRun) dependenciesFulfilled = runCaller;
+      };
+      function run() {
+        if (runDependencies > 0) {
+          return;
+        }
+        preRun();
+        if (runDependencies > 0) {
+          return;
+        }
+        function doRun() {
+          if (calledRun) return;
+          calledRun = true;
+          Module2["calledRun"] = true;
+          if (ABORT) return;
+          initRuntime();
+          readyPromiseResolve(Module2);
+          if (Module2["onRuntimeInitialized"]) Module2["onRuntimeInitialized"]();
+          postRun();
+        }
+        if (Module2["setStatus"]) {
+          Module2["setStatus"]("Running...");
+          setTimeout(function() {
+            setTimeout(function() {
+              Module2["setStatus"]("");
+            }, 1);
+            doRun();
+          }, 1);
+        } else {
+          doRun();
+        }
+      }
+      if (Module2["preInit"]) {
+        if (typeof Module2["preInit"] == "function") Module2["preInit"] = [
+          Module2["preInit"]
+        ];
+        while (Module2["preInit"].length > 0) {
+          Module2["preInit"].pop()();
+        }
+      }
+      run();
+      return readyPromise;
+    };
+  })();
+  const defaultOptions = {
+    quality: 75,
+    baseline: false,
+    arithmetic: false,
+    progressive: true,
+    optimize_coding: true,
+    smoothing: 0,
+    color_space: 3,
+    quant_table: 3,
+    trellis_multipass: false,
+    trellis_opt_zero: false,
+    trellis_opt_table: false,
+    trellis_loops: 1,
+    auto_subsample: true,
+    chroma_subsample: 2,
+    separate_chroma_quality: false,
+    chroma_quality: 75
+  };
+  function initEmscriptenModule(moduleFactory, wasmModule, moduleOptionOverrides = {}) {
+    let instantiateWasm;
+    if (wasmModule) {
+      instantiateWasm = (imports, callback) => {
+        const instance = new WebAssembly.Instance(wasmModule, imports);
+        callback(instance);
+        return instance.exports;
+      };
+    }
+    return moduleFactory({
+      noInitialRun: true,
+      instantiateWasm,
+      ...moduleOptionOverrides
+    });
+  }
+  let emscriptenModule;
+  async function init(module, moduleOptionOverrides) {
+    let actualModule = module;
+    let actualOptions = moduleOptionOverrides;
+    if (arguments.length === 1 && !(module instanceof WebAssembly.Module)) {
+      actualModule = void 0;
+      actualOptions = module;
+    }
+    emscriptenModule = initEmscriptenModule(Module, actualModule, actualOptions);
+  }
+  async function encode(data2, options = {}) {
+    if (!emscriptenModule) init();
+    const module = await emscriptenModule;
+    const _options = {
+      ...defaultOptions,
+      ...options
+    };
+    const resultView = module.encode(data2.data, data2.width, data2.height, _options);
+    return resultView.buffer;
+  }
+  const MOZJPEG_COLORSPACE_GRAYSCALE = 1;
+  const JPEG_EXPORT_QUALITY = 0.95;
   function clampValue$1(x2, min2, max2) {
     if (max2 === min2) return 0;
     return Math.min(255, Math.max(0, 255 * (x2 - min2) / (max2 - min2)));
@@ -170702,38 +173505,65 @@ void main() {
       out[o2 + 3] = 255;
     }
   }
-  async function blobFromCanvas(canvas2, width, height, rgba, quality) {
-    canvas2.width = width;
-    canvas2.height = height;
-    const ctx2 = canvas2.getContext("2d");
-    if (!ctx2) throw new Error("jpegExportEncode: 2d context unavailable");
-    const imageData = new ImageData(rgba, width, height);
-    ctx2.putImageData(imageData, 0, 0);
-    let blob;
-    if (typeof canvas2.convertToBlob === "function") {
-      blob = await canvas2.convertToBlob({
-        type: "image/jpeg",
-        quality
-      });
-    } else {
-      const htmlCanvas = canvas2;
-      blob = await new Promise((resolve) => {
-        htmlCanvas.toBlob(resolve, "image/jpeg", quality);
-      });
+  function cubeRootPixelsToRgba(out, pixels) {
+    for (let i2 = 0; i2 < pixels.length; i2++) {
+      const v2 = encodeCubeRootU16ToU8(pixels[i2]);
+      const o2 = i2 * 4;
+      out[o2] = v2;
+      out[o2 + 1] = v2;
+      out[o2 + 2] = v2;
+      out[o2 + 3] = 255;
     }
-    if (!blob) throw new Error("jpegExportEncode: JPEG blob is null");
-    return blob.arrayBuffer();
   }
-  async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY) {
+  function padGrayscaleRgbaToTile(rgba, width, height, tileSize = JPEG_PYRAMID_TILE_SIZE) {
+    if (width === tileSize && height === tileSize) {
+      return rgba.buffer instanceof ArrayBuffer ? rgba : new Uint8ClampedArray(rgba);
+    }
+    const out = new Uint8ClampedArray(new ArrayBuffer(tileSize * tileSize * 4));
+    const copyW = Math.min(width, tileSize);
+    const copyH = Math.min(height, tileSize);
+    for (let row2 = 0; row2 < copyH; row2++) {
+      const src = row2 * width * 4;
+      const dst = row2 * tileSize * 4;
+      out.set(rgba.subarray(src, src + copyW * 4), dst);
+    }
+    return out;
+  }
+  function mozJpegQuality(quality) {
+    if (!Number.isFinite(quality)) return 50;
+    return quality <= 1 ? Math.round(quality * 100) : Math.round(quality);
+  }
+  let jsquashReady = null;
+  function ensureJpegEncoderReady() {
+    if (!jsquashReady) {
+      jsquashReady = init().then(() => void 0);
+    }
+    return jsquashReady;
+  }
+  async function encodeRgbaToJpeg(width, height, rgba, quality) {
+    await ensureJpegEncoderReady();
+    const imageData = new ImageData(rgba, width, height);
+    return encode(imageData, {
+      quality: mozJpegQuality(quality),
+      color_space: MOZJPEG_COLORSPACE_GRAYSCALE,
+      baseline: true,
+      progressive: false,
+      arithmetic: false,
+      optimize_coding: false
+    });
+  }
+  async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
     const rgba = new Uint8ClampedArray(new ArrayBuffer(width * height * 4));
-    clampPixelsToRgba(rgba, pixels, lowerLimit, upperLimit);
-    if (typeof OffscreenCanvas !== "undefined") {
-      return blobFromCanvas(new OffscreenCanvas(width, height), width, height, rgba, quality);
+    if (transfer === "cube-root") {
+      cubeRootPixelsToRgba(rgba, pixels);
+    } else {
+      clampPixelsToRgba(rgba, pixels, lowerLimit, upperLimit);
     }
-    if (typeof document !== "undefined") {
-      return blobFromCanvas(document.createElement("canvas"), width, height, rgba, quality);
+    if (padTileSize === void 0 || width === padTileSize && height === padTileSize) {
+      return encodeRgbaToJpeg(width, height, rgba, quality);
     }
-    throw new Error("jpegExportEncode: no canvas available");
+    const padded = padGrayscaleRgbaToTile(rgba, width, height, padTileSize);
+    return encodeRgbaToJpeg(padTileSize, padTileSize, padded, quality);
   }
   function typedArrayCtorName(data2) {
     var _a2;
@@ -170749,11 +173579,13 @@ void main() {
     return copy2;
   }
   function WorkerWrapper$3(options) {
-    return new Worker("" + new URL("jpegExport.worker-uuixqBf7.js", import.meta.url).href, {
+    return new Worker("" + new URL("jpegExport.worker-SXV9ALQ1.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
   }
+  const MAX_JPEG_EXPORT_WORKERS = 8;
+  const defaultPoolSize$1 = Math.min(MAX_JPEG_EXPORT_WORKERS, ((_e2 = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _e2.hardwareConcurrency) ?? 4);
   let WorkerWrapper$2 = class WorkerWrapper {
     constructor(worker) {
       __publicField(this, "worker");
@@ -170801,7 +173633,6 @@ void main() {
       this.worker.terminate();
     }
   };
-  const defaultPoolSize$1 = ((_e2 = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _e2.hardwareConcurrency) ?? 4;
   class JpegExportPool {
     constructor(size = defaultPoolSize$1, createWorker = () => new WorkerWrapper$3()) {
       __publicField(this, "workerWrappers", null);
@@ -170817,7 +173648,7 @@ void main() {
         })();
       }
     }
-    async encode(width, height, buffer2, arrayCtorName, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY) {
+    async encode(width, height, buffer2, arrayCtorName, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
       const workerWrappersPromise = this.workerWrappers;
       if (!workerWrappersPromise) {
         throw new Error("JpegExportPool has no workers");
@@ -170831,7 +173662,9 @@ void main() {
         arrayCtorName,
         lowerLimit,
         upperLimit,
-        quality
+        quality,
+        transfer,
+        padTileSize
       }, [
         buffer2
       ]);
@@ -170848,7 +173681,7 @@ void main() {
   }
   let singleton = null;
   function workersSupported() {
-    return typeof Worker !== "undefined" && typeof OffscreenCanvas !== "undefined";
+    return typeof Worker !== "undefined";
   }
   function getJpegExportPool() {
     if (!workersSupported()) return null;
@@ -170858,30 +173691,347 @@ void main() {
     return singleton;
   }
   async function encodeTileJpeg(input2) {
-    const { width, height, data: data2, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY } = input2;
+    const { width, height, data: data2, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize } = input2;
     const pool = getJpegExportPool();
     if (pool) {
       try {
         const copy2 = copyPixelBuffer(data2);
-        return await pool.encode(width, height, copy2, typedArrayCtorName(data2), lowerLimit, upperLimit, quality);
+        return await pool.encode(width, height, copy2, typedArrayCtorName(data2), lowerLimit, upperLimit, quality, transfer, padTileSize);
       } catch (err2) {
         console.warn("[minerva] jpegExport worker failed, using main thread:", err2);
       }
     }
-    return encodeGrayscaleJpeg(width, height, data2, lowerLimit, upperLimit, quality);
+    return encodeGrayscaleJpeg(width, height, data2, lowerLimit, upperLimit, quality, transfer, padTileSize);
   }
   function jpegExportConcurrency() {
     const pool = getJpegExportPool();
     if (pool) return pool.size;
     return defaultPoolSize$1;
   }
-  const imageExporter = "_imageExporter_13d1j_1";
-  const exportStatus = "_exportStatus_13d1j_13";
-  const dismissButton = "_dismissButton_13d1j_19";
-  const progressBar = "_progressBar_13d1j_29";
-  const progressBarDone = "_progressBarDone_13d1j_50";
-  const etaLine = "_etaLine_13d1j_60";
-  const exportMessage = "_exportMessage_13d1j_67";
+  function omeTiffExportFileName(image2, used) {
+    var _a2;
+    const raw2 = ((_a2 = image2.basename) == null ? void 0 : _a2.replace(/\.(ome\.)?(tif|tiff)$/i, "")) || image2.id || "image";
+    const base2 = raw2.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") || "image";
+    let name2 = `${base2}.ome.tif`;
+    let n2 = 2;
+    while (used.has(name2.toLowerCase())) {
+      name2 = `${base2}_${n2}.ome.tif`;
+      n2 += 1;
+    }
+    used.add(name2.toLowerCase());
+    return name2;
+  }
+  function channelIdsFromGroups(channelGroups) {
+    const ids = /* @__PURE__ */ new Set();
+    for (const g2 of channelGroups) {
+      for (const row2 of g2.channels) {
+        ids.add(row2.channelId);
+      }
+    }
+    return ids;
+  }
+  function groupIntensityChannelsForOmeExport(image2, channelGroups) {
+    const wanted = channelIdsFromGroups(channelGroups);
+    if (wanted.size === 0) return [];
+    return (image2.channels ?? []).filter((ch2) => wanted.has(ch2.id) && effectiveChannelKind(ch2) === "channel").slice().sort((a2, b2) => a2.index - b2.index);
+  }
+  function assertNoSelectedMaskChannels(images, channelGroups) {
+    const wanted = channelIdsFromGroups(channelGroups);
+    for (const im of images) {
+      const selectedMasks = (im.channels ?? []).filter((ch2) => wanted.has(ch2.id) && effectiveChannelKind(ch2) === "mask");
+      if (selectedMasks.length > 0) {
+        throw new Error(`OME-TIFF export does not support mask/segmentation channels yet (${im.basename || im.id}). Remove masks from channel groups or export as JPEG folders.`);
+      }
+    }
+  }
+  function remappedImageForOmeTiffExport(image2, exportedChannels, fileName) {
+    return {
+      ...image2,
+      sizeC: exportedChannels.length,
+      channels: exportedChannels.map((ch2, i2) => ({
+        ...ch2,
+        index: i2
+      })),
+      source: {
+        kind: "url",
+        url: fileName
+      }
+    };
+  }
+  function planeLevels(loaderData) {
+    return loaderData.map((plane) => {
+      const { width, height } = getImageSize(plane);
+      const tileSize = typeof plane.tileSize === "number" && plane.tileSize > 0 ? plane.tileSize : JPEG_PYRAMID_TILE_SIZE;
+      return {
+        width,
+        height,
+        tileSize
+      };
+    });
+  }
+  function tileCountForLevels(levels, channelCount) {
+    let n2 = 0;
+    for (const level of levels) {
+      n2 += Math.ceil(level.width / level.tileSize) * Math.ceil(level.height / level.tileSize) * channelCount;
+    }
+    return n2;
+  }
+  function escapeXmlAttr(value) {
+    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function omeColorInt(color2) {
+    const view = new DataView(new ArrayBuffer(4));
+    view.setUint8(0, color2.r & 255);
+    view.setUint8(1, color2.g & 255);
+    view.setUint8(2, color2.b & 255);
+    view.setUint8(3, 255);
+    return view.getInt32(0, false);
+  }
+  function optionalNumberAttr(name2, value) {
+    if (typeof value !== "number" || !Number.isFinite(value)) return "";
+    return ` ${name2}="${value}"`;
+  }
+  function optionalStringAttr(name2, value) {
+    if (typeof value !== "string" || !value.trim()) return "";
+    return ` ${name2}="${escapeXmlAttr(value)}"`;
+  }
+  function contrastLimitsForExportedChannel(channel, channelGroups) {
+    for (const g2 of channelGroups) {
+      for (const row2 of g2.channels) {
+        if (row2.channelId !== channel.id) continue;
+        return {
+          lowerLimit: row2.lowerLimit,
+          upperLimit: row2.upperLimit
+        };
+      }
+    }
+    throw new Error(`No channel-group contrast for channel ${channel.id}`);
+  }
+  function buildJpegOmeTiffXml(opts) {
+    const { image: image2, channels: channels2, width, height, fileName, pixels } = opts;
+    const imageName = image2.basename || image2.id || "image";
+    const sizeC = channels2.length;
+    const channelXml = channels2.map((ch2, i2) => {
+      var _a2;
+      const id2 = escapeXmlAttr(ch2.id || `Channel:0:${i2}`);
+      const chName = escapeXmlAttr(((_a2 = ch2.name) == null ? void 0 : _a2.trim()) || `Channel ${i2}`);
+      const colorAttr = ch2.color && typeof ch2.color.r === "number" && typeof ch2.color.g === "number" && typeof ch2.color.b === "number" ? ` Color="${omeColorInt({
+        r: ch2.color.r,
+        g: ch2.color.g,
+        b: ch2.color.b
+      })}"` : "";
+      return `<Channel ID="${id2}" Name="${chName}" SamplesPerPixel="1"${colorAttr}/>`;
+    }).join("");
+    const tiffDataXml = channels2.map((_2, i2) => {
+      const uuid = escapeXmlAttr(fileName);
+      return `<TiffData FirstC="${i2}" FirstT="0" FirstZ="0" IFD="${i2}" PlaneCount="1"><UUID FileName="${uuid}">${uuid}</UUID></TiffData>`;
+    }).join("");
+    const physicalAttrs = optionalNumberAttr("PhysicalSizeX", pixels == null ? void 0 : pixels.PhysicalSizeX) + optionalNumberAttr("PhysicalSizeY", pixels == null ? void 0 : pixels.PhysicalSizeY) + optionalNumberAttr("PhysicalSizeZ", pixels == null ? void 0 : pixels.PhysicalSizeZ) + optionalStringAttr("PhysicalSizeXUnit", pixels == null ? void 0 : pixels.PhysicalSizeXUnit) + optionalStringAttr("PhysicalSizeYUnit", pixels == null ? void 0 : pixels.PhysicalSizeYUnit) + optionalStringAttr("PhysicalSizeZUnit", pixels == null ? void 0 : pixels.PhysicalSizeZUnit);
+    return `<?xml version="1.0" encoding="UTF-8"?><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd"><Image ID="Image:0" Name="${escapeXmlAttr(imageName)}"><Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="uint8" SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1" SignificantBits="8" Interleaved="false" BigEndian="false"${physicalAttrs}>${channelXml}${tiffDataXml}</Pixels></Image></OME>`;
+  }
+  async function exportJpegOmeTiffImage(opts) {
+    var _a2, _b2, _c2;
+    const { directory, entry, image: image2, channels: channels2, channelGroups, fileName, transfer, signal, onProgress } = opts;
+    if (channels2.length === 0) {
+      throw new Error(`No intensity channels to export for ${image2.basename || image2.id}`);
+    }
+    const loaderData = entry.loader.data;
+    if (!(loaderData == null ? void 0 : loaderData.length)) {
+      throw new Error(`Loader has no pyramid levels for ${image2.basename || image2.id}`);
+    }
+    const levels = planeLevels(loaderData);
+    const channelLimits = channels2.map((ch2) => {
+      const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
+      return folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
+    });
+    const omeXml = buildJpegOmeTiffXml({
+      image: image2,
+      channels: channels2,
+      width: levels[0].width,
+      height: levels[0].height,
+      fileName,
+      pixels: ((_a2 = entry.loader.metadata) == null ? void 0 : _a2.Pixels) ?? null
+    });
+    const { layouts, jobs } = planPyramid({
+      levels,
+      channelCount: channels2.length,
+      baseTags: grayscaleJpegTags(),
+      imageDescription: omeXml
+    });
+    const fh2 = await directory.getFileHandle(fileName, {
+      create: true
+    });
+    const writable = await fh2.createWritable();
+    let exportFailed = null;
+    const localAbort = new AbortController();
+    const onOuterAbort = () => localAbort.abort();
+    signal.addEventListener("abort", onOuterAbort);
+    if (signal.aborted) localAbort.abort();
+    const workSignal = localAbort.signal;
+    const failExport = (e2) => {
+      if (!exportFailed) {
+        exportFailed = e2 instanceof Error ? e2 : new Error(String(e2 ?? "OME-TIFF export failed"));
+      }
+      localAbort.abort();
+    };
+    let writer;
+    try {
+      writer = await createTiffWriter({
+        sink: browserFileSink(writable),
+        signal: workSignal,
+        images: layouts
+      });
+    } catch (e2) {
+      signal.removeEventListener("abort", onOuterAbort);
+      try {
+        await ((_b2 = writable.abort) == null ? void 0 : _b2.call(writable));
+      } catch {
+      }
+      throw e2;
+    }
+    const concurrency = Math.min(jpegExportConcurrency(), Math.max(1, jobs.length));
+    let next2 = 0;
+    const runJob = async (job) => {
+      if (workSignal.aborted) return;
+      const plane = loaderData[job.levelIndex];
+      const tileSize = levels[job.levelIndex].tileSize;
+      const channel = channels2[job.channelIndex];
+      const limits = channelLimits[job.channelIndex];
+      const tile = await plane.getTile({
+        selection: {
+          t: 0,
+          z: 0,
+          c: channel.index
+        },
+        x: job.x,
+        y: job.y,
+        signal: workSignal
+      });
+      if (workSignal.aborted) return;
+      const { width, height, data: data2 } = tile;
+      const jpeg = await encodeTileJpeg({
+        width,
+        height,
+        data: data2,
+        lowerLimit: limits.lowerLimit,
+        upperLimit: limits.upperLimit,
+        transfer,
+        padTileSize: tileSize
+      });
+      if (workSignal.aborted) return;
+      await writer.writeSegment(job.address, new Uint8Array(jpeg));
+      onProgress == null ? void 0 : onProgress(1);
+    };
+    const workerLoop = async () => {
+      while (!workSignal.aborted) {
+        const i2 = next2++;
+        if (i2 >= jobs.length) return;
+        try {
+          await runJob(jobs[i2]);
+        } catch (e2) {
+          if (workSignal.aborted) return;
+          console.error(e2 instanceof Error ? e2.message : e2);
+          try {
+            await runJob(jobs[i2]);
+          } catch (e22) {
+            console.error(e22 instanceof Error ? e22.message : e22);
+            failExport(e22);
+            return;
+          }
+        }
+      }
+    };
+    try {
+      await Promise.all(Array.from({
+        length: concurrency
+      }, () => workerLoop()));
+      if (exportFailed) throw exportFailed;
+      if (signal.aborted || workSignal.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
+      await writer.finish();
+    } catch (e2) {
+      try {
+        await writer.abort(e2);
+      } catch {
+      }
+      try {
+        await ((_c2 = writable.abort) == null ? void 0 : _c2.call(writable));
+      } catch {
+      }
+      throw e2;
+    } finally {
+      signal.removeEventListener("abort", onOuterAbort);
+    }
+    return remappedImageForOmeTiffExport(image2, channels2, fileName);
+  }
+  async function exportJpegOmeTiffStory(opts) {
+    const { directory, omeLoaderEntries, images, channelGroups, transfer, signal, onProgress } = opts;
+    if (omeLoaderEntries.length === 0) {
+      throw new Error("OME-TIFF export needs an OME or DICOM source image loaded.");
+    }
+    if (channelGroups.length === 0 || !channelGroups.some((g2) => g2.channels.length > 0)) {
+      throw new Error("Add a channel group with at least one channel before exporting OME-TIFF.");
+    }
+    const candidateImages = omeLoaderEntries.map((e2) => images.find((im) => im.id === e2.sourceImageId)).filter((im) => !!im);
+    assertNoSelectedMaskChannels(candidateImages, channelGroups);
+    const usedNames = /* @__PURE__ */ new Set();
+    const remappedImages = [];
+    let totalTiles = 0;
+    const work = [];
+    for (const entry of omeLoaderEntries) {
+      const image2 = images.find((im) => im.id === entry.sourceImageId);
+      if (!image2) continue;
+      const channels2 = groupIntensityChannelsForOmeExport(image2, channelGroups);
+      if (channels2.length === 0) continue;
+      const loaderData = entry.loader.data;
+      if (!(loaderData == null ? void 0 : loaderData.length)) continue;
+      const levels = planeLevels(loaderData);
+      totalTiles += tileCountForLevels(levels, channels2.length);
+      work.push({
+        entry,
+        image: image2,
+        channels: channels2,
+        fileName: omeTiffExportFileName(image2, usedNames)
+      });
+    }
+    if (work.length === 0) {
+      throw new Error("No channel-group intensity channels available for OME-TIFF export.");
+    }
+    let completed = 0;
+    onProgress == null ? void 0 : onProgress(0, totalTiles);
+    for (const item2 of work) {
+      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+      remappedImages.push(await exportJpegOmeTiffImage({
+        directory,
+        entry: item2.entry,
+        image: item2.image,
+        channels: item2.channels,
+        channelGroups,
+        fileName: item2.fileName,
+        transfer,
+        signal,
+        onProgress: (delta) => {
+          completed += delta;
+          onProgress == null ? void 0 : onProgress(completed, totalTiles);
+        }
+      }));
+    }
+    const remappedById = new Map(remappedImages.map((image2) => [
+      image2.id,
+      image2
+    ]));
+    return images.map((im) => remappedById.get(im.id) ?? im);
+  }
+  const imageExporter = "_imageExporter_1anwt_1";
+  const exportStatus = "_exportStatus_1anwt_13";
+  const dismissButton = "_dismissButton_1anwt_19";
+  const progressBar = "_progressBar_1anwt_29";
+  const progressBarDone = "_progressBarDone_1anwt_50";
+  const etaLine = "_etaLine_1anwt_60";
+  const exportMessage = "_exportMessage_1anwt_67";
+  const transferToggle = "_transferToggle_1anwt_75";
+  const confirmActions = "_confirmActions_1anwt_85";
   const styles$b = {
     imageExporter,
     exportStatus,
@@ -170889,7 +174039,9 @@ void main() {
     progressBar,
     progressBarDone,
     etaLine,
-    exportMessage
+    exportMessage,
+    transferToggle,
+    confirmActions
   };
   const formatMinutesLeft = (ms) => {
     const mins = Math.round(ms / 6e4);
@@ -170906,17 +174058,14 @@ void main() {
     return (total - completed) * elapsed / completed;
   };
   const toSettingsInternal = (loader, modality, activeChannelGroupId, channelVisibilities, channelGroupRowVisibilities, toSettings2, loaderSourceImageId) => {
-    if (loader === null) {
-      return toSettings2(activeChannelGroupId, modality, void 0, channelVisibilities, loaderSourceImageId, channelGroupRowVisibilities);
-    }
-    return toSettings2(activeChannelGroupId, modality, loader, channelVisibilities, loaderSourceImageId, channelGroupRowVisibilities);
+    return toSettings2(activeChannelGroupId, modality, loader ?? void 0, channelVisibilities, loaderSourceImageId, channelGroupRowVisibilities);
   };
   const toFilename = (index2) => {
     const level = -index2.z;
     const { x: x2, y: y2 } = index2;
     return `${level}_${x2}_${y2}.jpg`;
   };
-  const exportTile = async (index2, loader, signal) => {
+  const exportTile = async (index2, loader, signal, transfer) => {
     const filename2 = toFilename(index2);
     const level = Math.abs(index2.z);
     const z_loader = loader[level];
@@ -170939,7 +174088,8 @@ void main() {
       height,
       data: data2,
       lowerLimit: index2.lowerLimit,
-      upperLimit: index2.upperLimit
+      upperLimit: index2.upperLimit,
+      transfer
     });
     if (signal.aborted) return;
     const fh2 = await index2.dh.getFileHandle(filename2, {
@@ -170949,15 +174099,14 @@ void main() {
     await write.write(jpeg);
     await write.close();
   };
-  const createCRange = async (setCRange, channelGroups, imageChannels, directory_handle) => {
+  const createCRange = async (channelGroups, imageChannels, directory_handle, transfer) => {
     const pending = channelGroups.flatMap(({ channels: channels2 }) => channels2.map(async ({ channelId, lowerLimit, upperLimit }) => {
       const c2 = imageChannels[channelId];
       if (c2 === void 0) {
         return null;
       }
-      const lo = lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT;
-      const hi2 = upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT;
-      const folderName = await jpegPyramidFolderName(channelId, lo, hi2);
+      const folderLimits = folderLimitsForTransfer(transfer, lowerLimit, upperLimit);
+      const folderName = await jpegPyramidFolderName(channelId, folderLimits.lowerLimit, folderLimits.upperLimit);
       const dh2 = await directory_handle.getDirectoryHandle(folderName, {
         create: true
       });
@@ -170968,8 +174117,8 @@ void main() {
       await write.write(JSON.stringify({
         channel: c2,
         channelId,
-        lowerLimit: lo,
-        upperLimit: hi2
+        lowerLimit,
+        upperLimit
       }, null, 2));
       await write.close();
       return {
@@ -170979,18 +174128,15 @@ void main() {
         c: c2,
         dh: dh2,
         encoded: folderName,
-        lowerLimit: lo,
-        upperLimit: hi2
+        lowerLimit,
+        upperLimit
       };
     }));
     const resolved = await Promise.all(pending);
-    setCRange(resolved.filter((v2) => v2 !== null));
+    return resolved.filter((v2) => v2 !== null);
   };
-  function toTileScale(zoom, ...vals) {
-    const scale2 = 2 ** Math.abs(zoom);
-    return vals.map((v2) => {
-      return v2 * scale2;
-    });
+  function toTileScale(zoom, value) {
+    return value * 2 ** Math.abs(zoom);
   }
   const toTilePlane = (zoom, loaders) => {
     return loaders[Math.max(0, Math.abs(zoom))];
@@ -171021,7 +174167,7 @@ void main() {
     const { tileSize } = tileProps;
     const width = tileProps.extent[2];
     const height = tileProps.extent[3];
-    const [ts] = toTileScale(zoom, tileSize);
+    const ts = toTileScale(zoom, tileSize);
     const y2 = Math.ceil(height / ts);
     const x2 = Math.ceil(width / ts);
     return {
@@ -171114,8 +174260,7 @@ void main() {
       mainSettingsOmeList,
       mainSettingsDicomList
     ]);
-    const { handles, directory_handle } = props;
-    handles ? handles[0] : null;
+    const { directory_handle } = props;
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
     const imageChannels = reactExports.useMemo(() => {
@@ -171137,10 +174282,33 @@ void main() {
     const [nowMs, setNowMs] = reactExports.useState(() => performance.now());
     const [cRange, setCRange] = reactExports.useState(null);
     const [exportError, setExportError] = reactExports.useState(null);
+    const [jpegTransfer, setJpegTransfer] = reactExports.useState(() => jpegTransferFromImageSource(useDocumentStore.getState().metadata.imageSource));
+    const [mode, setMode] = reactExports.useState(() => {
+      if (exportMode === "remote-url") return "remote-url";
+      if (isJpegOmeTiffImageSource(useDocumentStore.getState().metadata.imageSource)) {
+        return "jpeg-ome-tiff";
+      }
+      return exportMode;
+    });
+    const [exportArmed, setExportArmed] = reactExports.useState(false);
+    const armedSnapshotRef = reactExports.useRef(null);
+    const docTransfer = jpegTransferFromImageSource(useDocumentStore((s2) => s2.metadata.imageSource));
+    const canUpdateDocumentOnly = !!props.onDocumentOnlyUpdate && mode === "jpeg-pyramid" && jpegTransfer === docTransfer;
+    const armExport = () => {
+      armedSnapshotRef.current = {
+        omeLoaderEntries,
+        dicomIndexList
+      };
+      setExportArmed(true);
+    };
     const hasChannelGroup = channelGroups.length > 0 && channelGroups.some((g2) => g2.channels.length > 0);
     reactExports.useEffect(() => {
-      if (exportMode === "remote-url") {
+      if (mode === "remote-url" || mode === "jpeg-ome-tiff") {
         setCRange([]);
+        return;
+      }
+      if (!exportArmed) {
+        setCRange(null);
         return;
       }
       if (!hasChannelGroup) {
@@ -171149,38 +174317,51 @@ void main() {
         return;
       }
       setExportError(null);
-      createCRange(setCRange, channelGroups, imageChannels, directory_handle);
+      let cancelled = false;
+      void createCRange(channelGroups, imageChannels, directory_handle, jpegTransfer).then((range2) => {
+        if (!cancelled) setCRange(range2);
+      }).catch((e2) => {
+        if (cancelled) return;
+        console.error("[minerva] jpeg export setup failed", e2);
+        setExportError(e2 instanceof Error ? e2.message : "Failed to prepare JPEG export");
+      });
+      return () => {
+        cancelled = true;
+      };
     }, [
       channelGroups,
       imageChannels,
       directory_handle,
       hasChannelGroup,
-      exportMode
+      mode,
+      exportArmed,
+      jpegTransfer
     ]);
     const loader = reactExports.useMemo(() => mainSettingsList.length > 0 ? mainSettingsList[0].loader.data : null, [
       mainSettingsList
     ]);
     const state = reactExports.useMemo(() => {
-      if (exportMode === "remote-url") return null;
+      if (mode !== "jpeg-pyramid" || !exportArmed) return null;
       if (loader === null || cRange === null) {
         return null;
       }
-      const init = initialize({
+      const init2 = initialize({
         loader,
         cRange
       });
-      if (isFullState(init) && (loader == null ? void 0 : loader.length)) {
-        return init;
+      if (isFullState(init2) && (loader == null ? void 0 : loader.length)) {
+        return init2;
       }
       return null;
     }, [
       loader,
       cRange,
-      exportMode
+      mode,
+      exportArmed
     ]);
     const stopExport = props.stopExport;
     reactExports.useEffect(() => {
-      if (exportMode !== "remote-url") return;
+      if (mode !== "remote-url") return;
       if (exportError) return;
       let cancelled = false;
       const wallStart = performance.now();
@@ -171212,13 +174393,98 @@ void main() {
         cancelled = true;
       };
     }, [
-      exportMode,
+      mode,
       directory_handle,
       exportError
     ]);
     reactExports.useEffect(() => {
-      if (exportMode === "remote-url") return;
-      if (exportError) return;
+      if (mode !== "jpeg-ome-tiff" || !exportArmed || exportError) return;
+      const snap = armedSnapshotRef.current;
+      if (!snap) return;
+      let cancelled = false;
+      let finishedOk = false;
+      const abort = new AbortController();
+      const wallStart = performance.now();
+      const loaderEntries = snap.omeLoaderEntries.length > 0 ? snap.omeLoaderEntries : snap.dicomIndexList.filter((d2) => d2.sourceImageId).map((d2) => ({
+        loader: d2.loader,
+        sourceImageId: d2.sourceImageId
+      }));
+      const imagesSnapshot = useDocumentStore.getState().images;
+      const channelGroupsSnapshot = useDocumentStore.getState().channelGroups;
+      setProgress({
+        completed: 0,
+        total: 1,
+        done: false,
+        startedAt: wallStart
+      });
+      const etaInterval = window.setInterval(() => {
+        if (!cancelled) setNowMs(performance.now());
+      }, 1e3);
+      void (async () => {
+        try {
+          const remappedImages = await exportJpegOmeTiffStory({
+            directory: directory_handle,
+            omeLoaderEntries: loaderEntries,
+            images: imagesSnapshot,
+            channelGroups: channelGroupsSnapshot,
+            transfer: jpegTransfer,
+            signal: abort.signal,
+            onProgress: (completed2, total2) => {
+              if (cancelled) return;
+              setProgress({
+                completed: completed2,
+                total: Math.max(total2, 1),
+                done: false,
+                startedAt: wallStart
+              });
+            }
+          });
+          if (cancelled) return;
+          finishedOk = true;
+          const nextSource = imageSourceFromOmeTiffTransfer(jpegTransfer);
+          const baseDoc = useDocumentStore.getState().toDocumentData();
+          const doc = {
+            ...baseDoc,
+            images: remappedImages,
+            metadata: {
+              ...baseDoc.metadata,
+              imageSource: nextSource
+            }
+          };
+          await writeStoryBundleSidecars(directory_handle, doc, {
+            mode: "jpeg-ome-tiff"
+          });
+          const store = useDocumentStore.getState();
+          store.setImages(remappedImages);
+          store.setMetadata({
+            imageSource: nextSource
+          });
+          console.log(`[minerva] jpeg-ome-tiff export took ${((performance.now() - wallStart) / 1e3).toFixed(1)}s (transfer=${jpegTransfer})`);
+          setProgress((p2) => ({
+            ...p2,
+            done: true,
+            completed: p2.total
+          }));
+        } catch (e2) {
+          if (cancelled || abort.signal.aborted) return;
+          console.error("[minerva] jpeg-ome-tiff export failed", e2);
+          setExportError(e2 instanceof Error ? e2.message : "Failed to export OME-TIFF");
+        }
+      })();
+      return () => {
+        cancelled = true;
+        window.clearInterval(etaInterval);
+        if (!finishedOk) abort.abort();
+      };
+    }, [
+      mode,
+      exportArmed,
+      exportError,
+      directory_handle,
+      jpegTransfer
+    ]);
+    reactExports.useEffect(() => {
+      if (mode !== "jpeg-pyramid" || !exportArmed || exportError) return;
       if (!state || !(loader == null ? void 0 : loader.length)) return;
       if (cRange !== null && cRange.length === 0) {
         setExportError("No exportable channels in the current channel groups.");
@@ -171246,24 +174512,32 @@ void main() {
       const run = async () => {
         let nextIndex = 0;
         let completed2 = 0;
+        let exportFailed = null;
         const concurrency = Math.min(jpegExportConcurrency(), total2);
+        const failExport = (e2) => {
+          if (exportFailed || cancelled) return;
+          exportFailed = e2 instanceof Error ? e2 : new Error(String(e2 ?? "JPEG export failed"));
+          abort.abort();
+        };
         const workerLoop = async () => {
           while (!cancelled && !abort.signal.aborted) {
             const i2 = nextIndex++;
             if (i2 >= total2) return;
             const index2 = indices[i2];
             try {
-              await exportTile(index2, loader, abort.signal);
+              await exportTile(index2, loader, abort.signal, jpegTransfer);
             } catch (e2) {
               if (abort.signal.aborted || cancelled) return;
               console.error(e2 instanceof Error ? e2.message : e2);
               try {
-                await exportTile(index2, loader, abort.signal);
+                await exportTile(index2, loader, abort.signal, jpegTransfer);
               } catch (e22) {
                 console.error(e22 instanceof Error ? e22.message : e22);
+                failExport(e22);
+                return;
               }
             }
-            if (cancelled) return;
+            if (cancelled || abort.signal.aborted) return;
             completed2 += 1;
             setProgress({
               completed: completed2,
@@ -171276,27 +174550,46 @@ void main() {
         await Promise.all(Array.from({
           length: concurrency
         }, () => workerLoop()));
-        if (!cancelled) {
-          finishedOk = true;
-          console.log(`[minerva] jpeg-export took ${((performance.now() - wallStart) / 1e3).toFixed(1)}s (${concurrency} workers, ${total2} tiles)`);
-          try {
-            await writeStoryBundleSidecars(directory_handle, useDocumentStore.getState().toDocumentData(), {
-              mode: "jpeg-pyramid"
-            });
-          } catch (e2) {
-            console.error("[minerva] failed to write story bundle sidecars", e2);
-            setExportError(e2 instanceof Error ? e2.message : "Failed to write document.json / index.html");
-            return;
-          }
-          setProgress({
-            completed: total2,
-            total: total2,
-            done: true,
-            startedAt: wallStart
-          });
+        if (cancelled) return;
+        if (exportFailed) {
+          console.error("[minerva] jpeg-export failed", exportFailed);
+          setExportError(exportFailed.message);
+          return;
         }
+        finishedOk = true;
+        console.log(`[minerva] jpeg-export took ${((performance.now() - wallStart) / 1e3).toFixed(1)}s (${concurrency} workers, ${total2} tiles, transfer=${jpegTransfer}, encoder=jsquash)`);
+        try {
+          const nextSource = imageSourceFromJpegTransfer(jpegTransfer);
+          const doc = useDocumentStore.getState().toDocumentData();
+          await writeStoryBundleSidecars(directory_handle, {
+            ...doc,
+            metadata: {
+              ...doc.metadata,
+              imageSource: nextSource
+            }
+          }, {
+            mode: "jpeg-pyramid"
+          });
+          useDocumentStore.getState().setMetadata({
+            imageSource: nextSource
+          });
+        } catch (e2) {
+          console.error("[minerva] failed to write story bundle sidecars", e2);
+          setExportError(e2 instanceof Error ? e2.message : "Failed to write document.json / index.html");
+          return;
+        }
+        setProgress({
+          completed: total2,
+          total: total2,
+          done: true,
+          startedAt: wallStart
+        });
       };
-      run();
+      void run().catch((e2) => {
+        if (cancelled) return;
+        console.error("[minerva] jpeg-export failed", e2);
+        setExportError(e2 instanceof Error ? e2.message : "JPEG export failed");
+      });
       return () => {
         cancelled = true;
         window.clearInterval(etaInterval);
@@ -171308,7 +174601,9 @@ void main() {
       cRange,
       exportError,
       directory_handle,
-      exportMode
+      mode,
+      exportArmed,
+      jpegTransfer
     ]);
     const { completed, total, done, startedAt } = progress;
     let ratio = done ? 1 : 0;
@@ -171349,7 +174644,7 @@ void main() {
             children: "Dismiss"
           })
         ]
-      }) : exportMode === "remote-url" ? jsxRuntimeExports.jsxs("div", {
+      }) : mode === "remote-url" ? jsxRuntimeExports.jsxs("div", {
         className: styles$b.exportStatus,
         children: [
           jsxRuntimeExports.jsx("div", {
@@ -171362,6 +174657,75 @@ void main() {
             onClick: stopExport,
             children: "Dismiss"
           }) : null
+        ]
+      }) : !exportArmed ? jsxRuntimeExports.jsxs("div", {
+        className: styles$b.exportStatus,
+        children: [
+          jsxRuntimeExports.jsx("div", {
+            className: styles$b.exportMessage,
+            children: mode === "jpeg-ome-tiff" ? "Export JPEG OME-TIFF" : "Export JPEG pyramid"
+          }),
+          jsxRuntimeExports.jsxs("label", {
+            className: styles$b.transferToggle,
+            children: [
+              jsxRuntimeExports.jsx("input", {
+                type: "checkbox",
+                checked: mode === "jpeg-ome-tiff",
+                onChange: (e2) => {
+                  if (e2.target.checked) {
+                    setMode("jpeg-ome-tiff");
+                  } else {
+                    setMode("jpeg-pyramid");
+                  }
+                }
+              }),
+              jsxRuntimeExports.jsx("span", {
+                children: "Single-file OME-TIFF"
+              })
+            ]
+          }),
+          jsxRuntimeExports.jsxs("label", {
+            className: styles$b.transferToggle,
+            children: [
+              jsxRuntimeExports.jsx("input", {
+                type: "checkbox",
+                checked: jpegTransfer === "cube-root",
+                onChange: (e2) => setJpegTransfer(e2.target.checked ? "cube-root" : "contrast")
+              }),
+              jsxRuntimeExports.jsx("span", {
+                children: "Cube-root intensity encoding"
+              })
+            ]
+          }),
+          jsxRuntimeExports.jsxs("div", {
+            className: styles$b.confirmActions,
+            children: [
+              jsxRuntimeExports.jsx("button", {
+                type: "button",
+                className: styles$b.dismissButton,
+                onClick: armExport,
+                children: "Start export"
+              }),
+              canUpdateDocumentOnly ? jsxRuntimeExports.jsx("button", {
+                type: "button",
+                className: styles$b.dismissButton,
+                onClick: () => {
+                  var _a2;
+                  void ((_a2 = props.onDocumentOnlyUpdate) == null ? void 0 : _a2.call(props).catch((e2) => {
+                    console.error("[minerva] failed to write story bundle sidecars", e2);
+                    setExportError(e2 instanceof Error ? e2.message : "Failed to write document.json / index.html");
+                  }));
+                },
+                children: "Update document.json only"
+              }) : null,
+              jsxRuntimeExports.jsx("button", {
+                type: "button",
+                className: styles$b.dismissButton,
+                onClick: stopExport,
+                children: "Cancel"
+              })
+            ]
+          })
         ]
       }) : jsxRuntimeExports.jsxs("div", {
         className: styles$b.exportStatus,
@@ -172718,7 +176082,6 @@ void main() {
       hide2 ? styles$5.hide : "",
       styles$5.core
     ].join(" ");
-    console.log(hideClass);
     const allGroups = channelGroups.length > 0 ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         jsxRuntimeExports.jsx("div", {
@@ -237406,13 +240769,13 @@ void main() {
         key: "write",
         value: function write(stream, vrType, values, syntax, writeOptions) {
           var vr = ValueRepresentation.createByTypeString(vrType), useSyntax = DicomMessage$1._normalizeSyntax(syntax);
-          var implicit = useSyntax == IMPLICIT_LITTLE_ENDIAN ? true : false, isLittleEndian = useSyntax == IMPLICIT_LITTLE_ENDIAN || useSyntax == EXPLICIT_LITTLE_ENDIAN$1 ? true : false, isEncapsulated = this.isPixelDataTag() && DicomMessage$1.isEncapsulated(syntax);
+          var implicit = useSyntax == IMPLICIT_LITTLE_ENDIAN ? true : false, isLittleEndian2 = useSyntax == IMPLICIT_LITTLE_ENDIAN || useSyntax == EXPLICIT_LITTLE_ENDIAN$1 ? true : false, isEncapsulated = this.isPixelDataTag() && DicomMessage$1.isEncapsulated(syntax);
           var oldEndian = stream.isLittleEndian;
-          stream.setEndian(isLittleEndian);
+          stream.setEndian(isLittleEndian2);
           stream.writeUint16(this.group());
           stream.writeUint16(this.element());
           var tagStream = new WriteBufferStream(256), valueLength;
-          tagStream.setEndian(isLittleEndian);
+          tagStream.setEndian(isLittleEndian2);
           if (vrType == "OW" || vrType == "OB" || vrType == "UN") {
             valueLength = vr.writeBytes(tagStream, values, useSyntax, isEncapsulated, writeOptions);
           } else if (vrType == "SQ") {
@@ -237758,9 +241121,9 @@ void main() {
             includeUntilTagValue: false
           };
           var untilTag = options.untilTag, includeUntilTagValue = options.includeUntilTagValue;
-          var implicit = syntax == IMPLICIT_LITTLE_ENDIAN ? true : false, isLittleEndian = syntax == IMPLICIT_LITTLE_ENDIAN || syntax == EXPLICIT_LITTLE_ENDIAN$1 ? true : false;
+          var implicit = syntax == IMPLICIT_LITTLE_ENDIAN ? true : false, isLittleEndian2 = syntax == IMPLICIT_LITTLE_ENDIAN || syntax == EXPLICIT_LITTLE_ENDIAN$1 ? true : false;
           var oldEndian = stream.isLittleEndian;
-          stream.setEndian(isLittleEndian);
+          stream.setEndian(isLittleEndian2);
           var tag = Tag.readTag(stream);
           if (untilTag === tag.toCleanString() && untilTag !== null) {
             if (!includeUntilTagValue) {
@@ -244149,13 +247512,17 @@ void main() {
     });
   }
   function createMultiscaleLayer(args) {
-    var _a2;
-    const selections = ((_a2 = args.settings) == null ? void 0 : _a2.selections) ?? [];
+    const base2 = args.settings;
+    const settings = args.transfer === "contrast" && Array.isArray(base2.contrastLimits) ? {
+      ...base2,
+      contrastLimits: base2.contrastLimits.map(() => JPEG_BAKED_CONTRAST_LIMIT)
+    } : base2;
+    const selections = settings.selections ?? [];
     const selectionId = selections.map(({ c: c2 }) => c2).join("-");
     const remount = args.remountKey === void 0 ? "" : `-r${args.remountKey}`;
     return new MultiscaleImageLayer({
       id: `mainLayer-${args.index}-${selectionId}${remount}`,
-      ...args.settings,
+      ...settings,
       loader: args.loader.data
     });
   }
@@ -244164,7 +247531,8 @@ void main() {
       jpegLoader: args.entry.loader.data,
       settings: args.settings,
       imagePath: args.entry.imagePath ?? ".",
-      channelFolders: args.entry.channelFolders ?? {}
+      channelFolders: args.entry.channelFolders ?? {},
+      transfer: args.entry.transfer ?? "contrast"
     });
   }
   function buildImageLayers(args) {
@@ -244182,11 +247550,14 @@ void main() {
         index: nextIndex++,
         remountKey: args.remountKey
       })),
-      ...omeLoaderEntries.map(({ loader }, i2) => createMultiscaleLayer({
+      ...omeLoaderEntries.map(({ loader, transfer }, i2) => createMultiscaleLayer({
         loader,
         settings: omeSettingsList[i2],
         index: nextIndex++,
-        remountKey: args.remountKey
+        remountKey: args.remountKey,
+        ...transfer ? {
+          transfer
+        } : {}
       })),
       ...jpegLoaderEntries.map((entry, i2) => createEncodedImageLayer({
         entry,
@@ -244375,14 +247746,13 @@ void main() {
     const folderPrompt2 = props.exportFolderPrompt;
     const overlayOpen = exporting || !!folderPrompt2;
     const exporterProps = {
-      in_f: props.in_f,
-      handles: props.handles,
       stopExport: props.stopExport,
       viewerConfig: props.viewerConfig,
       dicomIndexList: props.dicomIndexList,
       omeLoaderEntries: props.omeLoaderEntries,
       directory_handle: props.directory_handle,
-      exportMode: props.exportMode
+      exportMode: props.exportMode,
+      onDocumentOnlyUpdate: props.onDocumentOnlyUpdate
     };
     return jsxRuntimeExports.jsxs("div", {
       className: styles$3.modeViewport,
@@ -244470,12 +247840,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-07T15:39:49.359Z");
+    const label2 = utcShort("2026-08-13T13:49:00.140Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-07T15:39:49.359Z",
+      title: "2026-08-13T13:49:00.140Z",
       children: [
         "Updated ",
         label2,
@@ -245524,8 +248894,8 @@ void main() {
       ]
     });
   }
-  const _useState = (init) => {
-    const [val, set2] = reactExports.useState(init);
+  const _useState = (init2) => {
+    const [val, set2] = reactExports.useState(init2);
     const new_set = (e2) => {
       const form = e2.target;
       set2(form.value);
@@ -246394,10 +249764,57 @@ void main() {
       }
     }
   }
+  function expandCubeRootTileData(data2) {
+    const out = new Uint16Array(data2.length);
+    for (let i2 = 0; i2 < data2.length; i2++) {
+      out[i2] = decodeCubeRootU8ToU16(data2[i2]);
+    }
+    return out;
+  }
+  function expandContrastBakedTileData(data2) {
+    const out = new Uint16Array(data2.length);
+    for (let i2 = 0; i2 < data2.length; i2++) {
+      out[i2] = (data2[i2] & 255) << 8;
+    }
+    return out;
+  }
+  function wrapOmeLoaderJpegExport(loader, transfer) {
+    var _a2;
+    const expand = transfer === "cube-root" ? expandCubeRootTileData : expandContrastBakedTileData;
+    const data2 = (_a2 = loader.data) == null ? void 0 : _a2.map((plane) => {
+      var _a3;
+      const getTile = (_a3 = plane.getTile) == null ? void 0 : _a3.bind(plane);
+      if (!getTile) return plane;
+      const wrapped = {
+        ...plane,
+        dtype: "Uint16",
+        getTile: async (args) => {
+          const tile = await getTile(args);
+          const raw2 = tile.data;
+          return {
+            ...tile,
+            data: expand(raw2)
+          };
+        }
+      };
+      return wrapped;
+    });
+    return data2 ? {
+      ...loader,
+      data: data2
+    } : loader;
+  }
   const omeLoaderRole = (im) => resolveImageContentRole({
     contentRole: im.contentRole,
     channels: im.channels ?? []
   }) === "segmentation" ? "segmentation" : "intensity";
+  function resolveOmeSourceUrl(documentUrl, sourceUrl) {
+    const trimmed = sourceUrl.trim();
+    if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("blob:") || trimmed.startsWith("file:")) {
+      return trimmed;
+    }
+    return new URL(trimmed, new URL(documentUrl, window.location.href)).href;
+  }
   async function hydrateDocumentLoaders(images, opts = {}) {
     const jpegLoaderEntries = [];
     const omeLoaderEntries = [];
@@ -246411,10 +249828,13 @@ void main() {
     const canAccess = requestPermission ? ensureFileHandlePermission : hasFileHandlePermission;
     const channelGroups = opts.channelGroups ?? [];
     const documentUrl = opts.documentUrl ?? window.location.href;
+    const transfer = jpegTransferFromImageSource(opts.imageSource);
+    const wrapOmeJpeg = isJpegOmeTiffImageSource(opts.imageSource);
     jpegLoaderEntries.push(...await jpegLoaderEntriesFromImages({
       images,
       channelGroups,
       documentUrl,
+      transfer,
       ...opts.fetchTile ? {
         fetchTile: opts.fetchTile
       } : {},
@@ -246429,14 +249849,17 @@ void main() {
         case "url": {
           const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
             kind: "url",
-            url: im.source.url,
+            url: resolveOmeSourceUrl(documentUrl, im.source.url),
             ...pool ? {
               pool
             } : {}
           });
           omeLoaderEntries.push({
-            loader,
-            sourceImageId: im.id
+            loader: wrapOmeJpeg ? wrapOmeLoaderJpegExport(loader, transfer) : loader,
+            sourceImageId: im.id,
+            ...wrapOmeJpeg ? {
+              transfer
+            } : {}
           });
           break;
         }
@@ -246465,8 +249888,11 @@ void main() {
             } : {}
           });
           omeLoaderEntries.push({
-            loader,
-            sourceImageId: im.id
+            loader: wrapOmeJpeg ? wrapOmeLoaderJpegExport(loader, transfer) : loader,
+            sourceImageId: im.id,
+            ...wrapOmeJpeg ? {
+              transfer
+            } : {}
           });
           break;
         }
@@ -247071,7 +250497,8 @@ void main() {
       requestPermission,
       mode: "read"
     };
-    const root2 = await getStoryRootHandle(storyId, rootOpts);
+    const storedRoot = await getStoryRootHandle(storyId, rootOpts);
+    const root2 = storedRoot && await isStoryRootHandleUsable(storedRoot) ? storedRoot : void 0;
     const missingStoryRoot = storyNeedsLocalJpegRoot(images) && !root2;
     const result = await hydrateDocumentLoaders(images, {
       channelGroups: (opts == null ? void 0 : opts.channelGroups) ?? [],
@@ -247079,6 +250506,7 @@ void main() {
       pool: new Pool(),
       requestPermission,
       includeLocal: true,
+      imageSource: useDocumentStore.getState().metadata.imageSource,
       ...root2 ? {
         fetchTile: tileFetcherForDirectory(root2),
         existingPyramidFolders: await listExistingPyramidFolders(root2)
@@ -247094,6 +250522,16 @@ void main() {
     clearOmeGmmContrastCache();
   }
   const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
+  async function pickExportFolder() {
+    try {
+      return await showDirectoryPicker({
+        mode: "readwrite"
+      });
+    } catch (e2) {
+      if (e2 instanceof DOMException && e2.name === "AbortError") return null;
+      throw e2;
+    }
+  }
   const Content = (props) => {
     const { handleKeys, useLaunchQueue = false } = props;
     const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
@@ -247188,6 +250626,7 @@ void main() {
     }));
     const [ioState, setIoState] = reactExports.useState("IDLE");
     const [exportMode, setExportMode] = reactExports.useState("jpeg-pyramid");
+    const [exportAllowDocumentOnly, setExportAllowDocumentOnly] = reactExports.useState(false);
     const [viewerRemountKey, setViewerRemountKey] = reactExports.useState(0);
     const [directory_handle, setDirectoryHandle] = reactExports.useState(null);
     const [exportFolderPrompt, setExportFolderPrompt] = reactExports.useState(null);
@@ -247196,27 +250635,14 @@ void main() {
       const doc = useDocumentStore.getState();
       const storyId = doc.activeStoryId;
       if (mode === "jpeg-pyramid") {
-        const needed = await neededJpegPyramidFolderNames(doc.channelGroups, doc.images);
+        const needed = await neededJpegPyramidFolderNames(doc.channelGroups, doc.images, jpegTransferFromImageSource(doc.metadata.imageSource));
         const existing = await listExistingPyramidFolders(dirHandle);
-        if (needed.size === 0 || [
+        const foldersReady = needed.size === 0 || [
           ...needed
-        ].every((name2) => existing.has(name2))) {
-          try {
-            await writeStoryBundleSidecars(dirHandle, doc.toDocumentData(), {
-              mode: "jpeg-pyramid"
-            });
-            if (storyId) await setStoryRootHandle(storyId, dirHandle);
-            window.alert("Updated document.json in the export folder.");
-          } catch (e2) {
-            console.error("[minerva] sidecar-only export failed", e2);
-            window.alert(e2 instanceof Error ? e2.message : "Failed to update document.json.");
-          }
-          return;
-        }
-        if (omeLoaderEntries.length === 0 && dicomIndexList.length === 0) {
-          window.alert("Channel contrast changed. Re-export needs the original image, or match the existing pyramid contrast.");
-          return;
-        }
+        ].every((name2) => existing.has(name2));
+        setExportAllowDocumentOnly(foldersReady);
+      } else {
+        setExportAllowDocumentOnly(false);
       }
       if (storyId) {
         try {
@@ -247228,16 +250654,6 @@ void main() {
       setExportMode(mode);
       setDirectoryHandle(dirHandle);
       setIoState("EXPORTING");
-    };
-    const pickExportFolder = async () => {
-      try {
-        return await showDirectoryPicker({
-          mode: "readwrite"
-        });
-      } catch (e2) {
-        if (e2 instanceof DOMException && e2.name === "AbortError") return null;
-        throw e2;
-      }
     };
     const startExport = async (mode = "jpeg-pyramid") => {
       if (!hasDirectoryPickerAccess()) {
@@ -247257,11 +250673,18 @@ void main() {
           return;
         }
       }
+      if (mode === "jpeg-ome-tiff") {
+        if (omeLoaderEntries.length === 0 && dicomIndexList.length === 0) {
+          window.alert("OME-TIFF export needs the original OME-TIFF or DICOM image loaded (not a JPEG-only story).");
+          return;
+        }
+      }
       const storyId = doc.activeStoryId;
-      const existingRoot = mode === "jpeg-pyramid" && storyId ? await getStoryRootHandle(storyId, {
+      const storedRoot = (mode === "jpeg-pyramid" || mode === "jpeg-ome-tiff") && storyId ? await getStoryRootHandle(storyId, {
         requestPermission: true,
         mode: "readwrite"
       }) : void 0;
+      const existingRoot = storedRoot && await isStoryRootHandleUsable(storedRoot) ? storedRoot : void 0;
       if (existingRoot) {
         setExportFolderPrompt({
           mode,
@@ -247282,10 +250705,11 @@ void main() {
         if (modeAtStop === "jpeg-pyramid") {
           try {
             const doc = useDocumentStore.getState();
-            const root2 = directoryAtStop ?? (doc.activeStoryId ? await getStoryRootHandle(doc.activeStoryId, {
+            const storedRoot = directoryAtStop ?? (doc.activeStoryId ? await getStoryRootHandle(doc.activeStoryId, {
               requestPermission: true,
               mode: "read"
             }) : void 0);
+            const root2 = storedRoot && await isStoryRootHandleUsable(storedRoot) ? storedRoot : void 0;
             if (root2 && doc.images.some((im) => {
               var _a2;
               return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "jpeg";
@@ -247296,7 +250720,8 @@ void main() {
                 documentUrl: window.location.href,
                 activeGroupId: activeGroupIdAtStop,
                 fetchTile: tileFetcherForDirectory(root2),
-                existingPyramidFolders: await listExistingPyramidFolders(root2)
+                existingPyramidFolders: await listExistingPyramidFolders(root2),
+                transfer: jpegTransferFromImageSource(doc.metadata.imageSource)
               });
               if (entries.length > 0) setJpegLoaderEntries(entries);
             }
@@ -247702,7 +251127,8 @@ void main() {
         const jpegEntries = await jpegLoaderEntriesFromImages({
           images: data2.images,
           channelGroups: data2.channelGroups,
-          documentUrl
+          documentUrl,
+          transfer: jpegTransferFromImageSource(data2.metadata.imageSource)
         });
         if (loadGeneration !== jpegUrlLoadGenerationRef.current) return;
         setJpegLoaderEntries(jpegEntries);
@@ -248364,7 +251790,8 @@ void main() {
       omeLoaderEntries,
       onEnsureChannelGmmContrastLimits
     ]);
-    const contrastEditable = omeLoaderEntries.length > 0 || dicomIndexList.length > 0;
+    const storyImageSource = useDocumentStore((s2) => s2.metadata.imageSource);
+    const contrastEditable = storyImageSource !== JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE && (omeLoaderEntries.length > 0 || dicomIndexList.length > 0 || jpegTransferFromImageSource(storyImageSource) === "cube-root");
     const channelProps = {
       hiddenChannel: true,
       contrastEditable,
@@ -248373,11 +251800,19 @@ void main() {
     };
     const mainProps = {
       ...channelProps,
-      in_f: fileName,
-      handles: [],
       directory_handle,
       ioState,
       exportMode,
+      onDocumentOnlyUpdate: exportAllowDocumentOnly ? async () => {
+        const handle2 = directory_handle;
+        if (!handle2) {
+          throw new Error("No export folder selected");
+        }
+        await writeStoryBundleSidecars(handle2, useDocumentStore.getState().toDocumentData(), {
+          mode: "jpeg-pyramid"
+        });
+        stopExport();
+      } : void 0,
       presenting,
       stopExport,
       exportFolderPrompt: exportFolderPrompt ? {
