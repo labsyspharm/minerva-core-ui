@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-XdUKPM5L.js","./pako.esm-KbdoS3Oq.js","./lerc-qmxGSRAe.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DKEO9sa9.js","./pako.esm-KbdoS3Oq.js","./lerc-COSrYBGA.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-C3wklIdD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CwWdPXtJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-6iXoy_Id.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CkkaNPh_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BxqtMpaJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-Da0rYve1.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-XdUKPM5L.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BqNE3b67.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-qmxGSRAe.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DKEO9sa9.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BuBlLqyt.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-COSrYBGA.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DXCMO3s5.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CVZjJlNq.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DP50wBHQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-SN9N2RBS.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -75558,40 +75558,35 @@ void main() {
     return "Uint32";
   }
   function parseFirstOmeImagePixels(imageDescription) {
+    var _a2;
     if (typeof imageDescription !== "string" || imageDescription.trim() === "") {
       return null;
     }
     const doc = new DOMParser().parseFromString(imageDescription, "application/xml");
-    const image2 = doc.querySelector("Image");
-    const pixels = image2 == null ? void 0 : image2.querySelector("Pixels");
+    const pixels = (_a2 = doc.querySelector("Image")) == null ? void 0 : _a2.querySelector("Pixels");
     if (!pixels) return null;
-    const attrNum = (name2) => {
+    const num2 = (name2) => {
       const value = pixels.getAttribute(name2);
       return value == null ? void 0 : Number(value);
     };
-    const channels2 = Array.from(pixels.querySelectorAll("Channel"));
+    const channelCount = pixels.querySelectorAll("Channel").length;
     return {
-      ID: pixels.getAttribute("ID") ?? "Pixels:0",
-      DimensionOrder: pixels.getAttribute("DimensionOrder") ?? "XYZCT",
-      Type: pixels.getAttribute("Type") ?? "uint16",
-      SizeT: attrNum("SizeT") ?? 1,
-      SizeC: attrNum("SizeC") ?? Math.max(1, channels2.length),
-      SizeZ: attrNum("SizeZ") ?? 1,
-      SizeY: attrNum("SizeY") ?? 0,
-      SizeX: attrNum("SizeX") ?? 0,
-      PhysicalSizeX: attrNum("PhysicalSizeX") ?? 1,
-      PhysicalSizeY: attrNum("PhysicalSizeY") ?? 1,
-      PhysicalSizeXUnit: pixels.getAttribute("PhysicalSizeXUnit") ?? "\xB5m",
-      PhysicalSizeYUnit: pixels.getAttribute("PhysicalSizeYUnit") ?? "\xB5m",
-      PhysicalSizeZUnit: pixels.getAttribute("PhysicalSizeZUnit") ?? "\xB5m",
-      BigEndian: false,
-      TiffData: [],
-      Channels: channels2.length > 0 ? channels2.map((ch2, i2) => ({
-        ID: ch2.getAttribute("ID") ?? `Channel:0:${i2}`,
-        Name: ch2.getAttribute("Name") ?? `Mask ${i2 + 1}`,
-        SamplesPerPixel: Number(ch2.getAttribute("SamplesPerPixel") ?? 1)
-      })) : []
+      ID: pixels.getAttribute("ID") ?? void 0,
+      Type: pixels.getAttribute("Type") ?? void 0,
+      SizeC: num2("SizeC") ?? (channelCount > 0 ? channelCount : void 0),
+      PhysicalSizeX: num2("PhysicalSizeX"),
+      PhysicalSizeY: num2("PhysicalSizeY"),
+      PhysicalSizeXUnit: pixels.getAttribute("PhysicalSizeXUnit") ?? void 0,
+      PhysicalSizeYUnit: pixels.getAttribute("PhysicalSizeYUnit") ?? void 0,
+      PhysicalSizeZUnit: pixels.getAttribute("PhysicalSizeZUnit") ?? void 0,
+      BigEndian: false
     };
+  }
+  function vivTileSize(image2) {
+    const tw = image2.getTileWidth();
+    const th2 = image2.getTileHeight();
+    const size = Math.min(tw, th2);
+    return 2 ** Math.floor(Math.log2(Math.max(1, size)));
   }
   async function readTiffRaster(image2, sample) {
     const raster = await image2.readRasters({
@@ -75604,6 +75599,73 @@ void main() {
       data: raster,
       width: raster.width ?? image2.getWidth(),
       height: raster.height ?? image2.getHeight()
+    };
+  }
+  async function readTiffTile(image2, sample, tileX, tileY, tileSize) {
+    const x0 = tileX * tileSize;
+    const y0 = tileY * tileSize;
+    const x1 = Math.min(x0 + tileSize, image2.getWidth());
+    const y1 = Math.min(y0 + tileSize, image2.getHeight());
+    const width = x1 - x0;
+    const height = y1 - y0;
+    const raster = await image2.readRasters({
+      samples: [
+        sample
+      ],
+      interleave: true,
+      window: [
+        x0,
+        y0,
+        x1,
+        y1
+      ],
+      width,
+      height
+    });
+    return {
+      data: raster,
+      width: raster.width ?? width,
+      height: raster.height ?? height
+    };
+  }
+  async function resolveMaskPyramidImages(tiff, baseImage) {
+    const images = [
+      baseImage
+    ];
+    const offsets = baseImage.fileDirectory.SubIFDs;
+    if (!Array.isArray(offsets) || offsets.length === 0) return images;
+    const internals = tiff;
+    for (const offset of offsets) {
+      const parsed = await internals.parseFileDirectoryAt(offset);
+      images.push(new GeoTIFFImage(parsed.fileDirectory, parsed.geoKeyDirectory, internals.dataView, internals.littleEndian, internals.cache, internals.source));
+    }
+    return images;
+  }
+  function maskPlaneFromImage(image2, sizeC, dtype) {
+    const width = image2.getWidth();
+    const height = image2.getHeight();
+    const tileSize = vivTileSize(image2);
+    const clampC = (c2) => Math.max(0, Math.min(sizeC - 1, c2));
+    return {
+      dtype,
+      shape: [
+        1,
+        sizeC,
+        1,
+        height,
+        width
+      ],
+      tileSize,
+      labels: [
+        "t",
+        "c",
+        "z",
+        "y",
+        "x"
+      ],
+      onTileError: () => void 0,
+      getRaster: ({ selection }) => readTiffRaster(image2, clampC(selection.c)),
+      getTile: ({ x: x2, y: y2, selection }) => readTiffTile(image2, clampC(selection.c), x2, y2, tileSize)
     };
   }
   function hasDirectoryPickerAccess() {
@@ -75707,71 +75769,41 @@ void main() {
   };
   async function maskLoaderFromBlob(inFile) {
     const tiff = await fromBlob(inFile);
-    const image2 = await tiff.getImage(0);
-    const fd2 = image2.fileDirectory;
-    const width = image2.getWidth();
-    const height = image2.getHeight();
-    const samples = fd2.SamplesPerPixel ?? 1;
+    const baseImage = await tiff.getImage(0);
+    const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
+    const fd2 = baseImage.fileDirectory;
+    const width = baseImage.getWidth();
+    const height = baseImage.getHeight();
     const dtype = dtypeFromTiffDirectory(fd2);
-    const omePixels = parseFirstOmeImagePixels(fd2.ImageDescription);
-    const sizeC = Math.max(1, (omePixels == null ? void 0 : omePixels.SizeC) ?? samples);
+    const ome = parseFirstOmeImagePixels(fd2.ImageDescription);
+    const sizeC = Math.max(1, (ome == null ? void 0 : ome.SizeC) ?? fd2.SamplesPerPixel ?? 1);
     const channels2 = Array.from({
       length: sizeC
-    }, (_2, i2) => {
-      var _a2, _b2;
-      return {
-        ID: ((_b2 = (_a2 = omePixels == null ? void 0 : omePixels.Channels) == null ? void 0 : _a2[i2]) == null ? void 0 : _b2.ID) ?? `Channel:0:${i2}`,
-        Name: sizeC === 1 ? "Mask" : `Mask ${i2 + 1}`,
-        SamplesPerPixel: 1
-      };
-    });
+    }, (_2, i2) => ({
+      ID: `Channel:0:${i2}`,
+      Name: sizeC === 1 ? "Mask" : `Mask ${i2 + 1}`,
+      SamplesPerPixel: 1
+    }));
     const pixels = {
-      ID: (omePixels == null ? void 0 : omePixels.ID) ?? "Pixels:0",
+      ID: (ome == null ? void 0 : ome.ID) ?? "Pixels:0",
       DimensionOrder: "XYZCT",
-      Type: (omePixels == null ? void 0 : omePixels.Type) ?? dtype,
+      Type: (ome == null ? void 0 : ome.Type) ?? dtype,
       SizeT: 1,
-      SizeC: channels2.length,
+      SizeC: sizeC,
       SizeZ: 1,
       SizeY: height,
       SizeX: width,
-      PhysicalSizeX: (omePixels == null ? void 0 : omePixels.PhysicalSizeX) ?? 1,
-      PhysicalSizeY: (omePixels == null ? void 0 : omePixels.PhysicalSizeY) ?? 1,
-      PhysicalSizeXUnit: (omePixels == null ? void 0 : omePixels.PhysicalSizeXUnit) ?? "\xB5m",
-      PhysicalSizeYUnit: (omePixels == null ? void 0 : omePixels.PhysicalSizeYUnit) ?? "\xB5m",
-      PhysicalSizeZUnit: (omePixels == null ? void 0 : omePixels.PhysicalSizeZUnit) ?? "\xB5m",
-      BigEndian: (omePixels == null ? void 0 : omePixels.BigEndian) ?? false,
+      PhysicalSizeX: (ome == null ? void 0 : ome.PhysicalSizeX) ?? 1,
+      PhysicalSizeY: (ome == null ? void 0 : ome.PhysicalSizeY) ?? 1,
+      PhysicalSizeXUnit: (ome == null ? void 0 : ome.PhysicalSizeXUnit) ?? "\xB5m",
+      PhysicalSizeYUnit: (ome == null ? void 0 : ome.PhysicalSizeYUnit) ?? "\xB5m",
+      PhysicalSizeZUnit: (ome == null ? void 0 : ome.PhysicalSizeZUnit) ?? "\xB5m",
+      BigEndian: (ome == null ? void 0 : ome.BigEndian) ?? false,
       TiffData: [],
-      Channels: channels2.map((ch2, i2) => ({
-        ID: ch2.ID ?? `Channel:0:${i2}`,
-        Name: ch2.Name ?? (channels2.length === 1 ? "Mask" : `Mask ${i2 + 1}`),
-        SamplesPerPixel: ch2.SamplesPerPixel ?? 1
-      }))
-    };
-    const plane = {
-      dtype,
-      shape: [
-        1,
-        channels2.length,
-        1,
-        height,
-        width
-      ],
-      tileSize: fd2.TileWidth ?? fd2.ImageWidth ?? width,
-      labels: [
-        "t",
-        "c",
-        "z",
-        "y",
-        "x"
-      ],
-      onTileError: () => void 0,
-      getRaster: ({ selection }) => readTiffRaster(image2, Math.max(0, Math.min(channels2.length - 1, selection.c))),
-      getTile: ({ selection }) => readTiffRaster(image2, Math.max(0, Math.min(channels2.length - 1, selection.c)))
+      Channels: channels2
     };
     return {
-      data: [
-        plane
-      ],
+      data: pyramidImages.map((image2) => maskPlaneFromImage(image2, channels2.length, dtype)),
       metadata: {
         ID: "Image:0",
         AquisitionDate: "",
@@ -80226,10 +80258,27 @@ void main() {
     "channel",
     "mask"
   ]));
-  const MaskVisualizationSchema = enumType([
-    "outline",
-    "randomColors"
-  ]);
+  const MaskVisualizationSchema = preprocessType((v2) => {
+    if (v2 === "outline") return {
+      style: "outline",
+      color: "white"
+    };
+    if (v2 === "randomColors") return {
+      style: "full",
+      color: "random"
+    };
+    return v2;
+  }, objectType({
+    style: enumType([
+      "outline",
+      "full"
+    ]),
+    color: enumType([
+      "white",
+      "random"
+    ]),
+    colorSeed: numberType().int().nonnegative().optional()
+  }));
   const ImageChannelSchema = objectType({
     id: IdSchema,
     index: numberType().int().min(0),
@@ -80401,7 +80450,25 @@ void main() {
       shapes: e2.shapes
     };
   }, jsonExportCoreSchema);
-  const DEFAULT_MASK_VISUALIZATION = "outline";
+  const DEFAULT_MASK_VISUALIZATION = {
+    style: "outline",
+    color: "white"
+  };
+  function withReseededRandomColors(value) {
+    let colorSeed = 1 + Math.floor(Math.random() * 16777215);
+    if (colorSeed === value.colorSeed) {
+      colorSeed = colorSeed >= 16777215 ? 1 : colorSeed + 1;
+    }
+    return {
+      ...value,
+      color: "random",
+      colorSeed
+    };
+  }
+  function normalizeMaskVisualization(value) {
+    const parsed = MaskVisualizationSchema.safeParse(value);
+    return parsed.success ? parsed.data : DEFAULT_MASK_VISUALIZATION;
+  }
   const DEFAULT_VISIBLE_INTENSITY_CHANNELS = 4;
   function resolveImageImportRole(image2) {
     const role = resolveImageContentRole(image2);
@@ -80679,9 +80746,7 @@ void main() {
     ];
   }
   function effectiveMaskVisualization(row2) {
-    if (row2.maskVisualization === "outline") return "outline";
-    if (row2.maskVisualization === "randomColors") return "randomColors";
-    return DEFAULT_MASK_VISUALIZATION;
+    return normalizeMaskVisualization(row2.maskVisualization);
   }
   function effectiveMaskVisualizationForSource(sc2, channelGroups, activeChannelGroupId) {
     const groups = activeChannelGroupId ? [
@@ -86026,8 +86091,7 @@ void main() {
       b2
     ];
   }
-  function isEdgeAt(data2, width, height, x2, y2, label2) {
-    if (label2 === 0) return false;
+  function isEdgeAt(data2, width, height, x2, y2) {
     const neighbors = [
       [
         x2 - 1,
@@ -86048,8 +86112,7 @@ void main() {
     ];
     for (const [nx, ny] of neighbors) {
       if (nx < 0 || ny < 0 || nx >= width || ny >= height) return true;
-      const ni2 = ny * width + nx;
-      if (data2[ni2] !== label2) return true;
+      if (!data2[ny * width + nx]) return true;
     }
     return false;
   }
@@ -86087,96 +86150,39 @@ void main() {
     }
     return out;
   }
-  function labelRasterToRgba(data2, width, height, visualization) {
-    const rgba = new Uint8ClampedArray(width * height * 4);
-    const n2 = width * height;
-    if (visualization === "randomColors") {
-      const colorByLabel = /* @__PURE__ */ new Map();
-      for (let i2 = 0; i2 < n2; i2++) {
-        const label2 = data2[i2];
-        if (label2 === 0) continue;
-        let rgb = colorByLabel.get(label2);
-        if (!rgb) {
-          rgb = colorFromSeed(String(label2));
-          colorByLabel.set(label2, rgb);
-        }
-        const o2 = i2 * 4;
-        rgba[o2] = rgb[0];
-        rgba[o2 + 1] = rgb[1];
-        rgba[o2 + 2] = rgb[2];
-        rgba[o2 + 3] = 200;
-      }
-      return new ImageData(rgba, width, height);
-    }
-    const edgeMask = new Uint8Array(n2);
-    for (let y2 = 0; y2 < height; y2++) {
-      for (let x2 = 0; x2 < width; x2++) {
-        const i2 = y2 * width + x2;
-        const label2 = data2[i2];
-        if (label2 === 0) continue;
-        if (isEdgeAt(data2, width, height, x2, y2, label2)) {
-          edgeMask[i2] = 1;
-        }
-      }
-    }
-    const thickEdges = dilateBinaryMask(edgeMask, width, height, 1);
-    for (let i2 = 0; i2 < n2; i2++) {
-      const label2 = data2[i2];
-      if (label2 === 0) continue;
+  function paintBinaryMask(rgba, mask2, rgb, alpha2) {
+    const [fr, fg2, fb2] = rgb;
+    for (let i2 = 0; i2 < mask2.length; i2++) {
+      if (!mask2[i2]) continue;
       const o2 = i2 * 4;
-      if (thickEdges[i2]) {
-        rgba[o2] = 255;
-        rgba[o2 + 1] = 255;
-        rgba[o2 + 2] = 255;
-        rgba[o2 + 3] = 235;
-      } else {
-        rgba[o2] = 200;
-        rgba[o2 + 1] = 220;
-        rgba[o2 + 2] = 255;
-        rgba[o2 + 3] = 36;
-      }
+      rgba[o2] = fr;
+      rgba[o2 + 1] = fg2;
+      rgba[o2 + 2] = fb2;
+      rgba[o2 + 3] = alpha2;
     }
-    return new ImageData(rgba, width, height);
   }
   function binaryMaskToRgba(data2, width, height, visualization, colorSeed) {
     const rgba = new Uint8ClampedArray(width * height * 4);
-    const [fr, fg2, fb2] = colorFromSeed(colorSeed);
-    if (visualization === "randomColors") {
-      for (let i2 = 0; i2 < width * height; i2++) {
-        if (!data2[i2]) continue;
-        const o2 = i2 * 4;
-        rgba[o2] = fr;
-        rgba[o2 + 1] = fg2;
-        rgba[o2 + 2] = fb2;
-        rgba[o2 + 3] = 170;
-      }
+    const seedKey = visualization.colorSeed != null ? `${colorSeed}:${visualization.colorSeed}` : colorSeed;
+    const rgb = visualization.color === "random" ? colorFromSeed(seedKey) : [
+      255,
+      255,
+      255
+    ];
+    const outline = visualization.style === "outline";
+    const alpha2 = outline ? 230 : 170;
+    if (!outline) {
+      paintBinaryMask(rgba, data2, rgb, alpha2);
       return new ImageData(rgba, width, height);
     }
-    const n2 = width * height;
-    const edgeMask = new Uint8Array(n2);
+    const edgeMask = new Uint8Array(width * height);
     for (let y2 = 0; y2 < height; y2++) {
       for (let x2 = 0; x2 < width; x2++) {
         const i2 = y2 * width + x2;
-        if (!data2[i2]) continue;
-        if (isEdgeAt(data2, width, height, x2, y2, 1)) edgeMask[i2] = 1;
+        if (data2[i2] && isEdgeAt(data2, width, height, x2, y2)) edgeMask[i2] = 1;
       }
     }
-    const thickEdges = dilateBinaryMask(edgeMask, width, height, 1);
-    for (let i2 = 0; i2 < n2; i2++) {
-      if (!data2[i2]) continue;
-      const o2 = i2 * 4;
-      if (thickEdges[i2]) {
-        rgba[o2] = 255;
-        rgba[o2 + 1] = 255;
-        rgba[o2 + 2] = 255;
-        rgba[o2 + 3] = 230;
-      } else {
-        rgba[o2] = fr;
-        rgba[o2 + 1] = fg2;
-        rgba[o2 + 2] = fb2;
-        rgba[o2 + 3] = 40;
-      }
-    }
+    paintBinaryMask(rgba, dilateBinaryMask(edgeMask, width, height, 1), rgb, alpha2);
     return new ImageData(rgba, width, height);
   }
   const MAX_RASTER_SIDE = 4096;
@@ -95157,39 +95163,6 @@ void main() {
       viewRect,
       imageToSam,
       samToImage
-    };
-  }
-  function canvasToFloat32Array(canvas2) {
-    const { width, height } = canvas2;
-    const ctx2 = canvas2.getContext("2d");
-    if (!ctx2) throw new Error("Could not get 2d context");
-    const imageData = ctx2.getImageData(0, 0, width, height);
-    const { data: data2 } = imageData;
-    const total = width * height * 3;
-    const float32Array = new Float32Array(total);
-    const rescale = 1 / 255;
-    const meanR = 0.485;
-    const meanG = 0.456;
-    const meanB = 0.406;
-    const stdR = 0.229;
-    const stdG = 0.224;
-    const stdB = 0.225;
-    for (let i2 = 0; i2 < width * height; i2++) {
-      const r2 = data2[i2 * 4] * rescale;
-      const g2 = data2[i2 * 4 + 1] * rescale;
-      const b2 = data2[i2 * 4 + 2] * rescale;
-      float32Array[i2] = (r2 - meanR) / stdR;
-      float32Array[width * height + i2] = (g2 - meanG) / stdG;
-      float32Array[width * height * 2 + i2] = (b2 - meanB) / stdB;
-    }
-    return {
-      float32Array,
-      shape: [
-        1,
-        3,
-        height,
-        width
-      ]
     };
   }
   function float32ArrayToCanvas(float32Array, width, height) {
@@ -168760,20 +168733,25 @@ void main() {
       ]
     });
   }
-  const channelNameInput = "_channelNameInput_gk9vh_3";
-  const channelTextStack = "_channelTextStack_gk9vh_9";
-  const channelImageSubtitle = "_channelImageSubtitle_gk9vh_18";
-  const detailTitleInput = "_detailTitleInput_gk9vh_29";
-  const channelVisibilityButton = "_channelVisibilityButton_gk9vh_53";
-  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_gk9vh_74";
-  const channelColorSwatch = "_channelColorSwatch_gk9vh_78";
-  const detailChannelRowLocked = "_detailChannelRowLocked_gk9vh_92";
-  const maskVizToggle = "_maskVizToggle_gk9vh_96";
-  const maskVizOption = "_maskVizOption_gk9vh_107";
-  const maskVizOptionActive = "_maskVizOptionActive_gk9vh_121";
-  const groupChildRow = "_groupChildRow_gk9vh_128";
-  const rootChannelRow = "_rootChannelRow_gk9vh_144";
-  const rootChannelRowInline = "_rootChannelRowInline_gk9vh_189";
+  const channelNameInput = "_channelNameInput_jvwng_3";
+  const channelTextStack = "_channelTextStack_jvwng_9";
+  const channelImageSubtitle = "_channelImageSubtitle_jvwng_18";
+  const detailTitleInput = "_detailTitleInput_jvwng_29";
+  const channelVisibilityButton = "_channelVisibilityButton_jvwng_53";
+  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_jvwng_74";
+  const channelColorSwatch = "_channelColorSwatch_jvwng_78";
+  const detailChannelRowLocked = "_detailChannelRowLocked_jvwng_92";
+  const maskVizControls = "_maskVizControls_jvwng_96";
+  const maskVizToggle = "_maskVizToggle_jvwng_104";
+  const maskVizOption = "_maskVizOption_jvwng_115";
+  const maskVizOptionActive = "_maskVizOptionActive_jvwng_134";
+  const maskVizIconOutline = "_maskVizIconOutline_jvwng_139";
+  const maskVizIconFull = "_maskVizIconFull_jvwng_140";
+  const maskVizSwatchWhite = "_maskVizSwatchWhite_jvwng_141";
+  const maskVizSwatchRandom = "_maskVizSwatchRandom_jvwng_142";
+  const groupChildRow = "_groupChildRow_jvwng_177";
+  const rootChannelRow = "_rootChannelRow_jvwng_193";
+  const rootChannelRowInline = "_rootChannelRowInline_jvwng_238";
   const row = {
     channelNameInput,
     channelTextStack,
@@ -168783,9 +168761,14 @@ void main() {
     channelVisibilityButtonHidden,
     channelColorSwatch,
     detailChannelRowLocked,
+    maskVizControls,
     maskVizToggle,
     maskVizOption,
     maskVizOptionActive,
+    maskVizIconOutline,
+    maskVizIconFull,
+    maskVizSwatchWhite,
+    maskVizSwatchRandom,
     groupChildRow,
     rootChannelRow,
     rootChannelRowInline
@@ -168880,25 +168863,71 @@ void main() {
       color2.b ?? 0
     ].map((n2) => n2.toString(16).padStart(2, "0")).join("");
   }
+  function MaskVizButton(props) {
+    return jsxRuntimeExports.jsx("button", {
+      type: "button",
+      className: props.active ? `${row.maskVizOption} ${row.maskVizOptionActive}` : row.maskVizOption,
+      "aria-pressed": props.active,
+      title: props.title ?? props.label,
+      "aria-label": props.label,
+      onClick: props.onClick,
+      children: jsxRuntimeExports.jsx("span", {
+        className: props.iconClass,
+        "aria-hidden": true
+      })
+    });
+  }
   function MaskVisualizationToggle(props) {
     const { value, onChange, ariaLabel } = props;
-    return jsxRuntimeExports.jsxs("fieldset", {
-      className: row.maskVizToggle,
-      "aria-label": ariaLabel,
+    const randomActive = value.color === "random";
+    return jsxRuntimeExports.jsxs("div", {
+      className: row.maskVizControls,
       children: [
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: value === "outline" ? `${row.maskVizOption} ${row.maskVizOptionActive}` : row.maskVizOption,
-          "aria-pressed": value === "outline",
-          onClick: () => onChange("outline"),
-          children: "Outlines"
+        jsxRuntimeExports.jsxs("fieldset", {
+          className: row.maskVizToggle,
+          "aria-label": `${ariaLabel} fill`,
+          children: [
+            jsxRuntimeExports.jsx(MaskVizButton, {
+              active: value.style === "outline",
+              label: "Outline",
+              iconClass: row.maskVizIconOutline,
+              onClick: () => onChange({
+                ...value,
+                style: "outline"
+              })
+            }),
+            jsxRuntimeExports.jsx(MaskVizButton, {
+              active: value.style === "full",
+              label: "Full",
+              iconClass: row.maskVizIconFull,
+              onClick: () => onChange({
+                ...value,
+                style: "full"
+              })
+            })
+          ]
         }),
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: value === "randomColors" ? `${row.maskVizOption} ${row.maskVizOptionActive}` : row.maskVizOption,
-          "aria-pressed": value === "randomColors",
-          onClick: () => onChange("randomColors"),
-          children: "Colors"
+        jsxRuntimeExports.jsxs("fieldset", {
+          className: row.maskVizToggle,
+          "aria-label": `${ariaLabel} color`,
+          children: [
+            jsxRuntimeExports.jsx(MaskVizButton, {
+              active: value.color === "white",
+              label: "White",
+              iconClass: row.maskVizSwatchWhite,
+              onClick: () => onChange({
+                ...value,
+                color: "white"
+              })
+            }),
+            jsxRuntimeExports.jsx(MaskVizButton, {
+              active: randomActive,
+              label: randomActive ? "Random colors, re-seed" : "Random colors",
+              title: randomActive ? "Random colors (click to re-seed)" : "Random colors",
+              iconClass: row.maskVizSwatchRandom,
+              onClick: () => onChange(withReseededRandomColors(value))
+            })
+          ]
         })
       ]
     });
@@ -173491,13 +173520,13 @@ void main() {
   }
   const MOZJPEG_COLORSPACE_GRAYSCALE = 1;
   const JPEG_EXPORT_QUALITY = 0.95;
-  function clampValue$1(x2, min2, max2) {
+  function clampValue(x2, min2, max2) {
     if (max2 === min2) return 0;
     return Math.min(255, Math.max(0, 255 * (x2 - min2) / (max2 - min2)));
   }
   function clampPixelsToRgba(out, pixels, min2, max2) {
     for (let i2 = 0; i2 < pixels.length; i2++) {
-      const clamped = clampValue$1(pixels[i2], min2, max2);
+      const clamped = clampValue(pixels[i2], min2, max2);
       const o2 = i2 * 4;
       out[o2] = clamped;
       out[o2 + 1] = clamped;
@@ -176180,198 +176209,261 @@ void main() {
     });
   });
   LoadingWidget.displayName = "LoadingWidget";
-  async function fetchPlaneRaster(loader, sourceIndex, prefs = {}) {
-    var _a2;
-    const planes = loader.data;
-    if (!(planes == null ? void 0 : planes.length)) return null;
-    const first = planes[0];
-    const cIdx = first.labels.indexOf("c");
-    const channelCount = cIdx >= 0 ? first.shape[cIdx] : 1;
-    if (sourceIndex < 0 || sourceIndex >= channelCount) return null;
-    const preferCoarsest = prefs.preferCoarsest ?? false;
-    const order2 = preferCoarsest ? [
-      ...planes.keys()
-    ].reverse() : [
-      ...planes.keys()
-    ];
-    for (const i2 of order2) {
-      const plane = planes[i2];
-      try {
-        const raster = await plane.getRaster({
-          selection: {
-            t: 0,
-            z: 0,
-            c: sourceIndex
-          }
-        });
-        if ((_a2 = raster == null ? void 0 : raster.data) == null ? void 0 : _a2.length) return {
-          raster,
-          plane
-        };
-      } catch {
-      }
+  const MASK_VS = `#version 300 es
+#define SHADER_NAME mask-bitmask-layer-vertex-shader
+
+in vec2 texCoords;
+in vec3 positions;
+in vec3 positions64Low;
+in vec3 instancePickingColors;
+out vec2 vTexCoord;
+
+void main(void) {
+  geometry.worldPosition = positions;
+  geometry.uv = texCoords;
+  geometry.pickingColor = instancePickingColors;
+  gl_Position = project_position_to_clipspace(positions, positions64Low, vec3(0.), geometry.position);
+  DECKGL_FILTER_GL_POSITION(gl_Position, geometry);
+  vTexCoord = texCoords;
+  vec4 color = vec4(0.);
+  DECKGL_FILTER_COLOR(color, geometry);
+}
+`;
+  const MASK_FS = `#version 300 es
+#define SHADER_NAME mask-bitmask-layer-fragment-shader
+
+precision highp float;
+precision highp int;
+precision highp SAMPLER_TYPE;
+
+uniform SAMPLER_TYPE channel0;
+uniform SAMPLER_TYPE channel1;
+uniform SAMPLER_TYPE channel2;
+uniform SAMPLER_TYPE channel3;
+uniform SAMPLER_TYPE channel4;
+uniform SAMPLER_TYPE channel5;
+
+uniform bool uOutline;
+uniform bool uRandomColors;
+uniform float uColorSeed;
+uniform vec2 uTexelSize;
+uniform float opacity;
+
+in vec2 vTexCoord;
+out vec4 fragColor;
+
+uint hashLabel(uint x) {
+  x ^= x >> 16u;
+  x *= 0x7feb352du;
+  x ^= x >> 15u;
+  x *= 0x846ca68bu;
+  x ^= x >> 16u;
+  return x;
+}
+
+vec3 randomColor(uint label) {
+  uint h = hashLabel(label ^ uint(uColorSeed));
+  return vec3(
+    float(50u + (h & 0x9fu)) / 255.0,
+    float(50u + ((h >> 8u) & 0x9fu)) / 255.0,
+    float(50u + ((h >> 16u) & 0x9fu)) / 255.0
+  );
+}
+
+bool isInteriorEdge(uint label, vec2 coord) {
+  uint n = uint(texture(channel0, coord + vec2(0.0, uTexelSize.y)).r);
+  uint s = uint(texture(channel0, coord - vec2(0.0, uTexelSize.y)).r);
+  uint e = uint(texture(channel0, coord + vec2(uTexelSize.x, 0.0)).r);
+  uint w = uint(texture(channel0, coord - vec2(uTexelSize.x, 0.0)).r);
+  return n != label || s != label || e != label || w != label;
+}
+
+void main() {
+  uint label = uint(texture(channel0, vTexCoord).r);
+  if (label == 0u) discard;
+  if (uOutline && !isInteriorEdge(label, vTexCoord)) discard;
+
+  vec3 rgb = uRandomColors ? randomColor(label) : vec3(1.0);
+  float a = (uOutline ? 235.0 : 200.0) / 255.0;
+  fragColor = vec4(rgb, a * opacity);
+
+  geometry.uv = vTexCoord;
+  DECKGL_FILTER_COLOR(fragColor, geometry);
+}
+`;
+  const BITMASK_PROPS = {
+    dtype: "Uint32",
+    interpolation: "nearest",
+    channelsVisible: [
+      true
+    ],
+    contrastLimits: [
+      [
+        0,
+        1
+      ]
+    ],
+    coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+    pickable: false,
+    opacity: 1
+  };
+  const XRLayerBase = XRLayer;
+  const layerGetShaders = Object.getPrototypeOf(XRLayerBase.prototype).getShaders;
+  class MaskBitmaskLayer extends XRLayerBase {
+    getShaders() {
+      return layerGetShaders.call(this, {
+        vs: MASK_VS,
+        fs: MASK_FS,
+        modules: [
+          project32,
+          picking
+        ],
+        defines: {
+          SAMPLER_TYPE: "usampler2D"
+        }
+      });
     }
-    return null;
+    draw(opts) {
+      const { textures, model } = this.state;
+      if (!textures || !model) return;
+      const channelData = this.props.channelData;
+      const w2 = Math.max(1, (channelData == null ? void 0 : channelData.width) ?? 1);
+      const h2 = Math.max(1, (channelData == null ? void 0 : channelData.height) ?? 1);
+      const viz = this.props.visualization ?? DEFAULT_MASK_VISUALIZATION;
+      model.setUniforms({
+        ...opts.uniforms,
+        uOutline: viz.style === "outline",
+        uRandomColors: viz.color === "random",
+        uColorSeed: viz.colorSeed ?? 0,
+        uTexelSize: [
+          1 / w2,
+          1 / h2
+        ],
+        opacity: this.props.opacity ?? 1
+      }, {
+        disableWarnings: true
+      });
+      model.setBindings(textures);
+      model.draw(this.context.renderPass);
+    }
   }
-  function rasterToUint16Array(data2) {
-    if (data2 instanceof Uint16Array) return data2;
-    const out = new Uint16Array(data2.length);
-    if (data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray) {
-      for (let i2 = 0; i2 < data2.length; i2++) out[i2] = data2[i2] << 8;
-      return out;
-    }
+  __publicField(MaskBitmaskLayer, "layerName", "MaskBitmaskLayer");
+  __publicField(MaskBitmaskLayer, "defaultProps", {
+    ...BITMASK_PROPS,
+    visualization: DEFAULT_MASK_VISUALIZATION
+  });
+  function asLabelUint32(data2) {
+    if (data2 instanceof Uint32Array) return data2;
+    const out = new Uint32Array(data2.length);
     for (let i2 = 0; i2 < data2.length; i2++) {
       const v2 = data2[i2];
-      out[i2] = Number.isFinite(v2) ? Math.max(0, Math.min(65535, Math.round(v2))) : 0;
+      out[i2] = Number.isFinite(v2) ? Math.max(0, Math.round(v2)) : 0;
     }
     return out;
   }
-  function rasterToLabelArray(data2) {
-    if (data2 instanceof Uint8Array || data2 instanceof Uint16Array || data2 instanceof Uint32Array) {
-      return data2;
-    }
-    return rasterToUint16Array(data2);
-  }
-  async function fetchLabelRasterForSourceIndex(loader, sourceIndex) {
-    const hit = await fetchPlaneRaster(loader, sourceIndex, {
-      preferCoarsest: false
-    });
-    if (!hit) return null;
-    const { raster, plane } = hit;
-    const data2 = rasterToLabelArray(raster.data);
-    const width = raster.width ?? plane.shape[plane.labels.indexOf("x")] ?? 0;
-    const height = raster.height ?? plane.shape[plane.labels.indexOf("y")] ?? 0;
-    if (width <= 0 || height <= 0) return null;
+  function planeSize(plane) {
+    const xi2 = plane.labels.indexOf("x");
+    const yi2 = plane.labels.indexOf("y");
     return {
-      data: data2,
-      width,
-      height
+      width: xi2 >= 0 ? plane.shape[xi2] : 0,
+      height: yi2 >= 0 ? plane.shape[yi2] : 0
     };
   }
-  function clampValue(x2, min2, max2) {
-    if (max2 <= min2) return min2;
-    return Math.min(255, Math.max(0, Math.round(255 * (x2 - min2) / (max2 - min2))));
-  }
-  function pickPyramidLevel(levels, viewRect, samSize) {
-    const viewW = viewRect.maxX - viewRect.minX;
-    const viewH = viewRect.maxY - viewRect.minY;
-    const longerSide = Math.max(viewW, viewH);
-    if (longerSide <= 0) return 0;
-    const idealLevel = Math.max(0, Math.floor(Math.log2(longerSide / samSize)));
-    return Math.min(idealLevel, levels.length - 1);
-  }
-  function createSam2ImageFetcher(loader, settings, imageWidth, imageHeight) {
-    var _a2;
-    if (!((_a2 = loader == null ? void 0 : loader.data) == null ? void 0 : _a2.length) || !settings) return null;
-    const SAM_SIZE = 1024;
-    return async (viewRect) => {
-      Math.max(1, viewRect.maxX - viewRect.minX);
-      Math.max(1, viewRect.maxY - viewRect.minY);
-      const level = pickPyramidLevel(loader.data, viewRect, SAM_SIZE);
-      const plane = loader.data[level];
-      const { tileSize } = plane;
-      const labels = Array.from(plane.labels ?? []);
-      const shape = plane.shape ?? [];
-      const xIdx = labels.indexOf("x") >= 0 ? labels.indexOf("x") : shape.length - 1;
-      const yIdx = labels.indexOf("y") >= 0 ? labels.indexOf("y") : shape.length - 2;
-      const levelW = shape[xIdx] ?? imageWidth;
-      const levelH = shape[yIdx] ?? imageHeight;
-      const scaleX2 = levelW / imageWidth;
-      const scaleY2 = levelH / imageHeight;
-      const lvlMinX = Math.max(0, Math.floor(viewRect.minX * scaleX2));
-      const lvlMinY = Math.max(0, Math.floor(viewRect.minY * scaleY2));
-      const lvlMaxX = Math.min(levelW, Math.ceil(viewRect.maxX * scaleX2));
-      const lvlMaxY = Math.min(levelH, Math.ceil(viewRect.maxY * scaleY2));
-      const cropW = Math.max(1, lvlMaxX - lvlMinX);
-      const cropH = Math.max(1, lvlMaxY - lvlMinY);
-      const tileXMin = Math.floor(lvlMinX / tileSize);
-      const tileYMin = Math.floor(lvlMinY / tileSize);
-      const tileXMax = Math.floor((lvlMaxX - 1) / tileSize);
-      const tileYMax = Math.floor((lvlMaxY - 1) / tileSize);
-      const canvas2 = document.createElement("canvas");
-      canvas2.width = cropW;
-      canvas2.height = cropH;
-      const ctx2 = canvas2.getContext("2d");
-      if (!ctx2) throw new Error("Could not get 2d context");
-      const imageData = ctx2.createImageData(cropW, cropH);
-      const outData = imageData.data;
-      outData.fill(0);
-      const signal = AbortSignal.timeout(3e4);
-      let hasData = false;
-      for (let ch2 = 0; ch2 < settings.selections.length; ch2++) {
-        if (!settings.channelsVisible[ch2]) continue;
-        const sel = settings.selections[ch2];
-        const [low, high] = settings.contrastLimits[ch2] ?? [
-          0,
-          65535
-        ];
-        const [r2, g2, b2] = settings.colors[ch2] ?? [
-          255,
-          255,
-          255
-        ];
-        for (let ty = tileYMin; ty <= tileYMax; ty++) {
-          for (let tx = tileXMin; tx <= tileXMax; tx++) {
-            const tile = await plane.getTile({
-              selection: {
-                z: sel.z,
-                t: sel.t,
-                c: sel.c
-              },
-              x: tx,
-              y: ty,
-              signal
-            });
-            const { data: data2, width: tw, height: th2 } = tile;
-            const tilePixelX = tx * tileSize;
-            const tilePixelY = ty * tileSize;
-            const isUint16 = data2 instanceof Uint16Array;
-            for (let py = 0; py < th2; py++) {
-              for (let px = 0; px < tw; px++) {
-                const imgX = tilePixelX + px;
-                const imgY = tilePixelY + py;
-                const cropX = imgX - lvlMinX;
-                const cropY = imgY - lvlMinY;
-                if (cropX < 0 || cropX >= cropW || cropY < 0 || cropY >= cropH) continue;
-                hasData = true;
-                const tileIdx = py * tw + px;
-                const raw2 = isUint16 ? data2[tileIdx] : data2[tileIdx];
-                const v2 = clampValue(raw2, low, high);
-                const outIdx = (cropY * cropW + cropX) * 4;
-                outData[outIdx] = Math.min(255, outData[outIdx] + v2 * r2 / 255);
-                outData[outIdx + 1] = Math.min(255, outData[outIdx + 1] + v2 * g2 / 255);
-                outData[outIdx + 2] = Math.min(255, outData[outIdx + 2] + v2 * b2 / 255);
-                outData[outIdx + 3] = 255;
-              }
-            }
+  function createMaskTileLayer(args) {
+    const planes = args.loader.data;
+    if (!(planes == null ? void 0 : planes.length)) return null;
+    const finest = planes[0];
+    const { width: maskW, height: maskH } = planeSize(finest);
+    if (maskW <= 0 || maskH <= 0) return null;
+    if (args.worldWidth <= 0 || args.worldHeight <= 0) return null;
+    const scaleX2 = args.worldWidth / maskW;
+    const scaleY2 = args.worldHeight / maskH;
+    const { visualization: viz, channelIndex } = args;
+    return new TileLayer({
+      id: args.id,
+      tileSize: finest.tileSize,
+      minZoom: -(planes.length - 1),
+      maxZoom: 0,
+      extent: [
+        0,
+        0,
+        maskW,
+        maskH
+      ],
+      refinementStrategy: "best-available",
+      pickable: false,
+      updateTriggers: {
+        getTileData: [
+          channelIndex
+        ],
+        renderSubLayers: [
+          viz.style,
+          viz.color,
+          viz.colorSeed ?? 0
+        ]
+      },
+      getTileData: async ({ index: index2, signal }) => {
+        var _a2;
+        const level = Math.min(planes.length - 1, Math.max(0, Math.round(-index2.z)));
+        try {
+          const tile = await planes[level].getTile({
+            x: index2.x,
+            y: index2.y,
+            selection: {
+              t: 0,
+              z: 0,
+              c: channelIndex
+            },
+            signal
+          });
+          if (!((_a2 = tile == null ? void 0 : tile.data) == null ? void 0 : _a2.length) || tile.width <= 0 || tile.height <= 0) {
+            return null;
           }
+          const labels = asLabelUint32(tile.data);
+          if (labels.length < tile.width * tile.height) return null;
+          return {
+            data: [
+              labels
+            ],
+            width: tile.width,
+            height: tile.height
+          };
+        } catch (e2) {
+          if ((signal == null ? void 0 : signal.aborted) || e2 === "__vivSignalAborted") return null;
+          console.error(e2);
+          return null;
         }
+      },
+      renderSubLayers: (props) => {
+        var _a2;
+        const tileData = props.data;
+        if (!((_a2 = tileData == null ? void 0 : tileData.data) == null ? void 0 : _a2[0]) || tileData.width <= 0 || tileData.height <= 0) {
+          return null;
+        }
+        const bbox = props.tile.bbox;
+        if (!("left" in bbox)) return null;
+        const { left, bottom, right, top: top2 } = bbox;
+        if ([
+          left,
+          bottom,
+          right,
+          top2
+        ].some((v2) => v2 < 0)) return null;
+        const { tileSize } = finest;
+        return new MaskBitmaskLayer({
+          id: `${args.id}-bitmask-${props.tile.id}`,
+          channelData: tileData,
+          bounds: [
+            left * scaleX2,
+            (tileData.height < tileSize ? maskH : bottom) * scaleY2,
+            (tileData.width < tileSize ? maskW : right) * scaleX2,
+            top2 * scaleY2
+          ],
+          visualization: viz,
+          ...BITMASK_PROPS
+        });
       }
-      if (!hasData) {
-        ctx2.fillStyle = "#000";
-        ctx2.fillRect(0, 0, cropW, cropH);
-      } else {
-        ctx2.putImageData(imageData, 0, 0);
-      }
-      const longerSide = Math.max(cropW, cropH);
-      const drawScale = SAM_SIZE / longerSide;
-      const drawW = Math.round(cropW * drawScale);
-      const drawH = Math.round(cropH * drawScale);
-      const offsetX = Math.round((SAM_SIZE - drawW) / 2);
-      const offsetY = Math.round((SAM_SIZE - drawH) / 2);
-      const samCanvas = document.createElement("canvas");
-      samCanvas.width = SAM_SIZE;
-      samCanvas.height = SAM_SIZE;
-      const samCtx = samCanvas.getContext("2d");
-      if (!samCtx) throw new Error("Could not get 2d context");
-      samCtx.clearRect(0, 0, SAM_SIZE, SAM_SIZE);
-      samCtx.drawImage(canvas2, 0, 0, cropW, cropH, offsetX, offsetY, drawW, drawH);
-      const { float32Array, shape: s2 } = canvasToFloat32Array(samCanvas);
-      return {
-        float32Array,
-        shape: s2
-      };
-    };
+    });
   }
   const main = "_main_1gd1g_1";
   const squareViewportOverlay = "_squareViewportOverlay_1gd1g_6";
@@ -176523,17 +176615,15 @@ void main() {
   };
   const ImageViewer = (props) => {
     const windowSize = useWindowSize();
-    const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, viewerConfig, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2 } = props;
+    const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2 } = props;
     const { activeChannelGroupId, channelVisibilities, channelGroupRowVisibilities, sam2Processing, authoringWaypointEditorOpen } = useAppStore();
     const imageSelectionMask = useAppStore((s2) => s2.imageSelectionMask);
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
-    const [maskDisplayLayers, setMaskDisplayLayers] = reactExports.useState([]);
     const selectionMaskActive = imageSelectionMask != null && (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
     const maskExtension = reactExports.useMemo(() => new MaskExtension(), []);
     useShapeLayers(authoringWaypointEditorOpen);
     const [viewportSize, setViewportSize] = reactExports.useState(windowSize);
-    const [_canvas, _setCanvas] = reactExports.useState(null);
     const rootRef = reactExports.useRef(null);
     const deckRef = reactExports.useRef(null);
     reactExports.useEffect(() => {
@@ -176594,76 +176684,45 @@ void main() {
       imageShape.y,
       setViewerReferenceImagePixelSize
     ]);
-    const visibleMaskSources = reactExports.useMemo(() => {
+    const maskDisplayLayers = reactExports.useMemo(() => {
+      const imgW = Number(imageShape.x) || 0;
+      const imgH = Number(imageShape.y) || 0;
+      if (imgW <= 0 || imgH <= 0 || omeLoaderEntries.length === 0) return [];
       const activeGroup = activeChannelGroupId ? channelGroups.find((g2) => g2.id === activeChannelGroupId) : void 0;
-      return flattenImageChannelsInDocumentOrder(images).filter((sc2) => {
-        if (!isMaskChannel(sc2)) return false;
-        return isMaskSourceRendered({
+      const layers = [];
+      for (const sc2 of flattenImageChannelsInDocumentOrder(images)) {
+        if (!isMaskChannel(sc2)) continue;
+        if (!isMaskSourceRendered({
           sc: sc2,
           activeGroup,
           channelGroups,
           stackVisibilities: channelVisibilities ?? {},
           groupRowVisibilities: channelGroupRowVisibilities
+        })) {
+          continue;
+        }
+        const entry = omeLoaderEntries.find((e2) => e2.sourceImageId === sc2.imageId);
+        if (!(entry == null ? void 0 : entry.loader)) continue;
+        const layer = createMaskTileLayer({
+          id: `mask-channel-${sc2.id}`,
+          loader: entry.loader,
+          channelIndex: sc2.index,
+          visualization: effectiveMaskVisualizationForSource(sc2, channelGroups, activeChannelGroupId),
+          worldWidth: imgW,
+          worldHeight: imgH
         });
-      });
+        if (layer) layers.push(layer);
+      }
+      return layers;
     }, [
       images,
+      omeLoaderEntries,
+      imageShape.x,
+      imageShape.y,
       channelVisibilities,
       channelGroupRowVisibilities,
       activeChannelGroupId,
       channelGroups
-    ]);
-    reactExports.useEffect(() => {
-      if (visibleMaskSources.length === 0 || omeLoaderEntries.length === 0) {
-        setMaskDisplayLayers([]);
-        return;
-      }
-      const imgW = Number(imageShape.x) || 0;
-      const imgH = Number(imageShape.y) || 0;
-      if (imgW <= 0 || imgH <= 0) {
-        setMaskDisplayLayers([]);
-        return;
-      }
-      let cancelled = false;
-      void (async () => {
-        const layers = [];
-        const bounds = [
-          0,
-          imgH,
-          imgW,
-          0
-        ];
-        for (const sc2 of visibleMaskSources) {
-          const entry = omeLoaderEntries.find((e2) => e2.sourceImageId === sc2.imageId);
-          if (!(entry == null ? void 0 : entry.loader)) continue;
-          const raster = await fetchLabelRasterForSourceIndex(entry.loader, sc2.index);
-          if (!raster || cancelled) continue;
-          const viz = effectiveMaskVisualizationForSource(sc2, channelGroups, activeChannelGroupId);
-          const image2 = labelRasterToRgba(raster.data, raster.width, raster.height, viz);
-          layers.push(new BitmapLayer$1({
-            id: `mask-channel-${sc2.id}`,
-            bounds,
-            image: image2,
-            pickable: false,
-            textureParameters: {
-              magFilter: "nearest",
-              minFilter: "linear",
-              mipmapFilter: "linear"
-            }
-          }));
-        }
-        if (!cancelled) setMaskDisplayLayers(layers);
-      })();
-      return () => {
-        cancelled = true;
-      };
-    }, [
-      visibleMaskSources,
-      omeLoaderEntries,
-      imageShape.x,
-      imageShape.y,
-      channelGroups,
-      activeChannelGroupId
     ]);
     const initialViewState = reactExports.useMemo(() => {
       const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
@@ -176737,37 +176796,8 @@ void main() {
     const setViewerViewportSize = useAppStore((s2) => s2.setViewerViewportSize);
     const setSquareViewportThumbnailCapture = useAppStore((s2) => s2.setSquareViewportThumbnailCapture);
     const setViewerImageLayersLoaded = useAppStore((s2) => s2.setViewerImageLayersLoaded);
-    useAppStore((s2) => s2.setSam2ImageFetcher);
     const setSam2ViewState = useAppStore((s2) => s2.setSam2ViewState);
     const setSam2ViewportSize = useAppStore((s2) => s2.setSam2ViewportSize);
-    reactExports.useEffect(() => {
-      if ((firstLoader == null ? void 0 : firstLoader.loader) && mainSettingsList.length > 0 && imageShape.x > 0 && imageShape.y > 0) {
-        const settings = mainSettingsList[0];
-        createSam2ImageFetcher({
-          data: firstLoader.loader.data
-        }, {
-          selections: settings.selections.map((s2) => ({
-            z: 0,
-            t: 0,
-            c: s2.c
-          })),
-          colors: [
-            ...settings.colors
-          ],
-          contrastLimits: [
-            ...settings.contrastLimits
-          ],
-          channelsVisible: [
-            ...settings.channelsVisible ?? []
-          ]
-        }, imageShape.x, imageShape.y);
-      }
-    }, [
-      firstLoader,
-      mainSettingsList,
-      imageShape.x,
-      imageShape.y
-    ]);
     reactExports.useEffect(() => {
       setSam2ViewState(viewState);
     }, [
@@ -247550,15 +247580,22 @@ void main() {
         index: nextIndex++,
         remountKey: args.remountKey
       })),
-      ...omeLoaderEntries.map(({ loader, transfer }, i2) => createMultiscaleLayer({
-        loader,
-        settings: omeSettingsList[i2],
-        index: nextIndex++,
-        remountKey: args.remountKey,
-        ...transfer ? {
-          transfer
-        } : {}
-      })),
+      ...omeLoaderEntries.flatMap(({ loader, transfer }, i2) => {
+        var _a2;
+        const settings = omeSettingsList[i2];
+        if (!((_a2 = settings == null ? void 0 : settings.selections) == null ? void 0 : _a2.length)) return [];
+        return [
+          createMultiscaleLayer({
+            loader,
+            settings,
+            index: nextIndex++,
+            remountKey: args.remountKey,
+            ...transfer ? {
+              transfer
+            } : {}
+          })
+        ];
+      }),
       ...jpegLoaderEntries.map((entry, i2) => createEncodedImageLayer({
         entry,
         settings: jpegSettingsList[i2]
@@ -247683,7 +247720,7 @@ void main() {
   }
   function StoryPlaybackView(props) {
     const { omeLoaderEntries } = props;
-    const { viewerConfig, loaderList, mainSettingsList, imageLayers } = useStoryPlaybackLayers(props);
+    const { loaderList, mainSettingsList, imageLayers } = useStoryPlaybackLayers(props);
     const { overlayLayers, activeTool, dragState, hoverState, handleOverlayInteraction } = useAppStore();
     return jsxRuntimeExports.jsx(ChannelPanel, {
       noLoader: false,
@@ -247693,7 +247730,6 @@ void main() {
         imageLayers,
         mainSettingsList,
         loaderList,
-        viewerConfig,
         overlayLayers,
         activeTool,
         isDragging: dragState.isDragging,
@@ -247840,12 +247876,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-13T13:49:00.140Z");
+    const label2 = utcShort("2026-08-13T18:46:44.321Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-13T13:49:00.140Z",
+      title: "2026-08-13T18:46:44.321Z",
       children: [
         "Updated ",
         label2,
@@ -248808,39 +248844,39 @@ void main() {
       shapeCount: added
     };
   }
-  const stack = "_stack_ajz18_1";
-  const headerActionsWrap = "_headerActionsWrap_ajz18_11";
-  const addPanel = "_addPanel_ajz18_18";
-  const addActionAnchor = "_addActionAnchor_ajz18_36";
-  const formatRow = "_formatRow_ajz18_41";
-  const formatChip = "_formatChip_ajz18_48";
-  const formatChipActive = "_formatChipActive_ajz18_65";
-  const addPanelBody = "_addPanelBody_ajz18_71";
-  const urlRow = "_urlRow_ajz18_79";
-  const urlInput = "_urlInput_ajz18_87";
-  const primaryButton = "_primaryButton_ajz18_92";
-  const importError = "_importError_ajz18_119";
-  const importSuccess = "_importSuccess_ajz18_125";
-  const imageCard = "_imageCard_ajz18_131";
-  const fileAccessOverlay = "_fileAccessOverlay_ajz18_143";
-  const fileAccessError = "_fileAccessError_ajz18_157";
-  const imageCardHeader = "_imageCardHeader_ajz18_165";
-  const imageCardText = "_imageCardText_ajz18_173";
-  const imageCardTitle = "_imageCardTitle_ajz18_181";
-  const imageCardMeta = "_imageCardMeta_ajz18_189";
-  const imageCardActions = "_imageCardActions_ajz18_195";
-  const imageCardAction = "_imageCardAction_ajz18_195";
-  const imageCardActionDanger = "_imageCardActionDanger_ajz18_224";
-  const hiddenFileInput = "_hiddenFileInput_ajz18_229";
-  const dicomForm = "_dicomForm_ajz18_240";
-  const fieldGroup = "_fieldGroup_ajz18_247";
-  const fieldLabel = "_fieldLabel_ajz18_253";
-  const fieldRow = "_fieldRow_ajz18_261";
-  const textInput = "_textInput_ajz18_265";
-  const textInputInvalid = "_textInputInvalid_ajz18_288";
-  const textInputValid = "_textInputValid_ajz18_292";
-  const invalidFeedback = "_invalidFeedback_ajz18_296";
-  const validFeedback = "_validFeedback_ajz18_303";
+  const stack = "_stack_o9i5m_1";
+  const headerActionsWrap = "_headerActionsWrap_o9i5m_11";
+  const addPanel = "_addPanel_o9i5m_18";
+  const addActionAnchor = "_addActionAnchor_o9i5m_36";
+  const formatRow = "_formatRow_o9i5m_41";
+  const formatChip = "_formatChip_o9i5m_53";
+  const formatChipActive = "_formatChipActive_o9i5m_70";
+  const addPanelBody = "_addPanelBody_o9i5m_76";
+  const urlRow = "_urlRow_o9i5m_84";
+  const urlInput = "_urlInput_o9i5m_92";
+  const primaryButton = "_primaryButton_o9i5m_97";
+  const importError = "_importError_o9i5m_124";
+  const importSuccess = "_importSuccess_o9i5m_130";
+  const imageCard = "_imageCard_o9i5m_136";
+  const fileAccessOverlay = "_fileAccessOverlay_o9i5m_148";
+  const fileAccessError = "_fileAccessError_o9i5m_162";
+  const imageCardHeader = "_imageCardHeader_o9i5m_170";
+  const imageCardText = "_imageCardText_o9i5m_178";
+  const imageCardTitle = "_imageCardTitle_o9i5m_186";
+  const imageCardMeta = "_imageCardMeta_o9i5m_194";
+  const imageCardActions = "_imageCardActions_o9i5m_200";
+  const imageCardAction = "_imageCardAction_o9i5m_200";
+  const imageCardActionDanger = "_imageCardActionDanger_o9i5m_229";
+  const hiddenFileInput = "_hiddenFileInput_o9i5m_234";
+  const dicomForm = "_dicomForm_o9i5m_245";
+  const fieldGroup = "_fieldGroup_o9i5m_252";
+  const fieldLabel = "_fieldLabel_o9i5m_258";
+  const fieldRow = "_fieldRow_o9i5m_266";
+  const textInput = "_textInput_o9i5m_270";
+  const textInputInvalid = "_textInputInvalid_o9i5m_293";
+  const textInputValid = "_textInputValid_o9i5m_297";
+  const invalidFeedback = "_invalidFeedback_o9i5m_301";
+  const validFeedback = "_validFeedback_o9i5m_308";
   const styles$1 = {
     stack,
     headerActionsWrap,
@@ -249093,6 +249129,14 @@ void main() {
         return null;
     }
   };
+  function resolveImportRole(selected, pathOrName) {
+    if (selected === "segmentation") return "segmentation";
+    const leaf = (pathOrName.split(/[\\/]/).pop() ?? pathOrName).toLowerCase();
+    if (/(?:^|[^a-z0-9])(?:masks?|labels?|labelmap|segmentation|segs?)(?:[^a-z0-9]|$)/.test(leaf)) {
+      return "segmentation";
+    }
+    return selected;
+  }
   const Upload = (props) => {
     const [addPanelOpen, setAddPanelOpen] = reactExports.useState(false);
     const [importRole, setImportRole] = reactExports.useState("intensity");
@@ -249102,12 +249146,11 @@ void main() {
     const [importError2, setImportError] = reactExports.useState(null);
     const xmlFileInputRef = reactExports.useRef(null);
     const addPanelRef = reactExports.useRef(null);
-    const addImageAnchorRef = reactExports.useRef(null);
-    const addMaskAnchorRef = reactExports.useRef(null);
+    const addAnchorRef = reactExports.useRef(null);
     const prevImportRev = reactExports.useRef(props.importRevision);
     const localImportInFlightRef = reactExports.useRef(false);
     const images = useDocumentStore((s2) => s2.images);
-    const { formProps, handles, onAllow, importRevision, imageLoaded, loadedSource, fileName = "", lastOmeTiffUrl = null, onImportOme, needsFileAccess = false, onRequestFileAccess, missingHandleKeys = [], onReselectFile, needsStoryRootReconnect = false, onReconnectStoryRoot, onRemoveImage, onReplaceImage } = props;
+    const { formProps, onAllow, importRevision, imageLoaded, loadedSource, fileName = "", lastOmeTiffUrl = null, onImportOme, needsFileAccess = false, onRequestFileAccess, missingHandleKeys = [], onReselectFile, needsStoryRootReconnect = false, onReconnectStoryRoot, onRemoveImage, onReplaceImage } = props;
     const closeAddPanel = reactExports.useCallback(() => {
       setAddPanelOpen(false);
       setImportRole("intensity");
@@ -249131,10 +249174,9 @@ void main() {
     reactExports.useEffect(() => {
       if (!addPanelOpen) return;
       const onPointerDown = (event) => {
-        var _a2;
-        const anchor = importRole === "segmentation" ? addMaskAnchorRef.current : addImageAnchorRef.current;
+        var _a2, _b2;
         const target = event.target;
-        if (!(anchor == null ? void 0 : anchor.contains(target)) && !((_a2 = addPanelRef.current) == null ? void 0 : _a2.contains(target))) {
+        if (!((_a2 = addAnchorRef.current) == null ? void 0 : _a2.contains(target)) && !((_b2 = addPanelRef.current) == null ? void 0 : _b2.contains(target))) {
           closeAddPanel();
         }
       };
@@ -249149,7 +249191,6 @@ void main() {
       };
     }, [
       addPanelOpen,
-      importRole,
       closeAddPanel
     ]);
     const labelOpts = {
@@ -249160,18 +249201,10 @@ void main() {
     const isMaskImport = importRole === "segmentation";
     const importLabel = isMaskImport ? "Import mask" : "Import";
     const urlReady = /^https?:\/\/.+/.test(omeTiffUrl.trim());
-    const runUrlImport = async () => {
-      if (!onImportOme || imageFormat !== "OME-TIFF-URL" || !urlReady) return;
+    const setRole = (role) => {
+      setImportRole(role);
       setImportError(null);
-      const result = await onImportOme({
-        role: importRole,
-        append,
-        source: {
-          kind: "url",
-          url: omeTiffUrl.trim()
-        }
-      });
-      if (result && result.ok === false) setImportError(result.error);
+      setImageFormat("");
     };
     const importLocalOmeTiff = async (role, picked) => {
       if (picked.length === 0 || !onImportOme) return;
@@ -249187,30 +249220,19 @@ void main() {
       });
       if (result && result.ok === false) setImportError(result.error);
     };
-    const chooseMaskFile = async () => {
-      setImportError(null);
-      const picked = await toFile();
-      if (picked.length === 0) return;
-      const handle2 = picked[0];
-      if (!await ensureFileHandlePermission(handle2)) {
-        setImportError("Allow file access to load this mask.");
-        return;
-      }
-      if (!await findFile({
-        handle: handle2
-      })) {
-        setImportError("Could not read the selected file.");
-        return;
-      }
-      await importLocalOmeTiff("segmentation", picked);
-    };
-    const importIntensityFromHandles = async (picked) => {
-      if (picked.length === 0 || localImportInFlightRef.current) return;
+    const chooseLocalOmeTiff = async () => {
+      if (localImportInFlightRef.current) return;
       localImportInFlightRef.current = true;
+      setImportError(null);
       try {
+        const picked = isMaskImport ? await toFile() : await onAllow();
+        if (picked.length === 0) {
+          setImageFormat("");
+          return;
+        }
         const handle2 = picked[0];
         if (!await ensureFileHandlePermission(handle2)) {
-          setImportError("Allow file access to load this image.");
+          setImportError(isMaskImport ? "Allow file access to load this mask." : "Allow file access to load this image.");
           return;
         }
         if (!await findFile({
@@ -249219,23 +249241,36 @@ void main() {
           setImportError("Could not read the selected file.");
           return;
         }
-        await importLocalOmeTiff("intensity", picked);
+        const role = resolveImportRole(importRole, handle2.name);
+        if (role !== importRole) setImportRole(role);
+        await importLocalOmeTiff(role, picked);
       } finally {
         localImportInFlightRef.current = false;
       }
     };
-    const chooseIntensityFile = async () => {
+    const runUrlImport = async () => {
+      if (!onImportOme || imageFormat !== "OME-TIFF-URL" || !urlReady) return;
       setImportError(null);
-      const picked = await onAllow();
-      await importIntensityFromHandles(picked);
+      const url = omeTiffUrl.trim();
+      const role = resolveImportRole(importRole, url);
+      if (role !== importRole) setImportRole(role);
+      const result = await onImportOme({
+        role,
+        append,
+        source: {
+          kind: "url",
+          url
+        }
+      });
+      if (result && result.ok === false) setImportError(result.error);
     };
-    const openAddPanel = (role) => {
-      if (addPanelOpen && importRole === role) {
+    const toggleAddPanel = () => {
+      if (addPanelOpen) {
         closeAddPanel();
         return;
       }
-      setImportRole(role);
       setAddPanelOpen(true);
+      setImportRole("intensity");
       setImageFormat("");
       setImportError(null);
     };
@@ -249243,16 +249278,7 @@ void main() {
       setImportError(null);
       const next2 = imageFormat === format ? "" : format;
       setImageFormat(next2);
-      if (next2 !== "OME-TIFF") return;
-      if (isMaskImport) {
-        void chooseMaskFile();
-        return;
-      }
-      if (handles.length > 0) {
-        void importIntensityFromHandles(handles);
-        return;
-      }
-      void chooseIntensityFile();
+      if (next2 === "OME-TIFF") void chooseLocalOmeTiff();
     };
     const onAnnotationXmlSelected = (e2) => {
       var _a2;
@@ -249279,8 +249305,6 @@ void main() {
         });
       });
     };
-    const addImageActive = addPanelOpen && importRole === "intensity";
-    const addMaskActive = addPanelOpen && importRole === "segmentation";
     const renderAddPanelBody = () => {
       if (imageFormat === "OME-TIFF") {
         return importError2 ? jsxRuntimeExports.jsx("div", {
@@ -249312,7 +249336,7 @@ void main() {
           ]
         });
       }
-      if (imageFormat === "DICOM-WEB" && importRole === "intensity") {
+      if (imageFormat === "DICOM-WEB" && !isMaskImport) {
         return jsxRuntimeExports.jsx("div", {
           className: styles$1.addPanelBody,
           children: jsxRuntimeExports.jsx(FormDicom, {
@@ -249435,7 +249459,26 @@ void main() {
         jsxRuntimeExports.jsxs("div", {
           className: styles$1.formatRow,
           children: [
-            importRole === "intensity" ? jsxRuntimeExports.jsx(FormatChip, {
+            jsxRuntimeExports.jsx(FormatChip, {
+              label: "Image",
+              selected: !isMaskImport,
+              onClick: () => setRole("intensity"),
+              chipClass: styles$1.formatChip,
+              chipActiveClass: styles$1.formatChipActive
+            }),
+            jsxRuntimeExports.jsx(FormatChip, {
+              label: "Mask",
+              selected: isMaskImport,
+              onClick: () => setRole("segmentation"),
+              chipClass: styles$1.formatChip,
+              chipActiveClass: styles$1.formatChipActive
+            })
+          ]
+        }),
+        jsxRuntimeExports.jsxs("div", {
+          className: styles$1.formatRow,
+          children: [
+            !isMaskImport ? jsxRuntimeExports.jsx(FormatChip, {
               label: "DicomWeb",
               selected: imageFormat === "DICOM-WEB",
               onClick: () => selectFormat("DICOM-WEB"),
@@ -249494,30 +249537,14 @@ void main() {
                 ]
               }) : null,
               jsxRuntimeExports.jsx("div", {
-                ref: addMaskAnchorRef,
+                ref: addAnchorRef,
                 className: styles$1.addActionAnchor,
                 children: jsxRuntimeExports.jsx(PanelIconButton, {
-                  active: addMaskActive,
-                  "aria-pressed": addMaskActive,
-                  "aria-label": "Add mask",
-                  title: "Add mask",
-                  onClick: () => openAddPanel("segmentation"),
-                  children: jsxRuntimeExports.jsx(SvgRectangle, {
-                    width: 14,
-                    height: 14,
-                    "aria-hidden": true
-                  })
-                })
-              }),
-              jsxRuntimeExports.jsx("div", {
-                ref: addImageAnchorRef,
-                className: styles$1.addActionAnchor,
-                children: jsxRuntimeExports.jsx(PanelIconButton, {
-                  active: addImageActive,
-                  "aria-pressed": addImageActive,
-                  "aria-label": "Add image",
-                  title: "Add image",
-                  onClick: () => openAddPanel("intensity"),
+                  active: addPanelOpen,
+                  "aria-pressed": addPanelOpen,
+                  "aria-label": "Add image or mask",
+                  title: "Add",
+                  onClick: toggleAddPanel,
                   children: jsxRuntimeExports.jsx(PlusIcon, {})
                 })
               }),
@@ -249542,6 +249569,52 @@ void main() {
       ]
     });
   };
+  async function fetchPlaneRaster(loader, sourceIndex, prefs = {}) {
+    var _a2;
+    const planes = loader.data;
+    if (!(planes == null ? void 0 : planes.length)) return null;
+    const first = planes[0];
+    const cIdx = first.labels.indexOf("c");
+    const channelCount = cIdx >= 0 ? first.shape[cIdx] : 1;
+    if (sourceIndex < 0 || sourceIndex >= channelCount) return null;
+    const preferCoarsest = prefs.preferCoarsest ?? false;
+    const order2 = preferCoarsest ? [
+      ...planes.keys()
+    ].reverse() : [
+      ...planes.keys()
+    ];
+    for (const i2 of order2) {
+      const plane = planes[i2];
+      try {
+        const raster = await plane.getRaster({
+          selection: {
+            t: 0,
+            z: 0,
+            c: sourceIndex
+          }
+        });
+        if ((_a2 = raster == null ? void 0 : raster.data) == null ? void 0 : _a2.length) return {
+          raster,
+          plane
+        };
+      } catch {
+      }
+    }
+    return null;
+  }
+  function rasterToUint16Array(data2) {
+    if (data2 instanceof Uint16Array) return data2;
+    const out = new Uint16Array(data2.length);
+    if (data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray) {
+      for (let i2 = 0; i2 < data2.length; i2++) out[i2] = data2[i2] << 8;
+      return out;
+    }
+    for (let i2 = 0; i2 < data2.length; i2++) {
+      const v2 = data2[i2];
+      out[i2] = Number.isFinite(v2) ? Math.max(0, Math.min(65535, Math.round(v2))) : 0;
+    }
+    return out;
+  }
   function looksLikeImportDefaultLimits(lower, upper) {
     if (lower === IMPORT_DEFAULT_LOWER_LIMIT && upper === IMPORT_DEFAULT_UPPER_LIMIT) {
       return true;
@@ -250995,14 +251068,16 @@ void main() {
         resetActiveGroup: true
       });
       ensureDefaultWaypointForImageImport();
-      for (let i2 = 0; i2 < entries.length; i2++) {
-        const entry = entries[i2];
-        const handle2 = handles[i2];
-        if (!entry || !handle2) continue;
-        const { loader } = entry;
-        const file = await handle2.getFile();
-        const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
-        applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+      if (role !== "segmentation") {
+        for (let i2 = 0; i2 < entries.length; i2++) {
+          const entry = entries[i2];
+          const handle2 = handles[i2];
+          if (!entry || !handle2) continue;
+          const { loader } = entry;
+          const file = await handle2.getFile();
+          const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
+          applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+        }
       }
       setFileName(handles.length === 1 ? in_f : handles.map((h2) => h2.name).join(", ") || in_f);
     };
@@ -251194,8 +251269,10 @@ void main() {
         resetActiveGroup: true
       });
       ensureDefaultWaypointForImageImport();
-      const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
-      applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+      if (role !== "segmentation") {
+        const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
+        applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+      }
       setLastOmeTiffUrl(url);
       setFileName(basename2);
     };
@@ -251937,7 +252014,7 @@ void main() {
       autoRestoreOnMount: !hasDemo,
       useLaunchQueue,
       onRestoredHandles: hasDemo ? void 0 : onRestoredOmeHandles,
-      children: ({ handles, onAllow, onRecall, hasRecent }) => {
+      children: ({ handles, onAllow }) => {
         const onSubmit = (event) => {
           const form = event.currentTarget;
           const data2 = [
@@ -251947,7 +252024,6 @@ void main() {
             o2[k2] = `${v2}`;
             return o2;
           }, {
-            mask: "",
             url: "",
             name: ""
           });
@@ -252040,10 +252116,7 @@ void main() {
         };
         const uploadProps = {
           formProps,
-          handles,
           onAllow,
-          onRecall,
-          hasRecent,
           importRevision,
           imageLoaded,
           loadedSource,
@@ -252062,7 +252135,6 @@ void main() {
         const routerProps = {
           ...mainProps,
           noLoader,
-          handles,
           viewerConfig,
           dicomIndexList,
           omeLoaderEntries,
@@ -252075,7 +252147,6 @@ void main() {
         });
         const viewer = noLoader ? null : jsxRuntimeExports.jsx(ImageViewer, {
           ...imageProps,
-          viewerConfig,
           overlayLayers,
           activeTool,
           isDragging: dragState.isDragging,
