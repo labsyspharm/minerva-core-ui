@@ -884,14 +884,17 @@ const Content = (props: Props) => {
     setMissingHandleKeys([]);
     publishChannelState(nextImages, ChannelGroups, { resetActiveGroup: true });
     ensureDefaultWaypointForImageImport();
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i];
-      const handle = handles[i];
-      if (!entry || !handle) continue;
-      const { loader } = entry;
-      const file = await handle.getFile();
-      const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
-      applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+    // Mask OME-XML is often not well-formed (copied metadata); skip ROI scrape.
+    if (role !== "segmentation") {
+      for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i];
+        const handle = handles[i];
+        if (!entry || !handle) continue;
+        const { loader } = entry;
+        const file = await handle.getFile();
+        const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
+        applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+      }
     }
     setFileName(
       handles.length === 1
@@ -1099,8 +1102,10 @@ const Content = (props: Props) => {
     setDeniedHandleKeys([]);
     publishChannelState(nextImages, ChannelGroups, { resetActiveGroup: true });
     ensureDefaultWaypointForImageImport();
-    const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
-    applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+    if (role !== "segmentation") {
+      const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
+      applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+    }
     setLastOmeTiffUrl(url);
     setFileName(basename);
   };
@@ -2003,7 +2008,7 @@ const Content = (props: Props) => {
       useLaunchQueue={useLaunchQueue}
       onRestoredHandles={hasDemo ? undefined : onRestoredOmeHandles}
     >
-      {({ handles, onAllow, onRecall, hasRecent }) => {
+      {({ handles, onAllow }) => {
         const onSubmit: FormEventHandler = (event) => {
           const form = event.currentTarget as HTMLFormElement;
           const data = [...new FormData(form).entries()];
@@ -2013,7 +2018,6 @@ const Content = (props: Props) => {
               return o;
             },
             {
-              mask: "",
               url: "",
               name: "",
             },
@@ -2133,10 +2137,7 @@ const Content = (props: Props) => {
 
         const uploadProps = {
           formProps,
-          handles,
           onAllow,
-          onRecall,
-          hasRecent,
           importRevision,
           imageLoaded,
           loadedSource,
@@ -2155,7 +2156,6 @@ const Content = (props: Props) => {
         const routerProps = {
           ...mainProps,
           noLoader,
-          handles,
           viewerConfig,
           dicomIndexList,
           omeLoaderEntries,
@@ -2168,7 +2168,6 @@ const Content = (props: Props) => {
           <ImageViewer
             key={viewerRemountKey}
             {...imageProps}
-            viewerConfig={viewerConfig}
             overlayLayers={overlayLayers}
             activeTool={activeTool}
             isDragging={dragState.isDragging}

@@ -1,12 +1,33 @@
-import type { ImageChannel } from "@/lib/stores/documentSchema";
+import {
+  type ImageChannel,
+  type ImageChannelKind,
+  type MaskVisualization,
+  MaskVisualizationSchema,
+} from "@/lib/stores/documentSchema";
 
-/** Intensity / pseudocolor imagery (`channel`) vs label / segmentation (`mask`). */
-export type ImageChannelKind = "channel" | "mask";
+export type { ImageChannelKind, MaskVisualization };
 
-/** How a mask layer is drawn in the viewer. */
-export type MaskVisualization = "outline" | "randomColors";
+export const DEFAULT_MASK_VISUALIZATION: MaskVisualization = {
+  style: "outline",
+  color: "white",
+};
 
-export const DEFAULT_MASK_VISUALIZATION: MaskVisualization = "outline";
+/** Enable random colors with a new seed (also used to re-roll while active). */
+export function withReseededRandomColors(
+  value: MaskVisualization,
+): MaskVisualization {
+  let colorSeed = 1 + Math.floor(Math.random() * 0xffffff);
+  if (colorSeed === value.colorSeed) {
+    colorSeed = colorSeed >= 0xffffff ? 1 : colorSeed + 1;
+  }
+  return { ...value, color: "random", colorSeed };
+}
+
+/** Coerce persisted/legacy viz; falls back to default when invalid. */
+export function normalizeMaskVisualization(value: unknown): MaskVisualization {
+  const parsed = MaskVisualizationSchema.safeParse(value);
+  return parsed.success ? parsed.data : DEFAULT_MASK_VISUALIZATION;
+}
 
 /** Intensity channels on by default at import; matches default group slot count. */
 export const DEFAULT_VISIBLE_INTENSITY_CHANNELS = 4;

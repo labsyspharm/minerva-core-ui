@@ -1,9 +1,24 @@
 import { loadOmeTiff } from "@hms-dbmi/viv";
 import { fileOpen } from "browser-fs-access";
-import { fromBlob } from "geotiff";
+import { fromBlob, GeoTIFFImage } from "geotiff";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
 import type { Loader } from "./viv";
 import type { PoolClass } from "./workers/pool";
+
+type GeoTiff = Awaited<ReturnType<typeof fromBlob>>;
+type GeoTiffImage = Awaited<ReturnType<GeoTiff["getImage"]>>;
+
+/** Fields geotiff uses when constructing SubIFD images (not in public typings). */
+type GeoTiffInternals = GeoTiff & {
+  dataView: DataView;
+  littleEndian: boolean;
+  cache: unknown;
+  source: unknown;
+  parseFileDirectoryAt: (offset: number) => Promise<{
+    fileDirectory: GeoTiffImage["fileDirectory"];
+    geoKeyDirectory: unknown;
+  }>;
+};
 
 type FindFileIn = {
   handle: Handle.File;
@@ -61,6 +76,7 @@ function dtypeFromTiffDirectory(fileDirectory: {
   return "Uint32";
 }
 
+/** First OME Pixels block — size/units only (channel names come from import). */
 function parseFirstOmeImagePixels(
   imageDescription: unknown,
 ): Partial<OmePixelMetadata> | null {
@@ -71,43 +87,36 @@ function parseFirstOmeImagePixels(
     imageDescription,
     "application/xml",
   );
-  const image = doc.querySelector("Image");
-  const pixels = image?.querySelector("Pixels");
+  const pixels = doc.querySelector("Image")?.querySelector("Pixels");
   if (!pixels) return null;
-  const attrNum = (name: string) => {
+  const num = (name: string) => {
     const value = pixels.getAttribute(name);
     return value == null ? undefined : Number(value);
   };
-  const channels = Array.from(pixels.querySelectorAll("Channel"));
+  const channelCount = pixels.querySelectorAll("Channel").length;
   return {
-    ID: pixels.getAttribute("ID") ?? "Pixels:0",
-    DimensionOrder: pixels.getAttribute("DimensionOrder") ?? "XYZCT",
-    Type: pixels.getAttribute("Type") ?? "uint16",
-    SizeT: attrNum("SizeT") ?? 1,
-    SizeC: attrNum("SizeC") ?? Math.max(1, channels.length),
-    SizeZ: attrNum("SizeZ") ?? 1,
-    SizeY: attrNum("SizeY") ?? 0,
-    SizeX: attrNum("SizeX") ?? 0,
-    PhysicalSizeX: attrNum("PhysicalSizeX") ?? 1,
-    PhysicalSizeY: attrNum("PhysicalSizeY") ?? 1,
-    PhysicalSizeXUnit: pixels.getAttribute("PhysicalSizeXUnit") ?? "µm",
-    PhysicalSizeYUnit: pixels.getAttribute("PhysicalSizeYUnit") ?? "µm",
-    PhysicalSizeZUnit: pixels.getAttribute("PhysicalSizeZUnit") ?? "µm",
+    ID: pixels.getAttribute("ID") ?? undefined,
+    Type: pixels.getAttribute("Type") ?? undefined,
+    SizeC: num("SizeC") ?? (channelCount > 0 ? channelCount : undefined),
+    PhysicalSizeX: num("PhysicalSizeX"),
+    PhysicalSizeY: num("PhysicalSizeY"),
+    PhysicalSizeXUnit: pixels.getAttribute("PhysicalSizeXUnit") ?? undefined,
+    PhysicalSizeYUnit: pixels.getAttribute("PhysicalSizeYUnit") ?? undefined,
+    PhysicalSizeZUnit: pixels.getAttribute("PhysicalSizeZUnit") ?? undefined,
     BigEndian: false,
-    TiffData: [],
-    Channels:
-      channels.length > 0
-        ? channels.map((ch, i) => ({
-            ID: ch.getAttribute("ID") ?? `Channel:0:${i}`,
-            Name: ch.getAttribute("Name") ?? `Mask ${i + 1}`,
-            SamplesPerPixel: Number(ch.getAttribute("SamplesPerPixel") ?? 1),
-          }))
-        : [],
   };
 }
 
+/** Power-of-two tile size, matching Viv MultiscaleImageLayer. */
+function vivTileSize(image: GeoTiffImage): number {
+  const tw = image.getTileWidth();
+  const th = image.getTileHeight();
+  const size = Math.min(tw, th);
+  return 2 ** Math.floor(Math.log2(Math.max(1, size)));
+}
+
 async function readTiffRaster(
-  image: Awaited<ReturnType<Awaited<ReturnType<typeof fromBlob>>["getImage"]>>,
+  image: GeoTiffImage,
   sample: number,
 ): Promise<HasTile> {
   const raster = (await image.readRasters({
@@ -118,6 +127,80 @@ async function readTiffRaster(
     data: raster as unknown as HasTile["data"],
     width: raster.width ?? image.getWidth(),
     height: raster.height ?? image.getHeight(),
+  };
+}
+
+async function readTiffTile(
+  image: GeoTiffImage,
+  sample: number,
+  tileX: number,
+  tileY: number,
+  tileSize: number,
+): Promise<HasTile> {
+  const x0 = tileX * tileSize;
+  const y0 = tileY * tileSize;
+  const x1 = Math.min(x0 + tileSize, image.getWidth());
+  const y1 = Math.min(y0 + tileSize, image.getHeight());
+  const width = x1 - x0;
+  const height = y1 - y0;
+  const raster = (await image.readRasters({
+    samples: [sample],
+    interleave: true,
+    window: [x0, y0, x1, y1],
+    width,
+    height,
+  })) as ArrayLike<number> & { width?: number; height?: number };
+  return {
+    data: raster as unknown as HasTile["data"],
+    width: raster.width ?? width,
+    height: raster.height ?? height,
+  };
+}
+
+/** IFD 0 + SubIFD reduced-resolution levels. */
+async function resolveMaskPyramidImages(
+  tiff: GeoTiff,
+  baseImage: GeoTiffImage,
+): Promise<GeoTiffImage[]> {
+  const images: GeoTiffImage[] = [baseImage];
+  const offsets = (baseImage.fileDirectory as { SubIFDs?: number[] }).SubIFDs;
+  if (!Array.isArray(offsets) || offsets.length === 0) return images;
+
+  const internals = tiff as GeoTiffInternals;
+  for (const offset of offsets) {
+    const parsed = await internals.parseFileDirectoryAt(offset);
+    images.push(
+      new GeoTIFFImage(
+        parsed.fileDirectory,
+        parsed.geoKeyDirectory,
+        internals.dataView,
+        internals.littleEndian,
+        internals.cache,
+        internals.source,
+      ) as unknown as GeoTiffImage,
+    );
+  }
+  return images;
+}
+
+function maskPlaneFromImage(
+  image: GeoTiffImage,
+  sizeC: number,
+  dtype: Dtype,
+): LoaderPlane {
+  const width = image.getWidth();
+  const height = image.getHeight();
+  const tileSize = vivTileSize(image);
+  const clampC = (c: number) => Math.max(0, Math.min(sizeC - 1, c));
+  return {
+    dtype,
+    shape: [1, sizeC, 1, height, width],
+    tileSize,
+    labels: ["t", "c", "z", "y", "x"],
+    onTileError: () => undefined,
+    getRaster: ({ selection }) => readTiffRaster(image, clampC(selection.c)),
+    getTile: ({ x, y, selection }) =>
+      readTiffTile(image, clampC(selection.c), x, y, tileSize),
   };
 }
 
@@ -246,72 +329,47 @@ const toLoader: ToLoader = async ({ handle, pool = null }) => {
 };
 
 /**
- * Mask files sometimes carry OME-XML copied from a multi-image source while the
- * TIFF payload itself contains only image 0. Viv interprets those extra OME
- * `Image` entries as pyramid levels and calls `getImage(1)`, which throws.
- * For mask overlays we only need the first raster, so build a minimal loader
- * directly from GeoTIFF image 0 and the first OME Pixels block.
+ * Viv `loadOmeTiff` misreads mask files whose OME-XML lists extra `Image`
+ * entries that are not real IFDs. Build a pyramid from IFD0 + SubIFDs instead;
+ * OME Pixels is used for channel count / units only (names come later).
  */
 async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
   const tiff = await fromBlob(inFile);
-  const image = await tiff.getImage(0);
-  const fd = image.fileDirectory;
-  const width = image.getWidth();
-  const height = image.getHeight();
-  const samples = fd.SamplesPerPixel ?? 1;
+  const baseImage = await tiff.getImage(0);
+  const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
+  const fd = baseImage.fileDirectory;
+  const width = baseImage.getWidth();
+  const height = baseImage.getHeight();
   const dtype = dtypeFromTiffDirectory(fd);
-  const omePixels = parseFirstOmeImagePixels(fd.ImageDescription);
-  const sizeC = Math.max(1, omePixels?.SizeC ?? samples);
-  // OME XML may have been copied from a multi-channel source whose channel
-  // names ("Channel 0", ...) collide with intensity images. Names are
-  // refined later by the import pipeline using the file basename; here we
-  // just emit unambiguous generic mask labels.
+  const ome = parseFirstOmeImagePixels(fd.ImageDescription);
+  const sizeC = Math.max(1, ome?.SizeC ?? fd.SamplesPerPixel ?? 1);
   const channels = Array.from({ length: sizeC }, (_, i) => ({
-    ID: omePixels?.Channels?.[i]?.ID ?? `Channel:0:${i}`,
+    ID: `Channel:0:${i}`,
     Name: sizeC === 1 ? "Mask" : `Mask ${i + 1}`,
     SamplesPerPixel: 1,
   }));
   const pixels: OmePixelMetadata = {
-    ID: omePixels?.ID ?? "Pixels:0",
+    ID: ome?.ID ?? "Pixels:0",
     DimensionOrder: "XYZCT",
-    Type: omePixels?.Type ?? dtype,
+    Type: ome?.Type ?? dtype,
     SizeT: 1,
-    SizeC: channels.length,
+    SizeC: sizeC,
     SizeZ: 1,
     SizeY: height,
     SizeX: width,
-    PhysicalSizeX: omePixels?.PhysicalSizeX ?? 1,
-    PhysicalSizeY: omePixels?.PhysicalSizeY ?? 1,
-    PhysicalSizeXUnit: omePixels?.PhysicalSizeXUnit ?? "µm",
-    PhysicalSizeYUnit: omePixels?.PhysicalSizeYUnit ?? "µm",
-    PhysicalSizeZUnit: omePixels?.PhysicalSizeZUnit ?? "µm",
-    BigEndian: omePixels?.BigEndian ?? false,
+    PhysicalSizeX: ome?.PhysicalSizeX ?? 1,
+    PhysicalSizeY: ome?.PhysicalSizeY ?? 1,
+    PhysicalSizeXUnit: ome?.PhysicalSizeXUnit ?? "µm",
+    PhysicalSizeYUnit: ome?.PhysicalSizeYUnit ?? "µm",
+    PhysicalSizeZUnit: ome?.PhysicalSizeZUnit ?? "µm",
+    BigEndian: ome?.BigEndian ?? false,
     TiffData: [],
-    Channels: channels.map((ch, i) => ({
-      ID: ch.ID ?? `Channel:0:${i}`,
-      Name: ch.Name ?? (channels.length === 1 ? "Mask" : `Mask ${i + 1}`),
-      SamplesPerPixel: ch.SamplesPerPixel ?? 1,
-    })),
-  };
-  const plane: LoaderPlane = {
-    dtype,
-    shape: [1, channels.length, 1, height, width],
-    tileSize: fd.TileWidth ?? fd.ImageWidth ?? width,
-    labels: ["t", "c", "z", "y", "x"],
-    onTileError: () => undefined,
-    getRaster: ({ selection }) =>
-      readTiffRaster(
-        image,
-        Math.max(0, Math.min(channels.length - 1, selection.c)),
-      ),
-    getTile: ({ selection }) =>
-      readTiffRaster(
-        image,
-        Math.max(0, Math.min(channels.length - 1, selection.c)),
-      ),
+    Channels: channels,
   };
   return {
-    data: [plane],
+    data: pyramidImages.map((image) =>
+      maskPlaneFromImage(image, channels.length, dtype),
+    ),
     metadata: {
       ID: "Image:0",
       AquisitionDate: "",

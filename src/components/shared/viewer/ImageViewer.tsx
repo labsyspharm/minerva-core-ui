@@ -15,17 +15,14 @@ import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import { isMaskSourceRendered } from "@/lib/imaging/channelCompositor";
 import { isMaskChannel } from "@/lib/imaging/channelKind";
-import { fetchLabelRasterForSourceIndex } from "@/lib/imaging/maskChannelRaster";
 import {
   IMAGE_SELECTION_MASK_LAYER_ID,
-  labelRasterToRgba,
   SELECTION_MASK_CHANNEL_KEY,
   selectionMaskBinaryImageData,
   selectionMaskDisplayImageData,
 } from "@/lib/imaging/maskLayers";
+import { createMaskTileLayer } from "@/lib/imaging/maskTileLayer";
 import { effectiveMaskVisualizationForSource } from "@/lib/imaging/sourceChannelStyle";
-import type { Config } from "@/lib/imaging/viv";
-import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -265,7 +262,6 @@ export type ImageViewerProps = {
   imageLayers: Layer[];
   mainSettingsList: MainSettings[];
   loaderList: LoaderList;
-  viewerConfig: Config;
   overlayLayers?: OverlayLayer[];
   activeTool: string;
   isDragging?: boolean;
@@ -326,7 +322,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     isDragging = false,
     hoveredShapeId = null,
     onOverlayInteraction,
-    viewerConfig,
     showSquareViewportOverlay = false,
     squareViewportScale = 0.9,
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
@@ -343,14 +338,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
-  const [maskDisplayLayers, setMaskDisplayLayers] = useState<Layer[]>([]);
   const selectionMaskActive =
     imageSelectionMask != null &&
     (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
   const maskExtension = useMemo(() => new MaskExtension(), []);
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
-  const [_canvas, _setCanvas] = useState(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const deckRef = useRef<DeckGLRef | null>(null);
 
@@ -412,90 +405,56 @@ export const ImageViewer = (props: ImageViewerProps) => {
     };
   }, [imageShape.x, imageShape.y, setViewerReferenceImagePixelSize]);
 
-  const visibleMaskSources = useMemo(() => {
+  const maskDisplayLayers = useMemo(() => {
+    const imgW = Number(imageShape.x) || 0;
+    const imgH = Number(imageShape.y) || 0;
+    if (imgW <= 0 || imgH <= 0 || omeLoaderEntries.length === 0) return [];
+
     const activeGroup = activeChannelGroupId
       ? channelGroups.find((g) => g.id === activeChannelGroupId)
       : undefined;
-    return flattenImageChannelsInDocumentOrder(images).filter((sc) => {
-      if (!isMaskChannel(sc)) return false;
-      return isMaskSourceRendered({
-        sc,
-        activeGroup,
-        channelGroups,
-        stackVisibilities: channelVisibilities ?? {},
-        groupRowVisibilities: channelGroupRowVisibilities,
+    const layers: Layer[] = [];
+    for (const sc of flattenImageChannelsInDocumentOrder(images)) {
+      if (!isMaskChannel(sc)) continue;
+      if (
+        !isMaskSourceRendered({
+          sc,
+          activeGroup,
+          channelGroups,
+          stackVisibilities: channelVisibilities ?? {},
+          groupRowVisibilities: channelGroupRowVisibilities,
+        })
+      ) {
+        continue;
+      }
+      const entry = omeLoaderEntries.find(
+        (e) => e.sourceImageId === sc.imageId,
+      );
+      if (!entry?.loader) continue;
+      const layer = createMaskTileLayer({
+        id: `mask-channel-${sc.id}`,
+        loader: entry.loader,
+        channelIndex: sc.index,
+        visualization: effectiveMaskVisualizationForSource(
+          sc,
+          channelGroups,
+          activeChannelGroupId,
+        ),
+        worldWidth: imgW,
+        worldHeight: imgH,
       });
-    });
+      if (layer) layers.push(layer);
+    }
+    return layers;
   }, [
     images,
+    omeLoaderEntries,
+    imageShape.x,
+    imageShape.y,
     channelVisibilities,
     channelGroupRowVisibilities,
     activeChannelGroupId,
     channelGroups,
-  ]);
-
-  useEffect(() => {
-    if (visibleMaskSources.length === 0 || omeLoaderEntries.length === 0) {
-      setMaskDisplayLayers([]);
-      return;
-    }
-    const imgW = Number(imageShape.x) || 0;
-    const imgH = Number(imageShape.y) || 0;
-    if (imgW <= 0 || imgH <= 0) {
-      setMaskDisplayLayers([]);
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      const layers: Layer[] = [];
-      const bounds: [number, number, number, number] = [0, imgH, imgW, 0];
-      for (const sc of visibleMaskSources) {
-        const entry = omeLoaderEntries.find(
-          (e) => e.sourceImageId === sc.imageId,
-        );
-        if (!entry?.loader) continue;
-        const raster = await fetchLabelRasterForSourceIndex(
-          entry.loader,
-          sc.index,
-        );
-        if (!raster || cancelled) continue;
-        const viz = effectiveMaskVisualizationForSource(
-          sc,
-          channelGroups,
-          activeChannelGroupId,
-        );
-        const image = labelRasterToRgba(
-          raster.data,
-          raster.width,
-          raster.height,
-          viz,
-        );
-        layers.push(
-          new BitmapLayer({
-            id: `mask-channel-${sc.id}`,
-            bounds,
-            image,
-            pickable: false,
-            textureParameters: {
-              magFilter: "nearest",
-              minFilter: "linear",
-              mipmapFilter: "linear",
-            },
-          }),
-        );
-      }
-      if (!cancelled) setMaskDisplayLayers(layers);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    visibleMaskSources,
-    omeLoaderEntries,
-    imageShape.x,
-    imageShape.y,
-    channelGroups,
-    activeChannelGroupId,
   ]);
 
   // Memoize initial view state
@@ -571,40 +530,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
     (s) => s.setViewerImageLayersLoaded,
   );
 
-  // Register SAM2 image fetcher for magic wand (first OME image only; reference frame).
-  const setSam2ImageFetcher = useAppStore((s) => s.setSam2ImageFetcher);
   const setSam2ViewState = useAppStore((s) => s.setSam2ViewState);
   const setSam2ViewportSize = useAppStore((s) => s.setSam2ViewportSize);
-  useEffect(() => {
-    if (
-      firstLoader?.loader &&
-      mainSettingsList.length > 0 &&
-      imageShape.x > 0 &&
-      imageShape.y > 0
-    ) {
-      const settings = mainSettingsList[0];
-      const fetcher = createSam2ImageFetcher(
-        { data: firstLoader.loader.data },
-        {
-          selections: settings.selections.map((s) => ({
-            z: 0,
-            t: 0,
-            c: s.c,
-          })),
-          colors: [...settings.colors],
-          contrastLimits: [...settings.contrastLimits],
-          channelsVisible: [...(settings.channelsVisible ?? [])],
-        },
-        imageShape.x,
-        imageShape.y,
-      );
-      //TODO
-      //setSam2ImageFetcher(fetcher);
-    } else {
-      //TODO
-      //setSam2ImageFetcher(null);
-    }
-  }, [firstLoader, mainSettingsList, imageShape.x, imageShape.y]);
 
   useEffect(() => {
     setSam2ViewState(viewState);

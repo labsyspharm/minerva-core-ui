@@ -1,28 +1,5 @@
 import * as dcmjs from "dcmjs";
 
-// TODO use this again
-const _temp = () => {
-  // Create canvas and context
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-
-  // Set dimensions (small example)
-  canvas.width = 1024;
-  canvas.height = 1024;
-
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Get base64 PNG data
-  const base64Data = canvas.toDataURL("image/png");
-
-  // Convert base64 to Uint8Array
-  const uint8Array = Uint8Array.from(atob(base64Data.split(",")[1]), (c) =>
-    c.charCodeAt(0),
-  );
-  return uint8Array;
-};
-
 const fetchFrame = async ({ series, subpath, signal }) => {
   const url = `${series}/instances/${subpath}`;
   const headers = {

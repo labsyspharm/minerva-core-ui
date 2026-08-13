@@ -2,7 +2,7 @@ import type { Loader } from "@/lib/imaging/viv";
 import type { LoaderPlane, SupportedTypedArray } from "./loaderTypes";
 
 /**
- * OME plane raster fetch (histogram auto-contrast + mask label overlays).
+ * OME plane raster fetch for histogram / auto-contrast.
  * File name is historical; not mask-specific.
  */
 
@@ -59,38 +59,4 @@ export function rasterToUint16Array(data: SupportedTypedArray): Uint16Array {
       : 0;
   }
   return out;
-}
-
-function rasterToLabelArray(
-  data: SupportedTypedArray,
-): Uint8Array | Uint16Array | Uint32Array {
-  if (
-    data instanceof Uint8Array ||
-    data instanceof Uint16Array ||
-    data instanceof Uint32Array
-  ) {
-    return data;
-  }
-  return rasterToUint16Array(data);
-}
-
-/** Fetch label raster for one source index (finest readable pyramid plane). */
-export async function fetchLabelRasterForSourceIndex(
-  loader: Loader,
-  sourceIndex: number,
-): Promise<{
-  data: Uint8Array | Uint16Array | Uint32Array;
-  width: number;
-  height: number;
-} | null> {
-  const hit = await fetchPlaneRaster(loader, sourceIndex, {
-    preferCoarsest: false,
-  });
-  if (!hit) return null;
-  const { raster, plane } = hit;
-  const data = rasterToLabelArray(raster.data);
-  const width = raster.width ?? plane.shape[plane.labels.indexOf("x")] ?? 0;
-  const height = raster.height ?? plane.shape[plane.labels.indexOf("y")] ?? 0;
-  if (width <= 0 || height <= 0) return null;
-  return { data, width, height };
 }

@@ -2,7 +2,6 @@ import type { ChangeEventHandler, FormEventHandler } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
-import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
 import { CompactHeader } from "@/components/shared/panel/CompactHeader";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
@@ -75,12 +74,8 @@ export type OmeImportRequest = {
 };
 
 export type UploadProps = {
-  handles: Handle.File[];
   onAllow: () => Promise<Handle.File[]>;
-  onRecall: (options?: { notifyRestored?: boolean }) => Promise<Handle.File[]>;
-  /** True when a persisted recent file handle is available for `onRecall`. */
-  hasRecent: boolean;
-  formProps: Omit<FormProps, "handles">;
+  formProps: FormProps;
   /** Bumps after a successful image import; closes the add panel. */
   importRevision: number;
   /** True when the viewer has image data (same idea as `!noLoader` in main). */
@@ -339,10 +334,27 @@ const roleBadgeLabel = (
   }
 };
 
+/** Prefer Mask when the chip says so, or the file/URL name clearly looks like one. */
+function resolveImportRole(
+  selected: OmeImportRole,
+  pathOrName: string,
+): OmeImportRole {
+  if (selected === "segmentation") return "segmentation";
+  const leaf = (pathOrName.split(/[\\/]/).pop() ?? pathOrName).toLowerCase();
+  if (
+    /(?:^|[^a-z0-9])(?:masks?|labels?|labelmap|segmentation|segs?)(?:[^a-z0-9]|$)/.test(
+      leaf,
+    )
+  ) {
+    return "segmentation";
+  }
+  return selected;
+}
+
 const Upload = (props: UploadProps) => {
   const [addPanelOpen, setAddPanelOpen] = useState(false);
   const [importRole, setImportRole] = useState<OmeImportRole>("intensity");
-  const [imageFormat, setImageFormat] = useState("");
+  const [imageFormat, setImageFormat] = useState<ImageFormatChoice>("");
   const [omeTiffUrl, _setOmeTiffUrl, setOmeTiffUrl] = _useState("");
   const [xmlImportFeedback, setXmlImportFeedback] = useState<{
     type: "ok" | "err";
@@ -351,8 +363,7 @@ const Upload = (props: UploadProps) => {
   const [importError, setImportError] = useState<string | null>(null);
   const xmlFileInputRef = useRef<HTMLInputElement | null>(null);
   const addPanelRef = useRef<HTMLDivElement | null>(null);
-  const addImageAnchorRef = useRef<HTMLDivElement | null>(null);
-  const addMaskAnchorRef = useRef<HTMLDivElement | null>(null);
+  const addAnchorRef = useRef<HTMLDivElement | null>(null);
   const prevImportRev = useRef(props.importRevision);
   const localImportInFlightRef = useRef(false);
 
@@ -360,7 +371,6 @@ const Upload = (props: UploadProps) => {
 
   const {
     formProps,
-    handles,
     onAllow,
     importRevision,
     imageLoaded,
@@ -400,12 +410,11 @@ const Upload = (props: UploadProps) => {
   useEffect(() => {
     if (!addPanelOpen) return;
     const onPointerDown = (event: PointerEvent) => {
-      const anchor =
-        importRole === "segmentation"
-          ? addMaskAnchorRef.current
-          : addImageAnchorRef.current;
       const target = event.target as Node;
-      if (!anchor?.contains(target) && !addPanelRef.current?.contains(target)) {
+      if (
+        !addAnchorRef.current?.contains(target) &&
+        !addPanelRef.current?.contains(target)
+      ) {
         closeAddPanel();
       }
     };
@@ -418,7 +427,7 @@ const Upload = (props: UploadProps) => {
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [addPanelOpen, importRole, closeAddPanel]);
+  }, [addPanelOpen, closeAddPanel]);
 
   const labelOpts = { fileName, lastOmeTiffUrl };
   const append = imageLoaded;
@@ -426,15 +435,10 @@ const Upload = (props: UploadProps) => {
   const importLabel = isMaskImport ? "Import mask" : "Import";
   const urlReady = /^https?:\/\/.+/.test(omeTiffUrl.trim());
 
-  const runUrlImport = async () => {
-    if (!onImportOme || imageFormat !== "OME-TIFF-URL" || !urlReady) return;
+  const setRole = (role: OmeImportRole) => {
+    setImportRole(role);
     setImportError(null);
-    const result = await onImportOme({
-      role: importRole,
-      append,
-      source: { kind: "url", url: omeTiffUrl.trim() },
-    });
-    if (result && result.ok === false) setImportError(result.error);
+    setImageFormat("");
   };
 
   const importLocalOmeTiff = async (
@@ -455,54 +459,59 @@ const Upload = (props: UploadProps) => {
     if (result && result.ok === false) setImportError(result.error);
   };
 
-  const chooseMaskFile = async () => {
-    setImportError(null);
-    const picked = await toFile();
-    if (picked.length === 0) return;
-    const handle = picked[0];
-    if (!(await ensureFileHandlePermission(handle))) {
-      setImportError("Allow file access to load this mask.");
-      return;
-    }
-    if (!(await findFile({ handle }))) {
-      setImportError("Could not read the selected file.");
-      return;
-    }
-    await importLocalOmeTiff("segmentation", picked);
-  };
-
-  const importIntensityFromHandles = async (picked: Handle.File[]) => {
-    if (picked.length === 0 || localImportInFlightRef.current) return;
+  const chooseLocalOmeTiff = async () => {
+    if (localImportInFlightRef.current) return;
     localImportInFlightRef.current = true;
+    setImportError(null);
     try {
+      // Fresh picker each time; masks use toFile so they don't clobber the intensity handle.
+      const picked = isMaskImport ? await toFile() : await onAllow();
+      if (picked.length === 0) {
+        setImageFormat("");
+        return;
+      }
       const handle = picked[0];
       if (!(await ensureFileHandlePermission(handle))) {
-        setImportError("Allow file access to load this image.");
+        setImportError(
+          isMaskImport
+            ? "Allow file access to load this mask."
+            : "Allow file access to load this image.",
+        );
         return;
       }
       if (!(await findFile({ handle }))) {
         setImportError("Could not read the selected file.");
         return;
       }
-      await importLocalOmeTiff("intensity", picked);
+      const role = resolveImportRole(importRole, handle.name);
+      if (role !== importRole) setImportRole(role);
+      await importLocalOmeTiff(role, picked);
     } finally {
       localImportInFlightRef.current = false;
     }
   };
 
-  const chooseIntensityFile = async () => {
+  const runUrlImport = async () => {
+    if (!onImportOme || imageFormat !== "OME-TIFF-URL" || !urlReady) return;
     setImportError(null);
-    const picked = await onAllow();
-    await importIntensityFromHandles(picked);
+    const url = omeTiffUrl.trim();
+    const role = resolveImportRole(importRole, url);
+    if (role !== importRole) setImportRole(role);
+    const result = await onImportOme({
+      role,
+      append,
+      source: { kind: "url", url },
+    });
+    if (result && result.ok === false) setImportError(result.error);
   };
 
-  const openAddPanel = (role: OmeImportRole) => {
-    if (addPanelOpen && importRole === role) {
+  const toggleAddPanel = () => {
+    if (addPanelOpen) {
       closeAddPanel();
       return;
     }
-    setImportRole(role);
     setAddPanelOpen(true);
+    setImportRole("intensity");
     setImageFormat("");
     setImportError(null);
   };
@@ -511,16 +520,7 @@ const Upload = (props: UploadProps) => {
     setImportError(null);
     const next = imageFormat === format ? "" : format;
     setImageFormat(next);
-    if (next !== "OME-TIFF") return;
-    if (isMaskImport) {
-      void chooseMaskFile();
-      return;
-    }
-    if (handles.length > 0) {
-      void importIntensityFromHandles(handles);
-      return;
-    }
-    void chooseIntensityFile();
+    if (next === "OME-TIFF") void chooseLocalOmeTiff();
   };
 
   const onAnnotationXmlSelected: ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -547,9 +547,6 @@ const Upload = (props: UploadProps) => {
         });
       });
   };
-
-  const addImageActive = addPanelOpen && importRole === "intensity";
-  const addMaskActive = addPanelOpen && importRole === "segmentation";
 
   const renderAddPanelBody = () => {
     // OME-TIFF opens the OS picker immediately — no body row under the chips.
@@ -579,7 +576,7 @@ const Upload = (props: UploadProps) => {
         </div>
       );
     }
-    if (imageFormat === "DICOM-WEB" && importRole === "intensity") {
+    if (imageFormat === "DICOM-WEB" && !isMaskImport) {
       return (
         <div className={styles.addPanelBody}>
           <FormDicom {...formProps} />
@@ -700,7 +697,23 @@ const Upload = (props: UploadProps) => {
   const addPanel = addPanelOpen ? (
     <div ref={addPanelRef} className={styles.addPanel}>
       <div className={styles.formatRow}>
-        {importRole === "intensity" ? (
+        <FormatChip
+          label="Image"
+          selected={!isMaskImport}
+          onClick={() => setRole("intensity")}
+          chipClass={styles.formatChip}
+          chipActiveClass={styles.formatChipActive}
+        />
+        <FormatChip
+          label="Mask"
+          selected={isMaskImport}
+          onClick={() => setRole("segmentation")}
+          chipClass={styles.formatChip}
+          chipActiveClass={styles.formatChipActive}
+        />
+      </div>
+      <div className={styles.formatRow}>
+        {!isMaskImport ? (
           <FormatChip
             label="DicomWeb"
             selected={imageFormat === "DICOM-WEB"}
@@ -752,24 +765,13 @@ const Upload = (props: UploadProps) => {
                 </PanelIconButton>
               </>
             ) : null}
-            <div ref={addMaskAnchorRef} className={styles.addActionAnchor}>
+            <div ref={addAnchorRef} className={styles.addActionAnchor}>
               <PanelIconButton
-                active={addMaskActive}
-                aria-pressed={addMaskActive}
-                aria-label="Add mask"
-                title="Add mask"
-                onClick={() => openAddPanel("segmentation")}
-              >
-                <RectangleIcon width={14} height={14} aria-hidden />
-              </PanelIconButton>
-            </div>
-            <div ref={addImageAnchorRef} className={styles.addActionAnchor}>
-              <PanelIconButton
-                active={addImageActive}
-                aria-pressed={addImageActive}
-                aria-label="Add image"
-                title="Add image"
-                onClick={() => openAddPanel("intensity")}
+                active={addPanelOpen}
+                aria-pressed={addPanelOpen}
+                aria-label="Add image or mask"
+                title="Add"
+                onClick={toggleAddPanel}
               >
                 <PlusIcon />
               </PanelIconButton>

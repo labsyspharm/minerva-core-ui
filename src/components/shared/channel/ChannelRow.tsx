@@ -4,6 +4,7 @@ import {
   ChannelVisibilitySwatch,
 } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
+import { withReseededRandomColors } from "@/lib/imaging/channelKind";
 import styles from "./ChannelRow.module.css";
 
 export function rgbToHex(color: {
@@ -16,39 +17,78 @@ export function rgbToHex(color: {
     .join("");
 }
 
+function MaskVizButton(props: {
+  active: boolean;
+  label: string;
+  title?: string;
+  onClick: () => void;
+  iconClass: string;
+}) {
+  return (
+    <button
+      type="button"
+      className={
+        props.active
+          ? `${styles.maskVizOption} ${styles.maskVizOptionActive}`
+          : styles.maskVizOption
+      }
+      aria-pressed={props.active}
+      title={props.title ?? props.label}
+      aria-label={props.label}
+      onClick={props.onClick}
+    >
+      <span className={props.iconClass} aria-hidden />
+    </button>
+  );
+}
+
 export function MaskVisualizationToggle(props: {
   value: MaskVisualization;
   onChange: (viz: MaskVisualization) => void;
   ariaLabel: string;
 }) {
   const { value, onChange, ariaLabel } = props;
+  const randomActive = value.color === "random";
   return (
-    <fieldset className={styles.maskVizToggle} aria-label={ariaLabel}>
-      <button
-        type="button"
-        className={
-          value === "outline"
-            ? `${styles.maskVizOption} ${styles.maskVizOptionActive}`
-            : styles.maskVizOption
-        }
-        aria-pressed={value === "outline"}
-        onClick={() => onChange("outline")}
+    <div className={styles.maskVizControls}>
+      <fieldset
+        className={styles.maskVizToggle}
+        aria-label={`${ariaLabel} fill`}
       >
-        Outlines
-      </button>
-      <button
-        type="button"
-        className={
-          value === "randomColors"
-            ? `${styles.maskVizOption} ${styles.maskVizOptionActive}`
-            : styles.maskVizOption
-        }
-        aria-pressed={value === "randomColors"}
-        onClick={() => onChange("randomColors")}
+        <MaskVizButton
+          active={value.style === "outline"}
+          label="Outline"
+          iconClass={styles.maskVizIconOutline}
+          onClick={() => onChange({ ...value, style: "outline" })}
+        />
+        <MaskVizButton
+          active={value.style === "full"}
+          label="Full"
+          iconClass={styles.maskVizIconFull}
+          onClick={() => onChange({ ...value, style: "full" })}
+        />
+      </fieldset>
+      <fieldset
+        className={styles.maskVizToggle}
+        aria-label={`${ariaLabel} color`}
       >
-        Colors
-      </button>
-    </fieldset>
+        <MaskVizButton
+          active={value.color === "white"}
+          label="White"
+          iconClass={styles.maskVizSwatchWhite}
+          onClick={() => onChange({ ...value, color: "white" })}
+        />
+        <MaskVizButton
+          active={randomActive}
+          label={randomActive ? "Random colors, re-seed" : "Random colors"}
+          title={
+            randomActive ? "Random colors (click to re-seed)" : "Random colors"
+          }
+          iconClass={styles.maskVizSwatchRandom}
+          onClick={() => onChange(withReseededRandomColors(value))}
+        />
+      </fieldset>
+    </div>
   );
 }
 

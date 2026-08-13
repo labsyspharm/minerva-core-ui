@@ -424,12 +424,6 @@ function computeImagePyramid({ metadata, bits }) {
    * i.e., values on the axis lie in the range [-n, -1], where n is the
    * number of rows in the total pixel matrix.
    */
-  //const extent = [
-  //  0, // min X
-  //  -(baseTotalPixelMatrixRows + 1), // min Y
-  //  baseTotalPixelMatrixColumns, // max X
-  //  -1 // max Y
-  //]
   const extent = [0, 0, baseTotalPixelMatrixColumns, baseTotalPixelMatrixRows];
 
   return {

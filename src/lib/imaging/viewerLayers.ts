@@ -186,15 +186,20 @@ export function buildImageLayers(args: {
         remountKey: args.remountKey,
       }),
     ),
-    ...omeLoaderEntries.map(({ loader, transfer }, i) =>
-      createMultiscaleLayer({
-        loader,
-        settings: omeSettingsList[i] as MainSettings,
-        index: nextIndex++,
-        remountKey: args.remountKey,
-        ...(transfer ? { transfer } : {}),
-      }),
-    ),
+    ...omeLoaderEntries.flatMap(({ loader, transfer }, i) => {
+      const settings = omeSettingsList[i] as MainSettings | undefined;
+      // Mask-only loaders have no intensity selections; painted by createMaskTileLayer.
+      if (!settings?.selections?.length) return [];
+      return [
+        createMultiscaleLayer({
+          loader,
+          settings,
+          index: nextIndex++,
+          remountKey: args.remountKey,
+          ...(transfer ? { transfer } : {}),
+        }),
+      ];
+    }),
     ...jpegLoaderEntries.map((entry, i) =>
       createEncodedImageLayer({
         entry,

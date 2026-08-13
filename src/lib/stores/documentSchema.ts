@@ -94,8 +94,20 @@ export const ImageChannelKindSchema = z.preprocess(
   z.enum(["channel", "mask"]),
 );
 
-/** Mask display mode in the viewer (not used for intensity channels). */
-export const MaskVisualizationSchema = z.enum(["outline", "randomColors"]);
+/** Mask display (legacy `"outline"` / `"randomColors"` coerced in preprocess). */
+export const MaskVisualizationSchema = z.preprocess(
+  (v) => {
+    if (v === "outline") return { style: "outline", color: "white" };
+    if (v === "randomColors") return { style: "full", color: "random" };
+    return v;
+  },
+  z.object({
+    style: z.enum(["outline", "full"]),
+    color: z.enum(["white", "random"]),
+    /** 24-bit; XOR'd into the GPU label hash when `color` is `random`. */
+    colorSeed: z.number().int().nonnegative().optional(),
+  }),
+);
 
 /** One logical channel under an image (persisted). `id` is stable across the document. */
 export const ImageChannelSchema = z.object({
@@ -172,7 +184,7 @@ export const ChannelGroupChannelSchema = z.object({
   color: ColorSchema,
   lowerLimit: z.number(),
   upperLimit: z.number(),
-  /** When {@link ImageChannelSchema.kind} is `mask`, controls outline vs per-label colors. */
+  /** When {@link ImageChannelSchema.kind} is `mask`, fill + color mode. */
   maskVisualization: MaskVisualizationSchema.optional(),
 });
 

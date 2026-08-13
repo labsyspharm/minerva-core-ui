@@ -45,6 +45,11 @@
   min-width: 0;
 }
 
+.formatRow + .formatRow {
+  padding-top: 8px;
+  border-top: 1px solid #252525;
+}
+
 .formatChip {
   font-size: 11px;
   font-weight: 600;

@@ -2,6 +2,7 @@ import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import {
   DEFAULT_MASK_VISUALIZATION,
   isMaskChannel,
+  normalizeMaskVisualization,
   planarRgbDisplayColor,
 } from "@/lib/imaging/channelKind";
 import type { ChannelGroup, Color } from "@/lib/stores/documentSchema";
@@ -75,19 +76,13 @@ export function effectiveSourceLimits(channel: Channel): [number, number] {
   return [lo, hi];
 }
 
-/** Resolved mask display mode from a source channel or group row. */
 export function effectiveMaskVisualization(row: {
-  maskVisualization?: string;
+  maskVisualization?: unknown;
 }): MaskVisualization {
-  if (row.maskVisualization === "outline") return "outline";
-  if (row.maskVisualization === "randomColors") return "randomColors";
-  return DEFAULT_MASK_VISUALIZATION;
+  return normalizeMaskVisualization(row.maskVisualization);
 }
 
-/**
- * Mask display for the viewer: group row wins when this source is in a group
- * (UI toggles there); otherwise use the source channel field.
- */
+/** Group-row viz wins when present; otherwise the source channel. */
 export function effectiveMaskVisualizationForSource(
   sc: Channel,
   channelGroups: ChannelGroup[],

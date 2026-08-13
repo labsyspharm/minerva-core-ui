@@ -65,7 +65,7 @@ function useStoryPlaybackLayers({
 /** Shared ChannelPanel + ImageViewer under Presentation (CDN + Story preview). */
 export function StoryPlaybackView(props: StoryPlaybackLoaders) {
   const { omeLoaderEntries } = props;
-  const { viewerConfig, loaderList, mainSettingsList, imageLayers } =
+  const { loaderList, mainSettingsList, imageLayers } =
     useStoryPlaybackLayers(props);
   const {
     overlayLayers,
@@ -82,7 +82,6 @@ export function StoryPlaybackView(props: StoryPlaybackLoaders) {
         imageLayers={imageLayers}
         mainSettingsList={mainSettingsList}
         loaderList={loaderList}
-        viewerConfig={viewerConfig}
         overlayLayers={overlayLayers}
         activeTool={activeTool}
         isDragging={dragState.isDragging}

@@ -186,6 +186,7 @@ const toSettings = (opts: ToSettingsOpts) => {
         ? image_id === loaderSourceImageId
         : image_id === modality;
 
+    // Intensity only; masks use createMaskTileLayer.
     const onLoader = SourceChannels.filter(
       (sc) => sourceImageMatches(sc.imageId) && isImageChannel(sc),
     );

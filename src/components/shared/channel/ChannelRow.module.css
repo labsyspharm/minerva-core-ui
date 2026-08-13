@@ -93,34 +93,83 @@
   box-shadow: 0 0 0 1px #388bfd66;
 }
 
+.maskVizControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  height: 22px;
+}
+
 .maskVizToggle {
   display: inline-flex;
   flex-shrink: 0;
   margin: 0;
-  padding: 0;
+  padding: 1px;
   border: 1px solid #30363d;
   border-radius: 4px;
-  overflow: hidden;
-  min-width: 0;
+  background: #0d1117;
+  gap: 1px;
 }
 
 .maskVizOption {
-  padding: 2px 6px;
-  font-size: 10px;
-  line-height: 1.3;
-  background: #161b22;
-  color: #8b949e;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  background: transparent;
+  color: #6e7681;
   border: none;
+  border-radius: 3px;
   cursor: pointer;
 }
 
 .maskVizOption:hover {
   color: #e6edf3;
+  background: #21262d;
 }
 
 .maskVizOptionActive {
-  background: #21262d;
+  background: #30363d;
   color: #e6edf3;
+}
+
+.maskVizIconOutline,
+.maskVizIconFull,
+.maskVizSwatchWhite,
+.maskVizSwatchRandom {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+.maskVizIconOutline {
+  border: 1.5px solid currentColor;
+  background: transparent;
+}
+
+.maskVizIconFull {
+  background: currentColor;
+}
+
+.maskVizSwatchWhite {
+  border: 1px solid #8b949e;
+  background: #f0f3f6;
+}
+
+.maskVizSwatchRandom {
+  background: conic-gradient(
+    from 45deg,
+    #ff6b6b,
+    #ffd93d,
+    #6bcb77,
+    #4d96ff,
+    #ff6b6b
+  );
 }
 
 /* ---- Row layouts passed as ChannelRow rowClassName ---- */
@@ -180,7 +229,7 @@
 }
 
 .rootChannelRow .channelColorSwatch,
-.rootChannelRow .maskVizToggle {
+.rootChannelRow .maskVizControls {
   grid-column: 3;
   grid-row: 1;
   align-self: center;

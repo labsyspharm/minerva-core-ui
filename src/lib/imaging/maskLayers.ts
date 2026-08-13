@@ -39,14 +39,12 @@ function colorFromSeed(seed: string): [number, number, number] {
 }
 
 function isEdgeAt(
-  data: Uint8Array | Uint16Array | Uint32Array,
+  data: Uint8Array,
   width: number,
   height: number,
   x: number,
   y: number,
-  label: number,
 ): boolean {
-  if (label === 0) return false;
   const neighbors = [
     [x - 1, y],
     [x + 1, y],
@@ -55,8 +53,7 @@ function isEdgeAt(
   ];
   for (const [nx, ny] of neighbors) {
     if (nx < 0 || ny < 0 || nx >= width || ny >= height) return true;
-    const ni = ny * width + nx;
-    if (data[ni] !== label) return true;
+    if (!data[ny * width + nx]) return true;
   }
   return false;
 }
@@ -102,64 +99,21 @@ function dilateBinaryMask(
   return out;
 }
 
-/** Colorize a label raster (`0` = background). */
-export function labelRasterToRgba(
-  data: Uint8Array | Uint16Array | Uint32Array,
-  width: number,
-  height: number,
-  visualization: MaskVisualization,
-): ImageData {
-  const rgba = new Uint8ClampedArray(width * height * 4);
-  const n = width * height;
-
-  if (visualization === "randomColors") {
-    const colorByLabel = new Map<number, [number, number, number]>();
-    for (let i = 0; i < n; i++) {
-      const label = data[i];
-      if (label === 0) continue;
-      let rgb = colorByLabel.get(label);
-      if (!rgb) {
-        rgb = colorFromSeed(String(label));
-        colorByLabel.set(label, rgb);
-      }
-      const o = i * 4;
-      rgba[o] = rgb[0];
-      rgba[o + 1] = rgb[1];
-      rgba[o + 2] = rgb[2];
-      rgba[o + 3] = 200;
-    }
-    return new ImageData(rgba, width, height);
-  }
-
-  const edgeMask = new Uint8Array(n);
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const i = y * width + x;
-      const label = data[i];
-      if (label === 0) continue;
-      if (isEdgeAt(data, width, height, x, y, label)) {
-        edgeMask[i] = 1;
-      }
-    }
-  }
-  const thickEdges = dilateBinaryMask(edgeMask, width, height, 1);
-  for (let i = 0; i < n; i++) {
-    const label = data[i];
-    if (label === 0) continue;
+function paintBinaryMask(
+  rgba: Uint8ClampedArray,
+  mask: Uint8Array,
+  rgb: [number, number, number],
+  alpha: number,
+) {
+  const [fr, fg, fb] = rgb;
+  for (let i = 0; i < mask.length; i++) {
+    if (!mask[i]) continue;
     const o = i * 4;
-    if (thickEdges[i]) {
-      rgba[o] = 255;
-      rgba[o + 1] = 255;
-      rgba[o + 2] = 255;
-      rgba[o + 3] = 235;
-    } else {
-      rgba[o] = 200;
-      rgba[o + 1] = 220;
-      rgba[o + 2] = 255;
-      rgba[o + 3] = 36;
-    }
+    rgba[o] = fr;
+    rgba[o + 1] = fg;
+    rgba[o + 2] = fb;
+    rgba[o + 3] = alpha;
   }
-  return new ImageData(rgba, width, height);
 }
 
 /** Binary mask (`data[i]` 0/1) for annotation selections. */
@@ -171,45 +125,33 @@ function binaryMaskToRgba(
   colorSeed: string,
 ): ImageData {
   const rgba = new Uint8ClampedArray(width * height * 4);
-  const [fr, fg, fb] = colorFromSeed(colorSeed);
+  const seedKey =
+    visualization.colorSeed != null
+      ? `${colorSeed}:${visualization.colorSeed}`
+      : colorSeed;
+  const rgb: [number, number, number] =
+    visualization.color === "random" ? colorFromSeed(seedKey) : [255, 255, 255];
+  const outline = visualization.style === "outline";
+  const alpha = outline ? 230 : 170;
 
-  if (visualization === "randomColors") {
-    for (let i = 0; i < width * height; i++) {
-      if (!data[i]) continue;
-      const o = i * 4;
-      rgba[o] = fr;
-      rgba[o + 1] = fg;
-      rgba[o + 2] = fb;
-      rgba[o + 3] = 170;
-    }
+  if (!outline) {
+    paintBinaryMask(rgba, data, rgb, alpha);
     return new ImageData(rgba, width, height);
   }
 
-  const n = width * height;
-  const edgeMask = new Uint8Array(n);
+  const edgeMask = new Uint8Array(width * height);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const i = y * width + x;
-      if (!data[i]) continue;
-      if (isEdgeAt(data, width, height, x, y, 1)) edgeMask[i] = 1;
+      if (data[i] && isEdgeAt(data, width, height, x, y)) edgeMask[i] = 1;
     }
   }
-  const thickEdges = dilateBinaryMask(edgeMask, width, height, 1);
-  for (let i = 0; i < n; i++) {
-    if (!data[i]) continue;
-    const o = i * 4;
-    if (thickEdges[i]) {
-      rgba[o] = 255;
-      rgba[o + 1] = 255;
-      rgba[o + 2] = 255;
-      rgba[o + 3] = 230;
-    } else {
-      rgba[o] = fr;
-      rgba[o + 1] = fg;
-      rgba[o + 2] = fb;
-      rgba[o + 3] = 40;
-    }
-  }
+  paintBinaryMask(
+    rgba,
+    dilateBinaryMask(edgeMask, width, height, 1),
+    rgb,
+    alpha,
+  );
   return new ImageData(rgba, width, height);
 }
 

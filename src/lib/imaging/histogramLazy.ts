@@ -1,7 +1,8 @@
 /**
  * Lazy OME-TIFF histograms: `ChannelGroupsMasterDetail` requests indices →
  * `ensureOmeHistogramDistributions` (tile extract + in-memory cache) →
- * `mergeHistogramsIntoSourceChannels` patches `sourceDistribution` on the store.
+ * `mergeHistogramsIntoSourceChannelsByChannelId` patches `sourceDistribution`
+ * on the store.
  * DICOM still uses eager `extractDistributions` in `main.tsx` (`getDistributions`).
  */
 import type { ConfigSourceDistribution } from "../authoring/config";
@@ -63,22 +64,7 @@ export function clearOmeHistogramCache(): void {
   omeHistogramCache.clear();
 }
 
-export function mergeHistogramsIntoSourceChannels(
-  channels: Channel[],
-  byIndex: Map<number, ConfigSourceDistribution>,
-): Channel[] {
-  let changed = false;
-  const next = channels.map((sc) => {
-    const dist = byIndex.get(sc.index);
-    if (!dist) return sc;
-    if (sourceDistributionYValuesLength(sc) > 0) return sc;
-    changed = true;
-    return { ...sc, sourceDistribution: dist };
-  });
-  return changed ? next : channels;
-}
-
-/** Prefer this when OME channels from several images can share the same pyramid `index`. */
+/** Prefer when OME channels from several images can share the same pyramid `index`. */
 export function mergeHistogramsIntoSourceChannelsByChannelId(
   channels: Channel[],
   byChannelId: Map<string, ConfigSourceDistribution>,
