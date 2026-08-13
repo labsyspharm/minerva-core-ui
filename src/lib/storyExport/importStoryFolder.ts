@@ -1,10 +1,15 @@
 import { fileOpen } from "browser-fs-access";
+import {
+  folderLimitsForTransfer,
+  isJpegOmeTiffImageSource,
+  type JpegExportTransfer,
+  jpegTransferFromImageSource,
+} from "@/lib/imaging/cubeRootEncoding";
 import { hasDirectoryPickerAccess } from "@/lib/imaging/filesystem";
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import {
   folderByChannelIndexFromGroup,
-  JPEG_FALLBACK_LOWER_LIMIT,
-  JPEG_FALLBACK_UPPER_LIMIT,
+  JPEG_BAKED_CONTRAST_LIMIT,
   jpegPyramidFolderName,
 } from "@/lib/imaging/jpegPyramid";
 import { jpegSourceNeedsLocalRoot } from "@/lib/imaging/loadJpegFromDocument";
@@ -90,21 +95,21 @@ export function tileFetcherForDirectory(
 export async function neededJpegPyramidFolderNames(
   channelGroups: ReadonlyArray<DocumentData["channelGroups"][number]>,
   images?: DocumentData["images"],
+  transfer: JpegExportTransfer = "contrast",
 ): Promise<Set<string>> {
   const names = new Set<string>();
   await Promise.all(
     channelGroups.flatMap((g) =>
-      g.channels.map(async (ch) =>
+      g.channels.map(async (ch) => {
+        const { lowerLimit, upperLimit } = folderLimitsForTransfer(
+          transfer,
+          ch.lowerLimit,
+          ch.upperLimit,
+        );
         names.add(
-          await jpegPyramidFolderName(
-            ch.channelId,
-            // Match export / folderByChannelIndexFromImageChannels defaults so
-            // missing limits still hash to the on-disk pyramid folder name.
-            ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
-            ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
-          ),
-        ),
-      ),
+          await jpegPyramidFolderName(ch.channelId, lowerLimit, upperLimit),
+        );
+      }),
     ),
   );
   if (names.size === 0 && images) {
@@ -114,11 +119,14 @@ export async function neededJpegPyramidFolderNames(
         im.channels.map((ch) => [ch.id, ch.index]),
       );
       const folders = await folderByChannelIndexFromGroup({
-        channels: im.channels.map((ch) => ({
-          channelId: ch.id,
-          lowerLimit: ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
-          upperLimit: ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
-        })),
+        channels: im.channels.map((ch) => {
+          const { lowerLimit, upperLimit } = folderLimitsForTransfer(
+            transfer,
+            ch.lowerLimit ?? JPEG_BAKED_CONTRAST_LIMIT[0],
+            ch.upperLimit ?? JPEG_BAKED_CONTRAST_LIMIT[1],
+          );
+          return { channelId: ch.id, lowerLimit, upperLimit };
+        }),
         channelIndexById,
       });
       for (const name of Object.values(folders)) names.add(name);
@@ -131,12 +139,34 @@ export async function listExistingPyramidFolders(
   root: FileSystemDirectoryHandle,
 ): Promise<Set<string>> {
   const names = new Set<string>();
-  for await (const [name, handle] of root.entries()) {
-    if (handle.kind === "directory" && /^[0-9a-f]{64}$/i.test(name)) {
-      names.add(name.toLowerCase());
+  try {
+    for await (const [name, handle] of root.entries()) {
+      if (handle.kind === "directory" && /^[0-9a-f]{64}$/i.test(name)) {
+        names.add(name.toLowerCase());
+      }
     }
+  } catch (e) {
+    // Stale / moved story-root handles throw NotFoundError from the FS Access API.
+    if (e instanceof DOMException && e.name === "NotFoundError") {
+      return names;
+    }
+    throw e;
   }
   return names;
+}
+
+/** False when the persisted directory handle no longer points at a real folder. */
+export async function isStoryRootHandleUsable(
+  root: FileSystemDirectoryHandle,
+): Promise<boolean> {
+  try {
+    // `entries()` touches the directory; permission alone can succeed on a dead handle.
+    await root.entries().next();
+    return true;
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "NotFoundError") return false;
+    throw e;
+  }
 }
 
 async function assertPyramidFoldersExist(
@@ -144,9 +174,11 @@ async function assertPyramidFoldersExist(
   data: DocumentData,
 ): Promise<void> {
   if (data.metadata.imageSource === "remote-url") return;
+  if (isJpegOmeTiffImageSource(data.metadata.imageSource)) return;
   const needed = await neededJpegPyramidFolderNames(
     data.channelGroups,
     data.images,
+    jpegTransferFromImageSource(data.metadata.imageSource),
   );
   if (needed.size === 0) return;
   const existing = await listExistingPyramidFolders(root);
@@ -156,6 +188,12 @@ async function assertPyramidFoldersExist(
       "Missing JPEG pyramid folders. Pick the folder created by Export (document.json plus channel directories).",
     );
   }
+}
+
+function isRelativeOmeTiffUrl(url: string): boolean {
+  const u = url.trim();
+  if (!u || /^https?:\/\//i.test(u) || u.startsWith("blob:")) return false;
+  return /\.ome\.tiff?$/i.test(u) || /\.tiff?$/i.test(u);
 }
 
 async function readDocumentJson(
@@ -174,15 +212,18 @@ async function persistImportedStory(
   const title =
     data.metadata.title?.trim() || titleFallback || "Imported Story";
   const hasLocalSources = data.images.some((im) => im.source?.kind === "local");
+  const omeTiffBundle = isJpegOmeTiffImageSource(data.metadata.imageSource);
   // Remote-URL exports keep `kind: "url"`. JPEG-pyramid bundles rewrite to
-  // `{ kind: "jpeg", url: "." }`. Local OME handleKeys cannot be transferred in
-  // JSON — keep them (reminted below) so the UI can ask the user to locate files.
+  // `{ kind: "jpeg", url: "." }`. JPEG OME-TIFF bundles use relative `.ome.tif`
+  // URLs (bound to local handles below when `root` is set).
   const imagesBase =
-    data.metadata.imageSource === "remote-url" || hasLocalSources
+    data.metadata.imageSource === "remote-url" ||
+    hasLocalSources ||
+    omeTiffBundle
       ? data.images
       : withPortableJpegSources(data.images);
   const rec = await createStoryRecord(title);
-  const images = hasLocalSources
+  let images = hasLocalSources
     ? imagesBase.map((im) => {
         if (im.source?.kind !== "local") return im;
         return {
@@ -194,6 +235,25 @@ async function persistImportedStory(
         };
       })
     : imagesBase;
+
+  if (root && omeTiffBundle) {
+    const next: typeof images = [];
+    for (const im of images) {
+      if (im.source?.kind === "url" && isRelativeOmeTiffUrl(im.source.url)) {
+        const fh = await root.getFileHandle(im.source.url);
+        const handleKey = imageHandleStorageKey(rec.id, im.id);
+        await putFileHandle(handleKey, fh);
+        next.push({
+          ...im,
+          source: { kind: "local", handleKey },
+        });
+      } else {
+        next.push(im);
+      }
+    }
+    images = next;
+  }
+
   const next = validateDocumentData({
     ...data,
     metadata: {
@@ -221,10 +281,17 @@ export async function importStoryJsonFromPicker(): Promise<string> {
   const data = validateDocumentData(JSON.parse(await file.text()) as unknown);
 
   let root: FileSystemDirectoryHandle | undefined;
-  if (storyNeedsLocalJpegRoot(data.images)) {
+  if (
+    storyNeedsLocalJpegRoot(data.images) ||
+    (isJpegOmeTiffImageSource(data.metadata.imageSource) &&
+      data.images.some(
+        (im) =>
+          im.source?.kind === "url" && isRelativeOmeTiffUrl(im.source.url),
+      ))
+  ) {
     if (!hasDirectoryPickerAccess()) {
       throw new Error(
-        "This story uses local JPEG pyramids. Open it in Chrome or Edge and choose the story folder to grant access.",
+        "This story uses local image files. Open it in Chrome or Edge and choose the story folder to grant access.",
       );
     }
     root = await window.showDirectoryPicker({

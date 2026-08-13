@@ -10,9 +10,11 @@ import type {
 import type { ChannelRendering } from "@/lib/stores/appStore";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
 import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
+import type { JpegExportTransfer } from "./cubeRootEncoding";
 import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
 import { createJpegLayers } from "./jpeg.js";
+import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
 import { type Config, type Loader, toSettings } from "./viv";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
@@ -117,14 +119,28 @@ export function createMultiscaleLayer(args: {
   index: number;
   /** Appended to the layer id (e.g. after export remount). */
   remountKey?: string | number;
+  /**
+   * JPEG OME-TIFF export transfer. Contrast is baked into tiles — force full
+   * display window like jpeg-pyramid (see jpeg.js).
+   */
+  transfer?: JpegExportTransfer;
 }): Layer {
-  const selections =
-    (args.settings as MainSettings | undefined)?.selections ?? [];
+  const base = args.settings as MainSettings;
+  const settings: MainSettings =
+    args.transfer === "contrast" && Array.isArray(base.contrastLimits)
+      ? {
+          ...base,
+          contrastLimits: base.contrastLimits.map(
+            () => JPEG_BAKED_CONTRAST_LIMIT,
+          ),
+        }
+      : base;
+  const selections = settings.selections ?? [];
   const selectionId = selections.map(({ c }) => c).join("-");
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
   return new MultiscaleImageLayer({
     id: `mainLayer-${args.index}-${selectionId}${remount}`,
-    ...args.settings,
+    ...settings,
     loader: args.loader.data,
   } as never);
 }
@@ -138,6 +154,7 @@ export function createEncodedImageLayer(args: {
     settings: args.settings,
     imagePath: args.entry.imagePath ?? ".",
     channelFolders: args.entry.channelFolders ?? {},
+    transfer: args.entry.transfer ?? "contrast",
   });
 }
 
@@ -169,12 +186,13 @@ export function buildImageLayers(args: {
         remountKey: args.remountKey,
       }),
     ),
-    ...omeLoaderEntries.map(({ loader }, i) =>
+    ...omeLoaderEntries.map(({ loader, transfer }, i) =>
       createMultiscaleLayer({
         loader,
         settings: omeSettingsList[i] as MainSettings,
         index: nextIndex++,
         remountKey: args.remountKey,
+        ...(transfer ? { transfer } : {}),
       }),
     ),
     ...jpegLoaderEntries.map((entry, i) =>

@@ -14,9 +14,14 @@ import {
 } from "@/lib/imaging/loadJpegFromDocument";
 import { getFileHandle } from "@/lib/persistence/fileHandles";
 import type { Image } from "@/lib/stores/documentSchema";
+import {
+  isJpegOmeTiffImageSource,
+  jpegTransferFromImageSource,
+} from "./cubeRootEncoding";
 import type { JpegLoaderEntry, OmeLoaderEntry } from "./loaderEntries";
 import type { PoolClass } from "./workers/pool";
 import { Pool } from "./workers/pool";
+import { wrapOmeLoaderJpegExport } from "./wrapOmeLoaderCubeRoot";
 
 export type HydrateDocumentLoadersResult = {
   jpegLoaderEntries: JpegLoaderEntry[];
@@ -38,6 +43,8 @@ export type HydrateDocumentLoadersOpts = {
   includeLocal?: boolean;
   fetchTile?: JpegTileFetcher;
   existingPyramidFolders?: ReadonlySet<string>;
+  /** When set, wrap OME loaders for cube-root JPEG OME-TIFF decode. */
+  imageSource?: string;
 };
 
 const omeLoaderRole = (im: Image): "intensity" | "segmentation" =>
@@ -47,6 +54,22 @@ const omeLoaderRole = (im: Image): "intensity" | "segmentation" =>
   }) === "segmentation"
     ? "segmentation"
     : "intensity";
+
+/**
+ * Viv's `loadOmeTiff` does `new URL(source)` with no base, so relative
+ * export paths (`foo.ome.tif`) must be resolved against document.json.
+ */
+function resolveOmeSourceUrl(documentUrl: string, sourceUrl: string): string {
+  const trimmed = sourceUrl.trim();
+  if (
+    /^https?:\/\//i.test(trimmed) ||
+    trimmed.startsWith("blob:") ||
+    trimmed.startsWith("file:")
+  ) {
+    return trimmed;
+  }
+  return new URL(trimmed, new URL(documentUrl, window.location.href)).href;
+}
 
 /** Rebuild Viv / DICOM loaders from persisted document image rows. */
 export async function hydrateDocumentLoaders(
@@ -67,12 +90,15 @@ export async function hydrateDocumentLoaders(
     : hasFileHandlePermission;
   const channelGroups = opts.channelGroups ?? [];
   const documentUrl = opts.documentUrl ?? window.location.href;
+  const transfer = jpegTransferFromImageSource(opts.imageSource);
+  const wrapOmeJpeg = isJpegOmeTiffImageSource(opts.imageSource);
 
   jpegLoaderEntries.push(
     ...(await jpegLoaderEntriesFromImages({
       images,
       channelGroups,
       documentUrl,
+      transfer,
       ...(opts.fetchTile ? { fetchTile: opts.fetchTile } : {}),
       ...(opts.existingPyramidFolders
         ? { existingPyramidFolders: opts.existingPyramidFolders }
@@ -87,10 +113,16 @@ export async function hydrateDocumentLoaders(
       case "url": {
         const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
           kind: "url",
-          url: im.source.url,
+          url: resolveOmeSourceUrl(documentUrl, im.source.url),
           ...(pool ? { pool } : {}),
         });
-        omeLoaderEntries.push({ loader, sourceImageId: im.id });
+        omeLoaderEntries.push({
+          loader: wrapOmeJpeg
+            ? wrapOmeLoaderJpegExport(loader, transfer)
+            : loader,
+          sourceImageId: im.id,
+          ...(wrapOmeJpeg ? { transfer } : {}),
+        });
         break;
       }
       case "local": {
@@ -113,7 +145,13 @@ export async function hydrateDocumentLoaders(
           in_f: file.name,
           ...(pool ? { pool } : {}),
         });
-        omeLoaderEntries.push({ loader, sourceImageId: im.id });
+        omeLoaderEntries.push({
+          loader: wrapOmeJpeg
+            ? wrapOmeLoaderJpegExport(loader, transfer)
+            : loader,
+          sourceImageId: im.id,
+          ...(wrapOmeJpeg ? { transfer } : {}),
+        });
         break;
       }
       case "dicomWeb": {

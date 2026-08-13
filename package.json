@@ -48,6 +48,7 @@
     "@deck.gl/widgets": "9.1.11",
     "@fontsource/overpass": "^5.0.18",
     "@hms-dbmi/viv": "0.20.1",
+    "@jsquash/jpeg": "^1.6.0",
     "@loaders.gl/3d-tiles": "3.4.13",
     "@loaders.gl/core": "3.4.13",
     "@loaders.gl/gis": "3.4.13",
@@ -88,6 +89,7 @@
     "react-is": "^18.3.1",
     "react-markdown": "^10.1.0",
     "stable-hash": "^0.0.6",
+    "tiffwriter": "^0.1.6",
     "vite-plugin-svgr": "^4.3.0",
     "zod": "^3.25.76",
     "zustand": "^5.0.8"
@@ -104,6 +106,7 @@
     "@vivjs/types": "0.20.1",
     "eslint": "^9.7.0",
     "eslint-plugin-react": "^7.34.4",
+    "http-server": "^14.1.1",
     "prettier": "^3.3.3",
     "react-refresh": "^0.14.2",
     "ts-node": "^10.9.2",
@@ -113,8 +116,7 @@
     "vite-plugin-mkcert": "^1.17.5",
     "vite-plugin-top-level-await": "^1.6.0",
     "vite-plugin-wasm": "^3.6.0",
-    "vitest": "^3.2.7",
-    "http-server": "^14.1.1"
+    "vitest": "^3.2.7"
   },
   "pnpm": {
     "overrides": {

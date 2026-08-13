@@ -2,20 +2,23 @@ import type { TiffPixelSource } from "@hms-dbmi/viv";
 import { getImageSize } from "@hms-dbmi/viv";
 import * as React from "react";
 import { type CSSProperties, useMemo, useState } from "react";
+import {
+  folderLimitsForTransfer,
+  imageSourceFromJpegTransfer,
+  imageSourceFromOmeTiffTransfer,
+  isJpegOmeTiffImageSource,
+  type JpegExportTransfer,
+  jpegTransferFromImageSource,
+} from "@/lib/imaging/cubeRootEncoding";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
-import { toLoader } from "@/lib/imaging/filesystem";
+import { exportJpegOmeTiffStory } from "@/lib/imaging/exportJpegOmeTiff";
 import {
   encodeTileJpeg,
   jpegExportConcurrency,
 } from "@/lib/imaging/jpegExportPool";
-import {
-  JPEG_FALLBACK_LOWER_LIMIT,
-  JPEG_FALLBACK_UPPER_LIMIT,
-  jpegPyramidFolderName,
-} from "@/lib/imaging/jpegPyramid";
+import { jpegPyramidFolderName } from "@/lib/imaging/jpegPyramid";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Config } from "@/lib/imaging/viv";
-import type { PoolClass } from "@/lib/imaging/workers/pool";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
@@ -23,8 +26,6 @@ import {
   writeStoryBundleSidecars,
 } from "@/lib/storyExport/storyBundle";
 import styles from "./ImageExporter.module.css";
-
-///
 
 type Dtype =
   | "Uint8"
@@ -89,20 +90,10 @@ const toSettingsInternal = (
   toSettings,
   loaderSourceImageId?: string,
 ) => {
-  if (loader === null) {
-    return toSettings(
-      activeChannelGroupId,
-      modality,
-      undefined,
-      channelVisibilities,
-      loaderSourceImageId,
-      channelGroupRowVisibilities,
-    );
-  }
   return toSettings(
     activeChannelGroupId,
     modality,
-    loader,
+    loader ?? undefined,
     channelVisibilities,
     loaderSourceImageId,
     channelGroupRowVisibilities,
@@ -119,6 +110,7 @@ const exportTile = async (
   index: Index,
   loader: LoaderPlane[],
   signal: AbortSignal,
+  transfer: JpegExportTransfer,
 ) => {
   const filename = toFilename(index);
   const level = Math.abs(index.z);
@@ -143,6 +135,7 @@ const exportTile = async (
     },
     lowerLimit: index.lowerLimit,
     upperLimit: index.upperLimit,
+    transfer,
   });
   if (signal.aborted) return;
   const fh = await index.dh.getFileHandle(filename, { create: true });
@@ -152,21 +145,27 @@ const exportTile = async (
 };
 
 const createCRange = async (
-  setCRange,
   channelGroups,
   imageChannels,
   directory_handle,
-) => {
+  transfer: JpegExportTransfer,
+): Promise<Index[]> => {
   const pending = channelGroups.flatMap(({ channels }) =>
     channels.map(async ({ channelId, lowerLimit, upperLimit }) => {
       const c = imageChannels[channelId];
       if (c === undefined) {
         return null;
       }
-      // Keep in sync with neededJpegPyramidFolderNames / image-channel fallbacks.
-      const lo = lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT;
-      const hi = upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT;
-      const folderName = await jpegPyramidFolderName(channelId, lo, hi);
+      const folderLimits = folderLimitsForTransfer(
+        transfer,
+        lowerLimit,
+        upperLimit,
+      );
+      const folderName = await jpegPyramidFolderName(
+        channelId,
+        folderLimits.lowerLimit,
+        folderLimits.upperLimit,
+      );
       const dh = await directory_handle.getDirectoryHandle(folderName, {
         create: true,
       });
@@ -179,8 +178,8 @@ const createCRange = async (
           {
             channel: c,
             channelId,
-            lowerLimit: lo,
-            upperLimit: hi,
+            lowerLimit,
+            upperLimit,
           },
           null,
           2,
@@ -194,13 +193,13 @@ const createCRange = async (
         c,
         dh,
         encoded: folderName,
-        lowerLimit: lo,
-        upperLimit: hi,
+        lowerLimit,
+        upperLimit,
       } as Index;
     }),
   );
   const resolved = await Promise.all(pending);
-  setCRange(resolved.filter((v): v is Index => v !== null));
+  return resolved.filter((v): v is Index => v !== null);
 };
 
 type TileProps = {
@@ -228,20 +227,10 @@ type FullState = {
 type MainState = null | FullState;
 type Initialize = (i: InitIn) => Partial<FullState>;
 
-type One = [number];
-type Two = [number, number];
-type Three = [number, number, number];
 type Four = [number, number, number, number];
 
-function toTileScale(zoom: number, ...vals: One): One;
-function toTileScale(zoom: number, ...vals: Two): Two;
-function toTileScale(zoom: number, ...vals: Three): Three;
-function toTileScale(zoom: number, ...vals: Four): Four;
-function toTileScale(zoom: number, ...vals: number[]): number[] {
-  const scale = 2 ** Math.abs(zoom);
-  return vals.map((v) => {
-    return v * scale;
-  });
+function toTileScale(zoom: number, value: number): number {
+  return value * 2 ** Math.abs(zoom);
 }
 
 const toTilePlane: ToTilePlane = (zoom, loaders) => {
@@ -270,7 +259,7 @@ const toTileCounts: ToTileCounts = ({ zoom, tileProps }) => {
   const { tileSize } = tileProps;
   const width = tileProps.extent[2];
   const height = tileProps.extent[3];
-  const [ts] = toTileScale(zoom, tileSize);
+  const ts = toTileScale(zoom, tileSize);
   const y = Math.ceil(height / ts);
   const x = Math.ceil(width / ts);
   return { x, y };
@@ -317,30 +306,7 @@ function isFullState(o: Partial<FullState>): o is FullState {
   return needs.every((x: string) => x in o && o[x] !== null);
 }
 
-///
-
-type LoaderOpts = {
-  pool: PoolClass;
-  handle: Handle.File | null;
-};
-
-const getLoader = async (opts: LoaderOpts) => {
-  const { handle, pool } = opts;
-  if (handle === null) return null;
-  const in_file = await handle.getFile();
-  const in_f = in_file.name;
-  const loader = await toLoader({
-    handle,
-    in_f,
-    pool,
-  });
-  const { data } = loader;
-  return data;
-};
-
 export type ImageExporterProps = {
-  in_f: string;
-  handles: Handle.File[];
   directory_handle: Handle.Dir;
   stopExport: () => void;
   dicomIndexList: DicomIndex[];
@@ -348,13 +314,11 @@ export type ImageExporterProps = {
   viewerConfig: Config;
   /** Default: bake JPEG pyramids. `remote-url` writes sidecars only. */
   exportMode?: StoryExportMode;
+  /** When set, offer a document.json-only update (current transfer only). */
+  onDocumentOnlyUpdate?: () => Promise<void>;
 };
 
 export const ImageExporter = (props: ImageExporterProps) => {
-  const _exportProps = {
-    variant: "primary",
-    className: "mb-3",
-  };
   const { viewerConfig } = props;
   const { omeLoaderEntries, dicomIndexList } = props;
   const exportMode: StoryExportMode = props.exportMode ?? "jpeg-pyramid";
@@ -412,8 +376,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     [omeLoaderEntries, mainSettingsOmeList, mainSettingsDicomList],
   );
 
-  const { handles, directory_handle } = props;
-  const handle = handles ? handles[0] : null; //TODO
+  const { directory_handle } = props;
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const imageChannels = useMemo(() => {
@@ -434,14 +397,54 @@ export const ImageExporter = (props: ImageExporterProps) => {
   const [nowMs, setNowMs] = useState(() => performance.now());
   const [cRange, setCRange] = useState<Index[] | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [jpegTransfer, setJpegTransfer] = useState<JpegExportTransfer>(() =>
+    jpegTransferFromImageSource(
+      useDocumentStore.getState().metadata.imageSource,
+    ),
+  );
+  /** Session mode: props.exportMode, or jpeg-ome-tiff when that option is checked. */
+  const [mode, setMode] = useState<StoryExportMode>(() => {
+    if (exportMode === "remote-url") return "remote-url";
+    // Prefer last published format so re-export still shows the confirm UI
+    // with the previous choice preselected.
+    if (
+      isJpegOmeTiffImageSource(useDocumentStore.getState().metadata.imageSource)
+    ) {
+      return "jpeg-ome-tiff";
+    }
+    return exportMode;
+  });
+  const [exportArmed, setExportArmed] = useState(false);
+  /** Frozen at Start so post-export store updates cannot re-trigger the job. */
+  const armedSnapshotRef = React.useRef<{
+    omeLoaderEntries: OmeLoaderEntry[];
+    dicomIndexList: DicomIndex[];
+  } | null>(null);
+
+  const docTransfer = jpegTransferFromImageSource(
+    useDocumentStore((s) => s.metadata.imageSource),
+  );
+  const canUpdateDocumentOnly =
+    !!props.onDocumentOnlyUpdate &&
+    mode === "jpeg-pyramid" &&
+    jpegTransfer === docTransfer;
+
+  const armExport = () => {
+    armedSnapshotRef.current = { omeLoaderEntries, dicomIndexList };
+    setExportArmed(true);
+  };
 
   const hasChannelGroup =
     channelGroups.length > 0 &&
     channelGroups.some((g) => g.channels.length > 0);
 
   React.useEffect(() => {
-    if (exportMode === "remote-url") {
+    if (mode === "remote-url" || mode === "jpeg-ome-tiff") {
       setCRange([]);
+      return;
+    }
+    if (!exportArmed) {
+      setCRange(null);
       return;
     }
     if (!hasChannelGroup) {
@@ -452,13 +455,34 @@ export const ImageExporter = (props: ImageExporterProps) => {
       return;
     }
     setExportError(null);
-    createCRange(setCRange, channelGroups, imageChannels, directory_handle);
+    let cancelled = false;
+    void createCRange(
+      channelGroups,
+      imageChannels,
+      directory_handle,
+      jpegTransfer,
+    )
+      .then((range) => {
+        if (!cancelled) setCRange(range);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        console.error("[minerva] jpeg export setup failed", e);
+        setExportError(
+          e instanceof Error ? e.message : "Failed to prepare JPEG export",
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [
     channelGroups,
     imageChannels,
     directory_handle,
     hasChannelGroup,
-    exportMode,
+    mode,
+    exportArmed,
+    jpegTransfer,
   ]);
   const loader = useMemo(
     () =>
@@ -467,7 +491,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
   );
 
   const state: MainState = useMemo(() => {
-    if (exportMode === "remote-url") return null;
+    if (mode !== "jpeg-pyramid" || !exportArmed) return null;
     if (loader === null || cRange === null) {
       return null;
     }
@@ -476,12 +500,12 @@ export const ImageExporter = (props: ImageExporterProps) => {
       return init;
     }
     return null;
-  }, [loader, cRange, exportMode]);
+  }, [loader, cRange, mode, exportArmed]);
 
   const stopExport = props.stopExport;
 
   React.useEffect(() => {
-    if (exportMode !== "remote-url") return;
+    if (mode !== "remote-url") return;
     if (exportError) return;
     let cancelled = false;
     const wallStart = performance.now();
@@ -513,11 +537,101 @@ export const ImageExporter = (props: ImageExporterProps) => {
     return () => {
       cancelled = true;
     };
-  }, [exportMode, directory_handle, exportError]);
+  }, [mode, directory_handle, exportError]);
 
   React.useEffect(() => {
-    if (exportMode === "remote-url") return;
-    if (exportError) return;
+    if (mode !== "jpeg-ome-tiff" || !exportArmed || exportError) return;
+
+    const snap = armedSnapshotRef.current;
+    if (!snap) return;
+
+    let cancelled = false;
+    let finishedOk = false;
+    const abort = new AbortController();
+    const wallStart = performance.now();
+    const loaderEntries: OmeLoaderEntry[] =
+      snap.omeLoaderEntries.length > 0
+        ? snap.omeLoaderEntries
+        : snap.dicomIndexList
+            .filter((d) => d.sourceImageId)
+            .map((d) => ({
+              loader: d.loader as OmeLoaderEntry["loader"],
+              sourceImageId: d.sourceImageId as string,
+            }));
+    const imagesSnapshot = useDocumentStore.getState().images;
+    const channelGroupsSnapshot = useDocumentStore.getState().channelGroups;
+
+    setProgress({ completed: 0, total: 1, done: false, startedAt: wallStart });
+
+    const etaInterval = window.setInterval(() => {
+      if (!cancelled) setNowMs(performance.now());
+    }, 1000);
+
+    void (async () => {
+      try {
+        const remappedImages = await exportJpegOmeTiffStory({
+          directory: directory_handle,
+          omeLoaderEntries: loaderEntries,
+          images: imagesSnapshot,
+          channelGroups: channelGroupsSnapshot,
+          transfer: jpegTransfer,
+          signal: abort.signal,
+          onProgress: (completed, total) => {
+            if (cancelled) return;
+            setProgress({
+              completed,
+              total: Math.max(total, 1),
+              done: false,
+              startedAt: wallStart,
+            });
+          },
+        });
+        if (cancelled) return;
+        finishedOk = true;
+        const nextSource = imageSourceFromOmeTiffTransfer(jpegTransfer);
+        const baseDoc = useDocumentStore.getState().toDocumentData();
+        const doc = {
+          ...baseDoc,
+          images: remappedImages,
+          metadata: {
+            ...baseDoc.metadata,
+            imageSource: nextSource,
+          },
+        };
+        await writeStoryBundleSidecars(directory_handle, doc, {
+          mode: "jpeg-ome-tiff",
+        });
+        const store = useDocumentStore.getState();
+        store.setImages(remappedImages);
+        store.setMetadata({
+          imageSource: nextSource,
+        });
+        console.log(
+          `[minerva] jpeg-ome-tiff export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (transfer=${jpegTransfer})`,
+        );
+        setProgress((p) => ({
+          ...p,
+          done: true,
+          completed: p.total,
+        }));
+      } catch (e) {
+        if (cancelled || abort.signal.aborted) return;
+        console.error("[minerva] jpeg-ome-tiff export failed", e);
+        setExportError(
+          e instanceof Error ? e.message : "Failed to export OME-TIFF",
+        );
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(etaInterval);
+      if (!finishedOk) abort.abort();
+    };
+  }, [mode, exportArmed, exportError, directory_handle, jpegTransfer]);
+
+  React.useEffect(() => {
+    if (mode !== "jpeg-pyramid" || !exportArmed || exportError) return;
     if (!state || !loader?.length) return;
     if (cRange !== null && cRange.length === 0) {
       setExportError("No exportable channels in the current channel groups.");
@@ -544,7 +658,15 @@ export const ImageExporter = (props: ImageExporterProps) => {
     const run = async () => {
       let nextIndex = 0;
       let completed = 0;
+      let exportFailed: Error | null = null;
       const concurrency = Math.min(jpegExportConcurrency(), total);
+
+      const failExport = (e: unknown) => {
+        if (exportFailed || cancelled) return;
+        exportFailed =
+          e instanceof Error ? e : new Error(String(e ?? "JPEG export failed"));
+        abort.abort();
+      };
 
       const workerLoop = async () => {
         while (!cancelled && !abort.signal.aborted) {
@@ -552,17 +674,19 @@ export const ImageExporter = (props: ImageExporterProps) => {
           if (i >= total) return;
           const index = indices[i];
           try {
-            await exportTile(index, loader, abort.signal);
+            await exportTile(index, loader, abort.signal, jpegTransfer);
           } catch (e) {
             if (abort.signal.aborted || cancelled) return;
             console.error(e instanceof Error ? e.message : e);
             try {
-              await exportTile(index, loader, abort.signal);
+              await exportTile(index, loader, abort.signal, jpegTransfer);
             } catch (e2) {
               console.error(e2 instanceof Error ? e2.message : e2);
+              failExport(e2);
+              return;
             }
           }
-          if (cancelled) return;
+          if (cancelled || abort.signal.aborted) return;
           completed += 1;
           setProgress({
             completed,
@@ -577,36 +701,51 @@ export const ImageExporter = (props: ImageExporterProps) => {
         Array.from({ length: concurrency }, () => workerLoop()),
       );
 
-      if (!cancelled) {
-        finishedOk = true;
-        console.log(
-          `[minerva] jpeg-export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (${concurrency} workers, ${total} tiles)`,
-        );
-        try {
-          await writeStoryBundleSidecars(
-            directory_handle,
-            useDocumentStore.getState().toDocumentData(),
-            { mode: "jpeg-pyramid" },
-          );
-        } catch (e) {
-          console.error("[minerva] failed to write story bundle sidecars", e);
-          setExportError(
-            e instanceof Error
-              ? e.message
-              : "Failed to write document.json / index.html",
-          );
-          return;
-        }
-        setProgress({
-          completed: total,
-          total,
-          done: true,
-          startedAt: wallStart,
-        });
+      if (cancelled) return;
+      if (exportFailed) {
+        console.error("[minerva] jpeg-export failed", exportFailed);
+        setExportError(exportFailed.message);
+        return;
       }
+
+      finishedOk = true;
+      console.log(
+        `[minerva] jpeg-export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (${concurrency} workers, ${total} tiles, transfer=${jpegTransfer}, encoder=jsquash)`,
+      );
+      try {
+        const nextSource = imageSourceFromJpegTransfer(jpegTransfer);
+        const doc = useDocumentStore.getState().toDocumentData();
+        await writeStoryBundleSidecars(
+          directory_handle,
+          {
+            ...doc,
+            metadata: { ...doc.metadata, imageSource: nextSource },
+          },
+          { mode: "jpeg-pyramid" },
+        );
+        useDocumentStore.getState().setMetadata({ imageSource: nextSource });
+      } catch (e) {
+        console.error("[minerva] failed to write story bundle sidecars", e);
+        setExportError(
+          e instanceof Error
+            ? e.message
+            : "Failed to write document.json / index.html",
+        );
+        return;
+      }
+      setProgress({
+        completed: total,
+        total,
+        done: true,
+        startedAt: wallStart,
+      });
     };
 
-    run();
+    void run().catch((e) => {
+      if (cancelled) return;
+      console.error("[minerva] jpeg-export failed", e);
+      setExportError(e instanceof Error ? e.message : "JPEG export failed");
+    });
 
     return () => {
       cancelled = true;
@@ -614,7 +753,16 @@ export const ImageExporter = (props: ImageExporterProps) => {
       // Avoid aborting the shared Viv loader after a successful export.
       if (!finishedOk) abort.abort();
     };
-  }, [state, loader, cRange, exportError, directory_handle, exportMode]);
+  }, [
+    state,
+    loader,
+    cRange,
+    exportError,
+    directory_handle,
+    mode,
+    exportArmed,
+    jpegTransfer,
+  ]);
 
   const { completed, total, done, startedAt } = progress;
   let ratio = done ? 1 : 0;
@@ -659,7 +807,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
             Dismiss
           </button>
         </div>
-      ) : exportMode === "remote-url" ? (
+      ) : mode === "remote-url" ? (
         <div className={styles.exportStatus}>
           <div className={styles.exportMessage}>
             {done
@@ -675,6 +823,75 @@ export const ImageExporter = (props: ImageExporterProps) => {
               Dismiss
             </button>
           ) : null}
+        </div>
+      ) : !exportArmed ? (
+        <div className={styles.exportStatus}>
+          <div className={styles.exportMessage}>
+            {mode === "jpeg-ome-tiff"
+              ? "Export JPEG OME-TIFF"
+              : "Export JPEG pyramid"}
+          </div>
+          <label className={styles.transferToggle}>
+            <input
+              type="checkbox"
+              checked={mode === "jpeg-ome-tiff"}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setMode("jpeg-ome-tiff");
+                } else {
+                  setMode("jpeg-pyramid");
+                }
+              }}
+            />
+            <span>Single-file OME-TIFF</span>
+          </label>
+          <label className={styles.transferToggle}>
+            <input
+              type="checkbox"
+              checked={jpegTransfer === "cube-root"}
+              onChange={(e) =>
+                setJpegTransfer(e.target.checked ? "cube-root" : "contrast")
+              }
+            />
+            <span>Cube-root intensity encoding</span>
+          </label>
+          <div className={styles.confirmActions}>
+            <button
+              type="button"
+              className={styles.dismissButton}
+              onClick={armExport}
+            >
+              Start export
+            </button>
+            {canUpdateDocumentOnly ? (
+              <button
+                type="button"
+                className={styles.dismissButton}
+                onClick={() => {
+                  void props.onDocumentOnlyUpdate?.().catch((e) => {
+                    console.error(
+                      "[minerva] failed to write story bundle sidecars",
+                      e,
+                    );
+                    setExportError(
+                      e instanceof Error
+                        ? e.message
+                        : "Failed to write document.json / index.html",
+                    );
+                  });
+                }}
+              >
+                Update document.json only
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className={styles.dismissButton}
+              onClick={stopExport}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       ) : (
         <div className={styles.exportStatus}>

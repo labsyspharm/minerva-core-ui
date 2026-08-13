@@ -7,13 +7,6 @@ export const JPEG_PYRAMID_TILE_SIZE = 1024;
 export const JPEG_BAKED_CONTRAST_LIMIT: [number, number] = [0, 65535];
 
 /**
- * Fallback contrast when building folder keys without a channel group
- * (matches import defaults in sourceChannelStyle).
- */
-export const JPEG_FALLBACK_LOWER_LIMIT = 2 ** 5;
-export const JPEG_FALLBACK_UPPER_LIMIT = 2 ** 14;
-
-/**
  * Folder name under the story root for one exported channel+contrast combo.
  * Must stay in sync with {@link ImageExporter} pyramid folder naming.
  */
@@ -61,8 +54,8 @@ export async function folderByChannelIndexFromImageChannels(
   channels: ReadonlyArray<{
     id: string;
     index: number;
-    lowerLimit?: number;
-    upperLimit?: number;
+    lowerLimit: number;
+    upperLimit: number;
   }>,
 ): Promise<Record<number, string>> {
   const out: Record<number, string> = {};
@@ -70,8 +63,8 @@ export async function folderByChannelIndexFromImageChannels(
     channels.map(async (ch) => {
       out[ch.index] = await jpegPyramidFolderName(
         ch.id,
-        ch.lowerLimit ?? JPEG_FALLBACK_LOWER_LIMIT,
-        ch.upperLimit ?? JPEG_FALLBACK_UPPER_LIMIT,
+        ch.lowerLimit,
+        ch.upperLimit,
       );
     }),
   );

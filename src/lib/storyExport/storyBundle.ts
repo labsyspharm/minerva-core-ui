@@ -1,3 +1,7 @@
+import {
+  isJpegOmeTiffImageSource,
+  JPEG_OME_TIFF_IMAGE_SOURCE,
+} from "@/lib/imaging/cubeRootEncoding";
 import type { DocumentData, Image } from "@/lib/stores/documentSchema";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
 import { version as MINERVA_VERSION } from "../../../package.json";
@@ -11,13 +15,16 @@ function minervaCdnUrls(version: string): { js: string; css: string } {
 }
 
 /** How pixel data is referenced in an exported story folder. */
-export type StoryExportMode = "jpeg-pyramid" | "remote-url";
+export type StoryExportMode = "jpeg-pyramid" | "jpeg-ome-tiff" | "remote-url";
 
-/** True when every intensity source is a remote URL (no local file handles). */
+/** True when every intensity source is an absolute http(s) URL (no local / relative files). */
 export function canExportWithRemoteUrls(images: Image[]): boolean {
   const withSource = images.filter((im) => im.source);
   if (withSource.length === 0) return false;
-  return withSource.every((im) => im.source?.kind === "url");
+  return withSource.every((im) => {
+    if (im.source?.kind !== "url") return false;
+    return /^https?:\/\//i.test(im.source.url.trim());
+  });
 }
 
 /** Point intensity images at the story-folder JPEG root. */
@@ -39,20 +46,32 @@ function toExportedStoryDocument(
   data: DocumentData,
   mode: StoryExportMode,
 ): DocumentData {
-  const images =
-    mode === "remote-url" ? data.images : withPortableJpegSources(data.images);
+  let images = data.images;
+  if (mode === "jpeg-pyramid") {
+    images = withPortableJpegSources(data.images);
+  }
   return validateDocumentData({
     ...data,
     images,
     metadata: {
       ...data.metadata,
       minervaVersion: MINERVA_VERSION,
-      imageSource:
-        mode === "remote-url"
-          ? "remote-url"
-          : (data.metadata.imageSource ?? "jpeg-pyramid"),
+      imageSource: imageSourceForExportMode(mode, data.metadata.imageSource),
     },
   });
+}
+
+function imageSourceForExportMode(
+  mode: StoryExportMode,
+  current?: string,
+): string {
+  if (mode === "remote-url") return "remote-url";
+  if (mode === "jpeg-ome-tiff") {
+    // Preserve contrast vs cube-root variant set by the exporter.
+    if (current && isJpegOmeTiffImageSource(current)) return current;
+    return JPEG_OME_TIFF_IMAGE_SOURCE;
+  }
+  return current ?? "jpeg-pyramid";
 }
 
 function storyIndexHtml(title?: string, version = MINERVA_VERSION): string {

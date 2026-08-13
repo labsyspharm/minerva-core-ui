@@ -152,6 +152,7 @@
 
 .whisper {
   margin: 0;
+  padding: 4px 6px;
   font-size: 0.85rem;
   letter-spacing: 0.05em;
   color: rgb(255 255 255 / 0.26);
@@ -159,7 +160,7 @@
 
 .emptyLine {
   margin: 0;
-  margin-left: -0.25rem;
+  padding: 4px 6px 4px 0;
   font-size: 0.95rem;
   letter-spacing: 0.03em;
   color: rgb(170 164 152 / 0.5);
@@ -244,11 +245,7 @@
   align-items: stretch;
   gap: 0;
   min-height: 2.5rem;
-  padding: 6px 0 10px;
-}
-
-.bayContentEmptyPrompt {
-  padding: 14px 0 10px;
+  padding: 0;
 }
 
 /* Unused shelf tiers — one row of ghost spines */

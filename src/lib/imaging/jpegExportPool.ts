@@ -1,3 +1,4 @@
+import type { JpegExportTransfer } from "./cubeRootEncoding";
 import {
   copyPixelBuffer,
   encodeGrayscaleJpeg,
@@ -5,6 +6,13 @@ import {
   typedArrayCtorName,
 } from "./jpegExportEncode";
 import JpegExportWorker from "./workers/jpegExport.worker?worker";
+
+/** Cap WASM workers so MozJPEG memory stays bounded. */
+const MAX_JPEG_EXPORT_WORKERS = 8;
+const defaultPoolSize = Math.min(
+  MAX_JPEG_EXPORT_WORKERS,
+  globalThis?.navigator?.hardwareConcurrency ?? 4,
+);
 
 /**
  * Same job protocol as the decoder {@link Pool} (`submitJob` / `jobId`).
@@ -66,8 +74,6 @@ class WorkerWrapper {
   }
 }
 
-const defaultPoolSize = globalThis?.navigator?.hardwareConcurrency ?? 4;
-
 /**
  * JPEG export encode pool: same shape as the decoder {@link Pool}
  * (`encode` / `destroy`), least-loaded worker selection.
@@ -100,6 +106,8 @@ export class JpegExportPool {
     lowerLimit: number,
     upperLimit: number,
     quality = JPEG_EXPORT_QUALITY,
+    transfer: JpegExportTransfer = "contrast",
+    padTileSize?: number,
   ): Promise<ArrayBuffer> {
     const workerWrappersPromise = this.workerWrappers;
     if (!workerWrappersPromise) {
@@ -118,6 +126,8 @@ export class JpegExportPool {
         lowerLimit,
         upperLimit,
         quality,
+        transfer,
+        padTileSize,
       },
       [buffer],
     );
@@ -137,9 +147,7 @@ export class JpegExportPool {
 let singleton: JpegExportPool | null = null;
 
 function workersSupported(): boolean {
-  return (
-    typeof Worker !== "undefined" && typeof OffscreenCanvas !== "undefined"
-  );
+  return typeof Worker !== "undefined";
 }
 
 export function getJpegExportPool(): JpegExportPool | null {
@@ -161,11 +169,13 @@ export type EncodeTilePixelsIn = {
   lowerLimit: number;
   upperLimit: number;
   quality?: number;
+  transfer?: JpegExportTransfer;
+  padTileSize?: number;
 };
 
 /**
- * Prefer workers; fall back to main-thread canvas encode if workers are
- * unavailable or fail.
+ * Prefer workers; fall back to main-thread @jsquash/jpeg encode if workers
+ * are unavailable or fail.
  */
 export async function encodeTileJpeg(
   input: EncodeTilePixelsIn,
@@ -177,6 +187,8 @@ export async function encodeTileJpeg(
     lowerLimit,
     upperLimit,
     quality = JPEG_EXPORT_QUALITY,
+    transfer = "contrast",
+    padTileSize,
   } = input;
   const pool = getJpegExportPool();
   if (pool) {
@@ -190,6 +202,8 @@ export async function encodeTileJpeg(
         lowerLimit,
         upperLimit,
         quality,
+        transfer,
+        padTileSize,
       );
     } catch (err) {
       console.warn(
@@ -205,6 +219,8 @@ export async function encodeTileJpeg(
     lowerLimit,
     upperLimit,
     quality,
+    transfer,
+    padTileSize,
   );
 }
 

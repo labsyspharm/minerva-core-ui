@@ -1,4 +1,13 @@
-export const JPEG_EXPORT_QUALITY = 0.5;
+import encodeJpeg, { init as initJpegEncode } from "@jsquash/jpeg/encode";
+import type { JpegExportTransfer } from "./cubeRootEncoding";
+import { encodeCubeRootU16ToU8 } from "./cubeRootEncoding";
+import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
+
+/** MozJpegColorSpace.GRAYSCALE — const enum is erased at runtime. */
+const MOZJPEG_COLORSPACE_GRAYSCALE = 1;
+
+/** Historical 0–1 scale (Canvas); MozJPEG uses 0–100 via {@link mozJpegQuality}. */
+export const JPEG_EXPORT_QUALITY = 0.95;
 
 export const PIXEL_CTORS: Record<
   string,
@@ -17,13 +26,13 @@ export const PIXEL_CTORS: Record<
   Float64Array,
 };
 
-export function clampValue(x: number, min: number, max: number): number {
+function clampValue(x: number, min: number, max: number): number {
   if (max === min) return 0;
   return Math.min(255, Math.max(0, (255 * (x - min)) / (max - min)));
 }
 
 /** Fill grayscale RGBA into a preallocated buffer (length = width * height * 4). */
-export function clampPixelsToRgba(
+function clampPixelsToRgba(
   out: Uint8ClampedArray,
   pixels: ArrayLike<number>,
   min: number,
@@ -39,46 +48,83 @@ export function clampPixelsToRgba(
   }
 }
 
-type CanvasLike = {
-  width: number;
-  height: number;
-  getContext(contextId: "2d"): {
-    putImageData(imageData: ImageData, dx: number, dy: number): void;
-  } | null;
-  convertToBlob?(options?: { type?: string; quality?: number }): Promise<Blob>;
-};
+function cubeRootPixelsToRgba(
+  out: Uint8ClampedArray,
+  pixels: ArrayLike<number>,
+): void {
+  for (let i = 0; i < pixels.length; i++) {
+    const v = encodeCubeRootU16ToU8(pixels[i]);
+    const o = i * 4;
+    out[o] = v;
+    out[o + 1] = v;
+    out[o + 2] = v;
+    out[o + 3] = 255;
+  }
+}
 
-async function blobFromCanvas(
-  canvas: CanvasLike,
+/**
+ * Pad edge tiles so JPEG SOF dimensions match the declared (square) TIFF tile
+ * size. Input is grayscale RGBA (R=G=B=intensity). Output is tile×tile RGBA.
+ */
+function padGrayscaleRgbaToTile(
+  rgba: Uint8ClampedArray,
+  width: number,
+  height: number,
+  tileSize = JPEG_PYRAMID_TILE_SIZE,
+): Uint8ClampedArray<ArrayBuffer> {
+  if (width === tileSize && height === tileSize) {
+    return rgba.buffer instanceof ArrayBuffer
+      ? (rgba as Uint8ClampedArray<ArrayBuffer>)
+      : (new Uint8ClampedArray(rgba) as Uint8ClampedArray<ArrayBuffer>);
+  }
+  const out = new Uint8ClampedArray(
+    new ArrayBuffer(tileSize * tileSize * 4),
+  ) as Uint8ClampedArray<ArrayBuffer>;
+  const copyW = Math.min(width, tileSize);
+  const copyH = Math.min(height, tileSize);
+  for (let row = 0; row < copyH; row++) {
+    const src = row * width * 4;
+    const dst = row * tileSize * 4;
+    out.set(rgba.subarray(src, src + copyW * 4), dst);
+  }
+  return out;
+}
+
+/** Accept legacy 0–1 quality or MozJPEG 0–100. */
+function mozJpegQuality(quality: number): number {
+  if (!Number.isFinite(quality)) return 50;
+  return quality <= 1 ? Math.round(quality * 100) : Math.round(quality);
+}
+
+let jsquashReady: Promise<void> | null = null;
+
+/** Pre-warm MozJPEG WASM (once per worker / main thread). */
+export function ensureJpegEncoderReady(): Promise<void> {
+  if (!jsquashReady) {
+    jsquashReady = initJpegEncode().then(() => undefined);
+  }
+  return jsquashReady;
+}
+
+async function encodeRgbaToJpeg(
   width: number,
   height: number,
   rgba: Uint8ClampedArray<ArrayBuffer>,
   quality: number,
 ): Promise<ArrayBuffer> {
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("jpegExportEncode: 2d context unavailable");
+  await ensureJpegEncoderReady();
   const imageData = new ImageData(rgba, width, height);
-  ctx.putImageData(imageData, 0, 0);
-
-  let blob: Blob | null;
-  if (typeof canvas.convertToBlob === "function") {
-    blob = await canvas.convertToBlob({
-      type: "image/jpeg",
-      quality,
-    });
-  } else {
-    const htmlCanvas = canvas as unknown as HTMLCanvasElement;
-    blob = await new Promise<Blob | null>((resolve) => {
-      htmlCanvas.toBlob(resolve, "image/jpeg", quality);
-    });
-  }
-  if (!blob) throw new Error("jpegExportEncode: JPEG blob is null");
-  return blob.arrayBuffer();
+  return encodeJpeg(imageData, {
+    quality: mozJpegQuality(quality),
+    color_space: MOZJPEG_COLORSPACE_GRAYSCALE,
+    baseline: true,
+    progressive: false,
+    arithmetic: false,
+    optimize_coding: false,
+  });
 }
 
-/** Encode clamped grayscale pixels to JPEG. Prefer OffscreenCanvas when available. */
+/** Encode grayscale pixels to JPEG (contrast-windowed or cube-root transfer). */
 export async function encodeGrayscaleJpeg(
   width: number,
   height: number,
@@ -86,33 +132,25 @@ export async function encodeGrayscaleJpeg(
   lowerLimit: number,
   upperLimit: number,
   quality = JPEG_EXPORT_QUALITY,
+  transfer: JpegExportTransfer = "contrast",
+  padTileSize?: number,
 ): Promise<ArrayBuffer> {
   const rgba = new Uint8ClampedArray(
     new ArrayBuffer(width * height * 4),
   ) as Uint8ClampedArray<ArrayBuffer>;
-  clampPixelsToRgba(rgba, pixels, lowerLimit, upperLimit);
-
-  if (typeof OffscreenCanvas !== "undefined") {
-    return blobFromCanvas(
-      new OffscreenCanvas(width, height),
-      width,
-      height,
-      rgba,
-      quality,
-    );
+  if (transfer === "cube-root") {
+    cubeRootPixelsToRgba(rgba, pixels);
+  } else {
+    clampPixelsToRgba(rgba, pixels, lowerLimit, upperLimit);
   }
-
-  if (typeof document !== "undefined") {
-    return blobFromCanvas(
-      document.createElement("canvas"),
-      width,
-      height,
-      rgba,
-      quality,
-    );
+  if (
+    padTileSize === undefined ||
+    (width === padTileSize && height === padTileSize)
+  ) {
+    return encodeRgbaToJpeg(width, height, rgba, quality);
   }
-
-  throw new Error("jpegExportEncode: no canvas available");
+  const padded = padGrayscaleRgbaToTile(rgba, width, height, padTileSize);
+  return encodeRgbaToJpeg(padTileSize, padTileSize, padded, quality);
 }
 
 export function typedArrayCtorName(data: ArrayLike<number>): string {

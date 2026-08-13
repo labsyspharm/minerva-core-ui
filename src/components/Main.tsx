@@ -30,6 +30,10 @@ import {
 } from "@/lib/imaging/autoContrast";
 import { defaultVisibilitiesForSources } from "@/lib/imaging/channelCompositor";
 import { isImageChannel } from "@/lib/imaging/channelKind";
+import {
+  JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE,
+  jpegTransferFromImageSource,
+} from "@/lib/imaging/cubeRootEncoding";
 import { loadDicomWeb, parseDicomWeb } from "@/lib/imaging/dicom.js";
 import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
 import {
@@ -103,6 +107,7 @@ import {
 import { validateDocumentData } from "@/lib/stores/validateDocument";
 import {
   getStoryRootHandle,
+  isStoryRootHandleUsable,
   listExistingPyramidFolders,
   neededJpegPyramidFolderNames,
   reconnectStoryRootFromPicker,
@@ -258,7 +263,11 @@ async function hydrateLoadersFromImages(
 > {
   const storyId = useDocumentStore.getState().activeStoryId;
   const rootOpts = { requestPermission, mode: "read" as const };
-  const root = await getStoryRootHandle(storyId, rootOpts);
+  const storedRoot = await getStoryRootHandle(storyId, rootOpts);
+  const root =
+    storedRoot && (await isStoryRootHandleUsable(storedRoot))
+      ? storedRoot
+      : undefined;
   const missingStoryRoot = storyNeedsLocalJpegRoot(images) && !root;
   const result = await hydrateDocumentLoaders(images, {
     channelGroups: opts?.channelGroups ?? [],
@@ -266,6 +275,7 @@ async function hydrateLoadersFromImages(
     pool: new Pool(),
     requestPermission,
     includeLocal: true,
+    imageSource: useDocumentStore.getState().metadata.imageSource,
     ...(root
       ? {
           fetchTile: tileFetcherForDirectory(root),
@@ -282,6 +292,15 @@ function clearOmeDerivedCaches(): void {
 }
 
 const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
+
+async function pickExportFolder(): Promise<FileSystemDirectoryHandle | null> {
+  try {
+    return await showDirectoryPicker({ mode: "readwrite" });
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") return null;
+    throw e;
+  }
+}
 
 const Content = (props: Props) => {
   const { handleKeys, useLaunchQueue = false } = props;
@@ -393,6 +412,7 @@ const Content = (props: Props) => {
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
   const [exportMode, setExportMode] = useState<StoryExportMode>("jpeg-pyramid");
+  const [exportAllowDocumentOnly, setExportAllowDocumentOnly] = useState(false);
   const [viewerRemountKey, setViewerRemountKey] = useState(0);
   const [directory_handle, setDirectoryHandle] = useState(
     null as Handle.Dir | null,
@@ -409,36 +429,20 @@ const Content = (props: Props) => {
   ) => {
     const doc = useDocumentStore.getState();
     const storyId = doc.activeStoryId;
+    // Always open ImageExporter (format picker). Document-only is offered when
+    // matching pyramid folders already exist.
     if (mode === "jpeg-pyramid") {
       const needed = await neededJpegPyramidFolderNames(
         doc.channelGroups,
         doc.images,
+        jpegTransferFromImageSource(doc.metadata.imageSource),
       );
       const existing = await listExistingPyramidFolders(dirHandle);
-      if (
-        needed.size === 0 ||
-        [...needed].every((name) => existing.has(name))
-      ) {
-        try {
-          await writeStoryBundleSidecars(dirHandle, doc.toDocumentData(), {
-            mode: "jpeg-pyramid",
-          });
-          if (storyId) await setStoryRootHandle(storyId, dirHandle);
-          window.alert("Updated document.json in the export folder.");
-        } catch (e) {
-          console.error("[minerva] sidecar-only export failed", e);
-          window.alert(
-            e instanceof Error ? e.message : "Failed to update document.json.",
-          );
-        }
-        return;
-      }
-      if (omeLoaderEntries.length === 0 && dicomIndexList.length === 0) {
-        window.alert(
-          "Channel contrast changed. Re-export needs the original image, or match the existing pyramid contrast.",
-        );
-        return;
-      }
+      const foldersReady =
+        needed.size === 0 || [...needed].every((name) => existing.has(name));
+      setExportAllowDocumentOnly(foldersReady);
+    } else {
+      setExportAllowDocumentOnly(false);
     }
     if (storyId) {
       try {
@@ -451,16 +455,6 @@ const Content = (props: Props) => {
     setDirectoryHandle(dirHandle);
     setIoState("EXPORTING");
   };
-
-  const pickExportFolder =
-    async (): Promise<FileSystemDirectoryHandle | null> => {
-      try {
-        return await showDirectoryPicker({ mode: "readwrite" });
-      } catch (e) {
-        if (e instanceof DOMException && e.name === "AbortError") return null;
-        throw e;
-      }
-    };
 
   const startExport = async (mode: StoryExportMode = "jpeg-pyramid") => {
     if (!hasDirectoryPickerAccess()) {
@@ -486,13 +480,25 @@ const Content = (props: Props) => {
         return;
       }
     }
+    if (mode === "jpeg-ome-tiff") {
+      if (omeLoaderEntries.length === 0 && dicomIndexList.length === 0) {
+        window.alert(
+          "OME-TIFF export needs the original OME-TIFF or DICOM image loaded (not a JPEG-only story).",
+        );
+        return;
+      }
+    }
     const storyId = doc.activeStoryId;
-    const existingRoot =
-      mode === "jpeg-pyramid" && storyId
+    const storedRoot =
+      (mode === "jpeg-pyramid" || mode === "jpeg-ome-tiff") && storyId
         ? await getStoryRootHandle(storyId, {
             requestPermission: true,
             mode: "readwrite",
           })
+        : undefined;
+    const existingRoot =
+      storedRoot && (await isStoryRootHandleUsable(storedRoot))
+        ? storedRoot
         : undefined;
     if (existingRoot) {
       setExportFolderPrompt({ mode, root: existingRoot });
@@ -511,7 +517,7 @@ const Content = (props: Props) => {
       if (modeAtStop === "jpeg-pyramid") {
         try {
           const doc = useDocumentStore.getState();
-          const root =
+          const storedRoot =
             directoryAtStop ??
             (doc.activeStoryId
               ? await getStoryRootHandle(doc.activeStoryId, {
@@ -519,6 +525,10 @@ const Content = (props: Props) => {
                   mode: "read",
                 })
               : undefined);
+          const root =
+            storedRoot && (await isStoryRootHandleUsable(storedRoot))
+              ? storedRoot
+              : undefined;
           if (root && doc.images.some((im) => im.source?.kind === "jpeg")) {
             const entries = await jpegLoaderEntriesFromImages({
               images: doc.images,
@@ -527,6 +537,7 @@ const Content = (props: Props) => {
               activeGroupId: activeGroupIdAtStop,
               fetchTile: tileFetcherForDirectory(root),
               existingPyramidFolders: await listExistingPyramidFolders(root),
+              transfer: jpegTransferFromImageSource(doc.metadata.imageSource),
             });
             if (entries.length > 0) setJpegLoaderEntries(entries);
           }
@@ -1012,6 +1023,7 @@ const Content = (props: Props) => {
         images: data.images,
         channelGroups: data.channelGroups,
         documentUrl,
+        transfer: jpegTransferFromImageSource(data.metadata.imageSource),
       });
       if (loadGeneration !== jpegUrlLoadGenerationRef.current) return;
       setJpegLoaderEntries(jpegEntries);
@@ -1802,8 +1814,13 @@ const Content = (props: Props) => {
     });
   }, [viewerImageKey, omeLoaderEntries, onEnsureChannelGmmContrastLimits]);
 
+  const storyImageSource = useDocumentStore((s) => s.metadata.imageSource);
+  // Contrast-baked JPEG OME-TIFF matches jpeg-pyramid: display-only, not re-windowed.
   const contrastEditable =
-    omeLoaderEntries.length > 0 || dicomIndexList.length > 0;
+    storyImageSource !== JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE &&
+    (omeLoaderEntries.length > 0 ||
+      dicomIndexList.length > 0 ||
+      jpegTransferFromImageSource(storyImageSource) === "cube-root");
   const channelProps = {
     hiddenChannel: true,
     contrastEditable,
@@ -1813,11 +1830,23 @@ const Content = (props: Props) => {
 
   const mainProps = {
     ...channelProps,
-    in_f: fileName,
-    handles: [] as Handle.File[],
     directory_handle,
     ioState,
     exportMode,
+    onDocumentOnlyUpdate: exportAllowDocumentOnly
+      ? async () => {
+          const handle = directory_handle;
+          if (!handle) {
+            throw new Error("No export folder selected");
+          }
+          await writeStoryBundleSidecars(
+            handle,
+            useDocumentStore.getState().toDocumentData(),
+            { mode: "jpeg-pyramid" },
+          );
+          stopExport();
+        }
+      : undefined,
     presenting,
     stopExport,
     exportFolderPrompt: exportFolderPrompt

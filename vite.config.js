@@ -44,7 +44,7 @@ export default defineConfig(({ command }) => {
       }),
     ].filter(Boolean),
     optimizeDeps: {
-      exclude: ["onnxruntime-web", "psudo"],
+      exclude: ["onnxruntime-web", "psudo", "@jsquash/jpeg"],
       include: [
         "@luma.gl/core",
         "@luma.gl/constants",
