@@ -138,10 +138,11 @@ type LegendRowProps = {
     cid: string,
     c: Partial<ChannelGroupChannel>,
   ) => void;
+  onClick: (e: React.MouseEvent) => void;
   popChannel: (ctx: { g: number; idx: number }) => void;
 };
 
-const LegendRow = (props: LegendRowProps & { onClick: () => void }) => {
+const LegendRow = (props: LegendRowProps) => {
   const { channel } = props;
   const channelName = channel.name;
   const { idx, g, onClick } = props;
@@ -308,7 +309,7 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
                     channelGroupRowVisibilities,
                     c.channel_uuid,
                   );
-                const rowProps: LegendRowProps & { onClick: () => void } = {
+                const rowProps: LegendRowProps = {
                   channel: c,
                   idx: k,
                   g,
