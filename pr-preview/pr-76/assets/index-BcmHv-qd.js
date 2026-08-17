@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-V8q9-pv3.js","./pako.esm-KbdoS3Oq.js","./lerc-kpPcnJBc.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BJrNHUv2.js","./pako.esm-KbdoS3Oq.js","./lerc-BO1tvsTb.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-zuzRJyo-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Dz5PYGVr.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DhqUJrAe.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CkMiIVpM.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DaUPUKWu.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-ByWhETkK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-V8q9-pv3.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-Dn5AGTzb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-kpPcnJBc.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BJrNHUv2.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-C0JEFfpc.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BO1tvsTb.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BcGETNNJ.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-af7QlYrF.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DIUVP5rG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-D2rDJ3nF.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -87093,45 +87093,6 @@ void main() {
   function useCanDocumentRedo() {
     return useStore(useDocumentStore.temporal, (s2) => s2.futureStates.length > 0);
   }
-  function isEditableTarget(target) {
-    if (!(target instanceof HTMLElement)) return false;
-    const tag = target.tagName;
-    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
-    if (target.isContentEditable) return true;
-    if (target.closest(".ProseMirror")) return true;
-    return false;
-  }
-  function useDocumentUndoKeyboard() {
-    reactExports.useEffect(() => {
-      const onKeyDown = (event) => {
-        if (!event.metaKey && !event.ctrlKey) return;
-        if (isEditableTarget(event.target)) return;
-        const key2 = event.key.toLowerCase();
-        if (key2 === "z" && !event.shiftKey) {
-          const can = useDocumentStore.temporal.getState().pastStates.length > 0;
-          if (!can) return;
-          event.preventDefault();
-          documentUndo();
-          return;
-        }
-        if (key2 === "z" && event.shiftKey) {
-          const can = useDocumentStore.temporal.getState().futureStates.length > 0;
-          if (!can) return;
-          event.preventDefault();
-          documentRedo();
-          return;
-        }
-        if (key2 === "y") {
-          const can = useDocumentStore.temporal.getState().futureStates.length > 0;
-          if (!can) return;
-          event.preventDefault();
-          documentRedo();
-        }
-      };
-      window.addEventListener("keydown", onKeyDown);
-      return () => window.removeEventListener("keydown", onKeyDown);
-    }, []);
-  }
   const group$1 = "_group_gqa4m_1";
   const button$1 = "_button_gqa4m_12";
   const styles$u = {
@@ -87176,7 +87137,7 @@ void main() {
           className: styles$u.button,
           onClick: () => documentUndo(),
           disabled: !canUndo,
-          title: "Undo (\u2318Z)",
+          title: "Undo",
           "aria-label": "Undo",
           children: jsxRuntimeExports.jsx(UndoIcon, {})
         }),
@@ -87185,7 +87146,7 @@ void main() {
           className: styles$u.button,
           onClick: () => documentRedo(),
           disabled: !canRedo,
-          title: "Redo (\u2318\u21E7Z)",
+          title: "Redo",
           "aria-label": "Redo",
           children: jsxRuntimeExports.jsx(RedoIcon, {})
         })
@@ -87387,7 +87348,9 @@ void main() {
     const fieldId = reactExports.useId();
     const inputRef = reactExports.useRef(null);
     const [editing, setEditing] = reactExports.useState(false);
-    const inputSize = Math.min(200, Math.max(14, titleText2.length || 13));
+    const [draftTitle, setDraftTitle] = reactExports.useState("");
+    const displayTitle = editing ? draftTitle : titleText2;
+    const inputSize = Math.min(200, Math.max(14, displayTitle.length || 13));
     reactExports.useEffect(() => {
       if (!editing) return;
       const el2 = inputRef.current;
@@ -87398,12 +87361,6 @@ void main() {
     }, [
       editing
     ]);
-    const pauseDocumentHistory = () => {
-      useDocumentStore.temporal.getState().pause();
-    };
-    const resumeDocumentHistory = () => {
-      useDocumentStore.temporal.getState().resume();
-    };
     return jsxRuntimeExports.jsxs(StoryBannerBar, {
       as: "section",
       className: styles$r.bannerShell,
@@ -87424,24 +87381,24 @@ void main() {
             type: "text",
             size: inputSize,
             readOnly: !editing,
-            value: titleText2,
+            value: displayTitle,
             placeholder: "Untitled story",
             "aria-label": "Story title",
             onFocus: () => {
-              pauseDocumentHistory();
-              if (!editing) setEditing(true);
+              if (!editing) {
+                setDraftTitle(titleText2);
+                setEditing(true);
+              }
             },
-            onChange: (e2) => setMetadata({
-              title: e2.target.value
-            }),
+            onChange: (e2) => setDraftTitle(e2.target.value),
             onBlur: (e2) => {
               setEditing(false);
-              const raw2 = e2.target.value;
-              const trimmed = raw2.trim();
-              if (trimmed !== raw2) setMetadata({
-                title: trimmed
-              });
-              resumeDocumentHistory();
+              const trimmed = e2.target.value.trim();
+              if (trimmed !== titleText2) {
+                setMetadata({
+                  title: trimmed
+                });
+              }
               void (async () => {
                 const s2 = useDocumentStore.getState();
                 const id2 = s2.activeStoryId;
@@ -248207,12 +248164,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-17T16:40:56.119Z");
+    const label2 = utcShort("2026-08-17T18:41:30.953Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-17T16:40:56.119Z",
+      title: "2026-08-17T18:41:30.953Z",
       children: [
         "Updated ",
         label2,
@@ -250940,7 +250897,6 @@ void main() {
     const { handleKeys, useLaunchQueue = false } = props;
     const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
     useStoryAutoSave();
-    useDocumentUndoKeyboard();
     const navigate = rootRouteApi.useNavigate();
     const returnToLibrary = reactExports.useCallback(() => {
       void (async () => {
