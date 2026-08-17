@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useStore } from "zustand";
 import { useAppStore } from "./appStore";
 import {
@@ -131,50 +130,4 @@ export function useCanDocumentUndo(): boolean {
 
 export function useCanDocumentRedo(): boolean {
   return useStore(useDocumentStore.temporal, (s) => s.futureStates.length > 0);
-}
-
-function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  const tag = target.tagName;
-  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
-  if (target.isContentEditable) return true;
-  if (target.closest(".ProseMirror")) return true;
-  return false;
-}
-
-/** Global Cmd/Ctrl+Z and Cmd/Ctrl+Shift+Z for document undo/redo. */
-export function useDocumentUndoKeyboard(): void {
-  React.useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (!event.metaKey && !event.ctrlKey) return;
-      if (isEditableTarget(event.target)) return;
-
-      const key = event.key.toLowerCase();
-      if (key === "z" && !event.shiftKey) {
-        const can = useDocumentStore.temporal.getState().pastStates.length > 0;
-        if (!can) return;
-        event.preventDefault();
-        documentUndo();
-        return;
-      }
-      if (key === "z" && event.shiftKey) {
-        const can =
-          useDocumentStore.temporal.getState().futureStates.length > 0;
-        if (!can) return;
-        event.preventDefault();
-        documentRedo();
-        return;
-      }
-      if (key === "y") {
-        const can =
-          useDocumentStore.temporal.getState().futureStates.length > 0;
-        if (!can) return;
-        event.preventDefault();
-        documentRedo();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
 }

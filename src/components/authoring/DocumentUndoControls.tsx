@@ -52,7 +52,7 @@ export function DocumentUndoControls() {
         className={styles.button}
         onClick={() => documentUndo()}
         disabled={!canUndo}
-        title="Undo (⌘Z)"
+        title="Undo"
         aria-label="Undo"
       >
         <UndoIcon />
@@ -62,7 +62,7 @@ export function DocumentUndoControls() {
         className={styles.button}
         onClick={() => documentRedo()}
         disabled={!canRedo}
-        title="Redo (⌘⇧Z)"
+        title="Redo"
         aria-label="Redo"
       >
         <RedoIcon />
