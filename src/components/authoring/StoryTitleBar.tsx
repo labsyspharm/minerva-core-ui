@@ -1,4 +1,5 @@
 import * as React from "react";
+import { DocumentUndoControls } from "@/components/authoring/DocumentUndoControls";
 import { StoryAuthorOverflowMenu } from "@/components/authoring/StoryAuthorOverflowMenu";
 import PlayIcon from "@/components/shared/icons/play.svg?react";
 import {
@@ -48,6 +49,14 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
     el.setSelectionRange(n, n);
   }, [editing]);
 
+  const pauseDocumentHistory = () => {
+    useDocumentStore.temporal.getState().pause();
+  };
+
+  const resumeDocumentHistory = () => {
+    useDocumentStore.temporal.getState().resume();
+  };
+
   return (
     <StoryBannerBar
       as="section"
@@ -60,6 +69,7 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
           onExport={onExport}
         />
       ) : null}
+      <DocumentUndoControls />
       <label className={styles.titleFieldWrap} htmlFor={fieldId}>
         <input
           ref={inputRef}
@@ -72,6 +82,7 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
           placeholder="Untitled story"
           aria-label="Story title"
           onFocus={() => {
+            pauseDocumentHistory();
             if (!editing) setEditing(true);
           }}
           onChange={(e) => setMetadata({ title: e.target.value })}
@@ -80,6 +91,7 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
             const raw = e.target.value;
             const trimmed = raw.trim();
             if (trimmed !== raw) setMetadata({ title: trimmed });
+            resumeDocumentHistory();
             void (async () => {
               const s = useDocumentStore.getState();
               const id = s.activeStoryId;

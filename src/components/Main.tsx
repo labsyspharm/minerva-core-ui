@@ -95,6 +95,7 @@ import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
+import { useDocumentUndoKeyboard } from "@/lib/stores/documentUndo";
 import {
   applySourceChannelsToImages,
   dedupeImagesForImport,
@@ -307,6 +308,7 @@ const Content = (props: Props) => {
   /** Remote demo image / DICOM bootstrap from `index.tsx` (`pnpm run demo` only). */
   const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
   useStoryAutoSave();
+  useDocumentUndoKeyboard();
   const navigate = rootRouteApi.useNavigate();
   const returnToLibrary = React.useCallback(() => {
     void (async () => {
