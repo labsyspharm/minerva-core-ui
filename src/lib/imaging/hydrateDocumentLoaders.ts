@@ -30,6 +30,8 @@ export type HydrateDocumentLoadersResult = {
   deniedHandleKeys: string[];
   /** Local source present but no handle in IDB/session (typical after Firefox refresh). */
   missingHandleKeys: string[];
+  /** Per-image load failures (e.g. untiled mask larger than the GPU). */
+  loaderErrors: string[];
 };
 
 export type HydrateDocumentLoadersOpts = {
@@ -81,6 +83,7 @@ export async function hydrateDocumentLoaders(
   const dicomIndexList: DicomIndex[] = [];
   const deniedHandleKeys: string[] = [];
   const missingHandleKeys: string[] = [];
+  const loaderErrors: string[] = [];
   const pool = opts.pool === null ? undefined : (opts.pool ?? new Pool());
   const dicomSeriesSeen = new Set<string>();
   const requestPermission = opts.requestPermission ?? false;
@@ -111,18 +114,24 @@ export async function hydrateDocumentLoaders(
     if (im.source.kind === "jpeg") continue;
     switch (im.source.kind) {
       case "url": {
-        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-          kind: "url",
-          url: resolveOmeSourceUrl(documentUrl, im.source.url),
-          ...(pool ? { pool } : {}),
-        });
-        omeLoaderEntries.push({
-          loader: wrapOmeJpeg
-            ? wrapOmeLoaderJpegExport(loader, transfer)
-            : loader,
-          sourceImageId: im.id,
-          ...(wrapOmeJpeg ? { transfer } : {}),
-        });
+        try {
+          const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
+            kind: "url",
+            url: resolveOmeSourceUrl(documentUrl, im.source.url),
+            ...(pool ? { pool } : {}),
+          });
+          omeLoaderEntries.push({
+            loader: wrapOmeJpeg
+              ? wrapOmeLoaderJpegExport(loader, transfer)
+              : loader,
+            sourceImageId: im.id,
+            ...(wrapOmeJpeg ? { transfer } : {}),
+          });
+        } catch (e) {
+          loaderErrors.push(
+            e instanceof Error ? e.message : `Could not load ${im.basename}`,
+          );
+        }
         break;
       }
       case "local": {
@@ -139,19 +148,25 @@ export async function hydrateDocumentLoaders(
         }
         if (!(await findFile({ handle }))) break;
         const file = await handle.getFile();
-        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-          kind: "local",
-          handle,
-          in_f: file.name,
-          ...(pool ? { pool } : {}),
-        });
-        omeLoaderEntries.push({
-          loader: wrapOmeJpeg
-            ? wrapOmeLoaderJpegExport(loader, transfer)
-            : loader,
-          sourceImageId: im.id,
-          ...(wrapOmeJpeg ? { transfer } : {}),
-        });
+        try {
+          const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
+            kind: "local",
+            handle,
+            in_f: file.name,
+            ...(pool ? { pool } : {}),
+          });
+          omeLoaderEntries.push({
+            loader: wrapOmeJpeg
+              ? wrapOmeLoaderJpegExport(loader, transfer)
+              : loader,
+            sourceImageId: im.id,
+            ...(wrapOmeJpeg ? { transfer } : {}),
+          });
+        } catch (e) {
+          loaderErrors.push(
+            e instanceof Error ? e.message : `Could not load ${im.basename}`,
+          );
+        }
         break;
       }
       case "dicomWeb": {
@@ -182,5 +197,6 @@ export async function hydrateDocumentLoaders(
     dicomIndexList,
     deniedHandleKeys,
     missingHandleKeys,
+    loaderErrors,
   };
 }

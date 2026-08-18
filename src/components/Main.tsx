@@ -1182,6 +1182,9 @@ const Content = (props: Props) => {
       setDeniedHandleKeys(result.deniedHandleKeys);
       setMissingHandleKeys(result.missingHandleKeys);
       setMissingStoryRoot(result.missingStoryRoot);
+      if (result.loaderErrors.length > 0) {
+        window.alert(result.loaderErrors.join("\n"));
+      }
     },
     [],
   );
@@ -2129,6 +2132,14 @@ const Content = (props: Props) => {
               );
             }
             return { ok: true };
+          } catch (e) {
+            return {
+              ok: false,
+              error:
+                e instanceof Error
+                  ? e.message
+                  : "Could not load the image file.",
+            };
           } finally {
             setIsLoadingImage(false);
             document.getElementById("global-loader")?.remove();

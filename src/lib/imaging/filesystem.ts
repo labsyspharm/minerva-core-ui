@@ -107,6 +107,48 @@ function parseFirstOmeImagePixels(
   };
 }
 
+const FALLBACK_MAX_TEXTURE_SIZE = 4096;
+let cachedMaxTextureSize: number | undefined;
+
+/** WebGL `MAX_TEXTURE_SIZE`; cached. Fallback 4096 if there is no GPU context. */
+function queryMaxTextureSize(): number {
+  if (cachedMaxTextureSize != null) return cachedMaxTextureSize;
+  if (typeof document === "undefined") {
+    cachedMaxTextureSize = FALLBACK_MAX_TEXTURE_SIZE;
+    return cachedMaxTextureSize;
+  }
+  const canvas = document.createElement("canvas");
+  const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+  const size =
+    gl && typeof gl.getParameter === "function"
+      ? Number(gl.getParameter(gl.MAX_TEXTURE_SIZE))
+      : NaN;
+  cachedMaxTextureSize =
+    Number.isFinite(size) && size > 0 ? size : FALLBACK_MAX_TEXTURE_SIZE;
+  gl?.getExtension("WEBGL_lose_context")?.loseContext();
+  return cachedMaxTextureSize;
+}
+
+function tiffDirNumber(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (Array.isArray(value) && typeof value[0] === "number") return value[0];
+  return 0;
+}
+
+/** True TIFF tiles — not geotiff's ImageWidth / RowsPerStrip fallback. */
+function isTiffTiled(image: GeoTiffImage): boolean {
+  const fd = image.fileDirectory as {
+    TileWidth?: unknown;
+    TileLength?: unknown;
+  };
+  return tiffDirNumber(fd.TileWidth) > 0 && tiffDirNumber(fd.TileLength) > 0;
+}
+
+function isTiffPyramided(image: GeoTiffImage): boolean {
+  const offsets = (image.fileDirectory as { SubIFDs?: unknown }).SubIFDs;
+  return Array.isArray(offsets) && offsets.length > 0;
+}
+
 /** Power-of-two tile size, matching Viv MultiscaleImageLayer. */
 function vivTileSize(image: GeoTiffImage): number {
   const tw = image.getTileWidth();
@@ -190,17 +232,27 @@ function maskPlaneFromImage(
 ): LoaderPlane {
   const width = image.getWidth();
   const height = image.getHeight();
-  const tileSize = vivTileSize(image);
+  const tiled = isTiffTiled(image);
+  const tileSize = tiled ? vivTileSize(image) : Math.max(width, height, 1);
   const clampC = (c: number) => Math.max(0, Math.min(sizeC - 1, c));
+  const getRaster = ({ selection }: { selection: Selection }) =>
+    readTiffRaster(image, clampC(selection.c));
   return {
     dtype,
     shape: [1, sizeC, 1, height, width],
     tileSize,
     labels: ["t", "c", "z", "y", "x"],
     onTileError: () => undefined,
-    getRaster: ({ selection }) => readTiffRaster(image, clampC(selection.c)),
-    getTile: ({ x, y, selection }) =>
-      readTiffTile(image, clampC(selection.c), x, y, tileSize),
+    getRaster,
+    getTile: tiled
+      ? ({ x, y, selection }) =>
+          readTiffTile(image, clampC(selection.c), x, y, tileSize)
+      : async ({ x, y, selection }) => {
+          if (x !== 0 || y !== 0) {
+            return { data: new Uint8Array(0), width: 0, height: 0 };
+          }
+          return getRaster({ selection });
+        },
   };
 }
 
@@ -336,10 +388,18 @@ const toLoader: ToLoader = async ({ handle, pool = null }) => {
 async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
   const tiff = await fromBlob(inFile);
   const baseImage = await tiff.getImage(0);
-  const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
   const fd = baseImage.fileDirectory;
   const width = baseImage.getWidth();
   const height = baseImage.getHeight();
+  if (!isTiffPyramided(baseImage) && !isTiffTiled(baseImage)) {
+    const maxTextureSize = queryMaxTextureSize();
+    if (width > maxTextureSize || height > maxTextureSize) {
+      throw new Error(
+        `This mask is not tiled or pyramided and is too large for the GPU (${width}×${height}; max texture ${maxTextureSize}). Export it as a tiled OME-TIFF pyramid and import again.`,
+      );
+    }
+  }
+  const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
   const dtype = dtypeFromTiffDirectory(fd);
   const ome = parseFirstOmeImagePixels(fd.ImageDescription);
   const sizeC = Math.max(1, ome?.SizeC ?? fd.SamplesPerPixel ?? 1);
