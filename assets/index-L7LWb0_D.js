@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DKEO9sa9.js","./pako.esm-KbdoS3Oq.js","./lerc-COSrYBGA.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DZx8C3EJ.js","./pako.esm-KbdoS3Oq.js","./lerc-DgeTWaiS.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-6iXoy_Id.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CkkaNPh_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BgBucunu.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BAmRfWS6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-Da0rYve1.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-WdeQK9Ov.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DKEO9sa9.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BuBlLqyt.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-COSrYBGA.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DZx8C3EJ.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BsyG2h3G.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DgeTWaiS.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CVZjJlNq.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CY925KkL.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-SN9N2RBS.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-WY_GLlkJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -75582,6 +75582,35 @@ void main() {
       BigEndian: false
     };
   }
+  const FALLBACK_MAX_TEXTURE_SIZE = 4096;
+  let cachedMaxTextureSize;
+  function queryMaxTextureSize() {
+    var _a2;
+    if (cachedMaxTextureSize != null) return cachedMaxTextureSize;
+    if (typeof document === "undefined") {
+      cachedMaxTextureSize = FALLBACK_MAX_TEXTURE_SIZE;
+      return cachedMaxTextureSize;
+    }
+    const canvas2 = document.createElement("canvas");
+    const gl2 = canvas2.getContext("webgl2") ?? canvas2.getContext("webgl");
+    const size = gl2 && typeof gl2.getParameter === "function" ? Number(gl2.getParameter(gl2.MAX_TEXTURE_SIZE)) : NaN;
+    cachedMaxTextureSize = Number.isFinite(size) && size > 0 ? size : FALLBACK_MAX_TEXTURE_SIZE;
+    (_a2 = gl2 == null ? void 0 : gl2.getExtension("WEBGL_lose_context")) == null ? void 0 : _a2.loseContext();
+    return cachedMaxTextureSize;
+  }
+  function tiffDirNumber(value) {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (Array.isArray(value) && typeof value[0] === "number") return value[0];
+    return 0;
+  }
+  function isTiffTiled(image2) {
+    const fd2 = image2.fileDirectory;
+    return tiffDirNumber(fd2.TileWidth) > 0 && tiffDirNumber(fd2.TileLength) > 0;
+  }
+  function isTiffPyramided(image2) {
+    const offsets = image2.fileDirectory.SubIFDs;
+    return Array.isArray(offsets) && offsets.length > 0;
+  }
   function vivTileSize(image2) {
     const tw = image2.getTileWidth();
     const th2 = image2.getTileHeight();
@@ -75644,8 +75673,10 @@ void main() {
   function maskPlaneFromImage(image2, sizeC, dtype) {
     const width = image2.getWidth();
     const height = image2.getHeight();
-    const tileSize = vivTileSize(image2);
+    const tiled = isTiffTiled(image2);
+    const tileSize = tiled ? vivTileSize(image2) : Math.max(width, height, 1);
     const clampC = (c2) => Math.max(0, Math.min(sizeC - 1, c2));
+    const getRaster = ({ selection }) => readTiffRaster(image2, clampC(selection.c));
     return {
       dtype,
       shape: [
@@ -75664,8 +75695,19 @@ void main() {
         "x"
       ],
       onTileError: () => void 0,
-      getRaster: ({ selection }) => readTiffRaster(image2, clampC(selection.c)),
-      getTile: ({ x: x2, y: y2, selection }) => readTiffTile(image2, clampC(selection.c), x2, y2, tileSize)
+      getRaster,
+      getTile: tiled ? ({ x: x2, y: y2, selection }) => readTiffTile(image2, clampC(selection.c), x2, y2, tileSize) : async ({ x: x2, y: y2, selection }) => {
+        if (x2 !== 0 || y2 !== 0) {
+          return {
+            data: new Uint8Array(0),
+            width: 0,
+            height: 0
+          };
+        }
+        return getRaster({
+          selection
+        });
+      }
     };
   }
   function hasDirectoryPickerAccess() {
@@ -75770,10 +75812,16 @@ void main() {
   async function maskLoaderFromBlob(inFile) {
     const tiff = await fromBlob(inFile);
     const baseImage = await tiff.getImage(0);
-    const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
     const fd2 = baseImage.fileDirectory;
     const width = baseImage.getWidth();
     const height = baseImage.getHeight();
+    if (!isTiffPyramided(baseImage) && !isTiffTiled(baseImage)) {
+      const maxTextureSize = queryMaxTextureSize();
+      if (width > maxTextureSize || height > maxTextureSize) {
+        throw new Error(`This mask is not tiled or pyramided and is too large for the GPU (${width}\xD7${height}; max texture ${maxTextureSize}). Export it as a tiled OME-TIFF pyramid and import again.`);
+      }
+    }
+    const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
     const dtype = dtypeFromTiffDirectory(fd2);
     const ome = parseFirstOmeImagePixels(fd2.ImageDescription);
     const sizeC = Math.max(1, (ome == null ? void 0 : ome.SizeC) ?? fd2.SamplesPerPixel ?? 1);
@@ -247876,12 +247924,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-13T18:46:44.321Z");
+    const label2 = utcShort("2026-08-18T17:33:06.185Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-13T18:46:44.321Z",
+      title: "2026-08-18T17:33:06.185Z",
       children: [
         "Updated ",
         label2,
@@ -249894,6 +249942,7 @@ void main() {
     const dicomIndexList = [];
     const deniedHandleKeys = [];
     const missingHandleKeys = [];
+    const loaderErrors = [];
     const pool = opts.pool === null ? void 0 : opts.pool ?? new Pool();
     const dicomSeriesSeen = /* @__PURE__ */ new Set();
     const requestPermission = opts.requestPermission ?? false;
@@ -249920,20 +249969,24 @@ void main() {
       if (im.source.kind === "jpeg") continue;
       switch (im.source.kind) {
         case "url": {
-          const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-            kind: "url",
-            url: resolveOmeSourceUrl(documentUrl, im.source.url),
-            ...pool ? {
-              pool
-            } : {}
-          });
-          omeLoaderEntries.push({
-            loader: wrapOmeJpeg ? wrapOmeLoaderJpegExport(loader, transfer) : loader,
-            sourceImageId: im.id,
-            ...wrapOmeJpeg ? {
-              transfer
-            } : {}
-          });
+          try {
+            const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
+              kind: "url",
+              url: resolveOmeSourceUrl(documentUrl, im.source.url),
+              ...pool ? {
+                pool
+              } : {}
+            });
+            omeLoaderEntries.push({
+              loader: wrapOmeJpeg ? wrapOmeLoaderJpegExport(loader, transfer) : loader,
+              sourceImageId: im.id,
+              ...wrapOmeJpeg ? {
+                transfer
+              } : {}
+            });
+          } catch (e2) {
+            loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
+          }
           break;
         }
         case "local": {
@@ -249952,21 +250005,25 @@ void main() {
             handle: handle2
           })) break;
           const file = await handle2.getFile();
-          const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-            kind: "local",
-            handle: handle2,
-            in_f: file.name,
-            ...pool ? {
-              pool
-            } : {}
-          });
-          omeLoaderEntries.push({
-            loader: wrapOmeJpeg ? wrapOmeLoaderJpegExport(loader, transfer) : loader,
-            sourceImageId: im.id,
-            ...wrapOmeJpeg ? {
-              transfer
-            } : {}
-          });
+          try {
+            const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
+              kind: "local",
+              handle: handle2,
+              in_f: file.name,
+              ...pool ? {
+                pool
+              } : {}
+            });
+            omeLoaderEntries.push({
+              loader: wrapOmeJpeg ? wrapOmeLoaderJpegExport(loader, transfer) : loader,
+              sourceImageId: im.id,
+              ...wrapOmeJpeg ? {
+                transfer
+              } : {}
+            });
+          } catch (e2) {
+            loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
+          }
           break;
         }
         case "dicomWeb": {
@@ -249995,7 +250052,8 @@ void main() {
       omeLoaderEntries,
       dicomIndexList,
       deniedHandleKeys,
-      missingHandleKeys
+      missingHandleKeys,
+      loaderErrors
     };
   }
   const MASK_BASENAME_CLASH_ERROR = "The mask must be a different file from the main image.";
@@ -251349,6 +251407,9 @@ void main() {
       setDeniedHandleKeys(result.deniedHandleKeys);
       setMissingHandleKeys(result.missingHandleKeys);
       setMissingStoryRoot(result.missingStoryRoot);
+      if (result.loaderErrors.length > 0) {
+        window.alert(result.loaderErrors.join("\n"));
+      }
     }, []);
     const syncRegistryFromDocument = reactExports.useCallback(() => {
       const doc = useDocumentStore.getState();
@@ -252108,6 +252169,11 @@ void main() {
             }
             return {
               ok: true
+            };
+          } catch (e2) {
+            return {
+              ok: false,
+              error: e2 instanceof Error ? e2.message : "Could not load the image file."
             };
           } finally {
             setIsLoadingImage(false);
