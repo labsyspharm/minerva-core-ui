@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DZx8C3EJ.js","./pako.esm-KbdoS3Oq.js","./lerc-DgeTWaiS.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-B7wDmdPG.js","./pako.esm-KbdoS3Oq.js","./lerc-IrHGmJUz.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-BgBucunu.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BAmRfWS6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DTZSVH1e.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-B_q2O_0U.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-WdeQK9Ov.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CXDRh_Vz.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DZx8C3EJ.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BsyG2h3G.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-DgeTWaiS.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-B7wDmdPG.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-CRZmn2Gc.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-IrHGmJUz.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CY925KkL.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DmzGEzzh.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-WY_GLlkJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DIDFhjr_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -16522,6 +16522,6602 @@ let __tla = (async () => {
       console.error("[zustand devtools middleware] Could not parse the received json", e2);
     }
     if (parsed !== void 0) fn(parsed);
+  };
+  var util;
+  (function(util2) {
+    util2.assertEqual = (_2) => {
+    };
+    function assertIs(_arg) {
+    }
+    util2.assertIs = assertIs;
+    function assertNever(_x) {
+      throw new Error();
+    }
+    util2.assertNever = assertNever;
+    util2.arrayToEnum = (items) => {
+      const obj = {};
+      for (const item2 of items) {
+        obj[item2] = item2;
+      }
+      return obj;
+    };
+    util2.getValidEnumValues = (obj) => {
+      const validKeys = util2.objectKeys(obj).filter((k2) => typeof obj[obj[k2]] !== "number");
+      const filtered = {};
+      for (const k2 of validKeys) {
+        filtered[k2] = obj[k2];
+      }
+      return util2.objectValues(filtered);
+    };
+    util2.objectValues = (obj) => {
+      return util2.objectKeys(obj).map(function(e2) {
+        return obj[e2];
+      });
+    };
+    util2.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object) => {
+      const keys2 = [];
+      for (const key2 in object) {
+        if (Object.prototype.hasOwnProperty.call(object, key2)) {
+          keys2.push(key2);
+        }
+      }
+      return keys2;
+    };
+    util2.find = (arr, checker) => {
+      for (const item2 of arr) {
+        if (checker(item2)) return item2;
+      }
+      return void 0;
+    };
+    util2.isInteger = typeof Number.isInteger === "function" ? (val) => Number.isInteger(val) : (val) => typeof val === "number" && Number.isFinite(val) && Math.floor(val) === val;
+    function joinValues(array, separator = " | ") {
+      return array.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
+    }
+    util2.joinValues = joinValues;
+    util2.jsonStringifyReplacer = (_2, value) => {
+      if (typeof value === "bigint") {
+        return value.toString();
+      }
+      return value;
+    };
+  })(util || (util = {}));
+  var objectUtil;
+  (function(objectUtil2) {
+    objectUtil2.mergeShapes = (first, second) => {
+      return {
+        ...first,
+        ...second
+      };
+    };
+  })(objectUtil || (objectUtil = {}));
+  const ZodParsedType = util.arrayToEnum([
+    "string",
+    "nan",
+    "number",
+    "integer",
+    "float",
+    "boolean",
+    "date",
+    "bigint",
+    "symbol",
+    "function",
+    "undefined",
+    "null",
+    "array",
+    "object",
+    "unknown",
+    "promise",
+    "void",
+    "never",
+    "map",
+    "set"
+  ]);
+  const getParsedType = (data2) => {
+    const t2 = typeof data2;
+    switch (t2) {
+      case "undefined":
+        return ZodParsedType.undefined;
+      case "string":
+        return ZodParsedType.string;
+      case "number":
+        return Number.isNaN(data2) ? ZodParsedType.nan : ZodParsedType.number;
+      case "boolean":
+        return ZodParsedType.boolean;
+      case "function":
+        return ZodParsedType.function;
+      case "bigint":
+        return ZodParsedType.bigint;
+      case "symbol":
+        return ZodParsedType.symbol;
+      case "object":
+        if (Array.isArray(data2)) {
+          return ZodParsedType.array;
+        }
+        if (data2 === null) {
+          return ZodParsedType.null;
+        }
+        if (data2.then && typeof data2.then === "function" && data2.catch && typeof data2.catch === "function") {
+          return ZodParsedType.promise;
+        }
+        if (typeof Map !== "undefined" && data2 instanceof Map) {
+          return ZodParsedType.map;
+        }
+        if (typeof Set !== "undefined" && data2 instanceof Set) {
+          return ZodParsedType.set;
+        }
+        if (typeof Date !== "undefined" && data2 instanceof Date) {
+          return ZodParsedType.date;
+        }
+        return ZodParsedType.object;
+      default:
+        return ZodParsedType.unknown;
+    }
+  };
+  const ZodIssueCode = util.arrayToEnum([
+    "invalid_type",
+    "invalid_literal",
+    "custom",
+    "invalid_union",
+    "invalid_union_discriminator",
+    "invalid_enum_value",
+    "unrecognized_keys",
+    "invalid_arguments",
+    "invalid_return_type",
+    "invalid_date",
+    "invalid_string",
+    "too_small",
+    "too_big",
+    "invalid_intersection_types",
+    "not_multiple_of",
+    "not_finite"
+  ]);
+  class ZodError extends Error {
+    get errors() {
+      return this.issues;
+    }
+    constructor(issues) {
+      super();
+      this.issues = [];
+      this.addIssue = (sub2) => {
+        this.issues = [
+          ...this.issues,
+          sub2
+        ];
+      };
+      this.addIssues = (subs = []) => {
+        this.issues = [
+          ...this.issues,
+          ...subs
+        ];
+      };
+      const actualProto = new.target.prototype;
+      if (Object.setPrototypeOf) {
+        Object.setPrototypeOf(this, actualProto);
+      } else {
+        this.__proto__ = actualProto;
+      }
+      this.name = "ZodError";
+      this.issues = issues;
+    }
+    format(_mapper) {
+      const mapper = _mapper || function(issue) {
+        return issue.message;
+      };
+      const fieldErrors = {
+        _errors: []
+      };
+      const processError = (error2) => {
+        for (const issue of error2.issues) {
+          if (issue.code === "invalid_union") {
+            issue.unionErrors.map(processError);
+          } else if (issue.code === "invalid_return_type") {
+            processError(issue.returnTypeError);
+          } else if (issue.code === "invalid_arguments") {
+            processError(issue.argumentsError);
+          } else if (issue.path.length === 0) {
+            fieldErrors._errors.push(mapper(issue));
+          } else {
+            let curr = fieldErrors;
+            let i2 = 0;
+            while (i2 < issue.path.length) {
+              const el2 = issue.path[i2];
+              const terminal = i2 === issue.path.length - 1;
+              if (!terminal) {
+                curr[el2] = curr[el2] || {
+                  _errors: []
+                };
+              } else {
+                curr[el2] = curr[el2] || {
+                  _errors: []
+                };
+                curr[el2]._errors.push(mapper(issue));
+              }
+              curr = curr[el2];
+              i2++;
+            }
+          }
+        }
+      };
+      processError(this);
+      return fieldErrors;
+    }
+    static assert(value) {
+      if (!(value instanceof ZodError)) {
+        throw new Error(`Not a ZodError: ${value}`);
+      }
+    }
+    toString() {
+      return this.message;
+    }
+    get message() {
+      return JSON.stringify(this.issues, util.jsonStringifyReplacer, 2);
+    }
+    get isEmpty() {
+      return this.issues.length === 0;
+    }
+    flatten(mapper = (issue) => issue.message) {
+      const fieldErrors = {};
+      const formErrors = [];
+      for (const sub2 of this.issues) {
+        if (sub2.path.length > 0) {
+          const firstEl = sub2.path[0];
+          fieldErrors[firstEl] = fieldErrors[firstEl] || [];
+          fieldErrors[firstEl].push(mapper(sub2));
+        } else {
+          formErrors.push(mapper(sub2));
+        }
+      }
+      return {
+        formErrors,
+        fieldErrors
+      };
+    }
+    get formErrors() {
+      return this.flatten();
+    }
+  }
+  ZodError.create = (issues) => {
+    const error2 = new ZodError(issues);
+    return error2;
+  };
+  const errorMap = (issue, _ctx) => {
+    let message2;
+    switch (issue.code) {
+      case ZodIssueCode.invalid_type:
+        if (issue.received === ZodParsedType.undefined) {
+          message2 = "Required";
+        } else {
+          message2 = `Expected ${issue.expected}, received ${issue.received}`;
+        }
+        break;
+      case ZodIssueCode.invalid_literal:
+        message2 = `Invalid literal value, expected ${JSON.stringify(issue.expected, util.jsonStringifyReplacer)}`;
+        break;
+      case ZodIssueCode.unrecognized_keys:
+        message2 = `Unrecognized key(s) in object: ${util.joinValues(issue.keys, ", ")}`;
+        break;
+      case ZodIssueCode.invalid_union:
+        message2 = `Invalid input`;
+        break;
+      case ZodIssueCode.invalid_union_discriminator:
+        message2 = `Invalid discriminator value. Expected ${util.joinValues(issue.options)}`;
+        break;
+      case ZodIssueCode.invalid_enum_value:
+        message2 = `Invalid enum value. Expected ${util.joinValues(issue.options)}, received '${issue.received}'`;
+        break;
+      case ZodIssueCode.invalid_arguments:
+        message2 = `Invalid function arguments`;
+        break;
+      case ZodIssueCode.invalid_return_type:
+        message2 = `Invalid function return type`;
+        break;
+      case ZodIssueCode.invalid_date:
+        message2 = `Invalid date`;
+        break;
+      case ZodIssueCode.invalid_string:
+        if (typeof issue.validation === "object") {
+          if ("includes" in issue.validation) {
+            message2 = `Invalid input: must include "${issue.validation.includes}"`;
+            if (typeof issue.validation.position === "number") {
+              message2 = `${message2} at one or more positions greater than or equal to ${issue.validation.position}`;
+            }
+          } else if ("startsWith" in issue.validation) {
+            message2 = `Invalid input: must start with "${issue.validation.startsWith}"`;
+          } else if ("endsWith" in issue.validation) {
+            message2 = `Invalid input: must end with "${issue.validation.endsWith}"`;
+          } else {
+            util.assertNever(issue.validation);
+          }
+        } else if (issue.validation !== "regex") {
+          message2 = `Invalid ${issue.validation}`;
+        } else {
+          message2 = "Invalid";
+        }
+        break;
+      case ZodIssueCode.too_small:
+        if (issue.type === "array") message2 = `Array must contain ${issue.exact ? "exactly" : issue.inclusive ? `at least` : `more than`} ${issue.minimum} element(s)`;
+        else if (issue.type === "string") message2 = `String must contain ${issue.exact ? "exactly" : issue.inclusive ? `at least` : `over`} ${issue.minimum} character(s)`;
+        else if (issue.type === "number") message2 = `Number must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${issue.minimum}`;
+        else if (issue.type === "bigint") message2 = `Number must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${issue.minimum}`;
+        else if (issue.type === "date") message2 = `Date must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${new Date(Number(issue.minimum))}`;
+        else message2 = "Invalid input";
+        break;
+      case ZodIssueCode.too_big:
+        if (issue.type === "array") message2 = `Array must contain ${issue.exact ? `exactly` : issue.inclusive ? `at most` : `less than`} ${issue.maximum} element(s)`;
+        else if (issue.type === "string") message2 = `String must contain ${issue.exact ? `exactly` : issue.inclusive ? `at most` : `under`} ${issue.maximum} character(s)`;
+        else if (issue.type === "number") message2 = `Number must be ${issue.exact ? `exactly` : issue.inclusive ? `less than or equal to` : `less than`} ${issue.maximum}`;
+        else if (issue.type === "bigint") message2 = `BigInt must be ${issue.exact ? `exactly` : issue.inclusive ? `less than or equal to` : `less than`} ${issue.maximum}`;
+        else if (issue.type === "date") message2 = `Date must be ${issue.exact ? `exactly` : issue.inclusive ? `smaller than or equal to` : `smaller than`} ${new Date(Number(issue.maximum))}`;
+        else message2 = "Invalid input";
+        break;
+      case ZodIssueCode.custom:
+        message2 = `Invalid input`;
+        break;
+      case ZodIssueCode.invalid_intersection_types:
+        message2 = `Intersection results could not be merged`;
+        break;
+      case ZodIssueCode.not_multiple_of:
+        message2 = `Number must be a multiple of ${issue.multipleOf}`;
+        break;
+      case ZodIssueCode.not_finite:
+        message2 = "Number must be finite";
+        break;
+      default:
+        message2 = _ctx.defaultError;
+        util.assertNever(issue);
+    }
+    return {
+      message: message2
+    };
+  };
+  let overrideErrorMap = errorMap;
+  function getErrorMap() {
+    return overrideErrorMap;
+  }
+  const makeIssue = (params) => {
+    const { data: data2, path: path2, errorMaps, issueData } = params;
+    const fullPath = [
+      ...path2,
+      ...issueData.path || []
+    ];
+    const fullIssue = {
+      ...issueData,
+      path: fullPath
+    };
+    if (issueData.message !== void 0) {
+      return {
+        ...issueData,
+        path: fullPath,
+        message: issueData.message
+      };
+    }
+    let errorMessage = "";
+    const maps = errorMaps.filter((m2) => !!m2).slice().reverse();
+    for (const map2 of maps) {
+      errorMessage = map2(fullIssue, {
+        data: data2,
+        defaultError: errorMessage
+      }).message;
+    }
+    return {
+      ...issueData,
+      path: fullPath,
+      message: errorMessage
+    };
+  };
+  function addIssueToContext(ctx2, issueData) {
+    const overrideMap = getErrorMap();
+    const issue = makeIssue({
+      issueData,
+      data: ctx2.data,
+      path: ctx2.path,
+      errorMaps: [
+        ctx2.common.contextualErrorMap,
+        ctx2.schemaErrorMap,
+        overrideMap,
+        overrideMap === errorMap ? void 0 : errorMap
+      ].filter((x2) => !!x2)
+    });
+    ctx2.common.issues.push(issue);
+  }
+  class ParseStatus {
+    constructor() {
+      this.value = "valid";
+    }
+    dirty() {
+      if (this.value === "valid") this.value = "dirty";
+    }
+    abort() {
+      if (this.value !== "aborted") this.value = "aborted";
+    }
+    static mergeArray(status, results) {
+      const arrayValue = [];
+      for (const s2 of results) {
+        if (s2.status === "aborted") return INVALID$1;
+        if (s2.status === "dirty") status.dirty();
+        arrayValue.push(s2.value);
+      }
+      return {
+        status: status.value,
+        value: arrayValue
+      };
+    }
+    static async mergeObjectAsync(status, pairs) {
+      const syncPairs = [];
+      for (const pair of pairs) {
+        const key2 = await pair.key;
+        const value = await pair.value;
+        syncPairs.push({
+          key: key2,
+          value
+        });
+      }
+      return ParseStatus.mergeObjectSync(status, syncPairs);
+    }
+    static mergeObjectSync(status, pairs) {
+      const finalObject = {};
+      for (const pair of pairs) {
+        const { key: key2, value } = pair;
+        if (key2.status === "aborted") return INVALID$1;
+        if (value.status === "aborted") return INVALID$1;
+        if (key2.status === "dirty") status.dirty();
+        if (value.status === "dirty") status.dirty();
+        if (key2.value !== "__proto__" && (typeof value.value !== "undefined" || pair.alwaysSet)) {
+          finalObject[key2.value] = value.value;
+        }
+      }
+      return {
+        status: status.value,
+        value: finalObject
+      };
+    }
+  }
+  const INVALID$1 = Object.freeze({
+    status: "aborted"
+  });
+  const DIRTY = (value) => ({
+    status: "dirty",
+    value
+  });
+  const OK = (value) => ({
+    status: "valid",
+    value
+  });
+  const isAborted = (x2) => x2.status === "aborted";
+  const isDirty = (x2) => x2.status === "dirty";
+  const isValid = (x2) => x2.status === "valid";
+  const isAsync = (x2) => typeof Promise !== "undefined" && x2 instanceof Promise;
+  var errorUtil;
+  (function(errorUtil2) {
+    errorUtil2.errToObj = (message2) => typeof message2 === "string" ? {
+      message: message2
+    } : message2 || {};
+    errorUtil2.toString = (message2) => typeof message2 === "string" ? message2 : message2 == null ? void 0 : message2.message;
+  })(errorUtil || (errorUtil = {}));
+  class ParseInputLazyPath {
+    constructor(parent2, value, path2, key2) {
+      this._cachedPath = [];
+      this.parent = parent2;
+      this.data = value;
+      this._path = path2;
+      this._key = key2;
+    }
+    get path() {
+      if (!this._cachedPath.length) {
+        if (Array.isArray(this._key)) {
+          this._cachedPath.push(...this._path, ...this._key);
+        } else {
+          this._cachedPath.push(...this._path, this._key);
+        }
+      }
+      return this._cachedPath;
+    }
+  }
+  const handleResult = (ctx2, result) => {
+    if (isValid(result)) {
+      return {
+        success: true,
+        data: result.value
+      };
+    } else {
+      if (!ctx2.common.issues.length) {
+        throw new Error("Validation failed but no issues detected.");
+      }
+      return {
+        success: false,
+        get error() {
+          if (this._error) return this._error;
+          const error2 = new ZodError(ctx2.common.issues);
+          this._error = error2;
+          return this._error;
+        }
+      };
+    }
+  };
+  function processCreateParams(params) {
+    if (!params) return {};
+    const { errorMap: errorMap2, invalid_type_error, required_error, description } = params;
+    if (errorMap2 && (invalid_type_error || required_error)) {
+      throw new Error(`Can't use "invalid_type_error" or "required_error" in conjunction with custom error map.`);
+    }
+    if (errorMap2) return {
+      errorMap: errorMap2,
+      description
+    };
+    const customMap = (iss, ctx2) => {
+      const { message: message2 } = params;
+      if (iss.code === "invalid_enum_value") {
+        return {
+          message: message2 ?? ctx2.defaultError
+        };
+      }
+      if (typeof ctx2.data === "undefined") {
+        return {
+          message: message2 ?? required_error ?? ctx2.defaultError
+        };
+      }
+      if (iss.code !== "invalid_type") return {
+        message: ctx2.defaultError
+      };
+      return {
+        message: message2 ?? invalid_type_error ?? ctx2.defaultError
+      };
+    };
+    return {
+      errorMap: customMap,
+      description
+    };
+  }
+  class ZodType {
+    get description() {
+      return this._def.description;
+    }
+    _getType(input2) {
+      return getParsedType(input2.data);
+    }
+    _getOrReturnCtx(input2, ctx2) {
+      return ctx2 || {
+        common: input2.parent.common,
+        data: input2.data,
+        parsedType: getParsedType(input2.data),
+        schemaErrorMap: this._def.errorMap,
+        path: input2.path,
+        parent: input2.parent
+      };
+    }
+    _processInputParams(input2) {
+      return {
+        status: new ParseStatus(),
+        ctx: {
+          common: input2.parent.common,
+          data: input2.data,
+          parsedType: getParsedType(input2.data),
+          schemaErrorMap: this._def.errorMap,
+          path: input2.path,
+          parent: input2.parent
+        }
+      };
+    }
+    _parseSync(input2) {
+      const result = this._parse(input2);
+      if (isAsync(result)) {
+        throw new Error("Synchronous parse encountered promise.");
+      }
+      return result;
+    }
+    _parseAsync(input2) {
+      const result = this._parse(input2);
+      return Promise.resolve(result);
+    }
+    parse(data2, params) {
+      const result = this.safeParse(data2, params);
+      if (result.success) return result.data;
+      throw result.error;
+    }
+    safeParse(data2, params) {
+      const ctx2 = {
+        common: {
+          issues: [],
+          async: (params == null ? void 0 : params.async) ?? false,
+          contextualErrorMap: params == null ? void 0 : params.errorMap
+        },
+        path: (params == null ? void 0 : params.path) || [],
+        schemaErrorMap: this._def.errorMap,
+        parent: null,
+        data: data2,
+        parsedType: getParsedType(data2)
+      };
+      const result = this._parseSync({
+        data: data2,
+        path: ctx2.path,
+        parent: ctx2
+      });
+      return handleResult(ctx2, result);
+    }
+    "~validate"(data2) {
+      var _a2, _b2;
+      const ctx2 = {
+        common: {
+          issues: [],
+          async: !!this["~standard"].async
+        },
+        path: [],
+        schemaErrorMap: this._def.errorMap,
+        parent: null,
+        data: data2,
+        parsedType: getParsedType(data2)
+      };
+      if (!this["~standard"].async) {
+        try {
+          const result = this._parseSync({
+            data: data2,
+            path: [],
+            parent: ctx2
+          });
+          return isValid(result) ? {
+            value: result.value
+          } : {
+            issues: ctx2.common.issues
+          };
+        } catch (err2) {
+          if ((_b2 = (_a2 = err2 == null ? void 0 : err2.message) == null ? void 0 : _a2.toLowerCase()) == null ? void 0 : _b2.includes("encountered")) {
+            this["~standard"].async = true;
+          }
+          ctx2.common = {
+            issues: [],
+            async: true
+          };
+        }
+      }
+      return this._parseAsync({
+        data: data2,
+        path: [],
+        parent: ctx2
+      }).then((result) => isValid(result) ? {
+        value: result.value
+      } : {
+        issues: ctx2.common.issues
+      });
+    }
+    async parseAsync(data2, params) {
+      const result = await this.safeParseAsync(data2, params);
+      if (result.success) return result.data;
+      throw result.error;
+    }
+    async safeParseAsync(data2, params) {
+      const ctx2 = {
+        common: {
+          issues: [],
+          contextualErrorMap: params == null ? void 0 : params.errorMap,
+          async: true
+        },
+        path: (params == null ? void 0 : params.path) || [],
+        schemaErrorMap: this._def.errorMap,
+        parent: null,
+        data: data2,
+        parsedType: getParsedType(data2)
+      };
+      const maybeAsyncResult = this._parse({
+        data: data2,
+        path: ctx2.path,
+        parent: ctx2
+      });
+      const result = await (isAsync(maybeAsyncResult) ? maybeAsyncResult : Promise.resolve(maybeAsyncResult));
+      return handleResult(ctx2, result);
+    }
+    refine(check, message2) {
+      const getIssueProperties = (val) => {
+        if (typeof message2 === "string" || typeof message2 === "undefined") {
+          return {
+            message: message2
+          };
+        } else if (typeof message2 === "function") {
+          return message2(val);
+        } else {
+          return message2;
+        }
+      };
+      return this._refinement((val, ctx2) => {
+        const result = check(val);
+        const setError = () => ctx2.addIssue({
+          code: ZodIssueCode.custom,
+          ...getIssueProperties(val)
+        });
+        if (typeof Promise !== "undefined" && result instanceof Promise) {
+          return result.then((data2) => {
+            if (!data2) {
+              setError();
+              return false;
+            } else {
+              return true;
+            }
+          });
+        }
+        if (!result) {
+          setError();
+          return false;
+        } else {
+          return true;
+        }
+      });
+    }
+    refinement(check, refinementData) {
+      return this._refinement((val, ctx2) => {
+        if (!check(val)) {
+          ctx2.addIssue(typeof refinementData === "function" ? refinementData(val, ctx2) : refinementData);
+          return false;
+        } else {
+          return true;
+        }
+      });
+    }
+    _refinement(refinement) {
+      return new ZodEffects({
+        schema: this,
+        typeName: ZodFirstPartyTypeKind.ZodEffects,
+        effect: {
+          type: "refinement",
+          refinement
+        }
+      });
+    }
+    superRefine(refinement) {
+      return this._refinement(refinement);
+    }
+    constructor(def) {
+      this.spa = this.safeParseAsync;
+      this._def = def;
+      this.parse = this.parse.bind(this);
+      this.safeParse = this.safeParse.bind(this);
+      this.parseAsync = this.parseAsync.bind(this);
+      this.safeParseAsync = this.safeParseAsync.bind(this);
+      this.spa = this.spa.bind(this);
+      this.refine = this.refine.bind(this);
+      this.refinement = this.refinement.bind(this);
+      this.superRefine = this.superRefine.bind(this);
+      this.optional = this.optional.bind(this);
+      this.nullable = this.nullable.bind(this);
+      this.nullish = this.nullish.bind(this);
+      this.array = this.array.bind(this);
+      this.promise = this.promise.bind(this);
+      this.or = this.or.bind(this);
+      this.and = this.and.bind(this);
+      this.transform = this.transform.bind(this);
+      this.brand = this.brand.bind(this);
+      this.default = this.default.bind(this);
+      this.catch = this.catch.bind(this);
+      this.describe = this.describe.bind(this);
+      this.pipe = this.pipe.bind(this);
+      this.readonly = this.readonly.bind(this);
+      this.isNullable = this.isNullable.bind(this);
+      this.isOptional = this.isOptional.bind(this);
+      this["~standard"] = {
+        version: 1,
+        vendor: "zod",
+        validate: (data2) => this["~validate"](data2)
+      };
+    }
+    optional() {
+      return ZodOptional.create(this, this._def);
+    }
+    nullable() {
+      return ZodNullable.create(this, this._def);
+    }
+    nullish() {
+      return this.nullable().optional();
+    }
+    array() {
+      return ZodArray.create(this);
+    }
+    promise() {
+      return ZodPromise.create(this, this._def);
+    }
+    or(option2) {
+      return ZodUnion.create([
+        this,
+        option2
+      ], this._def);
+    }
+    and(incoming) {
+      return ZodIntersection.create(this, incoming, this._def);
+    }
+    transform(transform) {
+      return new ZodEffects({
+        ...processCreateParams(this._def),
+        schema: this,
+        typeName: ZodFirstPartyTypeKind.ZodEffects,
+        effect: {
+          type: "transform",
+          transform
+        }
+      });
+    }
+    default(def) {
+      const defaultValueFunc = typeof def === "function" ? def : () => def;
+      return new ZodDefault({
+        ...processCreateParams(this._def),
+        innerType: this,
+        defaultValue: defaultValueFunc,
+        typeName: ZodFirstPartyTypeKind.ZodDefault
+      });
+    }
+    brand() {
+      return new ZodBranded({
+        typeName: ZodFirstPartyTypeKind.ZodBranded,
+        type: this,
+        ...processCreateParams(this._def)
+      });
+    }
+    catch(def) {
+      const catchValueFunc = typeof def === "function" ? def : () => def;
+      return new ZodCatch({
+        ...processCreateParams(this._def),
+        innerType: this,
+        catchValue: catchValueFunc,
+        typeName: ZodFirstPartyTypeKind.ZodCatch
+      });
+    }
+    describe(description) {
+      const This = this.constructor;
+      return new This({
+        ...this._def,
+        description
+      });
+    }
+    pipe(target) {
+      return ZodPipeline.create(this, target);
+    }
+    readonly() {
+      return ZodReadonly.create(this);
+    }
+    isOptional() {
+      return this.safeParse(void 0).success;
+    }
+    isNullable() {
+      return this.safeParse(null).success;
+    }
+  }
+  const cuidRegex = /^c[^\s-]{8,}$/i;
+  const cuid2Regex = /^[0-9a-z]+$/;
+  const ulidRegex = /^[0-9A-HJKMNP-TV-Z]{26}$/i;
+  const uuidRegex = /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
+  const nanoidRegex = /^[a-z0-9_-]{21}$/i;
+  const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/;
+  const durationRegex = /^[-+]?P(?!$)(?:(?:[-+]?\d+Y)|(?:[-+]?\d+[.,]\d+Y$))?(?:(?:[-+]?\d+M)|(?:[-+]?\d+[.,]\d+M$))?(?:(?:[-+]?\d+W)|(?:[-+]?\d+[.,]\d+W$))?(?:(?:[-+]?\d+D)|(?:[-+]?\d+[.,]\d+D$))?(?:T(?=[\d+-])(?:(?:[-+]?\d+H)|(?:[-+]?\d+[.,]\d+H$))?(?:(?:[-+]?\d+M)|(?:[-+]?\d+[.,]\d+M$))?(?:[-+]?\d+(?:[.,]\d+)?S)?)??$/;
+  const emailRegex = /^(?!\.)(?!.*\.\.)([A-Z0-9_'+\-\.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i;
+  const _emojiRegex = `^(\\p{Extended_Pictographic}|\\p{Emoji_Component})+$`;
+  let emojiRegex;
+  const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/;
+  const ipv4CidrRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\/(3[0-2]|[12]?[0-9])$/;
+  const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
+  const ipv6CidrRegex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))\/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$/;
+  const base64Regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
+  const base64urlRegex = /^([0-9a-zA-Z-_]{4})*(([0-9a-zA-Z-_]{2}(==)?)|([0-9a-zA-Z-_]{3}(=)?))?$/;
+  const dateRegexSource = `((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))`;
+  const dateRegex = new RegExp(`^${dateRegexSource}$`);
+  function timeRegexSource(args) {
+    let secondsRegexSource = `[0-5]\\d`;
+    if (args.precision) {
+      secondsRegexSource = `${secondsRegexSource}\\.\\d{${args.precision}}`;
+    } else if (args.precision == null) {
+      secondsRegexSource = `${secondsRegexSource}(\\.\\d+)?`;
+    }
+    const secondsQuantifier = args.precision ? "+" : "?";
+    return `([01]\\d|2[0-3]):[0-5]\\d(:${secondsRegexSource})${secondsQuantifier}`;
+  }
+  function timeRegex(args) {
+    return new RegExp(`^${timeRegexSource(args)}$`);
+  }
+  function datetimeRegex(args) {
+    let regex2 = `${dateRegexSource}T${timeRegexSource(args)}`;
+    const opts = [];
+    opts.push(args.local ? `Z?` : `Z`);
+    if (args.offset) opts.push(`([+-]\\d{2}:?\\d{2})`);
+    regex2 = `${regex2}(${opts.join("|")})`;
+    return new RegExp(`^${regex2}$`);
+  }
+  function isValidIP(ip, version2) {
+    if ((version2 === "v4" || !version2) && ipv4Regex.test(ip)) {
+      return true;
+    }
+    if ((version2 === "v6" || !version2) && ipv6Regex.test(ip)) {
+      return true;
+    }
+    return false;
+  }
+  function isValidJWT(jwt, alg) {
+    if (!jwtRegex.test(jwt)) return false;
+    try {
+      const [header2] = jwt.split(".");
+      if (!header2) return false;
+      const base64 = header2.replace(/-/g, "+").replace(/_/g, "/").padEnd(header2.length + (4 - header2.length % 4) % 4, "=");
+      const decoded = JSON.parse(atob(base64));
+      if (typeof decoded !== "object" || decoded === null) return false;
+      if ("typ" in decoded && (decoded == null ? void 0 : decoded.typ) !== "JWT") return false;
+      if (!decoded.alg) return false;
+      if (alg && decoded.alg !== alg) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  function isValidCidr(ip, version2) {
+    if ((version2 === "v4" || !version2) && ipv4CidrRegex.test(ip)) {
+      return true;
+    }
+    if ((version2 === "v6" || !version2) && ipv6CidrRegex.test(ip)) {
+      return true;
+    }
+    return false;
+  }
+  class ZodString extends ZodType {
+    _parse(input2) {
+      if (this._def.coerce) {
+        input2.data = String(input2.data);
+      }
+      const parsedType = this._getType(input2);
+      if (parsedType !== ZodParsedType.string) {
+        const ctx3 = this._getOrReturnCtx(input2);
+        addIssueToContext(ctx3, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.string,
+          received: ctx3.parsedType
+        });
+        return INVALID$1;
+      }
+      const status = new ParseStatus();
+      let ctx2 = void 0;
+      for (const check of this._def.checks) {
+        if (check.kind === "min") {
+          if (input2.data.length < check.value) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.too_small,
+              minimum: check.value,
+              type: "string",
+              inclusive: true,
+              exact: false,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "max") {
+          if (input2.data.length > check.value) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.too_big,
+              maximum: check.value,
+              type: "string",
+              inclusive: true,
+              exact: false,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "length") {
+          const tooBig = input2.data.length > check.value;
+          const tooSmall = input2.data.length < check.value;
+          if (tooBig || tooSmall) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            if (tooBig) {
+              addIssueToContext(ctx2, {
+                code: ZodIssueCode.too_big,
+                maximum: check.value,
+                type: "string",
+                inclusive: true,
+                exact: true,
+                message: check.message
+              });
+            } else if (tooSmall) {
+              addIssueToContext(ctx2, {
+                code: ZodIssueCode.too_small,
+                minimum: check.value,
+                type: "string",
+                inclusive: true,
+                exact: true,
+                message: check.message
+              });
+            }
+            status.dirty();
+          }
+        } else if (check.kind === "email") {
+          if (!emailRegex.test(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "email",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "emoji") {
+          if (!emojiRegex) {
+            emojiRegex = new RegExp(_emojiRegex, "u");
+          }
+          if (!emojiRegex.test(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "emoji",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "uuid") {
+          if (!uuidRegex.test(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "uuid",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "nanoid") {
+          if (!nanoidRegex.test(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "nanoid",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "cuid") {
+          if (!cuidRegex.test(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "cuid",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "cuid2") {
+          if (!cuid2Regex.test(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "cuid2",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "ulid") {
+          if (!ulidRegex.test(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "ulid",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "url") {
+          try {
+            new URL(input2.data);
+          } catch {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "url",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "regex") {
+          check.regex.lastIndex = 0;
+          const testResult = check.regex.test(input2.data);
+          if (!testResult) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "regex",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "trim") {
+          input2.data = input2.data.trim();
+        } else if (check.kind === "includes") {
+          if (!input2.data.includes(check.value, check.position)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.invalid_string,
+              validation: {
+                includes: check.value,
+                position: check.position
+              },
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "toLowerCase") {
+          input2.data = input2.data.toLowerCase();
+        } else if (check.kind === "toUpperCase") {
+          input2.data = input2.data.toUpperCase();
+        } else if (check.kind === "startsWith") {
+          if (!input2.data.startsWith(check.value)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.invalid_string,
+              validation: {
+                startsWith: check.value
+              },
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "endsWith") {
+          if (!input2.data.endsWith(check.value)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.invalid_string,
+              validation: {
+                endsWith: check.value
+              },
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "datetime") {
+          const regex2 = datetimeRegex(check);
+          if (!regex2.test(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.invalid_string,
+              validation: "datetime",
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "date") {
+          const regex2 = dateRegex;
+          if (!regex2.test(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.invalid_string,
+              validation: "date",
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "time") {
+          const regex2 = timeRegex(check);
+          if (!regex2.test(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.invalid_string,
+              validation: "time",
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "duration") {
+          if (!durationRegex.test(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "duration",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "ip") {
+          if (!isValidIP(input2.data, check.version)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "ip",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "jwt") {
+          if (!isValidJWT(input2.data, check.alg)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "jwt",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "cidr") {
+          if (!isValidCidr(input2.data, check.version)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "cidr",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "base64") {
+          if (!base64Regex.test(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "base64",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "base64url") {
+          if (!base64urlRegex.test(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              validation: "base64url",
+              code: ZodIssueCode.invalid_string,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else {
+          util.assertNever(check);
+        }
+      }
+      return {
+        status: status.value,
+        value: input2.data
+      };
+    }
+    _regex(regex2, validation2, message2) {
+      return this.refinement((data2) => regex2.test(data2), {
+        validation: validation2,
+        code: ZodIssueCode.invalid_string,
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    _addCheck(check) {
+      return new ZodString({
+        ...this._def,
+        checks: [
+          ...this._def.checks,
+          check
+        ]
+      });
+    }
+    email(message2) {
+      return this._addCheck({
+        kind: "email",
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    url(message2) {
+      return this._addCheck({
+        kind: "url",
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    emoji(message2) {
+      return this._addCheck({
+        kind: "emoji",
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    uuid(message2) {
+      return this._addCheck({
+        kind: "uuid",
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    nanoid(message2) {
+      return this._addCheck({
+        kind: "nanoid",
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    cuid(message2) {
+      return this._addCheck({
+        kind: "cuid",
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    cuid2(message2) {
+      return this._addCheck({
+        kind: "cuid2",
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    ulid(message2) {
+      return this._addCheck({
+        kind: "ulid",
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    base64(message2) {
+      return this._addCheck({
+        kind: "base64",
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    base64url(message2) {
+      return this._addCheck({
+        kind: "base64url",
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    jwt(options) {
+      return this._addCheck({
+        kind: "jwt",
+        ...errorUtil.errToObj(options)
+      });
+    }
+    ip(options) {
+      return this._addCheck({
+        kind: "ip",
+        ...errorUtil.errToObj(options)
+      });
+    }
+    cidr(options) {
+      return this._addCheck({
+        kind: "cidr",
+        ...errorUtil.errToObj(options)
+      });
+    }
+    datetime(options) {
+      if (typeof options === "string") {
+        return this._addCheck({
+          kind: "datetime",
+          precision: null,
+          offset: false,
+          local: false,
+          message: options
+        });
+      }
+      return this._addCheck({
+        kind: "datetime",
+        precision: typeof (options == null ? void 0 : options.precision) === "undefined" ? null : options == null ? void 0 : options.precision,
+        offset: (options == null ? void 0 : options.offset) ?? false,
+        local: (options == null ? void 0 : options.local) ?? false,
+        ...errorUtil.errToObj(options == null ? void 0 : options.message)
+      });
+    }
+    date(message2) {
+      return this._addCheck({
+        kind: "date",
+        message: message2
+      });
+    }
+    time(options) {
+      if (typeof options === "string") {
+        return this._addCheck({
+          kind: "time",
+          precision: null,
+          message: options
+        });
+      }
+      return this._addCheck({
+        kind: "time",
+        precision: typeof (options == null ? void 0 : options.precision) === "undefined" ? null : options == null ? void 0 : options.precision,
+        ...errorUtil.errToObj(options == null ? void 0 : options.message)
+      });
+    }
+    duration(message2) {
+      return this._addCheck({
+        kind: "duration",
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    regex(regex2, message2) {
+      return this._addCheck({
+        kind: "regex",
+        regex: regex2,
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    includes(value, options) {
+      return this._addCheck({
+        kind: "includes",
+        value,
+        position: options == null ? void 0 : options.position,
+        ...errorUtil.errToObj(options == null ? void 0 : options.message)
+      });
+    }
+    startsWith(value, message2) {
+      return this._addCheck({
+        kind: "startsWith",
+        value,
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    endsWith(value, message2) {
+      return this._addCheck({
+        kind: "endsWith",
+        value,
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    min(minLength, message2) {
+      return this._addCheck({
+        kind: "min",
+        value: minLength,
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    max(maxLength, message2) {
+      return this._addCheck({
+        kind: "max",
+        value: maxLength,
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    length(len2, message2) {
+      return this._addCheck({
+        kind: "length",
+        value: len2,
+        ...errorUtil.errToObj(message2)
+      });
+    }
+    nonempty(message2) {
+      return this.min(1, errorUtil.errToObj(message2));
+    }
+    trim() {
+      return new ZodString({
+        ...this._def,
+        checks: [
+          ...this._def.checks,
+          {
+            kind: "trim"
+          }
+        ]
+      });
+    }
+    toLowerCase() {
+      return new ZodString({
+        ...this._def,
+        checks: [
+          ...this._def.checks,
+          {
+            kind: "toLowerCase"
+          }
+        ]
+      });
+    }
+    toUpperCase() {
+      return new ZodString({
+        ...this._def,
+        checks: [
+          ...this._def.checks,
+          {
+            kind: "toUpperCase"
+          }
+        ]
+      });
+    }
+    get isDatetime() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "datetime");
+    }
+    get isDate() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "date");
+    }
+    get isTime() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "time");
+    }
+    get isDuration() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "duration");
+    }
+    get isEmail() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "email");
+    }
+    get isURL() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "url");
+    }
+    get isEmoji() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "emoji");
+    }
+    get isUUID() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "uuid");
+    }
+    get isNANOID() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "nanoid");
+    }
+    get isCUID() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "cuid");
+    }
+    get isCUID2() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "cuid2");
+    }
+    get isULID() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "ulid");
+    }
+    get isIP() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "ip");
+    }
+    get isCIDR() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "cidr");
+    }
+    get isBase64() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "base64");
+    }
+    get isBase64url() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "base64url");
+    }
+    get minLength() {
+      let min2 = null;
+      for (const ch2 of this._def.checks) {
+        if (ch2.kind === "min") {
+          if (min2 === null || ch2.value > min2) min2 = ch2.value;
+        }
+      }
+      return min2;
+    }
+    get maxLength() {
+      let max2 = null;
+      for (const ch2 of this._def.checks) {
+        if (ch2.kind === "max") {
+          if (max2 === null || ch2.value < max2) max2 = ch2.value;
+        }
+      }
+      return max2;
+    }
+  }
+  ZodString.create = (params) => {
+    return new ZodString({
+      checks: [],
+      typeName: ZodFirstPartyTypeKind.ZodString,
+      coerce: (params == null ? void 0 : params.coerce) ?? false,
+      ...processCreateParams(params)
+    });
+  };
+  function floatSafeRemainder(val, step) {
+    const valDecCount = (val.toString().split(".")[1] || "").length;
+    const stepDecCount = (step.toString().split(".")[1] || "").length;
+    const decCount = valDecCount > stepDecCount ? valDecCount : stepDecCount;
+    const valInt = Number.parseInt(val.toFixed(decCount).replace(".", ""));
+    const stepInt = Number.parseInt(step.toFixed(decCount).replace(".", ""));
+    return valInt % stepInt / 10 ** decCount;
+  }
+  class ZodNumber extends ZodType {
+    constructor() {
+      super(...arguments);
+      this.min = this.gte;
+      this.max = this.lte;
+      this.step = this.multipleOf;
+    }
+    _parse(input2) {
+      if (this._def.coerce) {
+        input2.data = Number(input2.data);
+      }
+      const parsedType = this._getType(input2);
+      if (parsedType !== ZodParsedType.number) {
+        const ctx3 = this._getOrReturnCtx(input2);
+        addIssueToContext(ctx3, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.number,
+          received: ctx3.parsedType
+        });
+        return INVALID$1;
+      }
+      let ctx2 = void 0;
+      const status = new ParseStatus();
+      for (const check of this._def.checks) {
+        if (check.kind === "int") {
+          if (!util.isInteger(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.invalid_type,
+              expected: "integer",
+              received: "float",
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "min") {
+          const tooSmall = check.inclusive ? input2.data < check.value : input2.data <= check.value;
+          if (tooSmall) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.too_small,
+              minimum: check.value,
+              type: "number",
+              inclusive: check.inclusive,
+              exact: false,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "max") {
+          const tooBig = check.inclusive ? input2.data > check.value : input2.data >= check.value;
+          if (tooBig) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.too_big,
+              maximum: check.value,
+              type: "number",
+              inclusive: check.inclusive,
+              exact: false,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "multipleOf") {
+          if (floatSafeRemainder(input2.data, check.value) !== 0) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.not_multiple_of,
+              multipleOf: check.value,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "finite") {
+          if (!Number.isFinite(input2.data)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.not_finite,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else {
+          util.assertNever(check);
+        }
+      }
+      return {
+        status: status.value,
+        value: input2.data
+      };
+    }
+    gte(value, message2) {
+      return this.setLimit("min", value, true, errorUtil.toString(message2));
+    }
+    gt(value, message2) {
+      return this.setLimit("min", value, false, errorUtil.toString(message2));
+    }
+    lte(value, message2) {
+      return this.setLimit("max", value, true, errorUtil.toString(message2));
+    }
+    lt(value, message2) {
+      return this.setLimit("max", value, false, errorUtil.toString(message2));
+    }
+    setLimit(kind, value, inclusive, message2) {
+      return new ZodNumber({
+        ...this._def,
+        checks: [
+          ...this._def.checks,
+          {
+            kind,
+            value,
+            inclusive,
+            message: errorUtil.toString(message2)
+          }
+        ]
+      });
+    }
+    _addCheck(check) {
+      return new ZodNumber({
+        ...this._def,
+        checks: [
+          ...this._def.checks,
+          check
+        ]
+      });
+    }
+    int(message2) {
+      return this._addCheck({
+        kind: "int",
+        message: errorUtil.toString(message2)
+      });
+    }
+    positive(message2) {
+      return this._addCheck({
+        kind: "min",
+        value: 0,
+        inclusive: false,
+        message: errorUtil.toString(message2)
+      });
+    }
+    negative(message2) {
+      return this._addCheck({
+        kind: "max",
+        value: 0,
+        inclusive: false,
+        message: errorUtil.toString(message2)
+      });
+    }
+    nonpositive(message2) {
+      return this._addCheck({
+        kind: "max",
+        value: 0,
+        inclusive: true,
+        message: errorUtil.toString(message2)
+      });
+    }
+    nonnegative(message2) {
+      return this._addCheck({
+        kind: "min",
+        value: 0,
+        inclusive: true,
+        message: errorUtil.toString(message2)
+      });
+    }
+    multipleOf(value, message2) {
+      return this._addCheck({
+        kind: "multipleOf",
+        value,
+        message: errorUtil.toString(message2)
+      });
+    }
+    finite(message2) {
+      return this._addCheck({
+        kind: "finite",
+        message: errorUtil.toString(message2)
+      });
+    }
+    safe(message2) {
+      return this._addCheck({
+        kind: "min",
+        inclusive: true,
+        value: Number.MIN_SAFE_INTEGER,
+        message: errorUtil.toString(message2)
+      })._addCheck({
+        kind: "max",
+        inclusive: true,
+        value: Number.MAX_SAFE_INTEGER,
+        message: errorUtil.toString(message2)
+      });
+    }
+    get minValue() {
+      let min2 = null;
+      for (const ch2 of this._def.checks) {
+        if (ch2.kind === "min") {
+          if (min2 === null || ch2.value > min2) min2 = ch2.value;
+        }
+      }
+      return min2;
+    }
+    get maxValue() {
+      let max2 = null;
+      for (const ch2 of this._def.checks) {
+        if (ch2.kind === "max") {
+          if (max2 === null || ch2.value < max2) max2 = ch2.value;
+        }
+      }
+      return max2;
+    }
+    get isInt() {
+      return !!this._def.checks.find((ch2) => ch2.kind === "int" || ch2.kind === "multipleOf" && util.isInteger(ch2.value));
+    }
+    get isFinite() {
+      let max2 = null;
+      let min2 = null;
+      for (const ch2 of this._def.checks) {
+        if (ch2.kind === "finite" || ch2.kind === "int" || ch2.kind === "multipleOf") {
+          return true;
+        } else if (ch2.kind === "min") {
+          if (min2 === null || ch2.value > min2) min2 = ch2.value;
+        } else if (ch2.kind === "max") {
+          if (max2 === null || ch2.value < max2) max2 = ch2.value;
+        }
+      }
+      return Number.isFinite(min2) && Number.isFinite(max2);
+    }
+  }
+  ZodNumber.create = (params) => {
+    return new ZodNumber({
+      checks: [],
+      typeName: ZodFirstPartyTypeKind.ZodNumber,
+      coerce: (params == null ? void 0 : params.coerce) || false,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodBigInt extends ZodType {
+    constructor() {
+      super(...arguments);
+      this.min = this.gte;
+      this.max = this.lte;
+    }
+    _parse(input2) {
+      if (this._def.coerce) {
+        try {
+          input2.data = BigInt(input2.data);
+        } catch {
+          return this._getInvalidInput(input2);
+        }
+      }
+      const parsedType = this._getType(input2);
+      if (parsedType !== ZodParsedType.bigint) {
+        return this._getInvalidInput(input2);
+      }
+      let ctx2 = void 0;
+      const status = new ParseStatus();
+      for (const check of this._def.checks) {
+        if (check.kind === "min") {
+          const tooSmall = check.inclusive ? input2.data < check.value : input2.data <= check.value;
+          if (tooSmall) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.too_small,
+              type: "bigint",
+              minimum: check.value,
+              inclusive: check.inclusive,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "max") {
+          const tooBig = check.inclusive ? input2.data > check.value : input2.data >= check.value;
+          if (tooBig) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.too_big,
+              type: "bigint",
+              maximum: check.value,
+              inclusive: check.inclusive,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "multipleOf") {
+          if (input2.data % check.value !== BigInt(0)) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.not_multiple_of,
+              multipleOf: check.value,
+              message: check.message
+            });
+            status.dirty();
+          }
+        } else {
+          util.assertNever(check);
+        }
+      }
+      return {
+        status: status.value,
+        value: input2.data
+      };
+    }
+    _getInvalidInput(input2) {
+      const ctx2 = this._getOrReturnCtx(input2);
+      addIssueToContext(ctx2, {
+        code: ZodIssueCode.invalid_type,
+        expected: ZodParsedType.bigint,
+        received: ctx2.parsedType
+      });
+      return INVALID$1;
+    }
+    gte(value, message2) {
+      return this.setLimit("min", value, true, errorUtil.toString(message2));
+    }
+    gt(value, message2) {
+      return this.setLimit("min", value, false, errorUtil.toString(message2));
+    }
+    lte(value, message2) {
+      return this.setLimit("max", value, true, errorUtil.toString(message2));
+    }
+    lt(value, message2) {
+      return this.setLimit("max", value, false, errorUtil.toString(message2));
+    }
+    setLimit(kind, value, inclusive, message2) {
+      return new ZodBigInt({
+        ...this._def,
+        checks: [
+          ...this._def.checks,
+          {
+            kind,
+            value,
+            inclusive,
+            message: errorUtil.toString(message2)
+          }
+        ]
+      });
+    }
+    _addCheck(check) {
+      return new ZodBigInt({
+        ...this._def,
+        checks: [
+          ...this._def.checks,
+          check
+        ]
+      });
+    }
+    positive(message2) {
+      return this._addCheck({
+        kind: "min",
+        value: BigInt(0),
+        inclusive: false,
+        message: errorUtil.toString(message2)
+      });
+    }
+    negative(message2) {
+      return this._addCheck({
+        kind: "max",
+        value: BigInt(0),
+        inclusive: false,
+        message: errorUtil.toString(message2)
+      });
+    }
+    nonpositive(message2) {
+      return this._addCheck({
+        kind: "max",
+        value: BigInt(0),
+        inclusive: true,
+        message: errorUtil.toString(message2)
+      });
+    }
+    nonnegative(message2) {
+      return this._addCheck({
+        kind: "min",
+        value: BigInt(0),
+        inclusive: true,
+        message: errorUtil.toString(message2)
+      });
+    }
+    multipleOf(value, message2) {
+      return this._addCheck({
+        kind: "multipleOf",
+        value,
+        message: errorUtil.toString(message2)
+      });
+    }
+    get minValue() {
+      let min2 = null;
+      for (const ch2 of this._def.checks) {
+        if (ch2.kind === "min") {
+          if (min2 === null || ch2.value > min2) min2 = ch2.value;
+        }
+      }
+      return min2;
+    }
+    get maxValue() {
+      let max2 = null;
+      for (const ch2 of this._def.checks) {
+        if (ch2.kind === "max") {
+          if (max2 === null || ch2.value < max2) max2 = ch2.value;
+        }
+      }
+      return max2;
+    }
+  }
+  ZodBigInt.create = (params) => {
+    return new ZodBigInt({
+      checks: [],
+      typeName: ZodFirstPartyTypeKind.ZodBigInt,
+      coerce: (params == null ? void 0 : params.coerce) ?? false,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodBoolean extends ZodType {
+    _parse(input2) {
+      if (this._def.coerce) {
+        input2.data = Boolean(input2.data);
+      }
+      const parsedType = this._getType(input2);
+      if (parsedType !== ZodParsedType.boolean) {
+        const ctx2 = this._getOrReturnCtx(input2);
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.boolean,
+          received: ctx2.parsedType
+        });
+        return INVALID$1;
+      }
+      return OK(input2.data);
+    }
+  }
+  ZodBoolean.create = (params) => {
+    return new ZodBoolean({
+      typeName: ZodFirstPartyTypeKind.ZodBoolean,
+      coerce: (params == null ? void 0 : params.coerce) || false,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodDate extends ZodType {
+    _parse(input2) {
+      if (this._def.coerce) {
+        input2.data = new Date(input2.data);
+      }
+      const parsedType = this._getType(input2);
+      if (parsedType !== ZodParsedType.date) {
+        const ctx3 = this._getOrReturnCtx(input2);
+        addIssueToContext(ctx3, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.date,
+          received: ctx3.parsedType
+        });
+        return INVALID$1;
+      }
+      if (Number.isNaN(input2.data.getTime())) {
+        const ctx3 = this._getOrReturnCtx(input2);
+        addIssueToContext(ctx3, {
+          code: ZodIssueCode.invalid_date
+        });
+        return INVALID$1;
+      }
+      const status = new ParseStatus();
+      let ctx2 = void 0;
+      for (const check of this._def.checks) {
+        if (check.kind === "min") {
+          if (input2.data.getTime() < check.value) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.too_small,
+              message: check.message,
+              inclusive: true,
+              exact: false,
+              minimum: check.value,
+              type: "date"
+            });
+            status.dirty();
+          }
+        } else if (check.kind === "max") {
+          if (input2.data.getTime() > check.value) {
+            ctx2 = this._getOrReturnCtx(input2, ctx2);
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.too_big,
+              message: check.message,
+              inclusive: true,
+              exact: false,
+              maximum: check.value,
+              type: "date"
+            });
+            status.dirty();
+          }
+        } else {
+          util.assertNever(check);
+        }
+      }
+      return {
+        status: status.value,
+        value: new Date(input2.data.getTime())
+      };
+    }
+    _addCheck(check) {
+      return new ZodDate({
+        ...this._def,
+        checks: [
+          ...this._def.checks,
+          check
+        ]
+      });
+    }
+    min(minDate, message2) {
+      return this._addCheck({
+        kind: "min",
+        value: minDate.getTime(),
+        message: errorUtil.toString(message2)
+      });
+    }
+    max(maxDate, message2) {
+      return this._addCheck({
+        kind: "max",
+        value: maxDate.getTime(),
+        message: errorUtil.toString(message2)
+      });
+    }
+    get minDate() {
+      let min2 = null;
+      for (const ch2 of this._def.checks) {
+        if (ch2.kind === "min") {
+          if (min2 === null || ch2.value > min2) min2 = ch2.value;
+        }
+      }
+      return min2 != null ? new Date(min2) : null;
+    }
+    get maxDate() {
+      let max2 = null;
+      for (const ch2 of this._def.checks) {
+        if (ch2.kind === "max") {
+          if (max2 === null || ch2.value < max2) max2 = ch2.value;
+        }
+      }
+      return max2 != null ? new Date(max2) : null;
+    }
+  }
+  ZodDate.create = (params) => {
+    return new ZodDate({
+      checks: [],
+      coerce: (params == null ? void 0 : params.coerce) || false,
+      typeName: ZodFirstPartyTypeKind.ZodDate,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodSymbol extends ZodType {
+    _parse(input2) {
+      const parsedType = this._getType(input2);
+      if (parsedType !== ZodParsedType.symbol) {
+        const ctx2 = this._getOrReturnCtx(input2);
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.symbol,
+          received: ctx2.parsedType
+        });
+        return INVALID$1;
+      }
+      return OK(input2.data);
+    }
+  }
+  ZodSymbol.create = (params) => {
+    return new ZodSymbol({
+      typeName: ZodFirstPartyTypeKind.ZodSymbol,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodUndefined extends ZodType {
+    _parse(input2) {
+      const parsedType = this._getType(input2);
+      if (parsedType !== ZodParsedType.undefined) {
+        const ctx2 = this._getOrReturnCtx(input2);
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.undefined,
+          received: ctx2.parsedType
+        });
+        return INVALID$1;
+      }
+      return OK(input2.data);
+    }
+  }
+  ZodUndefined.create = (params) => {
+    return new ZodUndefined({
+      typeName: ZodFirstPartyTypeKind.ZodUndefined,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodNull extends ZodType {
+    _parse(input2) {
+      const parsedType = this._getType(input2);
+      if (parsedType !== ZodParsedType.null) {
+        const ctx2 = this._getOrReturnCtx(input2);
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.null,
+          received: ctx2.parsedType
+        });
+        return INVALID$1;
+      }
+      return OK(input2.data);
+    }
+  }
+  ZodNull.create = (params) => {
+    return new ZodNull({
+      typeName: ZodFirstPartyTypeKind.ZodNull,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodAny extends ZodType {
+    constructor() {
+      super(...arguments);
+      this._any = true;
+    }
+    _parse(input2) {
+      return OK(input2.data);
+    }
+  }
+  ZodAny.create = (params) => {
+    return new ZodAny({
+      typeName: ZodFirstPartyTypeKind.ZodAny,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodUnknown extends ZodType {
+    constructor() {
+      super(...arguments);
+      this._unknown = true;
+    }
+    _parse(input2) {
+      return OK(input2.data);
+    }
+  }
+  ZodUnknown.create = (params) => {
+    return new ZodUnknown({
+      typeName: ZodFirstPartyTypeKind.ZodUnknown,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodNever extends ZodType {
+    _parse(input2) {
+      const ctx2 = this._getOrReturnCtx(input2);
+      addIssueToContext(ctx2, {
+        code: ZodIssueCode.invalid_type,
+        expected: ZodParsedType.never,
+        received: ctx2.parsedType
+      });
+      return INVALID$1;
+    }
+  }
+  ZodNever.create = (params) => {
+    return new ZodNever({
+      typeName: ZodFirstPartyTypeKind.ZodNever,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodVoid extends ZodType {
+    _parse(input2) {
+      const parsedType = this._getType(input2);
+      if (parsedType !== ZodParsedType.undefined) {
+        const ctx2 = this._getOrReturnCtx(input2);
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.void,
+          received: ctx2.parsedType
+        });
+        return INVALID$1;
+      }
+      return OK(input2.data);
+    }
+  }
+  ZodVoid.create = (params) => {
+    return new ZodVoid({
+      typeName: ZodFirstPartyTypeKind.ZodVoid,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodArray extends ZodType {
+    _parse(input2) {
+      const { ctx: ctx2, status } = this._processInputParams(input2);
+      const def = this._def;
+      if (ctx2.parsedType !== ZodParsedType.array) {
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.array,
+          received: ctx2.parsedType
+        });
+        return INVALID$1;
+      }
+      if (def.exactLength !== null) {
+        const tooBig = ctx2.data.length > def.exactLength.value;
+        const tooSmall = ctx2.data.length < def.exactLength.value;
+        if (tooBig || tooSmall) {
+          addIssueToContext(ctx2, {
+            code: tooBig ? ZodIssueCode.too_big : ZodIssueCode.too_small,
+            minimum: tooSmall ? def.exactLength.value : void 0,
+            maximum: tooBig ? def.exactLength.value : void 0,
+            type: "array",
+            inclusive: true,
+            exact: true,
+            message: def.exactLength.message
+          });
+          status.dirty();
+        }
+      }
+      if (def.minLength !== null) {
+        if (ctx2.data.length < def.minLength.value) {
+          addIssueToContext(ctx2, {
+            code: ZodIssueCode.too_small,
+            minimum: def.minLength.value,
+            type: "array",
+            inclusive: true,
+            exact: false,
+            message: def.minLength.message
+          });
+          status.dirty();
+        }
+      }
+      if (def.maxLength !== null) {
+        if (ctx2.data.length > def.maxLength.value) {
+          addIssueToContext(ctx2, {
+            code: ZodIssueCode.too_big,
+            maximum: def.maxLength.value,
+            type: "array",
+            inclusive: true,
+            exact: false,
+            message: def.maxLength.message
+          });
+          status.dirty();
+        }
+      }
+      if (ctx2.common.async) {
+        return Promise.all([
+          ...ctx2.data
+        ].map((item2, i2) => {
+          return def.type._parseAsync(new ParseInputLazyPath(ctx2, item2, ctx2.path, i2));
+        })).then((result2) => {
+          return ParseStatus.mergeArray(status, result2);
+        });
+      }
+      const result = [
+        ...ctx2.data
+      ].map((item2, i2) => {
+        return def.type._parseSync(new ParseInputLazyPath(ctx2, item2, ctx2.path, i2));
+      });
+      return ParseStatus.mergeArray(status, result);
+    }
+    get element() {
+      return this._def.type;
+    }
+    min(minLength, message2) {
+      return new ZodArray({
+        ...this._def,
+        minLength: {
+          value: minLength,
+          message: errorUtil.toString(message2)
+        }
+      });
+    }
+    max(maxLength, message2) {
+      return new ZodArray({
+        ...this._def,
+        maxLength: {
+          value: maxLength,
+          message: errorUtil.toString(message2)
+        }
+      });
+    }
+    length(len2, message2) {
+      return new ZodArray({
+        ...this._def,
+        exactLength: {
+          value: len2,
+          message: errorUtil.toString(message2)
+        }
+      });
+    }
+    nonempty(message2) {
+      return this.min(1, message2);
+    }
+  }
+  ZodArray.create = (schema, params) => {
+    return new ZodArray({
+      type: schema,
+      minLength: null,
+      maxLength: null,
+      exactLength: null,
+      typeName: ZodFirstPartyTypeKind.ZodArray,
+      ...processCreateParams(params)
+    });
+  };
+  function deepPartialify(schema) {
+    if (schema instanceof ZodObject) {
+      const newShape = {};
+      for (const key2 in schema.shape) {
+        const fieldSchema = schema.shape[key2];
+        newShape[key2] = ZodOptional.create(deepPartialify(fieldSchema));
+      }
+      return new ZodObject({
+        ...schema._def,
+        shape: () => newShape
+      });
+    } else if (schema instanceof ZodArray) {
+      return new ZodArray({
+        ...schema._def,
+        type: deepPartialify(schema.element)
+      });
+    } else if (schema instanceof ZodOptional) {
+      return ZodOptional.create(deepPartialify(schema.unwrap()));
+    } else if (schema instanceof ZodNullable) {
+      return ZodNullable.create(deepPartialify(schema.unwrap()));
+    } else if (schema instanceof ZodTuple) {
+      return ZodTuple.create(schema.items.map((item2) => deepPartialify(item2)));
+    } else {
+      return schema;
+    }
+  }
+  class ZodObject extends ZodType {
+    constructor() {
+      super(...arguments);
+      this._cached = null;
+      this.nonstrict = this.passthrough;
+      this.augment = this.extend;
+    }
+    _getCached() {
+      if (this._cached !== null) return this._cached;
+      const shape = this._def.shape();
+      const keys2 = util.objectKeys(shape);
+      this._cached = {
+        shape,
+        keys: keys2
+      };
+      return this._cached;
+    }
+    _parse(input2) {
+      const parsedType = this._getType(input2);
+      if (parsedType !== ZodParsedType.object) {
+        const ctx3 = this._getOrReturnCtx(input2);
+        addIssueToContext(ctx3, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.object,
+          received: ctx3.parsedType
+        });
+        return INVALID$1;
+      }
+      const { status, ctx: ctx2 } = this._processInputParams(input2);
+      const { shape, keys: shapeKeys } = this._getCached();
+      const extraKeys = [];
+      if (!(this._def.catchall instanceof ZodNever && this._def.unknownKeys === "strip")) {
+        for (const key2 in ctx2.data) {
+          if (!shapeKeys.includes(key2)) {
+            extraKeys.push(key2);
+          }
+        }
+      }
+      const pairs = [];
+      for (const key2 of shapeKeys) {
+        const keyValidator = shape[key2];
+        const value = ctx2.data[key2];
+        pairs.push({
+          key: {
+            status: "valid",
+            value: key2
+          },
+          value: keyValidator._parse(new ParseInputLazyPath(ctx2, value, ctx2.path, key2)),
+          alwaysSet: key2 in ctx2.data
+        });
+      }
+      if (this._def.catchall instanceof ZodNever) {
+        const unknownKeys = this._def.unknownKeys;
+        if (unknownKeys === "passthrough") {
+          for (const key2 of extraKeys) {
+            pairs.push({
+              key: {
+                status: "valid",
+                value: key2
+              },
+              value: {
+                status: "valid",
+                value: ctx2.data[key2]
+              }
+            });
+          }
+        } else if (unknownKeys === "strict") {
+          if (extraKeys.length > 0) {
+            addIssueToContext(ctx2, {
+              code: ZodIssueCode.unrecognized_keys,
+              keys: extraKeys
+            });
+            status.dirty();
+          }
+        } else if (unknownKeys === "strip") ;
+        else {
+          throw new Error(`Internal ZodObject error: invalid unknownKeys value.`);
+        }
+      } else {
+        const catchall = this._def.catchall;
+        for (const key2 of extraKeys) {
+          const value = ctx2.data[key2];
+          pairs.push({
+            key: {
+              status: "valid",
+              value: key2
+            },
+            value: catchall._parse(new ParseInputLazyPath(ctx2, value, ctx2.path, key2)),
+            alwaysSet: key2 in ctx2.data
+          });
+        }
+      }
+      if (ctx2.common.async) {
+        return Promise.resolve().then(async () => {
+          const syncPairs = [];
+          for (const pair of pairs) {
+            const key2 = await pair.key;
+            const value = await pair.value;
+            syncPairs.push({
+              key: key2,
+              value,
+              alwaysSet: pair.alwaysSet
+            });
+          }
+          return syncPairs;
+        }).then((syncPairs) => {
+          return ParseStatus.mergeObjectSync(status, syncPairs);
+        });
+      } else {
+        return ParseStatus.mergeObjectSync(status, pairs);
+      }
+    }
+    get shape() {
+      return this._def.shape();
+    }
+    strict(message2) {
+      errorUtil.errToObj;
+      return new ZodObject({
+        ...this._def,
+        unknownKeys: "strict",
+        ...message2 !== void 0 ? {
+          errorMap: (issue, ctx2) => {
+            var _a2, _b2;
+            const defaultError = ((_b2 = (_a2 = this._def).errorMap) == null ? void 0 : _b2.call(_a2, issue, ctx2).message) ?? ctx2.defaultError;
+            if (issue.code === "unrecognized_keys") return {
+              message: errorUtil.errToObj(message2).message ?? defaultError
+            };
+            return {
+              message: defaultError
+            };
+          }
+        } : {}
+      });
+    }
+    strip() {
+      return new ZodObject({
+        ...this._def,
+        unknownKeys: "strip"
+      });
+    }
+    passthrough() {
+      return new ZodObject({
+        ...this._def,
+        unknownKeys: "passthrough"
+      });
+    }
+    extend(augmentation) {
+      return new ZodObject({
+        ...this._def,
+        shape: () => ({
+          ...this._def.shape(),
+          ...augmentation
+        })
+      });
+    }
+    merge(merging) {
+      const merged = new ZodObject({
+        unknownKeys: merging._def.unknownKeys,
+        catchall: merging._def.catchall,
+        shape: () => ({
+          ...this._def.shape(),
+          ...merging._def.shape()
+        }),
+        typeName: ZodFirstPartyTypeKind.ZodObject
+      });
+      return merged;
+    }
+    setKey(key2, schema) {
+      return this.augment({
+        [key2]: schema
+      });
+    }
+    catchall(index2) {
+      return new ZodObject({
+        ...this._def,
+        catchall: index2
+      });
+    }
+    pick(mask2) {
+      const shape = {};
+      for (const key2 of util.objectKeys(mask2)) {
+        if (mask2[key2] && this.shape[key2]) {
+          shape[key2] = this.shape[key2];
+        }
+      }
+      return new ZodObject({
+        ...this._def,
+        shape: () => shape
+      });
+    }
+    omit(mask2) {
+      const shape = {};
+      for (const key2 of util.objectKeys(this.shape)) {
+        if (!mask2[key2]) {
+          shape[key2] = this.shape[key2];
+        }
+      }
+      return new ZodObject({
+        ...this._def,
+        shape: () => shape
+      });
+    }
+    deepPartial() {
+      return deepPartialify(this);
+    }
+    partial(mask2) {
+      const newShape = {};
+      for (const key2 of util.objectKeys(this.shape)) {
+        const fieldSchema = this.shape[key2];
+        if (mask2 && !mask2[key2]) {
+          newShape[key2] = fieldSchema;
+        } else {
+          newShape[key2] = fieldSchema.optional();
+        }
+      }
+      return new ZodObject({
+        ...this._def,
+        shape: () => newShape
+      });
+    }
+    required(mask2) {
+      const newShape = {};
+      for (const key2 of util.objectKeys(this.shape)) {
+        if (mask2 && !mask2[key2]) {
+          newShape[key2] = this.shape[key2];
+        } else {
+          const fieldSchema = this.shape[key2];
+          let newField = fieldSchema;
+          while (newField instanceof ZodOptional) {
+            newField = newField._def.innerType;
+          }
+          newShape[key2] = newField;
+        }
+      }
+      return new ZodObject({
+        ...this._def,
+        shape: () => newShape
+      });
+    }
+    keyof() {
+      return createZodEnum(util.objectKeys(this.shape));
+    }
+  }
+  ZodObject.create = (shape, params) => {
+    return new ZodObject({
+      shape: () => shape,
+      unknownKeys: "strip",
+      catchall: ZodNever.create(),
+      typeName: ZodFirstPartyTypeKind.ZodObject,
+      ...processCreateParams(params)
+    });
+  };
+  ZodObject.strictCreate = (shape, params) => {
+    return new ZodObject({
+      shape: () => shape,
+      unknownKeys: "strict",
+      catchall: ZodNever.create(),
+      typeName: ZodFirstPartyTypeKind.ZodObject,
+      ...processCreateParams(params)
+    });
+  };
+  ZodObject.lazycreate = (shape, params) => {
+    return new ZodObject({
+      shape,
+      unknownKeys: "strip",
+      catchall: ZodNever.create(),
+      typeName: ZodFirstPartyTypeKind.ZodObject,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodUnion extends ZodType {
+    _parse(input2) {
+      const { ctx: ctx2 } = this._processInputParams(input2);
+      const options = this._def.options;
+      function handleResults(results) {
+        for (const result of results) {
+          if (result.result.status === "valid") {
+            return result.result;
+          }
+        }
+        for (const result of results) {
+          if (result.result.status === "dirty") {
+            ctx2.common.issues.push(...result.ctx.common.issues);
+            return result.result;
+          }
+        }
+        const unionErrors = results.map((result) => new ZodError(result.ctx.common.issues));
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_union,
+          unionErrors
+        });
+        return INVALID$1;
+      }
+      if (ctx2.common.async) {
+        return Promise.all(options.map(async (option2) => {
+          const childCtx = {
+            ...ctx2,
+            common: {
+              ...ctx2.common,
+              issues: []
+            },
+            parent: null
+          };
+          return {
+            result: await option2._parseAsync({
+              data: ctx2.data,
+              path: ctx2.path,
+              parent: childCtx
+            }),
+            ctx: childCtx
+          };
+        })).then(handleResults);
+      } else {
+        let dirty = void 0;
+        const issues = [];
+        for (const option2 of options) {
+          const childCtx = {
+            ...ctx2,
+            common: {
+              ...ctx2.common,
+              issues: []
+            },
+            parent: null
+          };
+          const result = option2._parseSync({
+            data: ctx2.data,
+            path: ctx2.path,
+            parent: childCtx
+          });
+          if (result.status === "valid") {
+            return result;
+          } else if (result.status === "dirty" && !dirty) {
+            dirty = {
+              result,
+              ctx: childCtx
+            };
+          }
+          if (childCtx.common.issues.length) {
+            issues.push(childCtx.common.issues);
+          }
+        }
+        if (dirty) {
+          ctx2.common.issues.push(...dirty.ctx.common.issues);
+          return dirty.result;
+        }
+        const unionErrors = issues.map((issues2) => new ZodError(issues2));
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_union,
+          unionErrors
+        });
+        return INVALID$1;
+      }
+    }
+    get options() {
+      return this._def.options;
+    }
+  }
+  ZodUnion.create = (types2, params) => {
+    return new ZodUnion({
+      options: types2,
+      typeName: ZodFirstPartyTypeKind.ZodUnion,
+      ...processCreateParams(params)
+    });
+  };
+  const getDiscriminator = (type) => {
+    if (type instanceof ZodLazy) {
+      return getDiscriminator(type.schema);
+    } else if (type instanceof ZodEffects) {
+      return getDiscriminator(type.innerType());
+    } else if (type instanceof ZodLiteral) {
+      return [
+        type.value
+      ];
+    } else if (type instanceof ZodEnum) {
+      return type.options;
+    } else if (type instanceof ZodNativeEnum) {
+      return util.objectValues(type.enum);
+    } else if (type instanceof ZodDefault) {
+      return getDiscriminator(type._def.innerType);
+    } else if (type instanceof ZodUndefined) {
+      return [
+        void 0
+      ];
+    } else if (type instanceof ZodNull) {
+      return [
+        null
+      ];
+    } else if (type instanceof ZodOptional) {
+      return [
+        void 0,
+        ...getDiscriminator(type.unwrap())
+      ];
+    } else if (type instanceof ZodNullable) {
+      return [
+        null,
+        ...getDiscriminator(type.unwrap())
+      ];
+    } else if (type instanceof ZodBranded) {
+      return getDiscriminator(type.unwrap());
+    } else if (type instanceof ZodReadonly) {
+      return getDiscriminator(type.unwrap());
+    } else if (type instanceof ZodCatch) {
+      return getDiscriminator(type._def.innerType);
+    } else {
+      return [];
+    }
+  };
+  class ZodDiscriminatedUnion extends ZodType {
+    _parse(input2) {
+      const { ctx: ctx2 } = this._processInputParams(input2);
+      if (ctx2.parsedType !== ZodParsedType.object) {
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.object,
+          received: ctx2.parsedType
+        });
+        return INVALID$1;
+      }
+      const discriminator = this.discriminator;
+      const discriminatorValue = ctx2.data[discriminator];
+      const option2 = this.optionsMap.get(discriminatorValue);
+      if (!option2) {
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_union_discriminator,
+          options: Array.from(this.optionsMap.keys()),
+          path: [
+            discriminator
+          ]
+        });
+        return INVALID$1;
+      }
+      if (ctx2.common.async) {
+        return option2._parseAsync({
+          data: ctx2.data,
+          path: ctx2.path,
+          parent: ctx2
+        });
+      } else {
+        return option2._parseSync({
+          data: ctx2.data,
+          path: ctx2.path,
+          parent: ctx2
+        });
+      }
+    }
+    get discriminator() {
+      return this._def.discriminator;
+    }
+    get options() {
+      return this._def.options;
+    }
+    get optionsMap() {
+      return this._def.optionsMap;
+    }
+    static create(discriminator, options, params) {
+      const optionsMap = /* @__PURE__ */ new Map();
+      for (const type of options) {
+        const discriminatorValues = getDiscriminator(type.shape[discriminator]);
+        if (!discriminatorValues.length) {
+          throw new Error(`A discriminator value for key \`${discriminator}\` could not be extracted from all schema options`);
+        }
+        for (const value of discriminatorValues) {
+          if (optionsMap.has(value)) {
+            throw new Error(`Discriminator property ${String(discriminator)} has duplicate value ${String(value)}`);
+          }
+          optionsMap.set(value, type);
+        }
+      }
+      return new ZodDiscriminatedUnion({
+        typeName: ZodFirstPartyTypeKind.ZodDiscriminatedUnion,
+        discriminator,
+        options,
+        optionsMap,
+        ...processCreateParams(params)
+      });
+    }
+  }
+  function mergeValues(a2, b2) {
+    const aType = getParsedType(a2);
+    const bType = getParsedType(b2);
+    if (a2 === b2) {
+      return {
+        valid: true,
+        data: a2
+      };
+    } else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {
+      const bKeys = util.objectKeys(b2);
+      const sharedKeys = util.objectKeys(a2).filter((key2) => bKeys.indexOf(key2) !== -1);
+      const newObj = {
+        ...a2,
+        ...b2
+      };
+      for (const key2 of sharedKeys) {
+        const sharedValue = mergeValues(a2[key2], b2[key2]);
+        if (!sharedValue.valid) {
+          return {
+            valid: false
+          };
+        }
+        newObj[key2] = sharedValue.data;
+      }
+      return {
+        valid: true,
+        data: newObj
+      };
+    } else if (aType === ZodParsedType.array && bType === ZodParsedType.array) {
+      if (a2.length !== b2.length) {
+        return {
+          valid: false
+        };
+      }
+      const newArray = [];
+      for (let index2 = 0; index2 < a2.length; index2++) {
+        const itemA = a2[index2];
+        const itemB = b2[index2];
+        const sharedValue = mergeValues(itemA, itemB);
+        if (!sharedValue.valid) {
+          return {
+            valid: false
+          };
+        }
+        newArray.push(sharedValue.data);
+      }
+      return {
+        valid: true,
+        data: newArray
+      };
+    } else if (aType === ZodParsedType.date && bType === ZodParsedType.date && +a2 === +b2) {
+      return {
+        valid: true,
+        data: a2
+      };
+    } else {
+      return {
+        valid: false
+      };
+    }
+  }
+  class ZodIntersection extends ZodType {
+    _parse(input2) {
+      const { status, ctx: ctx2 } = this._processInputParams(input2);
+      const handleParsed = (parsedLeft, parsedRight) => {
+        if (isAborted(parsedLeft) || isAborted(parsedRight)) {
+          return INVALID$1;
+        }
+        const merged = mergeValues(parsedLeft.value, parsedRight.value);
+        if (!merged.valid) {
+          addIssueToContext(ctx2, {
+            code: ZodIssueCode.invalid_intersection_types
+          });
+          return INVALID$1;
+        }
+        if (isDirty(parsedLeft) || isDirty(parsedRight)) {
+          status.dirty();
+        }
+        return {
+          status: status.value,
+          value: merged.data
+        };
+      };
+      if (ctx2.common.async) {
+        return Promise.all([
+          this._def.left._parseAsync({
+            data: ctx2.data,
+            path: ctx2.path,
+            parent: ctx2
+          }),
+          this._def.right._parseAsync({
+            data: ctx2.data,
+            path: ctx2.path,
+            parent: ctx2
+          })
+        ]).then(([left, right]) => handleParsed(left, right));
+      } else {
+        return handleParsed(this._def.left._parseSync({
+          data: ctx2.data,
+          path: ctx2.path,
+          parent: ctx2
+        }), this._def.right._parseSync({
+          data: ctx2.data,
+          path: ctx2.path,
+          parent: ctx2
+        }));
+      }
+    }
+  }
+  ZodIntersection.create = (left, right, params) => {
+    return new ZodIntersection({
+      left,
+      right,
+      typeName: ZodFirstPartyTypeKind.ZodIntersection,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodTuple extends ZodType {
+    _parse(input2) {
+      const { status, ctx: ctx2 } = this._processInputParams(input2);
+      if (ctx2.parsedType !== ZodParsedType.array) {
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.array,
+          received: ctx2.parsedType
+        });
+        return INVALID$1;
+      }
+      if (ctx2.data.length < this._def.items.length) {
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.too_small,
+          minimum: this._def.items.length,
+          inclusive: true,
+          exact: false,
+          type: "array"
+        });
+        return INVALID$1;
+      }
+      const rest2 = this._def.rest;
+      if (!rest2 && ctx2.data.length > this._def.items.length) {
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.too_big,
+          maximum: this._def.items.length,
+          inclusive: true,
+          exact: false,
+          type: "array"
+        });
+        status.dirty();
+      }
+      const items = [
+        ...ctx2.data
+      ].map((item2, itemIndex) => {
+        const schema = this._def.items[itemIndex] || this._def.rest;
+        if (!schema) return null;
+        return schema._parse(new ParseInputLazyPath(ctx2, item2, ctx2.path, itemIndex));
+      }).filter((x2) => !!x2);
+      if (ctx2.common.async) {
+        return Promise.all(items).then((results) => {
+          return ParseStatus.mergeArray(status, results);
+        });
+      } else {
+        return ParseStatus.mergeArray(status, items);
+      }
+    }
+    get items() {
+      return this._def.items;
+    }
+    rest(rest2) {
+      return new ZodTuple({
+        ...this._def,
+        rest: rest2
+      });
+    }
+  }
+  ZodTuple.create = (schemas, params) => {
+    if (!Array.isArray(schemas)) {
+      throw new Error("You must pass an array of schemas to z.tuple([ ... ])");
+    }
+    return new ZodTuple({
+      items: schemas,
+      typeName: ZodFirstPartyTypeKind.ZodTuple,
+      rest: null,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodMap extends ZodType {
+    get keySchema() {
+      return this._def.keyType;
+    }
+    get valueSchema() {
+      return this._def.valueType;
+    }
+    _parse(input2) {
+      const { status, ctx: ctx2 } = this._processInputParams(input2);
+      if (ctx2.parsedType !== ZodParsedType.map) {
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.map,
+          received: ctx2.parsedType
+        });
+        return INVALID$1;
+      }
+      const keyType = this._def.keyType;
+      const valueType = this._def.valueType;
+      const pairs = [
+        ...ctx2.data.entries()
+      ].map(([key2, value], index2) => {
+        return {
+          key: keyType._parse(new ParseInputLazyPath(ctx2, key2, ctx2.path, [
+            index2,
+            "key"
+          ])),
+          value: valueType._parse(new ParseInputLazyPath(ctx2, value, ctx2.path, [
+            index2,
+            "value"
+          ]))
+        };
+      });
+      if (ctx2.common.async) {
+        const finalMap = /* @__PURE__ */ new Map();
+        return Promise.resolve().then(async () => {
+          for (const pair of pairs) {
+            const key2 = await pair.key;
+            const value = await pair.value;
+            if (key2.status === "aborted" || value.status === "aborted") {
+              return INVALID$1;
+            }
+            if (key2.status === "dirty" || value.status === "dirty") {
+              status.dirty();
+            }
+            finalMap.set(key2.value, value.value);
+          }
+          return {
+            status: status.value,
+            value: finalMap
+          };
+        });
+      } else {
+        const finalMap = /* @__PURE__ */ new Map();
+        for (const pair of pairs) {
+          const key2 = pair.key;
+          const value = pair.value;
+          if (key2.status === "aborted" || value.status === "aborted") {
+            return INVALID$1;
+          }
+          if (key2.status === "dirty" || value.status === "dirty") {
+            status.dirty();
+          }
+          finalMap.set(key2.value, value.value);
+        }
+        return {
+          status: status.value,
+          value: finalMap
+        };
+      }
+    }
+  }
+  ZodMap.create = (keyType, valueType, params) => {
+    return new ZodMap({
+      valueType,
+      keyType,
+      typeName: ZodFirstPartyTypeKind.ZodMap,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodSet extends ZodType {
+    _parse(input2) {
+      const { status, ctx: ctx2 } = this._processInputParams(input2);
+      if (ctx2.parsedType !== ZodParsedType.set) {
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.set,
+          received: ctx2.parsedType
+        });
+        return INVALID$1;
+      }
+      const def = this._def;
+      if (def.minSize !== null) {
+        if (ctx2.data.size < def.minSize.value) {
+          addIssueToContext(ctx2, {
+            code: ZodIssueCode.too_small,
+            minimum: def.minSize.value,
+            type: "set",
+            inclusive: true,
+            exact: false,
+            message: def.minSize.message
+          });
+          status.dirty();
+        }
+      }
+      if (def.maxSize !== null) {
+        if (ctx2.data.size > def.maxSize.value) {
+          addIssueToContext(ctx2, {
+            code: ZodIssueCode.too_big,
+            maximum: def.maxSize.value,
+            type: "set",
+            inclusive: true,
+            exact: false,
+            message: def.maxSize.message
+          });
+          status.dirty();
+        }
+      }
+      const valueType = this._def.valueType;
+      function finalizeSet(elements2) {
+        const parsedSet = /* @__PURE__ */ new Set();
+        for (const element2 of elements2) {
+          if (element2.status === "aborted") return INVALID$1;
+          if (element2.status === "dirty") status.dirty();
+          parsedSet.add(element2.value);
+        }
+        return {
+          status: status.value,
+          value: parsedSet
+        };
+      }
+      const elements = [
+        ...ctx2.data.values()
+      ].map((item2, i2) => valueType._parse(new ParseInputLazyPath(ctx2, item2, ctx2.path, i2)));
+      if (ctx2.common.async) {
+        return Promise.all(elements).then((elements2) => finalizeSet(elements2));
+      } else {
+        return finalizeSet(elements);
+      }
+    }
+    min(minSize, message2) {
+      return new ZodSet({
+        ...this._def,
+        minSize: {
+          value: minSize,
+          message: errorUtil.toString(message2)
+        }
+      });
+    }
+    max(maxSize, message2) {
+      return new ZodSet({
+        ...this._def,
+        maxSize: {
+          value: maxSize,
+          message: errorUtil.toString(message2)
+        }
+      });
+    }
+    size(size, message2) {
+      return this.min(size, message2).max(size, message2);
+    }
+    nonempty(message2) {
+      return this.min(1, message2);
+    }
+  }
+  ZodSet.create = (valueType, params) => {
+    return new ZodSet({
+      valueType,
+      minSize: null,
+      maxSize: null,
+      typeName: ZodFirstPartyTypeKind.ZodSet,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodLazy extends ZodType {
+    get schema() {
+      return this._def.getter();
+    }
+    _parse(input2) {
+      const { ctx: ctx2 } = this._processInputParams(input2);
+      const lazySchema = this._def.getter();
+      return lazySchema._parse({
+        data: ctx2.data,
+        path: ctx2.path,
+        parent: ctx2
+      });
+    }
+  }
+  ZodLazy.create = (getter, params) => {
+    return new ZodLazy({
+      getter,
+      typeName: ZodFirstPartyTypeKind.ZodLazy,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodLiteral extends ZodType {
+    _parse(input2) {
+      if (input2.data !== this._def.value) {
+        const ctx2 = this._getOrReturnCtx(input2);
+        addIssueToContext(ctx2, {
+          received: ctx2.data,
+          code: ZodIssueCode.invalid_literal,
+          expected: this._def.value
+        });
+        return INVALID$1;
+      }
+      return {
+        status: "valid",
+        value: input2.data
+      };
+    }
+    get value() {
+      return this._def.value;
+    }
+  }
+  ZodLiteral.create = (value, params) => {
+    return new ZodLiteral({
+      value,
+      typeName: ZodFirstPartyTypeKind.ZodLiteral,
+      ...processCreateParams(params)
+    });
+  };
+  function createZodEnum(values, params) {
+    return new ZodEnum({
+      values,
+      typeName: ZodFirstPartyTypeKind.ZodEnum,
+      ...processCreateParams(params)
+    });
+  }
+  class ZodEnum extends ZodType {
+    _parse(input2) {
+      if (typeof input2.data !== "string") {
+        const ctx2 = this._getOrReturnCtx(input2);
+        const expectedValues = this._def.values;
+        addIssueToContext(ctx2, {
+          expected: util.joinValues(expectedValues),
+          received: ctx2.parsedType,
+          code: ZodIssueCode.invalid_type
+        });
+        return INVALID$1;
+      }
+      if (!this._cache) {
+        this._cache = new Set(this._def.values);
+      }
+      if (!this._cache.has(input2.data)) {
+        const ctx2 = this._getOrReturnCtx(input2);
+        const expectedValues = this._def.values;
+        addIssueToContext(ctx2, {
+          received: ctx2.data,
+          code: ZodIssueCode.invalid_enum_value,
+          options: expectedValues
+        });
+        return INVALID$1;
+      }
+      return OK(input2.data);
+    }
+    get options() {
+      return this._def.values;
+    }
+    get enum() {
+      const enumValues = {};
+      for (const val of this._def.values) {
+        enumValues[val] = val;
+      }
+      return enumValues;
+    }
+    get Values() {
+      const enumValues = {};
+      for (const val of this._def.values) {
+        enumValues[val] = val;
+      }
+      return enumValues;
+    }
+    get Enum() {
+      const enumValues = {};
+      for (const val of this._def.values) {
+        enumValues[val] = val;
+      }
+      return enumValues;
+    }
+    extract(values, newDef = this._def) {
+      return ZodEnum.create(values, {
+        ...this._def,
+        ...newDef
+      });
+    }
+    exclude(values, newDef = this._def) {
+      return ZodEnum.create(this.options.filter((opt) => !values.includes(opt)), {
+        ...this._def,
+        ...newDef
+      });
+    }
+  }
+  ZodEnum.create = createZodEnum;
+  class ZodNativeEnum extends ZodType {
+    _parse(input2) {
+      const nativeEnumValues = util.getValidEnumValues(this._def.values);
+      const ctx2 = this._getOrReturnCtx(input2);
+      if (ctx2.parsedType !== ZodParsedType.string && ctx2.parsedType !== ZodParsedType.number) {
+        const expectedValues = util.objectValues(nativeEnumValues);
+        addIssueToContext(ctx2, {
+          expected: util.joinValues(expectedValues),
+          received: ctx2.parsedType,
+          code: ZodIssueCode.invalid_type
+        });
+        return INVALID$1;
+      }
+      if (!this._cache) {
+        this._cache = new Set(util.getValidEnumValues(this._def.values));
+      }
+      if (!this._cache.has(input2.data)) {
+        const expectedValues = util.objectValues(nativeEnumValues);
+        addIssueToContext(ctx2, {
+          received: ctx2.data,
+          code: ZodIssueCode.invalid_enum_value,
+          options: expectedValues
+        });
+        return INVALID$1;
+      }
+      return OK(input2.data);
+    }
+    get enum() {
+      return this._def.values;
+    }
+  }
+  ZodNativeEnum.create = (values, params) => {
+    return new ZodNativeEnum({
+      values,
+      typeName: ZodFirstPartyTypeKind.ZodNativeEnum,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodPromise extends ZodType {
+    unwrap() {
+      return this._def.type;
+    }
+    _parse(input2) {
+      const { ctx: ctx2 } = this._processInputParams(input2);
+      if (ctx2.parsedType !== ZodParsedType.promise && ctx2.common.async === false) {
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.promise,
+          received: ctx2.parsedType
+        });
+        return INVALID$1;
+      }
+      const promisified = ctx2.parsedType === ZodParsedType.promise ? ctx2.data : Promise.resolve(ctx2.data);
+      return OK(promisified.then((data2) => {
+        return this._def.type.parseAsync(data2, {
+          path: ctx2.path,
+          errorMap: ctx2.common.contextualErrorMap
+        });
+      }));
+    }
+  }
+  ZodPromise.create = (schema, params) => {
+    return new ZodPromise({
+      type: schema,
+      typeName: ZodFirstPartyTypeKind.ZodPromise,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodEffects extends ZodType {
+    innerType() {
+      return this._def.schema;
+    }
+    sourceType() {
+      return this._def.schema._def.typeName === ZodFirstPartyTypeKind.ZodEffects ? this._def.schema.sourceType() : this._def.schema;
+    }
+    _parse(input2) {
+      const { status, ctx: ctx2 } = this._processInputParams(input2);
+      const effect2 = this._def.effect || null;
+      const checkCtx = {
+        addIssue: (arg) => {
+          addIssueToContext(ctx2, arg);
+          if (arg.fatal) {
+            status.abort();
+          } else {
+            status.dirty();
+          }
+        },
+        get path() {
+          return ctx2.path;
+        }
+      };
+      checkCtx.addIssue = checkCtx.addIssue.bind(checkCtx);
+      if (effect2.type === "preprocess") {
+        const processed = effect2.transform(ctx2.data, checkCtx);
+        if (ctx2.common.async) {
+          return Promise.resolve(processed).then(async (processed2) => {
+            if (status.value === "aborted") return INVALID$1;
+            const result = await this._def.schema._parseAsync({
+              data: processed2,
+              path: ctx2.path,
+              parent: ctx2
+            });
+            if (result.status === "aborted") return INVALID$1;
+            if (result.status === "dirty") return DIRTY(result.value);
+            if (status.value === "dirty") return DIRTY(result.value);
+            return result;
+          });
+        } else {
+          if (status.value === "aborted") return INVALID$1;
+          const result = this._def.schema._parseSync({
+            data: processed,
+            path: ctx2.path,
+            parent: ctx2
+          });
+          if (result.status === "aborted") return INVALID$1;
+          if (result.status === "dirty") return DIRTY(result.value);
+          if (status.value === "dirty") return DIRTY(result.value);
+          return result;
+        }
+      }
+      if (effect2.type === "refinement") {
+        const executeRefinement = (acc) => {
+          const result = effect2.refinement(acc, checkCtx);
+          if (ctx2.common.async) {
+            return Promise.resolve(result);
+          }
+          if (result instanceof Promise) {
+            throw new Error("Async refinement encountered during synchronous parse operation. Use .parseAsync instead.");
+          }
+          return acc;
+        };
+        if (ctx2.common.async === false) {
+          const inner = this._def.schema._parseSync({
+            data: ctx2.data,
+            path: ctx2.path,
+            parent: ctx2
+          });
+          if (inner.status === "aborted") return INVALID$1;
+          if (inner.status === "dirty") status.dirty();
+          executeRefinement(inner.value);
+          return {
+            status: status.value,
+            value: inner.value
+          };
+        } else {
+          return this._def.schema._parseAsync({
+            data: ctx2.data,
+            path: ctx2.path,
+            parent: ctx2
+          }).then((inner) => {
+            if (inner.status === "aborted") return INVALID$1;
+            if (inner.status === "dirty") status.dirty();
+            return executeRefinement(inner.value).then(() => {
+              return {
+                status: status.value,
+                value: inner.value
+              };
+            });
+          });
+        }
+      }
+      if (effect2.type === "transform") {
+        if (ctx2.common.async === false) {
+          const base2 = this._def.schema._parseSync({
+            data: ctx2.data,
+            path: ctx2.path,
+            parent: ctx2
+          });
+          if (!isValid(base2)) return INVALID$1;
+          const result = effect2.transform(base2.value, checkCtx);
+          if (result instanceof Promise) {
+            throw new Error(`Asynchronous transform encountered during synchronous parse operation. Use .parseAsync instead.`);
+          }
+          return {
+            status: status.value,
+            value: result
+          };
+        } else {
+          return this._def.schema._parseAsync({
+            data: ctx2.data,
+            path: ctx2.path,
+            parent: ctx2
+          }).then((base2) => {
+            if (!isValid(base2)) return INVALID$1;
+            return Promise.resolve(effect2.transform(base2.value, checkCtx)).then((result) => ({
+              status: status.value,
+              value: result
+            }));
+          });
+        }
+      }
+      util.assertNever(effect2);
+    }
+  }
+  ZodEffects.create = (schema, effect2, params) => {
+    return new ZodEffects({
+      schema,
+      typeName: ZodFirstPartyTypeKind.ZodEffects,
+      effect: effect2,
+      ...processCreateParams(params)
+    });
+  };
+  ZodEffects.createWithPreprocess = (preprocess2, schema, params) => {
+    return new ZodEffects({
+      schema,
+      effect: {
+        type: "preprocess",
+        transform: preprocess2
+      },
+      typeName: ZodFirstPartyTypeKind.ZodEffects,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodOptional extends ZodType {
+    _parse(input2) {
+      const parsedType = this._getType(input2);
+      if (parsedType === ZodParsedType.undefined) {
+        return OK(void 0);
+      }
+      return this._def.innerType._parse(input2);
+    }
+    unwrap() {
+      return this._def.innerType;
+    }
+  }
+  ZodOptional.create = (type, params) => {
+    return new ZodOptional({
+      innerType: type,
+      typeName: ZodFirstPartyTypeKind.ZodOptional,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodNullable extends ZodType {
+    _parse(input2) {
+      const parsedType = this._getType(input2);
+      if (parsedType === ZodParsedType.null) {
+        return OK(null);
+      }
+      return this._def.innerType._parse(input2);
+    }
+    unwrap() {
+      return this._def.innerType;
+    }
+  }
+  ZodNullable.create = (type, params) => {
+    return new ZodNullable({
+      innerType: type,
+      typeName: ZodFirstPartyTypeKind.ZodNullable,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodDefault extends ZodType {
+    _parse(input2) {
+      const { ctx: ctx2 } = this._processInputParams(input2);
+      let data2 = ctx2.data;
+      if (ctx2.parsedType === ZodParsedType.undefined) {
+        data2 = this._def.defaultValue();
+      }
+      return this._def.innerType._parse({
+        data: data2,
+        path: ctx2.path,
+        parent: ctx2
+      });
+    }
+    removeDefault() {
+      return this._def.innerType;
+    }
+  }
+  ZodDefault.create = (type, params) => {
+    return new ZodDefault({
+      innerType: type,
+      typeName: ZodFirstPartyTypeKind.ZodDefault,
+      defaultValue: typeof params.default === "function" ? params.default : () => params.default,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodCatch extends ZodType {
+    _parse(input2) {
+      const { ctx: ctx2 } = this._processInputParams(input2);
+      const newCtx = {
+        ...ctx2,
+        common: {
+          ...ctx2.common,
+          issues: []
+        }
+      };
+      const result = this._def.innerType._parse({
+        data: newCtx.data,
+        path: newCtx.path,
+        parent: {
+          ...newCtx
+        }
+      });
+      if (isAsync(result)) {
+        return result.then((result2) => {
+          return {
+            status: "valid",
+            value: result2.status === "valid" ? result2.value : this._def.catchValue({
+              get error() {
+                return new ZodError(newCtx.common.issues);
+              },
+              input: newCtx.data
+            })
+          };
+        });
+      } else {
+        return {
+          status: "valid",
+          value: result.status === "valid" ? result.value : this._def.catchValue({
+            get error() {
+              return new ZodError(newCtx.common.issues);
+            },
+            input: newCtx.data
+          })
+        };
+      }
+    }
+    removeCatch() {
+      return this._def.innerType;
+    }
+  }
+  ZodCatch.create = (type, params) => {
+    return new ZodCatch({
+      innerType: type,
+      typeName: ZodFirstPartyTypeKind.ZodCatch,
+      catchValue: typeof params.catch === "function" ? params.catch : () => params.catch,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodNaN extends ZodType {
+    _parse(input2) {
+      const parsedType = this._getType(input2);
+      if (parsedType !== ZodParsedType.nan) {
+        const ctx2 = this._getOrReturnCtx(input2);
+        addIssueToContext(ctx2, {
+          code: ZodIssueCode.invalid_type,
+          expected: ZodParsedType.nan,
+          received: ctx2.parsedType
+        });
+        return INVALID$1;
+      }
+      return {
+        status: "valid",
+        value: input2.data
+      };
+    }
+  }
+  ZodNaN.create = (params) => {
+    return new ZodNaN({
+      typeName: ZodFirstPartyTypeKind.ZodNaN,
+      ...processCreateParams(params)
+    });
+  };
+  class ZodBranded extends ZodType {
+    _parse(input2) {
+      const { ctx: ctx2 } = this._processInputParams(input2);
+      const data2 = ctx2.data;
+      return this._def.type._parse({
+        data: data2,
+        path: ctx2.path,
+        parent: ctx2
+      });
+    }
+    unwrap() {
+      return this._def.type;
+    }
+  }
+  class ZodPipeline extends ZodType {
+    _parse(input2) {
+      const { status, ctx: ctx2 } = this._processInputParams(input2);
+      if (ctx2.common.async) {
+        const handleAsync = async () => {
+          const inResult = await this._def.in._parseAsync({
+            data: ctx2.data,
+            path: ctx2.path,
+            parent: ctx2
+          });
+          if (inResult.status === "aborted") return INVALID$1;
+          if (inResult.status === "dirty") {
+            status.dirty();
+            return DIRTY(inResult.value);
+          } else {
+            return this._def.out._parseAsync({
+              data: inResult.value,
+              path: ctx2.path,
+              parent: ctx2
+            });
+          }
+        };
+        return handleAsync();
+      } else {
+        const inResult = this._def.in._parseSync({
+          data: ctx2.data,
+          path: ctx2.path,
+          parent: ctx2
+        });
+        if (inResult.status === "aborted") return INVALID$1;
+        if (inResult.status === "dirty") {
+          status.dirty();
+          return {
+            status: "dirty",
+            value: inResult.value
+          };
+        } else {
+          return this._def.out._parseSync({
+            data: inResult.value,
+            path: ctx2.path,
+            parent: ctx2
+          });
+        }
+      }
+    }
+    static create(a2, b2) {
+      return new ZodPipeline({
+        in: a2,
+        out: b2,
+        typeName: ZodFirstPartyTypeKind.ZodPipeline
+      });
+    }
+  }
+  class ZodReadonly extends ZodType {
+    _parse(input2) {
+      const result = this._def.innerType._parse(input2);
+      const freeze = (data2) => {
+        if (isValid(data2)) {
+          data2.value = Object.freeze(data2.value);
+        }
+        return data2;
+      };
+      return isAsync(result) ? result.then((data2) => freeze(data2)) : freeze(result);
+    }
+    unwrap() {
+      return this._def.innerType;
+    }
+  }
+  ZodReadonly.create = (type, params) => {
+    return new ZodReadonly({
+      innerType: type,
+      typeName: ZodFirstPartyTypeKind.ZodReadonly,
+      ...processCreateParams(params)
+    });
+  };
+  var ZodFirstPartyTypeKind;
+  (function(ZodFirstPartyTypeKind2) {
+    ZodFirstPartyTypeKind2["ZodString"] = "ZodString";
+    ZodFirstPartyTypeKind2["ZodNumber"] = "ZodNumber";
+    ZodFirstPartyTypeKind2["ZodNaN"] = "ZodNaN";
+    ZodFirstPartyTypeKind2["ZodBigInt"] = "ZodBigInt";
+    ZodFirstPartyTypeKind2["ZodBoolean"] = "ZodBoolean";
+    ZodFirstPartyTypeKind2["ZodDate"] = "ZodDate";
+    ZodFirstPartyTypeKind2["ZodSymbol"] = "ZodSymbol";
+    ZodFirstPartyTypeKind2["ZodUndefined"] = "ZodUndefined";
+    ZodFirstPartyTypeKind2["ZodNull"] = "ZodNull";
+    ZodFirstPartyTypeKind2["ZodAny"] = "ZodAny";
+    ZodFirstPartyTypeKind2["ZodUnknown"] = "ZodUnknown";
+    ZodFirstPartyTypeKind2["ZodNever"] = "ZodNever";
+    ZodFirstPartyTypeKind2["ZodVoid"] = "ZodVoid";
+    ZodFirstPartyTypeKind2["ZodArray"] = "ZodArray";
+    ZodFirstPartyTypeKind2["ZodObject"] = "ZodObject";
+    ZodFirstPartyTypeKind2["ZodUnion"] = "ZodUnion";
+    ZodFirstPartyTypeKind2["ZodDiscriminatedUnion"] = "ZodDiscriminatedUnion";
+    ZodFirstPartyTypeKind2["ZodIntersection"] = "ZodIntersection";
+    ZodFirstPartyTypeKind2["ZodTuple"] = "ZodTuple";
+    ZodFirstPartyTypeKind2["ZodRecord"] = "ZodRecord";
+    ZodFirstPartyTypeKind2["ZodMap"] = "ZodMap";
+    ZodFirstPartyTypeKind2["ZodSet"] = "ZodSet";
+    ZodFirstPartyTypeKind2["ZodFunction"] = "ZodFunction";
+    ZodFirstPartyTypeKind2["ZodLazy"] = "ZodLazy";
+    ZodFirstPartyTypeKind2["ZodLiteral"] = "ZodLiteral";
+    ZodFirstPartyTypeKind2["ZodEnum"] = "ZodEnum";
+    ZodFirstPartyTypeKind2["ZodEffects"] = "ZodEffects";
+    ZodFirstPartyTypeKind2["ZodNativeEnum"] = "ZodNativeEnum";
+    ZodFirstPartyTypeKind2["ZodOptional"] = "ZodOptional";
+    ZodFirstPartyTypeKind2["ZodNullable"] = "ZodNullable";
+    ZodFirstPartyTypeKind2["ZodDefault"] = "ZodDefault";
+    ZodFirstPartyTypeKind2["ZodCatch"] = "ZodCatch";
+    ZodFirstPartyTypeKind2["ZodPromise"] = "ZodPromise";
+    ZodFirstPartyTypeKind2["ZodBranded"] = "ZodBranded";
+    ZodFirstPartyTypeKind2["ZodPipeline"] = "ZodPipeline";
+    ZodFirstPartyTypeKind2["ZodReadonly"] = "ZodReadonly";
+  })(ZodFirstPartyTypeKind || (ZodFirstPartyTypeKind = {}));
+  const stringType = ZodString.create;
+  const numberType = ZodNumber.create;
+  ZodBigInt.create;
+  const booleanType = ZodBoolean.create;
+  ZodDate.create;
+  const unknownType = ZodUnknown.create;
+  ZodNever.create;
+  const arrayType = ZodArray.create;
+  const objectType = ZodObject.create;
+  const unionType = ZodUnion.create;
+  const discriminatedUnionType = ZodDiscriminatedUnion.create;
+  ZodIntersection.create;
+  ZodTuple.create;
+  const literalType = ZodLiteral.create;
+  const enumType = ZodEnum.create;
+  ZodPromise.create;
+  ZodOptional.create;
+  ZodNullable.create;
+  const preprocessType = ZodEffects.createWithPreprocess;
+  const coerce = {
+    string: (arg) => ZodString.create({
+      ...arg,
+      coerce: true
+    }),
+    number: (arg) => ZodNumber.create({
+      ...arg,
+      coerce: true
+    }),
+    boolean: (arg) => ZodBoolean.create({
+      ...arg,
+      coerce: true
+    }),
+    bigint: (arg) => ZodBigInt.create({
+      ...arg,
+      coerce: true
+    }),
+    date: (arg) => ZodDate.create({
+      ...arg,
+      coerce: true
+    })
+  };
+  function normalizeWaypointRecord(raw2) {
+    const w2 = {
+      ...raw2
+    };
+    if (!("shapeIds" in w2) && "shapes" in w2 && Array.isArray(w2.shapes)) {
+      w2.shapeIds = w2.shapes;
+    }
+    if (!("groupId" in w2) && "group" in w2 && typeof w2.group === "string") {
+      w2.groupId = w2.group;
+    }
+    if (!("groupId" in w2) && "Group" in w2 && typeof w2.Group === "string") {
+      w2.groupId = w2.Group;
+    }
+    if (!("thumbnail" in w2) || w2.thumbnail == null) {
+      w2.thumbnail = "";
+    }
+    return w2;
+  }
+  function normalizeRawShape(shape) {
+    if (shape === null || typeof shape !== "object" || Array.isArray(shape)) {
+      return shape;
+    }
+    const s2 = shape;
+    let next2 = {
+      ...s2
+    };
+    if (typeof next2.uuid === "string" && next2.id === void 0) {
+      next2 = {
+        ...next2,
+        id: next2.uuid
+      };
+    }
+    if (next2.type !== "arrow") return next2;
+    if (typeof next2.text === "string" && next2.label === void 0) {
+      next2 = {
+        ...next2,
+        label: next2.text
+      };
+    }
+    const hasPoint = next2.point !== null && typeof next2.point === "object" && !Array.isArray(next2.point);
+    const angle2 = next2.angle;
+    const hasAngle = angle2 !== void 0 && angle2 !== null && !(typeof angle2 === "string" && angle2.trim() === "");
+    if (hasPoint && hasAngle) {
+      return next2;
+    }
+    const from = next2.from;
+    const to = next2.to;
+    if (from && to && typeof from.x === "number" && typeof from.y === "number" && typeof to.x === "number" && typeof to.y === "number") {
+      return {
+        ...next2,
+        point: to,
+        angle: Math.atan2(from.y - to.y, from.x - to.x)
+      };
+    }
+    return next2;
+  }
+  function preprocessDocumentDataRaw(raw2) {
+    if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
+      return raw2;
+    }
+    const d2 = raw2;
+    let next2 = {
+      ...d2
+    };
+    if ("groups" in next2 && !("channelGroups" in next2)) {
+      next2.channelGroups = next2.groups;
+      delete next2.groups;
+    }
+    const shapes = next2.shapes;
+    const waypoints = next2.waypoints;
+    if (Array.isArray(shapes)) {
+      next2 = {
+        ...next2,
+        shapes: shapes.map(normalizeRawShape)
+      };
+    }
+    if (Array.isArray(waypoints)) {
+      next2 = {
+        ...next2,
+        waypoints: waypoints.map((wp) => {
+          if (wp === null || typeof wp !== "object" || Array.isArray(wp)) {
+            return wp;
+          }
+          return normalizeWaypointRecord(wp);
+        })
+      };
+    }
+    return next2;
+  }
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  function isUuid(id2) {
+    return UUID_RE.test(id2);
+  }
+  function preprocessJsonExportRoot(raw2) {
+    if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
+      return raw2;
+    }
+    const d2 = raw2;
+    return preprocessDocumentDataRaw({
+      ...d2,
+      metadata: {},
+      channelGroups: [],
+      images: []
+    });
+  }
+  const IdSchema = stringType().uuid();
+  const PointSchema = objectType({
+    x: numberType(),
+    y: numberType()
+  });
+  const ViewportSchema = objectType({
+    upperLeft: PointSchema,
+    lowerRight: PointSchema
+  });
+  const ColorSchema = objectType({
+    r: numberType().int().min(0).max(255),
+    g: numberType().int().min(0).max(255),
+    b: numberType().int().min(0).max(255)
+  });
+  const BaseShapeSchema = objectType({
+    id: IdSchema
+  });
+  const PointShapeSchema = BaseShapeSchema.extend({
+    type: literalType("point"),
+    point: PointSchema
+  });
+  const ArrowShapeSchema = BaseShapeSchema.extend({
+    type: literalType("arrow"),
+    point: PointSchema,
+    angle: coerce.number(),
+    label: stringType().default("")
+  });
+  const PolygonShapeSchema = BaseShapeSchema.extend({
+    type: literalType("polygon"),
+    points: arrayType(PointSchema).min(3)
+  });
+  const PolylineShapeSchema = BaseShapeSchema.extend({
+    type: literalType("polyline"),
+    points: arrayType(PointSchema).min(2)
+  });
+  const TextShapeSchema = BaseShapeSchema.extend({
+    type: literalType("text"),
+    point: PointSchema,
+    content: stringType()
+  });
+  const ShapeSchema = discriminatedUnionType("type", [
+    PointShapeSchema,
+    ArrowShapeSchema,
+    PolygonShapeSchema,
+    PolylineShapeSchema,
+    TextShapeSchema
+  ]);
+  const SourceDistributionSchema = objectType({
+    id: IdSchema,
+    YValues: arrayType(numberType()),
+    XScale: stringType(),
+    YScale: stringType(),
+    LowerRange: numberType(),
+    UpperRange: numberType()
+  });
+  const GmmContrastLimitsSchema = objectType({
+    lower: numberType(),
+    upper: numberType()
+  });
+  const ImageChannelKindSchema = preprocessType((v2) => v2 === "field" ? "channel" : v2, enumType([
+    "channel",
+    "mask"
+  ]));
+  const MaskVisualizationSchema = preprocessType((v2) => {
+    if (v2 === "outline") return {
+      style: "outline",
+      color: "white"
+    };
+    if (v2 === "randomColors") return {
+      style: "full",
+      color: "random"
+    };
+    return v2;
+  }, objectType({
+    style: enumType([
+      "outline",
+      "full"
+    ]),
+    color: enumType([
+      "white",
+      "random"
+    ]),
+    colorSeed: numberType().int().nonnegative().optional()
+  }));
+  const ImageChannelSchema = objectType({
+    id: IdSchema,
+    index: numberType().int().min(0),
+    name: stringType(),
+    kind: ImageChannelKindSchema.optional(),
+    samples: numberType().int().optional(),
+    sourceDataTypeId: stringType().optional(),
+    sourceDistribution: SourceDistributionSchema.optional(),
+    gmmContrastLimits: GmmContrastLimitsSchema.optional(),
+    color: ColorSchema.optional(),
+    lowerLimit: numberType().optional(),
+    upperLimit: numberType().optional(),
+    maskVisualization: MaskVisualizationSchema.optional()
+  });
+  const ImageSourceJpegSchema = objectType({
+    kind: literalType("jpeg"),
+    url: stringType().min(1)
+  });
+  const ImageSourceUrlSchema = objectType({
+    kind: literalType("url"),
+    url: stringType().min(1)
+  });
+  const ImageSourceLocalSchema = objectType({
+    kind: literalType("local"),
+    handleKey: stringType().min(1)
+  });
+  const ImageSourceDicomWebSchema = objectType({
+    kind: literalType("dicomWeb"),
+    series: stringType(),
+    modality: stringType()
+  });
+  const ImageSourceSchema = discriminatedUnionType("kind", [
+    ImageSourceJpegSchema,
+    ImageSourceUrlSchema,
+    ImageSourceLocalSchema,
+    ImageSourceDicomWebSchema
+  ]);
+  const ImageSchema$1 = objectType({
+    id: IdSchema,
+    sizeX: numberType().int().positive(),
+    sizeY: numberType().int().positive(),
+    sizeC: numberType().int().nonnegative(),
+    omero: objectType({
+      omeroServerName: stringType(),
+      imageIdentifier: numberType().int()
+    }).optional(),
+    omeXmlHash: stringType(),
+    basename: stringType(),
+    contentRole: enumType([
+      "intensity",
+      "segmentation"
+    ]).optional(),
+    channels: arrayType(ImageChannelSchema),
+    source: ImageSourceSchema.optional()
+  });
+  const ChannelGroupChannelSchema = objectType({
+    id: IdSchema,
+    channelId: IdSchema,
+    color: ColorSchema,
+    lowerLimit: numberType(),
+    upperLimit: numberType(),
+    maskVisualization: MaskVisualizationSchema.optional()
+  });
+  const ChannelGroupSchema = objectType({
+    id: IdSchema,
+    name: stringType(),
+    expanded: booleanType().optional(),
+    channels: arrayType(ChannelGroupChannelSchema)
+  });
+  const waypointObjectZ = objectType({
+    id: IdSchema,
+    groupId: IdSchema.optional(),
+    thumbnail: stringType(),
+    title: stringType(),
+    name: stringType().optional(),
+    content: stringType(),
+    viewport: ViewportSchema,
+    shapeIds: arrayType(IdSchema)
+  });
+  const WaypointSchema = preprocessType((raw2) => {
+    if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
+      return raw2;
+    }
+    return normalizeWaypointRecord(raw2);
+  }, waypointObjectZ);
+  const optionalStringListSchema = preprocessType((val) => {
+    if (val === void 0 || val === null) return void 0;
+    if (Array.isArray(val)) {
+      return val.map((x2) => String(x2)).filter((s2) => s2.length > 0);
+    }
+    if (typeof val === "string" && val.trim()) return [
+      val.trim()
+    ];
+    return void 0;
+  }, arrayType(stringType()).optional());
+  const documentMetadataObjectSchema = objectType({
+    id: IdSchema.optional(),
+    title: stringType().optional(),
+    createdAt: stringType().optional(),
+    modifiedAt: stringType().optional(),
+    author: stringType().optional(),
+    doi: stringType().optional(),
+    publicationUrl: stringType().optional(),
+    citation: stringType().optional(),
+    license: stringType().optional(),
+    institution: stringType().optional(),
+    contact: stringType().optional(),
+    contactEmail: stringType().optional(),
+    specimenId: stringType().optional(),
+    accession: stringType().optional(),
+    keywords: optionalStringListSchema,
+    modalities: optionalStringListSchema,
+    minervaVersion: stringType().optional(),
+    imageSource: stringType().optional(),
+    notes: stringType().optional()
+  });
+  const DocumentMetadataSchema = preprocessType((raw2) => {
+    if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
+      return raw2;
+    }
+    const r2 = {
+      ...raw2
+    };
+    if (r2.createdAt == null && typeof r2.created === "string") {
+      r2.createdAt = r2.created;
+    }
+    if (r2.modifiedAt == null && typeof r2.modified === "string") {
+      r2.modifiedAt = r2.modified;
+    }
+    return r2;
+  }, documentMetadataObjectSchema);
+  const DocumentDataSchema = preprocessType((raw2) => {
+    if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
+      return raw2;
+    }
+    const r2 = raw2;
+    if ("groups" in r2 && !("channelGroups" in r2)) {
+      const { groups, ...rest2 } = r2;
+      return {
+        ...rest2,
+        channelGroups: groups
+      };
+    }
+    return raw2;
+  }, objectType({
+    metadata: DocumentMetadataSchema.default({}),
+    waypoints: arrayType(WaypointSchema),
+    shapes: arrayType(ShapeSchema),
+    channelGroups: arrayType(ChannelGroupSchema),
+    images: arrayType(ImageSchema$1)
+  }));
+  const jsonExportCoreSchema = objectType({
+    version: unionType([
+      literalType("1"),
+      literalType("2")
+    ]),
+    waypoints: arrayType(WaypointSchema),
+    shapes: arrayType(ShapeSchema)
+  });
+  preprocessType((raw2) => {
+    const expanded = preprocessJsonExportRoot(raw2);
+    if (expanded === null || typeof expanded !== "object" || Array.isArray(expanded)) {
+      return expanded;
+    }
+    const e2 = expanded;
+    return {
+      version: e2.version,
+      waypoints: e2.waypoints,
+      shapes: e2.shapes
+    };
+  }, jsonExportCoreSchema);
+  const DEFAULT_MASK_VISUALIZATION = {
+    style: "outline",
+    color: "white"
+  };
+  function withReseededRandomColors(value) {
+    let colorSeed = 1 + Math.floor(Math.random() * 16777215);
+    if (colorSeed === value.colorSeed) {
+      colorSeed = colorSeed >= 16777215 ? 1 : colorSeed + 1;
+    }
+    return {
+      ...value,
+      color: "random",
+      colorSeed
+    };
+  }
+  function normalizeMaskVisualization(value) {
+    const parsed = MaskVisualizationSchema.safeParse(value);
+    return parsed.success ? parsed.data : DEFAULT_MASK_VISUALIZATION;
+  }
+  const DEFAULT_VISIBLE_INTENSITY_CHANNELS = 4;
+  function resolveImageImportRole(image2) {
+    const role = resolveImageContentRole(image2);
+    return role === "segmentation" ? "segmentation" : "intensity";
+  }
+  function normalizeChannelKind(kind) {
+    if (kind === "field") return "channel";
+    if (kind === "channel" || kind === "mask") return kind;
+    return void 0;
+  }
+  function effectiveChannelKind(channel) {
+    return normalizeChannelKind(channel.kind) ?? "channel";
+  }
+  function isMaskChannel(channel) {
+    return effectiveChannelKind(channel) === "mask";
+  }
+  function isImageChannel(channel) {
+    return effectiveChannelKind(channel) === "channel";
+  }
+  function isPlanarIntensityDtype(dtype) {
+    if (dtype == null || dtype === "") return false;
+    return /uint/i.test(dtype);
+  }
+  const PLANAR_RGB_DISPLAY_COLORS = [
+    {
+      r: 255,
+      g: 0,
+      b: 0
+    },
+    {
+      r: 0,
+      g: 255,
+      b: 0
+    },
+    {
+      r: 0,
+      g: 0,
+      b: 255
+    }
+  ];
+  function planarRgbSlotFromName(name2) {
+    const n2 = name2.toLowerCase();
+    if (n2.endsWith("_r") || n2.endsWith("-r") || n2.endsWith("[r]") || n2 === "r") {
+      return 0;
+    }
+    if (n2.endsWith("_g") || n2.endsWith("-g") || n2.endsWith("[g]") || n2 === "g") {
+      return 1;
+    }
+    if (n2.endsWith("_b") || n2.endsWith("-b") || n2.endsWith("[b]") || n2 === "b") {
+      return 2;
+    }
+    return null;
+  }
+  function isRgbDisplaySource(channels2) {
+    const intensity = channels2.filter(isImageChannel);
+    if (intensity.length === 0) return false;
+    if (intensity.length === 1 && intensity[0].samples === 3) return true;
+    const planar = intensity.filter((c2) => (c2.samples ?? 1) === 1);
+    if (planar.length !== 3) return false;
+    if (planar.every((c2) => planarRgbSlotFromName(c2.name ?? "") != null)) {
+      return true;
+    }
+    return planar.every((c2) => isPlanarIntensityDtype(c2.sourceDataTypeId));
+  }
+  function planarRgbSlotIndex(channel, allChannels) {
+    if (!isRgbDisplayChannel(channel, allChannels)) return null;
+    if (channel.samples === 3) return null;
+    const byName = planarRgbSlotFromName(channel.name ?? "");
+    if (byName != null) return byName;
+    const onImage = allChannels.filter((c2) => c2.imageId === channel.imageId && isImageChannel(c2) && (c2.samples ?? 1) === 1).sort((a2, b2) => (a2.index ?? 0) - (b2.index ?? 0));
+    if (onImage.length !== 3) return null;
+    const pos = onImage.findIndex((c2) => channel.id != null && c2.id === channel.id || c2.index === channel.index);
+    return pos >= 0 && pos < 3 ? pos : null;
+  }
+  function planarRgbDisplayColor(channel, allChannels) {
+    const slot = planarRgbSlotIndex(channel, allChannels);
+    if (slot == null) return null;
+    return PLANAR_RGB_DISPLAY_COLORS[slot];
+  }
+  function isRgbDisplayChannel(channel, allChannels) {
+    if (!isImageChannel(channel)) return false;
+    if (channel.samples === 3) return true;
+    if (channel.imageId == null) return false;
+    const onImage = allChannels.filter((c2) => c2.imageId === channel.imageId);
+    return isRgbDisplaySource(onImage);
+  }
+  function resolveImageContentRole(image2) {
+    if (image2.contentRole === "segmentation") return "segmentation";
+    if (image2.contentRole === "intensity") return "intensity";
+    return imageSourceRole(image2);
+  }
+  function imageSourceRole(image2) {
+    if (image2.channels.length === 0) return null;
+    let sawChannel = false;
+    let sawMask = false;
+    for (const ch2 of image2.channels) {
+      if (effectiveChannelKind(ch2) === "mask") sawMask = true;
+      else sawChannel = true;
+    }
+    if (sawMask && sawChannel) return "mixed";
+    if (sawMask) return "segmentation";
+    return "intensity";
+  }
+  const rectangleToPolygon = (start, end) => {
+    const [startX, startY] = start;
+    const [endX, endY] = end;
+    const minX = Math.min(startX, endX);
+    const maxX = Math.max(startX, endX);
+    const minY = Math.min(startY, endY);
+    const maxY = Math.max(startY, endY);
+    return [
+      [
+        minX,
+        minY
+      ],
+      [
+        maxX,
+        minY
+      ],
+      [
+        maxX,
+        maxY
+      ],
+      [
+        minX,
+        maxY
+      ],
+      [
+        minX,
+        minY
+      ]
+    ];
+  };
+  const ellipseToPolygon$1 = (start, end, segments = 64) => {
+    const [startX, startY] = start;
+    const [endX, endY] = end;
+    const centerX = (startX + endX) / 2;
+    const centerY = (startY + endY) / 2;
+    const radiusX = Math.abs(endX - startX) / 2;
+    const radiusY = Math.abs(endY - startY) / 2;
+    const points = [];
+    for (let i2 = 0; i2 <= segments; i2++) {
+      const angle2 = i2 / segments * 2 * Math.PI;
+      const x2 = centerX + radiusX * Math.cos(angle2);
+      const y2 = centerY + radiusY * Math.sin(angle2);
+      points.push([
+        x2,
+        y2
+      ]);
+    }
+    return points;
+  };
+  const lineToPolygon = (start, end, lineWidth = 3) => {
+    const [startX, startY] = start;
+    const [endX, endY] = end;
+    const dx = endX - startX;
+    const dy = endY - startY;
+    const length2 = Math.sqrt(dx * dx + dy * dy);
+    if (length2 === 0) {
+      const halfWidth2 = lineWidth / 2;
+      return [
+        [
+          startX - halfWidth2,
+          startY - halfWidth2
+        ],
+        [
+          startX + halfWidth2,
+          startY - halfWidth2
+        ],
+        [
+          startX + halfWidth2,
+          startY + halfWidth2
+        ],
+        [
+          startX - halfWidth2,
+          startY + halfWidth2
+        ],
+        [
+          startX - halfWidth2,
+          startY - halfWidth2
+        ]
+      ];
+    }
+    const nx = -dy / length2;
+    const ny = dx / length2;
+    const halfWidth = lineWidth / 2;
+    return [
+      [
+        startX + nx * halfWidth,
+        startY + ny * halfWidth
+      ],
+      [
+        endX + nx * halfWidth,
+        endY + ny * halfWidth
+      ],
+      [
+        endX - nx * halfWidth,
+        endY - ny * halfWidth
+      ],
+      [
+        startX - nx * halfWidth,
+        startY - ny * halfWidth
+      ],
+      [
+        startX + nx * halfWidth,
+        startY + ny * halfWidth
+      ]
+    ];
+  };
+  const textToPolygon = (position2, text2, fontSize = 14, _padding = 4) => {
+    const [x2, y2] = position2;
+    const charWidth = fontSize * 0.7;
+    const textWidth = text2.length * charWidth;
+    const textHeight = fontSize * 1.2;
+    const hitPadding = Math.max(fontSize * 2, 20);
+    const halfWidth = (textWidth + hitPadding * 2) / 2;
+    const halfHeight = (textHeight + hitPadding * 2) / 2;
+    return [
+      [
+        x2 - halfWidth,
+        y2 - halfHeight
+      ],
+      [
+        x2 + halfWidth,
+        y2 - halfHeight
+      ],
+      [
+        x2 + halfWidth,
+        y2 + halfHeight
+      ],
+      [
+        x2 - halfWidth,
+        y2 + halfHeight
+      ],
+      [
+        x2 - halfWidth,
+        y2 - halfHeight
+      ]
+    ];
+  };
+  const SELECTION_MASK_CHANNEL_KEY = "Selection";
+  const IMAGE_SELECTION_MASK_LAYER_ID = "image-selection-mask";
+  function colorFromSeed(seed) {
+    let h2 = 2166136261;
+    for (let i2 = 0; i2 < seed.length; i2++) {
+      h2 ^= seed.charCodeAt(i2);
+      h2 = Math.imul(h2, 16777619);
+    }
+    const r2 = 50 + (h2 >> 16 & 159);
+    const g2 = 50 + (h2 >> 8 & 159);
+    const b2 = 50 + (h2 & 159);
+    return [
+      r2,
+      g2,
+      b2
+    ];
+  }
+  function isEdgeAt(data2, width, height, x2, y2) {
+    const neighbors = [
+      [
+        x2 - 1,
+        y2
+      ],
+      [
+        x2 + 1,
+        y2
+      ],
+      [
+        x2,
+        y2 - 1
+      ],
+      [
+        x2,
+        y2 + 1
+      ]
+    ];
+    for (const [nx, ny] of neighbors) {
+      if (nx < 0 || ny < 0 || nx >= width || ny >= height) return true;
+      if (!data2[ny * width + nx]) return true;
+    }
+    return false;
+  }
+  function dilateBinaryMask(src, width, height, radius) {
+    const horiz = new Uint8Array(width * height);
+    for (let y2 = 0; y2 < height; y2++) {
+      const row2 = y2 * width;
+      for (let x2 = 0; x2 < width; x2++) {
+        const lo = x2 - radius < 0 ? 0 : x2 - radius;
+        const hi2 = x2 + radius >= width ? width - 1 : x2 + radius;
+        let hit = 0;
+        for (let xx = lo; xx <= hi2; xx++) {
+          if (src[row2 + xx]) {
+            hit = 1;
+            break;
+          }
+        }
+        horiz[row2 + x2] = hit;
+      }
+    }
+    const out = new Uint8Array(width * height);
+    for (let x2 = 0; x2 < width; x2++) {
+      for (let y2 = 0; y2 < height; y2++) {
+        const lo = y2 - radius < 0 ? 0 : y2 - radius;
+        const hi2 = y2 + radius >= height ? height - 1 : y2 + radius;
+        let hit = 0;
+        for (let yy = lo; yy <= hi2; yy++) {
+          if (horiz[yy * width + x2]) {
+            hit = 1;
+            break;
+          }
+        }
+        out[y2 * width + x2] = hit;
+      }
+    }
+    return out;
+  }
+  function paintBinaryMask(rgba, mask2, rgb, alpha2) {
+    const [fr, fg2, fb2] = rgb;
+    for (let i2 = 0; i2 < mask2.length; i2++) {
+      if (!mask2[i2]) continue;
+      const o2 = i2 * 4;
+      rgba[o2] = fr;
+      rgba[o2 + 1] = fg2;
+      rgba[o2 + 2] = fb2;
+      rgba[o2 + 3] = alpha2;
+    }
+  }
+  function binaryMaskToRgba(data2, width, height, visualization, colorSeed) {
+    const rgba = new Uint8ClampedArray(width * height * 4);
+    const seedKey = visualization.colorSeed != null ? `${colorSeed}:${visualization.colorSeed}` : colorSeed;
+    const rgb = visualization.color === "random" ? colorFromSeed(seedKey) : [
+      255,
+      255,
+      255
+    ];
+    const outline = visualization.style === "outline";
+    const alpha2 = outline ? 230 : 170;
+    if (!outline) {
+      paintBinaryMask(rgba, data2, rgb, alpha2);
+      return new ImageData(rgba, width, height);
+    }
+    const edgeMask = new Uint8Array(width * height);
+    for (let y2 = 0; y2 < height; y2++) {
+      for (let x2 = 0; x2 < width; x2++) {
+        const i2 = y2 * width + x2;
+        if (data2[i2] && isEdgeAt(data2, width, height, x2, y2)) edgeMask[i2] = 1;
+      }
+    }
+    paintBinaryMask(rgba, dilateBinaryMask(edgeMask, width, height, 1), rgb, alpha2);
+    return new ImageData(rgba, width, height);
+  }
+  const MAX_RASTER_SIDE = 4096;
+  function polygonRingFromShape(shape) {
+    switch (shape.type) {
+      case "polygon":
+        return shape.polygon.length >= 3 ? shape.polygon : null;
+      case "line":
+        return shape.polygon.length >= 3 ? shape.polygon : lineToPolygon(shape.polygon[0] ?? [
+          0,
+          0
+        ], shape.polygon[1] ?? shape.polygon[0] ?? [
+          0,
+          0
+        ], shape.style.lineWidth);
+      case "polyline": {
+        if (shape.polygon.length < 2) return null;
+        const first = shape.polygon[0];
+        return [
+          ...shape.polygon,
+          first
+        ];
+      }
+      case "point": {
+        const [x2, y2] = shape.position;
+        const r2 = Math.max(2, shape.style.radius);
+        return ellipseToPolygon$1([
+          x2 - r2,
+          y2 - r2
+        ], [
+          x2 + r2,
+          y2 + r2
+        ], 24);
+      }
+      case "text":
+        return textToPolygon(shape.position, shape.text, shape.style.fontSize);
+      default:
+        return null;
+    }
+  }
+  function rasterizePolygonToImageMask(polygon, imageWidth, imageHeight, meta) {
+    if (polygon.length < 3 || imageWidth <= 0 || imageHeight <= 0) {
+      return null;
+    }
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const [x2, y2] of polygon) {
+      if (!Number.isFinite(x2) || !Number.isFinite(y2)) continue;
+      minX = Math.min(minX, x2);
+      minY = Math.min(minY, y2);
+      maxX = Math.max(maxX, x2);
+      maxY = Math.max(maxY, y2);
+    }
+    if (!Number.isFinite(minX) || maxX <= minX || maxY <= minY) {
+      return null;
+    }
+    minX = Math.max(0, minX);
+    minY = Math.max(0, minY);
+    maxX = Math.min(imageWidth, maxX);
+    maxY = Math.min(imageHeight, maxY);
+    const bw = maxX - minX;
+    const bh2 = maxY - minY;
+    if (bw <= 0 || bh2 <= 0) return null;
+    const scale2 = Math.min(1, MAX_RASTER_SIDE / Math.max(bw, bh2));
+    const width = Math.max(1, Math.ceil(bw * scale2));
+    const height = Math.max(1, Math.ceil(bh2 * scale2));
+    const canvas2 = document.createElement("canvas");
+    canvas2.width = width;
+    canvas2.height = height;
+    const ctx2 = canvas2.getContext("2d");
+    if (!ctx2) return null;
+    ctx2.beginPath();
+    for (let i2 = 0; i2 < polygon.length; i2++) {
+      const px = (polygon[i2][0] - minX) * scale2;
+      const py = (polygon[i2][1] - minY) * scale2;
+      if (i2 === 0) ctx2.moveTo(px, py);
+      else ctx2.lineTo(px, py);
+    }
+    ctx2.closePath();
+    ctx2.fillStyle = "#fff";
+    ctx2.fill();
+    const rgba = ctx2.getImageData(0, 0, width, height).data;
+    const data2 = new Uint8Array(width * height);
+    for (let i2 = 0, p2 = 0; i2 < data2.length; i2++, p2 += 4) {
+      data2[i2] = rgba[p2 + 3] > 0 || rgba[p2] > 0 ? 1 : 0;
+    }
+    let any = false;
+    for (let i2 = 0; i2 < data2.length; i2++) {
+      if (data2[i2]) {
+        any = true;
+        break;
+      }
+    }
+    if (!any) return null;
+    return {
+      width,
+      height,
+      data: data2,
+      bounds: [
+        minX,
+        minY,
+        maxX,
+        maxY
+      ],
+      ...meta
+    };
+  }
+  function selectionMaskBinaryImageData(mask2) {
+    const { width, height, data: data2 } = mask2;
+    const rgba = new Uint8ClampedArray(width * height * 4);
+    for (let i2 = 0; i2 < width * height; i2++) {
+      const v2 = data2[i2] ? 255 : 0;
+      const o2 = i2 * 4;
+      rgba[o2] = v2;
+      rgba[o2 + 1] = v2;
+      rgba[o2 + 2] = v2;
+      rgba[o2 + 3] = v2;
+    }
+    return new ImageData(rgba, width, height);
+  }
+  function selectionMaskDisplayImageData(mask2) {
+    const viz = mask2.maskVisualization ?? DEFAULT_MASK_VISUALIZATION;
+    const seed = mask2.sourceShapeId ?? mask2.sourceShapeLabel ?? "selection";
+    return binaryMaskToRgba(mask2.data, mask2.width, mask2.height, viz, seed);
+  }
+  const SEGMENTS_PER_CIRCLE = 32;
+  function makeCircle(cx, cy, radiusWorld, segments = SEGMENTS_PER_CIRCLE) {
+    const points = [];
+    for (let i2 = 0; i2 <= segments; i2++) {
+      const angle2 = i2 / segments * 2 * Math.PI;
+      points.push([
+        cx + radiusWorld * Math.cos(angle2),
+        cy + radiusWorld * Math.sin(angle2)
+      ]);
+    }
+    return points;
+  }
+  let f$4 = class f {
+    constructor(t2, e2) {
+      this.next = null, this.key = t2, this.data = e2, this.left = null, this.right = null;
+    }
+  };
+  function d$4(n2, t2) {
+    return n2 > t2 ? 1 : n2 < t2 ? -1 : 0;
+  }
+  function u$6(n2, t2, e2) {
+    const r2 = new f$4(null, null);
+    let l2 = r2, i2 = r2;
+    for (; ; ) {
+      const o2 = e2(n2, t2.key);
+      if (o2 < 0) {
+        if (t2.left === null) break;
+        if (e2(n2, t2.left.key) < 0) {
+          const s2 = t2.left;
+          if (t2.left = s2.right, s2.right = t2, t2 = s2, t2.left === null) break;
+        }
+        i2.left = t2, i2 = t2, t2 = t2.left;
+      } else if (o2 > 0) {
+        if (t2.right === null) break;
+        if (e2(n2, t2.right.key) > 0) {
+          const s2 = t2.right;
+          if (t2.right = s2.left, s2.left = t2, t2 = s2, t2.right === null) break;
+        }
+        l2.right = t2, l2 = t2, t2 = t2.right;
+      } else break;
+    }
+    return l2.right = t2.left, i2.left = t2.right, t2.left = r2.right, t2.right = r2.left, t2;
+  }
+  function c$6(n2, t2, e2, r2) {
+    const l2 = new f$4(n2, t2);
+    if (e2 === null) return l2.left = l2.right = null, l2;
+    e2 = u$6(n2, e2, r2);
+    const i2 = r2(n2, e2.key);
+    return i2 < 0 ? (l2.left = e2.left, l2.right = e2, e2.left = null) : i2 >= 0 && (l2.right = e2.right, l2.left = e2, e2.right = null), l2;
+  }
+  function m$2(n2, t2, e2) {
+    let r2 = null, l2 = null;
+    if (t2) {
+      t2 = u$6(n2, t2, e2);
+      const i2 = e2(t2.key, n2);
+      i2 === 0 ? (r2 = t2.left, l2 = t2.right) : i2 < 0 ? (l2 = t2.right, t2.right = null, r2 = t2) : (r2 = t2.left, t2.left = null, l2 = t2);
+    }
+    return {
+      left: r2,
+      right: l2
+    };
+  }
+  function w$3(n2, t2, e2) {
+    return t2 === null ? n2 : (n2 === null || (t2 = u$6(n2.key, t2, e2), t2.left = n2), t2);
+  }
+  function _$4(n2, t2, e2, r2, l2) {
+    if (n2) {
+      r2(`${t2}${e2 ? "\u2514\u2500\u2500 " : "\u251C\u2500\u2500 "}${l2(n2)}
+`);
+      const i2 = t2 + (e2 ? "    " : "\u2502   ");
+      n2.left && _$4(n2.left, i2, false, r2, l2), n2.right && _$4(n2.right, i2, true, r2, l2);
+    }
+  }
+  let z$1 = class z {
+    constructor(t2 = d$4) {
+      this._root = null, this._size = 0, this._comparator = t2;
+    }
+    insert(t2, e2) {
+      return this._size++, this._root = c$6(t2, e2, this._root, this._comparator);
+    }
+    add(t2, e2) {
+      const r2 = new f$4(t2, e2);
+      this._root === null && (r2.left = r2.right = null, this._size++, this._root = r2);
+      const l2 = this._comparator, i2 = u$6(t2, this._root, l2), o2 = l2(t2, i2.key);
+      return o2 === 0 ? this._root = i2 : (o2 < 0 ? (r2.left = i2.left, r2.right = i2, i2.left = null) : o2 > 0 && (r2.right = i2.right, r2.left = i2, i2.right = null), this._size++, this._root = r2), this._root;
+    }
+    remove(t2) {
+      this._root = this._remove(t2, this._root, this._comparator);
+    }
+    _remove(t2, e2, r2) {
+      let l2;
+      return e2 === null ? null : (e2 = u$6(t2, e2, r2), r2(t2, e2.key) === 0 ? (e2.left === null ? l2 = e2.right : (l2 = u$6(t2, e2.left, r2), l2.right = e2.right), this._size--, l2) : e2);
+    }
+    pop() {
+      let t2 = this._root;
+      if (t2) {
+        for (; t2.left; ) t2 = t2.left;
+        return this._root = u$6(t2.key, this._root, this._comparator), this._root = this._remove(t2.key, this._root, this._comparator), {
+          key: t2.key,
+          data: t2.data
+        };
+      }
+      return null;
+    }
+    findStatic(t2) {
+      let e2 = this._root;
+      const r2 = this._comparator;
+      for (; e2; ) {
+        const l2 = r2(t2, e2.key);
+        if (l2 === 0) return e2;
+        l2 < 0 ? e2 = e2.left : e2 = e2.right;
+      }
+      return null;
+    }
+    find(t2) {
+      return this._root && (this._root = u$6(t2, this._root, this._comparator), this._comparator(t2, this._root.key) !== 0) ? null : this._root;
+    }
+    contains(t2) {
+      let e2 = this._root;
+      const r2 = this._comparator;
+      for (; e2; ) {
+        const l2 = r2(t2, e2.key);
+        if (l2 === 0) return true;
+        l2 < 0 ? e2 = e2.left : e2 = e2.right;
+      }
+      return false;
+    }
+    forEach(t2, e2) {
+      let r2 = this._root;
+      const l2 = [];
+      let i2 = false;
+      for (; !i2; ) r2 !== null ? (l2.push(r2), r2 = r2.left) : l2.length !== 0 ? (r2 = l2.pop(), t2.call(e2, r2), r2 = r2.right) : i2 = true;
+      return this;
+    }
+    range(t2, e2, r2, l2) {
+      const i2 = [], o2 = this._comparator;
+      let s2 = this._root, h2;
+      for (; i2.length !== 0 || s2; ) if (s2) i2.push(s2), s2 = s2.left;
+      else {
+        if (s2 = i2.pop(), h2 = o2(s2.key, e2), h2 > 0) break;
+        if (o2(s2.key, t2) >= 0 && r2.call(l2, s2)) return this;
+        s2 = s2.right;
+      }
+      return this;
+    }
+    keys() {
+      const t2 = [];
+      return this.forEach(({ key: e2 }) => {
+        t2.push(e2);
+      }), t2;
+    }
+    values() {
+      const t2 = [];
+      return this.forEach(({ data: e2 }) => {
+        t2.push(e2);
+      }), t2;
+    }
+    min() {
+      return this._root ? this.minNode(this._root).key : null;
+    }
+    max() {
+      return this._root ? this.maxNode(this._root).key : null;
+    }
+    minNode(t2 = this._root) {
+      if (t2) for (; t2.left; ) t2 = t2.left;
+      return t2;
+    }
+    maxNode(t2 = this._root) {
+      if (t2) for (; t2.right; ) t2 = t2.right;
+      return t2;
+    }
+    at(t2) {
+      let e2 = this._root, r2 = false, l2 = 0;
+      const i2 = [];
+      for (; !r2; ) if (e2) i2.push(e2), e2 = e2.left;
+      else if (i2.length > 0) {
+        if (e2 = i2.pop(), l2 === t2) return e2;
+        l2++, e2 = e2.right;
+      } else r2 = true;
+      return null;
+    }
+    next(t2) {
+      let e2 = this._root, r2 = null;
+      if (t2.right) {
+        for (r2 = t2.right; r2.left; ) r2 = r2.left;
+        return r2;
+      }
+      const l2 = this._comparator;
+      for (; e2; ) {
+        const i2 = l2(t2.key, e2.key);
+        if (i2 === 0) break;
+        i2 < 0 ? (r2 = e2, e2 = e2.left) : e2 = e2.right;
+      }
+      return r2;
+    }
+    prev(t2) {
+      let e2 = this._root, r2 = null;
+      if (t2.left !== null) {
+        for (r2 = t2.left; r2.right; ) r2 = r2.right;
+        return r2;
+      }
+      const l2 = this._comparator;
+      for (; e2; ) {
+        const i2 = l2(t2.key, e2.key);
+        if (i2 === 0) break;
+        i2 < 0 ? e2 = e2.left : (r2 = e2, e2 = e2.right);
+      }
+      return r2;
+    }
+    clear() {
+      return this._root = null, this._size = 0, this;
+    }
+    toList() {
+      return k$1(this._root);
+    }
+    load(t2, e2 = [], r2 = false) {
+      let l2 = t2.length;
+      const i2 = this._comparator;
+      if (r2 && g$2(t2, e2, 0, l2 - 1, i2), this._root === null) this._root = a$3(t2, e2, 0, l2), this._size = l2;
+      else {
+        const o2 = y$2(this.toList(), x$1(t2, e2), i2);
+        l2 = this._size + l2, this._root = p$3({
+          head: o2
+        }, 0, l2);
+      }
+      return this;
+    }
+    isEmpty() {
+      return this._root === null;
+    }
+    get size() {
+      return this._size;
+    }
+    get root() {
+      return this._root;
+    }
+    toString(t2 = (e2) => String(e2.key)) {
+      const e2 = [];
+      return _$4(this._root, "", true, (r2) => e2.push(r2), t2), e2.join("");
+    }
+    update(t2, e2, r2) {
+      const l2 = this._comparator;
+      let { left: i2, right: o2 } = m$2(t2, this._root, l2);
+      l2(t2, e2) < 0 ? o2 = c$6(e2, r2, o2, l2) : i2 = c$6(e2, r2, i2, l2), this._root = w$3(i2, o2, l2);
+    }
+    split(t2) {
+      return m$2(t2, this._root, this._comparator);
+    }
+    *[Symbol.iterator]() {
+      let t2 = this._root;
+      const e2 = [];
+      let r2 = false;
+      for (; !r2; ) t2 !== null ? (e2.push(t2), t2 = t2.left) : e2.length !== 0 ? (t2 = e2.pop(), yield t2, t2 = t2.right) : r2 = true;
+    }
+  };
+  function a$3(n2, t2, e2, r2) {
+    const l2 = r2 - e2;
+    if (l2 > 0) {
+      const i2 = e2 + Math.floor(l2 / 2), o2 = n2[i2], s2 = t2[i2], h2 = new f$4(o2, s2);
+      return h2.left = a$3(n2, t2, e2, i2), h2.right = a$3(n2, t2, i2 + 1, r2), h2;
+    }
+    return null;
+  }
+  function x$1(n2, t2) {
+    const e2 = new f$4(null, null);
+    let r2 = e2;
+    for (let l2 = 0; l2 < n2.length; l2++) r2 = r2.next = new f$4(n2[l2], t2[l2]);
+    return r2.next = null, e2.next;
+  }
+  function k$1(n2) {
+    let t2 = n2;
+    const e2 = [];
+    let r2 = false;
+    const l2 = new f$4(null, null);
+    let i2 = l2;
+    for (; !r2; ) t2 ? (e2.push(t2), t2 = t2.left) : e2.length > 0 ? (t2 = i2 = i2.next = e2.pop(), t2 = t2.right) : r2 = true;
+    return i2.next = null, l2.next;
+  }
+  function p$3(n2, t2, e2) {
+    const r2 = e2 - t2;
+    if (r2 > 0) {
+      const l2 = t2 + Math.floor(r2 / 2), i2 = p$3(n2, t2, l2), o2 = n2.head;
+      return o2.left = i2, n2.head = n2.head.next, o2.right = p$3(n2, l2 + 1, e2), o2;
+    }
+    return null;
+  }
+  function y$2(n2, t2, e2) {
+    const r2 = new f$4(null, null);
+    let l2 = r2, i2 = n2, o2 = t2;
+    for (; i2 !== null && o2 !== null; ) e2(i2.key, o2.key) < 0 ? (l2.next = i2, i2 = i2.next) : (l2.next = o2, o2 = o2.next), l2 = l2.next;
+    return i2 !== null ? l2.next = i2 : o2 !== null && (l2.next = o2), r2.next;
+  }
+  function g$2(n2, t2, e2, r2, l2) {
+    if (e2 >= r2) return;
+    const i2 = n2[e2 + r2 >> 1];
+    let o2 = e2 - 1, s2 = r2 + 1;
+    for (; ; ) {
+      do
+        o2++;
+      while (l2(n2[o2], i2) < 0);
+      do
+        s2--;
+      while (l2(n2[s2], i2) > 0);
+      if (o2 >= s2) break;
+      let h2 = n2[o2];
+      n2[o2] = n2[s2], n2[s2] = h2, h2 = t2[o2], t2[o2] = t2[s2], t2[s2] = h2;
+    }
+    g$2(n2, t2, e2, s2, l2), g$2(n2, t2, s2 + 1, r2, l2);
+  }
+  const epsilon$1 = 11102230246251565e-32;
+  const splitter = 134217729;
+  const resulterrbound = (3 + 8 * epsilon$1) * epsilon$1;
+  function sum(elen, e2, flen, f2, h2) {
+    let Q2, Qnew, hh2, bvirt;
+    let enow = e2[0];
+    let fnow = f2[0];
+    let eindex = 0;
+    let findex = 0;
+    if (fnow > enow === fnow > -enow) {
+      Q2 = enow;
+      enow = e2[++eindex];
+    } else {
+      Q2 = fnow;
+      fnow = f2[++findex];
+    }
+    let hindex = 0;
+    if (eindex < elen && findex < flen) {
+      if (fnow > enow === fnow > -enow) {
+        Qnew = enow + Q2;
+        hh2 = Q2 - (Qnew - enow);
+        enow = e2[++eindex];
+      } else {
+        Qnew = fnow + Q2;
+        hh2 = Q2 - (Qnew - fnow);
+        fnow = f2[++findex];
+      }
+      Q2 = Qnew;
+      if (hh2 !== 0) {
+        h2[hindex++] = hh2;
+      }
+      while (eindex < elen && findex < flen) {
+        if (fnow > enow === fnow > -enow) {
+          Qnew = Q2 + enow;
+          bvirt = Qnew - Q2;
+          hh2 = Q2 - (Qnew - bvirt) + (enow - bvirt);
+          enow = e2[++eindex];
+        } else {
+          Qnew = Q2 + fnow;
+          bvirt = Qnew - Q2;
+          hh2 = Q2 - (Qnew - bvirt) + (fnow - bvirt);
+          fnow = f2[++findex];
+        }
+        Q2 = Qnew;
+        if (hh2 !== 0) {
+          h2[hindex++] = hh2;
+        }
+      }
+    }
+    while (eindex < elen) {
+      Qnew = Q2 + enow;
+      bvirt = Qnew - Q2;
+      hh2 = Q2 - (Qnew - bvirt) + (enow - bvirt);
+      enow = e2[++eindex];
+      Q2 = Qnew;
+      if (hh2 !== 0) {
+        h2[hindex++] = hh2;
+      }
+    }
+    while (findex < flen) {
+      Qnew = Q2 + fnow;
+      bvirt = Qnew - Q2;
+      hh2 = Q2 - (Qnew - bvirt) + (fnow - bvirt);
+      fnow = f2[++findex];
+      Q2 = Qnew;
+      if (hh2 !== 0) {
+        h2[hindex++] = hh2;
+      }
+    }
+    if (Q2 !== 0 || hindex === 0) {
+      h2[hindex++] = Q2;
+    }
+    return hindex;
+  }
+  function estimate(elen, e2) {
+    let Q2 = e2[0];
+    for (let i2 = 1; i2 < elen; i2++) Q2 += e2[i2];
+    return Q2;
+  }
+  function vec(n2) {
+    return new Float64Array(n2);
+  }
+  const ccwerrboundA = (3 + 16 * epsilon$1) * epsilon$1;
+  const ccwerrboundB = (2 + 12 * epsilon$1) * epsilon$1;
+  const ccwerrboundC = (9 + 64 * epsilon$1) * epsilon$1 * epsilon$1;
+  const B$2 = vec(4);
+  const C1 = vec(8);
+  const C2 = vec(12);
+  const D$2 = vec(16);
+  const u$5 = vec(4);
+  function orient2dadapt(ax, ay, bx, by, cx, cy, detsum) {
+    let acxtail, acytail, bcxtail, bcytail;
+    let bvirt, c2, ahi, alo, bhi, blo, _i, _j, _0, s1, s0, t1, t0, u3;
+    const acx = ax - cx;
+    const bcx = bx - cx;
+    const acy = ay - cy;
+    const bcy = by - cy;
+    s1 = acx * bcy;
+    c2 = splitter * acx;
+    ahi = c2 - (c2 - acx);
+    alo = acx - ahi;
+    c2 = splitter * bcy;
+    bhi = c2 - (c2 - bcy);
+    blo = bcy - bhi;
+    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
+    t1 = acy * bcx;
+    c2 = splitter * acy;
+    ahi = c2 - (c2 - acy);
+    alo = acy - ahi;
+    c2 = splitter * bcx;
+    bhi = c2 - (c2 - bcx);
+    blo = bcx - bhi;
+    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
+    _i = s0 - t0;
+    bvirt = s0 - _i;
+    B$2[0] = s0 - (_i + bvirt) + (bvirt - t0);
+    _j = s1 + _i;
+    bvirt = _j - s1;
+    _0 = s1 - (_j - bvirt) + (_i - bvirt);
+    _i = _0 - t1;
+    bvirt = _0 - _i;
+    B$2[1] = _0 - (_i + bvirt) + (bvirt - t1);
+    u3 = _j + _i;
+    bvirt = u3 - _j;
+    B$2[2] = _j - (u3 - bvirt) + (_i - bvirt);
+    B$2[3] = u3;
+    let det = estimate(4, B$2);
+    let errbound = ccwerrboundB * detsum;
+    if (det >= errbound || -det >= errbound) {
+      return det;
+    }
+    bvirt = ax - acx;
+    acxtail = ax - (acx + bvirt) + (bvirt - cx);
+    bvirt = bx - bcx;
+    bcxtail = bx - (bcx + bvirt) + (bvirt - cx);
+    bvirt = ay - acy;
+    acytail = ay - (acy + bvirt) + (bvirt - cy);
+    bvirt = by - bcy;
+    bcytail = by - (bcy + bvirt) + (bvirt - cy);
+    if (acxtail === 0 && acytail === 0 && bcxtail === 0 && bcytail === 0) {
+      return det;
+    }
+    errbound = ccwerrboundC * detsum + resulterrbound * Math.abs(det);
+    det += acx * bcytail + bcy * acxtail - (acy * bcxtail + bcx * acytail);
+    if (det >= errbound || -det >= errbound) return det;
+    s1 = acxtail * bcy;
+    c2 = splitter * acxtail;
+    ahi = c2 - (c2 - acxtail);
+    alo = acxtail - ahi;
+    c2 = splitter * bcy;
+    bhi = c2 - (c2 - bcy);
+    blo = bcy - bhi;
+    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
+    t1 = acytail * bcx;
+    c2 = splitter * acytail;
+    ahi = c2 - (c2 - acytail);
+    alo = acytail - ahi;
+    c2 = splitter * bcx;
+    bhi = c2 - (c2 - bcx);
+    blo = bcx - bhi;
+    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
+    _i = s0 - t0;
+    bvirt = s0 - _i;
+    u$5[0] = s0 - (_i + bvirt) + (bvirt - t0);
+    _j = s1 + _i;
+    bvirt = _j - s1;
+    _0 = s1 - (_j - bvirt) + (_i - bvirt);
+    _i = _0 - t1;
+    bvirt = _0 - _i;
+    u$5[1] = _0 - (_i + bvirt) + (bvirt - t1);
+    u3 = _j + _i;
+    bvirt = u3 - _j;
+    u$5[2] = _j - (u3 - bvirt) + (_i - bvirt);
+    u$5[3] = u3;
+    const C1len = sum(4, B$2, 4, u$5, C1);
+    s1 = acx * bcytail;
+    c2 = splitter * acx;
+    ahi = c2 - (c2 - acx);
+    alo = acx - ahi;
+    c2 = splitter * bcytail;
+    bhi = c2 - (c2 - bcytail);
+    blo = bcytail - bhi;
+    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
+    t1 = acy * bcxtail;
+    c2 = splitter * acy;
+    ahi = c2 - (c2 - acy);
+    alo = acy - ahi;
+    c2 = splitter * bcxtail;
+    bhi = c2 - (c2 - bcxtail);
+    blo = bcxtail - bhi;
+    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
+    _i = s0 - t0;
+    bvirt = s0 - _i;
+    u$5[0] = s0 - (_i + bvirt) + (bvirt - t0);
+    _j = s1 + _i;
+    bvirt = _j - s1;
+    _0 = s1 - (_j - bvirt) + (_i - bvirt);
+    _i = _0 - t1;
+    bvirt = _0 - _i;
+    u$5[1] = _0 - (_i + bvirt) + (bvirt - t1);
+    u3 = _j + _i;
+    bvirt = u3 - _j;
+    u$5[2] = _j - (u3 - bvirt) + (_i - bvirt);
+    u$5[3] = u3;
+    const C2len = sum(C1len, C1, 4, u$5, C2);
+    s1 = acxtail * bcytail;
+    c2 = splitter * acxtail;
+    ahi = c2 - (c2 - acxtail);
+    alo = acxtail - ahi;
+    c2 = splitter * bcytail;
+    bhi = c2 - (c2 - bcytail);
+    blo = bcytail - bhi;
+    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
+    t1 = acytail * bcxtail;
+    c2 = splitter * acytail;
+    ahi = c2 - (c2 - acytail);
+    alo = acytail - ahi;
+    c2 = splitter * bcxtail;
+    bhi = c2 - (c2 - bcxtail);
+    blo = bcxtail - bhi;
+    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
+    _i = s0 - t0;
+    bvirt = s0 - _i;
+    u$5[0] = s0 - (_i + bvirt) + (bvirt - t0);
+    _j = s1 + _i;
+    bvirt = _j - s1;
+    _0 = s1 - (_j - bvirt) + (_i - bvirt);
+    _i = _0 - t1;
+    bvirt = _0 - _i;
+    u$5[1] = _0 - (_i + bvirt) + (bvirt - t1);
+    u3 = _j + _i;
+    bvirt = u3 - _j;
+    u$5[2] = _j - (u3 - bvirt) + (_i - bvirt);
+    u$5[3] = u3;
+    const Dlen = sum(C2len, C2, 4, u$5, D$2);
+    return D$2[Dlen - 1];
+  }
+  function orient2d(ax, ay, bx, by, cx, cy) {
+    const detleft = (ay - cy) * (bx - cx);
+    const detright = (ax - cx) * (by - cy);
+    const det = detleft - detright;
+    const detsum = Math.abs(detleft + detright);
+    if (Math.abs(det) >= ccwerrboundA * detsum) return det;
+    return -orient2dadapt(ax, ay, bx, by, cx, cy, detsum);
+  }
+  var define_process_env_default = {};
+  const isInBbox = (bbox, point2) => {
+    return bbox.ll.x <= point2.x && point2.x <= bbox.ur.x && bbox.ll.y <= point2.y && point2.y <= bbox.ur.y;
+  };
+  const getBboxOverlap = (b1, b2) => {
+    if (b2.ur.x < b1.ll.x || b1.ur.x < b2.ll.x || b2.ur.y < b1.ll.y || b1.ur.y < b2.ll.y) return null;
+    const lowerX = b1.ll.x < b2.ll.x ? b2.ll.x : b1.ll.x;
+    const upperX = b1.ur.x < b2.ur.x ? b1.ur.x : b2.ur.x;
+    const lowerY = b1.ll.y < b2.ll.y ? b2.ll.y : b1.ll.y;
+    const upperY = b1.ur.y < b2.ur.y ? b1.ur.y : b2.ur.y;
+    return {
+      ll: {
+        x: lowerX,
+        y: lowerY
+      },
+      ur: {
+        x: upperX,
+        y: upperY
+      }
+    };
+  };
+  let epsilon = Number.EPSILON;
+  if (epsilon === void 0) epsilon = Math.pow(2, -52);
+  const EPSILON_SQ = epsilon * epsilon;
+  const cmp$1 = (a2, b2) => {
+    if (-epsilon < a2 && a2 < epsilon) {
+      if (-epsilon < b2 && b2 < epsilon) {
+        return 0;
+      }
+    }
+    const ab2 = a2 - b2;
+    if (ab2 * ab2 < EPSILON_SQ * a2 * b2) {
+      return 0;
+    }
+    return a2 < b2 ? -1 : 1;
+  };
+  class PtRounder {
+    constructor() {
+      this.reset();
+    }
+    reset() {
+      this.xRounder = new CoordRounder();
+      this.yRounder = new CoordRounder();
+    }
+    round(x2, y2) {
+      return {
+        x: this.xRounder.round(x2),
+        y: this.yRounder.round(y2)
+      };
+    }
+  }
+  class CoordRounder {
+    constructor() {
+      this.tree = new z$1();
+      this.round(0);
+    }
+    round(coord) {
+      const node2 = this.tree.add(coord);
+      const prevNode = this.tree.prev(node2);
+      if (prevNode !== null && cmp$1(node2.key, prevNode.key) === 0) {
+        this.tree.remove(coord);
+        return prevNode.key;
+      }
+      const nextNode = this.tree.next(node2);
+      if (nextNode !== null && cmp$1(node2.key, nextNode.key) === 0) {
+        this.tree.remove(coord);
+        return nextNode.key;
+      }
+      return coord;
+    }
+  }
+  const rounder = new PtRounder();
+  const crossProduct = (a2, b2) => a2.x * b2.y - a2.y * b2.x;
+  const dotProduct = (a2, b2) => a2.x * b2.x + a2.y * b2.y;
+  const compareVectorAngles = (basePt, endPt1, endPt2) => {
+    const res = orient2d(basePt.x, basePt.y, endPt1.x, endPt1.y, endPt2.x, endPt2.y);
+    if (res > 0) return -1;
+    if (res < 0) return 1;
+    return 0;
+  };
+  const length$4 = (v2) => Math.sqrt(dotProduct(v2, v2));
+  const sineOfAngle = (pShared, pBase, pAngle) => {
+    const vBase = {
+      x: pBase.x - pShared.x,
+      y: pBase.y - pShared.y
+    };
+    const vAngle = {
+      x: pAngle.x - pShared.x,
+      y: pAngle.y - pShared.y
+    };
+    return crossProduct(vAngle, vBase) / length$4(vAngle) / length$4(vBase);
+  };
+  const cosineOfAngle = (pShared, pBase, pAngle) => {
+    const vBase = {
+      x: pBase.x - pShared.x,
+      y: pBase.y - pShared.y
+    };
+    const vAngle = {
+      x: pAngle.x - pShared.x,
+      y: pAngle.y - pShared.y
+    };
+    return dotProduct(vAngle, vBase) / length$4(vAngle) / length$4(vBase);
+  };
+  const horizontalIntersection = (pt2, v2, y2) => {
+    if (v2.y === 0) return null;
+    return {
+      x: pt2.x + v2.x / v2.y * (y2 - pt2.y),
+      y: y2
+    };
+  };
+  const verticalIntersection = (pt2, v2, x2) => {
+    if (v2.x === 0) return null;
+    return {
+      x: x2,
+      y: pt2.y + v2.y / v2.x * (x2 - pt2.x)
+    };
+  };
+  const intersection$1 = (pt1, v1, pt2, v2) => {
+    if (v1.x === 0) return verticalIntersection(pt2, v2, pt1.x);
+    if (v2.x === 0) return verticalIntersection(pt1, v1, pt2.x);
+    if (v1.y === 0) return horizontalIntersection(pt2, v2, pt1.y);
+    if (v2.y === 0) return horizontalIntersection(pt1, v1, pt2.y);
+    const kross = crossProduct(v1, v2);
+    if (kross == 0) return null;
+    const ve2 = {
+      x: pt2.x - pt1.x,
+      y: pt2.y - pt1.y
+    };
+    const d1 = crossProduct(ve2, v1) / kross;
+    const d2 = crossProduct(ve2, v2) / kross;
+    const x1 = pt1.x + d2 * v1.x, x2 = pt2.x + d1 * v2.x;
+    const y1 = pt1.y + d2 * v1.y, y2 = pt2.y + d1 * v2.y;
+    const x3 = (x1 + x2) / 2;
+    const y3 = (y1 + y2) / 2;
+    return {
+      x: x3,
+      y: y3
+    };
+  };
+  class SweepEvent {
+    static compare(a2, b2) {
+      const ptCmp = SweepEvent.comparePoints(a2.point, b2.point);
+      if (ptCmp !== 0) return ptCmp;
+      if (a2.point !== b2.point) a2.link(b2);
+      if (a2.isLeft !== b2.isLeft) return a2.isLeft ? 1 : -1;
+      return Segment.compare(a2.segment, b2.segment);
+    }
+    static comparePoints(aPt, bPt) {
+      if (aPt.x < bPt.x) return -1;
+      if (aPt.x > bPt.x) return 1;
+      if (aPt.y < bPt.y) return -1;
+      if (aPt.y > bPt.y) return 1;
+      return 0;
+    }
+    constructor(point2, isLeft) {
+      if (point2.events === void 0) point2.events = [
+        this
+      ];
+      else point2.events.push(this);
+      this.point = point2;
+      this.isLeft = isLeft;
+    }
+    link(other) {
+      if (other.point === this.point) {
+        throw new Error("Tried to link already linked events");
+      }
+      const otherEvents = other.point.events;
+      for (let i2 = 0, iMax = otherEvents.length; i2 < iMax; i2++) {
+        const evt = otherEvents[i2];
+        this.point.events.push(evt);
+        evt.point = this.point;
+      }
+      this.checkForConsuming();
+    }
+    checkForConsuming() {
+      const numEvents = this.point.events.length;
+      for (let i2 = 0; i2 < numEvents; i2++) {
+        const evt1 = this.point.events[i2];
+        if (evt1.segment.consumedBy !== void 0) continue;
+        for (let j2 = i2 + 1; j2 < numEvents; j2++) {
+          const evt2 = this.point.events[j2];
+          if (evt2.consumedBy !== void 0) continue;
+          if (evt1.otherSE.point.events !== evt2.otherSE.point.events) continue;
+          evt1.segment.consume(evt2.segment);
+        }
+      }
+    }
+    getAvailableLinkedEvents() {
+      const events = [];
+      for (let i2 = 0, iMax = this.point.events.length; i2 < iMax; i2++) {
+        const evt = this.point.events[i2];
+        if (evt !== this && !evt.segment.ringOut && evt.segment.isInResult()) {
+          events.push(evt);
+        }
+      }
+      return events;
+    }
+    getLeftmostComparator(baseEvent) {
+      const cache2 = /* @__PURE__ */ new Map();
+      const fillCache = (linkedEvent) => {
+        const nextEvent = linkedEvent.otherSE;
+        cache2.set(linkedEvent, {
+          sine: sineOfAngle(this.point, baseEvent.point, nextEvent.point),
+          cosine: cosineOfAngle(this.point, baseEvent.point, nextEvent.point)
+        });
+      };
+      return (a2, b2) => {
+        if (!cache2.has(a2)) fillCache(a2);
+        if (!cache2.has(b2)) fillCache(b2);
+        const { sine: asine, cosine: acosine } = cache2.get(a2);
+        const { sine: bsine, cosine: bcosine } = cache2.get(b2);
+        if (asine >= 0 && bsine >= 0) {
+          if (acosine < bcosine) return 1;
+          if (acosine > bcosine) return -1;
+          return 0;
+        }
+        if (asine < 0 && bsine < 0) {
+          if (acosine < bcosine) return -1;
+          if (acosine > bcosine) return 1;
+          return 0;
+        }
+        if (bsine < asine) return -1;
+        if (bsine > asine) return 1;
+        return 0;
+      };
+    }
+  }
+  let segmentId = 0;
+  class Segment {
+    static compare(a2, b2) {
+      const alx = a2.leftSE.point.x;
+      const blx = b2.leftSE.point.x;
+      const arx = a2.rightSE.point.x;
+      const brx = b2.rightSE.point.x;
+      if (brx < alx) return 1;
+      if (arx < blx) return -1;
+      const aly = a2.leftSE.point.y;
+      const bly = b2.leftSE.point.y;
+      const ary = a2.rightSE.point.y;
+      const bry = b2.rightSE.point.y;
+      if (alx < blx) {
+        if (bly < aly && bly < ary) return 1;
+        if (bly > aly && bly > ary) return -1;
+        const aCmpBLeft = a2.comparePoint(b2.leftSE.point);
+        if (aCmpBLeft < 0) return 1;
+        if (aCmpBLeft > 0) return -1;
+        const bCmpARight = b2.comparePoint(a2.rightSE.point);
+        if (bCmpARight !== 0) return bCmpARight;
+        return -1;
+      }
+      if (alx > blx) {
+        if (aly < bly && aly < bry) return -1;
+        if (aly > bly && aly > bry) return 1;
+        const bCmpALeft = b2.comparePoint(a2.leftSE.point);
+        if (bCmpALeft !== 0) return bCmpALeft;
+        const aCmpBRight = a2.comparePoint(b2.rightSE.point);
+        if (aCmpBRight < 0) return 1;
+        if (aCmpBRight > 0) return -1;
+        return 1;
+      }
+      if (aly < bly) return -1;
+      if (aly > bly) return 1;
+      if (arx < brx) {
+        const bCmpARight = b2.comparePoint(a2.rightSE.point);
+        if (bCmpARight !== 0) return bCmpARight;
+      }
+      if (arx > brx) {
+        const aCmpBRight = a2.comparePoint(b2.rightSE.point);
+        if (aCmpBRight < 0) return 1;
+        if (aCmpBRight > 0) return -1;
+      }
+      if (arx !== brx) {
+        const ay = ary - aly;
+        const ax = arx - alx;
+        const by = bry - bly;
+        const bx = brx - blx;
+        if (ay > ax && by < bx) return 1;
+        if (ay < ax && by > bx) return -1;
+      }
+      if (arx > brx) return 1;
+      if (arx < brx) return -1;
+      if (ary < bry) return -1;
+      if (ary > bry) return 1;
+      if (a2.id < b2.id) return -1;
+      if (a2.id > b2.id) return 1;
+      return 0;
+    }
+    constructor(leftSE, rightSE, rings, windings) {
+      this.id = ++segmentId;
+      this.leftSE = leftSE;
+      leftSE.segment = this;
+      leftSE.otherSE = rightSE;
+      this.rightSE = rightSE;
+      rightSE.segment = this;
+      rightSE.otherSE = leftSE;
+      this.rings = rings;
+      this.windings = windings;
+    }
+    static fromRing(pt1, pt2, ring) {
+      let leftPt, rightPt, winding;
+      const cmpPts = SweepEvent.comparePoints(pt1, pt2);
+      if (cmpPts < 0) {
+        leftPt = pt1;
+        rightPt = pt2;
+        winding = 1;
+      } else if (cmpPts > 0) {
+        leftPt = pt2;
+        rightPt = pt1;
+        winding = -1;
+      } else throw new Error(`Tried to create degenerate segment at [${pt1.x}, ${pt1.y}]`);
+      const leftSE = new SweepEvent(leftPt, true);
+      const rightSE = new SweepEvent(rightPt, false);
+      return new Segment(leftSE, rightSE, [
+        ring
+      ], [
+        winding
+      ]);
+    }
+    replaceRightSE(newRightSE) {
+      this.rightSE = newRightSE;
+      this.rightSE.segment = this;
+      this.rightSE.otherSE = this.leftSE;
+      this.leftSE.otherSE = this.rightSE;
+    }
+    bbox() {
+      const y1 = this.leftSE.point.y;
+      const y2 = this.rightSE.point.y;
+      return {
+        ll: {
+          x: this.leftSE.point.x,
+          y: y1 < y2 ? y1 : y2
+        },
+        ur: {
+          x: this.rightSE.point.x,
+          y: y1 > y2 ? y1 : y2
+        }
+      };
+    }
+    vector() {
+      return {
+        x: this.rightSE.point.x - this.leftSE.point.x,
+        y: this.rightSE.point.y - this.leftSE.point.y
+      };
+    }
+    isAnEndpoint(pt2) {
+      return pt2.x === this.leftSE.point.x && pt2.y === this.leftSE.point.y || pt2.x === this.rightSE.point.x && pt2.y === this.rightSE.point.y;
+    }
+    comparePoint(point2) {
+      if (this.isAnEndpoint(point2)) return 0;
+      const lPt = this.leftSE.point;
+      const rPt = this.rightSE.point;
+      const v2 = this.vector();
+      if (lPt.x === rPt.x) {
+        if (point2.x === lPt.x) return 0;
+        return point2.x < lPt.x ? 1 : -1;
+      }
+      const yDist = (point2.y - lPt.y) / v2.y;
+      const xFromYDist = lPt.x + yDist * v2.x;
+      if (point2.x === xFromYDist) return 0;
+      const xDist = (point2.x - lPt.x) / v2.x;
+      const yFromXDist = lPt.y + xDist * v2.y;
+      if (point2.y === yFromXDist) return 0;
+      return point2.y < yFromXDist ? -1 : 1;
+    }
+    getIntersection(other) {
+      const tBbox = this.bbox();
+      const oBbox = other.bbox();
+      const bboxOverlap = getBboxOverlap(tBbox, oBbox);
+      if (bboxOverlap === null) return null;
+      const tlp = this.leftSE.point;
+      const trp = this.rightSE.point;
+      const olp = other.leftSE.point;
+      const orp = other.rightSE.point;
+      const touchesOtherLSE = isInBbox(tBbox, olp) && this.comparePoint(olp) === 0;
+      const touchesThisLSE = isInBbox(oBbox, tlp) && other.comparePoint(tlp) === 0;
+      const touchesOtherRSE = isInBbox(tBbox, orp) && this.comparePoint(orp) === 0;
+      const touchesThisRSE = isInBbox(oBbox, trp) && other.comparePoint(trp) === 0;
+      if (touchesThisLSE && touchesOtherLSE) {
+        if (touchesThisRSE && !touchesOtherRSE) return trp;
+        if (!touchesThisRSE && touchesOtherRSE) return orp;
+        return null;
+      }
+      if (touchesThisLSE) {
+        if (touchesOtherRSE) {
+          if (tlp.x === orp.x && tlp.y === orp.y) return null;
+        }
+        return tlp;
+      }
+      if (touchesOtherLSE) {
+        if (touchesThisRSE) {
+          if (trp.x === olp.x && trp.y === olp.y) return null;
+        }
+        return olp;
+      }
+      if (touchesThisRSE && touchesOtherRSE) return null;
+      if (touchesThisRSE) return trp;
+      if (touchesOtherRSE) return orp;
+      const pt2 = intersection$1(tlp, this.vector(), olp, other.vector());
+      if (pt2 === null) return null;
+      if (!isInBbox(bboxOverlap, pt2)) return null;
+      return rounder.round(pt2.x, pt2.y);
+    }
+    split(point2) {
+      const newEvents = [];
+      const alreadyLinked = point2.events !== void 0;
+      const newLeftSE = new SweepEvent(point2, true);
+      const newRightSE = new SweepEvent(point2, false);
+      const oldRightSE = this.rightSE;
+      this.replaceRightSE(newRightSE);
+      newEvents.push(newRightSE);
+      newEvents.push(newLeftSE);
+      const newSeg = new Segment(newLeftSE, oldRightSE, this.rings.slice(), this.windings.slice());
+      if (SweepEvent.comparePoints(newSeg.leftSE.point, newSeg.rightSE.point) > 0) {
+        newSeg.swapEvents();
+      }
+      if (SweepEvent.comparePoints(this.leftSE.point, this.rightSE.point) > 0) {
+        this.swapEvents();
+      }
+      if (alreadyLinked) {
+        newLeftSE.checkForConsuming();
+        newRightSE.checkForConsuming();
+      }
+      return newEvents;
+    }
+    swapEvents() {
+      const tmpEvt = this.rightSE;
+      this.rightSE = this.leftSE;
+      this.leftSE = tmpEvt;
+      this.leftSE.isLeft = true;
+      this.rightSE.isLeft = false;
+      for (let i2 = 0, iMax = this.windings.length; i2 < iMax; i2++) {
+        this.windings[i2] *= -1;
+      }
+    }
+    consume(other) {
+      let consumer = this;
+      let consumee = other;
+      while (consumer.consumedBy) consumer = consumer.consumedBy;
+      while (consumee.consumedBy) consumee = consumee.consumedBy;
+      const cmp2 = Segment.compare(consumer, consumee);
+      if (cmp2 === 0) return;
+      if (cmp2 > 0) {
+        const tmp = consumer;
+        consumer = consumee;
+        consumee = tmp;
+      }
+      if (consumer.prev === consumee) {
+        const tmp = consumer;
+        consumer = consumee;
+        consumee = tmp;
+      }
+      for (let i2 = 0, iMax = consumee.rings.length; i2 < iMax; i2++) {
+        const ring = consumee.rings[i2];
+        const winding = consumee.windings[i2];
+        const index2 = consumer.rings.indexOf(ring);
+        if (index2 === -1) {
+          consumer.rings.push(ring);
+          consumer.windings.push(winding);
+        } else consumer.windings[index2] += winding;
+      }
+      consumee.rings = null;
+      consumee.windings = null;
+      consumee.consumedBy = consumer;
+      consumee.leftSE.consumedBy = consumer.leftSE;
+      consumee.rightSE.consumedBy = consumer.rightSE;
+    }
+    prevInResult() {
+      if (this._prevInResult !== void 0) return this._prevInResult;
+      if (!this.prev) this._prevInResult = null;
+      else if (this.prev.isInResult()) this._prevInResult = this.prev;
+      else this._prevInResult = this.prev.prevInResult();
+      return this._prevInResult;
+    }
+    beforeState() {
+      if (this._beforeState !== void 0) return this._beforeState;
+      if (!this.prev) this._beforeState = {
+        rings: [],
+        windings: [],
+        multiPolys: []
+      };
+      else {
+        const seg = this.prev.consumedBy || this.prev;
+        this._beforeState = seg.afterState();
+      }
+      return this._beforeState;
+    }
+    afterState() {
+      if (this._afterState !== void 0) return this._afterState;
+      const beforeState = this.beforeState();
+      this._afterState = {
+        rings: beforeState.rings.slice(0),
+        windings: beforeState.windings.slice(0),
+        multiPolys: []
+      };
+      const ringsAfter = this._afterState.rings;
+      const windingsAfter = this._afterState.windings;
+      const mpsAfter = this._afterState.multiPolys;
+      for (let i2 = 0, iMax = this.rings.length; i2 < iMax; i2++) {
+        const ring = this.rings[i2];
+        const winding = this.windings[i2];
+        const index2 = ringsAfter.indexOf(ring);
+        if (index2 === -1) {
+          ringsAfter.push(ring);
+          windingsAfter.push(winding);
+        } else windingsAfter[index2] += winding;
+      }
+      const polysAfter = [];
+      const polysExclude = [];
+      for (let i2 = 0, iMax = ringsAfter.length; i2 < iMax; i2++) {
+        if (windingsAfter[i2] === 0) continue;
+        const ring = ringsAfter[i2];
+        const poly = ring.poly;
+        if (polysExclude.indexOf(poly) !== -1) continue;
+        if (ring.isExterior) polysAfter.push(poly);
+        else {
+          if (polysExclude.indexOf(poly) === -1) polysExclude.push(poly);
+          const index2 = polysAfter.indexOf(ring.poly);
+          if (index2 !== -1) polysAfter.splice(index2, 1);
+        }
+      }
+      for (let i2 = 0, iMax = polysAfter.length; i2 < iMax; i2++) {
+        const mp = polysAfter[i2].multiPoly;
+        if (mpsAfter.indexOf(mp) === -1) mpsAfter.push(mp);
+      }
+      return this._afterState;
+    }
+    isInResult() {
+      if (this.consumedBy) return false;
+      if (this._isInResult !== void 0) return this._isInResult;
+      const mpsBefore = this.beforeState().multiPolys;
+      const mpsAfter = this.afterState().multiPolys;
+      switch (operation.type) {
+        case "union": {
+          const noBefores = mpsBefore.length === 0;
+          const noAfters = mpsAfter.length === 0;
+          this._isInResult = noBefores !== noAfters;
+          break;
+        }
+        case "intersection": {
+          let least;
+          let most;
+          if (mpsBefore.length < mpsAfter.length) {
+            least = mpsBefore.length;
+            most = mpsAfter.length;
+          } else {
+            least = mpsAfter.length;
+            most = mpsBefore.length;
+          }
+          this._isInResult = most === operation.numMultiPolys && least < most;
+          break;
+        }
+        case "xor": {
+          const diff2 = Math.abs(mpsBefore.length - mpsAfter.length);
+          this._isInResult = diff2 % 2 === 1;
+          break;
+        }
+        case "difference": {
+          const isJustSubject = (mps) => mps.length === 1 && mps[0].isSubject;
+          this._isInResult = isJustSubject(mpsBefore) !== isJustSubject(mpsAfter);
+          break;
+        }
+        default:
+          throw new Error(`Unrecognized operation type found ${operation.type}`);
+      }
+      return this._isInResult;
+    }
+  }
+  class RingIn {
+    constructor(geomRing, poly, isExterior) {
+      if (!Array.isArray(geomRing) || geomRing.length === 0) {
+        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
+      }
+      this.poly = poly;
+      this.isExterior = isExterior;
+      this.segments = [];
+      if (typeof geomRing[0][0] !== "number" || typeof geomRing[0][1] !== "number") {
+        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
+      }
+      const firstPoint = rounder.round(geomRing[0][0], geomRing[0][1]);
+      this.bbox = {
+        ll: {
+          x: firstPoint.x,
+          y: firstPoint.y
+        },
+        ur: {
+          x: firstPoint.x,
+          y: firstPoint.y
+        }
+      };
+      let prevPoint = firstPoint;
+      for (let i2 = 1, iMax = geomRing.length; i2 < iMax; i2++) {
+        if (typeof geomRing[i2][0] !== "number" || typeof geomRing[i2][1] !== "number") {
+          throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
+        }
+        let point2 = rounder.round(geomRing[i2][0], geomRing[i2][1]);
+        if (point2.x === prevPoint.x && point2.y === prevPoint.y) continue;
+        this.segments.push(Segment.fromRing(prevPoint, point2, this));
+        if (point2.x < this.bbox.ll.x) this.bbox.ll.x = point2.x;
+        if (point2.y < this.bbox.ll.y) this.bbox.ll.y = point2.y;
+        if (point2.x > this.bbox.ur.x) this.bbox.ur.x = point2.x;
+        if (point2.y > this.bbox.ur.y) this.bbox.ur.y = point2.y;
+        prevPoint = point2;
+      }
+      if (firstPoint.x !== prevPoint.x || firstPoint.y !== prevPoint.y) {
+        this.segments.push(Segment.fromRing(prevPoint, firstPoint, this));
+      }
+    }
+    getSweepEvents() {
+      const sweepEvents = [];
+      for (let i2 = 0, iMax = this.segments.length; i2 < iMax; i2++) {
+        const segment = this.segments[i2];
+        sweepEvents.push(segment.leftSE);
+        sweepEvents.push(segment.rightSE);
+      }
+      return sweepEvents;
+    }
+  }
+  class PolyIn {
+    constructor(geomPoly, multiPoly) {
+      if (!Array.isArray(geomPoly)) {
+        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
+      }
+      this.exteriorRing = new RingIn(geomPoly[0], this, true);
+      this.bbox = {
+        ll: {
+          x: this.exteriorRing.bbox.ll.x,
+          y: this.exteriorRing.bbox.ll.y
+        },
+        ur: {
+          x: this.exteriorRing.bbox.ur.x,
+          y: this.exteriorRing.bbox.ur.y
+        }
+      };
+      this.interiorRings = [];
+      for (let i2 = 1, iMax = geomPoly.length; i2 < iMax; i2++) {
+        const ring = new RingIn(geomPoly[i2], this, false);
+        if (ring.bbox.ll.x < this.bbox.ll.x) this.bbox.ll.x = ring.bbox.ll.x;
+        if (ring.bbox.ll.y < this.bbox.ll.y) this.bbox.ll.y = ring.bbox.ll.y;
+        if (ring.bbox.ur.x > this.bbox.ur.x) this.bbox.ur.x = ring.bbox.ur.x;
+        if (ring.bbox.ur.y > this.bbox.ur.y) this.bbox.ur.y = ring.bbox.ur.y;
+        this.interiorRings.push(ring);
+      }
+      this.multiPoly = multiPoly;
+    }
+    getSweepEvents() {
+      const sweepEvents = this.exteriorRing.getSweepEvents();
+      for (let i2 = 0, iMax = this.interiorRings.length; i2 < iMax; i2++) {
+        const ringSweepEvents = this.interiorRings[i2].getSweepEvents();
+        for (let j2 = 0, jMax = ringSweepEvents.length; j2 < jMax; j2++) {
+          sweepEvents.push(ringSweepEvents[j2]);
+        }
+      }
+      return sweepEvents;
+    }
+  }
+  class MultiPolyIn {
+    constructor(geom, isSubject) {
+      if (!Array.isArray(geom)) {
+        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
+      }
+      try {
+        if (typeof geom[0][0][0] === "number") geom = [
+          geom
+        ];
+      } catch (ex) {
+      }
+      this.polys = [];
+      this.bbox = {
+        ll: {
+          x: Number.POSITIVE_INFINITY,
+          y: Number.POSITIVE_INFINITY
+        },
+        ur: {
+          x: Number.NEGATIVE_INFINITY,
+          y: Number.NEGATIVE_INFINITY
+        }
+      };
+      for (let i2 = 0, iMax = geom.length; i2 < iMax; i2++) {
+        const poly = new PolyIn(geom[i2], this);
+        if (poly.bbox.ll.x < this.bbox.ll.x) this.bbox.ll.x = poly.bbox.ll.x;
+        if (poly.bbox.ll.y < this.bbox.ll.y) this.bbox.ll.y = poly.bbox.ll.y;
+        if (poly.bbox.ur.x > this.bbox.ur.x) this.bbox.ur.x = poly.bbox.ur.x;
+        if (poly.bbox.ur.y > this.bbox.ur.y) this.bbox.ur.y = poly.bbox.ur.y;
+        this.polys.push(poly);
+      }
+      this.isSubject = isSubject;
+    }
+    getSweepEvents() {
+      const sweepEvents = [];
+      for (let i2 = 0, iMax = this.polys.length; i2 < iMax; i2++) {
+        const polySweepEvents = this.polys[i2].getSweepEvents();
+        for (let j2 = 0, jMax = polySweepEvents.length; j2 < jMax; j2++) {
+          sweepEvents.push(polySweepEvents[j2]);
+        }
+      }
+      return sweepEvents;
+    }
+  }
+  class RingOut {
+    static factory(allSegments) {
+      const ringsOut = [];
+      for (let i2 = 0, iMax = allSegments.length; i2 < iMax; i2++) {
+        const segment = allSegments[i2];
+        if (!segment.isInResult() || segment.ringOut) continue;
+        let prevEvent = null;
+        let event = segment.leftSE;
+        let nextEvent = segment.rightSE;
+        const events = [
+          event
+        ];
+        const startingPoint = event.point;
+        const intersectionLEs = [];
+        while (true) {
+          prevEvent = event;
+          event = nextEvent;
+          events.push(event);
+          if (event.point === startingPoint) break;
+          while (true) {
+            const availableLEs = event.getAvailableLinkedEvents();
+            if (availableLEs.length === 0) {
+              const firstPt = events[0].point;
+              const lastPt = events[events.length - 1].point;
+              throw new Error(`Unable to complete output ring starting at [${firstPt.x}, ${firstPt.y}]. Last matching segment found ends at [${lastPt.x}, ${lastPt.y}].`);
+            }
+            if (availableLEs.length === 1) {
+              nextEvent = availableLEs[0].otherSE;
+              break;
+            }
+            let indexLE = null;
+            for (let j2 = 0, jMax = intersectionLEs.length; j2 < jMax; j2++) {
+              if (intersectionLEs[j2].point === event.point) {
+                indexLE = j2;
+                break;
+              }
+            }
+            if (indexLE !== null) {
+              const intersectionLE = intersectionLEs.splice(indexLE)[0];
+              const ringEvents = events.splice(intersectionLE.index);
+              ringEvents.unshift(ringEvents[0].otherSE);
+              ringsOut.push(new RingOut(ringEvents.reverse()));
+              continue;
+            }
+            intersectionLEs.push({
+              index: events.length,
+              point: event.point
+            });
+            const comparator = event.getLeftmostComparator(prevEvent);
+            nextEvent = availableLEs.sort(comparator)[0].otherSE;
+            break;
+          }
+        }
+        ringsOut.push(new RingOut(events));
+      }
+      return ringsOut;
+    }
+    constructor(events) {
+      this.events = events;
+      for (let i2 = 0, iMax = events.length; i2 < iMax; i2++) {
+        events[i2].segment.ringOut = this;
+      }
+      this.poly = null;
+    }
+    getGeom() {
+      let prevPt = this.events[0].point;
+      const points = [
+        prevPt
+      ];
+      for (let i2 = 1, iMax = this.events.length - 1; i2 < iMax; i2++) {
+        const pt22 = this.events[i2].point;
+        const nextPt2 = this.events[i2 + 1].point;
+        if (compareVectorAngles(pt22, prevPt, nextPt2) === 0) continue;
+        points.push(pt22);
+        prevPt = pt22;
+      }
+      if (points.length === 1) return null;
+      const pt2 = points[0];
+      const nextPt = points[1];
+      if (compareVectorAngles(pt2, prevPt, nextPt) === 0) points.shift();
+      points.push(points[0]);
+      const step = this.isExteriorRing() ? 1 : -1;
+      const iStart = this.isExteriorRing() ? 0 : points.length - 1;
+      const iEnd = this.isExteriorRing() ? points.length : -1;
+      const orderedPoints = [];
+      for (let i2 = iStart; i2 != iEnd; i2 += step) orderedPoints.push([
+        points[i2].x,
+        points[i2].y
+      ]);
+      return orderedPoints;
+    }
+    isExteriorRing() {
+      if (this._isExteriorRing === void 0) {
+        const enclosing = this.enclosingRing();
+        this._isExteriorRing = enclosing ? !enclosing.isExteriorRing() : true;
+      }
+      return this._isExteriorRing;
+    }
+    enclosingRing() {
+      if (this._enclosingRing === void 0) {
+        this._enclosingRing = this._calcEnclosingRing();
+      }
+      return this._enclosingRing;
+    }
+    _calcEnclosingRing() {
+      let leftMostEvt = this.events[0];
+      for (let i2 = 1, iMax = this.events.length; i2 < iMax; i2++) {
+        const evt = this.events[i2];
+        if (SweepEvent.compare(leftMostEvt, evt) > 0) leftMostEvt = evt;
+      }
+      let prevSeg = leftMostEvt.segment.prevInResult();
+      let prevPrevSeg = prevSeg ? prevSeg.prevInResult() : null;
+      while (true) {
+        if (!prevSeg) return null;
+        if (!prevPrevSeg) return prevSeg.ringOut;
+        if (prevPrevSeg.ringOut !== prevSeg.ringOut) {
+          if (prevPrevSeg.ringOut.enclosingRing() !== prevSeg.ringOut) {
+            return prevSeg.ringOut;
+          } else return prevSeg.ringOut.enclosingRing();
+        }
+        prevSeg = prevPrevSeg.prevInResult();
+        prevPrevSeg = prevSeg ? prevSeg.prevInResult() : null;
+      }
+    }
+  }
+  class PolyOut {
+    constructor(exteriorRing) {
+      this.exteriorRing = exteriorRing;
+      exteriorRing.poly = this;
+      this.interiorRings = [];
+    }
+    addInterior(ring) {
+      this.interiorRings.push(ring);
+      ring.poly = this;
+    }
+    getGeom() {
+      const geom = [
+        this.exteriorRing.getGeom()
+      ];
+      if (geom[0] === null) return null;
+      for (let i2 = 0, iMax = this.interiorRings.length; i2 < iMax; i2++) {
+        const ringGeom = this.interiorRings[i2].getGeom();
+        if (ringGeom === null) continue;
+        geom.push(ringGeom);
+      }
+      return geom;
+    }
+  }
+  class MultiPolyOut {
+    constructor(rings) {
+      this.rings = rings;
+      this.polys = this._composePolys(rings);
+    }
+    getGeom() {
+      const geom = [];
+      for (let i2 = 0, iMax = this.polys.length; i2 < iMax; i2++) {
+        const polyGeom = this.polys[i2].getGeom();
+        if (polyGeom === null) continue;
+        geom.push(polyGeom);
+      }
+      return geom;
+    }
+    _composePolys(rings) {
+      const polys = [];
+      for (let i2 = 0, iMax = rings.length; i2 < iMax; i2++) {
+        const ring = rings[i2];
+        if (ring.poly) continue;
+        if (ring.isExteriorRing()) polys.push(new PolyOut(ring));
+        else {
+          const enclosingRing = ring.enclosingRing();
+          if (!enclosingRing.poly) polys.push(new PolyOut(enclosingRing));
+          enclosingRing.poly.addInterior(ring);
+        }
+      }
+      return polys;
+    }
+  }
+  class SweepLine {
+    constructor(queue) {
+      let comparator = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : Segment.compare;
+      this.queue = queue;
+      this.tree = new z$1(comparator);
+      this.segments = [];
+    }
+    process(event) {
+      const segment = event.segment;
+      const newEvents = [];
+      if (event.consumedBy) {
+        if (event.isLeft) this.queue.remove(event.otherSE);
+        else this.tree.remove(segment);
+        return newEvents;
+      }
+      const node2 = event.isLeft ? this.tree.add(segment) : this.tree.find(segment);
+      if (!node2) throw new Error(`Unable to find segment #${segment.id} [${segment.leftSE.point.x}, ${segment.leftSE.point.y}] -> [${segment.rightSE.point.x}, ${segment.rightSE.point.y}] in SweepLine tree.`);
+      let prevNode = node2;
+      let nextNode = node2;
+      let prevSeg = void 0;
+      let nextSeg = void 0;
+      while (prevSeg === void 0) {
+        prevNode = this.tree.prev(prevNode);
+        if (prevNode === null) prevSeg = null;
+        else if (prevNode.key.consumedBy === void 0) prevSeg = prevNode.key;
+      }
+      while (nextSeg === void 0) {
+        nextNode = this.tree.next(nextNode);
+        if (nextNode === null) nextSeg = null;
+        else if (nextNode.key.consumedBy === void 0) nextSeg = nextNode.key;
+      }
+      if (event.isLeft) {
+        let prevMySplitter = null;
+        if (prevSeg) {
+          const prevInter = prevSeg.getIntersection(segment);
+          if (prevInter !== null) {
+            if (!segment.isAnEndpoint(prevInter)) prevMySplitter = prevInter;
+            if (!prevSeg.isAnEndpoint(prevInter)) {
+              const newEventsFromSplit = this._splitSafely(prevSeg, prevInter);
+              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
+                newEvents.push(newEventsFromSplit[i2]);
+              }
+            }
+          }
+        }
+        let nextMySplitter = null;
+        if (nextSeg) {
+          const nextInter = nextSeg.getIntersection(segment);
+          if (nextInter !== null) {
+            if (!segment.isAnEndpoint(nextInter)) nextMySplitter = nextInter;
+            if (!nextSeg.isAnEndpoint(nextInter)) {
+              const newEventsFromSplit = this._splitSafely(nextSeg, nextInter);
+              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
+                newEvents.push(newEventsFromSplit[i2]);
+              }
+            }
+          }
+        }
+        if (prevMySplitter !== null || nextMySplitter !== null) {
+          let mySplitter = null;
+          if (prevMySplitter === null) mySplitter = nextMySplitter;
+          else if (nextMySplitter === null) mySplitter = prevMySplitter;
+          else {
+            const cmpSplitters = SweepEvent.comparePoints(prevMySplitter, nextMySplitter);
+            mySplitter = cmpSplitters <= 0 ? prevMySplitter : nextMySplitter;
+          }
+          this.queue.remove(segment.rightSE);
+          newEvents.push(segment.rightSE);
+          const newEventsFromSplit = segment.split(mySplitter);
+          for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
+            newEvents.push(newEventsFromSplit[i2]);
+          }
+        }
+        if (newEvents.length > 0) {
+          this.tree.remove(segment);
+          newEvents.push(event);
+        } else {
+          this.segments.push(segment);
+          segment.prev = prevSeg;
+        }
+      } else {
+        if (prevSeg && nextSeg) {
+          const inter = prevSeg.getIntersection(nextSeg);
+          if (inter !== null) {
+            if (!prevSeg.isAnEndpoint(inter)) {
+              const newEventsFromSplit = this._splitSafely(prevSeg, inter);
+              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
+                newEvents.push(newEventsFromSplit[i2]);
+              }
+            }
+            if (!nextSeg.isAnEndpoint(inter)) {
+              const newEventsFromSplit = this._splitSafely(nextSeg, inter);
+              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
+                newEvents.push(newEventsFromSplit[i2]);
+              }
+            }
+          }
+        }
+        this.tree.remove(segment);
+      }
+      return newEvents;
+    }
+    _splitSafely(seg, pt2) {
+      this.tree.remove(seg);
+      const rightSE = seg.rightSE;
+      this.queue.remove(rightSE);
+      const newEvents = seg.split(pt2);
+      newEvents.push(rightSE);
+      if (seg.consumedBy === void 0) this.tree.add(seg);
+      return newEvents;
+    }
+  }
+  const POLYGON_CLIPPING_MAX_QUEUE_SIZE = typeof process !== "undefined" && define_process_env_default.POLYGON_CLIPPING_MAX_QUEUE_SIZE || 1e6;
+  const POLYGON_CLIPPING_MAX_SWEEPLINE_SEGMENTS = typeof process !== "undefined" && define_process_env_default.POLYGON_CLIPPING_MAX_SWEEPLINE_SEGMENTS || 1e6;
+  class Operation {
+    run(type, geom, moreGeoms) {
+      operation.type = type;
+      rounder.reset();
+      const multipolys = [
+        new MultiPolyIn(geom, true)
+      ];
+      for (let i2 = 0, iMax = moreGeoms.length; i2 < iMax; i2++) {
+        multipolys.push(new MultiPolyIn(moreGeoms[i2], false));
+      }
+      operation.numMultiPolys = multipolys.length;
+      if (operation.type === "difference") {
+        const subject = multipolys[0];
+        let i2 = 1;
+        while (i2 < multipolys.length) {
+          if (getBboxOverlap(multipolys[i2].bbox, subject.bbox) !== null) i2++;
+          else multipolys.splice(i2, 1);
+        }
+      }
+      if (operation.type === "intersection") {
+        for (let i2 = 0, iMax = multipolys.length; i2 < iMax; i2++) {
+          const mpA = multipolys[i2];
+          for (let j2 = i2 + 1, jMax = multipolys.length; j2 < jMax; j2++) {
+            if (getBboxOverlap(mpA.bbox, multipolys[j2].bbox) === null) return [];
+          }
+        }
+      }
+      const queue = new z$1(SweepEvent.compare);
+      for (let i2 = 0, iMax = multipolys.length; i2 < iMax; i2++) {
+        const sweepEvents = multipolys[i2].getSweepEvents();
+        for (let j2 = 0, jMax = sweepEvents.length; j2 < jMax; j2++) {
+          queue.insert(sweepEvents[j2]);
+          if (queue.size > POLYGON_CLIPPING_MAX_QUEUE_SIZE) {
+            throw new Error("Infinite loop when putting segment endpoints in a priority queue (queue size too big).");
+          }
+        }
+      }
+      const sweepLine = new SweepLine(queue);
+      let prevQueueSize = queue.size;
+      let node2 = queue.pop();
+      while (node2) {
+        const evt = node2.key;
+        if (queue.size === prevQueueSize) {
+          const seg = evt.segment;
+          throw new Error(`Unable to pop() ${evt.isLeft ? "left" : "right"} SweepEvent [${evt.point.x}, ${evt.point.y}] from segment #${seg.id} [${seg.leftSE.point.x}, ${seg.leftSE.point.y}] -> [${seg.rightSE.point.x}, ${seg.rightSE.point.y}] from queue.`);
+        }
+        if (queue.size > POLYGON_CLIPPING_MAX_QUEUE_SIZE) {
+          throw new Error("Infinite loop when passing sweep line over endpoints (queue size too big).");
+        }
+        if (sweepLine.segments.length > POLYGON_CLIPPING_MAX_SWEEPLINE_SEGMENTS) {
+          throw new Error("Infinite loop when passing sweep line over endpoints (too many sweep line segments).");
+        }
+        const newEvents = sweepLine.process(evt);
+        for (let i2 = 0, iMax = newEvents.length; i2 < iMax; i2++) {
+          const evt2 = newEvents[i2];
+          if (evt2.consumedBy === void 0) queue.insert(evt2);
+        }
+        prevQueueSize = queue.size;
+        node2 = queue.pop();
+      }
+      rounder.reset();
+      const ringsOut = RingOut.factory(sweepLine.segments);
+      const result = new MultiPolyOut(ringsOut);
+      return result.getGeom();
+    }
+  }
+  const operation = new Operation();
+  const union = function(geom) {
+    for (var _len = arguments.length, moreGeoms = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      moreGeoms[_key - 1] = arguments[_key];
+    }
+    return operation.run("union", geom, moreGeoms);
+  };
+  const intersection = function(geom) {
+    for (var _len2 = arguments.length, moreGeoms = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+      moreGeoms[_key2 - 1] = arguments[_key2];
+    }
+    return operation.run("intersection", geom, moreGeoms);
+  };
+  const xor = function(geom) {
+    for (var _len3 = arguments.length, moreGeoms = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+      moreGeoms[_key3 - 1] = arguments[_key3];
+    }
+    return operation.run("xor", geom, moreGeoms);
+  };
+  const difference = function(subjectGeom) {
+    for (var _len4 = arguments.length, clippingGeoms = new Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+      clippingGeoms[_key4 - 1] = arguments[_key4];
+    }
+    return operation.run("difference", subjectGeom, clippingGeoms);
+  };
+  var index$2 = {
+    union,
+    intersection,
+    xor,
+    difference
+  };
+  function ensureClosed(ring) {
+    if (ring.length < 3) return ring;
+    const first = ring[0];
+    const last2 = ring[ring.length - 1];
+    if (first[0] === last2[0] && first[1] === last2[1]) return ring;
+    return [
+      ...ring,
+      first
+    ];
+  }
+  function toLibPolygon(ring) {
+    const closed = ensureClosed(ring);
+    if (closed.length < 3) return [];
+    return [
+      closed
+    ];
+  }
+  function fromLibRings(rings) {
+    if (!rings || rings.length === 0) return null;
+    const ring = rings[0];
+    if (!ring || ring.length < 3) return null;
+    return ring;
+  }
+  function polygonArea(ring) {
+    let area2 = 0;
+    const n2 = ring.length;
+    for (let i2 = 0; i2 < n2; i2++) {
+      const j2 = (i2 + 1) % n2;
+      area2 += ring[i2][0] * ring[j2][1];
+      area2 -= ring[j2][0] * ring[i2][1];
+    }
+    return Math.abs(area2) / 2;
+  }
+  function polygonUnion(a2, b2) {
+    if (a2.length < 3 || b2.length < 3) return null;
+    const polyA = toLibPolygon(a2);
+    const polyB = toLibPolygon(b2);
+    if (polyA.length === 0 || polyB.length === 0) return null;
+    const result = index$2.union(polyA, polyB);
+    if (!result || result.length === 0) return null;
+    if (result.length === 1) return fromLibRings(result[0]);
+    let best = result[0][0];
+    let bestArea = polygonArea(best);
+    for (let i2 = 0; i2 < result.length; i2++) {
+      const poly = result[i2];
+      if (poly == null ? void 0 : poly[0]) {
+        const area2 = polygonArea(poly[0]);
+        if (area2 > bestArea) {
+          best = poly[0];
+          bestArea = area2;
+        }
+      }
+    }
+    return best;
+  }
+  function polygonDifference(a2, b2) {
+    if (a2.length < 3 || b2.length < 3) return null;
+    const polyA = toLibPolygon(a2);
+    const polyB = toLibPolygon(b2);
+    if (polyA.length === 0 || polyB.length === 0) return null;
+    const result = index$2.difference(polyA, polyB);
+    if (!result || result.length === 0) return null;
+    if (result.length === 1 && result[0][0]) return fromLibRings(result[0]);
+    let best = result[0][0];
+    let bestArea = polygonArea(best);
+    for (let i2 = 0; i2 < result.length; i2++) {
+      const poly = result[i2];
+      if (poly == null ? void 0 : poly[0]) {
+        const area2 = polygonArea(poly[0]);
+        if (area2 > bestArea) {
+          best = poly[0];
+          bestArea = area2;
+        }
+      }
+    }
+    return best;
+  }
+  function buildBrushHull(strokePoints, brushRadiusPx, viewportZoom) {
+    if (strokePoints.length === 0 || brushRadiusPx <= 0) return null;
+    const scale2 = 2 ** (viewportZoom ?? 0);
+    const radiusWorld = brushRadiusPx / Math.max(scale2, 0.01);
+    let hull = null;
+    for (const [x2, y2] of strokePoints) {
+      const circle = makeCircle(x2, y2, radiusWorld);
+      if (!hull) {
+        hull = circle;
+      } else {
+        const union2 = polygonUnion(hull, circle);
+        if (union2 && union2.length >= 3) {
+          hull = union2;
+        }
+      }
+    }
+    return hull && hull.length >= 3 ? hull : null;
+  }
+  function arrowLineDegeneratePolygon(start, end) {
+    const [sx, sy] = start;
+    const [ex, ey] = end;
+    return [
+      [
+        sx,
+        sy
+      ],
+      [
+        ex,
+        ey
+      ],
+      [
+        ex,
+        ey
+      ],
+      [
+        sx,
+        sy
+      ],
+      [
+        sx,
+        sy
+      ]
+    ];
+  }
+  function mergeShapesAfterWaypointImport(state, newShapes, clearExisting) {
+    const existingShapes = clearExisting ? state.shapes.filter((s2) => {
+      var _a2;
+      return !((_a2 = s2.metadata) == null ? void 0 : _a2.isImported);
+    }) : state.shapes;
+    const newHidden = clearExisting ? new Set([
+      ...state.hiddenShapeIds
+    ].filter((id2) => {
+      var _a2;
+      const shape = state.shapes.find((s2) => s2.id === id2);
+      return shape && !((_a2 = shape.metadata) == null ? void 0 : _a2.isImported);
+    })) : state.hiddenShapeIds;
+    const existingIds = new Set(existingShapes.map((s2) => s2.id));
+    const seenIncoming = /* @__PURE__ */ new Set();
+    const appended = newShapes.filter((s2) => {
+      if (seenIncoming.has(s2.id)) return false;
+      seenIncoming.add(s2.id);
+      return !existingIds.has(s2.id);
+    });
+    return {
+      shapes: [
+        ...existingShapes,
+        ...appended
+      ],
+      hiddenShapeIds: newHidden
+    };
+  }
+  const o$2 = /* @__PURE__ */ new WeakMap();
+  let u$4 = 0;
+  function stableHash(t2) {
+    const i2 = typeof t2, s2 = t2 && t2.constructor, c2 = s2 === Date;
+    if (Object(t2) === t2 && !c2 && s2 != RegExp) {
+      let e2 = o$2.get(t2);
+      if (e2) return e2;
+      e2 = ++u$4 + "~", o$2.set(t2, e2);
+      let n2;
+      if (s2 === Array) {
+        for (e2 = "@", n2 = 0; n2 < t2.length; n2++) e2 += stableHash(t2[n2]) + ",";
+        o$2.set(t2, e2);
+      } else if (s2 === Object) {
+        e2 = "#";
+        const f2 = Object.keys(t2).sort();
+        for (; (n2 = f2.pop()) !== void 0; ) t2[n2] !== void 0 && (e2 += n2 + ":" + stableHash(t2[n2]) + ",");
+        o$2.set(t2, e2);
+      }
+      return e2;
+    }
+    return c2 ? t2.toJSON() : i2 === "symbol" ? t2.toString() : i2 === "string" ? JSON.stringify(t2) : "" + t2;
+  }
+  var temporalStateCreator = (userSet, userGet, options) => {
+    const stateCreator = (set2, get2) => {
+      return {
+        pastStates: (options == null ? void 0 : options.pastStates) || [],
+        futureStates: (options == null ? void 0 : options.futureStates) || [],
+        undo: (steps = 1) => {
+          var _a2, _b2;
+          if (get2().pastStates.length) {
+            const currentState = ((_a2 = options == null ? void 0 : options.partialize) == null ? void 0 : _a2.call(options, userGet())) || userGet();
+            const statesToApply = get2().pastStates.splice(-steps, steps);
+            const nextState = statesToApply.shift();
+            userSet(nextState);
+            set2({
+              pastStates: get2().pastStates,
+              futureStates: get2().futureStates.concat(((_b2 = options == null ? void 0 : options.diff) == null ? void 0 : _b2.call(options, currentState, nextState)) || currentState, statesToApply.reverse())
+            });
+          }
+        },
+        redo: (steps = 1) => {
+          var _a2, _b2;
+          if (get2().futureStates.length) {
+            const currentState = ((_a2 = options == null ? void 0 : options.partialize) == null ? void 0 : _a2.call(options, userGet())) || userGet();
+            const statesToApply = get2().futureStates.splice(-steps, steps);
+            const nextState = statesToApply.shift();
+            userSet(nextState);
+            set2({
+              pastStates: get2().pastStates.concat(((_b2 = options == null ? void 0 : options.diff) == null ? void 0 : _b2.call(options, currentState, nextState)) || currentState, statesToApply.reverse()),
+              futureStates: get2().futureStates
+            });
+          }
+        },
+        clear: () => set2({
+          pastStates: [],
+          futureStates: []
+        }),
+        isTracking: true,
+        pause: () => set2({
+          isTracking: false
+        }),
+        resume: () => set2({
+          isTracking: true
+        }),
+        setOnSave: (_onSave) => set2({
+          _onSave
+        }),
+        _onSave: options == null ? void 0 : options.onSave,
+        _handleSet: (pastState, replace2, currentState, deltaState) => {
+          var _a2, _b2;
+          if ((options == null ? void 0 : options.limit) && get2().pastStates.length >= (options == null ? void 0 : options.limit)) {
+            get2().pastStates.shift();
+          }
+          (_b2 = (_a2 = get2())._onSave) == null ? void 0 : _b2.call(_a2, pastState, currentState);
+          set2({
+            pastStates: get2().pastStates.concat(deltaState || pastState),
+            futureStates: []
+          });
+        }
+      };
+    };
+    return stateCreator;
+  };
+  var temporal = (config2, options) => {
+    const configWithTemporal = (set2, get2, store) => {
+      var _a2, _b2;
+      store.temporal = createStore$1(((_a2 = options == null ? void 0 : options.wrapTemporal) == null ? void 0 : _a2.call(options, temporalStateCreator(set2, get2, options))) || temporalStateCreator(set2, get2, options));
+      const curriedHandleSet = ((_b2 = options == null ? void 0 : options.handleSet) == null ? void 0 : _b2.call(options, store.temporal.getState()._handleSet)) || store.temporal.getState()._handleSet;
+      const temporalHandleSet = (pastState) => {
+        var _a3, _b3, _c2;
+        if (!store.temporal.getState().isTracking) return;
+        const currentState = ((_a3 = options == null ? void 0 : options.partialize) == null ? void 0 : _a3.call(options, get2())) || get2();
+        const deltaState = (_b3 = options == null ? void 0 : options.diff) == null ? void 0 : _b3.call(options, pastState, currentState);
+        if (!(deltaState === null || ((_c2 = options == null ? void 0 : options.equality) == null ? void 0 : _c2.call(options, pastState, currentState)))) {
+          curriedHandleSet(pastState, void 0, currentState, deltaState);
+        }
+      };
+      const setState = store.setState;
+      store.setState = (...args) => {
+        var _a3;
+        const pastState = ((_a3 = options == null ? void 0 : options.partialize) == null ? void 0 : _a3.call(options, get2())) || get2();
+        setState(...args);
+        temporalHandleSet(pastState);
+      };
+      return config2((...args) => {
+        var _a3;
+        const pastState = ((_a3 = options == null ? void 0 : options.partialize) == null ? void 0 : _a3.call(options, get2())) || get2();
+        set2(...args);
+        temporalHandleSet(pastState);
+      }, get2, store);
+    };
+    return configWithTemporal;
   };
   function promisifyRequest(request) {
     return new Promise((resolve, reject) => {
@@ -22878,7 +29474,7 @@ ${htmlLog}
       return `&${this.format.getTypeName()}`;
     }
   };
-  let a$3 = class a extends e$1 {
+  let a$2 = class a extends e$1 {
     constructor(e2, t2, n2, s2) {
       super(e2, n2), this.format = t2, this.access = s2;
     }
@@ -22904,7 +29500,7 @@ ${htmlLog}
   ((e2) => {
     e2[e2.Uniform = 0] = "Uniform", e2[e2.Storage = 1] = "Storage", e2[e2.Texture = 2] = "Texture", e2[e2.Sampler = 3] = "Sampler", e2[e2.StorageTexture = 4] = "StorageTexture";
   })(i$1 || (i$1 = {}));
-  let o$2 = class o {
+  let o$1 = class o {
     constructor(e2, t2, n2, s2, r2, a2, i2) {
       this.name = e2, this.type = t2, this.group = n2, this.binding = s2, this.attributes = r2, this.resourceType = a2, this.access = i2;
     }
@@ -22936,7 +29532,7 @@ ${htmlLog}
       return this.type.isArray ? this.type.stride : this.size;
     }
   };
-  let c$6 = class c {
+  let c$5 = class c {
     constructor(e2, t2) {
       this.name = e2, this.type = t2;
     }
@@ -22946,7 +29542,7 @@ ${htmlLog}
       this.name = e2, this.type = t2, this.locationType = n2, this.location = s2, this.interpolation = null;
     }
   };
-  let u$6 = class u {
+  let u$3 = class u {
     constructor(e2, t2, n2, s2) {
       this.name = e2, this.type = t2, this.locationType = n2, this.location = s2;
     }
@@ -22956,46 +29552,46 @@ ${htmlLog}
       this.name = e2, this.type = t2, this.attributes = n2, this.id = s2;
     }
   };
-  let f$4 = class f {
+  let f$3 = class f {
     constructor(e2, t2, n2) {
       this.name = e2, this.type = t2, this.attributes = n2;
     }
   };
-  let p$3 = class p {
+  let p$2 = class p {
     constructor(e2, t2 = null, n2) {
       this.stage = null, this.inputs = [], this.outputs = [], this.arguments = [], this.returnType = null, this.resources = [], this.overrides = [], this.startLine = -1, this.endLine = -1, this.inUse = false, this.calls = /* @__PURE__ */ new Set(), this.name = e2, this.stage = t2, this.attributes = n2;
     }
   };
-  let d$4 = class d {
+  let d$3 = class d {
     constructor() {
       this.vertex = [], this.fragment = [], this.compute = [];
     }
   };
-  function m$2(e2) {
+  function m$1(e2) {
     var t2 = (32768 & e2) >> 15, n2 = (31744 & e2) >> 10, s2 = 1023 & e2;
     return 0 == n2 ? (t2 ? -1 : 1) * Math.pow(2, -14) * (s2 / Math.pow(2, 10)) : 31 == n2 ? s2 ? NaN : 1 / 0 * (t2 ? -1 : 1) : (t2 ? -1 : 1) * Math.pow(2, n2 - 15) * (1 + s2 / Math.pow(2, 10));
   }
-  const g$2 = new Float32Array(1), _$4 = new Int32Array(g$2.buffer), x$1 = new Uint16Array(1);
-  function y$2(e2) {
-    g$2[0] = e2;
-    const t2 = _$4[0], n2 = t2 >> 31 & 1;
+  const g$1 = new Float32Array(1), _$3 = new Int32Array(g$1.buffer), x = new Uint16Array(1);
+  function y$1(e2) {
+    g$1[0] = e2;
+    const t2 = _$3[0], n2 = t2 >> 31 & 1;
     let s2 = t2 >> 23 & 255, r2 = 8388607 & t2;
-    if (255 === s2) return x$1[0] = n2 << 15 | 31744 | (0 !== r2 ? 512 : 0), x$1[0];
+    if (255 === s2) return x[0] = n2 << 15 | 31744 | (0 !== r2 ? 512 : 0), x[0];
     if (0 === s2) {
-      if (0 === r2) return x$1[0] = n2 << 15, x$1[0];
+      if (0 === r2) return x[0] = n2 << 15, x[0];
       r2 |= 8388608;
       let e3 = 113;
       for (; !(8388608 & r2); ) r2 <<= 1, e3--;
-      return s2 = 127 - e3, r2 &= 8388607, s2 > 0 ? (r2 = (r2 >> 126 - s2) + (r2 >> 127 - s2 & 1), x$1[0] = n2 << 15 | s2 << 10 | r2 >> 13, x$1[0]) : (x$1[0] = n2 << 15, x$1[0]);
+      return s2 = 127 - e3, r2 &= 8388607, s2 > 0 ? (r2 = (r2 >> 126 - s2) + (r2 >> 127 - s2 & 1), x[0] = n2 << 15 | s2 << 10 | r2 >> 13, x[0]) : (x[0] = n2 << 15, x[0]);
     }
-    return s2 = s2 - 127 + 15, s2 >= 31 ? (x$1[0] = n2 << 15 | 31744, x$1[0]) : s2 <= 0 ? s2 < -10 ? (x$1[0] = n2 << 15, x$1[0]) : (r2 = (8388608 | r2) >> 1 - s2, x$1[0] = n2 << 15 | r2 >> 13, x$1[0]) : (r2 >>= 13, x$1[0] = n2 << 15 | s2 << 10 | r2, x$1[0]);
+    return s2 = s2 - 127 + 15, s2 >= 31 ? (x[0] = n2 << 15 | 31744, x[0]) : s2 <= 0 ? s2 < -10 ? (x[0] = n2 << 15, x[0]) : (r2 = (8388608 | r2) >> 1 - s2, x[0] = n2 << 15 | r2 >> 13, x[0]) : (r2 >>= 13, x[0] = n2 << 15 | s2 << 10 | r2, x[0]);
   }
   const b$1 = new Uint32Array(1), v$3 = new Float32Array(b$1.buffer, 0, 1);
-  function w$3(e2) {
+  function w$2(e2) {
     const t2 = 112 + (e2 >> 6 & 31) << 23 | (63 & e2) << 17;
     return b$1[0] = t2, v$3[0];
   }
-  function k$1(e2, t2, n2, s2, r2, a2, i2, o2, c2) {
+  function k(e2, t2, n2, s2, r2, a2, i2, o2, c2) {
     const l2 = s2 * (i2 >>= r2) * (a2 >>= r2) + n2 * i2 + t2 * o2;
     switch (c2) {
       case "r8unorm":
@@ -23217,8 +29813,8 @@ ${htmlLog}
       case "rg11b10ufloat": {
         const t3 = new Uint32Array(e2.buffer, l2, 1)[0], n3 = (4192256 & t3) >> 11, s3 = (4290772992 & t3) >> 22;
         return [
-          w$3(2047 & t3),
-          w$3(n3),
+          w$2(2047 & t3),
+          w$2(n3),
           function(e3) {
             const t4 = 112 + (e3 >> 5 & 31) << 23 | (31 & e3) << 18;
             return b$1[0] = t4, v$3[0];
@@ -23256,7 +29852,7 @@ ${htmlLog}
         r2[a2] = (e2[t2] | e2[t2 + 1] << 8) - 32768, t2 += 2;
         break;
       case "16float":
-        r2[a2] = m$2(e2[t2] | e2[t2 + 1] << 8), t2 += 2;
+        r2[a2] = m$1(e2[t2] | e2[t2 + 1] << 8), t2 += 2;
         break;
       case "32uint":
       case "32sint":
@@ -23288,7 +29884,7 @@ ${htmlLog}
         new Int16Array(e2.buffer, t2, 1)[0] = r2[a2], t2 += 2;
         break;
       case "16float": {
-        const n3 = y$2(r2[a2]);
+        const n3 = y$1(r2[a2]);
         new Uint16Array(e2.buffer, t2, 1)[0] = n3, t2 += 2;
         break;
       }
@@ -24178,7 +30774,7 @@ ${htmlLog}
       super();
     }
   };
-  let D$2 = class D extends C$1 {
+  let D$1 = class D extends C$1 {
     constructor(e2, t2, n2, s2, r2, a2) {
       super(), this.calls = /* @__PURE__ */ new Set(), this.name = e2, this.args = t2, this.returnType = n2, this.body = s2, this.startLine = r2, this.endLine = a2;
     }
@@ -24225,7 +30821,7 @@ ${htmlLog}
       this.searchBlock(this.body, e2);
     }
   }
-  let B$2 = class B extends C$1 {
+  let B$1 = class B extends C$1 {
     constructor(e2, t2, n2, s2) {
       super(), this.init = e2, this.condition = t2, this.increment = n2, this.body = s2;
     }
@@ -24288,7 +30884,7 @@ ${htmlLog}
       e2(this), null === (t2 = this.value) || void 0 === t2 || t2.search(e2);
     }
   };
-  var W, q$2, H, z$1;
+  var W, q$2, H, z;
   ((e2) => {
     e2.increment = "++", e2.decrement = "--";
   })(W || (W = {})), ((e2) => {
@@ -24914,7 +31510,7 @@ ${htmlLog}
     getSubData(e2, t2, n2) {
       if (null === t2) return this;
       let s2 = e2.getTypeInfo("f32");
-      if (this.typeInfo instanceof a$3) s2 = this.typeInfo.format || s2;
+      if (this.typeInfo instanceof a$2) s2 = this.typeInfo.format || s2;
       else {
         const t3 = this.typeInfo.name;
         "vec2f" === t3 || "vec3f" === t3 || "vec4f" === t3 ? s2 = e2.getTypeInfo("f32") : "vec2i" === t3 || "vec3i" === t3 || "vec4i" === t3 ? s2 = e2.getTypeInfo("i32") : "vec2b" === t3 || "vec3b" === t3 || "vec4b" === t3 ? s2 = e2.getTypeInfo("bool") : "vec2u" === t3 || "vec3u" === t3 || "vec4u" === t3 ? s2 = e2.getTypeInfo("u32") : "vec2h" === t3 || "vec3h" === t3 || "vec4h" === t3 ? s2 = e2.getTypeInfo("f16") : console.error(`GetSubData: Unknown type ${t3}`);
@@ -24999,7 +31595,7 @@ ${htmlLog}
     getSubData(e2, t2, n2) {
       if (null === t2) return this;
       const s2 = this.typeInfo.name;
-      if (e2.getTypeInfo("f32"), this.typeInfo instanceof a$3) this.typeInfo.format;
+      if (e2.getTypeInfo("f32"), this.typeInfo instanceof a$2) this.typeInfo.format;
       else if (s2.endsWith("f")) e2.getTypeInfo("f32");
       else if (s2.endsWith("i")) e2.getTypeInfo("i32");
       else if (s2.endsWith("u")) e2.getTypeInfo("u32");
@@ -25263,7 +31859,7 @@ ${htmlLog}
         r2 = r2.postfix;
       }
       const f2 = h2.getTypeName();
-      return "f32" === f2 ? new Be(new Float32Array(this.buffer, u2, 1), h2, this) : "i32" === f2 ? new Be(new Int32Array(this.buffer, u2, 1), h2, this) : "u32" === f2 ? new Be(new Uint32Array(this.buffer, u2, 1), h2, this) : "vec2f" === f2 ? new Me(new Float32Array(this.buffer, u2, 2), h2, this) : "vec3f" === f2 ? new Me(new Float32Array(this.buffer, u2, 3), h2, this) : "vec4f" === f2 ? new Me(new Float32Array(this.buffer, u2, 4), h2, this) : "vec2i" === f2 ? new Me(new Int32Array(this.buffer, u2, 2), h2, this) : "vec3i" === f2 ? new Me(new Int32Array(this.buffer, u2, 3), h2, this) : "vec4i" === f2 ? new Me(new Int32Array(this.buffer, u2, 4), h2, this) : "vec2u" === f2 ? new Me(new Uint32Array(this.buffer, u2, 2), h2, this) : "vec3u" === f2 ? new Me(new Uint32Array(this.buffer, u2, 3), h2, this) : "vec4u" === f2 ? new Me(new Uint32Array(this.buffer, u2, 4), h2, this) : h2 instanceof a$3 && "atomic" === h2.name ? "u32" === (null === (o2 = h2.format) || void 0 === o2 ? void 0 : o2.name) ? new Be(new Uint32Array(this.buffer, u2, 1)[0], h2.format, this) : "i32" === (null === (c2 = h2.format) || void 0 === c2 ? void 0 : c2.name) ? new Be(new Int32Array(this.buffer, u2, 1)[0], h2.format, this) : (console.error(`GetDataValue: Invalid atomic format ${null === (l2 = h2.format) || void 0 === l2 ? void 0 : l2.name}`), null) : new Pe(this.buffer, h2, u2, this);
+      return "f32" === f2 ? new Be(new Float32Array(this.buffer, u2, 1), h2, this) : "i32" === f2 ? new Be(new Int32Array(this.buffer, u2, 1), h2, this) : "u32" === f2 ? new Be(new Uint32Array(this.buffer, u2, 1), h2, this) : "vec2f" === f2 ? new Me(new Float32Array(this.buffer, u2, 2), h2, this) : "vec3f" === f2 ? new Me(new Float32Array(this.buffer, u2, 3), h2, this) : "vec4f" === f2 ? new Me(new Float32Array(this.buffer, u2, 4), h2, this) : "vec2i" === f2 ? new Me(new Int32Array(this.buffer, u2, 2), h2, this) : "vec3i" === f2 ? new Me(new Int32Array(this.buffer, u2, 3), h2, this) : "vec4i" === f2 ? new Me(new Int32Array(this.buffer, u2, 4), h2, this) : "vec2u" === f2 ? new Me(new Uint32Array(this.buffer, u2, 2), h2, this) : "vec3u" === f2 ? new Me(new Uint32Array(this.buffer, u2, 3), h2, this) : "vec4u" === f2 ? new Me(new Uint32Array(this.buffer, u2, 4), h2, this) : h2 instanceof a$2 && "atomic" === h2.name ? "u32" === (null === (o2 = h2.format) || void 0 === o2 ? void 0 : o2.name) ? new Be(new Uint32Array(this.buffer, u2, 1)[0], h2.format, this) : "i32" === (null === (c2 = h2.format) || void 0 === c2 ? void 0 : c2.name) ? new Be(new Int32Array(this.buffer, u2, 1)[0], h2.format, this) : (console.error(`GetDataValue: Invalid atomic format ${null === (l2 = h2.format) || void 0 === l2 ? void 0 : l2.name}`), null) : new Pe(this.buffer, h2, u2, this);
     }
     toString() {
       let e2 = "";
@@ -25367,7 +31963,7 @@ ${htmlLog}
     }
     getPixel(e2, t2, n2 = 0, s2 = 0) {
       const r2 = this.texelByteSize, a2 = this.bytesPerRow, i2 = this.height, o2 = this.data[s2];
-      return k$1(new Uint8Array(o2), e2, t2, n2, s2, i2, a2, r2, this.format);
+      return k(new Uint8Array(o2), e2, t2, n2, s2, i2, a2, r2, this.format);
     }
     setPixel(e2, t2, n2, s2, r2) {
       const a2 = this.texelByteSize, i2 = this.bytesPerRow, o2 = this.height, c2 = this.data[s2];
@@ -25450,7 +32046,7 @@ ${htmlLog}
   }
   ((e2) => {
     e2[e2.token = 0] = "token", e2[e2.keyword = 1] = "keyword", e2[e2.reserved = 2] = "reserved";
-  })(z$1 || (z$1 = {}));
+  })(z || (z = {}));
   class qe {
     constructor(e2, t2, n2) {
       this.name = e2, this.type = t2, this.rule = n2;
@@ -25461,193 +32057,193 @@ ${htmlLog}
   }
   class He {
   }
-  H = He, He.none = new qe("", z$1.reserved, ""), He.eof = new qe("EOF", z$1.token, ""), He.reserved = {
-    asm: new qe("asm", z$1.reserved, "asm"),
-    bf16: new qe("bf16", z$1.reserved, "bf16"),
-    do: new qe("do", z$1.reserved, "do"),
-    enum: new qe("enum", z$1.reserved, "enum"),
-    f16: new qe("f16", z$1.reserved, "f16"),
-    f64: new qe("f64", z$1.reserved, "f64"),
-    handle: new qe("handle", z$1.reserved, "handle"),
-    i8: new qe("i8", z$1.reserved, "i8"),
-    i16: new qe("i16", z$1.reserved, "i16"),
-    i64: new qe("i64", z$1.reserved, "i64"),
-    mat: new qe("mat", z$1.reserved, "mat"),
-    premerge: new qe("premerge", z$1.reserved, "premerge"),
-    regardless: new qe("regardless", z$1.reserved, "regardless"),
-    typedef: new qe("typedef", z$1.reserved, "typedef"),
-    u8: new qe("u8", z$1.reserved, "u8"),
-    u16: new qe("u16", z$1.reserved, "u16"),
-    u64: new qe("u64", z$1.reserved, "u64"),
-    unless: new qe("unless", z$1.reserved, "unless"),
-    using: new qe("using", z$1.reserved, "using"),
-    vec: new qe("vec", z$1.reserved, "vec"),
-    void: new qe("void", z$1.reserved, "void")
+  H = He, He.none = new qe("", z.reserved, ""), He.eof = new qe("EOF", z.token, ""), He.reserved = {
+    asm: new qe("asm", z.reserved, "asm"),
+    bf16: new qe("bf16", z.reserved, "bf16"),
+    do: new qe("do", z.reserved, "do"),
+    enum: new qe("enum", z.reserved, "enum"),
+    f16: new qe("f16", z.reserved, "f16"),
+    f64: new qe("f64", z.reserved, "f64"),
+    handle: new qe("handle", z.reserved, "handle"),
+    i8: new qe("i8", z.reserved, "i8"),
+    i16: new qe("i16", z.reserved, "i16"),
+    i64: new qe("i64", z.reserved, "i64"),
+    mat: new qe("mat", z.reserved, "mat"),
+    premerge: new qe("premerge", z.reserved, "premerge"),
+    regardless: new qe("regardless", z.reserved, "regardless"),
+    typedef: new qe("typedef", z.reserved, "typedef"),
+    u8: new qe("u8", z.reserved, "u8"),
+    u16: new qe("u16", z.reserved, "u16"),
+    u64: new qe("u64", z.reserved, "u64"),
+    unless: new qe("unless", z.reserved, "unless"),
+    using: new qe("using", z.reserved, "using"),
+    vec: new qe("vec", z.reserved, "vec"),
+    void: new qe("void", z.reserved, "void")
   }, He.keywords = {
-    array: new qe("array", z$1.keyword, "array"),
-    atomic: new qe("atomic", z$1.keyword, "atomic"),
-    bool: new qe("bool", z$1.keyword, "bool"),
-    f32: new qe("f32", z$1.keyword, "f32"),
-    i32: new qe("i32", z$1.keyword, "i32"),
-    mat2x2: new qe("mat2x2", z$1.keyword, "mat2x2"),
-    mat2x3: new qe("mat2x3", z$1.keyword, "mat2x3"),
-    mat2x4: new qe("mat2x4", z$1.keyword, "mat2x4"),
-    mat3x2: new qe("mat3x2", z$1.keyword, "mat3x2"),
-    mat3x3: new qe("mat3x3", z$1.keyword, "mat3x3"),
-    mat3x4: new qe("mat3x4", z$1.keyword, "mat3x4"),
-    mat4x2: new qe("mat4x2", z$1.keyword, "mat4x2"),
-    mat4x3: new qe("mat4x3", z$1.keyword, "mat4x3"),
-    mat4x4: new qe("mat4x4", z$1.keyword, "mat4x4"),
-    ptr: new qe("ptr", z$1.keyword, "ptr"),
-    sampler: new qe("sampler", z$1.keyword, "sampler"),
-    sampler_comparison: new qe("sampler_comparison", z$1.keyword, "sampler_comparison"),
-    struct: new qe("struct", z$1.keyword, "struct"),
-    texture_1d: new qe("texture_1d", z$1.keyword, "texture_1d"),
-    texture_2d: new qe("texture_2d", z$1.keyword, "texture_2d"),
-    texture_2d_array: new qe("texture_2d_array", z$1.keyword, "texture_2d_array"),
-    texture_3d: new qe("texture_3d", z$1.keyword, "texture_3d"),
-    texture_cube: new qe("texture_cube", z$1.keyword, "texture_cube"),
-    texture_cube_array: new qe("texture_cube_array", z$1.keyword, "texture_cube_array"),
-    texture_multisampled_2d: new qe("texture_multisampled_2d", z$1.keyword, "texture_multisampled_2d"),
-    texture_storage_1d: new qe("texture_storage_1d", z$1.keyword, "texture_storage_1d"),
-    texture_storage_2d: new qe("texture_storage_2d", z$1.keyword, "texture_storage_2d"),
-    texture_storage_2d_array: new qe("texture_storage_2d_array", z$1.keyword, "texture_storage_2d_array"),
-    texture_storage_3d: new qe("texture_storage_3d", z$1.keyword, "texture_storage_3d"),
-    texture_depth_2d: new qe("texture_depth_2d", z$1.keyword, "texture_depth_2d"),
-    texture_depth_2d_array: new qe("texture_depth_2d_array", z$1.keyword, "texture_depth_2d_array"),
-    texture_depth_cube: new qe("texture_depth_cube", z$1.keyword, "texture_depth_cube"),
-    texture_depth_cube_array: new qe("texture_depth_cube_array", z$1.keyword, "texture_depth_cube_array"),
-    texture_depth_multisampled_2d: new qe("texture_depth_multisampled_2d", z$1.keyword, "texture_depth_multisampled_2d"),
-    texture_external: new qe("texture_external", z$1.keyword, "texture_external"),
-    u32: new qe("u32", z$1.keyword, "u32"),
-    vec2: new qe("vec2", z$1.keyword, "vec2"),
-    vec3: new qe("vec3", z$1.keyword, "vec3"),
-    vec4: new qe("vec4", z$1.keyword, "vec4"),
-    bitcast: new qe("bitcast", z$1.keyword, "bitcast"),
-    block: new qe("block", z$1.keyword, "block"),
-    break: new qe("break", z$1.keyword, "break"),
-    case: new qe("case", z$1.keyword, "case"),
-    continue: new qe("continue", z$1.keyword, "continue"),
-    continuing: new qe("continuing", z$1.keyword, "continuing"),
-    default: new qe("default", z$1.keyword, "default"),
-    diagnostic: new qe("diagnostic", z$1.keyword, "diagnostic"),
-    discard: new qe("discard", z$1.keyword, "discard"),
-    else: new qe("else", z$1.keyword, "else"),
-    enable: new qe("enable", z$1.keyword, "enable"),
-    fallthrough: new qe("fallthrough", z$1.keyword, "fallthrough"),
-    false: new qe("false", z$1.keyword, "false"),
-    fn: new qe("fn", z$1.keyword, "fn"),
-    for: new qe("for", z$1.keyword, "for"),
-    function: new qe("function", z$1.keyword, "function"),
-    if: new qe("if", z$1.keyword, "if"),
-    let: new qe("let", z$1.keyword, "let"),
-    const: new qe("const", z$1.keyword, "const"),
-    loop: new qe("loop", z$1.keyword, "loop"),
-    while: new qe("while", z$1.keyword, "while"),
-    private: new qe("private", z$1.keyword, "private"),
-    read: new qe("read", z$1.keyword, "read"),
-    read_write: new qe("read_write", z$1.keyword, "read_write"),
-    return: new qe("return", z$1.keyword, "return"),
-    requires: new qe("requires", z$1.keyword, "requires"),
-    storage: new qe("storage", z$1.keyword, "storage"),
-    switch: new qe("switch", z$1.keyword, "switch"),
-    true: new qe("true", z$1.keyword, "true"),
-    alias: new qe("alias", z$1.keyword, "alias"),
-    type: new qe("type", z$1.keyword, "type"),
-    uniform: new qe("uniform", z$1.keyword, "uniform"),
-    var: new qe("var", z$1.keyword, "var"),
-    override: new qe("override", z$1.keyword, "override"),
-    workgroup: new qe("workgroup", z$1.keyword, "workgroup"),
-    write: new qe("write", z$1.keyword, "write"),
-    r8unorm: new qe("r8unorm", z$1.keyword, "r8unorm"),
-    r8snorm: new qe("r8snorm", z$1.keyword, "r8snorm"),
-    r8uint: new qe("r8uint", z$1.keyword, "r8uint"),
-    r8sint: new qe("r8sint", z$1.keyword, "r8sint"),
-    r16uint: new qe("r16uint", z$1.keyword, "r16uint"),
-    r16sint: new qe("r16sint", z$1.keyword, "r16sint"),
-    r16float: new qe("r16float", z$1.keyword, "r16float"),
-    rg8unorm: new qe("rg8unorm", z$1.keyword, "rg8unorm"),
-    rg8snorm: new qe("rg8snorm", z$1.keyword, "rg8snorm"),
-    rg8uint: new qe("rg8uint", z$1.keyword, "rg8uint"),
-    rg8sint: new qe("rg8sint", z$1.keyword, "rg8sint"),
-    r32uint: new qe("r32uint", z$1.keyword, "r32uint"),
-    r32sint: new qe("r32sint", z$1.keyword, "r32sint"),
-    r32float: new qe("r32float", z$1.keyword, "r32float"),
-    rg16uint: new qe("rg16uint", z$1.keyword, "rg16uint"),
-    rg16sint: new qe("rg16sint", z$1.keyword, "rg16sint"),
-    rg16float: new qe("rg16float", z$1.keyword, "rg16float"),
-    rgba8unorm: new qe("rgba8unorm", z$1.keyword, "rgba8unorm"),
-    rgba8unorm_srgb: new qe("rgba8unorm_srgb", z$1.keyword, "rgba8unorm_srgb"),
-    rgba8snorm: new qe("rgba8snorm", z$1.keyword, "rgba8snorm"),
-    rgba8uint: new qe("rgba8uint", z$1.keyword, "rgba8uint"),
-    rgba8sint: new qe("rgba8sint", z$1.keyword, "rgba8sint"),
-    bgra8unorm: new qe("bgra8unorm", z$1.keyword, "bgra8unorm"),
-    bgra8unorm_srgb: new qe("bgra8unorm_srgb", z$1.keyword, "bgra8unorm_srgb"),
-    rgb10a2unorm: new qe("rgb10a2unorm", z$1.keyword, "rgb10a2unorm"),
-    rg11b10float: new qe("rg11b10float", z$1.keyword, "rg11b10float"),
-    rg32uint: new qe("rg32uint", z$1.keyword, "rg32uint"),
-    rg32sint: new qe("rg32sint", z$1.keyword, "rg32sint"),
-    rg32float: new qe("rg32float", z$1.keyword, "rg32float"),
-    rgba16uint: new qe("rgba16uint", z$1.keyword, "rgba16uint"),
-    rgba16sint: new qe("rgba16sint", z$1.keyword, "rgba16sint"),
-    rgba16float: new qe("rgba16float", z$1.keyword, "rgba16float"),
-    rgba32uint: new qe("rgba32uint", z$1.keyword, "rgba32uint"),
-    rgba32sint: new qe("rgba32sint", z$1.keyword, "rgba32sint"),
-    rgba32float: new qe("rgba32float", z$1.keyword, "rgba32float"),
-    static_assert: new qe("static_assert", z$1.keyword, "static_assert")
+    array: new qe("array", z.keyword, "array"),
+    atomic: new qe("atomic", z.keyword, "atomic"),
+    bool: new qe("bool", z.keyword, "bool"),
+    f32: new qe("f32", z.keyword, "f32"),
+    i32: new qe("i32", z.keyword, "i32"),
+    mat2x2: new qe("mat2x2", z.keyword, "mat2x2"),
+    mat2x3: new qe("mat2x3", z.keyword, "mat2x3"),
+    mat2x4: new qe("mat2x4", z.keyword, "mat2x4"),
+    mat3x2: new qe("mat3x2", z.keyword, "mat3x2"),
+    mat3x3: new qe("mat3x3", z.keyword, "mat3x3"),
+    mat3x4: new qe("mat3x4", z.keyword, "mat3x4"),
+    mat4x2: new qe("mat4x2", z.keyword, "mat4x2"),
+    mat4x3: new qe("mat4x3", z.keyword, "mat4x3"),
+    mat4x4: new qe("mat4x4", z.keyword, "mat4x4"),
+    ptr: new qe("ptr", z.keyword, "ptr"),
+    sampler: new qe("sampler", z.keyword, "sampler"),
+    sampler_comparison: new qe("sampler_comparison", z.keyword, "sampler_comparison"),
+    struct: new qe("struct", z.keyword, "struct"),
+    texture_1d: new qe("texture_1d", z.keyword, "texture_1d"),
+    texture_2d: new qe("texture_2d", z.keyword, "texture_2d"),
+    texture_2d_array: new qe("texture_2d_array", z.keyword, "texture_2d_array"),
+    texture_3d: new qe("texture_3d", z.keyword, "texture_3d"),
+    texture_cube: new qe("texture_cube", z.keyword, "texture_cube"),
+    texture_cube_array: new qe("texture_cube_array", z.keyword, "texture_cube_array"),
+    texture_multisampled_2d: new qe("texture_multisampled_2d", z.keyword, "texture_multisampled_2d"),
+    texture_storage_1d: new qe("texture_storage_1d", z.keyword, "texture_storage_1d"),
+    texture_storage_2d: new qe("texture_storage_2d", z.keyword, "texture_storage_2d"),
+    texture_storage_2d_array: new qe("texture_storage_2d_array", z.keyword, "texture_storage_2d_array"),
+    texture_storage_3d: new qe("texture_storage_3d", z.keyword, "texture_storage_3d"),
+    texture_depth_2d: new qe("texture_depth_2d", z.keyword, "texture_depth_2d"),
+    texture_depth_2d_array: new qe("texture_depth_2d_array", z.keyword, "texture_depth_2d_array"),
+    texture_depth_cube: new qe("texture_depth_cube", z.keyword, "texture_depth_cube"),
+    texture_depth_cube_array: new qe("texture_depth_cube_array", z.keyword, "texture_depth_cube_array"),
+    texture_depth_multisampled_2d: new qe("texture_depth_multisampled_2d", z.keyword, "texture_depth_multisampled_2d"),
+    texture_external: new qe("texture_external", z.keyword, "texture_external"),
+    u32: new qe("u32", z.keyword, "u32"),
+    vec2: new qe("vec2", z.keyword, "vec2"),
+    vec3: new qe("vec3", z.keyword, "vec3"),
+    vec4: new qe("vec4", z.keyword, "vec4"),
+    bitcast: new qe("bitcast", z.keyword, "bitcast"),
+    block: new qe("block", z.keyword, "block"),
+    break: new qe("break", z.keyword, "break"),
+    case: new qe("case", z.keyword, "case"),
+    continue: new qe("continue", z.keyword, "continue"),
+    continuing: new qe("continuing", z.keyword, "continuing"),
+    default: new qe("default", z.keyword, "default"),
+    diagnostic: new qe("diagnostic", z.keyword, "diagnostic"),
+    discard: new qe("discard", z.keyword, "discard"),
+    else: new qe("else", z.keyword, "else"),
+    enable: new qe("enable", z.keyword, "enable"),
+    fallthrough: new qe("fallthrough", z.keyword, "fallthrough"),
+    false: new qe("false", z.keyword, "false"),
+    fn: new qe("fn", z.keyword, "fn"),
+    for: new qe("for", z.keyword, "for"),
+    function: new qe("function", z.keyword, "function"),
+    if: new qe("if", z.keyword, "if"),
+    let: new qe("let", z.keyword, "let"),
+    const: new qe("const", z.keyword, "const"),
+    loop: new qe("loop", z.keyword, "loop"),
+    while: new qe("while", z.keyword, "while"),
+    private: new qe("private", z.keyword, "private"),
+    read: new qe("read", z.keyword, "read"),
+    read_write: new qe("read_write", z.keyword, "read_write"),
+    return: new qe("return", z.keyword, "return"),
+    requires: new qe("requires", z.keyword, "requires"),
+    storage: new qe("storage", z.keyword, "storage"),
+    switch: new qe("switch", z.keyword, "switch"),
+    true: new qe("true", z.keyword, "true"),
+    alias: new qe("alias", z.keyword, "alias"),
+    type: new qe("type", z.keyword, "type"),
+    uniform: new qe("uniform", z.keyword, "uniform"),
+    var: new qe("var", z.keyword, "var"),
+    override: new qe("override", z.keyword, "override"),
+    workgroup: new qe("workgroup", z.keyword, "workgroup"),
+    write: new qe("write", z.keyword, "write"),
+    r8unorm: new qe("r8unorm", z.keyword, "r8unorm"),
+    r8snorm: new qe("r8snorm", z.keyword, "r8snorm"),
+    r8uint: new qe("r8uint", z.keyword, "r8uint"),
+    r8sint: new qe("r8sint", z.keyword, "r8sint"),
+    r16uint: new qe("r16uint", z.keyword, "r16uint"),
+    r16sint: new qe("r16sint", z.keyword, "r16sint"),
+    r16float: new qe("r16float", z.keyword, "r16float"),
+    rg8unorm: new qe("rg8unorm", z.keyword, "rg8unorm"),
+    rg8snorm: new qe("rg8snorm", z.keyword, "rg8snorm"),
+    rg8uint: new qe("rg8uint", z.keyword, "rg8uint"),
+    rg8sint: new qe("rg8sint", z.keyword, "rg8sint"),
+    r32uint: new qe("r32uint", z.keyword, "r32uint"),
+    r32sint: new qe("r32sint", z.keyword, "r32sint"),
+    r32float: new qe("r32float", z.keyword, "r32float"),
+    rg16uint: new qe("rg16uint", z.keyword, "rg16uint"),
+    rg16sint: new qe("rg16sint", z.keyword, "rg16sint"),
+    rg16float: new qe("rg16float", z.keyword, "rg16float"),
+    rgba8unorm: new qe("rgba8unorm", z.keyword, "rgba8unorm"),
+    rgba8unorm_srgb: new qe("rgba8unorm_srgb", z.keyword, "rgba8unorm_srgb"),
+    rgba8snorm: new qe("rgba8snorm", z.keyword, "rgba8snorm"),
+    rgba8uint: new qe("rgba8uint", z.keyword, "rgba8uint"),
+    rgba8sint: new qe("rgba8sint", z.keyword, "rgba8sint"),
+    bgra8unorm: new qe("bgra8unorm", z.keyword, "bgra8unorm"),
+    bgra8unorm_srgb: new qe("bgra8unorm_srgb", z.keyword, "bgra8unorm_srgb"),
+    rgb10a2unorm: new qe("rgb10a2unorm", z.keyword, "rgb10a2unorm"),
+    rg11b10float: new qe("rg11b10float", z.keyword, "rg11b10float"),
+    rg32uint: new qe("rg32uint", z.keyword, "rg32uint"),
+    rg32sint: new qe("rg32sint", z.keyword, "rg32sint"),
+    rg32float: new qe("rg32float", z.keyword, "rg32float"),
+    rgba16uint: new qe("rgba16uint", z.keyword, "rgba16uint"),
+    rgba16sint: new qe("rgba16sint", z.keyword, "rgba16sint"),
+    rgba16float: new qe("rgba16float", z.keyword, "rgba16float"),
+    rgba32uint: new qe("rgba32uint", z.keyword, "rgba32uint"),
+    rgba32sint: new qe("rgba32sint", z.keyword, "rgba32sint"),
+    rgba32float: new qe("rgba32float", z.keyword, "rgba32float"),
+    static_assert: new qe("static_assert", z.keyword, "static_assert")
   }, He.tokens = {
-    decimal_float_literal: new qe("decimal_float_literal", z$1.token, /((-?[0-9]*\.[0-9]+|-?[0-9]+\.[0-9]*)((e|E)(\+|-)?[0-9]+)?[fh]?)|(-?[0-9]+(e|E)(\+|-)?[0-9]+[fh]?)|(-?[0-9]+[fh])/),
-    hex_float_literal: new qe("hex_float_literal", z$1.token, /-?0x((([0-9a-fA-F]*\.[0-9a-fA-F]+|[0-9a-fA-F]+\.[0-9a-fA-F]*)((p|P)(\+|-)?[0-9]+[fh]?)?)|([0-9a-fA-F]+(p|P)(\+|-)?[0-9]+[fh]?))/),
-    int_literal: new qe("int_literal", z$1.token, /-?0x[0-9a-fA-F]+|0i?|-?[1-9][0-9]*i?/),
-    uint_literal: new qe("uint_literal", z$1.token, /0x[0-9a-fA-F]+u|0u|[1-9][0-9]*u/),
-    name: new qe("name", z$1.token, /([_\p{XID_Start}][\p{XID_Continue}]+)|([\p{XID_Start}])/u),
-    ident: new qe("ident", z$1.token, /[_a-zA-Z][0-9a-zA-Z_]*/),
-    and: new qe("and", z$1.token, "&"),
-    and_and: new qe("and_and", z$1.token, "&&"),
-    arrow: new qe("arrow ", z$1.token, "->"),
-    attr: new qe("attr", z$1.token, "@"),
-    forward_slash: new qe("forward_slash", z$1.token, "/"),
-    bang: new qe("bang", z$1.token, "!"),
-    bracket_left: new qe("bracket_left", z$1.token, "["),
-    bracket_right: new qe("bracket_right", z$1.token, "]"),
-    brace_left: new qe("brace_left", z$1.token, "{"),
-    brace_right: new qe("brace_right", z$1.token, "}"),
-    colon: new qe("colon", z$1.token, ":"),
-    comma: new qe("comma", z$1.token, ","),
-    equal: new qe("equal", z$1.token, "="),
-    equal_equal: new qe("equal_equal", z$1.token, "=="),
-    not_equal: new qe("not_equal", z$1.token, "!="),
-    greater_than: new qe("greater_than", z$1.token, ">"),
-    greater_than_equal: new qe("greater_than_equal", z$1.token, ">="),
-    shift_right: new qe("shift_right", z$1.token, ">>"),
-    less_than: new qe("less_than", z$1.token, "<"),
-    less_than_equal: new qe("less_than_equal", z$1.token, "<="),
-    shift_left: new qe("shift_left", z$1.token, "<<"),
-    modulo: new qe("modulo", z$1.token, "%"),
-    minus: new qe("minus", z$1.token, "-"),
-    minus_minus: new qe("minus_minus", z$1.token, "--"),
-    period: new qe("period", z$1.token, "."),
-    plus: new qe("plus", z$1.token, "+"),
-    plus_plus: new qe("plus_plus", z$1.token, "++"),
-    or: new qe("or", z$1.token, "|"),
-    or_or: new qe("or_or", z$1.token, "||"),
-    paren_left: new qe("paren_left", z$1.token, "("),
-    paren_right: new qe("paren_right", z$1.token, ")"),
-    semicolon: new qe("semicolon", z$1.token, ";"),
-    star: new qe("star", z$1.token, "*"),
-    tilde: new qe("tilde", z$1.token, "~"),
-    underscore: new qe("underscore", z$1.token, "_"),
-    xor: new qe("xor", z$1.token, "^"),
-    plus_equal: new qe("plus_equal", z$1.token, "+="),
-    minus_equal: new qe("minus_equal", z$1.token, "-="),
-    times_equal: new qe("times_equal", z$1.token, "*="),
-    division_equal: new qe("division_equal", z$1.token, "/="),
-    modulo_equal: new qe("modulo_equal", z$1.token, "%="),
-    and_equal: new qe("and_equal", z$1.token, "&="),
-    or_equal: new qe("or_equal", z$1.token, "|="),
-    xor_equal: new qe("xor_equal", z$1.token, "^="),
-    shift_right_equal: new qe("shift_right_equal", z$1.token, ">>="),
-    shift_left_equal: new qe("shift_left_equal", z$1.token, "<<=")
+    decimal_float_literal: new qe("decimal_float_literal", z.token, /((-?[0-9]*\.[0-9]+|-?[0-9]+\.[0-9]*)((e|E)(\+|-)?[0-9]+)?[fh]?)|(-?[0-9]+(e|E)(\+|-)?[0-9]+[fh]?)|(-?[0-9]+[fh])/),
+    hex_float_literal: new qe("hex_float_literal", z.token, /-?0x((([0-9a-fA-F]*\.[0-9a-fA-F]+|[0-9a-fA-F]+\.[0-9a-fA-F]*)((p|P)(\+|-)?[0-9]+[fh]?)?)|([0-9a-fA-F]+(p|P)(\+|-)?[0-9]+[fh]?))/),
+    int_literal: new qe("int_literal", z.token, /-?0x[0-9a-fA-F]+|0i?|-?[1-9][0-9]*i?/),
+    uint_literal: new qe("uint_literal", z.token, /0x[0-9a-fA-F]+u|0u|[1-9][0-9]*u/),
+    name: new qe("name", z.token, /([_\p{XID_Start}][\p{XID_Continue}]+)|([\p{XID_Start}])/u),
+    ident: new qe("ident", z.token, /[_a-zA-Z][0-9a-zA-Z_]*/),
+    and: new qe("and", z.token, "&"),
+    and_and: new qe("and_and", z.token, "&&"),
+    arrow: new qe("arrow ", z.token, "->"),
+    attr: new qe("attr", z.token, "@"),
+    forward_slash: new qe("forward_slash", z.token, "/"),
+    bang: new qe("bang", z.token, "!"),
+    bracket_left: new qe("bracket_left", z.token, "["),
+    bracket_right: new qe("bracket_right", z.token, "]"),
+    brace_left: new qe("brace_left", z.token, "{"),
+    brace_right: new qe("brace_right", z.token, "}"),
+    colon: new qe("colon", z.token, ":"),
+    comma: new qe("comma", z.token, ","),
+    equal: new qe("equal", z.token, "="),
+    equal_equal: new qe("equal_equal", z.token, "=="),
+    not_equal: new qe("not_equal", z.token, "!="),
+    greater_than: new qe("greater_than", z.token, ">"),
+    greater_than_equal: new qe("greater_than_equal", z.token, ">="),
+    shift_right: new qe("shift_right", z.token, ">>"),
+    less_than: new qe("less_than", z.token, "<"),
+    less_than_equal: new qe("less_than_equal", z.token, "<="),
+    shift_left: new qe("shift_left", z.token, "<<"),
+    modulo: new qe("modulo", z.token, "%"),
+    minus: new qe("minus", z.token, "-"),
+    minus_minus: new qe("minus_minus", z.token, "--"),
+    period: new qe("period", z.token, "."),
+    plus: new qe("plus", z.token, "+"),
+    plus_plus: new qe("plus_plus", z.token, "++"),
+    or: new qe("or", z.token, "|"),
+    or_or: new qe("or_or", z.token, "||"),
+    paren_left: new qe("paren_left", z.token, "("),
+    paren_right: new qe("paren_right", z.token, ")"),
+    semicolon: new qe("semicolon", z.token, ";"),
+    star: new qe("star", z.token, "*"),
+    tilde: new qe("tilde", z.token, "~"),
+    underscore: new qe("underscore", z.token, "_"),
+    xor: new qe("xor", z.token, "^"),
+    plus_equal: new qe("plus_equal", z.token, "+="),
+    minus_equal: new qe("minus_equal", z.token, "-="),
+    times_equal: new qe("times_equal", z.token, "*="),
+    division_equal: new qe("division_equal", z.token, "/="),
+    modulo_equal: new qe("modulo_equal", z.token, "%="),
+    and_equal: new qe("and_equal", z.token, "&="),
+    or_equal: new qe("or_equal", z.token, "|="),
+    xor_equal: new qe("xor_equal", z.token, "^="),
+    shift_right_equal: new qe("shift_right_equal", z.token, ">>="),
+    shift_left_equal: new qe("shift_left_equal", z.token, "<<=")
   }, He.simpleTokens = {
     "@": H.tokens.attr,
     "{": H.tokens.brace_left,
@@ -25997,13 +32593,13 @@ ${htmlLog}
   }
   class at {
     constructor() {
-      this.uniforms = [], this.storage = [], this.textures = [], this.samplers = [], this.aliases = [], this.overrides = [], this.structs = [], this.entry = new d$4(), this.functions = [], this._types = /* @__PURE__ */ new Map(), this._functions = /* @__PURE__ */ new Map();
+      this.uniforms = [], this.storage = [], this.textures = [], this.samplers = [], this.aliases = [], this.overrides = [], this.structs = [], this.entry = new d$3(), this.functions = [], this._types = /* @__PURE__ */ new Map(), this._functions = /* @__PURE__ */ new Map();
     }
     _isStorageTexture(e2) {
       return "texture_storage_1d" == e2.name || "texture_storage_2d" == e2.name || "texture_storage_2d_array" == e2.name || "texture_storage_3d" == e2.name;
     }
     updateAST(e2) {
-      for (const t2 of e2) t2 instanceof D$2 && this._functions.set(t2.name, new st(t2));
+      for (const t2 of e2) t2 instanceof D$1 && this._functions.set(t2.name, new st(t2));
       for (const t2 of e2) if (t2 instanceof oe) {
         const e3 = this.getTypeInfo(t2, null);
         e3 instanceof n$2 && this.structs.push(e3);
@@ -26016,29 +32612,29 @@ ${htmlLog}
           continue;
         }
         if (this._isUniformVar(t2)) {
-          const e3 = t2, n2 = this._getAttributeNum(e3.attributes, "group", 0), s2 = this._getAttributeNum(e3.attributes, "binding", 0), r2 = this.getTypeInfo(e3.type, e3.attributes), a2 = new o$2(e3.name, r2, n2, s2, e3.attributes, i$1.Uniform, e3.access);
+          const e3 = t2, n2 = this._getAttributeNum(e3.attributes, "group", 0), s2 = this._getAttributeNum(e3.attributes, "binding", 0), r2 = this.getTypeInfo(e3.type, e3.attributes), a2 = new o$1(e3.name, r2, n2, s2, e3.attributes, i$1.Uniform, e3.access);
           a2.access || (a2.access = "read"), this.uniforms.push(a2);
           continue;
         }
         if (this._isStorageVar(t2)) {
-          const e3 = t2, n2 = this._getAttributeNum(e3.attributes, "group", 0), s2 = this._getAttributeNum(e3.attributes, "binding", 0), r2 = this.getTypeInfo(e3.type, e3.attributes), a2 = this._isStorageTexture(r2), c2 = new o$2(e3.name, r2, n2, s2, e3.attributes, a2 ? i$1.StorageTexture : i$1.Storage, e3.access);
+          const e3 = t2, n2 = this._getAttributeNum(e3.attributes, "group", 0), s2 = this._getAttributeNum(e3.attributes, "binding", 0), r2 = this.getTypeInfo(e3.type, e3.attributes), a2 = this._isStorageTexture(r2), c2 = new o$1(e3.name, r2, n2, s2, e3.attributes, a2 ? i$1.StorageTexture : i$1.Storage, e3.access);
           c2.access || (c2.access = "read"), this.storage.push(c2);
           continue;
         }
         if (this._isTextureVar(t2)) {
-          const e3 = t2, n2 = this._getAttributeNum(e3.attributes, "group", 0), s2 = this._getAttributeNum(e3.attributes, "binding", 0), r2 = this.getTypeInfo(e3.type, e3.attributes), a2 = this._isStorageTexture(r2), c2 = new o$2(e3.name, r2, n2, s2, e3.attributes, a2 ? i$1.StorageTexture : i$1.Texture, e3.access);
+          const e3 = t2, n2 = this._getAttributeNum(e3.attributes, "group", 0), s2 = this._getAttributeNum(e3.attributes, "binding", 0), r2 = this.getTypeInfo(e3.type, e3.attributes), a2 = this._isStorageTexture(r2), c2 = new o$1(e3.name, r2, n2, s2, e3.attributes, a2 ? i$1.StorageTexture : i$1.Texture, e3.access);
           c2.access || (c2.access = "read"), a2 ? this.storage.push(c2) : this.textures.push(c2);
           continue;
         }
         if (this._isSamplerVar(t2)) {
-          const e3 = t2, n2 = this._getAttributeNum(e3.attributes, "group", 0), s2 = this._getAttributeNum(e3.attributes, "binding", 0), r2 = this.getTypeInfo(e3.type, e3.attributes), a2 = new o$2(e3.name, r2, n2, s2, e3.attributes, i$1.Sampler, e3.access);
+          const e3 = t2, n2 = this._getAttributeNum(e3.attributes, "group", 0), s2 = this._getAttributeNum(e3.attributes, "binding", 0), r2 = this.getTypeInfo(e3.type, e3.attributes), a2 = new o$1(e3.name, r2, n2, s2, e3.attributes, i$1.Sampler, e3.access);
           this.samplers.push(a2);
           continue;
         }
       }
-      for (const t2 of e2) if (t2 instanceof D$2) {
-        const e3 = this._getAttribute(t2, "vertex"), n2 = this._getAttribute(t2, "fragment"), s2 = this._getAttribute(t2, "compute"), r2 = e3 || n2 || s2, a2 = new p$3(t2.name, null == r2 ? void 0 : r2.name, t2.attributes);
-        a2.attributes = t2.attributes, a2.startLine = t2.startLine, a2.endLine = t2.endLine, this.functions.push(a2), this._functions.get(t2.name).info = a2, r2 && (this._functions.get(t2.name).inUse = true, a2.inUse = true, a2.resources = this._findResources(t2, !!r2), a2.inputs = this._getInputs(t2.args), a2.outputs = this._getOutputs(t2.returnType), this.entry[r2.name].push(a2)), a2.arguments = t2.args.map((e4) => new f$4(e4.name, this.getTypeInfo(e4.type, e4.attributes), e4.attributes)), a2.returnType = t2.returnType ? this.getTypeInfo(t2.returnType, t2.attributes) : null;
+      for (const t2 of e2) if (t2 instanceof D$1) {
+        const e3 = this._getAttribute(t2, "vertex"), n2 = this._getAttribute(t2, "fragment"), s2 = this._getAttribute(t2, "compute"), r2 = e3 || n2 || s2, a2 = new p$2(t2.name, null == r2 ? void 0 : r2.name, t2.attributes);
+        a2.attributes = t2.attributes, a2.startLine = t2.startLine, a2.endLine = t2.endLine, this.functions.push(a2), this._functions.get(t2.name).info = a2, r2 && (this._functions.get(t2.name).inUse = true, a2.inUse = true, a2.resources = this._findResources(t2, !!r2), a2.inputs = this._getInputs(t2.args), a2.outputs = this._getOutputs(t2.returnType), this.entry[r2.name].push(a2)), a2.arguments = t2.args.map((e4) => new f$3(e4.name, this.getTypeInfo(e4.type, e4.attributes), e4.attributes)), a2.returnType = t2.returnType ? this.getTypeInfo(t2.returnType, t2.attributes) : null;
         continue;
       }
       for (const e3 of this._functions.values()) e3.info && (e3.info.inUse = e3.inUse, this._addCalls(e3.node, e3.info.calls));
@@ -26181,7 +32777,7 @@ ${htmlLog}
       else {
         const e3 = this._getAttribute(n2, "location") || this._getAttribute(n2, "builtin");
         if (null !== e3) {
-          const s2 = this.getTypeInfo(n2.type, n2.type.attributes), r2 = this._parseInt(e3.value), a2 = new u$6(n2.name, s2, e3.name, r2);
+          const s2 = this.getTypeInfo(n2.type, n2.type.attributes), r2 = this._parseInt(e3.value), a2 = new u$3(n2.name, s2, e3.name, r2);
           t2.push(a2);
         }
       }
@@ -26190,7 +32786,7 @@ ${htmlLog}
       const t2 = this._getAttribute(e2, "location") || this._getAttribute(e2, "builtin");
       if (null !== t2) {
         const n2 = this.getTypeInfo(e2, e2.attributes), s2 = this._parseInt(t2.value);
-        return new u$6("", n2, t2.name, s2);
+        return new u$3("", n2, t2.name, s2);
       }
       return null;
     }
@@ -26231,7 +32827,7 @@ ${htmlLog}
       return null;
     }
     _getAliasInfo(e2) {
-      return new c$6(e2.name, this.getTypeInfo(e2.type, null));
+      return new c$5(e2.name, this.getTypeInfo(e2.type, null));
     }
     getTypeInfoByName(e2) {
       for (const t2 of this.structs) if (t2.name == e2) return t2;
@@ -26258,11 +32854,11 @@ ${htmlLog}
         return this._types.set(i2, s2), this._updateTypeInfo(s2), s2;
       }
       if (i2 instanceof he) {
-        const t2 = i2, n2 = t2.format instanceof ae, s2 = t2.format ? n2 ? this.getTypeInfo(t2.format, null) : new e$1(t2.format, null) : null, r2 = new a$3(t2.name, s2, o2, t2.access);
+        const t2 = i2, n2 = t2.format instanceof ae, s2 = t2.format ? n2 ? this.getTypeInfo(t2.format, null) : new e$1(t2.format, null) : null, r2 = new a$2(t2.name, s2, o2, t2.access);
         return this._types.set(i2, r2), this._updateTypeInfo(r2), r2;
       }
       if (i2 instanceof ce) {
-        const e2 = i2, t2 = e2.format ? this.getTypeInfo(e2.format, null) : null, n2 = new a$3(e2.name, t2, o2, e2.access);
+        const e2 = i2, t2 = e2.format ? this.getTypeInfo(e2.format, null) : null, n2 = new a$2(e2.name, t2, o2, e2.access);
         return this._types.set(i2, n2), this._updateTypeInfo(n2), n2;
       }
       const c2 = new e$1(i2.name, o2);
@@ -27684,11 +34280,11 @@ ${htmlLog}
       if (e2 instanceof U) this._let(e2, t2);
       else if (e2 instanceof F) this._var(e2, t2);
       else if (e2 instanceof P$1) this._const(e2, t2);
-      else if (e2 instanceof D$2) this._function(e2, t2);
+      else if (e2 instanceof D$1) this._function(e2, t2);
       else {
         if (e2 instanceof Q$1) return this._if(e2, t2);
         if (e2 instanceof Z) return this._switch(e2, t2);
-        if (e2 instanceof B$2) return this._for(e2, t2);
+        if (e2 instanceof B$1) return this._for(e2, t2);
         if (e2 instanceof V) return this._while(e2, t2);
         if (e2 instanceof j$2) return this._loop(e2, t2);
         if (e2 instanceof O) {
@@ -29034,7 +35630,7 @@ ${htmlLog}
         const e3 = this.evalExpression(n3, t2);
         e3 instanceof Me ? i2.push(...e3.data) : e3 instanceof Be ? i2.push(e3.value) : e3 instanceof Ue && i2.push(...e3.data);
       }
-      if (n2 instanceof a$3 && null === n2.format && (n2.format = this.getTypeInfo("f32")), 0 === i2.length) {
+      if (n2 instanceof a$2 && null === n2.format && (n2.format = this.getTypeInfo("f32")), 0 === i2.length) {
         const s3 = new Array(r2[2]).fill(0);
         return new Ue(s3, n2).getSubData(this, e2.postfix, t2);
       }
@@ -29095,7 +35691,7 @@ ${htmlLog}
         this._deferArrayCountEval.length = 0;
       }
       if (this._forwardTypeCount > 0) for (const e3 of t2) e3.search((e4) => {
-        e4 instanceof Ce || e4 instanceof le ? e4.type = this._forwardType(e4.type) : e4 instanceof ue ? e4.format = this._forwardType(e4.format) : e4 instanceof F || e4 instanceof U || e4 instanceof P$1 ? e4.type = this._forwardType(e4.type) : e4 instanceof D$2 ? e4.returnType = this._forwardType(e4.returnType) : e4 instanceof $e && (e4.type = this._forwardType(e4.type));
+        e4 instanceof Ce || e4 instanceof le ? e4.type = this._forwardType(e4.type) : e4 instanceof ue ? e4.format = this._forwardType(e4.format) : e4 instanceof F || e4 instanceof U || e4 instanceof P$1 ? e4.type = this._forwardType(e4.type) : e4 instanceof D$1 ? e4.returnType = this._forwardType(e4.returnType) : e4 instanceof $e && (e4.type = this._forwardType(e4.type));
       });
       return t2;
     }
@@ -29256,7 +35852,7 @@ ${htmlLog}
         s2 = this._type_decl(), null != s2 && (s2.attributes = e3);
       }
       const r2 = this._compound_statement(), a2 = this._currentLine;
-      return this._updateNode(new D$2(t2, n2, s2, r2, e2, a2), e2);
+      return this._updateNode(new D$1(t2, n2, s2, r2, e2, a2), e2);
     }
     _compound_statement() {
       const e2 = [];
@@ -29321,7 +35917,7 @@ ${htmlLog}
     _for_statement() {
       if (!this._match(He.keywords.for)) return null;
       this._consume(He.tokens.paren_left, "Expected '('.");
-      const e2 = this._updateNode(new B$2(null, null, null, null));
+      const e2 = this._updateNode(new B$1(null, null, null, null));
       return this._currentLoop.push(e2), e2.init = this._check(He.tokens.semicolon) ? null : this._for_init(), this._consume(He.tokens.semicolon, "Expected ';'."), e2.condition = this._check(He.tokens.semicolon) ? null : this._short_circuit_or_expression(), this._consume(He.tokens.semicolon, "Expected ';'."), e2.increment = this._check(He.tokens.paren_right) ? null : this._for_increment(), this._consume(He.tokens.paren_right, "Expected ')'."), this._check(He.tokens.attr) && this._attribute(), e2.body = this._compound_statement(), this._currentLoop.pop(), e2;
     }
     _for_init() {
@@ -29816,7 +36412,7 @@ ${htmlLog}
         let e3 = [
           ae.f32
         ], n3 = i2.constEvaluate(this._exec, e3);
-        n3 instanceof Be && this._validateTypeRange(n3.value, e3[0]), e3[0] instanceof ce && null === e3[0].format && n3.typeInfo instanceof a$3 && null !== n3.typeInfo.format && ("f16" === n3.typeInfo.format.name ? e3[0].format = ae.f16 : "f32" === n3.typeInfo.format.name ? e3[0].format = ae.f32 : "i32" === n3.typeInfo.format.name ? e3[0].format = ae.i32 : "u32" === n3.typeInfo.format.name ? e3[0].format = ae.u32 : "bool" === n3.typeInfo.format.name ? e3[0].format = ae.bool : console.error(`TODO: impelement template format type ${n3.typeInfo.format.name}`)), r2 = this._updateNode(new xe(n3, e3[0])), this._exec.context.setVariable(t2.toString(), n3);
+        n3 instanceof Be && this._validateTypeRange(n3.value, e3[0]), e3[0] instanceof ce && null === e3[0].format && n3.typeInfo instanceof a$2 && null !== n3.typeInfo.format && ("f16" === n3.typeInfo.format.name ? e3[0].format = ae.f16 : "f32" === n3.typeInfo.format.name ? e3[0].format = ae.f32 : "i32" === n3.typeInfo.format.name ? e3[0].format = ae.i32 : "u32" === n3.typeInfo.format.name ? e3[0].format = ae.u32 : "bool" === n3.typeInfo.format.name ? e3[0].format = ae.bool : console.error(`TODO: impelement template format type ${n3.typeInfo.format.name}`)), r2 = this._updateNode(new xe(n3, e3[0])), this._exec.context.setVariable(t2.toString(), n3);
       } catch (e3) {
         r2 = i2;
       }
@@ -30614,7 +37210,7 @@ ${htmlLog}
     }
     return out;
   }
-  function length$4(a2) {
+  function length$3(a2) {
     const x2 = a2[0];
     const y2 = a2[1];
     const z2 = a2[2];
@@ -30782,7 +37378,7 @@ ${htmlLog}
     return Math.acos(Math.min(Math.max(cosine, -1), 1));
   }
   const sub$1 = subtract;
-  const len$1 = length$4;
+  const len$1 = length$3;
   const sqrLen$1 = squaredLength$3;
   (function() {
     const vec2 = create$7();
@@ -32123,7 +38719,7 @@ ${htmlLog}
     out[3] = a2[3] * b2;
     return out;
   }
-  function length$3(a2) {
+  function length$2(a2) {
     const x2 = a2[0];
     const y2 = a2[1];
     const z2 = a2[2];
@@ -32893,7 +39489,7 @@ ${htmlLog}
   const scale$1 = scale$2;
   const dot$3 = dot$4;
   const lerp$1 = lerp$2;
-  const length$2 = length$3;
+  const length$1 = length$2;
   const squaredLength$1 = squaredLength$2;
   const normalize$5 = normalize$6;
   const rotationTo = function() {
@@ -33027,7 +39623,7 @@ ${htmlLog}
       this[3] = checkNumber(value);
     }
     len() {
-      return length$2(this);
+      return length$1(this);
     }
     lengthSquared() {
       return squaredLength$1(this);
@@ -57274,10 +63870,10 @@ vec4 colormap(float intensity, float opacity) {
     AdditiveBlendExtension
   };
   let A, I = null;
-  function g$1() {
+  function g() {
     return null !== I && I.buffer === A.memory.buffer || (I = new Uint8Array(A.memory.buffer)), I;
   }
-  let B$1 = 0;
+  let B = 0;
   let Q = null;
   function C() {
     return null !== Q && Q.buffer === A.memory.buffer || (Q = new Int32Array(A.memory.buffer)), Q;
@@ -57306,17 +63902,17 @@ vec4 colormap(float intensity, float opacity) {
     }(await I2, {});
     return A = g2.exports, E.__wbindgen_wasm_module = B2, A;
   }
-  var D$1 = Object.freeze({
+  var D = Object.freeze({
     __proto__: null,
     decompress: function(I2, Q2) {
       try {
         const F2 = A.__wbindgen_add_to_stack_pointer(-16);
         var E2 = function(A2, I3) {
           const Q3 = I3(1 * A2.length);
-          return g$1().set(A2, Q3 / 1), B$1 = A2.length, Q3;
-        }(I2, A.__wbindgen_malloc), D2 = B$1;
+          return g().set(A2, Q3 / 1), B = A2.length, Q3;
+        }(I2, A.__wbindgen_malloc), D2 = B;
         A.decompress(F2, E2, D2, Q2);
-        var i2 = C()[F2 / 4 + 0], w2 = C()[F2 / 4 + 1], G2 = (o2 = i2, N2 = w2, g$1().subarray(o2 / 1, o2 / 1 + N2)).slice();
+        var i2 = C()[F2 / 4 + 0], w2 = C()[F2 / 4 + 1], G2 = (o2 = i2, N2 = w2, g().subarray(o2 / 1, o2 / 1 + N2)).slice();
         return A.__wbindgen_free(i2, 1 * w2), G2;
       } finally {
         A.__wbindgen_add_to_stack_pointer(16);
@@ -57407,3861 +64003,21 @@ vec4 colormap(float intensity, float opacity) {
     50,
     51
   ];
-  function w$2(A2) {
+  function w$1(A2) {
     return i[A2 - 43];
   }
   const G = function(A2) {
     let I2, g2 = A2.endsWith("==") ? 2 : A2.endsWith("=") ? 1 : 0, B2 = A2.length, Q2 = new Uint8Array(B2 / 4 * 3);
-    for (let g3 = 0, C3 = 0; g3 < B2; g3 += 4, C3 += 3) I2 = w$2(A2.charCodeAt(g3)) << 18 | w$2(A2.charCodeAt(g3 + 1)) << 12 | w$2(A2.charCodeAt(g3 + 2)) << 6 | w$2(A2.charCodeAt(g3 + 3)), Q2[C3] = I2 >> 16, Q2[C3 + 1] = I2 >> 8 & 255, Q2[C3 + 2] = 255 & I2;
+    for (let g3 = 0, C3 = 0; g3 < B2; g3 += 4, C3 += 3) I2 = w$1(A2.charCodeAt(g3)) << 18 | w$1(A2.charCodeAt(g3 + 1)) << 12 | w$1(A2.charCodeAt(g3 + 2)) << 6 | w$1(A2.charCodeAt(g3 + 3)), Q2[C3] = I2 >> 16, Q2[C3 + 1] = I2 >> 8 & 255, Q2[C3 + 2] = 255 & I2;
     return Q2.subarray(0, Q2.length - g2);
   }("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NwMAIANBEGokAA8LIARBCEHYhcAAEDcACyACQQhByIXAABA3AAuqAgEDfyMAQYABayIEJAACQAJAAn8CQCABKAIAIgNBEHFFBEAgACgCACECIANBIHENASACrSABEBUMAgsgACgCACECQQAhAANAIAAgBGpB/wBqIAJBD3EiA0EwciADQdcAaiADQQpJGzoAACAAQX9qIQAgAkEEdiICDQALIABBgAFqIgJBgQFPDQIgAUGkjsAAQQIgACAEakGAAWpBACAAaxAIDAELQQAhAANAIAAgBGpB/wBqIAJBD3EiA0EwciADQTdqIANBCkkbOgAAIABBf2ohACACQQR2IgINAAsgAEGAAWoiAkGBAU8NAiABQaSOwABBAiAAIARqQYABakEAIABrEAgLIARBgAFqJAAPCyACQYABQZSOwAAQOQALIAJBgAFBlI7AABA5AAuxAgEEfyMAQUBqIgIkACABKAIEIgNFBEAgAUEEaiEDIAEoAgAhBCACQQA2AiAgAkIBNwMYIAIgAkEYajYCJCACQThqIARBEGopAgA3AwAgAkEwaiAEQQhqKQIANwMAIAIgBCkCADcDKCACQSRqQdiJwAAgAkEoahAJGiACQRBqIgQgAigCIDYCACACIAIpAxg3AwgCQCABKAIEIgVFDQAgAUEIaigCAEUNACAFEAQLIAMgAikDCDcCACADQQhqIAQoAgA2AgAgAygCACEDCyABQQE2AgQgAUEMaigCACEEIAFBCGoiASgCACEFIAFCADcCAEEMQQQQWSIBRQRAQQxBBBBjAAsgASAENgIIIAEgBTYCBCABIAM2AgAgAEGQi8AANgIEIAAgATYCACACQUBrJAAL/AEBAn8jAEEQayICJAAgACgCACACQQA2AgwCfwJAAkAgAUGAAU8EQCABQYAQSQ0BIAJBDGohACABQYCABE8NAiACIAFBP3FBgAFyOgAOIAIgAUEMdkHgAXI6AAwgAiABQQZ2QT9xQYABcjoADUEDDAMLIAIgAToADCACQQxqIQBBAQwCCyACIAFBP3FBgAFyOgANIAIgAUEGdkHAAXI6AAwgAkEMaiEAQQIMAQsgAiABQT9xQYABcjoADyACIAFBEnZB8AFyOgAMIAIgAUEGdkE/cUGAAXI6AA4gAiABQQx2QT9xQYABcjoADUEECyEBIAAgARALIAJBEGokAAv5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QSxqQQI2AgAgAUE8akEhNgIAIAFCAjcCHCABQayMwAA2AhggAUEdNgI0IAEgAUEwajYCKCABIAFBEGo2AjggASABQQhqNgIwIAFBGGpB8IDAABBRAAtxAQN/IwBBIGsiAiQAAkAgACABEBkNACABQRxqKAIAIQMgASgCGCACQRxqQQA2AgAgAkHwi8AANgIYIAJCATcCDCACQfSLwAA2AgggAyACQQhqEAkNACAAQQRqIAEQGSACQSBqJAAPCyACQSBqJABBAQswAQF/AkACQEGAwABBAhBZIgENAQwAC0GAwABBAhBjAAsgACABNgIAIABBgCA2AgQLewECfwJAAkAgACgCBCIBBEAgACgCDCICIAFPDQEgACgCACIBIAJqIAEtAAA6AAAgAEEANgIIIAAgACgCDEEBajYCDCAAKAIERQ0CIAAoAgAtAAAPC0EAQQBBiIbAABA2AAsgAiABQZiGwAAQNgALQQBBAEGohsAAEDYAC2gBAn8gACAALQBGIgFBAWoiAjoACiAAQQEgAUEPcXRBAmoiATsBQCAAQX8gAkEPcXRBf3M7AQggAEEYaigCACABQf//A3EiAU8EQCAAIAE2AhgLIABBJGooAgAgAU8EQCAAIAE2AiQLC1ABAX8gAEEUaigCACIBRSABQQJ0RXJFBEAgACgCEBAECyAAQSBqKAIAIgFFIAFBAXRFckUEQCAAKAIcEAQLIABBLGooAgAEQCAAKAIoEAQLC2wBAX8jAEEwayIDJAAgAyABNgIEIAMgADYCACADQRxqQQI2AgAgA0EsakEcNgIAIANCAjcCDCADQYCNwAA2AgggA0EcNgIkIAMgA0EgajYCGCADIAM2AiggAyADQQRqNgIgIANBCGogAhBRAAtsAQF/IwBBMGsiAyQAIAMgATYCBCADIAA2AgAgA0EcakECNgIAIANBLGpBHDYCACADQgI3AgwgA0HMkcAANgIIIANBHDYCJCADIANBIGo2AhggAyADQQRqNgIoIAMgAzYCICADQQhqIAIQUQALbAEBfyMAQTBrIgMkACADIAE2AgQgAyAANgIAIANBHGpBAjYCACADQSxqQRw2AgAgA0ICNwIMIANBgJLAADYCCCADQRw2AiQgAyADQSBqNgIYIAMgA0EEajYCKCADIAM2AiAgA0EIaiACEFEAC2wBAX8jAEEwayIDJAAgAyABNgIEIAMgADYCACADQRxqQQI2AgAgA0EsakEcNgIAIANCAjcCDCADQayRwAA2AgggA0EcNgIkIAMgA0EgajYCGCADIANBBGo2AiggAyADNgIgIANBCGogAhBRAAtcAQF/IwBBEGsiAyQAAkAgACgCBCABayACTwRAIANBADYCAAwBCyADIAAgASACEBYgAygCAEEBRw0AIANBCGooAgAiAARAIAMoAgQgABBjAAsQXQALIANBEGokAAtaAQF/IwBBEGsiAiQAAkAgACgCBCABa0EBTwRAIAJBADYCAAwBCyACIAAgARAeIAIoAgBBAUcNACACQQhqKAIAIgAEQCACKAIEIAAQYwALEF0ACyACQRBqJAALWgEBfyMAQRBrIgIkAAJAIAAoAgQgAWtBAU8EQCACQQA2AgAMAQsgAiAAIAEQHSACKAIAQQFHDQAgAkEIaigCACIABEAgAigCBCAAEGMACxBdAAsgAkEQaiQAC1kBAX8jAEEgayICJAAgAiAAKAIANgIEIAJBGGogAUEQaikCADcDACACQRBqIAFBCGopAgA3AwAgAiABKQIANwMIIAJBBGpB2InAACACQQhqEAkgAkEgaiQAC0YAAkBBCCACSQRAAn9BCCACSQRAIAIgAxAQDAELIAMQAAsiAg0BQQAPCyAAIAMQCg8LIAIgACADIAEgASADSxsQSyAAEAQLWQEBfyMAQSBrIgIkACACIAAoAgA2AgQgAkEYaiABQRBqKQIANwMAIAJBEGogAUEIaikCADcDACACIAEpAgA3AwggAkEEakHwj8AAIAJBCGoQCSACQSBqJAALWQACQAJAAkAgAUF/SgRAAkAgAgRAIAENAQwECyABRQ0DIAFBARBZIgINBAwCCyABEEciAkUNAQwDCxBdAAsgAUEBEGMAC0EBIQILIAAgATYCBCAAIAI2AgALVgEBfyMAQSBrIgIkACACIAA2AgQgAkEYaiABQRBqKQIANwMAIAJBEGogAUEIaikCADcDACACIAEpAgA3AwggAkEEakHwj8AAIAJBCGoQCSACQSBqJAALWQEDfwJAIAEoAgwiAiABKAIIIgNPBEAgASgCBCIEIAJJDQEgASgCACEBIAAgAiADazYCBCAAIAEgA2o2AgAPCyADIAJB2IbAABA4AAsgAiAEQdiGwAAQNwALVQEBfyAAQRBqIAAt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");
-  let o$1;
+  let o;
   async function N(A2, I2) {
-    o$1 || (o$1 = await (async () => (await E(G), D$1))());
-    const g2 = o$1.decompress(A2, I2);
+    o || (o = await (async () => (await E(G), D))());
+    const g2 = o.decompress(A2, I2);
     if (0 === g2.length) throw Error("Failed to decode with LZW decoder.");
     return g2;
   }
-  var util;
-  (function(util2) {
-    util2.assertEqual = (_2) => {
-    };
-    function assertIs(_arg) {
-    }
-    util2.assertIs = assertIs;
-    function assertNever(_x) {
-      throw new Error();
-    }
-    util2.assertNever = assertNever;
-    util2.arrayToEnum = (items) => {
-      const obj = {};
-      for (const item2 of items) {
-        obj[item2] = item2;
-      }
-      return obj;
-    };
-    util2.getValidEnumValues = (obj) => {
-      const validKeys = util2.objectKeys(obj).filter((k2) => typeof obj[obj[k2]] !== "number");
-      const filtered = {};
-      for (const k2 of validKeys) {
-        filtered[k2] = obj[k2];
-      }
-      return util2.objectValues(filtered);
-    };
-    util2.objectValues = (obj) => {
-      return util2.objectKeys(obj).map(function(e2) {
-        return obj[e2];
-      });
-    };
-    util2.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object) => {
-      const keys2 = [];
-      for (const key2 in object) {
-        if (Object.prototype.hasOwnProperty.call(object, key2)) {
-          keys2.push(key2);
-        }
-      }
-      return keys2;
-    };
-    util2.find = (arr, checker) => {
-      for (const item2 of arr) {
-        if (checker(item2)) return item2;
-      }
-      return void 0;
-    };
-    util2.isInteger = typeof Number.isInteger === "function" ? (val) => Number.isInteger(val) : (val) => typeof val === "number" && Number.isFinite(val) && Math.floor(val) === val;
-    function joinValues(array, separator = " | ") {
-      return array.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
-    }
-    util2.joinValues = joinValues;
-    util2.jsonStringifyReplacer = (_2, value) => {
-      if (typeof value === "bigint") {
-        return value.toString();
-      }
-      return value;
-    };
-  })(util || (util = {}));
-  var objectUtil;
-  (function(objectUtil2) {
-    objectUtil2.mergeShapes = (first, second) => {
-      return {
-        ...first,
-        ...second
-      };
-    };
-  })(objectUtil || (objectUtil = {}));
-  const ZodParsedType = util.arrayToEnum([
-    "string",
-    "nan",
-    "number",
-    "integer",
-    "float",
-    "boolean",
-    "date",
-    "bigint",
-    "symbol",
-    "function",
-    "undefined",
-    "null",
-    "array",
-    "object",
-    "unknown",
-    "promise",
-    "void",
-    "never",
-    "map",
-    "set"
-  ]);
-  const getParsedType = (data2) => {
-    const t2 = typeof data2;
-    switch (t2) {
-      case "undefined":
-        return ZodParsedType.undefined;
-      case "string":
-        return ZodParsedType.string;
-      case "number":
-        return Number.isNaN(data2) ? ZodParsedType.nan : ZodParsedType.number;
-      case "boolean":
-        return ZodParsedType.boolean;
-      case "function":
-        return ZodParsedType.function;
-      case "bigint":
-        return ZodParsedType.bigint;
-      case "symbol":
-        return ZodParsedType.symbol;
-      case "object":
-        if (Array.isArray(data2)) {
-          return ZodParsedType.array;
-        }
-        if (data2 === null) {
-          return ZodParsedType.null;
-        }
-        if (data2.then && typeof data2.then === "function" && data2.catch && typeof data2.catch === "function") {
-          return ZodParsedType.promise;
-        }
-        if (typeof Map !== "undefined" && data2 instanceof Map) {
-          return ZodParsedType.map;
-        }
-        if (typeof Set !== "undefined" && data2 instanceof Set) {
-          return ZodParsedType.set;
-        }
-        if (typeof Date !== "undefined" && data2 instanceof Date) {
-          return ZodParsedType.date;
-        }
-        return ZodParsedType.object;
-      default:
-        return ZodParsedType.unknown;
-    }
-  };
-  const ZodIssueCode = util.arrayToEnum([
-    "invalid_type",
-    "invalid_literal",
-    "custom",
-    "invalid_union",
-    "invalid_union_discriminator",
-    "invalid_enum_value",
-    "unrecognized_keys",
-    "invalid_arguments",
-    "invalid_return_type",
-    "invalid_date",
-    "invalid_string",
-    "too_small",
-    "too_big",
-    "invalid_intersection_types",
-    "not_multiple_of",
-    "not_finite"
-  ]);
-  class ZodError extends Error {
-    get errors() {
-      return this.issues;
-    }
-    constructor(issues) {
-      super();
-      this.issues = [];
-      this.addIssue = (sub2) => {
-        this.issues = [
-          ...this.issues,
-          sub2
-        ];
-      };
-      this.addIssues = (subs = []) => {
-        this.issues = [
-          ...this.issues,
-          ...subs
-        ];
-      };
-      const actualProto = new.target.prototype;
-      if (Object.setPrototypeOf) {
-        Object.setPrototypeOf(this, actualProto);
-      } else {
-        this.__proto__ = actualProto;
-      }
-      this.name = "ZodError";
-      this.issues = issues;
-    }
-    format(_mapper) {
-      const mapper = _mapper || function(issue) {
-        return issue.message;
-      };
-      const fieldErrors = {
-        _errors: []
-      };
-      const processError = (error2) => {
-        for (const issue of error2.issues) {
-          if (issue.code === "invalid_union") {
-            issue.unionErrors.map(processError);
-          } else if (issue.code === "invalid_return_type") {
-            processError(issue.returnTypeError);
-          } else if (issue.code === "invalid_arguments") {
-            processError(issue.argumentsError);
-          } else if (issue.path.length === 0) {
-            fieldErrors._errors.push(mapper(issue));
-          } else {
-            let curr = fieldErrors;
-            let i2 = 0;
-            while (i2 < issue.path.length) {
-              const el2 = issue.path[i2];
-              const terminal = i2 === issue.path.length - 1;
-              if (!terminal) {
-                curr[el2] = curr[el2] || {
-                  _errors: []
-                };
-              } else {
-                curr[el2] = curr[el2] || {
-                  _errors: []
-                };
-                curr[el2]._errors.push(mapper(issue));
-              }
-              curr = curr[el2];
-              i2++;
-            }
-          }
-        }
-      };
-      processError(this);
-      return fieldErrors;
-    }
-    static assert(value) {
-      if (!(value instanceof ZodError)) {
-        throw new Error(`Not a ZodError: ${value}`);
-      }
-    }
-    toString() {
-      return this.message;
-    }
-    get message() {
-      return JSON.stringify(this.issues, util.jsonStringifyReplacer, 2);
-    }
-    get isEmpty() {
-      return this.issues.length === 0;
-    }
-    flatten(mapper = (issue) => issue.message) {
-      const fieldErrors = {};
-      const formErrors = [];
-      for (const sub2 of this.issues) {
-        if (sub2.path.length > 0) {
-          const firstEl = sub2.path[0];
-          fieldErrors[firstEl] = fieldErrors[firstEl] || [];
-          fieldErrors[firstEl].push(mapper(sub2));
-        } else {
-          formErrors.push(mapper(sub2));
-        }
-      }
-      return {
-        formErrors,
-        fieldErrors
-      };
-    }
-    get formErrors() {
-      return this.flatten();
-    }
-  }
-  ZodError.create = (issues) => {
-    const error2 = new ZodError(issues);
-    return error2;
-  };
-  const errorMap = (issue, _ctx) => {
-    let message2;
-    switch (issue.code) {
-      case ZodIssueCode.invalid_type:
-        if (issue.received === ZodParsedType.undefined) {
-          message2 = "Required";
-        } else {
-          message2 = `Expected ${issue.expected}, received ${issue.received}`;
-        }
-        break;
-      case ZodIssueCode.invalid_literal:
-        message2 = `Invalid literal value, expected ${JSON.stringify(issue.expected, util.jsonStringifyReplacer)}`;
-        break;
-      case ZodIssueCode.unrecognized_keys:
-        message2 = `Unrecognized key(s) in object: ${util.joinValues(issue.keys, ", ")}`;
-        break;
-      case ZodIssueCode.invalid_union:
-        message2 = `Invalid input`;
-        break;
-      case ZodIssueCode.invalid_union_discriminator:
-        message2 = `Invalid discriminator value. Expected ${util.joinValues(issue.options)}`;
-        break;
-      case ZodIssueCode.invalid_enum_value:
-        message2 = `Invalid enum value. Expected ${util.joinValues(issue.options)}, received '${issue.received}'`;
-        break;
-      case ZodIssueCode.invalid_arguments:
-        message2 = `Invalid function arguments`;
-        break;
-      case ZodIssueCode.invalid_return_type:
-        message2 = `Invalid function return type`;
-        break;
-      case ZodIssueCode.invalid_date:
-        message2 = `Invalid date`;
-        break;
-      case ZodIssueCode.invalid_string:
-        if (typeof issue.validation === "object") {
-          if ("includes" in issue.validation) {
-            message2 = `Invalid input: must include "${issue.validation.includes}"`;
-            if (typeof issue.validation.position === "number") {
-              message2 = `${message2} at one or more positions greater than or equal to ${issue.validation.position}`;
-            }
-          } else if ("startsWith" in issue.validation) {
-            message2 = `Invalid input: must start with "${issue.validation.startsWith}"`;
-          } else if ("endsWith" in issue.validation) {
-            message2 = `Invalid input: must end with "${issue.validation.endsWith}"`;
-          } else {
-            util.assertNever(issue.validation);
-          }
-        } else if (issue.validation !== "regex") {
-          message2 = `Invalid ${issue.validation}`;
-        } else {
-          message2 = "Invalid";
-        }
-        break;
-      case ZodIssueCode.too_small:
-        if (issue.type === "array") message2 = `Array must contain ${issue.exact ? "exactly" : issue.inclusive ? `at least` : `more than`} ${issue.minimum} element(s)`;
-        else if (issue.type === "string") message2 = `String must contain ${issue.exact ? "exactly" : issue.inclusive ? `at least` : `over`} ${issue.minimum} character(s)`;
-        else if (issue.type === "number") message2 = `Number must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${issue.minimum}`;
-        else if (issue.type === "bigint") message2 = `Number must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${issue.minimum}`;
-        else if (issue.type === "date") message2 = `Date must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${new Date(Number(issue.minimum))}`;
-        else message2 = "Invalid input";
-        break;
-      case ZodIssueCode.too_big:
-        if (issue.type === "array") message2 = `Array must contain ${issue.exact ? `exactly` : issue.inclusive ? `at most` : `less than`} ${issue.maximum} element(s)`;
-        else if (issue.type === "string") message2 = `String must contain ${issue.exact ? `exactly` : issue.inclusive ? `at most` : `under`} ${issue.maximum} character(s)`;
-        else if (issue.type === "number") message2 = `Number must be ${issue.exact ? `exactly` : issue.inclusive ? `less than or equal to` : `less than`} ${issue.maximum}`;
-        else if (issue.type === "bigint") message2 = `BigInt must be ${issue.exact ? `exactly` : issue.inclusive ? `less than or equal to` : `less than`} ${issue.maximum}`;
-        else if (issue.type === "date") message2 = `Date must be ${issue.exact ? `exactly` : issue.inclusive ? `smaller than or equal to` : `smaller than`} ${new Date(Number(issue.maximum))}`;
-        else message2 = "Invalid input";
-        break;
-      case ZodIssueCode.custom:
-        message2 = `Invalid input`;
-        break;
-      case ZodIssueCode.invalid_intersection_types:
-        message2 = `Intersection results could not be merged`;
-        break;
-      case ZodIssueCode.not_multiple_of:
-        message2 = `Number must be a multiple of ${issue.multipleOf}`;
-        break;
-      case ZodIssueCode.not_finite:
-        message2 = "Number must be finite";
-        break;
-      default:
-        message2 = _ctx.defaultError;
-        util.assertNever(issue);
-    }
-    return {
-      message: message2
-    };
-  };
-  let overrideErrorMap = errorMap;
-  function getErrorMap() {
-    return overrideErrorMap;
-  }
-  const makeIssue = (params) => {
-    const { data: data2, path: path2, errorMaps, issueData } = params;
-    const fullPath = [
-      ...path2,
-      ...issueData.path || []
-    ];
-    const fullIssue = {
-      ...issueData,
-      path: fullPath
-    };
-    if (issueData.message !== void 0) {
-      return {
-        ...issueData,
-        path: fullPath,
-        message: issueData.message
-      };
-    }
-    let errorMessage = "";
-    const maps = errorMaps.filter((m2) => !!m2).slice().reverse();
-    for (const map2 of maps) {
-      errorMessage = map2(fullIssue, {
-        data: data2,
-        defaultError: errorMessage
-      }).message;
-    }
-    return {
-      ...issueData,
-      path: fullPath,
-      message: errorMessage
-    };
-  };
-  function addIssueToContext(ctx2, issueData) {
-    const overrideMap = getErrorMap();
-    const issue = makeIssue({
-      issueData,
-      data: ctx2.data,
-      path: ctx2.path,
-      errorMaps: [
-        ctx2.common.contextualErrorMap,
-        ctx2.schemaErrorMap,
-        overrideMap,
-        overrideMap === errorMap ? void 0 : errorMap
-      ].filter((x2) => !!x2)
-    });
-    ctx2.common.issues.push(issue);
-  }
-  class ParseStatus {
-    constructor() {
-      this.value = "valid";
-    }
-    dirty() {
-      if (this.value === "valid") this.value = "dirty";
-    }
-    abort() {
-      if (this.value !== "aborted") this.value = "aborted";
-    }
-    static mergeArray(status, results) {
-      const arrayValue = [];
-      for (const s2 of results) {
-        if (s2.status === "aborted") return INVALID$1;
-        if (s2.status === "dirty") status.dirty();
-        arrayValue.push(s2.value);
-      }
-      return {
-        status: status.value,
-        value: arrayValue
-      };
-    }
-    static async mergeObjectAsync(status, pairs) {
-      const syncPairs = [];
-      for (const pair of pairs) {
-        const key2 = await pair.key;
-        const value = await pair.value;
-        syncPairs.push({
-          key: key2,
-          value
-        });
-      }
-      return ParseStatus.mergeObjectSync(status, syncPairs);
-    }
-    static mergeObjectSync(status, pairs) {
-      const finalObject = {};
-      for (const pair of pairs) {
-        const { key: key2, value } = pair;
-        if (key2.status === "aborted") return INVALID$1;
-        if (value.status === "aborted") return INVALID$1;
-        if (key2.status === "dirty") status.dirty();
-        if (value.status === "dirty") status.dirty();
-        if (key2.value !== "__proto__" && (typeof value.value !== "undefined" || pair.alwaysSet)) {
-          finalObject[key2.value] = value.value;
-        }
-      }
-      return {
-        status: status.value,
-        value: finalObject
-      };
-    }
-  }
-  const INVALID$1 = Object.freeze({
-    status: "aborted"
-  });
-  const DIRTY = (value) => ({
-    status: "dirty",
-    value
-  });
-  const OK = (value) => ({
-    status: "valid",
-    value
-  });
-  const isAborted = (x2) => x2.status === "aborted";
-  const isDirty = (x2) => x2.status === "dirty";
-  const isValid = (x2) => x2.status === "valid";
-  const isAsync = (x2) => typeof Promise !== "undefined" && x2 instanceof Promise;
-  var errorUtil;
-  (function(errorUtil2) {
-    errorUtil2.errToObj = (message2) => typeof message2 === "string" ? {
-      message: message2
-    } : message2 || {};
-    errorUtil2.toString = (message2) => typeof message2 === "string" ? message2 : message2 == null ? void 0 : message2.message;
-  })(errorUtil || (errorUtil = {}));
-  class ParseInputLazyPath {
-    constructor(parent2, value, path2, key2) {
-      this._cachedPath = [];
-      this.parent = parent2;
-      this.data = value;
-      this._path = path2;
-      this._key = key2;
-    }
-    get path() {
-      if (!this._cachedPath.length) {
-        if (Array.isArray(this._key)) {
-          this._cachedPath.push(...this._path, ...this._key);
-        } else {
-          this._cachedPath.push(...this._path, this._key);
-        }
-      }
-      return this._cachedPath;
-    }
-  }
-  const handleResult = (ctx2, result) => {
-    if (isValid(result)) {
-      return {
-        success: true,
-        data: result.value
-      };
-    } else {
-      if (!ctx2.common.issues.length) {
-        throw new Error("Validation failed but no issues detected.");
-      }
-      return {
-        success: false,
-        get error() {
-          if (this._error) return this._error;
-          const error2 = new ZodError(ctx2.common.issues);
-          this._error = error2;
-          return this._error;
-        }
-      };
-    }
-  };
-  function processCreateParams(params) {
-    if (!params) return {};
-    const { errorMap: errorMap2, invalid_type_error, required_error, description } = params;
-    if (errorMap2 && (invalid_type_error || required_error)) {
-      throw new Error(`Can't use "invalid_type_error" or "required_error" in conjunction with custom error map.`);
-    }
-    if (errorMap2) return {
-      errorMap: errorMap2,
-      description
-    };
-    const customMap = (iss, ctx2) => {
-      const { message: message2 } = params;
-      if (iss.code === "invalid_enum_value") {
-        return {
-          message: message2 ?? ctx2.defaultError
-        };
-      }
-      if (typeof ctx2.data === "undefined") {
-        return {
-          message: message2 ?? required_error ?? ctx2.defaultError
-        };
-      }
-      if (iss.code !== "invalid_type") return {
-        message: ctx2.defaultError
-      };
-      return {
-        message: message2 ?? invalid_type_error ?? ctx2.defaultError
-      };
-    };
-    return {
-      errorMap: customMap,
-      description
-    };
-  }
-  class ZodType {
-    get description() {
-      return this._def.description;
-    }
-    _getType(input2) {
-      return getParsedType(input2.data);
-    }
-    _getOrReturnCtx(input2, ctx2) {
-      return ctx2 || {
-        common: input2.parent.common,
-        data: input2.data,
-        parsedType: getParsedType(input2.data),
-        schemaErrorMap: this._def.errorMap,
-        path: input2.path,
-        parent: input2.parent
-      };
-    }
-    _processInputParams(input2) {
-      return {
-        status: new ParseStatus(),
-        ctx: {
-          common: input2.parent.common,
-          data: input2.data,
-          parsedType: getParsedType(input2.data),
-          schemaErrorMap: this._def.errorMap,
-          path: input2.path,
-          parent: input2.parent
-        }
-      };
-    }
-    _parseSync(input2) {
-      const result = this._parse(input2);
-      if (isAsync(result)) {
-        throw new Error("Synchronous parse encountered promise.");
-      }
-      return result;
-    }
-    _parseAsync(input2) {
-      const result = this._parse(input2);
-      return Promise.resolve(result);
-    }
-    parse(data2, params) {
-      const result = this.safeParse(data2, params);
-      if (result.success) return result.data;
-      throw result.error;
-    }
-    safeParse(data2, params) {
-      const ctx2 = {
-        common: {
-          issues: [],
-          async: (params == null ? void 0 : params.async) ?? false,
-          contextualErrorMap: params == null ? void 0 : params.errorMap
-        },
-        path: (params == null ? void 0 : params.path) || [],
-        schemaErrorMap: this._def.errorMap,
-        parent: null,
-        data: data2,
-        parsedType: getParsedType(data2)
-      };
-      const result = this._parseSync({
-        data: data2,
-        path: ctx2.path,
-        parent: ctx2
-      });
-      return handleResult(ctx2, result);
-    }
-    "~validate"(data2) {
-      var _a2, _b2;
-      const ctx2 = {
-        common: {
-          issues: [],
-          async: !!this["~standard"].async
-        },
-        path: [],
-        schemaErrorMap: this._def.errorMap,
-        parent: null,
-        data: data2,
-        parsedType: getParsedType(data2)
-      };
-      if (!this["~standard"].async) {
-        try {
-          const result = this._parseSync({
-            data: data2,
-            path: [],
-            parent: ctx2
-          });
-          return isValid(result) ? {
-            value: result.value
-          } : {
-            issues: ctx2.common.issues
-          };
-        } catch (err2) {
-          if ((_b2 = (_a2 = err2 == null ? void 0 : err2.message) == null ? void 0 : _a2.toLowerCase()) == null ? void 0 : _b2.includes("encountered")) {
-            this["~standard"].async = true;
-          }
-          ctx2.common = {
-            issues: [],
-            async: true
-          };
-        }
-      }
-      return this._parseAsync({
-        data: data2,
-        path: [],
-        parent: ctx2
-      }).then((result) => isValid(result) ? {
-        value: result.value
-      } : {
-        issues: ctx2.common.issues
-      });
-    }
-    async parseAsync(data2, params) {
-      const result = await this.safeParseAsync(data2, params);
-      if (result.success) return result.data;
-      throw result.error;
-    }
-    async safeParseAsync(data2, params) {
-      const ctx2 = {
-        common: {
-          issues: [],
-          contextualErrorMap: params == null ? void 0 : params.errorMap,
-          async: true
-        },
-        path: (params == null ? void 0 : params.path) || [],
-        schemaErrorMap: this._def.errorMap,
-        parent: null,
-        data: data2,
-        parsedType: getParsedType(data2)
-      };
-      const maybeAsyncResult = this._parse({
-        data: data2,
-        path: ctx2.path,
-        parent: ctx2
-      });
-      const result = await (isAsync(maybeAsyncResult) ? maybeAsyncResult : Promise.resolve(maybeAsyncResult));
-      return handleResult(ctx2, result);
-    }
-    refine(check, message2) {
-      const getIssueProperties = (val) => {
-        if (typeof message2 === "string" || typeof message2 === "undefined") {
-          return {
-            message: message2
-          };
-        } else if (typeof message2 === "function") {
-          return message2(val);
-        } else {
-          return message2;
-        }
-      };
-      return this._refinement((val, ctx2) => {
-        const result = check(val);
-        const setError = () => ctx2.addIssue({
-          code: ZodIssueCode.custom,
-          ...getIssueProperties(val)
-        });
-        if (typeof Promise !== "undefined" && result instanceof Promise) {
-          return result.then((data2) => {
-            if (!data2) {
-              setError();
-              return false;
-            } else {
-              return true;
-            }
-          });
-        }
-        if (!result) {
-          setError();
-          return false;
-        } else {
-          return true;
-        }
-      });
-    }
-    refinement(check, refinementData) {
-      return this._refinement((val, ctx2) => {
-        if (!check(val)) {
-          ctx2.addIssue(typeof refinementData === "function" ? refinementData(val, ctx2) : refinementData);
-          return false;
-        } else {
-          return true;
-        }
-      });
-    }
-    _refinement(refinement) {
-      return new ZodEffects({
-        schema: this,
-        typeName: ZodFirstPartyTypeKind.ZodEffects,
-        effect: {
-          type: "refinement",
-          refinement
-        }
-      });
-    }
-    superRefine(refinement) {
-      return this._refinement(refinement);
-    }
-    constructor(def) {
-      this.spa = this.safeParseAsync;
-      this._def = def;
-      this.parse = this.parse.bind(this);
-      this.safeParse = this.safeParse.bind(this);
-      this.parseAsync = this.parseAsync.bind(this);
-      this.safeParseAsync = this.safeParseAsync.bind(this);
-      this.spa = this.spa.bind(this);
-      this.refine = this.refine.bind(this);
-      this.refinement = this.refinement.bind(this);
-      this.superRefine = this.superRefine.bind(this);
-      this.optional = this.optional.bind(this);
-      this.nullable = this.nullable.bind(this);
-      this.nullish = this.nullish.bind(this);
-      this.array = this.array.bind(this);
-      this.promise = this.promise.bind(this);
-      this.or = this.or.bind(this);
-      this.and = this.and.bind(this);
-      this.transform = this.transform.bind(this);
-      this.brand = this.brand.bind(this);
-      this.default = this.default.bind(this);
-      this.catch = this.catch.bind(this);
-      this.describe = this.describe.bind(this);
-      this.pipe = this.pipe.bind(this);
-      this.readonly = this.readonly.bind(this);
-      this.isNullable = this.isNullable.bind(this);
-      this.isOptional = this.isOptional.bind(this);
-      this["~standard"] = {
-        version: 1,
-        vendor: "zod",
-        validate: (data2) => this["~validate"](data2)
-      };
-    }
-    optional() {
-      return ZodOptional.create(this, this._def);
-    }
-    nullable() {
-      return ZodNullable.create(this, this._def);
-    }
-    nullish() {
-      return this.nullable().optional();
-    }
-    array() {
-      return ZodArray.create(this);
-    }
-    promise() {
-      return ZodPromise.create(this, this._def);
-    }
-    or(option2) {
-      return ZodUnion.create([
-        this,
-        option2
-      ], this._def);
-    }
-    and(incoming) {
-      return ZodIntersection.create(this, incoming, this._def);
-    }
-    transform(transform) {
-      return new ZodEffects({
-        ...processCreateParams(this._def),
-        schema: this,
-        typeName: ZodFirstPartyTypeKind.ZodEffects,
-        effect: {
-          type: "transform",
-          transform
-        }
-      });
-    }
-    default(def) {
-      const defaultValueFunc = typeof def === "function" ? def : () => def;
-      return new ZodDefault({
-        ...processCreateParams(this._def),
-        innerType: this,
-        defaultValue: defaultValueFunc,
-        typeName: ZodFirstPartyTypeKind.ZodDefault
-      });
-    }
-    brand() {
-      return new ZodBranded({
-        typeName: ZodFirstPartyTypeKind.ZodBranded,
-        type: this,
-        ...processCreateParams(this._def)
-      });
-    }
-    catch(def) {
-      const catchValueFunc = typeof def === "function" ? def : () => def;
-      return new ZodCatch({
-        ...processCreateParams(this._def),
-        innerType: this,
-        catchValue: catchValueFunc,
-        typeName: ZodFirstPartyTypeKind.ZodCatch
-      });
-    }
-    describe(description) {
-      const This = this.constructor;
-      return new This({
-        ...this._def,
-        description
-      });
-    }
-    pipe(target) {
-      return ZodPipeline.create(this, target);
-    }
-    readonly() {
-      return ZodReadonly.create(this);
-    }
-    isOptional() {
-      return this.safeParse(void 0).success;
-    }
-    isNullable() {
-      return this.safeParse(null).success;
-    }
-  }
-  const cuidRegex = /^c[^\s-]{8,}$/i;
-  const cuid2Regex = /^[0-9a-z]+$/;
-  const ulidRegex = /^[0-9A-HJKMNP-TV-Z]{26}$/i;
-  const uuidRegex = /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
-  const nanoidRegex = /^[a-z0-9_-]{21}$/i;
-  const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/;
-  const durationRegex = /^[-+]?P(?!$)(?:(?:[-+]?\d+Y)|(?:[-+]?\d+[.,]\d+Y$))?(?:(?:[-+]?\d+M)|(?:[-+]?\d+[.,]\d+M$))?(?:(?:[-+]?\d+W)|(?:[-+]?\d+[.,]\d+W$))?(?:(?:[-+]?\d+D)|(?:[-+]?\d+[.,]\d+D$))?(?:T(?=[\d+-])(?:(?:[-+]?\d+H)|(?:[-+]?\d+[.,]\d+H$))?(?:(?:[-+]?\d+M)|(?:[-+]?\d+[.,]\d+M$))?(?:[-+]?\d+(?:[.,]\d+)?S)?)??$/;
-  const emailRegex = /^(?!\.)(?!.*\.\.)([A-Z0-9_'+\-\.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i;
-  const _emojiRegex = `^(\\p{Extended_Pictographic}|\\p{Emoji_Component})+$`;
-  let emojiRegex;
-  const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/;
-  const ipv4CidrRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\/(3[0-2]|[12]?[0-9])$/;
-  const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
-  const ipv6CidrRegex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))\/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$/;
-  const base64Regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
-  const base64urlRegex = /^([0-9a-zA-Z-_]{4})*(([0-9a-zA-Z-_]{2}(==)?)|([0-9a-zA-Z-_]{3}(=)?))?$/;
-  const dateRegexSource = `((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))`;
-  const dateRegex = new RegExp(`^${dateRegexSource}$`);
-  function timeRegexSource(args) {
-    let secondsRegexSource = `[0-5]\\d`;
-    if (args.precision) {
-      secondsRegexSource = `${secondsRegexSource}\\.\\d{${args.precision}}`;
-    } else if (args.precision == null) {
-      secondsRegexSource = `${secondsRegexSource}(\\.\\d+)?`;
-    }
-    const secondsQuantifier = args.precision ? "+" : "?";
-    return `([01]\\d|2[0-3]):[0-5]\\d(:${secondsRegexSource})${secondsQuantifier}`;
-  }
-  function timeRegex(args) {
-    return new RegExp(`^${timeRegexSource(args)}$`);
-  }
-  function datetimeRegex(args) {
-    let regex2 = `${dateRegexSource}T${timeRegexSource(args)}`;
-    const opts = [];
-    opts.push(args.local ? `Z?` : `Z`);
-    if (args.offset) opts.push(`([+-]\\d{2}:?\\d{2})`);
-    regex2 = `${regex2}(${opts.join("|")})`;
-    return new RegExp(`^${regex2}$`);
-  }
-  function isValidIP(ip, version2) {
-    if ((version2 === "v4" || !version2) && ipv4Regex.test(ip)) {
-      return true;
-    }
-    if ((version2 === "v6" || !version2) && ipv6Regex.test(ip)) {
-      return true;
-    }
-    return false;
-  }
-  function isValidJWT(jwt, alg) {
-    if (!jwtRegex.test(jwt)) return false;
-    try {
-      const [header2] = jwt.split(".");
-      if (!header2) return false;
-      const base64 = header2.replace(/-/g, "+").replace(/_/g, "/").padEnd(header2.length + (4 - header2.length % 4) % 4, "=");
-      const decoded = JSON.parse(atob(base64));
-      if (typeof decoded !== "object" || decoded === null) return false;
-      if ("typ" in decoded && (decoded == null ? void 0 : decoded.typ) !== "JWT") return false;
-      if (!decoded.alg) return false;
-      if (alg && decoded.alg !== alg) return false;
-      return true;
-    } catch {
-      return false;
-    }
-  }
-  function isValidCidr(ip, version2) {
-    if ((version2 === "v4" || !version2) && ipv4CidrRegex.test(ip)) {
-      return true;
-    }
-    if ((version2 === "v6" || !version2) && ipv6CidrRegex.test(ip)) {
-      return true;
-    }
-    return false;
-  }
-  class ZodString extends ZodType {
-    _parse(input2) {
-      if (this._def.coerce) {
-        input2.data = String(input2.data);
-      }
-      const parsedType = this._getType(input2);
-      if (parsedType !== ZodParsedType.string) {
-        const ctx3 = this._getOrReturnCtx(input2);
-        addIssueToContext(ctx3, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.string,
-          received: ctx3.parsedType
-        });
-        return INVALID$1;
-      }
-      const status = new ParseStatus();
-      let ctx2 = void 0;
-      for (const check of this._def.checks) {
-        if (check.kind === "min") {
-          if (input2.data.length < check.value) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.too_small,
-              minimum: check.value,
-              type: "string",
-              inclusive: true,
-              exact: false,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "max") {
-          if (input2.data.length > check.value) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.too_big,
-              maximum: check.value,
-              type: "string",
-              inclusive: true,
-              exact: false,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "length") {
-          const tooBig = input2.data.length > check.value;
-          const tooSmall = input2.data.length < check.value;
-          if (tooBig || tooSmall) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            if (tooBig) {
-              addIssueToContext(ctx2, {
-                code: ZodIssueCode.too_big,
-                maximum: check.value,
-                type: "string",
-                inclusive: true,
-                exact: true,
-                message: check.message
-              });
-            } else if (tooSmall) {
-              addIssueToContext(ctx2, {
-                code: ZodIssueCode.too_small,
-                minimum: check.value,
-                type: "string",
-                inclusive: true,
-                exact: true,
-                message: check.message
-              });
-            }
-            status.dirty();
-          }
-        } else if (check.kind === "email") {
-          if (!emailRegex.test(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "email",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "emoji") {
-          if (!emojiRegex) {
-            emojiRegex = new RegExp(_emojiRegex, "u");
-          }
-          if (!emojiRegex.test(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "emoji",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "uuid") {
-          if (!uuidRegex.test(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "uuid",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "nanoid") {
-          if (!nanoidRegex.test(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "nanoid",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "cuid") {
-          if (!cuidRegex.test(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "cuid",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "cuid2") {
-          if (!cuid2Regex.test(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "cuid2",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "ulid") {
-          if (!ulidRegex.test(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "ulid",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "url") {
-          try {
-            new URL(input2.data);
-          } catch {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "url",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "regex") {
-          check.regex.lastIndex = 0;
-          const testResult = check.regex.test(input2.data);
-          if (!testResult) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "regex",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "trim") {
-          input2.data = input2.data.trim();
-        } else if (check.kind === "includes") {
-          if (!input2.data.includes(check.value, check.position)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.invalid_string,
-              validation: {
-                includes: check.value,
-                position: check.position
-              },
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "toLowerCase") {
-          input2.data = input2.data.toLowerCase();
-        } else if (check.kind === "toUpperCase") {
-          input2.data = input2.data.toUpperCase();
-        } else if (check.kind === "startsWith") {
-          if (!input2.data.startsWith(check.value)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.invalid_string,
-              validation: {
-                startsWith: check.value
-              },
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "endsWith") {
-          if (!input2.data.endsWith(check.value)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.invalid_string,
-              validation: {
-                endsWith: check.value
-              },
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "datetime") {
-          const regex2 = datetimeRegex(check);
-          if (!regex2.test(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.invalid_string,
-              validation: "datetime",
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "date") {
-          const regex2 = dateRegex;
-          if (!regex2.test(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.invalid_string,
-              validation: "date",
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "time") {
-          const regex2 = timeRegex(check);
-          if (!regex2.test(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.invalid_string,
-              validation: "time",
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "duration") {
-          if (!durationRegex.test(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "duration",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "ip") {
-          if (!isValidIP(input2.data, check.version)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "ip",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "jwt") {
-          if (!isValidJWT(input2.data, check.alg)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "jwt",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "cidr") {
-          if (!isValidCidr(input2.data, check.version)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "cidr",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "base64") {
-          if (!base64Regex.test(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "base64",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "base64url") {
-          if (!base64urlRegex.test(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              validation: "base64url",
-              code: ZodIssueCode.invalid_string,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else {
-          util.assertNever(check);
-        }
-      }
-      return {
-        status: status.value,
-        value: input2.data
-      };
-    }
-    _regex(regex2, validation2, message2) {
-      return this.refinement((data2) => regex2.test(data2), {
-        validation: validation2,
-        code: ZodIssueCode.invalid_string,
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    _addCheck(check) {
-      return new ZodString({
-        ...this._def,
-        checks: [
-          ...this._def.checks,
-          check
-        ]
-      });
-    }
-    email(message2) {
-      return this._addCheck({
-        kind: "email",
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    url(message2) {
-      return this._addCheck({
-        kind: "url",
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    emoji(message2) {
-      return this._addCheck({
-        kind: "emoji",
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    uuid(message2) {
-      return this._addCheck({
-        kind: "uuid",
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    nanoid(message2) {
-      return this._addCheck({
-        kind: "nanoid",
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    cuid(message2) {
-      return this._addCheck({
-        kind: "cuid",
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    cuid2(message2) {
-      return this._addCheck({
-        kind: "cuid2",
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    ulid(message2) {
-      return this._addCheck({
-        kind: "ulid",
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    base64(message2) {
-      return this._addCheck({
-        kind: "base64",
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    base64url(message2) {
-      return this._addCheck({
-        kind: "base64url",
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    jwt(options) {
-      return this._addCheck({
-        kind: "jwt",
-        ...errorUtil.errToObj(options)
-      });
-    }
-    ip(options) {
-      return this._addCheck({
-        kind: "ip",
-        ...errorUtil.errToObj(options)
-      });
-    }
-    cidr(options) {
-      return this._addCheck({
-        kind: "cidr",
-        ...errorUtil.errToObj(options)
-      });
-    }
-    datetime(options) {
-      if (typeof options === "string") {
-        return this._addCheck({
-          kind: "datetime",
-          precision: null,
-          offset: false,
-          local: false,
-          message: options
-        });
-      }
-      return this._addCheck({
-        kind: "datetime",
-        precision: typeof (options == null ? void 0 : options.precision) === "undefined" ? null : options == null ? void 0 : options.precision,
-        offset: (options == null ? void 0 : options.offset) ?? false,
-        local: (options == null ? void 0 : options.local) ?? false,
-        ...errorUtil.errToObj(options == null ? void 0 : options.message)
-      });
-    }
-    date(message2) {
-      return this._addCheck({
-        kind: "date",
-        message: message2
-      });
-    }
-    time(options) {
-      if (typeof options === "string") {
-        return this._addCheck({
-          kind: "time",
-          precision: null,
-          message: options
-        });
-      }
-      return this._addCheck({
-        kind: "time",
-        precision: typeof (options == null ? void 0 : options.precision) === "undefined" ? null : options == null ? void 0 : options.precision,
-        ...errorUtil.errToObj(options == null ? void 0 : options.message)
-      });
-    }
-    duration(message2) {
-      return this._addCheck({
-        kind: "duration",
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    regex(regex2, message2) {
-      return this._addCheck({
-        kind: "regex",
-        regex: regex2,
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    includes(value, options) {
-      return this._addCheck({
-        kind: "includes",
-        value,
-        position: options == null ? void 0 : options.position,
-        ...errorUtil.errToObj(options == null ? void 0 : options.message)
-      });
-    }
-    startsWith(value, message2) {
-      return this._addCheck({
-        kind: "startsWith",
-        value,
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    endsWith(value, message2) {
-      return this._addCheck({
-        kind: "endsWith",
-        value,
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    min(minLength, message2) {
-      return this._addCheck({
-        kind: "min",
-        value: minLength,
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    max(maxLength, message2) {
-      return this._addCheck({
-        kind: "max",
-        value: maxLength,
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    length(len2, message2) {
-      return this._addCheck({
-        kind: "length",
-        value: len2,
-        ...errorUtil.errToObj(message2)
-      });
-    }
-    nonempty(message2) {
-      return this.min(1, errorUtil.errToObj(message2));
-    }
-    trim() {
-      return new ZodString({
-        ...this._def,
-        checks: [
-          ...this._def.checks,
-          {
-            kind: "trim"
-          }
-        ]
-      });
-    }
-    toLowerCase() {
-      return new ZodString({
-        ...this._def,
-        checks: [
-          ...this._def.checks,
-          {
-            kind: "toLowerCase"
-          }
-        ]
-      });
-    }
-    toUpperCase() {
-      return new ZodString({
-        ...this._def,
-        checks: [
-          ...this._def.checks,
-          {
-            kind: "toUpperCase"
-          }
-        ]
-      });
-    }
-    get isDatetime() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "datetime");
-    }
-    get isDate() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "date");
-    }
-    get isTime() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "time");
-    }
-    get isDuration() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "duration");
-    }
-    get isEmail() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "email");
-    }
-    get isURL() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "url");
-    }
-    get isEmoji() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "emoji");
-    }
-    get isUUID() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "uuid");
-    }
-    get isNANOID() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "nanoid");
-    }
-    get isCUID() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "cuid");
-    }
-    get isCUID2() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "cuid2");
-    }
-    get isULID() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "ulid");
-    }
-    get isIP() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "ip");
-    }
-    get isCIDR() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "cidr");
-    }
-    get isBase64() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "base64");
-    }
-    get isBase64url() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "base64url");
-    }
-    get minLength() {
-      let min2 = null;
-      for (const ch2 of this._def.checks) {
-        if (ch2.kind === "min") {
-          if (min2 === null || ch2.value > min2) min2 = ch2.value;
-        }
-      }
-      return min2;
-    }
-    get maxLength() {
-      let max2 = null;
-      for (const ch2 of this._def.checks) {
-        if (ch2.kind === "max") {
-          if (max2 === null || ch2.value < max2) max2 = ch2.value;
-        }
-      }
-      return max2;
-    }
-  }
-  ZodString.create = (params) => {
-    return new ZodString({
-      checks: [],
-      typeName: ZodFirstPartyTypeKind.ZodString,
-      coerce: (params == null ? void 0 : params.coerce) ?? false,
-      ...processCreateParams(params)
-    });
-  };
-  function floatSafeRemainder(val, step) {
-    const valDecCount = (val.toString().split(".")[1] || "").length;
-    const stepDecCount = (step.toString().split(".")[1] || "").length;
-    const decCount = valDecCount > stepDecCount ? valDecCount : stepDecCount;
-    const valInt = Number.parseInt(val.toFixed(decCount).replace(".", ""));
-    const stepInt = Number.parseInt(step.toFixed(decCount).replace(".", ""));
-    return valInt % stepInt / 10 ** decCount;
-  }
-  class ZodNumber extends ZodType {
-    constructor() {
-      super(...arguments);
-      this.min = this.gte;
-      this.max = this.lte;
-      this.step = this.multipleOf;
-    }
-    _parse(input2) {
-      if (this._def.coerce) {
-        input2.data = Number(input2.data);
-      }
-      const parsedType = this._getType(input2);
-      if (parsedType !== ZodParsedType.number) {
-        const ctx3 = this._getOrReturnCtx(input2);
-        addIssueToContext(ctx3, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.number,
-          received: ctx3.parsedType
-        });
-        return INVALID$1;
-      }
-      let ctx2 = void 0;
-      const status = new ParseStatus();
-      for (const check of this._def.checks) {
-        if (check.kind === "int") {
-          if (!util.isInteger(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.invalid_type,
-              expected: "integer",
-              received: "float",
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "min") {
-          const tooSmall = check.inclusive ? input2.data < check.value : input2.data <= check.value;
-          if (tooSmall) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.too_small,
-              minimum: check.value,
-              type: "number",
-              inclusive: check.inclusive,
-              exact: false,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "max") {
-          const tooBig = check.inclusive ? input2.data > check.value : input2.data >= check.value;
-          if (tooBig) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.too_big,
-              maximum: check.value,
-              type: "number",
-              inclusive: check.inclusive,
-              exact: false,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "multipleOf") {
-          if (floatSafeRemainder(input2.data, check.value) !== 0) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.not_multiple_of,
-              multipleOf: check.value,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "finite") {
-          if (!Number.isFinite(input2.data)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.not_finite,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else {
-          util.assertNever(check);
-        }
-      }
-      return {
-        status: status.value,
-        value: input2.data
-      };
-    }
-    gte(value, message2) {
-      return this.setLimit("min", value, true, errorUtil.toString(message2));
-    }
-    gt(value, message2) {
-      return this.setLimit("min", value, false, errorUtil.toString(message2));
-    }
-    lte(value, message2) {
-      return this.setLimit("max", value, true, errorUtil.toString(message2));
-    }
-    lt(value, message2) {
-      return this.setLimit("max", value, false, errorUtil.toString(message2));
-    }
-    setLimit(kind, value, inclusive, message2) {
-      return new ZodNumber({
-        ...this._def,
-        checks: [
-          ...this._def.checks,
-          {
-            kind,
-            value,
-            inclusive,
-            message: errorUtil.toString(message2)
-          }
-        ]
-      });
-    }
-    _addCheck(check) {
-      return new ZodNumber({
-        ...this._def,
-        checks: [
-          ...this._def.checks,
-          check
-        ]
-      });
-    }
-    int(message2) {
-      return this._addCheck({
-        kind: "int",
-        message: errorUtil.toString(message2)
-      });
-    }
-    positive(message2) {
-      return this._addCheck({
-        kind: "min",
-        value: 0,
-        inclusive: false,
-        message: errorUtil.toString(message2)
-      });
-    }
-    negative(message2) {
-      return this._addCheck({
-        kind: "max",
-        value: 0,
-        inclusive: false,
-        message: errorUtil.toString(message2)
-      });
-    }
-    nonpositive(message2) {
-      return this._addCheck({
-        kind: "max",
-        value: 0,
-        inclusive: true,
-        message: errorUtil.toString(message2)
-      });
-    }
-    nonnegative(message2) {
-      return this._addCheck({
-        kind: "min",
-        value: 0,
-        inclusive: true,
-        message: errorUtil.toString(message2)
-      });
-    }
-    multipleOf(value, message2) {
-      return this._addCheck({
-        kind: "multipleOf",
-        value,
-        message: errorUtil.toString(message2)
-      });
-    }
-    finite(message2) {
-      return this._addCheck({
-        kind: "finite",
-        message: errorUtil.toString(message2)
-      });
-    }
-    safe(message2) {
-      return this._addCheck({
-        kind: "min",
-        inclusive: true,
-        value: Number.MIN_SAFE_INTEGER,
-        message: errorUtil.toString(message2)
-      })._addCheck({
-        kind: "max",
-        inclusive: true,
-        value: Number.MAX_SAFE_INTEGER,
-        message: errorUtil.toString(message2)
-      });
-    }
-    get minValue() {
-      let min2 = null;
-      for (const ch2 of this._def.checks) {
-        if (ch2.kind === "min") {
-          if (min2 === null || ch2.value > min2) min2 = ch2.value;
-        }
-      }
-      return min2;
-    }
-    get maxValue() {
-      let max2 = null;
-      for (const ch2 of this._def.checks) {
-        if (ch2.kind === "max") {
-          if (max2 === null || ch2.value < max2) max2 = ch2.value;
-        }
-      }
-      return max2;
-    }
-    get isInt() {
-      return !!this._def.checks.find((ch2) => ch2.kind === "int" || ch2.kind === "multipleOf" && util.isInteger(ch2.value));
-    }
-    get isFinite() {
-      let max2 = null;
-      let min2 = null;
-      for (const ch2 of this._def.checks) {
-        if (ch2.kind === "finite" || ch2.kind === "int" || ch2.kind === "multipleOf") {
-          return true;
-        } else if (ch2.kind === "min") {
-          if (min2 === null || ch2.value > min2) min2 = ch2.value;
-        } else if (ch2.kind === "max") {
-          if (max2 === null || ch2.value < max2) max2 = ch2.value;
-        }
-      }
-      return Number.isFinite(min2) && Number.isFinite(max2);
-    }
-  }
-  ZodNumber.create = (params) => {
-    return new ZodNumber({
-      checks: [],
-      typeName: ZodFirstPartyTypeKind.ZodNumber,
-      coerce: (params == null ? void 0 : params.coerce) || false,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodBigInt extends ZodType {
-    constructor() {
-      super(...arguments);
-      this.min = this.gte;
-      this.max = this.lte;
-    }
-    _parse(input2) {
-      if (this._def.coerce) {
-        try {
-          input2.data = BigInt(input2.data);
-        } catch {
-          return this._getInvalidInput(input2);
-        }
-      }
-      const parsedType = this._getType(input2);
-      if (parsedType !== ZodParsedType.bigint) {
-        return this._getInvalidInput(input2);
-      }
-      let ctx2 = void 0;
-      const status = new ParseStatus();
-      for (const check of this._def.checks) {
-        if (check.kind === "min") {
-          const tooSmall = check.inclusive ? input2.data < check.value : input2.data <= check.value;
-          if (tooSmall) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.too_small,
-              type: "bigint",
-              minimum: check.value,
-              inclusive: check.inclusive,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "max") {
-          const tooBig = check.inclusive ? input2.data > check.value : input2.data >= check.value;
-          if (tooBig) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.too_big,
-              type: "bigint",
-              maximum: check.value,
-              inclusive: check.inclusive,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "multipleOf") {
-          if (input2.data % check.value !== BigInt(0)) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.not_multiple_of,
-              multipleOf: check.value,
-              message: check.message
-            });
-            status.dirty();
-          }
-        } else {
-          util.assertNever(check);
-        }
-      }
-      return {
-        status: status.value,
-        value: input2.data
-      };
-    }
-    _getInvalidInput(input2) {
-      const ctx2 = this._getOrReturnCtx(input2);
-      addIssueToContext(ctx2, {
-        code: ZodIssueCode.invalid_type,
-        expected: ZodParsedType.bigint,
-        received: ctx2.parsedType
-      });
-      return INVALID$1;
-    }
-    gte(value, message2) {
-      return this.setLimit("min", value, true, errorUtil.toString(message2));
-    }
-    gt(value, message2) {
-      return this.setLimit("min", value, false, errorUtil.toString(message2));
-    }
-    lte(value, message2) {
-      return this.setLimit("max", value, true, errorUtil.toString(message2));
-    }
-    lt(value, message2) {
-      return this.setLimit("max", value, false, errorUtil.toString(message2));
-    }
-    setLimit(kind, value, inclusive, message2) {
-      return new ZodBigInt({
-        ...this._def,
-        checks: [
-          ...this._def.checks,
-          {
-            kind,
-            value,
-            inclusive,
-            message: errorUtil.toString(message2)
-          }
-        ]
-      });
-    }
-    _addCheck(check) {
-      return new ZodBigInt({
-        ...this._def,
-        checks: [
-          ...this._def.checks,
-          check
-        ]
-      });
-    }
-    positive(message2) {
-      return this._addCheck({
-        kind: "min",
-        value: BigInt(0),
-        inclusive: false,
-        message: errorUtil.toString(message2)
-      });
-    }
-    negative(message2) {
-      return this._addCheck({
-        kind: "max",
-        value: BigInt(0),
-        inclusive: false,
-        message: errorUtil.toString(message2)
-      });
-    }
-    nonpositive(message2) {
-      return this._addCheck({
-        kind: "max",
-        value: BigInt(0),
-        inclusive: true,
-        message: errorUtil.toString(message2)
-      });
-    }
-    nonnegative(message2) {
-      return this._addCheck({
-        kind: "min",
-        value: BigInt(0),
-        inclusive: true,
-        message: errorUtil.toString(message2)
-      });
-    }
-    multipleOf(value, message2) {
-      return this._addCheck({
-        kind: "multipleOf",
-        value,
-        message: errorUtil.toString(message2)
-      });
-    }
-    get minValue() {
-      let min2 = null;
-      for (const ch2 of this._def.checks) {
-        if (ch2.kind === "min") {
-          if (min2 === null || ch2.value > min2) min2 = ch2.value;
-        }
-      }
-      return min2;
-    }
-    get maxValue() {
-      let max2 = null;
-      for (const ch2 of this._def.checks) {
-        if (ch2.kind === "max") {
-          if (max2 === null || ch2.value < max2) max2 = ch2.value;
-        }
-      }
-      return max2;
-    }
-  }
-  ZodBigInt.create = (params) => {
-    return new ZodBigInt({
-      checks: [],
-      typeName: ZodFirstPartyTypeKind.ZodBigInt,
-      coerce: (params == null ? void 0 : params.coerce) ?? false,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodBoolean extends ZodType {
-    _parse(input2) {
-      if (this._def.coerce) {
-        input2.data = Boolean(input2.data);
-      }
-      const parsedType = this._getType(input2);
-      if (parsedType !== ZodParsedType.boolean) {
-        const ctx2 = this._getOrReturnCtx(input2);
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.boolean,
-          received: ctx2.parsedType
-        });
-        return INVALID$1;
-      }
-      return OK(input2.data);
-    }
-  }
-  ZodBoolean.create = (params) => {
-    return new ZodBoolean({
-      typeName: ZodFirstPartyTypeKind.ZodBoolean,
-      coerce: (params == null ? void 0 : params.coerce) || false,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodDate extends ZodType {
-    _parse(input2) {
-      if (this._def.coerce) {
-        input2.data = new Date(input2.data);
-      }
-      const parsedType = this._getType(input2);
-      if (parsedType !== ZodParsedType.date) {
-        const ctx3 = this._getOrReturnCtx(input2);
-        addIssueToContext(ctx3, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.date,
-          received: ctx3.parsedType
-        });
-        return INVALID$1;
-      }
-      if (Number.isNaN(input2.data.getTime())) {
-        const ctx3 = this._getOrReturnCtx(input2);
-        addIssueToContext(ctx3, {
-          code: ZodIssueCode.invalid_date
-        });
-        return INVALID$1;
-      }
-      const status = new ParseStatus();
-      let ctx2 = void 0;
-      for (const check of this._def.checks) {
-        if (check.kind === "min") {
-          if (input2.data.getTime() < check.value) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.too_small,
-              message: check.message,
-              inclusive: true,
-              exact: false,
-              minimum: check.value,
-              type: "date"
-            });
-            status.dirty();
-          }
-        } else if (check.kind === "max") {
-          if (input2.data.getTime() > check.value) {
-            ctx2 = this._getOrReturnCtx(input2, ctx2);
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.too_big,
-              message: check.message,
-              inclusive: true,
-              exact: false,
-              maximum: check.value,
-              type: "date"
-            });
-            status.dirty();
-          }
-        } else {
-          util.assertNever(check);
-        }
-      }
-      return {
-        status: status.value,
-        value: new Date(input2.data.getTime())
-      };
-    }
-    _addCheck(check) {
-      return new ZodDate({
-        ...this._def,
-        checks: [
-          ...this._def.checks,
-          check
-        ]
-      });
-    }
-    min(minDate, message2) {
-      return this._addCheck({
-        kind: "min",
-        value: minDate.getTime(),
-        message: errorUtil.toString(message2)
-      });
-    }
-    max(maxDate, message2) {
-      return this._addCheck({
-        kind: "max",
-        value: maxDate.getTime(),
-        message: errorUtil.toString(message2)
-      });
-    }
-    get minDate() {
-      let min2 = null;
-      for (const ch2 of this._def.checks) {
-        if (ch2.kind === "min") {
-          if (min2 === null || ch2.value > min2) min2 = ch2.value;
-        }
-      }
-      return min2 != null ? new Date(min2) : null;
-    }
-    get maxDate() {
-      let max2 = null;
-      for (const ch2 of this._def.checks) {
-        if (ch2.kind === "max") {
-          if (max2 === null || ch2.value < max2) max2 = ch2.value;
-        }
-      }
-      return max2 != null ? new Date(max2) : null;
-    }
-  }
-  ZodDate.create = (params) => {
-    return new ZodDate({
-      checks: [],
-      coerce: (params == null ? void 0 : params.coerce) || false,
-      typeName: ZodFirstPartyTypeKind.ZodDate,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodSymbol extends ZodType {
-    _parse(input2) {
-      const parsedType = this._getType(input2);
-      if (parsedType !== ZodParsedType.symbol) {
-        const ctx2 = this._getOrReturnCtx(input2);
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.symbol,
-          received: ctx2.parsedType
-        });
-        return INVALID$1;
-      }
-      return OK(input2.data);
-    }
-  }
-  ZodSymbol.create = (params) => {
-    return new ZodSymbol({
-      typeName: ZodFirstPartyTypeKind.ZodSymbol,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodUndefined extends ZodType {
-    _parse(input2) {
-      const parsedType = this._getType(input2);
-      if (parsedType !== ZodParsedType.undefined) {
-        const ctx2 = this._getOrReturnCtx(input2);
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.undefined,
-          received: ctx2.parsedType
-        });
-        return INVALID$1;
-      }
-      return OK(input2.data);
-    }
-  }
-  ZodUndefined.create = (params) => {
-    return new ZodUndefined({
-      typeName: ZodFirstPartyTypeKind.ZodUndefined,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodNull extends ZodType {
-    _parse(input2) {
-      const parsedType = this._getType(input2);
-      if (parsedType !== ZodParsedType.null) {
-        const ctx2 = this._getOrReturnCtx(input2);
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.null,
-          received: ctx2.parsedType
-        });
-        return INVALID$1;
-      }
-      return OK(input2.data);
-    }
-  }
-  ZodNull.create = (params) => {
-    return new ZodNull({
-      typeName: ZodFirstPartyTypeKind.ZodNull,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodAny extends ZodType {
-    constructor() {
-      super(...arguments);
-      this._any = true;
-    }
-    _parse(input2) {
-      return OK(input2.data);
-    }
-  }
-  ZodAny.create = (params) => {
-    return new ZodAny({
-      typeName: ZodFirstPartyTypeKind.ZodAny,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodUnknown extends ZodType {
-    constructor() {
-      super(...arguments);
-      this._unknown = true;
-    }
-    _parse(input2) {
-      return OK(input2.data);
-    }
-  }
-  ZodUnknown.create = (params) => {
-    return new ZodUnknown({
-      typeName: ZodFirstPartyTypeKind.ZodUnknown,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodNever extends ZodType {
-    _parse(input2) {
-      const ctx2 = this._getOrReturnCtx(input2);
-      addIssueToContext(ctx2, {
-        code: ZodIssueCode.invalid_type,
-        expected: ZodParsedType.never,
-        received: ctx2.parsedType
-      });
-      return INVALID$1;
-    }
-  }
-  ZodNever.create = (params) => {
-    return new ZodNever({
-      typeName: ZodFirstPartyTypeKind.ZodNever,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodVoid extends ZodType {
-    _parse(input2) {
-      const parsedType = this._getType(input2);
-      if (parsedType !== ZodParsedType.undefined) {
-        const ctx2 = this._getOrReturnCtx(input2);
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.void,
-          received: ctx2.parsedType
-        });
-        return INVALID$1;
-      }
-      return OK(input2.data);
-    }
-  }
-  ZodVoid.create = (params) => {
-    return new ZodVoid({
-      typeName: ZodFirstPartyTypeKind.ZodVoid,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodArray extends ZodType {
-    _parse(input2) {
-      const { ctx: ctx2, status } = this._processInputParams(input2);
-      const def = this._def;
-      if (ctx2.parsedType !== ZodParsedType.array) {
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.array,
-          received: ctx2.parsedType
-        });
-        return INVALID$1;
-      }
-      if (def.exactLength !== null) {
-        const tooBig = ctx2.data.length > def.exactLength.value;
-        const tooSmall = ctx2.data.length < def.exactLength.value;
-        if (tooBig || tooSmall) {
-          addIssueToContext(ctx2, {
-            code: tooBig ? ZodIssueCode.too_big : ZodIssueCode.too_small,
-            minimum: tooSmall ? def.exactLength.value : void 0,
-            maximum: tooBig ? def.exactLength.value : void 0,
-            type: "array",
-            inclusive: true,
-            exact: true,
-            message: def.exactLength.message
-          });
-          status.dirty();
-        }
-      }
-      if (def.minLength !== null) {
-        if (ctx2.data.length < def.minLength.value) {
-          addIssueToContext(ctx2, {
-            code: ZodIssueCode.too_small,
-            minimum: def.minLength.value,
-            type: "array",
-            inclusive: true,
-            exact: false,
-            message: def.minLength.message
-          });
-          status.dirty();
-        }
-      }
-      if (def.maxLength !== null) {
-        if (ctx2.data.length > def.maxLength.value) {
-          addIssueToContext(ctx2, {
-            code: ZodIssueCode.too_big,
-            maximum: def.maxLength.value,
-            type: "array",
-            inclusive: true,
-            exact: false,
-            message: def.maxLength.message
-          });
-          status.dirty();
-        }
-      }
-      if (ctx2.common.async) {
-        return Promise.all([
-          ...ctx2.data
-        ].map((item2, i2) => {
-          return def.type._parseAsync(new ParseInputLazyPath(ctx2, item2, ctx2.path, i2));
-        })).then((result2) => {
-          return ParseStatus.mergeArray(status, result2);
-        });
-      }
-      const result = [
-        ...ctx2.data
-      ].map((item2, i2) => {
-        return def.type._parseSync(new ParseInputLazyPath(ctx2, item2, ctx2.path, i2));
-      });
-      return ParseStatus.mergeArray(status, result);
-    }
-    get element() {
-      return this._def.type;
-    }
-    min(minLength, message2) {
-      return new ZodArray({
-        ...this._def,
-        minLength: {
-          value: minLength,
-          message: errorUtil.toString(message2)
-        }
-      });
-    }
-    max(maxLength, message2) {
-      return new ZodArray({
-        ...this._def,
-        maxLength: {
-          value: maxLength,
-          message: errorUtil.toString(message2)
-        }
-      });
-    }
-    length(len2, message2) {
-      return new ZodArray({
-        ...this._def,
-        exactLength: {
-          value: len2,
-          message: errorUtil.toString(message2)
-        }
-      });
-    }
-    nonempty(message2) {
-      return this.min(1, message2);
-    }
-  }
-  ZodArray.create = (schema, params) => {
-    return new ZodArray({
-      type: schema,
-      minLength: null,
-      maxLength: null,
-      exactLength: null,
-      typeName: ZodFirstPartyTypeKind.ZodArray,
-      ...processCreateParams(params)
-    });
-  };
-  function deepPartialify(schema) {
-    if (schema instanceof ZodObject) {
-      const newShape = {};
-      for (const key2 in schema.shape) {
-        const fieldSchema = schema.shape[key2];
-        newShape[key2] = ZodOptional.create(deepPartialify(fieldSchema));
-      }
-      return new ZodObject({
-        ...schema._def,
-        shape: () => newShape
-      });
-    } else if (schema instanceof ZodArray) {
-      return new ZodArray({
-        ...schema._def,
-        type: deepPartialify(schema.element)
-      });
-    } else if (schema instanceof ZodOptional) {
-      return ZodOptional.create(deepPartialify(schema.unwrap()));
-    } else if (schema instanceof ZodNullable) {
-      return ZodNullable.create(deepPartialify(schema.unwrap()));
-    } else if (schema instanceof ZodTuple) {
-      return ZodTuple.create(schema.items.map((item2) => deepPartialify(item2)));
-    } else {
-      return schema;
-    }
-  }
-  class ZodObject extends ZodType {
-    constructor() {
-      super(...arguments);
-      this._cached = null;
-      this.nonstrict = this.passthrough;
-      this.augment = this.extend;
-    }
-    _getCached() {
-      if (this._cached !== null) return this._cached;
-      const shape = this._def.shape();
-      const keys2 = util.objectKeys(shape);
-      this._cached = {
-        shape,
-        keys: keys2
-      };
-      return this._cached;
-    }
-    _parse(input2) {
-      const parsedType = this._getType(input2);
-      if (parsedType !== ZodParsedType.object) {
-        const ctx3 = this._getOrReturnCtx(input2);
-        addIssueToContext(ctx3, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.object,
-          received: ctx3.parsedType
-        });
-        return INVALID$1;
-      }
-      const { status, ctx: ctx2 } = this._processInputParams(input2);
-      const { shape, keys: shapeKeys } = this._getCached();
-      const extraKeys = [];
-      if (!(this._def.catchall instanceof ZodNever && this._def.unknownKeys === "strip")) {
-        for (const key2 in ctx2.data) {
-          if (!shapeKeys.includes(key2)) {
-            extraKeys.push(key2);
-          }
-        }
-      }
-      const pairs = [];
-      for (const key2 of shapeKeys) {
-        const keyValidator = shape[key2];
-        const value = ctx2.data[key2];
-        pairs.push({
-          key: {
-            status: "valid",
-            value: key2
-          },
-          value: keyValidator._parse(new ParseInputLazyPath(ctx2, value, ctx2.path, key2)),
-          alwaysSet: key2 in ctx2.data
-        });
-      }
-      if (this._def.catchall instanceof ZodNever) {
-        const unknownKeys = this._def.unknownKeys;
-        if (unknownKeys === "passthrough") {
-          for (const key2 of extraKeys) {
-            pairs.push({
-              key: {
-                status: "valid",
-                value: key2
-              },
-              value: {
-                status: "valid",
-                value: ctx2.data[key2]
-              }
-            });
-          }
-        } else if (unknownKeys === "strict") {
-          if (extraKeys.length > 0) {
-            addIssueToContext(ctx2, {
-              code: ZodIssueCode.unrecognized_keys,
-              keys: extraKeys
-            });
-            status.dirty();
-          }
-        } else if (unknownKeys === "strip") ;
-        else {
-          throw new Error(`Internal ZodObject error: invalid unknownKeys value.`);
-        }
-      } else {
-        const catchall = this._def.catchall;
-        for (const key2 of extraKeys) {
-          const value = ctx2.data[key2];
-          pairs.push({
-            key: {
-              status: "valid",
-              value: key2
-            },
-            value: catchall._parse(new ParseInputLazyPath(ctx2, value, ctx2.path, key2)),
-            alwaysSet: key2 in ctx2.data
-          });
-        }
-      }
-      if (ctx2.common.async) {
-        return Promise.resolve().then(async () => {
-          const syncPairs = [];
-          for (const pair of pairs) {
-            const key2 = await pair.key;
-            const value = await pair.value;
-            syncPairs.push({
-              key: key2,
-              value,
-              alwaysSet: pair.alwaysSet
-            });
-          }
-          return syncPairs;
-        }).then((syncPairs) => {
-          return ParseStatus.mergeObjectSync(status, syncPairs);
-        });
-      } else {
-        return ParseStatus.mergeObjectSync(status, pairs);
-      }
-    }
-    get shape() {
-      return this._def.shape();
-    }
-    strict(message2) {
-      errorUtil.errToObj;
-      return new ZodObject({
-        ...this._def,
-        unknownKeys: "strict",
-        ...message2 !== void 0 ? {
-          errorMap: (issue, ctx2) => {
-            var _a2, _b2;
-            const defaultError = ((_b2 = (_a2 = this._def).errorMap) == null ? void 0 : _b2.call(_a2, issue, ctx2).message) ?? ctx2.defaultError;
-            if (issue.code === "unrecognized_keys") return {
-              message: errorUtil.errToObj(message2).message ?? defaultError
-            };
-            return {
-              message: defaultError
-            };
-          }
-        } : {}
-      });
-    }
-    strip() {
-      return new ZodObject({
-        ...this._def,
-        unknownKeys: "strip"
-      });
-    }
-    passthrough() {
-      return new ZodObject({
-        ...this._def,
-        unknownKeys: "passthrough"
-      });
-    }
-    extend(augmentation) {
-      return new ZodObject({
-        ...this._def,
-        shape: () => ({
-          ...this._def.shape(),
-          ...augmentation
-        })
-      });
-    }
-    merge(merging) {
-      const merged = new ZodObject({
-        unknownKeys: merging._def.unknownKeys,
-        catchall: merging._def.catchall,
-        shape: () => ({
-          ...this._def.shape(),
-          ...merging._def.shape()
-        }),
-        typeName: ZodFirstPartyTypeKind.ZodObject
-      });
-      return merged;
-    }
-    setKey(key2, schema) {
-      return this.augment({
-        [key2]: schema
-      });
-    }
-    catchall(index2) {
-      return new ZodObject({
-        ...this._def,
-        catchall: index2
-      });
-    }
-    pick(mask2) {
-      const shape = {};
-      for (const key2 of util.objectKeys(mask2)) {
-        if (mask2[key2] && this.shape[key2]) {
-          shape[key2] = this.shape[key2];
-        }
-      }
-      return new ZodObject({
-        ...this._def,
-        shape: () => shape
-      });
-    }
-    omit(mask2) {
-      const shape = {};
-      for (const key2 of util.objectKeys(this.shape)) {
-        if (!mask2[key2]) {
-          shape[key2] = this.shape[key2];
-        }
-      }
-      return new ZodObject({
-        ...this._def,
-        shape: () => shape
-      });
-    }
-    deepPartial() {
-      return deepPartialify(this);
-    }
-    partial(mask2) {
-      const newShape = {};
-      for (const key2 of util.objectKeys(this.shape)) {
-        const fieldSchema = this.shape[key2];
-        if (mask2 && !mask2[key2]) {
-          newShape[key2] = fieldSchema;
-        } else {
-          newShape[key2] = fieldSchema.optional();
-        }
-      }
-      return new ZodObject({
-        ...this._def,
-        shape: () => newShape
-      });
-    }
-    required(mask2) {
-      const newShape = {};
-      for (const key2 of util.objectKeys(this.shape)) {
-        if (mask2 && !mask2[key2]) {
-          newShape[key2] = this.shape[key2];
-        } else {
-          const fieldSchema = this.shape[key2];
-          let newField = fieldSchema;
-          while (newField instanceof ZodOptional) {
-            newField = newField._def.innerType;
-          }
-          newShape[key2] = newField;
-        }
-      }
-      return new ZodObject({
-        ...this._def,
-        shape: () => newShape
-      });
-    }
-    keyof() {
-      return createZodEnum(util.objectKeys(this.shape));
-    }
-  }
-  ZodObject.create = (shape, params) => {
-    return new ZodObject({
-      shape: () => shape,
-      unknownKeys: "strip",
-      catchall: ZodNever.create(),
-      typeName: ZodFirstPartyTypeKind.ZodObject,
-      ...processCreateParams(params)
-    });
-  };
-  ZodObject.strictCreate = (shape, params) => {
-    return new ZodObject({
-      shape: () => shape,
-      unknownKeys: "strict",
-      catchall: ZodNever.create(),
-      typeName: ZodFirstPartyTypeKind.ZodObject,
-      ...processCreateParams(params)
-    });
-  };
-  ZodObject.lazycreate = (shape, params) => {
-    return new ZodObject({
-      shape,
-      unknownKeys: "strip",
-      catchall: ZodNever.create(),
-      typeName: ZodFirstPartyTypeKind.ZodObject,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodUnion extends ZodType {
-    _parse(input2) {
-      const { ctx: ctx2 } = this._processInputParams(input2);
-      const options = this._def.options;
-      function handleResults(results) {
-        for (const result of results) {
-          if (result.result.status === "valid") {
-            return result.result;
-          }
-        }
-        for (const result of results) {
-          if (result.result.status === "dirty") {
-            ctx2.common.issues.push(...result.ctx.common.issues);
-            return result.result;
-          }
-        }
-        const unionErrors = results.map((result) => new ZodError(result.ctx.common.issues));
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_union,
-          unionErrors
-        });
-        return INVALID$1;
-      }
-      if (ctx2.common.async) {
-        return Promise.all(options.map(async (option2) => {
-          const childCtx = {
-            ...ctx2,
-            common: {
-              ...ctx2.common,
-              issues: []
-            },
-            parent: null
-          };
-          return {
-            result: await option2._parseAsync({
-              data: ctx2.data,
-              path: ctx2.path,
-              parent: childCtx
-            }),
-            ctx: childCtx
-          };
-        })).then(handleResults);
-      } else {
-        let dirty = void 0;
-        const issues = [];
-        for (const option2 of options) {
-          const childCtx = {
-            ...ctx2,
-            common: {
-              ...ctx2.common,
-              issues: []
-            },
-            parent: null
-          };
-          const result = option2._parseSync({
-            data: ctx2.data,
-            path: ctx2.path,
-            parent: childCtx
-          });
-          if (result.status === "valid") {
-            return result;
-          } else if (result.status === "dirty" && !dirty) {
-            dirty = {
-              result,
-              ctx: childCtx
-            };
-          }
-          if (childCtx.common.issues.length) {
-            issues.push(childCtx.common.issues);
-          }
-        }
-        if (dirty) {
-          ctx2.common.issues.push(...dirty.ctx.common.issues);
-          return dirty.result;
-        }
-        const unionErrors = issues.map((issues2) => new ZodError(issues2));
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_union,
-          unionErrors
-        });
-        return INVALID$1;
-      }
-    }
-    get options() {
-      return this._def.options;
-    }
-  }
-  ZodUnion.create = (types2, params) => {
-    return new ZodUnion({
-      options: types2,
-      typeName: ZodFirstPartyTypeKind.ZodUnion,
-      ...processCreateParams(params)
-    });
-  };
-  const getDiscriminator = (type) => {
-    if (type instanceof ZodLazy) {
-      return getDiscriminator(type.schema);
-    } else if (type instanceof ZodEffects) {
-      return getDiscriminator(type.innerType());
-    } else if (type instanceof ZodLiteral) {
-      return [
-        type.value
-      ];
-    } else if (type instanceof ZodEnum) {
-      return type.options;
-    } else if (type instanceof ZodNativeEnum) {
-      return util.objectValues(type.enum);
-    } else if (type instanceof ZodDefault) {
-      return getDiscriminator(type._def.innerType);
-    } else if (type instanceof ZodUndefined) {
-      return [
-        void 0
-      ];
-    } else if (type instanceof ZodNull) {
-      return [
-        null
-      ];
-    } else if (type instanceof ZodOptional) {
-      return [
-        void 0,
-        ...getDiscriminator(type.unwrap())
-      ];
-    } else if (type instanceof ZodNullable) {
-      return [
-        null,
-        ...getDiscriminator(type.unwrap())
-      ];
-    } else if (type instanceof ZodBranded) {
-      return getDiscriminator(type.unwrap());
-    } else if (type instanceof ZodReadonly) {
-      return getDiscriminator(type.unwrap());
-    } else if (type instanceof ZodCatch) {
-      return getDiscriminator(type._def.innerType);
-    } else {
-      return [];
-    }
-  };
-  class ZodDiscriminatedUnion extends ZodType {
-    _parse(input2) {
-      const { ctx: ctx2 } = this._processInputParams(input2);
-      if (ctx2.parsedType !== ZodParsedType.object) {
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.object,
-          received: ctx2.parsedType
-        });
-        return INVALID$1;
-      }
-      const discriminator = this.discriminator;
-      const discriminatorValue = ctx2.data[discriminator];
-      const option2 = this.optionsMap.get(discriminatorValue);
-      if (!option2) {
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_union_discriminator,
-          options: Array.from(this.optionsMap.keys()),
-          path: [
-            discriminator
-          ]
-        });
-        return INVALID$1;
-      }
-      if (ctx2.common.async) {
-        return option2._parseAsync({
-          data: ctx2.data,
-          path: ctx2.path,
-          parent: ctx2
-        });
-      } else {
-        return option2._parseSync({
-          data: ctx2.data,
-          path: ctx2.path,
-          parent: ctx2
-        });
-      }
-    }
-    get discriminator() {
-      return this._def.discriminator;
-    }
-    get options() {
-      return this._def.options;
-    }
-    get optionsMap() {
-      return this._def.optionsMap;
-    }
-    static create(discriminator, options, params) {
-      const optionsMap = /* @__PURE__ */ new Map();
-      for (const type of options) {
-        const discriminatorValues = getDiscriminator(type.shape[discriminator]);
-        if (!discriminatorValues.length) {
-          throw new Error(`A discriminator value for key \`${discriminator}\` could not be extracted from all schema options`);
-        }
-        for (const value of discriminatorValues) {
-          if (optionsMap.has(value)) {
-            throw new Error(`Discriminator property ${String(discriminator)} has duplicate value ${String(value)}`);
-          }
-          optionsMap.set(value, type);
-        }
-      }
-      return new ZodDiscriminatedUnion({
-        typeName: ZodFirstPartyTypeKind.ZodDiscriminatedUnion,
-        discriminator,
-        options,
-        optionsMap,
-        ...processCreateParams(params)
-      });
-    }
-  }
-  function mergeValues(a2, b2) {
-    const aType = getParsedType(a2);
-    const bType = getParsedType(b2);
-    if (a2 === b2) {
-      return {
-        valid: true,
-        data: a2
-      };
-    } else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {
-      const bKeys = util.objectKeys(b2);
-      const sharedKeys = util.objectKeys(a2).filter((key2) => bKeys.indexOf(key2) !== -1);
-      const newObj = {
-        ...a2,
-        ...b2
-      };
-      for (const key2 of sharedKeys) {
-        const sharedValue = mergeValues(a2[key2], b2[key2]);
-        if (!sharedValue.valid) {
-          return {
-            valid: false
-          };
-        }
-        newObj[key2] = sharedValue.data;
-      }
-      return {
-        valid: true,
-        data: newObj
-      };
-    } else if (aType === ZodParsedType.array && bType === ZodParsedType.array) {
-      if (a2.length !== b2.length) {
-        return {
-          valid: false
-        };
-      }
-      const newArray = [];
-      for (let index2 = 0; index2 < a2.length; index2++) {
-        const itemA = a2[index2];
-        const itemB = b2[index2];
-        const sharedValue = mergeValues(itemA, itemB);
-        if (!sharedValue.valid) {
-          return {
-            valid: false
-          };
-        }
-        newArray.push(sharedValue.data);
-      }
-      return {
-        valid: true,
-        data: newArray
-      };
-    } else if (aType === ZodParsedType.date && bType === ZodParsedType.date && +a2 === +b2) {
-      return {
-        valid: true,
-        data: a2
-      };
-    } else {
-      return {
-        valid: false
-      };
-    }
-  }
-  class ZodIntersection extends ZodType {
-    _parse(input2) {
-      const { status, ctx: ctx2 } = this._processInputParams(input2);
-      const handleParsed = (parsedLeft, parsedRight) => {
-        if (isAborted(parsedLeft) || isAborted(parsedRight)) {
-          return INVALID$1;
-        }
-        const merged = mergeValues(parsedLeft.value, parsedRight.value);
-        if (!merged.valid) {
-          addIssueToContext(ctx2, {
-            code: ZodIssueCode.invalid_intersection_types
-          });
-          return INVALID$1;
-        }
-        if (isDirty(parsedLeft) || isDirty(parsedRight)) {
-          status.dirty();
-        }
-        return {
-          status: status.value,
-          value: merged.data
-        };
-      };
-      if (ctx2.common.async) {
-        return Promise.all([
-          this._def.left._parseAsync({
-            data: ctx2.data,
-            path: ctx2.path,
-            parent: ctx2
-          }),
-          this._def.right._parseAsync({
-            data: ctx2.data,
-            path: ctx2.path,
-            parent: ctx2
-          })
-        ]).then(([left, right]) => handleParsed(left, right));
-      } else {
-        return handleParsed(this._def.left._parseSync({
-          data: ctx2.data,
-          path: ctx2.path,
-          parent: ctx2
-        }), this._def.right._parseSync({
-          data: ctx2.data,
-          path: ctx2.path,
-          parent: ctx2
-        }));
-      }
-    }
-  }
-  ZodIntersection.create = (left, right, params) => {
-    return new ZodIntersection({
-      left,
-      right,
-      typeName: ZodFirstPartyTypeKind.ZodIntersection,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodTuple extends ZodType {
-    _parse(input2) {
-      const { status, ctx: ctx2 } = this._processInputParams(input2);
-      if (ctx2.parsedType !== ZodParsedType.array) {
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.array,
-          received: ctx2.parsedType
-        });
-        return INVALID$1;
-      }
-      if (ctx2.data.length < this._def.items.length) {
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.too_small,
-          minimum: this._def.items.length,
-          inclusive: true,
-          exact: false,
-          type: "array"
-        });
-        return INVALID$1;
-      }
-      const rest2 = this._def.rest;
-      if (!rest2 && ctx2.data.length > this._def.items.length) {
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.too_big,
-          maximum: this._def.items.length,
-          inclusive: true,
-          exact: false,
-          type: "array"
-        });
-        status.dirty();
-      }
-      const items = [
-        ...ctx2.data
-      ].map((item2, itemIndex) => {
-        const schema = this._def.items[itemIndex] || this._def.rest;
-        if (!schema) return null;
-        return schema._parse(new ParseInputLazyPath(ctx2, item2, ctx2.path, itemIndex));
-      }).filter((x2) => !!x2);
-      if (ctx2.common.async) {
-        return Promise.all(items).then((results) => {
-          return ParseStatus.mergeArray(status, results);
-        });
-      } else {
-        return ParseStatus.mergeArray(status, items);
-      }
-    }
-    get items() {
-      return this._def.items;
-    }
-    rest(rest2) {
-      return new ZodTuple({
-        ...this._def,
-        rest: rest2
-      });
-    }
-  }
-  ZodTuple.create = (schemas, params) => {
-    if (!Array.isArray(schemas)) {
-      throw new Error("You must pass an array of schemas to z.tuple([ ... ])");
-    }
-    return new ZodTuple({
-      items: schemas,
-      typeName: ZodFirstPartyTypeKind.ZodTuple,
-      rest: null,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodMap extends ZodType {
-    get keySchema() {
-      return this._def.keyType;
-    }
-    get valueSchema() {
-      return this._def.valueType;
-    }
-    _parse(input2) {
-      const { status, ctx: ctx2 } = this._processInputParams(input2);
-      if (ctx2.parsedType !== ZodParsedType.map) {
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.map,
-          received: ctx2.parsedType
-        });
-        return INVALID$1;
-      }
-      const keyType = this._def.keyType;
-      const valueType = this._def.valueType;
-      const pairs = [
-        ...ctx2.data.entries()
-      ].map(([key2, value], index2) => {
-        return {
-          key: keyType._parse(new ParseInputLazyPath(ctx2, key2, ctx2.path, [
-            index2,
-            "key"
-          ])),
-          value: valueType._parse(new ParseInputLazyPath(ctx2, value, ctx2.path, [
-            index2,
-            "value"
-          ]))
-        };
-      });
-      if (ctx2.common.async) {
-        const finalMap = /* @__PURE__ */ new Map();
-        return Promise.resolve().then(async () => {
-          for (const pair of pairs) {
-            const key2 = await pair.key;
-            const value = await pair.value;
-            if (key2.status === "aborted" || value.status === "aborted") {
-              return INVALID$1;
-            }
-            if (key2.status === "dirty" || value.status === "dirty") {
-              status.dirty();
-            }
-            finalMap.set(key2.value, value.value);
-          }
-          return {
-            status: status.value,
-            value: finalMap
-          };
-        });
-      } else {
-        const finalMap = /* @__PURE__ */ new Map();
-        for (const pair of pairs) {
-          const key2 = pair.key;
-          const value = pair.value;
-          if (key2.status === "aborted" || value.status === "aborted") {
-            return INVALID$1;
-          }
-          if (key2.status === "dirty" || value.status === "dirty") {
-            status.dirty();
-          }
-          finalMap.set(key2.value, value.value);
-        }
-        return {
-          status: status.value,
-          value: finalMap
-        };
-      }
-    }
-  }
-  ZodMap.create = (keyType, valueType, params) => {
-    return new ZodMap({
-      valueType,
-      keyType,
-      typeName: ZodFirstPartyTypeKind.ZodMap,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodSet extends ZodType {
-    _parse(input2) {
-      const { status, ctx: ctx2 } = this._processInputParams(input2);
-      if (ctx2.parsedType !== ZodParsedType.set) {
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.set,
-          received: ctx2.parsedType
-        });
-        return INVALID$1;
-      }
-      const def = this._def;
-      if (def.minSize !== null) {
-        if (ctx2.data.size < def.minSize.value) {
-          addIssueToContext(ctx2, {
-            code: ZodIssueCode.too_small,
-            minimum: def.minSize.value,
-            type: "set",
-            inclusive: true,
-            exact: false,
-            message: def.minSize.message
-          });
-          status.dirty();
-        }
-      }
-      if (def.maxSize !== null) {
-        if (ctx2.data.size > def.maxSize.value) {
-          addIssueToContext(ctx2, {
-            code: ZodIssueCode.too_big,
-            maximum: def.maxSize.value,
-            type: "set",
-            inclusive: true,
-            exact: false,
-            message: def.maxSize.message
-          });
-          status.dirty();
-        }
-      }
-      const valueType = this._def.valueType;
-      function finalizeSet(elements2) {
-        const parsedSet = /* @__PURE__ */ new Set();
-        for (const element2 of elements2) {
-          if (element2.status === "aborted") return INVALID$1;
-          if (element2.status === "dirty") status.dirty();
-          parsedSet.add(element2.value);
-        }
-        return {
-          status: status.value,
-          value: parsedSet
-        };
-      }
-      const elements = [
-        ...ctx2.data.values()
-      ].map((item2, i2) => valueType._parse(new ParseInputLazyPath(ctx2, item2, ctx2.path, i2)));
-      if (ctx2.common.async) {
-        return Promise.all(elements).then((elements2) => finalizeSet(elements2));
-      } else {
-        return finalizeSet(elements);
-      }
-    }
-    min(minSize, message2) {
-      return new ZodSet({
-        ...this._def,
-        minSize: {
-          value: minSize,
-          message: errorUtil.toString(message2)
-        }
-      });
-    }
-    max(maxSize, message2) {
-      return new ZodSet({
-        ...this._def,
-        maxSize: {
-          value: maxSize,
-          message: errorUtil.toString(message2)
-        }
-      });
-    }
-    size(size, message2) {
-      return this.min(size, message2).max(size, message2);
-    }
-    nonempty(message2) {
-      return this.min(1, message2);
-    }
-  }
-  ZodSet.create = (valueType, params) => {
-    return new ZodSet({
-      valueType,
-      minSize: null,
-      maxSize: null,
-      typeName: ZodFirstPartyTypeKind.ZodSet,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodLazy extends ZodType {
-    get schema() {
-      return this._def.getter();
-    }
-    _parse(input2) {
-      const { ctx: ctx2 } = this._processInputParams(input2);
-      const lazySchema = this._def.getter();
-      return lazySchema._parse({
-        data: ctx2.data,
-        path: ctx2.path,
-        parent: ctx2
-      });
-    }
-  }
-  ZodLazy.create = (getter, params) => {
-    return new ZodLazy({
-      getter,
-      typeName: ZodFirstPartyTypeKind.ZodLazy,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodLiteral extends ZodType {
-    _parse(input2) {
-      if (input2.data !== this._def.value) {
-        const ctx2 = this._getOrReturnCtx(input2);
-        addIssueToContext(ctx2, {
-          received: ctx2.data,
-          code: ZodIssueCode.invalid_literal,
-          expected: this._def.value
-        });
-        return INVALID$1;
-      }
-      return {
-        status: "valid",
-        value: input2.data
-      };
-    }
-    get value() {
-      return this._def.value;
-    }
-  }
-  ZodLiteral.create = (value, params) => {
-    return new ZodLiteral({
-      value,
-      typeName: ZodFirstPartyTypeKind.ZodLiteral,
-      ...processCreateParams(params)
-    });
-  };
-  function createZodEnum(values, params) {
-    return new ZodEnum({
-      values,
-      typeName: ZodFirstPartyTypeKind.ZodEnum,
-      ...processCreateParams(params)
-    });
-  }
-  class ZodEnum extends ZodType {
-    _parse(input2) {
-      if (typeof input2.data !== "string") {
-        const ctx2 = this._getOrReturnCtx(input2);
-        const expectedValues = this._def.values;
-        addIssueToContext(ctx2, {
-          expected: util.joinValues(expectedValues),
-          received: ctx2.parsedType,
-          code: ZodIssueCode.invalid_type
-        });
-        return INVALID$1;
-      }
-      if (!this._cache) {
-        this._cache = new Set(this._def.values);
-      }
-      if (!this._cache.has(input2.data)) {
-        const ctx2 = this._getOrReturnCtx(input2);
-        const expectedValues = this._def.values;
-        addIssueToContext(ctx2, {
-          received: ctx2.data,
-          code: ZodIssueCode.invalid_enum_value,
-          options: expectedValues
-        });
-        return INVALID$1;
-      }
-      return OK(input2.data);
-    }
-    get options() {
-      return this._def.values;
-    }
-    get enum() {
-      const enumValues = {};
-      for (const val of this._def.values) {
-        enumValues[val] = val;
-      }
-      return enumValues;
-    }
-    get Values() {
-      const enumValues = {};
-      for (const val of this._def.values) {
-        enumValues[val] = val;
-      }
-      return enumValues;
-    }
-    get Enum() {
-      const enumValues = {};
-      for (const val of this._def.values) {
-        enumValues[val] = val;
-      }
-      return enumValues;
-    }
-    extract(values, newDef = this._def) {
-      return ZodEnum.create(values, {
-        ...this._def,
-        ...newDef
-      });
-    }
-    exclude(values, newDef = this._def) {
-      return ZodEnum.create(this.options.filter((opt) => !values.includes(opt)), {
-        ...this._def,
-        ...newDef
-      });
-    }
-  }
-  ZodEnum.create = createZodEnum;
-  class ZodNativeEnum extends ZodType {
-    _parse(input2) {
-      const nativeEnumValues = util.getValidEnumValues(this._def.values);
-      const ctx2 = this._getOrReturnCtx(input2);
-      if (ctx2.parsedType !== ZodParsedType.string && ctx2.parsedType !== ZodParsedType.number) {
-        const expectedValues = util.objectValues(nativeEnumValues);
-        addIssueToContext(ctx2, {
-          expected: util.joinValues(expectedValues),
-          received: ctx2.parsedType,
-          code: ZodIssueCode.invalid_type
-        });
-        return INVALID$1;
-      }
-      if (!this._cache) {
-        this._cache = new Set(util.getValidEnumValues(this._def.values));
-      }
-      if (!this._cache.has(input2.data)) {
-        const expectedValues = util.objectValues(nativeEnumValues);
-        addIssueToContext(ctx2, {
-          received: ctx2.data,
-          code: ZodIssueCode.invalid_enum_value,
-          options: expectedValues
-        });
-        return INVALID$1;
-      }
-      return OK(input2.data);
-    }
-    get enum() {
-      return this._def.values;
-    }
-  }
-  ZodNativeEnum.create = (values, params) => {
-    return new ZodNativeEnum({
-      values,
-      typeName: ZodFirstPartyTypeKind.ZodNativeEnum,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodPromise extends ZodType {
-    unwrap() {
-      return this._def.type;
-    }
-    _parse(input2) {
-      const { ctx: ctx2 } = this._processInputParams(input2);
-      if (ctx2.parsedType !== ZodParsedType.promise && ctx2.common.async === false) {
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.promise,
-          received: ctx2.parsedType
-        });
-        return INVALID$1;
-      }
-      const promisified = ctx2.parsedType === ZodParsedType.promise ? ctx2.data : Promise.resolve(ctx2.data);
-      return OK(promisified.then((data2) => {
-        return this._def.type.parseAsync(data2, {
-          path: ctx2.path,
-          errorMap: ctx2.common.contextualErrorMap
-        });
-      }));
-    }
-  }
-  ZodPromise.create = (schema, params) => {
-    return new ZodPromise({
-      type: schema,
-      typeName: ZodFirstPartyTypeKind.ZodPromise,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodEffects extends ZodType {
-    innerType() {
-      return this._def.schema;
-    }
-    sourceType() {
-      return this._def.schema._def.typeName === ZodFirstPartyTypeKind.ZodEffects ? this._def.schema.sourceType() : this._def.schema;
-    }
-    _parse(input2) {
-      const { status, ctx: ctx2 } = this._processInputParams(input2);
-      const effect2 = this._def.effect || null;
-      const checkCtx = {
-        addIssue: (arg) => {
-          addIssueToContext(ctx2, arg);
-          if (arg.fatal) {
-            status.abort();
-          } else {
-            status.dirty();
-          }
-        },
-        get path() {
-          return ctx2.path;
-        }
-      };
-      checkCtx.addIssue = checkCtx.addIssue.bind(checkCtx);
-      if (effect2.type === "preprocess") {
-        const processed = effect2.transform(ctx2.data, checkCtx);
-        if (ctx2.common.async) {
-          return Promise.resolve(processed).then(async (processed2) => {
-            if (status.value === "aborted") return INVALID$1;
-            const result = await this._def.schema._parseAsync({
-              data: processed2,
-              path: ctx2.path,
-              parent: ctx2
-            });
-            if (result.status === "aborted") return INVALID$1;
-            if (result.status === "dirty") return DIRTY(result.value);
-            if (status.value === "dirty") return DIRTY(result.value);
-            return result;
-          });
-        } else {
-          if (status.value === "aborted") return INVALID$1;
-          const result = this._def.schema._parseSync({
-            data: processed,
-            path: ctx2.path,
-            parent: ctx2
-          });
-          if (result.status === "aborted") return INVALID$1;
-          if (result.status === "dirty") return DIRTY(result.value);
-          if (status.value === "dirty") return DIRTY(result.value);
-          return result;
-        }
-      }
-      if (effect2.type === "refinement") {
-        const executeRefinement = (acc) => {
-          const result = effect2.refinement(acc, checkCtx);
-          if (ctx2.common.async) {
-            return Promise.resolve(result);
-          }
-          if (result instanceof Promise) {
-            throw new Error("Async refinement encountered during synchronous parse operation. Use .parseAsync instead.");
-          }
-          return acc;
-        };
-        if (ctx2.common.async === false) {
-          const inner = this._def.schema._parseSync({
-            data: ctx2.data,
-            path: ctx2.path,
-            parent: ctx2
-          });
-          if (inner.status === "aborted") return INVALID$1;
-          if (inner.status === "dirty") status.dirty();
-          executeRefinement(inner.value);
-          return {
-            status: status.value,
-            value: inner.value
-          };
-        } else {
-          return this._def.schema._parseAsync({
-            data: ctx2.data,
-            path: ctx2.path,
-            parent: ctx2
-          }).then((inner) => {
-            if (inner.status === "aborted") return INVALID$1;
-            if (inner.status === "dirty") status.dirty();
-            return executeRefinement(inner.value).then(() => {
-              return {
-                status: status.value,
-                value: inner.value
-              };
-            });
-          });
-        }
-      }
-      if (effect2.type === "transform") {
-        if (ctx2.common.async === false) {
-          const base2 = this._def.schema._parseSync({
-            data: ctx2.data,
-            path: ctx2.path,
-            parent: ctx2
-          });
-          if (!isValid(base2)) return INVALID$1;
-          const result = effect2.transform(base2.value, checkCtx);
-          if (result instanceof Promise) {
-            throw new Error(`Asynchronous transform encountered during synchronous parse operation. Use .parseAsync instead.`);
-          }
-          return {
-            status: status.value,
-            value: result
-          };
-        } else {
-          return this._def.schema._parseAsync({
-            data: ctx2.data,
-            path: ctx2.path,
-            parent: ctx2
-          }).then((base2) => {
-            if (!isValid(base2)) return INVALID$1;
-            return Promise.resolve(effect2.transform(base2.value, checkCtx)).then((result) => ({
-              status: status.value,
-              value: result
-            }));
-          });
-        }
-      }
-      util.assertNever(effect2);
-    }
-  }
-  ZodEffects.create = (schema, effect2, params) => {
-    return new ZodEffects({
-      schema,
-      typeName: ZodFirstPartyTypeKind.ZodEffects,
-      effect: effect2,
-      ...processCreateParams(params)
-    });
-  };
-  ZodEffects.createWithPreprocess = (preprocess2, schema, params) => {
-    return new ZodEffects({
-      schema,
-      effect: {
-        type: "preprocess",
-        transform: preprocess2
-      },
-      typeName: ZodFirstPartyTypeKind.ZodEffects,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodOptional extends ZodType {
-    _parse(input2) {
-      const parsedType = this._getType(input2);
-      if (parsedType === ZodParsedType.undefined) {
-        return OK(void 0);
-      }
-      return this._def.innerType._parse(input2);
-    }
-    unwrap() {
-      return this._def.innerType;
-    }
-  }
-  ZodOptional.create = (type, params) => {
-    return new ZodOptional({
-      innerType: type,
-      typeName: ZodFirstPartyTypeKind.ZodOptional,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodNullable extends ZodType {
-    _parse(input2) {
-      const parsedType = this._getType(input2);
-      if (parsedType === ZodParsedType.null) {
-        return OK(null);
-      }
-      return this._def.innerType._parse(input2);
-    }
-    unwrap() {
-      return this._def.innerType;
-    }
-  }
-  ZodNullable.create = (type, params) => {
-    return new ZodNullable({
-      innerType: type,
-      typeName: ZodFirstPartyTypeKind.ZodNullable,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodDefault extends ZodType {
-    _parse(input2) {
-      const { ctx: ctx2 } = this._processInputParams(input2);
-      let data2 = ctx2.data;
-      if (ctx2.parsedType === ZodParsedType.undefined) {
-        data2 = this._def.defaultValue();
-      }
-      return this._def.innerType._parse({
-        data: data2,
-        path: ctx2.path,
-        parent: ctx2
-      });
-    }
-    removeDefault() {
-      return this._def.innerType;
-    }
-  }
-  ZodDefault.create = (type, params) => {
-    return new ZodDefault({
-      innerType: type,
-      typeName: ZodFirstPartyTypeKind.ZodDefault,
-      defaultValue: typeof params.default === "function" ? params.default : () => params.default,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodCatch extends ZodType {
-    _parse(input2) {
-      const { ctx: ctx2 } = this._processInputParams(input2);
-      const newCtx = {
-        ...ctx2,
-        common: {
-          ...ctx2.common,
-          issues: []
-        }
-      };
-      const result = this._def.innerType._parse({
-        data: newCtx.data,
-        path: newCtx.path,
-        parent: {
-          ...newCtx
-        }
-      });
-      if (isAsync(result)) {
-        return result.then((result2) => {
-          return {
-            status: "valid",
-            value: result2.status === "valid" ? result2.value : this._def.catchValue({
-              get error() {
-                return new ZodError(newCtx.common.issues);
-              },
-              input: newCtx.data
-            })
-          };
-        });
-      } else {
-        return {
-          status: "valid",
-          value: result.status === "valid" ? result.value : this._def.catchValue({
-            get error() {
-              return new ZodError(newCtx.common.issues);
-            },
-            input: newCtx.data
-          })
-        };
-      }
-    }
-    removeCatch() {
-      return this._def.innerType;
-    }
-  }
-  ZodCatch.create = (type, params) => {
-    return new ZodCatch({
-      innerType: type,
-      typeName: ZodFirstPartyTypeKind.ZodCatch,
-      catchValue: typeof params.catch === "function" ? params.catch : () => params.catch,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodNaN extends ZodType {
-    _parse(input2) {
-      const parsedType = this._getType(input2);
-      if (parsedType !== ZodParsedType.nan) {
-        const ctx2 = this._getOrReturnCtx(input2);
-        addIssueToContext(ctx2, {
-          code: ZodIssueCode.invalid_type,
-          expected: ZodParsedType.nan,
-          received: ctx2.parsedType
-        });
-        return INVALID$1;
-      }
-      return {
-        status: "valid",
-        value: input2.data
-      };
-    }
-  }
-  ZodNaN.create = (params) => {
-    return new ZodNaN({
-      typeName: ZodFirstPartyTypeKind.ZodNaN,
-      ...processCreateParams(params)
-    });
-  };
-  class ZodBranded extends ZodType {
-    _parse(input2) {
-      const { ctx: ctx2 } = this._processInputParams(input2);
-      const data2 = ctx2.data;
-      return this._def.type._parse({
-        data: data2,
-        path: ctx2.path,
-        parent: ctx2
-      });
-    }
-    unwrap() {
-      return this._def.type;
-    }
-  }
-  class ZodPipeline extends ZodType {
-    _parse(input2) {
-      const { status, ctx: ctx2 } = this._processInputParams(input2);
-      if (ctx2.common.async) {
-        const handleAsync = async () => {
-          const inResult = await this._def.in._parseAsync({
-            data: ctx2.data,
-            path: ctx2.path,
-            parent: ctx2
-          });
-          if (inResult.status === "aborted") return INVALID$1;
-          if (inResult.status === "dirty") {
-            status.dirty();
-            return DIRTY(inResult.value);
-          } else {
-            return this._def.out._parseAsync({
-              data: inResult.value,
-              path: ctx2.path,
-              parent: ctx2
-            });
-          }
-        };
-        return handleAsync();
-      } else {
-        const inResult = this._def.in._parseSync({
-          data: ctx2.data,
-          path: ctx2.path,
-          parent: ctx2
-        });
-        if (inResult.status === "aborted") return INVALID$1;
-        if (inResult.status === "dirty") {
-          status.dirty();
-          return {
-            status: "dirty",
-            value: inResult.value
-          };
-        } else {
-          return this._def.out._parseSync({
-            data: inResult.value,
-            path: ctx2.path,
-            parent: ctx2
-          });
-        }
-      }
-    }
-    static create(a2, b2) {
-      return new ZodPipeline({
-        in: a2,
-        out: b2,
-        typeName: ZodFirstPartyTypeKind.ZodPipeline
-      });
-    }
-  }
-  class ZodReadonly extends ZodType {
-    _parse(input2) {
-      const result = this._def.innerType._parse(input2);
-      const freeze = (data2) => {
-        if (isValid(data2)) {
-          data2.value = Object.freeze(data2.value);
-        }
-        return data2;
-      };
-      return isAsync(result) ? result.then((data2) => freeze(data2)) : freeze(result);
-    }
-    unwrap() {
-      return this._def.innerType;
-    }
-  }
-  ZodReadonly.create = (type, params) => {
-    return new ZodReadonly({
-      innerType: type,
-      typeName: ZodFirstPartyTypeKind.ZodReadonly,
-      ...processCreateParams(params)
-    });
-  };
-  var ZodFirstPartyTypeKind;
-  (function(ZodFirstPartyTypeKind2) {
-    ZodFirstPartyTypeKind2["ZodString"] = "ZodString";
-    ZodFirstPartyTypeKind2["ZodNumber"] = "ZodNumber";
-    ZodFirstPartyTypeKind2["ZodNaN"] = "ZodNaN";
-    ZodFirstPartyTypeKind2["ZodBigInt"] = "ZodBigInt";
-    ZodFirstPartyTypeKind2["ZodBoolean"] = "ZodBoolean";
-    ZodFirstPartyTypeKind2["ZodDate"] = "ZodDate";
-    ZodFirstPartyTypeKind2["ZodSymbol"] = "ZodSymbol";
-    ZodFirstPartyTypeKind2["ZodUndefined"] = "ZodUndefined";
-    ZodFirstPartyTypeKind2["ZodNull"] = "ZodNull";
-    ZodFirstPartyTypeKind2["ZodAny"] = "ZodAny";
-    ZodFirstPartyTypeKind2["ZodUnknown"] = "ZodUnknown";
-    ZodFirstPartyTypeKind2["ZodNever"] = "ZodNever";
-    ZodFirstPartyTypeKind2["ZodVoid"] = "ZodVoid";
-    ZodFirstPartyTypeKind2["ZodArray"] = "ZodArray";
-    ZodFirstPartyTypeKind2["ZodObject"] = "ZodObject";
-    ZodFirstPartyTypeKind2["ZodUnion"] = "ZodUnion";
-    ZodFirstPartyTypeKind2["ZodDiscriminatedUnion"] = "ZodDiscriminatedUnion";
-    ZodFirstPartyTypeKind2["ZodIntersection"] = "ZodIntersection";
-    ZodFirstPartyTypeKind2["ZodTuple"] = "ZodTuple";
-    ZodFirstPartyTypeKind2["ZodRecord"] = "ZodRecord";
-    ZodFirstPartyTypeKind2["ZodMap"] = "ZodMap";
-    ZodFirstPartyTypeKind2["ZodSet"] = "ZodSet";
-    ZodFirstPartyTypeKind2["ZodFunction"] = "ZodFunction";
-    ZodFirstPartyTypeKind2["ZodLazy"] = "ZodLazy";
-    ZodFirstPartyTypeKind2["ZodLiteral"] = "ZodLiteral";
-    ZodFirstPartyTypeKind2["ZodEnum"] = "ZodEnum";
-    ZodFirstPartyTypeKind2["ZodEffects"] = "ZodEffects";
-    ZodFirstPartyTypeKind2["ZodNativeEnum"] = "ZodNativeEnum";
-    ZodFirstPartyTypeKind2["ZodOptional"] = "ZodOptional";
-    ZodFirstPartyTypeKind2["ZodNullable"] = "ZodNullable";
-    ZodFirstPartyTypeKind2["ZodDefault"] = "ZodDefault";
-    ZodFirstPartyTypeKind2["ZodCatch"] = "ZodCatch";
-    ZodFirstPartyTypeKind2["ZodPromise"] = "ZodPromise";
-    ZodFirstPartyTypeKind2["ZodBranded"] = "ZodBranded";
-    ZodFirstPartyTypeKind2["ZodPipeline"] = "ZodPipeline";
-    ZodFirstPartyTypeKind2["ZodReadonly"] = "ZodReadonly";
-  })(ZodFirstPartyTypeKind || (ZodFirstPartyTypeKind = {}));
-  const stringType = ZodString.create;
-  const numberType = ZodNumber.create;
-  ZodBigInt.create;
-  const booleanType = ZodBoolean.create;
-  ZodDate.create;
-  const unknownType = ZodUnknown.create;
-  ZodNever.create;
-  const arrayType = ZodArray.create;
-  const objectType = ZodObject.create;
-  const unionType = ZodUnion.create;
-  const discriminatedUnionType = ZodDiscriminatedUnion.create;
-  ZodIntersection.create;
-  ZodTuple.create;
-  const literalType = ZodLiteral.create;
-  const enumType = ZodEnum.create;
-  ZodPromise.create;
-  ZodOptional.create;
-  ZodNullable.create;
-  const preprocessType = ZodEffects.createWithPreprocess;
-  const coerce = {
-    string: (arg) => ZodString.create({
-      ...arg,
-      coerce: true
-    }),
-    number: (arg) => ZodNumber.create({
-      ...arg,
-      coerce: true
-    }),
-    boolean: (arg) => ZodBoolean.create({
-      ...arg,
-      coerce: true
-    }),
-    bigint: (arg) => ZodBigInt.create({
-      ...arg,
-      coerce: true
-    }),
-    date: (arg) => ZodDate.create({
-      ...arg,
-      coerce: true
-    })
-  };
   var __defProp$3 = Object.defineProperty;
   var __defNormalProp$3 = (obj, key2, value) => key2 in obj ? __defProp$3(obj, key2, {
     enumerable: true,
@@ -61711,7 +64467,7 @@ vec4 colormap(float intensity, float opacity) {
     Channels: Channel,
     ...rest2
   }));
-  const ImageSchema$1 = objectType({
+  const ImageSchema = objectType({
     AquisitionDate: stringType().optional().default(""),
     Description: unknownType().optional().default(""),
     Pixels: PixelsSchema
@@ -61722,7 +64478,7 @@ vec4 colormap(float intensity, float opacity) {
     })
   }).transform(flattenAttributes);
   const OmeSchema = objectType({
-    Image: preprocessType(ensureArray, ImageSchema$1.array())
+    Image: preprocessType(ensureArray, ImageSchema.array())
   });
   function fromString(str2) {
     const raw2 = parseXML(str2);
@@ -75309,7 +78065,7 @@ void main() {
     }
     return "showOpenFilePicker" in self;
   })(), t = e ? Promise.resolve().then(function() {
-    return c$5;
+    return c$4;
   }) : Promise.resolve().then(function() {
     return h$2;
   });
@@ -75317,14 +78073,14 @@ void main() {
     return (await t).default(...e2);
   }
   e ? Promise.resolve().then(function() {
-    return y$1;
+    return y;
   }) : Promise.resolve().then(function() {
     return b;
   });
   e ? Promise.resolve().then(function() {
-    return m$1;
+    return m;
   }) : Promise.resolve().then(function() {
-    return _$3;
+    return _$2;
   });
   const s$3 = async (e2) => {
     const t2 = await e2.getFile();
@@ -75353,11 +78109,11 @@ void main() {
       excludeAcceptAllOption: e2[0].excludeAcceptAllOption || false
     }), r2 = await Promise.all(n2.map(s$3));
     return e2[0].multiple ? r2 : r2[0];
-  }, c$5 = {
+  }, c$4 = {
     __proto__: null,
     default: l$2
   };
-  function u$5(e2) {
+  function u$2(e2) {
     function t2(e3) {
       if (Object(e3) !== e3) return Promise.reject(new TypeError(e3 + " is not an object."));
       var t3 = e3.done;
@@ -75368,9 +78124,9 @@ void main() {
         };
       });
     }
-    return u$5 = function(e3) {
+    return u$2 = function(e3) {
       this.s = e3, this.n = e3.next;
-    }, u$5.prototype = {
+    }, u$2.prototype = {
       s: null,
       n: null,
       next: function() {
@@ -75387,9 +78143,9 @@ void main() {
         var n2 = this.s.return;
         return void 0 === n2 ? Promise.reject(e3) : t2(n2.apply(this.s, arguments));
       }
-    }, new u$5(e2);
+    }, new u$2(e2);
   }
-  const p$2 = async (e2, t2, n2 = e2.name, r2) => {
+  const p$1 = async (e2, t2, n2 = e2.name, r2) => {
     const i2 = [], a2 = [];
     var o2, s2 = false, l2 = false;
     try {
@@ -75397,7 +78153,7 @@ void main() {
         var t3, n3, r3, i3 = 2;
         for ("undefined" != typeof Symbol && (n3 = Symbol.asyncIterator, r3 = Symbol.iterator); i3--; ) {
           if (n3 && null != (t3 = e3[n3])) return t3.call(e3);
-          if (r3 && null != (t3 = e3[r3])) return new u$5(t3.call(e3));
+          if (r3 && null != (t3 = e3[r3])) return new u$2(t3.call(e3));
           n3 = "@@asyncIterator", r3 = "@@iterator";
         }
         throw new TypeError("Object is not async iterable");
@@ -75407,7 +78163,7 @@ void main() {
           configurable: true,
           enumerable: true,
           get: () => s3
-        })))) : "directory" !== o3.kind || !t2 || r2 && r2(o3) || i2.push(p$2(o3, t2, s3, r2));
+        })))) : "directory" !== o3.kind || !t2 || r2 && r2(o3) || i2.push(p$1(o3, t2, s3, r2));
       }
     } catch (e3) {
       l2 = true, o2 = e3;
@@ -75423,7 +78179,7 @@ void main() {
       ...await Promise.all(a2)
     ];
   };
-  var d$3 = async (e2 = {}) => {
+  var d$2 = async (e2 = {}) => {
     e2.recursive = e2.recursive || false, e2.mode = e2.mode || "read";
     const t2 = await window.showDirectoryPicker({
       id: e2.id,
@@ -75432,11 +78188,11 @@ void main() {
     });
     return (await (await t2.values()).next()).done ? [
       t2
-    ] : p$2(t2, e2.recursive, void 0, e2.skipDirectory);
-  }, y$1 = {
+    ] : p$1(t2, e2.recursive, void 0, e2.skipDirectory);
+  }, y = {
     __proto__: null,
-    default: d$3
-  }, f$3 = async (e2, t2 = [
+    default: d$2
+  }, f$2 = async (e2, t2 = [
     {}
   ], n2 = null, r2 = false, i2 = null) => {
     Array.isArray(t2) || (t2 = [
@@ -75470,10 +78226,10 @@ void main() {
       return await t3.pipeTo(l2), s2;
     }
     return "body" in e2 ? (await e2.body.pipeTo(l2), s2) : (await l2.write(await e2), await l2.close(), s2);
-  }, m$1 = {
+  }, m = {
     __proto__: null,
-    default: f$3
-  }, w$1 = async (e2 = [
+    default: f$2
+  }, w = async (e2 = [
     {}
   ]) => (Array.isArray(e2) || (e2 = [
     e2
@@ -75491,7 +78247,7 @@ void main() {
     }), "showPicker" in HTMLInputElement.prototype ? r2.showPicker() : r2.click();
   })), h$2 = {
     __proto__: null,
-    default: w$1
+    default: w
   }, v$2 = async (e2 = [
     {}
   ]) => (Array.isArray(e2) || (e2 = [
@@ -75536,7 +78292,7 @@ void main() {
     return n2.addEventListener("click", () => {
       setTimeout(() => URL.revokeObjectURL(n2.href), 3e4), i2();
     }), n2.click(), null;
-  }, _$3 = {
+  }, _$2 = {
     __proto__: null,
     default: P
   };
@@ -80020,7 +82776,7 @@ void main() {
   if (_Dexie.semVer !== Dexie.semVer) {
     throw new Error(`Two different versions of Dexie loaded in the same app: ${_Dexie.semVer} and ${Dexie.semVer}`);
   }
-  const { liveQuery, mergeRanges, rangesOverlap, RangeSet, cmp: cmp$1, Entity, PropModification, replacePrefix, add: add$2, remove, DexieYProvider } = Dexie;
+  const { liveQuery, mergeRanges, rangesOverlap, RangeSet, cmp, Entity, PropModification, replacePrefix, add: add$2, remove, DexieYProvider } = Dexie;
   class MinervaStoriesDB extends Dexie {
     constructor() {
       super("minerva-stories");
@@ -80137,488 +82893,6 @@ void main() {
       if (id2.startsWith(prefix)) sessionHandles.delete(id2);
     }
     await storyDb.handles.where("id").startsWith(prefix).delete();
-  }
-  function normalizeWaypointRecord(raw2) {
-    const w2 = {
-      ...raw2
-    };
-    if (!("shapeIds" in w2) && "shapes" in w2 && Array.isArray(w2.shapes)) {
-      w2.shapeIds = w2.shapes;
-    }
-    if (!("groupId" in w2) && "group" in w2 && typeof w2.group === "string") {
-      w2.groupId = w2.group;
-    }
-    if (!("groupId" in w2) && "Group" in w2 && typeof w2.Group === "string") {
-      w2.groupId = w2.Group;
-    }
-    if (!("thumbnail" in w2) || w2.thumbnail == null) {
-      w2.thumbnail = "";
-    }
-    return w2;
-  }
-  function normalizeRawShape(shape) {
-    if (shape === null || typeof shape !== "object" || Array.isArray(shape)) {
-      return shape;
-    }
-    const s2 = shape;
-    let next2 = {
-      ...s2
-    };
-    if (typeof next2.uuid === "string" && next2.id === void 0) {
-      next2 = {
-        ...next2,
-        id: next2.uuid
-      };
-    }
-    if (next2.type !== "arrow") return next2;
-    if (typeof next2.text === "string" && next2.label === void 0) {
-      next2 = {
-        ...next2,
-        label: next2.text
-      };
-    }
-    const hasPoint = next2.point !== null && typeof next2.point === "object" && !Array.isArray(next2.point);
-    const angle2 = next2.angle;
-    const hasAngle = angle2 !== void 0 && angle2 !== null && !(typeof angle2 === "string" && angle2.trim() === "");
-    if (hasPoint && hasAngle) {
-      return next2;
-    }
-    const from = next2.from;
-    const to = next2.to;
-    if (from && to && typeof from.x === "number" && typeof from.y === "number" && typeof to.x === "number" && typeof to.y === "number") {
-      return {
-        ...next2,
-        point: to,
-        angle: Math.atan2(from.y - to.y, from.x - to.x)
-      };
-    }
-    return next2;
-  }
-  function preprocessDocumentDataRaw(raw2) {
-    if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
-      return raw2;
-    }
-    const d2 = raw2;
-    let next2 = {
-      ...d2
-    };
-    if ("groups" in next2 && !("channelGroups" in next2)) {
-      next2.channelGroups = next2.groups;
-      delete next2.groups;
-    }
-    const shapes = next2.shapes;
-    const waypoints = next2.waypoints;
-    if (Array.isArray(shapes)) {
-      next2 = {
-        ...next2,
-        shapes: shapes.map(normalizeRawShape)
-      };
-    }
-    if (Array.isArray(waypoints)) {
-      next2 = {
-        ...next2,
-        waypoints: waypoints.map((wp) => {
-          if (wp === null || typeof wp !== "object" || Array.isArray(wp)) {
-            return wp;
-          }
-          return normalizeWaypointRecord(wp);
-        })
-      };
-    }
-    return next2;
-  }
-  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  function isUuid(id2) {
-    return UUID_RE.test(id2);
-  }
-  function preprocessJsonExportRoot(raw2) {
-    if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
-      return raw2;
-    }
-    const d2 = raw2;
-    return preprocessDocumentDataRaw({
-      ...d2,
-      metadata: {},
-      channelGroups: [],
-      images: []
-    });
-  }
-  const IdSchema = stringType().uuid();
-  const PointSchema = objectType({
-    x: numberType(),
-    y: numberType()
-  });
-  const ViewportSchema = objectType({
-    upperLeft: PointSchema,
-    lowerRight: PointSchema
-  });
-  const ColorSchema = objectType({
-    r: numberType().int().min(0).max(255),
-    g: numberType().int().min(0).max(255),
-    b: numberType().int().min(0).max(255)
-  });
-  const BaseShapeSchema = objectType({
-    id: IdSchema
-  });
-  const PointShapeSchema = BaseShapeSchema.extend({
-    type: literalType("point"),
-    point: PointSchema
-  });
-  const ArrowShapeSchema = BaseShapeSchema.extend({
-    type: literalType("arrow"),
-    point: PointSchema,
-    angle: coerce.number(),
-    label: stringType().default("")
-  });
-  const PolygonShapeSchema = BaseShapeSchema.extend({
-    type: literalType("polygon"),
-    points: arrayType(PointSchema).min(3)
-  });
-  const PolylineShapeSchema = BaseShapeSchema.extend({
-    type: literalType("polyline"),
-    points: arrayType(PointSchema).min(2)
-  });
-  const TextShapeSchema = BaseShapeSchema.extend({
-    type: literalType("text"),
-    point: PointSchema,
-    content: stringType()
-  });
-  const ShapeSchema = discriminatedUnionType("type", [
-    PointShapeSchema,
-    ArrowShapeSchema,
-    PolygonShapeSchema,
-    PolylineShapeSchema,
-    TextShapeSchema
-  ]);
-  const SourceDistributionSchema = objectType({
-    id: IdSchema,
-    YValues: arrayType(numberType()),
-    XScale: stringType(),
-    YScale: stringType(),
-    LowerRange: numberType(),
-    UpperRange: numberType()
-  });
-  const GmmContrastLimitsSchema = objectType({
-    lower: numberType(),
-    upper: numberType()
-  });
-  const ImageChannelKindSchema = preprocessType((v2) => v2 === "field" ? "channel" : v2, enumType([
-    "channel",
-    "mask"
-  ]));
-  const MaskVisualizationSchema = preprocessType((v2) => {
-    if (v2 === "outline") return {
-      style: "outline",
-      color: "white"
-    };
-    if (v2 === "randomColors") return {
-      style: "full",
-      color: "random"
-    };
-    return v2;
-  }, objectType({
-    style: enumType([
-      "outline",
-      "full"
-    ]),
-    color: enumType([
-      "white",
-      "random"
-    ]),
-    colorSeed: numberType().int().nonnegative().optional()
-  }));
-  const ImageChannelSchema = objectType({
-    id: IdSchema,
-    index: numberType().int().min(0),
-    name: stringType(),
-    kind: ImageChannelKindSchema.optional(),
-    samples: numberType().int().optional(),
-    sourceDataTypeId: stringType().optional(),
-    sourceDistribution: SourceDistributionSchema.optional(),
-    gmmContrastLimits: GmmContrastLimitsSchema.optional(),
-    color: ColorSchema.optional(),
-    lowerLimit: numberType().optional(),
-    upperLimit: numberType().optional(),
-    maskVisualization: MaskVisualizationSchema.optional()
-  });
-  const ImageSourceJpegSchema = objectType({
-    kind: literalType("jpeg"),
-    url: stringType().min(1)
-  });
-  const ImageSourceUrlSchema = objectType({
-    kind: literalType("url"),
-    url: stringType().min(1)
-  });
-  const ImageSourceLocalSchema = objectType({
-    kind: literalType("local"),
-    handleKey: stringType().min(1)
-  });
-  const ImageSourceDicomWebSchema = objectType({
-    kind: literalType("dicomWeb"),
-    series: stringType(),
-    modality: stringType()
-  });
-  const ImageSourceSchema = discriminatedUnionType("kind", [
-    ImageSourceJpegSchema,
-    ImageSourceUrlSchema,
-    ImageSourceLocalSchema,
-    ImageSourceDicomWebSchema
-  ]);
-  const ImageSchema = objectType({
-    id: IdSchema,
-    sizeX: numberType().int().positive(),
-    sizeY: numberType().int().positive(),
-    sizeC: numberType().int().nonnegative(),
-    omero: objectType({
-      omeroServerName: stringType(),
-      imageIdentifier: numberType().int()
-    }).optional(),
-    omeXmlHash: stringType(),
-    basename: stringType(),
-    contentRole: enumType([
-      "intensity",
-      "segmentation"
-    ]).optional(),
-    channels: arrayType(ImageChannelSchema),
-    source: ImageSourceSchema.optional()
-  });
-  const ChannelGroupChannelSchema = objectType({
-    id: IdSchema,
-    channelId: IdSchema,
-    color: ColorSchema,
-    lowerLimit: numberType(),
-    upperLimit: numberType(),
-    maskVisualization: MaskVisualizationSchema.optional()
-  });
-  const ChannelGroupSchema = objectType({
-    id: IdSchema,
-    name: stringType(),
-    expanded: booleanType().optional(),
-    channels: arrayType(ChannelGroupChannelSchema)
-  });
-  const waypointObjectZ = objectType({
-    id: IdSchema,
-    groupId: IdSchema.optional(),
-    thumbnail: stringType(),
-    title: stringType(),
-    name: stringType().optional(),
-    content: stringType(),
-    viewport: ViewportSchema,
-    shapeIds: arrayType(IdSchema)
-  });
-  const WaypointSchema = preprocessType((raw2) => {
-    if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
-      return raw2;
-    }
-    return normalizeWaypointRecord(raw2);
-  }, waypointObjectZ);
-  const optionalStringListSchema = preprocessType((val) => {
-    if (val === void 0 || val === null) return void 0;
-    if (Array.isArray(val)) {
-      return val.map((x2) => String(x2)).filter((s2) => s2.length > 0);
-    }
-    if (typeof val === "string" && val.trim()) return [
-      val.trim()
-    ];
-    return void 0;
-  }, arrayType(stringType()).optional());
-  const documentMetadataObjectSchema = objectType({
-    id: IdSchema.optional(),
-    title: stringType().optional(),
-    createdAt: stringType().optional(),
-    modifiedAt: stringType().optional(),
-    author: stringType().optional(),
-    doi: stringType().optional(),
-    publicationUrl: stringType().optional(),
-    citation: stringType().optional(),
-    license: stringType().optional(),
-    institution: stringType().optional(),
-    contact: stringType().optional(),
-    contactEmail: stringType().optional(),
-    specimenId: stringType().optional(),
-    accession: stringType().optional(),
-    keywords: optionalStringListSchema,
-    modalities: optionalStringListSchema,
-    minervaVersion: stringType().optional(),
-    imageSource: stringType().optional(),
-    notes: stringType().optional()
-  });
-  const DocumentMetadataSchema = preprocessType((raw2) => {
-    if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
-      return raw2;
-    }
-    const r2 = {
-      ...raw2
-    };
-    if (r2.createdAt == null && typeof r2.created === "string") {
-      r2.createdAt = r2.created;
-    }
-    if (r2.modifiedAt == null && typeof r2.modified === "string") {
-      r2.modifiedAt = r2.modified;
-    }
-    return r2;
-  }, documentMetadataObjectSchema);
-  const DocumentDataSchema = preprocessType((raw2) => {
-    if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
-      return raw2;
-    }
-    const r2 = raw2;
-    if ("groups" in r2 && !("channelGroups" in r2)) {
-      const { groups, ...rest2 } = r2;
-      return {
-        ...rest2,
-        channelGroups: groups
-      };
-    }
-    return raw2;
-  }, objectType({
-    metadata: DocumentMetadataSchema.default({}),
-    waypoints: arrayType(WaypointSchema),
-    shapes: arrayType(ShapeSchema),
-    channelGroups: arrayType(ChannelGroupSchema),
-    images: arrayType(ImageSchema)
-  }));
-  const jsonExportCoreSchema = objectType({
-    version: unionType([
-      literalType("1"),
-      literalType("2")
-    ]),
-    waypoints: arrayType(WaypointSchema),
-    shapes: arrayType(ShapeSchema)
-  });
-  preprocessType((raw2) => {
-    const expanded = preprocessJsonExportRoot(raw2);
-    if (expanded === null || typeof expanded !== "object" || Array.isArray(expanded)) {
-      return expanded;
-    }
-    const e2 = expanded;
-    return {
-      version: e2.version,
-      waypoints: e2.waypoints,
-      shapes: e2.shapes
-    };
-  }, jsonExportCoreSchema);
-  const DEFAULT_MASK_VISUALIZATION = {
-    style: "outline",
-    color: "white"
-  };
-  function withReseededRandomColors(value) {
-    let colorSeed = 1 + Math.floor(Math.random() * 16777215);
-    if (colorSeed === value.colorSeed) {
-      colorSeed = colorSeed >= 16777215 ? 1 : colorSeed + 1;
-    }
-    return {
-      ...value,
-      color: "random",
-      colorSeed
-    };
-  }
-  function normalizeMaskVisualization(value) {
-    const parsed = MaskVisualizationSchema.safeParse(value);
-    return parsed.success ? parsed.data : DEFAULT_MASK_VISUALIZATION;
-  }
-  const DEFAULT_VISIBLE_INTENSITY_CHANNELS = 4;
-  function resolveImageImportRole(image2) {
-    const role = resolveImageContentRole(image2);
-    return role === "segmentation" ? "segmentation" : "intensity";
-  }
-  function normalizeChannelKind(kind) {
-    if (kind === "field") return "channel";
-    if (kind === "channel" || kind === "mask") return kind;
-    return void 0;
-  }
-  function effectiveChannelKind(channel) {
-    return normalizeChannelKind(channel.kind) ?? "channel";
-  }
-  function isMaskChannel(channel) {
-    return effectiveChannelKind(channel) === "mask";
-  }
-  function isImageChannel(channel) {
-    return effectiveChannelKind(channel) === "channel";
-  }
-  function isPlanarIntensityDtype(dtype) {
-    if (dtype == null || dtype === "") return false;
-    return /uint/i.test(dtype);
-  }
-  const PLANAR_RGB_DISPLAY_COLORS = [
-    {
-      r: 255,
-      g: 0,
-      b: 0
-    },
-    {
-      r: 0,
-      g: 255,
-      b: 0
-    },
-    {
-      r: 0,
-      g: 0,
-      b: 255
-    }
-  ];
-  function planarRgbSlotFromName(name2) {
-    const n2 = name2.toLowerCase();
-    if (n2.endsWith("_r") || n2.endsWith("-r") || n2.endsWith("[r]") || n2 === "r") {
-      return 0;
-    }
-    if (n2.endsWith("_g") || n2.endsWith("-g") || n2.endsWith("[g]") || n2 === "g") {
-      return 1;
-    }
-    if (n2.endsWith("_b") || n2.endsWith("-b") || n2.endsWith("[b]") || n2 === "b") {
-      return 2;
-    }
-    return null;
-  }
-  function isRgbDisplaySource(channels2) {
-    const intensity = channels2.filter(isImageChannel);
-    if (intensity.length === 0) return false;
-    if (intensity.length === 1 && intensity[0].samples === 3) return true;
-    const planar = intensity.filter((c2) => (c2.samples ?? 1) === 1);
-    if (planar.length !== 3) return false;
-    if (planar.every((c2) => planarRgbSlotFromName(c2.name ?? "") != null)) {
-      return true;
-    }
-    return planar.every((c2) => isPlanarIntensityDtype(c2.sourceDataTypeId));
-  }
-  function planarRgbSlotIndex(channel, allChannels) {
-    if (!isRgbDisplayChannel(channel, allChannels)) return null;
-    if (channel.samples === 3) return null;
-    const byName = planarRgbSlotFromName(channel.name ?? "");
-    if (byName != null) return byName;
-    const onImage = allChannels.filter((c2) => c2.imageId === channel.imageId && isImageChannel(c2) && (c2.samples ?? 1) === 1).sort((a2, b2) => (a2.index ?? 0) - (b2.index ?? 0));
-    if (onImage.length !== 3) return null;
-    const pos = onImage.findIndex((c2) => channel.id != null && c2.id === channel.id || c2.index === channel.index);
-    return pos >= 0 && pos < 3 ? pos : null;
-  }
-  function planarRgbDisplayColor(channel, allChannels) {
-    const slot = planarRgbSlotIndex(channel, allChannels);
-    if (slot == null) return null;
-    return PLANAR_RGB_DISPLAY_COLORS[slot];
-  }
-  function isRgbDisplayChannel(channel, allChannels) {
-    if (!isImageChannel(channel)) return false;
-    if (channel.samples === 3) return true;
-    if (channel.imageId == null) return false;
-    const onImage = allChannels.filter((c2) => c2.imageId === channel.imageId);
-    return isRgbDisplaySource(onImage);
-  }
-  function resolveImageContentRole(image2) {
-    if (image2.contentRole === "segmentation") return "segmentation";
-    if (image2.contentRole === "intensity") return "intensity";
-    return imageSourceRole(image2);
-  }
-  function imageSourceRole(image2) {
-    if (image2.channels.length === 0) return null;
-    let sawChannel = false;
-    let sawMask = false;
-    for (const ch2 of image2.channels) {
-      if (effectiveChannelKind(ch2) === "mask") sawMask = true;
-      else sawChannel = true;
-    }
-    if (sawMask && sawChannel) return "mixed";
-    if (sawMask) return "segmentation";
-    return "intensity";
   }
   function isStackVisible(stackVisibilities, sourceChannelId) {
     return stackVisibilities[sourceChannelId] !== false;
@@ -81079,169 +83353,6 @@ void main() {
     ],
     radius: 5
   };
-  function arrowLineDegeneratePolygon(start, end) {
-    const [sx, sy] = start;
-    const [ex, ey] = end;
-    return [
-      [
-        sx,
-        sy
-      ],
-      [
-        ex,
-        ey
-      ],
-      [
-        ex,
-        ey
-      ],
-      [
-        sx,
-        sy
-      ],
-      [
-        sx,
-        sy
-      ]
-    ];
-  }
-  const rectangleToPolygon = (start, end) => {
-    const [startX, startY] = start;
-    const [endX, endY] = end;
-    const minX = Math.min(startX, endX);
-    const maxX = Math.max(startX, endX);
-    const minY = Math.min(startY, endY);
-    const maxY = Math.max(startY, endY);
-    return [
-      [
-        minX,
-        minY
-      ],
-      [
-        maxX,
-        minY
-      ],
-      [
-        maxX,
-        maxY
-      ],
-      [
-        minX,
-        maxY
-      ],
-      [
-        minX,
-        minY
-      ]
-    ];
-  };
-  const ellipseToPolygon$1 = (start, end, segments = 64) => {
-    const [startX, startY] = start;
-    const [endX, endY] = end;
-    const centerX = (startX + endX) / 2;
-    const centerY = (startY + endY) / 2;
-    const radiusX = Math.abs(endX - startX) / 2;
-    const radiusY = Math.abs(endY - startY) / 2;
-    const points = [];
-    for (let i2 = 0; i2 <= segments; i2++) {
-      const angle2 = i2 / segments * 2 * Math.PI;
-      const x2 = centerX + radiusX * Math.cos(angle2);
-      const y2 = centerY + radiusY * Math.sin(angle2);
-      points.push([
-        x2,
-        y2
-      ]);
-    }
-    return points;
-  };
-  const lineToPolygon = (start, end, lineWidth = 3) => {
-    const [startX, startY] = start;
-    const [endX, endY] = end;
-    const dx = endX - startX;
-    const dy = endY - startY;
-    const length2 = Math.sqrt(dx * dx + dy * dy);
-    if (length2 === 0) {
-      const halfWidth2 = lineWidth / 2;
-      return [
-        [
-          startX - halfWidth2,
-          startY - halfWidth2
-        ],
-        [
-          startX + halfWidth2,
-          startY - halfWidth2
-        ],
-        [
-          startX + halfWidth2,
-          startY + halfWidth2
-        ],
-        [
-          startX - halfWidth2,
-          startY + halfWidth2
-        ],
-        [
-          startX - halfWidth2,
-          startY - halfWidth2
-        ]
-      ];
-    }
-    const nx = -dy / length2;
-    const ny = dx / length2;
-    const halfWidth = lineWidth / 2;
-    return [
-      [
-        startX + nx * halfWidth,
-        startY + ny * halfWidth
-      ],
-      [
-        endX + nx * halfWidth,
-        endY + ny * halfWidth
-      ],
-      [
-        endX - nx * halfWidth,
-        endY - ny * halfWidth
-      ],
-      [
-        startX - nx * halfWidth,
-        startY - ny * halfWidth
-      ],
-      [
-        startX + nx * halfWidth,
-        startY + ny * halfWidth
-      ]
-    ];
-  };
-  const textToPolygon = (position2, text2, fontSize = 14, _padding = 4) => {
-    const [x2, y2] = position2;
-    const charWidth = fontSize * 0.7;
-    const textWidth = text2.length * charWidth;
-    const textHeight = fontSize * 1.2;
-    const hitPadding = Math.max(fontSize * 2, 20);
-    const halfWidth = (textWidth + hitPadding * 2) / 2;
-    const halfHeight = (textHeight + hitPadding * 2) / 2;
-    return [
-      [
-        x2 - halfWidth,
-        y2 - halfHeight
-      ],
-      [
-        x2 + halfWidth,
-        y2 - halfHeight
-      ],
-      [
-        x2 + halfWidth,
-        y2 + halfHeight
-      ],
-      [
-        x2 - halfWidth,
-        y2 + halfHeight
-      ],
-      [
-        x2 - halfWidth,
-        y2 - halfHeight
-      ]
-    ];
-  };
   const convertWaypointToViewState = (pan, zoom, imageWidth, imageHeight, containerWidth) => {
     if ((pan === void 0 || pan === null) && (zoom === void 0 || zoom === null)) {
       return null;
@@ -81588,6 +83699,20 @@ void main() {
         name: candidate
       };
     });
+  }
+  function applySourceChannelRange(images, sourceChannelId, lower, upper) {
+    return images.map((im) => ({
+      ...im,
+      channels: im.channels.map((ch2) => ch2.id === sourceChannelId ? {
+        ...ch2,
+        lowerLimit: lower,
+        upperLimit: upper,
+        gmmContrastLimits: {
+          lower,
+          upper
+        }
+      } : ch2)
+    }));
   }
   function patchSourceChannelOnImages(images, sourceChannelId, patch2) {
     return images.map((im) => ({
@@ -82774,7 +84899,21 @@ void main() {
   function documentShapes(s2) {
     return s2.shapes;
   }
-  const useDocumentStore = create$9()(devtools((set2, get2) => ({
+  function documentUndoEquality(past, current) {
+    return stableHash(past) === stableHash(current);
+  }
+  const documentTemporalOptions = {
+    partialize: (state) => ({
+      waypoints: state.waypoints,
+      shapes: state.shapes,
+      channelGroups: state.channelGroups,
+      images: state.images,
+      metadata: state.metadata
+    }),
+    limit: 100,
+    equality: documentUndoEquality
+  };
+  const useDocumentStore = create$9()(devtools(temporal((set2, get2) => ({
     ...createEmptyDocumentState(),
     setActiveStoryId: (id2) => set2({
       activeStoryId: id2
@@ -82801,6 +84940,7 @@ void main() {
           id: m2.id ?? activeStoryId
         }
       });
+      clearDocumentHistory();
     },
     loadDocument: (input2) => {
       const data2 = validateDocumentData(input2);
@@ -82826,6 +84966,7 @@ void main() {
           activeStoryId: state.activeStoryId
         };
       });
+      clearDocumentHistory();
     },
     toDocumentData: () => {
       const s2 = get2();
@@ -82852,12 +84993,14 @@ void main() {
         ...createEmptyDocumentSlices(),
         activeStoryId: state.activeStoryId
       }));
+      clearDocumentHistory();
     },
     clearForLibraryView: () => {
       set2({
         ...createEmptyDocumentSlices(),
         activeStoryId: null
       });
+      clearDocumentHistory();
     },
     switchStory: async (id2) => {
       const s2 = get2();
@@ -82887,6 +85030,7 @@ void main() {
           ...rec.data.metadata
         }
       });
+      clearDocumentHistory();
     },
     createStory: async (title7) => {
       const s2 = get2();
@@ -82913,6 +85057,7 @@ void main() {
           ...rec.data.metadata
         }
       });
+      clearDocumentHistory();
       return rec.id;
     },
     deleteStory: async (id2) => {
@@ -82942,6 +85087,7 @@ void main() {
             ...rec2.data.metadata
           }
         });
+        clearDocumentHistory();
         return;
       }
       const next2 = summaries[0];
@@ -82971,6 +85117,7 @@ void main() {
           ...rec.data.metadata
         }
       });
+      clearDocumentHistory();
     },
     setWaypoints: (waypoints) => set2(() => ({
       waypoints: [
@@ -83003,7 +85150,2057 @@ void main() {
     },
     persistFileHandle: (key2, handle2) => putFileHandle(key2, handle2),
     getFileHandle: (key2) => getFileHandle(key2)
-  })));
+  }), documentTemporalOptions), {
+    name: "documentStore"
+  }));
+  function clearDocumentHistory() {
+    useDocumentStore.temporal.getState().clear();
+  }
+  function newShapeId() {
+    return crypto.randomUUID();
+  }
+  function effectiveReferenceImagePixelSize(viewerPublished, docWidth, docHeight) {
+    if (viewerPublished && viewerPublished.width > 0 && viewerPublished.height > 0) {
+      return viewerPublished;
+    }
+    return {
+      width: docWidth,
+      height: docHeight
+    };
+  }
+  function referenceImagePixelSizeForActions(get2) {
+    const doc = useDocumentStore.getState();
+    const im = doc.images[0];
+    return effectiveReferenceImagePixelSize(get2().viewerReferenceImagePixelSize, (im == null ? void 0 : im.sizeX) ?? 0, (im == null ? void 0 : im.sizeY) ?? 0);
+  }
+  function authoringViewportForDoc(get2) {
+    const v2 = get2().viewerViewportSize;
+    return {
+      width: (v2 == null ? void 0 : v2.width) ?? 0,
+      height: (v2 == null ? void 0 : v2.height) ?? 0
+    };
+  }
+  function ensureBrushMaskViewport(viewportWidth, viewportHeight, existing) {
+    const w2 = Math.max(1, Math.round(viewportWidth));
+    const h2 = Math.max(1, Math.round(viewportHeight));
+    return {
+      width: w2,
+      height: h2,
+      data: new Uint8Array(w2 * h2)
+    };
+  }
+  function paintCircleOnMaskScreen(mask2, sx, sy, radiusPx) {
+    const { width, height, data: data2 } = mask2;
+    if (width <= 0 || height <= 0) return;
+    const mx = Math.round(Math.max(0, Math.min(width - 1, sx)));
+    const my = Math.round(Math.max(0, Math.min(height - 1, sy)));
+    const r2 = Math.max(1, Math.round(radiusPx));
+    const y0 = Math.max(0, my - r2);
+    const y1 = Math.min(height - 1, my + r2);
+    const x0 = Math.max(0, mx - r2);
+    const x1 = Math.min(width - 1, mx + r2);
+    const r22 = r2 * r2;
+    for (let y2 = y0; y2 <= y1; y2++) {
+      for (let x2 = x0; x2 <= x1; x2++) {
+        if ((x2 - mx) ** 2 + (y2 - my) ** 2 <= r22) data2[y2 * width + x2] = 1;
+      }
+    }
+  }
+  function pointToSegmentDistance(p2, a2, b2) {
+    const [px, py] = p2;
+    const [ax, ay] = a2;
+    const [bx, by] = b2;
+    const abx = bx - ax;
+    const aby = by - ay;
+    const apx = px - ax;
+    const apy = py - ay;
+    const denom = abx * abx + aby * aby;
+    const t2 = denom === 0 ? 0 : Math.max(0, Math.min(1, (apx * abx + apy * aby) / denom));
+    const cx = ax + t2 * abx;
+    const cy = ay + t2 * aby;
+    return Math.hypot(px - cx, py - cy);
+  }
+  function simplifyRdpOpen(points, epsilon2) {
+    if (points.length <= 2) return points;
+    let maxDist = -1;
+    let idx = -1;
+    const a2 = points[0];
+    const b2 = points[points.length - 1];
+    for (let i2 = 1; i2 < points.length - 1; i2++) {
+      const d2 = pointToSegmentDistance(points[i2], a2, b2);
+      if (d2 > maxDist) {
+        maxDist = d2;
+        idx = i2;
+      }
+    }
+    if (maxDist <= epsilon2 || idx === -1) return [
+      a2,
+      b2
+    ];
+    const left = simplifyRdpOpen(points.slice(0, idx + 1), epsilon2);
+    const right = simplifyRdpOpen(points.slice(idx), epsilon2);
+    return [
+      ...left.slice(0, -1),
+      ...right
+    ];
+  }
+  function simplifyClosedPolygon(pointsClosed, epsilon2) {
+    if (pointsClosed.length < 4) return pointsClosed;
+    const pts = pointsClosed[0][0] === pointsClosed[pointsClosed.length - 1][0] && pointsClosed[0][1] === pointsClosed[pointsClosed.length - 1][1] ? pointsClosed.slice(0, -1) : [
+      ...pointsClosed
+    ];
+    if (pts.length < 3) return pointsClosed;
+    let minI = 0;
+    let maxI = 0;
+    for (let i2 = 1; i2 < pts.length; i2++) {
+      if (pts[i2][0] < pts[minI][0]) minI = i2;
+      if (pts[i2][0] > pts[maxI][0]) maxI = i2;
+    }
+    if (minI === maxI) {
+      minI = 0;
+      maxI = 0;
+      for (let i2 = 1; i2 < pts.length; i2++) {
+        if (pts[i2][1] < pts[minI][1]) minI = i2;
+        if (pts[i2][1] > pts[maxI][1]) maxI = i2;
+      }
+    }
+    const n2 = pts.length;
+    const forward = (from, to) => {
+      const out = [];
+      let i2 = from;
+      while (true) {
+        out.push(pts[i2]);
+        if (i2 === to) break;
+        i2 = (i2 + 1) % n2;
+      }
+      return out;
+    };
+    const path1 = forward(minI, maxI);
+    const path2 = forward(maxI, minI);
+    const s1 = simplifyRdpOpen(path1, epsilon2);
+    const s2 = simplifyRdpOpen(path2, epsilon2);
+    const combined = [
+      ...s1,
+      ...s2.slice(1, -1)
+    ];
+    const cleaned = [];
+    for (const p2 of combined) {
+      const last2 = cleaned[cleaned.length - 1];
+      if (!last2 || Math.hypot(p2[0] - last2[0], p2[1] - last2[1]) > epsilon2 * 0.25) cleaned.push(p2);
+    }
+    if (cleaned.length < 3) return pointsClosed;
+    return [
+      ...cleaned,
+      cleaned[0]
+    ];
+  }
+  function signedPolygonArea(points) {
+    let area2 = 0;
+    for (let i2 = 0, j2 = points.length - 1; i2 < points.length; j2 = i2++) {
+      area2 += points[j2][0] * points[i2][1];
+      area2 -= points[i2][0] * points[j2][1];
+    }
+    return area2 / 2;
+  }
+  function pointInPolygon2(p2, polygon) {
+    const [px, py] = p2;
+    let inside = false;
+    for (let i2 = 0, j2 = polygon.length - 1; i2 < polygon.length; j2 = i2++) {
+      const [xi2, yi2] = polygon[i2];
+      const [xj2, yj2] = polygon[j2];
+      const intersect2 = yi2 > py !== yj2 > py && px < (xj2 - xi2) * (py - yi2) / (yj2 - yi2 || Number.EPSILON) + xi2;
+      if (intersect2) inside = !inside;
+    }
+    return inside;
+  }
+  function polygonsOverlap(a2, b2) {
+    if (a2.length === 0 || b2.length === 0) return false;
+    const bbox = (poly) => {
+      let minX = poly[0][0];
+      let maxX = poly[0][0];
+      let minY = poly[0][1];
+      let maxY = poly[0][1];
+      for (const [x2, y2] of poly) {
+        if (x2 < minX) minX = x2;
+        if (x2 > maxX) maxX = x2;
+        if (y2 < minY) minY = y2;
+        if (y2 > maxY) maxY = y2;
+      }
+      return {
+        minX,
+        maxX,
+        minY,
+        maxY
+      };
+    };
+    const ab2 = bbox(a2);
+    const bb2 = bbox(b2);
+    if (ab2.maxX < bb2.minX || ab2.minX > bb2.maxX || ab2.maxY < bb2.minY || ab2.minY > bb2.maxY) {
+      return false;
+    }
+    for (const pt2 of a2) {
+      if (pointInPolygon2(pt2, b2)) return true;
+    }
+    for (const pt2 of b2) {
+      if (pointInPolygon2(pt2, a2)) return true;
+    }
+    return false;
+  }
+  function ikey(ix, iy) {
+    return `${ix},${iy}`;
+  }
+  function parseIKey(k2) {
+    const [xs, ys] = k2.split(",");
+    return [
+      Number.parseInt(xs, 10) / 2,
+      Number.parseInt(ys, 10) / 2
+    ];
+  }
+  function edgeKey(a2, b2) {
+    return a2 < b2 ? `${a2}|${b2}` : `${b2}|${a2}`;
+  }
+  function addAdj(adj, a2, b2) {
+    const la2 = adj.get(a2);
+    if (la2) la2.push(b2);
+    else adj.set(a2, [
+      b2
+    ]);
+    const lb2 = adj.get(b2);
+    if (lb2) lb2.push(a2);
+    else adj.set(b2, [
+      a2
+    ]);
+  }
+  function maskToLoops(mask2) {
+    const { width: w2, height: h2, data: data2 } = mask2;
+    if (w2 < 2 || h2 < 2) return [];
+    const adj = /* @__PURE__ */ new Map();
+    const pt2 = (x2, y2) => ikey(x2, y2);
+    const edgePoint = (x2, y2, edge) => {
+      switch (edge) {
+        case 0:
+          return pt2(x2 * 2 + 1, y2 * 2);
+        case 1:
+          return pt2((x2 + 1) * 2, y2 * 2 + 1);
+        case 2:
+          return pt2(x2 * 2 + 1, (y2 + 1) * 2);
+        case 3:
+          return pt2(x2 * 2, y2 * 2 + 1);
+      }
+    };
+    const addSeg = (a2, b2) => {
+      if (a2 === b2) return;
+      addAdj(adj, a2, b2);
+    };
+    for (let y2 = 0; y2 < h2 - 1; y2++) {
+      for (let x2 = 0; x2 < w2 - 1; x2++) {
+        const tl2 = data2[y2 * w2 + x2] ? 1 : 0;
+        const tr2 = data2[y2 * w2 + (x2 + 1)] ? 1 : 0;
+        const br = data2[(y2 + 1) * w2 + (x2 + 1)] ? 1 : 0;
+        const bl2 = data2[(y2 + 1) * w2 + x2] ? 1 : 0;
+        const idx = tl2 << 0 | tr2 << 1 | br << 2 | bl2 << 3;
+        let segs = [];
+        switch (idx) {
+          case 0:
+          case 15:
+            segs = [];
+            break;
+          case 1:
+            segs = [
+              [
+                3,
+                0
+              ]
+            ];
+            break;
+          case 2:
+            segs = [
+              [
+                0,
+                1
+              ]
+            ];
+            break;
+          case 3:
+            segs = [
+              [
+                3,
+                1
+              ]
+            ];
+            break;
+          case 4:
+            segs = [
+              [
+                1,
+                2
+              ]
+            ];
+            break;
+          case 5:
+            segs = [
+              [
+                3,
+                0
+              ],
+              [
+                1,
+                2
+              ]
+            ];
+            break;
+          case 6:
+            segs = [
+              [
+                0,
+                2
+              ]
+            ];
+            break;
+          case 7:
+            segs = [
+              [
+                3,
+                2
+              ]
+            ];
+            break;
+          case 8:
+            segs = [
+              [
+                2,
+                3
+              ]
+            ];
+            break;
+          case 9:
+            segs = [
+              [
+                0,
+                2
+              ]
+            ];
+            break;
+          case 10:
+            segs = [
+              [
+                0,
+                1
+              ],
+              [
+                2,
+                3
+              ]
+            ];
+            break;
+          case 11:
+            segs = [
+              [
+                1,
+                2
+              ]
+            ];
+            break;
+          case 12:
+            segs = [
+              [
+                1,
+                3
+              ]
+            ];
+            break;
+          case 13:
+            segs = [
+              [
+                0,
+                1
+              ]
+            ];
+            break;
+          case 14:
+            segs = [
+              [
+                3,
+                0
+              ]
+            ];
+            break;
+        }
+        for (const [e1, e2] of segs) {
+          const a2 = edgePoint(x2, y2, e1);
+          const b2 = edgePoint(x2, y2, e2);
+          addSeg(a2, b2);
+        }
+      }
+    }
+    const visited = /* @__PURE__ */ new Set();
+    const loops = [];
+    for (const [start, neighbors] of adj.entries()) {
+      for (const n0 of neighbors) {
+        const ek0 = edgeKey(start, n0);
+        if (visited.has(ek0)) continue;
+        const loopKeys = [
+          start
+        ];
+        let prev = start;
+        let curr = n0;
+        visited.add(ek0);
+        while (true) {
+          loopKeys.push(curr);
+          const neigh = adj.get(curr) ?? [];
+          let next2 = null;
+          for (const cand of neigh) {
+            if (cand === prev) continue;
+            const ek2 = edgeKey(curr, cand);
+            if (!visited.has(ek2)) {
+              next2 = cand;
+              visited.add(ek2);
+              break;
+            }
+          }
+          if (!next2) {
+            break;
+          }
+          prev = curr;
+          curr = next2;
+          if (curr === start) {
+            loopKeys.push(start);
+            break;
+          }
+          if (loopKeys.length > (w2 + h2) * 8) break;
+        }
+        if (loopKeys.length >= 6 && loopKeys[0] === loopKeys[loopKeys.length - 1]) {
+          loops.push(loopKeys.map(parseIKey));
+        }
+      }
+    }
+    return loops;
+  }
+  function loopScreenToWorld(loop, bounds, maskWidth, maskHeight) {
+    const [left, bottom, right, top2] = bounds;
+    const dx = right - left;
+    const dy = bottom - top2;
+    return loop.map(([x2, y2]) => [
+      left + x2 / maskWidth * dx,
+      top2 + y2 / maskHeight * dy
+    ]);
+  }
+  function maskToViewportPolygon(mask2, bounds) {
+    const { width, height, data: data2 } = mask2;
+    if (!width || !height) return null;
+    const [left, bottom, right, top2] = bounds;
+    const dx = right - left;
+    const dy = bottom - top2;
+    if (dx === 0 || dy === 0) return null;
+    const w2 = width;
+    const h2 = height;
+    let hull = null;
+    for (let y2 = 0; y2 < h2; y2++) {
+      let runStart = -1;
+      const rowOffset = y2 * w2;
+      for (let x2 = 0; x2 <= w2; x2++) {
+        const inside = x2 < w2 && data2[rowOffset + x2] !== 0;
+        if (inside && runStart === -1) {
+          runStart = x2;
+        } else if (!inside && runStart !== -1) {
+          const x0t = runStart / w2;
+          const x1t = x2 / w2;
+          const y0t = y2 / h2;
+          const y1t = (y2 + 1) / h2;
+          const x0 = left + x0t * dx;
+          const x1 = left + x1t * dx;
+          const y0 = top2 + y0t * dy;
+          const y1 = top2 + y1t * dy;
+          const rect = [
+            [
+              x0,
+              y0
+            ],
+            [
+              x1,
+              y0
+            ],
+            [
+              x1,
+              y1
+            ],
+            [
+              x0,
+              y1
+            ],
+            [
+              x0,
+              y0
+            ]
+          ];
+          if (!hull) {
+            hull = rect;
+          } else {
+            const union2 = polygonUnion(hull, rect);
+            if (union2 && union2.length >= 3) {
+              hull = union2;
+            }
+          }
+          runStart = -1;
+        }
+      }
+    }
+    if (!hull || hull.length < 3) return null;
+    const pxToWorld = Math.max(Math.abs(dx) / Math.max(1, w2), Math.abs(dy) / Math.max(1, h2));
+    const epsilonWorld = pxToWorld * 1;
+    const simplified = simplifyClosedPolygon(hull, epsilonWorld);
+    return simplified && simplified.length >= 3 ? simplified : hull;
+  }
+  function computeBrushPolygon(strokePoints, precomputedHull, mask2, brushRadiusPx, viewportZoom, brushViewBounds) {
+    if (precomputedHull && precomputedHull.length >= 3) {
+      return precomputedHull;
+    }
+    if (mask2 && brushViewBounds) {
+      const fromMask = maskToViewportPolygon(mask2, brushViewBounds);
+      if (fromMask && fromMask.length >= 3) {
+        return fromMask;
+      }
+    }
+    if (strokePoints.length > 0 && brushRadiusPx > 0) {
+      const hull = buildBrushHull(strokePoints, brushRadiusPx, viewportZoom);
+      if (hull && hull.length >= 3) {
+        return hull;
+      }
+    }
+    return null;
+  }
+  function maybePersistShapesAfterMutation(get2) {
+    const doc = useDocumentStore.getState();
+    const waypoints = documentWaypoints(doc);
+    const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
+    if (waypoints.length === 0 || iw <= 0 || ih2 <= 0) {
+      return;
+    }
+    const state = get2();
+    const authoring = state.authoringWaypointShapesIndex;
+    const active2 = state.activeStoryIndex;
+    const resolved = authoring !== null ? authoring : active2 !== null ? active2 : null;
+    if (resolved === null) {
+      return;
+    }
+    if (resolved < 0 || resolved >= waypoints.length) {
+      return;
+    }
+    get2().persistImportedShapesToStory(resolved);
+  }
+  const overlayInitialState = {
+    overlayLayers: [],
+    activeTool: "move",
+    currentInteraction: null,
+    drawingState: {
+      isDrawing: false,
+      dragStart: null,
+      dragEnd: null
+    },
+    dragState: {
+      isDragging: false,
+      draggedShapeId: null,
+      dragOffset: null
+    },
+    hoverState: {
+      hoveredShapeId: null
+    },
+    shapes: [],
+    shapeGroups: [],
+    hiddenShapeIds: /* @__PURE__ */ new Set(),
+    globalColor: [
+      255,
+      255,
+      255,
+      255
+    ],
+    viewportZoom: 0,
+    showSquareViewportOverlay: false,
+    brushRadiusPx: 30,
+    brushMask: null,
+    brushMaskVersion: 0,
+    brushMaskMaxResolution: 1024,
+    brushViewportWidth: 0,
+    brushViewportHeight: 0,
+    brushViewBounds: null,
+    brushLastScreenCoord: null,
+    selectedShapeId: null,
+    brushEditTargetId: null,
+    brushEditMode: null,
+    imageSelectionMask: null,
+    activeStoryIndex: null,
+    waypointAuthoring: /* @__PURE__ */ new Map(),
+    authoringWaypointShapesIndex: null,
+    activeChannelGroupId: null,
+    channelRendering: null,
+    channelVisibilities: {},
+    channelGroupRowVisibilities: {},
+    groupChannelLists: {},
+    groupNames: {},
+    targetWaypointCamera: null,
+    authoringWaypointEditorOpen: false,
+    layersPanelSelectedShapeIds: [],
+    layersPanelSelectedGroupId: null,
+    layersPanelSelectionFlash: null,
+    layersPanelSelectionRequest: null,
+    sam2ImageFetcher: null,
+    sam2Processing: false,
+    sam2DebugImages: null,
+    sam2ViewState: null,
+    sam2ViewportSize: null,
+    viewerViewState: null,
+    viewerViewportSize: null,
+    viewerReferenceImagePixelSize: null,
+    viewerImageLayersLoaded: false,
+    squareViewportThumbnailCapture: null,
+    editingViewstateWaypointIndex: null
+  };
+  const useAppStore = create$9()(devtools((set2, get2) => ({
+    ...overlayInitialState,
+    setActiveTool: (tool) => {
+      set2({
+        activeTool: tool,
+        brushEditTargetId: null,
+        brushEditMode: null
+      });
+    },
+    setCurrentInteraction: (interaction) => {
+      set2({
+        currentInteraction: interaction
+      });
+    },
+    addOverlayLayer: (layer) => {
+      set2((state) => {
+        const filtered = state.overlayLayers.filter((l2) => l2 && l2.id !== layer.id);
+        return {
+          overlayLayers: [
+            ...filtered,
+            layer
+          ]
+        };
+      });
+    },
+    removeOverlayLayer: (layerId) => {
+      set2((state) => ({
+        overlayLayers: state.overlayLayers.filter((l2) => l2 && l2.id !== layerId)
+      }));
+    },
+    clearOverlayLayers: () => {
+      set2({
+        overlayLayers: []
+      });
+    },
+    updateDrawingState: (updates) => {
+      set2((state) => ({
+        drawingState: {
+          ...state.drawingState,
+          ...updates
+        }
+      }));
+    },
+    resetDrawingState: () => {
+      set2({
+        drawingState: overlayInitialState.drawingState
+      });
+    },
+    handleLayerCreate: (layer) => {
+      if (layer === null) {
+        get2().removeOverlayLayer("drawing-layer");
+        return;
+      }
+      get2().addOverlayLayer(layer);
+    },
+    handleToolChange: (tool) => {
+      set2({
+        activeTool: tool,
+        brushEditTargetId: null,
+        brushEditMode: null
+      });
+      get2().resetDrawingState();
+      get2().resetDragState();
+      get2().removeOverlayLayer("drawing-layer");
+      get2().removeOverlayLayer("drawing-arrow-preview");
+    },
+    handleOverlayInteraction: (type, coordinate) => {
+      const { activeTool } = get2();
+      if (type === "hover" && activeTool === "move") {
+        return;
+      }
+      const interaction = {
+        type,
+        coordinate
+      };
+      set2({
+        currentInteraction: interaction
+      });
+      const { drawingState, dragState } = get2();
+      const [x2, y2] = coordinate;
+      if (activeTool === "move") {
+        if (!get2().authoringWaypointEditorOpen) {
+          return;
+        }
+        const { hoverState } = get2();
+        switch (type) {
+          case "hover":
+            break;
+          case "click":
+            if (hoverState.hoveredShapeId) {
+              get2().setSelectedShape(hoverState.hoveredShapeId);
+            }
+            break;
+          case "dragStart":
+            if (hoverState.hoveredShapeId) {
+              const annotation = get2().shapes.find((a2) => a2.id === hoverState.hoveredShapeId);
+              if (annotation) {
+                let offset = [
+                  0,
+                  0
+                ];
+                if (annotation.type === "text" || annotation.type === "point") {
+                  offset = [
+                    x2 - annotation.position[0],
+                    y2 - annotation.position[1]
+                  ];
+                } else {
+                  const firstPoint = annotation.polygon[0];
+                  offset = [
+                    x2 - firstPoint[0],
+                    y2 - firstPoint[1]
+                  ];
+                }
+                get2().startDrag(hoverState.hoveredShapeId, offset);
+              }
+            }
+            break;
+          case "drag":
+            if (dragState.isDragging) {
+              get2().updateDrag(coordinate);
+            }
+            break;
+          case "dragEnd":
+            if (dragState.isDragging) {
+              get2().endDrag();
+            }
+            break;
+        }
+        return;
+      }
+      const usesDrawingState = activeTool === "rectangle" || activeTool === "ellipse" || activeTool === "arrow" || activeTool === "line";
+      if (usesDrawingState) {
+        switch (type) {
+          case "click":
+          case "dragStart":
+            get2().updateDrawingState({
+              isDrawing: true,
+              dragStart: [
+                x2,
+                y2
+              ],
+              dragEnd: [
+                x2,
+                y2
+              ]
+            });
+            break;
+          case "drag":
+            if (drawingState.isDrawing) {
+              get2().updateDrawingState({
+                dragEnd: [
+                  x2,
+                  y2
+                ]
+              });
+            }
+            break;
+          case "dragEnd":
+            if (drawingState.isDrawing) {
+              get2().updateDrawingState({
+                dragEnd: [
+                  x2,
+                  y2
+                ]
+              });
+              if (activeTool === "rectangle") {
+                setTimeout(() => get2().finalizeRectangle(), 0);
+              } else if (activeTool === "ellipse") {
+                setTimeout(() => get2().finalizeEllipse(), 0);
+              } else if (activeTool === "arrow" || activeTool === "line") {
+                setTimeout(() => get2().finalizeLine(activeTool === "arrow"), 0);
+              }
+            }
+            break;
+        }
+      }
+    },
+    addShape: (shape) => {
+      set2((state) => ({
+        shapes: [
+          ...state.shapes,
+          shape
+        ]
+      }));
+      maybePersistShapesAfterMutation(get2);
+    },
+    addShapesBatch: (items) => {
+      if (items.length === 0) return;
+      set2((state) => ({
+        shapes: [
+          ...state.shapes,
+          ...items
+        ]
+      }));
+      maybePersistShapesAfterMutation(get2);
+    },
+    removeShape: (shapeId) => {
+      set2((state) => {
+        const newHiddenLayers = new Set(state.hiddenShapeIds);
+        newHiddenLayers.delete(shapeId);
+        const newSelected = state.selectedShapeId === shapeId ? null : state.selectedShapeId;
+        const clearingBrushEdit = state.brushEditTargetId === shapeId ? {
+          brushEditTargetId: null,
+          brushEditMode: null
+        } : {};
+        return {
+          shapes: state.shapes.filter((a2) => a2.id !== shapeId),
+          hiddenShapeIds: newHiddenLayers,
+          selectedShapeId: newSelected,
+          ...clearingBrushEdit
+        };
+      });
+      maybePersistShapesAfterMutation(get2);
+    },
+    updateShape: (shapeId, updates) => {
+      set2((state) => ({
+        shapes: state.shapes.map((a2) => a2.id === shapeId ? {
+          ...a2,
+          ...updates
+        } : a2)
+      }));
+    },
+    clearShapes: () => {
+      set2({
+        shapes: []
+      });
+    },
+    resetStoryViewerSession: () => {
+      const vis = {
+        ...get2().channelVisibilities
+      };
+      delete vis[SELECTION_MASK_CHANNEL_KEY];
+      set2({
+        shapes: [],
+        shapeGroups: [],
+        hiddenShapeIds: /* @__PURE__ */ new Set(),
+        selectedShapeId: null,
+        brushEditTargetId: null,
+        brushEditMode: null,
+        brushMask: null,
+        brushMaskVersion: 0,
+        brushLastScreenCoord: null,
+        imageSelectionMask: null,
+        channelVisibilities: vis,
+        activeStoryIndex: null,
+        waypointAuthoring: /* @__PURE__ */ new Map(),
+        authoringWaypointShapesIndex: null,
+        authoringWaypointEditorOpen: false,
+        targetWaypointCamera: null,
+        layersPanelSelectedShapeIds: [],
+        layersPanelSelectedGroupId: null,
+        layersPanelSelectionFlash: null,
+        layersPanelSelectionRequest: null,
+        drawingState: overlayInitialState.drawingState,
+        dragState: overlayInitialState.dragState,
+        hoverState: overlayInitialState.hoverState,
+        currentInteraction: null
+      });
+    },
+    finalizeRectangle: () => {
+      const { drawingState } = get2();
+      if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
+        const [startX, startY] = drawingState.dragStart;
+        const [endX, endY] = drawingState.dragEnd;
+        const annotation = {
+          id: newShapeId(),
+          type: "polygon",
+          polygon: rectangleToPolygon([
+            startX,
+            startY
+          ], [
+            endX,
+            endY
+          ]),
+          style: {
+            fillColor: [
+              get2().globalColor[0],
+              get2().globalColor[1],
+              get2().globalColor[2],
+              50
+            ],
+            lineColor: get2().globalColor,
+            lineWidth: 3
+          },
+          metadata: {
+            label: `Untitled ${get2().shapes.length + 1}`
+          }
+        };
+        get2().addShape(annotation);
+        get2().resetDrawingState();
+        get2().removeOverlayLayer("drawing-layer");
+      }
+    },
+    finalizeEllipse: () => {
+      const { drawingState } = get2();
+      if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
+        const [startX, startY] = drawingState.dragStart;
+        const [endX, endY] = drawingState.dragEnd;
+        const annotation = {
+          id: newShapeId(),
+          type: "polygon",
+          polygon: ellipseToPolygon$1([
+            startX,
+            startY
+          ], [
+            endX,
+            endY
+          ]),
+          style: {
+            fillColor: [
+              get2().globalColor[0],
+              get2().globalColor[1],
+              get2().globalColor[2],
+              50
+            ],
+            lineColor: get2().globalColor,
+            lineWidth: 3
+          },
+          metadata: {
+            label: `Untitled ${get2().shapes.length + 1}`
+          }
+        };
+        get2().addShape(annotation);
+        get2().resetDrawingState();
+        get2().removeOverlayLayer("drawing-layer");
+      }
+    },
+    finalizeLasso: (points) => {
+      if (points.length >= 3) {
+        const annotation = {
+          id: newShapeId(),
+          type: "polygon",
+          polygon: points,
+          style: {
+            fillColor: [
+              get2().globalColor[0],
+              get2().globalColor[1],
+              get2().globalColor[2],
+              50
+            ],
+            lineColor: get2().globalColor,
+            lineWidth: 3
+          },
+          metadata: {
+            label: `Untitled ${get2().shapes.length + 1}`
+          }
+        };
+        get2().addShape(annotation);
+        get2().removeOverlayLayer("drawing-layer");
+      }
+    },
+    finalizePolyline: (points) => {
+      if (points.length >= 2) {
+        const annotation = {
+          id: newShapeId(),
+          type: "polyline",
+          polygon: points,
+          style: {
+            lineColor: get2().globalColor,
+            lineWidth: 3
+          },
+          metadata: {
+            label: `Untitled ${get2().shapes.length + 1}`
+          }
+        };
+        get2().addShape(annotation);
+        get2().removeOverlayLayer("drawing-layer");
+      }
+    },
+    finalizeLine: (hasArrowHead = true) => {
+      const { drawingState } = get2();
+      if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
+        const [startX, startY] = drawingState.dragStart;
+        const [endX, endY] = drawingState.dragEnd;
+        const linePolygon = arrowLineDegeneratePolygon([
+          startX,
+          startY
+        ], [
+          endX,
+          endY
+        ]);
+        const annotation = {
+          id: newShapeId(),
+          type: "line",
+          polygon: linePolygon,
+          hasArrowHead,
+          style: {
+            fillColor: [
+              0,
+              0,
+              0,
+              0
+            ],
+            lineColor: get2().globalColor,
+            lineWidth: 3
+          },
+          metadata: {
+            label: `Untitled ${get2().shapes.length + 1}`
+          }
+        };
+        get2().addShape(annotation);
+        get2().resetDrawingState();
+        get2().removeOverlayLayer("drawing-layer");
+      }
+    },
+    createTextShape: (position2, text2, fontSize = 14) => {
+      if (!text2.trim()) {
+        return;
+      }
+      const annotation = {
+        id: newShapeId(),
+        type: "text",
+        position: position2,
+        text: text2.trim(),
+        style: {
+          fontSize,
+          fontColor: get2().globalColor,
+          backgroundColor: [
+            0,
+            0,
+            0,
+            100
+          ],
+          padding: 4
+        },
+        metadata: {
+          label: `Untitled ${get2().shapes.length + 1}`
+        }
+      };
+      get2().addShape(annotation);
+    },
+    createPointShape: (position2, radius = 5) => {
+      const annotation = {
+        id: newShapeId(),
+        type: "point",
+        position: position2,
+        style: {
+          fillColor: get2().globalColor,
+          strokeColor: [
+            255,
+            255,
+            255,
+            255
+          ],
+          radius
+        },
+        metadata: {
+          label: `Untitled ${get2().shapes.length + 1}`
+        }
+      };
+      get2().addShape(annotation);
+    },
+    updateTextShape: (shapeId, newText, fontSize) => {
+      if (!newText.trim()) {
+        return;
+      }
+      const shapes = get2().shapes;
+      const annotation = shapes.find((a2) => a2.id === shapeId);
+      if (!annotation || annotation.type !== "text") {
+        return;
+      }
+      const updates = {
+        text: newText.trim()
+      };
+      if (fontSize !== void 0) {
+        updates.style = {
+          ...annotation.style,
+          fontSize
+        };
+      }
+      get2().updateShape(shapeId, updates);
+    },
+    updateShapeText: (shapeId, newText) => {
+      const shapes = get2().shapes;
+      const annotation = shapes.find((a2) => a2.id === shapeId);
+      if (!annotation) return;
+      if (annotation.type === "text") {
+        get2().updateTextShape(shapeId, newText);
+        return;
+      }
+      const updates = {
+        text: newText.trim() || void 0
+      };
+      get2().updateShape(shapeId, updates);
+    },
+    updateShapeLabel: (shapeId, newLabel2) => {
+      const trimmed = newLabel2.trim();
+      set2((state) => ({
+        shapes: state.shapes.map((annotation) => {
+          if (annotation.id !== shapeId) {
+            return annotation;
+          }
+          const nextMetadata = {
+            ...annotation.metadata ?? {},
+            label: trimmed || void 0
+          };
+          return {
+            ...annotation,
+            metadata: nextMetadata
+          };
+        })
+      }));
+    },
+    setGlobalColor: (color2) => {
+      set2({
+        globalColor: color2
+      });
+    },
+    setViewportZoom: (zoom) => {
+      set2({
+        viewportZoom: zoom
+      });
+    },
+    setShowSquareViewportOverlay: (show) => {
+      set2({
+        showSquareViewportOverlay: show
+      });
+    },
+    setBrushRadiusPx: (radius) => {
+      set2({
+        brushRadiusPx: radius
+      });
+    },
+    setBrushViewport: (width, height, bounds) => {
+      set2({
+        brushViewportWidth: width,
+        brushViewportHeight: height,
+        brushViewBounds: bounds
+      });
+    },
+    clearBrushMask: () => {
+      set2({
+        brushMask: null,
+        brushMaskVersion: 0
+      });
+    },
+    setImageSelectionMaskFromShape: (shape) => {
+      var _a2;
+      const { width: imageWidth, height: imageHeight } = referenceImagePixelSizeForActions(get2);
+      if (imageWidth <= 0 || imageHeight <= 0) return false;
+      const ring = polygonRingFromShape(shape);
+      if (!ring) return false;
+      const mask2 = rasterizePolygonToImageMask(ring, imageWidth, imageHeight, {
+        sourceShapeId: shape.id,
+        sourceShapeLabel: (_a2 = shape.metadata) == null ? void 0 : _a2.label
+      });
+      if (!mask2) return false;
+      const vis = {
+        ...get2().channelVisibilities
+      };
+      vis[SELECTION_MASK_CHANNEL_KEY] = true;
+      set2({
+        imageSelectionMask: {
+          ...mask2,
+          maskVisualization: DEFAULT_MASK_VISUALIZATION
+        },
+        channelVisibilities: vis
+      });
+      return true;
+    },
+    setImageSelectionMaskVisualization: (viz) => {
+      const mask2 = get2().imageSelectionMask;
+      if (!mask2) return;
+      set2({
+        imageSelectionMask: {
+          ...mask2,
+          maskVisualization: viz
+        }
+      });
+    },
+    clearImageSelectionMask: () => {
+      const vis = {
+        ...get2().channelVisibilities
+      };
+      delete vis[SELECTION_MASK_CHANNEL_KEY];
+      set2({
+        imageSelectionMask: null,
+        channelVisibilities: vis
+      });
+    },
+    setImageSelectionMaskFromWaypoint: (shapeIds, preferredShapeIds) => {
+      if (shapeIds.length === 0) return false;
+      const docShapes = documentShapes(useDocumentStore.getState());
+      const viewerShapes = get2().shapes;
+      const tryIds = [
+        ...preferredShapeIds ?? [],
+        ...shapeIds.filter((id2) => !(preferredShapeIds == null ? void 0 : preferredShapeIds.includes(id2)))
+      ];
+      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
+      const apply = get2().setImageSelectionMaskFromShape;
+      for (const id2 of tryIds) {
+        const live = viewerShapes.find((s2) => s2.id === id2);
+        if (live && apply(live)) return true;
+        const persisted = docShapes.find((s2) => s2.id === id2);
+        if (persisted && apply(storyShapeToViewer(persisted, {
+          imageWidth: iw,
+          imageHeight: ih2
+        }))) {
+          return true;
+        }
+      }
+      return false;
+    },
+    brushPaintStart: (screenCoord) => {
+      const state = get2();
+      const { brushViewportWidth, brushViewportHeight, brushRadiusPx } = state;
+      if (brushViewportWidth <= 0 || brushViewportHeight <= 0 || brushRadiusPx <= 0) return;
+      const mask2 = ensureBrushMaskViewport(brushViewportWidth, brushViewportHeight);
+      paintCircleOnMaskScreen(mask2, screenCoord[0], screenCoord[1], brushRadiusPx);
+      set2({
+        brushMask: mask2,
+        brushMaskVersion: 1,
+        brushLastScreenCoord: screenCoord
+      });
+    },
+    brushPaint: (screenCoord) => {
+      const state = get2();
+      const mask2 = state.brushMask;
+      if (!mask2) return;
+      const { brushRadiusPx } = state;
+      const [x2, y2] = screenCoord;
+      const last2 = state.brushLastScreenCoord;
+      if (!last2) {
+        paintCircleOnMaskScreen(mask2, x2, y2, brushRadiusPx);
+        set2({
+          brushMask: {
+            ...mask2
+          },
+          brushMaskVersion: state.brushMaskVersion + 1,
+          brushLastScreenCoord: screenCoord
+        });
+        return;
+      }
+      const [x1, y1] = last2;
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const dist2 = Math.hypot(dx, dy);
+      if (dist2 === 0) {
+        paintCircleOnMaskScreen(mask2, x2, y2, brushRadiusPx);
+      } else {
+        const step = Math.max(1, brushRadiusPx * 0.5);
+        const steps = Math.max(1, Math.ceil(dist2 / step));
+        for (let i2 = 1; i2 <= steps; i2++) {
+          const t2 = i2 / steps;
+          const sx = x1 + dx * t2;
+          const sy = y1 + dy * t2;
+          paintCircleOnMaskScreen(mask2, sx, sy, brushRadiusPx);
+        }
+      }
+      set2({
+        brushMask: {
+          ...mask2
+        },
+        brushMaskVersion: state.brushMaskVersion + 1,
+        brushLastScreenCoord: screenCoord
+      });
+    },
+    brushPaintEnd: () => {
+      const state = get2();
+      const mask2 = state.brushMask;
+      const bounds = state.brushViewBounds;
+      let hull;
+      if (mask2 && bounds) {
+        const loops = maskToLoops(mask2);
+        const w2 = mask2.width;
+        const h2 = mask2.height;
+        const pxToWorld = Math.max(Math.abs(bounds[2] - bounds[0]) / Math.max(1, w2), Math.abs(bounds[1] - bounds[3]) / Math.max(1, h2));
+        const epsilonWorld = pxToWorld * 1;
+        const outerLoops = [];
+        for (const loop of loops) {
+          const worldLoop = loopScreenToWorld(loop, bounds, w2, h2);
+          const simplified = simplifyClosedPolygon(worldLoop, epsilonWorld);
+          if (simplified.length < 4) continue;
+          const area2 = signedPolygonArea(simplified);
+          if (area2 > 0) {
+            outerLoops.push(simplified);
+          }
+        }
+        if (outerLoops.length === 0) {
+          for (const loop of loops) {
+            const worldLoop = loopScreenToWorld(loop, bounds, w2, h2);
+            const simplified = simplifyClosedPolygon(worldLoop, epsilonWorld);
+            if (simplified.length < 4) continue;
+            const area2 = signedPolygonArea(simplified);
+            if (area2 < 0) {
+              outerLoops.push(simplified);
+            }
+          }
+        }
+        if (outerLoops.length === 1) {
+          hull = outerLoops[0];
+        } else if (outerLoops.length > 1) {
+          let accHull = outerLoops[0];
+          for (let i2 = 1; i2 < outerLoops.length; i2++) {
+            const union2 = polygonUnion(accHull, outerLoops[i2]);
+            if (union2 && union2.length >= 4) accHull = union2;
+          }
+          if (accHull && accHull.length >= 4) {
+            hull = accHull;
+          }
+        }
+      }
+      get2().finalizeBrush([], hull);
+      set2({
+        brushLastScreenCoord: null
+      });
+    },
+    startBrushEdit: (shapeId, mode) => {
+      set2((state) => {
+        const newHiddenLayers = new Set(state.hiddenShapeIds);
+        if (newHiddenLayers.has(shapeId)) {
+          newHiddenLayers.delete(shapeId);
+        }
+        return {
+          activeTool: "brush",
+          brushEditTargetId: shapeId,
+          brushEditMode: mode,
+          hiddenShapeIds: newHiddenLayers,
+          selectedShapeId: shapeId
+        };
+      });
+    },
+    stopBrushEdit: () => {
+      set2({
+        brushEditTargetId: null,
+        brushEditMode: null
+      });
+    },
+    setSelectedShape: (shapeId) => {
+      set2({
+        selectedShapeId: shapeId
+      });
+    },
+    finalizeBrush: (strokePoints, precomputedHull) => {
+      const state = get2();
+      const { brushRadiusPx, viewportZoom, brushMask, brushViewBounds, brushEditTargetId, brushEditMode, shapes: brushShapes, globalColor } = state;
+      const overlayPolygon = computeBrushPolygon(strokePoints, precomputedHull, brushMask, brushRadiusPx, viewportZoom, brushViewBounds);
+      if (!overlayPolygon || overlayPolygon.length < 3) {
+        set2({
+          brushMask: null,
+          brushMaskVersion: 0
+        });
+        return;
+      }
+      if (brushEditTargetId && brushEditMode) {
+        const target = brushShapes.find((a2) => a2.id === brushEditTargetId);
+        if (target && target.type === "polygon") {
+          const basePolygon = target.polygon;
+          const nextPolygon = brushEditMode === "add" ? (() => {
+            const touches = polygonsOverlap(basePolygon, overlayPolygon);
+            if (!touches) {
+              return basePolygon;
+            }
+            return polygonUnion(basePolygon, overlayPolygon);
+          })() : polygonDifference(basePolygon, overlayPolygon);
+          if (nextPolygon && nextPolygon.length >= 3 && nextPolygon !== basePolygon) {
+            get2().updateShape(brushEditTargetId, {
+              polygon: nextPolygon
+            });
+          }
+        }
+      } else {
+        const annotation = {
+          id: newShapeId(),
+          type: "polygon",
+          polygon: overlayPolygon,
+          style: {
+            fillColor: [
+              0,
+              0,
+              0,
+              0
+            ],
+            lineColor: globalColor,
+            lineWidth: 3
+          },
+          metadata: {
+            label: `Untitled ${brushShapes.length + 1}`
+          }
+        };
+        get2().addShape(annotation);
+      }
+      get2().removeOverlayLayer("drawing-layer");
+      set2({
+        brushMask: null,
+        brushMaskVersion: 0
+      });
+    },
+    toggleShapeVisibility: (shapeId) => {
+      set2((state) => {
+        const newHiddenLayers = new Set(state.hiddenShapeIds);
+        if (newHiddenLayers.has(shapeId)) {
+          newHiddenLayers.delete(shapeId);
+        } else {
+          newHiddenLayers.add(shapeId);
+        }
+        return {
+          hiddenShapeIds: newHiddenLayers
+        };
+      });
+    },
+    startDrag: (shapeId, offset) => {
+      set2({
+        dragState: {
+          isDragging: true,
+          draggedShapeId: shapeId,
+          dragOffset: offset
+        }
+      });
+    },
+    updateDrag: (coordinate) => {
+      const { dragState, shapes: dragShapes } = get2();
+      if (dragState.isDragging && dragState.draggedShapeId && dragState.dragOffset) {
+        const [x2, y2] = coordinate;
+        const [offsetX, offsetY] = dragState.dragOffset;
+        const newX = x2 - offsetX;
+        const newY = y2 - offsetY;
+        const annotation = dragShapes.find((a2) => a2.id === dragState.draggedShapeId);
+        if (annotation) {
+          if (annotation.type === "text" || annotation.type === "point") {
+            const updatedAnnotation = {
+              ...annotation,
+              position: [
+                newX,
+                newY
+              ]
+            };
+            get2().updateShape(dragState.draggedShapeId, updatedAnnotation);
+          } else {
+            const deltaX = newX - annotation.polygon[0][0];
+            const deltaY = newY - annotation.polygon[0][1];
+            const updatedPolygon = annotation.polygon.map(([px, py]) => [
+              px + deltaX,
+              py + deltaY
+            ]);
+            get2().updateShape(dragState.draggedShapeId, {
+              ...annotation,
+              polygon: updatedPolygon
+            });
+          }
+        }
+      }
+    },
+    endDrag: () => {
+      set2({
+        dragState: {
+          isDragging: false,
+          draggedShapeId: null,
+          dragOffset: null
+        }
+      });
+      maybePersistShapesAfterMutation(get2);
+    },
+    resetDragState: () => {
+      set2({
+        dragState: overlayInitialState.dragState
+      });
+    },
+    setHoveredShape: (shapeId) => {
+      if (get2().hoverState.hoveredShapeId === shapeId) return;
+      set2({
+        hoverState: {
+          hoveredShapeId: shapeId
+        }
+      });
+    },
+    setAuthoringWaypointEditorOpen: (open) => {
+      if (open) {
+        set2({
+          authoringWaypointEditorOpen: true
+        });
+      } else {
+        set2({
+          authoringWaypointEditorOpen: false,
+          hoverState: overlayInitialState.hoverState,
+          dragState: overlayInitialState.dragState
+        });
+      }
+    },
+    setAuthoringWaypointShapesIndex: (index2) => {
+      set2({
+        authoringWaypointShapesIndex: index2
+      });
+    },
+    setLayersPanelSelectedShapeIds: (ids) => {
+      set2({
+        layersPanelSelectedShapeIds: [
+          ...ids
+        ]
+      });
+    },
+    setLayersPanelSelectedGroupId: (id2) => {
+      set2({
+        layersPanelSelectedGroupId: id2
+      });
+    },
+    flashLayersPanelSelection: (payload) => {
+      set2({
+        layersPanelSelectionFlash: {
+          token: Date.now(),
+          shapeIds: [
+            ...payload.shapeIds
+          ],
+          groupId: payload.groupId
+        }
+      });
+    },
+    requestLayersPanelSelection: (payload) => {
+      set2({
+        layersPanelSelectionRequest: {
+          token: Date.now(),
+          shapeIds: [
+            ...payload.shapeIds
+          ],
+          groupId: payload.groupId
+        }
+      });
+    },
+    createGroup: (name2) => {
+      const groupCount = get2().shapeGroups.length;
+      const newGroup = {
+        id: `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name: name2 || `Group ${groupCount + 1}`,
+        shapeIds: [],
+        isExpanded: true
+      };
+      set2((state) => ({
+        shapeGroups: [
+          ...state.shapeGroups,
+          newGroup
+        ]
+      }));
+    },
+    deleteGroup: (groupId) => {
+      set2((state) => ({
+        shapeGroups: state.shapeGroups.filter((g2) => g2.id !== groupId)
+      }));
+    },
+    addShapeToGroup: (groupId, shapeId) => {
+      set2((state) => ({
+        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId ? {
+          ...group2,
+          shapeIds: [
+            ...group2.shapeIds,
+            shapeId
+          ]
+        } : group2)
+      }));
+    },
+    removeShapeFromGroup: (groupId, shapeId) => {
+      set2((state) => ({
+        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId ? {
+          ...group2,
+          shapeIds: group2.shapeIds.filter((id2) => id2 !== shapeId)
+        } : group2)
+      }));
+    },
+    toggleGroupExpanded: (groupId) => {
+      set2((state) => ({
+        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId ? {
+          ...group2,
+          isExpanded: !group2.isExpanded
+        } : group2)
+      }));
+    },
+    setStories: (configWaypoints2) => {
+      const doc = useDocumentStore.getState();
+      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
+      const vp = authoringViewportForDoc(get2);
+      const nextAuthoring = /* @__PURE__ */ new Map();
+      const waypoints = configWaypoints2.map((w2) => {
+        const { waypoint, authoring } = configWaypointToWaypoint(hydrateConfigWaypoint(w2, doc.channelGroups), iw, ih2, vp.width, vp.height);
+        nextAuthoring.set(waypoint.id, authoring);
+        return waypoint;
+      });
+      doc.setWaypoints(waypoints);
+      set2({
+        activeStoryIndex: null,
+        waypointAuthoring: nextAuthoring
+      });
+    },
+    setActiveStory: (index2) => {
+      set2({
+        activeStoryIndex: index2
+      });
+    },
+    addStory: (configWaypoint) => {
+      const doc = useDocumentStore.getState();
+      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
+      const vp = authoringViewportForDoc(get2);
+      const { waypoint, authoring } = configWaypointToWaypoint(hydrateConfigWaypoint(configWaypoint, doc.channelGroups), iw, ih2, vp.width, vp.height);
+      doc.setWaypoints([
+        ...doc.waypoints,
+        waypoint
+      ]);
+      set2((s2) => {
+        const next2 = new Map(s2.waypointAuthoring);
+        next2.set(waypoint.id, authoring);
+        return {
+          waypointAuthoring: next2
+        };
+      });
+    },
+    updateStory: (index2, updates) => {
+      const doc = useDocumentStore.getState();
+      const wp = doc.waypoints[index2];
+      if (!wp) return;
+      const vp = authoringViewportForDoc(get2);
+      const existingAuthoring = get2().waypointAuthoring.get(wp.id);
+      const asConfig = waypointToConfigWaypoint(wp, existingAuthoring);
+      let merged = {
+        ...asConfig,
+        ...updates
+      };
+      const shouldDropLegacyViewKeys = Object.hasOwn(updates, "Bounds");
+      if (shouldDropLegacyViewKeys) {
+        const { Pan: _pan, Zoom: _zoom, ...withoutPanZoom } = merged;
+        if (Object.hasOwn(updates, "ViewState")) {
+          merged = withoutPanZoom;
+        } else {
+          const { ViewState: _vs, ...rest2 } = withoutPanZoom;
+          merged = rest2;
+        }
+      }
+      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
+      const { waypoint: nextWp, authoring } = configWaypointToWaypoint(merged, iw, ih2, vp.width, vp.height);
+      const waypoints = [
+        ...doc.waypoints
+      ];
+      waypoints[index2] = nextWp;
+      doc.setWaypoints(waypoints);
+      set2((s2) => {
+        const next2 = new Map(s2.waypointAuthoring);
+        next2.set(nextWp.id, authoring);
+        return {
+          waypointAuthoring: next2
+        };
+      });
+    },
+    removeStory: (index2) => {
+      var _a2;
+      const doc = useDocumentStore.getState();
+      const removedId = (_a2 = doc.waypoints[index2]) == null ? void 0 : _a2.id;
+      if (index2 >= 0 && index2 < doc.waypoints.length) {
+        doc.setWaypoints(doc.waypoints.filter((_2, i2) => i2 !== index2));
+      }
+      set2((state) => {
+        const next2 = new Map(state.waypointAuthoring);
+        if (removedId) next2.delete(removedId);
+        return {
+          waypointAuthoring: next2,
+          activeStoryIndex: state.activeStoryIndex === index2 ? null : state.activeStoryIndex && state.activeStoryIndex > index2 ? state.activeStoryIndex - 1 : state.activeStoryIndex
+        };
+      });
+    },
+    reorderStories: (fromIndex, toIndex) => {
+      const doc = useDocumentStore.getState();
+      const next2 = [
+        ...doc.waypoints
+      ];
+      const [moved] = next2.splice(fromIndex, 1);
+      next2.splice(toIndex, 0, moved);
+      doc.setWaypoints(next2);
+      set2((state) => {
+        let newActiveStoryIndex = state.activeStoryIndex;
+        if (state.activeStoryIndex !== null) {
+          if (state.activeStoryIndex === fromIndex) {
+            newActiveStoryIndex = toIndex;
+          } else if (fromIndex < state.activeStoryIndex && toIndex >= state.activeStoryIndex) {
+            newActiveStoryIndex = state.activeStoryIndex - 1;
+          } else if (fromIndex > state.activeStoryIndex && toIndex <= state.activeStoryIndex) {
+            newActiveStoryIndex = state.activeStoryIndex + 1;
+          }
+        }
+        return {
+          activeStoryIndex: newActiveStoryIndex
+        };
+      });
+    },
+    setGroupNames: (o2) => {
+      set2({
+        groupNames: o2
+      });
+    },
+    setGroupChannelLists: (o2) => {
+      set2({
+        groupChannelLists: o2
+      });
+    },
+    setSam2ImageFetcher: (fetcher) => {
+      set2({
+        sam2ImageFetcher: fetcher
+      });
+    },
+    setSam2Processing: (v2) => {
+      set2({
+        sam2Processing: v2
+      });
+    },
+    setSam2DebugImages: (v2) => {
+      set2({
+        sam2DebugImages: v2
+      });
+    },
+    setSam2ViewState: (vs2) => {
+      set2({
+        sam2ViewState: vs2
+      });
+    },
+    setSam2ViewportSize: (size) => {
+      set2({
+        sam2ViewportSize: size
+      });
+    },
+    setViewerViewState: (vs2) => {
+      set2({
+        viewerViewState: vs2
+      });
+    },
+    setViewerViewportSize: (size) => {
+      set2({
+        viewerViewportSize: size
+      });
+    },
+    setViewerReferenceImagePixelSize: (size) => {
+      set2({
+        viewerReferenceImagePixelSize: size
+      });
+    },
+    setViewerImageLayersLoaded: (loaded) => {
+      set2({
+        viewerImageLayersLoaded: loaded
+      });
+    },
+    setSquareViewportThumbnailCapture: (capture) => {
+      set2({
+        squareViewportThumbnailCapture: capture
+      });
+    },
+    captureSquareViewportThumbnail: () => {
+      const capture = get2().squareViewportThumbnailCapture;
+      if (!capture) return null;
+      return capture();
+    },
+    setEditingViewstateWaypointIndex: (index2) => {
+      set2({
+        editingViewstateWaypointIndex: index2
+      });
+    },
+    setChannelVisibilities: (vis) => {
+      set2({
+        channelVisibilities: vis
+      });
+    },
+    setChannelGroupRowVisibilities: (vis) => {
+      set2({
+        channelGroupRowVisibilities: vis
+      });
+    },
+    setChannelRendering: (rendering) => {
+      set2({
+        channelRendering: rendering
+      });
+    },
+    clearChannelRendering: () => {
+      set2({
+        channelRendering: null
+      });
+    },
+    importWaypointShapes: (story, clearExisting = false, shapeRegistry) => {
+      const doc0 = useDocumentStore.getState();
+      const { width: imageWidth, height: imageHeight } = referenceImagePixelSizeForActions(get2);
+      const fromStore = documentShapes(doc0);
+      const shapesForLookup = shapeRegistry === void 0 ? fromStore : (() => {
+        const merged = new Map(fromStore.map((s2) => [
+          s2.id,
+          s2
+        ]));
+        for (const s2 of shapeRegistry) {
+          merged.set(s2.id, s2);
+        }
+        return [
+          ...merged.values()
+        ];
+      })();
+      if (imageWidth === 0 || imageHeight === 0) {
+        return;
+      }
+      const shapeIds = story.shapeIds ?? [];
+      if (clearExisting && shapeIds.length > 0 && shapesForLookup.length === 0) {
+        return;
+      }
+      const shapeById = new Map(shapesForLookup.map((s2) => [
+        s2.id,
+        s2
+      ]));
+      const newAnnotations = [];
+      for (const id2 of shapeIds) {
+        const sh2 = shapeById.get(id2);
+        if (sh2) newAnnotations.push(storyShapeToViewer(sh2, {
+          imageWidth,
+          imageHeight
+        }));
+      }
+      set2((state) => mergeShapesAfterWaypointImport(state, newAnnotations, clearExisting));
+    },
+    persistImportedShapesToStory: (storyIndex) => {
+      var _a2;
+      const state = get2();
+      const doc = useDocumentStore.getState();
+      const waypoints = documentWaypoints(doc);
+      const row2 = waypoints[storyIndex];
+      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
+      if (!row2 || iw <= 0 || ih2 <= 0) {
+        return;
+      }
+      const hadStored = (((_a2 = row2.shapeIds) == null ? void 0 : _a2.length) ?? 0) > 0;
+      if (state.shapes.length === 0 && !hadStored) {
+        return;
+      }
+      if (state.shapes.length === 0 && hadStored) {
+        const prevShapesList2 = documentShapes(doc);
+        const merged2 = mergeShapesForWaypointPersist({
+          waypoints,
+          waypointIndex: storyIndex,
+          prevShapes: prevShapesList2,
+          builtShapes: [],
+          newShapeIdsOrdered: []
+        });
+        if (JSON.stringify(merged2) !== JSON.stringify(prevShapesList2)) {
+          useDocumentStore.getState().setShapes(merged2);
+        }
+        get2().updateStory(storyIndex, {
+          shapeIds: []
+        });
+        return;
+      }
+      const builtShapes = viewerShapesToStoryShapes(state.shapes);
+      const newShapeIdsOrdered = builtShapes.map((s2) => s2.id);
+      const prevShapesList = documentShapes(doc);
+      const merged = mergeShapesForWaypointPersist({
+        waypoints,
+        waypointIndex: storyIndex,
+        prevShapes: prevShapesList,
+        builtShapes,
+        newShapeIdsOrdered
+      });
+      const prevIds = JSON.stringify(row2.shapeIds ?? []);
+      const nextIds = JSON.stringify(newShapeIdsOrdered);
+      const prevShapesJson = JSON.stringify(prevShapesList);
+      const nextShapesJson = JSON.stringify(merged);
+      if (prevIds === nextIds && prevShapesJson === nextShapesJson) {
+        return;
+      }
+      useDocumentStore.getState().setShapes(merged);
+      get2().updateStory(storyIndex, {
+        shapeIds: newShapeIdsOrdered
+      });
+      const idSet = new Set(newShapeIdsOrdered);
+      set2((s2) => ({
+        shapes: s2.shapes.map((shape) => idSet.has(shape.id) ? {
+          ...shape,
+          metadata: {
+            ...shape.metadata,
+            isImported: true
+          }
+        } : shape)
+      }));
+    },
+    setActiveChannelGroup: (channelGroupId) => {
+      set2({
+        activeChannelGroupId: channelGroupId
+      });
+    },
+    setTargetWaypointCamera: (waypoint) => {
+      const next2 = waypoint === null ? null : {
+        ...waypoint
+      };
+      set2({
+        targetWaypointCamera: next2
+      });
+    },
+    clearTargetWaypointCamera: () => {
+      set2({
+        targetWaypointCamera: null
+      });
+    }
+  }), {
+    name: "appStore"
+  }));
+  function syncAppStoreChannelMirrorsFromDocument() {
+    var _a2;
+    const doc = useDocumentStore.getState();
+    const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+    const groups = doc.channelGroups;
+    const groupNames = Object.fromEntries(groups.map(({ name: name2, id: id2 }) => [
+      id2,
+      name2
+    ]));
+    const groupChannelLists = Object.fromEntries(groups.map(({ name: name2, channels: channels2 }) => [
+      name2,
+      channels2.map((gc2) => findSourceChannel(sourceChannels, gc2.channelId)).filter(Boolean).map((sc2) => sc2 == null ? void 0 : sc2.name)
+    ]));
+    const namesInUse = /* @__PURE__ */ new Set();
+    for (const g2 of groups) {
+      for (const gc2 of g2.channels) {
+        const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
+        if (sc2 == null ? void 0 : sc2.name) namesInUse.add(sc2.name);
+      }
+    }
+    const prevVis = useAppStore.getState().channelVisibilities;
+    const channelVisibilities = {
+      ...prevVis
+    };
+    for (const name2 of namesInUse) {
+      if (channelVisibilities[name2] === void 0) {
+        channelVisibilities[name2] = true;
+      }
+    }
+    const activeId = useAppStore.getState().activeChannelGroupId;
+    const nextActiveId = activeId && groups.some((g2) => g2.id === activeId) ? activeId : ((_a2 = groups[0]) == null ? void 0 : _a2.id) ?? null;
+    useAppStore.setState({
+      groupNames,
+      groupChannelLists,
+      channelVisibilities,
+      activeChannelGroupId: nextActiveId
+    });
+  }
+  function syncAppStoreWaypointsFromDocument() {
+    const doc = useDocumentStore.getState();
+    const app = useAppStore.getState();
+    const waypoints = doc.waypoints;
+    const ids = new Set(waypoints.map((w2) => w2.id));
+    const waypointAuthoring = new Map(app.waypointAuthoring);
+    for (const id2 of waypointAuthoring.keys()) {
+      if (!ids.has(id2)) waypointAuthoring.delete(id2);
+    }
+    let activeStoryIndex = app.activeStoryIndex;
+    if (activeStoryIndex !== null && activeStoryIndex >= waypoints.length) {
+      activeStoryIndex = waypoints.length > 0 ? waypoints.length - 1 : null;
+    }
+    let authoringWaypointShapesIndex = app.authoringWaypointShapesIndex;
+    if (authoringWaypointShapesIndex !== null && authoringWaypointShapesIndex >= waypoints.length) {
+      authoringWaypointShapesIndex = waypoints.length > 0 ? waypoints.length - 1 : null;
+    }
+    useAppStore.setState({
+      waypointAuthoring,
+      activeStoryIndex,
+      authoringWaypointShapesIndex
+    });
+  }
+  function syncAppStoreShapesFromDocument() {
+    const doc = useDocumentStore.getState();
+    const app = useAppStore.getState();
+    const waypoints = doc.waypoints;
+    useAppStore.setState({
+      shapes: []
+    });
+    const idx = app.authoringWaypointShapesIndex ?? app.activeStoryIndex;
+    if (idx === null || idx < 0 || idx >= waypoints.length) return;
+    useAppStore.getState().importWaypointShapes(waypoints[idx], true);
+  }
+  function syncAppStoreFromDocument() {
+    useAppStore.getState().clearChannelRendering();
+    syncAppStoreChannelMirrorsFromDocument();
+    syncAppStoreWaypointsFromDocument();
+    syncAppStoreShapesFromDocument();
+  }
+  function documentUndo() {
+    const { pastStates, undo } = useDocumentStore.temporal.getState();
+    if (pastStates.length === 0) return;
+    undo();
+    syncAppStoreFromDocument();
+  }
+  function documentRedo() {
+    const { futureStates, redo } = useDocumentStore.temporal.getState();
+    if (futureStates.length === 0) return;
+    redo();
+    syncAppStoreFromDocument();
+  }
+  function useCanDocumentUndo() {
+    return useStore(useDocumentStore.temporal, (s2) => s2.pastStates.length > 0);
+  }
+  function useCanDocumentRedo() {
+    return useStore(useDocumentStore.temporal, (s2) => s2.futureStates.length > 0);
+  }
+  const group$1 = "_group_gqa4m_1";
+  const button$1 = "_button_gqa4m_12";
+  const styles$u = {
+    group: group$1,
+    button: button$1
+  };
+  function UndoIcon() {
+    return jsxRuntimeExports.jsx("svg", {
+      width: "14",
+      height: "14",
+      viewBox: "0 0 14 14",
+      "aria-hidden": "true",
+      focusable: "false",
+      children: jsxRuntimeExports.jsx("path", {
+        fill: "currentColor",
+        d: "M6.2 2.1a.75.75 0 0 1 0 1.06L4.56 4.8H8.5a4.25 4.25 0 1 1 0 8.5H7a.75.75 0 0 1 0-1.5h1.5a2.75 2.75 0 1 0 0-5.5H4.56l1.64 1.64a.75.75 0 1 1-1.06 1.06L2.22 5.72a.75.75 0 0 1 0-1.06l2.92-2.92a.75.75 0 0 1 1.06 0Z"
+      })
+    });
+  }
+  function RedoIcon() {
+    return jsxRuntimeExports.jsx("svg", {
+      width: "14",
+      height: "14",
+      viewBox: "0 0 14 14",
+      "aria-hidden": "true",
+      focusable: "false",
+      children: jsxRuntimeExports.jsx("path", {
+        fill: "currentColor",
+        d: "M7.8 2.1a.75.75 0 0 0 0 1.06L9.44 4.8H5.5a4.25 4.25 0 1 0 0 8.5H7a.75.75 0 0 0 0-1.5H5.5a2.75 2.75 0 1 1 0-5.5h3.94L7.8 7.94a.75.75 0 1 0 1.06 1.06l2.92-2.92a.75.75 0 0 0 0-1.06L8.86 2.1a.75.75 0 0 0-1.06 0Z"
+      })
+    });
+  }
+  function DocumentUndoControls() {
+    const canUndo = useCanDocumentUndo();
+    const canRedo = useCanDocumentRedo();
+    return jsxRuntimeExports.jsxs("fieldset", {
+      className: styles$u.group,
+      "aria-label": "Document undo and redo",
+      children: [
+        jsxRuntimeExports.jsx("button", {
+          type: "button",
+          className: styles$u.button,
+          onClick: () => documentUndo(),
+          disabled: !canUndo,
+          title: "Undo",
+          "aria-label": "Undo",
+          children: jsxRuntimeExports.jsx(UndoIcon, {})
+        }),
+        jsxRuntimeExports.jsx("button", {
+          type: "button",
+          className: styles$u.button,
+          onClick: () => documentRedo(),
+          disabled: !canRedo,
+          title: "Redo",
+          "aria-label": "Redo",
+          children: jsxRuntimeExports.jsx(RedoIcon, {})
+        })
+      ]
+    });
+  }
   const menuWrap = "_menuWrap_1pony_1";
   const hamburgButton = "_hamburgButton_1pony_9";
   const dropdown = "_dropdown_1pony_49";
@@ -83199,7 +87396,9 @@ void main() {
     const fieldId = reactExports.useId();
     const inputRef = reactExports.useRef(null);
     const [editing, setEditing] = reactExports.useState(false);
-    const inputSize = Math.min(200, Math.max(14, titleText2.length || 13));
+    const [draftTitle, setDraftTitle] = reactExports.useState("");
+    const displayTitle = editing ? draftTitle : titleText2;
+    const inputSize = Math.min(200, Math.max(14, displayTitle.length || 13));
     reactExports.useEffect(() => {
       if (!editing) return;
       const el2 = inputRef.current;
@@ -83219,6 +87418,7 @@ void main() {
           onReturnToLibrary,
           onExport
         }) : null,
+        jsxRuntimeExports.jsx(DocumentUndoControls, {}),
         jsxRuntimeExports.jsx("label", {
           className: styles$r.titleFieldWrap,
           htmlFor: fieldId,
@@ -83229,22 +87429,24 @@ void main() {
             type: "text",
             size: inputSize,
             readOnly: !editing,
-            value: titleText2,
+            value: displayTitle,
             placeholder: "Untitled story",
             "aria-label": "Story title",
             onFocus: () => {
-              if (!editing) setEditing(true);
+              if (!editing) {
+                setDraftTitle(titleText2);
+                setEditing(true);
+              }
             },
-            onChange: (e2) => setMetadata({
-              title: e2.target.value
-            }),
+            onChange: (e2) => setDraftTitle(e2.target.value),
             onBlur: (e2) => {
               setEditing(false);
-              const raw2 = e2.target.value;
-              const trimmed = raw2.trim();
-              if (trimmed !== raw2) setMetadata({
-                title: trimmed
-              });
+              const trimmed = e2.target.value.trim();
+              if (trimmed !== titleText2) {
+                setMetadata({
+                  title: trimmed
+                });
+              }
               void (async () => {
                 const s2 = useDocumentStore.getState();
                 const id2 = s2.activeStoryId;
@@ -86122,3893 +90324,6 @@ void main() {
       configWaypoints: enabled2 && !jpeg ? configWaypoints : []
     };
   }
-  const SELECTION_MASK_CHANNEL_KEY = "Selection";
-  const IMAGE_SELECTION_MASK_LAYER_ID = "image-selection-mask";
-  function colorFromSeed(seed) {
-    let h2 = 2166136261;
-    for (let i2 = 0; i2 < seed.length; i2++) {
-      h2 ^= seed.charCodeAt(i2);
-      h2 = Math.imul(h2, 16777619);
-    }
-    const r2 = 50 + (h2 >> 16 & 159);
-    const g2 = 50 + (h2 >> 8 & 159);
-    const b2 = 50 + (h2 & 159);
-    return [
-      r2,
-      g2,
-      b2
-    ];
-  }
-  function isEdgeAt(data2, width, height, x2, y2) {
-    const neighbors = [
-      [
-        x2 - 1,
-        y2
-      ],
-      [
-        x2 + 1,
-        y2
-      ],
-      [
-        x2,
-        y2 - 1
-      ],
-      [
-        x2,
-        y2 + 1
-      ]
-    ];
-    for (const [nx, ny] of neighbors) {
-      if (nx < 0 || ny < 0 || nx >= width || ny >= height) return true;
-      if (!data2[ny * width + nx]) return true;
-    }
-    return false;
-  }
-  function dilateBinaryMask(src, width, height, radius) {
-    const horiz = new Uint8Array(width * height);
-    for (let y2 = 0; y2 < height; y2++) {
-      const row2 = y2 * width;
-      for (let x2 = 0; x2 < width; x2++) {
-        const lo = x2 - radius < 0 ? 0 : x2 - radius;
-        const hi2 = x2 + radius >= width ? width - 1 : x2 + radius;
-        let hit = 0;
-        for (let xx = lo; xx <= hi2; xx++) {
-          if (src[row2 + xx]) {
-            hit = 1;
-            break;
-          }
-        }
-        horiz[row2 + x2] = hit;
-      }
-    }
-    const out = new Uint8Array(width * height);
-    for (let x2 = 0; x2 < width; x2++) {
-      for (let y2 = 0; y2 < height; y2++) {
-        const lo = y2 - radius < 0 ? 0 : y2 - radius;
-        const hi2 = y2 + radius >= height ? height - 1 : y2 + radius;
-        let hit = 0;
-        for (let yy = lo; yy <= hi2; yy++) {
-          if (horiz[yy * width + x2]) {
-            hit = 1;
-            break;
-          }
-        }
-        out[y2 * width + x2] = hit;
-      }
-    }
-    return out;
-  }
-  function paintBinaryMask(rgba, mask2, rgb, alpha2) {
-    const [fr, fg2, fb2] = rgb;
-    for (let i2 = 0; i2 < mask2.length; i2++) {
-      if (!mask2[i2]) continue;
-      const o2 = i2 * 4;
-      rgba[o2] = fr;
-      rgba[o2 + 1] = fg2;
-      rgba[o2 + 2] = fb2;
-      rgba[o2 + 3] = alpha2;
-    }
-  }
-  function binaryMaskToRgba(data2, width, height, visualization, colorSeed) {
-    const rgba = new Uint8ClampedArray(width * height * 4);
-    const seedKey = visualization.colorSeed != null ? `${colorSeed}:${visualization.colorSeed}` : colorSeed;
-    const rgb = visualization.color === "random" ? colorFromSeed(seedKey) : [
-      255,
-      255,
-      255
-    ];
-    const outline = visualization.style === "outline";
-    const alpha2 = outline ? 230 : 170;
-    if (!outline) {
-      paintBinaryMask(rgba, data2, rgb, alpha2);
-      return new ImageData(rgba, width, height);
-    }
-    const edgeMask = new Uint8Array(width * height);
-    for (let y2 = 0; y2 < height; y2++) {
-      for (let x2 = 0; x2 < width; x2++) {
-        const i2 = y2 * width + x2;
-        if (data2[i2] && isEdgeAt(data2, width, height, x2, y2)) edgeMask[i2] = 1;
-      }
-    }
-    paintBinaryMask(rgba, dilateBinaryMask(edgeMask, width, height, 1), rgb, alpha2);
-    return new ImageData(rgba, width, height);
-  }
-  const MAX_RASTER_SIDE = 4096;
-  function polygonRingFromShape(shape) {
-    switch (shape.type) {
-      case "polygon":
-        return shape.polygon.length >= 3 ? shape.polygon : null;
-      case "line":
-        return shape.polygon.length >= 3 ? shape.polygon : lineToPolygon(shape.polygon[0] ?? [
-          0,
-          0
-        ], shape.polygon[1] ?? shape.polygon[0] ?? [
-          0,
-          0
-        ], shape.style.lineWidth);
-      case "polyline": {
-        if (shape.polygon.length < 2) return null;
-        const first = shape.polygon[0];
-        return [
-          ...shape.polygon,
-          first
-        ];
-      }
-      case "point": {
-        const [x2, y2] = shape.position;
-        const r2 = Math.max(2, shape.style.radius);
-        return ellipseToPolygon$1([
-          x2 - r2,
-          y2 - r2
-        ], [
-          x2 + r2,
-          y2 + r2
-        ], 24);
-      }
-      case "text":
-        return textToPolygon(shape.position, shape.text, shape.style.fontSize);
-      default:
-        return null;
-    }
-  }
-  function rasterizePolygonToImageMask(polygon, imageWidth, imageHeight, meta) {
-    if (polygon.length < 3 || imageWidth <= 0 || imageHeight <= 0) {
-      return null;
-    }
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    for (const [x2, y2] of polygon) {
-      if (!Number.isFinite(x2) || !Number.isFinite(y2)) continue;
-      minX = Math.min(minX, x2);
-      minY = Math.min(minY, y2);
-      maxX = Math.max(maxX, x2);
-      maxY = Math.max(maxY, y2);
-    }
-    if (!Number.isFinite(minX) || maxX <= minX || maxY <= minY) {
-      return null;
-    }
-    minX = Math.max(0, minX);
-    minY = Math.max(0, minY);
-    maxX = Math.min(imageWidth, maxX);
-    maxY = Math.min(imageHeight, maxY);
-    const bw = maxX - minX;
-    const bh2 = maxY - minY;
-    if (bw <= 0 || bh2 <= 0) return null;
-    const scale2 = Math.min(1, MAX_RASTER_SIDE / Math.max(bw, bh2));
-    const width = Math.max(1, Math.ceil(bw * scale2));
-    const height = Math.max(1, Math.ceil(bh2 * scale2));
-    const canvas2 = document.createElement("canvas");
-    canvas2.width = width;
-    canvas2.height = height;
-    const ctx2 = canvas2.getContext("2d");
-    if (!ctx2) return null;
-    ctx2.beginPath();
-    for (let i2 = 0; i2 < polygon.length; i2++) {
-      const px = (polygon[i2][0] - minX) * scale2;
-      const py = (polygon[i2][1] - minY) * scale2;
-      if (i2 === 0) ctx2.moveTo(px, py);
-      else ctx2.lineTo(px, py);
-    }
-    ctx2.closePath();
-    ctx2.fillStyle = "#fff";
-    ctx2.fill();
-    const rgba = ctx2.getImageData(0, 0, width, height).data;
-    const data2 = new Uint8Array(width * height);
-    for (let i2 = 0, p2 = 0; i2 < data2.length; i2++, p2 += 4) {
-      data2[i2] = rgba[p2 + 3] > 0 || rgba[p2] > 0 ? 1 : 0;
-    }
-    let any = false;
-    for (let i2 = 0; i2 < data2.length; i2++) {
-      if (data2[i2]) {
-        any = true;
-        break;
-      }
-    }
-    if (!any) return null;
-    return {
-      width,
-      height,
-      data: data2,
-      bounds: [
-        minX,
-        minY,
-        maxX,
-        maxY
-      ],
-      ...meta
-    };
-  }
-  function selectionMaskBinaryImageData(mask2) {
-    const { width, height, data: data2 } = mask2;
-    const rgba = new Uint8ClampedArray(width * height * 4);
-    for (let i2 = 0; i2 < width * height; i2++) {
-      const v2 = data2[i2] ? 255 : 0;
-      const o2 = i2 * 4;
-      rgba[o2] = v2;
-      rgba[o2 + 1] = v2;
-      rgba[o2 + 2] = v2;
-      rgba[o2 + 3] = v2;
-    }
-    return new ImageData(rgba, width, height);
-  }
-  function selectionMaskDisplayImageData(mask2) {
-    const viz = mask2.maskVisualization ?? DEFAULT_MASK_VISUALIZATION;
-    const seed = mask2.sourceShapeId ?? mask2.sourceShapeLabel ?? "selection";
-    return binaryMaskToRgba(mask2.data, mask2.width, mask2.height, viz, seed);
-  }
-  const SEGMENTS_PER_CIRCLE = 32;
-  function makeCircle(cx, cy, radiusWorld, segments = SEGMENTS_PER_CIRCLE) {
-    const points = [];
-    for (let i2 = 0; i2 <= segments; i2++) {
-      const angle2 = i2 / segments * 2 * Math.PI;
-      points.push([
-        cx + radiusWorld * Math.cos(angle2),
-        cy + radiusWorld * Math.sin(angle2)
-      ]);
-    }
-    return points;
-  }
-  let f$2 = class f {
-    constructor(t2, e2) {
-      this.next = null, this.key = t2, this.data = e2, this.left = null, this.right = null;
-    }
-  };
-  function d$2(n2, t2) {
-    return n2 > t2 ? 1 : n2 < t2 ? -1 : 0;
-  }
-  function u$4(n2, t2, e2) {
-    const r2 = new f$2(null, null);
-    let l2 = r2, i2 = r2;
-    for (; ; ) {
-      const o2 = e2(n2, t2.key);
-      if (o2 < 0) {
-        if (t2.left === null) break;
-        if (e2(n2, t2.left.key) < 0) {
-          const s2 = t2.left;
-          if (t2.left = s2.right, s2.right = t2, t2 = s2, t2.left === null) break;
-        }
-        i2.left = t2, i2 = t2, t2 = t2.left;
-      } else if (o2 > 0) {
-        if (t2.right === null) break;
-        if (e2(n2, t2.right.key) > 0) {
-          const s2 = t2.right;
-          if (t2.right = s2.left, s2.left = t2, t2 = s2, t2.right === null) break;
-        }
-        l2.right = t2, l2 = t2, t2 = t2.right;
-      } else break;
-    }
-    return l2.right = t2.left, i2.left = t2.right, t2.left = r2.right, t2.right = r2.left, t2;
-  }
-  function c$4(n2, t2, e2, r2) {
-    const l2 = new f$2(n2, t2);
-    if (e2 === null) return l2.left = l2.right = null, l2;
-    e2 = u$4(n2, e2, r2);
-    const i2 = r2(n2, e2.key);
-    return i2 < 0 ? (l2.left = e2.left, l2.right = e2, e2.left = null) : i2 >= 0 && (l2.right = e2.right, l2.left = e2, e2.right = null), l2;
-  }
-  function m(n2, t2, e2) {
-    let r2 = null, l2 = null;
-    if (t2) {
-      t2 = u$4(n2, t2, e2);
-      const i2 = e2(t2.key, n2);
-      i2 === 0 ? (r2 = t2.left, l2 = t2.right) : i2 < 0 ? (l2 = t2.right, t2.right = null, r2 = t2) : (r2 = t2.left, t2.left = null, l2 = t2);
-    }
-    return {
-      left: r2,
-      right: l2
-    };
-  }
-  function w(n2, t2, e2) {
-    return t2 === null ? n2 : (n2 === null || (t2 = u$4(n2.key, t2, e2), t2.left = n2), t2);
-  }
-  function _$2(n2, t2, e2, r2, l2) {
-    if (n2) {
-      r2(`${t2}${e2 ? "\u2514\u2500\u2500 " : "\u251C\u2500\u2500 "}${l2(n2)}
-`);
-      const i2 = t2 + (e2 ? "    " : "\u2502   ");
-      n2.left && _$2(n2.left, i2, false, r2, l2), n2.right && _$2(n2.right, i2, true, r2, l2);
-    }
-  }
-  class z {
-    constructor(t2 = d$2) {
-      this._root = null, this._size = 0, this._comparator = t2;
-    }
-    insert(t2, e2) {
-      return this._size++, this._root = c$4(t2, e2, this._root, this._comparator);
-    }
-    add(t2, e2) {
-      const r2 = new f$2(t2, e2);
-      this._root === null && (r2.left = r2.right = null, this._size++, this._root = r2);
-      const l2 = this._comparator, i2 = u$4(t2, this._root, l2), o2 = l2(t2, i2.key);
-      return o2 === 0 ? this._root = i2 : (o2 < 0 ? (r2.left = i2.left, r2.right = i2, i2.left = null) : o2 > 0 && (r2.right = i2.right, r2.left = i2, i2.right = null), this._size++, this._root = r2), this._root;
-    }
-    remove(t2) {
-      this._root = this._remove(t2, this._root, this._comparator);
-    }
-    _remove(t2, e2, r2) {
-      let l2;
-      return e2 === null ? null : (e2 = u$4(t2, e2, r2), r2(t2, e2.key) === 0 ? (e2.left === null ? l2 = e2.right : (l2 = u$4(t2, e2.left, r2), l2.right = e2.right), this._size--, l2) : e2);
-    }
-    pop() {
-      let t2 = this._root;
-      if (t2) {
-        for (; t2.left; ) t2 = t2.left;
-        return this._root = u$4(t2.key, this._root, this._comparator), this._root = this._remove(t2.key, this._root, this._comparator), {
-          key: t2.key,
-          data: t2.data
-        };
-      }
-      return null;
-    }
-    findStatic(t2) {
-      let e2 = this._root;
-      const r2 = this._comparator;
-      for (; e2; ) {
-        const l2 = r2(t2, e2.key);
-        if (l2 === 0) return e2;
-        l2 < 0 ? e2 = e2.left : e2 = e2.right;
-      }
-      return null;
-    }
-    find(t2) {
-      return this._root && (this._root = u$4(t2, this._root, this._comparator), this._comparator(t2, this._root.key) !== 0) ? null : this._root;
-    }
-    contains(t2) {
-      let e2 = this._root;
-      const r2 = this._comparator;
-      for (; e2; ) {
-        const l2 = r2(t2, e2.key);
-        if (l2 === 0) return true;
-        l2 < 0 ? e2 = e2.left : e2 = e2.right;
-      }
-      return false;
-    }
-    forEach(t2, e2) {
-      let r2 = this._root;
-      const l2 = [];
-      let i2 = false;
-      for (; !i2; ) r2 !== null ? (l2.push(r2), r2 = r2.left) : l2.length !== 0 ? (r2 = l2.pop(), t2.call(e2, r2), r2 = r2.right) : i2 = true;
-      return this;
-    }
-    range(t2, e2, r2, l2) {
-      const i2 = [], o2 = this._comparator;
-      let s2 = this._root, h2;
-      for (; i2.length !== 0 || s2; ) if (s2) i2.push(s2), s2 = s2.left;
-      else {
-        if (s2 = i2.pop(), h2 = o2(s2.key, e2), h2 > 0) break;
-        if (o2(s2.key, t2) >= 0 && r2.call(l2, s2)) return this;
-        s2 = s2.right;
-      }
-      return this;
-    }
-    keys() {
-      const t2 = [];
-      return this.forEach(({ key: e2 }) => {
-        t2.push(e2);
-      }), t2;
-    }
-    values() {
-      const t2 = [];
-      return this.forEach(({ data: e2 }) => {
-        t2.push(e2);
-      }), t2;
-    }
-    min() {
-      return this._root ? this.minNode(this._root).key : null;
-    }
-    max() {
-      return this._root ? this.maxNode(this._root).key : null;
-    }
-    minNode(t2 = this._root) {
-      if (t2) for (; t2.left; ) t2 = t2.left;
-      return t2;
-    }
-    maxNode(t2 = this._root) {
-      if (t2) for (; t2.right; ) t2 = t2.right;
-      return t2;
-    }
-    at(t2) {
-      let e2 = this._root, r2 = false, l2 = 0;
-      const i2 = [];
-      for (; !r2; ) if (e2) i2.push(e2), e2 = e2.left;
-      else if (i2.length > 0) {
-        if (e2 = i2.pop(), l2 === t2) return e2;
-        l2++, e2 = e2.right;
-      } else r2 = true;
-      return null;
-    }
-    next(t2) {
-      let e2 = this._root, r2 = null;
-      if (t2.right) {
-        for (r2 = t2.right; r2.left; ) r2 = r2.left;
-        return r2;
-      }
-      const l2 = this._comparator;
-      for (; e2; ) {
-        const i2 = l2(t2.key, e2.key);
-        if (i2 === 0) break;
-        i2 < 0 ? (r2 = e2, e2 = e2.left) : e2 = e2.right;
-      }
-      return r2;
-    }
-    prev(t2) {
-      let e2 = this._root, r2 = null;
-      if (t2.left !== null) {
-        for (r2 = t2.left; r2.right; ) r2 = r2.right;
-        return r2;
-      }
-      const l2 = this._comparator;
-      for (; e2; ) {
-        const i2 = l2(t2.key, e2.key);
-        if (i2 === 0) break;
-        i2 < 0 ? e2 = e2.left : (r2 = e2, e2 = e2.right);
-      }
-      return r2;
-    }
-    clear() {
-      return this._root = null, this._size = 0, this;
-    }
-    toList() {
-      return k(this._root);
-    }
-    load(t2, e2 = [], r2 = false) {
-      let l2 = t2.length;
-      const i2 = this._comparator;
-      if (r2 && g(t2, e2, 0, l2 - 1, i2), this._root === null) this._root = a$2(t2, e2, 0, l2), this._size = l2;
-      else {
-        const o2 = y(this.toList(), x(t2, e2), i2);
-        l2 = this._size + l2, this._root = p$1({
-          head: o2
-        }, 0, l2);
-      }
-      return this;
-    }
-    isEmpty() {
-      return this._root === null;
-    }
-    get size() {
-      return this._size;
-    }
-    get root() {
-      return this._root;
-    }
-    toString(t2 = (e2) => String(e2.key)) {
-      const e2 = [];
-      return _$2(this._root, "", true, (r2) => e2.push(r2), t2), e2.join("");
-    }
-    update(t2, e2, r2) {
-      const l2 = this._comparator;
-      let { left: i2, right: o2 } = m(t2, this._root, l2);
-      l2(t2, e2) < 0 ? o2 = c$4(e2, r2, o2, l2) : i2 = c$4(e2, r2, i2, l2), this._root = w(i2, o2, l2);
-    }
-    split(t2) {
-      return m(t2, this._root, this._comparator);
-    }
-    *[Symbol.iterator]() {
-      let t2 = this._root;
-      const e2 = [];
-      let r2 = false;
-      for (; !r2; ) t2 !== null ? (e2.push(t2), t2 = t2.left) : e2.length !== 0 ? (t2 = e2.pop(), yield t2, t2 = t2.right) : r2 = true;
-    }
-  }
-  function a$2(n2, t2, e2, r2) {
-    const l2 = r2 - e2;
-    if (l2 > 0) {
-      const i2 = e2 + Math.floor(l2 / 2), o2 = n2[i2], s2 = t2[i2], h2 = new f$2(o2, s2);
-      return h2.left = a$2(n2, t2, e2, i2), h2.right = a$2(n2, t2, i2 + 1, r2), h2;
-    }
-    return null;
-  }
-  function x(n2, t2) {
-    const e2 = new f$2(null, null);
-    let r2 = e2;
-    for (let l2 = 0; l2 < n2.length; l2++) r2 = r2.next = new f$2(n2[l2], t2[l2]);
-    return r2.next = null, e2.next;
-  }
-  function k(n2) {
-    let t2 = n2;
-    const e2 = [];
-    let r2 = false;
-    const l2 = new f$2(null, null);
-    let i2 = l2;
-    for (; !r2; ) t2 ? (e2.push(t2), t2 = t2.left) : e2.length > 0 ? (t2 = i2 = i2.next = e2.pop(), t2 = t2.right) : r2 = true;
-    return i2.next = null, l2.next;
-  }
-  function p$1(n2, t2, e2) {
-    const r2 = e2 - t2;
-    if (r2 > 0) {
-      const l2 = t2 + Math.floor(r2 / 2), i2 = p$1(n2, t2, l2), o2 = n2.head;
-      return o2.left = i2, n2.head = n2.head.next, o2.right = p$1(n2, l2 + 1, e2), o2;
-    }
-    return null;
-  }
-  function y(n2, t2, e2) {
-    const r2 = new f$2(null, null);
-    let l2 = r2, i2 = n2, o2 = t2;
-    for (; i2 !== null && o2 !== null; ) e2(i2.key, o2.key) < 0 ? (l2.next = i2, i2 = i2.next) : (l2.next = o2, o2 = o2.next), l2 = l2.next;
-    return i2 !== null ? l2.next = i2 : o2 !== null && (l2.next = o2), r2.next;
-  }
-  function g(n2, t2, e2, r2, l2) {
-    if (e2 >= r2) return;
-    const i2 = n2[e2 + r2 >> 1];
-    let o2 = e2 - 1, s2 = r2 + 1;
-    for (; ; ) {
-      do
-        o2++;
-      while (l2(n2[o2], i2) < 0);
-      do
-        s2--;
-      while (l2(n2[s2], i2) > 0);
-      if (o2 >= s2) break;
-      let h2 = n2[o2];
-      n2[o2] = n2[s2], n2[s2] = h2, h2 = t2[o2], t2[o2] = t2[s2], t2[s2] = h2;
-    }
-    g(n2, t2, e2, s2, l2), g(n2, t2, s2 + 1, r2, l2);
-  }
-  const epsilon$1 = 11102230246251565e-32;
-  const splitter = 134217729;
-  const resulterrbound = (3 + 8 * epsilon$1) * epsilon$1;
-  function sum(elen, e2, flen, f2, h2) {
-    let Q2, Qnew, hh2, bvirt;
-    let enow = e2[0];
-    let fnow = f2[0];
-    let eindex = 0;
-    let findex = 0;
-    if (fnow > enow === fnow > -enow) {
-      Q2 = enow;
-      enow = e2[++eindex];
-    } else {
-      Q2 = fnow;
-      fnow = f2[++findex];
-    }
-    let hindex = 0;
-    if (eindex < elen && findex < flen) {
-      if (fnow > enow === fnow > -enow) {
-        Qnew = enow + Q2;
-        hh2 = Q2 - (Qnew - enow);
-        enow = e2[++eindex];
-      } else {
-        Qnew = fnow + Q2;
-        hh2 = Q2 - (Qnew - fnow);
-        fnow = f2[++findex];
-      }
-      Q2 = Qnew;
-      if (hh2 !== 0) {
-        h2[hindex++] = hh2;
-      }
-      while (eindex < elen && findex < flen) {
-        if (fnow > enow === fnow > -enow) {
-          Qnew = Q2 + enow;
-          bvirt = Qnew - Q2;
-          hh2 = Q2 - (Qnew - bvirt) + (enow - bvirt);
-          enow = e2[++eindex];
-        } else {
-          Qnew = Q2 + fnow;
-          bvirt = Qnew - Q2;
-          hh2 = Q2 - (Qnew - bvirt) + (fnow - bvirt);
-          fnow = f2[++findex];
-        }
-        Q2 = Qnew;
-        if (hh2 !== 0) {
-          h2[hindex++] = hh2;
-        }
-      }
-    }
-    while (eindex < elen) {
-      Qnew = Q2 + enow;
-      bvirt = Qnew - Q2;
-      hh2 = Q2 - (Qnew - bvirt) + (enow - bvirt);
-      enow = e2[++eindex];
-      Q2 = Qnew;
-      if (hh2 !== 0) {
-        h2[hindex++] = hh2;
-      }
-    }
-    while (findex < flen) {
-      Qnew = Q2 + fnow;
-      bvirt = Qnew - Q2;
-      hh2 = Q2 - (Qnew - bvirt) + (fnow - bvirt);
-      fnow = f2[++findex];
-      Q2 = Qnew;
-      if (hh2 !== 0) {
-        h2[hindex++] = hh2;
-      }
-    }
-    if (Q2 !== 0 || hindex === 0) {
-      h2[hindex++] = Q2;
-    }
-    return hindex;
-  }
-  function estimate(elen, e2) {
-    let Q2 = e2[0];
-    for (let i2 = 1; i2 < elen; i2++) Q2 += e2[i2];
-    return Q2;
-  }
-  function vec(n2) {
-    return new Float64Array(n2);
-  }
-  const ccwerrboundA = (3 + 16 * epsilon$1) * epsilon$1;
-  const ccwerrboundB = (2 + 12 * epsilon$1) * epsilon$1;
-  const ccwerrboundC = (9 + 64 * epsilon$1) * epsilon$1 * epsilon$1;
-  const B = vec(4);
-  const C1 = vec(8);
-  const C2 = vec(12);
-  const D = vec(16);
-  const u$3 = vec(4);
-  function orient2dadapt(ax, ay, bx, by, cx, cy, detsum) {
-    let acxtail, acytail, bcxtail, bcytail;
-    let bvirt, c2, ahi, alo, bhi, blo, _i, _j, _0, s1, s0, t1, t0, u3;
-    const acx = ax - cx;
-    const bcx = bx - cx;
-    const acy = ay - cy;
-    const bcy = by - cy;
-    s1 = acx * bcy;
-    c2 = splitter * acx;
-    ahi = c2 - (c2 - acx);
-    alo = acx - ahi;
-    c2 = splitter * bcy;
-    bhi = c2 - (c2 - bcy);
-    blo = bcy - bhi;
-    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
-    t1 = acy * bcx;
-    c2 = splitter * acy;
-    ahi = c2 - (c2 - acy);
-    alo = acy - ahi;
-    c2 = splitter * bcx;
-    bhi = c2 - (c2 - bcx);
-    blo = bcx - bhi;
-    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
-    _i = s0 - t0;
-    bvirt = s0 - _i;
-    B[0] = s0 - (_i + bvirt) + (bvirt - t0);
-    _j = s1 + _i;
-    bvirt = _j - s1;
-    _0 = s1 - (_j - bvirt) + (_i - bvirt);
-    _i = _0 - t1;
-    bvirt = _0 - _i;
-    B[1] = _0 - (_i + bvirt) + (bvirt - t1);
-    u3 = _j + _i;
-    bvirt = u3 - _j;
-    B[2] = _j - (u3 - bvirt) + (_i - bvirt);
-    B[3] = u3;
-    let det = estimate(4, B);
-    let errbound = ccwerrboundB * detsum;
-    if (det >= errbound || -det >= errbound) {
-      return det;
-    }
-    bvirt = ax - acx;
-    acxtail = ax - (acx + bvirt) + (bvirt - cx);
-    bvirt = bx - bcx;
-    bcxtail = bx - (bcx + bvirt) + (bvirt - cx);
-    bvirt = ay - acy;
-    acytail = ay - (acy + bvirt) + (bvirt - cy);
-    bvirt = by - bcy;
-    bcytail = by - (bcy + bvirt) + (bvirt - cy);
-    if (acxtail === 0 && acytail === 0 && bcxtail === 0 && bcytail === 0) {
-      return det;
-    }
-    errbound = ccwerrboundC * detsum + resulterrbound * Math.abs(det);
-    det += acx * bcytail + bcy * acxtail - (acy * bcxtail + bcx * acytail);
-    if (det >= errbound || -det >= errbound) return det;
-    s1 = acxtail * bcy;
-    c2 = splitter * acxtail;
-    ahi = c2 - (c2 - acxtail);
-    alo = acxtail - ahi;
-    c2 = splitter * bcy;
-    bhi = c2 - (c2 - bcy);
-    blo = bcy - bhi;
-    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
-    t1 = acytail * bcx;
-    c2 = splitter * acytail;
-    ahi = c2 - (c2 - acytail);
-    alo = acytail - ahi;
-    c2 = splitter * bcx;
-    bhi = c2 - (c2 - bcx);
-    blo = bcx - bhi;
-    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
-    _i = s0 - t0;
-    bvirt = s0 - _i;
-    u$3[0] = s0 - (_i + bvirt) + (bvirt - t0);
-    _j = s1 + _i;
-    bvirt = _j - s1;
-    _0 = s1 - (_j - bvirt) + (_i - bvirt);
-    _i = _0 - t1;
-    bvirt = _0 - _i;
-    u$3[1] = _0 - (_i + bvirt) + (bvirt - t1);
-    u3 = _j + _i;
-    bvirt = u3 - _j;
-    u$3[2] = _j - (u3 - bvirt) + (_i - bvirt);
-    u$3[3] = u3;
-    const C1len = sum(4, B, 4, u$3, C1);
-    s1 = acx * bcytail;
-    c2 = splitter * acx;
-    ahi = c2 - (c2 - acx);
-    alo = acx - ahi;
-    c2 = splitter * bcytail;
-    bhi = c2 - (c2 - bcytail);
-    blo = bcytail - bhi;
-    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
-    t1 = acy * bcxtail;
-    c2 = splitter * acy;
-    ahi = c2 - (c2 - acy);
-    alo = acy - ahi;
-    c2 = splitter * bcxtail;
-    bhi = c2 - (c2 - bcxtail);
-    blo = bcxtail - bhi;
-    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
-    _i = s0 - t0;
-    bvirt = s0 - _i;
-    u$3[0] = s0 - (_i + bvirt) + (bvirt - t0);
-    _j = s1 + _i;
-    bvirt = _j - s1;
-    _0 = s1 - (_j - bvirt) + (_i - bvirt);
-    _i = _0 - t1;
-    bvirt = _0 - _i;
-    u$3[1] = _0 - (_i + bvirt) + (bvirt - t1);
-    u3 = _j + _i;
-    bvirt = u3 - _j;
-    u$3[2] = _j - (u3 - bvirt) + (_i - bvirt);
-    u$3[3] = u3;
-    const C2len = sum(C1len, C1, 4, u$3, C2);
-    s1 = acxtail * bcytail;
-    c2 = splitter * acxtail;
-    ahi = c2 - (c2 - acxtail);
-    alo = acxtail - ahi;
-    c2 = splitter * bcytail;
-    bhi = c2 - (c2 - bcytail);
-    blo = bcytail - bhi;
-    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
-    t1 = acytail * bcxtail;
-    c2 = splitter * acytail;
-    ahi = c2 - (c2 - acytail);
-    alo = acytail - ahi;
-    c2 = splitter * bcxtail;
-    bhi = c2 - (c2 - bcxtail);
-    blo = bcxtail - bhi;
-    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
-    _i = s0 - t0;
-    bvirt = s0 - _i;
-    u$3[0] = s0 - (_i + bvirt) + (bvirt - t0);
-    _j = s1 + _i;
-    bvirt = _j - s1;
-    _0 = s1 - (_j - bvirt) + (_i - bvirt);
-    _i = _0 - t1;
-    bvirt = _0 - _i;
-    u$3[1] = _0 - (_i + bvirt) + (bvirt - t1);
-    u3 = _j + _i;
-    bvirt = u3 - _j;
-    u$3[2] = _j - (u3 - bvirt) + (_i - bvirt);
-    u$3[3] = u3;
-    const Dlen = sum(C2len, C2, 4, u$3, D);
-    return D[Dlen - 1];
-  }
-  function orient2d(ax, ay, bx, by, cx, cy) {
-    const detleft = (ay - cy) * (bx - cx);
-    const detright = (ax - cx) * (by - cy);
-    const det = detleft - detright;
-    const detsum = Math.abs(detleft + detright);
-    if (Math.abs(det) >= ccwerrboundA * detsum) return det;
-    return -orient2dadapt(ax, ay, bx, by, cx, cy, detsum);
-  }
-  var define_process_env_default = {};
-  const isInBbox = (bbox, point2) => {
-    return bbox.ll.x <= point2.x && point2.x <= bbox.ur.x && bbox.ll.y <= point2.y && point2.y <= bbox.ur.y;
-  };
-  const getBboxOverlap = (b1, b2) => {
-    if (b2.ur.x < b1.ll.x || b1.ur.x < b2.ll.x || b2.ur.y < b1.ll.y || b1.ur.y < b2.ll.y) return null;
-    const lowerX = b1.ll.x < b2.ll.x ? b2.ll.x : b1.ll.x;
-    const upperX = b1.ur.x < b2.ur.x ? b1.ur.x : b2.ur.x;
-    const lowerY = b1.ll.y < b2.ll.y ? b2.ll.y : b1.ll.y;
-    const upperY = b1.ur.y < b2.ur.y ? b1.ur.y : b2.ur.y;
-    return {
-      ll: {
-        x: lowerX,
-        y: lowerY
-      },
-      ur: {
-        x: upperX,
-        y: upperY
-      }
-    };
-  };
-  let epsilon = Number.EPSILON;
-  if (epsilon === void 0) epsilon = Math.pow(2, -52);
-  const EPSILON_SQ = epsilon * epsilon;
-  const cmp = (a2, b2) => {
-    if (-epsilon < a2 && a2 < epsilon) {
-      if (-epsilon < b2 && b2 < epsilon) {
-        return 0;
-      }
-    }
-    const ab2 = a2 - b2;
-    if (ab2 * ab2 < EPSILON_SQ * a2 * b2) {
-      return 0;
-    }
-    return a2 < b2 ? -1 : 1;
-  };
-  class PtRounder {
-    constructor() {
-      this.reset();
-    }
-    reset() {
-      this.xRounder = new CoordRounder();
-      this.yRounder = new CoordRounder();
-    }
-    round(x2, y2) {
-      return {
-        x: this.xRounder.round(x2),
-        y: this.yRounder.round(y2)
-      };
-    }
-  }
-  class CoordRounder {
-    constructor() {
-      this.tree = new z();
-      this.round(0);
-    }
-    round(coord) {
-      const node2 = this.tree.add(coord);
-      const prevNode = this.tree.prev(node2);
-      if (prevNode !== null && cmp(node2.key, prevNode.key) === 0) {
-        this.tree.remove(coord);
-        return prevNode.key;
-      }
-      const nextNode = this.tree.next(node2);
-      if (nextNode !== null && cmp(node2.key, nextNode.key) === 0) {
-        this.tree.remove(coord);
-        return nextNode.key;
-      }
-      return coord;
-    }
-  }
-  const rounder = new PtRounder();
-  const crossProduct = (a2, b2) => a2.x * b2.y - a2.y * b2.x;
-  const dotProduct = (a2, b2) => a2.x * b2.x + a2.y * b2.y;
-  const compareVectorAngles = (basePt, endPt1, endPt2) => {
-    const res = orient2d(basePt.x, basePt.y, endPt1.x, endPt1.y, endPt2.x, endPt2.y);
-    if (res > 0) return -1;
-    if (res < 0) return 1;
-    return 0;
-  };
-  const length$1 = (v2) => Math.sqrt(dotProduct(v2, v2));
-  const sineOfAngle = (pShared, pBase, pAngle) => {
-    const vBase = {
-      x: pBase.x - pShared.x,
-      y: pBase.y - pShared.y
-    };
-    const vAngle = {
-      x: pAngle.x - pShared.x,
-      y: pAngle.y - pShared.y
-    };
-    return crossProduct(vAngle, vBase) / length$1(vAngle) / length$1(vBase);
-  };
-  const cosineOfAngle = (pShared, pBase, pAngle) => {
-    const vBase = {
-      x: pBase.x - pShared.x,
-      y: pBase.y - pShared.y
-    };
-    const vAngle = {
-      x: pAngle.x - pShared.x,
-      y: pAngle.y - pShared.y
-    };
-    return dotProduct(vAngle, vBase) / length$1(vAngle) / length$1(vBase);
-  };
-  const horizontalIntersection = (pt2, v2, y2) => {
-    if (v2.y === 0) return null;
-    return {
-      x: pt2.x + v2.x / v2.y * (y2 - pt2.y),
-      y: y2
-    };
-  };
-  const verticalIntersection = (pt2, v2, x2) => {
-    if (v2.x === 0) return null;
-    return {
-      x: x2,
-      y: pt2.y + v2.y / v2.x * (x2 - pt2.x)
-    };
-  };
-  const intersection$1 = (pt1, v1, pt2, v2) => {
-    if (v1.x === 0) return verticalIntersection(pt2, v2, pt1.x);
-    if (v2.x === 0) return verticalIntersection(pt1, v1, pt2.x);
-    if (v1.y === 0) return horizontalIntersection(pt2, v2, pt1.y);
-    if (v2.y === 0) return horizontalIntersection(pt1, v1, pt2.y);
-    const kross = crossProduct(v1, v2);
-    if (kross == 0) return null;
-    const ve2 = {
-      x: pt2.x - pt1.x,
-      y: pt2.y - pt1.y
-    };
-    const d1 = crossProduct(ve2, v1) / kross;
-    const d2 = crossProduct(ve2, v2) / kross;
-    const x1 = pt1.x + d2 * v1.x, x2 = pt2.x + d1 * v2.x;
-    const y1 = pt1.y + d2 * v1.y, y2 = pt2.y + d1 * v2.y;
-    const x3 = (x1 + x2) / 2;
-    const y3 = (y1 + y2) / 2;
-    return {
-      x: x3,
-      y: y3
-    };
-  };
-  class SweepEvent {
-    static compare(a2, b2) {
-      const ptCmp = SweepEvent.comparePoints(a2.point, b2.point);
-      if (ptCmp !== 0) return ptCmp;
-      if (a2.point !== b2.point) a2.link(b2);
-      if (a2.isLeft !== b2.isLeft) return a2.isLeft ? 1 : -1;
-      return Segment.compare(a2.segment, b2.segment);
-    }
-    static comparePoints(aPt, bPt) {
-      if (aPt.x < bPt.x) return -1;
-      if (aPt.x > bPt.x) return 1;
-      if (aPt.y < bPt.y) return -1;
-      if (aPt.y > bPt.y) return 1;
-      return 0;
-    }
-    constructor(point2, isLeft) {
-      if (point2.events === void 0) point2.events = [
-        this
-      ];
-      else point2.events.push(this);
-      this.point = point2;
-      this.isLeft = isLeft;
-    }
-    link(other) {
-      if (other.point === this.point) {
-        throw new Error("Tried to link already linked events");
-      }
-      const otherEvents = other.point.events;
-      for (let i2 = 0, iMax = otherEvents.length; i2 < iMax; i2++) {
-        const evt = otherEvents[i2];
-        this.point.events.push(evt);
-        evt.point = this.point;
-      }
-      this.checkForConsuming();
-    }
-    checkForConsuming() {
-      const numEvents = this.point.events.length;
-      for (let i2 = 0; i2 < numEvents; i2++) {
-        const evt1 = this.point.events[i2];
-        if (evt1.segment.consumedBy !== void 0) continue;
-        for (let j2 = i2 + 1; j2 < numEvents; j2++) {
-          const evt2 = this.point.events[j2];
-          if (evt2.consumedBy !== void 0) continue;
-          if (evt1.otherSE.point.events !== evt2.otherSE.point.events) continue;
-          evt1.segment.consume(evt2.segment);
-        }
-      }
-    }
-    getAvailableLinkedEvents() {
-      const events = [];
-      for (let i2 = 0, iMax = this.point.events.length; i2 < iMax; i2++) {
-        const evt = this.point.events[i2];
-        if (evt !== this && !evt.segment.ringOut && evt.segment.isInResult()) {
-          events.push(evt);
-        }
-      }
-      return events;
-    }
-    getLeftmostComparator(baseEvent) {
-      const cache2 = /* @__PURE__ */ new Map();
-      const fillCache = (linkedEvent) => {
-        const nextEvent = linkedEvent.otherSE;
-        cache2.set(linkedEvent, {
-          sine: sineOfAngle(this.point, baseEvent.point, nextEvent.point),
-          cosine: cosineOfAngle(this.point, baseEvent.point, nextEvent.point)
-        });
-      };
-      return (a2, b2) => {
-        if (!cache2.has(a2)) fillCache(a2);
-        if (!cache2.has(b2)) fillCache(b2);
-        const { sine: asine, cosine: acosine } = cache2.get(a2);
-        const { sine: bsine, cosine: bcosine } = cache2.get(b2);
-        if (asine >= 0 && bsine >= 0) {
-          if (acosine < bcosine) return 1;
-          if (acosine > bcosine) return -1;
-          return 0;
-        }
-        if (asine < 0 && bsine < 0) {
-          if (acosine < bcosine) return -1;
-          if (acosine > bcosine) return 1;
-          return 0;
-        }
-        if (bsine < asine) return -1;
-        if (bsine > asine) return 1;
-        return 0;
-      };
-    }
-  }
-  let segmentId = 0;
-  class Segment {
-    static compare(a2, b2) {
-      const alx = a2.leftSE.point.x;
-      const blx = b2.leftSE.point.x;
-      const arx = a2.rightSE.point.x;
-      const brx = b2.rightSE.point.x;
-      if (brx < alx) return 1;
-      if (arx < blx) return -1;
-      const aly = a2.leftSE.point.y;
-      const bly = b2.leftSE.point.y;
-      const ary = a2.rightSE.point.y;
-      const bry = b2.rightSE.point.y;
-      if (alx < blx) {
-        if (bly < aly && bly < ary) return 1;
-        if (bly > aly && bly > ary) return -1;
-        const aCmpBLeft = a2.comparePoint(b2.leftSE.point);
-        if (aCmpBLeft < 0) return 1;
-        if (aCmpBLeft > 0) return -1;
-        const bCmpARight = b2.comparePoint(a2.rightSE.point);
-        if (bCmpARight !== 0) return bCmpARight;
-        return -1;
-      }
-      if (alx > blx) {
-        if (aly < bly && aly < bry) return -1;
-        if (aly > bly && aly > bry) return 1;
-        const bCmpALeft = b2.comparePoint(a2.leftSE.point);
-        if (bCmpALeft !== 0) return bCmpALeft;
-        const aCmpBRight = a2.comparePoint(b2.rightSE.point);
-        if (aCmpBRight < 0) return 1;
-        if (aCmpBRight > 0) return -1;
-        return 1;
-      }
-      if (aly < bly) return -1;
-      if (aly > bly) return 1;
-      if (arx < brx) {
-        const bCmpARight = b2.comparePoint(a2.rightSE.point);
-        if (bCmpARight !== 0) return bCmpARight;
-      }
-      if (arx > brx) {
-        const aCmpBRight = a2.comparePoint(b2.rightSE.point);
-        if (aCmpBRight < 0) return 1;
-        if (aCmpBRight > 0) return -1;
-      }
-      if (arx !== brx) {
-        const ay = ary - aly;
-        const ax = arx - alx;
-        const by = bry - bly;
-        const bx = brx - blx;
-        if (ay > ax && by < bx) return 1;
-        if (ay < ax && by > bx) return -1;
-      }
-      if (arx > brx) return 1;
-      if (arx < brx) return -1;
-      if (ary < bry) return -1;
-      if (ary > bry) return 1;
-      if (a2.id < b2.id) return -1;
-      if (a2.id > b2.id) return 1;
-      return 0;
-    }
-    constructor(leftSE, rightSE, rings, windings) {
-      this.id = ++segmentId;
-      this.leftSE = leftSE;
-      leftSE.segment = this;
-      leftSE.otherSE = rightSE;
-      this.rightSE = rightSE;
-      rightSE.segment = this;
-      rightSE.otherSE = leftSE;
-      this.rings = rings;
-      this.windings = windings;
-    }
-    static fromRing(pt1, pt2, ring) {
-      let leftPt, rightPt, winding;
-      const cmpPts = SweepEvent.comparePoints(pt1, pt2);
-      if (cmpPts < 0) {
-        leftPt = pt1;
-        rightPt = pt2;
-        winding = 1;
-      } else if (cmpPts > 0) {
-        leftPt = pt2;
-        rightPt = pt1;
-        winding = -1;
-      } else throw new Error(`Tried to create degenerate segment at [${pt1.x}, ${pt1.y}]`);
-      const leftSE = new SweepEvent(leftPt, true);
-      const rightSE = new SweepEvent(rightPt, false);
-      return new Segment(leftSE, rightSE, [
-        ring
-      ], [
-        winding
-      ]);
-    }
-    replaceRightSE(newRightSE) {
-      this.rightSE = newRightSE;
-      this.rightSE.segment = this;
-      this.rightSE.otherSE = this.leftSE;
-      this.leftSE.otherSE = this.rightSE;
-    }
-    bbox() {
-      const y1 = this.leftSE.point.y;
-      const y2 = this.rightSE.point.y;
-      return {
-        ll: {
-          x: this.leftSE.point.x,
-          y: y1 < y2 ? y1 : y2
-        },
-        ur: {
-          x: this.rightSE.point.x,
-          y: y1 > y2 ? y1 : y2
-        }
-      };
-    }
-    vector() {
-      return {
-        x: this.rightSE.point.x - this.leftSE.point.x,
-        y: this.rightSE.point.y - this.leftSE.point.y
-      };
-    }
-    isAnEndpoint(pt2) {
-      return pt2.x === this.leftSE.point.x && pt2.y === this.leftSE.point.y || pt2.x === this.rightSE.point.x && pt2.y === this.rightSE.point.y;
-    }
-    comparePoint(point2) {
-      if (this.isAnEndpoint(point2)) return 0;
-      const lPt = this.leftSE.point;
-      const rPt = this.rightSE.point;
-      const v2 = this.vector();
-      if (lPt.x === rPt.x) {
-        if (point2.x === lPt.x) return 0;
-        return point2.x < lPt.x ? 1 : -1;
-      }
-      const yDist = (point2.y - lPt.y) / v2.y;
-      const xFromYDist = lPt.x + yDist * v2.x;
-      if (point2.x === xFromYDist) return 0;
-      const xDist = (point2.x - lPt.x) / v2.x;
-      const yFromXDist = lPt.y + xDist * v2.y;
-      if (point2.y === yFromXDist) return 0;
-      return point2.y < yFromXDist ? -1 : 1;
-    }
-    getIntersection(other) {
-      const tBbox = this.bbox();
-      const oBbox = other.bbox();
-      const bboxOverlap = getBboxOverlap(tBbox, oBbox);
-      if (bboxOverlap === null) return null;
-      const tlp = this.leftSE.point;
-      const trp = this.rightSE.point;
-      const olp = other.leftSE.point;
-      const orp = other.rightSE.point;
-      const touchesOtherLSE = isInBbox(tBbox, olp) && this.comparePoint(olp) === 0;
-      const touchesThisLSE = isInBbox(oBbox, tlp) && other.comparePoint(tlp) === 0;
-      const touchesOtherRSE = isInBbox(tBbox, orp) && this.comparePoint(orp) === 0;
-      const touchesThisRSE = isInBbox(oBbox, trp) && other.comparePoint(trp) === 0;
-      if (touchesThisLSE && touchesOtherLSE) {
-        if (touchesThisRSE && !touchesOtherRSE) return trp;
-        if (!touchesThisRSE && touchesOtherRSE) return orp;
-        return null;
-      }
-      if (touchesThisLSE) {
-        if (touchesOtherRSE) {
-          if (tlp.x === orp.x && tlp.y === orp.y) return null;
-        }
-        return tlp;
-      }
-      if (touchesOtherLSE) {
-        if (touchesThisRSE) {
-          if (trp.x === olp.x && trp.y === olp.y) return null;
-        }
-        return olp;
-      }
-      if (touchesThisRSE && touchesOtherRSE) return null;
-      if (touchesThisRSE) return trp;
-      if (touchesOtherRSE) return orp;
-      const pt2 = intersection$1(tlp, this.vector(), olp, other.vector());
-      if (pt2 === null) return null;
-      if (!isInBbox(bboxOverlap, pt2)) return null;
-      return rounder.round(pt2.x, pt2.y);
-    }
-    split(point2) {
-      const newEvents = [];
-      const alreadyLinked = point2.events !== void 0;
-      const newLeftSE = new SweepEvent(point2, true);
-      const newRightSE = new SweepEvent(point2, false);
-      const oldRightSE = this.rightSE;
-      this.replaceRightSE(newRightSE);
-      newEvents.push(newRightSE);
-      newEvents.push(newLeftSE);
-      const newSeg = new Segment(newLeftSE, oldRightSE, this.rings.slice(), this.windings.slice());
-      if (SweepEvent.comparePoints(newSeg.leftSE.point, newSeg.rightSE.point) > 0) {
-        newSeg.swapEvents();
-      }
-      if (SweepEvent.comparePoints(this.leftSE.point, this.rightSE.point) > 0) {
-        this.swapEvents();
-      }
-      if (alreadyLinked) {
-        newLeftSE.checkForConsuming();
-        newRightSE.checkForConsuming();
-      }
-      return newEvents;
-    }
-    swapEvents() {
-      const tmpEvt = this.rightSE;
-      this.rightSE = this.leftSE;
-      this.leftSE = tmpEvt;
-      this.leftSE.isLeft = true;
-      this.rightSE.isLeft = false;
-      for (let i2 = 0, iMax = this.windings.length; i2 < iMax; i2++) {
-        this.windings[i2] *= -1;
-      }
-    }
-    consume(other) {
-      let consumer = this;
-      let consumee = other;
-      while (consumer.consumedBy) consumer = consumer.consumedBy;
-      while (consumee.consumedBy) consumee = consumee.consumedBy;
-      const cmp2 = Segment.compare(consumer, consumee);
-      if (cmp2 === 0) return;
-      if (cmp2 > 0) {
-        const tmp = consumer;
-        consumer = consumee;
-        consumee = tmp;
-      }
-      if (consumer.prev === consumee) {
-        const tmp = consumer;
-        consumer = consumee;
-        consumee = tmp;
-      }
-      for (let i2 = 0, iMax = consumee.rings.length; i2 < iMax; i2++) {
-        const ring = consumee.rings[i2];
-        const winding = consumee.windings[i2];
-        const index2 = consumer.rings.indexOf(ring);
-        if (index2 === -1) {
-          consumer.rings.push(ring);
-          consumer.windings.push(winding);
-        } else consumer.windings[index2] += winding;
-      }
-      consumee.rings = null;
-      consumee.windings = null;
-      consumee.consumedBy = consumer;
-      consumee.leftSE.consumedBy = consumer.leftSE;
-      consumee.rightSE.consumedBy = consumer.rightSE;
-    }
-    prevInResult() {
-      if (this._prevInResult !== void 0) return this._prevInResult;
-      if (!this.prev) this._prevInResult = null;
-      else if (this.prev.isInResult()) this._prevInResult = this.prev;
-      else this._prevInResult = this.prev.prevInResult();
-      return this._prevInResult;
-    }
-    beforeState() {
-      if (this._beforeState !== void 0) return this._beforeState;
-      if (!this.prev) this._beforeState = {
-        rings: [],
-        windings: [],
-        multiPolys: []
-      };
-      else {
-        const seg = this.prev.consumedBy || this.prev;
-        this._beforeState = seg.afterState();
-      }
-      return this._beforeState;
-    }
-    afterState() {
-      if (this._afterState !== void 0) return this._afterState;
-      const beforeState = this.beforeState();
-      this._afterState = {
-        rings: beforeState.rings.slice(0),
-        windings: beforeState.windings.slice(0),
-        multiPolys: []
-      };
-      const ringsAfter = this._afterState.rings;
-      const windingsAfter = this._afterState.windings;
-      const mpsAfter = this._afterState.multiPolys;
-      for (let i2 = 0, iMax = this.rings.length; i2 < iMax; i2++) {
-        const ring = this.rings[i2];
-        const winding = this.windings[i2];
-        const index2 = ringsAfter.indexOf(ring);
-        if (index2 === -1) {
-          ringsAfter.push(ring);
-          windingsAfter.push(winding);
-        } else windingsAfter[index2] += winding;
-      }
-      const polysAfter = [];
-      const polysExclude = [];
-      for (let i2 = 0, iMax = ringsAfter.length; i2 < iMax; i2++) {
-        if (windingsAfter[i2] === 0) continue;
-        const ring = ringsAfter[i2];
-        const poly = ring.poly;
-        if (polysExclude.indexOf(poly) !== -1) continue;
-        if (ring.isExterior) polysAfter.push(poly);
-        else {
-          if (polysExclude.indexOf(poly) === -1) polysExclude.push(poly);
-          const index2 = polysAfter.indexOf(ring.poly);
-          if (index2 !== -1) polysAfter.splice(index2, 1);
-        }
-      }
-      for (let i2 = 0, iMax = polysAfter.length; i2 < iMax; i2++) {
-        const mp = polysAfter[i2].multiPoly;
-        if (mpsAfter.indexOf(mp) === -1) mpsAfter.push(mp);
-      }
-      return this._afterState;
-    }
-    isInResult() {
-      if (this.consumedBy) return false;
-      if (this._isInResult !== void 0) return this._isInResult;
-      const mpsBefore = this.beforeState().multiPolys;
-      const mpsAfter = this.afterState().multiPolys;
-      switch (operation.type) {
-        case "union": {
-          const noBefores = mpsBefore.length === 0;
-          const noAfters = mpsAfter.length === 0;
-          this._isInResult = noBefores !== noAfters;
-          break;
-        }
-        case "intersection": {
-          let least;
-          let most;
-          if (mpsBefore.length < mpsAfter.length) {
-            least = mpsBefore.length;
-            most = mpsAfter.length;
-          } else {
-            least = mpsAfter.length;
-            most = mpsBefore.length;
-          }
-          this._isInResult = most === operation.numMultiPolys && least < most;
-          break;
-        }
-        case "xor": {
-          const diff2 = Math.abs(mpsBefore.length - mpsAfter.length);
-          this._isInResult = diff2 % 2 === 1;
-          break;
-        }
-        case "difference": {
-          const isJustSubject = (mps) => mps.length === 1 && mps[0].isSubject;
-          this._isInResult = isJustSubject(mpsBefore) !== isJustSubject(mpsAfter);
-          break;
-        }
-        default:
-          throw new Error(`Unrecognized operation type found ${operation.type}`);
-      }
-      return this._isInResult;
-    }
-  }
-  class RingIn {
-    constructor(geomRing, poly, isExterior) {
-      if (!Array.isArray(geomRing) || geomRing.length === 0) {
-        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
-      }
-      this.poly = poly;
-      this.isExterior = isExterior;
-      this.segments = [];
-      if (typeof geomRing[0][0] !== "number" || typeof geomRing[0][1] !== "number") {
-        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
-      }
-      const firstPoint = rounder.round(geomRing[0][0], geomRing[0][1]);
-      this.bbox = {
-        ll: {
-          x: firstPoint.x,
-          y: firstPoint.y
-        },
-        ur: {
-          x: firstPoint.x,
-          y: firstPoint.y
-        }
-      };
-      let prevPoint = firstPoint;
-      for (let i2 = 1, iMax = geomRing.length; i2 < iMax; i2++) {
-        if (typeof geomRing[i2][0] !== "number" || typeof geomRing[i2][1] !== "number") {
-          throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
-        }
-        let point2 = rounder.round(geomRing[i2][0], geomRing[i2][1]);
-        if (point2.x === prevPoint.x && point2.y === prevPoint.y) continue;
-        this.segments.push(Segment.fromRing(prevPoint, point2, this));
-        if (point2.x < this.bbox.ll.x) this.bbox.ll.x = point2.x;
-        if (point2.y < this.bbox.ll.y) this.bbox.ll.y = point2.y;
-        if (point2.x > this.bbox.ur.x) this.bbox.ur.x = point2.x;
-        if (point2.y > this.bbox.ur.y) this.bbox.ur.y = point2.y;
-        prevPoint = point2;
-      }
-      if (firstPoint.x !== prevPoint.x || firstPoint.y !== prevPoint.y) {
-        this.segments.push(Segment.fromRing(prevPoint, firstPoint, this));
-      }
-    }
-    getSweepEvents() {
-      const sweepEvents = [];
-      for (let i2 = 0, iMax = this.segments.length; i2 < iMax; i2++) {
-        const segment = this.segments[i2];
-        sweepEvents.push(segment.leftSE);
-        sweepEvents.push(segment.rightSE);
-      }
-      return sweepEvents;
-    }
-  }
-  class PolyIn {
-    constructor(geomPoly, multiPoly) {
-      if (!Array.isArray(geomPoly)) {
-        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
-      }
-      this.exteriorRing = new RingIn(geomPoly[0], this, true);
-      this.bbox = {
-        ll: {
-          x: this.exteriorRing.bbox.ll.x,
-          y: this.exteriorRing.bbox.ll.y
-        },
-        ur: {
-          x: this.exteriorRing.bbox.ur.x,
-          y: this.exteriorRing.bbox.ur.y
-        }
-      };
-      this.interiorRings = [];
-      for (let i2 = 1, iMax = geomPoly.length; i2 < iMax; i2++) {
-        const ring = new RingIn(geomPoly[i2], this, false);
-        if (ring.bbox.ll.x < this.bbox.ll.x) this.bbox.ll.x = ring.bbox.ll.x;
-        if (ring.bbox.ll.y < this.bbox.ll.y) this.bbox.ll.y = ring.bbox.ll.y;
-        if (ring.bbox.ur.x > this.bbox.ur.x) this.bbox.ur.x = ring.bbox.ur.x;
-        if (ring.bbox.ur.y > this.bbox.ur.y) this.bbox.ur.y = ring.bbox.ur.y;
-        this.interiorRings.push(ring);
-      }
-      this.multiPoly = multiPoly;
-    }
-    getSweepEvents() {
-      const sweepEvents = this.exteriorRing.getSweepEvents();
-      for (let i2 = 0, iMax = this.interiorRings.length; i2 < iMax; i2++) {
-        const ringSweepEvents = this.interiorRings[i2].getSweepEvents();
-        for (let j2 = 0, jMax = ringSweepEvents.length; j2 < jMax; j2++) {
-          sweepEvents.push(ringSweepEvents[j2]);
-        }
-      }
-      return sweepEvents;
-    }
-  }
-  class MultiPolyIn {
-    constructor(geom, isSubject) {
-      if (!Array.isArray(geom)) {
-        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
-      }
-      try {
-        if (typeof geom[0][0][0] === "number") geom = [
-          geom
-        ];
-      } catch (ex) {
-      }
-      this.polys = [];
-      this.bbox = {
-        ll: {
-          x: Number.POSITIVE_INFINITY,
-          y: Number.POSITIVE_INFINITY
-        },
-        ur: {
-          x: Number.NEGATIVE_INFINITY,
-          y: Number.NEGATIVE_INFINITY
-        }
-      };
-      for (let i2 = 0, iMax = geom.length; i2 < iMax; i2++) {
-        const poly = new PolyIn(geom[i2], this);
-        if (poly.bbox.ll.x < this.bbox.ll.x) this.bbox.ll.x = poly.bbox.ll.x;
-        if (poly.bbox.ll.y < this.bbox.ll.y) this.bbox.ll.y = poly.bbox.ll.y;
-        if (poly.bbox.ur.x > this.bbox.ur.x) this.bbox.ur.x = poly.bbox.ur.x;
-        if (poly.bbox.ur.y > this.bbox.ur.y) this.bbox.ur.y = poly.bbox.ur.y;
-        this.polys.push(poly);
-      }
-      this.isSubject = isSubject;
-    }
-    getSweepEvents() {
-      const sweepEvents = [];
-      for (let i2 = 0, iMax = this.polys.length; i2 < iMax; i2++) {
-        const polySweepEvents = this.polys[i2].getSweepEvents();
-        for (let j2 = 0, jMax = polySweepEvents.length; j2 < jMax; j2++) {
-          sweepEvents.push(polySweepEvents[j2]);
-        }
-      }
-      return sweepEvents;
-    }
-  }
-  class RingOut {
-    static factory(allSegments) {
-      const ringsOut = [];
-      for (let i2 = 0, iMax = allSegments.length; i2 < iMax; i2++) {
-        const segment = allSegments[i2];
-        if (!segment.isInResult() || segment.ringOut) continue;
-        let prevEvent = null;
-        let event = segment.leftSE;
-        let nextEvent = segment.rightSE;
-        const events = [
-          event
-        ];
-        const startingPoint = event.point;
-        const intersectionLEs = [];
-        while (true) {
-          prevEvent = event;
-          event = nextEvent;
-          events.push(event);
-          if (event.point === startingPoint) break;
-          while (true) {
-            const availableLEs = event.getAvailableLinkedEvents();
-            if (availableLEs.length === 0) {
-              const firstPt = events[0].point;
-              const lastPt = events[events.length - 1].point;
-              throw new Error(`Unable to complete output ring starting at [${firstPt.x}, ${firstPt.y}]. Last matching segment found ends at [${lastPt.x}, ${lastPt.y}].`);
-            }
-            if (availableLEs.length === 1) {
-              nextEvent = availableLEs[0].otherSE;
-              break;
-            }
-            let indexLE = null;
-            for (let j2 = 0, jMax = intersectionLEs.length; j2 < jMax; j2++) {
-              if (intersectionLEs[j2].point === event.point) {
-                indexLE = j2;
-                break;
-              }
-            }
-            if (indexLE !== null) {
-              const intersectionLE = intersectionLEs.splice(indexLE)[0];
-              const ringEvents = events.splice(intersectionLE.index);
-              ringEvents.unshift(ringEvents[0].otherSE);
-              ringsOut.push(new RingOut(ringEvents.reverse()));
-              continue;
-            }
-            intersectionLEs.push({
-              index: events.length,
-              point: event.point
-            });
-            const comparator = event.getLeftmostComparator(prevEvent);
-            nextEvent = availableLEs.sort(comparator)[0].otherSE;
-            break;
-          }
-        }
-        ringsOut.push(new RingOut(events));
-      }
-      return ringsOut;
-    }
-    constructor(events) {
-      this.events = events;
-      for (let i2 = 0, iMax = events.length; i2 < iMax; i2++) {
-        events[i2].segment.ringOut = this;
-      }
-      this.poly = null;
-    }
-    getGeom() {
-      let prevPt = this.events[0].point;
-      const points = [
-        prevPt
-      ];
-      for (let i2 = 1, iMax = this.events.length - 1; i2 < iMax; i2++) {
-        const pt22 = this.events[i2].point;
-        const nextPt2 = this.events[i2 + 1].point;
-        if (compareVectorAngles(pt22, prevPt, nextPt2) === 0) continue;
-        points.push(pt22);
-        prevPt = pt22;
-      }
-      if (points.length === 1) return null;
-      const pt2 = points[0];
-      const nextPt = points[1];
-      if (compareVectorAngles(pt2, prevPt, nextPt) === 0) points.shift();
-      points.push(points[0]);
-      const step = this.isExteriorRing() ? 1 : -1;
-      const iStart = this.isExteriorRing() ? 0 : points.length - 1;
-      const iEnd = this.isExteriorRing() ? points.length : -1;
-      const orderedPoints = [];
-      for (let i2 = iStart; i2 != iEnd; i2 += step) orderedPoints.push([
-        points[i2].x,
-        points[i2].y
-      ]);
-      return orderedPoints;
-    }
-    isExteriorRing() {
-      if (this._isExteriorRing === void 0) {
-        const enclosing = this.enclosingRing();
-        this._isExteriorRing = enclosing ? !enclosing.isExteriorRing() : true;
-      }
-      return this._isExteriorRing;
-    }
-    enclosingRing() {
-      if (this._enclosingRing === void 0) {
-        this._enclosingRing = this._calcEnclosingRing();
-      }
-      return this._enclosingRing;
-    }
-    _calcEnclosingRing() {
-      let leftMostEvt = this.events[0];
-      for (let i2 = 1, iMax = this.events.length; i2 < iMax; i2++) {
-        const evt = this.events[i2];
-        if (SweepEvent.compare(leftMostEvt, evt) > 0) leftMostEvt = evt;
-      }
-      let prevSeg = leftMostEvt.segment.prevInResult();
-      let prevPrevSeg = prevSeg ? prevSeg.prevInResult() : null;
-      while (true) {
-        if (!prevSeg) return null;
-        if (!prevPrevSeg) return prevSeg.ringOut;
-        if (prevPrevSeg.ringOut !== prevSeg.ringOut) {
-          if (prevPrevSeg.ringOut.enclosingRing() !== prevSeg.ringOut) {
-            return prevSeg.ringOut;
-          } else return prevSeg.ringOut.enclosingRing();
-        }
-        prevSeg = prevPrevSeg.prevInResult();
-        prevPrevSeg = prevSeg ? prevSeg.prevInResult() : null;
-      }
-    }
-  }
-  class PolyOut {
-    constructor(exteriorRing) {
-      this.exteriorRing = exteriorRing;
-      exteriorRing.poly = this;
-      this.interiorRings = [];
-    }
-    addInterior(ring) {
-      this.interiorRings.push(ring);
-      ring.poly = this;
-    }
-    getGeom() {
-      const geom = [
-        this.exteriorRing.getGeom()
-      ];
-      if (geom[0] === null) return null;
-      for (let i2 = 0, iMax = this.interiorRings.length; i2 < iMax; i2++) {
-        const ringGeom = this.interiorRings[i2].getGeom();
-        if (ringGeom === null) continue;
-        geom.push(ringGeom);
-      }
-      return geom;
-    }
-  }
-  class MultiPolyOut {
-    constructor(rings) {
-      this.rings = rings;
-      this.polys = this._composePolys(rings);
-    }
-    getGeom() {
-      const geom = [];
-      for (let i2 = 0, iMax = this.polys.length; i2 < iMax; i2++) {
-        const polyGeom = this.polys[i2].getGeom();
-        if (polyGeom === null) continue;
-        geom.push(polyGeom);
-      }
-      return geom;
-    }
-    _composePolys(rings) {
-      const polys = [];
-      for (let i2 = 0, iMax = rings.length; i2 < iMax; i2++) {
-        const ring = rings[i2];
-        if (ring.poly) continue;
-        if (ring.isExteriorRing()) polys.push(new PolyOut(ring));
-        else {
-          const enclosingRing = ring.enclosingRing();
-          if (!enclosingRing.poly) polys.push(new PolyOut(enclosingRing));
-          enclosingRing.poly.addInterior(ring);
-        }
-      }
-      return polys;
-    }
-  }
-  class SweepLine {
-    constructor(queue) {
-      let comparator = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : Segment.compare;
-      this.queue = queue;
-      this.tree = new z(comparator);
-      this.segments = [];
-    }
-    process(event) {
-      const segment = event.segment;
-      const newEvents = [];
-      if (event.consumedBy) {
-        if (event.isLeft) this.queue.remove(event.otherSE);
-        else this.tree.remove(segment);
-        return newEvents;
-      }
-      const node2 = event.isLeft ? this.tree.add(segment) : this.tree.find(segment);
-      if (!node2) throw new Error(`Unable to find segment #${segment.id} [${segment.leftSE.point.x}, ${segment.leftSE.point.y}] -> [${segment.rightSE.point.x}, ${segment.rightSE.point.y}] in SweepLine tree.`);
-      let prevNode = node2;
-      let nextNode = node2;
-      let prevSeg = void 0;
-      let nextSeg = void 0;
-      while (prevSeg === void 0) {
-        prevNode = this.tree.prev(prevNode);
-        if (prevNode === null) prevSeg = null;
-        else if (prevNode.key.consumedBy === void 0) prevSeg = prevNode.key;
-      }
-      while (nextSeg === void 0) {
-        nextNode = this.tree.next(nextNode);
-        if (nextNode === null) nextSeg = null;
-        else if (nextNode.key.consumedBy === void 0) nextSeg = nextNode.key;
-      }
-      if (event.isLeft) {
-        let prevMySplitter = null;
-        if (prevSeg) {
-          const prevInter = prevSeg.getIntersection(segment);
-          if (prevInter !== null) {
-            if (!segment.isAnEndpoint(prevInter)) prevMySplitter = prevInter;
-            if (!prevSeg.isAnEndpoint(prevInter)) {
-              const newEventsFromSplit = this._splitSafely(prevSeg, prevInter);
-              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
-                newEvents.push(newEventsFromSplit[i2]);
-              }
-            }
-          }
-        }
-        let nextMySplitter = null;
-        if (nextSeg) {
-          const nextInter = nextSeg.getIntersection(segment);
-          if (nextInter !== null) {
-            if (!segment.isAnEndpoint(nextInter)) nextMySplitter = nextInter;
-            if (!nextSeg.isAnEndpoint(nextInter)) {
-              const newEventsFromSplit = this._splitSafely(nextSeg, nextInter);
-              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
-                newEvents.push(newEventsFromSplit[i2]);
-              }
-            }
-          }
-        }
-        if (prevMySplitter !== null || nextMySplitter !== null) {
-          let mySplitter = null;
-          if (prevMySplitter === null) mySplitter = nextMySplitter;
-          else if (nextMySplitter === null) mySplitter = prevMySplitter;
-          else {
-            const cmpSplitters = SweepEvent.comparePoints(prevMySplitter, nextMySplitter);
-            mySplitter = cmpSplitters <= 0 ? prevMySplitter : nextMySplitter;
-          }
-          this.queue.remove(segment.rightSE);
-          newEvents.push(segment.rightSE);
-          const newEventsFromSplit = segment.split(mySplitter);
-          for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
-            newEvents.push(newEventsFromSplit[i2]);
-          }
-        }
-        if (newEvents.length > 0) {
-          this.tree.remove(segment);
-          newEvents.push(event);
-        } else {
-          this.segments.push(segment);
-          segment.prev = prevSeg;
-        }
-      } else {
-        if (prevSeg && nextSeg) {
-          const inter = prevSeg.getIntersection(nextSeg);
-          if (inter !== null) {
-            if (!prevSeg.isAnEndpoint(inter)) {
-              const newEventsFromSplit = this._splitSafely(prevSeg, inter);
-              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
-                newEvents.push(newEventsFromSplit[i2]);
-              }
-            }
-            if (!nextSeg.isAnEndpoint(inter)) {
-              const newEventsFromSplit = this._splitSafely(nextSeg, inter);
-              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
-                newEvents.push(newEventsFromSplit[i2]);
-              }
-            }
-          }
-        }
-        this.tree.remove(segment);
-      }
-      return newEvents;
-    }
-    _splitSafely(seg, pt2) {
-      this.tree.remove(seg);
-      const rightSE = seg.rightSE;
-      this.queue.remove(rightSE);
-      const newEvents = seg.split(pt2);
-      newEvents.push(rightSE);
-      if (seg.consumedBy === void 0) this.tree.add(seg);
-      return newEvents;
-    }
-  }
-  const POLYGON_CLIPPING_MAX_QUEUE_SIZE = typeof process !== "undefined" && define_process_env_default.POLYGON_CLIPPING_MAX_QUEUE_SIZE || 1e6;
-  const POLYGON_CLIPPING_MAX_SWEEPLINE_SEGMENTS = typeof process !== "undefined" && define_process_env_default.POLYGON_CLIPPING_MAX_SWEEPLINE_SEGMENTS || 1e6;
-  class Operation {
-    run(type, geom, moreGeoms) {
-      operation.type = type;
-      rounder.reset();
-      const multipolys = [
-        new MultiPolyIn(geom, true)
-      ];
-      for (let i2 = 0, iMax = moreGeoms.length; i2 < iMax; i2++) {
-        multipolys.push(new MultiPolyIn(moreGeoms[i2], false));
-      }
-      operation.numMultiPolys = multipolys.length;
-      if (operation.type === "difference") {
-        const subject = multipolys[0];
-        let i2 = 1;
-        while (i2 < multipolys.length) {
-          if (getBboxOverlap(multipolys[i2].bbox, subject.bbox) !== null) i2++;
-          else multipolys.splice(i2, 1);
-        }
-      }
-      if (operation.type === "intersection") {
-        for (let i2 = 0, iMax = multipolys.length; i2 < iMax; i2++) {
-          const mpA = multipolys[i2];
-          for (let j2 = i2 + 1, jMax = multipolys.length; j2 < jMax; j2++) {
-            if (getBboxOverlap(mpA.bbox, multipolys[j2].bbox) === null) return [];
-          }
-        }
-      }
-      const queue = new z(SweepEvent.compare);
-      for (let i2 = 0, iMax = multipolys.length; i2 < iMax; i2++) {
-        const sweepEvents = multipolys[i2].getSweepEvents();
-        for (let j2 = 0, jMax = sweepEvents.length; j2 < jMax; j2++) {
-          queue.insert(sweepEvents[j2]);
-          if (queue.size > POLYGON_CLIPPING_MAX_QUEUE_SIZE) {
-            throw new Error("Infinite loop when putting segment endpoints in a priority queue (queue size too big).");
-          }
-        }
-      }
-      const sweepLine = new SweepLine(queue);
-      let prevQueueSize = queue.size;
-      let node2 = queue.pop();
-      while (node2) {
-        const evt = node2.key;
-        if (queue.size === prevQueueSize) {
-          const seg = evt.segment;
-          throw new Error(`Unable to pop() ${evt.isLeft ? "left" : "right"} SweepEvent [${evt.point.x}, ${evt.point.y}] from segment #${seg.id} [${seg.leftSE.point.x}, ${seg.leftSE.point.y}] -> [${seg.rightSE.point.x}, ${seg.rightSE.point.y}] from queue.`);
-        }
-        if (queue.size > POLYGON_CLIPPING_MAX_QUEUE_SIZE) {
-          throw new Error("Infinite loop when passing sweep line over endpoints (queue size too big).");
-        }
-        if (sweepLine.segments.length > POLYGON_CLIPPING_MAX_SWEEPLINE_SEGMENTS) {
-          throw new Error("Infinite loop when passing sweep line over endpoints (too many sweep line segments).");
-        }
-        const newEvents = sweepLine.process(evt);
-        for (let i2 = 0, iMax = newEvents.length; i2 < iMax; i2++) {
-          const evt2 = newEvents[i2];
-          if (evt2.consumedBy === void 0) queue.insert(evt2);
-        }
-        prevQueueSize = queue.size;
-        node2 = queue.pop();
-      }
-      rounder.reset();
-      const ringsOut = RingOut.factory(sweepLine.segments);
-      const result = new MultiPolyOut(ringsOut);
-      return result.getGeom();
-    }
-  }
-  const operation = new Operation();
-  const union = function(geom) {
-    for (var _len = arguments.length, moreGeoms = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      moreGeoms[_key - 1] = arguments[_key];
-    }
-    return operation.run("union", geom, moreGeoms);
-  };
-  const intersection = function(geom) {
-    for (var _len2 = arguments.length, moreGeoms = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-      moreGeoms[_key2 - 1] = arguments[_key2];
-    }
-    return operation.run("intersection", geom, moreGeoms);
-  };
-  const xor = function(geom) {
-    for (var _len3 = arguments.length, moreGeoms = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-      moreGeoms[_key3 - 1] = arguments[_key3];
-    }
-    return operation.run("xor", geom, moreGeoms);
-  };
-  const difference = function(subjectGeom) {
-    for (var _len4 = arguments.length, clippingGeoms = new Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-      clippingGeoms[_key4 - 1] = arguments[_key4];
-    }
-    return operation.run("difference", subjectGeom, clippingGeoms);
-  };
-  var index$2 = {
-    union,
-    intersection,
-    xor,
-    difference
-  };
-  function ensureClosed(ring) {
-    if (ring.length < 3) return ring;
-    const first = ring[0];
-    const last2 = ring[ring.length - 1];
-    if (first[0] === last2[0] && first[1] === last2[1]) return ring;
-    return [
-      ...ring,
-      first
-    ];
-  }
-  function toLibPolygon(ring) {
-    const closed = ensureClosed(ring);
-    if (closed.length < 3) return [];
-    return [
-      closed
-    ];
-  }
-  function fromLibRings(rings) {
-    if (!rings || rings.length === 0) return null;
-    const ring = rings[0];
-    if (!ring || ring.length < 3) return null;
-    return ring;
-  }
-  function polygonArea(ring) {
-    let area2 = 0;
-    const n2 = ring.length;
-    for (let i2 = 0; i2 < n2; i2++) {
-      const j2 = (i2 + 1) % n2;
-      area2 += ring[i2][0] * ring[j2][1];
-      area2 -= ring[j2][0] * ring[i2][1];
-    }
-    return Math.abs(area2) / 2;
-  }
-  function polygonUnion(a2, b2) {
-    if (a2.length < 3 || b2.length < 3) return null;
-    const polyA = toLibPolygon(a2);
-    const polyB = toLibPolygon(b2);
-    if (polyA.length === 0 || polyB.length === 0) return null;
-    const result = index$2.union(polyA, polyB);
-    if (!result || result.length === 0) return null;
-    if (result.length === 1) return fromLibRings(result[0]);
-    let best = result[0][0];
-    let bestArea = polygonArea(best);
-    for (let i2 = 0; i2 < result.length; i2++) {
-      const poly = result[i2];
-      if (poly == null ? void 0 : poly[0]) {
-        const area2 = polygonArea(poly[0]);
-        if (area2 > bestArea) {
-          best = poly[0];
-          bestArea = area2;
-        }
-      }
-    }
-    return best;
-  }
-  function polygonDifference(a2, b2) {
-    if (a2.length < 3 || b2.length < 3) return null;
-    const polyA = toLibPolygon(a2);
-    const polyB = toLibPolygon(b2);
-    if (polyA.length === 0 || polyB.length === 0) return null;
-    const result = index$2.difference(polyA, polyB);
-    if (!result || result.length === 0) return null;
-    if (result.length === 1 && result[0][0]) return fromLibRings(result[0]);
-    let best = result[0][0];
-    let bestArea = polygonArea(best);
-    for (let i2 = 0; i2 < result.length; i2++) {
-      const poly = result[i2];
-      if (poly == null ? void 0 : poly[0]) {
-        const area2 = polygonArea(poly[0]);
-        if (area2 > bestArea) {
-          best = poly[0];
-          bestArea = area2;
-        }
-      }
-    }
-    return best;
-  }
-  function buildBrushHull(strokePoints, brushRadiusPx, viewportZoom) {
-    if (strokePoints.length === 0 || brushRadiusPx <= 0) return null;
-    const scale2 = 2 ** (viewportZoom ?? 0);
-    const radiusWorld = brushRadiusPx / Math.max(scale2, 0.01);
-    let hull = null;
-    for (const [x2, y2] of strokePoints) {
-      const circle = makeCircle(x2, y2, radiusWorld);
-      if (!hull) {
-        hull = circle;
-      } else {
-        const union2 = polygonUnion(hull, circle);
-        if (union2 && union2.length >= 3) {
-          hull = union2;
-        }
-      }
-    }
-    return hull && hull.length >= 3 ? hull : null;
-  }
-  function mergeShapesAfterWaypointImport(state, newShapes, clearExisting) {
-    const existingShapes = clearExisting ? state.shapes.filter((s2) => {
-      var _a2;
-      return !((_a2 = s2.metadata) == null ? void 0 : _a2.isImported);
-    }) : state.shapes;
-    const newHidden = clearExisting ? new Set([
-      ...state.hiddenShapeIds
-    ].filter((id2) => {
-      var _a2;
-      const shape = state.shapes.find((s2) => s2.id === id2);
-      return shape && !((_a2 = shape.metadata) == null ? void 0 : _a2.isImported);
-    })) : state.hiddenShapeIds;
-    const existingIds = new Set(existingShapes.map((s2) => s2.id));
-    const seenIncoming = /* @__PURE__ */ new Set();
-    const appended = newShapes.filter((s2) => {
-      if (seenIncoming.has(s2.id)) return false;
-      seenIncoming.add(s2.id);
-      return !existingIds.has(s2.id);
-    });
-    return {
-      shapes: [
-        ...existingShapes,
-        ...appended
-      ],
-      hiddenShapeIds: newHidden
-    };
-  }
-  function newShapeId() {
-    return crypto.randomUUID();
-  }
-  function effectiveReferenceImagePixelSize(viewerPublished, docWidth, docHeight) {
-    if (viewerPublished && viewerPublished.width > 0 && viewerPublished.height > 0) {
-      return viewerPublished;
-    }
-    return {
-      width: docWidth,
-      height: docHeight
-    };
-  }
-  function referenceImagePixelSizeForActions(get2) {
-    const doc = useDocumentStore.getState();
-    const im = doc.images[0];
-    return effectiveReferenceImagePixelSize(get2().viewerReferenceImagePixelSize, (im == null ? void 0 : im.sizeX) ?? 0, (im == null ? void 0 : im.sizeY) ?? 0);
-  }
-  function authoringViewportForDoc(get2) {
-    const v2 = get2().viewerViewportSize;
-    return {
-      width: (v2 == null ? void 0 : v2.width) ?? 0,
-      height: (v2 == null ? void 0 : v2.height) ?? 0
-    };
-  }
-  function ensureBrushMaskViewport(viewportWidth, viewportHeight, existing) {
-    const w2 = Math.max(1, Math.round(viewportWidth));
-    const h2 = Math.max(1, Math.round(viewportHeight));
-    return {
-      width: w2,
-      height: h2,
-      data: new Uint8Array(w2 * h2)
-    };
-  }
-  function paintCircleOnMaskScreen(mask2, sx, sy, radiusPx) {
-    const { width, height, data: data2 } = mask2;
-    if (width <= 0 || height <= 0) return;
-    const mx = Math.round(Math.max(0, Math.min(width - 1, sx)));
-    const my = Math.round(Math.max(0, Math.min(height - 1, sy)));
-    const r2 = Math.max(1, Math.round(radiusPx));
-    const y0 = Math.max(0, my - r2);
-    const y1 = Math.min(height - 1, my + r2);
-    const x0 = Math.max(0, mx - r2);
-    const x1 = Math.min(width - 1, mx + r2);
-    const r22 = r2 * r2;
-    for (let y2 = y0; y2 <= y1; y2++) {
-      for (let x2 = x0; x2 <= x1; x2++) {
-        if ((x2 - mx) ** 2 + (y2 - my) ** 2 <= r22) data2[y2 * width + x2] = 1;
-      }
-    }
-  }
-  function pointToSegmentDistance(p2, a2, b2) {
-    const [px, py] = p2;
-    const [ax, ay] = a2;
-    const [bx, by] = b2;
-    const abx = bx - ax;
-    const aby = by - ay;
-    const apx = px - ax;
-    const apy = py - ay;
-    const denom = abx * abx + aby * aby;
-    const t2 = denom === 0 ? 0 : Math.max(0, Math.min(1, (apx * abx + apy * aby) / denom));
-    const cx = ax + t2 * abx;
-    const cy = ay + t2 * aby;
-    return Math.hypot(px - cx, py - cy);
-  }
-  function simplifyRdpOpen(points, epsilon2) {
-    if (points.length <= 2) return points;
-    let maxDist = -1;
-    let idx = -1;
-    const a2 = points[0];
-    const b2 = points[points.length - 1];
-    for (let i2 = 1; i2 < points.length - 1; i2++) {
-      const d2 = pointToSegmentDistance(points[i2], a2, b2);
-      if (d2 > maxDist) {
-        maxDist = d2;
-        idx = i2;
-      }
-    }
-    if (maxDist <= epsilon2 || idx === -1) return [
-      a2,
-      b2
-    ];
-    const left = simplifyRdpOpen(points.slice(0, idx + 1), epsilon2);
-    const right = simplifyRdpOpen(points.slice(idx), epsilon2);
-    return [
-      ...left.slice(0, -1),
-      ...right
-    ];
-  }
-  function simplifyClosedPolygon(pointsClosed, epsilon2) {
-    if (pointsClosed.length < 4) return pointsClosed;
-    const pts = pointsClosed[0][0] === pointsClosed[pointsClosed.length - 1][0] && pointsClosed[0][1] === pointsClosed[pointsClosed.length - 1][1] ? pointsClosed.slice(0, -1) : [
-      ...pointsClosed
-    ];
-    if (pts.length < 3) return pointsClosed;
-    let minI = 0;
-    let maxI = 0;
-    for (let i2 = 1; i2 < pts.length; i2++) {
-      if (pts[i2][0] < pts[minI][0]) minI = i2;
-      if (pts[i2][0] > pts[maxI][0]) maxI = i2;
-    }
-    if (minI === maxI) {
-      minI = 0;
-      maxI = 0;
-      for (let i2 = 1; i2 < pts.length; i2++) {
-        if (pts[i2][1] < pts[minI][1]) minI = i2;
-        if (pts[i2][1] > pts[maxI][1]) maxI = i2;
-      }
-    }
-    const n2 = pts.length;
-    const forward = (from, to) => {
-      const out = [];
-      let i2 = from;
-      while (true) {
-        out.push(pts[i2]);
-        if (i2 === to) break;
-        i2 = (i2 + 1) % n2;
-      }
-      return out;
-    };
-    const path1 = forward(minI, maxI);
-    const path2 = forward(maxI, minI);
-    const s1 = simplifyRdpOpen(path1, epsilon2);
-    const s2 = simplifyRdpOpen(path2, epsilon2);
-    const combined = [
-      ...s1,
-      ...s2.slice(1, -1)
-    ];
-    const cleaned = [];
-    for (const p2 of combined) {
-      const last2 = cleaned[cleaned.length - 1];
-      if (!last2 || Math.hypot(p2[0] - last2[0], p2[1] - last2[1]) > epsilon2 * 0.25) cleaned.push(p2);
-    }
-    if (cleaned.length < 3) return pointsClosed;
-    return [
-      ...cleaned,
-      cleaned[0]
-    ];
-  }
-  function signedPolygonArea(points) {
-    let area2 = 0;
-    for (let i2 = 0, j2 = points.length - 1; i2 < points.length; j2 = i2++) {
-      area2 += points[j2][0] * points[i2][1];
-      area2 -= points[i2][0] * points[j2][1];
-    }
-    return area2 / 2;
-  }
-  function pointInPolygon2(p2, polygon) {
-    const [px, py] = p2;
-    let inside = false;
-    for (let i2 = 0, j2 = polygon.length - 1; i2 < polygon.length; j2 = i2++) {
-      const [xi2, yi2] = polygon[i2];
-      const [xj2, yj2] = polygon[j2];
-      const intersect2 = yi2 > py !== yj2 > py && px < (xj2 - xi2) * (py - yi2) / (yj2 - yi2 || Number.EPSILON) + xi2;
-      if (intersect2) inside = !inside;
-    }
-    return inside;
-  }
-  function polygonsOverlap(a2, b2) {
-    if (a2.length === 0 || b2.length === 0) return false;
-    const bbox = (poly) => {
-      let minX = poly[0][0];
-      let maxX = poly[0][0];
-      let minY = poly[0][1];
-      let maxY = poly[0][1];
-      for (const [x2, y2] of poly) {
-        if (x2 < minX) minX = x2;
-        if (x2 > maxX) maxX = x2;
-        if (y2 < minY) minY = y2;
-        if (y2 > maxY) maxY = y2;
-      }
-      return {
-        minX,
-        maxX,
-        minY,
-        maxY
-      };
-    };
-    const ab2 = bbox(a2);
-    const bb2 = bbox(b2);
-    if (ab2.maxX < bb2.minX || ab2.minX > bb2.maxX || ab2.maxY < bb2.minY || ab2.minY > bb2.maxY) {
-      return false;
-    }
-    for (const pt2 of a2) {
-      if (pointInPolygon2(pt2, b2)) return true;
-    }
-    for (const pt2 of b2) {
-      if (pointInPolygon2(pt2, a2)) return true;
-    }
-    return false;
-  }
-  function ikey(ix, iy) {
-    return `${ix},${iy}`;
-  }
-  function parseIKey(k2) {
-    const [xs, ys] = k2.split(",");
-    return [
-      Number.parseInt(xs, 10) / 2,
-      Number.parseInt(ys, 10) / 2
-    ];
-  }
-  function edgeKey(a2, b2) {
-    return a2 < b2 ? `${a2}|${b2}` : `${b2}|${a2}`;
-  }
-  function addAdj(adj, a2, b2) {
-    const la2 = adj.get(a2);
-    if (la2) la2.push(b2);
-    else adj.set(a2, [
-      b2
-    ]);
-    const lb2 = adj.get(b2);
-    if (lb2) lb2.push(a2);
-    else adj.set(b2, [
-      a2
-    ]);
-  }
-  function maskToLoops(mask2) {
-    const { width: w2, height: h2, data: data2 } = mask2;
-    if (w2 < 2 || h2 < 2) return [];
-    const adj = /* @__PURE__ */ new Map();
-    const pt2 = (x2, y2) => ikey(x2, y2);
-    const edgePoint = (x2, y2, edge) => {
-      switch (edge) {
-        case 0:
-          return pt2(x2 * 2 + 1, y2 * 2);
-        case 1:
-          return pt2((x2 + 1) * 2, y2 * 2 + 1);
-        case 2:
-          return pt2(x2 * 2 + 1, (y2 + 1) * 2);
-        case 3:
-          return pt2(x2 * 2, y2 * 2 + 1);
-      }
-    };
-    const addSeg = (a2, b2) => {
-      if (a2 === b2) return;
-      addAdj(adj, a2, b2);
-    };
-    for (let y2 = 0; y2 < h2 - 1; y2++) {
-      for (let x2 = 0; x2 < w2 - 1; x2++) {
-        const tl2 = data2[y2 * w2 + x2] ? 1 : 0;
-        const tr2 = data2[y2 * w2 + (x2 + 1)] ? 1 : 0;
-        const br = data2[(y2 + 1) * w2 + (x2 + 1)] ? 1 : 0;
-        const bl2 = data2[(y2 + 1) * w2 + x2] ? 1 : 0;
-        const idx = tl2 << 0 | tr2 << 1 | br << 2 | bl2 << 3;
-        let segs = [];
-        switch (idx) {
-          case 0:
-          case 15:
-            segs = [];
-            break;
-          case 1:
-            segs = [
-              [
-                3,
-                0
-              ]
-            ];
-            break;
-          case 2:
-            segs = [
-              [
-                0,
-                1
-              ]
-            ];
-            break;
-          case 3:
-            segs = [
-              [
-                3,
-                1
-              ]
-            ];
-            break;
-          case 4:
-            segs = [
-              [
-                1,
-                2
-              ]
-            ];
-            break;
-          case 5:
-            segs = [
-              [
-                3,
-                0
-              ],
-              [
-                1,
-                2
-              ]
-            ];
-            break;
-          case 6:
-            segs = [
-              [
-                0,
-                2
-              ]
-            ];
-            break;
-          case 7:
-            segs = [
-              [
-                3,
-                2
-              ]
-            ];
-            break;
-          case 8:
-            segs = [
-              [
-                2,
-                3
-              ]
-            ];
-            break;
-          case 9:
-            segs = [
-              [
-                0,
-                2
-              ]
-            ];
-            break;
-          case 10:
-            segs = [
-              [
-                0,
-                1
-              ],
-              [
-                2,
-                3
-              ]
-            ];
-            break;
-          case 11:
-            segs = [
-              [
-                1,
-                2
-              ]
-            ];
-            break;
-          case 12:
-            segs = [
-              [
-                1,
-                3
-              ]
-            ];
-            break;
-          case 13:
-            segs = [
-              [
-                0,
-                1
-              ]
-            ];
-            break;
-          case 14:
-            segs = [
-              [
-                3,
-                0
-              ]
-            ];
-            break;
-        }
-        for (const [e1, e2] of segs) {
-          const a2 = edgePoint(x2, y2, e1);
-          const b2 = edgePoint(x2, y2, e2);
-          addSeg(a2, b2);
-        }
-      }
-    }
-    const visited = /* @__PURE__ */ new Set();
-    const loops = [];
-    for (const [start, neighbors] of adj.entries()) {
-      for (const n0 of neighbors) {
-        const ek0 = edgeKey(start, n0);
-        if (visited.has(ek0)) continue;
-        const loopKeys = [
-          start
-        ];
-        let prev = start;
-        let curr = n0;
-        visited.add(ek0);
-        while (true) {
-          loopKeys.push(curr);
-          const neigh = adj.get(curr) ?? [];
-          let next2 = null;
-          for (const cand of neigh) {
-            if (cand === prev) continue;
-            const ek2 = edgeKey(curr, cand);
-            if (!visited.has(ek2)) {
-              next2 = cand;
-              visited.add(ek2);
-              break;
-            }
-          }
-          if (!next2) {
-            break;
-          }
-          prev = curr;
-          curr = next2;
-          if (curr === start) {
-            loopKeys.push(start);
-            break;
-          }
-          if (loopKeys.length > (w2 + h2) * 8) break;
-        }
-        if (loopKeys.length >= 6 && loopKeys[0] === loopKeys[loopKeys.length - 1]) {
-          loops.push(loopKeys.map(parseIKey));
-        }
-      }
-    }
-    return loops;
-  }
-  function loopScreenToWorld(loop, bounds, maskWidth, maskHeight) {
-    const [left, bottom, right, top2] = bounds;
-    const dx = right - left;
-    const dy = bottom - top2;
-    return loop.map(([x2, y2]) => [
-      left + x2 / maskWidth * dx,
-      top2 + y2 / maskHeight * dy
-    ]);
-  }
-  function maskToViewportPolygon(mask2, bounds) {
-    const { width, height, data: data2 } = mask2;
-    if (!width || !height) return null;
-    const [left, bottom, right, top2] = bounds;
-    const dx = right - left;
-    const dy = bottom - top2;
-    if (dx === 0 || dy === 0) return null;
-    const w2 = width;
-    const h2 = height;
-    let hull = null;
-    for (let y2 = 0; y2 < h2; y2++) {
-      let runStart = -1;
-      const rowOffset = y2 * w2;
-      for (let x2 = 0; x2 <= w2; x2++) {
-        const inside = x2 < w2 && data2[rowOffset + x2] !== 0;
-        if (inside && runStart === -1) {
-          runStart = x2;
-        } else if (!inside && runStart !== -1) {
-          const x0t = runStart / w2;
-          const x1t = x2 / w2;
-          const y0t = y2 / h2;
-          const y1t = (y2 + 1) / h2;
-          const x0 = left + x0t * dx;
-          const x1 = left + x1t * dx;
-          const y0 = top2 + y0t * dy;
-          const y1 = top2 + y1t * dy;
-          const rect = [
-            [
-              x0,
-              y0
-            ],
-            [
-              x1,
-              y0
-            ],
-            [
-              x1,
-              y1
-            ],
-            [
-              x0,
-              y1
-            ],
-            [
-              x0,
-              y0
-            ]
-          ];
-          if (!hull) {
-            hull = rect;
-          } else {
-            const union2 = polygonUnion(hull, rect);
-            if (union2 && union2.length >= 3) {
-              hull = union2;
-            }
-          }
-          runStart = -1;
-        }
-      }
-    }
-    if (!hull || hull.length < 3) return null;
-    const pxToWorld = Math.max(Math.abs(dx) / Math.max(1, w2), Math.abs(dy) / Math.max(1, h2));
-    const epsilonWorld = pxToWorld * 1;
-    const simplified = simplifyClosedPolygon(hull, epsilonWorld);
-    return simplified && simplified.length >= 3 ? simplified : hull;
-  }
-  function computeBrushPolygon(strokePoints, precomputedHull, mask2, brushRadiusPx, viewportZoom, brushViewBounds) {
-    if (precomputedHull && precomputedHull.length >= 3) {
-      return precomputedHull;
-    }
-    if (mask2 && brushViewBounds) {
-      const fromMask = maskToViewportPolygon(mask2, brushViewBounds);
-      if (fromMask && fromMask.length >= 3) {
-        return fromMask;
-      }
-    }
-    if (strokePoints.length > 0 && brushRadiusPx > 0) {
-      const hull = buildBrushHull(strokePoints, brushRadiusPx, viewportZoom);
-      if (hull && hull.length >= 3) {
-        return hull;
-      }
-    }
-    return null;
-  }
-  function maybePersistShapesAfterMutation(get2) {
-    const doc = useDocumentStore.getState();
-    const waypoints = documentWaypoints(doc);
-    const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
-    if (waypoints.length === 0 || iw <= 0 || ih2 <= 0) {
-      return;
-    }
-    const state = get2();
-    const authoring = state.authoringWaypointShapesIndex;
-    const active2 = state.activeStoryIndex;
-    const resolved = authoring !== null ? authoring : active2 !== null ? active2 : null;
-    if (resolved === null) {
-      return;
-    }
-    if (resolved < 0 || resolved >= waypoints.length) {
-      return;
-    }
-    get2().persistImportedShapesToStory(resolved);
-  }
-  const overlayInitialState = {
-    overlayLayers: [],
-    activeTool: "move",
-    currentInteraction: null,
-    drawingState: {
-      isDrawing: false,
-      dragStart: null,
-      dragEnd: null
-    },
-    dragState: {
-      isDragging: false,
-      draggedShapeId: null,
-      dragOffset: null
-    },
-    hoverState: {
-      hoveredShapeId: null
-    },
-    shapes: [],
-    shapeGroups: [],
-    hiddenShapeIds: /* @__PURE__ */ new Set(),
-    globalColor: [
-      255,
-      255,
-      255,
-      255
-    ],
-    viewportZoom: 0,
-    showSquareViewportOverlay: false,
-    brushRadiusPx: 30,
-    brushMask: null,
-    brushMaskVersion: 0,
-    brushMaskMaxResolution: 1024,
-    brushViewportWidth: 0,
-    brushViewportHeight: 0,
-    brushViewBounds: null,
-    brushLastScreenCoord: null,
-    selectedShapeId: null,
-    brushEditTargetId: null,
-    brushEditMode: null,
-    imageSelectionMask: null,
-    activeStoryIndex: null,
-    waypointAuthoring: /* @__PURE__ */ new Map(),
-    authoringWaypointShapesIndex: null,
-    activeChannelGroupId: null,
-    channelRendering: null,
-    channelVisibilities: {},
-    channelGroupRowVisibilities: {},
-    groupChannelLists: {},
-    groupNames: {},
-    targetWaypointCamera: null,
-    authoringWaypointEditorOpen: false,
-    layersPanelSelectedShapeIds: [],
-    layersPanelSelectedGroupId: null,
-    layersPanelSelectionFlash: null,
-    layersPanelSelectionRequest: null,
-    sam2ImageFetcher: null,
-    sam2Processing: false,
-    sam2DebugImages: null,
-    sam2ViewState: null,
-    sam2ViewportSize: null,
-    viewerViewState: null,
-    viewerViewportSize: null,
-    viewerReferenceImagePixelSize: null,
-    viewerImageLayersLoaded: false,
-    squareViewportThumbnailCapture: null,
-    editingViewstateWaypointIndex: null
-  };
-  const useAppStore = create$9()(devtools((set2, get2) => ({
-    ...overlayInitialState,
-    setActiveTool: (tool) => {
-      set2({
-        activeTool: tool,
-        brushEditTargetId: null,
-        brushEditMode: null
-      });
-    },
-    setCurrentInteraction: (interaction) => {
-      set2({
-        currentInteraction: interaction
-      });
-    },
-    addOverlayLayer: (layer) => {
-      set2((state) => {
-        const filtered = state.overlayLayers.filter((l2) => l2 && l2.id !== layer.id);
-        return {
-          overlayLayers: [
-            ...filtered,
-            layer
-          ]
-        };
-      });
-    },
-    removeOverlayLayer: (layerId) => {
-      set2((state) => ({
-        overlayLayers: state.overlayLayers.filter((l2) => l2 && l2.id !== layerId)
-      }));
-    },
-    clearOverlayLayers: () => {
-      set2({
-        overlayLayers: []
-      });
-    },
-    updateDrawingState: (updates) => {
-      set2((state) => ({
-        drawingState: {
-          ...state.drawingState,
-          ...updates
-        }
-      }));
-    },
-    resetDrawingState: () => {
-      set2({
-        drawingState: overlayInitialState.drawingState
-      });
-    },
-    handleLayerCreate: (layer) => {
-      if (layer === null) {
-        get2().removeOverlayLayer("drawing-layer");
-        return;
-      }
-      get2().addOverlayLayer(layer);
-    },
-    handleToolChange: (tool) => {
-      set2({
-        activeTool: tool,
-        brushEditTargetId: null,
-        brushEditMode: null
-      });
-      get2().resetDrawingState();
-      get2().resetDragState();
-      get2().removeOverlayLayer("drawing-layer");
-      get2().removeOverlayLayer("drawing-arrow-preview");
-    },
-    handleOverlayInteraction: (type, coordinate) => {
-      const { activeTool } = get2();
-      if (type === "hover" && activeTool === "move") {
-        return;
-      }
-      const interaction = {
-        type,
-        coordinate
-      };
-      set2({
-        currentInteraction: interaction
-      });
-      const { drawingState, dragState } = get2();
-      const [x2, y2] = coordinate;
-      if (activeTool === "move") {
-        if (!get2().authoringWaypointEditorOpen) {
-          return;
-        }
-        const { hoverState } = get2();
-        switch (type) {
-          case "hover":
-            break;
-          case "click":
-            if (hoverState.hoveredShapeId) {
-              get2().setSelectedShape(hoverState.hoveredShapeId);
-            }
-            break;
-          case "dragStart":
-            if (hoverState.hoveredShapeId) {
-              const annotation = get2().shapes.find((a2) => a2.id === hoverState.hoveredShapeId);
-              if (annotation) {
-                let offset = [
-                  0,
-                  0
-                ];
-                if (annotation.type === "text" || annotation.type === "point") {
-                  offset = [
-                    x2 - annotation.position[0],
-                    y2 - annotation.position[1]
-                  ];
-                } else {
-                  const firstPoint = annotation.polygon[0];
-                  offset = [
-                    x2 - firstPoint[0],
-                    y2 - firstPoint[1]
-                  ];
-                }
-                get2().startDrag(hoverState.hoveredShapeId, offset);
-              }
-            }
-            break;
-          case "drag":
-            if (dragState.isDragging) {
-              get2().updateDrag(coordinate);
-            }
-            break;
-          case "dragEnd":
-            if (dragState.isDragging) {
-              get2().endDrag();
-            }
-            break;
-        }
-        return;
-      }
-      const usesDrawingState = activeTool === "rectangle" || activeTool === "ellipse" || activeTool === "arrow" || activeTool === "line";
-      if (usesDrawingState) {
-        switch (type) {
-          case "click":
-          case "dragStart":
-            get2().updateDrawingState({
-              isDrawing: true,
-              dragStart: [
-                x2,
-                y2
-              ],
-              dragEnd: [
-                x2,
-                y2
-              ]
-            });
-            break;
-          case "drag":
-            if (drawingState.isDrawing) {
-              get2().updateDrawingState({
-                dragEnd: [
-                  x2,
-                  y2
-                ]
-              });
-            }
-            break;
-          case "dragEnd":
-            if (drawingState.isDrawing) {
-              get2().updateDrawingState({
-                dragEnd: [
-                  x2,
-                  y2
-                ]
-              });
-              if (activeTool === "rectangle") {
-                setTimeout(() => get2().finalizeRectangle(), 0);
-              } else if (activeTool === "ellipse") {
-                setTimeout(() => get2().finalizeEllipse(), 0);
-              } else if (activeTool === "arrow" || activeTool === "line") {
-                setTimeout(() => get2().finalizeLine(activeTool === "arrow"), 0);
-              }
-            }
-            break;
-        }
-      }
-    },
-    addShape: (shape) => {
-      set2((state) => ({
-        shapes: [
-          ...state.shapes,
-          shape
-        ]
-      }));
-      maybePersistShapesAfterMutation(get2);
-    },
-    addShapesBatch: (items) => {
-      if (items.length === 0) return;
-      set2((state) => ({
-        shapes: [
-          ...state.shapes,
-          ...items
-        ]
-      }));
-      maybePersistShapesAfterMutation(get2);
-    },
-    removeShape: (shapeId) => {
-      set2((state) => {
-        const newHiddenLayers = new Set(state.hiddenShapeIds);
-        newHiddenLayers.delete(shapeId);
-        const newSelected = state.selectedShapeId === shapeId ? null : state.selectedShapeId;
-        const clearingBrushEdit = state.brushEditTargetId === shapeId ? {
-          brushEditTargetId: null,
-          brushEditMode: null
-        } : {};
-        return {
-          shapes: state.shapes.filter((a2) => a2.id !== shapeId),
-          hiddenShapeIds: newHiddenLayers,
-          selectedShapeId: newSelected,
-          ...clearingBrushEdit
-        };
-      });
-      maybePersistShapesAfterMutation(get2);
-    },
-    updateShape: (shapeId, updates) => {
-      set2((state) => ({
-        shapes: state.shapes.map((a2) => a2.id === shapeId ? {
-          ...a2,
-          ...updates
-        } : a2)
-      }));
-    },
-    clearShapes: () => {
-      set2({
-        shapes: []
-      });
-    },
-    resetStoryViewerSession: () => {
-      const vis = {
-        ...get2().channelVisibilities
-      };
-      delete vis[SELECTION_MASK_CHANNEL_KEY];
-      set2({
-        shapes: [],
-        shapeGroups: [],
-        hiddenShapeIds: /* @__PURE__ */ new Set(),
-        selectedShapeId: null,
-        brushEditTargetId: null,
-        brushEditMode: null,
-        brushMask: null,
-        brushMaskVersion: 0,
-        brushLastScreenCoord: null,
-        imageSelectionMask: null,
-        channelVisibilities: vis,
-        activeStoryIndex: null,
-        waypointAuthoring: /* @__PURE__ */ new Map(),
-        authoringWaypointShapesIndex: null,
-        authoringWaypointEditorOpen: false,
-        targetWaypointCamera: null,
-        layersPanelSelectedShapeIds: [],
-        layersPanelSelectedGroupId: null,
-        layersPanelSelectionFlash: null,
-        layersPanelSelectionRequest: null,
-        drawingState: overlayInitialState.drawingState,
-        dragState: overlayInitialState.dragState,
-        hoverState: overlayInitialState.hoverState,
-        currentInteraction: null
-      });
-    },
-    finalizeRectangle: () => {
-      const { drawingState } = get2();
-      if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
-        const [startX, startY] = drawingState.dragStart;
-        const [endX, endY] = drawingState.dragEnd;
-        const annotation = {
-          id: newShapeId(),
-          type: "polygon",
-          polygon: rectangleToPolygon([
-            startX,
-            startY
-          ], [
-            endX,
-            endY
-          ]),
-          style: {
-            fillColor: [
-              get2().globalColor[0],
-              get2().globalColor[1],
-              get2().globalColor[2],
-              50
-            ],
-            lineColor: get2().globalColor,
-            lineWidth: 3
-          },
-          metadata: {
-            label: `Untitled ${get2().shapes.length + 1}`
-          }
-        };
-        get2().addShape(annotation);
-        get2().resetDrawingState();
-        get2().removeOverlayLayer("drawing-layer");
-      }
-    },
-    finalizeEllipse: () => {
-      const { drawingState } = get2();
-      if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
-        const [startX, startY] = drawingState.dragStart;
-        const [endX, endY] = drawingState.dragEnd;
-        const annotation = {
-          id: newShapeId(),
-          type: "polygon",
-          polygon: ellipseToPolygon$1([
-            startX,
-            startY
-          ], [
-            endX,
-            endY
-          ]),
-          style: {
-            fillColor: [
-              get2().globalColor[0],
-              get2().globalColor[1],
-              get2().globalColor[2],
-              50
-            ],
-            lineColor: get2().globalColor,
-            lineWidth: 3
-          },
-          metadata: {
-            label: `Untitled ${get2().shapes.length + 1}`
-          }
-        };
-        get2().addShape(annotation);
-        get2().resetDrawingState();
-        get2().removeOverlayLayer("drawing-layer");
-      }
-    },
-    finalizeLasso: (points) => {
-      if (points.length >= 3) {
-        const annotation = {
-          id: newShapeId(),
-          type: "polygon",
-          polygon: points,
-          style: {
-            fillColor: [
-              get2().globalColor[0],
-              get2().globalColor[1],
-              get2().globalColor[2],
-              50
-            ],
-            lineColor: get2().globalColor,
-            lineWidth: 3
-          },
-          metadata: {
-            label: `Untitled ${get2().shapes.length + 1}`
-          }
-        };
-        get2().addShape(annotation);
-        get2().removeOverlayLayer("drawing-layer");
-      }
-    },
-    finalizePolyline: (points) => {
-      if (points.length >= 2) {
-        const annotation = {
-          id: newShapeId(),
-          type: "polyline",
-          polygon: points,
-          style: {
-            lineColor: get2().globalColor,
-            lineWidth: 3
-          },
-          metadata: {
-            label: `Untitled ${get2().shapes.length + 1}`
-          }
-        };
-        get2().addShape(annotation);
-        get2().removeOverlayLayer("drawing-layer");
-      }
-    },
-    finalizeLine: (hasArrowHead = true) => {
-      const { drawingState } = get2();
-      if (drawingState.isDrawing && drawingState.dragStart && drawingState.dragEnd) {
-        const [startX, startY] = drawingState.dragStart;
-        const [endX, endY] = drawingState.dragEnd;
-        const linePolygon = arrowLineDegeneratePolygon([
-          startX,
-          startY
-        ], [
-          endX,
-          endY
-        ]);
-        const annotation = {
-          id: newShapeId(),
-          type: "line",
-          polygon: linePolygon,
-          hasArrowHead,
-          style: {
-            fillColor: [
-              0,
-              0,
-              0,
-              0
-            ],
-            lineColor: get2().globalColor,
-            lineWidth: 3
-          },
-          metadata: {
-            label: `Untitled ${get2().shapes.length + 1}`
-          }
-        };
-        get2().addShape(annotation);
-        get2().resetDrawingState();
-        get2().removeOverlayLayer("drawing-layer");
-      }
-    },
-    createTextShape: (position2, text2, fontSize = 14) => {
-      if (!text2.trim()) {
-        return;
-      }
-      const annotation = {
-        id: newShapeId(),
-        type: "text",
-        position: position2,
-        text: text2.trim(),
-        style: {
-          fontSize,
-          fontColor: get2().globalColor,
-          backgroundColor: [
-            0,
-            0,
-            0,
-            100
-          ],
-          padding: 4
-        },
-        metadata: {
-          label: `Untitled ${get2().shapes.length + 1}`
-        }
-      };
-      get2().addShape(annotation);
-    },
-    createPointShape: (position2, radius = 5) => {
-      const annotation = {
-        id: newShapeId(),
-        type: "point",
-        position: position2,
-        style: {
-          fillColor: get2().globalColor,
-          strokeColor: [
-            255,
-            255,
-            255,
-            255
-          ],
-          radius
-        },
-        metadata: {
-          label: `Untitled ${get2().shapes.length + 1}`
-        }
-      };
-      get2().addShape(annotation);
-    },
-    updateTextShape: (shapeId, newText, fontSize) => {
-      if (!newText.trim()) {
-        return;
-      }
-      const shapes = get2().shapes;
-      const annotation = shapes.find((a2) => a2.id === shapeId);
-      if (!annotation || annotation.type !== "text") {
-        return;
-      }
-      const updates = {
-        text: newText.trim()
-      };
-      if (fontSize !== void 0) {
-        updates.style = {
-          ...annotation.style,
-          fontSize
-        };
-      }
-      get2().updateShape(shapeId, updates);
-    },
-    updateShapeText: (shapeId, newText) => {
-      const shapes = get2().shapes;
-      const annotation = shapes.find((a2) => a2.id === shapeId);
-      if (!annotation) return;
-      if (annotation.type === "text") {
-        get2().updateTextShape(shapeId, newText);
-        return;
-      }
-      const updates = {
-        text: newText.trim() || void 0
-      };
-      get2().updateShape(shapeId, updates);
-    },
-    updateShapeLabel: (shapeId, newLabel2) => {
-      const trimmed = newLabel2.trim();
-      set2((state) => ({
-        shapes: state.shapes.map((annotation) => {
-          if (annotation.id !== shapeId) {
-            return annotation;
-          }
-          const nextMetadata = {
-            ...annotation.metadata ?? {},
-            label: trimmed || void 0
-          };
-          return {
-            ...annotation,
-            metadata: nextMetadata
-          };
-        })
-      }));
-    },
-    setGlobalColor: (color2) => {
-      set2({
-        globalColor: color2
-      });
-    },
-    setViewportZoom: (zoom) => {
-      set2({
-        viewportZoom: zoom
-      });
-    },
-    setShowSquareViewportOverlay: (show) => {
-      set2({
-        showSquareViewportOverlay: show
-      });
-    },
-    setBrushRadiusPx: (radius) => {
-      set2({
-        brushRadiusPx: radius
-      });
-    },
-    setBrushViewport: (width, height, bounds) => {
-      set2({
-        brushViewportWidth: width,
-        brushViewportHeight: height,
-        brushViewBounds: bounds
-      });
-    },
-    clearBrushMask: () => {
-      set2({
-        brushMask: null,
-        brushMaskVersion: 0
-      });
-    },
-    setImageSelectionMaskFromShape: (shape) => {
-      var _a2;
-      const { width: imageWidth, height: imageHeight } = referenceImagePixelSizeForActions(get2);
-      if (imageWidth <= 0 || imageHeight <= 0) return false;
-      const ring = polygonRingFromShape(shape);
-      if (!ring) return false;
-      const mask2 = rasterizePolygonToImageMask(ring, imageWidth, imageHeight, {
-        sourceShapeId: shape.id,
-        sourceShapeLabel: (_a2 = shape.metadata) == null ? void 0 : _a2.label
-      });
-      if (!mask2) return false;
-      const vis = {
-        ...get2().channelVisibilities
-      };
-      vis[SELECTION_MASK_CHANNEL_KEY] = true;
-      set2({
-        imageSelectionMask: {
-          ...mask2,
-          maskVisualization: DEFAULT_MASK_VISUALIZATION
-        },
-        channelVisibilities: vis
-      });
-      return true;
-    },
-    setImageSelectionMaskVisualization: (viz) => {
-      const mask2 = get2().imageSelectionMask;
-      if (!mask2) return;
-      set2({
-        imageSelectionMask: {
-          ...mask2,
-          maskVisualization: viz
-        }
-      });
-    },
-    clearImageSelectionMask: () => {
-      const vis = {
-        ...get2().channelVisibilities
-      };
-      delete vis[SELECTION_MASK_CHANNEL_KEY];
-      set2({
-        imageSelectionMask: null,
-        channelVisibilities: vis
-      });
-    },
-    setImageSelectionMaskFromWaypoint: (shapeIds, preferredShapeIds) => {
-      if (shapeIds.length === 0) return false;
-      const docShapes = documentShapes(useDocumentStore.getState());
-      const viewerShapes = get2().shapes;
-      const tryIds = [
-        ...preferredShapeIds ?? [],
-        ...shapeIds.filter((id2) => !(preferredShapeIds == null ? void 0 : preferredShapeIds.includes(id2)))
-      ];
-      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
-      const apply = get2().setImageSelectionMaskFromShape;
-      for (const id2 of tryIds) {
-        const live = viewerShapes.find((s2) => s2.id === id2);
-        if (live && apply(live)) return true;
-        const persisted = docShapes.find((s2) => s2.id === id2);
-        if (persisted && apply(storyShapeToViewer(persisted, {
-          imageWidth: iw,
-          imageHeight: ih2
-        }))) {
-          return true;
-        }
-      }
-      return false;
-    },
-    brushPaintStart: (screenCoord) => {
-      const state = get2();
-      const { brushViewportWidth, brushViewportHeight, brushRadiusPx } = state;
-      if (brushViewportWidth <= 0 || brushViewportHeight <= 0 || brushRadiusPx <= 0) return;
-      const mask2 = ensureBrushMaskViewport(brushViewportWidth, brushViewportHeight);
-      paintCircleOnMaskScreen(mask2, screenCoord[0], screenCoord[1], brushRadiusPx);
-      set2({
-        brushMask: mask2,
-        brushMaskVersion: 1,
-        brushLastScreenCoord: screenCoord
-      });
-    },
-    brushPaint: (screenCoord) => {
-      const state = get2();
-      const mask2 = state.brushMask;
-      if (!mask2) return;
-      const { brushRadiusPx } = state;
-      const [x2, y2] = screenCoord;
-      const last2 = state.brushLastScreenCoord;
-      if (!last2) {
-        paintCircleOnMaskScreen(mask2, x2, y2, brushRadiusPx);
-        set2({
-          brushMask: {
-            ...mask2
-          },
-          brushMaskVersion: state.brushMaskVersion + 1,
-          brushLastScreenCoord: screenCoord
-        });
-        return;
-      }
-      const [x1, y1] = last2;
-      const dx = x2 - x1;
-      const dy = y2 - y1;
-      const dist2 = Math.hypot(dx, dy);
-      if (dist2 === 0) {
-        paintCircleOnMaskScreen(mask2, x2, y2, brushRadiusPx);
-      } else {
-        const step = Math.max(1, brushRadiusPx * 0.5);
-        const steps = Math.max(1, Math.ceil(dist2 / step));
-        for (let i2 = 1; i2 <= steps; i2++) {
-          const t2 = i2 / steps;
-          const sx = x1 + dx * t2;
-          const sy = y1 + dy * t2;
-          paintCircleOnMaskScreen(mask2, sx, sy, brushRadiusPx);
-        }
-      }
-      set2({
-        brushMask: {
-          ...mask2
-        },
-        brushMaskVersion: state.brushMaskVersion + 1,
-        brushLastScreenCoord: screenCoord
-      });
-    },
-    brushPaintEnd: () => {
-      const state = get2();
-      const mask2 = state.brushMask;
-      const bounds = state.brushViewBounds;
-      let hull;
-      if (mask2 && bounds) {
-        const loops = maskToLoops(mask2);
-        const w2 = mask2.width;
-        const h2 = mask2.height;
-        const pxToWorld = Math.max(Math.abs(bounds[2] - bounds[0]) / Math.max(1, w2), Math.abs(bounds[1] - bounds[3]) / Math.max(1, h2));
-        const epsilonWorld = pxToWorld * 1;
-        const outerLoops = [];
-        for (const loop of loops) {
-          const worldLoop = loopScreenToWorld(loop, bounds, w2, h2);
-          const simplified = simplifyClosedPolygon(worldLoop, epsilonWorld);
-          if (simplified.length < 4) continue;
-          const area2 = signedPolygonArea(simplified);
-          if (area2 > 0) {
-            outerLoops.push(simplified);
-          }
-        }
-        if (outerLoops.length === 0) {
-          for (const loop of loops) {
-            const worldLoop = loopScreenToWorld(loop, bounds, w2, h2);
-            const simplified = simplifyClosedPolygon(worldLoop, epsilonWorld);
-            if (simplified.length < 4) continue;
-            const area2 = signedPolygonArea(simplified);
-            if (area2 < 0) {
-              outerLoops.push(simplified);
-            }
-          }
-        }
-        if (outerLoops.length === 1) {
-          hull = outerLoops[0];
-        } else if (outerLoops.length > 1) {
-          let accHull = outerLoops[0];
-          for (let i2 = 1; i2 < outerLoops.length; i2++) {
-            const union2 = polygonUnion(accHull, outerLoops[i2]);
-            if (union2 && union2.length >= 4) accHull = union2;
-          }
-          if (accHull && accHull.length >= 4) {
-            hull = accHull;
-          }
-        }
-      }
-      get2().finalizeBrush([], hull);
-      set2({
-        brushLastScreenCoord: null
-      });
-    },
-    startBrushEdit: (shapeId, mode) => {
-      set2((state) => {
-        const newHiddenLayers = new Set(state.hiddenShapeIds);
-        if (newHiddenLayers.has(shapeId)) {
-          newHiddenLayers.delete(shapeId);
-        }
-        return {
-          activeTool: "brush",
-          brushEditTargetId: shapeId,
-          brushEditMode: mode,
-          hiddenShapeIds: newHiddenLayers,
-          selectedShapeId: shapeId
-        };
-      });
-    },
-    stopBrushEdit: () => {
-      set2({
-        brushEditTargetId: null,
-        brushEditMode: null
-      });
-    },
-    setSelectedShape: (shapeId) => {
-      set2({
-        selectedShapeId: shapeId
-      });
-    },
-    finalizeBrush: (strokePoints, precomputedHull) => {
-      const state = get2();
-      const { brushRadiusPx, viewportZoom, brushMask, brushViewBounds, brushEditTargetId, brushEditMode, shapes: brushShapes, globalColor } = state;
-      const overlayPolygon = computeBrushPolygon(strokePoints, precomputedHull, brushMask, brushRadiusPx, viewportZoom, brushViewBounds);
-      if (!overlayPolygon || overlayPolygon.length < 3) {
-        set2({
-          brushMask: null,
-          brushMaskVersion: 0
-        });
-        return;
-      }
-      if (brushEditTargetId && brushEditMode) {
-        const target = brushShapes.find((a2) => a2.id === brushEditTargetId);
-        if (target && target.type === "polygon") {
-          const basePolygon = target.polygon;
-          const nextPolygon = brushEditMode === "add" ? (() => {
-            const touches = polygonsOverlap(basePolygon, overlayPolygon);
-            if (!touches) {
-              return basePolygon;
-            }
-            return polygonUnion(basePolygon, overlayPolygon);
-          })() : polygonDifference(basePolygon, overlayPolygon);
-          if (nextPolygon && nextPolygon.length >= 3 && nextPolygon !== basePolygon) {
-            get2().updateShape(brushEditTargetId, {
-              polygon: nextPolygon
-            });
-          }
-        }
-      } else {
-        const annotation = {
-          id: newShapeId(),
-          type: "polygon",
-          polygon: overlayPolygon,
-          style: {
-            fillColor: [
-              0,
-              0,
-              0,
-              0
-            ],
-            lineColor: globalColor,
-            lineWidth: 3
-          },
-          metadata: {
-            label: `Untitled ${brushShapes.length + 1}`
-          }
-        };
-        get2().addShape(annotation);
-      }
-      get2().removeOverlayLayer("drawing-layer");
-      set2({
-        brushMask: null,
-        brushMaskVersion: 0
-      });
-    },
-    toggleShapeVisibility: (shapeId) => {
-      set2((state) => {
-        const newHiddenLayers = new Set(state.hiddenShapeIds);
-        if (newHiddenLayers.has(shapeId)) {
-          newHiddenLayers.delete(shapeId);
-        } else {
-          newHiddenLayers.add(shapeId);
-        }
-        return {
-          hiddenShapeIds: newHiddenLayers
-        };
-      });
-    },
-    startDrag: (shapeId, offset) => {
-      set2({
-        dragState: {
-          isDragging: true,
-          draggedShapeId: shapeId,
-          dragOffset: offset
-        }
-      });
-    },
-    updateDrag: (coordinate) => {
-      const { dragState, shapes: dragShapes } = get2();
-      if (dragState.isDragging && dragState.draggedShapeId && dragState.dragOffset) {
-        const [x2, y2] = coordinate;
-        const [offsetX, offsetY] = dragState.dragOffset;
-        const newX = x2 - offsetX;
-        const newY = y2 - offsetY;
-        const annotation = dragShapes.find((a2) => a2.id === dragState.draggedShapeId);
-        if (annotation) {
-          if (annotation.type === "text" || annotation.type === "point") {
-            const updatedAnnotation = {
-              ...annotation,
-              position: [
-                newX,
-                newY
-              ]
-            };
-            get2().updateShape(dragState.draggedShapeId, updatedAnnotation);
-          } else {
-            const deltaX = newX - annotation.polygon[0][0];
-            const deltaY = newY - annotation.polygon[0][1];
-            const updatedPolygon = annotation.polygon.map(([px, py]) => [
-              px + deltaX,
-              py + deltaY
-            ]);
-            get2().updateShape(dragState.draggedShapeId, {
-              ...annotation,
-              polygon: updatedPolygon
-            });
-          }
-        }
-      }
-    },
-    endDrag: () => {
-      set2({
-        dragState: {
-          isDragging: false,
-          draggedShapeId: null,
-          dragOffset: null
-        }
-      });
-      maybePersistShapesAfterMutation(get2);
-    },
-    resetDragState: () => {
-      set2({
-        dragState: overlayInitialState.dragState
-      });
-    },
-    setHoveredShape: (shapeId) => {
-      if (get2().hoverState.hoveredShapeId === shapeId) return;
-      set2({
-        hoverState: {
-          hoveredShapeId: shapeId
-        }
-      });
-    },
-    setAuthoringWaypointEditorOpen: (open) => {
-      if (open) {
-        set2({
-          authoringWaypointEditorOpen: true
-        });
-      } else {
-        set2({
-          authoringWaypointEditorOpen: false,
-          hoverState: overlayInitialState.hoverState,
-          dragState: overlayInitialState.dragState
-        });
-      }
-    },
-    setAuthoringWaypointShapesIndex: (index2) => {
-      set2({
-        authoringWaypointShapesIndex: index2
-      });
-    },
-    setLayersPanelSelectedShapeIds: (ids) => {
-      set2({
-        layersPanelSelectedShapeIds: [
-          ...ids
-        ]
-      });
-    },
-    setLayersPanelSelectedGroupId: (id2) => {
-      set2({
-        layersPanelSelectedGroupId: id2
-      });
-    },
-    flashLayersPanelSelection: (payload) => {
-      set2({
-        layersPanelSelectionFlash: {
-          token: Date.now(),
-          shapeIds: [
-            ...payload.shapeIds
-          ],
-          groupId: payload.groupId
-        }
-      });
-    },
-    requestLayersPanelSelection: (payload) => {
-      set2({
-        layersPanelSelectionRequest: {
-          token: Date.now(),
-          shapeIds: [
-            ...payload.shapeIds
-          ],
-          groupId: payload.groupId
-        }
-      });
-    },
-    createGroup: (name2) => {
-      const groupCount = get2().shapeGroups.length;
-      const newGroup = {
-        id: `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        name: name2 || `Group ${groupCount + 1}`,
-        shapeIds: [],
-        isExpanded: true
-      };
-      set2((state) => ({
-        shapeGroups: [
-          ...state.shapeGroups,
-          newGroup
-        ]
-      }));
-    },
-    deleteGroup: (groupId) => {
-      set2((state) => ({
-        shapeGroups: state.shapeGroups.filter((g2) => g2.id !== groupId)
-      }));
-    },
-    addShapeToGroup: (groupId, shapeId) => {
-      set2((state) => ({
-        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId ? {
-          ...group2,
-          shapeIds: [
-            ...group2.shapeIds,
-            shapeId
-          ]
-        } : group2)
-      }));
-    },
-    removeShapeFromGroup: (groupId, shapeId) => {
-      set2((state) => ({
-        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId ? {
-          ...group2,
-          shapeIds: group2.shapeIds.filter((id2) => id2 !== shapeId)
-        } : group2)
-      }));
-    },
-    toggleGroupExpanded: (groupId) => {
-      set2((state) => ({
-        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId ? {
-          ...group2,
-          isExpanded: !group2.isExpanded
-        } : group2)
-      }));
-    },
-    setStories: (configWaypoints2) => {
-      const doc = useDocumentStore.getState();
-      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
-      const vp = authoringViewportForDoc(get2);
-      const nextAuthoring = /* @__PURE__ */ new Map();
-      const waypoints = configWaypoints2.map((w2) => {
-        const { waypoint, authoring } = configWaypointToWaypoint(hydrateConfigWaypoint(w2, doc.channelGroups), iw, ih2, vp.width, vp.height);
-        nextAuthoring.set(waypoint.id, authoring);
-        return waypoint;
-      });
-      doc.setWaypoints(waypoints);
-      set2({
-        activeStoryIndex: null,
-        waypointAuthoring: nextAuthoring
-      });
-    },
-    setActiveStory: (index2) => {
-      set2({
-        activeStoryIndex: index2
-      });
-    },
-    addStory: (configWaypoint) => {
-      const doc = useDocumentStore.getState();
-      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
-      const vp = authoringViewportForDoc(get2);
-      const { waypoint, authoring } = configWaypointToWaypoint(hydrateConfigWaypoint(configWaypoint, doc.channelGroups), iw, ih2, vp.width, vp.height);
-      doc.setWaypoints([
-        ...doc.waypoints,
-        waypoint
-      ]);
-      set2((s2) => {
-        const next2 = new Map(s2.waypointAuthoring);
-        next2.set(waypoint.id, authoring);
-        return {
-          waypointAuthoring: next2
-        };
-      });
-    },
-    updateStory: (index2, updates) => {
-      const doc = useDocumentStore.getState();
-      const wp = doc.waypoints[index2];
-      if (!wp) return;
-      const vp = authoringViewportForDoc(get2);
-      const existingAuthoring = get2().waypointAuthoring.get(wp.id);
-      const asConfig = waypointToConfigWaypoint(wp, existingAuthoring);
-      let merged = {
-        ...asConfig,
-        ...updates
-      };
-      const shouldDropLegacyViewKeys = Object.hasOwn(updates, "Bounds");
-      if (shouldDropLegacyViewKeys) {
-        const { Pan: _pan, Zoom: _zoom, ...withoutPanZoom } = merged;
-        if (Object.hasOwn(updates, "ViewState")) {
-          merged = withoutPanZoom;
-        } else {
-          const { ViewState: _vs, ...rest2 } = withoutPanZoom;
-          merged = rest2;
-        }
-      }
-      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
-      const { waypoint: nextWp, authoring } = configWaypointToWaypoint(merged, iw, ih2, vp.width, vp.height);
-      const waypoints = [
-        ...doc.waypoints
-      ];
-      waypoints[index2] = nextWp;
-      doc.setWaypoints(waypoints);
-      set2((s2) => {
-        const next2 = new Map(s2.waypointAuthoring);
-        next2.set(nextWp.id, authoring);
-        return {
-          waypointAuthoring: next2
-        };
-      });
-    },
-    removeStory: (index2) => {
-      var _a2;
-      const doc = useDocumentStore.getState();
-      const removedId = (_a2 = doc.waypoints[index2]) == null ? void 0 : _a2.id;
-      if (index2 >= 0 && index2 < doc.waypoints.length) {
-        doc.setWaypoints(doc.waypoints.filter((_2, i2) => i2 !== index2));
-      }
-      set2((state) => {
-        const next2 = new Map(state.waypointAuthoring);
-        if (removedId) next2.delete(removedId);
-        return {
-          waypointAuthoring: next2,
-          activeStoryIndex: state.activeStoryIndex === index2 ? null : state.activeStoryIndex && state.activeStoryIndex > index2 ? state.activeStoryIndex - 1 : state.activeStoryIndex
-        };
-      });
-    },
-    reorderStories: (fromIndex, toIndex) => {
-      const doc = useDocumentStore.getState();
-      const next2 = [
-        ...doc.waypoints
-      ];
-      const [moved] = next2.splice(fromIndex, 1);
-      next2.splice(toIndex, 0, moved);
-      doc.setWaypoints(next2);
-      set2((state) => {
-        let newActiveStoryIndex = state.activeStoryIndex;
-        if (state.activeStoryIndex !== null) {
-          if (state.activeStoryIndex === fromIndex) {
-            newActiveStoryIndex = toIndex;
-          } else if (fromIndex < state.activeStoryIndex && toIndex >= state.activeStoryIndex) {
-            newActiveStoryIndex = state.activeStoryIndex - 1;
-          } else if (fromIndex > state.activeStoryIndex && toIndex <= state.activeStoryIndex) {
-            newActiveStoryIndex = state.activeStoryIndex + 1;
-          }
-        }
-        return {
-          activeStoryIndex: newActiveStoryIndex
-        };
-      });
-    },
-    setGroupNames: (o2) => {
-      set2({
-        groupNames: o2
-      });
-    },
-    setGroupChannelLists: (o2) => {
-      set2({
-        groupChannelLists: o2
-      });
-    },
-    setSam2ImageFetcher: (fetcher) => {
-      set2({
-        sam2ImageFetcher: fetcher
-      });
-    },
-    setSam2Processing: (v2) => {
-      set2({
-        sam2Processing: v2
-      });
-    },
-    setSam2DebugImages: (v2) => {
-      set2({
-        sam2DebugImages: v2
-      });
-    },
-    setSam2ViewState: (vs2) => {
-      set2({
-        sam2ViewState: vs2
-      });
-    },
-    setSam2ViewportSize: (size) => {
-      set2({
-        sam2ViewportSize: size
-      });
-    },
-    setViewerViewState: (vs2) => {
-      set2({
-        viewerViewState: vs2
-      });
-    },
-    setViewerViewportSize: (size) => {
-      set2({
-        viewerViewportSize: size
-      });
-    },
-    setViewerReferenceImagePixelSize: (size) => {
-      set2({
-        viewerReferenceImagePixelSize: size
-      });
-    },
-    setViewerImageLayersLoaded: (loaded) => {
-      set2({
-        viewerImageLayersLoaded: loaded
-      });
-    },
-    setSquareViewportThumbnailCapture: (capture) => {
-      set2({
-        squareViewportThumbnailCapture: capture
-      });
-    },
-    captureSquareViewportThumbnail: () => {
-      const capture = get2().squareViewportThumbnailCapture;
-      if (!capture) return null;
-      return capture();
-    },
-    setEditingViewstateWaypointIndex: (index2) => {
-      set2({
-        editingViewstateWaypointIndex: index2
-      });
-    },
-    setChannelVisibilities: (vis) => {
-      set2({
-        channelVisibilities: vis
-      });
-    },
-    setChannelGroupRowVisibilities: (vis) => {
-      set2({
-        channelGroupRowVisibilities: vis
-      });
-    },
-    setChannelRendering: (rendering) => {
-      set2({
-        channelRendering: rendering
-      });
-    },
-    clearChannelRendering: () => {
-      set2({
-        channelRendering: null
-      });
-    },
-    importWaypointShapes: (story, clearExisting = false, shapeRegistry) => {
-      const doc0 = useDocumentStore.getState();
-      const { width: imageWidth, height: imageHeight } = referenceImagePixelSizeForActions(get2);
-      const fromStore = documentShapes(doc0);
-      const shapesForLookup = shapeRegistry === void 0 ? fromStore : (() => {
-        const merged = new Map(fromStore.map((s2) => [
-          s2.id,
-          s2
-        ]));
-        for (const s2 of shapeRegistry) {
-          merged.set(s2.id, s2);
-        }
-        return [
-          ...merged.values()
-        ];
-      })();
-      if (imageWidth === 0 || imageHeight === 0) {
-        return;
-      }
-      const shapeIds = story.shapeIds ?? [];
-      if (clearExisting && shapeIds.length > 0 && shapesForLookup.length === 0) {
-        return;
-      }
-      const shapeById = new Map(shapesForLookup.map((s2) => [
-        s2.id,
-        s2
-      ]));
-      const newAnnotations = [];
-      for (const id2 of shapeIds) {
-        const sh2 = shapeById.get(id2);
-        if (sh2) newAnnotations.push(storyShapeToViewer(sh2, {
-          imageWidth,
-          imageHeight
-        }));
-      }
-      set2((state) => mergeShapesAfterWaypointImport(state, newAnnotations, clearExisting));
-    },
-    persistImportedShapesToStory: (storyIndex) => {
-      var _a2;
-      const state = get2();
-      const doc = useDocumentStore.getState();
-      const waypoints = documentWaypoints(doc);
-      const row2 = waypoints[storyIndex];
-      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
-      if (!row2 || iw <= 0 || ih2 <= 0) {
-        return;
-      }
-      const hadStored = (((_a2 = row2.shapeIds) == null ? void 0 : _a2.length) ?? 0) > 0;
-      if (state.shapes.length === 0 && !hadStored) {
-        return;
-      }
-      if (state.shapes.length === 0 && hadStored) {
-        const prevShapesList2 = documentShapes(doc);
-        const merged2 = mergeShapesForWaypointPersist({
-          waypoints,
-          waypointIndex: storyIndex,
-          prevShapes: prevShapesList2,
-          builtShapes: [],
-          newShapeIdsOrdered: []
-        });
-        if (JSON.stringify(merged2) !== JSON.stringify(prevShapesList2)) {
-          useDocumentStore.getState().setShapes(merged2);
-        }
-        get2().updateStory(storyIndex, {
-          shapeIds: []
-        });
-        return;
-      }
-      const builtShapes = viewerShapesToStoryShapes(state.shapes);
-      const newShapeIdsOrdered = builtShapes.map((s2) => s2.id);
-      const prevShapesList = documentShapes(doc);
-      const merged = mergeShapesForWaypointPersist({
-        waypoints,
-        waypointIndex: storyIndex,
-        prevShapes: prevShapesList,
-        builtShapes,
-        newShapeIdsOrdered
-      });
-      const prevIds = JSON.stringify(row2.shapeIds ?? []);
-      const nextIds = JSON.stringify(newShapeIdsOrdered);
-      const prevShapesJson = JSON.stringify(prevShapesList);
-      const nextShapesJson = JSON.stringify(merged);
-      if (prevIds === nextIds && prevShapesJson === nextShapesJson) {
-        return;
-      }
-      useDocumentStore.getState().setShapes(merged);
-      get2().updateStory(storyIndex, {
-        shapeIds: newShapeIdsOrdered
-      });
-      const idSet = new Set(newShapeIdsOrdered);
-      set2((s2) => ({
-        shapes: s2.shapes.map((shape) => idSet.has(shape.id) ? {
-          ...shape,
-          metadata: {
-            ...shape.metadata,
-            isImported: true
-          }
-        } : shape)
-      }));
-    },
-    setActiveChannelGroup: (channelGroupId) => {
-      set2({
-        activeChannelGroupId: channelGroupId
-      });
-    },
-    setTargetWaypointCamera: (waypoint) => {
-      const next2 = waypoint === null ? null : {
-        ...waypoint
-      };
-      set2({
-        targetWaypointCamera: next2
-      });
-    },
-    clearTargetWaypointCamera: () => {
-      set2({
-        targetWaypointCamera: null
-      });
-    }
-  }), {
-    name: "appStore"
-  }));
   const JPEG_OME_TIFF_IMAGE_SOURCE = "jpeg-ome-tiff";
   const JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE = "jpeg-ome-tiff-contrast";
   function isJpegOmeTiffImageSource(imageSource) {
@@ -90045,28 +90360,6 @@ void main() {
   function decodeCubeRootU8ToU16(byte) {
     if (!Number.isFinite(byte) || byte <= 0) return 0;
     return Math.min(65535, Math.max(0, Math.round((byte / 256) ** 3 * 65536)));
-  }
-  const o = /* @__PURE__ */ new WeakMap();
-  let u$2 = 0;
-  function stableHash(t2) {
-    const i2 = typeof t2, s2 = t2 && t2.constructor, c2 = s2 === Date;
-    if (Object(t2) === t2 && !c2 && s2 != RegExp) {
-      let e2 = o.get(t2);
-      if (e2) return e2;
-      e2 = ++u$2 + "~", o.set(t2, e2);
-      let n2;
-      if (s2 === Array) {
-        for (e2 = "@", n2 = 0; n2 < t2.length; n2++) e2 += stableHash(t2[n2]) + ",";
-        o.set(t2, e2);
-      } else if (s2 === Object) {
-        e2 = "#";
-        const f2 = Object.keys(t2).sort();
-        for (; (n2 = f2.pop()) !== void 0; ) t2[n2] !== void 0 && (e2 += n2 + ":" + stableHash(t2[n2]) + ",");
-        o.set(t2, e2);
-      }
-      return e2;
-    }
-    return c2 ? t2.toJSON() : i2 === "symbol" ? t2.toString() : i2 === "string" ? JSON.stringify(t2) : "" + t2;
   }
   const JPEG_PYRAMID_TILE_SIZE = 1024;
   const JPEG_BAKED_CONTRAST_LIMIT = [
@@ -168427,7 +168720,6 @@ void main() {
   function ChannelContrastEditor(props) {
     const setChannelGroups = useDocumentStore((s2) => s2.setChannelGroups);
     const setImages = useDocumentStore((s2) => s2.setImages);
-    const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const dist2 = props.distribution ?? {
       YValues: [],
       XScale: "log",
@@ -168472,23 +168764,19 @@ void main() {
     const commitRange = reactExports.useCallback((lower, upper) => {
       const lo = Math.round(lower);
       const hi2 = Math.round(upper);
+      const doc = useDocumentStore.getState();
       if (props.groupId) {
-        setChannelGroups(applyGroupChannelRange(channelGroups, {
+        setChannelGroups(applyGroupChannelRange(doc.channelGroups, {
           LowerRange: lo,
           UpperRange: hi2,
           group_uuid: props.groupId,
           channel_uuid: props.channelId
         }));
       } else {
-        const doc = useDocumentStore.getState();
-        setImages(patchSourceChannelOnImages(doc.images, props.sourceChannelId, {
-          lowerLimit: lo,
-          upperLimit: hi2
-        }));
+        setImages(applySourceChannelRange(doc.images, props.sourceChannelId, lo, hi2));
       }
       useAppStore.getState().clearChannelRendering();
     }, [
-      channelGroups,
       props.groupId,
       props.channelId,
       props.sourceChannelId,
@@ -247924,12 +248212,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-18T17:33:06.185Z");
+    const label2 = utcShort("2026-08-18T17:34:30.860Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-18T17:33:06.185Z",
+      title: "2026-08-18T17:34:30.860Z",
       children: [
         "Updated ",
         label2,
