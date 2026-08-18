@@ -4,7 +4,7 @@ import type { SourceDistributionData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   applyGroupChannelRange,
-  patchSourceChannelOnImages,
+  applySourceChannelRange,
 } from "@/lib/stores/storeUtils";
 import styles from "./ChannelContrastEditor.module.css";
 
@@ -114,7 +114,6 @@ export type ChannelContrastEditorProps = {
 export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
   const setImages = useDocumentStore((s) => s.setImages);
-  const channelGroups = useDocumentStore((s) => s.channelGroups);
 
   const dist = props.distribution ?? {
     id: "",
@@ -169,9 +168,11 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     (lower: number, upper: number) => {
       const lo = Math.round(lower);
       const hi = Math.round(upper);
+      // Read document slices at commit time — avoid stale closures from drag start.
+      const doc = useDocumentStore.getState();
       if (props.groupId) {
         setChannelGroups(
-          applyGroupChannelRange(channelGroups, {
+          applyGroupChannelRange(doc.channelGroups, {
             LowerRange: lo,
             UpperRange: hi,
             group_uuid: props.groupId,
@@ -179,18 +180,15 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
           }),
         );
       } else {
-        const doc = useDocumentStore.getState();
+        // Keep gmmContrastLimits in sync: stack/ungrouped display uses
+        // effectiveSourceLimits → gmm when present.
         setImages(
-          patchSourceChannelOnImages(doc.images, props.sourceChannelId, {
-            lowerLimit: lo,
-            upperLimit: hi,
-          }),
+          applySourceChannelRange(doc.images, props.sourceChannelId, lo, hi),
         );
       }
       useAppStore.getState().clearChannelRendering();
     },
     [
-      channelGroups,
       props.groupId,
       props.channelId,
       props.sourceChannelId,

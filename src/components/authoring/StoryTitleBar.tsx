@@ -1,4 +1,5 @@
 import * as React from "react";
+import { DocumentUndoControls } from "@/components/authoring/DocumentUndoControls";
 import { StoryAuthorOverflowMenu } from "@/components/authoring/StoryAuthorOverflowMenu";
 import PlayIcon from "@/components/shared/icons/play.svg?react";
 import {
@@ -36,8 +37,11 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
   const fieldId = React.useId();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [editing, setEditing] = React.useState(false);
+  /** Local draft while focused so keystrokes are one undo step on blur, not per character. */
+  const [draftTitle, setDraftTitle] = React.useState("");
+  const displayTitle = editing ? draftTitle : titleText;
   /** Approximate width for browsers without `field-sizing: content` on `<input>`. */
-  const inputSize = Math.min(200, Math.max(14, titleText.length || 13));
+  const inputSize = Math.min(200, Math.max(14, displayTitle.length || 13));
 
   React.useEffect(() => {
     if (!editing) return;
@@ -60,6 +64,7 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
           onExport={onExport}
         />
       ) : null}
+      <DocumentUndoControls />
       <label className={styles.titleFieldWrap} htmlFor={fieldId}>
         <input
           ref={inputRef}
@@ -68,18 +73,22 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
           type="text"
           size={inputSize}
           readOnly={!editing}
-          value={titleText}
+          value={displayTitle}
           placeholder="Untitled story"
           aria-label="Story title"
           onFocus={() => {
-            if (!editing) setEditing(true);
+            if (!editing) {
+              setDraftTitle(titleText);
+              setEditing(true);
+            }
           }}
-          onChange={(e) => setMetadata({ title: e.target.value })}
+          onChange={(e) => setDraftTitle(e.target.value)}
           onBlur={(e) => {
             setEditing(false);
-            const raw = e.target.value;
-            const trimmed = raw.trim();
-            if (trimmed !== raw) setMetadata({ title: trimmed });
+            const trimmed = e.target.value.trim();
+            if (trimmed !== titleText) {
+              setMetadata({ title: trimmed });
+            }
             void (async () => {
               const s = useDocumentStore.getState();
               const id = s.activeStoryId;

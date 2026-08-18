@@ -92,6 +92,7 @@
     "tiffwriter": "^0.1.6",
     "vite-plugin-svgr": "^4.3.0",
     "zod": "^3.25.76",
+    "zundo": "^2.3.0",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
