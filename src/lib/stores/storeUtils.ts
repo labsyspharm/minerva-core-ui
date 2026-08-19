@@ -336,6 +336,34 @@ export function basenameImportLabel(basename: string): string {
   return trimmed.replace(/\.ome\.tiff?$/i, "").replace(/\.tiff?$/i, "");
 }
 
+/** Short per-image labels; identical basenames become `name`, `name (2)`, … */
+export function uniqueImageDisplayLabels(
+  images: readonly { id: string; basename?: string }[],
+): Map<string, string> {
+  const rows = images.map((im) => {
+    const trimmed = (im.basename ?? "").trim();
+    const base = trimmed
+      ? trimmed.replace(/\.ome\.tiff?$/i, "").replace(/\.tiff?$/i, "") ||
+        "Image"
+      : "Image";
+    return { id: im.id, base };
+  });
+  const counts = new Map<string, number>();
+  for (const { base } of rows) counts.set(base, (counts.get(base) ?? 0) + 1);
+  const seen = new Map<string, number>();
+  const out = new Map<string, string>();
+  for (const { id, base } of rows) {
+    if ((counts.get(base) ?? 0) <= 1) {
+      out.set(id, base);
+      continue;
+    }
+    const n = (seen.get(base) ?? 0) + 1;
+    seen.set(base, n);
+    out.set(id, n === 1 ? base : `${base} (${n})`);
+  }
+  return out;
+}
+
 /**
  * Rename mask source channels so they don't collide with intensity channels
  * (whose visibility / styling is keyed by `name`). Uses the file basename as

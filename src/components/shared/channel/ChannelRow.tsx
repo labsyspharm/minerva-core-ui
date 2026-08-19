@@ -188,60 +188,58 @@ export function ChannelRow(props: ChannelRowProps) {
     onToggleVisibility,
     name,
     imageSubtitle,
-    compact = false,
     trailing,
   } = props;
 
-  const showTextStack = name.mode === "editable";
   const styleControls = channelRowHasStyleControls(props) ? props : null;
 
   return (
     <div className={rowClassName}>
-      <ChannelVisibilitySwatch
-        visible={visible}
-        title={visibilityTitle}
-        ariaLabel={visibilityAriaLabel}
-        onClick={onToggleVisibility}
-      />
-      {showTextStack ? (
-        <div className={styles.channelTextStack}>
-          <ChannelRowName {...name} />
-          {imageSubtitle ? (
-            <span
-              className={styles.channelImageSubtitle}
-              title={`From ${imageSubtitle}`}
-            >
-              {imageSubtitle}
-            </span>
-          ) : null}
-        </div>
-      ) : (
-        <ChannelRowName {...name} />
-      )}
-      {styleControls?.isMask && styleControls.fixedColorHex ? (
-        <span
-          className={styles.channelColorSwatch}
-          style={{ backgroundColor: `#${styleControls.fixedColorHex}` }}
-          aria-hidden
+      <div className={styles.channelRowMain}>
+        <ChannelVisibilitySwatch
+          visible={visible}
+          title={visibilityTitle}
+          ariaLabel={visibilityAriaLabel}
+          onClick={onToggleVisibility}
         />
-      ) : null}
-      {styleControls ? (
-        styleControls.isMask ? (
-          <MaskVisualizationToggle
-            value={styleControls.maskVisualization}
-            ariaLabel={styleControls.maskAriaLabel}
-            onChange={styleControls.onMaskVisualizationChange}
+        <div className={styles.channelRowTitle}>
+          <ChannelRowName {...name} />
+        </div>
+        {styleControls?.isMask && styleControls.fixedColorHex ? (
+          <span
+            className={styles.channelColorSwatch}
+            style={{ backgroundColor: `#${styleControls.fixedColorHex}` }}
+            aria-hidden
           />
-        ) : isIntensityRowStyle(styleControls) ? (
-          <ChannelColorSwatchButton
-            hex={styleControls.colorHex}
-            title={styleControls.colorTitle}
-            ariaLabel={styleControls.colorAriaLabel}
-            onClick={styleControls.onColorClick}
-          />
-        ) : null
+        ) : null}
+        {styleControls ? (
+          styleControls.isMask ? (
+            <MaskVisualizationToggle
+              value={styleControls.maskVisualization}
+              ariaLabel={styleControls.maskAriaLabel}
+              onChange={styleControls.onMaskVisualizationChange}
+            />
+          ) : isIntensityRowStyle(styleControls) ? (
+            <ChannelColorSwatchButton
+              hex={styleControls.colorHex}
+              title={styleControls.colorTitle}
+              ariaLabel={styleControls.colorAriaLabel}
+              onClick={styleControls.onColorClick}
+            />
+          ) : null
+        ) : null}
+        {trailing ? (
+          <div className={styles.channelRowTrailing}>{trailing}</div>
+        ) : null}
+      </div>
+      {imageSubtitle ? (
+        <span
+          className={styles.channelImageSubtitle}
+          title={`From ${imageSubtitle}`}
+        >
+          {imageSubtitle}
+        </span>
       ) : null}
-      {trailing}
     </div>
   );
 }

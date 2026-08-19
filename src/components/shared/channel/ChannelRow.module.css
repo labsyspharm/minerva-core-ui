@@ -1,18 +1,27 @@
 /* Channel row / swatch primitives + row layout variants used via ChannelRow. */
 
 .channelNameInput {
-  flex: 1 1 0;
+  display: block;
   min-width: 0;
-  width: auto;
+  width: 100%;
 }
 
-.channelTextStack {
+.channelRowMain {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.channelRowTitle {
   flex: 1 1 0;
   min-width: 0;
+}
+
+.channelRowTrailing {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 1px;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .channelImageSubtitle {
@@ -23,7 +32,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding-left: 2px;
+  margin: 1px 0 0 26px;
 }
 
 .detailTitleInput {
@@ -174,69 +183,21 @@
 
 /* ---- Row layouts passed as ChannelRow rowClassName ---- */
 
-.groupChildRow {
+.groupChildRow,
+.rootChannelRow {
   display: flex;
-  align-items: center;
-  gap: 4px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
   padding: 4px 8px 2px 4px;
   min-height: 0;
 }
 
-.groupChildRow .channelNameInput {
-  box-sizing: border-box;
-  height: 22px;
-  padding: 2px 6px;
-  font-size: 12px;
-  line-height: 1.2;
-}
-
-.rootChannelRow {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
-  column-gap: 4px;
-  row-gap: 0;
-  align-items: center;
-  padding: 4px 8px 2px 4px;
-}
-
-.rootChannelRow .channelVisibilityButton {
-  grid-column: 1;
-  grid-row: 1;
-  align-self: center;
-}
-
-.rootChannelRow .channelTextStack {
-  display: contents;
-}
-
+.groupChildRow .channelNameInput,
 .rootChannelRow .channelNameInput {
-  grid-column: 2;
-  grid-row: 1;
-  align-self: center;
   box-sizing: border-box;
   height: 22px;
   padding: 2px 6px;
   font-size: 12px;
   line-height: 1.2;
-}
-
-.rootChannelRow .channelImageSubtitle {
-  grid-column: 2;
-  grid-row: 2;
-  margin-top: 1px;
-  line-height: 1.15;
-}
-
-.rootChannelRow .channelColorSwatch,
-.rootChannelRow .maskVizControls {
-  grid-column: 3;
-  grid-row: 1;
-  align-self: center;
-}
-
-.rootChannelRowInline {
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }

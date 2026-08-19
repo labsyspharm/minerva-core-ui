@@ -113,6 +113,21 @@ export function createDicomTileLayer(args: {
   });
 }
 
+/** Later OME intensity layers: skip Viv's opaque background and add onto the base. */
+const OME_INTENSITY_OVERLAY_PROPS = {
+  excludeBackground: true,
+  refinementStrategy: "no-overlap" as const,
+  parameters: {
+    blend: true,
+    blendColorOperation: "add",
+    blendAlphaOperation: "add",
+    blendColorSrcFactor: "one",
+    blendColorDstFactor: "one",
+    blendAlphaSrcFactor: "one",
+    blendAlphaDstFactor: "one",
+  },
+};
+
 export function createMultiscaleLayer(args: {
   loader: Loader;
   settings: MainSettings | Record<string, unknown>;
@@ -124,6 +139,7 @@ export function createMultiscaleLayer(args: {
    * display window like jpeg-pyramid (see jpeg.js).
    */
   transfer?: JpegExportTransfer;
+  overlay?: boolean;
 }): Layer {
   const base = args.settings as MainSettings;
   const settings: MainSettings =
@@ -141,6 +157,7 @@ export function createMultiscaleLayer(args: {
   return new MultiscaleImageLayer({
     id: `mainLayer-${args.index}-${selectionId}${remount}`,
     ...settings,
+    ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
     loader: args.loader.data,
   } as never);
 }
@@ -177,6 +194,7 @@ export function buildImageLayers(args: {
   // One global index across DICOM → OME → JPEG so layer ids stay unique and
   // align with loaderList / mainSettingsList order.
   let nextIndex = 0;
+  let omeIntensityPainted = 0;
   return [
     ...dicomIndexList.map((entry, i) =>
       createDicomTileLayer({
@@ -190,12 +208,15 @@ export function buildImageLayers(args: {
       const settings = omeSettingsList[i] as MainSettings | undefined;
       // Mask-only loaders have no intensity selections; painted by createMaskTileLayer.
       if (!settings?.selections?.length) return [];
+      const overlay = omeIntensityPainted > 0;
+      omeIntensityPainted += 1;
       return [
         createMultiscaleLayer({
           loader,
           settings,
           index: nextIndex++,
           remountKey: args.remountKey,
+          overlay,
           ...(transfer ? { transfer } : {}),
         }),
       ];

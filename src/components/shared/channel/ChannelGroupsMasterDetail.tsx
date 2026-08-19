@@ -1,4 +1,5 @@
 import * as React from "react";
+import { createPortal } from "react-dom";
 import {
   ChromeColorPickerPopover,
   chromeColorPickerAnchorPosition,
@@ -67,7 +68,10 @@ import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
-import { patchSourceChannelOnImages } from "@/lib/stores/storeUtils";
+import {
+  patchSourceChannelOnImages,
+  uniqueImageDisplayLabels,
+} from "@/lib/stores/storeUtils";
 import styles from "./ChannelGroupsMasterDetail.module.css";
 import row from "./ChannelRow.module.css";
 
@@ -179,6 +183,120 @@ function ChannelDragHandle(props: {
     >
       ⋮⋮
     </button>
+  );
+}
+
+type ChannelRowMoreMenuProps = {
+  channelName: string;
+  onFitContrast?: () => void;
+  fitBusy?: boolean;
+  onRemoveFromGroup?: () => void;
+};
+
+function ChannelRowMoreMenu(props: ChannelRowMoreMenuProps) {
+  const { channelName, onFitContrast, fitBusy, onRemoveFromGroup } = props;
+  const [open, setOpen] = React.useState(false);
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const menuRef = React.useRef<HTMLDivElement>(null);
+  const [menuStyle, setMenuStyle] = React.useState<React.CSSProperties>({});
+  const hasItems = Boolean(onFitContrast || onRemoveFromGroup);
+
+  const placeMenu = (btn: HTMLButtonElement) => {
+    const rect = btn.getBoundingClientRect();
+    const menuHeight = 72;
+    const openUp =
+      rect.bottom + menuHeight + 8 > window.innerHeight &&
+      rect.top > menuHeight;
+    setMenuStyle({
+      top: openUp ? rect.top - 4 - menuHeight : rect.bottom + 4,
+      right: Math.max(8, window.innerWidth - rect.right),
+    });
+  };
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (wrapRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  if (!hasItems) return null;
+
+  const close = () => setOpen(false);
+
+  return (
+    <div className={styles.moreMenuWrap} ref={wrapRef}>
+      <button
+        type="button"
+        className={styles.channelActionButton}
+        aria-label={`More actions for ${channelName}`}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (open) {
+            close();
+            return;
+          }
+          placeMenu(e.currentTarget);
+          setOpen(true);
+        }}
+      >
+        ⋮
+      </button>
+      {open
+        ? createPortal(
+            <div
+              ref={menuRef}
+              className={styles.moreMenu}
+              role="menu"
+              style={menuStyle}
+            >
+              {onFitContrast ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={styles.moreMenuItem}
+                  disabled={fitBusy}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    close();
+                    onFitContrast();
+                  }}
+                >
+                  {fitBusy ? "Fitting contrast…" : "Fit contrast"}
+                </button>
+              ) : null}
+              {onRemoveFromGroup ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={styles.moreMenuItem}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    close();
+                    onRemoveFromGroup();
+                  }}
+                >
+                  Remove from group
+                </button>
+              ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
+    </div>
   );
 }
 function dedupeGroupChannels(
@@ -552,30 +670,29 @@ export const ChannelGroupsMasterDetail = (
     [ensureChannelGmmContrastLimits, sourceChannels],
   );
 
-  const autoContrastActionButton = (sc: Channel | undefined, name: string) => {
-    if (
-      !props.contrastEditable ||
-      !sc ||
-      !ensureChannelGmmContrastLimits ||
-      isMaskChannel(sc) ||
-      isRgbDisplayChannel(sc, sourceChannels)
-    ) {
-      return null;
-    }
-    const busy = refittingContrastIds.has(sc.id);
-    return (
-      <button
-        type="button"
-        className={styles.channelActionButton}
-        disabled={busy}
-        title="Re-fit contrast with psudo GMM (resets manual limits)"
-        aria-label={`Re-fit GMM contrast for ${name}`}
-        onClick={() => void refitAutoContrast(sc.id)}
-      >
-        {busy ? "…" : "Fit"}
-      </button>
+  const canFitContrast = (sc: Channel | undefined): sc is Channel =>
+    Boolean(
+      props.contrastEditable &&
+        sc &&
+        ensureChannelGmmContrastLimits &&
+        !isMaskChannel(sc) &&
+        !isRgbDisplayChannel(sc, sourceChannels),
     );
-  };
+
+  const channelMoreMenu = (
+    sc: Channel | undefined,
+    name: string,
+    onRemoveFromGroup?: () => void,
+  ) => (
+    <ChannelRowMoreMenu
+      channelName={name}
+      onFitContrast={
+        canFitContrast(sc) ? () => void refitAutoContrast(sc.id) : undefined
+      }
+      fitBusy={sc ? refittingContrastIds.has(sc.id) : false}
+      onRemoveFromGroup={onRemoveFromGroup}
+    />
+  );
 
   const addChannelToGroup = React.useCallback(
     async (groupId: string, sourceChannelUUID: string) => {
@@ -937,6 +1054,10 @@ export const ChannelGroupsMasterDetail = (
   // Show which image each channel came from only when more than one image
   // is loaded. With a single image the badge would be redundant noise.
   const showImageBadge = images.length > 1;
+  const imageLabels = React.useMemo(
+    () => uniqueImageDisplayLabels(images),
+    [images],
+  );
 
   const renderGroupFolder = (group: ChannelGroup, groupIndex: number) => {
     const expanded = group.expanded ?? groupIndex === 0;
@@ -1066,9 +1187,7 @@ export const ChannelGroupsMasterDetail = (
 
                 const imageSubtitle =
                   showImageBadge && sc
-                    ? images
-                        .find((i) => i.id === sc.imageId)
-                        ?.basename?.trim() || null
+                    ? (imageLabels.get(sc.imageId) ?? null)
                     : null;
                 const channelMeta = sc
                   ? imageSubtitle
@@ -1131,25 +1250,9 @@ export const ChannelGroupsMasterDetail = (
                                 }
                           }
                           imageSubtitle={imageSubtitle}
-                          trailing={
-                            <div className={styles.channelActionCluster}>
-                              {autoContrastActionButton(sc, name)}
-                              <button
-                                type="button"
-                                className={styles.channelActionButton}
-                                title="Remove from group"
-                                aria-label={`Remove ${name} from group`}
-                                onClick={() =>
-                                  removeChannelFromGroup(group.id, gc.id)
-                                }
-                              >
-                                <TrashIcon
-                                  title="Remove from group"
-                                  size={12}
-                                />
-                              </button>
-                            </div>
-                          }
+                          trailing={channelMoreMenu(sc, name, () =>
+                            removeChannelFromGroup(group.id, gc.id),
+                          )}
                         />
                       ) : (
                         <ChannelRow
@@ -1216,7 +1319,7 @@ export const ChannelGroupsMasterDetail = (
                                 },
                               })}
                           trailing={
-                            <div className={styles.channelActionCluster}>
+                            <>
                               {showColorLock ? (
                                 <button
                                   type="button"
@@ -1254,24 +1357,10 @@ export const ChannelGroupsMasterDetail = (
                                   )}
                                 </button>
                               ) : null}
-                              {kind === "mask"
-                                ? null
-                                : autoContrastActionButton(sc, name)}
-                              <button
-                                type="button"
-                                className={styles.channelActionButton}
-                                title="Remove from group"
-                                aria-label={`Remove ${name} from group`}
-                                onClick={() =>
-                                  removeChannelFromGroup(group.id, gc.id)
-                                }
-                              >
-                                <TrashIcon
-                                  title="Remove from group"
-                                  size={12}
-                                />
-                              </button>
-                            </div>
+                              {channelMoreMenu(sc, name, () =>
+                                removeChannelFromGroup(group.id, gc.id),
+                              )}
+                            </>
                           }
                         />
                       )}
@@ -1351,11 +1440,16 @@ export const ChannelGroupsMasterDetail = (
         ? viaActiveGroup
         : false
       : viaActiveGroup || stackOn;
-    const im = images.find((i) => i.id === sc.imageId);
-    const imageLabel = im?.basename?.trim() ?? "";
+    const imageLabel = showImageBadge
+      ? (imageLabels.get(sc.imageId) ?? "")
+      : "";
+    const imageSubtitle = imageLabel || null;
     const meta = imageLabel
       ? `${imageLabel} · index ${sc.index}`
       : `Index ${sc.index}`;
+    const visibilityAriaLabel = imageLabel
+      ? `Toggle layer for ${sc.name} from ${imageLabel}`
+      : `Toggle layer for ${sc.name}`;
 
     const toggleAllChannelsVisibility = (nextVisible: boolean) => {
       if (activeRow) {
@@ -1401,7 +1495,7 @@ export const ChannelGroupsMasterDetail = (
                     : `Show ${sc.name} in active group`
                   : allChannelsLayerTitle(sc, shownInViewer, viaActiveGroup)
               }
-              visibilityAriaLabel={`Toggle layer for ${sc.name}`}
+              visibilityAriaLabel={visibilityAriaLabel}
               onToggleVisibility={() =>
                 toggleAllChannelsVisibility(!shownInViewer)
               }
@@ -1411,6 +1505,7 @@ export const ChannelGroupsMasterDetail = (
                 title: meta,
                 className: styles.rootChannelCompactName,
               }}
+              imageSubtitle={imageSubtitle}
             />
           </div>
         </li>
@@ -1445,7 +1540,7 @@ export const ChannelGroupsMasterDetail = (
               compact
               visible={false}
               visibilityTitle={stackLayerTitle(sc, false)}
-              visibilityAriaLabel={`Toggle layer for ${sc.name}`}
+              visibilityAriaLabel={visibilityAriaLabel}
               onToggleVisibility={() => toggleAllChannelsVisibility(true)}
               name={{
                 mode: "label",
@@ -1453,6 +1548,7 @@ export const ChannelGroupsMasterDetail = (
                 title: meta,
                 className: styles.rootChannelCompactName,
               }}
+              imageSubtitle={imageSubtitle}
             />
           </div>
         </li>
@@ -1489,7 +1585,7 @@ export const ChannelGroupsMasterDetail = (
                   ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) — hide another channel`
                   : stackLayerTitle(sc, true)
               }
-              visibilityAriaLabel={`Toggle layer for ${sc.name}`}
+              visibilityAriaLabel={visibilityAriaLabel}
               onToggleVisibility={() => toggleAllChannelsVisibility(false)}
               name={{
                 mode: "editable",
@@ -1497,7 +1593,7 @@ export const ChannelGroupsMasterDetail = (
                 meta,
                 onBlur: (value) => renameSourceChannelDisplayName(sc.id, value),
               }}
-              imageSubtitle={showImageBadge && imageLabel ? imageLabel : null}
+              imageSubtitle={imageSubtitle}
             />
           ) : (
             <ChannelRow
@@ -1508,7 +1604,7 @@ export const ChannelGroupsMasterDetail = (
                   ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) — hide another channel`
                   : stackLayerTitle(sc, true)
               }
-              visibilityAriaLabel={`Toggle layer for ${sc.name}`}
+              visibilityAriaLabel={visibilityAriaLabel}
               onToggleVisibility={() => toggleAllChannelsVisibility(false)}
               name={{
                 mode: "editable",
@@ -1516,7 +1612,7 @@ export const ChannelGroupsMasterDetail = (
                 meta,
                 onBlur: (value) => renameSourceChannelDisplayName(sc.id, value),
               }}
-              imageSubtitle={showImageBadge && imageLabel ? imageLabel : null}
+              imageSubtitle={imageSubtitle}
               {...(isMaskChannel(sc)
                 ? {
                     isMask: true as const,
@@ -1539,7 +1635,7 @@ export const ChannelGroupsMasterDetail = (
                       setColorPickerPos(chromeColorPickerAnchorPosition(rect));
                     },
                   })}
-              trailing={autoContrastActionButton(sc, sc.name)}
+              trailing={channelMoreMenu(sc, sc.name)}
             />
           )}
         </div>
@@ -1619,9 +1715,7 @@ export const ChannelGroupsMasterDetail = (
 
         {imageSelectionMask ? (
           <ChannelRow
-            rowClassName={[row.rootChannelRow, row.rootChannelRowInline].join(
-              " ",
-            )}
+            rowClassName={row.rootChannelRow}
             visible={selectionMaskVisible}
             visibilityTitle="Toggle selection mask visibility"
             visibilityAriaLabel="Toggle selection mask visibility"
