@@ -798,14 +798,12 @@ export interface AppStore {
   /** Per group-row uuid; independent of stack visibility in All Channels. */
   channelGroupRowVisibilities: Record<string, boolean>;
   setChannelGroupRowVisibilities: (vis: Record<string, boolean>) => void;
-  setGroupChannelLists: (l: Record<string, string[]>) => void;
   setGroupNames: (l: Record<string, string>) => void;
   /** See {@link ChannelRendering}; folded into Viv settings in ImageViewer until cleared. */
   channelRendering: ChannelRendering | null;
   setChannelRendering: (rendering: ChannelRendering) => void;
   clearChannelRendering: () => void;
   channelVisibilities: Record<string, boolean>;
-  groupChannelLists: Record<string, string[]>;
   groupNames: Record<string, string>;
 
   finalizeEllipse: () => void;
@@ -943,7 +941,6 @@ const overlayInitialState = {
   channelRendering: null,
   channelVisibilities: {},
   channelGroupRowVisibilities: {},
-  groupChannelLists: {},
   groupNames: {},
   targetWaypointCamera: null,
   authoringWaypointEditorOpen: false,
@@ -2171,10 +2168,6 @@ export const useAppStore = create<AppStore>()(
       },
       setGroupNames: (o: Record<string, string>) => {
         set({ groupNames: o });
-      },
-
-      setGroupChannelLists: (o: Record<string, string[]>) => {
-        set({ groupChannelLists: o });
       },
 
       setSam2ImageFetcher: (fetcher) => {

@@ -386,7 +386,6 @@ const Content = (props: Props) => {
   const {
     setActiveChannelGroup,
     setChannelVisibilities,
-    setGroupChannelLists,
     activeChannelGroupId,
     channelVisibilities,
     channelGroupRowVisibilities,
@@ -560,12 +559,6 @@ const Content = (props: Props) => {
           .filter((x) => x)
           .map(({ name: chName }) => chName);
       };
-      const groupChannelLists = Object.fromEntries(
-        ChannelGroups.map(({ name, channels }) => {
-          return [name, toChannelList(channels)];
-        }),
-      );
-      setGroupChannelLists(groupChannelLists);
       setChannelVisibilities(
         defaultVisibilitiesForSources(
           SourceChannels,
@@ -574,7 +567,7 @@ const Content = (props: Props) => {
         ),
       );
     },
-    [setGroupNames, setGroupChannelLists, setChannelVisibilities],
+    [setGroupNames, setChannelVisibilities],
   );
 
   /** After reload, app store resets while channel groups persist — select first group and sync lists/visibilities. */
