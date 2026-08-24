@@ -207,7 +207,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         setActiveChannelGroup(new_group.id);
       } else {
         const found = findSourceChannel(sourceChannels, channelId);
+        setActiveChannelGroup(group.id);
         if (found) {
+          console.log({
+            kind: "color",
+            sourceChannelId: found.id,
+            ...newChannel.color,
+          });
+
           useAppStore.getState().setChannelRendering({
             kind: "color",
             sourceChannelId: found.id,
