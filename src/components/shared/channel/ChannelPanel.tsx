@@ -202,27 +202,21 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       });
       const is_copied = (g) => " copy" === g.name.slice(-5);
       const new_group = is_copied(group) ? null : copy(group);
-      syncGroupState(
-        new_group
-          ? [...groups, new_group]
-          : groups.map((g) => {
-              if (is_copied(g) && g.id === group.id) {
-                return {
-                  ...g,
-                  channels: g.channels.map(update),
-                };
-              }
-              return g;
-            }),
-      );
       if (new_group) {
-        console.log("foo");
+        syncGroupState([...groups, new_group]);
         setActiveChannelGroup(new_group.id);
       } else {
-        setActiveChannelGroup(group.id);
+        const found = findSourceChannel(sourceChannels, channelId);
+        if (found) {
+          useAppStore.getState().setChannelRendering({
+            kind: "color",
+            sourceChannelId: found.id,
+            ...newChannel.color,
+          });
+        }
       }
     },
-    [groups, syncGroupState, setActiveChannelGroup],
+    [groups, sourceChannels, syncGroupState, setActiveChannelGroup],
   );
 
   const toggleChannel = (c: LegendChannel) => {
