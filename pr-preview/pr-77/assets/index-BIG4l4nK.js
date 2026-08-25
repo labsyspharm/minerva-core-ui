@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-C8_D5uva.js","./pako.esm-KbdoS3Oq.js","./lerc-BTRAFFBJ.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DbduCU07.js","./pako.esm-KbdoS3Oq.js","./lerc-D8mI1pkc.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-CZYKf52u.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BKk94Aia.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-D4GTe2Xn.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-C_j18tDj.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BOt58ujd.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-B_uVe-pH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-C8_D5uva.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-814__ydC.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BTRAFFBJ.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DbduCU07.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-Bi8HdoJF.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-D8mI1pkc.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BFeGuRDH.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CscBWXsk.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CIP1KPxU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DY0VD1_M.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -81581,52 +81581,63 @@ void main() {
   function applyPlaybackGroupChannelColor(channelGroups, groupId, sourceChannelId, color2) {
     const named = channelGroups.find((g2) => g2.id === groupId);
     if (!named) return null;
-    const copyName = playbackGroupCopyName(named.name);
-    const target = channelGroups.find((g2) => g2.name === copyName) ?? named;
     const paint = (gc2) => gc2.channelId === sourceChannelId ? {
       ...gc2,
       color: color2
     } : gc2;
-    if (!isPlaybackGroupCopyName(target.name)) {
-      const copiedRowIds = [];
-      const copied = {
-        ...target,
-        id: crypto.randomUUID(),
-        name: copyName,
-        channels: target.channels.map((gc2) => {
-          const id2 = crypto.randomUUID();
-          copiedRowIds.push({
-            from: gc2.id,
-            to: id2
-          });
-          return {
-            ...paint(gc2),
-            id: id2
-          };
-        })
-      };
+    if (isPlaybackGroupCopyName(named.name)) {
+      const row2 = named.channels.find((gc2) => gc2.channelId === sourceChannelId);
+      if (row2 && colorsEqual(row2.color, color2)) {
+        return {
+          channelGroups,
+          activeChannelGroupId: named.id
+        };
+      }
       return {
-        channelGroups: [
-          ...channelGroups,
-          copied
-        ],
-        activeChannelGroupId: copied.id,
+        channelGroups: channelGroups.map((g2) => g2.id !== named.id ? g2 : {
+          ...g2,
+          channels: g2.channels.map(paint)
+        }),
+        activeChannelGroupId: named.id
+      };
+    }
+    const copyName = playbackGroupCopyName(named.name);
+    const copiedRowIds = [];
+    const channels2 = named.channels.map((gc2) => {
+      const id2 = crypto.randomUUID();
+      copiedRowIds.push({
+        from: gc2.id,
+        to: id2
+      });
+      return {
+        ...paint(gc2),
+        id: id2
+      };
+    });
+    const existing = channelGroups.find((g2) => g2.name === copyName);
+    if (existing) {
+      return {
+        channelGroups: channelGroups.map((g2) => g2.id !== existing.id ? g2 : {
+          ...g2,
+          channels: channels2
+        }),
+        activeChannelGroupId: existing.id,
         copiedRowIds
       };
     }
-    const row2 = target.channels.find((gc2) => gc2.channelId === sourceChannelId);
-    if (row2 && colorsEqual(row2.color, color2)) {
-      return {
-        channelGroups,
-        activeChannelGroupId: target.id
-      };
-    }
+    const copied = {
+      ...named,
+      id: crypto.randomUUID(),
+      name: copyName,
+      channels: channels2
+    };
     return {
-      channelGroups: channelGroups.map((g2) => g2.id !== target.id ? g2 : {
-        ...g2,
-        channels: g2.channels.map(paint)
-      }),
-      activeChannelGroupId: target.id
+      channelGroups: [
+        ...channelGroups,
+        copied
+      ],
+      activeChannelGroupId: copied.id,
+      copiedRowIds
     };
   }
   function hydrateConfigWaypoint(wp, channelGroups) {
@@ -244097,12 +244108,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-25T17:29:35.277Z");
+    const label2 = utcShort("2026-08-25T17:35:20.648Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-25T17:29:35.277Z",
+      title: "2026-08-25T17:35:20.648Z",
       children: [
         "Updated ",
         label2,
