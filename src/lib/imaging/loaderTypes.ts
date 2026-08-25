@@ -47,6 +47,14 @@ export type LoaderPlane = {
   labels:
     | [...("t" | "c" | "z" | "y" | "x" | "_c")[], "y", "x", "_c"]
     | [...("t" | "c" | "z" | "y" | "x")[], "y", "x"];
+  /** Viv BitmapLayer RGB path reads `photometricInterpretation` from this. */
+  meta?: {
+    photometricInterpretation?: number;
+    physicalSizes?: {
+      x?: { size: number; unit: string };
+      y?: { size: number; unit: string };
+    };
+  };
   onTileError: (e: Error) => void;
   getRaster: (s: SelectionConfig) => Promise<HasTile>;
   getTile: (s: TileConfig) => Promise<HasTile>;

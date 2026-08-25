@@ -1,18 +1,31 @@
 import type { Layer } from "@deck.gl/core";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type {
   JpegLoaderEntry,
   LoaderList,
   MainSettings,
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
-import type { ChannelRendering } from "@/lib/stores/appStore";
+import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
 import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import type { JpegExportTransfer } from "./cubeRootEncoding";
 import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
+import {
+  createHeDeconvLayer,
+  type HeDeconvComponent,
+  type HeDeconvSplit,
+  type HeStainView,
+} from "./hedDeconvTileLayer";
+import {
+  DEFAULT_STAIN_INVERSE,
+  ensureHeHistograms,
+  ensureHeStainFit,
+  type HeStainFit,
+  stainInverseKey,
+} from "./heStainFit";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
 import { type Config, type Loader, toSettings } from "./viv";
@@ -22,7 +35,7 @@ export function applyChannelRendering<S extends MainSettings>(
   settings: S,
   live: ChannelRendering | null | undefined,
 ): S {
-  if (!live) return settings;
+  if (!live || live.heComponent) return settings;
   const ids = settings.sourceChannelIds;
   if (!ids?.length) return settings;
   const idx = ids.indexOf(live.sourceChannelId);
@@ -175,6 +188,76 @@ export function createEncodedImageLayer(args: {
   });
 }
 
+type HeDeconvPaint = {
+  parentIndex: number;
+  sourceChannelId: string;
+  hematoxylin: HeStainView;
+  eosin: HeStainView;
+};
+
+function liveHeStain(
+  stain: HeStainView,
+  sourceChannelId: string,
+  component: HeDeconvComponent,
+  live: ChannelRendering | null | undefined,
+): HeStainView {
+  if (
+    live?.sourceChannelId !== sourceChannelId ||
+    live.heComponent !== component
+  ) {
+    return stain;
+  }
+  if (live.kind === "contrast") {
+    return { ...stain, lower: live.lower, upper: live.upper };
+  }
+  return { ...stain, color: [live.r, live.g, live.b] };
+}
+
+function peelHeDeconvFromSettings(
+  settings: MainSettings | undefined,
+  heDeconvByChannelId: Record<string, HeDeconvSplit> | undefined,
+  live: ChannelRendering | null | undefined,
+): { settings: MainSettings | undefined; heLayers: HeDeconvPaint[] } {
+  const ids = settings?.sourceChannelIds;
+  if (!settings || !ids?.length || !heDeconvByChannelId) {
+    return { settings, heLayers: [] };
+  }
+  const heLayers: HeDeconvPaint[] = [];
+  const keep: number[] = [];
+  for (let i = 0; i < ids.length; i++) {
+    const id = ids[i];
+    const split = id ? heDeconvByChannelId[id] : undefined;
+    if (!id || !split) {
+      keep.push(i);
+      continue;
+    }
+    const hematoxylin = liveHeStain(split.hematoxylin, id, "hematoxylin", live);
+    const eosin = liveHeStain(split.eosin, id, "eosin", live);
+    if (!hematoxylin.visible && !eosin.visible) continue;
+    heLayers.push({
+      parentIndex: settings.selections[i]?.c ?? 0,
+      sourceChannelId: id,
+      hematoxylin,
+      eosin,
+    });
+  }
+  if (keep.length === ids.length) return { settings, heLayers };
+  const visibleFlags = settings.channelsVisible;
+  return {
+    settings: {
+      ...settings,
+      selections: keep.map((i) => settings.selections[i]),
+      colors: keep.map((i) => settings.colors[i]),
+      contrastLimits: keep.map((i) => settings.contrastLimits[i]),
+      channelsVisible: visibleFlags
+        ? keep.map((i) => visibleFlags[i] ?? true)
+        : undefined,
+      sourceChannelIds: keep.map((i) => ids[i]),
+    },
+    heLayers,
+  };
+}
+
 export function buildImageLayers(args: {
   dicomIndexList?: DicomIndex[];
   omeLoaderEntries?: OmeLoaderEntry[];
@@ -183,6 +266,9 @@ export function buildImageLayers(args: {
   omeSettingsList?: unknown[];
   jpegSettingsList?: unknown[];
   remountKey?: string | number;
+  heDeconvByChannelId?: Record<string, HeDeconvSplit>;
+  heStainFitByChannelId?: Record<string, HeStainFit>;
+  channelRendering?: ChannelRendering | null;
 }): Layer[] {
   const dicomIndexList = args.dicomIndexList ?? [];
   const omeLoaderEntries = args.omeLoaderEntries ?? [];
@@ -207,19 +293,47 @@ export function buildImageLayers(args: {
     ...omeLoaderEntries.flatMap(({ loader, transfer }, i) => {
       const settings = omeSettingsList[i] as MainSettings | undefined;
       // Mask-only loaders have no intensity selections; painted by createMaskTileLayer.
-      if (!settings?.selections?.length) return [];
+      const peeled = peelHeDeconvFromSettings(
+        settings,
+        args.heDeconvByChannelId,
+        args.channelRendering,
+      );
+      const vivSettings = peeled.settings;
+      if (!vivSettings?.selections?.length && !peeled.heLayers.length) {
+        return [];
+      }
       const overlay = omeIntensityPainted > 0;
       omeIntensityPainted += 1;
-      return [
-        createMultiscaleLayer({
+      const remount =
+        args.remountKey === undefined ? "" : `-r${args.remountKey}`;
+      const out: Layer[] = [];
+      if (vivSettings?.selections?.length) {
+        out.push(
+          createMultiscaleLayer({
+            loader,
+            settings: vivSettings,
+            index: nextIndex,
+            remountKey: args.remountKey,
+            overlay,
+            ...(transfer ? { transfer } : {}),
+          }),
+        );
+      }
+      for (const he of peeled.heLayers) {
+        const layer = createHeDeconvLayer({
+          id: `heDeconv-${i}${remount}`,
           loader,
-          settings,
-          index: nextIndex++,
-          remountKey: args.remountKey,
-          overlay,
-          ...(transfer ? { transfer } : {}),
-        }),
-      ];
+          parentIndex: he.parentIndex,
+          hematoxylin: he.hematoxylin,
+          eosin: he.eosin,
+          overlay: overlay || out.length > 0,
+          stainInverse:
+            args.heStainFitByChannelId?.[he.sourceChannelId]?.glslInverse,
+        });
+        if (layer) out.push(layer);
+      }
+      nextIndex += 1;
+      return out;
     }),
     ...jpegLoaderEntries.map((entry, i) =>
       createEncodedImageLayer({
@@ -257,6 +371,53 @@ export function useViewerLayers(args: {
     channelRendering = null,
     remountKey,
   } = args;
+  const heDeconvByChannelId = useAppStore((s) => s.heDeconvByChannelId);
+  const heStainFitByChannelId = useAppStore((s) => s.heStainFitByChannelId);
+  const heHistogramByChannelId = useAppStore((s) => s.heHistogramByChannelId);
+
+  useEffect(() => {
+    const ids = Object.keys(heDeconvByChannelId);
+    if (ids.length === 0) return;
+    for (const channelId of ids) {
+      const sc = sourceChannels.find((c) => c.id === channelId);
+      if (!sc) continue;
+      const entry = omeLoaderEntries.find(
+        (e) => e.sourceImageId === sc.imageId,
+      );
+      if (!entry) continue;
+      const cacheKey = `${sc.imageId}:${sc.index}`;
+      if (!heStainFitByChannelId[channelId]) {
+        void ensureHeStainFit({
+          loader: entry.loader,
+          cacheKey,
+          channelIndex: sc.index,
+        }).then((fit) => {
+          useAppStore.getState().setHeStainFit(channelId, fit);
+        });
+      }
+      const inverse =
+        heStainFitByChannelId[channelId]?.glslInverse ?? DEFAULT_STAIN_INVERSE;
+      if (
+        heHistogramByChannelId[channelId]?.fitKey === stainInverseKey(inverse)
+      ) {
+        continue;
+      }
+      void ensureHeHistograms({
+        loader: entry.loader,
+        cacheKey,
+        channelIndex: sc.index,
+        inverse,
+      }).then((histogram) => {
+        useAppStore.getState().setHeHistogram(channelId, histogram);
+      });
+    }
+  }, [
+    heDeconvByChannelId,
+    heStainFitByChannelId,
+    heHistogramByChannelId,
+    omeLoaderEntries,
+    sourceChannels,
+  ]);
 
   // Histogram merges rewrite `sourceChannels` identity without changing Viv paint
   // inputs. Key config/settings/layers on a signature that omits distributions.
@@ -395,6 +556,9 @@ export function useViewerLayers(args: {
         omeSettingsList: omeSettingsWithLive,
         jpegSettingsList: jpegSettingsWithLive,
         remountKey,
+        heDeconvByChannelId,
+        heStainFitByChannelId,
+        channelRendering,
       }),
     [
       dicomIndexList,
@@ -404,6 +568,9 @@ export function useViewerLayers(args: {
       omeSettingsWithLive,
       jpegSettingsWithLive,
       remountKey,
+      heDeconvByChannelId,
+      heStainFitByChannelId,
+      channelRendering,
     ],
   );
 

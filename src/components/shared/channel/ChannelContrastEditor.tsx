@@ -1,4 +1,5 @@
 import * as React from "react";
+import type { HeDeconvComponent } from "@/lib/imaging/hedDeconvTileLayer";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { SourceDistributionData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
@@ -109,6 +110,9 @@ export type ChannelContrastEditorProps = {
   upperLimit: number;
   histogramLoading?: boolean;
   distribution?: SourceDistributionData | null;
+  dtypeMax?: number;
+  onCommitRange?: (lower: number, upper: number) => void;
+  heComponent?: HeDeconvComponent;
 };
 
 export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
@@ -130,8 +134,9 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
         distScale: dist.XScale,
         distMin: dist.LowerRange,
         distMax: dist.UpperRange,
+        dtypeMax: props.dtypeMax,
       }),
-    [dist.XScale, dist.LowerRange, dist.UpperRange],
+    [dist.XScale, dist.LowerRange, dist.UpperRange, props.dtypeMax],
   );
 
   const [sliderMin, setSliderMin] = React.useState(() =>
@@ -152,46 +157,57 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     setMaxInput(String(Math.round(props.upperLimit)));
   }, [props.lowerLimit, props.upperLimit, scale]);
 
+  const sourceChannelId = props.sourceChannelId;
+  const heComponent = props.heComponent;
+  const onCommitRange = props.onCommitRange;
+  const groupId = props.groupId;
+  const channelId = props.channelId;
+
   const previewRange = React.useCallback(
     (lower: number, upper: number) => {
       useAppStore.getState().setChannelRendering({
         kind: "contrast",
-        sourceChannelId: props.sourceChannelId,
+        sourceChannelId,
         lower,
         upper,
+        ...(heComponent ? { heComponent } : {}),
       });
     },
-    [props.sourceChannelId],
+    [sourceChannelId, heComponent],
   );
 
   const commitRange = React.useCallback(
     (lower: number, upper: number) => {
       const lo = Math.round(lower);
       const hi = Math.round(upper);
+      if (onCommitRange) {
+        onCommitRange(lo, hi);
+        useAppStore.getState().clearChannelRendering();
+        return;
+      }
       // Read document slices at commit time — avoid stale closures from drag start.
       const doc = useDocumentStore.getState();
-      if (props.groupId) {
+      if (groupId) {
         setChannelGroups(
           applyGroupChannelRange(doc.channelGroups, {
             LowerRange: lo,
             UpperRange: hi,
-            group_uuid: props.groupId,
-            channel_uuid: props.channelId,
+            group_uuid: groupId,
+            channel_uuid: channelId,
           }),
         );
       } else {
         // Keep gmmContrastLimits in sync: stack/ungrouped display uses
         // effectiveSourceLimits → gmm when present.
-        setImages(
-          applySourceChannelRange(doc.images, props.sourceChannelId, lo, hi),
-        );
+        setImages(applySourceChannelRange(doc.images, sourceChannelId, lo, hi));
       }
       useAppStore.getState().clearChannelRendering();
     },
     [
-      props.groupId,
-      props.channelId,
-      props.sourceChannelId,
+      onCommitRange,
+      groupId,
+      channelId,
+      sourceChannelId,
       setChannelGroups,
       setImages,
     ],
@@ -203,12 +219,13 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
         useAppStore.getState();
       if (
         channelRendering?.kind === "contrast" &&
-        channelRendering.sourceChannelId === props.sourceChannelId
+        channelRendering.sourceChannelId === sourceChannelId &&
+        channelRendering.heComponent === heComponent
       ) {
         clearChannelRendering();
       }
     };
-  }, [props.sourceChannelId]);
+  }, [sourceChannelId, heComponent]);
 
   const syncFromSliders = (loStep: number, hiStep: number, commit: boolean) => {
     const lo = Math.round(scale.fromSlider(loStep));

@@ -1,24 +1,22 @@
 import { loadOmeTiff } from "@hms-dbmi/viv";
 import { fileOpen } from "browser-fs-access";
-import { fromBlob, GeoTIFFImage } from "geotiff";
+import { fromBlob, fromUrl } from "geotiff";
+import {
+  type Dtype,
+  dtypeFromTiffDirectory,
+  type GeoTiff,
+  type GeoTiffImage,
+  isPlanarRgbTiffImage,
+  isTiffPyramided,
+  isTiffTiled,
+  parseFirstOmeImagePixels,
+  resolveSubIfdPyramidImages,
+  vivTileSize,
+} from "./geotiffUtils";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
+import { loadPlanarRgbOmeTiff } from "./planarRgbTiff";
 import type { Loader } from "./viv";
 import type { PoolClass } from "./workers/pool";
-
-type GeoTiff = Awaited<ReturnType<typeof fromBlob>>;
-type GeoTiffImage = Awaited<ReturnType<GeoTiff["getImage"]>>;
-
-/** Fields geotiff uses when constructing SubIFD images (not in public typings). */
-type GeoTiffInternals = GeoTiff & {
-  dataView: DataView;
-  littleEndian: boolean;
-  cache: unknown;
-  source: unknown;
-  parseFileDirectoryAt: (offset: number) => Promise<{
-    fileDirectory: GeoTiffImage["fileDirectory"];
-    geoKeyDirectory: unknown;
-  }>;
-};
 
 type FindFileIn = {
   handle: Handle.File;
@@ -48,64 +46,8 @@ type TileConfig = {
   signal: AbortSignal;
   selection: Selection;
 };
-export type Dtype =
-  | "Uint8"
-  | "Uint16"
-  | "Uint32"
-  | "Int8"
-  | "Int16"
-  | "Int32"
-  | "Float32"
-  | "Float64";
+export type { Dtype };
 type OmePixelMetadata = Loader["metadata"]["Pixels"];
-
-function dtypeFromTiffDirectory(fileDirectory: {
-  BitsPerSample?: number[];
-  SampleFormat?: number[];
-}): Dtype {
-  const bits = fileDirectory.BitsPerSample?.[0] ?? 16;
-  const sampleFormat = fileDirectory.SampleFormat?.[0] ?? 1;
-  if (sampleFormat === 3) return bits === 64 ? "Float64" : "Float32";
-  if (sampleFormat === 2) {
-    if (bits <= 8) return "Int8";
-    if (bits <= 16) return "Int16";
-    return "Int32";
-  }
-  if (bits <= 8) return "Uint8";
-  if (bits <= 16) return "Uint16";
-  return "Uint32";
-}
-
-/** First OME Pixels block — size/units only (channel names come from import). */
-function parseFirstOmeImagePixels(
-  imageDescription: unknown,
-): Partial<OmePixelMetadata> | null {
-  if (typeof imageDescription !== "string" || imageDescription.trim() === "") {
-    return null;
-  }
-  const doc = new DOMParser().parseFromString(
-    imageDescription,
-    "application/xml",
-  );
-  const pixels = doc.querySelector("Image")?.querySelector("Pixels");
-  if (!pixels) return null;
-  const num = (name: string) => {
-    const value = pixels.getAttribute(name);
-    return value == null ? undefined : Number(value);
-  };
-  const channelCount = pixels.querySelectorAll("Channel").length;
-  return {
-    ID: pixels.getAttribute("ID") ?? undefined,
-    Type: pixels.getAttribute("Type") ?? undefined,
-    SizeC: num("SizeC") ?? (channelCount > 0 ? channelCount : undefined),
-    PhysicalSizeX: num("PhysicalSizeX"),
-    PhysicalSizeY: num("PhysicalSizeY"),
-    PhysicalSizeXUnit: pixels.getAttribute("PhysicalSizeXUnit") ?? undefined,
-    PhysicalSizeYUnit: pixels.getAttribute("PhysicalSizeYUnit") ?? undefined,
-    PhysicalSizeZUnit: pixels.getAttribute("PhysicalSizeZUnit") ?? undefined,
-    BigEndian: false,
-  };
-}
 
 const FALLBACK_MAX_TEXTURE_SIZE = 4096;
 let cachedMaxTextureSize: number | undefined;
@@ -127,34 +69,6 @@ function queryMaxTextureSize(): number {
     Number.isFinite(size) && size > 0 ? size : FALLBACK_MAX_TEXTURE_SIZE;
   gl?.getExtension("WEBGL_lose_context")?.loseContext();
   return cachedMaxTextureSize;
-}
-
-function tiffDirNumber(value: unknown): number {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (Array.isArray(value) && typeof value[0] === "number") return value[0];
-  return 0;
-}
-
-/** True TIFF tiles — not geotiff's ImageWidth / RowsPerStrip fallback. */
-function isTiffTiled(image: GeoTiffImage): boolean {
-  const fd = image.fileDirectory as {
-    TileWidth?: unknown;
-    TileLength?: unknown;
-  };
-  return tiffDirNumber(fd.TileWidth) > 0 && tiffDirNumber(fd.TileLength) > 0;
-}
-
-function isTiffPyramided(image: GeoTiffImage): boolean {
-  const offsets = (image.fileDirectory as { SubIFDs?: unknown }).SubIFDs;
-  return Array.isArray(offsets) && offsets.length > 0;
-}
-
-/** Power-of-two tile size, matching Viv MultiscaleImageLayer. */
-function vivTileSize(image: GeoTiffImage): number {
-  const tw = image.getTileWidth();
-  const th = image.getTileHeight();
-  const size = Math.min(tw, th);
-  return 2 ** Math.floor(Math.log2(Math.max(1, size)));
 }
 
 async function readTiffRaster(
@@ -197,32 +111,6 @@ async function readTiffTile(
     width: raster.width ?? width,
     height: raster.height ?? height,
   };
-}
-
-/** IFD 0 + SubIFD reduced-resolution levels. */
-async function resolveMaskPyramidImages(
-  tiff: GeoTiff,
-  baseImage: GeoTiffImage,
-): Promise<GeoTiffImage[]> {
-  const images: GeoTiffImage[] = [baseImage];
-  const offsets = (baseImage.fileDirectory as { SubIFDs?: number[] }).SubIFDs;
-  if (!Array.isArray(offsets) || offsets.length === 0) return images;
-
-  const internals = tiff as GeoTiffInternals;
-  for (const offset of offsets) {
-    const parsed = await internals.parseFileDirectoryAt(offset);
-    images.push(
-      new GeoTIFFImage(
-        parsed.fileDirectory,
-        parsed.geoKeyDirectory,
-        internals.dataView,
-        internals.littleEndian,
-        internals.cache,
-        internals.source,
-      ) as unknown as GeoTiffImage,
-    );
-  }
-  return images;
 }
 
 function maskPlaneFromImage(
@@ -371,13 +259,48 @@ const toFile: ToFiles = async () => {
   }
 };
 
-const toLoader: ToLoader = async ({ handle, pool = null }) => {
-  const in_file = await handle.getFile();
+function isCompanionOmeSource(source: File | string): boolean {
+  const name = typeof source === "string" ? source : source.name;
+  return typeof name === "string" && name.endsWith(".companion.ome");
+}
+
+/**
+ * Intensity OME-TIFF: planar photometric RGB uses a dedicated pyramid reader
+ * (Viv maps SizeC to IFDs and geotiff rejects short SampleFormat tags). All
+ * other files still go through Viv `loadOmeTiff` unchanged.
+ */
+async function loadIntensityOmeTiff(
+  source: File | string,
+  pool?: PoolClass | null,
+): Promise<Loader> {
+  let peeked: { tiff: GeoTiff; baseImage: GeoTiffImage } | undefined;
+  if (!isCompanionOmeSource(source)) {
+    try {
+      const tiff =
+        typeof source === "string"
+          ? await fromUrl(source, { cacheSize: Number.POSITIVE_INFINITY })
+          : await fromBlob(source);
+      peeked = { tiff, baseImage: await tiff.getImage(0) };
+    } catch {
+      // Peek failed (not a GeoTIFF we can inspect). Viv may still load it.
+    }
+  }
+  if (peeked && isPlanarRgbTiffImage(peeked.baseImage)) {
+    return loadPlanarRgbOmeTiff(
+      peeked.tiff,
+      peeked.baseImage,
+      pool ?? undefined,
+    );
+  }
   if (pool) {
     // @vivjs/loaders types geotiff@2.1.3 Pool; app uses geotiff@2.1.4-beta (different .d.ts).
-    return asAppLoader(await loadOmeTiff(in_file, { pool: pool as never }));
+    return asAppLoader(await loadOmeTiff(source, { pool: pool as never }));
   }
-  return asAppLoader(await loadOmeTiff(in_file));
+  return asAppLoader(await loadOmeTiff(source));
+}
+
+const toLoader: ToLoader = async ({ handle, pool = null }) => {
+  return loadIntensityOmeTiff(await handle.getFile(), pool);
 };
 
 /**
@@ -399,7 +322,7 @@ async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
       );
     }
   }
-  const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
+  const pyramidImages = await resolveSubIfdPyramidImages(tiff, baseImage);
   const dtype = dtypeFromTiffDirectory(fd);
   const ome = parseFirstOmeImagePixels(fd.ImageDescription);
   const sizeC = Math.max(1, ome?.SizeC ?? fd.SamplesPerPixel ?? 1);
@@ -497,10 +420,7 @@ const toLoaderFromUrl = async (
   url: string,
   pool?: PoolClass,
 ): Promise<Loader> => {
-  if (pool) {
-    return asAppLoader(await loadOmeTiff(url, { pool: pool as never }));
-  }
-  return asAppLoader(await loadOmeTiff(url));
+  return loadIntensityOmeTiff(url, pool);
 };
 
 export {

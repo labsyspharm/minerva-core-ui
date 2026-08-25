@@ -1,5 +1,15 @@
 /* ChannelGroupsMasterDetail tree / folder chrome. */
 
+.heStainList {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 4px 28px;
+}
+
+.heStainBlock {
+  margin: 0;
+}
+
 .detailChannelItemEmbed {
   padding: 0 8px 4px 20px;
   width: 100%;
