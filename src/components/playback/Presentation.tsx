@@ -86,10 +86,10 @@ export const Presentation = (props: PresentationProps) => {
   } = useAppStore();
 
   const previousActiveStoryIndexRef = useRef<number | null>(null);
-  const lastAppliedCameraKeyRef = useRef<string | null>(null);
 
-  // Import shapes on story/registry/size changes. Camera is keyed so a
-  // shapes re-import does not snap the viewer back to the waypoint.
+  // Import shapes / camera / waypoint group when story or size changes.
+  // Do not depend on channelGroups — preview color creates `{name} copy`
+  // and must not snap the view or steal the active group back.
   useEffect(() => {
     if (waypoints.length === 0) return;
     // Wait for image dimensions to be set
@@ -109,14 +109,18 @@ export const Presentation = (props: PresentationProps) => {
 
     importWaypointShapes(story, true, shapes);
 
-    const cameraKey = `${idx}:${story.id}:${imageWidth}x${imageHeight}`;
-    if (lastAppliedCameraKeyRef.current === cameraKey) return;
-
-    lastAppliedCameraKeyRef.current = cameraKey;
     const authoringMap = useAppStore.getState().waypointAuthoring;
-    setTargetWaypointCamera(
-      waypointToConfigWaypoint(story, authoringMap.get(story.id)),
-    );
+    const wp = waypointToConfigWaypoint(story, authoringMap.get(story.id));
+    setTargetWaypointCamera(wp);
+
+    const groups = useDocumentStore.getState().channelGroups;
+    const gid = wp.groupId;
+    if (groups.length > 0 && gid) {
+      const foundGroup = groups.find((g) => g.id === gid) || groups[0];
+      if (foundGroup) {
+        setActiveChannelGroup(foundGroup.id);
+      }
+    }
   }, [
     waypoints,
     activeStoryIndex,
@@ -125,28 +129,6 @@ export const Presentation = (props: PresentationProps) => {
     shapes,
     importWaypointShapes,
     setTargetWaypointCamera,
-  ]);
-
-  const hasChannelGroups = channelGroups.length > 0;
-  const waypointGroupId =
-    activeStoryIndex === null
-      ? null
-      : (waypoints[activeStoryIndex]?.groupId ?? null);
-
-  useEffect(() => {
-    if (!hasChannelGroups) return;
-    if (activeStoryIndex === null) return;
-    if (!waypointGroupId) return;
-    const groups = useDocumentStore.getState().channelGroups;
-    const foundGroup =
-      groups.find((g) => g.id === waypointGroupId) || groups[0];
-    if (foundGroup) {
-      setActiveChannelGroup(foundGroup.id);
-    }
-  }, [
-    hasChannelGroups,
-    waypointGroupId,
-    activeStoryIndex,
     setActiveChannelGroup,
   ]);
 
