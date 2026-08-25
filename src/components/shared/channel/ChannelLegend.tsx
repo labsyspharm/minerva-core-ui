@@ -19,7 +19,6 @@ export type LegendChannel = {
   g: number;
   b: number;
   name: string;
-  color: string;
   group_uuid: string;
   source_uuid: string;
   channel_uuid: string;
@@ -35,31 +34,22 @@ export type LegendSection = {
   entries: LegendEntry[];
 };
 
-function rgbHex(r: number, g: number, b: number): string {
-  return [r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("");
-}
-
 /** Legend swatch matching what the viewer draws (group row or stack source). */
 export function legendChannelFromLayer(
   sc: Channel,
-  gc: ChannelGroupChannel | null,
-  activeGroupId: string | null,
-  colorIndex: number,
+  gc: ChannelGroupChannel,
+  activeGroupId: string,
 ): LegendChannel {
-  if (gc) {
-    const { r, g, b } = gc.color;
-    return {
-      r,
-      g,
-      b,
-      name: sc.name,
-      color: rgbHex(r, g, b),
-      group_uuid: activeGroupId ?? "",
-      source_uuid: sc.id,
-      channel_uuid: gc.id,
-    };
-  }
-  return legendChannelFromSource(sc, colorIndex);
+  const { r, g, b } = gc.color;
+  return {
+    r,
+    g,
+    b,
+    name: sc.name,
+    group_uuid: activeGroupId,
+    source_uuid: sc.id,
+    channel_uuid: gc.id,
+  };
 }
 
 export function legendChannelFromSource(
@@ -72,7 +62,6 @@ export function legendChannelFromSource(
     g,
     b,
     name: sc.name,
-    color: rgbHex(r, g, b),
     group_uuid: "",
     source_uuid: sc.id,
     channel_uuid: sc.id,
@@ -127,7 +116,11 @@ const LegendRow = (props: LegendRowProps) => {
         className={[styles.swatch, rowVisible ? styles.swatchFilled : null]
           .filter(Boolean)
           .join(" ")}
-        style={{ "--swatch-color": `#${channel.color}` } as CSSProperties}
+        style={
+          {
+            "--swatch-color": `rgb(${channel.r} ${channel.g} ${channel.b})`,
+          } as CSSProperties
+        }
         title={`Color ${channelName}`}
         aria-label={`Color ${channelName}`}
         onClick={(e) => {

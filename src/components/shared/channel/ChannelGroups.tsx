@@ -32,10 +32,7 @@ const GroupRow = (props: { group: ChannelGroup }) => {
   );
 };
 
-export const ChannelGroups = (props: {
-  channelGroups: { id: string; name: string }[];
-}) => {
-  const { channelGroups } = props;
+export const ChannelGroups = () => {
   const [expanded, setExpanded] = React.useState(false);
 
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
@@ -57,7 +54,7 @@ export const ChannelGroups = (props: {
 
   const activeGroupName = activeGroup?.name || "No group";
 
-  if (channelGroups.length <= 1) {
+  if (docChannelGroups.length <= 1) {
     return (
       <div className={styles.wrapRows}>
         <div className={styles.activeHeader} title={activeGroupName}>
