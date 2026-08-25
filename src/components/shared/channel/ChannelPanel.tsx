@@ -10,12 +10,15 @@ import {
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
 import { useAppStore } from "@/lib/stores/appStore";
-import type { ChannelGroup } from "@/lib/stores/documentStore";
 import {
   findSourceChannel,
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
+import {
+  applyGroupChannelColor,
+  patchSourceChannelOnImages,
+} from "@/lib/stores/storeUtils";
 import { ChannelGroups } from "./ChannelGroups";
 import {
   ChannelLegend,
@@ -37,7 +40,6 @@ export type ChannelPanelProps = {
 export const ChannelPanel = (props: ChannelPanelProps) => {
   const hide = props.hiddenChannel;
   const hidden = props.noLoader;
-  const setActiveChannelGroup = useAppStore((s) => s.setActiveChannelGroup);
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
   const channelGroupRowVisibilities = useAppStore(
@@ -49,39 +51,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   );
   const docChannelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
+  const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
+  const setImages = useDocumentStore((s) => s.setImages);
   const sourceChannels = React.useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
 
-  const channelGroups = docChannelGroups.map((group, g) => ({
-    g,
-    id: group.id,
-    name: group.name,
-    channels: group.channels
-      .map((channel) => {
-        const { color } = channel;
-        const found = findSourceChannel(sourceChannels, channel.channelId);
-        if (!found) return null;
-        const { r, g: gg, b } = color;
-        const hex_color = [r, gg, b]
-          .map((n) => n.toString(16).padStart(2, "0"))
-          .join("");
-        return {
-          r,
-          g: gg,
-          b,
-          lower_range: channel.lowerLimit,
-          upper_range: channel.upperLimit,
-          name: found.name,
-          color: hex_color,
-          group_uuid: group.id,
-          source_uuid: found.id,
-          channel_uuid: channel.id,
-        };
-      })
-      .filter((x) => x != null),
-  }));
+  const channelGroups = docChannelGroups.map(({ id, name }) => ({ id, name }));
   const legendSections = React.useMemo((): LegendSection[] => {
     const indexById = new Map(
       sourceChannels.map((sc, idx) => [sc.id, idx] as const),
@@ -164,66 +141,27 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     channelVisibilities,
   ]);
 
-  const groups = useDocumentStore((s) => s.channelGroups);
-  const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
-  const setGroupNames = useAppStore((s) => s.setGroupNames);
-
-  const syncGroupState = React.useCallback(
-    (newGroups: ChannelGroup[]) => {
-      setChannelGroups(newGroups);
-      setGroupNames(
-        Object.fromEntries(newGroups.map(({ name, id }) => [id, name])),
-      );
-    },
-    [setChannelGroups, setGroupNames],
-  );
-
-  const updateChannel = React.useCallback(
-    (groupId, channelId, newChannel) => {
-      // Find existing copy if any
-      const copy_name = (g) => `${g.name} copy`;
-      const id_group = groups.find(({ id }) => groupId === id);
-      const group =
-        groups.find(({ name }) => name === copy_name(id_group)) || id_group;
-      const update = (gc) => {
-        if (gc.channelId === channelId) {
-          return { ...gc, ...newChannel };
-        }
-        return gc;
-      };
-      const copy = (g) => ({
-        ...g,
-        name: copy_name(g),
-        id: crypto.randomUUID(),
-        channels: g.channels.map((gc) => ({
-          ...update(gc),
-          id: crypto.randomUUID(),
-        })),
-      });
-      const is_copied = (g) => " copy" === g.name.slice(-5);
-      const new_group = is_copied(group) ? null : copy(group);
-      if (new_group) {
-        syncGroupState([...groups, new_group]);
-        setActiveChannelGroup(new_group.id);
-      } else {
-        const found = findSourceChannel(sourceChannels, channelId);
-        setActiveChannelGroup(group.id);
-        if (found) {
-          console.log({
-            kind: "color",
-            sourceChannelId: found.id,
-            ...newChannel.color,
-          });
-
-          useAppStore.getState().setChannelRendering({
-            kind: "color",
-            sourceChannelId: found.id,
-            ...newChannel.color,
-          });
-        }
+  const updateChannelColor = React.useCallback(
+    (
+      groupId: string,
+      id: string,
+      color: { r: number; g: number; b: number },
+    ) => {
+      const doc = useDocumentStore.getState();
+      if (!groupId) {
+        const next = patchSourceChannelOnImages(doc.images, id, { color });
+        if (next !== doc.images) setImages(next);
+        return;
       }
+      const next = applyGroupChannelColor(
+        doc.channelGroups,
+        groupId,
+        id,
+        color,
+      );
+      if (next !== doc.channelGroups) setChannelGroups(next);
     },
-    [groups, sourceChannels, syncGroupState, setActiveChannelGroup],
+    [setChannelGroups, setImages],
   );
 
   const toggleChannel = (c: LegendChannel) => {
@@ -266,7 +204,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
             channelVisibilities={channelVisibilities}
             channelGroupRowVisibilities={channelGroupRowVisibilities}
             toggleChannel={toggleChannel}
-            updateChannel={updateChannel}
+            onChannelColor={updateChannelColor}
           />
         </div>
       </div>

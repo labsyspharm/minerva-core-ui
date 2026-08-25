@@ -86,8 +86,10 @@ export const Presentation = (props: PresentationProps) => {
   } = useAppStore();
 
   const previousActiveStoryIndexRef = useRef<number | null>(null);
+  const lastAppliedCameraKeyRef = useRef<string | null>(null);
 
-  // Auto-import shapes for the active story when dimensions / selection / channel groups change.
+  // Import shapes on story/registry/size changes. Camera is keyed so a
+  // shapes re-import does not snap the viewer back to the waypoint.
   useEffect(() => {
     if (waypoints.length === 0) return;
     // Wait for image dimensions to be set
@@ -96,34 +98,25 @@ export const Presentation = (props: PresentationProps) => {
     if (activeStoryIndex === null) return;
 
     const story = waypoints[activeStoryIndex];
+    if (!story) return;
 
-    if (story) {
-      const idx = activeStoryIndex;
-      const prev = previousActiveStoryIndexRef.current;
-      const store = useAppStore.getState();
-      if (prev !== null && prev !== idx) {
-        store.persistImportedShapesToStory(prev);
-      }
-      previousActiveStoryIndexRef.current = idx;
-
-      // Import shapes from the story (clearing existing imported ones atomically)
-      importWaypointShapes(story, true, shapes);
-
-      const authoringMap = useAppStore.getState().waypointAuthoring;
-      const wp = waypointToConfigWaypoint(story, authoringMap.get(story.id));
-      if (imageWidth > 0 && imageHeight > 0) {
-        setTargetWaypointCamera(wp);
-      }
-
-      const gid = wp.groupId;
-      if (channelGroups.length > 0 && gid) {
-        const foundGroup =
-          channelGroups.find((g) => g.id === gid) || channelGroups[0];
-        if (foundGroup) {
-          setActiveChannelGroup(foundGroup.id);
-        }
-      }
+    const idx = activeStoryIndex;
+    const prev = previousActiveStoryIndexRef.current;
+    if (prev !== null && prev !== idx) {
+      useAppStore.getState().persistImportedShapesToStory(prev);
     }
+    previousActiveStoryIndexRef.current = idx;
+
+    importWaypointShapes(story, true, shapes);
+
+    const cameraKey = `${idx}:${story.id}:${imageWidth}x${imageHeight}`;
+    if (lastAppliedCameraKeyRef.current === cameraKey) return;
+
+    lastAppliedCameraKeyRef.current = cameraKey;
+    const authoringMap = useAppStore.getState().waypointAuthoring;
+    setTargetWaypointCamera(
+      waypointToConfigWaypoint(story, authoringMap.get(story.id)),
+    );
   }, [
     waypoints,
     activeStoryIndex,
@@ -132,9 +125,21 @@ export const Presentation = (props: PresentationProps) => {
     shapes,
     importWaypointShapes,
     setTargetWaypointCamera,
-    channelGroups,
-    setActiveChannelGroup,
   ]);
+
+  useEffect(() => {
+    if (waypoints.length === 0) return;
+    if (activeStoryIndex === null) return;
+    const story = waypoints[activeStoryIndex];
+    if (!story) return;
+    const gid = story.groupId;
+    if (channelGroups.length === 0 || !gid) return;
+    const foundGroup =
+      channelGroups.find((g) => g.id === gid) || channelGroups[0];
+    if (foundGroup) {
+      setActiveChannelGroup(foundGroup.id);
+    }
+  }, [waypoints, activeStoryIndex, channelGroups, setActiveChannelGroup]);
 
   useEffect(() => {
     return () => {

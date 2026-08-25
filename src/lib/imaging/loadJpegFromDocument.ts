@@ -1,4 +1,4 @@
-import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import type { JpegLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Image } from "@/lib/stores/documentSchema";
@@ -209,6 +209,40 @@ async function syncJpegEntryChannelFolders(
   return changed ? next : entries;
 }
 
+const JPEG_FOLDER_SYNC_DEBOUNCE_MS = 150;
+
+function jpegFolderSyncKey(
+  activeChannelGroupId: string | null | undefined,
+  channelGroups: ReadonlyArray<GroupLike>,
+  images: Image[],
+  jpegLoaderEntries: JpegLoaderEntry[],
+): string {
+  const groupContrast = channelGroups
+    .map((g) => {
+      const rows = (g.channels ?? [])
+        .map(
+          (c) =>
+            `${c.channelId ?? ""}:${c.lowerLimit ?? ""}:${c.upperLimit ?? ""}`,
+        )
+        .join(",");
+      return `${g.id ?? ""}=${rows}`;
+    })
+    .join("|");
+  const imageContrast = images
+    .map((im) =>
+      im.channels
+        .map((c) => `${c.id}:${c.lowerLimit}:${c.upperLimit}`)
+        .join(","),
+    )
+    .join("|");
+  return [
+    activeChannelGroupId ?? "",
+    groupContrast,
+    imageContrast,
+    jpegLoaderEntries.map((e) => e.sourceImageId).join(","),
+  ].join("\0");
+}
+
 /** Keep JPEG pyramid folder map aligned with the active channel group's contrast. */
 export function useSyncJpegChannelFolders(
   jpegLoaderEntries: JpegLoaderEntry[],
@@ -217,37 +251,59 @@ export function useSyncJpegChannelFolders(
   channelGroups: ReadonlyArray<GroupLike>,
   setJpegLoaderEntries: Dispatch<SetStateAction<JpegLoaderEntry[]>>,
 ): void {
+  const syncedKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (jpegLoaderEntries.length === 0) return;
+    const key = jpegFolderSyncKey(
+      activeChannelGroupId,
+      channelGroups,
+      images,
+      jpegLoaderEntries,
+    );
+    if (key === syncedKeyRef.current) return;
+    if (jpegLoaderEntries.length === 0) {
+      syncedKeyRef.current = key;
+      return;
+    }
     const group = activeChannelGroupId
       ? channelGroups.find((g) => g.id === activeChannelGroupId)
       : channelGroups[0];
     // Empty / missing group channels still sync via image-channel fallback.
     const channels = group?.channels ?? [];
     const groupId = group?.id ?? activeChannelGroupId;
+    const delayMs =
+      syncedKeyRef.current === null ? 0 : JPEG_FOLDER_SYNC_DEBOUNCE_MS;
     let cancelled = false;
-    void (async () => {
-      const next = await syncJpegEntryChannelFolders(
-        jpegLoaderEntries,
-        images,
-        channels,
-        groupId,
-      );
-      if (cancelled) return;
-      setJpegLoaderEntries((prev) =>
-        prev.length === next.length && prev.every((e, i) => e === next[i])
-          ? prev
-          : next,
-      );
-    })();
+    const timeout = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const next = await syncJpegEntryChannelFolders(
+            jpegLoaderEntries,
+            images,
+            channels,
+            groupId,
+          );
+          if (cancelled) return;
+          syncedKeyRef.current = key;
+          setJpegLoaderEntries((prev) =>
+            prev.length === next.length && prev.every((e, i) => e === next[i])
+              ? prev
+              : next,
+          );
+        } catch {
+          // Leave the key unmarked so a later effect can retry.
+        }
+      })();
+    }, delayMs);
     return () => {
       cancelled = true;
+      window.clearTimeout(timeout);
     };
   }, [
     activeChannelGroupId,
     channelGroups,
-    jpegLoaderEntries,
     images,
+    jpegLoaderEntries,
     setJpegLoaderEntries,
   ]);
 }
