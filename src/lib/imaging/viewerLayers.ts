@@ -7,45 +7,80 @@ import type {
   MainSettings,
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
-import type { ChannelRendering } from "@/lib/stores/appStore";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
-import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
 import { createJpegLayers } from "./jpeg.js";
 import { type Config, type Loader, toSettings } from "./viv";
 
-/** Fold live channel drag preview into Viv settings without writing the document. */
-export function applyChannelRendering<S extends MainSettings>(
-  settings: S,
-  live: ChannelRendering | null | undefined,
-): S {
-  if (!live) return settings;
-  const ids = settings.sourceChannelIds;
-  if (!ids?.length) return settings;
-  const idx = ids.indexOf(live.sourceChannelId);
-  if (idx < 0) return settings;
-  if (live.kind === "contrast") {
-    if (idx >= settings.contrastLimits.length) return settings;
-    const lo = Math.round(live.lower);
-    const hi = Math.round(live.upper);
-    const contrastLimits = settings.contrastLimits.map((pair, i) =>
-      i === idx
-        ? ([lo, hi] as [number, number])
-        : ([pair[0], pair[1]] as [number, number]),
-    );
-    return { ...settings, contrastLimits };
-  }
-  if (idx >= settings.colors.length) return settings;
-  const r = Math.round(Math.max(0, Math.min(255, live.r)));
-  const g = Math.round(Math.max(0, Math.min(255, live.g)));
-  const b = Math.round(Math.max(0, Math.min(255, live.b)));
-  const colors = settings.colors.map((triple, i) =>
-    i === idx
-      ? ([r, g, b] as [number, number, number])
-      : ([triple[0], triple[1], triple[2]] as [number, number, number]),
+type SelectionPick = { c: number; z?: number; t?: number };
+
+type VivSettings = MainSettings & {
+  loader?: unknown;
+  selections: readonly SelectionPick[];
+};
+
+function samePicks(
+  a: readonly SelectionPick[],
+  b: readonly SelectionPick[],
+): boolean {
+  return (
+    a.length === b.length &&
+    a.every((s, i) => s.c === b[i].c && s.z === b[i].z && s.t === b[i].t)
   );
-  return { ...settings, colors };
+}
+
+function sameTuples(
+  a: readonly number[][] | undefined,
+  b: readonly number[][] | undefined,
+): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  return a.every(
+    (tuple, i) =>
+      tuple.length === b[i].length && tuple.every((n, j) => n === b[i][j]),
+  );
+}
+
+/**
+ * Viv reloads tiles when `selections` is a new array. Color/contrast are
+ * uniforms — reuse the previous selections (and the whole settings object when
+ * paint is unchanged) so the layer stack stays put.
+ */
+function keepStableSelections<S extends VivSettings>(
+  next: S,
+  prev: S | undefined,
+): S {
+  if (!prev || prev.loader !== next.loader) return next;
+  if (!samePicks(prev.selections, next.selections)) return next;
+  const visA = prev.channelsVisible ?? [];
+  const visB = next.channelsVisible ?? [];
+  const visSame =
+    visA.length === visB.length && visA.every((v, i) => v === visB[i]);
+  if (
+    visSame &&
+    sameTuples(prev.colors, next.colors) &&
+    sameTuples(prev.contrastLimits, next.contrastLimits)
+  ) {
+    return prev;
+  }
+  return { ...next, selections: prev.selections };
+}
+
+function stabilizeSettingsList<S extends VivSettings>(
+  nextList: S[],
+  prevList: readonly S[],
+): S[] {
+  const out = nextList.map((next, i) =>
+    keepStableSelections(next, prevList[i]),
+  );
+  if (
+    out.length === prevList.length &&
+    out.every((settings, i) => settings === prevList[i])
+  ) {
+    return prevList as S[];
+  }
+  return out;
 }
 
 export type ViewerLoaderSources = {
@@ -196,8 +231,6 @@ export function useViewerLayers(args: {
   activeChannelGroupId: string | null;
   channelVisibilities: Record<string, boolean>;
   channelGroupRowVisibilities: Record<string, boolean>;
-  /** Authoring: live contrast/color drag preview (CDN omits). */
-  channelRendering?: ChannelRendering | null;
   /** Authoring: bump after export to recreate GL layers (CDN omits). */
   remountKey?: string | number;
 }) {
@@ -210,29 +243,17 @@ export function useViewerLayers(args: {
     activeChannelGroupId,
     channelVisibilities,
     channelGroupRowVisibilities,
-    channelRendering = null,
     remountKey,
   } = args;
 
-  // Histogram merges rewrite `sourceChannels` identity without changing Viv paint
-  // inputs. Key config/settings/layers on a signature that omits distributions.
-  const channelsSignature = buildImageViewerSignature(
-    channelGroups,
-    sourceChannels,
+  const viewerConfig = useMemo(
+    () =>
+      createViewerConfigFromDocument({
+        sourceChannels,
+        channelGroups,
+      }),
+    [sourceChannels, channelGroups],
   );
-  const channelsRef = useRef({ sourceChannels, channelGroups });
-  channelsRef.current = { sourceChannels, channelGroups };
-
-  const viewerConfig = useMemo(() => {
-    // `channelsSignature` is the intentional memo key (histogram-stable).
-    // Read channels from the ref so we close over the arrays from this signature.
-    void channelsSignature;
-    const { sourceChannels: sc, channelGroups: cg } = channelsRef.current;
-    return createViewerConfigFromDocument({
-      sourceChannels: sc,
-      channelGroups: cg,
-    });
-  }, [channelsSignature]);
 
   const loaderList = useMemo(
     () =>
@@ -244,100 +265,72 @@ export function useViewerLayers(args: {
     [dicomIndexList, omeLoaderEntries, jpegLoaderEntries],
   );
 
-  const dicomSettingsList = useMemo(
-    () =>
-      dicomIndexList.map(({ loader, modality, sourceImageId }) =>
-        viewerConfig.toSettings(
-          activeChannelGroupId,
-          modality,
-          loader,
-          channelVisibilities,
-          sourceImageId || undefined,
-          channelGroupRowVisibilities,
-        ),
-      ),
-    [
+  const prevSettingsRef = useRef({
+    dicom: [] as VivSettings[],
+    ome: [] as VivSettings[],
+    jpeg: [] as VivSettings[],
+  });
+
+  const { dicomSettingsList, omeSettingsList, jpegSettingsList } =
+    useMemo(() => {
+      const dicom = stabilizeSettingsList(
+        dicomIndexList.map(({ loader, modality, sourceImageId }) =>
+          viewerConfig.toSettings(
+            activeChannelGroupId,
+            modality,
+            loader,
+            channelVisibilities,
+            sourceImageId || undefined,
+            channelGroupRowVisibilities,
+          ),
+        ) as VivSettings[],
+        prevSettingsRef.current.dicom,
+      );
+      const ome = stabilizeSettingsList(
+        omeLoaderEntries.map(({ loader, sourceImageId }) =>
+          viewerConfig.toSettings(
+            activeChannelGroupId,
+            "Colorimetric",
+            loader,
+            channelVisibilities,
+            sourceImageId,
+            channelGroupRowVisibilities,
+          ),
+        ) as VivSettings[],
+        prevSettingsRef.current.ome,
+      );
+      const jpeg = stabilizeSettingsList(
+        jpegLoaderEntries.map(({ loader, sourceImageId }) =>
+          viewerConfig.toSettings(
+            activeChannelGroupId,
+            "Colorimetric",
+            loader,
+            channelVisibilities,
+            sourceImageId,
+            channelGroupRowVisibilities,
+          ),
+        ) as VivSettings[],
+        prevSettingsRef.current.jpeg,
+      );
+      prevSettingsRef.current = { dicom, ome, jpeg };
+      return {
+        dicomSettingsList: dicom,
+        omeSettingsList: ome,
+        jpegSettingsList: jpeg,
+      };
+    }, [
       dicomIndexList,
-      viewerConfig,
-      activeChannelGroupId,
-      channelVisibilities,
-      channelGroupRowVisibilities,
-    ],
-  );
-
-  const omeSettingsList = useMemo(
-    () =>
-      omeLoaderEntries.map(({ loader, sourceImageId }) =>
-        viewerConfig.toSettings(
-          activeChannelGroupId,
-          "Colorimetric",
-          loader,
-          channelVisibilities,
-          sourceImageId,
-          channelGroupRowVisibilities,
-        ),
-      ),
-    [
       omeLoaderEntries,
-      viewerConfig,
-      activeChannelGroupId,
-      channelVisibilities,
-      channelGroupRowVisibilities,
-    ],
-  );
-
-  const jpegSettingsList = useMemo(
-    () =>
-      jpegLoaderEntries.map(({ loader, sourceImageId }) =>
-        viewerConfig.toSettings(
-          activeChannelGroupId,
-          "Colorimetric",
-          loader,
-          channelVisibilities,
-          sourceImageId,
-          channelGroupRowVisibilities,
-        ),
-      ),
-    [
       jpegLoaderEntries,
       viewerConfig,
       activeChannelGroupId,
       channelVisibilities,
       channelGroupRowVisibilities,
-    ],
-  );
-
-  const dicomSettingsWithLive = useMemo(
-    () =>
-      dicomSettingsList.map((settings) =>
-        applyChannelRendering(settings as MainSettings, channelRendering),
-      ),
-    [dicomSettingsList, channelRendering],
-  );
-
-  const omeSettingsWithLive = useMemo(
-    () =>
-      omeSettingsList.map((settings) =>
-        applyChannelRendering(settings as MainSettings, channelRendering),
-      ),
-    [omeSettingsList, channelRendering],
-  );
-
-  const jpegSettingsWithLive = useMemo(
-    () =>
-      jpegSettingsList.map((settings) =>
-        applyChannelRendering(settings as MainSettings, channelRendering),
-      ),
-    [jpegSettingsList, channelRendering],
-  );
+    ]);
 
   const mainSettingsList = useMemo(
-    () => [
-      ...dicomSettingsWithLive,
-      ...omeSettingsWithLive,
-      ...jpegSettingsWithLive,
-    ],
-    [dicomSettingsWithLive, omeSettingsWithLive, jpegSettingsWithLive],
+    () => [...dicomSettingsList, ...omeSettingsList, ...jpegSettingsList],
+    [dicomSettingsList, omeSettingsList, jpegSettingsList],
   );
 
   const imageLayers = useMemo(
@@ -346,19 +339,18 @@ export function useViewerLayers(args: {
         dicomIndexList,
         omeLoaderEntries,
         jpegLoaderEntries,
-        // Live rendering must reach layers (not only mainSettingsList props).
-        dicomSettingsList: dicomSettingsWithLive,
-        omeSettingsList: omeSettingsWithLive,
-        jpegSettingsList: jpegSettingsWithLive,
+        dicomSettingsList,
+        omeSettingsList,
+        jpegSettingsList,
         remountKey,
       }),
     [
       dicomIndexList,
       omeLoaderEntries,
       jpegLoaderEntries,
-      dicomSettingsWithLive,
-      omeSettingsWithLive,
-      jpegSettingsWithLive,
+      dicomSettingsList,
+      omeSettingsList,
+      jpegSettingsList,
       remountKey,
     ],
   );

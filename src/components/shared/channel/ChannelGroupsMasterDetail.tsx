@@ -56,7 +56,7 @@ import {
   effectiveSourceLimits,
 } from "@/lib/imaging/sourceChannelStyle";
 import { MAX_VIV_INTENSITY_CHANNELS } from "@/lib/imaging/viv";
-import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
+import { useAppStore } from "@/lib/stores/appStore";
 import type {
   Channel,
   ChannelGroup,
@@ -67,73 +67,48 @@ import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
-import { patchSourceChannelOnImages } from "@/lib/stores/storeUtils";
+import {
+  applyGroupChannelColor,
+  patchSourceChannelOnImages,
+} from "@/lib/stores/storeUtils";
 import styles from "./ChannelGroupsMasterDetail.module.css";
 import row from "./ChannelRow.module.css";
 
 const CHANNEL_DRAG_MIME = "application/x-minerva-channel-ref";
 
-function colorRenderingForSource(
-  live: ChannelRendering | null,
-  sourceChannelId: string,
-): Extract<ChannelRendering, { kind: "color" }> | null {
-  if (live?.kind === "color" && live.sourceChannelId === sourceChannelId) {
-    return live;
-  }
-  return null;
-}
-
-function contrastRenderingForSource(
-  live: ChannelRendering | null,
-  sourceChannelId: string,
-): Extract<ChannelRendering, { kind: "contrast" }> | null {
-  if (live?.kind === "contrast" && live.sourceChannelId === sourceChannelId) {
-    return live;
-  }
-  return null;
-}
-
 function contrastEditorPropsForSource(
-  channelRendering: ChannelRendering | null,
   sc: Channel,
   color: { r?: number; g?: number; b?: number },
   limits: [number, number],
 ): ChannelContrastEditorProps {
-  const liveColor = colorRenderingForSource(channelRendering, sc.id);
-  const c = liveColor ?? color;
-  const liveContrast = contrastRenderingForSource(channelRendering, sc.id);
   return {
     groupId: "",
     channelId: sc.id,
     sourceChannelId: sc.id,
-    r: c.r ?? 0,
-    g: c.g ?? 0,
-    b: c.b ?? 0,
-    lowerLimit: liveContrast ? liveContrast.lower : limits[0],
-    upperLimit: liveContrast ? liveContrast.upper : limits[1],
+    r: color.r ?? 0,
+    g: color.g ?? 0,
+    b: color.b ?? 0,
+    lowerLimit: limits[0],
+    upperLimit: limits[1],
     distribution: sc.sourceDistribution ?? null,
   };
 }
 
 function contrastEditorPropsForGroupRow(
-  channelRendering: ChannelRendering | null,
   groupId: string,
   gc: ChannelGroupChannel,
   sc: Channel | undefined,
 ): ChannelContrastEditorProps {
   const sourceId = sc?.id ?? gc.channelId;
-  const liveColor = colorRenderingForSource(channelRendering, sourceId);
-  const c = liveColor ?? gc.color;
-  const liveContrast = contrastRenderingForSource(channelRendering, sourceId);
   return {
     groupId,
     channelId: gc.id,
     sourceChannelId: sourceId,
-    r: c.r ?? 0,
-    g: c.g ?? 0,
-    b: c.b ?? 0,
-    lowerLimit: liveContrast ? liveContrast.lower : gc.lowerLimit,
-    upperLimit: liveContrast ? liveContrast.upper : gc.upperLimit,
+    r: gc.color.r ?? 0,
+    g: gc.color.g ?? 0,
+    b: gc.color.b ?? 0,
+    lowerLimit: gc.lowerLimit,
+    upperLimit: gc.upperLimit,
     distribution: sc?.sourceDistribution ?? null,
   };
 }
@@ -248,12 +223,10 @@ export const ChannelGroupsMasterDetail = (
   const setChannelGroupRowVisibilities = useAppStore(
     (s) => s.setChannelGroupRowVisibilities,
   );
-  const channelRendering = useAppStore((s) => s.channelRendering);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
   const setImages = useDocumentStore((s) => s.setImages);
-  const setGroupNames = useAppStore((s) => s.setGroupNames);
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
 
   const sourceChannels = React.useMemo(
@@ -354,11 +327,8 @@ export const ChannelGroupsMasterDetail = (
         channels: dedupeGroupChannels(g.channels),
       }));
       setChannelGroups(normalized);
-      setGroupNames(
-        Object.fromEntries(normalized.map(({ name, id }) => [id, name])),
-      );
     },
-    [setChannelGroups, setGroupNames],
+    [setChannelGroups],
   );
 
   const activateGroup = React.useCallback(
@@ -510,7 +480,6 @@ export const ChannelGroupsMasterDetail = (
         next.add(sourceChannelId);
         return next;
       });
-      useAppStore.getState().clearChannelRendering();
       try {
         await ensureChannelGmmContrastLimits([sourceChannelId], {
           overwriteExistingLimits: true,
@@ -610,7 +579,6 @@ export const ChannelGroupsMasterDetail = (
       }
 
       setOptimizePaletteBusy(true);
-      useAppStore.getState().clearChannelRendering();
       try {
         const colors = await optimizeChannelGroupWithLocks(
           updatedGroup,
@@ -718,7 +686,6 @@ export const ChannelGroupsMasterDetail = (
     }
     const lockedIds = lockedIdsForGroup(groupId);
     setOptimizePaletteBusy(true);
-    useAppStore.getState().clearChannelRendering();
     try {
       const colors = await optimizeChannelGroupWithLocks(
         group,
@@ -780,14 +747,18 @@ export const ChannelGroupsMasterDetail = (
     sourceChannels,
   ]);
 
+  const visibleHistogramTargetKey = visibleHistogramTargets.join(",");
+
   React.useEffect(() => {
     if (!ensureChannelHistograms || props.noLoader) return;
-    if (visibleHistogramTargets.length === 0) {
+    const targets = visibleHistogramTargetKey
+      ? visibleHistogramTargetKey.split(",")
+      : [];
+    if (targets.length === 0) {
       setLoadingHistogramSourceIds([]);
       return;
     }
     let cancelled = false;
-    const targets = visibleHistogramTargets;
     const idleHandle = scheduleBackgroundTask(() => {
       if (cancelled) return;
       setLoadingHistogramSourceIds(targets);
@@ -804,16 +775,11 @@ export const ChannelGroupsMasterDetail = (
       idleHandle.cancel();
       setLoadingHistogramSourceIds([]);
     };
-  }, [visibleHistogramTargets, ensureChannelHistograms, props.noLoader]);
+  }, [visibleHistogramTargetKey, ensureChannelHistograms, props.noLoader]);
 
   const pickingColorHex = React.useMemo(() => {
     if (!colorPickerTarget) return null;
     if (colorPickerTarget.scope === "source") {
-      const live = colorRenderingForSource(
-        channelRendering,
-        colorPickerTarget.sourceId,
-      );
-      if (live) return rgbToHex(live);
       const sc = findSourceChannel(sourceChannels, colorPickerTarget.sourceId);
       if (!sc) return null;
       const idx = sourceChannels.findIndex((c) => c.id === sc.id);
@@ -825,62 +791,15 @@ export const ChannelGroupsMasterDetail = (
     const gc = g?.channels.find((c) => c.id === colorPickerTarget.rowId);
     if (!gc) return null;
     const sc = findSourceChannel(sourceChannels, gc.channelId);
-    const live = colorRenderingForSource(channelRendering, gc.channelId);
-    if (live) return rgbToHex(live);
     return rgbToHex(
       sc ? effectiveDisplayColor(sc, sourceChannels, gc) : gc.color,
     );
-  }, [colorPickerTarget, channelRendering, sourceChannels, channelGroups]);
+  }, [colorPickerTarget, sourceChannels, channelGroups]);
 
   const closeColorPicker = React.useCallback(() => {
-    const target = colorPickerTarget;
-    const live = useAppStore.getState().channelRendering;
-    if (target?.scope === "source") {
-      const colorLive = colorRenderingForSource(live, target.sourceId);
-      if (colorLive) {
-        const doc = useDocumentStore.getState();
-        setImages(
-          patchSourceChannelOnImages(doc.images, target.sourceId, {
-            color: { r: colorLive.r, g: colorLive.g, b: colorLive.b },
-          }),
-        );
-      }
-    } else if (target?.scope === "group") {
-      const row = useDocumentStore
-        .getState()
-        .channelGroups.find((g) => g.id === target.groupId)
-        ?.channels.find((gc) => gc.id === target.rowId);
-      const colorLive = row
-        ? colorRenderingForSource(live, row.channelId)
-        : null;
-      if (colorLive) {
-        syncGroupState(
-          useDocumentStore.getState().channelGroups.map((g) =>
-            g.id !== target.groupId
-              ? g
-              : {
-                  ...g,
-                  channels: g.channels.map((gc) =>
-                    gc.id === target.rowId
-                      ? {
-                          ...gc,
-                          color: {
-                            r: colorLive.r,
-                            g: colorLive.g,
-                            b: colorLive.b,
-                          },
-                        }
-                      : gc,
-                  ),
-                },
-          ),
-        );
-      }
-    }
-    useAppStore.getState().clearChannelRendering();
     setColorPickerTarget(null);
     setColorPickerPos(null);
-  }, [colorPickerTarget, setImages, syncGroupState]);
+  }, []);
 
   const compositedIntensityLayers = React.useMemo(
     () =>
@@ -1028,12 +947,7 @@ export const ChannelGroupsMasterDetail = (
                   !rgbDisplay ? (
                     <ChannelContrastEditor
                       key={`grp-${group.id}-${gc.id}`}
-                      {...contrastEditorPropsForGroupRow(
-                        channelRendering,
-                        group.id,
-                        gc,
-                        sc,
-                      )}
+                      {...contrastEditorPropsForGroupRow(group.id, gc, sc)}
                       histogramLoading={loadingHistogramSourceIds.includes(
                         sc.id,
                       )}
@@ -1441,12 +1355,7 @@ export const ChannelGroupsMasterDetail = (
     const contrastEditor = showHistogramEmbed ? (
       <ChannelContrastEditor
         key={`all-${sc.id}`}
-        {...contrastEditorPropsForSource(
-          channelRendering,
-          sc,
-          displayColor,
-          displayLimits,
-        )}
+        {...contrastEditorPropsForSource(sc, displayColor, displayLimits)}
         histogramLoading={loadingHistogramSourceIds.includes(sc.id)}
       />
     ) : null;
@@ -1651,24 +1560,24 @@ export const ChannelGroupsMasterDetail = (
             const G = Number.parseInt(raw.slice(2, 4), 16);
             const B = Number.parseInt(raw.slice(4, 6), 16);
             if ([R, G, B].some((n) => Number.isNaN(n))) return;
-            const sourceId =
-              colorPickerTarget.scope === "source"
-                ? colorPickerTarget.sourceId
-                : useDocumentStore
-                    .getState()
-                    .channelGroups.find(
-                      (g) => g.id === colorPickerTarget.groupId,
-                    )
-                    ?.channels.find((gc) => gc.id === colorPickerTarget.rowId)
-                    ?.channelId;
-            if (!sourceId) return;
-            useAppStore.getState().setChannelRendering({
-              kind: "color",
-              sourceChannelId: sourceId,
-              r: R,
-              g: G,
-              b: B,
-            });
+            const color = { r: R, g: G, b: B };
+            const doc = useDocumentStore.getState();
+            if (colorPickerTarget.scope === "source") {
+              const next = patchSourceChannelOnImages(
+                doc.images,
+                colorPickerTarget.sourceId,
+                { color },
+              );
+              if (next !== doc.images) setImages(next);
+              return;
+            }
+            const next = applyGroupChannelColor(
+              doc.channelGroups,
+              colorPickerTarget.groupId,
+              colorPickerTarget.rowId,
+              color,
+            );
+            if (next !== doc.channelGroups) syncGroupState(next);
           }}
         />
       ) : null}

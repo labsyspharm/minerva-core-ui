@@ -35,5 +35,4 @@ export type MainSettings = {
   contrastLimits: readonly [number, number][];
   colors: readonly [number, number, number][];
   channelsVisible?: readonly boolean[];
-  sourceChannelIds?: readonly string[];
 };

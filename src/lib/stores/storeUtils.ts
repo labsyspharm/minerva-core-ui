@@ -43,6 +43,7 @@ import type {
   ArrowShape,
   Channel,
   ChannelGroup,
+  Color,
   Image,
   ImageChannel,
   ImageSource,
@@ -90,7 +91,7 @@ export function flattenImageChannelsInDocumentOrder(
 
 /** Resolve a flat row by nested channel id (same as `Image.channels[].id`). */
 export function findSourceChannel(
-  channels: Channel[],
+  channels: readonly Channel[],
   channelId: string,
 ): Channel | undefined {
   return channels.find((c) => c.id === channelId);
@@ -369,6 +370,18 @@ export function applySourceChannelRange(
   lower: number,
   upper: number,
 ): Image[] {
+  const found = images
+    .flatMap((im) => im.channels)
+    .find((ch) => ch.id === sourceChannelId);
+  if (
+    !found ||
+    (found.lowerLimit === lower &&
+      found.upperLimit === upper &&
+      found.gmmContrastLimits?.lower === lower &&
+      found.gmmContrastLimits?.upper === upper)
+  ) {
+    return images;
+  }
   return images.map((im) => ({
     ...im,
     channels: im.channels.map((ch) =>
@@ -382,6 +395,48 @@ export function applySourceChannelRange(
         : ch,
     ),
   }));
+}
+
+function colorsEqual(a: Color | undefined, b: Color | undefined): boolean {
+  return a?.r === b?.r && a?.g === b?.g && a?.b === b?.b;
+}
+
+function sourceChannelPatchIsNoop(
+  ch: ImageChannel,
+  patch: Partial<
+    Pick<
+      ImageChannel,
+      | "color"
+      | "lowerLimit"
+      | "upperLimit"
+      | "maskVisualization"
+      | "name"
+      | "kind"
+    >
+  >,
+): boolean {
+  if (patch.color !== undefined && !colorsEqual(ch.color, patch.color)) {
+    return false;
+  }
+  if (patch.lowerLimit !== undefined && ch.lowerLimit !== patch.lowerLimit) {
+    return false;
+  }
+  if (patch.upperLimit !== undefined && ch.upperLimit !== patch.upperLimit) {
+    return false;
+  }
+  if (
+    patch.maskVisualization !== undefined &&
+    ch.maskVisualization !== patch.maskVisualization
+  ) {
+    return false;
+  }
+  if (patch.name !== undefined && ch.name !== patch.name) {
+    return false;
+  }
+  if (patch.kind !== undefined && ch.kind !== patch.kind) {
+    return false;
+  }
+  return true;
 }
 
 export function patchSourceChannelOnImages(
@@ -399,6 +454,10 @@ export function patchSourceChannelOnImages(
     >
   >,
 ): Image[] {
+  const found = images
+    .flatMap((im) => im.channels)
+    .find((ch) => ch.id === sourceChannelId);
+  if (!found || sourceChannelPatchIsNoop(found, patch)) return images;
   return images.map((im) => ({
     ...im,
     channels: im.channels.map((ch) =>
@@ -435,6 +494,12 @@ export function applyGroupChannelRange(
     "channelId" in raw && raw.channelId !== undefined
       ? raw.channelId
       : (raw as { channel_uuid: string }).channel_uuid;
+  const row = channelGroups
+    .find((g) => g.id === groupId)
+    ?.channels.find((e) => e.id === channelEntryId);
+  if (!row || (row.lowerLimit === lower && row.upperLimit === upper)) {
+    return channelGroups;
+  }
   return channelGroups.map((group) =>
     group.id !== groupId
       ? group
@@ -447,6 +512,114 @@ export function applyGroupChannelRange(
           ),
         },
   );
+}
+
+/** Update one group-row color; returns the same array when RGB is unchanged. */
+export function applyGroupChannelColor(
+  channelGroups: ChannelGroup[],
+  groupId: string,
+  rowId: string,
+  color: Color,
+): ChannelGroup[] {
+  const row = channelGroups
+    .find((g) => g.id === groupId)
+    ?.channels.find((c) => c.id === rowId);
+  if (!row || colorsEqual(row.color, color)) return channelGroups;
+  return channelGroups.map((g) =>
+    g.id !== groupId
+      ? g
+      : {
+          ...g,
+          channels: g.channels.map((gc) =>
+            gc.id === rowId ? { ...gc, color } : gc,
+          ),
+        },
+  );
+}
+
+const PLAYBACK_GROUP_COPY_SUFFIX = " copy";
+
+function isPlaybackGroupCopyName(name: string): boolean {
+  return name.endsWith(PLAYBACK_GROUP_COPY_SUFFIX);
+}
+
+function playbackGroupCopyName(name: string): string {
+  return isPlaybackGroupCopyName(name)
+    ? name
+    : `${name}${PLAYBACK_GROUP_COPY_SUFFIX}`;
+}
+
+export type PlaybackGroupColorResult = {
+  channelGroups: ChannelGroup[];
+  activeChannelGroupId: string;
+  /** Authored row id → copy row id when the copy is created or rebuilt. */
+  copiedRowIds?: ReadonlyArray<{ from: string; to: string }>;
+};
+
+/**
+ * Preview / exported legend: never mutate an authored group.
+ * Editing from a copy paints that copy in place. Editing from the authored
+ * group creates `{name} copy` or rebuilds it from the authored rows, then
+ * applies the new color.
+ */
+export function applyPlaybackGroupChannelColor(
+  channelGroups: ChannelGroup[],
+  groupId: string,
+  sourceChannelId: string,
+  color: Color,
+): PlaybackGroupColorResult | null {
+  const named = channelGroups.find((g) => g.id === groupId);
+  if (!named) return null;
+
+  const paint = (gc: ChannelGroup["channels"][number]) =>
+    gc.channelId === sourceChannelId ? { ...gc, color } : gc;
+
+  if (isPlaybackGroupCopyName(named.name)) {
+    const row = named.channels.find((gc) => gc.channelId === sourceChannelId);
+    if (row && colorsEqual(row.color, color)) {
+      return {
+        channelGroups,
+        activeChannelGroupId: named.id,
+      };
+    }
+    return {
+      channelGroups: channelGroups.map((g) =>
+        g.id !== named.id ? g : { ...g, channels: g.channels.map(paint) },
+      ),
+      activeChannelGroupId: named.id,
+    };
+  }
+
+  const copyName = playbackGroupCopyName(named.name);
+  const copiedRowIds: { from: string; to: string }[] = [];
+  const channels = named.channels.map((gc) => {
+    const id = crypto.randomUUID();
+    copiedRowIds.push({ from: gc.id, to: id });
+    return { ...paint(gc), id };
+  });
+
+  const existing = channelGroups.find((g) => g.name === copyName);
+  if (existing) {
+    return {
+      channelGroups: channelGroups.map((g) =>
+        g.id !== existing.id ? g : { ...g, channels },
+      ),
+      activeChannelGroupId: existing.id,
+      copiedRowIds,
+    };
+  }
+
+  const copied: ChannelGroup = {
+    ...named,
+    id: crypto.randomUUID(),
+    name: copyName,
+    channels,
+  };
+  return {
+    channelGroups: [...channelGroups, copied],
+    activeChannelGroupId: copied.id,
+    copiedRowIds,
+  };
 }
 
 // --- Exhibit `ConfigWaypoint` ↔ `story.json` waypoint slice (for building JsonExport) -----
