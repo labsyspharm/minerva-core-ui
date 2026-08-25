@@ -39,7 +39,7 @@ void main(void) {
 }
 `;
 
-// XRLayer binds channel0–5; only channel0 is used for labels.
+// XRLayer binds channel0; only channel0 is used for labels.
 const MASK_FS = `#version 300 es
 #define SHADER_NAME mask-bitmask-layer-fragment-shader
 
@@ -48,17 +48,6 @@ precision highp int;
 precision highp SAMPLER_TYPE;
 
 uniform SAMPLER_TYPE channel0;
-uniform SAMPLER_TYPE channel1;
-uniform SAMPLER_TYPE channel2;
-uniform SAMPLER_TYPE channel3;
-uniform SAMPLER_TYPE channel4;
-uniform SAMPLER_TYPE channel5;
-
-uniform bool uOutline;
-uniform bool uRandomColors;
-uniform float uColorSeed;
-uniform vec2 uTexelSize;
-uniform float opacity;
 
 in vec2 vTexCoord;
 out vec4 fragColor;
@@ -73,7 +62,7 @@ uint hashLabel(uint x) {
 }
 
 vec3 randomColor(uint label) {
-  uint h = hashLabel(label ^ uint(uColorSeed));
+  uint h = hashLabel(label ^ uint(maskViz.uColorSeed));
   return vec3(
     float(50u + (h & 0x9fu)) / 255.0,
     float(50u + ((h >> 8u) & 0x9fu)) / 255.0,
@@ -82,21 +71,21 @@ vec3 randomColor(uint label) {
 }
 
 bool isInteriorEdge(uint label, vec2 coord) {
-  uint n = uint(texture(channel0, coord + vec2(0.0, uTexelSize.y)).r);
-  uint s = uint(texture(channel0, coord - vec2(0.0, uTexelSize.y)).r);
-  uint e = uint(texture(channel0, coord + vec2(uTexelSize.x, 0.0)).r);
-  uint w = uint(texture(channel0, coord - vec2(uTexelSize.x, 0.0)).r);
+  uint n = uint(texture(channel0, coord + vec2(0.0, maskViz.uTexelSize.y)).r);
+  uint s = uint(texture(channel0, coord - vec2(0.0, maskViz.uTexelSize.y)).r);
+  uint e = uint(texture(channel0, coord + vec2(maskViz.uTexelSize.x, 0.0)).r);
+  uint w = uint(texture(channel0, coord - vec2(maskViz.uTexelSize.x, 0.0)).r);
   return n != label || s != label || e != label || w != label;
 }
 
 void main() {
   uint label = uint(texture(channel0, vTexCoord).r);
   if (label == 0u) discard;
-  if (uOutline && !isInteriorEdge(label, vTexCoord)) discard;
+  if (maskViz.uOutline != 0 && !isInteriorEdge(label, vTexCoord)) discard;
 
-  vec3 rgb = uRandomColors ? randomColor(label) : vec3(1.0);
-  float a = (uOutline ? 235.0 : 200.0) / 255.0;
-  fragColor = vec4(rgb, a * opacity);
+  vec3 rgb = maskViz.uRandomColors != 0 ? randomColor(label) : vec3(1.0);
+  float a = (maskViz.uOutline != 0 ? 235.0 : 200.0) / 255.0;
+  fragColor = vec4(rgb, a * maskViz.opacity);
 
   geometry.uv = vTexCoord;
   DECKGL_FILTER_COLOR(fragColor, geometry);
@@ -113,21 +102,37 @@ const BITMASK_PROPS = {
   opacity: 1,
 } as const;
 
+/** luma.gl 9.3: custom uniforms live in a UBO module, not `model.setUniforms`. */
+const maskViz = {
+  name: "maskViz",
+  fs: `\
+uniform maskVizUniforms {
+  int uOutline;
+  int uRandomColors;
+  float uColorSeed;
+  vec2 uTexelSize;
+  float opacity;
+} maskViz;
+`,
+  uniformTypes: {
+    uOutline: "i32",
+    uRandomColors: "i32",
+    uColorSeed: "f32",
+    uTexelSize: "vec2<f32>",
+    opacity: "f32",
+  },
+};
+
 // Viv types XRLayer as a constructable const; subclass at runtime (Vitessce pattern).
 type XRLayerInstance = {
   props: Record<string, unknown>;
   state: {
     textures?: Record<string, unknown> | null;
     model?: {
-      setUniforms: (
-        u: Record<string, unknown>,
-        opts?: { disableWarnings?: boolean },
-      ) => unknown;
-      setBindings: (b: Record<string, unknown>) => unknown;
-      draw: (pass: unknown) => void;
+      shaderInputs: { setProps: (props: Record<string, unknown>) => void };
     } | null;
   };
-  context: { renderPass: unknown };
+  updateState(params: unknown): void;
 };
 const XRLayerBase = XRLayer as unknown as new (
   props?: Record<string, unknown>,
@@ -145,37 +150,48 @@ class MaskBitmaskLayer extends XRLayerBase {
     visualization: DEFAULT_MASK_VISUALIZATION,
   };
 
+  getNumChannels() {
+    return 1;
+  }
+
+  getNumPlanes() {
+    return 1;
+  }
+
   getShaders() {
     return layerGetShaders.call(this, {
       vs: MASK_VS,
       fs: MASK_FS,
-      modules: [project32, picking],
-      defines: { SAMPLER_TYPE: "usampler2D" },
+      modules: [project32, picking, maskViz],
+      // VivShaderAssembler hook signatures use float[NUM_CHANNELS]; XRLayer
+      // normally injects these via expandShaderModule, which this subclass skips.
+      defines: {
+        SAMPLER_TYPE: "usampler2D",
+        NUM_CHANNELS: "1",
+        NUM_PLANES: "1",
+      },
     });
   }
 
-  draw(opts: { uniforms: Record<string, unknown> }) {
-    const { textures, model } = this.state;
-    if (!textures || !model) return;
+  updateState(params: unknown) {
+    super.updateState(params);
+    const { model } = this.state;
+    if (!model) return;
     const channelData = this.props.channelData as MaskTileData | undefined;
     const w = Math.max(1, channelData?.width ?? 1);
     const h = Math.max(1, channelData?.height ?? 1);
     const viz =
       (this.props.visualization as MaskVisualization | undefined) ??
       DEFAULT_MASK_VISUALIZATION;
-    model.setUniforms(
-      {
-        ...opts.uniforms,
-        uOutline: viz.style === "outline",
-        uRandomColors: viz.color === "random",
+    model.shaderInputs.setProps({
+      maskViz: {
+        uOutline: viz.style === "outline" ? 1 : 0,
+        uRandomColors: viz.color === "random" ? 1 : 0,
         uColorSeed: viz.colorSeed ?? 0,
         uTexelSize: [1 / w, 1 / h],
         opacity: this.props.opacity ?? 1,
       },
-      { disableWarnings: true },
-    );
-    model.setBindings(textures);
-    model.draw(this.context.renderPass);
+    });
   }
 }
 

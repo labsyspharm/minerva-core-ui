@@ -13,12 +13,11 @@ import {
 } from "./sourceChannelStyle";
 
 /**
- * Viv's `XRLayer` shader compiles with a fixed `MAX_CHANNELS_PER_LAYER` (6).
- * Passing more than that crashes the WebGL draw with “undefined channels passed
- * in, but only 6 are allowed”. We cap visible intensity layers at this limit
- * and warn so the panel can surface a hint.
+ * Viv's `XRLayer` shader compiles with `MAX_CHANNELS` (10 in Viv 0.22).
+ * Passing more than that crashes the WebGL draw. We cap visible intensity
+ * layers at this limit and warn so the panel can surface a hint.
  */
-export const MAX_VIV_INTENSITY_CHANNELS = 6;
+export const MAX_VIV_INTENSITY_CHANNELS = 10;
 
 /**
  * Shared Viv `MultiscaleImageLayer` / TileLayer fetch tuning.
