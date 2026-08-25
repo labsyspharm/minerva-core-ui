@@ -92,6 +92,49 @@ export function MaskVisualizationToggle(props: {
   );
 }
 
+/** RGB vs H&E — same segmented chrome as {@link MaskVisualizationToggle}. */
+export function HeDisplayModeToggle(props: {
+  split: boolean;
+  onChange: (split: boolean) => void;
+  ariaLabel?: string;
+}) {
+  const { split, onChange } = props;
+  return (
+    <fieldset
+      className={styles.maskVizToggle}
+      aria-label={props.ariaLabel ?? "Display as RGB or H&E stains"}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        className={
+          !split
+            ? `${styles.maskVizOption} ${styles.maskVizOptionActive} ${styles.modeToggleOption}`
+            : `${styles.maskVizOption} ${styles.modeToggleOption}`
+        }
+        aria-pressed={!split}
+        title="Show RGB"
+        onClick={() => onChange(false)}
+      >
+        RGB
+      </button>
+      <button
+        type="button"
+        className={
+          split
+            ? `${styles.maskVizOption} ${styles.maskVizOptionActive} ${styles.modeToggleOption}`
+            : `${styles.maskVizOption} ${styles.modeToggleOption}`
+        }
+        aria-pressed={split}
+        title="Split into Hematoxylin and Eosin"
+        onClick={() => onChange(true)}
+      >
+        H&E
+      </button>
+    </fieldset>
+  );
+}
+
 type ChannelRowNameProps =
   | {
       mode: "label";
@@ -117,13 +160,23 @@ type MaskRowStyleProps = {
 
 type IntensityRowStyleProps = {
   isMask?: false;
+  isRgb?: false;
   colorHex: string;
   colorTitle: string;
   colorAriaLabel: string;
   onColorClick: MouseEventHandler<HTMLButtonElement>;
 };
 
-type ChannelRowStyleProps = MaskRowStyleProps | IntensityRowStyleProps;
+type RgbRowStyleProps = {
+  isRgb: true;
+  heSplit: boolean;
+  onHeSplitChange: (split: boolean) => void;
+};
+
+type ChannelRowStyleProps =
+  | MaskRowStyleProps
+  | IntensityRowStyleProps
+  | RgbRowStyleProps;
 
 export type ChannelRowProps = {
   rowClassName: string;
@@ -138,10 +191,14 @@ export type ChannelRowProps = {
   trailing?: React.ReactNode;
 } & ({ compact: true } | ({ compact?: false } & ChannelRowStyleProps));
 
-function isIntensityRowStyle(
+function isMaskRowStyle(
   props: ChannelRowStyleProps,
-): props is IntensityRowStyleProps {
-  return !props.isMask;
+): props is MaskRowStyleProps {
+  return "isMask" in props && props.isMask === true;
+}
+
+function isRgbRowStyle(props: ChannelRowStyleProps): props is RgbRowStyleProps {
+  return "isRgb" in props && props.isRgb === true;
 }
 
 function channelRowHasStyleControls(
@@ -205,7 +262,9 @@ export function ChannelRow(props: ChannelRowProps) {
         <div className={styles.channelRowTitle}>
           <ChannelRowName {...name} />
         </div>
-        {styleControls?.isMask && styleControls.fixedColorHex ? (
+        {styleControls &&
+        isMaskRowStyle(styleControls) &&
+        styleControls.fixedColorHex ? (
           <span
             className={styles.channelColorSwatch}
             style={{ backgroundColor: `#${styleControls.fixedColorHex}` }}
@@ -213,20 +272,25 @@ export function ChannelRow(props: ChannelRowProps) {
           />
         ) : null}
         {styleControls ? (
-          styleControls.isMask ? (
+          isRgbRowStyle(styleControls) ? (
+            <HeDisplayModeToggle
+              split={styleControls.heSplit}
+              onChange={styleControls.onHeSplitChange}
+            />
+          ) : isMaskRowStyle(styleControls) ? (
             <MaskVisualizationToggle
               value={styleControls.maskVisualization}
               ariaLabel={styleControls.maskAriaLabel}
               onChange={styleControls.onMaskVisualizationChange}
             />
-          ) : isIntensityRowStyle(styleControls) ? (
+          ) : (
             <ChannelColorSwatchButton
               hex={styleControls.colorHex}
               title={styleControls.colorTitle}
               ariaLabel={styleControls.colorAriaLabel}
               onClick={styleControls.onColorClick}
             />
-          ) : null
+          )
         ) : null}
         {trailing ? (
           <div className={styles.channelRowTrailing}>{trailing}</div>

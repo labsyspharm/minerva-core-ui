@@ -338,16 +338,18 @@ export function basenameImportLabel(basename: string): string {
 
 /** Short per-image labels; identical basenames become `name`, `name (2)`, … */
 export function uniqueImageDisplayLabels(
-  images: readonly { id: string; basename?: string }[],
+  images: readonly { id?: string; basename?: string }[],
 ): Map<string, string> {
-  const rows = images.map((im) => {
-    const trimmed = (im.basename ?? "").trim();
-    const base = trimmed
-      ? trimmed.replace(/\.ome\.tiff?$/i, "").replace(/\.tiff?$/i, "") ||
-        "Image"
-      : "Image";
-    return { id: im.id, base };
-  });
+  const rows = images
+    .filter((im): im is { id: string; basename?: string } => !!im.id)
+    .map((im) => {
+      const trimmed = (im.basename ?? "").trim();
+      const base = trimmed
+        ? trimmed.replace(/\.ome\.tiff?$/i, "").replace(/\.tiff?$/i, "") ||
+          "Image"
+        : "Image";
+      return { id: im.id, base };
+    });
   const counts = new Map<string, number>();
   for (const { base } of rows) counts.set(base, (counts.get(base) ?? 0) + 1);
   const seen = new Map<string, number>();

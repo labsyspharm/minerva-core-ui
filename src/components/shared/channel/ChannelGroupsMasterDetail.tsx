@@ -39,6 +39,14 @@ import {
   planarRgbDisplayColor,
 } from "@/lib/imaging/channelKind";
 import {
+  defaultHeDeconvSplit,
+  HE_CONTRAST_SCALE,
+  HE_DECONV_COMPONENTS,
+  HE_DECONV_LABELS,
+  type HeDeconvComponent,
+  type HeStainView,
+} from "@/lib/imaging/hedDeconvTileLayer";
+import {
   scheduleBackgroundTask,
   sourceDistributionYValuesLength,
 } from "@/lib/imaging/histogramLazy";
@@ -76,12 +84,18 @@ import styles from "./ChannelGroupsMasterDetail.module.css";
 import row from "./ChannelRow.module.css";
 
 const CHANNEL_DRAG_MIME = "application/x-minerva-channel-ref";
+const EMPTY_LOCKED_ROW_IDS = new Set<string>();
 
 function colorRenderingForSource(
   live: ChannelRendering | null,
   sourceChannelId: string,
+  heComponent?: HeDeconvComponent,
 ): Extract<ChannelRendering, { kind: "color" }> | null {
-  if (live?.kind === "color" && live.sourceChannelId === sourceChannelId) {
+  if (
+    live?.kind === "color" &&
+    live.sourceChannelId === sourceChannelId &&
+    live.heComponent === heComponent
+  ) {
     return live;
   }
   return null;
@@ -90,8 +104,13 @@ function colorRenderingForSource(
 function contrastRenderingForSource(
   live: ChannelRendering | null,
   sourceChannelId: string,
+  heComponent?: HeDeconvComponent,
 ): Extract<ChannelRendering, { kind: "contrast" }> | null {
-  if (live?.kind === "contrast" && live.sourceChannelId === sourceChannelId) {
+  if (
+    live?.kind === "contrast" &&
+    live.sourceChannelId === sourceChannelId &&
+    live.heComponent === heComponent
+  ) {
     return live;
   }
   return null;
@@ -149,9 +168,55 @@ type ChannelDragPayload = {
 
 type ColorPickerTarget =
   | { scope: "source"; sourceId: string }
-  | { scope: "group"; groupId: string; rowId: string };
+  | { scope: "group"; groupId: string; rowId: string }
+  | { scope: "he"; sourceId: string; component: HeDeconvComponent };
 
-const EMPTY_LOCKED_ROW_IDS = new Set<string>();
+const HE_CONTRAST_DISTRIBUTION = {
+  id: "",
+  YValues: [] as number[],
+  XScale: "linear" as const,
+  YScale: "linear" as const,
+  LowerRange: 0,
+  UpperRange: HE_CONTRAST_SCALE,
+};
+
+function heStainColor(
+  stain: { color: [number, number, number] },
+  live: ChannelRendering | null,
+  sourceChannelId: string,
+  component: HeDeconvComponent,
+): { r: number; g: number; b: number } {
+  const liveColor = colorRenderingForSource(live, sourceChannelId, component);
+  if (liveColor) return { r: liveColor.r, g: liveColor.g, b: liveColor.b };
+  return { r: stain.color[0], g: stain.color[1], b: stain.color[2] };
+}
+
+function heDeconvContrastEditorProps(
+  sc: Channel,
+  component: HeDeconvComponent,
+  stain: HeStainView,
+  live: ChannelRendering | null,
+  yValues: number[],
+): ChannelContrastEditorProps {
+  const c = heStainColor(stain, live, sc.id, component);
+  const liveContrast = contrastRenderingForSource(live, sc.id, component);
+  return {
+    groupId: "",
+    channelId: `${sc.id}:${component}`,
+    sourceChannelId: sc.id,
+    r: c.r,
+    g: c.g,
+    b: c.b,
+    lowerLimit: liveContrast ? liveContrast.lower : stain.lower,
+    upperLimit: liveContrast ? liveContrast.upper : stain.upper,
+    distribution: {
+      ...HE_CONTRAST_DISTRIBUTION,
+      YValues: yValues,
+    },
+    dtypeMax: HE_CONTRAST_SCALE,
+    heComponent: component,
+  };
+}
 
 function readDragPayload(e: React.DragEvent): ChannelDragPayload | null {
   const raw = e.dataTransfer.getData(CHANNEL_DRAG_MIME);
@@ -374,6 +439,10 @@ export const ChannelGroupsMasterDetail = (
   const setGroupNames = useAppStore((s) => s.setGroupNames);
   const setGroupChannelLists = useAppStore((s) => s.setGroupChannelLists);
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
+  const heDeconvByChannelId = useAppStore((s) => s.heDeconvByChannelId);
+  const heHistogramByChannelId = useAppStore((s) => s.heHistogramByChannelId);
+  const setHeDeconv = useAppStore((s) => s.setHeDeconv);
+  const patchHeDeconv = useAppStore((s) => s.patchHeDeconv);
 
   const sourceChannels = React.useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
@@ -694,6 +763,82 @@ export const ChannelGroupsMasterDetail = (
     />
   );
 
+  const rgbDisplayProps = (sc: Channel) => ({
+    isRgb: true as const,
+    heSplit: !!heDeconvByChannelId[sc.id],
+    onHeSplitChange: (split: boolean) => {
+      setHeDeconv(sc.id, split ? defaultHeDeconvSplit() : null);
+    },
+  });
+
+  const renderHeStainRows = (sc: Channel) => {
+    const split = heDeconvByChannelId[sc.id];
+    if (!split) return null;
+    return (
+      <ul className={styles.heStainList}>
+        {HE_DECONV_COMPONENTS.map((component) => {
+          const stain = split[component];
+          const label = HE_DECONV_LABELS[component];
+          const c = heStainColor(stain, channelRendering, sc.id, component);
+          return (
+            <li key={component} className={styles.heStainBlock}>
+              <ChannelRow
+                rowClassName={row.groupChildRow}
+                visible={stain.visible}
+                visibilityTitle={
+                  stain.visible ? `Hide ${label}` : `Show ${label}`
+                }
+                visibilityAriaLabel={`Toggle visibility for ${label}`}
+                onToggleVisibility={() =>
+                  patchHeDeconv(sc.id, component, {
+                    visible: !stain.visible,
+                  })
+                }
+                name={{
+                  mode: "label",
+                  name: label,
+                  title: label,
+                  className: styles.groupChildName,
+                }}
+                colorHex={rgbToHex(c)}
+                colorTitle={`Pick color for ${label}`}
+                colorAriaLabel={`Pick color for ${label}`}
+                onColorClick={(e) => {
+                  e.stopPropagation();
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setColorPickerTarget({
+                    scope: "he",
+                    sourceId: sc.id,
+                    component,
+                  });
+                  setColorPickerPos(chromeColorPickerAnchorPosition(rect));
+                }}
+              />
+              {props.contrastEditable ? (
+                <div className={styles.detailChannelItemEmbed}>
+                  <ChannelContrastEditor
+                    key={`he-${sc.id}-${component}`}
+                    {...heDeconvContrastEditorProps(
+                      sc,
+                      component,
+                      stain,
+                      channelRendering,
+                      heHistogramByChannelId[sc.id]?.[component] ?? [],
+                    )}
+                    histogramLoading={!heHistogramByChannelId[sc.id]}
+                    onCommitRange={(lower, upper) =>
+                      patchHeDeconv(sc.id, component, { lower, upper })
+                    }
+                  />
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
+
   const addChannelToGroup = React.useCallback(
     async (groupId: string, sourceChannelUUID: string) => {
       if (optimizePaletteBusy) return;
@@ -949,6 +1094,24 @@ export const ChannelGroupsMasterDetail = (
 
   const pickingColorHex = React.useMemo(() => {
     if (!colorPickerTarget) return null;
+    if (colorPickerTarget.scope === "he") {
+      const live = colorRenderingForSource(
+        channelRendering,
+        colorPickerTarget.sourceId,
+        colorPickerTarget.component,
+      );
+      if (live) return rgbToHex(live);
+      const stain =
+        heDeconvByChannelId[colorPickerTarget.sourceId]?.[
+          colorPickerTarget.component
+        ];
+      if (!stain) return null;
+      return rgbToHex({
+        r: stain.color[0],
+        g: stain.color[1],
+        b: stain.color[2],
+      });
+    }
     if (colorPickerTarget.scope === "source") {
       const live = colorRenderingForSource(
         channelRendering,
@@ -971,12 +1134,29 @@ export const ChannelGroupsMasterDetail = (
     return rgbToHex(
       sc ? effectiveDisplayColor(sc, sourceChannels, gc) : gc.color,
     );
-  }, [colorPickerTarget, channelRendering, sourceChannels, channelGroups]);
+  }, [
+    colorPickerTarget,
+    channelRendering,
+    sourceChannels,
+    channelGroups,
+    heDeconvByChannelId,
+  ]);
 
   const closeColorPicker = React.useCallback(() => {
     const target = colorPickerTarget;
     const live = useAppStore.getState().channelRendering;
-    if (target?.scope === "source") {
+    if (target?.scope === "he") {
+      const colorLive = colorRenderingForSource(
+        live,
+        target.sourceId,
+        target.component,
+      );
+      if (colorLive) {
+        patchHeDeconv(target.sourceId, target.component, {
+          color: [colorLive.r, colorLive.g, colorLive.b],
+        });
+      }
+    } else if (target?.scope === "source") {
       const colorLive = colorRenderingForSource(live, target.sourceId);
       if (colorLive) {
         const doc = useDocumentStore.getState();
@@ -1021,7 +1201,7 @@ export const ChannelGroupsMasterDetail = (
     useAppStore.getState().clearChannelRendering();
     setColorPickerTarget(null);
     setColorPickerPos(null);
-  }, [colorPickerTarget, setImages, syncGroupState]);
+  }, [colorPickerTarget, patchHeDeconv, setImages, syncGroupState]);
 
   const compositedIntensityLayers = React.useMemo(
     () =>
@@ -1165,6 +1345,7 @@ export const ChannelGroupsMasterDetail = (
                 const rgbDisplay = sc
                   ? isRgbDisplayChannel(sc, sourceChannels)
                   : false;
+                const heSplit = sc ? heDeconvByChannelId[sc.id] : undefined;
                 const contrastEditor =
                   props.contrastEditable &&
                   sc &&
@@ -1215,10 +1396,9 @@ export const ChannelGroupsMasterDetail = (
                           })
                         }
                       />
-                      {rgbDisplay ? (
+                      {rgbDisplay && sc ? (
                         <ChannelRow
                           rowClassName={row.groupChildRow}
-                          compact
                           visible={visible}
                           visibilityTitle={
                             visible ? `Hide ${name}` : `Show ${name}`
@@ -1250,6 +1430,7 @@ export const ChannelGroupsMasterDetail = (
                                 }
                           }
                           imageSubtitle={imageSubtitle}
+                          {...rgbDisplayProps(sc)}
                           trailing={channelMoreMenu(sc, name, () =>
                             removeChannelFromGroup(group.id, gc.id),
                           )}
@@ -1365,6 +1546,7 @@ export const ChannelGroupsMasterDetail = (
                         />
                       )}
                     </div>
+                    {heSplit && visible && sc ? renderHeStainRows(sc) : null}
                     {contrastEditor ? (
                       <div className={styles.detailChannelItemEmbed}>
                         {contrastEditor}
@@ -1556,6 +1738,7 @@ export const ChannelGroupsMasterDetail = (
     }
 
     const rgbDisplay = isRgbDisplayChannel(sc, sourceChannels);
+    const heSplit = heDeconvByChannelId[sc.id];
     const showHistogramEmbed =
       props.contrastEditable && isImageChannel(sc) && !rgbDisplay;
     const contrastEditor = showHistogramEmbed ? (
@@ -1578,7 +1761,6 @@ export const ChannelGroupsMasterDetail = (
           {rgbDisplay ? (
             <ChannelRow
               rowClassName={row.rootChannelRow}
-              compact
               visible
               visibilityTitle={
                 capped
@@ -1594,6 +1776,7 @@ export const ChannelGroupsMasterDetail = (
                 onBlur: (value) => renameSourceChannelDisplayName(sc.id, value),
               }}
               imageSubtitle={imageSubtitle}
+              {...rgbDisplayProps(sc)}
             />
           ) : (
             <ChannelRow
@@ -1639,6 +1822,7 @@ export const ChannelGroupsMasterDetail = (
             />
           )}
         </div>
+        {heSplit ? renderHeStainRows(sc) : null}
         {contrastEditor ? (
           <div className={styles.detailChannelItemEmbed}>{contrastEditor}</div>
         ) : null}
@@ -1770,6 +1954,7 @@ export const ChannelGroupsMasterDetail = (
             const B = Number.parseInt(raw.slice(4, 6), 16);
             if ([R, G, B].some((n) => Number.isNaN(n))) return;
             const sourceId =
+              colorPickerTarget.scope === "he" ||
               colorPickerTarget.scope === "source"
                 ? colorPickerTarget.sourceId
                 : useDocumentStore
@@ -1786,6 +1971,9 @@ export const ChannelGroupsMasterDetail = (
               r: R,
               g: G,
               b: B,
+              ...(colorPickerTarget.scope === "he"
+                ? { heComponent: colorPickerTarget.component }
+                : {}),
             });
           }}
         />

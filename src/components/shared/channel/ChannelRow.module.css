@@ -145,6 +145,17 @@
   color: #e6edf3;
 }
 
+.modeToggleOption {
+  width: auto;
+  min-width: 26px;
+  padding: 0 5px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
 .maskVizIconOutline,
 .maskVizIconFull,
 .maskVizSwatchWhite,
