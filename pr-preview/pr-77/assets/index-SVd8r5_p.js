@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DCq1VeCK.js","./pako.esm-KbdoS3Oq.js","./lerc-D50GcCkC.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-C8_D5uva.js","./pako.esm-KbdoS3Oq.js","./lerc-BTRAFFBJ.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-dB5eFdPM.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-POMPxhp2.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CZYKf52u.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BKk94Aia.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BK_xLHkS.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BOt58ujd.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DCq1VeCK.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DJCNF-k2.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-D50GcCkC.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-C8_D5uva.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-814__ydC.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BTRAFFBJ.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BRWJHaKB.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BFeGuRDH.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BIZ0TiSe.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CIP1KPxU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -171544,7 +171544,6 @@ void main() {
     });
   };
   const Presentation = (props) => {
-    var _a2;
     const documentTitle = useDocumentStore((s2) => s2.metadata.title ?? "");
     const waypoints = useDocumentStore((s2) => s2.waypoints);
     const shapes = useDocumentStore((s2) => s2.shapes);
@@ -171554,18 +171553,17 @@ void main() {
       images
     ]);
     const docImageWidth = useDocumentStore((s2) => {
-      var _a3;
-      return ((_a3 = s2.images[0]) == null ? void 0 : _a3.sizeX) ?? 0;
+      var _a2;
+      return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeX) ?? 0;
     });
     const docImageHeight = useDocumentStore((s2) => {
-      var _a3;
-      return ((_a3 = s2.images[0]) == null ? void 0 : _a3.sizeY) ?? 0;
+      var _a2;
+      return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeY) ?? 0;
     });
     const viewerRefSize = useAppStore((s2) => s2.viewerReferenceImagePixelSize);
     const { width: imageWidth, height: imageHeight } = effectiveReferenceImagePixelSize(viewerRefSize, docImageWidth, docImageHeight);
     const { activeStoryIndex, setActiveStory, activeChannelGroupId, setActiveChannelGroup, importWaypointShapes, setTargetWaypointCamera } = useAppStore();
     const previousActiveStoryIndexRef = reactExports.useRef(null);
-    const lastAppliedCameraKeyRef = reactExports.useRef(null);
     reactExports.useEffect(() => {
       if (waypoints.length === 0) return;
       if (imageWidth === 0 || imageHeight === 0) return;
@@ -171579,11 +171577,17 @@ void main() {
       }
       previousActiveStoryIndexRef.current = idx;
       importWaypointShapes(story2, true, shapes);
-      const cameraKey = `${idx}:${story2.id}:${imageWidth}x${imageHeight}`;
-      if (lastAppliedCameraKeyRef.current === cameraKey) return;
-      lastAppliedCameraKeyRef.current = cameraKey;
       const authoringMap = useAppStore.getState().waypointAuthoring;
-      setTargetWaypointCamera(waypointToConfigWaypoint(story2, authoringMap.get(story2.id)));
+      const wp = waypointToConfigWaypoint(story2, authoringMap.get(story2.id));
+      setTargetWaypointCamera(wp);
+      const groups = useDocumentStore.getState().channelGroups;
+      const gid = wp.groupId;
+      if (groups.length > 0 && gid) {
+        const foundGroup = groups.find((g2) => g2.id === gid) || groups[0];
+        if (foundGroup) {
+          setActiveChannelGroup(foundGroup.id);
+        }
+      }
     }, [
       waypoints,
       activeStoryIndex,
@@ -171591,23 +171595,7 @@ void main() {
       imageHeight,
       shapes,
       importWaypointShapes,
-      setTargetWaypointCamera
-    ]);
-    const hasChannelGroups = channelGroups.length > 0;
-    const waypointGroupId = activeStoryIndex === null ? null : ((_a2 = waypoints[activeStoryIndex]) == null ? void 0 : _a2.groupId) ?? null;
-    reactExports.useEffect(() => {
-      if (!hasChannelGroups) return;
-      if (activeStoryIndex === null) return;
-      if (!waypointGroupId) return;
-      const groups = useDocumentStore.getState().channelGroups;
-      const foundGroup = groups.find((g2) => g2.id === waypointGroupId) || groups[0];
-      if (foundGroup) {
-        setActiveChannelGroup(foundGroup.id);
-      }
-    }, [
-      hasChannelGroups,
-      waypointGroupId,
-      activeStoryIndex,
+      setTargetWaypointCamera,
       setActiveChannelGroup
     ]);
     reactExports.useEffect(() => {
@@ -244109,12 +244097,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-25T17:07:54.346Z");
+    const label2 = utcShort("2026-08-25T17:29:35.277Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-25T17:07:54.346Z",
+      title: "2026-08-25T17:29:35.277Z",
       children: [
         "Updated ",
         label2,
