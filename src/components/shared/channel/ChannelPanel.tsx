@@ -59,7 +59,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     [images],
   );
 
-  const channelGroups = docChannelGroups.map(({ id, name }) => ({ id, name }));
   const legendSections = React.useMemo((): LegendSection[] => {
     const indexById = new Map(
       sourceChannels.map((sc, idx) => [sc.id, idx] as const),
@@ -82,10 +81,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         for (const gc of activeGroup.channels) {
           const sc = findSourceChannel(sourceChannels, gc.channelId);
           if (!sc || sc.imageId !== im.id) continue;
-          const colorIdx = indexById.get(sc.id) ?? 0;
-          groupChannels.push(
-            legendChannelFromLayer(sc, gc, activeChannelGroupId, colorIdx),
-          );
+          groupChannels.push(legendChannelFromLayer(sc, gc, activeGroup.id));
         }
 
         const overlayChannels: LegendChannel[] = [];
@@ -214,10 +210,10 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const hideClass = [hide ? styles.hide : "", styles.core].join(" ");
 
   const allGroups =
-    channelGroups.length > 0 ? (
+    docChannelGroups.length > 0 ? (
       <>
         <div className={styles.overlaySectionLabel}>Channel groups</div>
-        <ChannelGroups channelGroups={channelGroups} />
+        <ChannelGroups />
       </>
     ) : null;
 

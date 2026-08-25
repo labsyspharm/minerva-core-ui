@@ -863,13 +863,12 @@ export const ChannelGroupsMasterDetail = (
   ]);
 
   const visibleHistogramTargetKey = visibleHistogramTargets.join(",");
-  const histogramTargetsRef = React.useRef(visibleHistogramTargets);
-  histogramTargetsRef.current = visibleHistogramTargets;
 
   React.useEffect(() => {
     if (!ensureChannelHistograms || props.noLoader) return;
-    const targets =
-      visibleHistogramTargetKey.length === 0 ? [] : histogramTargetsRef.current;
+    const targets = visibleHistogramTargetKey
+      ? visibleHistogramTargetKey.split(",")
+      : [];
     if (targets.length === 0) {
       setLoadingHistogramSourceIds([]);
       return;

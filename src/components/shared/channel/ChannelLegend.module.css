@@ -7,10 +7,6 @@
 }
 
 .channelsSectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
   padding: 3px 6px;
   border-bottom: 1px solid
     color-mix(in srgb, var(--theme-glass-edge) 35%, transparent);
@@ -24,8 +20,6 @@
   color: color-mix(in srgb, var(--theme-light-contrast-color) 52%, transparent);
   line-height: 1.2;
   margin: 0;
-  flex: 1;
-  min-width: 0;
 }
 
 .legendBody {
