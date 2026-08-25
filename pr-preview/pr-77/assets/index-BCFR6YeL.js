@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CZmmA9ib.js","./pako.esm-KbdoS3Oq.js","./lerc-BGGcRmgZ.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DCq1VeCK.js","./pako.esm-KbdoS3Oq.js","./lerc-D50GcCkC.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-Bp8A3jUf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-5QLwouNj.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-dB5eFdPM.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-POMPxhp2.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-Tti0cuR0.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BK_xLHkS.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-CZmmA9ib.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DUX3pLF2.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BGGcRmgZ.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DCq1VeCK.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DJCNF-k2.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-D50GcCkC.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DB3tKcFU.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BRWJHaKB.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-B_hH42fC.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BIZ0TiSe.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -87048,39 +87048,43 @@ void main() {
       basepath: routerBasepath()
     });
   }
-  const root$8 = "_root_1r6lg_4";
-  const shelfToolbar = "_shelfToolbar_1r6lg_28";
-  const toolbarActions = "_toolbarActions_1r6lg_40";
-  const wordmark = "_wordmark_1r6lg_47";
-  const newVolume = "_newVolume_1r6lg_56";
-  const error = "_error_1r6lg_90";
-  const whisper = "_whisper_1r6lg_99";
-  const emptyLine = "_emptyLine_1r6lg_106";
-  const inlineLink = "_inlineLink_1r6lg_114";
-  const bookcase = "_bookcase_1r6lg_136";
-  const bookcaseInner = "_bookcaseInner_1r6lg_159";
-  const shelfBay = "_shelfBay_1r6lg_177";
-  const bayContent = "_bayContent_1r6lg_187";
-  const bayContentEmptyPrompt = "_bayContentEmptyPrompt_1r6lg_196";
-  const bayContentEmpty = "_bayContentEmpty_1r6lg_196";
-  const ghostShelf = "_ghostShelf_1r6lg_208";
-  const ghostBook = "_ghostBook_1r6lg_219";
-  const storyRow = "_storyRow_1r6lg_228";
-  const shelfBoard = "_shelfBoard_1r6lg_244";
-  const rowOpen = "_rowOpen_1r6lg_271";
-  const rowThumb = "_rowThumb_1r6lg_305";
-  const rowThumbImg = "_rowThumbImg_1r6lg_314";
-  const rowThumbBlank = "_rowThumbBlank_1r6lg_323";
-  const rowText = "_rowText_1r6lg_331";
-  const rowTitle$1 = "_rowTitle_1r6lg_340";
-  const rowDate = "_rowDate_1r6lg_350";
-  const scrap = "_scrap_1r6lg_358";
+  const root$8 = "_root_1gti7_4";
+  const shelfToolbar = "_shelfToolbar_1gti7_28";
+  const toolbarActions = "_toolbarActions_1gti7_40";
+  const wordmark = "_wordmark_1gti7_47";
+  const newVolume = "_newVolume_1gti7_56";
+  const newGlyph = "_newGlyph_1gti7_87";
+  const newLabel = "_newLabel_1gti7_94";
+  const error = "_error_1gti7_98";
+  const whisper = "_whisper_1gti7_107";
+  const emptyLine = "_emptyLine_1gti7_114";
+  const inlineLink = "_inlineLink_1gti7_122";
+  const bookcase = "_bookcase_1gti7_144";
+  const bookcaseInner = "_bookcaseInner_1gti7_167";
+  const shelfBay = "_shelfBay_1gti7_185";
+  const bayContent = "_bayContent_1gti7_195";
+  const bayContentEmptyPrompt = "_bayContentEmptyPrompt_1gti7_204";
+  const bayContentEmpty = "_bayContentEmpty_1gti7_204";
+  const ghostShelf = "_ghostShelf_1gti7_216";
+  const ghostBook = "_ghostBook_1gti7_227";
+  const storyRow = "_storyRow_1gti7_236";
+  const shelfBoard = "_shelfBoard_1gti7_252";
+  const rowOpen = "_rowOpen_1gti7_279";
+  const rowThumb = "_rowThumb_1gti7_313";
+  const rowThumbImg = "_rowThumbImg_1gti7_322";
+  const rowThumbBlank = "_rowThumbBlank_1gti7_331";
+  const rowText = "_rowText_1gti7_339";
+  const rowTitle$1 = "_rowTitle_1gti7_348";
+  const rowDate = "_rowDate_1gti7_358";
+  const scrap = "_scrap_1gti7_366";
   const styles$o = {
     root: root$8,
     shelfToolbar,
     toolbarActions,
     wordmark,
     newVolume,
+    newGlyph,
+    newLabel,
     error,
     whisper,
     emptyLine,
@@ -87397,15 +87401,28 @@ void main() {
                   disabled: importing || creating,
                   onClick: () => void handleImportFolder(),
                   "aria-label": "Import a story folder",
-                  children: importing ? "\u2026" : "Import"
+                  children: jsxRuntimeExports.jsx("span", {
+                    className: styles$o.newLabel,
+                    children: importing ? "\u2026" : "Import"
+                  })
                 }) : null,
-                jsxRuntimeExports.jsx("button", {
+                jsxRuntimeExports.jsxs("button", {
                   type: "button",
                   className: styles$o.newVolume,
                   disabled: creating || importing,
                   onClick: () => void handleNew(),
                   "aria-label": "Add a new story",
-                  children: creating ? "\u2026" : "+ New"
+                  children: [
+                    jsxRuntimeExports.jsx("span", {
+                      className: styles$o.newGlyph,
+                      "aria-hidden": true,
+                      children: "+"
+                    }),
+                    jsxRuntimeExports.jsx("span", {
+                      className: styles$o.newLabel,
+                      children: creating ? "\u2026" : "New"
+                    })
+                  ]
                 })
               ]
             })
@@ -90805,8 +90822,8 @@ void main() {
       };
       get2().updateShape(shapeId, updates);
     },
-    updateShapeLabel: (shapeId, newLabel) => {
-      const trimmed = newLabel.trim();
+    updateShapeLabel: (shapeId, newLabel2) => {
+      const trimmed = newLabel2.trim();
       set2((state) => ({
         shapes: state.shapes.map((annotation) => {
           if (annotation.id !== shapeId) {
@@ -169731,11 +169748,9 @@ void main() {
       sourceChannels
     ]);
     const visibleHistogramTargetKey = visibleHistogramTargets.join(",");
-    const histogramTargetsRef = reactExports.useRef(visibleHistogramTargets);
-    histogramTargetsRef.current = visibleHistogramTargets;
     reactExports.useEffect(() => {
       if (!ensureChannelHistograms || props.noLoader) return;
-      const targets = visibleHistogramTargetKey.length === 0 ? [] : histogramTargetsRef.current;
+      const targets = visibleHistogramTargetKey ? visibleHistogramTargetKey.split(",") : [];
       if (targets.length === 0) {
         setLoadingHistogramSourceIds([]);
         return;
@@ -171988,8 +172003,7 @@ void main() {
       children: name2
     });
   };
-  const ChannelGroups = (props) => {
-    const { channelGroups } = props;
+  const ChannelGroups = () => {
     const [expanded, setExpanded] = reactExports.useState(false);
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const docChannelGroups = useDocumentStore((s2) => s2.channelGroups);
@@ -172005,7 +172019,7 @@ void main() {
       }
     });
     const activeGroupName = (activeGroup == null ? void 0 : activeGroup.name) || "No group";
-    if (channelGroups.length <= 1) {
+    if (docChannelGroups.length <= 1) {
       return jsxRuntimeExports.jsx("div", {
         className: styles$7.wrapRows,
         children: jsxRuntimeExports.jsx("div", {
@@ -172050,18 +172064,18 @@ void main() {
       ]
     });
   };
-  const channelsSection = "_channelsSection_147cw_1";
-  const channelsSectionHeader = "_channelsSectionHeader_147cw_9";
-  const sectionLabel = "_sectionLabel_147cw_19";
-  const legendBody = "_legendBody_147cw_31";
-  const imageSection = "_imageSection_147cw_38";
-  const imageSectionLabel = "_imageSectionLabel_147cw_45";
-  const channelList = "_channelList_147cw_57";
-  const legendRowWrap = "_legendRowWrap_147cw_63";
-  const nameClickArea = "_nameClickArea_147cw_79";
-  const swatch = "_swatch_147cw_97";
-  const swatchFilled = "_swatchFilled_147cw_111";
-  const legendDivider = "_legendDivider_147cw_115";
+  const channelsSection = "_channelsSection_17o8o_1";
+  const channelsSectionHeader = "_channelsSectionHeader_17o8o_9";
+  const sectionLabel = "_sectionLabel_17o8o_15";
+  const legendBody = "_legendBody_17o8o_25";
+  const imageSection = "_imageSection_17o8o_32";
+  const imageSectionLabel = "_imageSectionLabel_17o8o_39";
+  const channelList = "_channelList_17o8o_51";
+  const legendRowWrap = "_legendRowWrap_17o8o_57";
+  const nameClickArea = "_nameClickArea_17o8o_73";
+  const swatch = "_swatch_17o8o_91";
+  const swatchFilled = "_swatchFilled_17o8o_105";
+  const legendDivider = "_legendDivider_17o8o_109";
   const styles$6 = {
     channelsSection,
     channelsSectionHeader,
@@ -172076,28 +172090,17 @@ void main() {
     swatchFilled,
     legendDivider
   };
-  function rgbHex(r2, g2, b2) {
-    return [
-      r2,
-      g2,
-      b2
-    ].map((n2) => n2.toString(16).padStart(2, "0")).join("");
-  }
-  function legendChannelFromLayer(sc2, gc2, activeGroupId, colorIndex) {
-    if (gc2) {
-      const { r: r2, g: g2, b: b2 } = gc2.color;
-      return {
-        r: r2,
-        g: g2,
-        b: b2,
-        name: sc2.name,
-        color: rgbHex(r2, g2, b2),
-        group_uuid: activeGroupId ?? "",
-        source_uuid: sc2.id,
-        channel_uuid: gc2.id
-      };
-    }
-    return legendChannelFromSource(sc2, colorIndex);
+  function legendChannelFromLayer(sc2, gc2, activeGroupId) {
+    const { r: r2, g: g2, b: b2 } = gc2.color;
+    return {
+      r: r2,
+      g: g2,
+      b: b2,
+      name: sc2.name,
+      group_uuid: activeGroupId,
+      source_uuid: sc2.id,
+      channel_uuid: gc2.id
+    };
   }
   function legendChannelFromSource(sc2, colorIndex) {
     const { r: r2, g: g2, b: b2 } = effectiveSourceColor(sc2, colorIndex);
@@ -172106,7 +172109,6 @@ void main() {
       g: g2,
       b: b2,
       name: sc2.name,
-      color: rgbHex(r2, g2, b2),
       group_uuid: "",
       source_uuid: sc2.id,
       channel_uuid: sc2.id
@@ -172140,7 +172142,7 @@ void main() {
             rowVisible ? styles$6.swatchFilled : null
           ].filter(Boolean).join(" "),
           style: {
-            "--swatch-color": `#${channel.color}`
+            "--swatch-color": `rgb(${channel.r} ${channel.g} ${channel.b})`
           },
           title: `Color ${channelName2}`,
           "aria-label": `Color ${channelName2}`,
@@ -172279,10 +172281,6 @@ void main() {
     const sourceChannels = reactExports.useMemo(() => flattenImageChannelsInDocumentOrder(images), [
       images
     ]);
-    const channelGroups = docChannelGroups.map(({ id: id2, name: name2 }) => ({
-      id: id2,
-      name: name2
-    }));
     const legendSections = reactExports.useMemo(() => {
       const indexById = new Map(sourceChannels.map((sc2, idx) => [
         sc2.id,
@@ -172299,8 +172297,7 @@ void main() {
           for (const gc2 of activeGroup.channels) {
             const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
             if (!sc2 || sc2.imageId !== im.id) continue;
-            const colorIdx = indexById.get(sc2.id) ?? 0;
-            groupChannels.push(legendChannelFromLayer(sc2, gc2, activeChannelGroupId, colorIdx));
+            groupChannels.push(legendChannelFromLayer(sc2, gc2, activeGroup.id));
           }
           const overlayChannels = [];
           if (hasStackVisibilityMap) {
@@ -172409,15 +172406,13 @@ void main() {
       hide2 ? styles$5.hide : "",
       styles$5.core
     ].join(" ");
-    const allGroups = channelGroups.length > 0 ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+    const allGroups = docChannelGroups.length > 0 ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         jsxRuntimeExports.jsx("div", {
           className: styles$5.overlaySectionLabel,
           children: "Channel groups"
         }),
-        jsxRuntimeExports.jsx(ChannelGroups, {
-          channelGroups
-        })
+        jsxRuntimeExports.jsx(ChannelGroups, {})
       ]
     }) : null;
     const channelMenu = jsxRuntimeExports.jsx("div", {
@@ -244114,12 +244109,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-25T16:45:44.543Z");
+    const label2 = utcShort("2026-08-25T17:07:54.346Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-25T16:45:44.543Z",
+      title: "2026-08-25T17:07:54.346Z",
       children: [
         "Updated ",
         label2,
