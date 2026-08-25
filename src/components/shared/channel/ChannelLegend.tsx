@@ -153,7 +153,7 @@ type ChannelLegendProps = {
   toggleChannel: (c: LegendChannel) => void;
   onChannelColor?: (
     groupId: string,
-    id: string,
+    sourceChannelId: string,
     color: { r: number; g: number; b: number },
   ) => void;
 };
@@ -250,9 +250,11 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
           };
           if (colorPickerChannel !== null) {
             const channel = colorPickerChannel;
-            const groupId = channel.group_uuid;
-            const id = groupId ? channel.channel_uuid : channel.source_uuid;
-            props.onChannelColor?.(groupId, id, color);
+            props.onChannelColor?.(
+              channel.group_uuid,
+              channel.source_uuid,
+              color,
+            );
           }
         }}
       />

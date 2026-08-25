@@ -16,7 +16,7 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import {
-  applyGroupChannelColor,
+  applyPlaybackGroupChannelColor,
   patchSourceChannelOnImages,
 } from "@/lib/stores/storeUtils";
 import { ChannelGroups } from "./ChannelGroups";
@@ -40,6 +40,7 @@ export type ChannelPanelProps = {
 export const ChannelPanel = (props: ChannelPanelProps) => {
   const hide = props.hiddenChannel;
   const hidden = props.noLoader;
+  const setActiveChannelGroup = useAppStore((s) => s.setActiveChannelGroup);
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
   const channelGroupRowVisibilities = useAppStore(
@@ -144,24 +145,50 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const updateChannelColor = React.useCallback(
     (
       groupId: string,
-      id: string,
+      sourceChannelId: string,
       color: { r: number; g: number; b: number },
     ) => {
       const doc = useDocumentStore.getState();
       if (!groupId) {
-        const next = patchSourceChannelOnImages(doc.images, id, { color });
+        const next = patchSourceChannelOnImages(doc.images, sourceChannelId, {
+          color,
+        });
         if (next !== doc.images) setImages(next);
         return;
       }
-      const next = applyGroupChannelColor(
+      const result = applyPlaybackGroupChannelColor(
         doc.channelGroups,
         groupId,
-        id,
+        sourceChannelId,
         color,
       );
-      if (next !== doc.channelGroups) setChannelGroups(next);
+      if (!result) return;
+      if (result.channelGroups !== doc.channelGroups) {
+        setChannelGroups(result.channelGroups);
+      }
+      if (result.copiedRowIds?.length) {
+        const vis = useAppStore.getState().channelGroupRowVisibilities;
+        let next: Record<string, boolean> | null = null;
+        for (const { from, to } of result.copiedRowIds) {
+          if (vis[from] === undefined) continue;
+          if (next === null) next = { ...vis };
+          next[to] = vis[from];
+        }
+        if (next) setChannelGroupRowVisibilities(next);
+      }
+      if (
+        result.activeChannelGroupId !==
+        useAppStore.getState().activeChannelGroupId
+      ) {
+        setActiveChannelGroup(result.activeChannelGroupId);
+      }
     },
-    [setChannelGroups, setImages],
+    [
+      setActiveChannelGroup,
+      setChannelGroupRowVisibilities,
+      setChannelGroups,
+      setImages,
+    ],
   );
 
   const toggleChannel = (c: LegendChannel) => {

@@ -349,10 +349,7 @@ export function MinervaLibraryPage() {
             onClick={() => void handleNew()}
             aria-label="Add a new story"
           >
-            <span className={styles.newGlyph} aria-hidden>
-              +
-            </span>
-            <span className={styles.newLabel}>{creating ? "…" : "New"}</span>
+            {creating ? "…" : "+ New"}
           </button>
         </div>
       </div>

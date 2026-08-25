@@ -565,6 +565,79 @@ export function applyGroupChannelColor(
   );
 }
 
+const PLAYBACK_GROUP_COPY_SUFFIX = " copy";
+
+function isPlaybackGroupCopyName(name: string): boolean {
+  return name.endsWith(PLAYBACK_GROUP_COPY_SUFFIX);
+}
+
+function playbackGroupCopyName(name: string): string {
+  return isPlaybackGroupCopyName(name)
+    ? name
+    : `${name}${PLAYBACK_GROUP_COPY_SUFFIX}`;
+}
+
+export type PlaybackGroupColorResult = {
+  channelGroups: ChannelGroup[];
+  activeChannelGroupId: string;
+  /** Set when a new `{name} copy` is created: authored row id → copy row id. */
+  copiedRowIds?: ReadonlyArray<{ from: string; to: string }>;
+};
+
+/**
+ * Preview / exported legend: do not mutate an authored group. Reuse
+ * `{name} copy` if it exists, otherwise create that copy, then paint by
+ * source-channel id so later picker ticks still hit the copy after new row ids.
+ */
+export function applyPlaybackGroupChannelColor(
+  channelGroups: ChannelGroup[],
+  groupId: string,
+  sourceChannelId: string,
+  color: Color,
+): PlaybackGroupColorResult | null {
+  const named = channelGroups.find((g) => g.id === groupId);
+  if (!named) return null;
+  const copyName = playbackGroupCopyName(named.name);
+  const target = channelGroups.find((g) => g.name === copyName) ?? named;
+
+  const paint = (gc: ChannelGroup["channels"][number]) =>
+    gc.channelId === sourceChannelId ? { ...gc, color } : gc;
+
+  if (!isPlaybackGroupCopyName(target.name)) {
+    const copiedRowIds: { from: string; to: string }[] = [];
+    const copied: ChannelGroup = {
+      ...target,
+      id: crypto.randomUUID(),
+      name: copyName,
+      channels: target.channels.map((gc) => {
+        const id = crypto.randomUUID();
+        copiedRowIds.push({ from: gc.id, to: id });
+        return { ...paint(gc), id };
+      }),
+    };
+    return {
+      channelGroups: [...channelGroups, copied],
+      activeChannelGroupId: copied.id,
+      copiedRowIds,
+    };
+  }
+
+  const row = target.channels.find((gc) => gc.channelId === sourceChannelId);
+  if (row && colorsEqual(row.color, color)) {
+    return {
+      channelGroups,
+      activeChannelGroupId: target.id,
+    };
+  }
+
+  return {
+    channelGroups: channelGroups.map((g) =>
+      g.id !== target.id ? g : { ...g, channels: g.channels.map(paint) },
+    ),
+    activeChannelGroupId: target.id,
+  };
+}
+
 // --- Exhibit `ConfigWaypoint` ↔ `story.json` waypoint slice (for building JsonExport) -----
 
 /** Normalize exhibit / legacy waypoint fields into current {@link ConfigWaypoint} shape. */

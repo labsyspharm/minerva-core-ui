@@ -139,14 +139,20 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const [sliderMax, setSliderMax] = React.useState(() =>
     scale.toSlider(props.upperLimit),
   );
+  const sliderMinRef = React.useRef(sliderMin);
+  const sliderMaxRef = React.useRef(sliderMax);
   const [minInput, setMinInput] = React.useState(String(props.lowerLimit));
   const [maxInput, setMaxInput] = React.useState(String(props.upperLimit));
   const editingLimitRef = React.useRef(false);
 
   React.useEffect(() => {
     if (editingLimitRef.current) return;
-    setSliderMin(scale.toSlider(props.lowerLimit));
-    setSliderMax(scale.toSlider(props.upperLimit));
+    const min = scale.toSlider(props.lowerLimit);
+    const max = scale.toSlider(props.upperLimit);
+    sliderMinRef.current = min;
+    sliderMaxRef.current = max;
+    setSliderMin(min);
+    setSliderMax(max);
     setMinInput(String(Math.round(props.lowerLimit)));
     setMaxInput(String(Math.round(props.upperLimit)));
   }, [props.lowerLimit, props.upperLimit, scale]);
@@ -184,7 +190,11 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     ],
   );
 
-  const syncFromSliders = (loStep: number, hiStep: number) => {
+  const commitSliderSteps = (loStep: number, hiStep: number) => {
+    sliderMinRef.current = loStep;
+    sliderMaxRef.current = hiStep;
+    setSliderMin(loStep);
+    setSliderMax(hiStep);
     const lo = Math.round(scale.fromSlider(loStep));
     const hi = Math.round(scale.fromSlider(hiStep));
     setMinInput(String(lo));
@@ -198,19 +208,18 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
 
   const endSliderEdit = () => {
     editingLimitRef.current = false;
-    syncFromSliders(sliderMin, sliderMax);
   };
 
   const onMinSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = Math.min(Number(e.target.value), sliderMax);
-    setSliderMin(v);
-    syncFromSliders(v, sliderMax);
+    const max = sliderMaxRef.current;
+    const v = Math.min(Number(e.target.value), max);
+    commitSliderSteps(v, max);
   };
 
   const onMaxSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = Math.max(Number(e.target.value), sliderMin);
-    setSliderMax(v);
-    syncFromSliders(sliderMin, v);
+    const min = sliderMinRef.current;
+    const v = Math.max(Number(e.target.value), min);
+    commitSliderSteps(min, v);
   };
 
   const commitFromInputs = () => {
@@ -225,8 +234,12 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
       lo = hi;
       hi = t;
     }
-    setSliderMin(scale.toSlider(lo));
-    setSliderMax(scale.toSlider(hi));
+    const minStep = scale.toSlider(lo);
+    const maxStep = scale.toSlider(hi);
+    sliderMinRef.current = minStep;
+    sliderMaxRef.current = maxStep;
+    setSliderMin(minStep);
+    setSliderMax(maxStep);
     setMinInput(String(lo));
     setMaxInput(String(hi));
     commitRange(lo, hi);
@@ -273,8 +286,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
       active: true,
       pointerId: e.pointerId,
       startX: e.clientX,
-      startMin: sliderMin,
-      startMax: sliderMax,
+      startMin: sliderMinRef.current,
+      startMax: sliderMaxRef.current,
     };
     e.currentTarget.setPointerCapture(e.pointerId);
     editingLimitRef.current = true;
@@ -308,9 +321,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
       hi = scale.sliderSteps;
       lo = scale.sliderSteps - span;
     }
-    setSliderMin(lo);
-    setSliderMax(hi);
-    syncFromSliders(lo, hi);
+    commitSliderSteps(lo, hi);
   };
 
   const endRangePan = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -332,9 +343,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
         hi = scale.sliderSteps;
         lo = scale.sliderSteps - span;
       }
-      setSliderMin(lo);
-      setSliderMax(hi);
-      syncFromSliders(lo, hi);
+      commitSliderSteps(lo, hi);
     }
     panDragRef.current = null;
     panMovedRef.current = false;
@@ -398,8 +407,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
             value={sliderMin}
             onPointerDown={beginSliderEdit}
             onChange={onMinSlider}
-            onMouseUp={endSliderEdit}
-            onTouchEnd={endSliderEdit}
+            onPointerUp={endSliderEdit}
+            onPointerCancel={endSliderEdit}
             aria-label="Contrast minimum"
           />
           <input
@@ -410,8 +419,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
             value={sliderMax}
             onPointerDown={beginSliderEdit}
             onChange={onMaxSlider}
-            onMouseUp={endSliderEdit}
-            onTouchEnd={endSliderEdit}
+            onPointerUp={endSliderEdit}
+            onPointerCancel={endSliderEdit}
             aria-label="Contrast maximum"
           />
         </div>
