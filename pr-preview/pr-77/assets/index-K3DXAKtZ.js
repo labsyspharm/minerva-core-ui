@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DXKhYERQ.js","./pako.esm-KbdoS3Oq.js","./lerc-BqhbPXqD.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CZmmA9ib.js","./pako.esm-KbdoS3Oq.js","./lerc-BGGcRmgZ.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-_H7g7CxX.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BbZR_ZGz.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-Bp8A3jUf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-5QLwouNj.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BELQQvul.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-Tti0cuR0.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DXKhYERQ.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CtxOhX0h.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BqhbPXqD.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-CZmmA9ib.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DUX3pLF2.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BGGcRmgZ.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-C9DsOVHv.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DB3tKcFU.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-D2y9wUB7.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-B_hH42fC.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -81571,6 +81571,64 @@ void main() {
       } : gc2)
     });
   }
+  const PLAYBACK_GROUP_COPY_SUFFIX = " copy";
+  function isPlaybackGroupCopyName(name2) {
+    return name2.endsWith(PLAYBACK_GROUP_COPY_SUFFIX);
+  }
+  function playbackGroupCopyName(name2) {
+    return isPlaybackGroupCopyName(name2) ? name2 : `${name2}${PLAYBACK_GROUP_COPY_SUFFIX}`;
+  }
+  function applyPlaybackGroupChannelColor(channelGroups, groupId, sourceChannelId, color2) {
+    const named = channelGroups.find((g2) => g2.id === groupId);
+    if (!named) return null;
+    const copyName = playbackGroupCopyName(named.name);
+    const target = channelGroups.find((g2) => g2.name === copyName) ?? named;
+    const paint = (gc2) => gc2.channelId === sourceChannelId ? {
+      ...gc2,
+      color: color2
+    } : gc2;
+    if (!isPlaybackGroupCopyName(target.name)) {
+      const copiedRowIds = [];
+      const copied = {
+        ...target,
+        id: crypto.randomUUID(),
+        name: copyName,
+        channels: target.channels.map((gc2) => {
+          const id2 = crypto.randomUUID();
+          copiedRowIds.push({
+            from: gc2.id,
+            to: id2
+          });
+          return {
+            ...paint(gc2),
+            id: id2
+          };
+        })
+      };
+      return {
+        channelGroups: [
+          ...channelGroups,
+          copied
+        ],
+        activeChannelGroupId: copied.id,
+        copiedRowIds
+      };
+    }
+    const row2 = target.channels.find((gc2) => gc2.channelId === sourceChannelId);
+    if (row2 && colorsEqual(row2.color, color2)) {
+      return {
+        channelGroups,
+        activeChannelGroupId: target.id
+      };
+    }
+    return {
+      channelGroups: channelGroups.map((g2) => g2.id !== target.id ? g2 : {
+        ...g2,
+        channels: g2.channels.map(paint)
+      }),
+      activeChannelGroupId: target.id
+    };
+  }
   function hydrateConfigWaypoint(wp, channelGroups) {
     var _a2;
     const anyWp = wp;
@@ -86990,43 +87048,39 @@ void main() {
       basepath: routerBasepath()
     });
   }
-  const root$8 = "_root_1gti7_4";
-  const shelfToolbar = "_shelfToolbar_1gti7_28";
-  const toolbarActions = "_toolbarActions_1gti7_40";
-  const wordmark = "_wordmark_1gti7_47";
-  const newVolume = "_newVolume_1gti7_56";
-  const newGlyph = "_newGlyph_1gti7_87";
-  const newLabel = "_newLabel_1gti7_94";
-  const error = "_error_1gti7_98";
-  const whisper = "_whisper_1gti7_107";
-  const emptyLine = "_emptyLine_1gti7_114";
-  const inlineLink = "_inlineLink_1gti7_122";
-  const bookcase = "_bookcase_1gti7_144";
-  const bookcaseInner = "_bookcaseInner_1gti7_167";
-  const shelfBay = "_shelfBay_1gti7_185";
-  const bayContent = "_bayContent_1gti7_195";
-  const bayContentEmptyPrompt = "_bayContentEmptyPrompt_1gti7_204";
-  const bayContentEmpty = "_bayContentEmpty_1gti7_204";
-  const ghostShelf = "_ghostShelf_1gti7_216";
-  const ghostBook = "_ghostBook_1gti7_227";
-  const storyRow = "_storyRow_1gti7_236";
-  const shelfBoard = "_shelfBoard_1gti7_252";
-  const rowOpen = "_rowOpen_1gti7_279";
-  const rowThumb = "_rowThumb_1gti7_313";
-  const rowThumbImg = "_rowThumbImg_1gti7_322";
-  const rowThumbBlank = "_rowThumbBlank_1gti7_331";
-  const rowText = "_rowText_1gti7_339";
-  const rowTitle$1 = "_rowTitle_1gti7_348";
-  const rowDate = "_rowDate_1gti7_358";
-  const scrap = "_scrap_1gti7_366";
+  const root$8 = "_root_1r6lg_4";
+  const shelfToolbar = "_shelfToolbar_1r6lg_28";
+  const toolbarActions = "_toolbarActions_1r6lg_40";
+  const wordmark = "_wordmark_1r6lg_47";
+  const newVolume = "_newVolume_1r6lg_56";
+  const error = "_error_1r6lg_90";
+  const whisper = "_whisper_1r6lg_99";
+  const emptyLine = "_emptyLine_1r6lg_106";
+  const inlineLink = "_inlineLink_1r6lg_114";
+  const bookcase = "_bookcase_1r6lg_136";
+  const bookcaseInner = "_bookcaseInner_1r6lg_159";
+  const shelfBay = "_shelfBay_1r6lg_177";
+  const bayContent = "_bayContent_1r6lg_187";
+  const bayContentEmptyPrompt = "_bayContentEmptyPrompt_1r6lg_196";
+  const bayContentEmpty = "_bayContentEmpty_1r6lg_196";
+  const ghostShelf = "_ghostShelf_1r6lg_208";
+  const ghostBook = "_ghostBook_1r6lg_219";
+  const storyRow = "_storyRow_1r6lg_228";
+  const shelfBoard = "_shelfBoard_1r6lg_244";
+  const rowOpen = "_rowOpen_1r6lg_271";
+  const rowThumb = "_rowThumb_1r6lg_305";
+  const rowThumbImg = "_rowThumbImg_1r6lg_314";
+  const rowThumbBlank = "_rowThumbBlank_1r6lg_323";
+  const rowText = "_rowText_1r6lg_331";
+  const rowTitle$1 = "_rowTitle_1r6lg_340";
+  const rowDate = "_rowDate_1r6lg_350";
+  const scrap = "_scrap_1r6lg_358";
   const styles$o = {
     root: root$8,
     shelfToolbar,
     toolbarActions,
     wordmark,
     newVolume,
-    newGlyph,
-    newLabel,
     error,
     whisper,
     emptyLine,
@@ -87343,28 +87397,15 @@ void main() {
                   disabled: importing || creating,
                   onClick: () => void handleImportFolder(),
                   "aria-label": "Import a story folder",
-                  children: jsxRuntimeExports.jsx("span", {
-                    className: styles$o.newLabel,
-                    children: importing ? "\u2026" : "Import"
-                  })
+                  children: importing ? "\u2026" : "Import"
                 }) : null,
-                jsxRuntimeExports.jsxs("button", {
+                jsxRuntimeExports.jsx("button", {
                   type: "button",
                   className: styles$o.newVolume,
                   disabled: creating || importing,
                   onClick: () => void handleNew(),
                   "aria-label": "Add a new story",
-                  children: [
-                    jsxRuntimeExports.jsx("span", {
-                      className: styles$o.newGlyph,
-                      "aria-hidden": true,
-                      children: "+"
-                    }),
-                    jsxRuntimeExports.jsx("span", {
-                      className: styles$o.newLabel,
-                      children: creating ? "\u2026" : "New"
-                    })
-                  ]
+                  children: creating ? "\u2026" : "+ New"
                 })
               ]
             })
@@ -90764,8 +90805,8 @@ void main() {
       };
       get2().updateShape(shapeId, updates);
     },
-    updateShapeLabel: (shapeId, newLabel2) => {
-      const trimmed = newLabel2.trim();
+    updateShapeLabel: (shapeId, newLabel) => {
+      const trimmed = newLabel.trim();
       set2((state) => ({
         shapes: state.shapes.map((annotation) => {
           if (annotation.id !== shapeId) {
@@ -168233,13 +168274,19 @@ void main() {
     ]);
     const [sliderMin, setSliderMin] = reactExports.useState(() => scale2.toSlider(props.lowerLimit));
     const [sliderMax, setSliderMax] = reactExports.useState(() => scale2.toSlider(props.upperLimit));
+    const sliderMinRef = reactExports.useRef(sliderMin);
+    const sliderMaxRef = reactExports.useRef(sliderMax);
     const [minInput, setMinInput] = reactExports.useState(String(props.lowerLimit));
     const [maxInput, setMaxInput] = reactExports.useState(String(props.upperLimit));
     const editingLimitRef = reactExports.useRef(false);
     reactExports.useEffect(() => {
       if (editingLimitRef.current) return;
-      setSliderMin(scale2.toSlider(props.lowerLimit));
-      setSliderMax(scale2.toSlider(props.upperLimit));
+      const min2 = scale2.toSlider(props.lowerLimit);
+      const max2 = scale2.toSlider(props.upperLimit);
+      sliderMinRef.current = min2;
+      sliderMaxRef.current = max2;
+      setSliderMin(min2);
+      setSliderMax(max2);
       setMinInput(String(Math.round(props.lowerLimit)));
       setMaxInput(String(Math.round(props.upperLimit)));
     }, [
@@ -168270,7 +168317,11 @@ void main() {
       setChannelGroups,
       setImages
     ]);
-    const syncFromSliders = (loStep, hiStep) => {
+    const commitSliderSteps = (loStep, hiStep) => {
+      sliderMinRef.current = loStep;
+      sliderMaxRef.current = hiStep;
+      setSliderMin(loStep);
+      setSliderMax(hiStep);
       const lo = Math.round(scale2.fromSlider(loStep));
       const hi2 = Math.round(scale2.fromSlider(hiStep));
       setMinInput(String(lo));
@@ -168282,17 +168333,16 @@ void main() {
     };
     const endSliderEdit = () => {
       editingLimitRef.current = false;
-      syncFromSliders(sliderMin, sliderMax);
     };
     const onMinSlider = (e2) => {
-      const v2 = Math.min(Number(e2.target.value), sliderMax);
-      setSliderMin(v2);
-      syncFromSliders(v2, sliderMax);
+      const max2 = sliderMaxRef.current;
+      const v2 = Math.min(Number(e2.target.value), max2);
+      commitSliderSteps(v2, max2);
     };
     const onMaxSlider = (e2) => {
-      const v2 = Math.max(Number(e2.target.value), sliderMin);
-      setSliderMax(v2);
-      syncFromSliders(sliderMin, v2);
+      const min2 = sliderMinRef.current;
+      const v2 = Math.max(Number(e2.target.value), min2);
+      commitSliderSteps(min2, v2);
     };
     const commitFromInputs = () => {
       let lo = Number.parseFloat(minInput);
@@ -168306,8 +168356,12 @@ void main() {
         lo = hi2;
         hi2 = t2;
       }
-      setSliderMin(scale2.toSlider(lo));
-      setSliderMax(scale2.toSlider(hi2));
+      const minStep = scale2.toSlider(lo);
+      const maxStep = scale2.toSlider(hi2);
+      sliderMinRef.current = minStep;
+      sliderMaxRef.current = maxStep;
+      setSliderMin(minStep);
+      setSliderMax(maxStep);
       setMinInput(String(lo));
       setMaxInput(String(hi2));
       commitRange(lo, hi2);
@@ -168339,8 +168393,8 @@ void main() {
         active: true,
         pointerId: e2.pointerId,
         startX: e2.clientX,
-        startMin: sliderMin,
-        startMax: sliderMax
+        startMin: sliderMinRef.current,
+        startMax: sliderMaxRef.current
       };
       e2.currentTarget.setPointerCapture(e2.pointerId);
       editingLimitRef.current = true;
@@ -168368,9 +168422,7 @@ void main() {
         hi2 = scale2.sliderSteps;
         lo = scale2.sliderSteps - span;
       }
-      setSliderMin(lo);
-      setSliderMax(hi2);
-      syncFromSliders(lo, hi2);
+      commitSliderSteps(lo, hi2);
     };
     const endRangePan = (e2) => {
       const drag = panDragRef.current;
@@ -168391,9 +168443,7 @@ void main() {
           hi2 = scale2.sliderSteps;
           lo = scale2.sliderSteps - span;
         }
-        setSliderMin(lo);
-        setSliderMax(hi2);
-        syncFromSliders(lo, hi2);
+        commitSliderSteps(lo, hi2);
       }
       panDragRef.current = null;
       panMovedRef.current = false;
@@ -168469,8 +168519,8 @@ void main() {
                   value: sliderMin,
                   onPointerDown: beginSliderEdit,
                   onChange: onMinSlider,
-                  onMouseUp: endSliderEdit,
-                  onTouchEnd: endSliderEdit,
+                  onPointerUp: endSliderEdit,
+                  onPointerCancel: endSliderEdit,
                   "aria-label": "Contrast minimum"
                 }),
                 jsxRuntimeExports.jsx("input", {
@@ -168481,8 +168531,8 @@ void main() {
                   value: sliderMax,
                   onPointerDown: beginSliderEdit,
                   onChange: onMaxSlider,
-                  onMouseUp: endSliderEdit,
-                  onTouchEnd: endSliderEdit,
+                  onPointerUp: endSliderEdit,
+                  onPointerCancel: endSliderEdit,
                   "aria-label": "Contrast maximum"
                 })
               ]
@@ -171479,6 +171529,7 @@ void main() {
     });
   };
   const Presentation = (props) => {
+    var _a2;
     const documentTitle = useDocumentStore((s2) => s2.metadata.title ?? "");
     const waypoints = useDocumentStore((s2) => s2.waypoints);
     const shapes = useDocumentStore((s2) => s2.shapes);
@@ -171488,12 +171539,12 @@ void main() {
       images
     ]);
     const docImageWidth = useDocumentStore((s2) => {
-      var _a2;
-      return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeX) ?? 0;
+      var _a3;
+      return ((_a3 = s2.images[0]) == null ? void 0 : _a3.sizeX) ?? 0;
     });
     const docImageHeight = useDocumentStore((s2) => {
-      var _a2;
-      return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeY) ?? 0;
+      var _a3;
+      return ((_a3 = s2.images[0]) == null ? void 0 : _a3.sizeY) ?? 0;
     });
     const viewerRefSize = useAppStore((s2) => s2.viewerReferenceImagePixelSize);
     const { width: imageWidth, height: imageHeight } = effectiveReferenceImagePixelSize(viewerRefSize, docImageWidth, docImageHeight);
@@ -171527,21 +171578,21 @@ void main() {
       importWaypointShapes,
       setTargetWaypointCamera
     ]);
+    const hasChannelGroups = channelGroups.length > 0;
+    const waypointGroupId = activeStoryIndex === null ? null : ((_a2 = waypoints[activeStoryIndex]) == null ? void 0 : _a2.groupId) ?? null;
     reactExports.useEffect(() => {
-      if (waypoints.length === 0) return;
+      if (!hasChannelGroups) return;
       if (activeStoryIndex === null) return;
-      const story2 = waypoints[activeStoryIndex];
-      if (!story2) return;
-      const gid = story2.groupId;
-      if (channelGroups.length === 0 || !gid) return;
-      const foundGroup = channelGroups.find((g2) => g2.id === gid) || channelGroups[0];
+      if (!waypointGroupId) return;
+      const groups = useDocumentStore.getState().channelGroups;
+      const foundGroup = groups.find((g2) => g2.id === waypointGroupId) || groups[0];
       if (foundGroup) {
         setActiveChannelGroup(foundGroup.id);
       }
     }, [
-      waypoints,
+      hasChannelGroups,
+      waypointGroupId,
       activeStoryIndex,
-      channelGroups,
       setActiveChannelGroup
     ]);
     reactExports.useEffect(() => {
@@ -172191,9 +172242,7 @@ void main() {
             };
             if (colorPickerChannel !== null) {
               const channel = colorPickerChannel;
-              const groupId = channel.group_uuid;
-              const id2 = groupId ? channel.channel_uuid : channel.source_uuid;
-              (_a2 = props.onChannelColor) == null ? void 0 : _a2.call(props, groupId, id2, color2);
+              (_a2 = props.onChannelColor) == null ? void 0 : _a2.call(props, channel.group_uuid, channel.source_uuid, color2);
             }
           }
         })
@@ -172217,6 +172266,7 @@ void main() {
   const ChannelPanel = (props) => {
     const hide2 = props.hiddenChannel;
     const hidden = props.noLoader;
+    const setActiveChannelGroup = useAppStore((s2) => s2.setActiveChannelGroup);
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const channelVisibilities = useAppStore((s2) => s2.channelVisibilities);
     const channelGroupRowVisibilities = useAppStore((s2) => s2.channelGroupRowVisibilities);
@@ -172305,18 +172355,39 @@ void main() {
       activeChannelGroupId,
       channelVisibilities
     ]);
-    const updateChannelColor = reactExports.useCallback((groupId, id2, color2) => {
+    const updateChannelColor = reactExports.useCallback((groupId, sourceChannelId, color2) => {
+      var _a2;
       const doc = useDocumentStore.getState();
       if (!groupId) {
-        const next22 = patchSourceChannelOnImages(doc.images, id2, {
+        const next2 = patchSourceChannelOnImages(doc.images, sourceChannelId, {
           color: color2
         });
-        if (next22 !== doc.images) setImages(next22);
+        if (next2 !== doc.images) setImages(next2);
         return;
       }
-      const next2 = applyGroupChannelColor(doc.channelGroups, groupId, id2, color2);
-      if (next2 !== doc.channelGroups) setChannelGroups(next2);
+      const result = applyPlaybackGroupChannelColor(doc.channelGroups, groupId, sourceChannelId, color2);
+      if (!result) return;
+      if (result.channelGroups !== doc.channelGroups) {
+        setChannelGroups(result.channelGroups);
+      }
+      if ((_a2 = result.copiedRowIds) == null ? void 0 : _a2.length) {
+        const vis = useAppStore.getState().channelGroupRowVisibilities;
+        let next2 = null;
+        for (const { from, to } of result.copiedRowIds) {
+          if (vis[from] === void 0) continue;
+          if (next2 === null) next2 = {
+            ...vis
+          };
+          next2[to] = vis[from];
+        }
+        if (next2) setChannelGroupRowVisibilities(next2);
+      }
+      if (result.activeChannelGroupId !== useAppStore.getState().activeChannelGroupId) {
+        setActiveChannelGroup(result.activeChannelGroupId);
+      }
     }, [
+      setActiveChannelGroup,
+      setChannelGroupRowVisibilities,
       setChannelGroups,
       setImages
     ]);
@@ -244043,12 +244114,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-25T16:06:18.781Z");
+    const label2 = utcShort("2026-08-25T16:45:44.543Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-25T16:06:18.781Z",
+      title: "2026-08-25T16:45:44.543Z",
       children: [
         "Updated ",
         label2,

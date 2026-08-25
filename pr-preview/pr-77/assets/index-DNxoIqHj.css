@@ -247,7 +247,7 @@
 /* Bookshelf: CSS border frame (even stroke) + inset white shelf boards — one bay per story */
 
 /* Bounded viewport height so many shelves scroll inside the page shell (not clipped). */
-._root_1gti7_4 {
+._root_1r6lg_4 {
   box-sizing: border-box;
   min-height: 100dvh;
   max-height: 100dvh;
@@ -271,7 +271,7 @@
  * Align with text/shelves inside the frame: bookcase padding (14px) +
  * bookcaseInner horizontal padding — matches where shelf content starts.
  */
-._shelfToolbar_1gti7_28 {
+._shelfToolbar_1r6lg_28 {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -283,14 +283,14 @@
   box-sizing: border-box;
 }
 
-._toolbarActions_1gti7_40 {
+._toolbarActions_1r6lg_40 {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
 }
 
-._wordmark_1gti7_47 {
+._wordmark_1r6lg_47 {
   margin: 0;
   font-size: clamp(0.95rem, 2vw, 1.1rem);
   font-weight: 500;
@@ -299,16 +299,19 @@
   color: rgb(188 180 168 / 0.88);
 }
 
-._newVolume_1gti7_56 {
+._newVolume_1r6lg_56 {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 2rem;
+  padding: 0 14px;
   border: 1px dashed rgb(255 255 255 / 0.16);
   border-radius: 2px;
   background: rgb(255 255 255 / 0.02);
   color: rgb(170 164 152 / 0.95);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
+  line-height: 1;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   cursor: pointer;
@@ -319,29 +322,18 @@
     background 0.2s ease;
 }
 
-._newVolume_1gti7_56:hover:not(:disabled) {
+._newVolume_1r6lg_56:hover:not(:disabled) {
   border-color: rgb(255 255 255 / 0.32);
   color: rgb(215 208 195);
   background: rgb(255 255 255 / 0.04);
 }
 
-._newVolume_1gti7_56:disabled {
+._newVolume_1r6lg_56:disabled {
   opacity: 0.4;
   cursor: wait;
 }
 
-._newGlyph_1gti7_87 {
-  font-size: 1.1rem;
-  font-weight: 300;
-  line-height: 1;
-  opacity: 0.85;
-}
-
-._newLabel_1gti7_94 {
-  font-size: 0.62rem;
-}
-
-._error_1gti7_98 {
+._error_1r6lg_90 {
   margin: 0 0 16px;
   padding: 10px 14px;
   font-size: 0.85rem;
@@ -350,14 +342,14 @@
   background: rgb(40 28 24 / 0.35);
 }
 
-._whisper_1gti7_107 {
+._whisper_1r6lg_99 {
   margin: 0;
   font-size: 0.85rem;
   letter-spacing: 0.05em;
   color: rgb(255 255 255 / 0.26);
 }
 
-._emptyLine_1gti7_114 {
+._emptyLine_1r6lg_106 {
   margin: 0;
   margin-left: -0.25rem;
   font-size: 0.95rem;
@@ -365,7 +357,7 @@
   color: rgb(170 164 152 / 0.5);
 }
 
-._inlineLink_1gti7_122 {
+._inlineLink_1r6lg_114 {
   margin: 0;
   padding: 0;
   border: none;
@@ -377,17 +369,17 @@
   font: inherit;
 }
 
-._inlineLink_1gti7_122:hover:not(:disabled) {
+._inlineLink_1r6lg_114:hover:not(:disabled) {
   color: rgb(220 212 198);
 }
 
-._inlineLink_1gti7_122:disabled {
+._inlineLink_1r6lg_114:disabled {
   opacity: 0.5;
   cursor: wait;
 }
 
 /* Wooden bookcase frame with layered box-shadows for depth */
-._bookcase_1gti7_144 {
+._bookcase_1r6lg_136 {
   max-width: 52rem;
   margin: 0 auto;
   min-height: 12rem;
@@ -410,7 +402,7 @@
     0 1px 3px rgb(0 0 0 / 0.3);
 }
 
-._bookcaseInner_1gti7_167 {
+._bookcaseInner_1r6lg_159 {
   padding: clamp(10px, 3%, 16px) clamp(10px, 3%, 18px);
   box-sizing: border-box;
   border-radius: 4px;
@@ -428,17 +420,17 @@
 }
 
 /* One compartment per story; shelf board below each bay */
-._shelfBay_1gti7_185 {
+._shelfBay_1r6lg_177 {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-._shelfBay_1gti7_185 + ._shelfBay_1gti7_185 {
+._shelfBay_1r6lg_177 + ._shelfBay_1r6lg_177 {
   margin-top: 0;
 }
 
-._bayContent_1gti7_195 {
+._bayContent_1r6lg_187 {
   position: relative;
   display: flex;
   align-items: stretch;
@@ -447,19 +439,19 @@
   padding: 6px 0 10px;
 }
 
-._bayContentEmptyPrompt_1gti7_204 {
+._bayContentEmptyPrompt_1r6lg_196 {
   padding: 14px 0 10px;
 }
 
 /* Unused shelf tiers — one row of ghost spines */
-._bayContentEmpty_1gti7_204 {
+._bayContentEmpty_1r6lg_196 {
   min-height: 44px;
   padding: 0;
   box-sizing: border-box;
 }
 
 /* Ghost book cluster — single row, no wrap */
-._ghostShelf_1gti7_216 {
+._ghostShelf_1r6lg_208 {
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-end;
@@ -470,7 +462,7 @@
   overflow: hidden;
 }
 
-._ghostBook_1gti7_227 {
+._ghostBook_1r6lg_219 {
   flex: 0 0 auto;
   border-radius: 1px 1px 0 0;
   box-shadow:
@@ -479,7 +471,7 @@
 }
 
 /* Compact stroked “volume” sitting on the shelf */
-._storyRow_1gti7_236 {
+._storyRow_1r6lg_228 {
   display: flex;
   align-items: center;
   gap: 2px;
@@ -495,7 +487,7 @@
 }
 
 /* Wooden shelf plank with bevel and shadow */
-._shelfBoard_1gti7_252 {
+._shelfBoard_1r6lg_244 {
   flex: 0 0 auto;
   height: 8px;
   width: 100%;
@@ -522,7 +514,7 @@
     0 1px 2px rgb(0 0 0 / 0.3);
 }
 
-._rowOpen_1gti7_279 {
+._rowOpen_1r6lg_271 {
   --row-accent: hsl(28 14% 28%);
   flex: 1 1 auto;
   display: flex;
@@ -543,20 +535,20 @@
     box-shadow 0.15s ease;
 }
 
-._rowOpen_1gti7_279:hover:not(:disabled) {
+._rowOpen_1r6lg_271:hover:not(:disabled) {
   background: rgb(180 150 100 / 0.06);
 }
 
-._rowOpen_1gti7_279:active:not(:disabled) {
+._rowOpen_1r6lg_271:active:not(:disabled) {
   background: rgb(180 150 100 / 0.1);
 }
 
-._rowOpen_1gti7_279:disabled {
+._rowOpen_1r6lg_271:disabled {
   opacity: 0.45;
   cursor: wait;
 }
 
-._rowThumb_1gti7_313 {
+._rowThumb_1r6lg_305 {
   flex: 0 0 auto;
   width: 32px;
   height: 32px;
@@ -565,7 +557,7 @@
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
 }
 
-._rowThumbImg_1gti7_322 {
+._rowThumbImg_1r6lg_314 {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -574,7 +566,7 @@
   filter: saturate(0.9) contrast(1.03);
 }
 
-._rowThumbBlank_1gti7_331 {
+._rowThumbBlank_1r6lg_323 {
   display: block;
   width: 100%;
   height: 100%;
@@ -582,7 +574,7 @@
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
 }
 
-._rowText_1gti7_339 {
+._rowText_1r6lg_331 {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
@@ -591,7 +583,7 @@
   gap: 10px;
 }
 
-._rowTitle_1gti7_348 {
+._rowTitle_1r6lg_340 {
   font-size: 0.8125rem;
   font-weight: 550;
   letter-spacing: 0.02em;
@@ -601,7 +593,7 @@
   white-space: nowrap;
 }
 
-._rowDate_1gti7_358 {
+._rowDate_1r6lg_350 {
   flex: 0 0 auto;
   font-size: 0.65rem;
   letter-spacing: 0.03em;
@@ -609,11 +601,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-._storyRow_1gti7_236:focus-within ._scrap_1gti7_366 {
+._storyRow_1r6lg_228:focus-within ._scrap_1r6lg_358 {
   opacity: 1;
 }
 
-._scrap_1gti7_366 {
+._scrap_1r6lg_358 {
   flex: 0 0 auto;
   align-self: center;
   width: 22px;
@@ -633,44 +625,44 @@
     background 0.15s ease;
 }
 
-._storyRow_1gti7_236:hover ._scrap_1gti7_366 {
+._storyRow_1r6lg_228:hover ._scrap_1r6lg_358 {
   opacity: 1;
 }
 
-._scrap_1gti7_366:hover:not(:disabled) {
+._scrap_1r6lg_358:hover:not(:disabled) {
   color: rgb(210 160 150);
   background: rgb(45 32 28 / 0.6);
 }
 
-._scrap_1gti7_366:disabled {
+._scrap_1r6lg_358:disabled {
   opacity: 0.25;
   cursor: wait;
 }
 
 @media (max-width: 540px) {
-  ._rowText_1gti7_339 {
+  ._rowText_1r6lg_331 {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
 
-  ._rowDate_1gti7_358 {
+  ._rowDate_1r6lg_350 {
     font-size: 0.68rem;
   }
 
-  ._shelfToolbar_1gti7_28 {
+  ._shelfToolbar_1r6lg_28 {
     flex-direction: column;
     align-items: flex-start;
     padding-left: calc(14px + 6%);
     padding-right: calc(14px + 6%);
   }
 
-  ._bookcaseInner_1gti7_167 {
+  ._bookcaseInner_1r6lg_159 {
     padding-left: 6%;
     padding-right: 6%;
   }
 
-  ._shelfBoard_1gti7_252 {
+  ._shelfBoard_1r6lg_244 {
     width: 100%;
   }
 }
