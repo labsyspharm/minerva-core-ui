@@ -127,19 +127,28 @@ export const Presentation = (props: PresentationProps) => {
     setTargetWaypointCamera,
   ]);
 
+  const hasChannelGroups = channelGroups.length > 0;
+  const waypointGroupId =
+    activeStoryIndex === null
+      ? null
+      : (waypoints[activeStoryIndex]?.groupId ?? null);
+
   useEffect(() => {
-    if (waypoints.length === 0) return;
+    if (!hasChannelGroups) return;
     if (activeStoryIndex === null) return;
-    const story = waypoints[activeStoryIndex];
-    if (!story) return;
-    const gid = story.groupId;
-    if (channelGroups.length === 0 || !gid) return;
+    if (!waypointGroupId) return;
+    const groups = useDocumentStore.getState().channelGroups;
     const foundGroup =
-      channelGroups.find((g) => g.id === gid) || channelGroups[0];
+      groups.find((g) => g.id === waypointGroupId) || groups[0];
     if (foundGroup) {
       setActiveChannelGroup(foundGroup.id);
     }
-  }, [waypoints, activeStoryIndex, channelGroups, setActiveChannelGroup]);
+  }, [
+    hasChannelGroups,
+    waypointGroupId,
+    activeStoryIndex,
+    setActiveChannelGroup,
+  ]);
 
   useEffect(() => {
     return () => {

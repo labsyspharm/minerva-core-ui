@@ -56,13 +56,16 @@
 .newVolume {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 2rem;
+  padding: 0 14px;
   border: 1px dashed rgb(255 255 255 / 0.16);
   border-radius: 2px;
   background: rgb(255 255 255 / 0.02);
   color: rgb(170 164 152 / 0.95);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
+  line-height: 1;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   cursor: pointer;
@@ -82,17 +85,6 @@
 .newVolume:disabled {
   opacity: 0.4;
   cursor: wait;
-}
-
-.newGlyph {
-  font-size: 1.1rem;
-  font-weight: 300;
-  line-height: 1;
-  opacity: 0.85;
-}
-
-.newLabel {
-  font-size: 0.62rem;
 }
 
 .error {

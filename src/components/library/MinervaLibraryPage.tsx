@@ -309,9 +309,7 @@ export function MinervaLibraryPage() {
               onClick={() => void handleImportFolder()}
               aria-label="Import a story folder"
             >
-              <span className={styles.newLabel}>
-                {importing ? "…" : "Import"}
-              </span>
+              {importing ? "…" : "Import"}
             </button>
           ) : null}
           <button
@@ -321,10 +319,7 @@ export function MinervaLibraryPage() {
             onClick={() => void handleNew()}
             aria-label="Add a new story"
           >
-            <span className={styles.newGlyph} aria-hidden>
-              +
-            </span>
-            <span className={styles.newLabel}>{creating ? "…" : "New"}</span>
+            {creating ? "…" : "+ New"}
           </button>
         </div>
       </div>
