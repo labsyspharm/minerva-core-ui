@@ -1,12 +1,10 @@
 import { loadOmeTiff } from "@hms-dbmi/viv";
 import { fileOpen } from "browser-fs-access";
-import { fromBlob, fromUrl } from "geotiff";
+import { fromBlob } from "geotiff";
 import {
   type Dtype,
   dtypeFromTiffDirectory,
-  type GeoTiff,
   type GeoTiffImage,
-  isPlanarRgbTiffImage,
   isTiffPyramided,
   isTiffTiled,
   parseFirstOmeImagePixels,
@@ -14,7 +12,6 @@ import {
   vivTileSize,
 } from "./geotiffUtils";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
-import { loadPlanarRgbOmeTiff } from "./planarRgbTiff";
 import type { Loader } from "./viv";
 import type { PoolClass } from "./workers/pool";
 
@@ -259,39 +256,11 @@ const toFile: ToFiles = async () => {
   }
 };
 
-function isCompanionOmeSource(source: File | string): boolean {
-  const name = typeof source === "string" ? source : source.name;
-  return typeof name === "string" && name.endsWith(".companion.ome");
-}
-
-/**
- * Intensity OME-TIFF: planar photometric RGB uses a dedicated pyramid reader
- * (Viv maps SizeC to IFDs and geotiff rejects short SampleFormat tags). All
- * other files still go through Viv `loadOmeTiff` unchanged.
- */
+/** Packed and planar RGB OME-TIFF are handled inside Viv `loadOmeTiff`. */
 async function loadIntensityOmeTiff(
   source: File | string,
   pool?: PoolClass | null,
 ): Promise<Loader> {
-  let peeked: { tiff: GeoTiff; baseImage: GeoTiffImage } | undefined;
-  if (!isCompanionOmeSource(source)) {
-    try {
-      const tiff =
-        typeof source === "string"
-          ? await fromUrl(source, { cacheSize: Number.POSITIVE_INFINITY })
-          : await fromBlob(source);
-      peeked = { tiff, baseImage: await tiff.getImage(0) };
-    } catch {
-      // Peek failed (not a GeoTIFF we can inspect). Viv may still load it.
-    }
-  }
-  if (peeked && isPlanarRgbTiffImage(peeked.baseImage)) {
-    return loadPlanarRgbOmeTiff(
-      peeked.tiff,
-      peeked.baseImage,
-      pool ?? undefined,
-    );
-  }
   if (pool) {
     // @vivjs/loaders types geotiff@2.1.3 Pool; app uses geotiff@2.1.4-beta (different .d.ts).
     return asAppLoader(await loadOmeTiff(source, { pool: pool as never }));

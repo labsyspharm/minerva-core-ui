@@ -28,25 +28,17 @@ export type Dtype =
 
 type OmePixelMetadata = Loader["metadata"]["Pixels"];
 
-type ParsedOmePixels = Partial<OmePixelMetadata> & {
-  firstChannelName?: string;
-  firstChannelSamples?: number;
-};
+type ParsedOmePixels = Partial<OmePixelMetadata>;
 
 type TiffSampleDirectory = {
   SamplesPerPixel?: number;
   BitsPerSample?: ArrayLike<number>;
   SampleFormat?: ArrayLike<number>;
-  PhotometricInterpretation?: number;
-  PlanarConfiguration?: number;
   ImageDescription?: unknown;
   SubIFDs?: unknown;
   TileWidth?: unknown;
   TileLength?: unknown;
 };
-
-/** TIFF photometric RGB. */
-export const PHOTOMETRIC_RGB = 2;
 
 function tiffDirNumber(value: unknown): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -90,56 +82,6 @@ export function dtypeFromTiffDirectory(fileDirectory: {
   return "Uint32";
 }
 
-function padSampleArray(
-  values: ArrayLike<number> | undefined,
-  length: number,
-  fallback: number,
-): number[] {
-  const src = values != null ? Array.from(values) : [];
-  const fill = src[0] ?? fallback;
-  return Array.from({ length }, (_, i) => src[i] ?? fill);
-}
-
-/**
- * Bio-Formats often writes a single SampleFormat (or BitsPerSample) value for
- * RGB files. geotiff.js indexes those tags per sample and throws
- * `Unsupported data format/bitsPerSample` when the array is short.
- * No-op when lengths already match SamplesPerPixel.
- */
-export function padTiffSampleTags(fileDirectory: TiffSampleDirectory): void {
-  const spp = Math.max(
-    1,
-    fileDirectory.SamplesPerPixel ?? fileDirectory.BitsPerSample?.length ?? 1,
-  );
-  const bits = fileDirectory.BitsPerSample;
-  const formats = fileDirectory.SampleFormat;
-  const bitsOk = bits != null && bits.length >= spp;
-  const formatsOk = formats != null && formats.length >= spp;
-  if (bitsOk && formatsOk) return;
-  if (!bitsOk) {
-    fileDirectory.BitsPerSample = padSampleArray(bits, spp, 8);
-  }
-  if (!formatsOk) {
-    fileDirectory.SampleFormat = padSampleArray(formats, spp, 1);
-  }
-}
-
-/**
- * Photometric RGB stored as separate planes in one IFD (not pixel-interleaved,
- * not one IFD per channel). Viv's OME indexer cannot map this layout.
- */
-export function isPlanarRgbTiffImage(image: {
-  fileDirectory: TiffSampleDirectory;
-}): boolean {
-  const fd = image.fileDirectory;
-  const spp = fd.SamplesPerPixel ?? fd.BitsPerSample?.length ?? 1;
-  return (
-    fd.PhotometricInterpretation === PHOTOMETRIC_RGB &&
-    fd.PlanarConfiguration === 2 &&
-    spp === 3
-  );
-}
-
 /** First OME Pixels block — size/units only (channel names come from import). */
 export function parseFirstOmeImagePixels(
   imageDescription: unknown,
@@ -157,10 +99,7 @@ export function parseFirstOmeImagePixels(
     const value = pixels.getAttribute(name);
     return value == null ? undefined : Number(value);
   };
-  const channelEls = pixels.querySelectorAll("Channel");
-  const channelCount = channelEls.length;
-  const firstChannel = channelEls[0];
-  const firstChannelSamplesRaw = firstChannel?.getAttribute("SamplesPerPixel");
+  const channelCount = pixels.querySelectorAll("Channel").length;
   return {
     ID: pixels.getAttribute("ID") ?? undefined,
     Type: pixels.getAttribute("Type") ?? undefined,
@@ -171,11 +110,6 @@ export function parseFirstOmeImagePixels(
     PhysicalSizeYUnit: pixels.getAttribute("PhysicalSizeYUnit") ?? undefined,
     PhysicalSizeZUnit: pixels.getAttribute("PhysicalSizeZUnit") ?? undefined,
     BigEndian: false,
-    firstChannelName: firstChannel?.getAttribute("Name") ?? undefined,
-    firstChannelSamples:
-      firstChannelSamplesRaw == null
-        ? undefined
-        : Number(firstChannelSamplesRaw),
   };
 }
 

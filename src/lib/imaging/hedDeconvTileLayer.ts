@@ -104,17 +104,6 @@ precision highp SAMPLER_TYPE;
 uniform SAMPLER_TYPE channel0;
 uniform SAMPLER_TYPE channel1;
 uniform SAMPLER_TYPE channel2;
-uniform SAMPLER_TYPE channel3;
-uniform SAMPLER_TYPE channel4;
-uniform SAMPLER_TYPE channel5;
-
-uniform float uToRgb8;
-uniform vec2 uHContrast;
-uniform vec2 uEContrast;
-uniform vec3 uHColor;
-uniform vec3 uEColor;
-uniform mat3 uStainInverse;
-uniform float opacity;
 
 in vec2 vTexCoord;
 out vec4 fragColor;
@@ -139,17 +128,42 @@ void main() {
     samplePlane(channel0, vTexCoord),
     samplePlane(channel1, vTexCoord),
     samplePlane(channel2, vTexCoord)
-  ) * uToRgb8;
-  vec3 conc = uStainInverse * optical_density(rgb8);
+  ) * heDeconv.uToRgb8;
+  vec3 conc = heDeconv.uStainInverse * optical_density(rgb8);
   vec3 rgb =
-    windowed(conc.x, uHContrast) * uHColor +
-    windowed(conc.y, uEContrast) * uEColor;
-  fragColor = vec4(rgb, opacity);
+    windowed(conc.x, heDeconv.uHContrast) * heDeconv.uHColor +
+    windowed(conc.y, heDeconv.uEContrast) * heDeconv.uEColor;
+  fragColor = vec4(rgb, heDeconv.opacity);
 
   geometry.uv = vTexCoord;
   DECKGL_FILTER_COLOR(fragColor, geometry);
 }
 `;
+
+/** luma.gl 9.3: custom uniforms live in a UBO module, not `model.setUniforms`. */
+const heDeconv = {
+  name: "heDeconv",
+  fs: `\
+uniform heDeconvUniforms {
+  float uToRgb8;
+  vec2 uHContrast;
+  vec2 uEContrast;
+  vec3 uHColor;
+  vec3 uEColor;
+  mat3 uStainInverse;
+  float opacity;
+} heDeconv;
+`,
+  uniformTypes: {
+    uToRgb8: "f32",
+    uHContrast: "vec2<f32>",
+    uEContrast: "vec2<f32>",
+    uHColor: "vec3<f32>",
+    uEColor: "vec3<f32>",
+    uStainInverse: "mat3x3<f32>",
+    opacity: "f32",
+  },
+};
 
 const HE_XR_PROPS = {
   interpolation: "linear",
@@ -169,15 +183,10 @@ type XRLayerInstance = {
   state: {
     textures?: Record<string, unknown> | null;
     model?: {
-      setUniforms: (
-        u: Record<string, unknown>,
-        opts?: { disableWarnings?: boolean },
-      ) => unknown;
-      setBindings: (b: Record<string, unknown>) => unknown;
-      draw: (pass: unknown) => void;
+      shaderInputs: { setProps: (props: Record<string, unknown>) => void };
     } | null;
   };
-  context: { renderPass: unknown };
+  updateState(params: unknown): void;
 };
 const XRLayerBase = XRLayer as unknown as new (
   props?: Record<string, unknown>,
@@ -209,19 +218,34 @@ class HeDeconvXrLayer extends XRLayerBase {
     uStainInverse: DEFAULT_STAIN_INVERSE,
   };
 
+  getNumChannels() {
+    return 3;
+  }
+
+  getNumPlanes() {
+    return 1;
+  }
+
   getShaders() {
     return layerGetShaders.call(this, {
       vs: HE_VS,
       fs: HE_FS,
-      modules: [project32, picking],
+      modules: [project32, picking, heDeconv],
       // Linear interpolation uploads integer dtypes as Float32.
-      defines: { SAMPLER_TYPE: "sampler2D" },
+      // VivShaderAssembler hook signatures use float[NUM_CHANNELS]; XRLayer
+      // normally injects these via expandShaderModule, which this subclass skips.
+      defines: {
+        SAMPLER_TYPE: "sampler2D",
+        NUM_CHANNELS: "3",
+        NUM_PLANES: "1",
+      },
     });
   }
 
-  draw(opts: { uniforms: Record<string, unknown> }) {
-    const { textures, model } = this.state;
-    if (!textures || !model) return;
+  updateState(params: unknown) {
+    super.updateState(params);
+    const { model } = this.state;
+    if (!model) return;
     const props = this.props as typeof this.props & {
       uToRgb8: number;
       uHContrast: [number, number];
@@ -230,21 +254,17 @@ class HeDeconvXrLayer extends XRLayerBase {
       uEColor: [number, number, number];
       uStainInverse: GlslMat3;
     };
-    model.setUniforms(
-      {
-        ...opts.uniforms,
-        uToRgb8: props.uToRgb8,
-        uHContrast: props.uHContrast,
-        uEContrast: props.uEContrast,
-        uHColor: props.uHColor,
-        uEColor: props.uEColor,
-        uStainInverse: props.uStainInverse,
+    model.shaderInputs.setProps({
+      heDeconv: {
+        uToRgb8: props.uToRgb8 ?? 1,
+        uHContrast: props.uHContrast ?? [0, 1],
+        uEContrast: props.uEContrast ?? [0, 1],
+        uHColor: props.uHColor ?? [0, 0.35, 1],
+        uEColor: props.uEColor ?? [1, 0.22, 0.55],
+        uStainInverse: props.uStainInverse ?? DEFAULT_STAIN_INVERSE,
         opacity: this.props.opacity ?? 1,
       },
-      { disableWarnings: true },
-    );
-    model.setBindings(textures);
-    model.draw(this.context.renderPass);
+    });
   }
 }
 
