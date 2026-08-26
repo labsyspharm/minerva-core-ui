@@ -10,6 +10,7 @@ import {
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
 import { useAppStore } from "@/lib/stores/appStore";
+import type { ChannelGroup } from "@/lib/stores/documentStore";
 import {
   findSourceChannel,
   flattenImageChannelsInDocumentOrder,
@@ -36,6 +37,7 @@ export type ChannelPanelProps = {
 export const ChannelPanel = (props: ChannelPanelProps) => {
   const hide = props.hiddenChannel;
   const hidden = props.noLoader;
+  const setActiveChannelGroup = useAppStore((s) => s.setActiveChannelGroup);
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
   const channelGroupRowVisibilities = useAppStore(
@@ -162,6 +164,68 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     channelVisibilities,
   ]);
 
+  const groups = useDocumentStore((s) => s.channelGroups);
+  const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
+  const setGroupNames = useAppStore((s) => s.setGroupNames);
+
+  const syncGroupState = React.useCallback(
+    (newGroups: ChannelGroup[]) => {
+      setChannelGroups(newGroups);
+      setGroupNames(
+        Object.fromEntries(newGroups.map(({ name, id }) => [id, name])),
+      );
+    },
+    [setChannelGroups, setGroupNames],
+  );
+
+  const updateChannel = React.useCallback(
+    (groupId, channelId, newChannel) => {
+      // Find existing copy if any
+      const copy_name = (g) => `${g.name} copy`;
+      const id_group = groups.find(({ id }) => groupId === id);
+      const group =
+        groups.find(({ name }) => name === copy_name(id_group)) || id_group;
+      const update = (gc) => {
+        if (gc.channelId === channelId) {
+          return { ...gc, ...newChannel };
+        }
+        return gc;
+      };
+      const copy = (g) => ({
+        ...g,
+        name: copy_name(g),
+        id: crypto.randomUUID(),
+        channels: g.channels.map((gc) => ({
+          ...update(gc),
+          id: crypto.randomUUID(),
+        })),
+      });
+      const is_copied = (g) => " copy" === g.name.slice(-5);
+      const new_group = is_copied(group) ? null : copy(group);
+      if (new_group) {
+        syncGroupState([...groups, new_group]);
+        setActiveChannelGroup(new_group.id);
+      } else {
+        const found = findSourceChannel(sourceChannels, channelId);
+        setActiveChannelGroup(group.id);
+        if (found) {
+          console.log({
+            kind: "color",
+            sourceChannelId: found.id,
+            ...newChannel.color,
+          });
+
+          useAppStore.getState().setChannelRendering({
+            kind: "color",
+            sourceChannelId: found.id,
+            ...newChannel.color,
+          });
+        }
+      }
+    },
+    [groups, sourceChannels, syncGroupState, setActiveChannelGroup],
+  );
+
   const toggleChannel = (c: LegendChannel) => {
     if (c.group_uuid && c.channel_uuid) {
       setChannelGroupRowVisibilities({
@@ -202,6 +266,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
             channelVisibilities={channelVisibilities}
             channelGroupRowVisibilities={channelGroupRowVisibilities}
             toggleChannel={toggleChannel}
+            updateChannel={updateChannel}
           />
         </div>
       </div>
