@@ -161,22 +161,21 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     (lower: number, upper: number) => {
       const lo = Math.round(lower);
       const hi = Math.round(upper);
-      // Read document slices at commit time — avoid stale closures from drag start.
       const doc = useDocumentStore.getState();
       if (props.groupId) {
-        setChannelGroups(
-          applyGroupChannelRange(doc.channelGroups, {
-            LowerRange: lo,
-            UpperRange: hi,
-            group_uuid: props.groupId,
-            channel_uuid: props.channelId,
-          }),
-        );
+        const next = applyGroupChannelRange(doc.channelGroups, {
+          LowerRange: lo,
+          UpperRange: hi,
+          group_uuid: props.groupId,
+          channel_uuid: props.channelId,
+        });
+        if (next !== doc.channelGroups) setChannelGroups(next);
       } else {
-        // Keep gmmContrastLimits in sync: stack/ungrouped display uses
-        // effectiveSourceLimits → gmm when present.
-        setImages(
-          applySourceChannelRange(doc.images, props.sourceChannelId, lo, hi),
+        const next = applySourceChannelRange(
+          doc.images,
+          props.sourceChannelId,
+          lo,
+          hi,
         );
         if (next !== doc.images) setImages(next);
       }

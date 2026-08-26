@@ -15,8 +15,10 @@ import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import { isMaskSourceRendered } from "@/lib/imaging/channelCompositor";
 import { isMaskChannel } from "@/lib/imaging/channelKind";
+import { fetchLabelRasterForSourceIndex } from "@/lib/imaging/maskChannelRaster";
 import {
   IMAGE_SELECTION_MASK_LAYER_ID,
+  labelRasterToRgba,
   SELECTION_MASK_CHANNEL_KEY,
   selectionMaskBinaryImageData,
   selectionMaskDisplayImageData,

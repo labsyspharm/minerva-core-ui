@@ -60,3 +60,37 @@ export function rasterToUint16Array(data: SupportedTypedArray): Uint16Array {
   }
   return out;
 }
+
+function rasterToLabelArray(
+  data: SupportedTypedArray,
+): Uint8Array | Uint16Array | Uint32Array {
+  if (
+    data instanceof Uint8Array ||
+    data instanceof Uint16Array ||
+    data instanceof Uint32Array
+  ) {
+    return data;
+  }
+  return rasterToUint16Array(data);
+}
+
+/** Fetch label raster for one source index (finest readable pyramid plane). */
+export async function fetchLabelRasterForSourceIndex(
+  loader: Loader,
+  sourceIndex: number,
+): Promise<{
+  data: Uint8Array | Uint16Array | Uint32Array;
+  width: number;
+  height: number;
+} | null> {
+  const hit = await fetchPlaneRaster(loader, sourceIndex, {
+    preferCoarsest: false,
+  });
+  if (!hit) return null;
+  const { raster, plane } = hit;
+  const data = rasterToLabelArray(raster.data);
+  const width = raster.width ?? plane.shape[plane.labels.indexOf("x")] ?? 0;
+  const height = raster.height ?? plane.shape[plane.labels.indexOf("y")] ?? 0;
+  if (width <= 0 || height <= 0) return null;
+  return { data, width, height };
+}
