@@ -3,7 +3,7 @@
  * Kept out of `lib/authoring/config` so imaging does not depend on authoring.
  */
 
-import type { DTYPE_VALUES } from "@vivjs/constants";
+import type { DTYPE_VALUES } from "@hms-dbmi/viv";
 
 export type SupportedDtype = keyof typeof DTYPE_VALUES;
 export type SupportedTypedArray = InstanceType<

@@ -1,9 +1,4 @@
 onlyBuiltDependencies:
-  - "@hms-dbmi/viv@https://codeload.github.com/simonwarchol/viv/tar.gz/9f9128e69d16fbe14bf5edf97f81d0c69c13f194#path:packages/main"
-  - "@vivjs/constants@https://codeload.github.com/simonwarchol/viv/tar.gz/9f9128e69d16fbe14bf5edf97f81d0c69c13f194#path:packages/constants"
-  - "@vivjs/extensions@https://codeload.github.com/simonwarchol/viv/tar.gz/9f9128e69d16fbe14bf5edf97f81d0c69c13f194#path:packages/extensions"
-  - "@vivjs/layers@https://codeload.github.com/simonwarchol/viv/tar.gz/9f9128e69d16fbe14bf5edf97f81d0c69c13f194#path:packages/layers"
-  - "@vivjs/loaders@https://codeload.github.com/simonwarchol/viv/tar.gz/9f9128e69d16fbe14bf5edf97f81d0c69c13f194#path:packages/loaders"
-  - "@vivjs/types@https://codeload.github.com/simonwarchol/viv/tar.gz/9f9128e69d16fbe14bf5edf97f81d0c69c13f194#path:packages/types"
-  - "@vivjs/viewers@https://codeload.github.com/simonwarchol/viv/tar.gz/9f9128e69d16fbe14bf5edf97f81d0c69c13f194#path:packages/viewers"
-  - "@vivjs/views@https://codeload.github.com/simonwarchol/viv/tar.gz/9f9128e69d16fbe14bf5edf97f81d0c69c13f194#path:packages/views"
+  - "@vivjs/loaders"
+  - esbuild
+  - lefthook
