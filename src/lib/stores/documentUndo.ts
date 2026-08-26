@@ -15,15 +15,6 @@ export function syncAppStoreChannelMirrorsFromDocument(): void {
   const groupNames = Object.fromEntries(
     groups.map(({ name, id }) => [id, name]),
   );
-  const groupChannelLists = Object.fromEntries(
-    groups.map(({ name, channels }) => [
-      name,
-      channels
-        .map((gc) => findSourceChannel(sourceChannels, gc.channelId))
-        .filter(Boolean)
-        .map((sc) => sc?.name as string),
-    ]),
-  );
 
   const namesInUse = new Set<string>();
   for (const g of groups) {
@@ -49,7 +40,6 @@ export function syncAppStoreChannelMirrorsFromDocument(): void {
 
   useAppStore.setState({
     groupNames,
-    groupChannelLists,
     channelVisibilities,
     activeChannelGroupId: nextActiveId,
   });
