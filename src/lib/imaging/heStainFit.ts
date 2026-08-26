@@ -2,12 +2,20 @@
  * QuPath Auto / Macenko H&E stain vectors from a fixed set of native tiles.
  * The viewer stores only the GLSL inverse; residual is used to unmix, not shown.
  */
+import { HE_CONTRAST_SCALE } from "@/lib/imaging/heDeconvView";
 import type {
   LoaderPlane,
   SupportedTypedArray,
 } from "@/lib/imaging/loaderTypes";
+import { planeSize } from "@/lib/imaging/loaderTypes";
 import type { Loader } from "@/lib/imaging/viv";
 
+/**
+ * Upload-ready 3×3 for luma.gl `mat3` / GLSL `mat3 uStainInverse`.
+ * Layout: flatten row-major inv(STAIN_MATRIX) where rows are H, E, residual.
+ * GLSL reads columns so `M * v` == numpy `v @ inv`. CPU `unmixHe` uses the
+ * same indexing (`inverse[0]/[3]/[6]` for H).
+ */
 export type GlslMat3 = [
   number,
   number,
@@ -30,7 +38,6 @@ export type HeHistogram = {
 };
 
 const HE_HIST_BINS = 50;
-const HE_HIST_MAX = 1000;
 const HE_HIST_STEP = 4;
 const HE_HIST_TIMEOUT_MS = 10_000;
 
@@ -100,6 +107,7 @@ function stainAngleDeg(a: Vec3, b: Vec3): number {
 }
 
 function invert3(m: readonly Vec3[]): GlslMat3 | null {
+  // Adjugate / det of row-major [H; E; residual]; result is GlslMat3 (see type).
   const [[a, b, c], [d, e, f], [g, h, i]] = m;
   const A = e * i - f * h;
   const B = f * g - d * i;
@@ -345,7 +353,6 @@ function fitAutoFromPackedOd(packed: Float32Array, count: number): HeStainFit {
   if (!p1 || !p2) return fallback;
   const hematoxylin = p1[0] >= p2[0] ? p1 : p2;
   const eosin = p1[0] >= p2[0] ? p2 : p1;
-  if (hematoxylin[0] < eosin[0]) return fallback;
   const residual = unit(cross(hematoxylin, eosin));
   if (!residual) return fallback;
   const inverse = invert3([hematoxylin, eosin, residual]);
@@ -356,23 +363,21 @@ function fitAutoFromPackedOd(packed: Float32Array, count: number): HeStainFit {
   return { glslInverse: inverse };
 }
 
-function planeSize(plane: LoaderPlane): { width: number; height: number } {
-  const xi = plane.labels.indexOf("x");
-  const yi = plane.labels.indexOf("y");
-  return {
-    width: xi >= 0 ? plane.shape[xi] : 0,
-    height: yi >= 0 ? plane.shape[yi] : 0,
-  };
-}
-
-function asRgb8(v: number): number {
-  return v > 255 ? v / 257 : v;
+/**
+ * Scale Viv RGB samples to ~8-bit counts for optical density.
+ * Must match the HE shader `uToRgb8` uniform (Float ≈ [0,1], Uint16 ≈ full scale).
+ */
+export function rgb8ScaleFromDtype(dtype: string): number {
+  if (dtype.startsWith("Float")) return 255;
+  if (dtype === "Uint16" || dtype === "Int16") return 1 / 257;
+  return 1;
 }
 
 function splitInterleavedRgb8(
   data: SupportedTypedArray,
   width: number,
   height: number,
+  scale: number,
 ): { r: Float32Array; g: Float32Array; b: Float32Array } | null {
   const n = width * height;
   if (n <= 0 || data.length < n * 3) return null;
@@ -381,9 +386,9 @@ function splitInterleavedRgb8(
   const b = new Float32Array(n);
   for (let i = 0; i < n; i++) {
     const s = i * 3;
-    r[i] = asRgb8(data[s]);
-    g[i] = asRgb8(data[s + 1]);
-    b[i] = asRgb8(data[s + 2]);
+    r[i] = data[s] * scale;
+    g[i] = data[s + 1] * scale;
+    b[i] = data[s + 2] * scale;
   }
   return { r, g, b };
 }
@@ -434,7 +439,8 @@ async function readRgb(
         signal,
       });
   if (!raw?.data?.length || raw.width <= 0 || raw.height <= 0) return null;
-  const rgb = splitInterleavedRgb8(raw.data, raw.width, raw.height);
+  const scale = rgb8ScaleFromDtype(plane.dtype);
+  const rgb = splitInterleavedRgb8(raw.data, raw.width, raw.height, scale);
   if (!rgb) return null;
   return { ...rgb, w: raw.width, h: raw.height };
 }
@@ -559,7 +565,7 @@ function unmixHe(
 
 function binLinear(values: number[]): number[] {
   const out = new Array<number>(HE_HIST_BINS).fill(0);
-  const scale = HE_HIST_BINS / HE_HIST_MAX;
+  const scale = HE_HIST_BINS / HE_CONTRAST_SCALE;
   for (const v of values) {
     if (!(v > 0)) continue;
     const t = Math.min(HE_HIST_BINS - 1, Math.floor(v * scale));
@@ -581,13 +587,10 @@ async function computeHeHistograms(
   let rgb: Awaited<ReturnType<typeof readRgb>> = null;
   try {
     const signal = AbortSignal.timeout(HE_HIST_TIMEOUT_MS);
-    rgb = await readRgb(coarsest, channelIndex, { x: 0, y: 0 }, signal);
+    // Full overview raster — not tile (0,0) — so sparklines match tissue.
+    rgb = await readRgb(coarsest, channelIndex, undefined, signal);
   } catch {
-    try {
-      rgb = await readRgb(coarsest, channelIndex);
-    } catch {
-      return empty;
-    }
+    return empty;
   }
   if (!rgb) return empty;
   const h: number[] = [];
@@ -601,8 +604,8 @@ async function computeHeHistograms(
       opticalDensity(rgb.g[i]),
       opticalDensity(rgb.b[i]),
     );
-    h.push(ch * HE_HIST_MAX);
-    e.push(ce * HE_HIST_MAX);
+    h.push(ch * HE_CONTRAST_SCALE);
+    e.push(ce * HE_CONTRAST_SCALE);
   }
   return {
     fitKey,

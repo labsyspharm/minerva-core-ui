@@ -13,14 +13,13 @@ import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import type { JpegExportTransfer } from "./cubeRootEncoding";
 import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
+import { createHeDeconvLayer } from "./heDeconvTileLayer";
+import type {
+  HeDeconvComponent,
+  HeDeconvSplit,
+  HeStainView,
+} from "./heDeconvView";
 import {
-  createHeDeconvLayer,
-  type HeDeconvComponent,
-  type HeDeconvSplit,
-  type HeStainView,
-} from "./hedDeconvTileLayer";
-import {
-  DEFAULT_STAIN_INVERSE,
   ensureHeHistograms,
   ensureHeStainFit,
   type HeStainFit,
@@ -28,6 +27,7 @@ import {
 } from "./heStainFit";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
+import { ADDITIVE_BLEND_PARAMETERS } from "./pyramidTileLayer";
 import { type Config, type Loader, toSettings } from "./viv";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
@@ -132,12 +132,7 @@ const OME_INTENSITY_OVERLAY_PROPS = {
   refinementStrategy: "no-overlap" as const,
   parameters: {
     blend: true,
-    blendColorOperation: "add",
-    blendAlphaOperation: "add",
-    blendColorSrcFactor: "one",
-    blendColorDstFactor: "one",
-    blendAlphaSrcFactor: "one",
-    blendAlphaDstFactor: "one",
+    ...ADDITIVE_BLEND_PARAMETERS,
   },
 };
 
@@ -321,7 +316,7 @@ export function buildImageLayers(args: {
       }
       for (const he of peeled.heLayers) {
         const layer = createHeDeconvLayer({
-          id: `heDeconv-${i}${remount}`,
+          id: `heDeconv-${i}-${he.sourceChannelId}${remount}`,
           loader,
           parentIndex: he.parentIndex,
           hematoxylin: he.hematoxylin,
@@ -378,6 +373,8 @@ export function useViewerLayers(args: {
   useEffect(() => {
     const ids = Object.keys(heDeconvByChannelId);
     if (ids.length === 0) return;
+    let cancelled = false;
+
     for (const channelId of ids) {
       const sc = sourceChannels.find((c) => c.id === channelId);
       if (!sc) continue;
@@ -386,31 +383,46 @@ export function useViewerLayers(args: {
       );
       if (!entry) continue;
       const cacheKey = `${sc.imageId}:${sc.index}`;
+
       if (!heStainFitByChannelId[channelId]) {
         void ensureHeStainFit({
           loader: entry.loader,
           cacheKey,
           channelIndex: sc.index,
         }).then((fit) => {
-          useAppStore.getState().setHeStainFit(channelId, fit);
+          if (cancelled) return;
+          const store = useAppStore.getState();
+          if (!store.heDeconvByChannelId[channelId]) return;
+          store.setHeStainFit(channelId, fit);
         });
-      }
-      const inverse =
-        heStainFitByChannelId[channelId]?.glslInverse ?? DEFAULT_STAIN_INVERSE;
-      if (
-        heHistogramByChannelId[channelId]?.fitKey === stainInverseKey(inverse)
-      ) {
+        // Wait for fitted inverse before sampling histograms.
         continue;
       }
+
+      const inverse = heStainFitByChannelId[channelId].glslInverse;
+      const expectedKey = stainInverseKey(inverse);
+      if (heHistogramByChannelId[channelId]?.fitKey === expectedKey) {
+        continue;
+      }
+
       void ensureHeHistograms({
         loader: entry.loader,
         cacheKey,
         channelIndex: sc.index,
         inverse,
       }).then((histogram) => {
-        useAppStore.getState().setHeHistogram(channelId, histogram);
+        if (cancelled) return;
+        const store = useAppStore.getState();
+        if (!store.heDeconvByChannelId[channelId]) return;
+        const current = store.heStainFitByChannelId[channelId]?.glslInverse;
+        if (!current || stainInverseKey(current) !== histogram.fitKey) return;
+        store.setHeHistogram(channelId, histogram);
       });
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     heDeconvByChannelId,
     heStainFitByChannelId,

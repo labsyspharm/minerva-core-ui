@@ -63,3 +63,15 @@ export type LoaderPlane = {
 export type VivLoaderPlane = LoaderPlane & {
   labels: ["t", "c", "z", "y", "x"];
 };
+
+export function planeSize(plane: LoaderPlane): {
+  width: number;
+  height: number;
+} {
+  const xi = plane.labels.indexOf("x");
+  const yi = plane.labels.indexOf("y");
+  return {
+    width: xi >= 0 ? plane.shape[xi] : 0,
+    height: yi >= 0 ? plane.shape[yi] : 0,
+  };
+}

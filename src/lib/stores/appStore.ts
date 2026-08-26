@@ -8,7 +8,7 @@ import type {
   HeDeconvComponent,
   HeDeconvSplit,
   HeStainView,
-} from "../imaging/hedDeconvTileLayer";
+} from "../imaging/heDeconvView";
 import {
   clearHeStainEstimateCache,
   type HeHistogram,

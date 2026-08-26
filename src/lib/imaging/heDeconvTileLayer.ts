@@ -1,12 +1,23 @@
 import type { Layer } from "@deck.gl/core";
 import { COORDINATE_SYSTEM, picking, project32 } from "@deck.gl/core";
-import { TileLayer } from "@deck.gl/geo-layers";
-import { XRLayer } from "@hms-dbmi/viv";
-import { DEFAULT_STAIN_INVERSE, type GlslMat3 } from "@/lib/imaging/heStainFit";
-import type {
-  LoaderPlane,
-  SupportedTypedArray,
-} from "@/lib/imaging/loaderTypes";
+import {
+  defaultHeDeconvSplit,
+  HE_CONTRAST_SCALE,
+  type HeStainView,
+} from "@/lib/imaging/heDeconvView";
+import {
+  DEFAULT_STAIN_INVERSE,
+  type GlslMat3,
+  rgb8ScaleFromDtype,
+} from "@/lib/imaging/heStainFit";
+import type { SupportedTypedArray } from "@/lib/imaging/loaderTypes";
+import { planeSize } from "@/lib/imaging/loaderTypes";
+import {
+  ADDITIVE_BLEND_PARAMETERS,
+  createLoaderPyramidTileLayer,
+  layerGetShaders,
+  XRLayerBase,
+} from "@/lib/imaging/pyramidTileLayer";
 import {
   type Loader,
   loaderPixelSizeXY,
@@ -19,54 +30,6 @@ type HeTileData = {
   width: number;
   height: number;
 };
-
-/** Displayed outputs of `deconv_he`. Residual is computed for unmixing, not shown. */
-export type HeDeconvComponent = "hematoxylin" | "eosin";
-
-export const HE_DECONV_COMPONENTS: readonly HeDeconvComponent[] = [
-  "hematoxylin",
-  "eosin",
-];
-
-export const HE_DECONV_LABELS: Record<HeDeconvComponent, string> = {
-  hematoxylin: "Hematoxylin",
-  eosin: "Eosin",
-};
-
-/** Integer contrast sliders map concentration [0, 1] → 0–1000, same as IF 16-bit sliders. */
-export const HE_CONTRAST_SCALE = 1000;
-
-export type HeStainView = {
-  color: [number, number, number];
-  lower: number;
-  upper: number;
-  visible: boolean;
-};
-
-/** RGB H&E source split into two IF-style stain channels. */
-export type HeDeconvSplit = Record<HeDeconvComponent, HeStainView>;
-
-const DEFAULT_HE_STAIN: Record<HeDeconvComponent, HeStainView> = {
-  hematoxylin: {
-    color: [0, 90, 255],
-    lower: 0,
-    upper: HE_CONTRAST_SCALE,
-    visible: true,
-  },
-  eosin: {
-    color: [255, 56, 140],
-    lower: 0,
-    upper: HE_CONTRAST_SCALE,
-    visible: true,
-  },
-};
-
-export function defaultHeDeconvSplit(): HeDeconvSplit {
-  return {
-    hematoxylin: { ...DEFAULT_HE_STAIN.hematoxylin },
-    eosin: { ...DEFAULT_HE_STAIN.eosin },
-  };
-}
 
 const HE_VS = `#version 300 es
 #define SHADER_NAME he-deconv-layer-vertex-shader
@@ -178,25 +141,6 @@ const HE_XR_PROPS = {
   opacity: 1,
 } as const;
 
-type XRLayerInstance = {
-  props: Record<string, unknown>;
-  state: {
-    textures?: Record<string, unknown> | null;
-    model?: {
-      shaderInputs: { setProps: (props: Record<string, unknown>) => void };
-    } | null;
-  };
-  updateState(params: unknown): void;
-};
-const XRLayerBase = XRLayer as unknown as new (
-  props?: Record<string, unknown>,
-) => XRLayerInstance;
-const layerGetShaders = Object.getPrototypeOf(XRLayerBase.prototype)
-  .getShaders as (
-  this: XRLayerInstance,
-  opts?: Record<string, unknown>,
-) => Record<string, unknown>;
-
 function stainContrast(stain: HeStainView): [number, number] {
   return [stain.lower / HE_CONTRAST_SCALE, stain.upper / HE_CONTRAST_SCALE];
 }
@@ -206,6 +150,10 @@ function stainColor(stain: HeStainView): [number, number, number] {
   return [stain.color[0] / 255, stain.color[1] / 255, stain.color[2] / 255];
 }
 
+const DEFAULT_STAIN = defaultHeDeconvSplit();
+const DEFAULT_H_COLOR = stainColor(DEFAULT_STAIN.hematoxylin);
+const DEFAULT_E_COLOR = stainColor(DEFAULT_STAIN.eosin);
+
 class HeDeconvXrLayer extends XRLayerBase {
   static layerName = "HeDeconvXrLayer";
   static defaultProps = {
@@ -213,8 +161,8 @@ class HeDeconvXrLayer extends XRLayerBase {
     uToRgb8: 1,
     uHContrast: [0, 1],
     uEContrast: [0, 1],
-    uHColor: [0, 0.35, 1],
-    uEColor: [1, 0.22, 0.55],
+    uHColor: DEFAULT_H_COLOR,
+    uEColor: DEFAULT_E_COLOR,
     uStainInverse: DEFAULT_STAIN_INVERSE,
   };
 
@@ -259,28 +207,13 @@ class HeDeconvXrLayer extends XRLayerBase {
         uToRgb8: props.uToRgb8 ?? 1,
         uHContrast: props.uHContrast ?? [0, 1],
         uEContrast: props.uEContrast ?? [0, 1],
-        uHColor: props.uHColor ?? [0, 0.35, 1],
-        uEColor: props.uEColor ?? [1, 0.22, 0.55],
+        uHColor: props.uHColor ?? DEFAULT_H_COLOR,
+        uEColor: props.uEColor ?? DEFAULT_E_COLOR,
         uStainInverse: props.uStainInverse ?? DEFAULT_STAIN_INVERSE,
         opacity: this.props.opacity ?? 1,
       },
     });
   }
-}
-
-function planeSize(plane: LoaderPlane): { width: number; height: number } {
-  const xi = plane.labels.indexOf("x");
-  const yi = plane.labels.indexOf("y");
-  return {
-    width: xi >= 0 ? plane.shape[xi] : 0,
-    height: yi >= 0 ? plane.shape[yi] : 0,
-  };
-}
-
-/** Map texture samples to 8-bit counts so OD matches `optical_density(rgb8, 255)`. */
-function toRgb8FromDtype(dtype: string): number {
-  if (dtype.startsWith("Float")) return 255;
-  return 1;
 }
 
 /** Deinterleave RGB for XRLayer textures. Unmixing happens in the fragment shader. */
@@ -306,21 +239,9 @@ function splitInterleavedRgb(
   return [r, g, b];
 }
 
-const HE_OVERLAY_PROPS = {
-  parameters: {
-    blendColorOperation: "add",
-    blendAlphaOperation: "add",
-    blendColorSrcFactor: "one",
-    blendColorDstFactor: "one",
-    blendAlphaSrcFactor: "one",
-    blendAlphaDstFactor: "one",
-  },
-};
-
 /**
- * Hematoxylin + eosin in one TileLayer. Independent color/contrast/visibility
- * are shader uniforms so zoom does not fetch the RGB pyramid twice or add
- * overlapping LODs (which flashes with additive blend).
+ * Hematoxylin + eosin in one TileLayer. Color/contrast/visibility are uniforms
+ * so one RGB fetch covers both stains (avoids additive LOD flash).
  */
 export function createHeDeconvLayer(args: {
   id: string;
@@ -339,30 +260,25 @@ export function createHeDeconvLayer(args: {
   const world = loaderPixelSizeXY(args.loader);
   const worldW = world?.sizeX ?? planeW;
   const worldH = world?.sizeY ?? planeH;
-  const scaleX = worldW / planeW;
-  const scaleY = worldH / planeH;
   const parentIndex = args.parentIndex;
   const dtype = finest.dtype;
-  const uToRgb8 = toRgb8FromDtype(dtype);
+  const uToRgb8 = rgb8ScaleFromDtype(dtype);
   const uHContrast = stainContrast(args.hematoxylin);
   const uEContrast = stainContrast(args.eosin);
   const uHColor = stainColor(args.hematoxylin);
   const uEColor = stainColor(args.eosin);
   const uStainInverse = args.stainInverse ?? DEFAULT_STAIN_INVERSE;
-  // Viv: opaque uses best-available (parents cover holes); additive overlay
-  // must be no-overlap or cached LODs stack and flash 2× bright.
+  // Opaque: best-available covers holes. Additive: no-overlap or LODs flash 2×.
   const refinementStrategy = args.overlay ? "no-overlap" : "best-available";
 
-  return new TileLayer<HeTileData>({
+  return createLoaderPyramidTileLayer<HeTileData>({
     id: args.id,
-    tileSize: finest.tileSize,
-    minZoom: -(planes.length - 1),
-    maxZoom: 0,
-    extent: [0, 0, planeW, planeH],
+    planes,
+    scaleX: worldW / planeW,
+    scaleY: worldH / planeH,
     refinementStrategy,
     debounceTime: VIV_TILE_DEBOUNCE_MS,
     maxRequests: VIV_TILE_MAX_REQUESTS,
-    pickable: false,
     updateTriggers: {
       getTileData: [parentIndex],
       renderSubLayers: [
@@ -375,49 +291,25 @@ export function createHeDeconvLayer(args: {
         ...uStainInverse,
       ],
     },
-    getTileData: async ({ index, signal }) => {
-      const level = Math.min(
-        planes.length - 1,
-        Math.max(0, Math.round(-index.z)),
-      );
-      try {
-        const tile = await planes[level].getTile({
-          x: index.x,
-          y: index.y,
-          selection: { t: 0, z: 0, c: parentIndex },
-          signal,
-        });
-        if (!tile?.data?.length || tile.width <= 0 || tile.height <= 0) {
-          return null;
-        }
-        const split = splitInterleavedRgb(tile.data, tile.width, tile.height);
-        if (!split) return null;
-        return { data: split, width: tile.width, height: tile.height };
-      } catch (e) {
-        if (signal?.aborted || e === "__vivSignalAborted") return null;
-        console.error(e);
+    getTileData: async ({ plane, x, y, signal }) => {
+      const tile = await plane.getTile({
+        x,
+        y,
+        selection: { t: 0, z: 0, c: parentIndex },
+        signal,
+      });
+      if (!tile?.data?.length || tile.width <= 0 || tile.height <= 0) {
         return null;
       }
+      const split = splitInterleavedRgb(tile.data, tile.width, tile.height);
+      if (!split) return null;
+      return { data: split, width: tile.width, height: tile.height };
     },
-    renderSubLayers: (props) => {
-      const tileData = props.data;
-      if (!tileData?.data?.[0] || tileData.width <= 0 || tileData.height <= 0) {
-        return null;
-      }
-      const bbox = props.tile.bbox;
-      if (!("left" in bbox)) return null;
-      const { left, bottom, right, top } = bbox;
-      if ([left, bottom, right, top].some((v) => v < 0)) return null;
-      const { tileSize } = finest;
-      return new HeDeconvXrLayer({
-        id: `${args.id}-xr-${props.tile.id}`,
+    renderSubLayer: ({ layerId, tileData, bounds, tileId }) =>
+      new HeDeconvXrLayer({
+        id: `${layerId}-xr-${tileId}`,
         channelData: tileData,
-        bounds: [
-          left * scaleX,
-          (tileData.height < tileSize ? planeH : bottom) * scaleY,
-          (tileData.width < tileSize ? planeW : right) * scaleX,
-          top * scaleY,
-        ],
+        bounds,
         dtype,
         uToRgb8,
         uHContrast,
@@ -426,8 +318,7 @@ export function createHeDeconvLayer(args: {
         uEColor,
         uStainInverse,
         ...HE_XR_PROPS,
-        ...(args.overlay ? HE_OVERLAY_PROPS : {}),
-      }) as unknown as Layer;
-    },
+        ...(args.overlay ? { parameters: ADDITIVE_BLEND_PARAMETERS } : {}),
+      }) as unknown as Layer,
   });
 }

@@ -45,7 +45,8 @@ import {
   HE_DECONV_LABELS,
   type HeDeconvComponent,
   type HeStainView,
-} from "@/lib/imaging/hedDeconvTileLayer";
+} from "@/lib/imaging/heDeconvView";
+import { stainInverseKey } from "@/lib/imaging/heStainFit";
 import {
   scheduleBackgroundTask,
   sourceDistributionYValuesLength,
@@ -441,6 +442,7 @@ export const ChannelGroupsMasterDetail = (
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
   const heDeconvByChannelId = useAppStore((s) => s.heDeconvByChannelId);
   const heHistogramByChannelId = useAppStore((s) => s.heHistogramByChannelId);
+  const heStainFitByChannelId = useAppStore((s) => s.heStainFitByChannelId);
   const setHeDeconv = useAppStore((s) => s.setHeDeconv);
   const patchHeDeconv = useAppStore((s) => s.patchHeDeconv);
 
@@ -825,7 +827,13 @@ export const ChannelGroupsMasterDetail = (
                       channelRendering,
                       heHistogramByChannelId[sc.id]?.[component] ?? [],
                     )}
-                    histogramLoading={!heHistogramByChannelId[sc.id]}
+                    histogramLoading={
+                      !heStainFitByChannelId[sc.id] ||
+                      heHistogramByChannelId[sc.id]?.fitKey !==
+                        stainInverseKey(
+                          heStainFitByChannelId[sc.id].glslInverse,
+                        )
+                    }
                     onCommitRange={(lower, upper) =>
                       patchHeDeconv(sc.id, component, { lower, upper })
                     }

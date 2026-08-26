@@ -1,15 +1,16 @@
 import type { Layer } from "@deck.gl/core";
 import { COORDINATE_SYSTEM, picking, project32 } from "@deck.gl/core";
-import { TileLayer } from "@deck.gl/geo-layers";
-import { XRLayer } from "@hms-dbmi/viv";
 import {
   DEFAULT_MASK_VISUALIZATION,
   type MaskVisualization,
 } from "@/lib/imaging/channelKind";
-import type {
-  LoaderPlane,
-  SupportedTypedArray,
-} from "@/lib/imaging/loaderTypes";
+import type { SupportedTypedArray } from "@/lib/imaging/loaderTypes";
+import { planeSize } from "@/lib/imaging/loaderTypes";
+import {
+  createLoaderPyramidTileLayer,
+  layerGetShaders,
+  XRLayerBase,
+} from "@/lib/imaging/pyramidTileLayer";
 import type { Loader } from "@/lib/imaging/viv";
 
 type MaskTileData = {
@@ -123,26 +124,6 @@ uniform maskVizUniforms {
   },
 };
 
-// Viv types XRLayer as a constructable const; subclass at runtime (Vitessce pattern).
-type XRLayerInstance = {
-  props: Record<string, unknown>;
-  state: {
-    textures?: Record<string, unknown> | null;
-    model?: {
-      shaderInputs: { setProps: (props: Record<string, unknown>) => void };
-    } | null;
-  };
-  updateState(params: unknown): void;
-};
-const XRLayerBase = XRLayer as unknown as new (
-  props?: Record<string, unknown>,
-) => XRLayerInstance;
-const layerGetShaders = Object.getPrototypeOf(XRLayerBase.prototype)
-  .getShaders as (
-  this: XRLayerInstance,
-  opts?: Record<string, unknown>,
-) => Record<string, unknown>;
-
 class MaskBitmaskLayer extends XRLayerBase {
   static layerName = "MaskBitmaskLayer";
   static defaultProps = {
@@ -205,15 +186,6 @@ function asLabelUint32(data: SupportedTypedArray): Uint32Array {
   return out;
 }
 
-function planeSize(plane: LoaderPlane): { width: number; height: number } {
-  const xi = plane.labels.indexOf("x");
-  const yi = plane.labels.indexOf("y");
-  return {
-    width: xi >= 0 ? plane.shape[xi] : 0,
-    height: yi >= 0 ? plane.shape[yi] : 0,
-  };
-}
-
 /** Tiled GPU bitmask overlay; stretches mask pixels into the viewer frame. */
 export function createMaskTileLayer(args: {
   id: string;
@@ -230,68 +202,38 @@ export function createMaskTileLayer(args: {
   if (maskW <= 0 || maskH <= 0) return null;
   if (args.worldWidth <= 0 || args.worldHeight <= 0) return null;
 
-  const scaleX = args.worldWidth / maskW;
-  const scaleY = args.worldHeight / maskH;
   const { visualization: viz, channelIndex } = args;
 
-  return new TileLayer<MaskTileData>({
+  return createLoaderPyramidTileLayer<MaskTileData>({
     id: args.id,
-    tileSize: finest.tileSize,
-    minZoom: -(planes.length - 1),
-    maxZoom: 0,
-    extent: [0, 0, maskW, maskH],
-    refinementStrategy: "best-available",
-    pickable: false,
+    planes,
+    scaleX: args.worldWidth / maskW,
+    scaleY: args.worldHeight / maskH,
     updateTriggers: {
       getTileData: [channelIndex],
       renderSubLayers: [viz.style, viz.color, viz.colorSeed ?? 0],
     },
-    getTileData: async ({ index, signal }) => {
-      const level = Math.min(
-        planes.length - 1,
-        Math.max(0, Math.round(-index.z)),
-      );
-      try {
-        const tile = await planes[level].getTile({
-          x: index.x,
-          y: index.y,
-          selection: { t: 0, z: 0, c: channelIndex },
-          signal,
-        });
-        if (!tile?.data?.length || tile.width <= 0 || tile.height <= 0) {
-          return null;
-        }
-        const labels = asLabelUint32(tile.data);
-        if (labels.length < tile.width * tile.height) return null;
-        return { data: [labels], width: tile.width, height: tile.height };
-      } catch (e) {
-        if (signal?.aborted || e === "__vivSignalAborted") return null;
-        console.error(e);
+    getTileData: async ({ plane, x, y, signal }) => {
+      const tile = await plane.getTile({
+        x,
+        y,
+        selection: { t: 0, z: 0, c: channelIndex },
+        signal,
+      });
+      if (!tile?.data?.length || tile.width <= 0 || tile.height <= 0) {
         return null;
       }
+      const labels = asLabelUint32(tile.data);
+      if (labels.length < tile.width * tile.height) return null;
+      return { data: [labels], width: tile.width, height: tile.height };
     },
-    renderSubLayers: (props) => {
-      const tileData = props.data;
-      if (!tileData?.data?.[0] || tileData.width <= 0 || tileData.height <= 0) {
-        return null;
-      }
-      const bbox = props.tile.bbox;
-      if (!("left" in bbox)) return null;
-      const { left, bottom, right, top } = bbox;
-      if ([left, bottom, right, top].some((v) => v < 0)) return null;
-      const { tileSize } = finest;
-      return new MaskBitmaskLayer({
-        id: `${args.id}-bitmask-${props.tile.id}`,
+    renderSubLayer: ({ layerId, tileData, bounds, tileId }) =>
+      new MaskBitmaskLayer({
+        id: `${layerId}-bitmask-${tileId}`,
         channelData: tileData,
-        bounds: [
-          left * scaleX,
-          (tileData.height < tileSize ? maskH : bottom) * scaleY,
-          (tileData.width < tileSize ? maskW : right) * scaleX,
-          top * scaleY,
-        ],
+        bounds,
         visualization: viz,
         ...BITMASK_PROPS,
-      }) as unknown as Layer;
-    },
+      }) as unknown as Layer,
   });
 }

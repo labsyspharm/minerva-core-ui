@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { HeDeconvComponent } from "@/lib/imaging/hedDeconvTileLayer";
+import type { HeDeconvComponent } from "@/lib/imaging/heDeconvView";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { SourceDistributionData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
