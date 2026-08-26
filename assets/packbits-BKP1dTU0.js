@@ -1,8 +1,10 @@
-import { B as BaseDecoder } from "./index-Dx2pcR7x.js";
+import { B as BaseDecoder } from './decoder.worker-BB8BIQv9.js';
+
 class PackbitsDecoder extends BaseDecoder {
   decodeBlock(buffer) {
     const dataView = new DataView(buffer);
     const out = [];
+
     for (let i = 0; i < buffer.byteLength; ++i) {
       let header = dataView.getInt8(i);
       if (header < 0) {
@@ -22,6 +24,5 @@ class PackbitsDecoder extends BaseDecoder {
     return new Uint8Array(out).buffer;
   }
 }
-export {
-  PackbitsDecoder as default
-};
+
+export { PackbitsDecoder as default };
