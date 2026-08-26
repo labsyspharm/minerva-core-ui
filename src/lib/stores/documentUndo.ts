@@ -12,10 +12,6 @@ export function syncAppStoreChannelMirrorsFromDocument(): void {
   const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
   const groups = doc.channelGroups;
 
-  const groupNames = Object.fromEntries(
-    groups.map(({ name, id }) => [id, name]),
-  );
-
   const namesInUse = new Set<string>();
   for (const g of groups) {
     for (const gc of g.channels) {
@@ -39,7 +35,6 @@ export function syncAppStoreChannelMirrorsFromDocument(): void {
       : (groups[0]?.id ?? null);
 
   useAppStore.setState({
-    groupNames,
     channelVisibilities,
     activeChannelGroupId: nextActiveId,
   });
@@ -94,7 +89,6 @@ export function syncAppStoreShapesFromDocument(): void {
 
 /** Reconcile ephemeral UI state after the document store changes externally (undo/redo). */
 export function syncAppStoreFromDocument(): void {
-  useAppStore.getState().clearChannelRendering();
   syncAppStoreChannelMirrorsFromDocument();
   syncAppStoreWaypointsFromDocument();
   syncAppStoreShapesFromDocument();

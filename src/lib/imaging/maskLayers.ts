@@ -39,7 +39,7 @@ function colorFromSeed(seed: string): [number, number, number] {
 }
 
 function isEdgeAt(
-  data: Uint8Array,
+  data: Uint8Array | Uint16Array | Uint32Array,
   width: number,
   height: number,
   x: number,
@@ -125,7 +125,7 @@ export function labelRasterToRgba(
   const rgba = new Uint8ClampedArray(width * height * 4);
   const n = width * height;
 
-  if (visualization === "randomColors") {
+  if (visualization.color === "random") {
     const colorByLabel = new Map<number, [number, number, number]>();
     for (let i = 0; i < n; i++) {
       const label = data[i];
@@ -150,7 +150,7 @@ export function labelRasterToRgba(
       const i = y * width + x;
       const label = data[i];
       if (label === 0) continue;
-      if (isEdgeAt(data, width, height, x, y, label)) {
+      if (isEdgeAt(data, width, height, x, y)) {
         edgeMask[i] = 1;
       }
     }
