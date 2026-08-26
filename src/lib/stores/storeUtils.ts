@@ -338,7 +338,7 @@ export function basenameImportLabel(basename: string): string {
 
 /** Short per-image labels; identical basenames become `name`, `name (2)`, … */
 export function uniqueImageDisplayLabels(
-  images: readonly { id: string; basename?: string }[],
+  images: readonly Image[],
 ): Map<string, string> {
   const rows = images.map((im) => {
     const trimmed = (im.basename ?? "").trim();
