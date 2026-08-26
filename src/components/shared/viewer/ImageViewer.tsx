@@ -21,7 +21,6 @@ import {
   selectionMaskBinaryImageData,
   selectionMaskDisplayImageData,
 } from "@/lib/imaging/maskLayers";
-import { createMaskTileLayer } from "@/lib/imaging/maskTileLayer";
 import { effectiveMaskVisualizationForSource } from "@/lib/imaging/sourceChannelStyle";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
@@ -334,10 +333,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
     sam2Processing,
     authoringWaypointEditorOpen,
   } = useAppStore();
-  // Live contrast/color preview is folded in `useViewerLayers`, not here.
   const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
+  const [maskDisplayLayers, setMaskDisplayLayers] = useState<Layer[]>([]);
   const selectionMaskActive =
     imageSelectionMask != null &&
     (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
@@ -405,57 +404,127 @@ export const ImageViewer = (props: ImageViewerProps) => {
     };
   }, [imageShape.x, imageShape.y, setViewerReferenceImagePixelSize]);
 
-  const maskDisplayLayers = useMemo(() => {
-    const imgW = Number(imageShape.x) || 0;
-    const imgH = Number(imageShape.y) || 0;
-    if (imgW <= 0 || imgH <= 0 || omeLoaderEntries.length === 0) return [];
-
+  const maskOverlayKey = useMemo(() => {
     const activeGroup = activeChannelGroupId
       ? channelGroups.find((g) => g.id === activeChannelGroupId)
       : undefined;
-    const layers: Layer[] = [];
-    for (const sc of flattenImageChannelsInDocumentOrder(images)) {
-      if (!isMaskChannel(sc)) continue;
-      if (
-        !isMaskSourceRendered({
+    return flattenImageChannelsInDocumentOrder(images)
+      .filter((sc) => {
+        if (!isMaskChannel(sc)) return false;
+        return isMaskSourceRendered({
           sc,
           activeGroup,
           channelGroups,
           stackVisibilities: channelVisibilities ?? {},
           groupRowVisibilities: channelGroupRowVisibilities,
-        })
-      ) {
-        continue;
-      }
-      const entry = omeLoaderEntries.find(
-        (e) => e.sourceImageId === sc.imageId,
-      );
-      if (!entry?.loader) continue;
-      const layer = createMaskTileLayer({
-        id: `mask-channel-${sc.id}`,
-        loader: entry.loader,
-        channelIndex: sc.index,
-        visualization: effectiveMaskVisualizationForSource(
+        });
+      })
+      .map((sc) => {
+        const viz = effectiveMaskVisualizationForSource(
           sc,
           channelGroups,
           activeChannelGroupId,
-        ),
-        worldWidth: imgW,
-        worldHeight: imgH,
-      });
-      if (layer) layers.push(layer);
-    }
-    return layers;
+        );
+        return `${sc.id}:${sc.index}:${sc.imageId}:${viz}`;
+      })
+      .join("|");
   }, [
     images,
-    omeLoaderEntries,
-    imageShape.x,
-    imageShape.y,
     channelVisibilities,
     channelGroupRowVisibilities,
     activeChannelGroupId,
     channelGroups,
   ]);
+
+  const maskOverlayRef = useRef({
+    images,
+    channelGroups,
+    channelVisibilities,
+    channelGroupRowVisibilities,
+    activeChannelGroupId,
+  });
+  maskOverlayRef.current = {
+    images,
+    channelGroups,
+    channelVisibilities,
+    channelGroupRowVisibilities,
+    activeChannelGroupId,
+  };
+
+  useEffect(() => {
+    if (!maskOverlayKey || omeLoaderEntries.length === 0) {
+      setMaskDisplayLayers([]);
+      return;
+    }
+    const imgW = Number(imageShape.x) || 0;
+    const imgH = Number(imageShape.y) || 0;
+    if (imgW <= 0 || imgH <= 0) {
+      setMaskDisplayLayers([]);
+      return;
+    }
+    const {
+      images: imgs,
+      channelGroups: groups,
+      channelVisibilities: stackVis,
+      channelGroupRowVisibilities: rowVis,
+      activeChannelGroupId: groupId,
+    } = maskOverlayRef.current;
+    const activeGroup = groupId
+      ? groups.find((g) => g.id === groupId)
+      : undefined;
+    const visibleMaskSources = flattenImageChannelsInDocumentOrder(imgs).filter(
+      (sc) => {
+        if (!isMaskChannel(sc)) return false;
+        return isMaskSourceRendered({
+          sc,
+          activeGroup,
+          channelGroups: groups,
+          stackVisibilities: stackVis ?? {},
+          groupRowVisibilities: rowVis,
+        });
+      },
+    );
+    let cancelled = false;
+    void (async () => {
+      const layers: Layer[] = [];
+      const bounds: [number, number, number, number] = [0, imgH, imgW, 0];
+      for (const sc of visibleMaskSources) {
+        const entry = omeLoaderEntries.find(
+          (e) => e.sourceImageId === sc.imageId,
+        );
+        if (!entry?.loader) continue;
+        const raster = await fetchLabelRasterForSourceIndex(
+          entry.loader,
+          sc.index,
+        );
+        if (!raster || cancelled) continue;
+        const viz = effectiveMaskVisualizationForSource(sc, groups, groupId);
+        const image = labelRasterToRgba(
+          raster.data,
+          raster.width,
+          raster.height,
+          viz,
+        );
+        layers.push(
+          new BitmapLayer({
+            id: `mask-channel-${sc.id}`,
+            bounds,
+            image,
+            pickable: false,
+            textureParameters: {
+              magFilter: "nearest",
+              minFilter: "linear",
+              mipmapFilter: "linear",
+            },
+          }),
+        );
+      }
+      if (!cancelled) setMaskDisplayLayers(layers);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [maskOverlayKey, omeLoaderEntries, imageShape.x, imageShape.y]);
 
   // Memoize initial view state
   const initialViewState = useMemo(() => {
@@ -475,10 +544,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   const viewRef = useRef({ viewState, viewportSize });
   viewRef.current = { viewState, viewportSize };
-
-  // When we apply a programmatic waypoint view, ignore the next handleViewStateChange
-  // (Deck may emit stale state and overwrite our update)
-  const ignoreNextViewStateChangeRef = useRef(false);
 
   // Get target waypoint view state for responding to waypoint selection
   const targetWaypointCamera = useAppStore(
@@ -954,7 +1019,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
   // Memoize view state change handler.
   const handleViewStateChange = useCallback(
     ({ viewState: nextViewState }) => {
-      if (ignoreNextViewStateChangeRef.current) return;
       // Only skip while dragging an annotation (move tool). Do not skip for
       // viewport pan/zoom while using brush or other tools — otherwise the store
       // keeps a stale camera and waypoint overwrite saves the wrong view.

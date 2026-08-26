@@ -44,8 +44,6 @@ type Settings = {
   contrastLimits: Limit[];
   loader: Loader | null;
   colors: Color[];
-  /** Parallel to selections — source channel ids for live preview mapping. */
-  sourceChannelIds?: string[];
 };
 
 type OmeChannelMeta = {
@@ -157,7 +155,6 @@ const toDefaultSettings = (n: number) => {
         return n < n_shown;
       })
       .slice(0, n_sub),
-    sourceChannelIds: [] as string[],
   };
 };
 
@@ -220,7 +217,6 @@ const toSettings = (opts: ToSettingsOpts) => {
     const colors: Color[] = [];
     const contrastLimits: Limit[] = [];
     const channelsVisible: boolean[] = [];
-    const sourceChannelIds: string[] = [];
 
     for (let i = 0; i < layers.length; i++) {
       const { sc, gc } = layers[i];
@@ -234,7 +230,6 @@ const toSettings = (opts: ToSettingsOpts) => {
       colors.push([r, g, b]);
       contrastLimits.push([lo, hi]);
       channelsVisible.push(true);
-      sourceChannelIds.push(sc.id);
     }
 
     const n_channels = c_idx >= 0 ? shape[c_idx] || 0 : 1;
@@ -244,7 +239,6 @@ const toSettings = (opts: ToSettingsOpts) => {
       colors,
       contrastLimits,
       channelsVisible,
-      sourceChannelIds,
       loader,
     };
   };

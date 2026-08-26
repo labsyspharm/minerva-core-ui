@@ -91,7 +91,6 @@ import {
   documentShapes,
   documentSourceChannels,
   documentWaypoints,
-  findSourceChannel,
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
@@ -389,8 +388,6 @@ const Content = (props: Props) => {
     activeChannelGroupId,
     channelVisibilities,
     channelGroupRowVisibilities,
-    channelRendering,
-    setGroupNames,
   } = useAppStore();
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
   const setImages = useDocumentStore((s) => s.setImages);
@@ -548,42 +545,30 @@ const Content = (props: Props) => {
     })();
   };
 
-  const updateGroupChannelLists = useCallback(
-    ({ ChannelGroups, SourceChannels }) => {
-      setGroupNames(
-        Object.fromEntries(ChannelGroups.map(({ name, id }) => [id, name])),
-      );
-      const toChannelList = (groupChannels) => {
-        return groupChannels
-          .map((gc) => findSourceChannel(SourceChannels, gc.channelId))
-          .filter((x) => x)
-          .map(({ name: chName }) => chName);
-      };
+  const syncChannelVisibilities = useCallback(
+    (groups: ChannelGroup[], sources: Channel[]) => {
       setChannelVisibilities(
         defaultVisibilitiesForSources(
-          SourceChannels,
+          sources,
           useAppStore.getState().channelVisibilities,
-          ChannelGroups,
+          groups,
         ),
       );
     },
-    [setGroupNames, setChannelVisibilities],
+    [setChannelVisibilities],
   );
 
-  /** After reload, app store resets while channel groups persist — select first group and sync lists/visibilities. */
+  /** After reload, app store resets while channel groups persist — select first group and sync visibilities. */
   useEffect(() => {
     if (channelGroups.length === 0 || sourceChannels.length === 0) return;
     const active = useAppStore.getState().activeChannelGroupId;
     if (active != null && channelGroups.some((g) => g.id === active)) return;
-    updateGroupChannelLists({
-      ChannelGroups: channelGroups,
-      SourceChannels: sourceChannels,
-    });
+    syncChannelVisibilities(channelGroups, sourceChannels);
     setActiveChannelGroup(channelGroups[0].id);
   }, [
     channelGroups,
     sourceChannels,
-    updateGroupChannelLists,
+    syncChannelVisibilities,
     setActiveChannelGroup,
   ]);
 
@@ -609,10 +594,6 @@ const Content = (props: Props) => {
       } else if (opts.resetActiveGroup) {
         setActiveChannelGroup(nextChannelGroups[0].id);
       }
-      updateGroupChannelLists({
-        ChannelGroups: nextChannelGroups,
-        SourceChannels: flat,
-      });
       const prev = opts.mergeVisibilities
         ? useAppStore.getState().channelVisibilities
         : undefined;
@@ -623,7 +604,6 @@ const Content = (props: Props) => {
     [
       setImages,
       setChannelGroups,
-      updateGroupChannelLists,
       setChannelVisibilities,
       setActiveChannelGroup,
     ],
@@ -1005,10 +985,7 @@ const Content = (props: Props) => {
       const flat = flattenImageChannelsInDocumentOrder(data.images);
       setImages(data.images);
       setChannelGroups(data.channelGroups);
-      updateGroupChannelLists({
-        ChannelGroups: data.channelGroups,
-        SourceChannels: flat,
-      });
+      syncChannelVisibilities(data.channelGroups, flat);
       if (data.channelGroups.length > 0) {
         setActiveChannelGroup(data.channelGroups[0].id);
       } else {
@@ -1185,18 +1162,8 @@ const Content = (props: Props) => {
   const syncRegistryFromDocument = React.useCallback(() => {
     const doc = useDocumentStore.getState();
     const flat = flattenImageChannelsInDocumentOrder(doc.images);
-    updateGroupChannelLists({
-      ChannelGroups: doc.channelGroups,
-      SourceChannels: flat,
-    });
-    setChannelVisibilities(
-      defaultVisibilitiesForSources(
-        flat,
-        useAppStore.getState().channelVisibilities,
-        doc.channelGroups,
-      ),
-    );
-  }, [updateGroupChannelLists, setChannelVisibilities]);
+    syncChannelVisibilities(doc.channelGroups, flat);
+  }, [syncChannelVisibilities]);
 
   const reconnectStoryRoot = React.useCallback(async () => {
     const storyId = useDocumentStore.getState().activeStoryId;
@@ -1491,10 +1458,7 @@ const Content = (props: Props) => {
     }
     setImages(nextDocImages);
     setChannelGroups(ChannelGroups);
-    updateGroupChannelLists({
-      ChannelGroups,
-      SourceChannels,
-    });
+    syncChannelVisibilities(ChannelGroups, SourceChannels);
     ensureDefaultWaypointForImageImport();
   };
 
@@ -1659,12 +1623,14 @@ const Content = (props: Props) => {
       }
 
       if (byChannelId.size === 0) return;
+      const docNow = useDocumentStore.getState();
+      const prevChNow = documentSourceChannels(docNow);
       const next = mergeHistogramsIntoSourceChannelsByChannelId(
-        prevCh,
+        prevChNow,
         byChannelId,
       );
-      if (next === prevCh) return;
-      doc.setImages(applySourceChannelsToImages(doc.images, next));
+      if (next === prevChNow) return;
+      docNow.setImages(applySourceChannelsToImages(docNow.images, next));
     },
     [omeLoaderEntries, viewerImageKey],
   );
@@ -1882,7 +1848,6 @@ const Content = (props: Props) => {
       activeChannelGroupId,
       channelVisibilities,
       channelGroupRowVisibilities,
-      channelRendering,
       remountKey: viewerRemountKey,
     });
 

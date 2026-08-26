@@ -594,25 +594,6 @@ function computeBrushPolygon(
  *
  * Durable story data validates as {@link DocumentData} (`validateDocumentData` / `DocumentDataSchema`).
  */
-/**
- * In‑flight contrast or color for one channel (what Viv should render before commit).
- * Not persisted: commit updates {@link useDocumentStore} `channelGroups`, then clear this.
- */
-export type ChannelRendering =
-  | {
-      kind: "contrast";
-      sourceChannelId: string;
-      lower: number;
-      upper: number;
-    }
-  | {
-      kind: "color";
-      sourceChannelId: string;
-      r: number;
-      g: number;
-      b: number;
-    };
-
 export interface AppStore {
   // State
   overlayLayers: OverlayLayer[];
@@ -798,13 +779,7 @@ export interface AppStore {
   /** Per group-row uuid; independent of stack visibility in All Channels. */
   channelGroupRowVisibilities: Record<string, boolean>;
   setChannelGroupRowVisibilities: (vis: Record<string, boolean>) => void;
-  setGroupNames: (l: Record<string, string>) => void;
-  /** See {@link ChannelRendering}; folded into Viv settings in ImageViewer until cleared. */
-  channelRendering: ChannelRendering | null;
-  setChannelRendering: (rendering: ChannelRendering) => void;
-  clearChannelRendering: () => void;
   channelVisibilities: Record<string, boolean>;
-  groupNames: Record<string, string>;
 
   finalizeEllipse: () => void;
   finalizeLasso: (points: [number, number][]) => void;
@@ -938,10 +913,8 @@ const overlayInitialState = {
   waypointAuthoring: new Map<string, AuthoringWaypointExtra>(),
   authoringWaypointShapesIndex: null as number | null,
   activeChannelGroupId: null, // No channel group initially
-  channelRendering: null,
   channelVisibilities: {},
   channelGroupRowVisibilities: {},
-  groupNames: {},
   targetWaypointCamera: null,
   authoringWaypointEditorOpen: false,
   layersPanelSelectedShapeIds: [] as string[],
@@ -2166,9 +2139,6 @@ export const useAppStore = create<AppStore>()(
           return { activeStoryIndex: newActiveStoryIndex };
         });
       },
-      setGroupNames: (o: Record<string, string>) => {
-        set({ groupNames: o });
-      },
 
       setSam2ImageFetcher: (fetcher) => {
         set({ sam2ImageFetcher: fetcher });
@@ -2225,14 +2195,6 @@ export const useAppStore = create<AppStore>()(
 
       setChannelGroupRowVisibilities: (vis: Record<string, boolean>) => {
         set({ channelGroupRowVisibilities: vis });
-      },
-
-      setChannelRendering: (rendering) => {
-        set({ channelRendering: rendering });
-      },
-
-      clearChannelRendering: () => {
-        set({ channelRendering: null });
       },
 
       // Import waypoint shapes actions

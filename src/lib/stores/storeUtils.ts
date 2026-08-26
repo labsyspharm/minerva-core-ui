@@ -43,6 +43,7 @@ import type {
   ArrowShape,
   Channel,
   ChannelGroup,
+  Color,
   Image,
   ImageChannel,
   ImageSource,
@@ -90,7 +91,7 @@ export function flattenImageChannelsInDocumentOrder(
 
 /** Resolve a flat row by nested channel id (same as `Image.channels[].id`). */
 export function findSourceChannel(
-  channels: Channel[],
+  channels: readonly Channel[],
   channelId: string,
 ): Channel | undefined {
   return channels.find((c) => c.id === channelId);
@@ -397,6 +398,18 @@ export function applySourceChannelRange(
   lower: number,
   upper: number,
 ): Image[] {
+  const found = images
+    .flatMap((im) => im.channels)
+    .find((ch) => ch.id === sourceChannelId);
+  if (
+    !found ||
+    (found.lowerLimit === lower &&
+      found.upperLimit === upper &&
+      found.gmmContrastLimits?.lower === lower &&
+      found.gmmContrastLimits?.upper === upper)
+  ) {
+    return images;
+  }
   return images.map((im) => ({
     ...im,
     channels: im.channels.map((ch) =>
@@ -410,6 +423,48 @@ export function applySourceChannelRange(
         : ch,
     ),
   }));
+}
+
+function colorsEqual(a: Color | undefined, b: Color | undefined): boolean {
+  return a?.r === b?.r && a?.g === b?.g && a?.b === b?.b;
+}
+
+function sourceChannelPatchIsNoop(
+  ch: ImageChannel,
+  patch: Partial<
+    Pick<
+      ImageChannel,
+      | "color"
+      | "lowerLimit"
+      | "upperLimit"
+      | "maskVisualization"
+      | "name"
+      | "kind"
+    >
+  >,
+): boolean {
+  if (patch.color !== undefined && !colorsEqual(ch.color, patch.color)) {
+    return false;
+  }
+  if (patch.lowerLimit !== undefined && ch.lowerLimit !== patch.lowerLimit) {
+    return false;
+  }
+  if (patch.upperLimit !== undefined && ch.upperLimit !== patch.upperLimit) {
+    return false;
+  }
+  if (
+    patch.maskVisualization !== undefined &&
+    ch.maskVisualization !== patch.maskVisualization
+  ) {
+    return false;
+  }
+  if (patch.name !== undefined && ch.name !== patch.name) {
+    return false;
+  }
+  if (patch.kind !== undefined && ch.kind !== patch.kind) {
+    return false;
+  }
+  return true;
 }
 
 export function patchSourceChannelOnImages(
@@ -427,6 +482,10 @@ export function patchSourceChannelOnImages(
     >
   >,
 ): Image[] {
+  const found = images
+    .flatMap((im) => im.channels)
+    .find((ch) => ch.id === sourceChannelId);
+  if (!found || sourceChannelPatchIsNoop(found, patch)) return images;
   return images.map((im) => ({
     ...im,
     channels: im.channels.map((ch) =>
@@ -463,6 +522,12 @@ export function applyGroupChannelRange(
     "channelId" in raw && raw.channelId !== undefined
       ? raw.channelId
       : (raw as { channel_uuid: string }).channel_uuid;
+  const row = channelGroups
+    .find((g) => g.id === groupId)
+    ?.channels.find((e) => e.id === channelEntryId);
+  if (!row || (row.lowerLimit === lower && row.upperLimit === upper)) {
+    return channelGroups;
+  }
   return channelGroups.map((group) =>
     group.id !== groupId
       ? group
@@ -472,6 +537,29 @@ export function applyGroupChannelRange(
             e.id === channelEntryId
               ? { ...e, lowerLimit: lower, upperLimit: upper }
               : e,
+          ),
+        },
+  );
+}
+
+/** Update one group-row color; returns the same array when RGB is unchanged. */
+export function applyGroupChannelColor(
+  channelGroups: ChannelGroup[],
+  groupId: string,
+  rowId: string,
+  color: Color,
+): ChannelGroup[] {
+  const row = channelGroups
+    .find((g) => g.id === groupId)
+    ?.channels.find((c) => c.id === rowId);
+  if (!row || colorsEqual(row.color, color)) return channelGroups;
+  return channelGroups.map((g) =>
+    g.id !== groupId
+      ? g
+      : {
+          ...g,
+          channels: g.channels.map((gc) =>
+            gc.id === rowId ? { ...gc, color } : gc,
           ),
         },
   );
