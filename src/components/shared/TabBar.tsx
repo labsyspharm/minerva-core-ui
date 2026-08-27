@@ -1,27 +1,33 @@
-import styles from "./GlassTabBar.module.css";
+import {
+  minervaThemeTabActiveClassName,
+  minervaThemeTabClassName,
+  minervaThemeTabListClassName,
+} from "@/components/shared/minervaTheme";
 
-export type GlassTabItem<T extends string = string> = {
+export type TabItem<T extends string = string> = {
   id: T;
   label: string;
 };
 
-export type GlassTabBarProps<T extends string> = {
-  tabs: readonly GlassTabItem<T>[];
+export type TabBarProps<T extends string> = {
+  tabs: readonly TabItem<T>[];
   value: T;
   onChange: (id: T) => void;
   "aria-label"?: string;
   className?: string;
 };
 
-/** Compact underline tab strip for authoring sidebar panels. */
-export function GlassTabBar<T extends string>(props: GlassTabBarProps<T>) {
+/** Underline tab strip for authoring sidebar panels. */
+export function TabBar<T extends string>(props: TabBarProps<T>) {
   const { tabs, value, onChange, className, "aria-label": ariaLabel } = props;
 
   return (
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className={[styles.list, className].filter(Boolean).join(" ")}
+      className={[minervaThemeTabListClassName, className]
+        .filter(Boolean)
+        .join(" ")}
     >
       {tabs.map((tab) => {
         const active = tab.id === value;
@@ -31,7 +37,10 @@ export function GlassTabBar<T extends string>(props: GlassTabBarProps<T>) {
             type="button"
             role="tab"
             aria-selected={active}
-            className={[styles.tab, active ? styles.tabActive : null]
+            className={[
+              minervaThemeTabClassName,
+              active ? minervaThemeTabActiveClassName : null,
+            ]
               .filter(Boolean)
               .join(" ")}
             onClick={() => onChange(tab.id)}

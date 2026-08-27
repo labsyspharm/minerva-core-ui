@@ -3,7 +3,12 @@ import * as React from "react";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 import { ChannelGroupsMasterDetail } from "@/components/shared/channel/ChannelGroupsMasterDetail";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
-import { GlassTabBar } from "@/components/shared/GlassTabBar";
+import {
+  minervaThemeControlClassName,
+  minervaThemeRootClassName,
+  minervaThemeStripClassName,
+} from "@/components/shared/minervaTheme";
+import { TabBar } from "@/components/shared/TabBar";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import styles from "./AuthorSidebar.module.css";
 
@@ -32,6 +37,7 @@ export function AuthorSidebarHost(props: AuthorSidebarHostProps) {
     <div
       className={[
         styles.sidebarHost,
+        minervaThemeRootClassName,
         collapsed ? styles.sidebarHostCollapsed : null,
         className,
       ]
@@ -77,8 +83,8 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
     <AuthorSidebarHost collapsed={!expanded}>
       <div className={styles.sidebar}>
         <div className={styles.panelOuter}>
-          <div className={styles.tabRow}>
-            <GlassTabBar<AuthorTab>
+          <div className={`${styles.tabRow} ${minervaThemeStripClassName}`}>
+            <TabBar<AuthorTab>
               tabs={TAB_ITEMS}
               value={activeTab}
               onChange={setActiveTab}
@@ -164,6 +170,7 @@ export function AuthorView(props: AuthorViewProps) {
       <button
         type="button"
         className={[
+          minervaThemeControlClassName,
           styles.expandControl,
           expanded ? styles.expandControlExpanded : null,
         ]

@@ -46,8 +46,9 @@
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: #111;
-  color: #e8e8e8;
+  background: var(--minerva-paper, #000);
+  color: var(--minerva-ink, #f2f2f2);
+  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
   display: grid;
   place-items: center;
 }
@@ -58,13 +59,13 @@
   gap: 0.85em;
   max-width: 22rem;
   padding: 1.25em 1.5em;
-  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
-  background: color-mix(in srgb, #1a1a1a 92%, transparent);
+  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  background: var(--minerva-paper, #000);
 }
 
 .folderPromptTitle {
   font-size: 1.05em;
-  font-weight: 600;
+  font-weight: 400;
   text-align: center;
 }
 
@@ -72,7 +73,7 @@
   font-size: 0.95em;
   line-height: 1.4;
   text-align: center;
-  opacity: 0.85;
+  color: var(--minerva-quiet, #888);
 }
 
 .folderPromptActions {
@@ -85,22 +86,22 @@
 .folderPromptActions button {
   appearance: none;
   padding: 0.55em 1em;
-  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
-  background: color-mix(in srgb, currentColor 12%, transparent);
+  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  background: transparent;
   color: inherit;
   font: inherit;
   cursor: pointer;
 }
 
 .folderPromptActions button:hover {
-  background: color-mix(in srgb, currentColor 20%, transparent);
+  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
 }
 
 .folderPromptActions button:focus-visible {
-  outline: 2px solid hwb(45 90% 0%);
+  outline: 2px solid var(--minerva-ink, #f2f2f2);
   outline-offset: 2px;
 }
 
 .folderPromptPrimary {
-  background: color-mix(in srgb, currentColor 22%, transparent) !important;
+  background: var(--minerva-wash, rgb(255 255 255 / 0.08)) !important;
 }

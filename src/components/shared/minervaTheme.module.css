@@ -1,0 +1,274 @@
+/**
+ * Minerva look — black paper, light ink, Noto Serif.
+ * Shared surface for the title bar, preview ribbon, and sidebar tabs.
+ */
+
+.root {
+  color: var(--minerva-ink);
+  font-family: var(--minerva-serif);
+  font-weight: 400;
+}
+
+.bar {
+  composes: root;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  height: var(--minerva-bar-height);
+  min-height: var(--minerva-bar-height);
+  padding: 0 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  background: var(--minerva-paper);
+  border-bottom: 1px solid var(--minerva-hairline, #f2f2f2);
+}
+
+.title {
+  font-family: var(--minerva-serif);
+  font-size: var(--minerva-title-size, 1.35rem);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  color: var(--minerva-ink);
+}
+
+.field {
+  composes: title;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 0.55em 0 0.25em;
+  border: none;
+  background: transparent;
+  font-style: italic;
+  line-height: 1.2;
+  height: auto;
+}
+
+.field::placeholder {
+  color: var(--minerva-quiet);
+  font-style: italic;
+}
+
+.field:focus {
+  outline: none;
+}
+
+.field:focus-visible {
+  outline: 2px solid var(--minerva-ink);
+  outline-offset: 2px;
+}
+
+.control {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  width: var(--minerva-control, 28px);
+  height: var(--minerva-control, 28px);
+  min-width: var(--minerva-control, 28px);
+  min-height: var(--minerva-control, 28px);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--minerva-ink, #f2f2f2);
+  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  line-height: 0;
+  cursor: pointer;
+}
+
+.control:hover:not(:disabled) {
+  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+}
+
+.control:disabled {
+  color: var(--minerva-quiet, #888);
+  cursor: default;
+}
+
+.control:disabled:hover {
+  background: transparent;
+}
+
+.control:focus-visible {
+  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline-offset: 2px;
+}
+
+.controlActive {
+  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  color: var(--minerva-ink, #f2f2f2);
+  box-shadow: inset 0 -1px 0 var(--minerva-ink, #f2f2f2);
+}
+
+.controlActive:hover:not(:disabled) {
+  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+}
+
+.control svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.controlText {
+  width: auto;
+  min-width: var(--minerva-control);
+  padding: 0 10px;
+  gap: 6px;
+  font-size: var(--minerva-size, 0.9rem);
+  line-height: 1;
+  font-weight: 400;
+}
+
+.controlRow {
+  composes: control;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.controlOutlined {
+  composes: control;
+  composes: controlText;
+  border: 1px solid var(--minerva-edge);
+}
+
+.cluster {
+  display: inline-flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  gap: 2px;
+}
+
+.clusterFieldset {
+  display: contents;
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
+}
+
+.menu {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 4px);
+  left: 0;
+  right: auto;
+  min-width: 11rem;
+  padding: 0.25em 0;
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
+}
+
+.menuItem {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.55em 0.85em;
+  border: 0;
+  background: transparent;
+  color: var(--minerva-ink);
+  font-family: var(--minerva-serif);
+  font-size: var(--minerva-size, 0.9rem);
+  text-align: left;
+  cursor: pointer;
+}
+
+.menuItem:hover:not(:disabled) {
+  background: var(--minerva-wash);
+}
+
+.menuItem:disabled {
+  color: var(--minerva-quiet);
+  cursor: default;
+}
+
+.menuItemGap {
+  margin-top: 0.25em;
+  padding-top: 0.7em;
+}
+
+.menuFixed {
+  composes: menu;
+  position: fixed;
+  top: auto;
+  left: auto;
+}
+
+.volume {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 1.15em;
+  flex-shrink: 0;
+}
+
+.spine {
+  display: block;
+  width: 6px;
+  background: var(--cloth);
+}
+
+.strip {
+  composes: root;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  min-height: var(--minerva-strip-height, 38px);
+  box-sizing: border-box;
+  background: var(--minerva-paper);
+}
+
+.tabList {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: stretch;
+  gap: 0;
+  background: transparent;
+  font-family: var(--minerva-serif);
+}
+
+.tab {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0.45em 0.5em;
+  border: none;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--minerva-quiet);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab:hover {
+  color: var(--minerva-ink);
+}
+
+.tabActive {
+  color: var(--minerva-ink);
+  border-bottom-color: var(--minerva-ink);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--minerva-ink);
+  outline-offset: -2px;
+}

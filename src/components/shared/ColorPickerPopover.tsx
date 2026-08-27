@@ -1,4 +1,4 @@
-import { Chrome } from "@uiw/react-color";
+import { Chrome as ColorPicker } from "@uiw/react-color";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import CloseIcon from "@/components/shared/icons/close.svg?react";
@@ -19,9 +19,9 @@ const backdropButtonStyle: React.CSSProperties = {
 
 const panelFrameStyle: React.CSSProperties = {
   padding: "3px 8px 8px",
-  background: "#fff",
-  borderRadius: 8,
-  boxShadow: "0 4px 24px rgba(0,0,0,0.45)",
+  background: "var(--minerva-paper, #000)",
+  border: "1px solid var(--minerva-edge, rgb(255 255 255 / 0.18))",
+  borderRadius: 0,
 };
 
 const closeRowStyle: React.CSSProperties = {
@@ -41,10 +41,10 @@ const closeButtonStyle: React.CSSProperties = {
   margin: 0,
   padding: 0,
   border: "none",
-  borderRadius: 4,
+  borderRadius: 0,
   background: "transparent",
   cursor: "pointer",
-  color: "#5c5c5c",
+  color: "var(--minerva-quiet, #888)",
 };
 
 const closeIconStyle: React.CSSProperties = {
@@ -54,7 +54,7 @@ const closeIconStyle: React.CSSProperties = {
 };
 
 /** Clamp popover so it stays on-screen (channel + annotation pickers). */
-export function chromeColorPickerAnchorPosition(rect: DOMRect): {
+export function colorPickerAnchorPosition(rect: DOMRect): {
   top: number;
   left: number;
 } {
@@ -64,20 +64,20 @@ export function chromeColorPickerAnchorPosition(rect: DOMRect): {
   };
 }
 
-export type ChromeColorPickerPopoverProps = {
+export type ColorPickerPopoverProps = {
   position: { top: number; left: number } | null;
   onClose: () => void;
-} & Omit<React.ComponentProps<typeof Chrome>, "ref">;
+} & Omit<React.ComponentProps<typeof ColorPicker>, "ref">;
 
 /**
  * Fixed popover + transparent backdrop; close control in a row above the picker.
- * Popover triangle (Github `showTriangle`) is off so the panel is a simple rectangle.
+ * Popover triangle is off so the panel is a simple rectangle.
  */
-export function ChromeColorPickerPopover({
+export function ColorPickerPopover({
   position,
   onClose,
-  ...chromeProps
-}: ChromeColorPickerPopoverProps) {
+  ...pickerProps
+}: ColorPickerPopoverProps) {
   React.useEffect(() => {
     if (!position) return;
     const onKey = (e: KeyboardEvent) => {
@@ -119,17 +119,11 @@ export function ChromeColorPickerPopover({
               e.stopPropagation();
               onClose();
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(0, 0, 0, 0.06)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-            }}
           >
             <CloseIcon aria-hidden style={closeIconStyle} />
           </button>
         </div>
-        <Chrome {...chromeProps} showTriangle={false} />
+        <ColorPicker {...pickerProps} showTriangle={false} />
       </div>
     </>,
     document.body,

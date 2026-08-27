@@ -3,9 +3,9 @@ import * as React from "react";
 import { LayersPanel } from "@/components/authoring/LayersPanel";
 import { ToolSubmenu } from "@/components/authoring/ToolSubmenu";
 import {
-  ChromeColorPickerPopover,
-  chromeColorPickerAnchorPosition,
-} from "@/components/shared/ChromeColorPickerPopover";
+  ColorPickerPopover,
+  colorPickerAnchorPosition,
+} from "@/components/shared/ColorPickerPopover";
 import ArrowIcon from "@/components/shared/icons/arrow-tool.svg?react";
 import BrushIcon from "@/components/shared/icons/brush.svg?react";
 import CopyAnnotationsIcon from "@/components/shared/icons/copy-annotations.svg?react";
@@ -21,7 +21,10 @@ import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
-import toolButton from "@/components/shared/panel/toolButton.module.css";
+import {
+  minervaThemeControlActiveClassName,
+  minervaThemeControlClassName,
+} from "@/components/shared/minervaTheme";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import {
   cloneShapesForPaste,
@@ -197,7 +200,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         a: globalColor[3] / 255,
       }),
     );
-    setColorPickerPos(chromeColorPickerAnchorPosition(anchor));
+    setColorPickerPos(colorPickerAnchorPosition(anchor));
   };
 
   const handleOpenAnnotationColorPicker = (
@@ -214,14 +217,14 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         a: rgba[3] / 255,
       }),
     );
-    setColorPickerPos(chromeColorPickerAnchorPosition(anchor));
+    setColorPickerPos(colorPickerAnchorPosition(anchor));
   };
 
   const waypointClipboardActions = (
     <>
       <button
         type="button"
-        className={toolButton.toolButton}
+        className={minervaThemeControlClassName}
         disabled={layersPanelSelectedShapeIds.length === 0}
         title="Copy selected shapes to the clipboard"
         onClick={() => void copySelectedWaypointShapes()}
@@ -230,7 +233,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
       </button>
       <button
         type="button"
-        className={toolButton.toolButton}
+        className={minervaThemeControlClassName}
         title="Paste shapes from the clipboard"
         onClick={() => void pasteWaypointShapesFromClipboard()}
       >
@@ -247,7 +250,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     <>
       <button
         type="button"
-        className={`${toolButton.toolButton} ${activeTool === TOOLS.MOVE ? toolButton.active : ""}`}
+        className={`${minervaThemeControlClassName} ${activeTool === TOOLS.MOVE ? minervaThemeControlActiveClassName : ""}`}
         title="Move Tool"
         onClick={() => handleToolChangeLocal(TOOLS.MOVE)}
       >
@@ -272,8 +275,8 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<ShapesIcon />}
         parentTitle="Shapes"
-        buttonClassName={toolButton.toolButton}
-        activeClassName={toolButton.active}
+        buttonClassName={minervaThemeControlClassName}
+        activeClassName={minervaThemeControlActiveClassName}
       />
 
       <ToolSubmenu
@@ -286,13 +289,13 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<LinesIcon />}
         parentTitle="Lines"
-        buttonClassName={toolButton.toolButton}
-        activeClassName={toolButton.active}
+        buttonClassName={minervaThemeControlClassName}
+        activeClassName={minervaThemeControlActiveClassName}
       />
 
       <button
         type="button"
-        className={`${toolButton.toolButton} ${activeTool === TOOLS.BRUSH ? toolButton.active : ""}`}
+        className={`${minervaThemeControlClassName} ${activeTool === TOOLS.BRUSH ? minervaThemeControlActiveClassName : ""}`}
         title="Brush"
         onClick={() => handleToolChangeLocal(TOOLS.BRUSH)}
       >
@@ -301,7 +304,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${toolButton.toolButton} ${activeTool === TOOLS.TEXT ? toolButton.active : ""}`}
+        className={`${minervaThemeControlClassName} ${activeTool === TOOLS.TEXT ? minervaThemeControlActiveClassName : ""}`}
         title="Text Tool"
         onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
       >
@@ -310,7 +313,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${toolButton.toolButton} ${activeTool === TOOLS.POINT ? toolButton.active : ""}`}
+        className={`${minervaThemeControlClassName} ${activeTool === TOOLS.POINT ? minervaThemeControlActiveClassName : ""}`}
         title="Point Tool"
         onClick={() => handleToolChangeLocal(TOOLS.POINT)}
       >
@@ -319,7 +322,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${toolButton.toolButton} ${activeTool === TOOLS.MAGIC_WAND ? toolButton.active : ""}`}
+        className={`${minervaThemeControlClassName} ${activeTool === TOOLS.MAGIC_WAND ? minervaThemeControlActiveClassName : ""}`}
         title="Magic Wand"
         onClick={() => handleToolChangeLocal(TOOLS.MAGIC_WAND)}
       >
@@ -357,7 +360,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         ) : null}
       </div>
 
-      <ChromeColorPickerPopover
+      <ColorPickerPopover
         position={colorPickerPos}
         onClose={closeColorPicker}
         color={pickerHsva}

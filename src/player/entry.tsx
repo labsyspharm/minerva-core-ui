@@ -1,5 +1,8 @@
 import { createRoot } from "react-dom/client";
 import "@deck.gl/widgets/stylesheet.css";
+import "@fontsource/noto-serif/400.css";
+import "@fontsource/noto-serif/400-italic.css";
+import "@/components/shared/minervaTheme.global.css";
 import { StoryPlayerApp } from "@/components/playback/StoryPlayerApp";
 
 export type MinervaStoryPlayOptions = {

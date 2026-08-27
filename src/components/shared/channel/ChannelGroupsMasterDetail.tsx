@@ -1,9 +1,9 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import {
-  ChromeColorPickerPopover,
-  chromeColorPickerAnchorPosition,
-} from "@/components/shared/ChromeColorPickerPopover";
+  ColorPickerPopover,
+  colorPickerAnchorPosition,
+} from "@/components/shared/ColorPickerPopover";
 import {
   ChannelContrastEditor,
   type ChannelContrastEditorProps,
@@ -15,6 +15,10 @@ import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import LockIcon from "@/components/shared/icons/lock.svg?react";
 import LockOpenIcon from "@/components/shared/icons/lock-open.svg?react";
+import {
+  minervaThemeMenuFixedClassName,
+  minervaThemeMenuItemClassName,
+} from "@/components/shared/minervaTheme";
 import { CompactHeader } from "@/components/shared/panel/CompactHeader";
 import {
   PanelActionButton,
@@ -259,7 +263,7 @@ function ChannelRowMoreMenu(props: ChannelRowMoreMenuProps) {
         ? createPortal(
             <div
               ref={menuRef}
-              className={styles.moreMenu}
+              className={minervaThemeMenuFixedClassName}
               role="menu"
               style={menuStyle}
             >
@@ -267,7 +271,7 @@ function ChannelRowMoreMenu(props: ChannelRowMoreMenuProps) {
                 <button
                   type="button"
                   role="menuitem"
-                  className={styles.moreMenuItem}
+                  className={minervaThemeMenuItemClassName}
                   disabled={fitBusy}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -282,7 +286,7 @@ function ChannelRowMoreMenu(props: ChannelRowMoreMenuProps) {
                 <button
                   type="button"
                   role="menuitem"
-                  className={styles.moreMenuItem}
+                  className={minervaThemeMenuItemClassName}
                   onClick={(e) => {
                     e.stopPropagation();
                     close();
@@ -1290,7 +1294,7 @@ export const ChannelGroupsMasterDetail = (
                                     rowId: gc.id,
                                   });
                                   setColorPickerPos(
-                                    chromeColorPickerAnchorPosition(rect),
+                                    colorPickerAnchorPosition(rect),
                                   );
                                 },
                               })}
@@ -1608,7 +1612,7 @@ export const ChannelGroupsMasterDetail = (
                         scope: "source",
                         sourceId: sc.id,
                       });
-                      setColorPickerPos(chromeColorPickerAnchorPosition(rect));
+                      setColorPickerPos(colorPickerAnchorPosition(rect));
                     },
                   })}
               trailing={channelMoreMenu(sc, sc.name)}
@@ -1630,39 +1634,36 @@ export const ChannelGroupsMasterDetail = (
   return (
     <div className={panel.authorPanel}>
       <CompactHeader
-        title="Channel Groups"
+        title="Channels"
+        count={`(${channelGroups.length})`}
         actions={
           <>
-            <PanelActionButton
-              disabled={!canOptimizeActiveGroup || optimizePaletteBusy}
-              title={
-                !activeGroup
-                  ? "Select a group first"
-                  : canOptimizeActiveGroup
-                    ? "Optimize colors"
-                    : "Need at least two non-RGB channels"
-              }
-              aria-label="Optimize colors"
-              onClick={() => {
-                if (!activeGroup) return;
-                void runOptimizePaletteForGroup(activeGroup.id);
-              }}
-            >
-              Optimize colors
-            </PanelActionButton>
+            {canOptimizeActiveGroup ? (
+              <PanelActionButton
+                disabled={optimizePaletteBusy}
+                title="Optimize colors"
+                aria-label="Optimize colors"
+                onClick={() => {
+                  if (!activeGroup) return;
+                  void runOptimizePaletteForGroup(activeGroup.id);
+                }}
+              >
+                Optimize colors
+              </PanelActionButton>
+            ) : null}
+            {activeGroup ? (
+              <PanelIconButton
+                title="Delete"
+                aria-label="Delete group"
+                onClick={() => {
+                  deleteGroup(activeGroup.id);
+                }}
+              >
+                <TrashIcon />
+              </PanelIconButton>
+            ) : null}
             <PanelIconButton
-              title="Delete active group"
-              aria-label="Delete group"
-              disabled={!activeGroup}
-              onClick={() => {
-                if (!activeGroup) return;
-                deleteGroup(activeGroup.id);
-              }}
-            >
-              <TrashIcon />
-            </PanelIconButton>
-            <PanelIconButton
-              title="Add group"
+              title="Add"
               aria-label="Add group"
               onClick={createGroup}
             >
@@ -1679,10 +1680,14 @@ export const ChannelGroupsMasterDetail = (
           </div>
         ) : null}
 
-        <div className={styles.treeSeparator}>All Channels</div>
+        {uniqueSourceChannels.length > 0 ? (
+          <div className={styles.treeSeparator}>All channels</div>
+        ) : null}
 
         {uniqueSourceChannels.length === 0 ? (
-          <div className={styles.emptyMessage}>No channels loaded</div>
+          channelGroups.length === 0 ? (
+            <div className={panel.emptyMessage}>No channels yet</div>
+          ) : null
         ) : (
           <ul className={styles.rootChannelList}>
             {allChannelsOrdered.map(renderAllChannelsRow)}
@@ -1733,7 +1738,7 @@ export const ChannelGroupsMasterDetail = (
       </div>
 
       {colorPickerTarget && colorPickerPos && pickingColorHex ? (
-        <ChromeColorPickerPopover
+        <ColorPickerPopover
           position={colorPickerPos}
           onClose={closeColorPicker}
           color={`#${pickingColorHex}`}

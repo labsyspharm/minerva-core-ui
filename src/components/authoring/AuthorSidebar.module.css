@@ -9,7 +9,7 @@
   width: 30em;
   display: flex;
   flex-direction: column;
-  --author-tab-header-height: 2.35rem;
+  font-size: var(--minerva-size, 0.9rem);
   transition: transform 0.5s ease;
   transform: translateX(0);
   pointer-events: auto;
@@ -30,47 +30,19 @@
 }
 
 .panelOuter {
-  --dark-main-glass: color-mix(
-    in xyz,
-    var(--theme-dark-main-color, navy),
-    transparent 60%
-  );
-  --dim-gray-glass: color-mix(
-    in xyz,
-    var(--theme-dim-gray-color, black),
-    transparent 60%
-  );
-
   display: grid;
   grid-template-rows: auto 1fr;
   grid-template-columns: 1fr;
   flex: 1;
   min-height: 0;
-  border-radius: 0;
-  backdrop-filter: var(--theme-glass-filter, blur(32px));
-  background-color: var(--dark-main-glass);
-  border: 1px solid var(--theme-glass-edge, rgba(255, 255, 255, 0.5));
-  padding-left: 0;
-  border-left: none;
-  border-top: none;
+  border-right: 1px solid var(--minerva-edge);
   overflow: hidden;
 }
 
 .tabRow {
   grid-row: 1;
-  display: flex;
-  align-items: stretch;
-  min-width: 0;
-  min-height: var(--author-tab-header-height, 2.35rem);
-  box-sizing: border-box;
-  padding: 0 2.4rem 0 0.25em;
-  font-size: 0.8em;
-  border-bottom: 1px solid
-    color-mix(
-      in srgb,
-      var(--theme-glass-edge, rgba(255, 255, 255, 0.5)) 40%,
-      transparent
-    );
+  /* Same inset as the collapse control, both sides, so the three tabs sit centered. */
+  padding: 0 calc(var(--minerva-control, 28px) + 12px);
 }
 
 .expandControl {
@@ -79,46 +51,15 @@
   z-index: 6;
   justify-self: center;
   align-self: start;
-  margin-top: calc((var(--author-tab-header-height, 2.35rem) - 24px) / 2);
-  margin-right: 0;
-  background-color: color-mix(
-    in xyz,
-    var(--theme-dark-main-color, navy),
-    transparent 60%
+  margin-top: calc(
+    (var(--minerva-strip-height, 38px) - var(--minerva-control, 28px)) / 2
   );
-  padding: 0;
-  border: 1px solid var(--theme-glass-edge, rgba(255, 255, 255, 0.5));
-  border-radius: 50%;
-  cursor: pointer;
-  color: inherit;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  line-height: 0;
-  flex-shrink: 0;
-  transition:
-    background-color 0.05s ease,
-    border-color 0.05s ease;
+  margin-right: 0;
 }
 
 .expandControlExpanded {
   justify-self: end;
-  margin-right: 0.35rem;
-}
-
-.expandControl:hover {
-  background-color: color-mix(
-    in xyz,
-    var(--theme-dim-gray-color, black),
-    transparent 52%
-  );
-  border-color: color-mix(
-    in srgb,
-    var(--theme-light-focus-color, white) 55%,
-    var(--theme-glass-edge, rgba(255, 255, 255, 0.5))
-  );
+  margin-right: 6px;
 }
 
 .panelContent {
@@ -127,8 +68,6 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background-color: #000;
-  font-size: 0.75em;
 }
 
 .panelContentInner {
@@ -150,9 +89,6 @@
 
 .viewport {
   --author-collapsed-rail: 2.5rem;
-  --author-tab-header-height: 2.35rem;
-  font-family: var(--theme-font-family, "lato", sans-serif);
-  color: var(--theme-light-contrast-color, white);
   flex: 1;
   height: 100%;
   min-height: 0;

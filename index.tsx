@@ -1,3 +1,6 @@
+import "@fontsource/noto-serif/400.css";
+import "@fontsource/noto-serif/400-italic.css";
+import "@/components/shared/minervaTheme.global.css";
 import "./index.css";
 import { RouterProvider } from "@tanstack/react-router";
 import * as React from "react";
@@ -5,9 +8,6 @@ import { createRoot } from "react-dom/client";
 import { Main } from "@/components/Main";
 import { getDemoDocumentTitle, getDemoMainProps } from "@/lib/persistence/demo";
 import { createAppRouter } from "@/router/appRouter";
-import "@fontsource/overpass/200.css";
-import "@/fonts.css";
-import "@fontsource/overpass/500.css";
 
 const id = "react-output";
 

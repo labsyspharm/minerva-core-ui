@@ -3,6 +3,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
+import {
+  minervaThemeControlActiveClassName,
+  minervaThemeControlClassName,
+  minervaThemeControlTextClassName,
+} from "@/components/shared/minervaTheme";
 import { CompactHeader } from "@/components/shared/panel/CompactHeader";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
@@ -218,7 +223,10 @@ const FormDicom = (props: FormProps) => {
           )}
         </div>
       </div>
-      <button type="submit" className={styles.primaryButton}>
+      <button
+        type="submit"
+        className={`${minervaThemeControlClassName} ${minervaThemeControlTextClassName}`}
+      >
         Submit
       </button>
     </form>
@@ -568,7 +576,7 @@ const Upload = (props: UploadProps) => {
             canImport={urlReady}
             inputClassName={styles.urlInput}
             rowClassName={styles.urlRow}
-            primaryClassName={styles.primaryButton}
+            primaryClassName={`${minervaThemeControlClassName} ${minervaThemeControlTextClassName}`}
           />
           {importError ? (
             <div className={styles.importError}>{importError}</div>
@@ -628,26 +636,22 @@ const Upload = (props: UploadProps) => {
               {onReplaceImage &&
               im.source?.kind !== "jpeg" &&
               im.source?.kind !== "dicomWeb" ? (
-                <button
-                  type="button"
-                  className={styles.imageCardAction}
+                <PanelIconButton
                   title={`Replace ${title} with another OME-TIFF`}
                   aria-label={`Replace ${title}`}
                   onClick={() => void onReplaceImage(im.id)}
                 >
                   <ReplaceIcon title="Replace image" size={14} />
-                </button>
+                </PanelIconButton>
               ) : null}
               {onRemoveImage ? (
-                <button
-                  type="button"
-                  className={`${styles.imageCardAction} ${styles.imageCardActionDanger}`}
-                  title={`Remove ${title}`}
-                  aria-label={`Remove ${title}`}
+                <PanelIconButton
+                  title={`Delete ${title}`}
+                  aria-label={`Delete ${title}`}
                   onClick={() => void onRemoveImage(im.id)}
                 >
-                  <TrashIcon title="Remove image" size={14} />
-                </button>
+                  <TrashIcon title="Delete" size={14} />
+                </PanelIconButton>
               ) : null}
             </div>
           ) : null}
@@ -659,7 +663,7 @@ const Upload = (props: UploadProps) => {
             </span>
             <button
               type="button"
-              className={styles.primaryButton}
+              className={`${minervaThemeControlClassName} ${minervaThemeControlTextClassName}`}
               onClick={() => {
                 if (needsStoryDir) void onReconnectStoryRoot?.();
                 else if (needsReselect) void onReselectFile?.(im.id);
@@ -701,15 +705,15 @@ const Upload = (props: UploadProps) => {
           label="Image"
           selected={!isMaskImport}
           onClick={() => setRole("intensity")}
-          chipClass={styles.formatChip}
-          chipActiveClass={styles.formatChipActive}
+          chipClass={`${minervaThemeControlClassName} ${minervaThemeControlTextClassName}`}
+          chipActiveClass={minervaThemeControlActiveClassName}
         />
         <FormatChip
           label="Mask"
           selected={isMaskImport}
           onClick={() => setRole("segmentation")}
-          chipClass={styles.formatChip}
-          chipActiveClass={styles.formatChipActive}
+          chipClass={`${minervaThemeControlClassName} ${minervaThemeControlTextClassName}`}
+          chipActiveClass={minervaThemeControlActiveClassName}
         />
       </div>
       <div className={styles.formatRow}>
@@ -718,23 +722,23 @@ const Upload = (props: UploadProps) => {
             label="DicomWeb"
             selected={imageFormat === "DICOM-WEB"}
             onClick={() => selectFormat("DICOM-WEB")}
-            chipClass={styles.formatChip}
-            chipActiveClass={styles.formatChipActive}
+            chipClass={`${minervaThemeControlClassName} ${minervaThemeControlTextClassName}`}
+            chipActiveClass={minervaThemeControlActiveClassName}
           />
         ) : null}
         <FormatChip
           label="OmeTiff File"
           selected={imageFormat === "OME-TIFF"}
           onClick={() => selectFormat("OME-TIFF")}
-          chipClass={styles.formatChip}
-          chipActiveClass={styles.formatChipActive}
+          chipClass={`${minervaThemeControlClassName} ${minervaThemeControlTextClassName}`}
+          chipActiveClass={minervaThemeControlActiveClassName}
         />
         <FormatChip
           label="OmeTiff URL"
           selected={imageFormat === "OME-TIFF-URL"}
           onClick={() => selectFormat("OME-TIFF-URL")}
-          chipClass={styles.formatChip}
-          chipActiveClass={styles.formatChipActive}
+          chipClass={`${minervaThemeControlClassName} ${minervaThemeControlTextClassName}`}
+          chipActiveClass={minervaThemeControlActiveClassName}
         />
       </div>
       {renderAddPanelBody()}
@@ -744,6 +748,8 @@ const Upload = (props: UploadProps) => {
   return (
     <div className={panel.authorPanel}>
       <CompactHeader
+        title="Images"
+        count={`(${images.length})`}
         actions={
           <div className={styles.headerActionsWrap}>
             {imageLoaded ? (
@@ -769,7 +775,7 @@ const Upload = (props: UploadProps) => {
               <PanelIconButton
                 active={addPanelOpen}
                 aria-pressed={addPanelOpen}
-                aria-label="Add image or mask"
+                aria-label="Add image"
                 title="Add"
                 onClick={toggleAddPanel}
               >
@@ -781,14 +787,12 @@ const Upload = (props: UploadProps) => {
         }
       />
 
-      <div
-        className={[
-          styles.stack,
-          panel.authorPanelBody,
-          panel.thinScrollbar,
-        ].join(" ")}
-      >
-        {imageCards}
+      <div className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}>
+        {imageCards ? (
+          <div className={styles.stack}>{imageCards}</div>
+        ) : (
+          <div className={panel.emptyMessage}>No images yet</div>
+        )}
 
         {xmlImportFeedback ? (
           <div

@@ -1,8 +1,8 @@
-/* Match @uiw/react-md-editor dark surface (#0d1117) and chrome */
+/* Match minervaTheme paper / soft edge surface */
 .annotationsPanel {
-  background-color: #0d1117;
-  border: 1px solid #30363d;
-  border-radius: 3px;
+  background-color: var(--minerva-paper, #000);
+  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border-radius: 0;
   margin: 8px 0;
   overflow: hidden;
   display: flex;
@@ -38,5 +38,5 @@
 .annotationsPanelEmbedded .layersContainer {
   max-height: none;
   overflow: visible;
-  background-color: #0d1117;
+  background-color: var(--minerva-paper, #000);
 }

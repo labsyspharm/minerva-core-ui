@@ -2,14 +2,13 @@ import type { ReactNode } from "react";
 import styles from "./CompactHeader.module.css";
 
 export type CompactHeaderProps = {
-  /** Omit when the tab label already names the panel (e.g. Images). */
   title?: ReactNode;
   count?: ReactNode;
   actions?: ReactNode;
   className?: string;
 };
 
-/** Shared compact list header (Waypoints / Channels / similar panels). */
+/** Shared list header for the Images / Channels / Story panels. */
 export function CompactHeader({
   title,
   count,

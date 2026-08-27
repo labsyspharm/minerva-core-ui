@@ -16,7 +16,10 @@ import PointIcon from "@/components/shared/icons/point.svg?react";
 import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
 import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
-import toolButton from "@/components/shared/panel/toolButton.module.css";
+import {
+  minervaThemeControlActiveClassName,
+  minervaThemeControlClassName,
+} from "@/components/shared/minervaTheme";
 import { TextEditPanel } from "@/components/shared/tools/TextEditPanel";
 import type { Shape } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -664,8 +667,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
             <button
               type="button"
               className={[
-                styles.brushEditButton,
-                isBrushActive ? styles.brushEditButtonActive : "",
+                minervaThemeControlClassName,
+                isBrushActive ? minervaThemeControlActiveClassName : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -694,8 +697,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
             <button
               type="button"
               className={[
-                styles.brushEditButton,
-                isEraserActive ? styles.brushEditButtonActive : "",
+                minervaThemeControlClassName,
+                isEraserActive ? minervaThemeControlActiveClassName : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -734,15 +737,16 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     <>
       <button
         type="button"
-        className={toolButton.toolButton}
+        className={minervaThemeControlClassName}
         onClick={() => createGroup()}
-        title="Add group"
+        title="Add"
+        aria-label="Add group"
       >
         <FolderIcon />
       </button>
       <button
         type="button"
-        className={toolButton.toolButton}
+        className={minervaThemeControlClassName}
         onClick={handleHeaderEditTextClick}
         disabled={headerEditTextDisabled}
         title={
@@ -755,7 +759,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       </button>
       <button
         type="button"
-        className={toolButton.toolButton}
+        className={minervaThemeControlClassName}
         onClick={handleHeaderColorClick}
         disabled={headerColorDisabled}
         title={
@@ -772,7 +776,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       </button>
       <button
         type="button"
-        className={toolButton.toolButton}
+        className={minervaThemeControlClassName}
         onClick={handleHeaderDeleteClick}
         disabled={!selectedGroupId && selectedShapeIds.length === 0}
         title={
@@ -789,11 +793,11 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     </>
   );
 
-  const hasUnifiedChrome = !!toolbarSlot;
+  const hasUnifiedToolbar = !!toolbarSlot;
 
   return (
     <div className={styles.layersPanel}>
-      {hasUnifiedChrome ? (
+      {hasUnifiedToolbar ? (
         <div className={styles.layersUnifiedTop}>
           <div className={styles.layersToolbarSlot}>{toolbarSlot}</div>
           <div className={styles.layersMetaCluster}>{layerMetaButtons}</div>
@@ -806,7 +810,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
           variant={itemListVariant}
           items={allItems}
           title="Layers"
-          noHeader={hasUnifiedChrome}
+          noHeader={hasUnifiedToolbar}
           emptyMessage="No layers yet"
           onItemClick={handleItemClick}
           onToggleVisibility={handleToggleVisibility}
@@ -824,7 +828,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
           showDeleteButton={false}
           showExpandToggle={true}
           headerActions={
-            hasUnifiedChrome ? undefined : (
+            hasUnifiedToolbar ? undefined : (
               <div className={styles.layersMetaCluster}>{layerMetaButtons}</div>
             )
           }

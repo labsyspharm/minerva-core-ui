@@ -498,25 +498,31 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   const listHeader = (
     <CompactHeader
-      title="Waypoints"
+      title="Story"
       count={`(${waypoints.length})`}
       actions={
         canEdit ? (
           <>
+            {waypoints.length > 0 ? (
+              <PanelIconButton
+                onClick={() => {
+                  if (waypoints.length === 0) return;
+                  const indexToRemove = activeStoryIndex ?? 0;
+                  if (indexToRemove < 0 || indexToRemove >= waypoints.length)
+                    return;
+                  removeStory(indexToRemove);
+                }}
+                title="Delete"
+                aria-label="Delete waypoint"
+              >
+                <TrashIcon />
+              </PanelIconButton>
+            ) : null}
             <PanelIconButton
-              onClick={() => {
-                if (waypoints.length === 0) return;
-                const indexToRemove = activeStoryIndex ?? 0;
-                if (indexToRemove < 0 || indexToRemove >= waypoints.length)
-                  return;
-                removeStory(indexToRemove);
-              }}
-              disabled={waypoints.length === 0}
-              title="Delete active waypoint"
+              onClick={handleAddWaypoint}
+              title="Add"
+              aria-label="Add waypoint"
             >
-              <TrashIcon />
-            </PanelIconButton>
-            <PanelIconButton onClick={handleAddWaypoint} title="Add waypoint">
               <PlusIcon />
             </PanelIconButton>
           </>
@@ -529,7 +535,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     <>
       {listHeader}
       {waypoints.length === 0 ? (
-        <div className={styles.emptyMessage}>No waypoints yet</div>
+        <div className={panel.emptyMessage}>No waypoints yet</div>
       ) : (
         <ul
           className={[

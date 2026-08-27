@@ -1,5 +1,9 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
+import {
+  minervaThemeMenuFixedClassName,
+  minervaThemeMenuItemClassName,
+} from "@/components/shared/minervaTheme";
 import styles from "./ToolSubmenu.module.css";
 
 export interface ToolSubmenuItem {
@@ -100,14 +104,14 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
         createPortal(
           <div
             ref={menuRef}
-            className={styles.menu}
+            className={`${minervaThemeMenuFixedClassName} ${styles.menu}`}
             style={{ top: menuPos.top, left: menuPos.left }}
           >
             {items.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                className={`${styles.menuItem} ${activeTool === item.id ? styles.menuItemActive : ""}`}
+                className={`${minervaThemeMenuItemClassName} ${styles.menuItem} ${activeTool === item.id ? styles.menuItemActive : ""}`}
                 title={item.title}
                 onClick={() => handleSelect(item.id)}
               >

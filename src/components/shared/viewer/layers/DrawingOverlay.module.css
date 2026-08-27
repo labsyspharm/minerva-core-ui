@@ -3,13 +3,14 @@
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #c62828;
-  color: white;
+  background-color: var(--minerva-paper, #000);
+  color: var(--minerva-ink, #f2f2f2);
   padding: 8px 16px;
-  border-radius: 8px;
+  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border-radius: 0;
+  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
   font-size: 14px;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .hintBar {
@@ -17,37 +18,32 @@
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(30, 30, 30, 0.9);
-  color: #ddd;
+  background-color: var(--minerva-paper, #000);
+  color: var(--minerva-ink, #f2f2f2);
   padding: 8px 20px;
-  border-radius: 8px;
+  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border-radius: 0;
+  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
   font-size: 13px;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   display: flex;
   gap: 16px;
   align-items: center;
   white-space: nowrap;
 }
 
-.hintAdd {
-  color: #4caf50;
-}
-
-.hintRemove {
-  color: #ef5350;
-}
-
+.hintAdd,
+.hintRemove,
 .hintConfirm {
-  color: #90caf9;
+  color: var(--minerva-ink, #f2f2f2);
 }
 
-.hintCancel {
-  color: #999;
+.hintCancel,
+.hintCount {
+  color: var(--minerva-quiet, #888);
 }
 
 .hintCount {
-  color: #888;
   font-size: 12px;
 }
 
@@ -57,15 +53,16 @@
   left: 16px;
   display: flex;
   gap: 12px;
-  background-color: rgba(0, 0, 0, 0.85);
+  background-color: var(--minerva-paper, #000);
+  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 0;
   z-index: 1001;
   max-width: 90vw;
 }
 
 .debugLabel {
-  color: #ccc;
+  color: var(--minerva-quiet, #888);
   font-size: 12px;
   margin-bottom: 4px;
 }
@@ -77,6 +74,6 @@
 }
 
 .debugWaiting {
-  color: #888;
+  color: var(--minerva-quiet, #888);
   font-size: 12px;
 }

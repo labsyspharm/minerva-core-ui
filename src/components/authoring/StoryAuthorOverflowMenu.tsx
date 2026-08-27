@@ -1,4 +1,10 @@
 import * as React from "react";
+import {
+  minervaThemeControlClassName,
+  minervaThemeMenuClassName,
+  minervaThemeMenuItemClassName,
+  minervaThemeMenuItemGapClassName,
+} from "@/components/shared/minervaTheme";
 import type { DocumentData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
@@ -26,10 +32,6 @@ export type StoryAuthorOverflowMenuProps = {
   onExport: () => void;
 };
 
-/**
- * Hamburger + overflow actions (library, export dialog, JSON download) aligned with the top
- * story banner; behavior matches the former nav tab-row menu.
- */
 export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
   const { onReturnToLibrary, onExport } = props;
   const [open, setOpen] = React.useState(false);
@@ -52,7 +54,7 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
     <div className={styles.menuWrap} ref={wrapRef}>
       <button
         type="button"
-        className={styles.hamburgButton}
+        className={minervaThemeControlClassName}
         title="Menu"
         aria-label="Menu"
         aria-expanded={open}
@@ -62,73 +64,64 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
           setOpen((v) => !v);
         }}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 14"
-          width="20"
-          height="14"
-          aria-hidden="true"
-        >
-          <rect x="0" y="0" width="20" height="2" rx="1" fill="currentColor" />
-          <rect x="0" y="6" width="20" height="2" rx="1" fill="currentColor" />
-          <rect x="0" y="12" width="20" height="2" rx="1" fill="currentColor" />
+        <svg viewBox="0 0 14 14" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M2 3h10v1H2V3zm0 4h10v1H2V7zm0 4h10v1H2v-1z"
+          />
         </svg>
       </button>
-      <div
-        className={[styles.dropdown, open ? styles.dropdownOpen : null]
-          .filter(Boolean)
-          .join(" ")}
-        role="menu"
-        aria-hidden={!open}
-      >
-        <button
-          type="button"
-          role="menuitem"
-          className={styles.menuItem}
-          onClick={(e) => {
-            e.stopPropagation();
-            close();
-            onReturnToLibrary();
-          }}
-        >
-          Return to Library
-        </button>
-        <button
-          type="button"
-          role="menuitem"
-          className={`${styles.menuItem} ${styles.menuItemDivided}`}
-          disabled={!waypointsOk}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!waypointsOk) return;
-            close();
-            downloadStoryJsonExport(
-              useDocumentStore.getState().toDocumentData(),
-            );
-          }}
-        >
-          Save Config
-        </button>
-        <button
-          type="button"
-          role="menuitem"
-          className={styles.menuItem}
-          disabled={!waypointsOk}
-          title={
-            waypointsOk
-              ? "Save a playable story folder (index.html + images)"
-              : "Add a waypoint before exporting"
-          }
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!waypointsOk) return;
-            close();
-            onExport();
-          }}
-        >
-          Export Story
-        </button>
-      </div>
+      {open ? (
+        <div className={minervaThemeMenuClassName} role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            className={minervaThemeMenuItemClassName}
+            onClick={(e) => {
+              e.stopPropagation();
+              close();
+              onReturnToLibrary();
+            }}
+          >
+            Return to Library
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className={`${minervaThemeMenuItemClassName} ${minervaThemeMenuItemGapClassName}`}
+            disabled={!waypointsOk}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!waypointsOk) return;
+              close();
+              downloadStoryJsonExport(
+                useDocumentStore.getState().toDocumentData(),
+              );
+            }}
+          >
+            Save Config
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className={minervaThemeMenuItemClassName}
+            disabled={!waypointsOk}
+            title={
+              waypointsOk
+                ? "Save a playable story folder (index.html + images)"
+                : "Add a waypoint before exporting"
+            }
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!waypointsOk) return;
+              close();
+              onExport();
+            }}
+          >
+            Export Story
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

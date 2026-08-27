@@ -17,8 +17,8 @@
   inset: 0;
   align-items: center;
   justify-content: center;
-  background: rgba(13, 17, 23, 0.55);
-  border-radius: 4px;
+  background: rgb(0 0 0 / 0.55);
+  border-radius: 0;
 }
 
 .histogramLoadingVisible {
@@ -42,20 +42,20 @@
 }
 
 .histogramSvg {
-  background-color: #141414;
+  background: var(--minerva-paper, #000);
   width: 100%;
   height: 32px;
   display: block;
 }
 
 .histogramFill {
-  fill: var(--theme-light-focus-color, white);
+  fill: var(--minerva-ink, #f2f2f2);
   stroke: none;
 }
 
 .histogramLine {
   fill: none;
-  stroke: var(--theme-light-focus-color, white);
+  stroke: var(--minerva-ink, #f2f2f2);
   stroke-width: 0.75;
   stroke-linejoin: round;
 }
@@ -88,7 +88,7 @@
   transform: translateY(-50%);
   height: var(--slider-track-height);
   border-radius: 2px;
-  background: #30363d;
+  background: var(--minerva-edge, rgb(255 255 255 / 0.18));
   pointer-events: none;
 }
 
@@ -136,9 +136,9 @@
   appearance: none;
   width: var(--handle-width);
   height: 12px;
-  border-radius: 3px;
-  border: 1px solid var(--theme-glass-edge, rgba(255, 255, 255, 0.5));
-  background: var(--theme-dim-gray-color, #444);
+  border-radius: 0;
+  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  background: var(--minerva-paper, #000);
   cursor: pointer;
   pointer-events: all;
 }
@@ -146,9 +146,9 @@
 .rangeInput::-moz-range-thumb {
   width: var(--handle-width);
   height: 12px;
-  border-radius: 3px;
-  border: 1px solid var(--theme-glass-edge, rgba(255, 255, 255, 0.5));
-  background: var(--theme-dim-gray-color, #444);
+  border-radius: 0;
+  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  background: var(--minerva-paper, #000);
   cursor: pointer;
   pointer-events: all;
 }
@@ -185,21 +185,22 @@
   line-height: 1.2;
   padding: 2px 3px;
   text-align: center;
-  border-radius: 3px;
-  border: 1px solid
-    color-mix(in srgb, var(--theme-glass-edge, #fff) 70%, transparent);
-  background: color-mix(in srgb, var(--theme-dark-gray-color, #000) 88%, black);
-  color: var(--theme-light-contrast-color, #fff);
+  border-radius: 0;
+  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  background: transparent;
+  color: var(--minerva-ink, #f2f2f2);
   font-variant-numeric: tabular-nums;
+  font-family: inherit;
 }
 
 .limitInput:focus {
   outline: none;
-  border-color: color-mix(
-    in srgb,
-    var(--theme-light-focus-color, #fff) 55%,
-    transparent
-  );
+  border-color: var(--minerva-ink, #f2f2f2);
+}
+
+.limitInput:focus-visible {
+  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline-offset: 1px;
 }
 
 .limitInput::-webkit-outer-spin-button,

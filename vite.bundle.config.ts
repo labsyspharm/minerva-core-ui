@@ -83,7 +83,7 @@ export default defineConfig({
       output: {
         exports: "named",
         inlineDynamicImports: true,
-        // Keep CSS as minerva.css; hash other assets (Lato faces, workers).
+        // Keep CSS as minerva.css; hash other assets (fonts, workers).
         assetFileNames: (info) => {
           const name = info.names?.[0] ?? info.name ?? "asset";
           if (name.endsWith(".css")) return "minerva[extname]";

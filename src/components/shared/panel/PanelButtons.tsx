@@ -1,9 +1,14 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import styles from "./PanelButtons.module.css";
+import {
+  minervaThemeControlActiveClassName,
+  minervaThemeControlClassName,
+  minervaThemeControlRowClassName,
+  minervaThemeControlTextClassName,
+} from "@/components/shared/minervaTheme";
 
 export type PanelIconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
-  /** `header` = 30×30 square; `row` = 24×24 pill */
+  /** `header` = 28×28 square; `row` = 24×24 */
   variant?: "header" | "row";
   active?: boolean;
 };
@@ -18,13 +23,16 @@ export function PanelIconButton({
   ...rest
 }: PanelIconButtonProps) {
   const base =
-    variant === "row" ? styles.rowIconButton : styles.iconHeaderButton;
+    variant === "row"
+      ? minervaThemeControlRowClassName
+      : minervaThemeControlClassName;
   return (
     <button
       type={type}
+      data-icon-button=""
       className={[
         base,
-        active ? styles.iconHeaderButtonActive : null,
+        active ? minervaThemeControlActiveClassName : null,
         className,
       ]
         .filter(Boolean)
@@ -41,7 +49,7 @@ export type PanelActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   active?: boolean;
 };
 
-/** Shared text CTA used in panel headers (Add group / Add image). */
+/** Shared text CTA used in panel headers. */
 export function PanelActionButton({
   children,
   active,
@@ -53,8 +61,9 @@ export function PanelActionButton({
     <button
       type={type}
       className={[
-        styles.headerActionButton,
-        active ? styles.headerActionButtonActive : null,
+        minervaThemeControlClassName,
+        minervaThemeControlTextClassName,
+        active ? minervaThemeControlActiveClassName : null,
         className,
       ]
         .filter(Boolean)

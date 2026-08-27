@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { PanelActionButton } from "@/components/shared/panel/PanelButtons";
 import styles from "./TextEditPanel.module.css";
 
 export interface TextEditPanelProps {
@@ -90,23 +91,17 @@ export const TextEditPanel: FC<TextEditPanelProps> = ({
       )}
 
       <div className={styles.actions}>
-        <button
-          type="button"
-          onClick={onCancel}
-          className={styles.buttonCancel}
-        >
+        <PanelActionButton type="button" onClick={onCancel}>
           Cancel
-        </button>
-        <button
+        </PanelActionButton>
+        <PanelActionButton
           type="button"
           onClick={onSubmit}
           disabled={!canSubmit}
-          className={
-            canSubmit ? styles.buttonSubmit : styles.buttonSubmitDisabled
-          }
+          active={canSubmit}
         >
           {submitButtonText}
-        </button>
+        </PanelActionButton>
       </div>
       <div className={styles.hint}>
         {singleLine

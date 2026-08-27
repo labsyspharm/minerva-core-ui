@@ -1,100 +1,77 @@
+@import "@fontsource/noto-serif/400.css";
+@import "@fontsource/noto-serif/400-italic.css";
+
 /**
- * Story presentation shell — authoring preview AND CDN export.
- * Sealed styling boundary so parent Bootstrap / Overpass / app-shell globals
- * do not change layout inside the presentation root.
+ * Story presentation — authoring preview AND CDN export.
+ * Sealed boundary so a parent page's globals cannot change layout inside.
  */
 
-@import "../../fonts.css";
+/* Values on every descendant so a host `* { --dark-main-glass: … }` cannot win. */
+.presentation,
+.presentation * {
+  --minerva-ink: #f2f2f2;
+  --minerva-paper: #000;
+  --minerva-quiet: #888;
+  --minerva-edge: rgb(255 255 255 / 0.18);
+  --minerva-wash: rgb(255 255 255 / 0.08);
+  --minerva-serif: "Noto Serif", Georgia, serif;
+  --minerva-bar-height: 3rem;
+  --minerva-strip-height: 38px;
+  --minerva-title-size: 1.35rem;
+  --minerva-size: 0.9rem;
+  --minerva-size-note: 0.8rem;
+  --minerva-hairline: #f2f2f2;
+  --minerva-control: 28px;
 
-/* Tokens on every descendant so parent-shell `* { --dark-main-glass: … }` cannot win. */
-.presentationShell,
-.presentationShell * {
-  --theme-font-family: "lato", system-ui, sans-serif;
-  --theme-dark-main-color: hwb(240 10% 50%);
-  --theme-light-focus-color: hwb(45 90% 0%);
-  --theme-light-contrast-color: hwb(45 99% 0%);
-  --theme-glass-edge: color-mix(in xyz, white 20%, transparent);
-  --theme-dim-gray-color: #111;
-  --theme-dark-gray-color: color-mix(in xyz, navy 2%, black);
+  --theme-font-family: var(--minerva-serif);
+  --theme-dark-main-color: var(--minerva-paper);
+  --theme-light-focus-color: var(--minerva-ink);
+  --theme-light-contrast-color: var(--minerva-ink);
+  --theme-glass-edge: var(--minerva-edge);
+  --theme-dim-gray-color: var(--minerva-paper);
+  --theme-dark-gray-color: var(--minerva-paper);
   --theme-gap-tiny: 0.3em;
-  --bs-link-color: #6ea8fe;
-  --radius-0001: 0 0 0 4px;
-  --dark-main-glass: color-mix(
-    in xyz,
-    var(--theme-dark-main-color),
-    transparent 60%
-  );
-  --dark-glass: color-mix(in xyz, var(--theme-dim-gray-color), transparent 20%);
-  --dark-main-color: var(--theme-dark-main-color);
-  --light-focus-color: var(--theme-light-focus-color);
-  --light-contrast-color: var(--theme-light-contrast-color);
-  --glass-edge: var(--theme-glass-edge);
-  --dim-gray-color: var(--theme-dim-gray-color);
+  --bs-link-color: var(--minerva-ink);
+  --radius-0001: 0;
+  --dark-main-glass: var(--minerva-paper);
+  --dark-glass: var(--minerva-paper);
+  --dark-main-color: var(--minerva-paper);
+  --light-focus-color: var(--minerva-ink);
+  --light-contrast-color: var(--minerva-ink);
+  --glass-edge: var(--minerva-edge);
+  --dim-gray-color: var(--minerva-paper);
 }
 
-.presentationShell,
-.presentationShell *,
-.presentationShell *::before,
-.presentationShell *::after {
+.presentation,
+.presentation *,
+.presentation *::before,
+.presentation *::after {
   box-sizing: border-box;
 }
 
-.presentationShell {
+.presentation {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  color: #e8e8e8;
-  font-family: var(--theme-font-family);
-  /* Author shell sets Overpass weight 200 on #react-output — do not inherit it. */
+  color: var(--minerva-ink);
+  font-family: var(--minerva-serif);
   font-weight: 400;
   font-size: 16px;
   line-height: normal;
-  background: #111;
+  background: var(--minerva-paper);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 .previewRibbon {
   position: relative;
-  /* Above SplitGrid (later in DOM); channel overlay is absolutely positioned and was painting over */
   z-index: 2;
   justify-content: flex-start;
 }
 
-.previewBackButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  height: var(--story-banner-control-size, 28px);
-  background: rgb(0 0 0 / 0.16);
-  border: 1px solid rgb(255 255 255 / 0.22);
-  color: rgb(248 250 252 / 0.98);
-  padding: 0 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
-  font-family: inherit;
-  font-weight: 500;
-}
-
-.previewBackButton:hover {
-  background: rgb(0 0 0 / 0.26);
-  border-color: rgb(255 255 255 / 0.28);
-  color: #fff;
-}
-
-.previewBackButton:focus-visible {
-  outline: 2px solid var(--theme-light-focus-color, hwb(45 90% 0%));
-  outline-offset: 2px;
-}
-
-/** Left-pointing chevron (down icon rotated); keep as a single SVG for optical centering. */
+/** Left-pointing chevron (down icon rotated). */
 .previewRibbonChevron {
   width: 14px;
   height: 14px;
@@ -110,37 +87,32 @@
 .previewRibbonDocumentTitle {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
   flex: 1;
   min-width: 0;
-  height: var(--story-banner-control-size, 28px);
   box-sizing: border-box;
-  color: rgb(255 255 255 / 0.94);
+  color: var(--minerva-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: start;
-  border-left: 1px solid rgb(255 255 255 / 0.14);
-  padding-left: 10px;
+  padding-inline-end: 0.55em;
 }
 
 /* CDN title-only: center like StoryTitleBar. Preview mode: sit after Back. */
 .previewRibbonDocumentTitleFlush {
+  justify-content: center;
   text-align: center;
-  border-left: none;
-  padding-left: 0;
 }
 
 .previewRibbonPreviewBadge {
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  height: 28px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgb(255 255 255 / 0.55);
+  font-size: var(--minerva-size-note, 0.8rem);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--minerva-quiet);
 }
 
 .splitGrid {
@@ -178,8 +150,8 @@
 
 /** TOC / chevron SVGs are 16px; row must clear icons with equal vertical padding. */
 .navPane {
-  border-right: 2px solid var(--theme-glass-edge);
-  background: var(--theme-dim-gray-color);
+  border-right: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
   display: grid;
   /* No gap — it sat between toolbar and content’s border-top as empty space. */
   gap: 0;
@@ -217,7 +189,7 @@
   overflow-y: auto;
   grid-column: 1;
   grid-row: 2;
-  border-top: 2px solid var(--theme-glass-edge);
+  border-top: 1px solid var(--minerva-edge);
   /* Fixed padding — same whether StoryTitle row is present or not. */
   padding: 8px 8px 0;
   margin: 0;
@@ -246,24 +218,25 @@
 }
 
 .navPane button:focus-visible {
-  outline: 2px solid var(--theme-light-focus-color);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 2px;
 }
 
 .navInactive {
-  color: #444;
+  color: var(--minerva-quiet);
 }
 
 .storyTitle {
-  font-size: 1.25rem;
-  font-weight: 500;
-  line-height: 1.1;
+  font-size: var(--minerva-title-size, 1.35rem);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.2;
   min-width: 0;
 }
 
 .heading {
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.2;
   margin: 0 0 0.5em;
 }
@@ -307,8 +280,8 @@
 }
 
 .toolbar > button:focus-visible {
-  outline: 1px solid var(--theme-light-focus-color, hwb(45 90% 0%));
-  outline-offset: 1px;
+  outline: 2px solid var(--minerva-ink);
+  outline-offset: 2px;
 }
 
 .toolbar > button.navInactive {
@@ -321,7 +294,7 @@
  * (those use their own 11–12px metrics; a root line-height: 1.5 bloated them).
  */
 .contentWrap {
-  scrollbar-color: #888 var(--theme-dim-gray-color);
+  scrollbar-color: var(--minerva-quiet) var(--minerva-paper);
   font-size: 1rem;
   line-height: 1.5;
   font-weight: 400;
@@ -340,12 +313,13 @@
 }
 
 .contentWrap a {
-  color: var(--bs-link-color);
+  color: var(--minerva-ink);
   text-decoration: underline;
 }
 
 .contentWrap a:hover {
-  color: color-mix(in srgb, var(--bs-link-color) 80%, white);
+  color: var(--minerva-ink);
+  opacity: 0.85;
 }
 
 .contentWrap strong {
@@ -415,7 +389,7 @@
 }
 
 .tocWrapper li {
-  color: var(--bs-link-color);
+  color: var(--minerva-ink);
   cursor: pointer;
 }
 
