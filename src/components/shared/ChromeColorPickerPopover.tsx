@@ -1,4 +1,8 @@
-import { Chrome } from "@uiw/react-color";
+import type { HsvaColor } from "@uiw/color-convert";
+import { type Chrome, hexToHsva, hsvaToHex } from "@uiw/react-color";
+import type { AlphaProps } from "@uiw/react-color-alpha";
+import Hue from "@uiw/react-color-hue";
+import Saturation from "@uiw/react-color-saturation";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import CloseIcon from "@/components/shared/icons/close.svg?react";
@@ -69,6 +73,19 @@ export type ChromeColorPickerPopoverProps = {
   onClose: () => void;
 } & Omit<React.ComponentProps<typeof Chrome>, "ref">;
 
+interface HueProps extends Omit<AlphaProps, "hsva" | "onChange"> {
+  onChange?: (newHue: { h: number }) => void;
+  hue: number;
+}
+
+export interface SaturationProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
+  prefixCls?: string;
+  hsva?: HsvaColor;
+  radius?: CSS.Properties<string | number>["borderRadius"];
+  onChange?: (newColor: HsvaColor) => void;
+}
+
 /**
  * Fixed popover + transparent backdrop; close control in a row above the picker.
  * Popover triangle (Github `showTriangle`) is off so the panel is a simple rectangle.
@@ -86,8 +103,25 @@ export function ChromeColorPickerPopover({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [position, onClose]);
+  const hueProps: HueProps = {
+    hue: hexToHsva(chromeProps.color).h,
+    onChange: ({ h }) => {
+      const { v, s } = hexToHsva(chromeProps.color);
+      const hex = hsvaToHex({ h, v, s, a: 1 });
+      chromeProps.onChange({ hex });
+    },
+  };
+  const saturationProps: SaturationProps = {
+    hsva: hexToHsva(chromeProps.color),
+    onChange: ({ h, v, s, a }) => {
+      const hex = hsvaToHex({ h, v, s, a });
+      chromeProps.onChange({ hex });
+    },
+  };
 
   if (!position || typeof document === "undefined") return null;
+
+  console.log(chromeProps, hexToHsva(chromeProps.color).h);
 
   return createPortal(
     <>
@@ -129,7 +163,8 @@ export function ChromeColorPickerPopover({
             <CloseIcon aria-hidden style={closeIconStyle} />
           </button>
         </div>
-        <Chrome {...chromeProps} showTriangle={false} />
+        <Hue {...hueProps} />
+        <Saturation {...saturationProps} />
       </div>
     </>,
     document.body,
