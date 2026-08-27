@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-D1l6pjUq.js","./pako.esm-KbdoS3Oq.js","./lerc-Brz4_tbE.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-zQvI40SR.js","./pako.esm-KbdoS3Oq.js","./lerc-DNHgLjW3.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-D6yeqVXm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CJ_eXKQv.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BvInfKEU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Bxxp9_KE.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-Dm0vwi9X.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-jIrBvnI9.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-D1l6pjUq.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-HABWIvaE.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Brz4_tbE.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-zQvI40SR.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-Ky5iagFl.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DNHgLjW3.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DmCo1-u8.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-y5bmNi-F.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-z_NAjMPA.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DAko3BMu.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -82704,6 +82704,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     }
     return out;
+  }
+  function initialPaintSourceChannelIds(args) {
+    const channelGroups = args.channelGroups ?? [];
+    const stackVisibilities = args.stackVisibilities ?? defaultVisibilitiesForSources(args.sourceChannels, {}, channelGroups);
+    const onLoader = args.sourceChannels.filter(isImageChannel);
+    const activeGroup = channelGroups.length === 0 ? void 0 : channelGroups.find((g2) => g2.id === args.activeGroupId) ?? channelGroups[0];
+    const layers = buildCompositedIntensityLayers({
+      onLoader,
+      activeGroup,
+      channelGroups,
+      stackVisibilities,
+      groupRowVisibilities: args.groupRowVisibilities ?? {},
+      hasVisibilityMap: true
+    });
+    return new Set(layers.map((l2) => l2.sc.id));
   }
   const IMPORT_DEFAULT_SEED_HEX = [
     "0dabff",
@@ -169155,13 +169170,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return result;
   }
   const DEFAULT_LUMINANCE = new Uint16Array([
-    45,
+    50,
     92
   ]);
   const PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP = false;
   const PSUDO_MAX_ITERS = 3e3;
   const PSUDO_CONFUSION_BASELINE_SAMPLES = 32;
-  const PSUDO_NUM_RESTARTS = 6;
+  const PSUDO_NUM_RESTARTS = 18;
   const PSUDO_CONTRAST_MIN = 0;
   const PSUDO_CONTRAST_MAX = 65535;
   const IMPORT_GROUP_SLOT_COUNT = DEFAULT_VISIBLE_INTENSITY_CHANNELS;
@@ -169220,12 +169235,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   let psudoWarmupPromise = null;
   function warmupPsudoPalette() {
     if (!psudoWarmupPromise) {
-      psudoWarmupPromise = __vitePreload(() => import("./index-2w_eDfSA.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.warmup());
+      psudoWarmupPromise = __vitePreload(() => import("./index-CtHPZSV6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.warmup());
     }
     return psudoWarmupPromise;
   }
   async function invokePsudoOptimize(inputs) {
-    const psudo = await __vitePreload(() => import("./index-2w_eDfSA.js"), true ? [] : void 0, import.meta.url);
+    const psudo = await __vitePreload(() => import("./index-CtHPZSV6.js"), true ? [] : void 0, import.meta.url);
     await warmupPsudoPalette();
     const optimized = await psudo.optimize(inputs.colors, inputs.locked, inputs.intensities, inputs.contrastLimits, inputs.luminance, inputs.excluded, inputs.colorNames, inputs.maxIters, inputs.confusionSamples, inputs.spatial, inputs.numRestarts);
     return optimized instanceof Float32Array ? optimized : new Float32Array(optimized);
@@ -176676,11 +176691,15 @@ void main() {
       }
     });
   }
-  const main = "_main_1gd1g_1";
-  const squareViewportOverlay = "_squareViewportOverlay_1gd1g_6";
+  const main = "_main_1ufxm_1";
+  const squareViewportOverlay = "_squareViewportOverlay_1ufxm_6";
+  const imageLoadingOverlay = "_imageLoadingOverlay_1ufxm_15";
+  const imageLoadingSpinner = "_imageLoadingSpinner_1ufxm_31";
   const styles$4 = {
     main,
-    squareViewportOverlay
+    squareViewportOverlay,
+    imageLoadingOverlay,
+    imageLoadingSpinner
   };
   const ORTHO_VIEW_ID = "ortho";
   const SCALEBAR_VIEW_ID = "scalebar-overlay";
@@ -176826,7 +176845,7 @@ void main() {
   };
   const ImageViewer = (props) => {
     const windowSize = useWindowSize();
-    const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2 } = props;
+    const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2, isLoadingImage = false } = props;
     const { activeChannelGroupId, channelVisibilities, channelGroupRowVisibilities, sam2Processing, authoringWaypointEditorOpen } = useAppStore();
     const imageSelectionMask = useAppStore((s2) => s2.imageSelectionMask);
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
@@ -177486,6 +177505,18 @@ void main() {
         jsxRuntimeExports.jsx(LoadingWidget, {
           ref: loadingWidgetRef
         }),
+        isLoadingImage ? jsxRuntimeExports.jsxs("output", {
+          className: styles$4.imageLoadingOverlay,
+          "aria-busy": "true",
+          children: [
+            jsxRuntimeExports.jsx("div", {
+              className: styles$4.imageLoadingSpinner
+            }),
+            jsxRuntimeExports.jsx("span", {
+              children: "Loading\u2026"
+            })
+          ]
+        }) : null,
         showSquareViewportOverlay && jsxRuntimeExports.jsx("div", {
           className: styles$4.squareViewportOverlay,
           style: squareViewportStyle
@@ -248105,12 +248136,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-26T18:22:53.239Z");
+    const label2 = utcShort("2026-08-27T17:17:15.052Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-26T18:22:53.239Z",
+      title: "2026-08-27T17:17:15.052Z",
       children: [
         "Updated ",
         label2,
@@ -249908,8 +249939,10 @@ void main() {
     const { raster } = hit;
     if (!(raster == null ? void 0 : raster.data) || raster.data.length === 0) return null;
     const u16 = rasterToUint16Array(raster.data);
+    const stats = null;
     try {
-      const psudo = await __vitePreload(() => import("./index-2w_eDfSA.js"), true ? [] : void 0, import.meta.url);
+      if (false) ;
+      const psudo = await __vitePreload(() => import("./index-CtHPZSV6.js"), true ? [] : void 0, import.meta.url);
       await warmupPsudoPalette();
       const result = await psudo.channel_gmm(u16);
       if (result && result.length >= 2) {
@@ -249918,7 +249951,7 @@ void main() {
           if (false) ;
           return limits;
         }
-      }
+      } else if (false) ;
     } catch (e2) {
     }
     const fallback = approximateAutoContrastFromUint16Histogram(u16);
@@ -249976,6 +250009,98 @@ void main() {
       }
     }
     return result;
+  }
+  function mergeGmmIntoChannelGroups(groups, byChannelId) {
+    if (byChannelId.size === 0 || groups.length === 0) return groups;
+    let changed = false;
+    const next2 = groups.map((g2) => {
+      const channels2 = g2.channels.map((gc2) => {
+        const fit = byChannelId.get(gc2.channelId);
+        if (!fit) return gc2;
+        if (!looksLikeImportDefaultLimits(gc2.lowerLimit, gc2.upperLimit)) {
+          return gc2;
+        }
+        changed = true;
+        return {
+          ...gc2,
+          lowerLimit: fit.lower,
+          upperLimit: fit.upper
+        };
+      });
+      return {
+        ...g2,
+        channels: channels2
+      };
+    });
+    return changed ? next2 : groups;
+  }
+  function visibleChannelIdsForGmmBeforePaint(args) {
+    const sourceChannels = flattenImageChannelsInDocumentOrder(args.images);
+    const channelGroups = args.channelGroups ?? [];
+    return initialPaintSourceChannelIds({
+      sourceChannels,
+      channelGroups,
+      stackVisibilities: args.stackVisibilities ?? defaultVisibilitiesForSources(sourceChannels, {}, channelGroups),
+      groupRowVisibilities: args.groupRowVisibilities,
+      activeGroupId: args.activeGroupId
+    });
+  }
+  async function fitGmmContrastBeforePaint(args) {
+    const { loaderEntries, imageKey } = args;
+    if (loaderEntries.length === 0) {
+      return {
+        images: args.images,
+        channelGroups: args.channelGroups
+      };
+    }
+    const sourceChannels = flattenImageChannelsInDocumentOrder(args.images);
+    const loaderByImageId = new Map(loaderEntries.map((e2) => [
+      e2.sourceImageId,
+      e2.loader
+    ]));
+    const byChannelId = /* @__PURE__ */ new Map();
+    const byImage = /* @__PURE__ */ new Map();
+    const visible = args.visibleChannelIds;
+    for (const sc2 of sourceChannels) {
+      if (!loaderByImageId.has(sc2.imageId)) continue;
+      if (!isImageChannel(sc2) || sc2.samples === 3) continue;
+      if (visible && !visible.has(sc2.id)) continue;
+      if (sc2.gmmContrastLimits) continue;
+      const list2 = byImage.get(sc2.imageId) ?? [];
+      list2.push({
+        channelId: sc2.id,
+        index: sc2.index
+      });
+      byImage.set(sc2.imageId, list2);
+    }
+    for (const [imageId, pairs] of byImage) {
+      const loader = loaderByImageId.get(imageId);
+      if (!loader) continue;
+      const uniqueIdx = [
+        ...new Set(pairs.map((p2) => p2.index))
+      ];
+      const map2 = await ensureOmeGmmContrastLimits(loader, imageKey, imageId, uniqueIdx);
+      for (const p2 of pairs) {
+        const limits = map2.get(p2.index);
+        if (limits) byChannelId.set(p2.channelId, limits);
+      }
+    }
+    if (byChannelId.size === 0) {
+      return {
+        images: args.images,
+        channelGroups: args.channelGroups
+      };
+    }
+    const nextChannels = mergeGmmContrastLimitsIntoSourceChannelsByChannelId(sourceChannels, byChannelId);
+    const images = nextChannels === sourceChannels ? args.images : applySourceChannelsToImages(args.images, nextChannels);
+    const channelGroups = args.channelGroups != null ? mergeGmmIntoChannelGroups(args.channelGroups, byChannelId) : void 0;
+    return {
+      images,
+      channelGroups
+    };
+  }
+  function omeImportGmmImageKey(fileName, sourceImageIds) {
+    return `${fileName || "ome-tiff"}\0${sourceImageIds.join("\0")}`;
   }
   function WorkerWrapper$1(options) {
     return new Worker("" + new URL("decoder.worker-DIAknyvn.js", import.meta.url).href, {
@@ -250714,13 +250839,17 @@ void main() {
         return;
     }
   }
-  const wrapper = "_wrapper_1mk43_1";
-  const full$1 = "_full_1mk43_10";
-  const retrieving = "_retrieving_1mk43_19";
+  const wrapper = "_wrapper_wfy4u_1";
+  const full$1 = "_full_wfy4u_10";
+  const retrieving = "_retrieving_wfy4u_19";
+  const importLoadingOverlay = "_importLoadingOverlay_wfy4u_28";
+  const importLoadingSpinner = "_importLoadingSpinner_wfy4u_44";
   const styles = {
     wrapper,
     full: full$1,
-    retrieving
+    retrieving,
+    importLoadingOverlay,
+    importLoadingSpinner
   };
   function ensureDefaultWaypointForImageImport() {
     var _a2;
@@ -251149,9 +251278,28 @@ void main() {
     const jpegUrlLoadGenerationRef = reactExports.useRef(0);
     const [importRevision, setImportRevision] = reactExports.useState(0);
     const [isLoadingImage, setIsLoadingImage] = reactExports.useState(hasDemo);
+    const imageLoadEpochRef = reactExports.useRef(0);
+    const pendingEagerGmmEpochRef = reactExports.useRef(null);
+    const beginImageLoading = reactExports.useCallback(() => {
+      const epoch = ++imageLoadEpochRef.current;
+      pendingEagerGmmEpochRef.current = null;
+      setIsLoadingImage(true);
+      return epoch;
+    }, []);
+    const endImageLoading = reactExports.useCallback((epoch) => {
+      if (epoch === imageLoadEpochRef.current) {
+        pendingEagerGmmEpochRef.current = null;
+        setIsLoadingImage(false);
+      }
+    }, []);
+    const clearImageLoading = reactExports.useCallback(() => {
+      imageLoadEpochRef.current += 1;
+      pendingEagerGmmEpochRef.current = null;
+      setIsLoadingImage(false);
+    }, []);
     const onReplaceImage = reactExports.useCallback(async (imageId) => {
       var _a2;
-      setIsLoadingImage(true);
+      const loadEpoch = beginImageLoading();
       try {
         const handle2 = await pickLocalOmeTiffHandle();
         if (!handle2) return;
@@ -251167,20 +251315,40 @@ void main() {
           if (prep.error) window.alert(prep.error);
           return;
         }
-        const nextImages = await persistLocalImageHandle({
+        const nextImagesPersisted = await persistLocalImageHandle({
           storyId: useDocumentStore.getState().activeStoryId,
           imageId: prep.newImageId,
           handle: handle2,
           images: prep.nextImages,
           previousHandleKey: prep.oldLocalHandleKey
         });
+        const loaderEntry = {
+          loader: prep.loader,
+          sourceImageId: prep.newImageId
+        };
+        const app = useAppStore.getState();
+        const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+          images: nextImagesPersisted,
+          channelGroups: doc.channelGroups,
+          stackVisibilities: defaultVisibilitiesForSources(flattenImageChannelsInDocumentOrder(nextImagesPersisted), app.channelVisibilities, doc.channelGroups),
+          groupRowVisibilities: app.channelGroupRowVisibilities,
+          activeGroupId: app.activeChannelGroupId
+        });
+        const gmm = await fitGmmContrastBeforePaint({
+          images: nextImagesPersisted,
+          channelGroups: doc.channelGroups,
+          loaderEntries: [
+            loaderEntry
+          ],
+          imageKey: omeImportGmmImageKey(prep.basename, [
+            prep.newImageId
+          ]),
+          visibleChannelIds
+        });
         skipLoaderHydrateRef.current = true;
         setOmeLoaderEntries((prev) => [
           ...prev.filter((e2) => e2.sourceImageId !== prep.oldImageId),
-          {
-            loader: prep.loader,
-            sourceImageId: prep.newImageId
-          }
+          loaderEntry
         ]);
         setJpegLoaderEntries((prev) => prev.filter((e2) => e2.sourceImageId !== prep.oldImageId));
         setDicomIndexList((prev) => prev.filter((d2) => d2.sourceImageId !== prep.oldImageId));
@@ -251188,7 +251356,7 @@ void main() {
         if (prep.oldLocalHandleKey) {
           setMissingHandleKeys((prev) => prev.filter((k2) => k2 !== prep.oldLocalHandleKey));
         }
-        publishChannelState(nextImages, doc.channelGroups, {
+        publishChannelState(gmm.images, gmm.channelGroups ?? doc.channelGroups, {
           resetActiveGroup: false,
           mergeVisibilities: true
         });
@@ -251202,10 +251370,12 @@ void main() {
           window.alert(e2 instanceof Error ? e2.message : "Could not replace image");
         }
       } finally {
-        setIsLoadingImage(false);
+        endImageLoading(loadEpoch);
         (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
       }
     }, [
+      beginImageLoading,
+      endImageLoading,
       publishChannelState
     ]);
     const showSquareViewportOverlay = useAppStore((state) => state.showSquareViewportOverlay);
@@ -251287,6 +251457,17 @@ void main() {
       const ChannelGroups2 = [];
       if (role !== "segmentation") {
         nextImages = await applyPaletteToFlatImportImages(nextImages, SourceChannels);
+        const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+          images: nextImages,
+          channelGroups: []
+        });
+        const gmm = await fitGmmContrastBeforePaint({
+          images: nextImages,
+          loaderEntries: entries,
+          imageKey: omeImportGmmImageKey(in_f, entries.map((e2) => e2.sourceImageId)),
+          visibleChannelIds
+        });
+        nextImages = gmm.images;
       }
       skipLoaderHydrateRef.current = true;
       setOmeLoaderEntries(entries);
@@ -251374,11 +251555,30 @@ void main() {
           }
         }
       }
-      const ChannelGroups2 = await finalizeAppendedIntensityGroups({
+      let ChannelGroups2 = await finalizeAppendedIntensityGroups({
         mergedGroups,
         newIntensityGroups: role === "intensity" ? newIntensityGroups : [],
         nextImages
       });
+      if (role !== "segmentation" && newEntries.length > 0) {
+        const app = useAppStore.getState();
+        const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+          images: nextImages,
+          channelGroups: ChannelGroups2,
+          stackVisibilities: defaultVisibilitiesForSources(flattenImageChannelsInDocumentOrder(nextImages), app.channelVisibilities, ChannelGroups2),
+          groupRowVisibilities: app.channelGroupRowVisibilities,
+          activeGroupId: app.activeChannelGroupId
+        });
+        const gmm = await fitGmmContrastBeforePaint({
+          images: nextImages,
+          channelGroups: ChannelGroups2,
+          loaderEntries: newEntries,
+          imageKey: omeImportGmmImageKey(in_f, newEntries.map((e2) => e2.sourceImageId)),
+          visibleChannelIds
+        });
+        nextImages = gmm.images;
+        if (gmm.channelGroups) ChannelGroups2 = gmm.channelGroups;
+      }
       skipLoaderHydrateRef.current = true;
       setOmeLoaderEntries((prev) => {
         const drop = new Set(removedLoaderIds);
@@ -251485,6 +251685,28 @@ void main() {
         kind: "url",
         url
       });
+      if (role !== "segmentation") {
+        const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+          images: nextImages,
+          channelGroups: ChannelGroups2
+        });
+        const gmm = await fitGmmContrastBeforePaint({
+          images: nextImages,
+          channelGroups: ChannelGroups2,
+          loaderEntries: [
+            {
+              loader,
+              sourceImageId
+            }
+          ],
+          imageKey: omeImportGmmImageKey(basename2, [
+            sourceImageId
+          ]),
+          visibleChannelIds
+        });
+        nextImages = gmm.images;
+        if (gmm.channelGroups) ChannelGroups2 = gmm.channelGroups;
+      }
       skipLoaderHydrateRef.current = true;
       setOmeLoaderEntries([
         {
@@ -251544,11 +251766,37 @@ void main() {
       if (role !== "segmentation" && slice.extractedGroups.length === 0) {
         nextImages = await applyPaletteToFlatImportImages(nextImages, slice.sourceChannels);
       }
-      const ChannelGroups2 = await finalizeAppendedIntensityGroups({
+      let ChannelGroups2 = await finalizeAppendedIntensityGroups({
         mergedGroups,
         newIntensityGroups: role !== "segmentation" ? slice.extractedGroups : [],
         nextImages
       });
+      if (role !== "segmentation") {
+        const app = useAppStore.getState();
+        const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+          images: nextImages,
+          channelGroups: ChannelGroups2,
+          stackVisibilities: defaultVisibilitiesForSources(flattenImageChannelsInDocumentOrder(nextImages), app.channelVisibilities, ChannelGroups2),
+          groupRowVisibilities: app.channelGroupRowVisibilities,
+          activeGroupId: app.activeChannelGroupId
+        });
+        const gmm = await fitGmmContrastBeforePaint({
+          images: nextImages,
+          channelGroups: ChannelGroups2,
+          loaderEntries: [
+            {
+              loader,
+              sourceImageId
+            }
+          ],
+          imageKey: omeImportGmmImageKey(basename2, [
+            sourceImageId
+          ]),
+          visibleChannelIds
+        });
+        nextImages = gmm.images;
+        if (gmm.channelGroups) ChannelGroups2 = gmm.channelGroups;
+      }
       skipLoaderHydrateRef.current = true;
       setOmeLoaderEntries((prev) => {
         const drop = new Set(deduped.removedImageIds);
@@ -251597,7 +251845,7 @@ void main() {
       var _a2;
       const storyId = useDocumentStore.getState().activeStoryId;
       if (!storyId) return;
-      setIsLoadingImage(true);
+      const loadEpoch = beginImageLoading();
       try {
         await reconnectStoryRootFromPicker(storyId);
         const doc = useDocumentStore.getState();
@@ -251616,16 +251864,18 @@ void main() {
           window.alert(e2 instanceof Error ? e2.message : "Could not open story folder");
         }
       } finally {
-        setIsLoadingImage(false);
+        endImageLoading(loadEpoch);
         (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
       }
     }, [
       applyHydratedLoaders,
+      beginImageLoading,
+      endImageLoading,
       syncRegistryFromDocument
     ]);
     const requestLoaderFileAccess = reactExports.useCallback(async () => {
       var _a2;
-      setIsLoadingImage(true);
+      const loadEpoch = beginImageLoading();
       try {
         const doc = useDocumentStore.getState();
         const result = await hydrateLoadersFromImages(doc.images, true, {
@@ -251640,16 +251890,18 @@ void main() {
       } catch (e2) {
         console.error("[minerva] requestLoaderFileAccess failed", e2);
       } finally {
-        setIsLoadingImage(false);
+        endImageLoading(loadEpoch);
         (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
       }
     }, [
       applyHydratedLoaders,
+      beginImageLoading,
+      endImageLoading,
       syncRegistryFromDocument
     ]);
     const reselectLoaderFile = reactExports.useCallback(async (imageId) => {
       var _a2;
-      setIsLoadingImage(true);
+      const loadEpoch = beginImageLoading();
       try {
         const handle2 = await pickLocalOmeTiffHandle();
         if (!handle2) return;
@@ -251671,11 +251923,13 @@ void main() {
       } catch (e2) {
         console.error("[minerva] reselectLoaderFile failed", e2);
       } finally {
-        setIsLoadingImage(false);
+        endImageLoading(loadEpoch);
         (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
       }
     }, [
       applyHydratedLoaders,
+      beginImageLoading,
+      endImageLoading,
       syncRegistryFromDocument
     ]);
     const onRestoredOmeHandles = reactExports.useCallback(async (restored) => {
@@ -251687,7 +251941,7 @@ void main() {
       const doc = useDocumentStore.getState();
       if (doc.images.some((im) => im.source)) {
         useAppStore.getState().clearOverlayLayers();
-        setIsLoadingImage(true);
+        const loadEpoch = beginImageLoading();
         try {
           applyHydratedLoaders(await hydrateLoadersFromImages(doc.images, false, {
             channelGroups: doc.channelGroups,
@@ -251695,7 +251949,7 @@ void main() {
           }));
           syncRegistryFromDocument();
         } finally {
-          setIsLoadingImage(false);
+          endImageLoading(loadEpoch);
         }
         setImportRevision((r2) => r2 + 1);
         (_b2 = document.getElementById("global-loader")) == null ? void 0 : _b2.remove();
@@ -251708,6 +251962,8 @@ void main() {
       (_c2 = document.getElementById("global-loader")) == null ? void 0 : _c2.remove();
     }, [
       applyHydratedLoaders,
+      beginImageLoading,
+      endImageLoading,
       syncRegistryFromDocument
     ]);
     const onStart = async (imagePropList, handles) => {
@@ -251729,7 +251985,7 @@ void main() {
       const t0 = performance.now();
       console.log("[minerva] onStart: will load, setting loading state");
       setImportRevision((r2) => r2 + 1);
-      setIsLoadingImage(true);
+      const loadEpoch = beginImageLoading();
       try {
         if (dicomPropList.length > 0) {
           const t1 = performance.now();
@@ -251753,7 +252009,7 @@ void main() {
         }
       } finally {
         console.log(`[minerva] total load: ${(performance.now() - t0).toFixed(0)}ms`);
-        setIsLoadingImage(false);
+        endImageLoading(loadEpoch);
         (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
       }
     };
@@ -251829,7 +252085,7 @@ void main() {
     reactExports.useEffect(() => {
       if (!props.demo_url) return;
       if (useDocumentStore.getState().images.length > 0) {
-        setIsLoadingImage(false);
+        clearImageLoading();
         return;
       }
       if (props.demo_jpeg) {
@@ -251855,7 +252111,8 @@ void main() {
       })();
     }, [
       props.demo_url,
-      props.demo_jpeg
+      props.demo_jpeg,
+      clearImageLoading
     ]);
     const loaderHydrationGenRef = reactExports.useRef(0);
     reactExports.useEffect(() => {
@@ -251869,7 +252126,8 @@ void main() {
       let cancelled = false;
       void (async () => {
         var _a2;
-        setIsLoadingImage(true);
+        const loadEpoch = beginImageLoading();
+        let hydratedOmeIds = [];
         try {
           const result = await hydrateLoadersFromImages(images, false, {
             channelGroups: useDocumentStore.getState().channelGroups,
@@ -251878,6 +252136,7 @@ void main() {
           if (cancelled || gen !== loaderHydrationGenRef.current || skipLoaderHydrateRef.current) {
             return;
           }
+          hydratedOmeIds = result.omeLoaderEntries.map((e2) => e2.sourceImageId);
           applyHydratedLoaders(result);
           const urlIm = images.find((i2) => {
             var _a3;
@@ -251890,8 +252149,27 @@ void main() {
         } catch (e2) {
           console.error("[minerva] hydrate loaders failed", e2);
         } finally {
-          if (!cancelled && gen === loaderHydrationGenRef.current) {
-            setIsLoadingImage(false);
+          const stale = cancelled || gen !== loaderHydrationGenRef.current || skipLoaderHydrateRef.current;
+          if (stale) {
+            endImageLoading(loadEpoch);
+          } else {
+            const doc = useDocumentStore.getState();
+            const loaderIds = new Set(hydratedOmeIds);
+            const scs = documentSourceChannels(doc);
+            const app = useAppStore.getState();
+            const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+              images: doc.images,
+              channelGroups: doc.channelGroups,
+              stackVisibilities: defaultVisibilitiesForSources(scs, app.channelVisibilities, doc.channelGroups),
+              groupRowVisibilities: app.channelGroupRowVisibilities,
+              activeGroupId: app.activeChannelGroupId
+            });
+            const needsEagerGmm = loaderIds.size > 0 && doc.channelGroups.length === 0 && scs.some((sc2) => loaderIds.has(sc2.imageId) && isImageChannel(sc2) && sc2.samples !== 3 && !sc2.gmmContrastLimits && visibleChannelIds.has(sc2.id));
+            if (needsEagerGmm && loadEpoch === imageLoadEpochRef.current) {
+              pendingEagerGmmEpochRef.current = loadEpoch;
+            } else {
+              endImageLoading(loadEpoch);
+            }
           }
         }
       })();
@@ -251903,7 +252181,9 @@ void main() {
       jpegLoaderEntries.length,
       omeLoaderEntries.length,
       dicomIndexList.length,
-      applyHydratedLoaders
+      applyHydratedLoaders,
+      beginImageLoading,
+      endImageLoading
     ]);
     const noLoader = jpegLoaderEntries.length === 0 && omeLoaderEntries.length === 0 && dicomIndexList.length === 0 && !hasDemo;
     useSyncJpegChannelFolders(jpegLoaderEntries, images, activeChannelGroupId, channelGroups, setJpegLoaderEntries);
@@ -252083,20 +252363,41 @@ void main() {
       const doc = useDocumentStore.getState();
       if (doc.channelGroups.length > 0) {
         lastEagerGmmKeyRef.current = viewerImageKey;
+        const handed = pendingEagerGmmEpochRef.current;
+        pendingEagerGmmEpochRef.current = null;
+        if (handed != null) endImageLoading(handed);
         return;
       }
       const scs = documentSourceChannels(doc);
       const loaderImageIds = new Set(omeLoaderEntries.map((e2) => e2.sourceImageId));
-      const ids = scs.filter((sc2) => loaderImageIds.has(sc2.imageId) && isImageChannel(sc2) && sc2.samples !== 3 && !sc2.gmmContrastLimits).map((sc2) => sc2.id);
+      const app = useAppStore.getState();
+      const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+        images: doc.images,
+        channelGroups: doc.channelGroups,
+        stackVisibilities: defaultVisibilitiesForSources(scs, app.channelVisibilities, doc.channelGroups),
+        groupRowVisibilities: app.channelGroupRowVisibilities,
+        activeGroupId: app.activeChannelGroupId
+      });
+      const ids = scs.filter((sc2) => loaderImageIds.has(sc2.imageId) && isImageChannel(sc2) && sc2.samples !== 3 && !sc2.gmmContrastLimits && visibleChannelIds.has(sc2.id)).map((sc2) => sc2.id);
       if (scs.length === 0) return;
       lastEagerGmmKeyRef.current = viewerImageKey;
-      if (ids.length === 0) return;
+      const handedOff = pendingEagerGmmEpochRef.current != null && pendingEagerGmmEpochRef.current === imageLoadEpochRef.current ? pendingEagerGmmEpochRef.current : null;
+      pendingEagerGmmEpochRef.current = null;
+      if (ids.length === 0) {
+        if (handedOff != null) endImageLoading(handedOff);
+        return;
+      }
+      const loadEpoch = handedOff ?? beginImageLoading();
       void onEnsureChannelGmmContrastLimits(ids).catch((e2) => {
+      }).finally(() => {
+        endImageLoading(loadEpoch);
       });
     }, [
       viewerImageKey,
       omeLoaderEntries,
-      onEnsureChannelGmmContrastLimits
+      onEnsureChannelGmmContrastLimits,
+      beginImageLoading,
+      endImageLoading
     ]);
     const storyImageSource = useDocumentStore((s2) => s2.metadata.imageSource);
     const contrastEditable = storyImageSource !== JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE && (omeLoaderEntries.length > 0 || dicomIndexList.length > 0 || jpegTransferFromImageSource(storyImageSource) === "cube-root");
@@ -252160,14 +252461,16 @@ void main() {
         mainSettingsList,
         imageLayers,
         omeLoaderEntries,
-        showSquareViewportOverlay
+        showSquareViewportOverlay,
+        isLoadingImage
       };
     }, [
       showSquareViewportOverlay,
       mainSettingsList,
       imageLayers,
       loaderList,
-      omeLoaderEntries
+      omeLoaderEntries,
+      isLoadingImage
     ]);
     const { overlayLayers, activeTool, dragState, hoverState, handleOverlayInteraction, activeStoryIndex, setActiveStory, setStories } = useAppStore();
     const _waypoints = useDocumentStore((s2) => s2.waypoints);
@@ -252317,7 +252620,7 @@ void main() {
         }
         const importOme = async (req) => {
           var _a2;
-          setIsLoadingImage(true);
+          const loadEpoch = beginImageLoading();
           try {
             if (req.source.kind === "local") {
               if (req.append) {
@@ -252346,7 +252649,7 @@ void main() {
               error: e2 instanceof Error ? e2.message : "Could not load the image file."
             };
           } finally {
-            setIsLoadingImage(false);
+            endImageLoading(loadEpoch);
             (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
           }
         };
@@ -252389,13 +252692,27 @@ void main() {
           hoveredShapeId: hoverState.hoveredShapeId,
           onOverlayInteraction: handleOverlayInteraction
         }, viewerRemountKey);
-        const imager = jsxRuntimeExports.jsx("div", {
+        const imager = jsxRuntimeExports.jsxs("div", {
           className: styles.full,
-          children: jsxRuntimeExports.jsx(PlaybackModeView, {
-            ...routerProps,
-            viewer,
-            imagesPanel
-          })
+          children: [
+            isLoadingImage ? jsxRuntimeExports.jsxs("output", {
+              className: styles.importLoadingOverlay,
+              "aria-busy": "true",
+              children: [
+                jsxRuntimeExports.jsx("div", {
+                  className: styles.importLoadingSpinner
+                }),
+                jsxRuntimeExports.jsx("span", {
+                  children: "Loading\u2026"
+                })
+              ]
+            }) : null,
+            jsxRuntimeExports.jsx(PlaybackModeView, {
+              ...routerProps,
+              viewer,
+              imagesPanel
+            })
+          ]
         });
         return jsxRuntimeExports.jsxs("div", {
           className: styles.wrapper,

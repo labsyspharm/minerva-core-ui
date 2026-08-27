@@ -6689,18 +6689,49 @@ body[data-color-mode*='light'] {
   margin-top: -1px;
   cursor: row-resize;
 }
-._main_1gd1g_1 {
+._main_1ufxm_1 {
   position: relative;
   height: 100%;
 }
 
-._squareViewportOverlay_1gd1g_6 {
+._squareViewportOverlay_1ufxm_6 {
   position: absolute;
   pointer-events: none;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   box-sizing: border-box;
+}
+
+._imageLoadingOverlay_1ufxm_15 {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in xyz, var(--theme-dark-gray-color, #111) 85%, transparent);
+  pointer-events: all;
+  color: #aaa;
+  font-family: var(--theme-font-family, sans-serif);
+  font-size: 15px;
+}
+
+._imageLoadingSpinner_1ufxm_31 {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  animation: _image-loading-spin_1ufxm_1 0.9s linear infinite;
+}
+
+@keyframes _image-loading-spin_1ufxm_1 {
+  to {
+    transform: rotate(360deg);
+  }
 }
 ._modeViewport_8yyl9_1 {
   position: relative;
@@ -7134,7 +7165,7 @@ body[data-color-mode*='light'] {
   color: #3fb950;
   margin-top: 0.25rem;
 }
-._wrapper_1mk43_1 {
+._wrapper_wfy4u_1 {
   flex: 1;
   height: 100%;
   position: relative;
@@ -7143,7 +7174,7 @@ body[data-color-mode*='light'] {
   flex-direction: column;
 }
 
-._full_1mk43_10 {
+._full_wfy4u_10 {
   position: relative;
   flex: 1;
   min-height: 0;
@@ -7152,13 +7183,44 @@ body[data-color-mode*='light'] {
   overflow: hidden;
 }
 
-._retrieving_1mk43_19 {
+._retrieving_wfy4u_19 {
   height: 100%;
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
   justify-items: center;
   align-items: center;
+}
+
+._importLoadingOverlay_wfy4u_28 {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in xyz, var(--theme-dark-gray-color, #111) 88%, transparent);
+  pointer-events: all;
+  color: #aaa;
+  font-family: var(--theme-font-family, sans-serif);
+  font-size: 15px;
+}
+
+._importLoadingSpinner_wfy4u_44 {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  animation: _import-loading-spin_wfy4u_1 0.9s linear infinite;
+}
+
+@keyframes _import-loading-spin_wfy4u_1 {
+  to {
+    transform: rotate(360deg);
+  }
 }
 /* overpass-cyrillic-ext-200-normal */
 @font-face {
