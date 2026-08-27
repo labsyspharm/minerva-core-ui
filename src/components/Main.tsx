@@ -24,9 +24,12 @@ import {
   type ContrastLimits,
   clearOmeGmmContrastCache,
   ensureOmeGmmContrastLimits,
+  fitGmmContrastBeforePaint,
   invalidateOmeGmmContrastCache,
   looksLikeImportDefaultLimits,
   mergeGmmContrastLimitsIntoSourceChannelsByChannelId,
+  omeImportGmmImageKey,
+  visibleChannelIdsForGmmBeforePaint,
 } from "@/lib/imaging/autoContrast";
 import { defaultVisibilitiesForSources } from "@/lib/imaging/channelCompositor";
 import { isImageChannel } from "@/lib/imaging/channelKind";
@@ -702,6 +705,34 @@ const Content = (props: Props) => {
   const jpegUrlLoadGenerationRef = React.useRef(0);
   const [importRevision, setImportRevision] = useState(0);
   const [isLoadingImage, setIsLoadingImage] = useState(hasDemo);
+  /**
+   * Only the latest `beginImageLoading` epoch may clear the overlay. Prevents a
+   * finished hydrate / eager-GMM from hiding loading for a newer import.
+   */
+  const imageLoadEpochRef = React.useRef(0);
+  /** Hydrate handed this epoch to eager GMM — do not clear until GMM finishes. */
+  const pendingEagerGmmEpochRef = React.useRef<number | null>(null);
+
+  const beginImageLoading = React.useCallback(() => {
+    const epoch = ++imageLoadEpochRef.current;
+    pendingEagerGmmEpochRef.current = null;
+    setIsLoadingImage(true);
+    return epoch;
+  }, []);
+
+  const endImageLoading = React.useCallback((epoch: number) => {
+    if (epoch === imageLoadEpochRef.current) {
+      pendingEagerGmmEpochRef.current = null;
+      setIsLoadingImage(false);
+    }
+  }, []);
+
+  /** Force-clear (cancel / demo already loaded) and invalidate in-flight owners. */
+  const clearImageLoading = React.useCallback(() => {
+    imageLoadEpochRef.current += 1;
+    pendingEagerGmmEpochRef.current = null;
+    setIsLoadingImage(false);
+  }, []);
 
   /**
    * Swap an image's pixel source for a new OME-TIFF. New image id, same channel
@@ -709,7 +740,7 @@ const Content = (props: Props) => {
    */
   const onReplaceImage = useCallback(
     async (imageId: string) => {
-      setIsLoadingImage(true);
+      const loadEpoch = beginImageLoading();
       try {
         const handle = await pickLocalOmeTiffHandle();
         if (!handle) return;
@@ -727,7 +758,7 @@ const Content = (props: Props) => {
           return;
         }
 
-        const nextImages = await persistLocalImageHandle({
+        const nextImagesPersisted = await persistLocalImageHandle({
           storyId: useDocumentStore.getState().activeStoryId,
           imageId: prep.newImageId,
           handle,
@@ -735,10 +766,34 @@ const Content = (props: Props) => {
           previousHandleKey: prep.oldLocalHandleKey,
         });
 
+        const loaderEntry = {
+          loader: prep.loader,
+          sourceImageId: prep.newImageId,
+        };
+        const app = useAppStore.getState();
+        const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+          images: nextImagesPersisted,
+          channelGroups: doc.channelGroups,
+          stackVisibilities: defaultVisibilitiesForSources(
+            flattenImageChannelsInDocumentOrder(nextImagesPersisted),
+            app.channelVisibilities,
+            doc.channelGroups,
+          ),
+          groupRowVisibilities: app.channelGroupRowVisibilities,
+          activeGroupId: app.activeChannelGroupId,
+        });
+        const gmm = await fitGmmContrastBeforePaint({
+          images: nextImagesPersisted,
+          channelGroups: doc.channelGroups,
+          loaderEntries: [loaderEntry],
+          imageKey: omeImportGmmImageKey(prep.basename, [prep.newImageId]),
+          visibleChannelIds,
+        });
+
         skipLoaderHydrateRef.current = true;
         setOmeLoaderEntries((prev) => [
           ...prev.filter((e) => e.sourceImageId !== prep.oldImageId),
-          { loader: prep.loader, sourceImageId: prep.newImageId },
+          loaderEntry,
         ]);
         setJpegLoaderEntries((prev) =>
           prev.filter((e) => e.sourceImageId !== prep.oldImageId),
@@ -753,10 +808,14 @@ const Content = (props: Props) => {
           );
         }
 
-        publishChannelState(nextImages, doc.channelGroups, {
-          resetActiveGroup: false,
-          mergeVisibilities: true,
-        });
+        publishChannelState(
+          gmm.images,
+          gmm.channelGroups ?? doc.channelGroups,
+          {
+            resetActiveGroup: false,
+            mergeVisibilities: true,
+          },
+        );
         setFileName(prep.basename);
         setLastOmeTiffUrl(null);
         setViewerRemountKey((k) => k + 1);
@@ -769,11 +828,11 @@ const Content = (props: Props) => {
           );
         }
       } finally {
-        setIsLoadingImage(false);
+        endImageLoading(loadEpoch);
         document.getElementById("global-loader")?.remove();
       }
     },
-    [publishChannelState],
+    [beginImageLoading, endImageLoading, publishChannelState],
   );
 
   const showSquareViewportOverlay = useAppStore(
@@ -870,6 +929,20 @@ const Content = (props: Props) => {
         nextImages,
         SourceChannels,
       );
+      const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+        images: nextImages,
+        channelGroups: [],
+      });
+      const gmm = await fitGmmContrastBeforePaint({
+        images: nextImages,
+        loaderEntries: entries,
+        imageKey: omeImportGmmImageKey(
+          in_f,
+          entries.map((e) => e.sourceImageId),
+        ),
+        visibleChannelIds,
+      });
+      nextImages = gmm.images;
     }
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries(entries);
@@ -961,11 +1034,37 @@ const Content = (props: Props) => {
       }
     }
 
-    const ChannelGroups = await finalizeAppendedIntensityGroups({
+    let ChannelGroups = await finalizeAppendedIntensityGroups({
       mergedGroups,
       newIntensityGroups: role === "intensity" ? newIntensityGroups : [],
       nextImages,
     });
+    if (role !== "segmentation" && newEntries.length > 0) {
+      const app = useAppStore.getState();
+      const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+        images: nextImages,
+        channelGroups: ChannelGroups,
+        stackVisibilities: defaultVisibilitiesForSources(
+          flattenImageChannelsInDocumentOrder(nextImages),
+          app.channelVisibilities,
+          ChannelGroups,
+        ),
+        groupRowVisibilities: app.channelGroupRowVisibilities,
+        activeGroupId: app.activeChannelGroupId,
+      });
+      const gmm = await fitGmmContrastBeforePaint({
+        images: nextImages,
+        channelGroups: ChannelGroups,
+        loaderEntries: newEntries,
+        imageKey: omeImportGmmImageKey(
+          in_f,
+          newEntries.map((e) => e.sourceImageId),
+        ),
+        visibleChannelIds,
+      });
+      nextImages = gmm.images;
+      if (gmm.channelGroups) ChannelGroups = gmm.channelGroups;
+    }
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries((prev) => {
       const drop = new Set(removedLoaderIds);
@@ -1090,6 +1189,21 @@ const Content = (props: Props) => {
       kind: "url",
       url,
     });
+    if (role !== "segmentation") {
+      const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+        images: nextImages,
+        channelGroups: ChannelGroups,
+      });
+      const gmm = await fitGmmContrastBeforePaint({
+        images: nextImages,
+        channelGroups: ChannelGroups,
+        loaderEntries: [{ loader, sourceImageId }],
+        imageKey: omeImportGmmImageKey(basename, [sourceImageId]),
+        visibleChannelIds,
+      });
+      nextImages = gmm.images;
+      if (gmm.channelGroups) ChannelGroups = gmm.channelGroups;
+    }
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries([{ loader, sourceImageId }]);
     setDeniedHandleKeys([]);
@@ -1144,11 +1258,34 @@ const Content = (props: Props) => {
         slice.sourceChannels,
       );
     }
-    const ChannelGroups = await finalizeAppendedIntensityGroups({
+    let ChannelGroups = await finalizeAppendedIntensityGroups({
       mergedGroups,
       newIntensityGroups: role !== "segmentation" ? slice.extractedGroups : [],
       nextImages,
     });
+    if (role !== "segmentation") {
+      const app = useAppStore.getState();
+      const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+        images: nextImages,
+        channelGroups: ChannelGroups,
+        stackVisibilities: defaultVisibilitiesForSources(
+          flattenImageChannelsInDocumentOrder(nextImages),
+          app.channelVisibilities,
+          ChannelGroups,
+        ),
+        groupRowVisibilities: app.channelGroupRowVisibilities,
+        activeGroupId: app.activeChannelGroupId,
+      });
+      const gmm = await fitGmmContrastBeforePaint({
+        images: nextImages,
+        channelGroups: ChannelGroups,
+        loaderEntries: [{ loader, sourceImageId }],
+        imageKey: omeImportGmmImageKey(basename, [sourceImageId]),
+        visibleChannelIds,
+      });
+      nextImages = gmm.images;
+      if (gmm.channelGroups) ChannelGroups = gmm.channelGroups;
+    }
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries((prev) => {
       const drop = new Set(deduped.removedImageIds);
@@ -1201,7 +1338,7 @@ const Content = (props: Props) => {
   const reconnectStoryRoot = React.useCallback(async () => {
     const storyId = useDocumentStore.getState().activeStoryId;
     if (!storyId) return;
-    setIsLoadingImage(true);
+    const loadEpoch = beginImageLoading();
     try {
       await reconnectStoryRootFromPicker(storyId);
       const doc = useDocumentStore.getState();
@@ -1222,14 +1359,19 @@ const Content = (props: Props) => {
         );
       }
     } finally {
-      setIsLoadingImage(false);
+      endImageLoading(loadEpoch);
       document.getElementById("global-loader")?.remove();
     }
-  }, [applyHydratedLoaders, syncRegistryFromDocument]);
+  }, [
+    applyHydratedLoaders,
+    beginImageLoading,
+    endImageLoading,
+    syncRegistryFromDocument,
+  ]);
 
   /** Chrome needs a click to re-grant File System Access after refresh. */
   const requestLoaderFileAccess = React.useCallback(async () => {
-    setIsLoadingImage(true);
+    const loadEpoch = beginImageLoading();
     try {
       const doc = useDocumentStore.getState();
       const result = await hydrateLoadersFromImages(doc.images, true, {
@@ -1249,10 +1391,15 @@ const Content = (props: Props) => {
     } catch (e) {
       console.error("[minerva] requestLoaderFileAccess failed", e);
     } finally {
-      setIsLoadingImage(false);
+      endImageLoading(loadEpoch);
       document.getElementById("global-loader")?.remove();
     }
-  }, [applyHydratedLoaders, syncRegistryFromDocument]);
+  }, [
+    applyHydratedLoaders,
+    beginImageLoading,
+    endImageLoading,
+    syncRegistryFromDocument,
+  ]);
 
   /**
    * Firefox (and any browser without persistable handles): pick the file again after
@@ -1260,7 +1407,7 @@ const Content = (props: Props) => {
    */
   const reselectLoaderFile = React.useCallback(
     async (imageId: string) => {
-      setIsLoadingImage(true);
+      const loadEpoch = beginImageLoading();
       try {
         const handle = await pickLocalOmeTiffHandle();
         if (!handle) return;
@@ -1289,11 +1436,16 @@ const Content = (props: Props) => {
       } catch (e) {
         console.error("[minerva] reselectLoaderFile failed", e);
       } finally {
-        setIsLoadingImage(false);
+        endImageLoading(loadEpoch);
         document.getElementById("global-loader")?.remove();
       }
     },
-    [applyHydratedLoaders, syncRegistryFromDocument],
+    [
+      applyHydratedLoaders,
+      beginImageLoading,
+      endImageLoading,
+      syncRegistryFromDocument,
+    ],
   );
 
   /** Shared by FileHandler: auto-restore on mount, “Use recent”, and PWA launch — same rules. */
@@ -1306,7 +1458,7 @@ const Content = (props: Props) => {
       const doc = useDocumentStore.getState();
       if (doc.images.some((im) => im.source)) {
         useAppStore.getState().clearOverlayLayers();
-        setIsLoadingImage(true);
+        const loadEpoch = beginImageLoading();
         try {
           // FileHandler already requested permission on the click path.
           applyHydratedLoaders(
@@ -1317,7 +1469,7 @@ const Content = (props: Props) => {
           );
           syncRegistryFromDocument();
         } finally {
-          setIsLoadingImage(false);
+          endImageLoading(loadEpoch);
         }
         setImportRevision((r) => r + 1);
         document.getElementById("global-loader")?.remove();
@@ -1329,7 +1481,12 @@ const Content = (props: Props) => {
       setImportRevision((r) => r + 1);
       document.getElementById("global-loader")?.remove();
     },
-    [applyHydratedLoaders, syncRegistryFromDocument],
+    [
+      applyHydratedLoaders,
+      beginImageLoading,
+      endImageLoading,
+      syncRegistryFromDocument,
+    ],
   );
 
   const onStart = async (
@@ -1366,7 +1523,7 @@ const Content = (props: Props) => {
     console.log("[minerva] onStart: will load, setting loading state");
     // Switch to waypoints tab and show loading immediately.
     setImportRevision((r) => r + 1);
-    setIsLoadingImage(true);
+    const loadEpoch = beginImageLoading();
     try {
       if (dicomPropList.length > 0) {
         const t1 = performance.now();
@@ -1403,7 +1560,7 @@ const Content = (props: Props) => {
       console.log(
         `[minerva] total load: ${(performance.now() - t0).toFixed(0)}ms`,
       );
-      setIsLoadingImage(false);
+      endImageLoading(loadEpoch);
       document.getElementById("global-loader")?.remove();
     }
   };
@@ -1509,7 +1666,7 @@ const Content = (props: Props) => {
       // Persisted story already has image metadata (e.g. after refresh); do not
       // re-fetch URL, but clear loading — otherwise `isLoadingImage` stays true
       // from `useState(hasDemo)` and the global HTML loader never dismisses.
-      setIsLoadingImage(false);
+      clearImageLoading();
       return;
     }
     if (props.demo_jpeg) {
@@ -1527,7 +1684,7 @@ const Content = (props: Props) => {
         [] as Handle.File[],
       );
     })();
-  }, [props.demo_url, props.demo_jpeg]);
+  }, [props.demo_url, props.demo_jpeg, clearImageLoading]);
 
   const loaderHydrationGenRef = React.useRef(0);
   useEffect(() => {
@@ -1544,7 +1701,8 @@ const Content = (props: Props) => {
     const gen = ++loaderHydrationGenRef.current;
     let cancelled = false;
     void (async () => {
-      setIsLoadingImage(true);
+      const loadEpoch = beginImageLoading();
+      let hydratedOmeIds: string[] = [];
       try {
         const result = await hydrateLoadersFromImages(images, false, {
           channelGroups: useDocumentStore.getState().channelGroups,
@@ -1557,6 +1715,7 @@ const Content = (props: Props) => {
         ) {
           return;
         }
+        hydratedOmeIds = result.omeLoaderEntries.map((e) => e.sourceImageId);
         applyHydratedLoaders(result);
         const urlIm = images.find((i) => i.source?.kind === "url");
         if (urlIm?.source?.kind === "url") {
@@ -1566,8 +1725,47 @@ const Content = (props: Props) => {
       } catch (e) {
         console.error("[minerva] hydrate loaders failed", e);
       } finally {
-        if (!cancelled && gen === loaderHydrationGenRef.current) {
-          setIsLoadingImage(false);
+        const stale =
+          cancelled ||
+          gen !== loaderHydrationGenRef.current ||
+          skipLoaderHydrateRef.current;
+        if (stale) {
+          // No-ops when a newer beginImageLoading already took ownership.
+          endImageLoading(loadEpoch);
+        } else {
+          // Keep the overlay up when eager GMM still needs to run (flat OME
+          // without saved fits); that effect clears via the handed-off epoch.
+          const doc = useDocumentStore.getState();
+          const loaderIds = new Set(hydratedOmeIds);
+          const scs = documentSourceChannels(doc);
+          const app = useAppStore.getState();
+          const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+            images: doc.images,
+            channelGroups: doc.channelGroups,
+            stackVisibilities: defaultVisibilitiesForSources(
+              scs,
+              app.channelVisibilities,
+              doc.channelGroups,
+            ),
+            groupRowVisibilities: app.channelGroupRowVisibilities,
+            activeGroupId: app.activeChannelGroupId,
+          });
+          const needsEagerGmm =
+            loaderIds.size > 0 &&
+            doc.channelGroups.length === 0 &&
+            scs.some(
+              (sc) =>
+                loaderIds.has(sc.imageId) &&
+                isImageChannel(sc) &&
+                sc.samples !== 3 &&
+                !sc.gmmContrastLimits &&
+                visibleChannelIds.has(sc.id),
+            );
+          if (needsEagerGmm && loadEpoch === imageLoadEpochRef.current) {
+            pendingEagerGmmEpochRef.current = loadEpoch;
+          } else {
+            endImageLoading(loadEpoch);
+          }
         }
       }
     })();
@@ -1580,6 +1778,8 @@ const Content = (props: Props) => {
     omeLoaderEntries.length,
     dicomIndexList.length,
     applyHydratedLoaders,
+    beginImageLoading,
+    endImageLoading,
   ]);
 
   const noLoader =
@@ -1789,31 +1989,67 @@ const Content = (props: Props) => {
     // when there are no groups yet (or first group creation will fit).
     if (doc.channelGroups.length > 0) {
       lastEagerGmmKeyRef.current = viewerImageKey;
+      const handed = pendingEagerGmmEpochRef.current;
+      pendingEagerGmmEpochRef.current = null;
+      if (handed != null) endImageLoading(handed);
       return;
     }
     const scs = documentSourceChannels(doc);
     const loaderImageIds = new Set(
       omeLoaderEntries.map((e) => e.sourceImageId),
     );
+    const app = useAppStore.getState();
+    const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
+      images: doc.images,
+      channelGroups: doc.channelGroups,
+      stackVisibilities: defaultVisibilitiesForSources(
+        scs,
+        app.channelVisibilities,
+        doc.channelGroups,
+      ),
+      groupRowVisibilities: app.channelGroupRowVisibilities,
+      activeGroupId: app.activeChannelGroupId,
+    });
     const ids = scs
       .filter(
         (sc) =>
           loaderImageIds.has(sc.imageId) &&
           isImageChannel(sc) &&
           sc.samples !== 3 &&
-          !sc.gmmContrastLimits,
+          !sc.gmmContrastLimits &&
+          visibleChannelIds.has(sc.id),
       )
       .map((sc) => sc.id);
     // Only mark this image as handled once there are channels to fit (or none needed).
     if (scs.length === 0) return;
     lastEagerGmmKeyRef.current = viewerImageKey;
-    if (ids.length === 0) return;
-    void onEnsureChannelGmmContrastLimits(ids).catch((e) => {
-      if (import.meta.env.DEV) {
-        console.warn("[psudo] eager auto contrast on import failed", e);
-      }
-    });
-  }, [viewerImageKey, omeLoaderEntries, onEnsureChannelGmmContrastLimits]);
+    const handedOff =
+      pendingEagerGmmEpochRef.current != null &&
+      pendingEagerGmmEpochRef.current === imageLoadEpochRef.current
+        ? pendingEagerGmmEpochRef.current
+        : null;
+    pendingEagerGmmEpochRef.current = null;
+    if (ids.length === 0) {
+      if (handedOff != null) endImageLoading(handedOff);
+      return;
+    }
+    const loadEpoch = handedOff ?? beginImageLoading();
+    void onEnsureChannelGmmContrastLimits(ids)
+      .catch((e) => {
+        if (import.meta.env.DEV) {
+          console.warn("[psudo] eager auto contrast on import failed", e);
+        }
+      })
+      .finally(() => {
+        endImageLoading(loadEpoch);
+      });
+  }, [
+    viewerImageKey,
+    omeLoaderEntries,
+    onEnsureChannelGmmContrastLimits,
+    beginImageLoading,
+    endImageLoading,
+  ]);
 
   const storyImageSource = useDocumentStore((s) => s.metadata.imageSource);
   // Contrast-baked JPEG OME-TIFF matches jpeg-pyramid: display-only, not re-windowed.
@@ -1893,6 +2129,7 @@ const Content = (props: Props) => {
       imageLayers,
       omeLoaderEntries,
       showSquareViewportOverlay,
+      isLoadingImage,
     };
   }, [
     showSquareViewportOverlay,
@@ -1900,6 +2137,7 @@ const Content = (props: Props) => {
     imageLayers,
     loaderList,
     omeLoaderEntries,
+    isLoadingImage,
   ]);
 
   // Use Zustand store for overlay state management
@@ -2093,7 +2331,7 @@ const Content = (props: Props) => {
         const importOme = async (
           req: OmeImportRequest,
         ): Promise<OmeImportResult> => {
-          setIsLoadingImage(true);
+          const loadEpoch = beginImageLoading();
           try {
             if (req.source.kind === "local") {
               if (req.append) {
@@ -2134,7 +2372,7 @@ const Content = (props: Props) => {
                   : "Could not load the image file.",
             };
           } finally {
-            setIsLoadingImage(false);
+            endImageLoading(loadEpoch);
             document.getElementById("global-loader")?.remove();
           }
         };
@@ -2181,6 +2419,12 @@ const Content = (props: Props) => {
         );
         const imager = (
           <div className={styles.full}>
+            {isLoadingImage ? (
+              <output className={styles.importLoadingOverlay} aria-busy="true">
+                <div className={styles.importLoadingSpinner} />
+                <span>Loading…</span>
+              </output>
+            ) : null}
             <PlaybackModeView
               {...routerProps}
               viewer={viewer}

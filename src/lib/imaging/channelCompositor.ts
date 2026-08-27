@@ -242,3 +242,32 @@ export function defaultVisibilitiesForSources(
   }
   return out;
 }
+
+/** Source channel ids composited on first paint (matches viewer layer build). */
+export function initialPaintSourceChannelIds(args: {
+  sourceChannels: Channel[];
+  channelGroups?: ChannelGroup[];
+  stackVisibilities?: Record<string, boolean>;
+  groupRowVisibilities?: Record<string, boolean>;
+  activeGroupId?: string | null;
+}): Set<string> {
+  const channelGroups = args.channelGroups ?? [];
+  const stackVisibilities =
+    args.stackVisibilities ??
+    defaultVisibilitiesForSources(args.sourceChannels, {}, channelGroups);
+  const onLoader = args.sourceChannels.filter(isImageChannel);
+  const activeGroup =
+    channelGroups.length === 0
+      ? undefined
+      : (channelGroups.find((g) => g.id === args.activeGroupId) ??
+        channelGroups[0]);
+  const layers = buildCompositedIntensityLayers({
+    onLoader,
+    activeGroup,
+    channelGroups,
+    stackVisibilities,
+    groupRowVisibilities: args.groupRowVisibilities ?? {},
+    hasVisibilityMap: true,
+  });
+  return new Set(layers.map((l) => l.sc.id));
+}

@@ -10,8 +10,8 @@ import {
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
 import { findSourceChannel } from "@/lib/stores/documentStore";
 
-/** OKLab L bounds × 100 (psudo default). */
-const DEFAULT_LUMINANCE = new Uint16Array([45, 92]);
+/** OKLab L bounds × 100 (psudo 0.15+ / palette study default). */
+const DEFAULT_LUMINANCE = new Uint16Array([50, 92]);
 
 /**
  * psudo README / npm tests: `false` = optimize C3 color-name distance + OKLab
@@ -20,7 +20,8 @@ const DEFAULT_LUMINANCE = new Uint16Array([45, 92]);
 export const PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP = false;
 export const PSUDO_MAX_ITERS = 3000;
 export const PSUDO_CONFUSION_BASELINE_SAMPLES = 32; // only matters if spatial on
-export const PSUDO_NUM_RESTARTS = 6;
+/** Matches psudo 0.15+ / palette_study (× n/3, max 40 inside WASM). */
+export const PSUDO_NUM_RESTARTS = 18;
 
 /** Per-channel contrast passed to psudo (full uint16 range; matches palette study / README). */
 const PSUDO_CONTRAST_MIN = 0;
@@ -39,7 +40,7 @@ export type PsudoOptimizeInputs = {
   excluded: string[];
   /** Per-channel C3 hints; use empty strings for name-free optimization. */
   colorNames: string[];
-  /** Passed through to `psudo.optimize` (psudo 0.4.1+). */
+  /** Passed through to `psudo.optimize` (psudo 0.4.1+ / 0.15+). */
   maxIters: number;
   confusionSamples: number;
   spatial: boolean;
@@ -67,7 +68,7 @@ function defaultContrastLimits(nChannels: number): Uint16Array {
 /**
  * Build WASM inputs for `psudo.optimize` from a channel group and source channels.
  * Color-only path: empty intensities, full-range contrast limits, no excluded
- * names, empty `colorNames` (matches psudo 0.4.1 color-only usage). Channel count
+ * names, empty `colorNames` (matches psudo 0.15 color-only usage). Channel count
  * is `group.channels.length` (often 4 for default import groups).
  */
 export function buildOptimizeInputs(

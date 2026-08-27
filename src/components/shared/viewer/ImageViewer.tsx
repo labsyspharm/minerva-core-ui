@@ -276,6 +276,8 @@ export type ImageViewerProps = {
   squareViewportScale?: number;
   squareViewportColor?: string;
   squareViewportBorderWidth?: number;
+  /** Full-cover spinner while import / GMM contrast is still pending. */
+  isLoadingImage?: boolean;
 };
 
 const _isElement = (x = {}): x is HTMLElement => {
@@ -326,6 +328,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     squareViewportScale = 0.9,
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
     squareViewportBorderWidth = 2,
+    isLoadingImage = false,
   } = props;
   const {
     activeChannelGroupId,
@@ -1050,6 +1053,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
         views={views}
       />
       <LoadingWidget ref={loadingWidgetRef} />
+      {isLoadingImage ? (
+        <output className={styles.imageLoadingOverlay} aria-busy="true">
+          <div className={styles.imageLoadingSpinner} />
+          <span>Loading…</span>
+        </output>
+      ) : null}
       {showSquareViewportOverlay && (
         <div
           className={styles.squareViewportOverlay}
