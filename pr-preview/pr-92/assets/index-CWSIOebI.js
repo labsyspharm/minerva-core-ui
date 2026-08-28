@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CMB1lzaL.js","./pako.esm-KbdoS3Oq.js","./lerc-D1joBUt2.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CPxHolLT.js","./pako.esm-KbdoS3Oq.js","./lerc-CDXKzsvC.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DdkuYrGQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-cT7ClKdb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CIsd9gEo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-B3C2C7fc.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-gMlNB6nb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-B_fyETDt.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-CMB1lzaL.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-PIVf3wKv.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-D1joBUt2.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-CPxHolLT.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DInsyAwL.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-CDXKzsvC.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DoCfNZ6T.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-8Bc2QMNs.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-GL5FB83h.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-D2LLkn0J.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -16270,26 +16270,38 @@ let __tla = (async () => {
     fill: "currentColor",
     d: "M9.06,11.98h-4.81c-.28,0-.52-.23-.52-.52s.23-.52.52-.52h4.81c1.19,0,1.79,0,2.15-.21.23-.14.43-.33.57-.57.21-.36.21-.96.21-2.15s0-1.79-.21-2.15c-.14-.23-.33-.43-.57-.57-.36-.21-.96-.21-2.15-.21H2.75l1.18,1.18c.2.2.2.53,0,.73-.2.2-.53.2-.73,0l-2.06-2.06s0,0,0,0h0s0,0,0,0c0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0-.05-.05-.08-.1-.1-.16,0,0,0,0,0,0,0,0,0,0,0,0-.02-.05-.04-.11-.04-.17,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0-.01,0-.02s0-.01,0-.02c0,0,0,0,0,0,0,0,0,0,0,0,0-.06.01-.12.04-.17,0,0,0,0,0,0h0c.03-.06.06-.12.11-.17l2.06-2.06c.2-.2.53-.2.73,0s.2.53,0,.73l-1.18,1.18h6.31c1.37,0,2.06,0,2.66.35.39.23.72.55.94.94.35.6.35,1.29.35,2.66s0,2.06-.34,2.66c-.23.39-.55.72-.94.94-.6.34-1.29.34-2.66.34Z"
   }));
-  const bar = "_bar_qro6x_5";
-  const wordmark$2 = "_wordmark_qro6x_18";
-  const title$2 = "_title_qro6x_30";
-  const field$1 = "_field_qro6x_31";
-  const control = "_control_qro6x_61";
-  const controlRow = "_controlRow_qro6x_61";
-  const controlActive = "_controlActive_qro6x_103";
-  const controlText = "_controlText_qro6x_108";
-  const menu$1 = "_menu_qro6x_122";
-  const menuFixed = "_menuFixed_qro6x_123";
-  const menuItem$1 = "_menuItem_qro6x_137";
-  const strip = "_strip_qro6x_167";
-  const tabList = "_tabList_qro6x_175";
-  const tab$1 = "_tab_qro6x_175";
-  const tabActive = "_tabActive_qro6x_200";
+  const bar = "_bar_y2qgi_7";
+  const wordmark$1 = "_wordmark_y2qgi_20";
+  const wordmarkDisplay = "_wordmarkDisplay_y2qgi_32";
+  const title$2 = "_title_y2qgi_36";
+  const field$1 = "_field_y2qgi_37";
+  const input$1 = "_input_y2qgi_62";
+  const surface = "_surface_y2qgi_82";
+  const selectLeft = "_selectLeft_y2qgi_89";
+  const control = "_control_y2qgi_4";
+  const controlRow = "_controlRow_y2qgi_4";
+  const controlActive = "_controlActive_y2qgi_4";
+  const controlText = "_controlText_y2qgi_4";
+  const menu$1 = "_menu_y2qgi_150";
+  const menuFixed = "_menuFixed_y2qgi_151";
+  const menuItem$1 = "_menuItem_y2qgi_165";
+  const strip = "_strip_y2qgi_195";
+  const tabList = "_tabList_y2qgi_203";
+  const tab$1 = "_tab_y2qgi_203";
+  const tabActive = "_tabActive_y2qgi_228";
+  const focusRing = "_focusRing_y2qgi_240";
+  const spinner = "_spinner_y2qgi_256";
+  const spinnerMd = "_spinnerMd_y2qgi_266 _spinner_y2qgi_256";
+  const spinnerSm = "_spinnerSm_y2qgi_272 _spinner_y2qgi_256";
   const minervaTheme = {
     bar,
-    wordmark: wordmark$2,
+    wordmark: wordmark$1,
+    wordmarkDisplay,
     title: title$2,
     field: field$1,
+    input: input$1,
+    surface,
+    selectLeft,
     control,
     controlRow,
     controlActive,
@@ -16300,8 +16312,39 @@ let __tla = (async () => {
     strip,
     tabList,
     tab: tab$1,
-    tabActive
+    tabActive,
+    focusRing,
+    spinner,
+    spinnerMd,
+    spinnerSm
   };
+  function PanelIconButton({ children, variant = "header", active, className: className2, type = "button", ...rest2 }) {
+    const base2 = variant === "row" ? minervaTheme.controlRow : minervaTheme.control;
+    return jsxRuntimeExports.jsx("button", {
+      type,
+      "data-icon-button": "",
+      className: [
+        base2,
+        active ? minervaTheme.controlActive : null,
+        className2
+      ].filter(Boolean).join(" "),
+      ...rest2,
+      children
+    });
+  }
+  function PanelActionButton({ children, active, className: className2, type = "button", ...rest2 }) {
+    return jsxRuntimeExports.jsx("button", {
+      type,
+      className: [
+        minervaTheme.control,
+        minervaTheme.controlText,
+        active ? minervaTheme.controlActive : null,
+        className2
+      ].filter(Boolean).join(" "),
+      ...rest2,
+      children
+    });
+  }
   const createStoreImpl = (createState2) => {
     let state;
     const listeners = /* @__PURE__ */ new Set();
@@ -86951,9 +86994,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       className: styles$s.clusterFieldset,
       "aria-label": "Document undo and redo",
       children: [
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: minervaTheme.control,
+        jsxRuntimeExports.jsx(PanelIconButton, {
           onClick: () => documentUndo(),
           disabled: !canUndo,
           title: "Undo",
@@ -86962,9 +87003,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             "aria-hidden": true
           })
         }),
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: minervaTheme.control,
+        jsxRuntimeExports.jsx(PanelIconButton, {
           onClick: () => documentRedo(),
           disabled: !canRedo,
           title: "Redo",
@@ -87028,9 +87067,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       className: styles$r.menuWrap,
       ref: wrapRef,
       children: [
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: minervaTheme.control,
+        jsxRuntimeExports.jsx(PanelIconButton, {
           title: "Menu",
           "aria-label": "Menu",
           "aria-expanded": open,
@@ -87133,19 +87170,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }, frac))
     });
   }
-  const banner = "_banner_1b2y7_1";
-  const leading = "_leading_1b2y7_8";
-  const play = "_play_1b2y7_25";
-  const wordmark$1 = "_wordmark_1b2y7_30";
-  const titleFieldWrap = "_titleFieldWrap_1b2y7_43";
-  const titleDisplay = "_titleDisplay_1b2y7_54";
-  const titleInput = "_titleInput_1b2y7_55";
-  const titlePlaceholder = "_titlePlaceholder_1b2y7_69";
+  const banner = "_banner_1juq2_1";
+  const leading = "_leading_1juq2_8";
+  const play = "_play_1juq2_25";
+  const wordmark = "_wordmark_1juq2_30";
+  const titleFieldWrap = "_titleFieldWrap_1juq2_41";
+  const titleDisplay = "_titleDisplay_1juq2_52";
+  const titleInput = "_titleInput_1juq2_53";
+  const titlePlaceholder = "_titlePlaceholder_1juq2_67";
   const styles$p = {
     banner,
     leading,
     play,
-    wordmark: wordmark$1,
+    wordmark,
     titleFieldWrap,
     titleDisplay,
     titleInput,
@@ -87236,9 +87273,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             })
           ]
         }),
-        onEnterPlaybackPreview ? jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: `${minervaTheme.control} ${styles$p.play}`,
+        onEnterPlaybackPreview ? jsxRuntimeExports.jsx(PanelIconButton, {
+          className: styles$p.play,
           onClick: onEnterPlaybackPreview,
           disabled: playbackPreviewDisabled,
           title: playbackPreviewDisabled ? "Add a waypoint to preview" : "Preview playback",
@@ -90795,7 +90831,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     <title>${safeTitle}</title>
     <link rel="stylesheet" href="${css2}" />
     <style>
-      html, body, #minerva-root { height: 100%; margin: 0; background: #111; }
+      /* Hex literal (no custom properties yet): matches --minerva-paper before player CSS loads. */
+      html, body, #minerva-root { height: 100%; margin: 0; background: #000; }
     </style>
   </head>
   <body>
@@ -91160,39 +91197,37 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       basepath: routerBasepath()
     });
   }
-  const root$8 = "_root_ij6it_6";
-  const masthead = "_masthead_ij6it_19";
-  const addWrap = "_addWrap_ij6it_30";
-  const addMenu = "_addMenu_ij6it_38";
-  const addTrigger = "_addTrigger_ij6it_43";
-  const wordmark = "_wordmark_ij6it_74";
-  const tagline = "_tagline_ij6it_83";
-  const error = "_error_ij6it_91";
-  const whisper = "_whisper_ij6it_100";
-  const bookcase = "_bookcase_ij6it_108";
-  const bookcaseInner = "_bookcaseInner_ij6it_120";
-  const shelfBay = "_shelfBay_ij6it_125";
-  const bayContent = "_bayContent_ij6it_131";
-  const bayContentEmpty = "_bayContentEmpty_ij6it_140";
-  const ghostShelf = "_ghostShelf_ij6it_146";
-  const ghostBook = "_ghostBook_ij6it_158";
-  const storyRow = "_storyRow_ij6it_162";
-  const shelfBoard = "_shelfBoard_ij6it_173";
-  const rowOpen = "_rowOpen_ij6it_182";
-  const rowThumb = "_rowThumb_ij6it_208";
-  const rowThumbImg = "_rowThumbImg_ij6it_218";
-  const rowThumbBlank = "_rowThumbBlank_ij6it_226";
-  const rowText = "_rowText_ij6it_233";
-  const rowTitle$1 = "_rowTitle_ij6it_242";
-  const rowDate = "_rowDate_ij6it_252";
-  const scrap = "_scrap_ij6it_261";
+  const root$8 = "_root_teok6_6";
+  const masthead = "_masthead_teok6_19";
+  const addWrap = "_addWrap_teok6_30";
+  const addMenu = "_addMenu_teok6_38";
+  const addTrigger = "_addTrigger_teok6_43";
+  const tagline = "_tagline_teok6_74";
+  const error = "_error_teok6_82";
+  const whisper = "_whisper_teok6_91";
+  const bookcase = "_bookcase_teok6_99";
+  const bookcaseInner = "_bookcaseInner_teok6_111";
+  const shelfBay = "_shelfBay_teok6_116";
+  const bayContent = "_bayContent_teok6_122";
+  const bayContentEmpty = "_bayContentEmpty_teok6_131";
+  const ghostShelf = "_ghostShelf_teok6_137";
+  const ghostBook = "_ghostBook_teok6_149";
+  const storyRow = "_storyRow_teok6_153";
+  const shelfBoard = "_shelfBoard_teok6_164";
+  const rowOpen = "_rowOpen_teok6_173";
+  const rowThumb = "_rowThumb_teok6_199";
+  const rowThumbImg = "_rowThumbImg_teok6_209";
+  const rowThumbBlank = "_rowThumbBlank_teok6_217";
+  const rowText = "_rowText_teok6_224";
+  const rowTitle$1 = "_rowTitle_teok6_233";
+  const rowDate = "_rowDate_teok6_243";
+  const scrap = "_scrap_teok6_252";
   const styles$o = {
     root: root$8,
     masthead,
     addWrap,
     addMenu,
     addTrigger,
-    wordmark,
     tagline,
     error,
     whisper,
@@ -91477,7 +91512,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           className: styles$o.masthead,
           children: [
             jsxRuntimeExports.jsx("h1", {
-              className: styles$o.wordmark,
+              className: `${minervaTheme.wordmark} ${minervaTheme.wordmarkDisplay}`,
               children: "Minerva"
             }),
             jsxRuntimeExports.jsx("p", {
@@ -91503,7 +91538,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       children: [
                         jsxRuntimeExports.jsxs("button", {
                           type: "button",
-                          className: styles$o.addTrigger,
+                          className: `${minervaTheme.focusRing} ${styles$o.addTrigger}`,
                           disabled: creating || importing,
                           "aria-label": "Add story",
                           "aria-expanded": addOpen,
@@ -91563,7 +91598,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           children: [
                             jsxRuntimeExports.jsxs("button", {
                               type: "button",
-                              className: styles$o.rowOpen,
+                              className: `${minervaTheme.focusRing} ${styles$o.rowOpen}`,
                               disabled: busyId === bay.story.id,
                               onClick: () => void openStory(bay.story.id),
                               children: [
@@ -91595,7 +91630,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             }),
                             jsxRuntimeExports.jsx("button", {
                               type: "button",
-                              className: styles$o.scrap,
+                              className: `${minervaTheme.focusRing} ${styles$o.scrap}`,
                               disabled: busyId === bay.story.id,
                               "aria-label": `Remove ${bay.story.title}`,
                               onClick: (e2) => {
@@ -91777,33 +91812,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }) : null,
         actionsNode
       ]
-    });
-  }
-  function PanelIconButton({ children, variant = "header", active, className: className2, type = "button", ...rest2 }) {
-    const base2 = variant === "row" ? minervaTheme.controlRow : minervaTheme.control;
-    return jsxRuntimeExports.jsx("button", {
-      type,
-      "data-icon-button": "",
-      className: [
-        base2,
-        active ? minervaTheme.controlActive : null,
-        className2
-      ].filter(Boolean).join(" "),
-      ...rest2,
-      children
-    });
-  }
-  function PanelActionButton({ children, active, className: className2, type = "button", ...rest2 }) {
-    return jsxRuntimeExports.jsx("button", {
-      type,
-      className: [
-        minervaTheme.control,
-        minervaTheme.controlText,
-        active ? minervaTheme.controlActive : null,
-        className2
-      ].filter(Boolean).join(" "),
-      ...rest2,
-      children
     });
   }
   const authorPanel = "_authorPanel_1vaoa_3";
@@ -93573,35 +93581,33 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     itemListRoot,
     metaIcon
   };
-  const itemList = "_itemList_1mhjn_1";
-  const headerMarkdown = "_headerMarkdown_1mhjn_13";
-  const list$3 = "_list_1mhjn_17";
-  const item = "_item_1mhjn_1";
-  const itemActive = "_itemActive_1mhjn_41";
-  const itemPulse = "_itemPulse_1mhjn_46";
-  const itemHidden = "_itemHidden_1mhjn_63";
-  const itemDragging = "_itemDragging_1mhjn_67";
-  const itemDropTarget = "_itemDropTarget_1mhjn_72";
-  const itemChild = "_itemChild_1mhjn_77";
-  const itemLeadingVisibility = "_itemLeadingVisibility_1mhjn_82";
-  const button = "_button_1mhjn_88";
-  const content$2 = "_content_1mhjn_105";
-  const title$1 = "_title_1mhjn_113";
-  const titleActive = "_titleActive_1mhjn_118";
-  const subtitle = "_subtitle_1mhjn_122";
-  const actions$1 = "_actions_1mhjn_128";
-  const icon$2 = "_icon_1mhjn_135";
-  const itemIconHit = "_itemIconHit_1mhjn_140";
-  const itemRowMain = "_itemRowMain_1mhjn_157";
-  const itemRowMainStatic = "_itemRowMainStatic_1mhjn_176";
-  const itemListMarkdownEditor = "_itemListMarkdownEditor_1mhjn_182";
-  const itemListCompact = "_itemListCompact_1mhjn_217";
+  const itemList = "_itemList_1ftcd_1";
+  const headerMarkdown = "_headerMarkdown_1ftcd_13";
+  const list$3 = "_list_1ftcd_17";
+  const item = "_item_1ftcd_1";
+  const itemPulse = "_itemPulse_1ftcd_41";
+  const itemHidden = "_itemHidden_1ftcd_58";
+  const itemDragging = "_itemDragging_1ftcd_62";
+  const itemDropTarget = "_itemDropTarget_1ftcd_67";
+  const itemChild = "_itemChild_1ftcd_72";
+  const itemLeadingVisibility = "_itemLeadingVisibility_1ftcd_77";
+  const button = "_button_1ftcd_83";
+  const content$2 = "_content_1ftcd_100";
+  const title$1 = "_title_1ftcd_108";
+  const titleActive = "_titleActive_1ftcd_113";
+  const subtitle = "_subtitle_1ftcd_117";
+  const actions$1 = "_actions_1ftcd_123";
+  const icon$2 = "_icon_1ftcd_130";
+  const itemIconHit = "_itemIconHit_1ftcd_135";
+  const itemRowMain = "_itemRowMain_1ftcd_147";
+  const itemRowMainStatic = "_itemRowMainStatic_1ftcd_161";
+  const itemListMarkdownEditor = "_itemListMarkdownEditor_1ftcd_167";
+  const itemListCompact = "_itemListCompact_1ftcd_197";
   const styles$k = {
     itemList,
     headerMarkdown,
     list: list$3,
     item,
-    itemActive,
     itemPulse,
     itemHidden,
     itemDragging,
@@ -93695,7 +93701,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const isDropTarget = dropTargetId === item2.id;
       const itemClasses = [
         styles$k.item,
-        item2.isActive ? styles$k.itemActive : "",
+        item2.isActive ? minervaTheme.selectLeft : "",
         item2.pulse ? styles$k.itemPulse : "",
         item2.isHidden ? styles$k.itemHidden : "",
         isDragging ? styles$k.itemDragging : "",
@@ -93730,7 +93736,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }) : null,
           item2.icon ? onItemClick ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$k.itemIconHit,
+            className: `${minervaTheme.focusRing} ${styles$k.itemIconHit}`,
             onClick: (e2) => onItemClick(item2, e2),
             onDoubleClick: () => onItemDoubleClick == null ? void 0 : onItemDoubleClick(item2),
             children: jsxRuntimeExports.jsx("span", {
@@ -93754,7 +93760,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           onItemClick ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$k.itemRowMain,
+            className: `${minervaTheme.focusRing} ${styles$k.itemRowMain}`,
             onClick: (e2) => onItemClick(item2, e2),
             onDoubleClick: () => onItemDoubleClick == null ? void 0 : onItemDoubleClick(item2),
             children: contentBlock
@@ -93953,15 +93959,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     fill: "currentColor",
     stroke: "none"
   }));
-  const panel = "_panel_mb51b_1";
-  const title = "_title_mb51b_17";
-  const field = "_field_mb51b_24";
-  const label = "_label_mb51b_28";
-  const numberInput = "_numberInput_mb51b_35";
-  const textarea = "_textarea_mb51b_52";
-  const textInput$1 = "_textInput_mb51b_72";
-  const actions = "_actions_mb51b_91";
-  const hint = "_hint_mb51b_98";
+  const panel = "_panel_ex885_1";
+  const title = "_title_ex885_12";
+  const field = "_field_ex885_19";
+  const label = "_label_ex885_23";
+  const numberInput = "_numberInput_ex885_30";
+  const textarea = "_textarea_ex885_35";
+  const textInput$1 = "_textInput_ex885_42";
+  const actions = "_actions_ex885_48";
+  const hint = "_hint_ex885_55";
   const styles$j = {
     panel,
     title,
@@ -93976,7 +93982,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const TextEditPanel = ({ title: title7, textValue, fontSize = 14, onTextChange, onFontSizeChange, onSubmit, onCancel, submitButtonText, allowEmpty = false, showFontSize = true, singleLine = false, placeholder = "Enter your text here..." }) => {
     const canSubmit = allowEmpty || !!(textValue == null ? void 0 : textValue.trim());
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$j.panel,
+      className: `${minervaTheme.surface} ${styles$j.panel}`,
       children: [
         jsxRuntimeExports.jsx("div", {
           className: styles$j.title,
@@ -93998,7 +94004,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onChange: (e2) => onFontSizeChange == null ? void 0 : onFontSizeChange(parseInt(e2.target.value, 10) || 14),
               min: "8",
               max: "72",
-              className: styles$j.numberInput
+              className: `${minervaTheme.input} ${styles$j.numberInput}`
             })
           ]
         }) : null,
@@ -94007,7 +94013,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           value: textValue,
           onChange: (e2) => onTextChange(e2.target.value),
           placeholder,
-          className: styles$j.textInput,
+          className: `${minervaTheme.input} ${styles$j.textInput}`,
           onKeyDown: (e2) => {
             if (e2.key === "Enter") {
               onSubmit();
@@ -94019,7 +94025,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           value: textValue,
           onChange: (e2) => onTextChange(e2.target.value),
           placeholder,
-          className: styles$j.textarea,
+          className: `${minervaTheme.input} ${styles$j.textarea}`,
           onKeyDown: (e2) => {
             if (e2.key === "Enter" && e2.ctrlKey) {
               onSubmit();
@@ -94553,12 +94559,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         return jsxRuntimeExports.jsxs("div", {
           className: styles$l.brushEditActions,
           children: [
-            isPolygon && jsxRuntimeExports.jsx("button", {
-              type: "button",
-              className: [
-                minervaTheme.control,
-                isBrushActive ? minervaTheme.controlActive : ""
-              ].filter(Boolean).join(" "),
+            isPolygon && jsxRuntimeExports.jsx(PanelIconButton, {
+              variant: "row",
+              active: isBrushActive,
               onClick: (e2) => {
                 e2.stopPropagation();
                 if (hiddenShapeIds.has(annotation.id)) {
@@ -94575,12 +94578,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 className: styles$l.brushEditIcon
               })
             }),
-            isPolygon && jsxRuntimeExports.jsx("button", {
-              type: "button",
-              className: [
-                minervaTheme.control,
-                isEraserActive ? minervaTheme.controlActive : ""
-              ].filter(Boolean).join(" "),
+            isPolygon && jsxRuntimeExports.jsx(PanelIconButton, {
+              variant: "row",
+              active: isEraserActive,
               onClick: (e2) => {
                 e2.stopPropagation();
                 if (hiddenShapeIds.has(annotation.id)) {
@@ -94610,33 +94610,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const layerMetaButtons = jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: minervaTheme.control,
+        jsxRuntimeExports.jsx(PanelIconButton, {
           onClick: () => createGroup(),
           title: "Add",
           "aria-label": "Add group",
           children: jsxRuntimeExports.jsx(SvgFolder, {})
         }),
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: minervaTheme.control,
+        jsxRuntimeExports.jsx(PanelIconButton, {
           onClick: handleHeaderEditTextClick,
           disabled: headerEditTextDisabled,
           title: headerEditTextDisabled ? "Select an annotation to edit text" : "Edit text \u2014 selected annotation",
           children: jsxRuntimeExports.jsx(SvgCursor, {})
         }),
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: minervaTheme.control,
+        jsxRuntimeExports.jsx(PanelIconButton, {
           onClick: handleHeaderColorClick,
           disabled: headerColorDisabled,
           title: layerColorLocked ? "Color is fixed for arrows and text shapes" : headerColorDisabled ? "Select a layer or group to change color" : shapes.some((a2) => a2.id === selectedLayerId) ? "Color \u2014 selected annotation" : "Color \u2014 global (group selected)",
           children: jsxRuntimeExports.jsx(SvgAnnotationColor, {})
         }),
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: minervaTheme.control,
+        jsxRuntimeExports.jsx(PanelIconButton, {
           onClick: handleHeaderDeleteClick,
           disabled: !selectedGroupId && selectedShapeIds.length === 0,
           title: selectedGroupId || selectedShapeIds.length > 0 ? selectedShapeIds.length > 1 ? "Delete selected shapes" : "Delete selected layer or group" : "Select a layer or group to delete",
@@ -94719,23 +94711,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   };
-  const container = "_container_jf4zn_1";
-  const toggle = "_toggle_jf4zn_6";
-  const chevron = "_chevron_jf4zn_28";
-  const menu = "_menu_jf4zn_41";
-  const menuItem = "_menuItem_jf4zn_53";
-  const menuItemActive = "_menuItemActive_jf4zn_59";
-  const menuItemLabel = "_menuItemLabel_jf4zn_63";
+  const container = "_container_1gwwf_1";
+  const toggle = "_toggle_1gwwf_6";
+  const chevron = "_chevron_1gwwf_23";
+  const menu = "_menu_1gwwf_36";
+  const menuItem = "_menuItem_1gwwf_48";
+  const menuItemLabel = "_menuItemLabel_1gwwf_54";
   const styles$i = {
     container,
     toggle,
     chevron,
     menu,
     menuItem,
-    menuItemActive,
     menuItemLabel
   };
-  const ToolSubmenu = ({ items, activeTool, onToolChange, parentIcon, parentTitle, buttonClassName = "", activeClassName = "" }) => {
+  const ToolSubmenu = ({ items, activeTool, onToolChange, parentIcon, parentTitle, buttonClassName = minervaTheme.control, activeClassName = minervaTheme.controlActive }) => {
     const [isOpen, setIsOpen] = reactExports.useState(false);
     const toggleRef = reactExports.useRef(null);
     const menuRef = reactExports.useRef(null);
@@ -94816,7 +94806,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           },
           children: items.map((item2) => jsxRuntimeExports.jsxs("button", {
             type: "button",
-            className: `${minervaTheme.menuItem} ${styles$i.menuItem} ${activeTool === item2.id ? styles$i.menuItemActive : ""}`,
+            className: `${minervaTheme.menuItem} ${styles$i.menuItem} ${activeTool === item2.id ? minervaTheme.selectLeft : ""}`,
             title: item2.title,
             onClick: () => handleSelect(item2.id),
             children: [
@@ -97925,17 +97915,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const waypointClipboardActions = jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: minervaTheme.control,
+        jsxRuntimeExports.jsx(PanelIconButton, {
           disabled: layersPanelSelectedShapeIds.length === 0,
           title: "Copy selected shapes to the clipboard",
           onClick: () => void copySelectedWaypointShapes(),
           children: jsxRuntimeExports.jsx(SvgCopyAnnotations, {})
         }),
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: minervaTheme.control,
+        jsxRuntimeExports.jsx(PanelIconButton, {
           title: "Paste shapes from the clipboard",
           onClick: () => void pasteWaypointShapesFromClipboard(),
           children: jsxRuntimeExports.jsx(SvgPasteAnnotations, {})
@@ -97947,9 +97933,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const drawingToolbar = jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: `${minervaTheme.control} ${activeTool === TOOLS.MOVE ? minervaTheme.controlActive : ""}`,
+        jsxRuntimeExports.jsx(PanelIconButton, {
+          active: activeTool === TOOLS.MOVE,
           title: "Move Tool",
           onClick: () => handleToolChangeLocal(TOOLS.MOVE),
           children: jsxRuntimeExports.jsx(SvgMove, {})
@@ -97975,9 +97960,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           activeTool,
           onToolChange: handleToolChangeLocal,
           parentIcon: jsxRuntimeExports.jsx(SvgShapes, {}),
-          parentTitle: "Shapes",
-          buttonClassName: minervaTheme.control,
-          activeClassName: minervaTheme.controlActive
+          parentTitle: "Shapes"
         }),
         jsxRuntimeExports.jsx(ToolSubmenu, {
           items: [
@@ -98000,34 +97983,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           activeTool,
           onToolChange: handleToolChangeLocal,
           parentIcon: jsxRuntimeExports.jsx(SvgLines, {}),
-          parentTitle: "Lines",
-          buttonClassName: minervaTheme.control,
-          activeClassName: minervaTheme.controlActive
+          parentTitle: "Lines"
         }),
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: `${minervaTheme.control} ${activeTool === TOOLS.BRUSH ? minervaTheme.controlActive : ""}`,
+        jsxRuntimeExports.jsx(PanelIconButton, {
+          active: activeTool === TOOLS.BRUSH,
           title: "Brush",
           onClick: () => handleToolChangeLocal(TOOLS.BRUSH),
           children: jsxRuntimeExports.jsx(SvgBrush, {})
         }),
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: `${minervaTheme.control} ${activeTool === TOOLS.TEXT ? minervaTheme.controlActive : ""}`,
+        jsxRuntimeExports.jsx(PanelIconButton, {
+          active: activeTool === TOOLS.TEXT,
           title: "Text Tool",
           onClick: () => handleToolChangeLocal(TOOLS.TEXT),
           children: jsxRuntimeExports.jsx(SvgText, {})
         }),
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: `${minervaTheme.control} ${activeTool === TOOLS.POINT ? minervaTheme.controlActive : ""}`,
+        jsxRuntimeExports.jsx(PanelIconButton, {
+          active: activeTool === TOOLS.POINT,
           title: "Point Tool",
           onClick: () => handleToolChangeLocal(TOOLS.POINT),
           children: jsxRuntimeExports.jsx(SvgPoint, {})
         }),
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: `${minervaTheme.control} ${activeTool === TOOLS.MAGIC_WAND ? minervaTheme.controlActive : ""}`,
+        jsxRuntimeExports.jsx(PanelIconButton, {
+          active: activeTool === TOOLS.MAGIC_WAND,
           title: "Magic Wand",
           onClick: () => handleToolChangeLocal(TOOLS.MAGIC_WAND),
           children: jsxRuntimeExports.jsx(SvgMagicWand, {})
@@ -167403,55 +167380,53 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }, variant === "detail" ? story.id : storyIndex)
     });
   };
-  const rows = "_rows_1w01k_1";
-  const compactRow = "_compactRow_1w01k_10";
-  const rowChevronSpacer = "_rowChevronSpacer_1w01k_23";
-  const rowThumbnail = "_rowThumbnail_1w01k_29";
-  const compactRowDraggable = "_compactRowDraggable_1w01k_43";
-  const rowMainHit = "_rowMainHit_1w01k_51";
-  const rowTextStack = "_rowTextStack_1w01k_66";
-  const rowTitleRow = "_rowTitleRow_1w01k_75";
-  const compactRowActive = "_compactRowActive_1w01k_92";
-  const compactRowDragging = "_compactRowDragging_1w01k_97";
-  const compactRowDropTarget = "_compactRowDropTarget_1w01k_102";
-  const rowOpenDetailButton = "_rowOpenDetailButton_1w01k_106";
-  const rowTitle = "_rowTitle_1w01k_75";
-  const rowContent = "_rowContent_1w01k_145";
-  const annotationBadge = "_annotationBadge_1w01k_162";
-  const rowViewportActions = "_rowViewportActions_1w01k_185";
-  const annotationIcon = "_annotationIcon_1w01k_196";
-  const annotationCount = "_annotationCount_1w01k_204";
-  const visuallyHidden = "_visuallyHidden_1w01k_209";
-  const detailView = "_detailView_1w01k_221";
-  const detailHeader = "_detailHeader_1w01k_229";
-  const backButton = "_backButton_1w01k_240";
-  const detailTitle = "_detailTitle_1w01k_265";
-  const detailBody = "_detailBody_1w01k_276";
-  const detailBodyInner = "_detailBodyInner_1w01k_284";
-  const detailTitleFieldWrap = "_detailTitleFieldWrap_1w01k_290";
-  const detailTitleLabel = "_detailTitleLabel_1w01k_301";
-  const detailTitleInput$1 = "_detailTitleInput_1w01k_309";
-  const detailMarkdownSection = "_detailMarkdownSection_1w01k_342";
-  const detailAnnotationsSection = "_detailAnnotationsSection_1w01k_346";
-  const detailSelectionActions = "_detailSelectionActions_1w01k_350";
-  const detailSelectionButton = "_detailSelectionButton_1w01k_354";
-  const detailCollapsible = "_detailCollapsible_1w01k_379";
-  const detailCollapsibleHeader = "_detailCollapsibleHeader_1w01k_387";
-  const detailCollapsibleCollapsed = "_detailCollapsibleCollapsed_1w01k_418";
-  const detailCollapsibleChevron = "_detailCollapsibleChevron_1w01k_422";
-  const detailCollapsibleTitle = "_detailCollapsibleTitle_1w01k_435";
-  const detailCollapsibleCount = "_detailCollapsibleCount_1w01k_440";
-  const detailCollapsibleBody = "_detailCollapsibleBody_1w01k_446";
-  const channelGroupDropdown = "_channelGroupDropdown_1w01k_452";
-  const channelGroupDropdownTrigger = "_channelGroupDropdownTrigger_1w01k_457";
-  const channelGroupDropdownTriggerMain = "_channelGroupDropdownTriggerMain_1w01k_496";
-  const channelGroupDropdownTitle = "_channelGroupDropdownTitle_1w01k_505";
-  const channelGroupDropdownChannels = "_channelGroupDropdownChannels_1w01k_512";
-  const channelGroupDropdownChevron = "_channelGroupDropdownChevron_1w01k_520";
-  const channelGroupDropdownMenu = "_channelGroupDropdownMenu_1w01k_529";
-  const channelGroupDropdownItem = "_channelGroupDropdownItem_1w01k_556";
-  const channelGroupDropdownOption = "_channelGroupDropdownOption_1w01k_561";
-  const channelGroupDropdownOptionSelected = "_channelGroupDropdownOptionSelected_1w01k_594";
+  const rows = "_rows_1q98i_1";
+  const compactRow = "_compactRow_1q98i_10";
+  const rowChevronSpacer = "_rowChevronSpacer_1q98i_23";
+  const rowThumbnail = "_rowThumbnail_1q98i_29";
+  const compactRowDraggable = "_compactRowDraggable_1q98i_40";
+  const rowMainHit = "_rowMainHit_1q98i_48";
+  const rowTextStack = "_rowTextStack_1q98i_63";
+  const rowTitleRow = "_rowTitleRow_1q98i_72";
+  const compactRowDragging = "_compactRowDragging_1q98i_84";
+  const compactRowDropTarget = "_compactRowDropTarget_1q98i_89";
+  const rowOpenDetailButton = "_rowOpenDetailButton_1q98i_93";
+  const rowTitle = "_rowTitle_1q98i_72";
+  const rowContent = "_rowContent_1q98i_117";
+  const annotationBadge = "_annotationBadge_1q98i_134";
+  const rowViewportActions = "_rowViewportActions_1q98i_153";
+  const annotationIcon = "_annotationIcon_1q98i_164";
+  const annotationCount = "_annotationCount_1q98i_172";
+  const visuallyHidden = "_visuallyHidden_1q98i_177";
+  const detailView = "_detailView_1q98i_189";
+  const detailHeader = "_detailHeader_1q98i_197";
+  const backButton = "_backButton_1q98i_208";
+  const detailTitle = "_detailTitle_1q98i_225";
+  const detailBody = "_detailBody_1q98i_236";
+  const detailBodyInner = "_detailBodyInner_1q98i_244";
+  const detailTitleFieldWrap = "_detailTitleFieldWrap_1q98i_250";
+  const detailTitleLabel = "_detailTitleLabel_1q98i_258";
+  const detailTitleInput = "_detailTitleInput_1q98i_266";
+  const detailMarkdownSection = "_detailMarkdownSection_1q98i_278";
+  const detailAnnotationsSection = "_detailAnnotationsSection_1q98i_282";
+  const detailSelectionActions = "_detailSelectionActions_1q98i_286";
+  const detailSelectionButton = "_detailSelectionButton_1q98i_290";
+  const detailCollapsible = "_detailCollapsible_1q98i_307";
+  const detailCollapsibleHeader = "_detailCollapsibleHeader_1q98i_312";
+  const detailCollapsibleCollapsed = "_detailCollapsibleCollapsed_1q98i_341";
+  const detailCollapsibleChevron = "_detailCollapsibleChevron_1q98i_345";
+  const detailCollapsibleTitle = "_detailCollapsibleTitle_1q98i_358";
+  const detailCollapsibleCount = "_detailCollapsibleCount_1q98i_363";
+  const detailCollapsibleBody = "_detailCollapsibleBody_1q98i_369";
+  const channelGroupDropdown = "_channelGroupDropdown_1q98i_375";
+  const channelGroupDropdownTrigger = "_channelGroupDropdownTrigger_1q98i_380";
+  const channelGroupDropdownTriggerMain = "_channelGroupDropdownTriggerMain_1q98i_402";
+  const channelGroupDropdownTitle = "_channelGroupDropdownTitle_1q98i_411";
+  const channelGroupDropdownChannels = "_channelGroupDropdownChannels_1q98i_418";
+  const channelGroupDropdownChevron = "_channelGroupDropdownChevron_1q98i_426";
+  const channelGroupDropdownMenu = "_channelGroupDropdownMenu_1q98i_435";
+  const channelGroupDropdownItem = "_channelGroupDropdownItem_1q98i_454";
+  const channelGroupDropdownOption = "_channelGroupDropdownOption_1q98i_459";
   const styles$f = {
     rows,
     compactRow,
@@ -167461,7 +167436,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     rowMainHit,
     rowTextStack,
     rowTitleRow,
-    compactRowActive,
     compactRowDragging,
     compactRowDropTarget,
     rowOpenDetailButton,
@@ -167480,7 +167454,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     detailBodyInner,
     detailTitleFieldWrap,
     detailTitleLabel,
-    detailTitleInput: detailTitleInput$1,
+    detailTitleInput,
     detailMarkdownSection,
     detailAnnotationsSection,
     detailSelectionActions,
@@ -167500,8 +167474,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     channelGroupDropdownChevron,
     channelGroupDropdownMenu,
     channelGroupDropdownItem,
-    channelGroupDropdownOption,
-    channelGroupDropdownOptionSelected
+    channelGroupDropdownOption
   };
   const countWaypointAnnotations = (story) => {
     var _a2;
@@ -167888,10 +167861,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               className: [
                 styles$f.compactRow,
                 canEdit ? styles$f.compactRowDraggable : "",
-                isActive ? styles$f.compactRowActive : "",
+                isActive ? minervaTheme.selectLeft : "",
                 isDragging ? styles$f.compactRowDragging : "",
                 isDropTarget ? styles$f.compactRowDropTarget : ""
-              ].join(" "),
+              ].filter(Boolean).join(" "),
               onDragOver: (e2) => handleDragOverRow(storyId, e2),
               onDragLeave: handleDragLeaveRow,
               onDrop: (e2) => {
@@ -167899,8 +167872,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 handleDropOnRow(storyId);
               },
               children: [
-                canEdit ? jsxRuntimeExports.jsx("button", {
-                  type: "button",
+                canEdit ? jsxRuntimeExports.jsx(PanelIconButton, {
+                  variant: "row",
                   ...rowDragProps,
                   className: styles$f.rowOpenDetailButton,
                   title: "Open waypoint details",
@@ -167916,20 +167889,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   "aria-hidden": true
                 }),
                 story.thumbnail ? jsxRuntimeExports.jsx("img", {
-                  className: styles$f.rowThumbnail,
+                  className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
                   src: story.thumbnail,
                   width: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
                   height: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
                   alt: "",
                   "aria-hidden": true
                 }) : jsxRuntimeExports.jsx("div", {
-                  className: styles$f.rowThumbnail,
+                  className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
                   "aria-hidden": true
                 }),
                 jsxRuntimeExports.jsx("button", {
                   type: "button",
                   ...rowDragProps,
-                  className: styles$f.rowMainHit,
+                  className: `${minervaTheme.focusRing} ${styles$f.rowMainHit}`,
                   "aria-label": `Select waypoint: ${story.title}`,
                   onClick: () => activateStoryIndex(index2, true),
                   onDoubleClick: () => openDetailForStoryId(storyId),
@@ -167945,7 +167918,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             children: story.title
                           }),
                           jsxRuntimeExports.jsxs("span", {
-                            className: styles$f.annotationBadge,
+                            className: `${minervaTheme.surface} ${styles$f.annotationBadge}`,
                             title: annotationTitle,
                             children: [
                               jsxRuntimeExports.jsx("span", {
@@ -168077,7 +168050,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             children: [
               jsxRuntimeExports.jsxs("button", {
                 type: "button",
-                className: styles$f.backButton,
+                className: `${minervaTheme.focusRing} ${styles$f.backButton}`,
                 onClick: () => setDetailStoryId(null),
                 title: "Back to waypoint list",
                 children: [
@@ -168106,7 +168079,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               className: styles$f.detailBodyInner,
               children: [
                 jsxRuntimeExports.jsxs("div", {
-                  className: styles$f.detailTitleFieldWrap,
+                  className: `${minervaTheme.surface} ${styles$f.detailTitleFieldWrap}`,
                   children: [
                     jsxRuntimeExports.jsx("label", {
                       className: styles$f.detailTitleLabel,
@@ -168115,7 +168088,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     }),
                     jsxRuntimeExports.jsx("input", {
                       id: detailTitleFieldId,
-                      className: styles$f.detailTitleInput,
+                      className: `${minervaTheme.input} ${styles$f.detailTitleInput}`,
                       type: "text",
                       value: detailStory.title ?? "",
                       onChange: (e2) => updateStory(detailStoryIndex, {
@@ -168131,7 +168104,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   ]
                 }),
                 channelGroups.length > 0 ? jsxRuntimeExports.jsxs("div", {
-                  className: styles$f.detailTitleFieldWrap,
+                  className: `${minervaTheme.surface} ${styles$f.detailTitleFieldWrap}`,
                   children: [
                     jsxRuntimeExports.jsx("label", {
                       className: styles$f.detailTitleLabel,
@@ -168145,7 +168118,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                         jsxRuntimeExports.jsxs("button", {
                           type: "button",
                           id: detailGroupFieldId,
-                          className: styles$f.channelGroupDropdownTrigger,
+                          className: `${minervaTheme.input} ${minervaTheme.focusRing} ${styles$f.channelGroupDropdownTrigger}`,
                           "aria-haspopup": "listbox",
                           "aria-expanded": channelGroupMenuOpen,
                           disabled: !canEdit,
@@ -168171,7 +168144,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           ]
                         }),
                         channelGroupMenuOpen ? jsxRuntimeExports.jsx("div", {
-                          className: styles$f.channelGroupDropdownMenu,
+                          className: `${minervaTheme.menu} ${styles$f.channelGroupDropdownMenu}`,
                           role: "listbox",
                           "aria-label": "Channel groups",
                           children: channelGroups.map((group2) => {
@@ -168185,8 +168158,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                                 role: "option",
                                 "aria-selected": isSelected,
                                 className: [
+                                  minervaTheme.menuItem,
                                   styles$f.channelGroupDropdownOption,
-                                  isSelected ? styles$f.channelGroupDropdownOptionSelected : ""
+                                  isSelected ? minervaTheme.selectLeft : ""
                                 ].filter(Boolean).join(" "),
                                 onClick: () => selectChannelGroupByUuid(group2.id),
                                 children: [
@@ -168210,13 +168184,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 jsxRuntimeExports.jsxs("div", {
                   className: [
                     styles$f.detailCollapsible,
+                    minervaTheme.surface,
                     styles$f.detailMarkdownSection,
                     !detailMarkdownExpanded ? styles$f.detailCollapsibleCollapsed : ""
                   ].filter(Boolean).join(" "),
                   children: [
                     jsxRuntimeExports.jsxs("button", {
                       type: "button",
-                      className: styles$f.detailCollapsibleHeader,
+                      className: `${minervaTheme.focusRing} ${styles$f.detailCollapsibleHeader}`,
                       "aria-expanded": detailMarkdownExpanded,
                       onClick: () => setDetailMarkdownExpanded((prev) => !prev),
                       children: [
@@ -168242,13 +168217,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 jsxRuntimeExports.jsxs("div", {
                   className: [
                     styles$f.detailCollapsible,
+                    minervaTheme.surface,
                     styles$f.detailAnnotationsSection,
                     !detailAnnotationsExpanded ? styles$f.detailCollapsibleCollapsed : ""
                   ].filter(Boolean).join(" "),
                   children: [
                     jsxRuntimeExports.jsxs("button", {
                       type: "button",
-                      className: styles$f.detailCollapsibleHeader,
+                      className: `${minervaTheme.focusRing} ${styles$f.detailCollapsibleHeader}`,
                       "aria-expanded": detailAnnotationsExpanded,
                       title: detailAnnotationText,
                       onClick: () => setDetailAnnotationsExpanded((prev) => !prev),
@@ -168280,7 +168256,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           className: styles$f.detailSelectionActions,
                           children: jsxRuntimeExports.jsx("button", {
                             type: "button",
-                            className: styles$f.detailSelectionButton,
+                            className: `${minervaTheme.focusRing} ${styles$f.detailSelectionButton}`,
                             title: "Use a waypoint annotation as the spatial selection mask (prefers the selected shape in the layers list)",
                             onClick: () => {
                               const shapeIds = detailStory.shapeIds ?? [];
@@ -168309,28 +168285,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: detailStoryId ? renderDetail() : renderList()
     });
   };
-  const wrap = "_wrap_1nb1x_1";
-  const histogramHost = "_histogramHost_1nb1x_9";
-  const histogramLoading = "_histogramLoading_1nb1x_14";
-  const histogramLoadingVisible = "_histogramLoadingVisible_1nb1x_24";
-  const histogramSpinner = "_histogramSpinner_1nb1x_28";
-  const histogramSvg = "_histogramSvg_1nb1x_44";
-  const histogramFill = "_histogramFill_1nb1x_51";
-  const histogramLine = "_histogramLine_1nb1x_56";
-  const controls = "_controls_1nb1x_63";
-  const sliderRow = "_sliderRow_1nb1x_75";
-  const track = "_track_1nb1x_83";
-  const rangePan = "_rangePan_1nb1x_95";
-  const rangeInput = "_rangeInput_1nb1x_119";
-  const limitsRow = "_limitsRow_1nb1x_166";
-  const limitField = "_limitField_1nb1x_173";
-  const limitInput = "_limitInput_1nb1x_181";
+  const wrap = "_wrap_eioaw_1";
+  const histogramHost = "_histogramHost_eioaw_9";
+  const histogramLoading = "_histogramLoading_eioaw_14";
+  const histogramLoadingVisible = "_histogramLoadingVisible_eioaw_24";
+  const histogramSvg = "_histogramSvg_eioaw_28";
+  const histogramFill = "_histogramFill_eioaw_35";
+  const histogramLine = "_histogramLine_eioaw_40";
+  const controls = "_controls_eioaw_47";
+  const sliderRow = "_sliderRow_eioaw_59";
+  const track = "_track_eioaw_67";
+  const rangePan = "_rangePan_eioaw_79";
+  const rangeInput = "_rangeInput_eioaw_103";
+  const limitsRow = "_limitsRow_eioaw_150";
+  const limitField = "_limitField_eioaw_157";
+  const limitInput = "_limitInput_eioaw_165";
   const styles$e = {
     wrap,
     histogramHost,
     histogramLoading,
     histogramLoadingVisible,
-    histogramSpinner,
     histogramSvg,
     histogramFill,
     histogramLine,
@@ -168647,7 +168621,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ].filter(Boolean).join(" "),
               title: "Loading histogram",
               children: jsxRuntimeExports.jsx("div", {
-                className: styles$e.histogramSpinner
+                className: minervaTheme.spinnerSm
               })
             })
           ]
@@ -168711,7 +168685,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   },
                   children: jsxRuntimeExports.jsx("input", {
                     type: "number",
-                    className: styles$e.limitInput,
+                    className: `${minervaTheme.input} ${styles$e.limitInput}`,
                     value: minInput,
                     "aria-label": "Contrast minimum value",
                     min: scale2.dtypeMin,
@@ -168737,7 +168711,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   },
                   children: jsxRuntimeExports.jsx("input", {
                     type: "number",
-                    className: styles$e.limitInput,
+                    className: `${minervaTheme.input} ${styles$e.limitInput}`,
                     value: maxInput,
                     "aria-label": "Contrast maximum value",
                     min: scale2.dtypeMin,
@@ -168762,33 +168736,31 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  const channelNameInput = "_channelNameInput_1etsx_3";
-  const channelRowMain = "_channelRowMain_1etsx_9";
-  const channelRowTitle = "_channelRowTitle_1etsx_16";
-  const channelRowTrailing = "_channelRowTrailing_1etsx_21";
-  const channelImageSubtitle = "_channelImageSubtitle_1etsx_27";
-  const detailTitleInput = "_detailTitleInput_1etsx_38";
-  const channelVisibilityButton = "_channelVisibilityButton_1etsx_67";
-  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_1etsx_87";
-  const channelColorSwatch = "_channelColorSwatch_1etsx_91";
-  const detailChannelRowLocked = "_detailChannelRowLocked_1etsx_105";
-  const maskVizControls = "_maskVizControls_1etsx_109";
-  const maskVizToggle = "_maskVizToggle_1etsx_117";
-  const maskVizOption = "_maskVizOption_1etsx_128";
-  const maskVizOptionActive = "_maskVizOptionActive_1etsx_147";
-  const maskVizIconOutline = "_maskVizIconOutline_1etsx_153";
-  const maskVizIconFull = "_maskVizIconFull_1etsx_154";
-  const maskVizSwatchWhite = "_maskVizSwatchWhite_1etsx_155";
-  const maskVizSwatchRandom = "_maskVizSwatchRandom_1etsx_156";
-  const groupChildRow = "_groupChildRow_1etsx_189";
-  const rootChannelRow = "_rootChannelRow_1etsx_190";
+  const channelNameInput = "_channelNameInput_1k7e1_3";
+  const channelRowMain = "_channelRowMain_1k7e1_9";
+  const channelRowTitle = "_channelRowTitle_1k7e1_16";
+  const channelRowTrailing = "_channelRowTrailing_1k7e1_21";
+  const channelImageSubtitle = "_channelImageSubtitle_1k7e1_27";
+  const channelVisibilityButton = "_channelVisibilityButton_1k7e1_38";
+  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_1k7e1_63";
+  const channelColorSwatch = "_channelColorSwatch_1k7e1_67";
+  const detailChannelRowLocked = "_detailChannelRowLocked_1k7e1_86";
+  const maskVizControls = "_maskVizControls_1k7e1_90";
+  const maskVizToggle = "_maskVizToggle_1k7e1_98";
+  const maskVizOption = "_maskVizOption_1k7e1_109";
+  const maskVizOptionActive = "_maskVizOptionActive_1k7e1_133";
+  const maskVizIconOutline = "_maskVizIconOutline_1k7e1_139";
+  const maskVizIconFull = "_maskVizIconFull_1k7e1_140";
+  const maskVizSwatchWhite = "_maskVizSwatchWhite_1k7e1_141";
+  const maskVizSwatchRandom = "_maskVizSwatchRandom_1k7e1_142";
+  const groupChildRow = "_groupChildRow_1k7e1_175";
+  const rootChannelRow = "_rootChannelRow_1k7e1_176";
   const row = {
     channelNameInput,
     channelRowMain,
     channelRowTitle,
     channelRowTrailing,
     channelImageSubtitle,
-    detailTitleInput,
     channelVisibilityButton,
     channelVisibilityButtonHidden,
     channelColorSwatch,
@@ -168864,6 +168836,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return jsxRuntimeExports.jsx("button", {
       type: "button",
       className: className2 ?? [
+        minervaTheme.focusRing,
         row.channelVisibilityButton,
         visible ? "" : row.channelVisibilityButtonHidden
       ].filter(Boolean).join(" "),
@@ -168878,7 +168851,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const { hex, title: title7, ariaLabel, onClick, className: className2 } = props;
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: className2 ?? row.channelColorSwatch,
+      className: className2 ?? `${minervaTheme.focusRing} ${row.channelColorSwatch}`,
       style: {
         backgroundColor: `#${hex}`
       },
@@ -168897,7 +168870,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function MaskVizButton(props) {
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: props.active ? `${row.maskVizOption} ${row.maskVizOptionActive}` : row.maskVizOption,
+      className: props.active ? `${minervaTheme.focusRing} ${row.maskVizOption} ${row.maskVizOptionActive}` : `${minervaTheme.focusRing} ${row.maskVizOption}`,
       "aria-pressed": props.active,
       title: props.title ?? props.label,
       "aria-label": props.label,
@@ -168978,7 +168951,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     }
     return jsxRuntimeExports.jsx("input", {
-      className: `${row.detailTitleInput} ${row.channelNameInput}`,
+      className: `${minervaTheme.field} ${row.channelNameInput}`,
       type: "text",
       defaultValue: props.name,
       maxLength: 200,
@@ -169409,32 +169382,31 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return seedDefaultSourceChannelStyles2(sourceChannels);
     }
   }
-  const detailChannelItemEmbed = "_detailChannelItemEmbed_7jxs7_3";
-  const channelActionButton = "_channelActionButton_7jxs7_10";
-  const colorLockButtonLocked = "_colorLockButtonLocked_7jxs7_27";
-  const addChannelRow = "_addChannelRow_7jxs7_36";
-  const addChannelSelect = "_addChannelSelect_7jxs7_40";
-  const groupFolders = "_groupFolders_7jxs7_56";
-  const groupFolder = "_groupFolder_7jxs7_56";
-  const groupFolderActive = "_groupFolderActive_7jxs7_71";
-  const dropTargetActive = "_dropTargetActive_7jxs7_76";
-  const groupFolderHeader = "_groupFolderHeader_7jxs7_81";
-  const groupFolderActivate = "_groupFolderActivate_7jxs7_93";
-  const groupFolderChevron = "_groupFolderChevron_7jxs7_115";
-  const groupFolderName = "_groupFolderName_7jxs7_133";
-  const groupFolderTrailing = "_groupFolderTrailing_7jxs7_140";
-  const groupFolderBody = "_groupFolderBody_7jxs7_147";
-  const groupChildList = "_groupChildList_7jxs7_152";
-  const groupChildBlock = "_groupChildBlock_7jxs7_158";
-  const groupChildRowWrap = "_groupChildRowWrap_7jxs7_166";
-  const rootChannelRowWrap = "_rootChannelRowWrap_7jxs7_167";
-  const groupChildName = "_groupChildName_7jxs7_186";
-  const dragHandle = "_dragHandle_7jxs7_196";
-  const treeSeparator = "_treeSeparator_7jxs7_219";
-  const rootChannelList = "_rootChannelList_7jxs7_229";
-  const rootChannelBlock = "_rootChannelBlock_7jxs7_237";
-  const rootChannelBlockCompact = "_rootChannelBlockCompact_7jxs7_241";
-  const rootChannelCompactName = "_rootChannelCompactName_7jxs7_245";
+  const detailChannelItemEmbed = "_detailChannelItemEmbed_ulb77_3";
+  const channelActionButton = "_channelActionButton_ulb77_10";
+  const colorLockButtonLocked = "_colorLockButtonLocked_ulb77_27";
+  const addChannelRow = "_addChannelRow_ulb77_36";
+  const addChannelSelect = "_addChannelSelect_ulb77_40";
+  const groupFolders = "_groupFolders_ulb77_45";
+  const groupFolder = "_groupFolder_ulb77_45";
+  const dropTargetActive = "_dropTargetActive_ulb77_60";
+  const groupFolderHeader = "_groupFolderHeader_ulb77_65";
+  const groupFolderActivate = "_groupFolderActivate_ulb77_77";
+  const groupFolderChevron = "_groupFolderChevron_ulb77_98";
+  const groupFolderName = "_groupFolderName_ulb77_116";
+  const groupFolderTrailing = "_groupFolderTrailing_ulb77_123";
+  const groupFolderBody = "_groupFolderBody_ulb77_130";
+  const groupChildList = "_groupChildList_ulb77_135";
+  const groupChildBlock = "_groupChildBlock_ulb77_141";
+  const groupChildRowWrap = "_groupChildRowWrap_ulb77_149";
+  const rootChannelRowWrap = "_rootChannelRowWrap_ulb77_150";
+  const groupChildName = "_groupChildName_ulb77_169";
+  const dragHandle = "_dragHandle_ulb77_179";
+  const treeSeparator = "_treeSeparator_ulb77_202";
+  const rootChannelList = "_rootChannelList_ulb77_212";
+  const rootChannelBlock = "_rootChannelBlock_ulb77_220";
+  const rootChannelBlockCompact = "_rootChannelBlockCompact_ulb77_224";
+  const rootChannelCompactName = "_rootChannelCompactName_ulb77_228";
   const styles$d = {
     detailChannelItemEmbed,
     channelActionButton,
@@ -169443,7 +169415,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     addChannelSelect,
     groupFolders,
     groupFolder,
-    groupFolderActive,
     dropTargetActive,
     groupFolderHeader,
     groupFolderActivate,
@@ -170290,7 +170261,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return jsxRuntimeExports.jsxs("div", {
         className: [
           styles$d.groupFolder,
-          isActive ? styles$d.groupFolderActive : "",
+          isActive ? minervaTheme.selectLeft : "",
           isDropTarget ? styles$d.dropTargetActive : ""
         ].join(" "),
         ...folderDropProps,
@@ -170300,7 +170271,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             children: [
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$d.groupFolderActivate,
+                className: `${minervaTheme.focusRing} ${styles$d.groupFolderActivate}`,
                 "aria-label": `Select group ${group2.name}`,
                 "aria-pressed": isActive,
                 onClick: () => activateGroup(group2.id)
@@ -170322,7 +170293,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 onClick: () => toggleGroupMasterVisibility(group2)
               }),
               jsxRuntimeExports.jsx("input", {
-                className: `${row.detailTitleInput} ${styles$d.groupFolderName}`,
+                className: `${minervaTheme.input} ${styles$d.groupFolderName}`,
                 type: "text",
                 defaultValue: group2.name,
                 maxLength: 200,
@@ -170513,7 +170484,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               jsxRuntimeExports.jsx("div", {
                 className: styles$d.addChannelRow,
                 children: jsxRuntimeExports.jsxs("select", {
-                  className: styles$d.addChannelSelect,
+                  className: `${minervaTheme.input} ${styles$d.addChannelSelect}`,
                   defaultValue: "",
                   disabled: optimizePaletteBusy || addable.length === 0,
                   onChange: (e2) => {
@@ -170837,17 +170808,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })
     });
   }
-  const sidebarHost = "_sidebarHost_118b0_1";
-  const sidebarHostCollapsed = "_sidebarHostCollapsed_118b0_19";
-  const panelOuter = "_panelOuter_118b0_24";
-  const tabRow = "_tabRow_118b0_34";
-  const stripActions = "_stripActions_118b0_42";
-  const expandControl = "_expandControl_118b0_51";
-  const expandControlExpanded = "_expandControlExpanded_118b0_63";
-  const panelContent = "_panelContent_118b0_69";
-  const viewport = "_viewport_118b0_79";
-  const viewportCollapsed = "_viewportCollapsed_118b0_92";
-  const viewerRegion = "_viewerRegion_118b0_96";
+  const sidebarHost = "_sidebarHost_1ewkv_1";
+  const sidebarHostCollapsed = "_sidebarHostCollapsed_1ewkv_18";
+  const panelOuter = "_panelOuter_1ewkv_23";
+  const tabRow = "_tabRow_1ewkv_33";
+  const stripActions = "_stripActions_1ewkv_41";
+  const expandControl = "_expandControl_1ewkv_50";
+  const expandControlExpanded = "_expandControlExpanded_1ewkv_62";
+  const panelContent = "_panelContent_1ewkv_68";
+  const viewport = "_viewport_1ewkv_78";
+  const viewportCollapsed = "_viewportCollapsed_1ewkv_90";
+  const viewerRegion = "_viewerRegion_1ewkv_94";
   const styles$c = {
     sidebarHost,
     sidebarHostCollapsed,
@@ -170950,10 +170921,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           contrastEditable: props.contrastEditable,
           expanded
         }),
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
+        jsxRuntimeExports.jsx(PanelIconButton, {
           className: [
-            minervaTheme.control,
             styles$c.expandControl,
             expanded ? styles$c.expandControlExpanded : null
           ].filter(Boolean).join(" "),
@@ -175111,29 +175080,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return "";
   }
-  const presentation = "_presentation_thxug_7";
-  const previewRibbon = "_previewRibbon_thxug_53";
-  const previewRibbonChevron = "_previewRibbonChevron_thxug_60";
-  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_thxug_72";
-  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_thxug_89";
-  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_thxug_94";
-  const splitGrid = "_splitGrid_thxug_103";
-  const presentationViewerRegion = "_presentationViewerRegion_thxug_129";
-  const navPane = "_navPane_thxug_137";
-  const navPaneHasStoryName = "_navPaneHasStoryName_thxug_150";
-  const storyTitle = "_storyTitle_thxug_154";
-  const toolbar = "_toolbar_thxug_161";
-  const contentWrap = "_contentWrap_thxug_173";
-  const navInactive = "_navInactive_thxug_210";
-  const heading = "_heading_thxug_222";
-  const tocButton = "_tocButton_thxug_238";
-  const navLeft = "_navLeft_thxug_243";
-  const count = "_count_thxug_247";
-  const navRight = "_navRight_thxug_251";
-  const inlineNext = "_inlineNext_thxug_314";
-  const nextLink = "_nextLink_thxug_332";
-  const tocWrapper = "_tocWrapper_thxug_376";
-  const channelName = "_channelName_thxug_385";
+  const presentation = "_presentation_ltxq8_6";
+  const previewRibbon = "_previewRibbon_ltxq8_29";
+  const previewRibbonChevron = "_previewRibbonChevron_ltxq8_36";
+  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_ltxq8_48";
+  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_ltxq8_65";
+  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_ltxq8_70";
+  const splitGrid = "_splitGrid_ltxq8_79";
+  const presentationViewerRegion = "_presentationViewerRegion_ltxq8_105";
+  const navPane = "_navPane_ltxq8_113";
+  const navPaneHasStoryName = "_navPaneHasStoryName_ltxq8_126";
+  const storyTitle = "_storyTitle_ltxq8_130";
+  const toolbar = "_toolbar_ltxq8_137";
+  const contentWrap = "_contentWrap_ltxq8_149";
+  const navInactive = "_navInactive_ltxq8_186";
+  const heading = "_heading_ltxq8_198";
+  const tocButton = "_tocButton_ltxq8_214";
+  const navLeft = "_navLeft_ltxq8_219";
+  const count = "_count_ltxq8_223";
+  const navRight = "_navRight_ltxq8_227";
+  const inlineNext = "_inlineNext_ltxq8_290";
+  const nextLink = "_nextLink_ltxq8_308";
+  const tocWrapper = "_tocWrapper_ltxq8_352";
+  const channelName = "_channelName_ltxq8_361";
   const styles$a = {
     presentation,
     previewRibbon,
@@ -175473,14 +175442,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const navStoryName = !showRibbon && documentTitle.trim() ? documentTitle.trim() : "";
     const flushTitle = !props.exitPlaybackPreview;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$a.presentation,
+      className: `${styles$a.presentation} minerva-seal`,
       children: [
         showRibbon ? jsxRuntimeExports.jsxs("div", {
           className: `${minervaTheme.bar} ${styles$a.previewRibbon}`,
           children: [
-            props.exitPlaybackPreview ? jsxRuntimeExports.jsxs("button", {
+            props.exitPlaybackPreview ? jsxRuntimeExports.jsxs(PanelActionButton, {
               type: "button",
-              className: `${minervaTheme.control} ${minervaTheme.controlText}`,
               onClick: props.exitPlaybackPreview,
               title: "Back to editing",
               "aria-label": "Back to editing",
@@ -175596,14 +175564,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   };
-  const wrapRows = "_wrapRows_1426e_1";
-  const activeHeader = "_activeHeader_1426e_7";
-  const activeGroupTrigger = "_activeGroupTrigger_1426e_21";
-  const chevronWrap = "_chevronWrap_1426e_50";
-  const alternateList = "_alternateList_1426e_57";
-  const groupAltRow = "_groupAltRow_1426e_68";
-  const ellipsis = "_ellipsis_1426e_91";
-  const triggerLabel = "_triggerLabel_1426e_97";
+  const wrapRows = "_wrapRows_8953e_1";
+  const activeHeader = "_activeHeader_8953e_7";
+  const activeGroupTrigger = "_activeGroupTrigger_8953e_21";
+  const chevronWrap = "_chevronWrap_8953e_45";
+  const alternateList = "_alternateList_8953e_52";
+  const groupAltRow = "_groupAltRow_8953e_63";
+  const ellipsis = "_ellipsis_8953e_81";
+  const triggerLabel = "_triggerLabel_8953e_87";
   const styles$9 = {
     wrapRows,
     activeHeader,
@@ -175630,7 +175598,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: styles$9.groupAltRow,
+      className: `${minervaTheme.focusRing} ${styles$9.groupAltRow}`,
       onClick: toGroup,
       children: name2
     });
@@ -175671,7 +175639,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         jsxRuntimeExports.jsxs("button", {
           type: "button",
-          className: styles$9.activeGroupTrigger,
+          className: `${minervaTheme.focusRing} ${styles$9.activeGroupTrigger}`,
           "aria-expanded": expanded,
           onClick: () => setExpanded(!expanded),
           children: [
@@ -176418,30 +176386,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         right: "8px"
       }
     };
-    return jsxRuntimeExports.jsxs("div", {
+    return jsxRuntimeExports.jsx("div", {
       className: "deck-widget-loading",
       style: positionStyles,
       title: label2,
-      children: [
-        jsxRuntimeExports.jsx("div", {
-          style: {
-            width: "24px",
-            height: "24px",
-            border: "3px solid rgba(255, 255, 255, 0.3)",
-            borderTop: "3px solid rgba(255, 255, 255, 0.9)",
-            borderRadius: "50%",
-            animation: "spin 1s linear infinite"
-          }
-        }),
-        jsxRuntimeExports.jsx("style", {
-          children: `
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `
-        })
-      ]
+      children: jsxRuntimeExports.jsx("div", {
+        className: minervaTheme.spinnerMd
+      })
     });
   });
   LoadingWidget.displayName = "LoadingWidget";
@@ -176762,15 +176713,13 @@ void main() {
       }
     });
   }
-  const main = "_main_q956q_1";
-  const squareViewportOverlay = "_squareViewportOverlay_q956q_6";
-  const imageLoadingOverlay = "_imageLoadingOverlay_q956q_15";
-  const imageLoadingSpinner = "_imageLoadingSpinner_q956q_31";
+  const main = "_main_11dz1_1";
+  const squareViewportOverlay = "_squareViewportOverlay_11dz1_6";
+  const imageLoadingOverlay = "_imageLoadingOverlay_11dz1_15";
   const styles$4 = {
     main,
     squareViewportOverlay,
-    imageLoadingOverlay,
-    imageLoadingSpinner
+    imageLoadingOverlay
   };
   const ORTHO_VIEW_ID = "ortho";
   const SCALEBAR_VIEW_ID = "scalebar-overlay";
@@ -177581,7 +177530,7 @@ void main() {
           "aria-busy": "true",
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$4.imageLoadingSpinner
+              className: minervaTheme.spinner
             }),
             jsxRuntimeExports.jsx("span", {
               children: "Loading\u2026"
@@ -248069,15 +248018,15 @@ void main() {
       })
     });
   }
-  const modeViewport = "_modeViewport_iwhrl_1";
-  const authorViewport = "_authorViewport_iwhrl_26";
-  const authorViewportHidden = "_authorViewportHidden_iwhrl_40";
-  const exportOverlay = "_exportOverlay_iwhrl_45";
-  const folderPrompt = "_folderPrompt_iwhrl_56";
-  const folderPromptTitle = "_folderPromptTitle_iwhrl_66";
-  const folderPromptBody = "_folderPromptBody_iwhrl_72";
-  const folderPromptActions = "_folderPromptActions_iwhrl_79";
-  const folderPromptPrimary = "_folderPromptPrimary_iwhrl_105";
+  const modeViewport = "_modeViewport_1vo0y_1";
+  const authorViewport = "_authorViewport_1vo0y_26";
+  const authorViewportHidden = "_authorViewportHidden_1vo0y_40";
+  const exportOverlay = "_exportOverlay_1vo0y_45";
+  const folderPrompt = "_folderPrompt_1vo0y_56";
+  const folderPromptTitle = "_folderPromptTitle_1vo0y_66";
+  const folderPromptBody = "_folderPromptBody_1vo0y_72";
+  const folderPromptActions = "_folderPromptActions_1vo0y_79";
+  const folderPromptPrimary = "_folderPromptPrimary_1vo0y_105";
   const styles$3 = {
     modeViewport,
     authorViewport,
@@ -248197,7 +248146,7 @@ void main() {
       ]
     }, "author");
   };
-  const stamp = "_stamp_ils59_1";
+  const stamp = "_stamp_3x91t_1";
   const styles$2 = {
     stamp
   };
@@ -248207,12 +248156,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-28T16:17:00.648Z");
+    const label2 = utcShort("2026-08-28T17:59:42.360Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-28T16:17:00.648Z",
+      title: "2026-08-28T17:59:42.360Z",
       children: [
         "Updated ",
         label2,
@@ -249175,34 +249124,34 @@ void main() {
       shapeCount: added
     };
   }
-  const stack = "_stack_7f7qr_1";
-  const addPanel = "_addPanel_7f7qr_11";
-  const addActionAnchor = "_addActionAnchor_7f7qr_26";
-  const formatRow = "_formatRow_7f7qr_31";
-  const addPanelBody = "_addPanelBody_7f7qr_43";
-  const urlRow = "_urlRow_7f7qr_51";
-  const urlInput = "_urlInput_7f7qr_59";
-  const importError = "_importError_7f7qr_64";
-  const importSuccess = "_importSuccess_7f7qr_71";
-  const imageCard = "_imageCard_7f7qr_78";
-  const fileAccessOverlay = "_fileAccessOverlay_7f7qr_90";
-  const fileAccessError = "_fileAccessError_7f7qr_104";
-  const fileAccessAction = "_fileAccessAction_7f7qr_112";
-  const imageCardHeader = "_imageCardHeader_7f7qr_120";
-  const imageCardText = "_imageCardText_7f7qr_128";
-  const imageCardTitle = "_imageCardTitle_7f7qr_136";
-  const imageCardMeta = "_imageCardMeta_7f7qr_144";
-  const imageCardActions = "_imageCardActions_7f7qr_150";
-  const hiddenFileInput = "_hiddenFileInput_7f7qr_159";
-  const dicomForm = "_dicomForm_7f7qr_170";
-  const fieldGroup = "_fieldGroup_7f7qr_177";
-  const fieldLabel = "_fieldLabel_7f7qr_183";
-  const fieldRow = "_fieldRow_7f7qr_190";
-  const textInput = "_textInput_7f7qr_194";
-  const textInputInvalid = "_textInputInvalid_7f7qr_223";
-  const textInputValid = "_textInputValid_7f7qr_227";
-  const invalidFeedback = "_invalidFeedback_7f7qr_231";
-  const validFeedback = "_validFeedback_7f7qr_239";
+  const stack = "_stack_1kbf5_1";
+  const addPanel = "_addPanel_1kbf5_11";
+  const addActionAnchor = "_addActionAnchor_1kbf5_24";
+  const formatRow = "_formatRow_1kbf5_29";
+  const addPanelBody = "_addPanelBody_1kbf5_41";
+  const urlRow = "_urlRow_1kbf5_49";
+  const urlInput = "_urlInput_1kbf5_57";
+  const importError = "_importError_1kbf5_62";
+  const importSuccess = "_importSuccess_1kbf5_69";
+  const imageCard = "_imageCard_1kbf5_76";
+  const fileAccessOverlay = "_fileAccessOverlay_1kbf5_88";
+  const fileAccessError = "_fileAccessError_1kbf5_106";
+  const fileAccessAction = "_fileAccessAction_1kbf5_114";
+  const imageCardHeader = "_imageCardHeader_1kbf5_122";
+  const imageCardText = "_imageCardText_1kbf5_130";
+  const imageCardTitle = "_imageCardTitle_1kbf5_138";
+  const imageCardMeta = "_imageCardMeta_1kbf5_146";
+  const imageCardActions = "_imageCardActions_1kbf5_152";
+  const hiddenFileInput = "_hiddenFileInput_1kbf5_161";
+  const dicomForm = "_dicomForm_1kbf5_172";
+  const fieldGroup = "_fieldGroup_1kbf5_179";
+  const fieldLabel = "_fieldLabel_1kbf5_185";
+  const fieldRow = "_fieldRow_1kbf5_192";
+  const textInput = "_textInput_1kbf5_196";
+  const textInputInvalid = "_textInputInvalid_1kbf5_207";
+  const textInputValid = "_textInputValid_1kbf5_211";
+  const invalidFeedback = "_invalidFeedback_1kbf5_215";
+  const validFeedback = "_validFeedback_1kbf5_223";
   const styles$1 = {
     stack,
     addPanel,
@@ -249283,6 +249232,7 @@ void main() {
   };
   function validationInputClass(v2) {
     const parts = [
+      minervaTheme.input,
       styles$1.textInput
     ];
     if (v2.isInvalid) parts.push(styles$1.textInputInvalid);
@@ -249371,9 +249321,8 @@ void main() {
             })
           ]
         }),
-        jsxRuntimeExports.jsx("button", {
+        jsxRuntimeExports.jsx(PanelActionButton, {
           type: "submit",
-          className: `${minervaTheme.control} ${minervaTheme.controlText}`,
           children: "Submit"
         })
       ]
@@ -249406,7 +249355,7 @@ void main() {
     return `Image ${index2 + 1}`;
   }
   const OmeTiffUrlImport = (props) => {
-    const { url, onUrlChange, onImport, importLabel, canImport, inputClassName, rowClassName, primaryClassName } = props;
+    const { url, onUrlChange, onImport, importLabel, canImport, inputClassName, rowClassName } = props;
     return jsxRuntimeExports.jsxs("div", {
       className: rowClassName,
       children: [
@@ -249417,11 +249366,10 @@ void main() {
           name: "ome_tiff_url",
           placeholder: "",
           onChange: onUrlChange,
-          className: `${styles$1.textInput} ${inputClassName}`
+          className: `${minervaTheme.input} ${styles$1.textInput} ${inputClassName}`
         }),
-        jsxRuntimeExports.jsx("button", {
+        jsxRuntimeExports.jsx(PanelActionButton, {
           type: "button",
-          className: primaryClassName,
           onClick: onImport,
           disabled: !canImport,
           children: importLabel
@@ -249430,10 +249378,9 @@ void main() {
     });
   };
   function FormatChip({ label: label2, selected, onClick }) {
-    const className2 = selected ? `${minervaTheme.control} ${minervaTheme.controlText} ${minervaTheme.controlActive}` : `${minervaTheme.control} ${minervaTheme.controlText}`;
-    return jsxRuntimeExports.jsx("button", {
+    return jsxRuntimeExports.jsx(PanelActionButton, {
       type: "button",
-      className: className2,
+      active: selected,
       "aria-pressed": selected,
       onClick,
       children: label2
@@ -249658,8 +249605,7 @@ void main() {
               importLabel,
               canImport: urlReady,
               inputClassName: styles$1.urlInput,
-              rowClassName: styles$1.urlRow,
-              primaryClassName: `${minervaTheme.control} ${minervaTheme.controlText}`
+              rowClassName: styles$1.urlRow
             }),
             importError2 ? jsxRuntimeExports.jsx("div", {
               className: styles$1.importError,
@@ -249755,9 +249701,9 @@ void main() {
                 className: styles$1.fileAccessError,
                 children: needsStoryDir ? "Story folder needed" : "File access needed"
               }),
-              jsxRuntimeExports.jsx("button", {
+              jsxRuntimeExports.jsx(PanelActionButton, {
                 type: "button",
-                className: `${minervaTheme.control} ${minervaTheme.controlText} ${styles$1.fileAccessAction}`,
+                className: styles$1.fileAccessAction,
                 onClick: () => {
                   if (needsStoryDir) void (onReconnectStoryRoot == null ? void 0 : onReconnectStoryRoot());
                   else if (needsReselect) void (onReselectFile == null ? void 0 : onReselectFile(im.id));
@@ -249790,7 +249736,7 @@ void main() {
       })
     }) : null;
     const addPanel2 = addPanelOpen ? jsxRuntimeExports.jsxs("div", {
-      className: styles$1.addPanel,
+      className: `${minervaTheme.surface} ${styles$1.addPanel}`,
       children: [
         jsxRuntimeExports.jsxs("div", {
           className: styles$1.formatRow,
@@ -250904,17 +250850,15 @@ void main() {
         return;
     }
   }
-  const wrapper = "_wrapper_10mfe_1";
-  const full$1 = "_full_10mfe_10";
-  const retrieving = "_retrieving_10mfe_19";
-  const importLoadingOverlay = "_importLoadingOverlay_10mfe_28";
-  const importLoadingSpinner = "_importLoadingSpinner_10mfe_44";
+  const wrapper = "_wrapper_1xu7r_1";
+  const full$1 = "_full_1xu7r_10";
+  const retrieving = "_retrieving_1xu7r_19";
+  const importLoadingOverlay = "_importLoadingOverlay_1xu7r_28";
   const styles = {
     wrapper,
     full: full$1,
     retrieving,
-    importLoadingOverlay,
-    importLoadingSpinner
+    importLoadingOverlay
   };
   function ensureDefaultWaypointForImageImport() {
     var _a2;
@@ -252765,7 +252709,7 @@ void main() {
               "aria-busy": "true",
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles.importLoadingSpinner
+                  className: minervaTheme.spinner
                 }),
                 jsxRuntimeExports.jsx("span", {
                   children: "Loading\u2026"
