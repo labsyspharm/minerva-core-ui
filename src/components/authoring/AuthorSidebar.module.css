@@ -6,10 +6,11 @@
   min-height: 0;
   min-width: 0;
   height: 100%;
-  width: 30em;
+  width: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  font-size: var(--minerva-size, 0.9rem);
+  font-size: var(--minerva-size);
   transition: transform 0.5s ease;
   transform: translateX(0);
   pointer-events: auto;
@@ -18,15 +19,6 @@
 .sidebarHostCollapsed {
   transform: translateX(-100%);
   pointer-events: none;
-}
-
-.sidebar {
-  width: 30em;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  pointer-events: all;
 }
 
 .panelOuter {
@@ -41,8 +33,19 @@
 
 .tabRow {
   grid-row: 1;
-  /* Same inset as the collapse control, both sides, so the three tabs sit centered. */
-  padding: 0 calc(var(--minerva-control, 28px) + 12px);
+  position: relative;
+  z-index: 3;
+  /* Equal inset so the three titles sit in the middle; plus overlays the left. */
+  padding: 0 calc(var(--minerva-control) * 2 + 12px);
+}
+
+.stripActions {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 6px;
+  display: flex;
+  align-items: center;
 }
 
 .expandControl {
@@ -52,39 +55,25 @@
   justify-self: center;
   align-self: start;
   margin-top: calc(
-    (var(--minerva-strip-height, 38px) - var(--minerva-control, 28px)) / 2
+    (var(--minerva-strip-height) - var(--minerva-control)) / 2
   );
   margin-right: 0;
 }
 
 .expandControlExpanded {
-  justify-self: end;
-  margin-right: 6px;
+  grid-column: 2;
+  justify-self: start;
+  background: var(--minerva-paper);
 }
 
 .panelContent {
   grid-row: 2;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.panelContentInner {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.panelSlot {
   position: relative;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .viewport {

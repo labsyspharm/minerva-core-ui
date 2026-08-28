@@ -46,9 +46,9 @@
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: var(--minerva-paper, #000);
-  color: var(--minerva-ink, #f2f2f2);
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  background: var(--minerva-paper);
+  color: var(--minerva-ink);
+  font-family: var(--minerva-font);
   display: grid;
   place-items: center;
 }
@@ -59,8 +59,8 @@
   gap: 0.85em;
   max-width: 22rem;
   padding: 1.25em 1.5em;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
-  background: var(--minerva-paper, #000);
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
 }
 
 .folderPromptTitle {
@@ -73,7 +73,7 @@
   font-size: 0.95em;
   line-height: 1.4;
   text-align: center;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
 }
 
 .folderPromptActions {
@@ -86,7 +86,7 @@
 .folderPromptActions button {
   appearance: none;
   padding: 0.55em 1em;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border: 1px solid var(--minerva-edge);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -94,14 +94,14 @@
 }
 
 .folderPromptActions button:hover {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background: var(--minerva-wash);
 }
 
 .folderPromptActions button:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 2px;
 }
 
 .folderPromptPrimary {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08)) !important;
+  background: var(--minerva-wash) !important;
 }

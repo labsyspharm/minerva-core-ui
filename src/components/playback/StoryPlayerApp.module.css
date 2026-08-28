@@ -2,9 +2,9 @@
   display: grid;
   place-items: center;
   height: 100%;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   padding: 24px;
   text-align: center;
-  background: var(--minerva-paper, #000);
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  background: var(--minerva-paper);
+  font-family: var(--minerva-font);
 }

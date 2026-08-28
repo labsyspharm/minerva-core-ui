@@ -19,8 +19,8 @@ const backdropButtonStyle: React.CSSProperties = {
 
 const panelFrameStyle: React.CSSProperties = {
   padding: "3px 8px 8px",
-  background: "var(--minerva-paper, #000)",
-  border: "1px solid var(--minerva-edge, rgb(255 255 255 / 0.18))",
+  background: "var(--minerva-paper)",
+  border: "1px solid var(--minerva-edge)",
   borderRadius: 0,
 };
 
@@ -44,7 +44,7 @@ const closeButtonStyle: React.CSSProperties = {
   borderRadius: 0,
   background: "transparent",
   cursor: "pointer",
-  color: "var(--minerva-quiet, #888)",
+  color: "var(--minerva-quiet)",
 };
 
 const closeIconStyle: React.CSSProperties = {

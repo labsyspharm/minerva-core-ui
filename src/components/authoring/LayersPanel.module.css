@@ -15,13 +15,13 @@
   align-content: flex-start;
   gap: 8px;
   row-gap: 4px;
-  background: var(--minerva-paper, #000);
-  border-bottom: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  background: var(--minerva-paper);
+  border-bottom: 1px solid var(--minerva-edge);
   border-radius: 0;
   padding: 4px 6px;
   box-sizing: border-box;
   user-select: none;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
 }
 
 .layersToolbarSlot > button > svg,

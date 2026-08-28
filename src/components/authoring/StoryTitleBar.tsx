@@ -2,13 +2,8 @@ import * as React from "react";
 import { DocumentUndoControls } from "@/components/authoring/DocumentUndoControls";
 import { StoryAuthorOverflowMenu } from "@/components/authoring/StoryAuthorOverflowMenu";
 import PlayIcon from "@/components/shared/icons/play.svg?react";
-import {
-  minervaThemeBarClassName,
-  minervaThemeClusterClassName,
-  minervaThemeControlClassName,
-  minervaThemeFieldClassName,
-  StorySpines,
-} from "@/components/shared/minervaTheme";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { StorySpines } from "@/components/shared/StorySpines";
 import { saveStoryDocument } from "@/lib/persistence/storyPersistence";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import styles from "./StoryTitleBar.module.css";
@@ -34,7 +29,6 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [editing, setEditing] = React.useState(false);
   const [draftTitle, setDraftTitle] = React.useState("");
-  const inputSize = Math.min(200, Math.max(16, (draftTitle.length || 13) + 2));
 
   React.useEffect(() => {
     if (!editing) return;
@@ -47,16 +41,19 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
 
   return (
     <section
-      className={`${minervaThemeBarClassName} ${styles.banner}`}
+      className={`${minervaTheme.bar} ${styles.banner}`}
       aria-label="Story title"
     >
-      <div className={minervaThemeClusterClassName}>
+      <div className={styles.leading}>
         {onExport ? (
           <StoryAuthorOverflowMenu
             onReturnToLibrary={onReturnToLibrary}
             onExport={onExport}
           />
         ) : null}
+        <span className={`${minervaTheme.wordmark} ${styles.wordmark}`}>
+          Minerva
+        </span>
         <DocumentUndoControls />
       </div>
       <label
@@ -68,9 +65,8 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
           <input
             ref={inputRef}
             id={fieldId}
-            className={`${minervaThemeFieldClassName} ${styles.titleInput}`}
+            className={`${minervaTheme.field} ${styles.titleInput}`}
             type="text"
-            size={inputSize}
             value={draftTitle}
             placeholder="Untitled story"
             aria-label="Story title"
@@ -94,7 +90,7 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
         ) : (
           <button
             type="button"
-            className={`${minervaThemeFieldClassName} ${styles.titleDisplay}`}
+            className={`${minervaTheme.field} ${styles.titleDisplay}`}
             aria-label="Story title"
             onClick={() => {
               setDraftTitle(titleText);
@@ -112,7 +108,7 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
       {onEnterPlaybackPreview ? (
         <button
           type="button"
-          className={minervaThemeControlClassName}
+          className={`${minervaTheme.control} ${styles.play}`}
           onClick={onEnterPlaybackPreview}
           disabled={playbackPreviewDisabled}
           title={
@@ -126,7 +122,7 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
               : "Preview playback"
           }
         >
-          <PlayIcon width={14} height={14} aria-hidden />
+          <PlayIcon aria-hidden />
         </button>
       ) : null}
     </section>

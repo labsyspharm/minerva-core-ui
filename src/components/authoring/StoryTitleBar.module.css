@@ -1,6 +1,43 @@
 .banner {
   position: relative;
   z-index: 20;
+  padding-left: 4px;
+  gap: 14px;
+}
+
+.leading {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: var(--minerva-control);
+  gap: 8px;
+}
+
+.leading button {
+  font-size: 1.25rem;
+  width: auto;
+  min-width: var(--minerva-control);
+  height: var(--minerva-control);
+  padding: 0 6px;
+}
+
+.banner .leading button svg,
+.play svg {
+  width: 1em;
+  height: 1em;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  height: var(--minerva-control);
+  padding: 0 8px;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.play {
+  font-size: 1.25rem;
 }
 
 .titleFieldWrap {
@@ -14,19 +51,17 @@
   cursor: text;
 }
 
-.titleDisplay {
+.titleDisplay,
+.titleInput {
+  appearance: none;
   min-width: 0;
   max-width: min(42rem, calc(100% - 2.5rem));
-  padding: 0 0.15em 0 0.25em;
-  border: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-style: italic;
-  letter-spacing: 0.01em;
-  line-height: 1.2;
+  font-size: var(--minerva-title-size);
   text-align: center;
   white-space: nowrap;
+}
+
+.titleDisplay {
   overflow: visible;
   cursor: text;
 }
@@ -36,17 +71,10 @@
 }
 
 .titleInput {
+  /* Padding must sit outside the text: border-box + field-sizing clips italic glyphs. */
+  box-sizing: content-box;
   width: auto;
-  min-width: 0;
-  max-width: min(42rem, calc(100% - 2.5rem));
+  max-width: 100%;
   field-sizing: content;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  padding-inline-end: 0.7em;
-}
-
-.titleInput:read-only {
-  cursor: text;
-  user-select: none;
+  overflow-x: auto;
 }

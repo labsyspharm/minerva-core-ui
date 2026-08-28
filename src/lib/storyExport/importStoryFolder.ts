@@ -270,7 +270,7 @@ async function persistImportedStory(
   return rec.id;
 }
 
-/** Pick and import a complete story document JSON. Remote sources need no extra prompt. */
+/** Pick a story JSON. If it needs local image files, a folder picker follows. */
 export async function importStoryJsonFromPicker(): Promise<string> {
   const file = await fileOpen({
     description: "Minerva story JSON",

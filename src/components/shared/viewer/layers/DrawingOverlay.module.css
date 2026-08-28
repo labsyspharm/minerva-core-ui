@@ -3,12 +3,12 @@
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: var(--minerva-paper, #000);
-  color: var(--minerva-ink, #f2f2f2);
+  background-color: var(--minerva-paper);
+  color: var(--minerva-ink);
   padding: 8px 16px;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border: 1px solid var(--minerva-edge);
   border-radius: 0;
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  font-family: var(--minerva-font);
   font-size: 14px;
   z-index: 1000;
 }
@@ -18,12 +18,12 @@
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: var(--minerva-paper, #000);
-  color: var(--minerva-ink, #f2f2f2);
+  background-color: var(--minerva-paper);
+  color: var(--minerva-ink);
   padding: 8px 20px;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border: 1px solid var(--minerva-edge);
   border-radius: 0;
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  font-family: var(--minerva-font);
   font-size: 13px;
   z-index: 1000;
   display: flex;
@@ -35,12 +35,12 @@
 .hintAdd,
 .hintRemove,
 .hintConfirm {
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
 }
 
 .hintCancel,
 .hintCount {
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
 }
 
 .hintCount {
@@ -53,8 +53,8 @@
   left: 16px;
   display: flex;
   gap: 12px;
-  background-color: var(--minerva-paper, #000);
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  background-color: var(--minerva-paper);
+  border: 1px solid var(--minerva-edge);
   padding: 12px;
   border-radius: 0;
   z-index: 1001;
@@ -62,7 +62,7 @@
 }
 
 .debugLabel {
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   font-size: 12px;
   margin-bottom: 4px;
 }
@@ -74,6 +74,6 @@
 }
 
 .debugWaiting {
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   font-size: 12px;
 }

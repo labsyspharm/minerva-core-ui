@@ -1,8 +1,4 @@
-import {
-  minervaThemeTabActiveClassName,
-  minervaThemeTabClassName,
-  minervaThemeTabListClassName,
-} from "@/components/shared/minervaTheme";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 
 export type TabItem<T extends string = string> = {
   id: T;
@@ -25,9 +21,7 @@ export function TabBar<T extends string>(props: TabBarProps<T>) {
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className={[minervaThemeTabListClassName, className]
-        .filter(Boolean)
-        .join(" ")}
+      className={[minervaTheme.tabList, className].filter(Boolean).join(" ")}
     >
       {tabs.map((tab) => {
         const active = tab.id === value;
@@ -38,8 +32,8 @@ export function TabBar<T extends string>(props: TabBarProps<T>) {
             role="tab"
             aria-selected={active}
             className={[
-              minervaThemeTabClassName,
-              active ? minervaThemeTabActiveClassName : null,
+              minervaTheme.tab,
+              active ? minervaTheme.tabActive : null,
             ]
               .filter(Boolean)
               .join(" ")}

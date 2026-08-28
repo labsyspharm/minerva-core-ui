@@ -26,9 +26,9 @@
 
 .channelImageSubtitle {
   display: block;
-  font-size: var(--minerva-size-note, 0.8rem);
+  font-size: var(--minerva-size-note);
   line-height: 1.2;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -40,27 +40,27 @@
   box-sizing: border-box;
   margin: 0;
   padding: 6px 8px;
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  font-family: var(--minerva-font);
   font-size: inherit;
   line-height: 1.3;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
   background: transparent;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border: 1px solid var(--minerva-edge);
   border-radius: 0;
 }
 
 .detailTitleInput:focus {
   outline: none;
-  border-color: var(--minerva-ink, #f2f2f2);
+  border-color: var(--minerva-ink);
 }
 
 .detailTitleInput:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 2px;
 }
 
 .detailTitleInput:disabled {
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   cursor: default;
 }
 
@@ -75,35 +75,35 @@
   background: none;
   border: none;
   border-radius: 0;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
   cursor: pointer;
 }
 
 .channelVisibilityButton:hover {
-  color: var(--minerva-ink, #f2f2f2);
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  color: var(--minerva-ink);
+  background: var(--minerva-wash);
 }
 
 .channelVisibilityButtonHidden {
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
 }
 
 .channelColorSwatch {
   width: 14px;
   height: 14px;
   padding: 0;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border: 1px solid var(--minerva-edge);
   border-radius: 0;
   flex-shrink: 0;
   cursor: pointer;
 }
 
 .channelColorSwatch:hover {
-  border-color: var(--minerva-ink, #f2f2f2);
+  border-color: var(--minerva-ink);
 }
 
 .detailChannelRowLocked .channelColorSwatch {
-  box-shadow: inset 0 0 0 1px var(--minerva-ink, #f2f2f2);
+  box-shadow: inset 0 0 0 1px var(--minerva-ink);
 }
 
 .maskVizControls {
@@ -119,7 +119,7 @@
   flex-shrink: 0;
   margin: 0;
   padding: 1px;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border: 1px solid var(--minerva-edge);
   border-radius: 0;
   background: transparent;
   gap: 1px;
@@ -133,21 +133,21 @@
   height: 18px;
   padding: 0;
   background: transparent;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   border: none;
   border-radius: 0;
   cursor: pointer;
 }
 
 .maskVizOption:hover {
-  color: var(--minerva-ink, #f2f2f2);
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  color: var(--minerva-ink);
+  background: var(--minerva-wash);
 }
 
 .maskVizOptionActive {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
-  color: var(--minerva-ink, #f2f2f2);
-  box-shadow: inset 0 -1px 0 var(--minerva-ink, #f2f2f2);
+  background: var(--minerva-wash);
+  color: var(--minerva-ink);
+  box-shadow: inset 0 -1px 0 var(--minerva-ink);
 }
 
 .maskVizIconOutline,
@@ -171,7 +171,7 @@
 }
 
 .maskVizSwatchWhite {
-  border: 1px solid var(--minerva-quiet, #888);
+  border: 1px solid var(--minerva-quiet);
   background: #f0f3f6;
 }
 
@@ -192,7 +192,7 @@
   flex-direction: column;
   align-items: stretch;
   gap: 0;
-  padding: 4px 8px 2px 4px;
+  padding: 4px 0 2px;
   min-height: 0;
 }
 
@@ -206,12 +206,12 @@
   background: transparent;
   border: none;
   border-radius: 0;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
   font-family: inherit;
 }
 
 .groupChildRow .channelNameInput:focus-visible,
 .rootChannelRow .channelNameInput:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 1px;
 }

@@ -8,9 +8,9 @@
 }
 
 .compactRow {
-  padding: 10px 10px;
+  padding: 10px var(--minerva-inset);
   min-height: 84px;
-  border-bottom: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border-bottom: 1px solid var(--minerva-edge);
   display: grid;
   align-items: start;
   box-sizing: border-box;
@@ -30,8 +30,8 @@
   width: 64px;
   height: 64px;
   border-radius: 0;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
-  background-color: var(--minerva-paper, #000);
+  border: 1px solid var(--minerva-edge);
+  background-color: var(--minerva-paper);
   box-sizing: border-box;
   flex-shrink: 0;
   align-self: center;
@@ -81,17 +81,17 @@
 }
 
 .rowMainHit:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 1px;
 }
 
 .compactRow:hover {
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background-color: var(--minerva-wash);
 }
 
 .compactRowActive {
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
-  box-shadow: inset 2px 0 0 var(--minerva-ink, #f2f2f2);
+  background-color: var(--minerva-wash);
+  box-shadow: inset 2px 0 0 var(--minerva-ink);
 }
 
 .compactRowDragging {
@@ -100,7 +100,7 @@
 }
 
 .compactRowDropTarget {
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background-color: var(--minerva-wash);
 }
 
 .rowOpenDetailButton {
@@ -109,7 +109,7 @@
   padding: 0;
   background: none;
   border: none;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -119,11 +119,11 @@
 }
 
 .rowOpenDetailButton:hover {
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
 }
 
 .rowOpenDetailButton:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 1px;
 }
 
@@ -138,7 +138,7 @@
   white-space: nowrap;
   font-size: inherit;
   font-weight: 400;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
   line-height: 1.25;
 }
 
@@ -149,10 +149,10 @@
   overflow: hidden;
   white-space: normal;
   word-break: break-word;
-  font-size: var(--minerva-size-note, 0.8rem);
+  font-size: var(--minerva-size-note);
   line-height: 1.35;
   min-height: calc(1.35em * 2);
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
 }
 
 .rowTitleRow .rowTitle {
@@ -165,9 +165,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: var(--minerva-size-note, 0.8rem);
-  color: var(--minerva-ink, #f2f2f2);
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  font-size: var(--minerva-size-note);
+  color: var(--minerva-ink);
+  border: 1px solid var(--minerva-edge);
   background-color: transparent;
   border-radius: 0;
   padding: 2px 8px;
@@ -227,8 +227,8 @@
 }
 
 .detailHeader {
-  background-color: var(--minerva-paper, #000);
-  border-bottom: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  background-color: var(--minerva-paper);
+  border-bottom: 1px solid var(--minerva-edge);
   padding: 6px 10px;
   display: flex;
   align-items: center;
@@ -242,23 +242,23 @@
   align-items: center;
   gap: 6px;
   background: none;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
-  color: var(--minerva-ink, #f2f2f2);
+  border: 1px solid var(--minerva-edge);
+  color: var(--minerva-ink);
   padding: 4px 8px;
   border-radius: 0;
   cursor: pointer;
   font-size: inherit;
   line-height: 1;
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  font-family: var(--minerva-font);
 }
 
 .backButton:hover {
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
-  color: var(--minerva-ink, #f2f2f2);
+  background-color: var(--minerva-wash);
+  color: var(--minerva-ink);
 }
 
 .backButton:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 1px;
 }
 
@@ -269,8 +269,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-  color: var(--minerva-ink, #f2f2f2);
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  color: var(--minerva-ink);
+  font-family: var(--minerva-font);
 }
 
 .detailBody {
@@ -288,9 +288,9 @@
 }
 
 .detailTitleFieldWrap {
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border: 1px solid var(--minerva-edge);
   border-radius: 0;
-  background-color: var(--minerva-paper, #000);
+  background-color: var(--minerva-paper);
   padding: 8px 10px 10px;
   box-sizing: border-box;
   display: flex;
@@ -301,9 +301,9 @@
 .detailTitleLabel {
   font-size: inherit;
   font-weight: 400;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
   line-height: 1.2;
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  font-family: var(--minerva-font);
 }
 
 .detailTitleInput {
@@ -313,24 +313,24 @@
   padding: 6px 8px;
   font-size: inherit;
   line-height: 1.3;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
   background-color: transparent;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border: 1px solid var(--minerva-edge);
   border-radius: 0;
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  font-family: var(--minerva-font);
 }
 
 .detailTitleInput::placeholder {
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
 }
 
 .detailTitleInput:focus {
   outline: none;
-  border-color: var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border-color: var(--minerva-edge);
 }
 
 .detailTitleInput:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 1px;
 }
 
@@ -353,34 +353,34 @@
 
 .detailSelectionButton {
   width: 100%;
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
-  color: var(--minerva-ink, #f2f2f2);
+  background: var(--minerva-wash);
+  border: 1px solid var(--minerva-edge);
+  color: var(--minerva-ink);
   padding: 6px 10px;
   border-radius: 0;
   cursor: pointer;
   font-size: inherit;
   text-align: left;
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  font-family: var(--minerva-font);
 }
 
 .detailSelectionButton:hover {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
-  box-shadow: inset 0 -1px 0 var(--minerva-ink, #f2f2f2);
+  background: var(--minerva-wash);
+  box-shadow: inset 0 -1px 0 var(--minerva-ink);
 }
 
 .detailSelectionButton:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 1px;
 }
 
 /* ---- Collapsible detail sections ---- */
 
 .detailCollapsible {
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border: 1px solid var(--minerva-edge);
   border-radius: 0;
   overflow: hidden;
-  background-color: var(--minerva-paper, #000);
+  background-color: var(--minerva-paper);
   box-sizing: border-box;
 }
 
@@ -393,25 +393,25 @@
   padding: 6px 10px;
   box-sizing: border-box;
   border: none;
-  border-bottom: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
-  background-color: var(--minerva-paper, #000);
-  color: var(--minerva-ink, #f2f2f2);
+  border-bottom: 1px solid var(--minerva-edge);
+  background-color: var(--minerva-paper);
+  color: var(--minerva-ink);
   font-size: inherit;
   font-weight: 400;
   line-height: 1.2;
   text-align: left;
   cursor: pointer;
   user-select: none;
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  font-family: var(--minerva-font);
   transition: background-color 0.15s ease;
 }
 
 .detailCollapsibleHeader:hover {
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background-color: var(--minerva-wash);
 }
 
 .detailCollapsibleHeader:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: -2px;
 }
 
@@ -423,7 +423,7 @@
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   transform: rotate(-90deg);
   transition: transform 0.15s ease;
 }
@@ -439,7 +439,7 @@
 
 .detailCollapsibleCount {
   font-weight: 400;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   font-variant-numeric: tabular-nums;
 }
 
@@ -465,18 +465,18 @@
   padding: 8px 10px;
   font-size: inherit;
   line-height: 1.35;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
   background-color: transparent;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border: 1px solid var(--minerva-edge);
   border-radius: 0;
   cursor: pointer;
   text-align: left;
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  font-family: var(--minerva-font);
   transition: border-color 0.15s ease;
 }
 
 .channelGroupDropdownTrigger:hover:not(:disabled) {
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background-color: var(--minerva-wash);
 }
 
 .channelGroupDropdownTrigger:focus {
@@ -484,7 +484,7 @@
 }
 
 .channelGroupDropdownTrigger:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 1px;
 }
 
@@ -505,14 +505,14 @@
 .channelGroupDropdownTitle {
   font-size: inherit;
   font-weight: 400;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
   line-height: 1.25;
 }
 
 .channelGroupDropdownChannels {
-  font-size: var(--minerva-size-note, 0.8rem);
+  font-size: var(--minerva-size-note);
   font-weight: 400;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   line-height: 1.35;
   word-break: break-word;
 }
@@ -522,7 +522,7 @@
   width: 14px;
   height: 14px;
   margin-top: 2px;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   transition: transform 0.15s ease;
 }
 
@@ -537,10 +537,10 @@
   list-style: none;
   max-height: 280px;
   overflow-y: auto;
-  background-color: var(--minerva-paper, #000);
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  background-color: var(--minerva-paper);
+  border: 1px solid var(--minerva-edge);
   border-radius: 0;
-  scrollbar-color: var(--minerva-quiet, #888) transparent;
+  scrollbar-color: var(--minerva-quiet) transparent;
   scrollbar-width: thin;
 }
 
@@ -549,7 +549,7 @@
 }
 
 .channelGroupDropdownMenu::-webkit-scrollbar-thumb {
-  background-color: var(--minerva-quiet, #888);
+  background-color: var(--minerva-quiet);
   border-radius: 0;
 }
 
@@ -577,25 +577,25 @@
 }
 
 .channelGroupDropdownOption:hover {
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background-color: var(--minerva-wash);
 }
 
 .channelGroupDropdownOption:focus {
   outline: none;
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background-color: var(--minerva-wash);
 }
 
 .channelGroupDropdownOption:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: -2px;
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background-color: var(--minerva-wash);
 }
 
 .channelGroupDropdownOptionSelected {
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
-  box-shadow: inset 2px 0 0 var(--minerva-ink, #f2f2f2);
+  background-color: var(--minerva-wash);
+  box-shadow: inset 2px 0 0 var(--minerva-ink);
 }
 
 .channelGroupDropdownOptionSelected:hover {
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background-color: var(--minerva-wash);
 }

@@ -4,7 +4,7 @@
   bottom: max(8px, env(safe-area-inset-bottom));
   z-index: 99999;
   pointer-events: none;
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  font-family: var(--minerva-font);
   font-size: 10px;
   line-height: 1.25;
   font-weight: 400;

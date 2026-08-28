@@ -2,13 +2,8 @@ import type { CSSProperties, MouseEvent, ReactElement } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import {
-  minervaThemeBarClassName,
-  minervaThemeControlClassName,
-  minervaThemeControlTextClassName,
-  minervaThemeTitleClassName,
-  StorySpines,
-} from "@/components/shared/minervaTheme";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { StorySpines } from "@/components/shared/StorySpines";
 import {
   effectiveReferenceImagePixelSize,
   useAppStore,
@@ -375,11 +370,11 @@ export const Presentation = (props: PresentationProps) => {
   return (
     <div className={styles.presentation}>
       {showRibbon ? (
-        <div className={`${minervaThemeBarClassName} ${styles.previewRibbon}`}>
+        <div className={`${minervaTheme.bar} ${styles.previewRibbon}`}>
           {props.exitPlaybackPreview ? (
             <button
               type="button"
-              className={`${minervaThemeControlClassName} ${minervaThemeControlTextClassName}`}
+              className={`${minervaTheme.control} ${minervaTheme.controlText}`}
               onClick={props.exitPlaybackPreview}
               title="Back to editing"
               aria-label="Back to editing"
@@ -394,7 +389,7 @@ export const Presentation = (props: PresentationProps) => {
           <span
             title={ribbonDocTitle}
             className={[
-              minervaThemeTitleClassName,
+              minervaTheme.title,
               styles.previewRibbonDocumentTitle,
               flushTitle ? styles.previewRibbonDocumentTitleFlush : null,
             ]

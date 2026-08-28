@@ -1,6 +1,12 @@
 .menuWrap {
   position: relative;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   flex-shrink: 0;
+  height: var(--minerva-control);
+}
+
+.menuItemGap {
+  margin-top: 0.25em;
+  padding-top: 0.7em;
 }

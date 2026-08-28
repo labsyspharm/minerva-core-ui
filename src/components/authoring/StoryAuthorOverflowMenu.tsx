@@ -1,10 +1,6 @@
 import * as React from "react";
-import {
-  minervaThemeControlClassName,
-  minervaThemeMenuClassName,
-  minervaThemeMenuItemClassName,
-  minervaThemeMenuItemGapClassName,
-} from "@/components/shared/minervaTheme";
+import MenuIcon from "@/components/shared/icons/menu.svg?react";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import type { DocumentData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
@@ -54,7 +50,7 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
     <div className={styles.menuWrap} ref={wrapRef}>
       <button
         type="button"
-        className={minervaThemeControlClassName}
+        className={minervaTheme.control}
         title="Menu"
         aria-label="Menu"
         aria-expanded={open}
@@ -64,19 +60,14 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
           setOpen((v) => !v);
         }}
       >
-        <svg viewBox="0 0 14 14" aria-hidden="true">
-          <path
-            fill="currentColor"
-            d="M2 3h10v1H2V3zm0 4h10v1H2V7zm0 4h10v1H2v-1z"
-          />
-        </svg>
+        <MenuIcon aria-hidden />
       </button>
       {open ? (
-        <div className={minervaThemeMenuClassName} role="menu">
+        <div className={minervaTheme.menu} role="menu">
           <button
             type="button"
             role="menuitem"
-            className={minervaThemeMenuItemClassName}
+            className={minervaTheme.menuItem}
             onClick={(e) => {
               e.stopPropagation();
               close();
@@ -88,7 +79,7 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
           <button
             type="button"
             role="menuitem"
-            className={`${minervaThemeMenuItemClassName} ${minervaThemeMenuItemGapClassName}`}
+            className={`${minervaTheme.menuItem} ${styles.menuItemGap}`}
             disabled={!waypointsOk}
             onClick={(e) => {
               e.stopPropagation();
@@ -104,7 +95,7 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
           <button
             type="button"
             role="menuitem"
-            className={minervaThemeMenuItemClassName}
+            className={minervaTheme.menuItem}
             disabled={!waypointsOk}
             title={
               waypointsOk

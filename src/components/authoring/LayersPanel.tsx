@@ -16,10 +16,7 @@ import PointIcon from "@/components/shared/icons/point.svg?react";
 import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
 import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
-import {
-  minervaThemeControlActiveClassName,
-  minervaThemeControlClassName,
-} from "@/components/shared/minervaTheme";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { TextEditPanel } from "@/components/shared/tools/TextEditPanel";
 import type { Shape } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -667,8 +664,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
             <button
               type="button"
               className={[
-                minervaThemeControlClassName,
-                isBrushActive ? minervaThemeControlActiveClassName : "",
+                minervaTheme.control,
+                isBrushActive ? minervaTheme.controlActive : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -697,8 +694,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
             <button
               type="button"
               className={[
-                minervaThemeControlClassName,
-                isEraserActive ? minervaThemeControlActiveClassName : "",
+                minervaTheme.control,
+                isEraserActive ? minervaTheme.controlActive : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -737,7 +734,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     <>
       <button
         type="button"
-        className={minervaThemeControlClassName}
+        className={minervaTheme.control}
         onClick={() => createGroup()}
         title="Add"
         aria-label="Add group"
@@ -746,7 +743,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       </button>
       <button
         type="button"
-        className={minervaThemeControlClassName}
+        className={minervaTheme.control}
         onClick={handleHeaderEditTextClick}
         disabled={headerEditTextDisabled}
         title={
@@ -759,7 +756,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       </button>
       <button
         type="button"
-        className={minervaThemeControlClassName}
+        className={minervaTheme.control}
         onClick={handleHeaderColorClick}
         disabled={headerColorDisabled}
         title={
@@ -776,7 +773,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       </button>
       <button
         type="button"
-        className={minervaThemeControlClassName}
+        className={minervaTheme.control}
         onClick={handleHeaderDeleteClick}
         disabled={!selectedGroupId && selectedShapeIds.length === 0}
         title={

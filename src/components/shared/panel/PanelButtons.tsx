@@ -1,10 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import {
-  minervaThemeControlActiveClassName,
-  minervaThemeControlClassName,
-  minervaThemeControlRowClassName,
-  minervaThemeControlTextClassName,
-} from "@/components/shared/minervaTheme";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 
 export type PanelIconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
@@ -23,18 +18,12 @@ export function PanelIconButton({
   ...rest
 }: PanelIconButtonProps) {
   const base =
-    variant === "row"
-      ? minervaThemeControlRowClassName
-      : minervaThemeControlClassName;
+    variant === "row" ? minervaTheme.controlRow : minervaTheme.control;
   return (
     <button
       type={type}
       data-icon-button=""
-      className={[
-        base,
-        active ? minervaThemeControlActiveClassName : null,
-        className,
-      ]
+      className={[base, active ? minervaTheme.controlActive : null, className]
         .filter(Boolean)
         .join(" ")}
       {...rest}
@@ -61,9 +50,9 @@ export function PanelActionButton({
     <button
       type={type}
       className={[
-        minervaThemeControlClassName,
-        minervaThemeControlTextClassName,
-        active ? minervaThemeControlActiveClassName : null,
+        minervaTheme.control,
+        minervaTheme.controlText,
+        active ? minervaTheme.controlActive : null,
         className,
       ]
         .filter(Boolean)

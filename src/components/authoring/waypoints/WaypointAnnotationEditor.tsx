@@ -21,10 +21,7 @@ import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
-import {
-  minervaThemeControlActiveClassName,
-  minervaThemeControlClassName,
-} from "@/components/shared/minervaTheme";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import {
   cloneShapesForPaste,
@@ -224,7 +221,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     <>
       <button
         type="button"
-        className={minervaThemeControlClassName}
+        className={minervaTheme.control}
         disabled={layersPanelSelectedShapeIds.length === 0}
         title="Copy selected shapes to the clipboard"
         onClick={() => void copySelectedWaypointShapes()}
@@ -233,7 +230,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
       </button>
       <button
         type="button"
-        className={minervaThemeControlClassName}
+        className={minervaTheme.control}
         title="Paste shapes from the clipboard"
         onClick={() => void pasteWaypointShapesFromClipboard()}
       >
@@ -250,7 +247,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
     <>
       <button
         type="button"
-        className={`${minervaThemeControlClassName} ${activeTool === TOOLS.MOVE ? minervaThemeControlActiveClassName : ""}`}
+        className={`${minervaTheme.control} ${activeTool === TOOLS.MOVE ? minervaTheme.controlActive : ""}`}
         title="Move Tool"
         onClick={() => handleToolChangeLocal(TOOLS.MOVE)}
       >
@@ -275,8 +272,8 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<ShapesIcon />}
         parentTitle="Shapes"
-        buttonClassName={minervaThemeControlClassName}
-        activeClassName={minervaThemeControlActiveClassName}
+        buttonClassName={minervaTheme.control}
+        activeClassName={minervaTheme.controlActive}
       />
 
       <ToolSubmenu
@@ -289,13 +286,13 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<LinesIcon />}
         parentTitle="Lines"
-        buttonClassName={minervaThemeControlClassName}
-        activeClassName={minervaThemeControlActiveClassName}
+        buttonClassName={minervaTheme.control}
+        activeClassName={minervaTheme.controlActive}
       />
 
       <button
         type="button"
-        className={`${minervaThemeControlClassName} ${activeTool === TOOLS.BRUSH ? minervaThemeControlActiveClassName : ""}`}
+        className={`${minervaTheme.control} ${activeTool === TOOLS.BRUSH ? minervaTheme.controlActive : ""}`}
         title="Brush"
         onClick={() => handleToolChangeLocal(TOOLS.BRUSH)}
       >
@@ -304,7 +301,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${minervaThemeControlClassName} ${activeTool === TOOLS.TEXT ? minervaThemeControlActiveClassName : ""}`}
+        className={`${minervaTheme.control} ${activeTool === TOOLS.TEXT ? minervaTheme.controlActive : ""}`}
         title="Text Tool"
         onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
       >
@@ -313,7 +310,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${minervaThemeControlClassName} ${activeTool === TOOLS.POINT ? minervaThemeControlActiveClassName : ""}`}
+        className={`${minervaTheme.control} ${activeTool === TOOLS.POINT ? minervaTheme.controlActive : ""}`}
         title="Point Tool"
         onClick={() => handleToolChangeLocal(TOOLS.POINT)}
       >
@@ -322,7 +319,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
       <button
         type="button"
-        className={`${minervaThemeControlClassName} ${activeTool === TOOLS.MAGIC_WAND ? minervaThemeControlActiveClassName : ""}`}
+        className={`${minervaTheme.control} ${activeTool === TOOLS.MAGIC_WAND ? minervaTheme.controlActive : ""}`}
         title="Magic Wand"
         onClick={() => handleToolChangeLocal(TOOLS.MAGIC_WAND)}
       >

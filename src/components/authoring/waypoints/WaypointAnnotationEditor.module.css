@@ -1,7 +1,7 @@
 /* Match minervaTheme paper / soft edge surface */
 .annotationsPanel {
-  background-color: var(--minerva-paper, #000);
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  background-color: var(--minerva-paper);
+  border: 1px solid var(--minerva-edge);
   border-radius: 0;
   margin: 8px 0;
   overflow: hidden;
@@ -38,5 +38,5 @@
 .annotationsPanelEmbedded .layersContainer {
   max-height: none;
   overflow: visible;
-  background-color: var(--minerva-paper, #000);
+  background-color: var(--minerva-paper);
 }

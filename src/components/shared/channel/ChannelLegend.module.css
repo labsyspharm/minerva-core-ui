@@ -1,8 +1,8 @@
 .channelsSection {
   margin-top: 4px;
   border-radius: 0;
-  background: var(--minerva-paper, #000);
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  background: var(--minerva-paper);
+  border: 1px solid var(--minerva-edge);
   overflow: hidden;
 }
 
@@ -12,14 +12,14 @@
   justify-content: space-between;
   gap: 6px;
   padding: 3px 6px;
-  border-bottom: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border-bottom: 1px solid var(--minerva-edge);
 }
 
 .sectionLabel {
   font-weight: 400;
   letter-spacing: 0.01em;
   font-size: 0.7rem;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   line-height: 1.2;
   margin: 0;
   flex: 1;
@@ -44,7 +44,7 @@
 .imageSection:not(:first-child) {
   margin-top: 4px;
   padding-top: 4px;
-  border-top: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border-top: 1px solid var(--minerva-edge);
 }
 
 .imageSectionLabel {
@@ -53,7 +53,7 @@
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: 0.02em;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -77,13 +77,13 @@
 }
 
 .legendRowWrap:hover {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background: var(--minerva-wash);
 }
 
 .rowClickArea {
   all: unset;
   box-sizing: border-box;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
   display: flex;
   align-items: center;
   gap: 5px;
@@ -110,7 +110,7 @@
 
 .legendDivider {
   margin: 3px 2px 2px;
-  border-top: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border-top: 1px solid var(--minerva-edge);
 }
 
 .nameSlot {

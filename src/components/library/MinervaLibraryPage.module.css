@@ -1,6 +1,6 @@
 /**
  * Minerva Library — story look with the prior abstract bookshelf:
- * italic wordmark, ink hairline case/shelves, muted cloth spines.
+ * wordmark, ink hairline case/shelves, muted cloth spines.
  */
 
 .root {
@@ -11,65 +11,90 @@
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   padding: clamp(24px, 5vw, 48px) clamp(18px, 5vw, 56px) 40px;
-  background: var(--minerva-paper, #000);
-  color: var(--minerva-ink, #f2f2f2);
-  font-family: var(--minerva-serif, "Noto Serif", Georgia, serif);
+  background: var(--minerva-paper);
+  color: var(--minerva-ink);
+  font-family: var(--minerva-font);
 }
 
-.shelfToolbar {
+.masthead {
   display: flex;
   align-items: baseline;
-  max-width: var(--minerva-measure, 52rem);
-  margin: 0 auto clamp(10px, 2vw, 18px);
+  flex-wrap: wrap;
+  gap: 0.55em 0.85em;
+  max-width: 52rem;
+  margin: 0 auto 0.55em;
   padding: 0 14px;
   box-sizing: border-box;
 }
 
-.importMenu {
+.addWrap {
   position: relative;
-  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-.importMenu > summary {
-  list-style: none;
-}
-
-.importMenu > summary::-webkit-details-marker {
-  display: none;
-}
-
-.disabledAction {
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-.importMenuPanel {
+.addWrap .addMenu {
   left: 0;
   right: auto;
 }
 
-.importMenu > .importMenuPanel {
-  left: 0;
-  right: auto;
+.addTrigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 32px;
+  padding: 6px 0 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--minerva-quiet);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.addTrigger:hover:not(:disabled) {
+  color: var(--minerva-ink);
+  background: var(--minerva-wash);
+}
+
+.addTrigger:disabled {
+  opacity: 0.45;
+  cursor: wait;
 }
 
 .wordmark {
   margin: 0;
-  font-size: var(--minerva-title-size, 1.35rem);
+  font-size: 1.75rem;
   font-weight: 400;
-  font-style: italic;
   letter-spacing: 0.01em;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-blue);
   font-family: inherit;
 }
 
+.tagline {
+  margin: 0;
+  font-size: var(--minerva-size);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--minerva-quiet);
+}
+
 .error {
-  max-width: var(--minerva-measure, 52rem);
+  max-width: 52rem;
   margin: 0 auto 16px;
   padding: 8px 0;
   font-size: 0.95rem;
-  color: var(--minerva-ink, #f2f2f2);
-  border-bottom: 1px solid var(--minerva-hairline, #f2f2f2);
+  color: var(--minerva-ink);
+  border-bottom: 1px solid var(--minerva-ink);
 }
 
 .whisper {
@@ -77,16 +102,17 @@
   padding: 4px 6px 4px 0;
   font-size: 1rem;
   font-style: italic;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
 }
 
 .bookcase {
-  max-width: var(--minerva-measure, 52rem);
+  position: relative;
+  max-width: 52rem;
   margin: 0 auto;
   min-height: 12rem;
   box-sizing: border-box;
   padding: 6px 14px 12px;
-  border: 1px solid var(--minerva-hairline, #f2f2f2);
+  border: 1px solid var(--minerva-ink);
   border-radius: 0;
   background: transparent;
 }
@@ -133,29 +159,6 @@
   flex: 0 0 auto;
 }
 
-.catalogRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  min-height: var(--minerva-control, 28px);
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.catalogBay {
-  min-height: 0;
-  align-items: center;
-}
-
-.catalogAction {
-  font-style: italic;
-}
-
-.importMenu > summary.catalogAction {
-  list-style: none;
-}
-
 .storyRow {
   display: flex;
   align-items: center;
@@ -173,7 +176,7 @@
   width: 100%;
   margin: 0;
   border-radius: 0;
-  background: var(--minerva-hairline, #f2f2f2);
+  background: var(--minerva-ink);
 }
 
 .rowOpen {
@@ -194,7 +197,7 @@
 }
 
 .rowOpen:hover:not(:disabled) {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background: var(--minerva-wash);
 }
 
 .rowOpen:disabled {
@@ -208,7 +211,7 @@
   height: 32px;
   border-radius: 0;
   overflow: hidden;
-  border: 1px solid var(--minerva-hairline, #f2f2f2);
+  border: 1px solid var(--minerva-ink);
   box-shadow: none;
 }
 
@@ -224,7 +227,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background: var(--minerva-wash);
 }
 
 .rowText {
@@ -240,7 +243,7 @@
   font-size: 1rem;
   font-weight: 400;
   letter-spacing: 0.01em;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -251,7 +254,7 @@
   font-size: 0.8rem;
   font-style: italic;
   letter-spacing: 0;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   font-variant-numeric: tabular-nums;
 }
 
@@ -269,7 +272,7 @@
   border: none;
   border-radius: 0;
   background: transparent;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   font-size: 1.1rem;
   line-height: 1;
   cursor: pointer;
@@ -277,7 +280,7 @@
 }
 
 .scrap:hover:not(:disabled) {
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
   background: transparent;
 }
 

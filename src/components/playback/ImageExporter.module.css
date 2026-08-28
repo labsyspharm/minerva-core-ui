@@ -19,7 +19,7 @@
 .dismissButton {
   align-self: center;
   padding: 0.4em 0.8em;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border: 1px solid var(--minerva-edge);
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -27,7 +27,7 @@
 }
 
 .dismissButton:hover {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background: var(--minerva-wash);
 }
 
 .progressBar {
@@ -40,7 +40,7 @@
 .progressBar > div:first-child {
   box-sizing: border-box;
   height: 1.25em;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border: 1px solid var(--minerva-edge);
   background-color: transparent;
   overflow: hidden;
 }
@@ -48,11 +48,11 @@
 .progressBar > div:first-child > div {
   height: 100%;
   width: calc(var(--progress-ratio, 0) * 100%);
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background-color: var(--minerva-wash);
 }
 
 .progressBarDone > div:first-child > div {
-  background-color: var(--minerva-ink, #f2f2f2);
+  background-color: var(--minerva-ink);
 }
 
 .progressBar > div:last-child {
@@ -65,7 +65,7 @@
   font-family: inherit;
   font-size: 0.9em;
   text-align: center;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
 }
 
 .exportMessage {

@@ -1,21 +1,12 @@
 import * as React from "react";
-import {
-  minervaThemeControlOutlinedClassName,
-  minervaThemeMenuClassName,
-  minervaThemeMenuItemClassName,
-  minervaThemeRootClassName,
-  STORY_CLOTH,
-} from "@/components/shared/minervaTheme";
-import { hasDirectoryPickerAccess } from "@/lib/imaging/filesystem";
+import { PlusIcon } from "@/components/shared/common/PlusIcon";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { listStorySummaries } from "@/lib/persistence/storyPersistence";
 import type { StorySummary } from "@/lib/persistence/types";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
-import {
-  importStoryFolderFromPicker,
-  importStoryJsonFromPicker,
-} from "@/lib/storyExport/importStoryFolder";
+import { importStoryJsonFromPicker } from "@/lib/storyExport/importStoryFolder";
 import { rootRouteApi } from "@/router/appRouter";
 import styles from "./MinervaLibraryPage.module.css";
 
@@ -91,7 +82,6 @@ function GhostBooks({ bayIndex }: { bayIndex: number }) {
       width: number;
       height: number;
       color: string;
-      opacity: number;
     }[] = [];
     let used = 0;
     let i = 0;
@@ -106,10 +96,7 @@ function GhostBooks({ bayIndex }: { bayIndex: number }) {
         key: i,
         width,
         height: 22 + Math.floor(rand() * 16),
-        color:
-          STORY_CLOTH[Math.floor(rand() * STORY_CLOTH.length)] ??
-          STORY_CLOTH[0],
-        opacity: 0.72 + rand() * 0.28,
+        color: `var(--cloth-${1 + Math.floor(rand() * 6)})`,
       });
       i += 1;
       if (i > 400) break;
@@ -127,7 +114,6 @@ function GhostBooks({ bayIndex }: { bayIndex: number }) {
             width: b.width,
             height: b.height,
             background: b.color,
-            opacity: b.opacity,
           }}
         />
       ))}
@@ -136,40 +122,37 @@ function GhostBooks({ bayIndex }: { bayIndex: number }) {
 }
 
 /**
- * Reference SVG: 7 interior lines → 8 tiers. Always show at least this many bays
- * so empty shelves appear below real stories.
+ * First bay is always the add row. Remaining slots fill to this many tiers
+ * (7 interior lines → 8 shelves including add).
  */
 const TARGET_BAYS = 8;
+const STORY_BAYS = TARGET_BAYS - 1;
 
 type BaySlot =
-  | { kind: "catalog" }
   | { kind: "loading" }
   | { kind: "story"; story: StorySummary }
   | { kind: "empty" };
 
 function buildBays(summaries: StorySummary[] | null): BaySlot[] {
-  const rest: BaySlot[] =
-    summaries === null
-      ? [
-          { kind: "loading" },
-          ...Array.from({ length: TARGET_BAYS - 2 }, () => ({
-            kind: "empty" as const,
-          })),
-        ]
-      : (() => {
-          const count = Math.max(TARGET_BAYS - 1, summaries.length);
-          const out: BaySlot[] = [];
-          for (let i = 0; i < count; i++) {
-            const story = i < summaries.length ? summaries[i] : undefined;
-            if (story !== undefined) {
-              out.push({ kind: "story", story });
-            } else {
-              out.push({ kind: "empty" });
-            }
-          }
-          return out;
-        })();
-  return [{ kind: "catalog" }, ...rest];
+  if (summaries === null) {
+    return [
+      { kind: "loading" },
+      ...Array.from({ length: STORY_BAYS - 1 }, () => ({
+        kind: "empty" as const,
+      })),
+    ];
+  }
+  const count = Math.max(STORY_BAYS, summaries.length);
+  const out: BaySlot[] = [];
+  for (let i = 0; i < count; i++) {
+    const story = summaries[i];
+    if (story !== undefined) {
+      out.push({ kind: "story", story });
+    } else {
+      out.push({ kind: "empty" });
+    }
+  }
+  return out;
 }
 
 export function MinervaLibraryPage() {
@@ -181,10 +164,10 @@ export function MinervaLibraryPage() {
   const [summaries, setSummaries] = React.useState<StorySummary[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [busyId, setBusyId] = React.useState<string | null>(null);
+  const [addOpen, setAddOpen] = React.useState(false);
   const [creating, setCreating] = React.useState(false);
   const [importing, setImporting] = React.useState(false);
-  const importMenuRef = React.useRef<HTMLDetailsElement>(null);
-  const canImportFolder = hasDirectoryPickerAccess();
+  const addRef = React.useRef<HTMLDivElement>(null);
 
   const refresh = React.useCallback(() => {
     setError(null);
@@ -203,6 +186,16 @@ export function MinervaLibraryPage() {
   React.useEffect(() => {
     document.title = `${APP_TAB_TITLE_PREFIX} | Minerva Library`;
   }, []);
+
+  React.useEffect(() => {
+    if (!addOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      const el = addRef.current;
+      if (el && !el.contains(e.target as Node)) setAddOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [addOpen]);
 
   const openStory = React.useCallback(
     async (id: string) => {
@@ -228,6 +221,7 @@ export function MinervaLibraryPage() {
   );
 
   const handleNew = React.useCallback(async () => {
+    setAddOpen(false);
     setCreating(true);
     setError(null);
     try {
@@ -247,35 +241,29 @@ export function MinervaLibraryPage() {
     }
   }, [createStory, navigate]);
 
-  const handleImport = React.useCallback(
-    async (kind: "json" | "folder") => {
-      importMenuRef.current?.removeAttribute("open");
-      setImporting(true);
-      setError(null);
-      try {
-        useAppStore.getState().resetStoryViewerSession();
-        const id =
-          kind === "json"
-            ? await importStoryJsonFromPicker()
-            : await importStoryFolderFromPicker();
-        navigate({
-          search: (prev: { storyid?: string }) => ({
-            ...prev,
-            storyid: id,
-          }),
-          replace: true,
-        } as never);
-      } catch (e: unknown) {
-        // AbortError = user cancelled the picker; finally still clears `importing`.
-        if (!(e instanceof DOMException && e.name === "AbortError")) {
-          setError(e instanceof Error ? e.message : "Could not import story");
-        }
-      } finally {
-        setImporting(false);
+  const handleImport = React.useCallback(async () => {
+    setAddOpen(false);
+    setImporting(true);
+    setError(null);
+    try {
+      useAppStore.getState().resetStoryViewerSession();
+      const id = await importStoryJsonFromPicker();
+      navigate({
+        search: (prev: { storyid?: string }) => ({
+          ...prev,
+          storyid: id,
+        }),
+        replace: true,
+      } as never);
+    } catch (e: unknown) {
+      // AbortError = user cancelled the picker; finally still clears `importing`.
+      if (!(e instanceof DOMException && e.name === "AbortError")) {
+        setError(e instanceof Error ? e.message : "Could not import story");
       }
-    },
-    [navigate],
-  );
+    } finally {
+      setImporting(false);
+    }
+  }, [navigate]);
 
   const handleDelete = React.useCallback(
     (id: string, title: string) => {
@@ -299,79 +287,72 @@ export function MinervaLibraryPage() {
   const bays = React.useMemo(() => buildBays(summaries), [summaries]);
 
   return (
-    <div className={`${styles.root} ${minervaThemeRootClassName}`}>
+    <div className={styles.root}>
       {error ? <p className={styles.error}>{error}</p> : null}
 
-      <div className={styles.shelfToolbar}>
-        <h1 className={styles.wordmark}>Minerva Library</h1>
-      </div>
+      <header className={styles.masthead}>
+        <h1 className={styles.wordmark}>Minerva</h1>
+        <p className={styles.tagline}>a microscopy viewer for non-experts</p>
+      </header>
 
-      <section className={styles.bookcase} aria-label="Bookshelf">
+      <section className={styles.bookcase} aria-label="Library">
         <div className={styles.bookcaseInner}>
+          <div className={styles.shelfBay}>
+            <div className={styles.bayContent}>
+              <div className={styles.addWrap} ref={addRef}>
+                <button
+                  type="button"
+                  className={styles.addTrigger}
+                  disabled={creating || importing}
+                  aria-label="Add story"
+                  aria-expanded={addOpen}
+                  aria-haspopup="menu"
+                  onClick={() => setAddOpen((v) => !v)}
+                >
+                  <PlusIcon />
+                  New story
+                </button>
+                {addOpen ? (
+                  <div
+                    className={`${minervaTheme.menu} ${styles.addMenu}`}
+                    role="menu"
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={minervaTheme.menuItem}
+                      disabled={creating || importing}
+                      onClick={() => void handleNew()}
+                    >
+                      New story
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={minervaTheme.menuItem}
+                      disabled={creating || importing}
+                      onClick={() => void handleImport()}
+                    >
+                      Import story
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <ShelfBoard />
+          </div>
           {bays.map((bay, index) => {
-            const key =
-              bay.kind === "story"
-                ? bay.story.id
-                : bay.kind === "catalog"
-                  ? "catalog"
-                  : `bay-${index}`;
+            const key = bay.kind === "story" ? bay.story.id : `bay-${index}`;
             return (
               <div key={key} className={styles.shelfBay}>
                 <div
                   className={
                     bay.kind === "empty"
                       ? `${styles.bayContent} ${styles.bayContentEmpty}`
-                      : bay.kind === "catalog"
-                        ? `${styles.bayContent} ${styles.catalogBay}`
-                        : styles.bayContent
+                      : styles.bayContent
                   }
                   aria-hidden={bay.kind === "empty" ? true : undefined}
                 >
-                  {bay.kind === "catalog" ? (
-                    <div className={styles.catalogRow}>
-                      <button
-                        type="button"
-                        className={`${minervaThemeControlOutlinedClassName} ${styles.catalogAction}`}
-                        disabled={creating || importing}
-                        onClick={() => void handleNew()}
-                      >
-                        {creating ? "…" : "New story"}
-                      </button>
-                      <details
-                        ref={importMenuRef}
-                        className={styles.importMenu}
-                      >
-                        <summary
-                          className={`${minervaThemeControlOutlinedClassName} ${styles.catalogAction} ${importing || creating ? styles.disabledAction : ""}`}
-                          aria-label="Import a story"
-                        >
-                          {importing ? "…" : "Import"}
-                        </summary>
-                        <div
-                          className={`${minervaThemeMenuClassName} ${styles.importMenuPanel}`}
-                        >
-                          <button
-                            type="button"
-                            className={minervaThemeMenuItemClassName}
-                            disabled={importing || creating}
-                            onClick={() => void handleImport("json")}
-                          >
-                            JSON file
-                          </button>
-                          {canImportFolder ? (
-                            <button
-                              type="button"
-                              className={minervaThemeMenuItemClassName}
-                              disabled={importing || creating}
-                              onClick={() => void handleImport("folder")}
-                            >
-                              Story folder
-                            </button>
-                          ) : null}
-                        </div>
-                      </details>
-                    </div>
-                  ) : null}
                   {bay.kind === "empty" ? (
                     <GhostBooks bayIndex={index} />
                   ) : null}

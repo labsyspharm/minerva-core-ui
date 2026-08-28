@@ -1,5 +1,3 @@
-import "@fontsource/noto-serif/400.css";
-import "@fontsource/noto-serif/400-italic.css";
 import "@/components/shared/minervaTheme.global.css";
 import "./index.css";
 import { RouterProvider } from "@tanstack/react-router";

@@ -1,13 +1,12 @@
-import type { ReactNode } from "react";
-import * as React from "react";
+import { type ReactNode, useState } from "react";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 import { ChannelGroupsMasterDetail } from "@/components/shared/channel/ChannelGroupsMasterDetail";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
-  minervaThemeControlClassName,
-  minervaThemeRootClassName,
-  minervaThemeStripClassName,
-} from "@/components/shared/minervaTheme";
+  SidebarStripSlot,
+  SidebarStripSlotProvider,
+} from "@/components/shared/panel/CompactHeader";
 import { TabBar } from "@/components/shared/TabBar";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import styles from "./AuthorSidebar.module.css";
@@ -24,31 +23,6 @@ const TAB_LABELS: Record<AuthorTab, string> = {
 
 const TAB_ITEMS = TAB_ORDER.map((id) => ({ id, label: TAB_LABELS[id] }));
 
-export type AuthorSidebarHostProps = {
-  collapsed: boolean;
-  children: ReactNode;
-  className?: string;
-};
-
-/** Thin layout wrapper (formerly styled); kept for stable export API. */
-export function AuthorSidebarHost(props: AuthorSidebarHostProps) {
-  const { collapsed, children, className } = props;
-  return (
-    <div
-      className={[
-        styles.sidebarHost,
-        minervaThemeRootClassName,
-        collapsed ? styles.sidebarHostCollapsed : null,
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      {children}
-    </div>
-  );
-}
-
 export type AuthorSidebarProps = {
   imagesPanel: ReactNode;
   noLoader: boolean;
@@ -62,7 +36,7 @@ export type AuthorSidebarProps = {
 };
 
 export function AuthorSidebar(props: AuthorSidebarProps) {
-  const [activeTab, setActiveTab] = React.useState<AuthorTab>("images");
+  const [activeTab, setActiveTab] = useState<AuthorTab>("images");
   const { expanded } = props;
 
   const activePanel =
@@ -80,25 +54,31 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
     );
 
   return (
-    <AuthorSidebarHost collapsed={!expanded}>
-      <div className={styles.sidebar}>
+    <SidebarStripSlotProvider>
+      <div
+        className={[
+          styles.sidebarHost,
+          expanded ? null : styles.sidebarHostCollapsed,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         <div className={styles.panelOuter}>
-          <div className={`${styles.tabRow} ${minervaThemeStripClassName}`}>
+          <div className={`${styles.tabRow} ${minervaTheme.strip}`}>
             <TabBar<AuthorTab>
               tabs={TAB_ITEMS}
               value={activeTab}
               onChange={setActiveTab}
               aria-label="Author panels"
             />
+            <SidebarStripSlot className={styles.stripActions} />
           </div>
           <div className={styles.panelContent} role="tabpanel">
-            <div className={styles.panelContentInner}>
-              <div className={styles.panelSlot}>{activePanel}</div>
-            </div>
+            {activePanel}
           </div>
         </div>
       </div>
-    </AuthorSidebarHost>
+    </SidebarStripSlotProvider>
   );
 }
 
@@ -155,7 +135,7 @@ export type AuthorViewProps = {
 };
 
 export function AuthorView(props: AuthorViewProps) {
-  const [expanded, setExpanded] = React.useState(true);
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <AuthorViewport collapsed={!expanded}>
@@ -170,7 +150,7 @@ export function AuthorView(props: AuthorViewProps) {
       <button
         type="button"
         className={[
-          minervaThemeControlClassName,
+          minervaTheme.control,
           styles.expandControl,
           expanded ? styles.expandControlExpanded : null,
         ]

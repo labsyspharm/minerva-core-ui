@@ -12,9 +12,9 @@
   line-height: 1.25;
   font-size: inherit;
   font-weight: 400;
-  color: var(--minerva-ink, #f2f2f2);
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
-  background: var(--minerva-paper, #000);
+  color: var(--minerva-ink);
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
   cursor: default;
 }
 
@@ -27,9 +27,9 @@
   line-height: 1.25;
   font-size: inherit;
   font-weight: 400;
-  color: var(--minerva-ink, #f2f2f2);
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
-  background: var(--minerva-paper, #000);
+  color: var(--minerva-ink);
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -39,11 +39,11 @@
 }
 
 .activeGroupTrigger:hover {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background: var(--minerva-wash);
 }
 
 .activeGroupTrigger:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 1px;
 }
 
@@ -61,8 +61,8 @@
   margin-top: 1px;
   padding: 3px;
   border-radius: 0;
-  background: var(--minerva-paper, #000);
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  background: var(--minerva-paper);
+  border: 1px solid var(--minerva-edge);
 }
 
 .groupAltRow {
@@ -70,21 +70,21 @@
   box-sizing: border-box;
   width: 100%;
   cursor: pointer;
-  font-size: var(--minerva-size-note, 0.8rem);
+  font-size: var(--minerva-size-note);
   font-weight: 400;
   line-height: 1.3;
   padding: 4px 6px;
   border-radius: 0;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
   text-align: left;
 }
 
 .groupAltRow:hover {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background: var(--minerva-wash);
 }
 
 .groupAltRow:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 0;
 }
 

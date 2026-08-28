@@ -1,21 +1,24 @@
 .compactHeader {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 8px;
-  min-height: 0;
-  padding: 4px 8px;
+  min-height: var(--minerva-strip-height);
+  padding: 0 var(--minerva-inset);
   box-sizing: border-box;
   border-bottom: 1px solid var(--minerva-edge);
 }
 
 .headerTitle {
+  grid-column: 2;
+  justify-self: center;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
   white-space: nowrap;
   font-size: inherit;
   font-weight: 400;
-  line-height: 1;
+  line-height: 1.2;
 }
 
 .headerCount {
@@ -27,20 +30,10 @@
 .headerActions {
   display: flex;
   align-items: center;
-  gap: 2px;
-  margin-left: auto;
+  gap: 0;
 }
 
-/* Hug the glyph — same size as Images (0), no extra button padding. */
-.compactHeader .headerActions button[data-icon-button] {
-  width: 1.35em;
-  height: 1.35em;
-  min-width: 1.35em;
-  min-height: 1.35em;
-  padding: 0;
-}
-
-.compactHeader .headerActions button[data-icon-button] svg {
-  width: 1.35em;
-  height: 1.35em;
+.compactHeader .headerActions {
+  grid-column: 3;
+  justify-self: end;
 }

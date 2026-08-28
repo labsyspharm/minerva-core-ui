@@ -15,15 +15,9 @@ import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import LockIcon from "@/components/shared/icons/lock.svg?react";
 import LockOpenIcon from "@/components/shared/icons/lock-open.svg?react";
-import {
-  minervaThemeMenuFixedClassName,
-  minervaThemeMenuItemClassName,
-} from "@/components/shared/minervaTheme";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { CompactHeader } from "@/components/shared/panel/CompactHeader";
-import {
-  PanelActionButton,
-  PanelIconButton,
-} from "@/components/shared/panel/PanelButtons";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import {
@@ -190,31 +184,37 @@ function ChannelDragHandle(props: {
   );
 }
 
-type ChannelRowMoreMenuProps = {
-  channelName: string;
-  onFitContrast?: () => void;
-  fitBusy?: boolean;
-  onRemoveFromGroup?: () => void;
-};
-
-function ChannelRowMoreMenu(props: ChannelRowMoreMenuProps) {
-  const { channelName, onFitContrast, fitBusy, onRemoveFromGroup } = props;
+function useAnchoredMenu(opts: {
+  align: "start" | "end";
+  estimateHeight: number;
+}) {
+  const { align, estimateHeight } = opts;
   const [open, setOpen] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
   const [menuStyle, setMenuStyle] = React.useState<React.CSSProperties>({});
-  const hasItems = Boolean(onFitContrast || onRemoveFromGroup);
 
-  const placeMenu = (btn: HTMLButtonElement) => {
+  const close = React.useCallback(() => setOpen(false), []);
+
+  const toggleFromButton = (btn: HTMLButtonElement) => {
+    if (open) {
+      close();
+      return;
+    }
     const rect = btn.getBoundingClientRect();
-    const menuHeight = 72;
     const openUp =
-      rect.bottom + menuHeight + 8 > window.innerHeight &&
-      rect.top > menuHeight;
-    setMenuStyle({
-      top: openUp ? rect.top - 4 - menuHeight : rect.bottom + 4,
-      right: Math.max(8, window.innerWidth - rect.right),
-    });
+      rect.bottom + estimateHeight + 8 > window.innerHeight &&
+      rect.top > estimateHeight;
+    const top = openUp ? rect.top - 4 - estimateHeight : rect.bottom + 4;
+    setMenuStyle(
+      align === "end"
+        ? { top, right: Math.max(8, window.innerWidth - rect.right) }
+        : {
+            top,
+            left: Math.max(8, Math.min(rect.left, window.innerWidth - 188)),
+          },
+    );
+    setOpen(true);
   };
 
   React.useEffect(() => {
@@ -235,47 +235,55 @@ function ChannelRowMoreMenu(props: ChannelRowMoreMenuProps) {
     };
   }, [open]);
 
+  return { open, wrapRef, menuRef, menuStyle, toggleFromButton, close };
+}
+
+type ChannelRowMoreMenuProps = {
+  channelName: string;
+  onFitContrast?: () => void;
+  fitBusy?: boolean;
+  onRemoveFromGroup?: () => void;
+};
+
+function ChannelRowMoreMenu(props: ChannelRowMoreMenuProps) {
+  const { channelName, onFitContrast, fitBusy, onRemoveFromGroup } = props;
+  const hasItems = Boolean(onFitContrast || onRemoveFromGroup);
+  const menu = useAnchoredMenu({ align: "end", estimateHeight: 72 });
+
   if (!hasItems) return null;
 
-  const close = () => setOpen(false);
-
   return (
-    <div className={styles.moreMenuWrap} ref={wrapRef}>
+    <div ref={menu.wrapRef}>
       <button
         type="button"
         className={styles.channelActionButton}
         aria-label={`More actions for ${channelName}`}
-        aria-expanded={open}
+        aria-expanded={menu.open}
         aria-haspopup="menu"
         onClick={(e) => {
           e.stopPropagation();
-          if (open) {
-            close();
-            return;
-          }
-          placeMenu(e.currentTarget);
-          setOpen(true);
+          menu.toggleFromButton(e.currentTarget);
         }}
       >
         ⋮
       </button>
-      {open
+      {menu.open
         ? createPortal(
             <div
-              ref={menuRef}
-              className={minervaThemeMenuFixedClassName}
+              ref={menu.menuRef}
+              className={minervaTheme.menuFixed}
               role="menu"
-              style={menuStyle}
+              style={menu.menuStyle}
             >
               {onFitContrast ? (
                 <button
                   type="button"
                   role="menuitem"
-                  className={minervaThemeMenuItemClassName}
+                  className={minervaTheme.menuItem}
                   disabled={fitBusy}
                   onClick={(e) => {
                     e.stopPropagation();
-                    close();
+                    menu.close();
                     onFitContrast();
                   }}
                 >
@@ -286,10 +294,10 @@ function ChannelRowMoreMenu(props: ChannelRowMoreMenuProps) {
                 <button
                   type="button"
                   role="menuitem"
-                  className={minervaThemeMenuItemClassName}
+                  className={minervaTheme.menuItem}
                   onClick={(e) => {
                     e.stopPropagation();
-                    close();
+                    menu.close();
                     onRemoveFromGroup();
                   }}
                 >
@@ -303,6 +311,85 @@ function ChannelRowMoreMenu(props: ChannelRowMoreMenuProps) {
     </div>
   );
 }
+
+function GearIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      aria-hidden={true}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+type GroupFolderGearMenuProps = {
+  groupName: string;
+  canOptimize: boolean;
+  optimizeBusy: boolean;
+  onOptimize: () => void;
+};
+
+function GroupFolderGearMenu(props: GroupFolderGearMenuProps) {
+  const { groupName, canOptimize, optimizeBusy, onOptimize } = props;
+  const menu = useAnchoredMenu({ align: "start", estimateHeight: 44 });
+
+  return (
+    <div ref={menu.wrapRef}>
+      <PanelIconButton
+        variant="row"
+        title="Group settings"
+        aria-label={`Group settings for ${groupName}`}
+        aria-expanded={menu.open}
+        aria-haspopup="menu"
+        onClick={(e) => {
+          e.stopPropagation();
+          menu.toggleFromButton(e.currentTarget);
+        }}
+      >
+        <GearIcon />
+      </PanelIconButton>
+      {menu.open
+        ? createPortal(
+            <div
+              ref={menu.menuRef}
+              className={minervaTheme.menuFixed}
+              role="menu"
+              style={menu.menuStyle}
+            >
+              <button
+                type="button"
+                role="menuitem"
+                className={minervaTheme.menuItem}
+                disabled={!canOptimize || optimizeBusy}
+                title={
+                  canOptimize ? undefined : "Needs at least two image channels"
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!canOptimize || optimizeBusy) return;
+                  menu.close();
+                  onOptimize();
+                }}
+              >
+                {optimizeBusy ? "Optimizing…" : "Optimize colors"}
+              </button>
+            </div>,
+            document.body,
+          )
+        : null}
+    </div>
+  );
+}
+
 function dedupeGroupChannels(
   channels: ChannelGroupChannel[],
 ): ChannelGroupChannel[] {
@@ -1123,6 +1210,30 @@ export const ChannelGroupsMasterDetail = (
               }
             }}
           />
+          <div className={styles.groupFolderTrailing}>
+            <GroupFolderGearMenu
+              groupName={group.name}
+              canOptimize={isGroupEligibleForPsudoOptimize(
+                group,
+                sourceChannels,
+              )}
+              optimizeBusy={optimizePaletteBusy}
+              onOptimize={() => {
+                void runOptimizePaletteForGroup(group.id);
+              }}
+            />
+            <PanelIconButton
+              variant="row"
+              title="Delete group"
+              aria-label={`Delete group ${group.name}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                deleteGroup(group.id);
+              }}
+            >
+              <TrashIcon title="Delete" size={14} />
+            </PanelIconButton>
+          </div>
         </div>
         {expanded ? (
           <div className={styles.groupFolderBody}>
@@ -1626,50 +1737,17 @@ export const ChannelGroupsMasterDetail = (
     );
   };
 
-  const activeGroup = channelGroups.find((g) => g.id === activeChannelGroupId);
-  const canOptimizeActiveGroup =
-    !!activeGroup &&
-    isGroupEligibleForPsudoOptimize(activeGroup, sourceChannels);
-
   return (
     <div className={panel.authorPanel}>
       <CompactHeader
-        title="Channels"
-        count={`(${channelGroups.length})`}
         actions={
-          <>
-            {canOptimizeActiveGroup ? (
-              <PanelActionButton
-                disabled={optimizePaletteBusy}
-                title="Optimize colors"
-                aria-label="Optimize colors"
-                onClick={() => {
-                  if (!activeGroup) return;
-                  void runOptimizePaletteForGroup(activeGroup.id);
-                }}
-              >
-                Optimize colors
-              </PanelActionButton>
-            ) : null}
-            {activeGroup ? (
-              <PanelIconButton
-                title="Delete"
-                aria-label="Delete group"
-                onClick={() => {
-                  deleteGroup(activeGroup.id);
-                }}
-              >
-                <TrashIcon />
-              </PanelIconButton>
-            ) : null}
-            <PanelIconButton
-              title="Add"
-              aria-label="Add group"
-              onClick={createGroup}
-            >
-              <PlusIcon />
-            </PanelIconButton>
-          </>
+          <PanelIconButton
+            title="Add"
+            aria-label="Add group"
+            onClick={createGroup}
+          >
+            <PlusIcon />
+          </PanelIconButton>
         }
       />
 

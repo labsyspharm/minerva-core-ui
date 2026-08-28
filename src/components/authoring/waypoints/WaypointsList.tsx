@@ -498,34 +498,15 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   const listHeader = (
     <CompactHeader
-      title="Story"
-      count={`(${waypoints.length})`}
       actions={
         canEdit ? (
-          <>
-            {waypoints.length > 0 ? (
-              <PanelIconButton
-                onClick={() => {
-                  if (waypoints.length === 0) return;
-                  const indexToRemove = activeStoryIndex ?? 0;
-                  if (indexToRemove < 0 || indexToRemove >= waypoints.length)
-                    return;
-                  removeStory(indexToRemove);
-                }}
-                title="Delete"
-                aria-label="Delete waypoint"
-              >
-                <TrashIcon />
-              </PanelIconButton>
-            ) : null}
-            <PanelIconButton
-              onClick={handleAddWaypoint}
-              title="Add"
-              aria-label="Add waypoint"
-            >
-              <PlusIcon />
-            </PanelIconButton>
-          </>
+          <PanelIconButton
+            onClick={handleAddWaypoint}
+            title="Add"
+            aria-label="Add waypoint"
+          >
+            <PlusIcon />
+          </PanelIconButton>
         ) : undefined
       }
     />
@@ -646,6 +627,19 @@ const WaypointsList = (props: WaypointsListProps) => {
                   </div>
                 </button>
                 <div className={styles.rowViewportActions}>
+                  {canEdit ? (
+                    <PanelIconButton
+                      variant="row"
+                      title="Delete waypoint"
+                      aria-label={`Delete waypoint: ${story.title}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        removeStory(index);
+                      }}
+                    >
+                      <TrashIcon title="Delete" size={14} />
+                    </PanelIconButton>
+                  ) : null}
                   <PanelIconButton
                     variant="row"
                     title="Jump to waypoint view"

@@ -10,7 +10,7 @@
 .channelActionButton {
   background: none;
   border: none;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   cursor: pointer;
   padding: 2px;
   display: flex;
@@ -20,21 +20,17 @@
 }
 
 .channelActionButton:hover {
-  color: var(--minerva-ink, #f2f2f2);
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  color: var(--minerva-ink);
+  background: var(--minerva-wash);
 }
 
 .channelActionButton.colorLockButtonLocked {
-  color: var(--minerva-ink, #f2f2f2);
-  box-shadow: inset 0 -1px 0 var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
+  box-shadow: inset 0 -1px 0 var(--minerva-ink);
 }
 
 .channelActionButton.colorLockButtonLocked:hover {
-  color: var(--minerva-ink, #f2f2f2);
-}
-
-.moreMenuWrap {
-  flex-shrink: 0;
+  color: var(--minerva-ink);
 }
 
 .addChannelRow {
@@ -45,15 +41,15 @@
   width: 100%;
   padding: 6px 8px;
   background: transparent;
-  color: var(--minerva-ink, #f2f2f2);
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  color: var(--minerva-ink);
+  border: 1px solid var(--minerva-edge);
   border-radius: 0;
   font-family: inherit;
   font-size: inherit;
 }
 
 .addChannelSelect:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 2px;
 }
 
@@ -66,27 +62,27 @@
 
 .groupFolder {
   border: none;
-  border-bottom: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border-bottom: 1px solid var(--minerva-edge);
   border-radius: 0;
   background: transparent;
   margin: 0;
 }
 
 .groupFolderActive {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
-  box-shadow: inset 2px 0 0 var(--minerva-ink, #f2f2f2);
+  background: var(--minerva-wash);
+  box-shadow: inset 2px 0 0 var(--minerva-ink);
 }
 
 .dropTargetActive {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
-  box-shadow: inset 0 0 0 1px var(--minerva-ink, #f2f2f2);
+  background: var(--minerva-wash);
+  box-shadow: inset 0 0 0 1px var(--minerva-ink);
 }
 
 .groupFolderHeader {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
   width: 100%;
   margin: 0;
   padding: 6px 8px;
@@ -107,7 +103,7 @@
 }
 
 .groupFolderActivate:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: -2px;
 }
 
@@ -118,26 +114,38 @@
 
 .groupFolderChevron {
   all: unset;
+  box-sizing: border-box;
   display: flex;
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 22px;
   cursor: pointer;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   line-height: 0;
 }
 
 .groupFolderChevron:hover {
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
 }
 
 .groupFolderName {
   flex: 1;
   min-width: 0;
   font-weight: 400;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
+}
+
+.groupFolderTrailing {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
 }
 
 .groupFolderBody {
-  border-top: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border-top: 1px solid var(--minerva-edge);
   padding: 2px 0 6px;
 }
 
@@ -148,7 +156,7 @@
 }
 
 .groupChildBlock {
-  border-bottom: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border-bottom: 1px solid var(--minerva-edge);
 }
 
 .groupChildBlock:last-of-type {
@@ -160,6 +168,8 @@
   display: flex;
   align-items: flex-start;
   gap: 2px;
+  padding: 0 8px;
+  box-sizing: border-box;
 }
 
 .groupChildRowWrap > *,
@@ -180,7 +190,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: inherit;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
 }
 
 .dragHandle {
@@ -194,13 +204,12 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   cursor: grab;
   user-select: none;
   font-size: 10px;
   letter-spacing: -0.12em;
   line-height: 1;
-  align-self: flex-start;
 }
 
 .dragHandle:active {
@@ -210,11 +219,11 @@
 .treeSeparator {
   margin: 8px 10px 4px;
   padding: 4px 0;
-  font-size: var(--minerva-size-note, 0.8rem);
+  font-size: var(--minerva-size-note);
   font-weight: 400;
   letter-spacing: 0.01em;
-  color: var(--minerva-quiet, #888);
-  border-top: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  color: var(--minerva-quiet);
+  border-top: 1px solid var(--minerva-edge);
 }
 
 .rootChannelList {
@@ -226,11 +235,7 @@
 }
 
 .rootChannelBlock {
-  border-bottom: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
-}
-
-.rootChannelBlock:active {
-  cursor: default;
+  border-bottom: 1px solid var(--minerva-edge);
 }
 
 .rootChannelBlockCompact {
@@ -240,8 +245,8 @@
 .rootChannelCompactName {
   display: block;
   min-width: 0;
-  font-size: var(--minerva-size-note, 0.8rem);
-  color: var(--minerva-quiet, #888);
+  font-size: var(--minerva-size-note);
+  color: var(--minerva-quiet);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

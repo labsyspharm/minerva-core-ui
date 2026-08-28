@@ -25,7 +25,7 @@
 
 .item {
   padding: 10px 12px;
-  border-bottom: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border-bottom: 1px solid var(--minerva-edge);
   display: flex;
   width: 100%;
   box-sizing: border-box;
@@ -35,12 +35,12 @@
 }
 
 .item:hover {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background: var(--minerva-wash);
 }
 
 .itemActive {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
-  box-shadow: inset 2px 0 0 var(--minerva-ink, #f2f2f2);
+  background: var(--minerva-wash);
+  box-shadow: inset 2px 0 0 var(--minerva-ink);
 }
 
 .itemPulse {
@@ -70,8 +70,8 @@
 }
 
 .itemDropTarget {
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
-  box-shadow: inset 0 0 0 1px var(--minerva-ink, #f2f2f2);
+  background-color: var(--minerva-wash);
+  box-shadow: inset 0 0 0 1px var(--minerva-ink);
 }
 
 .itemChild {
@@ -88,7 +88,7 @@
 .button {
   background: none;
   border: none;
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
   cursor: pointer;
   padding: 4px;
   border-radius: 0;
@@ -98,8 +98,8 @@
 }
 
 .button:hover {
-  background-color: var(--minerva-wash, rgb(255 255 255 / 0.08));
-  color: var(--minerva-ink, #f2f2f2);
+  background-color: var(--minerva-wash);
+  color: var(--minerva-ink);
 }
 
 .content {
@@ -121,8 +121,8 @@
 
 .subtitle {
   display: block;
-  font-size: var(--minerva-size-note, 0.8rem);
-  color: var(--minerva-quiet, #888);
+  font-size: var(--minerva-size-note);
+  color: var(--minerva-quiet);
 }
 
 .actions {
@@ -150,7 +150,7 @@
 }
 
 .itemIconHit:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 2px;
 }
 
@@ -169,7 +169,7 @@
 }
 
 .itemRowMain:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 2px;
 }
 
@@ -180,20 +180,20 @@
 
 /* Annotation embed — same story surface as the rest of the sidebar */
 .itemListMarkdownEditor {
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
 }
 
 .itemListMarkdownEditor .item {
-  border-bottom: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border-bottom: 1px solid var(--minerva-edge);
 }
 
 .itemListMarkdownEditor .item:hover {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
+  background: var(--minerva-wash);
 }
 
 .itemListMarkdownEditor .itemActive {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
-  box-shadow: inset 2px 0 0 var(--minerva-ink, #f2f2f2);
+  background: var(--minerva-wash);
+  box-shadow: inset 2px 0 0 var(--minerva-ink);
 }
 
 .itemListMarkdownEditor .itemChild {
@@ -201,16 +201,16 @@
 }
 
 .itemListMarkdownEditor .title {
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
 }
 
 .itemListMarkdownEditor .subtitle {
-  color: var(--minerva-quiet, #888);
+  color: var(--minerva-quiet);
 }
 
 .itemListMarkdownEditor .button:hover {
-  background: var(--minerva-wash, rgb(255 255 255 / 0.08));
-  color: var(--minerva-ink, #f2f2f2);
+  background: var(--minerva-wash);
+  color: var(--minerva-ink);
 }
 
 /* ~waypoints .compactRow height: 6px 10px padding, 12px primary text */
@@ -233,7 +233,7 @@
 }
 
 .itemListCompact .subtitle {
-  font-size: var(--minerva-size-note, 0.8rem);
+  font-size: var(--minerva-size-note);
   line-height: 1.2;
   margin-top: 1px;
   overflow: hidden;

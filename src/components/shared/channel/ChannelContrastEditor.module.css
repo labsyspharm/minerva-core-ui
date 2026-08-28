@@ -17,7 +17,7 @@
   inset: 0;
   align-items: center;
   justify-content: center;
-  background: rgb(0 0 0 / 0.55);
+  background: transparent;
   border-radius: 0;
 }
 
@@ -42,20 +42,20 @@
 }
 
 .histogramSvg {
-  background: var(--minerva-paper, #000);
+  background: transparent;
   width: 100%;
   height: 32px;
   display: block;
 }
 
 .histogramFill {
-  fill: var(--minerva-ink, #f2f2f2);
+  fill: var(--minerva-ink);
   stroke: none;
 }
 
 .histogramLine {
   fill: none;
-  stroke: var(--minerva-ink, #f2f2f2);
+  stroke: var(--minerva-ink);
   stroke-width: 0.75;
   stroke-linejoin: round;
 }
@@ -88,7 +88,7 @@
   transform: translateY(-50%);
   height: var(--slider-track-height);
   border-radius: 2px;
-  background: var(--minerva-edge, rgb(255 255 255 / 0.18));
+  background: var(--minerva-edge);
   pointer-events: none;
 }
 
@@ -101,9 +101,9 @@
   background: linear-gradient(
     to bottom,
     transparent calc(50% - var(--slider-track-height) / 2),
-    color-mix(in srgb, var(--slider-background, #888) 70%, transparent)
+    color-mix(in srgb, var(--slider-background, var(--minerva-quiet)) 70%, transparent)
       calc(50% - var(--slider-track-height) / 2),
-    color-mix(in srgb, var(--slider-background, #888) 70%, transparent)
+    color-mix(in srgb, var(--slider-background, var(--minerva-quiet)) 70%, transparent)
       calc(50% + var(--slider-track-height) / 2),
     transparent calc(50% + var(--slider-track-height) / 2)
   );
@@ -137,8 +137,8 @@
   width: var(--handle-width);
   height: 12px;
   border-radius: 0;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
-  background: var(--minerva-paper, #000);
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
   cursor: pointer;
   pointer-events: all;
 }
@@ -147,8 +147,8 @@
   width: var(--handle-width);
   height: 12px;
   border-radius: 0;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
-  background: var(--minerva-paper, #000);
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
   cursor: pointer;
   pointer-events: all;
 }
@@ -186,20 +186,20 @@
   padding: 2px 3px;
   text-align: center;
   border-radius: 0;
-  border: 1px solid var(--minerva-edge, rgb(255 255 255 / 0.18));
+  border: 1px solid var(--minerva-edge);
   background: transparent;
-  color: var(--minerva-ink, #f2f2f2);
+  color: var(--minerva-ink);
   font-variant-numeric: tabular-nums;
   font-family: inherit;
 }
 
 .limitInput:focus {
   outline: none;
-  border-color: var(--minerva-ink, #f2f2f2);
+  border-color: var(--minerva-ink);
 }
 
 .limitInput:focus-visible {
-  outline: 2px solid var(--minerva-ink, #f2f2f2);
+  outline: 2px solid var(--minerva-ink);
   outline-offset: 1px;
 }
 
