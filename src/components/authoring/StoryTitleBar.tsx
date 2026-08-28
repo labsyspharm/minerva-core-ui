@@ -3,6 +3,7 @@ import { DocumentUndoControls } from "@/components/authoring/DocumentUndoControl
 import { StoryAuthorOverflowMenu } from "@/components/authoring/StoryAuthorOverflowMenu";
 import PlayIcon from "@/components/shared/icons/play.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import { StorySpines } from "@/components/shared/StorySpines";
 import { saveStoryDocument } from "@/lib/persistence/storyPersistence";
 import { useDocumentStore } from "@/lib/stores/documentStore";
@@ -106,9 +107,8 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
         )}
       </label>
       {onEnterPlaybackPreview ? (
-        <button
-          type="button"
-          className={`${minervaTheme.control} ${styles.play}`}
+        <PanelIconButton
+          className={styles.play}
           onClick={onEnterPlaybackPreview}
           disabled={playbackPreviewDisabled}
           title={
@@ -123,7 +123,7 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
           }
         >
           <PlayIcon aria-hidden />
-        </button>
+        </PanelIconButton>
       ) : null}
     </section>
   );

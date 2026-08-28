@@ -1,31 +1,7 @@
 /**
  * Story presentation — authoring preview AND CDN export.
- * Sealed boundary so a parent page's globals cannot change layout inside.
+ * Tokens are sealed via the global `.minerva-seal` class on the root.
  */
-
-/* Re-set tokens on every descendant so a host `* { --minerva-paper: … }` cannot win. */
-.presentation,
-.presentation * {
-  --minerva-ink: #f2f2f2;
-  --minerva-paper: #000;
-  --minerva-quiet: #888;
-  --minerva-blue: hsl(208 72% 58%);
-  --minerva-edge: rgb(255 255 255 / 0.18);
-  --minerva-wash: rgb(255 255 255 / 0.08);
-  --minerva-control: 28px;
-  --minerva-inset: 12px;
-  --minerva-font: "DM Sans", sans-serif;
-  --minerva-bar-height: 3rem;
-  --minerva-title-size: 1.35rem;
-  --minerva-size: 0.9rem;
-  --minerva-size-note: 0.8rem;
-  --cloth-1: hsl(8 18% 46%);
-  --cloth-2: hsl(34 16% 48%);
-  --cloth-3: hsl(48 14% 50%);
-  --cloth-4: hsl(152 12% 42%);
-  --cloth-5: hsl(208 14% 44%);
-  --cloth-6: hsl(280 12% 46%);
-}
 
 .presentation,
 .presentation *,
@@ -203,8 +179,8 @@
 }
 
 .navPane button:focus-visible {
-  outline: 2px solid var(--minerva-ink);
-  outline-offset: 2px;
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: var(--minerva-focus-offset);
 }
 
 .navInactive {
@@ -265,8 +241,8 @@
 }
 
 .toolbar > button:focus-visible {
-  outline: 2px solid var(--minerva-ink);
-  outline-offset: 2px;
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: var(--minerva-focus-offset);
 }
 
 .toolbar > button.navInactive {

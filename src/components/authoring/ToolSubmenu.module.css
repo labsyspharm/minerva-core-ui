@@ -20,11 +20,6 @@
   line-height: 0;
 }
 
-.toggle:hover,
-.toggle:focus-visible {
-  outline: none;
-}
-
 .chevron {
   display: flex;
   align-items: center;
@@ -54,10 +49,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-.menuItemActive {
-  box-shadow: inset 2px 0 0 var(--minerva-ink);
 }
 
 .menuItemLabel {

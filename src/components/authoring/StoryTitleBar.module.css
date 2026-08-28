@@ -13,15 +13,15 @@
   gap: 8px;
 }
 
-.leading button {
-  font-size: 1.25rem;
+.leading button[data-icon-button] {
+  font-size: var(--minerva-wordmark-size);
   width: auto;
   min-width: var(--minerva-control);
   height: var(--minerva-control);
   padding: 0 6px;
 }
 
-.banner .leading button svg,
+.banner .leading button[data-icon-button] svg,
 .play svg {
   width: 1em;
   height: 1em;
@@ -32,12 +32,10 @@
   align-items: center;
   height: var(--minerva-control);
   padding: 0 8px;
-  font-size: 1.25rem;
-  line-height: 1;
 }
 
 .play {
-  font-size: 1.25rem;
+  font-size: var(--minerva-wordmark-size);
 }
 
 .titleFieldWrap {

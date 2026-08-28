@@ -3,14 +3,9 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: var(--minerva-paper);
-  border: 1px solid var(--minerva-edge);
-  border-radius: 0;
   padding: 20px;
   z-index: 1000;
   min-width: 300px;
-  color: var(--minerva-ink);
-  font-family: var(--minerva-font);
   font-size: var(--minerva-size);
 }
 
@@ -35,57 +30,19 @@
 .numberInput {
   width: 80px;
   padding: 5px 8px;
-  border: 1px solid var(--minerva-edge);
-  border-radius: 0;
-  background: transparent;
-  color: var(--minerva-ink);
-  font-family: inherit;
-  font-size: inherit;
-  outline: none;
-}
-
-.numberInput:focus-visible {
-  outline: 2px solid var(--minerva-ink);
-  outline-offset: 2px;
 }
 
 .textarea {
   width: 100%;
   min-height: 80px;
   padding: 10px;
-  border: 1px solid var(--minerva-edge);
-  border-radius: 0;
-  background: transparent;
-  color: var(--minerva-ink);
-  font-size: inherit;
-  font-family: inherit;
   resize: vertical;
-  outline: none;
-  box-sizing: border-box;
-}
-
-.textarea:focus-visible {
-  outline: 2px solid var(--minerva-ink);
-  outline-offset: 2px;
 }
 
 .textInput {
   width: 100%;
   padding: 8px;
-  border: 1px solid var(--minerva-edge);
-  border-radius: 0;
-  background: transparent;
-  color: var(--minerva-ink);
-  font-size: inherit;
-  font-family: inherit;
-  outline: none;
   margin-bottom: 15px;
-  box-sizing: border-box;
-}
-
-.textInput:focus-visible {
-  outline: 2px solid var(--minerva-ink);
-  outline-offset: 2px;
 }
 
 .actions {

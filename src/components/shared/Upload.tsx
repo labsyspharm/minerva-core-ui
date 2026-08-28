@@ -4,7 +4,10 @@ import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { CompactHeader } from "@/components/shared/panel/CompactHeader";
-import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
+import {
+  PanelActionButton,
+  PanelIconButton,
+} from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
 import { resolveImageContentRole } from "@/lib/imaging/channelKind";
 import {
@@ -147,7 +150,7 @@ const validate: Validate = (valid, fn) => {
 };
 
 function validationInputClass(v: ValidOut): string {
-  const parts = [styles.textInput];
+  const parts = [minervaTheme.input, styles.textInput];
   if (v.isInvalid) parts.push(styles.textInputInvalid);
   if (v.isValid) parts.push(styles.textInputValid);
   return parts.join(" ");
@@ -218,12 +221,7 @@ const FormDicom = (props: FormProps) => {
           )}
         </div>
       </div>
-      <button
-        type="submit"
-        className={`${minervaTheme.control} ${minervaTheme.controlText}`}
-      >
-        Submit
-      </button>
+      <PanelActionButton type="submit">Submit</PanelActionButton>
     </form>
   );
 };
@@ -266,7 +264,6 @@ const OmeTiffUrlImport = (props: {
   canImport: boolean;
   inputClassName: string;
   rowClassName: string;
-  primaryClassName: string;
 }) => {
   const {
     url,
@@ -276,7 +273,6 @@ const OmeTiffUrlImport = (props: {
     canImport,
     inputClassName,
     rowClassName,
-    primaryClassName,
   } = props;
   return (
     <div className={rowClassName}>
@@ -287,16 +283,11 @@ const OmeTiffUrlImport = (props: {
         name="ome_tiff_url"
         placeholder=""
         onChange={onUrlChange}
-        className={`${styles.textInput} ${inputClassName}`}
+        className={`${minervaTheme.input} ${styles.textInput} ${inputClassName}`}
       />
-      <button
-        type="button"
-        className={primaryClassName}
-        onClick={onImport}
-        disabled={!canImport}
-      >
+      <PanelActionButton type="button" onClick={onImport} disabled={!canImport}>
         {importLabel}
-      </button>
+      </PanelActionButton>
     </div>
   );
 };
@@ -314,18 +305,15 @@ function FormatChip({
   selected: boolean;
   onClick: () => void;
 }) {
-  const className = selected
-    ? `${minervaTheme.control} ${minervaTheme.controlText} ${minervaTheme.controlActive}`
-    : `${minervaTheme.control} ${minervaTheme.controlText}`;
   return (
-    <button
+    <PanelActionButton
       type="button"
-      className={className}
+      active={selected}
       aria-pressed={selected}
       onClick={onClick}
     >
       {label}
-    </button>
+    </PanelActionButton>
   );
 }
 
@@ -583,7 +571,6 @@ const Upload = (props: UploadProps) => {
             canImport={urlReady}
             inputClassName={styles.urlInput}
             rowClassName={styles.urlRow}
-            primaryClassName={`${minervaTheme.control} ${minervaTheme.controlText}`}
           />
           {importError ? (
             <div className={styles.importError}>{importError}</div>
@@ -675,9 +662,9 @@ const Upload = (props: UploadProps) => {
             <span className={styles.fileAccessError}>
               {needsStoryDir ? "Story folder needed" : "File access needed"}
             </span>
-            <button
+            <PanelActionButton
               type="button"
-              className={`${minervaTheme.control} ${minervaTheme.controlText} ${styles.fileAccessAction}`}
+              className={styles.fileAccessAction}
               onClick={() => {
                 if (needsStoryDir) void onReconnectStoryRoot?.();
                 else if (needsReselect) void onReselectFile?.(im.id);
@@ -685,7 +672,7 @@ const Upload = (props: UploadProps) => {
               }}
             >
               {needsStoryDir ? "Choose story folder" : "Allow file access"}
-            </button>
+            </PanelActionButton>
           </div>
         ) : null}
       </article>
@@ -713,7 +700,7 @@ const Upload = (props: UploadProps) => {
     ) : null;
 
   const addPanel = addPanelOpen ? (
-    <div className={styles.addPanel}>
+    <div className={`${minervaTheme.surface} ${styles.addPanel}`}>
       <div className={styles.formatRow}>
         <FormatChip
           label="Image"

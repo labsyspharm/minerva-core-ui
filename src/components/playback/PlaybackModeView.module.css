@@ -98,10 +98,10 @@
 }
 
 .folderPromptActions button:focus-visible {
-  outline: 2px solid var(--minerva-ink);
-  outline-offset: 2px;
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: var(--minerva-focus-offset);
 }
 
-.folderPromptPrimary {
-  background: var(--minerva-wash) !important;
+.folderPromptActions .folderPromptPrimary {
+  background: var(--minerva-wash);
 }

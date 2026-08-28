@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { PanelActionButton } from "@/components/shared/panel/PanelButtons";
 import { StorySpines } from "@/components/shared/StorySpines";
 import {
   effectiveReferenceImagePixelSize,
@@ -368,13 +369,12 @@ export const Presentation = (props: PresentationProps) => {
   const flushTitle = !props.exitPlaybackPreview;
 
   return (
-    <div className={styles.presentation}>
+    <div className={`${styles.presentation} minerva-seal`}>
       {showRibbon ? (
         <div className={`${minervaTheme.bar} ${styles.previewRibbon}`}>
           {props.exitPlaybackPreview ? (
-            <button
+            <PanelActionButton
               type="button"
-              className={`${minervaTheme.control} ${minervaTheme.controlText}`}
               onClick={props.exitPlaybackPreview}
               title="Back to editing"
               aria-label="Back to editing"
@@ -384,7 +384,7 @@ export const Presentation = (props: PresentationProps) => {
                 aria-hidden
               />
               <span>Back</span>
-            </button>
+            </PanelActionButton>
           ) : null}
           <span
             title={ribbonDocTitle}

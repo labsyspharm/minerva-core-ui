@@ -1,6 +1,7 @@
 import * as React from "react";
 import MenuIcon from "@/components/shared/icons/menu.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import type { DocumentData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
@@ -48,9 +49,7 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
 
   return (
     <div className={styles.menuWrap} ref={wrapRef}>
-      <button
-        type="button"
-        className={minervaTheme.control}
+      <PanelIconButton
         title="Menu"
         aria-label="Menu"
         aria-expanded={open}
@@ -61,7 +60,7 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
         }}
       >
         <MenuIcon aria-hidden />
-      </button>
+      </PanelIconButton>
       {open ? (
         <div className={minervaTheme.menu} role="menu">
           <button

@@ -1,6 +1,6 @@
 import RedoIcon from "@/components/shared/icons/redo.svg?react";
 import UndoIcon from "@/components/shared/icons/undo.svg?react";
-import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import {
   documentRedo,
   documentUndo,
@@ -19,26 +19,22 @@ export function DocumentUndoControls() {
       className={styles.clusterFieldset}
       aria-label="Document undo and redo"
     >
-      <button
-        type="button"
-        className={minervaTheme.control}
+      <PanelIconButton
         onClick={() => documentUndo()}
         disabled={!canUndo}
         title="Undo"
         aria-label="Undo"
       >
         <UndoIcon aria-hidden />
-      </button>
-      <button
-        type="button"
-        className={minervaTheme.control}
+      </PanelIconButton>
+      <PanelIconButton
         onClick={() => documentRedo()}
         disabled={!canRedo}
         title="Redo"
         aria-label="Redo"
       >
         <RedoIcon aria-hidden />
-      </button>
+      </PanelIconButton>
     </fieldset>
   );
 }

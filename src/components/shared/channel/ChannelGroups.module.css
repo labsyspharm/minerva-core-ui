@@ -42,11 +42,6 @@
   background: var(--minerva-wash);
 }
 
-.activeGroupTrigger:focus-visible {
-  outline: 2px solid var(--minerva-ink);
-  outline-offset: 1px;
-}
-
 .chevronWrap {
   display: flex;
   flex-shrink: 0;
@@ -81,11 +76,6 @@
 
 .groupAltRow:hover {
   background: var(--minerva-wash);
-}
-
-.groupAltRow:focus-visible {
-  outline: 2px solid var(--minerva-ink);
-  outline-offset: 0;
 }
 
 .ellipsis {

@@ -1,4 +1,5 @@
 import type { MouseEventHandler } from "react";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import styles from "./ChannelRow.module.css";
 
 const EyeIcon = () => (
@@ -56,6 +57,7 @@ export function ChannelVisibilitySwatch(props: VisibilityProps) {
       className={
         className ??
         [
+          minervaTheme.focusRing,
           styles.channelVisibilityButton,
           visible ? "" : styles.channelVisibilityButtonHidden,
         ]
@@ -86,7 +88,9 @@ export function ChannelColorSwatchButton(props: ColorProps) {
   return (
     <button
       type="button"
-      className={className ?? styles.channelColorSwatch}
+      className={
+        className ?? `${minervaTheme.focusRing} ${styles.channelColorSwatch}`
+      }
       style={{ backgroundColor: `#${hex}` }}
       title={title}
       aria-label={ariaLabel}

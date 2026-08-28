@@ -25,8 +25,8 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
   onToolChange,
   parentIcon,
   parentTitle,
-  buttonClassName = "",
-  activeClassName = "",
+  buttonClassName = minervaTheme.control,
+  activeClassName = minervaTheme.controlActive,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const toggleRef = React.useRef<HTMLButtonElement>(null);
@@ -108,7 +108,7 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
               <button
                 key={item.id}
                 type="button"
-                className={`${minervaTheme.menuItem} ${styles.menuItem} ${activeTool === item.id ? styles.menuItemActive : ""}`}
+                className={`${minervaTheme.menuItem} ${styles.menuItem} ${activeTool === item.id ? minervaTheme.selectLeft : ""}`}
                 title={item.title}
                 onClick={() => handleSelect(item.id)}
               >

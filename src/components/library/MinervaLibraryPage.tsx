@@ -291,7 +291,11 @@ export function MinervaLibraryPage() {
       {error ? <p className={styles.error}>{error}</p> : null}
 
       <header className={styles.masthead}>
-        <h1 className={styles.wordmark}>Minerva</h1>
+        <h1
+          className={`${minervaTheme.wordmark} ${minervaTheme.wordmarkDisplay}`}
+        >
+          Minerva
+        </h1>
         <p className={styles.tagline}>a microscopy viewer for non-experts</p>
       </header>
 
@@ -302,7 +306,7 @@ export function MinervaLibraryPage() {
               <div className={styles.addWrap} ref={addRef}>
                 <button
                   type="button"
-                  className={styles.addTrigger}
+                  className={`${minervaTheme.focusRing} ${styles.addTrigger}`}
                   disabled={creating || importing}
                   aria-label="Add story"
                   aria-expanded={addOpen}
@@ -363,7 +367,7 @@ export function MinervaLibraryPage() {
                     <div className={styles.storyRow}>
                       <button
                         type="button"
-                        className={styles.rowOpen}
+                        className={`${minervaTheme.focusRing} ${styles.rowOpen}`}
                         disabled={busyId === bay.story.id}
                         onClick={() => void openStory(bay.story.id)}
                       >
@@ -389,7 +393,7 @@ export function MinervaLibraryPage() {
                       </button>
                       <button
                         type="button"
-                        className={styles.scrap}
+                        className={`${minervaTheme.focusRing} ${styles.scrap}`}
                         disabled={busyId === bay.story.id}
                         aria-label={`Remove ${bay.story.title}`}
                         onClick={(e) => {

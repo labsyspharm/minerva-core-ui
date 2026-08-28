@@ -16,7 +16,7 @@ import PointIcon from "@/components/shared/icons/point.svg?react";
 import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
 import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
-import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import { TextEditPanel } from "@/components/shared/tools/TextEditPanel";
 import type { Shape } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -661,14 +661,9 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         <div className={styles.brushEditActions}>
           {/* Brush add mode */}
           {isPolygon && (
-            <button
-              type="button"
-              className={[
-                minervaTheme.control,
-                isBrushActive ? minervaTheme.controlActive : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
+            <PanelIconButton
+              variant="row"
+              active={isBrushActive}
               onClick={(e) => {
                 e.stopPropagation();
 
@@ -686,19 +681,14 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
               title="Brush add to polygon"
             >
               <AddBrushIcon className={styles.brushEditIcon} />
-            </button>
+            </PanelIconButton>
           )}
 
           {/* Brush subtract (eraser) mode */}
           {isPolygon && (
-            <button
-              type="button"
-              className={[
-                minervaTheme.control,
-                isEraserActive ? minervaTheme.controlActive : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
+            <PanelIconButton
+              variant="row"
+              active={isEraserActive}
               onClick={(e) => {
                 e.stopPropagation();
 
@@ -716,7 +706,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
               title="Brush subtract from polygon"
             >
               <EraserIcon className={styles.brushEditIcon} />
-            </button>
+            </PanelIconButton>
           )}
         </div>
       );
@@ -732,18 +722,14 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
 
   const layerMetaButtons = (
     <>
-      <button
-        type="button"
-        className={minervaTheme.control}
+      <PanelIconButton
         onClick={() => createGroup()}
         title="Add"
         aria-label="Add group"
       >
         <FolderIcon />
-      </button>
-      <button
-        type="button"
-        className={minervaTheme.control}
+      </PanelIconButton>
+      <PanelIconButton
         onClick={handleHeaderEditTextClick}
         disabled={headerEditTextDisabled}
         title={
@@ -753,10 +739,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         }
       >
         <CursorIcon />
-      </button>
-      <button
-        type="button"
-        className={minervaTheme.control}
+      </PanelIconButton>
+      <PanelIconButton
         onClick={handleHeaderColorClick}
         disabled={headerColorDisabled}
         title={
@@ -770,10 +754,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         }
       >
         <AnnotationColorIcon />
-      </button>
-      <button
-        type="button"
-        className={minervaTheme.control}
+      </PanelIconButton>
+      <PanelIconButton
         onClick={handleHeaderDeleteClick}
         disabled={!selectedGroupId && selectedShapeIds.length === 0}
         title={
@@ -785,7 +767,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         }
       >
         <TrashIcon />
-      </button>
+      </PanelIconButton>
       {waypointClipboardActions}
     </>
   );

@@ -40,17 +40,6 @@
 .addChannelSelect {
   width: 100%;
   padding: 6px 8px;
-  background: transparent;
-  color: var(--minerva-ink);
-  border: 1px solid var(--minerva-edge);
-  border-radius: 0;
-  font-family: inherit;
-  font-size: inherit;
-}
-
-.addChannelSelect:focus-visible {
-  outline: 2px solid var(--minerva-ink);
-  outline-offset: 2px;
 }
 
 .groupFolders {
@@ -66,11 +55,6 @@
   border-radius: 0;
   background: transparent;
   margin: 0;
-}
-
-.groupFolderActive {
-  background: var(--minerva-wash);
-  box-shadow: inset 2px 0 0 var(--minerva-ink);
 }
 
 .dropTargetActive {
@@ -103,7 +87,6 @@
 }
 
 .groupFolderActivate:focus-visible {
-  outline: 2px solid var(--minerva-ink);
   outline-offset: -2px;
 }
 
@@ -133,8 +116,8 @@
 .groupFolderName {
   flex: 1;
   min-width: 0;
+  padding: 2px 6px;
   font-weight: 400;
-  color: var(--minerva-ink);
 }
 
 .groupFolderTrailing {

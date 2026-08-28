@@ -71,15 +71,6 @@
   cursor: wait;
 }
 
-.wordmark {
-  margin: 0;
-  font-size: 1.75rem;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  color: var(--minerva-blue);
-  font-family: inherit;
-}
-
 .tagline {
   margin: 0;
   font-size: var(--minerva-size);

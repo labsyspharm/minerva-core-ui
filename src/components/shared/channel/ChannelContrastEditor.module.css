@@ -25,22 +25,6 @@
   display: flex;
 }
 
-.histogramSpinner {
-  width: 14px;
-  height: 14px;
-  box-sizing: border-box;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  animation: contrast-histogram-spin 1s linear infinite;
-}
-
-@keyframes contrast-histogram-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .histogramSvg {
   background: transparent;
   width: 100%;
@@ -180,27 +164,11 @@
 
 .limitInput {
   width: 100%;
-  box-sizing: border-box;
+  padding: 2px 3px;
   font-size: 9px;
   line-height: 1.2;
-  padding: 2px 3px;
   text-align: center;
-  border-radius: 0;
-  border: 1px solid var(--minerva-edge);
-  background: transparent;
-  color: var(--minerva-ink);
   font-variant-numeric: tabular-nums;
-  font-family: inherit;
-}
-
-.limitInput:focus {
-  outline: none;
-  border-color: var(--minerva-ink);
-}
-
-.limitInput:focus-visible {
-  outline: 2px solid var(--minerva-ink);
-  outline-offset: 1px;
 }
 
 .limitInput::-webkit-outer-spin-button,

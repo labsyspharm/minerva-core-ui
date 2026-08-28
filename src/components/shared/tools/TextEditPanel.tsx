@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { PanelActionButton } from "@/components/shared/panel/PanelButtons";
 import styles from "./TextEditPanel.module.css";
 
@@ -36,7 +37,7 @@ export const TextEditPanel: FC<TextEditPanelProps> = ({
 }) => {
   const canSubmit = allowEmpty || !!textValue?.trim();
   return (
-    <div className={styles.panel}>
+    <div className={`${minervaTheme.surface} ${styles.panel}`}>
       <div className={styles.title}>{title}</div>
 
       {showFontSize ? (
@@ -54,7 +55,7 @@ export const TextEditPanel: FC<TextEditPanelProps> = ({
             }
             min="8"
             max="72"
-            className={styles.numberInput}
+            className={`${minervaTheme.input} ${styles.numberInput}`}
           />
         </div>
       ) : null}
@@ -65,7 +66,7 @@ export const TextEditPanel: FC<TextEditPanelProps> = ({
           value={textValue}
           onChange={(e) => onTextChange(e.target.value)}
           placeholder={placeholder}
-          className={styles.textInput}
+          className={`${minervaTheme.input} ${styles.textInput}`}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               onSubmit();
@@ -79,7 +80,7 @@ export const TextEditPanel: FC<TextEditPanelProps> = ({
           value={textValue}
           onChange={(e) => onTextChange(e.target.value)}
           placeholder={placeholder}
-          className={styles.textarea}
+          className={`${minervaTheme.input} ${styles.textarea}`}
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.ctrlKey) {
               onSubmit();

@@ -21,7 +21,7 @@ import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
-import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import {
   cloneShapesForPaste,
@@ -219,23 +219,19 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
   const waypointClipboardActions = (
     <>
-      <button
-        type="button"
-        className={minervaTheme.control}
+      <PanelIconButton
         disabled={layersPanelSelectedShapeIds.length === 0}
         title="Copy selected shapes to the clipboard"
         onClick={() => void copySelectedWaypointShapes()}
       >
         <CopyAnnotationsIcon />
-      </button>
-      <button
-        type="button"
-        className={minervaTheme.control}
+      </PanelIconButton>
+      <PanelIconButton
         title="Paste shapes from the clipboard"
         onClick={() => void pasteWaypointShapesFromClipboard()}
       >
         <PasteAnnotationsIcon />
-      </button>
+      </PanelIconButton>
     </>
   );
 
@@ -245,14 +241,13 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
   const drawingToolbar = (
     <>
-      <button
-        type="button"
-        className={`${minervaTheme.control} ${activeTool === TOOLS.MOVE ? minervaTheme.controlActive : ""}`}
+      <PanelIconButton
+        active={activeTool === TOOLS.MOVE}
         title="Move Tool"
         onClick={() => handleToolChangeLocal(TOOLS.MOVE)}
       >
         <MoveIcon />
-      </button>
+      </PanelIconButton>
 
       <ToolSubmenu
         items={[
@@ -272,8 +267,6 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<ShapesIcon />}
         parentTitle="Shapes"
-        buttonClassName={minervaTheme.control}
-        activeClassName={minervaTheme.controlActive}
       />
 
       <ToolSubmenu
@@ -286,45 +279,39 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<LinesIcon />}
         parentTitle="Lines"
-        buttonClassName={minervaTheme.control}
-        activeClassName={minervaTheme.controlActive}
       />
 
-      <button
-        type="button"
-        className={`${minervaTheme.control} ${activeTool === TOOLS.BRUSH ? minervaTheme.controlActive : ""}`}
+      <PanelIconButton
+        active={activeTool === TOOLS.BRUSH}
         title="Brush"
         onClick={() => handleToolChangeLocal(TOOLS.BRUSH)}
       >
         <BrushIcon />
-      </button>
+      </PanelIconButton>
 
-      <button
-        type="button"
-        className={`${minervaTheme.control} ${activeTool === TOOLS.TEXT ? minervaTheme.controlActive : ""}`}
+      <PanelIconButton
+        active={activeTool === TOOLS.TEXT}
         title="Text Tool"
         onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
       >
         <TextIcon />
-      </button>
+      </PanelIconButton>
 
-      <button
-        type="button"
-        className={`${minervaTheme.control} ${activeTool === TOOLS.POINT ? minervaTheme.controlActive : ""}`}
+      <PanelIconButton
+        active={activeTool === TOOLS.POINT}
         title="Point Tool"
         onClick={() => handleToolChangeLocal(TOOLS.POINT)}
       >
         <PointIcon />
-      </button>
+      </PanelIconButton>
 
-      <button
-        type="button"
-        className={`${minervaTheme.control} ${activeTool === TOOLS.MAGIC_WAND ? minervaTheme.controlActive : ""}`}
+      <PanelIconButton
+        active={activeTool === TOOLS.MAGIC_WAND}
         title="Magic Wand"
         onClick={() => handleToolChangeLocal(TOOLS.MAGIC_WAND)}
       >
         <MagicWandIcon />
-      </button>
+      </PanelIconButton>
     </>
   );
 

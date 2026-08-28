@@ -19,8 +19,6 @@
   width: max-content;
   max-width: min(420px, calc(100vw - 32px));
   padding: 10px 12px;
-  background: var(--minerva-paper);
-  border: 1px solid var(--minerva-edge);
 }
 
 .addActionAnchor {
@@ -97,24 +95,28 @@
   justify-content: center;
   gap: 8px;
   padding: 12px;
-  background: color-mix(in srgb, #1a0a0a 88%, var(--minerva-paper));
-  border: 1px solid #6e2a2a;
+  background: color-mix(
+    in srgb,
+    var(--minerva-danger-surface) 88%,
+    var(--minerva-paper)
+  );
+  border: 1px solid var(--minerva-danger-border);
 }
 
 .fileAccessError {
   font-size: var(--minerva-size-note);
   font-weight: 400;
   line-height: 1.3;
-  color: #f85149;
+  color: var(--minerva-danger);
   text-align: center;
 }
 
 .fileAccessAction {
-  color: #f85149;
+  color: var(--minerva-danger);
 }
 
 .fileAccessAction:hover:not(:disabled) {
-  background: rgb(248 81 73 / 0.12);
+  background: var(--minerva-danger-wash);
 }
 
 .imageCardHeader {
@@ -192,32 +194,14 @@
 }
 
 .textInput {
-  box-sizing: border-box;
   width: 100%;
   max-width: 100%;
-  background: transparent;
-  border: 1px solid var(--minerva-edge);
-  color: var(--minerva-ink);
-  font-family: inherit;
-  font-size: inherit;
   padding: 0.45rem 0.6rem;
-  border-radius: 0;
   line-height: 1.2;
 }
 
 .textInput::placeholder {
-  color: var(--minerva-quiet);
   font-style: italic;
-}
-
-.textInput:focus {
-  outline: none;
-  border-color: var(--minerva-ink);
-}
-
-.textInput:focus-visible {
-  outline: 2px solid var(--minerva-ink);
-  outline-offset: 2px;
 }
 
 .textInputInvalid {

@@ -1160,7 +1160,7 @@ export const ChannelGroupsMasterDetail = (
         key={group.id}
         className={[
           styles.groupFolder,
-          isActive ? styles.groupFolderActive : "",
+          isActive ? minervaTheme.selectLeft : "",
           isDropTarget ? styles.dropTargetActive : "",
         ].join(" ")}
         {...folderDropProps}
@@ -1168,7 +1168,7 @@ export const ChannelGroupsMasterDetail = (
         <div className={styles.groupFolderHeader}>
           <button
             type="button"
-            className={styles.groupFolderActivate}
+            className={`${minervaTheme.focusRing} ${styles.groupFolderActivate}`}
             aria-label={`Select group ${group.name}`}
             aria-pressed={isActive}
             onClick={() => activateGroup(group.id)}
@@ -1189,7 +1189,7 @@ export const ChannelGroupsMasterDetail = (
             onClick={() => toggleGroupMasterVisibility(group)}
           />
           <input
-            className={`${row.detailTitleInput} ${styles.groupFolderName}`}
+            className={`${minervaTheme.input} ${styles.groupFolderName}`}
             type="text"
             defaultValue={group.name}
             maxLength={200}
@@ -1467,7 +1467,7 @@ export const ChannelGroupsMasterDetail = (
             </ul>
             <div className={styles.addChannelRow}>
               <select
-                className={styles.addChannelSelect}
+                className={`${minervaTheme.input} ${styles.addChannelSelect}`}
                 defaultValue=""
                 disabled={optimizePaletteBusy || addable.length === 0}
                 onChange={(e) => {

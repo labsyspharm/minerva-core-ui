@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { CompactHeader } from "@/components/shared/panel/CompactHeader";
 import panel from "@/components/shared/panel/panelShared.module.css";
 import type { Shape, ShapeGroup } from "@/lib/shapes/shapeModel";
@@ -179,7 +180,7 @@ const ItemList = <T = React.Component>({
     // Build CSS class names based on item state
     const itemClasses = [
       styles.item,
-      item.isActive ? styles.itemActive : "",
+      item.isActive ? minervaTheme.selectLeft : "",
       item.pulse ? styles.itemPulse : "",
       item.isHidden ? styles.itemHidden : "",
       isDragging ? styles.itemDragging : "",
@@ -222,7 +223,7 @@ const ItemList = <T = React.Component>({
           onItemClick ? (
             <button
               type="button"
-              className={styles.itemIconHit}
+              className={`${minervaTheme.focusRing} ${styles.itemIconHit}`}
               onClick={(e) => onItemClick(item, e)}
               onDoubleClick={() => onItemDoubleClick?.(item)}
             >
@@ -249,7 +250,7 @@ const ItemList = <T = React.Component>({
         {onItemClick ? (
           <button
             type="button"
-            className={styles.itemRowMain}
+            className={`${minervaTheme.focusRing} ${styles.itemRowMain}`}
             onClick={(e) => onItemClick(item, e)}
             onDoubleClick={() => onItemDoubleClick?.(item)}
           >

@@ -1,5 +1,7 @@
 /**
- * Shared chrome. Tokens live in minervaTheme.global.css.
+ * Shared recipes. Tokens live in minervaTheme.global.css.
+ *
+ * Control modifiers: .control (28) / .controlRow (24) / .controlText / .controlActive
  */
 
 .bar {
@@ -10,7 +12,7 @@
   padding: 0 var(--minerva-inset);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--minerva-gap);
   background: var(--minerva-paper);
   border-bottom: 1px solid var(--minerva-blue);
 }
@@ -18,13 +20,17 @@
 .wordmark {
   flex-shrink: 0;
   margin: 0;
-  font-size: var(--minerva-size);
+  font-size: var(--minerva-wordmark-size);
   font-weight: 400;
   letter-spacing: 0.01em;
   color: var(--minerva-blue);
   font-family: inherit;
   line-height: 1;
   white-space: nowrap;
+}
+
+.wordmarkDisplay {
+  font-size: var(--minerva-wordmark-display);
 }
 
 .title,
@@ -53,9 +59,36 @@
   outline: none;
 }
 
-.field:focus-visible {
-  outline: 2px solid var(--minerva-ink);
-  outline-offset: 2px;
+.input {
+  box-sizing: border-box;
+  margin: 0;
+  border: 1px solid var(--minerva-edge);
+  border-radius: var(--minerva-radius);
+  background: transparent;
+  color: var(--minerva-ink);
+  font: inherit;
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--minerva-quiet);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--minerva-ink);
+}
+
+.surface {
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
+  border-radius: var(--minerva-radius);
+  color: var(--minerva-ink);
+}
+
+.selectLeft {
+  background: var(--minerva-wash);
+  box-shadow: inset 2px 0 0 var(--minerva-ink);
 }
 
 :is(.control, .controlRow) {
@@ -89,15 +122,10 @@
   background: transparent;
 }
 
-:is(.control, .controlRow):focus-visible {
-  outline: 2px solid var(--minerva-ink);
-  outline-offset: 2px;
-}
-
 :is(.control, .controlRow) svg {
   display: block;
-  width: 16px;
-  height: 16px;
+  width: var(--minerva-icon-size);
+  height: var(--minerva-icon-size);
 }
 
 .controlActive {
@@ -108,8 +136,8 @@
 .controlText {
   width: auto;
   min-width: var(--minerva-control);
-  padding: 0 10px;
-  gap: 6px;
+  padding: 0 var(--minerva-gap);
+  gap: var(--minerva-gap-sm);
   font-size: var(--minerva-size);
   line-height: 1;
 }
@@ -122,14 +150,14 @@
 .menu,
 .menuFixed {
   position: absolute;
-  z-index: 50;
+  z-index: var(--minerva-z-menu);
   top: calc(100% + 4px);
   left: 0;
   min-width: 11rem;
   padding: 0.25em 0;
   border: 1px solid var(--minerva-edge);
   background: var(--minerva-paper);
-  font-family: var(--minerva-font);
+  font: inherit;
   font-size: var(--minerva-size);
   font-weight: 400;
 }
@@ -142,7 +170,7 @@
   border: 0;
   background: transparent;
   color: var(--minerva-ink);
-  font-family: var(--minerva-font);
+  font: inherit;
   font-size: var(--minerva-size);
   font-weight: 400;
   text-align: left;
@@ -205,7 +233,54 @@
   border-bottom-color: var(--minerva-ink);
 }
 
+.field:focus-visible,
+.input:focus-visible,
+.menuItem:focus-visible,
+:is(.control, .controlRow):focus-visible,
+.focusRing:focus-visible {
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: var(--minerva-focus-offset);
+}
+
 .tab:focus-visible {
-  outline: 2px solid var(--minerva-ink);
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
   outline-offset: -2px;
+}
+
+@keyframes minerva-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--minerva-edge);
+  border-top-color: var(--minerva-ink);
+  border-radius: 50%;
+  animation: minerva-spin 0.9s linear infinite;
+}
+
+.spinnerMd {
+  composes: spinner;
+  width: 24px;
+  height: 24px;
+}
+
+.spinnerSm {
+  composes: spinner;
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .spinnerMd,
+  .spinnerSm {
+    animation: none;
+    border-top-color: var(--minerva-quiet);
+  }
 }

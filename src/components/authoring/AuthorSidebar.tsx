@@ -7,6 +7,7 @@ import {
   SidebarStripSlot,
   SidebarStripSlotProvider,
 } from "@/components/shared/panel/CompactHeader";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import { TabBar } from "@/components/shared/TabBar";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import styles from "./AuthorSidebar.module.css";
@@ -147,10 +148,8 @@ export function AuthorView(props: AuthorViewProps) {
         contrastEditable={props.contrastEditable}
         expanded={expanded}
       />
-      <button
-        type="button"
+      <PanelIconButton
         className={[
-          minervaTheme.control,
           styles.expandControl,
           expanded ? styles.expandControlExpanded : null,
         ]
@@ -162,7 +161,7 @@ export function AuthorView(props: AuthorViewProps) {
         onClick={() => setExpanded((open) => !open)}
       >
         <ChevronIcon direction={expanded ? "left" : "right"} />
-      </button>
+      </PanelIconButton>
       <AuthorViewerRegion>{props.viewer}</AuthorViewerRegion>
     </AuthorViewport>
   );

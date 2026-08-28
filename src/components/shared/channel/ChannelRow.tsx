@@ -3,6 +3,7 @@ import {
   ChannelColorSwatchButton,
   ChannelVisibilitySwatch,
 } from "@/components/shared/channel/ChannelVisibilitySwatch";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import { withReseededRandomColors } from "@/lib/imaging/channelKind";
 import styles from "./ChannelRow.module.css";
@@ -29,8 +30,8 @@ function MaskVizButton(props: {
       type="button"
       className={
         props.active
-          ? `${styles.maskVizOption} ${styles.maskVizOptionActive}`
-          : styles.maskVizOption
+          ? `${minervaTheme.focusRing} ${styles.maskVizOption} ${styles.maskVizOptionActive}`
+          : `${minervaTheme.focusRing} ${styles.maskVizOption}`
       }
       aria-pressed={props.active}
       title={props.title ?? props.label}
@@ -160,7 +161,7 @@ function ChannelRowName(props: ChannelRowNameProps) {
   }
   return (
     <input
-      className={`${styles.detailTitleInput} ${styles.channelNameInput}`}
+      className={`${minervaTheme.field} ${styles.channelNameInput}`}
       type="text"
       defaultValue={props.name}
       maxLength={200}

@@ -10,5 +10,5 @@
   font-weight: 400;
   letter-spacing: 0.015em;
   opacity: 0.28;
-  color: rgba(238, 238, 238, 0.85);
+  color: var(--minerva-ink);
 }

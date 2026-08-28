@@ -1,4 +1,5 @@
 import * as React from "react";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { SourceDistributionData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
@@ -391,7 +392,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
             .join(" ")}
           title="Loading histogram"
         >
-          <div className={styles.histogramSpinner} />
+          <div className={minervaTheme.spinnerSm} />
         </div>
       </div>
       <div
@@ -447,7 +448,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
           >
             <input
               type="number"
-              className={styles.limitInput}
+              className={`${minervaTheme.input} ${styles.limitInput}`}
               value={minInput}
               aria-label="Contrast minimum value"
               min={scale.dtypeMin}
@@ -474,7 +475,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
           >
             <input
               type="number"
-              className={styles.limitInput}
+              className={`${minervaTheme.input} ${styles.limitInput}`}
               value={maxInput}
               aria-label="Contrast maximum value"
               min={scale.dtypeMin}
