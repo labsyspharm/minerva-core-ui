@@ -1,5 +1,6 @@
 import type { HsvaColor } from "@uiw/color-convert";
-import { type Chrome, hexToHsva, hsvaToHex } from "@uiw/react-color";
+import { color } from "@uiw/color-convert";
+import type { Chrome } from "@uiw/react-color";
 import type { AlphaProps } from "@uiw/react-color-alpha";
 import Hue from "@uiw/react-color-hue";
 import Saturation from "@uiw/react-color-saturation";
@@ -82,7 +83,6 @@ export interface SaturationProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
   prefixCls?: string;
   hsva?: HsvaColor;
-  radius?: CSS.Properties<string | number>["borderRadius"];
   onChange?: (newColor: HsvaColor) => void;
 }
 
@@ -103,25 +103,26 @@ export function ChromeColorPickerPopover({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [position, onClose]);
+
+  const currentColor = color(chromeProps.color);
+
   const hueProps: HueProps = {
-    hue: hexToHsva(chromeProps.color).h,
+    hue: currentColor.hsva.h,
     onChange: ({ h }) => {
-      const { v, s } = hexToHsva(chromeProps.color);
-      const hex = hsvaToHex({ h, v, s, a: 1 });
-      chromeProps.onChange({ hex });
+      const { v, s } = currentColor.hsva;
+      chromeProps.onChange(color({ h, v, s, a: 1 }));
     },
   };
   const saturationProps: SaturationProps = {
-    hsva: hexToHsva(chromeProps.color),
+    hsva: currentColor.hsva,
     onChange: ({ h, v, s, a }) => {
-      const hex = hsvaToHex({ h, v, s, a });
-      chromeProps.onChange({ hex });
+      chromeProps.onChange(color({ h, v, s, a }));
     },
   };
 
   if (!position || typeof document === "undefined") return null;
 
-  console.log(chromeProps, hexToHsva(chromeProps.color).h);
+  console.log(chromeProps, currentColor.hex, currentColor.hsva);
 
   return createPortal(
     <>
