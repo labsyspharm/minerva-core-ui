@@ -87,7 +87,9 @@ export const Presentation = (props: PresentationProps) => {
 
   const previousActiveStoryIndexRef = useRef<number | null>(null);
 
-  // Auto-import shapes for the active story when dimensions / selection / channel groups change.
+  // Import shapes / camera / waypoint group when story or size changes.
+  // Do not depend on channelGroups — preview color creates `{name} copy`
+  // and must not snap the view or steal the active group back.
   useEffect(() => {
     if (waypoints.length === 0) return;
     // Wait for image dimensions to be set
@@ -96,32 +98,27 @@ export const Presentation = (props: PresentationProps) => {
     if (activeStoryIndex === null) return;
 
     const story = waypoints[activeStoryIndex];
+    if (!story) return;
 
-    if (story) {
-      const idx = activeStoryIndex;
-      const prev = previousActiveStoryIndexRef.current;
-      const store = useAppStore.getState();
-      if (prev !== null && prev !== idx) {
-        store.persistImportedShapesToStory(prev);
-      }
-      previousActiveStoryIndexRef.current = idx;
+    const idx = activeStoryIndex;
+    const prev = previousActiveStoryIndexRef.current;
+    if (prev !== null && prev !== idx) {
+      useAppStore.getState().persistImportedShapesToStory(prev);
+    }
+    previousActiveStoryIndexRef.current = idx;
 
-      // Import shapes from the story (clearing existing imported ones atomically)
-      importWaypointShapes(story, true, shapes);
+    importWaypointShapes(story, true, shapes);
 
-      const authoringMap = useAppStore.getState().waypointAuthoring;
-      const wp = waypointToConfigWaypoint(story, authoringMap.get(story.id));
-      if (imageWidth > 0 && imageHeight > 0) {
-        setTargetWaypointCamera(wp);
-      }
+    const authoringMap = useAppStore.getState().waypointAuthoring;
+    const wp = waypointToConfigWaypoint(story, authoringMap.get(story.id));
+    setTargetWaypointCamera(wp);
 
-      const gid = wp.groupId;
-      if (channelGroups.length > 0 && gid) {
-        const foundGroup =
-          channelGroups.find((g) => g.id === gid) || channelGroups[0];
-        if (foundGroup) {
-          setActiveChannelGroup(foundGroup.id);
-        }
+    const groups = useDocumentStore.getState().channelGroups;
+    const gid = wp.groupId;
+    if (groups.length > 0 && gid) {
+      const foundGroup = groups.find((g) => g.id === gid) || groups[0];
+      if (foundGroup) {
+        setActiveChannelGroup(foundGroup.id);
       }
     }
   }, [
@@ -132,7 +129,6 @@ export const Presentation = (props: PresentationProps) => {
     shapes,
     importWaypointShapes,
     setTargetWaypointCamera,
-    channelGroups,
     setActiveChannelGroup,
   ]);
 
