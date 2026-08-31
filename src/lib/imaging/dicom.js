@@ -450,6 +450,14 @@ const readInstances = async (series) => {
   return naturalized;
 };
 
+/** Accept series roots or `…/series/…/instances[/]` listing URLs. */
+const normalizeDicomWebSeriesUrl = (url) => {
+  return String(url)
+    .trim()
+    .replace(/\/+$/, "")
+    .replace(/\/instances$/i, "");
+};
+
 const readMetadata = async (series) => {
   const response = await fetch(`${series}/metadata`);
   const result = await response.json();
@@ -570,6 +578,10 @@ function createTileLayers(meta) {
   const { channelsVisible, colors, contrastLimits, selections } = meta.settings;
   const visible = channelsVisible.some((x) => x);
   const { imageID, pyramids, dicomLoader, rgbImage } = meta;
+  // Viv MultiscaleImageLayer expects LoaderPlane[]; callers may pass Loader `{ data }`.
+  const loaderPlanes = Array.isArray(dicomLoader)
+    ? dicomLoader
+    : (dicomLoader?.data ?? []);
   const height = [...pyramids["0"]].pop().height;
   const width = [...pyramids["0"]].pop().width;
   const _tileSize = pyramids["0"][0].tileSize;
@@ -584,7 +596,7 @@ function createTileLayers(meta) {
         const level = Math.abs(-z);
         console.log("z level and x,y");
         console.log({ x, y, z, level });
-        const source = dicomLoader[level];
+        const source = loaderPlanes[level];
         if (!source) {
           return null;
         }
@@ -652,9 +664,16 @@ function createTileLayers(meta) {
       },
     });
   }
+  if (!loaderPlanes[0]) {
+    console.error(
+      "[minerva] dicom: MultiscaleImageLayer skipped — empty loader planes",
+      imageID,
+    );
+    return null;
+  }
   const imageProps = {
     visible,
-    loader: dicomLoader,
+    loader: loaderPlanes,
     // https://deck.gl/docs/api-reference/geo-layers/tile-layer#refinementstrategy
     refinementStrategy: "best-available",
     // Include contrast limits in ID to force layer recreation when they change
@@ -669,7 +688,8 @@ function createTileLayers(meta) {
 }
 
 const listDicomWeb = async (series) => {
-  return await readInstances(`${series}/instances/`);
+  const root = normalizeDicomWebSeriesUrl(series);
+  return await readInstances(`${root}/instances/`);
 };
 
 const toDicomPlane = (dicomPixelSource) => {
@@ -768,11 +788,12 @@ const parseDicomWeb = (meta) => {
 const loadDicomWeb = async (series) => {
   // Test Series:
   // "https://proxy.imaging.datacommons.cancer.gov/current/viewer-only-no-downloads-see-tinyurl-dot-com-slash-3j3d9jyp/dicomWeb/studies/2.25.93749216439228361118017742627453453196/series/1.3.6.1.4.1.5962.99.1.2344794501.795090168.1655907236229.4.0"
-  const instance_list = await listDicomWeb(series);
+  const root = normalizeDicomWebSeriesUrl(series);
+  const instance_list = await listDicomWeb(root);
   const pyramids = await Promise.all(
     instance_list.map((opts, _i) => {
       const { SOPInstanceUID, BitsAllocated } = opts;
-      const instance = `${series}/instances/${SOPInstanceUID}`;
+      const instance = `${root}/instances/${SOPInstanceUID}`;
       return readMetadata(instance).then((instance_metadata) => {
         const pyramid = computeImagePyramid({
           metadata: instance_metadata,
@@ -823,6 +844,7 @@ const findDicomWeb = (series) => {
 export {
   loadDicomWeb,
   findDicomWeb,
+  normalizeDicomWebSeriesUrl,
   createTileLayers,
   readInstances,
   readMetadata,

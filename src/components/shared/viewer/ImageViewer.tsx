@@ -12,7 +12,6 @@ import "@deck.gl/widgets/stylesheet.css";
 import type { Layer } from "@deck.gl/core";
 import { MaskExtension } from "@deck.gl/extensions";
 import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
-import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import { isMaskSourceRendered } from "@/lib/imaging/channelCompositor";
 import { isMaskChannel } from "@/lib/imaging/channelKind";
@@ -277,8 +276,6 @@ export type ImageViewerProps = {
   squareViewportScale?: number;
   squareViewportColor?: string;
   squareViewportBorderWidth?: number;
-  /** Full-cover spinner while import / GMM contrast is still pending. */
-  isLoadingImage?: boolean;
 };
 
 const _isElement = (x = {}): x is HTMLElement => {
@@ -329,7 +326,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     squareViewportScale = 0.9,
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
     squareViewportBorderWidth = 2,
-    isLoadingImage = false,
   } = props;
   const {
     activeChannelGroupId,
@@ -1053,13 +1049,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         layerFilter={layerFilter}
         views={views}
       />
-      <LoadingWidget ref={loadingWidgetRef} />
-      {isLoadingImage ? (
-        <output className={styles.imageLoadingOverlay} aria-busy="true">
-          <div className={minervaTheme.spinner} />
-          <span>Loading…</span>
-        </output>
-      ) : null}
+      <LoadingWidget ref={loadingWidgetRef} placement="top-right" />
       {showSquareViewportOverlay && (
         <div
           className={styles.squareViewportOverlay}

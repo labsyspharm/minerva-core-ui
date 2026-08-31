@@ -38,7 +38,11 @@ import {
   JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE,
   jpegTransferFromImageSource,
 } from "@/lib/imaging/cubeRootEncoding";
-import { loadDicomWeb, parseDicomWeb } from "@/lib/imaging/dicom.js";
+import {
+  loadDicomWeb,
+  normalizeDicomWebSeriesUrl,
+  parseDicomWeb,
+} from "@/lib/imaging/dicom.js";
 import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
 import {
   hasAuthorShellSupport,
@@ -80,6 +84,7 @@ import {
   persistLocalImageHandle,
 } from "@/lib/persistence/imageHandles";
 import {
+  isBlankOrUntitledStoryTitle,
   saveStoryDocument,
   setActiveStoryId,
 } from "@/lib/persistence/storyPersistence";
@@ -102,6 +107,7 @@ import {
 import {
   applySourceChannelsToImages,
   dedupeImagesForImport,
+  firstImageNameForStoryTitle,
   hydrateConfigWaypoint,
   type LegacyExhibitWaypoint,
   removeImageFromDocument,
@@ -137,6 +143,15 @@ import {
 } from "@/router/appRouter";
 import styles from "./Main.module.css";
 
+/** When the story title is still blank/untitled, name it after the first image. */
+function maybeDefaultStoryTitleFromFirstImage(): void {
+  const doc = useDocumentStore.getState();
+  if (!isBlankOrUntitledStoryTitle(doc.metadata.title)) return;
+  const name = firstImageNameForStoryTitle(doc.images);
+  if (!name) return;
+  doc.setMetadata({ title: name });
+}
+
 /** When the story has no waypoints yet, add a default row for image import to attach to. */
 function ensureDefaultWaypointForImageImport(): void {
   const doc = useDocumentStore.getState();
@@ -154,6 +169,12 @@ function ensureDefaultWaypointForImageImport(): void {
   const app = useAppStore.getState();
   app.addStory(hydrateConfigWaypoint(raw, doc.channelGroups));
   app.setActiveStory(0);
+}
+
+/** Shared post-import document side effects after images land in the store. */
+function afterImageImportDocumentEffects(): void {
+  maybeDefaultStoryTitleFromFirstImage();
+  ensureDefaultWaypointForImageImport();
 }
 
 type GeoTiffWithImage = {
@@ -949,7 +970,7 @@ const Content = (props: Props) => {
     setDeniedHandleKeys([]);
     setMissingHandleKeys([]);
     publishChannelState(nextImages, ChannelGroups, { resetActiveGroup: true });
-    ensureDefaultWaypointForImageImport();
+    afterImageImportDocumentEffects();
     // Mask OME-XML is often not well-formed (copied metadata); skip ROI scrape.
     if (role !== "segmentation") {
       for (let i = 0; i < entries.length; i++) {
@@ -1074,6 +1095,7 @@ const Content = (props: Props) => {
       resetActiveGroup: false,
       mergeVisibilities: true,
     });
+    maybeDefaultStoryTitleFromFirstImage();
     return { ok: true };
   };
 
@@ -1113,7 +1135,7 @@ const Content = (props: Props) => {
       } else {
         useAppStore.setState({ activeChannelGroupId: null });
       }
-      ensureDefaultWaypointForImageImport();
+      afterImageImportDocumentEffects();
       const jpegEntries = await jpegLoaderEntriesFromImages({
         images: data.images,
         channelGroups: data.channelGroups,
@@ -1208,7 +1230,7 @@ const Content = (props: Props) => {
     setOmeLoaderEntries([{ loader, sourceImageId }]);
     setDeniedHandleKeys([]);
     publishChannelState(nextImages, ChannelGroups, { resetActiveGroup: true });
-    ensureDefaultWaypointForImageImport();
+    afterImageImportDocumentEffects();
     if (role !== "segmentation") {
       const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
       applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
@@ -1298,6 +1320,7 @@ const Content = (props: Props) => {
       resetActiveGroup: false,
       mergeVisibilities: true,
     });
+    maybeDefaultStoryTitleFromFirstImage();
     return { ok: true };
   };
 
@@ -1652,7 +1675,7 @@ const Content = (props: Props) => {
       ChannelGroups,
       SourceChannels,
     });
-    ensureDefaultWaypointForImageImport();
+    afterImageImportDocumentEffects();
   };
 
   const [valid, setValid] = useState({} as ValidObj);
@@ -2129,7 +2152,6 @@ const Content = (props: Props) => {
       imageLayers,
       omeLoaderEntries,
       showSquareViewportOverlay,
-      isLoadingImage,
     };
   }, [
     showSquareViewportOverlay,
@@ -2137,7 +2159,6 @@ const Content = (props: Props) => {
     imageLayers,
     loaderList,
     omeLoaderEntries,
-    isLoadingImage,
   ]);
 
   // Use Zustand store for overlay state management
@@ -2377,6 +2398,44 @@ const Content = (props: Props) => {
           }
         };
 
+        const importDicomWeb = async (req: {
+          url: string;
+          name?: string;
+        }): Promise<OmeImportResult> => {
+          const loadEpoch = beginImageLoading();
+          try {
+            const series = normalizeDicomWebSeriesUrl(req.url);
+            const label =
+              req.name?.trim() ||
+              series.match(/\/series\/([^/]+)/i)?.[1]?.slice(-14) ||
+              "DICOMweb";
+            await onStartDicomWeb(
+              [[series, label]],
+              props.demo_dicom_web ? (props.exhibit_config.Groups ?? []) : [],
+            );
+            setImportRevision((r) => r + 1);
+            const storyId = useDocumentStore.getState().activeStoryId;
+            if (storyId) {
+              await saveStoryDocument(
+                storyId,
+                useDocumentStore.getState().toDocumentData(),
+              );
+            }
+            return { ok: true };
+          } catch (e) {
+            return {
+              ok: false,
+              error:
+                e instanceof Error
+                  ? e.message
+                  : "Could not load the DICOMweb series.",
+            };
+          } finally {
+            endImageLoading(loadEpoch);
+            document.getElementById("global-loader")?.remove();
+          }
+        };
+
         const uploadProps = {
           formProps,
           onAllow,
@@ -2386,6 +2445,7 @@ const Content = (props: Props) => {
           fileName,
           lastOmeTiffUrl,
           onImportOme: importOme,
+          onImportDicomWeb: importDicomWeb,
           needsFileAccess: deniedHandleKeys.length > 0,
           onRequestFileAccess: requestLoaderFileAccess,
           missingHandleKeys,
@@ -2419,12 +2479,6 @@ const Content = (props: Props) => {
         );
         const imager = (
           <div className={styles.full}>
-            {isLoadingImage ? (
-              <output className={styles.importLoadingOverlay} aria-busy="true">
-                <div className={minervaTheme.spinner} />
-                <span>Loading…</span>
-              </output>
-            ) : null}
             <PlaybackModeView
               {...routerProps}
               viewer={viewer}
@@ -2450,6 +2504,12 @@ const Content = (props: Props) => {
               />
             ) : null}
             {imager}
+            {isLoadingImage ? (
+              <output className={styles.importLoadingOverlay} aria-busy="true">
+                <div className={minervaTheme.spinner} />
+                <span>Loading…</span>
+              </output>
+            ) : null}
           </div>
         );
       }}

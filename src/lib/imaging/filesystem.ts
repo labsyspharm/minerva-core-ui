@@ -293,6 +293,31 @@ function ephemeralFileHandleFromFile(file: File): Handle.File {
   return h as unknown as Handle.File;
 }
 
+/**
+ * Prefer Chromium `getAsFileSystemHandle` for persistable drops; else ephemeral File.
+ */
+async function fileHandleFromDataTransferItem(
+  item: DataTransferItem,
+): Promise<Handle.File | null> {
+  if (item.kind !== "file") return null;
+  const withHandle = item as DataTransferItem & {
+    getAsFileSystemHandle?: () => Promise<FileSystemHandle | null>;
+  };
+  if (typeof withHandle.getAsFileSystemHandle === "function") {
+    try {
+      const handle = await withHandle.getAsFileSystemHandle();
+      if (handle && handle.kind === "file") {
+        return handle as Handle.File;
+      }
+    } catch {
+      // fall through to File
+    }
+  }
+  const file = item.getAsFile();
+  if (!file) return null;
+  return ephemeralFileHandleFromFile(file);
+}
+
 function isPersistableFileHandle(handle: Handle.File): boolean {
   return (
     typeof FileSystemFileHandle !== "undefined" &&
@@ -513,4 +538,6 @@ export {
   findFile,
   toLoader,
   toFile,
+  ephemeralFileHandleFromFile,
+  fileHandleFromDataTransferItem,
 };

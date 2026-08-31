@@ -27,6 +27,14 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
+/** Empty, whitespace-only, or the placeholder untitled label (not a real name). */
+export function isBlankOrUntitledStoryTitle(
+  title: string | undefined | null,
+): boolean {
+  const t = title?.trim() ?? "";
+  return t.length === 0 || t.toLowerCase() === UNTITLED.toLowerCase();
+}
+
 export function deriveTitle(data: DocumentData): string {
   const t = data.metadata?.title?.trim();
   return t && t.length > 0 ? t : UNTITLED;

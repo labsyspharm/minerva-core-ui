@@ -1,6 +1,7 @@
 /* Shared authoring-panel layout. Type and color come from the story look. */
 
 .authorPanel {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;

@@ -101,7 +101,7 @@ export function createDicomTileLayer(args: {
   settings: unknown;
   index: number;
   remountKey?: string | number;
-}): Layer {
+}): Layer | null {
   const rgbImage = args.entry.modality === "Brightfield";
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
   return createTileLayers({
@@ -196,14 +196,17 @@ export function buildImageLayers(args: {
   let nextIndex = 0;
   let omeIntensityPainted = 0;
   return [
-    ...dicomIndexList.map((entry, i) =>
-      createDicomTileLayer({
+    ...dicomIndexList.flatMap((entry, i) => {
+      const layer = createDicomTileLayer({
         entry,
         settings: dicomSettingsList[i],
-        index: nextIndex++,
+        index: nextIndex,
         remountKey: args.remountKey,
-      }),
-    ),
+      });
+      if (!layer) return [];
+      nextIndex += 1;
+      return [layer];
+    }),
     ...omeLoaderEntries.flatMap(({ loader, transfer }, i) => {
       const settings = omeSettingsList[i] as MainSettings | undefined;
       // Mask-only loaders have no intensity selections; painted by createMaskTileLayer.

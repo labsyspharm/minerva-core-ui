@@ -1,9 +1,7 @@
-import type { ChangeEventHandler, FormEventHandler } from "react";
+import type { FormEventHandler, DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
-import { CompactHeader } from "@/components/shared/panel/CompactHeader";
 import {
   PanelActionButton,
   PanelIconButton,
@@ -11,11 +9,19 @@ import {
 import panel from "@/components/shared/panel/panelShared.module.css";
 import { resolveImageContentRole } from "@/lib/imaging/channelKind";
 import {
+  findDicomWeb,
+  normalizeDicomWebSeriesUrl,
+} from "@/lib/imaging/dicom.js";
+import {
   ensureFileHandlePermission,
+  fileHandleFromDataTransferItem,
   findFile,
   toFile,
 } from "@/lib/imaging/filesystem";
-import { applyOmeRoisFromAnnotationXmlString } from "@/lib/shapes/applyOmeRoisToDocument";
+import type {
+  OmeImageImportRole,
+  OmeImportResult,
+} from "@/lib/imaging/omeImport";
 import type { Image } from "@/lib/stores/documentStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { jpegSourceNeedsLocalRoot } from "@/lib/storyExport/importStoryFolder";
@@ -23,6 +29,7 @@ import type { ValidObj } from "@/lib/validate";
 import styles from "./Upload.module.css";
 
 export type { ValidObj } from "@/lib/validate";
+export type { OmeImportResult };
 
 function ReplaceIcon({ title, size = 14 }: { title?: string; size?: number }) {
   const label = title ?? "Replace";
@@ -59,14 +66,8 @@ export type LoadedSourceSummary = {
   isDemo?: boolean;
 };
 
-import type {
-  OmeImageImportRole,
-  OmeImportResult,
-} from "@/lib/imaging/omeImport";
-
 /** Intensity stack vs label / segmentation file. */
 export type OmeImportRole = OmeImageImportRole;
-export type { OmeImportResult };
 
 export type OmeImportRequest = {
   role: OmeImportRole;
@@ -76,10 +77,17 @@ export type OmeImportRequest = {
     | { kind: "url"; url: string };
 };
 
+export type DicomWebImportRequest = {
+  url: string;
+  /** Display label for the series; defaults to a short series id when omitted. */
+  name?: string;
+};
+
 export type UploadProps = {
   onAllow: () => Promise<Handle.File[]>;
-  formProps: FormProps;
-  /** Bumps after a successful image import; closes the add panel. */
+  /** @deprecated DICOM uses `onImportDicomWeb`; kept optional for call-site compatibility. */
+  formProps?: FormProps;
+  /** Bumps after a successful image import; clears pending add state. */
   importRevision: number;
   /** True when the viewer has image data (same idea as `!noLoader` in main). */
   imageLoaded: boolean;
@@ -90,6 +98,9 @@ export type UploadProps = {
   lastOmeTiffUrl?: string | null;
   onImportOme?: (
     req: OmeImportRequest,
+  ) => Promise<OmeImportResult | undefined> | OmeImportResult | undefined;
+  onImportDicomWeb?: (
+    req: DicomWebImportRequest,
   ) => Promise<OmeImportResult | undefined> | OmeImportResult | undefined;
   /** Local handles present but Chrome revoked access after reload. */
   needsFileAccess?: boolean;
@@ -111,120 +122,51 @@ export type UploadProps = {
    */
   onReplaceImage?: (imageId: string) => void | Promise<void>;
 };
-type ValidationFunction = (v: ValidObj) => boolean | null;
-type Validation = (s: string) => ValidationFunction;
-type ValidOut = Partial<{
-  isValid: true;
-  isInvalid: true;
-}>;
-type Validate = (v: ValidObj, fn: ValidationFunction) => ValidOut;
-type SetState = (s: string) => void;
-type SetTargetState = FormEventHandler;
-type UseTargetState = (init: string) => [string, SetState, SetTargetState];
 
-const _useState: UseTargetState = (init) => {
-  const [val, set] = useState(init);
-  const new_set: SetTargetState = (e) => {
-    const form = e.target as HTMLFormElement;
-    set(form.value);
-  };
-  return [val, set, new_set];
+type PendingLocal = {
+  kind: "local";
+  handles: Handle.File[];
+  label: string;
 };
+type PendingUrl = { kind: "url"; url: string };
+type PendingSource = PendingLocal | PendingUrl;
 
-const validation: Validation = (key) => {
-  return (valid) => {
-    if (key in valid) {
-      return !!valid[key];
-    }
-    return null;
-  };
-};
+type OverlayRole = OmeImportRole;
+type OverlayFormat = "ome-tiff" | "dicomweb";
 
-const validate: Validate = (valid, fn) => {
-  const validated = fn(valid);
-  if (validated === null) {
-    return {};
-  }
-  const opt = validated ? "isValid" : "isInvalid";
-  return { [opt]: true };
-};
+/** Series root, or the same with a trailing `/instances[/]`. */
+const DICOM_SERIES_URL =
+  /^https?:\/\/.+\/studies\/[^/]+\/series\/[^/]+(?:\/instances)?\/?$/i;
 
-function validationInputClass(v: ValidOut): string {
-  const parts = [minervaTheme.input, styles.textInput];
-  if (v.isInvalid) parts.push(styles.textInputInvalid);
-  if (v.isValid) parts.push(styles.textInputValid);
-  return parts.join(" ");
+function defaultDicomName(seriesUrl: string): string {
+  const uid = seriesUrl.match(/\/series\/([^/]+)/i)?.[1];
+  if (!uid) return "DICOMweb";
+  return uid.length > 18 ? `…${uid.slice(-14)}` : uid;
 }
 
-const FormDicom = (props: FormProps) => {
-  const { valid, onSubmit } = props;
-  const [url, _sU, setURL] = _useState("");
-  const [name, _sN, setName] = _useState("");
-  const urlValidation = validate(valid, ({ url: validEndpoint }) => {
-    if (validEndpoint === undefined) {
-      return null;
-    }
-    return (
-      validEndpoint &&
-      /^https?:\/\/.+\/studies\/[^/]+\/series\/[^/]+$/.test(url)
-    );
-  });
-  const nameValidation = validate(valid, validation("name"));
-
+function FormatChip({
+  label,
+  selected,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  selected: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
   return (
-    <form onSubmit={onSubmit} noValidate className={styles.dicomForm}>
-      <div className={styles.fieldGroup}>
-        <label htmlFor="dicom-url" className={styles.fieldLabel}>
-          DICOMweb™ URL:
-        </label>
-        <div className={styles.fieldRow}>
-          <input
-            id="dicom-url"
-            type="text"
-            required
-            value={url}
-            name="url"
-            onChange={setURL}
-            className={validationInputClass(urlValidation)}
-            aria-invalid={urlValidation.isInvalid ?? undefined}
-          />
-          {urlValidation.isInvalid && (
-            <div className={styles.invalidFeedback}>Invalid DICOMweb™ URL</div>
-          )}
-          {urlValidation.isValid && (
-            <div className={styles.validFeedback}>Valid.</div>
-          )}
-        </div>
-      </div>
-      <div className={styles.fieldGroup}>
-        <label htmlFor="dicom-name" className={styles.fieldLabel}>
-          Dataset Name:
-        </label>
-        <div className={styles.fieldRow}>
-          <input
-            id="dicom-name"
-            type="text"
-            required
-            value={name}
-            name="name"
-            onChange={setName}
-            className={validationInputClass(nameValidation)}
-            aria-invalid={nameValidation.isInvalid ?? undefined}
-          />
-          {nameValidation.isInvalid && (
-            <div className={styles.invalidFeedback}>
-              Please name the dataset.
-            </div>
-          )}
-          {nameValidation.isValid && (
-            <div className={styles.validFeedback}>Valid.</div>
-          )}
-        </div>
-      </div>
-      <PanelActionButton type="submit">Submit</PanelActionButton>
-    </form>
+    <PanelActionButton
+      type="button"
+      disabled={disabled}
+      aria-pressed={selected}
+      className={selected ? styles.typeChipActive : undefined}
+      onClick={onClick}
+    >
+      {label}
+    </PanelActionButton>
   );
-};
+}
 
 const formatDims = (w: number, h: number, c: number) => {
   const dims =
@@ -256,67 +198,6 @@ function imageDisplayLabel(
   return `Image ${index + 1}`;
 }
 
-const OmeTiffUrlImport = (props: {
-  url: string;
-  onUrlChange: SetTargetState;
-  onImport: () => void;
-  importLabel: string;
-  canImport: boolean;
-  inputClassName: string;
-  rowClassName: string;
-}) => {
-  const {
-    url,
-    onUrlChange,
-    onImport,
-    importLabel,
-    canImport,
-    inputClassName,
-    rowClassName,
-  } = props;
-  return (
-    <div className={rowClassName}>
-      <input
-        type="text"
-        required
-        value={url}
-        name="ome_tiff_url"
-        placeholder=""
-        onChange={onUrlChange}
-        className={`${minervaTheme.input} ${styles.textInput} ${inputClassName}`}
-      />
-      <PanelActionButton type="button" onClick={onImport} disabled={!canImport}>
-        {importLabel}
-      </PanelActionButton>
-    </div>
-  );
-};
-
-type AddKind = "image" | "mask" | "annotation";
-
-type ImageFormatChoice = "" | "DICOM-WEB" | "OME-TIFF" | "OME-TIFF-URL";
-
-function FormatChip({
-  label,
-  selected,
-  onClick,
-}: {
-  label: string;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <PanelActionButton
-      type="button"
-      active={selected}
-      aria-pressed={selected}
-      onClick={onClick}
-    >
-      {label}
-    </PanelActionButton>
-  );
-}
-
 const roleBadgeLabel = (
   role: ReturnType<typeof resolveImageContentRole>,
 ): string | null => {
@@ -330,7 +211,7 @@ const roleBadgeLabel = (
   }
 };
 
-/** Prefer Mask when the chip says so, or the file/URL name clearly looks like one. */
+/** Prefer Mask when selected, or when the file/URL name clearly looks like one. */
 function resolveImportRole(
   selected: OmeImportRole,
   pathOrName: string,
@@ -347,25 +228,18 @@ function resolveImportRole(
   return selected;
 }
 
+function inferFormat(pending: PendingSource): OverlayFormat {
+  if (pending.kind === "local") return "ome-tiff";
+  return DICOM_SERIES_URL.test(pending.url) ? "dicomweb" : "ome-tiff";
+}
+
+function pendingLabel(pending: PendingSource): string {
+  if (pending.kind === "local") return pending.label;
+  return pending.url;
+}
+
 const Upload = (props: UploadProps) => {
-  const [addPanelOpen, setAddPanelOpen] = useState(false);
-  const [addKind, setAddKind] = useState<AddKind>("image");
-  const [imageFormat, setImageFormat] = useState<ImageFormatChoice>("");
-  const [omeTiffUrl, _setOmeTiffUrl, setOmeTiffUrl] = _useState("");
-  const [xmlImportFeedback, setXmlImportFeedback] = useState<{
-    type: "ok" | "err";
-    text: string;
-  } | null>(null);
-  const [importError, setImportError] = useState<string | null>(null);
-  const xmlFileInputRef = useRef<HTMLInputElement | null>(null);
-  const addAnchorRef = useRef<HTMLDivElement | null>(null);
-  const prevImportRev = useRef(props.importRevision);
-  const localImportInFlightRef = useRef(false);
-
-  const images = useDocumentStore((s) => s.images);
-
   const {
-    formProps,
     onAllow,
     importRevision,
     imageLoaded,
@@ -373,6 +247,7 @@ const Upload = (props: UploadProps) => {
     fileName = "",
     lastOmeTiffUrl = null,
     onImportOme,
+    onImportDicomWeb,
     needsFileAccess = false,
     onRequestFileAccess,
     missingHandleKeys = [],
@@ -383,217 +258,212 @@ const Upload = (props: UploadProps) => {
     onReplaceImage,
   } = props;
 
-  const resetAddFields = useCallback(
-    (opts?: { clearUrl?: boolean }) => {
-      setAddKind("image");
-      setImageFormat("");
-      setImportError(null);
-      setXmlImportFeedback(null);
-      if (opts?.clearUrl) _setOmeTiffUrl("");
-    },
-    [_setOmeTiffUrl],
-  );
+  const images = useDocumentStore((s) => s.images);
+  const hasImages =
+    images.length > 0 || (!!imageLoaded && loadedSource != null);
 
-  const closeAddPanel = useCallback(() => {
-    setAddPanelOpen(false);
-    resetAddFields();
-  }, [resetAddFields]);
+  const [urlDraft, setUrlDraft] = useState("");
+  const [pending, setPending] = useState<PendingSource | null>(null);
+  const [overlayRole, setOverlayRole] = useState<OverlayRole>("intensity");
+  const [overlayFormat, setOverlayFormat] = useState<OverlayFormat>("ome-tiff");
+  const [dicomName, setDicomName] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importBusy, setImportBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const dragDepthRef = useRef(0);
+  const localPickInFlightRef = useRef(false);
+  const prevImportRev = useRef(importRevision);
 
-  useEffect(() => {
-    if (prevImportRev.current !== importRevision) {
-      prevImportRev.current = importRevision;
-      setAddPanelOpen(false);
-      resetAddFields({ clearUrl: true });
-    }
-  }, [importRevision, resetAddFields]);
+  const showTypeOverlay = pending != null;
+  const dicomAllowed =
+    pending?.kind === "url" && overlayRole !== "segmentation";
+  const urlReady = /^https?:\/\/.+/.test(urlDraft.trim());
 
   useEffect(() => {
-    if (!addPanelOpen) return;
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (!addAnchorRef.current?.contains(target)) {
-        closeAddPanel();
-      }
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeAddPanel();
-    };
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [addPanelOpen, closeAddPanel]);
-
-  const labelOpts = { fileName, lastOmeTiffUrl };
-  const append = imageLoaded;
-  const isMaskImport = addKind === "mask";
-  const isAnnotationImport = addKind === "annotation";
-  const importRole: OmeImportRole = isMaskImport ? "segmentation" : "intensity";
-  const importLabel = isMaskImport ? "Import mask" : "Import";
-  const urlReady = /^https?:\/\/.+/.test(omeTiffUrl.trim());
-
-  const setKind = (kind: AddKind) => {
-    setAddKind(kind);
+    if (prevImportRev.current === importRevision) return;
+    prevImportRev.current = importRevision;
+    setPending(null);
     setImportError(null);
-    setXmlImportFeedback(null);
-    setImageFormat("");
-  };
+    setUrlDraft("");
+    setImportBusy(false);
+  }, [importRevision]);
 
-  const importLocalOmeTiff = async (
-    role: OmeImportRole,
-    picked: Handle.File[],
-  ) => {
-    if (picked.length === 0 || !onImportOme) return;
+  const openPending = useCallback((next: PendingSource) => {
+    const role = resolveImportRole("intensity", pendingLabel(next));
+    let format = inferFormat(next);
+    if (role === "segmentation") format = "ome-tiff";
+    setPending(next);
+    setOverlayRole(role);
+    setOverlayFormat(format);
+    setDicomName("");
     setImportError(null);
-    const result = await onImportOme({
-      role,
-      append: imageLoaded,
-      source: {
-        kind: "local",
-        path: picked[0].name,
-        handles: picked,
-      },
-    });
-    if (result && result.ok === false) setImportError(result.error);
-  };
+  }, []);
 
-  const chooseLocalOmeTiff = async () => {
-    if (localImportInFlightRef.current) return;
-    localImportInFlightRef.current = true;
+  const clearPending = useCallback(() => {
+    setPending(null);
     setImportError(null);
-    try {
-      // Fresh picker each time; masks use toFile so they don't clobber the intensity handle.
-      const picked = isMaskImport ? await toFile() : await onAllow();
-      if (picked.length === 0) {
-        setImageFormat("");
-        return;
-      }
-      const handle = picked[0];
+  }, []);
+
+  const acceptLocalHandles = useCallback(
+    async (handles: Handle.File[]) => {
+      if (handles.length === 0) return;
+      const handle = handles[0];
       if (!(await ensureFileHandlePermission(handle))) {
-        setImportError(
-          isMaskImport
-            ? "Allow file access to load this mask."
-            : "Allow file access to load this image.",
-        );
+        setImportError("Allow file access to load this image.");
         return;
       }
       if (!(await findFile({ handle }))) {
         setImportError("Could not read the selected file.");
         return;
       }
-      const role = resolveImportRole(importRole, handle.name);
-      if (role !== importRole) {
-        setAddKind(role === "segmentation" ? "mask" : "image");
-      }
-      await importLocalOmeTiff(role, picked);
-    } finally {
-      localImportInFlightRef.current = false;
-    }
-  };
+      openPending({
+        kind: "local",
+        handles: [handle],
+        label: handle.name || "image.ome.tif",
+      });
+    },
+    [openPending],
+  );
 
-  const runUrlImport = async () => {
-    if (!onImportOme || imageFormat !== "OME-TIFF-URL" || !urlReady) return;
+  const browseLocal = useCallback(async () => {
+    if (localPickInFlightRef.current) return;
+    localPickInFlightRef.current = true;
     setImportError(null);
-    const url = omeTiffUrl.trim();
-    const role = resolveImportRole(importRole, url);
-    if (role !== importRole) {
-      setAddKind(role === "segmentation" ? "mask" : "image");
+    try {
+      const picked = await onAllow();
+      if (picked.length === 0) {
+        // Fallback for mask-friendly picker when intensity handle path is empty
+        const alt = await toFile();
+        if (alt.length === 0) return;
+        await acceptLocalHandles(alt);
+        return;
+      }
+      await acceptLocalHandles(picked);
+    } finally {
+      localPickInFlightRef.current = false;
     }
-    const result = await onImportOme({
-      role,
-      append,
-      source: { kind: "url", url },
-    });
-    if (result && result.ok === false) setImportError(result.error);
-  };
+  }, [acceptLocalHandles, onAllow]);
 
-  const toggleAddPanel = () => {
-    if (addPanelOpen) {
-      closeAddPanel();
+  const acceptUrlDraft = useCallback(() => {
+    const url = urlDraft.trim();
+    if (!/^https?:\/\/.+/.test(url)) {
+      setImportError("Enter a valid http(s) URL.");
       return;
     }
-    setAddPanelOpen(true);
+    openPending({ kind: "url", url });
+  }, [openPending, urlDraft]);
+
+  const onDragEnter = (e: ReactDragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepthRef.current += 1;
+    if (e.dataTransfer.types.includes("Files")) setDragging(true);
   };
 
-  const selectFormat = (format: ImageFormatChoice) => {
+  const onDragLeave = (e: ReactDragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+    if (dragDepthRef.current === 0) setDragging(false);
+  };
+
+  const onDragOver = (e: ReactDragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.types.includes("Files")) {
+      e.dataTransfer.dropEffect = "copy";
+    }
+  };
+
+  const onDrop = async (e: ReactDragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepthRef.current = 0;
+    setDragging(false);
+    const items = [...e.dataTransfer.items].filter((i) => i.kind === "file");
+    if (items.length === 0) {
+      setImportError("Drop an image file to add it.");
+      return;
+    }
+    const handle = await fileHandleFromDataTransferItem(items[0]);
+    if (!handle) {
+      setImportError("Could not read the dropped file.");
+      return;
+    }
+    await acceptLocalHandles([handle]);
+  };
+
+  const runImport = async () => {
+    if (!pending || importBusy) return;
+    setImportBusy(true);
     setImportError(null);
-    setXmlImportFeedback(null);
-    const next = imageFormat === format ? "" : format;
-    setImageFormat(next);
-    if (next === "OME-TIFF") void chooseLocalOmeTiff();
-  };
+    try {
+      const label = pendingLabel(pending);
+      const role = resolveImportRole(overlayRole, label);
+      const format =
+        !dicomAllowed && overlayFormat === "dicomweb"
+          ? "ome-tiff"
+          : overlayFormat;
 
-  const onAnnotationXmlSelected: ChangeEventHandler<HTMLInputElement> = (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    file
-      .text()
-      .then((text) => {
-        const r = applyOmeRoisFromAnnotationXmlString(text);
-        if (r.success === false) {
-          setXmlImportFeedback({ type: "err", text: r.error });
+      if (format === "dicomweb") {
+        if (pending.kind !== "url") {
+          setImportError("DICOMweb needs a series URL.");
           return;
         }
-        closeAddPanel();
-        setXmlImportFeedback({
-          type: "ok",
-          text: `Imported ${r.shapeCount} annotation${r.shapeCount === 1 ? "" : "s"}.`,
+        if (!DICOM_SERIES_URL.test(pending.url.trim())) {
+          setImportError(
+            "DICOMweb URL must include /studies/…/series/… (optional /instances).",
+          );
+          return;
+        }
+        if (!onImportDicomWeb) {
+          setImportError("DICOMweb import is unavailable.");
+          return;
+        }
+        const seriesUrl = normalizeDicomWebSeriesUrl(pending.url);
+        try {
+          await findDicomWeb(seriesUrl);
+        } catch {
+          setImportError("Could not reach that DICOMweb series.");
+          return;
+        }
+        const result = await onImportDicomWeb({
+          url: seriesUrl,
+          name: dicomName.trim() || defaultDicomName(seriesUrl),
         });
-      })
-      .catch((err: unknown) => {
-        setXmlImportFeedback({
-          type: "err",
-          text: err instanceof Error ? err.message : "Could not read the file.",
+        if (result && result.ok === false) setImportError(result.error);
+        return;
+      }
+
+      if (!onImportOme) {
+        setImportError("Image import is unavailable.");
+        return;
+      }
+      if (pending.kind === "local") {
+        const result = await onImportOme({
+          role,
+          append: hasImages,
+          source: {
+            kind: "local",
+            path: pending.label,
+            handles: pending.handles,
+          },
         });
+        if (result && result.ok === false) setImportError(result.error);
+        return;
+      }
+      const result = await onImportOme({
+        role,
+        append: hasImages,
+        source: { kind: "url", url: pending.url },
       });
+      if (result && result.ok === false) setImportError(result.error);
+    } finally {
+      setImportBusy(false);
+    }
   };
 
-  const renderAddPanelBody = () => {
-    // OME-TIFF opens the OS picker immediately — no body row under the chips.
-    if (imageFormat === "OME-TIFF") {
-      return importError ? (
-        <div className={styles.addPanelBody}>
-          <div className={styles.importError}>{importError}</div>
-        </div>
-      ) : null;
-    }
-    if (imageFormat === "OME-TIFF-URL") {
-      return (
-        <div className={styles.addPanelBody}>
-          <OmeTiffUrlImport
-            url={omeTiffUrl}
-            onUrlChange={setOmeTiffUrl}
-            onImport={() => void runUrlImport()}
-            importLabel={importLabel}
-            canImport={urlReady}
-            inputClassName={styles.urlInput}
-            rowClassName={styles.urlRow}
-          />
-          {importError ? (
-            <div className={styles.importError}>{importError}</div>
-          ) : null}
-        </div>
-      );
-    }
-    if (addKind === "image" && imageFormat === "DICOM-WEB") {
-      return (
-        <div className={styles.addPanelBody}>
-          <FormDicom {...formProps} />
-        </div>
-      );
-    }
-    if (addKind === "annotation" && xmlImportFeedback?.type === "err") {
-      return (
-        <div className={styles.addPanelBody}>
-          <div className={styles.importError}>{xmlImportFeedback.text}</div>
-        </div>
-      );
-    }
-    return null;
-  };
+  const labelOpts = { fileName, lastOmeTiffUrl };
 
   const renderImageCard = (im: Image, index: number) => {
     const title = imageDisplayLabel(im, index, labelOpts);
@@ -680,115 +550,183 @@ const Upload = (props: UploadProps) => {
   };
 
   const imageCards =
-    images.length > 0 ? (
-      images.map((im, i) => renderImageCard(im, i))
-    ) : imageLoaded && loadedSource ? (
-      <article className={styles.imageCard}>
-        <div className={styles.imageCardHeader}>
-          <div className={styles.imageCardText}>
-            <div className={styles.imageCardTitle}>{loadedSource.label}</div>
-            <div className={styles.imageCardMeta}>
-              {formatDims(
-                loadedSource.width,
-                loadedSource.height,
-                loadedSource.channelCount,
-              ) ?? "Loading dimensions…"}
+    images.length > 0
+      ? images.map((im, i) => renderImageCard(im, i))
+      : imageLoaded && loadedSource
+        ? [
+            <article key="loaded-source" className={styles.imageCard}>
+              <div className={styles.imageCardHeader}>
+                <div className={styles.imageCardText}>
+                  <div className={styles.imageCardTitle}>
+                    {loadedSource.label}
+                  </div>
+                  <div className={styles.imageCardMeta}>
+                    {formatDims(
+                      loadedSource.width,
+                      loadedSource.height,
+                      loadedSource.channelCount,
+                    ) ?? "Loading dimensions…"}
+                  </div>
+                </div>
+              </div>
+            </article>,
+          ]
+        : [];
+
+  const addStrip = (
+    <div className={styles.addStrip}>
+      <button
+        type="button"
+        className={[
+          styles.dropZone,
+          dragging ? styles.dropZoneActive : "",
+        ].join(" ")}
+        onClick={() => void browseLocal()}
+      >
+        <span className={styles.dropZoneTitle}>Drop or Browse File</span>
+      </button>
+      <div className={styles.orDivider}>
+        <span>or</span>
+      </div>
+      <div className={styles.urlRow}>
+        <input
+          id="images-add-url"
+          type="url"
+          className={`${minervaTheme.input} ${styles.urlInput}`}
+          placeholder="Image URL (OME-TIFF or DICOMweb)"
+          aria-label="Image URL"
+          value={urlDraft}
+          onChange={(e) => {
+            setUrlDraft(e.target.value);
+            setImportError(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              acceptUrlDraft();
+            }
+          }}
+        />
+        <PanelActionButton
+          type="button"
+          disabled={!urlReady}
+          onClick={acceptUrlDraft}
+        >
+          Add
+        </PanelActionButton>
+      </div>
+      {importError && !showTypeOverlay ? (
+        <div className={styles.importError}>{importError}</div>
+      ) : null}
+    </div>
+  );
+
+  return (
+    // File drop on the Images panel (HTML5 DnD; not a focusable control).
+    // biome-ignore lint/a11y/noStaticElementInteractions: panel-wide file drop target
+    <div
+      className={[
+        panel.authorPanel,
+        dragging ? styles.panelDropActive : "",
+      ].join(" ")}
+      onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDragOver={onDragOver}
+      onDrop={(e) => void onDrop(e)}
+    >
+      <div
+        className={[
+          panel.authorPanelBody,
+          panel.thinScrollbar,
+          styles.panelBody,
+        ].join(" ")}
+      >
+        <div className={styles.stack}>
+          {imageCards}
+          {addStrip}
+        </div>
+      </div>
+
+      {showTypeOverlay && pending ? (
+        <div className={styles.typeOverlay} role="dialog" aria-modal="true">
+          <div className={styles.typeOverlayBackdrop} />
+          <div className={`${minervaTheme.surface} ${styles.typeOverlayCard}`}>
+            <div
+              className={styles.typeOverlayFile}
+              title={pendingLabel(pending)}
+            >
+              {pendingLabel(pending)}
+            </div>
+            <div className={styles.typeRow}>
+              <span className={styles.fieldLabel}>Type</span>
+              <FormatChip
+                label="Microscopy Image"
+                selected={overlayRole === "intensity"}
+                onClick={() => setOverlayRole("intensity")}
+              />
+              <FormatChip
+                label="Segmentation Mask"
+                selected={overlayRole === "segmentation"}
+                onClick={() => {
+                  setOverlayRole("segmentation");
+                  setOverlayFormat("ome-tiff");
+                }}
+              />
+            </div>
+            {dicomAllowed ? (
+              <div className={styles.typeSection}>
+                <div className={styles.typeRow}>
+                  <span className={styles.fieldLabel}>Format</span>
+                  <FormatChip
+                    label="OME-TIFF"
+                    selected={overlayFormat === "ome-tiff"}
+                    onClick={() => setOverlayFormat("ome-tiff")}
+                  />
+                  <FormatChip
+                    label="DICOMweb"
+                    selected={overlayFormat === "dicomweb"}
+                    onClick={() => setOverlayFormat("dicomweb")}
+                  />
+                </div>
+              </div>
+            ) : null}
+            {overlayFormat === "dicomweb" && dicomAllowed ? (
+              <div className={styles.typeSection}>
+                <label
+                  className={styles.fieldLabel}
+                  htmlFor="dicom-dataset-name"
+                >
+                  Label (optional)
+                </label>
+                <input
+                  id="dicom-dataset-name"
+                  type="text"
+                  className={`${minervaTheme.input} ${styles.urlInput}`}
+                  value={dicomName}
+                  onChange={(e) => setDicomName(e.target.value)}
+                  placeholder="Short name for this series"
+                />
+              </div>
+            ) : null}
+            {importError ? (
+              <div className={styles.importError}>{importError}</div>
+            ) : null}
+            <div className={styles.typeFooter}>
+              <PanelActionButton type="button" onClick={clearPending}>
+                Cancel
+              </PanelActionButton>
+              <PanelActionButton
+                type="button"
+                className={styles.typeImport}
+                disabled={importBusy}
+                onClick={() => void runImport()}
+              >
+                {importBusy ? "Importing…" : "Import"}
+              </PanelActionButton>
             </div>
           </div>
         </div>
-      </article>
-    ) : null;
-
-  const addPanel = addPanelOpen ? (
-    <div className={`${minervaTheme.surface} ${styles.addPanel}`}>
-      <div className={styles.formatRow}>
-        <FormatChip
-          label="Image"
-          selected={addKind === "image"}
-          onClick={() => setKind("image")}
-        />
-        <FormatChip
-          label="Mask"
-          selected={addKind === "mask"}
-          onClick={() => setKind("mask")}
-        />
-        <FormatChip
-          label="Annotation"
-          selected={isAnnotationImport}
-          onClick={() => setKind("annotation")}
-        />
-      </div>
-      <div className={styles.formatRow}>
-        {isAnnotationImport ? (
-          <FormatChip
-            label="Ome-XML"
-            selected
-            onClick={() => xmlFileInputRef.current?.click()}
-          />
-        ) : (
-          <>
-            {!isMaskImport ? (
-              <FormatChip
-                label="DicomWEB"
-                selected={imageFormat === "DICOM-WEB"}
-                onClick={() => selectFormat("DICOM-WEB")}
-              />
-            ) : null}
-            <FormatChip
-              label="OmeTiff File"
-              selected={imageFormat === "OME-TIFF"}
-              onClick={() => selectFormat("OME-TIFF")}
-            />
-            <FormatChip
-              label="OmeTiff URL"
-              selected={imageFormat === "OME-TIFF-URL"}
-              onClick={() => selectFormat("OME-TIFF-URL")}
-            />
-          </>
-        )}
-      </div>
-      {renderAddPanelBody()}
-    </div>
-  ) : null;
-
-  return (
-    <div className={panel.authorPanel}>
-      <CompactHeader
-        actions={
-          <div ref={addAnchorRef} className={styles.addActionAnchor}>
-            <PanelIconButton
-              active={addPanelOpen}
-              aria-pressed={addPanelOpen}
-              aria-label="Add image"
-              title="Add"
-              onClick={toggleAddPanel}
-            >
-              <PlusIcon />
-            </PanelIconButton>
-            {addPanel}
-            <input
-              ref={xmlFileInputRef}
-              className={styles.hiddenFileInput}
-              type="file"
-              accept=".xml,application/xml,text/xml"
-              aria-label="OME-XML annotations file"
-              onChange={onAnnotationXmlSelected}
-            />
-          </div>
-        }
-      />
-
-      <div className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}>
-        {imageCards ? (
-          <div className={styles.stack}>{imageCards}</div>
-        ) : (
-          <div className={panel.emptyMessage}>No images yet</div>
-        )}
-
-        {xmlImportFeedback?.type === "ok" && !addPanelOpen ? (
-          <div className={styles.importSuccess}>{xmlImportFeedback.text}</div>
-        ) : null}
-      </div>
+      ) : null}
     </div>
   );
 };

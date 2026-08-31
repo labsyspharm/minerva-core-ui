@@ -336,6 +336,35 @@ export function basenameImportLabel(basename: string): string {
   return trimmed.replace(/\.ome\.tiff?$/i, "").replace(/\.tiff?$/i, "");
 }
 
+/**
+ * Display name suitable for a story title from the first document image
+ * (file basename without OME-TIFF suffix, else DICOMweb modality / URL leaf).
+ */
+export function firstImageNameForStoryTitle(
+  images: readonly Image[],
+): string | null {
+  const im = images[0];
+  if (!im) return null;
+  const base = im.basename.trim();
+  if (base) {
+    const label = basenameImportLabel(base);
+    return label.trim() || base;
+  }
+  const src = im.source;
+  if (src?.kind === "dicomWeb") {
+    const modality = src.modality.trim();
+    if (modality) return modality;
+  }
+  if (src?.kind === "url") {
+    const leaf = src.url.split("/").pop()?.trim();
+    if (leaf) {
+      const label = basenameImportLabel(leaf);
+      return label.trim() || leaf;
+    }
+  }
+  return null;
+}
+
 /** Short per-image labels; identical basenames become `name`, `name (2)`, … */
 export function uniqueImageDisplayLabels(
   images: readonly Image[],
