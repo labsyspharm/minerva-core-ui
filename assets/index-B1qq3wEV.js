@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BYtffVoe.js","./pako.esm-KbdoS3Oq.js","./lerc-C2it7QoM.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-OLvXQ8n-.js","./pako.esm-KbdoS3Oq.js","./lerc-CP3Od3af.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -4778,12 +4778,12 @@ let __tla = (async () => {
   }
   var objectIs$1 = "function" === typeof Object.is ? Object.is : is$2, useState = React$1.useState, useEffect$1 = React$1.useEffect, useLayoutEffect = React$1.useLayoutEffect, useDebugValue$1 = React$1.useDebugValue;
   function useSyncExternalStore$2(subscribe2, getSnapshot) {
-    var value = getSnapshot(), _useState2 = useState({
+    var value = getSnapshot(), _useState = useState({
       inst: {
         value,
         getSnapshot
       }
-    }), inst = _useState2[0].inst, forceUpdate = _useState2[1];
+    }), inst = _useState[0].inst, forceUpdate = _useState[1];
     useLayoutEffect(function() {
       inst.value = value;
       inst.getSnapshot = getSnapshot;
@@ -13861,26 +13861,26 @@ let __tla = (async () => {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DZWhBYiP.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DwSrKKx2.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-Dg5osOTE.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-DvlTSFJn.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-ofIW_XS-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-D7ENO4Ud.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BYtffVoe.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DFk5uH2_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-C2it7QoM.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-OLvXQ8n-.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-Da2Pc-fh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-CP3Od3af.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CbbU6uZv.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BvxoUKU6.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DoEVgDw4.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CldQ5Oju.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -17857,9 +17857,9 @@ let __tla = (async () => {
         value: input2.data
       };
     }
-    _regex(regex2, validation2, message2) {
+    _regex(regex2, validation, message2) {
       return this.refinement((data2) => regex2.test(data2), {
-        validation: validation2,
+        validation,
         code: ZodIssueCode.invalid_string,
         ...errorUtil.errToObj(message2)
       });
@@ -69050,7 +69050,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
   const OUTER_POLYGON_WINDING = WINDING.CLOCKWISE;
   const HOLE_POLYGON_WINDING = WINDING.COUNTER_CLOCKWISE;
   const windingOptions = {};
-  function validate$2(polygon) {
+  function validate$1(polygon) {
     polygon = polygon && polygon.positions || polygon;
     if (!Array.isArray(polygon) && !ArrayBuffer.isView(polygon)) {
       throw new Error("invalid polygon");
@@ -69122,7 +69122,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     return targetIndex;
   }
   function normalize$4(polygon, positionSize) {
-    validate$2(polygon);
+    validate$1(polygon);
     const positions = [];
     const holeIndices = [];
     if ("positions" in polygon) {
@@ -78303,6 +78303,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     return h2;
   }
+  async function fileHandleFromDataTransferItem(item2) {
+    if (item2.kind !== "file") return null;
+    const withHandle = item2;
+    if (typeof withHandle.getAsFileSystemHandle === "function") {
+      try {
+        const handle2 = await withHandle.getAsFileSystemHandle();
+        if (handle2 && handle2.kind === "file") {
+          return handle2;
+        }
+      } catch {
+      }
+    }
+    const file = item2.getAsFile();
+    if (!file) return null;
+    return ephemeralFileHandleFromFile(file);
+  }
   function isPersistableFileHandle(handle2) {
     return typeof FileSystemFileHandle !== "undefined" && handle2 instanceof FileSystemFileHandle;
   }
@@ -83511,6 +83527,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!trimmed) return "Mask";
     return trimmed.replace(/\.ome\.tiff?$/i, "").replace(/\.tiff?$/i, "");
   }
+  function firstImageNameForStoryTitle(images) {
+    var _a2;
+    const im = images[0];
+    if (!im) return null;
+    const base2 = im.basename.trim();
+    if (base2) {
+      const label2 = basenameImportLabel(base2);
+      return label2.trim() || base2;
+    }
+    const src = im.source;
+    if ((src == null ? void 0 : src.kind) === "dicomWeb") {
+      const modality = src.modality.trim();
+      if (modality) return modality;
+    }
+    if ((src == null ? void 0 : src.kind) === "url") {
+      const leaf = (_a2 = src.url.split("/").pop()) == null ? void 0 : _a2.trim();
+      if (leaf) {
+        const label2 = basenameImportLabel(leaf);
+        return label2.trim() || leaf;
+      }
+    }
+    return null;
+  }
   function uniqueImageDisplayLabels(images) {
     const rows2 = images.map((im) => {
       const trimmed = (im.basename ?? "").trim();
@@ -84624,6 +84663,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const UNTITLED = "Untitled Story";
   function nowIso() {
     return (/* @__PURE__ */ new Date()).toISOString();
+  }
+  function isBlankOrUntitledStoryTitle(title7) {
+    const t2 = (title7 == null ? void 0 : title7.trim()) ?? "";
+    return t2.length === 0 || t2.toLowerCase() === UNTITLED.toLowerCase();
   }
   function deriveTitle(data2) {
     var _a2, _b2;
@@ -87025,11 +87068,845 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     fill: "currentColor",
     d: "M2,2.5h10v1H2v-1ZM2,6.5h10v1H2v-1ZM2,10.5h10v1H2v-1Z"
   }));
-  const menuWrap = "_menuWrap_fzwzu_1";
-  const menuItemGap = "_menuItemGap_fzwzu_9";
+  const attr = (el2, ...keys2) => {
+    for (const k2 of keys2) {
+      const v2 = el2.getAttribute(k2);
+      if (v2 != null && v2 !== "") return v2;
+    }
+    return null;
+  };
+  const num = (el2, ...keys2) => {
+    const s2 = attr(el2, ...keys2);
+    if (s2 == null) return Number.NaN;
+    return Number(s2);
+  };
+  const parseOmeColor = (s2) => {
+    if (s2 == null || s2 === "") return void 0;
+    const t2 = s2.trim();
+    if (/^-?\d+$/.test(t2)) {
+      const int = Number.parseInt(t2, 10);
+      if (!Number.isNaN(int)) {
+        const buffer2 = new ArrayBuffer(4);
+        const view = new DataView(buffer2);
+        view.setInt32(0, int, false);
+        const b2 = new Uint8Array(buffer2);
+        if (b2.length < 4) return void 0;
+        return [
+          b2[0],
+          b2[1],
+          b2[2],
+          b2[3]
+        ];
+      }
+    }
+    if (t2.startsWith("rgba(") || t2.startsWith("rgb(")) {
+      const parts = t2.replace(/^rgba\(/, "").replace(/^rgb\(/, "").replace(/\)\s*$/, "").split(/[,\s]+/).map(Number);
+      if (parts.length >= 3 && parts.every((n2) => !Number.isNaN(n2))) {
+        const r0 = parts[0];
+        const r1 = parts[1];
+        const r2 = parts[2];
+        if (r0 === void 0 || r1 === void 0 || r2 === void 0) {
+          return void 0;
+        }
+        const aRaw = parts[3];
+        const a2 = aRaw === void 0 ? 255 : aRaw <= 1 ? aRaw * 255 : aRaw;
+        return [
+          r0,
+          r1,
+          r2,
+          a2
+        ];
+      }
+    }
+    let hex = t2.replace("#", "");
+    if (hex.length === 8) {
+      const a2 = parseInt(hex.slice(0, 2), 16);
+      hex = hex.slice(2);
+      const r2 = parseInt(hex.slice(0, 2), 16);
+      const g2 = parseInt(hex.slice(2, 4), 16);
+      const b2 = parseInt(hex.slice(4, 6), 16);
+      if ([
+        a2,
+        r2,
+        g2,
+        b2
+      ].some((n2) => Number.isNaN(n2))) return void 0;
+      return [
+        r2,
+        g2,
+        b2,
+        a2
+      ];
+    }
+    if (hex.length === 6) {
+      const r2 = parseInt(hex.slice(0, 2), 16);
+      const g2 = parseInt(hex.slice(2, 4), 16);
+      const b2 = parseInt(hex.slice(4, 6), 16);
+      if ([
+        r2,
+        g2,
+        b2
+      ].some((n2) => Number.isNaN(n2))) return void 0;
+      return [
+        r2,
+        g2,
+        b2,
+        255
+      ];
+    }
+    return void 0;
+  };
+  const shapeCommon = (el2, id2) => {
+    const name2 = attr(el2, "Name", "name");
+    const text2 = attr(el2, "Text", "text", "Value");
+    const theC = num(el2, "TheC", "theC");
+    const theT = num(el2, "TheT", "theT");
+    const theZ = num(el2, "TheZ", "theZ");
+    const sw = num(el2, "StrokeWidth", "strokeWidth");
+    const base2 = {
+      ID: id2
+    };
+    if (name2) base2.Name = name2;
+    if (text2) base2.Text = text2;
+    const fill = parseOmeColor(attr(el2, "FillColor", "fillColor", "Fill", "fill"));
+    const stroke = parseOmeColor(attr(el2, "StrokeColor", "strokeColor", "Stroke", "stroke"));
+    if (fill) base2.FillColor = fill;
+    if (stroke) base2.StrokeColor = stroke;
+    if (!Number.isNaN(sw) && sw > 0) base2.StrokeWidth = sw;
+    if (!Number.isNaN(theC) && theC >= 0) base2.TheC = Math.floor(theC);
+    if (!Number.isNaN(theT) && theT >= 0) base2.TheT = Math.floor(theT);
+    if (!Number.isNaN(theZ) && theZ >= 0) base2.TheZ = Math.floor(theZ);
+    return base2;
+  };
+  const shapeIdFor = (el2, fallback) => attr(el2, "ID", "id", "Name", "name") || fallback;
+  function elementToRoiShape(el2, index2) {
+    var _a2;
+    const id2 = shapeIdFor(el2, `Shape:${index2}`);
+    const common2 = (extra) => {
+      return {
+        ...shapeCommon(el2, id2),
+        ...extra
+      };
+    };
+    const tag = el2.localName;
+    const lower = tag.toLowerCase();
+    if (lower === "rectangle") {
+      const x2 = num(el2, "X", "x");
+      const y2 = num(el2, "Y", "y");
+      const w2 = num(el2, "Width", "width", "W", "w");
+      const h2 = num(el2, "Height", "height", "H", "h");
+      if ([
+        x2,
+        y2,
+        w2,
+        h2
+      ].some((n2) => Number.isNaN(n2)) || w2 <= 0 || h2 <= 0) {
+        return null;
+      }
+      return common2({
+        type: "rectangle",
+        X: x2,
+        Y: y2,
+        Width: w2,
+        Height: h2
+      });
+    }
+    if (lower === "ellipse") {
+      const x2 = num(el2, "X", "x", "cx");
+      const y2 = num(el2, "Y", "y", "cy");
+      const rx = num(el2, "RadiusX", "radiusX", "rx", "Radius", "r");
+      let ry = num(el2, "RadiusY", "radiusY", "ry");
+      if (Number.isNaN(ry) && !Number.isNaN(rx)) ry = rx;
+      if ([
+        x2,
+        y2,
+        rx,
+        ry
+      ].some((n2) => Number.isNaN(n2)) || rx <= 0 || ry <= 0) {
+        return null;
+      }
+      return common2({
+        type: "ellipse",
+        X: x2,
+        Y: y2,
+        RadiusX: rx,
+        RadiusY: ry
+      });
+    }
+    if (lower === "line") {
+      const x1 = num(el2, "X1", "x1", "X");
+      const y1 = num(el2, "Y1", "y1", "Y");
+      const x2 = num(el2, "X2", "x2");
+      const y2 = num(el2, "Y2", "y2");
+      if ([
+        x1,
+        y1,
+        x2,
+        y2
+      ].some((n2) => Number.isNaN(n2))) {
+        return null;
+      }
+      return common2({
+        type: "line",
+        X1: x1,
+        Y1: y1,
+        X2: x2,
+        Y2: y2
+      });
+    }
+    if (lower === "point") {
+      const x2 = num(el2, "X", "x", "px");
+      const y2 = num(el2, "Y", "y", "py");
+      if (Number.isNaN(x2) || Number.isNaN(y2)) return null;
+      return common2({
+        type: "point",
+        X: x2,
+        Y: y2
+      });
+    }
+    if (lower === "polygon" || lower === "polyline") {
+      const pts = attr(el2, "Points", "points", "Point", "Path");
+      if (!pts || !pts.trim()) return null;
+      if (lower === "polygon") {
+        return common2({
+          type: "polygon",
+          Points: pts.trim()
+        });
+      }
+      return common2({
+        type: "polyline",
+        Points: pts.trim()
+      });
+    }
+    if (lower === "label") {
+      const x2 = num(el2, "X", "x", "px");
+      const y2 = num(el2, "Y", "y", "py");
+      const t2 = attr(el2, "Text", "text", "Value", "name") || ((_a2 = el2.textContent) == null ? void 0 : _a2.trim()) || "";
+      if (Number.isNaN(x2) || Number.isNaN(y2) || t2 === "") return null;
+      return common2({
+        type: "label",
+        X: x2,
+        Y: y2,
+        Text: t2
+      });
+    }
+    return null;
+  }
+  function unionShapeElements(roiEl) {
+    const out = [];
+    const ns = (name2) => roiEl.getElementsByTagNameNS("*", name2);
+    const unions = [
+      ...Array.from(ns("Union")),
+      ...Array.from(roiEl.getElementsByTagName("Union"))
+    ];
+    if (unions.length > 0) {
+      for (const u2 of unions) {
+        for (const ch2 of u2.children) {
+          if (ch2.nodeType === Node.ELEMENT_NODE) out.push(ch2);
+        }
+      }
+      return out;
+    }
+    for (const ch2 of roiEl.children) {
+      if (ch2.localName === "Name" || ch2.localName === "Description") continue;
+      if (ch2.nodeType === Node.ELEMENT_NODE) out.push(ch2);
+    }
+    return out;
+  }
+  function collectRoiElements(doc) {
+    const a2 = Array.from(doc.getElementsByTagNameNS("*", "ROI"));
+    const b2 = Array.from(doc.getElementsByTagName("ROI"));
+    return Array.from(/* @__PURE__ */ new Set([
+      ...a2,
+      ...b2
+    ]));
+  }
+  function parseOmeXmlStringToRois(xml2) {
+    var _a2;
+    if (typeof DOMParser === "undefined") {
+      throw new Error("XML parsing is not available in this environment.");
+    }
+    const parser2 = new DOMParser();
+    const doc = parser2.parseFromString(xml2, "application/xml");
+    const perr = doc.getElementsByTagName("parsererror")[0];
+    if ((_a2 = perr == null ? void 0 : perr.textContent) == null ? void 0 : _a2.trim()) {
+      throw new Error("The file is not well-formed XML.");
+    }
+    const roiEls = collectRoiElements(doc);
+    const rois = [];
+    for (const roiEl of roiEls) {
+      const id2 = attr(roiEl, "ID", "id");
+      if (!id2) continue;
+      let roiName;
+      for (const ch2 of Array.from(roiEl.children)) {
+        if (ch2.localName === "Name" && ch2.textContent) {
+          roiName = ch2.textContent.trim();
+          break;
+        }
+      }
+      if (!roiName) roiName = attr(roiEl, "Name", "name") || void 0;
+      let desc;
+      for (const ch2 of Array.from(roiEl.children)) {
+        if (ch2.localName === "Description" && ch2.textContent) {
+          desc = ch2.textContent.trim();
+          break;
+        }
+      }
+      const shapeEls = unionShapeElements(roiEl);
+      const shapes = [];
+      shapeEls.forEach((shapeEl, i2) => {
+        const s2 = elementToRoiShape(shapeEl, i2);
+        if (s2) shapes.push(s2);
+      });
+      if (shapes.length > 0) {
+        rois.push({
+          ID: id2,
+          Name: roiName,
+          Description: desc,
+          shapes
+        });
+      }
+    }
+    return rois;
+  }
+  const applyTransform = (x2, y2, transform) => {
+    if (!transform) return [
+      x2,
+      y2
+    ];
+    const newX = transform.A00 * x2 + transform.A01 * y2 + transform.A02;
+    const newY = transform.A10 * x2 + transform.A11 * y2 + transform.A12;
+    return [
+      newX,
+      newY
+    ];
+  };
+  const parsePoints = (pointsStr, transform) => {
+    const points = pointsStr.trim().split(/\s+/).map((point2) => {
+      const [x2, y2] = point2.split(",").map(Number);
+      return applyTransform(x2, y2, transform);
+    });
+    return points;
+  };
+  const ellipseToPolygon = (centerX, centerY, radiusX, radiusY, transform, segments = 32) => {
+    const points = [];
+    for (let i2 = 0; i2 <= segments; i2++) {
+      const angle2 = i2 / segments * 2 * Math.PI;
+      const x2 = centerX + radiusX * Math.cos(angle2);
+      const y2 = centerY + radiusY * Math.sin(angle2);
+      points.push(applyTransform(x2, y2, transform));
+    }
+    return points;
+  };
+  const getColors = (shape, defaultFill, defaultStroke) => {
+    return {
+      fillColor: shape.FillColor || defaultFill,
+      lineColor: shape.StrokeColor || defaultStroke,
+      lineWidth: shape.StrokeWidth || 3
+    };
+  };
+  const rectangleShapeToViewerShape = (shape, roi) => {
+    const { X: X2, Y: Y2, Width, Height, Transform, ID, Text, Name } = shape;
+    const topLeft = applyTransform(X2, Y2, Transform);
+    const bottomRight = applyTransform(X2 + Width, Y2 + Height, Transform);
+    const polygon = rectangleToPolygon(topLeft, bottomRight);
+    const colors = getColors(shape, [
+      255,
+      0,
+      0,
+      50
+    ], [
+      255,
+      0,
+      0,
+      255
+    ]);
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "polygon",
+      polygon,
+      style: colors,
+      text: Text,
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  const ellipseShapeToViewerShape = (shape, roi) => {
+    const { X: X2, Y: Y2, RadiusX, RadiusY, Transform, ID, Text, Name } = shape;
+    const polygon = ellipseToPolygon(X2, Y2, RadiusX, RadiusY, Transform);
+    const colors = getColors(shape, [
+      0,
+      255,
+      0,
+      50
+    ], [
+      0,
+      255,
+      0,
+      255
+    ]);
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "polygon",
+      polygon,
+      style: colors,
+      text: Text,
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  const lineShapeToViewerShape = (shape, roi) => {
+    const { X1, Y1, X2, Y2, Transform, ID, Text, Name } = shape;
+    const start = applyTransform(X1, Y1, Transform);
+    const end = applyTransform(X2, Y2, Transform);
+    const lineWidth = shape.StrokeWidth || 3;
+    const polygon = lineToPolygon(start, end, lineWidth);
+    const lineColor = shape.StrokeColor || [
+      0,
+      255,
+      255,
+      255
+    ];
+    const fillColor = shape.FillColor || [
+      0,
+      255,
+      255,
+      255
+    ];
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "line",
+      polygon,
+      hasArrowHead: false,
+      style: {
+        fillColor,
+        lineColor,
+        lineWidth
+      },
+      text: Text,
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  const pointShapeToViewerShape = (shape, roi) => {
+    const { X: X2, Y: Y2, Transform, ID, Text, Name } = shape;
+    const position2 = applyTransform(X2, Y2, Transform);
+    const fillColor = shape.FillColor || [
+      255,
+      140,
+      0,
+      255
+    ];
+    const strokeColor = shape.StrokeColor || [
+      255,
+      255,
+      255,
+      255
+    ];
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "point",
+      position: position2,
+      style: {
+        fillColor,
+        strokeColor,
+        radius: 5
+      },
+      text: Text,
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  const polygonShapeToViewerShape = (shape, roi) => {
+    const { Points, Transform, ID, Text, Name } = shape;
+    const polygon = parsePoints(Points, Transform);
+    const colors = getColors(shape, [
+      255,
+      165,
+      0,
+      50
+    ], [
+      255,
+      165,
+      0,
+      255
+    ]);
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "polygon",
+      polygon,
+      style: colors,
+      text: Text,
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  const polylineShapeToViewerShape = (shape, roi) => {
+    const { Points, Transform, ID, Text, Name } = shape;
+    const polygon = parsePoints(Points, Transform);
+    const lineColor = shape.StrokeColor || [
+      0,
+      255,
+      0,
+      255
+    ];
+    const lineWidth = shape.StrokeWidth || 3;
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "polyline",
+      polygon,
+      style: {
+        lineColor,
+        lineWidth
+      },
+      text: Text,
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  const labelShapeToViewerShape = (shape, roi) => {
+    const { X: X2, Y: Y2, Text, ID, Name, Transform } = shape;
+    const position2 = applyTransform(X2, Y2, Transform);
+    const fontColor = shape.StrokeColor || [
+      255,
+      255,
+      0,
+      255
+    ];
+    const backgroundColor = shape.FillColor || [
+      0,
+      0,
+      0,
+      150
+    ];
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "text",
+      position: position2,
+      text: Text,
+      style: {
+        fontSize: 14,
+        fontColor,
+        backgroundColor,
+        padding: 4
+      },
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  function collectRoiShapeWorldPoints(shape) {
+    const T2 = shape.Transform;
+    switch (shape.type) {
+      case "rectangle": {
+        const { X: X2, Y: Y2, Width, Height } = shape;
+        return [
+          applyTransform(X2, Y2, T2),
+          applyTransform(X2 + Width, Y2, T2),
+          applyTransform(X2 + Width, Y2 + Height, T2),
+          applyTransform(X2, Y2 + Height, T2)
+        ];
+      }
+      case "ellipse":
+        return ellipseToPolygon(shape.X, shape.Y, shape.RadiusX, shape.RadiusY, T2, 24);
+      case "line":
+        return [
+          applyTransform(shape.X1, shape.Y1, T2),
+          applyTransform(shape.X2, shape.Y2, T2)
+        ];
+      case "point":
+        return [
+          applyTransform(shape.X, shape.Y, T2)
+        ];
+      case "polygon":
+      case "polyline":
+        return parsePoints(shape.Points, T2);
+      case "label":
+        return [
+          applyTransform(shape.X, shape.Y, T2)
+        ];
+      default:
+        return [];
+    }
+  }
+  function importRoiCentroidPosition(roi) {
+    const hasNonLabel = roi.shapes.some((s2) => s2.type !== "label");
+    const pts = [];
+    for (const s2 of roi.shapes) {
+      if (hasNonLabel && s2.type === "label") continue;
+      pts.push(...collectRoiShapeWorldPoints(s2));
+    }
+    if (pts.length === 0) return null;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const [x2, y2] of pts) {
+      if (x2 < minX) minX = x2;
+      if (y2 < minY) minY = y2;
+      if (x2 > maxX) maxX = x2;
+      if (y2 > maxY) maxY = y2;
+    }
+    return [
+      (minX + maxX) / 2,
+      (minY + maxY) / 2
+    ];
+  }
+  function importRoiCentroidLabelText(roi) {
+    var _a2, _b2, _c2;
+    const name2 = (_a2 = roi.Name) == null ? void 0 : _a2.trim();
+    if (name2) return name2;
+    const desc = (_b2 = roi.Description) == null ? void 0 : _b2.trim();
+    if (desc) {
+      const line = ((_c2 = desc.split(/\r?\n/)[0]) == null ? void 0 : _c2.trim()) ?? "";
+      if (line) return line.length > 120 ? `${line.slice(0, 117)}\u2026` : line;
+    }
+    const id2 = roi.ID.trim();
+    if (id2.includes(":")) {
+      const tail = id2.split(":").pop();
+      if (tail) return tail;
+    }
+    return id2 || "ROI";
+  }
+  function makeImportCentroidTextShape(roi, position2) {
+    const text2 = importRoiCentroidLabelText(roi);
+    return {
+      id: `roi-${roi.ID}__import-centroid-label`,
+      type: "text",
+      position: position2,
+      text: text2,
+      style: {
+        ...importedTextStyle
+      },
+      metadata: {
+        label: text2,
+        description: `Auto centroid label for imported ROI ${roi.ID}`,
+        isImported: true
+      }
+    };
+  }
+  const parseRoisFromRoiList = (rois) => {
+    const shapes = [];
+    const groups = [];
+    if (!rois || rois.length === 0) {
+      return {
+        shapes,
+        groups
+      };
+    }
+    console.log(`Found ${rois.length} ROIs in ROI list`);
+    rois.forEach((roi) => {
+      console.log(`Processing ROI ${roi.ID} (${roi.Name || "unnamed"}) with ${roi.shapes.length} shapes`);
+      const groupId = `roi-group-${roi.ID}`;
+      const roiShapeIds = [];
+      roi.shapes.forEach((shape) => {
+        try {
+          let viewerShape = null;
+          switch (shape.type) {
+            case "rectangle":
+              viewerShape = rectangleShapeToViewerShape(shape, roi);
+              console.log(`Created rectangle shape: ${viewerShape.id}`);
+              break;
+            case "ellipse":
+              viewerShape = ellipseShapeToViewerShape(shape, roi);
+              console.log(`Created ellipse shape: ${viewerShape.id}`);
+              break;
+            case "line":
+              viewerShape = lineShapeToViewerShape(shape, roi);
+              console.log(`Created line shape: ${viewerShape.id}`);
+              break;
+            case "point":
+              viewerShape = pointShapeToViewerShape(shape, roi);
+              console.log(`Created point shape: ${viewerShape.id}`);
+              break;
+            case "polygon":
+              viewerShape = polygonShapeToViewerShape(shape, roi);
+              console.log(`Created polygon shape: ${viewerShape.id}`);
+              break;
+            case "polyline":
+              viewerShape = polylineShapeToViewerShape(shape, roi);
+              console.log(`Created polyline shape: ${viewerShape.id}`);
+              break;
+            case "label":
+              viewerShape = labelShapeToViewerShape(shape, roi);
+              console.log(`Created text shape: ${viewerShape.id}`);
+              break;
+            default:
+              console.warn(`Unknown shape: ${shape}`);
+          }
+          if (viewerShape) {
+            shapes.push(viewerShape);
+            roiShapeIds.push(viewerShape.id);
+          }
+        } catch (error2) {
+          console.error(`Error processing shape ${shape.ID} in ROI ${roi.ID}:`, error2);
+        }
+      });
+      const labelOnlyRoi = roi.shapes.length > 0 && roi.shapes.every((s2) => s2.type === "label");
+      if (roiShapeIds.length > 0 && !labelOnlyRoi) {
+        const centroidPos = importRoiCentroidPosition(roi);
+        if (centroidPos) {
+          const centroidShape = makeImportCentroidTextShape(roi, centroidPos);
+          shapes.push(centroidShape);
+          roiShapeIds.push(centroidShape.id);
+        }
+      }
+      if (roiShapeIds.length > 0) {
+        const group2 = {
+          id: groupId,
+          name: roi.Name || `ROI ${roi.ID}`,
+          shapeIds: roiShapeIds,
+          isExpanded: true
+        };
+        groups.push(group2);
+        console.log(`Created group for ROI ${roi.ID} with ${roiShapeIds.length} shapes`);
+      }
+    });
+    console.log(`Total shapes created from ROIs: ${shapes.length}`);
+    console.log(`Total groups created from ROIs: ${groups.length}`);
+    return {
+      shapes,
+      groups
+    };
+  };
+  const parseRoisFromLoader = (loader) => {
+    if (!loader || !loader.metadata || !loader.metadata.ROIs) {
+      console.log("No ROIs found in loader metadata");
+      return {
+        shapes: [],
+        groups: []
+      };
+    }
+    return parseRoisFromRoiList(loader.metadata.ROIs);
+  };
+  function appendImportedStoryShapesDeduped(storyShapes) {
+    if (storyShapes.length === 0) return 0;
+    const doc = useDocumentStore.getState();
+    const { waypoints, shapes } = doc;
+    if (waypoints.length === 0) {
+      return 0;
+    }
+    const idx = 0;
+    const wp = waypoints[idx];
+    const docIds = new Set(shapes.map((s2) => s2.id));
+    const wpIds = new Set(wp.shapeIds ?? []);
+    const seenInBatch = /* @__PURE__ */ new Set();
+    const deduped = [];
+    for (const s2 of storyShapes) {
+      if (seenInBatch.has(s2.id)) continue;
+      seenInBatch.add(s2.id);
+      if (docIds.has(s2.id) || wpIds.has(s2.id)) {
+        continue;
+      }
+      deduped.push(s2);
+    }
+    if (deduped.length === 0) return 0;
+    const newIds = deduped.map((s2) => s2.id);
+    doc.setShapes([
+      ...shapes,
+      ...deduped
+    ]);
+    doc.setWaypoints(waypoints.map((w2, i2) => i2 === idx ? {
+      ...w2,
+      shapeIds: [
+        ...w2.shapeIds ?? [],
+        ...newIds
+      ]
+    } : w2));
+    return deduped.length;
+  }
+  function applyOmeRoisFromLoaderToFirstWaypoint(loader, imageDescriptionOmeXml = null) {
+    let { shapes: viewerRoiShapes } = parseRoisFromLoader(loader);
+    if (viewerRoiShapes.length === 0 && imageDescriptionOmeXml) {
+      try {
+        const rois = parseOmeXmlStringToRois(imageDescriptionOmeXml);
+        viewerRoiShapes = parseRoisFromRoiList(rois).shapes;
+      } catch (e2) {
+      }
+    }
+    const storyShapes = viewerShapesToStoryShapes(viewerRoiShapes);
+    appendImportedStoryShapesDeduped(storyShapes);
+  }
+  function applyOmeRoisFromAnnotationXmlString(xml2) {
+    const doc = useDocumentStore.getState();
+    const { waypoints } = doc;
+    if (waypoints.length === 0) {
+      return {
+        success: false,
+        error: "Add a waypoint in the story first, then import annotations to attach them.",
+        shapeCount: 0
+      };
+    }
+    let rois;
+    try {
+      rois = parseOmeXmlStringToRois(xml2);
+    } catch (e2) {
+      return {
+        success: false,
+        error: e2 instanceof Error ? e2.message : String(e2),
+        shapeCount: 0
+      };
+    }
+    if (rois.length === 0) {
+      return {
+        success: false,
+        error: "No ROIs with drawable shapes were found in the XML.",
+        shapeCount: 0
+      };
+    }
+    const { shapes: viewerRoiShapes } = parseRoisFromRoiList(rois);
+    const storyShapes = viewerShapesToStoryShapes(viewerRoiShapes);
+    if (storyShapes.length === 0) {
+      return {
+        success: false,
+        error: "No valid annotations could be built from the XML.",
+        shapeCount: 0
+      };
+    }
+    const added = appendImportedStoryShapesDeduped(storyShapes);
+    if (added === 0) {
+      return {
+        success: false,
+        error: "All annotations from this file are already present (duplicate import skipped).",
+        shapeCount: 0
+      };
+    }
+    return {
+      success: true,
+      shapeCount: added
+    };
+  }
+  const menuWrap = "_menuWrap_14ty9_1";
+  const menuItemGap = "_menuItemGap_14ty9_9";
+  const hiddenFileInput = "_hiddenFileInput_14ty9_14";
+  const xmlFeedbackOk = "_xmlFeedbackOk_14ty9_25";
+  const xmlFeedbackErr = "_xmlFeedbackErr_14ty9_26";
   const styles$r = {
     menuWrap,
-    menuItemGap
+    menuItemGap,
+    hiddenFileInput,
+    xmlFeedbackOk,
+    xmlFeedbackErr
   };
   function downloadStoryJsonExport(data2, filename2 = "document.json") {
     const clone2 = JSON.parse(JSON.stringify(data2));
@@ -87049,7 +87926,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function StoryAuthorOverflowMenu(props) {
     const { onReturnToLibrary, onExport } = props;
     const [open, setOpen] = reactExports.useState(false);
+    const [xmlFeedback, setXmlFeedback] = reactExports.useState(null);
     const wrapRef = reactExports.useRef(null);
+    const xmlInputRef = reactExports.useRef(null);
     const waypointsOk = useDocumentStore((s2) => s2.waypoints.length > 0);
     reactExports.useEffect(() => {
       if (!open) return;
@@ -87063,6 +87942,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       open
     ]);
     const close = () => setOpen(false);
+    const onAnnotationXmlSelected = (e2) => {
+      var _a2;
+      const file = (_a2 = e2.target.files) == null ? void 0 : _a2[0];
+      e2.target.value = "";
+      if (!file) return;
+      file.text().then((text2) => {
+        const r2 = applyOmeRoisFromAnnotationXmlString(text2);
+        if (r2.success === false) {
+          setXmlFeedback({
+            type: "err",
+            text: r2.error
+          });
+          return;
+        }
+        setXmlFeedback({
+          type: "ok",
+          text: `Imported ${r2.shapeCount} annotation${r2.shapeCount === 1 ? "" : "s"}.`
+        });
+        close();
+      }).catch((err2) => {
+        setXmlFeedback({
+          type: "err",
+          text: err2 instanceof Error ? err2.message : "Could not read the file."
+        });
+      });
+    };
     return jsxRuntimeExports.jsxs("div", {
       className: styles$r.menuWrap,
       ref: wrapRef,
@@ -87121,8 +88026,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 onExport();
               },
               children: "Export Story"
+            }),
+            jsxRuntimeExports.jsx("button", {
+              type: "button",
+              role: "menuitem",
+              className: `${minervaTheme.menuItem} ${styles$r.menuItemGap}`,
+              onClick: (e2) => {
+                var _a2;
+                e2.stopPropagation();
+                setXmlFeedback(null);
+                (_a2 = xmlInputRef.current) == null ? void 0 : _a2.click();
+              },
+              children: "Upload annotations (OME-XML)"
             })
           ]
+        }) : null,
+        jsxRuntimeExports.jsx("input", {
+          ref: xmlInputRef,
+          className: styles$r.hiddenFileInput,
+          type: "file",
+          accept: ".xml,application/xml,text/xml",
+          "aria-label": "OME-XML annotations file",
+          onChange: onAnnotationXmlSelected
+        }),
+        xmlFeedback ? jsxRuntimeExports.jsx("output", {
+          className: xmlFeedback.type === "ok" ? styles$r.xmlFeedbackOk : styles$r.xmlFeedbackErr,
+          children: xmlFeedback.text
         }) : null
       ]
     });
@@ -91814,10 +92743,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  const authorPanel = "_authorPanel_1vaoa_3";
-  const authorPanelBody = "_authorPanelBody_1vaoa_13";
-  const emptyMessage = "_emptyMessage_1vaoa_20";
-  const thinScrollbar = "_thinScrollbar_1vaoa_28";
+  const authorPanel = "_authorPanel_1yzv8_3";
+  const authorPanelBody = "_authorPanelBody_1yzv8_14";
+  const emptyMessage = "_emptyMessage_1yzv8_21";
+  const thinScrollbar = "_thinScrollbar_1yzv8_29";
   const panel$1 = {
     authorPanel,
     authorPanelBody,
@@ -93965,7 +94894,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const label = "_label_ex885_23";
   const numberInput = "_numberInput_ex885_30";
   const textarea = "_textarea_ex885_35";
-  const textInput$1 = "_textInput_ex885_42";
+  const textInput = "_textInput_ex885_42";
   const actions = "_actions_ex885_48";
   const hint = "_hint_ex885_55";
   const styles$j = {
@@ -93975,7 +94904,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     label,
     numberInput,
     textarea,
-    textInput: textInput$1,
+    textInput,
     actions,
     hint
   };
@@ -176713,13 +177642,11 @@ void main() {
       }
     });
   }
-  const main = "_main_11dz1_1";
-  const squareViewportOverlay = "_squareViewportOverlay_11dz1_6";
-  const imageLoadingOverlay = "_imageLoadingOverlay_11dz1_15";
+  const main = "_main_1gd1g_1";
+  const squareViewportOverlay = "_squareViewportOverlay_1gd1g_6";
   const styles$4 = {
     main,
-    squareViewportOverlay,
-    imageLoadingOverlay
+    squareViewportOverlay
   };
   const ORTHO_VIEW_ID = "ortho";
   const SCALEBAR_VIEW_ID = "scalebar-overlay";
@@ -176865,7 +177792,7 @@ void main() {
   };
   const ImageViewer = (props) => {
     const windowSize = useWindowSize();
-    const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2, isLoadingImage = false } = props;
+    const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2 } = props;
     const { activeChannelGroupId, channelVisibilities, channelGroupRowVisibilities, sam2Processing, authoringWaypointEditorOpen } = useAppStore();
     const imageSelectionMask = useAppStore((s2) => s2.imageSelectionMask);
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
@@ -177523,20 +178450,9 @@ void main() {
           views
         }),
         jsxRuntimeExports.jsx(LoadingWidget, {
-          ref: loadingWidgetRef
+          ref: loadingWidgetRef,
+          placement: "top-right"
         }),
-        isLoadingImage ? jsxRuntimeExports.jsxs("output", {
-          className: styles$4.imageLoadingOverlay,
-          "aria-busy": "true",
-          children: [
-            jsxRuntimeExports.jsx("div", {
-              className: minervaTheme.spinner
-            }),
-            jsxRuntimeExports.jsx("span", {
-              children: "Loading\u2026"
-            })
-          ]
-        }) : null,
         showSquareViewportOverlay && jsxRuntimeExports.jsx("div", {
           className: styles$4.squareViewportOverlay,
           style: squareViewportStyle
@@ -247314,6 +248230,9 @@ void main() {
     }));
     return naturalized;
   };
+  const normalizeDicomWebSeriesUrl = (url) => {
+    return String(url).trim().replace(/\/+$/, "").replace(/\/instances$/i, "");
+  };
   const readMetadata = async (series) => {
     const response = await fetch(`${series}/metadata`);
     const result = await response.json();
@@ -247435,6 +248354,7 @@ void main() {
     const { channelsVisible, colors, contrastLimits, selections } = meta.settings;
     const visible = channelsVisible.some((x2) => x2);
     const { imageID, pyramids, dicomLoader, rgbImage } = meta;
+    const loaderPlanes = Array.isArray(dicomLoader) ? dicomLoader : (dicomLoader == null ? void 0 : dicomLoader.data) ?? [];
     const height = [
       ...pyramids["0"]
     ].pop().height;
@@ -247458,7 +248378,7 @@ void main() {
             z: z2,
             level
           });
-          const source2 = dicomLoader[level];
+          const source2 = loaderPlanes[level];
           if (!source2) {
             return null;
           }
@@ -247559,9 +248479,13 @@ void main() {
         }
       });
     }
+    if (!loaderPlanes[0]) {
+      console.error("[minerva] dicom: MultiscaleImageLayer skipped \u2014 empty loader planes", imageID);
+      return null;
+    }
     const imageProps = {
       visible,
-      loader: dicomLoader,
+      loader: loaderPlanes,
       refinementStrategy: "best-available",
       id: `${imageID}-${contrastLimits.map(([l2, u2]) => `${l2}-${u2}`).join("-")}`,
       channelsVisible,
@@ -247572,7 +248496,8 @@ void main() {
     return new MultiscaleImageLayer(imageProps);
   }
   const listDicomWeb = async (series) => {
-    return await readInstances(`${series}/instances/`);
+    const root2 = normalizeDicomWebSeriesUrl(series);
+    return await readInstances(`${root2}/instances/`);
   };
   const toDicomPlane = (dicomPixelSource) => {
     class DicomPlane {
@@ -247680,10 +248605,11 @@ void main() {
     };
   };
   const loadDicomWeb = async (series) => {
-    const instance_list = await listDicomWeb(series);
+    const root2 = normalizeDicomWebSeriesUrl(series);
+    const instance_list = await listDicomWeb(root2);
     const pyramids = await Promise.all(instance_list.map((opts, _i) => {
       const { SOPInstanceUID, BitsAllocated } = opts;
-      const instance = `${series}/instances/${SOPInstanceUID}`;
+      const instance = `${root2}/instances/${SOPInstanceUID}`;
       return readMetadata(instance).then((instance_metadata) => {
         const pyramid = computeImagePyramid({
           metadata: instance_metadata,
@@ -247851,12 +248777,19 @@ void main() {
     let nextIndex = 0;
     let omeIntensityPainted = 0;
     return [
-      ...dicomIndexList.map((entry, i2) => createDicomTileLayer({
-        entry,
-        settings: dicomSettingsList[i2],
-        index: nextIndex++,
-        remountKey: args.remountKey
-      })),
+      ...dicomIndexList.flatMap((entry, i2) => {
+        const layer = createDicomTileLayer({
+          entry,
+          settings: dicomSettingsList[i2],
+          index: nextIndex,
+          remountKey: args.remountKey
+        });
+        if (!layer) return [];
+        nextIndex += 1;
+        return [
+          layer
+        ];
+      }),
       ...omeLoaderEntries.flatMap(({ loader, transfer }, i2) => {
         var _a2;
         const settings = omeSettingsList[i2];
@@ -248156,12 +249089,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-31T16:28:40.945Z");
+    const label2 = utcShort("2026-08-31T20:37:36.212Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-31T16:28:40.945Z",
+      title: "2026-08-31T20:37:36.212Z",
       children: [
         "Updated ",
         label2,
@@ -248296,872 +249229,58 @@ void main() {
       })
     });
   };
-  const attr = (el2, ...keys2) => {
-    for (const k2 of keys2) {
-      const v2 = el2.getAttribute(k2);
-      if (v2 != null && v2 !== "") return v2;
-    }
-    return null;
-  };
-  const num = (el2, ...keys2) => {
-    const s2 = attr(el2, ...keys2);
-    if (s2 == null) return Number.NaN;
-    return Number(s2);
-  };
-  const parseOmeColor = (s2) => {
-    if (s2 == null || s2 === "") return void 0;
-    const t2 = s2.trim();
-    if (/^-?\d+$/.test(t2)) {
-      const int = Number.parseInt(t2, 10);
-      if (!Number.isNaN(int)) {
-        const buffer2 = new ArrayBuffer(4);
-        const view = new DataView(buffer2);
-        view.setInt32(0, int, false);
-        const b2 = new Uint8Array(buffer2);
-        if (b2.length < 4) return void 0;
-        return [
-          b2[0],
-          b2[1],
-          b2[2],
-          b2[3]
-        ];
-      }
-    }
-    if (t2.startsWith("rgba(") || t2.startsWith("rgb(")) {
-      const parts = t2.replace(/^rgba\(/, "").replace(/^rgb\(/, "").replace(/\)\s*$/, "").split(/[,\s]+/).map(Number);
-      if (parts.length >= 3 && parts.every((n2) => !Number.isNaN(n2))) {
-        const r0 = parts[0];
-        const r1 = parts[1];
-        const r2 = parts[2];
-        if (r0 === void 0 || r1 === void 0 || r2 === void 0) {
-          return void 0;
-        }
-        const aRaw = parts[3];
-        const a2 = aRaw === void 0 ? 255 : aRaw <= 1 ? aRaw * 255 : aRaw;
-        return [
-          r0,
-          r1,
-          r2,
-          a2
-        ];
-      }
-    }
-    let hex = t2.replace("#", "");
-    if (hex.length === 8) {
-      const a2 = parseInt(hex.slice(0, 2), 16);
-      hex = hex.slice(2);
-      const r2 = parseInt(hex.slice(0, 2), 16);
-      const g2 = parseInt(hex.slice(2, 4), 16);
-      const b2 = parseInt(hex.slice(4, 6), 16);
-      if ([
-        a2,
-        r2,
-        g2,
-        b2
-      ].some((n2) => Number.isNaN(n2))) return void 0;
-      return [
-        r2,
-        g2,
-        b2,
-        a2
-      ];
-    }
-    if (hex.length === 6) {
-      const r2 = parseInt(hex.slice(0, 2), 16);
-      const g2 = parseInt(hex.slice(2, 4), 16);
-      const b2 = parseInt(hex.slice(4, 6), 16);
-      if ([
-        r2,
-        g2,
-        b2
-      ].some((n2) => Number.isNaN(n2))) return void 0;
-      return [
-        r2,
-        g2,
-        b2,
-        255
-      ];
-    }
-    return void 0;
-  };
-  const shapeCommon = (el2, id2) => {
-    const name2 = attr(el2, "Name", "name");
-    const text2 = attr(el2, "Text", "text", "Value");
-    const theC = num(el2, "TheC", "theC");
-    const theT = num(el2, "TheT", "theT");
-    const theZ = num(el2, "TheZ", "theZ");
-    const sw = num(el2, "StrokeWidth", "strokeWidth");
-    const base2 = {
-      ID: id2
-    };
-    if (name2) base2.Name = name2;
-    if (text2) base2.Text = text2;
-    const fill = parseOmeColor(attr(el2, "FillColor", "fillColor", "Fill", "fill"));
-    const stroke = parseOmeColor(attr(el2, "StrokeColor", "strokeColor", "Stroke", "stroke"));
-    if (fill) base2.FillColor = fill;
-    if (stroke) base2.StrokeColor = stroke;
-    if (!Number.isNaN(sw) && sw > 0) base2.StrokeWidth = sw;
-    if (!Number.isNaN(theC) && theC >= 0) base2.TheC = Math.floor(theC);
-    if (!Number.isNaN(theT) && theT >= 0) base2.TheT = Math.floor(theT);
-    if (!Number.isNaN(theZ) && theZ >= 0) base2.TheZ = Math.floor(theZ);
-    return base2;
-  };
-  const shapeIdFor = (el2, fallback) => attr(el2, "ID", "id", "Name", "name") || fallback;
-  function elementToRoiShape(el2, index2) {
-    var _a2;
-    const id2 = shapeIdFor(el2, `Shape:${index2}`);
-    const common2 = (extra) => {
-      return {
-        ...shapeCommon(el2, id2),
-        ...extra
-      };
-    };
-    const tag = el2.localName;
-    const lower = tag.toLowerCase();
-    if (lower === "rectangle") {
-      const x2 = num(el2, "X", "x");
-      const y2 = num(el2, "Y", "y");
-      const w2 = num(el2, "Width", "width", "W", "w");
-      const h2 = num(el2, "Height", "height", "H", "h");
-      if ([
-        x2,
-        y2,
-        w2,
-        h2
-      ].some((n2) => Number.isNaN(n2)) || w2 <= 0 || h2 <= 0) {
-        return null;
-      }
-      return common2({
-        type: "rectangle",
-        X: x2,
-        Y: y2,
-        Width: w2,
-        Height: h2
-      });
-    }
-    if (lower === "ellipse") {
-      const x2 = num(el2, "X", "x", "cx");
-      const y2 = num(el2, "Y", "y", "cy");
-      const rx = num(el2, "RadiusX", "radiusX", "rx", "Radius", "r");
-      let ry = num(el2, "RadiusY", "radiusY", "ry");
-      if (Number.isNaN(ry) && !Number.isNaN(rx)) ry = rx;
-      if ([
-        x2,
-        y2,
-        rx,
-        ry
-      ].some((n2) => Number.isNaN(n2)) || rx <= 0 || ry <= 0) {
-        return null;
-      }
-      return common2({
-        type: "ellipse",
-        X: x2,
-        Y: y2,
-        RadiusX: rx,
-        RadiusY: ry
-      });
-    }
-    if (lower === "line") {
-      const x1 = num(el2, "X1", "x1", "X");
-      const y1 = num(el2, "Y1", "y1", "Y");
-      const x2 = num(el2, "X2", "x2");
-      const y2 = num(el2, "Y2", "y2");
-      if ([
-        x1,
-        y1,
-        x2,
-        y2
-      ].some((n2) => Number.isNaN(n2))) {
-        return null;
-      }
-      return common2({
-        type: "line",
-        X1: x1,
-        Y1: y1,
-        X2: x2,
-        Y2: y2
-      });
-    }
-    if (lower === "point") {
-      const x2 = num(el2, "X", "x", "px");
-      const y2 = num(el2, "Y", "y", "py");
-      if (Number.isNaN(x2) || Number.isNaN(y2)) return null;
-      return common2({
-        type: "point",
-        X: x2,
-        Y: y2
-      });
-    }
-    if (lower === "polygon" || lower === "polyline") {
-      const pts = attr(el2, "Points", "points", "Point", "Path");
-      if (!pts || !pts.trim()) return null;
-      if (lower === "polygon") {
-        return common2({
-          type: "polygon",
-          Points: pts.trim()
-        });
-      }
-      return common2({
-        type: "polyline",
-        Points: pts.trim()
-      });
-    }
-    if (lower === "label") {
-      const x2 = num(el2, "X", "x", "px");
-      const y2 = num(el2, "Y", "y", "py");
-      const t2 = attr(el2, "Text", "text", "Value", "name") || ((_a2 = el2.textContent) == null ? void 0 : _a2.trim()) || "";
-      if (Number.isNaN(x2) || Number.isNaN(y2) || t2 === "") return null;
-      return common2({
-        type: "label",
-        X: x2,
-        Y: y2,
-        Text: t2
-      });
-    }
-    return null;
-  }
-  function unionShapeElements(roiEl) {
-    const out = [];
-    const ns = (name2) => roiEl.getElementsByTagNameNS("*", name2);
-    const unions = [
-      ...Array.from(ns("Union")),
-      ...Array.from(roiEl.getElementsByTagName("Union"))
-    ];
-    if (unions.length > 0) {
-      for (const u2 of unions) {
-        for (const ch2 of u2.children) {
-          if (ch2.nodeType === Node.ELEMENT_NODE) out.push(ch2);
-        }
-      }
-      return out;
-    }
-    for (const ch2 of roiEl.children) {
-      if (ch2.localName === "Name" || ch2.localName === "Description") continue;
-      if (ch2.nodeType === Node.ELEMENT_NODE) out.push(ch2);
-    }
-    return out;
-  }
-  function collectRoiElements(doc) {
-    const a2 = Array.from(doc.getElementsByTagNameNS("*", "ROI"));
-    const b2 = Array.from(doc.getElementsByTagName("ROI"));
-    return Array.from(/* @__PURE__ */ new Set([
-      ...a2,
-      ...b2
-    ]));
-  }
-  function parseOmeXmlStringToRois(xml2) {
-    var _a2;
-    if (typeof DOMParser === "undefined") {
-      throw new Error("XML parsing is not available in this environment.");
-    }
-    const parser2 = new DOMParser();
-    const doc = parser2.parseFromString(xml2, "application/xml");
-    const perr = doc.getElementsByTagName("parsererror")[0];
-    if ((_a2 = perr == null ? void 0 : perr.textContent) == null ? void 0 : _a2.trim()) {
-      throw new Error("The file is not well-formed XML.");
-    }
-    const roiEls = collectRoiElements(doc);
-    const rois = [];
-    for (const roiEl of roiEls) {
-      const id2 = attr(roiEl, "ID", "id");
-      if (!id2) continue;
-      let roiName;
-      for (const ch2 of Array.from(roiEl.children)) {
-        if (ch2.localName === "Name" && ch2.textContent) {
-          roiName = ch2.textContent.trim();
-          break;
-        }
-      }
-      if (!roiName) roiName = attr(roiEl, "Name", "name") || void 0;
-      let desc;
-      for (const ch2 of Array.from(roiEl.children)) {
-        if (ch2.localName === "Description" && ch2.textContent) {
-          desc = ch2.textContent.trim();
-          break;
-        }
-      }
-      const shapeEls = unionShapeElements(roiEl);
-      const shapes = [];
-      shapeEls.forEach((shapeEl, i2) => {
-        const s2 = elementToRoiShape(shapeEl, i2);
-        if (s2) shapes.push(s2);
-      });
-      if (shapes.length > 0) {
-        rois.push({
-          ID: id2,
-          Name: roiName,
-          Description: desc,
-          shapes
-        });
-      }
-    }
-    return rois;
-  }
-  const applyTransform = (x2, y2, transform) => {
-    if (!transform) return [
-      x2,
-      y2
-    ];
-    const newX = transform.A00 * x2 + transform.A01 * y2 + transform.A02;
-    const newY = transform.A10 * x2 + transform.A11 * y2 + transform.A12;
-    return [
-      newX,
-      newY
-    ];
-  };
-  const parsePoints = (pointsStr, transform) => {
-    const points = pointsStr.trim().split(/\s+/).map((point2) => {
-      const [x2, y2] = point2.split(",").map(Number);
-      return applyTransform(x2, y2, transform);
-    });
-    return points;
-  };
-  const ellipseToPolygon = (centerX, centerY, radiusX, radiusY, transform, segments = 32) => {
-    const points = [];
-    for (let i2 = 0; i2 <= segments; i2++) {
-      const angle2 = i2 / segments * 2 * Math.PI;
-      const x2 = centerX + radiusX * Math.cos(angle2);
-      const y2 = centerY + radiusY * Math.sin(angle2);
-      points.push(applyTransform(x2, y2, transform));
-    }
-    return points;
-  };
-  const getColors = (shape, defaultFill, defaultStroke) => {
-    return {
-      fillColor: shape.FillColor || defaultFill,
-      lineColor: shape.StrokeColor || defaultStroke,
-      lineWidth: shape.StrokeWidth || 3
-    };
-  };
-  const rectangleShapeToViewerShape = (shape, roi) => {
-    const { X: X2, Y: Y2, Width, Height, Transform, ID, Text, Name } = shape;
-    const topLeft = applyTransform(X2, Y2, Transform);
-    const bottomRight = applyTransform(X2 + Width, Y2 + Height, Transform);
-    const polygon = rectangleToPolygon(topLeft, bottomRight);
-    const colors = getColors(shape, [
-      255,
-      0,
-      0,
-      50
-    ], [
-      255,
-      0,
-      0,
-      255
-    ]);
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "polygon",
-      polygon,
-      style: colors,
-      text: Text,
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  const ellipseShapeToViewerShape = (shape, roi) => {
-    const { X: X2, Y: Y2, RadiusX, RadiusY, Transform, ID, Text, Name } = shape;
-    const polygon = ellipseToPolygon(X2, Y2, RadiusX, RadiusY, Transform);
-    const colors = getColors(shape, [
-      0,
-      255,
-      0,
-      50
-    ], [
-      0,
-      255,
-      0,
-      255
-    ]);
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "polygon",
-      polygon,
-      style: colors,
-      text: Text,
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  const lineShapeToViewerShape = (shape, roi) => {
-    const { X1, Y1, X2, Y2, Transform, ID, Text, Name } = shape;
-    const start = applyTransform(X1, Y1, Transform);
-    const end = applyTransform(X2, Y2, Transform);
-    const lineWidth = shape.StrokeWidth || 3;
-    const polygon = lineToPolygon(start, end, lineWidth);
-    const lineColor = shape.StrokeColor || [
-      0,
-      255,
-      255,
-      255
-    ];
-    const fillColor = shape.FillColor || [
-      0,
-      255,
-      255,
-      255
-    ];
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "line",
-      polygon,
-      hasArrowHead: false,
-      style: {
-        fillColor,
-        lineColor,
-        lineWidth
-      },
-      text: Text,
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  const pointShapeToViewerShape = (shape, roi) => {
-    const { X: X2, Y: Y2, Transform, ID, Text, Name } = shape;
-    const position2 = applyTransform(X2, Y2, Transform);
-    const fillColor = shape.FillColor || [
-      255,
-      140,
-      0,
-      255
-    ];
-    const strokeColor = shape.StrokeColor || [
-      255,
-      255,
-      255,
-      255
-    ];
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "point",
-      position: position2,
-      style: {
-        fillColor,
-        strokeColor,
-        radius: 5
-      },
-      text: Text,
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  const polygonShapeToViewerShape = (shape, roi) => {
-    const { Points, Transform, ID, Text, Name } = shape;
-    const polygon = parsePoints(Points, Transform);
-    const colors = getColors(shape, [
-      255,
-      165,
-      0,
-      50
-    ], [
-      255,
-      165,
-      0,
-      255
-    ]);
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "polygon",
-      polygon,
-      style: colors,
-      text: Text,
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  const polylineShapeToViewerShape = (shape, roi) => {
-    const { Points, Transform, ID, Text, Name } = shape;
-    const polygon = parsePoints(Points, Transform);
-    const lineColor = shape.StrokeColor || [
-      0,
-      255,
-      0,
-      255
-    ];
-    const lineWidth = shape.StrokeWidth || 3;
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "polyline",
-      polygon,
-      style: {
-        lineColor,
-        lineWidth
-      },
-      text: Text,
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  const labelShapeToViewerShape = (shape, roi) => {
-    const { X: X2, Y: Y2, Text, ID, Name, Transform } = shape;
-    const position2 = applyTransform(X2, Y2, Transform);
-    const fontColor = shape.StrokeColor || [
-      255,
-      255,
-      0,
-      255
-    ];
-    const backgroundColor = shape.FillColor || [
-      0,
-      0,
-      0,
-      150
-    ];
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "text",
-      position: position2,
-      text: Text,
-      style: {
-        fontSize: 14,
-        fontColor,
-        backgroundColor,
-        padding: 4
-      },
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  function collectRoiShapeWorldPoints(shape) {
-    const T2 = shape.Transform;
-    switch (shape.type) {
-      case "rectangle": {
-        const { X: X2, Y: Y2, Width, Height } = shape;
-        return [
-          applyTransform(X2, Y2, T2),
-          applyTransform(X2 + Width, Y2, T2),
-          applyTransform(X2 + Width, Y2 + Height, T2),
-          applyTransform(X2, Y2 + Height, T2)
-        ];
-      }
-      case "ellipse":
-        return ellipseToPolygon(shape.X, shape.Y, shape.RadiusX, shape.RadiusY, T2, 24);
-      case "line":
-        return [
-          applyTransform(shape.X1, shape.Y1, T2),
-          applyTransform(shape.X2, shape.Y2, T2)
-        ];
-      case "point":
-        return [
-          applyTransform(shape.X, shape.Y, T2)
-        ];
-      case "polygon":
-      case "polyline":
-        return parsePoints(shape.Points, T2);
-      case "label":
-        return [
-          applyTransform(shape.X, shape.Y, T2)
-        ];
-      default:
-        return [];
-    }
-  }
-  function importRoiCentroidPosition(roi) {
-    const hasNonLabel = roi.shapes.some((s2) => s2.type !== "label");
-    const pts = [];
-    for (const s2 of roi.shapes) {
-      if (hasNonLabel && s2.type === "label") continue;
-      pts.push(...collectRoiShapeWorldPoints(s2));
-    }
-    if (pts.length === 0) return null;
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    for (const [x2, y2] of pts) {
-      if (x2 < minX) minX = x2;
-      if (y2 < minY) minY = y2;
-      if (x2 > maxX) maxX = x2;
-      if (y2 > maxY) maxY = y2;
-    }
-    return [
-      (minX + maxX) / 2,
-      (minY + maxY) / 2
-    ];
-  }
-  function importRoiCentroidLabelText(roi) {
-    var _a2, _b2, _c2;
-    const name2 = (_a2 = roi.Name) == null ? void 0 : _a2.trim();
-    if (name2) return name2;
-    const desc = (_b2 = roi.Description) == null ? void 0 : _b2.trim();
-    if (desc) {
-      const line = ((_c2 = desc.split(/\r?\n/)[0]) == null ? void 0 : _c2.trim()) ?? "";
-      if (line) return line.length > 120 ? `${line.slice(0, 117)}\u2026` : line;
-    }
-    const id2 = roi.ID.trim();
-    if (id2.includes(":")) {
-      const tail = id2.split(":").pop();
-      if (tail) return tail;
-    }
-    return id2 || "ROI";
-  }
-  function makeImportCentroidTextShape(roi, position2) {
-    const text2 = importRoiCentroidLabelText(roi);
-    return {
-      id: `roi-${roi.ID}__import-centroid-label`,
-      type: "text",
-      position: position2,
-      text: text2,
-      style: {
-        ...importedTextStyle
-      },
-      metadata: {
-        label: text2,
-        description: `Auto centroid label for imported ROI ${roi.ID}`,
-        isImported: true
-      }
-    };
-  }
-  const parseRoisFromRoiList = (rois) => {
-    const shapes = [];
-    const groups = [];
-    if (!rois || rois.length === 0) {
-      return {
-        shapes,
-        groups
-      };
-    }
-    console.log(`Found ${rois.length} ROIs in ROI list`);
-    rois.forEach((roi) => {
-      console.log(`Processing ROI ${roi.ID} (${roi.Name || "unnamed"}) with ${roi.shapes.length} shapes`);
-      const groupId = `roi-group-${roi.ID}`;
-      const roiShapeIds = [];
-      roi.shapes.forEach((shape) => {
-        try {
-          let viewerShape = null;
-          switch (shape.type) {
-            case "rectangle":
-              viewerShape = rectangleShapeToViewerShape(shape, roi);
-              console.log(`Created rectangle shape: ${viewerShape.id}`);
-              break;
-            case "ellipse":
-              viewerShape = ellipseShapeToViewerShape(shape, roi);
-              console.log(`Created ellipse shape: ${viewerShape.id}`);
-              break;
-            case "line":
-              viewerShape = lineShapeToViewerShape(shape, roi);
-              console.log(`Created line shape: ${viewerShape.id}`);
-              break;
-            case "point":
-              viewerShape = pointShapeToViewerShape(shape, roi);
-              console.log(`Created point shape: ${viewerShape.id}`);
-              break;
-            case "polygon":
-              viewerShape = polygonShapeToViewerShape(shape, roi);
-              console.log(`Created polygon shape: ${viewerShape.id}`);
-              break;
-            case "polyline":
-              viewerShape = polylineShapeToViewerShape(shape, roi);
-              console.log(`Created polyline shape: ${viewerShape.id}`);
-              break;
-            case "label":
-              viewerShape = labelShapeToViewerShape(shape, roi);
-              console.log(`Created text shape: ${viewerShape.id}`);
-              break;
-            default:
-              console.warn(`Unknown shape: ${shape}`);
-          }
-          if (viewerShape) {
-            shapes.push(viewerShape);
-            roiShapeIds.push(viewerShape.id);
-          }
-        } catch (error2) {
-          console.error(`Error processing shape ${shape.ID} in ROI ${roi.ID}:`, error2);
-        }
-      });
-      const labelOnlyRoi = roi.shapes.length > 0 && roi.shapes.every((s2) => s2.type === "label");
-      if (roiShapeIds.length > 0 && !labelOnlyRoi) {
-        const centroidPos = importRoiCentroidPosition(roi);
-        if (centroidPos) {
-          const centroidShape = makeImportCentroidTextShape(roi, centroidPos);
-          shapes.push(centroidShape);
-          roiShapeIds.push(centroidShape.id);
-        }
-      }
-      if (roiShapeIds.length > 0) {
-        const group2 = {
-          id: groupId,
-          name: roi.Name || `ROI ${roi.ID}`,
-          shapeIds: roiShapeIds,
-          isExpanded: true
-        };
-        groups.push(group2);
-        console.log(`Created group for ROI ${roi.ID} with ${roiShapeIds.length} shapes`);
-      }
-    });
-    console.log(`Total shapes created from ROIs: ${shapes.length}`);
-    console.log(`Total groups created from ROIs: ${groups.length}`);
-    return {
-      shapes,
-      groups
-    };
-  };
-  const parseRoisFromLoader = (loader) => {
-    if (!loader || !loader.metadata || !loader.metadata.ROIs) {
-      console.log("No ROIs found in loader metadata");
-      return {
-        shapes: [],
-        groups: []
-      };
-    }
-    return parseRoisFromRoiList(loader.metadata.ROIs);
-  };
-  function appendImportedStoryShapesDeduped(storyShapes) {
-    if (storyShapes.length === 0) return 0;
-    const doc = useDocumentStore.getState();
-    const { waypoints, shapes } = doc;
-    if (waypoints.length === 0) {
-      return 0;
-    }
-    const idx = 0;
-    const wp = waypoints[idx];
-    const docIds = new Set(shapes.map((s2) => s2.id));
-    const wpIds = new Set(wp.shapeIds ?? []);
-    const seenInBatch = /* @__PURE__ */ new Set();
-    const deduped = [];
-    for (const s2 of storyShapes) {
-      if (seenInBatch.has(s2.id)) continue;
-      seenInBatch.add(s2.id);
-      if (docIds.has(s2.id) || wpIds.has(s2.id)) {
-        continue;
-      }
-      deduped.push(s2);
-    }
-    if (deduped.length === 0) return 0;
-    const newIds = deduped.map((s2) => s2.id);
-    doc.setShapes([
-      ...shapes,
-      ...deduped
-    ]);
-    doc.setWaypoints(waypoints.map((w2, i2) => i2 === idx ? {
-      ...w2,
-      shapeIds: [
-        ...w2.shapeIds ?? [],
-        ...newIds
-      ]
-    } : w2));
-    return deduped.length;
-  }
-  function applyOmeRoisFromLoaderToFirstWaypoint(loader, imageDescriptionOmeXml = null) {
-    let { shapes: viewerRoiShapes } = parseRoisFromLoader(loader);
-    if (viewerRoiShapes.length === 0 && imageDescriptionOmeXml) {
-      try {
-        const rois = parseOmeXmlStringToRois(imageDescriptionOmeXml);
-        viewerRoiShapes = parseRoisFromRoiList(rois).shapes;
-      } catch (e2) {
-      }
-    }
-    const storyShapes = viewerShapesToStoryShapes(viewerRoiShapes);
-    appendImportedStoryShapesDeduped(storyShapes);
-  }
-  function applyOmeRoisFromAnnotationXmlString(xml2) {
-    const doc = useDocumentStore.getState();
-    const { waypoints } = doc;
-    if (waypoints.length === 0) {
-      return {
-        success: false,
-        error: "Add a waypoint in the story first, then import annotations to attach them.",
-        shapeCount: 0
-      };
-    }
-    let rois;
-    try {
-      rois = parseOmeXmlStringToRois(xml2);
-    } catch (e2) {
-      return {
-        success: false,
-        error: e2 instanceof Error ? e2.message : String(e2),
-        shapeCount: 0
-      };
-    }
-    if (rois.length === 0) {
-      return {
-        success: false,
-        error: "No ROIs with drawable shapes were found in the XML.",
-        shapeCount: 0
-      };
-    }
-    const { shapes: viewerRoiShapes } = parseRoisFromRoiList(rois);
-    const storyShapes = viewerShapesToStoryShapes(viewerRoiShapes);
-    if (storyShapes.length === 0) {
-      return {
-        success: false,
-        error: "No valid annotations could be built from the XML.",
-        shapeCount: 0
-      };
-    }
-    const added = appendImportedStoryShapesDeduped(storyShapes);
-    if (added === 0) {
-      return {
-        success: false,
-        error: "All annotations from this file are already present (duplicate import skipped).",
-        shapeCount: 0
-      };
-    }
-    return {
-      success: true,
-      shapeCount: added
-    };
-  }
-  const stack = "_stack_1kbf5_1";
-  const addPanel = "_addPanel_1kbf5_11";
-  const addActionAnchor = "_addActionAnchor_1kbf5_24";
-  const formatRow = "_formatRow_1kbf5_29";
-  const addPanelBody = "_addPanelBody_1kbf5_41";
-  const urlRow = "_urlRow_1kbf5_49";
-  const urlInput = "_urlInput_1kbf5_57";
-  const importError = "_importError_1kbf5_62";
-  const importSuccess = "_importSuccess_1kbf5_69";
-  const imageCard = "_imageCard_1kbf5_76";
-  const fileAccessOverlay = "_fileAccessOverlay_1kbf5_88";
-  const fileAccessError = "_fileAccessError_1kbf5_106";
-  const fileAccessAction = "_fileAccessAction_1kbf5_114";
-  const imageCardHeader = "_imageCardHeader_1kbf5_122";
-  const imageCardText = "_imageCardText_1kbf5_130";
-  const imageCardTitle = "_imageCardTitle_1kbf5_138";
-  const imageCardMeta = "_imageCardMeta_1kbf5_146";
-  const imageCardActions = "_imageCardActions_1kbf5_152";
-  const hiddenFileInput = "_hiddenFileInput_1kbf5_161";
-  const dicomForm = "_dicomForm_1kbf5_172";
-  const fieldGroup = "_fieldGroup_1kbf5_179";
-  const fieldLabel = "_fieldLabel_1kbf5_185";
-  const fieldRow = "_fieldRow_1kbf5_192";
-  const textInput = "_textInput_1kbf5_196";
-  const textInputInvalid = "_textInputInvalid_1kbf5_207";
-  const textInputValid = "_textInputValid_1kbf5_211";
-  const invalidFeedback = "_invalidFeedback_1kbf5_215";
-  const validFeedback = "_validFeedback_1kbf5_223";
+  const stack = "_stack_20heo_1";
+  const panelBody = "_panelBody_20heo_11";
+  const panelDropActive = "_panelDropActive_20heo_15";
+  const addStrip = "_addStrip_20heo_20";
+  const dropZone = "_dropZone_20heo_30";
+  const dropZoneActive = "_dropZoneActive_20heo_47";
+  const dropZoneTitle = "_dropZoneTitle_20heo_51";
+  const orDivider = "_orDivider_20heo_56";
+  const urlRow = "_urlRow_20heo_83";
+  const urlInput = "_urlInput_20heo_92";
+  const fieldLabel = "_fieldLabel_20heo_97";
+  const importError = "_importError_20heo_104";
+  const typeOverlay = "_typeOverlay_20heo_111";
+  const typeOverlayBackdrop = "_typeOverlayBackdrop_20heo_120";
+  const typeOverlayCard = "_typeOverlayCard_20heo_126";
+  const typeOverlayFile = "_typeOverlayFile_20heo_138";
+  const typeRow = "_typeRow_20heo_147";
+  const typeChipActive = "_typeChipActive_20heo_155";
+  const typeFooter = "_typeFooter_20heo_160";
+  const typeImport = "_typeImport_20heo_169";
+  const typeSection = "_typeSection_20heo_173";
+  const imageCard = "_imageCard_20heo_181";
+  const fileAccessOverlay = "_fileAccessOverlay_20heo_193";
+  const fileAccessError = "_fileAccessError_20heo_211";
+  const fileAccessAction = "_fileAccessAction_20heo_219";
+  const imageCardHeader = "_imageCardHeader_20heo_227";
+  const imageCardText = "_imageCardText_20heo_235";
+  const imageCardTitle = "_imageCardTitle_20heo_243";
+  const imageCardMeta = "_imageCardMeta_20heo_251";
+  const imageCardActions = "_imageCardActions_20heo_257";
   const styles$1 = {
     stack,
-    addPanel,
-    addActionAnchor,
-    formatRow,
-    addPanelBody,
+    panelBody,
+    panelDropActive,
+    addStrip,
+    dropZone,
+    dropZoneActive,
+    dropZoneTitle,
+    orDivider,
     urlRow,
     urlInput,
+    fieldLabel,
     importError,
-    importSuccess,
+    typeOverlay,
+    typeOverlayBackdrop,
+    typeOverlayCard,
+    typeOverlayFile,
+    typeRow,
+    typeChipActive,
+    typeFooter,
+    typeImport,
+    typeSection,
     imageCard,
     fileAccessOverlay,
     fileAccessError,
@@ -249170,17 +249289,7 @@ void main() {
     imageCardText,
     imageCardTitle,
     imageCardMeta,
-    imageCardActions,
-    hiddenFileInput,
-    dicomForm,
-    fieldGroup,
-    fieldLabel,
-    fieldRow,
-    textInput,
-    textInputInvalid,
-    textInputValid,
-    invalidFeedback,
-    validFeedback
+    imageCardActions
   };
   function ReplaceIcon({ title: title7, size = 14 }) {
     const label2 = title7 ?? "Replace";
@@ -249200,134 +249309,23 @@ void main() {
       ]
     });
   }
-  const _useState = (init2) => {
-    const [val, set2] = reactExports.useState(init2);
-    const new_set = (e2) => {
-      const form = e2.target;
-      set2(form.value);
-    };
-    return [
-      val,
-      set2,
-      new_set
-    ];
-  };
-  const validation = (key2) => {
-    return (valid2) => {
-      if (key2 in valid2) {
-        return !!valid2[key2];
-      }
-      return null;
-    };
-  };
-  const validate$1 = (valid2, fn) => {
-    const validated = fn(valid2);
-    if (validated === null) {
-      return {};
-    }
-    const opt = validated ? "isValid" : "isInvalid";
-    return {
-      [opt]: true
-    };
-  };
-  function validationInputClass(v2) {
-    const parts = [
-      minervaTheme.input,
-      styles$1.textInput
-    ];
-    if (v2.isInvalid) parts.push(styles$1.textInputInvalid);
-    if (v2.isValid) parts.push(styles$1.textInputValid);
-    return parts.join(" ");
+  const DICOM_SERIES_URL = /^https?:\/\/.+\/studies\/[^/]+\/series\/[^/]+(?:\/instances)?\/?$/i;
+  function defaultDicomName(seriesUrl) {
+    var _a2;
+    const uid2 = (_a2 = seriesUrl.match(/\/series\/([^/]+)/i)) == null ? void 0 : _a2[1];
+    if (!uid2) return "DICOMweb";
+    return uid2.length > 18 ? `\u2026${uid2.slice(-14)}` : uid2;
   }
-  const FormDicom = (props) => {
-    const { valid: valid2, onSubmit } = props;
-    const [url, _sU, setURL] = _useState("");
-    const [name2, _sN, setName] = _useState("");
-    const urlValidation = validate$1(valid2, ({ url: validEndpoint }) => {
-      if (validEndpoint === void 0) {
-        return null;
-      }
-      return validEndpoint && /^https?:\/\/.+\/studies\/[^/]+\/series\/[^/]+$/.test(url);
+  function FormatChip({ label: label2, selected, disabled: disabled2, onClick }) {
+    return jsxRuntimeExports.jsx(PanelActionButton, {
+      type: "button",
+      disabled: disabled2,
+      "aria-pressed": selected,
+      className: selected ? styles$1.typeChipActive : void 0,
+      onClick,
+      children: label2
     });
-    const nameValidation = validate$1(valid2, validation("name"));
-    return jsxRuntimeExports.jsxs("form", {
-      onSubmit,
-      noValidate: true,
-      className: styles$1.dicomForm,
-      children: [
-        jsxRuntimeExports.jsxs("div", {
-          className: styles$1.fieldGroup,
-          children: [
-            jsxRuntimeExports.jsx("label", {
-              htmlFor: "dicom-url",
-              className: styles$1.fieldLabel,
-              children: "DICOMweb\u2122 URL:"
-            }),
-            jsxRuntimeExports.jsxs("div", {
-              className: styles$1.fieldRow,
-              children: [
-                jsxRuntimeExports.jsx("input", {
-                  id: "dicom-url",
-                  type: "text",
-                  required: true,
-                  value: url,
-                  name: "url",
-                  onChange: setURL,
-                  className: validationInputClass(urlValidation),
-                  "aria-invalid": urlValidation.isInvalid ?? void 0
-                }),
-                urlValidation.isInvalid && jsxRuntimeExports.jsx("div", {
-                  className: styles$1.invalidFeedback,
-                  children: "Invalid DICOMweb\u2122 URL"
-                }),
-                urlValidation.isValid && jsxRuntimeExports.jsx("div", {
-                  className: styles$1.validFeedback,
-                  children: "Valid."
-                })
-              ]
-            })
-          ]
-        }),
-        jsxRuntimeExports.jsxs("div", {
-          className: styles$1.fieldGroup,
-          children: [
-            jsxRuntimeExports.jsx("label", {
-              htmlFor: "dicom-name",
-              className: styles$1.fieldLabel,
-              children: "Dataset Name:"
-            }),
-            jsxRuntimeExports.jsxs("div", {
-              className: styles$1.fieldRow,
-              children: [
-                jsxRuntimeExports.jsx("input", {
-                  id: "dicom-name",
-                  type: "text",
-                  required: true,
-                  value: name2,
-                  name: "name",
-                  onChange: setName,
-                  className: validationInputClass(nameValidation),
-                  "aria-invalid": nameValidation.isInvalid ?? void 0
-                }),
-                nameValidation.isInvalid && jsxRuntimeExports.jsx("div", {
-                  className: styles$1.invalidFeedback,
-                  children: "Please name the dataset."
-                }),
-                nameValidation.isValid && jsxRuntimeExports.jsx("div", {
-                  className: styles$1.validFeedback,
-                  children: "Valid."
-                })
-              ]
-            })
-          ]
-        }),
-        jsxRuntimeExports.jsx(PanelActionButton, {
-          type: "submit",
-          children: "Submit"
-        })
-      ]
-    });
-  };
+  }
   const formatDims = (w2, h2, c2) => {
     const dims = w2 > 0 && h2 > 0 ? `${w2.toLocaleString()} \xD7 ${h2.toLocaleString()} px` : null;
     const ch2 = c2 > 0 ? `${c2} channel${c2 === 1 ? "" : "s"}` : null;
@@ -249354,38 +249352,6 @@ void main() {
     }
     return `Image ${index2 + 1}`;
   }
-  const OmeTiffUrlImport = (props) => {
-    const { url, onUrlChange, onImport, importLabel, canImport, inputClassName, rowClassName } = props;
-    return jsxRuntimeExports.jsxs("div", {
-      className: rowClassName,
-      children: [
-        jsxRuntimeExports.jsx("input", {
-          type: "text",
-          required: true,
-          value: url,
-          name: "ome_tiff_url",
-          placeholder: "",
-          onChange: onUrlChange,
-          className: `${minervaTheme.input} ${styles$1.textInput} ${inputClassName}`
-        }),
-        jsxRuntimeExports.jsx(PanelActionButton, {
-          type: "button",
-          onClick: onImport,
-          disabled: !canImport,
-          children: importLabel
-        })
-      ]
-    });
-  };
-  function FormatChip({ label: label2, selected, onClick }) {
-    return jsxRuntimeExports.jsx(PanelActionButton, {
-      type: "button",
-      active: selected,
-      "aria-pressed": selected,
-      onClick,
-      children: label2
-    });
-  }
   const roleBadgeLabel = (role) => {
     switch (role) {
       case "segmentation":
@@ -249404,234 +249370,221 @@ void main() {
     }
     return selected;
   }
+  function inferFormat(pending) {
+    if (pending.kind === "local") return "ome-tiff";
+    return DICOM_SERIES_URL.test(pending.url) ? "dicomweb" : "ome-tiff";
+  }
+  function pendingLabel(pending) {
+    if (pending.kind === "local") return pending.label;
+    return pending.url;
+  }
   const Upload = (props) => {
-    const [addPanelOpen, setAddPanelOpen] = reactExports.useState(false);
-    const [addKind, setAddKind] = reactExports.useState("image");
-    const [imageFormat, setImageFormat] = reactExports.useState("");
-    const [omeTiffUrl, _setOmeTiffUrl, setOmeTiffUrl] = _useState("");
-    const [xmlImportFeedback, setXmlImportFeedback] = reactExports.useState(null);
-    const [importError2, setImportError] = reactExports.useState(null);
-    const xmlFileInputRef = reactExports.useRef(null);
-    const addAnchorRef = reactExports.useRef(null);
-    const prevImportRev = reactExports.useRef(props.importRevision);
-    const localImportInFlightRef = reactExports.useRef(false);
+    const { onAllow, importRevision, imageLoaded, loadedSource, fileName = "", lastOmeTiffUrl = null, onImportOme, onImportDicomWeb, needsFileAccess = false, onRequestFileAccess, missingHandleKeys = [], onReselectFile, needsStoryRootReconnect = false, onReconnectStoryRoot, onRemoveImage, onReplaceImage } = props;
     const images = useDocumentStore((s2) => s2.images);
-    const { formProps, onAllow, importRevision, imageLoaded, loadedSource, fileName = "", lastOmeTiffUrl = null, onImportOme, needsFileAccess = false, onRequestFileAccess, missingHandleKeys = [], onReselectFile, needsStoryRootReconnect = false, onReconnectStoryRoot, onRemoveImage, onReplaceImage } = props;
-    const resetAddFields = reactExports.useCallback((opts) => {
-      setAddKind("image");
-      setImageFormat("");
-      setImportError(null);
-      setXmlImportFeedback(null);
-      if (opts == null ? void 0 : opts.clearUrl) _setOmeTiffUrl("");
-    }, [
-      _setOmeTiffUrl
-    ]);
-    const closeAddPanel = reactExports.useCallback(() => {
-      setAddPanelOpen(false);
-      resetAddFields();
-    }, [
-      resetAddFields
-    ]);
+    const hasImages = images.length > 0 || !!imageLoaded && loadedSource != null;
+    const [urlDraft, setUrlDraft] = reactExports.useState("");
+    const [pending, setPending] = reactExports.useState(null);
+    const [overlayRole, setOverlayRole] = reactExports.useState("intensity");
+    const [overlayFormat, setOverlayFormat] = reactExports.useState("ome-tiff");
+    const [dicomName, setDicomName] = reactExports.useState("");
+    const [importError2, setImportError] = reactExports.useState(null);
+    const [importBusy, setImportBusy] = reactExports.useState(false);
+    const [dragging, setDragging] = reactExports.useState(false);
+    const dragDepthRef = reactExports.useRef(0);
+    const localPickInFlightRef = reactExports.useRef(false);
+    const prevImportRev = reactExports.useRef(importRevision);
+    const showTypeOverlay = pending != null;
+    const dicomAllowed = (pending == null ? void 0 : pending.kind) === "url" && overlayRole !== "segmentation";
+    const urlReady = /^https?:\/\/.+/.test(urlDraft.trim());
     reactExports.useEffect(() => {
-      if (prevImportRev.current !== importRevision) {
-        prevImportRev.current = importRevision;
-        setAddPanelOpen(false);
-        resetAddFields({
-          clearUrl: true
-        });
+      if (prevImportRev.current === importRevision) return;
+      prevImportRev.current = importRevision;
+      setPending(null);
+      setImportError(null);
+      setUrlDraft("");
+      setImportBusy(false);
+    }, [
+      importRevision
+    ]);
+    const openPending = reactExports.useCallback((next2) => {
+      const role = resolveImportRole("intensity", pendingLabel(next2));
+      let format = inferFormat(next2);
+      if (role === "segmentation") format = "ome-tiff";
+      setPending(next2);
+      setOverlayRole(role);
+      setOverlayFormat(format);
+      setDicomName("");
+      setImportError(null);
+    }, []);
+    const clearPending = reactExports.useCallback(() => {
+      setPending(null);
+      setImportError(null);
+    }, []);
+    const acceptLocalHandles = reactExports.useCallback(async (handles) => {
+      if (handles.length === 0) return;
+      const handle2 = handles[0];
+      if (!await ensureFileHandlePermission(handle2)) {
+        setImportError("Allow file access to load this image.");
+        return;
+      }
+      if (!await findFile({
+        handle: handle2
+      })) {
+        setImportError("Could not read the selected file.");
+        return;
+      }
+      openPending({
+        kind: "local",
+        handles: [
+          handle2
+        ],
+        label: handle2.name || "image.ome.tif"
+      });
+    }, [
+      openPending
+    ]);
+    const browseLocal = reactExports.useCallback(async () => {
+      if (localPickInFlightRef.current) return;
+      localPickInFlightRef.current = true;
+      setImportError(null);
+      try {
+        const picked = await onAllow();
+        if (picked.length === 0) {
+          const alt = await toFile();
+          if (alt.length === 0) return;
+          await acceptLocalHandles(alt);
+          return;
+        }
+        await acceptLocalHandles(picked);
+      } finally {
+        localPickInFlightRef.current = false;
       }
     }, [
-      importRevision,
-      resetAddFields
+      acceptLocalHandles,
+      onAllow
     ]);
-    reactExports.useEffect(() => {
-      if (!addPanelOpen) return;
-      const onPointerDown = (event) => {
-        var _a2;
-        const target = event.target;
-        if (!((_a2 = addAnchorRef.current) == null ? void 0 : _a2.contains(target))) {
-          closeAddPanel();
-        }
-      };
-      const onKeyDown = (event) => {
-        if (event.key === "Escape") closeAddPanel();
-      };
-      document.addEventListener("pointerdown", onPointerDown);
-      document.addEventListener("keydown", onKeyDown);
-      return () => {
-        document.removeEventListener("pointerdown", onPointerDown);
-        document.removeEventListener("keydown", onKeyDown);
-      };
+    const acceptUrlDraft = reactExports.useCallback(() => {
+      const url = urlDraft.trim();
+      if (!/^https?:\/\/.+/.test(url)) {
+        setImportError("Enter a valid http(s) URL.");
+        return;
+      }
+      openPending({
+        kind: "url",
+        url
+      });
     }, [
-      addPanelOpen,
-      closeAddPanel
+      openPending,
+      urlDraft
     ]);
+    const onDragEnter = (e2) => {
+      e2.preventDefault();
+      e2.stopPropagation();
+      dragDepthRef.current += 1;
+      if (e2.dataTransfer.types.includes("Files")) setDragging(true);
+    };
+    const onDragLeave = (e2) => {
+      e2.preventDefault();
+      e2.stopPropagation();
+      dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+      if (dragDepthRef.current === 0) setDragging(false);
+    };
+    const onDragOver = (e2) => {
+      e2.preventDefault();
+      e2.stopPropagation();
+      if (e2.dataTransfer.types.includes("Files")) {
+        e2.dataTransfer.dropEffect = "copy";
+      }
+    };
+    const onDrop = async (e2) => {
+      e2.preventDefault();
+      e2.stopPropagation();
+      dragDepthRef.current = 0;
+      setDragging(false);
+      const items = [
+        ...e2.dataTransfer.items
+      ].filter((i2) => i2.kind === "file");
+      if (items.length === 0) {
+        setImportError("Drop an image file to add it.");
+        return;
+      }
+      const handle2 = await fileHandleFromDataTransferItem(items[0]);
+      if (!handle2) {
+        setImportError("Could not read the dropped file.");
+        return;
+      }
+      await acceptLocalHandles([
+        handle2
+      ]);
+    };
+    const runImport = async () => {
+      if (!pending || importBusy) return;
+      setImportBusy(true);
+      setImportError(null);
+      try {
+        const label2 = pendingLabel(pending);
+        const role = resolveImportRole(overlayRole, label2);
+        const format = !dicomAllowed && overlayFormat === "dicomweb" ? "ome-tiff" : overlayFormat;
+        if (format === "dicomweb") {
+          if (pending.kind !== "url") {
+            setImportError("DICOMweb needs a series URL.");
+            return;
+          }
+          if (!DICOM_SERIES_URL.test(pending.url.trim())) {
+            setImportError("DICOMweb URL must include /studies/\u2026/series/\u2026 (optional /instances).");
+            return;
+          }
+          if (!onImportDicomWeb) {
+            setImportError("DICOMweb import is unavailable.");
+            return;
+          }
+          const seriesUrl = normalizeDicomWebSeriesUrl(pending.url);
+          try {
+            await findDicomWeb(seriesUrl);
+          } catch {
+            setImportError("Could not reach that DICOMweb series.");
+            return;
+          }
+          const result2 = await onImportDicomWeb({
+            url: seriesUrl,
+            name: dicomName.trim() || defaultDicomName(seriesUrl)
+          });
+          if (result2 && result2.ok === false) setImportError(result2.error);
+          return;
+        }
+        if (!onImportOme) {
+          setImportError("Image import is unavailable.");
+          return;
+        }
+        if (pending.kind === "local") {
+          const result2 = await onImportOme({
+            role,
+            append: hasImages,
+            source: {
+              kind: "local",
+              path: pending.label,
+              handles: pending.handles
+            }
+          });
+          if (result2 && result2.ok === false) setImportError(result2.error);
+          return;
+        }
+        const result = await onImportOme({
+          role,
+          append: hasImages,
+          source: {
+            kind: "url",
+            url: pending.url
+          }
+        });
+        if (result && result.ok === false) setImportError(result.error);
+      } finally {
+        setImportBusy(false);
+      }
+    };
     const labelOpts = {
       fileName,
       lastOmeTiffUrl
-    };
-    const append = imageLoaded;
-    const isMaskImport = addKind === "mask";
-    const isAnnotationImport = addKind === "annotation";
-    const importRole = isMaskImport ? "segmentation" : "intensity";
-    const importLabel = isMaskImport ? "Import mask" : "Import";
-    const urlReady = /^https?:\/\/.+/.test(omeTiffUrl.trim());
-    const setKind = (kind) => {
-      setAddKind(kind);
-      setImportError(null);
-      setXmlImportFeedback(null);
-      setImageFormat("");
-    };
-    const importLocalOmeTiff = async (role, picked) => {
-      if (picked.length === 0 || !onImportOme) return;
-      setImportError(null);
-      const result = await onImportOme({
-        role,
-        append: imageLoaded,
-        source: {
-          kind: "local",
-          path: picked[0].name,
-          handles: picked
-        }
-      });
-      if (result && result.ok === false) setImportError(result.error);
-    };
-    const chooseLocalOmeTiff = async () => {
-      if (localImportInFlightRef.current) return;
-      localImportInFlightRef.current = true;
-      setImportError(null);
-      try {
-        const picked = isMaskImport ? await toFile() : await onAllow();
-        if (picked.length === 0) {
-          setImageFormat("");
-          return;
-        }
-        const handle2 = picked[0];
-        if (!await ensureFileHandlePermission(handle2)) {
-          setImportError(isMaskImport ? "Allow file access to load this mask." : "Allow file access to load this image.");
-          return;
-        }
-        if (!await findFile({
-          handle: handle2
-        })) {
-          setImportError("Could not read the selected file.");
-          return;
-        }
-        const role = resolveImportRole(importRole, handle2.name);
-        if (role !== importRole) {
-          setAddKind(role === "segmentation" ? "mask" : "image");
-        }
-        await importLocalOmeTiff(role, picked);
-      } finally {
-        localImportInFlightRef.current = false;
-      }
-    };
-    const runUrlImport = async () => {
-      if (!onImportOme || imageFormat !== "OME-TIFF-URL" || !urlReady) return;
-      setImportError(null);
-      const url = omeTiffUrl.trim();
-      const role = resolveImportRole(importRole, url);
-      if (role !== importRole) {
-        setAddKind(role === "segmentation" ? "mask" : "image");
-      }
-      const result = await onImportOme({
-        role,
-        append,
-        source: {
-          kind: "url",
-          url
-        }
-      });
-      if (result && result.ok === false) setImportError(result.error);
-    };
-    const toggleAddPanel = () => {
-      if (addPanelOpen) {
-        closeAddPanel();
-        return;
-      }
-      setAddPanelOpen(true);
-    };
-    const selectFormat = (format) => {
-      setImportError(null);
-      setXmlImportFeedback(null);
-      const next2 = imageFormat === format ? "" : format;
-      setImageFormat(next2);
-      if (next2 === "OME-TIFF") void chooseLocalOmeTiff();
-    };
-    const onAnnotationXmlSelected = (e2) => {
-      var _a2;
-      const file = (_a2 = e2.target.files) == null ? void 0 : _a2[0];
-      e2.target.value = "";
-      if (!file) return;
-      file.text().then((text2) => {
-        const r2 = applyOmeRoisFromAnnotationXmlString(text2);
-        if (r2.success === false) {
-          setXmlImportFeedback({
-            type: "err",
-            text: r2.error
-          });
-          return;
-        }
-        closeAddPanel();
-        setXmlImportFeedback({
-          type: "ok",
-          text: `Imported ${r2.shapeCount} annotation${r2.shapeCount === 1 ? "" : "s"}.`
-        });
-      }).catch((err2) => {
-        setXmlImportFeedback({
-          type: "err",
-          text: err2 instanceof Error ? err2.message : "Could not read the file."
-        });
-      });
-    };
-    const renderAddPanelBody = () => {
-      if (imageFormat === "OME-TIFF") {
-        return importError2 ? jsxRuntimeExports.jsx("div", {
-          className: styles$1.addPanelBody,
-          children: jsxRuntimeExports.jsx("div", {
-            className: styles$1.importError,
-            children: importError2
-          })
-        }) : null;
-      }
-      if (imageFormat === "OME-TIFF-URL") {
-        return jsxRuntimeExports.jsxs("div", {
-          className: styles$1.addPanelBody,
-          children: [
-            jsxRuntimeExports.jsx(OmeTiffUrlImport, {
-              url: omeTiffUrl,
-              onUrlChange: setOmeTiffUrl,
-              onImport: () => void runUrlImport(),
-              importLabel,
-              canImport: urlReady,
-              inputClassName: styles$1.urlInput,
-              rowClassName: styles$1.urlRow
-            }),
-            importError2 ? jsxRuntimeExports.jsx("div", {
-              className: styles$1.importError,
-              children: importError2
-            }) : null
-          ]
-        });
-      }
-      if (addKind === "image" && imageFormat === "DICOM-WEB") {
-        return jsxRuntimeExports.jsx("div", {
-          className: styles$1.addPanelBody,
-          children: jsxRuntimeExports.jsx(FormDicom, {
-            ...formProps
-          })
-        });
-      }
-      if (addKind === "annotation" && (xmlImportFeedback == null ? void 0 : xmlImportFeedback.type) === "err") {
-        return jsxRuntimeExports.jsx("div", {
-          className: styles$1.addPanelBody,
-          children: jsxRuntimeExports.jsx("div", {
-            className: styles$1.importError,
-            children: xmlImportFeedback.text
-          })
-        });
-      }
-      return null;
     };
     const renderImageCard = (im, index2) => {
       var _a2, _b2, _c2, _d, _e;
@@ -249716,127 +249669,210 @@ void main() {
         ]
       }, im.id);
     };
-    const imageCards = images.length > 0 ? images.map((im, i2) => renderImageCard(im, i2)) : imageLoaded && loadedSource ? jsxRuntimeExports.jsx("article", {
-      className: styles$1.imageCard,
-      children: jsxRuntimeExports.jsx("div", {
-        className: styles$1.imageCardHeader,
-        children: jsxRuntimeExports.jsxs("div", {
-          className: styles$1.imageCardText,
-          children: [
-            jsxRuntimeExports.jsx("div", {
-              className: styles$1.imageCardTitle,
-              children: loadedSource.label
-            }),
-            jsxRuntimeExports.jsx("div", {
-              className: styles$1.imageCardMeta,
-              children: formatDims(loadedSource.width, loadedSource.height, loadedSource.channelCount) ?? "Loading dimensions\u2026"
-            })
-          ]
+    const imageCards = images.length > 0 ? images.map((im, i2) => renderImageCard(im, i2)) : imageLoaded && loadedSource ? [
+      jsxRuntimeExports.jsx("article", {
+        className: styles$1.imageCard,
+        children: jsxRuntimeExports.jsx("div", {
+          className: styles$1.imageCardHeader,
+          children: jsxRuntimeExports.jsxs("div", {
+            className: styles$1.imageCardText,
+            children: [
+              jsxRuntimeExports.jsx("div", {
+                className: styles$1.imageCardTitle,
+                children: loadedSource.label
+              }),
+              jsxRuntimeExports.jsx("div", {
+                className: styles$1.imageCardMeta,
+                children: formatDims(loadedSource.width, loadedSource.height, loadedSource.channelCount) ?? "Loading dimensions\u2026"
+              })
+            ]
+          })
         })
-      })
-    }) : null;
-    const addPanel2 = addPanelOpen ? jsxRuntimeExports.jsxs("div", {
-      className: `${minervaTheme.surface} ${styles$1.addPanel}`,
+      }, "loaded-source")
+    ] : [];
+    const addStrip2 = jsxRuntimeExports.jsxs("div", {
+      className: styles$1.addStrip,
       children: [
-        jsxRuntimeExports.jsxs("div", {
-          className: styles$1.formatRow,
-          children: [
-            jsxRuntimeExports.jsx(FormatChip, {
-              label: "Image",
-              selected: addKind === "image",
-              onClick: () => setKind("image")
-            }),
-            jsxRuntimeExports.jsx(FormatChip, {
-              label: "Mask",
-              selected: addKind === "mask",
-              onClick: () => setKind("mask")
-            }),
-            jsxRuntimeExports.jsx(FormatChip, {
-              label: "Annotation",
-              selected: isAnnotationImport,
-              onClick: () => setKind("annotation")
-            })
-          ]
+        jsxRuntimeExports.jsx("button", {
+          type: "button",
+          className: [
+            styles$1.dropZone,
+            dragging ? styles$1.dropZoneActive : ""
+          ].join(" "),
+          onClick: () => void browseLocal(),
+          children: jsxRuntimeExports.jsx("span", {
+            className: styles$1.dropZoneTitle,
+            children: "Drop or Browse File"
+          })
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$1.formatRow,
-          children: isAnnotationImport ? jsxRuntimeExports.jsx(FormatChip, {
-            label: "Ome-XML",
-            selected: true,
-            onClick: () => {
-              var _a2;
-              return (_a2 = xmlFileInputRef.current) == null ? void 0 : _a2.click();
-            }
-          }) : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
-            children: [
-              !isMaskImport ? jsxRuntimeExports.jsx(FormatChip, {
-                label: "DicomWEB",
-                selected: imageFormat === "DICOM-WEB",
-                onClick: () => selectFormat("DICOM-WEB")
-              }) : null,
-              jsxRuntimeExports.jsx(FormatChip, {
-                label: "OmeTiff File",
-                selected: imageFormat === "OME-TIFF",
-                onClick: () => selectFormat("OME-TIFF")
-              }),
-              jsxRuntimeExports.jsx(FormatChip, {
-                label: "OmeTiff URL",
-                selected: imageFormat === "OME-TIFF-URL",
-                onClick: () => selectFormat("OME-TIFF-URL")
-              })
-            ]
-          })
-        }),
-        renderAddPanelBody()
-      ]
-    }) : null;
-    return jsxRuntimeExports.jsxs("div", {
-      className: panel$1.authorPanel,
-      children: [
-        jsxRuntimeExports.jsx(CompactHeader, {
-          actions: jsxRuntimeExports.jsxs("div", {
-            ref: addAnchorRef,
-            className: styles$1.addActionAnchor,
-            children: [
-              jsxRuntimeExports.jsx(PanelIconButton, {
-                active: addPanelOpen,
-                "aria-pressed": addPanelOpen,
-                "aria-label": "Add image",
-                title: "Add",
-                onClick: toggleAddPanel,
-                children: jsxRuntimeExports.jsx(PlusIcon, {})
-              }),
-              addPanel2,
-              jsxRuntimeExports.jsx("input", {
-                ref: xmlFileInputRef,
-                className: styles$1.hiddenFileInput,
-                type: "file",
-                accept: ".xml,application/xml,text/xml",
-                "aria-label": "OME-XML annotations file",
-                onChange: onAnnotationXmlSelected
-              })
-            ]
+          className: styles$1.orDivider,
+          children: jsxRuntimeExports.jsx("span", {
+            children: "or"
           })
         }),
         jsxRuntimeExports.jsxs("div", {
+          className: styles$1.urlRow,
+          children: [
+            jsxRuntimeExports.jsx("input", {
+              id: "images-add-url",
+              type: "url",
+              className: `${minervaTheme.input} ${styles$1.urlInput}`,
+              placeholder: "Image URL (OME-TIFF or DICOMweb)",
+              "aria-label": "Image URL",
+              value: urlDraft,
+              onChange: (e2) => {
+                setUrlDraft(e2.target.value);
+                setImportError(null);
+              },
+              onKeyDown: (e2) => {
+                if (e2.key === "Enter") {
+                  e2.preventDefault();
+                  acceptUrlDraft();
+                }
+              }
+            }),
+            jsxRuntimeExports.jsx(PanelActionButton, {
+              type: "button",
+              disabled: !urlReady,
+              onClick: acceptUrlDraft,
+              children: "Add"
+            })
+          ]
+        }),
+        importError2 && !showTypeOverlay ? jsxRuntimeExports.jsx("div", {
+          className: styles$1.importError,
+          children: importError2
+        }) : null
+      ]
+    });
+    return jsxRuntimeExports.jsxs("div", {
+      className: [
+        panel$1.authorPanel,
+        dragging ? styles$1.panelDropActive : ""
+      ].join(" "),
+      onDragEnter,
+      onDragLeave,
+      onDragOver,
+      onDrop: (e2) => void onDrop(e2),
+      children: [
+        jsxRuntimeExports.jsx("div", {
           className: [
             panel$1.authorPanelBody,
-            panel$1.thinScrollbar
+            panel$1.thinScrollbar,
+            styles$1.panelBody
           ].join(" "),
+          children: jsxRuntimeExports.jsxs("div", {
+            className: styles$1.stack,
+            children: [
+              imageCards,
+              addStrip2
+            ]
+          })
+        }),
+        showTypeOverlay && pending ? jsxRuntimeExports.jsxs("div", {
+          className: styles$1.typeOverlay,
+          role: "dialog",
+          "aria-modal": "true",
           children: [
-            imageCards ? jsxRuntimeExports.jsx("div", {
-              className: styles$1.stack,
-              children: imageCards
-            }) : jsxRuntimeExports.jsx("div", {
-              className: panel$1.emptyMessage,
-              children: "No images yet"
+            jsxRuntimeExports.jsx("div", {
+              className: styles$1.typeOverlayBackdrop
             }),
-            (xmlImportFeedback == null ? void 0 : xmlImportFeedback.type) === "ok" && !addPanelOpen ? jsxRuntimeExports.jsx("div", {
-              className: styles$1.importSuccess,
-              children: xmlImportFeedback.text
-            }) : null
+            jsxRuntimeExports.jsxs("div", {
+              className: `${minervaTheme.surface} ${styles$1.typeOverlayCard}`,
+              children: [
+                jsxRuntimeExports.jsx("div", {
+                  className: styles$1.typeOverlayFile,
+                  title: pendingLabel(pending),
+                  children: pendingLabel(pending)
+                }),
+                jsxRuntimeExports.jsxs("div", {
+                  className: styles$1.typeRow,
+                  children: [
+                    jsxRuntimeExports.jsx("span", {
+                      className: styles$1.fieldLabel,
+                      children: "Type"
+                    }),
+                    jsxRuntimeExports.jsx(FormatChip, {
+                      label: "Microscopy Image",
+                      selected: overlayRole === "intensity",
+                      onClick: () => setOverlayRole("intensity")
+                    }),
+                    jsxRuntimeExports.jsx(FormatChip, {
+                      label: "Segmentation Mask",
+                      selected: overlayRole === "segmentation",
+                      onClick: () => {
+                        setOverlayRole("segmentation");
+                        setOverlayFormat("ome-tiff");
+                      }
+                    })
+                  ]
+                }),
+                dicomAllowed ? jsxRuntimeExports.jsx("div", {
+                  className: styles$1.typeSection,
+                  children: jsxRuntimeExports.jsxs("div", {
+                    className: styles$1.typeRow,
+                    children: [
+                      jsxRuntimeExports.jsx("span", {
+                        className: styles$1.fieldLabel,
+                        children: "Format"
+                      }),
+                      jsxRuntimeExports.jsx(FormatChip, {
+                        label: "OME-TIFF",
+                        selected: overlayFormat === "ome-tiff",
+                        onClick: () => setOverlayFormat("ome-tiff")
+                      }),
+                      jsxRuntimeExports.jsx(FormatChip, {
+                        label: "DICOMweb",
+                        selected: overlayFormat === "dicomweb",
+                        onClick: () => setOverlayFormat("dicomweb")
+                      })
+                    ]
+                  })
+                }) : null,
+                overlayFormat === "dicomweb" && dicomAllowed ? jsxRuntimeExports.jsxs("div", {
+                  className: styles$1.typeSection,
+                  children: [
+                    jsxRuntimeExports.jsx("label", {
+                      className: styles$1.fieldLabel,
+                      htmlFor: "dicom-dataset-name",
+                      children: "Label (optional)"
+                    }),
+                    jsxRuntimeExports.jsx("input", {
+                      id: "dicom-dataset-name",
+                      type: "text",
+                      className: `${minervaTheme.input} ${styles$1.urlInput}`,
+                      value: dicomName,
+                      onChange: (e2) => setDicomName(e2.target.value),
+                      placeholder: "Short name for this series"
+                    })
+                  ]
+                }) : null,
+                importError2 ? jsxRuntimeExports.jsx("div", {
+                  className: styles$1.importError,
+                  children: importError2
+                }) : null,
+                jsxRuntimeExports.jsxs("div", {
+                  className: styles$1.typeFooter,
+                  children: [
+                    jsxRuntimeExports.jsx(PanelActionButton, {
+                      type: "button",
+                      onClick: clearPending,
+                      children: "Cancel"
+                    }),
+                    jsxRuntimeExports.jsx(PanelActionButton, {
+                      type: "button",
+                      className: styles$1.typeImport,
+                      disabled: importBusy,
+                      onClick: () => void runImport(),
+                      children: importBusy ? "Importing\u2026" : "Import"
+                    })
+                  ]
+                })
+              ]
+            })
           ]
-        })
+        }) : null
       ]
     });
   };
@@ -250850,16 +250886,25 @@ void main() {
         return;
     }
   }
-  const wrapper = "_wrapper_1xu7r_1";
-  const full$1 = "_full_1xu7r_10";
-  const retrieving = "_retrieving_1xu7r_19";
-  const importLoadingOverlay = "_importLoadingOverlay_1xu7r_28";
+  const wrapper = "_wrapper_1dnlo_1";
+  const full$1 = "_full_1dnlo_10";
+  const retrieving = "_retrieving_1dnlo_19";
+  const importLoadingOverlay = "_importLoadingOverlay_1dnlo_28";
   const styles = {
     wrapper,
     full: full$1,
     retrieving,
     importLoadingOverlay
   };
+  function maybeDefaultStoryTitleFromFirstImage() {
+    const doc = useDocumentStore.getState();
+    if (!isBlankOrUntitledStoryTitle(doc.metadata.title)) return;
+    const name2 = firstImageNameForStoryTitle(doc.images);
+    if (!name2) return;
+    doc.setMetadata({
+      title: name2
+    });
+  }
   function ensureDefaultWaypointForImageImport() {
     var _a2;
     const doc = useDocumentStore.getState();
@@ -250880,6 +250925,10 @@ void main() {
     const app = useAppStore.getState();
     app.addStory(hydrateConfigWaypoint(raw2, doc.channelGroups));
     app.setActiveStory(0);
+  }
+  function afterImageImportDocumentEffects() {
+    maybeDefaultStoryTitleFromFirstImage();
+    ensureDefaultWaypointForImageImport();
   }
   async function getOmeTiffImageDescriptionOmeXml(source2, urlOptions = {}, signal) {
     var _a2;
@@ -251485,7 +251534,7 @@ void main() {
       publishChannelState(nextImages, ChannelGroups2, {
         resetActiveGroup: true
       });
-      ensureDefaultWaypointForImageImport();
+      afterImageImportDocumentEffects();
       if (role !== "segmentation") {
         for (let i2 = 0; i2 < entries.length; i2++) {
           const entry = entries[i2];
@@ -251600,6 +251649,7 @@ void main() {
         resetActiveGroup: false,
         mergeVisibilities: true
       });
+      maybeDefaultStoryTitleFromFirstImage();
       return {
         ok: true
       };
@@ -251635,7 +251685,7 @@ void main() {
             activeChannelGroupId: null
           });
         }
-        ensureDefaultWaypointForImageImport();
+        afterImageImportDocumentEffects();
         const jpegEntries = await jpegLoaderEntriesFromImages({
           images: data2.images,
           channelGroups: data2.channelGroups,
@@ -251727,7 +251777,7 @@ void main() {
       publishChannelState(nextImages, ChannelGroups2, {
         resetActiveGroup: true
       });
-      ensureDefaultWaypointForImageImport();
+      afterImageImportDocumentEffects();
       if (role !== "segmentation") {
         const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
         applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
@@ -251821,6 +251871,7 @@ void main() {
         resetActiveGroup: false,
         mergeVisibilities: true
       });
+      maybeDefaultStoryTitleFromFirstImage();
       return {
         ok: true
       };
@@ -252086,7 +252137,7 @@ void main() {
         ChannelGroups: ChannelGroups2,
         SourceChannels
       });
-      ensureDefaultWaypointForImageImport();
+      afterImageImportDocumentEffects();
     };
     const [valid2, setValid] = reactExports.useState({});
     const onStartRef = reactExports.useRef(onStart);
@@ -252470,16 +252521,14 @@ void main() {
         mainSettingsList,
         imageLayers,
         omeLoaderEntries,
-        showSquareViewportOverlay,
-        isLoadingImage
+        showSquareViewportOverlay
       };
     }, [
       showSquareViewportOverlay,
       mainSettingsList,
       imageLayers,
       loaderList,
-      omeLoaderEntries,
-      isLoadingImage
+      omeLoaderEntries
     ]);
     const { overlayLayers, activeTool, dragState, hoverState, handleOverlayInteraction, activeStoryIndex, setActiveStory, setStories } = useAppStore();
     const _waypoints = useDocumentStore((s2) => s2.waypoints);
@@ -252662,6 +252711,36 @@ void main() {
             (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
           }
         };
+        const importDicomWeb = async (req) => {
+          var _a2, _b2, _c2, _d;
+          const loadEpoch = beginImageLoading();
+          try {
+            const series = normalizeDicomWebSeriesUrl(req.url);
+            const label2 = ((_a2 = req.name) == null ? void 0 : _a2.trim()) || ((_c2 = (_b2 = series.match(/\/series\/([^/]+)/i)) == null ? void 0 : _b2[1]) == null ? void 0 : _c2.slice(-14)) || "DICOMweb";
+            await onStartDicomWeb([
+              [
+                series,
+                label2
+              ]
+            ], props.demo_dicom_web ? props.exhibit_config.Groups ?? [] : []);
+            setImportRevision((r2) => r2 + 1);
+            const storyId = useDocumentStore.getState().activeStoryId;
+            if (storyId) {
+              await saveStoryDocument(storyId, useDocumentStore.getState().toDocumentData());
+            }
+            return {
+              ok: true
+            };
+          } catch (e2) {
+            return {
+              ok: false,
+              error: e2 instanceof Error ? e2.message : "Could not load the DICOMweb series."
+            };
+          } finally {
+            endImageLoading(loadEpoch);
+            (_d = document.getElementById("global-loader")) == null ? void 0 : _d.remove();
+          }
+        };
         const uploadProps = {
           formProps,
           onAllow,
@@ -252671,6 +252750,7 @@ void main() {
           fileName,
           lastOmeTiffUrl,
           onImportOme: importOme,
+          onImportDicomWeb: importDicomWeb,
           needsFileAccess: deniedHandleKeys.length > 0,
           onRequestFileAccess: requestLoaderFileAccess,
           missingHandleKeys,
@@ -252701,9 +252781,24 @@ void main() {
           hoveredShapeId: hoverState.hoveredShapeId,
           onOverlayInteraction: handleOverlayInteraction
         }, viewerRemountKey);
-        const imager = jsxRuntimeExports.jsxs("div", {
+        const imager = jsxRuntimeExports.jsx("div", {
           className: styles.full,
+          children: jsxRuntimeExports.jsx(PlaybackModeView, {
+            ...routerProps,
+            viewer,
+            imagesPanel
+          })
+        });
+        return jsxRuntimeExports.jsxs("div", {
+          className: styles.wrapper,
           children: [
+            !presenting ? jsxRuntimeExports.jsx(StoryTitleBar, {
+              onReturnToLibrary: returnToLibrary,
+              onExport: () => void startExport(canExportWithRemoteUrls(images) ? "remote-url" : "jpeg-pyramid"),
+              onEnterPlaybackPreview: enterPlaybackPreview,
+              playbackPreviewDisabled: _waypoints.length === 0
+            }) : null,
+            imager,
             isLoadingImage ? jsxRuntimeExports.jsxs("output", {
               className: styles.importLoadingOverlay,
               "aria-busy": "true",
@@ -252715,24 +252810,7 @@ void main() {
                   children: "Loading\u2026"
                 })
               ]
-            }) : null,
-            jsxRuntimeExports.jsx(PlaybackModeView, {
-              ...routerProps,
-              viewer,
-              imagesPanel
-            })
-          ]
-        });
-        return jsxRuntimeExports.jsxs("div", {
-          className: styles.wrapper,
-          children: [
-            !presenting ? jsxRuntimeExports.jsx(StoryTitleBar, {
-              onReturnToLibrary: returnToLibrary,
-              onExport: () => void startExport(canExportWithRemoteUrls(images) ? "remote-url" : "jpeg-pyramid"),
-              onEnterPlaybackPreview: enterPlaybackPreview,
-              playbackPreviewDisabled: _waypoints.length === 0
-            }) : null,
-            imager
+            }) : null
           ]
         });
       }
