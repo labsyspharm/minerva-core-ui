@@ -105,30 +105,38 @@ export type Config = {
   ) => Settings;
 };
 
-/** Full-resolution pixel width/height from OME metadata or the finest pyramid level. */
+/** Full-resolution pixel size from OME metadata or finest pyramid level (>1 rejects placeholders). */
 export function loaderPixelSizeXY(loader: Loader): {
   sizeX: number;
   sizeY: number;
 } | null {
   const px = loader.metadata?.Pixels;
+  const metaX = Number(px?.SizeX);
+  const metaY = Number(px?.SizeY);
   if (
-    px &&
-    typeof px.SizeX === "number" &&
-    typeof px.SizeY === "number" &&
-    px.SizeX > 0 &&
-    px.SizeY > 0
+    Number.isFinite(metaX) &&
+    Number.isFinite(metaY) &&
+    metaX > 1 &&
+    metaY > 1
   ) {
-    return { sizeX: px.SizeX, sizeY: px.SizeY };
+    return { sizeX: Math.round(metaX), sizeY: Math.round(metaY) };
   }
   const level = loader.data?.[0];
-  if (!level) return null;
+  if (!level?.labels || !level?.shape) return null;
   const xi = level.labels.indexOf("x");
   const yi = level.labels.indexOf("y");
   if (xi < 0 || yi < 0) return null;
-  const sizeX = level.shape[xi];
-  const sizeY = level.shape[yi];
-  if (sizeX <= 0 || sizeY <= 0) return null;
-  return { sizeX, sizeY };
+  const sizeX = Number(level.shape[xi]);
+  const sizeY = Number(level.shape[yi]);
+  if (
+    !Number.isFinite(sizeX) ||
+    !Number.isFinite(sizeY) ||
+    sizeX <= 1 ||
+    sizeY <= 1
+  ) {
+    return null;
+  }
+  return { sizeX: Math.round(sizeX), sizeY: Math.round(sizeY) };
 }
 
 const toDefaultSettings = (n: number) => {
