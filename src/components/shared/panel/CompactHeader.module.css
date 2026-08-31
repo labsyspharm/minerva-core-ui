@@ -1,31 +1,39 @@
 .compactHeader {
-  background-color: var(--panel-surface, #1a1a1a);
-  border-bottom: 1px solid var(--panel-border, #444);
-  padding: 6px 10px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 10px;
-  min-height: 34px;
+  gap: 8px;
+  min-height: var(--minerva-strip-height);
+  padding: 0 var(--minerva-inset);
   box-sizing: border-box;
+  border-bottom: 1px solid var(--minerva-edge);
 }
 
 .headerTitle {
+  grid-column: 2;
+  justify-self: center;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
-  font-size: 12px;
-  font-weight: bold;
   white-space: nowrap;
+  font-size: inherit;
+  font-weight: 400;
+  line-height: 1.2;
 }
 
 .headerCount {
-  font-weight: normal;
-  color: var(--panel-muted, #999);
+  color: var(--minerva-quiet);
+  font-size: inherit;
+  font-weight: 400;
 }
 
 .headerActions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-left: auto;
+  gap: 0;
+}
+
+.compactHeader .headerActions {
+  grid-column: 3;
+  justify-self: end;
 }

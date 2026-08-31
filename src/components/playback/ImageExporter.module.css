@@ -19,11 +19,15 @@
 .dismissButton {
   align-self: center;
   padding: 0.4em 0.8em;
-  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
-  background: color-mix(in srgb, currentColor 12%, transparent);
+  border: 1px solid var(--minerva-edge);
+  background: transparent;
   color: inherit;
   cursor: pointer;
   font: inherit;
+}
+
+.dismissButton:hover {
+  background: var(--minerva-wash);
 }
 
 .progressBar {
@@ -36,7 +40,7 @@
 .progressBar > div:first-child {
   box-sizing: border-box;
   height: 1.25em;
-  border: 1px solid color-mix(in srgb, currentColor 85%, transparent);
+  border: 1px solid var(--minerva-edge);
   background-color: transparent;
   overflow: hidden;
 }
@@ -44,31 +48,31 @@
 .progressBar > div:first-child > div {
   height: 100%;
   width: calc(var(--progress-ratio, 0) * 100%);
-  background-color: hwb(220 10% 20% / 0.5);
+  background-color: var(--minerva-wash);
 }
 
 .progressBarDone > div:first-child > div {
-  background-color: hwb(220 70% 30% / 0.9);
+  background-color: var(--minerva-ink);
 }
 
 .progressBar > div:last-child {
   padding: 0.25em;
-  font-family: monospace;
+  font-family: inherit;
   white-space: nowrap;
 }
 
 .etaLine {
-  font-family: monospace;
+  font-family: inherit;
   font-size: 0.9em;
   text-align: center;
-  opacity: 0.85;
+  color: var(--minerva-quiet);
 }
 
 .exportMessage {
   grid-row: 2;
   grid-column: 2;
   padding: 0.5em 0.75em;
-  font-family: monospace;
+  font-family: inherit;
   text-align: center;
 }
 

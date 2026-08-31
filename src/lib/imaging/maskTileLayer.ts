@@ -12,6 +12,16 @@ import type {
 } from "@/lib/imaging/loaderTypes";
 import type { Loader } from "@/lib/imaging/viv";
 
+/** Higher-chroma cousins of `--cloth-1`…`--cloth-6`. */
+const CELL_OUTLINE_VEC3: [number, number, number][] = [
+  [212 / 255, 110 / 255, 94 / 255],
+  [207 / 255, 156 / 255, 89 / 255],
+  [199 / 255, 176 / 255, 87 / 255],
+  [74 / 255, 181 / 255, 131 / 255],
+  [87 / 255, 147 / 255, 199 / 255],
+  [163 / 255, 103 / 255, 193 / 255],
+];
+
 type MaskTileData = {
   data: Uint32Array[];
   width: number;
@@ -52,22 +62,14 @@ uniform SAMPLER_TYPE channel0;
 in vec2 vTexCoord;
 out vec4 fragColor;
 
-uint hashLabel(uint x) {
-  x ^= x >> 16u;
-  x *= 0x7feb352du;
-  x ^= x >> 15u;
-  x *= 0x846ca68bu;
-  x ^= x >> 16u;
-  return x;
-}
-
 vec3 randomColor(uint label) {
-  uint h = hashLabel(label ^ uint(maskViz.uColorSeed));
-  return vec3(
-    float(50u + (h & 0x9fu)) / 255.0,
-    float(50u + ((h >> 8u) & 0x9fu)) / 255.0,
-    float(50u + ((h >> 16u) & 0x9fu)) / 255.0
-  );
+  uint i = (label ^ uint(maskViz.uColorSeed)) % 6u;
+  if (i == 0u) return maskViz.uPalette0;
+  if (i == 1u) return maskViz.uPalette1;
+  if (i == 2u) return maskViz.uPalette2;
+  if (i == 3u) return maskViz.uPalette3;
+  if (i == 4u) return maskViz.uPalette4;
+  return maskViz.uPalette5;
 }
 
 bool isInteriorEdge(uint label, vec2 coord) {
@@ -112,6 +114,12 @@ uniform maskVizUniforms {
   float uColorSeed;
   vec2 uTexelSize;
   float opacity;
+  vec3 uPalette0;
+  vec3 uPalette1;
+  vec3 uPalette2;
+  vec3 uPalette3;
+  vec3 uPalette4;
+  vec3 uPalette5;
 } maskViz;
 `,
   uniformTypes: {
@@ -120,6 +128,12 @@ uniform maskVizUniforms {
     uColorSeed: "f32",
     uTexelSize: "vec2<f32>",
     opacity: "f32",
+    uPalette0: "vec3<f32>",
+    uPalette1: "vec3<f32>",
+    uPalette2: "vec3<f32>",
+    uPalette3: "vec3<f32>",
+    uPalette4: "vec3<f32>",
+    uPalette5: "vec3<f32>",
   },
 };
 
@@ -183,6 +197,7 @@ class MaskBitmaskLayer extends XRLayerBase {
     const viz =
       (this.props.visualization as MaskVisualization | undefined) ??
       DEFAULT_MASK_VISUALIZATION;
+    const white: [number, number, number] = [1, 1, 1];
     model.shaderInputs.setProps({
       maskViz: {
         uOutline: viz.style === "outline" ? 1 : 0,
@@ -190,6 +205,12 @@ class MaskBitmaskLayer extends XRLayerBase {
         uColorSeed: viz.colorSeed ?? 0,
         uTexelSize: [1 / w, 1 / h],
         opacity: this.props.opacity ?? 1,
+        uPalette0: CELL_OUTLINE_VEC3[0] ?? white,
+        uPalette1: CELL_OUTLINE_VEC3[1] ?? white,
+        uPalette2: CELL_OUTLINE_VEC3[2] ?? white,
+        uPalette3: CELL_OUTLINE_VEC3[3] ?? white,
+        uPalette4: CELL_OUTLINE_VEC3[4] ?? white,
+        uPalette5: CELL_OUTLINE_VEC3[5] ?? white,
       },
     });
   }

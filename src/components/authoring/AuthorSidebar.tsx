@@ -1,9 +1,14 @@
-import type { ReactNode } from "react";
-import * as React from "react";
+import { type ReactNode, useState } from "react";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 import { ChannelGroupsMasterDetail } from "@/components/shared/channel/ChannelGroupsMasterDetail";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
-import { GlassTabBar } from "@/components/shared/GlassTabBar";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import {
+  SidebarStripSlot,
+  SidebarStripSlotProvider,
+} from "@/components/shared/panel/CompactHeader";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
+import { TabBar } from "@/components/shared/TabBar";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import styles from "./AuthorSidebar.module.css";
 
@@ -19,30 +24,6 @@ const TAB_LABELS: Record<AuthorTab, string> = {
 
 const TAB_ITEMS = TAB_ORDER.map((id) => ({ id, label: TAB_LABELS[id] }));
 
-export type AuthorSidebarHostProps = {
-  collapsed: boolean;
-  children: ReactNode;
-  className?: string;
-};
-
-/** Thin layout wrapper (formerly styled); kept for stable export API. */
-export function AuthorSidebarHost(props: AuthorSidebarHostProps) {
-  const { collapsed, children, className } = props;
-  return (
-    <div
-      className={[
-        styles.sidebarHost,
-        collapsed ? styles.sidebarHostCollapsed : null,
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      {children}
-    </div>
-  );
-}
-
 export type AuthorSidebarProps = {
   imagesPanel: ReactNode;
   noLoader: boolean;
@@ -56,7 +37,7 @@ export type AuthorSidebarProps = {
 };
 
 export function AuthorSidebar(props: AuthorSidebarProps) {
-  const [activeTab, setActiveTab] = React.useState<AuthorTab>("images");
+  const [activeTab, setActiveTab] = useState<AuthorTab>("images");
   const { expanded } = props;
 
   const activePanel =
@@ -74,25 +55,31 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
     );
 
   return (
-    <AuthorSidebarHost collapsed={!expanded}>
-      <div className={styles.sidebar}>
+    <SidebarStripSlotProvider>
+      <div
+        className={[
+          styles.sidebarHost,
+          expanded ? null : styles.sidebarHostCollapsed,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         <div className={styles.panelOuter}>
-          <div className={styles.tabRow}>
-            <GlassTabBar<AuthorTab>
+          <div className={`${styles.tabRow} ${minervaTheme.strip}`}>
+            <TabBar<AuthorTab>
               tabs={TAB_ITEMS}
               value={activeTab}
               onChange={setActiveTab}
               aria-label="Author panels"
             />
+            <SidebarStripSlot className={styles.stripActions} />
           </div>
           <div className={styles.panelContent} role="tabpanel">
-            <div className={styles.panelContentInner}>
-              <div className={styles.panelSlot}>{activePanel}</div>
-            </div>
+            {activePanel}
           </div>
         </div>
       </div>
-    </AuthorSidebarHost>
+    </SidebarStripSlotProvider>
   );
 }
 
@@ -149,7 +136,7 @@ export type AuthorViewProps = {
 };
 
 export function AuthorView(props: AuthorViewProps) {
-  const [expanded, setExpanded] = React.useState(true);
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <AuthorViewport collapsed={!expanded}>
@@ -161,8 +148,7 @@ export function AuthorView(props: AuthorViewProps) {
         contrastEditable={props.contrastEditable}
         expanded={expanded}
       />
-      <button
-        type="button"
+      <PanelIconButton
         className={[
           styles.expandControl,
           expanded ? styles.expandControlExpanded : null,
@@ -175,7 +161,7 @@ export function AuthorView(props: AuthorViewProps) {
         onClick={() => setExpanded((open) => !open)}
       >
         <ChevronIcon direction={expanded ? "left" : "right"} />
-      </button>
+      </PanelIconButton>
       <AuthorViewerRegion>{props.viewer}</AuthorViewerRegion>
     </AuthorViewport>
   );

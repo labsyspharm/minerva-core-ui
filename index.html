@@ -7,59 +7,38 @@
     <link rel="icon" href="images/favicon.png" />
     <meta http-equiv="Cache-control" content="no-cache" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
     <style>
+      /* Boot colors match --minerva-paper / --minerva-ink / --minerva-quiet (hex: loader runs before JS/CSS modules). */
       html,
       body {
         height: 100%;
         margin: 0;
+        background: #000;
+        color: #f2f2f2;
       }
       body {
         min-height: 100vh;
       }
-      * {
-        --theme-font-family: "lato",sans-serif;
-        --theme-dark-main-color: hwb(240 10% 50%);
-        --theme-light-focus-color: hwb(45 90% 0%);
-        --theme-light-contrast-color: hwb(45 99% 0%);
-        --theme-dark-accept-color: hwb(170 5% 75%);
-        --theme-dark-reject-color: hwb(25 0% 75%);
-        --theme-dark-focus-color: hwb(45 0% 90%);
-        --theme-glass-edge: color-mix(in xyz, white 20%, transparent);
-        --theme-dark-gray-color: color-mix(in xyz, navy 2%, black);
-        --theme-glass-filter: blur(32px);
-        --theme-dim-gray-color: #111;
-        --theme-gap-tiny: 0.3em;
-        --radius-0001: 0 0 0 4px;
-        /* Authoring panel chrome (Waypoints / Channels / Upload) */
-        --panel-surface: #1a1a1a;
-        --panel-border: #444;
-        --panel-muted: #999;
-        --panel-accent: #58a6ff;
-        --dark-main-glass: 
-          color-mix(
-            in xyz, var(--theme-dark-main-color), transparent 20%
-          );
-        --dark-glass: 
-          color-mix(
-            in xyz, var(--theme-dim-gray-color), transparent 20%
-          );
+      #global-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        color: #888;
+        font-family: "DM Sans", sans-serif;
+        font-size: 18px;
+        z-index: 9999;
       }
     </style>
   </head>
   <body>
     <script type="module" src="./index.tsx"></script>
-    <div id="global-loader" style="
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--theme-dark-gray-color, #111);
-      color: #aaa;
-      font-family: var(--theme-font-family, sans-serif);
-      font-size: 18px;
-      z-index: 9999;
-    ">Loading Minerva...</div>
+    <div id="global-loader">Loading Minerva...</div>
     <div id="react-output"></div>
   </body>
 </html>

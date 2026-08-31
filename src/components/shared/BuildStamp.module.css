@@ -4,10 +4,11 @@
   bottom: max(8px, env(safe-area-inset-bottom));
   z-index: 99999;
   pointer-events: none;
+  font-family: var(--minerva-font);
   font-size: 10px;
   line-height: 1.25;
   font-weight: 400;
   letter-spacing: 0.015em;
   opacity: 0.28;
-  color: rgba(238, 238, 238, 0.85);
+  color: var(--minerva-ink);
 }

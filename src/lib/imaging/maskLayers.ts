@@ -25,19 +25,6 @@ export type ImageSelectionMask = {
   maskVisualization?: MaskVisualization;
 };
 
-/** Stable RGB from a string seed (label id, shape id, channel name). */
-function colorFromSeed(seed: string): [number, number, number] {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  const r = 50 + ((h >> 16) & 0x9f);
-  const g = 50 + ((h >> 8) & 0x9f);
-  const b = 50 + (h & 0x9f);
-  return [r, g, b];
-}
-
 function isEdgeAt(
   data: Uint8Array,
   width: number,
@@ -116,6 +103,28 @@ function paintBinaryMask(
   }
 }
 
+/** Higher-chroma cousins of `--cloth-1`…`--cloth-6`. */
+const CELL_OUTLINE_RGB = [
+  [212, 110, 94],
+  [207, 156, 89],
+  [199, 176, 87],
+  [74, 181, 131],
+  [87, 147, 199],
+  [163, 103, 193],
+] as const;
+
+function cellOutlineRgbFromSeed(seed: string): [number, number, number] {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const c =
+    CELL_OUTLINE_RGB[(h >>> 0) % CELL_OUTLINE_RGB.length] ??
+    CELL_OUTLINE_RGB[0];
+  return [c[0], c[1], c[2]];
+}
+
 /** Binary mask (`data[i]` 0/1) for annotation selections. */
 function binaryMaskToRgba(
   data: Uint8Array,
@@ -130,7 +139,9 @@ function binaryMaskToRgba(
       ? `${colorSeed}:${visualization.colorSeed}`
       : colorSeed;
   const rgb: [number, number, number] =
-    visualization.color === "random" ? colorFromSeed(seedKey) : [255, 255, 255];
+    visualization.color === "random"
+      ? cellOutlineRgbFromSeed(seedKey)
+      : [255, 255, 255];
   const outline = visualization.style === "outline";
   const alpha = outline ? 230 : 170;
 

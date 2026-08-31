@@ -1,0 +1,286 @@
+/**
+ * Shared recipes. Tokens live in minervaTheme.global.css.
+ *
+ * Control modifiers: .control (28) / .controlRow (24) / .controlText / .controlActive
+ */
+
+.bar {
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  height: var(--minerva-bar-height);
+  padding: 0 var(--minerva-inset);
+  display: flex;
+  align-items: center;
+  gap: var(--minerva-gap);
+  background: var(--minerva-paper);
+  border-bottom: 1px solid var(--minerva-blue);
+}
+
+.wordmark {
+  flex-shrink: 0;
+  margin: 0;
+  font-size: var(--minerva-wordmark-size);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--minerva-blue);
+  font-family: inherit;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.wordmarkDisplay {
+  font-size: var(--minerva-wordmark-display);
+}
+
+.title,
+.field {
+  font-size: var(--minerva-title-size);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.field {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 0.55em 0 0.25em;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  height: auto;
+}
+
+.field::placeholder {
+  color: var(--minerva-quiet);
+}
+
+.field:focus {
+  outline: none;
+}
+
+.input {
+  box-sizing: border-box;
+  margin: 0;
+  border: 1px solid var(--minerva-edge);
+  border-radius: var(--minerva-radius);
+  background: transparent;
+  color: var(--minerva-ink);
+  font: inherit;
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--minerva-quiet);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--minerva-ink);
+}
+
+.surface {
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
+  border-radius: var(--minerva-radius);
+  color: var(--minerva-ink);
+}
+
+.selectLeft {
+  background: var(--minerva-wash);
+  box-shadow: inset 2px 0 0 var(--minerva-ink);
+}
+
+:is(.control, .controlRow) {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  width: var(--minerva-control);
+  height: var(--minerva-control);
+  border: none;
+  background: transparent;
+  color: var(--minerva-ink);
+  font-family: inherit;
+  line-height: 0;
+  cursor: pointer;
+}
+
+:is(.control, .controlRow):hover:not(:disabled) {
+  background: var(--minerva-wash);
+}
+
+:is(.control, .controlRow):disabled {
+  color: var(--minerva-quiet);
+  cursor: default;
+}
+
+:is(.control, .controlRow):disabled:hover {
+  background: transparent;
+}
+
+:is(.control, .controlRow) svg {
+  display: block;
+  width: var(--minerva-icon-size);
+  height: var(--minerva-icon-size);
+}
+
+.controlActive {
+  background: var(--minerva-wash);
+  box-shadow: inset 0 -1px 0 var(--minerva-ink);
+}
+
+.controlText {
+  width: auto;
+  min-width: var(--minerva-control);
+  padding: 0 var(--minerva-gap);
+  gap: var(--minerva-gap-sm);
+  font-size: var(--minerva-size);
+  line-height: 1;
+}
+
+.controlRow {
+  width: 24px;
+  height: 24px;
+}
+
+.menu,
+.menuFixed {
+  position: absolute;
+  z-index: var(--minerva-z-menu);
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 11rem;
+  padding: 0.25em 0;
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
+  font: inherit;
+  font-size: var(--minerva-size);
+  font-weight: 400;
+}
+
+.menuItem {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.55em 0.85em;
+  border: 0;
+  background: transparent;
+  color: var(--minerva-ink);
+  font: inherit;
+  font-size: var(--minerva-size);
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menuItem:hover:not(:disabled) {
+  background: var(--minerva-wash);
+}
+
+.menuItem:disabled {
+  color: var(--minerva-quiet);
+  cursor: default;
+}
+
+.menuFixed {
+  position: fixed;
+  top: auto;
+  left: auto;
+}
+
+.strip {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  min-height: var(--minerva-strip-height);
+  background: var(--minerva-paper);
+}
+
+.tabList {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.tab {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0.55em 0.5em 0.5em;
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--minerva-quiet);
+  font: inherit;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab:hover,
+.tabActive {
+  color: var(--minerva-ink);
+}
+
+.tabActive {
+  border-bottom-color: var(--minerva-ink);
+}
+
+.field:focus-visible,
+.input:focus-visible,
+.menuItem:focus-visible,
+:is(.control, .controlRow):focus-visible,
+.focusRing:focus-visible {
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: var(--minerva-focus-offset);
+}
+
+.tab:focus-visible {
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: -2px;
+}
+
+@keyframes minerva-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--minerva-edge);
+  border-top-color: var(--minerva-ink);
+  border-radius: 50%;
+  animation: minerva-spin 0.9s linear infinite;
+}
+
+.spinnerMd {
+  composes: spinner;
+  width: 24px;
+  height: 24px;
+}
+
+.spinnerSm {
+  composes: spinner;
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .spinnerMd,
+  .spinnerSm {
+    animation: none;
+    border-top-color: var(--minerva-quiet);
+  }
+}

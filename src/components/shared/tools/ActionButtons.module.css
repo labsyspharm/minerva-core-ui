@@ -1,32 +1,13 @@
-.glassIconButton {
-  justify-items: center;
-  align-items: center;
-  display: grid;
-  border: none;
-  font: inherit;
-  border-radius: 50%;
-  outline: 1px solid var(--theme-glass-edge) !important;
-  background-color: var(--theme-dark-main-color);
-  margin-bottom: calc(2 * var(--theme-gap-tiny));
-  color: var(--icon-color, #fff);
-  font-size: 1em;
-  height: 1em;
-  width: 1em;
-  padding: 0;
-  opacity: 0.5;
+.static {
   cursor: default;
 }
 
-.glassIconButtonClickable {
-  opacity: 1;
-  cursor: pointer;
+.static:hover {
+  background: transparent;
 }
 
-.glassIconButton svg {
-  width: 1em;
-  height: 1em;
-  display: block;
-  transform: scale(1, 0.9);
+.clickable {
+  cursor: pointer;
 }
 
 .wrapColumn {

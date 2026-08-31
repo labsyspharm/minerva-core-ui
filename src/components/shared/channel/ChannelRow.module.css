@@ -1,4 +1,4 @@
-/* Channel row / swatch primitives + row layout variants used via ChannelRow. */
+/* Channel row — story look. */
 
 .channelNameInput {
   display: block;
@@ -26,37 +26,13 @@
 
 .channelImageSubtitle {
   display: block;
-  font-size: 10px;
+  font-size: var(--minerva-size-note);
   line-height: 1.2;
-  color: #7d868f;
+  color: var(--minerva-quiet);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   margin: 1px 0 0 26px;
-}
-
-.detailTitleInput {
-  width: 100%;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 6px 8px;
-  font-size: 13px;
-  line-height: 1.3;
-  color: #e6edf3;
-  background-color: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 3px;
-}
-
-.detailTitleInput:focus {
-  outline: none;
-  border-color: var(--panel-accent, #58a6ff);
-  box-shadow: 0 0 0 1px var(--panel-accent, #58a6ff);
-}
-
-.detailTitleInput:disabled {
-  opacity: 0.85;
-  cursor: not-allowed;
 }
 
 .channelVisibilityButton {
@@ -68,38 +44,47 @@
   padding: 0;
   flex-shrink: 0;
   background: none;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  color: #c9d1d9;
+  border: none;
+  border-radius: 0;
+  color: var(--minerva-ink);
   cursor: pointer;
 }
 
 .channelVisibilityButton:hover {
-  color: #e6edf3;
-  background-color: #21262d;
-  border-color: #30363d;
+  color: var(--minerva-ink);
+  background: var(--minerva-wash);
+}
+
+.channelVisibilityButton:focus-visible {
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: var(--minerva-focus-offset);
 }
 
 .channelVisibilityButtonHidden {
-  color: #6e7681;
+  color: var(--minerva-quiet);
 }
 
 .channelColorSwatch {
   width: 14px;
   height: 14px;
   padding: 0;
-  border: 1px solid #444;
-  border-radius: 2px;
+  border: 1px solid var(--minerva-edge);
+  border-radius: 0;
   flex-shrink: 0;
   cursor: pointer;
 }
 
 .channelColorSwatch:hover {
-  border-color: #8b949e;
+  border-color: var(--minerva-ink);
+}
+
+.channelColorSwatch:focus-visible {
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: var(--minerva-focus-offset);
 }
 
 .detailChannelRowLocked .channelColorSwatch {
-  box-shadow: 0 0 0 1px #388bfd66;
+  box-shadow: inset 0 0 0 1px var(--minerva-ink);
 }
 
 .maskVizControls {
@@ -115,9 +100,9 @@
   flex-shrink: 0;
   margin: 0;
   padding: 1px;
-  border: 1px solid #30363d;
-  border-radius: 4px;
-  background: #0d1117;
+  border: 1px solid var(--minerva-edge);
+  border-radius: 0;
+  background: transparent;
   gap: 1px;
 }
 
@@ -129,20 +114,26 @@
   height: 18px;
   padding: 0;
   background: transparent;
-  color: #6e7681;
+  color: var(--minerva-quiet);
   border: none;
-  border-radius: 3px;
+  border-radius: 0;
   cursor: pointer;
 }
 
 .maskVizOption:hover {
-  color: #e6edf3;
-  background: #21262d;
+  color: var(--minerva-ink);
+  background: var(--minerva-wash);
+}
+
+.maskVizOption:focus-visible {
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: var(--minerva-focus-offset);
 }
 
 .maskVizOptionActive {
-  background: #30363d;
-  color: #e6edf3;
+  background: var(--minerva-wash);
+  color: var(--minerva-ink);
+  box-shadow: inset 0 -1px 0 var(--minerva-ink);
 }
 
 .maskVizIconOutline,
@@ -152,7 +143,7 @@
   display: block;
   width: 10px;
   height: 10px;
-  border-radius: 2px;
+  border-radius: 0;
   box-sizing: border-box;
 }
 
@@ -166,8 +157,8 @@
 }
 
 .maskVizSwatchWhite {
-  border: 1px solid #8b949e;
-  background: #f0f3f6;
+  border: 1px solid var(--minerva-quiet);
+  background: var(--minerva-ink);
 }
 
 .maskVizSwatchRandom {
@@ -181,15 +172,13 @@
   );
 }
 
-/* ---- Row layouts passed as ChannelRow rowClassName ---- */
-
 .groupChildRow,
 .rootChannelRow {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 0;
-  padding: 4px 8px 2px 4px;
+  padding: 4px 0 2px;
   min-height: 0;
 }
 
@@ -198,6 +187,17 @@
   box-sizing: border-box;
   height: 22px;
   padding: 2px 6px;
-  font-size: 12px;
+  font-size: inherit;
   line-height: 1.2;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--minerva-ink);
+  font-family: inherit;
+}
+
+.groupChildRow .channelNameInput:focus-visible,
+.rootChannelRow .channelNameInput:focus-visible {
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: 1px;
 }

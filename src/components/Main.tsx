@@ -7,6 +7,7 @@ import { MinervaLibraryPage } from "@/components/library/MinervaLibraryPage";
 import { PlaybackModeView } from "@/components/playback/PlaybackModeView";
 import { BuildStamp } from "@/components/shared/BuildStamp";
 import { FileHandler } from "@/components/shared/FileHandler";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import type {
   LoadedSourceSummary,
   OmeImportRequest,
@@ -134,7 +135,6 @@ import {
   rootRouteApi,
   StoryIdUrlSync,
 } from "@/router/appRouter";
-
 import styles from "./Main.module.css";
 
 /** When the story has no waypoints yet, add a default row for image import to attach to. */
@@ -2421,7 +2421,7 @@ const Content = (props: Props) => {
           <div className={styles.full}>
             {isLoadingImage ? (
               <output className={styles.importLoadingOverlay} aria-busy="true">
-                <div className={styles.importLoadingSpinner} />
+                <div className={minervaTheme.spinner} />
                 <span>Loading…</span>
               </output>
             ) : null}

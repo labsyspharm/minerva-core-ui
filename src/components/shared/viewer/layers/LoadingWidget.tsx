@@ -1,5 +1,6 @@
 import type { Layer } from "@deck.gl/core";
 import * as React from "react";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 
 type LoadingWidgetProps = {
   /** Widget positioning within the view. Default 'top-left'. */
@@ -43,22 +44,7 @@ export const LoadingWidget = React.forwardRef<
 
   return (
     <div className="deck-widget-loading" style={positionStyles} title={label}>
-      <div
-        style={{
-          width: "24px",
-          height: "24px",
-          border: "3px solid rgba(255, 255, 255, 0.3)",
-          borderTop: "3px solid rgba(255, 255, 255, 0.9)",
-          borderRadius: "50%",
-          animation: "spin 1s linear infinite",
-        }}
-      />
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
+      <div className={minervaTheme.spinnerMd} />
     </div>
   );
 });

@@ -1,6 +1,8 @@
 import * as React from "react";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { CompactHeader } from "@/components/shared/panel/CompactHeader";
 import panel from "@/components/shared/panel/panelShared.module.css";
 import type { Shape, ShapeGroup } from "@/lib/shapes/shapeModel";
 import styles from "./ItemList.module.css";
@@ -40,7 +42,7 @@ export interface ItemListProps<T = Metadata> {
   noHeader?: boolean;
   emptyMessage?: string;
   className?: string;
-  /** Match @uiw/react-md-editor dark UI (#0d1117 / #30363d) */
+  /** Match the Minerva look for annotation lists */
   variant?: ItemListVariant;
   /** Dense rows (~waypoint list): tighter padding and type sizes */
   compactRows?: boolean;
@@ -178,7 +180,7 @@ const ItemList = <T = React.Component>({
     // Build CSS class names based on item state
     const itemClasses = [
       styles.item,
-      item.isActive ? styles.itemActive : "",
+      item.isActive ? minervaTheme.selectLeft : "",
       item.pulse ? styles.itemPulse : "",
       item.isHidden ? styles.itemHidden : "",
       isDragging ? styles.itemDragging : "",
@@ -221,7 +223,7 @@ const ItemList = <T = React.Component>({
           onItemClick ? (
             <button
               type="button"
-              className={styles.itemIconHit}
+              className={`${minervaTheme.focusRing} ${styles.itemIconHit}`}
               onClick={(e) => onItemClick(item, e)}
               onDoubleClick={() => onItemDoubleClick?.(item)}
             >
@@ -248,7 +250,7 @@ const ItemList = <T = React.Component>({
         {onItemClick ? (
           <button
             type="button"
-            className={styles.itemRowMain}
+            className={`${minervaTheme.focusRing} ${styles.itemRowMain}`}
             onClick={(e) => onItemClick(item, e)}
             onDoubleClick={() => onItemDoubleClick?.(item)}
           >
@@ -285,14 +287,14 @@ const ItemList = <T = React.Component>({
   };
 
   const header = (
-    <div className={styles.header}>
-      <span>
-        {title} ({items.length})
-      </span>
-      {headerActions && (
-        <div className={styles.headerActions}>{headerActions}</div>
-      )}
-    </div>
+    <CompactHeader
+      title={title}
+      count={`(${items.length})`}
+      actions={headerActions}
+      className={
+        variant === "markdownEditor" ? styles.headerMarkdown : undefined
+      }
+    />
   );
 
   const rootClass = [
@@ -311,7 +313,7 @@ const ItemList = <T = React.Component>({
 
       {/* List */}
       {items.length === 0 ? (
-        <div className={styles.emptyMessage}>{emptyMessage}</div>
+        <div className={panel.emptyMessage}>{emptyMessage}</div>
       ) : (
         <ul className={[styles.list, panel.thinScrollbar].join(" ")}>
           {items.map((item) => (

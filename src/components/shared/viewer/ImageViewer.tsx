@@ -12,6 +12,7 @@ import "@deck.gl/widgets/stylesheet.css";
 import type { Layer } from "@deck.gl/core";
 import { MaskExtension } from "@deck.gl/extensions";
 import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import { isMaskSourceRendered } from "@/lib/imaging/channelCompositor";
 import { isMaskChannel } from "@/lib/imaging/channelKind";
@@ -1055,7 +1056,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       <LoadingWidget ref={loadingWidgetRef} />
       {isLoadingImage ? (
         <output className={styles.imageLoadingOverlay} aria-busy="true">
-          <div className={styles.imageLoadingSpinner} />
+          <div className={minervaTheme.spinner} />
           <span>Loading…</span>
         </output>
       ) : null}

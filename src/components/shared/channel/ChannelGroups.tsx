@@ -1,5 +1,6 @@
 import * as React from "react";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
   type ChannelGroup,
@@ -26,7 +27,11 @@ const GroupRow = (props: { group: ChannelGroup }) => {
   };
 
   return (
-    <button type="button" className={styles.groupAltRow} onClick={toGroup}>
+    <button
+      type="button"
+      className={`${minervaTheme.focusRing} ${styles.groupAltRow}`}
+      onClick={toGroup}
+    >
       {name}
     </button>
   );
@@ -75,7 +80,7 @@ export const ChannelGroups = (props: {
     <div className={styles.wrapRows}>
       <button
         type="button"
-        className={styles.activeGroupTrigger}
+        className={`${minervaTheme.focusRing} ${styles.activeGroupTrigger}`}
         aria-expanded={expanded}
         onClick={() => setExpanded(!expanded)}
       >

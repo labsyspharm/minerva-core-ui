@@ -1,5 +1,6 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import styles from "./ToolSubmenu.module.css";
 
 export interface ToolSubmenuItem {
@@ -24,8 +25,8 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
   onToolChange,
   parentIcon,
   parentTitle,
-  buttonClassName = "",
-  activeClassName = "",
+  buttonClassName = minervaTheme.control,
+  activeClassName = minervaTheme.controlActive,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const toggleRef = React.useRef<HTMLButtonElement>(null);
@@ -100,14 +101,14 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
         createPortal(
           <div
             ref={menuRef}
-            className={styles.menu}
+            className={`${minervaTheme.menuFixed} ${styles.menu}`}
             style={{ top: menuPos.top, left: menuPos.left }}
           >
             {items.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                className={`${styles.menuItem} ${activeTool === item.id ? styles.menuItemActive : ""}`}
+                className={`${minervaTheme.menuItem} ${styles.menuItem} ${activeTool === item.id ? minervaTheme.selectLeft : ""}`}
                 title={item.title}
                 onClick={() => handleSelect(item.id)}
               >

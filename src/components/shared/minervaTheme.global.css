@@ -1,0 +1,55 @@
+/**
+ * App-wide Minerva look. Custom properties only — safe in the author app
+ * and in the CDN player (does not restyle a host page's type).
+ *
+ * `.minerva-seal` re-applies the same values on every descendant so a host
+ * `* { --minerva-paper: … }` cannot override the story player.
+ */
+:root,
+.minerva-seal,
+.minerva-seal * {
+  --minerva-ink: #f2f2f2;
+  --minerva-paper: #000;
+  --minerva-quiet: #888;
+  --minerva-blue: hsl(208 72% 58%);
+  --minerva-edge: rgb(255 255 255 / 0.18);
+  --minerva-wash: rgb(255 255 255 / 0.08);
+  --minerva-danger: #f85149;
+  --minerva-danger-border: #6e2a2a;
+  --minerva-danger-wash: rgb(248 81 73 / 0.12);
+  --minerva-danger-surface: #1a0a0a;
+  --minerva-control: 28px;
+  --minerva-inset: 12px;
+  --minerva-bar-height: 3rem;
+  --minerva-strip-height: 38px;
+  --minerva-radius: 0;
+  --minerva-focus-width: 2px;
+  --minerva-focus-offset: 2px;
+  --minerva-icon-size: 16px;
+  --minerva-gap: 10px;
+  --minerva-gap-sm: 6px;
+  --minerva-z-menu: 50;
+  --minerva-font: "DM Sans", sans-serif;
+  --minerva-title-size: 1.35rem;
+  --minerva-wordmark-size: 1.25rem;
+  --minerva-wordmark-display: 1.75rem;
+  --minerva-size: 0.9rem;
+  --minerva-size-note: 0.8rem;
+
+  --minerva-cloth-1: hsl(8 18% 46%);
+  --minerva-cloth-2: hsl(34 16% 48%);
+  --minerva-cloth-3: hsl(48 14% 50%);
+  --minerva-cloth-4: hsl(152 12% 42%);
+  --minerva-cloth-5: hsl(208 14% 44%);
+  --minerva-cloth-6: hsl(280 12% 46%);
+  --cloth-1: var(--minerva-cloth-1);
+  --cloth-2: var(--minerva-cloth-2);
+  --cloth-3: var(--minerva-cloth-3);
+  --cloth-4: var(--minerva-cloth-4);
+  --cloth-5: var(--minerva-cloth-5);
+  --cloth-6: var(--minerva-cloth-6);
+}
+
+:is(#react-output, .minerva-seal) :is(button, input, textarea, select) {
+  border-radius: var(--minerva-radius);
+}

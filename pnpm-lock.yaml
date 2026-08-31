@@ -52,9 +52,6 @@ importers:
       '@deck.gl/widgets':
         specifier: 9.3.3
         version: 9.3.3(@deck.gl/core@9.3.3)(@luma.gl/core@9.3.3)
-      '@fontsource/overpass':
-        specifier: ^5.0.18
-        version: 5.2.5
       '@hms-dbmi/viv':
         specifier: 0.22.1
         version: 0.22.1(d83ab5bd87f60f0963d8a2873ede9650)
@@ -648,9 +645,6 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
-
-  '@fontsource/overpass@5.2.5':
-    resolution: {integrity: sha512-xwxYbZXc4lDQi1z0r9LiJhHTJm4UqprdYcdIZVi7C4lVtWZOTX0nvyto6Be8wWJMeu+sHb9fzLN3byldibSF4A==}
 
   '@hms-dbmi/viv@0.22.1':
     resolution: {integrity: sha512-rJmh8VjLcVXwxlRZctuI7qLv7cT2DGlU3IfVULH7486LQAWfQdamRZ3IWjOby/e99/yKgXJkJiV1Nqvnk54CZQ==}
@@ -4299,8 +4293,6 @@ snapshots:
       '@floating-ui/utils': 0.2.12
 
   '@floating-ui/utils@0.2.12': {}
-
-  '@fontsource/overpass@5.2.5': {}
 
   '@hms-dbmi/viv@0.22.1(d83ab5bd87f60f0963d8a2873ede9650)':
     dependencies:

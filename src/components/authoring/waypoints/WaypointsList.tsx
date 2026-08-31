@@ -5,6 +5,7 @@ import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import JumpToViewIcon from "@/components/shared/icons/jump-to-view.svg?react";
 import OverwriteViewIcon from "@/components/shared/icons/overwrite-view.svg?react";
 import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { CompactHeader } from "@/components/shared/panel/CompactHeader";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
@@ -498,28 +499,15 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   const listHeader = (
     <CompactHeader
-      title="Waypoints"
-      count={`(${waypoints.length})`}
       actions={
         canEdit ? (
-          <>
-            <PanelIconButton
-              onClick={() => {
-                if (waypoints.length === 0) return;
-                const indexToRemove = activeStoryIndex ?? 0;
-                if (indexToRemove < 0 || indexToRemove >= waypoints.length)
-                  return;
-                removeStory(indexToRemove);
-              }}
-              disabled={waypoints.length === 0}
-              title="Delete active waypoint"
-            >
-              <TrashIcon />
-            </PanelIconButton>
-            <PanelIconButton onClick={handleAddWaypoint} title="Add waypoint">
-              <PlusIcon />
-            </PanelIconButton>
-          </>
+          <PanelIconButton
+            onClick={handleAddWaypoint}
+            title="Add"
+            aria-label="Add waypoint"
+          >
+            <PlusIcon />
+          </PanelIconButton>
         ) : undefined
       }
     />
@@ -529,7 +517,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     <>
       {listHeader}
       {waypoints.length === 0 ? (
-        <div className={styles.emptyMessage}>No waypoints yet</div>
+        <div className={panel.emptyMessage}>No waypoints yet</div>
       ) : (
         <ul
           className={[
@@ -561,10 +549,12 @@ const WaypointsList = (props: WaypointsListProps) => {
                 className={[
                   styles.compactRow,
                   canEdit ? styles.compactRowDraggable : "",
-                  isActive ? styles.compactRowActive : "",
+                  isActive ? minervaTheme.selectLeft : "",
                   isDragging ? styles.compactRowDragging : "",
                   isDropTarget ? styles.compactRowDropTarget : "",
-                ].join(" ")}
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 onDragOver={(e) => handleDragOverRow(storyId, e)}
                 onDragLeave={handleDragLeaveRow}
                 onDrop={(e) => {
@@ -573,8 +563,8 @@ const WaypointsList = (props: WaypointsListProps) => {
                 }}
               >
                 {canEdit ? (
-                  <button
-                    type="button"
+                  <PanelIconButton
+                    variant="row"
                     {...rowDragProps}
                     className={styles.rowOpenDetailButton}
                     title="Open waypoint details"
@@ -584,14 +574,14 @@ const WaypointsList = (props: WaypointsListProps) => {
                     }}
                   >
                     <ChevronIcon direction="right" />
-                  </button>
+                  </PanelIconButton>
                 ) : (
                   <div className={styles.rowChevronSpacer} aria-hidden />
                 )}
 
                 {story.thumbnail ? (
                   <img
-                    className={styles.rowThumbnail}
+                    className={`${minervaTheme.surface} ${styles.rowThumbnail}`}
                     src={story.thumbnail}
                     width={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
                     height={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
@@ -599,13 +589,16 @@ const WaypointsList = (props: WaypointsListProps) => {
                     aria-hidden
                   />
                 ) : (
-                  <div className={styles.rowThumbnail} aria-hidden />
+                  <div
+                    className={`${minervaTheme.surface} ${styles.rowThumbnail}`}
+                    aria-hidden
+                  />
                 )}
 
                 <button
                   type="button"
                   {...rowDragProps}
-                  className={styles.rowMainHit}
+                  className={`${minervaTheme.focusRing} ${styles.rowMainHit}`}
                   aria-label={`Select waypoint: ${story.title}`}
                   onClick={() => activateStoryIndex(index, true)}
                   onDoubleClick={() => openDetailForStoryId(storyId)}
@@ -616,7 +609,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                         {story.title}
                       </span>
                       <span
-                        className={styles.annotationBadge}
+                        className={`${minervaTheme.surface} ${styles.annotationBadge}`}
                         title={annotationTitle}
                       >
                         <span className={styles.visuallyHidden}>
@@ -640,6 +633,19 @@ const WaypointsList = (props: WaypointsListProps) => {
                   </div>
                 </button>
                 <div className={styles.rowViewportActions}>
+                  {canEdit ? (
+                    <PanelIconButton
+                      variant="row"
+                      title="Delete waypoint"
+                      aria-label={`Delete waypoint: ${story.title}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        removeStory(index);
+                      }}
+                    >
+                      <TrashIcon title="Delete" size={14} />
+                    </PanelIconButton>
+                  ) : null}
                   <PanelIconButton
                     variant="row"
                     title="Jump to waypoint view"
@@ -722,7 +728,7 @@ const WaypointsList = (props: WaypointsListProps) => {
         <div className={styles.detailHeader}>
           <button
             type="button"
-            className={styles.backButton}
+            className={`${minervaTheme.focusRing} ${styles.backButton}`}
             onClick={() => setDetailStoryId(null)}
             title="Back to waypoint list"
           >
@@ -739,7 +745,9 @@ const WaypointsList = (props: WaypointsListProps) => {
           ref={detailBodyRef}
         >
           <div className={styles.detailBodyInner}>
-            <div className={styles.detailTitleFieldWrap}>
+            <div
+              className={`${minervaTheme.surface} ${styles.detailTitleFieldWrap}`}
+            >
               <label
                 className={styles.detailTitleLabel}
                 htmlFor={detailTitleFieldId}
@@ -748,7 +756,7 @@ const WaypointsList = (props: WaypointsListProps) => {
               </label>
               <input
                 id={detailTitleFieldId}
-                className={styles.detailTitleInput}
+                className={`${minervaTheme.input} ${styles.detailTitleInput}`}
                 type="text"
                 value={detailStory.title ?? ""}
                 onChange={(e) =>
@@ -763,7 +771,9 @@ const WaypointsList = (props: WaypointsListProps) => {
               />
             </div>
             {channelGroups.length > 0 ? (
-              <div className={styles.detailTitleFieldWrap}>
+              <div
+                className={`${minervaTheme.surface} ${styles.detailTitleFieldWrap}`}
+              >
                 <label
                   className={styles.detailTitleLabel}
                   htmlFor={detailGroupFieldId}
@@ -777,7 +787,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <button
                     type="button"
                     id={detailGroupFieldId}
-                    className={styles.channelGroupDropdownTrigger}
+                    className={`${minervaTheme.input} ${minervaTheme.focusRing} ${styles.channelGroupDropdownTrigger}`}
                     aria-haspopup="listbox"
                     aria-expanded={channelGroupMenuOpen}
                     disabled={!canEdit}
@@ -798,7 +808,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                   </button>
                   {channelGroupMenuOpen ? (
                     <div
-                      className={styles.channelGroupDropdownMenu}
+                      className={`${minervaTheme.menu} ${styles.channelGroupDropdownMenu}`}
                       role="listbox"
                       aria-label="Channel groups"
                     >
@@ -819,10 +829,9 @@ const WaypointsList = (props: WaypointsListProps) => {
                               role="option"
                               aria-selected={isSelected}
                               className={[
+                                minervaTheme.menuItem,
                                 styles.channelGroupDropdownOption,
-                                isSelected
-                                  ? styles.channelGroupDropdownOptionSelected
-                                  : "",
+                                isSelected ? minervaTheme.selectLeft : "",
                               ]
                                 .filter(Boolean)
                                 .join(" ")}
@@ -850,6 +859,7 @@ const WaypointsList = (props: WaypointsListProps) => {
             <div
               className={[
                 styles.detailCollapsible,
+                minervaTheme.surface,
                 styles.detailMarkdownSection,
                 !detailMarkdownExpanded
                   ? styles.detailCollapsibleCollapsed
@@ -860,7 +870,7 @@ const WaypointsList = (props: WaypointsListProps) => {
             >
               <button
                 type="button"
-                className={styles.detailCollapsibleHeader}
+                className={`${minervaTheme.focusRing} ${styles.detailCollapsibleHeader}`}
                 aria-expanded={detailMarkdownExpanded}
                 onClick={() => setDetailMarkdownExpanded((prev) => !prev)}
               >
@@ -881,6 +891,7 @@ const WaypointsList = (props: WaypointsListProps) => {
             <div
               className={[
                 styles.detailCollapsible,
+                minervaTheme.surface,
                 styles.detailAnnotationsSection,
                 !detailAnnotationsExpanded
                   ? styles.detailCollapsibleCollapsed
@@ -891,7 +902,7 @@ const WaypointsList = (props: WaypointsListProps) => {
             >
               <button
                 type="button"
-                className={styles.detailCollapsibleHeader}
+                className={`${minervaTheme.focusRing} ${styles.detailCollapsibleHeader}`}
                 aria-expanded={detailAnnotationsExpanded}
                 title={detailAnnotationText}
                 onClick={() => setDetailAnnotationsExpanded((prev) => !prev)}
@@ -910,7 +921,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                     <div className={styles.detailSelectionActions}>
                       <button
                         type="button"
-                        className={styles.detailSelectionButton}
+                        className={`${minervaTheme.focusRing} ${styles.detailSelectionButton}`}
                         title="Use a waypoint annotation as the spatial selection mask (prefers the selected shape in the layers list)"
                         onClick={() => {
                           const shapeIds = detailStory.shapeIds ?? [];

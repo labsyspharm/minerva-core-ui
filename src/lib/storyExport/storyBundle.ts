@@ -89,7 +89,8 @@ function storyIndexHtml(title?: string, version = MINERVA_VERSION): string {
     <title>${safeTitle}</title>
     <link rel="stylesheet" href="${css}" />
     <style>
-      html, body, #minerva-root { height: 100%; margin: 0; background: #111; }
+      /* Hex literal (no custom properties yet): matches --minerva-paper before player CSS loads. */
+      html, body, #minerva-root { height: 100%; margin: 0; background: #000; }
     </style>
   </head>
   <body>

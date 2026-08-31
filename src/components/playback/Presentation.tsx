@@ -2,10 +2,9 @@ import type { CSSProperties, MouseEvent, ReactElement } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import {
-  StoryBannerBar,
-  storyBannerTitleClassName,
-} from "@/components/shared/StoryBannerBar";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { PanelActionButton } from "@/components/shared/panel/PanelButtons";
+import { StorySpines } from "@/components/shared/StorySpines";
 import {
   effectiveReferenceImagePixelSize,
   useAppStore,
@@ -59,6 +58,7 @@ const NavChevron = (props: { dir: "left" | "right"; px: number }) => {
 
 export const Presentation = (props: PresentationProps) => {
   const documentTitle = useDocumentStore((s) => s.metadata.title ?? "");
+  const storyId = useDocumentStore((s) => s.activeStoryId ?? "");
   const waypoints = useDocumentStore((s) => s.waypoints);
   const shapes = useDocumentStore((s) => s.shapes);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
@@ -369,13 +369,12 @@ export const Presentation = (props: PresentationProps) => {
   const flushTitle = !props.exitPlaybackPreview;
 
   return (
-    <div className={styles.presentationShell}>
+    <div className={`${styles.presentation} minerva-seal`}>
       {showRibbon ? (
-        <StoryBannerBar className={styles.previewRibbon}>
+        <div className={`${minervaTheme.bar} ${styles.previewRibbon}`}>
           {props.exitPlaybackPreview ? (
-            <button
+            <PanelActionButton
               type="button"
-              className={styles.previewBackButton}
               onClick={props.exitPlaybackPreview}
               title="Back to editing"
               aria-label="Back to editing"
@@ -385,18 +384,19 @@ export const Presentation = (props: PresentationProps) => {
                 aria-hidden
               />
               <span>Back</span>
-            </button>
+            </PanelActionButton>
           ) : null}
           <span
             title={ribbonDocTitle}
             className={[
-              storyBannerTitleClassName,
+              minervaTheme.title,
               styles.previewRibbonDocumentTitle,
               flushTitle ? styles.previewRibbonDocumentTitleFlush : null,
             ]
               .filter(Boolean)
               .join(" ")}
           >
+            <StorySpines seed={storyId} />
             {ribbonDocTitle}
           </span>
           {props.exitPlaybackPreview ? (
@@ -404,7 +404,7 @@ export const Presentation = (props: PresentationProps) => {
               Story preview
             </span>
           ) : null}
-        </StoryBannerBar>
+        </div>
       ) : null}
       <div className={styles.splitGrid}>
         <div

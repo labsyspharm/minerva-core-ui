@@ -2,9 +2,9 @@ import { rgbaToHsva } from "@uiw/react-color";
 import type { CSSProperties } from "react";
 import * as React from "react";
 import {
-  ChromeColorPickerPopover,
-  chromeColorPickerAnchorPosition,
-} from "@/components/shared/ChromeColorPickerPopover";
+  ColorPickerPopover,
+  colorPickerAnchorPosition,
+} from "@/components/shared/ColorPickerPopover";
 import {
   PopUpdate as PopUpdateChannel,
   Push as PushChannel,
@@ -19,7 +19,6 @@ import {
   effectiveSourceColor,
   effectiveSourceLimits,
 } from "@/lib/imaging/sourceChannelStyle";
-import { useAppStore } from "@/lib/stores/appStore";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
 import { basenameImportLabel } from "@/lib/stores/storeUtils";
 import styles from "./ChannelLegend.module.css";
@@ -237,7 +236,6 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
   const addChannelUI = pushChannel ? (
     <EditModeSwitcher {...{ ...props, editSwitch }} />
   ) : null;
-  const { globalColor, setGlobalColor } = useAppStore();
   const [colorPickerPos, setColorPickerPos] = React.useState<{
     top: number;
     left: number;
@@ -257,13 +255,13 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
     setColorPickerChannel(c);
     setPickerHsva(
       rgbaToHsva({
-        r: globalColor[0],
-        g: globalColor[1],
-        b: globalColor[2],
-        a: globalColor[3] / 255,
+        r: c.r,
+        g: c.g,
+        b: c.b,
+        a: 1,
       }),
     );
-    setColorPickerPos(chromeColorPickerAnchorPosition(anchor));
+    setColorPickerPos(colorPickerAnchorPosition(anchor));
   };
 
   if (sections.length === 0) {
@@ -337,26 +335,20 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
           </div>
         ))}
       </div>
-      <ChromeColorPickerPopover
+      <ColorPickerPopover
         position={colorPickerPos}
         onClose={closeColorPicker}
         color={pickerHsva}
         showAlpha
         onChange={(c) => {
           setPickerHsva(c.hsva);
-          const { r, g, b, a } = c.rgba;
+          const { r, g, b } = c.rgba;
           const color = { r, g, b };
-          const newColor: [number, number, number, number] = [
-            Math.round(r),
-            Math.round(g),
-            Math.round(b),
-            Math.round(a * 255),
-          ];
           if (colorPickerChannel !== null) {
             const channel = colorPickerChannel;
             const groupId = channel.group_uuid;
             const channelId = channel.source_uuid;
-            props.updateChannel(groupId, channelId, { color });
+            props.updateChannel?.(groupId, channelId, { color });
           }
         }}
       />

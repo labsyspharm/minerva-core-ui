@@ -1,4 +1,4 @@
-/* Shared authoring-panel shell. */
+/* Shared authoring-panel layout. Type and color come from the story look. */
 
 .authorPanel {
   display: flex;
@@ -7,9 +7,6 @@
   min-width: 0;
   min-height: 0;
   flex: 1;
-  background-color: #000;
-  color: #e6edf3;
-  font-size: 12px;
   box-sizing: border-box;
 }
 
@@ -20,9 +17,16 @@
   overflow-y: auto;
 }
 
-/* Thin dark scrollbar used by panel list scrollers */
+.emptyMessage {
+  padding: 16px;
+  text-align: center;
+  color: var(--minerva-quiet);
+  font-size: inherit;
+  font-style: italic;
+}
+
 .thinScrollbar {
-  scrollbar-color: #555 transparent;
+  scrollbar-color: var(--minerva-quiet) transparent;
   scrollbar-width: thin;
 }
 
@@ -35,6 +39,6 @@
 }
 
 .thinScrollbar::-webkit-scrollbar-thumb {
-  background-color: #555;
-  border-radius: 4px;
+  background-color: var(--minerva-quiet);
+  border-radius: 0;
 }

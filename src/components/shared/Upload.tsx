@@ -2,9 +2,12 @@ import type { ChangeEventHandler, FormEventHandler } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
-import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { CompactHeader } from "@/components/shared/panel/CompactHeader";
-import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
+import {
+  PanelActionButton,
+  PanelIconButton,
+} from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
 import { resolveImageContentRole } from "@/lib/imaging/channelKind";
 import {
@@ -147,7 +150,7 @@ const validate: Validate = (valid, fn) => {
 };
 
 function validationInputClass(v: ValidOut): string {
-  const parts = [styles.textInput];
+  const parts = [minervaTheme.input, styles.textInput];
   if (v.isInvalid) parts.push(styles.textInputInvalid);
   if (v.isValid) parts.push(styles.textInputValid);
   return parts.join(" ");
@@ -218,9 +221,7 @@ const FormDicom = (props: FormProps) => {
           )}
         </div>
       </div>
-      <button type="submit" className={styles.primaryButton}>
-        Submit
-      </button>
+      <PanelActionButton type="submit">Submit</PanelActionButton>
     </form>
   );
 };
@@ -263,7 +264,6 @@ const OmeTiffUrlImport = (props: {
   canImport: boolean;
   inputClassName: string;
   rowClassName: string;
-  primaryClassName: string;
 }) => {
   const {
     url,
@@ -273,7 +273,6 @@ const OmeTiffUrlImport = (props: {
     canImport,
     inputClassName,
     rowClassName,
-    primaryClassName,
   } = props;
   return (
     <div className={rowClassName}>
@@ -284,40 +283,37 @@ const OmeTiffUrlImport = (props: {
         name="ome_tiff_url"
         placeholder=""
         onChange={onUrlChange}
-        className={`${styles.textInput} ${inputClassName}`}
+        className={`${minervaTheme.input} ${styles.textInput} ${inputClassName}`}
       />
-      <button
-        type="button"
-        className={primaryClassName}
-        onClick={onImport}
-        disabled={!canImport}
-      >
+      <PanelActionButton type="button" onClick={onImport} disabled={!canImport}>
         {importLabel}
-      </button>
+      </PanelActionButton>
     </div>
   );
 };
 
+type AddKind = "image" | "mask" | "annotation";
+
 type ImageFormatChoice = "" | "DICOM-WEB" | "OME-TIFF" | "OME-TIFF-URL";
 
-function FormatChip(props: {
+function FormatChip({
+  label,
+  selected,
+  onClick,
+}: {
   label: string;
   selected: boolean;
   onClick: () => void;
-  chipClass: string;
-  chipActiveClass: string;
 }) {
-  const { label, selected, onClick, chipClass, chipActiveClass } = props;
-  const className = selected ? `${chipClass} ${chipActiveClass}` : chipClass;
   return (
-    <button
+    <PanelActionButton
       type="button"
-      className={className}
+      active={selected}
       aria-pressed={selected}
       onClick={onClick}
     >
       {label}
-    </button>
+    </PanelActionButton>
   );
 }
 
@@ -353,7 +349,7 @@ function resolveImportRole(
 
 const Upload = (props: UploadProps) => {
   const [addPanelOpen, setAddPanelOpen] = useState(false);
-  const [importRole, setImportRole] = useState<OmeImportRole>("intensity");
+  const [addKind, setAddKind] = useState<AddKind>("image");
   const [imageFormat, setImageFormat] = useState<ImageFormatChoice>("");
   const [omeTiffUrl, _setOmeTiffUrl, setOmeTiffUrl] = _useState("");
   const [xmlImportFeedback, setXmlImportFeedback] = useState<{
@@ -362,7 +358,6 @@ const Upload = (props: UploadProps) => {
   } | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const xmlFileInputRef = useRef<HTMLInputElement | null>(null);
-  const addPanelRef = useRef<HTMLDivElement | null>(null);
   const addAnchorRef = useRef<HTMLDivElement | null>(null);
   const prevImportRev = useRef(props.importRevision);
   const localImportInFlightRef = useRef(false);
@@ -388,33 +383,35 @@ const Upload = (props: UploadProps) => {
     onReplaceImage,
   } = props;
 
+  const resetAddFields = useCallback(
+    (opts?: { clearUrl?: boolean }) => {
+      setAddKind("image");
+      setImageFormat("");
+      setImportError(null);
+      setXmlImportFeedback(null);
+      if (opts?.clearUrl) _setOmeTiffUrl("");
+    },
+    [_setOmeTiffUrl],
+  );
+
   const closeAddPanel = useCallback(() => {
     setAddPanelOpen(false);
-    setImportRole("intensity");
-    setImageFormat("");
-    setImportError(null);
-  }, []);
+    resetAddFields();
+  }, [resetAddFields]);
 
   useEffect(() => {
     if (prevImportRev.current !== importRevision) {
       prevImportRev.current = importRevision;
       setAddPanelOpen(false);
-      setImportRole("intensity");
-      setImageFormat("");
-      _setOmeTiffUrl("");
-      setImportError(null);
-      setXmlImportFeedback(null);
+      resetAddFields({ clearUrl: true });
     }
-  }, [importRevision, _setOmeTiffUrl]);
+  }, [importRevision, resetAddFields]);
 
   useEffect(() => {
     if (!addPanelOpen) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
-      if (
-        !addAnchorRef.current?.contains(target) &&
-        !addPanelRef.current?.contains(target)
-      ) {
+      if (!addAnchorRef.current?.contains(target)) {
         closeAddPanel();
       }
     };
@@ -431,13 +428,16 @@ const Upload = (props: UploadProps) => {
 
   const labelOpts = { fileName, lastOmeTiffUrl };
   const append = imageLoaded;
-  const isMaskImport = importRole === "segmentation";
+  const isMaskImport = addKind === "mask";
+  const isAnnotationImport = addKind === "annotation";
+  const importRole: OmeImportRole = isMaskImport ? "segmentation" : "intensity";
   const importLabel = isMaskImport ? "Import mask" : "Import";
   const urlReady = /^https?:\/\/.+/.test(omeTiffUrl.trim());
 
-  const setRole = (role: OmeImportRole) => {
-    setImportRole(role);
+  const setKind = (kind: AddKind) => {
+    setAddKind(kind);
     setImportError(null);
+    setXmlImportFeedback(null);
     setImageFormat("");
   };
 
@@ -484,7 +484,9 @@ const Upload = (props: UploadProps) => {
         return;
       }
       const role = resolveImportRole(importRole, handle.name);
-      if (role !== importRole) setImportRole(role);
+      if (role !== importRole) {
+        setAddKind(role === "segmentation" ? "mask" : "image");
+      }
       await importLocalOmeTiff(role, picked);
     } finally {
       localImportInFlightRef.current = false;
@@ -496,7 +498,9 @@ const Upload = (props: UploadProps) => {
     setImportError(null);
     const url = omeTiffUrl.trim();
     const role = resolveImportRole(importRole, url);
-    if (role !== importRole) setImportRole(role);
+    if (role !== importRole) {
+      setAddKind(role === "segmentation" ? "mask" : "image");
+    }
     const result = await onImportOme({
       role,
       append,
@@ -511,13 +515,11 @@ const Upload = (props: UploadProps) => {
       return;
     }
     setAddPanelOpen(true);
-    setImportRole("intensity");
-    setImageFormat("");
-    setImportError(null);
   };
 
   const selectFormat = (format: ImageFormatChoice) => {
     setImportError(null);
+    setXmlImportFeedback(null);
     const next = imageFormat === format ? "" : format;
     setImageFormat(next);
     if (next === "OME-TIFF") void chooseLocalOmeTiff();
@@ -535,6 +537,7 @@ const Upload = (props: UploadProps) => {
           setXmlImportFeedback({ type: "err", text: r.error });
           return;
         }
+        closeAddPanel();
         setXmlImportFeedback({
           type: "ok",
           text: `Imported ${r.shapeCount} annotation${r.shapeCount === 1 ? "" : "s"}.`,
@@ -568,7 +571,6 @@ const Upload = (props: UploadProps) => {
             canImport={urlReady}
             inputClassName={styles.urlInput}
             rowClassName={styles.urlRow}
-            primaryClassName={styles.primaryButton}
           />
           {importError ? (
             <div className={styles.importError}>{importError}</div>
@@ -576,10 +578,17 @@ const Upload = (props: UploadProps) => {
         </div>
       );
     }
-    if (imageFormat === "DICOM-WEB" && !isMaskImport) {
+    if (addKind === "image" && imageFormat === "DICOM-WEB") {
       return (
         <div className={styles.addPanelBody}>
           <FormDicom {...formProps} />
+        </div>
+      );
+    }
+    if (addKind === "annotation" && xmlImportFeedback?.type === "err") {
+      return (
+        <div className={styles.addPanelBody}>
+          <div className={styles.importError}>{xmlImportFeedback.text}</div>
         </div>
       );
     }
@@ -628,26 +637,22 @@ const Upload = (props: UploadProps) => {
               {onReplaceImage &&
               im.source?.kind !== "jpeg" &&
               im.source?.kind !== "dicomWeb" ? (
-                <button
-                  type="button"
-                  className={styles.imageCardAction}
+                <PanelIconButton
                   title={`Replace ${title} with another OME-TIFF`}
                   aria-label={`Replace ${title}`}
                   onClick={() => void onReplaceImage(im.id)}
                 >
                   <ReplaceIcon title="Replace image" size={14} />
-                </button>
+                </PanelIconButton>
               ) : null}
               {onRemoveImage ? (
-                <button
-                  type="button"
-                  className={`${styles.imageCardAction} ${styles.imageCardActionDanger}`}
-                  title={`Remove ${title}`}
-                  aria-label={`Remove ${title}`}
+                <PanelIconButton
+                  title={`Delete ${title}`}
+                  aria-label={`Delete ${title}`}
                   onClick={() => void onRemoveImage(im.id)}
                 >
-                  <TrashIcon title="Remove image" size={14} />
-                </button>
+                  <TrashIcon title="Delete" size={14} />
+                </PanelIconButton>
               ) : null}
             </div>
           ) : null}
@@ -657,9 +662,9 @@ const Upload = (props: UploadProps) => {
             <span className={styles.fileAccessError}>
               {needsStoryDir ? "Story folder needed" : "File access needed"}
             </span>
-            <button
+            <PanelActionButton
               type="button"
-              className={styles.primaryButton}
+              className={styles.fileAccessAction}
               onClick={() => {
                 if (needsStoryDir) void onReconnectStoryRoot?.();
                 else if (needsReselect) void onReselectFile?.(im.id);
@@ -667,7 +672,7 @@ const Upload = (props: UploadProps) => {
               }}
             >
               {needsStoryDir ? "Choose story folder" : "Allow file access"}
-            </button>
+            </PanelActionButton>
           </div>
         ) : null}
       </article>
@@ -695,47 +700,52 @@ const Upload = (props: UploadProps) => {
     ) : null;
 
   const addPanel = addPanelOpen ? (
-    <div ref={addPanelRef} className={styles.addPanel}>
+    <div className={`${minervaTheme.surface} ${styles.addPanel}`}>
       <div className={styles.formatRow}>
         <FormatChip
           label="Image"
-          selected={!isMaskImport}
-          onClick={() => setRole("intensity")}
-          chipClass={styles.formatChip}
-          chipActiveClass={styles.formatChipActive}
+          selected={addKind === "image"}
+          onClick={() => setKind("image")}
         />
         <FormatChip
           label="Mask"
-          selected={isMaskImport}
-          onClick={() => setRole("segmentation")}
-          chipClass={styles.formatChip}
-          chipActiveClass={styles.formatChipActive}
+          selected={addKind === "mask"}
+          onClick={() => setKind("mask")}
+        />
+        <FormatChip
+          label="Annotation"
+          selected={isAnnotationImport}
+          onClick={() => setKind("annotation")}
         />
       </div>
       <div className={styles.formatRow}>
-        {!isMaskImport ? (
+        {isAnnotationImport ? (
           <FormatChip
-            label="DicomWeb"
-            selected={imageFormat === "DICOM-WEB"}
-            onClick={() => selectFormat("DICOM-WEB")}
-            chipClass={styles.formatChip}
-            chipActiveClass={styles.formatChipActive}
+            label="Ome-XML"
+            selected
+            onClick={() => xmlFileInputRef.current?.click()}
           />
-        ) : null}
-        <FormatChip
-          label="OmeTiff File"
-          selected={imageFormat === "OME-TIFF"}
-          onClick={() => selectFormat("OME-TIFF")}
-          chipClass={styles.formatChip}
-          chipActiveClass={styles.formatChipActive}
-        />
-        <FormatChip
-          label="OmeTiff URL"
-          selected={imageFormat === "OME-TIFF-URL"}
-          onClick={() => selectFormat("OME-TIFF-URL")}
-          chipClass={styles.formatChip}
-          chipActiveClass={styles.formatChipActive}
-        />
+        ) : (
+          <>
+            {!isMaskImport ? (
+              <FormatChip
+                label="DicomWEB"
+                selected={imageFormat === "DICOM-WEB"}
+                onClick={() => selectFormat("DICOM-WEB")}
+              />
+            ) : null}
+            <FormatChip
+              label="OmeTiff File"
+              selected={imageFormat === "OME-TIFF"}
+              onClick={() => selectFormat("OME-TIFF")}
+            />
+            <FormatChip
+              label="OmeTiff URL"
+              selected={imageFormat === "OME-TIFF-URL"}
+              onClick={() => selectFormat("OME-TIFF-URL")}
+            />
+          </>
+        )}
       </div>
       {renderAddPanelBody()}
     </div>
@@ -745,61 +755,38 @@ const Upload = (props: UploadProps) => {
     <div className={panel.authorPanel}>
       <CompactHeader
         actions={
-          <div className={styles.headerActionsWrap}>
-            {imageLoaded ? (
-              <>
-                <input
-                  ref={xmlFileInputRef}
-                  className={styles.hiddenFileInput}
-                  type="file"
-                  accept=".xml,application/xml,text/xml"
-                  aria-label="OME-XML annotations file"
-                  onChange={onAnnotationXmlSelected}
-                />
-                <PanelIconButton
-                  aria-label="Import annotations"
-                  title="Import annotations"
-                  onClick={() => xmlFileInputRef.current?.click()}
-                >
-                  <AnnotationsIcon width={14} height={14} aria-hidden />
-                </PanelIconButton>
-              </>
-            ) : null}
-            <div ref={addAnchorRef} className={styles.addActionAnchor}>
-              <PanelIconButton
-                active={addPanelOpen}
-                aria-pressed={addPanelOpen}
-                aria-label="Add image or mask"
-                title="Add"
-                onClick={toggleAddPanel}
-              >
-                <PlusIcon />
-              </PanelIconButton>
-            </div>
+          <div ref={addAnchorRef} className={styles.addActionAnchor}>
+            <PanelIconButton
+              active={addPanelOpen}
+              aria-pressed={addPanelOpen}
+              aria-label="Add image"
+              title="Add"
+              onClick={toggleAddPanel}
+            >
+              <PlusIcon />
+            </PanelIconButton>
             {addPanel}
+            <input
+              ref={xmlFileInputRef}
+              className={styles.hiddenFileInput}
+              type="file"
+              accept=".xml,application/xml,text/xml"
+              aria-label="OME-XML annotations file"
+              onChange={onAnnotationXmlSelected}
+            />
           </div>
         }
       />
 
-      <div
-        className={[
-          styles.stack,
-          panel.authorPanelBody,
-          panel.thinScrollbar,
-        ].join(" ")}
-      >
-        {imageCards}
+      <div className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}>
+        {imageCards ? (
+          <div className={styles.stack}>{imageCards}</div>
+        ) : (
+          <div className={panel.emptyMessage}>No images yet</div>
+        )}
 
-        {xmlImportFeedback ? (
-          <div
-            className={
-              xmlImportFeedback.type === "err"
-                ? styles.importError
-                : styles.importSuccess
-            }
-          >
-            {xmlImportFeedback.text}
-          </div>
+        {xmlImportFeedback?.type === "ok" && !addPanelOpen ? (
+          <div className={styles.importSuccess}>{xmlImportFeedback.text}</div>
         ) : null}
       </div>
     </div>
