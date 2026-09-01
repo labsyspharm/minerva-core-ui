@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-OLvXQ8n-.js","./pako.esm-KbdoS3Oq.js","./lerc-CP3Od3af.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-u3sUWy4C.js","./pako.esm-KbdoS3Oq.js","./lerc-CZlgIFrf.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13203,3053 +13203,6 @@ let __tla = (async () => {
     createRoot = m$2.createRoot;
     m$2.hydrateRoot;
   }
-  function uncurryThis(target) {
-    return (thisArg, ...args) => {
-      return ReflectApply(target, thisArg, args);
-    };
-  }
-  function uncurryThisGetter(target, key2) {
-    return uncurryThis(ReflectGetOwnPropertyDescriptor(target, key2).get);
-  }
-  const { apply: ReflectApply, getOwnPropertyDescriptor: ReflectGetOwnPropertyDescriptor, getPrototypeOf: ReflectGetPrototypeOf, ownKeys: ReflectOwnKeys } = Reflect;
-  const { iterator: SymbolIterator, toStringTag: SymbolToStringTag } = Symbol;
-  const NativeObject = Object;
-  const { create: ObjectCreate, defineProperty: ObjectDefineProperty } = NativeObject;
-  const NativeArray = Array;
-  const ArrayPrototype = NativeArray.prototype;
-  const NativeArrayPrototypeSymbolIterator = ArrayPrototype[SymbolIterator];
-  const ArrayPrototypeSymbolIterator = uncurryThis(NativeArrayPrototypeSymbolIterator);
-  const NativeArrayBuffer = ArrayBuffer;
-  const ArrayBufferPrototype = NativeArrayBuffer.prototype;
-  uncurryThisGetter(ArrayBufferPrototype, "byteLength");
-  const NativeSharedArrayBuffer = typeof SharedArrayBuffer !== "undefined" ? SharedArrayBuffer : null;
-  NativeSharedArrayBuffer && uncurryThisGetter(NativeSharedArrayBuffer.prototype, "byteLength");
-  const TypedArray = ReflectGetPrototypeOf(Uint8Array);
-  TypedArray.from;
-  const TypedArrayPrototype = TypedArray.prototype;
-  TypedArrayPrototype[SymbolIterator];
-  uncurryThis(TypedArrayPrototype.keys);
-  uncurryThis(TypedArrayPrototype.values);
-  uncurryThis(TypedArrayPrototype.entries);
-  uncurryThis(TypedArrayPrototype.set);
-  uncurryThis(TypedArrayPrototype.reverse);
-  uncurryThis(TypedArrayPrototype.fill);
-  uncurryThis(TypedArrayPrototype.copyWithin);
-  uncurryThis(TypedArrayPrototype.sort);
-  uncurryThis(TypedArrayPrototype.slice);
-  uncurryThis(TypedArrayPrototype.subarray);
-  uncurryThisGetter(TypedArrayPrototype, "buffer");
-  uncurryThisGetter(TypedArrayPrototype, "byteOffset");
-  uncurryThisGetter(TypedArrayPrototype, "length");
-  uncurryThisGetter(TypedArrayPrototype, SymbolToStringTag);
-  const NativeUint8Array = Uint8Array;
-  const NativeUint16Array = Uint16Array;
-  const NativeUint32Array = Uint32Array;
-  const NativeFloat32Array = Float32Array;
-  const ArrayIteratorPrototype = ReflectGetPrototypeOf([][SymbolIterator]());
-  const ArrayIteratorPrototypeNext = uncurryThis(ArrayIteratorPrototype.next);
-  const GeneratorPrototypeNext = uncurryThis(function* () {
-  }().next);
-  const IteratorPrototype = ReflectGetPrototypeOf(ArrayIteratorPrototype);
-  const DataViewPrototype = DataView.prototype;
-  const DataViewPrototypeGetUint16 = uncurryThis(DataViewPrototype.getUint16);
-  const NativeWeakMap = WeakMap;
-  const WeakMapPrototype = NativeWeakMap.prototype;
-  const WeakMapPrototypeGet = uncurryThis(WeakMapPrototype.get);
-  const WeakMapPrototypeSet = uncurryThis(WeakMapPrototype.set);
-  const arrayIterators = new NativeWeakMap();
-  const SafeIteratorPrototype = ObjectCreate(null, {
-    next: {
-      value: function next2() {
-        const arrayIterator = WeakMapPrototypeGet(arrayIterators, this);
-        return ArrayIteratorPrototypeNext(arrayIterator);
-      }
-    },
-    [SymbolIterator]: {
-      value: function values() {
-        return this;
-      }
-    }
-  });
-  function safeIfNeeded(array) {
-    if (array[SymbolIterator] === NativeArrayPrototypeSymbolIterator && ArrayIteratorPrototype.next === ArrayIteratorPrototypeNext) {
-      return array;
-    }
-    const safe = ObjectCreate(SafeIteratorPrototype);
-    WeakMapPrototypeSet(arrayIterators, safe, ArrayPrototypeSymbolIterator(array));
-    return safe;
-  }
-  const generators = new NativeWeakMap();
-  const DummyArrayIteratorPrototype = ObjectCreate(IteratorPrototype, {
-    next: {
-      value: function next2() {
-        const generator = WeakMapPrototypeGet(generators, this);
-        return GeneratorPrototypeNext(generator);
-      },
-      writable: true,
-      configurable: true
-    }
-  });
-  for (const key2 of ReflectOwnKeys(ArrayIteratorPrototype)) {
-    if (key2 === "next") {
-      continue;
-    }
-    ObjectDefineProperty(DummyArrayIteratorPrototype, key2, ReflectGetOwnPropertyDescriptor(ArrayIteratorPrototype, key2));
-  }
-  const buffer = new NativeArrayBuffer(4);
-  const floatView = new NativeFloat32Array(buffer);
-  const uint32View = new NativeUint32Array(buffer);
-  const baseTable = new NativeUint16Array(512);
-  const shiftTable = new NativeUint8Array(512);
-  for (let i2 = 0; i2 < 256; ++i2) {
-    const e2 = i2 - 127;
-    if (e2 < -24) {
-      baseTable[i2] = 0;
-      baseTable[i2 | 256] = 32768;
-      shiftTable[i2] = 24;
-      shiftTable[i2 | 256] = 24;
-    } else if (e2 < -14) {
-      baseTable[i2] = 1024 >> -e2 - 14;
-      baseTable[i2 | 256] = 1024 >> -e2 - 14 | 32768;
-      shiftTable[i2] = -e2 - 1;
-      shiftTable[i2 | 256] = -e2 - 1;
-    } else if (e2 <= 15) {
-      baseTable[i2] = e2 + 15 << 10;
-      baseTable[i2 | 256] = e2 + 15 << 10 | 32768;
-      shiftTable[i2] = 13;
-      shiftTable[i2 | 256] = 13;
-    } else if (e2 < 128) {
-      baseTable[i2] = 31744;
-      baseTable[i2 | 256] = 64512;
-      shiftTable[i2] = 24;
-      shiftTable[i2 | 256] = 24;
-    } else {
-      baseTable[i2] = 31744;
-      baseTable[i2 | 256] = 64512;
-      shiftTable[i2] = 13;
-      shiftTable[i2 | 256] = 13;
-    }
-  }
-  const mantissaTable = new NativeUint32Array(2048);
-  for (let i2 = 1; i2 < 1024; ++i2) {
-    let m2 = i2 << 13;
-    let e2 = 0;
-    while ((m2 & 8388608) === 0) {
-      m2 <<= 1;
-      e2 -= 8388608;
-    }
-    m2 &= -8388609;
-    e2 += 947912704;
-    mantissaTable[i2] = m2 | e2;
-  }
-  for (let i2 = 1024; i2 < 2048; ++i2) {
-    mantissaTable[i2] = 939524096 + (i2 - 1024 << 13);
-  }
-  const exponentTable = new NativeUint32Array(64);
-  for (let i2 = 1; i2 < 31; ++i2) {
-    exponentTable[i2] = i2 << 23;
-  }
-  exponentTable[31] = 1199570944;
-  exponentTable[32] = 2147483648;
-  for (let i2 = 33; i2 < 63; ++i2) {
-    exponentTable[i2] = 2147483648 + (i2 - 32 << 23);
-  }
-  exponentTable[63] = 3347054592;
-  const offsetTable = new NativeUint16Array(64);
-  for (let i2 = 1; i2 < 64; ++i2) {
-    if (i2 !== 32) {
-      offsetTable[i2] = 1024;
-    }
-  }
-  function convertToNumber(float16bits) {
-    const i2 = float16bits >> 10;
-    uint32View[0] = mantissaTable[offsetTable[i2] + (float16bits & 1023)] + exponentTable[i2];
-    return floatView[0];
-  }
-  function getFloat16(dataView, byteOffset, ...opts) {
-    return convertToNumber(DataViewPrototypeGetUint16(dataView, byteOffset, ...safeIfNeeded(opts)));
-  }
-  function getAttribute(tag, attributeName, options) {
-    const xml2 = typeof tag === "object" ? tag.outer : tag;
-    const opening2 = xml2.slice(0, xml2.indexOf(">") + 1);
-    const quotechars = [
-      '"',
-      "'"
-    ];
-    for (let i2 = 0; i2 < quotechars.length; i2++) {
-      const char = quotechars[i2];
-      const pattern = attributeName + "\\=" + char + "([^" + char + "]*)" + char;
-      const re2 = new RegExp(pattern);
-      const match = re2.exec(opening2);
-      if (match) return match[1];
-    }
-  }
-  function indexOfMatch(xml2, pattern, startIndex) {
-    const re2 = new RegExp(pattern);
-    const match = re2.exec(xml2.slice(startIndex));
-    if (match) return startIndex + match.index;
-    else return -1;
-  }
-  function indexOfMatchEnd(xml2, pattern, startIndex) {
-    const re2 = new RegExp(pattern);
-    const match = re2.exec(xml2.slice(startIndex));
-    if (match) return startIndex + match.index + match[0].length - 1;
-    else return -1;
-  }
-  function countSubstring(string2, substring) {
-    const pattern = new RegExp(substring, "g");
-    const match = string2.match(pattern);
-    return match ? match.length : 0;
-  }
-  function findTagByName(xml2, tagName, options) {
-    const debug2 = options && options.debug || false;
-    const nested = !(options && typeof options.nested === false);
-    const startIndex = options && options.startIndex || 0;
-    if (debug2) console.log("[xml-utils] starting findTagByName with", tagName, " and ", options);
-    const start = indexOfMatch(xml2, `<${tagName}[ 
->/]`, startIndex);
-    if (debug2) console.log("[xml-utils] start:", start);
-    if (start === -1) return void 0;
-    const afterStart = xml2.slice(start + tagName.length);
-    let relativeEnd = indexOfMatchEnd(afterStart, "^[^<]*[ /]>", 0);
-    const selfClosing = relativeEnd !== -1 && afterStart[relativeEnd - 1] === "/";
-    if (debug2) console.log("[xml-utils] selfClosing:", selfClosing);
-    if (selfClosing === false) {
-      if (nested) {
-        let startIndex2 = 0;
-        let openings = 1;
-        let closings = 0;
-        while ((relativeEnd = indexOfMatchEnd(afterStart, "[ /]" + tagName + ">", startIndex2)) !== -1) {
-          const clip = afterStart.substring(startIndex2, relativeEnd + 1);
-          openings += countSubstring(clip, "<" + tagName + "[ \n	>]");
-          closings += countSubstring(clip, "</" + tagName + ">");
-          if (closings >= openings) break;
-          startIndex2 = relativeEnd;
-        }
-      } else {
-        relativeEnd = indexOfMatchEnd(afterStart, "[ /]" + tagName + ">", 0);
-      }
-    }
-    const end = start + tagName.length + relativeEnd + 1;
-    if (debug2) console.log("[xml-utils] end:", end);
-    if (end === -1) return void 0;
-    const outer = xml2.slice(start, end);
-    let inner;
-    if (selfClosing) {
-      inner = null;
-    } else {
-      inner = outer.slice(outer.indexOf(">") + 1, outer.lastIndexOf("<"));
-    }
-    return {
-      inner,
-      outer,
-      start,
-      end
-    };
-  }
-  function findTagsByName(xml2, tagName, options) {
-    const tags = [];
-    const debug2 = false;
-    let startIndex = 0;
-    let tag;
-    while (tag = findTagByName(xml2, tagName, {
-      debug: debug2,
-      startIndex
-    })) {
-      {
-        startIndex = tag.start + 1 + tagName.length;
-      }
-      tags.push(tag);
-    }
-    return tags;
-  }
-  const fieldTagNames = {
-    315: "Artist",
-    258: "BitsPerSample",
-    265: "CellLength",
-    264: "CellWidth",
-    320: "ColorMap",
-    259: "Compression",
-    33432: "Copyright",
-    306: "DateTime",
-    338: "ExtraSamples",
-    266: "FillOrder",
-    289: "FreeByteCounts",
-    288: "FreeOffsets",
-    291: "GrayResponseCurve",
-    290: "GrayResponseUnit",
-    316: "HostComputer",
-    270: "ImageDescription",
-    257: "ImageLength",
-    256: "ImageWidth",
-    271: "Make",
-    281: "MaxSampleValue",
-    280: "MinSampleValue",
-    272: "Model",
-    254: "NewSubfileType",
-    274: "Orientation",
-    262: "PhotometricInterpretation",
-    284: "PlanarConfiguration",
-    296: "ResolutionUnit",
-    278: "RowsPerStrip",
-    277: "SamplesPerPixel",
-    305: "Software",
-    279: "StripByteCounts",
-    273: "StripOffsets",
-    255: "SubfileType",
-    263: "Threshholding",
-    282: "XResolution",
-    283: "YResolution",
-    326: "BadFaxLines",
-    327: "CleanFaxData",
-    343: "ClipPath",
-    328: "ConsecutiveBadFaxLines",
-    433: "Decode",
-    434: "DefaultImageColor",
-    269: "DocumentName",
-    336: "DotRange",
-    321: "HalftoneHints",
-    346: "Indexed",
-    347: "JPEGTables",
-    285: "PageName",
-    297: "PageNumber",
-    317: "Predictor",
-    319: "PrimaryChromaticities",
-    532: "ReferenceBlackWhite",
-    339: "SampleFormat",
-    340: "SMinSampleValue",
-    341: "SMaxSampleValue",
-    559: "StripRowCounts",
-    330: "SubIFDs",
-    292: "T4Options",
-    293: "T6Options",
-    325: "TileByteCounts",
-    323: "TileLength",
-    324: "TileOffsets",
-    322: "TileWidth",
-    301: "TransferFunction",
-    318: "WhitePoint",
-    344: "XClipPathUnits",
-    286: "XPosition",
-    529: "YCbCrCoefficients",
-    531: "YCbCrPositioning",
-    530: "YCbCrSubSampling",
-    345: "YClipPathUnits",
-    287: "YPosition",
-    37378: "ApertureValue",
-    40961: "ColorSpace",
-    36868: "DateTimeDigitized",
-    36867: "DateTimeOriginal",
-    34665: "Exif IFD",
-    36864: "ExifVersion",
-    33434: "ExposureTime",
-    41728: "FileSource",
-    37385: "Flash",
-    40960: "FlashpixVersion",
-    33437: "FNumber",
-    42016: "ImageUniqueID",
-    37384: "LightSource",
-    37500: "MakerNote",
-    37377: "ShutterSpeedValue",
-    37510: "UserComment",
-    33723: "IPTC",
-    34412: "CZ_LSMINFO",
-    34675: "ICC Profile",
-    700: "XMP",
-    42112: "GDAL_METADATA",
-    42113: "GDAL_NODATA",
-    34377: "Photoshop",
-    33550: "ModelPixelScale",
-    33922: "ModelTiepoint",
-    34264: "ModelTransformation",
-    34735: "GeoKeyDirectory",
-    34736: "GeoDoubleParams",
-    34737: "GeoAsciiParams",
-    50674: "LercParameters"
-  };
-  const fieldTags = {};
-  for (const key2 in fieldTagNames) {
-    if (fieldTagNames.hasOwnProperty(key2)) {
-      fieldTags[fieldTagNames[key2]] = parseInt(key2, 10);
-    }
-  }
-  const arrayFields = [
-    fieldTags.BitsPerSample,
-    fieldTags.ExtraSamples,
-    fieldTags.SampleFormat,
-    fieldTags.StripByteCounts,
-    fieldTags.StripOffsets,
-    fieldTags.StripRowCounts,
-    fieldTags.TileByteCounts,
-    fieldTags.TileOffsets,
-    fieldTags.SubIFDs
-  ];
-  const fieldTypeNames = {
-    1: "BYTE",
-    2: "ASCII",
-    3: "SHORT",
-    4: "LONG",
-    5: "RATIONAL",
-    6: "SBYTE",
-    7: "UNDEFINED",
-    8: "SSHORT",
-    9: "SLONG",
-    10: "SRATIONAL",
-    11: "FLOAT",
-    12: "DOUBLE",
-    13: "IFD",
-    16: "LONG8",
-    17: "SLONG8",
-    18: "IFD8"
-  };
-  const fieldTypes = {};
-  for (const key2 in fieldTypeNames) {
-    if (fieldTypeNames.hasOwnProperty(key2)) {
-      fieldTypes[fieldTypeNames[key2]] = parseInt(key2, 10);
-    }
-  }
-  const photometricInterpretations = {
-    WhiteIsZero: 0,
-    BlackIsZero: 1,
-    RGB: 2,
-    Palette: 3,
-    CMYK: 5,
-    YCbCr: 6,
-    CIELab: 8
-  };
-  const ExtraSamplesValues = {
-    Unspecified: 0
-  };
-  LercParameters = {
-    AddCompression: 1
-  };
-  LercAddCompression = {
-    None: 0,
-    Deflate: 1,
-    Zstandard: 2
-  };
-  const geoKeyNames = {
-    1024: "GTModelTypeGeoKey",
-    1025: "GTRasterTypeGeoKey",
-    1026: "GTCitationGeoKey",
-    2048: "GeographicTypeGeoKey",
-    2049: "GeogCitationGeoKey",
-    2050: "GeogGeodeticDatumGeoKey",
-    2051: "GeogPrimeMeridianGeoKey",
-    2052: "GeogLinearUnitsGeoKey",
-    2053: "GeogLinearUnitSizeGeoKey",
-    2054: "GeogAngularUnitsGeoKey",
-    2055: "GeogAngularUnitSizeGeoKey",
-    2056: "GeogEllipsoidGeoKey",
-    2057: "GeogSemiMajorAxisGeoKey",
-    2058: "GeogSemiMinorAxisGeoKey",
-    2059: "GeogInvFlatteningGeoKey",
-    2060: "GeogAzimuthUnitsGeoKey",
-    2061: "GeogPrimeMeridianLongGeoKey",
-    2062: "GeogTOWGS84GeoKey",
-    3072: "ProjectedCSTypeGeoKey",
-    3073: "PCSCitationGeoKey",
-    3074: "ProjectionGeoKey",
-    3075: "ProjCoordTransGeoKey",
-    3076: "ProjLinearUnitsGeoKey",
-    3077: "ProjLinearUnitSizeGeoKey",
-    3078: "ProjStdParallel1GeoKey",
-    3079: "ProjStdParallel2GeoKey",
-    3080: "ProjNatOriginLongGeoKey",
-    3081: "ProjNatOriginLatGeoKey",
-    3082: "ProjFalseEastingGeoKey",
-    3083: "ProjFalseNorthingGeoKey",
-    3084: "ProjFalseOriginLongGeoKey",
-    3085: "ProjFalseOriginLatGeoKey",
-    3086: "ProjFalseOriginEastingGeoKey",
-    3087: "ProjFalseOriginNorthingGeoKey",
-    3088: "ProjCenterLongGeoKey",
-    3089: "ProjCenterLatGeoKey",
-    3090: "ProjCenterEastingGeoKey",
-    3091: "ProjCenterNorthingGeoKey",
-    3092: "ProjScaleAtNatOriginGeoKey",
-    3093: "ProjScaleAtCenterGeoKey",
-    3094: "ProjAzimuthAngleGeoKey",
-    3095: "ProjStraightVertPoleLongGeoKey",
-    3096: "ProjRectifiedGridAngleGeoKey",
-    4096: "VerticalCSTypeGeoKey",
-    4097: "VerticalCitationGeoKey",
-    4098: "VerticalDatumGeoKey",
-    4099: "VerticalUnitsGeoKey"
-  };
-  function fromWhiteIsZero(raster, max2) {
-    const { width, height } = raster;
-    const rgbRaster = new Uint8Array(width * height * 3);
-    let value;
-    for (let i2 = 0, j2 = 0; i2 < raster.length; ++i2, j2 += 3) {
-      value = 256 - raster[i2] / max2 * 256;
-      rgbRaster[j2] = value;
-      rgbRaster[j2 + 1] = value;
-      rgbRaster[j2 + 2] = value;
-    }
-    return rgbRaster;
-  }
-  function fromBlackIsZero(raster, max2) {
-    const { width, height } = raster;
-    const rgbRaster = new Uint8Array(width * height * 3);
-    let value;
-    for (let i2 = 0, j2 = 0; i2 < raster.length; ++i2, j2 += 3) {
-      value = raster[i2] / max2 * 256;
-      rgbRaster[j2] = value;
-      rgbRaster[j2 + 1] = value;
-      rgbRaster[j2 + 2] = value;
-    }
-    return rgbRaster;
-  }
-  function fromPalette(raster, colorMap) {
-    const { width, height } = raster;
-    const rgbRaster = new Uint8Array(width * height * 3);
-    const greenOffset = colorMap.length / 3;
-    const blueOffset = colorMap.length / 3 * 2;
-    for (let i2 = 0, j2 = 0; i2 < raster.length; ++i2, j2 += 3) {
-      const mapIndex = raster[i2];
-      rgbRaster[j2] = colorMap[mapIndex] / 65536 * 256;
-      rgbRaster[j2 + 1] = colorMap[mapIndex + greenOffset] / 65536 * 256;
-      rgbRaster[j2 + 2] = colorMap[mapIndex + blueOffset] / 65536 * 256;
-    }
-    return rgbRaster;
-  }
-  function fromCMYK(cmykRaster) {
-    const { width, height } = cmykRaster;
-    const rgbRaster = new Uint8Array(width * height * 3);
-    for (let i2 = 0, j2 = 0; i2 < cmykRaster.length; i2 += 4, j2 += 3) {
-      const c2 = cmykRaster[i2];
-      const m2 = cmykRaster[i2 + 1];
-      const y2 = cmykRaster[i2 + 2];
-      const k2 = cmykRaster[i2 + 3];
-      rgbRaster[j2] = 255 * ((255 - c2) / 256) * ((255 - k2) / 256);
-      rgbRaster[j2 + 1] = 255 * ((255 - m2) / 256) * ((255 - k2) / 256);
-      rgbRaster[j2 + 2] = 255 * ((255 - y2) / 256) * ((255 - k2) / 256);
-    }
-    return rgbRaster;
-  }
-  function fromYCbCr(yCbCrRaster) {
-    const { width, height } = yCbCrRaster;
-    const rgbRaster = new Uint8ClampedArray(width * height * 3);
-    for (let i2 = 0, j2 = 0; i2 < yCbCrRaster.length; i2 += 3, j2 += 3) {
-      const y2 = yCbCrRaster[i2];
-      const cb2 = yCbCrRaster[i2 + 1];
-      const cr = yCbCrRaster[i2 + 2];
-      rgbRaster[j2] = y2 + 1.402 * (cr - 128);
-      rgbRaster[j2 + 1] = y2 - 0.34414 * (cb2 - 128) - 0.71414 * (cr - 128);
-      rgbRaster[j2 + 2] = y2 + 1.772 * (cb2 - 128);
-    }
-    return rgbRaster;
-  }
-  const Xn = 0.95047;
-  const Yn = 1;
-  const Zn = 1.08883;
-  function fromCIELab(cieLabRaster) {
-    const { width, height } = cieLabRaster;
-    const rgbRaster = new Uint8Array(width * height * 3);
-    for (let i2 = 0, j2 = 0; i2 < cieLabRaster.length; i2 += 3, j2 += 3) {
-      const L2 = cieLabRaster[i2 + 0];
-      const a_ = cieLabRaster[i2 + 1] << 24 >> 24;
-      const b_ = cieLabRaster[i2 + 2] << 24 >> 24;
-      let y2 = (L2 + 16) / 116;
-      let x2 = a_ / 500 + y2;
-      let z2 = y2 - b_ / 200;
-      let r2;
-      let g2;
-      let b2;
-      x2 = Xn * (x2 * x2 * x2 > 8856e-6 ? x2 * x2 * x2 : (x2 - 16 / 116) / 7.787);
-      y2 = Yn * (y2 * y2 * y2 > 8856e-6 ? y2 * y2 * y2 : (y2 - 16 / 116) / 7.787);
-      z2 = Zn * (z2 * z2 * z2 > 8856e-6 ? z2 * z2 * z2 : (z2 - 16 / 116) / 7.787);
-      r2 = x2 * 3.2406 + y2 * -1.5372 + z2 * -0.4986;
-      g2 = x2 * -0.9689 + y2 * 1.8758 + z2 * 0.0415;
-      b2 = x2 * 0.0557 + y2 * -0.204 + z2 * 1.057;
-      r2 = r2 > 31308e-7 ? 1.055 * r2 ** (1 / 2.4) - 0.055 : 12.92 * r2;
-      g2 = g2 > 31308e-7 ? 1.055 * g2 ** (1 / 2.4) - 0.055 : 12.92 * g2;
-      b2 = b2 > 31308e-7 ? 1.055 * b2 ** (1 / 2.4) - 0.055 : 12.92 * b2;
-      rgbRaster[j2] = Math.max(0, Math.min(1, r2)) * 255;
-      rgbRaster[j2 + 1] = Math.max(0, Math.min(1, g2)) * 255;
-      rgbRaster[j2 + 2] = Math.max(0, Math.min(1, b2)) * 255;
-    }
-    return rgbRaster;
-  }
-  const scriptRel = "modulepreload";
-  const assetsURL = function(dep, importerUrl) {
-    return new URL(dep, importerUrl).href;
-  };
-  const seen = {};
-  const __vitePreload = function preload(baseModule, deps, importerUrl) {
-    let promise = Promise.resolve();
-    if (deps && deps.length > 0) {
-      const links = document.getElementsByTagName("link");
-      const cspNonceMeta = document.querySelector("meta[property=csp-nonce]");
-      const cspNonce = (cspNonceMeta == null ? void 0 : cspNonceMeta.nonce) || (cspNonceMeta == null ? void 0 : cspNonceMeta.getAttribute("nonce"));
-      promise = Promise.allSettled(deps.map((dep) => {
-        dep = assetsURL(dep, importerUrl);
-        if (dep in seen) return;
-        seen[dep] = true;
-        const isCss = dep.endsWith(".css");
-        const cssSelector = isCss ? '[rel="stylesheet"]' : "";
-        const isBaseRelative = !!importerUrl;
-        if (isBaseRelative) {
-          for (let i2 = links.length - 1; i2 >= 0; i2--) {
-            const link22 = links[i2];
-            if (link22.href === dep && (!isCss || link22.rel === "stylesheet")) {
-              return;
-            }
-          }
-        } else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) {
-          return;
-        }
-        const link2 = document.createElement("link");
-        link2.rel = isCss ? "stylesheet" : scriptRel;
-        if (!isCss) {
-          link2.as = "script";
-        }
-        link2.crossOrigin = "";
-        link2.href = dep;
-        if (cspNonce) {
-          link2.setAttribute("nonce", cspNonce);
-        }
-        document.head.appendChild(link2);
-        if (isCss) {
-          return new Promise((res, rej) => {
-            link2.addEventListener("load", res);
-            link2.addEventListener("error", () => rej(new Error(`Unable to preload CSS for ${dep}`)));
-          });
-        }
-      }));
-    }
-    function handlePreloadError(err2) {
-      const e2 = new Event("vite:preloadError", {
-        cancelable: true
-      });
-      e2.payload = err2;
-      window.dispatchEvent(e2);
-      if (!e2.defaultPrevented) {
-        throw err2;
-      }
-    }
-    return promise.then((res) => {
-      for (const item2 of res || []) {
-        if (item2.status !== "rejected") continue;
-        handlePreloadError(item2.reason);
-      }
-      return baseModule().catch(handlePreloadError);
-    });
-  };
-  const registry = /* @__PURE__ */ new Map();
-  const preferWorkerMap = /* @__PURE__ */ new Map();
-  function addDecoder(cases, importFn, preferWorker_ = true) {
-    if (!Array.isArray(cases)) {
-      cases = [
-        cases
-      ];
-    }
-    cases.forEach((c2) => {
-      registry.set(c2, importFn);
-      preferWorkerMap.set(c2, preferWorker_);
-    });
-  }
-  async function getDecoder(fileDirectory) {
-    const importFn = registry.get(fileDirectory.Compression);
-    if (!importFn) {
-      throw new Error(`Unknown compression method identifier: ${fileDirectory.Compression}`);
-    }
-    const Decoder = await importFn();
-    return new Decoder(fileDirectory);
-  }
-  addDecoder([
-    void 0,
-    1
-  ], () => __vitePreload(() => import("./raw-Dg5osOTE.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DvlTSFJn.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(6, () => {
-    throw new Error("old style JPEG compression is not supported.");
-  });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-D7ENO4Ud.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder([
-    8,
-    32946
-  ], () => __vitePreload(() => import("./deflate-OLvXQ8n-.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-Da2Pc-fh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CP3Od3af.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
-    await m2.zstd.init();
-    return m2;
-  }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BvxoUKU6.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
-    await m2.zstd.init();
-    return m2;
-  }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CldQ5Oju.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  function copyNewSize(array, width, height, samplesPerPixel = 1) {
-    return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
-  }
-  function resampleNearest(valueArrays, inWidth, inHeight, outWidth, outHeight) {
-    const relX = inWidth / outWidth;
-    const relY = inHeight / outHeight;
-    return valueArrays.map((array) => {
-      const newArray = copyNewSize(array, outWidth, outHeight);
-      for (let y2 = 0; y2 < outHeight; ++y2) {
-        const cy = Math.min(Math.round(relY * y2), inHeight - 1);
-        for (let x2 = 0; x2 < outWidth; ++x2) {
-          const cx = Math.min(Math.round(relX * x2), inWidth - 1);
-          const value = array[cy * inWidth + cx];
-          newArray[y2 * outWidth + x2] = value;
-        }
-      }
-      return newArray;
-    });
-  }
-  function lerp$6(v0, v1, t2) {
-    return (1 - t2) * v0 + t2 * v1;
-  }
-  function resampleBilinear(valueArrays, inWidth, inHeight, outWidth, outHeight) {
-    const relX = inWidth / outWidth;
-    const relY = inHeight / outHeight;
-    return valueArrays.map((array) => {
-      const newArray = copyNewSize(array, outWidth, outHeight);
-      for (let y2 = 0; y2 < outHeight; ++y2) {
-        const rawY = relY * y2;
-        const yl = Math.floor(rawY);
-        const yh2 = Math.min(Math.ceil(rawY), inHeight - 1);
-        for (let x2 = 0; x2 < outWidth; ++x2) {
-          const rawX = relX * x2;
-          const tx = rawX % 1;
-          const xl = Math.floor(rawX);
-          const xh2 = Math.min(Math.ceil(rawX), inWidth - 1);
-          const ll2 = array[yl * inWidth + xl];
-          const hl2 = array[yl * inWidth + xh2];
-          const lh2 = array[yh2 * inWidth + xl];
-          const hh2 = array[yh2 * inWidth + xh2];
-          const value = lerp$6(lerp$6(ll2, hl2, tx), lerp$6(lh2, hh2, tx), rawY % 1);
-          newArray[y2 * outWidth + x2] = value;
-        }
-      }
-      return newArray;
-    });
-  }
-  function resample(valueArrays, inWidth, inHeight, outWidth, outHeight, method = "nearest") {
-    switch (method.toLowerCase()) {
-      case "nearest":
-        return resampleNearest(valueArrays, inWidth, inHeight, outWidth, outHeight);
-      case "bilinear":
-      case "linear":
-        return resampleBilinear(valueArrays, inWidth, inHeight, outWidth, outHeight);
-      default:
-        throw new Error(`Unsupported resampling method: '${method}'`);
-    }
-  }
-  function resampleNearestInterleaved(valueArray, inWidth, inHeight, outWidth, outHeight, samples) {
-    const relX = inWidth / outWidth;
-    const relY = inHeight / outHeight;
-    const newArray = copyNewSize(valueArray, outWidth, outHeight, samples);
-    for (let y2 = 0; y2 < outHeight; ++y2) {
-      const cy = Math.min(Math.round(relY * y2), inHeight - 1);
-      for (let x2 = 0; x2 < outWidth; ++x2) {
-        const cx = Math.min(Math.round(relX * x2), inWidth - 1);
-        for (let i2 = 0; i2 < samples; ++i2) {
-          const value = valueArray[cy * inWidth * samples + cx * samples + i2];
-          newArray[y2 * outWidth * samples + x2 * samples + i2] = value;
-        }
-      }
-    }
-    return newArray;
-  }
-  function resampleBilinearInterleaved(valueArray, inWidth, inHeight, outWidth, outHeight, samples) {
-    const relX = inWidth / outWidth;
-    const relY = inHeight / outHeight;
-    const newArray = copyNewSize(valueArray, outWidth, outHeight, samples);
-    for (let y2 = 0; y2 < outHeight; ++y2) {
-      const rawY = relY * y2;
-      const yl = Math.floor(rawY);
-      const yh2 = Math.min(Math.ceil(rawY), inHeight - 1);
-      for (let x2 = 0; x2 < outWidth; ++x2) {
-        const rawX = relX * x2;
-        const tx = rawX % 1;
-        const xl = Math.floor(rawX);
-        const xh2 = Math.min(Math.ceil(rawX), inWidth - 1);
-        for (let i2 = 0; i2 < samples; ++i2) {
-          const ll2 = valueArray[yl * inWidth * samples + xl * samples + i2];
-          const hl2 = valueArray[yl * inWidth * samples + xh2 * samples + i2];
-          const lh2 = valueArray[yh2 * inWidth * samples + xl * samples + i2];
-          const hh2 = valueArray[yh2 * inWidth * samples + xh2 * samples + i2];
-          const value = lerp$6(lerp$6(ll2, hl2, tx), lerp$6(lh2, hh2, tx), rawY % 1);
-          newArray[y2 * outWidth * samples + x2 * samples + i2] = value;
-        }
-      }
-    }
-    return newArray;
-  }
-  function resampleInterleaved(valueArray, inWidth, inHeight, outWidth, outHeight, samples, method = "nearest") {
-    switch (method.toLowerCase()) {
-      case "nearest":
-        return resampleNearestInterleaved(valueArray, inWidth, inHeight, outWidth, outHeight, samples);
-      case "bilinear":
-      case "linear":
-        return resampleBilinearInterleaved(valueArray, inWidth, inHeight, outWidth, outHeight, samples);
-      default:
-        throw new Error(`Unsupported resampling method: '${method}'`);
-    }
-  }
-  function sum$1(array, start, end) {
-    let s2 = 0;
-    for (let i2 = start; i2 < end; ++i2) {
-      s2 += array[i2];
-    }
-    return s2;
-  }
-  function arrayForType(format, bitsPerSample, size) {
-    switch (format) {
-      case 1:
-        if (bitsPerSample <= 8) {
-          return new Uint8Array(size);
-        } else if (bitsPerSample <= 16) {
-          return new Uint16Array(size);
-        } else if (bitsPerSample <= 32) {
-          return new Uint32Array(size);
-        }
-        break;
-      case 2:
-        if (bitsPerSample === 8) {
-          return new Int8Array(size);
-        } else if (bitsPerSample === 16) {
-          return new Int16Array(size);
-        } else if (bitsPerSample === 32) {
-          return new Int32Array(size);
-        }
-        break;
-      case 3:
-        switch (bitsPerSample) {
-          case 16:
-          case 32:
-            return new Float32Array(size);
-          case 64:
-            return new Float64Array(size);
-        }
-        break;
-    }
-    throw Error("Unsupported data format/bitsPerSample");
-  }
-  function needsNormalization(format, bitsPerSample) {
-    if ((format === 1 || format === 2) && bitsPerSample <= 32 && bitsPerSample % 8 === 0) {
-      return false;
-    } else if (format === 3 && (bitsPerSample === 16 || bitsPerSample === 32 || bitsPerSample === 64)) {
-      return false;
-    }
-    return true;
-  }
-  function normalizeArray(inBuffer, format, planarConfiguration, samplesPerPixel, bitsPerSample, tileWidth, tileHeight) {
-    const view = new DataView(inBuffer);
-    const outSize = planarConfiguration === 2 ? tileHeight * tileWidth : tileHeight * tileWidth * samplesPerPixel;
-    const samplesToTransfer = planarConfiguration === 2 ? 1 : samplesPerPixel;
-    const outArray = arrayForType(format, bitsPerSample, outSize);
-    const bitMask = parseInt("1".repeat(bitsPerSample), 2);
-    if (format === 1) {
-      let pixelBitSkip;
-      if (planarConfiguration === 1) {
-        pixelBitSkip = samplesPerPixel * bitsPerSample;
-      } else {
-        pixelBitSkip = bitsPerSample;
-      }
-      let bitsPerLine = tileWidth * pixelBitSkip;
-      if ((bitsPerLine & 7) !== 0) {
-        bitsPerLine = bitsPerLine + 7 & -8;
-      }
-      for (let y2 = 0; y2 < tileHeight; ++y2) {
-        const lineBitOffset = y2 * bitsPerLine;
-        for (let x2 = 0; x2 < tileWidth; ++x2) {
-          const pixelBitOffset = lineBitOffset + x2 * samplesToTransfer * bitsPerSample;
-          for (let i2 = 0; i2 < samplesToTransfer; ++i2) {
-            const bitOffset = pixelBitOffset + i2 * bitsPerSample;
-            const outIndex = (y2 * tileWidth + x2) * samplesToTransfer + i2;
-            const byteOffset = Math.floor(bitOffset / 8);
-            const innerBitOffset = bitOffset % 8;
-            if (innerBitOffset + bitsPerSample <= 8) {
-              outArray[outIndex] = view.getUint8(byteOffset) >> 8 - bitsPerSample - innerBitOffset & bitMask;
-            } else if (innerBitOffset + bitsPerSample <= 16) {
-              outArray[outIndex] = view.getUint16(byteOffset) >> 16 - bitsPerSample - innerBitOffset & bitMask;
-            } else if (innerBitOffset + bitsPerSample <= 24) {
-              const raw2 = view.getUint16(byteOffset) << 8 | view.getUint8(byteOffset + 2);
-              outArray[outIndex] = raw2 >> 24 - bitsPerSample - innerBitOffset & bitMask;
-            } else {
-              outArray[outIndex] = view.getUint32(byteOffset) >> 32 - bitsPerSample - innerBitOffset & bitMask;
-            }
-          }
-        }
-      }
-    }
-    return outArray.buffer;
-  }
-  class GeoTIFFImage {
-    constructor(fileDirectory, geoKeys, dataView, littleEndian, cache2, source2) {
-      this.fileDirectory = fileDirectory;
-      this.geoKeys = geoKeys;
-      this.dataView = dataView;
-      this.littleEndian = littleEndian;
-      this.tiles = cache2 ? {} : null;
-      this.isTiled = !fileDirectory.StripOffsets;
-      const planarConfiguration = fileDirectory.PlanarConfiguration;
-      this.planarConfiguration = typeof planarConfiguration === "undefined" ? 1 : planarConfiguration;
-      if (this.planarConfiguration !== 1 && this.planarConfiguration !== 2) {
-        throw new Error("Invalid planar configuration.");
-      }
-      this.source = source2;
-    }
-    getFileDirectory() {
-      return this.fileDirectory;
-    }
-    getGeoKeys() {
-      return this.geoKeys;
-    }
-    getWidth() {
-      return this.fileDirectory.ImageWidth;
-    }
-    getHeight() {
-      return this.fileDirectory.ImageLength;
-    }
-    getSamplesPerPixel() {
-      return typeof this.fileDirectory.SamplesPerPixel !== "undefined" ? this.fileDirectory.SamplesPerPixel : 1;
-    }
-    getTileWidth() {
-      return this.isTiled ? this.fileDirectory.TileWidth : this.getWidth();
-    }
-    getTileHeight() {
-      if (this.isTiled) {
-        return this.fileDirectory.TileLength;
-      }
-      if (typeof this.fileDirectory.RowsPerStrip !== "undefined") {
-        return Math.min(this.fileDirectory.RowsPerStrip, this.getHeight());
-      }
-      return this.getHeight();
-    }
-    getBlockWidth() {
-      return this.getTileWidth();
-    }
-    getBlockHeight(y2) {
-      if (this.isTiled || (y2 + 1) * this.getTileHeight() <= this.getHeight()) {
-        return this.getTileHeight();
-      } else {
-        return this.getHeight() - y2 * this.getTileHeight();
-      }
-    }
-    getBytesPerPixel() {
-      let bytes = 0;
-      for (let i2 = 0; i2 < this.fileDirectory.BitsPerSample.length; ++i2) {
-        bytes += this.getSampleByteSize(i2);
-      }
-      return bytes;
-    }
-    getSampleByteSize(i2) {
-      if (i2 >= this.fileDirectory.BitsPerSample.length) {
-        throw new RangeError(`Sample index ${i2} is out of range.`);
-      }
-      return Math.ceil(this.fileDirectory.BitsPerSample[i2] / 8);
-    }
-    getReaderForSample(sampleIndex) {
-      const format = this.fileDirectory.SampleFormat ? this.fileDirectory.SampleFormat[sampleIndex] : 1;
-      const bitsPerSample = this.fileDirectory.BitsPerSample[sampleIndex];
-      switch (format) {
-        case 1:
-          if (bitsPerSample <= 8) {
-            return DataView.prototype.getUint8;
-          } else if (bitsPerSample <= 16) {
-            return DataView.prototype.getUint16;
-          } else if (bitsPerSample <= 32) {
-            return DataView.prototype.getUint32;
-          }
-          break;
-        case 2:
-          if (bitsPerSample <= 8) {
-            return DataView.prototype.getInt8;
-          } else if (bitsPerSample <= 16) {
-            return DataView.prototype.getInt16;
-          } else if (bitsPerSample <= 32) {
-            return DataView.prototype.getInt32;
-          }
-          break;
-        case 3:
-          switch (bitsPerSample) {
-            case 16:
-              return function(offset, littleEndian) {
-                return getFloat16(this, offset, littleEndian);
-              };
-            case 32:
-              return DataView.prototype.getFloat32;
-            case 64:
-              return DataView.prototype.getFloat64;
-          }
-          break;
-      }
-      throw Error("Unsupported data format/bitsPerSample");
-    }
-    getSampleFormat(sampleIndex = 0) {
-      return this.fileDirectory.SampleFormat ? this.fileDirectory.SampleFormat[sampleIndex] : 1;
-    }
-    getBitsPerSample(sampleIndex = 0) {
-      return this.fileDirectory.BitsPerSample[sampleIndex];
-    }
-    getArrayForSample(sampleIndex, size) {
-      const format = this.getSampleFormat(sampleIndex);
-      const bitsPerSample = this.getBitsPerSample(sampleIndex);
-      return arrayForType(format, bitsPerSample, size);
-    }
-    async getTileOrStrip(x2, y2, sample, poolOrDecoder, signal) {
-      const numTilesPerRow = Math.ceil(this.getWidth() / this.getTileWidth());
-      const numTilesPerCol = Math.ceil(this.getHeight() / this.getTileHeight());
-      let index2;
-      const { tiles } = this;
-      if (this.planarConfiguration === 1) {
-        index2 = y2 * numTilesPerRow + x2;
-      } else if (this.planarConfiguration === 2) {
-        index2 = sample * numTilesPerRow * numTilesPerCol + y2 * numTilesPerRow + x2;
-      }
-      let offset;
-      let byteCount;
-      if (this.isTiled) {
-        offset = this.fileDirectory.TileOffsets[index2];
-        byteCount = this.fileDirectory.TileByteCounts[index2];
-      } else {
-        offset = this.fileDirectory.StripOffsets[index2];
-        byteCount = this.fileDirectory.StripByteCounts[index2];
-      }
-      if (byteCount === 0) {
-        const nPixels = this.getBlockHeight(y2) * this.getTileWidth();
-        const bytesPerPixel = this.planarConfiguration === 2 ? this.getSampleByteSize(sample) : this.getBytesPerPixel();
-        const data2 = new ArrayBuffer(nPixels * bytesPerPixel);
-        const view = this.getArrayForSample(sample, data2);
-        view.fill(this.getGDALNoData() || 0);
-        return {
-          x: x2,
-          y: y2,
-          sample,
-          data: data2
-        };
-      }
-      const slice = (await this.source.fetch([
-        {
-          offset,
-          length: byteCount
-        }
-      ], signal))[0];
-      let request;
-      if (tiles === null || !tiles[index2]) {
-        request = (async () => {
-          let data2 = await poolOrDecoder.decode(this.fileDirectory, slice);
-          const sampleFormat = this.getSampleFormat();
-          const bitsPerSample = this.getBitsPerSample();
-          if (needsNormalization(sampleFormat, bitsPerSample)) {
-            data2 = normalizeArray(data2, sampleFormat, this.planarConfiguration, this.getSamplesPerPixel(), bitsPerSample, this.getTileWidth(), this.getBlockHeight(y2));
-          }
-          return data2;
-        })();
-        if (tiles !== null) {
-          tiles[index2] = request;
-        }
-      } else {
-        request = tiles[index2];
-      }
-      return {
-        x: x2,
-        y: y2,
-        sample,
-        data: await request
-      };
-    }
-    async _readRaster(imageWindow, samples, valueArrays, interleave, poolOrDecoder, width, height, resampleMethod, signal) {
-      const tileWidth = this.getTileWidth();
-      const tileHeight = this.getTileHeight();
-      const imageWidth = this.getWidth();
-      const imageHeight = this.getHeight();
-      const minXTile = Math.max(Math.floor(imageWindow[0] / tileWidth), 0);
-      const maxXTile = Math.min(Math.ceil(imageWindow[2] / tileWidth), Math.ceil(imageWidth / tileWidth));
-      const minYTile = Math.max(Math.floor(imageWindow[1] / tileHeight), 0);
-      const maxYTile = Math.min(Math.ceil(imageWindow[3] / tileHeight), Math.ceil(imageHeight / tileHeight));
-      const windowWidth = imageWindow[2] - imageWindow[0];
-      let bytesPerPixel = this.getBytesPerPixel();
-      const srcSampleOffsets = [];
-      const sampleReaders = [];
-      for (let i2 = 0; i2 < samples.length; ++i2) {
-        if (this.planarConfiguration === 1) {
-          srcSampleOffsets.push(sum$1(this.fileDirectory.BitsPerSample, 0, samples[i2]) / 8);
-        } else {
-          srcSampleOffsets.push(0);
-        }
-        sampleReaders.push(this.getReaderForSample(samples[i2]));
-      }
-      const promises = [];
-      const { littleEndian } = this;
-      for (let yTile = minYTile; yTile < maxYTile; ++yTile) {
-        for (let xTile = minXTile; xTile < maxXTile; ++xTile) {
-          let getPromise;
-          if (this.planarConfiguration === 1) {
-            getPromise = this.getTileOrStrip(xTile, yTile, 0, poolOrDecoder, signal);
-          }
-          for (let sampleIndex = 0; sampleIndex < samples.length; ++sampleIndex) {
-            const si2 = sampleIndex;
-            const sample = samples[sampleIndex];
-            if (this.planarConfiguration === 2) {
-              bytesPerPixel = this.getSampleByteSize(sample);
-              getPromise = this.getTileOrStrip(xTile, yTile, sample, poolOrDecoder, signal);
-            }
-            const promise = getPromise.then((tile) => {
-              const buffer2 = tile.data;
-              const dataView = new DataView(buffer2);
-              const blockHeight = this.getBlockHeight(tile.y);
-              const firstLine = tile.y * tileHeight;
-              const firstCol = tile.x * tileWidth;
-              const lastLine = firstLine + blockHeight;
-              const lastCol = (tile.x + 1) * tileWidth;
-              const reader = sampleReaders[si2];
-              const ymax = Math.min(blockHeight, blockHeight - (lastLine - imageWindow[3]), imageHeight - firstLine);
-              const xmax = Math.min(tileWidth, tileWidth - (lastCol - imageWindow[2]), imageWidth - firstCol);
-              for (let y2 = Math.max(0, imageWindow[1] - firstLine); y2 < ymax; ++y2) {
-                for (let x2 = Math.max(0, imageWindow[0] - firstCol); x2 < xmax; ++x2) {
-                  const pixelOffset = (y2 * tileWidth + x2) * bytesPerPixel;
-                  const value = reader.call(dataView, pixelOffset + srcSampleOffsets[si2], littleEndian);
-                  let windowCoordinate;
-                  if (interleave) {
-                    windowCoordinate = (y2 + firstLine - imageWindow[1]) * windowWidth * samples.length + (x2 + firstCol - imageWindow[0]) * samples.length + si2;
-                    valueArrays[windowCoordinate] = value;
-                  } else {
-                    windowCoordinate = (y2 + firstLine - imageWindow[1]) * windowWidth + x2 + firstCol - imageWindow[0];
-                    valueArrays[si2][windowCoordinate] = value;
-                  }
-                }
-              }
-            });
-            promises.push(promise);
-          }
-        }
-      }
-      await Promise.all(promises);
-      if (width && imageWindow[2] - imageWindow[0] !== width || height && imageWindow[3] - imageWindow[1] !== height) {
-        let resampled;
-        if (interleave) {
-          resampled = resampleInterleaved(valueArrays, imageWindow[2] - imageWindow[0], imageWindow[3] - imageWindow[1], width, height, samples.length, resampleMethod);
-        } else {
-          resampled = resample(valueArrays, imageWindow[2] - imageWindow[0], imageWindow[3] - imageWindow[1], width, height, resampleMethod);
-        }
-        resampled.width = width;
-        resampled.height = height;
-        return resampled;
-      }
-      valueArrays.width = width || imageWindow[2] - imageWindow[0];
-      valueArrays.height = height || imageWindow[3] - imageWindow[1];
-      return valueArrays;
-    }
-    async readRasters({ window: wnd, samples = [], interleave, pool = null, width, height, resampleMethod, fillValue, signal } = {}) {
-      const imageWindow = wnd || [
-        0,
-        0,
-        this.getWidth(),
-        this.getHeight()
-      ];
-      if (imageWindow[0] > imageWindow[2] || imageWindow[1] > imageWindow[3]) {
-        throw new Error("Invalid subsets");
-      }
-      const imageWindowWidth = imageWindow[2] - imageWindow[0];
-      const imageWindowHeight = imageWindow[3] - imageWindow[1];
-      const numPixels = imageWindowWidth * imageWindowHeight;
-      const samplesPerPixel = this.getSamplesPerPixel();
-      if (!samples || !samples.length) {
-        for (let i2 = 0; i2 < samplesPerPixel; ++i2) {
-          samples.push(i2);
-        }
-      } else {
-        for (let i2 = 0; i2 < samples.length; ++i2) {
-          if (samples[i2] >= samplesPerPixel) {
-            return Promise.reject(new RangeError(`Invalid sample index '${samples[i2]}'.`));
-          }
-        }
-      }
-      let valueArrays;
-      if (interleave) {
-        const format = this.fileDirectory.SampleFormat ? Math.max.apply(null, this.fileDirectory.SampleFormat) : 1;
-        const bitsPerSample = Math.max.apply(null, this.fileDirectory.BitsPerSample);
-        valueArrays = arrayForType(format, bitsPerSample, numPixels * samples.length);
-        if (fillValue) {
-          valueArrays.fill(fillValue);
-        }
-      } else {
-        valueArrays = [];
-        for (let i2 = 0; i2 < samples.length; ++i2) {
-          const valueArray = this.getArrayForSample(samples[i2], numPixels);
-          if (Array.isArray(fillValue) && i2 < fillValue.length) {
-            valueArray.fill(fillValue[i2]);
-          } else if (fillValue && !Array.isArray(fillValue)) {
-            valueArray.fill(fillValue);
-          }
-          valueArrays.push(valueArray);
-        }
-      }
-      const poolOrDecoder = pool || await getDecoder(this.fileDirectory);
-      const result = await this._readRaster(imageWindow, samples, valueArrays, interleave, poolOrDecoder, width, height, resampleMethod, signal);
-      return result;
-    }
-    async readRGB({ window: window2, interleave = true, pool = null, width, height, resampleMethod, enableAlpha = false, signal } = {}) {
-      const imageWindow = window2 || [
-        0,
-        0,
-        this.getWidth(),
-        this.getHeight()
-      ];
-      if (imageWindow[0] > imageWindow[2] || imageWindow[1] > imageWindow[3]) {
-        throw new Error("Invalid subsets");
-      }
-      const pi2 = this.fileDirectory.PhotometricInterpretation;
-      if (pi2 === photometricInterpretations.RGB) {
-        let s2 = [
-          0,
-          1,
-          2
-        ];
-        if (!(this.fileDirectory.ExtraSamples === ExtraSamplesValues.Unspecified) && enableAlpha) {
-          s2 = [];
-          for (let i2 = 0; i2 < this.fileDirectory.BitsPerSample.length; i2 += 1) {
-            s2.push(i2);
-          }
-        }
-        return this.readRasters({
-          window: window2,
-          interleave,
-          samples: s2,
-          pool,
-          width,
-          height,
-          resampleMethod,
-          signal
-        });
-      }
-      let samples;
-      switch (pi2) {
-        case photometricInterpretations.WhiteIsZero:
-        case photometricInterpretations.BlackIsZero:
-        case photometricInterpretations.Palette:
-          samples = [
-            0
-          ];
-          break;
-        case photometricInterpretations.CMYK:
-          samples = [
-            0,
-            1,
-            2,
-            3
-          ];
-          break;
-        case photometricInterpretations.YCbCr:
-        case photometricInterpretations.CIELab:
-          samples = [
-            0,
-            1,
-            2
-          ];
-          break;
-        default:
-          throw new Error("Invalid or unsupported photometric interpretation.");
-      }
-      const subOptions = {
-        window: imageWindow,
-        interleave: true,
-        samples,
-        pool,
-        width,
-        height,
-        resampleMethod,
-        signal
-      };
-      const { fileDirectory } = this;
-      const raster = await this.readRasters(subOptions);
-      const max2 = 2 ** this.fileDirectory.BitsPerSample[0];
-      let data2;
-      switch (pi2) {
-        case photometricInterpretations.WhiteIsZero:
-          data2 = fromWhiteIsZero(raster, max2);
-          break;
-        case photometricInterpretations.BlackIsZero:
-          data2 = fromBlackIsZero(raster, max2);
-          break;
-        case photometricInterpretations.Palette:
-          data2 = fromPalette(raster, fileDirectory.ColorMap);
-          break;
-        case photometricInterpretations.CMYK:
-          data2 = fromCMYK(raster);
-          break;
-        case photometricInterpretations.YCbCr:
-          data2 = fromYCbCr(raster);
-          break;
-        case photometricInterpretations.CIELab:
-          data2 = fromCIELab(raster);
-          break;
-        default:
-          throw new Error("Unsupported photometric interpretation.");
-      }
-      if (!interleave) {
-        const red = new Uint8Array(data2.length / 3);
-        const green = new Uint8Array(data2.length / 3);
-        const blue = new Uint8Array(data2.length / 3);
-        for (let i2 = 0, j2 = 0; i2 < data2.length; i2 += 3, ++j2) {
-          red[j2] = data2[i2];
-          green[j2] = data2[i2 + 1];
-          blue[j2] = data2[i2 + 2];
-        }
-        data2 = [
-          red,
-          green,
-          blue
-        ];
-      }
-      data2.width = raster.width;
-      data2.height = raster.height;
-      return data2;
-    }
-    getTiePoints() {
-      if (!this.fileDirectory.ModelTiepoint) {
-        return [];
-      }
-      const tiePoints = [];
-      for (let i2 = 0; i2 < this.fileDirectory.ModelTiepoint.length; i2 += 6) {
-        tiePoints.push({
-          i: this.fileDirectory.ModelTiepoint[i2],
-          j: this.fileDirectory.ModelTiepoint[i2 + 1],
-          k: this.fileDirectory.ModelTiepoint[i2 + 2],
-          x: this.fileDirectory.ModelTiepoint[i2 + 3],
-          y: this.fileDirectory.ModelTiepoint[i2 + 4],
-          z: this.fileDirectory.ModelTiepoint[i2 + 5]
-        });
-      }
-      return tiePoints;
-    }
-    getGDALMetadata(sample = null) {
-      const metadata = {};
-      if (!this.fileDirectory.GDAL_METADATA) {
-        return null;
-      }
-      const string2 = this.fileDirectory.GDAL_METADATA;
-      let items = findTagsByName(string2, "Item");
-      if (sample === null) {
-        items = items.filter((item2) => getAttribute(item2, "sample") === void 0);
-      } else {
-        items = items.filter((item2) => Number(getAttribute(item2, "sample")) === sample);
-      }
-      for (let i2 = 0; i2 < items.length; ++i2) {
-        const item2 = items[i2];
-        metadata[getAttribute(item2, "name")] = item2.inner;
-      }
-      return metadata;
-    }
-    getGDALNoData() {
-      if (!this.fileDirectory.GDAL_NODATA) {
-        return null;
-      }
-      const string2 = this.fileDirectory.GDAL_NODATA;
-      return Number(string2.substring(0, string2.length - 1));
-    }
-    getOrigin() {
-      const tiePoints = this.fileDirectory.ModelTiepoint;
-      const modelTransformation = this.fileDirectory.ModelTransformation;
-      if (tiePoints && tiePoints.length === 6) {
-        return [
-          tiePoints[3],
-          tiePoints[4],
-          tiePoints[5]
-        ];
-      }
-      if (modelTransformation) {
-        return [
-          modelTransformation[3],
-          modelTransformation[7],
-          modelTransformation[11]
-        ];
-      }
-      throw new Error("The image does not have an affine transformation.");
-    }
-    getResolution(referenceImage = null) {
-      const modelPixelScale = this.fileDirectory.ModelPixelScale;
-      const modelTransformation = this.fileDirectory.ModelTransformation;
-      if (modelPixelScale) {
-        return [
-          modelPixelScale[0],
-          -modelPixelScale[1],
-          modelPixelScale[2]
-        ];
-      }
-      if (modelTransformation) {
-        if (modelTransformation[1] === 0 && modelTransformation[4] === 0) {
-          return [
-            modelTransformation[0],
-            -modelTransformation[5],
-            modelTransformation[10]
-          ];
-        }
-        return [
-          Math.sqrt(modelTransformation[0] * modelTransformation[0] + modelTransformation[4] * modelTransformation[4]),
-          -Math.sqrt(modelTransformation[1] * modelTransformation[1] + modelTransformation[5] * modelTransformation[5]),
-          modelTransformation[10]
-        ];
-      }
-      if (referenceImage) {
-        const [refResX, refResY, refResZ] = referenceImage.getResolution();
-        return [
-          refResX * referenceImage.getWidth() / this.getWidth(),
-          refResY * referenceImage.getHeight() / this.getHeight(),
-          refResZ * referenceImage.getWidth() / this.getWidth()
-        ];
-      }
-      throw new Error("The image does not have an affine transformation.");
-    }
-    pixelIsArea() {
-      return this.geoKeys.GTRasterTypeGeoKey === 1;
-    }
-    getBoundingBox(tilegrid = false) {
-      const height = this.getHeight();
-      const width = this.getWidth();
-      if (this.fileDirectory.ModelTransformation && !tilegrid) {
-        const [a2, b2, c2, d2, e2, f2, g2, h2] = this.fileDirectory.ModelTransformation;
-        const corners = [
-          [
-            0,
-            0
-          ],
-          [
-            0,
-            height
-          ],
-          [
-            width,
-            0
-          ],
-          [
-            width,
-            height
-          ]
-        ];
-        const projected = corners.map(([I2, J2]) => [
-          d2 + a2 * I2 + b2 * J2,
-          h2 + e2 * I2 + f2 * J2
-        ]);
-        const xs = projected.map((pt) => pt[0]);
-        const ys = projected.map((pt) => pt[1]);
-        return [
-          Math.min(...xs),
-          Math.min(...ys),
-          Math.max(...xs),
-          Math.max(...ys)
-        ];
-      } else {
-        const origin = this.getOrigin();
-        const resolution = this.getResolution();
-        const x1 = origin[0];
-        const y1 = origin[1];
-        const x2 = x1 + resolution[0] * width;
-        const y2 = y1 + resolution[1] * height;
-        return [
-          Math.min(x1, x2),
-          Math.min(y1, y2),
-          Math.max(x1, x2),
-          Math.max(y1, y2)
-        ];
-      }
-    }
-  }
-  class DataView64 {
-    constructor(arrayBuffer2) {
-      this._dataView = new DataView(arrayBuffer2);
-    }
-    get buffer() {
-      return this._dataView.buffer;
-    }
-    getUint64(offset, littleEndian) {
-      const left = this.getUint32(offset, littleEndian);
-      const right = this.getUint32(offset + 4, littleEndian);
-      let combined;
-      if (littleEndian) {
-        combined = left + 2 ** 32 * right;
-        if (!Number.isSafeInteger(combined)) {
-          throw new Error(`${combined} exceeds MAX_SAFE_INTEGER. Precision may be lost. Please report if you get this message to https://github.com/geotiffjs/geotiff.js/issues`);
-        }
-        return combined;
-      }
-      combined = 2 ** 32 * left + right;
-      if (!Number.isSafeInteger(combined)) {
-        throw new Error(`${combined} exceeds MAX_SAFE_INTEGER. Precision may be lost. Please report if you get this message to https://github.com/geotiffjs/geotiff.js/issues`);
-      }
-      return combined;
-    }
-    getInt64(offset, littleEndian) {
-      let value = 0;
-      const isNegative = (this._dataView.getUint8(offset + (littleEndian ? 7 : 0)) & 128) > 0;
-      let carrying = true;
-      for (let i2 = 0; i2 < 8; i2++) {
-        let byte = this._dataView.getUint8(offset + (littleEndian ? i2 : 7 - i2));
-        if (isNegative) {
-          if (carrying) {
-            if (byte !== 0) {
-              byte = ~(byte - 1) & 255;
-              carrying = false;
-            }
-          } else {
-            byte = ~byte & 255;
-          }
-        }
-        value += byte * 256 ** i2;
-      }
-      if (isNegative) {
-        value = -value;
-      }
-      return value;
-    }
-    getUint8(offset, littleEndian) {
-      return this._dataView.getUint8(offset, littleEndian);
-    }
-    getInt8(offset, littleEndian) {
-      return this._dataView.getInt8(offset, littleEndian);
-    }
-    getUint16(offset, littleEndian) {
-      return this._dataView.getUint16(offset, littleEndian);
-    }
-    getInt16(offset, littleEndian) {
-      return this._dataView.getInt16(offset, littleEndian);
-    }
-    getUint32(offset, littleEndian) {
-      return this._dataView.getUint32(offset, littleEndian);
-    }
-    getInt32(offset, littleEndian) {
-      return this._dataView.getInt32(offset, littleEndian);
-    }
-    getFloat16(offset, littleEndian) {
-      return getFloat16(this._dataView, offset, littleEndian);
-    }
-    getFloat32(offset, littleEndian) {
-      return this._dataView.getFloat32(offset, littleEndian);
-    }
-    getFloat64(offset, littleEndian) {
-      return this._dataView.getFloat64(offset, littleEndian);
-    }
-  }
-  class DataSlice {
-    constructor(arrayBuffer2, sliceOffset, littleEndian, bigTiff) {
-      this._dataView = new DataView(arrayBuffer2);
-      this._sliceOffset = sliceOffset;
-      this._littleEndian = littleEndian;
-      this._bigTiff = bigTiff;
-    }
-    get sliceOffset() {
-      return this._sliceOffset;
-    }
-    get sliceTop() {
-      return this._sliceOffset + this.buffer.byteLength;
-    }
-    get littleEndian() {
-      return this._littleEndian;
-    }
-    get bigTiff() {
-      return this._bigTiff;
-    }
-    get buffer() {
-      return this._dataView.buffer;
-    }
-    covers(offset, length2) {
-      return this.sliceOffset <= offset && this.sliceTop >= offset + length2;
-    }
-    readUint8(offset) {
-      return this._dataView.getUint8(offset - this._sliceOffset, this._littleEndian);
-    }
-    readInt8(offset) {
-      return this._dataView.getInt8(offset - this._sliceOffset, this._littleEndian);
-    }
-    readUint16(offset) {
-      return this._dataView.getUint16(offset - this._sliceOffset, this._littleEndian);
-    }
-    readInt16(offset) {
-      return this._dataView.getInt16(offset - this._sliceOffset, this._littleEndian);
-    }
-    readUint32(offset) {
-      return this._dataView.getUint32(offset - this._sliceOffset, this._littleEndian);
-    }
-    readInt32(offset) {
-      return this._dataView.getInt32(offset - this._sliceOffset, this._littleEndian);
-    }
-    readFloat32(offset) {
-      return this._dataView.getFloat32(offset - this._sliceOffset, this._littleEndian);
-    }
-    readFloat64(offset) {
-      return this._dataView.getFloat64(offset - this._sliceOffset, this._littleEndian);
-    }
-    readUint64(offset) {
-      const left = this.readUint32(offset);
-      const right = this.readUint32(offset + 4);
-      let combined;
-      if (this._littleEndian) {
-        combined = left + 2 ** 32 * right;
-        if (!Number.isSafeInteger(combined)) {
-          throw new Error(`${combined} exceeds MAX_SAFE_INTEGER. Precision may be lost. Please report if you get this message to https://github.com/geotiffjs/geotiff.js/issues`);
-        }
-        return combined;
-      }
-      combined = 2 ** 32 * left + right;
-      if (!Number.isSafeInteger(combined)) {
-        throw new Error(`${combined} exceeds MAX_SAFE_INTEGER. Precision may be lost. Please report if you get this message to https://github.com/geotiffjs/geotiff.js/issues`);
-      }
-      return combined;
-    }
-    readInt64(offset) {
-      let value = 0;
-      const isNegative = (this._dataView.getUint8(offset + (this._littleEndian ? 7 : 0)) & 128) > 0;
-      let carrying = true;
-      for (let i2 = 0; i2 < 8; i2++) {
-        let byte = this._dataView.getUint8(offset + (this._littleEndian ? i2 : 7 - i2));
-        if (isNegative) {
-          if (carrying) {
-            if (byte !== 0) {
-              byte = ~(byte - 1) & 255;
-              carrying = false;
-            }
-          } else {
-            byte = ~byte & 255;
-          }
-        }
-        value += byte * 256 ** i2;
-      }
-      if (isNegative) {
-        value = -value;
-      }
-      return value;
-    }
-    readOffset(offset) {
-      if (this._bigTiff) {
-        return this.readUint64(offset);
-      }
-      return this.readUint32(offset);
-    }
-  }
-  const CRLFCRLF = "\r\n\r\n";
-  function itemsToObject(items) {
-    if (typeof Object.fromEntries !== "undefined") {
-      return Object.fromEntries(items);
-    }
-    const obj = {};
-    for (const [key2, value] of items) {
-      obj[key2.toLowerCase()] = value;
-    }
-    return obj;
-  }
-  function parseHeaders(text2) {
-    const items = text2.split("\r\n").map((line) => {
-      const kv = line.split(":").map((str2) => str2.trim());
-      kv[0] = kv[0].toLowerCase();
-      return kv;
-    });
-    return itemsToObject(items);
-  }
-  function parseContentType(rawContentType) {
-    const [type, ...rawParams] = rawContentType.split(";").map((s2) => s2.trim());
-    const paramsItems = rawParams.map((param) => param.split("="));
-    return {
-      type,
-      params: itemsToObject(paramsItems)
-    };
-  }
-  function parseContentRange(rawContentRange) {
-    let start;
-    let end;
-    let total;
-    if (rawContentRange) {
-      [, start, end, total] = rawContentRange.match(/bytes (\d+)-(\d+)\/(\d+)/);
-      start = parseInt(start, 10);
-      end = parseInt(end, 10);
-      total = parseInt(total, 10);
-    }
-    return {
-      start,
-      end,
-      total
-    };
-  }
-  function parseByteRanges(responseArrayBuffer, boundary) {
-    let offset = null;
-    const decoder = new TextDecoder("ascii");
-    const out = [];
-    const startBoundary = `--${boundary}`;
-    const endBoundary = `${startBoundary}--`;
-    for (let i2 = 0; i2 < 10; ++i2) {
-      const text2 = decoder.decode(new Uint8Array(responseArrayBuffer, i2, startBoundary.length));
-      if (text2 === startBoundary) {
-        offset = i2;
-      }
-    }
-    if (offset === null) {
-      throw new Error("Could not find initial boundary");
-    }
-    while (offset < responseArrayBuffer.byteLength) {
-      const text2 = decoder.decode(new Uint8Array(responseArrayBuffer, offset, Math.min(startBoundary.length + 1024, responseArrayBuffer.byteLength - offset)));
-      if (text2.length === 0 || text2.startsWith(endBoundary)) {
-        break;
-      }
-      if (!text2.startsWith(startBoundary)) {
-        throw new Error("Part does not start with boundary");
-      }
-      const innerText = text2.substr(startBoundary.length + 2);
-      if (innerText.length === 0) {
-        break;
-      }
-      const endOfHeaders = innerText.indexOf(CRLFCRLF);
-      const headers = parseHeaders(innerText.substr(0, endOfHeaders));
-      const { start, end, total } = parseContentRange(headers["content-range"]);
-      const startOfData = offset + startBoundary.length + endOfHeaders + CRLFCRLF.length;
-      const length2 = parseInt(end, 10) + 1 - parseInt(start, 10);
-      out.push({
-        headers,
-        data: responseArrayBuffer.slice(startOfData, startOfData + length2),
-        offset: start,
-        length: length2,
-        fileSize: total
-      });
-      offset = startOfData + length2 + 4;
-    }
-    return out;
-  }
-  class BaseSource {
-    async fetch(slices, signal = void 0) {
-      return Promise.all(slices.map((slice) => this.fetchSlice(slice, signal)));
-    }
-    async fetchSlice(slice) {
-      throw new Error(`fetching of slice ${slice} not possible, not implemented`);
-    }
-    get fileSize() {
-      return null;
-    }
-    async close() {
-    }
-  }
-  class QuickLRU extends Map {
-    constructor(options = {}) {
-      super();
-      if (!(options.maxSize && options.maxSize > 0)) {
-        throw new TypeError("`maxSize` must be a number greater than 0");
-      }
-      if (typeof options.maxAge === "number" && options.maxAge === 0) {
-        throw new TypeError("`maxAge` must be a number greater than 0");
-      }
-      this.maxSize = options.maxSize;
-      this.maxAge = options.maxAge || Number.POSITIVE_INFINITY;
-      this.onEviction = options.onEviction;
-      this.cache = /* @__PURE__ */ new Map();
-      this.oldCache = /* @__PURE__ */ new Map();
-      this._size = 0;
-    }
-    _emitEvictions(cache2) {
-      if (typeof this.onEviction !== "function") {
-        return;
-      }
-      for (const [key2, item2] of cache2) {
-        this.onEviction(key2, item2.value);
-      }
-    }
-    _deleteIfExpired(key2, item2) {
-      if (typeof item2.expiry === "number" && item2.expiry <= Date.now()) {
-        if (typeof this.onEviction === "function") {
-          this.onEviction(key2, item2.value);
-        }
-        return this.delete(key2);
-      }
-      return false;
-    }
-    _getOrDeleteIfExpired(key2, item2) {
-      const deleted = this._deleteIfExpired(key2, item2);
-      if (deleted === false) {
-        return item2.value;
-      }
-    }
-    _getItemValue(key2, item2) {
-      return item2.expiry ? this._getOrDeleteIfExpired(key2, item2) : item2.value;
-    }
-    _peek(key2, cache2) {
-      const item2 = cache2.get(key2);
-      return this._getItemValue(key2, item2);
-    }
-    _set(key2, value) {
-      this.cache.set(key2, value);
-      this._size++;
-      if (this._size >= this.maxSize) {
-        this._size = 0;
-        this._emitEvictions(this.oldCache);
-        this.oldCache = this.cache;
-        this.cache = /* @__PURE__ */ new Map();
-      }
-    }
-    _moveToRecent(key2, item2) {
-      this.oldCache.delete(key2);
-      this._set(key2, item2);
-    }
-    *_entriesAscending() {
-      for (const item2 of this.oldCache) {
-        const [key2, value] = item2;
-        if (!this.cache.has(key2)) {
-          const deleted = this._deleteIfExpired(key2, value);
-          if (deleted === false) {
-            yield item2;
-          }
-        }
-      }
-      for (const item2 of this.cache) {
-        const [key2, value] = item2;
-        const deleted = this._deleteIfExpired(key2, value);
-        if (deleted === false) {
-          yield item2;
-        }
-      }
-    }
-    get(key2) {
-      if (this.cache.has(key2)) {
-        const item2 = this.cache.get(key2);
-        return this._getItemValue(key2, item2);
-      }
-      if (this.oldCache.has(key2)) {
-        const item2 = this.oldCache.get(key2);
-        if (this._deleteIfExpired(key2, item2) === false) {
-          this._moveToRecent(key2, item2);
-          return item2.value;
-        }
-      }
-    }
-    set(key2, value, { maxAge = this.maxAge } = {}) {
-      const expiry = typeof maxAge === "number" && maxAge !== Number.POSITIVE_INFINITY ? Date.now() + maxAge : void 0;
-      if (this.cache.has(key2)) {
-        this.cache.set(key2, {
-          value,
-          expiry
-        });
-      } else {
-        this._set(key2, {
-          value,
-          expiry
-        });
-      }
-      return this;
-    }
-    has(key2) {
-      if (this.cache.has(key2)) {
-        return !this._deleteIfExpired(key2, this.cache.get(key2));
-      }
-      if (this.oldCache.has(key2)) {
-        return !this._deleteIfExpired(key2, this.oldCache.get(key2));
-      }
-      return false;
-    }
-    peek(key2) {
-      if (this.cache.has(key2)) {
-        return this._peek(key2, this.cache);
-      }
-      if (this.oldCache.has(key2)) {
-        return this._peek(key2, this.oldCache);
-      }
-    }
-    delete(key2) {
-      const deleted = this.cache.delete(key2);
-      if (deleted) {
-        this._size--;
-      }
-      return this.oldCache.delete(key2) || deleted;
-    }
-    clear() {
-      this.cache.clear();
-      this.oldCache.clear();
-      this._size = 0;
-    }
-    resize(newSize) {
-      if (!(newSize && newSize > 0)) {
-        throw new TypeError("`maxSize` must be a number greater than 0");
-      }
-      const items = [
-        ...this._entriesAscending()
-      ];
-      const removeCount = items.length - newSize;
-      if (removeCount < 0) {
-        this.cache = new Map(items);
-        this.oldCache = /* @__PURE__ */ new Map();
-        this._size = items.length;
-      } else {
-        if (removeCount > 0) {
-          this._emitEvictions(items.slice(0, removeCount));
-        }
-        this.oldCache = new Map(items.slice(removeCount));
-        this.cache = /* @__PURE__ */ new Map();
-        this._size = 0;
-      }
-      this.maxSize = newSize;
-    }
-    *keys() {
-      for (const [key2] of this) {
-        yield key2;
-      }
-    }
-    *values() {
-      for (const [, value] of this) {
-        yield value;
-      }
-    }
-    *[Symbol.iterator]() {
-      for (const item2 of this.cache) {
-        const [key2, value] = item2;
-        const deleted = this._deleteIfExpired(key2, value);
-        if (deleted === false) {
-          yield [
-            key2,
-            value.value
-          ];
-        }
-      }
-      for (const item2 of this.oldCache) {
-        const [key2, value] = item2;
-        if (!this.cache.has(key2)) {
-          const deleted = this._deleteIfExpired(key2, value);
-          if (deleted === false) {
-            yield [
-              key2,
-              value.value
-            ];
-          }
-        }
-      }
-    }
-    *entriesDescending() {
-      let items = [
-        ...this.cache
-      ];
-      for (let i2 = items.length - 1; i2 >= 0; --i2) {
-        const item2 = items[i2];
-        const [key2, value] = item2;
-        const deleted = this._deleteIfExpired(key2, value);
-        if (deleted === false) {
-          yield [
-            key2,
-            value.value
-          ];
-        }
-      }
-      items = [
-        ...this.oldCache
-      ];
-      for (let i2 = items.length - 1; i2 >= 0; --i2) {
-        const item2 = items[i2];
-        const [key2, value] = item2;
-        if (!this.cache.has(key2)) {
-          const deleted = this._deleteIfExpired(key2, value);
-          if (deleted === false) {
-            yield [
-              key2,
-              value.value
-            ];
-          }
-        }
-      }
-    }
-    *entriesAscending() {
-      for (const [key2, value] of this._entriesAscending()) {
-        yield [
-          key2,
-          value.value
-        ];
-      }
-    }
-    get size() {
-      if (!this._size) {
-        return this.oldCache.size;
-      }
-      let oldCacheSize = 0;
-      for (const key2 of this.oldCache.keys()) {
-        if (!this.cache.has(key2)) {
-          oldCacheSize++;
-        }
-      }
-      return Math.min(this._size + oldCacheSize, this.maxSize);
-    }
-    entries() {
-      return this.entriesAscending();
-    }
-    forEach(callbackFunction, thisArgument = this) {
-      for (const [key2, value] of this.entriesAscending()) {
-        callbackFunction.call(thisArgument, value, key2, this);
-      }
-    }
-    get [Symbol.toStringTag]() {
-      return JSON.stringify([
-        ...this.entriesAscending()
-      ]);
-    }
-  }
-  async function wait(milliseconds) {
-    return new Promise((resolve) => setTimeout(resolve, milliseconds));
-  }
-  function zip(a2, b2) {
-    const A2 = Array.isArray(a2) ? a2 : Array.from(a2);
-    const B2 = Array.isArray(b2) ? b2 : Array.from(b2);
-    return A2.map((k2, i2) => [
-      k2,
-      B2[i2]
-    ]);
-  }
-  let AbortError$1 = class AbortError2 extends Error {
-    constructor(params) {
-      super(params);
-      if (Error.captureStackTrace) {
-        Error.captureStackTrace(this, AbortError2);
-      }
-      this.name = "AbortError";
-    }
-  };
-  class CustomAggregateError extends Error {
-    constructor(errors2, message2) {
-      super(message2);
-      this.errors = errors2;
-      this.message = message2;
-      this.name = "AggregateError";
-    }
-  }
-  const AggregateError$1 = CustomAggregateError;
-  class Block {
-    constructor(offset, length2, data2 = null) {
-      this.offset = offset;
-      this.length = length2;
-      this.data = data2;
-    }
-    get top() {
-      return this.offset + this.length;
-    }
-  }
-  class BlockGroup {
-    constructor(offset, length2, blockIds) {
-      this.offset = offset;
-      this.length = length2;
-      this.blockIds = blockIds;
-    }
-  }
-  class BlockedSource extends BaseSource {
-    constructor(source2, { blockSize = 65536, cacheSize = 100 } = {}) {
-      super();
-      this.source = source2;
-      this.blockSize = blockSize;
-      this.blockCache = new QuickLRU({
-        maxSize: cacheSize,
-        onEviction: (blockId, block) => {
-          this.evictedBlocks.set(blockId, block);
-        }
-      });
-      this.evictedBlocks = /* @__PURE__ */ new Map();
-      this.blockRequests = /* @__PURE__ */ new Map();
-      this.blockIdsToFetch = /* @__PURE__ */ new Set();
-      this.abortedBlockIds = /* @__PURE__ */ new Set();
-    }
-    get fileSize() {
-      return this.source.fileSize;
-    }
-    async fetch(slices, signal) {
-      const blockRequests = [];
-      const missingBlockIds = [];
-      const allBlockIds = [];
-      this.evictedBlocks.clear();
-      for (const { offset, length: length2 } of slices) {
-        let top2 = offset + length2;
-        const { fileSize } = this;
-        if (fileSize !== null) {
-          top2 = Math.min(top2, fileSize);
-        }
-        const firstBlockOffset = Math.floor(offset / this.blockSize) * this.blockSize;
-        for (let current = firstBlockOffset; current < top2; current += this.blockSize) {
-          const blockId = Math.floor(current / this.blockSize);
-          if (!this.blockCache.has(blockId) && !this.blockRequests.has(blockId)) {
-            this.blockIdsToFetch.add(blockId);
-            missingBlockIds.push(blockId);
-          }
-          if (this.blockRequests.has(blockId)) {
-            blockRequests.push(this.blockRequests.get(blockId));
-          }
-          allBlockIds.push(blockId);
-        }
-      }
-      await wait();
-      this.fetchBlocks(signal);
-      const missingRequests = [];
-      for (const blockId of missingBlockIds) {
-        if (this.blockRequests.has(blockId)) {
-          missingRequests.push(this.blockRequests.get(blockId));
-        }
-      }
-      await Promise.allSettled(blockRequests);
-      await Promise.allSettled(missingRequests);
-      const abortedBlockRequests = [];
-      const abortedBlockIds = allBlockIds.filter((id2) => this.abortedBlockIds.has(id2) || !this.blockCache.has(id2));
-      abortedBlockIds.forEach((id2) => this.blockIdsToFetch.add(id2));
-      if (abortedBlockIds.length > 0 && signal && !signal.aborted) {
-        this.fetchBlocks(null);
-        for (const blockId of abortedBlockIds) {
-          const block = this.blockRequests.get(blockId);
-          if (!block) {
-            throw new Error(`Block ${blockId} is not in the block requests`);
-          }
-          abortedBlockRequests.push(block);
-        }
-        await Promise.allSettled(abortedBlockRequests);
-      }
-      if (signal && signal.aborted) {
-        throw new AbortError$1("Request was aborted");
-      }
-      const blocks = allBlockIds.map((id2) => this.blockCache.get(id2) || this.evictedBlocks.get(id2));
-      const failedBlocks = blocks.filter((i2) => !i2);
-      if (failedBlocks.length) {
-        throw new AggregateError$1(failedBlocks, "Request failed");
-      }
-      const requiredBlocks = new Map(zip(allBlockIds, blocks));
-      return this.readSliceData(slices, requiredBlocks);
-    }
-    fetchBlocks(signal) {
-      if (this.blockIdsToFetch.size > 0) {
-        const groups = this.groupBlocks(this.blockIdsToFetch);
-        const groupRequests = this.source.fetch(groups, signal);
-        for (let groupIndex = 0; groupIndex < groups.length; ++groupIndex) {
-          const group2 = groups[groupIndex];
-          for (const blockId of group2.blockIds) {
-            this.blockRequests.set(blockId, (async () => {
-              try {
-                const response = (await groupRequests)[groupIndex];
-                const blockOffset = blockId * this.blockSize;
-                const o2 = blockOffset - response.offset;
-                const t2 = Math.min(o2 + this.blockSize, response.data.byteLength);
-                const data2 = response.data.slice(o2, t2);
-                const block = new Block(blockOffset, data2.byteLength, data2, blockId);
-                this.blockCache.set(blockId, block);
-                this.abortedBlockIds.delete(blockId);
-              } catch (err2) {
-                if (err2.name === "AbortError") {
-                  err2.signal = signal;
-                  this.blockCache.delete(blockId);
-                  this.abortedBlockIds.add(blockId);
-                } else {
-                  throw err2;
-                }
-              } finally {
-                this.blockRequests.delete(blockId);
-              }
-            })());
-          }
-        }
-        this.blockIdsToFetch.clear();
-      }
-    }
-    groupBlocks(blockIds) {
-      const sortedBlockIds = Array.from(blockIds).sort((a2, b2) => a2 - b2);
-      if (sortedBlockIds.length === 0) {
-        return [];
-      }
-      let current = [];
-      let lastBlockId = null;
-      const groups = [];
-      for (const blockId of sortedBlockIds) {
-        if (lastBlockId === null || lastBlockId + 1 === blockId) {
-          current.push(blockId);
-          lastBlockId = blockId;
-        } else {
-          groups.push(new BlockGroup(current[0] * this.blockSize, current.length * this.blockSize, current));
-          current = [
-            blockId
-          ];
-          lastBlockId = blockId;
-        }
-      }
-      groups.push(new BlockGroup(current[0] * this.blockSize, current.length * this.blockSize, current));
-      return groups;
-    }
-    readSliceData(slices, blocks) {
-      return slices.map((slice) => {
-        let top2 = slice.offset + slice.length;
-        if (this.fileSize !== null) {
-          top2 = Math.min(this.fileSize, top2);
-        }
-        const blockIdLow = Math.floor(slice.offset / this.blockSize);
-        const blockIdHigh = Math.floor(top2 / this.blockSize);
-        const sliceData = new ArrayBuffer(slice.length);
-        const sliceView = new Uint8Array(sliceData);
-        for (let blockId = blockIdLow; blockId <= blockIdHigh; ++blockId) {
-          const block = blocks.get(blockId);
-          const delta = block.offset - slice.offset;
-          const topDelta = block.top - top2;
-          let blockInnerOffset = 0;
-          let rangeInnerOffset = 0;
-          let usedBlockLength;
-          if (delta < 0) {
-            blockInnerOffset = -delta;
-          } else if (delta > 0) {
-            rangeInnerOffset = delta;
-          }
-          if (topDelta < 0) {
-            usedBlockLength = block.length - blockInnerOffset;
-          } else {
-            usedBlockLength = top2 - block.offset - blockInnerOffset;
-          }
-          const blockView = new Uint8Array(block.data, blockInnerOffset, usedBlockLength);
-          sliceView.set(blockView, rangeInnerOffset);
-        }
-        return sliceData;
-      });
-    }
-  }
-  class BaseResponse {
-    get ok() {
-      return this.status >= 200 && this.status <= 299;
-    }
-    get status() {
-      throw new Error("not implemented");
-    }
-    getHeader(headerName) {
-      throw new Error("not implemented");
-    }
-    async getData() {
-      throw new Error("not implemented");
-    }
-  }
-  class BaseClient {
-    constructor(url) {
-      this.url = url;
-    }
-    async request({ headers, signal } = {}) {
-      throw new Error("request is not implemented");
-    }
-  }
-  class FetchResponse extends BaseResponse {
-    constructor(response) {
-      super();
-      this.response = response;
-    }
-    get status() {
-      return this.response.status;
-    }
-    getHeader(name2) {
-      return this.response.headers.get(name2);
-    }
-    async getData() {
-      const data2 = this.response.arrayBuffer ? await this.response.arrayBuffer() : (await this.response.buffer()).buffer;
-      return data2;
-    }
-  }
-  class FetchClient extends BaseClient {
-    constructor(url, credentials) {
-      super(url);
-      this.credentials = credentials;
-    }
-    async request({ headers, signal } = {}) {
-      const response = await fetch(this.url, {
-        headers,
-        credentials: this.credentials,
-        signal
-      });
-      return new FetchResponse(response);
-    }
-  }
-  class XHRResponse extends BaseResponse {
-    constructor(xhr, data2) {
-      super();
-      this.xhr = xhr;
-      this.data = data2;
-    }
-    get status() {
-      return this.xhr.status;
-    }
-    getHeader(name2) {
-      return this.xhr.getResponseHeader(name2);
-    }
-    async getData() {
-      return this.data;
-    }
-  }
-  class XHRClient extends BaseClient {
-    constructRequest(headers, signal) {
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", this.url);
-        xhr.responseType = "arraybuffer";
-        for (const [key2, value] of Object.entries(headers)) {
-          xhr.setRequestHeader(key2, value);
-        }
-        xhr.onload = () => {
-          const data2 = xhr.response;
-          resolve(new XHRResponse(xhr, data2));
-        };
-        xhr.onerror = reject;
-        xhr.onabort = () => reject(new AbortError$1("Request aborted"));
-        xhr.send();
-        if (signal) {
-          if (signal.aborted) {
-            xhr.abort();
-          }
-          signal.addEventListener("abort", () => xhr.abort());
-        }
-      });
-    }
-    async request({ headers, signal } = {}) {
-      const response = await this.constructRequest(headers, signal);
-      return response;
-    }
-  }
-  const zlib = {};
-  class HttpResponse extends BaseResponse {
-    constructor(response, dataPromise) {
-      super();
-      this.response = response;
-      this.dataPromise = dataPromise;
-    }
-    get status() {
-      return this.response.statusCode;
-    }
-    getHeader(name2) {
-      return this.response.headers[name2];
-    }
-    async getData() {
-      const data2 = await this.dataPromise;
-      return data2;
-    }
-  }
-  class HttpClient extends BaseClient {
-    constructor(url) {
-      super(url);
-      this.parsedUrl = zlib.parse(this.url);
-      this.httpApi = this.parsedUrl.protocol === "http:" ? zlib : zlib;
-    }
-    constructRequest(headers, signal) {
-      return new Promise((resolve, reject) => {
-        const request = this.httpApi.get({
-          ...this.parsedUrl,
-          headers
-        }, (response) => {
-          const dataPromise = new Promise((resolveData) => {
-            const chunks = [];
-            response.on("data", (chunk) => {
-              chunks.push(chunk);
-            });
-            response.on("end", () => {
-              const data2 = Buffer.concat(chunks).buffer;
-              resolveData(data2);
-            });
-            response.on("error", reject);
-          });
-          resolve(new HttpResponse(response, dataPromise));
-        });
-        request.on("error", reject);
-        if (signal) {
-          if (signal.aborted) {
-            request.destroy(new AbortError$1("Request aborted"));
-          }
-          signal.addEventListener("abort", () => request.destroy(new AbortError$1("Request aborted")));
-        }
-      });
-    }
-    async request({ headers, signal } = {}) {
-      const response = await this.constructRequest(headers, signal);
-      return response;
-    }
-  }
-  class RemoteSource extends BaseSource {
-    constructor(client, headers, maxRanges, allowFullFile) {
-      super();
-      this.client = client;
-      this.headers = headers;
-      this.maxRanges = maxRanges;
-      this.allowFullFile = allowFullFile;
-      this._fileSize = null;
-    }
-    async fetch(slices, signal) {
-      if (this.maxRanges >= slices.length) {
-        return this.fetchSlices(slices, signal);
-      } else if (this.maxRanges > 0 && slices.length > 1) ;
-      return Promise.all(slices.map((slice) => this.fetchSlice(slice, signal)));
-    }
-    async fetchSlices(slices, signal) {
-      const response = await this.client.request({
-        headers: {
-          ...this.headers,
-          Range: `bytes=${slices.map(({ offset, length: length2 }) => `${offset}-${offset + length2}`).join(",")}`
-        },
-        signal
-      });
-      if (!response.ok) {
-        throw new Error("Error fetching data.");
-      } else if (response.status === 206) {
-        const { type, params } = parseContentType(response.getHeader("content-type"));
-        if (type === "multipart/byteranges") {
-          const byteRanges = parseByteRanges(await response.getData(), params.boundary);
-          this._fileSize = byteRanges[0].fileSize || null;
-          return byteRanges;
-        }
-        const data2 = await response.getData();
-        const { start, end, total } = parseContentRange(response.getHeader("content-range"));
-        this._fileSize = total || null;
-        const first = [
-          {
-            data: data2,
-            offset: start,
-            length: end - start
-          }
-        ];
-        if (slices.length > 1) {
-          const others = await Promise.all(slices.slice(1).map((slice) => this.fetchSlice(slice, signal)));
-          return first.concat(others);
-        }
-        return first;
-      } else {
-        if (!this.allowFullFile) {
-          throw new Error("Server responded with full file");
-        }
-        const data2 = await response.getData();
-        this._fileSize = data2.byteLength;
-        return [
-          {
-            data: data2,
-            offset: 0,
-            length: data2.byteLength
-          }
-        ];
-      }
-    }
-    async fetchSlice(slice, signal) {
-      const { offset, length: length2 } = slice;
-      const response = await this.client.request({
-        headers: {
-          ...this.headers,
-          Range: `bytes=${offset}-${offset + length2}`
-        },
-        signal
-      });
-      if (!response.ok) {
-        throw new Error("Error fetching data.");
-      } else if (response.status === 206) {
-        const data2 = await response.getData();
-        const { total } = parseContentRange(response.getHeader("content-range"));
-        this._fileSize = total || null;
-        return {
-          data: data2,
-          offset,
-          length: length2
-        };
-      } else {
-        if (!this.allowFullFile) {
-          throw new Error("Server responded with full file");
-        }
-        const data2 = await response.getData();
-        this._fileSize = data2.byteLength;
-        return {
-          data: data2,
-          offset: 0,
-          length: data2.byteLength
-        };
-      }
-    }
-    get fileSize() {
-      return this._fileSize;
-    }
-  }
-  function maybeWrapInBlockedSource(source2, { blockSize, cacheSize }) {
-    if (blockSize === null) {
-      return source2;
-    }
-    return new BlockedSource(source2, {
-      blockSize,
-      cacheSize
-    });
-  }
-  function makeFetchSource(url, { headers = {}, credentials, maxRanges = 0, allowFullFile = false, ...blockOptions } = {}) {
-    const client = new FetchClient(url, credentials);
-    const source2 = new RemoteSource(client, headers, maxRanges, allowFullFile);
-    return maybeWrapInBlockedSource(source2, blockOptions);
-  }
-  function makeXHRSource(url, { headers = {}, maxRanges = 0, allowFullFile = false, ...blockOptions } = {}) {
-    const client = new XHRClient(url);
-    const source2 = new RemoteSource(client, headers, maxRanges, allowFullFile);
-    return maybeWrapInBlockedSource(source2, blockOptions);
-  }
-  function makeHttpSource(url, { headers = {}, maxRanges = 0, allowFullFile = false, ...blockOptions } = {}) {
-    const client = new HttpClient(url);
-    const source2 = new RemoteSource(client, headers, maxRanges, allowFullFile);
-    return maybeWrapInBlockedSource(source2, blockOptions);
-  }
-  function makeRemoteSource(url, { forceXHR = false, ...clientOptions } = {}) {
-    if (typeof fetch === "function" && !forceXHR) {
-      return makeFetchSource(url, clientOptions);
-    }
-    if (typeof XMLHttpRequest !== "undefined") {
-      return makeXHRSource(url, clientOptions);
-    }
-    return makeHttpSource(url, clientOptions);
-  }
-  class FileReaderSource extends BaseSource {
-    constructor(file) {
-      super();
-      this.file = file;
-    }
-    async fetchSlice(slice, signal) {
-      return new Promise((resolve, reject) => {
-        const blob = this.file.slice(slice.offset, slice.offset + slice.length);
-        const reader = new FileReader();
-        reader.onload = (event) => resolve(event.target.result);
-        reader.onerror = reject;
-        reader.onabort = reject;
-        reader.readAsArrayBuffer(blob);
-        if (signal) {
-          signal.addEventListener("abort", () => reader.abort());
-        }
-      });
-    }
-  }
-  function makeFileReaderSource(file) {
-    return new FileReaderSource(file);
-  }
-  function closeAsync(fd2) {
-    return new Promise((resolve, reject) => {
-      zlib.close(fd2, (err2) => {
-        if (err2) {
-          reject(err2);
-        } else {
-          resolve();
-        }
-      });
-    });
-  }
-  function openAsync(path2, flags, mode = void 0) {
-    return new Promise((resolve, reject) => {
-      zlib.open(path2, flags, mode, (err2, fd2) => {
-        if (err2) {
-          reject(err2);
-        } else {
-          resolve(fd2);
-        }
-      });
-    });
-  }
-  function readAsync(...args) {
-    return new Promise((resolve, reject) => {
-      zlib.read(...args, (err2, bytesRead, buffer2) => {
-        if (err2) {
-          reject(err2);
-        } else {
-          resolve({
-            bytesRead,
-            buffer: buffer2
-          });
-        }
-      });
-    });
-  }
-  class FileSource extends BaseSource {
-    constructor(path2) {
-      super();
-      this.path = path2;
-      this.openRequest = openAsync(path2, "r");
-    }
-    async fetchSlice(slice) {
-      const fd2 = await this.openRequest;
-      const { buffer: buffer2 } = await readAsync(fd2, Buffer.alloc(slice.length), 0, slice.length, slice.offset);
-      return buffer2.buffer;
-    }
-    async close() {
-      const fd2 = await this.openRequest;
-      await closeAsync(fd2);
-    }
-  }
-  function makeFileSource(path2) {
-    return new FileSource(path2);
-  }
-  function decodeRowAcc(row2, stride) {
-    let length2 = row2.length - stride;
-    let offset = 0;
-    do {
-      for (let i2 = stride; i2 > 0; i2--) {
-        row2[offset + stride] += row2[offset];
-        offset++;
-      }
-      length2 -= stride;
-    } while (length2 > 0);
-  }
-  function decodeRowFloatingPoint(row2, stride, bytesPerSample) {
-    let index2 = 0;
-    let count2 = row2.length;
-    const wc2 = count2 / bytesPerSample;
-    while (count2 > stride) {
-      for (let i2 = stride; i2 > 0; --i2) {
-        row2[index2 + stride] += row2[index2];
-        ++index2;
-      }
-      count2 -= stride;
-    }
-    const copy2 = row2.slice();
-    for (let i2 = 0; i2 < wc2; ++i2) {
-      for (let b2 = 0; b2 < bytesPerSample; ++b2) {
-        row2[bytesPerSample * i2 + b2] = copy2[(bytesPerSample - b2 - 1) * wc2 + i2];
-      }
-    }
-  }
-  function applyPredictor(block, predictor, width, height, bitsPerSample, planarConfiguration) {
-    if (predictor === 1) {
-      return block;
-    }
-    for (let i2 = 0; i2 < bitsPerSample.length; ++i2) {
-      if (bitsPerSample[i2] % 8 !== 0) {
-        throw new Error("When decoding with predictor, only multiple of 8 bits are supported.");
-      }
-      if (bitsPerSample[i2] !== bitsPerSample[0]) {
-        throw new Error("When decoding with predictor, all samples must have the same size.");
-      }
-    }
-    const bytesPerSample = bitsPerSample[0] / 8;
-    const stride = planarConfiguration === 2 ? 1 : bitsPerSample.length;
-    for (let i2 = 0; i2 < height; ++i2) {
-      if (i2 * stride * width * bytesPerSample >= block.byteLength) {
-        break;
-      }
-      let row2;
-      if (predictor === 2) {
-        switch (bitsPerSample[0]) {
-          case 8:
-            row2 = new Uint8Array(block, i2 * stride * width * bytesPerSample, stride * width * bytesPerSample);
-            break;
-          case 16:
-            row2 = new Uint16Array(block, i2 * stride * width * bytesPerSample, stride * width * bytesPerSample / 2);
-            break;
-          case 32:
-            row2 = new Uint32Array(block, i2 * stride * width * bytesPerSample, stride * width * bytesPerSample / 4);
-            break;
-          default:
-            throw new Error(`Predictor 2 not allowed with ${bitsPerSample[0]} bits per sample.`);
-        }
-        decodeRowAcc(row2, stride);
-      } else if (predictor === 3) {
-        row2 = new Uint8Array(block, i2 * stride * width * bytesPerSample, stride * width * bytesPerSample);
-        decodeRowFloatingPoint(row2, stride, bytesPerSample);
-      }
-    }
-    return block;
-  }
-  BaseDecoder = class {
-    async decode(fileDirectory, buffer2) {
-      const decoded = await this.decodeBlock(buffer2);
-      const predictor = fileDirectory.Predictor || 1;
-      if (predictor !== 1) {
-        const isTiled = !fileDirectory.StripOffsets;
-        const tileWidth = isTiled ? fileDirectory.TileWidth : fileDirectory.ImageWidth;
-        const tileHeight = isTiled ? fileDirectory.TileLength : fileDirectory.RowsPerStrip || fileDirectory.ImageLength;
-        return applyPredictor(decoded, predictor, tileWidth, tileHeight, fileDirectory.BitsPerSample, fileDirectory.PlanarConfiguration);
-      }
-      return decoded;
-    }
-  };
-  function getFieldTypeLength(fieldType) {
-    switch (fieldType) {
-      case fieldTypes.BYTE:
-      case fieldTypes.ASCII:
-      case fieldTypes.SBYTE:
-      case fieldTypes.UNDEFINED:
-        return 1;
-      case fieldTypes.SHORT:
-      case fieldTypes.SSHORT:
-        return 2;
-      case fieldTypes.LONG:
-      case fieldTypes.SLONG:
-      case fieldTypes.FLOAT:
-      case fieldTypes.IFD:
-        return 4;
-      case fieldTypes.RATIONAL:
-      case fieldTypes.SRATIONAL:
-      case fieldTypes.DOUBLE:
-      case fieldTypes.LONG8:
-      case fieldTypes.SLONG8:
-      case fieldTypes.IFD8:
-        return 8;
-      default:
-        throw new RangeError(`Invalid field type: ${fieldType}`);
-    }
-  }
-  function parseGeoKeyDirectory(fileDirectory) {
-    const rawGeoKeyDirectory = fileDirectory.GeoKeyDirectory;
-    if (!rawGeoKeyDirectory) {
-      return null;
-    }
-    const geoKeyDirectory = {};
-    for (let i2 = 4; i2 <= rawGeoKeyDirectory[3] * 4; i2 += 4) {
-      const key2 = geoKeyNames[rawGeoKeyDirectory[i2]];
-      const location2 = rawGeoKeyDirectory[i2 + 1] ? fieldTagNames[rawGeoKeyDirectory[i2 + 1]] : null;
-      const count2 = rawGeoKeyDirectory[i2 + 2];
-      const offset = rawGeoKeyDirectory[i2 + 3];
-      let value = null;
-      if (!location2) {
-        value = offset;
-      } else {
-        value = fileDirectory[location2];
-        if (typeof value === "undefined" || value === null) {
-          throw new Error(`Could not get value of geoKey '${key2}'.`);
-        } else if (typeof value === "string") {
-          value = value.substring(offset, offset + count2 - 1);
-        } else if (value.subarray) {
-          value = value.subarray(offset, offset + count2);
-          if (count2 === 1) {
-            value = value[0];
-          }
-        }
-      }
-      geoKeyDirectory[key2] = value;
-    }
-    return geoKeyDirectory;
-  }
-  function getValues(dataSlice, fieldType, count2, offset) {
-    let values = null;
-    let readMethod = null;
-    const fieldTypeLength = getFieldTypeLength(fieldType);
-    switch (fieldType) {
-      case fieldTypes.BYTE:
-      case fieldTypes.ASCII:
-      case fieldTypes.UNDEFINED:
-        values = new Uint8Array(count2);
-        readMethod = dataSlice.readUint8;
-        break;
-      case fieldTypes.SBYTE:
-        values = new Int8Array(count2);
-        readMethod = dataSlice.readInt8;
-        break;
-      case fieldTypes.SHORT:
-        values = new Uint16Array(count2);
-        readMethod = dataSlice.readUint16;
-        break;
-      case fieldTypes.SSHORT:
-        values = new Int16Array(count2);
-        readMethod = dataSlice.readInt16;
-        break;
-      case fieldTypes.LONG:
-      case fieldTypes.IFD:
-        values = new Uint32Array(count2);
-        readMethod = dataSlice.readUint32;
-        break;
-      case fieldTypes.SLONG:
-        values = new Int32Array(count2);
-        readMethod = dataSlice.readInt32;
-        break;
-      case fieldTypes.LONG8:
-      case fieldTypes.IFD8:
-        values = new Array(count2);
-        readMethod = dataSlice.readUint64;
-        break;
-      case fieldTypes.SLONG8:
-        values = new Array(count2);
-        readMethod = dataSlice.readInt64;
-        break;
-      case fieldTypes.RATIONAL:
-        values = new Uint32Array(count2 * 2);
-        readMethod = dataSlice.readUint32;
-        break;
-      case fieldTypes.SRATIONAL:
-        values = new Int32Array(count2 * 2);
-        readMethod = dataSlice.readInt32;
-        break;
-      case fieldTypes.FLOAT:
-        values = new Float32Array(count2);
-        readMethod = dataSlice.readFloat32;
-        break;
-      case fieldTypes.DOUBLE:
-        values = new Float64Array(count2);
-        readMethod = dataSlice.readFloat64;
-        break;
-      default:
-        throw new RangeError(`Invalid field type: ${fieldType}`);
-    }
-    if (!(fieldType === fieldTypes.RATIONAL || fieldType === fieldTypes.SRATIONAL)) {
-      for (let i2 = 0; i2 < count2; ++i2) {
-        values[i2] = readMethod.call(dataSlice, offset + i2 * fieldTypeLength);
-      }
-    } else {
-      for (let i2 = 0; i2 < count2; i2 += 2) {
-        values[i2] = readMethod.call(dataSlice, offset + i2 * fieldTypeLength);
-        values[i2 + 1] = readMethod.call(dataSlice, offset + (i2 * fieldTypeLength + 4));
-      }
-    }
-    if (fieldType === fieldTypes.ASCII) {
-      return new TextDecoder("utf-8").decode(values);
-    }
-    return values;
-  }
-  class ImageFileDirectory {
-    constructor(fileDirectory, rawFileDirectory, geoKeyDirectory, nextIFDByteOffset) {
-      this.fileDirectory = fileDirectory;
-      this.rawFileDirectory = rawFileDirectory;
-      this.geoKeyDirectory = geoKeyDirectory;
-      this.nextIFDByteOffset = nextIFDByteOffset;
-    }
-  }
-  class GeoTIFFImageIndexError extends Error {
-    constructor(index2) {
-      super(`No image at index ${index2}`);
-      this.index = index2;
-    }
-  }
-  class GeoTIFFBase {
-    async readRasters(options = {}) {
-      const { window: imageWindow, width, height } = options;
-      let { resX, resY, bbox } = options;
-      const firstImage = await this.getImage();
-      let usedImage = firstImage;
-      const imageCount = await this.getImageCount();
-      const imgBBox = firstImage.getBoundingBox();
-      if (imageWindow && bbox) {
-        throw new Error('Both "bbox" and "window" passed.');
-      }
-      if (width || height) {
-        if (imageWindow) {
-          const [oX, oY] = firstImage.getOrigin();
-          const [rX, rY] = firstImage.getResolution();
-          bbox = [
-            oX + imageWindow[0] * rX,
-            oY + imageWindow[1] * rY,
-            oX + imageWindow[2] * rX,
-            oY + imageWindow[3] * rY
-          ];
-        }
-        const usedBBox = bbox || imgBBox;
-        if (width) {
-          if (resX) {
-            throw new Error("Both width and resX passed");
-          }
-          resX = (usedBBox[2] - usedBBox[0]) / width;
-        }
-        if (height) {
-          if (resY) {
-            throw new Error("Both width and resY passed");
-          }
-          resY = (usedBBox[3] - usedBBox[1]) / height;
-        }
-      }
-      if (resX || resY) {
-        const allImages = [];
-        for (let i2 = 0; i2 < imageCount; ++i2) {
-          const image2 = await this.getImage(i2);
-          const { SubfileType: subfileType, NewSubfileType: newSubfileType } = image2.fileDirectory;
-          if (i2 === 0 || subfileType === 2 || newSubfileType & 1) {
-            allImages.push(image2);
-          }
-        }
-        allImages.sort((a2, b2) => a2.getWidth() - b2.getWidth());
-        for (let i2 = 0; i2 < allImages.length; ++i2) {
-          const image2 = allImages[i2];
-          const imgResX = (imgBBox[2] - imgBBox[0]) / image2.getWidth();
-          const imgResY = (imgBBox[3] - imgBBox[1]) / image2.getHeight();
-          usedImage = image2;
-          if (resX && resX > imgResX || resY && resY > imgResY) {
-            break;
-          }
-        }
-      }
-      let wnd = imageWindow;
-      if (bbox) {
-        const [oX, oY] = firstImage.getOrigin();
-        const [imageResX, imageResY] = usedImage.getResolution(firstImage);
-        wnd = [
-          Math.round((bbox[0] - oX) / imageResX),
-          Math.round((bbox[1] - oY) / imageResY),
-          Math.round((bbox[2] - oX) / imageResX),
-          Math.round((bbox[3] - oY) / imageResY)
-        ];
-        wnd = [
-          Math.min(wnd[0], wnd[2]),
-          Math.min(wnd[1], wnd[3]),
-          Math.max(wnd[0], wnd[2]),
-          Math.max(wnd[1], wnd[3])
-        ];
-      }
-      return usedImage.readRasters({
-        ...options,
-        window: wnd
-      });
-    }
-  }
-  class GeoTIFF extends GeoTIFFBase {
-    constructor(source2, littleEndian, bigTiff, firstIFDOffset, options = {}) {
-      super();
-      this.source = source2;
-      this.littleEndian = littleEndian;
-      this.bigTiff = bigTiff;
-      this.firstIFDOffset = firstIFDOffset;
-      this.cache = options.cache || false;
-      this.ifdRequests = [];
-      this.ghostValues = null;
-    }
-    async getSlice(offset, size) {
-      const fallbackSize = this.bigTiff ? 4048 : 1024;
-      return new DataSlice((await this.source.fetch([
-        {
-          offset,
-          length: typeof size !== "undefined" ? size : fallbackSize
-        }
-      ]))[0], offset, this.littleEndian, this.bigTiff);
-    }
-    async parseFileDirectoryAt(offset) {
-      const entrySize = this.bigTiff ? 20 : 12;
-      const offsetSize = this.bigTiff ? 8 : 2;
-      let dataSlice = await this.getSlice(offset);
-      const numDirEntries = this.bigTiff ? dataSlice.readUint64(offset) : dataSlice.readUint16(offset);
-      const byteSize = numDirEntries * entrySize + (this.bigTiff ? 16 : 6);
-      if (!dataSlice.covers(offset, byteSize)) {
-        dataSlice = await this.getSlice(offset, byteSize);
-      }
-      const fileDirectory = {};
-      const rawFileDirectory = /* @__PURE__ */ new Map();
-      let i2 = offset + (this.bigTiff ? 8 : 2);
-      for (let entryCount = 0; entryCount < numDirEntries; i2 += entrySize, ++entryCount) {
-        const fieldTag = dataSlice.readUint16(i2);
-        const fieldType = dataSlice.readUint16(i2 + 2);
-        const typeCount = this.bigTiff ? dataSlice.readUint64(i2 + 4) : dataSlice.readUint32(i2 + 4);
-        let fieldValues;
-        let value;
-        const fieldTypeLength = getFieldTypeLength(fieldType);
-        const valueOffset = i2 + (this.bigTiff ? 12 : 8);
-        if (fieldTypeLength * typeCount <= (this.bigTiff ? 8 : 4)) {
-          fieldValues = getValues(dataSlice, fieldType, typeCount, valueOffset);
-        } else {
-          const actualOffset = dataSlice.readOffset(valueOffset);
-          const length2 = getFieldTypeLength(fieldType) * typeCount;
-          if (dataSlice.covers(actualOffset, length2)) {
-            fieldValues = getValues(dataSlice, fieldType, typeCount, actualOffset);
-          } else {
-            const fieldDataSlice = await this.getSlice(actualOffset, length2);
-            fieldValues = getValues(fieldDataSlice, fieldType, typeCount, actualOffset);
-          }
-        }
-        if (typeCount === 1 && arrayFields.indexOf(fieldTag) === -1 && !(fieldType === fieldTypes.RATIONAL || fieldType === fieldTypes.SRATIONAL)) {
-          value = fieldValues[0];
-        } else {
-          value = fieldValues;
-        }
-        const tagName = fieldTagNames[fieldTag];
-        if (tagName) {
-          fileDirectory[tagName] = value;
-        }
-        rawFileDirectory.set(fieldTag, value);
-      }
-      const geoKeyDirectory = parseGeoKeyDirectory(fileDirectory);
-      const nextIFDByteOffset = dataSlice.readOffset(offset + offsetSize + entrySize * numDirEntries);
-      return new ImageFileDirectory(fileDirectory, rawFileDirectory, geoKeyDirectory, nextIFDByteOffset);
-    }
-    async requestIFD(index2) {
-      if (this.ifdRequests[index2]) {
-        return this.ifdRequests[index2];
-      } else if (index2 === 0) {
-        this.ifdRequests[index2] = this.parseFileDirectoryAt(this.firstIFDOffset);
-        return this.ifdRequests[index2];
-      } else if (!this.ifdRequests[index2 - 1]) {
-        try {
-          this.ifdRequests[index2 - 1] = this.requestIFD(index2 - 1);
-        } catch (e2) {
-          if (e2 instanceof GeoTIFFImageIndexError) {
-            throw new GeoTIFFImageIndexError(index2);
-          }
-          throw e2;
-        }
-      }
-      this.ifdRequests[index2] = (async () => {
-        const previousIfd = await this.ifdRequests[index2 - 1];
-        if (previousIfd.nextIFDByteOffset === 0) {
-          throw new GeoTIFFImageIndexError(index2);
-        }
-        return this.parseFileDirectoryAt(previousIfd.nextIFDByteOffset);
-      })();
-      return this.ifdRequests[index2];
-    }
-    async getImage(index2 = 0) {
-      const ifd = await this.requestIFD(index2);
-      return new GeoTIFFImage(ifd.fileDirectory, ifd.geoKeyDirectory, this.dataView, this.littleEndian, this.cache, this.source);
-    }
-    async getImageCount() {
-      let index2 = 0;
-      let hasNext = true;
-      while (hasNext) {
-        try {
-          await this.requestIFD(index2);
-          ++index2;
-        } catch (e2) {
-          if (e2 instanceof GeoTIFFImageIndexError) {
-            hasNext = false;
-          } else {
-            throw e2;
-          }
-        }
-      }
-      return index2;
-    }
-    async getGhostValues() {
-      const offset = this.bigTiff ? 16 : 8;
-      if (this.ghostValues) {
-        return this.ghostValues;
-      }
-      const detectionString = "GDAL_STRUCTURAL_METADATA_SIZE=";
-      const heuristicAreaSize = detectionString.length + 100;
-      let slice = await this.getSlice(offset, heuristicAreaSize);
-      if (detectionString === getValues(slice, fieldTypes.ASCII, detectionString.length, offset)) {
-        const valuesString = getValues(slice, fieldTypes.ASCII, heuristicAreaSize, offset);
-        const firstLine = valuesString.split("\n")[0];
-        const metadataSize = Number(firstLine.split("=")[1].split(" ")[0]) + firstLine.length;
-        if (metadataSize > heuristicAreaSize) {
-          slice = await this.getSlice(offset, metadataSize);
-        }
-        const fullString = getValues(slice, fieldTypes.ASCII, metadataSize, offset);
-        this.ghostValues = {};
-        fullString.split("\n").filter((line) => line.length > 0).map((line) => line.split("=")).forEach(([key2, value]) => {
-          this.ghostValues[key2] = value;
-        });
-      }
-      return this.ghostValues;
-    }
-    static async fromSource(source2, options, signal) {
-      const headerData = (await source2.fetch([
-        {
-          offset: 0,
-          length: 1024
-        }
-      ], signal))[0];
-      const dataView = new DataView64(headerData);
-      const BOM = dataView.getUint16(0, 0);
-      let littleEndian;
-      if (BOM === 18761) {
-        littleEndian = true;
-      } else if (BOM === 19789) {
-        littleEndian = false;
-      } else {
-        throw new TypeError("Invalid byte order value.");
-      }
-      const magicNumber = dataView.getUint16(2, littleEndian);
-      let bigTiff;
-      if (magicNumber === 42) {
-        bigTiff = false;
-      } else if (magicNumber === 43) {
-        bigTiff = true;
-        const offsetByteSize = dataView.getUint16(4, littleEndian);
-        if (offsetByteSize !== 8) {
-          throw new Error("Unsupported offset byte-size.");
-        }
-      } else {
-        throw new TypeError("Invalid magic number.");
-      }
-      const firstIFDOffset = bigTiff ? dataView.getUint64(8, littleEndian) : dataView.getUint32(4, littleEndian);
-      return new GeoTIFF(source2, littleEndian, bigTiff, firstIFDOffset, options);
-    }
-    close() {
-      if (typeof this.source.close === "function") {
-        return this.source.close();
-      }
-      return false;
-    }
-  }
-  async function fromUrl(url, options = {}, signal) {
-    return GeoTIFF.fromSource(makeRemoteSource(url, options), signal);
-  }
-  async function fromFile(path2, signal) {
-    return GeoTIFF.fromSource(makeFileSource(path2), signal);
-  }
-  async function fromBlob(blob, signal) {
-    return GeoTIFF.fromSource(makeFileReaderSource(blob), signal);
-  }
   const SvgRedo = (props) => reactExports.createElement("svg", {
     viewBox: "0 0 14 14",
     xmlns: "http://www.w3.org/2000/svg",
@@ -21655,7 +18608,7 @@ let __tla = (async () => {
   const epsilon$1 = 11102230246251565e-32;
   const splitter = 134217729;
   const resulterrbound = (3 + 8 * epsilon$1) * epsilon$1;
-  function sum(elen, e2, flen, f2, h2) {
+  function sum$1(elen, e2, flen, f2, h2) {
     let Q2, Qnew, hh2, bvirt;
     let enow = e2[0];
     let fnow = f2[0];
@@ -21826,7 +18779,7 @@ let __tla = (async () => {
     bvirt = u3 - _j;
     u$4[2] = _j - (u3 - bvirt) + (_i - bvirt);
     u$4[3] = u3;
-    const C1len = sum(4, B$1, 4, u$4, C1);
+    const C1len = sum$1(4, B$1, 4, u$4, C1);
     s1 = acx * bcytail;
     c2 = splitter * acx;
     ahi = c2 - (c2 - acx);
@@ -21856,7 +18809,7 @@ let __tla = (async () => {
     bvirt = u3 - _j;
     u$4[2] = _j - (u3 - bvirt) + (_i - bvirt);
     u$4[3] = u3;
-    const C2len = sum(C1len, C1, 4, u$4, C2);
+    const C2len = sum$1(C1len, C1, 4, u$4, C2);
     s1 = acxtail * bcytail;
     c2 = splitter * acxtail;
     ahi = c2 - (c2 - acxtail);
@@ -21886,7 +18839,7 @@ let __tla = (async () => {
     bvirt = u3 - _j;
     u$4[2] = _j - (u3 - bvirt) + (_i - bvirt);
     u$4[3] = u3;
-    const Dlen = sum(C2len, C2, 4, u$4, D$1);
+    const Dlen = sum$1(C2len, C2, 4, u$4, D$1);
     return D$1[Dlen - 1];
   }
   function orient2d(ax, ay, bx, by, cx, cy) {
@@ -28024,9 +24977,9 @@ void main() {
   function clamp$2(value, min2, max2) {
     return map$3(value, (value2) => Math.max(min2, Math.min(max2, value2)));
   }
-  function lerp$5(a2, b2, t2) {
+  function lerp$6(a2, b2, t2) {
     if (isArray$4(a2)) {
-      return a2.map((ai2, i2) => lerp$5(ai2, b2[i2], t2));
+      return a2.map((ai2, i2) => lerp$6(ai2, b2[i2], t2));
     }
     return t2 * b2 + (1 - t2) * a2;
   }
@@ -28420,7 +25373,7 @@ void main() {
     out[1] = -a2[1];
     return out;
   }
-  function lerp$4(out, a2, b2, t2) {
+  function lerp$5(out, a2, b2, t2) {
     const ax = a2[0];
     const ay = a2[1];
     out[0] = ax + t2 * (b2[0] - ax);
@@ -28581,7 +25534,7 @@ void main() {
     out[2] = ax * by - ay * bx;
     return out;
   }
-  function lerp$3(out, a2, b2, t2) {
+  function lerp$4(out, a2, b2, t2) {
     const ax = a2[0];
     const ay = a2[1];
     const az = a2[2];
@@ -30063,7 +27016,7 @@ void main() {
   function dot$4(a2, b2) {
     return a2[0] * b2[0] + a2[1] * b2[1] + a2[2] * b2[2] + a2[3] * b2[3];
   }
-  function lerp$2(out, a2, b2, t2) {
+  function lerp$3(out, a2, b2, t2) {
     const ax = a2[0];
     const ay = a2[1];
     const az = a2[2];
@@ -30800,7 +27753,7 @@ void main() {
   const add$4 = add$5;
   const scale$1 = scale$2;
   const dot$3 = dot$4;
-  const lerp$1 = lerp$2;
+  const lerp$2 = lerp$3;
   const length$1 = length$2;
   const squaredLength$1 = squaredLength$2;
   const normalize$5 = normalize$6;
@@ -30967,7 +27920,7 @@ void main() {
       if (t2 === void 0) {
         return this.lerp(this, a2, b2);
       }
-      lerp$1(this, a2, b2, t2);
+      lerp$2(this, a2, b2, t2);
       return this.check();
     }
     multiplyRight(a2) {
@@ -40235,7 +37188,7 @@ vec4 project_position_to_clipspace(
     const z0 = coord0[2];
     const z1 = coord1[2];
     const t2 = z0 === z1 ? 0 : ((targetZ || 0) - z0) / (z1 - z0);
-    return lerp$4([], coord0, coord1, t2);
+    return lerp$5([], coord0, coord1, t2);
   }
   function fitBounds(options) {
     const { width, height, bounds, minExtent = 0, maxZoom = 24, offset = [
@@ -40344,7 +37297,7 @@ vec4 project_position_to_clipspace(
     ]);
     const z2 = targetZ * viewport2.distanceScales.unitsPerMeter[2];
     const t2 = (z2 - coord0[2]) / (coord1[2] - coord0[2]);
-    const coord = lerp$4([], coord0, coord1, t2);
+    const coord = lerp$5([], coord0, coord1, t2);
     const result = worldToLngLat(coord);
     result.push(targetZ);
     return result;
@@ -46193,7 +43146,7 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
         const r0 = Math.sqrt(l0Sqr - dSqr);
         const dr = Math.sqrt(Math.max(0, lt * lt - dSqr));
         const t2 = (r0 - dr) / Math.sqrt(lSqr);
-        coord = lerp$3([], coord0, coord1, t2);
+        coord = lerp$4([], coord0, coord1, t2);
       }
       const [X2, Y2, Z2] = this.unprojectPosition(coord);
       if (Number.isFinite(z2)) {
@@ -46320,14 +43273,14 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     interpolateProps(startProps, endProps, t2) {
       const propsInTransition = {};
       for (const key2 of this._propsToExtract) {
-        propsInTransition[key2] = lerp$5(startProps[key2] || 0, endProps[key2] || 0, t2);
+        propsInTransition[key2] = lerp$6(startProps[key2] || 0, endProps[key2] || 0, t2);
       }
       if (endProps.aroundPosition && this.opts.makeViewport) {
         const viewport2 = this.opts.makeViewport({
           ...endProps,
           ...propsInTransition
         });
-        Object.assign(propsInTransition, viewport2.panByPosition(endProps.aroundPosition, lerp$5(startProps.around, endProps.around, t2)));
+        Object.assign(propsInTransition, viewport2.panByPosition(endProps.aroundPosition, lerp$6(startProps.around, endProps.around, t2)));
       }
       return propsInTransition;
     }
@@ -49575,6 +46528,71 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     GLEnum2[GLEnum2["MAX_DUAL_SOURCE_DRAW_BUFFERS_WEBGL"] = 35068] = "MAX_DUAL_SOURCE_DRAW_BUFFERS_WEBGL";
     GLEnum2[GLEnum2["MIRROR_CLAMP_TO_EDGE_EXT"] = 34627] = "MIRROR_CLAMP_TO_EDGE_EXT";
   })(GLEnum$1 || (GLEnum$1 = {}));
+  const scriptRel = "modulepreload";
+  const assetsURL = function(dep, importerUrl) {
+    return new URL(dep, importerUrl).href;
+  };
+  const seen = {};
+  const __vitePreload = function preload(baseModule, deps, importerUrl) {
+    let promise = Promise.resolve();
+    if (deps && deps.length > 0) {
+      const links = document.getElementsByTagName("link");
+      const cspNonceMeta = document.querySelector("meta[property=csp-nonce]");
+      const cspNonce = (cspNonceMeta == null ? void 0 : cspNonceMeta.nonce) || (cspNonceMeta == null ? void 0 : cspNonceMeta.getAttribute("nonce"));
+      promise = Promise.allSettled(deps.map((dep) => {
+        dep = assetsURL(dep, importerUrl);
+        if (dep in seen) return;
+        seen[dep] = true;
+        const isCss = dep.endsWith(".css");
+        const cssSelector = isCss ? '[rel="stylesheet"]' : "";
+        const isBaseRelative = !!importerUrl;
+        if (isBaseRelative) {
+          for (let i2 = links.length - 1; i2 >= 0; i2--) {
+            const link22 = links[i2];
+            if (link22.href === dep && (!isCss || link22.rel === "stylesheet")) {
+              return;
+            }
+          }
+        } else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) {
+          return;
+        }
+        const link2 = document.createElement("link");
+        link2.rel = isCss ? "stylesheet" : scriptRel;
+        if (!isCss) {
+          link2.as = "script";
+        }
+        link2.crossOrigin = "";
+        link2.href = dep;
+        if (cspNonce) {
+          link2.setAttribute("nonce", cspNonce);
+        }
+        document.head.appendChild(link2);
+        if (isCss) {
+          return new Promise((res, rej) => {
+            link2.addEventListener("load", res);
+            link2.addEventListener("error", () => rej(new Error(`Unable to preload CSS for ${dep}`)));
+          });
+        }
+      }));
+    }
+    function handlePreloadError(err2) {
+      const e2 = new Event("vite:preloadError", {
+        cancelable: true
+      });
+      e2.payload = err2;
+      window.dispatchEvent(e2);
+      if (!e2.defaultPrevented) {
+        throw err2;
+      }
+    }
+    return promise.then((res) => {
+      for (const item2 of res || []) {
+        if (item2.status !== "rejected") continue;
+        handlePreloadError(item2.reason);
+      }
+      return baseModule().catch(handlePreloadError);
+    });
+  };
   const WEBGL1_STATIC_EXTENSIONS = {
     WEBGL_depth_texture: {
       UNSIGNED_INT_24_8_WEBGL: 34042
@@ -58063,7 +55081,7 @@ void main(void) {
     _onUpdate() {
       const { time, settings: { fromValue, toValue: toValue2, duration, easing } } = this;
       const t2 = easing(time / duration);
-      this._value = lerp$5(fromValue, toValue2, t2);
+      this._value = lerp$6(fromValue, toValue2, t2);
     }
   }
   const EPSILON$2 = 1e-5;
@@ -63793,6 +60811,2988 @@ vec4 colormap(float intensity, float opacity) {
   const ColorPalette3DExtensions = {
     AdditiveBlendExtension
   };
+  function uncurryThis(target) {
+    return (thisArg, ...args) => {
+      return ReflectApply(target, thisArg, args);
+    };
+  }
+  function uncurryThisGetter(target, key2) {
+    return uncurryThis(ReflectGetOwnPropertyDescriptor(target, key2).get);
+  }
+  const { apply: ReflectApply, getOwnPropertyDescriptor: ReflectGetOwnPropertyDescriptor, getPrototypeOf: ReflectGetPrototypeOf, ownKeys: ReflectOwnKeys } = Reflect;
+  const { iterator: SymbolIterator, toStringTag: SymbolToStringTag } = Symbol;
+  const NativeObject = Object;
+  const { create: ObjectCreate, defineProperty: ObjectDefineProperty } = NativeObject;
+  const NativeArray = Array;
+  const ArrayPrototype = NativeArray.prototype;
+  const NativeArrayPrototypeSymbolIterator = ArrayPrototype[SymbolIterator];
+  const ArrayPrototypeSymbolIterator = uncurryThis(NativeArrayPrototypeSymbolIterator);
+  const NativeArrayBuffer = ArrayBuffer;
+  const ArrayBufferPrototype = NativeArrayBuffer.prototype;
+  uncurryThisGetter(ArrayBufferPrototype, "byteLength");
+  const NativeSharedArrayBuffer = typeof SharedArrayBuffer !== "undefined" ? SharedArrayBuffer : null;
+  NativeSharedArrayBuffer && uncurryThisGetter(NativeSharedArrayBuffer.prototype, "byteLength");
+  const TypedArray = ReflectGetPrototypeOf(Uint8Array);
+  TypedArray.from;
+  const TypedArrayPrototype = TypedArray.prototype;
+  TypedArrayPrototype[SymbolIterator];
+  uncurryThis(TypedArrayPrototype.keys);
+  uncurryThis(TypedArrayPrototype.values);
+  uncurryThis(TypedArrayPrototype.entries);
+  uncurryThis(TypedArrayPrototype.set);
+  uncurryThis(TypedArrayPrototype.reverse);
+  uncurryThis(TypedArrayPrototype.fill);
+  uncurryThis(TypedArrayPrototype.copyWithin);
+  uncurryThis(TypedArrayPrototype.sort);
+  uncurryThis(TypedArrayPrototype.slice);
+  uncurryThis(TypedArrayPrototype.subarray);
+  uncurryThisGetter(TypedArrayPrototype, "buffer");
+  uncurryThisGetter(TypedArrayPrototype, "byteOffset");
+  uncurryThisGetter(TypedArrayPrototype, "length");
+  uncurryThisGetter(TypedArrayPrototype, SymbolToStringTag);
+  const NativeUint8Array = Uint8Array;
+  const NativeUint16Array = Uint16Array;
+  const NativeUint32Array = Uint32Array;
+  const NativeFloat32Array = Float32Array;
+  const ArrayIteratorPrototype = ReflectGetPrototypeOf([][SymbolIterator]());
+  const ArrayIteratorPrototypeNext = uncurryThis(ArrayIteratorPrototype.next);
+  const GeneratorPrototypeNext = uncurryThis(function* () {
+  }().next);
+  const IteratorPrototype = ReflectGetPrototypeOf(ArrayIteratorPrototype);
+  const DataViewPrototype = DataView.prototype;
+  const DataViewPrototypeGetUint16 = uncurryThis(DataViewPrototype.getUint16);
+  const NativeWeakMap = WeakMap;
+  const WeakMapPrototype = NativeWeakMap.prototype;
+  const WeakMapPrototypeGet = uncurryThis(WeakMapPrototype.get);
+  const WeakMapPrototypeSet = uncurryThis(WeakMapPrototype.set);
+  const arrayIterators = new NativeWeakMap();
+  const SafeIteratorPrototype = ObjectCreate(null, {
+    next: {
+      value: function next2() {
+        const arrayIterator = WeakMapPrototypeGet(arrayIterators, this);
+        return ArrayIteratorPrototypeNext(arrayIterator);
+      }
+    },
+    [SymbolIterator]: {
+      value: function values() {
+        return this;
+      }
+    }
+  });
+  function safeIfNeeded(array) {
+    if (array[SymbolIterator] === NativeArrayPrototypeSymbolIterator && ArrayIteratorPrototype.next === ArrayIteratorPrototypeNext) {
+      return array;
+    }
+    const safe = ObjectCreate(SafeIteratorPrototype);
+    WeakMapPrototypeSet(arrayIterators, safe, ArrayPrototypeSymbolIterator(array));
+    return safe;
+  }
+  const generators = new NativeWeakMap();
+  const DummyArrayIteratorPrototype = ObjectCreate(IteratorPrototype, {
+    next: {
+      value: function next2() {
+        const generator = WeakMapPrototypeGet(generators, this);
+        return GeneratorPrototypeNext(generator);
+      },
+      writable: true,
+      configurable: true
+    }
+  });
+  for (const key2 of ReflectOwnKeys(ArrayIteratorPrototype)) {
+    if (key2 === "next") {
+      continue;
+    }
+    ObjectDefineProperty(DummyArrayIteratorPrototype, key2, ReflectGetOwnPropertyDescriptor(ArrayIteratorPrototype, key2));
+  }
+  const buffer = new NativeArrayBuffer(4);
+  const floatView = new NativeFloat32Array(buffer);
+  const uint32View = new NativeUint32Array(buffer);
+  const baseTable = new NativeUint16Array(512);
+  const shiftTable = new NativeUint8Array(512);
+  for (let i2 = 0; i2 < 256; ++i2) {
+    const e2 = i2 - 127;
+    if (e2 < -24) {
+      baseTable[i2] = 0;
+      baseTable[i2 | 256] = 32768;
+      shiftTable[i2] = 24;
+      shiftTable[i2 | 256] = 24;
+    } else if (e2 < -14) {
+      baseTable[i2] = 1024 >> -e2 - 14;
+      baseTable[i2 | 256] = 1024 >> -e2 - 14 | 32768;
+      shiftTable[i2] = -e2 - 1;
+      shiftTable[i2 | 256] = -e2 - 1;
+    } else if (e2 <= 15) {
+      baseTable[i2] = e2 + 15 << 10;
+      baseTable[i2 | 256] = e2 + 15 << 10 | 32768;
+      shiftTable[i2] = 13;
+      shiftTable[i2 | 256] = 13;
+    } else if (e2 < 128) {
+      baseTable[i2] = 31744;
+      baseTable[i2 | 256] = 64512;
+      shiftTable[i2] = 24;
+      shiftTable[i2 | 256] = 24;
+    } else {
+      baseTable[i2] = 31744;
+      baseTable[i2 | 256] = 64512;
+      shiftTable[i2] = 13;
+      shiftTable[i2 | 256] = 13;
+    }
+  }
+  const mantissaTable = new NativeUint32Array(2048);
+  for (let i2 = 1; i2 < 1024; ++i2) {
+    let m2 = i2 << 13;
+    let e2 = 0;
+    while ((m2 & 8388608) === 0) {
+      m2 <<= 1;
+      e2 -= 8388608;
+    }
+    m2 &= -8388609;
+    e2 += 947912704;
+    mantissaTable[i2] = m2 | e2;
+  }
+  for (let i2 = 1024; i2 < 2048; ++i2) {
+    mantissaTable[i2] = 939524096 + (i2 - 1024 << 13);
+  }
+  const exponentTable = new NativeUint32Array(64);
+  for (let i2 = 1; i2 < 31; ++i2) {
+    exponentTable[i2] = i2 << 23;
+  }
+  exponentTable[31] = 1199570944;
+  exponentTable[32] = 2147483648;
+  for (let i2 = 33; i2 < 63; ++i2) {
+    exponentTable[i2] = 2147483648 + (i2 - 32 << 23);
+  }
+  exponentTable[63] = 3347054592;
+  const offsetTable = new NativeUint16Array(64);
+  for (let i2 = 1; i2 < 64; ++i2) {
+    if (i2 !== 32) {
+      offsetTable[i2] = 1024;
+    }
+  }
+  function convertToNumber(float16bits) {
+    const i2 = float16bits >> 10;
+    uint32View[0] = mantissaTable[offsetTable[i2] + (float16bits & 1023)] + exponentTable[i2];
+    return floatView[0];
+  }
+  function getFloat16(dataView, byteOffset, ...opts) {
+    return convertToNumber(DataViewPrototypeGetUint16(dataView, byteOffset, ...safeIfNeeded(opts)));
+  }
+  function getAttribute(tag, attributeName, options) {
+    const xml2 = typeof tag === "object" ? tag.outer : tag;
+    const opening2 = xml2.slice(0, xml2.indexOf(">") + 1);
+    const quotechars = [
+      '"',
+      "'"
+    ];
+    for (let i2 = 0; i2 < quotechars.length; i2++) {
+      const char = quotechars[i2];
+      const pattern = attributeName + "\\=" + char + "([^" + char + "]*)" + char;
+      const re2 = new RegExp(pattern);
+      const match = re2.exec(opening2);
+      if (match) return match[1];
+    }
+  }
+  function indexOfMatch(xml2, pattern, startIndex) {
+    const re2 = new RegExp(pattern);
+    const match = re2.exec(xml2.slice(startIndex));
+    if (match) return startIndex + match.index;
+    else return -1;
+  }
+  function indexOfMatchEnd(xml2, pattern, startIndex) {
+    const re2 = new RegExp(pattern);
+    const match = re2.exec(xml2.slice(startIndex));
+    if (match) return startIndex + match.index + match[0].length - 1;
+    else return -1;
+  }
+  function countSubstring(string2, substring) {
+    const pattern = new RegExp(substring, "g");
+    const match = string2.match(pattern);
+    return match ? match.length : 0;
+  }
+  function findTagByName(xml2, tagName, options) {
+    const debug2 = options && options.debug || false;
+    const nested = !(options && typeof options.nested === false);
+    const startIndex = options && options.startIndex || 0;
+    if (debug2) console.log("[xml-utils] starting findTagByName with", tagName, " and ", options);
+    const start = indexOfMatch(xml2, `<${tagName}[ 
+>/]`, startIndex);
+    if (debug2) console.log("[xml-utils] start:", start);
+    if (start === -1) return void 0;
+    const afterStart = xml2.slice(start + tagName.length);
+    let relativeEnd = indexOfMatchEnd(afterStart, "^[^<]*[ /]>", 0);
+    const selfClosing = relativeEnd !== -1 && afterStart[relativeEnd - 1] === "/";
+    if (debug2) console.log("[xml-utils] selfClosing:", selfClosing);
+    if (selfClosing === false) {
+      if (nested) {
+        let startIndex2 = 0;
+        let openings = 1;
+        let closings = 0;
+        while ((relativeEnd = indexOfMatchEnd(afterStart, "[ /]" + tagName + ">", startIndex2)) !== -1) {
+          const clip = afterStart.substring(startIndex2, relativeEnd + 1);
+          openings += countSubstring(clip, "<" + tagName + "[ \n	>]");
+          closings += countSubstring(clip, "</" + tagName + ">");
+          if (closings >= openings) break;
+          startIndex2 = relativeEnd;
+        }
+      } else {
+        relativeEnd = indexOfMatchEnd(afterStart, "[ /]" + tagName + ">", 0);
+      }
+    }
+    const end = start + tagName.length + relativeEnd + 1;
+    if (debug2) console.log("[xml-utils] end:", end);
+    if (end === -1) return void 0;
+    const outer = xml2.slice(start, end);
+    let inner;
+    if (selfClosing) {
+      inner = null;
+    } else {
+      inner = outer.slice(outer.indexOf(">") + 1, outer.lastIndexOf("<"));
+    }
+    return {
+      inner,
+      outer,
+      start,
+      end
+    };
+  }
+  function findTagsByName(xml2, tagName, options) {
+    const tags = [];
+    const debug2 = false;
+    let startIndex = 0;
+    let tag;
+    while (tag = findTagByName(xml2, tagName, {
+      debug: debug2,
+      startIndex
+    })) {
+      {
+        startIndex = tag.start + 1 + tagName.length;
+      }
+      tags.push(tag);
+    }
+    return tags;
+  }
+  const fieldTagNames = {
+    315: "Artist",
+    258: "BitsPerSample",
+    265: "CellLength",
+    264: "CellWidth",
+    320: "ColorMap",
+    259: "Compression",
+    33432: "Copyright",
+    306: "DateTime",
+    338: "ExtraSamples",
+    266: "FillOrder",
+    289: "FreeByteCounts",
+    288: "FreeOffsets",
+    291: "GrayResponseCurve",
+    290: "GrayResponseUnit",
+    316: "HostComputer",
+    270: "ImageDescription",
+    257: "ImageLength",
+    256: "ImageWidth",
+    271: "Make",
+    281: "MaxSampleValue",
+    280: "MinSampleValue",
+    272: "Model",
+    254: "NewSubfileType",
+    274: "Orientation",
+    262: "PhotometricInterpretation",
+    284: "PlanarConfiguration",
+    296: "ResolutionUnit",
+    278: "RowsPerStrip",
+    277: "SamplesPerPixel",
+    305: "Software",
+    279: "StripByteCounts",
+    273: "StripOffsets",
+    255: "SubfileType",
+    263: "Threshholding",
+    282: "XResolution",
+    283: "YResolution",
+    326: "BadFaxLines",
+    327: "CleanFaxData",
+    343: "ClipPath",
+    328: "ConsecutiveBadFaxLines",
+    433: "Decode",
+    434: "DefaultImageColor",
+    269: "DocumentName",
+    336: "DotRange",
+    321: "HalftoneHints",
+    346: "Indexed",
+    347: "JPEGTables",
+    285: "PageName",
+    297: "PageNumber",
+    317: "Predictor",
+    319: "PrimaryChromaticities",
+    532: "ReferenceBlackWhite",
+    339: "SampleFormat",
+    340: "SMinSampleValue",
+    341: "SMaxSampleValue",
+    559: "StripRowCounts",
+    330: "SubIFDs",
+    292: "T4Options",
+    293: "T6Options",
+    325: "TileByteCounts",
+    323: "TileLength",
+    324: "TileOffsets",
+    322: "TileWidth",
+    301: "TransferFunction",
+    318: "WhitePoint",
+    344: "XClipPathUnits",
+    286: "XPosition",
+    529: "YCbCrCoefficients",
+    531: "YCbCrPositioning",
+    530: "YCbCrSubSampling",
+    345: "YClipPathUnits",
+    287: "YPosition",
+    37378: "ApertureValue",
+    40961: "ColorSpace",
+    36868: "DateTimeDigitized",
+    36867: "DateTimeOriginal",
+    34665: "Exif IFD",
+    36864: "ExifVersion",
+    33434: "ExposureTime",
+    41728: "FileSource",
+    37385: "Flash",
+    40960: "FlashpixVersion",
+    33437: "FNumber",
+    42016: "ImageUniqueID",
+    37384: "LightSource",
+    37500: "MakerNote",
+    37377: "ShutterSpeedValue",
+    37510: "UserComment",
+    33723: "IPTC",
+    34412: "CZ_LSMINFO",
+    34675: "ICC Profile",
+    700: "XMP",
+    42112: "GDAL_METADATA",
+    42113: "GDAL_NODATA",
+    34377: "Photoshop",
+    33550: "ModelPixelScale",
+    33922: "ModelTiepoint",
+    34264: "ModelTransformation",
+    34735: "GeoKeyDirectory",
+    34736: "GeoDoubleParams",
+    34737: "GeoAsciiParams",
+    50674: "LercParameters"
+  };
+  const fieldTags = {};
+  for (const key2 in fieldTagNames) {
+    if (fieldTagNames.hasOwnProperty(key2)) {
+      fieldTags[fieldTagNames[key2]] = parseInt(key2, 10);
+    }
+  }
+  const arrayFields = [
+    fieldTags.BitsPerSample,
+    fieldTags.ExtraSamples,
+    fieldTags.SampleFormat,
+    fieldTags.StripByteCounts,
+    fieldTags.StripOffsets,
+    fieldTags.StripRowCounts,
+    fieldTags.TileByteCounts,
+    fieldTags.TileOffsets,
+    fieldTags.SubIFDs
+  ];
+  const fieldTypeNames = {
+    1: "BYTE",
+    2: "ASCII",
+    3: "SHORT",
+    4: "LONG",
+    5: "RATIONAL",
+    6: "SBYTE",
+    7: "UNDEFINED",
+    8: "SSHORT",
+    9: "SLONG",
+    10: "SRATIONAL",
+    11: "FLOAT",
+    12: "DOUBLE",
+    13: "IFD",
+    16: "LONG8",
+    17: "SLONG8",
+    18: "IFD8"
+  };
+  const fieldTypes = {};
+  for (const key2 in fieldTypeNames) {
+    if (fieldTypeNames.hasOwnProperty(key2)) {
+      fieldTypes[fieldTypeNames[key2]] = parseInt(key2, 10);
+    }
+  }
+  const photometricInterpretations = {
+    WhiteIsZero: 0,
+    BlackIsZero: 1,
+    RGB: 2,
+    Palette: 3,
+    CMYK: 5,
+    YCbCr: 6,
+    CIELab: 8
+  };
+  const ExtraSamplesValues = {
+    Unspecified: 0
+  };
+  LercParameters = {
+    AddCompression: 1
+  };
+  LercAddCompression = {
+    None: 0,
+    Deflate: 1,
+    Zstandard: 2
+  };
+  const geoKeyNames = {
+    1024: "GTModelTypeGeoKey",
+    1025: "GTRasterTypeGeoKey",
+    1026: "GTCitationGeoKey",
+    2048: "GeographicTypeGeoKey",
+    2049: "GeogCitationGeoKey",
+    2050: "GeogGeodeticDatumGeoKey",
+    2051: "GeogPrimeMeridianGeoKey",
+    2052: "GeogLinearUnitsGeoKey",
+    2053: "GeogLinearUnitSizeGeoKey",
+    2054: "GeogAngularUnitsGeoKey",
+    2055: "GeogAngularUnitSizeGeoKey",
+    2056: "GeogEllipsoidGeoKey",
+    2057: "GeogSemiMajorAxisGeoKey",
+    2058: "GeogSemiMinorAxisGeoKey",
+    2059: "GeogInvFlatteningGeoKey",
+    2060: "GeogAzimuthUnitsGeoKey",
+    2061: "GeogPrimeMeridianLongGeoKey",
+    2062: "GeogTOWGS84GeoKey",
+    3072: "ProjectedCSTypeGeoKey",
+    3073: "PCSCitationGeoKey",
+    3074: "ProjectionGeoKey",
+    3075: "ProjCoordTransGeoKey",
+    3076: "ProjLinearUnitsGeoKey",
+    3077: "ProjLinearUnitSizeGeoKey",
+    3078: "ProjStdParallel1GeoKey",
+    3079: "ProjStdParallel2GeoKey",
+    3080: "ProjNatOriginLongGeoKey",
+    3081: "ProjNatOriginLatGeoKey",
+    3082: "ProjFalseEastingGeoKey",
+    3083: "ProjFalseNorthingGeoKey",
+    3084: "ProjFalseOriginLongGeoKey",
+    3085: "ProjFalseOriginLatGeoKey",
+    3086: "ProjFalseOriginEastingGeoKey",
+    3087: "ProjFalseOriginNorthingGeoKey",
+    3088: "ProjCenterLongGeoKey",
+    3089: "ProjCenterLatGeoKey",
+    3090: "ProjCenterEastingGeoKey",
+    3091: "ProjCenterNorthingGeoKey",
+    3092: "ProjScaleAtNatOriginGeoKey",
+    3093: "ProjScaleAtCenterGeoKey",
+    3094: "ProjAzimuthAngleGeoKey",
+    3095: "ProjStraightVertPoleLongGeoKey",
+    3096: "ProjRectifiedGridAngleGeoKey",
+    4096: "VerticalCSTypeGeoKey",
+    4097: "VerticalCitationGeoKey",
+    4098: "VerticalDatumGeoKey",
+    4099: "VerticalUnitsGeoKey"
+  };
+  function fromWhiteIsZero(raster, max2) {
+    const { width, height } = raster;
+    const rgbRaster = new Uint8Array(width * height * 3);
+    let value;
+    for (let i2 = 0, j2 = 0; i2 < raster.length; ++i2, j2 += 3) {
+      value = 256 - raster[i2] / max2 * 256;
+      rgbRaster[j2] = value;
+      rgbRaster[j2 + 1] = value;
+      rgbRaster[j2 + 2] = value;
+    }
+    return rgbRaster;
+  }
+  function fromBlackIsZero(raster, max2) {
+    const { width, height } = raster;
+    const rgbRaster = new Uint8Array(width * height * 3);
+    let value;
+    for (let i2 = 0, j2 = 0; i2 < raster.length; ++i2, j2 += 3) {
+      value = raster[i2] / max2 * 256;
+      rgbRaster[j2] = value;
+      rgbRaster[j2 + 1] = value;
+      rgbRaster[j2 + 2] = value;
+    }
+    return rgbRaster;
+  }
+  function fromPalette(raster, colorMap) {
+    const { width, height } = raster;
+    const rgbRaster = new Uint8Array(width * height * 3);
+    const greenOffset = colorMap.length / 3;
+    const blueOffset = colorMap.length / 3 * 2;
+    for (let i2 = 0, j2 = 0; i2 < raster.length; ++i2, j2 += 3) {
+      const mapIndex = raster[i2];
+      rgbRaster[j2] = colorMap[mapIndex] / 65536 * 256;
+      rgbRaster[j2 + 1] = colorMap[mapIndex + greenOffset] / 65536 * 256;
+      rgbRaster[j2 + 2] = colorMap[mapIndex + blueOffset] / 65536 * 256;
+    }
+    return rgbRaster;
+  }
+  function fromCMYK(cmykRaster) {
+    const { width, height } = cmykRaster;
+    const rgbRaster = new Uint8Array(width * height * 3);
+    for (let i2 = 0, j2 = 0; i2 < cmykRaster.length; i2 += 4, j2 += 3) {
+      const c2 = cmykRaster[i2];
+      const m2 = cmykRaster[i2 + 1];
+      const y2 = cmykRaster[i2 + 2];
+      const k2 = cmykRaster[i2 + 3];
+      rgbRaster[j2] = 255 * ((255 - c2) / 256) * ((255 - k2) / 256);
+      rgbRaster[j2 + 1] = 255 * ((255 - m2) / 256) * ((255 - k2) / 256);
+      rgbRaster[j2 + 2] = 255 * ((255 - y2) / 256) * ((255 - k2) / 256);
+    }
+    return rgbRaster;
+  }
+  function fromYCbCr(yCbCrRaster) {
+    const { width, height } = yCbCrRaster;
+    const rgbRaster = new Uint8ClampedArray(width * height * 3);
+    for (let i2 = 0, j2 = 0; i2 < yCbCrRaster.length; i2 += 3, j2 += 3) {
+      const y2 = yCbCrRaster[i2];
+      const cb2 = yCbCrRaster[i2 + 1];
+      const cr = yCbCrRaster[i2 + 2];
+      rgbRaster[j2] = y2 + 1.402 * (cr - 128);
+      rgbRaster[j2 + 1] = y2 - 0.34414 * (cb2 - 128) - 0.71414 * (cr - 128);
+      rgbRaster[j2 + 2] = y2 + 1.772 * (cb2 - 128);
+    }
+    return rgbRaster;
+  }
+  const Xn = 0.95047;
+  const Yn = 1;
+  const Zn = 1.08883;
+  function fromCIELab(cieLabRaster) {
+    const { width, height } = cieLabRaster;
+    const rgbRaster = new Uint8Array(width * height * 3);
+    for (let i2 = 0, j2 = 0; i2 < cieLabRaster.length; i2 += 3, j2 += 3) {
+      const L2 = cieLabRaster[i2 + 0];
+      const a_ = cieLabRaster[i2 + 1] << 24 >> 24;
+      const b_ = cieLabRaster[i2 + 2] << 24 >> 24;
+      let y2 = (L2 + 16) / 116;
+      let x2 = a_ / 500 + y2;
+      let z2 = y2 - b_ / 200;
+      let r2;
+      let g2;
+      let b2;
+      x2 = Xn * (x2 * x2 * x2 > 8856e-6 ? x2 * x2 * x2 : (x2 - 16 / 116) / 7.787);
+      y2 = Yn * (y2 * y2 * y2 > 8856e-6 ? y2 * y2 * y2 : (y2 - 16 / 116) / 7.787);
+      z2 = Zn * (z2 * z2 * z2 > 8856e-6 ? z2 * z2 * z2 : (z2 - 16 / 116) / 7.787);
+      r2 = x2 * 3.2406 + y2 * -1.5372 + z2 * -0.4986;
+      g2 = x2 * -0.9689 + y2 * 1.8758 + z2 * 0.0415;
+      b2 = x2 * 0.0557 + y2 * -0.204 + z2 * 1.057;
+      r2 = r2 > 31308e-7 ? 1.055 * r2 ** (1 / 2.4) - 0.055 : 12.92 * r2;
+      g2 = g2 > 31308e-7 ? 1.055 * g2 ** (1 / 2.4) - 0.055 : 12.92 * g2;
+      b2 = b2 > 31308e-7 ? 1.055 * b2 ** (1 / 2.4) - 0.055 : 12.92 * b2;
+      rgbRaster[j2] = Math.max(0, Math.min(1, r2)) * 255;
+      rgbRaster[j2 + 1] = Math.max(0, Math.min(1, g2)) * 255;
+      rgbRaster[j2 + 2] = Math.max(0, Math.min(1, b2)) * 255;
+    }
+    return rgbRaster;
+  }
+  const registry = /* @__PURE__ */ new Map();
+  const preferWorkerMap = /* @__PURE__ */ new Map();
+  function addDecoder(cases, importFn, preferWorker_ = true) {
+    if (!Array.isArray(cases)) {
+      cases = [
+        cases
+      ];
+    }
+    cases.forEach((c2) => {
+      registry.set(c2, importFn);
+      preferWorkerMap.set(c2, preferWorker_);
+    });
+  }
+  async function getDecoder(fileDirectory) {
+    const importFn = registry.get(fileDirectory.Compression);
+    if (!importFn) {
+      throw new Error(`Unknown compression method identifier: ${fileDirectory.Compression}`);
+    }
+    const Decoder = await importFn();
+    return new Decoder(fileDirectory);
+  }
+  addDecoder([
+    void 0,
+    1
+  ], () => __vitePreload(() => import("./raw-CJ9GjD_d.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CrMcv6E-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(6, () => {
+    throw new Error("old style JPEG compression is not supported.");
+  });
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-gk-eiSxY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder([
+    8,
+    32946
+  ], () => __vitePreload(() => import("./deflate-u3sUWy4C.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BUnYe3RJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-CZlgIFrf.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+    await m2.zstd.init();
+    return m2;
+  }).then((m2) => m2.default));
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DFJfvubV.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+    await m2.zstd.init();
+    return m2;
+  }).then((m2) => m2.default));
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-Dlw6BqUf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  function copyNewSize(array, width, height, samplesPerPixel = 1) {
+    return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
+  }
+  function resampleNearest(valueArrays, inWidth, inHeight, outWidth, outHeight) {
+    const relX = inWidth / outWidth;
+    const relY = inHeight / outHeight;
+    return valueArrays.map((array) => {
+      const newArray = copyNewSize(array, outWidth, outHeight);
+      for (let y2 = 0; y2 < outHeight; ++y2) {
+        const cy = Math.min(Math.round(relY * y2), inHeight - 1);
+        for (let x2 = 0; x2 < outWidth; ++x2) {
+          const cx = Math.min(Math.round(relX * x2), inWidth - 1);
+          const value = array[cy * inWidth + cx];
+          newArray[y2 * outWidth + x2] = value;
+        }
+      }
+      return newArray;
+    });
+  }
+  function lerp$1(v0, v1, t2) {
+    return (1 - t2) * v0 + t2 * v1;
+  }
+  function resampleBilinear(valueArrays, inWidth, inHeight, outWidth, outHeight) {
+    const relX = inWidth / outWidth;
+    const relY = inHeight / outHeight;
+    return valueArrays.map((array) => {
+      const newArray = copyNewSize(array, outWidth, outHeight);
+      for (let y2 = 0; y2 < outHeight; ++y2) {
+        const rawY = relY * y2;
+        const yl = Math.floor(rawY);
+        const yh2 = Math.min(Math.ceil(rawY), inHeight - 1);
+        for (let x2 = 0; x2 < outWidth; ++x2) {
+          const rawX = relX * x2;
+          const tx = rawX % 1;
+          const xl = Math.floor(rawX);
+          const xh2 = Math.min(Math.ceil(rawX), inWidth - 1);
+          const ll2 = array[yl * inWidth + xl];
+          const hl2 = array[yl * inWidth + xh2];
+          const lh2 = array[yh2 * inWidth + xl];
+          const hh2 = array[yh2 * inWidth + xh2];
+          const value = lerp$1(lerp$1(ll2, hl2, tx), lerp$1(lh2, hh2, tx), rawY % 1);
+          newArray[y2 * outWidth + x2] = value;
+        }
+      }
+      return newArray;
+    });
+  }
+  function resample(valueArrays, inWidth, inHeight, outWidth, outHeight, method = "nearest") {
+    switch (method.toLowerCase()) {
+      case "nearest":
+        return resampleNearest(valueArrays, inWidth, inHeight, outWidth, outHeight);
+      case "bilinear":
+      case "linear":
+        return resampleBilinear(valueArrays, inWidth, inHeight, outWidth, outHeight);
+      default:
+        throw new Error(`Unsupported resampling method: '${method}'`);
+    }
+  }
+  function resampleNearestInterleaved(valueArray, inWidth, inHeight, outWidth, outHeight, samples) {
+    const relX = inWidth / outWidth;
+    const relY = inHeight / outHeight;
+    const newArray = copyNewSize(valueArray, outWidth, outHeight, samples);
+    for (let y2 = 0; y2 < outHeight; ++y2) {
+      const cy = Math.min(Math.round(relY * y2), inHeight - 1);
+      for (let x2 = 0; x2 < outWidth; ++x2) {
+        const cx = Math.min(Math.round(relX * x2), inWidth - 1);
+        for (let i2 = 0; i2 < samples; ++i2) {
+          const value = valueArray[cy * inWidth * samples + cx * samples + i2];
+          newArray[y2 * outWidth * samples + x2 * samples + i2] = value;
+        }
+      }
+    }
+    return newArray;
+  }
+  function resampleBilinearInterleaved(valueArray, inWidth, inHeight, outWidth, outHeight, samples) {
+    const relX = inWidth / outWidth;
+    const relY = inHeight / outHeight;
+    const newArray = copyNewSize(valueArray, outWidth, outHeight, samples);
+    for (let y2 = 0; y2 < outHeight; ++y2) {
+      const rawY = relY * y2;
+      const yl = Math.floor(rawY);
+      const yh2 = Math.min(Math.ceil(rawY), inHeight - 1);
+      for (let x2 = 0; x2 < outWidth; ++x2) {
+        const rawX = relX * x2;
+        const tx = rawX % 1;
+        const xl = Math.floor(rawX);
+        const xh2 = Math.min(Math.ceil(rawX), inWidth - 1);
+        for (let i2 = 0; i2 < samples; ++i2) {
+          const ll2 = valueArray[yl * inWidth * samples + xl * samples + i2];
+          const hl2 = valueArray[yl * inWidth * samples + xh2 * samples + i2];
+          const lh2 = valueArray[yh2 * inWidth * samples + xl * samples + i2];
+          const hh2 = valueArray[yh2 * inWidth * samples + xh2 * samples + i2];
+          const value = lerp$1(lerp$1(ll2, hl2, tx), lerp$1(lh2, hh2, tx), rawY % 1);
+          newArray[y2 * outWidth * samples + x2 * samples + i2] = value;
+        }
+      }
+    }
+    return newArray;
+  }
+  function resampleInterleaved(valueArray, inWidth, inHeight, outWidth, outHeight, samples, method = "nearest") {
+    switch (method.toLowerCase()) {
+      case "nearest":
+        return resampleNearestInterleaved(valueArray, inWidth, inHeight, outWidth, outHeight, samples);
+      case "bilinear":
+      case "linear":
+        return resampleBilinearInterleaved(valueArray, inWidth, inHeight, outWidth, outHeight, samples);
+      default:
+        throw new Error(`Unsupported resampling method: '${method}'`);
+    }
+  }
+  function sum(array, start, end) {
+    let s2 = 0;
+    for (let i2 = start; i2 < end; ++i2) {
+      s2 += array[i2];
+    }
+    return s2;
+  }
+  function arrayForType(format, bitsPerSample, size) {
+    switch (format) {
+      case 1:
+        if (bitsPerSample <= 8) {
+          return new Uint8Array(size);
+        } else if (bitsPerSample <= 16) {
+          return new Uint16Array(size);
+        } else if (bitsPerSample <= 32) {
+          return new Uint32Array(size);
+        }
+        break;
+      case 2:
+        if (bitsPerSample === 8) {
+          return new Int8Array(size);
+        } else if (bitsPerSample === 16) {
+          return new Int16Array(size);
+        } else if (bitsPerSample === 32) {
+          return new Int32Array(size);
+        }
+        break;
+      case 3:
+        switch (bitsPerSample) {
+          case 16:
+          case 32:
+            return new Float32Array(size);
+          case 64:
+            return new Float64Array(size);
+        }
+        break;
+    }
+    throw Error("Unsupported data format/bitsPerSample");
+  }
+  function needsNormalization(format, bitsPerSample) {
+    if ((format === 1 || format === 2) && bitsPerSample <= 32 && bitsPerSample % 8 === 0) {
+      return false;
+    } else if (format === 3 && (bitsPerSample === 16 || bitsPerSample === 32 || bitsPerSample === 64)) {
+      return false;
+    }
+    return true;
+  }
+  function normalizeArray(inBuffer, format, planarConfiguration, samplesPerPixel, bitsPerSample, tileWidth, tileHeight) {
+    const view = new DataView(inBuffer);
+    const outSize = planarConfiguration === 2 ? tileHeight * tileWidth : tileHeight * tileWidth * samplesPerPixel;
+    const samplesToTransfer = planarConfiguration === 2 ? 1 : samplesPerPixel;
+    const outArray = arrayForType(format, bitsPerSample, outSize);
+    const bitMask = parseInt("1".repeat(bitsPerSample), 2);
+    if (format === 1) {
+      let pixelBitSkip;
+      if (planarConfiguration === 1) {
+        pixelBitSkip = samplesPerPixel * bitsPerSample;
+      } else {
+        pixelBitSkip = bitsPerSample;
+      }
+      let bitsPerLine = tileWidth * pixelBitSkip;
+      if ((bitsPerLine & 7) !== 0) {
+        bitsPerLine = bitsPerLine + 7 & -8;
+      }
+      for (let y2 = 0; y2 < tileHeight; ++y2) {
+        const lineBitOffset = y2 * bitsPerLine;
+        for (let x2 = 0; x2 < tileWidth; ++x2) {
+          const pixelBitOffset = lineBitOffset + x2 * samplesToTransfer * bitsPerSample;
+          for (let i2 = 0; i2 < samplesToTransfer; ++i2) {
+            const bitOffset = pixelBitOffset + i2 * bitsPerSample;
+            const outIndex = (y2 * tileWidth + x2) * samplesToTransfer + i2;
+            const byteOffset = Math.floor(bitOffset / 8);
+            const innerBitOffset = bitOffset % 8;
+            if (innerBitOffset + bitsPerSample <= 8) {
+              outArray[outIndex] = view.getUint8(byteOffset) >> 8 - bitsPerSample - innerBitOffset & bitMask;
+            } else if (innerBitOffset + bitsPerSample <= 16) {
+              outArray[outIndex] = view.getUint16(byteOffset) >> 16 - bitsPerSample - innerBitOffset & bitMask;
+            } else if (innerBitOffset + bitsPerSample <= 24) {
+              const raw2 = view.getUint16(byteOffset) << 8 | view.getUint8(byteOffset + 2);
+              outArray[outIndex] = raw2 >> 24 - bitsPerSample - innerBitOffset & bitMask;
+            } else {
+              outArray[outIndex] = view.getUint32(byteOffset) >> 32 - bitsPerSample - innerBitOffset & bitMask;
+            }
+          }
+        }
+      }
+    }
+    return outArray.buffer;
+  }
+  class GeoTIFFImage {
+    constructor(fileDirectory, geoKeys, dataView, littleEndian, cache2, source2) {
+      this.fileDirectory = fileDirectory;
+      this.geoKeys = geoKeys;
+      this.dataView = dataView;
+      this.littleEndian = littleEndian;
+      this.tiles = cache2 ? {} : null;
+      this.isTiled = !fileDirectory.StripOffsets;
+      const planarConfiguration = fileDirectory.PlanarConfiguration;
+      this.planarConfiguration = typeof planarConfiguration === "undefined" ? 1 : planarConfiguration;
+      if (this.planarConfiguration !== 1 && this.planarConfiguration !== 2) {
+        throw new Error("Invalid planar configuration.");
+      }
+      this.source = source2;
+    }
+    getFileDirectory() {
+      return this.fileDirectory;
+    }
+    getGeoKeys() {
+      return this.geoKeys;
+    }
+    getWidth() {
+      return this.fileDirectory.ImageWidth;
+    }
+    getHeight() {
+      return this.fileDirectory.ImageLength;
+    }
+    getSamplesPerPixel() {
+      return typeof this.fileDirectory.SamplesPerPixel !== "undefined" ? this.fileDirectory.SamplesPerPixel : 1;
+    }
+    getTileWidth() {
+      return this.isTiled ? this.fileDirectory.TileWidth : this.getWidth();
+    }
+    getTileHeight() {
+      if (this.isTiled) {
+        return this.fileDirectory.TileLength;
+      }
+      if (typeof this.fileDirectory.RowsPerStrip !== "undefined") {
+        return Math.min(this.fileDirectory.RowsPerStrip, this.getHeight());
+      }
+      return this.getHeight();
+    }
+    getBlockWidth() {
+      return this.getTileWidth();
+    }
+    getBlockHeight(y2) {
+      if (this.isTiled || (y2 + 1) * this.getTileHeight() <= this.getHeight()) {
+        return this.getTileHeight();
+      } else {
+        return this.getHeight() - y2 * this.getTileHeight();
+      }
+    }
+    getBytesPerPixel() {
+      let bytes = 0;
+      for (let i2 = 0; i2 < this.fileDirectory.BitsPerSample.length; ++i2) {
+        bytes += this.getSampleByteSize(i2);
+      }
+      return bytes;
+    }
+    getSampleByteSize(i2) {
+      if (i2 >= this.fileDirectory.BitsPerSample.length) {
+        throw new RangeError(`Sample index ${i2} is out of range.`);
+      }
+      return Math.ceil(this.fileDirectory.BitsPerSample[i2] / 8);
+    }
+    getReaderForSample(sampleIndex) {
+      const format = this.fileDirectory.SampleFormat ? this.fileDirectory.SampleFormat[sampleIndex] : 1;
+      const bitsPerSample = this.fileDirectory.BitsPerSample[sampleIndex];
+      switch (format) {
+        case 1:
+          if (bitsPerSample <= 8) {
+            return DataView.prototype.getUint8;
+          } else if (bitsPerSample <= 16) {
+            return DataView.prototype.getUint16;
+          } else if (bitsPerSample <= 32) {
+            return DataView.prototype.getUint32;
+          }
+          break;
+        case 2:
+          if (bitsPerSample <= 8) {
+            return DataView.prototype.getInt8;
+          } else if (bitsPerSample <= 16) {
+            return DataView.prototype.getInt16;
+          } else if (bitsPerSample <= 32) {
+            return DataView.prototype.getInt32;
+          }
+          break;
+        case 3:
+          switch (bitsPerSample) {
+            case 16:
+              return function(offset, littleEndian) {
+                return getFloat16(this, offset, littleEndian);
+              };
+            case 32:
+              return DataView.prototype.getFloat32;
+            case 64:
+              return DataView.prototype.getFloat64;
+          }
+          break;
+      }
+      throw Error("Unsupported data format/bitsPerSample");
+    }
+    getSampleFormat(sampleIndex = 0) {
+      return this.fileDirectory.SampleFormat ? this.fileDirectory.SampleFormat[sampleIndex] : 1;
+    }
+    getBitsPerSample(sampleIndex = 0) {
+      return this.fileDirectory.BitsPerSample[sampleIndex];
+    }
+    getArrayForSample(sampleIndex, size) {
+      const format = this.getSampleFormat(sampleIndex);
+      const bitsPerSample = this.getBitsPerSample(sampleIndex);
+      return arrayForType(format, bitsPerSample, size);
+    }
+    async getTileOrStrip(x2, y2, sample, poolOrDecoder, signal) {
+      const numTilesPerRow = Math.ceil(this.getWidth() / this.getTileWidth());
+      const numTilesPerCol = Math.ceil(this.getHeight() / this.getTileHeight());
+      let index2;
+      const { tiles } = this;
+      if (this.planarConfiguration === 1) {
+        index2 = y2 * numTilesPerRow + x2;
+      } else if (this.planarConfiguration === 2) {
+        index2 = sample * numTilesPerRow * numTilesPerCol + y2 * numTilesPerRow + x2;
+      }
+      let offset;
+      let byteCount;
+      if (this.isTiled) {
+        offset = this.fileDirectory.TileOffsets[index2];
+        byteCount = this.fileDirectory.TileByteCounts[index2];
+      } else {
+        offset = this.fileDirectory.StripOffsets[index2];
+        byteCount = this.fileDirectory.StripByteCounts[index2];
+      }
+      if (byteCount === 0) {
+        const nPixels = this.getBlockHeight(y2) * this.getTileWidth();
+        const bytesPerPixel = this.planarConfiguration === 2 ? this.getSampleByteSize(sample) : this.getBytesPerPixel();
+        const data2 = new ArrayBuffer(nPixels * bytesPerPixel);
+        const view = this.getArrayForSample(sample, data2);
+        view.fill(this.getGDALNoData() || 0);
+        return {
+          x: x2,
+          y: y2,
+          sample,
+          data: data2
+        };
+      }
+      const slice = (await this.source.fetch([
+        {
+          offset,
+          length: byteCount
+        }
+      ], signal))[0];
+      let request;
+      if (tiles === null || !tiles[index2]) {
+        request = (async () => {
+          let data2 = await poolOrDecoder.decode(this.fileDirectory, slice);
+          const sampleFormat = this.getSampleFormat();
+          const bitsPerSample = this.getBitsPerSample();
+          if (needsNormalization(sampleFormat, bitsPerSample)) {
+            data2 = normalizeArray(data2, sampleFormat, this.planarConfiguration, this.getSamplesPerPixel(), bitsPerSample, this.getTileWidth(), this.getBlockHeight(y2));
+          }
+          return data2;
+        })();
+        if (tiles !== null) {
+          tiles[index2] = request;
+        }
+      } else {
+        request = tiles[index2];
+      }
+      return {
+        x: x2,
+        y: y2,
+        sample,
+        data: await request
+      };
+    }
+    async _readRaster(imageWindow, samples, valueArrays, interleave, poolOrDecoder, width, height, resampleMethod, signal) {
+      const tileWidth = this.getTileWidth();
+      const tileHeight = this.getTileHeight();
+      const imageWidth = this.getWidth();
+      const imageHeight = this.getHeight();
+      const minXTile = Math.max(Math.floor(imageWindow[0] / tileWidth), 0);
+      const maxXTile = Math.min(Math.ceil(imageWindow[2] / tileWidth), Math.ceil(imageWidth / tileWidth));
+      const minYTile = Math.max(Math.floor(imageWindow[1] / tileHeight), 0);
+      const maxYTile = Math.min(Math.ceil(imageWindow[3] / tileHeight), Math.ceil(imageHeight / tileHeight));
+      const windowWidth = imageWindow[2] - imageWindow[0];
+      let bytesPerPixel = this.getBytesPerPixel();
+      const srcSampleOffsets = [];
+      const sampleReaders = [];
+      for (let i2 = 0; i2 < samples.length; ++i2) {
+        if (this.planarConfiguration === 1) {
+          srcSampleOffsets.push(sum(this.fileDirectory.BitsPerSample, 0, samples[i2]) / 8);
+        } else {
+          srcSampleOffsets.push(0);
+        }
+        sampleReaders.push(this.getReaderForSample(samples[i2]));
+      }
+      const promises = [];
+      const { littleEndian } = this;
+      for (let yTile = minYTile; yTile < maxYTile; ++yTile) {
+        for (let xTile = minXTile; xTile < maxXTile; ++xTile) {
+          let getPromise;
+          if (this.planarConfiguration === 1) {
+            getPromise = this.getTileOrStrip(xTile, yTile, 0, poolOrDecoder, signal);
+          }
+          for (let sampleIndex = 0; sampleIndex < samples.length; ++sampleIndex) {
+            const si2 = sampleIndex;
+            const sample = samples[sampleIndex];
+            if (this.planarConfiguration === 2) {
+              bytesPerPixel = this.getSampleByteSize(sample);
+              getPromise = this.getTileOrStrip(xTile, yTile, sample, poolOrDecoder, signal);
+            }
+            const promise = getPromise.then((tile) => {
+              const buffer2 = tile.data;
+              const dataView = new DataView(buffer2);
+              const blockHeight = this.getBlockHeight(tile.y);
+              const firstLine = tile.y * tileHeight;
+              const firstCol = tile.x * tileWidth;
+              const lastLine = firstLine + blockHeight;
+              const lastCol = (tile.x + 1) * tileWidth;
+              const reader = sampleReaders[si2];
+              const ymax = Math.min(blockHeight, blockHeight - (lastLine - imageWindow[3]), imageHeight - firstLine);
+              const xmax = Math.min(tileWidth, tileWidth - (lastCol - imageWindow[2]), imageWidth - firstCol);
+              for (let y2 = Math.max(0, imageWindow[1] - firstLine); y2 < ymax; ++y2) {
+                for (let x2 = Math.max(0, imageWindow[0] - firstCol); x2 < xmax; ++x2) {
+                  const pixelOffset = (y2 * tileWidth + x2) * bytesPerPixel;
+                  const value = reader.call(dataView, pixelOffset + srcSampleOffsets[si2], littleEndian);
+                  let windowCoordinate;
+                  if (interleave) {
+                    windowCoordinate = (y2 + firstLine - imageWindow[1]) * windowWidth * samples.length + (x2 + firstCol - imageWindow[0]) * samples.length + si2;
+                    valueArrays[windowCoordinate] = value;
+                  } else {
+                    windowCoordinate = (y2 + firstLine - imageWindow[1]) * windowWidth + x2 + firstCol - imageWindow[0];
+                    valueArrays[si2][windowCoordinate] = value;
+                  }
+                }
+              }
+            });
+            promises.push(promise);
+          }
+        }
+      }
+      await Promise.all(promises);
+      if (width && imageWindow[2] - imageWindow[0] !== width || height && imageWindow[3] - imageWindow[1] !== height) {
+        let resampled;
+        if (interleave) {
+          resampled = resampleInterleaved(valueArrays, imageWindow[2] - imageWindow[0], imageWindow[3] - imageWindow[1], width, height, samples.length, resampleMethod);
+        } else {
+          resampled = resample(valueArrays, imageWindow[2] - imageWindow[0], imageWindow[3] - imageWindow[1], width, height, resampleMethod);
+        }
+        resampled.width = width;
+        resampled.height = height;
+        return resampled;
+      }
+      valueArrays.width = width || imageWindow[2] - imageWindow[0];
+      valueArrays.height = height || imageWindow[3] - imageWindow[1];
+      return valueArrays;
+    }
+    async readRasters({ window: wnd, samples = [], interleave, pool = null, width, height, resampleMethod, fillValue, signal } = {}) {
+      const imageWindow = wnd || [
+        0,
+        0,
+        this.getWidth(),
+        this.getHeight()
+      ];
+      if (imageWindow[0] > imageWindow[2] || imageWindow[1] > imageWindow[3]) {
+        throw new Error("Invalid subsets");
+      }
+      const imageWindowWidth = imageWindow[2] - imageWindow[0];
+      const imageWindowHeight = imageWindow[3] - imageWindow[1];
+      const numPixels = imageWindowWidth * imageWindowHeight;
+      const samplesPerPixel = this.getSamplesPerPixel();
+      if (!samples || !samples.length) {
+        for (let i2 = 0; i2 < samplesPerPixel; ++i2) {
+          samples.push(i2);
+        }
+      } else {
+        for (let i2 = 0; i2 < samples.length; ++i2) {
+          if (samples[i2] >= samplesPerPixel) {
+            return Promise.reject(new RangeError(`Invalid sample index '${samples[i2]}'.`));
+          }
+        }
+      }
+      let valueArrays;
+      if (interleave) {
+        const format = this.fileDirectory.SampleFormat ? Math.max.apply(null, this.fileDirectory.SampleFormat) : 1;
+        const bitsPerSample = Math.max.apply(null, this.fileDirectory.BitsPerSample);
+        valueArrays = arrayForType(format, bitsPerSample, numPixels * samples.length);
+        if (fillValue) {
+          valueArrays.fill(fillValue);
+        }
+      } else {
+        valueArrays = [];
+        for (let i2 = 0; i2 < samples.length; ++i2) {
+          const valueArray = this.getArrayForSample(samples[i2], numPixels);
+          if (Array.isArray(fillValue) && i2 < fillValue.length) {
+            valueArray.fill(fillValue[i2]);
+          } else if (fillValue && !Array.isArray(fillValue)) {
+            valueArray.fill(fillValue);
+          }
+          valueArrays.push(valueArray);
+        }
+      }
+      const poolOrDecoder = pool || await getDecoder(this.fileDirectory);
+      const result = await this._readRaster(imageWindow, samples, valueArrays, interleave, poolOrDecoder, width, height, resampleMethod, signal);
+      return result;
+    }
+    async readRGB({ window: window2, interleave = true, pool = null, width, height, resampleMethod, enableAlpha = false, signal } = {}) {
+      const imageWindow = window2 || [
+        0,
+        0,
+        this.getWidth(),
+        this.getHeight()
+      ];
+      if (imageWindow[0] > imageWindow[2] || imageWindow[1] > imageWindow[3]) {
+        throw new Error("Invalid subsets");
+      }
+      const pi2 = this.fileDirectory.PhotometricInterpretation;
+      if (pi2 === photometricInterpretations.RGB) {
+        let s2 = [
+          0,
+          1,
+          2
+        ];
+        if (!(this.fileDirectory.ExtraSamples === ExtraSamplesValues.Unspecified) && enableAlpha) {
+          s2 = [];
+          for (let i2 = 0; i2 < this.fileDirectory.BitsPerSample.length; i2 += 1) {
+            s2.push(i2);
+          }
+        }
+        return this.readRasters({
+          window: window2,
+          interleave,
+          samples: s2,
+          pool,
+          width,
+          height,
+          resampleMethod,
+          signal
+        });
+      }
+      let samples;
+      switch (pi2) {
+        case photometricInterpretations.WhiteIsZero:
+        case photometricInterpretations.BlackIsZero:
+        case photometricInterpretations.Palette:
+          samples = [
+            0
+          ];
+          break;
+        case photometricInterpretations.CMYK:
+          samples = [
+            0,
+            1,
+            2,
+            3
+          ];
+          break;
+        case photometricInterpretations.YCbCr:
+        case photometricInterpretations.CIELab:
+          samples = [
+            0,
+            1,
+            2
+          ];
+          break;
+        default:
+          throw new Error("Invalid or unsupported photometric interpretation.");
+      }
+      const subOptions = {
+        window: imageWindow,
+        interleave: true,
+        samples,
+        pool,
+        width,
+        height,
+        resampleMethod,
+        signal
+      };
+      const { fileDirectory } = this;
+      const raster = await this.readRasters(subOptions);
+      const max2 = 2 ** this.fileDirectory.BitsPerSample[0];
+      let data2;
+      switch (pi2) {
+        case photometricInterpretations.WhiteIsZero:
+          data2 = fromWhiteIsZero(raster, max2);
+          break;
+        case photometricInterpretations.BlackIsZero:
+          data2 = fromBlackIsZero(raster, max2);
+          break;
+        case photometricInterpretations.Palette:
+          data2 = fromPalette(raster, fileDirectory.ColorMap);
+          break;
+        case photometricInterpretations.CMYK:
+          data2 = fromCMYK(raster);
+          break;
+        case photometricInterpretations.YCbCr:
+          data2 = fromYCbCr(raster);
+          break;
+        case photometricInterpretations.CIELab:
+          data2 = fromCIELab(raster);
+          break;
+        default:
+          throw new Error("Unsupported photometric interpretation.");
+      }
+      if (!interleave) {
+        const red = new Uint8Array(data2.length / 3);
+        const green = new Uint8Array(data2.length / 3);
+        const blue = new Uint8Array(data2.length / 3);
+        for (let i2 = 0, j2 = 0; i2 < data2.length; i2 += 3, ++j2) {
+          red[j2] = data2[i2];
+          green[j2] = data2[i2 + 1];
+          blue[j2] = data2[i2 + 2];
+        }
+        data2 = [
+          red,
+          green,
+          blue
+        ];
+      }
+      data2.width = raster.width;
+      data2.height = raster.height;
+      return data2;
+    }
+    getTiePoints() {
+      if (!this.fileDirectory.ModelTiepoint) {
+        return [];
+      }
+      const tiePoints = [];
+      for (let i2 = 0; i2 < this.fileDirectory.ModelTiepoint.length; i2 += 6) {
+        tiePoints.push({
+          i: this.fileDirectory.ModelTiepoint[i2],
+          j: this.fileDirectory.ModelTiepoint[i2 + 1],
+          k: this.fileDirectory.ModelTiepoint[i2 + 2],
+          x: this.fileDirectory.ModelTiepoint[i2 + 3],
+          y: this.fileDirectory.ModelTiepoint[i2 + 4],
+          z: this.fileDirectory.ModelTiepoint[i2 + 5]
+        });
+      }
+      return tiePoints;
+    }
+    getGDALMetadata(sample = null) {
+      const metadata = {};
+      if (!this.fileDirectory.GDAL_METADATA) {
+        return null;
+      }
+      const string2 = this.fileDirectory.GDAL_METADATA;
+      let items = findTagsByName(string2, "Item");
+      if (sample === null) {
+        items = items.filter((item2) => getAttribute(item2, "sample") === void 0);
+      } else {
+        items = items.filter((item2) => Number(getAttribute(item2, "sample")) === sample);
+      }
+      for (let i2 = 0; i2 < items.length; ++i2) {
+        const item2 = items[i2];
+        metadata[getAttribute(item2, "name")] = item2.inner;
+      }
+      return metadata;
+    }
+    getGDALNoData() {
+      if (!this.fileDirectory.GDAL_NODATA) {
+        return null;
+      }
+      const string2 = this.fileDirectory.GDAL_NODATA;
+      return Number(string2.substring(0, string2.length - 1));
+    }
+    getOrigin() {
+      const tiePoints = this.fileDirectory.ModelTiepoint;
+      const modelTransformation = this.fileDirectory.ModelTransformation;
+      if (tiePoints && tiePoints.length === 6) {
+        return [
+          tiePoints[3],
+          tiePoints[4],
+          tiePoints[5]
+        ];
+      }
+      if (modelTransformation) {
+        return [
+          modelTransformation[3],
+          modelTransformation[7],
+          modelTransformation[11]
+        ];
+      }
+      throw new Error("The image does not have an affine transformation.");
+    }
+    getResolution(referenceImage = null) {
+      const modelPixelScale = this.fileDirectory.ModelPixelScale;
+      const modelTransformation = this.fileDirectory.ModelTransformation;
+      if (modelPixelScale) {
+        return [
+          modelPixelScale[0],
+          -modelPixelScale[1],
+          modelPixelScale[2]
+        ];
+      }
+      if (modelTransformation) {
+        if (modelTransformation[1] === 0 && modelTransformation[4] === 0) {
+          return [
+            modelTransformation[0],
+            -modelTransformation[5],
+            modelTransformation[10]
+          ];
+        }
+        return [
+          Math.sqrt(modelTransformation[0] * modelTransformation[0] + modelTransformation[4] * modelTransformation[4]),
+          -Math.sqrt(modelTransformation[1] * modelTransformation[1] + modelTransformation[5] * modelTransformation[5]),
+          modelTransformation[10]
+        ];
+      }
+      if (referenceImage) {
+        const [refResX, refResY, refResZ] = referenceImage.getResolution();
+        return [
+          refResX * referenceImage.getWidth() / this.getWidth(),
+          refResY * referenceImage.getHeight() / this.getHeight(),
+          refResZ * referenceImage.getWidth() / this.getWidth()
+        ];
+      }
+      throw new Error("The image does not have an affine transformation.");
+    }
+    pixelIsArea() {
+      return this.geoKeys.GTRasterTypeGeoKey === 1;
+    }
+    getBoundingBox(tilegrid = false) {
+      const height = this.getHeight();
+      const width = this.getWidth();
+      if (this.fileDirectory.ModelTransformation && !tilegrid) {
+        const [a2, b2, c2, d2, e2, f2, g2, h2] = this.fileDirectory.ModelTransformation;
+        const corners = [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            height
+          ],
+          [
+            width,
+            0
+          ],
+          [
+            width,
+            height
+          ]
+        ];
+        const projected = corners.map(([I2, J2]) => [
+          d2 + a2 * I2 + b2 * J2,
+          h2 + e2 * I2 + f2 * J2
+        ]);
+        const xs = projected.map((pt) => pt[0]);
+        const ys = projected.map((pt) => pt[1]);
+        return [
+          Math.min(...xs),
+          Math.min(...ys),
+          Math.max(...xs),
+          Math.max(...ys)
+        ];
+      } else {
+        const origin = this.getOrigin();
+        const resolution = this.getResolution();
+        const x1 = origin[0];
+        const y1 = origin[1];
+        const x2 = x1 + resolution[0] * width;
+        const y2 = y1 + resolution[1] * height;
+        return [
+          Math.min(x1, x2),
+          Math.min(y1, y2),
+          Math.max(x1, x2),
+          Math.max(y1, y2)
+        ];
+      }
+    }
+  }
+  class DataView64 {
+    constructor(arrayBuffer2) {
+      this._dataView = new DataView(arrayBuffer2);
+    }
+    get buffer() {
+      return this._dataView.buffer;
+    }
+    getUint64(offset, littleEndian) {
+      const left = this.getUint32(offset, littleEndian);
+      const right = this.getUint32(offset + 4, littleEndian);
+      let combined;
+      if (littleEndian) {
+        combined = left + 2 ** 32 * right;
+        if (!Number.isSafeInteger(combined)) {
+          throw new Error(`${combined} exceeds MAX_SAFE_INTEGER. Precision may be lost. Please report if you get this message to https://github.com/geotiffjs/geotiff.js/issues`);
+        }
+        return combined;
+      }
+      combined = 2 ** 32 * left + right;
+      if (!Number.isSafeInteger(combined)) {
+        throw new Error(`${combined} exceeds MAX_SAFE_INTEGER. Precision may be lost. Please report if you get this message to https://github.com/geotiffjs/geotiff.js/issues`);
+      }
+      return combined;
+    }
+    getInt64(offset, littleEndian) {
+      let value = 0;
+      const isNegative = (this._dataView.getUint8(offset + (littleEndian ? 7 : 0)) & 128) > 0;
+      let carrying = true;
+      for (let i2 = 0; i2 < 8; i2++) {
+        let byte = this._dataView.getUint8(offset + (littleEndian ? i2 : 7 - i2));
+        if (isNegative) {
+          if (carrying) {
+            if (byte !== 0) {
+              byte = ~(byte - 1) & 255;
+              carrying = false;
+            }
+          } else {
+            byte = ~byte & 255;
+          }
+        }
+        value += byte * 256 ** i2;
+      }
+      if (isNegative) {
+        value = -value;
+      }
+      return value;
+    }
+    getUint8(offset, littleEndian) {
+      return this._dataView.getUint8(offset, littleEndian);
+    }
+    getInt8(offset, littleEndian) {
+      return this._dataView.getInt8(offset, littleEndian);
+    }
+    getUint16(offset, littleEndian) {
+      return this._dataView.getUint16(offset, littleEndian);
+    }
+    getInt16(offset, littleEndian) {
+      return this._dataView.getInt16(offset, littleEndian);
+    }
+    getUint32(offset, littleEndian) {
+      return this._dataView.getUint32(offset, littleEndian);
+    }
+    getInt32(offset, littleEndian) {
+      return this._dataView.getInt32(offset, littleEndian);
+    }
+    getFloat16(offset, littleEndian) {
+      return getFloat16(this._dataView, offset, littleEndian);
+    }
+    getFloat32(offset, littleEndian) {
+      return this._dataView.getFloat32(offset, littleEndian);
+    }
+    getFloat64(offset, littleEndian) {
+      return this._dataView.getFloat64(offset, littleEndian);
+    }
+  }
+  class DataSlice {
+    constructor(arrayBuffer2, sliceOffset, littleEndian, bigTiff) {
+      this._dataView = new DataView(arrayBuffer2);
+      this._sliceOffset = sliceOffset;
+      this._littleEndian = littleEndian;
+      this._bigTiff = bigTiff;
+    }
+    get sliceOffset() {
+      return this._sliceOffset;
+    }
+    get sliceTop() {
+      return this._sliceOffset + this.buffer.byteLength;
+    }
+    get littleEndian() {
+      return this._littleEndian;
+    }
+    get bigTiff() {
+      return this._bigTiff;
+    }
+    get buffer() {
+      return this._dataView.buffer;
+    }
+    covers(offset, length2) {
+      return this.sliceOffset <= offset && this.sliceTop >= offset + length2;
+    }
+    readUint8(offset) {
+      return this._dataView.getUint8(offset - this._sliceOffset, this._littleEndian);
+    }
+    readInt8(offset) {
+      return this._dataView.getInt8(offset - this._sliceOffset, this._littleEndian);
+    }
+    readUint16(offset) {
+      return this._dataView.getUint16(offset - this._sliceOffset, this._littleEndian);
+    }
+    readInt16(offset) {
+      return this._dataView.getInt16(offset - this._sliceOffset, this._littleEndian);
+    }
+    readUint32(offset) {
+      return this._dataView.getUint32(offset - this._sliceOffset, this._littleEndian);
+    }
+    readInt32(offset) {
+      return this._dataView.getInt32(offset - this._sliceOffset, this._littleEndian);
+    }
+    readFloat32(offset) {
+      return this._dataView.getFloat32(offset - this._sliceOffset, this._littleEndian);
+    }
+    readFloat64(offset) {
+      return this._dataView.getFloat64(offset - this._sliceOffset, this._littleEndian);
+    }
+    readUint64(offset) {
+      const left = this.readUint32(offset);
+      const right = this.readUint32(offset + 4);
+      let combined;
+      if (this._littleEndian) {
+        combined = left + 2 ** 32 * right;
+        if (!Number.isSafeInteger(combined)) {
+          throw new Error(`${combined} exceeds MAX_SAFE_INTEGER. Precision may be lost. Please report if you get this message to https://github.com/geotiffjs/geotiff.js/issues`);
+        }
+        return combined;
+      }
+      combined = 2 ** 32 * left + right;
+      if (!Number.isSafeInteger(combined)) {
+        throw new Error(`${combined} exceeds MAX_SAFE_INTEGER. Precision may be lost. Please report if you get this message to https://github.com/geotiffjs/geotiff.js/issues`);
+      }
+      return combined;
+    }
+    readInt64(offset) {
+      let value = 0;
+      const isNegative = (this._dataView.getUint8(offset + (this._littleEndian ? 7 : 0)) & 128) > 0;
+      let carrying = true;
+      for (let i2 = 0; i2 < 8; i2++) {
+        let byte = this._dataView.getUint8(offset + (this._littleEndian ? i2 : 7 - i2));
+        if (isNegative) {
+          if (carrying) {
+            if (byte !== 0) {
+              byte = ~(byte - 1) & 255;
+              carrying = false;
+            }
+          } else {
+            byte = ~byte & 255;
+          }
+        }
+        value += byte * 256 ** i2;
+      }
+      if (isNegative) {
+        value = -value;
+      }
+      return value;
+    }
+    readOffset(offset) {
+      if (this._bigTiff) {
+        return this.readUint64(offset);
+      }
+      return this.readUint32(offset);
+    }
+  }
+  const CRLFCRLF = "\r\n\r\n";
+  function itemsToObject(items) {
+    if (typeof Object.fromEntries !== "undefined") {
+      return Object.fromEntries(items);
+    }
+    const obj = {};
+    for (const [key2, value] of items) {
+      obj[key2.toLowerCase()] = value;
+    }
+    return obj;
+  }
+  function parseHeaders(text2) {
+    const items = text2.split("\r\n").map((line) => {
+      const kv = line.split(":").map((str2) => str2.trim());
+      kv[0] = kv[0].toLowerCase();
+      return kv;
+    });
+    return itemsToObject(items);
+  }
+  function parseContentType(rawContentType) {
+    const [type, ...rawParams] = rawContentType.split(";").map((s2) => s2.trim());
+    const paramsItems = rawParams.map((param) => param.split("="));
+    return {
+      type,
+      params: itemsToObject(paramsItems)
+    };
+  }
+  function parseContentRange(rawContentRange) {
+    let start;
+    let end;
+    let total;
+    if (rawContentRange) {
+      [, start, end, total] = rawContentRange.match(/bytes (\d+)-(\d+)\/(\d+)/);
+      start = parseInt(start, 10);
+      end = parseInt(end, 10);
+      total = parseInt(total, 10);
+    }
+    return {
+      start,
+      end,
+      total
+    };
+  }
+  function parseByteRanges(responseArrayBuffer, boundary) {
+    let offset = null;
+    const decoder = new TextDecoder("ascii");
+    const out = [];
+    const startBoundary = `--${boundary}`;
+    const endBoundary = `${startBoundary}--`;
+    for (let i2 = 0; i2 < 10; ++i2) {
+      const text2 = decoder.decode(new Uint8Array(responseArrayBuffer, i2, startBoundary.length));
+      if (text2 === startBoundary) {
+        offset = i2;
+      }
+    }
+    if (offset === null) {
+      throw new Error("Could not find initial boundary");
+    }
+    while (offset < responseArrayBuffer.byteLength) {
+      const text2 = decoder.decode(new Uint8Array(responseArrayBuffer, offset, Math.min(startBoundary.length + 1024, responseArrayBuffer.byteLength - offset)));
+      if (text2.length === 0 || text2.startsWith(endBoundary)) {
+        break;
+      }
+      if (!text2.startsWith(startBoundary)) {
+        throw new Error("Part does not start with boundary");
+      }
+      const innerText = text2.substr(startBoundary.length + 2);
+      if (innerText.length === 0) {
+        break;
+      }
+      const endOfHeaders = innerText.indexOf(CRLFCRLF);
+      const headers = parseHeaders(innerText.substr(0, endOfHeaders));
+      const { start, end, total } = parseContentRange(headers["content-range"]);
+      const startOfData = offset + startBoundary.length + endOfHeaders + CRLFCRLF.length;
+      const length2 = parseInt(end, 10) + 1 - parseInt(start, 10);
+      out.push({
+        headers,
+        data: responseArrayBuffer.slice(startOfData, startOfData + length2),
+        offset: start,
+        length: length2,
+        fileSize: total
+      });
+      offset = startOfData + length2 + 4;
+    }
+    return out;
+  }
+  class BaseSource {
+    async fetch(slices, signal = void 0) {
+      return Promise.all(slices.map((slice) => this.fetchSlice(slice, signal)));
+    }
+    async fetchSlice(slice) {
+      throw new Error(`fetching of slice ${slice} not possible, not implemented`);
+    }
+    get fileSize() {
+      return null;
+    }
+    async close() {
+    }
+  }
+  class QuickLRU extends Map {
+    constructor(options = {}) {
+      super();
+      if (!(options.maxSize && options.maxSize > 0)) {
+        throw new TypeError("`maxSize` must be a number greater than 0");
+      }
+      if (typeof options.maxAge === "number" && options.maxAge === 0) {
+        throw new TypeError("`maxAge` must be a number greater than 0");
+      }
+      this.maxSize = options.maxSize;
+      this.maxAge = options.maxAge || Number.POSITIVE_INFINITY;
+      this.onEviction = options.onEviction;
+      this.cache = /* @__PURE__ */ new Map();
+      this.oldCache = /* @__PURE__ */ new Map();
+      this._size = 0;
+    }
+    _emitEvictions(cache2) {
+      if (typeof this.onEviction !== "function") {
+        return;
+      }
+      for (const [key2, item2] of cache2) {
+        this.onEviction(key2, item2.value);
+      }
+    }
+    _deleteIfExpired(key2, item2) {
+      if (typeof item2.expiry === "number" && item2.expiry <= Date.now()) {
+        if (typeof this.onEviction === "function") {
+          this.onEviction(key2, item2.value);
+        }
+        return this.delete(key2);
+      }
+      return false;
+    }
+    _getOrDeleteIfExpired(key2, item2) {
+      const deleted = this._deleteIfExpired(key2, item2);
+      if (deleted === false) {
+        return item2.value;
+      }
+    }
+    _getItemValue(key2, item2) {
+      return item2.expiry ? this._getOrDeleteIfExpired(key2, item2) : item2.value;
+    }
+    _peek(key2, cache2) {
+      const item2 = cache2.get(key2);
+      return this._getItemValue(key2, item2);
+    }
+    _set(key2, value) {
+      this.cache.set(key2, value);
+      this._size++;
+      if (this._size >= this.maxSize) {
+        this._size = 0;
+        this._emitEvictions(this.oldCache);
+        this.oldCache = this.cache;
+        this.cache = /* @__PURE__ */ new Map();
+      }
+    }
+    _moveToRecent(key2, item2) {
+      this.oldCache.delete(key2);
+      this._set(key2, item2);
+    }
+    *_entriesAscending() {
+      for (const item2 of this.oldCache) {
+        const [key2, value] = item2;
+        if (!this.cache.has(key2)) {
+          const deleted = this._deleteIfExpired(key2, value);
+          if (deleted === false) {
+            yield item2;
+          }
+        }
+      }
+      for (const item2 of this.cache) {
+        const [key2, value] = item2;
+        const deleted = this._deleteIfExpired(key2, value);
+        if (deleted === false) {
+          yield item2;
+        }
+      }
+    }
+    get(key2) {
+      if (this.cache.has(key2)) {
+        const item2 = this.cache.get(key2);
+        return this._getItemValue(key2, item2);
+      }
+      if (this.oldCache.has(key2)) {
+        const item2 = this.oldCache.get(key2);
+        if (this._deleteIfExpired(key2, item2) === false) {
+          this._moveToRecent(key2, item2);
+          return item2.value;
+        }
+      }
+    }
+    set(key2, value, { maxAge = this.maxAge } = {}) {
+      const expiry = typeof maxAge === "number" && maxAge !== Number.POSITIVE_INFINITY ? Date.now() + maxAge : void 0;
+      if (this.cache.has(key2)) {
+        this.cache.set(key2, {
+          value,
+          expiry
+        });
+      } else {
+        this._set(key2, {
+          value,
+          expiry
+        });
+      }
+      return this;
+    }
+    has(key2) {
+      if (this.cache.has(key2)) {
+        return !this._deleteIfExpired(key2, this.cache.get(key2));
+      }
+      if (this.oldCache.has(key2)) {
+        return !this._deleteIfExpired(key2, this.oldCache.get(key2));
+      }
+      return false;
+    }
+    peek(key2) {
+      if (this.cache.has(key2)) {
+        return this._peek(key2, this.cache);
+      }
+      if (this.oldCache.has(key2)) {
+        return this._peek(key2, this.oldCache);
+      }
+    }
+    delete(key2) {
+      const deleted = this.cache.delete(key2);
+      if (deleted) {
+        this._size--;
+      }
+      return this.oldCache.delete(key2) || deleted;
+    }
+    clear() {
+      this.cache.clear();
+      this.oldCache.clear();
+      this._size = 0;
+    }
+    resize(newSize) {
+      if (!(newSize && newSize > 0)) {
+        throw new TypeError("`maxSize` must be a number greater than 0");
+      }
+      const items = [
+        ...this._entriesAscending()
+      ];
+      const removeCount = items.length - newSize;
+      if (removeCount < 0) {
+        this.cache = new Map(items);
+        this.oldCache = /* @__PURE__ */ new Map();
+        this._size = items.length;
+      } else {
+        if (removeCount > 0) {
+          this._emitEvictions(items.slice(0, removeCount));
+        }
+        this.oldCache = new Map(items.slice(removeCount));
+        this.cache = /* @__PURE__ */ new Map();
+        this._size = 0;
+      }
+      this.maxSize = newSize;
+    }
+    *keys() {
+      for (const [key2] of this) {
+        yield key2;
+      }
+    }
+    *values() {
+      for (const [, value] of this) {
+        yield value;
+      }
+    }
+    *[Symbol.iterator]() {
+      for (const item2 of this.cache) {
+        const [key2, value] = item2;
+        const deleted = this._deleteIfExpired(key2, value);
+        if (deleted === false) {
+          yield [
+            key2,
+            value.value
+          ];
+        }
+      }
+      for (const item2 of this.oldCache) {
+        const [key2, value] = item2;
+        if (!this.cache.has(key2)) {
+          const deleted = this._deleteIfExpired(key2, value);
+          if (deleted === false) {
+            yield [
+              key2,
+              value.value
+            ];
+          }
+        }
+      }
+    }
+    *entriesDescending() {
+      let items = [
+        ...this.cache
+      ];
+      for (let i2 = items.length - 1; i2 >= 0; --i2) {
+        const item2 = items[i2];
+        const [key2, value] = item2;
+        const deleted = this._deleteIfExpired(key2, value);
+        if (deleted === false) {
+          yield [
+            key2,
+            value.value
+          ];
+        }
+      }
+      items = [
+        ...this.oldCache
+      ];
+      for (let i2 = items.length - 1; i2 >= 0; --i2) {
+        const item2 = items[i2];
+        const [key2, value] = item2;
+        if (!this.cache.has(key2)) {
+          const deleted = this._deleteIfExpired(key2, value);
+          if (deleted === false) {
+            yield [
+              key2,
+              value.value
+            ];
+          }
+        }
+      }
+    }
+    *entriesAscending() {
+      for (const [key2, value] of this._entriesAscending()) {
+        yield [
+          key2,
+          value.value
+        ];
+      }
+    }
+    get size() {
+      if (!this._size) {
+        return this.oldCache.size;
+      }
+      let oldCacheSize = 0;
+      for (const key2 of this.oldCache.keys()) {
+        if (!this.cache.has(key2)) {
+          oldCacheSize++;
+        }
+      }
+      return Math.min(this._size + oldCacheSize, this.maxSize);
+    }
+    entries() {
+      return this.entriesAscending();
+    }
+    forEach(callbackFunction, thisArgument = this) {
+      for (const [key2, value] of this.entriesAscending()) {
+        callbackFunction.call(thisArgument, value, key2, this);
+      }
+    }
+    get [Symbol.toStringTag]() {
+      return JSON.stringify([
+        ...this.entriesAscending()
+      ]);
+    }
+  }
+  async function wait(milliseconds) {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
+  }
+  function zip(a2, b2) {
+    const A2 = Array.isArray(a2) ? a2 : Array.from(a2);
+    const B2 = Array.isArray(b2) ? b2 : Array.from(b2);
+    return A2.map((k2, i2) => [
+      k2,
+      B2[i2]
+    ]);
+  }
+  let AbortError$1 = class AbortError2 extends Error {
+    constructor(params) {
+      super(params);
+      if (Error.captureStackTrace) {
+        Error.captureStackTrace(this, AbortError2);
+      }
+      this.name = "AbortError";
+    }
+  };
+  class CustomAggregateError extends Error {
+    constructor(errors2, message2) {
+      super(message2);
+      this.errors = errors2;
+      this.message = message2;
+      this.name = "AggregateError";
+    }
+  }
+  const AggregateError$1 = CustomAggregateError;
+  class Block {
+    constructor(offset, length2, data2 = null) {
+      this.offset = offset;
+      this.length = length2;
+      this.data = data2;
+    }
+    get top() {
+      return this.offset + this.length;
+    }
+  }
+  class BlockGroup {
+    constructor(offset, length2, blockIds) {
+      this.offset = offset;
+      this.length = length2;
+      this.blockIds = blockIds;
+    }
+  }
+  class BlockedSource extends BaseSource {
+    constructor(source2, { blockSize = 65536, cacheSize = 100 } = {}) {
+      super();
+      this.source = source2;
+      this.blockSize = blockSize;
+      this.blockCache = new QuickLRU({
+        maxSize: cacheSize,
+        onEviction: (blockId, block) => {
+          this.evictedBlocks.set(blockId, block);
+        }
+      });
+      this.evictedBlocks = /* @__PURE__ */ new Map();
+      this.blockRequests = /* @__PURE__ */ new Map();
+      this.blockIdsToFetch = /* @__PURE__ */ new Set();
+      this.abortedBlockIds = /* @__PURE__ */ new Set();
+    }
+    get fileSize() {
+      return this.source.fileSize;
+    }
+    async fetch(slices, signal) {
+      const blockRequests = [];
+      const missingBlockIds = [];
+      const allBlockIds = [];
+      this.evictedBlocks.clear();
+      for (const { offset, length: length2 } of slices) {
+        let top2 = offset + length2;
+        const { fileSize } = this;
+        if (fileSize !== null) {
+          top2 = Math.min(top2, fileSize);
+        }
+        const firstBlockOffset = Math.floor(offset / this.blockSize) * this.blockSize;
+        for (let current = firstBlockOffset; current < top2; current += this.blockSize) {
+          const blockId = Math.floor(current / this.blockSize);
+          if (!this.blockCache.has(blockId) && !this.blockRequests.has(blockId)) {
+            this.blockIdsToFetch.add(blockId);
+            missingBlockIds.push(blockId);
+          }
+          if (this.blockRequests.has(blockId)) {
+            blockRequests.push(this.blockRequests.get(blockId));
+          }
+          allBlockIds.push(blockId);
+        }
+      }
+      await wait();
+      this.fetchBlocks(signal);
+      const missingRequests = [];
+      for (const blockId of missingBlockIds) {
+        if (this.blockRequests.has(blockId)) {
+          missingRequests.push(this.blockRequests.get(blockId));
+        }
+      }
+      await Promise.allSettled(blockRequests);
+      await Promise.allSettled(missingRequests);
+      const abortedBlockRequests = [];
+      const abortedBlockIds = allBlockIds.filter((id2) => this.abortedBlockIds.has(id2) || !this.blockCache.has(id2));
+      abortedBlockIds.forEach((id2) => this.blockIdsToFetch.add(id2));
+      if (abortedBlockIds.length > 0 && signal && !signal.aborted) {
+        this.fetchBlocks(null);
+        for (const blockId of abortedBlockIds) {
+          const block = this.blockRequests.get(blockId);
+          if (!block) {
+            throw new Error(`Block ${blockId} is not in the block requests`);
+          }
+          abortedBlockRequests.push(block);
+        }
+        await Promise.allSettled(abortedBlockRequests);
+      }
+      if (signal && signal.aborted) {
+        throw new AbortError$1("Request was aborted");
+      }
+      const blocks = allBlockIds.map((id2) => this.blockCache.get(id2) || this.evictedBlocks.get(id2));
+      const failedBlocks = blocks.filter((i2) => !i2);
+      if (failedBlocks.length) {
+        throw new AggregateError$1(failedBlocks, "Request failed");
+      }
+      const requiredBlocks = new Map(zip(allBlockIds, blocks));
+      return this.readSliceData(slices, requiredBlocks);
+    }
+    fetchBlocks(signal) {
+      if (this.blockIdsToFetch.size > 0) {
+        const groups = this.groupBlocks(this.blockIdsToFetch);
+        const groupRequests = this.source.fetch(groups, signal);
+        for (let groupIndex = 0; groupIndex < groups.length; ++groupIndex) {
+          const group2 = groups[groupIndex];
+          for (const blockId of group2.blockIds) {
+            this.blockRequests.set(blockId, (async () => {
+              try {
+                const response = (await groupRequests)[groupIndex];
+                const blockOffset = blockId * this.blockSize;
+                const o2 = blockOffset - response.offset;
+                const t2 = Math.min(o2 + this.blockSize, response.data.byteLength);
+                const data2 = response.data.slice(o2, t2);
+                const block = new Block(blockOffset, data2.byteLength, data2, blockId);
+                this.blockCache.set(blockId, block);
+                this.abortedBlockIds.delete(blockId);
+              } catch (err2) {
+                if (err2.name === "AbortError") {
+                  err2.signal = signal;
+                  this.blockCache.delete(blockId);
+                  this.abortedBlockIds.add(blockId);
+                } else {
+                  throw err2;
+                }
+              } finally {
+                this.blockRequests.delete(blockId);
+              }
+            })());
+          }
+        }
+        this.blockIdsToFetch.clear();
+      }
+    }
+    groupBlocks(blockIds) {
+      const sortedBlockIds = Array.from(blockIds).sort((a2, b2) => a2 - b2);
+      if (sortedBlockIds.length === 0) {
+        return [];
+      }
+      let current = [];
+      let lastBlockId = null;
+      const groups = [];
+      for (const blockId of sortedBlockIds) {
+        if (lastBlockId === null || lastBlockId + 1 === blockId) {
+          current.push(blockId);
+          lastBlockId = blockId;
+        } else {
+          groups.push(new BlockGroup(current[0] * this.blockSize, current.length * this.blockSize, current));
+          current = [
+            blockId
+          ];
+          lastBlockId = blockId;
+        }
+      }
+      groups.push(new BlockGroup(current[0] * this.blockSize, current.length * this.blockSize, current));
+      return groups;
+    }
+    readSliceData(slices, blocks) {
+      return slices.map((slice) => {
+        let top2 = slice.offset + slice.length;
+        if (this.fileSize !== null) {
+          top2 = Math.min(this.fileSize, top2);
+        }
+        const blockIdLow = Math.floor(slice.offset / this.blockSize);
+        const blockIdHigh = Math.floor(top2 / this.blockSize);
+        const sliceData = new ArrayBuffer(slice.length);
+        const sliceView = new Uint8Array(sliceData);
+        for (let blockId = blockIdLow; blockId <= blockIdHigh; ++blockId) {
+          const block = blocks.get(blockId);
+          const delta = block.offset - slice.offset;
+          const topDelta = block.top - top2;
+          let blockInnerOffset = 0;
+          let rangeInnerOffset = 0;
+          let usedBlockLength;
+          if (delta < 0) {
+            blockInnerOffset = -delta;
+          } else if (delta > 0) {
+            rangeInnerOffset = delta;
+          }
+          if (topDelta < 0) {
+            usedBlockLength = block.length - blockInnerOffset;
+          } else {
+            usedBlockLength = top2 - block.offset - blockInnerOffset;
+          }
+          const blockView = new Uint8Array(block.data, blockInnerOffset, usedBlockLength);
+          sliceView.set(blockView, rangeInnerOffset);
+        }
+        return sliceData;
+      });
+    }
+  }
+  class BaseResponse {
+    get ok() {
+      return this.status >= 200 && this.status <= 299;
+    }
+    get status() {
+      throw new Error("not implemented");
+    }
+    getHeader(headerName) {
+      throw new Error("not implemented");
+    }
+    async getData() {
+      throw new Error("not implemented");
+    }
+  }
+  class BaseClient {
+    constructor(url) {
+      this.url = url;
+    }
+    async request({ headers, signal } = {}) {
+      throw new Error("request is not implemented");
+    }
+  }
+  class FetchResponse extends BaseResponse {
+    constructor(response) {
+      super();
+      this.response = response;
+    }
+    get status() {
+      return this.response.status;
+    }
+    getHeader(name2) {
+      return this.response.headers.get(name2);
+    }
+    async getData() {
+      const data2 = this.response.arrayBuffer ? await this.response.arrayBuffer() : (await this.response.buffer()).buffer;
+      return data2;
+    }
+  }
+  class FetchClient extends BaseClient {
+    constructor(url, credentials) {
+      super(url);
+      this.credentials = credentials;
+    }
+    async request({ headers, signal } = {}) {
+      const response = await fetch(this.url, {
+        headers,
+        credentials: this.credentials,
+        signal
+      });
+      return new FetchResponse(response);
+    }
+  }
+  class XHRResponse extends BaseResponse {
+    constructor(xhr, data2) {
+      super();
+      this.xhr = xhr;
+      this.data = data2;
+    }
+    get status() {
+      return this.xhr.status;
+    }
+    getHeader(name2) {
+      return this.xhr.getResponseHeader(name2);
+    }
+    async getData() {
+      return this.data;
+    }
+  }
+  class XHRClient extends BaseClient {
+    constructRequest(headers, signal) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", this.url);
+        xhr.responseType = "arraybuffer";
+        for (const [key2, value] of Object.entries(headers)) {
+          xhr.setRequestHeader(key2, value);
+        }
+        xhr.onload = () => {
+          const data2 = xhr.response;
+          resolve(new XHRResponse(xhr, data2));
+        };
+        xhr.onerror = reject;
+        xhr.onabort = () => reject(new AbortError$1("Request aborted"));
+        xhr.send();
+        if (signal) {
+          if (signal.aborted) {
+            xhr.abort();
+          }
+          signal.addEventListener("abort", () => xhr.abort());
+        }
+      });
+    }
+    async request({ headers, signal } = {}) {
+      const response = await this.constructRequest(headers, signal);
+      return response;
+    }
+  }
+  const zlib = {};
+  class HttpResponse extends BaseResponse {
+    constructor(response, dataPromise) {
+      super();
+      this.response = response;
+      this.dataPromise = dataPromise;
+    }
+    get status() {
+      return this.response.statusCode;
+    }
+    getHeader(name2) {
+      return this.response.headers[name2];
+    }
+    async getData() {
+      const data2 = await this.dataPromise;
+      return data2;
+    }
+  }
+  class HttpClient extends BaseClient {
+    constructor(url) {
+      super(url);
+      this.parsedUrl = zlib.parse(this.url);
+      this.httpApi = this.parsedUrl.protocol === "http:" ? zlib : zlib;
+    }
+    constructRequest(headers, signal) {
+      return new Promise((resolve, reject) => {
+        const request = this.httpApi.get({
+          ...this.parsedUrl,
+          headers
+        }, (response) => {
+          const dataPromise = new Promise((resolveData) => {
+            const chunks = [];
+            response.on("data", (chunk) => {
+              chunks.push(chunk);
+            });
+            response.on("end", () => {
+              const data2 = Buffer.concat(chunks).buffer;
+              resolveData(data2);
+            });
+            response.on("error", reject);
+          });
+          resolve(new HttpResponse(response, dataPromise));
+        });
+        request.on("error", reject);
+        if (signal) {
+          if (signal.aborted) {
+            request.destroy(new AbortError$1("Request aborted"));
+          }
+          signal.addEventListener("abort", () => request.destroy(new AbortError$1("Request aborted")));
+        }
+      });
+    }
+    async request({ headers, signal } = {}) {
+      const response = await this.constructRequest(headers, signal);
+      return response;
+    }
+  }
+  class RemoteSource extends BaseSource {
+    constructor(client, headers, maxRanges, allowFullFile) {
+      super();
+      this.client = client;
+      this.headers = headers;
+      this.maxRanges = maxRanges;
+      this.allowFullFile = allowFullFile;
+      this._fileSize = null;
+    }
+    async fetch(slices, signal) {
+      if (this.maxRanges >= slices.length) {
+        return this.fetchSlices(slices, signal);
+      } else if (this.maxRanges > 0 && slices.length > 1) ;
+      return Promise.all(slices.map((slice) => this.fetchSlice(slice, signal)));
+    }
+    async fetchSlices(slices, signal) {
+      const response = await this.client.request({
+        headers: {
+          ...this.headers,
+          Range: `bytes=${slices.map(({ offset, length: length2 }) => `${offset}-${offset + length2}`).join(",")}`
+        },
+        signal
+      });
+      if (!response.ok) {
+        throw new Error("Error fetching data.");
+      } else if (response.status === 206) {
+        const { type, params } = parseContentType(response.getHeader("content-type"));
+        if (type === "multipart/byteranges") {
+          const byteRanges = parseByteRanges(await response.getData(), params.boundary);
+          this._fileSize = byteRanges[0].fileSize || null;
+          return byteRanges;
+        }
+        const data2 = await response.getData();
+        const { start, end, total } = parseContentRange(response.getHeader("content-range"));
+        this._fileSize = total || null;
+        const first = [
+          {
+            data: data2,
+            offset: start,
+            length: end - start
+          }
+        ];
+        if (slices.length > 1) {
+          const others = await Promise.all(slices.slice(1).map((slice) => this.fetchSlice(slice, signal)));
+          return first.concat(others);
+        }
+        return first;
+      } else {
+        if (!this.allowFullFile) {
+          throw new Error("Server responded with full file");
+        }
+        const data2 = await response.getData();
+        this._fileSize = data2.byteLength;
+        return [
+          {
+            data: data2,
+            offset: 0,
+            length: data2.byteLength
+          }
+        ];
+      }
+    }
+    async fetchSlice(slice, signal) {
+      const { offset, length: length2 } = slice;
+      const response = await this.client.request({
+        headers: {
+          ...this.headers,
+          Range: `bytes=${offset}-${offset + length2}`
+        },
+        signal
+      });
+      if (!response.ok) {
+        throw new Error("Error fetching data.");
+      } else if (response.status === 206) {
+        const data2 = await response.getData();
+        const { total } = parseContentRange(response.getHeader("content-range"));
+        this._fileSize = total || null;
+        return {
+          data: data2,
+          offset,
+          length: length2
+        };
+      } else {
+        if (!this.allowFullFile) {
+          throw new Error("Server responded with full file");
+        }
+        const data2 = await response.getData();
+        this._fileSize = data2.byteLength;
+        return {
+          data: data2,
+          offset: 0,
+          length: data2.byteLength
+        };
+      }
+    }
+    get fileSize() {
+      return this._fileSize;
+    }
+  }
+  function maybeWrapInBlockedSource(source2, { blockSize, cacheSize }) {
+    if (blockSize === null) {
+      return source2;
+    }
+    return new BlockedSource(source2, {
+      blockSize,
+      cacheSize
+    });
+  }
+  function makeFetchSource(url, { headers = {}, credentials, maxRanges = 0, allowFullFile = false, ...blockOptions } = {}) {
+    const client = new FetchClient(url, credentials);
+    const source2 = new RemoteSource(client, headers, maxRanges, allowFullFile);
+    return maybeWrapInBlockedSource(source2, blockOptions);
+  }
+  function makeXHRSource(url, { headers = {}, maxRanges = 0, allowFullFile = false, ...blockOptions } = {}) {
+    const client = new XHRClient(url);
+    const source2 = new RemoteSource(client, headers, maxRanges, allowFullFile);
+    return maybeWrapInBlockedSource(source2, blockOptions);
+  }
+  function makeHttpSource(url, { headers = {}, maxRanges = 0, allowFullFile = false, ...blockOptions } = {}) {
+    const client = new HttpClient(url);
+    const source2 = new RemoteSource(client, headers, maxRanges, allowFullFile);
+    return maybeWrapInBlockedSource(source2, blockOptions);
+  }
+  function makeRemoteSource(url, { forceXHR = false, ...clientOptions } = {}) {
+    if (typeof fetch === "function" && !forceXHR) {
+      return makeFetchSource(url, clientOptions);
+    }
+    if (typeof XMLHttpRequest !== "undefined") {
+      return makeXHRSource(url, clientOptions);
+    }
+    return makeHttpSource(url, clientOptions);
+  }
+  class FileReaderSource extends BaseSource {
+    constructor(file) {
+      super();
+      this.file = file;
+    }
+    async fetchSlice(slice, signal) {
+      return new Promise((resolve, reject) => {
+        const blob = this.file.slice(slice.offset, slice.offset + slice.length);
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target.result);
+        reader.onerror = reject;
+        reader.onabort = reject;
+        reader.readAsArrayBuffer(blob);
+        if (signal) {
+          signal.addEventListener("abort", () => reader.abort());
+        }
+      });
+    }
+  }
+  function makeFileReaderSource(file) {
+    return new FileReaderSource(file);
+  }
+  function closeAsync(fd2) {
+    return new Promise((resolve, reject) => {
+      zlib.close(fd2, (err2) => {
+        if (err2) {
+          reject(err2);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+  function openAsync(path2, flags, mode = void 0) {
+    return new Promise((resolve, reject) => {
+      zlib.open(path2, flags, mode, (err2, fd2) => {
+        if (err2) {
+          reject(err2);
+        } else {
+          resolve(fd2);
+        }
+      });
+    });
+  }
+  function readAsync(...args) {
+    return new Promise((resolve, reject) => {
+      zlib.read(...args, (err2, bytesRead, buffer2) => {
+        if (err2) {
+          reject(err2);
+        } else {
+          resolve({
+            bytesRead,
+            buffer: buffer2
+          });
+        }
+      });
+    });
+  }
+  class FileSource extends BaseSource {
+    constructor(path2) {
+      super();
+      this.path = path2;
+      this.openRequest = openAsync(path2, "r");
+    }
+    async fetchSlice(slice) {
+      const fd2 = await this.openRequest;
+      const { buffer: buffer2 } = await readAsync(fd2, Buffer.alloc(slice.length), 0, slice.length, slice.offset);
+      return buffer2.buffer;
+    }
+    async close() {
+      const fd2 = await this.openRequest;
+      await closeAsync(fd2);
+    }
+  }
+  function makeFileSource(path2) {
+    return new FileSource(path2);
+  }
+  function decodeRowAcc(row2, stride) {
+    let length2 = row2.length - stride;
+    let offset = 0;
+    do {
+      for (let i2 = stride; i2 > 0; i2--) {
+        row2[offset + stride] += row2[offset];
+        offset++;
+      }
+      length2 -= stride;
+    } while (length2 > 0);
+  }
+  function decodeRowFloatingPoint(row2, stride, bytesPerSample) {
+    let index2 = 0;
+    let count2 = row2.length;
+    const wc2 = count2 / bytesPerSample;
+    while (count2 > stride) {
+      for (let i2 = stride; i2 > 0; --i2) {
+        row2[index2 + stride] += row2[index2];
+        ++index2;
+      }
+      count2 -= stride;
+    }
+    const copy2 = row2.slice();
+    for (let i2 = 0; i2 < wc2; ++i2) {
+      for (let b2 = 0; b2 < bytesPerSample; ++b2) {
+        row2[bytesPerSample * i2 + b2] = copy2[(bytesPerSample - b2 - 1) * wc2 + i2];
+      }
+    }
+  }
+  function applyPredictor(block, predictor, width, height, bitsPerSample, planarConfiguration) {
+    if (predictor === 1) {
+      return block;
+    }
+    for (let i2 = 0; i2 < bitsPerSample.length; ++i2) {
+      if (bitsPerSample[i2] % 8 !== 0) {
+        throw new Error("When decoding with predictor, only multiple of 8 bits are supported.");
+      }
+      if (bitsPerSample[i2] !== bitsPerSample[0]) {
+        throw new Error("When decoding with predictor, all samples must have the same size.");
+      }
+    }
+    const bytesPerSample = bitsPerSample[0] / 8;
+    const stride = planarConfiguration === 2 ? 1 : bitsPerSample.length;
+    for (let i2 = 0; i2 < height; ++i2) {
+      if (i2 * stride * width * bytesPerSample >= block.byteLength) {
+        break;
+      }
+      let row2;
+      if (predictor === 2) {
+        switch (bitsPerSample[0]) {
+          case 8:
+            row2 = new Uint8Array(block, i2 * stride * width * bytesPerSample, stride * width * bytesPerSample);
+            break;
+          case 16:
+            row2 = new Uint16Array(block, i2 * stride * width * bytesPerSample, stride * width * bytesPerSample / 2);
+            break;
+          case 32:
+            row2 = new Uint32Array(block, i2 * stride * width * bytesPerSample, stride * width * bytesPerSample / 4);
+            break;
+          default:
+            throw new Error(`Predictor 2 not allowed with ${bitsPerSample[0]} bits per sample.`);
+        }
+        decodeRowAcc(row2, stride);
+      } else if (predictor === 3) {
+        row2 = new Uint8Array(block, i2 * stride * width * bytesPerSample, stride * width * bytesPerSample);
+        decodeRowFloatingPoint(row2, stride, bytesPerSample);
+      }
+    }
+    return block;
+  }
+  BaseDecoder = class {
+    async decode(fileDirectory, buffer2) {
+      const decoded = await this.decodeBlock(buffer2);
+      const predictor = fileDirectory.Predictor || 1;
+      if (predictor !== 1) {
+        const isTiled = !fileDirectory.StripOffsets;
+        const tileWidth = isTiled ? fileDirectory.TileWidth : fileDirectory.ImageWidth;
+        const tileHeight = isTiled ? fileDirectory.TileLength : fileDirectory.RowsPerStrip || fileDirectory.ImageLength;
+        return applyPredictor(decoded, predictor, tileWidth, tileHeight, fileDirectory.BitsPerSample, fileDirectory.PlanarConfiguration);
+      }
+      return decoded;
+    }
+  };
+  function getFieldTypeLength(fieldType) {
+    switch (fieldType) {
+      case fieldTypes.BYTE:
+      case fieldTypes.ASCII:
+      case fieldTypes.SBYTE:
+      case fieldTypes.UNDEFINED:
+        return 1;
+      case fieldTypes.SHORT:
+      case fieldTypes.SSHORT:
+        return 2;
+      case fieldTypes.LONG:
+      case fieldTypes.SLONG:
+      case fieldTypes.FLOAT:
+      case fieldTypes.IFD:
+        return 4;
+      case fieldTypes.RATIONAL:
+      case fieldTypes.SRATIONAL:
+      case fieldTypes.DOUBLE:
+      case fieldTypes.LONG8:
+      case fieldTypes.SLONG8:
+      case fieldTypes.IFD8:
+        return 8;
+      default:
+        throw new RangeError(`Invalid field type: ${fieldType}`);
+    }
+  }
+  function parseGeoKeyDirectory(fileDirectory) {
+    const rawGeoKeyDirectory = fileDirectory.GeoKeyDirectory;
+    if (!rawGeoKeyDirectory) {
+      return null;
+    }
+    const geoKeyDirectory = {};
+    for (let i2 = 4; i2 <= rawGeoKeyDirectory[3] * 4; i2 += 4) {
+      const key2 = geoKeyNames[rawGeoKeyDirectory[i2]];
+      const location2 = rawGeoKeyDirectory[i2 + 1] ? fieldTagNames[rawGeoKeyDirectory[i2 + 1]] : null;
+      const count2 = rawGeoKeyDirectory[i2 + 2];
+      const offset = rawGeoKeyDirectory[i2 + 3];
+      let value = null;
+      if (!location2) {
+        value = offset;
+      } else {
+        value = fileDirectory[location2];
+        if (typeof value === "undefined" || value === null) {
+          throw new Error(`Could not get value of geoKey '${key2}'.`);
+        } else if (typeof value === "string") {
+          value = value.substring(offset, offset + count2 - 1);
+        } else if (value.subarray) {
+          value = value.subarray(offset, offset + count2);
+          if (count2 === 1) {
+            value = value[0];
+          }
+        }
+      }
+      geoKeyDirectory[key2] = value;
+    }
+    return geoKeyDirectory;
+  }
+  function getValues(dataSlice, fieldType, count2, offset) {
+    let values = null;
+    let readMethod = null;
+    const fieldTypeLength = getFieldTypeLength(fieldType);
+    switch (fieldType) {
+      case fieldTypes.BYTE:
+      case fieldTypes.ASCII:
+      case fieldTypes.UNDEFINED:
+        values = new Uint8Array(count2);
+        readMethod = dataSlice.readUint8;
+        break;
+      case fieldTypes.SBYTE:
+        values = new Int8Array(count2);
+        readMethod = dataSlice.readInt8;
+        break;
+      case fieldTypes.SHORT:
+        values = new Uint16Array(count2);
+        readMethod = dataSlice.readUint16;
+        break;
+      case fieldTypes.SSHORT:
+        values = new Int16Array(count2);
+        readMethod = dataSlice.readInt16;
+        break;
+      case fieldTypes.LONG:
+      case fieldTypes.IFD:
+        values = new Uint32Array(count2);
+        readMethod = dataSlice.readUint32;
+        break;
+      case fieldTypes.SLONG:
+        values = new Int32Array(count2);
+        readMethod = dataSlice.readInt32;
+        break;
+      case fieldTypes.LONG8:
+      case fieldTypes.IFD8:
+        values = new Array(count2);
+        readMethod = dataSlice.readUint64;
+        break;
+      case fieldTypes.SLONG8:
+        values = new Array(count2);
+        readMethod = dataSlice.readInt64;
+        break;
+      case fieldTypes.RATIONAL:
+        values = new Uint32Array(count2 * 2);
+        readMethod = dataSlice.readUint32;
+        break;
+      case fieldTypes.SRATIONAL:
+        values = new Int32Array(count2 * 2);
+        readMethod = dataSlice.readInt32;
+        break;
+      case fieldTypes.FLOAT:
+        values = new Float32Array(count2);
+        readMethod = dataSlice.readFloat32;
+        break;
+      case fieldTypes.DOUBLE:
+        values = new Float64Array(count2);
+        readMethod = dataSlice.readFloat64;
+        break;
+      default:
+        throw new RangeError(`Invalid field type: ${fieldType}`);
+    }
+    if (!(fieldType === fieldTypes.RATIONAL || fieldType === fieldTypes.SRATIONAL)) {
+      for (let i2 = 0; i2 < count2; ++i2) {
+        values[i2] = readMethod.call(dataSlice, offset + i2 * fieldTypeLength);
+      }
+    } else {
+      for (let i2 = 0; i2 < count2; i2 += 2) {
+        values[i2] = readMethod.call(dataSlice, offset + i2 * fieldTypeLength);
+        values[i2 + 1] = readMethod.call(dataSlice, offset + (i2 * fieldTypeLength + 4));
+      }
+    }
+    if (fieldType === fieldTypes.ASCII) {
+      return new TextDecoder("utf-8").decode(values);
+    }
+    return values;
+  }
+  class ImageFileDirectory {
+    constructor(fileDirectory, rawFileDirectory, geoKeyDirectory, nextIFDByteOffset) {
+      this.fileDirectory = fileDirectory;
+      this.rawFileDirectory = rawFileDirectory;
+      this.geoKeyDirectory = geoKeyDirectory;
+      this.nextIFDByteOffset = nextIFDByteOffset;
+    }
+  }
+  class GeoTIFFImageIndexError extends Error {
+    constructor(index2) {
+      super(`No image at index ${index2}`);
+      this.index = index2;
+    }
+  }
+  class GeoTIFFBase {
+    async readRasters(options = {}) {
+      const { window: imageWindow, width, height } = options;
+      let { resX, resY, bbox } = options;
+      const firstImage = await this.getImage();
+      let usedImage = firstImage;
+      const imageCount = await this.getImageCount();
+      const imgBBox = firstImage.getBoundingBox();
+      if (imageWindow && bbox) {
+        throw new Error('Both "bbox" and "window" passed.');
+      }
+      if (width || height) {
+        if (imageWindow) {
+          const [oX, oY] = firstImage.getOrigin();
+          const [rX, rY] = firstImage.getResolution();
+          bbox = [
+            oX + imageWindow[0] * rX,
+            oY + imageWindow[1] * rY,
+            oX + imageWindow[2] * rX,
+            oY + imageWindow[3] * rY
+          ];
+        }
+        const usedBBox = bbox || imgBBox;
+        if (width) {
+          if (resX) {
+            throw new Error("Both width and resX passed");
+          }
+          resX = (usedBBox[2] - usedBBox[0]) / width;
+        }
+        if (height) {
+          if (resY) {
+            throw new Error("Both width and resY passed");
+          }
+          resY = (usedBBox[3] - usedBBox[1]) / height;
+        }
+      }
+      if (resX || resY) {
+        const allImages = [];
+        for (let i2 = 0; i2 < imageCount; ++i2) {
+          const image2 = await this.getImage(i2);
+          const { SubfileType: subfileType, NewSubfileType: newSubfileType } = image2.fileDirectory;
+          if (i2 === 0 || subfileType === 2 || newSubfileType & 1) {
+            allImages.push(image2);
+          }
+        }
+        allImages.sort((a2, b2) => a2.getWidth() - b2.getWidth());
+        for (let i2 = 0; i2 < allImages.length; ++i2) {
+          const image2 = allImages[i2];
+          const imgResX = (imgBBox[2] - imgBBox[0]) / image2.getWidth();
+          const imgResY = (imgBBox[3] - imgBBox[1]) / image2.getHeight();
+          usedImage = image2;
+          if (resX && resX > imgResX || resY && resY > imgResY) {
+            break;
+          }
+        }
+      }
+      let wnd = imageWindow;
+      if (bbox) {
+        const [oX, oY] = firstImage.getOrigin();
+        const [imageResX, imageResY] = usedImage.getResolution(firstImage);
+        wnd = [
+          Math.round((bbox[0] - oX) / imageResX),
+          Math.round((bbox[1] - oY) / imageResY),
+          Math.round((bbox[2] - oX) / imageResX),
+          Math.round((bbox[3] - oY) / imageResY)
+        ];
+        wnd = [
+          Math.min(wnd[0], wnd[2]),
+          Math.min(wnd[1], wnd[3]),
+          Math.max(wnd[0], wnd[2]),
+          Math.max(wnd[1], wnd[3])
+        ];
+      }
+      return usedImage.readRasters({
+        ...options,
+        window: wnd
+      });
+    }
+  }
+  class GeoTIFF extends GeoTIFFBase {
+    constructor(source2, littleEndian, bigTiff, firstIFDOffset, options = {}) {
+      super();
+      this.source = source2;
+      this.littleEndian = littleEndian;
+      this.bigTiff = bigTiff;
+      this.firstIFDOffset = firstIFDOffset;
+      this.cache = options.cache || false;
+      this.ifdRequests = [];
+      this.ghostValues = null;
+    }
+    async getSlice(offset, size) {
+      const fallbackSize = this.bigTiff ? 4048 : 1024;
+      return new DataSlice((await this.source.fetch([
+        {
+          offset,
+          length: typeof size !== "undefined" ? size : fallbackSize
+        }
+      ]))[0], offset, this.littleEndian, this.bigTiff);
+    }
+    async parseFileDirectoryAt(offset) {
+      const entrySize = this.bigTiff ? 20 : 12;
+      const offsetSize = this.bigTiff ? 8 : 2;
+      let dataSlice = await this.getSlice(offset);
+      const numDirEntries = this.bigTiff ? dataSlice.readUint64(offset) : dataSlice.readUint16(offset);
+      const byteSize = numDirEntries * entrySize + (this.bigTiff ? 16 : 6);
+      if (!dataSlice.covers(offset, byteSize)) {
+        dataSlice = await this.getSlice(offset, byteSize);
+      }
+      const fileDirectory = {};
+      const rawFileDirectory = /* @__PURE__ */ new Map();
+      let i2 = offset + (this.bigTiff ? 8 : 2);
+      for (let entryCount = 0; entryCount < numDirEntries; i2 += entrySize, ++entryCount) {
+        const fieldTag = dataSlice.readUint16(i2);
+        const fieldType = dataSlice.readUint16(i2 + 2);
+        const typeCount = this.bigTiff ? dataSlice.readUint64(i2 + 4) : dataSlice.readUint32(i2 + 4);
+        let fieldValues;
+        let value;
+        const fieldTypeLength = getFieldTypeLength(fieldType);
+        const valueOffset = i2 + (this.bigTiff ? 12 : 8);
+        if (fieldTypeLength * typeCount <= (this.bigTiff ? 8 : 4)) {
+          fieldValues = getValues(dataSlice, fieldType, typeCount, valueOffset);
+        } else {
+          const actualOffset = dataSlice.readOffset(valueOffset);
+          const length2 = getFieldTypeLength(fieldType) * typeCount;
+          if (dataSlice.covers(actualOffset, length2)) {
+            fieldValues = getValues(dataSlice, fieldType, typeCount, actualOffset);
+          } else {
+            const fieldDataSlice = await this.getSlice(actualOffset, length2);
+            fieldValues = getValues(fieldDataSlice, fieldType, typeCount, actualOffset);
+          }
+        }
+        if (typeCount === 1 && arrayFields.indexOf(fieldTag) === -1 && !(fieldType === fieldTypes.RATIONAL || fieldType === fieldTypes.SRATIONAL)) {
+          value = fieldValues[0];
+        } else {
+          value = fieldValues;
+        }
+        const tagName = fieldTagNames[fieldTag];
+        if (tagName) {
+          fileDirectory[tagName] = value;
+        }
+        rawFileDirectory.set(fieldTag, value);
+      }
+      const geoKeyDirectory = parseGeoKeyDirectory(fileDirectory);
+      const nextIFDByteOffset = dataSlice.readOffset(offset + offsetSize + entrySize * numDirEntries);
+      return new ImageFileDirectory(fileDirectory, rawFileDirectory, geoKeyDirectory, nextIFDByteOffset);
+    }
+    async requestIFD(index2) {
+      if (this.ifdRequests[index2]) {
+        return this.ifdRequests[index2];
+      } else if (index2 === 0) {
+        this.ifdRequests[index2] = this.parseFileDirectoryAt(this.firstIFDOffset);
+        return this.ifdRequests[index2];
+      } else if (!this.ifdRequests[index2 - 1]) {
+        try {
+          this.ifdRequests[index2 - 1] = this.requestIFD(index2 - 1);
+        } catch (e2) {
+          if (e2 instanceof GeoTIFFImageIndexError) {
+            throw new GeoTIFFImageIndexError(index2);
+          }
+          throw e2;
+        }
+      }
+      this.ifdRequests[index2] = (async () => {
+        const previousIfd = await this.ifdRequests[index2 - 1];
+        if (previousIfd.nextIFDByteOffset === 0) {
+          throw new GeoTIFFImageIndexError(index2);
+        }
+        return this.parseFileDirectoryAt(previousIfd.nextIFDByteOffset);
+      })();
+      return this.ifdRequests[index2];
+    }
+    async getImage(index2 = 0) {
+      const ifd = await this.requestIFD(index2);
+      return new GeoTIFFImage(ifd.fileDirectory, ifd.geoKeyDirectory, this.dataView, this.littleEndian, this.cache, this.source);
+    }
+    async getImageCount() {
+      let index2 = 0;
+      let hasNext = true;
+      while (hasNext) {
+        try {
+          await this.requestIFD(index2);
+          ++index2;
+        } catch (e2) {
+          if (e2 instanceof GeoTIFFImageIndexError) {
+            hasNext = false;
+          } else {
+            throw e2;
+          }
+        }
+      }
+      return index2;
+    }
+    async getGhostValues() {
+      const offset = this.bigTiff ? 16 : 8;
+      if (this.ghostValues) {
+        return this.ghostValues;
+      }
+      const detectionString = "GDAL_STRUCTURAL_METADATA_SIZE=";
+      const heuristicAreaSize = detectionString.length + 100;
+      let slice = await this.getSlice(offset, heuristicAreaSize);
+      if (detectionString === getValues(slice, fieldTypes.ASCII, detectionString.length, offset)) {
+        const valuesString = getValues(slice, fieldTypes.ASCII, heuristicAreaSize, offset);
+        const firstLine = valuesString.split("\n")[0];
+        const metadataSize = Number(firstLine.split("=")[1].split(" ")[0]) + firstLine.length;
+        if (metadataSize > heuristicAreaSize) {
+          slice = await this.getSlice(offset, metadataSize);
+        }
+        const fullString = getValues(slice, fieldTypes.ASCII, metadataSize, offset);
+        this.ghostValues = {};
+        fullString.split("\n").filter((line) => line.length > 0).map((line) => line.split("=")).forEach(([key2, value]) => {
+          this.ghostValues[key2] = value;
+        });
+      }
+      return this.ghostValues;
+    }
+    static async fromSource(source2, options, signal) {
+      const headerData = (await source2.fetch([
+        {
+          offset: 0,
+          length: 1024
+        }
+      ], signal))[0];
+      const dataView = new DataView64(headerData);
+      const BOM = dataView.getUint16(0, 0);
+      let littleEndian;
+      if (BOM === 18761) {
+        littleEndian = true;
+      } else if (BOM === 19789) {
+        littleEndian = false;
+      } else {
+        throw new TypeError("Invalid byte order value.");
+      }
+      const magicNumber = dataView.getUint16(2, littleEndian);
+      let bigTiff;
+      if (magicNumber === 42) {
+        bigTiff = false;
+      } else if (magicNumber === 43) {
+        bigTiff = true;
+        const offsetByteSize = dataView.getUint16(4, littleEndian);
+        if (offsetByteSize !== 8) {
+          throw new Error("Unsupported offset byte-size.");
+        }
+      } else {
+        throw new TypeError("Invalid magic number.");
+      }
+      const firstIFDOffset = bigTiff ? dataView.getUint64(8, littleEndian) : dataView.getUint32(4, littleEndian);
+      return new GeoTIFF(source2, littleEndian, bigTiff, firstIFDOffset, options);
+    }
+    close() {
+      if (typeof this.source.close === "function") {
+        return this.source.close();
+      }
+      return false;
+    }
+  }
+  async function fromUrl(url, options = {}, signal) {
+    return GeoTIFF.fromSource(makeRemoteSource(url, options), signal);
+  }
+  async function fromFile(path2, signal) {
+    return GeoTIFF.fromSource(makeFileSource(path2), signal);
+  }
+  async function fromBlob(blob, signal) {
+    return GeoTIFF.fromSource(makeFileReaderSource(blob), signal);
+  }
   let A, I = null;
   function g() {
     return null !== I && I.buffer === A.memory.buffer || (I = new Uint8Array(A.memory.buffer)), I;
@@ -65304,7 +65304,7 @@ vec4 colormap(float intensity, float opacity) {
     };
   }
   function interpolateQuad(quad, ut, vt) {
-    return lerp$5(lerp$5(quad[0], quad[1], vt), lerp$5(quad[3], quad[2], vt), ut);
+    return lerp$6(lerp$6(quad[0], quad[1], vt), lerp$6(quad[3], quad[2], vt), ut);
   }
   const uniformBlock$6 = `layout(std140) uniform bitmapUniforms {
   vec4 bounds;
@@ -83002,23 +83002,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function loaderPixelSizeXY(loader) {
     var _a2, _b2;
     const px = (_a2 = loader.metadata) == null ? void 0 : _a2.Pixels;
-    if (px && typeof px.SizeX === "number" && typeof px.SizeY === "number" && px.SizeX > 0 && px.SizeY > 0) {
+    const metaX = Number(px == null ? void 0 : px.SizeX);
+    const metaY = Number(px == null ? void 0 : px.SizeY);
+    if (Number.isFinite(metaX) && Number.isFinite(metaY) && metaX > 1 && metaY > 1) {
       return {
-        sizeX: px.SizeX,
-        sizeY: px.SizeY
+        sizeX: Math.round(metaX),
+        sizeY: Math.round(metaY)
       };
     }
     const level = (_b2 = loader.data) == null ? void 0 : _b2[0];
-    if (!level) return null;
+    if (!(level == null ? void 0 : level.labels) || !(level == null ? void 0 : level.shape)) return null;
     const xi2 = level.labels.indexOf("x");
     const yi2 = level.labels.indexOf("y");
     if (xi2 < 0 || yi2 < 0) return null;
-    const sizeX = level.shape[xi2];
-    const sizeY = level.shape[yi2];
-    if (sizeX <= 0 || sizeY <= 0) return null;
+    const sizeX = Number(level.shape[xi2]);
+    const sizeY = Number(level.shape[yi2]);
+    if (!Number.isFinite(sizeX) || !Number.isFinite(sizeY) || sizeX <= 1 || sizeY <= 1) {
+      return null;
+    }
     return {
-      sizeX,
-      sizeY
+      sizeX: Math.round(sizeX),
+      sizeY: Math.round(sizeY)
     };
   }
   const toDefaultSettings = (n2) => {
@@ -90918,13 +90922,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     console.log(`[minerva] histogram extract: dtype=${dtype} effectiveBits=${bits ?? "none"} requested=${sourceIndices.length} resolved=${filtered.length} nonEmpty=${nonEmpty} emptyCurve=${emptyCurves} tileErrors=${tileErrorCount} skippedNoBits=${skippedNoBits}`);
     return new Map(entries);
   };
-  const extractDistributions = async (loader) => {
-    const init2 = initialize$1({
-      planes: loader.data
-    });
-    const allC = init2.indices.map((i2) => i2.c);
-    return extractDistributionsForSourceIndices(loader, allC);
-  };
   const extractChannels = (loader, modality, groups, sourceImageId, defaultChannelKind = "channel") => {
     const init2 = initialize$1({
       planes: loader.data
@@ -91372,7 +91369,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
   };
-  const getShapeForBinaryDownsampleLevel$1 = (options) => {
+  const getShapeForBinaryDownsampleLevel = (options) => {
     const { axes, level } = options;
     const xIndex = axes.labels.indexOf("x");
     const yIndex = axes.labels.indexOf("y");
@@ -91413,7 +91410,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           width
         ]
       };
-      return new JpegPixelSource((sel) => pyramidIndexer(sel, level), tileSize, getShapeForBinaryDownsampleLevel$1({
+      return new JpegPixelSource((sel) => pyramidIndexer(sel, level), tileSize, getShapeForBinaryDownsampleLevel({
         axes,
         level
       }));
@@ -247683,7 +247680,7 @@ void main() {
     }
     async getRaster({ selection, signal }) {
       await this._indexer(selection);
-      return await this.getTile({
+      return this.getTile({
         x: 0,
         y: 0,
         selection,
@@ -247708,15 +247705,6 @@ void main() {
         props.x,
         props.y
       ].join("-");
-      const frame_path = image2.getPyramid().frameMappings[[
-        props.y + 1,
-        props.x + 1,
-        image2.c
-      ].join("-")];
-      if (!frame_path) {
-        throw "__minervaEmptyFramePath";
-      }
-      frame_path.split("/").pop();
       let raster = this.tileCache[index2];
       if (!raster) {
         raster = await image2.readRasters({
@@ -247777,30 +247765,40 @@ void main() {
   class DicomTIFFImage {
     constructor(opts) {
       const { metadata, little_endian } = opts;
-      const { tileSize } = opts.pyramids[0][0];
       const { Pixels } = metadata;
       const rgbImage = Pixels.Type === "Uint8";
-      const bytesPerSample = rgbImage ? 3 : 2;
       this.Pixels = Pixels;
       this.level = opts.level;
       this.c = opts.c;
       this.series = opts.series;
       this.pyramids = opts.pyramids;
       this.littleEndian = little_endian;
-      this.bytesPerSample = bytesPerSample;
-      this.tileWidth = tileSize;
-      this.tileHeight = tileSize;
+      this.bytesPerSample = rgbImage ? 3 : 2;
       this.rgbImage = rgbImage;
     }
     getPyramid() {
-      const n_levels = this.pyramids[this.c].length - 1;
-      const pyramid_level = n_levels - this.level;
-      const pyramid = this.pyramids[this.c][pyramid_level];
+      const levels = this.pyramids[String(this.c)];
+      if (!Array.isArray(levels) || levels.length === 0) {
+        throw new Error(`[minerva] dicom: no pyramid levels for channel ${this.c}`);
+      }
+      const pyramid = levels[this.level];
+      if (!pyramid) {
+        throw new Error(`[minerva] dicom: missing pyramid level ${this.level} for channel ${this.c}`);
+      }
       return pyramid;
+    }
+    get tileWidth() {
+      return this.getPyramid().tileSize;
+    }
+    get tileHeight() {
+      return this.getPyramid().tileSize;
     }
     async getTileOrStrip(x2, y2, sample, signal) {
       const pyramid = this.getPyramid();
       const subpath = pyramid.frameMappings[`${y2 + 1}-${x2 + 1}-${this.c}`];
+      if (!subpath) {
+        throw "__minervaEmptyFramePath";
+      }
       const request = await fetchFrame({
         series: this.series,
         subpath,
@@ -247819,7 +247817,7 @@ void main() {
       const imageWidth = this.getWidth();
       const origin_x = x2 * this.tileWidth;
       const origin_y = y2 * this.tileHeight;
-      return await this.getTileOrStrip(x2, y2, sample, signal).then((tile) => {
+      return this.getTileOrStrip(x2, y2, sample, signal).then((tile) => {
         const fullTile = tileHeight * tileWidth;
         const ymax = Math.min(tileHeight, height, imageHeight - origin_y);
         const xmax = Math.min(tileWidth, width, imageWidth - origin_x);
@@ -247840,20 +247838,17 @@ void main() {
             height: full2 ? tileHeight : ymax
           };
         }
-        const optimization = true;
-        if (littleEndianPlatform === this.littleEndian && optimization) {
-          const data3 = new Uint16Array(tile.data.buffer);
+        if (littleEndianPlatform === this.littleEndian) {
+          const data3 = new Uint16Array(tile.data.buffer, tile.data.byteOffset, tile.data.byteLength / 2);
           const full2 = data3.length === fullTile;
           for (let pixel_y = ymax; pixel_y < tileHeight; ++pixel_y) {
             for (let pixel_x = 0; pixel_x < tileWidth; ++pixel_x) {
-              const windowCoordinate = pixel_y * tileWidth + pixel_x;
-              data3[windowCoordinate] = 0;
+              data3[pixel_y * tileWidth + pixel_x] = 0;
             }
           }
           for (let pixel_x = xmax; pixel_x < tileWidth; ++pixel_x) {
             for (let pixel_y = 0; pixel_y < tileHeight; ++pixel_y) {
-              const windowCoordinate = pixel_y * tileWidth + pixel_x;
-              data3[windowCoordinate] = 0;
+              data3[pixel_y * tileWidth + pixel_x] = 0;
             }
           }
           return {
@@ -247865,27 +247860,22 @@ void main() {
         const data2 = new Uint16Array(ymax * xmax);
         for (let pixel_y = 0; pixel_y < ymax; ++pixel_y) {
           for (let pixel_x = 0; pixel_x < xmax; ++pixel_x) {
-            const windowCoordinate = pixel_y * tileWidth + pixel_x;
-            data2[windowCoordinate] = tile.data.getUint16(windowCoordinate * this.bytesPerSample, this.littleEndian);
+            data2[pixel_y * tileWidth + pixel_x] = tile.data.getUint16((pixel_y * tileWidth + pixel_x) * this.bytesPerSample, this.littleEndian);
           }
         }
         return {
           data: data2,
-          width: full ? tileWidth : xmax,
-          height: full ? tileHeight : ymax
+          width: xmax,
+          height: ymax
         };
       });
     }
     async readRasters(options = {}) {
-      const { signal } = options;
-      const { x: x2, y: y2, height, width } = options;
-      const samples = options.samples ?? [
+      const { signal, x: x2, y: y2, height, width } = options;
+      const sample = (options.samples ?? [
         0
-      ];
-      x2 * this.tileWidth;
-      y2 * this.tileHeight;
-      const sample = samples[0];
-      const raster = await this._readRaster({
+      ])[0];
+      return this._readRaster({
         x: x2,
         y: y2,
         width,
@@ -247893,7 +247883,6 @@ void main() {
         sample,
         signal
       });
-      return raster;
     }
     getWidth() {
       return this.getPyramid().width;
@@ -248181,7 +248170,6 @@ void main() {
       let zoomFactor = baseTotalPixelMatrixColumns / totalPixelMatrixColumns;
       const roundedZoomFactor = Math.round(zoomFactor);
       if (pyramidResolutions.includes(roundedZoomFactor)) {
-        console.warn("resolution conflict rounding zoom factor (baseTotalPixelMatrixColumns / totalPixelMatrixColumns): ", zoomFactor);
         zoomFactor = parseFloat(zoomFactor.toFixed(2));
       } else {
         zoomFactor = roundedZoomFactor;
@@ -248196,12 +248184,6 @@ void main() {
     pyramidPixelSpacings.reverse();
     pyramidImageSizes.reverse();
     pyramidPhysicalSizes.reverse();
-    const uniquePhysicalSizes = [
-      ...new Set(pyramidPhysicalSizes.map((v2) => v2.toString()))
-    ].map((v2) => v2.split(","));
-    if (uniquePhysicalSizes.length > 1) {
-      console.warn("images of the image pyramid have different sizes: ", "\nsize [mm]: ", pyramidPhysicalSizes, "\npixel spacing [mm]: ", pyramidPixelSpacings, "\nsize [pixels]: ", pyramidImageSizes, "\ntile size [pixels]: ", pyramidTileSizes, "\ntile grid size [tiles]: ", pyramidGridSizes, "\nresolution [factors]: ", pyramidResolutions);
-    }
     const extent = [
       0,
       0,
@@ -248215,6 +248197,7 @@ void main() {
       resolutions: pyramidResolutions,
       gridSizes: pyramidGridSizes,
       tileSizes: pyramidTileSizes,
+      imageSizes: pyramidImageSizes,
       pixelSpacings: pyramidPixelSpacings,
       metadata: pyramidMetadata,
       frameMappings: pyramidFrameMappings,
@@ -248231,17 +248214,196 @@ void main() {
     return naturalized;
   };
   const normalizeDicomWebSeriesUrl = (url) => {
-    return String(url).trim().replace(/\/+$/, "").replace(/\/instances$/i, "");
+    return String(url).trim().replace(/\/+$/, "").replace(/\/instances(?:\/.*)?$/i, "");
+  };
+  const isDicomWebSeriesUrl = (url) => {
+    const root2 = normalizeDicomWebSeriesUrl(String(url).trim());
+    return /^https?:\/\/.+\/studies\/[^/]+\/series\/[^/]+$/i.test(root2);
+  };
+  const isDicomWeb = async (url, signal) => {
+    if (!isDicomWebSeriesUrl(url)) return false;
+    const root2 = normalizeDicomWebSeriesUrl(url);
+    try {
+      const response = await fetch(`${root2}/instances/?limit=1`, {
+        signal
+      });
+      if (!response.ok) return false;
+      const result = await response.json();
+      if (!Array.isArray(result) || result.length === 0) return false;
+      const first = naturalizeDataset(result[0]);
+      return Boolean(first == null ? void 0 : first.SOPInstanceUID);
+    } catch {
+      return false;
+    }
   };
   const readMetadata = async (series) => {
     const response = await fetch(`${series}/metadata`);
+    if (!response.ok) {
+      throw new Error(`DICOMweb metadata request failed (${response.status}) for ${series}`);
+    }
     const result = await response.json();
+    if (!Array.isArray(result)) {
+      throw new Error("DICOMweb metadata response must be a JSON array.");
+    }
     const naturalized = result.map((json2) => ({
       ...naturalizeDataset(json2),
       json: json2
     }));
     return naturalized;
   };
+  function opticalPathIdentifier(instance) {
+    var _a2, _b2;
+    const id2 = (_b2 = (_a2 = instance == null ? void 0 : instance.OpticalPathSequence) == null ? void 0 : _a2[0]) == null ? void 0 : _b2.OpticalPathIdentifier;
+    return id2 != null && String(id2).length > 0 ? String(id2) : "0";
+  }
+  function shortFramePath(path2) {
+    return String(path2).split("/").slice(-3).join("/");
+  }
+  function pixelMatrixSize(levelMeta) {
+    const width = Math.abs(Number((levelMeta == null ? void 0 : levelMeta.TotalPixelMatrixColumns) ?? (levelMeta == null ? void 0 : levelMeta.Columns) ?? 0) || 0);
+    const height = Math.abs(Number((levelMeta == null ? void 0 : levelMeta.TotalPixelMatrixRows) ?? (levelMeta == null ? void 0 : levelMeta.Rows) ?? 0) || 0);
+    return {
+      width,
+      height
+    };
+  }
+  function pyramidLevelsForLoader(pyramid) {
+    var _a2, _b2, _c2;
+    const baseW = Math.abs(Number((_a2 = pyramid.extent) == null ? void 0 : _a2[2]) || 0);
+    const baseH = Math.abs(Number((_b2 = pyramid.extent) == null ? void 0 : _b2[3]) || 0);
+    const n2 = ((_c2 = pyramid.metadata) == null ? void 0 : _c2.length) ?? 0;
+    return (pyramid.metadata || []).map((levelMeta, i2) => {
+      var _a3, _b3, _c3;
+      const fromSizes = (_a3 = pyramid.imageSizes) == null ? void 0 : _a3[i2];
+      let width = Math.abs(Number(fromSizes == null ? void 0 : fromSizes[0]) || 0);
+      let height = Math.abs(Number(fromSizes == null ? void 0 : fromSizes[1]) || 0);
+      if (!(width > 0 && height > 0)) {
+        ({ width, height } = pixelMatrixSize(levelMeta));
+      }
+      if (i2 === n2 - 1 && baseW > 0 && baseH > 0) {
+        width = baseW;
+        height = baseH;
+      }
+      const tileW = Number(levelMeta.Columns) || 0;
+      const tileH = Number(levelMeta.Rows) || 0;
+      const fromPyramid = (_b3 = pyramid.tileSizes) == null ? void 0 : _b3[i2];
+      const tileSize = Math.max(tileW, tileH) || Math.max(0, Number(fromPyramid == null ? void 0 : fromPyramid[0]) || 0, Number(fromPyramid == null ? void 0 : fromPyramid[1]) || 0);
+      const frameMapping = ((_c3 = pyramid.frameMappings) == null ? void 0 : _c3[i2]) || {};
+      return {
+        bits: pyramid.bits,
+        extent: [
+          0,
+          0,
+          width,
+          height
+        ],
+        width,
+        height,
+        tileSize,
+        frameMappings: Object.fromEntries(Object.entries(frameMapping).map(([k2, v2]) => [
+          k2,
+          shortFramePath(v2)
+        ]))
+      };
+    });
+  }
+  function pyramidsForChannelIndex(pyramids) {
+    return Object.fromEntries(Object.keys(pyramids ?? {}).map((pathKey, cIndex) => {
+      const finestFirst = [
+        ...pyramids[pathKey] || []
+      ].reverse().map((level) => ({
+        ...level,
+        frameMappings: Object.fromEntries(Object.entries(level.frameMappings || {}).map(([k2, v2]) => {
+          const [row2, col] = String(k2).split("-");
+          return row2 != null && col != null ? [
+            `${row2}-${col}-${cIndex}`,
+            v2
+          ] : [
+            k2,
+            v2
+          ];
+        }))
+      }));
+      return [
+        String(cIndex),
+        finestFirst
+      ];
+    }));
+  }
+  function pyramidsNeedInstanceMetadata(pyramids) {
+    for (const levels of Object.values(pyramids ?? {})) {
+      if (!Array.isArray(levels)) continue;
+      for (const level of levels) {
+        const tw = Number(level == null ? void 0 : level.tileSize) || 0;
+        const w2 = Number(level == null ? void 0 : level.width) || 0;
+        const h2 = Number(level == null ? void 0 : level.height) || 0;
+        if (tw <= 0 || w2 <= 0 || h2 <= 0) continue;
+        const expected = Math.ceil(w2 / tw) * Math.ceil(h2 / tw);
+        const mapped = Object.keys(level.frameMappings || {}).length;
+        if (expected > 4 && mapped < expected * 0.5) return true;
+      }
+    }
+    return false;
+  }
+  function dicomPyramidsFromInstances(instances) {
+    if (!(instances == null ? void 0 : instances.length)) {
+      throw new Error("No DICOMweb instance metadata to build pyramids from.");
+    }
+    const byPath = {};
+    for (const instance of instances) {
+      const k2 = opticalPathIdentifier(instance);
+      if (!byPath[k2]) byPath[k2] = [];
+      byPath[k2].push(instance);
+    }
+    return Object.fromEntries(Object.entries(byPath).map(([key2, group2]) => {
+      var _a2;
+      const bits = Number((_a2 = group2[0]) == null ? void 0 : _a2.BitsAllocated) || 16;
+      return [
+        key2,
+        pyramidLevelsForLoader(computeImagePyramid({
+          metadata: [
+            ...group2
+          ],
+          bits
+        }))
+      ];
+    }));
+  }
+  function dicomStringTag(value) {
+    if (value == null) return "";
+    if (typeof value === "string") return value.trim();
+    if (Array.isArray(value) && typeof value[0] === "string") {
+      return value[0].trim();
+    }
+    return "";
+  }
+  const dicomSeriesDisplayName = (instance, seriesUrl = "") => {
+    var _a2;
+    const originalFile = dicomStringTag(instance == null ? void 0 : instance["00091001"]);
+    if (originalFile) return originalFile;
+    const container2 = dicomStringTag(instance == null ? void 0 : instance.ContainerIdentifier);
+    if (container2) return container2;
+    const specimen = dicomStringTag(instance == null ? void 0 : instance.SpecimenIdentifier);
+    if (specimen) return specimen;
+    const seriesDescription = dicomStringTag(instance == null ? void 0 : instance.SeriesDescription);
+    if (seriesDescription) return seriesDescription;
+    const uid2 = dicomStringTag(instance == null ? void 0 : instance.SeriesInstanceUID) || ((_a2 = String(seriesUrl).match(/\/series\/([^/]+)/i)) == null ? void 0 : _a2[1]) || "";
+    if (!uid2) return "DICOMweb";
+    return uid2.length > 18 ? `\u2026${uid2.slice(-14)}` : uid2;
+  };
+  function dicomWebLoadResult(instances, seriesUrl) {
+    const first = instances == null ? void 0 : instances[0];
+    return {
+      pyramids: dicomPyramidsFromInstances(instances),
+      displayName: dicomSeriesDisplayName(first, seriesUrl),
+      modality: dicomStringTag(first == null ? void 0 : first.Modality) || "SM"
+    };
+  }
+  async function loadDicomWebPerInstance(root2) {
+    const instance_list = await listDicomWeb(root2);
+    const allMetadata = (await Promise.all(instance_list.map(async ({ SOPInstanceUID }) => readMetadata(`${root2}/instances/${SOPInstanceUID}`)))).flat();
+    return dicomWebLoadResult(allMetadata, root2);
+  }
   const toIndexer = (opts) => {
     const { metadata, pyramids, series, little_endian } = opts;
     return (sel, level) => {
@@ -248255,56 +248417,54 @@ void main() {
       });
     };
   };
-  const getShapeForBinaryDownsampleLevel = (options) => {
-    const { axes, level } = options;
-    const xIndex = axes.labels.indexOf("x");
-    const yIndex = axes.labels.indexOf("y");
-    const resolutionShape = axes.shape.slice();
-    resolutionShape[xIndex] = axes.shape[xIndex] >> level;
-    resolutionShape[yIndex] = axes.shape[yIndex] >> level;
-    return resolutionShape;
-  };
   const loadDicom = (meta) => {
-    const { pyramids, series, little_endian } = meta;
-    const { width, height, bits } = [
-      ...pyramids[0]
-    ].pop();
-    const channels2 = Object.keys(pyramids).map((n2) => parseInt(n2, 10)).toSorted((x2, y2) => x2 - y2);
-    const levels = Object.keys(pyramids["0"]).map((n2) => parseInt(n2, 10)).toSorted((x2, y2) => x2 - y2);
-    const pixels = {
-      Channels: channels2.map((id2) => ({
-        ID: `Channel:0:${id2}`,
-        Name: `Channel ${id2}`,
-        SamplesPerPixel: 1
-      })),
-      ID: "Pixels:0",
-      DimensionOrder: "XYZCT",
-      Type: bits === 8 ? "Uint8" : "Uint16",
-      SizeT: 1,
-      SizeZ: 1,
-      SizeC: channels2.length,
-      SizeY: height,
-      SizeX: width,
-      PhysicalSizeX: 1,
-      PhysicalSizeY: 1,
-      PhysicalSizeXUnit: "\xB5m",
-      PhysicalSizeYUnit: "\xB5m",
-      PhysicalSizeZUnit: "\xB5m",
-      BigEndian: false,
-      TiffData: channels2.map((id2) => ({
-        IFD: id2,
-        PlaneCount: 1,
-        FirstT: 0,
-        FirstC: id2,
-        FirstZ: 0,
-        UUID: {
-          FileName: "tmp.tif"
-        }
-      }))
-    };
-    const { tileSize } = pyramids["0"][0];
+    const { pyramids: rawPyramids, series, little_endian } = meta;
+    const channelKeys = Object.keys(rawPyramids ?? {});
+    if (channelKeys.length === 0) {
+      throw new Error("No DICOMweb pyramid channels.");
+    }
+    const pyramids = pyramidsForChannelIndex(rawPyramids);
+    const primaryLevels = pyramids["0"];
+    if (!Array.isArray(primaryLevels) || primaryLevels.length === 0) {
+      throw new Error("DICOMweb primary pyramid has no levels.");
+    }
+    const finest = primaryLevels[0];
+    const dtype = finest.bits === 8 ? "Uint8" : "Uint16";
     const metadata = {
-      Pixels: pixels
+      ID: "Image:0",
+      AquisitionDate: "",
+      Description: "",
+      Pixels: {
+        Channels: channelKeys.map((id2, i2) => ({
+          ID: `Channel:0:${i2}`,
+          Name: `Channel ${id2}`,
+          SamplesPerPixel: 1
+        })),
+        ID: "Pixels:0",
+        DimensionOrder: "XYZCT",
+        Type: dtype,
+        SizeT: 1,
+        SizeZ: 1,
+        SizeC: channelKeys.length,
+        SizeY: finest.height,
+        SizeX: finest.width,
+        PhysicalSizeX: 1,
+        PhysicalSizeY: 1,
+        PhysicalSizeXUnit: "\xB5m",
+        PhysicalSizeYUnit: "\xB5m",
+        PhysicalSizeZUnit: "\xB5m",
+        BigEndian: false,
+        TiffData: channelKeys.map((_2, i2) => ({
+          IFD: i2,
+          PlaneCount: 1,
+          FirstT: 0,
+          FirstC: i2,
+          FirstZ: 0,
+          UUID: {
+            FileName: "tmp.tif"
+          }
+        }))
+      }
     };
     const pyramidIndexer = toIndexer({
       metadata,
@@ -248312,118 +248472,80 @@ void main() {
       series,
       little_endian
     });
-    const data2 = levels.map((level) => {
-      pyramids["0"][level];
-      const axes = {
-        labels: [
-          "t",
-          "c",
-          "z",
-          "y",
-          "x"
-        ],
-        shape: [
-          1,
-          channels2.length,
-          1,
-          height,
-          width
-        ]
-      };
-      const meta2 = {
-        physicalSizes: {
-          x: {
-            size: 0.324999988079,
-            unit: "\xB5m"
-          },
-          y: {
-            size: 0.324999988079,
-            unit: "\xB5m"
-          }
+    const labels = [
+      "t",
+      "c",
+      "z",
+      "y",
+      "x"
+    ];
+    const planeMeta = {
+      physicalSizes: {
+        x: {
+          size: 1,
+          unit: "\xB5m"
         },
-        photometricInterpretation: 1
-      };
-      return new DicomPixelSource((sel) => pyramidIndexer(sel, level), metadata.Pixels.Type, tileSize, getShapeForBinaryDownsampleLevel({
-        axes,
-        level
-      }), axes.labels, meta2);
-    });
-    return data2;
+        y: {
+          size: 1,
+          unit: "\xB5m"
+        }
+      },
+      photometricInterpretation: 1
+    };
+    const data2 = primaryLevels.map((levelRow, level) => new DicomPixelSource((sel) => pyramidIndexer(sel, level), dtype, levelRow.tileSize, [
+      1,
+      channelKeys.length,
+      1,
+      levelRow.height,
+      levelRow.width
+    ], labels, planeMeta));
+    return {
+      data: data2,
+      metadata
+    };
   };
   function createTileLayers(meta) {
     const { channelsVisible, colors, contrastLimits, selections } = meta.settings;
     const visible = channelsVisible.some((x2) => x2);
     const { imageID, pyramids, dicomLoader, rgbImage } = meta;
     const loaderPlanes = Array.isArray(dicomLoader) ? dicomLoader : (dicomLoader == null ? void 0 : dicomLoader.data) ?? [];
-    const height = [
-      ...pyramids["0"]
-    ].pop().height;
-    const width = [
-      ...pyramids["0"]
-    ].pop().width;
-    pyramids["0"][0].tileSize;
-    const maxLevel = pyramids["0"].length;
-    const minZoom = Math.round(-(maxLevel - 1));
+    const primaryKey = pyramids["0"] != null ? "0" : Object.keys(pyramids || {})[0];
+    const primaryLevels = pyramids == null ? void 0 : pyramids[primaryKey];
+    if (!Array.isArray(primaryLevels) || primaryLevels.length === 0) {
+      console.error("[minerva] dicom: no primary pyramid levels", imageID);
+      return null;
+    }
+    const finest = primaryLevels[primaryLevels.length - 1];
+    const { width, height } = finest;
+    const minZoom = Math.round(-(primaryLevels.length - 1));
     if (rgbImage) {
       return new TileLayer({
         visible,
         id: "rgb_image",
         getTileData: async ({ index: index2, signal }) => {
           const { x: x2, y: y2, z: z2 } = index2;
-          const level = Math.abs(-z2);
-          console.log("z level and x,y");
-          console.log({
-            x: x2,
-            y: y2,
-            z: z2,
-            level
-          });
-          const source2 = loaderPlanes[level];
-          if (!source2) {
-            return null;
-          }
-          console.log("z level Has Source");
-          console.log({
-            x: x2,
-            y: y2,
-            z: z2,
-            level
-          }, source2);
-          const selection = {
-            z: 0,
-            t: 0,
-            c: 0
-          };
-          let tile = null;
+          const source2 = loaderPlanes[Math.abs(-z2)];
+          if (!source2) return null;
           try {
-            tile = await source2.getTile({
+            return await source2.getTile({
               x: x2,
               y: y2,
-              selection,
+              selection: {
+                z: 0,
+                t: 0,
+                c: 0
+              },
               signal
             });
           } catch (e2) {
-            if (e2 !== "__minervaEmptyFramePath") {
-              if (!(e2 instanceof AbortError)) {
-                console.error(e2);
-              }
+            if (e2 !== "__minervaEmptyFramePath" && !(e2 instanceof AbortError)) {
+              console.error(e2);
             }
             return null;
           }
-          if (!tile) {
-            return null;
-          }
-          console.log("x,y Has Tile");
-          console.log({
-            x: x2,
-            y: y2,
-            z: z2,
-            level
-          }, source2, tile);
-          return tile;
         },
         refinementStrategy: "best-available",
-        tileSize: 1024,
+        tileSize: finest.tileSize || 1024,
         minZoom,
         maxZoom: 0,
         extent: [
@@ -248435,27 +248557,10 @@ void main() {
         renderSubLayers: (props) => {
           const { left, bottom, right, top: top2 } = props.tile.bbox;
           const { x: x2, y: y2, z: z2 } = props.tile.index;
-          if (!props.data) {
-            return null;
-          }
-          const { data: data2, width: width2, height: height2 } = props.data;
-          const imageDataArguments = [
-            data2,
-            width2,
-            height2
-          ];
-          console.log("Image Data Arguments:");
-          console.log(imageDataArguments);
-          const imageData = new ImageData(...imageDataArguments);
-          console.log("Bitmap Layer Bounds:");
-          console.log([
-            left,
-            bottom,
-            right,
-            top2
-          ]);
+          if (!props.data) return null;
+          const { data: data2, width: tw, height: th2 } = props.data;
           return new BitmapLayer$1(props, {
-            image: imageData,
+            image: new ImageData(data2, tw, th2),
             id: `rgb-${z2}-${x2}-${y2}`,
             bounds: [
               left,
@@ -248466,16 +248571,7 @@ void main() {
           });
         },
         pickable: true,
-        onClick: ({ bitmap }) => {
-          if (bitmap) {
-            console.log("Picked Pixel:");
-            console.log({
-              sourceX: bitmap.pixel[0],
-              sourceY: bitmap.pixel[1],
-              sourceWidth: 1,
-              sourceHeight: 1
-            });
-          }
+        onClick: () => {
         }
       });
     }
@@ -248483,7 +248579,7 @@ void main() {
       console.error("[minerva] dicom: MultiscaleImageLayer skipped \u2014 empty loader planes", imageID);
       return null;
     }
-    const imageProps = {
+    return new MultiscaleImageLayer({
       visible,
       loader: loaderPlanes,
       refinementStrategy: "best-available",
@@ -248492,8 +248588,7 @@ void main() {
       colors,
       contrastLimits,
       selections
-    };
-    return new MultiscaleImageLayer(imageProps);
+    });
   }
   const listDicomWeb = async (series) => {
     const root2 = normalizeDicomWebSeriesUrl(series);
@@ -248512,140 +248607,56 @@ void main() {
         this.tileSize = props.tileSize;
       }
       async getTile(opts) {
-        return await dicomPixelSource.getTile(opts);
+        return dicomPixelSource.getTile(opts);
+      }
+      async getRaster(opts) {
+        return dicomPixelSource.getRaster(opts);
+      }
+      onTileError(err2) {
+        var _a2;
+        (_a2 = dicomPixelSource.onTileError) == null ? void 0 : _a2.call(dicomPixelSource, err2);
       }
     }
     return DicomPlane;
   };
   const parseDicomWeb = (meta) => {
-    const { pyramids, series, little_endian } = meta;
-    if (!pyramids) {
-      return null;
-    }
-    const loader_data = loadDicom({
-      pyramids,
-      series,
-      little_endian: true
+    if (!(meta == null ? void 0 : meta.pyramids)) return null;
+    const { data: sources, metadata } = loadDicom({
+      ...meta,
+      little_endian: meta.little_endian ?? true
     });
-    const channel_pyramids = Object.values(pyramids);
-    const n_channels = channel_pyramids.length;
-    const any_channel = [
-      ...channel_pyramids
-    ].pop();
-    const levels = any_channel.toReversed();
-    const data_config = levels.map((level) => {
-      const { tileSize, width, height, bits } = level;
-      const shape = [
-        width,
-        height,
-        n_channels
-      ];
-      return {
-        series,
-        samples: bits === 16 ? 1 : 3,
-        dtype: bits === 16 ? "Uint16" : "Uint8",
-        tileSize,
-        shape,
-        labels: [
-          "x",
-          "y",
-          "c"
-        ],
-        meta: {
-          physicalSizes: {
-            x: {
-              size: 1,
-              unit: "\xB5m"
-            },
-            y: {
-              size: 1,
-              unit: "\xB5m"
-            }
-          },
-          photometricInterpretation: 1
-        }
-      };
-    });
-    const metadata = {
-      ID: "Image:0",
-      AquisitionDate: "",
-      Description: "",
-      Pixels: {
-        Channels: channel_pyramids.map((_2, i2) => {
-          const { samples } = data_config[0];
-          return {
-            ID: `Channel:0:${i2}`,
-            Name: `Channel ${i2}`,
-            SamplesPerPixel: samples
-          };
-        }),
-        ID: "Pixels:0",
-        DimensionOrder: "XYC",
-        Type: data_config[0].dtype,
-        SizeC: data_config[0].shape[2],
-        SizeY: data_config[0].shape[1],
-        SizeX: data_config[0].shape[0],
-        PhysicalSizeX: 1,
-        PhysicalSizeY: 1,
-        PhysicalSizeXUnit: "\xB5m",
-        PhysicalSizeYUnit: "\xB5m",
-        BigEndian: false
-      }
-    };
-    const data2 = data_config.map((level_data, i2) => {
-      const DicomPlane = toDicomPlane(loader_data[i2]);
-      return new DicomPlane({
-        metadata,
-        ...level_data
-      });
-    });
+    const samples = metadata.Pixels.Type === "Uint16" ? 1 : 3;
     return {
-      data: data2,
-      metadata
+      metadata,
+      data: sources.map((src) => {
+        const Plane2 = toDicomPlane(src);
+        return new Plane2({
+          metadata,
+          series: meta.series,
+          samples,
+          dtype: src.dtype,
+          tileSize: src.tileSize,
+          shape: src.shape,
+          labels: src.labels,
+          meta: src.meta
+        });
+      })
     };
   };
   const loadDicomWeb = async (series) => {
     const root2 = normalizeDicomWebSeriesUrl(series);
-    const instance_list = await listDicomWeb(root2);
-    const pyramids = await Promise.all(instance_list.map((opts, _i) => {
-      const { SOPInstanceUID, BitsAllocated } = opts;
-      const instance = `${root2}/instances/${SOPInstanceUID}`;
-      return readMetadata(instance).then((instance_metadata) => {
-        const pyramid = computeImagePyramid({
-          metadata: instance_metadata,
-          bits: BitsAllocated
-        });
-        return pyramid;
-      });
-    }));
-    const channel_pyramids = pyramids.reduce((o2, i2) => {
-      const k2 = String(i2.metadata[0].OpticalPathSequence[0].OpticalPathIdentifier);
-      const channel_pyramid = [
-        ...o2[k2] || [],
-        ...[
-          i2
-        ]
-      ];
-      o2[k2] = channel_pyramid;
-      return o2;
-    }, {});
-    const dicom_pyramids = Object.fromEntries(Object.entries(channel_pyramids).map(([key2, pyramid]) => [
-      key2,
-      Object.values(pyramid).map(({ frameMappings, bits, extent, tileSizes }) => ({
-        bits,
-        extent,
-        width: Math.abs(extent[2]),
-        height: Math.abs(extent[3]),
-        frameMappings: Object.fromEntries(Object.entries(frameMappings[0]).map(([k2, v2]) => [
-          k2,
-          v2.split("/").slice(-3).join("/")
-        ])),
-        tileSize: Math.max(...tileSizes[0])
-      })).sort((a2, b2) => {
-        return a2.width - b2.width;
-      })
-    ]));
-    return dicom_pyramids;
+    try {
+      const instances = await readMetadata(root2);
+      const result = dicomWebLoadResult(instances, root2);
+      if (!pyramidsNeedInstanceMetadata(result.pyramids)) {
+        return result;
+      }
+      console.warn("[minerva] dicom: series /metadata frame maps incomplete; using per-instance metadata");
+      return loadDicomWebPerInstance(root2);
+    } catch (seriesErr) {
+      console.warn("[minerva] dicom: series /metadata failed; falling back to per-instance metadata", seriesErr);
+      return loadDicomWebPerInstance(root2);
+    }
   };
   const findDicomWeb = (series) => {
     return listDicomWeb(series);
@@ -249089,12 +249100,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-08-31T20:37:36.212Z");
+    const label2 = utcShort("2026-09-01T16:23:55.110Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-08-31T20:37:36.212Z",
+      title: "2026-09-01T16:23:55.110Z",
       children: [
         "Updated ",
         label2,
@@ -249229,6 +249240,46 @@ void main() {
       })
     });
   };
+  function hasOmePixels(imageDescription) {
+    var _a2;
+    if (typeof imageDescription !== "string" || imageDescription.trim() === "") {
+      return false;
+    }
+    const doc = new DOMParser().parseFromString(imageDescription, "application/xml");
+    return ((_a2 = doc.querySelector("Image")) == null ? void 0 : _a2.querySelector("Pixels")) != null;
+  }
+  async function getOmeTiffImageDescriptionOmeXml(source2, urlOptions = {}, signal) {
+    var _a2;
+    try {
+      const tiff = typeof source2 === "string" ? await fromUrl(source2, urlOptions, signal) : await fromBlob(source2, signal);
+      const first = await tiff.getImage(0);
+      const desc = (_a2 = first.fileDirectory) == null ? void 0 : _a2.ImageDescription;
+      if (typeof desc !== "string" || !hasOmePixels(desc)) {
+        return null;
+      }
+      return desc;
+    } catch (e2) {
+      return null;
+    }
+  }
+  async function isOmeTiff(url, signal) {
+    var _a2;
+    try {
+      const tiff = await fromUrl(url, {}, signal);
+      const first = await tiff.getImage(0);
+      return hasOmePixels((_a2 = first.fileDirectory) == null ? void 0 : _a2.ImageDescription);
+    } catch {
+      return false;
+    }
+  }
+  async function detectUrlImageFormat(url, signal) {
+    const looksDicom = isDicomWebSeriesUrl(url);
+    if (looksDicom) {
+      if (await isDicomWeb(url, signal)) return "dicomweb";
+    }
+    if (await isOmeTiff(url, signal)) return "ome-tiff";
+    return looksDicom ? "dicomweb" : "ome-tiff";
+  }
   const stack = "_stack_20heo_1";
   const panelBody = "_panelBody_20heo_11";
   const panelDropActive = "_panelDropActive_20heo_15";
@@ -249309,13 +249360,6 @@ void main() {
       ]
     });
   }
-  const DICOM_SERIES_URL = /^https?:\/\/.+\/studies\/[^/]+\/series\/[^/]+(?:\/instances)?\/?$/i;
-  function defaultDicomName(seriesUrl) {
-    var _a2;
-    const uid2 = (_a2 = seriesUrl.match(/\/series\/([^/]+)/i)) == null ? void 0 : _a2[1];
-    if (!uid2) return "DICOMweb";
-    return uid2.length > 18 ? `\u2026${uid2.slice(-14)}` : uid2;
-  }
   function FormatChip({ label: label2, selected, disabled: disabled2, onClick }) {
     return jsxRuntimeExports.jsx(PanelActionButton, {
       type: "button",
@@ -249343,7 +249387,7 @@ void main() {
       return u2.split("/").pop() || u2;
     }
     if ((src == null ? void 0 : src.kind) === "dicomWeb") {
-      return src.modality ? `${src.series} (${src.modality})` : src.series;
+      return src.modality || "DICOMweb";
     }
     if (index2 === 0 && opts.fileName.trim()) return opts.fileName.trim();
     if (index2 === 0 && opts.lastOmeTiffUrl) {
@@ -249372,7 +249416,7 @@ void main() {
   }
   function inferFormat(pending) {
     if (pending.kind === "local") return "ome-tiff";
-    return DICOM_SERIES_URL.test(pending.url) ? "dicomweb" : "ome-tiff";
+    return isDicomWebSeriesUrl(pending.url) ? "dicomweb" : "ome-tiff";
   }
   function pendingLabel(pending) {
     if (pending.kind === "local") return pending.label;
@@ -249386,40 +249430,74 @@ void main() {
     const [pending, setPending] = reactExports.useState(null);
     const [overlayRole, setOverlayRole] = reactExports.useState("intensity");
     const [overlayFormat, setOverlayFormat] = reactExports.useState("ome-tiff");
-    const [dicomName, setDicomName] = reactExports.useState("");
     const [importError2, setImportError] = reactExports.useState(null);
     const [importBusy, setImportBusy] = reactExports.useState(false);
     const [dragging, setDragging] = reactExports.useState(false);
     const dragDepthRef = reactExports.useRef(0);
     const localPickInFlightRef = reactExports.useRef(false);
     const prevImportRev = reactExports.useRef(importRevision);
+    const formatDetectAbortRef = reactExports.useRef(null);
+    const formatChosenByUserRef = reactExports.useRef(false);
     const showTypeOverlay = pending != null;
     const dicomAllowed = (pending == null ? void 0 : pending.kind) === "url" && overlayRole !== "segmentation";
     const urlReady = /^https?:\/\/.+/.test(urlDraft.trim());
+    const abortFormatDetect = reactExports.useCallback(() => {
+      var _a2;
+      (_a2 = formatDetectAbortRef.current) == null ? void 0 : _a2.abort();
+      formatDetectAbortRef.current = null;
+    }, []);
+    reactExports.useEffect(() => {
+      return () => {
+        abortFormatDetect();
+      };
+    }, [
+      abortFormatDetect
+    ]);
     reactExports.useEffect(() => {
       if (prevImportRev.current === importRevision) return;
       prevImportRev.current = importRevision;
+      abortFormatDetect();
       setPending(null);
       setImportError(null);
       setUrlDraft("");
       setImportBusy(false);
     }, [
+      abortFormatDetect,
       importRevision
     ]);
     const openPending = reactExports.useCallback((next2) => {
+      abortFormatDetect();
+      formatChosenByUserRef.current = false;
       const role = resolveImportRole("intensity", pendingLabel(next2));
       let format = inferFormat(next2);
       if (role === "segmentation") format = "ome-tiff";
       setPending(next2);
       setOverlayRole(role);
       setOverlayFormat(format);
-      setDicomName("");
       setImportError(null);
-    }, []);
+      if (next2.kind !== "url" || role === "segmentation") return;
+      const ac2 = new AbortController();
+      formatDetectAbortRef.current = ac2;
+      const url = next2.url;
+      void detectUrlImageFormat(url, ac2.signal).then((detected) => {
+        if (ac2.signal.aborted || formatChosenByUserRef.current) return;
+        setOverlayFormat(detected);
+      }).catch(() => {
+      }).finally(() => {
+        if (formatDetectAbortRef.current === ac2) {
+          formatDetectAbortRef.current = null;
+        }
+      });
+    }, [
+      abortFormatDetect
+    ]);
     const clearPending = reactExports.useCallback(() => {
+      abortFormatDetect();
       setPending(null);
       setImportError(null);
-    }, []);
+    }, [
+      abortFormatDetect
+    ]);
     const acceptLocalHandles = reactExports.useCallback(async (handles) => {
       if (handles.length === 0) return;
       const handle2 = handles[0];
@@ -249530,8 +249608,8 @@ void main() {
             setImportError("DICOMweb needs a series URL.");
             return;
           }
-          if (!DICOM_SERIES_URL.test(pending.url.trim())) {
-            setImportError("DICOMweb URL must include /studies/\u2026/series/\u2026 (optional /instances).");
+          if (!isDicomWebSeriesUrl(pending.url)) {
+            setImportError("DICOMweb URL must include /studies/\u2026/series/\u2026 (instance or frame paths are OK).");
             return;
           }
           if (!onImportDicomWeb) {
@@ -249539,15 +249617,8 @@ void main() {
             return;
           }
           const seriesUrl = normalizeDicomWebSeriesUrl(pending.url);
-          try {
-            await findDicomWeb(seriesUrl);
-          } catch {
-            setImportError("Could not reach that DICOMweb series.");
-            return;
-          }
           const result2 = await onImportDicomWeb({
-            url: seriesUrl,
-            name: dicomName.trim() || defaultDicomName(seriesUrl)
+            url: seriesUrl
           });
           if (result2 && result2.ok === false) setImportError(result2.error);
           return;
@@ -249802,6 +249873,7 @@ void main() {
                       label: "Segmentation Mask",
                       selected: overlayRole === "segmentation",
                       onClick: () => {
+                        formatChosenByUserRef.current = true;
                         setOverlayRole("segmentation");
                         setOverlayFormat("ome-tiff");
                       }
@@ -249820,33 +249892,21 @@ void main() {
                       jsxRuntimeExports.jsx(FormatChip, {
                         label: "OME-TIFF",
                         selected: overlayFormat === "ome-tiff",
-                        onClick: () => setOverlayFormat("ome-tiff")
+                        onClick: () => {
+                          formatChosenByUserRef.current = true;
+                          setOverlayFormat("ome-tiff");
+                        }
                       }),
                       jsxRuntimeExports.jsx(FormatChip, {
                         label: "DICOMweb",
                         selected: overlayFormat === "dicomweb",
-                        onClick: () => setOverlayFormat("dicomweb")
+                        onClick: () => {
+                          formatChosenByUserRef.current = true;
+                          setOverlayFormat("dicomweb");
+                        }
                       })
                     ]
                   })
-                }) : null,
-                overlayFormat === "dicomweb" && dicomAllowed ? jsxRuntimeExports.jsxs("div", {
-                  className: styles$1.typeSection,
-                  children: [
-                    jsxRuntimeExports.jsx("label", {
-                      className: styles$1.fieldLabel,
-                      htmlFor: "dicom-dataset-name",
-                      children: "Label (optional)"
-                    }),
-                    jsxRuntimeExports.jsx("input", {
-                      id: "dicom-dataset-name",
-                      type: "text",
-                      className: `${minervaTheme.input} ${styles$1.urlInput}`,
-                      value: dicomName,
-                      onChange: (e2) => setDicomName(e2.target.value),
-                      placeholder: "Short name for this series"
-                    })
-                  ]
                 }) : null,
                 importError2 ? jsxRuntimeExports.jsx("div", {
                   className: styles$1.importError,
@@ -250383,7 +250443,7 @@ void main() {
           const { series, modality } = im.source;
           if (dicomSeriesSeen.has(series)) break;
           dicomSeriesSeen.add(series);
-          const pyramids = await loadDicomWeb(series);
+          const { pyramids } = await loadDicomWeb(series);
           const loader = parseDicomWeb({
             pyramids,
             series,
@@ -250887,12 +250947,12 @@ void main() {
     }
   }
   const wrapper = "_wrapper_1dnlo_1";
-  const full$1 = "_full_1dnlo_10";
+  const full = "_full_1dnlo_10";
   const retrieving = "_retrieving_1dnlo_19";
   const importLoadingOverlay = "_importLoadingOverlay_1dnlo_28";
   const styles = {
     wrapper,
-    full: full$1,
+    full,
     retrieving,
     importLoadingOverlay
   };
@@ -250930,20 +250990,6 @@ void main() {
     maybeDefaultStoryTitleFromFirstImage();
     ensureDefaultWaypointForImageImport();
   }
-  async function getOmeTiffImageDescriptionOmeXml(source2, urlOptions = {}, signal) {
-    var _a2;
-    try {
-      const tiff = typeof source2 === "string" ? await fromUrl(source2, urlOptions, signal) : await fromBlob(source2, signal);
-      const first = await tiff.getImage(0);
-      const desc = (_a2 = first.fileDirectory) == null ? void 0 : _a2.ImageDescription;
-      if (typeof desc !== "string" || !desc.trim()) {
-        return null;
-      }
-      return /OME|openmicroscopy|Pixels/i.test(desc) ? desc : null;
-    } catch (e2) {
-      return null;
-    }
-  }
   const cloneConfigWaypoints = (stories) => {
     if (typeof structuredClone === "function") {
       return structuredClone(stories);
@@ -250975,20 +251021,6 @@ void main() {
         children
       ]
     });
-  };
-  const getDistributions = async (sourceChannels, loader) => {
-    const sourceDistributionMap = await extractDistributions(loader);
-    const SourceDistributions = [
-      ...sourceDistributionMap.values()
-    ];
-    const SourceChannelsWithDist = sourceChannels.map((sourceChannel) => ({
-      ...sourceChannel,
-      sourceDistribution: sourceDistributionMap.get(sourceChannel.index)
-    }));
-    return {
-      SourceChannelsWithDist,
-      SourceDistributions
-    };
   };
   async function hydrateLoadersFromImages(images, requestPermission = false, opts) {
     const storyId = useDocumentStore.getState().activeStoryId;
@@ -252042,45 +252074,34 @@ void main() {
       const omeTiffUrlList = imagePropList.filter(([_url, _modality, type]) => type === "OME-TIFF-URL").map(([url]) => url);
       const willLoad = dicomPropList.length > 0 || omeTiffPropList.length > 0 && handles.length > 0 || omeTiffUrlList.length > 0 || jpegUrlList.length > 0;
       if (!willLoad) return;
-      const t0 = performance.now();
-      console.log("[minerva] onStart: will load, setting loading state");
       setImportRevision((r2) => r2 + 1);
       const loadEpoch = beginImageLoading();
       try {
         if (dicomPropList.length > 0) {
-          const t1 = performance.now();
           await onStartDicomWeb(dicomPropList, props.demo_dicom_web ? props.exhibit_config.Groups ?? [] : []);
-          console.log(`[minerva] onStartDicomWeb: ${(performance.now() - t1).toFixed(0)}ms`);
         }
         if (omeTiffPropList.length > 0 && handles.length > 0) {
-          const t1 = performance.now();
           await onStartOmeTiff(omeTiffPropList[0][0], handles);
-          console.log(`[minerva] onStartOmeTiff: ${(performance.now() - t1).toFixed(0)}ms`);
         }
         if (jpegUrlList.length > 0) {
-          const t1 = performance.now();
           await onStartJpegUrl(jpegUrlList[0]);
-          console.log(`[minerva] onStartOmeTiffUrl: ${(performance.now() - t1).toFixed(0)}ms`);
         }
         if (omeTiffUrlList.length > 0) {
-          const t1 = performance.now();
           await onStartOmeTiffUrl(omeTiffUrlList[0]);
-          console.log(`[minerva] onStartOmeTiffUrl: ${(performance.now() - t1).toFixed(0)}ms`);
         }
       } finally {
-        console.log(`[minerva] total load: ${(performance.now() - t0).toFixed(0)}ms`);
         endImageLoading(loadEpoch);
         (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
       }
     };
     const onStartDicomWeb = async (imagePropList, groups) => {
+      var _a2;
       clearOmeDerivedCaches();
       setLastOmeTiffUrl(null);
-      console.log("[minerva] dicom: fetching pyramids for", imagePropList.length, "series");
-      const indexList = await Promise.all(imagePropList.map(async ([series, modality]) => {
-        const t1 = performance.now();
-        const pyramids = await loadDicomWeb(series);
-        console.log(`[minerva] dicom: loadDicomWeb ${modality}: ${(performance.now() - t1).toFixed(0)}ms`);
+      const indexList = await Promise.all(imagePropList.map(async ([series, modalityFallback]) => {
+        const { pyramids, displayName, modality: dicomModality } = await loadDicomWeb(series);
+        const label2 = displayName || modalityFallback;
+        const modality = groups.length > 0 && modalityFallback ? modalityFallback : dicomModality || label2;
         const loader = parseDicomWeb({
           pyramids,
           series,
@@ -252090,27 +252111,24 @@ void main() {
           series,
           pyramids,
           modality,
+          displayName: label2,
           loader,
-          sourceImageId: modality
+          sourceImageId: crypto.randomUUID()
         };
       }));
-      console.log("[minerva] dicom: all pyramids loaded, extracting channels");
       setDicomIndexList(indexList);
-      setFileName(indexList.length > 0 ? indexList.map((d2) => d2.modality ? `${d2.series} (${d2.modality})` : `${d2.series}`).join(", ") : "");
+      setFileName(indexList.length > 0 ? indexList.map((d2) => d2.displayName).join(", ") : "");
       let registry2 = {
         SourceChannels: [],
         ChannelGroups: []
       };
-      for (const { loader, modality } of indexList) {
+      for (const { loader, modality, sourceImageId } of indexList) {
         const relevant_groups = groups.filter(({ Image: Image2 }) => Image2.Method === modality);
-        const { SourceChannels: sc2, ChannelGroups: gr } = extractChannels(loader, modality, relevant_groups);
-        const t2 = performance.now();
-        const { SourceChannelsWithDist } = await getDistributions(sc2, loader);
-        console.log(`[minerva] dicom: getDistributions ${modality}: ${(performance.now() - t2).toFixed(0)}ms`);
+        const { SourceChannels: sc2, ChannelGroups: gr } = extractChannels(loader, modality, relevant_groups, sourceImageId);
         registry2 = {
           SourceChannels: [
             ...registry2.SourceChannels,
-            ...SourceChannelsWithDist
+            ...sc2
           ],
           ChannelGroups: [
             ...registry2.ChannelGroups,
@@ -252118,23 +252136,45 @@ void main() {
           ]
         };
       }
-      console.log("[minerva] dicom: setting store state");
       const { SourceChannels } = registry2;
       const ChannelGroups2 = await applyPaletteToGroupedImport(registry2.ChannelGroups, SourceChannels);
       setOmeLoaderEntries([]);
       const doc = useDocumentStore.getState();
-      let nextDocImages = applySourceChannelsToImages(doc.images, SourceChannels);
-      for (const { series, modality } of indexList) {
-        nextDocImages = setImageSource(nextDocImages, modality, {
+      const importSeriesRoots = new Set(indexList.map((d2) => normalizeDicomWebSeriesUrl(d2.series)));
+      const legacyModalityIds = new Set(indexList.map((d2) => d2.modality));
+      let nextDocImages = [
+        ...doc.images
+      ];
+      let nextChannelGroups = [
+        ...doc.channelGroups
+      ];
+      for (const im of doc.images) {
+        const sameSeries = ((_a2 = im.source) == null ? void 0 : _a2.kind) === "dicomWeb" && importSeriesRoots.has(normalizeDicomWebSeriesUrl(im.source.series));
+        const legacyId = legacyModalityIds.has(im.id);
+        if (!sameSeries && !legacyId) continue;
+        const removed = removeImageFromDocument(nextDocImages, nextChannelGroups, im.id);
+        nextDocImages = removed.images;
+        nextChannelGroups = removed.channelGroups;
+      }
+      nextDocImages = applySourceChannelsToImages(nextDocImages, SourceChannels);
+      for (const { series, modality, displayName, loader, sourceImageId } of indexList) {
+        nextDocImages = setImageSource(nextDocImages, sourceImageId, {
           kind: "dicomWeb",
           series,
           modality
         });
+        nextDocImages = applyLoaderPixelSizeToImage(nextDocImages, sourceImageId, loader);
+        nextDocImages = setImageBasename(nextDocImages, sourceImageId, displayName);
+        nextDocImages = setImageContentRole(nextDocImages, sourceImageId, "intensity");
       }
       setImages(nextDocImages);
-      setChannelGroups(ChannelGroups2);
+      const mergedChannelGroups = [
+        ...nextChannelGroups,
+        ...ChannelGroups2
+      ];
+      setChannelGroups(mergedChannelGroups);
       updateGroupChannelLists({
-        ChannelGroups: ChannelGroups2,
+        ChannelGroups: mergedChannelGroups,
         SourceChannels
       });
       afterImageImportDocumentEffects();
@@ -252712,15 +252752,15 @@ void main() {
           }
         };
         const importDicomWeb = async (req) => {
-          var _a2, _b2, _c2, _d;
+          var _a2;
           const loadEpoch = beginImageLoading();
           try {
             const series = normalizeDicomWebSeriesUrl(req.url);
-            const label2 = ((_a2 = req.name) == null ? void 0 : _a2.trim()) || ((_c2 = (_b2 = series.match(/\/series\/([^/]+)/i)) == null ? void 0 : _b2[1]) == null ? void 0 : _c2.slice(-14)) || "DICOMweb";
+            const method = props.demo_dicom_web ? "Colorimetric" : "";
             await onStartDicomWeb([
               [
                 series,
-                label2
+                method
               ]
             ], props.demo_dicom_web ? props.exhibit_config.Groups ?? [] : []);
             setImportRevision((r2) => r2 + 1);
@@ -252738,7 +252778,7 @@ void main() {
             };
           } finally {
             endImageLoading(loadEpoch);
-            (_d = document.getElementById("global-loader")) == null ? void 0 : _d.remove();
+            (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
           }
         };
         const uploadProps = {
