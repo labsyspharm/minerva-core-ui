@@ -31,7 +31,12 @@ import {
   omeImportGmmImageKey,
   visibleChannelIdsForGmmBeforePaint,
 } from "@/lib/imaging/autoContrast";
-import { defaultVisibilitiesForSources } from "@/lib/imaging/channelCompositor";
+import {
+  applyVisibilityTransition,
+  diffChannelIds,
+  diffGroupRowIds,
+  type VisibilityTransition,
+} from "@/lib/imaging/channelCompositor";
 import { isImageChannel } from "@/lib/imaging/channelKind";
 import {
   JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE,
@@ -55,6 +60,10 @@ import {
   mergeHistogramsIntoSourceChannelsByChannelId,
 } from "@/lib/imaging/histogramLazy";
 import { hydrateDocumentLoaders } from "@/lib/imaging/hydrateDocumentLoaders";
+import {
+  duplicateImportError,
+  findDuplicateImportTarget,
+} from "@/lib/imaging/importSourceMatch";
 import type {
   JpegLoaderEntry,
   OmeLoaderEntry,
@@ -63,7 +72,7 @@ import {
   jpegLoaderEntriesFromImages,
   useSyncJpegChannelFolders,
 } from "@/lib/imaging/loadJpegFromDocument";
-import { validateMaskBasenameForAppend } from "@/lib/imaging/omeImport";
+import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/maskLayers";
 import {
   applyPaletteToFlatImportImages,
   applyPaletteToGroupedImport,
@@ -78,11 +87,8 @@ import { Pool } from "@/lib/imaging/workers/pool";
 import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
-import { deleteFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
-import {
-  imageHandleStorageKey,
-  persistLocalImageHandle,
-} from "@/lib/persistence/imageHandles";
+import { putFileHandle } from "@/lib/persistence/fileHandles";
+import { persistLocalImageHandle } from "@/lib/persistence/imageHandles";
 import {
   isBlankOrUntitledStoryTitle,
   saveStoryDocument,
@@ -100,14 +106,12 @@ import {
   documentShapes,
   documentSourceChannels,
   documentWaypoints,
-  findSourceChannel,
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import {
   applyLoaderPixelSizeToImage,
   applySourceChannelsToImages,
-  dedupeImagesForImport,
   firstImageNameForStoryTitle,
   hydrateConfigWaypoint,
   type LegacyExhibitWaypoint,
@@ -178,6 +182,26 @@ function ensureDefaultWaypointForImageImport(): void {
 function afterImageImportDocumentEffects(): void {
   maybeDefaultStoryTitleFromFirstImage();
   ensureDefaultWaypointForImageImport();
+}
+
+function reconcileLoaderEntries<T extends { sourceImageId: string }>(
+  current: T[],
+  expectedIds: ReadonlySet<string>,
+  incoming: T[] = [],
+): T[] {
+  const incomingIds = new Set(incoming.map((entry) => entry.sourceImageId));
+  const next = [
+    ...current.filter(
+      (entry) =>
+        expectedIds.has(entry.sourceImageId) &&
+        !incomingIds.has(entry.sourceImageId),
+    ),
+    ...incoming,
+  ];
+  return next.length === current.length &&
+    next.every((entry, index) => entry === current[index])
+    ? current
+    : next;
 }
 
 type Props = {
@@ -368,6 +392,7 @@ const Content = (props: Props) => {
   const {
     setActiveChannelGroup,
     setChannelVisibilities,
+    setChannelGroupRowVisibilities,
     activeChannelGroupId,
     channelVisibilities,
     channelGroupRowVisibilities,
@@ -531,25 +556,12 @@ const Content = (props: Props) => {
   };
 
   const updateGroupChannelLists = useCallback(
-    ({ ChannelGroups, SourceChannels }) => {
+    ({ ChannelGroups }: { ChannelGroups: ChannelGroup[] }) => {
       setGroupNames(
         Object.fromEntries(ChannelGroups.map(({ name, id }) => [id, name])),
       );
-      const toChannelList = (groupChannels) => {
-        return groupChannels
-          .map((gc) => findSourceChannel(SourceChannels, gc.channelId))
-          .filter((x) => x)
-          .map(({ name: chName }) => chName);
-      };
-      setChannelVisibilities(
-        defaultVisibilitiesForSources(
-          SourceChannels,
-          useAppStore.getState().channelVisibilities,
-          ChannelGroups,
-        ),
-      );
     },
-    [setGroupNames, setChannelVisibilities],
+    [setGroupNames],
   );
 
   /** After reload, app store resets while channel groups persist — select first group and sync lists/visibilities. */
@@ -559,7 +571,6 @@ const Content = (props: Props) => {
     if (active != null && channelGroups.some((g) => g.id === active)) return;
     updateGroupChannelLists({
       ChannelGroups: channelGroups,
-      SourceChannels: sourceChannels,
     });
     setActiveChannelGroup(channelGroups[0].id);
   }, [
@@ -581,7 +592,10 @@ const Content = (props: Props) => {
     (
       nextImages: Image[],
       nextChannelGroups: ChannelGroup[],
-      opts: { resetActiveGroup: boolean; mergeVisibilities?: boolean },
+      opts: {
+        resetActiveGroup: boolean;
+        transition: VisibilityTransition;
+      },
     ) => {
       const flat = flattenImageChannelsInDocumentOrder(nextImages);
       setImages(nextImages);
@@ -591,25 +605,42 @@ const Content = (props: Props) => {
       } else if (opts.resetActiveGroup) {
         setActiveChannelGroup(nextChannelGroups[0].id);
       }
-      updateGroupChannelLists({
-        ChannelGroups: nextChannelGroups,
-        SourceChannels: flat,
-      });
-      const prev = opts.mergeVisibilities
-        ? useAppStore.getState().channelVisibilities
-        : undefined;
-      setChannelVisibilities(
-        defaultVisibilitiesForSources(flat, prev, nextChannelGroups),
+      updateGroupChannelLists({ ChannelGroups: nextChannelGroups });
+      const app = useAppStore.getState();
+      const visibilities = applyVisibilityTransition(
+        flat,
+        nextChannelGroups,
+        app.channelVisibilities,
+        app.channelGroupRowVisibilities,
+        opts.transition,
       );
+      setChannelVisibilities(visibilities.channelVisibilities);
+      setChannelGroupRowVisibilities(visibilities.channelGroupRowVisibilities);
     },
     [
       setImages,
       setChannelGroups,
       updateGroupChannelLists,
       setChannelVisibilities,
+      setChannelGroupRowVisibilities,
       setActiveChannelGroup,
     ],
   );
+
+  const clearRemovedImageState = useCallback((removed: Image[]) => {
+    if (removed.length === 0) return;
+    const app = useAppStore.getState();
+    app.clearChannelRendering();
+    const channelVisibilities = { ...app.channelVisibilities };
+    delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
+    useAppStore.setState({ imageSelectionMask: null, channelVisibilities });
+    const keys = removed.flatMap((im) =>
+      im.source?.kind === "local" ? [im.source.handleKey] : [],
+    );
+    const drop = new Set(keys);
+    setMissingHandleKeys((prev) => prev.filter((key) => !drop.has(key)));
+    setDeniedHandleKeys((prev) => prev.filter((key) => !drop.has(key)));
+  }, []);
 
   // Keep a stable reference for store subscriptions.
   const setItemsRef = React.useRef(setItems);
@@ -622,12 +653,10 @@ const Content = (props: Props) => {
   const [lastOmeTiffUrl, setLastOmeTiffUrl] = useState<string | null>(null);
 
   const onRemoveImage = useCallback(
-    async (imageId: string) => {
+    (imageId: string) => {
       const doc = useDocumentStore.getState();
       const removed = doc.images.find((im) => im.id === imageId);
       if (!removed) return;
-      const localHandleKey =
-        removed.source?.kind === "local" ? removed.source.handleKey : undefined;
 
       const result = removeImageFromDocument(
         doc.images,
@@ -635,14 +664,7 @@ const Content = (props: Props) => {
         imageId,
       );
       if (result.images.length === doc.images.length) return;
-
-      if (localHandleKey) {
-        await deleteFileHandle(localHandleKey);
-        setMissingHandleKeys((prev) =>
-          prev.filter((k) => k !== localHandleKey),
-        );
-        setDeniedHandleKeys((prev) => prev.filter((k) => k !== localHandleKey));
-      }
+      clearRemovedImageState([removed]);
 
       clearOmeDerivedCaches();
       setOmeLoaderEntries((prev) =>
@@ -661,7 +683,7 @@ const Content = (props: Props) => {
       );
       publishChannelState(result.images, result.channelGroups, {
         resetActiveGroup: !activeStillExists,
-        mergeVisibilities: true,
+        transition: { kind: "remove" },
       });
 
       if (result.images.length === 0) {
@@ -676,7 +698,7 @@ const Content = (props: Props) => {
       }
       setViewerRemountKey((k) => k + 1);
     },
-    [publishChannelState],
+    [clearRemovedImageState, publishChannelState],
   );
 
   /** Bumps on each OME-TIFF-URL load so a stale loader cannot commit after a newer URL starts. */
@@ -725,6 +747,18 @@ const Content = (props: Props) => {
         if (!handle) return;
 
         const doc = useDocumentStore.getState();
+        const replacedImage = doc.images.find((im) => im.id === imageId);
+        if (!replacedImage) return;
+        const duplicate = await findDuplicateImportTarget(
+          doc.images,
+          { kind: "local", handle },
+          { excludeImageId: imageId },
+        );
+        if (duplicate) {
+          window.alert(duplicateImportError(duplicate));
+          return;
+        }
+
         clearOmeDerivedCaches();
         const prep = await replaceOmeLocalImageInDocument({
           images: doc.images,
@@ -737,12 +771,12 @@ const Content = (props: Props) => {
           return;
         }
 
+        const storyId = useDocumentStore.getState().activeStoryId;
         const nextImagesPersisted = await persistLocalImageHandle({
-          storyId: useDocumentStore.getState().activeStoryId,
+          storyId,
           imageId: prep.newImageId,
           handle,
           images: prep.nextImages,
-          previousHandleKey: prep.oldLocalHandleKey,
         });
 
         const loaderEntry = {
@@ -750,15 +784,18 @@ const Content = (props: Props) => {
           sourceImageId: prep.newImageId,
         };
         const app = useAppStore.getState();
+        const visibility = applyVisibilityTransition(
+          flattenImageChannelsInDocumentOrder(nextImagesPersisted),
+          doc.channelGroups,
+          app.channelVisibilities,
+          app.channelGroupRowVisibilities,
+          { kind: "sync" },
+        );
         const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
           images: nextImagesPersisted,
           channelGroups: doc.channelGroups,
-          stackVisibilities: defaultVisibilitiesForSources(
-            flattenImageChannelsInDocumentOrder(nextImagesPersisted),
-            app.channelVisibilities,
-            doc.channelGroups,
-          ),
-          groupRowVisibilities: app.channelGroupRowVisibilities,
+          stackVisibilities: visibility.channelVisibilities,
+          groupRowVisibilities: visibility.channelGroupRowVisibilities,
           activeGroupId: app.activeChannelGroupId,
         });
         const gmm = await fitGmmContrastBeforePaint({
@@ -769,6 +806,7 @@ const Content = (props: Props) => {
           visibleChannelIds,
         });
 
+        clearRemovedImageState([replacedImage]);
         skipLoaderHydrateRef.current = true;
         setOmeLoaderEntries((prev) => [
           ...prev.filter((e) => e.sourceImageId !== prep.oldImageId),
@@ -792,7 +830,7 @@ const Content = (props: Props) => {
           gmm.channelGroups ?? doc.channelGroups,
           {
             resetActiveGroup: false,
-            mergeVisibilities: true,
+            transition: { kind: "sync" },
           },
         );
         setFileName(prep.basename);
@@ -811,7 +849,12 @@ const Content = (props: Props) => {
         document.getElementById("global-loader")?.remove();
       }
     },
-    [beginImageLoading, endImageLoading, publishChannelState],
+    [
+      beginImageLoading,
+      clearRemovedImageState,
+      endImageLoading,
+      publishChannelState,
+    ],
   );
 
   const showSquareViewportOverlay = useAppStore(
@@ -885,19 +928,14 @@ const Content = (props: Props) => {
     }
 
     const storyId = useDocumentStore.getState().activeStoryId;
-    if (storyId) {
-      for (let i = 0; i < entries.length; i++) {
-        const { sourceImageId } = entries[i];
-        const handle = handles[i];
-        const key = imageHandleStorageKey(storyId, sourceImageId);
-        // Always record local source so refresh can prompt re-select (Firefox) or
-        // re-grant (Chrome). putFileHandle no-ops IDB for ephemeral handles.
-        await putFileHandle(key, handle);
-        nextImages = setImageSource(nextImages, sourceImageId, {
-          kind: "local",
-          handleKey: key,
-        });
-      }
+    for (let i = 0; i < entries.length; i++) {
+      const { sourceImageId } = entries[i];
+      nextImages = await persistLocalImageHandle({
+        storyId,
+        imageId: sourceImageId,
+        handle: handles[i],
+        images: nextImages,
+      });
     }
 
     const { SourceChannels } = registry;
@@ -927,7 +965,10 @@ const Content = (props: Props) => {
     setOmeLoaderEntries(entries);
     setDeniedHandleKeys([]);
     setMissingHandleKeys([]);
-    publishChannelState(nextImages, ChannelGroups, { resetActiveGroup: true });
+    publishChannelState(nextImages, ChannelGroups, {
+      resetActiveGroup: true,
+      transition: { kind: "fresh" },
+    });
     afterImageImportDocumentEffects();
     // Mask OME-XML is often not well-formed (copied metadata); skip ROI scrape.
     if (role !== "segmentation") {
@@ -959,20 +1000,15 @@ const Content = (props: Props) => {
     }
     clearOmeDerivedCaches();
     const doc = useDocumentStore.getState();
+    const flatBefore = flattenImageChannelsInDocumentOrder(doc.images);
     const mergedGroups = [...doc.channelGroups];
     let nextImages = [...doc.images];
-    let removedLoaderIds: string[] = [];
     const newEntries: OmeLoaderEntry[] = [];
     const newIntensityGroups: ChannelGroup[] = [];
 
     for (let i = 0; i < handles.length; i++) {
       const handle = handles[i];
       const basename = i === 0 ? in_f : handle.name;
-      const clash = validateMaskBasenameForAppend(nextImages, basename, role);
-      if (clash) return clash;
-      const deduped = dedupeImagesForImport(nextImages, basename, role);
-      nextImages = deduped.images;
-      removedLoaderIds = [...removedLoaderIds, ...deduped.removedImageIds];
 
       const loader = await loadOmeLoaderForRole(role, {
         kind: "local",
@@ -992,14 +1028,12 @@ const Content = (props: Props) => {
       newEntries.push({ loader, sourceImageId });
 
       const storyId = useDocumentStore.getState().activeStoryId;
-      if (storyId) {
-        const key = imageHandleStorageKey(storyId, sourceImageId);
-        await putFileHandle(key, handle);
-        nextImages = setImageSource(nextImages, sourceImageId, {
-          kind: "local",
-          handleKey: key,
-        });
-      }
+      nextImages = await persistLocalImageHandle({
+        storyId,
+        imageId: sourceImageId,
+        handle,
+        images: nextImages,
+      });
 
       if (role !== "segmentation") {
         if (slice.extractedGroups.length > 0) {
@@ -1013,31 +1047,44 @@ const Content = (props: Props) => {
       }
     }
 
+    const liveEntries = newEntries.filter((entry) =>
+      nextImages.some((im) => im.id === entry.sourceImageId),
+    );
     let ChannelGroups = await finalizeAppendedIntensityGroups({
       mergedGroups,
       newIntensityGroups: role === "intensity" ? newIntensityGroups : [],
       nextImages,
     });
-    if (role !== "segmentation" && newEntries.length > 0) {
+    const flatAfter = flattenImageChannelsInDocumentOrder(nextImages);
+    const newChannelIds = diffChannelIds(flatBefore, flatAfter);
+    const newGroupRowIds = diffGroupRowIds(doc.channelGroups, ChannelGroups);
+    const visibilityTransition: VisibilityTransition =
+      role === "segmentation"
+        ? { kind: "appendMask", newChannelIds }
+        : { kind: "appendIntensity", newChannelIds, newGroupRowIds };
+    if (role !== "segmentation" && liveEntries.length > 0) {
       const app = useAppStore.getState();
+      const visibility = applyVisibilityTransition(
+        flatAfter,
+        ChannelGroups,
+        app.channelVisibilities,
+        app.channelGroupRowVisibilities,
+        visibilityTransition,
+      );
       const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
         images: nextImages,
         channelGroups: ChannelGroups,
-        stackVisibilities: defaultVisibilitiesForSources(
-          flattenImageChannelsInDocumentOrder(nextImages),
-          app.channelVisibilities,
-          ChannelGroups,
-        ),
-        groupRowVisibilities: app.channelGroupRowVisibilities,
+        stackVisibilities: visibility.channelVisibilities,
+        groupRowVisibilities: visibility.channelGroupRowVisibilities,
         activeGroupId: app.activeChannelGroupId,
       });
       const gmm = await fitGmmContrastBeforePaint({
         images: nextImages,
         channelGroups: ChannelGroups,
-        loaderEntries: newEntries,
+        loaderEntries: liveEntries,
         imageKey: omeImportGmmImageKey(
           in_f,
-          newEntries.map((e) => e.sourceImageId),
+          liveEntries.map((e) => e.sourceImageId),
         ),
         visibleChannelIds,
       });
@@ -1045,13 +1092,11 @@ const Content = (props: Props) => {
       if (gmm.channelGroups) ChannelGroups = gmm.channelGroups;
     }
     skipLoaderHydrateRef.current = true;
-    setOmeLoaderEntries((prev) => {
-      const drop = new Set(removedLoaderIds);
-      return [...prev.filter((e) => !drop.has(e.sourceImageId)), ...newEntries];
-    });
+    setOmeLoaderEntries((prev) => [...prev, ...liveEntries]);
+    const activeId = useAppStore.getState().activeChannelGroupId;
     publishChannelState(nextImages, ChannelGroups, {
-      resetActiveGroup: false,
-      mergeVisibilities: true,
+      resetActiveGroup: !ChannelGroups.some((g) => g.id === activeId),
+      transition: visibilityTransition,
     });
     maybeDefaultStoryTitleFromFirstImage();
     return { ok: true };
@@ -1081,18 +1126,10 @@ const Content = (props: Props) => {
         data.metadata.id ??
         crypto.randomUUID();
       useDocumentStore.getState().hydrateFromDocument(data, storyId);
-      const flat = flattenImageChannelsInDocumentOrder(data.images);
-      setImages(data.images);
-      setChannelGroups(data.channelGroups);
-      updateGroupChannelLists({
-        ChannelGroups: data.channelGroups,
-        SourceChannels: flat,
+      publishChannelState(data.images, data.channelGroups, {
+        resetActiveGroup: data.channelGroups.length > 0,
+        transition: { kind: "sync" },
       });
-      if (data.channelGroups.length > 0) {
-        setActiveChannelGroup(data.channelGroups[0].id);
-      } else {
-        useAppStore.setState({ activeChannelGroupId: null });
-      }
       afterImageImportDocumentEffects();
       const jpegEntries = await jpegLoaderEntriesFromImages({
         images: data.images,
@@ -1187,7 +1224,10 @@ const Content = (props: Props) => {
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries([{ loader, sourceImageId }]);
     setDeniedHandleKeys([]);
-    publishChannelState(nextImages, ChannelGroups, { resetActiveGroup: true });
+    publishChannelState(nextImages, ChannelGroups, {
+      resetActiveGroup: true,
+      transition: { kind: "fresh" },
+    });
     afterImageImportDocumentEffects();
     if (role !== "segmentation") {
       const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
@@ -1214,11 +1254,9 @@ const Content = (props: Props) => {
     }
     const basename = url.split("/").pop() || "remote.ome.tif";
     const doc = useDocumentStore.getState();
-    const clash = validateMaskBasenameForAppend(doc.images, basename, role);
-    if (clash) return clash;
-    const mergedGroups = [...doc.channelGroups];
-    const deduped = dedupeImagesForImport(doc.images, basename, role);
-    let nextImages = deduped.images;
+    const flatBefore = flattenImageChannelsInDocumentOrder(doc.images);
+    const mergedGroups = doc.channelGroups;
+    let nextImages = doc.images;
     const sourceImageId = crypto.randomUUID();
     const slice = buildOmeImportSlice({
       loader,
@@ -1243,17 +1281,27 @@ const Content = (props: Props) => {
       newIntensityGroups: role !== "segmentation" ? slice.extractedGroups : [],
       nextImages,
     });
+    const flatAfter = flattenImageChannelsInDocumentOrder(nextImages);
+    const newChannelIds = diffChannelIds(flatBefore, flatAfter);
+    const newGroupRowIds = diffGroupRowIds(doc.channelGroups, ChannelGroups);
+    const visibilityTransition: VisibilityTransition =
+      role === "segmentation"
+        ? { kind: "appendMask", newChannelIds }
+        : { kind: "appendIntensity", newChannelIds, newGroupRowIds };
     if (role !== "segmentation") {
       const app = useAppStore.getState();
+      const visibility = applyVisibilityTransition(
+        flatAfter,
+        ChannelGroups,
+        app.channelVisibilities,
+        app.channelGroupRowVisibilities,
+        visibilityTransition,
+      );
       const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
         images: nextImages,
         channelGroups: ChannelGroups,
-        stackVisibilities: defaultVisibilitiesForSources(
-          flattenImageChannelsInDocumentOrder(nextImages),
-          app.channelVisibilities,
-          ChannelGroups,
-        ),
-        groupRowVisibilities: app.channelGroupRowVisibilities,
+        stackVisibilities: visibility.channelVisibilities,
+        groupRowVisibilities: visibility.channelGroupRowVisibilities,
         activeGroupId: app.activeChannelGroupId,
       });
       const gmm = await fitGmmContrastBeforePaint({
@@ -1267,16 +1315,11 @@ const Content = (props: Props) => {
       if (gmm.channelGroups) ChannelGroups = gmm.channelGroups;
     }
     skipLoaderHydrateRef.current = true;
-    setOmeLoaderEntries((prev) => {
-      const drop = new Set(deduped.removedImageIds);
-      return [
-        ...prev.filter((e) => !drop.has(e.sourceImageId)),
-        { loader, sourceImageId },
-      ];
-    });
+    setOmeLoaderEntries((prev) => [...prev, { loader, sourceImageId }]);
+    const activeId = useAppStore.getState().activeChannelGroupId;
     publishChannelState(nextImages, ChannelGroups, {
-      resetActiveGroup: false,
-      mergeVisibilities: true,
+      resetActiveGroup: !ChannelGroups.some((g) => g.id === activeId),
+      transition: visibilityTransition,
     });
     maybeDefaultStoryTitleFromFirstImage();
     return { ok: true };
@@ -1303,18 +1346,22 @@ const Content = (props: Props) => {
   const syncRegistryFromDocument = React.useCallback(() => {
     const doc = useDocumentStore.getState();
     const flat = flattenImageChannelsInDocumentOrder(doc.images);
-    updateGroupChannelLists({
-      ChannelGroups: doc.channelGroups,
-      SourceChannels: flat,
-    });
-    setChannelVisibilities(
-      defaultVisibilitiesForSources(
-        flat,
-        useAppStore.getState().channelVisibilities,
-        doc.channelGroups,
-      ),
+    updateGroupChannelLists({ ChannelGroups: doc.channelGroups });
+    const app = useAppStore.getState();
+    const visibility = applyVisibilityTransition(
+      flat,
+      doc.channelGroups,
+      app.channelVisibilities,
+      app.channelGroupRowVisibilities,
+      { kind: "sync" },
     );
-  }, [updateGroupChannelLists, setChannelVisibilities]);
+    setChannelVisibilities(visibility.channelVisibilities);
+    setChannelGroupRowVisibilities(visibility.channelGroupRowVisibilities);
+  }, [
+    updateGroupChannelLists,
+    setChannelVisibilities,
+    setChannelGroupRowVisibilities,
+  ]);
 
   const reconnectStoryRoot = React.useCallback(async () => {
     const storyId = useDocumentStore.getState().activeStoryId;
@@ -1560,7 +1607,6 @@ const Content = (props: Props) => {
         };
       }),
     );
-    setDicomIndexList(indexList);
     setFileName(
       indexList.length > 0
         ? indexList.map((d) => d.displayName).join(", ")
@@ -1588,7 +1634,6 @@ const Content = (props: Props) => {
       registry.ChannelGroups,
       SourceChannels,
     );
-    setOmeLoaderEntries([]);
     const doc = useDocumentStore.getState();
     // Drop prior same-series rows (and legacy modality-as-id rows) on re-import.
     const importSeriesRoots = new Set(
@@ -1597,6 +1642,7 @@ const Content = (props: Props) => {
     const legacyModalityIds = new Set(indexList.map((d) => d.modality));
     let nextDocImages = [...doc.images];
     let nextChannelGroups = [...doc.channelGroups];
+    const removedImages: Image[] = [];
     for (const im of doc.images) {
       const sameSeries =
         im.source?.kind === "dicomWeb" &&
@@ -1604,6 +1650,7 @@ const Content = (props: Props) => {
       // Pre-UUID imports keyed the document image id by modality / Method.
       const legacyId = legacyModalityIds.has(im.id);
       if (!sameSeries && !legacyId) continue;
+      removedImages.push(im);
       const removed = removeImageFromDocument(
         nextDocImages,
         nextChannelGroups,
@@ -1612,6 +1659,7 @@ const Content = (props: Props) => {
       nextDocImages = removed.images;
       nextChannelGroups = removed.channelGroups;
     }
+    const channelsBefore = flattenImageChannelsInDocumentOrder(nextDocImages);
     nextDocImages = applySourceChannelsToImages(nextDocImages, SourceChannels);
     for (const {
       series,
@@ -1641,12 +1689,38 @@ const Content = (props: Props) => {
         "intensity",
       );
     }
-    setImages(nextDocImages);
     const mergedChannelGroups = [...nextChannelGroups, ...ChannelGroups];
-    setChannelGroups(mergedChannelGroups);
-    updateGroupChannelLists({
-      ChannelGroups: mergedChannelGroups,
-      SourceChannels,
+    const isFresh = channelsBefore.length === 0;
+    const transition: VisibilityTransition = isFresh
+      ? { kind: "fresh" }
+      : {
+          kind: "appendIntensity",
+          newChannelIds: diffChannelIds(
+            channelsBefore,
+            flattenImageChannelsInDocumentOrder(nextDocImages),
+          ),
+          newGroupRowIds: diffGroupRowIds(
+            nextChannelGroups,
+            mergedChannelGroups,
+          ),
+        };
+    clearRemovedImageState(removedImages);
+    const removedIds = new Set(removedImages.map((im) => im.id));
+    setOmeLoaderEntries((prev) =>
+      prev.filter((entry) => !removedIds.has(entry.sourceImageId)),
+    );
+    setJpegLoaderEntries((prev) =>
+      prev.filter((entry) => !removedIds.has(entry.sourceImageId)),
+    );
+    setDicomIndexList((prev) => [
+      ...prev.filter((entry) => !removedIds.has(entry.sourceImageId)),
+      ...indexList,
+    ]);
+    const activeId = useAppStore.getState().activeChannelGroupId;
+    publishChannelState(nextDocImages, mergedChannelGroups, {
+      resetActiveGroup:
+        isFresh || !mergedChannelGroups.some((g) => g.id === activeId),
+      transition,
     });
     afterImageImportDocumentEffects();
   };
@@ -1684,23 +1758,30 @@ const Content = (props: Props) => {
 
   const loaderHydrationGenRef = React.useRef(0);
   useEffect(() => {
-    if (
-      jpegLoaderEntries.length > 0 ||
-      omeLoaderEntries.length > 0 ||
-      dicomIndexList.length > 0
-    ) {
+    const expectedIds = new Set(images.map((im) => im.id));
+    const loadedIds = new Set(
+      [...jpegLoaderEntries, ...omeLoaderEntries, ...dicomIndexList]
+        .filter((entry) => expectedIds.has(entry.sourceImageId))
+        .map((entry) => entry.sourceImageId),
+    );
+    const missingImages = images.filter(
+      (im) => im.source && !loadedIds.has(im.id),
+    );
+    if (missingImages.length === 0) {
+      setJpegLoaderEntries((prev) => reconcileLoaderEntries(prev, expectedIds));
+      setOmeLoaderEntries((prev) => reconcileLoaderEntries(prev, expectedIds));
+      setDicomIndexList((prev) => reconcileLoaderEntries(prev, expectedIds));
       skipLoaderHydrateRef.current = false;
       return;
     }
     if (skipLoaderHydrateRef.current) return;
-    if (!images.some((im) => im.source)) return;
     const gen = ++loaderHydrationGenRef.current;
     let cancelled = false;
     void (async () => {
       const loadEpoch = beginImageLoading();
       let hydratedOmeIds: string[] = [];
       try {
-        const result = await hydrateLoadersFromImages(images, false, {
+        const result = await hydrateLoadersFromImages(missingImages, true, {
           channelGroups: useDocumentStore.getState().channelGroups,
           documentUrl: window.location.href,
         });
@@ -1712,8 +1793,22 @@ const Content = (props: Props) => {
           return;
         }
         hydratedOmeIds = result.omeLoaderEntries.map((e) => e.sourceImageId);
-        applyHydratedLoaders(result);
-        const urlIm = images.find((i) => i.source?.kind === "url");
+        setJpegLoaderEntries((prev) =>
+          reconcileLoaderEntries(prev, expectedIds, result.jpegLoaderEntries),
+        );
+        setOmeLoaderEntries((prev) =>
+          reconcileLoaderEntries(prev, expectedIds, result.omeLoaderEntries),
+        );
+        setDicomIndexList((prev) =>
+          reconcileLoaderEntries(prev, expectedIds, result.dicomIndexList),
+        );
+        setDeniedHandleKeys(result.deniedHandleKeys);
+        setMissingHandleKeys(result.missingHandleKeys);
+        setMissingStoryRoot(result.missingStoryRoot);
+        if (result.loaderErrors.length > 0) {
+          window.alert(result.loaderErrors.join("\n"));
+        }
+        const urlIm = missingImages.find((i) => i.source?.kind === "url");
         if (urlIm?.source?.kind === "url") {
           setLastOmeTiffUrl(urlIm.source.url);
           setFileName(urlIm.source.url.split("/").pop() ?? "remote.ome.tif");
@@ -1735,15 +1830,18 @@ const Content = (props: Props) => {
           const loaderIds = new Set(hydratedOmeIds);
           const scs = documentSourceChannels(doc);
           const app = useAppStore.getState();
+          const visibility = applyVisibilityTransition(
+            scs,
+            doc.channelGroups,
+            app.channelVisibilities,
+            app.channelGroupRowVisibilities,
+            { kind: "sync" },
+          );
           const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
             images: doc.images,
             channelGroups: doc.channelGroups,
-            stackVisibilities: defaultVisibilitiesForSources(
-              scs,
-              app.channelVisibilities,
-              doc.channelGroups,
-            ),
-            groupRowVisibilities: app.channelGroupRowVisibilities,
+            stackVisibilities: visibility.channelVisibilities,
+            groupRowVisibilities: visibility.channelGroupRowVisibilities,
             activeGroupId: app.activeChannelGroupId,
           });
           const needsEagerGmm =
@@ -1770,10 +1868,9 @@ const Content = (props: Props) => {
     };
   }, [
     images,
-    jpegLoaderEntries.length,
-    omeLoaderEntries.length,
-    dicomIndexList.length,
-    applyHydratedLoaders,
+    jpegLoaderEntries,
+    omeLoaderEntries,
+    dicomIndexList,
     beginImageLoading,
     endImageLoading,
   ]);
@@ -1995,15 +2092,18 @@ const Content = (props: Props) => {
       omeLoaderEntries.map((e) => e.sourceImageId),
     );
     const app = useAppStore.getState();
+    const visibility = applyVisibilityTransition(
+      scs,
+      doc.channelGroups,
+      app.channelVisibilities,
+      app.channelGroupRowVisibilities,
+      { kind: "sync" },
+    );
     const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
       images: doc.images,
       channelGroups: doc.channelGroups,
-      stackVisibilities: defaultVisibilitiesForSources(
-        scs,
-        app.channelVisibilities,
-        doc.channelGroups,
-      ),
-      groupRowVisibilities: app.channelGroupRowVisibilities,
+      stackVisibilities: visibility.channelVisibilities,
+      groupRowVisibilities: visibility.channelGroupRowVisibilities,
       activeGroupId: app.activeChannelGroupId,
     });
     const ids = scs
@@ -2325,8 +2425,33 @@ const Content = (props: Props) => {
         const importOme = async (
           req: OmeImportRequest,
         ): Promise<OmeImportResult> => {
-          const loadEpoch = beginImageLoading();
           try {
+            if (req.append) {
+              const doc = useDocumentStore.getState();
+              if (req.source.kind === "local") {
+                for (const handle of req.source.handles) {
+                  const duplicate = await findDuplicateImportTarget(
+                    doc.images,
+                    { kind: "local", handle },
+                  );
+                  if (duplicate) {
+                    return {
+                      ok: false,
+                      error: duplicateImportError(duplicate),
+                    };
+                  }
+                }
+              } else {
+                const duplicate = await findDuplicateImportTarget(doc.images, {
+                  kind: "url",
+                  url: req.source.url,
+                  dicomWeb: false,
+                });
+                if (duplicate) {
+                  return { ok: false, error: duplicateImportError(duplicate) };
+                }
+              }
+            }
             if (req.source.kind === "local") {
               if (req.append) {
                 const result = await onAppendLocalOmeTiff(
@@ -2348,7 +2473,6 @@ const Content = (props: Props) => {
             } else {
               await onStartOmeTiffUrl(req.source.url, req.role);
             }
-            setImportRevision((r) => r + 1);
             const storyId = useDocumentStore.getState().activeStoryId;
             if (storyId) {
               await saveStoryDocument(
@@ -2356,6 +2480,7 @@ const Content = (props: Props) => {
                 useDocumentStore.getState().toDocumentData(),
               );
             }
+            setImportRevision((r) => r + 1);
             return { ok: true };
           } catch (e) {
             return {
@@ -2365,25 +2490,27 @@ const Content = (props: Props) => {
                   ? e.message
                   : "Could not load the image file.",
             };
-          } finally {
-            endImageLoading(loadEpoch);
-            document.getElementById("global-loader")?.remove();
           }
         };
 
         const importDicomWeb = async (req: {
           url: string;
         }): Promise<OmeImportResult> => {
-          const loadEpoch = beginImageLoading();
           try {
             const series = normalizeDicomWebSeriesUrl(req.url);
+            const duplicate = await findDuplicateImportTarget(
+              useDocumentStore.getState().images,
+              { kind: "url", url: series, dicomWeb: true },
+            );
+            if (duplicate) {
+              return { ok: false, error: duplicateImportError(duplicate) };
+            }
             // Method name only for demo exhibit groups; otherwise metadata wins.
             const method = props.demo_dicom_web ? "Colorimetric" : "";
             await onStartDicomWeb(
               [[series, method]],
               props.demo_dicom_web ? (props.exhibit_config.Groups ?? []) : [],
             );
-            setImportRevision((r) => r + 1);
             const storyId = useDocumentStore.getState().activeStoryId;
             if (storyId) {
               await saveStoryDocument(
@@ -2391,6 +2518,7 @@ const Content = (props: Props) => {
                 useDocumentStore.getState().toDocumentData(),
               );
             }
+            setImportRevision((r) => r + 1);
             return { ok: true };
           } catch (e) {
             return {
@@ -2400,9 +2528,6 @@ const Content = (props: Props) => {
                   ? e.message
                   : "Could not load the DICOMweb series.",
             };
-          } finally {
-            endImageLoading(loadEpoch);
-            document.getElementById("global-loader")?.remove();
           }
         };
 

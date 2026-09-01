@@ -1049,7 +1049,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         layerFilter={layerFilter}
         views={views}
       />
-      <LoadingWidget ref={loadingWidgetRef} placement="top-right" />
+      <LoadingWidget ref={loadingWidgetRef} placement="center" />
       {showSquareViewportOverlay && (
         <div
           className={styles.squareViewportOverlay}

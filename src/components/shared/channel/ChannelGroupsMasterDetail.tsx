@@ -21,6 +21,7 @@ import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import {
+  applyGroupRowVisibilities,
   buildCompositedIntensityLayers,
   isDisplayedViaActiveGroup,
   isGroupRowVisible,
@@ -532,6 +533,29 @@ export const ChannelGroupsMasterDetail = (
   const [lockedColorRowIdsByGroup, setLockedColorRowIdsByGroup] =
     React.useState<Map<string, Set<string>>>(() => new Map());
 
+  React.useEffect(() => {
+    setLockedColorRowIdsByGroup((prev) => {
+      const validGroupIds = new Set(channelGroups.map((g) => g.id));
+      const validRowIds = new Set(
+        channelGroups.flatMap((g) => g.channels.map((gc) => gc.id)),
+      );
+      let changed = false;
+      const next = new Map<string, Set<string>>();
+      for (const [groupId, rowIds] of prev) {
+        if (!validGroupIds.has(groupId)) {
+          changed = true;
+          continue;
+        }
+        const filtered = new Set(
+          [...rowIds].filter((rowId) => validRowIds.has(rowId)),
+        );
+        if (filtered.size !== rowIds.size) changed = true;
+        if (filtered.size > 0) next.set(groupId, filtered);
+      }
+      return changed ? next : prev;
+    });
+  }, [channelGroups]);
+
   const lockedIdsForGroup = React.useCallback(
     (groupId: string) =>
       lockedColorRowIdsByGroup.get(groupId) ?? EMPTY_LOCKED_ROW_IDS,
@@ -566,8 +590,15 @@ export const ChannelGroupsMasterDetail = (
       setGroupNames(
         Object.fromEntries(normalized.map(({ name, id }) => [id, name])),
       );
+      setChannelGroupRowVisibilities(
+        applyGroupRowVisibilities(
+          normalized,
+          useAppStore.getState().channelGroupRowVisibilities,
+          { kind: "sync" },
+        ),
+      );
     },
-    [setChannelGroups, setGroupNames],
+    [setChannelGroups, setGroupNames, setChannelGroupRowVisibilities],
   );
 
   const activateGroup = React.useCallback(

@@ -8,10 +8,6 @@
   box-sizing: border-box;
 }
 
-.panelBody {
-  position: relative;
-}
-
 .panelDropActive {
   outline: 1px dashed var(--minerva-ink);
   outline-offset: -2px;
@@ -109,30 +105,45 @@
 }
 
 .typeOverlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 8;
+  z-index: 100;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+  pointer-events: all;
 }
 
 .typeOverlayBackdrop {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--minerva-paper, #111) 92%, transparent);
+  background: color-mix(in srgb, var(--minerva-paper, #111) 88%, transparent);
 }
 
 .typeOverlayCard {
   position: relative;
   z-index: 1;
-  margin: 8px var(--minerva-inset);
+  margin: 0;
+  width: 100%;
+  max-width: min(24rem, calc(100vw - 2rem));
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: calc(100% - 16px);
+  max-height: calc(100vh - 2rem);
   overflow: auto;
+}
+
+.typeOverlayFields {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .typeOverlayFile {
@@ -154,7 +165,25 @@
 
 .typeChipActive {
   background: var(--minerva-wash);
-  box-shadow: inset 0 -1px 0 var(--minerva-ink);
+}
+
+.typeChipSuggested {
+  box-shadow: inset 0 -2px 0 var(--minerva-blue);
+  color: var(--minerva-ink);
+}
+
+.typeChipMuted {
+  color: var(--minerva-ink);
+  background: color-mix(in srgb, var(--minerva-ink) 5%, transparent);
+}
+
+.typeChipActive.typeChipMuted {
+  background: var(--minerva-wash);
+}
+
+.typeChipMuted:hover,
+.typeChipMuted:focus-visible {
+  background: var(--minerva-wash);
 }
 
 .typeFooter {
@@ -167,6 +196,9 @@
 }
 
 .typeImport {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   color: var(--minerva-blue);
 }
 
@@ -195,10 +227,8 @@
   inset: 0;
   z-index: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   padding: 12px;
   background: color-mix(
     in srgb,
@@ -206,14 +236,6 @@
     var(--minerva-paper)
   );
   border: 1px solid var(--minerva-danger-border);
-}
-
-.fileAccessError {
-  font-size: var(--minerva-size-note);
-  font-weight: 400;
-  line-height: 1.3;
-  color: var(--minerva-danger);
-  text-align: center;
 }
 
 .fileAccessAction {
