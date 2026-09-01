@@ -1,10 +1,63 @@
 import { fromBlob, fromUrl } from "geotiff";
+import { classify, type MaskDetectResult } from "@/lib/imaging/maskDetect";
 
 type GeoTiffWithImage = {
   getImage: (i: number) => Promise<{
-    fileDirectory?: { ImageDescription?: string | undefined };
+    fileDirectory?: {
+      ImageDescription?: string | undefined;
+      BitsPerSample?: number[];
+      SampleFormat?: number[];
+      SamplesPerPixel?: number;
+    };
+    getHeight: () => number;
+    getWidth: () => number;
+    getTileHeight: () => number;
+    getTileWidth: () => number;
+    readRasters: (options: {
+      samples: number[];
+      interleave: true;
+      window: [number, number, number, number];
+      signal?: AbortSignal;
+    }) => Promise<ArrayLike<number>>;
   }>;
 };
+
+async function openOmeTiff(source: Blob | string, signal?: AbortSignal) {
+  return (
+    typeof source === "string"
+      ? await fromUrl(source, {}, signal)
+      : await fromBlob(source, signal)
+  ) as GeoTiffWithImage;
+}
+
+/** Run format-agnostic mask detection through a TIFF window reader. */
+export async function detectOmeTiffMask(
+  source: Blob | string,
+  signal?: AbortSignal,
+): Promise<MaskDetectResult> {
+  const image = await (await openOmeTiff(source, signal)).getImage(0);
+  const fd = image.fileDirectory;
+  const samples = fd?.SamplesPerPixel ?? 1;
+  const bits = fd?.BitsPerSample?.[0];
+  const sampleFormat = fd?.SampleFormat?.[0] ?? 1;
+  return classify({
+    width: image.getWidth(),
+    height: image.getHeight(),
+    channels: samples,
+    integer: sampleFormat !== 3,
+    uint8: bits === 8 && sampleFormat === 1,
+    tileWidth: image.getTileWidth(),
+    tileHeight: image.getTileHeight(),
+    signal,
+    getWindow: (x, y, width, height, channel = 0) =>
+      image.readRasters({
+        samples: [channel],
+        interleave: true,
+        window: [x, y, x + width, y + height],
+        signal,
+      }),
+  });
+}
 
 /** True when ImageDescription contains an OME `<Pixels>` block. */
 function hasOmePixels(imageDescription: unknown): boolean {

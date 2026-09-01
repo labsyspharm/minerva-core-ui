@@ -15,7 +15,6 @@
  */
 
 import type { ConfigWaypoint } from "../authoring/config";
-import { resolveImageImportRole } from "../imaging/channelKind";
 import { type Loader, loaderPixelSizeXY } from "../imaging/viv";
 import {
   importedLineStyle,
@@ -302,31 +301,6 @@ export function removeImageFromDocument(
       .filter((g) => g.channels.length > 0),
     removedChannelIds,
   };
-}
-
-/** Drop an existing row before re-importing the same basename + role. */
-export function dedupeImagesForImport(
-  images: Image[],
-  basename: string,
-  contentRole: "intensity" | "segmentation",
-): { images: Image[]; removedImageIds: string[] } {
-  const key = basename.trim().toLowerCase();
-  if (!key) return { images, removedImageIds: [] };
-  const removedImageIds: string[] = [];
-  const next = images.filter((im) => {
-    const base = im.basename.trim().toLowerCase();
-    if (!base || base !== key) return true;
-    const role = resolveImageImportRole({
-      contentRole: im.contentRole,
-      channels: im.channels ?? [],
-    });
-    if (role === contentRole) {
-      removedImageIds.push(im.id);
-      return false;
-    }
-    return true;
-  });
-  return { images: next, removedImageIds };
 }
 
 /** Strip the OME-TIFF extension to derive a short import label from a basename. */

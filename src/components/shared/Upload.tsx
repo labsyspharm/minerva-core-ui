@@ -1,5 +1,6 @@
 import type { FormEventHandler, DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
@@ -17,12 +18,12 @@ import {
   ensureFileHandlePermission,
   fileHandleFromDataTransferItem,
   findFile,
-  toFile,
 } from "@/lib/imaging/filesystem";
 import type {
   OmeImageImportRole,
   OmeImportResult,
 } from "@/lib/imaging/omeImport";
+import { detectOmeTiffMask } from "@/lib/imaging/omeTiff";
 import type { Image } from "@/lib/stores/documentStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { jpegSourceNeedsLocalRoot } from "@/lib/storyExport/importStoryFolder";
@@ -133,14 +134,37 @@ type PendingSource = PendingLocal | PendingUrl;
 type OverlayRole = OmeImportRole;
 type OverlayFormat = "ome-tiff" | "dicomweb";
 
+const ROLE_OPTIONS: { role: OverlayRole; label: string }[] = [
+  { role: "intensity", label: "Microscopy Image" },
+  { role: "segmentation", label: "Segmentation Mask" },
+];
+
+const FORMAT_OPTIONS: { format: OverlayFormat; label: string }[] = [
+  { format: "ome-tiff", label: "OME-TIFF" },
+  { format: "dicomweb", label: "DICOMweb" },
+];
+
+function orderDetectedFirst<T>(
+  options: readonly T[],
+  isDetected: (option: T) => boolean,
+): T[] {
+  const suggested = options.find(isDetected);
+  if (!suggested) return [...options];
+  return [suggested, ...options.filter((o) => o !== suggested)];
+}
+
 function FormatChip({
   label,
   selected,
+  suggested,
+  muted,
   disabled,
   onClick,
 }: {
   label: string;
   selected: boolean;
+  suggested?: boolean;
+  muted?: boolean;
   disabled?: boolean;
   onClick: () => void;
 }) {
@@ -149,7 +173,13 @@ function FormatChip({
       type="button"
       disabled={disabled}
       aria-pressed={selected}
-      className={selected ? styles.typeChipActive : undefined}
+      className={[
+        selected ? styles.typeChipActive : null,
+        suggested ? styles.typeChipSuggested : null,
+        muted ? styles.typeChipMuted : null,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       onClick={onClick}
     >
       {label}
@@ -255,6 +285,9 @@ const Upload = (props: UploadProps) => {
   const [pending, setPending] = useState<PendingSource | null>(null);
   const [overlayRole, setOverlayRole] = useState<OverlayRole>("intensity");
   const [overlayFormat, setOverlayFormat] = useState<OverlayFormat>("ome-tiff");
+  const [detectedRole, setDetectedRole] = useState<OverlayRole>("intensity");
+  const [detectedFormat, setDetectedFormat] =
+    useState<OverlayFormat>("ome-tiff");
   const [importError, setImportError] = useState<string | null>(null);
   const [importBusy, setImportBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -263,6 +296,7 @@ const Upload = (props: UploadProps) => {
   const prevImportRev = useRef(importRevision);
   const formatDetectAbortRef = useRef<AbortController | null>(null);
   const formatChosenByUserRef = useRef(false);
+  const roleChosenByUserRef = useRef(false);
 
   const showTypeOverlay = pending != null;
   const dicomAllowed =
@@ -294,32 +328,70 @@ const Upload = (props: UploadProps) => {
     (next: PendingSource) => {
       abortFormatDetect();
       formatChosenByUserRef.current = false;
+      roleChosenByUserRef.current = false;
       const role = resolveImportRole("intensity", pendingLabel(next));
       let format = inferFormat(next);
       if (role === "segmentation") format = "ome-tiff";
       setPending(next);
       setOverlayRole(role);
       setOverlayFormat(format);
+      setDetectedRole(role);
+      setDetectedFormat(format);
       setImportError(null);
-
-      if (next.kind !== "url" || role === "segmentation") return;
 
       const ac = new AbortController();
       formatDetectAbortRef.current = ac;
-      const url = next.url;
-      void detectUrlImageFormat(url, ac.signal)
-        .then((detected) => {
-          if (ac.signal.aborted || formatChosenByUserRef.current) return;
-          setOverlayFormat(detected);
-        })
-        .catch(() => {
-          /* aborted or network — keep heuristic chip */
-        })
-        .finally(() => {
+      void (async () => {
+        let detectionStartedAt: number | null = null;
+        try {
+          let detectedFormat = format;
+          if (next.kind === "url") {
+            detectedFormat = await detectUrlImageFormat(next.url, ac.signal);
+            if (ac.signal.aborted) return;
+            setDetectedFormat(detectedFormat);
+            if (!formatChosenByUserRef.current) {
+              setOverlayFormat(detectedFormat);
+            }
+          }
+          if (detectedFormat !== "ome-tiff") return;
+
+          const source =
+            next.kind === "local" ? await next.handles[0].getFile() : next.url;
+          if (ac.signal.aborted) return;
+          detectionStartedAt = performance.now();
+          const result = await detectOmeTiffMask(source, ac.signal);
+          const durationMs = performance.now() - detectionStartedAt;
+          console.info(
+            `[minerva] mask detection: ${result.label} score=${result.score ?? "n/a"} duration=${durationMs.toFixed(1)}ms`,
+          );
+          if (
+            ac.signal.aborted ||
+            roleChosenByUserRef.current ||
+            (result.score == null && result.label !== "rgb")
+          ) {
+            return;
+          }
+          const detected =
+            result.label === "mask" ? "segmentation" : "intensity";
+          setDetectedRole(detected);
+          setOverlayRole(detected);
+        } catch (error) {
+          if (!ac.signal.aborted) {
+            const durationMs =
+              detectionStartedAt == null
+                ? null
+                : performance.now() - detectionStartedAt;
+            console.warn(
+              `[minerva] mask detection failed${durationMs == null ? "" : ` after ${durationMs.toFixed(1)}ms`}`,
+              error,
+            );
+          }
+        } finally {
           if (formatDetectAbortRef.current === ac) {
             formatDetectAbortRef.current = null;
           }
-        });
+        }
+      })();
     },
     [abortFormatDetect],
   );
@@ -357,13 +429,7 @@ const Upload = (props: UploadProps) => {
     setImportError(null);
     try {
       const picked = await onAllow();
-      if (picked.length === 0) {
-        // Fallback for mask-friendly picker when intensity handle path is empty
-        const alt = await toFile();
-        if (alt.length === 0) return;
-        await acceptLocalHandles(alt);
-        return;
-      }
+      if (picked.length === 0) return;
       await acceptLocalHandles(picked);
     } finally {
       localPickInFlightRef.current = false;
@@ -424,8 +490,7 @@ const Upload = (props: UploadProps) => {
     setImportBusy(true);
     setImportError(null);
     try {
-      const label = pendingLabel(pending);
-      const role = resolveImportRole(overlayRole, label);
+      const role = overlayRole;
       const format =
         !dicomAllowed && overlayFormat === "dicomweb"
           ? "ome-tiff"
@@ -546,9 +611,6 @@ const Upload = (props: UploadProps) => {
         </div>
         {showAccessOverlay ? (
           <div className={styles.fileAccessOverlay}>
-            <span className={styles.fileAccessError}>
-              {needsStoryDir ? "Story folder needed" : "File access needed"}
-            </span>
             <PanelActionButton
               type="button"
               className={styles.fileAccessAction}
@@ -558,7 +620,11 @@ const Upload = (props: UploadProps) => {
                 else void onRequestFileAccess?.();
               }}
             >
-              {needsStoryDir ? "Choose story folder" : "Allow file access"}
+              {needsStoryDir
+                ? "Choose story folder"
+                : needsReselect
+                  ? "Choose file again"
+                  : "Allow file access"}
             </PanelActionButton>
           </div>
         ) : null}
@@ -633,107 +699,137 @@ const Upload = (props: UploadProps) => {
         </PanelActionButton>
       </div>
       {importError && !showTypeOverlay ? (
-        <div className={styles.importError}>{importError}</div>
+        <div className={styles.importError} role="alert">
+          {importError}
+        </div>
       ) : null}
     </div>
   );
 
-  return (
-    // File drop on the Images panel (HTML5 DnD; not a focusable control).
-    // biome-ignore lint/a11y/noStaticElementInteractions: panel-wide file drop target
-    <div
-      className={[
-        panel.authorPanel,
-        dragging ? styles.panelDropActive : "",
-      ].join(" ")}
-      onDragEnter={onDragEnter}
-      onDragLeave={onDragLeave}
-      onDragOver={onDragOver}
-      onDrop={(e) => void onDrop(e)}
-    >
+  const typeOverlayDialog =
+    showTypeOverlay && pending ? (
       <div
-        className={[
-          panel.authorPanelBody,
-          panel.thinScrollbar,
-          styles.panelBody,
-        ].join(" ")}
+        className={styles.typeOverlay}
+        role="dialog"
+        aria-modal="true"
+        aria-busy={importBusy}
+        aria-labelledby="image-import-dialog-title"
       >
-        <div className={styles.stack}>
-          {imageCards}
-          {addStrip}
-        </div>
-      </div>
-
-      {showTypeOverlay && pending ? (
-        <div className={styles.typeOverlay} role="dialog" aria-modal="true">
-          <div className={styles.typeOverlayBackdrop} />
-          <div className={`${minervaTheme.surface} ${styles.typeOverlayCard}`}>
-            <div
-              className={styles.typeOverlayFile}
-              title={pendingLabel(pending)}
-            >
-              {pendingLabel(pending)}
-            </div>
+        <div className={styles.typeOverlayBackdrop} aria-hidden="true" />
+        <div className={`${minervaTheme.surface} ${styles.typeOverlayCard}`}>
+          <div
+            id="image-import-dialog-title"
+            className={styles.typeOverlayFile}
+            title={pendingLabel(pending)}
+          >
+            {pendingLabel(pending)}
+          </div>
+          <fieldset disabled={importBusy} className={styles.typeOverlayFields}>
             <div className={styles.typeRow}>
               <span className={styles.fieldLabel}>Type</span>
-              <FormatChip
-                label="Microscopy Image"
-                selected={overlayRole === "intensity"}
-                onClick={() => setOverlayRole("intensity")}
-              />
-              <FormatChip
-                label="Segmentation Mask"
-                selected={overlayRole === "segmentation"}
-                onClick={() => {
-                  formatChosenByUserRef.current = true;
-                  setOverlayRole("segmentation");
-                  setOverlayFormat("ome-tiff");
-                }}
-              />
+              {orderDetectedFirst(
+                ROLE_OPTIONS,
+                (o) => o.role === detectedRole,
+              ).map(({ role, label }) => (
+                <FormatChip
+                  key={role}
+                  label={label}
+                  selected={overlayRole === role}
+                  suggested={detectedRole === role}
+                  muted={detectedRole !== role}
+                  onClick={() => {
+                    roleChosenByUserRef.current = true;
+                    setOverlayRole(role);
+                    if (role === "segmentation") {
+                      formatChosenByUserRef.current = true;
+                      setOverlayFormat("ome-tiff");
+                    }
+                  }}
+                />
+              ))}
             </div>
             {dicomAllowed ? (
               <div className={styles.typeSection}>
                 <div className={styles.typeRow}>
                   <span className={styles.fieldLabel}>Format</span>
-                  <FormatChip
-                    label="OME-TIFF"
-                    selected={overlayFormat === "ome-tiff"}
-                    onClick={() => {
-                      formatChosenByUserRef.current = true;
-                      setOverlayFormat("ome-tiff");
-                    }}
-                  />
-                  <FormatChip
-                    label="DICOMweb"
-                    selected={overlayFormat === "dicomweb"}
-                    onClick={() => {
-                      formatChosenByUserRef.current = true;
-                      setOverlayFormat("dicomweb");
-                    }}
-                  />
+                  {orderDetectedFirst(
+                    FORMAT_OPTIONS,
+                    (o) => o.format === detectedFormat,
+                  ).map(({ format, label }) => (
+                    <FormatChip
+                      key={format}
+                      label={label}
+                      selected={overlayFormat === format}
+                      suggested={detectedFormat === format}
+                      muted={detectedFormat !== format}
+                      onClick={() => {
+                        formatChosenByUserRef.current = true;
+                        setOverlayFormat(format);
+                      }}
+                    />
+                  ))}
                 </div>
               </div>
             ) : null}
-            {importError ? (
-              <div className={styles.importError}>{importError}</div>
-            ) : null}
-            <div className={styles.typeFooter}>
-              <PanelActionButton type="button" onClick={clearPending}>
-                Cancel
-              </PanelActionButton>
-              <PanelActionButton
-                type="button"
-                className={styles.typeImport}
-                disabled={importBusy}
-                onClick={() => void runImport()}
-              >
-                {importBusy ? "Importing…" : "Import"}
-              </PanelActionButton>
+          </fieldset>
+          {importError ? (
+            <div className={styles.importError} role="alert">
+              {importError}
             </div>
+          ) : null}
+          <div className={styles.typeFooter}>
+            <PanelActionButton
+              type="button"
+              onClick={clearPending}
+              disabled={importBusy}
+            >
+              Cancel
+            </PanelActionButton>
+            <PanelActionButton
+              type="button"
+              className={styles.typeImport}
+              disabled={importBusy}
+              onClick={() => void runImport()}
+            >
+              {importBusy ? (
+                <>
+                  <span className={minervaTheme.spinnerSm} aria-hidden="true" />
+                  Importing…
+                </>
+              ) : (
+                "Import"
+              )}
+            </PanelActionButton>
           </div>
         </div>
-      ) : null}
-    </div>
+      </div>
+    ) : null;
+
+  return (
+    <>
+      {/* File drop on the Images panel (HTML5 DnD; not a focusable control). */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: panel-wide file drop target */}
+      <div
+        className={[
+          panel.authorPanel,
+          dragging ? styles.panelDropActive : "",
+        ].join(" ")}
+        onDragEnter={onDragEnter}
+        onDragLeave={onDragLeave}
+        onDragOver={onDragOver}
+        onDrop={(e) => void onDrop(e)}
+      >
+        <div className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}>
+          <div className={styles.stack}>
+            {imageCards}
+            {addStrip}
+          </div>
+        </div>
+      </div>
+      {typeOverlayDialog
+        ? createPortal(typeOverlayDialog, document.body)
+        : null}
+    </>
   );
 };
 

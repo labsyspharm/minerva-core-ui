@@ -1,4 +1,4 @@
-import { deleteFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
+import { putFileHandle } from "@/lib/persistence/fileHandles";
 import type { Image } from "@/lib/stores/documentSchema";
 import { setImageSource } from "@/lib/stores/storeUtils";
 
@@ -15,25 +15,21 @@ export function imageHandleStorageKey(
 }
 
 /**
- * Bind a local file handle to `imageId` (new key). Optionally delete the
- * previous handle key after a replace. Works with or without an active story.
+ * Bind a local file handle to `imageId` (new key). Old keys remain available
+ * for document undo and are removed with their owning story.
  */
 export async function persistLocalImageHandle(args: {
   storyId?: string | null;
   imageId: string;
   handle: Handle.File;
   images: Image[];
-  previousHandleKey?: string;
 }): Promise<Image[]> {
-  const { storyId, imageId, handle, images, previousHandleKey } = args;
+  const { storyId, imageId, handle, images } = args;
   const key = imageHandleStorageKey(storyId, imageId);
   await putFileHandle(key, handle);
   const next = setImageSource(images, imageId, {
     kind: "local",
     handleKey: key,
   });
-  if (previousHandleKey && previousHandleKey !== key) {
-    await deleteFileHandle(previousHandleKey);
-  }
   return next;
 }

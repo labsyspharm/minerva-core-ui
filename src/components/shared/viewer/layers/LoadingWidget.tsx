@@ -4,7 +4,12 @@ import minervaTheme from "@/components/shared/minervaTheme.module.css";
 
 type LoadingWidgetProps = {
   /** Widget positioning within the view. Default 'top-left'. */
-  placement?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  placement?:
+    | "center"
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right";
   /** Tooltip message when loading */
   label?: string;
 };
@@ -40,12 +45,23 @@ export const LoadingWidget = React.forwardRef<
     ...(placement === "top-right" && { top: "8px", right: "8px" }),
     ...(placement === "bottom-left" && { bottom: "8px", left: "8px" }),
     ...(placement === "bottom-right" && { bottom: "8px", right: "8px" }),
+    ...(placement === "center" && {
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+    }),
   };
 
   return (
-    <div className="deck-widget-loading" style={positionStyles} title={label}>
-      <div className={minervaTheme.spinnerMd} />
-    </div>
+    <output
+      className="deck-widget-loading"
+      style={positionStyles}
+      title={label}
+      aria-live="polite"
+      aria-label={label}
+    >
+      <div className={minervaTheme.spinnerMd} aria-hidden="true" />
+    </output>
   );
 });
 
