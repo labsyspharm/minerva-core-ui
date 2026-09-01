@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-u3sUWy4C.js","./pako.esm-KbdoS3Oq.js","./lerc-CZlgIFrf.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BGZzCN7I.js","./pako.esm-KbdoS3Oq.js","./lerc-DaP2QuCI.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -13344,233 +13344,6 @@ let __tla = (async () => {
     return useBoundStore;
   };
   const create$9 = (createState2) => createImpl;
-  const __vite_import_meta_env__ = {
-    "BASE_URL": "./",
-    "DEV": false,
-    "MODE": "production",
-    "PROD": true,
-    "SSR": false
-  };
-  const trackedConnections = /* @__PURE__ */ new Map();
-  const getTrackedConnectionState = (name2) => {
-    const api = trackedConnections.get(name2);
-    if (!api) return {};
-    return Object.fromEntries(Object.entries(api.stores).map(([key2, api2]) => [
-      key2,
-      api2.getState()
-    ]));
-  };
-  const extractConnectionInformation = (store, extensionConnector, options) => {
-    if (store === void 0) {
-      return {
-        type: "untracked",
-        connection: extensionConnector.connect(options)
-      };
-    }
-    const existingConnection = trackedConnections.get(options.name);
-    if (existingConnection) {
-      return {
-        type: "tracked",
-        store,
-        ...existingConnection
-      };
-    }
-    const newConnection = {
-      connection: extensionConnector.connect(options),
-      stores: {}
-    };
-    trackedConnections.set(options.name, newConnection);
-    return {
-      type: "tracked",
-      store,
-      ...newConnection
-    };
-  };
-  const removeStoreFromTrackedConnections = (name2, store) => {
-    if (store === void 0) return;
-    const connectionInfo = trackedConnections.get(name2);
-    if (!connectionInfo) return;
-    delete connectionInfo.stores[store];
-    if (Object.keys(connectionInfo.stores).length === 0) {
-      trackedConnections.delete(name2);
-    }
-  };
-  const findCallerName = (stack2) => {
-    var _a2, _b2;
-    if (!stack2) return void 0;
-    const traceLines = stack2.split("\n");
-    const apiSetStateLineIndex = traceLines.findIndex((traceLine) => traceLine.includes("api.setState"));
-    if (apiSetStateLineIndex < 0) return void 0;
-    const callerLine = ((_a2 = traceLines[apiSetStateLineIndex + 1]) == null ? void 0 : _a2.trim()) || "";
-    return (_b2 = /.+ (.+) .+/.exec(callerLine)) == null ? void 0 : _b2[1];
-  };
-  const devtoolsImpl = (fn, devtoolsOptions = {}) => (set2, get2, api) => {
-    const { enabled: enabled2, anonymousActionType, store, ...options } = devtoolsOptions;
-    let extensionConnector;
-    try {
-      extensionConnector = (enabled2 != null ? enabled2 : (__vite_import_meta_env__ ? "production" : void 0) !== "production") && window.__REDUX_DEVTOOLS_EXTENSION__;
-    } catch (e2) {
-    }
-    if (!extensionConnector) {
-      return fn(set2, get2, api);
-    }
-    const { connection, ...connectionInformation } = extractConnectionInformation(store, extensionConnector, options);
-    let isRecording = true;
-    api.setState = (state, replace2, nameOrAction) => {
-      const r2 = set2(state, replace2);
-      if (!isRecording) return r2;
-      const action = nameOrAction === void 0 ? {
-        type: anonymousActionType || findCallerName(new Error().stack) || "anonymous"
-      } : typeof nameOrAction === "string" ? {
-        type: nameOrAction
-      } : nameOrAction;
-      if (store === void 0) {
-        connection == null ? void 0 : connection.send(action, get2());
-        return r2;
-      }
-      connection == null ? void 0 : connection.send({
-        ...action,
-        type: `${store}/${action.type}`
-      }, {
-        ...getTrackedConnectionState(options.name),
-        [store]: api.getState()
-      });
-      return r2;
-    };
-    api.devtools = {
-      cleanup: () => {
-        if (connection && typeof connection.unsubscribe === "function") {
-          connection.unsubscribe();
-        }
-        removeStoreFromTrackedConnections(options.name, store);
-      }
-    };
-    const setStateFromDevtools = (...a2) => {
-      const originalIsRecording = isRecording;
-      isRecording = false;
-      set2(...a2);
-      isRecording = originalIsRecording;
-    };
-    const initialState = fn(api.setState, get2, api);
-    if (connectionInformation.type === "untracked") {
-      connection == null ? void 0 : connection.init(initialState);
-    } else {
-      connectionInformation.stores[connectionInformation.store] = api;
-      connection == null ? void 0 : connection.init(Object.fromEntries(Object.entries(connectionInformation.stores).map(([key2, store2]) => [
-        key2,
-        key2 === connectionInformation.store ? initialState : store2.getState()
-      ])));
-    }
-    if (api.dispatchFromDevtools && typeof api.dispatch === "function") {
-      let didWarnAboutReservedActionType = false;
-      const originalDispatch = api.dispatch;
-      api.dispatch = (...args) => {
-        if ((__vite_import_meta_env__ ? "production" : void 0) !== "production" && args[0].type === "__setState" && !didWarnAboutReservedActionType) {
-          console.warn('[zustand devtools middleware] "__setState" action type is reserved to set state from the devtools. Avoid using it.');
-          didWarnAboutReservedActionType = true;
-        }
-        originalDispatch(...args);
-      };
-    }
-    connection.subscribe((message2) => {
-      var _a2;
-      switch (message2.type) {
-        case "ACTION":
-          if (typeof message2.payload !== "string") {
-            console.error("[zustand devtools middleware] Unsupported action format");
-            return;
-          }
-          return parseJsonThen(message2.payload, (action) => {
-            if (action.type === "__setState") {
-              if (store === void 0) {
-                setStateFromDevtools(action.state);
-                return;
-              }
-              if (Object.keys(action.state).length !== 1) {
-                console.error(`
-                    [zustand devtools middleware] Unsupported __setState action format.
-                    When using 'store' option in devtools(), the 'state' should have only one key, which is a value of 'store' that was passed in devtools(),
-                    and value of this only key should be a state object. Example: { "type": "__setState", "state": { "abc123Store": { "foo": "bar" } } }
-                    `);
-              }
-              const stateFromDevtools = action.state[store];
-              if (stateFromDevtools === void 0 || stateFromDevtools === null) {
-                return;
-              }
-              if (JSON.stringify(api.getState()) !== JSON.stringify(stateFromDevtools)) {
-                setStateFromDevtools(stateFromDevtools);
-              }
-              return;
-            }
-            if (!api.dispatchFromDevtools) return;
-            if (typeof api.dispatch !== "function") return;
-            api.dispatch(action);
-          });
-        case "DISPATCH":
-          switch (message2.payload.type) {
-            case "RESET":
-              setStateFromDevtools(initialState);
-              if (store === void 0) {
-                return connection == null ? void 0 : connection.init(api.getState());
-              }
-              return connection == null ? void 0 : connection.init(getTrackedConnectionState(options.name));
-            case "COMMIT":
-              if (store === void 0) {
-                connection == null ? void 0 : connection.init(api.getState());
-                return;
-              }
-              return connection == null ? void 0 : connection.init(getTrackedConnectionState(options.name));
-            case "ROLLBACK":
-              return parseJsonThen(message2.state, (state) => {
-                if (store === void 0) {
-                  setStateFromDevtools(state);
-                  connection == null ? void 0 : connection.init(api.getState());
-                  return;
-                }
-                setStateFromDevtools(state[store]);
-                connection == null ? void 0 : connection.init(getTrackedConnectionState(options.name));
-              });
-            case "JUMP_TO_STATE":
-            case "JUMP_TO_ACTION":
-              return parseJsonThen(message2.state, (state) => {
-                if (store === void 0) {
-                  setStateFromDevtools(state);
-                  return;
-                }
-                if (JSON.stringify(api.getState()) !== JSON.stringify(state[store])) {
-                  setStateFromDevtools(state[store]);
-                }
-              });
-            case "IMPORT_STATE": {
-              const { nextLiftedState } = message2.payload;
-              const lastComputedState = (_a2 = nextLiftedState.computedStates.slice(-1)[0]) == null ? void 0 : _a2.state;
-              if (!lastComputedState) return;
-              if (store === void 0) {
-                setStateFromDevtools(lastComputedState);
-              } else {
-                setStateFromDevtools(lastComputedState[store]);
-              }
-              connection == null ? void 0 : connection.send(null, nextLiftedState);
-              return;
-            }
-            case "PAUSE_RECORDING":
-              return isRecording = !isRecording;
-          }
-          return;
-      }
-    });
-    return initialState;
-  };
-  const devtools = devtoolsImpl;
-  const parseJsonThen = (stringified, fn) => {
-    let parsed;
-    try {
-      parsed = JSON.parse(stringified);
-    } catch (e2) {
-      console.error("[zustand devtools middleware] Could not parse the received json", e2);
-    }
-    if (parsed !== void 0) fn(parsed);
-  };
   var util;
   (function(util2) {
     util2.assertEqual = (_2) => {
@@ -18296,6 +18069,453 @@ let __tla = (async () => {
     const seed = mask2.sourceShapeId ?? mask2.sourceShapeLabel ?? "selection";
     return binaryMaskToRgba(mask2.data, mask2.width, mask2.height, viz, seed);
   }
+  function isStackVisible(stackVisibilities, sourceChannelId) {
+    return stackVisibilities[sourceChannelId] !== false;
+  }
+  function isGroupRowVisible(groupRowVisibilities, rowId) {
+    return groupRowVisibilities[rowId] !== false;
+  }
+  function isShownFirstInAllChannelsList(sc2, stackVisibilities, activeGroup, groupRowVisibilities) {
+    if (isStackVisible(stackVisibilities, sc2.id)) return true;
+    if (!activeGroup) return false;
+    return activeGroup.channels.some((gc2) => gc2.channelId === sc2.id && isGroupRowVisible(groupRowVisibilities, gc2.id));
+  }
+  function activeGroupRowForSource(activeGroup, sourceId) {
+    return activeGroup == null ? void 0 : activeGroup.channels.find((gc2) => gc2.channelId === sourceId);
+  }
+  function isDisplayedViaActiveGroup(sourceId, activeGroup, groupRowVisibilities) {
+    const row2 = activeGroupRowForSource(activeGroup, sourceId);
+    return row2 != null && isGroupRowVisible(groupRowVisibilities, row2.id);
+  }
+  function sourceIdsInAnyGroup(channelGroups) {
+    return new Set(channelGroups.flatMap((g2) => g2.channels.map((gc2) => gc2.channelId)));
+  }
+  function sourceChannelInAnyGroup(channelGroups, sourceId) {
+    return sourceIdsInAnyGroup(channelGroups).has(sourceId);
+  }
+  function isUngroupedStackVisible(sourceId, groupedIds, stackVisibilities, hasVisibilityMap) {
+    if (groupedIds.has(sourceId)) return false;
+    return !hasVisibilityMap || isStackVisible(stackVisibilities, sourceId);
+  }
+  function buildCompositedIntensityLayers(args) {
+    const { onLoader, activeGroup, channelGroups = [], stackVisibilities, groupRowVisibilities, hasVisibilityMap } = args;
+    const groupedIds = sourceIdsInAnyGroup(channelGroups);
+    if (!activeGroup) {
+      const layers = hasVisibilityMap ? onLoader.filter((sc2) => isStackVisible(stackVisibilities, sc2.id)) : onLoader.slice(0, DEFAULT_VISIBLE_INTENSITY_CHANNELS);
+      return layers.map((sc2) => ({
+        sc: sc2,
+        gc: null
+      }));
+    }
+    const ordered = [];
+    for (const gc2 of activeGroup.channels) {
+      const sc2 = onLoader.find((c2) => c2.id === gc2.channelId);
+      if (!sc2) continue;
+      const rowOn = isGroupRowVisible(groupRowVisibilities, gc2.id);
+      const stackOn = isUngroupedStackVisible(sc2.id, groupedIds, stackVisibilities, hasVisibilityMap);
+      if (!rowOn && !stackOn) continue;
+      if (rowOn) ordered.push({
+        sc: sc2,
+        gc: gc2
+      });
+      else if (stackOn) ordered.push({
+        sc: sc2,
+        gc: null
+      });
+    }
+    for (const sc2 of onLoader) {
+      if (groupedIds.has(sc2.id)) continue;
+      const inActiveGroup = activeGroup.channels.some((gc2) => gc2.channelId === sc2.id);
+      if (inActiveGroup) continue;
+      if (hasVisibilityMap && !isStackVisible(stackVisibilities, sc2.id)) {
+        continue;
+      }
+      if (!hasVisibilityMap) continue;
+      ordered.push({
+        sc: sc2,
+        gc: null
+      });
+    }
+    return ordered;
+  }
+  function isMaskSourceRendered(args) {
+    const { sc: sc2, activeGroup, channelGroups = [], stackVisibilities, groupRowVisibilities } = args;
+    const groupedIds = sourceIdsInAnyGroup(channelGroups);
+    const stackOn = isUngroupedStackVisible(sc2.id, groupedIds, stackVisibilities, true);
+    if (!activeGroup) return isStackVisible(stackVisibilities, sc2.id);
+    const rows2 = activeGroup.channels.filter((gc2) => gc2.channelId === sc2.id);
+    if (rows2.length === 0) return stackOn;
+    const rowOn = rows2.some((gc2) => isGroupRowVisible(groupRowVisibilities, gc2.id));
+    return rowOn || stackOn;
+  }
+  function diffChannelIds(before, after) {
+    const beforeIds = new Set(before.map((sc2) => sc2.id));
+    return after.filter((sc2) => !beforeIds.has(sc2.id)).map((sc2) => sc2.id);
+  }
+  function diffGroupRowIds(before, after) {
+    const beforeIds = new Set(before.flatMap((g2) => g2.channels.map((gc2) => gc2.id)));
+    return after.flatMap((g2) => g2.channels.map((gc2) => gc2.id)).filter((id2) => !beforeIds.has(id2));
+  }
+  function preservedStackVisibilities(sourceChannels, prev, preserveSelectionMask = false) {
+    const sourceIds = new Set(sourceChannels.map((sc2) => sc2.id));
+    const out = {};
+    for (const [key2, visible] of Object.entries(prev)) {
+      if (sourceIds.has(key2) || preserveSelectionMask && key2 === SELECTION_MASK_CHANNEL_KEY) {
+        out[key2] = visible;
+      }
+    }
+    return out;
+  }
+  function freshStackDefaults(sourceChannels) {
+    const out = {};
+    let intensitySeen = 0;
+    for (const sc2 of sourceChannels) {
+      if (isMaskChannel(sc2)) {
+        out[sc2.id] = true;
+        continue;
+      }
+      if (isImageChannel(sc2)) {
+        const show = intensitySeen < DEFAULT_VISIBLE_INTENSITY_CHANNELS;
+        out[sc2.id] = show;
+        if (show) intensitySeen++;
+        continue;
+      }
+      out[sc2.id] = true;
+    }
+    return out;
+  }
+  function applyStackVisibilities(sourceChannels, prev, transition) {
+    switch (transition.kind) {
+      case "fresh":
+        return freshStackDefaults(sourceChannels);
+      case "remove":
+        return preservedStackVisibilities(sourceChannels, prev);
+      case "appendMask": {
+        const out = preservedStackVisibilities(sourceChannels, prev, true);
+        const newIds = new Set(transition.newChannelIds);
+        for (const sc2 of sourceChannels) {
+          if (newIds.has(sc2.id) && isMaskChannel(sc2)) out[sc2.id] = true;
+        }
+        return out;
+      }
+      case "appendIntensity": {
+        const out = preservedStackVisibilities(sourceChannels, prev, true);
+        const newIds = new Set(transition.newChannelIds);
+        for (const sc2 of sourceChannels) {
+          if (newIds.has(sc2.id)) out[sc2.id] = false;
+        }
+        return out;
+      }
+      case "sync": {
+        const out = preservedStackVisibilities(sourceChannels, prev, true);
+        let intensitySeen = sourceChannels.filter((sc2) => isImageChannel(sc2) && out[sc2.id] === true).length;
+        for (const sc2 of sourceChannels) {
+          if (out[sc2.id] !== void 0) continue;
+          if (isMaskChannel(sc2)) {
+            out[sc2.id] = true;
+            continue;
+          }
+          if (isImageChannel(sc2)) {
+            const show = intensitySeen < DEFAULT_VISIBLE_INTENSITY_CHANNELS;
+            out[sc2.id] = show;
+            if (show) intensitySeen++;
+            continue;
+          }
+          out[sc2.id] = true;
+        }
+        return out;
+      }
+    }
+  }
+  function applyGroupRowVisibilities(channelGroups, prev, transition, stackVisibilities) {
+    const rowIds = new Set(channelGroups.flatMap((g2) => g2.channels.map((gc2) => gc2.id)));
+    if (transition.kind === "remove") {
+      const out2 = {};
+      for (const [id2, visible] of Object.entries(prev)) {
+        if (rowIds.has(id2)) out2[id2] = visible;
+      }
+      return out2;
+    }
+    const out = {};
+    if (transition.kind !== "fresh") {
+      for (const [id2, visible] of Object.entries(prev)) {
+        if (rowIds.has(id2)) out[id2] = visible;
+      }
+    }
+    const newRowIds = transition.kind === "appendIntensity" ? new Set(transition.newGroupRowIds) : null;
+    for (const group2 of channelGroups) {
+      for (const gc2 of group2.channels) {
+        if (out[gc2.id] !== void 0) continue;
+        if (transition.kind === "fresh") {
+          out[gc2.id] = (stackVisibilities == null ? void 0 : stackVisibilities[gc2.channelId]) ?? false;
+        } else if (newRowIds == null ? void 0 : newRowIds.has(gc2.id)) {
+          out[gc2.id] = false;
+        } else {
+          out[gc2.id] = true;
+        }
+      }
+    }
+    return out;
+  }
+  function applyVisibilityTransition(sourceChannels, channelGroups, stackVisibilities, groupRowVisibilities, transition) {
+    const channelVisibilities = applyStackVisibilities(sourceChannels, stackVisibilities, transition);
+    return {
+      channelVisibilities,
+      channelGroupRowVisibilities: applyGroupRowVisibilities(channelGroups, groupRowVisibilities, transition, channelVisibilities)
+    };
+  }
+  function defaultVisibilitiesForSources(sourceChannels, prev = {}, _channelGroups = []) {
+    if (Object.keys(prev).length === 0) {
+      return applyStackVisibilities(sourceChannels, prev, {
+        kind: "fresh"
+      });
+    }
+    return applyStackVisibilities(sourceChannels, prev, {
+      kind: "sync"
+    });
+  }
+  function initialPaintSourceChannelIds(args) {
+    const channelGroups = args.channelGroups ?? [];
+    const stackVisibilities = args.stackVisibilities ?? defaultVisibilitiesForSources(args.sourceChannels, {}, channelGroups);
+    const onLoader = args.sourceChannels.filter(isImageChannel);
+    const activeGroup = channelGroups.length === 0 ? void 0 : channelGroups.find((g2) => g2.id === args.activeGroupId) ?? channelGroups[0];
+    const layers = buildCompositedIntensityLayers({
+      onLoader,
+      activeGroup,
+      channelGroups,
+      stackVisibilities,
+      groupRowVisibilities: args.groupRowVisibilities ?? {},
+      hasVisibilityMap: true
+    });
+    return new Set(layers.map((l2) => l2.sc.id));
+  }
+  const __vite_import_meta_env__ = {
+    "BASE_URL": "./",
+    "DEV": false,
+    "MODE": "production",
+    "PROD": true,
+    "SSR": false
+  };
+  const trackedConnections = /* @__PURE__ */ new Map();
+  const getTrackedConnectionState = (name2) => {
+    const api = trackedConnections.get(name2);
+    if (!api) return {};
+    return Object.fromEntries(Object.entries(api.stores).map(([key2, api2]) => [
+      key2,
+      api2.getState()
+    ]));
+  };
+  const extractConnectionInformation = (store, extensionConnector, options) => {
+    if (store === void 0) {
+      return {
+        type: "untracked",
+        connection: extensionConnector.connect(options)
+      };
+    }
+    const existingConnection = trackedConnections.get(options.name);
+    if (existingConnection) {
+      return {
+        type: "tracked",
+        store,
+        ...existingConnection
+      };
+    }
+    const newConnection = {
+      connection: extensionConnector.connect(options),
+      stores: {}
+    };
+    trackedConnections.set(options.name, newConnection);
+    return {
+      type: "tracked",
+      store,
+      ...newConnection
+    };
+  };
+  const removeStoreFromTrackedConnections = (name2, store) => {
+    if (store === void 0) return;
+    const connectionInfo = trackedConnections.get(name2);
+    if (!connectionInfo) return;
+    delete connectionInfo.stores[store];
+    if (Object.keys(connectionInfo.stores).length === 0) {
+      trackedConnections.delete(name2);
+    }
+  };
+  const findCallerName = (stack2) => {
+    var _a2, _b2;
+    if (!stack2) return void 0;
+    const traceLines = stack2.split("\n");
+    const apiSetStateLineIndex = traceLines.findIndex((traceLine) => traceLine.includes("api.setState"));
+    if (apiSetStateLineIndex < 0) return void 0;
+    const callerLine = ((_a2 = traceLines[apiSetStateLineIndex + 1]) == null ? void 0 : _a2.trim()) || "";
+    return (_b2 = /.+ (.+) .+/.exec(callerLine)) == null ? void 0 : _b2[1];
+  };
+  const devtoolsImpl = (fn, devtoolsOptions = {}) => (set2, get2, api) => {
+    const { enabled: enabled2, anonymousActionType, store, ...options } = devtoolsOptions;
+    let extensionConnector;
+    try {
+      extensionConnector = (enabled2 != null ? enabled2 : (__vite_import_meta_env__ ? "production" : void 0) !== "production") && window.__REDUX_DEVTOOLS_EXTENSION__;
+    } catch (e2) {
+    }
+    if (!extensionConnector) {
+      return fn(set2, get2, api);
+    }
+    const { connection, ...connectionInformation } = extractConnectionInformation(store, extensionConnector, options);
+    let isRecording = true;
+    api.setState = (state, replace2, nameOrAction) => {
+      const r2 = set2(state, replace2);
+      if (!isRecording) return r2;
+      const action = nameOrAction === void 0 ? {
+        type: anonymousActionType || findCallerName(new Error().stack) || "anonymous"
+      } : typeof nameOrAction === "string" ? {
+        type: nameOrAction
+      } : nameOrAction;
+      if (store === void 0) {
+        connection == null ? void 0 : connection.send(action, get2());
+        return r2;
+      }
+      connection == null ? void 0 : connection.send({
+        ...action,
+        type: `${store}/${action.type}`
+      }, {
+        ...getTrackedConnectionState(options.name),
+        [store]: api.getState()
+      });
+      return r2;
+    };
+    api.devtools = {
+      cleanup: () => {
+        if (connection && typeof connection.unsubscribe === "function") {
+          connection.unsubscribe();
+        }
+        removeStoreFromTrackedConnections(options.name, store);
+      }
+    };
+    const setStateFromDevtools = (...a2) => {
+      const originalIsRecording = isRecording;
+      isRecording = false;
+      set2(...a2);
+      isRecording = originalIsRecording;
+    };
+    const initialState = fn(api.setState, get2, api);
+    if (connectionInformation.type === "untracked") {
+      connection == null ? void 0 : connection.init(initialState);
+    } else {
+      connectionInformation.stores[connectionInformation.store] = api;
+      connection == null ? void 0 : connection.init(Object.fromEntries(Object.entries(connectionInformation.stores).map(([key2, store2]) => [
+        key2,
+        key2 === connectionInformation.store ? initialState : store2.getState()
+      ])));
+    }
+    if (api.dispatchFromDevtools && typeof api.dispatch === "function") {
+      let didWarnAboutReservedActionType = false;
+      const originalDispatch = api.dispatch;
+      api.dispatch = (...args) => {
+        if ((__vite_import_meta_env__ ? "production" : void 0) !== "production" && args[0].type === "__setState" && !didWarnAboutReservedActionType) {
+          console.warn('[zustand devtools middleware] "__setState" action type is reserved to set state from the devtools. Avoid using it.');
+          didWarnAboutReservedActionType = true;
+        }
+        originalDispatch(...args);
+      };
+    }
+    connection.subscribe((message2) => {
+      var _a2;
+      switch (message2.type) {
+        case "ACTION":
+          if (typeof message2.payload !== "string") {
+            console.error("[zustand devtools middleware] Unsupported action format");
+            return;
+          }
+          return parseJsonThen(message2.payload, (action) => {
+            if (action.type === "__setState") {
+              if (store === void 0) {
+                setStateFromDevtools(action.state);
+                return;
+              }
+              if (Object.keys(action.state).length !== 1) {
+                console.error(`
+                    [zustand devtools middleware] Unsupported __setState action format.
+                    When using 'store' option in devtools(), the 'state' should have only one key, which is a value of 'store' that was passed in devtools(),
+                    and value of this only key should be a state object. Example: { "type": "__setState", "state": { "abc123Store": { "foo": "bar" } } }
+                    `);
+              }
+              const stateFromDevtools = action.state[store];
+              if (stateFromDevtools === void 0 || stateFromDevtools === null) {
+                return;
+              }
+              if (JSON.stringify(api.getState()) !== JSON.stringify(stateFromDevtools)) {
+                setStateFromDevtools(stateFromDevtools);
+              }
+              return;
+            }
+            if (!api.dispatchFromDevtools) return;
+            if (typeof api.dispatch !== "function") return;
+            api.dispatch(action);
+          });
+        case "DISPATCH":
+          switch (message2.payload.type) {
+            case "RESET":
+              setStateFromDevtools(initialState);
+              if (store === void 0) {
+                return connection == null ? void 0 : connection.init(api.getState());
+              }
+              return connection == null ? void 0 : connection.init(getTrackedConnectionState(options.name));
+            case "COMMIT":
+              if (store === void 0) {
+                connection == null ? void 0 : connection.init(api.getState());
+                return;
+              }
+              return connection == null ? void 0 : connection.init(getTrackedConnectionState(options.name));
+            case "ROLLBACK":
+              return parseJsonThen(message2.state, (state) => {
+                if (store === void 0) {
+                  setStateFromDevtools(state);
+                  connection == null ? void 0 : connection.init(api.getState());
+                  return;
+                }
+                setStateFromDevtools(state[store]);
+                connection == null ? void 0 : connection.init(getTrackedConnectionState(options.name));
+              });
+            case "JUMP_TO_STATE":
+            case "JUMP_TO_ACTION":
+              return parseJsonThen(message2.state, (state) => {
+                if (store === void 0) {
+                  setStateFromDevtools(state);
+                  return;
+                }
+                if (JSON.stringify(api.getState()) !== JSON.stringify(state[store])) {
+                  setStateFromDevtools(state[store]);
+                }
+              });
+            case "IMPORT_STATE": {
+              const { nextLiftedState } = message2.payload;
+              const lastComputedState = (_a2 = nextLiftedState.computedStates.slice(-1)[0]) == null ? void 0 : _a2.state;
+              if (!lastComputedState) return;
+              if (store === void 0) {
+                setStateFromDevtools(lastComputedState);
+              } else {
+                setStateFromDevtools(lastComputedState[store]);
+              }
+              connection == null ? void 0 : connection.send(null, nextLiftedState);
+              return;
+            }
+            case "PAUSE_RECORDING":
+              return isRecording = !isRecording;
+          }
+          return;
+      }
+    });
+    return initialState;
+  };
+  const devtools = devtoolsImpl;
+  const parseJsonThen = (stringified, fn) => {
+    let parsed;
+    try {
+      parsed = JSON.parse(stringified);
+    } catch (e2) {
+      console.error("[zustand devtools middleware] Could not parse the received json", e2);
+    }
+    if (parsed !== void 0) fn(parsed);
+  };
   const SEGMENTS_PER_CIRCLE = 32;
   function makeCircle(cx, cy, radiusWorld, segments = SEGMENTS_PER_CIRCLE) {
     const points = [];
@@ -61404,26 +61624,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-CJ9GjD_d.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CrMcv6E-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-C7ReFIGN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-C8gjwanu.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-gk-eiSxY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DF6SDdjA.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-u3sUWy4C.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BUnYe3RJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CZlgIFrf.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BGZzCN7I.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-Cqs-nyav.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DaP2QuCI.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DFJfvubV.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Ck_V5d3r.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-Dlw6BqUf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CAPJgC_W.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -82713,153 +82933,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (handle2.kind === "file") return handle2;
     return void 0;
   }
-  async function deleteFileHandle(id2) {
-    sessionHandles.delete(id2);
-    await storyDb.handles.delete(id2);
-  }
   async function deleteFileHandlesForStory(storyId) {
     const prefix = `story:${storyId}:`;
     for (const id2 of sessionHandles.keys()) {
       if (id2.startsWith(prefix)) sessionHandles.delete(id2);
     }
     await storyDb.handles.where("id").startsWith(prefix).delete();
-  }
-  function isStackVisible(stackVisibilities, sourceChannelId) {
-    return stackVisibilities[sourceChannelId] !== false;
-  }
-  function isGroupRowVisible(groupRowVisibilities, rowId) {
-    return groupRowVisibilities[rowId] !== false;
-  }
-  function isShownFirstInAllChannelsList(sc2, stackVisibilities, activeGroup, groupRowVisibilities) {
-    if (isStackVisible(stackVisibilities, sc2.id)) return true;
-    if (!activeGroup) return false;
-    return activeGroup.channels.some((gc2) => gc2.channelId === sc2.id && isGroupRowVisible(groupRowVisibilities, gc2.id));
-  }
-  function activeGroupRowForSource(activeGroup, sourceId) {
-    return activeGroup == null ? void 0 : activeGroup.channels.find((gc2) => gc2.channelId === sourceId);
-  }
-  function isDisplayedViaActiveGroup(sourceId, activeGroup, groupRowVisibilities) {
-    const row2 = activeGroupRowForSource(activeGroup, sourceId);
-    return row2 != null && isGroupRowVisible(groupRowVisibilities, row2.id);
-  }
-  function sourceIdsInAnyGroup(channelGroups) {
-    return new Set(channelGroups.flatMap((g2) => g2.channels.map((gc2) => gc2.channelId)));
-  }
-  function sourceChannelInAnyGroup(channelGroups, sourceId) {
-    return sourceIdsInAnyGroup(channelGroups).has(sourceId);
-  }
-  function isUngroupedStackVisible(sourceId, groupedIds, stackVisibilities, hasVisibilityMap) {
-    if (groupedIds.has(sourceId)) return false;
-    return !hasVisibilityMap || isStackVisible(stackVisibilities, sourceId);
-  }
-  function buildCompositedIntensityLayers(args) {
-    const { onLoader, activeGroup, channelGroups = [], stackVisibilities, groupRowVisibilities, hasVisibilityMap } = args;
-    const groupedIds = sourceIdsInAnyGroup(channelGroups);
-    if (!activeGroup) {
-      const layers = hasVisibilityMap ? onLoader.filter((sc2) => isStackVisible(stackVisibilities, sc2.id)) : onLoader.slice(0, DEFAULT_VISIBLE_INTENSITY_CHANNELS);
-      return layers.map((sc2) => ({
-        sc: sc2,
-        gc: null
-      }));
-    }
-    const ordered = [];
-    for (const gc2 of activeGroup.channels) {
-      const sc2 = onLoader.find((c2) => c2.id === gc2.channelId);
-      if (!sc2) continue;
-      const rowOn = isGroupRowVisible(groupRowVisibilities, gc2.id);
-      const stackOn = isUngroupedStackVisible(sc2.id, groupedIds, stackVisibilities, hasVisibilityMap);
-      if (!rowOn && !stackOn) continue;
-      if (rowOn) ordered.push({
-        sc: sc2,
-        gc: gc2
-      });
-      else if (stackOn) ordered.push({
-        sc: sc2,
-        gc: null
-      });
-    }
-    for (const sc2 of onLoader) {
-      if (groupedIds.has(sc2.id)) continue;
-      const inActiveGroup = activeGroup.channels.some((gc2) => gc2.channelId === sc2.id);
-      if (inActiveGroup) continue;
-      if (hasVisibilityMap && !isStackVisible(stackVisibilities, sc2.id)) {
-        continue;
-      }
-      if (!hasVisibilityMap) continue;
-      ordered.push({
-        sc: sc2,
-        gc: null
-      });
-    }
-    return ordered;
-  }
-  function isMaskSourceRendered(args) {
-    const { sc: sc2, activeGroup, channelGroups = [], stackVisibilities, groupRowVisibilities } = args;
-    const groupedIds = sourceIdsInAnyGroup(channelGroups);
-    const stackOn = isUngroupedStackVisible(sc2.id, groupedIds, stackVisibilities, true);
-    if (!activeGroup) return isStackVisible(stackVisibilities, sc2.id);
-    const rows2 = activeGroup.channels.filter((gc2) => gc2.channelId === sc2.id);
-    if (rows2.length === 0) return stackOn;
-    const rowOn = rows2.some((gc2) => isGroupRowVisible(groupRowVisibilities, gc2.id));
-    return rowOn || stackOn;
-  }
-  function defaultVisibilitiesForSources(sourceChannels, prev = {}, channelGroups = []) {
-    const sourceIds = new Set(sourceChannels.map((sc2) => sc2.id));
-    const hasDocumentGroups = channelGroups.length > 0;
-    const prevVisibility = (sc2) => {
-      if (prev[sc2.id] !== void 0) return prev[sc2.id];
-      if (prev[sc2.name] !== void 0) return prev[sc2.name];
-      return void 0;
-    };
-    const hasHiddenSource = sourceChannels.some((sc2) => prevVisibility(sc2) === false);
-    const visibleIntensityCount = sourceChannels.filter((sc2) => isImageChannel(sc2) && prevVisibility(sc2) !== false).length;
-    const shouldPreserveExisting = hasHiddenSource || !hasDocumentGroups && visibleIntensityCount <= DEFAULT_VISIBLE_INTENSITY_CHANNELS;
-    const out = {};
-    for (const [key2, visible] of Object.entries(prev)) {
-      if (sourceIds.has(key2)) continue;
-      if (sourceChannels.some((sc2) => sc2.name === key2)) continue;
-      out[key2] = visible;
-    }
-    let intensitySeen = 0;
-    for (const sc2 of sourceChannels) {
-      const existing = prevVisibility(sc2);
-      if (existing !== void 0 && shouldPreserveExisting) {
-        if (existing !== false && isImageChannel(sc2)) intensitySeen++;
-        out[sc2.id] = existing;
-        continue;
-      }
-      if (isMaskChannel(sc2)) {
-        out[sc2.id] = true;
-        continue;
-      }
-      if (isImageChannel(sc2)) {
-        if (hasDocumentGroups) {
-          out[sc2.id] = false;
-          continue;
-        }
-        const shouldShow = intensitySeen < DEFAULT_VISIBLE_INTENSITY_CHANNELS;
-        out[sc2.id] = shouldShow;
-        if (shouldShow) intensitySeen++;
-      } else {
-        out[sc2.id] = true;
-      }
-    }
-    return out;
-  }
-  function initialPaintSourceChannelIds(args) {
-    const channelGroups = args.channelGroups ?? [];
-    const stackVisibilities = args.stackVisibilities ?? defaultVisibilitiesForSources(args.sourceChannels, {}, channelGroups);
-    const onLoader = args.sourceChannels.filter(isImageChannel);
-    const activeGroup = channelGroups.length === 0 ? void 0 : channelGroups.find((g2) => g2.id === args.activeGroupId) ?? channelGroups[0];
-    const layers = buildCompositedIntensityLayers({
-      onLoader,
-      activeGroup,
-      channelGroups,
-      stackVisibilities,
-      groupRowVisibilities: args.groupRowVisibilities ?? {},
-      hasVisibilityMap: true
-    });
-    return new Set(layers.map((l2) => l2.sc.id));
   }
   const IMPORT_DEFAULT_SEED_HEX = [
     "0dabff",
@@ -83499,31 +83578,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         channels: g2.channels.filter((gc2) => !removed.has(gc2.channelId))
       })).filter((g2) => g2.channels.length > 0),
       removedChannelIds
-    };
-  }
-  function dedupeImagesForImport(images, basename2, contentRole) {
-    const key2 = basename2.trim().toLowerCase();
-    if (!key2) return {
-      images,
-      removedImageIds: []
-    };
-    const removedImageIds = [];
-    const next2 = images.filter((im) => {
-      const base2 = im.basename.trim().toLowerCase();
-      if (!base2 || base2 !== key2) return true;
-      const role = resolveImageImportRole({
-        contentRole: im.contentRole,
-        channels: im.channels ?? []
-      });
-      if (role === contentRole) {
-        removedImageIds.push(im.id);
-        return false;
-      }
-      return true;
-    });
-    return {
-      images: next2,
-      removedImageIds
     };
   }
   function basenameImportLabel(basename2) {
@@ -86948,27 +87002,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       id2,
       name2
     ]));
-    const namesInUse = /* @__PURE__ */ new Set();
-    for (const g2 of groups) {
-      for (const gc2 of g2.channels) {
-        const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
-        if (sc2 == null ? void 0 : sc2.name) namesInUse.add(sc2.name);
-      }
-    }
-    const prevVis = useAppStore.getState().channelVisibilities;
-    const channelVisibilities = {
-      ...prevVis
-    };
-    for (const name2 of namesInUse) {
-      if (channelVisibilities[name2] === void 0) {
-        channelVisibilities[name2] = true;
-      }
-    }
-    const activeId = useAppStore.getState().activeChannelGroupId;
+    const app = useAppStore.getState();
+    const visibility = applyVisibilityTransition(sourceChannels, groups, app.channelVisibilities, app.channelGroupRowVisibilities, {
+      kind: "sync"
+    });
+    const { channelVisibilities } = visibility;
+    delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
+    const activeId = app.activeChannelGroupId;
     const nextActiveId = activeId && groups.some((g2) => g2.id === activeId) ? activeId : ((_a2 = groups[0]) == null ? void 0 : _a2.id) ?? null;
     useAppStore.setState({
       groupNames,
       channelVisibilities,
+      channelGroupRowVisibilities: visibility.channelGroupRowVisibilities,
       activeChannelGroupId: nextActiveId
     });
   }
@@ -87008,6 +87053,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function syncAppStoreFromDocument() {
     useAppStore.getState().clearChannelRendering();
+    useAppStore.setState({
+      imageSelectionMask: null
+    });
     syncAppStoreChannelMirrorsFromDocument();
     syncAppStoreWaypointsFromDocument();
     syncAppStoreShapesFromDocument();
@@ -91680,16 +91728,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return storyId ? `story:${storyId}:image:${imageId}` : `image:${imageId}`;
   }
   async function persistLocalImageHandle(args) {
-    const { storyId, imageId, handle: handle2, images, previousHandleKey } = args;
+    const { storyId, imageId, handle: handle2, images } = args;
     const key2 = imageHandleStorageKey(storyId, imageId);
     await putFileHandle(key2, handle2);
     const next2 = setImageSource(images, imageId, {
       kind: "local",
       handleKey: key2
     });
-    if (previousHandleKey && previousHandleKey !== key2) {
-      await deleteFileHandle(previousHandleKey);
-    }
     return next2;
   }
   const version = "1.0.0-alpha.7";
@@ -170693,6 +170738,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const [refittingContrastIds, setRefittingContrastIds] = reactExports.useState(() => /* @__PURE__ */ new Set());
     const [dragOverGroupId, setDragOverGroupId] = reactExports.useState(null);
     const [lockedColorRowIdsByGroup, setLockedColorRowIdsByGroup] = reactExports.useState(() => /* @__PURE__ */ new Map());
+    reactExports.useEffect(() => {
+      setLockedColorRowIdsByGroup((prev) => {
+        const validGroupIds = new Set(channelGroups.map((g2) => g2.id));
+        const validRowIds = new Set(channelGroups.flatMap((g2) => g2.channels.map((gc2) => gc2.id)));
+        let changed = false;
+        const next2 = /* @__PURE__ */ new Map();
+        for (const [groupId, rowIds] of prev) {
+          if (!validGroupIds.has(groupId)) {
+            changed = true;
+            continue;
+          }
+          const filtered = new Set([
+            ...rowIds
+          ].filter((rowId) => validRowIds.has(rowId)));
+          if (filtered.size !== rowIds.size) changed = true;
+          if (filtered.size > 0) next2.set(groupId, filtered);
+        }
+        return changed ? next2 : prev;
+      });
+    }, [
+      channelGroups
+    ]);
     const lockedIdsForGroup = reactExports.useCallback((groupId) => lockedColorRowIdsByGroup.get(groupId) ?? EMPTY_LOCKED_ROW_IDS, [
       lockedColorRowIdsByGroup
     ]);
@@ -170718,9 +170785,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         id2,
         name2
       ])));
+      setChannelGroupRowVisibilities(applyGroupRowVisibilities(normalized, useAppStore.getState().channelGroupRowVisibilities, {
+        kind: "sync"
+      }));
     }, [
       setChannelGroups,
-      setGroupNames
+      setGroupNames,
+      setChannelGroupRowVisibilities
     ]);
     const activateGroup = reactExports.useCallback((groupId) => {
       setActiveChannelGroup(groupId);
@@ -177310,14 +177381,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...placement === "bottom-right" && {
         bottom: "8px",
         right: "8px"
+      },
+      ...placement === "center" && {
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)"
       }
     };
-    return jsxRuntimeExports.jsx("div", {
+    return jsxRuntimeExports.jsx("output", {
       className: "deck-widget-loading",
       style: positionStyles,
       title: label2,
+      "aria-live": "polite",
+      "aria-label": label2,
       children: jsxRuntimeExports.jsx("div", {
-        className: minervaTheme.spinnerMd
+        className: minervaTheme.spinnerMd,
+        "aria-hidden": "true"
       })
     });
   });
@@ -178448,7 +178527,7 @@ void main() {
         }),
         jsxRuntimeExports.jsx(LoadingWidget, {
           ref: loadingWidgetRef,
-          placement: "top-right"
+          placement: "center"
         }),
         showSquareViewportOverlay && jsxRuntimeExports.jsx("div", {
           className: styles$4.squareViewportOverlay,
@@ -249100,12 +249179,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-01T16:23:55.110Z");
+    const label2 = utcShort("2026-09-01T20:39:21.307Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-09-01T16:23:55.110Z",
+      title: "2026-09-01T20:39:21.307Z",
       children: [
         "Updated ",
         label2,
@@ -249240,6 +249319,191 @@ void main() {
       })
     });
   };
+  const EQ_THRESHOLD = 0.5;
+  const MIN_PAIRS = 1e5;
+  const MAX_TILES = 6;
+  const PROBE_TILES = 48;
+  const TILE_MIN_FG = 0.01;
+  const DEFAULT_TILE = 2048;
+  const PHI = 1.618033988749895;
+  function gcd(a2, b2) {
+    a2 = Math.abs(a2);
+    b2 = Math.abs(b2);
+    while (b2 !== 0) {
+      const t2 = b2;
+      b2 = a2 % b2;
+      a2 = t2;
+    }
+    return a2;
+  }
+  function isIntegerData(data2) {
+    return data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray || data2 instanceof Uint16Array || data2 instanceof Uint32Array || data2 instanceof Int8Array || data2 instanceof Int16Array || data2 instanceof Int32Array;
+  }
+  function equalFgPairs(data2, width, height, signal) {
+    let eq = 0;
+    let tot = 0;
+    for (let y2 = 0; y2 < height; y2++) {
+      if ((y2 & 63) === 0) signal == null ? void 0 : signal.throwIfAborted();
+      const row2 = y2 * width;
+      for (let x2 = 0; x2 < width - 1; x2++) {
+        const a2 = data2[row2 + x2];
+        const b2 = data2[row2 + x2 + 1];
+        if (a2 !== 0 && b2 !== 0) {
+          tot += 1;
+          if (a2 === b2) eq += 1;
+        }
+      }
+    }
+    for (let y2 = 0; y2 < height - 1; y2++) {
+      if ((y2 & 63) === 0) signal == null ? void 0 : signal.throwIfAborted();
+      const row2 = y2 * width;
+      const next2 = row2 + width;
+      for (let x2 = 0; x2 < width; x2++) {
+        const a2 = data2[row2 + x2];
+        const b2 = data2[next2 + x2];
+        if (a2 !== 0 && b2 !== 0) {
+          tot += 1;
+          if (a2 === b2) eq += 1;
+        }
+      }
+    }
+    return [
+      eq,
+      tot
+    ];
+  }
+  function ldsOrder(n2) {
+    if (n2 <= 2) return [
+      ...Array(n2).keys()
+    ];
+    let k2 = Math.max(1, Math.round(n2 / PHI));
+    while (k2 < n2 && gcd(k2, n2) !== 1) k2 += 1;
+    if (gcd(k2, n2) !== 1) return [
+      ...Array(n2).keys()
+    ];
+    return Array.from({
+      length: n2
+    }, (_2, i2) => i2 * k2 % n2);
+  }
+  function fgFraction(data2, size) {
+    if (size <= 0) return 0;
+    let nz = 0;
+    for (let i2 = 0; i2 < size; i2++) if (data2[i2] !== 0) nz += 1;
+    return nz / size;
+  }
+  async function readWindow(plane, x2, y2, w2, h2, channel) {
+    var _a2;
+    (_a2 = plane.signal) == null ? void 0 : _a2.throwIfAborted();
+    const rw = Math.max(0, Math.min(w2, plane.width - x2));
+    const rh2 = Math.max(0, Math.min(h2, plane.height - y2));
+    if (rw <= 0 || rh2 <= 0) return {
+      data: [],
+      width: 0,
+      height: 0
+    };
+    const data2 = await plane.getWindow(x2, y2, rw, rh2, channel);
+    return {
+      data: data2,
+      width: rw,
+      height: rh2
+    };
+  }
+  function tileShape(plane) {
+    const th2 = Math.max(1, plane.tileHeight ?? DEFAULT_TILE);
+    const tw = Math.max(1, plane.tileWidth ?? DEFAULT_TILE);
+    return [
+      th2,
+      tw
+    ];
+  }
+  async function sparseEquality(plane, channel) {
+    var _a2;
+    const H2 = plane.height;
+    const W2 = plane.width;
+    const [th2, tw] = tileShape(plane);
+    const nTy = Math.max(1, Math.ceil(H2 / th2));
+    const nTx = Math.max(1, Math.ceil(W2 / tw));
+    let eq = 0;
+    let tot = 0;
+    let used = 0;
+    let read = 0;
+    for (const idx of ldsOrder(nTy * nTx)) {
+      (_a2 = plane.signal) == null ? void 0 : _a2.throwIfAborted();
+      if (used >= MAX_TILES || tot >= MIN_PAIRS || read >= PROBE_TILES) break;
+      const ty = Math.floor(idx / nTx);
+      const tx = idx % nTx;
+      const win = await readWindow(plane, tx * tw, ty * th2, tw, th2, channel);
+      read += 1;
+      const size = win.width * win.height;
+      if (size === 0 || fgFraction(win.data, size) < TILE_MIN_FG) continue;
+      const [e2, t2] = equalFgPairs(win.data, win.width, win.height, plane.signal);
+      eq += e2;
+      tot += t2;
+      used += 1;
+    }
+    return tot >= MIN_PAIRS / 10 ? eq / tot : null;
+  }
+  async function classifyPlane(plane, channel) {
+    const score = await sparseEquality(plane, channel);
+    if (score == null) {
+      let integer = plane.integer;
+      if (integer == null) {
+        const probe = await readWindow(plane, 0, 0, 1, 1, channel);
+        integer = isIntegerData(probe.data);
+      }
+      return {
+        label: integer ? "mask" : "image",
+        score: null
+      };
+    }
+    return {
+      label: score > EQ_THRESHOLD ? "mask" : "image",
+      score
+    };
+  }
+  async function classify(plane, channel = 0) {
+    const channels2 = plane.channels ?? 1;
+    if (channels2 === 3 && plane.uint8) return {
+      label: "rgb",
+      score: null
+    };
+    const ch2 = channels2 > 1 ? channel : 0;
+    return classifyPlane(plane, ch2);
+  }
+  async function openOmeTiff(source2, signal) {
+    return typeof source2 === "string" ? await fromUrl(source2, {}, signal) : await fromBlob(source2, signal);
+  }
+  async function detectOmeTiffMask(source2, signal) {
+    var _a2, _b2;
+    const image2 = await (await openOmeTiff(source2, signal)).getImage(0);
+    const fd2 = image2.fileDirectory;
+    const samples = (fd2 == null ? void 0 : fd2.SamplesPerPixel) ?? 1;
+    const bits = (_a2 = fd2 == null ? void 0 : fd2.BitsPerSample) == null ? void 0 : _a2[0];
+    const sampleFormat = ((_b2 = fd2 == null ? void 0 : fd2.SampleFormat) == null ? void 0 : _b2[0]) ?? 1;
+    return classify({
+      width: image2.getWidth(),
+      height: image2.getHeight(),
+      channels: samples,
+      integer: sampleFormat !== 3,
+      uint8: bits === 8 && sampleFormat === 1,
+      tileWidth: image2.getTileWidth(),
+      tileHeight: image2.getTileHeight(),
+      signal,
+      getWindow: (x2, y2, width, height, channel = 0) => image2.readRasters({
+        samples: [
+          channel
+        ],
+        interleave: true,
+        window: [
+          x2,
+          y2,
+          x2 + width,
+          y2 + height
+        ],
+        signal
+      })
+    });
+  }
   function hasOmePixels(imageDescription) {
     var _a2;
     if (typeof imageDescription !== "string" || imageDescription.trim() === "") {
@@ -249280,39 +249544,39 @@ void main() {
     if (await isOmeTiff(url, signal)) return "ome-tiff";
     return looksDicom ? "dicomweb" : "ome-tiff";
   }
-  const stack = "_stack_20heo_1";
-  const panelBody = "_panelBody_20heo_11";
-  const panelDropActive = "_panelDropActive_20heo_15";
-  const addStrip = "_addStrip_20heo_20";
-  const dropZone = "_dropZone_20heo_30";
-  const dropZoneActive = "_dropZoneActive_20heo_47";
-  const dropZoneTitle = "_dropZoneTitle_20heo_51";
-  const orDivider = "_orDivider_20heo_56";
-  const urlRow = "_urlRow_20heo_83";
-  const urlInput = "_urlInput_20heo_92";
-  const fieldLabel = "_fieldLabel_20heo_97";
-  const importError = "_importError_20heo_104";
-  const typeOverlay = "_typeOverlay_20heo_111";
-  const typeOverlayBackdrop = "_typeOverlayBackdrop_20heo_120";
-  const typeOverlayCard = "_typeOverlayCard_20heo_126";
-  const typeOverlayFile = "_typeOverlayFile_20heo_138";
-  const typeRow = "_typeRow_20heo_147";
-  const typeChipActive = "_typeChipActive_20heo_155";
-  const typeFooter = "_typeFooter_20heo_160";
-  const typeImport = "_typeImport_20heo_169";
-  const typeSection = "_typeSection_20heo_173";
-  const imageCard = "_imageCard_20heo_181";
-  const fileAccessOverlay = "_fileAccessOverlay_20heo_193";
-  const fileAccessError = "_fileAccessError_20heo_211";
-  const fileAccessAction = "_fileAccessAction_20heo_219";
-  const imageCardHeader = "_imageCardHeader_20heo_227";
-  const imageCardText = "_imageCardText_20heo_235";
-  const imageCardTitle = "_imageCardTitle_20heo_243";
-  const imageCardMeta = "_imageCardMeta_20heo_251";
-  const imageCardActions = "_imageCardActions_20heo_257";
+  const stack = "_stack_16d3p_1";
+  const panelDropActive = "_panelDropActive_16d3p_11";
+  const addStrip = "_addStrip_16d3p_16";
+  const dropZone = "_dropZone_16d3p_26";
+  const dropZoneActive = "_dropZoneActive_16d3p_43";
+  const dropZoneTitle = "_dropZoneTitle_16d3p_47";
+  const orDivider = "_orDivider_16d3p_52";
+  const urlRow = "_urlRow_16d3p_79";
+  const urlInput = "_urlInput_16d3p_88";
+  const fieldLabel = "_fieldLabel_16d3p_93";
+  const importError = "_importError_16d3p_100";
+  const typeOverlay = "_typeOverlay_16d3p_107";
+  const typeOverlayBackdrop = "_typeOverlayBackdrop_16d3p_119";
+  const typeOverlayCard = "_typeOverlayCard_16d3p_125";
+  const typeOverlayFields = "_typeOverlayFields_16d3p_139";
+  const typeOverlayFile = "_typeOverlayFile_16d3p_149";
+  const typeRow = "_typeRow_16d3p_158";
+  const typeChipActive = "_typeChipActive_16d3p_166";
+  const typeChipSuggested = "_typeChipSuggested_16d3p_170";
+  const typeChipMuted = "_typeChipMuted_16d3p_175";
+  const typeFooter = "_typeFooter_16d3p_189";
+  const typeImport = "_typeImport_16d3p_198";
+  const typeSection = "_typeSection_16d3p_205";
+  const imageCard = "_imageCard_16d3p_213";
+  const fileAccessOverlay = "_fileAccessOverlay_16d3p_225";
+  const fileAccessAction = "_fileAccessAction_16d3p_241";
+  const imageCardHeader = "_imageCardHeader_16d3p_249";
+  const imageCardText = "_imageCardText_16d3p_257";
+  const imageCardTitle = "_imageCardTitle_16d3p_265";
+  const imageCardMeta = "_imageCardMeta_16d3p_273";
+  const imageCardActions = "_imageCardActions_16d3p_279";
   const styles$1 = {
     stack,
-    panelBody,
     panelDropActive,
     addStrip,
     dropZone,
@@ -249326,15 +249590,17 @@ void main() {
     typeOverlay,
     typeOverlayBackdrop,
     typeOverlayCard,
+    typeOverlayFields,
     typeOverlayFile,
     typeRow,
     typeChipActive,
+    typeChipSuggested,
+    typeChipMuted,
     typeFooter,
     typeImport,
     typeSection,
     imageCard,
     fileAccessOverlay,
-    fileAccessError,
     fileAccessAction,
     imageCardHeader,
     imageCardText,
@@ -249360,12 +249626,46 @@ void main() {
       ]
     });
   }
-  function FormatChip({ label: label2, selected, disabled: disabled2, onClick }) {
+  const ROLE_OPTIONS = [
+    {
+      role: "intensity",
+      label: "Microscopy Image"
+    },
+    {
+      role: "segmentation",
+      label: "Segmentation Mask"
+    }
+  ];
+  const FORMAT_OPTIONS = [
+    {
+      format: "ome-tiff",
+      label: "OME-TIFF"
+    },
+    {
+      format: "dicomweb",
+      label: "DICOMweb"
+    }
+  ];
+  function orderDetectedFirst(options, isDetected) {
+    const suggested = options.find(isDetected);
+    if (!suggested) return [
+      ...options
+    ];
+    return [
+      suggested,
+      ...options.filter((o2) => o2 !== suggested)
+    ];
+  }
+  function FormatChip({ label: label2, selected, suggested, muted, disabled: disabled2, onClick }) {
     return jsxRuntimeExports.jsx(PanelActionButton, {
       type: "button",
       disabled: disabled2,
       "aria-pressed": selected,
-      className: selected ? styles$1.typeChipActive : void 0,
+      className: [
+        selected ? styles$1.typeChipActive : null,
+        suggested ? styles$1.typeChipSuggested : null,
+        muted ? styles$1.typeChipMuted : null
+      ].filter(Boolean).join(" "),
       onClick,
       children: label2
     });
@@ -249407,7 +249707,6 @@ void main() {
     }
   };
   function resolveImportRole(selected, pathOrName) {
-    if (selected === "segmentation") return "segmentation";
     const leaf = (pathOrName.split(/[\\/]/).pop() ?? pathOrName).toLowerCase();
     if (/(?:^|[^a-z0-9])(?:masks?|labels?|labelmap|segmentation|segs?)(?:[^a-z0-9]|$)/.test(leaf)) {
       return "segmentation";
@@ -249430,6 +249729,8 @@ void main() {
     const [pending, setPending] = reactExports.useState(null);
     const [overlayRole, setOverlayRole] = reactExports.useState("intensity");
     const [overlayFormat, setOverlayFormat] = reactExports.useState("ome-tiff");
+    const [detectedRole, setDetectedRole] = reactExports.useState("intensity");
+    const [detectedFormat, setDetectedFormat] = reactExports.useState("ome-tiff");
     const [importError2, setImportError] = reactExports.useState(null);
     const [importBusy, setImportBusy] = reactExports.useState(false);
     const [dragging, setDragging] = reactExports.useState(false);
@@ -249438,6 +249739,7 @@ void main() {
     const prevImportRev = reactExports.useRef(importRevision);
     const formatDetectAbortRef = reactExports.useRef(null);
     const formatChosenByUserRef = reactExports.useRef(false);
+    const roleChosenByUserRef = reactExports.useRef(false);
     const showTypeOverlay = pending != null;
     const dicomAllowed = (pending == null ? void 0 : pending.kind) === "url" && overlayRole !== "segmentation";
     const urlReady = /^https?:\/\/.+/.test(urlDraft.trim());
@@ -249468,26 +249770,54 @@ void main() {
     const openPending = reactExports.useCallback((next2) => {
       abortFormatDetect();
       formatChosenByUserRef.current = false;
+      roleChosenByUserRef.current = false;
       const role = resolveImportRole("intensity", pendingLabel(next2));
       let format = inferFormat(next2);
       if (role === "segmentation") format = "ome-tiff";
       setPending(next2);
       setOverlayRole(role);
       setOverlayFormat(format);
+      setDetectedRole(role);
+      setDetectedFormat(format);
       setImportError(null);
-      if (next2.kind !== "url" || role === "segmentation") return;
       const ac2 = new AbortController();
       formatDetectAbortRef.current = ac2;
-      const url = next2.url;
-      void detectUrlImageFormat(url, ac2.signal).then((detected) => {
-        if (ac2.signal.aborted || formatChosenByUserRef.current) return;
-        setOverlayFormat(detected);
-      }).catch(() => {
-      }).finally(() => {
-        if (formatDetectAbortRef.current === ac2) {
-          formatDetectAbortRef.current = null;
+      void (async () => {
+        let detectionStartedAt = null;
+        try {
+          let detectedFormat2 = format;
+          if (next2.kind === "url") {
+            detectedFormat2 = await detectUrlImageFormat(next2.url, ac2.signal);
+            if (ac2.signal.aborted) return;
+            setDetectedFormat(detectedFormat2);
+            if (!formatChosenByUserRef.current) {
+              setOverlayFormat(detectedFormat2);
+            }
+          }
+          if (detectedFormat2 !== "ome-tiff") return;
+          const source2 = next2.kind === "local" ? await next2.handles[0].getFile() : next2.url;
+          if (ac2.signal.aborted) return;
+          detectionStartedAt = performance.now();
+          const result = await detectOmeTiffMask(source2, ac2.signal);
+          const durationMs = performance.now() - detectionStartedAt;
+          console.info(`[minerva] mask detection: ${result.label} score=${result.score ?? "n/a"} duration=${durationMs.toFixed(1)}ms`);
+          if (ac2.signal.aborted || roleChosenByUserRef.current || result.score == null && result.label !== "rgb") {
+            return;
+          }
+          const detected = result.label === "mask" ? "segmentation" : "intensity";
+          setDetectedRole(detected);
+          setOverlayRole(detected);
+        } catch (error2) {
+          if (!ac2.signal.aborted) {
+            const durationMs = detectionStartedAt == null ? null : performance.now() - detectionStartedAt;
+            console.warn(`[minerva] mask detection failed${durationMs == null ? "" : ` after ${durationMs.toFixed(1)}ms`}`, error2);
+          }
+        } finally {
+          if (formatDetectAbortRef.current === ac2) {
+            formatDetectAbortRef.current = null;
+          }
         }
-      });
+      })();
     }, [
       abortFormatDetect
     ]);
@@ -249527,12 +249857,7 @@ void main() {
       setImportError(null);
       try {
         const picked = await onAllow();
-        if (picked.length === 0) {
-          const alt = await toFile();
-          if (alt.length === 0) return;
-          await acceptLocalHandles(alt);
-          return;
-        }
+        if (picked.length === 0) return;
         await acceptLocalHandles(picked);
       } finally {
         localPickInFlightRef.current = false;
@@ -249600,8 +249925,7 @@ void main() {
       setImportBusy(true);
       setImportError(null);
       try {
-        const label2 = pendingLabel(pending);
-        const role = resolveImportRole(overlayRole, label2);
+        const role = overlayRole;
         const format = !dicomAllowed && overlayFormat === "dicomweb" ? "ome-tiff" : overlayFormat;
         if (format === "dicomweb") {
           if (pending.kind !== "url") {
@@ -249718,24 +250042,18 @@ void main() {
               }) : null
             ]
           }),
-          showAccessOverlay ? jsxRuntimeExports.jsxs("div", {
+          showAccessOverlay ? jsxRuntimeExports.jsx("div", {
             className: styles$1.fileAccessOverlay,
-            children: [
-              jsxRuntimeExports.jsx("span", {
-                className: styles$1.fileAccessError,
-                children: needsStoryDir ? "Story folder needed" : "File access needed"
-              }),
-              jsxRuntimeExports.jsx(PanelActionButton, {
-                type: "button",
-                className: styles$1.fileAccessAction,
-                onClick: () => {
-                  if (needsStoryDir) void (onReconnectStoryRoot == null ? void 0 : onReconnectStoryRoot());
-                  else if (needsReselect) void (onReselectFile == null ? void 0 : onReselectFile(im.id));
-                  else void (onRequestFileAccess == null ? void 0 : onRequestFileAccess());
-                },
-                children: needsStoryDir ? "Choose story folder" : "Allow file access"
-              })
-            ]
+            children: jsxRuntimeExports.jsx(PanelActionButton, {
+              type: "button",
+              className: styles$1.fileAccessAction,
+              onClick: () => {
+                if (needsStoryDir) void (onReconnectStoryRoot == null ? void 0 : onReconnectStoryRoot());
+                else if (needsReselect) void (onReselectFile == null ? void 0 : onReselectFile(im.id));
+                else void (onRequestFileAccess == null ? void 0 : onRequestFileAccess());
+              },
+              children: needsStoryDir ? "Choose story folder" : needsReselect ? "Choose file again" : "Allow file access"
+            })
           }) : null
         ]
       }, im.id);
@@ -249813,50 +250131,35 @@ void main() {
         }),
         importError2 && !showTypeOverlay ? jsxRuntimeExports.jsx("div", {
           className: styles$1.importError,
+          role: "alert",
           children: importError2
         }) : null
       ]
     });
-    return jsxRuntimeExports.jsxs("div", {
-      className: [
-        panel$1.authorPanel,
-        dragging ? styles$1.panelDropActive : ""
-      ].join(" "),
-      onDragEnter,
-      onDragLeave,
-      onDragOver,
-      onDrop: (e2) => void onDrop(e2),
+    const typeOverlayDialog = showTypeOverlay && pending ? jsxRuntimeExports.jsxs("div", {
+      className: styles$1.typeOverlay,
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-busy": importBusy,
+      "aria-labelledby": "image-import-dialog-title",
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: [
-            panel$1.authorPanelBody,
-            panel$1.thinScrollbar,
-            styles$1.panelBody
-          ].join(" "),
-          children: jsxRuntimeExports.jsxs("div", {
-            className: styles$1.stack,
-            children: [
-              imageCards,
-              addStrip2
-            ]
-          })
+          className: styles$1.typeOverlayBackdrop,
+          "aria-hidden": "true"
         }),
-        showTypeOverlay && pending ? jsxRuntimeExports.jsxs("div", {
-          className: styles$1.typeOverlay,
-          role: "dialog",
-          "aria-modal": "true",
+        jsxRuntimeExports.jsxs("div", {
+          className: `${minervaTheme.surface} ${styles$1.typeOverlayCard}`,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$1.typeOverlayBackdrop
+              id: "image-import-dialog-title",
+              className: styles$1.typeOverlayFile,
+              title: pendingLabel(pending),
+              children: pendingLabel(pending)
             }),
-            jsxRuntimeExports.jsxs("div", {
-              className: `${minervaTheme.surface} ${styles$1.typeOverlayCard}`,
+            jsxRuntimeExports.jsxs("fieldset", {
+              disabled: importBusy,
+              className: styles$1.typeOverlayFields,
               children: [
-                jsxRuntimeExports.jsx("div", {
-                  className: styles$1.typeOverlayFile,
-                  title: pendingLabel(pending),
-                  children: pendingLabel(pending)
-                }),
                 jsxRuntimeExports.jsxs("div", {
                   className: styles$1.typeRow,
                   children: [
@@ -249864,20 +250167,20 @@ void main() {
                       className: styles$1.fieldLabel,
                       children: "Type"
                     }),
-                    jsxRuntimeExports.jsx(FormatChip, {
-                      label: "Microscopy Image",
-                      selected: overlayRole === "intensity",
-                      onClick: () => setOverlayRole("intensity")
-                    }),
-                    jsxRuntimeExports.jsx(FormatChip, {
-                      label: "Segmentation Mask",
-                      selected: overlayRole === "segmentation",
+                    orderDetectedFirst(ROLE_OPTIONS, (o2) => o2.role === detectedRole).map(({ role, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
+                      label: label2,
+                      selected: overlayRole === role,
+                      suggested: detectedRole === role,
+                      muted: detectedRole !== role,
                       onClick: () => {
-                        formatChosenByUserRef.current = true;
-                        setOverlayRole("segmentation");
-                        setOverlayFormat("ome-tiff");
+                        roleChosenByUserRef.current = true;
+                        setOverlayRole(role);
+                        if (role === "segmentation") {
+                          formatChosenByUserRef.current = true;
+                          setOverlayFormat("ome-tiff");
+                        }
                       }
-                    })
+                    }, role))
                   ]
                 }),
                 dicomAllowed ? jsxRuntimeExports.jsx("div", {
@@ -249889,50 +250192,82 @@ void main() {
                         className: styles$1.fieldLabel,
                         children: "Format"
                       }),
-                      jsxRuntimeExports.jsx(FormatChip, {
-                        label: "OME-TIFF",
-                        selected: overlayFormat === "ome-tiff",
+                      orderDetectedFirst(FORMAT_OPTIONS, (o2) => o2.format === detectedFormat).map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
+                        label: label2,
+                        selected: overlayFormat === format,
+                        suggested: detectedFormat === format,
+                        muted: detectedFormat !== format,
                         onClick: () => {
                           formatChosenByUserRef.current = true;
-                          setOverlayFormat("ome-tiff");
+                          setOverlayFormat(format);
                         }
-                      }),
-                      jsxRuntimeExports.jsx(FormatChip, {
-                        label: "DICOMweb",
-                        selected: overlayFormat === "dicomweb",
-                        onClick: () => {
-                          formatChosenByUserRef.current = true;
-                          setOverlayFormat("dicomweb");
-                        }
-                      })
+                      }, format))
                     ]
                   })
-                }) : null,
-                importError2 ? jsxRuntimeExports.jsx("div", {
-                  className: styles$1.importError,
-                  children: importError2
-                }) : null,
-                jsxRuntimeExports.jsxs("div", {
-                  className: styles$1.typeFooter,
-                  children: [
-                    jsxRuntimeExports.jsx(PanelActionButton, {
-                      type: "button",
-                      onClick: clearPending,
-                      children: "Cancel"
-                    }),
-                    jsxRuntimeExports.jsx(PanelActionButton, {
-                      type: "button",
-                      className: styles$1.typeImport,
-                      disabled: importBusy,
-                      onClick: () => void runImport(),
-                      children: importBusy ? "Importing\u2026" : "Import"
-                    })
-                  ]
+                }) : null
+              ]
+            }),
+            importError2 ? jsxRuntimeExports.jsx("div", {
+              className: styles$1.importError,
+              role: "alert",
+              children: importError2
+            }) : null,
+            jsxRuntimeExports.jsxs("div", {
+              className: styles$1.typeFooter,
+              children: [
+                jsxRuntimeExports.jsx(PanelActionButton, {
+                  type: "button",
+                  onClick: clearPending,
+                  disabled: importBusy,
+                  children: "Cancel"
+                }),
+                jsxRuntimeExports.jsx(PanelActionButton, {
+                  type: "button",
+                  className: styles$1.typeImport,
+                  disabled: importBusy,
+                  onClick: () => void runImport(),
+                  children: importBusy ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+                    children: [
+                      jsxRuntimeExports.jsx("span", {
+                        className: minervaTheme.spinnerSm,
+                        "aria-hidden": "true"
+                      }),
+                      "Importing\u2026"
+                    ]
+                  }) : "Import"
                 })
               ]
             })
           ]
-        }) : null
+        })
+      ]
+    }) : null;
+    return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+      children: [
+        jsxRuntimeExports.jsx("div", {
+          className: [
+            panel$1.authorPanel,
+            dragging ? styles$1.panelDropActive : ""
+          ].join(" "),
+          onDragEnter,
+          onDragLeave,
+          onDragOver,
+          onDrop: (e2) => void onDrop(e2),
+          children: jsxRuntimeExports.jsx("div", {
+            className: [
+              panel$1.authorPanelBody,
+              panel$1.thinScrollbar
+            ].join(" "),
+            children: jsxRuntimeExports.jsxs("div", {
+              className: styles$1.stack,
+              children: [
+                imageCards,
+                addStrip2
+              ]
+            })
+          })
+        }),
+        typeOverlayDialog ? reactDomExports.createPortal(typeOverlayDialog, document.body) : null
       ]
     });
   };
@@ -250469,26 +250804,84 @@ void main() {
       loaderErrors
     };
   }
-  const MASK_BASENAME_CLASH_ERROR = "The mask must be a different file from the main image.";
-  function maskBasenameClashesWithIntensity(images, basename2) {
-    const key2 = basename2.trim().toLowerCase();
-    if (!key2) return false;
-    return images.some((im) => {
-      const role = resolveImageContentRole({
-        contentRole: im.contentRole,
-        channels: im.channels ?? []
-      });
-      if (role === "segmentation") return false;
-      return im.basename.trim().toLowerCase() === key2;
-    });
+  function normalizeImportUrl(url) {
+    const trimmed = url.trim();
+    try {
+      const parsed = new URL(trimmed);
+      parsed.hash = "";
+      parsed.pathname = parsed.pathname.replace(/\/+$/, "");
+      return parsed.href;
+    } catch {
+      return trimmed.replace(/\/+$/, "");
+    }
   }
-  function validateMaskBasenameForAppend(images, basename2, role) {
-    if (role !== "segmentation") return null;
-    if (!maskBasenameClashesWithIntensity(images, basename2)) return null;
+  function fileFingerprint(file) {
     return {
-      ok: false,
-      error: MASK_BASENAME_CLASH_ERROR
+      name: file.name,
+      size: file.size,
+      lastModified: file.lastModified
     };
+  }
+  function fingerprintsEqual(a2, b2) {
+    return a2.name === b2.name && a2.size === b2.size && a2.lastModified === b2.lastModified;
+  }
+  async function handlesSameEntry(a2, b2) {
+    if (typeof a2.isSameEntry !== "function" || typeof b2.isSameEntry !== "function") {
+      return null;
+    }
+    try {
+      return await a2.isSameEntry(b2);
+    } catch {
+      return null;
+    }
+  }
+  function findUrlDuplicate(images, url) {
+    const key2 = normalizeImportUrl(url);
+    return images.find((im) => {
+      var _a2;
+      return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "url" && normalizeImportUrl(im.source.url) === key2;
+    }) ?? null;
+  }
+  function findDicomWebDuplicate(images, url) {
+    const series = normalizeDicomWebSeriesUrl(url);
+    return images.find((im) => {
+      var _a2;
+      return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "dicomWeb" && normalizeDicomWebSeriesUrl(im.source.series) === series;
+    }) ?? null;
+  }
+  async function findLocalDuplicate(images, handle2) {
+    var _a2;
+    const file = await handle2.getFile();
+    const fp = fileFingerprint(file);
+    for (const im of images) {
+      if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "local") continue;
+      let stored;
+      try {
+        stored = await getPersistedFileHandle(im.source.handleKey);
+      } catch {
+      }
+      if (!stored) continue;
+      const sameEntry = await handlesSameEntry(handle2, stored);
+      if (sameEntry === true) return im;
+      if (sameEntry === false) continue;
+      try {
+        const storedFile = await stored.getFile();
+        if (fingerprintsEqual(fp, fileFingerprint(storedFile))) return im;
+      } catch {
+      }
+    }
+    return null;
+  }
+  async function findDuplicateImportTarget(images, pending, options) {
+    const candidates = (options == null ? void 0 : options.excludeImageId) != null ? images.filter((im) => im.id !== options.excludeImageId) : images;
+    if (pending.kind === "url") {
+      return pending.dicomWeb ? findDicomWebDuplicate(candidates, pending.url) : findUrlDuplicate(candidates, pending.url);
+    }
+    return findLocalDuplicate(candidates, pending.handle);
+  }
+  function duplicateImportError(existing) {
+    const label2 = existing.basename.trim() || "an existing image";
+    return `This source is already imported as "${label2}".`;
   }
   function prepareImportedSourceChannels(sourceChannels, role, basename2, existingImages) {
     if (role !== "segmentation") return sourceChannels;
@@ -250990,6 +251383,14 @@ void main() {
     maybeDefaultStoryTitleFromFirstImage();
     ensureDefaultWaypointForImageImport();
   }
+  function reconcileLoaderEntries(current, expectedIds, incoming = []) {
+    const incomingIds = new Set(incoming.map((entry) => entry.sourceImageId));
+    const next2 = [
+      ...current.filter((entry) => expectedIds.has(entry.sourceImageId) && !incomingIds.has(entry.sourceImageId)),
+      ...incoming
+    ];
+    return next2.length === current.length && next2.every((entry, index2) => entry === current[index2]) ? current : next2;
+  }
   const cloneConfigWaypoints = (stories) => {
     if (typeof structuredClone === "function") {
       return structuredClone(stories);
@@ -251143,7 +251544,7 @@ void main() {
     const [missingHandleKeys, setMissingHandleKeys] = reactExports.useState([]);
     const [missingStoryRoot, setMissingStoryRoot] = reactExports.useState(false);
     const skipLoaderHydrateRef = reactExports.useRef(false);
-    const { setActiveChannelGroup, setChannelVisibilities, activeChannelGroupId, channelVisibilities, channelGroupRowVisibilities, channelRendering, setGroupNames } = useAppStore();
+    const { setActiveChannelGroup, setChannelVisibilities, setChannelGroupRowVisibilities, activeChannelGroupId, channelVisibilities, channelGroupRowVisibilities, channelRendering, setGroupNames } = useAppStore();
     const setChannelGroups = useDocumentStore((s2) => s2.setChannelGroups);
     const setImages = useDocumentStore((s2) => s2.setImages);
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
@@ -251263,23 +251664,20 @@ void main() {
         setViewerRemountKey((k2) => k2 + 1);
       })();
     };
-    const updateGroupChannelLists = reactExports.useCallback(({ ChannelGroups: ChannelGroups2, SourceChannels }) => {
+    const updateGroupChannelLists = reactExports.useCallback(({ ChannelGroups: ChannelGroups2 }) => {
       setGroupNames(Object.fromEntries(ChannelGroups2.map(({ name: name2, id: id2 }) => [
         id2,
         name2
       ])));
-      setChannelVisibilities(defaultVisibilitiesForSources(SourceChannels, useAppStore.getState().channelVisibilities, ChannelGroups2));
     }, [
-      setGroupNames,
-      setChannelVisibilities
+      setGroupNames
     ]);
     reactExports.useEffect(() => {
       if (channelGroups.length === 0 || sourceChannels.length === 0) return;
       const active = useAppStore.getState().activeChannelGroupId;
       if (active != null && channelGroups.some((g2) => g2.id === active)) return;
       updateGroupChannelLists({
-        ChannelGroups: channelGroups,
-        SourceChannels: sourceChannels
+        ChannelGroups: channelGroups
       });
       setActiveChannelGroup(channelGroups[0].id);
     }, [
@@ -251306,18 +251704,42 @@ void main() {
         setActiveChannelGroup(nextChannelGroups[0].id);
       }
       updateGroupChannelLists({
-        ChannelGroups: nextChannelGroups,
-        SourceChannels: flat
+        ChannelGroups: nextChannelGroups
       });
-      const prev = opts.mergeVisibilities ? useAppStore.getState().channelVisibilities : void 0;
-      setChannelVisibilities(defaultVisibilitiesForSources(flat, prev, nextChannelGroups));
+      const app = useAppStore.getState();
+      const visibilities = applyVisibilityTransition(flat, nextChannelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, opts.transition);
+      setChannelVisibilities(visibilities.channelVisibilities);
+      setChannelGroupRowVisibilities(visibilities.channelGroupRowVisibilities);
     }, [
       setImages,
       setChannelGroups,
       updateGroupChannelLists,
       setChannelVisibilities,
+      setChannelGroupRowVisibilities,
       setActiveChannelGroup
     ]);
+    const clearRemovedImageState = reactExports.useCallback((removed) => {
+      if (removed.length === 0) return;
+      const app = useAppStore.getState();
+      app.clearChannelRendering();
+      const channelVisibilities2 = {
+        ...app.channelVisibilities
+      };
+      delete channelVisibilities2[SELECTION_MASK_CHANNEL_KEY];
+      useAppStore.setState({
+        imageSelectionMask: null,
+        channelVisibilities: channelVisibilities2
+      });
+      const keys2 = removed.flatMap((im) => {
+        var _a2;
+        return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "local" ? [
+          im.source.handleKey
+        ] : [];
+      });
+      const drop = new Set(keys2);
+      setMissingHandleKeys((prev) => prev.filter((key2) => !drop.has(key2)));
+      setDeniedHandleKeys((prev) => prev.filter((key2) => !drop.has(key2)));
+    }, []);
     const setItemsRef = reactExports.useRef(setItems);
     reactExports.useEffect(() => {
       setItemsRef.current = setItems;
@@ -251326,19 +251748,16 @@ void main() {
     ]);
     const [fileName, setFileName] = reactExports.useState("");
     const [lastOmeTiffUrl, setLastOmeTiffUrl] = reactExports.useState(null);
-    const onRemoveImage = reactExports.useCallback(async (imageId) => {
-      var _a2, _b2;
+    const onRemoveImage = reactExports.useCallback((imageId) => {
+      var _a2;
       const doc = useDocumentStore.getState();
       const removed = doc.images.find((im) => im.id === imageId);
       if (!removed) return;
-      const localHandleKey = ((_a2 = removed.source) == null ? void 0 : _a2.kind) === "local" ? removed.source.handleKey : void 0;
       const result = removeImageFromDocument(doc.images, doc.channelGroups, imageId);
       if (result.images.length === doc.images.length) return;
-      if (localHandleKey) {
-        await deleteFileHandle(localHandleKey);
-        setMissingHandleKeys((prev) => prev.filter((k2) => k2 !== localHandleKey));
-        setDeniedHandleKeys((prev) => prev.filter((k2) => k2 !== localHandleKey));
-      }
+      clearRemovedImageState([
+        removed
+      ]);
       clearOmeDerivedCaches();
       setOmeLoaderEntries((prev) => prev.filter((e2) => e2.sourceImageId !== imageId));
       setJpegLoaderEntries((prev) => prev.filter((e2) => e2.sourceImageId !== imageId));
@@ -251347,7 +251766,9 @@ void main() {
       const activeStillExists = result.channelGroups.some((g2) => g2.id === activeId);
       publishChannelState(result.images, result.channelGroups, {
         resetActiveGroup: !activeStillExists,
-        mergeVisibilities: true
+        transition: {
+          kind: "remove"
+        }
       });
       if (result.images.length === 0) {
         setFileName("");
@@ -251358,10 +251779,11 @@ void main() {
           var _a3;
           return ((_a3 = im.source) == null ? void 0 : _a3.kind) === "url";
         });
-        setLastOmeTiffUrl(((_b2 = firstUrl == null ? void 0 : firstUrl.source) == null ? void 0 : _b2.kind) === "url" ? firstUrl.source.url : null);
+        setLastOmeTiffUrl(((_a2 = firstUrl == null ? void 0 : firstUrl.source) == null ? void 0 : _a2.kind) === "url" ? firstUrl.source.url : null);
       }
       setViewerRemountKey((k2) => k2 + 1);
     }, [
+      clearRemovedImageState,
       publishChannelState
     ]);
     const omeTiffUrlLoadGenerationRef = reactExports.useRef(0);
@@ -251394,6 +251816,18 @@ void main() {
         const handle2 = await pickLocalOmeTiffHandle();
         if (!handle2) return;
         const doc = useDocumentStore.getState();
+        const replacedImage = doc.images.find((im) => im.id === imageId);
+        if (!replacedImage) return;
+        const duplicate = await findDuplicateImportTarget(doc.images, {
+          kind: "local",
+          handle: handle2
+        }, {
+          excludeImageId: imageId
+        });
+        if (duplicate) {
+          window.alert(duplicateImportError(duplicate));
+          return;
+        }
         clearOmeDerivedCaches();
         const prep = await replaceOmeLocalImageInDocument({
           images: doc.images,
@@ -251405,23 +251839,26 @@ void main() {
           if (prep.error) window.alert(prep.error);
           return;
         }
+        const storyId = useDocumentStore.getState().activeStoryId;
         const nextImagesPersisted = await persistLocalImageHandle({
-          storyId: useDocumentStore.getState().activeStoryId,
+          storyId,
           imageId: prep.newImageId,
           handle: handle2,
-          images: prep.nextImages,
-          previousHandleKey: prep.oldLocalHandleKey
+          images: prep.nextImages
         });
         const loaderEntry = {
           loader: prep.loader,
           sourceImageId: prep.newImageId
         };
         const app = useAppStore.getState();
+        const visibility = applyVisibilityTransition(flattenImageChannelsInDocumentOrder(nextImagesPersisted), doc.channelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, {
+          kind: "sync"
+        });
         const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
           images: nextImagesPersisted,
           channelGroups: doc.channelGroups,
-          stackVisibilities: defaultVisibilitiesForSources(flattenImageChannelsInDocumentOrder(nextImagesPersisted), app.channelVisibilities, doc.channelGroups),
-          groupRowVisibilities: app.channelGroupRowVisibilities,
+          stackVisibilities: visibility.channelVisibilities,
+          groupRowVisibilities: visibility.channelGroupRowVisibilities,
           activeGroupId: app.activeChannelGroupId
         });
         const gmm = await fitGmmContrastBeforePaint({
@@ -251435,6 +251872,9 @@ void main() {
           ]),
           visibleChannelIds
         });
+        clearRemovedImageState([
+          replacedImage
+        ]);
         skipLoaderHydrateRef.current = true;
         setOmeLoaderEntries((prev) => [
           ...prev.filter((e2) => e2.sourceImageId !== prep.oldImageId),
@@ -251448,7 +251888,9 @@ void main() {
         }
         publishChannelState(gmm.images, gmm.channelGroups ?? doc.channelGroups, {
           resetActiveGroup: false,
-          mergeVisibilities: true
+          transition: {
+            kind: "sync"
+          }
         });
         setFileName(prep.basename);
         setLastOmeTiffUrl(null);
@@ -251465,6 +251907,7 @@ void main() {
       }
     }, [
       beginImageLoading,
+      clearRemovedImageState,
       endImageLoading,
       publishChannelState
     ]);
@@ -251531,17 +251974,14 @@ void main() {
         });
       }
       const storyId = useDocumentStore.getState().activeStoryId;
-      if (storyId) {
-        for (let i2 = 0; i2 < entries.length; i2++) {
-          const { sourceImageId } = entries[i2];
-          const handle2 = handles[i2];
-          const key2 = imageHandleStorageKey(storyId, sourceImageId);
-          await putFileHandle(key2, handle2);
-          nextImages = setImageSource(nextImages, sourceImageId, {
-            kind: "local",
-            handleKey: key2
-          });
-        }
+      for (let i2 = 0; i2 < entries.length; i2++) {
+        const { sourceImageId } = entries[i2];
+        nextImages = await persistLocalImageHandle({
+          storyId,
+          imageId: sourceImageId,
+          handle: handles[i2],
+          images: nextImages
+        });
       }
       const { SourceChannels } = registry2;
       const ChannelGroups2 = [];
@@ -251564,7 +252004,10 @@ void main() {
       setDeniedHandleKeys([]);
       setMissingHandleKeys([]);
       publishChannelState(nextImages, ChannelGroups2, {
-        resetActiveGroup: true
+        resetActiveGroup: true,
+        transition: {
+          kind: "fresh"
+        }
       });
       afterImageImportDocumentEffects();
       if (role !== "segmentation") {
@@ -251589,26 +252032,18 @@ void main() {
       }
       clearOmeDerivedCaches();
       const doc = useDocumentStore.getState();
+      const flatBefore = flattenImageChannelsInDocumentOrder(doc.images);
       const mergedGroups = [
         ...doc.channelGroups
       ];
       let nextImages = [
         ...doc.images
       ];
-      let removedLoaderIds = [];
       const newEntries = [];
       const newIntensityGroups = [];
       for (let i2 = 0; i2 < handles.length; i2++) {
         const handle2 = handles[i2];
         const basename2 = i2 === 0 ? in_f : handle2.name;
-        const clash = validateMaskBasenameForAppend(nextImages, basename2, role);
-        if (clash) return clash;
-        const deduped = dedupeImagesForImport(nextImages, basename2, role);
-        nextImages = deduped.images;
-        removedLoaderIds = [
-          ...removedLoaderIds,
-          ...deduped.removedImageIds
-        ];
         const loader = await loadOmeLoaderForRole(role, {
           kind: "local",
           handle: handle2,
@@ -251629,14 +252064,12 @@ void main() {
           sourceImageId
         });
         const storyId = useDocumentStore.getState().activeStoryId;
-        if (storyId) {
-          const key2 = imageHandleStorageKey(storyId, sourceImageId);
-          await putFileHandle(key2, handle2);
-          nextImages = setImageSource(nextImages, sourceImageId, {
-            kind: "local",
-            handleKey: key2
-          });
-        }
+        nextImages = await persistLocalImageHandle({
+          storyId,
+          imageId: sourceImageId,
+          handle: handle2,
+          images: nextImages
+        });
         if (role !== "segmentation") {
           if (slice.extractedGroups.length > 0) {
             newIntensityGroups.push(...slice.extractedGroups);
@@ -251645,41 +252078,52 @@ void main() {
           }
         }
       }
+      const liveEntries = newEntries.filter((entry) => nextImages.some((im) => im.id === entry.sourceImageId));
       let ChannelGroups2 = await finalizeAppendedIntensityGroups({
         mergedGroups,
         newIntensityGroups: role === "intensity" ? newIntensityGroups : [],
         nextImages
       });
-      if (role !== "segmentation" && newEntries.length > 0) {
+      const flatAfter = flattenImageChannelsInDocumentOrder(nextImages);
+      const newChannelIds = diffChannelIds(flatBefore, flatAfter);
+      const newGroupRowIds = diffGroupRowIds(doc.channelGroups, ChannelGroups2);
+      const visibilityTransition = role === "segmentation" ? {
+        kind: "appendMask",
+        newChannelIds
+      } : {
+        kind: "appendIntensity",
+        newChannelIds,
+        newGroupRowIds
+      };
+      if (role !== "segmentation" && liveEntries.length > 0) {
         const app = useAppStore.getState();
+        const visibility = applyVisibilityTransition(flatAfter, ChannelGroups2, app.channelVisibilities, app.channelGroupRowVisibilities, visibilityTransition);
         const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
           images: nextImages,
           channelGroups: ChannelGroups2,
-          stackVisibilities: defaultVisibilitiesForSources(flattenImageChannelsInDocumentOrder(nextImages), app.channelVisibilities, ChannelGroups2),
-          groupRowVisibilities: app.channelGroupRowVisibilities,
+          stackVisibilities: visibility.channelVisibilities,
+          groupRowVisibilities: visibility.channelGroupRowVisibilities,
           activeGroupId: app.activeChannelGroupId
         });
         const gmm = await fitGmmContrastBeforePaint({
           images: nextImages,
           channelGroups: ChannelGroups2,
-          loaderEntries: newEntries,
-          imageKey: omeImportGmmImageKey(in_f, newEntries.map((e2) => e2.sourceImageId)),
+          loaderEntries: liveEntries,
+          imageKey: omeImportGmmImageKey(in_f, liveEntries.map((e2) => e2.sourceImageId)),
           visibleChannelIds
         });
         nextImages = gmm.images;
         if (gmm.channelGroups) ChannelGroups2 = gmm.channelGroups;
       }
       skipLoaderHydrateRef.current = true;
-      setOmeLoaderEntries((prev) => {
-        const drop = new Set(removedLoaderIds);
-        return [
-          ...prev.filter((e2) => !drop.has(e2.sourceImageId)),
-          ...newEntries
-        ];
-      });
+      setOmeLoaderEntries((prev) => [
+        ...prev,
+        ...liveEntries
+      ]);
+      const activeId = useAppStore.getState().activeChannelGroupId;
       publishChannelState(nextImages, ChannelGroups2, {
-        resetActiveGroup: false,
-        mergeVisibilities: true
+        resetActiveGroup: !ChannelGroups2.some((g2) => g2.id === activeId),
+        transition: visibilityTransition
       });
       maybeDefaultStoryTitleFromFirstImage();
       return {
@@ -251703,20 +252147,12 @@ void main() {
         if (loadGeneration !== jpegUrlLoadGenerationRef.current) return;
         const storyId = useDocumentStore.getState().activeStoryId ?? data2.metadata.id ?? crypto.randomUUID();
         useDocumentStore.getState().hydrateFromDocument(data2, storyId);
-        const flat = flattenImageChannelsInDocumentOrder(data2.images);
-        setImages(data2.images);
-        setChannelGroups(data2.channelGroups);
-        updateGroupChannelLists({
-          ChannelGroups: data2.channelGroups,
-          SourceChannels: flat
+        publishChannelState(data2.images, data2.channelGroups, {
+          resetActiveGroup: data2.channelGroups.length > 0,
+          transition: {
+            kind: "sync"
+          }
         });
-        if (data2.channelGroups.length > 0) {
-          setActiveChannelGroup(data2.channelGroups[0].id);
-        } else {
-          useAppStore.setState({
-            activeChannelGroupId: null
-          });
-        }
         afterImageImportDocumentEffects();
         const jpegEntries = await jpegLoaderEntriesFromImages({
           images: data2.images,
@@ -251807,7 +252243,10 @@ void main() {
       ]);
       setDeniedHandleKeys([]);
       publishChannelState(nextImages, ChannelGroups2, {
-        resetActiveGroup: true
+        resetActiveGroup: true,
+        transition: {
+          kind: "fresh"
+        }
       });
       afterImageImportDocumentEffects();
       if (role !== "segmentation") {
@@ -251834,13 +252273,9 @@ void main() {
       }
       const basename2 = url.split("/").pop() || "remote.ome.tif";
       const doc = useDocumentStore.getState();
-      const clash = validateMaskBasenameForAppend(doc.images, basename2, role);
-      if (clash) return clash;
-      const mergedGroups = [
-        ...doc.channelGroups
-      ];
-      const deduped = dedupeImagesForImport(doc.images, basename2, role);
-      let nextImages = deduped.images;
+      const flatBefore = flattenImageChannelsInDocumentOrder(doc.images);
+      const mergedGroups = doc.channelGroups;
+      let nextImages = doc.images;
       const sourceImageId = crypto.randomUUID();
       const slice = buildOmeImportSlice({
         loader,
@@ -251862,13 +252297,25 @@ void main() {
         newIntensityGroups: role !== "segmentation" ? slice.extractedGroups : [],
         nextImages
       });
+      const flatAfter = flattenImageChannelsInDocumentOrder(nextImages);
+      const newChannelIds = diffChannelIds(flatBefore, flatAfter);
+      const newGroupRowIds = diffGroupRowIds(doc.channelGroups, ChannelGroups2);
+      const visibilityTransition = role === "segmentation" ? {
+        kind: "appendMask",
+        newChannelIds
+      } : {
+        kind: "appendIntensity",
+        newChannelIds,
+        newGroupRowIds
+      };
       if (role !== "segmentation") {
         const app = useAppStore.getState();
+        const visibility = applyVisibilityTransition(flatAfter, ChannelGroups2, app.channelVisibilities, app.channelGroupRowVisibilities, visibilityTransition);
         const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
           images: nextImages,
           channelGroups: ChannelGroups2,
-          stackVisibilities: defaultVisibilitiesForSources(flattenImageChannelsInDocumentOrder(nextImages), app.channelVisibilities, ChannelGroups2),
-          groupRowVisibilities: app.channelGroupRowVisibilities,
+          stackVisibilities: visibility.channelVisibilities,
+          groupRowVisibilities: visibility.channelGroupRowVisibilities,
           activeGroupId: app.activeChannelGroupId
         });
         const gmm = await fitGmmContrastBeforePaint({
@@ -251889,19 +252336,17 @@ void main() {
         if (gmm.channelGroups) ChannelGroups2 = gmm.channelGroups;
       }
       skipLoaderHydrateRef.current = true;
-      setOmeLoaderEntries((prev) => {
-        const drop = new Set(deduped.removedImageIds);
-        return [
-          ...prev.filter((e2) => !drop.has(e2.sourceImageId)),
-          {
-            loader,
-            sourceImageId
-          }
-        ];
-      });
+      setOmeLoaderEntries((prev) => [
+        ...prev,
+        {
+          loader,
+          sourceImageId
+        }
+      ]);
+      const activeId = useAppStore.getState().activeChannelGroupId;
       publishChannelState(nextImages, ChannelGroups2, {
-        resetActiveGroup: false,
-        mergeVisibilities: true
+        resetActiveGroup: !ChannelGroups2.some((g2) => g2.id === activeId),
+        transition: visibilityTransition
       });
       maybeDefaultStoryTitleFromFirstImage();
       return {
@@ -251925,13 +252370,18 @@ void main() {
       const doc = useDocumentStore.getState();
       const flat = flattenImageChannelsInDocumentOrder(doc.images);
       updateGroupChannelLists({
-        ChannelGroups: doc.channelGroups,
-        SourceChannels: flat
+        ChannelGroups: doc.channelGroups
       });
-      setChannelVisibilities(defaultVisibilitiesForSources(flat, useAppStore.getState().channelVisibilities, doc.channelGroups));
+      const app = useAppStore.getState();
+      const visibility = applyVisibilityTransition(flat, doc.channelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, {
+        kind: "sync"
+      });
+      setChannelVisibilities(visibility.channelVisibilities);
+      setChannelGroupRowVisibilities(visibility.channelGroupRowVisibilities);
     }, [
       updateGroupChannelLists,
-      setChannelVisibilities
+      setChannelVisibilities,
+      setChannelGroupRowVisibilities
     ]);
     const reconnectStoryRoot = reactExports.useCallback(async () => {
       var _a2;
@@ -252116,7 +252566,6 @@ void main() {
           sourceImageId: crypto.randomUUID()
         };
       }));
-      setDicomIndexList(indexList);
       setFileName(indexList.length > 0 ? indexList.map((d2) => d2.displayName).join(", ") : "");
       let registry2 = {
         SourceChannels: [],
@@ -252138,7 +252587,6 @@ void main() {
       }
       const { SourceChannels } = registry2;
       const ChannelGroups2 = await applyPaletteToGroupedImport(registry2.ChannelGroups, SourceChannels);
-      setOmeLoaderEntries([]);
       const doc = useDocumentStore.getState();
       const importSeriesRoots = new Set(indexList.map((d2) => normalizeDicomWebSeriesUrl(d2.series)));
       const legacyModalityIds = new Set(indexList.map((d2) => d2.modality));
@@ -252148,14 +252596,17 @@ void main() {
       let nextChannelGroups = [
         ...doc.channelGroups
       ];
+      const removedImages = [];
       for (const im of doc.images) {
         const sameSeries = ((_a2 = im.source) == null ? void 0 : _a2.kind) === "dicomWeb" && importSeriesRoots.has(normalizeDicomWebSeriesUrl(im.source.series));
         const legacyId = legacyModalityIds.has(im.id);
         if (!sameSeries && !legacyId) continue;
+        removedImages.push(im);
         const removed = removeImageFromDocument(nextDocImages, nextChannelGroups, im.id);
         nextDocImages = removed.images;
         nextChannelGroups = removed.channelGroups;
       }
+      const channelsBefore = flattenImageChannelsInDocumentOrder(nextDocImages);
       nextDocImages = applySourceChannelsToImages(nextDocImages, SourceChannels);
       for (const { series, modality, displayName, loader, sourceImageId } of indexList) {
         nextDocImages = setImageSource(nextDocImages, sourceImageId, {
@@ -252167,15 +252618,30 @@ void main() {
         nextDocImages = setImageBasename(nextDocImages, sourceImageId, displayName);
         nextDocImages = setImageContentRole(nextDocImages, sourceImageId, "intensity");
       }
-      setImages(nextDocImages);
       const mergedChannelGroups = [
         ...nextChannelGroups,
         ...ChannelGroups2
       ];
-      setChannelGroups(mergedChannelGroups);
-      updateGroupChannelLists({
-        ChannelGroups: mergedChannelGroups,
-        SourceChannels
+      const isFresh = channelsBefore.length === 0;
+      const transition = isFresh ? {
+        kind: "fresh"
+      } : {
+        kind: "appendIntensity",
+        newChannelIds: diffChannelIds(channelsBefore, flattenImageChannelsInDocumentOrder(nextDocImages)),
+        newGroupRowIds: diffGroupRowIds(nextChannelGroups, mergedChannelGroups)
+      };
+      clearRemovedImageState(removedImages);
+      const removedIds = new Set(removedImages.map((im) => im.id));
+      setOmeLoaderEntries((prev) => prev.filter((entry) => !removedIds.has(entry.sourceImageId)));
+      setJpegLoaderEntries((prev) => prev.filter((entry) => !removedIds.has(entry.sourceImageId)));
+      setDicomIndexList((prev) => [
+        ...prev.filter((entry) => !removedIds.has(entry.sourceImageId)),
+        ...indexList
+      ]);
+      const activeId = useAppStore.getState().activeChannelGroupId;
+      publishChannelState(nextDocImages, mergedChannelGroups, {
+        resetActiveGroup: isFresh || !mergedChannelGroups.some((g2) => g2.id === activeId),
+        transition
       });
       afterImageImportDocumentEffects();
     };
@@ -252216,12 +252682,21 @@ void main() {
     ]);
     const loaderHydrationGenRef = reactExports.useRef(0);
     reactExports.useEffect(() => {
-      if (jpegLoaderEntries.length > 0 || omeLoaderEntries.length > 0 || dicomIndexList.length > 0) {
+      const expectedIds = new Set(images.map((im) => im.id));
+      const loadedIds = new Set([
+        ...jpegLoaderEntries,
+        ...omeLoaderEntries,
+        ...dicomIndexList
+      ].filter((entry) => expectedIds.has(entry.sourceImageId)).map((entry) => entry.sourceImageId));
+      const missingImages = images.filter((im) => im.source && !loadedIds.has(im.id));
+      if (missingImages.length === 0) {
+        setJpegLoaderEntries((prev) => reconcileLoaderEntries(prev, expectedIds));
+        setOmeLoaderEntries((prev) => reconcileLoaderEntries(prev, expectedIds));
+        setDicomIndexList((prev) => reconcileLoaderEntries(prev, expectedIds));
         skipLoaderHydrateRef.current = false;
         return;
       }
       if (skipLoaderHydrateRef.current) return;
-      if (!images.some((im) => im.source)) return;
       const gen = ++loaderHydrationGenRef.current;
       let cancelled = false;
       void (async () => {
@@ -252229,7 +252704,7 @@ void main() {
         const loadEpoch = beginImageLoading();
         let hydratedOmeIds = [];
         try {
-          const result = await hydrateLoadersFromImages(images, false, {
+          const result = await hydrateLoadersFromImages(missingImages, true, {
             channelGroups: useDocumentStore.getState().channelGroups,
             documentUrl: window.location.href
           });
@@ -252237,8 +252712,16 @@ void main() {
             return;
           }
           hydratedOmeIds = result.omeLoaderEntries.map((e2) => e2.sourceImageId);
-          applyHydratedLoaders(result);
-          const urlIm = images.find((i2) => {
+          setJpegLoaderEntries((prev) => reconcileLoaderEntries(prev, expectedIds, result.jpegLoaderEntries));
+          setOmeLoaderEntries((prev) => reconcileLoaderEntries(prev, expectedIds, result.omeLoaderEntries));
+          setDicomIndexList((prev) => reconcileLoaderEntries(prev, expectedIds, result.dicomIndexList));
+          setDeniedHandleKeys(result.deniedHandleKeys);
+          setMissingHandleKeys(result.missingHandleKeys);
+          setMissingStoryRoot(result.missingStoryRoot);
+          if (result.loaderErrors.length > 0) {
+            window.alert(result.loaderErrors.join("\n"));
+          }
+          const urlIm = missingImages.find((i2) => {
             var _a3;
             return ((_a3 = i2.source) == null ? void 0 : _a3.kind) === "url";
           });
@@ -252257,11 +252740,14 @@ void main() {
             const loaderIds = new Set(hydratedOmeIds);
             const scs = documentSourceChannels(doc);
             const app = useAppStore.getState();
+            const visibility = applyVisibilityTransition(scs, doc.channelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, {
+              kind: "sync"
+            });
             const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
               images: doc.images,
               channelGroups: doc.channelGroups,
-              stackVisibilities: defaultVisibilitiesForSources(scs, app.channelVisibilities, doc.channelGroups),
-              groupRowVisibilities: app.channelGroupRowVisibilities,
+              stackVisibilities: visibility.channelVisibilities,
+              groupRowVisibilities: visibility.channelGroupRowVisibilities,
               activeGroupId: app.activeChannelGroupId
             });
             const needsEagerGmm = loaderIds.size > 0 && doc.channelGroups.length === 0 && scs.some((sc2) => loaderIds.has(sc2.imageId) && isImageChannel(sc2) && sc2.samples !== 3 && !sc2.gmmContrastLimits && visibleChannelIds.has(sc2.id));
@@ -252278,10 +252764,9 @@ void main() {
       };
     }, [
       images,
-      jpegLoaderEntries.length,
-      omeLoaderEntries.length,
-      dicomIndexList.length,
-      applyHydratedLoaders,
+      jpegLoaderEntries,
+      omeLoaderEntries,
+      dicomIndexList,
       beginImageLoading,
       endImageLoading
     ]);
@@ -252471,11 +252956,14 @@ void main() {
       const scs = documentSourceChannels(doc);
       const loaderImageIds = new Set(omeLoaderEntries.map((e2) => e2.sourceImageId));
       const app = useAppStore.getState();
+      const visibility = applyVisibilityTransition(scs, doc.channelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, {
+        kind: "sync"
+      });
       const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
         images: doc.images,
         channelGroups: doc.channelGroups,
-        stackVisibilities: defaultVisibilitiesForSources(scs, app.channelVisibilities, doc.channelGroups),
-        groupRowVisibilities: app.channelGroupRowVisibilities,
+        stackVisibilities: visibility.channelVisibilities,
+        groupRowVisibilities: visibility.channelGroupRowVisibilities,
         activeGroupId: app.activeChannelGroupId
       });
       const ids = scs.filter((sc2) => loaderImageIds.has(sc2.imageId) && isImageChannel(sc2) && sc2.samples !== 3 && !sc2.gmmContrastLimits && visibleChannelIds.has(sc2.id)).map((sc2) => sc2.id);
@@ -252717,9 +253205,36 @@ void main() {
           }
         }
         const importOme = async (req) => {
-          var _a2;
-          const loadEpoch = beginImageLoading();
           try {
+            if (req.append) {
+              const doc = useDocumentStore.getState();
+              if (req.source.kind === "local") {
+                for (const handle2 of req.source.handles) {
+                  const duplicate = await findDuplicateImportTarget(doc.images, {
+                    kind: "local",
+                    handle: handle2
+                  });
+                  if (duplicate) {
+                    return {
+                      ok: false,
+                      error: duplicateImportError(duplicate)
+                    };
+                  }
+                }
+              } else {
+                const duplicate = await findDuplicateImportTarget(doc.images, {
+                  kind: "url",
+                  url: req.source.url,
+                  dicomWeb: false
+                });
+                if (duplicate) {
+                  return {
+                    ok: false,
+                    error: duplicateImportError(duplicate)
+                  };
+                }
+              }
+            }
             if (req.source.kind === "local") {
               if (req.append) {
                 const result = await onAppendLocalOmeTiff(req.source.path, req.source.handles, req.role);
@@ -252733,11 +253248,11 @@ void main() {
             } else {
               await onStartOmeTiffUrl(req.source.url, req.role);
             }
-            setImportRevision((r2) => r2 + 1);
             const storyId = useDocumentStore.getState().activeStoryId;
             if (storyId) {
               await saveStoryDocument(storyId, useDocumentStore.getState().toDocumentData());
             }
+            setImportRevision((r2) => r2 + 1);
             return {
               ok: true
             };
@@ -252746,16 +253261,22 @@ void main() {
               ok: false,
               error: e2 instanceof Error ? e2.message : "Could not load the image file."
             };
-          } finally {
-            endImageLoading(loadEpoch);
-            (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
           }
         };
         const importDicomWeb = async (req) => {
-          var _a2;
-          const loadEpoch = beginImageLoading();
           try {
             const series = normalizeDicomWebSeriesUrl(req.url);
+            const duplicate = await findDuplicateImportTarget(useDocumentStore.getState().images, {
+              kind: "url",
+              url: series,
+              dicomWeb: true
+            });
+            if (duplicate) {
+              return {
+                ok: false,
+                error: duplicateImportError(duplicate)
+              };
+            }
             const method = props.demo_dicom_web ? "Colorimetric" : "";
             await onStartDicomWeb([
               [
@@ -252763,11 +253284,11 @@ void main() {
                 method
               ]
             ], props.demo_dicom_web ? props.exhibit_config.Groups ?? [] : []);
-            setImportRevision((r2) => r2 + 1);
             const storyId = useDocumentStore.getState().activeStoryId;
             if (storyId) {
               await saveStoryDocument(storyId, useDocumentStore.getState().toDocumentData());
             }
+            setImportRevision((r2) => r2 + 1);
             return {
               ok: true
             };
@@ -252776,9 +253297,6 @@ void main() {
               ok: false,
               error: e2 instanceof Error ? e2.message : "Could not load the DICOMweb series."
             };
-          } finally {
-            endImageLoading(loadEpoch);
-            (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
           }
         };
         const uploadProps = {
