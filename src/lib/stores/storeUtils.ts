@@ -338,7 +338,7 @@ export function basenameImportLabel(basename: string): string {
 
 /**
  * Display name suitable for a story title from the first document image
- * (file basename without OME-TIFF suffix, else DICOMweb modality / URL leaf).
+ * (OME-TIFF basename without extension, DICOMweb display basename, or URL leaf).
  */
 export function firstImageNameForStoryTitle(
   images: readonly Image[],

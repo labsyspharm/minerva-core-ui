@@ -1,4 +1,3 @@
-import { fromBlob, fromUrl } from "geotiff";
 import type { FormEventHandler } from "react";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -20,7 +19,7 @@ import type {
   ConfigSourceDistribution,
   ConfigWaypoint,
 } from "@/lib/authoring/config";
-import { extractChannels, extractDistributions } from "@/lib/authoring/config";
+import { extractChannels } from "@/lib/authoring/config";
 import {
   type ContrastLimits,
   clearOmeGmmContrastCache,
@@ -72,6 +71,7 @@ import {
   finalizeAppendedIntensityGroups,
   replaceOmeLocalImageInDocument,
 } from "@/lib/imaging/omeImportPipeline";
+import { getOmeTiffImageDescriptionOmeXml } from "@/lib/imaging/omeTiff";
 import { warmupPsudoPalette } from "@/lib/imaging/pseudoPalette";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
 import { Pool } from "@/lib/imaging/workers/pool";
@@ -105,12 +105,15 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import {
+  applyLoaderPixelSizeToImage,
   applySourceChannelsToImages,
   dedupeImagesForImport,
   firstImageNameForStoryTitle,
   hydrateConfigWaypoint,
   type LegacyExhibitWaypoint,
   removeImageFromDocument,
+  setImageBasename,
+  setImageContentRole,
   setImageSource,
   waypointsToConfigWaypoints,
 } from "@/lib/stores/storeUtils";
@@ -177,41 +180,6 @@ function afterImageImportDocumentEffects(): void {
   ensureDefaultWaypointForImageImport();
 }
 
-type GeoTiffWithImage = {
-  getImage: (i: number) => Promise<{
-    fileDirectory?: { ImageDescription?: string | undefined };
-  }>;
-};
-
-/** Read OME-XML from OME-TIFF ImageDescription without loading pixels. */
-async function getOmeTiffImageDescriptionOmeXml(
-  source: File | string,
-  urlOptions: Parameters<typeof fromUrl>[1] = {},
-  signal?: AbortSignal,
-): Promise<string | null> {
-  try {
-    const tiff: GeoTiffWithImage = (
-      typeof source === "string"
-        ? await fromUrl(source, urlOptions, signal)
-        : await fromBlob(source, signal)
-    ) as GeoTiffWithImage;
-    const first = await tiff.getImage(0);
-    const desc = first.fileDirectory?.ImageDescription;
-    if (typeof desc !== "string" || !desc.trim()) {
-      return null;
-    }
-    return /OME|openmicroscopy|Pixels/i.test(desc) ? desc : null;
-  } catch (e) {
-    if (import.meta.env.DEV) {
-      console.warn(
-        "[ome-roi] could not read ImageDescription from OME-TIFF",
-        e,
-      );
-    }
-    return null;
-  }
-}
-
 type Props = {
   /** Seed stories; may include legacy `Arrows` / `Overlays` until the image loads and migration runs. */
   configWaypoints: LegacyExhibitWaypoint[];
@@ -258,16 +226,6 @@ const StoryPersistenceRoot = ({ children }: { children: React.ReactNode }) => {
       {children}
     </>
   );
-};
-
-const getDistributions = async (sourceChannels, loader) => {
-  const sourceDistributionMap = await extractDistributions(loader);
-  const SourceDistributions = [...sourceDistributionMap.values()];
-  const SourceChannelsWithDist = sourceChannels.map((sourceChannel) => ({
-    ...sourceChannel,
-    sourceDistribution: sourceDistributionMap.get(sourceChannel.index),
-  }));
-  return { SourceChannelsWithDist, SourceDistributions };
 };
 
 /** Rebuild Viv / DICOM loaders from persisted image rows (after Dexie load / refresh). */
@@ -1542,47 +1500,26 @@ const Content = (props: Props) => {
       jpegUrlList.length > 0;
     if (!willLoad) return;
 
-    const t0 = performance.now();
-    console.log("[minerva] onStart: will load, setting loading state");
     // Switch to waypoints tab and show loading immediately.
     setImportRevision((r) => r + 1);
     const loadEpoch = beginImageLoading();
     try {
       if (dicomPropList.length > 0) {
-        const t1 = performance.now();
         await onStartDicomWeb(
           dicomPropList,
           props.demo_dicom_web ? (props.exhibit_config.Groups ?? []) : [],
         );
-        console.log(
-          `[minerva] onStartDicomWeb: ${(performance.now() - t1).toFixed(0)}ms`,
-        );
       }
       if (omeTiffPropList.length > 0 && handles.length > 0) {
-        const t1 = performance.now();
         await onStartOmeTiff(omeTiffPropList[0][0], handles);
-        console.log(
-          `[minerva] onStartOmeTiff: ${(performance.now() - t1).toFixed(0)}ms`,
-        );
       }
       if (jpegUrlList.length > 0) {
-        const t1 = performance.now();
         await onStartJpegUrl(jpegUrlList[0]);
-        console.log(
-          `[minerva] onStartOmeTiffUrl: ${(performance.now() - t1).toFixed(0)}ms`,
-        );
       }
       if (omeTiffUrlList.length > 0) {
-        const t1 = performance.now();
         await onStartOmeTiffUrl(omeTiffUrlList[0]);
-        console.log(
-          `[minerva] onStartOmeTiffUrl: ${(performance.now() - t1).toFixed(0)}ms`,
-        );
       }
     } finally {
-      console.log(
-        `[minerva] total load: ${(performance.now() - t0).toFixed(0)}ms`,
-      );
       endImageLoading(loadEpoch);
       document.getElementById("global-loader")?.remove();
     }
@@ -1595,18 +1532,19 @@ const Content = (props: Props) => {
   ) => {
     clearOmeDerivedCaches();
     setLastOmeTiffUrl(null);
-    console.log(
-      "[minerva] dicom: fetching pyramids for",
-      imagePropList.length,
-      "series",
-    );
     const indexList = await Promise.all(
-      imagePropList.map(async ([series, modality]) => {
-        const t1 = performance.now();
-        const pyramids = await loadDicomWeb(series);
-        console.log(
-          `[minerva] dicom: loadDicomWeb ${modality}: ${(performance.now() - t1).toFixed(0)}ms`,
-        );
+      imagePropList.map(async ([series, modalityFallback]) => {
+        const {
+          pyramids,
+          displayName,
+          modality: dicomModality,
+        } = await loadDicomWeb(series);
+        const label = displayName || modalityFallback;
+        // Exhibit demos pass Method names (Colorimetric); keep those for group match.
+        const modality =
+          groups.length > 0 && modalityFallback
+            ? modalityFallback
+            : dicomModality || label;
         const loader = parseDicomWeb({
           pyramids,
           series,
@@ -1616,25 +1554,20 @@ const Content = (props: Props) => {
           series,
           pyramids,
           modality,
+          displayName: label,
           loader,
-          // Fresh DICOM import keys document images by modality (see setImageSource below).
-          sourceImageId: modality,
+          sourceImageId: crypto.randomUUID(),
         };
       }),
     );
-    console.log("[minerva] dicom: all pyramids loaded, extracting channels");
     setDicomIndexList(indexList);
     setFileName(
       indexList.length > 0
-        ? indexList
-            .map((d) =>
-              d.modality ? `${d.series} (${d.modality})` : `${d.series}`,
-            )
-            .join(", ")
+        ? indexList.map((d) => d.displayName).join(", ")
         : "",
     );
     let registry = { SourceChannels: [], ChannelGroups: [] as ChannelGroup[] };
-    for (const { loader, modality } of indexList) {
+    for (const { loader, modality, sourceImageId } of indexList) {
       const relevant_groups = groups.filter(
         ({ Image }) => Image.Method === modality,
       );
@@ -1642,18 +1575,14 @@ const Content = (props: Props) => {
         loader,
         modality,
         relevant_groups,
+        sourceImageId,
       );
-      const t2 = performance.now();
-      const { SourceChannelsWithDist } = await getDistributions(sc, loader);
-      console.log(
-        `[minerva] dicom: getDistributions ${modality}: ${(performance.now() - t2).toFixed(0)}ms`,
-      );
+      // Skip eager histograms (one WADO frame per channel); paint with defaults.
       registry = {
-        SourceChannels: [...registry.SourceChannels, ...SourceChannelsWithDist],
+        SourceChannels: [...registry.SourceChannels, ...sc],
         ChannelGroups: [...registry.ChannelGroups, ...gr],
       };
     }
-    console.log("[minerva] dicom: setting store state");
     const { SourceChannels } = registry;
     const ChannelGroups = await applyPaletteToGroupedImport(
       registry.ChannelGroups,
@@ -1661,18 +1590,62 @@ const Content = (props: Props) => {
     );
     setOmeLoaderEntries([]);
     const doc = useDocumentStore.getState();
-    let nextDocImages = applySourceChannelsToImages(doc.images, SourceChannels);
-    for (const { series, modality } of indexList) {
-      nextDocImages = setImageSource(nextDocImages, modality, {
+    // Drop prior same-series rows (and legacy modality-as-id rows) on re-import.
+    const importSeriesRoots = new Set(
+      indexList.map((d) => normalizeDicomWebSeriesUrl(d.series)),
+    );
+    const legacyModalityIds = new Set(indexList.map((d) => d.modality));
+    let nextDocImages = [...doc.images];
+    let nextChannelGroups = [...doc.channelGroups];
+    for (const im of doc.images) {
+      const sameSeries =
+        im.source?.kind === "dicomWeb" &&
+        importSeriesRoots.has(normalizeDicomWebSeriesUrl(im.source.series));
+      // Pre-UUID imports keyed the document image id by modality / Method.
+      const legacyId = legacyModalityIds.has(im.id);
+      if (!sameSeries && !legacyId) continue;
+      const removed = removeImageFromDocument(
+        nextDocImages,
+        nextChannelGroups,
+        im.id,
+      );
+      nextDocImages = removed.images;
+      nextChannelGroups = removed.channelGroups;
+    }
+    nextDocImages = applySourceChannelsToImages(nextDocImages, SourceChannels);
+    for (const {
+      series,
+      modality,
+      displayName,
+      loader,
+      sourceImageId,
+    } of indexList) {
+      nextDocImages = setImageSource(nextDocImages, sourceImageId, {
         kind: "dicomWeb",
         series,
         modality,
       });
+      nextDocImages = applyLoaderPixelSizeToImage(
+        nextDocImages,
+        sourceImageId,
+        loader,
+      );
+      nextDocImages = setImageBasename(
+        nextDocImages,
+        sourceImageId,
+        displayName,
+      );
+      nextDocImages = setImageContentRole(
+        nextDocImages,
+        sourceImageId,
+        "intensity",
+      );
     }
     setImages(nextDocImages);
-    setChannelGroups(ChannelGroups);
+    const mergedChannelGroups = [...nextChannelGroups, ...ChannelGroups];
+    setChannelGroups(mergedChannelGroups);
     updateGroupChannelLists({
-      ChannelGroups,
+      ChannelGroups: mergedChannelGroups,
       SourceChannels,
     });
     afterImageImportDocumentEffects();
@@ -2400,17 +2373,14 @@ const Content = (props: Props) => {
 
         const importDicomWeb = async (req: {
           url: string;
-          name?: string;
         }): Promise<OmeImportResult> => {
           const loadEpoch = beginImageLoading();
           try {
             const series = normalizeDicomWebSeriesUrl(req.url);
-            const label =
-              req.name?.trim() ||
-              series.match(/\/series\/([^/]+)/i)?.[1]?.slice(-14) ||
-              "DICOMweb";
+            // Method name only for demo exhibit groups; otherwise metadata wins.
+            const method = props.demo_dicom_web ? "Colorimetric" : "";
             await onStartDicomWeb(
-              [[series, label]],
+              [[series, method]],
               props.demo_dicom_web ? (props.exhibit_config.Groups ?? []) : [],
             );
             setImportRevision((r) => r + 1);

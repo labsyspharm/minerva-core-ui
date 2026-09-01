@@ -8,8 +8,9 @@ import {
 } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
 import { resolveImageContentRole } from "@/lib/imaging/channelKind";
+import { detectUrlImageFormat } from "@/lib/imaging/detectImageUrl";
 import {
-  findDicomWeb,
+  isDicomWebSeriesUrl,
   normalizeDicomWebSeriesUrl,
 } from "@/lib/imaging/dicom.js";
 import {
@@ -79,8 +80,6 @@ export type OmeImportRequest = {
 
 export type DicomWebImportRequest = {
   url: string;
-  /** Display label for the series; defaults to a short series id when omitted. */
-  name?: string;
 };
 
 export type UploadProps = {
@@ -134,16 +133,6 @@ type PendingSource = PendingLocal | PendingUrl;
 type OverlayRole = OmeImportRole;
 type OverlayFormat = "ome-tiff" | "dicomweb";
 
-/** Series root, or the same with a trailing `/instances[/]`. */
-const DICOM_SERIES_URL =
-  /^https?:\/\/.+\/studies\/[^/]+\/series\/[^/]+(?:\/instances)?\/?$/i;
-
-function defaultDicomName(seriesUrl: string): string {
-  const uid = seriesUrl.match(/\/series\/([^/]+)/i)?.[1];
-  if (!uid) return "DICOMweb";
-  return uid.length > 18 ? `…${uid.slice(-14)}` : uid;
-}
-
 function FormatChip({
   label,
   selected,
@@ -188,7 +177,7 @@ function imageDisplayLabel(
     return u.split("/").pop() || u;
   }
   if (src?.kind === "dicomWeb") {
-    return src.modality ? `${src.series} (${src.modality})` : src.series;
+    return src.modality || "DICOMweb";
   }
   if (index === 0 && opts.fileName.trim()) return opts.fileName.trim();
   if (index === 0 && opts.lastOmeTiffUrl) {
@@ -230,7 +219,7 @@ function resolveImportRole(
 
 function inferFormat(pending: PendingSource): OverlayFormat {
   if (pending.kind === "local") return "ome-tiff";
-  return DICOM_SERIES_URL.test(pending.url) ? "dicomweb" : "ome-tiff";
+  return isDicomWebSeriesUrl(pending.url) ? "dicomweb" : "ome-tiff";
 }
 
 function pendingLabel(pending: PendingSource): string {
@@ -266,43 +255,80 @@ const Upload = (props: UploadProps) => {
   const [pending, setPending] = useState<PendingSource | null>(null);
   const [overlayRole, setOverlayRole] = useState<OverlayRole>("intensity");
   const [overlayFormat, setOverlayFormat] = useState<OverlayFormat>("ome-tiff");
-  const [dicomName, setDicomName] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
   const [importBusy, setImportBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
   const dragDepthRef = useRef(0);
   const localPickInFlightRef = useRef(false);
   const prevImportRev = useRef(importRevision);
+  const formatDetectAbortRef = useRef<AbortController | null>(null);
+  const formatChosenByUserRef = useRef(false);
 
   const showTypeOverlay = pending != null;
   const dicomAllowed =
     pending?.kind === "url" && overlayRole !== "segmentation";
   const urlReady = /^https?:\/\/.+/.test(urlDraft.trim());
 
+  const abortFormatDetect = useCallback(() => {
+    formatDetectAbortRef.current?.abort();
+    formatDetectAbortRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      abortFormatDetect();
+    };
+  }, [abortFormatDetect]);
+
   useEffect(() => {
     if (prevImportRev.current === importRevision) return;
     prevImportRev.current = importRevision;
+    abortFormatDetect();
     setPending(null);
     setImportError(null);
     setUrlDraft("");
     setImportBusy(false);
-  }, [importRevision]);
+  }, [abortFormatDetect, importRevision]);
 
-  const openPending = useCallback((next: PendingSource) => {
-    const role = resolveImportRole("intensity", pendingLabel(next));
-    let format = inferFormat(next);
-    if (role === "segmentation") format = "ome-tiff";
-    setPending(next);
-    setOverlayRole(role);
-    setOverlayFormat(format);
-    setDicomName("");
-    setImportError(null);
-  }, []);
+  const openPending = useCallback(
+    (next: PendingSource) => {
+      abortFormatDetect();
+      formatChosenByUserRef.current = false;
+      const role = resolveImportRole("intensity", pendingLabel(next));
+      let format = inferFormat(next);
+      if (role === "segmentation") format = "ome-tiff";
+      setPending(next);
+      setOverlayRole(role);
+      setOverlayFormat(format);
+      setImportError(null);
+
+      if (next.kind !== "url" || role === "segmentation") return;
+
+      const ac = new AbortController();
+      formatDetectAbortRef.current = ac;
+      const url = next.url;
+      void detectUrlImageFormat(url, ac.signal)
+        .then((detected) => {
+          if (ac.signal.aborted || formatChosenByUserRef.current) return;
+          setOverlayFormat(detected);
+        })
+        .catch(() => {
+          /* aborted or network — keep heuristic chip */
+        })
+        .finally(() => {
+          if (formatDetectAbortRef.current === ac) {
+            formatDetectAbortRef.current = null;
+          }
+        });
+    },
+    [abortFormatDetect],
+  );
 
   const clearPending = useCallback(() => {
+    abortFormatDetect();
     setPending(null);
     setImportError(null);
-  }, []);
+  }, [abortFormatDetect]);
 
   const acceptLocalHandles = useCallback(
     async (handles: Handle.File[]) => {
@@ -410,9 +436,9 @@ const Upload = (props: UploadProps) => {
           setImportError("DICOMweb needs a series URL.");
           return;
         }
-        if (!DICOM_SERIES_URL.test(pending.url.trim())) {
+        if (!isDicomWebSeriesUrl(pending.url)) {
           setImportError(
-            "DICOMweb URL must include /studies/…/series/… (optional /instances).",
+            "DICOMweb URL must include /studies/…/series/… (instance or frame paths are OK).",
           );
           return;
         }
@@ -421,16 +447,7 @@ const Upload = (props: UploadProps) => {
           return;
         }
         const seriesUrl = normalizeDicomWebSeriesUrl(pending.url);
-        try {
-          await findDicomWeb(seriesUrl);
-        } catch {
-          setImportError("Could not reach that DICOMweb series.");
-          return;
-        }
-        const result = await onImportDicomWeb({
-          url: seriesUrl,
-          name: dicomName.trim() || defaultDicomName(seriesUrl),
-        });
+        const result = await onImportDicomWeb({ url: seriesUrl });
         if (result && result.ok === false) setImportError(result.error);
         return;
       }
@@ -668,6 +685,7 @@ const Upload = (props: UploadProps) => {
                 label="Segmentation Mask"
                 selected={overlayRole === "segmentation"}
                 onClick={() => {
+                  formatChosenByUserRef.current = true;
                   setOverlayRole("segmentation");
                   setOverlayFormat("ome-tiff");
                 }}
@@ -680,32 +698,20 @@ const Upload = (props: UploadProps) => {
                   <FormatChip
                     label="OME-TIFF"
                     selected={overlayFormat === "ome-tiff"}
-                    onClick={() => setOverlayFormat("ome-tiff")}
+                    onClick={() => {
+                      formatChosenByUserRef.current = true;
+                      setOverlayFormat("ome-tiff");
+                    }}
                   />
                   <FormatChip
                     label="DICOMweb"
                     selected={overlayFormat === "dicomweb"}
-                    onClick={() => setOverlayFormat("dicomweb")}
+                    onClick={() => {
+                      formatChosenByUserRef.current = true;
+                      setOverlayFormat("dicomweb");
+                    }}
                   />
                 </div>
-              </div>
-            ) : null}
-            {overlayFormat === "dicomweb" && dicomAllowed ? (
-              <div className={styles.typeSection}>
-                <label
-                  className={styles.fieldLabel}
-                  htmlFor="dicom-dataset-name"
-                >
-                  Label (optional)
-                </label>
-                <input
-                  id="dicom-dataset-name"
-                  type="text"
-                  className={`${minervaTheme.input} ${styles.urlInput}`}
-                  value={dicomName}
-                  onChange={(e) => setDicomName(e.target.value)}
-                  placeholder="Short name for this series"
-                />
               </div>
             ) : null}
             {importError ? (

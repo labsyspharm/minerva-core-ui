@@ -173,7 +173,7 @@ export async function hydrateDocumentLoaders(
         const { series, modality } = im.source;
         if (dicomSeriesSeen.has(series)) break;
         dicomSeriesSeen.add(series);
-        const pyramids = await loadDicomWeb(series);
+        const { pyramids } = await loadDicomWeb(series);
         const loader = parseDicomWeb({
           pyramids,
           series,

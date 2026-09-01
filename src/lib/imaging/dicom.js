@@ -375,10 +375,6 @@ function computeImagePyramid({ metadata, bits }) {
      * The resolutions array should be composed of unique values in descending order.
      */
     if (pyramidResolutions.includes(roundedZoomFactor)) {
-      console.warn(
-        "resolution conflict rounding zoom factor (baseTotalPixelMatrixColumns / totalPixelMatrixColumns): ",
-        zoomFactor,
-      );
       zoomFactor = parseFloat(zoomFactor.toFixed(2));
     } else {
       zoomFactor = roundedZoomFactor;
@@ -394,26 +390,8 @@ function computeImagePyramid({ metadata, bits }) {
   pyramidImageSizes.reverse();
   pyramidPhysicalSizes.reverse();
 
-  const uniquePhysicalSizes = [
-    ...new Set(pyramidPhysicalSizes.map((v) => v.toString())),
-  ].map((v) => v.split(","));
-  if (uniquePhysicalSizes.length > 1) {
-    console.warn(
-      "images of the image pyramid have different sizes: ",
-      "\nsize [mm]: ",
-      pyramidPhysicalSizes,
-      "\npixel spacing [mm]: ",
-      pyramidPixelSpacings,
-      "\nsize [pixels]: ",
-      pyramidImageSizes,
-      "\ntile size [pixels]: ",
-      pyramidTileSizes,
-      "\ntile grid size [tiles]: ",
-      pyramidGridSizes,
-      "\nresolution [factors]: ",
-      pyramidResolutions,
-    );
-  }
+  // Multi-resolution WSI levels routinely differ in physical size (mm);
+  // that is expected and not logged.
 
   /**
    * Frames may extend beyond the size of the total pixel matrix.
@@ -433,6 +411,8 @@ function computeImagePyramid({ metadata, bits }) {
     resolutions: pyramidResolutions,
     gridSizes: pyramidGridSizes,
     tileSizes: pyramidTileSizes,
+    /** Coarsest → finest, aligned with `tileSizes` after reverse. */
+    imageSizes: pyramidImageSizes,
     pixelSpacings: pyramidPixelSpacings,
     metadata: pyramidMetadata,
     frameMappings: pyramidFrameMappings,
@@ -450,23 +430,242 @@ const readInstances = async (series) => {
   return naturalized;
 };
 
-/** Accept series roots or `…/series/…/instances[/]` listing URLs. */
+/** Accept series roots or deeper WADO paths (`…/instances`, `…/instances/{sop}/frames/{n}`). */
 const normalizeDicomWebSeriesUrl = (url) => {
   return String(url)
     .trim()
     .replace(/\/+$/, "")
-    .replace(/\/instances$/i, "");
+    .replace(/\/instances(?:\/.*)?$/i, "");
+};
+
+/** True when URL is (or normalizes to) a DICOMweb series root. */
+const isDicomWebSeriesUrl = (url) => {
+  const root = normalizeDicomWebSeriesUrl(String(url).trim());
+  return /^https?:\/\/.+\/studies\/[^/]+\/series\/[^/]+$/i.test(root);
+};
+
+/**
+ * Confirm a URL is a reachable DICOMweb series via QIDO `instances?limit=1`.
+ * Does not fetch full series `/metadata`.
+ */
+const isDicomWeb = async (url, signal) => {
+  if (!isDicomWebSeriesUrl(url)) return false;
+  const root = normalizeDicomWebSeriesUrl(url);
+  try {
+    const response = await fetch(`${root}/instances/?limit=1`, { signal });
+    if (!response.ok) return false;
+    const result = await response.json();
+    if (!Array.isArray(result) || result.length === 0) return false;
+    const first = naturalizeDataset(result[0]);
+    return Boolean(first?.SOPInstanceUID);
+  } catch {
+    return false;
+  }
 };
 
 const readMetadata = async (series) => {
   const response = await fetch(`${series}/metadata`);
+  if (!response.ok) {
+    throw new Error(
+      `DICOMweb metadata request failed (${response.status}) for ${series}`,
+    );
+  }
   const result = await response.json();
+  if (!Array.isArray(result)) {
+    throw new Error("DICOMweb metadata response must be a JSON array.");
+  }
   const naturalized = result.map((json) => ({
     ...naturalizeDataset(json),
     json,
   }));
   return naturalized;
 };
+
+/** Optical path id used to group VL Whole Slide Microscopy instances. */
+function opticalPathIdentifier(instance) {
+  const id = instance?.OpticalPathSequence?.[0]?.OpticalPathIdentifier;
+  return id != null && String(id).length > 0 ? String(id) : "0";
+}
+
+function shortFramePath(path) {
+  return String(path).split("/").slice(-3).join("/");
+}
+
+/** Pixel matrix size from naturalized VL WSI metadata. */
+function pixelMatrixSize(levelMeta) {
+  const width = Math.abs(
+    Number(levelMeta?.TotalPixelMatrixColumns ?? levelMeta?.Columns ?? 0) || 0,
+  );
+  const height = Math.abs(
+    Number(levelMeta?.TotalPixelMatrixRows ?? levelMeta?.Rows ?? 0) || 0,
+  );
+  return { width, height };
+}
+
+/**
+ * Flatten computeImagePyramid into loader levels (coarsest → finest).
+ * Frame paths become `instances/{sop}/frames/{n}` relative to the series root.
+ */
+function pyramidLevelsForLoader(pyramid) {
+  const baseW = Math.abs(Number(pyramid.extent?.[2]) || 0);
+  const baseH = Math.abs(Number(pyramid.extent?.[3]) || 0);
+  const n = pyramid.metadata?.length ?? 0;
+  return (pyramid.metadata || []).map((levelMeta, i) => {
+    const fromSizes = pyramid.imageSizes?.[i];
+    let width = Math.abs(Number(fromSizes?.[0]) || 0);
+    let height = Math.abs(Number(fromSizes?.[1]) || 0);
+    if (!(width > 0 && height > 0)) {
+      ({ width, height } = pixelMatrixSize(levelMeta));
+    }
+    if (i === n - 1 && baseW > 0 && baseH > 0) {
+      width = baseW;
+      height = baseH;
+    }
+    const tileW = Number(levelMeta.Columns) || 0;
+    const tileH = Number(levelMeta.Rows) || 0;
+    const fromPyramid = pyramid.tileSizes?.[i];
+    const tileSize =
+      Math.max(tileW, tileH) ||
+      Math.max(0, Number(fromPyramid?.[0]) || 0, Number(fromPyramid?.[1]) || 0);
+    const frameMapping = pyramid.frameMappings?.[i] || {};
+    return {
+      bits: pyramid.bits,
+      extent: [0, 0, width, height],
+      width,
+      height,
+      tileSize,
+      frameMappings: Object.fromEntries(
+        Object.entries(frameMapping).map(([k, v]) => [k, shortFramePath(v)]),
+      ),
+    };
+  });
+}
+
+/**
+ * Viv `c` is a 0-based channel index; DICOM frame keys use OpticalPathIdentifier.
+ * Re-key pyramids to `"0"…"N"` and rewrite frame keys; reverse to finest-first
+ * so level 0 is full resolution for MultiscaleImageLayer.
+ */
+function pyramidsForChannelIndex(pyramids) {
+  return Object.fromEntries(
+    Object.keys(pyramids ?? {}).map((pathKey, cIndex) => {
+      const finestFirst = [...(pyramids[pathKey] || [])]
+        .reverse()
+        .map((level) => ({
+          ...level,
+          frameMappings: Object.fromEntries(
+            Object.entries(level.frameMappings || {}).map(([k, v]) => {
+              const [row, col] = String(k).split("-");
+              return row != null && col != null
+                ? [`${row}-${col}-${cIndex}`, v]
+                : [k, v];
+            }),
+          ),
+        }));
+      return [String(cIndex), finestFirst];
+    }),
+  );
+}
+
+/** True when series `/metadata` frame maps look incomplete (bulk-elided per-frame). */
+function pyramidsNeedInstanceMetadata(pyramids) {
+  for (const levels of Object.values(pyramids ?? {})) {
+    if (!Array.isArray(levels)) continue;
+    for (const level of levels) {
+      const tw = Number(level?.tileSize) || 0;
+      const w = Number(level?.width) || 0;
+      const h = Number(level?.height) || 0;
+      if (tw <= 0 || w <= 0 || h <= 0) continue;
+      const expected = Math.ceil(w / tw) * Math.ceil(h / tw);
+      const mapped = Object.keys(level.frameMappings || {}).length;
+      if (expected > 4 && mapped < expected * 0.5) return true;
+    }
+  }
+  return false;
+}
+
+/** Group naturalized instances by optical path, then build one pyramid per group. */
+function dicomPyramidsFromInstances(instances) {
+  if (!instances?.length) {
+    throw new Error("No DICOMweb instance metadata to build pyramids from.");
+  }
+  const byPath = {};
+  for (const instance of instances) {
+    const k = opticalPathIdentifier(instance);
+    if (!byPath[k]) byPath[k] = [];
+    byPath[k].push(instance);
+  }
+  return Object.fromEntries(
+    Object.entries(byPath).map(([key, group]) => {
+      const bits = Number(group[0]?.BitsAllocated) || 16;
+      return [
+        key,
+        pyramidLevelsForLoader(
+          computeImagePyramid({ metadata: [...group], bits }),
+        ),
+      ];
+    }),
+  );
+}
+
+/** Trim a naturalized DICOM string / multi-value string tag. */
+function dicomStringTag(value) {
+  if (value == null) return "";
+  if (typeof value === "string") return value.trim();
+  if (Array.isArray(value) && typeof value[0] === "string") {
+    return value[0].trim();
+  }
+  return "";
+}
+
+/**
+ * Human label for a DICOMweb series from instance metadata.
+ * Prefer original filename (PixelMed private) → container/specimen →
+ * series description → series UID tail.
+ */
+const dicomSeriesDisplayName = (instance, seriesUrl = "") => {
+  // dcmjs keeps this PixelMed private tag as the hex key.
+  const originalFile = dicomStringTag(instance?.["00091001"]);
+  if (originalFile) return originalFile;
+
+  const container = dicomStringTag(instance?.ContainerIdentifier);
+  if (container) return container;
+
+  const specimen = dicomStringTag(instance?.SpecimenIdentifier);
+  if (specimen) return specimen;
+
+  const seriesDescription = dicomStringTag(instance?.SeriesDescription);
+  if (seriesDescription) return seriesDescription;
+
+  const uid =
+    dicomStringTag(instance?.SeriesInstanceUID) ||
+    String(seriesUrl).match(/\/series\/([^/]+)/i)?.[1] ||
+    "";
+  if (!uid) return "DICOMweb";
+  return uid.length > 18 ? `…${uid.slice(-14)}` : uid;
+};
+
+function dicomWebLoadResult(instances, seriesUrl) {
+  const first = instances?.[0];
+  return {
+    pyramids: dicomPyramidsFromInstances(instances),
+    displayName: dicomSeriesDisplayName(first, seriesUrl),
+    modality: dicomStringTag(first?.Modality) || "SM",
+  };
+}
+
+/** QIDO instances list + one `/metadata` fetch per SOP (N+1). */
+async function loadDicomWebPerInstance(root) {
+  const instance_list = await listDicomWeb(root);
+  const allMetadata = (
+    await Promise.all(
+      instance_list.map(async ({ SOPInstanceUID }) =>
+        readMetadata(`${root}/instances/${SOPInstanceUID}`),
+      ),
+    )
+  ).flat();
+  return dicomWebLoadResult(allMetadata, root);
+}
 
 const toIndexer = (opts) => {
   const { metadata, pyramids, series, little_endian } = opts;
@@ -482,186 +681,140 @@ const toIndexer = (opts) => {
   };
 };
 
-const getShapeForBinaryDownsampleLevel = (options) => {
-  const { axes, level } = options;
-  const xIndex = axes.labels.indexOf("x");
-  const yIndex = axes.labels.indexOf("y");
-  const resolutionShape = axes.shape.slice();
-  resolutionShape[xIndex] = axes.shape[xIndex] >> level;
-  resolutionShape[yIndex] = axes.shape[yIndex] >> level;
-  return resolutionShape;
-};
-
 const loadDicom = (meta) => {
-  const { pyramids, series, little_endian } = meta;
-  const { width, height, bits } = [...pyramids[0]].pop();
-  const channels = Object.keys(pyramids)
-    .map((n) => parseInt(n, 10))
-    .toSorted((x, y) => x - y);
-  const levels = Object.keys(pyramids["0"])
-    .map((n) => parseInt(n, 10))
-    .toSorted((x, y) => x - y);
-  const pixels = {
-    Channels: channels.map((id) => ({
-      ID: `Channel:0:${id}`,
-      Name: `Channel ${id}`,
-      SamplesPerPixel: 1,
-    })),
-    ID: "Pixels:0",
-    DimensionOrder: "XYZCT",
-    Type: bits === 8 ? "Uint8" : "Uint16",
-    SizeT: 1,
-    SizeZ: 1,
-    SizeC: channels.length,
-    SizeY: height,
-    SizeX: width,
-    PhysicalSizeX: 1,
-    PhysicalSizeY: 1,
-    PhysicalSizeXUnit: "µm",
-    PhysicalSizeYUnit: "µm",
-    PhysicalSizeZUnit: "µm",
-    BigEndian: false,
-    TiffData: channels.map((id) => ({
-      IFD: id,
-      PlaneCount: 1,
-      FirstT: 0,
-      FirstC: id,
-      FirstZ: 0,
-      UUID: {
-        FileName: "tmp.tif",
-      },
-    })),
+  const { pyramids: rawPyramids, series, little_endian } = meta;
+  const channelKeys = Object.keys(rawPyramids ?? {});
+  if (channelKeys.length === 0) {
+    throw new Error("No DICOMweb pyramid channels.");
+  }
+  // Viv `c` index keys, finest→coarsest levels, frame keys remapped for `c`.
+  const pyramids = pyramidsForChannelIndex(rawPyramids);
+  const primaryLevels = pyramids["0"];
+  if (!Array.isArray(primaryLevels) || primaryLevels.length === 0) {
+    throw new Error("DICOMweb primary pyramid has no levels.");
+  }
+  const finest = primaryLevels[0];
+  const dtype = finest.bits === 8 ? "Uint8" : "Uint16";
+  const metadata = {
+    ID: "Image:0",
+    AquisitionDate: "",
+    Description: "",
+    Pixels: {
+      Channels: channelKeys.map((id, i) => ({
+        ID: `Channel:0:${i}`,
+        Name: `Channel ${id}`,
+        SamplesPerPixel: 1,
+      })),
+      ID: "Pixels:0",
+      DimensionOrder: "XYZCT",
+      Type: dtype,
+      SizeT: 1,
+      SizeZ: 1,
+      SizeC: channelKeys.length,
+      SizeY: finest.height,
+      SizeX: finest.width,
+      PhysicalSizeX: 1,
+      PhysicalSizeY: 1,
+      PhysicalSizeXUnit: "µm",
+      PhysicalSizeYUnit: "µm",
+      PhysicalSizeZUnit: "µm",
+      BigEndian: false,
+      TiffData: channelKeys.map((_, i) => ({
+        IFD: i,
+        PlaneCount: 1,
+        FirstT: 0,
+        FirstC: i,
+        FirstZ: 0,
+        UUID: { FileName: "tmp.tif" },
+      })),
+    },
   };
-  const { tileSize } = pyramids["0"][0];
-  const metadata = { Pixels: pixels };
   const pyramidIndexer = toIndexer({
     metadata,
     pyramids,
     series,
     little_endian,
   });
-  const data = levels.map((level) => {
-    const _pyramid = pyramids["0"][level];
-    const axes = {
-      labels: ["t", "c", "z", "y", "x"],
-      shape: [1, channels.length, 1, height, width],
-    };
-    const meta = {
-      physicalSizes: {
-        x: {
-          size: 0.324999988079,
-          unit: "µm",
-        },
-        y: {
-          size: 0.324999988079,
-          unit: "µm",
-        },
-      },
-      photometricInterpretation: 1,
-    };
-    return new DicomPixelSource(
-      (sel) => pyramidIndexer(sel, level),
-      metadata.Pixels.Type,
-      tileSize,
-      getShapeForBinaryDownsampleLevel({
-        axes,
-        level,
-      }),
-      axes.labels,
-      meta,
-    );
-  });
-  return data;
+  const labels = ["t", "c", "z", "y", "x"];
+  const planeMeta = {
+    physicalSizes: {
+      x: { size: 1, unit: "µm" },
+      y: { size: 1, unit: "µm" },
+    },
+    photometricInterpretation: 1,
+  };
+  const data = primaryLevels.map(
+    (levelRow, level) =>
+      new DicomPixelSource(
+        (sel) => pyramidIndexer(sel, level),
+        dtype,
+        levelRow.tileSize,
+        [1, channelKeys.length, 1, levelRow.height, levelRow.width],
+        labels,
+        planeMeta,
+      ),
+  );
+  return { data, metadata };
 };
 
 function createTileLayers(meta) {
   const { channelsVisible, colors, contrastLimits, selections } = meta.settings;
   const visible = channelsVisible.some((x) => x);
   const { imageID, pyramids, dicomLoader, rgbImage } = meta;
-  // Viv MultiscaleImageLayer expects LoaderPlane[]; callers may pass Loader `{ data }`.
   const loaderPlanes = Array.isArray(dicomLoader)
     ? dicomLoader
     : (dicomLoader?.data ?? []);
-  const height = [...pyramids["0"]].pop().height;
-  const width = [...pyramids["0"]].pop().width;
-  const _tileSize = pyramids["0"][0].tileSize;
-  const maxLevel = pyramids["0"].length;
-  const minZoom = Math.round(-(maxLevel - 1));
+  const primaryKey =
+    pyramids["0"] != null ? "0" : Object.keys(pyramids || {})[0];
+  // Raw pyramids are coarsest→finest; last level is full resolution.
+  const primaryLevels = pyramids?.[primaryKey];
+  if (!Array.isArray(primaryLevels) || primaryLevels.length === 0) {
+    console.error("[minerva] dicom: no primary pyramid levels", imageID);
+    return null;
+  }
+  const finest = primaryLevels[primaryLevels.length - 1];
+  const { width, height } = finest;
+  const minZoom = Math.round(-(primaryLevels.length - 1));
   if (rgbImage) {
     return new TileLayer({
       visible,
       id: "rgb_image",
       getTileData: async ({ index, signal }) => {
         const { x, y, z } = index;
-        const level = Math.abs(-z);
-        console.log("z level and x,y");
-        console.log({ x, y, z, level });
-        const source = loaderPlanes[level];
-        if (!source) {
-          return null;
-        }
-        console.log("z level Has Source");
-        console.log({ x, y, z, level }, source);
-        const selection = { z: 0, t: 0, c: 0 };
-        let tile = null;
+        const source = loaderPlanes[Math.abs(-z)];
+        if (!source) return null;
         try {
-          tile = await source.getTile({
+          return await source.getTile({
             x,
             y,
-            selection,
+            selection: { z: 0, t: 0, c: 0 },
             signal,
           });
         } catch (e) {
-          if (e !== "__minervaEmptyFramePath") {
-            if (!(e instanceof AbortError)) {
-              console.error(e);
-            }
+          if (e !== "__minervaEmptyFramePath" && !(e instanceof AbortError)) {
+            console.error(e);
           }
           return null;
         }
-        if (!tile) {
-          return null;
-        }
-        console.log("x,y Has Tile");
-        console.log({ x, y, z, level }, source, tile);
-        return tile;
       },
       refinementStrategy: "best-available",
-      tileSize: 1024,
-      minZoom: minZoom,
+      tileSize: finest.tileSize || 1024,
+      minZoom,
       maxZoom: 0,
       extent: [0, 0, width, height],
       renderSubLayers: (props) => {
         const { left, bottom, right, top } = props.tile.bbox;
         const { x, y, z } = props.tile.index;
-        if (!props.data) {
-          return null;
-        }
-        const { data, width, height } = props.data;
-        const imageDataArguments = [data, width, height];
-        console.log("Image Data Arguments:");
-        console.log(imageDataArguments);
-        const imageData = new ImageData(...imageDataArguments);
-        console.log("Bitmap Layer Bounds:");
-        console.log([left, bottom, right, top]);
+        if (!props.data) return null;
+        const { data, width: tw, height: th } = props.data;
         return new BitmapLayer(props, {
-          image: imageData,
+          image: new ImageData(data, tw, th),
           id: `rgb-${z}-${x}-${y}`,
           bounds: [left, bottom, right, top],
         });
       },
       pickable: true,
-      onClick: ({ bitmap }) => {
-        if (bitmap) {
-          console.log("Picked Pixel:");
-          console.log({
-            sourceX: bitmap.pixel[0],
-            sourceY: bitmap.pixel[1],
-            sourceWidth: 1,
-            sourceHeight: 1,
-          });
-        }
-      },
+      onClick: () => {},
     });
   }
   if (!loaderPlanes[0]) {
@@ -671,20 +824,17 @@ function createTileLayers(meta) {
     );
     return null;
   }
-  const imageProps = {
+  return new MultiscaleImageLayer({
     visible,
     loader: loaderPlanes,
-    // https://deck.gl/docs/api-reference/geo-layers/tile-layer#refinementstrategy
     refinementStrategy: "best-available",
-    // Include contrast limits in ID to force layer recreation when they change
-    // This prevents flash when switching channel groups
+    // Contrast limits in ID force layer recreate (avoids flash on group switch).
     id: `${imageID}-${contrastLimits.map(([l, u]) => `${l}-${u}`).join("-")}`,
     channelsVisible,
     colors,
     contrastLimits,
     selections,
-  };
-  return new MultiscaleImageLayer(imageProps);
+  });
 }
 
 const listDicomWeb = async (series) => {
@@ -692,6 +842,7 @@ const listDicomWeb = async (series) => {
   return await readInstances(`${root}/instances/`);
 };
 
+/** Viv plane wrapper: shape must be tczyx so getImageSize() reads [height, width]. */
 const toDicomPlane = (dicomPixelSource) => {
   class DicomPlane {
     constructor(props) {
@@ -706,135 +857,65 @@ const toDicomPlane = (dicomPixelSource) => {
     }
 
     async getTile(opts) {
-      return await dicomPixelSource.getTile(opts);
+      return dicomPixelSource.getTile(opts);
+    }
+
+    async getRaster(opts) {
+      return dicomPixelSource.getRaster(opts);
+    }
+
+    onTileError(err) {
+      dicomPixelSource.onTileError?.(err);
     }
   }
   return DicomPlane;
 };
 
 const parseDicomWeb = (meta) => {
-  const { pyramids, series, little_endian } = meta;
-  if (!pyramids) {
-    return null;
-  }
-  const loader_data = loadDicom({
-    pyramids,
-    series,
-    little_endian: true,
+  if (!meta?.pyramids) return null;
+  const { data: sources, metadata } = loadDicom({
+    ...meta,
+    little_endian: meta.little_endian ?? true,
   });
-  const channel_pyramids = Object.values(pyramids);
-  const n_channels = channel_pyramids.length;
-  const any_channel = [...channel_pyramids].pop();
-  const levels = any_channel.toReversed();
-  // Levels starting at full resolution
-  const data_config = levels.map((level) => {
-    const { tileSize, width, height, bits } = level;
-    const shape = [width, height, n_channels];
-    return {
-      series: series,
-      samples: bits === 16 ? 1 : 3,
-      dtype: bits === 16 ? "Uint16" : "Uint8",
-      tileSize: tileSize,
-      shape: shape,
-      labels: ["x", "y", "c"],
-      meta: {
-        physicalSizes: {
-          x: { size: 1, unit: "µm" },
-          y: { size: 1, unit: "µm" },
-        },
-        photometricInterpretation: 1,
-      },
-    };
-  });
-  const metadata = {
-    ID: "Image:0",
-    AquisitionDate: "",
-    Description: "",
-    Pixels: {
-      Channels: channel_pyramids.map((_, i) => {
-        const { samples } = data_config[0];
-        return {
-          ID: `Channel:0:${i}`,
-          Name: `Channel ${i}`,
-          SamplesPerPixel: samples,
-        };
-      }),
-      ID: "Pixels:0",
-      DimensionOrder: "XYC",
-      Type: data_config[0].dtype,
-      SizeC: data_config[0].shape[2],
-      SizeY: data_config[0].shape[1],
-      SizeX: data_config[0].shape[0],
-      PhysicalSizeX: 1,
-      PhysicalSizeY: 1,
-      PhysicalSizeXUnit: "µm",
-      PhysicalSizeYUnit: "µm",
-      BigEndian: false,
-    },
-  };
-  const data = data_config.map((level_data, i) => {
-    const DicomPlane = toDicomPlane(loader_data[i]);
-    return new DicomPlane({
-      metadata,
-      ...level_data,
-    });
-  });
+  const samples = metadata.Pixels.Type === "Uint16" ? 1 : 3;
   return {
-    data,
     metadata,
+    data: sources.map((src) => {
+      const Plane = toDicomPlane(src);
+      return new Plane({
+        metadata,
+        series: meta.series,
+        samples,
+        dtype: src.dtype,
+        tileSize: src.tileSize,
+        shape: src.shape,
+        labels: src.labels,
+        meta: src.meta,
+      });
+    }),
   };
 };
 
+/** Series `/metadata` first; per-instance fallback if missing or incomplete. */
 const loadDicomWeb = async (series) => {
-  // Test Series:
-  // "https://proxy.imaging.datacommons.cancer.gov/current/viewer-only-no-downloads-see-tinyurl-dot-com-slash-3j3d9jyp/dicomWeb/studies/2.25.93749216439228361118017742627453453196/series/1.3.6.1.4.1.5962.99.1.2344794501.795090168.1655907236229.4.0"
   const root = normalizeDicomWebSeriesUrl(series);
-  const instance_list = await listDicomWeb(root);
-  const pyramids = await Promise.all(
-    instance_list.map((opts, _i) => {
-      const { SOPInstanceUID, BitsAllocated } = opts;
-      const instance = `${root}/instances/${SOPInstanceUID}`;
-      return readMetadata(instance).then((instance_metadata) => {
-        const pyramid = computeImagePyramid({
-          metadata: instance_metadata,
-          bits: BitsAllocated,
-        });
-        return pyramid;
-      });
-    }),
-  );
-  const channel_pyramids = pyramids.reduce((o, i) => {
-    const k = String(
-      i.metadata[0].OpticalPathSequence[0].OpticalPathIdentifier,
+  try {
+    const instances = await readMetadata(root);
+    const result = dicomWebLoadResult(instances, root);
+    if (!pyramidsNeedInstanceMetadata(result.pyramids)) {
+      return result;
+    }
+    console.warn(
+      "[minerva] dicom: series /metadata frame maps incomplete; using per-instance metadata",
     );
-    const channel_pyramid = [...(o[k] || []), ...[i]];
-    o[k] = channel_pyramid;
-    return o;
-  }, {});
-  // For first optical channel
-  const dicom_pyramids = Object.fromEntries(
-    Object.entries(channel_pyramids).map(([key, pyramid]) => [
-      key,
-      Object.values(pyramid)
-        .map(({ frameMappings, bits, extent, tileSizes }) => ({
-          bits,
-          extent,
-          width: Math.abs(extent[2]),
-          height: Math.abs(extent[3]),
-          frameMappings: Object.fromEntries(
-            Object.entries(frameMappings[0]).map(([k, v]) => [
-              k,
-              v.split("/").slice(-3).join("/"),
-            ]),
-          ),
-          tileSize: Math.max(...tileSizes[0]),
-        }))
-        .sort((a, b) => {
-          return a.width - b.width;
-        }),
-    ]),
-  );
-  return dicom_pyramids;
+    return loadDicomWebPerInstance(root);
+  } catch (seriesErr) {
+    console.warn(
+      "[minerva] dicom: series /metadata failed; falling back to per-instance metadata",
+      seriesErr,
+    );
+    return loadDicomWebPerInstance(root);
+  }
 };
 
 const findDicomWeb = (series) => {
@@ -845,6 +926,8 @@ export {
   loadDicomWeb,
   findDicomWeb,
   normalizeDicomWebSeriesUrl,
+  isDicomWebSeriesUrl,
+  isDicomWeb,
   createTileLayers,
   readInstances,
   readMetadata,
