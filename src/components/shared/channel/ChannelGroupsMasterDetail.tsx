@@ -1511,11 +1511,16 @@ export const ChannelGroupsMasterDetail = (
                 <option value="" disabled>
                   {optimizePaletteBusy ? "Optimizing…" : "Add channel…"}
                 </option>
-                {addable.map((sc) => (
-                  <option key={sc.id} value={sc.id}>
-                    {sc.name}
-                  </option>
-                ))}
+                {addable.map((sc) => {
+                  const imageLabel = showImageBadge
+                    ? imageLabels.get(sc.imageId)
+                    : undefined;
+                  return (
+                    <option key={sc.id} value={sc.id}>
+                      {imageLabel ? `${sc.name} (${imageLabel})` : sc.name}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>

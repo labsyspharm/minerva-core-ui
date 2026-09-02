@@ -48,10 +48,6 @@
 .progressBar > div:first-child > div {
   height: 100%;
   width: calc(var(--progress-ratio, 0) * 100%);
-  background-color: var(--minerva-wash);
-}
-
-.progressBarDone > div:first-child > div {
   background-color: var(--minerva-ink);
 }
 

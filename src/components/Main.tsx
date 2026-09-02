@@ -417,7 +417,8 @@ const Content = (props: Props) => {
 
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
-  const [exportMode, setExportMode] = useState<StoryExportMode>("jpeg-pyramid");
+  const [exportMode, setExportMode] =
+    useState<StoryExportMode>("jpeg-ome-tiff");
   const [exportAllowDocumentOnly, setExportAllowDocumentOnly] = useState(false);
   const [viewerRemountKey, setViewerRemountKey] = useState(0);
   const [directory_handle, setDirectoryHandle] = useState(
@@ -462,7 +463,7 @@ const Content = (props: Props) => {
     setIoState("EXPORTING");
   };
 
-  const startExport = async (mode: StoryExportMode = "jpeg-pyramid") => {
+  const startExport = async (mode: StoryExportMode = "jpeg-ome-tiff") => {
     if (!hasDirectoryPickerAccess()) {
       window.alert(
         "Export to a folder needs the File System Access API (directory picker). Try Chrome or Edge, or use “OME-TIFF URL” workflows in other browsers.",
@@ -2591,7 +2592,7 @@ const Content = (props: Props) => {
                   void startExport(
                     canExportWithRemoteUrls(images)
                       ? "remote-url"
-                      : "jpeg-pyramid",
+                      : "jpeg-ome-tiff",
                   )
                 }
                 onEnterPlaybackPreview={enterPlaybackPreview}

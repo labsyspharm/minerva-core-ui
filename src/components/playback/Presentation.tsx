@@ -166,37 +166,26 @@ export const Presentation = (props: PresentationProps) => {
     }
   };
 
-  const updateViewState = (storyIndex: number) => {
-    const story = waypoints[storyIndex];
-    if (!story) return;
-    if (imageWidth > 0 && imageHeight > 0) {
-      const auth = useAppStore.getState().waypointAuthoring.get(story.id);
-      setTargetWaypointCamera(waypointToConfigWaypoint(story, auth));
-    }
-  };
-
+  // Camera is applied solely by the activeStoryIndex effect above — do not also
+  // call setTargetWaypointCamera here or the ImageViewer tween restarts twice.
   const storyFirst = () => {
     setActiveStory(0);
     updateGroup(0);
-    updateViewState(0);
   };
   const storyLeft = () => {
     const active_story = Math.max(0, activeStoryIndex - 1);
     setActiveStory(active_story);
     updateGroup(active_story);
-    updateViewState(active_story);
   };
   const storyRight = () => {
     const active_story = Math.min(waypoints.length - 1, activeStoryIndex + 1);
     setActiveStory(active_story);
     updateGroup(active_story);
-    updateViewState(active_story);
   };
   const storyAt = (i: number) => {
     const active_story = Math.min(waypoints.length - 1, Math.max(0, i));
     setActiveStory(active_story);
     updateGroup(active_story);
-    updateViewState(active_story);
   };
   const iconPx = 16;
   const toc_button = (
