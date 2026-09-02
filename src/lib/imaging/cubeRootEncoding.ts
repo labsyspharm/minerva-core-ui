@@ -111,5 +111,3 @@ export function hydrateJpegTransferForImage(
   }
   return exportTransferForImage(image, storyTransfer);
 }
-
-// dtypeMaxForChannel lives in omeDtype.ts (shared with mask export).

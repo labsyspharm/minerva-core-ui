@@ -383,15 +383,6 @@ export function jpegPyramidExportChannels(
   return out;
 }
 
-export type OmeTiffExportNamePlan = {
-  intensityImages: Image[];
-  maskImages: Image[];
-  names: {
-    intensityFileNames: string[];
-    maskFileNames: string[];
-  };
-};
-
 /** Shared used-name set so intensity + mask files never collide. */
 export function allocateOmeTiffExportFileNames(
   intensityImages: Image[],
@@ -403,27 +394,6 @@ export function allocateOmeTiffExportFileNames(
       omeTiffExportFileName(im, used),
     ),
     maskFileNames: maskImages.map((im) => omeTiffMaskExportFileName(im, used)),
-  };
-}
-
-/**
- * JPEG OME-TIFF layout: one file per intensity source (IF or RGB), zlib masks.
- * Basename collisions get `_2`, `_3`, …; masks prefer `_mask` when needed.
- */
-export function planOmeTiffExportNames(
-  images: Image[],
-  channelGroups: ChannelGroup[],
-): OmeTiffExportNamePlan {
-  const intensityImages = images.filter(
-    (im) => groupIntensityChannelsForOmeExport(im, channelGroups).length > 0,
-  );
-  const maskImages = images.filter(
-    (im) => groupMaskChannelsForOmeExport(im, channelGroups).length > 0,
-  );
-  return {
-    intensityImages,
-    maskImages,
-    names: allocateOmeTiffExportFileNames(intensityImages, maskImages),
   };
 }
 

@@ -10,7 +10,6 @@ import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
-import type { Config } from "@/lib/imaging/viv";
 import type { StoryExportMode } from "@/lib/storyExport/storyBundle";
 import styles from "./PlaybackModeView.module.css";
 
@@ -28,7 +27,6 @@ export type PlaybackModeViewProps = StoryPlaybackLoaders & {
   ioState: null | string;
   stopExport: () => void;
   presenting: boolean;
-  viewerConfig: Config;
   directory_handle: FileSystemDirectoryHandle;
   exitPlaybackPreview?: () => void;
   dicomIndexList: DicomIndex[];
@@ -75,7 +73,6 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
   const overlayOpen = exporting || !!folderPrompt;
   const exporterProps = {
     stopExport: props.stopExport,
-    viewerConfig: props.viewerConfig,
     dicomIndexList: props.dicomIndexList,
     omeLoaderEntries: props.omeLoaderEntries,
     directory_handle: props.directory_handle,

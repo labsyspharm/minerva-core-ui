@@ -173,14 +173,14 @@ export function toFlatViewState(
   v: OrthoCamProps | null | undefined,
 ): { zoom: number; target: [number, number, number] } | null {
   const inner = v?.ortho ?? v;
-  if (!inner || !Array.isArray(inner.target) || inner.target.length < 3) {
+  if (!inner || !Array.isArray(inner.target) || inner.target.length < 2) {
     return null;
   }
   const zoom = orthographicZoomOf(inner);
   if (zoom === null) return null;
   return {
     zoom,
-    target: inner.target.slice(0, 3) as [number, number, number],
+    target: [inner.target[0], inner.target[1], inner.target[2] ?? 0],
   };
 }
 

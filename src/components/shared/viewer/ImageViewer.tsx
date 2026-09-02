@@ -28,6 +28,7 @@ import {
 } from "@/lib/stores/documentStore";
 import {
   getViewerViewportSnapshotFromDeck,
+  orthographicZoomOf,
   orthographicZoomToNumber,
   registerViewerLiveSnapshotReader,
   toFlatViewState,
@@ -446,6 +447,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   const viewRef = useRef({ viewState, viewportSize });
   viewRef.current = { viewState, viewportSize };
+  /** Bumped on user pan/zoom so a late waypoint onTransitionEnd cannot snap back. */
+  const waypointTransitionGenRef = useRef(0);
 
   // Get target waypoint view state for responding to waypoint selection
   const targetWaypointCamera = useAppStore(
@@ -576,11 +579,15 @@ export const ImageViewer = (props: ImageViewerProps) => {
       return;
     }
 
+    const gen = ++waypointTransitionGenRef.current;
     setViewState({
       ...withOrthoZoom(vs),
       transitionDuration: 1000,
       transitionInterpolator: WAYPOINT_TRANSITION_INTERPOLATOR,
-      onTransitionEnd: () => setViewState(withOrthoZoom(vs)),
+      onTransitionEnd: () => {
+        if (gen !== waypointTransitionGenRef.current) return;
+        setViewState(withOrthoZoom(vs));
+      },
     } as OrthographicViewState);
     setViewportZoom(vs.zoom);
     clearTargetWaypointCamera();
@@ -869,10 +876,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
   );
 
   // Memoize controller configuration
-  // When move tool is active and hovering over an annotation, disable pan so drag moves the annotation
+  // Disable pan only while the move tool would drag an annotation under the cursor.
   const controllerConfig = useMemo(
     () => ({
-      dragPan: activeTool === "move" && !isDragging && !hoveredShapeId,
+      dragPan: !(activeTool === "move" && !!hoveredShapeId) && !isDragging,
       dragRotate: false,
       scrollZoom: true,
       doubleClickZoom: true,
@@ -888,10 +895,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
   // Memoize view configuration — main image view + a fixed overlay for the scale bar
   const views = useMemo(
     () => [
-      new OrthographicView({ id: ORTHO_VIEW_ID, controller: true }),
+      new OrthographicView({ id: ORTHO_VIEW_ID, controller: controllerConfig }),
       new OrthographicView({ id: SCALEBAR_VIEW_ID, controller: false }),
     ],
-    [],
+    [controllerConfig],
   );
 
   // Memoize view state change handler.
@@ -899,12 +906,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
     ({
       viewState: nextViewState,
       viewId,
+      interactionState,
     }: {
       viewState?: OrthographicViewState & {
         ortho?: OrthographicViewState;
         [key: string]: unknown;
       };
       viewId?: string;
+      interactionState?: {
+        isDragging?: boolean;
+        isPanning?: boolean;
+        isZooming?: boolean;
+      };
     }) => {
       if (viewId === SCALEBAR_VIEW_ID) return;
       // Only skip while dragging an annotation (move tool). Do not skip for
@@ -912,16 +925,36 @@ export const ImageViewer = (props: ImageViewerProps) => {
       // keeps a stale camera and waypoint overwrite saves the wrong view.
       if (isDragging) return;
 
+      // User interaction cancels a pending waypoint onTransitionEnd snap-back.
+      if (
+        interactionState?.isZooming ||
+        interactionState?.isPanning ||
+        interactionState?.isDragging
+      ) {
+        waypointTransitionGenRef.current += 1;
+      }
+
       const ortho =
         (nextViewState?.[ORTHO_VIEW_ID] as OrthographicViewState | undefined) ??
         nextViewState?.ortho ??
         nextViewState;
       const flat = toFlatViewState(ortho) ?? toFlatViewState(nextViewState);
-      if (!flat) return;
+      if (flat) {
+        setViewState(withOrthoZoom(flat));
+        setViewportZoom(flat.zoom);
+        setViewerViewState(flat);
+        return;
+      }
 
-      setViewState(withOrthoZoom(flat));
-      setViewportZoom(flat.zoom);
-      setViewerViewState(flat);
+      // Never drop controller updates — a failed flatten used to freeze zoom/pan.
+      if (!nextViewState) return;
+      setViewState(nextViewState as OrthographicViewState);
+      const z =
+        orthographicZoomOf(ortho as Parameters<typeof orthographicZoomOf>[0]) ??
+        orthographicZoomOf(
+          nextViewState as Parameters<typeof orthographicZoomOf>[0],
+        );
+      if (z !== null) setViewportZoom(z);
     },
     [isDragging, setViewportZoom, setViewerViewState],
   );

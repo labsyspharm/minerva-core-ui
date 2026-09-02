@@ -86,44 +86,36 @@ export const Presentation = (props: PresentationProps) => {
   } = useAppStore();
 
   const previousActiveStoryIndexRef = useRef<number | null>(null);
+  /** Story index we last applied the waypoint's channel group for. */
+  const groupAppliedForStoryRef = useRef<number | null>(null);
+  /** Story index we last flew the camera to (must not re-fire on shapes/groups). */
+  const cameraAppliedForStoryRef = useRef<number | null>(null);
 
-  // Auto-import shapes for the active story when dimensions / selection / channel groups change.
+  // Fly camera + import shapes only when the active waypoint changes — never when
+  // channel groups / shapes churn (that stole zoom and re-tweened the viewport).
   useEffect(() => {
     if (waypoints.length === 0) return;
-    // Wait for image dimensions to be set
     if (imageWidth === 0 || imageHeight === 0) return;
-    // Wait for active story to be explicitly set (avoid duplicate imports)
     if (activeStoryIndex === null) return;
+    if (cameraAppliedForStoryRef.current === activeStoryIndex) return;
 
     const story = waypoints[activeStoryIndex];
+    if (!story) return;
 
-    if (story) {
-      const idx = activeStoryIndex;
-      const prev = previousActiveStoryIndexRef.current;
-      const store = useAppStore.getState();
-      if (prev !== null && prev !== idx) {
-        store.persistImportedShapesToStory(prev);
-      }
-      previousActiveStoryIndexRef.current = idx;
-
-      // Import shapes from the story (clearing existing imported ones atomically)
-      importWaypointShapes(story, true, shapes);
-
-      const authoringMap = useAppStore.getState().waypointAuthoring;
-      const wp = waypointToConfigWaypoint(story, authoringMap.get(story.id));
-      if (imageWidth > 0 && imageHeight > 0) {
-        setTargetWaypointCamera(wp);
-      }
-
-      const gid = wp.groupId;
-      if (channelGroups.length > 0 && gid) {
-        const foundGroup =
-          channelGroups.find((g) => g.id === gid) || channelGroups[0];
-        if (foundGroup) {
-          setActiveChannelGroup(foundGroup.id);
-        }
-      }
+    const idx = activeStoryIndex;
+    const prev = previousActiveStoryIndexRef.current;
+    if (prev !== null && prev !== idx) {
+      useAppStore.getState().persistImportedShapesToStory(prev);
     }
+    previousActiveStoryIndexRef.current = idx;
+    cameraAppliedForStoryRef.current = idx;
+    groupAppliedForStoryRef.current = null;
+
+    importWaypointShapes(story, true, shapes);
+
+    const authoringMap = useAppStore.getState().waypointAuthoring;
+    const wp = waypointToConfigWaypoint(story, authoringMap.get(story.id));
+    setTargetWaypointCamera(wp);
   }, [
     waypoints,
     activeStoryIndex,
@@ -132,9 +124,28 @@ export const Presentation = (props: PresentationProps) => {
     shapes,
     importWaypointShapes,
     setTargetWaypointCamera,
-    channelGroups,
-    setActiveChannelGroup,
   ]);
+
+  // Apply the waypoint's group once per story visit. Do not re-apply when the
+  // user creates a "… copy" group while recoloring in the legend.
+  useEffect(() => {
+    if (activeStoryIndex === null) return;
+    if (channelGroups.length === 0) return;
+    const story = waypoints[activeStoryIndex];
+    if (!story) return;
+
+    if (groupAppliedForStoryRef.current === activeStoryIndex) return;
+
+    const authoringMap = useAppStore.getState().waypointAuthoring;
+    const wp = waypointToConfigWaypoint(story, authoringMap.get(story.id));
+    const gid = wp.groupId;
+    const foundGroup = gid
+      ? channelGroups.find((g) => g.id === gid) || channelGroups[0]
+      : channelGroups[0];
+    if (!foundGroup) return;
+    groupAppliedForStoryRef.current = activeStoryIndex;
+    setActiveChannelGroup(foundGroup.id);
+  }, [activeStoryIndex, channelGroups, waypoints, setActiveChannelGroup]);
 
   useEffect(() => {
     return () => {

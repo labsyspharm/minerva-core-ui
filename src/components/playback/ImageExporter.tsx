@@ -17,7 +17,6 @@ import {
 import { jpegPyramidFolderName } from "@/lib/imaging/jpegPyramid";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 import { jpegPyramidExportChannels } from "@/lib/imaging/omeTiffExport";
-import type { Config } from "@/lib/imaging/viv";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   type StoryExportMode,
@@ -281,8 +280,7 @@ export type ImageExporterProps = {
   stopExport: () => void;
   dicomIndexList: DicomIndex[];
   omeLoaderEntries: OmeLoaderEntry[];
-  viewerConfig: Config;
-  /** Default: JPEG OME-TIFF. `remote-url` writes sidecars only. Folder pyramids are kept in code but not selectable. */
+  /** Default: JPEG OME-TIFF. `remote-url` writes sidecars only. Folder pyramids remain in code but are not selectable from the UI. */
   exportMode?: StoryExportMode;
   /** When set, offer a document.json-only update (current transfer only). */
   onDocumentOnlyUpdate?: () => Promise<void>;
@@ -336,7 +334,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
   );
   const canUpdateDocumentOnly =
     !!props.onDocumentOnlyUpdate &&
-    mode === "jpeg-pyramid" &&
+    mode === "jpeg-ome-tiff" &&
     jpegTransfer === docTransfer;
 
   const armExport = () => {
