@@ -28,7 +28,6 @@ import {
 } from "@/lib/stores/documentStore";
 import {
   getViewerViewportSnapshotFromDeck,
-  orthographicZoomOf,
   orthographicZoomToNumber,
   registerViewerLiveSnapshotReader,
   toFlatViewState,
@@ -45,6 +44,22 @@ import styles from "./ImageViewer.module.css";
 /** Keep in sync with `OrthographicView({ id })` below. */
 const ORTHO_VIEW_ID = "ortho";
 const SCALEBAR_VIEW_ID = "scalebar-overlay";
+
+const WAYPOINT_FLY_MS = 1400;
+const easeInOutCubic = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+
+const deckViewStates = (
+  ortho: OrthographicViewState,
+  width: number,
+  height: number,
+) => ({
+  [ORTHO_VIEW_ID]: ortho,
+  [SCALEBAR_VIEW_ID]: {
+    zoom: 0,
+    target: [width / 2, height / 2, 0],
+  } as OrthographicViewState,
+});
 
 type InteractionType = "click" | "dragStart" | "drag" | "dragEnd" | "hover";
 type InteractionCallback = (
@@ -429,28 +444,59 @@ export const ImageViewer = (props: ImageViewerProps) => {
     channelGroups,
   ]);
 
-  // Memoize initial view state
-  const initialViewState = useMemo(() => {
+  // Deck owns live pan/zoom via `initialViewState`. React `viewState` is the last
+  // idle snapshot (overlays / Zustand). `orthoSeed` matches it except during a
+  // waypoint fly, when the seed carries transition props.
+  const fitViewState = useMemo(() => {
     const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
-    return {
+    return withOrthoZoom({
       zoom: -n_levels,
       target: [imageShape.x / 2, imageShape.y / 2, 0],
-    } as OrthographicViewState;
+    });
   }, [firstLoader, imageShape]);
 
   const [viewState, setViewState] =
-    useState<OrthographicViewState>(initialViewState);
+    useState<OrthographicViewState>(fitViewState);
+  const [orthoSeed, setOrthoSeed] =
+    useState<OrthographicViewState>(fitViewState);
+  const cameraRef = useRef<OrthographicViewState>(fitViewState);
+  const viewportSizeRef = useRef(viewportSize);
+  viewportSizeRef.current = viewportSize;
   const hasInitialized = useRef(false);
+  const waypointTransitionGenRef = useRef(0);
+  const inTransitionRef = useRef(false);
+
+  const commitIdleCamera = useCallback((vs: OrthographicViewState) => {
+    const flat = toFlatViewState(vs);
+    if (!flat) return;
+    const { width, height } = viewportSizeRef.current;
+    const next = {
+      ...withOrthoZoom(flat),
+      ...(width > 0 && height > 0 ? { width, height } : {}),
+    } as OrthographicViewState;
+    cameraRef.current = next;
+    setOrthoSeed(next);
+    setViewState(next);
+  }, []);
 
   const setViewportZoom = useAppStore((state) => state.setViewportZoom);
   const setBrushViewport = useAppStore((state) => state.setBrushViewport);
+  const setViewerViewState = useAppStore((s) => s.setViewerViewState);
+  const setViewerViewportSize = useAppStore((s) => s.setViewerViewportSize);
+  const setSquareViewportThumbnailCapture = useAppStore(
+    (s) => s.setSquareViewportThumbnailCapture,
+  );
+  const setViewerImageLayersLoaded = useAppStore(
+    (s) => s.setViewerImageLayersLoaded,
+  );
+  const setSam2ViewState = useAppStore((s) => s.setSam2ViewState);
+  const setSam2ViewportSize = useAppStore((s) => s.setSam2ViewportSize);
 
-  const viewRef = useRef({ viewState, viewportSize });
-  viewRef.current = { viewState, viewportSize };
-  /** Bumped on user pan/zoom so a late waypoint onTransitionEnd cannot snap back. */
-  const waypointTransitionGenRef = useRef(0);
+  const deckInitialViewState = useMemo(
+    () => deckViewStates(orthoSeed, viewportSize.width, viewportSize.height),
+    [orthoSeed, viewportSize.width, viewportSize.height],
+  );
 
-  // Get target waypoint view state for responding to waypoint selection
   const targetWaypointCamera = useAppStore(
     (state) => state.targetWaypointCamera,
   );
@@ -460,81 +506,55 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const refImageWidth = Number(imageShape.x) || 0;
   const refImageHeight = Number(imageShape.y) || 0;
 
-  // Update viewState only on initial mount (not when loader changes)
   useEffect(() => {
     if (firstLoader !== null && !hasInitialized.current) {
-      setViewState(initialViewState);
-      // Set initial viewport zoom for line width calculations
-      if (typeof initialViewState.zoom === "number") {
-        setViewportZoom(initialViewState.zoom);
-      }
+      commitIdleCamera(fitViewState);
       hasInitialized.current = true;
     }
-  }, [initialViewState, firstLoader, setViewportZoom]);
+  }, [fitViewState, firstLoader, commitIdleCamera]);
+
+  // Resize changes the scalebar view; re-seed from the live camera so Deck does
+  // not snap ortho back to the last programmatic seed.
+  useEffect(() => {
+    const { width, height } = viewportSize;
+    if (!hasInitialized.current) return;
+    if (width <= 0 || height <= 0) return;
+    if (inTransitionRef.current) return;
+    commitIdleCamera(cameraRef.current);
+  }, [viewportSize, commitIdleCamera]);
 
   // Sync viewport size and visible world bounds for brush (canvas-aligned mask)
   useEffect(() => {
     const { width, height } = viewportSize;
     if (width <= 0 || height <= 0) return;
-    const zoom = typeof viewState?.zoom === "number" ? viewState.zoom : 0;
-    const target = viewState?.target ?? [0, 0, 0];
-    const scale = 2 ** zoom;
+    const flat = toFlatViewState(viewState);
+    if (!flat) return;
+    const scale = 2 ** flat.zoom;
     const halfW = width / (2 * scale);
     const halfH = height / (2 * scale);
+    const [x, y] = flat.target;
     // BitmapLayer bounds are [left, bottom, right, top] in world coords.
     // Our world space for images uses y increasing downward, so "bottom" is +halfH and "top" is -halfH.
-    const bounds: [number, number, number, number] = [
-      target[0] - halfW,
-      target[1] + halfH,
-      target[0] + halfW,
-      target[1] - halfH,
-    ];
-    setBrushViewport(width, height, bounds);
+    setBrushViewport(width, height, [
+      x - halfW,
+      y + halfH,
+      x + halfW,
+      y - halfH,
+    ]);
   }, [viewState, viewportSize, setBrushViewport]);
-  const setViewerViewState = useAppStore((s) => s.setViewerViewState);
-  const setViewerViewportSize = useAppStore((s) => s.setViewerViewportSize);
-  const setSquareViewportThumbnailCapture = useAppStore(
-    (s) => s.setSquareViewportThumbnailCapture,
-  );
-  const setViewerImageLayersLoaded = useAppStore(
-    (s) => s.setViewerImageLayersLoaded,
-  );
-
-  const setSam2ViewState = useAppStore((s) => s.setSam2ViewState);
-  const setSam2ViewportSize = useAppStore((s) => s.setSam2ViewportSize);
 
   useEffect(() => {
     setSam2ViewState(viewState);
-  }, [viewState, setSam2ViewState]);
+    const flat = toFlatViewState(viewState);
+    if (!flat) return;
+    setViewportZoom(flat.zoom);
+    setViewerViewState(flat);
+  }, [viewState, setSam2ViewState, setViewportZoom, setViewerViewState]);
 
   useEffect(() => {
     setSam2ViewportSize(viewportSize);
-  }, [viewportSize, setSam2ViewportSize]);
-
-  // Keep SAM2 store in sync with current view so useSam2 can compute the
-  // visible region at click time without needing direct access to ImageViewer state.
-  // Deck.gl passes view state keyed by view id ("ortho"); normalize to flat { zoom, target }
-  // so consumers get a consistent shape.
-  useEffect(() => {
-    const raw = viewState as {
-      ortho?: { zoom: number; target: [number, number, number] };
-      zoom?: number;
-      target?: [number, number, number];
-    } | null;
-    if (!raw) return;
-    const flat =
-      raw.ortho ??
-      (typeof raw.zoom === "number" &&
-      Array.isArray(raw.target) &&
-      raw.target.length === 3
-        ? { zoom: raw.zoom, target: raw.target as [number, number, number] }
-        : null);
-    if (flat) setViewerViewState(flat);
-  }, [viewState, setViewerViewState]);
-
-  useEffect(() => {
     setViewerViewportSize(viewportSize);
-  }, [viewportSize, setViewerViewportSize]);
+  }, [viewportSize, setSam2ViewportSize, setViewerViewportSize]);
 
   useEffect(() => {
     registerViewerLiveSnapshotReader(() => {
@@ -551,10 +571,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
           return fromDeck;
         }
       }
-      const { viewState: vs, viewportSize: vp } = viewRef.current;
-      const flat = toFlatViewState(vs);
-      if (!flat) return null;
-      if (vp.width <= 0 || vp.height <= 0) return null;
+      const vp = viewportSizeRef.current;
+      const flat = toFlatViewState(cameraRef.current);
+      if (!flat || vp.width <= 0 || vp.height <= 0) return null;
       return { viewState: flat as OrthographicViewState, viewportSize: vp };
     });
     return () => registerViewerLiveSnapshotReader(null);
@@ -580,17 +599,49 @@ export const ImageViewer = (props: ImageViewerProps) => {
     }
 
     const gen = ++waypointTransitionGenRef.current;
-    setViewState({
+    const viewportW = viewportSize.width;
+    const viewportH = viewportSize.height;
+    const settled = {
       ...withOrthoZoom(vs),
-      transitionDuration: 1000,
+      width: viewportW,
+      height: viewportH,
+    } as OrthographicViewState;
+
+    const next = {
+      ...settled,
+      transitionDuration: WAYPOINT_FLY_MS,
       transitionInterpolator: WAYPOINT_TRANSITION_INTERPOLATOR,
-      transitionEasing: (t: number) => (t === 1 ? 1 : 1 - 2 ** (-10 * t)),
+      transitionEasing: easeInOutCubic,
       onTransitionEnd: () => {
         if (gen !== waypointTransitionGenRef.current) return;
-        setViewState(withOrthoZoom(vs));
+        inTransitionRef.current = false;
+        commitIdleCamera(settled);
       },
-    } as OrthographicViewState);
-    setViewportZoom(vs.zoom);
+    } as OrthographicViewState;
+
+    // Deck transitions from the previous seed, not the live camera. Jump the
+    // seed to the live view first, then apply the destination.
+    const deck = deckRef.current?.deck;
+    const liveFlat =
+      toFlatViewState(getViewerViewportSnapshotFromDeck(deck)?.viewState) ??
+      toFlatViewState(cameraRef.current);
+    const from = {
+      ...(liveFlat ? withOrthoZoom(liveFlat) : withOrthoZoom(vs)),
+      width: viewportW,
+      height: viewportH,
+    } as OrthographicViewState;
+    if (liveFlat) cameraRef.current = withOrthoZoom(liveFlat);
+
+    inTransitionRef.current = true;
+    if (deck?.isInitialized) {
+      const setViews = (ortho: OrthographicViewState) =>
+        deck.setProps({
+          initialViewState: deckViewStates(ortho, viewportW, viewportH),
+        } as Parameters<typeof deck.setProps>[0]);
+      setViews(from);
+      setViews(next);
+    }
+    setOrthoSeed(next);
     clearTargetWaypointCamera();
   }, [
     targetWaypointCamera,
@@ -599,7 +650,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     refImageWidth,
     refImageHeight,
     clearTargetWaypointCamera,
-    setViewportZoom,
+    commitIdleCamera,
   ]);
 
   // Memoize scale bar layer
@@ -825,9 +876,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   const getScreenFromWorld = useCallback(
     (worldX: number, worldY: number): [number, number] => {
-      const { viewState: vs, viewportSize: vp } = viewRef.current;
-      const zoom = typeof vs?.zoom === "number" ? vs.zoom : 0;
-      const target = (vs as { target?: number[] })?.target ?? [0, 0, 0];
+      const flat = toFlatViewState(cameraRef.current);
+      const vp = viewportSizeRef.current;
+      const zoom = flat?.zoom ?? 0;
+      const target = flat?.target ?? [0, 0, 0];
       const scale = 2 ** zoom;
       return [
         (worldX - target[0]) * scale + vp.width / 2,
@@ -902,7 +954,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     [controllerConfig],
   );
 
-  // Memoize view state change handler.
   const handleViewStateChange = useCallback(
     ({
       viewState: nextViewState,
@@ -915,22 +966,22 @@ export const ImageViewer = (props: ImageViewerProps) => {
       };
       viewId?: string;
       interactionState?: {
+        inTransition?: boolean;
         isDragging?: boolean;
         isPanning?: boolean;
         isZooming?: boolean;
       };
     }) => {
       if (viewId === SCALEBAR_VIEW_ID) return;
-      // Only skip while dragging an annotation (move tool). Do not skip for
-      // viewport pan/zoom while using brush or other tools — otherwise the store
-      // keeps a stale camera and waypoint overwrite saves the wrong view.
+      // Only skip while dragging an annotation (move tool).
       if (isDragging) return;
 
-      // User interaction cancels a pending waypoint onTransitionEnd snap-back.
+      // User pan/zoom cancels a pending waypoint onTransitionEnd snap-back.
       if (
-        interactionState?.isZooming ||
-        interactionState?.isPanning ||
-        interactionState?.isDragging
+        !interactionState?.inTransition &&
+        (interactionState?.isZooming ||
+          interactionState?.isPanning ||
+          interactionState?.isDragging)
       ) {
         waypointTransitionGenRef.current += 1;
       }
@@ -941,23 +992,33 @@ export const ImageViewer = (props: ImageViewerProps) => {
         nextViewState;
       const flat = toFlatViewState(ortho) ?? toFlatViewState(nextViewState);
       if (flat) {
-        setViewState(withOrthoZoom(flat));
-        setViewportZoom(flat.zoom);
-        setViewerViewState(flat);
+        cameraRef.current = withOrthoZoom(flat);
+      } else if (nextViewState) {
+        cameraRef.current = nextViewState as OrthographicViewState;
+      }
+    },
+    [isDragging],
+  );
+
+  const handleInteractionStateChange = useCallback(
+    (state: {
+      inTransition?: boolean;
+      isDragging?: boolean;
+      isPanning?: boolean;
+      isZooming?: boolean;
+    }) => {
+      inTransitionRef.current = !!state.inTransition;
+      if (
+        state.inTransition ||
+        state.isPanning ||
+        state.isZooming ||
+        state.isDragging
+      ) {
         return;
       }
-
-      // Never drop controller updates — a failed flatten used to freeze zoom/pan.
-      if (!nextViewState) return;
-      setViewState(nextViewState as OrthographicViewState);
-      const z =
-        orthographicZoomOf(ortho as Parameters<typeof orthographicZoomOf>[0]) ??
-        orthographicZoomOf(
-          nextViewState as Parameters<typeof orthographicZoomOf>[0],
-        );
-      if (z !== null) setViewportZoom(z);
+      commitIdleCamera(cameraRef.current);
     },
-    [isDragging, setViewportZoom, setViewerViewState],
+    [commitIdleCamera],
   );
 
   // LoadingWidget ref for onRedraw callback
@@ -967,6 +1028,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const imageLayersLoadedRef = useRef<boolean | null>(null);
 
   const handleAfterRender = useCallback(() => {
+    // During waypoint fly-tos, isLoaded flickers as LODs churn — skip store
+    // writes so React does not re-render on every tile settle mid-transition.
+    if (inTransitionRef.current) return;
     if (loadingWidgetRef.current) {
       loadingWidgetRef.current.onRedraw({ layers: allLayers });
     }
@@ -1012,14 +1076,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
             preserveDrawingBuffer: true,
           },
         }}
-        viewState={{
-          [ORTHO_VIEW_ID]: viewState,
-          [SCALEBAR_VIEW_ID]: {
-            zoom: 0,
-            target: [viewportSize.width / 2, viewportSize.height / 2, 0],
-          } as Record<string, unknown>,
-        }}
+        initialViewState={deckInitialViewState}
         onViewStateChange={handleViewStateChange}
+        onInteractionStateChange={handleInteractionStateChange}
         onClick={dragHandlers.onClick}
         onDragStart={dragHandlers.onDragStart}
         onDrag={dragHandlers.onDrag}
