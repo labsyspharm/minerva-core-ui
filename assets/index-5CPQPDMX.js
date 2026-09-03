@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-mo0Uzsx1.js","./pako.esm-KbdoS3Oq.js","./lerc-DB6xGOj2.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Dgkbuo_X.js","./pako.esm-KbdoS3Oq.js","./lerc-0eatrRnt.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -61630,26 +61630,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DBnSbcdI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CRxuA_lN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CQr4pAsh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CNIElB32.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BsII_yvT.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-Wpd6YTak.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-mo0Uzsx1.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CZt2InyQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-DB6xGOj2.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-Dgkbuo_X.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-CA8bJMRq.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-0eatrRnt.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CPnwswdb.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-a-Bi1v0l.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BaEXZLoG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-Fg4I9K2n.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -168467,59 +168467,61 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }, variant === "detail" ? story.id : storyIndex)
     });
   };
-  const rows = "_rows_1q98i_1";
-  const compactRow = "_compactRow_1q98i_10";
-  const rowChevronSpacer = "_rowChevronSpacer_1q98i_23";
-  const rowThumbnail = "_rowThumbnail_1q98i_29";
-  const compactRowDraggable = "_compactRowDraggable_1q98i_40";
-  const rowMainHit = "_rowMainHit_1q98i_48";
-  const rowTextStack = "_rowTextStack_1q98i_63";
-  const rowTitleRow = "_rowTitleRow_1q98i_72";
-  const compactRowDragging = "_compactRowDragging_1q98i_84";
-  const compactRowDropTarget = "_compactRowDropTarget_1q98i_89";
-  const rowOpenDetailButton = "_rowOpenDetailButton_1q98i_93";
-  const rowTitle = "_rowTitle_1q98i_72";
-  const rowContent = "_rowContent_1q98i_117";
-  const annotationBadge = "_annotationBadge_1q98i_134";
-  const rowViewportActions = "_rowViewportActions_1q98i_153";
-  const annotationIcon = "_annotationIcon_1q98i_164";
-  const annotationCount = "_annotationCount_1q98i_172";
-  const visuallyHidden = "_visuallyHidden_1q98i_177";
-  const detailView = "_detailView_1q98i_189";
-  const detailHeader = "_detailHeader_1q98i_197";
-  const backButton = "_backButton_1q98i_208";
-  const detailTitle = "_detailTitle_1q98i_225";
-  const detailBody = "_detailBody_1q98i_236";
-  const detailBodyInner = "_detailBodyInner_1q98i_244";
-  const detailTitleFieldWrap = "_detailTitleFieldWrap_1q98i_250";
-  const detailTitleLabel = "_detailTitleLabel_1q98i_258";
-  const detailTitleInput = "_detailTitleInput_1q98i_266";
-  const detailMarkdownSection = "_detailMarkdownSection_1q98i_278";
-  const detailAnnotationsSection = "_detailAnnotationsSection_1q98i_282";
-  const detailSelectionActions = "_detailSelectionActions_1q98i_286";
-  const detailSelectionButton = "_detailSelectionButton_1q98i_290";
-  const detailCollapsible = "_detailCollapsible_1q98i_307";
-  const detailCollapsibleHeader = "_detailCollapsibleHeader_1q98i_312";
-  const detailCollapsibleCollapsed = "_detailCollapsibleCollapsed_1q98i_341";
-  const detailCollapsibleChevron = "_detailCollapsibleChevron_1q98i_345";
-  const detailCollapsibleTitle = "_detailCollapsibleTitle_1q98i_358";
-  const detailCollapsibleCount = "_detailCollapsibleCount_1q98i_363";
-  const detailCollapsibleBody = "_detailCollapsibleBody_1q98i_369";
-  const channelGroupDropdown = "_channelGroupDropdown_1q98i_375";
-  const channelGroupDropdownTrigger = "_channelGroupDropdownTrigger_1q98i_380";
-  const channelGroupDropdownTriggerMain = "_channelGroupDropdownTriggerMain_1q98i_402";
-  const channelGroupDropdownTitle = "_channelGroupDropdownTitle_1q98i_411";
-  const channelGroupDropdownChannels = "_channelGroupDropdownChannels_1q98i_418";
-  const channelGroupDropdownChevron = "_channelGroupDropdownChevron_1q98i_426";
-  const channelGroupDropdownMenu = "_channelGroupDropdownMenu_1q98i_435";
-  const channelGroupDropdownItem = "_channelGroupDropdownItem_1q98i_454";
-  const channelGroupDropdownOption = "_channelGroupDropdownOption_1q98i_459";
+  const rows = "_rows_zbb9b_1";
+  const compactRow = "_compactRow_zbb9b_10";
+  const compactRowEditable = "_compactRowEditable_zbb9b_23";
+  const rowChevronSpacer = "_rowChevronSpacer_zbb9b_27";
+  const rowThumbnail = "_rowThumbnail_zbb9b_33";
+  const dragHandle$1 = "_dragHandle_zbb9b_44";
+  const rowMainHit = "_rowMainHit_zbb9b_71";
+  const rowTextStack = "_rowTextStack_zbb9b_89";
+  const rowTitleRow = "_rowTitleRow_zbb9b_98";
+  const compactRowDragging = "_compactRowDragging_zbb9b_110";
+  const compactRowDropTarget = "_compactRowDropTarget_zbb9b_116";
+  const rowOpenDetailButton = "_rowOpenDetailButton_zbb9b_120";
+  const rowTitle = "_rowTitle_zbb9b_98";
+  const rowContent = "_rowContent_zbb9b_144";
+  const annotationBadge = "_annotationBadge_zbb9b_161";
+  const rowViewportActions = "_rowViewportActions_zbb9b_180";
+  const annotationIcon = "_annotationIcon_zbb9b_191";
+  const annotationCount = "_annotationCount_zbb9b_199";
+  const visuallyHidden = "_visuallyHidden_zbb9b_204";
+  const detailView = "_detailView_zbb9b_216";
+  const detailHeader = "_detailHeader_zbb9b_224";
+  const backButton = "_backButton_zbb9b_235";
+  const detailTitle = "_detailTitle_zbb9b_252";
+  const detailBody = "_detailBody_zbb9b_263";
+  const detailBodyInner = "_detailBodyInner_zbb9b_271";
+  const detailTitleFieldWrap = "_detailTitleFieldWrap_zbb9b_277";
+  const detailTitleLabel = "_detailTitleLabel_zbb9b_285";
+  const detailTitleInput = "_detailTitleInput_zbb9b_293";
+  const detailMarkdownSection = "_detailMarkdownSection_zbb9b_305";
+  const detailAnnotationsSection = "_detailAnnotationsSection_zbb9b_309";
+  const detailSelectionActions = "_detailSelectionActions_zbb9b_313";
+  const detailSelectionButton = "_detailSelectionButton_zbb9b_317";
+  const detailCollapsible = "_detailCollapsible_zbb9b_334";
+  const detailCollapsibleHeader = "_detailCollapsibleHeader_zbb9b_339";
+  const detailCollapsibleCollapsed = "_detailCollapsibleCollapsed_zbb9b_368";
+  const detailCollapsibleChevron = "_detailCollapsibleChevron_zbb9b_372";
+  const detailCollapsibleTitle = "_detailCollapsibleTitle_zbb9b_385";
+  const detailCollapsibleCount = "_detailCollapsibleCount_zbb9b_390";
+  const detailCollapsibleBody = "_detailCollapsibleBody_zbb9b_396";
+  const channelGroupDropdown = "_channelGroupDropdown_zbb9b_402";
+  const channelGroupDropdownTrigger = "_channelGroupDropdownTrigger_zbb9b_407";
+  const channelGroupDropdownTriggerMain = "_channelGroupDropdownTriggerMain_zbb9b_429";
+  const channelGroupDropdownTitle = "_channelGroupDropdownTitle_zbb9b_438";
+  const channelGroupDropdownChannels = "_channelGroupDropdownChannels_zbb9b_445";
+  const channelGroupDropdownChevron = "_channelGroupDropdownChevron_zbb9b_453";
+  const channelGroupDropdownMenu = "_channelGroupDropdownMenu_zbb9b_462";
+  const channelGroupDropdownItem = "_channelGroupDropdownItem_zbb9b_481";
+  const channelGroupDropdownOption = "_channelGroupDropdownOption_zbb9b_486";
   const styles$f = {
     rows,
     compactRow,
+    compactRowEditable,
     rowChevronSpacer,
     rowThumbnail,
-    compactRowDraggable,
+    dragHandle: dragHandle$1,
     rowMainHit,
     rowTextStack,
     rowTitleRow,
@@ -168940,15 +168942,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             const isActive = activeStoryIndex === index2;
             const isDragging = draggedStoryId === storyId;
             const isDropTarget = dropTargetStoryId === storyId;
-            const rowDragProps = canEdit ? {
-              draggable: true,
-              onDragStart: (e2) => handleDragStart(storyId, e2),
-              onDragEnd: handleDragEnd
-            } : {};
             return jsxRuntimeExports.jsxs("li", {
               className: [
                 styles$f.compactRow,
-                canEdit ? styles$f.compactRowDraggable : "",
+                canEdit ? styles$f.compactRowEditable : "",
                 isActive ? minervaTheme.selectLeft : "",
                 isDragging ? styles$f.compactRowDragging : "",
                 isDropTarget ? styles$f.compactRowDropTarget : ""
@@ -168960,15 +168957,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 handleDropOnRow(storyId);
               },
               children: [
+                canEdit ? jsxRuntimeExports.jsx("button", {
+                  type: "button",
+                  className: styles$f.dragHandle,
+                  draggable: true,
+                  title: `Drag ${story.title}`,
+                  "aria-label": `Drag ${story.title}`,
+                  onDragStart: (e2) => handleDragStart(storyId, e2),
+                  onDragEnd: handleDragEnd,
+                  children: "\u22EE\u22EE"
+                }) : null,
                 canEdit ? jsxRuntimeExports.jsx(PanelIconButton, {
                   variant: "row",
-                  ...rowDragProps,
                   className: styles$f.rowOpenDetailButton,
                   title: "Open waypoint details",
-                  onClick: (e2) => {
-                    e2.stopPropagation();
-                    openDetailForStoryId(storyId);
-                  },
+                  onClick: () => openDetailForStoryId(storyId),
                   children: jsxRuntimeExports.jsx(ChevronIcon, {
                     direction: "right"
                   })
@@ -168976,63 +168979,64 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   className: styles$f.rowChevronSpacer,
                   "aria-hidden": true
                 }),
-                story.thumbnail ? jsxRuntimeExports.jsx("img", {
-                  className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
-                  src: story.thumbnail,
-                  width: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
-                  height: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
-                  alt: "",
-                  "aria-hidden": true
-                }) : jsxRuntimeExports.jsx("div", {
-                  className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
-                  "aria-hidden": true
-                }),
-                jsxRuntimeExports.jsx("button", {
+                jsxRuntimeExports.jsxs("button", {
                   type: "button",
-                  ...rowDragProps,
                   className: `${minervaTheme.focusRing} ${styles$f.rowMainHit}`,
                   "aria-label": `Select waypoint: ${story.title}`,
                   onClick: () => activateStoryIndex(index2, true),
                   onDoubleClick: () => openDetailForStoryId(storyId),
-                  children: jsxRuntimeExports.jsxs("div", {
-                    className: styles$f.rowTextStack,
-                    children: [
-                      jsxRuntimeExports.jsxs("div", {
-                        className: styles$f.rowTitleRow,
-                        children: [
-                          jsxRuntimeExports.jsx("span", {
-                            className: styles$f.rowTitle,
-                            title: story.title,
-                            children: story.title
-                          }),
-                          jsxRuntimeExports.jsxs("span", {
-                            className: `${minervaTheme.surface} ${styles$f.annotationBadge}`,
-                            title: annotationTitle,
-                            children: [
-                              jsxRuntimeExports.jsx("span", {
-                                className: styles$f.visuallyHidden,
-                                children: annotationTitle
-                              }),
-                              jsxRuntimeExports.jsx(SvgShapes, {
-                                className: styles$f.annotationIcon,
-                                "aria-hidden": true
-                              }),
-                              jsxRuntimeExports.jsx("span", {
-                                className: styles$f.annotationCount,
-                                "aria-hidden": true,
-                                children: annotationCount2
-                              })
-                            ]
-                          })
-                        ]
-                      }),
-                      jsxRuntimeExports.jsx("span", {
-                        className: styles$f.rowContent,
-                        title: story.content ?? "",
-                        children: story.content ?? ""
-                      })
-                    ]
-                  })
+                  children: [
+                    story.thumbnail ? jsxRuntimeExports.jsx("img", {
+                      className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
+                      src: story.thumbnail,
+                      width: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
+                      height: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
+                      alt: "",
+                      "aria-hidden": true
+                    }) : jsxRuntimeExports.jsx("div", {
+                      className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
+                      "aria-hidden": true
+                    }),
+                    jsxRuntimeExports.jsxs("div", {
+                      className: styles$f.rowTextStack,
+                      children: [
+                        jsxRuntimeExports.jsxs("div", {
+                          className: styles$f.rowTitleRow,
+                          children: [
+                            jsxRuntimeExports.jsx("span", {
+                              className: styles$f.rowTitle,
+                              title: story.title,
+                              children: story.title
+                            }),
+                            jsxRuntimeExports.jsxs("span", {
+                              className: `${minervaTheme.surface} ${styles$f.annotationBadge}`,
+                              title: annotationTitle,
+                              children: [
+                                jsxRuntimeExports.jsx("span", {
+                                  className: styles$f.visuallyHidden,
+                                  children: annotationTitle
+                                }),
+                                jsxRuntimeExports.jsx(SvgShapes, {
+                                  className: styles$f.annotationIcon,
+                                  "aria-hidden": true
+                                }),
+                                jsxRuntimeExports.jsx("span", {
+                                  className: styles$f.annotationCount,
+                                  "aria-hidden": true,
+                                  children: annotationCount2
+                                })
+                              ]
+                            })
+                          ]
+                        }),
+                        jsxRuntimeExports.jsx("span", {
+                          className: styles$f.rowContent,
+                          title: story.content ?? "",
+                          children: story.content ?? ""
+                        })
+                      ]
+                    })
+                  ]
                 }),
                 jsxRuntimeExports.jsxs("div", {
                   className: styles$f.rowViewportActions,
@@ -169041,10 +169045,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       variant: "row",
                       title: "Delete waypoint",
                       "aria-label": `Delete waypoint: ${story.title}`,
-                      onClick: (event) => {
-                        event.stopPropagation();
-                        removeStory(index2);
-                      },
+                      onClick: () => removeStory(index2),
                       children: jsxRuntimeExports.jsx(TrashIcon, {
                         title: "Delete",
                         size: 14
@@ -169053,10 +169054,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     jsxRuntimeExports.jsxs(PanelIconButton, {
                       variant: "row",
                       title: "Jump to waypoint view",
-                      onClick: (event) => {
-                        event.stopPropagation();
-                        activateStoryIndex(index2);
-                      },
+                      onClick: () => activateStoryIndex(index2),
                       children: [
                         jsxRuntimeExports.jsx(SvgJumpToView, {
                           width: 14,
@@ -249796,12 +249794,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-03T17:59:47.873Z");
+    const label2 = utcShort("2026-09-03T18:12:40.555Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-09-03T17:59:47.873Z",
+      title: "2026-09-03T18:12:40.555Z",
       children: [
         "Updated ",
         label2,
