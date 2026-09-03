@@ -46,6 +46,8 @@ const ORTHO_VIEW_ID = "ortho";
 const SCALEBAR_VIEW_ID = "scalebar-overlay";
 
 const WAYPOINT_FLY_MS = 1400;
+/** Wheel flickers isZooming off between notches; wait before syncing React. */
+const CAMERA_IDLE_COMMIT_MS = 160;
 const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 
@@ -465,19 +467,46 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const hasInitialized = useRef(false);
   const waypointTransitionGenRef = useRef(0);
   const inTransitionRef = useRef(false);
+  /** True while pan/zoom/drag/transition is active, until idle-commit debounce fires. */
+  const isCameraBusyRef = useRef(false);
+  const idleCommitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const commitIdleCamera = useCallback((vs: OrthographicViewState) => {
-    const flat = toFlatViewState(vs);
-    if (!flat) return;
-    const { width, height } = viewportSizeRef.current;
-    const next = {
-      ...withOrthoZoom(flat),
-      ...(width > 0 && height > 0 ? { width, height } : {}),
-    } as OrthographicViewState;
-    cameraRef.current = next;
-    setOrthoSeed(next);
-    setViewState(next);
-  }, []);
+  const commitIdleCamera = useCallback(
+    (vs: OrthographicViewState, reseedDeck = false) => {
+      const flat = toFlatViewState(vs);
+      if (!flat) return;
+      const { width, height } = viewportSizeRef.current;
+      const next = {
+        ...withOrthoZoom(flat),
+        ...(width > 0 && height > 0 ? { width, height } : {}),
+      } as OrthographicViewState;
+      cameraRef.current = next;
+      if (idleCommitTimerRef.current) {
+        clearTimeout(idleCommitTimerRef.current);
+        idleCommitTimerRef.current = null;
+      }
+      isCameraBusyRef.current = false;
+      // Only re-seed Deck on init/resize/waypoint — not every wheel-idle.
+      if (reseedDeck) setOrthoSeed(next);
+      setViewState(next);
+    },
+    [],
+  );
+
+  const scheduleIdleCameraCommit = useCallback(() => {
+    if (idleCommitTimerRef.current) clearTimeout(idleCommitTimerRef.current);
+    idleCommitTimerRef.current = setTimeout(() => {
+      idleCommitTimerRef.current = null;
+      commitIdleCamera(cameraRef.current);
+    }, CAMERA_IDLE_COMMIT_MS);
+  }, [commitIdleCamera]);
+
+  useEffect(
+    () => () => {
+      if (idleCommitTimerRef.current) clearTimeout(idleCommitTimerRef.current);
+    },
+    [],
+  );
 
   const setViewportZoom = useAppStore((state) => state.setViewportZoom);
   const setBrushViewport = useAppStore((state) => state.setBrushViewport);
@@ -508,7 +537,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   useEffect(() => {
     if (firstLoader !== null && !hasInitialized.current) {
-      commitIdleCamera(fitViewState);
+      commitIdleCamera(fitViewState, true);
       hasInitialized.current = true;
     }
   }, [fitViewState, firstLoader, commitIdleCamera]);
@@ -520,7 +549,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     if (!hasInitialized.current) return;
     if (width <= 0 || height <= 0) return;
     if (inTransitionRef.current) return;
-    commitIdleCamera(cameraRef.current);
+    commitIdleCamera(cameraRef.current, true);
   }, [viewportSize, commitIdleCamera]);
 
   // Sync viewport size and visible world bounds for brush (canvas-aligned mask)
@@ -615,7 +644,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       onTransitionEnd: () => {
         if (gen !== waypointTransitionGenRef.current) return;
         inTransitionRef.current = false;
-        commitIdleCamera(settled);
+        commitIdleCamera(settled, true);
       },
     } as OrthographicViewState;
 
@@ -633,6 +662,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     if (liveFlat) cameraRef.current = withOrthoZoom(liveFlat);
 
     inTransitionRef.current = true;
+    isCameraBusyRef.current = true;
     if (deck?.isInitialized) {
       const setViews = (ortho: OrthographicViewState) =>
         deck.setProps({
@@ -939,8 +969,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
       touchZoom: true,
       touchRotate: false,
       keyboard: false,
-      /** Pan / pinch coast after release; `true` → Deck default (~300ms). Use a number for custom ms. */
-      inertia: true,
+      /** Pan/pinch coast duration (ms); also scales coast distance. Deck default is 300. */
+      inertia: 650,
     }),
     [activeTool, isDragging, hoveredShapeId],
   );
@@ -1007,18 +1037,24 @@ export const ImageViewer = (props: ImageViewerProps) => {
       isPanning?: boolean;
       isZooming?: boolean;
     }) => {
-      inTransitionRef.current = !!state.inTransition;
-      if (
+      const busy = !!(
         state.inTransition ||
         state.isPanning ||
         state.isZooming ||
         state.isDragging
-      ) {
+      );
+      inTransitionRef.current = !!state.inTransition;
+      if (busy) {
+        isCameraBusyRef.current = true;
+        if (idleCommitTimerRef.current) {
+          clearTimeout(idleCommitTimerRef.current);
+          idleCommitTimerRef.current = null;
+        }
         return;
       }
-      commitIdleCamera(cameraRef.current);
+      scheduleIdleCameraCommit();
     },
-    [commitIdleCamera],
+    [scheduleIdleCameraCommit],
   );
 
   // LoadingWidget ref for onRedraw callback
@@ -1028,12 +1064,11 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const imageLayersLoadedRef = useRef<boolean | null>(null);
 
   const handleAfterRender = useCallback(() => {
-    // During waypoint fly-tos, isLoaded flickers as LODs churn — skip store
-    // writes so React does not re-render on every tile settle mid-transition.
-    if (inTransitionRef.current) return;
     if (loadingWidgetRef.current) {
       loadingWidgetRef.current.onRedraw({ layers: allLayers });
     }
+    // Skip Zustand while the camera is busy — isLoaded flickers as LODs churn.
+    if (isCameraBusyRef.current) return;
     const loaded =
       imageLayers.length > 0 &&
       imageLayers.every((layer) => (layer as { isLoaded?: boolean }).isLoaded);

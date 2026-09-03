@@ -15,7 +15,12 @@ import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
-import { type Config, type Loader, toSettings } from "./viv";
+import {
+  type Config,
+  type Loader,
+  toSettings,
+  VIV_TILE_MAX_CACHE_SIZE,
+} from "./viv";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
 export function applyChannelRendering<S extends MainSettings>(
@@ -157,6 +162,7 @@ export function createMultiscaleLayer(args: {
   return new MultiscaleImageLayer({
     id: `mainLayer-${args.index}-${selectionId}${remount}`,
     ...settings,
+    maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
     ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
     loader: args.loader.data,
   } as never);
