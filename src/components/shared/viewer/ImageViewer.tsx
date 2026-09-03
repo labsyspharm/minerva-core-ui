@@ -637,7 +637,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       const setViews = (ortho: OrthographicViewState) =>
         deck.setProps({
           initialViewState: deckViewStates(ortho, viewportW, viewportH),
-        } as Parameters<typeof deck.setProps>[0]);
+        } as unknown as Parameters<typeof deck.setProps>[0]);
       setViews(from);
       setViews(next);
     }

@@ -13,6 +13,7 @@ bundle
 .pnpm-store
 .claude
 CLAUDE.md
+.cursor/
 .cursor/*
 !.cursor/hooks.json
 !.cursor/hooks/
