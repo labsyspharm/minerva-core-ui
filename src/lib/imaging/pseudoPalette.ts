@@ -18,7 +18,7 @@ const DEFAULT_LUMINANCE = new Uint16Array([50, 92]);
  * perceptual separation only (no spatial channel overlap).
  */
 export const PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP = false;
-export const PSUDO_MAX_ITERS = 3000;
+export const PSUDO_MAX_ITERS = 2700;
 export const PSUDO_CONFUSION_BASELINE_SAMPLES = 32; // only matters if spatial on
 /** Matches psudo 0.15+ / palette_study (× n/3, max 40 inside WASM). */
 export const PSUDO_NUM_RESTARTS = 18;

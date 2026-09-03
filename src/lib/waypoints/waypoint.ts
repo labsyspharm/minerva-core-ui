@@ -1,5 +1,9 @@
 // Types
 
+import {
+  viewStateToWorldBounds,
+  worldBoundsToViewState,
+} from "@/lib/viewer/viewerViewport";
 import type { ConfigWaypoint } from "../authoring/config";
 import type { Story } from "../legacy/exhibit";
 // View state for deck.gl OrthographicView
@@ -112,18 +116,12 @@ const viewStateToBounds = (
   containerWidth: number,
   containerHeight: number,
 ): WaypointBounds | null => {
-  if (containerWidth <= 0 || containerHeight <= 0) return null;
-  const scale = 2 ** viewState.zoom;
-  if (!Number.isFinite(scale) || scale <= 0) return null;
-  const halfW = containerWidth / (2 * scale);
-  const halfH = containerHeight / (2 * scale);
-  const [x, y] = viewState.target;
-  return {
-    x0: x - halfW,
-    x1: x + halfW,
-    y0: y - halfH,
-    y1: y + halfH,
-  };
+  return viewStateToWorldBounds(
+    viewState.zoom,
+    viewState.target,
+    containerWidth,
+    containerHeight,
+  );
 };
 
 const boundsToViewState = (
@@ -131,17 +129,7 @@ const boundsToViewState = (
   containerWidth: number,
   containerHeight: number,
 ): WaypointViewState | null => {
-  if (containerWidth <= 0 || containerHeight <= 0) return null;
-  const width = Math.max(1e-6, Math.abs(bounds.x1 - bounds.x0));
-  const height = Math.max(1e-6, Math.abs(bounds.y1 - bounds.y0));
-  const scaleX = containerWidth / width;
-  const scaleY = containerHeight / height;
-  const scale = Math.min(scaleX, scaleY);
-  if (!Number.isFinite(scale) || scale <= 0) return null;
-  return {
-    zoom: Math.log2(scale),
-    target: [(bounds.x0 + bounds.x1) / 2, (bounds.y0 + bounds.y1) / 2, 0],
-  };
+  return worldBoundsToViewState(bounds, containerWidth, containerHeight);
 };
 
 /**

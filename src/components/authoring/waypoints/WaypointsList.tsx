@@ -451,7 +451,10 @@ const WaypointsList = (props: WaypointsListProps) => {
     };
 
     addStory(newWaypoint);
-    activateStoryIndex(storyIndex);
+    // Capture the live camera immediately so jumps between this and other
+    // waypoints have a distinct Bounds/ViewState (not the shared full-image default).
+    saveCurrentViewToStory(storyIndex, "handleAddWaypoint");
+    activateStoryIndex(storyIndex, true);
     setDetailStoryId(newWaypoint.id);
 
     requestAnimationFrame(() => {

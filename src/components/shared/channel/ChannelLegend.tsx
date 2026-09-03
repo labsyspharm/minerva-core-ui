@@ -137,14 +137,14 @@ type LegendRowProps = {
     cid: string,
     c: Partial<ChannelGroupChannel>,
   ) => void;
-  onClick: (e: React.MouseEvent) => void;
+  onColorClick: (e: React.MouseEvent) => void;
   popChannel: (ctx: { g: number; idx: number }) => void;
 };
 
 const LegendRow = (props: LegendRowProps) => {
   const { channel } = props;
   const channelName = channel.name;
-  const { idx, g, onClick } = props;
+  const { idx, g, onColorClick } = props;
   const rowVisible = props.hiddenInViewer
     ? false
     : legendRowVisible(
@@ -170,23 +170,36 @@ const LegendRow = (props: LegendRowProps) => {
   };
 
   const coreUI = (
-    <button
-      type="button"
-      onClick={onClick}
+    <div
       className={styles.rowClickArea}
-      title={rowVisible ? `Hide ${channelName}` : `Show ${channelName}`}
       style={{ opacity: rowVisible ? 1 : 0.55 }}
     >
-      <div
-        className={[styles.swatch, rowVisible ? styles.swatchFilled : null]
-          .filter(Boolean)
-          .join(" ")}
-        style={{ "--swatch-color": `#${channel.color}` } as CSSProperties}
-      />
-      <span className={styles.nameSlot}>
-        <EditableText {...statusProps}>{channelName}</EditableText>
-      </span>
-    </button>
+      <button
+        type="button"
+        className={styles.swatchButton}
+        onClick={onColorClick}
+        title={`Change color of ${channelName}`}
+        aria-label={`Change color of ${channelName}`}
+      >
+        <div
+          className={[styles.swatch, rowVisible ? styles.swatchFilled : null]
+            .filter(Boolean)
+            .join(" ")}
+          style={{ "--swatch-color": `#${channel.color}` } as CSSProperties}
+        />
+      </button>
+      <button
+        type="button"
+        className={styles.nameButton}
+        onClick={() => props.toggleChannel(channel)}
+        title={rowVisible ? `Hide ${channelName}` : `Show ${channelName}`}
+        aria-label={rowVisible ? `Hide ${channelName}` : `Show ${channelName}`}
+      >
+        <span className={styles.nameSlot}>
+          <EditableText {...statusProps}>{channelName}</EditableText>
+        </span>
+      </button>
+    </div>
   );
   const editSwitch = [
     ["div", { children: coreUI }],
@@ -319,7 +332,7 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
                   toggleChannel: props.toggleChannel,
                   updateChannel: props.updateChannel ?? (() => {}),
                   popChannel: props.popChannel ?? (() => {}),
-                  onClick: (e) => {
+                  onColorClick: (e) => {
                     const anchor = e.currentTarget.getBoundingClientRect();
                     handleColorPickerOpen(anchor, c);
                   },

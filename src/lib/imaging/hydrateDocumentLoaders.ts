@@ -15,10 +15,13 @@ import {
 import { getFileHandle } from "@/lib/persistence/fileHandles";
 import type { Image } from "@/lib/stores/documentSchema";
 import {
+  hydrateJpegTransferForImage,
   isJpegOmeTiffImageSource,
+  type JpegExportTransfer,
   jpegTransferFromImageSource,
 } from "./cubeRootEncoding";
 import type { JpegLoaderEntry, OmeLoaderEntry } from "./loaderEntries";
+import type { Loader } from "./viv";
 import type { PoolClass } from "./workers/pool";
 import { Pool } from "./workers/pool";
 import { wrapOmeLoaderJpegExport } from "./wrapOmeLoaderCubeRoot";
@@ -56,6 +59,24 @@ const omeLoaderRole = (im: Image): "intensity" | "segmentation" =>
   }) === "segmentation"
     ? "segmentation"
     : "intensity";
+
+function omeLoaderForHydrate(
+  loader: Loader,
+  im: Image,
+  wrapOmeJpeg: boolean,
+  storyTransfer: JpegExportTransfer,
+): Pick<OmeLoaderEntry, "loader" | "transfer"> {
+  const jpegTransfer = wrapOmeJpeg
+    ? hydrateJpegTransferForImage(im, storyTransfer)
+    : null;
+  if (!jpegTransfer) {
+    return { loader };
+  }
+  return {
+    loader: wrapOmeLoaderJpegExport(loader, jpegTransfer),
+    transfer: jpegTransfer,
+  };
+}
 
 /**
  * Viv's `loadOmeTiff` does `new URL(source)` with no base, so relative
@@ -121,11 +142,8 @@ export async function hydrateDocumentLoaders(
             ...(pool ? { pool } : {}),
           });
           omeLoaderEntries.push({
-            loader: wrapOmeJpeg
-              ? wrapOmeLoaderJpegExport(loader, transfer)
-              : loader,
+            ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
             sourceImageId: im.id,
-            ...(wrapOmeJpeg ? { transfer } : {}),
           });
         } catch (e) {
           loaderErrors.push(
@@ -156,11 +174,8 @@ export async function hydrateDocumentLoaders(
             ...(pool ? { pool } : {}),
           });
           omeLoaderEntries.push({
-            loader: wrapOmeJpeg
-              ? wrapOmeLoaderJpegExport(loader, transfer)
-              : loader,
+            ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
             sourceImageId: im.id,
-            ...(wrapOmeJpeg ? { transfer } : {}),
           });
         } catch (e) {
           loaderErrors.push(

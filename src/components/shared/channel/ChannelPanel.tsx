@@ -3,6 +3,7 @@ import * as React from "react";
 import {
   defaultVisibilitiesForSources,
   isStackVisible,
+  sourceChannelInAnyGroup,
 } from "@/lib/imaging/channelCompositor";
 import {
   DEFAULT_VISIBLE_INTENSITY_CHANNELS,
@@ -111,11 +112,11 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         }
 
         const overlayChannels: LegendChannel[] = [];
-        // Active-group rows always remain listed so their eye can be toggled
-        // back on. All Channels rows are overlays and remain only while their
-        // independent stack eye is on.
+        // Match compositor: group rows cover grouped sources; overlays are
+        // only stack-visible channels that are not in any group.
         if (hasStackVisibilityMap) {
           for (const sc of imageSources) {
+            if (sourceChannelInAnyGroup(docChannelGroups, sc.id)) continue;
             if (!isStackVisible(channelVisibilities, sc.id)) continue;
             const colorIdx = indexById.get(sc.id) ?? 0;
             overlayChannels.push(legendChannelFromSource(sc, colorIdx));
@@ -180,50 +181,47 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
 
   const updateChannel = React.useCallback(
     (groupId, channelId, newChannel) => {
-      // Find existing copy if any
       const copy_name = (g) => `${g.name} copy`;
+      const is_copied = (g) => " copy" === g.name.slice(-5);
       const id_group = groups.find(({ id }) => groupId === id);
-      const group =
-        groups.find(({ name }) => name === copy_name(id_group)) || id_group;
-      const update = (gc) => {
-        if (gc.channelId === channelId) {
-          return { ...gc, ...newChannel };
-        }
-        return gc;
-      };
-      const copy = (g) => ({
+      if (!id_group) return;
+
+      const existingCopy = groups.find(
+        ({ name }) => name === copy_name(id_group),
+      );
+      const group = existingCopy || id_group;
+
+      const withColor = (g) => ({
         ...g,
-        name: copy_name(g),
+        channels: g.channels.map((gc) =>
+          gc.channelId === channelId ? { ...gc, ...newChannel } : gc,
+        ),
+      });
+
+      if (is_copied(group)) {
+        // Already on / have a copy — write color into that group (do not
+        // setChannelRendering-only; Viv would ignore group row colors).
+        syncGroupState(
+          groups.map((g) => (g.id === group.id ? withColor(g) : g)),
+        );
+        setActiveChannelGroup(group.id);
+        return;
+      }
+
+      const colored = withColor(group);
+      const new_group = {
+        ...colored,
+        name: copy_name(group),
         id: crypto.randomUUID(),
-        channels: g.channels.map((gc) => ({
-          ...update(gc),
+        channels: colored.channels.map((gc) => ({
+          ...gc,
           id: crypto.randomUUID(),
         })),
-      });
-      const is_copied = (g) => " copy" === g.name.slice(-5);
-      const new_group = is_copied(group) ? null : copy(group);
-      if (new_group) {
-        syncGroupState([...groups, new_group]);
-        setActiveChannelGroup(new_group.id);
-      } else {
-        const found = findSourceChannel(sourceChannels, channelId);
-        setActiveChannelGroup(group.id);
-        if (found) {
-          console.log({
-            kind: "color",
-            sourceChannelId: found.id,
-            ...newChannel.color,
-          });
-
-          useAppStore.getState().setChannelRendering({
-            kind: "color",
-            sourceChannelId: found.id,
-            ...newChannel.color,
-          });
-        }
-      }
+      };
+      syncGroupState([...groups, new_group]);
+      setActiveChannelGroup(new_group.id);
     },
-    [groups, sourceChannels, syncGroupState, setActiveChannelGroup],
+    [groups, syncGroupState, setActiveChannelGroup],
   );
 
   const toggleChannel = (c: LegendChannel) => {
