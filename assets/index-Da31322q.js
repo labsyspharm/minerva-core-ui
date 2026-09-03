@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Dgkbuo_X.js","./pako.esm-KbdoS3Oq.js","./lerc-0eatrRnt.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-rdM4t6Nx.js","./pako.esm-KbdoS3Oq.js","./lerc-B01gykag.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -61630,26 +61630,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-CQr4pAsh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CNIElB32.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DFSsxyTY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-_sgbxa9m.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-Wpd6YTak.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-Bee2SzOq.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-Dgkbuo_X.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CA8bJMRq.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-0eatrRnt.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-rdM4t6Nx.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DldtdpUE.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-B01gykag.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-a-Bi1v0l.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-OSfOF2l6.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-Fg4I9K2n.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DDEUSFho.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -83082,8 +83082,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     value: "Module"
   }));
   const MAX_VIV_INTENSITY_CHANNELS = 10;
-  const VIV_TILE_MAX_REQUESTS = 6;
-  const VIV_TILE_DEBOUNCE_MS = 75;
+  const VIV_TILE_MAX_CACHE_SIZE = 128;
   function loaderPixelSizeXY(loader) {
     var _a2, _b2;
     const px = (_a2 = loader.metadata) == null ? void 0 : _a2.Pixels;
@@ -91567,8 +91566,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       visible,
       loader: jpegLoader,
       refinementStrategy: "no-overlap",
-      maxRequests: VIV_TILE_MAX_REQUESTS,
-      debounceTime: VIV_TILE_DEBOUNCE_MS,
+      maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
       id: `${imageID}-${Object.values(channelFolders || {}).join("-")}-${selections == null ? void 0 : selections.map((s2) => s2.c).join("-")}`,
       channelsVisible,
       colors,
@@ -178319,6 +178317,7 @@ void main() {
   const ORTHO_VIEW_ID = "ortho";
   const SCALEBAR_VIEW_ID = "scalebar-overlay";
   const WAYPOINT_FLY_MS = 1400;
+  const CAMERA_IDLE_COMMIT_MS = 160;
   const easeInOutCubic = (t2) => t2 < 0.5 ? 4 * t2 * t2 * t2 : 1 - (-2 * t2 + 2) ** 3 / 2;
   const deckViewStates = (ortho2, width, height) => ({
     [ORTHO_VIEW_ID]: ortho2,
@@ -178593,7 +178592,9 @@ void main() {
     const hasInitialized = reactExports.useRef(false);
     const waypointTransitionGenRef = reactExports.useRef(0);
     const inTransitionRef = reactExports.useRef(false);
-    const commitIdleCamera = reactExports.useCallback((vs2) => {
+    const isCameraBusyRef = reactExports.useRef(false);
+    const idleCommitTimerRef = reactExports.useRef(null);
+    const commitIdleCamera = reactExports.useCallback((vs2, reseedDeck = false) => {
       const flat = toFlatViewState(vs2);
       if (!flat) return;
       const { width, height } = viewportSizeRef.current;
@@ -178605,8 +178606,25 @@ void main() {
         } : {}
       };
       cameraRef.current = next2;
-      setOrthoSeed(next2);
+      if (idleCommitTimerRef.current) {
+        clearTimeout(idleCommitTimerRef.current);
+        idleCommitTimerRef.current = null;
+      }
+      isCameraBusyRef.current = false;
+      if (reseedDeck) setOrthoSeed(next2);
       setViewState(next2);
+    }, []);
+    const scheduleIdleCameraCommit = reactExports.useCallback(() => {
+      if (idleCommitTimerRef.current) clearTimeout(idleCommitTimerRef.current);
+      idleCommitTimerRef.current = setTimeout(() => {
+        idleCommitTimerRef.current = null;
+        commitIdleCamera(cameraRef.current);
+      }, CAMERA_IDLE_COMMIT_MS);
+    }, [
+      commitIdleCamera
+    ]);
+    reactExports.useEffect(() => () => {
+      if (idleCommitTimerRef.current) clearTimeout(idleCommitTimerRef.current);
     }, []);
     const setViewportZoom = useAppStore((state) => state.setViewportZoom);
     const setBrushViewport = useAppStore((state) => state.setBrushViewport);
@@ -178627,7 +178645,7 @@ void main() {
     const refImageHeight = Number(imageShape.y) || 0;
     reactExports.useEffect(() => {
       if (firstLoader !== null && !hasInitialized.current) {
-        commitIdleCamera(fitViewState);
+        commitIdleCamera(fitViewState, true);
         hasInitialized.current = true;
       }
     }, [
@@ -178640,7 +178658,7 @@ void main() {
       if (!hasInitialized.current) return;
       if (width <= 0 || height <= 0) return;
       if (inTransitionRef.current) return;
-      commitIdleCamera(cameraRef.current);
+      commitIdleCamera(cameraRef.current, true);
     }, [
       viewportSize,
       commitIdleCamera
@@ -178731,7 +178749,7 @@ void main() {
         onTransitionEnd: () => {
           if (gen !== waypointTransitionGenRef.current) return;
           inTransitionRef.current = false;
-          commitIdleCamera(settled);
+          commitIdleCamera(settled, true);
         }
       };
       const deck = (_a2 = deckRef.current) == null ? void 0 : _a2.deck;
@@ -178743,6 +178761,7 @@ void main() {
       };
       if (liveFlat) cameraRef.current = withOrthoZoom(liveFlat);
       inTransitionRef.current = true;
+      isCameraBusyRef.current = true;
       if (deck == null ? void 0 : deck.isInitialized) {
         const setViews = (ortho2) => deck.setProps({
           initialViewState: deckViewStates(ortho2, viewportW, viewportH)
@@ -179039,7 +179058,7 @@ void main() {
       touchZoom: true,
       touchRotate: false,
       keyboard: false,
-      inertia: true
+      inertia: 650
     }), [
       activeTool,
       isDragging,
@@ -179074,23 +179093,29 @@ void main() {
       isDragging
     ]);
     const handleInteractionStateChange = reactExports.useCallback((state) => {
+      const busy = !!(state.inTransition || state.isPanning || state.isZooming || state.isDragging);
       inTransitionRef.current = !!state.inTransition;
-      if (state.inTransition || state.isPanning || state.isZooming || state.isDragging) {
+      if (busy) {
+        isCameraBusyRef.current = true;
+        if (idleCommitTimerRef.current) {
+          clearTimeout(idleCommitTimerRef.current);
+          idleCommitTimerRef.current = null;
+        }
         return;
       }
-      commitIdleCamera(cameraRef.current);
+      scheduleIdleCameraCommit();
     }, [
-      commitIdleCamera
+      scheduleIdleCameraCommit
     ]);
     const loadingWidgetRef = reactExports.useRef(null);
     const imageLayersLoadedRef = reactExports.useRef(null);
     const handleAfterRender = reactExports.useCallback(() => {
-      if (inTransitionRef.current) return;
       if (loadingWidgetRef.current) {
         loadingWidgetRef.current.onRedraw({
           layers: allLayers
         });
       }
+      if (isCameraBusyRef.current) return;
       const loaded = imageLayers.length > 0 && imageLayers.every((layer) => layer.isLoaded);
       if (imageLayersLoadedRef.current !== loaded) {
         imageLayersLoadedRef.current = loaded;
@@ -249460,6 +249485,7 @@ void main() {
     return new MultiscaleImageLayer({
       id: `mainLayer-${args.index}-${selectionId}${remount}`,
       ...settings,
+      maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
       ...args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {},
       loader: args.loader.data
     });
@@ -249794,12 +249820,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-03T18:12:40.555Z");
+    const label2 = utcShort("2026-09-03T20:49:20.544Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-09-03T18:12:40.555Z",
+      title: "2026-09-03T20:49:20.544Z",
       children: [
         "Updated ",
         label2,
