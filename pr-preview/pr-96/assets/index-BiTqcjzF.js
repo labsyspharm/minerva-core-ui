@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Clu2Q4XP.js","./pako.esm-KbdoS3Oq.js","./lerc-AgKxLQ3G.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CJ8-tO30.js","./pako.esm-KbdoS3Oq.js","./lerc-CR27Jwuv.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -61630,26 +61630,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DulxyOQr.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CwiD4-ip.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BxcncKhM.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-DsRto0sS.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-tz_ZGwOF.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CThjd0tp.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-Clu2Q4XP.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BKkAe6OP.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-AgKxLQ3G.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-CJ8-tO30.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-mByWSq0j.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-CR27Jwuv.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DEec1IXg.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BOX-6bdD.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-FNiXn9qM.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-NHmUONp7.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -173294,14 +173294,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function omeTiffExportBaseName(image2) {
     var _a2;
     const raw2 = ((_a2 = image2.basename) == null ? void 0 : _a2.replace(/\.(ome\.)?(tif|tiff)$/i, "")) || image2.id || "image";
-    return raw2.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") || "image";
+    const cleaned = raw2.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") || "image";
+    return cleaned.replace(/-minerva$/i, "") || "image";
+  }
+  function omeTiffExportDiskName(stem) {
+    return `${stem}-minerva.ome.tif`;
   }
   function omeTiffExportFileName(image2, used) {
     const base2 = omeTiffExportBaseName(image2);
-    let name2 = `${base2}.ome.tif`;
+    let name2 = omeTiffExportDiskName(base2);
     let n2 = 2;
     while (used.has(name2.toLowerCase())) {
-      name2 = `${base2}_${n2}.ome.tif`;
+      name2 = omeTiffExportDiskName(`${base2}_${n2}`);
       n2 += 1;
     }
     used.add(name2.toLowerCase());
@@ -173310,8 +173314,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function omeTiffMaskExportFileName(image2, used) {
     const base2 = omeTiffExportBaseName(image2);
     for (const candidate of [
-      `${base2}.ome.tif`,
-      `${base2}_mask.ome.tif`
+      omeTiffExportDiskName(base2),
+      omeTiffExportDiskName(`${base2}_mask`)
     ]) {
       if (!used.has(candidate.toLowerCase())) {
         used.add(candidate.toLowerCase());
@@ -173319,10 +173323,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     }
     let n2 = 2;
-    let name2 = `${base2}_mask_${n2}.ome.tif`;
+    let name2 = omeTiffExportDiskName(`${base2}_mask_${n2}`);
     while (used.has(name2.toLowerCase())) {
       n2 += 1;
-      name2 = `${base2}_mask_${n2}.ome.tif`;
+      name2 = omeTiffExportDiskName(`${base2}_mask_${n2}`);
     }
     used.add(name2.toLowerCase());
     return name2;
@@ -178695,6 +178699,7 @@ void main() {
         ...withOrthoZoom(vs2),
         transitionDuration: 1e3,
         transitionInterpolator: WAYPOINT_TRANSITION_INTERPOLATOR,
+        transitionEasing: (t2) => t2 === 1 ? 1 : 1 - 2 ** (-10 * t2),
         onTransitionEnd: () => {
           if (gen !== waypointTransitionGenRef.current) return;
           setViewState(withOrthoZoom(vs2));
@@ -249749,12 +249754,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-02T22:33:18.668Z");
+    const label2 = utcShort("2026-09-03T16:23:02.443Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-09-02T22:33:18.668Z",
+      title: "2026-09-03T16:23:02.443Z",
       children: [
         "Updated ",
         label2,
