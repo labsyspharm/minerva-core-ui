@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-IgykOejN.js","./pako.esm-KbdoS3Oq.js","./lerc-9B3BJDS5.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-mo0Uzsx1.js","./pako.esm-KbdoS3Oq.js","./lerc-DB6xGOj2.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -61630,26 +61630,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-Cj7CVOsG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Bowp0M9W.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DBnSbcdI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CRxuA_lN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CvifiL8o.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BsII_yvT.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-IgykOejN.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-s5EW81I7.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-9B3BJDS5.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-mo0Uzsx1.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-CZt2InyQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DB6xGOj2.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CViRl93_.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CPnwswdb.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BraMcxBK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BaEXZLoG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -178320,6 +178320,19 @@ void main() {
   };
   const ORTHO_VIEW_ID = "ortho";
   const SCALEBAR_VIEW_ID = "scalebar-overlay";
+  const WAYPOINT_FLY_MS = 1400;
+  const easeInOutCubic = (t2) => t2 < 0.5 ? 4 * t2 * t2 * t2 : 1 - (-2 * t2 + 2) ** 3 / 2;
+  const deckViewStates = (ortho2, width, height) => ({
+    [ORTHO_VIEW_ID]: ortho2,
+    [SCALEBAR_VIEW_ID]: {
+      zoom: 0,
+      target: [
+        width / 2,
+        height / 2,
+        0
+      ]
+    }
+  });
   const createDragHandlers = (activeTool, onInteraction, getScreenFromWorld) => {
     if (!onInteraction) {
       return {
@@ -178560,108 +178573,118 @@ void main() {
       activeChannelGroupId,
       channelGroups
     ]);
-    const initialViewState = reactExports.useMemo(() => {
+    const fitViewState = reactExports.useMemo(() => {
       const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
-      return {
+      return withOrthoZoom({
         zoom: -n_levels,
         target: [
           imageShape.x / 2,
           imageShape.y / 2,
           0
         ]
-      };
+      });
     }, [
       firstLoader,
       imageShape
     ]);
-    const [viewState, setViewState] = reactExports.useState(initialViewState);
+    const [viewState, setViewState] = reactExports.useState(fitViewState);
+    const [orthoSeed, setOrthoSeed] = reactExports.useState(fitViewState);
+    const cameraRef = reactExports.useRef(fitViewState);
+    const viewportSizeRef = reactExports.useRef(viewportSize);
+    viewportSizeRef.current = viewportSize;
     const hasInitialized = reactExports.useRef(false);
+    const waypointTransitionGenRef = reactExports.useRef(0);
+    const inTransitionRef = reactExports.useRef(false);
+    const commitIdleCamera = reactExports.useCallback((vs2) => {
+      const flat = toFlatViewState(vs2);
+      if (!flat) return;
+      const { width, height } = viewportSizeRef.current;
+      const next2 = {
+        ...withOrthoZoom(flat),
+        ...width > 0 && height > 0 ? {
+          width,
+          height
+        } : {}
+      };
+      cameraRef.current = next2;
+      setOrthoSeed(next2);
+      setViewState(next2);
+    }, []);
     const setViewportZoom = useAppStore((state) => state.setViewportZoom);
     const setBrushViewport = useAppStore((state) => state.setBrushViewport);
-    const viewRef = reactExports.useRef({
-      viewState,
-      viewportSize
-    });
-    viewRef.current = {
-      viewState,
-      viewportSize
-    };
-    const waypointTransitionGenRef = reactExports.useRef(0);
-    const targetWaypointCamera = useAppStore((state) => state.targetWaypointCamera);
-    const clearTargetWaypointCamera = useAppStore((state) => state.clearTargetWaypointCamera);
-    const refImageWidth = Number(imageShape.x) || 0;
-    const refImageHeight = Number(imageShape.y) || 0;
-    reactExports.useEffect(() => {
-      if (firstLoader !== null && !hasInitialized.current) {
-        setViewState(initialViewState);
-        if (typeof initialViewState.zoom === "number") {
-          setViewportZoom(initialViewState.zoom);
-        }
-        hasInitialized.current = true;
-      }
-    }, [
-      initialViewState,
-      firstLoader,
-      setViewportZoom
-    ]);
-    reactExports.useEffect(() => {
-      const { width, height } = viewportSize;
-      if (width <= 0 || height <= 0) return;
-      const zoom = typeof (viewState == null ? void 0 : viewState.zoom) === "number" ? viewState.zoom : 0;
-      const target = (viewState == null ? void 0 : viewState.target) ?? [
-        0,
-        0,
-        0
-      ];
-      const scale2 = 2 ** zoom;
-      const halfW = width / (2 * scale2);
-      const halfH = height / (2 * scale2);
-      const bounds = [
-        target[0] - halfW,
-        target[1] + halfH,
-        target[0] + halfW,
-        target[1] - halfH
-      ];
-      setBrushViewport(width, height, bounds);
-    }, [
-      viewState,
-      viewportSize,
-      setBrushViewport
-    ]);
     const setViewerViewState = useAppStore((s2) => s2.setViewerViewState);
     const setViewerViewportSize = useAppStore((s2) => s2.setViewerViewportSize);
     const setSquareViewportThumbnailCapture = useAppStore((s2) => s2.setSquareViewportThumbnailCapture);
     const setViewerImageLayersLoaded = useAppStore((s2) => s2.setViewerImageLayersLoaded);
     const setSam2ViewState = useAppStore((s2) => s2.setSam2ViewState);
     const setSam2ViewportSize = useAppStore((s2) => s2.setSam2ViewportSize);
+    const deckInitialViewState = reactExports.useMemo(() => deckViewStates(orthoSeed, viewportSize.width, viewportSize.height), [
+      orthoSeed,
+      viewportSize.width,
+      viewportSize.height
+    ]);
+    const targetWaypointCamera = useAppStore((state) => state.targetWaypointCamera);
+    const clearTargetWaypointCamera = useAppStore((state) => state.clearTargetWaypointCamera);
+    const refImageWidth = Number(imageShape.x) || 0;
+    const refImageHeight = Number(imageShape.y) || 0;
     reactExports.useEffect(() => {
-      setSam2ViewState(viewState);
+      if (firstLoader !== null && !hasInitialized.current) {
+        commitIdleCamera(fitViewState);
+        hasInitialized.current = true;
+      }
     }, [
-      viewState,
-      setSam2ViewState
+      fitViewState,
+      firstLoader,
+      commitIdleCamera
     ]);
     reactExports.useEffect(() => {
-      setSam2ViewportSize(viewportSize);
+      const { width, height } = viewportSize;
+      if (!hasInitialized.current) return;
+      if (width <= 0 || height <= 0) return;
+      if (inTransitionRef.current) return;
+      commitIdleCamera(cameraRef.current);
     }, [
       viewportSize,
-      setSam2ViewportSize
+      commitIdleCamera
     ]);
     reactExports.useEffect(() => {
-      const raw2 = viewState;
-      if (!raw2) return;
-      const flat = raw2.ortho ?? (typeof raw2.zoom === "number" && Array.isArray(raw2.target) && raw2.target.length === 3 ? {
-        zoom: raw2.zoom,
-        target: raw2.target
-      } : null);
-      if (flat) setViewerViewState(flat);
+      const { width, height } = viewportSize;
+      if (width <= 0 || height <= 0) return;
+      const flat = toFlatViewState(viewState);
+      if (!flat) return;
+      const scale2 = 2 ** flat.zoom;
+      const halfW = width / (2 * scale2);
+      const halfH = height / (2 * scale2);
+      const [x2, y2] = flat.target;
+      setBrushViewport(width, height, [
+        x2 - halfW,
+        y2 + halfH,
+        x2 + halfW,
+        y2 - halfH
+      ]);
     }, [
       viewState,
+      viewportSize,
+      setBrushViewport
+    ]);
+    reactExports.useEffect(() => {
+      setSam2ViewState(viewState);
+      const flat = toFlatViewState(viewState);
+      if (!flat) return;
+      setViewportZoom(flat.zoom);
+      setViewerViewState(flat);
+    }, [
+      viewState,
+      setSam2ViewState,
+      setViewportZoom,
       setViewerViewState
     ]);
     reactExports.useEffect(() => {
+      setSam2ViewportSize(viewportSize);
       setViewerViewportSize(viewportSize);
     }, [
       viewportSize,
+      setSam2ViewportSize,
       setViewerViewportSize
     ]);
     reactExports.useEffect(() => {
@@ -178674,10 +178697,9 @@ void main() {
             return fromDeck;
           }
         }
-        const { viewState: vs2, viewportSize: vp } = viewRef.current;
-        const flat = toFlatViewState(vs2);
-        if (!flat) return null;
-        if (vp.width <= 0 || vp.height <= 0) return null;
+        const vp = viewportSizeRef.current;
+        const flat = toFlatViewState(cameraRef.current);
+        if (!flat || vp.width <= 0 || vp.height <= 0) return null;
         return {
           viewState: flat,
           viewportSize: vp
@@ -178686,6 +178708,7 @@ void main() {
       return () => registerViewerLiveSnapshotReader(null);
     }, []);
     reactExports.useEffect(() => {
+      var _a2, _b2;
       if (targetWaypointCamera === null) return;
       if (viewportSize.width <= 0 || viewportSize.height <= 0) return;
       if (refImageWidth <= 0 || refImageHeight <= 0) return;
@@ -178695,17 +178718,41 @@ void main() {
         return;
       }
       const gen = ++waypointTransitionGenRef.current;
-      setViewState({
+      const viewportW = viewportSize.width;
+      const viewportH = viewportSize.height;
+      const settled = {
         ...withOrthoZoom(vs2),
-        transitionDuration: 1e3,
+        width: viewportW,
+        height: viewportH
+      };
+      const next2 = {
+        ...settled,
+        transitionDuration: WAYPOINT_FLY_MS,
         transitionInterpolator: WAYPOINT_TRANSITION_INTERPOLATOR,
-        transitionEasing: (t2) => t2 === 1 ? 1 : 1 - 2 ** (-10 * t2),
+        transitionEasing: easeInOutCubic,
         onTransitionEnd: () => {
           if (gen !== waypointTransitionGenRef.current) return;
-          setViewState(withOrthoZoom(vs2));
+          inTransitionRef.current = false;
+          commitIdleCamera(settled);
         }
-      });
-      setViewportZoom(vs2.zoom);
+      };
+      const deck = (_a2 = deckRef.current) == null ? void 0 : _a2.deck;
+      const liveFlat = toFlatViewState((_b2 = getViewerViewportSnapshotFromDeck(deck)) == null ? void 0 : _b2.viewState) ?? toFlatViewState(cameraRef.current);
+      const from = {
+        ...liveFlat ? withOrthoZoom(liveFlat) : withOrthoZoom(vs2),
+        width: viewportW,
+        height: viewportH
+      };
+      if (liveFlat) cameraRef.current = withOrthoZoom(liveFlat);
+      inTransitionRef.current = true;
+      if (deck == null ? void 0 : deck.isInitialized) {
+        const setViews = (ortho2) => deck.setProps({
+          initialViewState: deckViewStates(ortho2, viewportW, viewportH)
+        });
+        setViews(from);
+        setViews(next2);
+      }
+      setOrthoSeed(next2);
       clearTargetWaypointCamera();
     }, [
       targetWaypointCamera,
@@ -178714,7 +178761,7 @@ void main() {
       refImageWidth,
       refImageHeight,
       clearTargetWaypointCamera,
-      setViewportZoom
+      commitIdleCamera
     ]);
     const scaleBarLayer = reactExports.useMemo(() => {
       var _a2, _b2;
@@ -178936,9 +178983,10 @@ void main() {
       setSquareViewportThumbnailCapture
     ]);
     const getScreenFromWorld = reactExports.useCallback((worldX, worldY) => {
-      const { viewState: vs2, viewportSize: vp } = viewRef.current;
-      const zoom = typeof (vs2 == null ? void 0 : vs2.zoom) === "number" ? vs2.zoom : 0;
-      const target = (vs2 == null ? void 0 : vs2.target) ?? [
+      const flat = toFlatViewState(cameraRef.current);
+      const vp = viewportSizeRef.current;
+      const zoom = (flat == null ? void 0 : flat.zoom) ?? 0;
+      const target = (flat == null ? void 0 : flat.target) ?? [
         0,
         0,
         0
@@ -179014,29 +179062,32 @@ void main() {
     const handleViewStateChange = reactExports.useCallback(({ viewState: nextViewState, viewId, interactionState }) => {
       if (viewId === SCALEBAR_VIEW_ID) return;
       if (isDragging) return;
-      if ((interactionState == null ? void 0 : interactionState.isZooming) || (interactionState == null ? void 0 : interactionState.isPanning) || (interactionState == null ? void 0 : interactionState.isDragging)) {
+      if (!(interactionState == null ? void 0 : interactionState.inTransition) && ((interactionState == null ? void 0 : interactionState.isZooming) || (interactionState == null ? void 0 : interactionState.isPanning) || (interactionState == null ? void 0 : interactionState.isDragging))) {
         waypointTransitionGenRef.current += 1;
       }
       const ortho2 = (nextViewState == null ? void 0 : nextViewState[ORTHO_VIEW_ID]) ?? (nextViewState == null ? void 0 : nextViewState.ortho) ?? nextViewState;
       const flat = toFlatViewState(ortho2) ?? toFlatViewState(nextViewState);
       if (flat) {
-        setViewState(withOrthoZoom(flat));
-        setViewportZoom(flat.zoom);
-        setViewerViewState(flat);
+        cameraRef.current = withOrthoZoom(flat);
+      } else if (nextViewState) {
+        cameraRef.current = nextViewState;
+      }
+    }, [
+      isDragging
+    ]);
+    const handleInteractionStateChange = reactExports.useCallback((state) => {
+      inTransitionRef.current = !!state.inTransition;
+      if (state.inTransition || state.isPanning || state.isZooming || state.isDragging) {
         return;
       }
-      if (!nextViewState) return;
-      setViewState(nextViewState);
-      const z2 = orthographicZoomOf(ortho2) ?? orthographicZoomOf(nextViewState);
-      if (z2 !== null) setViewportZoom(z2);
+      commitIdleCamera(cameraRef.current);
     }, [
-      isDragging,
-      setViewportZoom,
-      setViewerViewState
+      commitIdleCamera
     ]);
     const loadingWidgetRef = reactExports.useRef(null);
     const imageLayersLoadedRef = reactExports.useRef(null);
     const handleAfterRender = reactExports.useCallback(() => {
+      if (inTransitionRef.current) return;
       if (loadingWidgetRef.current) {
         loadingWidgetRef.current.onRedraw({
           layers: allLayers
@@ -179080,18 +179131,9 @@ void main() {
               preserveDrawingBuffer: true
             }
           },
-          viewState: {
-            [ORTHO_VIEW_ID]: viewState,
-            [SCALEBAR_VIEW_ID]: {
-              zoom: 0,
-              target: [
-                viewportSize.width / 2,
-                viewportSize.height / 2,
-                0
-              ]
-            }
-          },
+          initialViewState: deckInitialViewState,
           onViewStateChange: handleViewStateChange,
+          onInteractionStateChange: handleInteractionStateChange,
           onClick: dragHandlers.onClick,
           onDragStart: dragHandlers.onDragStart,
           onDrag: dragHandlers.onDrag,
@@ -249754,12 +249796,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-03T16:25:53.093Z");
+    const label2 = utcShort("2026-09-03T17:59:47.873Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-09-03T16:25:53.093Z",
+      title: "2026-09-03T17:59:47.873Z",
       children: [
         "Updated ",
         label2,
