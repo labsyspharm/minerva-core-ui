@@ -534,21 +534,12 @@ const WaypointsList = (props: WaypointsListProps) => {
             const isDragging = draggedStoryId === storyId;
             const isDropTarget = dropTargetStoryId === storyId;
 
-            const rowDragProps = canEdit
-              ? ({
-                  draggable: true,
-                  onDragStart: (e: React.DragEvent) =>
-                    handleDragStart(storyId, e),
-                  onDragEnd: handleDragEnd,
-                } as const)
-              : ({} as const);
-
             return (
               <li
                 key={storyId}
                 className={[
                   styles.compactRow,
-                  canEdit ? styles.compactRowDraggable : "",
+                  canEdit ? styles.compactRowEditable : "",
                   isActive ? minervaTheme.selectLeft : "",
                   isDragging ? styles.compactRowDragging : "",
                   isDropTarget ? styles.compactRowDropTarget : "",
@@ -563,15 +554,24 @@ const WaypointsList = (props: WaypointsListProps) => {
                 }}
               >
                 {canEdit ? (
+                  <button
+                    type="button"
+                    className={styles.dragHandle}
+                    draggable
+                    title={`Drag ${story.title}`}
+                    aria-label={`Drag ${story.title}`}
+                    onDragStart={(e) => handleDragStart(storyId, e)}
+                    onDragEnd={handleDragEnd}
+                  >
+                    ⋮⋮
+                  </button>
+                ) : null}
+                {canEdit ? (
                   <PanelIconButton
                     variant="row"
-                    {...rowDragProps}
                     className={styles.rowOpenDetailButton}
                     title="Open waypoint details"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openDetailForStoryId(storyId);
-                    }}
+                    onClick={() => openDetailForStoryId(storyId)}
                   >
                     <ChevronIcon direction="right" />
                   </PanelIconButton>
@@ -579,30 +579,28 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <div className={styles.rowChevronSpacer} aria-hidden />
                 )}
 
-                {story.thumbnail ? (
-                  <img
-                    className={`${minervaTheme.surface} ${styles.rowThumbnail}`}
-                    src={story.thumbnail}
-                    width={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
-                    height={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
-                    alt=""
-                    aria-hidden
-                  />
-                ) : (
-                  <div
-                    className={`${minervaTheme.surface} ${styles.rowThumbnail}`}
-                    aria-hidden
-                  />
-                )}
-
                 <button
                   type="button"
-                  {...rowDragProps}
                   className={`${minervaTheme.focusRing} ${styles.rowMainHit}`}
                   aria-label={`Select waypoint: ${story.title}`}
                   onClick={() => activateStoryIndex(index, true)}
                   onDoubleClick={() => openDetailForStoryId(storyId)}
                 >
+                  {story.thumbnail ? (
+                    <img
+                      className={`${minervaTheme.surface} ${styles.rowThumbnail}`}
+                      src={story.thumbnail}
+                      width={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
+                      height={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
+                      alt=""
+                      aria-hidden
+                    />
+                  ) : (
+                    <div
+                      className={`${minervaTheme.surface} ${styles.rowThumbnail}`}
+                      aria-hidden
+                    />
+                  )}
                   <div className={styles.rowTextStack}>
                     <div className={styles.rowTitleRow}>
                       <span className={styles.rowTitle} title={story.title}>
@@ -638,10 +636,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                       variant="row"
                       title="Delete waypoint"
                       aria-label={`Delete waypoint: ${story.title}`}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        removeStory(index);
-                      }}
+                      onClick={() => removeStory(index)}
                     >
                       <TrashIcon title="Delete" size={14} />
                     </PanelIconButton>
@@ -649,10 +644,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <PanelIconButton
                     variant="row"
                     title="Jump to waypoint view"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      activateStoryIndex(index);
-                    }}
+                    onClick={() => activateStoryIndex(index)}
                   >
                     <JumpToViewIcon width={14} height={14} aria-hidden />
                     <span className={styles.visuallyHidden}>

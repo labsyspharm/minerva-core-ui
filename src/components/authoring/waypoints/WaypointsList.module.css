@@ -14,10 +14,14 @@
   display: grid;
   align-items: start;
   box-sizing: border-box;
-  grid-template-columns: 24px 64px minmax(0, 1fr) 28px;
+  grid-template-columns: 24px minmax(0, 1fr) 28px;
   gap: 10px;
   position: relative;
   user-select: none;
+}
+
+.compactRowEditable {
+  grid-template-columns: 14px 24px minmax(0, 1fr) 28px;
 }
 
 .rowChevronSpacer {
@@ -37,18 +41,40 @@
   display: block;
 }
 
-.compactRowDraggable {
+.dragHandle {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 22px;
+  align-self: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--minerva-quiet);
   cursor: grab;
+  user-select: none;
+  font-size: 10px;
+  letter-spacing: -0.12em;
+  line-height: 1;
 }
 
-.compactRowDraggable:active {
+.dragHandle:hover {
+  color: var(--minerva-ink);
+}
+
+.dragHandle:active {
   cursor: grabbing;
 }
 
 .rowMainHit {
   width: 100%;
   min-width: 0;
-  display: block;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
   padding: 0;
   margin: 0;
   border: none;
@@ -57,7 +83,7 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  align-self: start;
+  align-self: stretch;
 }
 
 .rowTextStack {
@@ -84,6 +110,7 @@
 .compactRowDragging {
   opacity: 0.5;
   transform: rotate(2deg);
+  cursor: grabbing;
 }
 
 .compactRowDropTarget {
