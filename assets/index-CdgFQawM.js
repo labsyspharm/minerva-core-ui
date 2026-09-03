@@ -1,10 +1,16 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BGZzCN7I.js","./pako.esm-KbdoS3Oq.js","./lerc-DaP2QuCI.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-IgykOejN.js","./pako.esm-KbdoS3Oq.js","./lerc-9B3BJDS5.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 let BaseDecoder, LercParameters, LercAddCompression, getDefaultExportFromCjs$1;
 let __tla = (async () => {
-  var _a, _b, _c, _g, _h;
+  var _a, _b, _c, _OrthographicBoundsInterpolator_instances, asBoundsProps_fn, _g, _h, _i;
   (function polyfill() {
     const relList = document.createElement("link").relList;
     if (relList && relList.supports && relList.supports("modulepreload")) {
@@ -807,7 +813,7 @@ let __tla = (async () => {
     return output;
   }
   function parseSegments(defaultCaseSensitive, data2, route, start, node2, depth, onRoute) {
-    var _a2, _b2, _c2, _d, _e, _f, _g2, _h2, _i, _j, _k, _l, _m;
+    var _a2, _b2, _c2, _d, _e, _f, _g2, _h2, _i2, _j, _k, _l, _m;
     onRoute == null ? void 0 : onRoute(route);
     let cursor = start;
     {
@@ -875,7 +881,7 @@ let __tla = (async () => {
             const actuallyCaseSensitive = caseSensitive && !!(prefix_raw || suffix_raw);
             const prefix = !prefix_raw ? void 0 : actuallyCaseSensitive ? prefix_raw : prefix_raw.toLowerCase();
             const suffix = !suffix_raw ? void 0 : actuallyCaseSensitive ? suffix_raw : suffix_raw.toLowerCase();
-            const existingNode = !skipOnParamError && ((_i = node2.optional) == null ? void 0 : _i.find((s2) => !s2.skipOnParamError && s2.caseSensitive === actuallyCaseSensitive && s2.prefix === prefix && s2.suffix === suffix));
+            const existingNode = !skipOnParamError && ((_i2 = node2.optional) == null ? void 0 : _i2.find((s2) => !s2.skipOnParamError && s2.caseSensitive === actuallyCaseSensitive && s2.prefix === prefix && s2.suffix === suffix));
             if (existingNode) nextNode = existingNode;
             else {
               const next2 = createDynamicNode(3, route.fullPath ?? route.from, actuallyCaseSensitive, prefix, suffix);
@@ -1104,7 +1110,7 @@ let __tla = (async () => {
     };
   }
   function extractParams(path2, parts, leaf) {
-    var _a2, _b2, _c2, _d, _e, _f, _g2, _h2, _i, _j;
+    var _a2, _b2, _c2, _d, _e, _f, _g2, _h2, _i2, _j;
     const list2 = buildBranch(leaf.node);
     let nodeParts = null;
     const rawParams = /* @__PURE__ */ Object.create(null);
@@ -1152,7 +1158,7 @@ let __tla = (async () => {
         if (value) rawParams[name2] = decodeURIComponent(value);
       } else if (node2.kind === 2) {
         const n2 = node2;
-        const value = path2.substring(currentPathIndex + (((_i = n2.prefix) == null ? void 0 : _i.length) ?? 0), path2.length - (((_j = n2.suffix) == null ? void 0 : _j.length) ?? 0));
+        const value = path2.substring(currentPathIndex + (((_i2 = n2.prefix) == null ? void 0 : _i2.length) ?? 0), path2.length - (((_j = n2.suffix) == null ? void 0 : _j.length) ?? 0));
         const splat = decodeURIComponent(value);
         rawParams["*"] = splat;
         rawParams._splat = splat;
@@ -18917,7 +18923,7 @@ let __tla = (async () => {
   const u$4 = vec(4);
   function orient2dadapt(ax, ay, bx, by, cx, cy, detsum) {
     let acxtail, acytail, bcxtail, bcytail;
-    let bvirt, c2, ahi, alo, bhi, blo, _i, _j, _0, s1, s0, t1, t0, u3;
+    let bvirt, c2, ahi, alo, bhi, blo, _i2, _j, _0, s1, s0, t1, t0, u3;
     const acx = ax - cx;
     const bcx = bx - cx;
     const acy = ay - cy;
@@ -18938,18 +18944,18 @@ let __tla = (async () => {
     bhi = c2 - (c2 - bcx);
     blo = bcx - bhi;
     t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
-    _i = s0 - t0;
-    bvirt = s0 - _i;
-    B$1[0] = s0 - (_i + bvirt) + (bvirt - t0);
-    _j = s1 + _i;
+    _i2 = s0 - t0;
+    bvirt = s0 - _i2;
+    B$1[0] = s0 - (_i2 + bvirt) + (bvirt - t0);
+    _j = s1 + _i2;
     bvirt = _j - s1;
-    _0 = s1 - (_j - bvirt) + (_i - bvirt);
-    _i = _0 - t1;
-    bvirt = _0 - _i;
-    B$1[1] = _0 - (_i + bvirt) + (bvirt - t1);
-    u3 = _j + _i;
+    _0 = s1 - (_j - bvirt) + (_i2 - bvirt);
+    _i2 = _0 - t1;
+    bvirt = _0 - _i2;
+    B$1[1] = _0 - (_i2 + bvirt) + (bvirt - t1);
+    u3 = _j + _i2;
     bvirt = u3 - _j;
-    B$1[2] = _j - (u3 - bvirt) + (_i - bvirt);
+    B$1[2] = _j - (u3 - bvirt) + (_i2 - bvirt);
     B$1[3] = u3;
     let det = estimate(4, B$1);
     let errbound = ccwerrboundB * detsum;
@@ -18986,18 +18992,18 @@ let __tla = (async () => {
     bhi = c2 - (c2 - bcx);
     blo = bcx - bhi;
     t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
-    _i = s0 - t0;
-    bvirt = s0 - _i;
-    u$4[0] = s0 - (_i + bvirt) + (bvirt - t0);
-    _j = s1 + _i;
+    _i2 = s0 - t0;
+    bvirt = s0 - _i2;
+    u$4[0] = s0 - (_i2 + bvirt) + (bvirt - t0);
+    _j = s1 + _i2;
     bvirt = _j - s1;
-    _0 = s1 - (_j - bvirt) + (_i - bvirt);
-    _i = _0 - t1;
-    bvirt = _0 - _i;
-    u$4[1] = _0 - (_i + bvirt) + (bvirt - t1);
-    u3 = _j + _i;
+    _0 = s1 - (_j - bvirt) + (_i2 - bvirt);
+    _i2 = _0 - t1;
+    bvirt = _0 - _i2;
+    u$4[1] = _0 - (_i2 + bvirt) + (bvirt - t1);
+    u3 = _j + _i2;
     bvirt = u3 - _j;
-    u$4[2] = _j - (u3 - bvirt) + (_i - bvirt);
+    u$4[2] = _j - (u3 - bvirt) + (_i2 - bvirt);
     u$4[3] = u3;
     const C1len = sum$1(4, B$1, 4, u$4, C1);
     s1 = acx * bcytail;
@@ -19016,18 +19022,18 @@ let __tla = (async () => {
     bhi = c2 - (c2 - bcxtail);
     blo = bcxtail - bhi;
     t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
-    _i = s0 - t0;
-    bvirt = s0 - _i;
-    u$4[0] = s0 - (_i + bvirt) + (bvirt - t0);
-    _j = s1 + _i;
+    _i2 = s0 - t0;
+    bvirt = s0 - _i2;
+    u$4[0] = s0 - (_i2 + bvirt) + (bvirt - t0);
+    _j = s1 + _i2;
     bvirt = _j - s1;
-    _0 = s1 - (_j - bvirt) + (_i - bvirt);
-    _i = _0 - t1;
-    bvirt = _0 - _i;
-    u$4[1] = _0 - (_i + bvirt) + (bvirt - t1);
-    u3 = _j + _i;
+    _0 = s1 - (_j - bvirt) + (_i2 - bvirt);
+    _i2 = _0 - t1;
+    bvirt = _0 - _i2;
+    u$4[1] = _0 - (_i2 + bvirt) + (bvirt - t1);
+    u3 = _j + _i2;
     bvirt = u3 - _j;
-    u$4[2] = _j - (u3 - bvirt) + (_i - bvirt);
+    u$4[2] = _j - (u3 - bvirt) + (_i2 - bvirt);
     u$4[3] = u3;
     const C2len = sum$1(C1len, C1, 4, u$4, C2);
     s1 = acxtail * bcytail;
@@ -19046,18 +19052,18 @@ let __tla = (async () => {
     bhi = c2 - (c2 - bcxtail);
     blo = bcxtail - bhi;
     t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
-    _i = s0 - t0;
-    bvirt = s0 - _i;
-    u$4[0] = s0 - (_i + bvirt) + (bvirt - t0);
-    _j = s1 + _i;
+    _i2 = s0 - t0;
+    bvirt = s0 - _i2;
+    u$4[0] = s0 - (_i2 + bvirt) + (bvirt - t0);
+    _j = s1 + _i2;
     bvirt = _j - s1;
-    _0 = s1 - (_j - bvirt) + (_i - bvirt);
-    _i = _0 - t1;
-    bvirt = _0 - _i;
-    u$4[1] = _0 - (_i + bvirt) + (bvirt - t1);
-    u3 = _j + _i;
+    _0 = s1 - (_j - bvirt) + (_i2 - bvirt);
+    _i2 = _0 - t1;
+    bvirt = _0 - _i2;
+    u$4[1] = _0 - (_i2 + bvirt) + (bvirt - t1);
+    u3 = _j + _i2;
     bvirt = u3 - _j;
-    u$4[2] = _j - (u3 - bvirt) + (_i - bvirt);
+    u$4[2] = _j - (u3 - bvirt) + (_i2 - bvirt);
     u$4[3] = u3;
     const Dlen = sum$1(C2len, C2, 4, u$4, D$1);
     return D$1[Dlen - 1];
@@ -21576,11 +21582,11 @@ let __tla = (async () => {
   async function concatenateArrayBuffersAsync(asyncIterator) {
     const arrayBuffers = [];
     for await (const chunk of asyncIterator) {
-      arrayBuffers.push(copyToArrayBuffer$1(chunk));
+      arrayBuffers.push(copyToArrayBuffer$2(chunk));
     }
     return concatenateArrayBuffers(...arrayBuffers);
   }
-  function copyToArrayBuffer$1(chunk) {
+  function copyToArrayBuffer$2(chunk) {
     if (chunk instanceof ArrayBuffer) {
       return chunk;
     }
@@ -21930,7 +21936,7 @@ let __tla = (async () => {
       return data2;
     }
     if (isSharedArrayBuffer(data2)) {
-      return copyToArrayBuffer(data2);
+      return copyToArrayBuffer$1(data2);
     }
     if (ArrayBuffer.isView(data2)) {
       const buffer2 = data2.buffer;
@@ -21954,15 +21960,15 @@ let __tla = (async () => {
       return bufferSource;
     }
     if (isSharedArrayBuffer(bufferSource)) {
-      return copyToArrayBuffer(bufferSource);
+      return copyToArrayBuffer$1(bufferSource);
     }
     const { buffer: buffer2, byteOffset, byteLength } = bufferSource;
     if (buffer2 instanceof ArrayBuffer && byteOffset === 0 && byteLength === buffer2.byteLength) {
       return buffer2;
     }
-    return copyToArrayBuffer(buffer2, byteOffset, byteLength);
+    return copyToArrayBuffer$1(buffer2, byteOffset, byteLength);
   }
-  function copyToArrayBuffer(buffer2, byteOffset = 0, byteLength = buffer2.byteLength - byteOffset) {
+  function copyToArrayBuffer$1(buffer2, byteOffset = 0, byteLength = buffer2.byteLength - byteOffset) {
     const view = new Uint8Array(buffer2, byteOffset, byteLength);
     const copy2 = new Uint8Array(view.length);
     copy2.set(view);
@@ -52788,7 +52794,7 @@ ${source2}`;
       this.animationLoop.start();
     }
     finalize() {
-      var _a2, _b2, _c2, _d, _e, _f, _g2, _h2, _i, _j;
+      var _a2, _b2, _c2, _d, _e, _f, _g2, _h2, _i2, _j;
       (_a2 = this.animationLoop) == null ? void 0 : _a2.stop();
       (_b2 = this.animationLoop) == null ? void 0 : _b2.destroy();
       this.animationLoop = null;
@@ -52808,7 +52814,7 @@ ${source2}`;
       this.deckPicker = null;
       (_h2 = this.eventManager) == null ? void 0 : _h2.destroy();
       this.eventManager = null;
-      (_i = this.widgetManager) == null ? void 0 : _i.finalize();
+      (_i2 = this.widgetManager) == null ? void 0 : _i2.finalize();
       this.widgetManager = null;
       if (!this.props.canvas && !this.props.device && !this.props.gl && this.canvas) {
         (_j = this.canvas.parentElement) == null ? void 0 : _j.removeChild(this.canvas);
@@ -61624,26 +61630,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-C7ReFIGN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-C8gjwanu.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-Cj7CVOsG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Bowp0M9W.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DF6SDdjA.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CvifiL8o.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BGZzCN7I.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-Cqs-nyav.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-DaP2QuCI.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-IgykOejN.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-s5EW81I7.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-9B3BJDS5.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Ck_V5d3r.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CViRl93_.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CAPJgC_W.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BraMcxBK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -83281,6 +83287,190 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ],
     radius: 5
   };
+  let viewerLiveSnapshotReader = null;
+  const getViewerViewportSnapshotFromDeck = (deck) => {
+    if (!(deck == null ? void 0 : deck.isInitialized)) return null;
+    const vps = deck.getViewports();
+    const vp = vps.find((v2) => v2.id === "ortho") ?? vps[0];
+    if (!vp || vp.width <= 0 || vp.height <= 0) return null;
+    const pos = vp.position;
+    const z2 = vp.zoom;
+    if (!Number.isFinite(z2) || !Array.isArray(pos) || pos.length < 2) return null;
+    const viewState = {
+      zoom: z2,
+      target: [
+        pos[0],
+        pos[1],
+        pos[2] ?? 0
+      ]
+    };
+    return {
+      viewState,
+      viewportSize: {
+        width: vp.width,
+        height: vp.height
+      }
+    };
+  };
+  const registerViewerLiveSnapshotReader = (reader) => {
+    viewerLiveSnapshotReader = reader;
+  };
+  const orthographicZoomToNumber = (zoom) => {
+    if (typeof zoom === "number") return zoom;
+    if (Array.isArray(zoom) && typeof zoom[0] === "number") return zoom[0];
+    return null;
+  };
+  const getViewerViewportSnapshotFromStore = () => {
+    const live = viewerLiveSnapshotReader == null ? void 0 : viewerLiveSnapshotReader();
+    if (live) {
+      const z2 = orthographicZoomToNumber(live.viewState.zoom);
+      if (z2 !== null && Array.isArray(live.viewState.target) && live.viewState.target.length >= 3 && live.viewportSize.width > 0 && live.viewportSize.height > 0) {
+        return live;
+      }
+    }
+    const { viewerViewState, viewerViewportSize } = useAppStore.getState();
+    if (!viewerViewState || !viewerViewportSize) return null;
+    if (viewerViewportSize.width <= 0 || viewerViewportSize.height <= 0) return null;
+    return {
+      viewState: viewerViewState,
+      viewportSize: viewerViewportSize
+    };
+  };
+  function viewStateToWorldBounds(zoom, target, width, height) {
+    if (width <= 0 || height <= 0) return null;
+    const scale2 = 2 ** zoom;
+    if (!Number.isFinite(scale2) || scale2 <= 0) return null;
+    const halfW = width / (2 * scale2);
+    const halfH = height / (2 * scale2);
+    const x2 = target[0] ?? 0;
+    const y2 = target[1] ?? 0;
+    return {
+      x0: x2 - halfW,
+      x1: x2 + halfW,
+      y0: y2 - halfH,
+      y1: y2 + halfH
+    };
+  }
+  function worldBoundsToViewState(bounds, width, height) {
+    if (width <= 0 || height <= 0) return null;
+    const worldW = Math.max(1e-6, Math.abs(bounds.x1 - bounds.x0));
+    const worldH = Math.max(1e-6, Math.abs(bounds.y1 - bounds.y0));
+    const scale2 = Math.min(width / worldW, height / worldH);
+    if (!Number.isFinite(scale2) || scale2 <= 0) return null;
+    return {
+      zoom: Math.log2(scale2),
+      target: [
+        (bounds.x0 + bounds.x1) / 2,
+        (bounds.y0 + bounds.y1) / 2,
+        0
+      ]
+    };
+  }
+  const getViewerBoundsFromSnapshot = (snapshot) => {
+    const zoom = orthographicZoomToNumber(snapshot.viewState.zoom);
+    if (zoom === null) return null;
+    return viewStateToWorldBounds(zoom, snapshot.viewState.target, snapshot.viewportSize.width, snapshot.viewportSize.height);
+  };
+  function withOrthoZoom(vs2) {
+    return {
+      zoom: vs2.zoom,
+      zoomX: vs2.zoom,
+      zoomY: vs2.zoom,
+      target: vs2.target
+    };
+  }
+  function orthographicZoomOf(props) {
+    if (typeof props.zoomX === "number") return props.zoomX;
+    return orthographicZoomToNumber(props.zoom);
+  }
+  function toFlatViewState(v2) {
+    const inner = (v2 == null ? void 0 : v2.ortho) ?? v2;
+    if (!inner || !Array.isArray(inner.target) || inner.target.length < 2) {
+      return null;
+    }
+    const zoom = orthographicZoomOf(inner);
+    if (zoom === null) return null;
+    return {
+      zoom,
+      target: [
+        inner.target[0],
+        inner.target[1],
+        inner.target[2] ?? 0
+      ]
+    };
+  }
+  class OrthographicBoundsInterpolator extends TransitionInterpolator {
+    constructor() {
+      super({
+        compare: [
+          "target",
+          "zoomX",
+          "zoomY"
+        ],
+        extract: [
+          "target",
+          "zoom",
+          "zoomX",
+          "zoomY",
+          "width",
+          "height"
+        ],
+        required: [
+          "target"
+        ]
+      });
+      __privateAdd(this, _OrthographicBoundsInterpolator_instances);
+    }
+    initializeProps(startProps, endProps) {
+      return {
+        start: __privateMethod(this, _OrthographicBoundsInterpolator_instances, asBoundsProps_fn).call(this, startProps),
+        end: __privateMethod(this, _OrthographicBoundsInterpolator_instances, asBoundsProps_fn).call(this, endProps)
+      };
+    }
+    interpolateProps(start, end, t2) {
+      const bounds = {
+        x0: lerp$6(start.x0, end.x0, t2),
+        x1: lerp$6(start.x1, end.x1, t2),
+        y0: lerp$6(start.y0, end.y0, t2),
+        y1: lerp$6(start.y1, end.y1, t2)
+      };
+      const width = end.width || start.width;
+      const height = end.height || start.height;
+      const vs2 = worldBoundsToViewState(bounds, width, height);
+      const zoom = (vs2 == null ? void 0 : vs2.zoom) ?? 0;
+      const target = (vs2 == null ? void 0 : vs2.target) ?? [
+        0,
+        0,
+        0
+      ];
+      return {
+        target,
+        zoom,
+        zoomX: zoom,
+        zoomY: zoom
+      };
+    }
+  }
+  _OrthographicBoundsInterpolator_instances = new WeakSet();
+  asBoundsProps_fn = function(props) {
+    const width = Math.max(1, props.width ?? 1);
+    const height = Math.max(1, props.height ?? 1);
+    const zoom = orthographicZoomOf(props) ?? 0;
+    const bounds = viewStateToWorldBounds(zoom, props.target ?? [
+      0,
+      0,
+      0
+    ], width, height);
+    return {
+      width,
+      height,
+      x0: (bounds == null ? void 0 : bounds.x0) ?? 0,
+      x1: (bounds == null ? void 0 : bounds.x1) ?? 0,
+      y0: (bounds == null ? void 0 : bounds.y0) ?? 0,
+      y1: (bounds == null ? void 0 : bounds.y1) ?? 0
+    };
+  };
+  const WAYPOINT_TRANSITION_INTERPOLATOR = new OrthographicBoundsInterpolator();
   const convertWaypointToViewState = (pan, zoom, imageWidth, imageHeight, containerWidth) => {
     if ((pan === void 0 || pan === null) && (zoom === void 0 || zoom === null)) {
       return null;
@@ -83321,35 +83511,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return typeof b2.x0 === "number" && typeof b2.x1 === "number" && typeof b2.y0 === "number" && typeof b2.y1 === "number";
   };
   const viewStateToBounds = (viewState, containerWidth, containerHeight) => {
-    if (containerWidth <= 0 || containerHeight <= 0) return null;
-    const scale2 = 2 ** viewState.zoom;
-    if (!Number.isFinite(scale2) || scale2 <= 0) return null;
-    const halfW = containerWidth / (2 * scale2);
-    const halfH = containerHeight / (2 * scale2);
-    const [x2, y2] = viewState.target;
-    return {
-      x0: x2 - halfW,
-      x1: x2 + halfW,
-      y0: y2 - halfH,
-      y1: y2 + halfH
-    };
+    return viewStateToWorldBounds(viewState.zoom, viewState.target, containerWidth, containerHeight);
   };
   const boundsToViewState = (bounds, containerWidth, containerHeight) => {
-    if (containerWidth <= 0 || containerHeight <= 0) return null;
-    const width = Math.max(1e-6, Math.abs(bounds.x1 - bounds.x0));
-    const height = Math.max(1e-6, Math.abs(bounds.y1 - bounds.y0));
-    const scaleX2 = containerWidth / width;
-    const scaleY2 = containerHeight / height;
-    const scale2 = Math.min(scaleX2, scaleY2);
-    if (!Number.isFinite(scale2) || scale2 <= 0) return null;
-    return {
-      zoom: Math.log2(scale2),
-      target: [
-        (bounds.x0 + bounds.x1) / 2,
-        (bounds.y0 + bounds.y1) / 2,
-        0
-      ]
-    };
+    return worldBoundsToViewState(bounds, containerWidth, containerHeight);
   };
   const getWaypointViewState = (waypoint, imageWidth, imageHeight, containerWidth, containerHeight) => {
     if (isWaypointViewState(waypoint.ViewState)) {
@@ -91140,10 +91305,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return "contrast";
   }
   function imageSourceFromJpegTransfer(transfer) {
-    return transfer === "cube-root" ? "jpeg-pyramid-cube-root" : "jpeg-pyramid";
+    return "jpeg-pyramid-cube-root";
   }
   function imageSourceFromOmeTiffTransfer(transfer) {
-    return transfer === "cube-root" ? JPEG_OME_TIFF_IMAGE_SOURCE : JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE;
+    return JPEG_OME_TIFF_IMAGE_SOURCE;
   }
   function folderLimitsForTransfer(transfer, lowerLimit, upperLimit) {
     if (transfer === "cube-root") {
@@ -91164,6 +91329,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function decodeCubeRootU8ToU16(byte) {
     if (!Number.isFinite(byte) || byte <= 0) return 0;
     return Math.min(65535, Math.max(0, Math.round((byte / 256) ** 3 * 65536)));
+  }
+  function exportTransferForImage(image2, storyTransfer) {
+    if (isRgbDisplaySource(image2.channels ?? [])) return "contrast";
+    return storyTransfer;
+  }
+  function hydrateJpegTransferForImage(image2, storyTransfer) {
+    if (resolveImageContentRole({
+      contentRole: image2.contentRole,
+      channels: [
+        ...image2.channels ?? []
+      ]
+    }) === "segmentation") {
+      return null;
+    }
+    return exportTransferForImage(image2, storyTransfer);
   }
   const JPEG_PYRAMID_TILE_SIZE = 1024;
   const JPEG_BAKED_CONTRAST_LIMIT = [
@@ -91737,7 +91917,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     return next2;
   }
-  const version = "1.0.0-alpha.7";
+  const version = "1.0.0-alpha.9";
   function minervaCdnUrls(version2) {
     const base2 = `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version2}/bundle`;
     return {
@@ -92794,70 +92974,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     authorPanelBody,
     emptyMessage,
     thinScrollbar
-  };
-  let viewerLiveSnapshotReader = null;
-  const getViewerViewportSnapshotFromDeck = (deck) => {
-    if (!(deck == null ? void 0 : deck.isInitialized)) return null;
-    const vps = deck.getViewports();
-    const vp = vps.find((v2) => v2.id === "ortho") ?? vps[0];
-    if (!vp || vp.width <= 0 || vp.height <= 0) return null;
-    const pos = vp.position;
-    const z2 = vp.zoom;
-    if (!Number.isFinite(z2) || !Array.isArray(pos) || pos.length < 2) return null;
-    const viewState = {
-      zoom: z2,
-      target: [
-        pos[0],
-        pos[1],
-        pos[2] ?? 0
-      ]
-    };
-    return {
-      viewState,
-      viewportSize: {
-        width: vp.width,
-        height: vp.height
-      }
-    };
-  };
-  const registerViewerLiveSnapshotReader = (reader) => {
-    viewerLiveSnapshotReader = reader;
-  };
-  const orthographicZoomToNumber = (zoom) => {
-    if (typeof zoom === "number") return zoom;
-    if (Array.isArray(zoom) && typeof zoom[0] === "number") return zoom[0];
-    return null;
-  };
-  const getViewerViewportSnapshotFromStore = () => {
-    const live = viewerLiveSnapshotReader == null ? void 0 : viewerLiveSnapshotReader();
-    if (live) {
-      const z2 = orthographicZoomToNumber(live.viewState.zoom);
-      if (z2 !== null && Array.isArray(live.viewState.target) && live.viewState.target.length >= 3 && live.viewportSize.width > 0 && live.viewportSize.height > 0) {
-        return live;
-      }
-    }
-    const { viewerViewState, viewerViewportSize } = useAppStore.getState();
-    if (!viewerViewState || !viewerViewportSize) return null;
-    if (viewerViewportSize.width <= 0 || viewerViewportSize.height <= 0) return null;
-    return {
-      viewState: viewerViewState,
-      viewportSize: viewerViewportSize
-    };
-  };
-  const getViewerBoundsFromSnapshot = (snapshot) => {
-    const zoom = orthographicZoomToNumber(snapshot.viewState.zoom);
-    if (zoom === null) return null;
-    const scale2 = 2 ** zoom;
-    if (!Number.isFinite(scale2) || scale2 <= 0) return null;
-    const [x2, y2] = snapshot.viewState.target;
-    const halfW = snapshot.viewportSize.width / (2 * scale2);
-    const halfH = snapshot.viewportSize.height / (2 * scale2);
-    return {
-      x0: x2 - halfW,
-      x1: x2 + halfW,
-      y0: y2 - halfH,
-      y1: y2 + halfH
-    };
   };
   const WAYPOINT_THUMBNAIL_PIXEL_SIZE = 64;
   const WAYPOINT_THUMBNAIL_JPEG_QUALITY = 0.85;
@@ -122155,8 +122271,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return emptyMulticharIndex;
     }
     var index2 = {};
-    for (var _i = 0, items_1 = items; _i < items_1.length; _i++) {
-      var item2 = items_1[_i];
+    for (var _i2 = 0, items_1 = items; _i2 < items_1.length; _i2++) {
+      var item2 = items_1[_i2];
       extendIndex(item2, index2);
     }
     return index2;
@@ -122166,8 +122282,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return emptyRegularIndex;
     }
     var result = {};
-    for (var _i = 0, items_2 = items; _i < items_2.length; _i++) {
-      var item2 = items_2[_i];
+    for (var _i2 = 0, items_2 = items; _i2 < items_2.length; _i2++) {
+      var item2 = items_2[_i2];
       result[item2] = true;
     }
     return result;
@@ -122188,8 +122304,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       result.type = type2;
     }
-    for (var _i = 0, types_1 = types2; _i < types_1.length; _i++) {
-      var type = types_1[_i];
+    for (var _i2 = 0, types_1 = types2; _i2 < types_1.length; _i2++) {
+      var type = types_1[_i2];
       if (type === "NoArgument") {
         result.optional = true;
       }
@@ -122211,8 +122327,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function inverseCategories(obj) {
     var result = {};
-    for (var _i = 0, _a2 = Object.keys(obj); _i < _a2.length; _i++) {
-      var category = _a2[_i];
+    for (var _i2 = 0, _a2 = Object.keys(obj); _i2 < _a2.length; _i2++) {
+      var category = _a2[_i2];
       var items = obj[category];
       if (items) {
         for (var _b2 = 0, _c2 = items; _b2 < _c2.length; _b2++) {
@@ -122226,8 +122342,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function calculatePseudoSignatures(definitions) {
     var pseudoClassesToArgumentTypes = inverseCategories(definitions);
     var result = {};
-    for (var _i = 0, _a2 = Object.keys(pseudoClassesToArgumentTypes); _i < _a2.length; _i++) {
-      var pseudoClass = _a2[_i];
+    for (var _i2 = 0, _a2 = Object.keys(pseudoClassesToArgumentTypes); _i2 < _a2.length; _i2++) {
+      var pseudoClass = _a2[_i2];
       var argumentTypes = pseudoClassesToArgumentTypes[pseudoClass];
       if (argumentTypes) {
         result[pseudoClass] = calculatePseudoSignature(argumentTypes);
@@ -122291,8 +122407,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         throw new Error("Unexpected syntax definition extension type: ".concat(extension2, "."));
       }
       var result = __assign({}, base2);
-      for (var _i = 0, _a2 = Object.entries(extension2); _i < _a2.length; _i++) {
-        var _b2 = _a2[_i], key2 = _b2[0], value = _b2[1];
+      for (var _i2 = 0, _a2 = Object.entries(extension2); _i2 < _a2.length; _i2++) {
+        var _b2 = _a2[_i2], key2 = _b2[0], value = _b2[1];
         if (key2 === "latest") {
           continue;
         }
@@ -122325,8 +122441,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return extension2;
     }
     var result = __assign({}, base2);
-    for (var _i = 0, _a2 = Object.entries(extension2); _i < _a2.length; _i++) {
-      var _b2 = _a2[_i], key2 = _b2[0], value = _b2[1];
+    for (var _i2 = 0, _a2 = Object.entries(extension2); _i2 < _a2.length; _i2++) {
+      var _b2 = _a2[_i2], key2 = _b2[0], value = _b2[1];
       if (!value) {
         delete result[key2];
         continue;
@@ -122708,8 +122824,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       "selectors-3",
       "selectors-4"
     ];
-    for (var _i = 0, cssLevels_1 = cssLevels; _i < cssLevels_1.length; _i++) {
-      var level = cssLevels_1[_i];
+    for (var _i2 = 0, cssLevels_1 = cssLevels; _i2 < cssLevels_1.length; _i2++) {
+      var level = cssLevels_1[_i2];
       var syntax = cssSyntaxDefinitions[level];
       if (syntax.pseudoClasses && typeof syntax.pseudoClasses === "object") {
         var definitions = syntax.pseudoClasses.definitions;
@@ -122854,8 +122970,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       syntaxDefinition = extendSyntaxDefinition(cssSyntaxDefinitions[syntaxDefinition.baseSyntax], syntaxDefinition);
     }
     if (syntaxDefinition.modules && syntaxDefinition.modules.length > 0) {
-      for (var _i = 0, _c2 = syntaxDefinition.modules; _i < _c2.length; _i++) {
-        var module_1 = _c2[_i];
+      for (var _i2 = 0, _c2 = syntaxDefinition.modules; _i2 < _c2.length; _i2++) {
+        var module_1 = _c2[_i2];
         var moduleSyntax = cssModules[module_1];
         if (moduleSyntax) {
           syntaxDefinition = extendSyntaxDefinition(moduleSyntax, syntaxDefinition);
@@ -166454,9 +166570,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         break;
       }
     }
-    for (var _i = position2; _i < text2.length; _i++) {
-      if (isWordDelimiter(text2[_i])) {
-        end = _i;
+    for (var _i2 = position2; _i2 < text2.length; _i2++) {
+      if (isWordDelimiter(text2[_i2])) {
+        end = _i2;
         break;
       }
     }
@@ -168755,7 +168871,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         shapeIds: []
       };
       addStory(newWaypoint);
-      activateStoryIndex(storyIndex);
+      saveCurrentViewToStory(storyIndex, "handleAddWaypoint");
+      activateStoryIndex(storyIndex, true);
       setDetailStoryId(newWaypoint.id);
       requestAnimationFrame(() => {
         var _a2;
@@ -170094,7 +170211,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     92
   ]);
   const PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP = false;
-  const PSUDO_MAX_ITERS = 3e3;
+  const PSUDO_MAX_ITERS = 2700;
   const PSUDO_CONFUSION_BASELINE_SAMPLES = 32;
   const PSUDO_NUM_RESTARTS = 18;
   const PSUDO_CONTRAST_MIN = 0;
@@ -171496,10 +171613,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       disabled: true,
                       children: optimizePaletteBusy ? "Optimizing\u2026" : "Add channel\u2026"
                     }),
-                    addable.map((sc2) => jsxRuntimeExports.jsx("option", {
-                      value: sc2.id,
-                      children: sc2.name
-                    }, sc2.id))
+                    addable.map((sc2) => {
+                      const imageLabel = showImageBadge ? imageLabels.get(sc2.imageId) : void 0;
+                      return jsxRuntimeExports.jsx("option", {
+                        value: sc2.id,
+                        children: imageLabel ? `${sc2.name} (${imageLabel})` : sc2.name
+                      }, sc2.id);
+                    })
                   ]
                 })
               })
@@ -172171,6 +172291,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ImageDescription: 270,
     SamplesPerPixel: 277,
     PlanarConfiguration: 284,
+    Predictor: 317,
     TileWidth: 322,
     TileLength: 323,
     TileOffsets: 324,
@@ -173025,15 +173146,39 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       jobs: buildJobs(levels, channelCount)
     };
   }
-  function grayscaleJpegTags() {
-    return [
-      tiffTag("BitsPerSample", "SHORT", 8),
-      tiffTag("Compression", "SHORT", 7),
+  const TIFF_COMPRESSION = {
+    JPEG: 7,
+    DEFLATE: 8
+  };
+  function grayscaleTags(options) {
+    const compression = options.compression;
+    if (!Number.isInteger(compression) || compression < 0 || compression > 65535) {
+      throw new TiffWriterError("INVALID_TAG_VALUE", `grayscaleTags: compression must be a TIFF SHORT (got ${compression})`);
+    }
+    const tags = [
+      tiffTag("BitsPerSample", "SHORT", options.bitsPerSample),
+      tiffTag("Compression", "SHORT", compression),
       tiffTag("PhotometricInterpretation", "SHORT", 1),
       tiffTag("SamplesPerPixel", "SHORT", 1),
       tiffTag("PlanarConfiguration", "SHORT", 1),
-      tiffTag("SampleFormat", "SHORT", 1)
+      tiffTag("SampleFormat", "SHORT", options.sampleFormat ?? 1)
     ];
+    if (options.predictor != null) {
+      tags.push(tiffTag("Predictor", "SHORT", options.predictor));
+    }
+    return tags;
+  }
+  function grayscaleJpegTags() {
+    return grayscaleTags({
+      compression: TIFF_COMPRESSION.JPEG,
+      bitsPerSample: 8
+    });
+  }
+  function grayscaleDeflateTags(bits) {
+    return grayscaleTags({
+      compression: TIFF_COMPRESSION.DEFLATE,
+      bitsPerSample: bits
+    });
   }
   function assertSafeNumberOffset$1(offset) {
     if (offset < 0n || offset > BigInt(Number.MAX_SAFE_INTEGER)) {
@@ -173071,6 +173216,595 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         await stream.abort(reason2);
       }
     };
+  }
+  function dtypeMaxForChannel(sourceDataTypeId) {
+    if (sourceDataTypeId === "Uint8" || sourceDataTypeId === "Int8") return 255;
+    return 65535;
+  }
+  function bitsPerSampleFromDtype(dtype) {
+    if (dtype === "Uint8" || dtype === "Int8") return 8;
+    if (dtype === "Uint16" || dtype === "Int16") return 16;
+    if (dtype === "Uint32" || dtype === "Int32") return 32;
+    throw new Error(`Unsupported mask dtype ${dtype}`);
+  }
+  function omeTypeFromDtype(dtype) {
+    switch (dtype) {
+      case "Uint8":
+        return "uint8";
+      case "Uint16":
+        return "uint16";
+      case "Uint32":
+        return "uint32";
+      case "Int8":
+        return "int8";
+      case "Int16":
+        return "int16";
+      case "Int32":
+        return "int32";
+      default:
+        throw new Error(`Unsupported mask dtype ${dtype}`);
+    }
+  }
+  function assertUnsignedLabelDtype(dtype) {
+    if (dtype === "Uint8" || dtype === "Uint16" || dtype === "Uint32") {
+      return dtype;
+    }
+    throw new Error(`Mask OME-TIFF export requires unsigned integer pixels (got ${dtype})`);
+  }
+  function escapeXmlAttr(value) {
+    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function omeColorInt(color2) {
+    const view = new DataView(new ArrayBuffer(4));
+    view.setUint8(0, color2.r & 255);
+    view.setUint8(1, color2.g & 255);
+    view.setUint8(2, color2.b & 255);
+    view.setUint8(3, 255);
+    return view.getInt32(0, false);
+  }
+  function optionalNumberAttr(name2, value) {
+    if (typeof value !== "number" || !Number.isFinite(value)) return "";
+    return ` ${name2}="${value}"`;
+  }
+  function optionalStringAttr(name2, value) {
+    if (typeof value !== "string" || !value.trim()) return "";
+    return ` ${name2}="${escapeXmlAttr(value)}"`;
+  }
+  function buildOmeTiffXml(opts) {
+    const { imageName, channels: channels2, width, height, fileName, pixelType, significantBits, pixels } = opts;
+    const sizeC = channels2.length;
+    const channelXml = channels2.map((ch2, i2) => {
+      var _a2;
+      const id2 = escapeXmlAttr(ch2.id || `Channel:0:${i2}`);
+      const chName = escapeXmlAttr(((_a2 = ch2.name) == null ? void 0 : _a2.trim()) || `Channel ${i2}`);
+      const colorAttr = ch2.color && typeof ch2.color.r === "number" && typeof ch2.color.g === "number" && typeof ch2.color.b === "number" ? ` Color="${omeColorInt({
+        r: ch2.color.r,
+        g: ch2.color.g,
+        b: ch2.color.b
+      })}"` : "";
+      return `<Channel ID="${id2}" Name="${chName}" SamplesPerPixel="1"${colorAttr}/>`;
+    }).join("");
+    const tiffDataXml = channels2.map((_2, i2) => {
+      const uuid = escapeXmlAttr(fileName);
+      return `<TiffData FirstC="${i2}" FirstT="0" FirstZ="0" IFD="${i2}" PlaneCount="1"><UUID FileName="${uuid}">${uuid}</UUID></TiffData>`;
+    }).join("");
+    const physicalAttrs = optionalNumberAttr("PhysicalSizeX", pixels == null ? void 0 : pixels.PhysicalSizeX) + optionalNumberAttr("PhysicalSizeY", pixels == null ? void 0 : pixels.PhysicalSizeY) + optionalNumberAttr("PhysicalSizeZ", pixels == null ? void 0 : pixels.PhysicalSizeZ) + optionalStringAttr("PhysicalSizeXUnit", pixels == null ? void 0 : pixels.PhysicalSizeXUnit) + optionalStringAttr("PhysicalSizeYUnit", pixels == null ? void 0 : pixels.PhysicalSizeYUnit) + optionalStringAttr("PhysicalSizeZUnit", pixels == null ? void 0 : pixels.PhysicalSizeZUnit);
+    return `<?xml version="1.0" encoding="UTF-8"?><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd"><Image ID="Image:0" Name="${escapeXmlAttr(imageName)}"><Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="${escapeXmlAttr(pixelType)}" SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1" SignificantBits="${significantBits}" Interleaved="false" BigEndian="false"${physicalAttrs}>${channelXml}${tiffDataXml}</Pixels></Image></OME>`;
+  }
+  function omeTiffExportBaseName(image2) {
+    var _a2;
+    const raw2 = ((_a2 = image2.basename) == null ? void 0 : _a2.replace(/\.(ome\.)?(tif|tiff)$/i, "")) || image2.id || "image";
+    const cleaned = raw2.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") || "image";
+    return cleaned.replace(/-minerva$/i, "") || "image";
+  }
+  function omeTiffExportDiskName(stem) {
+    return `${stem}-minerva.ome.tif`;
+  }
+  function omeTiffExportFileName(image2, used) {
+    const base2 = omeTiffExportBaseName(image2);
+    let name2 = omeTiffExportDiskName(base2);
+    let n2 = 2;
+    while (used.has(name2.toLowerCase())) {
+      name2 = omeTiffExportDiskName(`${base2}_${n2}`);
+      n2 += 1;
+    }
+    used.add(name2.toLowerCase());
+    return name2;
+  }
+  function omeTiffMaskExportFileName(image2, used) {
+    const base2 = omeTiffExportBaseName(image2);
+    for (const candidate of [
+      omeTiffExportDiskName(base2),
+      omeTiffExportDiskName(`${base2}_mask`)
+    ]) {
+      if (!used.has(candidate.toLowerCase())) {
+        used.add(candidate.toLowerCase());
+        return candidate;
+      }
+    }
+    let n2 = 2;
+    let name2 = omeTiffExportDiskName(`${base2}_mask_${n2}`);
+    while (used.has(name2.toLowerCase())) {
+      n2 += 1;
+      name2 = omeTiffExportDiskName(`${base2}_mask_${n2}`);
+    }
+    used.add(name2.toLowerCase());
+    return name2;
+  }
+  function channelIdsFromGroups(channelGroups) {
+    const ids = /* @__PURE__ */ new Set();
+    for (const g2 of channelGroups) {
+      for (const row2 of g2.channels) {
+        ids.add(row2.channelId);
+      }
+    }
+    return ids;
+  }
+  function isRgbExportImage(image2) {
+    return isRgbDisplaySource(image2.channels ?? []);
+  }
+  function channelsOfKind(image2, kind) {
+    return (image2.channels ?? []).filter((ch2) => effectiveChannelKind(ch2) === kind).slice().sort((a2, b2) => a2.index - b2.index);
+  }
+  function groupChannelsForOmeExport(image2, channelGroups, kind) {
+    const wanted = channelIdsFromGroups(channelGroups);
+    if (wanted.size === 0) return [];
+    return channelsOfKind(image2, kind).filter((ch2) => wanted.has(ch2.id));
+  }
+  function groupIntensityChannelsForOmeExport(image2, channelGroups) {
+    const all2 = channelsOfKind(image2, "channel");
+    if (all2.length === 0) return [];
+    if (isRgbExportImage(image2)) return all2;
+    const grouped = groupChannelsForOmeExport(image2, channelGroups, "channel");
+    return grouped.length > 0 ? grouped : all2;
+  }
+  function groupMaskChannelsForOmeExport(image2, channelGroups) {
+    const grouped = groupChannelsForOmeExport(image2, channelGroups, "mask");
+    if (grouped.length > 0) return grouped;
+    const intensity = groupIntensityChannelsForOmeExport(image2, channelGroups);
+    return intensity.length === 0 ? channelsOfKind(image2, "mask") : [];
+  }
+  function contrastLimitsForExportedChannel(channel, channelGroups) {
+    for (const g2 of channelGroups) {
+      for (const row2 of g2.channels) {
+        if (row2.channelId !== channel.id) continue;
+        return {
+          lowerLimit: row2.lowerLimit,
+          upperLimit: row2.upperLimit
+        };
+      }
+    }
+    const max2 = dtypeMaxForChannel(channel.sourceDataTypeId);
+    return {
+      lowerLimit: channel.lowerLimit ?? 0,
+      upperLimit: channel.upperLimit ?? max2
+    };
+  }
+  function imageOwningChannel(images, channelId) {
+    for (const image2 of images) {
+      const channel = (image2.channels ?? []).find((ch2) => ch2.id === channelId);
+      if (channel) return {
+        image: image2,
+        channel
+      };
+    }
+    return null;
+  }
+  function jpegPyramidExportChannels(images, channelGroups, storyTransfer) {
+    const out = [];
+    const seenGroupChannelIds = /* @__PURE__ */ new Set();
+    for (const g2 of channelGroups) {
+      for (const row2 of g2.channels) {
+        const loc = imageOwningChannel(images, row2.channelId);
+        if (!loc) continue;
+        const transfer = exportTransferForImage(loc.image, storyTransfer);
+        const limits = folderLimitsForTransfer(transfer, row2.lowerLimit, row2.upperLimit);
+        out.push({
+          channelId: row2.channelId,
+          sourceImageId: loc.image.id,
+          index: loc.channel.index,
+          lowerLimit: limits.lowerLimit,
+          upperLimit: limits.upperLimit,
+          transfer
+        });
+        seenGroupChannelIds.add(row2.channelId);
+      }
+    }
+    for (const image2 of images) {
+      if (!isRgbExportImage(image2)) continue;
+      const transfer = exportTransferForImage(image2, storyTransfer);
+      for (const ch2 of groupIntensityChannelsForOmeExport(image2, channelGroups)) {
+        if (seenGroupChannelIds.has(ch2.id)) continue;
+        const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
+        const limits = folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
+        out.push({
+          channelId: ch2.id,
+          sourceImageId: image2.id,
+          index: ch2.index,
+          lowerLimit: limits.lowerLimit,
+          upperLimit: limits.upperLimit,
+          transfer
+        });
+      }
+    }
+    return out;
+  }
+  function allocateOmeTiffExportFileNames(intensityImages, maskImages) {
+    const used = /* @__PURE__ */ new Set();
+    return {
+      intensityFileNames: intensityImages.map((im) => omeTiffExportFileName(im, used)),
+      maskFileNames: maskImages.map((im) => omeTiffMaskExportFileName(im, used))
+    };
+  }
+  function stitchOmeTiffExportImages(images, remappedById, insertedAfter, dropIds) {
+    return images.flatMap((im) => {
+      if (dropIds.has(im.id)) return insertedAfter.get(im.id) ?? [];
+      const main2 = remappedById.get(im.id) ?? im;
+      return [
+        main2,
+        ...insertedAfter.get(im.id) ?? []
+      ];
+    });
+  }
+  function remappedImageForOmeTiffExport(image2, exportedChannels, fileName) {
+    return {
+      ...image2,
+      sizeC: exportedChannels.length,
+      channels: exportedChannels.map((ch2, i2) => ({
+        ...ch2,
+        index: i2
+      })),
+      source: {
+        kind: "url",
+        url: fileName
+      }
+    };
+  }
+  function planeLevels(loaderData) {
+    return loaderData.map((plane) => {
+      const { width, height } = getImageSize(plane);
+      const tileSize = typeof plane.tileSize === "number" && plane.tileSize > 0 ? plane.tileSize : JPEG_PYRAMID_TILE_SIZE;
+      return {
+        width,
+        height,
+        tileSize
+      };
+    });
+  }
+  function tileCountForLevels(levels, channelCount) {
+    let n2 = 0;
+    for (const level of levels) {
+      n2 += Math.ceil(level.width / level.tileSize) * Math.ceil(level.height / level.tileSize) * channelCount;
+    }
+    return n2;
+  }
+  function loaderPlanesOrUndef(entry) {
+    const data2 = entry.loader.data;
+    return (data2 == null ? void 0 : data2.length) ? data2 : void 0;
+  }
+  const MASK_EXPORT_CONCURRENCY = Math.min(8, ((_g = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _g.hardwareConcurrency) ?? 4);
+  function labelArrayCtor(dtype) {
+    if (dtype === "Uint8") return Uint8Array;
+    if (dtype === "Uint16") return Uint16Array;
+    return Uint32Array;
+  }
+  function toLabelArray(data2, dtype) {
+    const Ctor = labelArrayCtor(dtype);
+    if (data2 instanceof Ctor) return data2;
+    const out = new Ctor(data2.length);
+    for (let i2 = 0; i2 < data2.length; i2++) out[i2] = data2[i2];
+    return out;
+  }
+  function maskExportTileSize(width, height, planeTileSize) {
+    const maxDim = Math.max(width, height, 1);
+    const ts = planeTileSize ?? 0;
+    if (ts > 0 && ts < maxDim) return ts;
+    if (ts > 0 && ts <= JPEG_PYRAMID_TILE_SIZE) return ts;
+    return JPEG_PYRAMID_TILE_SIZE;
+  }
+  function maskPyramidLevelSizes(width, height, tileSize) {
+    const levels = [
+      {
+        width,
+        height,
+        tileSize
+      }
+    ];
+    let w2 = width;
+    let h2 = height;
+    let n2 = 1;
+    while ((w2 > tileSize || h2 > tileSize) && n2 < 32) {
+      w2 = Math.max(1, w2 >> 1);
+      h2 = Math.max(1, h2 >> 1);
+      levels.push({
+        width: w2,
+        height: h2,
+        tileSize
+      });
+      n2 += 1;
+    }
+    return levels;
+  }
+  function nearestNeighborDownsample(src, srcW, srcH, dstW, dstH) {
+    const Ctor = src.constructor;
+    const dst = new Ctor(dstW * dstH);
+    for (let y2 = 0; y2 < dstH; y2++) {
+      const srcY = Math.min(srcH - 1, Math.floor(y2 * srcH / dstH));
+      for (let x2 = 0; x2 < dstW; x2++) {
+        const srcX = Math.min(srcW - 1, Math.floor(x2 * srcW / dstW));
+        dst[y2 * dstW + x2] = src[srcY * srcW + srcX];
+      }
+    }
+    return dst;
+  }
+  function padLabelTile(src, width, height, tileWidth, tileHeight) {
+    if (width === tileWidth && height === tileHeight && src.length === tileWidth * tileHeight) {
+      return src;
+    }
+    const Ctor = src.constructor;
+    const dst = new Ctor(tileWidth * tileHeight);
+    const copyW = Math.min(width, tileWidth);
+    const copyH = Math.min(height, tileHeight);
+    for (let y2 = 0; y2 < copyH; y2++) {
+      const srcStart = y2 * width;
+      dst.set(src.subarray(srcStart, srcStart + copyW), y2 * tileWidth);
+    }
+    return dst;
+  }
+  function extractLabelTile(plane, planeW, planeH, tileX, tileY, tileSize) {
+    const x0 = tileX * tileSize;
+    const y0 = tileY * tileSize;
+    const width = Math.max(0, Math.min(tileSize, planeW - x0));
+    const height = Math.max(0, Math.min(tileSize, planeH - y0));
+    const Ctor = plane.constructor;
+    const data2 = new Ctor(width * height);
+    for (let y2 = 0; y2 < height; y2++) {
+      const srcStart = (y0 + y2) * planeW + x0;
+      data2.set(plane.subarray(srcStart, srcStart + width), y2 * width);
+    }
+    return {
+      data: data2,
+      width,
+      height
+    };
+  }
+  function buildMaskPyramidRasters(full2, levels) {
+    const rasters = [
+      full2
+    ];
+    for (let i2 = 1; i2 < levels.length; i2++) {
+      rasters.push(nearestNeighborDownsample(rasters[i2 - 1], levels[i2 - 1].width, levels[i2 - 1].height, levels[i2].width, levels[i2].height));
+    }
+    return rasters;
+  }
+  function labelTileBytesLE(data2) {
+    return new Uint8Array(data2.buffer, data2.byteOffset, data2.byteLength).slice();
+  }
+  function copyToArrayBuffer(bytes) {
+    const out = new ArrayBuffer(bytes.byteLength);
+    new Uint8Array(out).set(bytes);
+    return out;
+  }
+  async function zlibDeflateBytes(bytes) {
+    const stream = new Blob([
+      copyToArrayBuffer(bytes)
+    ]).stream().pipeThrough(new CompressionStream("deflate"));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+  function planMaskExportLevels(loaderData) {
+    const plane0 = loaderData[0];
+    const { width, height } = getImageSize(plane0);
+    const tileSize = maskExportTileSize(width, height, plane0.tileSize);
+    if (loaderData.length > 1) {
+      return {
+        levels: loaderData.map((plane) => {
+          const size = getImageSize(plane);
+          return {
+            width: size.width,
+            height: size.height,
+            tileSize: maskExportTileSize(size.width, size.height, plane.tileSize)
+          };
+        }),
+        useLoaderTiles: true
+      };
+    }
+    const levels = maskPyramidLevelSizes(width, height, tileSize);
+    return {
+      levels,
+      useLoaderTiles: levels.length === 1
+    };
+  }
+  async function writeZlibOmeTiff(opts) {
+    const { sink, closeSink, image: image2, channels: channels2, fileName, pixels, dtype, levels, readTile, signal, onProgress } = opts;
+    if (channels2.length === 0) {
+      throw new Error(`No mask channels to export for ${image2.basename || image2.id}`);
+    }
+    const bits = bitsPerSampleFromDtype(dtype);
+    const omeXml = buildOmeTiffXml({
+      imageName: image2.basename || image2.id || "image",
+      channels: channels2,
+      width: levels[0].width,
+      height: levels[0].height,
+      fileName,
+      pixelType: omeTypeFromDtype(dtype),
+      significantBits: bits,
+      pixels
+    });
+    const { layouts, jobs } = planPyramid({
+      levels: [
+        ...levels
+      ],
+      channelCount: channels2.length,
+      baseTags: grayscaleDeflateTags(bits),
+      imageDescription: omeXml
+    });
+    let exportFailed = null;
+    const localAbort = new AbortController();
+    const onOuterAbort = () => localAbort.abort();
+    signal.addEventListener("abort", onOuterAbort);
+    if (signal.aborted) localAbort.abort();
+    const workSignal = localAbort.signal;
+    const failExport = (e2) => {
+      if (!exportFailed) {
+        exportFailed = e2 instanceof Error ? e2 : new Error(String(e2 ?? "Mask OME-TIFF export failed"));
+      }
+      localAbort.abort();
+    };
+    let writer;
+    try {
+      writer = await createTiffWriter({
+        sink,
+        closeSink,
+        signal: workSignal,
+        images: layouts
+      });
+    } catch (e2) {
+      signal.removeEventListener("abort", onOuterAbort);
+      throw e2;
+    }
+    const concurrency = Math.min(MASK_EXPORT_CONCURRENCY, Math.max(1, jobs.length));
+    let next2 = 0;
+    const runJob = async (job) => {
+      if (workSignal.aborted) return;
+      const tile = await readTile(job);
+      if (workSignal.aborted) return;
+      const tileSize = levels[job.levelIndex].tileSize;
+      const padded = padLabelTile(tile.data, tile.width, tile.height, tileSize, tileSize);
+      const deflated = await zlibDeflateBytes(labelTileBytesLE(padded));
+      if (workSignal.aborted) return;
+      await writer.writeSegment(job.address, deflated);
+      onProgress == null ? void 0 : onProgress(1);
+    };
+    const workerLoop = async () => {
+      while (!workSignal.aborted) {
+        const i2 = next2++;
+        if (i2 >= jobs.length) return;
+        try {
+          await runJob(jobs[i2]);
+        } catch (e2) {
+          if (workSignal.aborted) return;
+          console.error(e2 instanceof Error ? e2.message : e2);
+          try {
+            await runJob(jobs[i2]);
+          } catch (e22) {
+            console.error(e22 instanceof Error ? e22.message : e22);
+            failExport(e22);
+            return;
+          }
+        }
+      }
+    };
+    try {
+      await Promise.all(Array.from({
+        length: concurrency
+      }, () => workerLoop()));
+      if (exportFailed) throw exportFailed;
+      if (signal.aborted || workSignal.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
+      await writer.finish();
+    } catch (e2) {
+      try {
+        await writer.abort(e2);
+      } catch {
+      }
+      throw e2;
+    } finally {
+      signal.removeEventListener("abort", onOuterAbort);
+    }
+  }
+  function loaderPlanes(entry) {
+    const data2 = entry.loader.data;
+    if (!(data2 == null ? void 0 : data2.length)) {
+      throw new Error(`Loader has no pyramid levels for ${entry.sourceImageId}`);
+    }
+    return data2;
+  }
+  async function rastersForGeneratedPyramid(plane, channels2, levels, dtype, signal) {
+    const perChannel = [];
+    for (const channel of channels2) {
+      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+      const raster = await plane.getRaster({
+        selection: {
+          t: 0,
+          z: 0,
+          c: channel.index
+        },
+        signal
+      });
+      const full2 = toLabelArray(raster.data, dtype);
+      perChannel.push(buildMaskPyramidRasters(full2, levels));
+    }
+    return perChannel;
+  }
+  async function exportZlibOmeTiffImage(opts) {
+    var _a2, _b2;
+    const { directory, entry, image: image2, channels: channels2, fileName, signal, onProgress } = opts;
+    if (channels2.length === 0) {
+      throw new Error(`No mask channels to export for ${image2.basename || image2.id}`);
+    }
+    const loaderData = loaderPlanes(entry);
+    const dtype = assertUnsignedLabelDtype(loaderData[0].dtype);
+    const { levels, useLoaderTiles } = planMaskExportLevels(loaderData);
+    let generated = null;
+    if (!useLoaderTiles) {
+      generated = await rastersForGeneratedPyramid(loaderData[0], channels2, levels, dtype, signal);
+    }
+    const fh2 = await directory.getFileHandle(fileName, {
+      create: true
+    });
+    const writable = await fh2.createWritable();
+    try {
+      await writeZlibOmeTiff({
+        sink: browserFileSink(writable),
+        image: image2,
+        channels: channels2,
+        fileName,
+        pixels: ((_a2 = entry.loader.metadata) == null ? void 0 : _a2.Pixels) ?? null,
+        dtype,
+        levels,
+        signal,
+        onProgress,
+        readTile: async (job) => {
+          if (generated) {
+            const level = levels[job.levelIndex];
+            return extractLabelTile(generated[job.channelIndex][job.levelIndex], level.width, level.height, job.x, job.y, level.tileSize);
+          }
+          const plane = loaderData[job.levelIndex];
+          const channel = channels2[job.channelIndex];
+          const tile = await plane.getTile({
+            selection: {
+              t: 0,
+              z: 0,
+              c: channel.index
+            },
+            x: job.x,
+            y: job.y,
+            signal
+          });
+          return {
+            data: toLabelArray(tile.data, dtype),
+            width: tile.width,
+            height: tile.height
+          };
+        }
+      });
+    } catch (e2) {
+      try {
+        await ((_b2 = writable.abort) == null ? void 0 : _b2.call(writable));
+      } catch {
+      }
+      throw e2;
+    }
+    return remappedImageForOmeTiffExport({
+      ...image2,
+      contentRole: "segmentation"
+    }, channels2, fileName);
+  }
+  function maskExportTileCount(entry, channelCount) {
+    const loaderData = entry.loader.data;
+    if (!(loaderData == null ? void 0 : loaderData.length) || channelCount <= 0) return 0;
+    return tileCountForLevels(planMaskExportLevels(loaderData).levels, channelCount);
   }
   var Module = (() => {
     var _scriptDir = import.meta.url;
@@ -174711,13 +175445,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return copy2;
   }
   function WorkerWrapper$3(options) {
-    return new Worker("" + new URL("jpegExport.worker-SXV9ALQ1.js", import.meta.url).href, {
+    return new Worker("" + new URL("jpegExport.worker-BMPUP9uR.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
   }
   const MAX_JPEG_EXPORT_WORKERS = 8;
-  const defaultPoolSize$1 = Math.min(MAX_JPEG_EXPORT_WORKERS, ((_g = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _g.hardwareConcurrency) ?? 4);
+  const defaultPoolSize$1 = Math.min(MAX_JPEG_EXPORT_WORKERS, ((_h = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _h.hardwareConcurrency) ?? 4);
   let WorkerWrapper$2 = class WorkerWrapper {
     constructor(worker) {
       __publicField(this, "worker");
@@ -174840,149 +175574,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (pool) return pool.size;
     return defaultPoolSize$1;
   }
-  function omeTiffExportFileName(image2, used) {
-    var _a2;
-    const raw2 = ((_a2 = image2.basename) == null ? void 0 : _a2.replace(/\.(ome\.)?(tif|tiff)$/i, "")) || image2.id || "image";
-    const base2 = raw2.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") || "image";
-    let name2 = `${base2}.ome.tif`;
-    let n2 = 2;
-    while (used.has(name2.toLowerCase())) {
-      name2 = `${base2}_${n2}.ome.tif`;
-      n2 += 1;
-    }
-    used.add(name2.toLowerCase());
-    return name2;
-  }
-  function channelIdsFromGroups(channelGroups) {
-    const ids = /* @__PURE__ */ new Set();
-    for (const g2 of channelGroups) {
-      for (const row2 of g2.channels) {
-        ids.add(row2.channelId);
-      }
-    }
-    return ids;
-  }
-  function groupIntensityChannelsForOmeExport(image2, channelGroups) {
-    const wanted = channelIdsFromGroups(channelGroups);
-    if (wanted.size === 0) return [];
-    return (image2.channels ?? []).filter((ch2) => wanted.has(ch2.id) && effectiveChannelKind(ch2) === "channel").slice().sort((a2, b2) => a2.index - b2.index);
-  }
-  function assertNoSelectedMaskChannels(images, channelGroups) {
-    const wanted = channelIdsFromGroups(channelGroups);
-    for (const im of images) {
-      const selectedMasks = (im.channels ?? []).filter((ch2) => wanted.has(ch2.id) && effectiveChannelKind(ch2) === "mask");
-      if (selectedMasks.length > 0) {
-        throw new Error(`OME-TIFF export does not support mask/segmentation channels yet (${im.basename || im.id}). Remove masks from channel groups or export as JPEG folders.`);
-      }
-    }
-  }
-  function remappedImageForOmeTiffExport(image2, exportedChannels, fileName) {
-    return {
-      ...image2,
-      sizeC: exportedChannels.length,
-      channels: exportedChannels.map((ch2, i2) => ({
-        ...ch2,
-        index: i2
-      })),
-      source: {
-        kind: "url",
-        url: fileName
-      }
-    };
-  }
-  function planeLevels(loaderData) {
-    return loaderData.map((plane) => {
-      const { width, height } = getImageSize(plane);
-      const tileSize = typeof plane.tileSize === "number" && plane.tileSize > 0 ? plane.tileSize : JPEG_PYRAMID_TILE_SIZE;
-      return {
-        width,
-        height,
-        tileSize
-      };
-    });
-  }
-  function tileCountForLevels(levels, channelCount) {
-    let n2 = 0;
-    for (const level of levels) {
-      n2 += Math.ceil(level.width / level.tileSize) * Math.ceil(level.height / level.tileSize) * channelCount;
-    }
-    return n2;
-  }
-  function escapeXmlAttr(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
-  function omeColorInt(color2) {
-    const view = new DataView(new ArrayBuffer(4));
-    view.setUint8(0, color2.r & 255);
-    view.setUint8(1, color2.g & 255);
-    view.setUint8(2, color2.b & 255);
-    view.setUint8(3, 255);
-    return view.getInt32(0, false);
-  }
-  function optionalNumberAttr(name2, value) {
-    if (typeof value !== "number" || !Number.isFinite(value)) return "";
-    return ` ${name2}="${value}"`;
-  }
-  function optionalStringAttr(name2, value) {
-    if (typeof value !== "string" || !value.trim()) return "";
-    return ` ${name2}="${escapeXmlAttr(value)}"`;
-  }
-  function contrastLimitsForExportedChannel(channel, channelGroups) {
-    for (const g2 of channelGroups) {
-      for (const row2 of g2.channels) {
-        if (row2.channelId !== channel.id) continue;
-        return {
-          lowerLimit: row2.lowerLimit,
-          upperLimit: row2.upperLimit
-        };
-      }
-    }
-    throw new Error(`No channel-group contrast for channel ${channel.id}`);
-  }
-  function buildJpegOmeTiffXml(opts) {
-    const { image: image2, channels: channels2, width, height, fileName, pixels } = opts;
-    const imageName = image2.basename || image2.id || "image";
-    const sizeC = channels2.length;
-    const channelXml = channels2.map((ch2, i2) => {
-      var _a2;
-      const id2 = escapeXmlAttr(ch2.id || `Channel:0:${i2}`);
-      const chName = escapeXmlAttr(((_a2 = ch2.name) == null ? void 0 : _a2.trim()) || `Channel ${i2}`);
-      const colorAttr = ch2.color && typeof ch2.color.r === "number" && typeof ch2.color.g === "number" && typeof ch2.color.b === "number" ? ` Color="${omeColorInt({
-        r: ch2.color.r,
-        g: ch2.color.g,
-        b: ch2.color.b
-      })}"` : "";
-      return `<Channel ID="${id2}" Name="${chName}" SamplesPerPixel="1"${colorAttr}/>`;
-    }).join("");
-    const tiffDataXml = channels2.map((_2, i2) => {
-      const uuid = escapeXmlAttr(fileName);
-      return `<TiffData FirstC="${i2}" FirstT="0" FirstZ="0" IFD="${i2}" PlaneCount="1"><UUID FileName="${uuid}">${uuid}</UUID></TiffData>`;
-    }).join("");
-    const physicalAttrs = optionalNumberAttr("PhysicalSizeX", pixels == null ? void 0 : pixels.PhysicalSizeX) + optionalNumberAttr("PhysicalSizeY", pixels == null ? void 0 : pixels.PhysicalSizeY) + optionalNumberAttr("PhysicalSizeZ", pixels == null ? void 0 : pixels.PhysicalSizeZ) + optionalStringAttr("PhysicalSizeXUnit", pixels == null ? void 0 : pixels.PhysicalSizeXUnit) + optionalStringAttr("PhysicalSizeYUnit", pixels == null ? void 0 : pixels.PhysicalSizeYUnit) + optionalStringAttr("PhysicalSizeZUnit", pixels == null ? void 0 : pixels.PhysicalSizeZUnit);
-    return `<?xml version="1.0" encoding="UTF-8"?><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd"><Image ID="Image:0" Name="${escapeXmlAttr(imageName)}"><Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="uint8" SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1" SignificantBits="8" Interleaved="false" BigEndian="false"${physicalAttrs}>${channelXml}${tiffDataXml}</Pixels></Image></OME>`;
-  }
   async function exportJpegOmeTiffImage(opts) {
-    var _a2, _b2, _c2;
-    const { directory, entry, image: image2, channels: channels2, channelGroups, fileName, transfer, signal, onProgress } = opts;
+    var _a2, _b2;
+    const { directory, layoutPlanes, image: image2, channelSources, channelGroups, fileName, transfer, signal, onProgress } = opts;
+    const channels2 = channelSources.map((s2) => s2.channel);
     if (channels2.length === 0) {
       throw new Error(`No intensity channels to export for ${image2.basename || image2.id}`);
     }
-    const loaderData = entry.loader.data;
-    if (!(loaderData == null ? void 0 : loaderData.length)) {
+    if (!layoutPlanes.length) {
       throw new Error(`Loader has no pyramid levels for ${image2.basename || image2.id}`);
     }
-    const levels = planeLevels(loaderData);
+    const levels = planeLevels(layoutPlanes);
     const channelLimits = channels2.map((ch2) => {
       const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
       return folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
     });
-    const omeXml = buildJpegOmeTiffXml({
-      image: image2,
+    const omeXml = buildOmeTiffXml({
+      imageName: image2.basename || image2.id || "image",
       channels: channels2,
       width: levels[0].width,
       height: levels[0].height,
       fileName,
-      pixels: ((_a2 = entry.loader.metadata) == null ? void 0 : _a2.Pixels) ?? null
+      pixelType: "uint8",
+      significantBits: 8
     });
     const { layouts, jobs } = planPyramid({
       levels,
@@ -175016,7 +175630,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     } catch (e2) {
       signal.removeEventListener("abort", onOuterAbort);
       try {
-        await ((_b2 = writable.abort) == null ? void 0 : _b2.call(writable));
+        await ((_a2 = writable.abort) == null ? void 0 : _a2.call(writable));
       } catch {
       }
       throw e2;
@@ -175025,9 +175639,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     let next2 = 0;
     const runJob = async (job) => {
       if (workSignal.aborted) return;
-      const plane = loaderData[job.levelIndex];
+      const source2 = channelSources[job.channelIndex];
+      const levelIndex = Math.min(job.levelIndex, source2.planes.length - 1);
+      const plane = source2.planes[levelIndex];
       const tileSize = levels[job.levelIndex].tileSize;
-      const channel = channels2[job.channelIndex];
+      const channel = source2.channel;
       const limits = channelLimits[job.channelIndex];
       const tile = await plane.getTile({
         selection: {
@@ -175088,7 +175704,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       } catch {
       }
       try {
-        await ((_c2 = writable.abort) == null ? void 0 : _c2.call(writable));
+        await ((_b2 = writable.abort) == null ? void 0 : _b2.call(writable));
       } catch {
       }
       throw e2;
@@ -175102,77 +175718,115 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (omeLoaderEntries.length === 0) {
       throw new Error("OME-TIFF export needs an OME or DICOM source image loaded.");
     }
-    if (channelGroups.length === 0 || !channelGroups.some((g2) => g2.channels.length > 0)) {
-      throw new Error("Add a channel group with at least one channel before exporting OME-TIFF.");
-    }
-    const candidateImages = omeLoaderEntries.map((e2) => images.find((im) => im.id === e2.sourceImageId)).filter((im) => !!im);
-    assertNoSelectedMaskChannels(candidateImages, channelGroups);
-    const usedNames = /* @__PURE__ */ new Set();
-    const remappedImages = [];
-    let totalTiles = 0;
-    const work = [];
+    const perImage = [];
     for (const entry of omeLoaderEntries) {
       const image2 = images.find((im) => im.id === entry.sourceImageId);
       if (!image2) continue;
-      const channels2 = groupIntensityChannelsForOmeExport(image2, channelGroups);
-      if (channels2.length === 0) continue;
-      const loaderData = entry.loader.data;
-      if (!(loaderData == null ? void 0 : loaderData.length)) continue;
-      const levels = planeLevels(loaderData);
-      totalTiles += tileCountForLevels(levels, channels2.length);
-      work.push({
+      const planes = loaderPlanesOrUndef(entry);
+      if (!planes) continue;
+      const intensity = groupIntensityChannelsForOmeExport(image2, channelGroups);
+      const masks = groupMaskChannelsForOmeExport(image2, channelGroups);
+      if (intensity.length === 0 && masks.length === 0) continue;
+      perImage.push({
         entry,
         image: image2,
-        channels: channels2,
-        fileName: omeTiffExportFileName(image2, usedNames)
+        planes,
+        intensity,
+        masks
       });
     }
-    if (work.length === 0) {
-      throw new Error("No channel-group intensity channels available for OME-TIFF export.");
+    const imageOrder = new Map(images.map((im, i2) => [
+      im.id,
+      i2
+    ]));
+    const byDoc = (a2, b2) => (imageOrder.get(a2.image.id) ?? 0) - (imageOrder.get(b2.image.id) ?? 0);
+    const intensityItems = perImage.filter((w2) => w2.intensity.length > 0).sort(byDoc);
+    const maskItems = perImage.filter((w2) => w2.masks.length > 0).sort(byDoc);
+    if (intensityItems.length === 0 && maskItems.length === 0) {
+      throw new Error("No channels available for OME-TIFF export.");
     }
+    let totalTiles = 0;
+    for (const item2 of intensityItems) {
+      totalTiles += tileCountForLevels(planeLevels(item2.planes), item2.intensity.length);
+    }
+    for (const item2 of maskItems) {
+      totalTiles += maskExportTileCount(item2.entry, item2.masks.length);
+    }
+    const { intensityFileNames, maskFileNames } = allocateOmeTiffExportFileNames(intensityItems.map((item2) => item2.image), maskItems.map((item2) => item2.image));
     let completed = 0;
     onProgress == null ? void 0 : onProgress(0, totalTiles);
-    for (const item2 of work) {
+    const bump = (delta) => {
+      completed += delta;
+      onProgress == null ? void 0 : onProgress(completed, totalTiles);
+    };
+    const remappedById = /* @__PURE__ */ new Map();
+    const insertedAfter = /* @__PURE__ */ new Map();
+    for (let i2 = 0; i2 < intensityItems.length; i2++) {
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-      remappedImages.push(await exportJpegOmeTiffImage({
+      const item2 = intensityItems[i2];
+      let jpegImage = await exportJpegOmeTiffImage({
+        directory,
+        layoutPlanes: item2.planes,
+        image: item2.image,
+        channelSources: item2.intensity.map((channel) => ({
+          channel,
+          planes: item2.planes
+        })),
+        channelGroups,
+        fileName: intensityFileNames[i2],
+        transfer: exportTransferForImage(item2.image, transfer),
+        signal,
+        onProgress: bump
+      });
+      if (item2.masks.length > 0) {
+        jpegImage = {
+          ...jpegImage,
+          contentRole: "intensity"
+        };
+      }
+      remappedById.set(item2.image.id, jpegImage);
+    }
+    for (let i2 = 0; i2 < maskItems.length; i2++) {
+      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+      const item2 = maskItems[i2];
+      const splitFromIntensity = remappedById.has(item2.image.id);
+      const maskSource = splitFromIntensity ? {
+        ...item2.image,
+        id: crypto.randomUUID()
+      } : item2.image;
+      const maskImage = await exportZlibOmeTiffImage({
         directory,
         entry: item2.entry,
-        image: item2.image,
-        channels: item2.channels,
-        channelGroups,
-        fileName: item2.fileName,
-        transfer,
+        image: maskSource,
+        channels: item2.masks,
+        fileName: maskFileNames[i2],
         signal,
-        onProgress: (delta) => {
-          completed += delta;
-          onProgress == null ? void 0 : onProgress(completed, totalTiles);
-        }
-      }));
+        onProgress: bump
+      });
+      if (splitFromIntensity) {
+        const extra = insertedAfter.get(item2.image.id) ?? [];
+        extra.push(maskImage);
+        insertedAfter.set(item2.image.id, extra);
+      } else {
+        remappedById.set(item2.image.id, maskImage);
+      }
     }
-    const remappedById = new Map(remappedImages.map((image2) => [
-      image2.id,
-      image2
-    ]));
-    return images.map((im) => remappedById.get(im.id) ?? im);
+    return stitchOmeTiffExportImages(images, remappedById, insertedAfter, /* @__PURE__ */ new Set());
   }
-  const imageExporter = "_imageExporter_7b87i_1";
-  const exportStatus = "_exportStatus_7b87i_13";
-  const dismissButton = "_dismissButton_7b87i_19";
-  const progressBar = "_progressBar_7b87i_33";
-  const progressBarDone = "_progressBarDone_7b87i_54";
-  const etaLine = "_etaLine_7b87i_64";
-  const exportMessage = "_exportMessage_7b87i_71";
-  const transferToggle = "_transferToggle_7b87i_79";
-  const confirmActions = "_confirmActions_7b87i_89";
+  const imageExporter = "_imageExporter_1x24y_1";
+  const exportStatus = "_exportStatus_1x24y_13";
+  const dismissButton = "_dismissButton_1x24y_19";
+  const progressBar = "_progressBar_1x24y_33";
+  const etaLine = "_etaLine_1x24y_60";
+  const exportMessage = "_exportMessage_1x24y_67";
+  const confirmActions = "_confirmActions_1x24y_85";
   const styles$b = {
     imageExporter,
     exportStatus,
     dismissButton,
     progressBar,
-    progressBarDone,
     etaLine,
     exportMessage,
-    transferToggle,
     confirmActions
   };
   const formatMinutesLeft = (ms) => {
@@ -175189,18 +175843,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (elapsed <= 0) return null;
     return (total - completed) * elapsed / completed;
   };
-  const toSettingsInternal = (loader, modality, activeChannelGroupId, channelVisibilities, channelGroupRowVisibilities, toSettings2, loaderSourceImageId) => {
-    return toSettings2(activeChannelGroupId, modality, loader ?? void 0, channelVisibilities, loaderSourceImageId, channelGroupRowVisibilities);
-  };
   const toFilename = (index2) => {
     const level = -index2.z;
     const { x: x2, y: y2 } = index2;
     return `${level}_${x2}_${y2}.jpg`;
   };
-  const exportTile = async (index2, loader, signal, transfer) => {
+  const exportTile = async (index2, signal) => {
     const filename2 = toFilename(index2);
     const level = Math.abs(index2.z);
-    const z_loader = loader[level];
+    const z_loader = index2.loader[level];
     const selection = {
       t: 0,
       z: 0,
@@ -175221,7 +175872,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       data: data2,
       lowerLimit: index2.lowerLimit,
       upperLimit: index2.upperLimit,
-      transfer
+      transfer: index2.transfer
     });
     if (signal.aborted) return;
     const fh2 = await index2.dh.getFileHandle(filename2, {
@@ -175231,14 +175882,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     await write.write(jpeg);
     await write.close();
   };
-  const createCRange = async (channelGroups, imageChannels, directory_handle, transfer) => {
-    const pending = channelGroups.flatMap(({ channels: channels2 }) => channels2.map(async ({ channelId, lowerLimit, upperLimit }) => {
-      const c2 = imageChannels[channelId];
-      if (c2 === void 0) {
-        return null;
-      }
-      const folderLimits = folderLimitsForTransfer(transfer, lowerLimit, upperLimit);
-      const folderName = await jpegPyramidFolderName(channelId, folderLimits.lowerLimit, folderLimits.upperLimit);
+  const createCRange = async (channels2, directory_handle, planesByImageId) => {
+    const pending = channels2.map(async (ch2) => {
+      const loader = planesByImageId.get(ch2.sourceImageId);
+      if (!(loader == null ? void 0 : loader.length)) return null;
+      const folderName = await jpegPyramidFolderName(ch2.channelId, ch2.lowerLimit, ch2.upperLimit);
       const dh2 = await directory_handle.getDirectoryHandle(folderName, {
         create: true
       });
@@ -175247,23 +175895,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
       const write = await fh2.createWritable();
       await write.write(JSON.stringify({
-        channel: c2,
-        channelId,
-        lowerLimit,
-        upperLimit
+        channel: ch2.index,
+        channelId: ch2.channelId,
+        lowerLimit: ch2.lowerLimit,
+        upperLimit: ch2.upperLimit
       }, null, 2));
       await write.close();
       return {
         z: 0,
         x: 0,
         y: 0,
-        c: c2,
+        c: ch2.index,
         dh: dh2,
         encoded: folderName,
-        lowerLimit,
-        upperLimit
+        lowerLimit: ch2.lowerLimit,
+        upperLimit: ch2.upperLimit,
+        loader,
+        transfer: ch2.transfer
       };
-    }));
+    });
     const resolved = await Promise.all(pending);
     return resolved.filter((v2) => v2 !== null);
   };
@@ -175308,13 +175958,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
   };
   const initialize = (inputs) => {
-    const { loader, cRange } = inputs;
-    const tileProps = toTileLayer(loader);
-    const mz = Math.abs(tileProps.minZoom || 0) + 1;
-    const zoomRange = [
-      ...new Array(mz).keys()
-    ];
-    const zr = zoomRange.reverse().map((z2) => -z2);
+    const { cRange } = inputs;
     const cRangeUnique = [];
     const cEncodedSet = /* @__PURE__ */ new Set();
     for (const index2 of cRange) {
@@ -175324,30 +175968,43 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         cRangeUnique.push(index2);
       }
     }
-    const indices = [].concat(...zr.map((zoom) => {
-      const counts = toTileCounts({
-        zoom,
-        tileProps
-      });
-      const xRange = [
-        ...new Array(counts.x).keys()
-      ];
-      const yRange = [
-        ...new Array(counts.y).keys()
-      ];
-      return [].concat(...xRange.map((x2) => {
-        return [].concat(...yRange.map((y2) => {
-          return cRangeUnique.map((opts) => {
-            return {
+    const indices = cRangeUnique.flatMap((opts) => {
+      const tileProps2 = toTileLayer(opts.loader);
+      const mz = Math.abs(tileProps2.minZoom || 0) + 1;
+      const zr = [
+        ...new Array(mz).keys()
+      ].reverse().map((z2) => -z2);
+      return zr.flatMap((zoom) => {
+        const counts = toTileCounts({
+          zoom,
+          tileProps: tileProps2
+        });
+        const tiles = [];
+        for (let x2 = 0; x2 < counts.x; x2++) {
+          for (let y2 = 0; y2 < counts.y; y2++) {
+            tiles.push({
               ...opts,
               z: zoom,
               x: x2,
               y: y2
-            };
-          });
-        }));
-      }));
-    }));
+            });
+          }
+        }
+        return tiles;
+      });
+    });
+    const tileProps = cRangeUnique[0] != null ? toTileLayer(cRangeUnique[0].loader) : {
+      id: "Tiled-Image-0",
+      tileSize: 1024,
+      extent: [
+        0,
+        0,
+        0,
+        0
+      ],
+      minZoom: 0,
+      maxZoom: 0
+    };
     return {
       indices,
       tileProps
@@ -175361,49 +176018,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return needs.every((x2) => x2 in o2 && o2[x2] !== null);
   }
   const ImageExporter = (props) => {
-    const { viewerConfig } = props;
     const { omeLoaderEntries, dicomIndexList } = props;
-    const exportMode = props.exportMode ?? "jpeg-pyramid";
-    const { activeChannelGroupId, channelVisibilities, channelGroupRowVisibilities } = useAppStore();
-    const mainSettingsOmeList = reactExports.useMemo(() => {
-      const modality = "Colorimetric";
-      return omeLoaderEntries.map(({ loader: loader2, sourceImageId }) => toSettingsInternal(loader2, modality, activeChannelGroupId, channelVisibilities, channelGroupRowVisibilities, viewerConfig.toSettings, sourceImageId));
-    }, [
-      omeLoaderEntries,
-      activeChannelGroupId,
-      channelVisibilities,
-      channelGroupRowVisibilities,
-      viewerConfig.toSettings
-    ]);
-    const mainSettingsDicomList = reactExports.useMemo(() => {
-      return dicomIndexList.map((dicomIndex) => {
-        const { modality } = dicomIndex;
-        return toSettingsInternal(dicomIndex.loader, modality, activeChannelGroupId, channelVisibilities, channelGroupRowVisibilities, viewerConfig.toSettings);
-      });
-    }, [
-      dicomIndexList,
-      activeChannelGroupId,
-      channelVisibilities,
-      channelGroupRowVisibilities,
-      viewerConfig.toSettings
-    ]);
-    const mainSettingsList = reactExports.useMemo(() => omeLoaderEntries.length > 0 ? mainSettingsOmeList : mainSettingsDicomList, [
-      omeLoaderEntries,
-      mainSettingsOmeList,
-      mainSettingsDicomList
-    ]);
     const { directory_handle } = props;
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
-    const imageChannels = reactExports.useMemo(() => {
-      return Object.fromEntries([].concat(...images.map(({ channels: channels2 }) => {
-        return channels2.map(({ id: id2, index: index2 }) => [
-          id2,
-          index2
-        ]);
-      })));
+    const planesByImageId = reactExports.useMemo(() => {
+      var _a2;
+      const m2 = /* @__PURE__ */ new Map();
+      for (const e2 of omeLoaderEntries) {
+        const data2 = e2.loader.data;
+        if ((data2 == null ? void 0 : data2.length) && e2.sourceImageId) m2.set(e2.sourceImageId, data2);
+      }
+      for (const d2 of dicomIndexList) {
+        if (d2.sourceImageId && ((_a2 = d2.loader.data) == null ? void 0 : _a2.length) && !m2.has(d2.sourceImageId)) {
+          m2.set(d2.sourceImageId, d2.loader.data);
+        }
+      }
+      return m2;
     }, [
-      images
+      omeLoaderEntries,
+      dicomIndexList
     ]);
     const [progress, setProgress] = reactExports.useState({
       completed: 0,
@@ -175414,18 +176048,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const [nowMs, setNowMs] = reactExports.useState(() => performance.now());
     const [cRange, setCRange] = reactExports.useState(null);
     const [exportError, setExportError] = reactExports.useState(null);
-    const [jpegTransfer, setJpegTransfer] = reactExports.useState(() => jpegTransferFromImageSource(useDocumentStore.getState().metadata.imageSource));
-    const [mode, setMode] = reactExports.useState(() => {
-      if (exportMode === "remote-url") return "remote-url";
-      if (isJpegOmeTiffImageSource(useDocumentStore.getState().metadata.imageSource)) {
-        return "jpeg-ome-tiff";
-      }
-      return exportMode;
-    });
+    const jpegTransfer = "cube-root";
+    const [mode] = reactExports.useState(() => props.exportMode === "remote-url" ? "remote-url" : "jpeg-ome-tiff");
     const [exportArmed, setExportArmed] = reactExports.useState(false);
     const armedSnapshotRef = reactExports.useRef(null);
     const docTransfer = jpegTransferFromImageSource(useDocumentStore((s2) => s2.metadata.imageSource));
-    const canUpdateDocumentOnly = !!props.onDocumentOnlyUpdate && mode === "jpeg-pyramid" && jpegTransfer === docTransfer;
+    const canUpdateDocumentOnly = !!props.onDocumentOnlyUpdate && mode === "jpeg-ome-tiff" && jpegTransfer === docTransfer;
     const armExport = () => {
       armedSnapshotRef.current = {
         omeLoaderEntries,
@@ -175433,7 +176061,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       };
       setExportArmed(true);
     };
-    const hasChannelGroup = channelGroups.length > 0 && channelGroups.some((g2) => g2.channels.length > 0);
+    const pyramidChannels = reactExports.useMemo(() => jpegPyramidExportChannels(images, channelGroups, jpegTransfer), [
+      images,
+      channelGroups
+    ]);
     reactExports.useEffect(() => {
       if (mode === "remote-url" || mode === "jpeg-ome-tiff") {
         setCRange([]);
@@ -175443,14 +176074,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         setCRange(null);
         return;
       }
-      if (!hasChannelGroup) {
+      if (pyramidChannels.length === 0) {
         setCRange([]);
         setExportError("Add a channel group with at least one channel before exporting.");
         return;
       }
       setExportError(null);
       let cancelled = false;
-      void createCRange(channelGroups, imageChannels, directory_handle, jpegTransfer).then((range2) => {
+      void createCRange(pyramidChannels, directory_handle, planesByImageId).then((range2) => {
         if (!cancelled) setCRange(range2);
       }).catch((e2) => {
         if (cancelled) return;
@@ -175461,32 +176092,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         cancelled = true;
       };
     }, [
-      channelGroups,
-      imageChannels,
+      pyramidChannels,
       directory_handle,
-      hasChannelGroup,
+      planesByImageId,
       mode,
-      exportArmed,
-      jpegTransfer
-    ]);
-    const loader = reactExports.useMemo(() => mainSettingsList.length > 0 ? mainSettingsList[0].loader.data : null, [
-      mainSettingsList
+      exportArmed
     ]);
     const state = reactExports.useMemo(() => {
       if (mode !== "jpeg-pyramid" || !exportArmed) return null;
-      if (loader === null || cRange === null) {
+      if (cRange === null) {
         return null;
       }
       const init2 = initialize({
-        loader,
         cRange
       });
-      if (isFullState(init2) && (loader == null ? void 0 : loader.length)) {
+      if (isFullState(init2)) {
         return init2;
       }
       return null;
     }, [
-      loader,
       cRange,
       mode,
       exportArmed
@@ -175612,12 +176236,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       mode,
       exportArmed,
       exportError,
-      directory_handle,
-      jpegTransfer
+      directory_handle
     ]);
     reactExports.useEffect(() => {
       if (mode !== "jpeg-pyramid" || !exportArmed || exportError) return;
-      if (!state || !(loader == null ? void 0 : loader.length)) return;
+      if (!state) return;
       if (cRange !== null && cRange.length === 0) {
         setExportError("No exportable channels in the current channel groups.");
         return;
@@ -175657,12 +176280,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             if (i2 >= total2) return;
             const index2 = indices[i2];
             try {
-              await exportTile(index2, loader, abort.signal, jpegTransfer);
+              await exportTile(index2, abort.signal);
             } catch (e2) {
               if (abort.signal.aborted || cancelled) return;
               console.error(e2 instanceof Error ? e2.message : e2);
               try {
-                await exportTile(index2, loader, abort.signal, jpegTransfer);
+                await exportTile(index2, abort.signal);
               } catch (e22) {
                 console.error(e22 instanceof Error ? e22.message : e22);
                 failExport(e22);
@@ -175729,13 +176352,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       };
     }, [
       state,
-      loader,
       cRange,
       exportError,
       directory_handle,
       mode,
-      exportArmed,
-      jpegTransfer
+      exportArmed
     ]);
     const { completed, total, done, startedAt } = progress;
     let ratio = done ? 1 : 0;
@@ -175795,39 +176416,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         children: [
           jsxRuntimeExports.jsx("div", {
             className: styles$b.exportMessage,
-            children: mode === "jpeg-ome-tiff" ? "Export JPEG OME-TIFF" : "Export JPEG pyramid"
-          }),
-          jsxRuntimeExports.jsxs("label", {
-            className: styles$b.transferToggle,
-            children: [
-              jsxRuntimeExports.jsx("input", {
-                type: "checkbox",
-                checked: mode === "jpeg-ome-tiff",
-                onChange: (e2) => {
-                  if (e2.target.checked) {
-                    setMode("jpeg-ome-tiff");
-                  } else {
-                    setMode("jpeg-pyramid");
-                  }
-                }
-              }),
-              jsxRuntimeExports.jsx("span", {
-                children: "Single-file OME-TIFF"
-              })
-            ]
-          }),
-          jsxRuntimeExports.jsxs("label", {
-            className: styles$b.transferToggle,
-            children: [
-              jsxRuntimeExports.jsx("input", {
-                type: "checkbox",
-                checked: jpegTransfer === "cube-root",
-                onChange: (e2) => setJpegTransfer(e2.target.checked ? "cube-root" : "contrast")
-              }),
-              jsxRuntimeExports.jsx("span", {
-                children: "Cube-root intensity encoding"
-              })
-            ]
+            children: "Export JPEG OME-TIFF (cube-root IF)"
           }),
           jsxRuntimeExports.jsxs("div", {
             className: styles$b.confirmActions,
@@ -176165,33 +176754,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const { width: imageWidth, height: imageHeight } = effectiveReferenceImagePixelSize(viewerRefSize, docImageWidth, docImageHeight);
     const { activeStoryIndex, setActiveStory, activeChannelGroupId, setActiveChannelGroup, importWaypointShapes, setTargetWaypointCamera } = useAppStore();
     const previousActiveStoryIndexRef = reactExports.useRef(null);
+    const groupAppliedForStoryRef = reactExports.useRef(null);
+    const cameraAppliedForStoryRef = reactExports.useRef(null);
     reactExports.useEffect(() => {
       if (waypoints.length === 0) return;
       if (imageWidth === 0 || imageHeight === 0) return;
       if (activeStoryIndex === null) return;
+      if (cameraAppliedForStoryRef.current === activeStoryIndex) return;
       const story2 = waypoints[activeStoryIndex];
-      if (story2) {
-        const idx = activeStoryIndex;
-        const prev = previousActiveStoryIndexRef.current;
-        const store = useAppStore.getState();
-        if (prev !== null && prev !== idx) {
-          store.persistImportedShapesToStory(prev);
-        }
-        previousActiveStoryIndexRef.current = idx;
-        importWaypointShapes(story2, true, shapes);
-        const authoringMap = useAppStore.getState().waypointAuthoring;
-        const wp = waypointToConfigWaypoint(story2, authoringMap.get(story2.id));
-        if (imageWidth > 0 && imageHeight > 0) {
-          setTargetWaypointCamera(wp);
-        }
-        const gid = wp.groupId;
-        if (channelGroups.length > 0 && gid) {
-          const foundGroup = channelGroups.find((g2) => g2.id === gid) || channelGroups[0];
-          if (foundGroup) {
-            setActiveChannelGroup(foundGroup.id);
-          }
-        }
+      if (!story2) return;
+      const idx = activeStoryIndex;
+      const prev = previousActiveStoryIndexRef.current;
+      if (prev !== null && prev !== idx) {
+        useAppStore.getState().persistImportedShapesToStory(prev);
       }
+      previousActiveStoryIndexRef.current = idx;
+      cameraAppliedForStoryRef.current = idx;
+      groupAppliedForStoryRef.current = null;
+      importWaypointShapes(story2, true, shapes);
+      const authoringMap = useAppStore.getState().waypointAuthoring;
+      const wp = waypointToConfigWaypoint(story2, authoringMap.get(story2.id));
+      setTargetWaypointCamera(wp);
     }, [
       waypoints,
       activeStoryIndex,
@@ -176199,8 +176782,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       imageHeight,
       shapes,
       importWaypointShapes,
-      setTargetWaypointCamera,
+      setTargetWaypointCamera
+    ]);
+    reactExports.useEffect(() => {
+      if (activeStoryIndex === null) return;
+      if (channelGroups.length === 0) return;
+      const story2 = waypoints[activeStoryIndex];
+      if (!story2) return;
+      if (groupAppliedForStoryRef.current === activeStoryIndex) return;
+      const authoringMap = useAppStore.getState().waypointAuthoring;
+      const wp = waypointToConfigWaypoint(story2, authoringMap.get(story2.id));
+      const gid = wp.groupId;
+      const foundGroup = gid ? channelGroups.find((g2) => g2.id === gid) || channelGroups[0] : channelGroups[0];
+      if (!foundGroup) return;
+      groupAppliedForStoryRef.current = activeStoryIndex;
+      setActiveChannelGroup(foundGroup.id);
+    }, [
+      activeStoryIndex,
       channelGroups,
+      waypoints,
       setActiveChannelGroup
     ]);
     reactExports.useEffect(() => {
@@ -176226,36 +176826,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         setActiveChannelGroup(found_group.id);
       }
     };
-    const updateViewState = (storyIndex) => {
-      const story2 = waypoints[storyIndex];
-      if (!story2) return;
-      if (imageWidth > 0 && imageHeight > 0) {
-        const auth = useAppStore.getState().waypointAuthoring.get(story2.id);
-        setTargetWaypointCamera(waypointToConfigWaypoint(story2, auth));
-      }
-    };
     const storyFirst = () => {
       setActiveStory(0);
       updateGroup(0);
-      updateViewState(0);
     };
     const storyLeft = () => {
       const active_story = Math.max(0, activeStoryIndex - 1);
       setActiveStory(active_story);
       updateGroup(active_story);
-      updateViewState(active_story);
     };
     const storyRight = () => {
       const active_story = Math.min(waypoints.length - 1, activeStoryIndex + 1);
       setActiveStory(active_story);
       updateGroup(active_story);
-      updateViewState(active_story);
     };
     const storyAt = (i2) => {
       const active_story = Math.min(waypoints.length - 1, Math.max(0, i2));
       setActiveStory(active_story);
       updateGroup(active_story);
-      updateViewState(active_story);
     };
     const iconPx = 16;
     const toc_button = jsxRuntimeExports.jsx("button", {
@@ -176757,20 +177345,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...plainProps
     });
   };
-  const channelsSection = "_channelsSection_g6043_1";
-  const channelsSectionHeader = "_channelsSectionHeader_g6043_9";
-  const sectionLabel = "_sectionLabel_g6043_18";
-  const toolbarSlot = "_toolbarSlot_g6043_29";
-  const legendBody = "_legendBody_g6043_37";
-  const imageSection = "_imageSection_g6043_44";
-  const imageSectionLabel = "_imageSectionLabel_g6043_50";
-  const channelList = "_channelList_g6043_62";
-  const legendRowWrap = "_legendRowWrap_g6043_68";
-  const rowClickArea = "_rowClickArea_g6043_83";
-  const swatch = "_swatch_g6043_97";
-  const swatchFilled = "_swatchFilled_g6043_107";
-  const legendDivider = "_legendDivider_g6043_111";
-  const nameSlot = "_nameSlot_g6043_116";
+  const channelsSection = "_channelsSection_60gku_1";
+  const channelsSectionHeader = "_channelsSectionHeader_60gku_9";
+  const sectionLabel = "_sectionLabel_60gku_18";
+  const toolbarSlot = "_toolbarSlot_60gku_29";
+  const legendBody = "_legendBody_60gku_37";
+  const imageSection = "_imageSection_60gku_44";
+  const imageSectionLabel = "_imageSectionLabel_60gku_50";
+  const channelList = "_channelList_60gku_62";
+  const legendRowWrap = "_legendRowWrap_60gku_68";
+  const rowClickArea = "_rowClickArea_60gku_83";
+  const swatchButton = "_swatchButton_60gku_95";
+  const nameButton = "_nameButton_60gku_96";
+  const swatch = "_swatch_60gku_95";
+  const swatchFilled = "_swatchFilled_60gku_130";
+  const legendDivider = "_legendDivider_60gku_134";
+  const nameSlot = "_nameSlot_60gku_139";
   const styles$6 = {
     channelsSection,
     channelsSectionHeader,
@@ -176782,6 +177372,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     channelList,
     legendRowWrap,
     rowClickArea,
+    swatchButton,
+    nameButton,
     swatch,
     swatchFilled,
     legendDivider,
@@ -176863,7 +177455,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const LegendRow = (props) => {
     const { channel } = props;
     const channelName2 = channel.name;
-    const { idx, g: g2, onClick } = props;
+    const { idx, g: g2, onColorClick } = props;
     const rowVisible = props.hiddenInViewer ? false : legendRowVisible(channel, props.channelVisibilities, props.channelGroupRowVisibilities);
     const onPop = () => {
       props.popChannel({
@@ -176881,29 +177473,40 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       cache: /* @__PURE__ */ new Map(),
       uuid
     };
-    const coreUI = jsxRuntimeExports.jsxs("button", {
-      type: "button",
-      onClick,
+    const coreUI = jsxRuntimeExports.jsxs("div", {
       className: styles$6.rowClickArea,
-      title: rowVisible ? `Hide ${channelName2}` : `Show ${channelName2}`,
       style: {
         opacity: rowVisible ? 1 : 0.55
       },
       children: [
-        jsxRuntimeExports.jsx("div", {
-          className: [
-            styles$6.swatch,
-            rowVisible ? styles$6.swatchFilled : null
-          ].filter(Boolean).join(" "),
-          style: {
-            "--swatch-color": `#${channel.color}`
-          }
+        jsxRuntimeExports.jsx("button", {
+          type: "button",
+          className: styles$6.swatchButton,
+          onClick: onColorClick,
+          title: `Change color of ${channelName2}`,
+          "aria-label": `Change color of ${channelName2}`,
+          children: jsxRuntimeExports.jsx("div", {
+            className: [
+              styles$6.swatch,
+              rowVisible ? styles$6.swatchFilled : null
+            ].filter(Boolean).join(" "),
+            style: {
+              "--swatch-color": `#${channel.color}`
+            }
+          })
         }),
-        jsxRuntimeExports.jsx("span", {
-          className: styles$6.nameSlot,
-          children: jsxRuntimeExports.jsx(EditableText, {
-            ...statusProps,
-            children: channelName2
+        jsxRuntimeExports.jsx("button", {
+          type: "button",
+          className: styles$6.nameButton,
+          onClick: () => props.toggleChannel(channel),
+          title: rowVisible ? `Hide ${channelName2}` : `Show ${channelName2}`,
+          "aria-label": rowVisible ? `Hide ${channelName2}` : `Show ${channelName2}`,
+          children: jsxRuntimeExports.jsx("span", {
+            className: styles$6.nameSlot,
+            children: jsxRuntimeExports.jsx(EditableText, {
+              ...statusProps,
+              children: channelName2
+            })
           })
         })
       ]
@@ -177060,7 +177663,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     }),
                     popChannel: props.popChannel ?? (() => {
                     }),
-                    onClick: (e2) => {
+                    onColorClick: (e2) => {
                       const anchor = e2.currentTarget.getBoundingClientRect();
                       handleColorPickerOpen(anchor, c2);
                     }
@@ -177178,6 +177781,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           const overlayChannels = [];
           if (hasStackVisibilityMap) {
             for (const sc2 of imageSources) {
+              if (sourceChannelInAnyGroup(docChannelGroups, sc2.id)) continue;
               if (!isStackVisible(channelVisibilities, sc2.id)) continue;
               const colorIdx = indexById.get(sc2.id) ?? 0;
               overlayChannels.push(legendChannelFromSource(sc2, colorIdx));
@@ -177243,53 +177847,40 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     const updateChannel = reactExports.useCallback((groupId, channelId, newChannel) => {
       const copy_name = (g2) => `${g2.name} copy`;
+      const is_copied = (g2) => " copy" === g2.name.slice(-5);
       const id_group = groups.find(({ id: id2 }) => groupId === id2);
-      const group2 = groups.find(({ name: name2 }) => name2 === copy_name(id_group)) || id_group;
-      const update = (gc2) => {
-        if (gc2.channelId === channelId) {
-          return {
-            ...gc2,
-            ...newChannel
-          };
-        }
-        return gc2;
-      };
-      const copy2 = (g2) => ({
+      if (!id_group) return;
+      const existingCopy = groups.find(({ name: name2 }) => name2 === copy_name(id_group));
+      const group2 = existingCopy || id_group;
+      const withColor = (g2) => ({
         ...g2,
-        name: copy_name(g2),
+        channels: g2.channels.map((gc2) => gc2.channelId === channelId ? {
+          ...gc2,
+          ...newChannel
+        } : gc2)
+      });
+      if (is_copied(group2)) {
+        syncGroupState(groups.map((g2) => g2.id === group2.id ? withColor(g2) : g2));
+        setActiveChannelGroup(group2.id);
+        return;
+      }
+      const colored = withColor(group2);
+      const new_group = {
+        ...colored,
+        name: copy_name(group2),
         id: crypto.randomUUID(),
-        channels: g2.channels.map((gc2) => ({
-          ...update(gc2),
+        channels: colored.channels.map((gc2) => ({
+          ...gc2,
           id: crypto.randomUUID()
         }))
-      });
-      const is_copied = (g2) => " copy" === g2.name.slice(-5);
-      const new_group = is_copied(group2) ? null : copy2(group2);
-      if (new_group) {
-        syncGroupState([
-          ...groups,
-          new_group
-        ]);
-        setActiveChannelGroup(new_group.id);
-      } else {
-        const found = findSourceChannel(sourceChannels, channelId);
-        setActiveChannelGroup(group2.id);
-        if (found) {
-          console.log({
-            kind: "color",
-            sourceChannelId: found.id,
-            ...newChannel.color
-          });
-          useAppStore.getState().setChannelRendering({
-            kind: "color",
-            sourceChannelId: found.id,
-            ...newChannel.color
-          });
-        }
-      }
+      };
+      syncGroupState([
+        ...groups,
+        new_group
+      ]);
+      setActiveChannelGroup(new_group.id);
     }, [
       groups,
-      sourceChannels,
       syncGroupState,
       setActiveChannelGroup
     ]);
@@ -177390,7 +177981,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     return jsxRuntimeExports.jsx("output", {
       className: "deck-widget-loading",
-      style: positionStyles,
+      style: {
+        ...positionStyles,
+        pointerEvents: "none"
+      },
       title: label2,
       "aria-live": "polite",
       "aria-label": label2,
@@ -177855,17 +178449,6 @@ void main() {
     }, []);
     return windowSize;
   };
-  const toFlatViewState = (v2) => {
-    const inner = (v2 == null ? void 0 : v2.ortho) ?? v2;
-    if (!inner || !Array.isArray(inner.target) || inner.target.length < 3) return null;
-    const zoomVal = inner.zoom;
-    const zoom = typeof zoomVal === "number" ? zoomVal : Array.isArray(zoomVal) && typeof zoomVal[0] === "number" ? zoomVal[0] : null;
-    if (zoom === null) return null;
-    return {
-      zoom,
-      target: inner.target.slice(0, 3)
-    };
-  };
   const ImageViewer = (props) => {
     const windowSize = useWindowSize();
     const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2 } = props;
@@ -178003,7 +178586,7 @@ void main() {
       viewState,
       viewportSize
     };
-    const ignoreNextViewStateChangeRef = reactExports.useRef(false);
+    const waypointTransitionGenRef = reactExports.useRef(0);
     const targetWaypointCamera = useAppStore((state) => state.targetWaypointCamera);
     const clearTargetWaypointCamera = useAppStore((state) => state.clearTargetWaypointCamera);
     const refImageWidth = Number(imageShape.x) || 0;
@@ -178103,44 +178686,31 @@ void main() {
       return () => registerViewerLiveSnapshotReader(null);
     }, []);
     reactExports.useEffect(() => {
-      if (targetWaypointCamera === null) {
-        return;
-      }
-      if (viewportSize.width <= 0 || viewportSize.height <= 0) {
-        return;
-      }
-      if (refImageWidth <= 0 || refImageHeight <= 0) {
-        return;
-      }
+      if (targetWaypointCamera === null) return;
+      if (viewportSize.width <= 0 || viewportSize.height <= 0) return;
+      if (refImageWidth <= 0 || refImageHeight <= 0) return;
       const vs2 = getWaypointViewState(targetWaypointCamera, refImageWidth, refImageHeight, viewportSize.width, viewportSize.height);
       if (!vs2) {
         clearTargetWaypointCamera();
         return;
       }
-      setViewState((currentViewState) => ({
-        ...currentViewState,
-        transitionDuration: 0
-      }));
-      const clearId = window.setTimeout(() => {
-        const viewStateWithTransition = {
-          ...vs2,
-          transitionDuration: 1e3,
-          transitionInterpolator: new LinearInterpolator([
-            "target",
-            "zoom"
-          ]),
-          transitionEasing: (t2) => t2 === 1 ? 1 : 1 - 2 ** (-10 * t2)
-        };
-        setViewState(viewStateWithTransition);
-        setViewportZoom(vs2.zoom);
-        clearTargetWaypointCamera();
-      }, 0);
-      return () => {
-        window.clearTimeout(clearId);
-      };
+      const gen = ++waypointTransitionGenRef.current;
+      setViewState({
+        ...withOrthoZoom(vs2),
+        transitionDuration: 1e3,
+        transitionInterpolator: WAYPOINT_TRANSITION_INTERPOLATOR,
+        transitionEasing: (t2) => t2 === 1 ? 1 : 1 - 2 ** (-10 * t2),
+        onTransitionEnd: () => {
+          if (gen !== waypointTransitionGenRef.current) return;
+          setViewState(withOrthoZoom(vs2));
+        }
+      });
+      setViewportZoom(vs2.zoom);
+      clearTargetWaypointCamera();
     }, [
       targetWaypointCamera,
-      viewportSize,
+      viewportSize.width,
+      viewportSize.height,
       refImageWidth,
       refImageHeight,
       clearTargetWaypointCamera,
@@ -178416,7 +178986,7 @@ void main() {
       sam2Processing
     ]);
     const controllerConfig = reactExports.useMemo(() => ({
-      dragPan: activeTool === "move" && !isDragging && !hoveredShapeId,
+      dragPan: !(activeTool === "move" && !!hoveredShapeId) && !isDragging,
       dragRotate: false,
       scrollZoom: true,
       doubleClickZoom: true,
@@ -178432,27 +179002,33 @@ void main() {
     const views = reactExports.useMemo(() => [
       new OrthographicView({
         id: ORTHO_VIEW_ID,
-        controller: true
+        controller: controllerConfig
       }),
       new OrthographicView({
         id: SCALEBAR_VIEW_ID,
         controller: false
       })
-    ], []);
-    const handleViewStateChange = reactExports.useCallback(({ viewState: nextViewState }) => {
-      var _a2;
-      if (ignoreNextViewStateChangeRef.current) return;
+    ], [
+      controllerConfig
+    ]);
+    const handleViewStateChange = reactExports.useCallback(({ viewState: nextViewState, viewId, interactionState }) => {
+      if (viewId === SCALEBAR_VIEW_ID) return;
       if (isDragging) return;
-      const flat = toFlatViewState(nextViewState);
+      if ((interactionState == null ? void 0 : interactionState.isZooming) || (interactionState == null ? void 0 : interactionState.isPanning) || (interactionState == null ? void 0 : interactionState.isDragging)) {
+        waypointTransitionGenRef.current += 1;
+      }
+      const ortho2 = (nextViewState == null ? void 0 : nextViewState[ORTHO_VIEW_ID]) ?? (nextViewState == null ? void 0 : nextViewState.ortho) ?? nextViewState;
+      const flat = toFlatViewState(ortho2) ?? toFlatViewState(nextViewState);
       if (flat) {
-        setViewState(flat);
+        setViewState(withOrthoZoom(flat));
         setViewportZoom(flat.zoom);
         setViewerViewState(flat);
-      } else {
-        setViewState(nextViewState);
-        const zoom = ((_a2 = nextViewState == null ? void 0 : nextViewState.ortho) == null ? void 0 : _a2.zoom) ?? (typeof (nextViewState == null ? void 0 : nextViewState.zoom) === "number" ? nextViewState.zoom : void 0);
-        if (typeof zoom === "number") setViewportZoom(zoom);
+        return;
       }
+      if (!nextViewState) return;
+      setViewState(nextViewState);
+      const z2 = orthographicZoomOf(ortho2) ?? orthographicZoomOf(nextViewState);
+      if (z2 !== null) setViewportZoom(z2);
     }, [
       isDragging,
       setViewportZoom,
@@ -242140,8 +242716,8 @@ void main() {
     if (keys1.length !== keys2.length) {
       return false;
     }
-    for (var _i = 0, _keys = keys1; _i < _keys.length; _i++) {
-      var key2 = _keys[_i];
+    for (var _i2 = 0, _keys = keys1; _i2 < _keys.length; _i2++) {
+      var key2 = _keys[_i2];
       if (!keys2.includes(key2) || !deepEqual(obj1[key2], obj2[key2])) {
         return false;
       }
@@ -248587,7 +249163,7 @@ void main() {
     const { channelsVisible, colors, contrastLimits, selections } = meta.settings;
     const visible = channelsVisible.some((x2) => x2);
     const { imageID, pyramids, dicomLoader, rgbImage } = meta;
-    const loaderPlanes = Array.isArray(dicomLoader) ? dicomLoader : (dicomLoader == null ? void 0 : dicomLoader.data) ?? [];
+    const loaderPlanes2 = Array.isArray(dicomLoader) ? dicomLoader : (dicomLoader == null ? void 0 : dicomLoader.data) ?? [];
     const primaryKey = pyramids["0"] != null ? "0" : Object.keys(pyramids || {})[0];
     const primaryLevels = pyramids == null ? void 0 : pyramids[primaryKey];
     if (!Array.isArray(primaryLevels) || primaryLevels.length === 0) {
@@ -248603,7 +249179,7 @@ void main() {
         id: "rgb_image",
         getTileData: async ({ index: index2, signal }) => {
           const { x: x2, y: y2, z: z2 } = index2;
-          const source2 = loaderPlanes[Math.abs(-z2)];
+          const source2 = loaderPlanes2[Math.abs(-z2)];
           if (!source2) return null;
           try {
             return await source2.getTile({
@@ -248654,13 +249230,13 @@ void main() {
         }
       });
     }
-    if (!loaderPlanes[0]) {
+    if (!loaderPlanes2[0]) {
       console.error("[minerva] dicom: MultiscaleImageLayer skipped \u2014 empty loader planes", imageID);
       return null;
     }
     return new MultiscaleImageLayer({
       visible,
-      loader: loaderPlanes,
+      loader: loaderPlanes2,
       refinementStrategy: "best-available",
       id: `${imageID}-${contrastLimits.map(([l2, u2]) => `${l2}-${u2}`).join("-")}`,
       channelsVisible,
@@ -249086,7 +249662,6 @@ void main() {
     const overlayOpen = exporting || !!folderPrompt2;
     const exporterProps = {
       stopExport: props.stopExport,
-      viewerConfig: props.viewerConfig,
       dicomIndexList: props.dicomIndexList,
       omeLoaderEntries: props.omeLoaderEntries,
       directory_handle: props.directory_handle,
@@ -249179,12 +249754,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-01T20:39:21.307Z");
+    const label2 = utcShort("2026-09-03T16:25:53.093Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-09-01T20:39:21.307Z",
+      title: "2026-09-03T16:25:53.093Z",
       children: [
         "Updated ",
         label2,
@@ -250594,7 +251169,7 @@ void main() {
       this.worker.terminate();
     }
   }
-  const defaultPoolSize = ((_h = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _h.hardwareConcurrency) ?? 4;
+  const defaultPoolSize = ((_i = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _i.hardwareConcurrency) ?? 4;
   class Pool {
     constructor(size = defaultPoolSize, createWorker = () => new WorkerWrapper$1()) {
       __publicField(this, "workerWrappers", null);
@@ -250677,6 +251252,18 @@ void main() {
     contentRole: im.contentRole,
     channels: im.channels ?? []
   }) === "segmentation" ? "segmentation" : "intensity";
+  function omeLoaderForHydrate(loader, im, wrapOmeJpeg, storyTransfer) {
+    const jpegTransfer = wrapOmeJpeg ? hydrateJpegTransferForImage(im, storyTransfer) : null;
+    if (!jpegTransfer) {
+      return {
+        loader
+      };
+    }
+    return {
+      loader: wrapOmeLoaderJpegExport(loader, jpegTransfer),
+      transfer: jpegTransfer
+    };
+  }
   function resolveOmeSourceUrl(documentUrl, sourceUrl) {
     const trimmed = sourceUrl.trim();
     if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("blob:") || trimmed.startsWith("file:")) {
@@ -250726,11 +251313,8 @@ void main() {
               } : {}
             });
             omeLoaderEntries.push({
-              loader: wrapOmeJpeg ? wrapOmeLoaderJpegExport(loader, transfer) : loader,
-              sourceImageId: im.id,
-              ...wrapOmeJpeg ? {
-                transfer
-              } : {}
+              ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
+              sourceImageId: im.id
             });
           } catch (e2) {
             loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
@@ -250763,11 +251347,8 @@ void main() {
               } : {}
             });
             omeLoaderEntries.push({
-              loader: wrapOmeJpeg ? wrapOmeLoaderJpegExport(loader, transfer) : loader,
-              sourceImageId: im.id,
-              ...wrapOmeJpeg ? {
-                transfer
-              } : {}
+              ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
+              sourceImageId: im.id
             });
           } catch (e2) {
             loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
@@ -251557,7 +252138,7 @@ void main() {
       Stories: cloneConfigWaypoints(props.configWaypoints)
     }));
     const [ioState, setIoState] = reactExports.useState("IDLE");
-    const [exportMode, setExportMode] = reactExports.useState("jpeg-pyramid");
+    const [exportMode, setExportMode] = reactExports.useState("jpeg-ome-tiff");
     const [exportAllowDocumentOnly, setExportAllowDocumentOnly] = reactExports.useState(false);
     const [viewerRemountKey, setViewerRemountKey] = reactExports.useState(0);
     const [directory_handle, setDirectoryHandle] = reactExports.useState(null);
@@ -251566,16 +252147,7 @@ void main() {
     const beginExportToFolder = async (mode, dirHandle) => {
       const doc = useDocumentStore.getState();
       const storyId = doc.activeStoryId;
-      if (mode === "jpeg-pyramid") {
-        const needed = await neededJpegPyramidFolderNames(doc.channelGroups, doc.images, jpegTransferFromImageSource(doc.metadata.imageSource));
-        const existing = await listExistingPyramidFolders(dirHandle);
-        const foldersReady = needed.size === 0 || [
-          ...needed
-        ].every((name2) => existing.has(name2));
-        setExportAllowDocumentOnly(foldersReady);
-      } else {
-        setExportAllowDocumentOnly(false);
-      }
+      setExportAllowDocumentOnly(mode === "jpeg-ome-tiff" && isJpegOmeTiffImageSource(doc.metadata.imageSource));
       if (storyId) {
         try {
           await setStoryRootHandle(storyId, dirHandle);
@@ -251587,7 +252159,7 @@ void main() {
       setDirectoryHandle(dirHandle);
       setIoState("EXPORTING");
     };
-    const startExport = async (mode = "jpeg-pyramid") => {
+    const startExport = async (mode = "jpeg-ome-tiff") => {
       if (!hasDirectoryPickerAccess()) {
         window.alert("Export to a folder needs the File System Access API (directory picker). Try Chrome or Edge, or use \u201COME-TIFF URL\u201D workflows in other browsers.");
         return;
@@ -253006,7 +253578,7 @@ void main() {
           throw new Error("No export folder selected");
         }
         await writeStoryBundleSidecars(handle2, useDocumentStore.getState().toDocumentData(), {
-          mode: "jpeg-pyramid"
+          mode: "jpeg-ome-tiff"
         });
         stopExport();
       } : void 0,
@@ -253031,7 +253603,7 @@ void main() {
         onCancel: () => setExportFolderPrompt(null)
       } : null
     };
-    const { viewerConfig, loaderList, mainSettingsList, imageLayers } = useViewerLayers({
+    const { loaderList, mainSettingsList, imageLayers } = useViewerLayers({
       dicomIndexList,
       omeLoaderEntries,
       jpegLoaderEntries,
@@ -253321,7 +253893,6 @@ void main() {
         const routerProps = {
           ...mainProps,
           noLoader,
-          viewerConfig,
           dicomIndexList,
           omeLoaderEntries,
           jpegLoaderEntries,
@@ -253352,7 +253923,7 @@ void main() {
           children: [
             !presenting ? jsxRuntimeExports.jsx(StoryTitleBar, {
               onReturnToLibrary: returnToLibrary,
-              onExport: () => void startExport(canExportWithRemoteUrls(images) ? "remote-url" : "jpeg-pyramid"),
+              onExport: () => void startExport(canExportWithRemoteUrls(images) ? "remote-url" : "jpeg-ome-tiff"),
               onEnterPlaybackPreview: enterPlaybackPreview,
               playbackPreviewDisabled: _waypoints.length === 0
             }) : null,
