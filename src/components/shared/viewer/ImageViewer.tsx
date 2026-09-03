@@ -584,6 +584,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       ...withOrthoZoom(vs),
       transitionDuration: 1000,
       transitionInterpolator: WAYPOINT_TRANSITION_INTERPOLATOR,
+      transitionEasing: (t: number) => (t === 1 ? 1 : 1 - 2 ** (-10 * t)),
       onTransitionEnd: () => {
         if (gen !== waypointTransitionGenRef.current) return;
         setViewState(withOrthoZoom(vs));

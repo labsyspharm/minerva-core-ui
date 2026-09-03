@@ -187,38 +187,47 @@ function omeTiffExportBaseName(image: Image): string {
     image.basename?.replace(/\.(ome\.)?(tif|tiff)$/i, "") ||
     image.id ||
     "image";
-  return raw.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") || "image";
+  const cleaned =
+    raw.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") || "image";
+  return cleaned.replace(/-minerva$/i, "") || "image";
+}
+
+function omeTiffExportDiskName(stem: string): string {
+  return `${stem}-minerva.ome.tif`;
 }
 
 export function omeTiffExportFileName(image: Image, used: Set<string>): string {
   const base = omeTiffExportBaseName(image);
-  let name = `${base}.ome.tif`;
+  let name = omeTiffExportDiskName(base);
   let n = 2;
   while (used.has(name.toLowerCase())) {
-    name = `${base}_${n}.ome.tif`;
+    name = omeTiffExportDiskName(`${base}_${n}`);
     n += 1;
   }
   used.add(name.toLowerCase());
   return name;
 }
 
-/** Prefer `basename.ome.tif`; use `_mask` when that name is already taken. */
+/** Prefer `basename-minerva.ome.tif`; use `_mask` when that name is already taken. */
 export function omeTiffMaskExportFileName(
   image: Image,
   used: Set<string>,
 ): string {
   const base = omeTiffExportBaseName(image);
-  for (const candidate of [`${base}.ome.tif`, `${base}_mask.ome.tif`]) {
+  for (const candidate of [
+    omeTiffExportDiskName(base),
+    omeTiffExportDiskName(`${base}_mask`),
+  ]) {
     if (!used.has(candidate.toLowerCase())) {
       used.add(candidate.toLowerCase());
       return candidate;
     }
   }
   let n = 2;
-  let name = `${base}_mask_${n}.ome.tif`;
+  let name = omeTiffExportDiskName(`${base}_mask_${n}`);
   while (used.has(name.toLowerCase())) {
     n += 1;
-    name = `${base}_mask_${n}.ome.tif`;
+    name = omeTiffExportDiskName(`${base}_mask_${n}`);
   }
   used.add(name.toLowerCase());
   return name;
