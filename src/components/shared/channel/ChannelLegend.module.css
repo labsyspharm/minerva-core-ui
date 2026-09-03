@@ -81,7 +81,6 @@
 }
 
 .rowClickArea {
-  all: unset;
   box-sizing: border-box;
   color: var(--minerva-ink);
   display: flex;
@@ -89,8 +88,32 @@
   gap: 5px;
   flex: 1;
   min-width: 0;
+  font: inherit;
+  text-align: left;
+}
+
+.swatchButton,
+.nameButton {
+  all: unset;
+  box-sizing: border-box;
   cursor: pointer;
   font: inherit;
+  color: inherit;
+}
+
+.swatchButton {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 2px;
+  margin: -2px;
+}
+
+.nameButton {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
   text-align: left;
 }
 

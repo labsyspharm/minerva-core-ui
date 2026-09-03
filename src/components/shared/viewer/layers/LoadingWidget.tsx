@@ -55,7 +55,7 @@ export const LoadingWidget = React.forwardRef<
   return (
     <output
       className="deck-widget-loading"
-      style={positionStyles}
+      style={{ ...positionStyles, pointerEvents: "none" }}
       title={label}
       aria-live="polite"
       aria-label={label}

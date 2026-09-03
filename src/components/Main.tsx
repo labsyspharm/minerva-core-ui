@@ -39,6 +39,7 @@ import {
 } from "@/lib/imaging/channelCompositor";
 import { isImageChannel } from "@/lib/imaging/channelKind";
 import {
+  isJpegOmeTiffImageSource,
   JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE,
   jpegTransferFromImageSource,
 } from "@/lib/imaging/cubeRootEncoding";
@@ -126,7 +127,6 @@ import {
   getStoryRootHandle,
   isStoryRootHandleUsable,
   listExistingPyramidFolders,
-  neededJpegPyramidFolderNames,
   reconnectStoryRootFromPicker,
   setStoryRootHandle,
   storyNeedsLocalJpegRoot,
@@ -417,7 +417,8 @@ const Content = (props: Props) => {
 
   // UI State (from Index)
   const [ioState, setIoState] = useState("IDLE");
-  const [exportMode, setExportMode] = useState<StoryExportMode>("jpeg-pyramid");
+  const [exportMode, setExportMode] =
+    useState<StoryExportMode>("jpeg-ome-tiff");
   const [exportAllowDocumentOnly, setExportAllowDocumentOnly] = useState(false);
   const [viewerRemountKey, setViewerRemountKey] = useState(0);
   const [directory_handle, setDirectoryHandle] = useState(
@@ -435,21 +436,11 @@ const Content = (props: Props) => {
   ) => {
     const doc = useDocumentStore.getState();
     const storyId = doc.activeStoryId;
-    // Always open ImageExporter (format picker). Document-only is offered when
-    // matching pyramid folders already exist.
-    if (mode === "jpeg-pyramid") {
-      const needed = await neededJpegPyramidFolderNames(
-        doc.channelGroups,
-        doc.images,
-        jpegTransferFromImageSource(doc.metadata.imageSource),
-      );
-      const existing = await listExistingPyramidFolders(dirHandle);
-      const foldersReady =
-        needed.size === 0 || [...needed].every((name) => existing.has(name));
-      setExportAllowDocumentOnly(foldersReady);
-    } else {
-      setExportAllowDocumentOnly(false);
-    }
+    // Document-only when pixels are already JPEG OME-TIFF (rewrite sidecars).
+    setExportAllowDocumentOnly(
+      mode === "jpeg-ome-tiff" &&
+        isJpegOmeTiffImageSource(doc.metadata.imageSource),
+    );
     if (storyId) {
       try {
         await setStoryRootHandle(storyId, dirHandle);
@@ -462,7 +453,7 @@ const Content = (props: Props) => {
     setIoState("EXPORTING");
   };
 
-  const startExport = async (mode: StoryExportMode = "jpeg-pyramid") => {
+  const startExport = async (mode: StoryExportMode = "jpeg-ome-tiff") => {
     if (!hasDirectoryPickerAccess()) {
       window.alert(
         "Export to a folder needs the File System Access API (directory picker). Try Chrome or Edge, or use “OME-TIFF URL” workflows in other browsers.",
@@ -2175,7 +2166,7 @@ const Content = (props: Props) => {
           await writeStoryBundleSidecars(
             handle,
             useDocumentStore.getState().toDocumentData(),
-            { mode: "jpeg-pyramid" },
+            { mode: "jpeg-ome-tiff" },
           );
           stopExport();
         }
@@ -2204,19 +2195,18 @@ const Content = (props: Props) => {
       : null,
   };
 
-  const { viewerConfig, loaderList, mainSettingsList, imageLayers } =
-    useViewerLayers({
-      dicomIndexList,
-      omeLoaderEntries,
-      jpegLoaderEntries,
-      sourceChannels,
-      channelGroups,
-      activeChannelGroupId,
-      channelVisibilities,
-      channelGroupRowVisibilities,
-      channelRendering,
-      remountKey: viewerRemountKey,
-    });
+  const { loaderList, mainSettingsList, imageLayers } = useViewerLayers({
+    dicomIndexList,
+    omeLoaderEntries,
+    jpegLoaderEntries,
+    sourceChannels,
+    channelGroups,
+    activeChannelGroupId,
+    channelVisibilities,
+    channelGroupRowVisibilities,
+    channelRendering,
+    remountKey: viewerRemountKey,
+  });
 
   const imageProps = React.useMemo(() => {
     return {
@@ -2553,7 +2543,6 @@ const Content = (props: Props) => {
         const routerProps = {
           ...mainProps,
           noLoader,
-          viewerConfig,
           dicomIndexList,
           omeLoaderEntries,
           jpegLoaderEntries,
@@ -2591,7 +2580,7 @@ const Content = (props: Props) => {
                   void startExport(
                     canExportWithRemoteUrls(images)
                       ? "remote-url"
-                      : "jpeg-pyramid",
+                      : "jpeg-ome-tiff",
                   )
                 }
                 onEnterPlaybackPreview={enterPlaybackPreview}
