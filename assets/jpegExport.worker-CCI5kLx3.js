@@ -4187,7 +4187,9 @@ const MaskVisualizationSchema = preprocessType(
     style: enumType(["outline", "full"]),
     color: enumType(["white", "random"]),
     /** 24-bit; XOR'd into the GPU label hash when `color` is `random`. */
-    colorSeed: numberType().int().nonnegative().optional()
+    colorSeed: numberType().int().nonnegative().optional(),
+    /** Overlay alpha multiplier (`0…1`); omitted in older docs → `1`. */
+    opacity: numberType().min(0).max(1).default(1)
   })
 );
 const ImageChannelSchema = objectType({

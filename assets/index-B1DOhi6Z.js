@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-rdM4t6Nx.js","./pako.esm-KbdoS3Oq.js","./lerc-B01gykag.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-C-vsy-4H.js","./pako.esm-KbdoS3Oq.js","./lerc-rc0byiS-.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -17377,7 +17377,8 @@ let __tla = (async () => {
       "white",
       "random"
     ]),
-    colorSeed: numberType().int().nonnegative().optional()
+    colorSeed: numberType().int().nonnegative().optional(),
+    opacity: numberType().min(0).max(1).default(1)
   }));
   const ImageChannelSchema = objectType({
     id: IdSchema,
@@ -17552,7 +17553,8 @@ let __tla = (async () => {
   }, jsonExportCoreSchema);
   const DEFAULT_MASK_VISUALIZATION = {
     style: "outline",
-    color: "white"
+    color: "white",
+    opacity: 1
   };
   function withReseededRandomColors(value) {
     let colorSeed = 1 + Math.floor(Math.random() * 16777215);
@@ -17811,6 +17813,53 @@ let __tla = (async () => {
   };
   const SELECTION_MASK_CHANNEL_KEY = "Selection";
   const IMAGE_SELECTION_MASK_LAYER_ID = "image-selection-mask";
+  const CELL_OUTLINE_RGB = [
+    [
+      82,
+      249,
+      0
+    ],
+    [
+      0,
+      251,
+      255
+    ],
+    [
+      255,
+      0,
+      40
+    ],
+    [
+      255,
+      188,
+      0
+    ],
+    [
+      145,
+      169,
+      255
+    ],
+    [
+      255,
+      0,
+      255
+    ]
+  ];
+  function cellOutlineRgbFromSeed(seed) {
+    let h2 = 2166136261;
+    for (let i2 = 0; i2 < seed.length; i2++) {
+      h2 ^= seed.charCodeAt(i2);
+      h2 = Math.imul(h2, 16777619);
+    }
+    const [r2, g2, b2] = CELL_OUTLINE_RGB[(h2 >>> 0) % CELL_OUTLINE_RGB.length];
+    return [
+      r2,
+      g2,
+      b2
+    ];
+  }
+  const binaryImageCache = /* @__PURE__ */ new WeakMap();
+  const displayImageCache = /* @__PURE__ */ new WeakMap();
   function isEdgeAt(data2, width, height, x2, y2) {
     const neighbors = [
       [
@@ -17881,51 +17930,6 @@ let __tla = (async () => {
       rgba[o2 + 3] = alpha2;
     }
   }
-  const CELL_OUTLINE_RGB = [
-    [
-      212,
-      110,
-      94
-    ],
-    [
-      207,
-      156,
-      89
-    ],
-    [
-      199,
-      176,
-      87
-    ],
-    [
-      74,
-      181,
-      131
-    ],
-    [
-      87,
-      147,
-      199
-    ],
-    [
-      163,
-      103,
-      193
-    ]
-  ];
-  function cellOutlineRgbFromSeed(seed) {
-    let h2 = 2166136261;
-    for (let i2 = 0; i2 < seed.length; i2++) {
-      h2 ^= seed.charCodeAt(i2);
-      h2 = Math.imul(h2, 16777619);
-    }
-    const c2 = CELL_OUTLINE_RGB[(h2 >>> 0) % CELL_OUTLINE_RGB.length] ?? CELL_OUTLINE_RGB[0];
-    return [
-      c2[0],
-      c2[1],
-      c2[2]
-    ];
-  }
   function binaryMaskToRgba(data2, width, height, visualization, colorSeed) {
     const rgba = new Uint8ClampedArray(width * height * 4);
     const seedKey = visualization.colorSeed != null ? `${colorSeed}:${visualization.colorSeed}` : colorSeed;
@@ -17935,7 +17939,8 @@ let __tla = (async () => {
       255
     ];
     const outline = visualization.style === "outline";
-    const alpha2 = outline ? 230 : 170;
+    const opacity = Math.min(1, Math.max(0, visualization.opacity));
+    const alpha2 = Math.round((outline ? 230 : 170) * opacity);
     if (!outline) {
       paintBinaryMask(rgba, data2, rgb, alpha2);
       return new ImageData(rgba, width, height);
@@ -18059,6 +18064,8 @@ let __tla = (async () => {
   }
   function selectionMaskBinaryImageData(mask2) {
     const { width, height, data: data2 } = mask2;
+    const cached = binaryImageCache.get(data2);
+    if ((cached == null ? void 0 : cached.width) === width && cached.height === height) return cached.image;
     const rgba = new Uint8ClampedArray(width * height * 4);
     for (let i2 = 0; i2 < width * height; i2++) {
       const v2 = data2[i2] ? 255 : 0;
@@ -18068,23 +18075,42 @@ let __tla = (async () => {
       rgba[o2 + 2] = v2;
       rgba[o2 + 3] = v2;
     }
-    return new ImageData(rgba, width, height);
+    const image2 = new ImageData(rgba, width, height);
+    binaryImageCache.set(data2, {
+      width,
+      height,
+      image: image2
+    });
+    return image2;
   }
   function selectionMaskDisplayImageData(mask2) {
     const viz = mask2.maskVisualization ?? DEFAULT_MASK_VISUALIZATION;
     const seed = mask2.sourceShapeId ?? mask2.sourceShapeLabel ?? "selection";
-    return binaryMaskToRgba(mask2.data, mask2.width, mask2.height, viz, seed);
+    const key2 = [
+      mask2.width,
+      mask2.height,
+      viz.style,
+      viz.color,
+      viz.colorSeed ?? 0,
+      seed
+    ].join(":");
+    const cached = displayImageCache.get(mask2.data);
+    if ((cached == null ? void 0 : cached.key) === key2) return cached.image;
+    const image2 = binaryMaskToRgba(mask2.data, mask2.width, mask2.height, {
+      ...viz,
+      opacity: 1
+    }, seed);
+    displayImageCache.set(mask2.data, {
+      key: key2,
+      image: image2
+    });
+    return image2;
   }
   function isStackVisible(stackVisibilities, sourceChannelId) {
     return stackVisibilities[sourceChannelId] !== false;
   }
   function isGroupRowVisible(groupRowVisibilities, rowId) {
     return groupRowVisibilities[rowId] !== false;
-  }
-  function isShownFirstInAllChannelsList(sc2, stackVisibilities, activeGroup, groupRowVisibilities) {
-    if (isStackVisible(stackVisibilities, sc2.id)) return true;
-    if (!activeGroup) return false;
-    return activeGroup.channels.some((gc2) => gc2.channelId === sc2.id && isGroupRowVisible(groupRowVisibilities, gc2.id));
   }
   function activeGroupRowForSource(activeGroup, sourceId) {
     return activeGroup == null ? void 0 : activeGroup.channels.find((gc2) => gc2.channelId === sourceId);
@@ -61630,26 +61656,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DFSsxyTY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-_sgbxa9m.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-Cxxw1dsJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Dtk36fVb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-Bee2SzOq.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-C_sM4tck.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-rdM4t6Nx.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DldtdpUE.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-B01gykag.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-C-vsy-4H.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-CFZG5QdS.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-rc0byiS-.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-OSfOF2l6.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CA_yeSiS.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DDEUSFho.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BlzxCgbr.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -82962,6 +82988,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       b: n2 & 255
     };
   }
+  function rgbToHex$1(color2) {
+    return [
+      color2.r ?? 0,
+      color2.g ?? 0,
+      color2.b ?? 0
+    ].map((value) => value.toString(16).padStart(2, "0")).join("");
+  }
   function defaultSeedColorForIndex(index2) {
     return hexToRgb(IMPORT_DEFAULT_SEED_HEX[index2 % IMPORT_DEFAULT_SEED_HEX.length]);
   }
@@ -83075,6 +83108,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     effectiveSourceColor,
     effectiveSourceLimits,
     hexToRgb,
+    rgbToHex: rgbToHex$1,
     seedDefaultSourceChannelStyles,
     seedMaskSourceChannelStyles,
     styleSourceChannelsForRole
@@ -85257,6 +85291,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         ...images
       ]
     })),
+    setImagesAndChannelGroups: (images, channelGroups) => set2(() => ({
+      images: [
+        ...images
+      ],
+      channelGroups: [
+        ...channelGroups
+      ]
+    })),
     setMetadata: (patch2) => {
       const s2 = get2();
       set2({
@@ -85851,6 +85893,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     authoringWaypointShapesIndex: null,
     activeChannelGroupId: null,
     channelRendering: null,
+    maskVisualizationPreview: null,
     channelVisibilities: {},
     channelGroupRowVisibilities: {},
     groupNames: {},
@@ -86115,6 +86158,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         brushMaskVersion: 0,
         brushLastScreenCoord: null,
         imageSelectionMask: null,
+        maskVisualizationPreview: null,
         channelVisibilities: vis,
         activeStoryIndex: null,
         waypointAuthoring: /* @__PURE__ */ new Map(),
@@ -86449,6 +86493,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       delete vis[SELECTION_MASK_CHANNEL_KEY];
       set2({
         imageSelectionMask: null,
+        maskVisualizationPreview: null,
         channelVisibilities: vis
       });
     },
@@ -87036,6 +87081,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         channelRendering: null
       });
     },
+    setMaskVisualizationPreview: (preview) => {
+      set2({
+        maskVisualizationPreview: preview
+      });
+    },
     importWaypointShapes: (story, clearExisting = false, shapeRegistry) => {
       const doc0 = useDocumentStore.getState();
       const { width: imageWidth, height: imageHeight } = referenceImagePixelSizeForActions(get2);
@@ -87218,7 +87268,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function syncAppStoreFromDocument() {
     useAppStore.getState().clearChannelRendering();
     useAppStore.setState({
-      imageSelectionMask: null
+      maskVisualizationPreview: null
     });
     syncAppStoreChannelMirrorsFromDocument();
     syncAppStoreWaypointsFromDocument();
@@ -92346,31 +92396,31 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       basepath: routerBasepath()
     });
   }
-  const root$8 = "_root_teok6_6";
-  const masthead = "_masthead_teok6_19";
-  const addWrap = "_addWrap_teok6_30";
-  const addMenu = "_addMenu_teok6_38";
-  const addTrigger = "_addTrigger_teok6_43";
-  const tagline = "_tagline_teok6_74";
-  const error = "_error_teok6_82";
-  const whisper = "_whisper_teok6_91";
-  const bookcase = "_bookcase_teok6_99";
-  const bookcaseInner = "_bookcaseInner_teok6_111";
-  const shelfBay = "_shelfBay_teok6_116";
-  const bayContent = "_bayContent_teok6_122";
-  const bayContentEmpty = "_bayContentEmpty_teok6_131";
-  const ghostShelf = "_ghostShelf_teok6_137";
-  const ghostBook = "_ghostBook_teok6_149";
-  const storyRow = "_storyRow_teok6_153";
-  const shelfBoard = "_shelfBoard_teok6_164";
-  const rowOpen = "_rowOpen_teok6_173";
-  const rowThumb = "_rowThumb_teok6_199";
-  const rowThumbImg = "_rowThumbImg_teok6_209";
-  const rowThumbBlank = "_rowThumbBlank_teok6_217";
-  const rowText = "_rowText_teok6_224";
-  const rowTitle$1 = "_rowTitle_teok6_233";
-  const rowDate = "_rowDate_teok6_243";
-  const scrap = "_scrap_teok6_252";
+  const root$8 = "_root_pttqi_6";
+  const masthead = "_masthead_pttqi_19";
+  const addWrap = "_addWrap_pttqi_30";
+  const addMenu = "_addMenu_pttqi_38";
+  const addTrigger = "_addTrigger_pttqi_43";
+  const tagline = "_tagline_pttqi_74";
+  const error = "_error_pttqi_82";
+  const whisper = "_whisper_pttqi_91";
+  const bookcase = "_bookcase_pttqi_99";
+  const bookcaseInner = "_bookcaseInner_pttqi_111";
+  const shelfBay = "_shelfBay_pttqi_116";
+  const bayContent = "_bayContent_pttqi_122";
+  const bayContentEmpty = "_bayContentEmpty_pttqi_131";
+  const ghostShelf = "_ghostShelf_pttqi_137";
+  const ghostBook = "_ghostBook_pttqi_149";
+  const storyRow = "_storyRow_pttqi_153";
+  const shelfBoard = "_shelfBoard_pttqi_164";
+  const rowOpen = "_rowOpen_pttqi_173";
+  const rowThumb = "_rowThumb_pttqi_199";
+  const rowThumbImg = "_rowThumbImg_pttqi_209";
+  const rowThumbBlank = "_rowThumbBlank_pttqi_217";
+  const rowText = "_rowText_pttqi_224";
+  const rowTitle$1 = "_rowTitle_pttqi_233";
+  const rowDate = "_rowDate_pttqi_243";
+  const scrap = "_scrap_pttqi_252";
   const styles$o = {
     root: root$8,
     masthead,
@@ -93022,7 +93072,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       a: a2
     };
   };
-  var rgbToHex$1 = (_ref7) => {
+  var rgbToHex = (_ref7) => {
     var { r: r2, g: g2, b: b2 } = _ref7;
     var bin2 = r2 << 16 | g2 << 8 | b2;
     return "#" + ((h2) => new Array(7 - h2.length).join("0") + h2)(bin2.toString(16));
@@ -93030,7 +93080,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   var rgbaToHexa = (_ref8) => {
     var { r: r2, g: g2, b: b2, a: a2 } = _ref8;
     var alpha2 = typeof a2 === "number" && (a2 * 255 | 1 << 8).toString(16).slice(1);
-    return "" + rgbToHex$1({
+    return "" + rgbToHex({
       r: r2,
       g: g2,
       b: b2
@@ -93116,7 +93166,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       l: l2
     };
   };
-  var hsvaToHex = (hsva) => rgbToHex$1(hsvaToRgba(hsva));
+  var hsvaToHex = (hsva) => rgbToHex(hsvaToRgba(hsva));
   var hsvaToHexa = (hsva) => rgbaToHexa(hsvaToRgba(hsva));
   var hsvaToHsv = (_ref10) => {
     var { h: h2, s: s2, v: v2 } = _ref10;
@@ -169369,21 +169419,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: detailStoryId ? renderDetail() : renderList()
     });
   };
-  const wrap = "_wrap_eioaw_1";
-  const histogramHost = "_histogramHost_eioaw_9";
-  const histogramLoading = "_histogramLoading_eioaw_14";
-  const histogramLoadingVisible = "_histogramLoadingVisible_eioaw_24";
-  const histogramSvg = "_histogramSvg_eioaw_28";
-  const histogramFill = "_histogramFill_eioaw_35";
-  const histogramLine = "_histogramLine_eioaw_40";
-  const controls = "_controls_eioaw_47";
-  const sliderRow = "_sliderRow_eioaw_59";
-  const track = "_track_eioaw_67";
-  const rangePan = "_rangePan_eioaw_79";
-  const rangeInput = "_rangeInput_eioaw_103";
-  const limitsRow = "_limitsRow_eioaw_150";
-  const limitField = "_limitField_eioaw_157";
-  const limitInput = "_limitInput_eioaw_165";
+  const wrap = "_wrap_1d71z_1";
+  const histogramHost = "_histogramHost_1d71z_14";
+  const histogramLoading = "_histogramLoading_1d71z_21";
+  const histogramLoadingVisible = "_histogramLoadingVisible_1d71z_33";
+  const histogramSvg = "_histogramSvg_1d71z_37";
+  const histogramFill = "_histogramFill_1d71z_44";
+  const histogramLine = "_histogramLine_1d71z_49";
+  const histogramOutOfRange = "_histogramOutOfRange_1d71z_56";
+  const sliderRow = "_sliderRow_1d71z_60";
+  const rangePan = "_rangePan_1d71z_72";
+  const rangeInput = "_rangeInput_1d71z_86";
+  const limitInput = "_limitInput_1d71z_132";
   const styles$e = {
     wrap,
     histogramHost,
@@ -169392,13 +169439,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     histogramSvg,
     histogramFill,
     histogramLine,
-    controls,
+    histogramOutOfRange,
     sliderRow,
-    track,
     rangePan,
     rangeInput,
-    limitsRow,
-    limitField,
     limitInput
   };
   const SLIDER_DOMAIN_STEPS = 8192;
@@ -169491,30 +169535,45 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const [minInput, setMinInput] = reactExports.useState(String(props.lowerLimit));
     const [maxInput, setMaxInput] = reactExports.useState(String(props.upperLimit));
     const editingLimitRef = reactExports.useRef(false);
+    const lastCommittedRangeRef = reactExports.useRef([
+      Math.round(props.lowerLimit),
+      Math.round(props.upperLimit)
+    ]);
     reactExports.useEffect(() => {
       if (editingLimitRef.current) return;
       setSliderMin(scale2.toSlider(props.lowerLimit));
       setSliderMax(scale2.toSlider(props.upperLimit));
       setMinInput(String(Math.round(props.lowerLimit)));
       setMaxInput(String(Math.round(props.upperLimit)));
+      lastCommittedRangeRef.current = [
+        Math.round(props.lowerLimit),
+        Math.round(props.upperLimit)
+      ];
     }, [
       props.lowerLimit,
       props.upperLimit,
       scale2
     ]);
-    const previewRange = reactExports.useCallback((lower, upper) => {
+    const previewRange = (lower, upper) => {
       useAppStore.getState().setChannelRendering({
         kind: "contrast",
         sourceChannelId: props.sourceChannelId,
         lower,
         upper
       });
-    }, [
-      props.sourceChannelId
-    ]);
-    const commitRange = reactExports.useCallback((lower, upper) => {
+    };
+    const commitRange = (lower, upper) => {
       const lo = Math.round(lower);
       const hi2 = Math.round(upper);
+      const [lastLo, lastHi] = lastCommittedRangeRef.current;
+      if (lo === lastLo && hi2 === lastHi) {
+        useAppStore.getState().clearChannelRendering();
+        return;
+      }
+      lastCommittedRangeRef.current = [
+        lo,
+        hi2
+      ];
       const doc = useDocumentStore.getState();
       if (props.groupId) {
         setChannelGroups(applyGroupChannelRange(doc.channelGroups, {
@@ -169527,13 +169586,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         setImages(applySourceChannelRange(doc.images, props.sourceChannelId, lo, hi2));
       }
       useAppStore.getState().clearChannelRendering();
-    }, [
-      props.groupId,
-      props.channelId,
-      props.sourceChannelId,
-      setChannelGroups,
-      setImages
-    ]);
+    };
     reactExports.useEffect(() => {
       return () => {
         const { channelRendering, clearChannelRendering } = useAppStore.getState();
@@ -169588,23 +169641,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const minFrac = sliderMin / scale2.sliderSteps;
     const maxFrac = sliderMax / scale2.sliderSteps;
-    const handleHalf = 0.375;
     const sliderRowRef = reactExports.useRef(null);
     const panDragRef = reactExports.useRef(null);
     const panMovedRef = reactExports.useRef(false);
     const { linePath: histLinePath, fillPath: histFillPath } = histogramSparklinePaths(dist2.YValues);
-    const stepFromClientX = reactExports.useCallback((clientX) => {
+    const histogramClipId = reactExports.useId();
+    const histogramViewX = 1.15;
+    const histogramViewWidth = 96.7;
+    const histogramClipX = histogramViewX + minFrac * histogramViewWidth;
+    const histogramClipWidth = (maxFrac - minFrac) * histogramViewWidth;
+    const stepFromClientX = (clientX) => {
       const row2 = sliderRowRef.current;
       if (!row2) return 0;
       const rect = row2.getBoundingClientRect();
-      const handlePx = Number.parseFloat(getComputedStyle(row2).getPropertyValue("--handle-width")) * 16 || 12;
-      const trackWidth = Math.max(1, rect.width - handlePx);
-      const x2 = clientX - rect.left - handlePx / 2;
-      const frac = Math.min(1, Math.max(0, x2 / trackWidth));
+      const x2 = clientX - rect.left;
+      const frac = Math.min(1, Math.max(0, x2 / Math.max(1, rect.width)));
       return Math.round(frac * scale2.sliderSteps);
-    }, [
-      scale2.sliderSteps
-    ]);
+    };
     const onRangePanPointerDown = (e2) => {
       if (e2.button !== 0) return;
       e2.preventDefault();
@@ -169627,9 +169680,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const row2 = sliderRowRef.current;
       if (!row2) return;
       const rect = row2.getBoundingClientRect();
-      const handlePx = Number.parseFloat(getComputedStyle(row2).getPropertyValue("--handle-width")) * 16 || 12;
-      const trackWidth = Math.max(1, rect.width - handlePx);
-      const deltaSteps = Math.round((e2.clientX - drag.startX) / trackWidth * scale2.sliderSteps);
+      const deltaSteps = Math.round((e2.clientX - drag.startX) / Math.max(1, rect.width) * scale2.sliderSteps);
       const span = drag.startMax - drag.startMin;
       let lo = drag.startMin + deltaSteps;
       let hi2 = drag.startMax + deltaSteps;
@@ -169673,56 +169724,88 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       panDragRef.current = null;
       panMovedRef.current = false;
     };
-    const panLeft = `calc(${handleHalf}rem + ${minFrac} * (100% - ${handleHalf}rem))`;
-    const panWidth = `calc((${maxFrac} - ${minFrac}) * (100% - ${handleHalf}rem))`;
+    const panLeft = `${minFrac * 100}%`;
+    const panWidth = `${(maxFrac - minFrac) * 100}%`;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$e.wrap,
       children: [
+        jsxRuntimeExports.jsx("input", {
+          type: "number",
+          className: `${minervaTheme.input} ${styles$e.limitInput}`,
+          value: minInput,
+          "aria-label": `${props.channelLabel} contrast minimum value`,
+          min: scale2.dtypeMin,
+          max: scale2.dtypeMax,
+          onFocus: () => {
+            editingLimitRef.current = true;
+          },
+          onChange: (e2) => setMinInput(e2.target.value),
+          onBlur: () => {
+            editingLimitRef.current = false;
+            commitFromInputs();
+          },
+          onKeyDown: (e2) => {
+            if (e2.key === "Enter") e2.currentTarget.blur();
+          }
+        }),
         jsxRuntimeExports.jsxs("div", {
           className: styles$e.histogramHost,
+          style: {
+            "--histogram-color": `rgb(${props.r},${props.g},${props.b})`
+          },
           children: [
             jsxRuntimeExports.jsxs("svg", {
               className: styles$e.histogramSvg,
               viewBox: "1.15 0 96.7 11",
               preserveAspectRatio: "none",
               role: "img",
-              "aria-label": "Channel intensity histogram",
+              "aria-label": `${props.channelLabel} intensity histogram`,
               children: [
+                jsxRuntimeExports.jsx("defs", {
+                  children: jsxRuntimeExports.jsx("clipPath", {
+                    id: histogramClipId,
+                    children: jsxRuntimeExports.jsx("rect", {
+                      x: histogramClipX,
+                      y: 0,
+                      width: histogramClipWidth,
+                      height: 11
+                    })
+                  })
+                }),
                 jsxRuntimeExports.jsx("path", {
-                  className: styles$e.histogramFill,
+                  className: `${styles$e.histogramFill} ${styles$e.histogramOutOfRange}`,
                   d: histFillPath
                 }),
                 jsxRuntimeExports.jsx("path", {
-                  className: styles$e.histogramLine,
+                  className: `${styles$e.histogramLine} ${styles$e.histogramOutOfRange}`,
                   d: histLinePath
+                }),
+                jsxRuntimeExports.jsxs("g", {
+                  clipPath: `url(#${histogramClipId})`,
+                  children: [
+                    jsxRuntimeExports.jsx("path", {
+                      className: styles$e.histogramFill,
+                      d: histFillPath
+                    }),
+                    jsxRuntimeExports.jsx("path", {
+                      className: styles$e.histogramLine,
+                      d: histLinePath
+                    })
+                  ]
                 })
               ]
             }),
             jsxRuntimeExports.jsx("div", {
-              className: [
-                styles$e.histogramLoading,
-                props.histogramLoading ? styles$e.histogramLoadingVisible : ""
-              ].filter(Boolean).join(" "),
+              className: `${styles$e.histogramLoading}${props.histogramLoading ? ` ${styles$e.histogramLoadingVisible}` : ""}`,
               title: "Loading histogram",
               children: jsxRuntimeExports.jsx("div", {
                 className: minervaTheme.spinnerSm
               })
-            })
-          ]
-        }),
-        jsxRuntimeExports.jsxs("div", {
-          className: styles$e.controls,
-          style: {
-            "--slider-background": `rgb(${props.r},${props.g},${props.b})`
-          },
-          children: [
+            }),
             jsxRuntimeExports.jsxs("div", {
               ref: sliderRowRef,
               className: styles$e.sliderRow,
               children: [
-                jsxRuntimeExports.jsx("div", {
-                  className: styles$e.track
-                }),
                 sliderMax > sliderMin ? jsxRuntimeExports.jsx("div", {
                   className: styles$e.rangePan,
                   style: {
@@ -169744,7 +169827,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   onChange: onMinSlider,
                   onMouseUp: onSliderCommit,
                   onTouchEnd: onSliderCommit,
-                  "aria-label": "Contrast minimum"
+                  onKeyUp: onSliderCommit,
+                  onBlur: onSliderCommit,
+                  "aria-label": `${props.channelLabel} contrast minimum`,
+                  "aria-valuetext": `${Math.round(scale2.fromSlider(sliderMin))} intensity`
                 }),
                 jsxRuntimeExports.jsx("input", {
                   type: "range",
@@ -169755,102 +169841,92 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   onChange: onMaxSlider,
                   onMouseUp: onSliderCommit,
                   onTouchEnd: onSliderCommit,
-                  "aria-label": "Contrast maximum"
-                })
-              ]
-            }),
-            jsxRuntimeExports.jsxs("div", {
-              className: styles$e.limitsRow,
-              children: [
-                jsxRuntimeExports.jsx("div", {
-                  className: styles$e.limitField,
-                  style: {
-                    left: `clamp(calc(var(--range-input-width) / 2), calc(${handleHalf}rem + ${minFrac} * (100% - ${handleHalf}rem)), calc(100% - var(--range-input-width) / 2))`
-                  },
-                  children: jsxRuntimeExports.jsx("input", {
-                    type: "number",
-                    className: `${minervaTheme.input} ${styles$e.limitInput}`,
-                    value: minInput,
-                    "aria-label": "Contrast minimum value",
-                    min: scale2.dtypeMin,
-                    max: scale2.dtypeMax,
-                    onFocus: () => {
-                      editingLimitRef.current = true;
-                    },
-                    onChange: (e2) => setMinInput(e2.target.value),
-                    onBlur: () => {
-                      editingLimitRef.current = false;
-                      commitFromInputs();
-                    },
-                    onKeyDown: (e2) => {
-                      if (e2.key === "Enter") e2.currentTarget.blur();
-                    }
-                  })
-                }),
-                jsxRuntimeExports.jsx("div", {
-                  className: styles$e.limitField,
-                  style: {
-                    left: `clamp(calc(var(--range-input-width) / 2), calc(${handleHalf}rem + ${maxFrac} * (100% - ${handleHalf}rem)), calc(100% - var(--range-input-width) / 2))`,
-                    zIndex: 1
-                  },
-                  children: jsxRuntimeExports.jsx("input", {
-                    type: "number",
-                    className: `${minervaTheme.input} ${styles$e.limitInput}`,
-                    value: maxInput,
-                    "aria-label": "Contrast maximum value",
-                    min: scale2.dtypeMin,
-                    max: scale2.dtypeMax,
-                    onFocus: () => {
-                      editingLimitRef.current = true;
-                    },
-                    onChange: (e2) => setMaxInput(e2.target.value),
-                    onBlur: () => {
-                      editingLimitRef.current = false;
-                      commitFromInputs();
-                    },
-                    onKeyDown: (e2) => {
-                      if (e2.key === "Enter") e2.currentTarget.blur();
-                    }
-                  })
+                  onKeyUp: onSliderCommit,
+                  onBlur: onSliderCommit,
+                  "aria-label": `${props.channelLabel} contrast maximum`,
+                  "aria-valuetext": `${Math.round(scale2.fromSlider(sliderMax))} intensity`
                 })
               ]
             })
           ]
+        }),
+        jsxRuntimeExports.jsx("input", {
+          type: "number",
+          className: `${minervaTheme.input} ${styles$e.limitInput}`,
+          value: maxInput,
+          "aria-label": `${props.channelLabel} contrast maximum value`,
+          min: scale2.dtypeMin,
+          max: scale2.dtypeMax,
+          onFocus: () => {
+            editingLimitRef.current = true;
+          },
+          onChange: (e2) => setMaxInput(e2.target.value),
+          onBlur: () => {
+            editingLimitRef.current = false;
+            commitFromInputs();
+          },
+          onKeyDown: (e2) => {
+            if (e2.key === "Enter") e2.currentTarget.blur();
+          }
         })
       ]
     });
   }
-  const channelNameInput = "_channelNameInput_1k7e1_3";
-  const channelRowMain = "_channelRowMain_1k7e1_9";
-  const channelRowTitle = "_channelRowTitle_1k7e1_16";
-  const channelRowTrailing = "_channelRowTrailing_1k7e1_21";
-  const channelImageSubtitle = "_channelImageSubtitle_1k7e1_27";
-  const channelVisibilityButton = "_channelVisibilityButton_1k7e1_38";
-  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_1k7e1_63";
-  const channelColorSwatch = "_channelColorSwatch_1k7e1_67";
-  const detailChannelRowLocked = "_detailChannelRowLocked_1k7e1_86";
-  const maskVizControls = "_maskVizControls_1k7e1_90";
-  const maskVizToggle = "_maskVizToggle_1k7e1_98";
-  const maskVizOption = "_maskVizOption_1k7e1_109";
-  const maskVizOptionActive = "_maskVizOptionActive_1k7e1_133";
-  const maskVizIconOutline = "_maskVizIconOutline_1k7e1_139";
-  const maskVizIconFull = "_maskVizIconFull_1k7e1_140";
-  const maskVizSwatchWhite = "_maskVizSwatchWhite_1k7e1_141";
-  const maskVizSwatchRandom = "_maskVizSwatchRandom_1k7e1_142";
-  const groupChildRow = "_groupChildRow_1k7e1_175";
-  const rootChannelRow = "_rootChannelRow_1k7e1_176";
+  const channelNameInput = "_channelNameInput_1lxg1_3";
+  const channelRowMain = "_channelRowMain_1lxg1_12";
+  const channelRowTitle = "_channelRowTitle_1lxg1_19";
+  const channelNameSlot = "_channelNameSlot_1lxg1_28";
+  const channelRowTrailing = "_channelRowTrailing_1lxg1_43";
+  const maskDisclosureButton = "_maskDisclosureButton_1lxg1_49";
+  const channelImageSubtitle = "_channelImageSubtitle_1lxg1_72";
+  const maskModeControls = "_maskModeControls_1lxg1_85";
+  const maskControlsPanel = "_maskControlsPanel_1lxg1_92";
+  const maskModeToggles = "_maskModeToggles_1lxg1_97";
+  const maskModeGroup = "_maskModeGroup_1lxg1_104";
+  const maskModeGroupLabel = "_maskModeGroupLabel_1lxg1_111";
+  const maskVizToggle = "_maskVizToggle_1lxg1_118";
+  const maskOpacityControl = "_maskOpacityControl_1lxg1_130";
+  const maskOpacityInputRow = "_maskOpacityInputRow_1lxg1_138";
+  const maskOpacityLabel = "_maskOpacityLabel_1lxg1_151";
+  const maskOpacitySlider = "_maskOpacitySlider_1lxg1_158";
+  const maskOpacityValue = "_maskOpacityValue_1lxg1_226";
+  const channelVisibilityButton = "_channelVisibilityButton_1lxg1_236";
+  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_1lxg1_260";
+  const channelColorSwatch = "_channelColorSwatch_1lxg1_264";
+  const channelColorSwatchStatic = "_channelColorSwatchStatic_1lxg1_265";
+  const detailChannelRowLocked = "_detailChannelRowLocked_1lxg1_287";
+  const maskVizOption = "_maskVizOption_1lxg1_291";
+  const maskVizOptionActive = "_maskVizOptionActive_1lxg1_315";
+  const maskVizIconOutline = "_maskVizIconOutline_1lxg1_320";
+  const maskVizIconFull = "_maskVizIconFull_1lxg1_321";
+  const maskVizSwatchWhite = "_maskVizSwatchWhite_1lxg1_322";
+  const maskVizSwatchRandom = "_maskVizSwatchRandom_1lxg1_323";
+  const groupChildRow = "_groupChildRow_1lxg1_356";
+  const rootChannelRow = "_rootChannelRow_1lxg1_357";
   const row = {
     channelNameInput,
     channelRowMain,
     channelRowTitle,
+    channelNameSlot,
     channelRowTrailing,
+    maskDisclosureButton,
     channelImageSubtitle,
+    maskModeControls,
+    maskControlsPanel,
+    maskModeToggles,
+    maskModeGroup,
+    maskModeGroupLabel,
+    maskVizToggle,
+    maskOpacityControl,
+    maskOpacityInputRow,
+    maskOpacityLabel,
+    maskOpacitySlider,
+    maskOpacityValue,
     channelVisibilityButton,
     channelVisibilityButtonHidden,
     channelColorSwatch,
+    channelColorSwatchStatic,
     detailChannelRowLocked,
-    maskVizControls,
-    maskVizToggle,
     maskVizOption,
     maskVizOptionActive,
     maskVizIconOutline,
@@ -169916,10 +169992,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]
   });
   function ChannelVisibilitySwatch(props) {
-    const { visible, title: title7, ariaLabel, onClick, className: className2 } = props;
+    const { visible, title: title7, ariaLabel, onClick } = props;
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: className2 ?? [
+      className: [
         minervaTheme.focusRing,
         row.channelVisibilityButton,
         visible ? "" : row.channelVisibilityButtonHidden
@@ -169932,10 +170008,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function ChannelColorSwatchButton(props) {
-    const { hex, title: title7, ariaLabel, onClick, className: className2 } = props;
+    const { hex, title: title7, ariaLabel, onClick } = props;
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: className2 ?? `${minervaTheme.focusRing} ${row.channelColorSwatch}`,
+      className: `${minervaTheme.focusRing} ${row.channelColorSwatch}`,
       style: {
         backgroundColor: `#${hex}`
       },
@@ -169944,17 +170020,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onClick
     });
   }
-  function rgbToHex(color2) {
-    return [
-      color2.r ?? 0,
-      color2.g ?? 0,
-      color2.b ?? 0
-    ].map((n2) => n2.toString(16).padStart(2, "0")).join("");
-  }
   function MaskVizButton(props) {
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: props.active ? `${minervaTheme.focusRing} ${row.maskVizOption} ${row.maskVizOptionActive}` : `${minervaTheme.focusRing} ${row.maskVizOption}`,
+      className: `${minervaTheme.focusRing} ${row.maskVizOption}${props.active ? ` ${row.maskVizOptionActive}` : ""}`,
       "aria-pressed": props.active,
       title: props.title ?? props.label,
       "aria-label": props.label,
@@ -169965,96 +170034,233 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })
     });
   }
-  function MaskVisualizationToggle(props) {
-    const { value, onChange, ariaLabel } = props;
-    const randomActive = value.color === "random";
-    return jsxRuntimeExports.jsxs("div", {
-      className: row.maskVizControls,
+  function MaskOpacityControl(props) {
+    const { value, onChange, onPreview, ariaLabel } = props;
+    const committedPct = Math.round(value.opacity * 100);
+    const [pct, setPct] = reactExports.useState(committedPct);
+    const lastCommittedPct = reactExports.useRef(committedPct);
+    const onPreviewRef = reactExports.useRef(onPreview);
+    onPreviewRef.current = onPreview;
+    reactExports.useEffect(() => {
+      setPct(committedPct);
+      lastCommittedPct.current = committedPct;
+    }, [
+      committedPct
+    ]);
+    reactExports.useEffect(() => () => {
+      var _a2;
+      return (_a2 = onPreviewRef.current) == null ? void 0 : _a2.call(onPreviewRef, null);
+    }, []);
+    const visualizationAt = (nextPct) => ({
+      ...value,
+      opacity: nextPct / 100
+    });
+    const commit = () => {
+      if (pct !== lastCommittedPct.current) {
+        lastCommittedPct.current = pct;
+        onChange(visualizationAt(pct));
+      }
+      onPreview == null ? void 0 : onPreview(null);
+    };
+    return jsxRuntimeExports.jsxs("label", {
+      className: row.maskOpacityControl,
+      title: `Opacity ${pct}%`,
+      style: {
+        ["--mask-opacity-pct"]: `${pct}%`
+      },
       children: [
-        jsxRuntimeExports.jsxs("fieldset", {
-          className: row.maskVizToggle,
-          "aria-label": `${ariaLabel} fill`,
+        jsxRuntimeExports.jsxs("span", {
+          className: row.maskOpacityInputRow,
           children: [
-            jsxRuntimeExports.jsx(MaskVizButton, {
-              active: value.style === "outline",
-              label: "Outline",
-              iconClass: row.maskVizIconOutline,
-              onClick: () => onChange({
-                ...value,
-                style: "outline"
-              })
+            jsxRuntimeExports.jsx("input", {
+              type: "range",
+              className: row.maskOpacitySlider,
+              min: 0,
+              max: 100,
+              step: 1,
+              value: pct,
+              "aria-label": `${ariaLabel} opacity`,
+              onChange: (e2) => {
+                const nextPct = Number(e2.target.value);
+                setPct(nextPct);
+                onPreview == null ? void 0 : onPreview(visualizationAt(nextPct));
+              },
+              onPointerUp: commit,
+              onPointerCancel: () => {
+                setPct(committedPct);
+                onPreview == null ? void 0 : onPreview(null);
+              },
+              onKeyUp: commit,
+              onBlur: commit
             }),
-            jsxRuntimeExports.jsx(MaskVizButton, {
-              active: value.style === "full",
-              label: "Full",
-              iconClass: row.maskVizIconFull,
-              onClick: () => onChange({
-                ...value,
-                style: "full"
-              })
+            jsxRuntimeExports.jsxs("span", {
+              className: row.maskOpacityValue,
+              children: [
+                pct,
+                "%"
+              ]
             })
           ]
         }),
-        jsxRuntimeExports.jsxs("fieldset", {
-          className: row.maskVizToggle,
-          "aria-label": `${ariaLabel} color`,
-          children: [
-            jsxRuntimeExports.jsx(MaskVizButton, {
-              active: value.color === "white",
-              label: "White",
-              iconClass: row.maskVizSwatchWhite,
-              onClick: () => onChange({
-                ...value,
-                color: "white"
-              })
-            }),
-            jsxRuntimeExports.jsx(MaskVizButton, {
-              active: randomActive,
-              label: randomActive ? "Random colors, re-seed" : "Random colors",
-              title: randomActive ? "Random colors (click to re-seed)" : "Random colors",
-              iconClass: row.maskVizSwatchRandom,
-              onClick: () => onChange(withReseededRandomColors(value))
-            })
-          ]
+        jsxRuntimeExports.jsx("span", {
+          className: row.maskOpacityLabel,
+          children: "Opacity"
         })
       ]
     });
   }
-  function isIntensityRowStyle(props) {
-    return !props.isMask;
+  function MaskModeControls(props) {
+    const { value, onChange, ariaLabel } = props;
+    const randomActive = value.color === "random";
+    return jsxRuntimeExports.jsxs("div", {
+      className: row.maskModeControls,
+      children: [
+        jsxRuntimeExports.jsxs("div", {
+          className: row.maskModeToggles,
+          children: [
+            jsxRuntimeExports.jsxs("div", {
+              className: row.maskModeGroup,
+              children: [
+                jsxRuntimeExports.jsxs("fieldset", {
+                  className: row.maskVizToggle,
+                  "aria-label": `${ariaLabel} fill`,
+                  children: [
+                    jsxRuntimeExports.jsx(MaskVizButton, {
+                      active: value.style === "outline",
+                      label: "Outline",
+                      iconClass: row.maskVizIconOutline,
+                      onClick: () => onChange({
+                        ...value,
+                        style: "outline"
+                      })
+                    }),
+                    jsxRuntimeExports.jsx(MaskVizButton, {
+                      active: value.style === "full",
+                      label: "Full",
+                      iconClass: row.maskVizIconFull,
+                      onClick: () => onChange({
+                        ...value,
+                        style: "full"
+                      })
+                    })
+                  ]
+                }),
+                jsxRuntimeExports.jsx("span", {
+                  className: row.maskModeGroupLabel,
+                  children: "Fill"
+                })
+              ]
+            }),
+            jsxRuntimeExports.jsxs("div", {
+              className: row.maskModeGroup,
+              children: [
+                jsxRuntimeExports.jsxs("fieldset", {
+                  className: row.maskVizToggle,
+                  "aria-label": `${ariaLabel} color`,
+                  children: [
+                    jsxRuntimeExports.jsx(MaskVizButton, {
+                      active: value.color === "white",
+                      label: "White",
+                      iconClass: row.maskVizSwatchWhite,
+                      onClick: () => onChange({
+                        ...value,
+                        color: "white"
+                      })
+                    }),
+                    jsxRuntimeExports.jsx(MaskVizButton, {
+                      active: randomActive,
+                      label: randomActive ? "Random colors, re-seed" : "Random colors",
+                      title: randomActive ? "Random colors (click to re-seed)" : "Random colors",
+                      iconClass: row.maskVizSwatchRandom,
+                      onClick: () => onChange(withReseededRandomColors(value))
+                    })
+                  ]
+                }),
+                jsxRuntimeExports.jsx("span", {
+                  className: row.maskModeGroupLabel,
+                  children: "Color"
+                })
+              ]
+            })
+          ]
+        }),
+        jsxRuntimeExports.jsx(MaskOpacityControl, {
+          value,
+          onChange,
+          onPreview: props.onPreview,
+          ariaLabel
+        })
+      ]
+    });
   }
-  function channelRowHasStyleControls(props) {
-    return !props.compact;
+  function scrollRowNearest(row2) {
+    row2 == null ? void 0 : row2.scrollIntoView({
+      block: "nearest",
+      inline: "nearest",
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+    });
   }
-  function ChannelRowName(props) {
-    if (props.mode === "label") {
-      return jsxRuntimeExports.jsx("span", {
-        className: props.className,
-        title: props.title ?? props.name,
-        children: props.name
-      });
-    }
+  function EditableChannelRowName(props) {
+    const [draft, setDraft] = reactExports.useState(props.name);
+    const cancelCommit = reactExports.useRef(false);
+    reactExports.useEffect(() => {
+      setDraft(props.name);
+    }, [
+      props.name
+    ]);
+    const commit = () => {
+      if (cancelCommit.current) {
+        cancelCommit.current = false;
+        setDraft(props.name);
+        return;
+      }
+      const trimmed = draft.trim();
+      if (!trimmed || trimmed === props.name) {
+        setDraft(props.name);
+        return;
+      }
+      setDraft(trimmed);
+      props.onBlur(trimmed);
+    };
     return jsxRuntimeExports.jsx("input", {
       className: `${minervaTheme.field} ${row.channelNameInput}`,
       type: "text",
-      defaultValue: props.name,
+      value: draft,
+      title: props.name,
       maxLength: 200,
       autoComplete: "off",
       spellCheck: false,
       "aria-label": `Channel name (${props.meta})`,
-      onBlur: (e2) => props.onBlur(e2.target.value),
+      onChange: (e2) => setDraft(e2.target.value),
+      onBlur: commit,
       onKeyDown: (e2) => {
         if (e2.key === "Enter") {
           e2.preventDefault();
-          e2.target.blur();
+          e2.currentTarget.blur();
+        } else if (e2.key === "Escape") {
+          cancelCommit.current = true;
+          e2.currentTarget.blur();
         }
       }
     });
   }
   function ChannelRow(props) {
-    const { rowClassName, visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, trailing } = props;
-    const styleControls = channelRowHasStyleControls(props) ? props : null;
+    const { rowClassName, visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, trailing, compact, isMask, maskVisualization, onMaskVisualizationChange, onMaskVisualizationPreview, maskAriaLabel, fixedColorHex, colorHex, colorTitle, colorAriaLabel, onColorClick } = props;
+    const showMask = !compact && isMask && maskVisualization;
+    const showColor = !compact && !isMask && colorHex && onColorClick;
+    const [maskControlsOpen, setMaskControlsOpen] = reactExports.useState(true);
+    const rowRef = reactExports.useRef(null);
+    const maskControlsId = reactExports.useId();
+    const toggleMaskControls = () => {
+      const opening2 = !maskControlsOpen;
+      setMaskControlsOpen(opening2);
+      if (!opening2) return;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => scrollRowNearest(rowRef.current));
+      });
+    };
     return jsxRuntimeExports.jsxs("div", {
+      ref: rowRef,
       className: rowClassName,
       children: [
         jsxRuntimeExports.jsxs("div", {
@@ -170066,39 +170272,65 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ariaLabel: visibilityAriaLabel,
               onClick: onToggleVisibility
             }),
-            jsxRuntimeExports.jsx("div", {
+            jsxRuntimeExports.jsxs("div", {
               className: row.channelRowTitle,
-              children: jsxRuntimeExports.jsx(ChannelRowName, {
-                ...name2
-              })
+              children: [
+                jsxRuntimeExports.jsx("div", {
+                  className: row.channelNameSlot,
+                  children: name2.mode === "label" ? jsxRuntimeExports.jsx("span", {
+                    className: name2.className,
+                    title: name2.title ?? name2.name,
+                    children: name2.name
+                  }) : jsxRuntimeExports.jsx(EditableChannelRowName, {
+                    ...name2
+                  })
+                }),
+                imageSubtitle ? jsxRuntimeExports.jsx("span", {
+                  className: row.channelImageSubtitle,
+                  title: `From ${imageSubtitle}`,
+                  children: imageSubtitle
+                }) : null
+              ]
             }),
-            (styleControls == null ? void 0 : styleControls.isMask) && styleControls.fixedColorHex ? jsxRuntimeExports.jsx("span", {
-              className: row.channelColorSwatch,
+            showMask ? jsxRuntimeExports.jsx("button", {
+              type: "button",
+              className: `${minervaTheme.focusRing} ${row.maskDisclosureButton}`,
+              "aria-label": `${maskControlsOpen ? "Hide" : "Show"} mask display controls for ${name2.name}`,
+              "aria-expanded": maskControlsOpen,
+              "aria-controls": maskControlsOpen ? maskControlsId : void 0,
+              onClick: toggleMaskControls,
+              children: jsxRuntimeExports.jsx(ChevronIcon, {
+                direction: maskControlsOpen ? "down" : "right"
+              })
+            }) : null,
+            showMask && fixedColorHex ? jsxRuntimeExports.jsx("span", {
+              className: row.channelColorSwatchStatic,
               style: {
-                backgroundColor: `#${styleControls.fixedColorHex}`
+                backgroundColor: `#${fixedColorHex}`
               },
               "aria-hidden": true
             }) : null,
-            styleControls ? styleControls.isMask ? jsxRuntimeExports.jsx(MaskVisualizationToggle, {
-              value: styleControls.maskVisualization,
-              ariaLabel: styleControls.maskAriaLabel,
-              onChange: styleControls.onMaskVisualizationChange
-            }) : isIntensityRowStyle(styleControls) ? jsxRuntimeExports.jsx(ChannelColorSwatchButton, {
-              hex: styleControls.colorHex,
-              title: styleControls.colorTitle,
-              ariaLabel: styleControls.colorAriaLabel,
-              onClick: styleControls.onColorClick
-            }) : null : null,
+            showColor ? jsxRuntimeExports.jsx(ChannelColorSwatchButton, {
+              hex: colorHex,
+              title: colorTitle ?? `Pick color`,
+              ariaLabel: colorAriaLabel ?? `Pick color`,
+              onClick: onColorClick
+            }) : null,
             trailing ? jsxRuntimeExports.jsx("div", {
               className: row.channelRowTrailing,
               children: trailing
             }) : null
           ]
         }),
-        imageSubtitle ? jsxRuntimeExports.jsx("span", {
-          className: row.channelImageSubtitle,
-          title: `From ${imageSubtitle}`,
-          children: imageSubtitle
+        showMask && maskControlsOpen && onMaskVisualizationChange ? jsxRuntimeExports.jsx("div", {
+          id: maskControlsId,
+          className: row.maskControlsPanel,
+          children: jsxRuntimeExports.jsx(MaskModeControls, {
+            value: maskVisualization,
+            ariaLabel: maskAriaLabel ?? name2.name,
+            onChange: onMaskVisualizationChange,
+            onPreview: onMaskVisualizationPreview
+          })
         }) : null
       ]
     });
@@ -170359,33 +170591,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       };
     });
   }
-  function buildOptimizeInputsFromSlots(slots) {
-    const n2 = slots.length;
-    const colors = new Uint16Array(n2 * 3);
-    const locked = new Uint16Array(n2);
-    for (let i2 = 0; i2 < n2; i2++) {
-      const slot = slots[i2];
-      colors[i2 * 3] = clampUint16(slot.seed.r);
-      colors[i2 * 3 + 1] = clampUint16(slot.seed.g);
-      colors[i2 * 3 + 2] = clampUint16(slot.seed.b);
-      locked[i2] = 0;
-    }
-    return {
-      colors,
-      locked,
-      intensities: colorOnlyIntensities(),
-      contrastLimits: defaultContrastLimits(n2),
-      luminance: DEFAULT_LUMINANCE,
-      excluded: [],
-      colorNames: Array.from({
-        length: n2
-      }, () => ""),
-      maxIters: PSUDO_MAX_ITERS,
-      confusionSamples: PSUDO_CONFUSION_BASELINE_SAMPLES,
-      spatial: PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP,
-      numRestarts: PSUDO_NUM_RESTARTS
-    };
-  }
   function usesDefaultFourChannelGrouping(channelGroups) {
     if (channelGroups.length === 0) return false;
     return channelGroups.every((g2) => /^Group \d+$/.test(g2.name) && g2.channels.length >= 1 && g2.channels.length <= IMPORT_GROUP_SLOT_COUNT);
@@ -170398,25 +170603,33 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return pool.slice(0, IMPORT_GROUP_SLOT_COUNT);
   }
   async function optimizeImportPaletteFour(sourceChannels) {
-    var _a2;
+    const seeds = IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex));
     const picked = importPaletteSourceChannels(sourceChannels);
-    if (picked.length < 2) {
-      return IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex));
+    if (picked.length < 2) return seeds;
+    const n2 = Math.min(IMPORT_GROUP_SLOT_COUNT, picked.length);
+    const colors = new Uint16Array(n2 * 3);
+    for (let i2 = 0; i2 < n2; i2++) {
+      const seed = seeds[i2];
+      colors[i2 * 3] = clampUint16(seed.r);
+      colors[i2 * 3 + 1] = clampUint16(seed.g);
+      colors[i2 * 3 + 2] = clampUint16(seed.b);
     }
-    const slotCount = Math.min(IMPORT_GROUP_SLOT_COUNT, picked.length);
-    const slots = [];
-    for (let i2 = 0; i2 < slotCount; i2++) {
-      slots.push({
-        seed: hexToRgb(IMPORT_DEFAULT_SEED_HEX[i2])
-      });
-    }
-    const optimized = await optimizeGroupPalette(buildOptimizeInputsFromSlots(slots));
-    const palette = [];
-    for (let i2 = 0; i2 < IMPORT_GROUP_SLOT_COUNT; i2++) {
-      const fallback = hexToRgb(IMPORT_DEFAULT_SEED_HEX[i2]);
-      palette.push(optimized[i2] ?? ((_a2 = slots[i2]) == null ? void 0 : _a2.seed) ?? fallback);
-    }
-    return palette;
+    const optimized = await optimizeGroupPalette({
+      colors,
+      locked: new Uint16Array(n2),
+      intensities: colorOnlyIntensities(),
+      contrastLimits: defaultContrastLimits(n2),
+      luminance: DEFAULT_LUMINANCE,
+      excluded: [],
+      colorNames: Array.from({
+        length: n2
+      }, () => ""),
+      maxIters: PSUDO_MAX_ITERS,
+      confusionSamples: PSUDO_CONFUSION_BASELINE_SAMPLES,
+      spatial: PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP,
+      numRestarts: PSUDO_NUM_RESTARTS
+    });
+    return seeds.map((fallback, i2) => optimized[i2] ?? fallback);
   }
   function applyFourColorPaletteToChannelGroups(channelGroups, palette, sourceChannels) {
     if (palette.length === 0) return channelGroups;
@@ -170466,31 +170679,31 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return seedDefaultSourceChannelStyles2(sourceChannels);
     }
   }
-  const detailChannelItemEmbed = "_detailChannelItemEmbed_ulb77_3";
-  const channelActionButton = "_channelActionButton_ulb77_10";
-  const colorLockButtonLocked = "_colorLockButtonLocked_ulb77_27";
-  const addChannelRow = "_addChannelRow_ulb77_36";
-  const addChannelSelect = "_addChannelSelect_ulb77_40";
-  const groupFolders = "_groupFolders_ulb77_45";
-  const groupFolder = "_groupFolder_ulb77_45";
-  const dropTargetActive = "_dropTargetActive_ulb77_60";
-  const groupFolderHeader = "_groupFolderHeader_ulb77_65";
-  const groupFolderActivate = "_groupFolderActivate_ulb77_77";
-  const groupFolderChevron = "_groupFolderChevron_ulb77_98";
-  const groupFolderName = "_groupFolderName_ulb77_116";
-  const groupFolderTrailing = "_groupFolderTrailing_ulb77_123";
-  const groupFolderBody = "_groupFolderBody_ulb77_130";
-  const groupChildList = "_groupChildList_ulb77_135";
-  const groupChildBlock = "_groupChildBlock_ulb77_141";
-  const groupChildRowWrap = "_groupChildRowWrap_ulb77_149";
-  const rootChannelRowWrap = "_rootChannelRowWrap_ulb77_150";
-  const groupChildName = "_groupChildName_ulb77_169";
-  const dragHandle = "_dragHandle_ulb77_179";
-  const treeSeparator = "_treeSeparator_ulb77_202";
-  const rootChannelList = "_rootChannelList_ulb77_212";
-  const rootChannelBlock = "_rootChannelBlock_ulb77_220";
-  const rootChannelBlockCompact = "_rootChannelBlockCompact_ulb77_224";
-  const rootChannelCompactName = "_rootChannelCompactName_ulb77_228";
+  const detailChannelItemEmbed = "_detailChannelItemEmbed_b4p2o_3";
+  const channelActionButton = "_channelActionButton_b4p2o_10";
+  const colorLockButtonLocked = "_colorLockButtonLocked_b4p2o_27";
+  const addChannelRow = "_addChannelRow_b4p2o_36";
+  const addChannelSelect = "_addChannelSelect_b4p2o_40";
+  const groupFolders = "_groupFolders_b4p2o_45";
+  const groupFolder = "_groupFolder_b4p2o_45";
+  const dropTargetActive = "_dropTargetActive_b4p2o_60";
+  const groupFolderHeader = "_groupFolderHeader_b4p2o_65";
+  const groupFolderActivate = "_groupFolderActivate_b4p2o_77";
+  const groupFolderChevron = "_groupFolderChevron_b4p2o_98";
+  const groupFolderName = "_groupFolderName_b4p2o_116";
+  const groupFolderTrailing = "_groupFolderTrailing_b4p2o_123";
+  const groupFolderBody = "_groupFolderBody_b4p2o_130";
+  const groupChildList = "_groupChildList_b4p2o_135";
+  const groupChildBlock = "_groupChildBlock_b4p2o_141";
+  const groupChildRowWrap = "_groupChildRowWrap_b4p2o_149";
+  const rootChannelRowWrap = "_rootChannelRowWrap_b4p2o_150";
+  const groupChildName = "_groupChildName_b4p2o_169";
+  const dragHandle = "_dragHandle_b4p2o_179";
+  const treeSeparator = "_treeSeparator_b4p2o_202";
+  const rootChannelList = "_rootChannelList_b4p2o_212";
+  const rootChannelBlock = "_rootChannelBlock_b4p2o_220";
+  const rootChannelBlockCompact = "_rootChannelBlockCompact_b4p2o_224";
+  const rootChannelCompactName = "_rootChannelCompactName_b4p2o_228";
   const styles$d = {
     detailChannelItemEmbed,
     channelActionButton,
@@ -170519,6 +170732,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     rootChannelCompactName
   };
   const CHANNEL_DRAG_MIME = "application/x-minerva-channel-ref";
+  function toggleWithScrollOnShow(event, becomingVisible, apply) {
+    apply();
+    if (!becomingVisible) return;
+    const block = event.currentTarget.closest("li");
+    if (!block) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        block.scrollIntoView({
+          block: "nearest",
+          inline: "nearest",
+          behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+        });
+      });
+    });
+  }
+  function imageSubtitleIfDistinct(channelName2, imageLabel) {
+    if (!imageLabel) return null;
+    if (imageLabel.trim().toLowerCase() === channelName2.trim().toLowerCase()) {
+      return null;
+    }
+    return imageLabel;
+  }
   function colorRenderingForSource(live, sourceChannelId) {
     if ((live == null ? void 0 : live.kind) === "color" && live.sourceChannelId === sourceChannelId) {
       return live;
@@ -170539,6 +170774,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       groupId: "",
       channelId: sc2.id,
       sourceChannelId: sc2.id,
+      channelLabel: sc2.name,
       r: c2.r ?? 0,
       g: c2.g ?? 0,
       b: c2.b ?? 0,
@@ -170556,6 +170792,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       groupId,
       channelId: gc2.id,
       sourceChannelId: sourceId,
+      channelLabel: (sc2 == null ? void 0 : sc2.name) ?? "Channel",
       r: c2.r ?? 0,
       g: c2.g ?? 0,
       b: c2.b ?? 0,
@@ -170792,7 +171029,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
   }
   const ChannelGroupsMasterDetail = (props) => {
-    const { setActiveChannelGroup, clearImageSelectionMask, setImageSelectionMaskVisualization } = useAppStore();
+    const setActiveChannelGroup = useAppStore((s2) => s2.setActiveChannelGroup);
+    const clearImageSelectionMask = useAppStore((s2) => s2.clearImageSelectionMask);
+    const setImageSelectionMaskVisualization = useAppStore((s2) => s2.setImageSelectionMaskVisualization);
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const imageSelectionMask = useAppStore((s2) => s2.imageSelectionMask);
     const channelVisibilities = useAppStore((s2) => s2.channelVisibilities);
@@ -170803,6 +171042,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const images = useDocumentStore((s2) => s2.images);
     const setChannelGroups = useDocumentStore((s2) => s2.setChannelGroups);
     const setImages = useDocumentStore((s2) => s2.setImages);
+    const setImagesAndChannelGroups = useDocumentStore((s2) => s2.setImagesAndChannelGroups);
     const setGroupNames = useAppStore((s2) => s2.setGroupNames);
     const setChannelVisibilities = useAppStore((s2) => s2.setChannelVisibilities);
     const sourceChannels = reactExports.useMemo(() => flattenImageChannelsInDocumentOrder(images), [
@@ -170823,26 +171063,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const activeChannelGroup = reactExports.useMemo(() => activeChannelGroupId ? channelGroups.find((g2) => g2.id === activeChannelGroupId) : void 0, [
       channelGroups,
       activeChannelGroupId
-    ]);
-    const allChannelsOrdered = reactExports.useMemo(() => {
-      const first = [];
-      const rest2 = [];
-      for (const sc2 of uniqueSourceChannels) {
-        if (isShownFirstInAllChannelsList(sc2, channelVisibilities, activeChannelGroup, channelGroupRowVisibilities)) {
-          first.push(sc2);
-        } else {
-          rest2.push(sc2);
-        }
-      }
-      return [
-        ...first,
-        ...rest2
-      ];
-    }, [
-      uniqueSourceChannels,
-      channelVisibilities,
-      activeChannelGroup,
-      channelGroupRowVisibilities
     ]);
     const [loadingHistogramSourceIds, setLoadingHistogramSourceIds] = reactExports.useState([]);
     const [colorPickerTarget, setColorPickerTarget] = reactExports.useState(null);
@@ -171156,11 +171376,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const syncMaskVisualization = (sourceId, viz, groupId, rowId) => {
       const doc = useDocumentStore.getState();
-      setImages(patchSourceChannelOnImages(doc.images, sourceId, {
+      const nextImages = patchSourceChannelOnImages(doc.images, sourceId, {
         maskVisualization: viz
-      }));
-      const groups = useDocumentStore.getState().channelGroups;
-      syncGroupState(groups.map((g2) => ({
+      });
+      const nextGroups = doc.channelGroups.map((g2) => ({
         ...g2,
         channels: g2.channels.map((gc2) => {
           if (groupId != null && rowId != null) {
@@ -171174,7 +171393,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             maskVisualization: viz
           } : gc2;
         })
-      })));
+      }));
+      setImagesAndChannelGroups(nextImages, nextGroups);
+      useAppStore.getState().setMaskVisualizationPreview(null);
+    };
+    const previewMaskVisualization = (sourceId, viz) => {
+      useAppStore.getState().setMaskVisualizationPreview(viz ? {
+        sourceChannelId: sourceId,
+        visualization: viz
+      } : null);
     };
     const setGroupMaskVisualization = (groupId, rowId, viz) => {
       var _a2;
@@ -171182,9 +171409,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const sourceId = row2 == null ? void 0 : row2.channelId;
       if (!sourceId) return;
       syncMaskVisualization(sourceId, viz, groupId, rowId);
-    };
-    const setSourceMaskVisualization = (sourceId, viz) => {
-      syncMaskVisualization(sourceId, viz);
     };
     const runOptimizePaletteForGroup = async (groupId) => {
       if (optimizePaletteBusy) return;
@@ -171264,19 +171488,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (!colorPickerTarget) return null;
       if (colorPickerTarget.scope === "source") {
         const live2 = colorRenderingForSource(channelRendering, colorPickerTarget.sourceId);
-        if (live2) return rgbToHex(live2);
+        if (live2) return rgbToHex$1(live2);
         const sc22 = findSourceChannel(sourceChannels, colorPickerTarget.sourceId);
         if (!sc22) return null;
         const idx = sourceChannels.findIndex((c2) => c2.id === sc22.id);
-        return rgbToHex(effectiveSourceColor(sc22, idx >= 0 ? idx : 0, sourceChannels));
+        return rgbToHex$1(effectiveSourceColor(sc22, idx >= 0 ? idx : 0, sourceChannels));
       }
       const g2 = channelGroups.find((x2) => x2.id === colorPickerTarget.groupId);
       const gc2 = g2 == null ? void 0 : g2.channels.find((c2) => c2.id === colorPickerTarget.rowId);
       if (!gc2) return null;
       const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
       const live = colorRenderingForSource(channelRendering, gc2.channelId);
-      if (live) return rgbToHex(live);
-      return rgbToHex(sc2 ? effectiveDisplayColor(sc2, sourceChannels, gc2) : gc2.color);
+      if (live) return rgbToHex$1(live);
+      return rgbToHex$1(sc2 ? effectiveDisplayColor(sc2, sourceChannels, gc2) : gc2.color);
     }, [
       colorPickerTarget,
       channelRendering,
@@ -171324,6 +171548,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setImages,
       syncGroupState
     ]);
+    const openColorPicker = (target, rect) => {
+      closeColorPicker();
+      setColorPickerTarget(target);
+      setColorPickerPos(colorPickerAnchorPosition(rect));
+    };
     const compositedIntensityLayers = reactExports.useMemo(() => buildCompositedIntensityLayers({
       onLoader: uniqueSourceChannels.filter((sc2) => isImageChannel(sc2)),
       activeGroup: activeChannelGroupId ? channelGroups.find((g2) => g2.id === activeChannelGroupId) : void 0,
@@ -171461,14 +171690,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
                   const name2 = (sc2 == null ? void 0 : sc2.name) ?? "Unknown";
                   const visible = isGroupRowVisible(channelGroupRowVisibilities, gc2.id);
-                  const hex = rgbToHex(sc2 ? effectiveDisplayColor(sc2, sourceChannels, gc2) : gc2.color);
+                  const hex = rgbToHex$1(sc2 ? effectiveDisplayColor(sc2, sourceChannels, gc2) : gc2.color);
                   const kind = sc2 ? isMaskChannel(sc2) ? "mask" : "channel" : "channel";
                   const rgbDisplay = sc2 ? isRgbDisplayChannel(sc2, sourceChannels) : false;
                   const contrastEditor = props.contrastEditable && sc2 && isImageChannel(sc2) && visible && !rgbDisplay ? jsxRuntimeExports.jsx(ChannelContrastEditor, {
                     ...contrastEditorPropsForGroupRow(channelRendering, group2.id, gc2, sc2),
                     histogramLoading: loadingHistogramSourceIds.includes(sc2.id)
                   }, `grp-${group2.id}-${gc2.id}`) : null;
-                  const imageSubtitle = showImageBadge && sc2 ? imageLabels.get(sc2.imageId) ?? null : null;
+                  const imageSubtitle = showImageBadge && sc2 ? imageSubtitleIfDistinct(name2, imageLabels.get(sc2.imageId) ?? null) : null;
                   const channelMeta = sc2 ? imageSubtitle ? `${imageSubtitle} \xB7 index ${sc2.index}` : `Index ${sc2.index}` : "";
                   const colorLocked = lockedIds.has(gc2.id);
                   const showColorLock = kind !== "mask" && !rgbDisplay;
@@ -171488,18 +171717,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                               fromGroupId: group2.id
                             })
                           }),
-                          rgbDisplay ? jsxRuntimeExports.jsx(ChannelRow, {
+                          jsxRuntimeExports.jsx(ChannelRow, {
                             rowClassName: row.groupChildRow,
-                            compact: true,
                             visible,
                             visibilityTitle: visible ? `Hide ${name2}` : `Show ${name2}`,
                             visibilityAriaLabel: `Toggle visibility for ${name2}`,
-                            onToggleVisibility: () => {
+                            onToggleVisibility: (event) => toggleWithScrollOnShow(event, !visible, () => {
                               setChannelGroupRowVisibilities({
                                 ...channelGroupRowVisibilities,
                                 [gc2.id]: !visible
                               });
-                            },
+                            }),
                             name: sc2 ? {
                               mode: "editable",
                               name: name2,
@@ -171512,50 +171740,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                               className: styles$d.groupChildName
                             },
                             imageSubtitle,
-                            trailing: channelMoreMenu(sc2, name2, () => removeChannelFromGroup(group2.id, gc2.id))
-                          }) : jsxRuntimeExports.jsx(ChannelRow, {
-                            rowClassName: row.groupChildRow,
-                            visible,
-                            visibilityTitle: visible ? `Hide ${name2}` : `Show ${name2}`,
-                            visibilityAriaLabel: `Toggle visibility for ${name2}`,
-                            onToggleVisibility: () => {
-                              setChannelGroupRowVisibilities({
-                                ...channelGroupRowVisibilities,
-                                [gc2.id]: !visible
-                              });
-                            },
-                            name: sc2 ? {
-                              mode: "editable",
-                              name: name2,
-                              meta: channelMeta,
-                              onBlur: (value) => renameSourceChannelDisplayName(sc2.id, value)
-                            } : {
-                              mode: "label",
-                              name: name2,
-                              title: name2,
-                              className: styles$d.groupChildName
-                            },
-                            imageSubtitle,
-                            ...kind === "mask" ? {
+                            compact: rgbDisplay,
+                            ...!rgbDisplay && kind === "mask" ? {
                               isMask: true,
                               maskVisualization: effectiveMaskVisualization(gc2),
                               maskAriaLabel: `Mask display for ${name2}`,
-                              onMaskVisualizationChange: (viz) => setGroupMaskVisualization(group2.id, gc2.id, viz)
-                            } : {
+                              onMaskVisualizationChange: (viz) => setGroupMaskVisualization(group2.id, gc2.id, viz),
+                              onMaskVisualizationPreview: (viz) => {
+                                if (group2.id !== activeChannelGroupId) return;
+                                previewMaskVisualization(gc2.channelId, viz);
+                              }
+                            } : !rgbDisplay ? {
                               colorHex: hex,
                               colorTitle: `Pick color for ${name2} in this group`,
                               colorAriaLabel: `Pick color for ${name2} in this group`,
                               onColorClick: (e2) => {
-                                const rect = e2.currentTarget.getBoundingClientRect();
-                                setColorPickerTarget({
+                                openColorPicker({
                                   scope: "group",
                                   groupId: group2.id,
                                   rowId: gc2.id
-                                });
-                                setColorPickerPos(colorPickerAnchorPosition(rect));
+                                }, e2.currentTarget.getBoundingClientRect());
                               }
-                            },
-                            trailing: jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+                            } : {},
+                            trailing: rgbDisplay ? channelMoreMenu(sc2, name2, () => removeChannelFromGroup(group2.id, gc2.id)) : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
                               children: [
                                 showColorLock ? jsxRuntimeExports.jsx("button", {
                                   type: "button",
@@ -171630,12 +171837,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       return stackOn ? `Hide ${sc2.name} layer on top of active group` : `Show ${sc2.name} on top of active group`;
     };
-    const allChannelsLayerTitle = (sc2, shown, viaActiveGroup) => {
-      if (viaActiveGroup) {
-        return shown ? `Hide ${sc2.name} in active group` : `Show ${sc2.name} in active group`;
-      }
-      return stackLayerTitle(sc2, shown);
-    };
     const renderAllChannelsRow = (sc2) => {
       const stackOn = isStackVisible(channelVisibilities, sc2.id);
       const activeRow = activeChannelGroup == null ? void 0 : activeChannelGroup.channels.find((gc2) => gc2.channelId === sc2.id);
@@ -171643,7 +171844,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const viaActiveGroup = isDisplayedViaActiveGroup(sc2.id, activeChannelGroup, channelGroupRowVisibilities);
       const shownInViewer = inAnyGroup ? activeRow ? viaActiveGroup : false : viaActiveGroup || stackOn;
       const imageLabel = showImageBadge ? imageLabels.get(sc2.imageId) ?? "" : "";
-      const imageSubtitle = imageLabel || null;
+      const imageSubtitle = imageSubtitleIfDistinct(sc2.name, imageLabel || null);
       const meta = imageLabel ? `${imageLabel} \xB7 index ${sc2.index}` : `Index ${sc2.index}`;
       const visibilityAriaLabel = imageLabel ? `Toggle layer for ${sc2.name} from ${imageLabel}` : `Toggle layer for ${sc2.name}`;
       const toggleAllChannelsVisibility = (nextVisible) => {
@@ -171679,9 +171880,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 rowClassName: row.rootChannelRow,
                 compact: true,
                 visible: shownInViewer,
-                visibilityTitle: activeRow ? shownInViewer ? `Hide ${sc2.name} in active group` : `Show ${sc2.name} in active group` : allChannelsLayerTitle(sc2, shownInViewer, viaActiveGroup),
+                visibilityTitle: activeRow ? shownInViewer ? `Hide ${sc2.name} in active group` : `Show ${sc2.name} in active group` : stackLayerTitle(sc2, shownInViewer),
                 visibilityAriaLabel,
-                onToggleVisibility: () => toggleAllChannelsVisibility(!shownInViewer),
+                onToggleVisibility: (event) => toggleWithScrollOnShow(event, !shownInViewer, () => {
+                  toggleAllChannelsVisibility(!shownInViewer);
+                }),
                 name: {
                   mode: "label",
                   name: sc2.name,
@@ -171698,7 +171901,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const colorIdx = sourceChannels.findIndex((c2) => c2.id === sc2.id);
       const displayColor = effectiveDisplayColor(sc2, sourceChannels, null, colorIdx >= 0 ? colorIdx : 0);
       const displayLimits = effectiveSourceLimits(sc2);
-      const hex = rgbToHex(displayColor);
+      const hex = rgbToHex$1(displayColor);
       if (!shownInViewer) {
         return jsxRuntimeExports.jsx("li", {
           className: [
@@ -171715,12 +171918,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 visible: false,
                 visibilityTitle: stackLayerTitle(sc2, false),
                 visibilityAriaLabel,
-                onToggleVisibility: () => toggleAllChannelsVisibility(true),
+                onToggleVisibility: (event) => toggleWithScrollOnShow(event, true, () => {
+                  toggleAllChannelsVisibility(true);
+                }),
                 name: {
-                  mode: "label",
+                  mode: "editable",
                   name: sc2.name,
-                  title: meta,
-                  className: styles$d.rootChannelCompactName
+                  meta,
+                  onBlur: (value) => renameSourceChannelDisplayName(sc2.id, value)
                 },
                 imageSubtitle
               })
@@ -171741,21 +171946,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             className: styles$d.rootChannelRowWrap,
             children: [
               dragHandle2,
-              rgbDisplay ? jsxRuntimeExports.jsx(ChannelRow, {
-                rowClassName: row.rootChannelRow,
-                compact: true,
-                visible: true,
-                visibilityTitle: capped ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) \u2014 hide another channel` : stackLayerTitle(sc2, true),
-                visibilityAriaLabel,
-                onToggleVisibility: () => toggleAllChannelsVisibility(false),
-                name: {
-                  mode: "editable",
-                  name: sc2.name,
-                  meta,
-                  onBlur: (value) => renameSourceChannelDisplayName(sc2.id, value)
-                },
-                imageSubtitle
-              }) : jsxRuntimeExports.jsx(ChannelRow, {
+              jsxRuntimeExports.jsx(ChannelRow, {
                 rowClassName: row.rootChannelRow,
                 visible: true,
                 visibilityTitle: capped ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) \u2014 hide another channel` : stackLayerTitle(sc2, true),
@@ -171768,26 +171959,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   onBlur: (value) => renameSourceChannelDisplayName(sc2.id, value)
                 },
                 imageSubtitle,
-                ...isMaskChannel(sc2) ? {
+                compact: rgbDisplay,
+                ...!rgbDisplay && isMaskChannel(sc2) ? {
                   isMask: true,
                   maskVisualization: effectiveMaskVisualization(sc2),
                   maskAriaLabel: `Mask display for ${sc2.name}`,
-                  onMaskVisualizationChange: (viz) => setSourceMaskVisualization(sc2.id, viz)
-                } : {
+                  onMaskVisualizationChange: (viz) => syncMaskVisualization(sc2.id, viz),
+                  onMaskVisualizationPreview: (viz) => previewMaskVisualization(sc2.id, viz)
+                } : !rgbDisplay ? {
                   colorHex: hex,
                   colorTitle: `Pick color for ${sc2.name}`,
                   colorAriaLabel: `Pick color for ${sc2.name}`,
                   onColorClick: (e2) => {
                     e2.stopPropagation();
-                    const rect = e2.currentTarget.getBoundingClientRect();
-                    setColorPickerTarget({
+                    openColorPicker({
                       scope: "source",
                       sourceId: sc2.id
-                    });
-                    setColorPickerPos(colorPickerAnchorPosition(rect));
+                    }, e2.currentTarget.getBoundingClientRect());
                   }
-                },
-                trailing: channelMoreMenu(sc2, sc2.name)
+                } : {},
+                trailing: rgbDisplay ? void 0 : channelMoreMenu(sc2, sc2.name)
               })
             ]
           }),
@@ -171828,7 +172019,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               children: "No channels yet"
             }) : null : jsxRuntimeExports.jsx("ul", {
               className: styles$d.rootChannelList,
-              children: allChannelsOrdered.map(renderAllChannelsRow)
+              children: uniqueSourceChannels.map(renderAllChannelsRow)
             }),
             imageSelectionMask ? jsxRuntimeExports.jsx(ChannelRow, {
               rowClassName: row.rootChannelRow,
@@ -171849,7 +172040,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               isMask: true,
               maskVisualization: imageSelectionMask.maskVisualization ?? DEFAULT_MASK_VISUALIZATION,
               maskAriaLabel: "Selection mask display",
-              onMaskVisualizationChange: setImageSelectionMaskVisualization,
+              onMaskVisualizationChange: (viz) => {
+                setImageSelectionMaskVisualization(viz);
+                previewMaskVisualization(SELECTION_MASK_CHANNEL_KEY, null);
+              },
+              onMaskVisualizationPreview: (viz) => previewMaskVisualization(SELECTION_MASK_CHANNEL_KEY, viz),
               fixedColorHex: "ffcc00",
               trailing: jsxRuntimeExports.jsx("button", {
                 type: "button",
@@ -175441,7 +175636,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return copy2;
   }
   function WorkerWrapper$3(options) {
-    return new Worker("" + new URL("jpegExport.worker-BMPUP9uR.js", import.meta.url).href, {
+    return new Worker("" + new URL("jpegExport.worker-CCI5kLx3.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -177991,38 +178186,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   });
   LoadingWidget.displayName = "LoadingWidget";
-  const CELL_OUTLINE_VEC3 = [
-    [
-      212 / 255,
-      110 / 255,
-      94 / 255
-    ],
-    [
-      207 / 255,
-      156 / 255,
-      89 / 255
-    ],
-    [
-      199 / 255,
-      176 / 255,
-      87 / 255
-    ],
-    [
-      74 / 255,
-      181 / 255,
-      131 / 255
-    ],
-    [
-      87 / 255,
-      147 / 255,
-      199 / 255
-    ],
-    [
-      163 / 255,
-      103 / 255,
-      193 / 255
-    ]
-  ];
+  const CELL_OUTLINE_COUNT = CELL_OUTLINE_RGB.length;
+  const CELL_OUTLINE_VEC3 = CELL_OUTLINE_RGB.map(([r2, g2, b2]) => [
+    r2 / 255,
+    g2 / 255,
+    b2 / 255
+  ]);
   const MASK_VS = `#version 300 es
 #define SHADER_NAME mask-bitmask-layer-vertex-shader
 
@@ -178056,7 +178225,7 @@ in vec2 vTexCoord;
 out vec4 fragColor;
 
 vec3 randomColor(uint label) {
-  uint i = (label ^ uint(maskViz.uColorSeed)) % 6u;
+  uint i = (label ^ uint(maskViz.uColorSeed)) % ${CELL_OUTLINE_COUNT}u;
   if (i == 0u) return maskViz.uPalette0;
   if (i == 1u) return maskViz.uPalette1;
   if (i == 2u) return maskViz.uPalette2;
@@ -178079,7 +178248,7 @@ void main() {
   if (maskViz.uOutline != 0 && !isInteriorEdge(label, vTexCoord)) discard;
 
   vec3 rgb = maskViz.uRandomColors != 0 ? randomColor(label) : vec3(1.0);
-  float a = (maskViz.uOutline != 0 ? 235.0 : 200.0) / 255.0;
+  float a = (maskViz.uOutline != 0 ? 230.0 : 170.0) / 255.0;
   fragColor = vec4(rgb, a * maskViz.opacity);
 
   geometry.uv = vTexCoord;
@@ -178165,11 +178334,7 @@ void main() {
       const w2 = Math.max(1, (channelData == null ? void 0 : channelData.width) ?? 1);
       const h2 = Math.max(1, (channelData == null ? void 0 : channelData.height) ?? 1);
       const viz = this.props.visualization ?? DEFAULT_MASK_VISUALIZATION;
-      const white = [
-        1,
-        1,
-        1
-      ];
+      const opacity = Math.min(1, Math.max(0, viz.opacity ?? 1));
       model.shaderInputs.setProps({
         maskViz: {
           uOutline: viz.style === "outline" ? 1 : 0,
@@ -178179,13 +178344,13 @@ void main() {
             1 / w2,
             1 / h2
           ],
-          opacity: this.props.opacity ?? 1,
-          uPalette0: CELL_OUTLINE_VEC3[0] ?? white,
-          uPalette1: CELL_OUTLINE_VEC3[1] ?? white,
-          uPalette2: CELL_OUTLINE_VEC3[2] ?? white,
-          uPalette3: CELL_OUTLINE_VEC3[3] ?? white,
-          uPalette4: CELL_OUTLINE_VEC3[4] ?? white,
-          uPalette5: CELL_OUTLINE_VEC3[5] ?? white
+          opacity,
+          uPalette0: CELL_OUTLINE_VEC3[0],
+          uPalette1: CELL_OUTLINE_VEC3[1],
+          uPalette2: CELL_OUTLINE_VEC3[2],
+          uPalette3: CELL_OUTLINE_VEC3[3],
+          uPalette4: CELL_OUTLINE_VEC3[4],
+          uPalette5: CELL_OUTLINE_VEC3[5]
         }
       });
     }
@@ -178242,7 +178407,8 @@ void main() {
         renderSubLayers: [
           viz.style,
           viz.color,
-          viz.colorSeed ?? 0
+          viz.colorSeed ?? 0,
+          viz.opacity ?? 1
         ]
       },
       getTileData: async ({ index: index2, signal }) => {
@@ -178464,6 +178630,8 @@ void main() {
     const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2 } = props;
     const { activeChannelGroupId, channelVisibilities, channelGroupRowVisibilities, sam2Processing, authoringWaypointEditorOpen } = useAppStore();
     const imageSelectionMask = useAppStore((s2) => s2.imageSelectionMask);
+    const maskVisualizationPreview = useAppStore((s2) => s2.maskVisualizationPreview);
+    const selectionMaskVisualizationPreview = (maskVisualizationPreview == null ? void 0 : maskVisualizationPreview.sourceChannelId) === SELECTION_MASK_CHANNEL_KEY ? maskVisualizationPreview.visualization : null;
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
     const selectionMaskActive = imageSelectionMask != null && (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
@@ -178549,11 +178717,12 @@ void main() {
         }
         const entry = omeLoaderEntries.find((e2) => e2.sourceImageId === sc2.imageId);
         if (!(entry == null ? void 0 : entry.loader)) continue;
+        const visualization = (maskVisualizationPreview == null ? void 0 : maskVisualizationPreview.sourceChannelId) === sc2.id ? maskVisualizationPreview.visualization : effectiveMaskVisualizationForSource(sc2, channelGroups, activeChannelGroupId);
         const layer = createMaskTileLayer({
           id: `mask-channel-${sc2.id}`,
           loader: entry.loader,
           channelIndex: sc2.index,
-          visualization: effectiveMaskVisualizationForSource(sc2, channelGroups, activeChannelGroupId),
+          visualization,
           worldWidth: imgW,
           worldHeight: imgH
         });
@@ -178568,7 +178737,8 @@ void main() {
       channelVisibilities,
       channelGroupRowVisibilities,
       activeChannelGroupId,
-      channelGroups
+      channelGroups,
+      maskVisualizationPreview
     ]);
     const fitViewState = reactExports.useMemo(() => {
       const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
@@ -178885,6 +179055,7 @@ void main() {
         maxX,
         maxY
       ];
+      const visualization = selectionMaskVisualizationPreview ?? imageSelectionMask.maskVisualization ?? DEFAULT_MASK_VISUALIZATION;
       const layers = [
         new BitmapLayer$1({
           id: IMAGE_SELECTION_MASK_LAYER_ID,
@@ -178898,14 +179069,19 @@ void main() {
         layers.push(new BitmapLayer$1({
           id: "image-selection-display",
           bounds,
-          image: selectionMaskDisplayImageData(imageSelectionMask),
+          image: selectionMaskDisplayImageData({
+            ...imageSelectionMask,
+            maskVisualization: visualization
+          }),
+          opacity: visualization.opacity,
           pickable: false
         }));
       }
       return layers;
     }, [
       imageSelectionMask,
-      selectionMaskActive
+      selectionMaskActive,
+      selectionMaskVisualizationPreview
     ]);
     const clippedImageLayers = reactExports.useMemo(() => {
       if (!selectionMaskActive || !imageSelectionMask) return imageLayers;
@@ -179112,7 +179288,7 @@ void main() {
     const handleAfterRender = reactExports.useCallback(() => {
       if (loadingWidgetRef.current) {
         loadingWidgetRef.current.onRedraw({
-          layers: allLayers
+          layers: imageLayers
         });
       }
       if (isCameraBusyRef.current) return;
@@ -179122,7 +179298,6 @@ void main() {
         setViewerImageLayersLoaded(loaded);
       }
     }, [
-      allLayers,
       imageLayers,
       setViewerImageLayersLoaded
     ]);
@@ -249820,12 +249995,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-03T20:49:20.544Z");
+    const label2 = utcShort("2026-09-04T03:22:08.642Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.stamp,
       "aria-hidden": true,
-      title: "2026-09-03T20:49:20.544Z",
+      title: "2026-09-04T03:22:08.642Z",
       children: [
         "Updated ",
         label2,
@@ -250287,16 +250462,6 @@ void main() {
       label: "DICOMweb"
     }
   ];
-  function orderDetectedFirst(options, isDetected) {
-    const suggested = options.find(isDetected);
-    if (!suggested) return [
-      ...options
-    ];
-    return [
-      suggested,
-      ...options.filter((o2) => o2 !== suggested)
-    ];
-  }
   function FormatChip({ label: label2, selected, suggested, muted, disabled: disabled2, onClick }) {
     return jsxRuntimeExports.jsx(PanelActionButton, {
       type: "button",
@@ -250808,7 +250973,7 @@ void main() {
                       className: styles$1.fieldLabel,
                       children: "Type"
                     }),
-                    orderDetectedFirst(ROLE_OPTIONS, (o2) => o2.role === detectedRole).map(({ role, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
+                    ROLE_OPTIONS.map(({ role, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
                       label: label2,
                       selected: overlayRole === role,
                       suggested: detectedRole === role,
@@ -250833,7 +250998,7 @@ void main() {
                         className: styles$1.fieldLabel,
                         children: "Format"
                       }),
-                      orderDetectedFirst(FORMAT_OPTIONS, (o2) => o2.format === detectedFormat).map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
+                      FORMAT_OPTIONS.map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
                         label: label2,
                         selected: overlayFormat === format,
                         suggested: detectedFormat === format,
@@ -252366,6 +252531,7 @@ void main() {
       delete channelVisibilities2[SELECTION_MASK_CHANNEL_KEY];
       useAppStore.setState({
         imageSelectionMask: null,
+        maskVisualizationPreview: null,
         channelVisibilities: channelVisibilities2
       });
       const keys2 = removed.flatMap((im) => {
