@@ -93,6 +93,11 @@ export type DocumentStore = DocumentState & {
   setShapes: (shapes: Shape[]) => void;
   setChannelGroups: (channelGroups: ChannelGroup[]) => void;
   setImages: (images: Image[]) => void;
+  /** Atomically update coupled channel source/group state as one undo step. */
+  setImagesAndChannelGroups: (
+    images: Image[],
+    channelGroups: ChannelGroup[],
+  ) => void;
   /** Merge into `metadata`; use when persisting exhibit title/version, etc. */
   setMetadata: (metadata: Partial<DocumentMetadata>) => void;
 
@@ -320,6 +325,12 @@ export const useDocumentStore = create<DocumentStore>()(
           set(() => ({ channelGroups: [...channelGroups] })),
 
         setImages: (images) => set(() => ({ images: [...images] })),
+
+        setImagesAndChannelGroups: (images, channelGroups) =>
+          set(() => ({
+            images: [...images],
+            channelGroups: [...channelGroups],
+          })),
 
         /** Prefer `get()` + object `set` (not `set(fn)`) so devtools middleware always merges metadata reliably. */
         setMetadata: (patch) => {

@@ -10,7 +10,10 @@ import { MaskExtension } from "@deck.gl/extensions";
 import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import { isMaskSourceRendered } from "@/lib/imaging/channelCompositor";
-import { isMaskChannel } from "@/lib/imaging/channelKind";
+import {
+  DEFAULT_MASK_VISUALIZATION,
+  isMaskChannel,
+} from "@/lib/imaging/channelKind";
 import {
   IMAGE_SELECTION_MASK_LAYER_ID,
   SELECTION_MASK_CHANNEL_KEY,
@@ -325,6 +328,13 @@ export const ImageViewer = (props: ImageViewerProps) => {
   } = useAppStore();
   // Live contrast/color preview is folded in `useViewerLayers`, not here.
   const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
+  const maskVisualizationPreview = useAppStore(
+    (s) => s.maskVisualizationPreview,
+  );
+  const selectionMaskVisualizationPreview =
+    maskVisualizationPreview?.sourceChannelId === SELECTION_MASK_CHANNEL_KEY
+      ? maskVisualizationPreview.visualization
+      : null;
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const selectionMaskActive =
@@ -420,15 +430,19 @@ export const ImageViewer = (props: ImageViewerProps) => {
         (e) => e.sourceImageId === sc.imageId,
       );
       if (!entry?.loader) continue;
+      const visualization =
+        maskVisualizationPreview?.sourceChannelId === sc.id
+          ? maskVisualizationPreview.visualization
+          : effectiveMaskVisualizationForSource(
+              sc,
+              channelGroups,
+              activeChannelGroupId,
+            );
       const layer = createMaskTileLayer({
         id: `mask-channel-${sc.id}`,
         loader: entry.loader,
         channelIndex: sc.index,
-        visualization: effectiveMaskVisualizationForSource(
-          sc,
-          channelGroups,
-          activeChannelGroupId,
-        ),
+        visualization,
         worldWidth: imgW,
         worldHeight: imgH,
       });
@@ -444,6 +458,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     channelGroupRowVisibilities,
     activeChannelGroupId,
     channelGroups,
+    maskVisualizationPreview,
   ]);
 
   // Deck owns live pan/zoom via `initialViewState`. React `viewState` is the last
@@ -764,6 +779,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
     if (!imageSelectionMask) return [] as Layer[];
     const [minX, minY, maxX, maxY] = imageSelectionMask.bounds;
     const bounds: [number, number, number, number] = [minX, minY, maxX, maxY];
+    const visualization =
+      selectionMaskVisualizationPreview ??
+      imageSelectionMask.maskVisualization ??
+      DEFAULT_MASK_VISUALIZATION;
     const layers: Layer[] = [
       new BitmapLayer({
         id: IMAGE_SELECTION_MASK_LAYER_ID,
@@ -778,13 +797,21 @@ export const ImageViewer = (props: ImageViewerProps) => {
         new BitmapLayer({
           id: "image-selection-display",
           bounds,
-          image: selectionMaskDisplayImageData(imageSelectionMask),
+          image: selectionMaskDisplayImageData({
+            ...imageSelectionMask,
+            maskVisualization: visualization,
+          }),
+          opacity: visualization.opacity,
           pickable: false,
         }),
       );
     }
     return layers;
-  }, [imageSelectionMask, selectionMaskActive]);
+  }, [
+    imageSelectionMask,
+    selectionMaskActive,
+    selectionMaskVisualizationPreview,
+  ]);
 
   const clippedImageLayers = useMemo(() => {
     if (!selectionMaskActive || !imageSelectionMask) return imageLayers;
@@ -1065,7 +1092,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   const handleAfterRender = useCallback(() => {
     if (loadingWidgetRef.current) {
-      loadingWidgetRef.current.onRedraw({ layers: allLayers });
+      // Display-only overlays (mask opacity/color, annotations) should not
+      // activate the image-data loading spinner.
+      loadingWidgetRef.current.onRedraw({ layers: imageLayers });
     }
     // Skip Zustand while the camera is busy — isLoaded flickers as LODs churn.
     if (isCameraBusyRef.current) return;
@@ -1076,7 +1105,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       imageLayersLoadedRef.current = loaded;
       setViewerImageLayersLoaded(loaded);
     }
-  }, [allLayers, imageLayers, setViewerImageLayersLoaded]);
+  }, [imageLayers, setViewerImageLayersLoaded]);
 
   useEffect(() => {
     return () => {

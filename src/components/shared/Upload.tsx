@@ -144,15 +144,6 @@ const FORMAT_OPTIONS: { format: OverlayFormat; label: string }[] = [
   { format: "dicomweb", label: "DICOMweb" },
 ];
 
-function orderDetectedFirst<T>(
-  options: readonly T[],
-  isDetected: (option: T) => boolean,
-): T[] {
-  const suggested = options.find(isDetected);
-  if (!suggested) return [...options];
-  return [suggested, ...options.filter((o) => o !== suggested)];
-}
-
 function FormatChip({
   label,
   selected,
@@ -727,10 +718,7 @@ const Upload = (props: UploadProps) => {
           <fieldset disabled={importBusy} className={styles.typeOverlayFields}>
             <div className={styles.typeRow}>
               <span className={styles.fieldLabel}>Type</span>
-              {orderDetectedFirst(
-                ROLE_OPTIONS,
-                (o) => o.role === detectedRole,
-              ).map(({ role, label }) => (
+              {ROLE_OPTIONS.map(({ role, label }) => (
                 <FormatChip
                   key={role}
                   label={label}
@@ -752,10 +740,7 @@ const Upload = (props: UploadProps) => {
               <div className={styles.typeSection}>
                 <div className={styles.typeRow}>
                   <span className={styles.fieldLabel}>Format</span>
-                  {orderDetectedFirst(
-                    FORMAT_OPTIONS,
-                    (o) => o.format === detectedFormat,
-                  ).map(({ format, label }) => (
+                  {FORMAT_OPTIONS.map(({ format, label }) => (
                     <FormatChip
                       key={format}
                       label={label}

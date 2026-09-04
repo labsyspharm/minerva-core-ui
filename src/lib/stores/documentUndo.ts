@@ -92,7 +92,7 @@ export function syncAppStoreShapesFromDocument(): void {
 /** Reconcile ephemeral UI state after the document store changes externally (undo/redo). */
 export function syncAppStoreFromDocument(): void {
   useAppStore.getState().clearChannelRendering();
-  useAppStore.setState({ imageSelectionMask: null });
+  useAppStore.setState({ maskVisualizationPreview: null });
   syncAppStoreChannelMirrorsFromDocument();
   syncAppStoreWaypointsFromDocument();
   syncAppStoreShapesFromDocument();

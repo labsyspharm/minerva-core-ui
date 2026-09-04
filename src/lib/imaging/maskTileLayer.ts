@@ -10,17 +10,13 @@ import type {
   LoaderPlane,
   SupportedTypedArray,
 } from "@/lib/imaging/loaderTypes";
+import { CELL_OUTLINE_RGB } from "@/lib/imaging/maskLayers";
 import type { Loader } from "@/lib/imaging/viv";
 
-/** Higher-chroma cousins of `--cloth-1`…`--cloth-6`. */
-const CELL_OUTLINE_VEC3: [number, number, number][] = [
-  [212 / 255, 110 / 255, 94 / 255],
-  [207 / 255, 156 / 255, 89 / 255],
-  [199 / 255, 176 / 255, 87 / 255],
-  [74 / 255, 181 / 255, 131 / 255],
-  [87 / 255, 147 / 255, 199 / 255],
-  [163 / 255, 103 / 255, 193 / 255],
-];
+const CELL_OUTLINE_COUNT = CELL_OUTLINE_RGB.length;
+const CELL_OUTLINE_VEC3: [number, number, number][] = CELL_OUTLINE_RGB.map(
+  ([r, g, b]) => [r / 255, g / 255, b / 255],
+);
 
 type MaskTileData = {
   data: Uint32Array[];
@@ -63,7 +59,7 @@ in vec2 vTexCoord;
 out vec4 fragColor;
 
 vec3 randomColor(uint label) {
-  uint i = (label ^ uint(maskViz.uColorSeed)) % 6u;
+  uint i = (label ^ uint(maskViz.uColorSeed)) % ${CELL_OUTLINE_COUNT}u;
   if (i == 0u) return maskViz.uPalette0;
   if (i == 1u) return maskViz.uPalette1;
   if (i == 2u) return maskViz.uPalette2;
@@ -86,7 +82,7 @@ void main() {
   if (maskViz.uOutline != 0 && !isInteriorEdge(label, vTexCoord)) discard;
 
   vec3 rgb = maskViz.uRandomColors != 0 ? randomColor(label) : vec3(1.0);
-  float a = (maskViz.uOutline != 0 ? 235.0 : 200.0) / 255.0;
+  float a = (maskViz.uOutline != 0 ? 230.0 : 170.0) / 255.0;
   fragColor = vec4(rgb, a * maskViz.opacity);
 
   geometry.uv = vTexCoord;
@@ -197,20 +193,20 @@ class MaskBitmaskLayer extends XRLayerBase {
     const viz =
       (this.props.visualization as MaskVisualization | undefined) ??
       DEFAULT_MASK_VISUALIZATION;
-    const white: [number, number, number] = [1, 1, 1];
+    const opacity = Math.min(1, Math.max(0, viz.opacity ?? 1));
     model.shaderInputs.setProps({
       maskViz: {
         uOutline: viz.style === "outline" ? 1 : 0,
         uRandomColors: viz.color === "random" ? 1 : 0,
         uColorSeed: viz.colorSeed ?? 0,
         uTexelSize: [1 / w, 1 / h],
-        opacity: this.props.opacity ?? 1,
-        uPalette0: CELL_OUTLINE_VEC3[0] ?? white,
-        uPalette1: CELL_OUTLINE_VEC3[1] ?? white,
-        uPalette2: CELL_OUTLINE_VEC3[2] ?? white,
-        uPalette3: CELL_OUTLINE_VEC3[3] ?? white,
-        uPalette4: CELL_OUTLINE_VEC3[4] ?? white,
-        uPalette5: CELL_OUTLINE_VEC3[5] ?? white,
+        opacity,
+        uPalette0: CELL_OUTLINE_VEC3[0],
+        uPalette1: CELL_OUTLINE_VEC3[1],
+        uPalette2: CELL_OUTLINE_VEC3[2],
+        uPalette3: CELL_OUTLINE_VEC3[3],
+        uPalette4: CELL_OUTLINE_VEC3[4],
+        uPalette5: CELL_OUTLINE_VEC3[5],
       },
     });
   }
@@ -265,7 +261,12 @@ export function createMaskTileLayer(args: {
     pickable: false,
     updateTriggers: {
       getTileData: [channelIndex],
-      renderSubLayers: [viz.style, viz.color, viz.colorSeed ?? 0],
+      renderSubLayers: [
+        viz.style,
+        viz.color,
+        viz.colorSeed ?? 0,
+        viz.opacity ?? 1,
+      ],
     },
     getTileData: async ({ index, signal }) => {
       const level = Math.min(

@@ -82,7 +82,7 @@ import {
   replaceOmeLocalImageInDocument,
 } from "@/lib/imaging/omeImportPipeline";
 import { getOmeTiffImageDescriptionOmeXml } from "@/lib/imaging/omeTiff";
-import { warmupPsudoPalette } from "@/lib/imaging/pseudoPalette";
+import { warmupPsudoPalette } from "@/lib/imaging/psudoPalette";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
 import { Pool } from "@/lib/imaging/workers/pool";
 import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
@@ -624,7 +624,11 @@ const Content = (props: Props) => {
     app.clearChannelRendering();
     const channelVisibilities = { ...app.channelVisibilities };
     delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
-    useAppStore.setState({ imageSelectionMask: null, channelVisibilities });
+    useAppStore.setState({
+      imageSelectionMask: null,
+      maskVisualizationPreview: null,
+      channelVisibilities,
+    });
     const keys = removed.flatMap((im) =>
       im.source?.kind === "local" ? [im.source.handleKey] : [],
     );

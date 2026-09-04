@@ -94,7 +94,7 @@ export const ImageChannelKindSchema = z.preprocess(
   z.enum(["channel", "mask"]),
 );
 
-/** Mask display (legacy `"outline"` / `"randomColors"` coerced in preprocess). */
+/** Mask display. Legacy `"outline"` / `"randomColors"` strings are coerced here. */
 export const MaskVisualizationSchema = z.preprocess(
   (v) => {
     if (v === "outline") return { style: "outline", color: "white" };
@@ -106,6 +106,8 @@ export const MaskVisualizationSchema = z.preprocess(
     color: z.enum(["white", "random"]),
     /** 24-bit; XOR'd into the GPU label hash when `color` is `random`. */
     colorSeed: z.number().int().nonnegative().optional(),
+    /** Overlay alpha multiplier (`0…1`); omitted in older docs → `1`. */
+    opacity: z.number().min(0).max(1).default(1),
   }),
 );
 

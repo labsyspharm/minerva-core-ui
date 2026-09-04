@@ -2,8 +2,11 @@
 
 .channelNameInput {
   display: block;
-  min-width: 0;
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .channelRowMain {
@@ -14,8 +17,27 @@
 }
 
 .channelRowTitle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
   flex: 1 1 0;
   min-width: 0;
+}
+
+.channelNameSlot {
+  flex: 0 0 10ch;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.channelNameSlot > * {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .channelRowTrailing {
@@ -24,15 +46,191 @@
   flex-shrink: 0;
 }
 
+.maskDisclosureButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  padding: 0;
+  color: var(--minerva-quiet);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.maskDisclosureButton:hover {
+  color: var(--minerva-ink);
+}
+
+.maskDisclosureButton svg {
+  width: 10px;
+  height: 10px;
+}
+
 .channelImageSubtitle {
-  display: block;
-  font-size: var(--minerva-size-note);
-  line-height: 1.2;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 38%;
+  font-size: 10px;
+  line-height: 1;
   color: var(--minerva-quiet);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin: 1px 0 0 26px;
+  margin: 0;
+}
+
+.maskModeControls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.maskControlsPanel {
+  margin: 5px 8px 2px 26px;
+  padding: 2px 0;
+}
+
+.maskModeToggles {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.maskModeGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.maskModeGroupLabel {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--minerva-quiet);
+  user-select: none;
+}
+
+.maskVizToggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
+  border: 1px solid var(--minerva-edge);
+  border-radius: 0;
+  background: var(--minerva-wash);
+  gap: 0;
+}
+
+.maskOpacityControl {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+
+.maskOpacityInputRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 150px;
+  max-width: 100%;
+  height: 18px;
+  padding: 0 8px 0 4px;
+  box-sizing: border-box;
+  background: var(--minerva-wash);
+  border: 1px solid var(--minerva-edge);
+}
+
+.maskOpacityLabel {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--minerva-quiet);
+  user-select: none;
+}
+
+.maskOpacitySlider {
+  flex: 1 1 auto;
+  min-width: 48px;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--minerva-ink) 70%, transparent) 0%,
+    color-mix(in srgb, var(--minerva-ink) 70%, transparent)
+      var(--mask-opacity-pct, 100%),
+    var(--minerva-edge) var(--mask-opacity-pct, 100%),
+    var(--minerva-edge) 100%
+  );
+  background-position: center;
+  background-size: 100% 2px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.maskOpacitySlider::-webkit-slider-runnable-track {
+  height: 2px;
+  background: transparent;
+}
+
+.maskOpacitySlider::-moz-range-track {
+  height: 2px;
+  background: transparent;
+  border: none;
+}
+
+.maskOpacitySlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 9px;
+  height: 9px;
+  margin-top: -3.5px;
+  border: 1px solid var(--minerva-ink);
+  border-radius: 0;
+  background: var(--minerva-paper);
+  box-shadow: inset 0 0 0 1px var(--minerva-paper);
+}
+
+.maskOpacitySlider::-moz-range-thumb {
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--minerva-ink);
+  border-radius: 0;
+  background: var(--minerva-paper);
+}
+
+.maskOpacitySlider:hover::-webkit-slider-thumb,
+.maskOpacitySlider:focus-visible::-webkit-slider-thumb {
+  background: var(--minerva-ink);
+}
+
+.maskOpacitySlider:hover::-moz-range-thumb,
+.maskOpacitySlider:focus-visible::-moz-range-thumb {
+  background: var(--minerva-ink);
+}
+
+.maskOpacitySlider:focus-visible {
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: var(--minerva-focus-offset);
+}
+
+.maskOpacityValue {
+  flex-shrink: 0;
+  min-width: 1.85rem;
+  text-align: right;
+  font-size: 10px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--minerva-quiet);
 }
 
 .channelVisibilityButton {
@@ -51,7 +249,6 @@
 }
 
 .channelVisibilityButton:hover {
-  color: var(--minerva-ink);
   background: var(--minerva-wash);
 }
 
@@ -64,13 +261,17 @@
   color: var(--minerva-quiet);
 }
 
-.channelColorSwatch {
+.channelColorSwatch,
+.channelColorSwatchStatic {
   width: 14px;
   height: 14px;
   padding: 0;
   border: 1px solid var(--minerva-edge);
   border-radius: 0;
   flex-shrink: 0;
+}
+
+.channelColorSwatch {
   cursor: pointer;
 }
 
@@ -87,31 +288,12 @@
   box-shadow: inset 0 0 0 1px var(--minerva-ink);
 }
 
-.maskVizControls {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  height: 22px;
-}
-
-.maskVizToggle {
-  display: inline-flex;
-  flex-shrink: 0;
-  margin: 0;
-  padding: 1px;
-  border: 1px solid var(--minerva-edge);
-  border-radius: 0;
-  background: transparent;
-  gap: 1px;
-}
-
 .maskVizOption {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 18px;
+  width: 18px;
+  height: 16px;
   padding: 0;
   background: transparent;
   color: var(--minerva-quiet);
@@ -122,18 +304,17 @@
 
 .maskVizOption:hover {
   color: var(--minerva-ink);
-  background: var(--minerva-wash);
+  background: color-mix(in srgb, var(--minerva-ink) 10%, transparent);
 }
 
 .maskVizOption:focus-visible {
   outline: var(--minerva-focus-width) solid var(--minerva-ink);
-  outline-offset: var(--minerva-focus-offset);
+  outline-offset: -2px;
 }
 
 .maskVizOptionActive {
-  background: var(--minerva-wash);
+  background: color-mix(in srgb, var(--minerva-ink) 16%, transparent);
   color: var(--minerva-ink);
-  box-shadow: inset 0 -1px 0 var(--minerva-ink);
 }
 
 .maskVizIconOutline,
@@ -141,8 +322,8 @@
 .maskVizSwatchWhite,
 .maskVizSwatchRandom {
   display: block;
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 0;
   box-sizing: border-box;
 }

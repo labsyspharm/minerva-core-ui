@@ -1,7 +1,12 @@
 .wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+  --range-input-width: min(2.85rem, 21vw);
+  display: grid;
+  grid-template-columns:
+    var(--range-input-width)
+    minmax(0, 1fr)
+    var(--range-input-width);
+  align-items: end;
+  gap: 10px;
   width: 100%;
   padding-bottom: 2px;
 }
@@ -9,6 +14,8 @@
 .histogramHost {
   position: relative;
   width: 100%;
+  min-width: 0;
+  --handle-width: 0.5rem;
 }
 
 .histogramLoading {
@@ -19,6 +26,8 @@
   justify-content: center;
   background: transparent;
   border-radius: 0;
+  z-index: 3;
+  pointer-events: none;
 }
 
 .histogramLoadingVisible {
@@ -33,64 +42,38 @@
 }
 
 .histogramFill {
-  fill: var(--minerva-ink);
+  fill: var(--histogram-color, var(--minerva-ink));
   stroke: none;
 }
 
 .histogramLine {
   fill: none;
   stroke: var(--minerva-ink);
-  stroke-width: 0.75;
+  stroke-width: 0.65;
   stroke-linejoin: round;
 }
 
-.controls {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  width: 100%;
-  box-sizing: border-box;
-  --handle-width: 0.75rem;
-  --slider-track-height: 4px;
-  --slider-row-height: 18px;
-  --range-input-width: min(2.85rem, 21vw);
+.histogramOutOfRange {
+  opacity: 0.25;
 }
 
 .sliderRow {
-  position: relative;
-  width: 100%;
-  height: var(--slider-row-height);
-  padding: 0 calc(var(--handle-width) / 2);
-  box-sizing: border-box;
-}
-
-.track {
   position: absolute;
-  left: calc(var(--handle-width) / 2);
-  right: calc(var(--handle-width) / 2);
-  top: 50%;
-  transform: translateY(-50%);
-  height: var(--slider-track-height);
-  border-radius: 2px;
-  background: var(--minerva-edge);
-  pointer-events: none;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: var(--handle-width);
+  padding: 0;
+  box-sizing: border-box;
+  z-index: 2;
 }
 
 .rangePan {
   position: absolute;
   top: 0;
   height: 100%;
-  border-radius: 2px;
-  /* Color only the track strip; full row height stays the grab target. */
-  background: linear-gradient(
-    to bottom,
-    transparent calc(50% - var(--slider-track-height) / 2),
-    color-mix(in srgb, var(--slider-background, var(--minerva-quiet)) 70%, transparent)
-      calc(50% - var(--slider-track-height) / 2),
-    color-mix(in srgb, var(--slider-background, var(--minerva-quiet)) 70%, transparent)
-      calc(50% + var(--slider-track-height) / 2),
-    transparent calc(50% + var(--slider-track-height) / 2)
-  );
+  background: transparent;
   cursor: grab;
   touch-action: none;
   z-index: 1;
@@ -102,10 +85,9 @@
 
 .rangeInput {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: calc(var(--handle-width) / -2);
   top: 0;
-  width: 100%;
+  width: calc(100% + var(--handle-width));
   height: 100%;
   margin: 0;
   z-index: 2;
@@ -119,51 +101,38 @@
   -webkit-appearance: none;
   appearance: none;
   width: var(--handle-width);
-  height: 12px;
+  height: var(--handle-width);
   border-radius: 0;
-  border: 1px solid var(--minerva-edge);
-  background: var(--minerva-paper);
+  border: 1px solid var(--minerva-ink);
+  background: color-mix(in srgb, var(--minerva-paper) 75%, transparent);
   cursor: pointer;
-  pointer-events: all;
+  pointer-events: auto;
 }
 
 .rangeInput::-moz-range-thumb {
   width: var(--handle-width);
-  height: 12px;
+  height: var(--handle-width);
   border-radius: 0;
-  border: 1px solid var(--minerva-edge);
-  background: var(--minerva-paper);
+  border: 1px solid var(--minerva-ink);
+  background: color-mix(in srgb, var(--minerva-paper) 75%, transparent);
   cursor: pointer;
-  pointer-events: all;
+  pointer-events: auto;
 }
 
 .rangeInput::-webkit-slider-runnable-track {
-  height: var(--slider-track-height);
+  height: var(--handle-width);
   background: transparent;
 }
 
 .rangeInput::-moz-range-track {
-  height: var(--slider-track-height);
+  height: var(--handle-width);
   background: transparent;
-}
-
-.limitsRow {
-  position: relative;
-  width: 100%;
-  min-height: 24px;
-  margin-top: 1px;
-}
-
-.limitField {
-  position: absolute;
-  top: 0;
-  display: flex;
-  width: var(--range-input-width);
-  transform: translateX(-50%);
 }
 
 .limitInput {
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 2px 3px;
   font-size: 9px;
   line-height: 1.2;

@@ -36,12 +36,12 @@
   --minerva-size: 0.9rem;
   --minerva-size-note: 0.8rem;
 
-  --minerva-cloth-1: hsl(8 18% 46%);
-  --minerva-cloth-2: hsl(34 16% 48%);
-  --minerva-cloth-3: hsl(48 14% 50%);
-  --minerva-cloth-4: hsl(152 12% 42%);
-  --minerva-cloth-5: hsl(208 14% 44%);
-  --minerva-cloth-6: hsl(280 12% 46%);
+  --minerva-cloth-1: hsl(8 30% 50%);
+  --minerva-cloth-2: hsl(34 30% 52%);
+  --minerva-cloth-3: hsl(48 30% 54%);
+  --minerva-cloth-4: hsl(152 30% 46%);
+  --minerva-cloth-5: hsl(208 30% 50%);
+  --minerva-cloth-6: hsl(280 30% 50%);
   --cloth-1: var(--minerva-cloth-1);
   --cloth-2: var(--minerva-cloth-2);
   --cloth-3: var(--minerva-cloth-3);

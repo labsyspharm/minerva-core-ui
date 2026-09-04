@@ -613,6 +613,11 @@ export type ChannelRendering =
       b: number;
     };
 
+type MaskVisualizationPreview = {
+  sourceChannelId: string;
+  visualization: MaskVisualization;
+};
+
 export interface AppStore {
   // State
   overlayLayers: OverlayLayer[];
@@ -803,6 +808,11 @@ export interface AppStore {
   channelRendering: ChannelRendering | null;
   setChannelRendering: (rendering: ChannelRendering) => void;
   clearChannelRendering: () => void;
+  /** In-flight mask styling; committed values live in the document store. */
+  maskVisualizationPreview: MaskVisualizationPreview | null;
+  setMaskVisualizationPreview: (
+    preview: MaskVisualizationPreview | null,
+  ) => void;
   channelVisibilities: Record<string, boolean>;
   groupNames: Record<string, string>;
 
@@ -939,6 +949,7 @@ const overlayInitialState = {
   authoringWaypointShapesIndex: null as number | null,
   activeChannelGroupId: null, // No channel group initially
   channelRendering: null,
+  maskVisualizationPreview: null,
   channelVisibilities: {},
   channelGroupRowVisibilities: {},
   groupNames: {},
@@ -1210,6 +1221,7 @@ export const useAppStore = create<AppStore>()(
           brushMaskVersion: 0,
           brushLastScreenCoord: null,
           imageSelectionMask: null,
+          maskVisualizationPreview: null,
           channelVisibilities: vis,
           activeStoryIndex: null,
           waypointAuthoring: new Map(),
@@ -1560,7 +1572,11 @@ export const useAppStore = create<AppStore>()(
       clearImageSelectionMask: () => {
         const vis = { ...get().channelVisibilities };
         delete vis[SELECTION_MASK_CHANNEL_KEY];
-        set({ imageSelectionMask: null, channelVisibilities: vis });
+        set({
+          imageSelectionMask: null,
+          maskVisualizationPreview: null,
+          channelVisibilities: vis,
+        });
       },
 
       setImageSelectionMaskFromWaypoint: (shapeIds, preferredShapeIds) => {
@@ -2233,6 +2249,10 @@ export const useAppStore = create<AppStore>()(
 
       clearChannelRendering: () => {
         set({ channelRendering: null });
+      },
+
+      setMaskVisualizationPreview: (preview) => {
+        set({ maskVisualizationPreview: preview });
       },
 
       // Import waypoint shapes actions

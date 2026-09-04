@@ -272,40 +272,6 @@ export function applyOptimizedColorsToChannelGroup(
   });
 }
 
-type ImportPaletteSlot = {
-  seed: RgbColor;
-};
-
-function buildOptimizeInputsFromSlots(
-  slots: readonly ImportPaletteSlot[],
-): PsudoOptimizeInputs {
-  const n = slots.length;
-  const colors = new Uint16Array(n * 3);
-  const locked = new Uint16Array(n);
-
-  for (let i = 0; i < n; i++) {
-    const slot = slots[i];
-    colors[i * 3] = clampUint16(slot.seed.r);
-    colors[i * 3 + 1] = clampUint16(slot.seed.g);
-    colors[i * 3 + 2] = clampUint16(slot.seed.b);
-    locked[i] = 0;
-  }
-
-  return {
-    colors,
-    locked,
-    intensities: colorOnlyIntensities(),
-    contrastLimits: defaultContrastLimits(n),
-    luminance: DEFAULT_LUMINANCE,
-    excluded: [],
-    colorNames: Array.from({ length: n }, () => ""),
-    maxIters: PSUDO_MAX_ITERS,
-    confusionSamples: PSUDO_CONFUSION_BASELINE_SAMPLES,
-    spatial: PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP,
-    numRestarts: PSUDO_NUM_RESTARTS,
-  };
-}
-
 /** Channel groups created by the default `Group N` / four-channels-per-group import path. */
 export function usesDefaultFourChannelGrouping(
   channelGroups: ChannelGroup[],
@@ -340,28 +306,32 @@ function importPaletteSourceChannels(sourceChannels: Channel[]): Channel[] {
 export async function optimizeImportPaletteFour(
   sourceChannels: Channel[],
 ): Promise<RgbColor[]> {
+  const seeds = IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex));
   const picked = importPaletteSourceChannels(sourceChannels);
-  if (picked.length < 2) {
-    return IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex));
-  }
+  if (picked.length < 2) return seeds;
 
-  const slotCount = Math.min(IMPORT_GROUP_SLOT_COUNT, picked.length);
-  const slots: ImportPaletteSlot[] = [];
-  for (let i = 0; i < slotCount; i++) {
-    slots.push({
-      seed: hexToRgb(IMPORT_DEFAULT_SEED_HEX[i]),
-    });
+  const n = Math.min(IMPORT_GROUP_SLOT_COUNT, picked.length);
+  const colors = new Uint16Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const seed = seeds[i];
+    colors[i * 3] = clampUint16(seed.r);
+    colors[i * 3 + 1] = clampUint16(seed.g);
+    colors[i * 3 + 2] = clampUint16(seed.b);
   }
-
-  const optimized = await optimizeGroupPalette(
-    buildOptimizeInputsFromSlots(slots),
-  );
-  const palette: RgbColor[] = [];
-  for (let i = 0; i < IMPORT_GROUP_SLOT_COUNT; i++) {
-    const fallback = hexToRgb(IMPORT_DEFAULT_SEED_HEX[i]);
-    palette.push(optimized[i] ?? slots[i]?.seed ?? fallback);
-  }
-  return palette;
+  const optimized = await optimizeGroupPalette({
+    colors,
+    locked: new Uint16Array(n),
+    intensities: colorOnlyIntensities(),
+    contrastLimits: defaultContrastLimits(n),
+    luminance: DEFAULT_LUMINANCE,
+    excluded: [],
+    colorNames: Array.from({ length: n }, () => ""),
+    maxIters: PSUDO_MAX_ITERS,
+    confusionSamples: PSUDO_CONFUSION_BASELINE_SAMPLES,
+    spatial: PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP,
+    numRestarts: PSUDO_NUM_RESTARTS,
+  });
+  return seeds.map((fallback, i) => optimized[i] ?? fallback);
 }
 
 /** Apply a fixed four-color palette to each default import group (index mod 4). */

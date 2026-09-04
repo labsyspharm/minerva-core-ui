@@ -32,21 +32,6 @@ export type CompositedIntensityLayer = {
   gc: ChannelGroupChannel | null;
 };
 
-/** Sort key for All Channels: stack-on or on in the active group (top of list). */
-export function isShownFirstInAllChannelsList(
-  sc: Channel,
-  stackVisibilities: Record<string, boolean>,
-  activeGroup: ChannelGroup | undefined,
-  groupRowVisibilities: Record<string, boolean>,
-): boolean {
-  if (isStackVisible(stackVisibilities, sc.id)) return true;
-  if (!activeGroup) return false;
-  return activeGroup.channels.some(
-    (gc) =>
-      gc.channelId === sc.id && isGroupRowVisible(groupRowVisibilities, gc.id),
-  );
-}
-
 function activeGroupRowForSource(
   activeGroup: ChannelGroup | undefined,
   sourceId: string,

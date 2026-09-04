@@ -44,26 +44,22 @@ type VisibilityProps = {
   visible: boolean;
   title: string;
   ariaLabel: string;
-  onClick: () => void;
-  className?: string;
+  onClick: MouseEventHandler<HTMLButtonElement>;
 };
 
 /** Eye toggle for channel / group visibility (Photoshop-style). */
 export function ChannelVisibilitySwatch(props: VisibilityProps) {
-  const { visible, title, ariaLabel, onClick, className } = props;
+  const { visible, title, ariaLabel, onClick } = props;
   return (
     <button
       type="button"
-      className={
-        className ??
-        [
-          minervaTheme.focusRing,
-          styles.channelVisibilityButton,
-          visible ? "" : styles.channelVisibilityButtonHidden,
-        ]
-          .filter(Boolean)
-          .join(" ")
-      }
+      className={[
+        minervaTheme.focusRing,
+        styles.channelVisibilityButton,
+        visible ? "" : styles.channelVisibilityButtonHidden,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       title={title}
       aria-label={ariaLabel}
       aria-pressed={visible}
@@ -79,18 +75,15 @@ type ColorProps = {
   title: string;
   ariaLabel: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
-  className?: string;
 };
 
 /** Filled square showing channel color; opens the color picker when clicked. */
 export function ChannelColorSwatchButton(props: ColorProps) {
-  const { hex, title, ariaLabel, onClick, className } = props;
+  const { hex, title, ariaLabel, onClick } = props;
   return (
     <button
       type="button"
-      className={
-        className ?? `${minervaTheme.focusRing} ${styles.channelColorSwatch}`
-      }
+      className={`${minervaTheme.focusRing} ${styles.channelColorSwatch}`}
       style={{ backgroundColor: `#${hex}` }}
       title={title}
       aria-label={ariaLabel}
