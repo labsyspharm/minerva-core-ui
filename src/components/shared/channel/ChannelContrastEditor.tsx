@@ -103,6 +103,7 @@ export type ChannelContrastEditorProps = {
   groupId: string;
   channelId: string;
   sourceChannelId: string;
+  channelLabel: string;
   r: number;
   g: number;
   b: number;
@@ -153,50 +154,38 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     setMaxInput(String(Math.round(props.upperLimit)));
   }, [props.lowerLimit, props.upperLimit, scale]);
 
-  const previewRange = React.useCallback(
-    (lower: number, upper: number) => {
-      useAppStore.getState().setChannelRendering({
-        kind: "contrast",
-        sourceChannelId: props.sourceChannelId,
-        lower,
-        upper,
-      });
-    },
-    [props.sourceChannelId],
-  );
+  const previewRange = (lower: number, upper: number) => {
+    useAppStore.getState().setChannelRendering({
+      kind: "contrast",
+      sourceChannelId: props.sourceChannelId,
+      lower,
+      upper,
+    });
+  };
 
-  const commitRange = React.useCallback(
-    (lower: number, upper: number) => {
-      const lo = Math.round(lower);
-      const hi = Math.round(upper);
-      // Read document slices at commit time — avoid stale closures from drag start.
-      const doc = useDocumentStore.getState();
-      if (props.groupId) {
-        setChannelGroups(
-          applyGroupChannelRange(doc.channelGroups, {
-            LowerRange: lo,
-            UpperRange: hi,
-            group_uuid: props.groupId,
-            channel_uuid: props.channelId,
-          }),
-        );
-      } else {
-        // Keep gmmContrastLimits in sync: stack/ungrouped display uses
-        // effectiveSourceLimits → gmm when present.
-        setImages(
-          applySourceChannelRange(doc.images, props.sourceChannelId, lo, hi),
-        );
-      }
-      useAppStore.getState().clearChannelRendering();
-    },
-    [
-      props.groupId,
-      props.channelId,
-      props.sourceChannelId,
-      setChannelGroups,
-      setImages,
-    ],
-  );
+  const commitRange = (lower: number, upper: number) => {
+    const lo = Math.round(lower);
+    const hi = Math.round(upper);
+    // Read document slices at commit time — avoid stale closures from drag start.
+    const doc = useDocumentStore.getState();
+    if (props.groupId) {
+      setChannelGroups(
+        applyGroupChannelRange(doc.channelGroups, {
+          LowerRange: lo,
+          UpperRange: hi,
+          group_uuid: props.groupId,
+          channel_uuid: props.channelId,
+        }),
+      );
+    } else {
+      // Keep gmmContrastLimits in sync: stack/ungrouped display uses
+      // effectiveSourceLimits → gmm when present.
+      setImages(
+        applySourceChannelRange(doc.images, props.sourceChannelId, lo, hi),
+      );
+    }
+    useAppStore.getState().clearChannelRendering();
+  };
 
   React.useEffect(() => {
     return () => {
@@ -260,7 +249,6 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
 
   const minFrac = sliderMin / scale.sliderSteps;
   const maxFrac = sliderMax / scale.sliderSteps;
-  const handleHalf = 0.375;
   const sliderRowRef = React.useRef<HTMLDivElement>(null);
   const panDragRef = React.useRef<{
     active: boolean;
@@ -273,23 +261,20 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
 
   const { linePath: histLinePath, fillPath: histFillPath } =
     histogramSparklinePaths(dist.YValues);
+  const histogramClipId = React.useId();
+  const histogramViewX = 1.15;
+  const histogramViewWidth = 96.7;
+  const histogramClipX = histogramViewX + minFrac * histogramViewWidth;
+  const histogramClipWidth = (maxFrac - minFrac) * histogramViewWidth;
 
-  const stepFromClientX = React.useCallback(
-    (clientX: number) => {
-      const row = sliderRowRef.current;
-      if (!row) return 0;
-      const rect = row.getBoundingClientRect();
-      const handlePx =
-        Number.parseFloat(
-          getComputedStyle(row).getPropertyValue("--handle-width"),
-        ) * 16 || 12;
-      const trackWidth = Math.max(1, rect.width - handlePx);
-      const x = clientX - rect.left - handlePx / 2;
-      const frac = Math.min(1, Math.max(0, x / trackWidth));
-      return Math.round(frac * scale.sliderSteps);
-    },
-    [scale.sliderSteps],
-  );
+  const stepFromClientX = (clientX: number) => {
+    const row = sliderRowRef.current;
+    if (!row) return 0;
+    const rect = row.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const frac = Math.min(1, Math.max(0, x / Math.max(1, rect.width)));
+    return Math.round(frac * scale.sliderSteps);
+  };
 
   const onRangePanPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
@@ -314,13 +299,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     const row = sliderRowRef.current;
     if (!row) return;
     const rect = row.getBoundingClientRect();
-    const handlePx =
-      Number.parseFloat(
-        getComputedStyle(row).getPropertyValue("--handle-width"),
-      ) * 16 || 12;
-    const trackWidth = Math.max(1, rect.width - handlePx);
     const deltaSteps = Math.round(
-      ((e.clientX - drag.startX) / trackWidth) * scale.sliderSteps,
+      ((e.clientX - drag.startX) / Math.max(1, rect.width)) * scale.sliderSteps,
     );
     const span = drag.startMax - drag.startMin;
     let lo = drag.startMin + deltaSteps;
@@ -367,44 +347,77 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     panMovedRef.current = false;
   };
 
-  const panLeft = `calc(${handleHalf}rem + ${minFrac} * (100% - ${handleHalf}rem))`;
-  const panWidth = `calc((${maxFrac} - ${minFrac}) * (100% - ${handleHalf}rem))`;
+  const panLeft = `${minFrac * 100}%`;
+  const panWidth = `${(maxFrac - minFrac) * 100}%`;
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.histogramHost}>
+      <input
+        type="number"
+        className={`${minervaTheme.input} ${styles.limitInput}`}
+        value={minInput}
+        aria-label={`${props.channelLabel} contrast minimum value`}
+        min={scale.dtypeMin}
+        max={scale.dtypeMax}
+        onFocus={() => {
+          editingLimitRef.current = true;
+        }}
+        onChange={(e) => setMinInput(e.target.value)}
+        onBlur={() => {
+          editingLimitRef.current = false;
+          commitFromInputs();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.currentTarget.blur();
+        }}
+      />
+      <div
+        className={styles.histogramHost}
+        style={
+          {
+            "--histogram-color": `rgb(${props.r},${props.g},${props.b})`,
+          } as React.CSSProperties
+        }
+      >
         <svg
           className={styles.histogramSvg}
           viewBox="1.15 0 96.7 11"
           preserveAspectRatio="none"
           role="img"
-          aria-label="Channel intensity histogram"
+          aria-label={`${props.channelLabel} intensity histogram`}
         >
-          <path className={styles.histogramFill} d={histFillPath} />
-          <path className={styles.histogramLine} d={histLinePath} />
+          <defs>
+            <clipPath id={histogramClipId}>
+              <rect
+                x={histogramClipX}
+                y={0}
+                width={histogramClipWidth}
+                height={11}
+              />
+            </clipPath>
+          </defs>
+          <path
+            className={`${styles.histogramFill} ${styles.histogramOutOfRange}`}
+            d={histFillPath}
+          />
+          <path
+            className={`${styles.histogramLine} ${styles.histogramOutOfRange}`}
+            d={histLinePath}
+          />
+          <g clipPath={`url(#${histogramClipId})`}>
+            <path className={styles.histogramFill} d={histFillPath} />
+            <path className={styles.histogramLine} d={histLinePath} />
+          </g>
         </svg>
         <div
-          className={[
-            styles.histogramLoading,
-            props.histogramLoading ? styles.histogramLoadingVisible : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
+          className={`${styles.histogramLoading}${
+            props.histogramLoading ? ` ${styles.histogramLoadingVisible}` : ""
+          }`}
           title="Loading histogram"
         >
           <div className={minervaTheme.spinnerSm} />
         </div>
-      </div>
-      <div
-        className={styles.controls}
-        style={
-          {
-            "--slider-background": `rgb(${props.r},${props.g},${props.b})`,
-          } as React.CSSProperties
-        }
-      >
         <div ref={sliderRowRef} className={styles.sliderRow}>
-          <div className={styles.track} />
           {sliderMax > sliderMin ? (
             <div
               className={styles.rangePan}
@@ -425,7 +438,11 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
             onChange={onMinSlider}
             onMouseUp={onSliderCommit}
             onTouchEnd={onSliderCommit}
-            aria-label="Contrast minimum"
+            onBlur={onSliderCommit}
+            aria-label={`${props.channelLabel} contrast minimum`}
+            aria-valuetext={`${Math.round(
+              scale.fromSlider(sliderMin),
+            )} intensity`}
           />
           <input
             type="range"
@@ -436,65 +453,33 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
             onChange={onMaxSlider}
             onMouseUp={onSliderCommit}
             onTouchEnd={onSliderCommit}
-            aria-label="Contrast maximum"
+            onBlur={onSliderCommit}
+            aria-label={`${props.channelLabel} contrast maximum`}
+            aria-valuetext={`${Math.round(
+              scale.fromSlider(sliderMax),
+            )} intensity`}
           />
         </div>
-        <div className={styles.limitsRow}>
-          <div
-            className={styles.limitField}
-            style={{
-              left: `clamp(calc(var(--range-input-width) / 2), calc(${handleHalf}rem + ${minFrac} * (100% - ${handleHalf}rem)), calc(100% - var(--range-input-width) / 2))`,
-            }}
-          >
-            <input
-              type="number"
-              className={`${minervaTheme.input} ${styles.limitInput}`}
-              value={minInput}
-              aria-label="Contrast minimum value"
-              min={scale.dtypeMin}
-              max={scale.dtypeMax}
-              onFocus={() => {
-                editingLimitRef.current = true;
-              }}
-              onChange={(e) => setMinInput(e.target.value)}
-              onBlur={() => {
-                editingLimitRef.current = false;
-                commitFromInputs();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") e.currentTarget.blur();
-              }}
-            />
-          </div>
-          <div
-            className={styles.limitField}
-            style={{
-              left: `clamp(calc(var(--range-input-width) / 2), calc(${handleHalf}rem + ${maxFrac} * (100% - ${handleHalf}rem)), calc(100% - var(--range-input-width) / 2))`,
-              zIndex: 1,
-            }}
-          >
-            <input
-              type="number"
-              className={`${minervaTheme.input} ${styles.limitInput}`}
-              value={maxInput}
-              aria-label="Contrast maximum value"
-              min={scale.dtypeMin}
-              max={scale.dtypeMax}
-              onFocus={() => {
-                editingLimitRef.current = true;
-              }}
-              onChange={(e) => setMaxInput(e.target.value)}
-              onBlur={() => {
-                editingLimitRef.current = false;
-                commitFromInputs();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") e.currentTarget.blur();
-              }}
-            />
-          </div>
-        </div>
       </div>
+      <input
+        type="number"
+        className={`${minervaTheme.input} ${styles.limitInput}`}
+        value={maxInput}
+        aria-label={`${props.channelLabel} contrast maximum value`}
+        min={scale.dtypeMin}
+        max={scale.dtypeMax}
+        onFocus={() => {
+          editingLimitRef.current = true;
+        }}
+        onChange={(e) => setMaxInput(e.target.value)}
+        onBlur={() => {
+          editingLimitRef.current = false;
+          commitFromInputs();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.currentTarget.blur();
+        }}
+      />
     </div>
   );
 }

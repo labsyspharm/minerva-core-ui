@@ -106,6 +106,8 @@ export const MaskVisualizationSchema = z.preprocess(
     color: z.enum(["white", "random"]),
     /** 24-bit; XOR'd into the GPU label hash when `color` is `random`. */
     colorSeed: z.number().int().nonnegative().optional(),
+    /** Overlay alpha multiplier (`0…1`); omitted in older docs → `1`. */
+    opacity: z.number().min(0).max(1).default(1),
   }),
 );
 

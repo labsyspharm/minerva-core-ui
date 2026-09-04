@@ -44,7 +44,7 @@ type VisibilityProps = {
   visible: boolean;
   title: string;
   ariaLabel: string;
-  onClick: () => void;
+  onClick: MouseEventHandler<HTMLButtonElement>;
   className?: string;
 };
 

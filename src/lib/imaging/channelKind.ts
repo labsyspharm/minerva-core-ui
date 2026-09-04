@@ -10,6 +10,7 @@ export type { ImageChannelKind, MaskVisualization };
 export const DEFAULT_MASK_VISUALIZATION: MaskVisualization = {
   style: "outline",
   color: "white",
+  opacity: 1,
 };
 
 /** Enable random colors with a new seed (also used to re-roll while active). */
