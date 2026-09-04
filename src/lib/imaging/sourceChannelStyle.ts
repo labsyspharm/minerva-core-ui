@@ -31,6 +31,16 @@ export function hexToRgb(hex: string): RgbColor {
   };
 }
 
+export function rgbToHex(color: {
+  r?: number;
+  g?: number;
+  b?: number;
+}): string {
+  return [color.r ?? 0, color.g ?? 0, color.b ?? 0]
+    .map((value) => value.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 function defaultSeedColorForIndex(index: number): Color {
   return hexToRgb(
     IMPORT_DEFAULT_SEED_HEX[index % IMPORT_DEFAULT_SEED_HEX.length],

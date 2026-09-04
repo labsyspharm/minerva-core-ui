@@ -613,7 +613,7 @@ export type ChannelRendering =
       b: number;
     };
 
-export type MaskVisualizationPreview = {
+type MaskVisualizationPreview = {
   sourceChannelId: string;
   visualization: MaskVisualization;
 };
@@ -1221,6 +1221,7 @@ export const useAppStore = create<AppStore>()(
           brushMaskVersion: 0,
           brushLastScreenCoord: null,
           imageSelectionMask: null,
+          maskVisualizationPreview: null,
           channelVisibilities: vis,
           activeStoryIndex: null,
           waypointAuthoring: new Map(),
@@ -1571,7 +1572,11 @@ export const useAppStore = create<AppStore>()(
       clearImageSelectionMask: () => {
         const vis = { ...get().channelVisibilities };
         delete vis[SELECTION_MASK_CHANNEL_KEY];
-        set({ imageSelectionMask: null, channelVisibilities: vis });
+        set({
+          imageSelectionMask: null,
+          maskVisualizationPreview: null,
+          channelVisibilities: vis,
+        });
       },
 
       setImageSelectionMaskFromWaypoint: (shapeIds, preferredShapeIds) => {

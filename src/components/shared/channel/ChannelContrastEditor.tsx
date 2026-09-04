@@ -145,6 +145,10 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const [minInput, setMinInput] = React.useState(String(props.lowerLimit));
   const [maxInput, setMaxInput] = React.useState(String(props.upperLimit));
   const editingLimitRef = React.useRef(false);
+  const lastCommittedRangeRef = React.useRef([
+    Math.round(props.lowerLimit),
+    Math.round(props.upperLimit),
+  ] as const);
 
   React.useEffect(() => {
     if (editingLimitRef.current) return;
@@ -152,6 +156,10 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     setSliderMax(scale.toSlider(props.upperLimit));
     setMinInput(String(Math.round(props.lowerLimit)));
     setMaxInput(String(Math.round(props.upperLimit)));
+    lastCommittedRangeRef.current = [
+      Math.round(props.lowerLimit),
+      Math.round(props.upperLimit),
+    ];
   }, [props.lowerLimit, props.upperLimit, scale]);
 
   const previewRange = (lower: number, upper: number) => {
@@ -166,6 +174,12 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const commitRange = (lower: number, upper: number) => {
     const lo = Math.round(lower);
     const hi = Math.round(upper);
+    const [lastLo, lastHi] = lastCommittedRangeRef.current;
+    if (lo === lastLo && hi === lastHi) {
+      useAppStore.getState().clearChannelRendering();
+      return;
+    }
+    lastCommittedRangeRef.current = [lo, hi];
     // Read document slices at commit time — avoid stale closures from drag start.
     const doc = useDocumentStore.getState();
     if (props.groupId) {
@@ -438,6 +452,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
             onChange={onMinSlider}
             onMouseUp={onSliderCommit}
             onTouchEnd={onSliderCommit}
+            onKeyUp={onSliderCommit}
             onBlur={onSliderCommit}
             aria-label={`${props.channelLabel} contrast minimum`}
             aria-valuetext={`${Math.round(
@@ -453,6 +468,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
             onChange={onMaxSlider}
             onMouseUp={onSliderCommit}
             onTouchEnd={onSliderCommit}
+            onKeyUp={onSliderCommit}
             onBlur={onSliderCommit}
             aria-label={`${props.channelLabel} contrast maximum`}
             aria-valuetext={`${Math.round(

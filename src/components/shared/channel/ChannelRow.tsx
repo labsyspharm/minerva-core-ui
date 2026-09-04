@@ -25,11 +25,9 @@ function MaskVizButton(props: {
   return (
     <button
       type="button"
-      className={
-        props.active
-          ? `${minervaTheme.focusRing} ${styles.maskVizOption} ${styles.maskVizOptionActive}`
-          : `${minervaTheme.focusRing} ${styles.maskVizOption}`
-      }
+      className={`${minervaTheme.focusRing} ${styles.maskVizOption}${
+        props.active ? ` ${styles.maskVizOptionActive}` : ""
+      }`}
       aria-pressed={props.active}
       title={props.title ?? props.label}
       aria-label={props.label}
@@ -51,10 +49,15 @@ function MaskOpacityControl(props: {
   const [pct, setPct] = useState(committedPct);
   const lastCommittedPct = useRef(committedPct);
 
+  const onPreviewRef = useRef(onPreview);
+  onPreviewRef.current = onPreview;
+
   useEffect(() => {
     setPct(committedPct);
     lastCommittedPct.current = committedPct;
   }, [committedPct]);
+
+  useEffect(() => () => onPreviewRef.current?.(null), []);
 
   const visualizationAt = (nextPct: number): MaskVisualization => ({
     ...value,
@@ -184,27 +187,7 @@ type ChannelRowNameProps =
       onBlur: (value: string) => void;
     };
 
-type MaskRowStyleProps = {
-  isMask: true;
-  maskVisualization: MaskVisualization;
-  onMaskVisualizationChange: (viz: MaskVisualization) => void;
-  onMaskVisualizationPreview?: (viz: MaskVisualization | null) => void;
-  maskAriaLabel: string;
-  /** Non-interactive swatch when the row has no color picker (e.g. selection mask). */
-  fixedColorHex?: string;
-};
-
-type IntensityRowStyleProps = {
-  isMask?: false;
-  colorHex: string;
-  colorTitle: string;
-  colorAriaLabel: string;
-  onColorClick: MouseEventHandler<HTMLButtonElement>;
-};
-
-type ChannelRowStyleProps = MaskRowStyleProps | IntensityRowStyleProps;
-
-export type ChannelRowProps = {
+type ChannelRowProps = {
   rowClassName: string;
   visible: boolean;
   visibilityTitle: string;
@@ -212,32 +195,30 @@ export type ChannelRowProps = {
   onToggleVisibility: MouseEventHandler<HTMLButtonElement>;
   name: ChannelRowNameProps;
   imageSubtitle?: string | null;
-  /** Stack row hidden in All Channels — name + visibility only. */
+  /** Visibility + name only (hidden stack rows, RGB display). */
   compact?: boolean;
   trailing?: React.ReactNode;
-} & ({ compact: true } | ({ compact?: false } & ChannelRowStyleProps));
+  isMask?: boolean;
+  maskVisualization?: MaskVisualization;
+  onMaskVisualizationChange?: (viz: MaskVisualization) => void;
+  onMaskVisualizationPreview?: (viz: MaskVisualization | null) => void;
+  maskAriaLabel?: string;
+  /** Non-interactive swatch when the row has no color picker (e.g. selection mask). */
+  fixedColorHex?: string;
+  colorHex?: string;
+  colorTitle?: string;
+  colorAriaLabel?: string;
+  onColorClick?: MouseEventHandler<HTMLButtonElement>;
+};
 
-function isIntensityRowStyle(
-  props: ChannelRowStyleProps,
-): props is IntensityRowStyleProps {
-  return !props.isMask;
-}
-
-function channelRowHasStyleControls(
-  props: ChannelRowProps,
-): props is ChannelRowProps & ChannelRowStyleProps & { compact?: false } {
-  return !props.compact;
-}
-
-function ChannelRowName(props: ChannelRowNameProps) {
-  if (props.mode === "label") {
-    return (
-      <span className={props.className} title={props.title ?? props.name}>
-        {props.name}
-      </span>
-    );
-  }
-  return <EditableChannelRowName {...props} />;
+function scrollRowNearest(row: HTMLElement | null) {
+  row?.scrollIntoView({
+    block: "nearest",
+    inline: "nearest",
+    behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? "auto"
+      : "smooth",
+  });
 }
 
 function EditableChannelRowName(
@@ -301,9 +282,21 @@ export function ChannelRow(props: ChannelRowProps) {
     name,
     imageSubtitle,
     trailing,
+    compact,
+    isMask,
+    maskVisualization,
+    onMaskVisualizationChange,
+    onMaskVisualizationPreview,
+    maskAriaLabel,
+    fixedColorHex,
+    colorHex,
+    colorTitle,
+    colorAriaLabel,
+    onColorClick,
   } = props;
 
-  const styleControls = channelRowHasStyleControls(props) ? props : null;
+  const showMask = !compact && isMask && maskVisualization;
+  const showColor = !compact && !isMask && colorHex && onColorClick;
   const [maskControlsOpen, setMaskControlsOpen] = useState(true);
   const rowRef = useRef<HTMLDivElement>(null);
   const maskControlsId = useId();
@@ -313,15 +306,7 @@ export function ChannelRow(props: ChannelRowProps) {
     setMaskControlsOpen(opening);
     if (!opening) return;
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        rowRef.current?.scrollIntoView({
-          block: "nearest",
-          inline: "nearest",
-          behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-            ? "auto"
-            : "smooth",
-        });
-      });
+      requestAnimationFrame(() => scrollRowNearest(rowRef.current));
     });
   };
 
@@ -336,7 +321,13 @@ export function ChannelRow(props: ChannelRowProps) {
         />
         <div className={styles.channelRowTitle}>
           <div className={styles.channelNameSlot}>
-            <ChannelRowName {...name} />
+            {name.mode === "label" ? (
+              <span className={name.className} title={name.title ?? name.name}>
+                {name.name}
+              </span>
+            ) : (
+              <EditableChannelRowName {...name} />
+            )}
           </div>
           {imageSubtitle ? (
             <span
@@ -347,7 +338,7 @@ export function ChannelRow(props: ChannelRowProps) {
             </span>
           ) : null}
         </div>
-        {styleControls?.isMask ? (
+        {showMask ? (
           <button
             type="button"
             className={`${minervaTheme.focusRing} ${styles.maskDisclosureButton}`}
@@ -355,38 +346,38 @@ export function ChannelRow(props: ChannelRowProps) {
               maskControlsOpen ? "Hide" : "Show"
             } mask display controls for ${name.name}`}
             aria-expanded={maskControlsOpen}
-            aria-controls={maskControlsId}
+            aria-controls={maskControlsOpen ? maskControlsId : undefined}
             onClick={toggleMaskControls}
           >
             <ChevronIcon direction={maskControlsOpen ? "down" : "right"} />
           </button>
         ) : null}
-        {styleControls?.isMask && styleControls.fixedColorHex ? (
+        {showMask && fixedColorHex ? (
           <span
-            className={styles.channelColorSwatch}
-            style={{ backgroundColor: `#${styleControls.fixedColorHex}` }}
+            className={styles.channelColorSwatchStatic}
+            style={{ backgroundColor: `#${fixedColorHex}` }}
             aria-hidden
           />
         ) : null}
-        {styleControls && isIntensityRowStyle(styleControls) ? (
+        {showColor ? (
           <ChannelColorSwatchButton
-            hex={styleControls.colorHex}
-            title={styleControls.colorTitle}
-            ariaLabel={styleControls.colorAriaLabel}
-            onClick={styleControls.onColorClick}
+            hex={colorHex}
+            title={colorTitle ?? `Pick color`}
+            ariaLabel={colorAriaLabel ?? `Pick color`}
+            onClick={onColorClick}
           />
         ) : null}
         {trailing ? (
           <div className={styles.channelRowTrailing}>{trailing}</div>
         ) : null}
       </div>
-      {styleControls?.isMask && maskControlsOpen ? (
+      {showMask && maskControlsOpen && onMaskVisualizationChange ? (
         <div id={maskControlsId} className={styles.maskControlsPanel}>
           <MaskModeControls
-            value={styleControls.maskVisualization}
-            ariaLabel={styleControls.maskAriaLabel}
-            onChange={styleControls.onMaskVisualizationChange}
-            onPreview={styleControls.onMaskVisualizationPreview}
+            value={maskVisualization}
+            ariaLabel={maskAriaLabel ?? name.name}
+            onChange={onMaskVisualizationChange}
+            onPreview={onMaskVisualizationPreview}
           />
         </div>
       ) : null}

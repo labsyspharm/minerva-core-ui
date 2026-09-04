@@ -53,6 +53,7 @@ import {
   effectiveMaskVisualization,
   effectiveSourceColor,
   effectiveSourceLimits,
+  rgbToHex,
 } from "@/lib/imaging/sourceChannelStyle";
 import { MAX_VIV_INTENSITY_CHANNELS } from "@/lib/imaging/viv";
 import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
@@ -75,18 +76,14 @@ import row from "./ChannelRow.module.css";
 
 const CHANNEL_DRAG_MIME = "application/x-minerva-channel-ref";
 
-function rgbToHex(color: { r?: number; g?: number; b?: number }): string {
-  return [color.r ?? 0, color.g ?? 0, color.b ?? 0]
-    .map((value) => value.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function scrollChannelBlockAfterRender(
-  button: HTMLButtonElement,
+function toggleWithScrollOnShow(
+  event: React.MouseEvent<HTMLButtonElement>,
   becomingVisible: boolean,
+  apply: () => void,
 ) {
+  apply();
   if (!becomingVisible) return;
-  const block = button.closest("li");
+  const block = event.currentTarget.closest("li");
   if (!block) return;
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -487,9 +484,6 @@ export const ChannelGroupsMasterDetail = (
   const clearImageSelectionMask = useAppStore((s) => s.clearImageSelectionMask);
   const setImageSelectionMaskVisualization = useAppStore(
     (s) => s.setImageSelectionMaskVisualization,
-  );
-  const setMaskVisualizationPreview = useAppStore(
-    (s) => s.setMaskVisualizationPreview,
   );
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
@@ -973,13 +967,6 @@ export const ChannelGroupsMasterDetail = (
     syncMaskVisualization(sourceId, viz, groupId, rowId);
   };
 
-  const setSourceMaskVisualization = (
-    sourceId: string,
-    viz: MaskVisualization,
-  ) => {
-    syncMaskVisualization(sourceId, viz);
-  };
-
   const runOptimizePaletteForGroup = async (groupId: string) => {
     if (optimizePaletteBusy) return;
     const group = channelGroups.find((g) => g.id === groupId);
@@ -1151,6 +1138,12 @@ export const ChannelGroupsMasterDetail = (
     setColorPickerTarget(null);
     setColorPickerPos(null);
   }, [colorPickerTarget, setImages, syncGroupState]);
+
+  const openColorPicker = (target: ColorPickerTarget, rect: DOMRect) => {
+    closeColorPicker();
+    setColorPickerTarget(target);
+    setColorPickerPos(colorPickerAnchorPosition(rect));
+  };
 
   const compositedIntensityLayers = React.useMemo(
     () =>
@@ -1371,120 +1364,74 @@ export const ChannelGroupsMasterDetail = (
                           })
                         }
                       />
-                      {rgbDisplay ? (
-                        <ChannelRow
-                          rowClassName={row.groupChildRow}
-                          compact
-                          visible={visible}
-                          visibilityTitle={
-                            visible ? `Hide ${name}` : `Show ${name}`
-                          }
-                          visibilityAriaLabel={`Toggle visibility for ${name}`}
-                          onToggleVisibility={(event) => {
+                      <ChannelRow
+                        rowClassName={row.groupChildRow}
+                        visible={visible}
+                        visibilityTitle={
+                          visible ? `Hide ${name}` : `Show ${name}`
+                        }
+                        visibilityAriaLabel={`Toggle visibility for ${name}`}
+                        onToggleVisibility={(event) =>
+                          toggleWithScrollOnShow(event, !visible, () => {
                             setChannelGroupRowVisibilities({
                               ...channelGroupRowVisibilities,
                               [gc.id]: !visible,
                             });
-                            scrollChannelBlockAfterRender(
-                              event.currentTarget,
-                              !visible,
-                            );
-                          }}
-                          name={
-                            sc
-                              ? {
-                                  mode: "editable",
-                                  name,
-                                  meta: channelMeta,
-                                  onBlur: (value) =>
-                                    renameSourceChannelDisplayName(
-                                      sc.id,
-                                      value,
-                                    ),
-                                }
-                              : {
-                                  mode: "label",
-                                  name,
-                                  title: name,
-                                  className: styles.groupChildName,
-                                }
-                          }
-                          imageSubtitle={imageSubtitle}
-                          trailing={channelMoreMenu(sc, name, () =>
-                            removeChannelFromGroup(group.id, gc.id),
-                          )}
-                        />
-                      ) : (
-                        <ChannelRow
-                          rowClassName={row.groupChildRow}
-                          visible={visible}
-                          visibilityTitle={
-                            visible ? `Hide ${name}` : `Show ${name}`
-                          }
-                          visibilityAriaLabel={`Toggle visibility for ${name}`}
-                          onToggleVisibility={(event) => {
-                            setChannelGroupRowVisibilities({
-                              ...channelGroupRowVisibilities,
-                              [gc.id]: !visible,
-                            });
-                            scrollChannelBlockAfterRender(
-                              event.currentTarget,
-                              !visible,
-                            );
-                          }}
-                          name={
-                            sc
-                              ? {
-                                  mode: "editable",
-                                  name,
-                                  meta: channelMeta,
-                                  onBlur: (value) =>
-                                    renameSourceChannelDisplayName(
-                                      sc.id,
-                                      value,
-                                    ),
-                                }
-                              : {
-                                  mode: "label",
-                                  name,
-                                  title: name,
-                                  className: styles.groupChildName,
-                                }
-                          }
-                          imageSubtitle={imageSubtitle}
-                          {...(kind === "mask"
+                          })
+                        }
+                        name={
+                          sc
                             ? {
-                                isMask: true as const,
-                                maskVisualization:
-                                  effectiveMaskVisualization(gc),
-                                maskAriaLabel: `Mask display for ${name}`,
-                                onMaskVisualizationChange: (viz) =>
-                                  setGroupMaskVisualization(
-                                    group.id,
-                                    gc.id,
-                                    viz,
-                                  ),
-                                onMaskVisualizationPreview: (viz) =>
-                                  previewMaskVisualization(gc.channelId, viz),
+                                mode: "editable",
+                                name,
+                                meta: channelMeta,
+                                onBlur: (value) =>
+                                  renameSourceChannelDisplayName(sc.id, value),
                               }
                             : {
+                                mode: "label",
+                                name,
+                                title: name,
+                                className: styles.groupChildName,
+                              }
+                        }
+                        imageSubtitle={imageSubtitle}
+                        compact={rgbDisplay}
+                        {...(!rgbDisplay && kind === "mask"
+                          ? {
+                              isMask: true,
+                              maskVisualization: effectiveMaskVisualization(gc),
+                              maskAriaLabel: `Mask display for ${name}`,
+                              onMaskVisualizationChange: (viz) =>
+                                setGroupMaskVisualization(group.id, gc.id, viz),
+                              onMaskVisualizationPreview: (viz) => {
+                                if (group.id !== activeChannelGroupId) return;
+                                previewMaskVisualization(gc.channelId, viz);
+                              },
+                            }
+                          : !rgbDisplay
+                            ? {
                                 colorHex: hex,
                                 colorTitle: `Pick color for ${name} in this group`,
                                 colorAriaLabel: `Pick color for ${name} in this group`,
                                 onColorClick: (e) => {
-                                  const rect =
-                                    e.currentTarget.getBoundingClientRect();
-                                  setColorPickerTarget({
-                                    scope: "group",
-                                    groupId: group.id,
-                                    rowId: gc.id,
-                                  });
-                                  setColorPickerPos(
-                                    colorPickerAnchorPosition(rect),
+                                  openColorPicker(
+                                    {
+                                      scope: "group",
+                                      groupId: group.id,
+                                      rowId: gc.id,
+                                    },
+                                    e.currentTarget.getBoundingClientRect(),
                                   );
                                 },
-                              })}
-                          trailing={
+                              }
+                            : {})}
+                        trailing={
+                          rgbDisplay ? (
+                            channelMoreMenu(sc, name, () =>
+                              removeChannelFromGroup(group.id, gc.id),
+                            )
+                          ) : (
                             <>
                               {showColorLock ? (
                                 <button
@@ -1527,9 +1474,9 @@ export const ChannelGroupsMasterDetail = (
                                 removeChannelFromGroup(group.id, gc.id),
                               )}
                             </>
-                          }
-                        />
-                      )}
+                          )
+                        }
+                      />
                     </div>
                     {contrastEditor ? (
                       <div className={styles.detailChannelItemEmbed}>
@@ -1580,19 +1527,6 @@ export const ChannelGroupsMasterDetail = (
     return stackOn
       ? `Hide ${sc.name} layer on top of active group`
       : `Show ${sc.name} on top of active group`;
-  };
-
-  const allChannelsLayerTitle = (
-    sc: Channel,
-    shown: boolean,
-    viaActiveGroup: boolean,
-  ) => {
-    if (viaActiveGroup) {
-      return shown
-        ? `Hide ${sc.name} in active group`
-        : `Show ${sc.name} in active group`;
-    }
-    return stackLayerTitle(sc, shown);
   };
 
   const renderAllChannelsRow = (sc: Channel) => {
@@ -1664,16 +1598,14 @@ export const ChannelGroupsMasterDetail = (
                   ? shownInViewer
                     ? `Hide ${sc.name} in active group`
                     : `Show ${sc.name} in active group`
-                  : allChannelsLayerTitle(sc, shownInViewer, viaActiveGroup)
+                  : stackLayerTitle(sc, shownInViewer)
               }
               visibilityAriaLabel={visibilityAriaLabel}
-              onToggleVisibility={(event) => {
-                toggleAllChannelsVisibility(!shownInViewer);
-                scrollChannelBlockAfterRender(
-                  event.currentTarget,
-                  !shownInViewer,
-                );
-              }}
+              onToggleVisibility={(event) =>
+                toggleWithScrollOnShow(event, !shownInViewer, () => {
+                  toggleAllChannelsVisibility(!shownInViewer);
+                })
+              }
               name={{
                 mode: "label",
                 name: sc.name,
@@ -1716,10 +1648,11 @@ export const ChannelGroupsMasterDetail = (
               visible={false}
               visibilityTitle={stackLayerTitle(sc, false)}
               visibilityAriaLabel={visibilityAriaLabel}
-              onToggleVisibility={(event) => {
-                toggleAllChannelsVisibility(true);
-                scrollChannelBlockAfterRender(event.currentTarget, true);
-              }}
+              onToggleVisibility={(event) =>
+                toggleWithScrollOnShow(event, true, () => {
+                  toggleAllChannelsVisibility(true);
+                })
+              }
               name={{
                 mode: "editable",
                 name: sc.name,
@@ -1753,71 +1686,50 @@ export const ChannelGroupsMasterDetail = (
       <li key={`all-${sc.id}`} className={styles.rootChannelBlock}>
         <div className={styles.rootChannelRowWrap}>
           {dragHandle}
-          {rgbDisplay ? (
-            <ChannelRow
-              rowClassName={row.rootChannelRow}
-              compact
-              visible
-              visibilityTitle={
-                capped
-                  ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) — hide another channel`
-                  : stackLayerTitle(sc, true)
-              }
-              visibilityAriaLabel={visibilityAriaLabel}
-              onToggleVisibility={() => toggleAllChannelsVisibility(false)}
-              name={{
-                mode: "editable",
-                name: sc.name,
-                meta,
-                onBlur: (value) => renameSourceChannelDisplayName(sc.id, value),
-              }}
-              imageSubtitle={imageSubtitle}
-            />
-          ) : (
-            <ChannelRow
-              rowClassName={row.rootChannelRow}
-              visible
-              visibilityTitle={
-                capped
-                  ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) — hide another channel`
-                  : stackLayerTitle(sc, true)
-              }
-              visibilityAriaLabel={visibilityAriaLabel}
-              onToggleVisibility={() => toggleAllChannelsVisibility(false)}
-              name={{
-                mode: "editable",
-                name: sc.name,
-                meta,
-                onBlur: (value) => renameSourceChannelDisplayName(sc.id, value),
-              }}
-              imageSubtitle={imageSubtitle}
-              {...(isMaskChannel(sc)
+          <ChannelRow
+            rowClassName={row.rootChannelRow}
+            visible
+            visibilityTitle={
+              capped
+                ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) — hide another channel`
+                : stackLayerTitle(sc, true)
+            }
+            visibilityAriaLabel={visibilityAriaLabel}
+            onToggleVisibility={() => toggleAllChannelsVisibility(false)}
+            name={{
+              mode: "editable",
+              name: sc.name,
+              meta,
+              onBlur: (value) => renameSourceChannelDisplayName(sc.id, value),
+            }}
+            imageSubtitle={imageSubtitle}
+            compact={rgbDisplay}
+            {...(!rgbDisplay && isMaskChannel(sc)
+              ? {
+                  isMask: true,
+                  maskVisualization: effectiveMaskVisualization(sc),
+                  maskAriaLabel: `Mask display for ${sc.name}`,
+                  onMaskVisualizationChange: (viz) =>
+                    syncMaskVisualization(sc.id, viz),
+                  onMaskVisualizationPreview: (viz) =>
+                    previewMaskVisualization(sc.id, viz),
+                }
+              : !rgbDisplay
                 ? {
-                    isMask: true as const,
-                    maskVisualization: effectiveMaskVisualization(sc),
-                    maskAriaLabel: `Mask display for ${sc.name}`,
-                    onMaskVisualizationChange: (viz) =>
-                      setSourceMaskVisualization(sc.id, viz),
-                    onMaskVisualizationPreview: (viz) =>
-                      previewMaskVisualization(sc.id, viz),
-                  }
-                : {
                     colorHex: hex,
                     colorTitle: `Pick color for ${sc.name}`,
                     colorAriaLabel: `Pick color for ${sc.name}`,
                     onColorClick: (e) => {
                       e.stopPropagation();
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      setColorPickerTarget({
-                        scope: "source",
-                        sourceId: sc.id,
-                      });
-                      setColorPickerPos(colorPickerAnchorPosition(rect));
+                      openColorPicker(
+                        { scope: "source", sourceId: sc.id },
+                        e.currentTarget.getBoundingClientRect(),
+                      );
                     },
-                  })}
-              trailing={channelMoreMenu(sc, sc.name)}
-            />
-          )}
+                  }
+                : {})}
+            trailing={rgbDisplay ? undefined : channelMoreMenu(sc, sc.name)}
+          />
         </div>
         {contrastEditor ? (
           <div className={styles.detailChannelItemEmbed}>{contrastEditor}</div>
@@ -1889,17 +1801,10 @@ export const ChannelGroupsMasterDetail = (
             maskAriaLabel="Selection mask display"
             onMaskVisualizationChange={(viz) => {
               setImageSelectionMaskVisualization(viz);
-              setMaskVisualizationPreview(null);
+              previewMaskVisualization(SELECTION_MASK_CHANNEL_KEY, null);
             }}
-            onMaskVisualizationPreview={(visualization) =>
-              setMaskVisualizationPreview(
-                visualization
-                  ? {
-                      sourceChannelId: SELECTION_MASK_CHANNEL_KEY,
-                      visualization,
-                    }
-                  : null,
-              )
+            onMaskVisualizationPreview={(viz) =>
+              previewMaskVisualization(SELECTION_MASK_CHANNEL_KEY, viz)
             }
             fixedColorHex="ffcc00"
             trailing={

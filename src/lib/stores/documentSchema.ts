@@ -94,7 +94,7 @@ export const ImageChannelKindSchema = z.preprocess(
   z.enum(["channel", "mask"]),
 );
 
-/** Mask display (legacy `"outline"` / `"randomColors"` coerced in preprocess). */
+/** Mask display. Legacy `"outline"` / `"randomColors"` strings are coerced here. */
 export const MaskVisualizationSchema = z.preprocess(
   (v) => {
     if (v === "outline") return { style: "outline", color: "white" };

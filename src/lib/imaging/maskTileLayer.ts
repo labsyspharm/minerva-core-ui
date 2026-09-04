@@ -82,7 +82,7 @@ void main() {
   if (maskViz.uOutline != 0 && !isInteriorEdge(label, vTexCoord)) discard;
 
   vec3 rgb = maskViz.uRandomColors != 0 ? randomColor(label) : vec3(1.0);
-  float a = (maskViz.uOutline != 0 ? 235.0 : 200.0) / 255.0;
+  float a = (maskViz.uOutline != 0 ? 230.0 : 170.0) / 255.0;
   fragColor = vec4(rgb, a * maskViz.opacity);
 
   geometry.uv = vTexCoord;

@@ -29,6 +29,13 @@
   flex: 0 0 10ch;
   min-width: 0;
   overflow: hidden;
+}
+
+.channelNameSlot > * {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -83,7 +90,7 @@
 }
 
 .maskControlsPanel {
-  margin: 5px 8px 2px 52px;
+  margin: 5px 8px 2px 26px;
   padding: 2px 0;
 }
 
@@ -242,7 +249,6 @@
 }
 
 .channelVisibilityButton:hover {
-  color: var(--minerva-ink);
   background: var(--minerva-wash);
 }
 
@@ -255,13 +261,17 @@
   color: var(--minerva-quiet);
 }
 
-.channelColorSwatch {
+.channelColorSwatch,
+.channelColorSwatchStatic {
   width: 14px;
   height: 14px;
   padding: 0;
   border: 1px solid var(--minerva-edge);
   border-radius: 0;
   flex-shrink: 0;
+}
+
+.channelColorSwatch {
   cursor: pointer;
 }
 
