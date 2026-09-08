@@ -5,6 +5,7 @@ import {
   ColorPickerPopover,
   colorPickerAnchorPosition,
 } from "@/components/shared/ColorPickerPopover";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
   PopUpdate as PopUpdateChannel,
   Push as PushChannel,
@@ -15,6 +16,10 @@ import {
   isGroupRowVisible,
   isStackVisible,
 } from "@/lib/imaging/channelCompositor";
+import {
+  getStackPalettePendingIds,
+  subscribeStackPalettePending,
+} from "@/lib/imaging/psudoPalette";
 import {
   effectiveSourceColor,
   effectiveSourceLimits,
@@ -53,12 +58,11 @@ export type LegendSection = {
   entries: LegendEntry[];
 };
 
-/** Legend swatch matching what the viewer draws (group row or stack source). */
 export function legendChannelFromLayer(
   sc: Channel,
   gc: ChannelGroupChannel | null,
   activeGroupId: string | null,
-  colorIndex: number,
+  allChannels?: readonly Channel[],
 ): LegendChannel {
   if (gc) {
     const { r, g, b } = gc.color;
@@ -78,14 +82,14 @@ export function legendChannelFromLayer(
       channel_uuid: gc.id,
     };
   }
-  return legendChannelFromSource(sc, colorIndex);
+  return legendChannelFromSource(sc, allChannels);
 }
 
 export function legendChannelFromSource(
   sc: Channel,
-  colorIndex: number,
+  allChannels?: readonly Channel[],
 ): LegendChannel {
-  const { r, g, b } = effectiveSourceColor(sc, colorIndex);
+  const { r, g, b } = effectiveSourceColor(sc, allChannels);
   const hex_color = [r, g, b]
     .map((n) => n.toString(16).padStart(2, "0"))
     .join("");
@@ -127,9 +131,9 @@ type LegendRowProps = {
   g: number;
   total: number;
   editable?: boolean;
+  colorPending?: boolean;
   channelVisibilities: Record<string, boolean>;
   channelGroupRowVisibilities: Record<string, boolean>;
-  /** Group member hidden in the viewer — stroked swatch, still listed. */
   hiddenInViewer?: boolean;
   toggleChannel: (c: LegendChannel) => void;
   updateChannel: (
@@ -145,6 +149,7 @@ const LegendRow = (props: LegendRowProps) => {
   const { channel } = props;
   const channelName = channel.name;
   const { idx, g, onColorClick } = props;
+  const colorPending = !!props.colorPending;
   const rowVisible = props.hiddenInViewer
     ? false
     : legendRowVisible(
@@ -159,8 +164,6 @@ const LegendRow = (props: LegendRowProps) => {
   const uuid = `group/channel/name/${idx}`;
   const statusProps = {
     ...props,
-    // Must be explicit: EditableText defaults `editable` to true (bordered
-    // textarea). Playback / CDN pass undefined and must stay read-only.
     editable: props.editable === true,
     md: false,
     setInput: () => null,
@@ -174,20 +177,27 @@ const LegendRow = (props: LegendRowProps) => {
       className={styles.rowClickArea}
       style={{ opacity: rowVisible ? 1 : 0.55 }}
     >
-      <button
-        type="button"
-        className={styles.swatchButton}
-        onClick={onColorClick}
-        title={`Change color of ${channelName}`}
-        aria-label={`Change color of ${channelName}`}
-      >
+      {colorPending ? (
         <div
-          className={[styles.swatch, rowVisible ? styles.swatchFilled : null]
-            .filter(Boolean)
-            .join(" ")}
-          style={{ "--swatch-color": `#${channel.color}` } as CSSProperties}
+          className={minervaTheme.spinnerSm}
+          title={`Optimizing color of ${channelName}`}
         />
-      </button>
+      ) : (
+        <button
+          type="button"
+          className={styles.swatchButton}
+          onClick={onColorClick}
+          title={`Change color of ${channelName}`}
+          aria-label={`Change color of ${channelName}`}
+        >
+          <div
+            className={[styles.swatch, rowVisible ? styles.swatchFilled : null]
+              .filter(Boolean)
+              .join(" ")}
+            style={{ "--swatch-color": `#${channel.color}` } as CSSProperties}
+          />
+        </button>
+      )}
       <button
         type="button"
         className={styles.nameButton}
@@ -233,6 +243,11 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
   const pushChannel = props.pushChannel;
   const { sections } = props;
   const channelGroupRowVisibilities = props.channelGroupRowVisibilities ?? {};
+  const palettePendingIds = React.useSyncExternalStore(
+    subscribeStackPalettePending,
+    getStackPalettePendingIds,
+    getStackPalettePendingIds,
+  );
   const total = sections.reduce(
     (n, s) => n + s.entries.filter((e) => e.type === "channel").length,
     0,
@@ -326,6 +341,7 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
                   g,
                   total,
                   editable: props.editable,
+                  colorPending: palettePendingIds.includes(c.source_uuid),
                   channelVisibilities: props.channelVisibilities,
                   channelGroupRowVisibilities,
                   hiddenInViewer,

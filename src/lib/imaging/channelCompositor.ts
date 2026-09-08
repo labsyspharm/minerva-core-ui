@@ -56,6 +56,8 @@ type CompositedLayersArgs = {
   stackVisibilities: Record<string, boolean>;
   groupRowVisibilities: Record<string, boolean>;
   hasVisibilityMap: boolean;
+  unfittedChannelIds?: ReadonlySet<string>;
+  requireColor?: boolean;
 };
 
 function sourceIdsInAnyGroup(channelGroups: ChannelGroup[]): Set<string> {
@@ -81,6 +83,26 @@ function isUngroupedStackVisible(
   return !hasVisibilityMap || isStackVisible(stackVisibilities, sourceId);
 }
 
+function stackIntensityReady(sc: Channel): boolean {
+  return sc.samples === 3 || Boolean(sc.color);
+}
+
+function omitUnfittedUngrouped(
+  sc: Channel,
+  unfittedChannelIds: ReadonlySet<string> | undefined,
+): boolean {
+  return Boolean(unfittedChannelIds?.has(sc.id) && !sc.gmmContrastLimits);
+}
+
+function stackOverlayReady(
+  sc: Channel,
+  requireColor: boolean,
+  unfittedChannelIds: ReadonlySet<string> | undefined,
+): boolean {
+  if (requireColor && !stackIntensityReady(sc)) return false;
+  return !omitUnfittedUngrouped(sc, unfittedChannelIds);
+}
+
 /** Intensity layers sent to Viv (one OME channel per source; stack style wins over group). */
 export function buildCompositedIntensityLayers(
   args: CompositedLayersArgs,
@@ -92,6 +114,8 @@ export function buildCompositedIntensityLayers(
     stackVisibilities,
     groupRowVisibilities,
     hasVisibilityMap,
+    unfittedChannelIds,
+    requireColor = true,
   } = args;
 
   const groupedIds = sourceIdsInAnyGroup(channelGroups);
@@ -100,7 +124,9 @@ export function buildCompositedIntensityLayers(
     const layers = hasVisibilityMap
       ? onLoader.filter((sc) => isStackVisible(stackVisibilities, sc.id))
       : onLoader.slice(0, DEFAULT_VISIBLE_INTENSITY_CHANNELS);
-    return layers.map((sc) => ({ sc, gc: null }));
+    return layers
+      .filter((sc) => stackOverlayReady(sc, requireColor, unfittedChannelIds))
+      .map((sc) => ({ sc, gc: null }));
   }
 
   const ordered: CompositedIntensityLayer[] = [];
@@ -118,7 +144,12 @@ export function buildCompositedIntensityLayers(
     );
     if (!rowOn && !stackOn) continue;
     if (rowOn) ordered.push({ sc, gc });
-    else if (stackOn) ordered.push({ sc, gc: null });
+    else if (
+      stackOn &&
+      stackOverlayReady(sc, requireColor, unfittedChannelIds)
+    ) {
+      ordered.push({ sc, gc: null });
+    }
   }
 
   for (const sc of onLoader) {
@@ -131,6 +162,7 @@ export function buildCompositedIntensityLayers(
       continue;
     }
     if (!hasVisibilityMap) continue;
+    if (!stackOverlayReady(sc, requireColor, unfittedChannelIds)) continue;
     ordered.push({ sc, gc: null });
   }
 
@@ -373,24 +405,24 @@ export function defaultVisibilitiesForSources(
   return applyStackVisibilities(sourceChannels, prev, { kind: "sync" });
 }
 
-/** Source channel ids composited on first paint (matches viewer layer build). */
-export function initialPaintSourceChannelIds(args: {
-  sourceChannels: Channel[];
+/** Eyes / first-4 intensity ids without the color paint gate (GMM queue). */
+export function foregroundGmmChannelIds(args: {
+  sourceChannels: readonly Channel[];
   channelGroups?: ChannelGroup[];
   stackVisibilities?: Record<string, boolean>;
   groupRowVisibilities?: Record<string, boolean>;
   activeGroupId?: string | null;
 }): Set<string> {
   const channelGroups = args.channelGroups ?? [];
+  const sourceChannels = args.sourceChannels as Channel[];
   const stackVisibilities =
     args.stackVisibilities ??
-    defaultVisibilitiesForSources(args.sourceChannels, {}, channelGroups);
-  const onLoader = args.sourceChannels.filter(isImageChannel);
+    defaultVisibilitiesForSources(sourceChannels, {}, channelGroups);
+  const onLoader = sourceChannels.filter(isImageChannel);
   const activeGroup =
     channelGroups.length === 0
       ? undefined
-      : (channelGroups.find((g) => g.id === args.activeGroupId) ??
-        channelGroups[0]);
+      : channelGroups.find((g) => g.id === args.activeGroupId);
   const layers = buildCompositedIntensityLayers({
     onLoader,
     activeGroup,
@@ -398,6 +430,7 @@ export function initialPaintSourceChannelIds(args: {
     stackVisibilities,
     groupRowVisibilities: args.groupRowVisibilities ?? {},
     hasVisibilityMap: true,
+    requireColor: false,
   });
   return new Set(layers.map((l) => l.sc.id));
 }

@@ -23,6 +23,7 @@ import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import {
   applyGroupRowVisibilities,
   buildCompositedIntensityLayers,
+  defaultVisibilitiesForSources,
   isDisplayedViaActiveGroup,
   isGroupRowVisible,
   isStackVisible,
@@ -37,16 +38,26 @@ import {
   planarRgbDisplayColor,
 } from "@/lib/imaging/channelKind";
 import {
+  ensureGmm,
+  getGmmFitSnapshot,
+  refitGmm,
+  subscribeGmmFit,
+} from "@/lib/imaging/gmmScheduler";
+import {
   scheduleBackgroundTask,
   sourceDistributionYValuesLength,
 } from "@/lib/imaging/histogramLazy";
 import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/maskLayers";
 import {
   applyOptimizedColorsToChannelGroup,
+  ensurePaletteForNewlyVisibleStackChannels,
+  getStackPalettePendingIds,
   isGroupEligibleForPsudoOptimize,
   lockedRowIdsForGroup,
   optimizeChannelGroupWithLocks,
   seedRgbForGroupChannelIndex,
+  setStackPalettePendingMany,
+  subscribeStackPalettePending,
 } from "@/lib/imaging/psudoPalette";
 import {
   effectiveDisplayColor,
@@ -98,7 +109,6 @@ function toggleWithScrollOnShow(
   });
 }
 
-/** Hide source filename when it duplicates the channel/mask display name. */
 function imageSubtitleIfDistinct(
   channelName: string,
   imageLabel: string | null | undefined,
@@ -137,16 +147,16 @@ function contrastEditorPropsForSource(
   limits: [number, number],
 ): ChannelContrastEditorProps {
   const liveColor = colorRenderingForSource(channelRendering, sc.id);
-  const c = liveColor ?? color;
+  const c = liveColor ?? (sc.color ? color : undefined);
   const liveContrast = contrastRenderingForSource(channelRendering, sc.id);
   return {
     groupId: "",
     channelId: sc.id,
     sourceChannelId: sc.id,
     channelLabel: sc.name,
-    r: c.r ?? 0,
-    g: c.g ?? 0,
-    b: c.b ?? 0,
+    r: c?.r,
+    g: c?.g,
+    b: c?.b,
     lowerLimit: liveContrast ? liveContrast.lower : limits[0],
     upperLimit: liveContrast ? liveContrast.upper : limits[1],
     distribution: sc.sourceDistribution ?? null,
@@ -438,16 +448,13 @@ function dedupeGroupChannels(
   });
 }
 
-/** Group row copy of a source channel (independent color/limits from the source). */
 function makeGroupChannelRow(
   sc: Channel,
   slotIndex: number,
   sourceChannels: Channel[],
 ): ChannelGroupChannel {
-  // Prefer fitted auto-contrast (`gmmContrastLimits`) over import seed limits.
   const [srcLo, srcHi] = effectiveSourceLimits(sc);
-  const idx = sourceChannels.findIndex((c) => c.id === sc.id);
-  const srcColor = effectiveSourceColor(sc, idx >= 0 ? idx : 0, sourceChannels);
+  const srcColor = effectiveSourceColor(sc, sourceChannels);
   const seed =
     planarRgbDisplayColor(sc, sourceChannels) ??
     seedRgbForGroupChannelIndex(slotIndex);
@@ -466,15 +473,33 @@ function makeGroupChannelRow(
   };
 }
 
+function groupOptimizePendingSourceIds(
+  group: ChannelGroup,
+  sourceChannels: Channel[],
+  lockedRowIds: ReadonlySet<string>,
+): string[] {
+  const ids: string[] = [];
+  for (const gc of group.channels) {
+    if (lockedRowIds.has(gc.id)) continue;
+    const sc = findSourceChannel(sourceChannels, gc.channelId);
+    if (
+      !sc ||
+      !isImageChannel(sc) ||
+      sc.samples === 3 ||
+      isMaskChannel(sc) ||
+      isRgbDisplayChannel(sc, sourceChannels)
+    ) {
+      continue;
+    }
+    ids.push(sc.id);
+  }
+  return ids;
+}
+
 export type ChannelGroupsMasterDetailProps = {
   noLoader: boolean;
-  /** JPEG pyramids are pre-baked at exported contrast, so their controls are read-only. */
   contrastEditable?: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
-  ensureChannelGmmContrastLimits?: (
-    channelIds: string[],
-    opts?: { overwriteExistingLimits?: boolean },
-  ) => Promise<Map<string, ContrastLimits>>;
 };
 
 export const ChannelGroupsMasterDetail = (
@@ -520,6 +545,26 @@ export const ChannelGroupsMasterDetail = (
     }
     return out;
   }, [sourceChannels]);
+
+  const stackVisibilities = React.useMemo(
+    () =>
+      defaultVisibilitiesForSources(
+        sourceChannels,
+        channelVisibilities,
+        channelGroups,
+      ),
+    [sourceChannels, channelVisibilities, channelGroups],
+  );
+  const palettePendingIds = React.useSyncExternalStore(
+    subscribeStackPalettePending,
+    getStackPalettePendingIds,
+    getStackPalettePendingIds,
+  );
+  const gmmFit = React.useSyncExternalStore(
+    subscribeGmmFit,
+    getGmmFitSnapshot,
+    getGmmFitSnapshot,
+  );
 
   const activeChannelGroup = React.useMemo(
     () =>
@@ -652,22 +697,18 @@ export const ChannelGroupsMasterDetail = (
     const seedingFirst = channelGroups.length === 0;
     const toSeed = seedingFirst
       ? uniqueSourceChannels.filter((sc) =>
-          isStackVisible(channelVisibilities, sc.id),
+          isStackVisible(stackVisibilities, sc.id),
         )
       : [];
 
-    // First group is seeded from the currently visible stack channels — ensure
-    // auto-contrast has run so we don't bake in import-default limits.
-    if (seedingFirst && toSeed.length > 0 && ensureChannelGmmContrastLimits) {
+    if (seedingFirst && toSeed.length > 0) {
       const needFit = toSeed.filter(
         (sc) => !isMaskChannel(sc) && !sc.gmmContrastLimits,
       );
       if (needFit.length > 0) {
         try {
-          await ensureChannelGmmContrastLimits(needFit.map((sc) => sc.id));
-        } catch {
-          /* ignore — fall back to whatever limits are on the source */
-        }
+          await ensureGmm(needFit.map((sc) => sc.id));
+        } catch {}
       }
     }
 
@@ -693,7 +734,7 @@ export const ChannelGroupsMasterDetail = (
     ]);
     setActiveChannelGroup(newGroup.id);
     if (seedingFirst && seededChannels.length > 0) {
-      const stackOff = { ...useAppStore.getState().channelVisibilities };
+      const stackOff = { ...stackVisibilities };
       for (const gc of seededChannels) {
         const sc = findSourceChannel(sourcesNow, gc.channelId);
         if (sc) stackOff[sc.id] = false;
@@ -746,15 +787,16 @@ export const ChannelGroupsMasterDetail = (
       isGroupRowVisible(channelGroupRowVisibilities, gc.id),
     );
     const next = { ...channelGroupRowVisibilities };
-    for (const gc of group.channels) next[gc.id] = !allOn;
+    for (const gc of group.channels) {
+      next[gc.id] = !allOn;
+    }
     setChannelGroupRowVisibilities(next);
   };
 
-  const { ensureChannelGmmContrastLimits, ensureChannelHistograms } = props;
+  const { ensureChannelHistograms } = props;
 
   const refitAutoContrast = React.useCallback(
     async (sourceChannelId: string) => {
-      if (!ensureChannelGmmContrastLimits) return;
       const sc = sourceChannels.find((c) => c.id === sourceChannelId);
       if (!sc || isMaskChannel(sc) || isRgbDisplayChannel(sc, sourceChannels)) {
         return;
@@ -766,11 +808,24 @@ export const ChannelGroupsMasterDetail = (
       });
       useAppStore.getState().clearChannelRendering();
       try {
-        await ensureChannelGmmContrastLimits([sourceChannelId], {
-          overwriteExistingLimits: true,
+        const limits = await refitGmm(sourceChannelId);
+        if (!limits) return;
+        const groups = useDocumentStore.getState().channelGroups;
+        let changed = false;
+        const nextGroups = groups.map((g) => {
+          const channels = g.channels.map((gc) => {
+            if (gc.channelId !== sourceChannelId) return gc;
+            changed = true;
+            return {
+              ...gc,
+              lowerLimit: limits.lower,
+              upperLimit: limits.upper,
+            };
+          });
+          return { ...g, channels };
         });
+        if (changed) setChannelGroups(nextGroups);
       } catch {
-        /* ignore — keep prior limits */
       } finally {
         setRefittingContrastIds((prev) => {
           const next = new Set(prev);
@@ -779,14 +834,13 @@ export const ChannelGroupsMasterDetail = (
         });
       }
     },
-    [ensureChannelGmmContrastLimits, sourceChannels],
+    [setChannelGroups, sourceChannels],
   );
 
   const canFitContrast = (sc: Channel | undefined): sc is Channel =>
     Boolean(
       props.contrastEditable &&
         sc &&
-        ensureChannelGmmContrastLimits &&
         !isMaskChannel(sc) &&
         !isRgbDisplayChannel(sc, sourceChannels),
     );
@@ -827,13 +881,11 @@ export const ChannelGroupsMasterDetail = (
               upper: sc.gmmContrastLimits.upper,
             }
           : null;
-        if (!fittedLimits && ensureChannelGmmContrastLimits) {
+        if (!fittedLimits) {
           try {
-            const map = await ensureChannelGmmContrastLimits([sc.id]);
+            const map = await ensureGmm([sc.id]);
             fittedLimits = map.get(sc.id) ?? null;
-          } catch {
-            /* ignore */
-          }
+          } catch {}
         }
       }
 
@@ -863,6 +915,12 @@ export const ChannelGroupsMasterDetail = (
       }
 
       setOptimizePaletteBusy(true);
+      const pendingIds = groupOptimizePendingSourceIds(
+        updatedGroup,
+        sourceChannels,
+        lockedIds,
+      );
+      setStackPalettePendingMany(pendingIds, true);
       useAppStore.getState().clearChannelRendering();
       try {
         const colors = await optimizeChannelGroupWithLocks(
@@ -878,6 +936,7 @@ export const ChannelGroupsMasterDetail = (
       } catch {
         syncGroupState(newGroups);
       } finally {
+        setStackPalettePendingMany(pendingIds, false);
         setOptimizePaletteBusy(false);
       }
     },
@@ -886,7 +945,6 @@ export const ChannelGroupsMasterDetail = (
       sourceChannels,
       syncGroupState,
       optimizePaletteBusy,
-      ensureChannelGmmContrastLimits,
       setChannelGroupRowVisibilities,
     ],
   );
@@ -974,7 +1032,13 @@ export const ChannelGroupsMasterDetail = (
       return;
     }
     const lockedIds = lockedIdsForGroup(groupId);
+    const pendingIds = groupOptimizePendingSourceIds(
+      group,
+      sourceChannels,
+      lockedIds,
+    );
     setOptimizePaletteBusy(true);
+    setStackPalettePendingMany(pendingIds, true);
     useAppStore.getState().clearChannelRendering();
     try {
       const colors = await optimizeChannelGroupWithLocks(
@@ -991,8 +1055,8 @@ export const ChannelGroupsMasterDetail = (
         ),
       );
     } catch {
-      /* ignore — UI stays as-is */
     } finally {
+      setStackPalettePendingMany(pendingIds, false);
       setOptimizePaletteBusy(false);
     }
   };
@@ -1005,11 +1069,6 @@ export const ChannelGroupsMasterDetail = (
     void addChannelToGroup(groupId, payload.sourceId);
   };
 
-  /**
-   * Fetch histograms for channels that are on in the stack **or** in a group
-   * row (group eyes). After seeding a group we turn stack visibility off, so
-   * stack-only targeting would never load distributions for grouped channels.
-   */
   const visibleHistogramTargets = React.useMemo(() => {
     const ids: string[] = [];
     for (const sc of uniqueSourceChannels) {
@@ -1017,7 +1076,7 @@ export const ChannelGroupsMasterDetail = (
       if (isRgbDisplayChannel(sc, sourceChannels)) continue;
       if (sourceDistributionYValuesLength(sc) > 0) continue;
 
-      const stackOn = isStackVisible(channelVisibilities, sc.id);
+      const stackOn = isStackVisible(stackVisibilities, sc.id);
       const groupRowOn = channelGroups.some((g) =>
         g.channels.some(
           (gc) =>
@@ -1031,7 +1090,7 @@ export const ChannelGroupsMasterDetail = (
     return ids;
   }, [
     uniqueSourceChannels,
-    channelVisibilities,
+    stackVisibilities,
     channelGroupRowVisibilities,
     channelGroups,
     sourceChannels,
@@ -1073,10 +1132,7 @@ export const ChannelGroupsMasterDetail = (
       if (live) return rgbToHex(live);
       const sc = findSourceChannel(sourceChannels, colorPickerTarget.sourceId);
       if (!sc) return null;
-      const idx = sourceChannels.findIndex((c) => c.id === sc.id);
-      return rgbToHex(
-        effectiveSourceColor(sc, idx >= 0 ? idx : 0, sourceChannels),
-      );
+      return rgbToHex(effectiveSourceColor(sc, sourceChannels));
     }
     const g = channelGroups.find((x) => x.id === colorPickerTarget.groupId);
     const gc = g?.channels.find((c) => c.id === colorPickerTarget.rowId);
@@ -1153,16 +1209,18 @@ export const ChannelGroupsMasterDetail = (
           ? channelGroups.find((g) => g.id === activeChannelGroupId)
           : undefined,
         channelGroups,
-        stackVisibilities: channelVisibilities,
+        stackVisibilities,
         groupRowVisibilities: channelGroupRowVisibilities,
-        hasVisibilityMap: Object.keys(channelVisibilities).length > 0,
+        hasVisibilityMap: Object.keys(stackVisibilities).length > 0,
+        unfittedChannelIds: new Set(gmmFit.blockedChannelIds),
       }),
     [
       uniqueSourceChannels,
       activeChannelGroupId,
       channelGroups,
-      channelVisibilities,
+      stackVisibilities,
       channelGroupRowVisibilities,
+      gmmFit.blockedChannelIds,
     ],
   );
 
@@ -1173,8 +1231,6 @@ export const ChannelGroupsMasterDetail = (
     }
   }
 
-  // Show which image each channel came from only when more than one image
-  // is loaded. With a single image the badge would be redundant noise.
   const showImageBadge = images.length > 1;
   const imageLabels = React.useMemo(
     () => uniqueImageDisplayLabels(images),
@@ -1190,7 +1246,6 @@ export const ChannelGroupsMasterDetail = (
       group.channels.some((gc) =>
         isGroupRowVisible(channelGroupRowVisibilities, gc.id),
       );
-    // Inactive groups are not composited — show the master eye as off until selected.
     const masterVisible = isActive && rowsVisible;
     const addable = uniqueSourceChannels.filter(
       (sc) => !group.channels.some((gc) => gc.channelId === sc.id),
@@ -1303,6 +1358,7 @@ export const ChannelGroupsMasterDetail = (
                 const hex = rgbToHex(
                   sc ? effectiveDisplayColor(sc, sourceChannels, gc) : gc.color,
                 );
+                const palettePending = palettePendingIds.includes(gc.channelId);
                 const kind = sc
                   ? isMaskChannel(sc)
                     ? "mask"
@@ -1411,19 +1467,26 @@ export const ChannelGroupsMasterDetail = (
                             }
                           : !rgbDisplay
                             ? {
-                                colorHex: hex,
-                                colorTitle: `Pick color for ${name} in this group`,
-                                colorAriaLabel: `Pick color for ${name} in this group`,
-                                onColorClick: (e) => {
-                                  openColorPicker(
-                                    {
-                                      scope: "group",
-                                      groupId: group.id,
-                                      rowId: gc.id,
-                                    },
-                                    e.currentTarget.getBoundingClientRect(),
-                                  );
-                                },
+                                colorLoading: palettePending,
+                                ...(palettePending
+                                  ? {}
+                                  : {
+                                      colorHex: hex,
+                                      colorTitle: `Pick color for ${name} in this group`,
+                                      colorAriaLabel: `Pick color for ${name} in this group`,
+                                      onColorClick: (
+                                        e: React.MouseEvent<HTMLButtonElement>,
+                                      ) => {
+                                        openColorPicker(
+                                          {
+                                            scope: "group",
+                                            groupId: group.id,
+                                            rowId: gc.id,
+                                          },
+                                          e.currentTarget.getBoundingClientRect(),
+                                        );
+                                      },
+                                    }),
                               }
                             : {})}
                         trailing={
@@ -1530,7 +1593,7 @@ export const ChannelGroupsMasterDetail = (
   };
 
   const renderAllChannelsRow = (sc: Channel) => {
-    const stackOn = isStackVisible(channelVisibilities, sc.id);
+    const stackOn = isStackVisible(stackVisibilities, sc.id);
     const activeRow = activeChannelGroup?.channels.find(
       (gc) => gc.channelId === sc.id,
     );
@@ -1565,9 +1628,14 @@ export const ChannelGroupsMasterDetail = (
         return;
       }
       setChannelVisibilities({
-        ...channelVisibilities,
+        ...stackVisibilities,
         [sc.id]: nextVisible,
       });
+      if (nextVisible) {
+        void ensurePaletteForNewlyVisibleStackChannels({
+          sourceChannelId: sc.id,
+        });
+      }
     };
 
     const dragHandle = (
@@ -1577,7 +1645,6 @@ export const ChannelGroupsMasterDetail = (
       />
     );
 
-    // Contrast/histogram live on the group row when this source is grouped.
     if (inAnyGroup) {
       return (
         <li
@@ -1620,14 +1687,12 @@ export const ChannelGroupsMasterDetail = (
     }
 
     const capped =
-      isImageChannel(sc) && stackOn && !visibleIntensitySourceIds.has(sc.id);
-    const colorIdx = sourceChannels.findIndex((c) => c.id === sc.id);
-    const displayColor = effectiveDisplayColor(
-      sc,
-      sourceChannels,
-      null,
-      colorIdx >= 0 ? colorIdx : 0,
-    );
+      isImageChannel(sc) &&
+      stackOn &&
+      Boolean(sc.color) &&
+      !visibleIntensitySourceIds.has(sc.id);
+    const palettePending = palettePendingIds.includes(sc.id);
+    const displayColor = effectiveDisplayColor(sc, sourceChannels, null);
     const displayLimits = effectiveSourceLimits(sc);
     const hex = rgbToHex(displayColor);
 
@@ -1716,16 +1781,23 @@ export const ChannelGroupsMasterDetail = (
                 }
               : !rgbDisplay
                 ? {
-                    colorHex: hex,
-                    colorTitle: `Pick color for ${sc.name}`,
-                    colorAriaLabel: `Pick color for ${sc.name}`,
-                    onColorClick: (e) => {
-                      e.stopPropagation();
-                      openColorPicker(
-                        { scope: "source", sourceId: sc.id },
-                        e.currentTarget.getBoundingClientRect(),
-                      );
-                    },
+                    colorLoading: palettePending,
+                    ...(palettePending
+                      ? {}
+                      : {
+                          colorHex: hex,
+                          colorTitle: `Pick color for ${sc.name}`,
+                          colorAriaLabel: `Pick color for ${sc.name}`,
+                          onColorClick: (
+                            e: React.MouseEvent<HTMLButtonElement>,
+                          ) => {
+                            e.stopPropagation();
+                            openColorPicker(
+                              { scope: "source", sourceId: sc.id },
+                              e.currentTarget.getBoundingClientRect(),
+                            );
+                          },
+                        }),
                   }
                 : {})}
             trailing={rgbDisplay ? undefined : channelMoreMenu(sc, sc.name)}
@@ -1781,7 +1853,7 @@ export const ChannelGroupsMasterDetail = (
             visibilityAriaLabel="Toggle selection mask visibility"
             onToggleVisibility={() => {
               setChannelVisibilities({
-                ...channelVisibilities,
+                ...stackVisibilities,
                 [SELECTION_MASK_CHANNEL_KEY]: !selectionMaskVisible,
               });
             }}

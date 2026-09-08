@@ -1,17 +1,27 @@
+import { isStackVisible } from "@/lib/imaging/channelCompositor";
 import {
   DEFAULT_VISIBLE_INTENSITY_CHANNELS,
   isImageChannel,
+  isMaskChannel,
+  isRgbDisplayChannel,
 } from "@/lib/imaging/channelKind";
 import {
   hexToRgb,
   IMPORT_DEFAULT_SEED_HEX,
   type RgbColor,
+  seedDefaultSourceChannelStyles,
 } from "@/lib/imaging/sourceChannelStyle";
+import { useAppStore } from "@/lib/stores/appStore";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
-import { findSourceChannel } from "@/lib/stores/documentStore";
+import {
+  findSourceChannel,
+  flattenImageChannelsInDocumentOrder,
+  useDocumentStore,
+} from "@/lib/stores/documentStore";
+import { applySourceChannelsToImages } from "@/lib/stores/storeUtils";
 
 /** OKLab L bounds × 100 (psudo 0.15+ / palette study default). */
-const DEFAULT_LUMINANCE = new Uint16Array([50, 92]);
+const DEFAULT_LUMINANCE = new Uint16Array([60, 92]);
 
 /**
  * psudo README / npm tests: `false` = optimize C3 color-name distance + OKLab
@@ -19,16 +29,16 @@ const DEFAULT_LUMINANCE = new Uint16Array([50, 92]);
  */
 export const PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP = false;
 export const PSUDO_MAX_ITERS = 2700;
-export const PSUDO_CONFUSION_BASELINE_SAMPLES = 32; // only matters if spatial on
+export const PSUDO_CONFUSION_BASELINE_SAMPLES = 32;
 /** Matches psudo 0.15+ / palette_study (× n/3, max 40 inside WASM). */
 export const PSUDO_NUM_RESTARTS = 18;
 
-/** Per-channel contrast passed to psudo (full uint16 range; matches palette study / README). */
 const PSUDO_CONTRAST_MIN = 0;
 const PSUDO_CONTRAST_MAX = 65535;
 
-/** Channels per group from `extractChannels` default import path. */
 const IMPORT_GROUP_SLOT_COUNT = DEFAULT_VISIBLE_INTENSITY_CHANNELS;
+
+export type PaletteSlot = { id: string; color: RgbColor };
 
 export type PsudoOptimizeInputs = {
   colors: Uint16Array;
@@ -40,7 +50,6 @@ export type PsudoOptimizeInputs = {
   excluded: string[];
   /** Per-channel C3 hints; use empty strings for name-free optimization. */
   colorNames: string[];
-  /** Passed through to `psudo.optimize` (psudo 0.4.1+ / 0.15+). */
   maxIters: number;
   confusionSamples: number;
   spatial: boolean;
@@ -51,7 +60,10 @@ function clampUint16(n: number): number {
   return Math.max(0, Math.min(65535, Math.round(n)));
 }
 
-/** No intensity pixels — valid when `PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP` is false. */
+function asRgbColor(color: { r?: number; g?: number; b?: number }): RgbColor {
+  return { r: color.r ?? 0, g: color.g ?? 0, b: color.b ?? 0 };
+}
+
 function colorOnlyIntensities(): Uint16Array {
   return new Uint16Array(0);
 }
@@ -65,28 +77,21 @@ function defaultContrastLimits(nChannels: number): Uint16Array {
   return out;
 }
 
-/**
- * Build WASM inputs for `psudo.optimize` from a channel group and source channels.
- * Color-only path: empty intensities, full-range contrast limits, no excluded
- * names, empty `colorNames` (matches psudo 0.15 color-only usage). Channel count
- * is `group.channels.length` (often 4 for default import groups).
- */
-export function buildOptimizeInputs(
-  group: ChannelGroup,
-  options?: { lockedChannelRowIds?: ReadonlySet<string> },
+export function buildOptimizeInputsFromSlots(
+  slots: readonly PaletteSlot[],
+  lockedIds?: ReadonlySet<string>,
 ): PsudoOptimizeInputs {
-  const rows = group.channels ?? [];
-  const n = rows.length;
+  const n = slots.length;
   const colors = new Uint16Array(n * 3);
   const locked = new Uint16Array(n);
 
   for (let i = 0; i < n; i++) {
-    const gc = rows[i];
-    const { r, g, b } = gc.color;
+    const slot = slots[i];
+    const { r, g, b } = slot.color;
     colors[i * 3] = clampUint16(r);
     colors[i * 3 + 1] = clampUint16(g);
     colors[i * 3 + 2] = clampUint16(b);
-    locked[i] = options?.lockedChannelRowIds?.has(gc.id) ? 1 : 0;
+    locked[i] = lockedIds?.has(slot.id) ? 1 : 0;
   }
 
   return {
@@ -118,13 +123,16 @@ function linearToDisplayRgb(
 
 let psudoWarmupPromise: Promise<boolean[]> | null = null;
 
-/**
- * Preload psudo WASM in the worker pool (psudo 0.4+; one boolean per worker).
- * Safe to call multiple times; deduped until the first call settles.
- */
 export function warmupPsudoPalette(): Promise<boolean[]> {
   if (!psudoWarmupPromise) {
-    psudoWarmupPromise = import("psudo").then((m) => m.warmup());
+    psudoWarmupPromise = import("psudo").then(async (m) => {
+      const t0 = performance.now();
+      const result = await m.warmup();
+      console.log("[psudo] warmup", {
+        ms: Math.round(performance.now() - t0),
+      });
+      return result;
+    });
   }
   return psudoWarmupPromise;
 }
@@ -141,27 +149,50 @@ async function invokePsudoOptimize(
 ): Promise<Float32Array> {
   const psudo = await import("psudo");
   await warmupPsudoPalette();
-  const optimized = await psudo.optimize(
-    inputs.colors,
-    inputs.locked,
-    inputs.intensities,
-    inputs.contrastLimits,
-    inputs.luminance,
-    inputs.excluded,
-    inputs.colorNames,
-    inputs.maxIters,
-    inputs.confusionSamples,
-    inputs.spatial,
-    inputs.numRestarts,
-  );
-  return optimized instanceof Float32Array
-    ? optimized
-    : new Float32Array(optimized as ArrayLike<number>);
+  let locked = 0;
+  for (let i = 0; i < inputs.locked.length; i++) {
+    if (inputs.locked[i]) locked++;
+  }
+  const meta = {
+    channels: inputs.colorNames.length,
+    locked,
+    spatial: inputs.spatial,
+    maxIters: inputs.maxIters,
+    numRestarts: inputs.numRestarts,
+  };
+  console.log("[psudo] optimize start", meta);
+  const t0 = performance.now();
+  try {
+    const optimized = await psudo.optimize(
+      inputs.colors,
+      inputs.locked,
+      inputs.intensities,
+      inputs.contrastLimits,
+      inputs.luminance,
+      inputs.excluded,
+      inputs.colorNames,
+      inputs.maxIters,
+      inputs.confusionSamples,
+      inputs.spatial,
+      inputs.numRestarts,
+    );
+    console.log("[psudo] optimize done", {
+      ...meta,
+      ms: Math.round(performance.now() - t0),
+    });
+    return optimized instanceof Float32Array
+      ? optimized
+      : new Float32Array(optimized as ArrayLike<number>);
+  } catch (e) {
+    console.warn("[psudo] optimize failed", {
+      ...meta,
+      ms: Math.round(performance.now() - t0),
+      error: e,
+    });
+    throw e;
+  }
 }
 
-/**
- * Run psudo palette optimization (color-only / perceptual, no spatial overlap).
- */
 export async function optimizeGroupPalette(
   inputs: PsudoOptimizeInputs,
 ): Promise<RgbColor[]> {
@@ -190,7 +221,21 @@ export async function optimizeGroupPalette(
   return out;
 }
 
-/** True when the group is not suitable for pseudocolor optimization (e.g. RGB / H&E). */
+export async function optimizePaletteSlots(
+  slots: readonly PaletteSlot[],
+  lockedIds: ReadonlySet<string> = new Set(),
+): Promise<RgbColor[]> {
+  if (slots.length < 2) {
+    throw new Error(
+      "At least two channels are required to optimize a palette.",
+    );
+  }
+  if (slots.every((slot) => lockedIds.has(slot.id))) {
+    return slots.map((slot) => ({ ...slot.color }));
+  }
+  return optimizeGroupPalette(buildOptimizeInputsFromSlots(slots, lockedIds));
+}
+
 export function isGroupEligibleForPsudoOptimize(
   group: ChannelGroup,
   sourceChannels: Channel[],
@@ -204,12 +249,10 @@ export function isGroupEligibleForPsudoOptimize(
   return imageChannelCount >= 2;
 }
 
-/** Row ids for every channel slot in a group (used to lock existing colors on add). */
 export function lockedRowIdsForGroup(group: ChannelGroup): Set<string> {
   return new Set((group.channels ?? []).map((gc) => gc.id));
 }
 
-/** Default import seed color for a channel index within a group. */
 export function seedRgbForGroupChannelIndex(index: number): RgbColor {
   return hexToRgb(
     IMPORT_DEFAULT_SEED_HEX[index % IMPORT_DEFAULT_SEED_HEX.length],
@@ -224,17 +267,6 @@ function currentGroupColors(group: ChannelGroup): RgbColor[] {
   }));
 }
 
-function hasUnlockedRows(
-  group: ChannelGroup,
-  lockedChannelRowIds: ReadonlySet<string>,
-): boolean {
-  return (group.channels ?? []).some((gc) => !lockedChannelRowIds.has(gc.id));
-}
-
-/**
- * Optimize a group palette with optional per-row locks.
- * Returns current colors unchanged when ineligible or all rows are locked.
- */
 export async function optimizeChannelGroupWithLocks(
   group: ChannelGroup,
   sourceChannels: Channel[],
@@ -243,16 +275,16 @@ export async function optimizeChannelGroupWithLocks(
   if (!isGroupEligibleForPsudoOptimize(group, sourceChannels)) {
     return currentGroupColors(group);
   }
-  if (!hasUnlockedRows(group, lockedChannelRowIds)) {
+  const slots: PaletteSlot[] = (group.channels ?? []).map((gc) => ({
+    id: gc.id,
+    color: asRgbColor(gc.color),
+  }));
+  if (!slots.some((slot) => !lockedChannelRowIds.has(slot.id))) {
     return currentGroupColors(group);
   }
-  const inputs = buildOptimizeInputs(group, {
-    lockedChannelRowIds,
-  });
-  return optimizeGroupPalette(inputs);
+  return optimizePaletteSlots(slots, lockedChannelRowIds);
 }
 
-/** Apply optimized RGB values to one channel group; other groups unchanged. */
 export function applyOptimizedColorsToChannelGroup(
   channelGroups: ChannelGroup[],
   groupId: string,
@@ -272,7 +304,6 @@ export function applyOptimizedColorsToChannelGroup(
   });
 }
 
-/** Channel groups created by the default `Group N` / four-channels-per-group import path. */
 export function usesDefaultFourChannelGrouping(
   channelGroups: ChannelGroup[],
 ): boolean {
@@ -285,56 +316,71 @@ export function usesDefaultFourChannelGrouping(
   );
 }
 
-/** First four pseudocolor source channels on the first imported image (import palette seeds). */
 function importPaletteSourceChannels(sourceChannels: Channel[]): Channel[] {
   if (sourceChannels.length === 0) return [];
   const firstImageId = sourceChannels[0].imageId;
   const fromFirst = sourceChannels.filter(
-    (sc) => sc.imageId === firstImageId && sc.samples !== 3,
+    (sc) =>
+      sc.imageId === firstImageId &&
+      sc.samples !== 3 &&
+      isImageChannel(sc) &&
+      !isRgbDisplayChannel(sc, sourceChannels),
   );
   const pool =
     fromFirst.length > 0
       ? fromFirst
-      : sourceChannels.filter((sc) => sc.samples !== 3);
+      : sourceChannels.filter(
+          (sc) =>
+            sc.samples !== 3 &&
+            isImageChannel(sc) &&
+            !isRgbDisplayChannel(sc, sourceChannels),
+        );
   return pool.slice(0, IMPORT_GROUP_SLOT_COUNT);
 }
 
-/**
- * Run psudo once for import palette slots (non-spatial). Optimizes one slot per
- * real channel on the first image, up to four slots by default.
- */
+function seedPaletteForPicked(count: number): RgbColor[] {
+  return Array.from({ length: count }, (_, i) =>
+    seedRgbForGroupChannelIndex(i),
+  );
+}
+
+function startingColorAwayFromLocked(
+  lockedColors: readonly RgbColor[],
+): RgbColor {
+  const candidates: RgbColor[] = [
+    ...IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex)),
+    { r: 255, g: 255, b: 255 },
+    { r: 255, g: 0, b: 0 },
+    { r: 0, g: 255, b: 0 },
+    { r: 0, g: 0, b: 255 },
+    { r: 255, g: 255, b: 0 },
+  ];
+  return (
+    candidates.find(
+      (c) =>
+        !lockedColors.some(
+          (locked) => locked.r === c.r && locked.g === c.g && locked.b === c.b,
+        ),
+    ) ?? { r: 255, g: 255, b: 255 }
+  );
+}
+
 export async function optimizeImportPaletteFour(
   sourceChannels: Channel[],
 ): Promise<RgbColor[]> {
-  const seeds = IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex));
+  const seeds = seedPaletteForPicked(IMPORT_GROUP_SLOT_COUNT);
   const picked = importPaletteSourceChannels(sourceChannels);
   if (picked.length < 2) return seeds;
 
   const n = Math.min(IMPORT_GROUP_SLOT_COUNT, picked.length);
-  const colors = new Uint16Array(n * 3);
-  for (let i = 0; i < n; i++) {
-    const seed = seeds[i];
-    colors[i * 3] = clampUint16(seed.r);
-    colors[i * 3 + 1] = clampUint16(seed.g);
-    colors[i * 3 + 2] = clampUint16(seed.b);
-  }
-  const optimized = await optimizeGroupPalette({
-    colors,
-    locked: new Uint16Array(n),
-    intensities: colorOnlyIntensities(),
-    contrastLimits: defaultContrastLimits(n),
-    luminance: DEFAULT_LUMINANCE,
-    excluded: [],
-    colorNames: Array.from({ length: n }, () => ""),
-    maxIters: PSUDO_MAX_ITERS,
-    confusionSamples: PSUDO_CONFUSION_BASELINE_SAMPLES,
-    spatial: PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP,
-    numRestarts: PSUDO_NUM_RESTARTS,
-  });
+  const slots = picked.slice(0, n).map((sc, i) => ({
+    id: sc.id,
+    color: seeds[i] ?? seeds[0],
+  }));
+  const optimized = await optimizePaletteSlots(slots, new Set());
   return seeds.map((fallback, i) => optimized[i] ?? fallback);
 }
 
-/** Apply a fixed four-color palette to each default import group (index mod 4). */
 export function applyFourColorPaletteToChannelGroups(
   channelGroups: ChannelGroup[],
   palette: readonly RgbColor[],
@@ -353,10 +399,6 @@ export function applyFourColorPaletteToChannelGroups(
   });
 }
 
-/**
- * On image import: one psudo optimization, then the same four colors on every
- * auto-created `Group N` (skips demo CRC / H&E paths).
- */
 export async function applySharedImportPaletteToChannelGroups(
   channelGroups: ChannelGroup[],
   sourceChannels: Channel[],
@@ -379,20 +421,202 @@ export async function applySharedImportPaletteToChannelGroups(
   }
 }
 
-/** On generic import (no auto groups): seed psudo palette colors on source channels. */
 export async function applySharedImportPaletteToSourceChannels(
   sourceChannels: Channel[],
 ): Promise<Channel[]> {
-  const { seedDefaultSourceChannelStyles } = await import(
-    "./sourceChannelStyle"
-  );
+  const picked = importPaletteSourceChannels(sourceChannels);
+  const seeds = seedPaletteForPicked(picked.length);
+  const t0 = performance.now();
+  console.log("[psudo] import palette start", { channels: picked.length });
   try {
-    const palette = await optimizeImportPaletteFour(sourceChannels);
+    const palette =
+      picked.length < 2
+        ? seeds
+        : await optimizePaletteSlots(
+            picked.map((sc, i) => ({
+              id: sc.id,
+              color: seeds[i] ?? seeds[0],
+            })),
+            new Set(),
+          );
+    console.log("[psudo] import palette done", {
+      ms: Math.round(performance.now() - t0),
+      channels: picked.length,
+      optimized: picked.length >= 2,
+    });
     return seedDefaultSourceChannelStyles(sourceChannels, palette);
   } catch (e) {
-    if (import.meta.env.DEV) {
-      console.warn("[psudo] import source palette optimization failed", e);
-    }
-    return seedDefaultSourceChannelStyles(sourceChannels);
+    console.warn("[psudo] import palette failed", {
+      ms: Math.round(performance.now() - t0),
+      channels: picked.length,
+      error: e,
+    });
+    return seedDefaultSourceChannelStyles(sourceChannels, seeds);
   }
+}
+
+function stackPaletteParticipants(
+  sourceChannels: Channel[],
+  stackVisibilities: Record<string, boolean>,
+): Channel[] {
+  return sourceChannels.filter((sc) => {
+    if (!isImageChannel(sc) || sc.samples === 3) return false;
+    if (isMaskChannel(sc) || isRgbDisplayChannel(sc, sourceChannels)) {
+      return false;
+    }
+    return isStackVisible(stackVisibilities, sc.id);
+  });
+}
+
+let stackPaletteChain: Promise<void> = Promise.resolve();
+const stackPalettePending = new Set<string>();
+let stackPalettePendingSnapshot: readonly string[] = [];
+const stackPalettePendingListeners = new Set<() => void>();
+
+function setStackPalettePending(sourceChannelId: string, pending: boolean) {
+  setStackPalettePendingMany([sourceChannelId], pending);
+}
+
+export function setStackPalettePendingMany(
+  sourceChannelIds: readonly string[],
+  pending: boolean,
+): void {
+  if (sourceChannelIds.length === 0) return;
+  let changed = false;
+  for (const id of sourceChannelIds) {
+    if (pending) {
+      if (stackPalettePending.has(id)) continue;
+      stackPalettePending.add(id);
+      changed = true;
+    } else if (stackPalettePending.delete(id)) {
+      changed = true;
+    }
+  }
+  if (!changed) return;
+  stackPalettePendingSnapshot = [...stackPalettePending];
+  for (const listener of stackPalettePendingListeners) listener();
+}
+
+export function subscribeStackPalettePending(
+  onStoreChange: () => void,
+): () => void {
+  stackPalettePendingListeners.add(onStoreChange);
+  return () => {
+    stackPalettePendingListeners.delete(onStoreChange);
+  };
+}
+
+export function getStackPalettePendingIds(): readonly string[] {
+  return stackPalettePendingSnapshot;
+}
+
+function markStackPalettePendingIfNeeded(sourceChannelId: string): boolean {
+  const doc = useDocumentStore.getState();
+  if (doc.channelGroups.length > 0) return false;
+  const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+  const shown = sourceChannels.find((sc) => sc.id === sourceChannelId);
+  if (
+    !shown ||
+    !isImageChannel(shown) ||
+    shown.samples === 3 ||
+    isMaskChannel(shown) ||
+    isRgbDisplayChannel(shown, sourceChannels)
+  ) {
+    return false;
+  }
+  if (shown.color) return false;
+  setStackPalettePending(shown.id, true);
+  return true;
+}
+
+export function ensurePaletteForNewlyVisibleStackChannels(args: {
+  sourceChannelId: string;
+}): Promise<void> {
+  const pending = markStackPalettePendingIfNeeded(args.sourceChannelId);
+  const run = stackPaletteChain.then(async () => {
+    try {
+      await runEnsureStackPalette(args);
+    } finally {
+      if (pending) setStackPalettePending(args.sourceChannelId, false);
+    }
+  });
+  stackPaletteChain = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
+
+async function runEnsureStackPalette(args: {
+  sourceChannelId: string;
+}): Promise<void> {
+  const doc = useDocumentStore.getState();
+  if (doc.channelGroups.length > 0) return;
+
+  const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+  const shown = sourceChannels.find((sc) => sc.id === args.sourceChannelId);
+  if (
+    !shown ||
+    !isImageChannel(shown) ||
+    shown.samples === 3 ||
+    isMaskChannel(shown) ||
+    isRgbDisplayChannel(shown, sourceChannels) ||
+    shown.color
+  ) {
+    return;
+  }
+
+  const vis = useAppStore.getState().channelVisibilities;
+  const participants = stackPaletteParticipants(
+    flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images),
+    vis,
+  );
+  const unlocked = participants.filter((sc) => !sc.color);
+  if (unlocked.length === 0) return;
+
+  const lockedIds = new Set(
+    participants.filter((sc) => sc.color).map((sc) => sc.id),
+  );
+  const lockedColors = participants
+    .filter((sc) => lockedIds.has(sc.id) && sc.color)
+    .map((sc) => asRgbColor(sc.color as RgbColor));
+  const unlockedStart = startingColorAwayFromLocked(lockedColors);
+  const slots: PaletteSlot[] = participants.map((sc) => ({
+    id: sc.id,
+    color: lockedIds.has(sc.id)
+      ? asRgbColor(sc.color as RgbColor)
+      : unlockedStart,
+  }));
+
+  let colors: RgbColor[];
+  try {
+    colors =
+      slots.length < 2
+        ? slots.map((slot) => slot.color)
+        : await optimizePaletteSlots(slots, lockedIds);
+  } catch (e) {
+    if (import.meta.env.DEV) {
+      console.warn("[psudo] stack palette optimization failed", e);
+    }
+    return;
+  }
+
+  const docNow = useDocumentStore.getState();
+  if (docNow.channelGroups.length > 0) return;
+  const sourcesNow = flattenImageChannelsInDocumentOrder(docNow.images);
+  const unlockedIds = new Set(unlocked.map((sc) => sc.id));
+  const indexById = new Map(participants.map((sc, i) => [sc.id, i] as const));
+
+  let changed = false;
+  const next = sourcesNow.map((sc) => {
+    if (!unlockedIds.has(sc.id) || sc.color) return sc;
+    const idx = indexById.get(sc.id);
+    if (idx == null) return sc;
+    const c = colors[idx];
+    if (!c) return sc;
+    changed = true;
+    return { ...sc, color: { r: c.r, g: c.g, b: c.b } };
+  });
+  if (!changed) return;
+  docNow.setImages(applySourceChannelsToImages(docNow.images, next));
 }

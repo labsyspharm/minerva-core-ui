@@ -19,7 +19,6 @@ import {
  */
 export const MAX_VIV_INTENSITY_CHANNELS = 10;
 
-/** Keep parent pyramid tiles around for best-available refinement while zooming. */
 export const VIV_TILE_MAX_CACHE_SIZE = 128;
 
 type Selection = Record<"z" | "t" | "c", number>;
@@ -37,7 +36,6 @@ type Settings = {
   contrastLimits: Limit[];
   loader: Loader | null;
   colors: Color[];
-  /** Parallel to selections — source channel ids for live preview mapping. */
   sourceChannelIds?: string[];
 };
 
@@ -92,13 +90,11 @@ export type Config = {
     modality: string,
     l?: Loader,
     channelVisibilities?: Record<string, boolean>,
-    /** When set (OME multi-image UUID), channel visibility matches this instead of `modality`. */
     loaderSourceImageId?: string,
     channelGroupRowVisibilities?: Record<string, boolean>,
   ) => Settings;
 };
 
-/** Full-resolution pixel size from OME metadata or finest pyramid level (>1 rejects placeholders). */
 export function loaderPixelSizeXY(loader: Loader): {
   sizeX: number;
   sizeY: number;
@@ -135,7 +131,7 @@ export function loaderPixelSizeXY(loader: Loader): {
 const toDefaultSettings = (n: number) => {
   const chan_range = [...Array(n).keys()];
   const n_shown = 3;
-  const n_sub = n_shown; //TODO
+  const n_sub = n_shown;
   return {
     loader: null,
     selections: chan_range
@@ -165,6 +161,7 @@ const toDefaultSettings = (n: number) => {
 type ToSettingsOpts = {
   SourceChannels: SourceChannel[];
   channelGroups?: ChannelGroup[];
+  unfittedChannelIds?: ReadonlySet<string>;
 };
 
 const toSettings = (opts: ToSettingsOpts) => {
@@ -176,7 +173,7 @@ const toSettings = (opts: ToSettingsOpts) => {
     loaderSourceImageId?: string,
     channelGroupRowVisibilities: Record<string, boolean> = {},
   ) => {
-    const { SourceChannels, channelGroups = [] } = opts;
+    const { SourceChannels, channelGroups = [], unfittedChannelIds } = opts;
     if (!loader) return toDefaultSettings(3);
     const full_level = loader.data[0];
     const { labels, shape } = full_level;
@@ -186,7 +183,6 @@ const toSettings = (opts: ToSettingsOpts) => {
         ? image_id === loaderSourceImageId
         : image_id === modality;
 
-    // Intensity only; masks use createMaskTileLayer.
     const onLoader = SourceChannels.filter(
       (sc) => sourceImageMatches(sc.imageId) && isImageChannel(sc),
     );
@@ -205,6 +201,7 @@ const toSettings = (opts: ToSettingsOpts) => {
       stackVisibilities: channelVisibilities ?? {},
       groupRowVisibilities: channelGroupRowVisibilities,
       hasVisibilityMap,
+      unfittedChannelIds,
     });
 
     const layersAll = composited;
@@ -229,8 +226,8 @@ const toSettings = (opts: ToSettingsOpts) => {
         ? [gc.lowerLimit, gc.upperLimit]
         : effectiveSourceLimits(sc);
       const { r, g, b } = gc
-        ? effectiveDisplayColor(sc, SourceChannels, gc, i)
-        : effectiveSourceColor(sc, i, SourceChannels);
+        ? effectiveDisplayColor(sc, SourceChannels, gc)
+        : effectiveSourceColor(sc, SourceChannels);
       selections.push({ z: 0, t: 0, c: sc.index });
       colors.push([r, g, b]);
       contrastLimits.push([lo, hi]);

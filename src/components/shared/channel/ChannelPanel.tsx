@@ -10,6 +10,7 @@ import {
   isImageChannel,
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
+import { ensurePaletteForNewlyVisibleStackChannels } from "@/lib/imaging/psudoPalette";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { ChannelGroup } from "@/lib/stores/documentStore";
 import {
@@ -84,9 +85,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       .filter((x) => x != null),
   }));
   const legendSections = React.useMemo((): LegendSection[] => {
-    const indexById = new Map(
-      sourceChannels.map((sc, idx) => [sc.id, idx] as const),
-    );
     const activeGroup = activeChannelGroupId
       ? docChannelGroups.find((g) => g.id === activeChannelGroupId)
       : undefined;
@@ -105,21 +103,22 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         for (const gc of activeGroup.channels) {
           const sc = findSourceChannel(sourceChannels, gc.channelId);
           if (!sc || sc.imageId !== im.id) continue;
-          const colorIdx = indexById.get(sc.id) ?? 0;
           groupChannels.push(
-            legendChannelFromLayer(sc, gc, activeChannelGroupId, colorIdx),
+            legendChannelFromLayer(
+              sc,
+              gc,
+              activeChannelGroupId,
+              sourceChannels,
+            ),
           );
         }
 
         const overlayChannels: LegendChannel[] = [];
-        // Match compositor: group rows cover grouped sources; overlays are
-        // only stack-visible channels that are not in any group.
         if (hasStackVisibilityMap) {
           for (const sc of imageSources) {
             if (sourceChannelInAnyGroup(docChannelGroups, sc.id)) continue;
             if (!isStackVisible(channelVisibilities, sc.id)) continue;
-            const colorIdx = indexById.get(sc.id) ?? 0;
-            overlayChannels.push(legendChannelFromSource(sc, colorIdx));
+            overlayChannels.push(legendChannelFromSource(sc, sourceChannels));
           }
         }
 
@@ -141,10 +140,9 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
               defaultIntensitySeen < DEFAULT_VISIBLE_INTENSITY_CHANNELS;
           if (isImageChannel(sc)) defaultIntensitySeen += 1;
           if (!visible) continue;
-          const colorIdx = indexById.get(sc.id) ?? 0;
           entries.push({
             type: "channel",
-            channel: legendChannelFromSource(sc, colorIdx),
+            channel: legendChannelFromSource(sc, sourceChannels),
           });
         }
       }
@@ -199,8 +197,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       });
 
       if (is_copied(group)) {
-        // Already on / have a copy — write color into that group (do not
-        // setChannelRendering-only; Viv would ignore group row colors).
         syncGroupState(
           groups.map((g) => (g.id === group.id ? withColor(g) : g)),
         );
@@ -226,11 +222,12 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
 
   const toggleChannel = (c: LegendChannel) => {
     if (c.group_uuid && c.channel_uuid) {
+      const nextVisible = !(
+        channelGroupRowVisibilities[c.channel_uuid] ?? true
+      );
       setChannelGroupRowVisibilities({
         ...channelGroupRowVisibilities,
-        [c.channel_uuid]: !(
-          channelGroupRowVisibilities[c.channel_uuid] ?? true
-        ),
+        [c.channel_uuid]: nextVisible,
       });
       return;
     }
@@ -238,10 +235,16 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       Object.keys(channelVisibilities).length > 0
         ? channelVisibilities
         : defaultVisibilitiesForSources(sourceChannels, {}, docChannelGroups);
+    const nextVisible = !isStackVisible(stackVisibilities, c.source_uuid);
     setChannelVisibilities({
       ...stackVisibilities,
-      [c.source_uuid]: !isStackVisible(stackVisibilities, c.source_uuid),
+      [c.source_uuid]: nextVisible,
     });
+    if (nextVisible) {
+      void ensurePaletteForNewlyVisibleStackChannels({
+        sourceChannelId: c.source_uuid,
+      });
+    }
   };
 
   const hideClass = [hide ? styles.hide : "", styles.core].join(" ");

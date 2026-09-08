@@ -104,9 +104,9 @@ export type ChannelContrastEditorProps = {
   channelId: string;
   sourceChannelId: string;
   channelLabel: string;
-  r: number;
-  g: number;
-  b: number;
+  r?: number;
+  g?: number;
+  b?: number;
   lowerLimit: number;
   upperLimit: number;
   histogramLoading?: boolean;
@@ -142,6 +142,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const [sliderMax, setSliderMax] = React.useState(() =>
     scale.toSlider(props.upperLimit),
   );
+  const sliderMinRef = React.useRef(sliderMin);
+  const sliderMaxRef = React.useRef(sliderMax);
   const [minInput, setMinInput] = React.useState(String(props.lowerLimit));
   const [maxInput, setMaxInput] = React.useState(String(props.upperLimit));
   const editingLimitRef = React.useRef(false);
@@ -160,6 +162,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
       Math.round(props.lowerLimit),
       Math.round(props.upperLimit),
     ];
+    sliderMinRef.current = scale.toSlider(props.lowerLimit);
+    sliderMaxRef.current = scale.toSlider(props.upperLimit);
   }, [props.lowerLimit, props.upperLimit, scale]);
 
   const previewRange = (lower: number, upper: number) => {
@@ -227,19 +231,24 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   };
 
   const onMinSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = Math.min(Number(e.target.value), sliderMax);
+    editingLimitRef.current = true;
+    const v = Math.min(Number(e.target.value), sliderMaxRef.current);
+    sliderMinRef.current = v;
     setSliderMin(v);
-    syncFromSliders(v, sliderMax, false);
+    syncFromSliders(v, sliderMaxRef.current, false);
   };
 
   const onMaxSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = Math.max(Number(e.target.value), sliderMin);
+    editingLimitRef.current = true;
+    const v = Math.max(Number(e.target.value), sliderMinRef.current);
+    sliderMaxRef.current = v;
     setSliderMax(v);
-    syncFromSliders(sliderMin, v, false);
+    syncFromSliders(sliderMinRef.current, v, false);
   };
 
   const onSliderCommit = () => {
-    syncFromSliders(sliderMin, sliderMax, true);
+    editingLimitRef.current = false;
+    syncFromSliders(sliderMinRef.current, sliderMaxRef.current, true);
   };
 
   const commitFromInputs = () => {
@@ -293,6 +302,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const onRangePanPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
     e.preventDefault();
+    editingLimitRef.current = true;
     panMovedRef.current = false;
     panDragRef.current = {
       active: true,
@@ -327,6 +337,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
       hi = scale.sliderSteps;
       lo = scale.sliderSteps - span;
     }
+    sliderMinRef.current = lo;
+    sliderMaxRef.current = hi;
     setSliderMin(lo);
     setSliderMax(hi);
     syncFromSliders(lo, hi, false);
@@ -351,14 +363,18 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
         hi = scale.sliderSteps;
         lo = scale.sliderSteps - span;
       }
+      sliderMinRef.current = lo;
+      sliderMaxRef.current = hi;
       setSliderMin(lo);
       setSliderMax(hi);
+      editingLimitRef.current = false;
       syncFromSliders(lo, hi, true);
     } else {
       onSliderCommit();
     }
     panDragRef.current = null;
     panMovedRef.current = false;
+    editingLimitRef.current = false;
   };
 
   const panLeft = `${minFrac * 100}%`;
@@ -388,9 +404,11 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
       <div
         className={styles.histogramHost}
         style={
-          {
-            "--histogram-color": `rgb(${props.r},${props.g},${props.b})`,
-          } as React.CSSProperties
+          props.r != null && props.g != null && props.b != null
+            ? ({
+                "--histogram-color": `rgb(${props.r},${props.g},${props.b})`,
+              } as React.CSSProperties)
+            : undefined
         }
       >
         <svg

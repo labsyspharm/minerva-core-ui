@@ -21,23 +21,12 @@ import type {
 } from "@/lib/authoring/config";
 import { extractChannels } from "@/lib/authoring/config";
 import {
-  type ContrastLimits,
-  clearOmeGmmContrastCache,
-  ensureOmeGmmContrastLimits,
-  fitGmmContrastBeforePaint,
-  invalidateOmeGmmContrastCache,
-  looksLikeImportDefaultLimits,
-  mergeGmmContrastLimitsIntoSourceChannelsByChannelId,
-  omeImportGmmImageKey,
-  visibleChannelIdsForGmmBeforePaint,
-} from "@/lib/imaging/autoContrast";
-import {
   applyVisibilityTransition,
   diffChannelIds,
   diffGroupRowIds,
+  foregroundGmmChannelIds,
   type VisibilityTransition,
 } from "@/lib/imaging/channelCompositor";
-import { isImageChannel } from "@/lib/imaging/channelKind";
 import {
   isJpegOmeTiffImageSource,
   JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE,
@@ -55,6 +44,7 @@ import {
   loadOmeLoaderForRole,
   pickLocalOmeTiffHandle,
 } from "@/lib/imaging/filesystem";
+import { clearGmmScheduler, reconcileGmm } from "@/lib/imaging/gmmScheduler";
 import {
   clearOmeHistogramCache,
   ensureOmeHistogramDistributions,
@@ -294,7 +284,40 @@ async function hydrateLoadersFromImages(
 
 function clearOmeDerivedCaches(): void {
   clearOmeHistogramCache();
-  clearOmeGmmContrastCache();
+  clearGmmScheduler();
+}
+
+function startGmmForLoaders(
+  loaderEntries: readonly OmeLoaderEntry[],
+  images: Image[],
+  channelGroups: ChannelGroup[],
+  vis: {
+    channelVisibilities: Record<string, boolean>;
+    channelGroupRowVisibilities: Record<string, boolean>;
+    activeChannelGroupId: string | null;
+  },
+): void {
+  const channels = flattenImageChannelsInDocumentOrder(images);
+  const visibility = applyVisibilityTransition(
+    channels,
+    channelGroups,
+    vis.channelVisibilities,
+    vis.channelGroupRowVisibilities,
+    Object.keys(vis.channelVisibilities).length === 0
+      ? { kind: "fresh" }
+      : { kind: "sync" },
+  );
+  reconcileGmm({
+    loaderEntries,
+    channels,
+    visibleChannelIds: foregroundGmmChannelIds({
+      sourceChannels: channels,
+      channelGroups,
+      stackVisibilities: visibility.channelVisibilities,
+      groupRowVisibilities: visibility.channelGroupRowVisibilities,
+      activeGroupId: vis.activeChannelGroupId,
+    }),
+  });
 }
 
 const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
@@ -403,6 +426,42 @@ const Content = (props: Props) => {
   const setImages = useDocumentStore((s) => s.setImages);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
+  const gmmChannelKey = useMemo(
+    () =>
+      flattenImageChannelsInDocumentOrder(images)
+        .map((sc) => `${sc.id}:${sc.imageId}:${sc.index}`)
+        .join("|"),
+    [images],
+  );
+  React.useEffect(() => {
+    if (!activeStoryId) {
+      clearGmmScheduler();
+      return;
+    }
+    return () => clearGmmScheduler();
+  }, [activeStoryId]);
+  React.useEffect(() => {
+    if (!activeStoryId) return;
+    void gmmChannelKey;
+    startGmmForLoaders(
+      omeLoaderEntries,
+      useDocumentStore.getState().images,
+      channelGroups,
+      {
+        channelVisibilities,
+        channelGroupRowVisibilities,
+        activeChannelGroupId,
+      },
+    );
+  }, [
+    activeStoryId,
+    omeLoaderEntries,
+    gmmChannelKey,
+    channelGroups,
+    channelVisibilities,
+    channelGroupRowVisibilities,
+    activeChannelGroupId,
+  ]);
   const sourceChannels = useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
@@ -662,9 +721,10 @@ const Content = (props: Props) => {
       clearRemovedImageState([removed]);
 
       clearOmeDerivedCaches();
-      setOmeLoaderEntries((prev) =>
-        prev.filter((e) => e.sourceImageId !== imageId),
+      const remainingOme = omeLoaderEntries.filter(
+        (e) => e.sourceImageId !== imageId,
       );
+      setOmeLoaderEntries(remainingOme);
       setJpegLoaderEntries((prev) =>
         prev.filter((e) => e.sourceImageId !== imageId),
       );
@@ -693,7 +753,7 @@ const Content = (props: Props) => {
       }
       setViewerRemountKey((k) => k + 1);
     },
-    [clearRemovedImageState, publishChannelState],
+    [clearRemovedImageState, omeLoaderEntries, publishChannelState],
   );
 
   /** Bumps on each OME-TIFF-URL load so a stale loader cannot commit after a newer URL starts. */
@@ -703,22 +763,18 @@ const Content = (props: Props) => {
   const [isLoadingImage, setIsLoadingImage] = useState(hasDemo);
   /**
    * Only the latest `beginImageLoading` epoch may clear the overlay. Prevents a
-   * finished hydrate / eager-GMM from hiding loading for a newer import.
+   * finished hydrate from hiding loading for a newer import.
    */
   const imageLoadEpochRef = React.useRef(0);
-  /** Hydrate handed this epoch to eager GMM — do not clear until GMM finishes. */
-  const pendingEagerGmmEpochRef = React.useRef<number | null>(null);
 
   const beginImageLoading = React.useCallback(() => {
     const epoch = ++imageLoadEpochRef.current;
-    pendingEagerGmmEpochRef.current = null;
     setIsLoadingImage(true);
     return epoch;
   }, []);
 
   const endImageLoading = React.useCallback((epoch: number) => {
     if (epoch === imageLoadEpochRef.current) {
-      pendingEagerGmmEpochRef.current = null;
       setIsLoadingImage(false);
     }
   }, []);
@@ -726,7 +782,6 @@ const Content = (props: Props) => {
   /** Force-clear (cancel / demo already loaded) and invalidate in-flight owners. */
   const clearImageLoading = React.useCallback(() => {
     imageLoadEpochRef.current += 1;
-    pendingEagerGmmEpochRef.current = null;
     setIsLoadingImage(false);
   }, []);
 
@@ -778,35 +833,16 @@ const Content = (props: Props) => {
           loader: prep.loader,
           sourceImageId: prep.newImageId,
         };
-        const app = useAppStore.getState();
-        const visibility = applyVisibilityTransition(
-          flattenImageChannelsInDocumentOrder(nextImagesPersisted),
-          doc.channelGroups,
-          app.channelVisibilities,
-          app.channelGroupRowVisibilities,
-          { kind: "sync" },
-        );
-        const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
-          images: nextImagesPersisted,
-          channelGroups: doc.channelGroups,
-          stackVisibilities: visibility.channelVisibilities,
-          groupRowVisibilities: visibility.channelGroupRowVisibilities,
-          activeGroupId: app.activeChannelGroupId,
-        });
-        const gmm = await fitGmmContrastBeforePaint({
-          images: nextImagesPersisted,
-          channelGroups: doc.channelGroups,
-          loaderEntries: [loaderEntry],
-          imageKey: omeImportGmmImageKey(prep.basename, [prep.newImageId]),
-          visibleChannelIds,
-        });
+        const nextLoaders = [
+          ...omeLoaderEntries.filter(
+            (e) => e.sourceImageId !== prep.oldImageId,
+          ),
+          loaderEntry,
+        ];
 
         clearRemovedImageState([replacedImage]);
         skipLoaderHydrateRef.current = true;
-        setOmeLoaderEntries((prev) => [
-          ...prev.filter((e) => e.sourceImageId !== prep.oldImageId),
-          loaderEntry,
-        ]);
+        setOmeLoaderEntries(nextLoaders);
         setJpegLoaderEntries((prev) =>
           prev.filter((e) => e.sourceImageId !== prep.oldImageId),
         );
@@ -820,14 +856,10 @@ const Content = (props: Props) => {
           );
         }
 
-        publishChannelState(
-          gmm.images,
-          gmm.channelGroups ?? doc.channelGroups,
-          {
-            resetActiveGroup: false,
-            transition: { kind: "sync" },
-          },
-        );
+        publishChannelState(nextImagesPersisted, doc.channelGroups, {
+          resetActiveGroup: false,
+          transition: { kind: "sync" },
+        });
         setFileName(prep.basename);
         setLastOmeTiffUrl(null);
         setViewerRemountKey((k) => k + 1);
@@ -848,6 +880,7 @@ const Content = (props: Props) => {
       beginImageLoading,
       clearRemovedImageState,
       endImageLoading,
+      omeLoaderEntries,
       publishChannelState,
     ],
   );
@@ -941,20 +974,6 @@ const Content = (props: Props) => {
         nextImages,
         SourceChannels,
       );
-      const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
-        images: nextImages,
-        channelGroups: [],
-      });
-      const gmm = await fitGmmContrastBeforePaint({
-        images: nextImages,
-        loaderEntries: entries,
-        imageKey: omeImportGmmImageKey(
-          in_f,
-          entries.map((e) => e.sourceImageId),
-        ),
-        visibleChannelIds,
-      });
-      nextImages = gmm.images;
     }
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries(entries);
@@ -1045,7 +1064,7 @@ const Content = (props: Props) => {
     const liveEntries = newEntries.filter((entry) =>
       nextImages.some((im) => im.id === entry.sourceImageId),
     );
-    let ChannelGroups = await finalizeAppendedIntensityGroups({
+    const ChannelGroups = await finalizeAppendedIntensityGroups({
       mergedGroups,
       newIntensityGroups: role === "intensity" ? newIntensityGroups : [],
       nextImages,
@@ -1057,37 +1076,9 @@ const Content = (props: Props) => {
       role === "segmentation"
         ? { kind: "appendMask", newChannelIds }
         : { kind: "appendIntensity", newChannelIds, newGroupRowIds };
-    if (role !== "segmentation" && liveEntries.length > 0) {
-      const app = useAppStore.getState();
-      const visibility = applyVisibilityTransition(
-        flatAfter,
-        ChannelGroups,
-        app.channelVisibilities,
-        app.channelGroupRowVisibilities,
-        visibilityTransition,
-      );
-      const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
-        images: nextImages,
-        channelGroups: ChannelGroups,
-        stackVisibilities: visibility.channelVisibilities,
-        groupRowVisibilities: visibility.channelGroupRowVisibilities,
-        activeGroupId: app.activeChannelGroupId,
-      });
-      const gmm = await fitGmmContrastBeforePaint({
-        images: nextImages,
-        channelGroups: ChannelGroups,
-        loaderEntries: liveEntries,
-        imageKey: omeImportGmmImageKey(
-          in_f,
-          liveEntries.map((e) => e.sourceImageId),
-        ),
-        visibleChannelIds,
-      });
-      nextImages = gmm.images;
-      if (gmm.channelGroups) ChannelGroups = gmm.channelGroups;
-    }
     skipLoaderHydrateRef.current = true;
-    setOmeLoaderEntries((prev) => [...prev, ...liveEntries]);
+    const nextLoaders = [...omeLoaderEntries, ...liveEntries];
+    setOmeLoaderEntries(nextLoaders);
     const activeId = useAppStore.getState().activeChannelGroupId;
     publishChannelState(nextImages, ChannelGroups, {
       resetActiveGroup: !ChannelGroups.some((g) => g.id === activeId),
@@ -1201,23 +1192,9 @@ const Content = (props: Props) => {
       kind: "url",
       url,
     });
-    if (role !== "segmentation") {
-      const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
-        images: nextImages,
-        channelGroups: ChannelGroups,
-      });
-      const gmm = await fitGmmContrastBeforePaint({
-        images: nextImages,
-        channelGroups: ChannelGroups,
-        loaderEntries: [{ loader, sourceImageId }],
-        imageKey: omeImportGmmImageKey(basename, [sourceImageId]),
-        visibleChannelIds,
-      });
-      nextImages = gmm.images;
-      if (gmm.channelGroups) ChannelGroups = gmm.channelGroups;
-    }
     skipLoaderHydrateRef.current = true;
-    setOmeLoaderEntries([{ loader, sourceImageId }]);
+    const urlEntries = [{ loader, sourceImageId }];
+    setOmeLoaderEntries(urlEntries);
     setDeniedHandleKeys([]);
     publishChannelState(nextImages, ChannelGroups, {
       resetActiveGroup: true,
@@ -1271,7 +1248,7 @@ const Content = (props: Props) => {
         slice.sourceChannels,
       );
     }
-    let ChannelGroups = await finalizeAppendedIntensityGroups({
+    const ChannelGroups = await finalizeAppendedIntensityGroups({
       mergedGroups,
       newIntensityGroups: role !== "segmentation" ? slice.extractedGroups : [],
       nextImages,
@@ -1283,34 +1260,9 @@ const Content = (props: Props) => {
       role === "segmentation"
         ? { kind: "appendMask", newChannelIds }
         : { kind: "appendIntensity", newChannelIds, newGroupRowIds };
-    if (role !== "segmentation") {
-      const app = useAppStore.getState();
-      const visibility = applyVisibilityTransition(
-        flatAfter,
-        ChannelGroups,
-        app.channelVisibilities,
-        app.channelGroupRowVisibilities,
-        visibilityTransition,
-      );
-      const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
-        images: nextImages,
-        channelGroups: ChannelGroups,
-        stackVisibilities: visibility.channelVisibilities,
-        groupRowVisibilities: visibility.channelGroupRowVisibilities,
-        activeGroupId: app.activeChannelGroupId,
-      });
-      const gmm = await fitGmmContrastBeforePaint({
-        images: nextImages,
-        channelGroups: ChannelGroups,
-        loaderEntries: [{ loader, sourceImageId }],
-        imageKey: omeImportGmmImageKey(basename, [sourceImageId]),
-        visibleChannelIds,
-      });
-      nextImages = gmm.images;
-      if (gmm.channelGroups) ChannelGroups = gmm.channelGroups;
-    }
     skipLoaderHydrateRef.current = true;
-    setOmeLoaderEntries((prev) => [...prev, { loader, sourceImageId }]);
+    const nextLoaders = [...omeLoaderEntries, { loader, sourceImageId }];
+    setOmeLoaderEntries(nextLoaders);
     const activeId = useAppStore.getState().activeChannelGroupId;
     publishChannelState(nextImages, ChannelGroups, {
       resetActiveGroup: !ChannelGroups.some((g) => g.id === activeId),
@@ -1774,7 +1726,7 @@ const Content = (props: Props) => {
     let cancelled = false;
     void (async () => {
       const loadEpoch = beginImageLoading();
-      let hydratedOmeIds: string[] = [];
+      let hydratedOmeEntries: OmeLoaderEntry[] = [];
       try {
         const result = await hydrateLoadersFromImages(missingImages, true, {
           channelGroups: useDocumentStore.getState().channelGroups,
@@ -1787,7 +1739,7 @@ const Content = (props: Props) => {
         ) {
           return;
         }
-        hydratedOmeIds = result.omeLoaderEntries.map((e) => e.sourceImageId);
+        hydratedOmeEntries = result.omeLoaderEntries;
         setJpegLoaderEntries((prev) =>
           reconcileLoaderEntries(prev, expectedIds, result.jpegLoaderEntries),
         );
@@ -1811,51 +1763,7 @@ const Content = (props: Props) => {
       } catch (e) {
         console.error("[minerva] hydrate loaders failed", e);
       } finally {
-        const stale =
-          cancelled ||
-          gen !== loaderHydrationGenRef.current ||
-          skipLoaderHydrateRef.current;
-        if (stale) {
-          // No-ops when a newer beginImageLoading already took ownership.
-          endImageLoading(loadEpoch);
-        } else {
-          // Keep the overlay up when eager GMM still needs to run (flat OME
-          // without saved fits); that effect clears via the handed-off epoch.
-          const doc = useDocumentStore.getState();
-          const loaderIds = new Set(hydratedOmeIds);
-          const scs = documentSourceChannels(doc);
-          const app = useAppStore.getState();
-          const visibility = applyVisibilityTransition(
-            scs,
-            doc.channelGroups,
-            app.channelVisibilities,
-            app.channelGroupRowVisibilities,
-            { kind: "sync" },
-          );
-          const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
-            images: doc.images,
-            channelGroups: doc.channelGroups,
-            stackVisibilities: visibility.channelVisibilities,
-            groupRowVisibilities: visibility.channelGroupRowVisibilities,
-            activeGroupId: app.activeChannelGroupId,
-          });
-          const needsEagerGmm =
-            loaderIds.size > 0 &&
-            doc.channelGroups.length === 0 &&
-            scs.some(
-              (sc) =>
-                loaderIds.has(sc.imageId) &&
-                isImageChannel(sc) &&
-                sc.samples !== 3 &&
-                !sc.gmmContrastLimits &&
-                visibleChannelIds.has(sc.id),
-            );
-          if (needsEagerGmm && loadEpoch === imageLoadEpochRef.current) {
-            pendingEagerGmmEpochRef.current = loadEpoch;
-          } else {
-            endImageLoading(loadEpoch);
-          }
-        }
+        endImageLoading(loadEpoch);
       }
     })();
     return () => {
@@ -1947,200 +1855,17 @@ const Content = (props: Props) => {
       }
 
       if (byChannelId.size === 0) return;
-      const next = mergeHistogramsIntoSourceChannelsByChannelId(
-        prevCh,
-        byChannelId,
-      );
-      if (next === prevCh) return;
-      doc.setImages(applySourceChannelsToImages(doc.images, next));
-    },
-    [omeLoaderEntries, viewerImageKey],
-  );
-
-  const onEnsureChannelGmmContrastLimits = React.useCallback(
-    async (
-      channelIds: string[],
-      opts?: { overwriteExistingLimits?: boolean },
-    ): Promise<Map<string, ContrastLimits>> => {
-      const empty = new Map<string, ContrastLimits>();
-      if (omeLoaderEntries.length === 0 || channelIds.length === 0) {
-        return empty;
-      }
-      const imageKey = viewerImageKey;
-      if (!imageKey) return empty;
-      const doc = useDocumentStore.getState();
-      const prevCh = documentSourceChannels(doc);
-      const loaderByImageId = new Map(
-        omeLoaderEntries.map((e) => [e.sourceImageId, e.loader] as const),
-      );
-
-      type Pair = { imageId: string; index: number; channelId: string };
-      const pairs: Pair[] = [];
-      const overwrite = !!opts?.overwriteExistingLimits;
-      for (const cid of channelIds) {
-        const sc = prevCh.find((c) => c.id === cid);
-        if (!sc) continue;
-        if (!loaderByImageId.has(sc.imageId)) continue;
-        if (!isImageChannel(sc)) continue;
-        if (!overwrite && sc.gmmContrastLimits) {
-          continue;
-        }
-        pairs.push({
-          imageId: sc.imageId,
-          index: sc.index,
-          channelId: sc.id,
-        });
-      }
-
-      const byChannelId = new Map<string, ContrastLimits>();
-      if (pairs.length > 0) {
-        const byImage = new Map<string, Pair[]>();
-        for (const p of pairs) {
-          const list = byImage.get(p.imageId) ?? [];
-          list.push(p);
-          byImage.set(p.imageId, list);
-        }
-        for (const [imageId, plist] of byImage) {
-          const loader = loaderByImageId.get(imageId);
-          if (!loader) continue;
-          const uniqueIdx = [...new Set(plist.map((p) => p.index))];
-          if (overwrite) {
-            invalidateOmeGmmContrastCache(imageKey, imageId, uniqueIdx);
-          }
-          const map = await ensureOmeGmmContrastLimits(
-            loader,
-            imageKey,
-            imageId,
-            uniqueIdx,
-          );
-          for (const p of plist) {
-            const limits = map.get(p.index);
-            if (limits) byChannelId.set(p.channelId, limits);
-          }
-        }
-      }
-
-      for (const cid of channelIds) {
-        if (byChannelId.has(cid)) continue;
-        const sc = prevCh.find((c) => c.id === cid);
-        const cached = sc?.gmmContrastLimits;
-        if (cached && cached.lower != null && cached.upper != null) {
-          byChannelId.set(cid, { lower: cached.lower, upper: cached.upper });
-        }
-      }
-
-      if (byChannelId.size === 0) return empty;
-
       const docNow = useDocumentStore.getState();
       const prevChNow = documentSourceChannels(docNow);
-      const nextCh = mergeGmmContrastLimitsIntoSourceChannelsByChannelId(
+      const next = mergeHistogramsIntoSourceChannelsByChannelId(
         prevChNow,
         byChannelId,
-        { overwrite },
       );
-      if (nextCh !== prevChNow) {
-        docNow.setImages(applySourceChannelsToImages(docNow.images, nextCh));
-      }
-
-      const docAfterCh = useDocumentStore.getState();
-      const groupsNow = docAfterCh.channelGroups;
-      let groupsChanged = false;
-      const nextGroups = groupsNow.map((g) => {
-        const channels = g.channels.map((gc) => {
-          const fit = byChannelId.get(gc.channelId);
-          if (!fit) return gc;
-          if (
-            !overwrite &&
-            !looksLikeImportDefaultLimits(gc.lowerLimit, gc.upperLimit)
-          ) {
-            return gc;
-          }
-          groupsChanged = true;
-          return { ...gc, lowerLimit: fit.lower, upperLimit: fit.upper };
-        });
-        return { ...g, channels };
-      });
-      if (groupsChanged) {
-        docAfterCh.setChannelGroups(nextGroups);
-      }
-      return byChannelId;
+      if (next === prevChNow) return;
+      docNow.setImages(applySourceChannelsToImages(docNow.images, next));
     },
     [omeLoaderEntries, viewerImageKey],
   );
-
-  const lastEagerGmmKeyRef = React.useRef<string>("");
-  React.useEffect(() => {
-    if (!viewerImageKey || omeLoaderEntries.length === 0) return;
-    if (lastEagerGmmKeyRef.current === viewerImageKey) return;
-    const doc = useDocumentStore.getState();
-    // Existing channel groups already carry contrast limits — only eager-fit
-    // when there are no groups yet (or first group creation will fit).
-    if (doc.channelGroups.length > 0) {
-      lastEagerGmmKeyRef.current = viewerImageKey;
-      const handed = pendingEagerGmmEpochRef.current;
-      pendingEagerGmmEpochRef.current = null;
-      if (handed != null) endImageLoading(handed);
-      return;
-    }
-    const scs = documentSourceChannels(doc);
-    const loaderImageIds = new Set(
-      omeLoaderEntries.map((e) => e.sourceImageId),
-    );
-    const app = useAppStore.getState();
-    const visibility = applyVisibilityTransition(
-      scs,
-      doc.channelGroups,
-      app.channelVisibilities,
-      app.channelGroupRowVisibilities,
-      { kind: "sync" },
-    );
-    const visibleChannelIds = visibleChannelIdsForGmmBeforePaint({
-      images: doc.images,
-      channelGroups: doc.channelGroups,
-      stackVisibilities: visibility.channelVisibilities,
-      groupRowVisibilities: visibility.channelGroupRowVisibilities,
-      activeGroupId: app.activeChannelGroupId,
-    });
-    const ids = scs
-      .filter(
-        (sc) =>
-          loaderImageIds.has(sc.imageId) &&
-          isImageChannel(sc) &&
-          sc.samples !== 3 &&
-          !sc.gmmContrastLimits &&
-          visibleChannelIds.has(sc.id),
-      )
-      .map((sc) => sc.id);
-    // Only mark this image as handled once there are channels to fit (or none needed).
-    if (scs.length === 0) return;
-    lastEagerGmmKeyRef.current = viewerImageKey;
-    const handedOff =
-      pendingEagerGmmEpochRef.current != null &&
-      pendingEagerGmmEpochRef.current === imageLoadEpochRef.current
-        ? pendingEagerGmmEpochRef.current
-        : null;
-    pendingEagerGmmEpochRef.current = null;
-    if (ids.length === 0) {
-      if (handedOff != null) endImageLoading(handedOff);
-      return;
-    }
-    const loadEpoch = handedOff ?? beginImageLoading();
-    void onEnsureChannelGmmContrastLimits(ids)
-      .catch((e) => {
-        if (import.meta.env.DEV) {
-          console.warn("[psudo] eager auto contrast on import failed", e);
-        }
-      })
-      .finally(() => {
-        endImageLoading(loadEpoch);
-      });
-  }, [
-    viewerImageKey,
-    omeLoaderEntries,
-    onEnsureChannelGmmContrastLimits,
-    beginImageLoading,
-    endImageLoading,
-  ]);
 
   const storyImageSource = useDocumentStore((s) => s.metadata.imageSource);
   // Contrast-baked JPEG OME-TIFF matches jpeg-pyramid: display-only, not re-windowed.
@@ -2153,7 +1878,6 @@ const Content = (props: Props) => {
     hiddenChannel: true,
     contrastEditable,
     ensureChannelHistograms: onEnsureChannelHistograms,
-    ensureChannelGmmContrastLimits: onEnsureChannelGmmContrastLimits,
   };
 
   const mainProps = {

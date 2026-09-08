@@ -9,7 +9,6 @@ import {
 } from "@/components/shared/panel/CompactHeader";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import { TabBar } from "@/components/shared/TabBar";
-import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import styles from "./AuthorSidebar.module.css";
 
 type AuthorTab = "images" | "channels" | "story";
@@ -28,10 +27,6 @@ export type AuthorSidebarProps = {
   imagesPanel: ReactNode;
   noLoader: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
-  ensureChannelGmmContrastLimits?: (
-    channelIds: string[],
-    opts?: { overwriteExistingLimits?: boolean },
-  ) => Promise<Map<string, ContrastLimits>>;
   contrastEditable?: boolean;
   expanded: boolean;
 };
@@ -47,7 +42,6 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
       <ChannelGroupsMasterDetail
         noLoader={props.noLoader}
         ensureChannelHistograms={props.ensureChannelHistograms}
-        ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
         contrastEditable={props.contrastEditable}
       />
     ) : (
@@ -128,10 +122,6 @@ export type AuthorViewProps = {
   viewer: ReactNode;
   noLoader: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
-  ensureChannelGmmContrastLimits?: (
-    channelIds: string[],
-    opts?: { overwriteExistingLimits?: boolean },
-  ) => Promise<Map<string, ContrastLimits>>;
   contrastEditable?: boolean;
 };
 
@@ -144,7 +134,6 @@ export function AuthorView(props: AuthorViewProps) {
         imagesPanel={props.imagesPanel}
         noLoader={props.noLoader}
         ensureChannelHistograms={props.ensureChannelHistograms}
-        ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
         contrastEditable={props.contrastEditable}
         expanded={expanded}
       />

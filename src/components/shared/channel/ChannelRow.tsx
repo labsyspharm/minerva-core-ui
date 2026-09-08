@@ -208,6 +208,7 @@ type ChannelRowProps = {
   colorHex?: string;
   colorTitle?: string;
   colorAriaLabel?: string;
+  colorLoading?: boolean;
   onColorClick?: MouseEventHandler<HTMLButtonElement>;
 };
 
@@ -292,11 +293,14 @@ export function ChannelRow(props: ChannelRowProps) {
     colorHex,
     colorTitle,
     colorAriaLabel,
+    colorLoading,
     onColorClick,
   } = props;
 
   const showMask = !compact && isMask && maskVisualization;
-  const showColor = !compact && !isMask && colorHex && onColorClick;
+  const showColorLoading = !compact && !isMask && colorLoading;
+  const showColor =
+    !compact && !isMask && !colorLoading && colorHex && onColorClick;
   const [maskControlsOpen, setMaskControlsOpen] = useState(true);
   const rowRef = useRef<HTMLDivElement>(null);
   const maskControlsId = useId();
@@ -358,6 +362,9 @@ export function ChannelRow(props: ChannelRowProps) {
             style={{ backgroundColor: `#${fixedColorHex}` }}
             aria-hidden
           />
+        ) : null}
+        {showColorLoading ? (
+          <div className={minervaTheme.spinnerSm} title="Optimizing color" />
         ) : null}
         {showColor ? (
           <ChannelColorSwatchButton

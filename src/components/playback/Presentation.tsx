@@ -58,7 +58,6 @@ const NavChevron = (props: { dir: "left" | "right"; px: number }) => {
 
 export const Presentation = (props: PresentationProps) => {
   const documentTitle = useDocumentStore((s) => s.metadata.title ?? "");
-  const storyId = useDocumentStore((s) => s.activeStoryId ?? "");
   const waypoints = useDocumentStore((s) => s.waypoints);
   const shapes = useDocumentStore((s) => s.shapes);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
@@ -396,7 +395,7 @@ export const Presentation = (props: PresentationProps) => {
               .filter(Boolean)
               .join(" ")}
           >
-            <StorySpines seed={storyId} />
+            <StorySpines />
             {ribbonDocTitle}
           </span>
           {props.exitPlaybackPreview ? (

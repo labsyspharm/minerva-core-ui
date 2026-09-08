@@ -42,7 +42,7 @@
 }
 
 .histogramFill {
-  fill: var(--histogram-color, var(--minerva-ink));
+  fill: var(--histogram-color, none);
   stroke: none;
 }
 
