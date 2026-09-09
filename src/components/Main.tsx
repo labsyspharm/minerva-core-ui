@@ -72,7 +72,11 @@ import {
   replaceOmeLocalImageInDocument,
 } from "@/lib/imaging/omeImportPipeline";
 import { getOmeTiffImageDescriptionOmeXml } from "@/lib/imaging/omeTiff";
-import { warmupPsudoPalette } from "@/lib/imaging/psudoPalette";
+import {
+  reconcileUngroupedStackPalette,
+  resetUngroupedStackPaletteReconcile,
+  warmupPsudoPalette,
+} from "@/lib/imaging/psudoPalette";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
 import { Pool } from "@/lib/imaging/workers/pool";
 import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
@@ -285,6 +289,7 @@ async function hydrateLoadersFromImages(
 function clearOmeDerivedCaches(): void {
   clearOmeHistogramCache();
   clearGmmScheduler();
+  resetUngroupedStackPaletteReconcile();
 }
 
 function startGmmForLoaders(
@@ -436,23 +441,27 @@ const Content = (props: Props) => {
   React.useEffect(() => {
     if (!activeStoryId) {
       clearGmmScheduler();
+      resetUngroupedStackPaletteReconcile();
       return;
     }
-    return () => clearGmmScheduler();
+    return () => {
+      clearGmmScheduler();
+      resetUngroupedStackPaletteReconcile();
+    };
   }, [activeStoryId]);
   React.useEffect(() => {
     if (!activeStoryId) return;
     void gmmChannelKey;
-    startGmmForLoaders(
-      omeLoaderEntries,
-      useDocumentStore.getState().images,
+    const liveImages = useDocumentStore.getState().images;
+    startGmmForLoaders(omeLoaderEntries, liveImages, channelGroups, {
+      channelVisibilities,
+      channelGroupRowVisibilities,
+      activeChannelGroupId,
+    });
+    reconcileUngroupedStackPalette({
       channelGroups,
-      {
-        channelVisibilities,
-        channelGroupRowVisibilities,
-        activeChannelGroupId,
-      },
-    );
+      stackVisibilities: channelVisibilities,
+    });
   }, [
     activeStoryId,
     omeLoaderEntries,
@@ -721,10 +730,9 @@ const Content = (props: Props) => {
       clearRemovedImageState([removed]);
 
       clearOmeDerivedCaches();
-      const remainingOme = omeLoaderEntries.filter(
-        (e) => e.sourceImageId !== imageId,
+      setOmeLoaderEntries((prev) =>
+        prev.filter((e) => e.sourceImageId !== imageId),
       );
-      setOmeLoaderEntries(remainingOme);
       setJpegLoaderEntries((prev) =>
         prev.filter((e) => e.sourceImageId !== imageId),
       );
@@ -753,7 +761,7 @@ const Content = (props: Props) => {
       }
       setViewerRemountKey((k) => k + 1);
     },
-    [clearRemovedImageState, omeLoaderEntries, publishChannelState],
+    [clearRemovedImageState, publishChannelState],
   );
 
   /** Bumps on each OME-TIFF-URL load so a stale loader cannot commit after a newer URL starts. */
@@ -833,16 +841,13 @@ const Content = (props: Props) => {
           loader: prep.loader,
           sourceImageId: prep.newImageId,
         };
-        const nextLoaders = [
-          ...omeLoaderEntries.filter(
-            (e) => e.sourceImageId !== prep.oldImageId,
-          ),
-          loaderEntry,
-        ];
 
         clearRemovedImageState([replacedImage]);
         skipLoaderHydrateRef.current = true;
-        setOmeLoaderEntries(nextLoaders);
+        setOmeLoaderEntries((prev) => [
+          ...prev.filter((e) => e.sourceImageId !== prep.oldImageId),
+          loaderEntry,
+        ]);
         setJpegLoaderEntries((prev) =>
           prev.filter((e) => e.sourceImageId !== prep.oldImageId),
         );
@@ -880,7 +885,6 @@ const Content = (props: Props) => {
       beginImageLoading,
       clearRemovedImageState,
       endImageLoading,
-      omeLoaderEntries,
       publishChannelState,
     ],
   );
@@ -1077,8 +1081,7 @@ const Content = (props: Props) => {
         ? { kind: "appendMask", newChannelIds }
         : { kind: "appendIntensity", newChannelIds, newGroupRowIds };
     skipLoaderHydrateRef.current = true;
-    const nextLoaders = [...omeLoaderEntries, ...liveEntries];
-    setOmeLoaderEntries(nextLoaders);
+    setOmeLoaderEntries((prev) => [...prev, ...liveEntries]);
     const activeId = useAppStore.getState().activeChannelGroupId;
     publishChannelState(nextImages, ChannelGroups, {
       resetActiveGroup: !ChannelGroups.some((g) => g.id === activeId),
@@ -1193,8 +1196,7 @@ const Content = (props: Props) => {
       url,
     });
     skipLoaderHydrateRef.current = true;
-    const urlEntries = [{ loader, sourceImageId }];
-    setOmeLoaderEntries(urlEntries);
+    setOmeLoaderEntries([{ loader, sourceImageId }]);
     setDeniedHandleKeys([]);
     publishChannelState(nextImages, ChannelGroups, {
       resetActiveGroup: true,
@@ -1261,8 +1263,7 @@ const Content = (props: Props) => {
         ? { kind: "appendMask", newChannelIds }
         : { kind: "appendIntensity", newChannelIds, newGroupRowIds };
     skipLoaderHydrateRef.current = true;
-    const nextLoaders = [...omeLoaderEntries, { loader, sourceImageId }];
-    setOmeLoaderEntries(nextLoaders);
+    setOmeLoaderEntries((prev) => [...prev, { loader, sourceImageId }]);
     const activeId = useAppStore.getState().activeChannelGroupId;
     publishChannelState(nextImages, ChannelGroups, {
       resetActiveGroup: !ChannelGroups.some((g) => g.id === activeId),
@@ -1726,7 +1727,6 @@ const Content = (props: Props) => {
     let cancelled = false;
     void (async () => {
       const loadEpoch = beginImageLoading();
-      let hydratedOmeEntries: OmeLoaderEntry[] = [];
       try {
         const result = await hydrateLoadersFromImages(missingImages, true, {
           channelGroups: useDocumentStore.getState().channelGroups,
@@ -1739,7 +1739,6 @@ const Content = (props: Props) => {
         ) {
           return;
         }
-        hydratedOmeEntries = result.omeLoaderEntries;
         setJpegLoaderEntries((prev) =>
           reconcileLoaderEntries(prev, expectedIds, result.jpegLoaderEntries),
         );

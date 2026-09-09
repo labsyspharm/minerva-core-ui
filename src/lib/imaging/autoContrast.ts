@@ -87,20 +87,18 @@ function approximateAutoContrastFromUint16Histogram(
 /** Fit `channel_gmm` on an already-loaded coarsest plane. Returns null on failure. */
 export async function fitChannelGmmContrastFromUint16(
   u16: Uint16Array,
-  sourceIndex?: number,
 ): Promise<ContrastLimits | null> {
   if (u16.length === 0) return null;
   const stats = import.meta.env.DEV ? summarizeUint16ForGmm(u16) : null;
-  const c = sourceIndex ?? -1;
 
   try {
     if (import.meta.env.DEV && stats) {
-      console.log("[psudo] channel_gmm input", { c, ...stats });
+      console.log("[psudo] channel_gmm input", stats);
     }
     const psudo = await import("psudo");
     await warmupPsudoPalette();
     if (import.meta.env.DEV) {
-      console.log("[psudo] channel_gmm start", { c, pixels: u16.length });
+      console.log("[psudo] channel_gmm start", { pixels: u16.length });
     }
     const t0 = performance.now();
     const result = await psudo.channel_gmm(u16);
@@ -110,7 +108,6 @@ export async function fitChannelGmmContrastFromUint16(
       if (limits) {
         if (import.meta.env.DEV) {
           console.log("[psudo] channel_gmm done", {
-            c,
             ms,
             pixels: u16.length,
             lower: limits.lower,
@@ -122,24 +119,22 @@ export async function fitChannelGmmContrastFromUint16(
     }
     if (import.meta.env.DEV) {
       console.log("[psudo] channel_gmm empty", {
-        c,
         ms,
         ...(stats ?? { pixels: u16.length }),
       });
     }
   } catch (e) {
     if (import.meta.env.DEV) {
-      console.warn(
-        `[psudo] channel_gmm failed for c=${c}; using histogram fallback`,
-        { ...(stats ?? {}), error: e },
-      );
+      console.warn("[psudo] channel_gmm failed; using histogram fallback", {
+        ...(stats ?? {}),
+        error: e,
+      });
     }
   }
 
   const fallback = approximateAutoContrastFromUint16Histogram(u16);
   if (import.meta.env.DEV && fallback) {
     console.log("[psudo] auto contrast (histogram fallback)", {
-      c,
       ...(stats ?? { pixels: u16.length }),
       lower: fallback.lower,
       upper: fallback.upper,

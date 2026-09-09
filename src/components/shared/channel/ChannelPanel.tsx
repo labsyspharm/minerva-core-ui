@@ -10,7 +10,6 @@ import {
   isImageChannel,
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
-import { ensurePaletteForNewlyVisibleStackChannels } from "@/lib/imaging/psudoPalette";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { ChannelGroup } from "@/lib/stores/documentStore";
 import {
@@ -234,17 +233,12 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     const stackVisibilities =
       Object.keys(channelVisibilities).length > 0
         ? channelVisibilities
-        : defaultVisibilitiesForSources(sourceChannels, {}, docChannelGroups);
+        : defaultVisibilitiesForSources(sourceChannels, {});
     const nextVisible = !isStackVisible(stackVisibilities, c.source_uuid);
     setChannelVisibilities({
       ...stackVisibilities,
       [c.source_uuid]: nextVisible,
     });
-    if (nextVisible) {
-      void ensurePaletteForNewlyVisibleStackChannels({
-        sourceChannelId: c.source_uuid,
-      });
-    }
   };
 
   const hideClass = [hide ? styles.hide : "", styles.core].join(" ");

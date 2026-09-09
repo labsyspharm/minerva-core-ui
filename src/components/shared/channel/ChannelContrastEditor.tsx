@@ -1,7 +1,8 @@
 import * as React from "react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
-import { useAppStore } from "@/lib/stores/appStore";
+import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
 import type { SourceDistributionData } from "@/lib/stores/documentSchema";
+import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   applyGroupChannelRange,
@@ -112,6 +113,73 @@ export type ChannelContrastEditorProps = {
   histogramLoading?: boolean;
   distribution?: SourceDistributionData | null;
 };
+
+export function colorRenderingForSource(
+  live: ChannelRendering | null,
+  sourceChannelId: string,
+): Extract<ChannelRendering, { kind: "color" }> | null {
+  if (live?.kind === "color" && live.sourceChannelId === sourceChannelId) {
+    return live;
+  }
+  return null;
+}
+
+function contrastRenderingForSource(
+  live: ChannelRendering | null,
+  sourceChannelId: string,
+): Extract<ChannelRendering, { kind: "contrast" }> | null {
+  if (live?.kind === "contrast" && live.sourceChannelId === sourceChannelId) {
+    return live;
+  }
+  return null;
+}
+
+export function contrastEditorPropsForSource(
+  channelRendering: ChannelRendering | null,
+  sc: Channel,
+  color: { r?: number; g?: number; b?: number },
+  limits: [number, number],
+): ChannelContrastEditorProps {
+  const liveColor = colorRenderingForSource(channelRendering, sc.id);
+  const c = liveColor ?? (sc.color ? color : undefined);
+  const liveContrast = contrastRenderingForSource(channelRendering, sc.id);
+  return {
+    groupId: "",
+    channelId: sc.id,
+    sourceChannelId: sc.id,
+    channelLabel: sc.name,
+    r: c?.r,
+    g: c?.g,
+    b: c?.b,
+    lowerLimit: liveContrast ? liveContrast.lower : limits[0],
+    upperLimit: liveContrast ? liveContrast.upper : limits[1],
+    distribution: sc.sourceDistribution ?? null,
+  };
+}
+
+export function contrastEditorPropsForGroupRow(
+  channelRendering: ChannelRendering | null,
+  groupId: string,
+  gc: ChannelGroupChannel,
+  sc: Channel | undefined,
+): ChannelContrastEditorProps {
+  const sourceId = sc?.id ?? gc.channelId;
+  const liveColor = colorRenderingForSource(channelRendering, sourceId);
+  const c = liveColor ?? gc.color;
+  const liveContrast = contrastRenderingForSource(channelRendering, sourceId);
+  return {
+    groupId,
+    channelId: gc.id,
+    sourceChannelId: sourceId,
+    channelLabel: sc?.name ?? "Channel",
+    r: c.r ?? 0,
+    g: c.g ?? 0,
+    b: c.b ?? 0,
+    lowerLimit: liveContrast ? liveContrast.lower : gc.lowerLimit,
+    upperLimit: liveContrast ? liveContrast.upper : gc.upperLimit,
+    distribution: sc?.sourceDistribution ?? null,
+  };
+}
 
 export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);

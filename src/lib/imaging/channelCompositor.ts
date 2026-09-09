@@ -83,24 +83,13 @@ function isUngroupedStackVisible(
   return !hasVisibilityMap || isStackVisible(stackVisibilities, sourceId);
 }
 
-function stackIntensityReady(sc: Channel): boolean {
-  return sc.samples === 3 || Boolean(sc.color);
-}
-
-function omitUnfittedUngrouped(
-  sc: Channel,
-  unfittedChannelIds: ReadonlySet<string> | undefined,
-): boolean {
-  return Boolean(unfittedChannelIds?.has(sc.id) && !sc.gmmContrastLimits);
-}
-
 function stackOverlayReady(
   sc: Channel,
   requireColor: boolean,
   unfittedChannelIds: ReadonlySet<string> | undefined,
 ): boolean {
-  if (requireColor && !stackIntensityReady(sc)) return false;
-  return !omitUnfittedUngrouped(sc, unfittedChannelIds);
+  if (requireColor && sc.samples !== 3 && !sc.color) return false;
+  return !unfittedChannelIds?.has(sc.id) || Boolean(sc.gmmContrastLimits);
 }
 
 /** Intensity layers sent to Viv (one OME channel per source; stack style wins over group). */
@@ -396,9 +385,7 @@ export function applyVisibilityTransition(
 export function defaultVisibilitiesForSources(
   sourceChannels: Channel[],
   prev: Record<string, boolean> = {},
-  _channelGroups: ChannelGroup[] = [],
 ): Record<string, boolean> {
-  void _channelGroups;
   if (Object.keys(prev).length === 0) {
     return applyStackVisibilities(sourceChannels, prev, { kind: "fresh" });
   }
@@ -416,8 +403,7 @@ export function foregroundGmmChannelIds(args: {
   const channelGroups = args.channelGroups ?? [];
   const sourceChannels = args.sourceChannels as Channel[];
   const stackVisibilities =
-    args.stackVisibilities ??
-    defaultVisibilitiesForSources(sourceChannels, {}, channelGroups);
+    args.stackVisibilities ?? defaultVisibilitiesForSources(sourceChannels, {});
   const onLoader = sourceChannels.filter(isImageChannel);
   const activeGroup =
     channelGroups.length === 0

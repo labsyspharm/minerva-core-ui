@@ -1,5 +1,10 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
+import type { ChannelEditFocus } from "@/components/shared/channel/AuthorChannelNav";
+import {
+  type AuthorChannelNav,
+  AuthorChannelNavProvider,
+} from "@/components/shared/channel/AuthorChannelNav";
 import { ChannelGroupsMasterDetail } from "@/components/shared/channel/ChannelGroupsMasterDetail";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
@@ -33,7 +38,22 @@ export type AuthorSidebarProps = {
 
 export function AuthorSidebar(props: AuthorSidebarProps) {
   const [activeTab, setActiveTab] = useState<AuthorTab>("images");
+  const [channelEditFocus, setChannelEditFocus] =
+    useState<ChannelEditFocus | null>(null);
   const { expanded } = props;
+
+  const openChannelEditor = useCallback((focus: ChannelEditFocus) => {
+    setChannelEditFocus(focus);
+    setActiveTab("channels");
+  }, []);
+
+  const channelNav = useMemo<AuthorChannelNav>(
+    () => ({
+      openChannelEditor,
+      ensureChannelHistograms: props.ensureChannelHistograms,
+    }),
+    [openChannelEditor, props.ensureChannelHistograms],
+  );
 
   const activePanel =
     activeTab === "images" ? (
@@ -43,37 +63,41 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
         noLoader={props.noLoader}
         ensureChannelHistograms={props.ensureChannelHistograms}
         contrastEditable={props.contrastEditable}
+        editFocus={channelEditFocus}
+        onEditFocusConsumed={() => setChannelEditFocus(null)}
       />
     ) : (
       <WaypointsList />
     );
 
   return (
-    <SidebarStripSlotProvider>
-      <div
-        className={[
-          styles.sidebarHost,
-          expanded ? null : styles.sidebarHostCollapsed,
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        <div className={styles.panelOuter}>
-          <div className={`${styles.tabRow} ${minervaTheme.strip}`}>
-            <TabBar<AuthorTab>
-              tabs={TAB_ITEMS}
-              value={activeTab}
-              onChange={setActiveTab}
-              aria-label="Author panels"
-            />
-            <SidebarStripSlot className={styles.stripActions} />
-          </div>
-          <div className={styles.panelContent} role="tabpanel">
-            {activePanel}
+    <AuthorChannelNavProvider value={channelNav}>
+      <SidebarStripSlotProvider>
+        <div
+          className={[
+            styles.sidebarHost,
+            expanded ? null : styles.sidebarHostCollapsed,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <div className={styles.panelOuter}>
+            <div className={`${styles.tabRow} ${minervaTheme.strip}`}>
+              <TabBar<AuthorTab>
+                tabs={TAB_ITEMS}
+                value={activeTab}
+                onChange={setActiveTab}
+                aria-label="Author panels"
+              />
+              <SidebarStripSlot className={styles.stripActions} />
+            </div>
+            <div className={styles.panelContent} role="tabpanel">
+              {activePanel}
+            </div>
           </div>
         </div>
-      </div>
-    </SidebarStripSlotProvider>
+      </SidebarStripSlotProvider>
+    </AuthorChannelNavProvider>
   );
 }
 

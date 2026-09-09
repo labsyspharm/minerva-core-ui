@@ -16,12 +16,7 @@ import type { DicomIndex } from "./dicomIndex";
 import { getGmmFitSnapshot, subscribeGmmFit } from "./gmmScheduler";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
-import {
-  type Config,
-  type Loader,
-  toSettings,
-  VIV_TILE_MAX_CACHE_SIZE,
-} from "./viv";
+import { type Loader, toSettings, VIV_TILE_MAX_CACHE_SIZE } from "./viv";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
 export function applyChannelRendering<S extends MainSettings>(
@@ -88,20 +83,6 @@ export function loaderListFromEntries(
       modality: "Colorimetric" as const,
     })),
   ];
-}
-
-export function createViewerConfigFromDocument(args: {
-  sourceChannels: Channel[];
-  channelGroups: ChannelGroup[];
-  unfittedChannelIds?: ReadonlySet<string>;
-}): Config {
-  return {
-    toSettings: toSettings({
-      SourceChannels: args.sourceChannels,
-      channelGroups: args.channelGroups,
-      unfittedChannelIds: args.unfittedChannelIds,
-    }),
-  };
 }
 
 export function createDicomTileLayer(args: {
@@ -289,13 +270,13 @@ export function useViewerLayers(args: {
   const channelsRef = useRef({ sourceChannels, channelGroups });
   channelsRef.current = { sourceChannels, channelGroups };
 
-  const viewerConfig = useMemo(() => {
+  const toDocSettings = useMemo(() => {
     // `channelsSignature` is the intentional memo key (histogram-stable).
     // Read channels from the ref so we close over the arrays from this signature.
     void channelsSignature;
     const { sourceChannels: sc, channelGroups: cg } = channelsRef.current;
-    return createViewerConfigFromDocument({
-      sourceChannels: sc,
+    return toSettings({
+      SourceChannels: sc,
       channelGroups: cg,
       unfittedChannelIds,
     });
@@ -314,7 +295,7 @@ export function useViewerLayers(args: {
   const dicomSettingsList = useMemo(
     () =>
       dicomIndexList.map(({ loader, modality, sourceImageId }) =>
-        viewerConfig.toSettings(
+        toDocSettings(
           activeChannelGroupId,
           modality,
           loader,
@@ -325,7 +306,7 @@ export function useViewerLayers(args: {
       ),
     [
       dicomIndexList,
-      viewerConfig,
+      toDocSettings,
       activeChannelGroupId,
       channelVisibilities,
       channelGroupRowVisibilities,
@@ -335,7 +316,7 @@ export function useViewerLayers(args: {
   const omeSettingsList = useMemo(
     () =>
       omeLoaderEntries.map(({ loader, sourceImageId }) =>
-        viewerConfig.toSettings(
+        toDocSettings(
           activeChannelGroupId,
           "Colorimetric",
           loader,
@@ -346,7 +327,7 @@ export function useViewerLayers(args: {
       ),
     [
       omeLoaderEntries,
-      viewerConfig,
+      toDocSettings,
       activeChannelGroupId,
       channelVisibilities,
       channelGroupRowVisibilities,
@@ -356,7 +337,7 @@ export function useViewerLayers(args: {
   const jpegSettingsList = useMemo(
     () =>
       jpegLoaderEntries.map(({ loader, sourceImageId }) =>
-        viewerConfig.toSettings(
+        toDocSettings(
           activeChannelGroupId,
           "Colorimetric",
           loader,
@@ -367,7 +348,7 @@ export function useViewerLayers(args: {
       ),
     [
       jpegLoaderEntries,
-      viewerConfig,
+      toDocSettings,
       activeChannelGroupId,
       channelVisibilities,
       channelGroupRowVisibilities,
@@ -430,5 +411,5 @@ export function useViewerLayers(args: {
     ],
   );
 
-  return { viewerConfig, loaderList, mainSettingsList, imageLayers };
+  return { loaderList, mainSettingsList, imageLayers };
 }

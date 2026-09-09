@@ -16,11 +16,8 @@ import {
 } from "@/lib/stores/documentStore";
 import { applySourceChannelsToImages } from "@/lib/stores/storeUtils";
 
-/** ponytail: first-paint omit only. Jobs keep running. Raise if remote pyramids miss the window. */
 const GMM_VISIBLE_PAINT_BUDGET_MS = 800;
-/** ponytail: coarsest-plane IO cap. Idle still serializes behind FIT_CONCURRENCY. */
 const FETCH_CONCURRENCY = 4;
-/** ponytail: one `channel_gmm` at a time. Do not raise without isolating WASM. */
 const FIT_CONCURRENCY = 1;
 
 type Lane = "now" | "idle";
@@ -264,7 +261,7 @@ async function runJob(job: Job, gen: number): Promise<FitOutcome> {
   let window: ContrastLimits | null = null;
   try {
     if (gen === generation) {
-      window = await fitChannelGmmContrastFromUint16(u16, job.index);
+      window = await fitChannelGmmContrastFromUint16(u16);
     }
   } finally {
     releaseFit();

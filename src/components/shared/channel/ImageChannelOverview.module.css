@@ -1,0 +1,114 @@
+.root {
+  padding: 0 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid var(--minerva-edge);
+}
+
+.groupRow {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 4px;
+  align-items: start;
+  padding: 3px 4px;
+}
+
+.eyeSpacer {
+  width: 22px;
+}
+
+.groupBody {
+  min-width: 0;
+}
+
+.groupLabel {
+  margin: 0 0 3px;
+  color: var(--minerva-quiet);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.etcRow {
+  padding: 3px 4px;
+}
+
+.chipWrap {
+  display: grid;
+  /* Keep in sync with CHIP_COLS in ImageChannelOverview.tsx */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.chipCell {
+  display: flex;
+  min-width: 0;
+  height: 18px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--minerva-quiet);
+  background: transparent;
+  color: var(--minerva-quiet);
+}
+
+.chipOn {
+  border-color: var(--ch);
+  background: var(--ch);
+  color: #000;
+}
+
+.chip,
+.chipMenu {
+  appearance: none;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.chip {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  padding: 0 2px 0 4px;
+  font-size: 11px;
+  line-height: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.chipMenu {
+  display: flex;
+  flex: 0 0 14px;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 100%;
+  padding: 0;
+}
+
+.chipMenu svg {
+  width: 8px;
+  height: 8px;
+}
+
+.chipDim {
+  opacity: 0.28;
+}
+
+.editor {
+  grid-column: 1 / -1;
+  margin-top: 0;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}

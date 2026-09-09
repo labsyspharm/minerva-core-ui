@@ -132,15 +132,6 @@ export function seedMaskSourceChannelStyles(channels: Channel[]): Channel[] {
   }));
 }
 
-export function styleSourceChannelsForRole(
-  channels: Channel[],
-  role: "intensity" | "segmentation",
-): Channel[] {
-  return role === "segmentation"
-    ? seedMaskSourceChannelStyles(channels)
-    : channels;
-}
-
 export function seedDefaultSourceChannelStyles(
   sourceChannels: Channel[],
   palette?: readonly RgbColor[],

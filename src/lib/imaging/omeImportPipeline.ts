@@ -21,7 +21,7 @@ import {
   applySharedImportPaletteToChannelGroups,
   applySharedImportPaletteToSourceChannels,
 } from "./psudoPalette";
-import { styleSourceChannelsForRole } from "./sourceChannelStyle";
+import { seedMaskSourceChannelStyles } from "./sourceChannelStyle";
 
 export type BuiltOmeImportSlice = {
   sourceChannels: Channel[];
@@ -66,7 +66,7 @@ export function buildOmeImportSlice(args: {
     existingImages,
   );
   if (role === "segmentation") {
-    sourceChannels = styleSourceChannelsForRole(sourceChannels, role);
+    sourceChannels = seedMaskSourceChannelStyles(sourceChannels);
   }
   const nextImages = mergeExtractedChannelsIntoImages(
     existingImages,

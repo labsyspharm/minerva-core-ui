@@ -2,6 +2,7 @@ import type { OrthographicViewState } from "@deck.gl/core";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import type { ConfigWaypoint } from "../authoring/config";
+import { defaultVisibilitiesForSources } from "../imaging/channelCompositor";
 import type { MaskVisualization } from "../imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
 import {
@@ -35,6 +36,7 @@ import type { Waypoint } from "./documentSchema";
 import {
   documentShapes,
   documentWaypoints,
+  flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "./documentStore";
 import {
@@ -2236,7 +2238,13 @@ export const useAppStore = create<AppStore>()(
       },
 
       setChannelVisibilities: (vis: Record<string, boolean>) => {
-        set({ channelVisibilities: vis });
+        const { images } = useDocumentStore.getState();
+        set({
+          channelVisibilities: defaultVisibilitiesForSources(
+            flattenImageChannelsInDocumentOrder(images),
+            vis,
+          ),
+        });
       },
 
       setChannelGroupRowVisibilities: (vis: Record<string, boolean>) => {
