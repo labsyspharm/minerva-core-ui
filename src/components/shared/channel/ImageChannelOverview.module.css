@@ -51,7 +51,7 @@
   min-width: 0;
   height: 18px;
   box-sizing: border-box;
-  border: 1.5px solid var(--minerva-quiet);
+  border: 1.5px solid #fff;
   background: transparent;
   color: var(--minerva-quiet);
 }
@@ -60,6 +60,16 @@
   border-color: var(--ch);
   background: var(--ch);
   color: #000;
+}
+
+.chipOutlined {
+  border-color: var(--ch);
+  color: var(--minerva-ink);
+}
+
+.chipUnassigned {
+  border-color: #fff;
+  color: var(--minerva-ink);
 }
 
 .chip,

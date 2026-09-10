@@ -55,6 +55,16 @@ export function rgbToHex(color: {
     .join("");
 }
 
+export function looksLikeImportDefaultSeedColor(color: {
+  r?: number;
+  g?: number;
+  b?: number;
+}): boolean {
+  return (IMPORT_DEFAULT_SEED_HEX as readonly string[]).includes(
+    rgbToHex(color),
+  );
+}
+
 const UNASSIGNED_STACK_COLOR: Color = { r: 160, g: 160, b: 160 };
 
 export function effectiveSourceColor(
@@ -82,6 +92,22 @@ export function effectiveDisplayColor(
     groupRow?.color ??
     effectiveSourceColor(channel, allChannels)
   );
+}
+
+/** Hex for a color swatch, or undefined when the channel has no color yet. */
+export function assignedDisplayHex(
+  channel: Channel,
+  allChannels: readonly Channel[],
+  groupRow?: ChannelGroupChannel | null,
+): string | undefined {
+  if (
+    !channel.color &&
+    !groupRow?.color &&
+    !planarRgbDisplayColor(channel, allChannels)
+  ) {
+    return undefined;
+  }
+  return rgbToHex(effectiveDisplayColor(channel, allChannels, groupRow));
 }
 
 export function effectiveSourceLimits(channel: Channel): [number, number] {

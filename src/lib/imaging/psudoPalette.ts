@@ -1,4 +1,7 @@
-import { isStackVisible } from "@/lib/imaging/channelCompositor";
+import {
+  isStackVisible,
+  sourceChannelInAnyGroup,
+} from "@/lib/imaging/channelCompositor";
 import {
   DEFAULT_VISIBLE_INTENSITY_CHANNELS,
   isImageChannel,
@@ -7,7 +10,9 @@ import {
 import {
   hexToRgb,
   IMPORT_DEFAULT_SEED_HEX,
+  looksLikeImportDefaultSeedColor,
   type RgbColor,
+  rgbToHex,
   seedDefaultSourceChannelStyles,
 } from "@/lib/imaging/sourceChannelStyle";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -42,7 +47,7 @@ type PaletteSlot = { id: string; color: RgbColor };
 type PsudoOptimizeInputs = {
   colors: Uint16Array;
   locked: Uint16Array;
-  /** Column-major intensities, or empty when `spatial` is false (color-only path). */
+  /** Empty when spatial is off (color-only path). */
   intensities: Uint16Array;
   contrastLimits: Uint16Array;
   luminance: Uint16Array;
@@ -134,13 +139,15 @@ export function warmupPsudoPalette(): Promise<boolean[]> {
  * colors, locked_colors, intensities, contrast_limits, luminance_values,
  * excluded_colors, color_names, max_iters?, confusion_baseline_samples?,
  * include_spatial_channel_overlap?, num_restarts?
- * (color-only path: empty intensities, `include_spatial_channel_overlap: false`).
+ * Color-only path: empty intensities, `include_spatial_channel_overlap: false`.
  */
 async function invokePsudoOptimize(
   inputs: PsudoOptimizeInputs,
 ): Promise<Float32Array> {
   const psudo = await import("psudo");
   await warmupPsudoPalette();
+  const n = inputs.colorNames.length;
+  const t0 = performance.now();
   const optimized = await psudo.optimize(
     inputs.colors,
     inputs.locked,
@@ -154,9 +161,24 @@ async function invokePsudoOptimize(
     inputs.spatial,
     inputs.numRestarts,
   );
-  return optimized instanceof Float32Array
-    ? optimized
-    : new Float32Array(optimized as ArrayLike<number>);
+  const linear =
+    optimized instanceof Float32Array
+      ? optimized
+      : new Float32Array(optimized as ArrayLike<number>);
+  if (import.meta.env.DEV) {
+    const colors: string[] = [];
+    for (let i = 0; i < n; i++) {
+      colors.push(`#${rgbToHex(linearToDisplayRgb(linear, i))}`);
+    }
+    console.log("[psudo] optimize done", {
+      ms: Math.round(performance.now() - t0),
+      n,
+      locked: [...inputs.locked].filter((v) => v === 1).length,
+      spatial: inputs.spatial,
+      colors,
+    });
+  }
+  return linear;
 }
 
 async function optimizeGroupPalette(
@@ -385,34 +407,154 @@ export async function applySharedImportPaletteToSourceChannels(
   sourceChannels: Channel[],
 ): Promise<Channel[]> {
   const picked = importPaletteSourceChannels(sourceChannels);
-  const seeds = seedPaletteForPicked(picked.length);
   try {
-    const palette =
-      picked.length < 2
-        ? seeds
-        : await optimizePaletteSlots(
-            picked.map((sc, i) => ({
-              id: sc.id,
-              color: seeds[i] ?? seeds[0],
-            })),
-            new Set(),
-          );
+    const palette = (await optimizeImportPaletteFour(sourceChannels)).slice(
+      0,
+      picked.length,
+    );
     return seedDefaultSourceChannelStyles(sourceChannels, palette);
   } catch (e) {
     if (import.meta.env.DEV) {
       console.warn("[psudo] import palette failed", e);
     }
-    return seedDefaultSourceChannelStyles(sourceChannels, seeds);
+    return seedDefaultSourceChannelStyles(
+      sourceChannels,
+      seedPaletteForPicked(picked.length),
+    );
   }
+}
+
+function needsInitFourColorPalette(
+  picked: readonly Channel[],
+  groups: readonly ChannelGroup[],
+): boolean {
+  if (picked.length < 2) return false;
+  for (const sc of picked) {
+    if (sc.color && !looksLikeImportDefaultSeedColor(sc.color)) return false;
+  }
+  const pickedIds = new Set(picked.map((sc) => sc.id));
+  for (const g of groups) {
+    for (const gc of g.channels) {
+      if (!pickedIds.has(gc.channelId)) continue;
+      if (!looksLikeImportDefaultSeedColor(gc.color)) return false;
+    }
+  }
+  return true;
+}
+
+let initFourColorKey: string | null = null;
+let initFourColorInFlight: string | null = null;
+let initFourColorGeneration = 0;
+
+export function resetInitFourColorPalette(): void {
+  initFourColorGeneration += 1;
+  initFourColorKey = null;
+  initFourColorInFlight = null;
+}
+
+/**
+ * One 4-slot `psudo.optimize` for the first intensity channels when a story
+ * opens on the seed palette (hydrate) or never received an import optimize.
+ * Skips once colors are no longer the import seeds.
+ */
+export function ensureInitFourColorPalette(storyId: string): Promise<void> {
+  const doc = useDocumentStore.getState();
+  const sources = flattenImageChannelsInDocumentOrder(doc.images);
+  const picked = importPaletteSourceChannels(sources);
+  const key = `${storyId}:${picked.map((sc) => sc.id).join(",")}`;
+  if (initFourColorKey === key || initFourColorInFlight === key) {
+    return Promise.resolve();
+  }
+  if (!needsInitFourColorPalette(picked, doc.channelGroups)) {
+    initFourColorKey = key;
+    return Promise.resolve();
+  }
+  initFourColorInFlight = key;
+  const generation = initFourColorGeneration;
+  const pendingIds = picked.map((sc) => sc.id);
+  setStackPalettePendingMany(pendingIds, true);
+  const run = (async () => {
+    try {
+      const palette = await optimizeImportPaletteFour(sources);
+      if (generation !== initFourColorGeneration) return;
+      const docNow = useDocumentStore.getState();
+      if (docNow.activeStoryId !== storyId) return;
+      const sourcesNow = flattenImageChannelsInDocumentOrder(docNow.images);
+      const pickedNow = importPaletteSourceChannels(sourcesNow);
+      if (
+        pickedNow.map((sc) => sc.id).join(",") !==
+        picked.map((sc) => sc.id).join(",")
+      ) {
+        return;
+      }
+      if (!needsInitFourColorPalette(pickedNow, docNow.channelGroups)) {
+        initFourColorKey = key;
+        return;
+      }
+      const colorBySourceId = new Map(
+        pickedNow.map((sc, i) => [sc.id, palette[i]] as const),
+      );
+      let sourcesChanged = false;
+      const nextSources = sourcesNow.map((sc) => {
+        const c = colorBySourceId.get(sc.id);
+        if (!c || (sc.color && !looksLikeImportDefaultSeedColor(sc.color))) {
+          return sc;
+        }
+        sourcesChanged = true;
+        return { ...sc, color: { r: c.r, g: c.g, b: c.b } };
+      });
+      let groupsChanged = false;
+      const nextGroups = docNow.channelGroups.map((g) => {
+        let rowChanged = false;
+        const channels = g.channels.map((gc) => {
+          const c = colorBySourceId.get(gc.channelId);
+          if (!c || !looksLikeImportDefaultSeedColor(gc.color)) return gc;
+          rowChanged = true;
+          return { ...gc, color: { r: c.r, g: c.g, b: c.b } };
+        });
+        if (!rowChanged) return g;
+        groupsChanged = true;
+        return { ...g, channels };
+      });
+      if (!sourcesChanged && !groupsChanged) {
+        initFourColorKey = key;
+        return;
+      }
+      if (groupsChanged) {
+        docNow.setImagesAndChannelGroups(
+          applySourceChannelsToImages(docNow.images, nextSources),
+          nextGroups,
+        );
+      } else {
+        docNow.setImages(
+          applySourceChannelsToImages(docNow.images, nextSources),
+        );
+      }
+      if (import.meta.env.DEV) {
+        console.log("[psudo] init 4-color", pendingIds);
+      }
+      initFourColorKey = key;
+    } catch (e) {
+      if (import.meta.env.DEV) {
+        console.warn("[psudo] init 4-color palette failed", e);
+      }
+    } finally {
+      setStackPalettePendingMany(pendingIds, false);
+      if (initFourColorInFlight === key) initFourColorInFlight = null;
+    }
+  })();
+  return run;
 }
 
 function stackPaletteParticipants(
   sourceChannels: Channel[],
   stackVisibilities: Record<string, boolean>,
 ): Channel[] {
+  const groups = useDocumentStore.getState().channelGroups;
   return sourceChannels.filter((sc) => {
     if (!isImageChannel(sc) || sc.samples === 3) return false;
     if (isRgbDisplayChannel(sc, sourceChannels)) return false;
+    if (sourceChannelInAnyGroup(groups, sc.id)) return false;
     return isStackVisible(stackVisibilities, sc.id);
   });
 }
@@ -457,7 +599,7 @@ export function getStackPalettePendingIds(): readonly string[] {
 
 function markStackPalettePendingIfNeeded(sourceChannelId: string): boolean {
   const doc = useDocumentStore.getState();
-  if (doc.channelGroups.length > 0) return false;
+  if (sourceChannelInAnyGroup(doc.channelGroups, sourceChannelId)) return false;
   const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
   const shown = sourceChannels.find((sc) => sc.id === sourceChannelId);
   if (
@@ -497,19 +639,17 @@ export function resetUngroupedStackPaletteReconcile(): void {
   prevUngroupedStackVis = null;
 }
 
-export function reconcileUngroupedStackPalette(args: {
-  channelGroups: readonly ChannelGroup[];
-  stackVisibilities: Record<string, boolean>;
-}): void {
-  const vis = args.stackVisibilities;
+export function reconcileUngroupedStackPalette(
+  stackVisibilities: Record<string, boolean>,
+): void {
+  const vis = stackVisibilities;
   const prev = prevUngroupedStackVis;
   prevUngroupedStackVis = vis;
-  if (args.channelGroups.length > 0) return;
   if (prev === null) return;
-  const sourceChannels = flattenImageChannelsInDocumentOrder(
-    useDocumentStore.getState().images,
-  );
+  const doc = useDocumentStore.getState();
+  const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
   for (const sc of sourceChannels) {
+    if (sourceChannelInAnyGroup(doc.channelGroups, sc.id)) continue;
     if (isStackVisible(prev, sc.id) || !isStackVisible(vis, sc.id)) continue;
     void ensurePaletteForNewlyVisibleStackChannels(sc.id);
   }
@@ -517,8 +657,7 @@ export function reconcileUngroupedStackPalette(args: {
 
 async function runEnsureStackPalette(sourceChannelId: string): Promise<void> {
   const doc = useDocumentStore.getState();
-  if (doc.channelGroups.length > 0) return;
-
+  if (sourceChannelInAnyGroup(doc.channelGroups, sourceChannelId)) return;
   const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
   const shown = sourceChannels.find((sc) => sc.id === sourceChannelId);
   if (
@@ -567,7 +706,6 @@ async function runEnsureStackPalette(sourceChannelId: string): Promise<void> {
   }
 
   const docNow = useDocumentStore.getState();
-  if (docNow.channelGroups.length > 0) return;
   const sourcesNow = flattenImageChannelsInDocumentOrder(docNow.images);
   const unlockedIds = new Set(unlocked.map((sc) => sc.id));
   const indexById = new Map(participants.map((sc, i) => [sc.id, i] as const));

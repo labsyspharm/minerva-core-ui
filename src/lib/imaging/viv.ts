@@ -161,7 +161,6 @@ const toDefaultSettings = (n: number) => {
 type ToSettingsOpts = {
   SourceChannels: SourceChannel[];
   channelGroups?: ChannelGroup[];
-  unfittedChannelIds?: ReadonlySet<string>;
 };
 
 const toSettings = (opts: ToSettingsOpts) => {
@@ -173,7 +172,7 @@ const toSettings = (opts: ToSettingsOpts) => {
     loaderSourceImageId?: string,
     channelGroupRowVisibilities: Record<string, boolean> = {},
   ) => {
-    const { SourceChannels, channelGroups = [], unfittedChannelIds } = opts;
+    const { SourceChannels, channelGroups = [] } = opts;
     if (!loader) return toDefaultSettings(3);
     const full_level = loader.data[0];
     const { labels, shape } = full_level;
@@ -201,14 +200,12 @@ const toSettings = (opts: ToSettingsOpts) => {
       stackVisibilities: channelVisibilities ?? {},
       groupRowVisibilities: channelGroupRowVisibilities,
       hasVisibilityMap,
-      unfittedChannelIds,
     });
 
-    const layersAll = composited;
-    const layers = layersAll.slice(0, MAX_VIV_INTENSITY_CHANNELS);
-    if (layersAll.length > MAX_VIV_INTENSITY_CHANNELS && import.meta.env.DEV) {
+    const layers = composited.slice(0, MAX_VIV_INTENSITY_CHANNELS);
+    if (composited.length > MAX_VIV_INTENSITY_CHANNELS && import.meta.env.DEV) {
       console.warn(
-        `[viv] ${layersAll.length} visible intensity channels exceeds ` +
+        `[viv] ${composited.length} visible intensity channels exceeds ` +
           `MAX_VIV_INTENSITY_CHANNELS=${MAX_VIV_INTENSITY_CHANNELS}; ` +
           "extra channels are hidden until you toggle some off.",
       );

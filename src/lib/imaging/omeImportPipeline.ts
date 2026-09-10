@@ -108,14 +108,6 @@ export async function applyPaletteToFlatImportImages(
   return applySourceChannelsToImages(images, styled);
 }
 
-/** Palette for a replace-import that already has extracted groups. */
-export async function applyPaletteToGroupedImport(
-  groups: ChannelGroup[],
-  sourceChannels: Channel[],
-): Promise<ChannelGroup[]> {
-  return applySharedImportPaletteToChannelGroups(groups, sourceChannels);
-}
-
 export type ReplaceOmeLocalImageResult =
   | {
       ok: true;

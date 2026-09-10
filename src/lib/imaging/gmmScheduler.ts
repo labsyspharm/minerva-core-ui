@@ -16,11 +16,8 @@ import {
 } from "@/lib/stores/documentStore";
 import { applySourceChannelsToImages } from "@/lib/stores/storeUtils";
 
-const GMM_VISIBLE_PAINT_BUDGET_MS = 800;
 const FETCH_CONCURRENCY = 4;
 const FIT_CONCURRENCY = 1;
-
-type Lane = "now" | "idle";
 
 type WriteGuard =
   | { kind: "still-missing" }
@@ -31,7 +28,6 @@ type Job = {
   loader: Loader;
   sourceImageId: string;
   index: number;
-  lane: Lane;
   channelIds: Set<string>;
   guards: Map<string, WriteGuard>;
 };
@@ -41,30 +37,25 @@ type FitOutcome =
   | { kind: "failed" };
 
 type GmmFitSnapshot = {
-  activeChannelIds: readonly string[];
-  blockedChannelIds: readonly string[];
+  holdingLoad: boolean;
 };
 
 const emptySnapshot: GmmFitSnapshot = {
-  activeChannelIds: [],
-  blockedChannelIds: [],
+  holdingLoad: false,
 };
 
 let generation = 0;
 const loadersByImageId = new Map<string, Loader>();
 const jobsByKey = new Map<string, Job>();
-const nowOrder: string[] = [];
-const idleOrder: string[] = [];
+const queue: string[] = [];
 const inFlight = new Map<string, Promise<FitOutcome>>();
 const failedKeys = new Set<string>();
 const blockedIds = new Set<string>();
-const paintReleasedIds = new Set<string>();
 const listeners = new Set<() => void>();
 let snapshot: GmmFitSnapshot = emptySnapshot;
-let budgetTimer: ReturnType<typeof setTimeout> | null = null;
+let holdingLoad = false;
 const fetchWaiters: (() => void)[] = [];
-const fitNowWaiters: (() => void)[] = [];
-const fitIdleWaiters: (() => void)[] = [];
+const fitWaiters: (() => void)[] = [];
 const fetchUsedBox = { n: 0 };
 const fitUsedBox = { n: 0 };
 
@@ -104,52 +95,14 @@ function acquire(used: { n: number }, waiters: (() => void)[], max: number) {
   });
 }
 
-function releaseFetch() {
-  fetchUsedBox.n = Math.max(0, fetchUsedBox.n - 1);
-  fetchWaiters.shift()?.();
-}
-
-function acquireFit(lane: Lane) {
-  return new Promise<void>((resolve) => {
-    if (fitUsedBox.n < FIT_CONCURRENCY) {
-      fitUsedBox.n++;
-      resolve();
-      return;
-    }
-    (lane === "now" ? fitNowWaiters : fitIdleWaiters).push(resolve);
-  });
-}
-
-function releaseFit() {
-  fitUsedBox.n = Math.max(0, fitUsedBox.n - 1);
-  const next = fitNowWaiters.shift() ?? fitIdleWaiters.shift();
-  if (next) {
-    fitUsedBox.n++;
-    next();
-  }
-}
-
-function sameIds(ids: readonly string[], set: ReadonlySet<string>): boolean {
-  if (ids.length !== set.size) return false;
-  return ids.every((id) => set.has(id));
+function release(used: { n: number }, waiters: (() => void)[]) {
+  used.n = Math.max(0, used.n - 1);
+  waiters.shift()?.();
 }
 
 function notify() {
-  const active = new Set<string>();
-  for (const job of jobsByKey.values()) {
-    if (!inFlight.has(job.rasterKey)) continue;
-    for (const id of job.channelIds) active.add(id);
-  }
-  if (
-    sameIds(snapshot.activeChannelIds, active) &&
-    sameIds(snapshot.blockedChannelIds, blockedIds)
-  ) {
-    return;
-  }
-  snapshot = {
-    activeChannelIds: [...active],
-    blockedChannelIds: [...blockedIds],
-  };
+  if (snapshot.holdingLoad === holdingLoad) return;
+  snapshot = { holdingLoad };
   for (const listener of listeners) listener();
 }
 
@@ -160,22 +113,18 @@ function readChannel(channelId: string): Channel | undefined {
 }
 
 function removeFromQueues(key: string) {
-  const nowIdx = nowOrder.indexOf(key);
-  if (nowIdx >= 0) nowOrder.splice(nowIdx, 1);
-  const idleIdx = idleOrder.indexOf(key);
-  if (idleIdx >= 0) idleOrder.splice(idleIdx, 1);
+  const idx = queue.indexOf(key);
+  if (idx >= 0) queue.splice(idx, 1);
 }
 
-function enqueue(job: Job, lane: Lane) {
+function enqueue(job: Job) {
   removeFromQueues(job.rasterKey);
-  job.lane = lane;
-  const order = lane === "now" ? nowOrder : idleOrder;
-  if (!order.includes(job.rasterKey)) order.push(job.rasterKey);
+  queue.push(job.rasterKey);
 }
 
 function dropBlocked(channelId: string) {
   blockedIds.delete(channelId);
-  paintReleasedIds.delete(channelId);
+  if (holdingLoad && blockedIds.size === 0) holdingLoad = false;
 }
 
 function finishJob(job: Job, outcome: FitOutcome, gen: number) {
@@ -245,7 +194,7 @@ async function runJob(job: Job, gen: number): Promise<FitOutcome> {
       u16 = rasterToUint16Array(hit.raster.data);
     }
   } finally {
-    releaseFetch();
+    release(fetchUsedBox, fetchWaiters);
     pump();
   }
 
@@ -257,14 +206,14 @@ async function runJob(job: Job, gen: number): Promise<FitOutcome> {
     return { kind: "failed" };
   }
 
-  await acquireFit(job.lane);
+  await acquire(fitUsedBox, fitWaiters, FIT_CONCURRENCY);
   let window: ContrastLimits | null = null;
   try {
     if (gen === generation) {
       window = await fitChannelGmmContrastFromUint16(u16);
     }
   } finally {
-    releaseFit();
+    release(fitUsedBox, fitWaiters);
   }
 
   if (gen !== generation) return { kind: "failed" };
@@ -303,30 +252,11 @@ function intern(job: Job): Promise<FitOutcome> {
 }
 
 function pump() {
-  for (const key of [...nowOrder]) {
+  for (const key of [...queue]) {
     const job = jobsByKey.get(key);
     if (!job || inFlight.has(key)) continue;
     intern(job);
   }
-  const nowPending = nowOrder.some((key) => !inFlight.has(key));
-  if (nowPending) return;
-  for (const key of [...idleOrder]) {
-    const job = jobsByKey.get(key);
-    if (!job || inFlight.has(key)) continue;
-    intern(job);
-  }
-}
-
-function armBudget() {
-  if (budgetTimer != null || blockedIds.size === 0) return;
-  budgetTimer = setTimeout(() => {
-    budgetTimer = null;
-    for (const id of [...blockedIds]) {
-      paintReleasedIds.add(id);
-      blockedIds.delete(id);
-    }
-    notify();
-  }, GMM_VISIBLE_PAINT_BUDGET_MS);
 }
 
 function attachChannel(job: Job, channelId: string, guard: WriteGuard) {
@@ -341,10 +271,9 @@ function upsertJob(args: {
   sc: Channel;
   loader: Loader;
   guard: WriteGuard;
-  lane: Lane;
   retryFailed: boolean;
 }): Job | null {
-  const { sc, loader, guard, lane, retryFailed } = args;
+  const { sc, loader, guard, retryFailed } = args;
   const key = rasterKey(sc.imageId, sc.index);
   if (failedKeys.has(key)) {
     if (!retryFailed) return null;
@@ -353,8 +282,7 @@ function upsertJob(args: {
   const existing = jobsByKey.get(key);
   if (existing) {
     attachChannel(existing, sc.id, guard);
-    if (lane === "now") existing.lane = "now";
-    if (!inFlight.has(key)) enqueue(existing, existing.lane);
+    if (!inFlight.has(key)) enqueue(existing);
     return existing;
   }
   const job: Job = {
@@ -362,12 +290,11 @@ function upsertJob(args: {
     loader,
     sourceImageId: sc.imageId,
     index: sc.index,
-    lane,
     channelIds: new Set([sc.id]),
     guards: new Map([[sc.id, guard]]),
   };
   jobsByKey.set(key, job);
-  enqueue(job, lane);
+  enqueue(job);
   return job;
 }
 
@@ -380,7 +307,7 @@ function targetFor(channelId: string): { sc: Channel; loader: Loader } | null {
 }
 
 function blockVisible(channelId: string) {
-  if (paintReleasedIds.has(channelId) || blockedIds.has(channelId)) return;
+  if (blockedIds.has(channelId)) return;
   const sc = readChannel(channelId);
   if (!sc || sc.gmmContrastLimits || !isEligible(sc)) return;
   blockedIds.add(channelId);
@@ -408,21 +335,20 @@ export function reconcileGmm(args: {
   for (const sc of channels) {
     if (!isEligible(sc) || !loadersByImageId.has(sc.imageId)) continue;
     if (sc.gmmContrastLimits) continue;
+    if (!visibleChannelIds.has(sc.id)) continue;
     const loader = loadersByImageId.get(sc.imageId);
     if (!loader) continue;
-    const visible = visibleChannelIds.has(sc.id);
     const job = upsertJob({
       sc,
       loader,
       guard: { kind: "still-missing" },
-      lane: visible ? "now" : "idle",
       retryFailed: false,
     });
     if (!job) continue;
-    if (visible) blockVisible(sc.id);
+    blockVisible(sc.id);
   }
 
-  armBudget();
+  holdingLoad = blockedIds.size > 0;
   notify();
   pump();
 }
@@ -444,10 +370,10 @@ export async function ensureGmm(
       sc: target.sc,
       loader: target.loader,
       guard: { kind: "still-missing" },
-      lane: "now",
       retryFailed: true,
     });
     if (!job) continue;
+    blockVisible(channelId);
     waits.push(
       intern(job).then(() => {
         const sc = readChannel(channelId);
@@ -484,7 +410,6 @@ export async function refitGmm(
     sc: latest.sc,
     loader: latest.loader,
     guard,
-    lane: "now",
     retryFailed: true,
   });
   if (!job) return null;
@@ -511,16 +436,11 @@ export function clearGmmScheduler(): void {
   generation += 1;
   loadersByImageId.clear();
   jobsByKey.clear();
-  nowOrder.length = 0;
-  idleOrder.length = 0;
+  queue.length = 0;
   inFlight.clear();
   failedKeys.clear();
   blockedIds.clear();
-  paintReleasedIds.clear();
-  if (budgetTimer != null) {
-    clearTimeout(budgetTimer);
-    budgetTimer = null;
-  }
+  holdingLoad = false;
   snapshot = emptySnapshot;
   for (const listener of listeners) listener();
 }

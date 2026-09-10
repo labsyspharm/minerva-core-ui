@@ -1,11 +1,12 @@
 import type { CSSProperties } from "react";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuthorChannelNav } from "@/components/shared/channel/AuthorChannelNav";
 import { ChannelEditor } from "@/components/shared/channel/ChannelEditorPopover";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
+  defaultVisibilitiesForSources,
   isGroupRowVisible,
   isStackVisible,
 } from "@/lib/imaging/channelCompositor";
@@ -14,6 +15,10 @@ import {
   type ImageChannelChip,
   type ImageChannelGroupStrip,
 } from "@/lib/imaging/imageChannelOverview";
+import {
+  getStackPalettePendingIds,
+  subscribeStackPalettePending,
+} from "@/lib/imaging/psudoPalette";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentSchema";
 import {
@@ -22,39 +27,43 @@ import {
 } from "@/lib/stores/documentStore";
 import styles from "./ImageChannelOverview.module.css";
 
-function chipAriaLabel(chip: ImageChannelChip, toggle: boolean): string {
-  if (toggle) {
-    return chip.visible ? `Hide ${chip.name}` : `Show ${chip.name}`;
-  }
-  return chip.visible ? `${chip.name}, visible` : `${chip.name}, hidden`;
+function chipAriaLabel(chip: ImageChannelChip): string {
+  return chip.visible ? `Hide ${chip.name}` : `Show ${chip.name}`;
 }
 
 function ChipButton(props: {
   chip: ImageChannelChip;
-  toggle: boolean;
   open: boolean;
   dim: boolean;
+  colorPending: boolean;
   onClick: (chip: ImageChannelChip) => void;
   onOpenEditor: (chip: ImageChannelChip) => void;
 }) {
-  const { chip, toggle, open, dim, onClick, onOpenEditor } = props;
+  const { chip, open, dim, colorPending, onClick, onOpenEditor } = props;
+  const pendingLabel = `Assigning color to ${chip.name}`;
   return (
     <div
       className={[
         styles.chipCell,
-        chip.visible ? styles.chipOn : null,
+        chip.visible && chip.hex ? styles.chipOn : null,
+        !chip.visible && chip.hex ? styles.chipOutlined : null,
+        chip.hex ? null : styles.chipUnassigned,
+        colorPending ? minervaTheme.busyOverlay : null,
         dim ? styles.chipDim : null,
       ]
         .filter(Boolean)
         .join(" ")}
-      style={{ "--ch": `#${chip.hex}` } as CSSProperties}
+      style={
+        chip.hex ? ({ "--ch": `#${chip.hex}` } as CSSProperties) : undefined
+      }
+      aria-busy={colorPending || undefined}
     >
       <button
         type="button"
         className={`${minervaTheme.focusRing} ${styles.chip}`}
-        title={chip.name}
-        aria-label={chipAriaLabel(chip, toggle)}
-        aria-pressed={toggle ? chip.visible : undefined}
+        title={colorPending ? pendingLabel : chip.name}
+        aria-label={colorPending ? pendingLabel : chipAriaLabel(chip)}
+        aria-pressed={chip.visible}
         onClick={() => onClick(chip)}
       >
         {chip.name}
@@ -81,12 +90,16 @@ const CHIP_COLS = 5;
 
 function ChipGrid(props: {
   chips: ImageChannelChip[];
-  toggle?: boolean;
   openChip: ImageChannelChip | null;
   onChip: (chip: ImageChannelChip) => void;
   onOpenEditor: (chip: ImageChannelChip) => void;
 }) {
   const { chips, openChip } = props;
+  const pendingIds = useSyncExternalStore(
+    subscribeStackPalettePending,
+    getStackPalettePendingIds,
+    getStackPalettePendingIds,
+  );
   const openIndex = openChip
     ? chips.findIndex((c) => c.key === openChip.key)
     : -1;
@@ -103,9 +116,9 @@ function ChipGrid(props: {
         <Fragment key={chip.key}>
           <ChipButton
             chip={chip}
-            toggle={!!props.toggle}
             open={openChip?.key === chip.key}
             dim={openChip != null && openChip.key !== chip.key}
+            colorPending={pendingIds.includes(chip.sourceId)}
             onClick={props.onChip}
             onOpenEditor={props.onOpenEditor}
           />
@@ -123,7 +136,7 @@ function ChipGrid(props: {
 function GroupStrip(props: {
   group: ImageChannelGroupStrip;
   openChip: ImageChannelChip | null;
-  onEdit: (chip: ImageChannelChip) => void;
+  onChip: (chip: ImageChannelChip) => void;
   onOpenEditor: (chip: ImageChannelChip) => void;
   onToggleGroup: (groupId: string) => void;
 }) {
@@ -144,7 +157,7 @@ function GroupStrip(props: {
         <ChipGrid
           chips={group.chips}
           openChip={props.openChip}
-          onChip={props.onEdit}
+          onChip={props.onChip}
           onOpenEditor={props.onOpenEditor}
         />
       </div>
@@ -162,7 +175,6 @@ function EtcChips(props: {
   const grid = (
     <ChipGrid
       chips={props.chips}
-      toggle
       openChip={props.openChip}
       onChip={props.onChip}
       onOpenEditor={props.onOpenEditor}
@@ -197,20 +209,24 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
+  const filledStackVis = useMemo(
+    () => defaultVisibilitiesForSources(allSourceChannels, stackVisibilities),
+    [allSourceChannels, stackVisibilities],
+  );
   const model = useMemo(
     () =>
       buildImageChannelOverview({
         image,
         channelGroups,
         allSourceChannels,
-        stackVisibilities,
+        stackVisibilities: filledStackVis,
         groupRowVisibilities,
       }),
     [
       image,
       channelGroups,
       allSourceChannels,
-      stackVisibilities,
+      filledStackVis,
       groupRowVisibilities,
     ],
   );
@@ -236,12 +252,19 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
           key={group.id}
           group={group}
           openChip={openChip}
-          onEdit={(chip) => {
+          onChip={(chip) => {
+            if (!chip.groupRowId) return;
             if (chip.groupId) setActiveChannelGroup(chip.groupId);
-            nav?.openChannelEditor({
-              key: chip.key,
-              groupId: chip.groupId,
+            const vis = useAppStore.getState().channelGroupRowVisibilities;
+            const turningOn = !isGroupRowVisible(vis, chip.groupRowId);
+            setChannelGroupRowVisibilities({
+              ...vis,
+              [chip.groupRowId]: turningOn,
             });
+            if (!turningOn) return;
+            void nav
+              ?.ensureChannelHistograms?.([chip.sourceId])
+              .catch(() => undefined);
           }}
           onOpenEditor={onOpenEditor}
           onToggleGroup={(groupId) => {
@@ -263,7 +286,12 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
           aligned={model.groups.length > 0}
           openChip={openChip}
           onChip={(chip) => {
-            const vis = useAppStore.getState().channelVisibilities;
+            const vis = defaultVisibilitiesForSources(
+              flattenImageChannelsInDocumentOrder(
+                useDocumentStore.getState().images,
+              ),
+              useAppStore.getState().channelVisibilities,
+            );
             const turningOn = !isStackVisible(vis, chip.sourceId);
             setChannelVisibilities({ ...vis, [chip.sourceId]: turningOn });
             if (!turningOn) return;

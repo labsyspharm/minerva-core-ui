@@ -195,8 +195,6 @@ type ChannelRowProps = {
   onToggleVisibility: MouseEventHandler<HTMLButtonElement>;
   name: ChannelRowNameProps;
   imageSubtitle?: string | null;
-  /** Visibility + name only (hidden stack rows, RGB display). */
-  compact?: boolean;
   trailing?: React.ReactNode;
   isMask?: boolean;
   maskVisualization?: MaskVisualization;
@@ -207,8 +205,7 @@ type ChannelRowProps = {
   fixedColorHex?: string;
   colorHex?: string;
   colorTitle?: string;
-  colorAriaLabel?: string;
-  colorLoading?: boolean;
+  busy?: boolean;
   onColorClick?: MouseEventHandler<HTMLButtonElement>;
 };
 
@@ -283,7 +280,6 @@ export function ChannelRow(props: ChannelRowProps) {
     name,
     imageSubtitle,
     trailing,
-    compact,
     isMask,
     maskVisualization,
     onMaskVisualizationChange,
@@ -292,15 +288,12 @@ export function ChannelRow(props: ChannelRowProps) {
     fixedColorHex,
     colorHex,
     colorTitle,
-    colorAriaLabel,
-    colorLoading,
+    busy,
     onColorClick,
   } = props;
 
-  const showMask = !compact && isMask && maskVisualization;
-  const showColorLoading = !compact && !isMask && colorLoading;
-  const showColor =
-    !compact && !isMask && !colorLoading && colorHex && onColorClick;
+  const showMask = isMask && maskVisualization;
+  const showColor = !isMask && onColorClick;
   const [maskControlsOpen, setMaskControlsOpen] = useState(true);
   const rowRef = useRef<HTMLDivElement>(null);
   const maskControlsId = useId();
@@ -363,14 +356,13 @@ export function ChannelRow(props: ChannelRowProps) {
             aria-hidden
           />
         ) : null}
-        {showColorLoading ? (
-          <div className={minervaTheme.spinnerSm} title="Optimizing color" />
-        ) : null}
         {showColor ? (
           <ChannelColorSwatchButton
             hex={colorHex}
+            busy={busy}
+            filled={visible}
             title={colorTitle ?? `Pick color`}
-            ariaLabel={colorAriaLabel ?? `Pick color`}
+            ariaLabel={colorTitle ?? `Pick color`}
             onClick={onColorClick}
           />
         ) : null}

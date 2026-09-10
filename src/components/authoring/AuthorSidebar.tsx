@@ -1,6 +1,5 @@
-import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
-import type { ChannelEditFocus } from "@/components/shared/channel/AuthorChannelNav";
 import {
   type AuthorChannelNav,
   AuthorChannelNavProvider,
@@ -38,21 +37,13 @@ export type AuthorSidebarProps = {
 
 export function AuthorSidebar(props: AuthorSidebarProps) {
   const [activeTab, setActiveTab] = useState<AuthorTab>("images");
-  const [channelEditFocus, setChannelEditFocus] =
-    useState<ChannelEditFocus | null>(null);
   const { expanded } = props;
-
-  const openChannelEditor = useCallback((focus: ChannelEditFocus) => {
-    setChannelEditFocus(focus);
-    setActiveTab("channels");
-  }, []);
 
   const channelNav = useMemo<AuthorChannelNav>(
     () => ({
-      openChannelEditor,
       ensureChannelHistograms: props.ensureChannelHistograms,
     }),
-    [openChannelEditor, props.ensureChannelHistograms],
+    [props.ensureChannelHistograms],
   );
 
   const activePanel =
@@ -63,8 +54,6 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
         noLoader={props.noLoader}
         ensureChannelHistograms={props.ensureChannelHistograms}
         contrastEditable={props.contrastEditable}
-        editFocus={channelEditFocus}
-        onEditFocusConsumed={() => setChannelEditFocus(null)}
       />
     ) : (
       <WaypointsList />

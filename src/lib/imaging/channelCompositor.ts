@@ -56,7 +56,6 @@ type CompositedLayersArgs = {
   stackVisibilities: Record<string, boolean>;
   groupRowVisibilities: Record<string, boolean>;
   hasVisibilityMap: boolean;
-  unfittedChannelIds?: ReadonlySet<string>;
   requireColor?: boolean;
 };
 
@@ -83,13 +82,9 @@ function isUngroupedStackVisible(
   return !hasVisibilityMap || isStackVisible(stackVisibilities, sourceId);
 }
 
-function stackOverlayReady(
-  sc: Channel,
-  requireColor: boolean,
-  unfittedChannelIds: ReadonlySet<string> | undefined,
-): boolean {
+function stackOverlayReady(sc: Channel, requireColor: boolean): boolean {
   if (requireColor && sc.samples !== 3 && !sc.color) return false;
-  return !unfittedChannelIds?.has(sc.id) || Boolean(sc.gmmContrastLimits);
+  return true;
 }
 
 /** Intensity layers sent to Viv (one OME channel per source; stack style wins over group). */
@@ -103,7 +98,6 @@ export function buildCompositedIntensityLayers(
     stackVisibilities,
     groupRowVisibilities,
     hasVisibilityMap,
-    unfittedChannelIds,
     requireColor = true,
   } = args;
 
@@ -114,7 +108,7 @@ export function buildCompositedIntensityLayers(
       ? onLoader.filter((sc) => isStackVisible(stackVisibilities, sc.id))
       : onLoader.slice(0, DEFAULT_VISIBLE_INTENSITY_CHANNELS);
     return layers
-      .filter((sc) => stackOverlayReady(sc, requireColor, unfittedChannelIds))
+      .filter((sc) => stackOverlayReady(sc, requireColor))
       .map((sc) => ({ sc, gc: null }));
   }
 
@@ -133,10 +127,7 @@ export function buildCompositedIntensityLayers(
     );
     if (!rowOn && !stackOn) continue;
     if (rowOn) ordered.push({ sc, gc });
-    else if (
-      stackOn &&
-      stackOverlayReady(sc, requireColor, unfittedChannelIds)
-    ) {
+    else if (stackOn && stackOverlayReady(sc, requireColor)) {
       ordered.push({ sc, gc: null });
     }
   }
@@ -151,7 +142,7 @@ export function buildCompositedIntensityLayers(
       continue;
     }
     if (!hasVisibilityMap) continue;
-    if (!stackOverlayReady(sc, requireColor, unfittedChannelIds)) continue;
+    if (!stackOverlayReady(sc, requireColor)) continue;
     ordered.push({ sc, gc: null });
   }
 
@@ -287,22 +278,9 @@ export function applyStackVisibilities(
     }
     case "sync": {
       const out = preservedStackVisibilities(sourceChannels, prev, true);
-      let intensitySeen = sourceChannels.filter(
-        (sc) => isImageChannel(sc) && out[sc.id] === true,
-      ).length;
       for (const sc of sourceChannels) {
         if (out[sc.id] !== undefined) continue;
-        if (isMaskChannel(sc)) {
-          out[sc.id] = true;
-          continue;
-        }
-        if (isImageChannel(sc)) {
-          const show = intensitySeen < DEFAULT_VISIBLE_INTENSITY_CHANNELS;
-          out[sc.id] = show;
-          if (show) intensitySeen++;
-          continue;
-        }
-        out[sc.id] = true;
+        out[sc.id] = isMaskChannel(sc);
       }
       return out;
     }
@@ -390,33 +368,4 @@ export function defaultVisibilitiesForSources(
     return applyStackVisibilities(sourceChannels, prev, { kind: "fresh" });
   }
   return applyStackVisibilities(sourceChannels, prev, { kind: "sync" });
-}
-
-/** Eyes / first-4 intensity ids without the color paint gate (GMM queue). */
-export function foregroundGmmChannelIds(args: {
-  sourceChannels: readonly Channel[];
-  channelGroups?: ChannelGroup[];
-  stackVisibilities?: Record<string, boolean>;
-  groupRowVisibilities?: Record<string, boolean>;
-  activeGroupId?: string | null;
-}): Set<string> {
-  const channelGroups = args.channelGroups ?? [];
-  const sourceChannels = args.sourceChannels as Channel[];
-  const stackVisibilities =
-    args.stackVisibilities ?? defaultVisibilitiesForSources(sourceChannels, {});
-  const onLoader = sourceChannels.filter(isImageChannel);
-  const activeGroup =
-    channelGroups.length === 0
-      ? undefined
-      : channelGroups.find((g) => g.id === args.activeGroupId);
-  const layers = buildCompositedIntensityLayers({
-    onLoader,
-    activeGroup,
-    channelGroups,
-    stackVisibilities,
-    groupRowVisibilities: args.groupRowVisibilities ?? {},
-    hasVisibilityMap: true,
-    requireColor: false,
-  });
-  return new Set(layers.map((l) => l.sc.id));
 }

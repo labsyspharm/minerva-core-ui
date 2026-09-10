@@ -225,11 +225,6 @@
   opacity: 0.85;
 }
 
-.groupChildBlock[data-flash="1"],
-.rootChannelBlock[data-flash="1"] {
-  background: var(--minerva-wash);
-}
-
 .rootChannelCompactName {
   display: block;
   min-width: 0;

@@ -1,6 +1,12 @@
 import type { FormEventHandler } from "react";
 import * as React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { StoryTitleBar } from "@/components/authoring/StoryTitleBar";
 import { MinervaLibraryPage } from "@/components/library/MinervaLibraryPage";
 import { PlaybackModeView } from "@/components/playback/PlaybackModeView";
@@ -22,11 +28,12 @@ import type {
 import { extractChannels } from "@/lib/authoring/config";
 import {
   applyVisibilityTransition,
+  buildCompositedIntensityLayers,
   diffChannelIds,
   diffGroupRowIds,
-  foregroundGmmChannelIds,
   type VisibilityTransition,
 } from "@/lib/imaging/channelCompositor";
+import { isImageChannel } from "@/lib/imaging/channelKind";
 import {
   isJpegOmeTiffImageSource,
   JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE,
@@ -44,7 +51,13 @@ import {
   loadOmeLoaderForRole,
   pickLocalOmeTiffHandle,
 } from "@/lib/imaging/filesystem";
-import { clearGmmScheduler, reconcileGmm } from "@/lib/imaging/gmmScheduler";
+import {
+  clearGmmScheduler,
+  ensureGmm,
+  getGmmFitSnapshot,
+  reconcileGmm,
+  subscribeGmmFit,
+} from "@/lib/imaging/gmmScheduler";
 import {
   clearOmeHistogramCache,
   ensureOmeHistogramDistributions,
@@ -66,14 +79,16 @@ import {
 import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/maskLayers";
 import {
   applyPaletteToFlatImportImages,
-  applyPaletteToGroupedImport,
   buildOmeImportSlice,
   finalizeAppendedIntensityGroups,
   replaceOmeLocalImageInDocument,
 } from "@/lib/imaging/omeImportPipeline";
 import { getOmeTiffImageDescriptionOmeXml } from "@/lib/imaging/omeTiff";
 import {
+  applySharedImportPaletteToChannelGroups,
+  ensureInitFourColorPalette,
   reconcileUngroupedStackPalette,
+  resetInitFourColorPalette,
   resetUngroupedStackPaletteReconcile,
   warmupPsudoPalette,
 } from "@/lib/imaging/psudoPalette";
@@ -290,39 +305,35 @@ function clearOmeDerivedCaches(): void {
   clearOmeHistogramCache();
   clearGmmScheduler();
   resetUngroupedStackPaletteReconcile();
+  resetInitFourColorPalette();
 }
 
-function startGmmForLoaders(
-  loaderEntries: readonly OmeLoaderEntry[],
-  images: Image[],
-  channelGroups: ChannelGroup[],
-  vis: {
-    channelVisibilities: Record<string, boolean>;
-    channelGroupRowVisibilities: Record<string, boolean>;
-    activeChannelGroupId: string | null;
-  },
-): void {
+function visibleGmmIds(images: Image[]): Set<string> {
   const channels = flattenImageChannelsInDocumentOrder(images);
+  const { channelGroups } = useDocumentStore.getState();
+  const app = useAppStore.getState();
   const visibility = applyVisibilityTransition(
     channels,
     channelGroups,
-    vis.channelVisibilities,
-    vis.channelGroupRowVisibilities,
-    Object.keys(vis.channelVisibilities).length === 0
+    app.channelVisibilities,
+    app.channelGroupRowVisibilities,
+    Object.keys(app.channelVisibilities).length === 0
       ? { kind: "fresh" }
       : { kind: "sync" },
   );
-  reconcileGmm({
-    loaderEntries,
-    channels,
-    visibleChannelIds: foregroundGmmChannelIds({
-      sourceChannels: channels,
-      channelGroups,
-      stackVisibilities: visibility.channelVisibilities,
-      groupRowVisibilities: visibility.channelGroupRowVisibilities,
-      activeGroupId: vis.activeChannelGroupId,
-    }),
+  const layers = buildCompositedIntensityLayers({
+    onLoader: channels.filter(isImageChannel),
+    activeGroup:
+      channelGroups.length === 0
+        ? undefined
+        : channelGroups.find((g) => g.id === app.activeChannelGroupId),
+    channelGroups,
+    stackVisibilities: visibility.channelVisibilities,
+    groupRowVisibilities: visibility.channelGroupRowVisibilities,
+    hasVisibilityMap: true,
+    requireColor: false,
   });
+  return new Set(layers.map((l) => l.sc.id));
 }
 
 const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
@@ -438,39 +449,68 @@ const Content = (props: Props) => {
         .join("|"),
     [images],
   );
+  const prevGmmShownRef = React.useRef<Set<string> | null>(null);
+  const gmmFit = useSyncExternalStore(
+    subscribeGmmFit,
+    getGmmFitSnapshot,
+    getGmmFitSnapshot,
+  );
   React.useEffect(() => {
     if (!activeStoryId) {
       clearGmmScheduler();
       resetUngroupedStackPaletteReconcile();
+      resetInitFourColorPalette();
+      prevGmmShownRef.current = null;
       return;
     }
     return () => {
       clearGmmScheduler();
       resetUngroupedStackPaletteReconcile();
+      resetInitFourColorPalette();
+      prevGmmShownRef.current = null;
     };
   }, [activeStoryId]);
   React.useEffect(() => {
     if (!activeStoryId) return;
     void gmmChannelKey;
     const liveImages = useDocumentStore.getState().images;
-    startGmmForLoaders(omeLoaderEntries, liveImages, channelGroups, {
-      channelVisibilities,
-      channelGroupRowVisibilities,
-      activeChannelGroupId,
+    const shown = visibleGmmIds(liveImages);
+    reconcileGmm({
+      loaderEntries: omeLoaderEntries,
+      channels: flattenImageChannelsInDocumentOrder(liveImages),
+      visibleChannelIds: shown,
     });
-    reconcileUngroupedStackPalette({
-      channelGroups,
-      stackVisibilities: channelVisibilities,
-    });
+    prevGmmShownRef.current = shown;
+    void ensureInitFourColorPalette(activeStoryId);
+  }, [activeStoryId, omeLoaderEntries, gmmChannelKey]);
+  React.useEffect(() => {
+    if (!activeStoryId) return;
+    void channelGroups;
+    void channelVisibilities;
+    void channelGroupRowVisibilities;
+    void activeChannelGroupId;
+    const shown = visibleGmmIds(useDocumentStore.getState().images);
+    const prev = prevGmmShownRef.current;
+    prevGmmShownRef.current = shown;
+    if (prev === null) return;
+    const newly = [...shown].filter((id) => !prev.has(id));
+    if (newly.length > 0) {
+      if (import.meta.env.DEV) {
+        console.log("[psudo] gmm show", newly);
+      }
+      void ensureGmm(newly);
+    }
   }, [
     activeStoryId,
-    omeLoaderEntries,
-    gmmChannelKey,
     channelGroups,
     channelVisibilities,
     channelGroupRowVisibilities,
     activeChannelGroupId,
   ]);
+  React.useEffect(() => {
+    if (!activeStoryId) return;
+    reconcileUngroupedStackPalette(channelVisibilities);
+  }, [activeStoryId, channelVisibilities]);
   const sourceChannels = useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
@@ -1179,7 +1219,7 @@ const Content = (props: Props) => {
     if (role === "segmentation") {
       ChannelGroups = [];
     } else if (slice.extractedGroups.length > 0) {
-      ChannelGroups = await applyPaletteToGroupedImport(
+      ChannelGroups = await applySharedImportPaletteToChannelGroups(
         slice.extractedGroups,
         SourceChannels,
       );
@@ -1578,7 +1618,7 @@ const Content = (props: Props) => {
       };
     }
     const { SourceChannels } = registry;
-    const ChannelGroups = await applyPaletteToGroupedImport(
+    const ChannelGroups = await applySharedImportPaletteToChannelGroups(
       registry.ChannelGroups,
       SourceChannels,
     );
@@ -2039,12 +2079,14 @@ const Content = (props: Props) => {
     });
   }, []);
 
+  const showImageLoading = isLoadingImage || gmmFit.holdingLoad;
+
   // Remove the global HTML loader once no async image load is pending (dev, demo, or restored doc).
   useEffect(() => {
-    if (!isLoadingImage) {
+    if (!showImageLoading) {
       document.getElementById("global-loader")?.remove();
     }
-  }, [isLoadingImage]);
+  }, [showImageLoading]);
 
   return (
     <FileHandler
@@ -2315,7 +2357,7 @@ const Content = (props: Props) => {
               />
             ) : null}
             {imager}
-            {isLoadingImage ? (
+            {showImageLoading ? (
               <output className={styles.importLoadingOverlay} aria-busy="true">
                 <div className={minervaTheme.spinner} />
                 <span>Loading…</span>

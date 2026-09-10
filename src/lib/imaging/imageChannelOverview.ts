@@ -3,10 +3,7 @@ import {
   isStackVisible,
   sourceChannelInAnyGroup,
 } from "@/lib/imaging/channelCompositor";
-import {
-  effectiveDisplayColor,
-  rgbToHex,
-} from "@/lib/imaging/sourceChannelStyle";
+import { assignedDisplayHex } from "@/lib/imaging/sourceChannelStyle";
 import type { Channel, ChannelGroup, Image } from "@/lib/stores/documentSchema";
 
 export type ImageChannelChip = {
@@ -31,14 +28,6 @@ export type ImageChannelOverviewModel = {
   etc: ImageChannelChip[];
 };
 
-export function groupChipKey(groupId: string, rowId: string): string {
-  return `g:${groupId}:${rowId}`;
-}
-
-export function etcChipKey(sourceId: string): string {
-  return `e:${sourceId}`;
-}
-
 export function buildImageChannelOverview(args: {
   image: Image;
   channelGroups: readonly ChannelGroup[];
@@ -54,16 +43,12 @@ export function buildImageChannelOverview(args: {
     for (const gc of group.channels) {
       const sc = byId.get(gc.channelId);
       if (!sc) continue;
-      const color = effectiveDisplayColor(
-        { ...sc, imageId: args.image.id },
-        args.allSourceChannels,
-        gc,
-      );
+      const channel = { ...sc, imageId: args.image.id };
       chips.push({
-        key: groupChipKey(group.id, gc.id),
+        key: `g:${group.id}:${gc.id}`,
         sourceId: sc.id,
         name: sc.name,
-        hex: rgbToHex(color),
+        hex: assignedDisplayHex(channel, args.allSourceChannels, gc) ?? "",
         visible: isGroupRowVisible(args.groupRowVisibilities, gc.id),
         groupId: group.id,
         groupRowId: gc.id,
@@ -83,16 +68,12 @@ export function buildImageChannelOverview(args: {
     if (sourceChannelInAnyGroup(args.channelGroups as ChannelGroup[], sc.id)) {
       continue;
     }
-    const color = effectiveDisplayColor(
-      { ...sc, imageId: args.image.id },
-      args.allSourceChannels,
-      null,
-    );
+    const channel = { ...sc, imageId: args.image.id };
     etc.push({
-      key: etcChipKey(sc.id),
+      key: `e:${sc.id}`,
       sourceId: sc.id,
       name: sc.name,
-      hex: rgbToHex(color),
+      hex: assignedDisplayHex(channel, args.allSourceChannels, null) ?? "",
       visible: isStackVisible(args.stackVisibilities, sc.id),
       groupId: null,
     });

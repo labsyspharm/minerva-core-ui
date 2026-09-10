@@ -21,7 +21,7 @@ import {
   subscribeStackPalettePending,
 } from "@/lib/imaging/psudoPalette";
 import {
-  effectiveSourceColor,
+  assignedDisplayHex,
   effectiveSourceLimits,
 } from "@/lib/imaging/sourceChannelStyle";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
@@ -87,21 +87,18 @@ export function legendChannelFromLayer(
 
 export function legendChannelFromSource(
   sc: Channel,
-  allChannels?: readonly Channel[],
+  allChannels: readonly Channel[] = [],
 ): LegendChannel {
-  const { r, g, b } = effectiveSourceColor(sc, allChannels);
-  const hex_color = [r, g, b]
-    .map((n) => n.toString(16).padStart(2, "0"))
-    .join("");
+  const hex = assignedDisplayHex(sc, allChannels, null);
   const [lo, hi] = effectiveSourceLimits(sc);
   return {
-    r,
-    g,
-    b,
+    r: sc.color?.r ?? 255,
+    g: sc.color?.g ?? 255,
+    b: sc.color?.b ?? 255,
     lower_range: lo,
     upper_range: hi,
     name: sc.name,
-    color: hex_color,
+    color: hex ?? "",
     group_uuid: "",
     source_uuid: sc.id,
     channel_uuid: sc.id,
@@ -172,32 +169,41 @@ const LegendRow = (props: LegendRowProps) => {
     uuid,
   };
 
+  const swatchLabel = colorPending
+    ? `Optimizing color of ${channelName}`
+    : `Change color of ${channelName}`;
   const coreUI = (
     <div
       className={styles.rowClickArea}
       style={{ opacity: rowVisible ? 1 : 0.55 }}
     >
-      {colorPending ? (
+      <button
+        type="button"
+        className={[
+          styles.swatchButton,
+          colorPending ? minervaTheme.busyOverlay : null,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        onClick={onColorClick}
+        title={swatchLabel}
+        aria-label={swatchLabel}
+        aria-busy={colorPending || undefined}
+      >
         <div
-          className={minervaTheme.spinnerSm}
-          title={`Optimizing color of ${channelName}`}
+          className={[
+            styles.swatch,
+            channel.color && rowVisible ? styles.swatchFilled : null,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          style={
+            {
+              "--swatch-color": channel.color ? `#${channel.color}` : "#fff",
+            } as CSSProperties
+          }
         />
-      ) : (
-        <button
-          type="button"
-          className={styles.swatchButton}
-          onClick={onColorClick}
-          title={`Change color of ${channelName}`}
-          aria-label={`Change color of ${channelName}`}
-        >
-          <div
-            className={[styles.swatch, rowVisible ? styles.swatchFilled : null]
-              .filter(Boolean)
-              .join(" ")}
-            style={{ "--swatch-color": `#${channel.color}` } as CSSProperties}
-          />
-        </button>
-      )}
+      </button>
       <button
         type="button"
         className={styles.nameButton}

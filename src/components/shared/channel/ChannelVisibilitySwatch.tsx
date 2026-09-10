@@ -1,4 +1,4 @@
-import type { MouseEventHandler } from "react";
+import type { CSSProperties, MouseEventHandler } from "react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import styles from "./ChannelRow.module.css";
 
@@ -71,22 +71,40 @@ export function ChannelVisibilitySwatch(props: VisibilityProps) {
 }
 
 type ColorProps = {
-  hex: string;
+  hex?: string;
   title: string;
   ariaLabel: string;
+  busy?: boolean;
+  /** Filled when the channel is on; color stroke only when off. */
+  filled?: boolean;
   onClick: MouseEventHandler<HTMLButtonElement>;
 };
 
-/** Filled square showing channel color; opens the color picker when clicked. */
+/** Color square; empty white stroke when the channel has no color yet. */
 export function ChannelColorSwatchButton(props: ColorProps) {
-  const { hex, title, ariaLabel, onClick } = props;
+  const { hex, title, ariaLabel, busy, filled = true, onClick } = props;
+  const fill = Boolean(hex) && filled;
   return (
     <button
       type="button"
-      className={`${minervaTheme.focusRing} ${styles.channelColorSwatch}`}
-      style={{ backgroundColor: `#${hex}` }}
-      title={title}
-      aria-label={ariaLabel}
+      className={[
+        minervaTheme.focusRing,
+        styles.channelColorSwatch,
+        fill ? null : styles.channelColorSwatchUnfilled,
+        busy ? minervaTheme.busyOverlay : null,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      style={
+        fill
+          ? { backgroundColor: `#${hex}` }
+          : hex
+            ? ({ "--swatch-color": `#${hex}` } as CSSProperties)
+            : undefined
+      }
+      title={busy ? "Optimizing color" : title}
+      aria-label={busy ? "Optimizing color" : ariaLabel}
+      aria-busy={busy || undefined}
       onClick={onClick}
     />
   );

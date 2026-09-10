@@ -1,6 +1,6 @@
 import type { Layer } from "@deck.gl/core";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
-import { useMemo, useRef, useSyncExternalStore } from "react";
+import { useMemo, useRef } from "react";
 import type {
   JpegLoaderEntry,
   LoaderList,
@@ -13,7 +13,6 @@ import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import type { JpegExportTransfer } from "./cubeRootEncoding";
 import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
-import { getGmmFitSnapshot, subscribeGmmFit } from "./gmmScheduler";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
 import { type Loader, toSettings, VIV_TILE_MAX_CACHE_SIZE } from "./viv";
@@ -251,16 +250,6 @@ export function useViewerLayers(args: {
     remountKey,
   } = args;
 
-  const gmmFit = useSyncExternalStore(
-    subscribeGmmFit,
-    getGmmFitSnapshot,
-    getGmmFitSnapshot,
-  );
-  const unfittedChannelIds = useMemo(
-    () => new Set(gmmFit.blockedChannelIds),
-    [gmmFit.blockedChannelIds],
-  );
-
   // Histogram merges rewrite `sourceChannels` identity without changing Viv paint
   // inputs. Key config/settings/layers on a signature that omits distributions.
   const channelsSignature = buildImageViewerSignature(
@@ -278,9 +267,8 @@ export function useViewerLayers(args: {
     return toSettings({
       SourceChannels: sc,
       channelGroups: cg,
-      unfittedChannelIds,
     });
-  }, [channelsSignature, unfittedChannelIds]);
+  }, [channelsSignature]);
 
   const loaderList = useMemo(
     () =>

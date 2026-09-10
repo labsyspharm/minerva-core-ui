@@ -28,6 +28,7 @@ import {
   subscribeStackPalettePending,
 } from "@/lib/imaging/psudoPalette";
 import {
+  assignedDisplayHex,
   effectiveDisplayColor,
   effectiveMaskVisualization,
   effectiveSourceColor,
@@ -272,7 +273,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
     ? isGroupRowVisible(groupRowVisibilities, gc.id)
     : isStackVisible(stackVisibilities, sc.id);
   const color = effectiveDisplayColor(sc, sourceChannels, gc);
-  const hex = rgbToHex(color);
+  const hex = assignedDisplayHex(sc, sourceChannels, gc);
   const palettePending = palettePendingIds.includes(sc.id);
   const showHistogram = isImageChannel(sc) && !rgbDisplay && !isMaskChannel(sc);
   const colorTargetForRow: ChannelColorTarget =
@@ -365,7 +366,6 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
           meta: `Index ${sc.index}`,
           onBlur: rename,
         }}
-        compact={rgbDisplay}
         {...(!rgbDisplay && isMaskChannel(sc)
           ? {
               isMask: true as const,
@@ -382,20 +382,13 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
             }
           : !rgbDisplay
             ? {
-                colorLoading: palettePending,
-                ...(palettePending
-                  ? {}
-                  : {
-                      colorHex: hex,
-                      colorTitle: `Pick color for ${sc.name}`,
-                      colorAriaLabel: `Pick color for ${sc.name}`,
-                      onColorClick: (
-                        e: React.MouseEvent<HTMLButtonElement>,
-                      ) => {
-                        e.stopPropagation();
-                        openColor(e.currentTarget);
-                      },
-                    }),
+                busy: palettePending,
+                colorHex: hex,
+                colorTitle: `Pick color for ${sc.name}`,
+                onColorClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.stopPropagation();
+                  openColor(e.currentTarget);
+                },
               }
             : {})}
       />

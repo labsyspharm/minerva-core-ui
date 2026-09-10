@@ -276,10 +276,46 @@
   border-width: 2px;
 }
 
+.busyOverlay {
+  position: relative;
+  overflow: hidden;
+}
+
+.busyOverlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--minerva-paper) 40%, transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.busyOverlay::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  box-sizing: border-box;
+  border: 1.5px solid color-mix(in srgb, var(--minerva-ink) 22%, transparent);
+  border-top-color: var(--minerva-ink);
+  border-radius: 50%;
+  animation: minerva-spin 0.9s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .spinner,
   .spinnerMd,
   .spinnerSm {
+    animation: none;
+    border-top-color: var(--minerva-quiet);
+  }
+
+  .busyOverlay::after {
     animation: none;
     border-top-color: var(--minerva-quiet);
   }

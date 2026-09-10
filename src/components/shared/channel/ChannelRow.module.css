@@ -275,8 +275,17 @@
   cursor: pointer;
 }
 
+.channelColorSwatchUnfilled {
+  background: transparent;
+  border-color: var(--swatch-color, #fff);
+}
+
 .channelColorSwatch:hover {
   border-color: var(--minerva-ink);
+}
+
+.channelColorSwatchUnfilled:hover {
+  border-color: var(--swatch-color, var(--minerva-ink));
 }
 
 .channelColorSwatch:focus-visible {
