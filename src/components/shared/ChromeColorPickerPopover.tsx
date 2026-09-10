@@ -6,6 +6,7 @@ import Hue from "@uiw/react-color-hue";
 import Saturation from "@uiw/react-color-saturation";
 import * as React from "react";
 import { createPortal } from "react-dom";
+import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import CloseIcon from "@/components/shared/icons/close.svg?react";
 
 const BACKDROP_Z = 9998;
@@ -35,6 +36,36 @@ const closeRowStyle: React.CSSProperties = {
   alignItems: "center",
   flexShrink: 0,
   marginBottom: 0,
+};
+
+const colorGridStyle: React.CSSProperties = {
+  display: "grid",
+  gap: "0.5em",
+};
+
+const colorShownStyle: React.CSSProperties = {
+  transition: "height 0.33s ease-out, opacity 0.33s ease-out",
+};
+
+const colorHiddenStyle: React.CSSProperties = {
+  height: 0,
+  opacity: 0,
+  pointerEvents: "none",
+  transition: "height 0.33s ease-out, opacity 0.33s ease-out",
+};
+
+const hueRowStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1.5em 1fr",
+};
+
+const groupFolderChevron: React.CSSProperties = {
+  all: "unset",
+  display: "grid",
+  gridTemplateColumns: "1fr auto 1fr",
+  cursor: "pointer",
+  color: "#8b949e",
+  lineHeight: 0,
 };
 
 const closeButtonStyle: React.CSSProperties = {
@@ -105,6 +136,7 @@ export function ChromeColorPickerPopover({
   }, [position, onClose]);
 
   const currentColor = color(chromeProps.color);
+  const [expanded, setExpanded] = React.useState(false);
 
   const hueProps: HueProps = {
     hue: currentColor.hsva.h,
@@ -118,11 +150,10 @@ export function ChromeColorPickerPopover({
     onChange: ({ h, v, s, a }) => {
       chromeProps.onChange(color({ h, v, s, a }));
     },
+    style: expanded ? colorShownStyle : colorHiddenStyle,
   };
 
   if (!position || typeof document === "undefined") return null;
-
-  console.log(chromeProps, currentColor.hex, currentColor.hsva);
 
   return createPortal(
     <>
@@ -164,8 +195,23 @@ export function ChromeColorPickerPopover({
             <CloseIcon aria-hidden style={closeIconStyle} />
           </button>
         </div>
-        <Hue {...hueProps} />
-        <Saturation {...saturationProps} />
+        <div style={colorGridStyle}>
+          <div style={hueRowStyle}>
+            <button
+              type="button"
+              style={groupFolderChevron}
+              aria-expanded={expanded}
+              title={expanded ? "Fewer colors" : "More colors"}
+              onClick={() => setExpanded(!expanded)}
+            >
+              <div></div>
+              <ChevronIcon direction={expanded ? "down" : "right"} />
+              <div></div>
+            </button>
+            <Hue {...hueProps} />
+          </div>
+          <Saturation {...saturationProps} />
+        </div>
       </div>
     </>,
     document.body,
