@@ -121,7 +121,7 @@ function getWorkerPool() {
     workerPool = Array.from({ length: n }, () => {
       const w = new Worker(new URL(
         /* @vite-ignore */
-        "" + new URL("psudo.worker-Clfe5HZS.js", import.meta.url).href,
+        "" + new URL("psudo.worker-D1iEKPGu.js", import.meta.url).href,
         import.meta.url
       ), {
         type: "module"
