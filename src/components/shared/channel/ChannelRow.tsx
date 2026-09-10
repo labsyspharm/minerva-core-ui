@@ -347,7 +347,7 @@ export function ChannelRow(props: ChannelRowProps) {
             </span>
           ) : null}
         </div>
-        <div className={styles.channelRowMid}>
+        <div className={styles.channelRowMid} data-channel-drag-ignore="">
           {contrast ? <ChannelContrastEditor {...contrast} /> : null}
         </div>
         {showMask ? (
@@ -384,7 +384,11 @@ export function ChannelRow(props: ChannelRowProps) {
         <div className={styles.channelRowTrailing}>{trailing}</div>
       </div>
       {showMask && maskControlsOpen && onMaskVisualizationChange ? (
-        <div id={maskControlsId} className={styles.maskControlsPanel}>
+        <div
+          id={maskControlsId}
+          className={styles.maskControlsPanel}
+          data-channel-drag-ignore=""
+        >
           <MaskModeControls
             value={maskVisualization}
             ariaLabel={maskAriaLabel ?? name.name}

@@ -12,6 +12,7 @@ import {
 } from "@/lib/imaging/channelCompositor";
 import {
   buildImageChannelOverview,
+  channelNameMatchesQuery,
   type ImageChannelChip,
 } from "@/lib/imaging/imageChannelOverview";
 import {
@@ -140,10 +141,13 @@ function GroupStrip(props: {
   onOpenEditor: (chip: ImageChannelChip) => void;
   allVisible?: boolean;
   onToggleVisibility?: () => void;
+  nameFilter?: string;
+  onNameFilterChange?: (value: string) => void;
 }) {
   const visLabel = props.allVisible
     ? `Hide every channel in ${props.name}`
     : `Show every channel in ${props.name}`;
+  const filtering = props.onNameFilterChange != null;
   return (
     <div className={styles.groupCard}>
       <div className={styles.groupHeader}>
@@ -156,13 +160,31 @@ function GroupStrip(props: {
           />
         ) : null}
         <div className={styles.groupLabel}>{props.name}</div>
+        {props.onNameFilterChange ? (
+          <input
+            className={styles.channelFilter}
+            type="text"
+            value={props.nameFilter ?? ""}
+            placeholder="Search..."
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            aria-label="Filter channels by name"
+            onChange={(e) => props.onNameFilterChange?.(e.target.value)}
+          />
+        ) : null}
       </div>
-      <ChipGrid
-        chips={props.chips}
-        openChip={props.openChip}
-        onChip={props.onChip}
-        onOpenEditor={props.onOpenEditor}
-      />
+      {filtering && props.chips.length === 0 ? (
+        <div className={styles.filterEmpty}>No matching channels</div>
+      ) : (
+        <ChipGrid
+          chips={props.chips}
+          openChip={props.openChip}
+          onChip={props.onChip}
+          onOpenEditor={props.onOpenEditor}
+        />
+      )}
     </div>
   );
 }
@@ -182,6 +204,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const nav = useAuthorChannelNav();
   const [openKey, setOpenKey] = useState<string | null>(null);
+  const [channelNameFilter, setChannelNameFilter] = useState("");
 
   const allSourceChannels = useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
@@ -209,6 +232,14 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
       groupRowVisibilities,
       activeChannelGroupId,
     ],
+  );
+
+  const filteredAllChannels = useMemo(
+    () =>
+      model.allChannels.filter((chip) =>
+        channelNameMatchesQuery(chip.name, channelNameFilter),
+      ),
+    [model.allChannels, channelNameFilter],
   );
 
   const openChip =
@@ -298,10 +329,12 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
       {model.allChannels.length > 0 ? (
         <GroupStrip
           name="All channels"
-          chips={model.allChannels}
+          chips={filteredAllChannels}
           openChip={openChip}
           onChip={onAllChannelsChip}
           onOpenEditor={onOpenEditor}
+          nameFilter={channelNameFilter}
+          onNameFilterChange={setChannelNameFilter}
         />
       ) : null}
     </div>

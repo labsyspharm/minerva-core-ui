@@ -20,12 +20,21 @@
   min-width: 0;
 }
 
+.groupHeader:has(.channelFilter) {
+  gap: 12px;
+  padding: 2px 0;
+}
+
+.groupHeader:has(.channelFilter) .groupLabel {
+  line-height: 22px;
+}
+
 .groupLabel {
   margin: 0;
   min-width: 0;
-  flex: 1;
+  flex: 0 1 auto;
   color: var(--minerva-quiet);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -33,6 +42,35 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.channelFilter {
+  box-sizing: border-box;
+  flex: 1 1 6rem;
+  min-width: 0;
+  margin: 0;
+  height: 22px;
+  padding: 0 10px;
+  border: 1px solid var(--minerva-edge);
+  border-radius: var(--minerva-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 20px;
+  outline: none;
+}
+
+.channelFilter::placeholder {
+  color: var(--minerva-quiet);
+}
+
+.filterEmpty {
+  color: var(--minerva-quiet);
+  font-size: 12px;
+  font-style: italic;
 }
 
 .chipWrap {
@@ -45,7 +83,7 @@
 .chipCell {
   display: flex;
   min-width: 0;
-  height: 18px;
+  height: 22px;
   box-sizing: border-box;
   border: 1.5px solid #fff;
   background: transparent;
@@ -84,8 +122,8 @@
   min-width: 0;
   height: 100%;
   padding: 0 2px 0 4px;
-  font-size: 11px;
-  line-height: 15px;
+  font-size: 13px;
+  line-height: 19px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

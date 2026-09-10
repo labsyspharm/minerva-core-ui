@@ -44,6 +44,7 @@ import {
   scheduleBackgroundTask,
   sourceDistributionYValuesLength,
 } from "@/lib/imaging/histogramLazy";
+import { channelNameMatchesQuery } from "@/lib/imaging/imageChannelOverview";
 import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/maskLayers";
 import {
   applyOptimizedColorsToChannelGroup,
@@ -117,40 +118,115 @@ function imageSubtitleIfDistinct(
 
 type ChannelDragPayload = {
   sourceId: string;
+  fromGroupId?: string;
+  fromRowId?: string;
 };
 
 const EMPTY_LOCKED_ROW_IDS = new Set<string>();
 
+let groupChannelDragActive = false;
+
 function readDragPayload(e: React.DragEvent): ChannelDragPayload | null {
-  const raw = e.dataTransfer.getData(CHANNEL_DRAG_MIME);
+  const raw =
+    e.dataTransfer.getData(CHANNEL_DRAG_MIME) ||
+    e.dataTransfer.getData("text/plain");
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as ChannelDragPayload;
-  } catch {
-    return null;
-  }
+    const parsed = JSON.parse(raw) as ChannelDragPayload;
+    if (parsed && typeof parsed.sourceId === "string") return parsed;
+  } catch {}
+  return null;
 }
 
 function startChannelDrag(e: React.DragEvent, payload: ChannelDragPayload) {
-  e.dataTransfer.setData(CHANNEL_DRAG_MIME, JSON.stringify(payload));
-  e.dataTransfer.effectAllowed = "copy";
+  groupChannelDragActive = Boolean(payload.fromGroupId);
+  const encoded = JSON.stringify(payload);
+  e.dataTransfer.setData(CHANNEL_DRAG_MIME, encoded);
+  e.dataTransfer.setData("text/plain", encoded);
+  e.dataTransfer.effectAllowed = "move";
 }
 
-function ChannelDragHandle(props: {
+function isChannelDrag(e: React.DragEvent) {
+  const types = Array.from(e.dataTransfer.types);
+  return types.includes(CHANNEL_DRAG_MIME) || types.includes("text/plain");
+}
+
+function shouldIgnoreChannelRowDrag(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false;
+  if (target.closest(`.${styles.dragHandle}`)) return false;
+  return Boolean(
+    target.closest(
+      "input, textarea, select, button, a, label, [contenteditable], [data-channel-drag-ignore]",
+    ),
+  );
+}
+
+function previewUngroupWhileDragging(row: HTMLElement) {
+  const onOver = (ev: DragEvent) => {
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const overGroup =
+      el instanceof Element && el.closest(`.${styles.groupFolder}`);
+    row.classList.toggle(styles.ungrouping, !overGroup);
+  };
+  const onEnd = () => {
+    row.classList.remove(styles.ungrouping);
+    document.removeEventListener("dragover", onOver, true);
+    document.removeEventListener("dragend", onEnd);
+  };
+  document.addEventListener("dragover", onOver, true);
+  document.addEventListener("dragend", onEnd);
+}
+
+function DraggableChannelRow(props: {
   label: string;
-  onDragStart: (e: React.DragEvent) => void;
+  sourceId: string;
+  fromGroupId?: string;
+  fromRowId?: string;
+  onRemoveFromGroup?: () => void;
+  children: React.ReactNode;
 }) {
+  const payload: ChannelDragPayload = {
+    sourceId: props.sourceId,
+    fromGroupId: props.fromGroupId,
+    fromRowId: props.fromRowId,
+  };
+  const beginDrag = (e: React.DragEvent) => startChannelDrag(e, payload);
   return (
-    <button
-      type="button"
-      className={styles.dragHandle}
+    // biome-ignore lint/a11y/noStaticElementInteractions: grip button is the AT control; the row is a mouse drag hit target
+    <div
+      className={styles.channelRowWrap}
       draggable
-      onDragStart={props.onDragStart}
-      title={`Drag ${props.label}`}
-      aria-label={`Drag ${props.label}`}
+      onDragStart={(e) => {
+        if (shouldIgnoreChannelRowDrag(e.target)) {
+          e.preventDefault();
+          return;
+        }
+        beginDrag(e);
+        if (props.onRemoveFromGroup) {
+          previewUngroupWhileDragging(e.currentTarget);
+        }
+      }}
+      onDragEnd={(e) => {
+        if (!props.onRemoveFromGroup) return;
+        if (e.dataTransfer.dropEffect !== "none") return;
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const folder = e.currentTarget.closest(`.${styles.groupFolder}`);
+        if (folder && el && folder.contains(el)) return;
+        props.onRemoveFromGroup();
+      }}
     >
-      ⋮⋮
-    </button>
+      <button
+        type="button"
+        className={styles.dragHandle}
+        draggable
+        onDragStart={beginDrag}
+        title={`Drag ${props.label}`}
+        aria-label={`Drag ${props.label}`}
+      >
+        ⋮⋮
+      </button>
+      {props.children}
+    </div>
   );
 }
 
@@ -493,8 +569,25 @@ export const ChannelGroupsMasterDetail = (
   const [dragOverGroupId, setDragOverGroupId] = React.useState<string | null>(
     null,
   );
+
+  React.useEffect(() => {
+    const hide = () => {
+      groupChannelDragActive = false;
+      setDragOverGroupId(null);
+    };
+    document.addEventListener("dragend", hide);
+    return () => document.removeEventListener("dragend", hide);
+  }, []);
   const [lockedColorRowIdsByGroup, setLockedColorRowIdsByGroup] =
     React.useState<Map<string, Set<string>>>(() => new Map());
+  const [channelNameFilter, setChannelNameFilter] = React.useState("");
+  const filteredAllChannels = React.useMemo(
+    () =>
+      uniqueSourceChannels.filter((sc) =>
+        channelNameMatchesQuery(sc.name, channelNameFilter),
+      ),
+    [uniqueSourceChannels, channelNameFilter],
+  );
 
   React.useEffect(() => {
     setLockedColorRowIdsByGroup((prev) => {
@@ -940,10 +1033,18 @@ export const ChannelGroupsMasterDetail = (
 
   const handleDropOnGroup = (groupId: string, e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setDragOverGroupId(null);
     const payload = readDragPayload(e);
     if (!payload?.sourceId) return;
     void addChannelToGroup(groupId, payload.sourceId);
+  };
+
+  const handleDropRemoveFromGroup = (e: React.DragEvent) => {
+    e.preventDefault();
+    const payload = readDragPayload(e);
+    if (!payload?.fromGroupId || !payload.fromRowId) return;
+    removeChannelFromGroup(payload.fromGroupId, payload.fromRowId);
   };
 
   const visibleHistogramTargets = React.useMemo(() => {
@@ -1048,19 +1149,18 @@ export const ChannelGroupsMasterDetail = (
       group.channels.some((gc) =>
         isGroupRowVisible(channelGroupRowVisibilities, gc.id),
       );
-    const addable = uniqueSourceChannels.filter(
-      (sc) => !group.channels.some((gc) => gc.channelId === sc.id),
-    );
     const lockedIds = lockedIdsForGroup(group.id);
 
     const folderDropProps = {
       onDragOver: (e: React.DragEvent) => {
-        if (!e.dataTransfer.types.includes(CHANNEL_DRAG_MIME)) return;
+        if (!isChannelDrag(e)) return;
         e.preventDefault();
-        e.dataTransfer.dropEffect = "copy";
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = "move";
         setDragOverGroupId(group.id);
       },
-      onDragLeave: () => {
+      onDragLeave: (e: React.DragEvent) => {
+        if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
         if (dragOverGroupId === group.id) setDragOverGroupId(null);
       },
       onDrop: (e: React.DragEvent) => handleDropOnGroup(group.id, e),
@@ -1199,13 +1299,15 @@ export const ChannelGroupsMasterDetail = (
 
                 return (
                   <li key={gc.id} className={styles.groupChildBlock}>
-                    <div className={styles.channelRowWrap}>
-                      <ChannelDragHandle
-                        label={name}
-                        onDragStart={(e) =>
-                          startChannelDrag(e, { sourceId: gc.channelId })
-                        }
-                      />
+                    <DraggableChannelRow
+                      label={name}
+                      sourceId={gc.channelId}
+                      fromGroupId={group.id}
+                      fromRowId={gc.id}
+                      onRemoveFromGroup={() =>
+                        removeChannelFromGroup(group.id, gc.id)
+                      }
+                    >
                       <ChannelRow
                         visible={visible}
                         visibilityTitle={
@@ -1325,38 +1427,14 @@ export const ChannelGroupsMasterDetail = (
                           )
                         }
                       />
-                    </div>
+                    </DraggableChannelRow>
                   </li>
                 );
               })}
             </ul>
-            <div className={styles.addChannelRow}>
-              <select
-                className={`${minervaTheme.input} ${styles.addChannelSelect}`}
-                defaultValue=""
-                disabled={optimizePaletteBusy || addable.length === 0}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    void addChannelToGroup(group.id, e.target.value);
-                    e.target.value = "";
-                  }
-                }}
-              >
-                <option value="" disabled>
-                  {optimizePaletteBusy ? "Optimizing…" : "Add channel…"}
-                </option>
-                {addable.map((sc) => {
-                  const imageLabel = showImageBadge
-                    ? imageLabels.get(sc.imageId)
-                    : undefined;
-                  return (
-                    <option key={sc.id} value={sc.id}>
-                      {imageLabel ? `${sc.name} (${imageLabel})` : sc.name}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
+            {group.channels.length === 0 ? (
+              <div className={styles.dropHint}>Drag channels</div>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -1416,12 +1494,6 @@ export const ChannelGroupsMasterDetail = (
       });
     };
 
-    const dragHandle = (
-      <ChannelDragHandle
-        label={sc.name}
-        onDragStart={(e) => startChannelDrag(e, { sourceId: sc.id })}
-      />
-    );
     const palettePending = palettePendingIds.includes(sc.id);
     const rgbDisplay = isRgbDisplayChannel(sc, sourceChannels);
     const hex = assignedDisplayHex(sc, sourceChannels, home?.row ?? null);
@@ -1476,8 +1548,7 @@ export const ChannelGroupsMasterDetail = (
 
     return (
       <li key={`all-${sc.id}`} className={styles.rootChannelBlock}>
-        <div className={styles.channelRowWrap}>
-          {dragHandle}
+        <DraggableChannelRow label={sc.name} sourceId={sc.id}>
           <ChannelRow
             visible={shownInViewer}
             visibilityTitle={
@@ -1521,7 +1592,7 @@ export const ChannelGroupsMasterDetail = (
               expanded && !rgbDisplay ? channelMoreMenu(sc, sc.name) : undefined
             }
           />
-        </div>
+        </DraggableChannelRow>
       </li>
     );
   };
@@ -1540,7 +1611,17 @@ export const ChannelGroupsMasterDetail = (
         }
       />
 
-      <div className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}>
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: drop target for dragging channels out of groups */}
+      <div
+        className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}
+        onDragOver={(e) => {
+          if (!isChannelDrag(e) || !groupChannelDragActive) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          setDragOverGroupId(null);
+        }}
+        onDrop={handleDropRemoveFromGroup}
+      >
         {channelGroups.length > 0 ? (
           <div className={styles.groupFolders}>
             {channelGroups.map((group, i) => renderGroupFolder(group, i))}
@@ -1548,18 +1629,33 @@ export const ChannelGroupsMasterDetail = (
         ) : null}
 
         {uniqueSourceChannels.length > 0 ? (
-          <div className={styles.treeSeparator}>All channels</div>
+          <>
+            <div className={styles.treeSeparator}>
+              <span className={styles.treeSeparatorLabel}>All channels</span>
+              <input
+                className={styles.channelFilter}
+                type="text"
+                value={channelNameFilter}
+                placeholder="Search..."
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                aria-label="Filter channels by name"
+                onChange={(e) => setChannelNameFilter(e.target.value)}
+              />
+            </div>
+            {filteredAllChannels.length === 0 ? (
+              <div className={styles.filterEmpty}>No matching channels</div>
+            ) : (
+              <ul className={styles.rootChannelList}>
+                {filteredAllChannels.map(renderAllChannelsRow)}
+              </ul>
+            )}
+          </>
+        ) : channelGroups.length === 0 ? (
+          <div className={panel.emptyMessage}>No channels yet</div>
         ) : null}
-
-        {uniqueSourceChannels.length === 0 ? (
-          channelGroups.length === 0 ? (
-            <div className={panel.emptyMessage}>No channels yet</div>
-          ) : null
-        ) : (
-          <ul className={styles.rootChannelList}>
-            {uniqueSourceChannels.map(renderAllChannelsRow)}
-          </ul>
-        )}
 
         {imageSelectionMask ? (
           <ChannelRow
