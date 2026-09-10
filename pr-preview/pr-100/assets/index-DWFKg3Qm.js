@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CgnwkSwO.js","./pako.esm-KbdoS3Oq.js","./lerc-CRKW7lAK.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DcPn_K0Q.js","./pako.esm-KbdoS3Oq.js","./lerc-ROGVKgaz.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -61623,26 +61623,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-BNyp3csm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Cq15S7f4.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CvMdquZj.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Da71vDTm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CXcEX3O_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DuKkSN_I.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-CgnwkSwO.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CI8r2Byy.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CRKW7lAK.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DcPn_K0Q.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-GQbiV-DQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-ROGVKgaz.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-1x3r7ipz.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CKsgZrMb.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-pqZNIXsr.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-C1KI5JgT.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -170353,6 +170353,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsx("div", {
               className: styles$f.channelRowMid,
+              "data-channel-drag-ignore": "",
               children: contrast ? jsxRuntimeExports.jsx(ChannelContrastEditor, {
                 ...contrast
               }) : null
@@ -170392,6 +170393,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         showMask && maskControlsOpen && onMaskVisualizationChange ? jsxRuntimeExports.jsx("div", {
           id: maskControlsId,
           className: styles$f.maskControlsPanel,
+          "data-channel-drag-ignore": "",
           children: jsxRuntimeExports.jsx(MaskModeControls, {
             value: maskVisualization,
             ariaLabel: maskAriaLabel ?? name2.name,
@@ -171824,32 +171826,119 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     snapshot = emptySnapshot;
     for (const listener of listeners) listener();
   }
-  const channelActionButton = "_channelActionButton_1vw39_3";
-  const colorLockButtonLocked = "_colorLockButtonLocked_1vw39_20";
-  const addChannelRow = "_addChannelRow_1vw39_29";
-  const addChannelSelect = "_addChannelSelect_1vw39_33";
-  const groupFolders = "_groupFolders_1vw39_38";
-  const groupFolder = "_groupFolder_1vw39_38";
-  const dropTargetActive = "_dropTargetActive_1vw39_53";
-  const groupFolderHeader = "_groupFolderHeader_1vw39_58";
-  const groupFolderActivate = "_groupFolderActivate_1vw39_70";
-  const groupFolderChevron = "_groupFolderChevron_1vw39_91";
-  const groupFolderName = "_groupFolderName_1vw39_109";
-  const groupFolderTrailing = "_groupFolderTrailing_1vw39_116";
-  const groupFolderBody = "_groupFolderBody_1vw39_123";
-  const groupChildList = "_groupChildList_1vw39_128";
-  const groupChildBlock = "_groupChildBlock_1vw39_134";
-  const channelRowWrap = "_channelRowWrap_1vw39_142";
-  const groupChildName = "_groupChildName_1vw39_159";
-  const dragHandle = "_dragHandle_1vw39_169";
-  const treeSeparator = "_treeSeparator_1vw39_192";
-  const rootChannelList = "_rootChannelList_1vw39_202";
-  const rootChannelBlock = "_rootChannelBlock_1vw39_210";
+  function channelNameMatchesQuery(name2, query) {
+    const qRaw = query.trim().toLowerCase();
+    if (qRaw.length === 0) return true;
+    const nRaw = name2.toLowerCase();
+    if (nRaw.includes(qRaw)) return true;
+    const q2 = qRaw.replace(/[^a-z0-9]+/g, "");
+    if (q2.length === 0) return true;
+    const n2 = nRaw.replace(/[^a-z0-9]+/g, "");
+    if (n2.includes(q2)) return true;
+    let i2 = 0;
+    for (let k2 = 0; k2 < n2.length; k2++) {
+      if (n2[k2] === q2[i2]) {
+        i2 += 1;
+        if (i2 === q2.length) return true;
+      }
+    }
+    return false;
+  }
+  function groupHome(groups, sourceId, groupRowVisibilities, activeGroupId) {
+    const memberships = [];
+    for (const g2 of groups) {
+      const row = g2.channels.find((gc2) => gc2.channelId === sourceId);
+      if (row) memberships.push({
+        groupId: g2.id,
+        row
+      });
+    }
+    if (memberships.length === 0) return null;
+    return memberships.find((m2) => isGroupRowVisible(groupRowVisibilities, m2.row.id)) ?? memberships.find((m2) => m2.groupId === activeGroupId) ?? memberships[0];
+  }
+  function buildImageChannelOverview(args) {
+    const byId = new Map(args.image.channels.map((c2) => [
+      c2.id,
+      c2
+    ]));
+    const groups = [];
+    for (const group2 of args.channelGroups) {
+      const chips = [];
+      for (const gc2 of group2.channels) {
+        const sc2 = byId.get(gc2.channelId);
+        if (!sc2) continue;
+        const channel = {
+          ...sc2,
+          imageId: args.image.id
+        };
+        chips.push({
+          key: `g:${group2.id}:${gc2.id}`,
+          sourceId: sc2.id,
+          name: sc2.name,
+          hex: assignedDisplayHex(channel, args.allSourceChannels, gc2) ?? "",
+          visible: isGroupRowVisible(args.groupRowVisibilities, gc2.id),
+          groupId: group2.id,
+          groupRowId: gc2.id
+        });
+      }
+      if (chips.length === 0) continue;
+      groups.push({
+        id: group2.id,
+        name: group2.name,
+        allVisible: chips.every((c2) => c2.visible),
+        chips
+      });
+    }
+    const allChannels = [];
+    for (const sc2 of args.image.channels) {
+      const home = groupHome(args.channelGroups, sc2.id, args.groupRowVisibilities, args.activeChannelGroupId);
+      const channel = {
+        ...sc2,
+        imageId: args.image.id
+      };
+      allChannels.push({
+        key: `e:${sc2.id}`,
+        sourceId: sc2.id,
+        name: sc2.name,
+        hex: assignedDisplayHex(channel, args.allSourceChannels, (home == null ? void 0 : home.row) ?? null) ?? "",
+        visible: home ? isDisplayedViaGroupRow(sc2.id, args.channelGroups, args.groupRowVisibilities) : isStackVisible(args.stackVisibilities, sc2.id),
+        groupId: (home == null ? void 0 : home.groupId) ?? null,
+        groupRowId: home == null ? void 0 : home.row.id
+      });
+    }
+    return {
+      groups,
+      allChannels
+    };
+  }
+  const channelActionButton = "_channelActionButton_r32ls_3";
+  const colorLockButtonLocked = "_colorLockButtonLocked_r32ls_20";
+  const dropHint = "_dropHint_r32ls_29";
+  const groupFolders = "_groupFolders_r32ls_36";
+  const groupFolder = "_groupFolder_r32ls_36";
+  const dropTargetActive = "_dropTargetActive_r32ls_51";
+  const groupFolderHeader = "_groupFolderHeader_r32ls_56";
+  const groupFolderActivate = "_groupFolderActivate_r32ls_68";
+  const groupFolderChevron = "_groupFolderChevron_r32ls_89";
+  const groupFolderName = "_groupFolderName_r32ls_107";
+  const groupFolderTrailing = "_groupFolderTrailing_r32ls_114";
+  const groupFolderBody = "_groupFolderBody_r32ls_121";
+  const groupChildList = "_groupChildList_r32ls_126";
+  const groupChildBlock = "_groupChildBlock_r32ls_132";
+  const channelRowWrap = "_channelRowWrap_r32ls_140";
+  const ungrouping = "_ungrouping_r32ls_149";
+  const groupChildName = "_groupChildName_r32ls_166";
+  const dragHandle = "_dragHandle_r32ls_176";
+  const treeSeparator = "_treeSeparator_r32ls_199";
+  const treeSeparatorLabel = "_treeSeparatorLabel_r32ls_213";
+  const channelFilter$1 = "_channelFilter_r32ls_218";
+  const filterEmpty$1 = "_filterEmpty_r32ls_241";
+  const rootChannelList = "_rootChannelList_r32ls_248";
+  const rootChannelBlock = "_rootChannelBlock_r32ls_256";
   const styles$e = {
     channelActionButton,
     colorLockButtonLocked,
-    addChannelRow,
-    addChannelSelect,
+    dropHint,
     groupFolders,
     groupFolder,
     dropTargetActive,
@@ -171862,9 +171951,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     groupChildList,
     groupChildBlock,
     channelRowWrap,
+    ungrouping,
     groupChildName,
     dragHandle,
     treeSeparator,
+    treeSeparatorLabel,
+    channelFilter: channelFilter$1,
+    filterEmpty: filterEmpty$1,
     rootChannelList,
     rootChannelBlock
   };
@@ -171892,28 +171985,87 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return imageLabel;
   }
   const EMPTY_LOCKED_ROW_IDS = /* @__PURE__ */ new Set();
+  let groupChannelDragActive = false;
   function readDragPayload(e2) {
-    const raw2 = e2.dataTransfer.getData(CHANNEL_DRAG_MIME);
+    const raw2 = e2.dataTransfer.getData(CHANNEL_DRAG_MIME) || e2.dataTransfer.getData("text/plain");
     if (!raw2) return null;
     try {
-      return JSON.parse(raw2);
+      const parsed = JSON.parse(raw2);
+      if (parsed && typeof parsed.sourceId === "string") return parsed;
     } catch {
-      return null;
     }
+    return null;
   }
   function startChannelDrag(e2, payload) {
-    e2.dataTransfer.setData(CHANNEL_DRAG_MIME, JSON.stringify(payload));
-    e2.dataTransfer.effectAllowed = "copy";
+    groupChannelDragActive = Boolean(payload.fromGroupId);
+    const encoded = JSON.stringify(payload);
+    e2.dataTransfer.setData(CHANNEL_DRAG_MIME, encoded);
+    e2.dataTransfer.setData("text/plain", encoded);
+    e2.dataTransfer.effectAllowed = "move";
   }
-  function ChannelDragHandle(props) {
-    return jsxRuntimeExports.jsx("button", {
-      type: "button",
-      className: styles$e.dragHandle,
+  function isChannelDrag(e2) {
+    const types2 = Array.from(e2.dataTransfer.types);
+    return types2.includes(CHANNEL_DRAG_MIME) || types2.includes("text/plain");
+  }
+  function shouldIgnoreChannelRowDrag(target) {
+    if (!(target instanceof Element)) return false;
+    if (target.closest(`.${styles$e.dragHandle}`)) return false;
+    return Boolean(target.closest("input, textarea, select, button, a, label, [contenteditable], [data-channel-drag-ignore]"));
+  }
+  function previewUngroupWhileDragging(row) {
+    const onOver = (ev) => {
+      const el2 = document.elementFromPoint(ev.clientX, ev.clientY);
+      const overGroup = el2 instanceof Element && el2.closest(`.${styles$e.groupFolder}`);
+      row.classList.toggle(styles$e.ungrouping, !overGroup);
+    };
+    const onEnd = () => {
+      row.classList.remove(styles$e.ungrouping);
+      document.removeEventListener("dragover", onOver, true);
+      document.removeEventListener("dragend", onEnd);
+    };
+    document.addEventListener("dragover", onOver, true);
+    document.addEventListener("dragend", onEnd);
+  }
+  function DraggableChannelRow(props) {
+    const payload = {
+      sourceId: props.sourceId,
+      fromGroupId: props.fromGroupId,
+      fromRowId: props.fromRowId
+    };
+    const beginDrag = (e2) => startChannelDrag(e2, payload);
+    return jsxRuntimeExports.jsxs("div", {
+      className: styles$e.channelRowWrap,
       draggable: true,
-      onDragStart: props.onDragStart,
-      title: `Drag ${props.label}`,
-      "aria-label": `Drag ${props.label}`,
-      children: "\u22EE\u22EE"
+      onDragStart: (e2) => {
+        if (shouldIgnoreChannelRowDrag(e2.target)) {
+          e2.preventDefault();
+          return;
+        }
+        beginDrag(e2);
+        if (props.onRemoveFromGroup) {
+          previewUngroupWhileDragging(e2.currentTarget);
+        }
+      },
+      onDragEnd: (e2) => {
+        if (!props.onRemoveFromGroup) return;
+        if (e2.dataTransfer.dropEffect !== "none") return;
+        const el2 = document.elementFromPoint(e2.clientX, e2.clientY);
+        const folder = e2.currentTarget.closest(`.${styles$e.groupFolder}`);
+        if (folder && el2 && folder.contains(el2)) return;
+        props.onRemoveFromGroup();
+      },
+      children: [
+        jsxRuntimeExports.jsx("button", {
+          type: "button",
+          className: styles$e.dragHandle,
+          draggable: true,
+          onDragStart: beginDrag,
+          title: `Drag ${props.label}`,
+          "aria-label": `Drag ${props.label}`,
+          children: "\u22EE\u22EE"
+        }),
+        props.children
+      ]
     });
   }
   function useAnchoredMenu(opts) {
@@ -172172,7 +172324,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const [optimizePaletteBusy, setOptimizePaletteBusy] = reactExports.useState(false);
     const [refittingContrastIds, setRefittingContrastIds] = reactExports.useState(() => /* @__PURE__ */ new Set());
     const [dragOverGroupId, setDragOverGroupId] = reactExports.useState(null);
+    reactExports.useEffect(() => {
+      const hide2 = () => {
+        groupChannelDragActive = false;
+        setDragOverGroupId(null);
+      };
+      document.addEventListener("dragend", hide2);
+      return () => document.removeEventListener("dragend", hide2);
+    }, []);
     const [lockedColorRowIdsByGroup, setLockedColorRowIdsByGroup] = reactExports.useState(() => /* @__PURE__ */ new Map());
+    const [channelNameFilter, setChannelNameFilter] = reactExports.useState("");
+    const filteredAllChannels = reactExports.useMemo(() => uniqueSourceChannels.filter((sc2) => channelNameMatchesQuery(sc2.name, channelNameFilter)), [
+      uniqueSourceChannels,
+      channelNameFilter
+    ]);
     reactExports.useEffect(() => {
       setLockedColorRowIdsByGroup((prev) => {
         const validGroupIds = new Set(channelGroups.map((g2) => g2.id));
@@ -172537,10 +172702,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const handleDropOnGroup = (groupId, e2) => {
       e2.preventDefault();
+      e2.stopPropagation();
       setDragOverGroupId(null);
       const payload = readDragPayload(e2);
       if (!(payload == null ? void 0 : payload.sourceId)) return;
       void addChannelToGroup(groupId, payload.sourceId);
+    };
+    const handleDropRemoveFromGroup = (e2) => {
+      e2.preventDefault();
+      const payload = readDragPayload(e2);
+      if (!(payload == null ? void 0 : payload.fromGroupId) || !payload.fromRowId) return;
+      removeChannelFromGroup(payload.fromGroupId, payload.fromRowId);
     };
     const visibleHistogramTargets = reactExports.useMemo(() => {
       const ids = [];
@@ -172624,16 +172796,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const isActive = activeChannelGroupId === group2.id;
       const isDropTarget = dragOverGroupId === group2.id;
       const rowsVisible = group2.channels.length === 0 || group2.channels.some((gc2) => isGroupRowVisible(channelGroupRowVisibilities, gc2.id));
-      const addable = uniqueSourceChannels.filter((sc2) => !group2.channels.some((gc2) => gc2.channelId === sc2.id));
       const lockedIds = lockedIdsForGroup(group2.id);
       const folderDropProps = {
         onDragOver: (e2) => {
-          if (!e2.dataTransfer.types.includes(CHANNEL_DRAG_MIME)) return;
+          if (!isChannelDrag(e2)) return;
           e2.preventDefault();
-          e2.dataTransfer.dropEffect = "copy";
+          e2.stopPropagation();
+          e2.dataTransfer.dropEffect = "move";
           setDragOverGroupId(group2.id);
         },
-        onDragLeave: () => {
+        onDragLeave: (e2) => {
+          if (e2.currentTarget.contains(e2.relatedTarget)) return;
           if (dragOverGroupId === group2.id) setDragOverGroupId(null);
         },
         onDrop: (e2) => handleDropOnGroup(group2.id, e2)
@@ -172744,118 +172917,90 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   const showColorLock = !(sc2 && isMaskChannel(sc2)) && !rgbDisplay;
                   return jsxRuntimeExports.jsx("li", {
                     className: styles$e.groupChildBlock,
-                    children: jsxRuntimeExports.jsxs("div", {
-                      className: styles$e.channelRowWrap,
-                      children: [
-                        jsxRuntimeExports.jsx(ChannelDragHandle, {
-                          label: name2,
-                          onDragStart: (e2) => startChannelDrag(e2, {
-                            sourceId: gc2.channelId
-                          })
+                    children: jsxRuntimeExports.jsx(DraggableChannelRow, {
+                      label: name2,
+                      sourceId: gc2.channelId,
+                      fromGroupId: group2.id,
+                      fromRowId: gc2.id,
+                      onRemoveFromGroup: () => removeChannelFromGroup(group2.id, gc2.id),
+                      children: jsxRuntimeExports.jsx(ChannelRow, {
+                        visible,
+                        visibilityTitle: visible ? `Hide ${name2}` : `Show ${name2}`,
+                        visibilityAriaLabel: `Toggle visibility for ${name2}`,
+                        onToggleVisibility: (event) => toggleWithScrollOnShow(event, !visible, () => {
+                          setChannelGroupRowVisibilities({
+                            ...channelGroupRowVisibilities,
+                            [gc2.id]: !visible
+                          });
                         }),
-                        jsxRuntimeExports.jsx(ChannelRow, {
-                          visible,
-                          visibilityTitle: visible ? `Hide ${name2}` : `Show ${name2}`,
-                          visibilityAriaLabel: `Toggle visibility for ${name2}`,
-                          onToggleVisibility: (event) => toggleWithScrollOnShow(event, !visible, () => {
-                            setChannelGroupRowVisibilities({
-                              ...channelGroupRowVisibilities,
-                              [gc2.id]: !visible
-                            });
-                          }),
-                          name: sc2 ? {
-                            mode: "editable",
-                            name: name2,
-                            meta: channelMeta,
-                            onBlur: (value) => renameSourceChannelDisplayName(sc2.id, value)
-                          } : {
-                            mode: "label",
-                            name: name2,
-                            title: name2,
-                            className: styles$e.groupChildName
-                          },
-                          imageSubtitle,
-                          contrast,
-                          locked: colorLocked,
-                          ...!rgbDisplay && sc2 && isMaskChannel(sc2) ? {
-                            isMask: true,
-                            maskVisualization: effectiveMaskVisualization(gc2),
-                            maskAriaLabel: `Mask display for ${name2}`,
-                            onMaskVisualizationChange: (viz) => syncMaskVisualization(gc2.channelId, viz, group2.id, gc2.id),
-                            onMaskVisualizationPreview: (viz) => {
-                              previewMaskVisualization(gc2.channelId, viz);
-                            }
-                          } : !rgbDisplay ? {
-                            busy: palettePending,
-                            colorHex: hex,
-                            colorTitle: `Pick color for ${name2} in this group`,
-                            onColorClick: (e2) => {
-                              openColorPicker({
-                                scope: "group",
-                                groupId: group2.id,
-                                rowId: gc2.id
-                              }, e2.currentTarget.getBoundingClientRect());
-                            }
-                          } : {},
-                          trailing: rgbDisplay ? channelMoreMenu(sc2, name2, () => removeChannelFromGroup(group2.id, gc2.id)) : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
-                            children: [
-                              showColorLock ? jsxRuntimeExports.jsx("button", {
-                                type: "button",
-                                className: [
-                                  styles$e.channelActionButton,
-                                  colorLocked ? styles$e.colorLockButtonLocked : ""
-                                ].join(" "),
-                                title: colorLocked ? "Unlock color" : "Lock color",
-                                "aria-label": colorLocked ? `Unlock color for ${name2}` : `Lock color for ${name2}`,
-                                "aria-pressed": colorLocked,
-                                onClick: () => toggleColorLock(group2.id, gc2.id),
-                                children: colorLocked ? jsxRuntimeExports.jsx(SvgLock, {
-                                  width: 12,
-                                  height: 12,
-                                  "aria-hidden": true
-                                }) : jsxRuntimeExports.jsx(SvgLockOpen, {
-                                  width: 12,
-                                  height: 12,
-                                  "aria-hidden": true
-                                })
-                              }) : null,
-                              channelMoreMenu(sc2, name2, () => removeChannelFromGroup(group2.id, gc2.id))
-                            ]
-                          })
+                        name: sc2 ? {
+                          mode: "editable",
+                          name: name2,
+                          meta: channelMeta,
+                          onBlur: (value) => renameSourceChannelDisplayName(sc2.id, value)
+                        } : {
+                          mode: "label",
+                          name: name2,
+                          title: name2,
+                          className: styles$e.groupChildName
+                        },
+                        imageSubtitle,
+                        contrast,
+                        locked: colorLocked,
+                        ...!rgbDisplay && sc2 && isMaskChannel(sc2) ? {
+                          isMask: true,
+                          maskVisualization: effectiveMaskVisualization(gc2),
+                          maskAriaLabel: `Mask display for ${name2}`,
+                          onMaskVisualizationChange: (viz) => syncMaskVisualization(gc2.channelId, viz, group2.id, gc2.id),
+                          onMaskVisualizationPreview: (viz) => {
+                            previewMaskVisualization(gc2.channelId, viz);
+                          }
+                        } : !rgbDisplay ? {
+                          busy: palettePending,
+                          colorHex: hex,
+                          colorTitle: `Pick color for ${name2} in this group`,
+                          onColorClick: (e2) => {
+                            openColorPicker({
+                              scope: "group",
+                              groupId: group2.id,
+                              rowId: gc2.id
+                            }, e2.currentTarget.getBoundingClientRect());
+                          }
+                        } : {},
+                        trailing: rgbDisplay ? channelMoreMenu(sc2, name2, () => removeChannelFromGroup(group2.id, gc2.id)) : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+                          children: [
+                            showColorLock ? jsxRuntimeExports.jsx("button", {
+                              type: "button",
+                              className: [
+                                styles$e.channelActionButton,
+                                colorLocked ? styles$e.colorLockButtonLocked : ""
+                              ].join(" "),
+                              title: colorLocked ? "Unlock color" : "Lock color",
+                              "aria-label": colorLocked ? `Unlock color for ${name2}` : `Lock color for ${name2}`,
+                              "aria-pressed": colorLocked,
+                              onClick: () => toggleColorLock(group2.id, gc2.id),
+                              children: colorLocked ? jsxRuntimeExports.jsx(SvgLock, {
+                                width: 12,
+                                height: 12,
+                                "aria-hidden": true
+                              }) : jsxRuntimeExports.jsx(SvgLockOpen, {
+                                width: 12,
+                                height: 12,
+                                "aria-hidden": true
+                              })
+                            }) : null,
+                            channelMoreMenu(sc2, name2, () => removeChannelFromGroup(group2.id, gc2.id))
+                          ]
                         })
-                      ]
+                      })
                     })
                   }, gc2.id);
                 })
               }),
-              jsxRuntimeExports.jsx("div", {
-                className: styles$e.addChannelRow,
-                children: jsxRuntimeExports.jsxs("select", {
-                  className: `${minervaTheme.input} ${styles$e.addChannelSelect}`,
-                  defaultValue: "",
-                  disabled: optimizePaletteBusy || addable.length === 0,
-                  onChange: (e2) => {
-                    if (e2.target.value) {
-                      void addChannelToGroup(group2.id, e2.target.value);
-                      e2.target.value = "";
-                    }
-                  },
-                  children: [
-                    jsxRuntimeExports.jsx("option", {
-                      value: "",
-                      disabled: true,
-                      children: optimizePaletteBusy ? "Optimizing\u2026" : "Add channel\u2026"
-                    }),
-                    addable.map((sc2) => {
-                      const imageLabel = showImageBadge ? imageLabels.get(sc2.imageId) : void 0;
-                      return jsxRuntimeExports.jsx("option", {
-                        value: sc2.id,
-                        children: imageLabel ? `${sc2.name} (${imageLabel})` : sc2.name
-                      }, sc2.id);
-                    })
-                  ]
-                })
-              })
+              group2.channels.length === 0 ? jsxRuntimeExports.jsx("div", {
+                className: styles$e.dropHint,
+                children: "Drag channels"
+              }) : null
             ]
           }) : null
         ]
@@ -172895,12 +173040,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           [sc2.id]: nextVisible
         });
       };
-      const dragHandle2 = jsxRuntimeExports.jsx(ChannelDragHandle, {
-        label: sc2.name,
-        onDragStart: (e2) => startChannelDrag(e2, {
-          sourceId: sc2.id
-        })
-      });
       const palettePending = palettePendingIds.includes(sc2.id);
       const rgbDisplay = isRgbDisplayChannel(sc2, sourceChannels);
       const hex = assignedDisplayHex(sc2, sourceChannels, (home == null ? void 0 : home.row) ?? null);
@@ -172934,35 +173073,33 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       } : void 0;
       return jsxRuntimeExports.jsx("li", {
         className: styles$e.rootChannelBlock,
-        children: jsxRuntimeExports.jsxs("div", {
-          className: styles$e.channelRowWrap,
-          children: [
-            dragHandle2,
-            jsxRuntimeExports.jsx(ChannelRow, {
-              visible: shownInViewer,
-              visibilityTitle: capped ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) \u2014 hide another channel` : home ? shownInViewer ? `Hide ${sc2.name} in groups` : `Show ${sc2.name} in groups` : stackLayerTitle(sc2, shownInViewer),
-              visibilityAriaLabel,
-              onToggleVisibility: expanded ? () => toggleAllChannelsVisibility(false) : (event) => toggleWithScrollOnShow(event, !shownInViewer, () => {
-                toggleAllChannelsVisibility(!shownInViewer);
-              }),
-              name: {
-                mode: "editable",
-                name: sc2.name,
-                meta,
-                onBlur: (value) => renameSourceChannelDisplayName(sc2.id, value)
-              },
-              imageSubtitle,
-              contrast,
-              ...expanded && !rgbDisplay && isMaskChannel(sc2) ? {
-                isMask: true,
-                maskVisualization: effectiveMaskVisualization(sc2),
-                maskAriaLabel: `Mask display for ${sc2.name}`,
-                onMaskVisualizationChange: (viz) => syncMaskVisualization(sc2.id, viz),
-                onMaskVisualizationPreview: (viz) => previewMaskVisualization(sc2.id, viz)
-              } : colorSwatch,
-              trailing: expanded && !rgbDisplay ? channelMoreMenu(sc2, sc2.name) : void 0
-            })
-          ]
+        children: jsxRuntimeExports.jsx(DraggableChannelRow, {
+          label: sc2.name,
+          sourceId: sc2.id,
+          children: jsxRuntimeExports.jsx(ChannelRow, {
+            visible: shownInViewer,
+            visibilityTitle: capped ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) \u2014 hide another channel` : home ? shownInViewer ? `Hide ${sc2.name} in groups` : `Show ${sc2.name} in groups` : stackLayerTitle(sc2, shownInViewer),
+            visibilityAriaLabel,
+            onToggleVisibility: expanded ? () => toggleAllChannelsVisibility(false) : (event) => toggleWithScrollOnShow(event, !shownInViewer, () => {
+              toggleAllChannelsVisibility(!shownInViewer);
+            }),
+            name: {
+              mode: "editable",
+              name: sc2.name,
+              meta,
+              onBlur: (value) => renameSourceChannelDisplayName(sc2.id, value)
+            },
+            imageSubtitle,
+            contrast,
+            ...expanded && !rgbDisplay && isMaskChannel(sc2) ? {
+              isMask: true,
+              maskVisualization: effectiveMaskVisualization(sc2),
+              maskAriaLabel: `Mask display for ${sc2.name}`,
+              onMaskVisualizationChange: (viz) => syncMaskVisualization(sc2.id, viz),
+              onMaskVisualizationPreview: (viz) => previewMaskVisualization(sc2.id, viz)
+            } : colorSwatch,
+            trailing: expanded && !rgbDisplay ? channelMoreMenu(sc2, sc2.name) : void 0
+          })
         })
       }, `all-${sc2.id}`);
     };
@@ -172982,22 +173119,53 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             panel$1.authorPanelBody,
             panel$1.thinScrollbar
           ].join(" "),
+          onDragOver: (e2) => {
+            if (!isChannelDrag(e2) || !groupChannelDragActive) return;
+            e2.preventDefault();
+            e2.dataTransfer.dropEffect = "move";
+            setDragOverGroupId(null);
+          },
+          onDrop: handleDropRemoveFromGroup,
           children: [
             channelGroups.length > 0 ? jsxRuntimeExports.jsx("div", {
               className: styles$e.groupFolders,
               children: channelGroups.map((group2, i2) => renderGroupFolder(group2, i2))
             }) : null,
-            uniqueSourceChannels.length > 0 ? jsxRuntimeExports.jsx("div", {
-              className: styles$e.treeSeparator,
-              children: "All channels"
-            }) : null,
-            uniqueSourceChannels.length === 0 ? channelGroups.length === 0 ? jsxRuntimeExports.jsx("div", {
+            uniqueSourceChannels.length > 0 ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+              children: [
+                jsxRuntimeExports.jsxs("div", {
+                  className: styles$e.treeSeparator,
+                  children: [
+                    jsxRuntimeExports.jsx("span", {
+                      className: styles$e.treeSeparatorLabel,
+                      children: "All channels"
+                    }),
+                    jsxRuntimeExports.jsx("input", {
+                      className: styles$e.channelFilter,
+                      type: "text",
+                      value: channelNameFilter,
+                      placeholder: "Search...",
+                      autoComplete: "off",
+                      autoCorrect: "off",
+                      autoCapitalize: "off",
+                      spellCheck: false,
+                      "aria-label": "Filter channels by name",
+                      onChange: (e2) => setChannelNameFilter(e2.target.value)
+                    })
+                  ]
+                }),
+                filteredAllChannels.length === 0 ? jsxRuntimeExports.jsx("div", {
+                  className: styles$e.filterEmpty,
+                  children: "No matching channels"
+                }) : jsxRuntimeExports.jsx("ul", {
+                  className: styles$e.rootChannelList,
+                  children: filteredAllChannels.map(renderAllChannelsRow)
+                })
+              ]
+            }) : channelGroups.length === 0 ? jsxRuntimeExports.jsx("div", {
               className: panel$1.emptyMessage,
               children: "No channels yet"
-            }) : null : jsxRuntimeExports.jsx("ul", {
-              className: styles$e.rootChannelList,
-              children: uniqueSourceChannels.map(renderAllChannelsRow)
-            }),
+            }) : null,
             imageSelectionMask ? jsxRuntimeExports.jsx(ChannelRow, {
               visible: selectionMaskVisible,
               visibilityTitle: "Toggle selection mask visibility",
@@ -250934,12 +251102,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-10T16:26:54.207Z");
+    const label2 = utcShort("2026-09-10T20:09:46.296Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$3.stamp,
       "aria-hidden": true,
-      title: "2026-09-10T16:26:54.207Z",
+      title: "2026-09-10T20:09:46.296Z",
       children: [
         "Updated ",
         label2,
@@ -251074,91 +251242,28 @@ void main() {
       })
     });
   };
-  function groupHome(groups, sourceId, groupRowVisibilities, activeGroupId) {
-    const memberships = [];
-    for (const g2 of groups) {
-      const row = g2.channels.find((gc2) => gc2.channelId === sourceId);
-      if (row) memberships.push({
-        groupId: g2.id,
-        row
-      });
-    }
-    if (memberships.length === 0) return null;
-    return memberships.find((m2) => isGroupRowVisible(groupRowVisibilities, m2.row.id)) ?? memberships.find((m2) => m2.groupId === activeGroupId) ?? memberships[0];
-  }
-  function buildImageChannelOverview(args) {
-    const byId = new Map(args.image.channels.map((c2) => [
-      c2.id,
-      c2
-    ]));
-    const groups = [];
-    for (const group2 of args.channelGroups) {
-      const chips = [];
-      for (const gc2 of group2.channels) {
-        const sc2 = byId.get(gc2.channelId);
-        if (!sc2) continue;
-        const channel = {
-          ...sc2,
-          imageId: args.image.id
-        };
-        chips.push({
-          key: `g:${group2.id}:${gc2.id}`,
-          sourceId: sc2.id,
-          name: sc2.name,
-          hex: assignedDisplayHex(channel, args.allSourceChannels, gc2) ?? "",
-          visible: isGroupRowVisible(args.groupRowVisibilities, gc2.id),
-          groupId: group2.id,
-          groupRowId: gc2.id
-        });
-      }
-      if (chips.length === 0) continue;
-      groups.push({
-        id: group2.id,
-        name: group2.name,
-        allVisible: chips.every((c2) => c2.visible),
-        chips
-      });
-    }
-    const allChannels = [];
-    for (const sc2 of args.image.channels) {
-      const home = groupHome(args.channelGroups, sc2.id, args.groupRowVisibilities, args.activeChannelGroupId);
-      const channel = {
-        ...sc2,
-        imageId: args.image.id
-      };
-      allChannels.push({
-        key: `e:${sc2.id}`,
-        sourceId: sc2.id,
-        name: sc2.name,
-        hex: assignedDisplayHex(channel, args.allSourceChannels, (home == null ? void 0 : home.row) ?? null) ?? "",
-        visible: home ? isDisplayedViaGroupRow(sc2.id, args.channelGroups, args.groupRowVisibilities) : isStackVisible(args.stackVisibilities, sc2.id),
-        groupId: (home == null ? void 0 : home.groupId) ?? null,
-        groupRowId: home == null ? void 0 : home.row.id
-      });
-    }
-    return {
-      groups,
-      allChannels
-    };
-  }
-  const root$1 = "_root_1i4hc_1";
-  const groupCard = "_groupCard_1i4hc_9";
-  const groupHeader = "_groupHeader_1i4hc_16";
-  const groupLabel = "_groupLabel_1i4hc_23";
-  const chipWrap = "_chipWrap_1i4hc_38";
-  const chipCell = "_chipCell_1i4hc_45";
-  const chipOn = "_chipOn_1i4hc_55";
-  const chipOutlined = "_chipOutlined_1i4hc_61";
-  const chipUnassigned = "_chipUnassigned_1i4hc_66";
-  const chip = "_chip_1i4hc_38";
-  const chipMenu = "_chipMenu_1i4hc_72";
-  const chipDim = "_chipDim_1i4hc_110";
-  const editor = "_editor_1i4hc_114";
+  const root$1 = "_root_1v5gp_1";
+  const groupCard = "_groupCard_1v5gp_9";
+  const groupHeader = "_groupHeader_1v5gp_16";
+  const channelFilter = "_channelFilter_1v5gp_23";
+  const groupLabel = "_groupLabel_1v5gp_28";
+  const filterEmpty = "_filterEmpty_1v5gp_70";
+  const chipWrap = "_chipWrap_1v5gp_76";
+  const chipCell = "_chipCell_1v5gp_83";
+  const chipOn = "_chipOn_1v5gp_93";
+  const chipOutlined = "_chipOutlined_1v5gp_99";
+  const chipUnassigned = "_chipUnassigned_1v5gp_104";
+  const chip = "_chip_1v5gp_76";
+  const chipMenu = "_chipMenu_1v5gp_110";
+  const chipDim = "_chipDim_1v5gp_148";
+  const editor = "_editor_1v5gp_152";
   const styles$2 = {
     root: root$1,
     groupCard,
     groupHeader,
+    channelFilter,
     groupLabel,
+    filterEmpty,
     chipWrap,
     chipCell,
     chipOn,
@@ -251245,6 +251350,7 @@ void main() {
   }
   function GroupStrip(props) {
     const visLabel = props.allVisible ? `Hide every channel in ${props.name}` : `Show every channel in ${props.name}`;
+    const filtering = props.onNameFilterChange != null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$2.groupCard,
       children: [
@@ -251260,10 +251366,28 @@ void main() {
             jsxRuntimeExports.jsx("div", {
               className: styles$2.groupLabel,
               children: props.name
-            })
+            }),
+            props.onNameFilterChange ? jsxRuntimeExports.jsx("input", {
+              className: styles$2.channelFilter,
+              type: "text",
+              value: props.nameFilter ?? "",
+              placeholder: "Search...",
+              autoComplete: "off",
+              autoCorrect: "off",
+              autoCapitalize: "off",
+              spellCheck: false,
+              "aria-label": "Filter channels by name",
+              onChange: (e2) => {
+                var _a2;
+                return (_a2 = props.onNameFilterChange) == null ? void 0 : _a2.call(props, e2.target.value);
+              }
+            }) : null
           ]
         }),
-        jsxRuntimeExports.jsx(ChipGrid, {
+        filtering && props.chips.length === 0 ? jsxRuntimeExports.jsx("div", {
+          className: styles$2.filterEmpty,
+          children: "No matching channels"
+        }) : jsxRuntimeExports.jsx(ChipGrid, {
           chips: props.chips,
           openChip: props.openChip,
           onChip: props.onChip,
@@ -251283,6 +251407,7 @@ void main() {
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const nav = useAuthorChannelNav();
     const [openKey, setOpenKey] = reactExports.useState(null);
+    const [channelNameFilter, setChannelNameFilter] = reactExports.useState("");
     const allSourceChannels = reactExports.useMemo(() => flattenImageChannelsInDocumentOrder(images), [
       images
     ]);
@@ -251304,6 +251429,10 @@ void main() {
       filledStackVis,
       groupRowVisibilities,
       activeChannelGroupId
+    ]);
+    const filteredAllChannels = reactExports.useMemo(() => model.allChannels.filter((chip2) => channelNameMatchesQuery(chip2.name, channelNameFilter)), [
+      model.allChannels,
+      channelNameFilter
     ]);
     const openChip = openKey == null ? null : [
       ...model.groups.flatMap((g2) => g2.chips),
@@ -251390,10 +251519,12 @@ void main() {
         }, group2.id)),
         model.allChannels.length > 0 ? jsxRuntimeExports.jsx(GroupStrip, {
           name: "All channels",
-          chips: model.allChannels,
+          chips: filteredAllChannels,
           openChip,
           onChip: onAllChannelsChip,
-          onOpenEditor
+          onOpenEditor,
+          nameFilter: channelNameFilter,
+          onNameFilterChange: setChannelNameFilter
         }) : null
       ]
     });
