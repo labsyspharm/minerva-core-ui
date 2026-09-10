@@ -16,6 +16,7 @@ export const IMPORT_DEFAULT_SEED_HEX = [
   "c3ff00",
   "ff8b00",
   "ff00c7",
+  "1e5cff",
 ] as const;
 
 export const IMPORT_DEFAULT_LOWER_LIMIT = 2 ** 5;

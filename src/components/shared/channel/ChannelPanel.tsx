@@ -39,7 +39,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const hide = props.hiddenChannel;
   const hidden = props.noLoader;
   const setActiveChannelGroup = useAppStore((s) => s.setActiveChannelGroup);
-  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
   const channelGroupRowVisibilities = useAppStore(
     (s) => s.channelGroupRowVisibilities,
@@ -84,9 +83,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       .filter((x) => x != null),
   }));
   const legendSections = React.useMemo((): LegendSection[] => {
-    const activeGroup = activeChannelGroupId
-      ? docChannelGroups.find((g) => g.id === activeChannelGroupId)
-      : undefined;
     const hasStackVisibilityMap = Object.keys(channelVisibilities).length > 0;
     const sections: LegendSection[] = [];
 
@@ -97,19 +93,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
           sc.imageId === im.id && (isImageChannel(sc) || isMaskChannel(sc)),
       );
 
-      if (activeGroup) {
+      if (docChannelGroups.length > 0) {
         const groupChannels: LegendChannel[] = [];
-        for (const gc of activeGroup.channels) {
-          const sc = findSourceChannel(sourceChannels, gc.channelId);
-          if (!sc || sc.imageId !== im.id) continue;
-          groupChannels.push(
-            legendChannelFromLayer(
-              sc,
-              gc,
-              activeChannelGroupId,
-              sourceChannels,
-            ),
-          );
+        for (const group of docChannelGroups) {
+          for (const gc of group.channels) {
+            const sc = findSourceChannel(sourceChannels, gc.channelId);
+            if (!sc || sc.imageId !== im.id) continue;
+            groupChannels.push(legendChannelFromLayer(sc, gc, group.id));
+          }
         }
 
         const overlayChannels: LegendChannel[] = [];
@@ -154,13 +145,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       });
     }
     return sections;
-  }, [
-    images,
-    sourceChannels,
-    docChannelGroups,
-    activeChannelGroupId,
-    channelVisibilities,
-  ]);
+  }, [images, sourceChannels, docChannelGroups, channelVisibilities]);
 
   const groups = useDocumentStore((s) => s.channelGroups);
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);

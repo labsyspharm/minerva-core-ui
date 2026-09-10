@@ -158,7 +158,7 @@ importers:
         specifier: ^0.15.7
         version: 0.15.7
       psudo:
-        specifier: ^0.17.0
+        specifier: 0.17.0
         version: 0.17.0
       react:
         specifier: ^18.3.1

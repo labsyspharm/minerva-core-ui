@@ -5,7 +5,6 @@ import {
 } from "@/components/shared/ColorPickerPopover";
 import { useAuthorChannelNav } from "@/components/shared/channel/AuthorChannelNav";
 import {
-  ChannelContrastEditor,
   colorRenderingForSource,
   contrastEditorPropsForGroupRow,
   contrastEditorPropsForSource,
@@ -43,7 +42,6 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import { patchSourceChannelOnImages } from "@/lib/stores/storeUtils";
-import row from "./ChannelRow.module.css";
 
 export type ChannelColorTarget =
   | { scope: "source"; sourceId: string }
@@ -275,7 +273,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
   const color = effectiveDisplayColor(sc, sourceChannels, gc);
   const hex = assignedDisplayHex(sc, sourceChannels, gc);
   const palettePending = palettePendingIds.includes(sc.id);
-  const showHistogram = isImageChannel(sc) && !rgbDisplay && !isMaskChannel(sc);
+  const showHistogram = isImageChannel(sc) && !rgbDisplay;
   const colorTargetForRow: ChannelColorTarget =
     gc && chip.groupId
       ? { scope: "group", groupId: chip.groupId, rowId: gc.id }
@@ -328,34 +326,31 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
     setColorPos(colorPickerAnchorPosition(el.getBoundingClientRect()));
   };
 
-  const contrast = showHistogram ? (
-    gc && chip.groupId ? (
-      <ChannelContrastEditor
-        {...contrastEditorPropsForGroupRow(
-          channelRendering,
-          chip.groupId,
-          gc,
-          sc,
-        )}
-        histogramLoading={histogramLoading}
-      />
-    ) : (
-      <ChannelContrastEditor
-        {...contrastEditorPropsForSource(
-          channelRendering,
-          sc,
-          color,
-          effectiveSourceLimits(sc),
-        )}
-        histogramLoading={histogramLoading}
-      />
-    )
-  ) : null;
+  const contrast = showHistogram
+    ? gc && chip.groupId
+      ? {
+          ...contrastEditorPropsForGroupRow(
+            channelRendering,
+            chip.groupId,
+            gc,
+            sc,
+          ),
+          histogramLoading,
+        }
+      : {
+          ...contrastEditorPropsForSource(
+            channelRendering,
+            sc,
+            color,
+            effectiveSourceLimits(sc),
+          ),
+          histogramLoading,
+        }
+    : undefined;
 
   return (
     <>
       <ChannelRow
-        rowClassName={row.rootChannelRow}
         visible={visible}
         visibilityTitle={visible ? `Hide ${sc.name}` : `Show ${sc.name}`}
         visibilityAriaLabel={`Toggle visibility for ${sc.name}`}
@@ -366,6 +361,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
           meta: `Index ${sc.index}`,
           onBlur: rename,
         }}
+        contrast={contrast}
         {...(!rgbDisplay && isMaskChannel(sc)
           ? {
               isMask: true as const,
@@ -392,7 +388,6 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
               }
             : {})}
       />
-      {contrast}
       {colorTarget && colorPos ? (
         <ChannelColorPicker
           target={colorTarget}

@@ -84,17 +84,6 @@ type Metadata = {
   ROIs?: Roi[];
 };
 
-export type Config = {
-  toSettings: (
-    activeChannelGroupId: string | null,
-    modality: string,
-    l?: Loader,
-    channelVisibilities?: Record<string, boolean>,
-    loaderSourceImageId?: string,
-    channelGroupRowVisibilities?: Record<string, boolean>,
-  ) => Settings;
-};
-
 export function loaderPixelSizeXY(loader: Loader): {
   sizeX: number;
   sizeY: number;
@@ -165,7 +154,7 @@ type ToSettingsOpts = {
 
 const toSettings = (opts: ToSettingsOpts) => {
   return (
-    _activeChannelGroupId: string | null,
+    activeChannelGroupId: string | null,
     modality: string,
     loader: Loader | undefined,
     channelVisibilities?: Record<string, boolean>,
@@ -186,8 +175,8 @@ const toSettings = (opts: ToSettingsOpts) => {
       (sc) => sourceImageMatches(sc.imageId) && isImageChannel(sc),
     );
 
-    const activeGroup = _activeChannelGroupId
-      ? channelGroups.find((g) => g.id === _activeChannelGroupId)
+    const activeGroup = activeChannelGroupId
+      ? channelGroups.find((g) => g.id === activeChannelGroupId)
       : undefined;
 
     const hasVisibilityMap =

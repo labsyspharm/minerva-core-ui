@@ -21,6 +21,12 @@
   align-items: center;
   justify-content: flex-start;
   gap: 6px;
+  flex: 0 0 10ch;
+  width: 10ch;
+  min-width: 0;
+}
+
+.channelRowMid {
   flex: 1 1 0;
   min-width: 0;
 }
@@ -43,7 +49,11 @@
 .channelRowTrailing {
   display: flex;
   align-items: center;
-  flex-shrink: 0;
+  justify-content: flex-end;
+  /* lock 16px + more 9px; keep swatches aligned when a row has neither */
+  flex: 0 0 25px;
+  width: 25px;
+  min-width: 25px;
 }
 
 .maskDisclosureButton {
@@ -362,8 +372,7 @@
   );
 }
 
-.groupChildRow,
-.rootChannelRow {
+.channelRow {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -372,11 +381,10 @@
   min-height: 0;
 }
 
-.groupChildRow .channelNameInput,
-.rootChannelRow .channelNameInput {
+.channelRow .channelNameInput {
   box-sizing: border-box;
   height: 22px;
-  padding: 2px 6px;
+  padding: 2px 0;
   font-size: inherit;
   line-height: 1.2;
   background: transparent;
@@ -386,8 +394,7 @@
   font-family: inherit;
 }
 
-.groupChildRow .channelNameInput:focus-visible,
-.rootChannelRow .channelNameInput:focus-visible {
+.channelRow .channelNameInput:focus-visible {
   outline: var(--minerva-focus-width) solid var(--minerva-ink);
   outline-offset: 1px;
 }

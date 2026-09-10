@@ -13,7 +13,6 @@ import {
 import {
   buildImageChannelOverview,
   type ImageChannelChip,
-  type ImageChannelGroupStrip,
 } from "@/lib/imaging/imageChannelOverview";
 import {
   getStackPalettePendingIds,
@@ -134,57 +133,36 @@ function ChipGrid(props: {
 }
 
 function GroupStrip(props: {
-  group: ImageChannelGroupStrip;
-  openChip: ImageChannelChip | null;
-  onChip: (chip: ImageChannelChip) => void;
-  onOpenEditor: (chip: ImageChannelChip) => void;
-  onToggleGroup: (groupId: string) => void;
-}) {
-  const { group } = props;
-  const visLabel = group.allVisible
-    ? `Hide every channel in ${group.name}`
-    : `Show every channel in ${group.name}`;
-  return (
-    <div className={styles.groupRow}>
-      <ChannelVisibilitySwatch
-        visible={group.allVisible}
-        title={visLabel}
-        ariaLabel={visLabel}
-        onClick={() => props.onToggleGroup(group.id)}
-      />
-      <div className={styles.groupBody}>
-        <div className={styles.groupLabel}>{group.name}</div>
-        <ChipGrid
-          chips={group.chips}
-          openChip={props.openChip}
-          onChip={props.onChip}
-          onOpenEditor={props.onOpenEditor}
-        />
-      </div>
-    </div>
-  );
-}
-
-function EtcChips(props: {
+  name: string;
   chips: ImageChannelChip[];
-  aligned: boolean;
   openChip: ImageChannelChip | null;
   onChip: (chip: ImageChannelChip) => void;
   onOpenEditor: (chip: ImageChannelChip) => void;
+  allVisible?: boolean;
+  onToggleVisibility?: () => void;
 }) {
-  const grid = (
-    <ChipGrid
-      chips={props.chips}
-      openChip={props.openChip}
-      onChip={props.onChip}
-      onOpenEditor={props.onOpenEditor}
-    />
-  );
-  if (!props.aligned) return <div className={styles.etcRow}>{grid}</div>;
+  const visLabel = props.allVisible
+    ? `Hide every channel in ${props.name}`
+    : `Show every channel in ${props.name}`;
   return (
-    <div className={styles.groupRow}>
-      <div className={styles.eyeSpacer} />
-      <div className={styles.groupBody}>{grid}</div>
+    <div className={styles.groupCard}>
+      <div className={styles.groupHeader}>
+        {props.onToggleVisibility ? (
+          <ChannelVisibilitySwatch
+            visible={Boolean(props.allVisible)}
+            title={visLabel}
+            ariaLabel={visLabel}
+            onClick={props.onToggleVisibility}
+          />
+        ) : null}
+        <div className={styles.groupLabel}>{props.name}</div>
+      </div>
+      <ChipGrid
+        chips={props.chips}
+        openChip={props.openChip}
+        onChip={props.onChip}
+        onOpenEditor={props.onOpenEditor}
+      />
     </div>
   );
 }
@@ -201,7 +179,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
   const setChannelGroupRowVisibilities = useAppStore(
     (s) => s.setChannelGroupRowVisibilities,
   );
-  const setActiveChannelGroup = useAppStore((s) => s.setActiveChannelGroup);
+  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const nav = useAuthorChannelNav();
   const [openKey, setOpenKey] = useState<string | null>(null);
 
@@ -221,6 +199,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
         allSourceChannels,
         stackVisibilities: filledStackVis,
         groupRowVisibilities,
+        activeChannelGroupId,
       }),
     [
       image,
@@ -228,13 +207,14 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
       allSourceChannels,
       filledStackVis,
       groupRowVisibilities,
+      activeChannelGroupId,
     ],
   );
 
   const openChip =
     openKey == null
       ? null
-      : ([...model.groups.flatMap((g) => g.chips), ...model.etc].find(
+      : ([...model.groups.flatMap((g) => g.chips), ...model.allChannels].find(
           (c) => c.key === openKey,
         ) ?? null);
 
@@ -242,63 +222,85 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     setOpenKey((cur) => (cur === chip.key ? null : chip.key));
   };
 
+  const onGroupChip = (chip: ImageChannelChip) => {
+    if (!chip.groupRowId) return;
+    const vis = useAppStore.getState().channelGroupRowVisibilities;
+    if (chip.visible) {
+      setChannelGroupRowVisibilities({
+        ...vis,
+        [chip.groupRowId]: false,
+      });
+      return;
+    }
+    if (!isGroupRowVisible(vis, chip.groupRowId)) {
+      setChannelGroupRowVisibilities({
+        ...vis,
+        [chip.groupRowId]: true,
+      });
+    }
+    void nav?.ensureChannelHistograms?.([chip.sourceId]).catch(() => undefined);
+  };
+
+  const onAllChannelsChip = (chip: ImageChannelChip) => {
+    if (chip.groupRowId) {
+      const vis = useAppStore.getState().channelGroupRowVisibilities;
+      const groups = useDocumentStore.getState().channelGroups;
+      const nextOn = !chip.visible;
+      const next = { ...vis };
+      for (const g of groups) {
+        for (const gc of g.channels) {
+          if (gc.channelId === chip.sourceId) next[gc.id] = nextOn;
+        }
+      }
+      setChannelGroupRowVisibilities(next);
+      if (nextOn) {
+        void nav
+          ?.ensureChannelHistograms?.([chip.sourceId])
+          .catch(() => undefined);
+      }
+      return;
+    }
+    const vis = defaultVisibilitiesForSources(
+      flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images),
+      useAppStore.getState().channelVisibilities,
+    );
+    const turningOn = !isStackVisible(vis, chip.sourceId);
+    setChannelVisibilities({ ...vis, [chip.sourceId]: turningOn });
+    if (!turningOn) return;
+    void nav?.ensureChannelHistograms?.([chip.sourceId]).catch(() => undefined);
+  };
+
   if (image.channels.length === 0) return null;
-  if (model.groups.length === 0 && model.etc.length === 0) return null;
 
   return (
     <div className={styles.root}>
       {model.groups.map((group) => (
         <GroupStrip
           key={group.id}
-          group={group}
+          name={group.name}
+          chips={group.chips}
           openChip={openChip}
-          onChip={(chip) => {
-            if (!chip.groupRowId) return;
-            if (chip.groupId) setActiveChannelGroup(chip.groupId);
-            const vis = useAppStore.getState().channelGroupRowVisibilities;
-            const turningOn = !isGroupRowVisible(vis, chip.groupRowId);
-            setChannelGroupRowVisibilities({
-              ...vis,
-              [chip.groupRowId]: turningOn,
-            });
-            if (!turningOn) return;
-            void nav
-              ?.ensureChannelHistograms?.([chip.sourceId])
-              .catch(() => undefined);
-          }}
+          allVisible={group.allVisible}
+          onChip={onGroupChip}
           onOpenEditor={onOpenEditor}
-          onToggleGroup={(groupId) => {
-            const group = channelGroups.find((g) => g.id === groupId);
-            if (!group || group.channels.length === 0) return;
-            setActiveChannelGroup(groupId);
-            const allOn = group.channels.every((gc) =>
+          onToggleVisibility={() => {
+            const docGroup = channelGroups.find((g) => g.id === group.id);
+            if (!docGroup || docGroup.channels.length === 0) return;
+            const allOn = docGroup.channels.every((gc) =>
               isGroupRowVisible(groupRowVisibilities, gc.id),
             );
             const next = { ...groupRowVisibilities };
-            for (const gc of group.channels) next[gc.id] = !allOn;
+            for (const gc of docGroup.channels) next[gc.id] = !allOn;
             setChannelGroupRowVisibilities(next);
           }}
         />
       ))}
-      {model.etc.length > 0 ? (
-        <EtcChips
-          chips={model.etc}
-          aligned={model.groups.length > 0}
+      {model.allChannels.length > 0 ? (
+        <GroupStrip
+          name="All channels"
+          chips={model.allChannels}
           openChip={openChip}
-          onChip={(chip) => {
-            const vis = defaultVisibilitiesForSources(
-              flattenImageChannelsInDocumentOrder(
-                useDocumentStore.getState().images,
-              ),
-              useAppStore.getState().channelVisibilities,
-            );
-            const turningOn = !isStackVisible(vis, chip.sourceId);
-            setChannelVisibilities({ ...vis, [chip.sourceId]: turningOn });
-            if (!turningOn) return;
-            void nav
-              ?.ensureChannelHistograms?.([chip.sourceId])
-              .catch(() => undefined);
-          }}
+          onChip={onAllChannelsChip}
           onOpenEditor={onOpenEditor}
         />
       ) : null}

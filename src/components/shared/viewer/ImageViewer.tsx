@@ -409,16 +409,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
     const imgH = Number(imageShape.y) || 0;
     if (imgW <= 0 || imgH <= 0 || omeLoaderEntries.length === 0) return [];
 
-    const activeGroup = activeChannelGroupId
-      ? channelGroups.find((g) => g.id === activeChannelGroupId)
-      : undefined;
     const layers: Layer[] = [];
     for (const sc of flattenImageChannelsInDocumentOrder(images)) {
       if (!isMaskChannel(sc)) continue;
       if (
         !isMaskSourceRendered({
           sc,
-          activeGroup,
           channelGroups,
           stackVisibilities: channelVisibilities ?? {},
           groupRowVisibilities: channelGroupRowVisibilities,

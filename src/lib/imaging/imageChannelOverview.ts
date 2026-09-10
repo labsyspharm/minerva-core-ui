@@ -1,10 +1,15 @@
 import {
+  isDisplayedViaGroupRow,
   isGroupRowVisible,
   isStackVisible,
-  sourceChannelInAnyGroup,
 } from "@/lib/imaging/channelCompositor";
 import { assignedDisplayHex } from "@/lib/imaging/sourceChannelStyle";
-import type { Channel, ChannelGroup, Image } from "@/lib/stores/documentSchema";
+import type {
+  Channel,
+  ChannelGroup,
+  ChannelGroupChannel,
+  Image,
+} from "@/lib/stores/documentSchema";
 
 export type ImageChannelChip = {
   key: string;
@@ -16,17 +21,38 @@ export type ImageChannelChip = {
   groupRowId?: string;
 };
 
-export type ImageChannelGroupStrip = {
+type ImageChannelGroupStrip = {
   id: string;
   name: string;
   allVisible: boolean;
   chips: ImageChannelChip[];
 };
 
-export type ImageChannelOverviewModel = {
+type ImageChannelOverviewModel = {
   groups: ImageChannelGroupStrip[];
-  etc: ImageChannelChip[];
+  allChannels: ImageChannelChip[];
 };
+
+function groupHome(
+  groups: readonly ChannelGroup[],
+  sourceId: string,
+  groupRowVisibilities: Record<string, boolean>,
+  activeGroupId?: string | null,
+): { groupId: string; row: ChannelGroupChannel } | null {
+  const memberships: { groupId: string; row: ChannelGroupChannel }[] = [];
+  for (const g of groups) {
+    const row = g.channels.find((gc) => gc.channelId === sourceId);
+    if (row) memberships.push({ groupId: g.id, row });
+  }
+  if (memberships.length === 0) return null;
+  return (
+    memberships.find((m) =>
+      isGroupRowVisible(groupRowVisibilities, m.row.id),
+    ) ??
+    memberships.find((m) => m.groupId === activeGroupId) ??
+    memberships[0]
+  );
+}
 
 export function buildImageChannelOverview(args: {
   image: Image;
@@ -34,6 +60,7 @@ export function buildImageChannelOverview(args: {
   allSourceChannels: readonly Channel[];
   stackVisibilities: Record<string, boolean>;
   groupRowVisibilities: Record<string, boolean>;
+  activeChannelGroupId?: string | null;
 }): ImageChannelOverviewModel {
   const byId = new Map(args.image.channels.map((c) => [c.id, c]));
 
@@ -63,21 +90,36 @@ export function buildImageChannelOverview(args: {
     });
   }
 
-  const etc: ImageChannelChip[] = [];
+  const allChannels: ImageChannelChip[] = [];
   for (const sc of args.image.channels) {
-    if (sourceChannelInAnyGroup(args.channelGroups as ChannelGroup[], sc.id)) {
-      continue;
-    }
+    const home = groupHome(
+      args.channelGroups,
+      sc.id,
+      args.groupRowVisibilities,
+      args.activeChannelGroupId,
+    );
     const channel = { ...sc, imageId: args.image.id };
-    etc.push({
+    allChannels.push({
       key: `e:${sc.id}`,
       sourceId: sc.id,
       name: sc.name,
-      hex: assignedDisplayHex(channel, args.allSourceChannels, null) ?? "",
-      visible: isStackVisible(args.stackVisibilities, sc.id),
-      groupId: null,
+      hex:
+        assignedDisplayHex(
+          channel,
+          args.allSourceChannels,
+          home?.row ?? null,
+        ) ?? "",
+      visible: home
+        ? isDisplayedViaGroupRow(
+            sc.id,
+            args.channelGroups,
+            args.groupRowVisibilities,
+          )
+        : isStackVisible(args.stackVisibilities, sc.id),
+      groupId: home?.groupId ?? null,
+      groupRowId: home?.row.id,
     });
   }
 
-  return { groups, etc };
+  return { groups, allChannels };
 }

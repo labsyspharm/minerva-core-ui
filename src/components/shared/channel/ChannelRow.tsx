@@ -1,10 +1,15 @@
 import {
   type MouseEventHandler,
+  type ReactNode,
   useEffect,
   useId,
   useRef,
   useState,
 } from "react";
+import {
+  ChannelContrastEditor,
+  type ChannelContrastEditorProps,
+} from "@/components/shared/channel/ChannelContrastEditor";
 import {
   ChannelColorSwatchButton,
   ChannelVisibilitySwatch,
@@ -188,14 +193,15 @@ type ChannelRowNameProps =
     };
 
 type ChannelRowProps = {
-  rowClassName: string;
   visible: boolean;
   visibilityTitle: string;
   visibilityAriaLabel: string;
   onToggleVisibility: MouseEventHandler<HTMLButtonElement>;
   name: ChannelRowNameProps;
   imageSubtitle?: string | null;
-  trailing?: React.ReactNode;
+  contrast?: ChannelContrastEditorProps;
+  trailing?: ReactNode;
+  locked?: boolean;
   isMask?: boolean;
   maskVisualization?: MaskVisualization;
   onMaskVisualizationChange?: (viz: MaskVisualization) => void;
@@ -269,17 +275,18 @@ function EditableChannelRowName(
   );
 }
 
-/** Shared channel list row: visibility, name, mask viz or color swatch, optional action. */
+/** One-row channel editor: visibility, name, histogram, swatch, optional action. */
 export function ChannelRow(props: ChannelRowProps) {
   const {
-    rowClassName,
     visible,
     visibilityTitle,
     visibilityAriaLabel,
     onToggleVisibility,
     name,
     imageSubtitle,
+    contrast,
     trailing,
+    locked,
     isMask,
     maskVisualization,
     onMaskVisualizationChange,
@@ -308,7 +315,12 @@ export function ChannelRow(props: ChannelRowProps) {
   };
 
   return (
-    <div ref={rowRef} className={rowClassName}>
+    <div
+      ref={rowRef}
+      className={`${styles.channelRow}${
+        locked ? ` ${styles.detailChannelRowLocked}` : ""
+      }`}
+    >
       <div className={styles.channelRowMain}>
         <ChannelVisibilitySwatch
           visible={visible}
@@ -334,6 +346,9 @@ export function ChannelRow(props: ChannelRowProps) {
               {imageSubtitle}
             </span>
           ) : null}
+        </div>
+        <div className={styles.channelRowMid}>
+          {contrast ? <ChannelContrastEditor {...contrast} /> : null}
         </div>
         {showMask ? (
           <button
@@ -366,9 +381,7 @@ export function ChannelRow(props: ChannelRowProps) {
             onClick={onColorClick}
           />
         ) : null}
-        {trailing ? (
-          <div className={styles.channelRowTrailing}>{trailing}</div>
-        ) : null}
+        <div className={styles.channelRowTrailing}>{trailing}</div>
       </div>
       {showMask && maskControlsOpen && onMaskVisualizationChange ? (
         <div id={maskControlsId} className={styles.maskControlsPanel}>

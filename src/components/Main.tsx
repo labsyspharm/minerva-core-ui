@@ -86,10 +86,9 @@ import {
 import { getOmeTiffImageDescriptionOmeXml } from "@/lib/imaging/omeTiff";
 import {
   applySharedImportPaletteToChannelGroups,
-  ensureInitFourColorPalette,
+  ensureInitPalette,
   reconcileUngroupedStackPalette,
-  resetInitFourColorPalette,
-  resetUngroupedStackPaletteReconcile,
+  resetInitPalette,
   warmupPsudoPalette,
 } from "@/lib/imaging/psudoPalette";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
@@ -304,8 +303,7 @@ async function hydrateLoadersFromImages(
 function clearOmeDerivedCaches(): void {
   clearOmeHistogramCache();
   clearGmmScheduler();
-  resetUngroupedStackPaletteReconcile();
-  resetInitFourColorPalette();
+  resetInitPalette();
 }
 
 function visibleGmmIds(images: Image[]): Set<string> {
@@ -458,15 +456,13 @@ const Content = (props: Props) => {
   React.useEffect(() => {
     if (!activeStoryId) {
       clearGmmScheduler();
-      resetUngroupedStackPaletteReconcile();
-      resetInitFourColorPalette();
+      resetInitPalette();
       prevGmmShownRef.current = null;
       return;
     }
     return () => {
       clearGmmScheduler();
-      resetUngroupedStackPaletteReconcile();
-      resetInitFourColorPalette();
+      resetInitPalette();
       prevGmmShownRef.current = null;
     };
   }, [activeStoryId]);
@@ -481,7 +477,7 @@ const Content = (props: Props) => {
       visibleChannelIds: shown,
     });
     prevGmmShownRef.current = shown;
-    void ensureInitFourColorPalette(activeStoryId);
+    void ensureInitPalette(activeStoryId);
   }, [activeStoryId, omeLoaderEntries, gmmChannelKey]);
   React.useEffect(() => {
     if (!activeStoryId) return;

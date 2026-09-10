@@ -52,7 +52,6 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
     ) : activeTab === "channels" ? (
       <ChannelGroupsMasterDetail
         noLoader={props.noLoader}
-        ensureChannelHistograms={props.ensureChannelHistograms}
         contrastEditable={props.contrastEditable}
       />
     ) : (

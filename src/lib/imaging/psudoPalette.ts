@@ -1,4 +1,5 @@
 import {
+  buildCompositedIntensityLayers,
   isStackVisible,
   sourceChannelInAnyGroup,
 } from "@/lib/imaging/channelCompositor";
@@ -39,8 +40,6 @@ const PSUDO_NUM_RESTARTS = 18;
 
 const PSUDO_CONTRAST_MIN = 0;
 const PSUDO_CONTRAST_MAX = 65535;
-
-const IMPORT_GROUP_SLOT_COUNT = DEFAULT_VISIBLE_INTENSITY_CHANNELS;
 
 type PaletteSlot = { id: string; color: RgbColor };
 
@@ -181,18 +180,21 @@ async function invokePsudoOptimize(
   return linear;
 }
 
-async function optimizeGroupPalette(
-  inputs: PsudoOptimizeInputs,
+async function optimizePaletteSlots(
+  slots: readonly PaletteSlot[],
+  lockedIds: ReadonlySet<string> = new Set(),
 ): Promise<RgbColor[]> {
-  const nChannels = inputs.colorNames.length;
-  if (nChannels < 2) {
+  if (slots.length < 2) {
     throw new Error(
       "At least two channels are required to optimize a palette.",
     );
   }
-
+  if (slots.every((slot) => lockedIds.has(slot.id))) {
+    return slots.map((slot) => ({ ...slot.color }));
+  }
+  const inputs = buildOptimizeInputsFromSlots(slots, lockedIds);
+  const nChannels = inputs.colorNames.length;
   const linear = await invokePsudoOptimize(inputs);
-
   const out: RgbColor[] = [];
   for (let ch = 0; ch < nChannels; ch++) {
     if (inputs.locked[ch] === 1) {
@@ -207,21 +209,6 @@ async function optimizeGroupPalette(
     }
   }
   return out;
-}
-
-async function optimizePaletteSlots(
-  slots: readonly PaletteSlot[],
-  lockedIds: ReadonlySet<string> = new Set(),
-): Promise<RgbColor[]> {
-  if (slots.length < 2) {
-    throw new Error(
-      "At least two channels are required to optimize a palette.",
-    );
-  }
-  if (slots.every((slot) => lockedIds.has(slot.id))) {
-    return slots.map((slot) => ({ ...slot.color }));
-  }
-  return optimizeGroupPalette(buildOptimizeInputsFromSlots(slots, lockedIds));
 }
 
 export function isGroupEligibleForPsudoOptimize(
@@ -288,15 +275,13 @@ export function applyOptimizedColorsToChannelGroup(
   });
 }
 
-function usesDefaultFourChannelGrouping(
-  channelGroups: ChannelGroup[],
-): boolean {
+function usesDefaultImportGrouping(channelGroups: ChannelGroup[]): boolean {
   if (channelGroups.length === 0) return false;
   return channelGroups.every(
     (g) =>
       /^Group \d+$/.test(g.name) &&
       g.channels.length >= 1 &&
-      g.channels.length <= IMPORT_GROUP_SLOT_COUNT,
+      g.channels.length <= DEFAULT_VISIBLE_INTENSITY_CHANNELS,
   );
 }
 
@@ -319,7 +304,7 @@ function importPaletteSourceChannels(sourceChannels: Channel[]): Channel[] {
       : sourceChannels.filter((sc) =>
           isImportPaletteSource(sc, sourceChannels),
         );
-  return pool.slice(0, IMPORT_GROUP_SLOT_COUNT);
+  return pool.slice(0, DEFAULT_VISIBLE_INTENSITY_CHANNELS);
 }
 
 function seedPaletteForPicked(count: number): RgbColor[] {
@@ -349,10 +334,10 @@ function startingColorAwayFromLocked(
   );
 }
 
-async function optimizeImportPaletteFour(
+async function optimizeImportPalette(
   sourceChannels: Channel[],
 ): Promise<RgbColor[]> {
-  const seeds = seedPaletteForPicked(IMPORT_GROUP_SLOT_COUNT);
+  const seeds = seedPaletteForPicked(DEFAULT_VISIBLE_INTENSITY_CHANNELS);
   const picked = importPaletteSourceChannels(sourceChannels);
   if (picked.length < 2) return seeds;
 
@@ -364,37 +349,24 @@ async function optimizeImportPaletteFour(
   return seeds.map((fallback, i) => optimized[i] ?? fallback);
 }
 
-function applyFourColorPaletteToChannelGroups(
-  channelGroups: ChannelGroup[],
-  palette: readonly RgbColor[],
-  sourceChannels: Channel[],
-): ChannelGroup[] {
-  if (palette.length === 0) return channelGroups;
-  return channelGroups.map((g) => {
-    const channels = g.channels.map((gc, index) => {
-      const sc = findSourceChannel(sourceChannels, gc.channelId);
-      if (sc?.samples === 3) return gc;
-      const c = palette[index % palette.length];
-      return { ...gc, color: { r: c.r, g: c.g, b: c.b } };
-    });
-    return { ...g, channels };
-  });
-}
-
 export async function applySharedImportPaletteToChannelGroups(
   channelGroups: ChannelGroup[],
   sourceChannels: Channel[],
 ): Promise<ChannelGroup[]> {
-  if (!usesDefaultFourChannelGrouping(channelGroups)) {
+  if (!usesDefaultImportGrouping(channelGroups)) {
     return channelGroups;
   }
   try {
-    const palette = await optimizeImportPaletteFour(sourceChannels);
-    return applyFourColorPaletteToChannelGroups(
-      channelGroups,
-      palette,
-      sourceChannels,
-    );
+    const palette = await optimizeImportPalette(sourceChannels);
+    return channelGroups.map((g) => ({
+      ...g,
+      channels: g.channels.map((gc, index) => {
+        const sc = findSourceChannel(sourceChannels, gc.channelId);
+        if (sc?.samples === 3) return gc;
+        const c = palette[index % palette.length];
+        return { ...gc, color: { r: c.r, g: c.g, b: c.b } };
+      }),
+    }));
   } catch (e) {
     if (import.meta.env.DEV) {
       console.warn("[psudo] import palette optimization failed", e);
@@ -408,7 +380,7 @@ export async function applySharedImportPaletteToSourceChannels(
 ): Promise<Channel[]> {
   const picked = importPaletteSourceChannels(sourceChannels);
   try {
-    const palette = (await optimizeImportPaletteFour(sourceChannels)).slice(
+    const palette = (await optimizeImportPalette(sourceChannels)).slice(
       0,
       picked.length,
     );
@@ -424,7 +396,7 @@ export async function applySharedImportPaletteToSourceChannels(
   }
 }
 
-function needsInitFourColorPalette(
+function needsInitPalette(
   picked: readonly Channel[],
   groups: readonly ChannelGroup[],
 ): boolean {
@@ -442,41 +414,43 @@ function needsInitFourColorPalette(
   return true;
 }
 
-let initFourColorKey: string | null = null;
-let initFourColorInFlight: string | null = null;
-let initFourColorGeneration = 0;
+let initPaletteKey: string | null = null;
+let initPaletteInFlight: string | null = null;
+let initPaletteGeneration = 0;
+let prevUngroupedStackVis: Record<string, boolean> | null = null;
 
-export function resetInitFourColorPalette(): void {
-  initFourColorGeneration += 1;
-  initFourColorKey = null;
-  initFourColorInFlight = null;
+export function resetInitPalette(): void {
+  initPaletteGeneration += 1;
+  initPaletteKey = null;
+  initPaletteInFlight = null;
+  prevUngroupedStackVis = null;
 }
 
 /**
- * One 4-slot `psudo.optimize` for the first intensity channels when a story
+ * One `psudo.optimize` for the default visible intensity channels when a story
  * opens on the seed palette (hydrate) or never received an import optimize.
  * Skips once colors are no longer the import seeds.
  */
-export function ensureInitFourColorPalette(storyId: string): Promise<void> {
+export function ensureInitPalette(storyId: string): Promise<void> {
   const doc = useDocumentStore.getState();
   const sources = flattenImageChannelsInDocumentOrder(doc.images);
   const picked = importPaletteSourceChannels(sources);
   const key = `${storyId}:${picked.map((sc) => sc.id).join(",")}`;
-  if (initFourColorKey === key || initFourColorInFlight === key) {
+  if (initPaletteKey === key || initPaletteInFlight === key) {
     return Promise.resolve();
   }
-  if (!needsInitFourColorPalette(picked, doc.channelGroups)) {
-    initFourColorKey = key;
+  if (!needsInitPalette(picked, doc.channelGroups)) {
+    initPaletteKey = key;
     return Promise.resolve();
   }
-  initFourColorInFlight = key;
-  const generation = initFourColorGeneration;
+  initPaletteInFlight = key;
+  const generation = initPaletteGeneration;
   const pendingIds = picked.map((sc) => sc.id);
   setStackPalettePendingMany(pendingIds, true);
   const run = (async () => {
     try {
-      const palette = await optimizeImportPaletteFour(sources);
-      if (generation !== initFourColorGeneration) return;
+      const palette = await optimizeImportPalette(sources);
+      if (generation !== initPaletteGeneration) return;
       const docNow = useDocumentStore.getState();
       if (docNow.activeStoryId !== storyId) return;
       const sourcesNow = flattenImageChannelsInDocumentOrder(docNow.images);
@@ -487,8 +461,8 @@ export function ensureInitFourColorPalette(storyId: string): Promise<void> {
       ) {
         return;
       }
-      if (!needsInitFourColorPalette(pickedNow, docNow.channelGroups)) {
-        initFourColorKey = key;
+      if (!needsInitPalette(pickedNow, docNow.channelGroups)) {
+        initPaletteKey = key;
         return;
       }
       const colorBySourceId = new Map(
@@ -517,7 +491,7 @@ export function ensureInitFourColorPalette(storyId: string): Promise<void> {
         return { ...g, channels };
       });
       if (!sourcesChanged && !groupsChanged) {
-        initFourColorKey = key;
+        initPaletteKey = key;
         return;
       }
       if (groupsChanged) {
@@ -531,32 +505,19 @@ export function ensureInitFourColorPalette(storyId: string): Promise<void> {
         );
       }
       if (import.meta.env.DEV) {
-        console.log("[psudo] init 4-color", pendingIds);
+        console.log("[psudo] init palette", pendingIds);
       }
-      initFourColorKey = key;
+      initPaletteKey = key;
     } catch (e) {
       if (import.meta.env.DEV) {
-        console.warn("[psudo] init 4-color palette failed", e);
+        console.warn("[psudo] init palette failed", e);
       }
     } finally {
       setStackPalettePendingMany(pendingIds, false);
-      if (initFourColorInFlight === key) initFourColorInFlight = null;
+      if (initPaletteInFlight === key) initPaletteInFlight = null;
     }
   })();
   return run;
-}
-
-function stackPaletteParticipants(
-  sourceChannels: Channel[],
-  stackVisibilities: Record<string, boolean>,
-): Channel[] {
-  const groups = useDocumentStore.getState().channelGroups;
-  return sourceChannels.filter((sc) => {
-    if (!isImageChannel(sc) || sc.samples === 3) return false;
-    if (isRgbDisplayChannel(sc, sourceChannels)) return false;
-    if (sourceChannelInAnyGroup(groups, sc.id)) return false;
-    return isStackVisible(stackVisibilities, sc.id);
-  });
 }
 
 let stackPaletteChain: Promise<void> = Promise.resolve();
@@ -633,12 +594,6 @@ function ensurePaletteForNewlyVisibleStackChannels(
   return run;
 }
 
-let prevUngroupedStackVis: Record<string, boolean> | null = null;
-
-export function resetUngroupedStackPaletteReconcile(): void {
-  prevUngroupedStackVis = null;
-}
-
 export function reconcileUngroupedStackPalette(
   stackVisibilities: Record<string, boolean>,
 ): void {
@@ -670,27 +625,41 @@ async function runEnsureStackPalette(sourceChannelId: string): Promise<void> {
     return;
   }
 
-  const vis = useAppStore.getState().channelVisibilities;
-  const participants = stackPaletteParticipants(
-    flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images),
-    vis,
-  );
-  const unlocked = participants.filter((sc) => !sc.color);
+  const groups = doc.channelGroups;
+  const app = useAppStore.getState();
+  const lockedSlots: PaletteSlot[] = [];
+  const unlocked: Channel[] = [];
+  const seen = new Set<string>();
+  for (const { sc, gc } of buildCompositedIntensityLayers({
+    onLoader: sourceChannels.filter(isImageChannel),
+    activeGroup: groups.find((g) => g.id === app.activeChannelGroupId),
+    channelGroups: groups,
+    stackVisibilities: app.channelVisibilities,
+    groupRowVisibilities: app.channelGroupRowVisibilities,
+    hasVisibilityMap: true,
+    requireColor: false,
+  })) {
+    if (seen.has(sc.id)) continue;
+    if (sc.samples === 3 || isRgbDisplayChannel(sc, sourceChannels)) continue;
+    seen.add(sc.id);
+    const color = gc?.color ?? sc.color;
+    if (color) {
+      lockedSlots.push({ id: sc.id, color: asRgbColor(color) });
+    } else if (!gc) {
+      unlocked.push(sc);
+    }
+  }
+  if (!seen.has(shown.id)) unlocked.push(shown);
   if (unlocked.length === 0) return;
 
-  const lockedIds = new Set(
-    participants.filter((sc) => sc.color).map((sc) => sc.id),
+  const lockedIds = new Set(lockedSlots.map((slot) => slot.id));
+  const unlockedStart = startingColorAwayFromLocked(
+    lockedSlots.map((slot) => slot.color),
   );
-  const lockedColors = participants
-    .filter((sc) => lockedIds.has(sc.id) && sc.color)
-    .map((sc) => asRgbColor(sc.color as RgbColor));
-  const unlockedStart = startingColorAwayFromLocked(lockedColors);
-  const slots: PaletteSlot[] = participants.map((sc) => ({
-    id: sc.id,
-    color: lockedIds.has(sc.id)
-      ? asRgbColor(sc.color as RgbColor)
-      : unlockedStart,
-  }));
+  const slots: PaletteSlot[] = [
+    ...lockedSlots,
+    ...unlocked.map((sc) => ({ id: sc.id, color: unlockedStart })),
+  ];
 
   let colors: RgbColor[];
   try {
@@ -708,7 +677,7 @@ async function runEnsureStackPalette(sourceChannelId: string): Promise<void> {
   const docNow = useDocumentStore.getState();
   const sourcesNow = flattenImageChannelsInDocumentOrder(docNow.images);
   const unlockedIds = new Set(unlocked.map((sc) => sc.id));
-  const indexById = new Map(participants.map((sc, i) => [sc.id, i] as const));
+  const indexById = new Map(slots.map((slot, i) => [slot.id, i] as const));
 
   let changed = false;
   const next = sourcesNow.map((sc) => {

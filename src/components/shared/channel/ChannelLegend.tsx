@@ -60,29 +60,25 @@ export type LegendSection = {
 
 export function legendChannelFromLayer(
   sc: Channel,
-  gc: ChannelGroupChannel | null,
-  activeGroupId: string | null,
-  allChannels?: readonly Channel[],
+  gc: ChannelGroupChannel,
+  groupId: string,
 ): LegendChannel {
-  if (gc) {
-    const { r, g, b } = gc.color;
-    const hex_color = [r, g, b]
-      .map((n) => n.toString(16).padStart(2, "0"))
-      .join("");
-    return {
-      r,
-      g,
-      b,
-      lower_range: gc.lowerLimit,
-      upper_range: gc.upperLimit,
-      name: sc.name,
-      color: hex_color,
-      group_uuid: activeGroupId ?? "",
-      source_uuid: sc.id,
-      channel_uuid: gc.id,
-    };
-  }
-  return legendChannelFromSource(sc, allChannels);
+  const { r, g, b } = gc.color;
+  const hex_color = [r, g, b]
+    .map((n) => n.toString(16).padStart(2, "0"))
+    .join("");
+  return {
+    r,
+    g,
+    b,
+    lower_range: gc.lowerLimit,
+    upper_range: gc.upperLimit,
+    name: sc.name,
+    color: hex_color,
+    group_uuid: groupId,
+    source_uuid: sc.id,
+    channel_uuid: gc.id,
+  };
 }
 
 export function legendChannelFromSource(
@@ -131,7 +127,6 @@ type LegendRowProps = {
   colorPending?: boolean;
   channelVisibilities: Record<string, boolean>;
   channelGroupRowVisibilities: Record<string, boolean>;
-  hiddenInViewer?: boolean;
   toggleChannel: (c: LegendChannel) => void;
   updateChannel: (
     gid: string,
@@ -147,13 +142,11 @@ const LegendRow = (props: LegendRowProps) => {
   const channelName = channel.name;
   const { idx, g, onColorClick } = props;
   const colorPending = !!props.colorPending;
-  const rowVisible = props.hiddenInViewer
-    ? false
-    : legendRowVisible(
-        channel,
-        props.channelVisibilities,
-        props.channelGroupRowVisibilities,
-      );
+  const rowVisible = legendRowVisible(
+    channel,
+    props.channelVisibilities,
+    props.channelGroupRowVisibilities,
+  );
   const onPop = () => {
     props.popChannel({ g, idx });
   };
@@ -335,12 +328,6 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
                 const c = entry.channel;
                 const k = rowIdx;
                 rowIdx += 1;
-                const hiddenInViewer =
-                  !!c.group_uuid &&
-                  !isGroupRowVisible(
-                    channelGroupRowVisibilities,
-                    c.channel_uuid,
-                  );
                 const rowProps: LegendRowProps = {
                   channel: c,
                   idx: k,
@@ -350,7 +337,6 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
                   colorPending: palettePendingIds.includes(c.source_uuid),
                   channelVisibilities: props.channelVisibilities,
                   channelGroupRowVisibilities,
-                  hiddenInViewer,
                   toggleChannel: props.toggleChannel,
                   updateChannel: props.updateChannel ?? (() => {}),
                   popChannel: props.popChannel ?? (() => {}),
