@@ -12,6 +12,7 @@ import type {
 } from "@/lib/imaging/loaderTypes";
 import { CELL_OUTLINE_RGB } from "@/lib/imaging/maskLayers";
 import type { Loader } from "@/lib/imaging/viv";
+import { worldFrameFromLoader } from "@/lib/imaging/worldFrame";
 
 const CELL_OUTLINE_COUNT = CELL_OUTLINE_RGB.length;
 const CELL_OUTLINE_VEC3: [number, number, number][] = CELL_OUTLINE_RGB.map(
@@ -231,24 +232,21 @@ function planeSize(plane: LoaderPlane): { width: number; height: number } {
   };
 }
 
-/** Tiled GPU bitmask overlay; stretches mask pixels into the viewer frame. */
 export function createMaskTileLayer(args: {
   id: string;
   loader: Loader;
   channelIndex: number;
   visualization: MaskVisualization;
-  worldWidth: number;
-  worldHeight: number;
 }): Layer | null {
   const planes = args.loader.data;
   if (!planes?.length) return null;
   const finest = planes[0];
   const { width: maskW, height: maskH } = planeSize(finest);
   if (maskW <= 0 || maskH <= 0) return null;
-  if (args.worldWidth <= 0 || args.worldHeight <= 0) return null;
 
-  const scaleX = args.worldWidth / maskW;
-  const scaleY = args.worldHeight / maskH;
+  const { umPerPixelX: scaleX, umPerPixelY: scaleY } = worldFrameFromLoader(
+    args.loader,
+  );
   const { visualization: viz, channelIndex } = args;
 
   return new TileLayer<MaskTileData>({
