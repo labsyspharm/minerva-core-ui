@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DcPn_K0Q.js","./pako.esm-KbdoS3Oq.js","./lerc-ROGVKgaz.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-20x3EU-U.js","./pako.esm-KbdoS3Oq.js","./lerc-Lx9CaUWu.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18123,16 +18123,12 @@ let __tla = (async () => {
   function sourceChannelInAnyGroup(channelGroups, sourceId) {
     return sourceIdsInAnyGroup(channelGroups).has(sourceId);
   }
-  function stackOverlayReady(sc2, requireColor) {
-    if (requireColor && sc2.samples !== 3 && !sc2.color) return false;
-    return true;
-  }
   function buildCompositedIntensityLayers(args) {
     const { onLoader, activeGroup, channelGroups = [], stackVisibilities, groupRowVisibilities, hasVisibilityMap, requireColor = true } = args;
     const groupedIds = sourceIdsInAnyGroup(channelGroups);
     if (channelGroups.length === 0) {
       const layers = hasVisibilityMap ? onLoader.filter((sc2) => isStackVisible(stackVisibilities, sc2.id)) : onLoader.slice(0, DEFAULT_VISIBLE_INTENSITY_CHANNELS);
-      return layers.filter((sc2) => stackOverlayReady(sc2, requireColor)).map((sc2) => ({
+      return layers.filter((sc2) => !(requireColor && sc2.samples !== 3 && !sc2.color)).map((sc2) => ({
         sc: sc2,
         gc: null
       }));
@@ -18160,7 +18156,7 @@ let __tla = (async () => {
       if (!hasVisibilityMap || !isStackVisible(stackVisibilities, sc2.id)) {
         continue;
       }
-      if (!stackOverlayReady(sc2, requireColor)) continue;
+      if (requireColor && sc2.samples !== 3 && !sc2.color) continue;
       usedSourceIds.add(sc2.id);
       ordered.push({
         sc: sc2,
@@ -18515,6662 +18511,6 @@ let __tla = (async () => {
     }
     if (parsed !== void 0) fn(parsed);
   };
-  const SEGMENTS_PER_CIRCLE = 32;
-  function makeCircle(cx, cy, radiusWorld, segments = SEGMENTS_PER_CIRCLE) {
-    const points = [];
-    for (let i2 = 0; i2 <= segments; i2++) {
-      const angle2 = i2 / segments * 2 * Math.PI;
-      points.push([
-        cx + radiusWorld * Math.cos(angle2),
-        cy + radiusWorld * Math.sin(angle2)
-      ]);
-    }
-    return points;
-  }
-  let f$3 = class f {
-    constructor(t2, e2) {
-      this.next = null, this.key = t2, this.data = e2, this.left = null, this.right = null;
-    }
-  };
-  function d$3(n2, t2) {
-    return n2 > t2 ? 1 : n2 < t2 ? -1 : 0;
-  }
-  function u$5(n2, t2, e2) {
-    const r2 = new f$3(null, null);
-    let l2 = r2, i2 = r2;
-    for (; ; ) {
-      const o2 = e2(n2, t2.key);
-      if (o2 < 0) {
-        if (t2.left === null) break;
-        if (e2(n2, t2.left.key) < 0) {
-          const s2 = t2.left;
-          if (t2.left = s2.right, s2.right = t2, t2 = s2, t2.left === null) break;
-        }
-        i2.left = t2, i2 = t2, t2 = t2.left;
-      } else if (o2 > 0) {
-        if (t2.right === null) break;
-        if (e2(n2, t2.right.key) > 0) {
-          const s2 = t2.right;
-          if (t2.right = s2.left, s2.left = t2, t2 = s2, t2.right === null) break;
-        }
-        l2.right = t2, l2 = t2, t2 = t2.right;
-      } else break;
-    }
-    return l2.right = t2.left, i2.left = t2.right, t2.left = r2.right, t2.right = r2.left, t2;
-  }
-  function c$5(n2, t2, e2, r2) {
-    const l2 = new f$3(n2, t2);
-    if (e2 === null) return l2.left = l2.right = null, l2;
-    e2 = u$5(n2, e2, r2);
-    const i2 = r2(n2, e2.key);
-    return i2 < 0 ? (l2.left = e2.left, l2.right = e2, e2.left = null) : i2 >= 0 && (l2.right = e2.right, l2.left = e2, e2.right = null), l2;
-  }
-  function m$1(n2, t2, e2) {
-    let r2 = null, l2 = null;
-    if (t2) {
-      t2 = u$5(n2, t2, e2);
-      const i2 = e2(t2.key, n2);
-      i2 === 0 ? (r2 = t2.left, l2 = t2.right) : i2 < 0 ? (l2 = t2.right, t2.right = null, r2 = t2) : (r2 = t2.left, t2.left = null, l2 = t2);
-    }
-    return {
-      left: r2,
-      right: l2
-    };
-  }
-  function w$2(n2, t2, e2) {
-    return t2 === null ? n2 : (n2 === null || (t2 = u$5(n2.key, t2, e2), t2.left = n2), t2);
-  }
-  function _$3(n2, t2, e2, r2, l2) {
-    if (n2) {
-      r2(`${t2}${e2 ? "\u2514\u2500\u2500 " : "\u251C\u2500\u2500 "}${l2(n2)}
-`);
-      const i2 = t2 + (e2 ? "    " : "\u2502   ");
-      n2.left && _$3(n2.left, i2, false, r2, l2), n2.right && _$3(n2.right, i2, true, r2, l2);
-    }
-  }
-  class z {
-    constructor(t2 = d$3) {
-      this._root = null, this._size = 0, this._comparator = t2;
-    }
-    insert(t2, e2) {
-      return this._size++, this._root = c$5(t2, e2, this._root, this._comparator);
-    }
-    add(t2, e2) {
-      const r2 = new f$3(t2, e2);
-      this._root === null && (r2.left = r2.right = null, this._size++, this._root = r2);
-      const l2 = this._comparator, i2 = u$5(t2, this._root, l2), o2 = l2(t2, i2.key);
-      return o2 === 0 ? this._root = i2 : (o2 < 0 ? (r2.left = i2.left, r2.right = i2, i2.left = null) : o2 > 0 && (r2.right = i2.right, r2.left = i2, i2.right = null), this._size++, this._root = r2), this._root;
-    }
-    remove(t2) {
-      this._root = this._remove(t2, this._root, this._comparator);
-    }
-    _remove(t2, e2, r2) {
-      let l2;
-      return e2 === null ? null : (e2 = u$5(t2, e2, r2), r2(t2, e2.key) === 0 ? (e2.left === null ? l2 = e2.right : (l2 = u$5(t2, e2.left, r2), l2.right = e2.right), this._size--, l2) : e2);
-    }
-    pop() {
-      let t2 = this._root;
-      if (t2) {
-        for (; t2.left; ) t2 = t2.left;
-        return this._root = u$5(t2.key, this._root, this._comparator), this._root = this._remove(t2.key, this._root, this._comparator), {
-          key: t2.key,
-          data: t2.data
-        };
-      }
-      return null;
-    }
-    findStatic(t2) {
-      let e2 = this._root;
-      const r2 = this._comparator;
-      for (; e2; ) {
-        const l2 = r2(t2, e2.key);
-        if (l2 === 0) return e2;
-        l2 < 0 ? e2 = e2.left : e2 = e2.right;
-      }
-      return null;
-    }
-    find(t2) {
-      return this._root && (this._root = u$5(t2, this._root, this._comparator), this._comparator(t2, this._root.key) !== 0) ? null : this._root;
-    }
-    contains(t2) {
-      let e2 = this._root;
-      const r2 = this._comparator;
-      for (; e2; ) {
-        const l2 = r2(t2, e2.key);
-        if (l2 === 0) return true;
-        l2 < 0 ? e2 = e2.left : e2 = e2.right;
-      }
-      return false;
-    }
-    forEach(t2, e2) {
-      let r2 = this._root;
-      const l2 = [];
-      let i2 = false;
-      for (; !i2; ) r2 !== null ? (l2.push(r2), r2 = r2.left) : l2.length !== 0 ? (r2 = l2.pop(), t2.call(e2, r2), r2 = r2.right) : i2 = true;
-      return this;
-    }
-    range(t2, e2, r2, l2) {
-      const i2 = [], o2 = this._comparator;
-      let s2 = this._root, h2;
-      for (; i2.length !== 0 || s2; ) if (s2) i2.push(s2), s2 = s2.left;
-      else {
-        if (s2 = i2.pop(), h2 = o2(s2.key, e2), h2 > 0) break;
-        if (o2(s2.key, t2) >= 0 && r2.call(l2, s2)) return this;
-        s2 = s2.right;
-      }
-      return this;
-    }
-    keys() {
-      const t2 = [];
-      return this.forEach(({ key: e2 }) => {
-        t2.push(e2);
-      }), t2;
-    }
-    values() {
-      const t2 = [];
-      return this.forEach(({ data: e2 }) => {
-        t2.push(e2);
-      }), t2;
-    }
-    min() {
-      return this._root ? this.minNode(this._root).key : null;
-    }
-    max() {
-      return this._root ? this.maxNode(this._root).key : null;
-    }
-    minNode(t2 = this._root) {
-      if (t2) for (; t2.left; ) t2 = t2.left;
-      return t2;
-    }
-    maxNode(t2 = this._root) {
-      if (t2) for (; t2.right; ) t2 = t2.right;
-      return t2;
-    }
-    at(t2) {
-      let e2 = this._root, r2 = false, l2 = 0;
-      const i2 = [];
-      for (; !r2; ) if (e2) i2.push(e2), e2 = e2.left;
-      else if (i2.length > 0) {
-        if (e2 = i2.pop(), l2 === t2) return e2;
-        l2++, e2 = e2.right;
-      } else r2 = true;
-      return null;
-    }
-    next(t2) {
-      let e2 = this._root, r2 = null;
-      if (t2.right) {
-        for (r2 = t2.right; r2.left; ) r2 = r2.left;
-        return r2;
-      }
-      const l2 = this._comparator;
-      for (; e2; ) {
-        const i2 = l2(t2.key, e2.key);
-        if (i2 === 0) break;
-        i2 < 0 ? (r2 = e2, e2 = e2.left) : e2 = e2.right;
-      }
-      return r2;
-    }
-    prev(t2) {
-      let e2 = this._root, r2 = null;
-      if (t2.left !== null) {
-        for (r2 = t2.left; r2.right; ) r2 = r2.right;
-        return r2;
-      }
-      const l2 = this._comparator;
-      for (; e2; ) {
-        const i2 = l2(t2.key, e2.key);
-        if (i2 === 0) break;
-        i2 < 0 ? e2 = e2.left : (r2 = e2, e2 = e2.right);
-      }
-      return r2;
-    }
-    clear() {
-      return this._root = null, this._size = 0, this;
-    }
-    toList() {
-      return k(this._root);
-    }
-    load(t2, e2 = [], r2 = false) {
-      let l2 = t2.length;
-      const i2 = this._comparator;
-      if (r2 && g$1(t2, e2, 0, l2 - 1, i2), this._root === null) this._root = a$2(t2, e2, 0, l2), this._size = l2;
-      else {
-        const o2 = y$1(this.toList(), x(t2, e2), i2);
-        l2 = this._size + l2, this._root = p$2({
-          head: o2
-        }, 0, l2);
-      }
-      return this;
-    }
-    isEmpty() {
-      return this._root === null;
-    }
-    get size() {
-      return this._size;
-    }
-    get root() {
-      return this._root;
-    }
-    toString(t2 = (e2) => String(e2.key)) {
-      const e2 = [];
-      return _$3(this._root, "", true, (r2) => e2.push(r2), t2), e2.join("");
-    }
-    update(t2, e2, r2) {
-      const l2 = this._comparator;
-      let { left: i2, right: o2 } = m$1(t2, this._root, l2);
-      l2(t2, e2) < 0 ? o2 = c$5(e2, r2, o2, l2) : i2 = c$5(e2, r2, i2, l2), this._root = w$2(i2, o2, l2);
-    }
-    split(t2) {
-      return m$1(t2, this._root, this._comparator);
-    }
-    *[Symbol.iterator]() {
-      let t2 = this._root;
-      const e2 = [];
-      let r2 = false;
-      for (; !r2; ) t2 !== null ? (e2.push(t2), t2 = t2.left) : e2.length !== 0 ? (t2 = e2.pop(), yield t2, t2 = t2.right) : r2 = true;
-    }
-  }
-  function a$2(n2, t2, e2, r2) {
-    const l2 = r2 - e2;
-    if (l2 > 0) {
-      const i2 = e2 + Math.floor(l2 / 2), o2 = n2[i2], s2 = t2[i2], h2 = new f$3(o2, s2);
-      return h2.left = a$2(n2, t2, e2, i2), h2.right = a$2(n2, t2, i2 + 1, r2), h2;
-    }
-    return null;
-  }
-  function x(n2, t2) {
-    const e2 = new f$3(null, null);
-    let r2 = e2;
-    for (let l2 = 0; l2 < n2.length; l2++) r2 = r2.next = new f$3(n2[l2], t2[l2]);
-    return r2.next = null, e2.next;
-  }
-  function k(n2) {
-    let t2 = n2;
-    const e2 = [];
-    let r2 = false;
-    const l2 = new f$3(null, null);
-    let i2 = l2;
-    for (; !r2; ) t2 ? (e2.push(t2), t2 = t2.left) : e2.length > 0 ? (t2 = i2 = i2.next = e2.pop(), t2 = t2.right) : r2 = true;
-    return i2.next = null, l2.next;
-  }
-  function p$2(n2, t2, e2) {
-    const r2 = e2 - t2;
-    if (r2 > 0) {
-      const l2 = t2 + Math.floor(r2 / 2), i2 = p$2(n2, t2, l2), o2 = n2.head;
-      return o2.left = i2, n2.head = n2.head.next, o2.right = p$2(n2, l2 + 1, e2), o2;
-    }
-    return null;
-  }
-  function y$1(n2, t2, e2) {
-    const r2 = new f$3(null, null);
-    let l2 = r2, i2 = n2, o2 = t2;
-    for (; i2 !== null && o2 !== null; ) e2(i2.key, o2.key) < 0 ? (l2.next = i2, i2 = i2.next) : (l2.next = o2, o2 = o2.next), l2 = l2.next;
-    return i2 !== null ? l2.next = i2 : o2 !== null && (l2.next = o2), r2.next;
-  }
-  function g$1(n2, t2, e2, r2, l2) {
-    if (e2 >= r2) return;
-    const i2 = n2[e2 + r2 >> 1];
-    let o2 = e2 - 1, s2 = r2 + 1;
-    for (; ; ) {
-      do
-        o2++;
-      while (l2(n2[o2], i2) < 0);
-      do
-        s2--;
-      while (l2(n2[s2], i2) > 0);
-      if (o2 >= s2) break;
-      let h2 = n2[o2];
-      n2[o2] = n2[s2], n2[s2] = h2, h2 = t2[o2], t2[o2] = t2[s2], t2[s2] = h2;
-    }
-    g$1(n2, t2, e2, s2, l2), g$1(n2, t2, s2 + 1, r2, l2);
-  }
-  const epsilon$1 = 11102230246251565e-32;
-  const splitter = 134217729;
-  const resulterrbound = (3 + 8 * epsilon$1) * epsilon$1;
-  function sum$1(elen, e2, flen, f2, h2) {
-    let Q2, Qnew, hh2, bvirt;
-    let enow = e2[0];
-    let fnow = f2[0];
-    let eindex = 0;
-    let findex = 0;
-    if (fnow > enow === fnow > -enow) {
-      Q2 = enow;
-      enow = e2[++eindex];
-    } else {
-      Q2 = fnow;
-      fnow = f2[++findex];
-    }
-    let hindex = 0;
-    if (eindex < elen && findex < flen) {
-      if (fnow > enow === fnow > -enow) {
-        Qnew = enow + Q2;
-        hh2 = Q2 - (Qnew - enow);
-        enow = e2[++eindex];
-      } else {
-        Qnew = fnow + Q2;
-        hh2 = Q2 - (Qnew - fnow);
-        fnow = f2[++findex];
-      }
-      Q2 = Qnew;
-      if (hh2 !== 0) {
-        h2[hindex++] = hh2;
-      }
-      while (eindex < elen && findex < flen) {
-        if (fnow > enow === fnow > -enow) {
-          Qnew = Q2 + enow;
-          bvirt = Qnew - Q2;
-          hh2 = Q2 - (Qnew - bvirt) + (enow - bvirt);
-          enow = e2[++eindex];
-        } else {
-          Qnew = Q2 + fnow;
-          bvirt = Qnew - Q2;
-          hh2 = Q2 - (Qnew - bvirt) + (fnow - bvirt);
-          fnow = f2[++findex];
-        }
-        Q2 = Qnew;
-        if (hh2 !== 0) {
-          h2[hindex++] = hh2;
-        }
-      }
-    }
-    while (eindex < elen) {
-      Qnew = Q2 + enow;
-      bvirt = Qnew - Q2;
-      hh2 = Q2 - (Qnew - bvirt) + (enow - bvirt);
-      enow = e2[++eindex];
-      Q2 = Qnew;
-      if (hh2 !== 0) {
-        h2[hindex++] = hh2;
-      }
-    }
-    while (findex < flen) {
-      Qnew = Q2 + fnow;
-      bvirt = Qnew - Q2;
-      hh2 = Q2 - (Qnew - bvirt) + (fnow - bvirt);
-      fnow = f2[++findex];
-      Q2 = Qnew;
-      if (hh2 !== 0) {
-        h2[hindex++] = hh2;
-      }
-    }
-    if (Q2 !== 0 || hindex === 0) {
-      h2[hindex++] = Q2;
-    }
-    return hindex;
-  }
-  function estimate(elen, e2) {
-    let Q2 = e2[0];
-    for (let i2 = 1; i2 < elen; i2++) Q2 += e2[i2];
-    return Q2;
-  }
-  function vec(n2) {
-    return new Float64Array(n2);
-  }
-  const ccwerrboundA = (3 + 16 * epsilon$1) * epsilon$1;
-  const ccwerrboundB = (2 + 12 * epsilon$1) * epsilon$1;
-  const ccwerrboundC = (9 + 64 * epsilon$1) * epsilon$1 * epsilon$1;
-  const B$1 = vec(4);
-  const C1 = vec(8);
-  const C2 = vec(12);
-  const D$1 = vec(16);
-  const u$4 = vec(4);
-  function orient2dadapt(ax, ay, bx, by, cx, cy, detsum) {
-    let acxtail, acytail, bcxtail, bcytail;
-    let bvirt, c2, ahi, alo, bhi, blo, _i2, _j, _0, s1, s0, t1, t0, u3;
-    const acx = ax - cx;
-    const bcx = bx - cx;
-    const acy = ay - cy;
-    const bcy = by - cy;
-    s1 = acx * bcy;
-    c2 = splitter * acx;
-    ahi = c2 - (c2 - acx);
-    alo = acx - ahi;
-    c2 = splitter * bcy;
-    bhi = c2 - (c2 - bcy);
-    blo = bcy - bhi;
-    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
-    t1 = acy * bcx;
-    c2 = splitter * acy;
-    ahi = c2 - (c2 - acy);
-    alo = acy - ahi;
-    c2 = splitter * bcx;
-    bhi = c2 - (c2 - bcx);
-    blo = bcx - bhi;
-    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
-    _i2 = s0 - t0;
-    bvirt = s0 - _i2;
-    B$1[0] = s0 - (_i2 + bvirt) + (bvirt - t0);
-    _j = s1 + _i2;
-    bvirt = _j - s1;
-    _0 = s1 - (_j - bvirt) + (_i2 - bvirt);
-    _i2 = _0 - t1;
-    bvirt = _0 - _i2;
-    B$1[1] = _0 - (_i2 + bvirt) + (bvirt - t1);
-    u3 = _j + _i2;
-    bvirt = u3 - _j;
-    B$1[2] = _j - (u3 - bvirt) + (_i2 - bvirt);
-    B$1[3] = u3;
-    let det = estimate(4, B$1);
-    let errbound = ccwerrboundB * detsum;
-    if (det >= errbound || -det >= errbound) {
-      return det;
-    }
-    bvirt = ax - acx;
-    acxtail = ax - (acx + bvirt) + (bvirt - cx);
-    bvirt = bx - bcx;
-    bcxtail = bx - (bcx + bvirt) + (bvirt - cx);
-    bvirt = ay - acy;
-    acytail = ay - (acy + bvirt) + (bvirt - cy);
-    bvirt = by - bcy;
-    bcytail = by - (bcy + bvirt) + (bvirt - cy);
-    if (acxtail === 0 && acytail === 0 && bcxtail === 0 && bcytail === 0) {
-      return det;
-    }
-    errbound = ccwerrboundC * detsum + resulterrbound * Math.abs(det);
-    det += acx * bcytail + bcy * acxtail - (acy * bcxtail + bcx * acytail);
-    if (det >= errbound || -det >= errbound) return det;
-    s1 = acxtail * bcy;
-    c2 = splitter * acxtail;
-    ahi = c2 - (c2 - acxtail);
-    alo = acxtail - ahi;
-    c2 = splitter * bcy;
-    bhi = c2 - (c2 - bcy);
-    blo = bcy - bhi;
-    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
-    t1 = acytail * bcx;
-    c2 = splitter * acytail;
-    ahi = c2 - (c2 - acytail);
-    alo = acytail - ahi;
-    c2 = splitter * bcx;
-    bhi = c2 - (c2 - bcx);
-    blo = bcx - bhi;
-    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
-    _i2 = s0 - t0;
-    bvirt = s0 - _i2;
-    u$4[0] = s0 - (_i2 + bvirt) + (bvirt - t0);
-    _j = s1 + _i2;
-    bvirt = _j - s1;
-    _0 = s1 - (_j - bvirt) + (_i2 - bvirt);
-    _i2 = _0 - t1;
-    bvirt = _0 - _i2;
-    u$4[1] = _0 - (_i2 + bvirt) + (bvirt - t1);
-    u3 = _j + _i2;
-    bvirt = u3 - _j;
-    u$4[2] = _j - (u3 - bvirt) + (_i2 - bvirt);
-    u$4[3] = u3;
-    const C1len = sum$1(4, B$1, 4, u$4, C1);
-    s1 = acx * bcytail;
-    c2 = splitter * acx;
-    ahi = c2 - (c2 - acx);
-    alo = acx - ahi;
-    c2 = splitter * bcytail;
-    bhi = c2 - (c2 - bcytail);
-    blo = bcytail - bhi;
-    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
-    t1 = acy * bcxtail;
-    c2 = splitter * acy;
-    ahi = c2 - (c2 - acy);
-    alo = acy - ahi;
-    c2 = splitter * bcxtail;
-    bhi = c2 - (c2 - bcxtail);
-    blo = bcxtail - bhi;
-    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
-    _i2 = s0 - t0;
-    bvirt = s0 - _i2;
-    u$4[0] = s0 - (_i2 + bvirt) + (bvirt - t0);
-    _j = s1 + _i2;
-    bvirt = _j - s1;
-    _0 = s1 - (_j - bvirt) + (_i2 - bvirt);
-    _i2 = _0 - t1;
-    bvirt = _0 - _i2;
-    u$4[1] = _0 - (_i2 + bvirt) + (bvirt - t1);
-    u3 = _j + _i2;
-    bvirt = u3 - _j;
-    u$4[2] = _j - (u3 - bvirt) + (_i2 - bvirt);
-    u$4[3] = u3;
-    const C2len = sum$1(C1len, C1, 4, u$4, C2);
-    s1 = acxtail * bcytail;
-    c2 = splitter * acxtail;
-    ahi = c2 - (c2 - acxtail);
-    alo = acxtail - ahi;
-    c2 = splitter * bcytail;
-    bhi = c2 - (c2 - bcytail);
-    blo = bcytail - bhi;
-    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
-    t1 = acytail * bcxtail;
-    c2 = splitter * acytail;
-    ahi = c2 - (c2 - acytail);
-    alo = acytail - ahi;
-    c2 = splitter * bcxtail;
-    bhi = c2 - (c2 - bcxtail);
-    blo = bcxtail - bhi;
-    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
-    _i2 = s0 - t0;
-    bvirt = s0 - _i2;
-    u$4[0] = s0 - (_i2 + bvirt) + (bvirt - t0);
-    _j = s1 + _i2;
-    bvirt = _j - s1;
-    _0 = s1 - (_j - bvirt) + (_i2 - bvirt);
-    _i2 = _0 - t1;
-    bvirt = _0 - _i2;
-    u$4[1] = _0 - (_i2 + bvirt) + (bvirt - t1);
-    u3 = _j + _i2;
-    bvirt = u3 - _j;
-    u$4[2] = _j - (u3 - bvirt) + (_i2 - bvirt);
-    u$4[3] = u3;
-    const Dlen = sum$1(C2len, C2, 4, u$4, D$1);
-    return D$1[Dlen - 1];
-  }
-  function orient2d(ax, ay, bx, by, cx, cy) {
-    const detleft = (ay - cy) * (bx - cx);
-    const detright = (ax - cx) * (by - cy);
-    const det = detleft - detright;
-    const detsum = Math.abs(detleft + detright);
-    if (Math.abs(det) >= ccwerrboundA * detsum) return det;
-    return -orient2dadapt(ax, ay, bx, by, cx, cy, detsum);
-  }
-  var define_process_env_default = {};
-  const isInBbox = (bbox, point2) => {
-    return bbox.ll.x <= point2.x && point2.x <= bbox.ur.x && bbox.ll.y <= point2.y && point2.y <= bbox.ur.y;
-  };
-  const getBboxOverlap = (b1, b2) => {
-    if (b2.ur.x < b1.ll.x || b1.ur.x < b2.ll.x || b2.ur.y < b1.ll.y || b1.ur.y < b2.ll.y) return null;
-    const lowerX = b1.ll.x < b2.ll.x ? b2.ll.x : b1.ll.x;
-    const upperX = b1.ur.x < b2.ur.x ? b1.ur.x : b2.ur.x;
-    const lowerY = b1.ll.y < b2.ll.y ? b2.ll.y : b1.ll.y;
-    const upperY = b1.ur.y < b2.ur.y ? b1.ur.y : b2.ur.y;
-    return {
-      ll: {
-        x: lowerX,
-        y: lowerY
-      },
-      ur: {
-        x: upperX,
-        y: upperY
-      }
-    };
-  };
-  let epsilon = Number.EPSILON;
-  if (epsilon === void 0) epsilon = Math.pow(2, -52);
-  const EPSILON_SQ = epsilon * epsilon;
-  const cmp$1 = (a2, b2) => {
-    if (-epsilon < a2 && a2 < epsilon) {
-      if (-epsilon < b2 && b2 < epsilon) {
-        return 0;
-      }
-    }
-    const ab2 = a2 - b2;
-    if (ab2 * ab2 < EPSILON_SQ * a2 * b2) {
-      return 0;
-    }
-    return a2 < b2 ? -1 : 1;
-  };
-  class PtRounder {
-    constructor() {
-      this.reset();
-    }
-    reset() {
-      this.xRounder = new CoordRounder();
-      this.yRounder = new CoordRounder();
-    }
-    round(x2, y2) {
-      return {
-        x: this.xRounder.round(x2),
-        y: this.yRounder.round(y2)
-      };
-    }
-  }
-  class CoordRounder {
-    constructor() {
-      this.tree = new z();
-      this.round(0);
-    }
-    round(coord) {
-      const node2 = this.tree.add(coord);
-      const prevNode = this.tree.prev(node2);
-      if (prevNode !== null && cmp$1(node2.key, prevNode.key) === 0) {
-        this.tree.remove(coord);
-        return prevNode.key;
-      }
-      const nextNode = this.tree.next(node2);
-      if (nextNode !== null && cmp$1(node2.key, nextNode.key) === 0) {
-        this.tree.remove(coord);
-        return nextNode.key;
-      }
-      return coord;
-    }
-  }
-  const rounder = new PtRounder();
-  const crossProduct = (a2, b2) => a2.x * b2.y - a2.y * b2.x;
-  const dotProduct = (a2, b2) => a2.x * b2.x + a2.y * b2.y;
-  const compareVectorAngles = (basePt, endPt1, endPt2) => {
-    const res = orient2d(basePt.x, basePt.y, endPt1.x, endPt1.y, endPt2.x, endPt2.y);
-    if (res > 0) return -1;
-    if (res < 0) return 1;
-    return 0;
-  };
-  const length$4 = (v2) => Math.sqrt(dotProduct(v2, v2));
-  const sineOfAngle = (pShared, pBase, pAngle) => {
-    const vBase = {
-      x: pBase.x - pShared.x,
-      y: pBase.y - pShared.y
-    };
-    const vAngle = {
-      x: pAngle.x - pShared.x,
-      y: pAngle.y - pShared.y
-    };
-    return crossProduct(vAngle, vBase) / length$4(vAngle) / length$4(vBase);
-  };
-  const cosineOfAngle = (pShared, pBase, pAngle) => {
-    const vBase = {
-      x: pBase.x - pShared.x,
-      y: pBase.y - pShared.y
-    };
-    const vAngle = {
-      x: pAngle.x - pShared.x,
-      y: pAngle.y - pShared.y
-    };
-    return dotProduct(vAngle, vBase) / length$4(vAngle) / length$4(vBase);
-  };
-  const horizontalIntersection = (pt, v2, y2) => {
-    if (v2.y === 0) return null;
-    return {
-      x: pt.x + v2.x / v2.y * (y2 - pt.y),
-      y: y2
-    };
-  };
-  const verticalIntersection = (pt, v2, x2) => {
-    if (v2.x === 0) return null;
-    return {
-      x: x2,
-      y: pt.y + v2.y / v2.x * (x2 - pt.x)
-    };
-  };
-  const intersection$1 = (pt1, v1, pt2, v2) => {
-    if (v1.x === 0) return verticalIntersection(pt2, v2, pt1.x);
-    if (v2.x === 0) return verticalIntersection(pt1, v1, pt2.x);
-    if (v1.y === 0) return horizontalIntersection(pt2, v2, pt1.y);
-    if (v2.y === 0) return horizontalIntersection(pt1, v1, pt2.y);
-    const kross = crossProduct(v1, v2);
-    if (kross == 0) return null;
-    const ve2 = {
-      x: pt2.x - pt1.x,
-      y: pt2.y - pt1.y
-    };
-    const d1 = crossProduct(ve2, v1) / kross;
-    const d2 = crossProduct(ve2, v2) / kross;
-    const x1 = pt1.x + d2 * v1.x, x2 = pt2.x + d1 * v2.x;
-    const y1 = pt1.y + d2 * v1.y, y2 = pt2.y + d1 * v2.y;
-    const x3 = (x1 + x2) / 2;
-    const y3 = (y1 + y2) / 2;
-    return {
-      x: x3,
-      y: y3
-    };
-  };
-  class SweepEvent {
-    static compare(a2, b2) {
-      const ptCmp = SweepEvent.comparePoints(a2.point, b2.point);
-      if (ptCmp !== 0) return ptCmp;
-      if (a2.point !== b2.point) a2.link(b2);
-      if (a2.isLeft !== b2.isLeft) return a2.isLeft ? 1 : -1;
-      return Segment.compare(a2.segment, b2.segment);
-    }
-    static comparePoints(aPt, bPt) {
-      if (aPt.x < bPt.x) return -1;
-      if (aPt.x > bPt.x) return 1;
-      if (aPt.y < bPt.y) return -1;
-      if (aPt.y > bPt.y) return 1;
-      return 0;
-    }
-    constructor(point2, isLeft) {
-      if (point2.events === void 0) point2.events = [
-        this
-      ];
-      else point2.events.push(this);
-      this.point = point2;
-      this.isLeft = isLeft;
-    }
-    link(other) {
-      if (other.point === this.point) {
-        throw new Error("Tried to link already linked events");
-      }
-      const otherEvents = other.point.events;
-      for (let i2 = 0, iMax = otherEvents.length; i2 < iMax; i2++) {
-        const evt = otherEvents[i2];
-        this.point.events.push(evt);
-        evt.point = this.point;
-      }
-      this.checkForConsuming();
-    }
-    checkForConsuming() {
-      const numEvents = this.point.events.length;
-      for (let i2 = 0; i2 < numEvents; i2++) {
-        const evt1 = this.point.events[i2];
-        if (evt1.segment.consumedBy !== void 0) continue;
-        for (let j2 = i2 + 1; j2 < numEvents; j2++) {
-          const evt2 = this.point.events[j2];
-          if (evt2.consumedBy !== void 0) continue;
-          if (evt1.otherSE.point.events !== evt2.otherSE.point.events) continue;
-          evt1.segment.consume(evt2.segment);
-        }
-      }
-    }
-    getAvailableLinkedEvents() {
-      const events = [];
-      for (let i2 = 0, iMax = this.point.events.length; i2 < iMax; i2++) {
-        const evt = this.point.events[i2];
-        if (evt !== this && !evt.segment.ringOut && evt.segment.isInResult()) {
-          events.push(evt);
-        }
-      }
-      return events;
-    }
-    getLeftmostComparator(baseEvent) {
-      const cache2 = /* @__PURE__ */ new Map();
-      const fillCache = (linkedEvent) => {
-        const nextEvent = linkedEvent.otherSE;
-        cache2.set(linkedEvent, {
-          sine: sineOfAngle(this.point, baseEvent.point, nextEvent.point),
-          cosine: cosineOfAngle(this.point, baseEvent.point, nextEvent.point)
-        });
-      };
-      return (a2, b2) => {
-        if (!cache2.has(a2)) fillCache(a2);
-        if (!cache2.has(b2)) fillCache(b2);
-        const { sine: asine, cosine: acosine } = cache2.get(a2);
-        const { sine: bsine, cosine: bcosine } = cache2.get(b2);
-        if (asine >= 0 && bsine >= 0) {
-          if (acosine < bcosine) return 1;
-          if (acosine > bcosine) return -1;
-          return 0;
-        }
-        if (asine < 0 && bsine < 0) {
-          if (acosine < bcosine) return -1;
-          if (acosine > bcosine) return 1;
-          return 0;
-        }
-        if (bsine < asine) return -1;
-        if (bsine > asine) return 1;
-        return 0;
-      };
-    }
-  }
-  let segmentId = 0;
-  class Segment {
-    static compare(a2, b2) {
-      const alx = a2.leftSE.point.x;
-      const blx = b2.leftSE.point.x;
-      const arx = a2.rightSE.point.x;
-      const brx = b2.rightSE.point.x;
-      if (brx < alx) return 1;
-      if (arx < blx) return -1;
-      const aly = a2.leftSE.point.y;
-      const bly = b2.leftSE.point.y;
-      const ary = a2.rightSE.point.y;
-      const bry = b2.rightSE.point.y;
-      if (alx < blx) {
-        if (bly < aly && bly < ary) return 1;
-        if (bly > aly && bly > ary) return -1;
-        const aCmpBLeft = a2.comparePoint(b2.leftSE.point);
-        if (aCmpBLeft < 0) return 1;
-        if (aCmpBLeft > 0) return -1;
-        const bCmpARight = b2.comparePoint(a2.rightSE.point);
-        if (bCmpARight !== 0) return bCmpARight;
-        return -1;
-      }
-      if (alx > blx) {
-        if (aly < bly && aly < bry) return -1;
-        if (aly > bly && aly > bry) return 1;
-        const bCmpALeft = b2.comparePoint(a2.leftSE.point);
-        if (bCmpALeft !== 0) return bCmpALeft;
-        const aCmpBRight = a2.comparePoint(b2.rightSE.point);
-        if (aCmpBRight < 0) return 1;
-        if (aCmpBRight > 0) return -1;
-        return 1;
-      }
-      if (aly < bly) return -1;
-      if (aly > bly) return 1;
-      if (arx < brx) {
-        const bCmpARight = b2.comparePoint(a2.rightSE.point);
-        if (bCmpARight !== 0) return bCmpARight;
-      }
-      if (arx > brx) {
-        const aCmpBRight = a2.comparePoint(b2.rightSE.point);
-        if (aCmpBRight < 0) return 1;
-        if (aCmpBRight > 0) return -1;
-      }
-      if (arx !== brx) {
-        const ay = ary - aly;
-        const ax = arx - alx;
-        const by = bry - bly;
-        const bx = brx - blx;
-        if (ay > ax && by < bx) return 1;
-        if (ay < ax && by > bx) return -1;
-      }
-      if (arx > brx) return 1;
-      if (arx < brx) return -1;
-      if (ary < bry) return -1;
-      if (ary > bry) return 1;
-      if (a2.id < b2.id) return -1;
-      if (a2.id > b2.id) return 1;
-      return 0;
-    }
-    constructor(leftSE, rightSE, rings, windings) {
-      this.id = ++segmentId;
-      this.leftSE = leftSE;
-      leftSE.segment = this;
-      leftSE.otherSE = rightSE;
-      this.rightSE = rightSE;
-      rightSE.segment = this;
-      rightSE.otherSE = leftSE;
-      this.rings = rings;
-      this.windings = windings;
-    }
-    static fromRing(pt1, pt2, ring) {
-      let leftPt, rightPt, winding;
-      const cmpPts = SweepEvent.comparePoints(pt1, pt2);
-      if (cmpPts < 0) {
-        leftPt = pt1;
-        rightPt = pt2;
-        winding = 1;
-      } else if (cmpPts > 0) {
-        leftPt = pt2;
-        rightPt = pt1;
-        winding = -1;
-      } else throw new Error(`Tried to create degenerate segment at [${pt1.x}, ${pt1.y}]`);
-      const leftSE = new SweepEvent(leftPt, true);
-      const rightSE = new SweepEvent(rightPt, false);
-      return new Segment(leftSE, rightSE, [
-        ring
-      ], [
-        winding
-      ]);
-    }
-    replaceRightSE(newRightSE) {
-      this.rightSE = newRightSE;
-      this.rightSE.segment = this;
-      this.rightSE.otherSE = this.leftSE;
-      this.leftSE.otherSE = this.rightSE;
-    }
-    bbox() {
-      const y1 = this.leftSE.point.y;
-      const y2 = this.rightSE.point.y;
-      return {
-        ll: {
-          x: this.leftSE.point.x,
-          y: y1 < y2 ? y1 : y2
-        },
-        ur: {
-          x: this.rightSE.point.x,
-          y: y1 > y2 ? y1 : y2
-        }
-      };
-    }
-    vector() {
-      return {
-        x: this.rightSE.point.x - this.leftSE.point.x,
-        y: this.rightSE.point.y - this.leftSE.point.y
-      };
-    }
-    isAnEndpoint(pt) {
-      return pt.x === this.leftSE.point.x && pt.y === this.leftSE.point.y || pt.x === this.rightSE.point.x && pt.y === this.rightSE.point.y;
-    }
-    comparePoint(point2) {
-      if (this.isAnEndpoint(point2)) return 0;
-      const lPt = this.leftSE.point;
-      const rPt = this.rightSE.point;
-      const v2 = this.vector();
-      if (lPt.x === rPt.x) {
-        if (point2.x === lPt.x) return 0;
-        return point2.x < lPt.x ? 1 : -1;
-      }
-      const yDist = (point2.y - lPt.y) / v2.y;
-      const xFromYDist = lPt.x + yDist * v2.x;
-      if (point2.x === xFromYDist) return 0;
-      const xDist = (point2.x - lPt.x) / v2.x;
-      const yFromXDist = lPt.y + xDist * v2.y;
-      if (point2.y === yFromXDist) return 0;
-      return point2.y < yFromXDist ? -1 : 1;
-    }
-    getIntersection(other) {
-      const tBbox = this.bbox();
-      const oBbox = other.bbox();
-      const bboxOverlap = getBboxOverlap(tBbox, oBbox);
-      if (bboxOverlap === null) return null;
-      const tlp = this.leftSE.point;
-      const trp = this.rightSE.point;
-      const olp = other.leftSE.point;
-      const orp = other.rightSE.point;
-      const touchesOtherLSE = isInBbox(tBbox, olp) && this.comparePoint(olp) === 0;
-      const touchesThisLSE = isInBbox(oBbox, tlp) && other.comparePoint(tlp) === 0;
-      const touchesOtherRSE = isInBbox(tBbox, orp) && this.comparePoint(orp) === 0;
-      const touchesThisRSE = isInBbox(oBbox, trp) && other.comparePoint(trp) === 0;
-      if (touchesThisLSE && touchesOtherLSE) {
-        if (touchesThisRSE && !touchesOtherRSE) return trp;
-        if (!touchesThisRSE && touchesOtherRSE) return orp;
-        return null;
-      }
-      if (touchesThisLSE) {
-        if (touchesOtherRSE) {
-          if (tlp.x === orp.x && tlp.y === orp.y) return null;
-        }
-        return tlp;
-      }
-      if (touchesOtherLSE) {
-        if (touchesThisRSE) {
-          if (trp.x === olp.x && trp.y === olp.y) return null;
-        }
-        return olp;
-      }
-      if (touchesThisRSE && touchesOtherRSE) return null;
-      if (touchesThisRSE) return trp;
-      if (touchesOtherRSE) return orp;
-      const pt = intersection$1(tlp, this.vector(), olp, other.vector());
-      if (pt === null) return null;
-      if (!isInBbox(bboxOverlap, pt)) return null;
-      return rounder.round(pt.x, pt.y);
-    }
-    split(point2) {
-      const newEvents = [];
-      const alreadyLinked = point2.events !== void 0;
-      const newLeftSE = new SweepEvent(point2, true);
-      const newRightSE = new SweepEvent(point2, false);
-      const oldRightSE = this.rightSE;
-      this.replaceRightSE(newRightSE);
-      newEvents.push(newRightSE);
-      newEvents.push(newLeftSE);
-      const newSeg = new Segment(newLeftSE, oldRightSE, this.rings.slice(), this.windings.slice());
-      if (SweepEvent.comparePoints(newSeg.leftSE.point, newSeg.rightSE.point) > 0) {
-        newSeg.swapEvents();
-      }
-      if (SweepEvent.comparePoints(this.leftSE.point, this.rightSE.point) > 0) {
-        this.swapEvents();
-      }
-      if (alreadyLinked) {
-        newLeftSE.checkForConsuming();
-        newRightSE.checkForConsuming();
-      }
-      return newEvents;
-    }
-    swapEvents() {
-      const tmpEvt = this.rightSE;
-      this.rightSE = this.leftSE;
-      this.leftSE = tmpEvt;
-      this.leftSE.isLeft = true;
-      this.rightSE.isLeft = false;
-      for (let i2 = 0, iMax = this.windings.length; i2 < iMax; i2++) {
-        this.windings[i2] *= -1;
-      }
-    }
-    consume(other) {
-      let consumer = this;
-      let consumee = other;
-      while (consumer.consumedBy) consumer = consumer.consumedBy;
-      while (consumee.consumedBy) consumee = consumee.consumedBy;
-      const cmp2 = Segment.compare(consumer, consumee);
-      if (cmp2 === 0) return;
-      if (cmp2 > 0) {
-        const tmp = consumer;
-        consumer = consumee;
-        consumee = tmp;
-      }
-      if (consumer.prev === consumee) {
-        const tmp = consumer;
-        consumer = consumee;
-        consumee = tmp;
-      }
-      for (let i2 = 0, iMax = consumee.rings.length; i2 < iMax; i2++) {
-        const ring = consumee.rings[i2];
-        const winding = consumee.windings[i2];
-        const index2 = consumer.rings.indexOf(ring);
-        if (index2 === -1) {
-          consumer.rings.push(ring);
-          consumer.windings.push(winding);
-        } else consumer.windings[index2] += winding;
-      }
-      consumee.rings = null;
-      consumee.windings = null;
-      consumee.consumedBy = consumer;
-      consumee.leftSE.consumedBy = consumer.leftSE;
-      consumee.rightSE.consumedBy = consumer.rightSE;
-    }
-    prevInResult() {
-      if (this._prevInResult !== void 0) return this._prevInResult;
-      if (!this.prev) this._prevInResult = null;
-      else if (this.prev.isInResult()) this._prevInResult = this.prev;
-      else this._prevInResult = this.prev.prevInResult();
-      return this._prevInResult;
-    }
-    beforeState() {
-      if (this._beforeState !== void 0) return this._beforeState;
-      if (!this.prev) this._beforeState = {
-        rings: [],
-        windings: [],
-        multiPolys: []
-      };
-      else {
-        const seg = this.prev.consumedBy || this.prev;
-        this._beforeState = seg.afterState();
-      }
-      return this._beforeState;
-    }
-    afterState() {
-      if (this._afterState !== void 0) return this._afterState;
-      const beforeState = this.beforeState();
-      this._afterState = {
-        rings: beforeState.rings.slice(0),
-        windings: beforeState.windings.slice(0),
-        multiPolys: []
-      };
-      const ringsAfter = this._afterState.rings;
-      const windingsAfter = this._afterState.windings;
-      const mpsAfter = this._afterState.multiPolys;
-      for (let i2 = 0, iMax = this.rings.length; i2 < iMax; i2++) {
-        const ring = this.rings[i2];
-        const winding = this.windings[i2];
-        const index2 = ringsAfter.indexOf(ring);
-        if (index2 === -1) {
-          ringsAfter.push(ring);
-          windingsAfter.push(winding);
-        } else windingsAfter[index2] += winding;
-      }
-      const polysAfter = [];
-      const polysExclude = [];
-      for (let i2 = 0, iMax = ringsAfter.length; i2 < iMax; i2++) {
-        if (windingsAfter[i2] === 0) continue;
-        const ring = ringsAfter[i2];
-        const poly = ring.poly;
-        if (polysExclude.indexOf(poly) !== -1) continue;
-        if (ring.isExterior) polysAfter.push(poly);
-        else {
-          if (polysExclude.indexOf(poly) === -1) polysExclude.push(poly);
-          const index2 = polysAfter.indexOf(ring.poly);
-          if (index2 !== -1) polysAfter.splice(index2, 1);
-        }
-      }
-      for (let i2 = 0, iMax = polysAfter.length; i2 < iMax; i2++) {
-        const mp = polysAfter[i2].multiPoly;
-        if (mpsAfter.indexOf(mp) === -1) mpsAfter.push(mp);
-      }
-      return this._afterState;
-    }
-    isInResult() {
-      if (this.consumedBy) return false;
-      if (this._isInResult !== void 0) return this._isInResult;
-      const mpsBefore = this.beforeState().multiPolys;
-      const mpsAfter = this.afterState().multiPolys;
-      switch (operation.type) {
-        case "union": {
-          const noBefores = mpsBefore.length === 0;
-          const noAfters = mpsAfter.length === 0;
-          this._isInResult = noBefores !== noAfters;
-          break;
-        }
-        case "intersection": {
-          let least;
-          let most;
-          if (mpsBefore.length < mpsAfter.length) {
-            least = mpsBefore.length;
-            most = mpsAfter.length;
-          } else {
-            least = mpsAfter.length;
-            most = mpsBefore.length;
-          }
-          this._isInResult = most === operation.numMultiPolys && least < most;
-          break;
-        }
-        case "xor": {
-          const diff2 = Math.abs(mpsBefore.length - mpsAfter.length);
-          this._isInResult = diff2 % 2 === 1;
-          break;
-        }
-        case "difference": {
-          const isJustSubject = (mps) => mps.length === 1 && mps[0].isSubject;
-          this._isInResult = isJustSubject(mpsBefore) !== isJustSubject(mpsAfter);
-          break;
-        }
-        default:
-          throw new Error(`Unrecognized operation type found ${operation.type}`);
-      }
-      return this._isInResult;
-    }
-  }
-  class RingIn {
-    constructor(geomRing, poly, isExterior) {
-      if (!Array.isArray(geomRing) || geomRing.length === 0) {
-        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
-      }
-      this.poly = poly;
-      this.isExterior = isExterior;
-      this.segments = [];
-      if (typeof geomRing[0][0] !== "number" || typeof geomRing[0][1] !== "number") {
-        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
-      }
-      const firstPoint = rounder.round(geomRing[0][0], geomRing[0][1]);
-      this.bbox = {
-        ll: {
-          x: firstPoint.x,
-          y: firstPoint.y
-        },
-        ur: {
-          x: firstPoint.x,
-          y: firstPoint.y
-        }
-      };
-      let prevPoint = firstPoint;
-      for (let i2 = 1, iMax = geomRing.length; i2 < iMax; i2++) {
-        if (typeof geomRing[i2][0] !== "number" || typeof geomRing[i2][1] !== "number") {
-          throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
-        }
-        let point2 = rounder.round(geomRing[i2][0], geomRing[i2][1]);
-        if (point2.x === prevPoint.x && point2.y === prevPoint.y) continue;
-        this.segments.push(Segment.fromRing(prevPoint, point2, this));
-        if (point2.x < this.bbox.ll.x) this.bbox.ll.x = point2.x;
-        if (point2.y < this.bbox.ll.y) this.bbox.ll.y = point2.y;
-        if (point2.x > this.bbox.ur.x) this.bbox.ur.x = point2.x;
-        if (point2.y > this.bbox.ur.y) this.bbox.ur.y = point2.y;
-        prevPoint = point2;
-      }
-      if (firstPoint.x !== prevPoint.x || firstPoint.y !== prevPoint.y) {
-        this.segments.push(Segment.fromRing(prevPoint, firstPoint, this));
-      }
-    }
-    getSweepEvents() {
-      const sweepEvents = [];
-      for (let i2 = 0, iMax = this.segments.length; i2 < iMax; i2++) {
-        const segment = this.segments[i2];
-        sweepEvents.push(segment.leftSE);
-        sweepEvents.push(segment.rightSE);
-      }
-      return sweepEvents;
-    }
-  }
-  class PolyIn {
-    constructor(geomPoly, multiPoly) {
-      if (!Array.isArray(geomPoly)) {
-        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
-      }
-      this.exteriorRing = new RingIn(geomPoly[0], this, true);
-      this.bbox = {
-        ll: {
-          x: this.exteriorRing.bbox.ll.x,
-          y: this.exteriorRing.bbox.ll.y
-        },
-        ur: {
-          x: this.exteriorRing.bbox.ur.x,
-          y: this.exteriorRing.bbox.ur.y
-        }
-      };
-      this.interiorRings = [];
-      for (let i2 = 1, iMax = geomPoly.length; i2 < iMax; i2++) {
-        const ring = new RingIn(geomPoly[i2], this, false);
-        if (ring.bbox.ll.x < this.bbox.ll.x) this.bbox.ll.x = ring.bbox.ll.x;
-        if (ring.bbox.ll.y < this.bbox.ll.y) this.bbox.ll.y = ring.bbox.ll.y;
-        if (ring.bbox.ur.x > this.bbox.ur.x) this.bbox.ur.x = ring.bbox.ur.x;
-        if (ring.bbox.ur.y > this.bbox.ur.y) this.bbox.ur.y = ring.bbox.ur.y;
-        this.interiorRings.push(ring);
-      }
-      this.multiPoly = multiPoly;
-    }
-    getSweepEvents() {
-      const sweepEvents = this.exteriorRing.getSweepEvents();
-      for (let i2 = 0, iMax = this.interiorRings.length; i2 < iMax; i2++) {
-        const ringSweepEvents = this.interiorRings[i2].getSweepEvents();
-        for (let j2 = 0, jMax = ringSweepEvents.length; j2 < jMax; j2++) {
-          sweepEvents.push(ringSweepEvents[j2]);
-        }
-      }
-      return sweepEvents;
-    }
-  }
-  class MultiPolyIn {
-    constructor(geom, isSubject) {
-      if (!Array.isArray(geom)) {
-        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
-      }
-      try {
-        if (typeof geom[0][0][0] === "number") geom = [
-          geom
-        ];
-      } catch (ex) {
-      }
-      this.polys = [];
-      this.bbox = {
-        ll: {
-          x: Number.POSITIVE_INFINITY,
-          y: Number.POSITIVE_INFINITY
-        },
-        ur: {
-          x: Number.NEGATIVE_INFINITY,
-          y: Number.NEGATIVE_INFINITY
-        }
-      };
-      for (let i2 = 0, iMax = geom.length; i2 < iMax; i2++) {
-        const poly = new PolyIn(geom[i2], this);
-        if (poly.bbox.ll.x < this.bbox.ll.x) this.bbox.ll.x = poly.bbox.ll.x;
-        if (poly.bbox.ll.y < this.bbox.ll.y) this.bbox.ll.y = poly.bbox.ll.y;
-        if (poly.bbox.ur.x > this.bbox.ur.x) this.bbox.ur.x = poly.bbox.ur.x;
-        if (poly.bbox.ur.y > this.bbox.ur.y) this.bbox.ur.y = poly.bbox.ur.y;
-        this.polys.push(poly);
-      }
-      this.isSubject = isSubject;
-    }
-    getSweepEvents() {
-      const sweepEvents = [];
-      for (let i2 = 0, iMax = this.polys.length; i2 < iMax; i2++) {
-        const polySweepEvents = this.polys[i2].getSweepEvents();
-        for (let j2 = 0, jMax = polySweepEvents.length; j2 < jMax; j2++) {
-          sweepEvents.push(polySweepEvents[j2]);
-        }
-      }
-      return sweepEvents;
-    }
-  }
-  class RingOut {
-    static factory(allSegments) {
-      const ringsOut = [];
-      for (let i2 = 0, iMax = allSegments.length; i2 < iMax; i2++) {
-        const segment = allSegments[i2];
-        if (!segment.isInResult() || segment.ringOut) continue;
-        let prevEvent = null;
-        let event = segment.leftSE;
-        let nextEvent = segment.rightSE;
-        const events = [
-          event
-        ];
-        const startingPoint = event.point;
-        const intersectionLEs = [];
-        while (true) {
-          prevEvent = event;
-          event = nextEvent;
-          events.push(event);
-          if (event.point === startingPoint) break;
-          while (true) {
-            const availableLEs = event.getAvailableLinkedEvents();
-            if (availableLEs.length === 0) {
-              const firstPt = events[0].point;
-              const lastPt = events[events.length - 1].point;
-              throw new Error(`Unable to complete output ring starting at [${firstPt.x}, ${firstPt.y}]. Last matching segment found ends at [${lastPt.x}, ${lastPt.y}].`);
-            }
-            if (availableLEs.length === 1) {
-              nextEvent = availableLEs[0].otherSE;
-              break;
-            }
-            let indexLE = null;
-            for (let j2 = 0, jMax = intersectionLEs.length; j2 < jMax; j2++) {
-              if (intersectionLEs[j2].point === event.point) {
-                indexLE = j2;
-                break;
-              }
-            }
-            if (indexLE !== null) {
-              const intersectionLE = intersectionLEs.splice(indexLE)[0];
-              const ringEvents = events.splice(intersectionLE.index);
-              ringEvents.unshift(ringEvents[0].otherSE);
-              ringsOut.push(new RingOut(ringEvents.reverse()));
-              continue;
-            }
-            intersectionLEs.push({
-              index: events.length,
-              point: event.point
-            });
-            const comparator = event.getLeftmostComparator(prevEvent);
-            nextEvent = availableLEs.sort(comparator)[0].otherSE;
-            break;
-          }
-        }
-        ringsOut.push(new RingOut(events));
-      }
-      return ringsOut;
-    }
-    constructor(events) {
-      this.events = events;
-      for (let i2 = 0, iMax = events.length; i2 < iMax; i2++) {
-        events[i2].segment.ringOut = this;
-      }
-      this.poly = null;
-    }
-    getGeom() {
-      let prevPt = this.events[0].point;
-      const points = [
-        prevPt
-      ];
-      for (let i2 = 1, iMax = this.events.length - 1; i2 < iMax; i2++) {
-        const pt2 = this.events[i2].point;
-        const nextPt2 = this.events[i2 + 1].point;
-        if (compareVectorAngles(pt2, prevPt, nextPt2) === 0) continue;
-        points.push(pt2);
-        prevPt = pt2;
-      }
-      if (points.length === 1) return null;
-      const pt = points[0];
-      const nextPt = points[1];
-      if (compareVectorAngles(pt, prevPt, nextPt) === 0) points.shift();
-      points.push(points[0]);
-      const step = this.isExteriorRing() ? 1 : -1;
-      const iStart = this.isExteriorRing() ? 0 : points.length - 1;
-      const iEnd = this.isExteriorRing() ? points.length : -1;
-      const orderedPoints = [];
-      for (let i2 = iStart; i2 != iEnd; i2 += step) orderedPoints.push([
-        points[i2].x,
-        points[i2].y
-      ]);
-      return orderedPoints;
-    }
-    isExteriorRing() {
-      if (this._isExteriorRing === void 0) {
-        const enclosing = this.enclosingRing();
-        this._isExteriorRing = enclosing ? !enclosing.isExteriorRing() : true;
-      }
-      return this._isExteriorRing;
-    }
-    enclosingRing() {
-      if (this._enclosingRing === void 0) {
-        this._enclosingRing = this._calcEnclosingRing();
-      }
-      return this._enclosingRing;
-    }
-    _calcEnclosingRing() {
-      let leftMostEvt = this.events[0];
-      for (let i2 = 1, iMax = this.events.length; i2 < iMax; i2++) {
-        const evt = this.events[i2];
-        if (SweepEvent.compare(leftMostEvt, evt) > 0) leftMostEvt = evt;
-      }
-      let prevSeg = leftMostEvt.segment.prevInResult();
-      let prevPrevSeg = prevSeg ? prevSeg.prevInResult() : null;
-      while (true) {
-        if (!prevSeg) return null;
-        if (!prevPrevSeg) return prevSeg.ringOut;
-        if (prevPrevSeg.ringOut !== prevSeg.ringOut) {
-          if (prevPrevSeg.ringOut.enclosingRing() !== prevSeg.ringOut) {
-            return prevSeg.ringOut;
-          } else return prevSeg.ringOut.enclosingRing();
-        }
-        prevSeg = prevPrevSeg.prevInResult();
-        prevPrevSeg = prevSeg ? prevSeg.prevInResult() : null;
-      }
-    }
-  }
-  class PolyOut {
-    constructor(exteriorRing) {
-      this.exteriorRing = exteriorRing;
-      exteriorRing.poly = this;
-      this.interiorRings = [];
-    }
-    addInterior(ring) {
-      this.interiorRings.push(ring);
-      ring.poly = this;
-    }
-    getGeom() {
-      const geom = [
-        this.exteriorRing.getGeom()
-      ];
-      if (geom[0] === null) return null;
-      for (let i2 = 0, iMax = this.interiorRings.length; i2 < iMax; i2++) {
-        const ringGeom = this.interiorRings[i2].getGeom();
-        if (ringGeom === null) continue;
-        geom.push(ringGeom);
-      }
-      return geom;
-    }
-  }
-  class MultiPolyOut {
-    constructor(rings) {
-      this.rings = rings;
-      this.polys = this._composePolys(rings);
-    }
-    getGeom() {
-      const geom = [];
-      for (let i2 = 0, iMax = this.polys.length; i2 < iMax; i2++) {
-        const polyGeom = this.polys[i2].getGeom();
-        if (polyGeom === null) continue;
-        geom.push(polyGeom);
-      }
-      return geom;
-    }
-    _composePolys(rings) {
-      const polys = [];
-      for (let i2 = 0, iMax = rings.length; i2 < iMax; i2++) {
-        const ring = rings[i2];
-        if (ring.poly) continue;
-        if (ring.isExteriorRing()) polys.push(new PolyOut(ring));
-        else {
-          const enclosingRing = ring.enclosingRing();
-          if (!enclosingRing.poly) polys.push(new PolyOut(enclosingRing));
-          enclosingRing.poly.addInterior(ring);
-        }
-      }
-      return polys;
-    }
-  }
-  class SweepLine {
-    constructor(queue2) {
-      let comparator = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : Segment.compare;
-      this.queue = queue2;
-      this.tree = new z(comparator);
-      this.segments = [];
-    }
-    process(event) {
-      const segment = event.segment;
-      const newEvents = [];
-      if (event.consumedBy) {
-        if (event.isLeft) this.queue.remove(event.otherSE);
-        else this.tree.remove(segment);
-        return newEvents;
-      }
-      const node2 = event.isLeft ? this.tree.add(segment) : this.tree.find(segment);
-      if (!node2) throw new Error(`Unable to find segment #${segment.id} [${segment.leftSE.point.x}, ${segment.leftSE.point.y}] -> [${segment.rightSE.point.x}, ${segment.rightSE.point.y}] in SweepLine tree.`);
-      let prevNode = node2;
-      let nextNode = node2;
-      let prevSeg = void 0;
-      let nextSeg = void 0;
-      while (prevSeg === void 0) {
-        prevNode = this.tree.prev(prevNode);
-        if (prevNode === null) prevSeg = null;
-        else if (prevNode.key.consumedBy === void 0) prevSeg = prevNode.key;
-      }
-      while (nextSeg === void 0) {
-        nextNode = this.tree.next(nextNode);
-        if (nextNode === null) nextSeg = null;
-        else if (nextNode.key.consumedBy === void 0) nextSeg = nextNode.key;
-      }
-      if (event.isLeft) {
-        let prevMySplitter = null;
-        if (prevSeg) {
-          const prevInter = prevSeg.getIntersection(segment);
-          if (prevInter !== null) {
-            if (!segment.isAnEndpoint(prevInter)) prevMySplitter = prevInter;
-            if (!prevSeg.isAnEndpoint(prevInter)) {
-              const newEventsFromSplit = this._splitSafely(prevSeg, prevInter);
-              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
-                newEvents.push(newEventsFromSplit[i2]);
-              }
-            }
-          }
-        }
-        let nextMySplitter = null;
-        if (nextSeg) {
-          const nextInter = nextSeg.getIntersection(segment);
-          if (nextInter !== null) {
-            if (!segment.isAnEndpoint(nextInter)) nextMySplitter = nextInter;
-            if (!nextSeg.isAnEndpoint(nextInter)) {
-              const newEventsFromSplit = this._splitSafely(nextSeg, nextInter);
-              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
-                newEvents.push(newEventsFromSplit[i2]);
-              }
-            }
-          }
-        }
-        if (prevMySplitter !== null || nextMySplitter !== null) {
-          let mySplitter = null;
-          if (prevMySplitter === null) mySplitter = nextMySplitter;
-          else if (nextMySplitter === null) mySplitter = prevMySplitter;
-          else {
-            const cmpSplitters = SweepEvent.comparePoints(prevMySplitter, nextMySplitter);
-            mySplitter = cmpSplitters <= 0 ? prevMySplitter : nextMySplitter;
-          }
-          this.queue.remove(segment.rightSE);
-          newEvents.push(segment.rightSE);
-          const newEventsFromSplit = segment.split(mySplitter);
-          for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
-            newEvents.push(newEventsFromSplit[i2]);
-          }
-        }
-        if (newEvents.length > 0) {
-          this.tree.remove(segment);
-          newEvents.push(event);
-        } else {
-          this.segments.push(segment);
-          segment.prev = prevSeg;
-        }
-      } else {
-        if (prevSeg && nextSeg) {
-          const inter = prevSeg.getIntersection(nextSeg);
-          if (inter !== null) {
-            if (!prevSeg.isAnEndpoint(inter)) {
-              const newEventsFromSplit = this._splitSafely(prevSeg, inter);
-              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
-                newEvents.push(newEventsFromSplit[i2]);
-              }
-            }
-            if (!nextSeg.isAnEndpoint(inter)) {
-              const newEventsFromSplit = this._splitSafely(nextSeg, inter);
-              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
-                newEvents.push(newEventsFromSplit[i2]);
-              }
-            }
-          }
-        }
-        this.tree.remove(segment);
-      }
-      return newEvents;
-    }
-    _splitSafely(seg, pt) {
-      this.tree.remove(seg);
-      const rightSE = seg.rightSE;
-      this.queue.remove(rightSE);
-      const newEvents = seg.split(pt);
-      newEvents.push(rightSE);
-      if (seg.consumedBy === void 0) this.tree.add(seg);
-      return newEvents;
-    }
-  }
-  const POLYGON_CLIPPING_MAX_QUEUE_SIZE = typeof process !== "undefined" && define_process_env_default.POLYGON_CLIPPING_MAX_QUEUE_SIZE || 1e6;
-  const POLYGON_CLIPPING_MAX_SWEEPLINE_SEGMENTS = typeof process !== "undefined" && define_process_env_default.POLYGON_CLIPPING_MAX_SWEEPLINE_SEGMENTS || 1e6;
-  class Operation {
-    run(type, geom, moreGeoms) {
-      operation.type = type;
-      rounder.reset();
-      const multipolys = [
-        new MultiPolyIn(geom, true)
-      ];
-      for (let i2 = 0, iMax = moreGeoms.length; i2 < iMax; i2++) {
-        multipolys.push(new MultiPolyIn(moreGeoms[i2], false));
-      }
-      operation.numMultiPolys = multipolys.length;
-      if (operation.type === "difference") {
-        const subject = multipolys[0];
-        let i2 = 1;
-        while (i2 < multipolys.length) {
-          if (getBboxOverlap(multipolys[i2].bbox, subject.bbox) !== null) i2++;
-          else multipolys.splice(i2, 1);
-        }
-      }
-      if (operation.type === "intersection") {
-        for (let i2 = 0, iMax = multipolys.length; i2 < iMax; i2++) {
-          const mpA = multipolys[i2];
-          for (let j2 = i2 + 1, jMax = multipolys.length; j2 < jMax; j2++) {
-            if (getBboxOverlap(mpA.bbox, multipolys[j2].bbox) === null) return [];
-          }
-        }
-      }
-      const queue2 = new z(SweepEvent.compare);
-      for (let i2 = 0, iMax = multipolys.length; i2 < iMax; i2++) {
-        const sweepEvents = multipolys[i2].getSweepEvents();
-        for (let j2 = 0, jMax = sweepEvents.length; j2 < jMax; j2++) {
-          queue2.insert(sweepEvents[j2]);
-          if (queue2.size > POLYGON_CLIPPING_MAX_QUEUE_SIZE) {
-            throw new Error("Infinite loop when putting segment endpoints in a priority queue (queue size too big).");
-          }
-        }
-      }
-      const sweepLine = new SweepLine(queue2);
-      let prevQueueSize = queue2.size;
-      let node2 = queue2.pop();
-      while (node2) {
-        const evt = node2.key;
-        if (queue2.size === prevQueueSize) {
-          const seg = evt.segment;
-          throw new Error(`Unable to pop() ${evt.isLeft ? "left" : "right"} SweepEvent [${evt.point.x}, ${evt.point.y}] from segment #${seg.id} [${seg.leftSE.point.x}, ${seg.leftSE.point.y}] -> [${seg.rightSE.point.x}, ${seg.rightSE.point.y}] from queue.`);
-        }
-        if (queue2.size > POLYGON_CLIPPING_MAX_QUEUE_SIZE) {
-          throw new Error("Infinite loop when passing sweep line over endpoints (queue size too big).");
-        }
-        if (sweepLine.segments.length > POLYGON_CLIPPING_MAX_SWEEPLINE_SEGMENTS) {
-          throw new Error("Infinite loop when passing sweep line over endpoints (too many sweep line segments).");
-        }
-        const newEvents = sweepLine.process(evt);
-        for (let i2 = 0, iMax = newEvents.length; i2 < iMax; i2++) {
-          const evt2 = newEvents[i2];
-          if (evt2.consumedBy === void 0) queue2.insert(evt2);
-        }
-        prevQueueSize = queue2.size;
-        node2 = queue2.pop();
-      }
-      rounder.reset();
-      const ringsOut = RingOut.factory(sweepLine.segments);
-      const result = new MultiPolyOut(ringsOut);
-      return result.getGeom();
-    }
-  }
-  const operation = new Operation();
-  const union = function(geom) {
-    for (var _len = arguments.length, moreGeoms = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      moreGeoms[_key - 1] = arguments[_key];
-    }
-    return operation.run("union", geom, moreGeoms);
-  };
-  const intersection = function(geom) {
-    for (var _len2 = arguments.length, moreGeoms = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-      moreGeoms[_key2 - 1] = arguments[_key2];
-    }
-    return operation.run("intersection", geom, moreGeoms);
-  };
-  const xor = function(geom) {
-    for (var _len3 = arguments.length, moreGeoms = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-      moreGeoms[_key3 - 1] = arguments[_key3];
-    }
-    return operation.run("xor", geom, moreGeoms);
-  };
-  const difference = function(subjectGeom) {
-    for (var _len4 = arguments.length, clippingGeoms = new Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-      clippingGeoms[_key4 - 1] = arguments[_key4];
-    }
-    return operation.run("difference", subjectGeom, clippingGeoms);
-  };
-  var index$2 = {
-    union,
-    intersection,
-    xor,
-    difference
-  };
-  function ensureClosed(ring) {
-    if (ring.length < 3) return ring;
-    const first = ring[0];
-    const last2 = ring[ring.length - 1];
-    if (first[0] === last2[0] && first[1] === last2[1]) return ring;
-    return [
-      ...ring,
-      first
-    ];
-  }
-  function toLibPolygon(ring) {
-    const closed = ensureClosed(ring);
-    if (closed.length < 3) return [];
-    return [
-      closed
-    ];
-  }
-  function fromLibRings(rings) {
-    if (!rings || rings.length === 0) return null;
-    const ring = rings[0];
-    if (!ring || ring.length < 3) return null;
-    return ring;
-  }
-  function polygonArea(ring) {
-    let area2 = 0;
-    const n2 = ring.length;
-    for (let i2 = 0; i2 < n2; i2++) {
-      const j2 = (i2 + 1) % n2;
-      area2 += ring[i2][0] * ring[j2][1];
-      area2 -= ring[j2][0] * ring[i2][1];
-    }
-    return Math.abs(area2) / 2;
-  }
-  function polygonUnion(a2, b2) {
-    if (a2.length < 3 || b2.length < 3) return null;
-    const polyA = toLibPolygon(a2);
-    const polyB = toLibPolygon(b2);
-    if (polyA.length === 0 || polyB.length === 0) return null;
-    const result = index$2.union(polyA, polyB);
-    if (!result || result.length === 0) return null;
-    if (result.length === 1) return fromLibRings(result[0]);
-    let best = result[0][0];
-    let bestArea = polygonArea(best);
-    for (let i2 = 0; i2 < result.length; i2++) {
-      const poly = result[i2];
-      if (poly == null ? void 0 : poly[0]) {
-        const area2 = polygonArea(poly[0]);
-        if (area2 > bestArea) {
-          best = poly[0];
-          bestArea = area2;
-        }
-      }
-    }
-    return best;
-  }
-  function polygonDifference(a2, b2) {
-    if (a2.length < 3 || b2.length < 3) return null;
-    const polyA = toLibPolygon(a2);
-    const polyB = toLibPolygon(b2);
-    if (polyA.length === 0 || polyB.length === 0) return null;
-    const result = index$2.difference(polyA, polyB);
-    if (!result || result.length === 0) return null;
-    if (result.length === 1 && result[0][0]) return fromLibRings(result[0]);
-    let best = result[0][0];
-    let bestArea = polygonArea(best);
-    for (let i2 = 0; i2 < result.length; i2++) {
-      const poly = result[i2];
-      if (poly == null ? void 0 : poly[0]) {
-        const area2 = polygonArea(poly[0]);
-        if (area2 > bestArea) {
-          best = poly[0];
-          bestArea = area2;
-        }
-      }
-    }
-    return best;
-  }
-  function buildBrushHull(strokePoints, brushRadiusPx, viewportZoom) {
-    if (strokePoints.length === 0 || brushRadiusPx <= 0) return null;
-    const scale2 = 2 ** (viewportZoom ?? 0);
-    const radiusWorld = brushRadiusPx / Math.max(scale2, 0.01);
-    let hull = null;
-    for (const [x2, y2] of strokePoints) {
-      const circle = makeCircle(x2, y2, radiusWorld);
-      if (!hull) {
-        hull = circle;
-      } else {
-        const union2 = polygonUnion(hull, circle);
-        if (union2 && union2.length >= 3) {
-          hull = union2;
-        }
-      }
-    }
-    return hull && hull.length >= 3 ? hull : null;
-  }
-  function arrowLineDegeneratePolygon(start, end) {
-    const [sx, sy] = start;
-    const [ex, ey] = end;
-    return [
-      [
-        sx,
-        sy
-      ],
-      [
-        ex,
-        ey
-      ],
-      [
-        ex,
-        ey
-      ],
-      [
-        sx,
-        sy
-      ],
-      [
-        sx,
-        sy
-      ]
-    ];
-  }
-  function mergeShapesAfterWaypointImport(state, newShapes, clearExisting) {
-    const existingShapes = clearExisting ? state.shapes.filter((s2) => {
-      var _a2;
-      return !((_a2 = s2.metadata) == null ? void 0 : _a2.isImported);
-    }) : state.shapes;
-    const newHidden = clearExisting ? new Set([
-      ...state.hiddenShapeIds
-    ].filter((id2) => {
-      var _a2;
-      const shape = state.shapes.find((s2) => s2.id === id2);
-      return shape && !((_a2 = shape.metadata) == null ? void 0 : _a2.isImported);
-    })) : state.hiddenShapeIds;
-    const existingIds = new Set(existingShapes.map((s2) => s2.id));
-    const seenIncoming = /* @__PURE__ */ new Set();
-    const appended = newShapes.filter((s2) => {
-      if (seenIncoming.has(s2.id)) return false;
-      seenIncoming.add(s2.id);
-      return !existingIds.has(s2.id);
-    });
-    return {
-      shapes: [
-        ...existingShapes,
-        ...appended
-      ],
-      hiddenShapeIds: newHidden
-    };
-  }
-  const o$1 = /* @__PURE__ */ new WeakMap();
-  let u$3 = 0;
-  function stableHash(t2) {
-    const i2 = typeof t2, s2 = t2 && t2.constructor, c2 = s2 === Date;
-    if (Object(t2) === t2 && !c2 && s2 != RegExp) {
-      let e2 = o$1.get(t2);
-      if (e2) return e2;
-      e2 = ++u$3 + "~", o$1.set(t2, e2);
-      let n2;
-      if (s2 === Array) {
-        for (e2 = "@", n2 = 0; n2 < t2.length; n2++) e2 += stableHash(t2[n2]) + ",";
-        o$1.set(t2, e2);
-      } else if (s2 === Object) {
-        e2 = "#";
-        const f2 = Object.keys(t2).sort();
-        for (; (n2 = f2.pop()) !== void 0; ) t2[n2] !== void 0 && (e2 += n2 + ":" + stableHash(t2[n2]) + ",");
-        o$1.set(t2, e2);
-      }
-      return e2;
-    }
-    return c2 ? t2.toJSON() : i2 === "symbol" ? t2.toString() : i2 === "string" ? JSON.stringify(t2) : "" + t2;
-  }
-  var temporalStateCreator = (userSet, userGet, options) => {
-    const stateCreator = (set2, get2) => {
-      return {
-        pastStates: (options == null ? void 0 : options.pastStates) || [],
-        futureStates: (options == null ? void 0 : options.futureStates) || [],
-        undo: (steps = 1) => {
-          var _a2, _b2;
-          if (get2().pastStates.length) {
-            const currentState = ((_a2 = options == null ? void 0 : options.partialize) == null ? void 0 : _a2.call(options, userGet())) || userGet();
-            const statesToApply = get2().pastStates.splice(-steps, steps);
-            const nextState = statesToApply.shift();
-            userSet(nextState);
-            set2({
-              pastStates: get2().pastStates,
-              futureStates: get2().futureStates.concat(((_b2 = options == null ? void 0 : options.diff) == null ? void 0 : _b2.call(options, currentState, nextState)) || currentState, statesToApply.reverse())
-            });
-          }
-        },
-        redo: (steps = 1) => {
-          var _a2, _b2;
-          if (get2().futureStates.length) {
-            const currentState = ((_a2 = options == null ? void 0 : options.partialize) == null ? void 0 : _a2.call(options, userGet())) || userGet();
-            const statesToApply = get2().futureStates.splice(-steps, steps);
-            const nextState = statesToApply.shift();
-            userSet(nextState);
-            set2({
-              pastStates: get2().pastStates.concat(((_b2 = options == null ? void 0 : options.diff) == null ? void 0 : _b2.call(options, currentState, nextState)) || currentState, statesToApply.reverse()),
-              futureStates: get2().futureStates
-            });
-          }
-        },
-        clear: () => set2({
-          pastStates: [],
-          futureStates: []
-        }),
-        isTracking: true,
-        pause: () => set2({
-          isTracking: false
-        }),
-        resume: () => set2({
-          isTracking: true
-        }),
-        setOnSave: (_onSave) => set2({
-          _onSave
-        }),
-        _onSave: options == null ? void 0 : options.onSave,
-        _handleSet: (pastState, replace2, currentState, deltaState) => {
-          var _a2, _b2;
-          if ((options == null ? void 0 : options.limit) && get2().pastStates.length >= (options == null ? void 0 : options.limit)) {
-            get2().pastStates.shift();
-          }
-          (_b2 = (_a2 = get2())._onSave) == null ? void 0 : _b2.call(_a2, pastState, currentState);
-          set2({
-            pastStates: get2().pastStates.concat(deltaState || pastState),
-            futureStates: []
-          });
-        }
-      };
-    };
-    return stateCreator;
-  };
-  var temporal = (config2, options) => {
-    const configWithTemporal = (set2, get2, store) => {
-      var _a2, _b2;
-      store.temporal = createStore$1(((_a2 = options == null ? void 0 : options.wrapTemporal) == null ? void 0 : _a2.call(options, temporalStateCreator(set2, get2, options))) || temporalStateCreator(set2, get2, options));
-      const curriedHandleSet = ((_b2 = options == null ? void 0 : options.handleSet) == null ? void 0 : _b2.call(options, store.temporal.getState()._handleSet)) || store.temporal.getState()._handleSet;
-      const temporalHandleSet = (pastState) => {
-        var _a3, _b3, _c2;
-        if (!store.temporal.getState().isTracking) return;
-        const currentState = ((_a3 = options == null ? void 0 : options.partialize) == null ? void 0 : _a3.call(options, get2())) || get2();
-        const deltaState = (_b3 = options == null ? void 0 : options.diff) == null ? void 0 : _b3.call(options, pastState, currentState);
-        if (!(deltaState === null || ((_c2 = options == null ? void 0 : options.equality) == null ? void 0 : _c2.call(options, pastState, currentState)))) {
-          curriedHandleSet(pastState, void 0, currentState, deltaState);
-        }
-      };
-      const setState = store.setState;
-      store.setState = (...args) => {
-        var _a3;
-        const pastState = ((_a3 = options == null ? void 0 : options.partialize) == null ? void 0 : _a3.call(options, get2())) || get2();
-        setState(...args);
-        temporalHandleSet(pastState);
-      };
-      return config2((...args) => {
-        var _a3;
-        const pastState = ((_a3 = options == null ? void 0 : options.partialize) == null ? void 0 : _a3.call(options, get2())) || get2();
-        set2(...args);
-        temporalHandleSet(pastState);
-      }, get2, store);
-    };
-    return configWithTemporal;
-  };
-  function promisifyRequest(request) {
-    return new Promise((resolve, reject) => {
-      request.oncomplete = request.onsuccess = () => resolve(request.result);
-      request.onabort = request.onerror = () => reject(request.error);
-    });
-  }
-  function createStore(dbName, storeName) {
-    let dbp;
-    const getDB = () => {
-      if (dbp) return dbp;
-      const request = indexedDB.open(dbName);
-      request.onupgradeneeded = () => request.result.createObjectStore(storeName);
-      dbp = promisifyRequest(request);
-      dbp.then((db2) => {
-        db2.onclose = () => dbp = void 0;
-      }, () => {
-      });
-      return dbp;
-    };
-    return (txMode, callback) => getDB().then((db2) => callback(db2.transaction(storeName, txMode).objectStore(storeName)));
-  }
-  let defaultGetStoreFunc;
-  function defaultGetStore() {
-    if (!defaultGetStoreFunc) {
-      defaultGetStoreFunc = createStore("keyval-store", "keyval");
-    }
-    return defaultGetStoreFunc;
-  }
-  function get(key2, customStore = defaultGetStore()) {
-    return customStore("readonly", (store) => promisifyRequest(store.get(key2)));
-  }
-  function del(key2, customStore = defaultGetStore()) {
-    return customStore("readwrite", (store) => {
-      store.delete(key2);
-      return promisifyRequest(store.transaction);
-    });
-  }
-  function assert$8(condition, message2) {
-    if (!condition) {
-      throw new Error(message2 || "loader assertion failed.");
-    }
-  }
-  const isBrowser$2 = Boolean(typeof process !== "object" || String(process) !== "[object process]" || process.browser);
-  const matches$1 = typeof process !== "undefined" && process.version && /v([0-9]*)/.exec(process.version);
-  matches$1 && parseFloat(matches$1[1]) || 0;
-  const window_ = globalThis;
-  const process_ = globalThis.process || {};
-  const navigator_ = globalThis.navigator || {};
-  function isElectron(mockUserAgent) {
-    var _a2, _b2;
-    if (typeof window !== "undefined" && ((_a2 = window.process) == null ? void 0 : _a2.type) === "renderer") {
-      return true;
-    }
-    if (typeof process !== "undefined" && Boolean((_b2 = process.versions) == null ? void 0 : _b2["electron"])) {
-      return true;
-    }
-    const realUserAgent = typeof navigator !== "undefined" && navigator.userAgent;
-    const userAgent2 = realUserAgent;
-    return Boolean(userAgent2 && userAgent2.indexOf("Electron") >= 0);
-  }
-  function isBrowser$1() {
-    const isNode = typeof process === "object" && String(process) === "[object process]" && !(process == null ? void 0 : process.browser);
-    return !isNode || isElectron();
-  }
-  function getBrowser(mockUserAgent) {
-    if (!isBrowser$1()) {
-      return "Node";
-    }
-    if (isElectron()) {
-      return "Electron";
-    }
-    const userAgent2 = navigator_.userAgent || "";
-    if (userAgent2.indexOf("Edge") > -1) {
-      return "Edge";
-    }
-    if (globalThis.chrome) {
-      return "Chrome";
-    }
-    if (globalThis.safari) {
-      return "Safari";
-    }
-    if (globalThis.mozInnerScreenX) {
-      return "Firefox";
-    }
-    return "Unknown";
-  }
-  const VERSION$4 = "4.1.1";
-  function assert$7(condition, message2) {
-    if (!condition) {
-      throw new Error("Assertion failed");
-    }
-  }
-  function normalizeLogLevel(logLevel) {
-    if (!logLevel) {
-      return 0;
-    }
-    let resolvedLevel;
-    switch (typeof logLevel) {
-      case "number":
-        resolvedLevel = logLevel;
-        break;
-      case "object":
-        resolvedLevel = logLevel.logLevel || logLevel.priority || 0;
-        break;
-      default:
-        return 0;
-    }
-    assert$7(Number.isFinite(resolvedLevel) && resolvedLevel >= 0);
-    return resolvedLevel;
-  }
-  function normalizeArguments(opts) {
-    const { logLevel, message: message2 } = opts;
-    opts.logLevel = normalizeLogLevel(logLevel);
-    const args = opts.args ? Array.from(opts.args) : [];
-    while (args.length && args.shift() !== message2) {
-    }
-    switch (typeof logLevel) {
-      case "string":
-      case "function":
-        if (message2 !== void 0) {
-          args.unshift(message2);
-        }
-        opts.message = logLevel;
-        break;
-      case "object":
-        Object.assign(opts, logLevel);
-        break;
-    }
-    if (typeof opts.message === "function") {
-      opts.message = opts.message();
-    }
-    const messageType = typeof opts.message;
-    assert$7(messageType === "string" || messageType === "object");
-    return Object.assign(opts, {
-      args
-    }, opts.opts);
-  }
-  const noop$3 = () => {
-  };
-  class BaseLog {
-    constructor({ level = 0 } = {}) {
-      this.userData = {};
-      this._onceCache = /* @__PURE__ */ new Set();
-      this._level = level;
-    }
-    set level(newLevel) {
-      this.setLevel(newLevel);
-    }
-    get level() {
-      return this.getLevel();
-    }
-    setLevel(level) {
-      this._level = level;
-      return this;
-    }
-    getLevel() {
-      return this._level;
-    }
-    warn(message2, ...args) {
-      return this._log("warn", 0, message2, args, {
-        once: true
-      });
-    }
-    error(message2, ...args) {
-      return this._log("error", 0, message2, args);
-    }
-    log(logLevel, message2, ...args) {
-      return this._log("log", logLevel, message2, args);
-    }
-    info(logLevel, message2, ...args) {
-      return this._log("info", logLevel, message2, args);
-    }
-    once(logLevel, message2, ...args) {
-      return this._log("once", logLevel, message2, args, {
-        once: true
-      });
-    }
-    _log(type, logLevel, message2, args, options = {}) {
-      const normalized = normalizeArguments({
-        logLevel,
-        message: message2,
-        args: this._buildArgs(logLevel, message2, args),
-        opts: options
-      });
-      return this._createLogFunction(type, normalized, options);
-    }
-    _buildArgs(logLevel, message2, args) {
-      return [
-        logLevel,
-        message2,
-        ...args
-      ];
-    }
-    _createLogFunction(type, normalized, options) {
-      if (!this._shouldLog(normalized.logLevel)) {
-        return noop$3;
-      }
-      const tag = this._getOnceTag(options.tag ?? normalized.tag ?? normalized.message);
-      if ((options.once || normalized.once) && tag !== void 0) {
-        if (this._onceCache.has(tag)) {
-          return noop$3;
-        }
-        this._onceCache.add(tag);
-      }
-      return this._emit(type, normalized);
-    }
-    _shouldLog(logLevel) {
-      return this.getLevel() >= normalizeLogLevel(logLevel);
-    }
-    _getOnceTag(tag) {
-      if (tag === void 0) {
-        return void 0;
-      }
-      try {
-        return typeof tag === "string" ? tag : String(tag);
-      } catch {
-        return void 0;
-      }
-    }
-  }
-  function getStorage(type) {
-    try {
-      const storage = window[type];
-      const x2 = "__storage_test__";
-      storage.setItem(x2, x2);
-      storage.removeItem(x2);
-      return storage;
-    } catch (e2) {
-      return null;
-    }
-  }
-  class LocalStorage {
-    constructor(id2, defaultConfig, type = "sessionStorage") {
-      this.storage = getStorage(type);
-      this.id = id2;
-      this.config = defaultConfig;
-      this._loadConfiguration();
-    }
-    getConfiguration() {
-      return this.config;
-    }
-    setConfiguration(configuration) {
-      Object.assign(this.config, configuration);
-      if (this.storage) {
-        const serialized = JSON.stringify(this.config);
-        this.storage.setItem(this.id, serialized);
-      }
-    }
-    _loadConfiguration() {
-      let configuration = {};
-      if (this.storage) {
-        const serializedConfiguration = this.storage.getItem(this.id);
-        configuration = serializedConfiguration ? JSON.parse(serializedConfiguration) : {};
-      }
-      Object.assign(this.config, configuration);
-      return this;
-    }
-  }
-  function formatTime(ms) {
-    let formatted;
-    if (ms < 10) {
-      formatted = `${ms.toFixed(2)}ms`;
-    } else if (ms < 100) {
-      formatted = `${ms.toFixed(1)}ms`;
-    } else if (ms < 1e3) {
-      formatted = `${ms.toFixed(0)}ms`;
-    } else {
-      formatted = `${(ms / 1e3).toFixed(2)}s`;
-    }
-    return formatted;
-  }
-  function leftPad(string2, length2 = 8) {
-    const padLength = Math.max(length2 - string2.length, 0);
-    return `${" ".repeat(padLength)}${string2}`;
-  }
-  var COLOR;
-  (function(COLOR2) {
-    COLOR2[COLOR2["BLACK"] = 30] = "BLACK";
-    COLOR2[COLOR2["RED"] = 31] = "RED";
-    COLOR2[COLOR2["GREEN"] = 32] = "GREEN";
-    COLOR2[COLOR2["YELLOW"] = 33] = "YELLOW";
-    COLOR2[COLOR2["BLUE"] = 34] = "BLUE";
-    COLOR2[COLOR2["MAGENTA"] = 35] = "MAGENTA";
-    COLOR2[COLOR2["CYAN"] = 36] = "CYAN";
-    COLOR2[COLOR2["WHITE"] = 37] = "WHITE";
-    COLOR2[COLOR2["BRIGHT_BLACK"] = 90] = "BRIGHT_BLACK";
-    COLOR2[COLOR2["BRIGHT_RED"] = 91] = "BRIGHT_RED";
-    COLOR2[COLOR2["BRIGHT_GREEN"] = 92] = "BRIGHT_GREEN";
-    COLOR2[COLOR2["BRIGHT_YELLOW"] = 93] = "BRIGHT_YELLOW";
-    COLOR2[COLOR2["BRIGHT_BLUE"] = 94] = "BRIGHT_BLUE";
-    COLOR2[COLOR2["BRIGHT_MAGENTA"] = 95] = "BRIGHT_MAGENTA";
-    COLOR2[COLOR2["BRIGHT_CYAN"] = 96] = "BRIGHT_CYAN";
-    COLOR2[COLOR2["BRIGHT_WHITE"] = 97] = "BRIGHT_WHITE";
-  })(COLOR || (COLOR = {}));
-  const BACKGROUND_INCREMENT = 10;
-  function getColor(color2) {
-    if (typeof color2 !== "string") {
-      return color2;
-    }
-    color2 = color2.toUpperCase();
-    return COLOR[color2] || COLOR.WHITE;
-  }
-  function addColor(string2, color2, background) {
-    if (!isBrowser$1 && typeof string2 === "string") {
-      if (color2) {
-        const colorCode = getColor(color2);
-        string2 = `\x1B[${colorCode}m${string2}\x1B[39m`;
-      }
-      if (background) {
-        const colorCode = getColor(background);
-        string2 = `\x1B[${colorCode + BACKGROUND_INCREMENT}m${string2}\x1B[49m`;
-      }
-    }
-    return string2;
-  }
-  function autobind(obj, predefined = [
-    "constructor"
-  ]) {
-    const proto2 = Object.getPrototypeOf(obj);
-    const propNames = Object.getOwnPropertyNames(proto2);
-    const object = obj;
-    for (const key2 of propNames) {
-      const value = object[key2];
-      if (typeof value === "function") {
-        if (!predefined.find((name2) => key2 === name2)) {
-          object[key2] = value.bind(obj);
-        }
-      }
-    }
-  }
-  function getHiResTimestamp$1() {
-    var _a2, _b2, _c2;
-    let timestamp;
-    if (isBrowser$1() && window_.performance) {
-      timestamp = (_b2 = (_a2 = window_ == null ? void 0 : window_.performance) == null ? void 0 : _a2.now) == null ? void 0 : _b2.call(_a2);
-    } else if ("hrtime" in process_) {
-      const timeParts = (_c2 = process_ == null ? void 0 : process_.hrtime) == null ? void 0 : _c2.call(process_);
-      timestamp = timeParts[0] * 1e3 + timeParts[1] / 1e6;
-    } else {
-      timestamp = Date.now();
-    }
-    return timestamp;
-  }
-  const originalConsole = {
-    debug: isBrowser$1() ? console.debug || console.log : console.log,
-    log: console.log,
-    info: console.info,
-    warn: console.warn,
-    error: console.error
-  };
-  const DEFAULT_LOG_CONFIGURATION = {
-    enabled: true,
-    level: 0
-  };
-  class ProbeLog extends BaseLog {
-    constructor({ id: id2 } = {
-      id: ""
-    }) {
-      super({
-        level: 0
-      });
-      this.VERSION = VERSION$4;
-      this._startTs = getHiResTimestamp$1();
-      this._deltaTs = getHiResTimestamp$1();
-      this.userData = {};
-      this.LOG_THROTTLE_TIMEOUT = 0;
-      this.id = id2;
-      this.userData = {};
-      this._storage = new LocalStorage(`__probe-${this.id}__`, {
-        [this.id]: DEFAULT_LOG_CONFIGURATION
-      });
-      this.timeStamp(`${this.id} started`);
-      autobind(this);
-      Object.seal(this);
-    }
-    isEnabled() {
-      return this._getConfiguration().enabled;
-    }
-    getLevel() {
-      return this._getConfiguration().level;
-    }
-    getTotal() {
-      return Number((getHiResTimestamp$1() - this._startTs).toPrecision(10));
-    }
-    getDelta() {
-      return Number((getHiResTimestamp$1() - this._deltaTs).toPrecision(10));
-    }
-    set priority(newPriority) {
-      this.level = newPriority;
-    }
-    get priority() {
-      return this.level;
-    }
-    getPriority() {
-      return this.level;
-    }
-    enable(enabled2 = true) {
-      this._updateConfiguration({
-        enabled: enabled2
-      });
-      return this;
-    }
-    setLevel(level) {
-      this._updateConfiguration({
-        level
-      });
-      return this;
-    }
-    get(setting) {
-      return this._getConfiguration()[setting];
-    }
-    set(setting, value) {
-      this._updateConfiguration({
-        [setting]: value
-      });
-    }
-    settings() {
-      if (console.table) {
-        console.table(this._storage.config);
-      } else {
-        console.log(this._storage.config);
-      }
-    }
-    assert(condition, message2) {
-      if (!condition) {
-        throw new Error(message2 || "Assertion failed");
-      }
-    }
-    warn(message2, ...args) {
-      return this._log("warn", 0, message2, args, {
-        method: originalConsole.warn,
-        once: true
-      });
-    }
-    error(message2, ...args) {
-      return this._log("error", 0, message2, args, {
-        method: originalConsole.error
-      });
-    }
-    deprecated(oldUsage, newUsage) {
-      return this.warn(`\`${oldUsage}\` is deprecated and will be removed in a later version. Use \`${newUsage}\` instead`);
-    }
-    removed(oldUsage, newUsage) {
-      return this.error(`\`${oldUsage}\` has been removed. Use \`${newUsage}\` instead`);
-    }
-    probe(logLevel, message2, ...args) {
-      return this._log("log", logLevel, message2, args, {
-        method: originalConsole.log,
-        time: true,
-        once: true
-      });
-    }
-    log(logLevel, message2, ...args) {
-      return this._log("log", logLevel, message2, args, {
-        method: originalConsole.debug
-      });
-    }
-    info(logLevel, message2, ...args) {
-      return this._log("info", logLevel, message2, args, {
-        method: console.info
-      });
-    }
-    once(logLevel, message2, ...args) {
-      return this._log("once", logLevel, message2, args, {
-        method: originalConsole.debug || originalConsole.info,
-        once: true
-      });
-    }
-    table(logLevel, table2, columns) {
-      if (table2) {
-        return this._log("table", logLevel, table2, columns && [
-          columns
-        ] || [], {
-          method: console.table || noop$3,
-          tag: getTableHeader(table2)
-        });
-      }
-      return noop$3;
-    }
-    time(logLevel, message2) {
-      return this._log("time", logLevel, message2, [], {
-        method: console.time ? console.time : console.info
-      });
-    }
-    timeEnd(logLevel, message2) {
-      return this._log("time", logLevel, message2, [], {
-        method: console.timeEnd ? console.timeEnd : console.info
-      });
-    }
-    timeStamp(logLevel, message2) {
-      return this._log("time", logLevel, message2, [], {
-        method: console.timeStamp || noop$3
-      });
-    }
-    group(logLevel, message2, opts = {
-      collapsed: false
-    }) {
-      const method = (opts.collapsed ? console.groupCollapsed : console.group) || console.info;
-      return this._log("group", logLevel, message2, [], {
-        method
-      });
-    }
-    groupCollapsed(logLevel, message2, opts = {}) {
-      return this.group(logLevel, message2, Object.assign({}, opts, {
-        collapsed: true
-      }));
-    }
-    groupEnd(logLevel) {
-      return this._log("groupEnd", logLevel, "", [], {
-        method: console.groupEnd || noop$3
-      });
-    }
-    withGroup(logLevel, message2, func) {
-      this.group(logLevel, message2)();
-      try {
-        func();
-      } finally {
-        this.groupEnd(logLevel)();
-      }
-    }
-    trace() {
-      if (console.trace) {
-        console.trace();
-      }
-    }
-    _shouldLog(logLevel) {
-      return this.isEnabled() && super._shouldLog(logLevel);
-    }
-    _emit(_type, normalized) {
-      const method = normalized.method;
-      assert$7(method);
-      normalized.total = this.getTotal();
-      normalized.delta = this.getDelta();
-      this._deltaTs = getHiResTimestamp$1();
-      const message2 = decorateMessage(this.id, normalized.message, normalized);
-      return method.bind(console, message2, ...normalized.args);
-    }
-    _getConfiguration() {
-      if (!this._storage.config[this.id]) {
-        this._updateConfiguration(DEFAULT_LOG_CONFIGURATION);
-      }
-      return this._storage.config[this.id];
-    }
-    _updateConfiguration(configuration) {
-      const currentConfiguration = this._storage.config[this.id] || {
-        ...DEFAULT_LOG_CONFIGURATION
-      };
-      this._storage.setConfiguration({
-        [this.id]: {
-          ...currentConfiguration,
-          ...configuration
-        }
-      });
-    }
-  }
-  ProbeLog.VERSION = VERSION$4;
-  function decorateMessage(id2, message2, opts) {
-    if (typeof message2 === "string") {
-      const time = opts.time ? leftPad(formatTime(opts.total)) : "";
-      message2 = opts.time ? `${id2}: ${time}  ${message2}` : `${id2}: ${message2}`;
-      message2 = addColor(message2, opts.color, opts.background);
-    }
-    return message2;
-  }
-  function getTableHeader(table2) {
-    for (const key2 in table2) {
-      for (const title7 in table2[key2]) {
-        return title7 || "untitled";
-      }
-    }
-    return "empty";
-  }
-  const VERSION$3 = "4.4.5";
-  const version$1 = VERSION$3[0] >= "0" && VERSION$3[0] <= "9" ? `v${VERSION$3}` : "";
-  function createLog() {
-    const log3 = new ProbeLog({
-      id: "loaders.gl"
-    });
-    globalThis.loaders || (globalThis.loaders = {});
-    globalThis.loaders.log = log3;
-    globalThis.loaders.version = version$1;
-    globalThis.probe || (globalThis.probe = {});
-    globalThis.probe.loaders = log3;
-    return log3;
-  }
-  const log$4 = createLog();
-  const isBoolean = (value) => typeof value === "boolean";
-  const isFunction = (value) => typeof value === "function";
-  const isObject$1 = (value) => value !== null && typeof value === "object";
-  const isPureObject = (value) => isObject$1(value) && value.constructor === {}.constructor;
-  const isSharedArrayBuffer = (value) => typeof SharedArrayBuffer !== "undefined" && value instanceof SharedArrayBuffer;
-  const isArrayBufferLike = (value) => isObject$1(value) && typeof value.byteLength === "number" && typeof value.slice === "function";
-  const isIterable = (value) => Boolean(value) && isFunction(value[Symbol.iterator]);
-  const isAsyncIterable$1 = (value) => Boolean(value) && isFunction(value[Symbol.asyncIterator]);
-  const isResponse = (value) => typeof Response !== "undefined" && value instanceof Response || isObject$1(value) && isFunction(value.arrayBuffer) && isFunction(value.text) && isFunction(value.json);
-  const isBlob = (value) => typeof Blob !== "undefined" && value instanceof Blob;
-  const isReadableDOMStream = (value) => typeof ReadableStream !== "undefined" && value instanceof ReadableStream || isObject$1(value) && isFunction(value.tee) && isFunction(value.cancel) && isFunction(value.getReader);
-  const isReadableNodeStream = (value) => isObject$1(value) && isFunction(value.read) && isFunction(value.pipe) && isBoolean(value.readable);
-  const isReadableStream = (value) => isReadableDOMStream(value) || isReadableNodeStream(value);
-  function mergeOptions(baseOptions, newOptions) {
-    return mergeOptionsRecursively(baseOptions || {}, newOptions);
-  }
-  function mergeOptionsRecursively(baseOptions, newOptions, level = 0) {
-    if (level > 3) {
-      return newOptions;
-    }
-    const options = {
-      ...baseOptions
-    };
-    for (const [key2, newValue] of Object.entries(newOptions)) {
-      if (newValue && typeof newValue === "object" && !Array.isArray(newValue)) {
-        options[key2] = mergeOptionsRecursively(options[key2] || {}, newOptions[key2], level + 1);
-      } else {
-        options[key2] = newOptions[key2];
-      }
-    }
-    return options;
-  }
-  const NPM_TAG = "latest";
-  function getVersion() {
-    var _a2;
-    if (!((_a2 = globalThis._loadersgl_) == null ? void 0 : _a2.version)) {
-      globalThis._loadersgl_ = globalThis._loadersgl_ || {};
-      {
-        globalThis._loadersgl_.version = "4.4.5";
-      }
-    }
-    return globalThis._loadersgl_.version;
-  }
-  const VERSION$2 = getVersion();
-  function assert$6(condition, message2) {
-    if (!condition) {
-      throw new Error(message2 || "loaders.gl assertion failed.");
-    }
-  }
-  const isBrowser = typeof process !== "object" || String(process) !== "[object process]" || process.browser;
-  const isMobile = typeof window !== "undefined" && typeof window.orientation !== "undefined";
-  const matches = typeof process !== "undefined" && process.version && /v([0-9]*)/.exec(process.version);
-  matches && parseFloat(matches[1]) || 0;
-  class WorkerJob {
-    constructor(jobName, workerThread) {
-      __publicField(this, "name");
-      __publicField(this, "workerThread");
-      __publicField(this, "isRunning", true);
-      __publicField(this, "result");
-      __publicField(this, "_resolve", () => {
-      });
-      __publicField(this, "_reject", () => {
-      });
-      this.name = jobName;
-      this.workerThread = workerThread;
-      this.result = new Promise((resolve, reject) => {
-        this._resolve = resolve;
-        this._reject = reject;
-      });
-    }
-    postMessage(type, payload) {
-      this.workerThread.postMessage({
-        source: "loaders.gl",
-        type,
-        payload
-      });
-    }
-    done(value) {
-      assert$6(this.isRunning);
-      this.isRunning = false;
-      this._resolve(value);
-    }
-    error(error2) {
-      assert$6(this.isRunning);
-      this.isRunning = false;
-      this._reject(error2);
-    }
-  }
-  class NodeWorker {
-    terminate() {
-    }
-  }
-  const workerURLCache = /* @__PURE__ */ new Map();
-  function getLoadableWorkerURL(props) {
-    assert$6(props.source && !props.url || !props.source && props.url);
-    let workerURL = workerURLCache.get(props.source || props.url);
-    if (!workerURL) {
-      if (props.url) {
-        workerURL = getLoadableWorkerURLFromURL(props.url);
-        workerURLCache.set(props.url, workerURL);
-      }
-      if (props.source) {
-        workerURL = getLoadableWorkerURLFromSource(props.source);
-        workerURLCache.set(props.source, workerURL);
-      }
-    }
-    assert$6(workerURL);
-    return workerURL;
-  }
-  function getLoadableWorkerURLFromURL(url) {
-    if (!url.startsWith("http")) {
-      return url;
-    }
-    const workerSource = buildScriptSource(url);
-    return getLoadableWorkerURLFromSource(workerSource);
-  }
-  function getLoadableWorkerURLFromSource(workerSource) {
-    const blob = new Blob([
-      workerSource
-    ], {
-      type: "application/javascript"
-    });
-    return URL.createObjectURL(blob);
-  }
-  function buildScriptSource(workerUrl) {
-    return `try {
-  importScripts('${workerUrl}');
-} catch (error) {
-  console.error(error);
-  throw error;
-}`;
-  }
-  function getTransferList(object, recursive = true, transfers) {
-    const transfersSet = transfers || /* @__PURE__ */ new Set();
-    if (!object) ;
-    else if (isTransferable(object)) {
-      transfersSet.add(object);
-    } else if (isTransferable(object.buffer)) {
-      transfersSet.add(object.buffer);
-    } else if (ArrayBuffer.isView(object)) ;
-    else if (recursive && typeof object === "object") {
-      for (const key2 in object) {
-        getTransferList(object[key2], recursive, transfersSet);
-      }
-    }
-    return transfers === void 0 ? Array.from(transfersSet) : [];
-  }
-  function isTransferable(object) {
-    if (!object) {
-      return false;
-    }
-    if (object instanceof ArrayBuffer) {
-      return true;
-    }
-    if (typeof MessagePort !== "undefined" && object instanceof MessagePort) {
-      return true;
-    }
-    if (typeof ImageBitmap !== "undefined" && object instanceof ImageBitmap) {
-      return true;
-    }
-    if (typeof OffscreenCanvas !== "undefined" && object instanceof OffscreenCanvas) {
-      return true;
-    }
-    return false;
-  }
-  const NOOP = () => {
-  };
-  class WorkerThread {
-    constructor(props) {
-      __publicField(this, "name");
-      __publicField(this, "source");
-      __publicField(this, "url");
-      __publicField(this, "terminated", false);
-      __publicField(this, "worker");
-      __publicField(this, "onMessage");
-      __publicField(this, "onError");
-      __publicField(this, "_loadableURL", "");
-      const { name: name2, source: source2, url } = props;
-      assert$6(source2 || url);
-      this.name = name2;
-      this.source = source2;
-      this.url = url;
-      this.onMessage = NOOP;
-      this.onError = (error2) => console.log(error2);
-      this.worker = isBrowser ? this._createBrowserWorker() : this._createNodeWorker();
-    }
-    static isSupported() {
-      return typeof Worker !== "undefined" && isBrowser || typeof NodeWorker !== "undefined" && !isBrowser;
-    }
-    destroy() {
-      this.onMessage = NOOP;
-      this.onError = NOOP;
-      this.worker.terminate();
-      this.terminated = true;
-    }
-    get isRunning() {
-      return Boolean(this.onMessage);
-    }
-    postMessage(data2, transferList) {
-      transferList = transferList || getTransferList(data2);
-      this.worker.postMessage(data2, transferList);
-    }
-    _getErrorFromErrorEvent(event) {
-      let message2 = "Failed to load ";
-      message2 += `worker ${this.name} from ${this.url}. `;
-      if (event.message) {
-        message2 += `${event.message} in `;
-      }
-      if (event.lineno) {
-        message2 += `:${event.lineno}:${event.colno}`;
-      }
-      return new Error(message2);
-    }
-    _createBrowserWorker() {
-      this._loadableURL = getLoadableWorkerURL({
-        source: this.source,
-        url: this.url
-      });
-      const worker = new Worker(this._loadableURL, {
-        name: this.name
-      });
-      worker.onmessage = (event) => {
-        if (!event.data) {
-          this.onError(new Error("No data received"));
-        } else {
-          this.onMessage(event.data);
-        }
-      };
-      worker.onerror = (error2) => {
-        this.onError(this._getErrorFromErrorEvent(error2));
-        this.terminated = true;
-      };
-      worker.onmessageerror = (event) => console.error(event);
-      return worker;
-    }
-    _createNodeWorker() {
-      let worker;
-      if (this.url) {
-        const absolute = this.url.includes(":/") || this.url.startsWith("/");
-        const url = absolute ? this.url : `./${this.url}`;
-        const type = this.url.endsWith(".ts") || this.url.endsWith(".mjs") ? "module" : "commonjs";
-        worker = new NodeWorker(url, {
-          eval: false,
-          type
-        });
-      } else if (this.source) {
-        worker = new NodeWorker(this.source, {
-          eval: true
-        });
-      } else {
-        throw new Error("no worker");
-      }
-      worker.on("message", (data2) => {
-        this.onMessage(data2);
-      });
-      worker.on("error", (error2) => {
-        this.onError(error2);
-      });
-      worker.on("exit", (code2) => {
-      });
-      return worker;
-    }
-  }
-  class WorkerPool {
-    constructor(props) {
-      __publicField(this, "name", "unnamed");
-      __publicField(this, "source");
-      __publicField(this, "url");
-      __publicField(this, "maxConcurrency", 1);
-      __publicField(this, "maxMobileConcurrency", 1);
-      __publicField(this, "onDebug", () => {
-      });
-      __publicField(this, "reuseWorkers", true);
-      __publicField(this, "props", {});
-      __publicField(this, "jobQueue", []);
-      __publicField(this, "idleQueue", []);
-      __publicField(this, "count", 0);
-      __publicField(this, "isDestroyed", false);
-      this.source = props.source;
-      this.url = props.url;
-      this.setProps(props);
-    }
-    static isSupported() {
-      return WorkerThread.isSupported();
-    }
-    destroy() {
-      this.idleQueue.forEach((worker) => worker.destroy());
-      this.isDestroyed = true;
-    }
-    setProps(props) {
-      this.props = {
-        ...this.props,
-        ...props
-      };
-      if (props.name !== void 0) {
-        this.name = props.name;
-      }
-      if (props.maxConcurrency !== void 0) {
-        this.maxConcurrency = props.maxConcurrency;
-      }
-      if (props.maxMobileConcurrency !== void 0) {
-        this.maxMobileConcurrency = props.maxMobileConcurrency;
-      }
-      if (props.reuseWorkers !== void 0) {
-        this.reuseWorkers = props.reuseWorkers;
-      }
-      if (props.onDebug !== void 0) {
-        this.onDebug = props.onDebug;
-      }
-    }
-    async startJob(name2, onMessage2 = (job, type, data2) => job.done(data2), onError = (job, error2) => job.error(error2)) {
-      const startPromise = new Promise((onStart) => {
-        this.jobQueue.push({
-          name: name2,
-          onMessage: onMessage2,
-          onError,
-          onStart
-        });
-        return this;
-      });
-      this._startQueuedJob();
-      return await startPromise;
-    }
-    async _startQueuedJob() {
-      if (!this.jobQueue.length) {
-        return;
-      }
-      const workerThread = this._getAvailableWorker();
-      if (!workerThread) {
-        return;
-      }
-      const queuedJob = this.jobQueue.shift();
-      if (queuedJob) {
-        this.onDebug({
-          message: "Starting job",
-          name: queuedJob.name,
-          workerThread,
-          backlog: this.jobQueue.length
-        });
-        const job = new WorkerJob(queuedJob.name, workerThread);
-        workerThread.onMessage = (data2) => queuedJob.onMessage(job, data2.type, data2.payload);
-        workerThread.onError = (error2) => queuedJob.onError(job, error2);
-        queuedJob.onStart(job);
-        try {
-          await job.result;
-        } catch (error2) {
-          console.error(`Worker exception: ${error2}`);
-        } finally {
-          this.returnWorkerToQueue(workerThread);
-        }
-      }
-    }
-    returnWorkerToQueue(worker) {
-      const shouldDestroyWorker = !isBrowser || this.isDestroyed || !this.reuseWorkers || this.count > this._getMaxConcurrency();
-      if (shouldDestroyWorker) {
-        worker.destroy();
-        this.count--;
-      } else {
-        this.idleQueue.push(worker);
-      }
-      if (!this.isDestroyed) {
-        this._startQueuedJob();
-      }
-    }
-    _getAvailableWorker() {
-      if (this.idleQueue.length > 0) {
-        return this.idleQueue.shift() || null;
-      }
-      if (this.count < this._getMaxConcurrency()) {
-        this.count++;
-        const name2 = `${this.name.toLowerCase()} (#${this.count} of ${this.maxConcurrency})`;
-        return new WorkerThread({
-          name: name2,
-          source: this.source,
-          url: this.url
-        });
-      }
-      return null;
-    }
-    _getMaxConcurrency() {
-      return isMobile ? this.maxMobileConcurrency : this.maxConcurrency;
-    }
-  }
-  const DEFAULT_PROPS$2 = {
-    maxConcurrency: 3,
-    maxMobileConcurrency: 1,
-    reuseWorkers: true,
-    onDebug: () => {
-    }
-  };
-  const _WorkerFarm = class _WorkerFarm {
-    constructor(props) {
-      __publicField(this, "props");
-      __publicField(this, "workerPools", /* @__PURE__ */ new Map());
-      this.props = {
-        ...DEFAULT_PROPS$2
-      };
-      this.setProps(props);
-      this.workerPools = /* @__PURE__ */ new Map();
-    }
-    static isSupported() {
-      return WorkerThread.isSupported();
-    }
-    static getWorkerFarm(props = {}) {
-      _WorkerFarm._workerFarm = _WorkerFarm._workerFarm || new _WorkerFarm({});
-      _WorkerFarm._workerFarm.setProps(props);
-      return _WorkerFarm._workerFarm;
-    }
-    destroy() {
-      for (const workerPool of this.workerPools.values()) {
-        workerPool.destroy();
-      }
-      this.workerPools = /* @__PURE__ */ new Map();
-    }
-    setProps(props) {
-      this.props = {
-        ...this.props,
-        ...props
-      };
-      for (const workerPool of this.workerPools.values()) {
-        workerPool.setProps(this._getWorkerPoolProps());
-      }
-    }
-    getWorkerPool(options) {
-      const { name: name2, source: source2, url } = options;
-      let workerPool = this.workerPools.get(name2);
-      if (!workerPool) {
-        workerPool = new WorkerPool({
-          name: name2,
-          source: source2,
-          url
-        });
-        workerPool.setProps(this._getWorkerPoolProps());
-        this.workerPools.set(name2, workerPool);
-      }
-      return workerPool;
-    }
-    _getWorkerPoolProps() {
-      return {
-        maxConcurrency: this.props.maxConcurrency,
-        maxMobileConcurrency: this.props.maxMobileConcurrency,
-        reuseWorkers: this.props.reuseWorkers,
-        onDebug: this.props.onDebug
-      };
-    }
-  };
-  __publicField(_WorkerFarm, "_workerFarm");
-  let WorkerFarm = _WorkerFarm;
-  function getWorkerURL(worker, options = {}) {
-    var _a2;
-    const workerOptions = options[worker.id] || {};
-    const workerFile = isBrowser ? `${worker.id}-worker.js` : `${worker.id}-worker-node.js`;
-    let url = workerOptions.workerUrl;
-    if (!url && worker.id === "compression") {
-      url = options.workerUrl;
-    }
-    const workerType = options._workerType || ((_a2 = options == null ? void 0 : options.core) == null ? void 0 : _a2._workerType);
-    if (workerType === "test") {
-      if (isBrowser) {
-        url = `modules/${worker.module}/dist/${workerFile}`;
-      } else {
-        url = `modules/${worker.module}/src/workers/${worker.id}-worker-node.ts`;
-      }
-    }
-    if (!url) {
-      let version2 = worker.version;
-      if (version2 === "latest") {
-        version2 = NPM_TAG;
-      }
-      const versionTag = version2 ? `@${version2}` : "";
-      url = `https://unpkg.com/@loaders.gl/${worker.module}${versionTag}/dist/${workerFile}`;
-    }
-    assert$6(url);
-    return url;
-  }
-  function validateWorkerVersion(worker, coreVersion = VERSION$2) {
-    assert$6(worker, "no worker provided");
-    const workerVersion = worker.version;
-    if (!coreVersion || !workerVersion) {
-      return false;
-    }
-    return true;
-  }
-  function canParseWithWorker(loader, options) {
-    var _a2, _b2;
-    if (!WorkerFarm.isSupported()) {
-      return false;
-    }
-    const nodeWorkers = (options == null ? void 0 : options._nodeWorkers) ?? ((_a2 = options == null ? void 0 : options.core) == null ? void 0 : _a2._nodeWorkers);
-    if (!isBrowser && !nodeWorkers) {
-      return false;
-    }
-    const useWorkers = (options == null ? void 0 : options.worker) ?? ((_b2 = options == null ? void 0 : options.core) == null ? void 0 : _b2.worker);
-    return Boolean(loader.worker && useWorkers);
-  }
-  async function parseWithWorker(loader, data2, options, context, parseOnMainThread) {
-    const name2 = loader.id;
-    const url = getWorkerURL(loader, options);
-    const workerFarm = WorkerFarm.getWorkerFarm(options == null ? void 0 : options.core);
-    const workerPool = workerFarm.getWorkerPool({
-      name: name2,
-      url
-    });
-    options = JSON.parse(JSON.stringify(options));
-    context = JSON.parse(JSON.stringify(context || {}));
-    const job = await workerPool.startJob("process-on-worker", onMessage.bind(null, parseOnMainThread));
-    job.postMessage("process", {
-      input: data2,
-      options,
-      context
-    });
-    const result = await job.result;
-    return await result.result;
-  }
-  async function onMessage(parseOnMainThread, job, type, payload) {
-    switch (type) {
-      case "done":
-        job.done(payload);
-        break;
-      case "error":
-        job.error(new Error(payload.error));
-        break;
-      case "process":
-        const { id: id2, input: input2, options } = payload;
-        try {
-          const result = await parseOnMainThread(input2, options);
-          job.postMessage("done", {
-            id: id2,
-            result
-          });
-        } catch (error2) {
-          const message2 = error2 instanceof Error ? error2.message : "unknown error";
-          job.postMessage("error", {
-            id: id2,
-            error: message2
-          });
-        }
-        break;
-      default:
-        console.warn(`parse-with-worker unknown message ${type}`);
-    }
-  }
-  function compareArrayBuffers(arrayBuffer1, arrayBuffer2, byteLength) {
-    byteLength = byteLength || arrayBuffer1.byteLength;
-    if (arrayBuffer1.byteLength < byteLength || arrayBuffer2.byteLength < byteLength) {
-      return false;
-    }
-    const array1 = new Uint8Array(arrayBuffer1);
-    const array2 = new Uint8Array(arrayBuffer2);
-    for (let i2 = 0; i2 < array1.length; ++i2) {
-      if (array1[i2] !== array2[i2]) {
-        return false;
-      }
-    }
-    return true;
-  }
-  function concatenateArrayBuffers(...sources) {
-    return concatenateArrayBuffersFromArray(sources);
-  }
-  function concatenateArrayBuffersFromArray(sources) {
-    const sourceArrays = sources.map((source2) => source2 instanceof ArrayBuffer ? new Uint8Array(source2) : source2);
-    const byteLength = sourceArrays.reduce((length2, typedArray) => length2 + typedArray.byteLength, 0);
-    const result = new Uint8Array(byteLength);
-    let offset = 0;
-    for (const sourceArray of sourceArrays) {
-      result.set(sourceArray, offset);
-      offset += sourceArray.byteLength;
-    }
-    return result.buffer;
-  }
-  async function concatenateArrayBuffersAsync(asyncIterator) {
-    const arrayBuffers = [];
-    for await (const chunk of asyncIterator) {
-      arrayBuffers.push(copyToArrayBuffer$2(chunk));
-    }
-    return concatenateArrayBuffers(...arrayBuffers);
-  }
-  function copyToArrayBuffer$2(chunk) {
-    if (chunk instanceof ArrayBuffer) {
-      return chunk;
-    }
-    if (ArrayBuffer.isView(chunk)) {
-      const { buffer: buffer2, byteOffset, byteLength } = chunk;
-      return copyFromBuffer(buffer2, byteOffset, byteLength);
-    }
-    return copyFromBuffer(chunk);
-  }
-  function copyFromBuffer(buffer2, byteOffset = 0, byteLength = buffer2.byteLength - byteOffset) {
-    const view = new Uint8Array(buffer2, byteOffset, byteLength);
-    const copy2 = new Uint8Array(view.length);
-    copy2.set(view);
-    return copy2.buffer;
-  }
-  function getHiResTimestamp() {
-    let timestamp;
-    if (typeof window !== "undefined" && window.performance) {
-      timestamp = window.performance.now();
-    } else if (typeof process !== "undefined" && process.hrtime) {
-      const timeParts = process.hrtime();
-      timestamp = timeParts[0] * 1e3 + timeParts[1] / 1e6;
-    } else {
-      timestamp = Date.now();
-    }
-    return timestamp;
-  }
-  class Stat {
-    constructor(name2, type) {
-      this.sampleSize = 1;
-      this.time = 0;
-      this.count = 0;
-      this.samples = 0;
-      this.lastTiming = 0;
-      this.lastSampleTime = 0;
-      this.lastSampleCount = 0;
-      this._count = 0;
-      this._time = 0;
-      this._samples = 0;
-      this._startTime = 0;
-      this._timerPending = false;
-      this.name = name2;
-      this.type = type;
-      this.reset();
-    }
-    reset() {
-      this.time = 0;
-      this.count = 0;
-      this.samples = 0;
-      this.lastTiming = 0;
-      this.lastSampleTime = 0;
-      this.lastSampleCount = 0;
-      this._count = 0;
-      this._time = 0;
-      this._samples = 0;
-      this._startTime = 0;
-      this._timerPending = false;
-      return this;
-    }
-    setSampleSize(samples) {
-      this.sampleSize = samples;
-      return this;
-    }
-    incrementCount() {
-      this.addCount(1);
-      return this;
-    }
-    decrementCount() {
-      this.subtractCount(1);
-      return this;
-    }
-    addCount(value) {
-      this._count += value;
-      this._samples++;
-      this._checkSampling();
-      return this;
-    }
-    subtractCount(value) {
-      this._count -= value;
-      this._samples++;
-      this._checkSampling();
-      return this;
-    }
-    addTime(time) {
-      this._time += time;
-      this.lastTiming = time;
-      this._samples++;
-      this._checkSampling();
-      return this;
-    }
-    timeStart() {
-      this._startTime = getHiResTimestamp();
-      this._timerPending = true;
-      return this;
-    }
-    timeEnd() {
-      if (!this._timerPending) {
-        return this;
-      }
-      this.addTime(getHiResTimestamp() - this._startTime);
-      this._timerPending = false;
-      this._checkSampling();
-      return this;
-    }
-    getSampleAverageCount() {
-      return this.sampleSize > 0 ? this.lastSampleCount / this.sampleSize : 0;
-    }
-    getSampleAverageTime() {
-      return this.sampleSize > 0 ? this.lastSampleTime / this.sampleSize : 0;
-    }
-    getSampleHz() {
-      return this.lastSampleTime > 0 ? this.sampleSize / (this.lastSampleTime / 1e3) : 0;
-    }
-    getAverageCount() {
-      return this.samples > 0 ? this.count / this.samples : 0;
-    }
-    getAverageTime() {
-      return this.samples > 0 ? this.time / this.samples : 0;
-    }
-    getHz() {
-      return this.time > 0 ? this.samples / (this.time / 1e3) : 0;
-    }
-    _checkSampling() {
-      if (this._samples === this.sampleSize) {
-        this.lastSampleTime = this._time;
-        this.lastSampleCount = this._count;
-        this.count += this._count;
-        this.time += this._time;
-        this.samples += this._samples;
-        this._time = 0;
-        this._count = 0;
-        this._samples = 0;
-      }
-    }
-  }
-  class Stats {
-    constructor(options) {
-      this.stats = {};
-      this.id = options.id;
-      this.stats = {};
-      this._initializeStats(options.stats);
-      Object.seal(this);
-    }
-    get(name2, type = "count") {
-      return this._getOrCreate({
-        name: name2,
-        type
-      });
-    }
-    get size() {
-      return Object.keys(this.stats).length;
-    }
-    reset() {
-      for (const stat of Object.values(this.stats)) {
-        stat.reset();
-      }
-      return this;
-    }
-    forEach(fn) {
-      for (const stat of Object.values(this.stats)) {
-        fn(stat);
-      }
-    }
-    getTable() {
-      const table2 = {};
-      this.forEach((stat) => {
-        table2[stat.name] = {
-          time: stat.time || 0,
-          count: stat.count || 0,
-          average: stat.getAverageTime() || 0,
-          hz: stat.getHz() || 0
-        };
-      });
-      return table2;
-    }
-    _initializeStats(stats = []) {
-      stats.forEach((stat) => this._getOrCreate(stat));
-    }
-    _getOrCreate(stat) {
-      const { name: name2, type } = stat;
-      let result = this.stats[name2];
-      if (!result) {
-        if (stat instanceof Stat) {
-          result = stat;
-        } else {
-          result = new Stat(name2, type);
-        }
-        this.stats[name2] = result;
-      }
-      return result;
-    }
-  }
-  const STAT_QUEUED_REQUESTS = "Queued Requests";
-  const STAT_ACTIVE_REQUESTS = "Active Requests";
-  const STAT_CANCELLED_REQUESTS = "Cancelled Requests";
-  const STAT_QUEUED_REQUESTS_EVER = "Queued Requests Ever";
-  const STAT_ACTIVE_REQUESTS_EVER = "Active Requests Ever";
-  const DEFAULT_PROPS$1 = {
-    id: "request-scheduler",
-    throttleRequests: true,
-    maxRequests: 6,
-    debounceTime: 0
-  };
-  class RequestScheduler {
-    constructor(props = {}) {
-      __publicField(this, "props");
-      __publicField(this, "stats");
-      __publicField(this, "activeRequestCount", 0);
-      __publicField(this, "requestQueue", []);
-      __publicField(this, "requestMap", /* @__PURE__ */ new Map());
-      __publicField(this, "updateTimer", null);
-      this.props = {
-        ...DEFAULT_PROPS$1,
-        ...props
-      };
-      this.stats = new Stats({
-        id: this.props.id
-      });
-      this.stats.get(STAT_QUEUED_REQUESTS);
-      this.stats.get(STAT_ACTIVE_REQUESTS);
-      this.stats.get(STAT_CANCELLED_REQUESTS);
-      this.stats.get(STAT_QUEUED_REQUESTS_EVER);
-      this.stats.get(STAT_ACTIVE_REQUESTS_EVER);
-    }
-    setProps(props) {
-      if (props.throttleRequests !== void 0) {
-        this.props.throttleRequests = props.throttleRequests;
-      }
-      if (props.maxRequests !== void 0) {
-        this.props.maxRequests = props.maxRequests;
-      }
-      if (props.debounceTime !== void 0) {
-        this.props.debounceTime = props.debounceTime;
-      }
-    }
-    scheduleRequest(handle2, getPriority = () => 0) {
-      if (!this.props.throttleRequests) {
-        return Promise.resolve({
-          done: () => {
-          }
-        });
-      }
-      if (this.requestMap.has(handle2)) {
-        return this.requestMap.get(handle2);
-      }
-      const request = {
-        handle: handle2,
-        priority: 0,
-        getPriority
-      };
-      const promise = new Promise((resolve) => {
-        request.resolve = resolve;
-        return request;
-      });
-      this.requestQueue.push(request);
-      this.requestMap.set(handle2, promise);
-      this._issueNewRequests();
-      return promise;
-    }
-    _issueRequest(request) {
-      const { handle: handle2, resolve } = request;
-      let isDone = false;
-      const done = () => {
-        if (!isDone) {
-          isDone = true;
-          this.requestMap.delete(handle2);
-          this.activeRequestCount--;
-          this._issueNewRequests();
-        }
-      };
-      this.activeRequestCount++;
-      return resolve ? resolve({
-        done
-      }) : Promise.resolve({
-        done
-      });
-    }
-    _issueNewRequests() {
-      if (this.updateTimer !== null) {
-        clearTimeout(this.updateTimer);
-      }
-      this.updateTimer = setTimeout(() => this._issueNewRequestsAsync(), this.props.debounceTime);
-    }
-    _issueNewRequestsAsync() {
-      if (this.updateTimer !== null) {
-        clearTimeout(this.updateTimer);
-      }
-      this.updateTimer = null;
-      const freeSlots = Math.max(this.props.maxRequests - this.activeRequestCount, 0);
-      if (freeSlots === 0) {
-        return;
-      }
-      this._updateAllRequests();
-      for (let i2 = 0; i2 < freeSlots; ++i2) {
-        const request = this.requestQueue.shift();
-        if (request) {
-          this._issueRequest(request);
-        }
-      }
-    }
-    _updateAllRequests() {
-      const requestQueue = this.requestQueue;
-      for (let i2 = 0; i2 < requestQueue.length; ++i2) {
-        const request = requestQueue[i2];
-        if (!this._updateRequest(request)) {
-          requestQueue.splice(i2, 1);
-          this.requestMap.delete(request.handle);
-          i2--;
-        }
-      }
-      requestQueue.sort((a2, b2) => a2.priority - b2.priority);
-    }
-    _updateRequest(request) {
-      request.priority = request.getPriority(request.handle);
-      if (request.priority < 0) {
-        request.resolve(null);
-        return false;
-      }
-      return true;
-    }
-  }
-  let pathPrefix = "";
-  const fileAliases = {};
-  function resolvePath(filename2) {
-    for (const alias2 in fileAliases) {
-      if (filename2.startsWith(alias2)) {
-        const replacement = fileAliases[alias2];
-        filename2 = filename2.replace(alias2, replacement);
-      }
-    }
-    if (!filename2.startsWith("http://") && !filename2.startsWith("https://")) {
-      filename2 = `${pathPrefix}${filename2}`;
-    }
-    return filename2;
-  }
-  function toArrayBuffer$1(buffer2) {
-    return buffer2;
-  }
-  function isBuffer(value) {
-    return value && typeof value === "object" && value.isBuffer;
-  }
-  function toArrayBuffer(data2) {
-    if (isBuffer(data2)) {
-      return toArrayBuffer$1(data2);
-    }
-    if (data2 instanceof ArrayBuffer) {
-      return data2;
-    }
-    if (isSharedArrayBuffer(data2)) {
-      return copyToArrayBuffer$1(data2);
-    }
-    if (ArrayBuffer.isView(data2)) {
-      const buffer2 = data2.buffer;
-      if (data2.byteOffset === 0 && data2.byteLength === data2.buffer.byteLength) {
-        return buffer2;
-      }
-      return buffer2.slice(data2.byteOffset, data2.byteOffset + data2.byteLength);
-    }
-    if (typeof data2 === "string") {
-      const text2 = data2;
-      const uint8Array = new TextEncoder().encode(text2);
-      return uint8Array.buffer;
-    }
-    if (data2 && typeof data2 === "object" && data2._toArrayBuffer) {
-      return data2._toArrayBuffer();
-    }
-    throw new Error("toArrayBuffer");
-  }
-  function ensureArrayBuffer(bufferSource) {
-    if (bufferSource instanceof ArrayBuffer) {
-      return bufferSource;
-    }
-    if (isSharedArrayBuffer(bufferSource)) {
-      return copyToArrayBuffer$1(bufferSource);
-    }
-    const { buffer: buffer2, byteOffset, byteLength } = bufferSource;
-    if (buffer2 instanceof ArrayBuffer && byteOffset === 0 && byteLength === buffer2.byteLength) {
-      return buffer2;
-    }
-    return copyToArrayBuffer$1(buffer2, byteOffset, byteLength);
-  }
-  function copyToArrayBuffer$1(buffer2, byteOffset = 0, byteLength = buffer2.byteLength - byteOffset) {
-    const view = new Uint8Array(buffer2, byteOffset, byteLength);
-    const copy2 = new Uint8Array(view.length);
-    copy2.set(view);
-    return copy2.buffer;
-  }
-  function toArrayBufferView(data2) {
-    if (ArrayBuffer.isView(data2)) {
-      return data2;
-    }
-    return new Uint8Array(data2);
-  }
-  function filename(url) {
-    const slashIndex = url ? url.lastIndexOf("/") : -1;
-    return slashIndex >= 0 ? url.substr(slashIndex + 1) : url;
-  }
-  function dirname$1(url) {
-    const slashIndex = url ? url.lastIndexOf("/") : -1;
-    return slashIndex >= 0 ? url.substr(0, slashIndex) : "";
-  }
-  class FetchError extends Error {
-    constructor(message2, info) {
-      super(message2);
-      __publicField(this, "reason");
-      __publicField(this, "url");
-      __publicField(this, "response");
-      this.reason = info.reason;
-      this.url = info.url;
-      this.response = info.response;
-    }
-  }
-  const DATA_URL_PATTERN = /^data:([-\w.]+\/[-\w.+]+)(;|,)/;
-  const MIME_TYPE_PATTERN = /^([-\w.]+\/[-\w.+]+)/;
-  function compareMIMETypes(mimeType1, mimeType2) {
-    if (mimeType1.toLowerCase() === mimeType2.toLowerCase()) {
-      return true;
-    }
-    return false;
-  }
-  function parseMIMEType(mimeString) {
-    const matches2 = MIME_TYPE_PATTERN.exec(mimeString);
-    if (matches2) {
-      return matches2[1];
-    }
-    return mimeString;
-  }
-  function parseMIMETypeFromURL(url) {
-    const matches2 = DATA_URL_PATTERN.exec(url);
-    if (matches2) {
-      return matches2[1];
-    }
-    return "";
-  }
-  const QUERY_STRING_PATTERN = /\?.*/;
-  function extractQueryString(url) {
-    const matches2 = url.match(QUERY_STRING_PATTERN);
-    return matches2 && matches2[0];
-  }
-  function stripQueryString(url) {
-    return url.replace(QUERY_STRING_PATTERN, "");
-  }
-  function shortenUrlForDisplay(url) {
-    if (url.length < 50) {
-      return url;
-    }
-    const urlEnd = url.slice(url.length - 15);
-    const urlStart = url.substr(0, 32);
-    return `${urlStart}...${urlEnd}`;
-  }
-  function getResourceUrl(resource) {
-    if (isResponse(resource)) {
-      return resource.url;
-    }
-    if (isBlob(resource)) {
-      const fileName = "name" in resource ? resource.name : "";
-      return fileName || "";
-    }
-    if (typeof resource === "string") {
-      return resource;
-    }
-    return "";
-  }
-  function getResourceMIMEType(resource) {
-    if (isResponse(resource)) {
-      const contentTypeHeader = resource.headers.get("content-type") || "";
-      const noQueryUrl = stripQueryString(resource.url);
-      return parseMIMEType(contentTypeHeader) || parseMIMETypeFromURL(noQueryUrl);
-    }
-    if (isBlob(resource)) {
-      return resource.type || "";
-    }
-    if (typeof resource === "string") {
-      return parseMIMETypeFromURL(resource);
-    }
-    return "";
-  }
-  function getResourceContentLength(resource) {
-    if (isResponse(resource)) {
-      const response = resource;
-      return response.headers["content-length"] || -1;
-    }
-    if (isBlob(resource)) {
-      const blob = resource;
-      return blob.size;
-    }
-    if (typeof resource === "string") {
-      return resource.length;
-    }
-    if (resource instanceof ArrayBuffer) {
-      return resource.byteLength;
-    }
-    if (ArrayBuffer.isView(resource)) {
-      return resource.byteLength;
-    }
-    return -1;
-  }
-  async function makeResponse(resource) {
-    if (isResponse(resource)) {
-      return resource;
-    }
-    const headers = {};
-    const contentLength = getResourceContentLength(resource);
-    if (contentLength >= 0) {
-      headers["content-length"] = String(contentLength);
-    }
-    const url = getResourceUrl(resource);
-    const type = getResourceMIMEType(resource);
-    if (type) {
-      headers["content-type"] = type;
-    }
-    const initialDataUrl = await getInitialDataUrl(resource);
-    if (initialDataUrl) {
-      headers["x-first-bytes"] = initialDataUrl;
-    }
-    if (typeof resource === "string") {
-      resource = new TextEncoder().encode(resource);
-    }
-    const response = new Response(resource, {
-      headers
-    });
-    Object.defineProperty(response, "url", {
-      value: url
-    });
-    return response;
-  }
-  async function checkResponse(response) {
-    if (!response.ok) {
-      const error2 = await getResponseError(response);
-      throw error2;
-    }
-  }
-  async function getResponseError(response) {
-    const shortUrl = shortenUrlForDisplay(response.url);
-    let message2 = `Failed to fetch resource (${response.status}) ${response.statusText}: ${shortUrl}`;
-    message2 = message2.length > 100 ? `${message2.slice(0, 100)}...` : message2;
-    const info = {
-      reason: response.statusText,
-      url: response.url,
-      response
-    };
-    try {
-      const contentType = response.headers.get("Content-Type");
-      info.reason = !response.bodyUsed && (contentType == null ? void 0 : contentType.includes("application/json")) ? await response.json() : await response.text();
-    } catch (error2) {
-    }
-    return new FetchError(message2, info);
-  }
-  async function getInitialDataUrl(resource) {
-    const INITIAL_DATA_LENGTH = 5;
-    if (typeof resource === "string") {
-      return `data:,${resource.slice(0, INITIAL_DATA_LENGTH)}`;
-    }
-    if (resource instanceof Blob) {
-      const blobSlice = resource.slice(0, 5);
-      return await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          var _a2;
-          return resolve((_a2 = event == null ? void 0 : event.target) == null ? void 0 : _a2.result);
-        };
-        reader.readAsDataURL(blobSlice);
-      });
-    }
-    if (resource instanceof ArrayBuffer) {
-      const slice = resource.slice(0, INITIAL_DATA_LENGTH);
-      const base64 = arrayBufferToBase64(slice);
-      return `data:base64,${base64}`;
-    }
-    return null;
-  }
-  function arrayBufferToBase64(buffer2) {
-    let binary = "";
-    const bytes = new Uint8Array(buffer2);
-    for (let i2 = 0; i2 < bytes.byteLength; i2++) {
-      binary += String.fromCharCode(bytes[i2]);
-    }
-    return btoa(binary);
-  }
-  function isNodePath(url) {
-    return !isRequestURL(url) && !isDataURL(url);
-  }
-  function isRequestURL(url) {
-    return url.startsWith("http:") || url.startsWith("https:");
-  }
-  function isDataURL(url) {
-    return url.startsWith("data:");
-  }
-  async function fetchFile(urlOrData, fetchOptions) {
-    var _a2, _b2;
-    if (typeof urlOrData === "string") {
-      const url = resolvePath(urlOrData);
-      if (isNodePath(url)) {
-        if ((_a2 = globalThis.loaders) == null ? void 0 : _a2.fetchNode) {
-          return (_b2 = globalThis.loaders) == null ? void 0 : _b2.fetchNode(url, fetchOptions);
-        }
-      }
-      return await fetch(url, fetchOptions);
-    }
-    return await makeResponse(urlOrData);
-  }
-  const probeLog = new ProbeLog({
-    id: "loaders.gl"
-  });
-  class NullLog {
-    log() {
-      return () => {
-      };
-    }
-    info() {
-      return () => {
-      };
-    }
-    warn() {
-      return () => {
-      };
-    }
-    error() {
-      return () => {
-      };
-    }
-  }
-  class ConsoleLog {
-    constructor() {
-      __publicField(this, "console");
-      this.console = console;
-    }
-    log(...args) {
-      return this.console.log.bind(this.console, ...args);
-    }
-    info(...args) {
-      return this.console.info.bind(this.console, ...args);
-    }
-    warn(...args) {
-      return this.console.warn.bind(this.console, ...args);
-    }
-    error(...args) {
-      return this.console.error.bind(this.console, ...args);
-    }
-  }
-  const DEFAULT_LOADER_OPTIONS = {
-    core: {
-      baseUrl: void 0,
-      fetch: null,
-      mimeType: void 0,
-      fallbackMimeType: void 0,
-      ignoreRegisteredLoaders: void 0,
-      nothrow: false,
-      log: new ConsoleLog(),
-      useLocalLibraries: false,
-      CDN: "https://unpkg.com/@loaders.gl",
-      worker: true,
-      maxConcurrency: 3,
-      maxMobileConcurrency: 1,
-      reuseWorkers: isBrowser$2,
-      _nodeWorkers: false,
-      _workerType: "",
-      limit: 0,
-      _limitMB: 0,
-      batchSize: "auto",
-      batchDebounceMs: 0,
-      metadata: false,
-      transforms: []
-    }
-  };
-  const REMOVED_LOADER_OPTIONS = {
-    baseUri: "core.baseUrl",
-    fetch: "core.fetch",
-    mimeType: "core.mimeType",
-    fallbackMimeType: "core.fallbackMimeType",
-    ignoreRegisteredLoaders: "core.ignoreRegisteredLoaders",
-    nothrow: "core.nothrow",
-    log: "core.log",
-    useLocalLibraries: "core.useLocalLibraries",
-    CDN: "core.CDN",
-    worker: "core.worker",
-    maxConcurrency: "core.maxConcurrency",
-    maxMobileConcurrency: "core.maxMobileConcurrency",
-    reuseWorkers: "core.reuseWorkers",
-    _nodeWorkers: "core.nodeWorkers",
-    _workerType: "core._workerType",
-    _worker: "core._workerType",
-    limit: "core.limit",
-    _limitMB: "core._limitMB",
-    batchSize: "core.batchSize",
-    batchDebounceMs: "core.batchDebounceMs",
-    metadata: "core.metadata",
-    transforms: "core.transforms",
-    throws: "nothrow",
-    dataType: "(no longer used)",
-    uri: "core.baseUrl",
-    method: "core.fetch.method",
-    headers: "core.fetch.headers",
-    body: "core.fetch.body",
-    mode: "core.fetch.mode",
-    credentials: "core.fetch.credentials",
-    cache: "core.fetch.cache",
-    redirect: "core.fetch.redirect",
-    referrer: "core.fetch.referrer",
-    referrerPolicy: "core.fetch.referrerPolicy",
-    integrity: "core.fetch.integrity",
-    keepalive: "core.fetch.keepalive",
-    signal: "core.fetch.signal"
-  };
-  const CORE_LOADER_OPTION_KEYS = [
-    "baseUrl",
-    "fetch",
-    "mimeType",
-    "fallbackMimeType",
-    "ignoreRegisteredLoaders",
-    "nothrow",
-    "log",
-    "useLocalLibraries",
-    "CDN",
-    "worker",
-    "maxConcurrency",
-    "maxMobileConcurrency",
-    "reuseWorkers",
-    "_nodeWorkers",
-    "_workerType",
-    "limit",
-    "_limitMB",
-    "batchSize",
-    "batchDebounceMs",
-    "metadata",
-    "transforms"
-  ];
-  function getGlobalLoaderState() {
-    globalThis.loaders = globalThis.loaders || {};
-    const { loaders } = globalThis;
-    if (!loaders._state) {
-      loaders._state = {};
-    }
-    return loaders._state;
-  }
-  function getGlobalLoaderOptions() {
-    const state = getGlobalLoaderState();
-    state.globalOptions = state.globalOptions || {
-      ...DEFAULT_LOADER_OPTIONS,
-      core: {
-        ...DEFAULT_LOADER_OPTIONS.core
-      }
-    };
-    return normalizeLoaderOptions(state.globalOptions);
-  }
-  function normalizeOptions(options, loader, loaders, url) {
-    loaders = loaders || [];
-    loaders = Array.isArray(loaders) ? loaders : [
-      loaders
-    ];
-    validateOptions(options, loaders);
-    return normalizeLoaderOptions(normalizeOptionsInternal(loader, options, url));
-  }
-  function normalizeLoaderOptions(options) {
-    const normalized = cloneLoaderOptions(options);
-    moveDeprecatedTopLevelOptionsToCore(normalized);
-    for (const key2 of CORE_LOADER_OPTION_KEYS) {
-      if (normalized.core && normalized.core[key2] !== void 0) {
-        delete normalized[key2];
-      }
-    }
-    if (normalized.core && normalized.core._workerType !== void 0) {
-      delete normalized._worker;
-    }
-    return normalized;
-  }
-  function validateOptions(options, loaders) {
-    validateOptionsObject(options, null, DEFAULT_LOADER_OPTIONS, REMOVED_LOADER_OPTIONS, loaders);
-    for (const loader of loaders) {
-      const idOptions = options && options[loader.id] || {};
-      const loaderOptions = loader.options && loader.options[loader.id] || {};
-      const deprecatedOptions = loader.deprecatedOptions && loader.deprecatedOptions[loader.id] || {};
-      validateOptionsObject(idOptions, loader.id, loaderOptions, deprecatedOptions, loaders);
-    }
-  }
-  function validateOptionsObject(options, id2, defaultOptions2, deprecatedOptions, loaders) {
-    const loaderName = id2 || "Top level";
-    const prefix = id2 ? `${id2}.` : "";
-    for (const key2 in options) {
-      const isSubOptions = !id2 && isObject$1(options[key2]);
-      const isBaseUriOption = key2 === "baseUri" && !id2;
-      const isWorkerUrlOption = key2 === "workerUrl" && id2;
-      if (!(key2 in defaultOptions2) && !isBaseUriOption && !isWorkerUrlOption) {
-        if (key2 in deprecatedOptions) {
-          if (probeLog.level > 0) {
-            probeLog.warn(`${loaderName} loader option '${prefix}${key2}' no longer supported, use '${deprecatedOptions[key2]}'`)();
-          }
-        } else if (!isSubOptions) {
-          if (probeLog.level > 0) {
-            const suggestion = findSimilarOption(key2, loaders);
-            probeLog.warn(`${loaderName} loader option '${prefix}${key2}' not recognized. ${suggestion}`)();
-          }
-        }
-      }
-    }
-  }
-  function findSimilarOption(optionKey, loaders) {
-    const lowerCaseOptionKey = optionKey.toLowerCase();
-    let bestSuggestion = "";
-    for (const loader of loaders) {
-      for (const key2 in loader.options) {
-        if (optionKey === key2) {
-          return `Did you mean '${loader.id}.${key2}'?`;
-        }
-        const lowerCaseKey = key2.toLowerCase();
-        const isPartialMatch = lowerCaseOptionKey.startsWith(lowerCaseKey) || lowerCaseKey.startsWith(lowerCaseOptionKey);
-        if (isPartialMatch) {
-          bestSuggestion = bestSuggestion || `Did you mean '${loader.id}.${key2}'?`;
-        }
-      }
-    }
-    return bestSuggestion;
-  }
-  function normalizeOptionsInternal(loader, options, url) {
-    var _a2;
-    const loaderDefaultOptions = loader.options || {};
-    const mergedOptions = {
-      ...loaderDefaultOptions
-    };
-    if (loaderDefaultOptions.core) {
-      mergedOptions.core = {
-        ...loaderDefaultOptions.core
-      };
-    }
-    moveDeprecatedTopLevelOptionsToCore(mergedOptions);
-    if (((_a2 = mergedOptions.core) == null ? void 0 : _a2.log) === null) {
-      mergedOptions.core = {
-        ...mergedOptions.core,
-        log: new NullLog()
-      };
-    }
-    mergeNestedFields(mergedOptions, normalizeLoaderOptions(getGlobalLoaderOptions()));
-    const userOptions = normalizeLoaderOptions(options);
-    mergeNestedFields(mergedOptions, userOptions);
-    addUrlOptions(mergedOptions, url);
-    addDeprecatedTopLevelOptions(mergedOptions);
-    return mergedOptions;
-  }
-  function mergeNestedFields(mergedOptions, options) {
-    for (const key2 in options) {
-      if (key2 in options) {
-        const value = options[key2];
-        if (isPureObject(value) && isPureObject(mergedOptions[key2])) {
-          mergedOptions[key2] = {
-            ...mergedOptions[key2],
-            ...options[key2]
-          };
-        } else {
-          mergedOptions[key2] = options[key2];
-        }
-      }
-    }
-  }
-  function addUrlOptions(options, url) {
-    var _a2;
-    if (!url) {
-      return;
-    }
-    const hasCoreBaseUrl = ((_a2 = options.core) == null ? void 0 : _a2.baseUrl) !== void 0;
-    if (!hasCoreBaseUrl) {
-      options.core || (options.core = {});
-      options.core.baseUrl = dirname$1(stripQueryString(url));
-    }
-  }
-  function cloneLoaderOptions(options) {
-    const clonedOptions = {
-      ...options
-    };
-    if (options.core) {
-      clonedOptions.core = {
-        ...options.core
-      };
-    }
-    return clonedOptions;
-  }
-  function moveDeprecatedTopLevelOptionsToCore(options) {
-    if (options.baseUri !== void 0) {
-      options.core || (options.core = {});
-      if (options.core.baseUrl === void 0) {
-        options.core.baseUrl = options.baseUri;
-      }
-    }
-    for (const key2 of CORE_LOADER_OPTION_KEYS) {
-      if (options[key2] !== void 0) {
-        const coreOptions = options.core = options.core || {};
-        const coreRecord = coreOptions;
-        if (coreRecord[key2] === void 0) {
-          coreRecord[key2] = options[key2];
-        }
-      }
-    }
-    const workerTypeAlias = options._worker;
-    if (workerTypeAlias !== void 0) {
-      options.core || (options.core = {});
-      if (options.core._workerType === void 0) {
-        options.core._workerType = workerTypeAlias;
-      }
-    }
-  }
-  function addDeprecatedTopLevelOptions(options) {
-    const coreOptions = options.core;
-    if (!coreOptions) {
-      return;
-    }
-    for (const key2 of CORE_LOADER_OPTION_KEYS) {
-      if (coreOptions[key2] !== void 0) {
-        options[key2] = coreOptions[key2];
-      }
-    }
-  }
-  function isLoaderObject(loader) {
-    if (!loader) {
-      return false;
-    }
-    if (Array.isArray(loader)) {
-      loader = loader[0];
-    }
-    const hasExtensions = Array.isArray(loader == null ? void 0 : loader.extensions);
-    return hasExtensions;
-  }
-  function normalizeLoader(loader) {
-    assert$8(loader, "null loader");
-    assert$8(isLoaderObject(loader), "invalid loader");
-    let options;
-    if (Array.isArray(loader)) {
-      options = loader[1];
-      loader = loader[0];
-      loader = {
-        ...loader,
-        options: {
-          ...loader.options,
-          ...options
-        }
-      };
-    }
-    if ((loader == null ? void 0 : loader.parseTextSync) || (loader == null ? void 0 : loader.parseText)) {
-      loader.text = true;
-    }
-    if (!loader.text) {
-      loader.binary = true;
-    }
-    return loader;
-  }
-  const getGlobalLoaderRegistry = () => {
-    const state = getGlobalLoaderState();
-    state.loaderRegistry = state.loaderRegistry || [];
-    return state.loaderRegistry;
-  };
-  function registerLoaders(loaders) {
-    const loaderRegistry = getGlobalLoaderRegistry();
-    loaders = Array.isArray(loaders) ? loaders : [
-      loaders
-    ];
-    for (const loader of loaders) {
-      const normalizedLoader = normalizeLoader(loader);
-      if (!loaderRegistry.find((registeredLoader) => normalizedLoader === registeredLoader)) {
-        loaderRegistry.unshift(normalizedLoader);
-      }
-    }
-  }
-  function getRegisteredLoaders() {
-    return getGlobalLoaderRegistry();
-  }
-  const EXT_PATTERN = /\.([^.]+)$/;
-  async function selectLoader(data2, loaders = [], options, context) {
-    if (!validHTTPResponse(data2)) {
-      return null;
-    }
-    const normalizedOptions = normalizeLoaderOptions(options || {});
-    normalizedOptions.core || (normalizedOptions.core = {});
-    if (data2 instanceof Response && mayContainText(data2)) {
-      const text2 = await data2.clone().text();
-      const textLoader = selectLoaderSync(text2, loaders, {
-        ...normalizedOptions,
-        core: {
-          ...normalizedOptions.core,
-          nothrow: true
-        }
-      }, context);
-      if (textLoader) {
-        return textLoader;
-      }
-    }
-    let loader = selectLoaderSync(data2, loaders, {
-      ...normalizedOptions,
-      core: {
-        ...normalizedOptions.core,
-        nothrow: true
-      }
-    }, context);
-    if (loader) {
-      return loader;
-    }
-    if (isBlob(data2)) {
-      data2 = await data2.slice(0, 10).arrayBuffer();
-      loader = selectLoaderSync(data2, loaders, normalizedOptions, context);
-    }
-    if (!loader && data2 instanceof Response && mayContainText(data2)) {
-      const text2 = await data2.clone().text();
-      loader = selectLoaderSync(text2, loaders, normalizedOptions, context);
-    }
-    if (!loader && !normalizedOptions.core.nothrow) {
-      throw new Error(getNoValidLoaderMessage(data2));
-    }
-    return loader;
-  }
-  function mayContainText(response) {
-    const mimeType = getResourceMIMEType(response);
-    return Boolean(mimeType && (mimeType.startsWith("text/") || mimeType === "application/json" || mimeType.endsWith("+json")));
-  }
-  function selectLoaderSync(data2, loaders = [], options, context) {
-    if (!validHTTPResponse(data2)) {
-      return null;
-    }
-    const normalizedOptions = normalizeLoaderOptions(options || {});
-    normalizedOptions.core || (normalizedOptions.core = {});
-    if (loaders && !Array.isArray(loaders)) {
-      return normalizeLoader(loaders);
-    }
-    let candidateLoaders = [];
-    if (loaders) {
-      candidateLoaders = candidateLoaders.concat(loaders);
-    }
-    if (!normalizedOptions.core.ignoreRegisteredLoaders) {
-      candidateLoaders.push(...getRegisteredLoaders());
-    }
-    normalizeLoaders(candidateLoaders);
-    const loader = selectLoaderInternal(data2, candidateLoaders, normalizedOptions, context);
-    if (!loader && !normalizedOptions.core.nothrow) {
-      throw new Error(getNoValidLoaderMessage(data2));
-    }
-    return loader;
-  }
-  function selectLoaderInternal(data2, loaders, options, context) {
-    var _a2, _b2, _c2, _d, _e;
-    const url = getResourceUrl(data2);
-    const type = getResourceMIMEType(data2);
-    const testUrl = stripQueryString(url) || (context == null ? void 0 : context.url);
-    let loader = null;
-    let reason2 = "";
-    if ((_a2 = options == null ? void 0 : options.core) == null ? void 0 : _a2.mimeType) {
-      loader = findLoaderByMIMEType(loaders, (_b2 = options == null ? void 0 : options.core) == null ? void 0 : _b2.mimeType);
-      reason2 = `match forced by supplied MIME type ${(_c2 = options == null ? void 0 : options.core) == null ? void 0 : _c2.mimeType}`;
-    }
-    loader = loader || findLoaderByUrl(loaders, testUrl);
-    reason2 = reason2 || (loader ? `matched url ${testUrl}` : "");
-    loader = loader || findLoaderByMIMEType(loaders, type);
-    reason2 = reason2 || (loader ? `matched MIME type ${type}` : "");
-    loader = loader || findLoaderByInitialBytes(loaders, data2);
-    reason2 = reason2 || (loader ? `matched initial data ${getFirstCharacters(data2)}` : "");
-    if ((_d = options == null ? void 0 : options.core) == null ? void 0 : _d.fallbackMimeType) {
-      loader = loader || findLoaderByMIMEType(loaders, (_e = options == null ? void 0 : options.core) == null ? void 0 : _e.fallbackMimeType);
-      reason2 = reason2 || (loader ? `matched fallback MIME type ${type}` : "");
-    }
-    if (reason2) {
-      log$4.log(1, `selectLoader selected ${loader == null ? void 0 : loader.name}: ${reason2}.`);
-    }
-    return loader;
-  }
-  function validHTTPResponse(data2) {
-    if (data2 instanceof Response) {
-      if (data2.status === 204) {
-        return false;
-      }
-    }
-    return true;
-  }
-  function getNoValidLoaderMessage(data2) {
-    const url = getResourceUrl(data2);
-    const type = getResourceMIMEType(data2);
-    let message2 = "No valid loader found (";
-    message2 += url ? `${filename(url)}, ` : "no url provided, ";
-    message2 += `MIME type: ${type ? `"${type}"` : "not provided"}, `;
-    const firstCharacters = data2 ? getFirstCharacters(data2) : "";
-    message2 += firstCharacters ? ` first bytes: "${firstCharacters}"` : "first bytes: not available";
-    message2 += ")";
-    return message2;
-  }
-  function normalizeLoaders(loaders) {
-    for (const loader of loaders) {
-      normalizeLoader(loader);
-    }
-  }
-  function findLoaderByUrl(loaders, url) {
-    const match = url && EXT_PATTERN.exec(url);
-    const extension2 = match && match[1];
-    return extension2 ? findLoaderByExtension(loaders, extension2) : null;
-  }
-  function findLoaderByExtension(loaders, extension2) {
-    extension2 = extension2.toLowerCase();
-    for (const loader of loaders) {
-      for (const loaderExtension of loader.extensions) {
-        if (loaderExtension.toLowerCase() === extension2) {
-          return loader;
-        }
-      }
-    }
-    return null;
-  }
-  function findLoaderByMIMEType(loaders, mimeType) {
-    var _a2;
-    for (const loader of loaders) {
-      if ((_a2 = loader.mimeTypes) == null ? void 0 : _a2.some((mimeType1) => compareMIMETypes(mimeType, mimeType1))) {
-        return loader;
-      }
-      if (compareMIMETypes(mimeType, `application/x.${loader.id}`)) {
-        return loader;
-      }
-    }
-    return null;
-  }
-  function findLoaderByInitialBytes(loaders, data2) {
-    if (!data2) {
-      return null;
-    }
-    for (const loader of loaders) {
-      if (typeof data2 === "string") {
-        if (testDataAgainstText(data2, loader)) {
-          return loader;
-        }
-      } else if (ArrayBuffer.isView(data2)) {
-        if (testDataAgainstBinary(data2.buffer, data2.byteOffset, loader)) {
-          return loader;
-        }
-      } else if (data2 instanceof ArrayBuffer) {
-        const byteOffset = 0;
-        if (testDataAgainstBinary(data2, byteOffset, loader)) {
-          return loader;
-        }
-      }
-    }
-    return null;
-  }
-  function testDataAgainstText(data2, loader) {
-    if (loader.testText) {
-      return loader.testText(data2);
-    }
-    const tests = Array.isArray(loader.tests) ? loader.tests : [
-      loader.tests
-    ];
-    return tests.some((test2) => data2.startsWith(test2));
-  }
-  function testDataAgainstBinary(data2, byteOffset, loader) {
-    const tests = Array.isArray(loader.tests) ? loader.tests : [
-      loader.tests
-    ];
-    return tests.some((test2) => testBinary(data2, byteOffset, loader, test2));
-  }
-  function testBinary(data2, byteOffset, loader, test2) {
-    if (isArrayBufferLike(test2)) {
-      return compareArrayBuffers(test2, data2, test2.byteLength);
-    }
-    switch (typeof test2) {
-      case "function":
-        return test2(ensureArrayBuffer(data2));
-      case "string":
-        const magic = getMagicString(data2, byteOffset, test2.length);
-        return test2 === magic;
-      default:
-        return false;
-    }
-  }
-  function getFirstCharacters(data2, length2 = 5) {
-    if (typeof data2 === "string") {
-      return data2.slice(0, length2);
-    } else if (ArrayBuffer.isView(data2)) {
-      return getMagicString(data2.buffer, data2.byteOffset, length2);
-    } else if (data2 instanceof ArrayBuffer) {
-      const byteOffset = 0;
-      return getMagicString(data2, byteOffset, length2);
-    }
-    return "";
-  }
-  function getMagicString(arrayBuffer2, byteOffset, length2) {
-    if (arrayBuffer2.byteLength < byteOffset + length2) {
-      return "";
-    }
-    const dataView = new DataView(arrayBuffer2);
-    let magic = "";
-    for (let i2 = 0; i2 < length2; i2++) {
-      magic += String.fromCharCode(dataView.getUint8(byteOffset + i2));
-    }
-    return magic;
-  }
-  const DEFAULT_CHUNK_SIZE$2 = 256 * 1024;
-  function* makeStringIterator(string2, options) {
-    const chunkSize = (options == null ? void 0 : options.chunkSize) || DEFAULT_CHUNK_SIZE$2;
-    let offset = 0;
-    const textEncoder = new TextEncoder();
-    while (offset < string2.length) {
-      const chunkLength = Math.min(string2.length - offset, chunkSize);
-      const chunk = string2.slice(offset, offset + chunkLength);
-      offset += chunkLength;
-      yield ensureArrayBuffer(textEncoder.encode(chunk));
-    }
-  }
-  const DEFAULT_CHUNK_SIZE$1 = 256 * 1024;
-  function* makeArrayBufferIterator(arrayBuffer2, options = {}) {
-    const { chunkSize = DEFAULT_CHUNK_SIZE$1 } = options;
-    let byteOffset = 0;
-    while (byteOffset < arrayBuffer2.byteLength) {
-      const chunkByteLength = Math.min(arrayBuffer2.byteLength - byteOffset, chunkSize);
-      const chunk = new ArrayBuffer(chunkByteLength);
-      const sourceArray = new Uint8Array(arrayBuffer2, byteOffset, chunkByteLength);
-      const chunkArray = new Uint8Array(chunk);
-      chunkArray.set(sourceArray);
-      byteOffset += chunkByteLength;
-      yield chunk;
-    }
-  }
-  const DEFAULT_CHUNK_SIZE = 1024 * 1024;
-  async function* makeBlobIterator(blob, options) {
-    const chunkSize = (options == null ? void 0 : options.chunkSize) || DEFAULT_CHUNK_SIZE;
-    let offset = 0;
-    while (offset < blob.size) {
-      const end = offset + chunkSize;
-      const chunk = await blob.slice(offset, end).arrayBuffer();
-      offset = end;
-      yield chunk;
-    }
-  }
-  function makeStreamIterator(stream, options) {
-    return isBrowser$2 ? makeBrowserStreamIterator(stream, options) : makeNodeStreamIterator(stream);
-  }
-  async function* makeBrowserStreamIterator(stream, options) {
-    const reader = stream.getReader();
-    let nextBatchPromise;
-    try {
-      while (true) {
-        const currentBatchPromise = nextBatchPromise || reader.read();
-        if (options == null ? void 0 : options._streamReadAhead) {
-          nextBatchPromise = reader.read();
-        }
-        const { done, value } = await currentBatchPromise;
-        if (done) {
-          return;
-        }
-        yield toArrayBuffer(value);
-      }
-    } catch (error2) {
-      reader.releaseLock();
-    }
-  }
-  async function* makeNodeStreamIterator(stream, options) {
-    for await (const chunk of stream) {
-      yield toArrayBuffer(chunk);
-    }
-  }
-  function makeIterator(data2, options) {
-    if (typeof data2 === "string") {
-      return makeStringIterator(data2, options);
-    }
-    if (data2 instanceof ArrayBuffer) {
-      return makeArrayBufferIterator(data2, options);
-    }
-    if (isBlob(data2)) {
-      return makeBlobIterator(data2, options);
-    }
-    if (isReadableStream(data2)) {
-      return makeStreamIterator(data2, options);
-    }
-    if (isResponse(data2)) {
-      const responseBody = data2.body;
-      if (!responseBody) {
-        throw new Error("Readable stream not available on Response");
-      }
-      return makeStreamIterator(responseBody, options);
-    }
-    throw new Error("makeIterator");
-  }
-  const ERR_DATA = "Cannot convert supplied data type";
-  function getArrayBufferOrStringFromDataSync(data2, loader, options) {
-    if (loader.text && typeof data2 === "string") {
-      return data2;
-    }
-    if (isBuffer(data2)) {
-      data2 = data2.buffer;
-    }
-    if (isArrayBufferLike(data2)) {
-      const bufferSource = toArrayBufferView(data2);
-      if (loader.text && !loader.binary) {
-        const textDecoder = new TextDecoder("utf8");
-        return textDecoder.decode(bufferSource);
-      }
-      return toArrayBuffer(bufferSource);
-    }
-    throw new Error(ERR_DATA);
-  }
-  async function getArrayBufferOrStringFromData(data2, loader, options) {
-    if (typeof data2 === "string" || isArrayBufferLike(data2)) {
-      return getArrayBufferOrStringFromDataSync(data2, loader);
-    }
-    if (isBlob(data2)) {
-      data2 = await makeResponse(data2);
-    }
-    if (isResponse(data2)) {
-      await checkResponse(data2);
-      return loader.binary ? await data2.arrayBuffer() : await data2.text();
-    }
-    if (isReadableStream(data2)) {
-      data2 = makeIterator(data2, options);
-    }
-    if (isIterable(data2) || isAsyncIterable$1(data2)) {
-      return concatenateArrayBuffersAsync(data2);
-    }
-    throw new Error(ERR_DATA);
-  }
-  function getFetchFunction(options, context) {
-    var _a2;
-    const globalOptions = getGlobalLoaderOptions();
-    const loaderOptions = options || globalOptions;
-    const fetchOption = loaderOptions.fetch ?? ((_a2 = loaderOptions.core) == null ? void 0 : _a2.fetch);
-    if (typeof fetchOption === "function") {
-      return fetchOption;
-    }
-    if (isObject$1(fetchOption)) {
-      return (url) => fetchFile(url, fetchOption);
-    }
-    if (context == null ? void 0 : context.fetch) {
-      return context == null ? void 0 : context.fetch;
-    }
-    return fetchFile;
-  }
-  function getLoaderContext(context, options, parentContext) {
-    if (parentContext) {
-      return parentContext;
-    }
-    const newContext = {
-      fetch: getFetchFunction(options, context),
-      ...context
-    };
-    if (newContext.url) {
-      const baseUrl = stripQueryString(newContext.url);
-      newContext.baseUrl = baseUrl;
-      newContext.queryString = extractQueryString(newContext.url);
-      newContext.filename = filename(baseUrl);
-      newContext.baseUrl = dirname$1(baseUrl);
-    }
-    if (!Array.isArray(newContext.loaders)) {
-      newContext.loaders = null;
-    }
-    return newContext;
-  }
-  function getLoadersFromContext(loaders, context) {
-    if (loaders && !Array.isArray(loaders)) {
-      return loaders;
-    }
-    let candidateLoaders;
-    if (loaders) {
-      candidateLoaders = Array.isArray(loaders) ? loaders : [
-        loaders
-      ];
-    }
-    if (context && context.loaders) {
-      const contextLoaders = Array.isArray(context.loaders) ? context.loaders : [
-        context.loaders
-      ];
-      candidateLoaders = candidateLoaders ? [
-        ...candidateLoaders,
-        ...contextLoaders
-      ] : contextLoaders;
-    }
-    return candidateLoaders && candidateLoaders.length ? candidateLoaders : void 0;
-  }
-  async function parse$6(data2, loaders, options, context) {
-    if (loaders && !Array.isArray(loaders) && !isLoaderObject(loaders)) {
-      context = void 0;
-      options = loaders;
-      loaders = void 0;
-    }
-    data2 = await data2;
-    options = options || {};
-    const url = getResourceUrl(data2);
-    const typedLoaders = loaders;
-    const candidateLoaders = getLoadersFromContext(typedLoaders, context);
-    const loader = await selectLoader(data2, candidateLoaders, options);
-    if (!loader) {
-      return null;
-    }
-    const strictOptions = normalizeOptions(options, loader, candidateLoaders, url);
-    context = getLoaderContext({
-      url,
-      _parse: parse$6,
-      loaders: candidateLoaders
-    }, strictOptions, context || null);
-    return await parseWithLoader(loader, data2, strictOptions, context);
-  }
-  async function parseWithLoader(loader, data2, options, context) {
-    validateWorkerVersion(loader);
-    options = mergeOptions(loader.options, options);
-    if (isResponse(data2)) {
-      const { ok: ok2, redirected, status, statusText, type, url } = data2;
-      const headers = Object.fromEntries(data2.headers.entries());
-      context.response = {
-        headers,
-        ok: ok2,
-        redirected,
-        status,
-        statusText,
-        type,
-        url
-      };
-    }
-    data2 = await getArrayBufferOrStringFromData(data2, loader, options);
-    const loaderWithParser = loader;
-    if (loaderWithParser.parseTextSync && typeof data2 === "string") {
-      return loaderWithParser.parseTextSync(data2, options, context);
-    }
-    if (canParseWithWorker(loader, options)) {
-      return await parseWithWorker(loader, data2, options, context, parse$6);
-    }
-    if (loaderWithParser.parseText && typeof data2 === "string") {
-      return await loaderWithParser.parseText(data2, options, context);
-    }
-    if (loaderWithParser.parse) {
-      return await loaderWithParser.parse(data2, options, context);
-    }
-    assert$6(!loaderWithParser.parseSync);
-    throw new Error(`${loader.id} loader - no parser found and worker is disabled`);
-  }
-  function isTypedArray$1(value) {
-    return ArrayBuffer.isView(value) && !(value instanceof DataView);
-  }
-  function isNumberArray$1(value) {
-    if (Array.isArray(value)) {
-      return value.length === 0 || typeof value[0] === "number";
-    }
-    return false;
-  }
-  function isNumericArray(value) {
-    return isTypedArray$1(value) || isNumberArray$1(value);
-  }
-  async function load(url, loaders, options, context) {
-    var _a2;
-    let resolvedLoaders;
-    let resolvedOptions;
-    if (!Array.isArray(loaders) && !isLoaderObject(loaders)) {
-      resolvedLoaders = [];
-      resolvedOptions = loaders;
-    } else {
-      resolvedLoaders = loaders;
-      resolvedOptions = options;
-    }
-    const fetch2 = getFetchFunction(resolvedOptions);
-    let data2 = url;
-    if (typeof url === "string") {
-      data2 = await fetch2(url);
-    }
-    if (isBlob(url)) {
-      data2 = await fetch2(url);
-    }
-    if (typeof url === "string") {
-      const normalizedOptions = normalizeLoaderOptions(resolvedOptions || {});
-      if (!((_a2 = normalizedOptions.core) == null ? void 0 : _a2.baseUrl)) {
-        resolvedOptions = {
-          ...resolvedOptions,
-          core: {
-            ...resolvedOptions == null ? void 0 : resolvedOptions.core,
-            baseUrl: url
-          }
-        };
-      }
-    }
-    return Array.isArray(resolvedLoaders) ? await parse$6(data2, resolvedLoaders, resolvedOptions) : await parse$6(data2, resolvedLoaders, resolvedOptions);
-  }
-  const VERSION$1 = "4.4.5";
-  const parseImageNode = (_a = globalThis.loaders) == null ? void 0 : _a.parseImageNode;
-  const IMAGE_SUPPORTED = typeof Image !== "undefined";
-  const IMAGE_BITMAP_SUPPORTED = typeof ImageBitmap !== "undefined";
-  const NODE_IMAGE_SUPPORTED = Boolean(parseImageNode);
-  const DATA_SUPPORTED = isBrowser$2 ? true : NODE_IMAGE_SUPPORTED;
-  function isImageTypeSupported(type) {
-    switch (type) {
-      case "auto":
-        return IMAGE_BITMAP_SUPPORTED || IMAGE_SUPPORTED || DATA_SUPPORTED;
-      case "imagebitmap":
-        return IMAGE_BITMAP_SUPPORTED;
-      case "image":
-        return IMAGE_SUPPORTED;
-      case "data":
-        return DATA_SUPPORTED;
-      default:
-        throw new Error(`@loaders.gl/images: image ${type} not supported in this environment`);
-    }
-  }
-  function getDefaultImageType() {
-    if (IMAGE_BITMAP_SUPPORTED) {
-      return "imagebitmap";
-    }
-    if (IMAGE_SUPPORTED) {
-      return "image";
-    }
-    if (DATA_SUPPORTED) {
-      return "data";
-    }
-    throw new Error("Install '@loaders.gl/polyfills' to parse images under Node.js");
-  }
-  function getImageType(image2) {
-    const format = getImageTypeOrNull(image2);
-    if (!format) {
-      throw new Error("Not an image");
-    }
-    return format;
-  }
-  function getImageData(image2) {
-    switch (getImageType(image2)) {
-      case "data":
-        return image2;
-      case "image":
-      case "imagebitmap":
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-        if (!context) {
-          throw new Error("getImageData");
-        }
-        canvas.width = image2.width;
-        canvas.height = image2.height;
-        context.drawImage(image2, 0, 0);
-        return context.getImageData(0, 0, image2.width, image2.height);
-      default:
-        throw new Error("getImageData");
-    }
-  }
-  function getImageTypeOrNull(image2) {
-    if (typeof ImageBitmap !== "undefined" && image2 instanceof ImageBitmap) {
-      return "imagebitmap";
-    }
-    if (typeof Image !== "undefined" && image2 instanceof Image) {
-      return "image";
-    }
-    if (image2 && typeof image2 === "object" && image2.data && image2.width && image2.height) {
-      return "data";
-    }
-    return null;
-  }
-  const SVG_DATA_URL_PATTERN = /^data:image\/svg\+xml/;
-  const SVG_URL_PATTERN = /\.svg((\?|#).*)?$/;
-  function isSVG(url) {
-    return url && (SVG_DATA_URL_PATTERN.test(url) || SVG_URL_PATTERN.test(url));
-  }
-  function getBlobOrSVGDataUrl(arrayBuffer2, url) {
-    if (isSVG(url)) {
-      const textDecoder = new TextDecoder();
-      let xmlText = textDecoder.decode(arrayBuffer2);
-      try {
-        if (typeof unescape === "function" && typeof encodeURIComponent === "function") {
-          xmlText = unescape(encodeURIComponent(xmlText));
-        }
-      } catch (error2) {
-        throw new Error(error2.message);
-      }
-      const src = `data:image/svg+xml;base64,${btoa(xmlText)}`;
-      return src;
-    }
-    return getBlob(arrayBuffer2, url);
-  }
-  function getBlob(arrayBuffer2, url) {
-    if (isSVG(url)) {
-      throw new Error("SVG cannot be parsed directly to imagebitmap");
-    }
-    return new Blob([
-      new Uint8Array(arrayBuffer2)
-    ]);
-  }
-  async function parseToImage(arrayBuffer2, options, url) {
-    const blobOrDataUrl = getBlobOrSVGDataUrl(arrayBuffer2, url);
-    const URL2 = self.URL || self.webkitURL;
-    const objectUrl = typeof blobOrDataUrl !== "string" && URL2.createObjectURL(blobOrDataUrl);
-    try {
-      return await loadToImage(objectUrl || blobOrDataUrl, options);
-    } finally {
-      if (objectUrl) {
-        URL2.revokeObjectURL(objectUrl);
-      }
-    }
-  }
-  async function loadToImage(url, options) {
-    const image2 = new Image();
-    image2.src = url;
-    if (options.image && options.image.decode && image2.decode) {
-      await image2.decode();
-      return image2;
-    }
-    return await new Promise((resolve, reject) => {
-      try {
-        image2.onload = () => resolve(image2);
-        image2.onerror = (error2) => {
-          const message2 = error2 instanceof Error ? error2.message : "error";
-          reject(new Error(message2));
-        };
-      } catch (error2) {
-        reject(error2);
-      }
-    });
-  }
-  let imagebitmapOptionsSupported = true;
-  async function parseToImageBitmap(arrayBuffer2, options, url) {
-    let blob;
-    if (isSVG(url)) {
-      const image2 = await parseToImage(arrayBuffer2, options, url);
-      blob = image2;
-    } else {
-      blob = getBlob(arrayBuffer2, url);
-    }
-    const imagebitmapOptions = options && options.imagebitmap;
-    return await safeCreateImageBitmap(blob, imagebitmapOptions);
-  }
-  async function safeCreateImageBitmap(blob, imagebitmapOptions = null) {
-    if (isEmptyObject(imagebitmapOptions) || !imagebitmapOptionsSupported) {
-      imagebitmapOptions = null;
-    }
-    if (imagebitmapOptions) {
-      try {
-        return await createImageBitmap(blob, imagebitmapOptions);
-      } catch (error2) {
-        console.warn(error2);
-        imagebitmapOptionsSupported = false;
-      }
-    }
-    return await createImageBitmap(blob);
-  }
-  function isEmptyObject(object) {
-    if (!object) {
-      return true;
-    }
-    for (const key2 in object) {
-      if (Object.prototype.hasOwnProperty.call(object, key2)) {
-        return false;
-      }
-    }
-    return true;
-  }
-  function getISOBMFFMediaType(buffer2) {
-    if (!checkString(buffer2, "ftyp", 4)) {
-      return null;
-    }
-    if ((buffer2[8] & 96) === 0) {
-      return null;
-    }
-    return decodeMajorBrand(buffer2);
-  }
-  function decodeMajorBrand(buffer2) {
-    const brandMajor = getUTF8String(buffer2, 8, 12).replace("\0", " ").trim();
-    switch (brandMajor) {
-      case "avif":
-      case "avis":
-        return {
-          extension: "avif",
-          mimeType: "image/avif"
-        };
-      default:
-        return null;
-    }
-  }
-  function getUTF8String(array, start, end) {
-    return String.fromCharCode(...array.slice(start, end));
-  }
-  function stringToBytes(string2) {
-    return [
-      ...string2
-    ].map((character) => character.charCodeAt(0));
-  }
-  function checkString(buffer2, header, offset = 0) {
-    const headerBytes = stringToBytes(header);
-    for (let i2 = 0; i2 < headerBytes.length; ++i2) {
-      if (headerBytes[i2] !== buffer2[i2 + offset]) {
-        return false;
-      }
-    }
-    return true;
-  }
-  const BIG_ENDIAN$1 = false;
-  const LITTLE_ENDIAN$1 = true;
-  function getBinaryImageMetadata(binaryData) {
-    const dataView = toDataView(binaryData);
-    return getPngMetadata(dataView) || getJpegMetadata(dataView) || getGifMetadata(dataView) || getBmpMetadata(dataView) || getISOBMFFMetadata(dataView);
-  }
-  function getISOBMFFMetadata(binaryData) {
-    const buffer2 = new Uint8Array(binaryData instanceof DataView ? binaryData.buffer : binaryData);
-    const mediaType = getISOBMFFMediaType(buffer2);
-    if (!mediaType) {
-      return null;
-    }
-    return {
-      mimeType: mediaType.mimeType,
-      width: 0,
-      height: 0
-    };
-  }
-  function getPngMetadata(binaryData) {
-    const dataView = toDataView(binaryData);
-    const isPng = dataView.byteLength >= 24 && dataView.getUint32(0, BIG_ENDIAN$1) === 2303741511;
-    if (!isPng) {
-      return null;
-    }
-    return {
-      mimeType: "image/png",
-      width: dataView.getUint32(16, BIG_ENDIAN$1),
-      height: dataView.getUint32(20, BIG_ENDIAN$1)
-    };
-  }
-  function getGifMetadata(binaryData) {
-    const dataView = toDataView(binaryData);
-    const isGif = dataView.byteLength >= 10 && dataView.getUint32(0, BIG_ENDIAN$1) === 1195984440;
-    if (!isGif) {
-      return null;
-    }
-    return {
-      mimeType: "image/gif",
-      width: dataView.getUint16(6, LITTLE_ENDIAN$1),
-      height: dataView.getUint16(8, LITTLE_ENDIAN$1)
-    };
-  }
-  function getBmpMetadata(binaryData) {
-    const dataView = toDataView(binaryData);
-    const isBmp = dataView.byteLength >= 14 && dataView.getUint16(0, BIG_ENDIAN$1) === 16973 && dataView.getUint32(2, LITTLE_ENDIAN$1) === dataView.byteLength;
-    if (!isBmp) {
-      return null;
-    }
-    return {
-      mimeType: "image/bmp",
-      width: dataView.getUint32(18, LITTLE_ENDIAN$1),
-      height: dataView.getUint32(22, LITTLE_ENDIAN$1)
-    };
-  }
-  function getJpegMetadata(binaryData) {
-    const dataView = toDataView(binaryData);
-    const isJpeg = dataView.byteLength >= 3 && dataView.getUint16(0, BIG_ENDIAN$1) === 65496 && dataView.getUint8(2) === 255;
-    if (!isJpeg) {
-      return null;
-    }
-    const { tableMarkers, sofMarkers } = getJpegMarkers();
-    let i2 = 2;
-    while (i2 + 9 < dataView.byteLength) {
-      const marker = dataView.getUint16(i2, BIG_ENDIAN$1);
-      if (sofMarkers.has(marker)) {
-        return {
-          mimeType: "image/jpeg",
-          height: dataView.getUint16(i2 + 5, BIG_ENDIAN$1),
-          width: dataView.getUint16(i2 + 7, BIG_ENDIAN$1)
-        };
-      }
-      if (!tableMarkers.has(marker)) {
-        return null;
-      }
-      i2 += 2;
-      i2 += dataView.getUint16(i2, BIG_ENDIAN$1);
-    }
-    return null;
-  }
-  function getJpegMarkers() {
-    const tableMarkers = /* @__PURE__ */ new Set([
-      65499,
-      65476,
-      65484,
-      65501,
-      65534
-    ]);
-    for (let i2 = 65504; i2 < 65520; ++i2) {
-      tableMarkers.add(i2);
-    }
-    const sofMarkers = /* @__PURE__ */ new Set([
-      65472,
-      65473,
-      65474,
-      65475,
-      65477,
-      65478,
-      65479,
-      65481,
-      65482,
-      65483,
-      65485,
-      65486,
-      65487,
-      65502
-    ]);
-    return {
-      tableMarkers,
-      sofMarkers
-    };
-  }
-  function toDataView(data2) {
-    if (data2 instanceof DataView) {
-      return data2;
-    }
-    if (ArrayBuffer.isView(data2)) {
-      return new DataView(data2.buffer);
-    }
-    if (data2 instanceof ArrayBuffer) {
-      return new DataView(data2);
-    }
-    throw new Error("toDataView");
-  }
-  async function parseToNodeImage(arrayBuffer2, options) {
-    var _a2;
-    const { mimeType } = getBinaryImageMetadata(arrayBuffer2) || {};
-    const parseImageNode2 = (_a2 = globalThis.loaders) == null ? void 0 : _a2.parseImageNode;
-    assert$8(parseImageNode2);
-    return await parseImageNode2(arrayBuffer2, mimeType);
-  }
-  async function parseImage(arrayBuffer2, options, context) {
-    options = options || {};
-    const imageOptions = options.image || {};
-    const imageType = imageOptions.type || "auto";
-    const { url } = context || {};
-    const loadType = getLoadableImageType(imageType);
-    let image2;
-    switch (loadType) {
-      case "imagebitmap":
-        image2 = await parseToImageBitmap(arrayBuffer2, options, url);
-        break;
-      case "image":
-        image2 = await parseToImage(arrayBuffer2, options, url);
-        break;
-      case "data":
-        image2 = await parseToNodeImage(arrayBuffer2);
-        break;
-      default:
-        assert$8(false);
-    }
-    if (imageType === "data") {
-      image2 = getImageData(image2);
-    }
-    return image2;
-  }
-  function getLoadableImageType(type) {
-    switch (type) {
-      case "auto":
-      case "data":
-        return getDefaultImageType();
-      default:
-        isImageTypeSupported(type);
-        return type;
-    }
-  }
-  const EXTENSIONS = [
-    "png",
-    "jpg",
-    "jpeg",
-    "gif",
-    "webp",
-    "bmp",
-    "ico",
-    "svg",
-    "avif"
-  ];
-  const MIME_TYPES$1 = [
-    "image/png",
-    "image/jpeg",
-    "image/gif",
-    "image/webp",
-    "image/avif",
-    "image/bmp",
-    "image/vnd.microsoft.icon",
-    "image/svg+xml"
-  ];
-  const DEFAULT_IMAGE_LOADER_OPTIONS = {
-    image: {
-      type: "auto",
-      decode: true
-    }
-  };
-  const ImageLoader = {
-    dataType: null,
-    batchType: null,
-    id: "image",
-    module: "images",
-    name: "Images",
-    version: VERSION$1,
-    mimeTypes: MIME_TYPES$1,
-    extensions: EXTENSIONS,
-    parse: parseImage,
-    tests: [
-      (arrayBuffer2) => Boolean(getBinaryImageMetadata(new DataView(arrayBuffer2)))
-    ],
-    options: DEFAULT_IMAGE_LOADER_OPTIONS
-  };
-  const defaultLogger = new ProbeLog({
-    id: "deck"
-  });
-  let loggers = {};
-  function register$2(handlers2) {
-    loggers = handlers2;
-  }
-  function debug(eventType, arg1, arg2, arg3) {
-    if (defaultLogger.level > 0 && loggers[eventType]) {
-      loggers[eventType].call(null, arg1, arg2, arg3);
-    }
-  }
-  function isJSON(text2) {
-    const firstChar = text2[0];
-    const lastChar = text2[text2.length - 1];
-    return firstChar === "{" && lastChar === "}" || firstChar === "[" && lastChar === "]";
-  }
-  const jsonLoader = {
-    dataType: null,
-    batchType: null,
-    id: "JSON",
-    name: "JSON",
-    module: "",
-    version: "",
-    options: {},
-    extensions: [
-      "json",
-      "geojson"
-    ],
-    mimeTypes: [
-      "application/json",
-      "application/geo+json"
-    ],
-    testText: isJSON,
-    parseTextSync: JSON.parse
-  };
-  function checkVersion() {
-    const version2 = "9.3.3";
-    const existingVersion = globalThis.deck && globalThis.deck.VERSION;
-    if (existingVersion && existingVersion !== version2) {
-      throw new Error(`deck.gl - multiple versions detected: ${existingVersion} vs ${version2}`);
-    }
-    if (!existingVersion) {
-      defaultLogger.log(1, `deck.gl ${version2}`)();
-      globalThis.deck = {
-        ...globalThis.deck,
-        VERSION: version2,
-        version: version2,
-        log: defaultLogger,
-        _registerLoggers: register$2
-      };
-      registerLoaders([
-        jsonLoader,
-        [
-          ImageLoader,
-          {
-            imagebitmap: {
-              premultiplyAlpha: "none"
-            }
-          }
-        ]
-      ]);
-    }
-    return version2;
-  }
-  const VERSION = checkVersion();
-  function assert$5(condition, message2) {
-    var _a2;
-    if (!condition) {
-      const error2 = new Error(message2 || "shadertools: assertion failed.");
-      (_a2 = Error.captureStackTrace) == null ? void 0 : _a2.call(Error, error2, assert$5);
-      throw error2;
-    }
-  }
-  const DEFAULT_PROP_VALIDATORS = {
-    number: {
-      type: "number",
-      validate(value, propType) {
-        return Number.isFinite(value) && typeof propType === "object" && (propType.max === void 0 || value <= propType.max) && (propType.min === void 0 || value >= propType.min);
-      }
-    },
-    array: {
-      type: "array",
-      validate(value, propType) {
-        return Array.isArray(value) || ArrayBuffer.isView(value);
-      }
-    }
-  };
-  function makePropValidators(propTypes) {
-    const propValidators = {};
-    for (const [name2, propType] of Object.entries(propTypes)) {
-      propValidators[name2] = makePropValidator(propType);
-    }
-    return propValidators;
-  }
-  function makePropValidator(propType) {
-    let type = getTypeOf$1(propType);
-    if (type !== "object") {
-      return {
-        value: propType,
-        ...DEFAULT_PROP_VALIDATORS[type],
-        type
-      };
-    }
-    if (typeof propType === "object") {
-      if (!propType) {
-        return {
-          type: "object",
-          value: null
-        };
-      }
-      if (propType.type !== void 0) {
-        return {
-          ...propType,
-          ...DEFAULT_PROP_VALIDATORS[propType.type],
-          type: propType.type
-        };
-      }
-      if (propType.value === void 0) {
-        return {
-          type: "object",
-          value: propType
-        };
-      }
-      type = getTypeOf$1(propType.value);
-      return {
-        ...propType,
-        ...DEFAULT_PROP_VALIDATORS[type],
-        type
-      };
-    }
-    throw new Error("props");
-  }
-  function getTypeOf$1(value) {
-    if (Array.isArray(value) || ArrayBuffer.isView(value)) {
-      return "array";
-    }
-    return typeof value;
-  }
-  const MODULE_INJECTORS_VS = `#ifdef MODULE_LOGDEPTH
-  logdepth_adjustPosition(gl_Position);
-#endif
-`;
-  const MODULE_INJECTORS_FS = `#ifdef MODULE_MATERIAL
-  fragColor = material_filterColor(fragColor);
-#endif
-
-#ifdef MODULE_LIGHTING
-  fragColor = lighting_filterColor(fragColor);
-#endif
-
-#ifdef MODULE_FOG
-  fragColor = fog_filterColor(fragColor);
-#endif
-
-#ifdef MODULE_PICKING
-  fragColor = picking_filterHighlightColor(fragColor);
-  fragColor = picking_filterPickingColor(fragColor);
-#endif
-
-#ifdef MODULE_LOGDEPTH
-  logdepth_setFragDepth();
-#endif
-`;
-  const MODULE_INJECTORS = {
-    vertex: MODULE_INJECTORS_VS,
-    fragment: MODULE_INJECTORS_FS
-  };
-  const REGEX_START_OF_MAIN = /void\s+main\s*\([^)]*\)\s*\{\n?/;
-  const REGEX_END_OF_MAIN = /}\n?[^{}]*$/;
-  const fragments = [];
-  const DECLARATION_INJECT_MARKER = "__LUMA_INJECT_DECLARATIONS__";
-  function normalizeInjections(injections) {
-    const result = {
-      vertex: {},
-      fragment: {}
-    };
-    for (const hook in injections) {
-      let injection = injections[hook];
-      const stage = getHookStage(hook);
-      if (typeof injection === "string") {
-        injection = {
-          order: 0,
-          injection
-        };
-      }
-      result[stage][hook] = injection;
-    }
-    return result;
-  }
-  function getHookStage(hook) {
-    const type = hook.slice(0, 2);
-    switch (type) {
-      case "vs":
-        return "vertex";
-      case "fs":
-        return "fragment";
-      default:
-        throw new Error(type);
-    }
-  }
-  function injectShader(source2, stage, inject2, injectStandardStubs = false) {
-    const isVertex = stage === "vertex";
-    for (const key2 in inject2) {
-      const fragmentData = inject2[key2];
-      fragmentData.sort((a2, b2) => a2.order - b2.order);
-      fragments.length = fragmentData.length;
-      for (let i2 = 0, len2 = fragmentData.length; i2 < len2; ++i2) {
-        fragments[i2] = fragmentData[i2].injection;
-      }
-      const fragmentString = `${fragments.join("\n")}
-`;
-      switch (key2) {
-        case "vs:#decl":
-          if (isVertex) {
-            source2 = source2.replace(DECLARATION_INJECT_MARKER, fragmentString);
-          }
-          break;
-        case "vs:#main-start":
-          if (isVertex) {
-            source2 = source2.replace(REGEX_START_OF_MAIN, (match) => match + fragmentString);
-          }
-          break;
-        case "vs:#main-end":
-          if (isVertex) {
-            source2 = source2.replace(REGEX_END_OF_MAIN, (match) => fragmentString + match);
-          }
-          break;
-        case "fs:#decl":
-          if (!isVertex) {
-            source2 = source2.replace(DECLARATION_INJECT_MARKER, fragmentString);
-          }
-          break;
-        case "fs:#main-start":
-          if (!isVertex) {
-            source2 = source2.replace(REGEX_START_OF_MAIN, (match) => match + fragmentString);
-          }
-          break;
-        case "fs:#main-end":
-          if (!isVertex) {
-            source2 = source2.replace(REGEX_END_OF_MAIN, (match) => fragmentString + match);
-          }
-          break;
-        default:
-          source2 = source2.replace(key2, (match) => match + fragmentString);
-      }
-    }
-    source2 = source2.replace(DECLARATION_INJECT_MARKER, "");
-    if (injectStandardStubs) {
-      source2 = source2.replace(/\}\s*$/, (match) => match + MODULE_INJECTORS[stage]);
-    }
-    return source2;
-  }
-  function initializeShaderModules(modules) {
-    modules.map((module) => initializeShaderModule(module));
-  }
-  function initializeShaderModule(module) {
-    if (module.instance) {
-      return;
-    }
-    initializeShaderModules(module.dependencies || []);
-    const { propTypes = {}, deprecations: deprecations2 = [], inject: inject2 = {} } = module;
-    const instance = {
-      normalizedInjections: normalizeInjections(inject2),
-      parsedDeprecations: parseDeprecationDefinitions(deprecations2)
-    };
-    if (propTypes) {
-      instance.propValidators = makePropValidators(propTypes);
-    }
-    module.instance = instance;
-    let defaultProps2 = {};
-    if (propTypes) {
-      defaultProps2 = Object.entries(propTypes).reduce((obj, [key2, propType]) => {
-        const value = propType == null ? void 0 : propType.value;
-        if (value) {
-          obj[key2] = value;
-        }
-        return obj;
-      }, {});
-    }
-    module.defaultUniforms = {
-      ...module.defaultUniforms,
-      ...defaultProps2
-    };
-  }
-  function checkShaderModuleDeprecations(shaderModule, shaderSource, log3) {
-    var _a2;
-    (_a2 = shaderModule.deprecations) == null ? void 0 : _a2.forEach((def) => {
-      var _a3;
-      if ((_a3 = def.regex) == null ? void 0 : _a3.test(shaderSource)) {
-        if (def.deprecated) {
-          log3.deprecated(def.old, def.new)();
-        } else {
-          log3.removed(def.old, def.new)();
-        }
-      }
-    });
-  }
-  function parseDeprecationDefinitions(deprecations2) {
-    deprecations2.forEach((def) => {
-      switch (def.type) {
-        case "function":
-          def.regex = new RegExp(`\\b${def.old}\\(`);
-          break;
-        default:
-          def.regex = new RegExp(`${def.type} ${def.old};`);
-      }
-    });
-    return deprecations2;
-  }
-  function getShaderModuleDependencies(modules) {
-    initializeShaderModules(modules);
-    const moduleMap = {};
-    const moduleDepth = {};
-    getDependencyGraph({
-      modules,
-      level: 0,
-      moduleMap,
-      moduleDepth
-    });
-    const dependencies = Object.keys(moduleDepth).sort((a2, b2) => moduleDepth[b2] - moduleDepth[a2]).map((name2) => moduleMap[name2]);
-    initializeShaderModules(dependencies);
-    return dependencies;
-  }
-  function getDependencyGraph(options) {
-    const { modules, level, moduleMap, moduleDepth } = options;
-    if (level >= 5) {
-      throw new Error("Possible loop in shader dependency graph");
-    }
-    for (const module of modules) {
-      moduleMap[module.name] = module;
-      if (moduleDepth[module.name] === void 0 || moduleDepth[module.name] < level) {
-        moduleDepth[module.name] = level;
-      }
-    }
-    for (const module of modules) {
-      if (module.dependencies) {
-        getDependencyGraph({
-          modules: module.dependencies,
-          level: level + 1,
-          moduleMap,
-          moduleDepth
-        });
-      }
-    }
-  }
-  const GLSL_UNIFORM_BLOCK_FIELD_REGEXP = /^(?:uniform\s+)?(?:(?:lowp|mediump|highp)\s+)?[A-Za-z0-9_]+(?:<[^>]+>)?\s+([A-Za-z0-9_]+)(?:\s*\[[^\]]+\])?\s*;/;
-  const GLSL_UNIFORM_BLOCK_REGEXP = /((?:layout\s*\([^)]*\)\s*)*)uniform\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{([\s\S]*?)\}\s*([A-Za-z_][A-Za-z0-9_]*)?\s*;/g;
-  function getShaderModuleUniformBlockName(module) {
-    return `${module.name}Uniforms`;
-  }
-  function getShaderModuleUniformBlockFields(module, stage) {
-    const shaderSource = stage === "wgsl" ? module.source : stage === "vertex" ? module.vs : module.fs;
-    if (!shaderSource) {
-      return null;
-    }
-    const uniformBlockName = getShaderModuleUniformBlockName(module);
-    return extractShaderUniformBlockFieldNames(shaderSource, stage === "wgsl" ? "wgsl" : "glsl", uniformBlockName);
-  }
-  function getShaderModuleUniformLayoutValidationResult(module, stage) {
-    const expectedUniformNames = Object.keys(module.uniformTypes || {});
-    if (!expectedUniformNames.length) {
-      return null;
-    }
-    const actualUniformNames = getShaderModuleUniformBlockFields(module, stage);
-    if (!actualUniformNames) {
-      return null;
-    }
-    return {
-      moduleName: module.name,
-      uniformBlockName: getShaderModuleUniformBlockName(module),
-      stage,
-      expectedUniformNames,
-      actualUniformNames,
-      matches: areStringArraysEqual(expectedUniformNames, actualUniformNames)
-    };
-  }
-  function validateShaderModuleUniformLayout(module, stage, options = {}) {
-    var _a2, _b2;
-    const validationResult = getShaderModuleUniformLayoutValidationResult(module, stage);
-    if (!validationResult || validationResult.matches) {
-      return validationResult;
-    }
-    const message2 = formatShaderModuleUniformLayoutError(validationResult);
-    (_b2 = (_a2 = options.log) == null ? void 0 : _a2.error) == null ? void 0 : _b2.call(_a2, message2, validationResult)();
-    if (options.throwOnError !== false) {
-      assert$5(false, message2);
-    }
-    return validationResult;
-  }
-  function getGLSLUniformBlocks(shaderSource) {
-    var _a2;
-    const blocks = [];
-    const uncommentedSource = stripShaderComments(shaderSource);
-    for (const sourceMatch of uncommentedSource.matchAll(GLSL_UNIFORM_BLOCK_REGEXP)) {
-      const layoutQualifier = ((_a2 = sourceMatch[1]) == null ? void 0 : _a2.trim()) || null;
-      blocks.push({
-        blockName: sourceMatch[2],
-        body: sourceMatch[3],
-        instanceName: sourceMatch[4] || null,
-        layoutQualifier,
-        hasLayoutQualifier: Boolean(layoutQualifier),
-        isStd140: Boolean(layoutQualifier && /\blayout\s*\([^)]*\bstd140\b[^)]*\)/.exec(layoutQualifier))
-      });
-    }
-    return blocks;
-  }
-  function warnIfGLSLUniformBlocksAreNotStd140(shaderSource, stage, log3, context) {
-    var _a2;
-    const nonStd140Blocks = getGLSLUniformBlocks(shaderSource).filter((block) => !block.isStd140);
-    const seenBlockNames = /* @__PURE__ */ new Set();
-    for (const block of nonStd140Blocks) {
-      if (seenBlockNames.has(block.blockName)) {
-        continue;
-      }
-      seenBlockNames.add(block.blockName);
-      const shaderLabel = "";
-      const actualLayout = block.hasLayoutQualifier ? `declares ${normalizeWhitespace(block.layoutQualifier)} instead of layout(std140)` : "does not declare layout(std140)";
-      const message2 = `${shaderLabel}${stage} shader uniform block ${block.blockName} ${actualLayout}. luma.gl host-side shader block packing assumes explicit layout(std140) for GLSL uniform blocks. Add \`layout(std140)\` to the block declaration.`;
-      (_a2 = log3 == null ? void 0 : log3.warn) == null ? void 0 : _a2.call(log3, message2, block)();
-    }
-    return nonStd140Blocks;
-  }
-  function extractShaderUniformBlockFieldNames(shaderSource, language, uniformBlockName) {
-    const sourceBody = language === "wgsl" ? extractWGSLStructBody(shaderSource, uniformBlockName) : extractGLSLUniformBlockBody(shaderSource, uniformBlockName);
-    if (!sourceBody) {
-      return null;
-    }
-    const fieldNames = [];
-    for (const sourceLine of sourceBody.split("\n")) {
-      const line = sourceLine.replace(/\/\/.*$/, "").trim();
-      if (!line || line.startsWith("#")) {
-        continue;
-      }
-      const fieldMatch = language === "wgsl" ? line.match(/^([A-Za-z0-9_]+)\s*:/) : line.match(GLSL_UNIFORM_BLOCK_FIELD_REGEXP);
-      if (fieldMatch) {
-        fieldNames.push(fieldMatch[1]);
-      }
-    }
-    return fieldNames;
-  }
-  function extractWGSLStructBody(shaderSource, uniformBlockName) {
-    const structMatch = new RegExp(`\\bstruct\\s+${uniformBlockName}\\b`, "m").exec(shaderSource);
-    if (!structMatch) {
-      return null;
-    }
-    const openBraceIndex = shaderSource.indexOf("{", structMatch.index);
-    if (openBraceIndex < 0) {
-      return null;
-    }
-    let braceDepth = 0;
-    for (let index2 = openBraceIndex; index2 < shaderSource.length; index2++) {
-      const character = shaderSource[index2];
-      if (character === "{") {
-        braceDepth++;
-        continue;
-      }
-      if (character !== "}") {
-        continue;
-      }
-      braceDepth--;
-      if (braceDepth === 0) {
-        return shaderSource.slice(openBraceIndex + 1, index2);
-      }
-    }
-    return null;
-  }
-  function extractGLSLUniformBlockBody(shaderSource, uniformBlockName) {
-    const block = getGLSLUniformBlocks(shaderSource).find((candidate) => candidate.blockName === uniformBlockName);
-    return (block == null ? void 0 : block.body) || null;
-  }
-  function areStringArraysEqual(leftValues, rightValues) {
-    if (leftValues.length !== rightValues.length) {
-      return false;
-    }
-    for (let valueIndex = 0; valueIndex < leftValues.length; valueIndex++) {
-      if (leftValues[valueIndex] !== rightValues[valueIndex]) {
-        return false;
-      }
-    }
-    return true;
-  }
-  function formatShaderModuleUniformLayoutError(validationResult) {
-    const { expectedUniformNames, actualUniformNames } = validationResult;
-    const missingUniformNames = expectedUniformNames.filter((uniformName) => !actualUniformNames.includes(uniformName));
-    const unexpectedUniformNames = actualUniformNames.filter((uniformName) => !expectedUniformNames.includes(uniformName));
-    const mismatchDetails = [
-      `Expected ${expectedUniformNames.length} fields, found ${actualUniformNames.length}.`
-    ];
-    const firstMismatchDescription = getFirstUniformMismatchDescription(expectedUniformNames, actualUniformNames);
-    if (firstMismatchDescription) {
-      mismatchDetails.push(firstMismatchDescription);
-    }
-    if (missingUniformNames.length) {
-      mismatchDetails.push(`Missing from shader block (${missingUniformNames.length}): ${formatUniformNameList(missingUniformNames)}.`);
-    }
-    if (unexpectedUniformNames.length) {
-      mismatchDetails.push(`Unexpected in shader block (${unexpectedUniformNames.length}): ${formatUniformNameList(unexpectedUniformNames)}.`);
-    }
-    if (expectedUniformNames.length <= 12 && actualUniformNames.length <= 12 && (missingUniformNames.length || unexpectedUniformNames.length)) {
-      mismatchDetails.push(`Expected: ${expectedUniformNames.join(", ")}.`);
-      mismatchDetails.push(`Actual: ${actualUniformNames.join(", ")}.`);
-    }
-    return `${validationResult.moduleName}: ${validationResult.stage} shader uniform block ${validationResult.uniformBlockName} does not match module.uniformTypes. ${mismatchDetails.join(" ")}`;
-  }
-  function stripShaderComments(shaderSource) {
-    return shaderSource.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
-  }
-  function normalizeWhitespace(value) {
-    return value.replace(/\s+/g, " ").trim();
-  }
-  function getFirstUniformMismatchDescription(expectedUniformNames, actualUniformNames) {
-    const minimumLength = Math.min(expectedUniformNames.length, actualUniformNames.length);
-    for (let index2 = 0; index2 < minimumLength; index2++) {
-      if (expectedUniformNames[index2] !== actualUniformNames[index2]) {
-        return `First mismatch at field ${index2 + 1}: expected ${expectedUniformNames[index2]}, found ${actualUniformNames[index2]}.`;
-      }
-    }
-    if (expectedUniformNames.length > actualUniformNames.length) {
-      return `Shader block ends after field ${actualUniformNames.length}; expected next field ${expectedUniformNames[actualUniformNames.length]}.`;
-    }
-    if (actualUniformNames.length > expectedUniformNames.length) {
-      return `Shader block has extra field ${actualUniformNames.length}: ${actualUniformNames[expectedUniformNames.length]}.`;
-    }
-    return null;
-  }
-  function formatUniformNameList(uniformNames, maxNames = 8) {
-    if (uniformNames.length <= maxNames) {
-      return uniformNames.join(", ");
-    }
-    const remainingCount = uniformNames.length - maxNames;
-    return `${uniformNames.slice(0, maxNames).join(", ")}, ... (${remainingCount} more)`;
-  }
-  function getPlatformShaderDefines(platformInfo) {
-    switch (platformInfo == null ? void 0 : platformInfo.gpu.toLowerCase()) {
-      case "apple":
-        return `#define APPLE_GPU
-// Apple optimizes away the calculation necessary for emulated fp64
-#define LUMA_FP64_CODE_ELIMINATION_WORKAROUND 1
-#define LUMA_FP32_TAN_PRECISION_WORKAROUND 1
-// Intel GPU doesn't have full 32 bits precision in same cases, causes overflow
-#define LUMA_FP64_HIGH_BITS_OVERFLOW_WORKAROUND 1
-`;
-      case "nvidia":
-        return `#define NVIDIA_GPU
-// Nvidia optimizes away the calculation necessary for emulated fp64
-#define LUMA_FP64_CODE_ELIMINATION_WORKAROUND 1
-`;
-      case "intel":
-        return `#define INTEL_GPU
-// Intel optimizes away the calculation necessary for emulated fp64
-#define LUMA_FP64_CODE_ELIMINATION_WORKAROUND 1
-// Intel's built-in 'tan' function doesn't have acceptable precision
-#define LUMA_FP32_TAN_PRECISION_WORKAROUND 1
-// Intel GPU doesn't have full 32 bits precision in same cases, causes overflow
-#define LUMA_FP64_HIGH_BITS_OVERFLOW_WORKAROUND 1
-`;
-      case "amd":
-        return `#define AMD_GPU
-`;
-      default:
-        return `#define DEFAULT_GPU
-// Prevent driver from optimizing away the calculation necessary for emulated fp64
-#define LUMA_FP64_CODE_ELIMINATION_WORKAROUND 1
-// Headless Chrome's software shader 'tan' function doesn't have acceptable precision
-#define LUMA_FP32_TAN_PRECISION_WORKAROUND 1
-// If the GPU doesn't have full 32 bits precision, will causes overflow
-#define LUMA_FP64_HIGH_BITS_OVERFLOW_WORKAROUND 1
-`;
-    }
-  }
-  function transpileGLSLShader(source2, stage) {
-    var _a2;
-    const sourceGLSLVersion = Number(((_a2 = source2.match(/^#version[ \t]+(\d+)/m)) == null ? void 0 : _a2[1]) || 100);
-    if (sourceGLSLVersion !== 300) {
-      throw new Error("luma.gl v9 only supports GLSL 3.00 shader sources");
-    }
-    switch (stage) {
-      case "vertex":
-        source2 = convertShader(source2, ES300_VERTEX_REPLACEMENTS);
-        return source2;
-      case "fragment":
-        source2 = convertShader(source2, ES300_FRAGMENT_REPLACEMENTS);
-        return source2;
-      default:
-        throw new Error(stage);
-    }
-  }
-  const ES300_REPLACEMENTS = [
-    [
-      /^(#version[ \t]+(100|300[ \t]+es))?[ \t]*\n/,
-      "#version 300 es\n"
-    ],
-    [
-      /\btexture(2D|2DProj|Cube)Lod(EXT)?\(/g,
-      "textureLod("
-    ],
-    [
-      /\btexture(2D|2DProj|Cube)(EXT)?\(/g,
-      "texture("
-    ]
-  ];
-  const ES300_VERTEX_REPLACEMENTS = [
-    ...ES300_REPLACEMENTS,
-    [
-      makeVariableTextRegExp("attribute"),
-      "in $1"
-    ],
-    [
-      makeVariableTextRegExp("varying"),
-      "out $1"
-    ]
-  ];
-  const ES300_FRAGMENT_REPLACEMENTS = [
-    ...ES300_REPLACEMENTS,
-    [
-      makeVariableTextRegExp("varying"),
-      "in $1"
-    ]
-  ];
-  function convertShader(source2, replacements) {
-    for (const [pattern, replacement] of replacements) {
-      source2 = source2.replace(pattern, replacement);
-    }
-    return source2;
-  }
-  function makeVariableTextRegExp(qualifier) {
-    return new RegExp(`\\b${qualifier}[ \\t]+(\\w+[ \\t]+\\w+(\\[\\w+\\])?;)`, "g");
-  }
-  function getShaderHooks(hookFunctions, hookInjections) {
-    let result = "";
-    for (const hookName in hookFunctions) {
-      const hookFunction = hookFunctions[hookName];
-      result += `void ${hookFunction.signature} {
-`;
-      if (hookFunction.header) {
-        result += `  ${hookFunction.header}`;
-      }
-      if (hookInjections[hookName]) {
-        const injections = hookInjections[hookName];
-        injections.sort((a2, b2) => a2.order - b2.order);
-        for (const injection of injections) {
-          result += `  ${injection.injection}
-`;
-        }
-      }
-      if (hookFunction.footer) {
-        result += `  ${hookFunction.footer}`;
-      }
-      result += "}\n";
-    }
-    return result;
-  }
-  function normalizeShaderHooks(hookFunctions) {
-    const result = {
-      vertex: {},
-      fragment: {}
-    };
-    for (const hookFunction of hookFunctions) {
-      let opts;
-      let hook;
-      if (typeof hookFunction !== "string") {
-        opts = hookFunction;
-        hook = opts.hook;
-      } else {
-        opts = {};
-        hook = hookFunction;
-      }
-      hook = hook.trim();
-      const [shaderStage, signature] = hook.split(":");
-      const name2 = hook.replace(/\(.+/, "");
-      const normalizedHook = Object.assign(opts, {
-        signature
-      });
-      switch (shaderStage) {
-        case "vs":
-          result.vertex[name2] = normalizedHook;
-          break;
-        case "fs":
-          result.fragment[name2] = normalizedHook;
-          break;
-        default:
-          throw new Error(shaderStage);
-      }
-    }
-    return result;
-  }
-  function getShaderInfo(source2, defaultName) {
-    return {
-      name: getShaderName$1(source2, defaultName),
-      language: "glsl",
-      version: getShaderVersion(source2)
-    };
-  }
-  function getShaderName$1(shader, defaultName = "unnamed") {
-    const SHADER_NAME_REGEXP = /#define[^\S\r\n]*SHADER_NAME[^\S\r\n]*([A-Za-z0-9_-]+)\s*/;
-    const match = SHADER_NAME_REGEXP.exec(shader);
-    return match ? match[1] : defaultName;
-  }
-  function getShaderVersion(source2) {
-    let version2 = 100;
-    const words = source2.match(/[^\s]+/g);
-    if (words && words.length >= 2 && words[0] === "#version") {
-      const parsedVersion = parseInt(words[1], 10);
-      if (Number.isFinite(parsedVersion)) {
-        version2 = parsedVersion;
-      }
-    }
-    if (version2 !== 100 && version2 !== 300) {
-      throw new Error(`Invalid GLSL version ${version2}`);
-    }
-    return version2;
-  }
-  const WGSL_BINDABLE_VARIABLE_PATTERN = "(?:var<\\s*(uniform|storage(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)?)\\s*>|var)\\s+([A-Za-z_][A-Za-z0-9_]*)";
-  const WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN = "\\s*";
-  const MODULE_WGSL_BINDING_DECLARATION_REGEXES = [
-    new RegExp(`@binding\\(\\s*(auto|\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}@group\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g"),
-    new RegExp(`@group\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}@binding\\(\\s*(auto|\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g")
-  ];
-  const WGSL_BINDING_DECLARATION_REGEXES = [
-    new RegExp(`@binding\\(\\s*(auto|\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}@group\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g"),
-    new RegExp(`@group\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}@binding\\(\\s*(auto|\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g")
-  ];
-  const WGSL_EXPLICIT_BINDING_DECLARATION_REGEXES = [
-    new RegExp(`@binding\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}@group\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g"),
-    new RegExp(`@group\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}@binding\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g")
-  ];
-  const WGSL_AUTO_BINDING_DECLARATION_REGEXES = [
-    new RegExp(`@binding\\(\\s*(auto)\\s*\\)\\s*@group\\(\\s*(\\d+)\\s*\\)\\s*${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g"),
-    new RegExp(`@group\\(\\s*(\\d+)\\s*\\)\\s*@binding\\(\\s*(auto)\\s*\\)\\s*${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g"),
-    new RegExp(`@binding\\(\\s*(auto)\\s*\\)\\s*@group\\(\\s*(\\d+)\\s*\\)(?:[\\s\\n\\r]*@[A-Za-z_][^\\n\\r]*)*[\\s\\n\\r]*${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g"),
-    new RegExp(`@group\\(\\s*(\\d+)\\s*\\)\\s*@binding\\(\\s*(auto)\\s*\\)(?:[\\s\\n\\r]*@[A-Za-z_][^\\n\\r]*)*[\\s\\n\\r]*${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g")
-  ];
-  function maskWGSLComments(source2) {
-    const maskedCharacters = source2.split("");
-    let index2 = 0;
-    let blockCommentDepth = 0;
-    let inLineComment = false;
-    let inString = false;
-    let isEscaped = false;
-    while (index2 < source2.length) {
-      const character = source2[index2];
-      const nextCharacter = source2[index2 + 1];
-      if (inString) {
-        if (isEscaped) {
-          isEscaped = false;
-        } else if (character === "\\") {
-          isEscaped = true;
-        } else if (character === '"') {
-          inString = false;
-        }
-        index2++;
-        continue;
-      }
-      if (inLineComment) {
-        if (character === "\n" || character === "\r") {
-          inLineComment = false;
-        } else {
-          maskedCharacters[index2] = " ";
-        }
-        index2++;
-        continue;
-      }
-      if (blockCommentDepth > 0) {
-        if (character === "/" && nextCharacter === "*") {
-          maskedCharacters[index2] = " ";
-          maskedCharacters[index2 + 1] = " ";
-          blockCommentDepth++;
-          index2 += 2;
-          continue;
-        }
-        if (character === "*" && nextCharacter === "/") {
-          maskedCharacters[index2] = " ";
-          maskedCharacters[index2 + 1] = " ";
-          blockCommentDepth--;
-          index2 += 2;
-          continue;
-        }
-        if (character !== "\n" && character !== "\r") {
-          maskedCharacters[index2] = " ";
-        }
-        index2++;
-        continue;
-      }
-      if (character === '"') {
-        inString = true;
-        index2++;
-        continue;
-      }
-      if (character === "/" && nextCharacter === "/") {
-        maskedCharacters[index2] = " ";
-        maskedCharacters[index2 + 1] = " ";
-        inLineComment = true;
-        index2 += 2;
-        continue;
-      }
-      if (character === "/" && nextCharacter === "*") {
-        maskedCharacters[index2] = " ";
-        maskedCharacters[index2 + 1] = " ";
-        blockCommentDepth = 1;
-        index2 += 2;
-        continue;
-      }
-      index2++;
-    }
-    return maskedCharacters.join("");
-  }
-  function getWGSLBindingDeclarationMatches(source2, regexes) {
-    var _a2;
-    const maskedSource = maskWGSLComments(source2);
-    const matches2 = [];
-    for (const regex2 of regexes) {
-      regex2.lastIndex = 0;
-      let match;
-      match = regex2.exec(maskedSource);
-      while (match) {
-        const isBindingFirst = regex2 === regexes[0];
-        const index2 = match.index;
-        const length2 = match[0].length;
-        matches2.push({
-          match: source2.slice(index2, index2 + length2),
-          index: index2,
-          length: length2,
-          bindingToken: match[isBindingFirst ? 1 : 2],
-          groupToken: match[isBindingFirst ? 2 : 1],
-          accessDeclaration: (_a2 = match[3]) == null ? void 0 : _a2.trim(),
-          name: match[4]
-        });
-        match = regex2.exec(maskedSource);
-      }
-    }
-    return matches2.sort((left, right) => left.index - right.index);
-  }
-  function replaceWGSLBindingDeclarationMatches(source2, regexes, replacer) {
-    const matches2 = getWGSLBindingDeclarationMatches(source2, regexes);
-    if (!matches2.length) {
-      return source2;
-    }
-    let relocatedSource = "";
-    let lastIndex = 0;
-    for (const match of matches2) {
-      relocatedSource += source2.slice(lastIndex, match.index);
-      relocatedSource += replacer(match);
-      lastIndex = match.index + match.length;
-    }
-    relocatedSource += source2.slice(lastIndex);
-    return relocatedSource;
-  }
-  function hasWGSLAutoBinding(source2) {
-    return /@binding\(\s*auto\s*\)/.test(maskWGSLComments(source2));
-  }
-  function getFirstWGSLAutoBindingDeclarationMatch(source2, regexes) {
-    const autoBindingRegexes = regexes === MODULE_WGSL_BINDING_DECLARATION_REGEXES || regexes === WGSL_BINDING_DECLARATION_REGEXES ? WGSL_AUTO_BINDING_DECLARATION_REGEXES : regexes;
-    return getWGSLBindingDeclarationMatches(source2, autoBindingRegexes).find((declarationMatch) => declarationMatch.bindingToken === "auto");
-  }
-  const WGSL_BINDING_DEBUG_REGEXES = [
-    new RegExp(`@binding\\(\\s*(\\d+)\\s*\\)\\s*@group\\(\\s*(\\d+)\\s*\\)\\s*${WGSL_BINDABLE_VARIABLE_PATTERN}\\s*:\\s*([^;]+);`, "g"),
-    new RegExp(`@group\\(\\s*(\\d+)\\s*\\)\\s*@binding\\(\\s*(\\d+)\\s*\\)\\s*${WGSL_BINDABLE_VARIABLE_PATTERN}\\s*:\\s*([^;]+);`, "g")
-  ];
-  function getShaderBindingDebugRowsFromWGSL(source2, bindingAssignments = []) {
-    var _a2;
-    const maskedSource = maskWGSLComments(source2);
-    const assignmentMap = /* @__PURE__ */ new Map();
-    for (const bindingAssignment of bindingAssignments) {
-      assignmentMap.set(getBindingAssignmentKey(bindingAssignment.name, bindingAssignment.group, bindingAssignment.location), bindingAssignment.moduleName);
-    }
-    const rows2 = [];
-    for (const regex2 of WGSL_BINDING_DEBUG_REGEXES) {
-      regex2.lastIndex = 0;
-      let match;
-      match = regex2.exec(maskedSource);
-      while (match) {
-        const isBindingFirst = regex2 === WGSL_BINDING_DEBUG_REGEXES[0];
-        const binding = Number(match[isBindingFirst ? 1 : 2]);
-        const group2 = Number(match[isBindingFirst ? 2 : 1]);
-        const accessDeclaration = (_a2 = match[3]) == null ? void 0 : _a2.trim();
-        const name2 = match[4];
-        const resourceType = match[5].trim();
-        const moduleName2 = assignmentMap.get(getBindingAssignmentKey(name2, group2, binding));
-        rows2.push(normalizeShaderBindingDebugRow({
-          name: name2,
-          group: group2,
-          binding,
-          owner: moduleName2 ? "module" : "application",
-          moduleName: moduleName2,
-          accessDeclaration,
-          resourceType
-        }));
-        match = regex2.exec(maskedSource);
-      }
-    }
-    return rows2.sort((left, right) => {
-      if (left.group !== right.group) {
-        return left.group - right.group;
-      }
-      if (left.binding !== right.binding) {
-        return left.binding - right.binding;
-      }
-      return left.name.localeCompare(right.name);
-    });
-  }
-  function normalizeShaderBindingDebugRow(row) {
-    const baseRow = {
-      name: row.name,
-      group: row.group,
-      binding: row.binding,
-      owner: row.owner,
-      kind: "unknown",
-      moduleName: row.moduleName,
-      resourceType: row.resourceType
-    };
-    if (row.accessDeclaration) {
-      const access = row.accessDeclaration.split(",").map((value) => value.trim());
-      if (access[0] === "uniform") {
-        return {
-          ...baseRow,
-          kind: "uniform",
-          access: "uniform"
-        };
-      }
-      if (access[0] === "storage") {
-        const storageAccess = access[1] || "read_write";
-        return {
-          ...baseRow,
-          kind: storageAccess === "read" ? "read-only-storage" : "storage",
-          access: storageAccess
-        };
-      }
-    }
-    if (row.resourceType === "sampler" || row.resourceType === "sampler_comparison") {
-      return {
-        ...baseRow,
-        kind: "sampler",
-        samplerKind: row.resourceType === "sampler_comparison" ? "comparison" : "filtering"
-      };
-    }
-    if (row.resourceType.startsWith("texture_storage_")) {
-      return {
-        ...baseRow,
-        kind: "storage-texture",
-        access: getStorageTextureAccess(row.resourceType),
-        viewDimension: getTextureViewDimension(row.resourceType)
-      };
-    }
-    if (row.resourceType.startsWith("texture_")) {
-      return {
-        ...baseRow,
-        kind: "texture",
-        viewDimension: getTextureViewDimension(row.resourceType),
-        sampleType: getTextureSampleType(row.resourceType),
-        multisampled: row.resourceType.startsWith("texture_multisampled_")
-      };
-    }
-    return baseRow;
-  }
-  function getBindingAssignmentKey(name2, group2, binding) {
-    return `${group2}:${binding}:${name2}`;
-  }
-  function getTextureViewDimension(resourceType) {
-    if (resourceType.includes("cube_array")) {
-      return "cube-array";
-    }
-    if (resourceType.includes("2d_array")) {
-      return "2d-array";
-    }
-    if (resourceType.includes("cube")) {
-      return "cube";
-    }
-    if (resourceType.includes("3d")) {
-      return "3d";
-    }
-    if (resourceType.includes("2d")) {
-      return "2d";
-    }
-    if (resourceType.includes("1d")) {
-      return "1d";
-    }
-    return void 0;
-  }
-  function getTextureSampleType(resourceType) {
-    if (resourceType.startsWith("texture_depth_")) {
-      return "depth";
-    }
-    if (resourceType.includes("<i32>")) {
-      return "sint";
-    }
-    if (resourceType.includes("<u32>")) {
-      return "uint";
-    }
-    if (resourceType.includes("<f32>")) {
-      return "float";
-    }
-    return void 0;
-  }
-  function getStorageTextureAccess(resourceType) {
-    const match = /,\s*([A-Za-z_][A-Za-z0-9_]*)\s*>$/.exec(resourceType);
-    return match == null ? void 0 : match[1];
-  }
-  const INJECT_SHADER_DECLARATIONS = `
-
-${DECLARATION_INJECT_MARKER}
-`;
-  const RESERVED_APPLICATION_GROUP_0_BINDING_LIMIT = 100;
-  const FRAGMENT_SHADER_PROLOGUE = `precision highp float;
-`;
-  function assembleWGSLShader(options) {
-    const modules = getShaderModuleDependencies(options.modules || []);
-    const { source: source2, bindingAssignments } = assembleShaderWGSL(options.platformInfo, {
-      ...options,
-      source: options.source,
-      stage: "vertex",
-      modules
-    });
-    return {
-      source: source2,
-      getUniforms: assembleGetUniforms(modules),
-      bindingAssignments,
-      bindingTable: getShaderBindingDebugRowsFromWGSL(source2, bindingAssignments)
-    };
-  }
-  function assembleGLSLShaderPair(options) {
-    const { vs: vs2, fs: fs2 } = options;
-    const modules = getShaderModuleDependencies(options.modules || []);
-    return {
-      vs: assembleShaderGLSL(options.platformInfo, {
-        ...options,
-        source: vs2,
-        stage: "vertex",
-        modules
-      }),
-      fs: assembleShaderGLSL(options.platformInfo, {
-        ...options,
-        source: fs2,
-        stage: "fragment",
-        modules
-      }),
-      getUniforms: assembleGetUniforms(modules)
-    };
-  }
-  function assembleShaderWGSL(platformInfo, options) {
-    var _a2;
-    const { source: source2, stage, modules, hookFunctions = [], inject: inject2 = {}, log: log3 } = options;
-    assert$5(typeof source2 === "string", "shader source must be a string");
-    const coreSource = source2;
-    let assembledSource = "";
-    const hookFunctionMap = normalizeShaderHooks(hookFunctions);
-    const hookInjections = {};
-    const declInjections = {};
-    const mainInjections = {};
-    for (const key2 in inject2) {
-      const injection = typeof inject2[key2] === "string" ? {
-        injection: inject2[key2],
-        order: 0
-      } : inject2[key2];
-      const match = /^(v|f)s:(#)?([\w-]+)$/.exec(key2);
-      if (match) {
-        const hash = match[2];
-        const name2 = match[3];
-        if (hash) {
-          if (name2 === "decl") {
-            declInjections[key2] = [
-              injection
-            ];
-          } else {
-            mainInjections[key2] = [
-              injection
-            ];
-          }
-        } else {
-          hookInjections[key2] = [
-            injection
-          ];
-        }
-      } else {
-        mainInjections[key2] = [
-          injection
-        ];
-      }
-    }
-    const modulesToInject = modules;
-    const applicationRelocation = relocateWGSLApplicationBindings(coreSource);
-    const usedBindingsByGroup = getUsedBindingsByGroupFromApplicationWGSL(applicationRelocation.source);
-    const reservedBindingKeysByGroup = reserveRegisteredModuleBindings(modulesToInject, options._bindingRegistry, usedBindingsByGroup);
-    const bindingAssignments = [];
-    for (const module of modulesToInject) {
-      if (log3) {
-        checkShaderModuleDeprecations(module, coreSource, log3);
-      }
-      const relocation = relocateWGSLModuleBindings(getShaderModuleSource(module, "wgsl", log3), module, {
-        usedBindingsByGroup,
-        bindingRegistry: options._bindingRegistry,
-        reservedBindingKeysByGroup
-      });
-      bindingAssignments.push(...relocation.bindingAssignments);
-      const moduleSource = relocation.source;
-      assembledSource += moduleSource;
-      const injections = ((_a2 = module.injections) == null ? void 0 : _a2[stage]) || {};
-      for (const key2 in injections) {
-        const match = /^(v|f)s:#([\w-]+)$/.exec(key2);
-        if (match) {
-          const name2 = match[2];
-          const injectionType = name2 === "decl" ? declInjections : mainInjections;
-          injectionType[key2] = injectionType[key2] || [];
-          injectionType[key2].push(injections[key2]);
-        } else {
-          hookInjections[key2] = hookInjections[key2] || [];
-          hookInjections[key2].push(injections[key2]);
-        }
-      }
-    }
-    assembledSource += INJECT_SHADER_DECLARATIONS;
-    assembledSource = injectShader(assembledSource, stage, declInjections);
-    assembledSource += getShaderHooks(hookFunctionMap[stage], hookInjections);
-    assembledSource += formatWGSLBindingAssignmentComments(bindingAssignments);
-    assembledSource += applicationRelocation.source;
-    assembledSource = injectShader(assembledSource, stage, mainInjections);
-    assertNoUnresolvedAutoBindings(assembledSource);
-    return {
-      source: assembledSource,
-      bindingAssignments
-    };
-  }
-  function assembleShaderGLSL(platformInfo, options) {
-    var _a2;
-    const { source: source2, stage, language = "glsl", modules, defines: defines2 = {}, hookFunctions = [], inject: inject2 = {}, prologue = true, log: log3 } = options;
-    assert$5(typeof source2 === "string", "shader source must be a string");
-    const sourceVersion = language === "glsl" ? getShaderInfo(source2).version : -1;
-    const targetVersion = platformInfo.shaderLanguageVersion;
-    const sourceVersionDirective = sourceVersion === 100 ? "#version 100" : "#version 300 es";
-    const sourceLines = source2.split("\n");
-    const coreSource = sourceLines.slice(1).join("\n");
-    const allDefines = {};
-    modules.forEach((module) => {
-      Object.assign(allDefines, module.defines);
-    });
-    Object.assign(allDefines, defines2);
-    let assembledSource = "";
-    switch (language) {
-      case "wgsl":
-        break;
-      case "glsl":
-        assembledSource = prologue ? `${sourceVersionDirective}
-
-// ----- PROLOGUE -------------------------
-${`#define SHADER_TYPE_${stage.toUpperCase()}`}
-
-${getPlatformShaderDefines(platformInfo)}
-${stage === "fragment" ? FRAGMENT_SHADER_PROLOGUE : ""}
-
-// ----- APPLICATION DEFINES -------------------------
-
-${getApplicationDefines(allDefines)}
-
-` : `${sourceVersionDirective}
-`;
-        break;
-    }
-    const hookFunctionMap = normalizeShaderHooks(hookFunctions);
-    const hookInjections = {};
-    const declInjections = {};
-    const mainInjections = {};
-    for (const key2 in inject2) {
-      const injection = typeof inject2[key2] === "string" ? {
-        injection: inject2[key2],
-        order: 0
-      } : inject2[key2];
-      const match = /^(v|f)s:(#)?([\w-]+)$/.exec(key2);
-      if (match) {
-        const hash = match[2];
-        const name2 = match[3];
-        if (hash) {
-          if (name2 === "decl") {
-            declInjections[key2] = [
-              injection
-            ];
-          } else {
-            mainInjections[key2] = [
-              injection
-            ];
-          }
-        } else {
-          hookInjections[key2] = [
-            injection
-          ];
-        }
-      } else {
-        mainInjections[key2] = [
-          injection
-        ];
-      }
-    }
-    for (const module of modules) {
-      if (log3) {
-        checkShaderModuleDeprecations(module, coreSource, log3);
-      }
-      const moduleSource = getShaderModuleSource(module, stage, log3);
-      assembledSource += moduleSource;
-      const injections = ((_a2 = module.instance) == null ? void 0 : _a2.normalizedInjections[stage]) || {};
-      for (const key2 in injections) {
-        const match = /^(v|f)s:#([\w-]+)$/.exec(key2);
-        if (match) {
-          const name2 = match[2];
-          const injectionType = name2 === "decl" ? declInjections : mainInjections;
-          injectionType[key2] = injectionType[key2] || [];
-          injectionType[key2].push(injections[key2]);
-        } else {
-          hookInjections[key2] = hookInjections[key2] || [];
-          hookInjections[key2].push(injections[key2]);
-        }
-      }
-    }
-    assembledSource += "// ----- MAIN SHADER SOURCE -------------------------";
-    assembledSource += INJECT_SHADER_DECLARATIONS;
-    assembledSource = injectShader(assembledSource, stage, declInjections);
-    assembledSource += getShaderHooks(hookFunctionMap[stage], hookInjections);
-    assembledSource += coreSource;
-    assembledSource = injectShader(assembledSource, stage, mainInjections);
-    if (language === "glsl" && sourceVersion !== targetVersion) {
-      assembledSource = transpileGLSLShader(assembledSource, stage);
-    }
-    if (language === "glsl") {
-      warnIfGLSLUniformBlocksAreNotStd140(assembledSource, stage, log3);
-    }
-    return assembledSource.trim();
-  }
-  function assembleGetUniforms(modules) {
-    return function getUniforms2(opts) {
-      var _a2;
-      const uniforms = {};
-      for (const module of modules) {
-        const moduleUniforms = (_a2 = module.getUniforms) == null ? void 0 : _a2.call(module, opts, uniforms);
-        Object.assign(uniforms, moduleUniforms);
-      }
-      return uniforms;
-    };
-  }
-  function getApplicationDefines(defines2 = {}) {
-    let sourceText = "";
-    for (const define in defines2) {
-      const value = defines2[define];
-      if (value || Number.isFinite(value)) {
-        sourceText += `#define ${define.toUpperCase()} ${defines2[define]}
-`;
-      }
-    }
-    return sourceText;
-  }
-  function getShaderModuleSource(module, stage, log3) {
-    let moduleSource;
-    switch (stage) {
-      case "vertex":
-        moduleSource = module.vs || "";
-        break;
-      case "fragment":
-        moduleSource = module.fs || "";
-        break;
-      case "wgsl":
-        moduleSource = module.source || "";
-        break;
-      default:
-        assert$5(false);
-    }
-    if (!module.name) {
-      throw new Error("Shader module must have a name");
-    }
-    validateShaderModuleUniformLayout(module, stage, {
-      log: log3
-    });
-    const moduleName2 = module.name.toUpperCase().replace(/[^0-9a-z]/gi, "_");
-    let source2 = `// ----- MODULE ${module.name} ---------------
-
-`;
-    if (stage !== "wgsl") {
-      source2 += `#define MODULE_${moduleName2}
-`;
-    }
-    source2 += `${moduleSource}
-`;
-    return source2;
-  }
-  function getUsedBindingsByGroupFromApplicationWGSL(source2) {
-    const usedBindingsByGroup = /* @__PURE__ */ new Map();
-    for (const match of getWGSLBindingDeclarationMatches(source2, WGSL_EXPLICIT_BINDING_DECLARATION_REGEXES)) {
-      const location2 = Number(match.bindingToken);
-      const group2 = Number(match.groupToken);
-      validateApplicationWGSLBinding(group2, location2, match.name);
-      registerUsedBindingLocation(usedBindingsByGroup, group2, location2, `application binding "${match.name}"`);
-    }
-    return usedBindingsByGroup;
-  }
-  function relocateWGSLApplicationBindings(source2) {
-    const declarationMatches = getWGSLBindingDeclarationMatches(source2, WGSL_BINDING_DECLARATION_REGEXES);
-    const usedBindingsByGroup = /* @__PURE__ */ new Map();
-    for (const declarationMatch of declarationMatches) {
-      if (declarationMatch.bindingToken === "auto") {
-        continue;
-      }
-      const location2 = Number(declarationMatch.bindingToken);
-      const group2 = Number(declarationMatch.groupToken);
-      validateApplicationWGSLBinding(group2, location2, declarationMatch.name);
-      registerUsedBindingLocation(usedBindingsByGroup, group2, location2, `application binding "${declarationMatch.name}"`);
-    }
-    const relocationState = {
-      sawSupportedBindingDeclaration: declarationMatches.length > 0
-    };
-    const relocatedSource = replaceWGSLBindingDeclarationMatches(source2, WGSL_BINDING_DECLARATION_REGEXES, (declarationMatch) => relocateWGSLApplicationBindingMatch(declarationMatch, usedBindingsByGroup, relocationState));
-    if (hasWGSLAutoBinding(source2) && !relocationState.sawSupportedBindingDeclaration) {
-      throw new Error('Unsupported @binding(auto) declaration form in application WGSL. Use adjacent "@group(N)" and "@binding(auto)" decorators followed by a bindable "var" declaration.');
-    }
-    return {
-      source: relocatedSource
-    };
-  }
-  function relocateWGSLModuleBindings(moduleSource, module, context) {
-    const bindingAssignments = [];
-    const declarationMatches = getWGSLBindingDeclarationMatches(moduleSource, MODULE_WGSL_BINDING_DECLARATION_REGEXES);
-    const relocationState = {
-      sawSupportedBindingDeclaration: declarationMatches.length > 0,
-      nextHintedBindingLocation: typeof module.firstBindingSlot === "number" ? module.firstBindingSlot : null
-    };
-    const relocatedSource = replaceWGSLBindingDeclarationMatches(moduleSource, MODULE_WGSL_BINDING_DECLARATION_REGEXES, (declarationMatch) => relocateWGSLModuleBindingMatch(declarationMatch, {
-      module,
-      context,
-      bindingAssignments,
-      relocationState
-    }));
-    if (hasWGSLAutoBinding(moduleSource) && !relocationState.sawSupportedBindingDeclaration) {
-      throw new Error(`Unsupported @binding(auto) declaration form in module "${module.name}". Use adjacent "@group(N)" and "@binding(auto)" decorators followed by a bindable "var" declaration.`);
-    }
-    return {
-      source: relocatedSource,
-      bindingAssignments
-    };
-  }
-  function relocateWGSLModuleBindingMatch(declarationMatch, params) {
-    var _a2, _b2;
-    const { module, context, bindingAssignments, relocationState } = params;
-    const { match, bindingToken, groupToken, name: name2 } = declarationMatch;
-    const group2 = Number(groupToken);
-    if (bindingToken === "auto") {
-      const registryKey = getBindingRegistryKey(group2, module.name, name2);
-      const registryLocation = (_a2 = context.bindingRegistry) == null ? void 0 : _a2.get(registryKey);
-      const location3 = registryLocation !== void 0 ? registryLocation : relocationState.nextHintedBindingLocation === null ? allocateAutoBindingLocation(group2, context.usedBindingsByGroup) : allocateAutoBindingLocation(group2, context.usedBindingsByGroup, relocationState.nextHintedBindingLocation);
-      validateModuleWGSLBinding(module.name, group2, location3, name2);
-      if (registryLocation !== void 0 && claimReservedBindingLocation(context.reservedBindingKeysByGroup, group2, location3, registryKey)) {
-        bindingAssignments.push({
-          moduleName: module.name,
-          name: name2,
-          group: group2,
-          location: location3
-        });
-        return match.replace(/@binding\(\s*auto\s*\)/, `@binding(${location3})`);
-      }
-      registerUsedBindingLocation(context.usedBindingsByGroup, group2, location3, `module "${module.name}" binding "${name2}"`);
-      (_b2 = context.bindingRegistry) == null ? void 0 : _b2.set(registryKey, location3);
-      bindingAssignments.push({
-        moduleName: module.name,
-        name: name2,
-        group: group2,
-        location: location3
-      });
-      if (relocationState.nextHintedBindingLocation !== null && registryLocation === void 0) {
-        relocationState.nextHintedBindingLocation = location3 + 1;
-      }
-      return match.replace(/@binding\(\s*auto\s*\)/, `@binding(${location3})`);
-    }
-    const location2 = Number(bindingToken);
-    validateModuleWGSLBinding(module.name, group2, location2, name2);
-    registerUsedBindingLocation(context.usedBindingsByGroup, group2, location2, `module "${module.name}" binding "${name2}"`);
-    bindingAssignments.push({
-      moduleName: module.name,
-      name: name2,
-      group: group2,
-      location: location2
-    });
-    return match;
-  }
-  function relocateWGSLApplicationBindingMatch(declarationMatch, usedBindingsByGroup, relocationState) {
-    const { match, bindingToken, groupToken, name: name2 } = declarationMatch;
-    const group2 = Number(groupToken);
-    if (bindingToken === "auto") {
-      const location2 = allocateApplicationAutoBindingLocation(group2, usedBindingsByGroup);
-      validateApplicationWGSLBinding(group2, location2, name2);
-      registerUsedBindingLocation(usedBindingsByGroup, group2, location2, `application binding "${name2}"`);
-      return match.replace(/@binding\(\s*auto\s*\)/, `@binding(${location2})`);
-    }
-    relocationState.sawSupportedBindingDeclaration = true;
-    return match;
-  }
-  function reserveRegisteredModuleBindings(modules, bindingRegistry, usedBindingsByGroup) {
-    const reservedBindingKeysByGroup = /* @__PURE__ */ new Map();
-    if (!bindingRegistry) {
-      return reservedBindingKeysByGroup;
-    }
-    for (const module of modules) {
-      for (const binding of getModuleWGSLBindingDeclarations(module)) {
-        const registryKey = getBindingRegistryKey(binding.group, module.name, binding.name);
-        const location2 = bindingRegistry.get(registryKey);
-        if (location2 !== void 0) {
-          const reservedBindingKeys = reservedBindingKeysByGroup.get(binding.group) || /* @__PURE__ */ new Map();
-          const existingReservation = reservedBindingKeys.get(location2);
-          if (existingReservation && existingReservation !== registryKey) {
-            throw new Error(`Duplicate WGSL binding reservation for modules "${existingReservation}" and "${registryKey}": group ${binding.group}, binding ${location2}.`);
-          }
-          registerUsedBindingLocation(usedBindingsByGroup, binding.group, location2, `registered module binding "${registryKey}"`);
-          reservedBindingKeys.set(location2, registryKey);
-          reservedBindingKeysByGroup.set(binding.group, reservedBindingKeys);
-        }
-      }
-    }
-    return reservedBindingKeysByGroup;
-  }
-  function claimReservedBindingLocation(reservedBindingKeysByGroup, group2, location2, registryKey) {
-    const reservedBindingKeys = reservedBindingKeysByGroup.get(group2);
-    if (!reservedBindingKeys) {
-      return false;
-    }
-    const reservedKey = reservedBindingKeys.get(location2);
-    if (!reservedKey) {
-      return false;
-    }
-    if (reservedKey !== registryKey) {
-      throw new Error(`Registered module binding "${registryKey}" collided with "${reservedKey}": group ${group2}, binding ${location2}.`);
-    }
-    return true;
-  }
-  function getModuleWGSLBindingDeclarations(module) {
-    const declarations = [];
-    const moduleSource = module.source || "";
-    for (const match of getWGSLBindingDeclarationMatches(moduleSource, MODULE_WGSL_BINDING_DECLARATION_REGEXES)) {
-      declarations.push({
-        name: match.name,
-        group: Number(match.groupToken)
-      });
-    }
-    return declarations;
-  }
-  function validateApplicationWGSLBinding(group2, location2, name2) {
-    if (group2 === 0 && location2 >= RESERVED_APPLICATION_GROUP_0_BINDING_LIMIT) {
-      throw new Error(`Application binding "${name2}" in group 0 uses reserved binding ${location2}. Application-owned explicit group-0 bindings must stay below ${RESERVED_APPLICATION_GROUP_0_BINDING_LIMIT}.`);
-    }
-  }
-  function validateModuleWGSLBinding(moduleName2, group2, location2, name2) {
-    if (group2 === 0 && location2 < RESERVED_APPLICATION_GROUP_0_BINDING_LIMIT) {
-      throw new Error(`Module "${moduleName2}" binding "${name2}" in group 0 uses reserved application binding ${location2}. Module-owned explicit group-0 bindings must be ${RESERVED_APPLICATION_GROUP_0_BINDING_LIMIT} or higher.`);
-    }
-  }
-  function registerUsedBindingLocation(usedBindingsByGroup, group2, location2, label2) {
-    const usedBindings = usedBindingsByGroup.get(group2) || /* @__PURE__ */ new Set();
-    if (usedBindings.has(location2)) {
-      throw new Error(`Duplicate WGSL binding assignment for ${label2}: group ${group2}, binding ${location2}.`);
-    }
-    usedBindings.add(location2);
-    usedBindingsByGroup.set(group2, usedBindings);
-  }
-  function allocateAutoBindingLocation(group2, usedBindingsByGroup, preferredBindingLocation) {
-    const usedBindings = usedBindingsByGroup.get(group2) || /* @__PURE__ */ new Set();
-    let nextBinding = preferredBindingLocation ?? (group2 === 0 ? RESERVED_APPLICATION_GROUP_0_BINDING_LIMIT : usedBindings.size > 0 ? Math.max(...usedBindings) + 1 : 0);
-    while (usedBindings.has(nextBinding)) {
-      nextBinding++;
-    }
-    return nextBinding;
-  }
-  function allocateApplicationAutoBindingLocation(group2, usedBindingsByGroup) {
-    const usedBindings = usedBindingsByGroup.get(group2) || /* @__PURE__ */ new Set();
-    let nextBinding = 0;
-    while (usedBindings.has(nextBinding)) {
-      nextBinding++;
-    }
-    return nextBinding;
-  }
-  function assertNoUnresolvedAutoBindings(source2) {
-    const unresolvedBinding = getFirstWGSLAutoBindingDeclarationMatch(source2, MODULE_WGSL_BINDING_DECLARATION_REGEXES);
-    if (!unresolvedBinding) {
-      return;
-    }
-    const moduleName2 = getWGSLModuleNameAtIndex(source2, unresolvedBinding.index);
-    if (moduleName2) {
-      throw new Error(`Unresolved @binding(auto) for module "${moduleName2}" binding "${unresolvedBinding.name}" remained in assembled WGSL source.`);
-    }
-    if (isInApplicationWGSLSection(source2, unresolvedBinding.index)) {
-      throw new Error(`Unresolved @binding(auto) for application binding "${unresolvedBinding.name}" remained in assembled WGSL source.`);
-    }
-    throw new Error(`Unresolved @binding(auto) remained in assembled WGSL source near "${formatWGSLSourceSnippet(unresolvedBinding.match)}".`);
-  }
-  function formatWGSLBindingAssignmentComments(bindingAssignments) {
-    if (bindingAssignments.length === 0) {
-      return "";
-    }
-    let source2 = "// ----- MODULE WGSL BINDING ASSIGNMENTS ---------------\n";
-    for (const bindingAssignment of bindingAssignments) {
-      source2 += `// ${bindingAssignment.moduleName}.${bindingAssignment.name} -> @group(${bindingAssignment.group}) @binding(${bindingAssignment.location})
-`;
-    }
-    source2 += "\n";
-    return source2;
-  }
-  function getBindingRegistryKey(group2, moduleName2, bindingName) {
-    return `${group2}:${moduleName2}:${bindingName}`;
-  }
-  function getWGSLModuleNameAtIndex(source2, index2) {
-    const moduleHeaderRegex = /^\/\/ ----- MODULE ([^\n]+) ---------------$/gm;
-    let moduleName2;
-    let match;
-    match = moduleHeaderRegex.exec(source2);
-    while (match && match.index <= index2) {
-      moduleName2 = match[1];
-      match = moduleHeaderRegex.exec(source2);
-    }
-    return moduleName2;
-  }
-  function isInApplicationWGSLSection(source2, index2) {
-    const injectionMarkerIndex = source2.indexOf(INJECT_SHADER_DECLARATIONS);
-    return injectionMarkerIndex >= 0 ? index2 > injectionMarkerIndex : true;
-  }
-  function formatWGSLSourceSnippet(source2) {
-    return source2.replace(/\s+/g, " ").trim();
-  }
-  const DEFINE_NAME_PATTERN = "([a-zA-Z_][a-zA-Z0-9_]*)";
-  const IFDEF_REGEXP = new RegExp(`^\\s*\\#\\s*ifdef\\s*${DEFINE_NAME_PATTERN}\\s*$`);
-  const IFNDEF_REGEXP = new RegExp(`^\\s*\\#\\s*ifndef\\s*${DEFINE_NAME_PATTERN}\\s*(?:\\/\\/.*)?$`);
-  const ELSE_REGEXP = /^\s*\#\s*else\s*(?:\/\/.*)?$/;
-  const ENDIF_REGEXP = /^\s*\#\s*endif\s*$/;
-  const IFDEF_WITH_COMMENT_REGEXP = new RegExp(`^\\s*\\#\\s*ifdef\\s*${DEFINE_NAME_PATTERN}\\s*(?:\\/\\/.*)?$`);
-  const ENDIF_WITH_COMMENT_REGEXP = /^\s*\#\s*endif\s*(?:\/\/.*)?$/;
-  function preprocess$1(source2, options) {
-    var _a2, _b2;
-    const lines = source2.split("\n");
-    const output = [];
-    const conditionalStack = [];
-    let conditional = true;
-    for (const line of lines) {
-      const matchIf = line.match(IFDEF_WITH_COMMENT_REGEXP) || line.match(IFDEF_REGEXP);
-      const matchIfNot = line.match(IFNDEF_REGEXP);
-      const matchElse = line.match(ELSE_REGEXP);
-      const matchEnd = line.match(ENDIF_WITH_COMMENT_REGEXP) || line.match(ENDIF_REGEXP);
-      if (matchIf || matchIfNot) {
-        const defineName = (_a2 = matchIf || matchIfNot) == null ? void 0 : _a2[1];
-        const defineValue = Boolean((_b2 = options == null ? void 0 : options.defines) == null ? void 0 : _b2[defineName]);
-        const branchTaken = matchIf ? defineValue : !defineValue;
-        const active = conditional && branchTaken;
-        conditionalStack.push({
-          parentActive: conditional,
-          branchTaken,
-          active
-        });
-        conditional = active;
-      } else if (matchElse) {
-        const currentConditional = conditionalStack[conditionalStack.length - 1];
-        if (!currentConditional) {
-          throw new Error("Encountered #else without matching #ifdef or #ifndef");
-        }
-        currentConditional.active = currentConditional.parentActive && !currentConditional.branchTaken;
-        currentConditional.branchTaken = true;
-        conditional = currentConditional.active;
-      } else if (matchEnd) {
-        conditionalStack.pop();
-        conditional = conditionalStack.length ? conditionalStack[conditionalStack.length - 1].active : true;
-      } else if (conditional) {
-        output.push(line);
-      }
-    }
-    if (conditionalStack.length > 0) {
-      throw new Error("Unterminated conditional block in shader source");
-    }
-    return output.join("\n");
-  }
-  const _ShaderAssembler = class _ShaderAssembler {
-    constructor() {
-      __publicField(this, "_hookFunctions", []);
-      __publicField(this, "_defaultModules", []);
-      __publicField(this, "_wgslBindingRegistry", /* @__PURE__ */ new Map());
-    }
-    static getDefaultShaderAssembler() {
-      _ShaderAssembler.defaultShaderAssembler = _ShaderAssembler.defaultShaderAssembler || new _ShaderAssembler();
-      return _ShaderAssembler.defaultShaderAssembler;
-    }
-    addDefaultModule(module) {
-      if (!this._defaultModules.find((m2) => m2.name === (typeof module === "string" ? module : module.name))) {
-        this._defaultModules.push(module);
-      }
-    }
-    removeDefaultModule(module) {
-      const moduleName2 = typeof module === "string" ? module : module.name;
-      this._defaultModules = this._defaultModules.filter((m2) => m2.name !== moduleName2);
-    }
-    addShaderHook(hook, opts) {
-      if (opts) {
-        hook = Object.assign(opts, {
-          hook
-        });
-      }
-      this._hookFunctions.push(hook);
-    }
-    assembleWGSLShader(props) {
-      const modules = this._getModuleList(props.modules);
-      const hookFunctions = this._hookFunctions;
-      const { source: source2, getUniforms: getUniforms2, bindingAssignments } = assembleWGSLShader({
-        ...props,
-        source: props.source,
-        _bindingRegistry: this._wgslBindingRegistry,
-        modules,
-        hookFunctions
-      });
-      const defines2 = {
-        ...modules.reduce((accumulator, module) => {
-          Object.assign(accumulator, module.defines);
-          return accumulator;
-        }, {}),
-        ...props.defines
-      };
-      const preprocessedSource = props.platformInfo.shaderLanguage === "wgsl" ? preprocess$1(source2, {
-        defines: defines2
-      }) : source2;
-      return {
-        source: preprocessedSource,
-        getUniforms: getUniforms2,
-        modules,
-        bindingAssignments,
-        bindingTable: getShaderBindingDebugRowsFromWGSL(preprocessedSource, bindingAssignments)
-      };
-    }
-    assembleGLSLShaderPair(props) {
-      const modules = this._getModuleList(props.modules);
-      const hookFunctions = this._hookFunctions;
-      const assembled = assembleGLSLShaderPair({
-        ...props,
-        vs: props.vs,
-        fs: props.fs,
-        modules,
-        hookFunctions
-      });
-      return {
-        ...assembled,
-        modules
-      };
-    }
-    _getModuleList(appModules = []) {
-      const modules = new Array(this._defaultModules.length + appModules.length);
-      const seen2 = {};
-      let count2 = 0;
-      for (let i2 = 0, len2 = this._defaultModules.length; i2 < len2; ++i2) {
-        const module = this._defaultModules[i2];
-        const name2 = module.name;
-        modules[count2++] = module;
-        seen2[name2] = true;
-      }
-      for (let i2 = 0, len2 = appModules.length; i2 < len2; ++i2) {
-        const module = appModules[i2];
-        const name2 = module.name;
-        if (!seen2[name2]) {
-          modules[count2++] = module;
-          seen2[name2] = true;
-        }
-      }
-      modules.length = count2;
-      initializeShaderModules(modules);
-      return modules;
-    }
-  };
-  __publicField(_ShaderAssembler, "defaultShaderAssembler");
-  let ShaderAssembler = _ShaderAssembler;
-  const FS_GLES = `out vec4 transform_output;
-void main() {
-  transform_output = vec4(0);
-}`;
-  const FS300 = `#version 300 es
-${FS_GLES}`;
-  function getPassthroughFS(options) {
-    const { input: input2, inputChannels, output } = {};
-    if (!input2) {
-      return FS300;
-    }
-    if (!inputChannels) {
-      throw new Error("inputChannels");
-    }
-    const inputType = channelCountToType(inputChannels);
-    const outputValue = convertToVec4(input2, inputChannels);
-    return `#version 300 es
-in ${inputType} ${input2};
-out vec4 ${output};
-void main() {
-  ${output} = ${outputValue};
-}`;
-  }
-  function channelCountToType(channels2) {
-    switch (channels2) {
-      case 1:
-        return "float";
-      case 2:
-        return "vec2";
-      case 3:
-        return "vec3";
-      case 4:
-        return "vec4";
-      default:
-        throw new Error(`invalid channels: ${channels2}`);
-    }
-  }
-  function convertToVec4(variable, channels2) {
-    switch (channels2) {
-      case 1:
-        return `vec4(${variable}, 0.0, 0.0, 1.0)`;
-      case 2:
-        return `vec4(${variable}, 0.0, 1.0)`;
-      case 3:
-        return `vec4(${variable}, 1.0)`;
-      case 4:
-        return variable;
-      default:
-        throw new Error(`invalid channels: ${channels2}`);
-    }
-  }
   const DEFAULT_CONFIG = {
     EPSILON: 1e-12,
     debug: false,
@@ -25459,7 +18799,7 @@ void main() {
     }
     return v2;
   }
-  function assert$4(condition, message2) {
+  function assert$8(condition, message2) {
     if (!condition) {
       throw new Error(`math.gl assertion ${message2}`);
     }
@@ -25546,11 +18886,11 @@ void main() {
       return this.distanceSquared(vector);
     }
     getComponent(i2) {
-      assert$4(i2 >= 0 && i2 < this.ELEMENTS, "index is out of range");
+      assert$8(i2 >= 0 && i2 < this.ELEMENTS, "index is out of range");
       return checkNumber(this[i2]);
     }
     setComponent(i2, value) {
-      assert$4(i2 >= 0 && i2 < this.ELEMENTS, "index is out of range");
+      assert$8(i2 >= 0 && i2 < this.ELEMENTS, "index is out of range");
       this[i2] = value;
       return this.check();
     }
@@ -25694,7 +19034,7 @@ void main() {
     }
     return out;
   }
-  function length$3(a2) {
+  function length$4(a2) {
     const x2 = a2[0];
     const y2 = a2[1];
     const z2 = a2[2];
@@ -25862,7 +19202,7 @@ void main() {
     return Math.acos(Math.min(Math.max(cosine, -1), 1));
   }
   const sub$1 = subtract;
-  const len$1 = length$3;
+  const len$1 = length$4;
   const sqrLen$1 = squaredLength$3;
   (function() {
     const vec2 = create$7();
@@ -27203,7 +20543,7 @@ void main() {
     out[3] = a2[3] * b2;
     return out;
   }
-  function length$2(a2) {
+  function length$3(a2) {
     const x2 = a2[0];
     const y2 = a2[1];
     const z2 = a2[2];
@@ -27973,7 +21313,7 @@ void main() {
   const scale$1 = scale$2;
   const dot$3 = dot$4;
   const lerp$2 = lerp$3;
-  const length$1 = length$2;
+  const length$2 = length$3;
   const squaredLength$1 = squaredLength$2;
   const normalize$5 = normalize$6;
   const rotationTo = function() {
@@ -28107,7 +21447,7 @@ void main() {
       this[3] = checkNumber(value);
     }
     len() {
-      return length$1(this);
+      return length$2(this);
     }
     lengthSquared() {
       return squaredLength$1(this);
@@ -28218,6 +21558,7094 @@ void main() {
   }
   const EPSILON15 = 1e-15;
   const EPSILON20 = 1e-20;
+  const IMPORT_DEFAULT_SEED_HEX = [
+    "0dabff",
+    "c3ff00",
+    "ff8b00",
+    "ff00c7",
+    "1e5cff"
+  ];
+  const IMPORT_DEFAULT_LOWER_LIMIT = 2 ** 5;
+  const IMPORT_DEFAULT_UPPER_LIMIT = 2 ** 14;
+  function looksLikeImportDefaultLimits(lower, upper) {
+    if (lower === IMPORT_DEFAULT_LOWER_LIMIT && upper === IMPORT_DEFAULT_UPPER_LIMIT) {
+      return true;
+    }
+    if (lower === 0 && upper === 65535) return true;
+    if (lower === 0 && upper === 255) return true;
+    return false;
+  }
+  function hexToRgb(hex) {
+    const n2 = Number.parseInt(hex.replace("#", ""), 16);
+    return {
+      r: n2 >> 16 & 255,
+      g: n2 >> 8 & 255,
+      b: n2 & 255
+    };
+  }
+  function rgbToHex$1(color2) {
+    return [
+      color2.r ?? 0,
+      color2.g ?? 0,
+      color2.b ?? 0
+    ].map((value) => value.toString(16).padStart(2, "0")).join("");
+  }
+  function looksLikeImportDefaultSeedColor(color2) {
+    return IMPORT_DEFAULT_SEED_HEX.includes(rgbToHex$1(color2));
+  }
+  const UNASSIGNED_STACK_COLOR = {
+    r: 160,
+    g: 160,
+    b: 160
+  };
+  function effectiveSourceColor(channel, allChannels) {
+    if (channel.color) return channel.color;
+    if (allChannels) {
+      const planar = planarRgbDisplayColor(channel, allChannels);
+      if (planar) return planar;
+    }
+    if (channel.samples === 3) {
+      return {
+        r: 204,
+        g: 0,
+        b: 255
+      };
+    }
+    return UNASSIGNED_STACK_COLOR;
+  }
+  function effectiveDisplayColor(channel, allChannels, groupRow) {
+    return planarRgbDisplayColor(channel, allChannels) ?? (groupRow == null ? void 0 : groupRow.color) ?? effectiveSourceColor(channel, allChannels);
+  }
+  function assignedDisplayHex(channel, allChannels, groupRow) {
+    if (!channel.color && !(groupRow == null ? void 0 : groupRow.color) && !planarRgbDisplayColor(channel, allChannels)) {
+      return void 0;
+    }
+    return rgbToHex$1(effectiveDisplayColor(channel, allChannels, groupRow));
+  }
+  function effectiveSourceLimits(channel) {
+    if (channel.gmmContrastLimits) {
+      return [
+        channel.gmmContrastLimits.lower,
+        channel.gmmContrastLimits.upper
+      ];
+    }
+    const lo = channel.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT;
+    const hi2 = channel.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT;
+    return [
+      lo,
+      hi2
+    ];
+  }
+  function effectiveMaskVisualization(row) {
+    return normalizeMaskVisualization(row.maskVisualization);
+  }
+  function effectiveMaskVisualizationForSource(sc2, channelGroups, activeChannelGroupId) {
+    const groups = activeChannelGroupId ? [
+      channelGroups.find((g2) => g2.id === activeChannelGroupId),
+      ...channelGroups.filter((g2) => g2.id !== activeChannelGroupId)
+    ] : channelGroups;
+    for (const g2 of groups) {
+      if (!g2) continue;
+      const row = g2.channels.find((gc2) => gc2.channelId === sc2.id);
+      if (row) return effectiveMaskVisualization(row);
+    }
+    return effectiveMaskVisualization(sc2);
+  }
+  function seedMaskSourceChannelStyles(channels2) {
+    return channels2.map((sc2) => ({
+      ...sc2,
+      color: sc2.color ?? {
+        r: 136,
+        g: 136,
+        b: 136
+      },
+      lowerLimit: sc2.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
+      upperLimit: sc2.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT,
+      ...isMaskChannel(sc2) ? {
+        maskVisualization: sc2.maskVisualization ?? DEFAULT_MASK_VISUALIZATION
+      } : {}
+    }));
+  }
+  function seedDefaultSourceChannelStyles(sourceChannels, palette) {
+    let paletteIndex = 0;
+    return sourceChannels.map((sc2) => {
+      if (sc2.samples === 3) {
+        return {
+          ...sc2,
+          color: sc2.color ?? {
+            r: 204,
+            g: 0,
+            b: 255
+          },
+          lowerLimit: sc2.lowerLimit ?? 0,
+          upperLimit: sc2.upperLimit ?? 255
+        };
+      }
+      if (isMaskChannel(sc2)) {
+        return {
+          ...sc2,
+          color: sc2.color ?? {
+            r: 136,
+            g: 136,
+            b: 136
+          },
+          lowerLimit: sc2.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
+          upperLimit: sc2.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT,
+          maskVisualization: sc2.maskVisualization ?? DEFAULT_MASK_VISUALIZATION
+        };
+      }
+      const planar = planarRgbDisplayColor(sc2, sourceChannels);
+      if (planar) {
+        return {
+          ...sc2,
+          color: sc2.color ?? planar,
+          lowerLimit: sc2.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
+          upperLimit: sc2.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT
+        };
+      }
+      if (sc2.color) {
+        return {
+          ...sc2,
+          color: sc2.color,
+          lowerLimit: sc2.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
+          upperLimit: sc2.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT
+        };
+      }
+      const fromPalette2 = isImageChannel(sc2) && palette && paletteIndex < palette.length ? palette[paletteIndex++] : void 0;
+      return {
+        ...sc2,
+        ...fromPalette2 ? {
+          color: {
+            r: fromPalette2.r,
+            g: fromPalette2.g,
+            b: fromPalette2.b
+          }
+        } : {},
+        lowerLimit: sc2.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
+        upperLimit: sc2.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT
+      };
+    });
+  }
+  const MAX_VIV_INTENSITY_CHANNELS = 10;
+  const VIV_TILE_MAX_CACHE_SIZE = 128;
+  function loaderPixelSizeXY(loader) {
+    var _a2, _b2;
+    const px = (_a2 = loader.metadata) == null ? void 0 : _a2.Pixels;
+    const metaX = Number(px == null ? void 0 : px.SizeX);
+    const metaY = Number(px == null ? void 0 : px.SizeY);
+    if (Number.isFinite(metaX) && Number.isFinite(metaY) && metaX > 1 && metaY > 1) {
+      return {
+        sizeX: Math.round(metaX),
+        sizeY: Math.round(metaY)
+      };
+    }
+    const level = (_b2 = loader.data) == null ? void 0 : _b2[0];
+    if (!(level == null ? void 0 : level.labels) || !(level == null ? void 0 : level.shape)) return null;
+    const xi2 = level.labels.indexOf("x");
+    const yi2 = level.labels.indexOf("y");
+    if (xi2 < 0 || yi2 < 0) return null;
+    const sizeX = Number(level.shape[xi2]);
+    const sizeY = Number(level.shape[yi2]);
+    if (!Number.isFinite(sizeX) || !Number.isFinite(sizeY) || sizeX <= 1 || sizeY <= 1) {
+      return null;
+    }
+    return {
+      sizeX: Math.round(sizeX),
+      sizeY: Math.round(sizeY)
+    };
+  }
+  const toDefaultSettings = (n2) => {
+    const chan_range = [
+      ...Array(n2).keys()
+    ];
+    const n_shown = 3;
+    const n_sub = n_shown;
+    return {
+      loader: null,
+      selections: chan_range.map((c2) => {
+        return {
+          z: 0,
+          t: 0,
+          c: c2
+        };
+      }).slice(0, n_sub),
+      colors: chan_range.map((c2) => {
+        return [
+          [
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            255,
+            0
+          ],
+          [
+            255,
+            0,
+            0
+          ]
+        ][c2 % 3];
+      }).slice(0, n_sub),
+      contrastLimits: chan_range.map(() => [
+        0,
+        65535
+      ]).slice(0, n_sub),
+      channelsVisible: chan_range.map((n22) => {
+        return n22 < n_shown;
+      }).slice(0, n_sub),
+      sourceChannelIds: []
+    };
+  };
+  const toSettings = (opts) => {
+    return (activeChannelGroupId, modality, loader, channelVisibilities, loaderSourceImageId, channelGroupRowVisibilities = {}) => {
+      const { SourceChannels, channelGroups = [] } = opts;
+      if (!loader) return toDefaultSettings(3);
+      const full_level = loader.data[0];
+      const { labels, shape } = full_level;
+      const c_idx = labels.indexOf("c");
+      const sourceImageMatches = (image_id) => loaderSourceImageId !== void 0 && loaderSourceImageId !== "" ? image_id === loaderSourceImageId : image_id === modality;
+      const onLoader = SourceChannels.filter((sc2) => sourceImageMatches(sc2.imageId) && isImageChannel(sc2));
+      const activeGroup = activeChannelGroupId ? channelGroups.find((g2) => g2.id === activeChannelGroupId) : void 0;
+      const hasVisibilityMap = channelVisibilities != null && Object.keys(channelVisibilities).length > 0;
+      const composited = buildCompositedIntensityLayers({
+        onLoader,
+        activeGroup,
+        channelGroups,
+        stackVisibilities: channelVisibilities ?? {},
+        groupRowVisibilities: channelGroupRowVisibilities,
+        hasVisibilityMap
+      });
+      const layers = composited.slice(0, MAX_VIV_INTENSITY_CHANNELS);
+      if (composited.length > MAX_VIV_INTENSITY_CHANNELS && false) ;
+      const selections = [];
+      const colors = [];
+      const contrastLimits = [];
+      const channelsVisible = [];
+      const sourceChannelIds = [];
+      for (const { sc: sc2, gc: gc2 } of layers) {
+        const [lo, hi2] = gc2 ? [
+          gc2.lowerLimit,
+          gc2.upperLimit
+        ] : effectiveSourceLimits(sc2);
+        const { r: r2, g: g2, b: b2 } = gc2 ? effectiveDisplayColor(sc2, SourceChannels, gc2) : effectiveSourceColor(sc2, SourceChannels);
+        selections.push({
+          z: 0,
+          t: 0,
+          c: sc2.index
+        });
+        colors.push([
+          r2,
+          g2,
+          b2
+        ]);
+        contrastLimits.push([
+          lo,
+          hi2
+        ]);
+        channelsVisible.push(true);
+        sourceChannelIds.push(sc2.id);
+      }
+      const n_channels = c_idx >= 0 ? shape[c_idx] || 0 : 1;
+      return {
+        ...toDefaultSettings(n_channels),
+        selections,
+        colors,
+        contrastLimits,
+        channelsVisible,
+        sourceChannelIds,
+        loader
+      };
+    };
+  };
+  const WORLD_MICRON = "\xB5m";
+  const IDENTITY_UM = 1;
+  const METRE_PREFIX = {
+    Y: 1e24,
+    Z: 1e21,
+    E: 1e18,
+    P: 1e15,
+    T: 1e12,
+    G: 1e9,
+    M: 1e6,
+    k: 1e3,
+    h: 100,
+    da: 10,
+    d: 0.1,
+    c: 0.01,
+    m: 1e-3,
+    \u00B5: 1e-6,
+    \u03BC: 1e-6,
+    u: 1e-6,
+    n: 1e-9,
+    p: 1e-12,
+    f: 1e-15,
+    a: 1e-18,
+    z: 1e-21,
+    y: 1e-24
+  };
+  function metresPerUnit(unit) {
+    const u2 = unit.trim();
+    if (u2 === "m") return 1;
+    if (!u2.endsWith("m")) return null;
+    const prefix = u2.slice(0, -1);
+    return prefix in METRE_PREFIX ? METRE_PREFIX[prefix] : null;
+  }
+  function umPerPixelFromAxis(size, unit) {
+    if (size == null) return null;
+    const n2 = Number(size);
+    if (!Number.isFinite(n2) || n2 <= 0) return null;
+    const unitStr = unit == null || unit === "" ? WORLD_MICRON : String(unit);
+    const metres = metresPerUnit(unitStr);
+    if (metres == null) return null;
+    return n2 * metres * 1e6;
+  }
+  function parsePhysicalScale(pixels) {
+    const x2 = umPerPixelFromAxis(pixels == null ? void 0 : pixels.PhysicalSizeX, pixels == null ? void 0 : pixels.PhysicalSizeXUnit);
+    const y2 = umPerPixelFromAxis(pixels == null ? void 0 : pixels.PhysicalSizeY, pixels == null ? void 0 : pixels.PhysicalSizeYUnit);
+    if (x2 == null && y2 == null) {
+      return {
+        umPerPixelX: IDENTITY_UM,
+        umPerPixelY: IDENTITY_UM
+      };
+    }
+    const umPerPixelX = x2 ?? y2 ?? IDENTITY_UM;
+    const umPerPixelY = y2 ?? x2 ?? IDENTITY_UM;
+    return {
+      umPerPixelX,
+      umPerPixelY
+    };
+  }
+  function frameFromPixels(pixelWidth, pixelHeight, scale2) {
+    return {
+      pixelWidth,
+      pixelHeight,
+      umPerPixelX: scale2.umPerPixelX,
+      umPerPixelY: scale2.umPerPixelY,
+      worldWidth: pixelWidth * scale2.umPerPixelX,
+      worldHeight: pixelHeight * scale2.umPerPixelY
+    };
+  }
+  function worldFrameFromLoader(loader) {
+    var _a2;
+    const dims = loaderPixelSizeXY(loader);
+    return frameFromPixels((dims == null ? void 0 : dims.sizeX) ?? 0, (dims == null ? void 0 : dims.sizeY) ?? 0, parsePhysicalScale((_a2 = loader.metadata) == null ? void 0 : _a2.Pixels));
+  }
+  function worldFrameFromPixelCounts(width, height) {
+    return frameFromPixels(width, height, {
+      umPerPixelX: IDENTITY_UM,
+      umPerPixelY: IDENTITY_UM
+    });
+  }
+  function effectiveWorldFrame(published, docWidth, docHeight) {
+    if (published && published.pixelWidth > 0 && published.pixelHeight > 0) {
+      return published;
+    }
+    return worldFrameFromPixelCounts(docWidth, docHeight);
+  }
+  function layerModelMatrix(loader) {
+    const { umPerPixelX, umPerPixelY } = worldFrameFromLoader(loader);
+    return new Matrix4().scale([
+      umPerPixelX,
+      umPerPixelY,
+      1
+    ]);
+  }
+  function isIdentityScale(scale2) {
+    return scale2.umPerPixelX === 1 && scale2.umPerPixelY === 1;
+  }
+  function pixelViewRectFromWorld(rect, scale2) {
+    if (isIdentityScale(scale2)) return rect;
+    return {
+      minX: rect.minX / scale2.umPerPixelX,
+      maxX: rect.maxX / scale2.umPerPixelX,
+      minY: rect.minY / scale2.umPerPixelY,
+      maxY: rect.maxY / scale2.umPerPixelY
+    };
+  }
+  function viewStateToWorld(vs2, scale2) {
+    if (isIdentityScale(scale2)) return vs2;
+    const sx = scale2.umPerPixelX;
+    const sy = scale2.umPerPixelY;
+    return {
+      zoom: vs2.zoom - Math.log2(sx),
+      target: [
+        vs2.target[0] * sx,
+        vs2.target[1] * sy,
+        vs2.target[2]
+      ]
+    };
+  }
+  function viewStateToPixels(vs2, scale2) {
+    if (isIdentityScale(scale2)) return vs2;
+    const sx = scale2.umPerPixelX;
+    const sy = scale2.umPerPixelY;
+    return {
+      zoom: vs2.zoom + Math.log2(sx),
+      target: [
+        vs2.target[0] / sx,
+        vs2.target[1] / sy,
+        vs2.target[2]
+      ]
+    };
+  }
+  const SEGMENTS_PER_CIRCLE = 32;
+  function makeCircle(cx, cy, radiusWorld, segments = SEGMENTS_PER_CIRCLE) {
+    const points = [];
+    for (let i2 = 0; i2 <= segments; i2++) {
+      const angle2 = i2 / segments * 2 * Math.PI;
+      points.push([
+        cx + radiusWorld * Math.cos(angle2),
+        cy + radiusWorld * Math.sin(angle2)
+      ]);
+    }
+    return points;
+  }
+  let f$3 = class f {
+    constructor(t2, e2) {
+      this.next = null, this.key = t2, this.data = e2, this.left = null, this.right = null;
+    }
+  };
+  function d$3(n2, t2) {
+    return n2 > t2 ? 1 : n2 < t2 ? -1 : 0;
+  }
+  function u$5(n2, t2, e2) {
+    const r2 = new f$3(null, null);
+    let l2 = r2, i2 = r2;
+    for (; ; ) {
+      const o2 = e2(n2, t2.key);
+      if (o2 < 0) {
+        if (t2.left === null) break;
+        if (e2(n2, t2.left.key) < 0) {
+          const s2 = t2.left;
+          if (t2.left = s2.right, s2.right = t2, t2 = s2, t2.left === null) break;
+        }
+        i2.left = t2, i2 = t2, t2 = t2.left;
+      } else if (o2 > 0) {
+        if (t2.right === null) break;
+        if (e2(n2, t2.right.key) > 0) {
+          const s2 = t2.right;
+          if (t2.right = s2.left, s2.left = t2, t2 = s2, t2.right === null) break;
+        }
+        l2.right = t2, l2 = t2, t2 = t2.right;
+      } else break;
+    }
+    return l2.right = t2.left, i2.left = t2.right, t2.left = r2.right, t2.right = r2.left, t2;
+  }
+  function c$5(n2, t2, e2, r2) {
+    const l2 = new f$3(n2, t2);
+    if (e2 === null) return l2.left = l2.right = null, l2;
+    e2 = u$5(n2, e2, r2);
+    const i2 = r2(n2, e2.key);
+    return i2 < 0 ? (l2.left = e2.left, l2.right = e2, e2.left = null) : i2 >= 0 && (l2.right = e2.right, l2.left = e2, e2.right = null), l2;
+  }
+  function m$1(n2, t2, e2) {
+    let r2 = null, l2 = null;
+    if (t2) {
+      t2 = u$5(n2, t2, e2);
+      const i2 = e2(t2.key, n2);
+      i2 === 0 ? (r2 = t2.left, l2 = t2.right) : i2 < 0 ? (l2 = t2.right, t2.right = null, r2 = t2) : (r2 = t2.left, t2.left = null, l2 = t2);
+    }
+    return {
+      left: r2,
+      right: l2
+    };
+  }
+  function w$2(n2, t2, e2) {
+    return t2 === null ? n2 : (n2 === null || (t2 = u$5(n2.key, t2, e2), t2.left = n2), t2);
+  }
+  function _$3(n2, t2, e2, r2, l2) {
+    if (n2) {
+      r2(`${t2}${e2 ? "\u2514\u2500\u2500 " : "\u251C\u2500\u2500 "}${l2(n2)}
+`);
+      const i2 = t2 + (e2 ? "    " : "\u2502   ");
+      n2.left && _$3(n2.left, i2, false, r2, l2), n2.right && _$3(n2.right, i2, true, r2, l2);
+    }
+  }
+  class z {
+    constructor(t2 = d$3) {
+      this._root = null, this._size = 0, this._comparator = t2;
+    }
+    insert(t2, e2) {
+      return this._size++, this._root = c$5(t2, e2, this._root, this._comparator);
+    }
+    add(t2, e2) {
+      const r2 = new f$3(t2, e2);
+      this._root === null && (r2.left = r2.right = null, this._size++, this._root = r2);
+      const l2 = this._comparator, i2 = u$5(t2, this._root, l2), o2 = l2(t2, i2.key);
+      return o2 === 0 ? this._root = i2 : (o2 < 0 ? (r2.left = i2.left, r2.right = i2, i2.left = null) : o2 > 0 && (r2.right = i2.right, r2.left = i2, i2.right = null), this._size++, this._root = r2), this._root;
+    }
+    remove(t2) {
+      this._root = this._remove(t2, this._root, this._comparator);
+    }
+    _remove(t2, e2, r2) {
+      let l2;
+      return e2 === null ? null : (e2 = u$5(t2, e2, r2), r2(t2, e2.key) === 0 ? (e2.left === null ? l2 = e2.right : (l2 = u$5(t2, e2.left, r2), l2.right = e2.right), this._size--, l2) : e2);
+    }
+    pop() {
+      let t2 = this._root;
+      if (t2) {
+        for (; t2.left; ) t2 = t2.left;
+        return this._root = u$5(t2.key, this._root, this._comparator), this._root = this._remove(t2.key, this._root, this._comparator), {
+          key: t2.key,
+          data: t2.data
+        };
+      }
+      return null;
+    }
+    findStatic(t2) {
+      let e2 = this._root;
+      const r2 = this._comparator;
+      for (; e2; ) {
+        const l2 = r2(t2, e2.key);
+        if (l2 === 0) return e2;
+        l2 < 0 ? e2 = e2.left : e2 = e2.right;
+      }
+      return null;
+    }
+    find(t2) {
+      return this._root && (this._root = u$5(t2, this._root, this._comparator), this._comparator(t2, this._root.key) !== 0) ? null : this._root;
+    }
+    contains(t2) {
+      let e2 = this._root;
+      const r2 = this._comparator;
+      for (; e2; ) {
+        const l2 = r2(t2, e2.key);
+        if (l2 === 0) return true;
+        l2 < 0 ? e2 = e2.left : e2 = e2.right;
+      }
+      return false;
+    }
+    forEach(t2, e2) {
+      let r2 = this._root;
+      const l2 = [];
+      let i2 = false;
+      for (; !i2; ) r2 !== null ? (l2.push(r2), r2 = r2.left) : l2.length !== 0 ? (r2 = l2.pop(), t2.call(e2, r2), r2 = r2.right) : i2 = true;
+      return this;
+    }
+    range(t2, e2, r2, l2) {
+      const i2 = [], o2 = this._comparator;
+      let s2 = this._root, h2;
+      for (; i2.length !== 0 || s2; ) if (s2) i2.push(s2), s2 = s2.left;
+      else {
+        if (s2 = i2.pop(), h2 = o2(s2.key, e2), h2 > 0) break;
+        if (o2(s2.key, t2) >= 0 && r2.call(l2, s2)) return this;
+        s2 = s2.right;
+      }
+      return this;
+    }
+    keys() {
+      const t2 = [];
+      return this.forEach(({ key: e2 }) => {
+        t2.push(e2);
+      }), t2;
+    }
+    values() {
+      const t2 = [];
+      return this.forEach(({ data: e2 }) => {
+        t2.push(e2);
+      }), t2;
+    }
+    min() {
+      return this._root ? this.minNode(this._root).key : null;
+    }
+    max() {
+      return this._root ? this.maxNode(this._root).key : null;
+    }
+    minNode(t2 = this._root) {
+      if (t2) for (; t2.left; ) t2 = t2.left;
+      return t2;
+    }
+    maxNode(t2 = this._root) {
+      if (t2) for (; t2.right; ) t2 = t2.right;
+      return t2;
+    }
+    at(t2) {
+      let e2 = this._root, r2 = false, l2 = 0;
+      const i2 = [];
+      for (; !r2; ) if (e2) i2.push(e2), e2 = e2.left;
+      else if (i2.length > 0) {
+        if (e2 = i2.pop(), l2 === t2) return e2;
+        l2++, e2 = e2.right;
+      } else r2 = true;
+      return null;
+    }
+    next(t2) {
+      let e2 = this._root, r2 = null;
+      if (t2.right) {
+        for (r2 = t2.right; r2.left; ) r2 = r2.left;
+        return r2;
+      }
+      const l2 = this._comparator;
+      for (; e2; ) {
+        const i2 = l2(t2.key, e2.key);
+        if (i2 === 0) break;
+        i2 < 0 ? (r2 = e2, e2 = e2.left) : e2 = e2.right;
+      }
+      return r2;
+    }
+    prev(t2) {
+      let e2 = this._root, r2 = null;
+      if (t2.left !== null) {
+        for (r2 = t2.left; r2.right; ) r2 = r2.right;
+        return r2;
+      }
+      const l2 = this._comparator;
+      for (; e2; ) {
+        const i2 = l2(t2.key, e2.key);
+        if (i2 === 0) break;
+        i2 < 0 ? e2 = e2.left : (r2 = e2, e2 = e2.right);
+      }
+      return r2;
+    }
+    clear() {
+      return this._root = null, this._size = 0, this;
+    }
+    toList() {
+      return k(this._root);
+    }
+    load(t2, e2 = [], r2 = false) {
+      let l2 = t2.length;
+      const i2 = this._comparator;
+      if (r2 && g$1(t2, e2, 0, l2 - 1, i2), this._root === null) this._root = a$2(t2, e2, 0, l2), this._size = l2;
+      else {
+        const o2 = y$1(this.toList(), x(t2, e2), i2);
+        l2 = this._size + l2, this._root = p$2({
+          head: o2
+        }, 0, l2);
+      }
+      return this;
+    }
+    isEmpty() {
+      return this._root === null;
+    }
+    get size() {
+      return this._size;
+    }
+    get root() {
+      return this._root;
+    }
+    toString(t2 = (e2) => String(e2.key)) {
+      const e2 = [];
+      return _$3(this._root, "", true, (r2) => e2.push(r2), t2), e2.join("");
+    }
+    update(t2, e2, r2) {
+      const l2 = this._comparator;
+      let { left: i2, right: o2 } = m$1(t2, this._root, l2);
+      l2(t2, e2) < 0 ? o2 = c$5(e2, r2, o2, l2) : i2 = c$5(e2, r2, i2, l2), this._root = w$2(i2, o2, l2);
+    }
+    split(t2) {
+      return m$1(t2, this._root, this._comparator);
+    }
+    *[Symbol.iterator]() {
+      let t2 = this._root;
+      const e2 = [];
+      let r2 = false;
+      for (; !r2; ) t2 !== null ? (e2.push(t2), t2 = t2.left) : e2.length !== 0 ? (t2 = e2.pop(), yield t2, t2 = t2.right) : r2 = true;
+    }
+  }
+  function a$2(n2, t2, e2, r2) {
+    const l2 = r2 - e2;
+    if (l2 > 0) {
+      const i2 = e2 + Math.floor(l2 / 2), o2 = n2[i2], s2 = t2[i2], h2 = new f$3(o2, s2);
+      return h2.left = a$2(n2, t2, e2, i2), h2.right = a$2(n2, t2, i2 + 1, r2), h2;
+    }
+    return null;
+  }
+  function x(n2, t2) {
+    const e2 = new f$3(null, null);
+    let r2 = e2;
+    for (let l2 = 0; l2 < n2.length; l2++) r2 = r2.next = new f$3(n2[l2], t2[l2]);
+    return r2.next = null, e2.next;
+  }
+  function k(n2) {
+    let t2 = n2;
+    const e2 = [];
+    let r2 = false;
+    const l2 = new f$3(null, null);
+    let i2 = l2;
+    for (; !r2; ) t2 ? (e2.push(t2), t2 = t2.left) : e2.length > 0 ? (t2 = i2 = i2.next = e2.pop(), t2 = t2.right) : r2 = true;
+    return i2.next = null, l2.next;
+  }
+  function p$2(n2, t2, e2) {
+    const r2 = e2 - t2;
+    if (r2 > 0) {
+      const l2 = t2 + Math.floor(r2 / 2), i2 = p$2(n2, t2, l2), o2 = n2.head;
+      return o2.left = i2, n2.head = n2.head.next, o2.right = p$2(n2, l2 + 1, e2), o2;
+    }
+    return null;
+  }
+  function y$1(n2, t2, e2) {
+    const r2 = new f$3(null, null);
+    let l2 = r2, i2 = n2, o2 = t2;
+    for (; i2 !== null && o2 !== null; ) e2(i2.key, o2.key) < 0 ? (l2.next = i2, i2 = i2.next) : (l2.next = o2, o2 = o2.next), l2 = l2.next;
+    return i2 !== null ? l2.next = i2 : o2 !== null && (l2.next = o2), r2.next;
+  }
+  function g$1(n2, t2, e2, r2, l2) {
+    if (e2 >= r2) return;
+    const i2 = n2[e2 + r2 >> 1];
+    let o2 = e2 - 1, s2 = r2 + 1;
+    for (; ; ) {
+      do
+        o2++;
+      while (l2(n2[o2], i2) < 0);
+      do
+        s2--;
+      while (l2(n2[s2], i2) > 0);
+      if (o2 >= s2) break;
+      let h2 = n2[o2];
+      n2[o2] = n2[s2], n2[s2] = h2, h2 = t2[o2], t2[o2] = t2[s2], t2[s2] = h2;
+    }
+    g$1(n2, t2, e2, s2, l2), g$1(n2, t2, s2 + 1, r2, l2);
+  }
+  const epsilon$1 = 11102230246251565e-32;
+  const splitter = 134217729;
+  const resulterrbound = (3 + 8 * epsilon$1) * epsilon$1;
+  function sum$1(elen, e2, flen, f2, h2) {
+    let Q2, Qnew, hh2, bvirt;
+    let enow = e2[0];
+    let fnow = f2[0];
+    let eindex = 0;
+    let findex = 0;
+    if (fnow > enow === fnow > -enow) {
+      Q2 = enow;
+      enow = e2[++eindex];
+    } else {
+      Q2 = fnow;
+      fnow = f2[++findex];
+    }
+    let hindex = 0;
+    if (eindex < elen && findex < flen) {
+      if (fnow > enow === fnow > -enow) {
+        Qnew = enow + Q2;
+        hh2 = Q2 - (Qnew - enow);
+        enow = e2[++eindex];
+      } else {
+        Qnew = fnow + Q2;
+        hh2 = Q2 - (Qnew - fnow);
+        fnow = f2[++findex];
+      }
+      Q2 = Qnew;
+      if (hh2 !== 0) {
+        h2[hindex++] = hh2;
+      }
+      while (eindex < elen && findex < flen) {
+        if (fnow > enow === fnow > -enow) {
+          Qnew = Q2 + enow;
+          bvirt = Qnew - Q2;
+          hh2 = Q2 - (Qnew - bvirt) + (enow - bvirt);
+          enow = e2[++eindex];
+        } else {
+          Qnew = Q2 + fnow;
+          bvirt = Qnew - Q2;
+          hh2 = Q2 - (Qnew - bvirt) + (fnow - bvirt);
+          fnow = f2[++findex];
+        }
+        Q2 = Qnew;
+        if (hh2 !== 0) {
+          h2[hindex++] = hh2;
+        }
+      }
+    }
+    while (eindex < elen) {
+      Qnew = Q2 + enow;
+      bvirt = Qnew - Q2;
+      hh2 = Q2 - (Qnew - bvirt) + (enow - bvirt);
+      enow = e2[++eindex];
+      Q2 = Qnew;
+      if (hh2 !== 0) {
+        h2[hindex++] = hh2;
+      }
+    }
+    while (findex < flen) {
+      Qnew = Q2 + fnow;
+      bvirt = Qnew - Q2;
+      hh2 = Q2 - (Qnew - bvirt) + (fnow - bvirt);
+      fnow = f2[++findex];
+      Q2 = Qnew;
+      if (hh2 !== 0) {
+        h2[hindex++] = hh2;
+      }
+    }
+    if (Q2 !== 0 || hindex === 0) {
+      h2[hindex++] = Q2;
+    }
+    return hindex;
+  }
+  function estimate(elen, e2) {
+    let Q2 = e2[0];
+    for (let i2 = 1; i2 < elen; i2++) Q2 += e2[i2];
+    return Q2;
+  }
+  function vec(n2) {
+    return new Float64Array(n2);
+  }
+  const ccwerrboundA = (3 + 16 * epsilon$1) * epsilon$1;
+  const ccwerrboundB = (2 + 12 * epsilon$1) * epsilon$1;
+  const ccwerrboundC = (9 + 64 * epsilon$1) * epsilon$1 * epsilon$1;
+  const B$1 = vec(4);
+  const C1 = vec(8);
+  const C2 = vec(12);
+  const D$1 = vec(16);
+  const u$4 = vec(4);
+  function orient2dadapt(ax, ay, bx, by, cx, cy, detsum) {
+    let acxtail, acytail, bcxtail, bcytail;
+    let bvirt, c2, ahi, alo, bhi, blo, _i2, _j, _0, s1, s0, t1, t0, u3;
+    const acx = ax - cx;
+    const bcx = bx - cx;
+    const acy = ay - cy;
+    const bcy = by - cy;
+    s1 = acx * bcy;
+    c2 = splitter * acx;
+    ahi = c2 - (c2 - acx);
+    alo = acx - ahi;
+    c2 = splitter * bcy;
+    bhi = c2 - (c2 - bcy);
+    blo = bcy - bhi;
+    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
+    t1 = acy * bcx;
+    c2 = splitter * acy;
+    ahi = c2 - (c2 - acy);
+    alo = acy - ahi;
+    c2 = splitter * bcx;
+    bhi = c2 - (c2 - bcx);
+    blo = bcx - bhi;
+    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
+    _i2 = s0 - t0;
+    bvirt = s0 - _i2;
+    B$1[0] = s0 - (_i2 + bvirt) + (bvirt - t0);
+    _j = s1 + _i2;
+    bvirt = _j - s1;
+    _0 = s1 - (_j - bvirt) + (_i2 - bvirt);
+    _i2 = _0 - t1;
+    bvirt = _0 - _i2;
+    B$1[1] = _0 - (_i2 + bvirt) + (bvirt - t1);
+    u3 = _j + _i2;
+    bvirt = u3 - _j;
+    B$1[2] = _j - (u3 - bvirt) + (_i2 - bvirt);
+    B$1[3] = u3;
+    let det = estimate(4, B$1);
+    let errbound = ccwerrboundB * detsum;
+    if (det >= errbound || -det >= errbound) {
+      return det;
+    }
+    bvirt = ax - acx;
+    acxtail = ax - (acx + bvirt) + (bvirt - cx);
+    bvirt = bx - bcx;
+    bcxtail = bx - (bcx + bvirt) + (bvirt - cx);
+    bvirt = ay - acy;
+    acytail = ay - (acy + bvirt) + (bvirt - cy);
+    bvirt = by - bcy;
+    bcytail = by - (bcy + bvirt) + (bvirt - cy);
+    if (acxtail === 0 && acytail === 0 && bcxtail === 0 && bcytail === 0) {
+      return det;
+    }
+    errbound = ccwerrboundC * detsum + resulterrbound * Math.abs(det);
+    det += acx * bcytail + bcy * acxtail - (acy * bcxtail + bcx * acytail);
+    if (det >= errbound || -det >= errbound) return det;
+    s1 = acxtail * bcy;
+    c2 = splitter * acxtail;
+    ahi = c2 - (c2 - acxtail);
+    alo = acxtail - ahi;
+    c2 = splitter * bcy;
+    bhi = c2 - (c2 - bcy);
+    blo = bcy - bhi;
+    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
+    t1 = acytail * bcx;
+    c2 = splitter * acytail;
+    ahi = c2 - (c2 - acytail);
+    alo = acytail - ahi;
+    c2 = splitter * bcx;
+    bhi = c2 - (c2 - bcx);
+    blo = bcx - bhi;
+    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
+    _i2 = s0 - t0;
+    bvirt = s0 - _i2;
+    u$4[0] = s0 - (_i2 + bvirt) + (bvirt - t0);
+    _j = s1 + _i2;
+    bvirt = _j - s1;
+    _0 = s1 - (_j - bvirt) + (_i2 - bvirt);
+    _i2 = _0 - t1;
+    bvirt = _0 - _i2;
+    u$4[1] = _0 - (_i2 + bvirt) + (bvirt - t1);
+    u3 = _j + _i2;
+    bvirt = u3 - _j;
+    u$4[2] = _j - (u3 - bvirt) + (_i2 - bvirt);
+    u$4[3] = u3;
+    const C1len = sum$1(4, B$1, 4, u$4, C1);
+    s1 = acx * bcytail;
+    c2 = splitter * acx;
+    ahi = c2 - (c2 - acx);
+    alo = acx - ahi;
+    c2 = splitter * bcytail;
+    bhi = c2 - (c2 - bcytail);
+    blo = bcytail - bhi;
+    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
+    t1 = acy * bcxtail;
+    c2 = splitter * acy;
+    ahi = c2 - (c2 - acy);
+    alo = acy - ahi;
+    c2 = splitter * bcxtail;
+    bhi = c2 - (c2 - bcxtail);
+    blo = bcxtail - bhi;
+    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
+    _i2 = s0 - t0;
+    bvirt = s0 - _i2;
+    u$4[0] = s0 - (_i2 + bvirt) + (bvirt - t0);
+    _j = s1 + _i2;
+    bvirt = _j - s1;
+    _0 = s1 - (_j - bvirt) + (_i2 - bvirt);
+    _i2 = _0 - t1;
+    bvirt = _0 - _i2;
+    u$4[1] = _0 - (_i2 + bvirt) + (bvirt - t1);
+    u3 = _j + _i2;
+    bvirt = u3 - _j;
+    u$4[2] = _j - (u3 - bvirt) + (_i2 - bvirt);
+    u$4[3] = u3;
+    const C2len = sum$1(C1len, C1, 4, u$4, C2);
+    s1 = acxtail * bcytail;
+    c2 = splitter * acxtail;
+    ahi = c2 - (c2 - acxtail);
+    alo = acxtail - ahi;
+    c2 = splitter * bcytail;
+    bhi = c2 - (c2 - bcytail);
+    blo = bcytail - bhi;
+    s0 = alo * blo - (s1 - ahi * bhi - alo * bhi - ahi * blo);
+    t1 = acytail * bcxtail;
+    c2 = splitter * acytail;
+    ahi = c2 - (c2 - acytail);
+    alo = acytail - ahi;
+    c2 = splitter * bcxtail;
+    bhi = c2 - (c2 - bcxtail);
+    blo = bcxtail - bhi;
+    t0 = alo * blo - (t1 - ahi * bhi - alo * bhi - ahi * blo);
+    _i2 = s0 - t0;
+    bvirt = s0 - _i2;
+    u$4[0] = s0 - (_i2 + bvirt) + (bvirt - t0);
+    _j = s1 + _i2;
+    bvirt = _j - s1;
+    _0 = s1 - (_j - bvirt) + (_i2 - bvirt);
+    _i2 = _0 - t1;
+    bvirt = _0 - _i2;
+    u$4[1] = _0 - (_i2 + bvirt) + (bvirt - t1);
+    u3 = _j + _i2;
+    bvirt = u3 - _j;
+    u$4[2] = _j - (u3 - bvirt) + (_i2 - bvirt);
+    u$4[3] = u3;
+    const Dlen = sum$1(C2len, C2, 4, u$4, D$1);
+    return D$1[Dlen - 1];
+  }
+  function orient2d(ax, ay, bx, by, cx, cy) {
+    const detleft = (ay - cy) * (bx - cx);
+    const detright = (ax - cx) * (by - cy);
+    const det = detleft - detright;
+    const detsum = Math.abs(detleft + detright);
+    if (Math.abs(det) >= ccwerrboundA * detsum) return det;
+    return -orient2dadapt(ax, ay, bx, by, cx, cy, detsum);
+  }
+  var define_process_env_default = {};
+  const isInBbox = (bbox, point2) => {
+    return bbox.ll.x <= point2.x && point2.x <= bbox.ur.x && bbox.ll.y <= point2.y && point2.y <= bbox.ur.y;
+  };
+  const getBboxOverlap = (b1, b2) => {
+    if (b2.ur.x < b1.ll.x || b1.ur.x < b2.ll.x || b2.ur.y < b1.ll.y || b1.ur.y < b2.ll.y) return null;
+    const lowerX = b1.ll.x < b2.ll.x ? b2.ll.x : b1.ll.x;
+    const upperX = b1.ur.x < b2.ur.x ? b1.ur.x : b2.ur.x;
+    const lowerY = b1.ll.y < b2.ll.y ? b2.ll.y : b1.ll.y;
+    const upperY = b1.ur.y < b2.ur.y ? b1.ur.y : b2.ur.y;
+    return {
+      ll: {
+        x: lowerX,
+        y: lowerY
+      },
+      ur: {
+        x: upperX,
+        y: upperY
+      }
+    };
+  };
+  let epsilon = Number.EPSILON;
+  if (epsilon === void 0) epsilon = Math.pow(2, -52);
+  const EPSILON_SQ = epsilon * epsilon;
+  const cmp$1 = (a2, b2) => {
+    if (-epsilon < a2 && a2 < epsilon) {
+      if (-epsilon < b2 && b2 < epsilon) {
+        return 0;
+      }
+    }
+    const ab2 = a2 - b2;
+    if (ab2 * ab2 < EPSILON_SQ * a2 * b2) {
+      return 0;
+    }
+    return a2 < b2 ? -1 : 1;
+  };
+  class PtRounder {
+    constructor() {
+      this.reset();
+    }
+    reset() {
+      this.xRounder = new CoordRounder();
+      this.yRounder = new CoordRounder();
+    }
+    round(x2, y2) {
+      return {
+        x: this.xRounder.round(x2),
+        y: this.yRounder.round(y2)
+      };
+    }
+  }
+  class CoordRounder {
+    constructor() {
+      this.tree = new z();
+      this.round(0);
+    }
+    round(coord) {
+      const node2 = this.tree.add(coord);
+      const prevNode = this.tree.prev(node2);
+      if (prevNode !== null && cmp$1(node2.key, prevNode.key) === 0) {
+        this.tree.remove(coord);
+        return prevNode.key;
+      }
+      const nextNode = this.tree.next(node2);
+      if (nextNode !== null && cmp$1(node2.key, nextNode.key) === 0) {
+        this.tree.remove(coord);
+        return nextNode.key;
+      }
+      return coord;
+    }
+  }
+  const rounder = new PtRounder();
+  const crossProduct = (a2, b2) => a2.x * b2.y - a2.y * b2.x;
+  const dotProduct = (a2, b2) => a2.x * b2.x + a2.y * b2.y;
+  const compareVectorAngles = (basePt, endPt1, endPt2) => {
+    const res = orient2d(basePt.x, basePt.y, endPt1.x, endPt1.y, endPt2.x, endPt2.y);
+    if (res > 0) return -1;
+    if (res < 0) return 1;
+    return 0;
+  };
+  const length$1 = (v2) => Math.sqrt(dotProduct(v2, v2));
+  const sineOfAngle = (pShared, pBase, pAngle) => {
+    const vBase = {
+      x: pBase.x - pShared.x,
+      y: pBase.y - pShared.y
+    };
+    const vAngle = {
+      x: pAngle.x - pShared.x,
+      y: pAngle.y - pShared.y
+    };
+    return crossProduct(vAngle, vBase) / length$1(vAngle) / length$1(vBase);
+  };
+  const cosineOfAngle = (pShared, pBase, pAngle) => {
+    const vBase = {
+      x: pBase.x - pShared.x,
+      y: pBase.y - pShared.y
+    };
+    const vAngle = {
+      x: pAngle.x - pShared.x,
+      y: pAngle.y - pShared.y
+    };
+    return dotProduct(vAngle, vBase) / length$1(vAngle) / length$1(vBase);
+  };
+  const horizontalIntersection = (pt, v2, y2) => {
+    if (v2.y === 0) return null;
+    return {
+      x: pt.x + v2.x / v2.y * (y2 - pt.y),
+      y: y2
+    };
+  };
+  const verticalIntersection = (pt, v2, x2) => {
+    if (v2.x === 0) return null;
+    return {
+      x: x2,
+      y: pt.y + v2.y / v2.x * (x2 - pt.x)
+    };
+  };
+  const intersection$1 = (pt1, v1, pt2, v2) => {
+    if (v1.x === 0) return verticalIntersection(pt2, v2, pt1.x);
+    if (v2.x === 0) return verticalIntersection(pt1, v1, pt2.x);
+    if (v1.y === 0) return horizontalIntersection(pt2, v2, pt1.y);
+    if (v2.y === 0) return horizontalIntersection(pt1, v1, pt2.y);
+    const kross = crossProduct(v1, v2);
+    if (kross == 0) return null;
+    const ve2 = {
+      x: pt2.x - pt1.x,
+      y: pt2.y - pt1.y
+    };
+    const d1 = crossProduct(ve2, v1) / kross;
+    const d2 = crossProduct(ve2, v2) / kross;
+    const x1 = pt1.x + d2 * v1.x, x2 = pt2.x + d1 * v2.x;
+    const y1 = pt1.y + d2 * v1.y, y2 = pt2.y + d1 * v2.y;
+    const x3 = (x1 + x2) / 2;
+    const y3 = (y1 + y2) / 2;
+    return {
+      x: x3,
+      y: y3
+    };
+  };
+  class SweepEvent {
+    static compare(a2, b2) {
+      const ptCmp = SweepEvent.comparePoints(a2.point, b2.point);
+      if (ptCmp !== 0) return ptCmp;
+      if (a2.point !== b2.point) a2.link(b2);
+      if (a2.isLeft !== b2.isLeft) return a2.isLeft ? 1 : -1;
+      return Segment.compare(a2.segment, b2.segment);
+    }
+    static comparePoints(aPt, bPt) {
+      if (aPt.x < bPt.x) return -1;
+      if (aPt.x > bPt.x) return 1;
+      if (aPt.y < bPt.y) return -1;
+      if (aPt.y > bPt.y) return 1;
+      return 0;
+    }
+    constructor(point2, isLeft) {
+      if (point2.events === void 0) point2.events = [
+        this
+      ];
+      else point2.events.push(this);
+      this.point = point2;
+      this.isLeft = isLeft;
+    }
+    link(other) {
+      if (other.point === this.point) {
+        throw new Error("Tried to link already linked events");
+      }
+      const otherEvents = other.point.events;
+      for (let i2 = 0, iMax = otherEvents.length; i2 < iMax; i2++) {
+        const evt = otherEvents[i2];
+        this.point.events.push(evt);
+        evt.point = this.point;
+      }
+      this.checkForConsuming();
+    }
+    checkForConsuming() {
+      const numEvents = this.point.events.length;
+      for (let i2 = 0; i2 < numEvents; i2++) {
+        const evt1 = this.point.events[i2];
+        if (evt1.segment.consumedBy !== void 0) continue;
+        for (let j2 = i2 + 1; j2 < numEvents; j2++) {
+          const evt2 = this.point.events[j2];
+          if (evt2.consumedBy !== void 0) continue;
+          if (evt1.otherSE.point.events !== evt2.otherSE.point.events) continue;
+          evt1.segment.consume(evt2.segment);
+        }
+      }
+    }
+    getAvailableLinkedEvents() {
+      const events = [];
+      for (let i2 = 0, iMax = this.point.events.length; i2 < iMax; i2++) {
+        const evt = this.point.events[i2];
+        if (evt !== this && !evt.segment.ringOut && evt.segment.isInResult()) {
+          events.push(evt);
+        }
+      }
+      return events;
+    }
+    getLeftmostComparator(baseEvent) {
+      const cache2 = /* @__PURE__ */ new Map();
+      const fillCache = (linkedEvent) => {
+        const nextEvent = linkedEvent.otherSE;
+        cache2.set(linkedEvent, {
+          sine: sineOfAngle(this.point, baseEvent.point, nextEvent.point),
+          cosine: cosineOfAngle(this.point, baseEvent.point, nextEvent.point)
+        });
+      };
+      return (a2, b2) => {
+        if (!cache2.has(a2)) fillCache(a2);
+        if (!cache2.has(b2)) fillCache(b2);
+        const { sine: asine, cosine: acosine } = cache2.get(a2);
+        const { sine: bsine, cosine: bcosine } = cache2.get(b2);
+        if (asine >= 0 && bsine >= 0) {
+          if (acosine < bcosine) return 1;
+          if (acosine > bcosine) return -1;
+          return 0;
+        }
+        if (asine < 0 && bsine < 0) {
+          if (acosine < bcosine) return -1;
+          if (acosine > bcosine) return 1;
+          return 0;
+        }
+        if (bsine < asine) return -1;
+        if (bsine > asine) return 1;
+        return 0;
+      };
+    }
+  }
+  let segmentId = 0;
+  class Segment {
+    static compare(a2, b2) {
+      const alx = a2.leftSE.point.x;
+      const blx = b2.leftSE.point.x;
+      const arx = a2.rightSE.point.x;
+      const brx = b2.rightSE.point.x;
+      if (brx < alx) return 1;
+      if (arx < blx) return -1;
+      const aly = a2.leftSE.point.y;
+      const bly = b2.leftSE.point.y;
+      const ary = a2.rightSE.point.y;
+      const bry = b2.rightSE.point.y;
+      if (alx < blx) {
+        if (bly < aly && bly < ary) return 1;
+        if (bly > aly && bly > ary) return -1;
+        const aCmpBLeft = a2.comparePoint(b2.leftSE.point);
+        if (aCmpBLeft < 0) return 1;
+        if (aCmpBLeft > 0) return -1;
+        const bCmpARight = b2.comparePoint(a2.rightSE.point);
+        if (bCmpARight !== 0) return bCmpARight;
+        return -1;
+      }
+      if (alx > blx) {
+        if (aly < bly && aly < bry) return -1;
+        if (aly > bly && aly > bry) return 1;
+        const bCmpALeft = b2.comparePoint(a2.leftSE.point);
+        if (bCmpALeft !== 0) return bCmpALeft;
+        const aCmpBRight = a2.comparePoint(b2.rightSE.point);
+        if (aCmpBRight < 0) return 1;
+        if (aCmpBRight > 0) return -1;
+        return 1;
+      }
+      if (aly < bly) return -1;
+      if (aly > bly) return 1;
+      if (arx < brx) {
+        const bCmpARight = b2.comparePoint(a2.rightSE.point);
+        if (bCmpARight !== 0) return bCmpARight;
+      }
+      if (arx > brx) {
+        const aCmpBRight = a2.comparePoint(b2.rightSE.point);
+        if (aCmpBRight < 0) return 1;
+        if (aCmpBRight > 0) return -1;
+      }
+      if (arx !== brx) {
+        const ay = ary - aly;
+        const ax = arx - alx;
+        const by = bry - bly;
+        const bx = brx - blx;
+        if (ay > ax && by < bx) return 1;
+        if (ay < ax && by > bx) return -1;
+      }
+      if (arx > brx) return 1;
+      if (arx < brx) return -1;
+      if (ary < bry) return -1;
+      if (ary > bry) return 1;
+      if (a2.id < b2.id) return -1;
+      if (a2.id > b2.id) return 1;
+      return 0;
+    }
+    constructor(leftSE, rightSE, rings, windings) {
+      this.id = ++segmentId;
+      this.leftSE = leftSE;
+      leftSE.segment = this;
+      leftSE.otherSE = rightSE;
+      this.rightSE = rightSE;
+      rightSE.segment = this;
+      rightSE.otherSE = leftSE;
+      this.rings = rings;
+      this.windings = windings;
+    }
+    static fromRing(pt1, pt2, ring) {
+      let leftPt, rightPt, winding;
+      const cmpPts = SweepEvent.comparePoints(pt1, pt2);
+      if (cmpPts < 0) {
+        leftPt = pt1;
+        rightPt = pt2;
+        winding = 1;
+      } else if (cmpPts > 0) {
+        leftPt = pt2;
+        rightPt = pt1;
+        winding = -1;
+      } else throw new Error(`Tried to create degenerate segment at [${pt1.x}, ${pt1.y}]`);
+      const leftSE = new SweepEvent(leftPt, true);
+      const rightSE = new SweepEvent(rightPt, false);
+      return new Segment(leftSE, rightSE, [
+        ring
+      ], [
+        winding
+      ]);
+    }
+    replaceRightSE(newRightSE) {
+      this.rightSE = newRightSE;
+      this.rightSE.segment = this;
+      this.rightSE.otherSE = this.leftSE;
+      this.leftSE.otherSE = this.rightSE;
+    }
+    bbox() {
+      const y1 = this.leftSE.point.y;
+      const y2 = this.rightSE.point.y;
+      return {
+        ll: {
+          x: this.leftSE.point.x,
+          y: y1 < y2 ? y1 : y2
+        },
+        ur: {
+          x: this.rightSE.point.x,
+          y: y1 > y2 ? y1 : y2
+        }
+      };
+    }
+    vector() {
+      return {
+        x: this.rightSE.point.x - this.leftSE.point.x,
+        y: this.rightSE.point.y - this.leftSE.point.y
+      };
+    }
+    isAnEndpoint(pt) {
+      return pt.x === this.leftSE.point.x && pt.y === this.leftSE.point.y || pt.x === this.rightSE.point.x && pt.y === this.rightSE.point.y;
+    }
+    comparePoint(point2) {
+      if (this.isAnEndpoint(point2)) return 0;
+      const lPt = this.leftSE.point;
+      const rPt = this.rightSE.point;
+      const v2 = this.vector();
+      if (lPt.x === rPt.x) {
+        if (point2.x === lPt.x) return 0;
+        return point2.x < lPt.x ? 1 : -1;
+      }
+      const yDist = (point2.y - lPt.y) / v2.y;
+      const xFromYDist = lPt.x + yDist * v2.x;
+      if (point2.x === xFromYDist) return 0;
+      const xDist = (point2.x - lPt.x) / v2.x;
+      const yFromXDist = lPt.y + xDist * v2.y;
+      if (point2.y === yFromXDist) return 0;
+      return point2.y < yFromXDist ? -1 : 1;
+    }
+    getIntersection(other) {
+      const tBbox = this.bbox();
+      const oBbox = other.bbox();
+      const bboxOverlap = getBboxOverlap(tBbox, oBbox);
+      if (bboxOverlap === null) return null;
+      const tlp = this.leftSE.point;
+      const trp = this.rightSE.point;
+      const olp = other.leftSE.point;
+      const orp = other.rightSE.point;
+      const touchesOtherLSE = isInBbox(tBbox, olp) && this.comparePoint(olp) === 0;
+      const touchesThisLSE = isInBbox(oBbox, tlp) && other.comparePoint(tlp) === 0;
+      const touchesOtherRSE = isInBbox(tBbox, orp) && this.comparePoint(orp) === 0;
+      const touchesThisRSE = isInBbox(oBbox, trp) && other.comparePoint(trp) === 0;
+      if (touchesThisLSE && touchesOtherLSE) {
+        if (touchesThisRSE && !touchesOtherRSE) return trp;
+        if (!touchesThisRSE && touchesOtherRSE) return orp;
+        return null;
+      }
+      if (touchesThisLSE) {
+        if (touchesOtherRSE) {
+          if (tlp.x === orp.x && tlp.y === orp.y) return null;
+        }
+        return tlp;
+      }
+      if (touchesOtherLSE) {
+        if (touchesThisRSE) {
+          if (trp.x === olp.x && trp.y === olp.y) return null;
+        }
+        return olp;
+      }
+      if (touchesThisRSE && touchesOtherRSE) return null;
+      if (touchesThisRSE) return trp;
+      if (touchesOtherRSE) return orp;
+      const pt = intersection$1(tlp, this.vector(), olp, other.vector());
+      if (pt === null) return null;
+      if (!isInBbox(bboxOverlap, pt)) return null;
+      return rounder.round(pt.x, pt.y);
+    }
+    split(point2) {
+      const newEvents = [];
+      const alreadyLinked = point2.events !== void 0;
+      const newLeftSE = new SweepEvent(point2, true);
+      const newRightSE = new SweepEvent(point2, false);
+      const oldRightSE = this.rightSE;
+      this.replaceRightSE(newRightSE);
+      newEvents.push(newRightSE);
+      newEvents.push(newLeftSE);
+      const newSeg = new Segment(newLeftSE, oldRightSE, this.rings.slice(), this.windings.slice());
+      if (SweepEvent.comparePoints(newSeg.leftSE.point, newSeg.rightSE.point) > 0) {
+        newSeg.swapEvents();
+      }
+      if (SweepEvent.comparePoints(this.leftSE.point, this.rightSE.point) > 0) {
+        this.swapEvents();
+      }
+      if (alreadyLinked) {
+        newLeftSE.checkForConsuming();
+        newRightSE.checkForConsuming();
+      }
+      return newEvents;
+    }
+    swapEvents() {
+      const tmpEvt = this.rightSE;
+      this.rightSE = this.leftSE;
+      this.leftSE = tmpEvt;
+      this.leftSE.isLeft = true;
+      this.rightSE.isLeft = false;
+      for (let i2 = 0, iMax = this.windings.length; i2 < iMax; i2++) {
+        this.windings[i2] *= -1;
+      }
+    }
+    consume(other) {
+      let consumer = this;
+      let consumee = other;
+      while (consumer.consumedBy) consumer = consumer.consumedBy;
+      while (consumee.consumedBy) consumee = consumee.consumedBy;
+      const cmp2 = Segment.compare(consumer, consumee);
+      if (cmp2 === 0) return;
+      if (cmp2 > 0) {
+        const tmp = consumer;
+        consumer = consumee;
+        consumee = tmp;
+      }
+      if (consumer.prev === consumee) {
+        const tmp = consumer;
+        consumer = consumee;
+        consumee = tmp;
+      }
+      for (let i2 = 0, iMax = consumee.rings.length; i2 < iMax; i2++) {
+        const ring = consumee.rings[i2];
+        const winding = consumee.windings[i2];
+        const index2 = consumer.rings.indexOf(ring);
+        if (index2 === -1) {
+          consumer.rings.push(ring);
+          consumer.windings.push(winding);
+        } else consumer.windings[index2] += winding;
+      }
+      consumee.rings = null;
+      consumee.windings = null;
+      consumee.consumedBy = consumer;
+      consumee.leftSE.consumedBy = consumer.leftSE;
+      consumee.rightSE.consumedBy = consumer.rightSE;
+    }
+    prevInResult() {
+      if (this._prevInResult !== void 0) return this._prevInResult;
+      if (!this.prev) this._prevInResult = null;
+      else if (this.prev.isInResult()) this._prevInResult = this.prev;
+      else this._prevInResult = this.prev.prevInResult();
+      return this._prevInResult;
+    }
+    beforeState() {
+      if (this._beforeState !== void 0) return this._beforeState;
+      if (!this.prev) this._beforeState = {
+        rings: [],
+        windings: [],
+        multiPolys: []
+      };
+      else {
+        const seg = this.prev.consumedBy || this.prev;
+        this._beforeState = seg.afterState();
+      }
+      return this._beforeState;
+    }
+    afterState() {
+      if (this._afterState !== void 0) return this._afterState;
+      const beforeState = this.beforeState();
+      this._afterState = {
+        rings: beforeState.rings.slice(0),
+        windings: beforeState.windings.slice(0),
+        multiPolys: []
+      };
+      const ringsAfter = this._afterState.rings;
+      const windingsAfter = this._afterState.windings;
+      const mpsAfter = this._afterState.multiPolys;
+      for (let i2 = 0, iMax = this.rings.length; i2 < iMax; i2++) {
+        const ring = this.rings[i2];
+        const winding = this.windings[i2];
+        const index2 = ringsAfter.indexOf(ring);
+        if (index2 === -1) {
+          ringsAfter.push(ring);
+          windingsAfter.push(winding);
+        } else windingsAfter[index2] += winding;
+      }
+      const polysAfter = [];
+      const polysExclude = [];
+      for (let i2 = 0, iMax = ringsAfter.length; i2 < iMax; i2++) {
+        if (windingsAfter[i2] === 0) continue;
+        const ring = ringsAfter[i2];
+        const poly = ring.poly;
+        if (polysExclude.indexOf(poly) !== -1) continue;
+        if (ring.isExterior) polysAfter.push(poly);
+        else {
+          if (polysExclude.indexOf(poly) === -1) polysExclude.push(poly);
+          const index2 = polysAfter.indexOf(ring.poly);
+          if (index2 !== -1) polysAfter.splice(index2, 1);
+        }
+      }
+      for (let i2 = 0, iMax = polysAfter.length; i2 < iMax; i2++) {
+        const mp = polysAfter[i2].multiPoly;
+        if (mpsAfter.indexOf(mp) === -1) mpsAfter.push(mp);
+      }
+      return this._afterState;
+    }
+    isInResult() {
+      if (this.consumedBy) return false;
+      if (this._isInResult !== void 0) return this._isInResult;
+      const mpsBefore = this.beforeState().multiPolys;
+      const mpsAfter = this.afterState().multiPolys;
+      switch (operation.type) {
+        case "union": {
+          const noBefores = mpsBefore.length === 0;
+          const noAfters = mpsAfter.length === 0;
+          this._isInResult = noBefores !== noAfters;
+          break;
+        }
+        case "intersection": {
+          let least;
+          let most;
+          if (mpsBefore.length < mpsAfter.length) {
+            least = mpsBefore.length;
+            most = mpsAfter.length;
+          } else {
+            least = mpsAfter.length;
+            most = mpsBefore.length;
+          }
+          this._isInResult = most === operation.numMultiPolys && least < most;
+          break;
+        }
+        case "xor": {
+          const diff2 = Math.abs(mpsBefore.length - mpsAfter.length);
+          this._isInResult = diff2 % 2 === 1;
+          break;
+        }
+        case "difference": {
+          const isJustSubject = (mps) => mps.length === 1 && mps[0].isSubject;
+          this._isInResult = isJustSubject(mpsBefore) !== isJustSubject(mpsAfter);
+          break;
+        }
+        default:
+          throw new Error(`Unrecognized operation type found ${operation.type}`);
+      }
+      return this._isInResult;
+    }
+  }
+  class RingIn {
+    constructor(geomRing, poly, isExterior) {
+      if (!Array.isArray(geomRing) || geomRing.length === 0) {
+        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
+      }
+      this.poly = poly;
+      this.isExterior = isExterior;
+      this.segments = [];
+      if (typeof geomRing[0][0] !== "number" || typeof geomRing[0][1] !== "number") {
+        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
+      }
+      const firstPoint = rounder.round(geomRing[0][0], geomRing[0][1]);
+      this.bbox = {
+        ll: {
+          x: firstPoint.x,
+          y: firstPoint.y
+        },
+        ur: {
+          x: firstPoint.x,
+          y: firstPoint.y
+        }
+      };
+      let prevPoint = firstPoint;
+      for (let i2 = 1, iMax = geomRing.length; i2 < iMax; i2++) {
+        if (typeof geomRing[i2][0] !== "number" || typeof geomRing[i2][1] !== "number") {
+          throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
+        }
+        let point2 = rounder.round(geomRing[i2][0], geomRing[i2][1]);
+        if (point2.x === prevPoint.x && point2.y === prevPoint.y) continue;
+        this.segments.push(Segment.fromRing(prevPoint, point2, this));
+        if (point2.x < this.bbox.ll.x) this.bbox.ll.x = point2.x;
+        if (point2.y < this.bbox.ll.y) this.bbox.ll.y = point2.y;
+        if (point2.x > this.bbox.ur.x) this.bbox.ur.x = point2.x;
+        if (point2.y > this.bbox.ur.y) this.bbox.ur.y = point2.y;
+        prevPoint = point2;
+      }
+      if (firstPoint.x !== prevPoint.x || firstPoint.y !== prevPoint.y) {
+        this.segments.push(Segment.fromRing(prevPoint, firstPoint, this));
+      }
+    }
+    getSweepEvents() {
+      const sweepEvents = [];
+      for (let i2 = 0, iMax = this.segments.length; i2 < iMax; i2++) {
+        const segment = this.segments[i2];
+        sweepEvents.push(segment.leftSE);
+        sweepEvents.push(segment.rightSE);
+      }
+      return sweepEvents;
+    }
+  }
+  class PolyIn {
+    constructor(geomPoly, multiPoly) {
+      if (!Array.isArray(geomPoly)) {
+        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
+      }
+      this.exteriorRing = new RingIn(geomPoly[0], this, true);
+      this.bbox = {
+        ll: {
+          x: this.exteriorRing.bbox.ll.x,
+          y: this.exteriorRing.bbox.ll.y
+        },
+        ur: {
+          x: this.exteriorRing.bbox.ur.x,
+          y: this.exteriorRing.bbox.ur.y
+        }
+      };
+      this.interiorRings = [];
+      for (let i2 = 1, iMax = geomPoly.length; i2 < iMax; i2++) {
+        const ring = new RingIn(geomPoly[i2], this, false);
+        if (ring.bbox.ll.x < this.bbox.ll.x) this.bbox.ll.x = ring.bbox.ll.x;
+        if (ring.bbox.ll.y < this.bbox.ll.y) this.bbox.ll.y = ring.bbox.ll.y;
+        if (ring.bbox.ur.x > this.bbox.ur.x) this.bbox.ur.x = ring.bbox.ur.x;
+        if (ring.bbox.ur.y > this.bbox.ur.y) this.bbox.ur.y = ring.bbox.ur.y;
+        this.interiorRings.push(ring);
+      }
+      this.multiPoly = multiPoly;
+    }
+    getSweepEvents() {
+      const sweepEvents = this.exteriorRing.getSweepEvents();
+      for (let i2 = 0, iMax = this.interiorRings.length; i2 < iMax; i2++) {
+        const ringSweepEvents = this.interiorRings[i2].getSweepEvents();
+        for (let j2 = 0, jMax = ringSweepEvents.length; j2 < jMax; j2++) {
+          sweepEvents.push(ringSweepEvents[j2]);
+        }
+      }
+      return sweepEvents;
+    }
+  }
+  class MultiPolyIn {
+    constructor(geom, isSubject) {
+      if (!Array.isArray(geom)) {
+        throw new Error("Input geometry is not a valid Polygon or MultiPolygon");
+      }
+      try {
+        if (typeof geom[0][0][0] === "number") geom = [
+          geom
+        ];
+      } catch (ex) {
+      }
+      this.polys = [];
+      this.bbox = {
+        ll: {
+          x: Number.POSITIVE_INFINITY,
+          y: Number.POSITIVE_INFINITY
+        },
+        ur: {
+          x: Number.NEGATIVE_INFINITY,
+          y: Number.NEGATIVE_INFINITY
+        }
+      };
+      for (let i2 = 0, iMax = geom.length; i2 < iMax; i2++) {
+        const poly = new PolyIn(geom[i2], this);
+        if (poly.bbox.ll.x < this.bbox.ll.x) this.bbox.ll.x = poly.bbox.ll.x;
+        if (poly.bbox.ll.y < this.bbox.ll.y) this.bbox.ll.y = poly.bbox.ll.y;
+        if (poly.bbox.ur.x > this.bbox.ur.x) this.bbox.ur.x = poly.bbox.ur.x;
+        if (poly.bbox.ur.y > this.bbox.ur.y) this.bbox.ur.y = poly.bbox.ur.y;
+        this.polys.push(poly);
+      }
+      this.isSubject = isSubject;
+    }
+    getSweepEvents() {
+      const sweepEvents = [];
+      for (let i2 = 0, iMax = this.polys.length; i2 < iMax; i2++) {
+        const polySweepEvents = this.polys[i2].getSweepEvents();
+        for (let j2 = 0, jMax = polySweepEvents.length; j2 < jMax; j2++) {
+          sweepEvents.push(polySweepEvents[j2]);
+        }
+      }
+      return sweepEvents;
+    }
+  }
+  class RingOut {
+    static factory(allSegments) {
+      const ringsOut = [];
+      for (let i2 = 0, iMax = allSegments.length; i2 < iMax; i2++) {
+        const segment = allSegments[i2];
+        if (!segment.isInResult() || segment.ringOut) continue;
+        let prevEvent = null;
+        let event = segment.leftSE;
+        let nextEvent = segment.rightSE;
+        const events = [
+          event
+        ];
+        const startingPoint = event.point;
+        const intersectionLEs = [];
+        while (true) {
+          prevEvent = event;
+          event = nextEvent;
+          events.push(event);
+          if (event.point === startingPoint) break;
+          while (true) {
+            const availableLEs = event.getAvailableLinkedEvents();
+            if (availableLEs.length === 0) {
+              const firstPt = events[0].point;
+              const lastPt = events[events.length - 1].point;
+              throw new Error(`Unable to complete output ring starting at [${firstPt.x}, ${firstPt.y}]. Last matching segment found ends at [${lastPt.x}, ${lastPt.y}].`);
+            }
+            if (availableLEs.length === 1) {
+              nextEvent = availableLEs[0].otherSE;
+              break;
+            }
+            let indexLE = null;
+            for (let j2 = 0, jMax = intersectionLEs.length; j2 < jMax; j2++) {
+              if (intersectionLEs[j2].point === event.point) {
+                indexLE = j2;
+                break;
+              }
+            }
+            if (indexLE !== null) {
+              const intersectionLE = intersectionLEs.splice(indexLE)[0];
+              const ringEvents = events.splice(intersectionLE.index);
+              ringEvents.unshift(ringEvents[0].otherSE);
+              ringsOut.push(new RingOut(ringEvents.reverse()));
+              continue;
+            }
+            intersectionLEs.push({
+              index: events.length,
+              point: event.point
+            });
+            const comparator = event.getLeftmostComparator(prevEvent);
+            nextEvent = availableLEs.sort(comparator)[0].otherSE;
+            break;
+          }
+        }
+        ringsOut.push(new RingOut(events));
+      }
+      return ringsOut;
+    }
+    constructor(events) {
+      this.events = events;
+      for (let i2 = 0, iMax = events.length; i2 < iMax; i2++) {
+        events[i2].segment.ringOut = this;
+      }
+      this.poly = null;
+    }
+    getGeom() {
+      let prevPt = this.events[0].point;
+      const points = [
+        prevPt
+      ];
+      for (let i2 = 1, iMax = this.events.length - 1; i2 < iMax; i2++) {
+        const pt2 = this.events[i2].point;
+        const nextPt2 = this.events[i2 + 1].point;
+        if (compareVectorAngles(pt2, prevPt, nextPt2) === 0) continue;
+        points.push(pt2);
+        prevPt = pt2;
+      }
+      if (points.length === 1) return null;
+      const pt = points[0];
+      const nextPt = points[1];
+      if (compareVectorAngles(pt, prevPt, nextPt) === 0) points.shift();
+      points.push(points[0]);
+      const step = this.isExteriorRing() ? 1 : -1;
+      const iStart = this.isExteriorRing() ? 0 : points.length - 1;
+      const iEnd = this.isExteriorRing() ? points.length : -1;
+      const orderedPoints = [];
+      for (let i2 = iStart; i2 != iEnd; i2 += step) orderedPoints.push([
+        points[i2].x,
+        points[i2].y
+      ]);
+      return orderedPoints;
+    }
+    isExteriorRing() {
+      if (this._isExteriorRing === void 0) {
+        const enclosing = this.enclosingRing();
+        this._isExteriorRing = enclosing ? !enclosing.isExteriorRing() : true;
+      }
+      return this._isExteriorRing;
+    }
+    enclosingRing() {
+      if (this._enclosingRing === void 0) {
+        this._enclosingRing = this._calcEnclosingRing();
+      }
+      return this._enclosingRing;
+    }
+    _calcEnclosingRing() {
+      let leftMostEvt = this.events[0];
+      for (let i2 = 1, iMax = this.events.length; i2 < iMax; i2++) {
+        const evt = this.events[i2];
+        if (SweepEvent.compare(leftMostEvt, evt) > 0) leftMostEvt = evt;
+      }
+      let prevSeg = leftMostEvt.segment.prevInResult();
+      let prevPrevSeg = prevSeg ? prevSeg.prevInResult() : null;
+      while (true) {
+        if (!prevSeg) return null;
+        if (!prevPrevSeg) return prevSeg.ringOut;
+        if (prevPrevSeg.ringOut !== prevSeg.ringOut) {
+          if (prevPrevSeg.ringOut.enclosingRing() !== prevSeg.ringOut) {
+            return prevSeg.ringOut;
+          } else return prevSeg.ringOut.enclosingRing();
+        }
+        prevSeg = prevPrevSeg.prevInResult();
+        prevPrevSeg = prevSeg ? prevSeg.prevInResult() : null;
+      }
+    }
+  }
+  class PolyOut {
+    constructor(exteriorRing) {
+      this.exteriorRing = exteriorRing;
+      exteriorRing.poly = this;
+      this.interiorRings = [];
+    }
+    addInterior(ring) {
+      this.interiorRings.push(ring);
+      ring.poly = this;
+    }
+    getGeom() {
+      const geom = [
+        this.exteriorRing.getGeom()
+      ];
+      if (geom[0] === null) return null;
+      for (let i2 = 0, iMax = this.interiorRings.length; i2 < iMax; i2++) {
+        const ringGeom = this.interiorRings[i2].getGeom();
+        if (ringGeom === null) continue;
+        geom.push(ringGeom);
+      }
+      return geom;
+    }
+  }
+  class MultiPolyOut {
+    constructor(rings) {
+      this.rings = rings;
+      this.polys = this._composePolys(rings);
+    }
+    getGeom() {
+      const geom = [];
+      for (let i2 = 0, iMax = this.polys.length; i2 < iMax; i2++) {
+        const polyGeom = this.polys[i2].getGeom();
+        if (polyGeom === null) continue;
+        geom.push(polyGeom);
+      }
+      return geom;
+    }
+    _composePolys(rings) {
+      const polys = [];
+      for (let i2 = 0, iMax = rings.length; i2 < iMax; i2++) {
+        const ring = rings[i2];
+        if (ring.poly) continue;
+        if (ring.isExteriorRing()) polys.push(new PolyOut(ring));
+        else {
+          const enclosingRing = ring.enclosingRing();
+          if (!enclosingRing.poly) polys.push(new PolyOut(enclosingRing));
+          enclosingRing.poly.addInterior(ring);
+        }
+      }
+      return polys;
+    }
+  }
+  class SweepLine {
+    constructor(queue2) {
+      let comparator = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : Segment.compare;
+      this.queue = queue2;
+      this.tree = new z(comparator);
+      this.segments = [];
+    }
+    process(event) {
+      const segment = event.segment;
+      const newEvents = [];
+      if (event.consumedBy) {
+        if (event.isLeft) this.queue.remove(event.otherSE);
+        else this.tree.remove(segment);
+        return newEvents;
+      }
+      const node2 = event.isLeft ? this.tree.add(segment) : this.tree.find(segment);
+      if (!node2) throw new Error(`Unable to find segment #${segment.id} [${segment.leftSE.point.x}, ${segment.leftSE.point.y}] -> [${segment.rightSE.point.x}, ${segment.rightSE.point.y}] in SweepLine tree.`);
+      let prevNode = node2;
+      let nextNode = node2;
+      let prevSeg = void 0;
+      let nextSeg = void 0;
+      while (prevSeg === void 0) {
+        prevNode = this.tree.prev(prevNode);
+        if (prevNode === null) prevSeg = null;
+        else if (prevNode.key.consumedBy === void 0) prevSeg = prevNode.key;
+      }
+      while (nextSeg === void 0) {
+        nextNode = this.tree.next(nextNode);
+        if (nextNode === null) nextSeg = null;
+        else if (nextNode.key.consumedBy === void 0) nextSeg = nextNode.key;
+      }
+      if (event.isLeft) {
+        let prevMySplitter = null;
+        if (prevSeg) {
+          const prevInter = prevSeg.getIntersection(segment);
+          if (prevInter !== null) {
+            if (!segment.isAnEndpoint(prevInter)) prevMySplitter = prevInter;
+            if (!prevSeg.isAnEndpoint(prevInter)) {
+              const newEventsFromSplit = this._splitSafely(prevSeg, prevInter);
+              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
+                newEvents.push(newEventsFromSplit[i2]);
+              }
+            }
+          }
+        }
+        let nextMySplitter = null;
+        if (nextSeg) {
+          const nextInter = nextSeg.getIntersection(segment);
+          if (nextInter !== null) {
+            if (!segment.isAnEndpoint(nextInter)) nextMySplitter = nextInter;
+            if (!nextSeg.isAnEndpoint(nextInter)) {
+              const newEventsFromSplit = this._splitSafely(nextSeg, nextInter);
+              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
+                newEvents.push(newEventsFromSplit[i2]);
+              }
+            }
+          }
+        }
+        if (prevMySplitter !== null || nextMySplitter !== null) {
+          let mySplitter = null;
+          if (prevMySplitter === null) mySplitter = nextMySplitter;
+          else if (nextMySplitter === null) mySplitter = prevMySplitter;
+          else {
+            const cmpSplitters = SweepEvent.comparePoints(prevMySplitter, nextMySplitter);
+            mySplitter = cmpSplitters <= 0 ? prevMySplitter : nextMySplitter;
+          }
+          this.queue.remove(segment.rightSE);
+          newEvents.push(segment.rightSE);
+          const newEventsFromSplit = segment.split(mySplitter);
+          for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
+            newEvents.push(newEventsFromSplit[i2]);
+          }
+        }
+        if (newEvents.length > 0) {
+          this.tree.remove(segment);
+          newEvents.push(event);
+        } else {
+          this.segments.push(segment);
+          segment.prev = prevSeg;
+        }
+      } else {
+        if (prevSeg && nextSeg) {
+          const inter = prevSeg.getIntersection(nextSeg);
+          if (inter !== null) {
+            if (!prevSeg.isAnEndpoint(inter)) {
+              const newEventsFromSplit = this._splitSafely(prevSeg, inter);
+              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
+                newEvents.push(newEventsFromSplit[i2]);
+              }
+            }
+            if (!nextSeg.isAnEndpoint(inter)) {
+              const newEventsFromSplit = this._splitSafely(nextSeg, inter);
+              for (let i2 = 0, iMax = newEventsFromSplit.length; i2 < iMax; i2++) {
+                newEvents.push(newEventsFromSplit[i2]);
+              }
+            }
+          }
+        }
+        this.tree.remove(segment);
+      }
+      return newEvents;
+    }
+    _splitSafely(seg, pt) {
+      this.tree.remove(seg);
+      const rightSE = seg.rightSE;
+      this.queue.remove(rightSE);
+      const newEvents = seg.split(pt);
+      newEvents.push(rightSE);
+      if (seg.consumedBy === void 0) this.tree.add(seg);
+      return newEvents;
+    }
+  }
+  const POLYGON_CLIPPING_MAX_QUEUE_SIZE = typeof process !== "undefined" && define_process_env_default.POLYGON_CLIPPING_MAX_QUEUE_SIZE || 1e6;
+  const POLYGON_CLIPPING_MAX_SWEEPLINE_SEGMENTS = typeof process !== "undefined" && define_process_env_default.POLYGON_CLIPPING_MAX_SWEEPLINE_SEGMENTS || 1e6;
+  class Operation {
+    run(type, geom, moreGeoms) {
+      operation.type = type;
+      rounder.reset();
+      const multipolys = [
+        new MultiPolyIn(geom, true)
+      ];
+      for (let i2 = 0, iMax = moreGeoms.length; i2 < iMax; i2++) {
+        multipolys.push(new MultiPolyIn(moreGeoms[i2], false));
+      }
+      operation.numMultiPolys = multipolys.length;
+      if (operation.type === "difference") {
+        const subject = multipolys[0];
+        let i2 = 1;
+        while (i2 < multipolys.length) {
+          if (getBboxOverlap(multipolys[i2].bbox, subject.bbox) !== null) i2++;
+          else multipolys.splice(i2, 1);
+        }
+      }
+      if (operation.type === "intersection") {
+        for (let i2 = 0, iMax = multipolys.length; i2 < iMax; i2++) {
+          const mpA = multipolys[i2];
+          for (let j2 = i2 + 1, jMax = multipolys.length; j2 < jMax; j2++) {
+            if (getBboxOverlap(mpA.bbox, multipolys[j2].bbox) === null) return [];
+          }
+        }
+      }
+      const queue2 = new z(SweepEvent.compare);
+      for (let i2 = 0, iMax = multipolys.length; i2 < iMax; i2++) {
+        const sweepEvents = multipolys[i2].getSweepEvents();
+        for (let j2 = 0, jMax = sweepEvents.length; j2 < jMax; j2++) {
+          queue2.insert(sweepEvents[j2]);
+          if (queue2.size > POLYGON_CLIPPING_MAX_QUEUE_SIZE) {
+            throw new Error("Infinite loop when putting segment endpoints in a priority queue (queue size too big).");
+          }
+        }
+      }
+      const sweepLine = new SweepLine(queue2);
+      let prevQueueSize = queue2.size;
+      let node2 = queue2.pop();
+      while (node2) {
+        const evt = node2.key;
+        if (queue2.size === prevQueueSize) {
+          const seg = evt.segment;
+          throw new Error(`Unable to pop() ${evt.isLeft ? "left" : "right"} SweepEvent [${evt.point.x}, ${evt.point.y}] from segment #${seg.id} [${seg.leftSE.point.x}, ${seg.leftSE.point.y}] -> [${seg.rightSE.point.x}, ${seg.rightSE.point.y}] from queue.`);
+        }
+        if (queue2.size > POLYGON_CLIPPING_MAX_QUEUE_SIZE) {
+          throw new Error("Infinite loop when passing sweep line over endpoints (queue size too big).");
+        }
+        if (sweepLine.segments.length > POLYGON_CLIPPING_MAX_SWEEPLINE_SEGMENTS) {
+          throw new Error("Infinite loop when passing sweep line over endpoints (too many sweep line segments).");
+        }
+        const newEvents = sweepLine.process(evt);
+        for (let i2 = 0, iMax = newEvents.length; i2 < iMax; i2++) {
+          const evt2 = newEvents[i2];
+          if (evt2.consumedBy === void 0) queue2.insert(evt2);
+        }
+        prevQueueSize = queue2.size;
+        node2 = queue2.pop();
+      }
+      rounder.reset();
+      const ringsOut = RingOut.factory(sweepLine.segments);
+      const result = new MultiPolyOut(ringsOut);
+      return result.getGeom();
+    }
+  }
+  const operation = new Operation();
+  const union = function(geom) {
+    for (var _len = arguments.length, moreGeoms = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      moreGeoms[_key - 1] = arguments[_key];
+    }
+    return operation.run("union", geom, moreGeoms);
+  };
+  const intersection = function(geom) {
+    for (var _len2 = arguments.length, moreGeoms = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+      moreGeoms[_key2 - 1] = arguments[_key2];
+    }
+    return operation.run("intersection", geom, moreGeoms);
+  };
+  const xor = function(geom) {
+    for (var _len3 = arguments.length, moreGeoms = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+      moreGeoms[_key3 - 1] = arguments[_key3];
+    }
+    return operation.run("xor", geom, moreGeoms);
+  };
+  const difference = function(subjectGeom) {
+    for (var _len4 = arguments.length, clippingGeoms = new Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+      clippingGeoms[_key4 - 1] = arguments[_key4];
+    }
+    return operation.run("difference", subjectGeom, clippingGeoms);
+  };
+  var index$2 = {
+    union,
+    intersection,
+    xor,
+    difference
+  };
+  function ensureClosed(ring) {
+    if (ring.length < 3) return ring;
+    const first = ring[0];
+    const last2 = ring[ring.length - 1];
+    if (first[0] === last2[0] && first[1] === last2[1]) return ring;
+    return [
+      ...ring,
+      first
+    ];
+  }
+  function toLibPolygon(ring) {
+    const closed = ensureClosed(ring);
+    if (closed.length < 3) return [];
+    return [
+      closed
+    ];
+  }
+  function fromLibRings(rings) {
+    if (!rings || rings.length === 0) return null;
+    const ring = rings[0];
+    if (!ring || ring.length < 3) return null;
+    return ring;
+  }
+  function polygonArea(ring) {
+    let area2 = 0;
+    const n2 = ring.length;
+    for (let i2 = 0; i2 < n2; i2++) {
+      const j2 = (i2 + 1) % n2;
+      area2 += ring[i2][0] * ring[j2][1];
+      area2 -= ring[j2][0] * ring[i2][1];
+    }
+    return Math.abs(area2) / 2;
+  }
+  function polygonUnion(a2, b2) {
+    if (a2.length < 3 || b2.length < 3) return null;
+    const polyA = toLibPolygon(a2);
+    const polyB = toLibPolygon(b2);
+    if (polyA.length === 0 || polyB.length === 0) return null;
+    const result = index$2.union(polyA, polyB);
+    if (!result || result.length === 0) return null;
+    if (result.length === 1) return fromLibRings(result[0]);
+    let best = result[0][0];
+    let bestArea = polygonArea(best);
+    for (let i2 = 0; i2 < result.length; i2++) {
+      const poly = result[i2];
+      if (poly == null ? void 0 : poly[0]) {
+        const area2 = polygonArea(poly[0]);
+        if (area2 > bestArea) {
+          best = poly[0];
+          bestArea = area2;
+        }
+      }
+    }
+    return best;
+  }
+  function polygonDifference(a2, b2) {
+    if (a2.length < 3 || b2.length < 3) return null;
+    const polyA = toLibPolygon(a2);
+    const polyB = toLibPolygon(b2);
+    if (polyA.length === 0 || polyB.length === 0) return null;
+    const result = index$2.difference(polyA, polyB);
+    if (!result || result.length === 0) return null;
+    if (result.length === 1 && result[0][0]) return fromLibRings(result[0]);
+    let best = result[0][0];
+    let bestArea = polygonArea(best);
+    for (let i2 = 0; i2 < result.length; i2++) {
+      const poly = result[i2];
+      if (poly == null ? void 0 : poly[0]) {
+        const area2 = polygonArea(poly[0]);
+        if (area2 > bestArea) {
+          best = poly[0];
+          bestArea = area2;
+        }
+      }
+    }
+    return best;
+  }
+  function buildBrushHull(strokePoints, brushRadiusPx, viewportZoom) {
+    if (strokePoints.length === 0 || brushRadiusPx <= 0) return null;
+    const scale2 = 2 ** (viewportZoom ?? 0);
+    const radiusWorld = brushRadiusPx / Math.max(scale2, 0.01);
+    let hull = null;
+    for (const [x2, y2] of strokePoints) {
+      const circle = makeCircle(x2, y2, radiusWorld);
+      if (!hull) {
+        hull = circle;
+      } else {
+        const union2 = polygonUnion(hull, circle);
+        if (union2 && union2.length >= 3) {
+          hull = union2;
+        }
+      }
+    }
+    return hull && hull.length >= 3 ? hull : null;
+  }
+  function arrowLineDegeneratePolygon(start, end) {
+    const [sx, sy] = start;
+    const [ex, ey] = end;
+    return [
+      [
+        sx,
+        sy
+      ],
+      [
+        ex,
+        ey
+      ],
+      [
+        ex,
+        ey
+      ],
+      [
+        sx,
+        sy
+      ],
+      [
+        sx,
+        sy
+      ]
+    ];
+  }
+  function mergeShapesAfterWaypointImport(state, newShapes, clearExisting) {
+    const existingShapes = clearExisting ? state.shapes.filter((s2) => {
+      var _a2;
+      return !((_a2 = s2.metadata) == null ? void 0 : _a2.isImported);
+    }) : state.shapes;
+    const newHidden = clearExisting ? new Set([
+      ...state.hiddenShapeIds
+    ].filter((id2) => {
+      var _a2;
+      const shape = state.shapes.find((s2) => s2.id === id2);
+      return shape && !((_a2 = shape.metadata) == null ? void 0 : _a2.isImported);
+    })) : state.hiddenShapeIds;
+    const existingIds = new Set(existingShapes.map((s2) => s2.id));
+    const seenIncoming = /* @__PURE__ */ new Set();
+    const appended = newShapes.filter((s2) => {
+      if (seenIncoming.has(s2.id)) return false;
+      seenIncoming.add(s2.id);
+      return !existingIds.has(s2.id);
+    });
+    return {
+      shapes: [
+        ...existingShapes,
+        ...appended
+      ],
+      hiddenShapeIds: newHidden
+    };
+  }
+  const o$1 = /* @__PURE__ */ new WeakMap();
+  let u$3 = 0;
+  function stableHash(t2) {
+    const i2 = typeof t2, s2 = t2 && t2.constructor, c2 = s2 === Date;
+    if (Object(t2) === t2 && !c2 && s2 != RegExp) {
+      let e2 = o$1.get(t2);
+      if (e2) return e2;
+      e2 = ++u$3 + "~", o$1.set(t2, e2);
+      let n2;
+      if (s2 === Array) {
+        for (e2 = "@", n2 = 0; n2 < t2.length; n2++) e2 += stableHash(t2[n2]) + ",";
+        o$1.set(t2, e2);
+      } else if (s2 === Object) {
+        e2 = "#";
+        const f2 = Object.keys(t2).sort();
+        for (; (n2 = f2.pop()) !== void 0; ) t2[n2] !== void 0 && (e2 += n2 + ":" + stableHash(t2[n2]) + ",");
+        o$1.set(t2, e2);
+      }
+      return e2;
+    }
+    return c2 ? t2.toJSON() : i2 === "symbol" ? t2.toString() : i2 === "string" ? JSON.stringify(t2) : "" + t2;
+  }
+  var temporalStateCreator = (userSet, userGet, options) => {
+    const stateCreator = (set2, get2) => {
+      return {
+        pastStates: (options == null ? void 0 : options.pastStates) || [],
+        futureStates: (options == null ? void 0 : options.futureStates) || [],
+        undo: (steps = 1) => {
+          var _a2, _b2;
+          if (get2().pastStates.length) {
+            const currentState = ((_a2 = options == null ? void 0 : options.partialize) == null ? void 0 : _a2.call(options, userGet())) || userGet();
+            const statesToApply = get2().pastStates.splice(-steps, steps);
+            const nextState = statesToApply.shift();
+            userSet(nextState);
+            set2({
+              pastStates: get2().pastStates,
+              futureStates: get2().futureStates.concat(((_b2 = options == null ? void 0 : options.diff) == null ? void 0 : _b2.call(options, currentState, nextState)) || currentState, statesToApply.reverse())
+            });
+          }
+        },
+        redo: (steps = 1) => {
+          var _a2, _b2;
+          if (get2().futureStates.length) {
+            const currentState = ((_a2 = options == null ? void 0 : options.partialize) == null ? void 0 : _a2.call(options, userGet())) || userGet();
+            const statesToApply = get2().futureStates.splice(-steps, steps);
+            const nextState = statesToApply.shift();
+            userSet(nextState);
+            set2({
+              pastStates: get2().pastStates.concat(((_b2 = options == null ? void 0 : options.diff) == null ? void 0 : _b2.call(options, currentState, nextState)) || currentState, statesToApply.reverse()),
+              futureStates: get2().futureStates
+            });
+          }
+        },
+        clear: () => set2({
+          pastStates: [],
+          futureStates: []
+        }),
+        isTracking: true,
+        pause: () => set2({
+          isTracking: false
+        }),
+        resume: () => set2({
+          isTracking: true
+        }),
+        setOnSave: (_onSave) => set2({
+          _onSave
+        }),
+        _onSave: options == null ? void 0 : options.onSave,
+        _handleSet: (pastState, replace2, currentState, deltaState) => {
+          var _a2, _b2;
+          if ((options == null ? void 0 : options.limit) && get2().pastStates.length >= (options == null ? void 0 : options.limit)) {
+            get2().pastStates.shift();
+          }
+          (_b2 = (_a2 = get2())._onSave) == null ? void 0 : _b2.call(_a2, pastState, currentState);
+          set2({
+            pastStates: get2().pastStates.concat(deltaState || pastState),
+            futureStates: []
+          });
+        }
+      };
+    };
+    return stateCreator;
+  };
+  var temporal = (config2, options) => {
+    const configWithTemporal = (set2, get2, store) => {
+      var _a2, _b2;
+      store.temporal = createStore$1(((_a2 = options == null ? void 0 : options.wrapTemporal) == null ? void 0 : _a2.call(options, temporalStateCreator(set2, get2, options))) || temporalStateCreator(set2, get2, options));
+      const curriedHandleSet = ((_b2 = options == null ? void 0 : options.handleSet) == null ? void 0 : _b2.call(options, store.temporal.getState()._handleSet)) || store.temporal.getState()._handleSet;
+      const temporalHandleSet = (pastState) => {
+        var _a3, _b3, _c2;
+        if (!store.temporal.getState().isTracking) return;
+        const currentState = ((_a3 = options == null ? void 0 : options.partialize) == null ? void 0 : _a3.call(options, get2())) || get2();
+        const deltaState = (_b3 = options == null ? void 0 : options.diff) == null ? void 0 : _b3.call(options, pastState, currentState);
+        if (!(deltaState === null || ((_c2 = options == null ? void 0 : options.equality) == null ? void 0 : _c2.call(options, pastState, currentState)))) {
+          curriedHandleSet(pastState, void 0, currentState, deltaState);
+        }
+      };
+      const setState = store.setState;
+      store.setState = (...args) => {
+        var _a3;
+        const pastState = ((_a3 = options == null ? void 0 : options.partialize) == null ? void 0 : _a3.call(options, get2())) || get2();
+        setState(...args);
+        temporalHandleSet(pastState);
+      };
+      return config2((...args) => {
+        var _a3;
+        const pastState = ((_a3 = options == null ? void 0 : options.partialize) == null ? void 0 : _a3.call(options, get2())) || get2();
+        set2(...args);
+        temporalHandleSet(pastState);
+      }, get2, store);
+    };
+    return configWithTemporal;
+  };
+  function promisifyRequest(request) {
+    return new Promise((resolve, reject) => {
+      request.oncomplete = request.onsuccess = () => resolve(request.result);
+      request.onabort = request.onerror = () => reject(request.error);
+    });
+  }
+  function createStore(dbName, storeName) {
+    let dbp;
+    const getDB = () => {
+      if (dbp) return dbp;
+      const request = indexedDB.open(dbName);
+      request.onupgradeneeded = () => request.result.createObjectStore(storeName);
+      dbp = promisifyRequest(request);
+      dbp.then((db2) => {
+        db2.onclose = () => dbp = void 0;
+      }, () => {
+      });
+      return dbp;
+    };
+    return (txMode, callback) => getDB().then((db2) => callback(db2.transaction(storeName, txMode).objectStore(storeName)));
+  }
+  let defaultGetStoreFunc;
+  function defaultGetStore() {
+    if (!defaultGetStoreFunc) {
+      defaultGetStoreFunc = createStore("keyval-store", "keyval");
+    }
+    return defaultGetStoreFunc;
+  }
+  function get(key2, customStore = defaultGetStore()) {
+    return customStore("readonly", (store) => promisifyRequest(store.get(key2)));
+  }
+  function del(key2, customStore = defaultGetStore()) {
+    return customStore("readwrite", (store) => {
+      store.delete(key2);
+      return promisifyRequest(store.transaction);
+    });
+  }
+  function assert$7(condition, message2) {
+    if (!condition) {
+      throw new Error(message2 || "loader assertion failed.");
+    }
+  }
+  const isBrowser$2 = Boolean(typeof process !== "object" || String(process) !== "[object process]" || process.browser);
+  const matches$1 = typeof process !== "undefined" && process.version && /v([0-9]*)/.exec(process.version);
+  matches$1 && parseFloat(matches$1[1]) || 0;
+  const window_ = globalThis;
+  const process_ = globalThis.process || {};
+  const navigator_ = globalThis.navigator || {};
+  function isElectron(mockUserAgent) {
+    var _a2, _b2;
+    if (typeof window !== "undefined" && ((_a2 = window.process) == null ? void 0 : _a2.type) === "renderer") {
+      return true;
+    }
+    if (typeof process !== "undefined" && Boolean((_b2 = process.versions) == null ? void 0 : _b2["electron"])) {
+      return true;
+    }
+    const realUserAgent = typeof navigator !== "undefined" && navigator.userAgent;
+    const userAgent2 = realUserAgent;
+    return Boolean(userAgent2 && userAgent2.indexOf("Electron") >= 0);
+  }
+  function isBrowser$1() {
+    const isNode = typeof process === "object" && String(process) === "[object process]" && !(process == null ? void 0 : process.browser);
+    return !isNode || isElectron();
+  }
+  function getBrowser(mockUserAgent) {
+    if (!isBrowser$1()) {
+      return "Node";
+    }
+    if (isElectron()) {
+      return "Electron";
+    }
+    const userAgent2 = navigator_.userAgent || "";
+    if (userAgent2.indexOf("Edge") > -1) {
+      return "Edge";
+    }
+    if (globalThis.chrome) {
+      return "Chrome";
+    }
+    if (globalThis.safari) {
+      return "Safari";
+    }
+    if (globalThis.mozInnerScreenX) {
+      return "Firefox";
+    }
+    return "Unknown";
+  }
+  const VERSION$4 = "4.1.1";
+  function assert$6(condition, message2) {
+    if (!condition) {
+      throw new Error("Assertion failed");
+    }
+  }
+  function normalizeLogLevel(logLevel) {
+    if (!logLevel) {
+      return 0;
+    }
+    let resolvedLevel;
+    switch (typeof logLevel) {
+      case "number":
+        resolvedLevel = logLevel;
+        break;
+      case "object":
+        resolvedLevel = logLevel.logLevel || logLevel.priority || 0;
+        break;
+      default:
+        return 0;
+    }
+    assert$6(Number.isFinite(resolvedLevel) && resolvedLevel >= 0);
+    return resolvedLevel;
+  }
+  function normalizeArguments(opts) {
+    const { logLevel, message: message2 } = opts;
+    opts.logLevel = normalizeLogLevel(logLevel);
+    const args = opts.args ? Array.from(opts.args) : [];
+    while (args.length && args.shift() !== message2) {
+    }
+    switch (typeof logLevel) {
+      case "string":
+      case "function":
+        if (message2 !== void 0) {
+          args.unshift(message2);
+        }
+        opts.message = logLevel;
+        break;
+      case "object":
+        Object.assign(opts, logLevel);
+        break;
+    }
+    if (typeof opts.message === "function") {
+      opts.message = opts.message();
+    }
+    const messageType = typeof opts.message;
+    assert$6(messageType === "string" || messageType === "object");
+    return Object.assign(opts, {
+      args
+    }, opts.opts);
+  }
+  const noop$3 = () => {
+  };
+  class BaseLog {
+    constructor({ level = 0 } = {}) {
+      this.userData = {};
+      this._onceCache = /* @__PURE__ */ new Set();
+      this._level = level;
+    }
+    set level(newLevel) {
+      this.setLevel(newLevel);
+    }
+    get level() {
+      return this.getLevel();
+    }
+    setLevel(level) {
+      this._level = level;
+      return this;
+    }
+    getLevel() {
+      return this._level;
+    }
+    warn(message2, ...args) {
+      return this._log("warn", 0, message2, args, {
+        once: true
+      });
+    }
+    error(message2, ...args) {
+      return this._log("error", 0, message2, args);
+    }
+    log(logLevel, message2, ...args) {
+      return this._log("log", logLevel, message2, args);
+    }
+    info(logLevel, message2, ...args) {
+      return this._log("info", logLevel, message2, args);
+    }
+    once(logLevel, message2, ...args) {
+      return this._log("once", logLevel, message2, args, {
+        once: true
+      });
+    }
+    _log(type, logLevel, message2, args, options = {}) {
+      const normalized = normalizeArguments({
+        logLevel,
+        message: message2,
+        args: this._buildArgs(logLevel, message2, args),
+        opts: options
+      });
+      return this._createLogFunction(type, normalized, options);
+    }
+    _buildArgs(logLevel, message2, args) {
+      return [
+        logLevel,
+        message2,
+        ...args
+      ];
+    }
+    _createLogFunction(type, normalized, options) {
+      if (!this._shouldLog(normalized.logLevel)) {
+        return noop$3;
+      }
+      const tag = this._getOnceTag(options.tag ?? normalized.tag ?? normalized.message);
+      if ((options.once || normalized.once) && tag !== void 0) {
+        if (this._onceCache.has(tag)) {
+          return noop$3;
+        }
+        this._onceCache.add(tag);
+      }
+      return this._emit(type, normalized);
+    }
+    _shouldLog(logLevel) {
+      return this.getLevel() >= normalizeLogLevel(logLevel);
+    }
+    _getOnceTag(tag) {
+      if (tag === void 0) {
+        return void 0;
+      }
+      try {
+        return typeof tag === "string" ? tag : String(tag);
+      } catch {
+        return void 0;
+      }
+    }
+  }
+  function getStorage(type) {
+    try {
+      const storage = window[type];
+      const x2 = "__storage_test__";
+      storage.setItem(x2, x2);
+      storage.removeItem(x2);
+      return storage;
+    } catch (e2) {
+      return null;
+    }
+  }
+  class LocalStorage {
+    constructor(id2, defaultConfig, type = "sessionStorage") {
+      this.storage = getStorage(type);
+      this.id = id2;
+      this.config = defaultConfig;
+      this._loadConfiguration();
+    }
+    getConfiguration() {
+      return this.config;
+    }
+    setConfiguration(configuration) {
+      Object.assign(this.config, configuration);
+      if (this.storage) {
+        const serialized = JSON.stringify(this.config);
+        this.storage.setItem(this.id, serialized);
+      }
+    }
+    _loadConfiguration() {
+      let configuration = {};
+      if (this.storage) {
+        const serializedConfiguration = this.storage.getItem(this.id);
+        configuration = serializedConfiguration ? JSON.parse(serializedConfiguration) : {};
+      }
+      Object.assign(this.config, configuration);
+      return this;
+    }
+  }
+  function formatTime(ms) {
+    let formatted;
+    if (ms < 10) {
+      formatted = `${ms.toFixed(2)}ms`;
+    } else if (ms < 100) {
+      formatted = `${ms.toFixed(1)}ms`;
+    } else if (ms < 1e3) {
+      formatted = `${ms.toFixed(0)}ms`;
+    } else {
+      formatted = `${(ms / 1e3).toFixed(2)}s`;
+    }
+    return formatted;
+  }
+  function leftPad(string2, length2 = 8) {
+    const padLength = Math.max(length2 - string2.length, 0);
+    return `${" ".repeat(padLength)}${string2}`;
+  }
+  var COLOR;
+  (function(COLOR2) {
+    COLOR2[COLOR2["BLACK"] = 30] = "BLACK";
+    COLOR2[COLOR2["RED"] = 31] = "RED";
+    COLOR2[COLOR2["GREEN"] = 32] = "GREEN";
+    COLOR2[COLOR2["YELLOW"] = 33] = "YELLOW";
+    COLOR2[COLOR2["BLUE"] = 34] = "BLUE";
+    COLOR2[COLOR2["MAGENTA"] = 35] = "MAGENTA";
+    COLOR2[COLOR2["CYAN"] = 36] = "CYAN";
+    COLOR2[COLOR2["WHITE"] = 37] = "WHITE";
+    COLOR2[COLOR2["BRIGHT_BLACK"] = 90] = "BRIGHT_BLACK";
+    COLOR2[COLOR2["BRIGHT_RED"] = 91] = "BRIGHT_RED";
+    COLOR2[COLOR2["BRIGHT_GREEN"] = 92] = "BRIGHT_GREEN";
+    COLOR2[COLOR2["BRIGHT_YELLOW"] = 93] = "BRIGHT_YELLOW";
+    COLOR2[COLOR2["BRIGHT_BLUE"] = 94] = "BRIGHT_BLUE";
+    COLOR2[COLOR2["BRIGHT_MAGENTA"] = 95] = "BRIGHT_MAGENTA";
+    COLOR2[COLOR2["BRIGHT_CYAN"] = 96] = "BRIGHT_CYAN";
+    COLOR2[COLOR2["BRIGHT_WHITE"] = 97] = "BRIGHT_WHITE";
+  })(COLOR || (COLOR = {}));
+  const BACKGROUND_INCREMENT = 10;
+  function getColor(color2) {
+    if (typeof color2 !== "string") {
+      return color2;
+    }
+    color2 = color2.toUpperCase();
+    return COLOR[color2] || COLOR.WHITE;
+  }
+  function addColor(string2, color2, background) {
+    if (!isBrowser$1 && typeof string2 === "string") {
+      if (color2) {
+        const colorCode = getColor(color2);
+        string2 = `\x1B[${colorCode}m${string2}\x1B[39m`;
+      }
+      if (background) {
+        const colorCode = getColor(background);
+        string2 = `\x1B[${colorCode + BACKGROUND_INCREMENT}m${string2}\x1B[49m`;
+      }
+    }
+    return string2;
+  }
+  function autobind(obj, predefined = [
+    "constructor"
+  ]) {
+    const proto2 = Object.getPrototypeOf(obj);
+    const propNames = Object.getOwnPropertyNames(proto2);
+    const object = obj;
+    for (const key2 of propNames) {
+      const value = object[key2];
+      if (typeof value === "function") {
+        if (!predefined.find((name2) => key2 === name2)) {
+          object[key2] = value.bind(obj);
+        }
+      }
+    }
+  }
+  function getHiResTimestamp$1() {
+    var _a2, _b2, _c2;
+    let timestamp;
+    if (isBrowser$1() && window_.performance) {
+      timestamp = (_b2 = (_a2 = window_ == null ? void 0 : window_.performance) == null ? void 0 : _a2.now) == null ? void 0 : _b2.call(_a2);
+    } else if ("hrtime" in process_) {
+      const timeParts = (_c2 = process_ == null ? void 0 : process_.hrtime) == null ? void 0 : _c2.call(process_);
+      timestamp = timeParts[0] * 1e3 + timeParts[1] / 1e6;
+    } else {
+      timestamp = Date.now();
+    }
+    return timestamp;
+  }
+  const originalConsole = {
+    debug: isBrowser$1() ? console.debug || console.log : console.log,
+    log: console.log,
+    info: console.info,
+    warn: console.warn,
+    error: console.error
+  };
+  const DEFAULT_LOG_CONFIGURATION = {
+    enabled: true,
+    level: 0
+  };
+  class ProbeLog extends BaseLog {
+    constructor({ id: id2 } = {
+      id: ""
+    }) {
+      super({
+        level: 0
+      });
+      this.VERSION = VERSION$4;
+      this._startTs = getHiResTimestamp$1();
+      this._deltaTs = getHiResTimestamp$1();
+      this.userData = {};
+      this.LOG_THROTTLE_TIMEOUT = 0;
+      this.id = id2;
+      this.userData = {};
+      this._storage = new LocalStorage(`__probe-${this.id}__`, {
+        [this.id]: DEFAULT_LOG_CONFIGURATION
+      });
+      this.timeStamp(`${this.id} started`);
+      autobind(this);
+      Object.seal(this);
+    }
+    isEnabled() {
+      return this._getConfiguration().enabled;
+    }
+    getLevel() {
+      return this._getConfiguration().level;
+    }
+    getTotal() {
+      return Number((getHiResTimestamp$1() - this._startTs).toPrecision(10));
+    }
+    getDelta() {
+      return Number((getHiResTimestamp$1() - this._deltaTs).toPrecision(10));
+    }
+    set priority(newPriority) {
+      this.level = newPriority;
+    }
+    get priority() {
+      return this.level;
+    }
+    getPriority() {
+      return this.level;
+    }
+    enable(enabled2 = true) {
+      this._updateConfiguration({
+        enabled: enabled2
+      });
+      return this;
+    }
+    setLevel(level) {
+      this._updateConfiguration({
+        level
+      });
+      return this;
+    }
+    get(setting) {
+      return this._getConfiguration()[setting];
+    }
+    set(setting, value) {
+      this._updateConfiguration({
+        [setting]: value
+      });
+    }
+    settings() {
+      if (console.table) {
+        console.table(this._storage.config);
+      } else {
+        console.log(this._storage.config);
+      }
+    }
+    assert(condition, message2) {
+      if (!condition) {
+        throw new Error(message2 || "Assertion failed");
+      }
+    }
+    warn(message2, ...args) {
+      return this._log("warn", 0, message2, args, {
+        method: originalConsole.warn,
+        once: true
+      });
+    }
+    error(message2, ...args) {
+      return this._log("error", 0, message2, args, {
+        method: originalConsole.error
+      });
+    }
+    deprecated(oldUsage, newUsage) {
+      return this.warn(`\`${oldUsage}\` is deprecated and will be removed in a later version. Use \`${newUsage}\` instead`);
+    }
+    removed(oldUsage, newUsage) {
+      return this.error(`\`${oldUsage}\` has been removed. Use \`${newUsage}\` instead`);
+    }
+    probe(logLevel, message2, ...args) {
+      return this._log("log", logLevel, message2, args, {
+        method: originalConsole.log,
+        time: true,
+        once: true
+      });
+    }
+    log(logLevel, message2, ...args) {
+      return this._log("log", logLevel, message2, args, {
+        method: originalConsole.debug
+      });
+    }
+    info(logLevel, message2, ...args) {
+      return this._log("info", logLevel, message2, args, {
+        method: console.info
+      });
+    }
+    once(logLevel, message2, ...args) {
+      return this._log("once", logLevel, message2, args, {
+        method: originalConsole.debug || originalConsole.info,
+        once: true
+      });
+    }
+    table(logLevel, table2, columns) {
+      if (table2) {
+        return this._log("table", logLevel, table2, columns && [
+          columns
+        ] || [], {
+          method: console.table || noop$3,
+          tag: getTableHeader(table2)
+        });
+      }
+      return noop$3;
+    }
+    time(logLevel, message2) {
+      return this._log("time", logLevel, message2, [], {
+        method: console.time ? console.time : console.info
+      });
+    }
+    timeEnd(logLevel, message2) {
+      return this._log("time", logLevel, message2, [], {
+        method: console.timeEnd ? console.timeEnd : console.info
+      });
+    }
+    timeStamp(logLevel, message2) {
+      return this._log("time", logLevel, message2, [], {
+        method: console.timeStamp || noop$3
+      });
+    }
+    group(logLevel, message2, opts = {
+      collapsed: false
+    }) {
+      const method = (opts.collapsed ? console.groupCollapsed : console.group) || console.info;
+      return this._log("group", logLevel, message2, [], {
+        method
+      });
+    }
+    groupCollapsed(logLevel, message2, opts = {}) {
+      return this.group(logLevel, message2, Object.assign({}, opts, {
+        collapsed: true
+      }));
+    }
+    groupEnd(logLevel) {
+      return this._log("groupEnd", logLevel, "", [], {
+        method: console.groupEnd || noop$3
+      });
+    }
+    withGroup(logLevel, message2, func) {
+      this.group(logLevel, message2)();
+      try {
+        func();
+      } finally {
+        this.groupEnd(logLevel)();
+      }
+    }
+    trace() {
+      if (console.trace) {
+        console.trace();
+      }
+    }
+    _shouldLog(logLevel) {
+      return this.isEnabled() && super._shouldLog(logLevel);
+    }
+    _emit(_type, normalized) {
+      const method = normalized.method;
+      assert$6(method);
+      normalized.total = this.getTotal();
+      normalized.delta = this.getDelta();
+      this._deltaTs = getHiResTimestamp$1();
+      const message2 = decorateMessage(this.id, normalized.message, normalized);
+      return method.bind(console, message2, ...normalized.args);
+    }
+    _getConfiguration() {
+      if (!this._storage.config[this.id]) {
+        this._updateConfiguration(DEFAULT_LOG_CONFIGURATION);
+      }
+      return this._storage.config[this.id];
+    }
+    _updateConfiguration(configuration) {
+      const currentConfiguration = this._storage.config[this.id] || {
+        ...DEFAULT_LOG_CONFIGURATION
+      };
+      this._storage.setConfiguration({
+        [this.id]: {
+          ...currentConfiguration,
+          ...configuration
+        }
+      });
+    }
+  }
+  ProbeLog.VERSION = VERSION$4;
+  function decorateMessage(id2, message2, opts) {
+    if (typeof message2 === "string") {
+      const time = opts.time ? leftPad(formatTime(opts.total)) : "";
+      message2 = opts.time ? `${id2}: ${time}  ${message2}` : `${id2}: ${message2}`;
+      message2 = addColor(message2, opts.color, opts.background);
+    }
+    return message2;
+  }
+  function getTableHeader(table2) {
+    for (const key2 in table2) {
+      for (const title7 in table2[key2]) {
+        return title7 || "untitled";
+      }
+    }
+    return "empty";
+  }
+  const VERSION$3 = "4.4.5";
+  const version$1 = VERSION$3[0] >= "0" && VERSION$3[0] <= "9" ? `v${VERSION$3}` : "";
+  function createLog() {
+    const log3 = new ProbeLog({
+      id: "loaders.gl"
+    });
+    globalThis.loaders || (globalThis.loaders = {});
+    globalThis.loaders.log = log3;
+    globalThis.loaders.version = version$1;
+    globalThis.probe || (globalThis.probe = {});
+    globalThis.probe.loaders = log3;
+    return log3;
+  }
+  const log$4 = createLog();
+  const isBoolean = (value) => typeof value === "boolean";
+  const isFunction = (value) => typeof value === "function";
+  const isObject$1 = (value) => value !== null && typeof value === "object";
+  const isPureObject = (value) => isObject$1(value) && value.constructor === {}.constructor;
+  const isSharedArrayBuffer = (value) => typeof SharedArrayBuffer !== "undefined" && value instanceof SharedArrayBuffer;
+  const isArrayBufferLike = (value) => isObject$1(value) && typeof value.byteLength === "number" && typeof value.slice === "function";
+  const isIterable = (value) => Boolean(value) && isFunction(value[Symbol.iterator]);
+  const isAsyncIterable$1 = (value) => Boolean(value) && isFunction(value[Symbol.asyncIterator]);
+  const isResponse = (value) => typeof Response !== "undefined" && value instanceof Response || isObject$1(value) && isFunction(value.arrayBuffer) && isFunction(value.text) && isFunction(value.json);
+  const isBlob = (value) => typeof Blob !== "undefined" && value instanceof Blob;
+  const isReadableDOMStream = (value) => typeof ReadableStream !== "undefined" && value instanceof ReadableStream || isObject$1(value) && isFunction(value.tee) && isFunction(value.cancel) && isFunction(value.getReader);
+  const isReadableNodeStream = (value) => isObject$1(value) && isFunction(value.read) && isFunction(value.pipe) && isBoolean(value.readable);
+  const isReadableStream = (value) => isReadableDOMStream(value) || isReadableNodeStream(value);
+  function mergeOptions(baseOptions, newOptions) {
+    return mergeOptionsRecursively(baseOptions || {}, newOptions);
+  }
+  function mergeOptionsRecursively(baseOptions, newOptions, level = 0) {
+    if (level > 3) {
+      return newOptions;
+    }
+    const options = {
+      ...baseOptions
+    };
+    for (const [key2, newValue] of Object.entries(newOptions)) {
+      if (newValue && typeof newValue === "object" && !Array.isArray(newValue)) {
+        options[key2] = mergeOptionsRecursively(options[key2] || {}, newOptions[key2], level + 1);
+      } else {
+        options[key2] = newOptions[key2];
+      }
+    }
+    return options;
+  }
+  const NPM_TAG = "latest";
+  function getVersion() {
+    var _a2;
+    if (!((_a2 = globalThis._loadersgl_) == null ? void 0 : _a2.version)) {
+      globalThis._loadersgl_ = globalThis._loadersgl_ || {};
+      {
+        globalThis._loadersgl_.version = "4.4.5";
+      }
+    }
+    return globalThis._loadersgl_.version;
+  }
+  const VERSION$2 = getVersion();
+  function assert$5(condition, message2) {
+    if (!condition) {
+      throw new Error(message2 || "loaders.gl assertion failed.");
+    }
+  }
+  const isBrowser = typeof process !== "object" || String(process) !== "[object process]" || process.browser;
+  const isMobile = typeof window !== "undefined" && typeof window.orientation !== "undefined";
+  const matches = typeof process !== "undefined" && process.version && /v([0-9]*)/.exec(process.version);
+  matches && parseFloat(matches[1]) || 0;
+  class WorkerJob {
+    constructor(jobName, workerThread) {
+      __publicField(this, "name");
+      __publicField(this, "workerThread");
+      __publicField(this, "isRunning", true);
+      __publicField(this, "result");
+      __publicField(this, "_resolve", () => {
+      });
+      __publicField(this, "_reject", () => {
+      });
+      this.name = jobName;
+      this.workerThread = workerThread;
+      this.result = new Promise((resolve, reject) => {
+        this._resolve = resolve;
+        this._reject = reject;
+      });
+    }
+    postMessage(type, payload) {
+      this.workerThread.postMessage({
+        source: "loaders.gl",
+        type,
+        payload
+      });
+    }
+    done(value) {
+      assert$5(this.isRunning);
+      this.isRunning = false;
+      this._resolve(value);
+    }
+    error(error2) {
+      assert$5(this.isRunning);
+      this.isRunning = false;
+      this._reject(error2);
+    }
+  }
+  class NodeWorker {
+    terminate() {
+    }
+  }
+  const workerURLCache = /* @__PURE__ */ new Map();
+  function getLoadableWorkerURL(props) {
+    assert$5(props.source && !props.url || !props.source && props.url);
+    let workerURL = workerURLCache.get(props.source || props.url);
+    if (!workerURL) {
+      if (props.url) {
+        workerURL = getLoadableWorkerURLFromURL(props.url);
+        workerURLCache.set(props.url, workerURL);
+      }
+      if (props.source) {
+        workerURL = getLoadableWorkerURLFromSource(props.source);
+        workerURLCache.set(props.source, workerURL);
+      }
+    }
+    assert$5(workerURL);
+    return workerURL;
+  }
+  function getLoadableWorkerURLFromURL(url) {
+    if (!url.startsWith("http")) {
+      return url;
+    }
+    const workerSource = buildScriptSource(url);
+    return getLoadableWorkerURLFromSource(workerSource);
+  }
+  function getLoadableWorkerURLFromSource(workerSource) {
+    const blob = new Blob([
+      workerSource
+    ], {
+      type: "application/javascript"
+    });
+    return URL.createObjectURL(blob);
+  }
+  function buildScriptSource(workerUrl) {
+    return `try {
+  importScripts('${workerUrl}');
+} catch (error) {
+  console.error(error);
+  throw error;
+}`;
+  }
+  function getTransferList(object, recursive = true, transfers) {
+    const transfersSet = transfers || /* @__PURE__ */ new Set();
+    if (!object) ;
+    else if (isTransferable(object)) {
+      transfersSet.add(object);
+    } else if (isTransferable(object.buffer)) {
+      transfersSet.add(object.buffer);
+    } else if (ArrayBuffer.isView(object)) ;
+    else if (recursive && typeof object === "object") {
+      for (const key2 in object) {
+        getTransferList(object[key2], recursive, transfersSet);
+      }
+    }
+    return transfers === void 0 ? Array.from(transfersSet) : [];
+  }
+  function isTransferable(object) {
+    if (!object) {
+      return false;
+    }
+    if (object instanceof ArrayBuffer) {
+      return true;
+    }
+    if (typeof MessagePort !== "undefined" && object instanceof MessagePort) {
+      return true;
+    }
+    if (typeof ImageBitmap !== "undefined" && object instanceof ImageBitmap) {
+      return true;
+    }
+    if (typeof OffscreenCanvas !== "undefined" && object instanceof OffscreenCanvas) {
+      return true;
+    }
+    return false;
+  }
+  const NOOP = () => {
+  };
+  class WorkerThread {
+    constructor(props) {
+      __publicField(this, "name");
+      __publicField(this, "source");
+      __publicField(this, "url");
+      __publicField(this, "terminated", false);
+      __publicField(this, "worker");
+      __publicField(this, "onMessage");
+      __publicField(this, "onError");
+      __publicField(this, "_loadableURL", "");
+      const { name: name2, source: source2, url } = props;
+      assert$5(source2 || url);
+      this.name = name2;
+      this.source = source2;
+      this.url = url;
+      this.onMessage = NOOP;
+      this.onError = (error2) => console.log(error2);
+      this.worker = isBrowser ? this._createBrowserWorker() : this._createNodeWorker();
+    }
+    static isSupported() {
+      return typeof Worker !== "undefined" && isBrowser || typeof NodeWorker !== "undefined" && !isBrowser;
+    }
+    destroy() {
+      this.onMessage = NOOP;
+      this.onError = NOOP;
+      this.worker.terminate();
+      this.terminated = true;
+    }
+    get isRunning() {
+      return Boolean(this.onMessage);
+    }
+    postMessage(data2, transferList) {
+      transferList = transferList || getTransferList(data2);
+      this.worker.postMessage(data2, transferList);
+    }
+    _getErrorFromErrorEvent(event) {
+      let message2 = "Failed to load ";
+      message2 += `worker ${this.name} from ${this.url}. `;
+      if (event.message) {
+        message2 += `${event.message} in `;
+      }
+      if (event.lineno) {
+        message2 += `:${event.lineno}:${event.colno}`;
+      }
+      return new Error(message2);
+    }
+    _createBrowserWorker() {
+      this._loadableURL = getLoadableWorkerURL({
+        source: this.source,
+        url: this.url
+      });
+      const worker = new Worker(this._loadableURL, {
+        name: this.name
+      });
+      worker.onmessage = (event) => {
+        if (!event.data) {
+          this.onError(new Error("No data received"));
+        } else {
+          this.onMessage(event.data);
+        }
+      };
+      worker.onerror = (error2) => {
+        this.onError(this._getErrorFromErrorEvent(error2));
+        this.terminated = true;
+      };
+      worker.onmessageerror = (event) => console.error(event);
+      return worker;
+    }
+    _createNodeWorker() {
+      let worker;
+      if (this.url) {
+        const absolute = this.url.includes(":/") || this.url.startsWith("/");
+        const url = absolute ? this.url : `./${this.url}`;
+        const type = this.url.endsWith(".ts") || this.url.endsWith(".mjs") ? "module" : "commonjs";
+        worker = new NodeWorker(url, {
+          eval: false,
+          type
+        });
+      } else if (this.source) {
+        worker = new NodeWorker(this.source, {
+          eval: true
+        });
+      } else {
+        throw new Error("no worker");
+      }
+      worker.on("message", (data2) => {
+        this.onMessage(data2);
+      });
+      worker.on("error", (error2) => {
+        this.onError(error2);
+      });
+      worker.on("exit", (code2) => {
+      });
+      return worker;
+    }
+  }
+  class WorkerPool {
+    constructor(props) {
+      __publicField(this, "name", "unnamed");
+      __publicField(this, "source");
+      __publicField(this, "url");
+      __publicField(this, "maxConcurrency", 1);
+      __publicField(this, "maxMobileConcurrency", 1);
+      __publicField(this, "onDebug", () => {
+      });
+      __publicField(this, "reuseWorkers", true);
+      __publicField(this, "props", {});
+      __publicField(this, "jobQueue", []);
+      __publicField(this, "idleQueue", []);
+      __publicField(this, "count", 0);
+      __publicField(this, "isDestroyed", false);
+      this.source = props.source;
+      this.url = props.url;
+      this.setProps(props);
+    }
+    static isSupported() {
+      return WorkerThread.isSupported();
+    }
+    destroy() {
+      this.idleQueue.forEach((worker) => worker.destroy());
+      this.isDestroyed = true;
+    }
+    setProps(props) {
+      this.props = {
+        ...this.props,
+        ...props
+      };
+      if (props.name !== void 0) {
+        this.name = props.name;
+      }
+      if (props.maxConcurrency !== void 0) {
+        this.maxConcurrency = props.maxConcurrency;
+      }
+      if (props.maxMobileConcurrency !== void 0) {
+        this.maxMobileConcurrency = props.maxMobileConcurrency;
+      }
+      if (props.reuseWorkers !== void 0) {
+        this.reuseWorkers = props.reuseWorkers;
+      }
+      if (props.onDebug !== void 0) {
+        this.onDebug = props.onDebug;
+      }
+    }
+    async startJob(name2, onMessage2 = (job, type, data2) => job.done(data2), onError = (job, error2) => job.error(error2)) {
+      const startPromise = new Promise((onStart) => {
+        this.jobQueue.push({
+          name: name2,
+          onMessage: onMessage2,
+          onError,
+          onStart
+        });
+        return this;
+      });
+      this._startQueuedJob();
+      return await startPromise;
+    }
+    async _startQueuedJob() {
+      if (!this.jobQueue.length) {
+        return;
+      }
+      const workerThread = this._getAvailableWorker();
+      if (!workerThread) {
+        return;
+      }
+      const queuedJob = this.jobQueue.shift();
+      if (queuedJob) {
+        this.onDebug({
+          message: "Starting job",
+          name: queuedJob.name,
+          workerThread,
+          backlog: this.jobQueue.length
+        });
+        const job = new WorkerJob(queuedJob.name, workerThread);
+        workerThread.onMessage = (data2) => queuedJob.onMessage(job, data2.type, data2.payload);
+        workerThread.onError = (error2) => queuedJob.onError(job, error2);
+        queuedJob.onStart(job);
+        try {
+          await job.result;
+        } catch (error2) {
+          console.error(`Worker exception: ${error2}`);
+        } finally {
+          this.returnWorkerToQueue(workerThread);
+        }
+      }
+    }
+    returnWorkerToQueue(worker) {
+      const shouldDestroyWorker = !isBrowser || this.isDestroyed || !this.reuseWorkers || this.count > this._getMaxConcurrency();
+      if (shouldDestroyWorker) {
+        worker.destroy();
+        this.count--;
+      } else {
+        this.idleQueue.push(worker);
+      }
+      if (!this.isDestroyed) {
+        this._startQueuedJob();
+      }
+    }
+    _getAvailableWorker() {
+      if (this.idleQueue.length > 0) {
+        return this.idleQueue.shift() || null;
+      }
+      if (this.count < this._getMaxConcurrency()) {
+        this.count++;
+        const name2 = `${this.name.toLowerCase()} (#${this.count} of ${this.maxConcurrency})`;
+        return new WorkerThread({
+          name: name2,
+          source: this.source,
+          url: this.url
+        });
+      }
+      return null;
+    }
+    _getMaxConcurrency() {
+      return isMobile ? this.maxMobileConcurrency : this.maxConcurrency;
+    }
+  }
+  const DEFAULT_PROPS$2 = {
+    maxConcurrency: 3,
+    maxMobileConcurrency: 1,
+    reuseWorkers: true,
+    onDebug: () => {
+    }
+  };
+  const _WorkerFarm = class _WorkerFarm {
+    constructor(props) {
+      __publicField(this, "props");
+      __publicField(this, "workerPools", /* @__PURE__ */ new Map());
+      this.props = {
+        ...DEFAULT_PROPS$2
+      };
+      this.setProps(props);
+      this.workerPools = /* @__PURE__ */ new Map();
+    }
+    static isSupported() {
+      return WorkerThread.isSupported();
+    }
+    static getWorkerFarm(props = {}) {
+      _WorkerFarm._workerFarm = _WorkerFarm._workerFarm || new _WorkerFarm({});
+      _WorkerFarm._workerFarm.setProps(props);
+      return _WorkerFarm._workerFarm;
+    }
+    destroy() {
+      for (const workerPool of this.workerPools.values()) {
+        workerPool.destroy();
+      }
+      this.workerPools = /* @__PURE__ */ new Map();
+    }
+    setProps(props) {
+      this.props = {
+        ...this.props,
+        ...props
+      };
+      for (const workerPool of this.workerPools.values()) {
+        workerPool.setProps(this._getWorkerPoolProps());
+      }
+    }
+    getWorkerPool(options) {
+      const { name: name2, source: source2, url } = options;
+      let workerPool = this.workerPools.get(name2);
+      if (!workerPool) {
+        workerPool = new WorkerPool({
+          name: name2,
+          source: source2,
+          url
+        });
+        workerPool.setProps(this._getWorkerPoolProps());
+        this.workerPools.set(name2, workerPool);
+      }
+      return workerPool;
+    }
+    _getWorkerPoolProps() {
+      return {
+        maxConcurrency: this.props.maxConcurrency,
+        maxMobileConcurrency: this.props.maxMobileConcurrency,
+        reuseWorkers: this.props.reuseWorkers,
+        onDebug: this.props.onDebug
+      };
+    }
+  };
+  __publicField(_WorkerFarm, "_workerFarm");
+  let WorkerFarm = _WorkerFarm;
+  function getWorkerURL(worker, options = {}) {
+    var _a2;
+    const workerOptions = options[worker.id] || {};
+    const workerFile = isBrowser ? `${worker.id}-worker.js` : `${worker.id}-worker-node.js`;
+    let url = workerOptions.workerUrl;
+    if (!url && worker.id === "compression") {
+      url = options.workerUrl;
+    }
+    const workerType = options._workerType || ((_a2 = options == null ? void 0 : options.core) == null ? void 0 : _a2._workerType);
+    if (workerType === "test") {
+      if (isBrowser) {
+        url = `modules/${worker.module}/dist/${workerFile}`;
+      } else {
+        url = `modules/${worker.module}/src/workers/${worker.id}-worker-node.ts`;
+      }
+    }
+    if (!url) {
+      let version2 = worker.version;
+      if (version2 === "latest") {
+        version2 = NPM_TAG;
+      }
+      const versionTag = version2 ? `@${version2}` : "";
+      url = `https://unpkg.com/@loaders.gl/${worker.module}${versionTag}/dist/${workerFile}`;
+    }
+    assert$5(url);
+    return url;
+  }
+  function validateWorkerVersion(worker, coreVersion = VERSION$2) {
+    assert$5(worker, "no worker provided");
+    const workerVersion = worker.version;
+    if (!coreVersion || !workerVersion) {
+      return false;
+    }
+    return true;
+  }
+  function canParseWithWorker(loader, options) {
+    var _a2, _b2;
+    if (!WorkerFarm.isSupported()) {
+      return false;
+    }
+    const nodeWorkers = (options == null ? void 0 : options._nodeWorkers) ?? ((_a2 = options == null ? void 0 : options.core) == null ? void 0 : _a2._nodeWorkers);
+    if (!isBrowser && !nodeWorkers) {
+      return false;
+    }
+    const useWorkers = (options == null ? void 0 : options.worker) ?? ((_b2 = options == null ? void 0 : options.core) == null ? void 0 : _b2.worker);
+    return Boolean(loader.worker && useWorkers);
+  }
+  async function parseWithWorker(loader, data2, options, context, parseOnMainThread) {
+    const name2 = loader.id;
+    const url = getWorkerURL(loader, options);
+    const workerFarm = WorkerFarm.getWorkerFarm(options == null ? void 0 : options.core);
+    const workerPool = workerFarm.getWorkerPool({
+      name: name2,
+      url
+    });
+    options = JSON.parse(JSON.stringify(options));
+    context = JSON.parse(JSON.stringify(context || {}));
+    const job = await workerPool.startJob("process-on-worker", onMessage.bind(null, parseOnMainThread));
+    job.postMessage("process", {
+      input: data2,
+      options,
+      context
+    });
+    const result = await job.result;
+    return await result.result;
+  }
+  async function onMessage(parseOnMainThread, job, type, payload) {
+    switch (type) {
+      case "done":
+        job.done(payload);
+        break;
+      case "error":
+        job.error(new Error(payload.error));
+        break;
+      case "process":
+        const { id: id2, input: input2, options } = payload;
+        try {
+          const result = await parseOnMainThread(input2, options);
+          job.postMessage("done", {
+            id: id2,
+            result
+          });
+        } catch (error2) {
+          const message2 = error2 instanceof Error ? error2.message : "unknown error";
+          job.postMessage("error", {
+            id: id2,
+            error: message2
+          });
+        }
+        break;
+      default:
+        console.warn(`parse-with-worker unknown message ${type}`);
+    }
+  }
+  function compareArrayBuffers(arrayBuffer1, arrayBuffer2, byteLength) {
+    byteLength = byteLength || arrayBuffer1.byteLength;
+    if (arrayBuffer1.byteLength < byteLength || arrayBuffer2.byteLength < byteLength) {
+      return false;
+    }
+    const array1 = new Uint8Array(arrayBuffer1);
+    const array2 = new Uint8Array(arrayBuffer2);
+    for (let i2 = 0; i2 < array1.length; ++i2) {
+      if (array1[i2] !== array2[i2]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  function concatenateArrayBuffers(...sources) {
+    return concatenateArrayBuffersFromArray(sources);
+  }
+  function concatenateArrayBuffersFromArray(sources) {
+    const sourceArrays = sources.map((source2) => source2 instanceof ArrayBuffer ? new Uint8Array(source2) : source2);
+    const byteLength = sourceArrays.reduce((length2, typedArray) => length2 + typedArray.byteLength, 0);
+    const result = new Uint8Array(byteLength);
+    let offset = 0;
+    for (const sourceArray of sourceArrays) {
+      result.set(sourceArray, offset);
+      offset += sourceArray.byteLength;
+    }
+    return result.buffer;
+  }
+  async function concatenateArrayBuffersAsync(asyncIterator) {
+    const arrayBuffers = [];
+    for await (const chunk of asyncIterator) {
+      arrayBuffers.push(copyToArrayBuffer$2(chunk));
+    }
+    return concatenateArrayBuffers(...arrayBuffers);
+  }
+  function copyToArrayBuffer$2(chunk) {
+    if (chunk instanceof ArrayBuffer) {
+      return chunk;
+    }
+    if (ArrayBuffer.isView(chunk)) {
+      const { buffer: buffer2, byteOffset, byteLength } = chunk;
+      return copyFromBuffer(buffer2, byteOffset, byteLength);
+    }
+    return copyFromBuffer(chunk);
+  }
+  function copyFromBuffer(buffer2, byteOffset = 0, byteLength = buffer2.byteLength - byteOffset) {
+    const view = new Uint8Array(buffer2, byteOffset, byteLength);
+    const copy2 = new Uint8Array(view.length);
+    copy2.set(view);
+    return copy2.buffer;
+  }
+  function getHiResTimestamp() {
+    let timestamp;
+    if (typeof window !== "undefined" && window.performance) {
+      timestamp = window.performance.now();
+    } else if (typeof process !== "undefined" && process.hrtime) {
+      const timeParts = process.hrtime();
+      timestamp = timeParts[0] * 1e3 + timeParts[1] / 1e6;
+    } else {
+      timestamp = Date.now();
+    }
+    return timestamp;
+  }
+  class Stat {
+    constructor(name2, type) {
+      this.sampleSize = 1;
+      this.time = 0;
+      this.count = 0;
+      this.samples = 0;
+      this.lastTiming = 0;
+      this.lastSampleTime = 0;
+      this.lastSampleCount = 0;
+      this._count = 0;
+      this._time = 0;
+      this._samples = 0;
+      this._startTime = 0;
+      this._timerPending = false;
+      this.name = name2;
+      this.type = type;
+      this.reset();
+    }
+    reset() {
+      this.time = 0;
+      this.count = 0;
+      this.samples = 0;
+      this.lastTiming = 0;
+      this.lastSampleTime = 0;
+      this.lastSampleCount = 0;
+      this._count = 0;
+      this._time = 0;
+      this._samples = 0;
+      this._startTime = 0;
+      this._timerPending = false;
+      return this;
+    }
+    setSampleSize(samples) {
+      this.sampleSize = samples;
+      return this;
+    }
+    incrementCount() {
+      this.addCount(1);
+      return this;
+    }
+    decrementCount() {
+      this.subtractCount(1);
+      return this;
+    }
+    addCount(value) {
+      this._count += value;
+      this._samples++;
+      this._checkSampling();
+      return this;
+    }
+    subtractCount(value) {
+      this._count -= value;
+      this._samples++;
+      this._checkSampling();
+      return this;
+    }
+    addTime(time) {
+      this._time += time;
+      this.lastTiming = time;
+      this._samples++;
+      this._checkSampling();
+      return this;
+    }
+    timeStart() {
+      this._startTime = getHiResTimestamp();
+      this._timerPending = true;
+      return this;
+    }
+    timeEnd() {
+      if (!this._timerPending) {
+        return this;
+      }
+      this.addTime(getHiResTimestamp() - this._startTime);
+      this._timerPending = false;
+      this._checkSampling();
+      return this;
+    }
+    getSampleAverageCount() {
+      return this.sampleSize > 0 ? this.lastSampleCount / this.sampleSize : 0;
+    }
+    getSampleAverageTime() {
+      return this.sampleSize > 0 ? this.lastSampleTime / this.sampleSize : 0;
+    }
+    getSampleHz() {
+      return this.lastSampleTime > 0 ? this.sampleSize / (this.lastSampleTime / 1e3) : 0;
+    }
+    getAverageCount() {
+      return this.samples > 0 ? this.count / this.samples : 0;
+    }
+    getAverageTime() {
+      return this.samples > 0 ? this.time / this.samples : 0;
+    }
+    getHz() {
+      return this.time > 0 ? this.samples / (this.time / 1e3) : 0;
+    }
+    _checkSampling() {
+      if (this._samples === this.sampleSize) {
+        this.lastSampleTime = this._time;
+        this.lastSampleCount = this._count;
+        this.count += this._count;
+        this.time += this._time;
+        this.samples += this._samples;
+        this._time = 0;
+        this._count = 0;
+        this._samples = 0;
+      }
+    }
+  }
+  class Stats {
+    constructor(options) {
+      this.stats = {};
+      this.id = options.id;
+      this.stats = {};
+      this._initializeStats(options.stats);
+      Object.seal(this);
+    }
+    get(name2, type = "count") {
+      return this._getOrCreate({
+        name: name2,
+        type
+      });
+    }
+    get size() {
+      return Object.keys(this.stats).length;
+    }
+    reset() {
+      for (const stat of Object.values(this.stats)) {
+        stat.reset();
+      }
+      return this;
+    }
+    forEach(fn) {
+      for (const stat of Object.values(this.stats)) {
+        fn(stat);
+      }
+    }
+    getTable() {
+      const table2 = {};
+      this.forEach((stat) => {
+        table2[stat.name] = {
+          time: stat.time || 0,
+          count: stat.count || 0,
+          average: stat.getAverageTime() || 0,
+          hz: stat.getHz() || 0
+        };
+      });
+      return table2;
+    }
+    _initializeStats(stats = []) {
+      stats.forEach((stat) => this._getOrCreate(stat));
+    }
+    _getOrCreate(stat) {
+      const { name: name2, type } = stat;
+      let result = this.stats[name2];
+      if (!result) {
+        if (stat instanceof Stat) {
+          result = stat;
+        } else {
+          result = new Stat(name2, type);
+        }
+        this.stats[name2] = result;
+      }
+      return result;
+    }
+  }
+  const STAT_QUEUED_REQUESTS = "Queued Requests";
+  const STAT_ACTIVE_REQUESTS = "Active Requests";
+  const STAT_CANCELLED_REQUESTS = "Cancelled Requests";
+  const STAT_QUEUED_REQUESTS_EVER = "Queued Requests Ever";
+  const STAT_ACTIVE_REQUESTS_EVER = "Active Requests Ever";
+  const DEFAULT_PROPS$1 = {
+    id: "request-scheduler",
+    throttleRequests: true,
+    maxRequests: 6,
+    debounceTime: 0
+  };
+  class RequestScheduler {
+    constructor(props = {}) {
+      __publicField(this, "props");
+      __publicField(this, "stats");
+      __publicField(this, "activeRequestCount", 0);
+      __publicField(this, "requestQueue", []);
+      __publicField(this, "requestMap", /* @__PURE__ */ new Map());
+      __publicField(this, "updateTimer", null);
+      this.props = {
+        ...DEFAULT_PROPS$1,
+        ...props
+      };
+      this.stats = new Stats({
+        id: this.props.id
+      });
+      this.stats.get(STAT_QUEUED_REQUESTS);
+      this.stats.get(STAT_ACTIVE_REQUESTS);
+      this.stats.get(STAT_CANCELLED_REQUESTS);
+      this.stats.get(STAT_QUEUED_REQUESTS_EVER);
+      this.stats.get(STAT_ACTIVE_REQUESTS_EVER);
+    }
+    setProps(props) {
+      if (props.throttleRequests !== void 0) {
+        this.props.throttleRequests = props.throttleRequests;
+      }
+      if (props.maxRequests !== void 0) {
+        this.props.maxRequests = props.maxRequests;
+      }
+      if (props.debounceTime !== void 0) {
+        this.props.debounceTime = props.debounceTime;
+      }
+    }
+    scheduleRequest(handle2, getPriority = () => 0) {
+      if (!this.props.throttleRequests) {
+        return Promise.resolve({
+          done: () => {
+          }
+        });
+      }
+      if (this.requestMap.has(handle2)) {
+        return this.requestMap.get(handle2);
+      }
+      const request = {
+        handle: handle2,
+        priority: 0,
+        getPriority
+      };
+      const promise = new Promise((resolve) => {
+        request.resolve = resolve;
+        return request;
+      });
+      this.requestQueue.push(request);
+      this.requestMap.set(handle2, promise);
+      this._issueNewRequests();
+      return promise;
+    }
+    _issueRequest(request) {
+      const { handle: handle2, resolve } = request;
+      let isDone = false;
+      const done = () => {
+        if (!isDone) {
+          isDone = true;
+          this.requestMap.delete(handle2);
+          this.activeRequestCount--;
+          this._issueNewRequests();
+        }
+      };
+      this.activeRequestCount++;
+      return resolve ? resolve({
+        done
+      }) : Promise.resolve({
+        done
+      });
+    }
+    _issueNewRequests() {
+      if (this.updateTimer !== null) {
+        clearTimeout(this.updateTimer);
+      }
+      this.updateTimer = setTimeout(() => this._issueNewRequestsAsync(), this.props.debounceTime);
+    }
+    _issueNewRequestsAsync() {
+      if (this.updateTimer !== null) {
+        clearTimeout(this.updateTimer);
+      }
+      this.updateTimer = null;
+      const freeSlots = Math.max(this.props.maxRequests - this.activeRequestCount, 0);
+      if (freeSlots === 0) {
+        return;
+      }
+      this._updateAllRequests();
+      for (let i2 = 0; i2 < freeSlots; ++i2) {
+        const request = this.requestQueue.shift();
+        if (request) {
+          this._issueRequest(request);
+        }
+      }
+    }
+    _updateAllRequests() {
+      const requestQueue = this.requestQueue;
+      for (let i2 = 0; i2 < requestQueue.length; ++i2) {
+        const request = requestQueue[i2];
+        if (!this._updateRequest(request)) {
+          requestQueue.splice(i2, 1);
+          this.requestMap.delete(request.handle);
+          i2--;
+        }
+      }
+      requestQueue.sort((a2, b2) => a2.priority - b2.priority);
+    }
+    _updateRequest(request) {
+      request.priority = request.getPriority(request.handle);
+      if (request.priority < 0) {
+        request.resolve(null);
+        return false;
+      }
+      return true;
+    }
+  }
+  let pathPrefix = "";
+  const fileAliases = {};
+  function resolvePath(filename2) {
+    for (const alias2 in fileAliases) {
+      if (filename2.startsWith(alias2)) {
+        const replacement = fileAliases[alias2];
+        filename2 = filename2.replace(alias2, replacement);
+      }
+    }
+    if (!filename2.startsWith("http://") && !filename2.startsWith("https://")) {
+      filename2 = `${pathPrefix}${filename2}`;
+    }
+    return filename2;
+  }
+  function toArrayBuffer$1(buffer2) {
+    return buffer2;
+  }
+  function isBuffer(value) {
+    return value && typeof value === "object" && value.isBuffer;
+  }
+  function toArrayBuffer(data2) {
+    if (isBuffer(data2)) {
+      return toArrayBuffer$1(data2);
+    }
+    if (data2 instanceof ArrayBuffer) {
+      return data2;
+    }
+    if (isSharedArrayBuffer(data2)) {
+      return copyToArrayBuffer$1(data2);
+    }
+    if (ArrayBuffer.isView(data2)) {
+      const buffer2 = data2.buffer;
+      if (data2.byteOffset === 0 && data2.byteLength === data2.buffer.byteLength) {
+        return buffer2;
+      }
+      return buffer2.slice(data2.byteOffset, data2.byteOffset + data2.byteLength);
+    }
+    if (typeof data2 === "string") {
+      const text2 = data2;
+      const uint8Array = new TextEncoder().encode(text2);
+      return uint8Array.buffer;
+    }
+    if (data2 && typeof data2 === "object" && data2._toArrayBuffer) {
+      return data2._toArrayBuffer();
+    }
+    throw new Error("toArrayBuffer");
+  }
+  function ensureArrayBuffer(bufferSource) {
+    if (bufferSource instanceof ArrayBuffer) {
+      return bufferSource;
+    }
+    if (isSharedArrayBuffer(bufferSource)) {
+      return copyToArrayBuffer$1(bufferSource);
+    }
+    const { buffer: buffer2, byteOffset, byteLength } = bufferSource;
+    if (buffer2 instanceof ArrayBuffer && byteOffset === 0 && byteLength === buffer2.byteLength) {
+      return buffer2;
+    }
+    return copyToArrayBuffer$1(buffer2, byteOffset, byteLength);
+  }
+  function copyToArrayBuffer$1(buffer2, byteOffset = 0, byteLength = buffer2.byteLength - byteOffset) {
+    const view = new Uint8Array(buffer2, byteOffset, byteLength);
+    const copy2 = new Uint8Array(view.length);
+    copy2.set(view);
+    return copy2.buffer;
+  }
+  function toArrayBufferView(data2) {
+    if (ArrayBuffer.isView(data2)) {
+      return data2;
+    }
+    return new Uint8Array(data2);
+  }
+  function filename(url) {
+    const slashIndex = url ? url.lastIndexOf("/") : -1;
+    return slashIndex >= 0 ? url.substr(slashIndex + 1) : url;
+  }
+  function dirname$1(url) {
+    const slashIndex = url ? url.lastIndexOf("/") : -1;
+    return slashIndex >= 0 ? url.substr(0, slashIndex) : "";
+  }
+  class FetchError extends Error {
+    constructor(message2, info) {
+      super(message2);
+      __publicField(this, "reason");
+      __publicField(this, "url");
+      __publicField(this, "response");
+      this.reason = info.reason;
+      this.url = info.url;
+      this.response = info.response;
+    }
+  }
+  const DATA_URL_PATTERN = /^data:([-\w.]+\/[-\w.+]+)(;|,)/;
+  const MIME_TYPE_PATTERN = /^([-\w.]+\/[-\w.+]+)/;
+  function compareMIMETypes(mimeType1, mimeType2) {
+    if (mimeType1.toLowerCase() === mimeType2.toLowerCase()) {
+      return true;
+    }
+    return false;
+  }
+  function parseMIMEType(mimeString) {
+    const matches2 = MIME_TYPE_PATTERN.exec(mimeString);
+    if (matches2) {
+      return matches2[1];
+    }
+    return mimeString;
+  }
+  function parseMIMETypeFromURL(url) {
+    const matches2 = DATA_URL_PATTERN.exec(url);
+    if (matches2) {
+      return matches2[1];
+    }
+    return "";
+  }
+  const QUERY_STRING_PATTERN = /\?.*/;
+  function extractQueryString(url) {
+    const matches2 = url.match(QUERY_STRING_PATTERN);
+    return matches2 && matches2[0];
+  }
+  function stripQueryString(url) {
+    return url.replace(QUERY_STRING_PATTERN, "");
+  }
+  function shortenUrlForDisplay(url) {
+    if (url.length < 50) {
+      return url;
+    }
+    const urlEnd = url.slice(url.length - 15);
+    const urlStart = url.substr(0, 32);
+    return `${urlStart}...${urlEnd}`;
+  }
+  function getResourceUrl(resource) {
+    if (isResponse(resource)) {
+      return resource.url;
+    }
+    if (isBlob(resource)) {
+      const fileName = "name" in resource ? resource.name : "";
+      return fileName || "";
+    }
+    if (typeof resource === "string") {
+      return resource;
+    }
+    return "";
+  }
+  function getResourceMIMEType(resource) {
+    if (isResponse(resource)) {
+      const contentTypeHeader = resource.headers.get("content-type") || "";
+      const noQueryUrl = stripQueryString(resource.url);
+      return parseMIMEType(contentTypeHeader) || parseMIMETypeFromURL(noQueryUrl);
+    }
+    if (isBlob(resource)) {
+      return resource.type || "";
+    }
+    if (typeof resource === "string") {
+      return parseMIMETypeFromURL(resource);
+    }
+    return "";
+  }
+  function getResourceContentLength(resource) {
+    if (isResponse(resource)) {
+      const response = resource;
+      return response.headers["content-length"] || -1;
+    }
+    if (isBlob(resource)) {
+      const blob = resource;
+      return blob.size;
+    }
+    if (typeof resource === "string") {
+      return resource.length;
+    }
+    if (resource instanceof ArrayBuffer) {
+      return resource.byteLength;
+    }
+    if (ArrayBuffer.isView(resource)) {
+      return resource.byteLength;
+    }
+    return -1;
+  }
+  async function makeResponse(resource) {
+    if (isResponse(resource)) {
+      return resource;
+    }
+    const headers = {};
+    const contentLength = getResourceContentLength(resource);
+    if (contentLength >= 0) {
+      headers["content-length"] = String(contentLength);
+    }
+    const url = getResourceUrl(resource);
+    const type = getResourceMIMEType(resource);
+    if (type) {
+      headers["content-type"] = type;
+    }
+    const initialDataUrl = await getInitialDataUrl(resource);
+    if (initialDataUrl) {
+      headers["x-first-bytes"] = initialDataUrl;
+    }
+    if (typeof resource === "string") {
+      resource = new TextEncoder().encode(resource);
+    }
+    const response = new Response(resource, {
+      headers
+    });
+    Object.defineProperty(response, "url", {
+      value: url
+    });
+    return response;
+  }
+  async function checkResponse(response) {
+    if (!response.ok) {
+      const error2 = await getResponseError(response);
+      throw error2;
+    }
+  }
+  async function getResponseError(response) {
+    const shortUrl = shortenUrlForDisplay(response.url);
+    let message2 = `Failed to fetch resource (${response.status}) ${response.statusText}: ${shortUrl}`;
+    message2 = message2.length > 100 ? `${message2.slice(0, 100)}...` : message2;
+    const info = {
+      reason: response.statusText,
+      url: response.url,
+      response
+    };
+    try {
+      const contentType = response.headers.get("Content-Type");
+      info.reason = !response.bodyUsed && (contentType == null ? void 0 : contentType.includes("application/json")) ? await response.json() : await response.text();
+    } catch (error2) {
+    }
+    return new FetchError(message2, info);
+  }
+  async function getInitialDataUrl(resource) {
+    const INITIAL_DATA_LENGTH = 5;
+    if (typeof resource === "string") {
+      return `data:,${resource.slice(0, INITIAL_DATA_LENGTH)}`;
+    }
+    if (resource instanceof Blob) {
+      const blobSlice = resource.slice(0, 5);
+      return await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          var _a2;
+          return resolve((_a2 = event == null ? void 0 : event.target) == null ? void 0 : _a2.result);
+        };
+        reader.readAsDataURL(blobSlice);
+      });
+    }
+    if (resource instanceof ArrayBuffer) {
+      const slice = resource.slice(0, INITIAL_DATA_LENGTH);
+      const base64 = arrayBufferToBase64(slice);
+      return `data:base64,${base64}`;
+    }
+    return null;
+  }
+  function arrayBufferToBase64(buffer2) {
+    let binary = "";
+    const bytes = new Uint8Array(buffer2);
+    for (let i2 = 0; i2 < bytes.byteLength; i2++) {
+      binary += String.fromCharCode(bytes[i2]);
+    }
+    return btoa(binary);
+  }
+  function isNodePath(url) {
+    return !isRequestURL(url) && !isDataURL(url);
+  }
+  function isRequestURL(url) {
+    return url.startsWith("http:") || url.startsWith("https:");
+  }
+  function isDataURL(url) {
+    return url.startsWith("data:");
+  }
+  async function fetchFile(urlOrData, fetchOptions) {
+    var _a2, _b2;
+    if (typeof urlOrData === "string") {
+      const url = resolvePath(urlOrData);
+      if (isNodePath(url)) {
+        if ((_a2 = globalThis.loaders) == null ? void 0 : _a2.fetchNode) {
+          return (_b2 = globalThis.loaders) == null ? void 0 : _b2.fetchNode(url, fetchOptions);
+        }
+      }
+      return await fetch(url, fetchOptions);
+    }
+    return await makeResponse(urlOrData);
+  }
+  const probeLog = new ProbeLog({
+    id: "loaders.gl"
+  });
+  class NullLog {
+    log() {
+      return () => {
+      };
+    }
+    info() {
+      return () => {
+      };
+    }
+    warn() {
+      return () => {
+      };
+    }
+    error() {
+      return () => {
+      };
+    }
+  }
+  class ConsoleLog {
+    constructor() {
+      __publicField(this, "console");
+      this.console = console;
+    }
+    log(...args) {
+      return this.console.log.bind(this.console, ...args);
+    }
+    info(...args) {
+      return this.console.info.bind(this.console, ...args);
+    }
+    warn(...args) {
+      return this.console.warn.bind(this.console, ...args);
+    }
+    error(...args) {
+      return this.console.error.bind(this.console, ...args);
+    }
+  }
+  const DEFAULT_LOADER_OPTIONS = {
+    core: {
+      baseUrl: void 0,
+      fetch: null,
+      mimeType: void 0,
+      fallbackMimeType: void 0,
+      ignoreRegisteredLoaders: void 0,
+      nothrow: false,
+      log: new ConsoleLog(),
+      useLocalLibraries: false,
+      CDN: "https://unpkg.com/@loaders.gl",
+      worker: true,
+      maxConcurrency: 3,
+      maxMobileConcurrency: 1,
+      reuseWorkers: isBrowser$2,
+      _nodeWorkers: false,
+      _workerType: "",
+      limit: 0,
+      _limitMB: 0,
+      batchSize: "auto",
+      batchDebounceMs: 0,
+      metadata: false,
+      transforms: []
+    }
+  };
+  const REMOVED_LOADER_OPTIONS = {
+    baseUri: "core.baseUrl",
+    fetch: "core.fetch",
+    mimeType: "core.mimeType",
+    fallbackMimeType: "core.fallbackMimeType",
+    ignoreRegisteredLoaders: "core.ignoreRegisteredLoaders",
+    nothrow: "core.nothrow",
+    log: "core.log",
+    useLocalLibraries: "core.useLocalLibraries",
+    CDN: "core.CDN",
+    worker: "core.worker",
+    maxConcurrency: "core.maxConcurrency",
+    maxMobileConcurrency: "core.maxMobileConcurrency",
+    reuseWorkers: "core.reuseWorkers",
+    _nodeWorkers: "core.nodeWorkers",
+    _workerType: "core._workerType",
+    _worker: "core._workerType",
+    limit: "core.limit",
+    _limitMB: "core._limitMB",
+    batchSize: "core.batchSize",
+    batchDebounceMs: "core.batchDebounceMs",
+    metadata: "core.metadata",
+    transforms: "core.transforms",
+    throws: "nothrow",
+    dataType: "(no longer used)",
+    uri: "core.baseUrl",
+    method: "core.fetch.method",
+    headers: "core.fetch.headers",
+    body: "core.fetch.body",
+    mode: "core.fetch.mode",
+    credentials: "core.fetch.credentials",
+    cache: "core.fetch.cache",
+    redirect: "core.fetch.redirect",
+    referrer: "core.fetch.referrer",
+    referrerPolicy: "core.fetch.referrerPolicy",
+    integrity: "core.fetch.integrity",
+    keepalive: "core.fetch.keepalive",
+    signal: "core.fetch.signal"
+  };
+  const CORE_LOADER_OPTION_KEYS = [
+    "baseUrl",
+    "fetch",
+    "mimeType",
+    "fallbackMimeType",
+    "ignoreRegisteredLoaders",
+    "nothrow",
+    "log",
+    "useLocalLibraries",
+    "CDN",
+    "worker",
+    "maxConcurrency",
+    "maxMobileConcurrency",
+    "reuseWorkers",
+    "_nodeWorkers",
+    "_workerType",
+    "limit",
+    "_limitMB",
+    "batchSize",
+    "batchDebounceMs",
+    "metadata",
+    "transforms"
+  ];
+  function getGlobalLoaderState() {
+    globalThis.loaders = globalThis.loaders || {};
+    const { loaders } = globalThis;
+    if (!loaders._state) {
+      loaders._state = {};
+    }
+    return loaders._state;
+  }
+  function getGlobalLoaderOptions() {
+    const state = getGlobalLoaderState();
+    state.globalOptions = state.globalOptions || {
+      ...DEFAULT_LOADER_OPTIONS,
+      core: {
+        ...DEFAULT_LOADER_OPTIONS.core
+      }
+    };
+    return normalizeLoaderOptions(state.globalOptions);
+  }
+  function normalizeOptions(options, loader, loaders, url) {
+    loaders = loaders || [];
+    loaders = Array.isArray(loaders) ? loaders : [
+      loaders
+    ];
+    validateOptions(options, loaders);
+    return normalizeLoaderOptions(normalizeOptionsInternal(loader, options, url));
+  }
+  function normalizeLoaderOptions(options) {
+    const normalized = cloneLoaderOptions(options);
+    moveDeprecatedTopLevelOptionsToCore(normalized);
+    for (const key2 of CORE_LOADER_OPTION_KEYS) {
+      if (normalized.core && normalized.core[key2] !== void 0) {
+        delete normalized[key2];
+      }
+    }
+    if (normalized.core && normalized.core._workerType !== void 0) {
+      delete normalized._worker;
+    }
+    return normalized;
+  }
+  function validateOptions(options, loaders) {
+    validateOptionsObject(options, null, DEFAULT_LOADER_OPTIONS, REMOVED_LOADER_OPTIONS, loaders);
+    for (const loader of loaders) {
+      const idOptions = options && options[loader.id] || {};
+      const loaderOptions = loader.options && loader.options[loader.id] || {};
+      const deprecatedOptions = loader.deprecatedOptions && loader.deprecatedOptions[loader.id] || {};
+      validateOptionsObject(idOptions, loader.id, loaderOptions, deprecatedOptions, loaders);
+    }
+  }
+  function validateOptionsObject(options, id2, defaultOptions2, deprecatedOptions, loaders) {
+    const loaderName = id2 || "Top level";
+    const prefix = id2 ? `${id2}.` : "";
+    for (const key2 in options) {
+      const isSubOptions = !id2 && isObject$1(options[key2]);
+      const isBaseUriOption = key2 === "baseUri" && !id2;
+      const isWorkerUrlOption = key2 === "workerUrl" && id2;
+      if (!(key2 in defaultOptions2) && !isBaseUriOption && !isWorkerUrlOption) {
+        if (key2 in deprecatedOptions) {
+          if (probeLog.level > 0) {
+            probeLog.warn(`${loaderName} loader option '${prefix}${key2}' no longer supported, use '${deprecatedOptions[key2]}'`)();
+          }
+        } else if (!isSubOptions) {
+          if (probeLog.level > 0) {
+            const suggestion = findSimilarOption(key2, loaders);
+            probeLog.warn(`${loaderName} loader option '${prefix}${key2}' not recognized. ${suggestion}`)();
+          }
+        }
+      }
+    }
+  }
+  function findSimilarOption(optionKey, loaders) {
+    const lowerCaseOptionKey = optionKey.toLowerCase();
+    let bestSuggestion = "";
+    for (const loader of loaders) {
+      for (const key2 in loader.options) {
+        if (optionKey === key2) {
+          return `Did you mean '${loader.id}.${key2}'?`;
+        }
+        const lowerCaseKey = key2.toLowerCase();
+        const isPartialMatch = lowerCaseOptionKey.startsWith(lowerCaseKey) || lowerCaseKey.startsWith(lowerCaseOptionKey);
+        if (isPartialMatch) {
+          bestSuggestion = bestSuggestion || `Did you mean '${loader.id}.${key2}'?`;
+        }
+      }
+    }
+    return bestSuggestion;
+  }
+  function normalizeOptionsInternal(loader, options, url) {
+    var _a2;
+    const loaderDefaultOptions = loader.options || {};
+    const mergedOptions = {
+      ...loaderDefaultOptions
+    };
+    if (loaderDefaultOptions.core) {
+      mergedOptions.core = {
+        ...loaderDefaultOptions.core
+      };
+    }
+    moveDeprecatedTopLevelOptionsToCore(mergedOptions);
+    if (((_a2 = mergedOptions.core) == null ? void 0 : _a2.log) === null) {
+      mergedOptions.core = {
+        ...mergedOptions.core,
+        log: new NullLog()
+      };
+    }
+    mergeNestedFields(mergedOptions, normalizeLoaderOptions(getGlobalLoaderOptions()));
+    const userOptions = normalizeLoaderOptions(options);
+    mergeNestedFields(mergedOptions, userOptions);
+    addUrlOptions(mergedOptions, url);
+    addDeprecatedTopLevelOptions(mergedOptions);
+    return mergedOptions;
+  }
+  function mergeNestedFields(mergedOptions, options) {
+    for (const key2 in options) {
+      if (key2 in options) {
+        const value = options[key2];
+        if (isPureObject(value) && isPureObject(mergedOptions[key2])) {
+          mergedOptions[key2] = {
+            ...mergedOptions[key2],
+            ...options[key2]
+          };
+        } else {
+          mergedOptions[key2] = options[key2];
+        }
+      }
+    }
+  }
+  function addUrlOptions(options, url) {
+    var _a2;
+    if (!url) {
+      return;
+    }
+    const hasCoreBaseUrl = ((_a2 = options.core) == null ? void 0 : _a2.baseUrl) !== void 0;
+    if (!hasCoreBaseUrl) {
+      options.core || (options.core = {});
+      options.core.baseUrl = dirname$1(stripQueryString(url));
+    }
+  }
+  function cloneLoaderOptions(options) {
+    const clonedOptions = {
+      ...options
+    };
+    if (options.core) {
+      clonedOptions.core = {
+        ...options.core
+      };
+    }
+    return clonedOptions;
+  }
+  function moveDeprecatedTopLevelOptionsToCore(options) {
+    if (options.baseUri !== void 0) {
+      options.core || (options.core = {});
+      if (options.core.baseUrl === void 0) {
+        options.core.baseUrl = options.baseUri;
+      }
+    }
+    for (const key2 of CORE_LOADER_OPTION_KEYS) {
+      if (options[key2] !== void 0) {
+        const coreOptions = options.core = options.core || {};
+        const coreRecord = coreOptions;
+        if (coreRecord[key2] === void 0) {
+          coreRecord[key2] = options[key2];
+        }
+      }
+    }
+    const workerTypeAlias = options._worker;
+    if (workerTypeAlias !== void 0) {
+      options.core || (options.core = {});
+      if (options.core._workerType === void 0) {
+        options.core._workerType = workerTypeAlias;
+      }
+    }
+  }
+  function addDeprecatedTopLevelOptions(options) {
+    const coreOptions = options.core;
+    if (!coreOptions) {
+      return;
+    }
+    for (const key2 of CORE_LOADER_OPTION_KEYS) {
+      if (coreOptions[key2] !== void 0) {
+        options[key2] = coreOptions[key2];
+      }
+    }
+  }
+  function isLoaderObject(loader) {
+    if (!loader) {
+      return false;
+    }
+    if (Array.isArray(loader)) {
+      loader = loader[0];
+    }
+    const hasExtensions = Array.isArray(loader == null ? void 0 : loader.extensions);
+    return hasExtensions;
+  }
+  function normalizeLoader(loader) {
+    assert$7(loader, "null loader");
+    assert$7(isLoaderObject(loader), "invalid loader");
+    let options;
+    if (Array.isArray(loader)) {
+      options = loader[1];
+      loader = loader[0];
+      loader = {
+        ...loader,
+        options: {
+          ...loader.options,
+          ...options
+        }
+      };
+    }
+    if ((loader == null ? void 0 : loader.parseTextSync) || (loader == null ? void 0 : loader.parseText)) {
+      loader.text = true;
+    }
+    if (!loader.text) {
+      loader.binary = true;
+    }
+    return loader;
+  }
+  const getGlobalLoaderRegistry = () => {
+    const state = getGlobalLoaderState();
+    state.loaderRegistry = state.loaderRegistry || [];
+    return state.loaderRegistry;
+  };
+  function registerLoaders(loaders) {
+    const loaderRegistry = getGlobalLoaderRegistry();
+    loaders = Array.isArray(loaders) ? loaders : [
+      loaders
+    ];
+    for (const loader of loaders) {
+      const normalizedLoader = normalizeLoader(loader);
+      if (!loaderRegistry.find((registeredLoader) => normalizedLoader === registeredLoader)) {
+        loaderRegistry.unshift(normalizedLoader);
+      }
+    }
+  }
+  function getRegisteredLoaders() {
+    return getGlobalLoaderRegistry();
+  }
+  const EXT_PATTERN = /\.([^.]+)$/;
+  async function selectLoader(data2, loaders = [], options, context) {
+    if (!validHTTPResponse(data2)) {
+      return null;
+    }
+    const normalizedOptions = normalizeLoaderOptions(options || {});
+    normalizedOptions.core || (normalizedOptions.core = {});
+    if (data2 instanceof Response && mayContainText(data2)) {
+      const text2 = await data2.clone().text();
+      const textLoader = selectLoaderSync(text2, loaders, {
+        ...normalizedOptions,
+        core: {
+          ...normalizedOptions.core,
+          nothrow: true
+        }
+      }, context);
+      if (textLoader) {
+        return textLoader;
+      }
+    }
+    let loader = selectLoaderSync(data2, loaders, {
+      ...normalizedOptions,
+      core: {
+        ...normalizedOptions.core,
+        nothrow: true
+      }
+    }, context);
+    if (loader) {
+      return loader;
+    }
+    if (isBlob(data2)) {
+      data2 = await data2.slice(0, 10).arrayBuffer();
+      loader = selectLoaderSync(data2, loaders, normalizedOptions, context);
+    }
+    if (!loader && data2 instanceof Response && mayContainText(data2)) {
+      const text2 = await data2.clone().text();
+      loader = selectLoaderSync(text2, loaders, normalizedOptions, context);
+    }
+    if (!loader && !normalizedOptions.core.nothrow) {
+      throw new Error(getNoValidLoaderMessage(data2));
+    }
+    return loader;
+  }
+  function mayContainText(response) {
+    const mimeType = getResourceMIMEType(response);
+    return Boolean(mimeType && (mimeType.startsWith("text/") || mimeType === "application/json" || mimeType.endsWith("+json")));
+  }
+  function selectLoaderSync(data2, loaders = [], options, context) {
+    if (!validHTTPResponse(data2)) {
+      return null;
+    }
+    const normalizedOptions = normalizeLoaderOptions(options || {});
+    normalizedOptions.core || (normalizedOptions.core = {});
+    if (loaders && !Array.isArray(loaders)) {
+      return normalizeLoader(loaders);
+    }
+    let candidateLoaders = [];
+    if (loaders) {
+      candidateLoaders = candidateLoaders.concat(loaders);
+    }
+    if (!normalizedOptions.core.ignoreRegisteredLoaders) {
+      candidateLoaders.push(...getRegisteredLoaders());
+    }
+    normalizeLoaders(candidateLoaders);
+    const loader = selectLoaderInternal(data2, candidateLoaders, normalizedOptions, context);
+    if (!loader && !normalizedOptions.core.nothrow) {
+      throw new Error(getNoValidLoaderMessage(data2));
+    }
+    return loader;
+  }
+  function selectLoaderInternal(data2, loaders, options, context) {
+    var _a2, _b2, _c2, _d, _e;
+    const url = getResourceUrl(data2);
+    const type = getResourceMIMEType(data2);
+    const testUrl = stripQueryString(url) || (context == null ? void 0 : context.url);
+    let loader = null;
+    let reason2 = "";
+    if ((_a2 = options == null ? void 0 : options.core) == null ? void 0 : _a2.mimeType) {
+      loader = findLoaderByMIMEType(loaders, (_b2 = options == null ? void 0 : options.core) == null ? void 0 : _b2.mimeType);
+      reason2 = `match forced by supplied MIME type ${(_c2 = options == null ? void 0 : options.core) == null ? void 0 : _c2.mimeType}`;
+    }
+    loader = loader || findLoaderByUrl(loaders, testUrl);
+    reason2 = reason2 || (loader ? `matched url ${testUrl}` : "");
+    loader = loader || findLoaderByMIMEType(loaders, type);
+    reason2 = reason2 || (loader ? `matched MIME type ${type}` : "");
+    loader = loader || findLoaderByInitialBytes(loaders, data2);
+    reason2 = reason2 || (loader ? `matched initial data ${getFirstCharacters(data2)}` : "");
+    if ((_d = options == null ? void 0 : options.core) == null ? void 0 : _d.fallbackMimeType) {
+      loader = loader || findLoaderByMIMEType(loaders, (_e = options == null ? void 0 : options.core) == null ? void 0 : _e.fallbackMimeType);
+      reason2 = reason2 || (loader ? `matched fallback MIME type ${type}` : "");
+    }
+    if (reason2) {
+      log$4.log(1, `selectLoader selected ${loader == null ? void 0 : loader.name}: ${reason2}.`);
+    }
+    return loader;
+  }
+  function validHTTPResponse(data2) {
+    if (data2 instanceof Response) {
+      if (data2.status === 204) {
+        return false;
+      }
+    }
+    return true;
+  }
+  function getNoValidLoaderMessage(data2) {
+    const url = getResourceUrl(data2);
+    const type = getResourceMIMEType(data2);
+    let message2 = "No valid loader found (";
+    message2 += url ? `${filename(url)}, ` : "no url provided, ";
+    message2 += `MIME type: ${type ? `"${type}"` : "not provided"}, `;
+    const firstCharacters = data2 ? getFirstCharacters(data2) : "";
+    message2 += firstCharacters ? ` first bytes: "${firstCharacters}"` : "first bytes: not available";
+    message2 += ")";
+    return message2;
+  }
+  function normalizeLoaders(loaders) {
+    for (const loader of loaders) {
+      normalizeLoader(loader);
+    }
+  }
+  function findLoaderByUrl(loaders, url) {
+    const match = url && EXT_PATTERN.exec(url);
+    const extension2 = match && match[1];
+    return extension2 ? findLoaderByExtension(loaders, extension2) : null;
+  }
+  function findLoaderByExtension(loaders, extension2) {
+    extension2 = extension2.toLowerCase();
+    for (const loader of loaders) {
+      for (const loaderExtension of loader.extensions) {
+        if (loaderExtension.toLowerCase() === extension2) {
+          return loader;
+        }
+      }
+    }
+    return null;
+  }
+  function findLoaderByMIMEType(loaders, mimeType) {
+    var _a2;
+    for (const loader of loaders) {
+      if ((_a2 = loader.mimeTypes) == null ? void 0 : _a2.some((mimeType1) => compareMIMETypes(mimeType, mimeType1))) {
+        return loader;
+      }
+      if (compareMIMETypes(mimeType, `application/x.${loader.id}`)) {
+        return loader;
+      }
+    }
+    return null;
+  }
+  function findLoaderByInitialBytes(loaders, data2) {
+    if (!data2) {
+      return null;
+    }
+    for (const loader of loaders) {
+      if (typeof data2 === "string") {
+        if (testDataAgainstText(data2, loader)) {
+          return loader;
+        }
+      } else if (ArrayBuffer.isView(data2)) {
+        if (testDataAgainstBinary(data2.buffer, data2.byteOffset, loader)) {
+          return loader;
+        }
+      } else if (data2 instanceof ArrayBuffer) {
+        const byteOffset = 0;
+        if (testDataAgainstBinary(data2, byteOffset, loader)) {
+          return loader;
+        }
+      }
+    }
+    return null;
+  }
+  function testDataAgainstText(data2, loader) {
+    if (loader.testText) {
+      return loader.testText(data2);
+    }
+    const tests = Array.isArray(loader.tests) ? loader.tests : [
+      loader.tests
+    ];
+    return tests.some((test2) => data2.startsWith(test2));
+  }
+  function testDataAgainstBinary(data2, byteOffset, loader) {
+    const tests = Array.isArray(loader.tests) ? loader.tests : [
+      loader.tests
+    ];
+    return tests.some((test2) => testBinary(data2, byteOffset, loader, test2));
+  }
+  function testBinary(data2, byteOffset, loader, test2) {
+    if (isArrayBufferLike(test2)) {
+      return compareArrayBuffers(test2, data2, test2.byteLength);
+    }
+    switch (typeof test2) {
+      case "function":
+        return test2(ensureArrayBuffer(data2));
+      case "string":
+        const magic = getMagicString(data2, byteOffset, test2.length);
+        return test2 === magic;
+      default:
+        return false;
+    }
+  }
+  function getFirstCharacters(data2, length2 = 5) {
+    if (typeof data2 === "string") {
+      return data2.slice(0, length2);
+    } else if (ArrayBuffer.isView(data2)) {
+      return getMagicString(data2.buffer, data2.byteOffset, length2);
+    } else if (data2 instanceof ArrayBuffer) {
+      const byteOffset = 0;
+      return getMagicString(data2, byteOffset, length2);
+    }
+    return "";
+  }
+  function getMagicString(arrayBuffer2, byteOffset, length2) {
+    if (arrayBuffer2.byteLength < byteOffset + length2) {
+      return "";
+    }
+    const dataView = new DataView(arrayBuffer2);
+    let magic = "";
+    for (let i2 = 0; i2 < length2; i2++) {
+      magic += String.fromCharCode(dataView.getUint8(byteOffset + i2));
+    }
+    return magic;
+  }
+  const DEFAULT_CHUNK_SIZE$2 = 256 * 1024;
+  function* makeStringIterator(string2, options) {
+    const chunkSize = (options == null ? void 0 : options.chunkSize) || DEFAULT_CHUNK_SIZE$2;
+    let offset = 0;
+    const textEncoder = new TextEncoder();
+    while (offset < string2.length) {
+      const chunkLength = Math.min(string2.length - offset, chunkSize);
+      const chunk = string2.slice(offset, offset + chunkLength);
+      offset += chunkLength;
+      yield ensureArrayBuffer(textEncoder.encode(chunk));
+    }
+  }
+  const DEFAULT_CHUNK_SIZE$1 = 256 * 1024;
+  function* makeArrayBufferIterator(arrayBuffer2, options = {}) {
+    const { chunkSize = DEFAULT_CHUNK_SIZE$1 } = options;
+    let byteOffset = 0;
+    while (byteOffset < arrayBuffer2.byteLength) {
+      const chunkByteLength = Math.min(arrayBuffer2.byteLength - byteOffset, chunkSize);
+      const chunk = new ArrayBuffer(chunkByteLength);
+      const sourceArray = new Uint8Array(arrayBuffer2, byteOffset, chunkByteLength);
+      const chunkArray = new Uint8Array(chunk);
+      chunkArray.set(sourceArray);
+      byteOffset += chunkByteLength;
+      yield chunk;
+    }
+  }
+  const DEFAULT_CHUNK_SIZE = 1024 * 1024;
+  async function* makeBlobIterator(blob, options) {
+    const chunkSize = (options == null ? void 0 : options.chunkSize) || DEFAULT_CHUNK_SIZE;
+    let offset = 0;
+    while (offset < blob.size) {
+      const end = offset + chunkSize;
+      const chunk = await blob.slice(offset, end).arrayBuffer();
+      offset = end;
+      yield chunk;
+    }
+  }
+  function makeStreamIterator(stream, options) {
+    return isBrowser$2 ? makeBrowserStreamIterator(stream, options) : makeNodeStreamIterator(stream);
+  }
+  async function* makeBrowserStreamIterator(stream, options) {
+    const reader = stream.getReader();
+    let nextBatchPromise;
+    try {
+      while (true) {
+        const currentBatchPromise = nextBatchPromise || reader.read();
+        if (options == null ? void 0 : options._streamReadAhead) {
+          nextBatchPromise = reader.read();
+        }
+        const { done, value } = await currentBatchPromise;
+        if (done) {
+          return;
+        }
+        yield toArrayBuffer(value);
+      }
+    } catch (error2) {
+      reader.releaseLock();
+    }
+  }
+  async function* makeNodeStreamIterator(stream, options) {
+    for await (const chunk of stream) {
+      yield toArrayBuffer(chunk);
+    }
+  }
+  function makeIterator(data2, options) {
+    if (typeof data2 === "string") {
+      return makeStringIterator(data2, options);
+    }
+    if (data2 instanceof ArrayBuffer) {
+      return makeArrayBufferIterator(data2, options);
+    }
+    if (isBlob(data2)) {
+      return makeBlobIterator(data2, options);
+    }
+    if (isReadableStream(data2)) {
+      return makeStreamIterator(data2, options);
+    }
+    if (isResponse(data2)) {
+      const responseBody = data2.body;
+      if (!responseBody) {
+        throw new Error("Readable stream not available on Response");
+      }
+      return makeStreamIterator(responseBody, options);
+    }
+    throw new Error("makeIterator");
+  }
+  const ERR_DATA = "Cannot convert supplied data type";
+  function getArrayBufferOrStringFromDataSync(data2, loader, options) {
+    if (loader.text && typeof data2 === "string") {
+      return data2;
+    }
+    if (isBuffer(data2)) {
+      data2 = data2.buffer;
+    }
+    if (isArrayBufferLike(data2)) {
+      const bufferSource = toArrayBufferView(data2);
+      if (loader.text && !loader.binary) {
+        const textDecoder = new TextDecoder("utf8");
+        return textDecoder.decode(bufferSource);
+      }
+      return toArrayBuffer(bufferSource);
+    }
+    throw new Error(ERR_DATA);
+  }
+  async function getArrayBufferOrStringFromData(data2, loader, options) {
+    if (typeof data2 === "string" || isArrayBufferLike(data2)) {
+      return getArrayBufferOrStringFromDataSync(data2, loader);
+    }
+    if (isBlob(data2)) {
+      data2 = await makeResponse(data2);
+    }
+    if (isResponse(data2)) {
+      await checkResponse(data2);
+      return loader.binary ? await data2.arrayBuffer() : await data2.text();
+    }
+    if (isReadableStream(data2)) {
+      data2 = makeIterator(data2, options);
+    }
+    if (isIterable(data2) || isAsyncIterable$1(data2)) {
+      return concatenateArrayBuffersAsync(data2);
+    }
+    throw new Error(ERR_DATA);
+  }
+  function getFetchFunction(options, context) {
+    var _a2;
+    const globalOptions = getGlobalLoaderOptions();
+    const loaderOptions = options || globalOptions;
+    const fetchOption = loaderOptions.fetch ?? ((_a2 = loaderOptions.core) == null ? void 0 : _a2.fetch);
+    if (typeof fetchOption === "function") {
+      return fetchOption;
+    }
+    if (isObject$1(fetchOption)) {
+      return (url) => fetchFile(url, fetchOption);
+    }
+    if (context == null ? void 0 : context.fetch) {
+      return context == null ? void 0 : context.fetch;
+    }
+    return fetchFile;
+  }
+  function getLoaderContext(context, options, parentContext) {
+    if (parentContext) {
+      return parentContext;
+    }
+    const newContext = {
+      fetch: getFetchFunction(options, context),
+      ...context
+    };
+    if (newContext.url) {
+      const baseUrl = stripQueryString(newContext.url);
+      newContext.baseUrl = baseUrl;
+      newContext.queryString = extractQueryString(newContext.url);
+      newContext.filename = filename(baseUrl);
+      newContext.baseUrl = dirname$1(baseUrl);
+    }
+    if (!Array.isArray(newContext.loaders)) {
+      newContext.loaders = null;
+    }
+    return newContext;
+  }
+  function getLoadersFromContext(loaders, context) {
+    if (loaders && !Array.isArray(loaders)) {
+      return loaders;
+    }
+    let candidateLoaders;
+    if (loaders) {
+      candidateLoaders = Array.isArray(loaders) ? loaders : [
+        loaders
+      ];
+    }
+    if (context && context.loaders) {
+      const contextLoaders = Array.isArray(context.loaders) ? context.loaders : [
+        context.loaders
+      ];
+      candidateLoaders = candidateLoaders ? [
+        ...candidateLoaders,
+        ...contextLoaders
+      ] : contextLoaders;
+    }
+    return candidateLoaders && candidateLoaders.length ? candidateLoaders : void 0;
+  }
+  async function parse$6(data2, loaders, options, context) {
+    if (loaders && !Array.isArray(loaders) && !isLoaderObject(loaders)) {
+      context = void 0;
+      options = loaders;
+      loaders = void 0;
+    }
+    data2 = await data2;
+    options = options || {};
+    const url = getResourceUrl(data2);
+    const typedLoaders = loaders;
+    const candidateLoaders = getLoadersFromContext(typedLoaders, context);
+    const loader = await selectLoader(data2, candidateLoaders, options);
+    if (!loader) {
+      return null;
+    }
+    const strictOptions = normalizeOptions(options, loader, candidateLoaders, url);
+    context = getLoaderContext({
+      url,
+      _parse: parse$6,
+      loaders: candidateLoaders
+    }, strictOptions, context || null);
+    return await parseWithLoader(loader, data2, strictOptions, context);
+  }
+  async function parseWithLoader(loader, data2, options, context) {
+    validateWorkerVersion(loader);
+    options = mergeOptions(loader.options, options);
+    if (isResponse(data2)) {
+      const { ok: ok2, redirected, status, statusText, type, url } = data2;
+      const headers = Object.fromEntries(data2.headers.entries());
+      context.response = {
+        headers,
+        ok: ok2,
+        redirected,
+        status,
+        statusText,
+        type,
+        url
+      };
+    }
+    data2 = await getArrayBufferOrStringFromData(data2, loader, options);
+    const loaderWithParser = loader;
+    if (loaderWithParser.parseTextSync && typeof data2 === "string") {
+      return loaderWithParser.parseTextSync(data2, options, context);
+    }
+    if (canParseWithWorker(loader, options)) {
+      return await parseWithWorker(loader, data2, options, context, parse$6);
+    }
+    if (loaderWithParser.parseText && typeof data2 === "string") {
+      return await loaderWithParser.parseText(data2, options, context);
+    }
+    if (loaderWithParser.parse) {
+      return await loaderWithParser.parse(data2, options, context);
+    }
+    assert$5(!loaderWithParser.parseSync);
+    throw new Error(`${loader.id} loader - no parser found and worker is disabled`);
+  }
+  function isTypedArray$1(value) {
+    return ArrayBuffer.isView(value) && !(value instanceof DataView);
+  }
+  function isNumberArray$1(value) {
+    if (Array.isArray(value)) {
+      return value.length === 0 || typeof value[0] === "number";
+    }
+    return false;
+  }
+  function isNumericArray(value) {
+    return isTypedArray$1(value) || isNumberArray$1(value);
+  }
+  async function load(url, loaders, options, context) {
+    var _a2;
+    let resolvedLoaders;
+    let resolvedOptions;
+    if (!Array.isArray(loaders) && !isLoaderObject(loaders)) {
+      resolvedLoaders = [];
+      resolvedOptions = loaders;
+    } else {
+      resolvedLoaders = loaders;
+      resolvedOptions = options;
+    }
+    const fetch2 = getFetchFunction(resolvedOptions);
+    let data2 = url;
+    if (typeof url === "string") {
+      data2 = await fetch2(url);
+    }
+    if (isBlob(url)) {
+      data2 = await fetch2(url);
+    }
+    if (typeof url === "string") {
+      const normalizedOptions = normalizeLoaderOptions(resolvedOptions || {});
+      if (!((_a2 = normalizedOptions.core) == null ? void 0 : _a2.baseUrl)) {
+        resolvedOptions = {
+          ...resolvedOptions,
+          core: {
+            ...resolvedOptions == null ? void 0 : resolvedOptions.core,
+            baseUrl: url
+          }
+        };
+      }
+    }
+    return Array.isArray(resolvedLoaders) ? await parse$6(data2, resolvedLoaders, resolvedOptions) : await parse$6(data2, resolvedLoaders, resolvedOptions);
+  }
+  const VERSION$1 = "4.4.5";
+  const parseImageNode = (_a = globalThis.loaders) == null ? void 0 : _a.parseImageNode;
+  const IMAGE_SUPPORTED = typeof Image !== "undefined";
+  const IMAGE_BITMAP_SUPPORTED = typeof ImageBitmap !== "undefined";
+  const NODE_IMAGE_SUPPORTED = Boolean(parseImageNode);
+  const DATA_SUPPORTED = isBrowser$2 ? true : NODE_IMAGE_SUPPORTED;
+  function isImageTypeSupported(type) {
+    switch (type) {
+      case "auto":
+        return IMAGE_BITMAP_SUPPORTED || IMAGE_SUPPORTED || DATA_SUPPORTED;
+      case "imagebitmap":
+        return IMAGE_BITMAP_SUPPORTED;
+      case "image":
+        return IMAGE_SUPPORTED;
+      case "data":
+        return DATA_SUPPORTED;
+      default:
+        throw new Error(`@loaders.gl/images: image ${type} not supported in this environment`);
+    }
+  }
+  function getDefaultImageType() {
+    if (IMAGE_BITMAP_SUPPORTED) {
+      return "imagebitmap";
+    }
+    if (IMAGE_SUPPORTED) {
+      return "image";
+    }
+    if (DATA_SUPPORTED) {
+      return "data";
+    }
+    throw new Error("Install '@loaders.gl/polyfills' to parse images under Node.js");
+  }
+  function getImageType(image2) {
+    const format = getImageTypeOrNull(image2);
+    if (!format) {
+      throw new Error("Not an image");
+    }
+    return format;
+  }
+  function getImageData(image2) {
+    switch (getImageType(image2)) {
+      case "data":
+        return image2;
+      case "image":
+      case "imagebitmap":
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        if (!context) {
+          throw new Error("getImageData");
+        }
+        canvas.width = image2.width;
+        canvas.height = image2.height;
+        context.drawImage(image2, 0, 0);
+        return context.getImageData(0, 0, image2.width, image2.height);
+      default:
+        throw new Error("getImageData");
+    }
+  }
+  function getImageTypeOrNull(image2) {
+    if (typeof ImageBitmap !== "undefined" && image2 instanceof ImageBitmap) {
+      return "imagebitmap";
+    }
+    if (typeof Image !== "undefined" && image2 instanceof Image) {
+      return "image";
+    }
+    if (image2 && typeof image2 === "object" && image2.data && image2.width && image2.height) {
+      return "data";
+    }
+    return null;
+  }
+  const SVG_DATA_URL_PATTERN = /^data:image\/svg\+xml/;
+  const SVG_URL_PATTERN = /\.svg((\?|#).*)?$/;
+  function isSVG(url) {
+    return url && (SVG_DATA_URL_PATTERN.test(url) || SVG_URL_PATTERN.test(url));
+  }
+  function getBlobOrSVGDataUrl(arrayBuffer2, url) {
+    if (isSVG(url)) {
+      const textDecoder = new TextDecoder();
+      let xmlText = textDecoder.decode(arrayBuffer2);
+      try {
+        if (typeof unescape === "function" && typeof encodeURIComponent === "function") {
+          xmlText = unescape(encodeURIComponent(xmlText));
+        }
+      } catch (error2) {
+        throw new Error(error2.message);
+      }
+      const src = `data:image/svg+xml;base64,${btoa(xmlText)}`;
+      return src;
+    }
+    return getBlob(arrayBuffer2, url);
+  }
+  function getBlob(arrayBuffer2, url) {
+    if (isSVG(url)) {
+      throw new Error("SVG cannot be parsed directly to imagebitmap");
+    }
+    return new Blob([
+      new Uint8Array(arrayBuffer2)
+    ]);
+  }
+  async function parseToImage(arrayBuffer2, options, url) {
+    const blobOrDataUrl = getBlobOrSVGDataUrl(arrayBuffer2, url);
+    const URL2 = self.URL || self.webkitURL;
+    const objectUrl = typeof blobOrDataUrl !== "string" && URL2.createObjectURL(blobOrDataUrl);
+    try {
+      return await loadToImage(objectUrl || blobOrDataUrl, options);
+    } finally {
+      if (objectUrl) {
+        URL2.revokeObjectURL(objectUrl);
+      }
+    }
+  }
+  async function loadToImage(url, options) {
+    const image2 = new Image();
+    image2.src = url;
+    if (options.image && options.image.decode && image2.decode) {
+      await image2.decode();
+      return image2;
+    }
+    return await new Promise((resolve, reject) => {
+      try {
+        image2.onload = () => resolve(image2);
+        image2.onerror = (error2) => {
+          const message2 = error2 instanceof Error ? error2.message : "error";
+          reject(new Error(message2));
+        };
+      } catch (error2) {
+        reject(error2);
+      }
+    });
+  }
+  let imagebitmapOptionsSupported = true;
+  async function parseToImageBitmap(arrayBuffer2, options, url) {
+    let blob;
+    if (isSVG(url)) {
+      const image2 = await parseToImage(arrayBuffer2, options, url);
+      blob = image2;
+    } else {
+      blob = getBlob(arrayBuffer2, url);
+    }
+    const imagebitmapOptions = options && options.imagebitmap;
+    return await safeCreateImageBitmap(blob, imagebitmapOptions);
+  }
+  async function safeCreateImageBitmap(blob, imagebitmapOptions = null) {
+    if (isEmptyObject(imagebitmapOptions) || !imagebitmapOptionsSupported) {
+      imagebitmapOptions = null;
+    }
+    if (imagebitmapOptions) {
+      try {
+        return await createImageBitmap(blob, imagebitmapOptions);
+      } catch (error2) {
+        console.warn(error2);
+        imagebitmapOptionsSupported = false;
+      }
+    }
+    return await createImageBitmap(blob);
+  }
+  function isEmptyObject(object) {
+    if (!object) {
+      return true;
+    }
+    for (const key2 in object) {
+      if (Object.prototype.hasOwnProperty.call(object, key2)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  function getISOBMFFMediaType(buffer2) {
+    if (!checkString(buffer2, "ftyp", 4)) {
+      return null;
+    }
+    if ((buffer2[8] & 96) === 0) {
+      return null;
+    }
+    return decodeMajorBrand(buffer2);
+  }
+  function decodeMajorBrand(buffer2) {
+    const brandMajor = getUTF8String(buffer2, 8, 12).replace("\0", " ").trim();
+    switch (brandMajor) {
+      case "avif":
+      case "avis":
+        return {
+          extension: "avif",
+          mimeType: "image/avif"
+        };
+      default:
+        return null;
+    }
+  }
+  function getUTF8String(array, start, end) {
+    return String.fromCharCode(...array.slice(start, end));
+  }
+  function stringToBytes(string2) {
+    return [
+      ...string2
+    ].map((character) => character.charCodeAt(0));
+  }
+  function checkString(buffer2, header, offset = 0) {
+    const headerBytes = stringToBytes(header);
+    for (let i2 = 0; i2 < headerBytes.length; ++i2) {
+      if (headerBytes[i2] !== buffer2[i2 + offset]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  const BIG_ENDIAN$1 = false;
+  const LITTLE_ENDIAN$1 = true;
+  function getBinaryImageMetadata(binaryData) {
+    const dataView = toDataView(binaryData);
+    return getPngMetadata(dataView) || getJpegMetadata(dataView) || getGifMetadata(dataView) || getBmpMetadata(dataView) || getISOBMFFMetadata(dataView);
+  }
+  function getISOBMFFMetadata(binaryData) {
+    const buffer2 = new Uint8Array(binaryData instanceof DataView ? binaryData.buffer : binaryData);
+    const mediaType = getISOBMFFMediaType(buffer2);
+    if (!mediaType) {
+      return null;
+    }
+    return {
+      mimeType: mediaType.mimeType,
+      width: 0,
+      height: 0
+    };
+  }
+  function getPngMetadata(binaryData) {
+    const dataView = toDataView(binaryData);
+    const isPng = dataView.byteLength >= 24 && dataView.getUint32(0, BIG_ENDIAN$1) === 2303741511;
+    if (!isPng) {
+      return null;
+    }
+    return {
+      mimeType: "image/png",
+      width: dataView.getUint32(16, BIG_ENDIAN$1),
+      height: dataView.getUint32(20, BIG_ENDIAN$1)
+    };
+  }
+  function getGifMetadata(binaryData) {
+    const dataView = toDataView(binaryData);
+    const isGif = dataView.byteLength >= 10 && dataView.getUint32(0, BIG_ENDIAN$1) === 1195984440;
+    if (!isGif) {
+      return null;
+    }
+    return {
+      mimeType: "image/gif",
+      width: dataView.getUint16(6, LITTLE_ENDIAN$1),
+      height: dataView.getUint16(8, LITTLE_ENDIAN$1)
+    };
+  }
+  function getBmpMetadata(binaryData) {
+    const dataView = toDataView(binaryData);
+    const isBmp = dataView.byteLength >= 14 && dataView.getUint16(0, BIG_ENDIAN$1) === 16973 && dataView.getUint32(2, LITTLE_ENDIAN$1) === dataView.byteLength;
+    if (!isBmp) {
+      return null;
+    }
+    return {
+      mimeType: "image/bmp",
+      width: dataView.getUint32(18, LITTLE_ENDIAN$1),
+      height: dataView.getUint32(22, LITTLE_ENDIAN$1)
+    };
+  }
+  function getJpegMetadata(binaryData) {
+    const dataView = toDataView(binaryData);
+    const isJpeg = dataView.byteLength >= 3 && dataView.getUint16(0, BIG_ENDIAN$1) === 65496 && dataView.getUint8(2) === 255;
+    if (!isJpeg) {
+      return null;
+    }
+    const { tableMarkers, sofMarkers } = getJpegMarkers();
+    let i2 = 2;
+    while (i2 + 9 < dataView.byteLength) {
+      const marker = dataView.getUint16(i2, BIG_ENDIAN$1);
+      if (sofMarkers.has(marker)) {
+        return {
+          mimeType: "image/jpeg",
+          height: dataView.getUint16(i2 + 5, BIG_ENDIAN$1),
+          width: dataView.getUint16(i2 + 7, BIG_ENDIAN$1)
+        };
+      }
+      if (!tableMarkers.has(marker)) {
+        return null;
+      }
+      i2 += 2;
+      i2 += dataView.getUint16(i2, BIG_ENDIAN$1);
+    }
+    return null;
+  }
+  function getJpegMarkers() {
+    const tableMarkers = /* @__PURE__ */ new Set([
+      65499,
+      65476,
+      65484,
+      65501,
+      65534
+    ]);
+    for (let i2 = 65504; i2 < 65520; ++i2) {
+      tableMarkers.add(i2);
+    }
+    const sofMarkers = /* @__PURE__ */ new Set([
+      65472,
+      65473,
+      65474,
+      65475,
+      65477,
+      65478,
+      65479,
+      65481,
+      65482,
+      65483,
+      65485,
+      65486,
+      65487,
+      65502
+    ]);
+    return {
+      tableMarkers,
+      sofMarkers
+    };
+  }
+  function toDataView(data2) {
+    if (data2 instanceof DataView) {
+      return data2;
+    }
+    if (ArrayBuffer.isView(data2)) {
+      return new DataView(data2.buffer);
+    }
+    if (data2 instanceof ArrayBuffer) {
+      return new DataView(data2);
+    }
+    throw new Error("toDataView");
+  }
+  async function parseToNodeImage(arrayBuffer2, options) {
+    var _a2;
+    const { mimeType } = getBinaryImageMetadata(arrayBuffer2) || {};
+    const parseImageNode2 = (_a2 = globalThis.loaders) == null ? void 0 : _a2.parseImageNode;
+    assert$7(parseImageNode2);
+    return await parseImageNode2(arrayBuffer2, mimeType);
+  }
+  async function parseImage(arrayBuffer2, options, context) {
+    options = options || {};
+    const imageOptions = options.image || {};
+    const imageType = imageOptions.type || "auto";
+    const { url } = context || {};
+    const loadType = getLoadableImageType(imageType);
+    let image2;
+    switch (loadType) {
+      case "imagebitmap":
+        image2 = await parseToImageBitmap(arrayBuffer2, options, url);
+        break;
+      case "image":
+        image2 = await parseToImage(arrayBuffer2, options, url);
+        break;
+      case "data":
+        image2 = await parseToNodeImage(arrayBuffer2);
+        break;
+      default:
+        assert$7(false);
+    }
+    if (imageType === "data") {
+      image2 = getImageData(image2);
+    }
+    return image2;
+  }
+  function getLoadableImageType(type) {
+    switch (type) {
+      case "auto":
+      case "data":
+        return getDefaultImageType();
+      default:
+        isImageTypeSupported(type);
+        return type;
+    }
+  }
+  const EXTENSIONS = [
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "webp",
+    "bmp",
+    "ico",
+    "svg",
+    "avif"
+  ];
+  const MIME_TYPES$1 = [
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/webp",
+    "image/avif",
+    "image/bmp",
+    "image/vnd.microsoft.icon",
+    "image/svg+xml"
+  ];
+  const DEFAULT_IMAGE_LOADER_OPTIONS = {
+    image: {
+      type: "auto",
+      decode: true
+    }
+  };
+  const ImageLoader = {
+    dataType: null,
+    batchType: null,
+    id: "image",
+    module: "images",
+    name: "Images",
+    version: VERSION$1,
+    mimeTypes: MIME_TYPES$1,
+    extensions: EXTENSIONS,
+    parse: parseImage,
+    tests: [
+      (arrayBuffer2) => Boolean(getBinaryImageMetadata(new DataView(arrayBuffer2)))
+    ],
+    options: DEFAULT_IMAGE_LOADER_OPTIONS
+  };
+  const defaultLogger = new ProbeLog({
+    id: "deck"
+  });
+  let loggers = {};
+  function register$2(handlers2) {
+    loggers = handlers2;
+  }
+  function debug(eventType, arg1, arg2, arg3) {
+    if (defaultLogger.level > 0 && loggers[eventType]) {
+      loggers[eventType].call(null, arg1, arg2, arg3);
+    }
+  }
+  function isJSON(text2) {
+    const firstChar = text2[0];
+    const lastChar = text2[text2.length - 1];
+    return firstChar === "{" && lastChar === "}" || firstChar === "[" && lastChar === "]";
+  }
+  const jsonLoader = {
+    dataType: null,
+    batchType: null,
+    id: "JSON",
+    name: "JSON",
+    module: "",
+    version: "",
+    options: {},
+    extensions: [
+      "json",
+      "geojson"
+    ],
+    mimeTypes: [
+      "application/json",
+      "application/geo+json"
+    ],
+    testText: isJSON,
+    parseTextSync: JSON.parse
+  };
+  function checkVersion() {
+    const version2 = "9.3.3";
+    const existingVersion = globalThis.deck && globalThis.deck.VERSION;
+    if (existingVersion && existingVersion !== version2) {
+      throw new Error(`deck.gl - multiple versions detected: ${existingVersion} vs ${version2}`);
+    }
+    if (!existingVersion) {
+      defaultLogger.log(1, `deck.gl ${version2}`)();
+      globalThis.deck = {
+        ...globalThis.deck,
+        VERSION: version2,
+        version: version2,
+        log: defaultLogger,
+        _registerLoggers: register$2
+      };
+      registerLoaders([
+        jsonLoader,
+        [
+          ImageLoader,
+          {
+            imagebitmap: {
+              premultiplyAlpha: "none"
+            }
+          }
+        ]
+      ]);
+    }
+    return version2;
+  }
+  const VERSION = checkVersion();
+  function assert$4(condition, message2) {
+    var _a2;
+    if (!condition) {
+      const error2 = new Error(message2 || "shadertools: assertion failed.");
+      (_a2 = Error.captureStackTrace) == null ? void 0 : _a2.call(Error, error2, assert$4);
+      throw error2;
+    }
+  }
+  const DEFAULT_PROP_VALIDATORS = {
+    number: {
+      type: "number",
+      validate(value, propType) {
+        return Number.isFinite(value) && typeof propType === "object" && (propType.max === void 0 || value <= propType.max) && (propType.min === void 0 || value >= propType.min);
+      }
+    },
+    array: {
+      type: "array",
+      validate(value, propType) {
+        return Array.isArray(value) || ArrayBuffer.isView(value);
+      }
+    }
+  };
+  function makePropValidators(propTypes) {
+    const propValidators = {};
+    for (const [name2, propType] of Object.entries(propTypes)) {
+      propValidators[name2] = makePropValidator(propType);
+    }
+    return propValidators;
+  }
+  function makePropValidator(propType) {
+    let type = getTypeOf$1(propType);
+    if (type !== "object") {
+      return {
+        value: propType,
+        ...DEFAULT_PROP_VALIDATORS[type],
+        type
+      };
+    }
+    if (typeof propType === "object") {
+      if (!propType) {
+        return {
+          type: "object",
+          value: null
+        };
+      }
+      if (propType.type !== void 0) {
+        return {
+          ...propType,
+          ...DEFAULT_PROP_VALIDATORS[propType.type],
+          type: propType.type
+        };
+      }
+      if (propType.value === void 0) {
+        return {
+          type: "object",
+          value: propType
+        };
+      }
+      type = getTypeOf$1(propType.value);
+      return {
+        ...propType,
+        ...DEFAULT_PROP_VALIDATORS[type],
+        type
+      };
+    }
+    throw new Error("props");
+  }
+  function getTypeOf$1(value) {
+    if (Array.isArray(value) || ArrayBuffer.isView(value)) {
+      return "array";
+    }
+    return typeof value;
+  }
+  const MODULE_INJECTORS_VS = `#ifdef MODULE_LOGDEPTH
+  logdepth_adjustPosition(gl_Position);
+#endif
+`;
+  const MODULE_INJECTORS_FS = `#ifdef MODULE_MATERIAL
+  fragColor = material_filterColor(fragColor);
+#endif
+
+#ifdef MODULE_LIGHTING
+  fragColor = lighting_filterColor(fragColor);
+#endif
+
+#ifdef MODULE_FOG
+  fragColor = fog_filterColor(fragColor);
+#endif
+
+#ifdef MODULE_PICKING
+  fragColor = picking_filterHighlightColor(fragColor);
+  fragColor = picking_filterPickingColor(fragColor);
+#endif
+
+#ifdef MODULE_LOGDEPTH
+  logdepth_setFragDepth();
+#endif
+`;
+  const MODULE_INJECTORS = {
+    vertex: MODULE_INJECTORS_VS,
+    fragment: MODULE_INJECTORS_FS
+  };
+  const REGEX_START_OF_MAIN = /void\s+main\s*\([^)]*\)\s*\{\n?/;
+  const REGEX_END_OF_MAIN = /}\n?[^{}]*$/;
+  const fragments = [];
+  const DECLARATION_INJECT_MARKER = "__LUMA_INJECT_DECLARATIONS__";
+  function normalizeInjections(injections) {
+    const result = {
+      vertex: {},
+      fragment: {}
+    };
+    for (const hook in injections) {
+      let injection = injections[hook];
+      const stage = getHookStage(hook);
+      if (typeof injection === "string") {
+        injection = {
+          order: 0,
+          injection
+        };
+      }
+      result[stage][hook] = injection;
+    }
+    return result;
+  }
+  function getHookStage(hook) {
+    const type = hook.slice(0, 2);
+    switch (type) {
+      case "vs":
+        return "vertex";
+      case "fs":
+        return "fragment";
+      default:
+        throw new Error(type);
+    }
+  }
+  function injectShader(source2, stage, inject2, injectStandardStubs = false) {
+    const isVertex = stage === "vertex";
+    for (const key2 in inject2) {
+      const fragmentData = inject2[key2];
+      fragmentData.sort((a2, b2) => a2.order - b2.order);
+      fragments.length = fragmentData.length;
+      for (let i2 = 0, len2 = fragmentData.length; i2 < len2; ++i2) {
+        fragments[i2] = fragmentData[i2].injection;
+      }
+      const fragmentString = `${fragments.join("\n")}
+`;
+      switch (key2) {
+        case "vs:#decl":
+          if (isVertex) {
+            source2 = source2.replace(DECLARATION_INJECT_MARKER, fragmentString);
+          }
+          break;
+        case "vs:#main-start":
+          if (isVertex) {
+            source2 = source2.replace(REGEX_START_OF_MAIN, (match) => match + fragmentString);
+          }
+          break;
+        case "vs:#main-end":
+          if (isVertex) {
+            source2 = source2.replace(REGEX_END_OF_MAIN, (match) => fragmentString + match);
+          }
+          break;
+        case "fs:#decl":
+          if (!isVertex) {
+            source2 = source2.replace(DECLARATION_INJECT_MARKER, fragmentString);
+          }
+          break;
+        case "fs:#main-start":
+          if (!isVertex) {
+            source2 = source2.replace(REGEX_START_OF_MAIN, (match) => match + fragmentString);
+          }
+          break;
+        case "fs:#main-end":
+          if (!isVertex) {
+            source2 = source2.replace(REGEX_END_OF_MAIN, (match) => fragmentString + match);
+          }
+          break;
+        default:
+          source2 = source2.replace(key2, (match) => match + fragmentString);
+      }
+    }
+    source2 = source2.replace(DECLARATION_INJECT_MARKER, "");
+    if (injectStandardStubs) {
+      source2 = source2.replace(/\}\s*$/, (match) => match + MODULE_INJECTORS[stage]);
+    }
+    return source2;
+  }
+  function initializeShaderModules(modules) {
+    modules.map((module) => initializeShaderModule(module));
+  }
+  function initializeShaderModule(module) {
+    if (module.instance) {
+      return;
+    }
+    initializeShaderModules(module.dependencies || []);
+    const { propTypes = {}, deprecations: deprecations2 = [], inject: inject2 = {} } = module;
+    const instance = {
+      normalizedInjections: normalizeInjections(inject2),
+      parsedDeprecations: parseDeprecationDefinitions(deprecations2)
+    };
+    if (propTypes) {
+      instance.propValidators = makePropValidators(propTypes);
+    }
+    module.instance = instance;
+    let defaultProps2 = {};
+    if (propTypes) {
+      defaultProps2 = Object.entries(propTypes).reduce((obj, [key2, propType]) => {
+        const value = propType == null ? void 0 : propType.value;
+        if (value) {
+          obj[key2] = value;
+        }
+        return obj;
+      }, {});
+    }
+    module.defaultUniforms = {
+      ...module.defaultUniforms,
+      ...defaultProps2
+    };
+  }
+  function checkShaderModuleDeprecations(shaderModule, shaderSource, log3) {
+    var _a2;
+    (_a2 = shaderModule.deprecations) == null ? void 0 : _a2.forEach((def) => {
+      var _a3;
+      if ((_a3 = def.regex) == null ? void 0 : _a3.test(shaderSource)) {
+        if (def.deprecated) {
+          log3.deprecated(def.old, def.new)();
+        } else {
+          log3.removed(def.old, def.new)();
+        }
+      }
+    });
+  }
+  function parseDeprecationDefinitions(deprecations2) {
+    deprecations2.forEach((def) => {
+      switch (def.type) {
+        case "function":
+          def.regex = new RegExp(`\\b${def.old}\\(`);
+          break;
+        default:
+          def.regex = new RegExp(`${def.type} ${def.old};`);
+      }
+    });
+    return deprecations2;
+  }
+  function getShaderModuleDependencies(modules) {
+    initializeShaderModules(modules);
+    const moduleMap = {};
+    const moduleDepth = {};
+    getDependencyGraph({
+      modules,
+      level: 0,
+      moduleMap,
+      moduleDepth
+    });
+    const dependencies = Object.keys(moduleDepth).sort((a2, b2) => moduleDepth[b2] - moduleDepth[a2]).map((name2) => moduleMap[name2]);
+    initializeShaderModules(dependencies);
+    return dependencies;
+  }
+  function getDependencyGraph(options) {
+    const { modules, level, moduleMap, moduleDepth } = options;
+    if (level >= 5) {
+      throw new Error("Possible loop in shader dependency graph");
+    }
+    for (const module of modules) {
+      moduleMap[module.name] = module;
+      if (moduleDepth[module.name] === void 0 || moduleDepth[module.name] < level) {
+        moduleDepth[module.name] = level;
+      }
+    }
+    for (const module of modules) {
+      if (module.dependencies) {
+        getDependencyGraph({
+          modules: module.dependencies,
+          level: level + 1,
+          moduleMap,
+          moduleDepth
+        });
+      }
+    }
+  }
+  const GLSL_UNIFORM_BLOCK_FIELD_REGEXP = /^(?:uniform\s+)?(?:(?:lowp|mediump|highp)\s+)?[A-Za-z0-9_]+(?:<[^>]+>)?\s+([A-Za-z0-9_]+)(?:\s*\[[^\]]+\])?\s*;/;
+  const GLSL_UNIFORM_BLOCK_REGEXP = /((?:layout\s*\([^)]*\)\s*)*)uniform\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{([\s\S]*?)\}\s*([A-Za-z_][A-Za-z0-9_]*)?\s*;/g;
+  function getShaderModuleUniformBlockName(module) {
+    return `${module.name}Uniforms`;
+  }
+  function getShaderModuleUniformBlockFields(module, stage) {
+    const shaderSource = stage === "wgsl" ? module.source : stage === "vertex" ? module.vs : module.fs;
+    if (!shaderSource) {
+      return null;
+    }
+    const uniformBlockName = getShaderModuleUniformBlockName(module);
+    return extractShaderUniformBlockFieldNames(shaderSource, stage === "wgsl" ? "wgsl" : "glsl", uniformBlockName);
+  }
+  function getShaderModuleUniformLayoutValidationResult(module, stage) {
+    const expectedUniformNames = Object.keys(module.uniformTypes || {});
+    if (!expectedUniformNames.length) {
+      return null;
+    }
+    const actualUniformNames = getShaderModuleUniformBlockFields(module, stage);
+    if (!actualUniformNames) {
+      return null;
+    }
+    return {
+      moduleName: module.name,
+      uniformBlockName: getShaderModuleUniformBlockName(module),
+      stage,
+      expectedUniformNames,
+      actualUniformNames,
+      matches: areStringArraysEqual(expectedUniformNames, actualUniformNames)
+    };
+  }
+  function validateShaderModuleUniformLayout(module, stage, options = {}) {
+    var _a2, _b2;
+    const validationResult = getShaderModuleUniformLayoutValidationResult(module, stage);
+    if (!validationResult || validationResult.matches) {
+      return validationResult;
+    }
+    const message2 = formatShaderModuleUniformLayoutError(validationResult);
+    (_b2 = (_a2 = options.log) == null ? void 0 : _a2.error) == null ? void 0 : _b2.call(_a2, message2, validationResult)();
+    if (options.throwOnError !== false) {
+      assert$4(false, message2);
+    }
+    return validationResult;
+  }
+  function getGLSLUniformBlocks(shaderSource) {
+    var _a2;
+    const blocks = [];
+    const uncommentedSource = stripShaderComments(shaderSource);
+    for (const sourceMatch of uncommentedSource.matchAll(GLSL_UNIFORM_BLOCK_REGEXP)) {
+      const layoutQualifier = ((_a2 = sourceMatch[1]) == null ? void 0 : _a2.trim()) || null;
+      blocks.push({
+        blockName: sourceMatch[2],
+        body: sourceMatch[3],
+        instanceName: sourceMatch[4] || null,
+        layoutQualifier,
+        hasLayoutQualifier: Boolean(layoutQualifier),
+        isStd140: Boolean(layoutQualifier && /\blayout\s*\([^)]*\bstd140\b[^)]*\)/.exec(layoutQualifier))
+      });
+    }
+    return blocks;
+  }
+  function warnIfGLSLUniformBlocksAreNotStd140(shaderSource, stage, log3, context) {
+    var _a2;
+    const nonStd140Blocks = getGLSLUniformBlocks(shaderSource).filter((block) => !block.isStd140);
+    const seenBlockNames = /* @__PURE__ */ new Set();
+    for (const block of nonStd140Blocks) {
+      if (seenBlockNames.has(block.blockName)) {
+        continue;
+      }
+      seenBlockNames.add(block.blockName);
+      const shaderLabel = "";
+      const actualLayout = block.hasLayoutQualifier ? `declares ${normalizeWhitespace(block.layoutQualifier)} instead of layout(std140)` : "does not declare layout(std140)";
+      const message2 = `${shaderLabel}${stage} shader uniform block ${block.blockName} ${actualLayout}. luma.gl host-side shader block packing assumes explicit layout(std140) for GLSL uniform blocks. Add \`layout(std140)\` to the block declaration.`;
+      (_a2 = log3 == null ? void 0 : log3.warn) == null ? void 0 : _a2.call(log3, message2, block)();
+    }
+    return nonStd140Blocks;
+  }
+  function extractShaderUniformBlockFieldNames(shaderSource, language, uniformBlockName) {
+    const sourceBody = language === "wgsl" ? extractWGSLStructBody(shaderSource, uniformBlockName) : extractGLSLUniformBlockBody(shaderSource, uniformBlockName);
+    if (!sourceBody) {
+      return null;
+    }
+    const fieldNames = [];
+    for (const sourceLine of sourceBody.split("\n")) {
+      const line = sourceLine.replace(/\/\/.*$/, "").trim();
+      if (!line || line.startsWith("#")) {
+        continue;
+      }
+      const fieldMatch = language === "wgsl" ? line.match(/^([A-Za-z0-9_]+)\s*:/) : line.match(GLSL_UNIFORM_BLOCK_FIELD_REGEXP);
+      if (fieldMatch) {
+        fieldNames.push(fieldMatch[1]);
+      }
+    }
+    return fieldNames;
+  }
+  function extractWGSLStructBody(shaderSource, uniformBlockName) {
+    const structMatch = new RegExp(`\\bstruct\\s+${uniformBlockName}\\b`, "m").exec(shaderSource);
+    if (!structMatch) {
+      return null;
+    }
+    const openBraceIndex = shaderSource.indexOf("{", structMatch.index);
+    if (openBraceIndex < 0) {
+      return null;
+    }
+    let braceDepth = 0;
+    for (let index2 = openBraceIndex; index2 < shaderSource.length; index2++) {
+      const character = shaderSource[index2];
+      if (character === "{") {
+        braceDepth++;
+        continue;
+      }
+      if (character !== "}") {
+        continue;
+      }
+      braceDepth--;
+      if (braceDepth === 0) {
+        return shaderSource.slice(openBraceIndex + 1, index2);
+      }
+    }
+    return null;
+  }
+  function extractGLSLUniformBlockBody(shaderSource, uniformBlockName) {
+    const block = getGLSLUniformBlocks(shaderSource).find((candidate) => candidate.blockName === uniformBlockName);
+    return (block == null ? void 0 : block.body) || null;
+  }
+  function areStringArraysEqual(leftValues, rightValues) {
+    if (leftValues.length !== rightValues.length) {
+      return false;
+    }
+    for (let valueIndex = 0; valueIndex < leftValues.length; valueIndex++) {
+      if (leftValues[valueIndex] !== rightValues[valueIndex]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  function formatShaderModuleUniformLayoutError(validationResult) {
+    const { expectedUniformNames, actualUniformNames } = validationResult;
+    const missingUniformNames = expectedUniformNames.filter((uniformName) => !actualUniformNames.includes(uniformName));
+    const unexpectedUniformNames = actualUniformNames.filter((uniformName) => !expectedUniformNames.includes(uniformName));
+    const mismatchDetails = [
+      `Expected ${expectedUniformNames.length} fields, found ${actualUniformNames.length}.`
+    ];
+    const firstMismatchDescription = getFirstUniformMismatchDescription(expectedUniformNames, actualUniformNames);
+    if (firstMismatchDescription) {
+      mismatchDetails.push(firstMismatchDescription);
+    }
+    if (missingUniformNames.length) {
+      mismatchDetails.push(`Missing from shader block (${missingUniformNames.length}): ${formatUniformNameList(missingUniformNames)}.`);
+    }
+    if (unexpectedUniformNames.length) {
+      mismatchDetails.push(`Unexpected in shader block (${unexpectedUniformNames.length}): ${formatUniformNameList(unexpectedUniformNames)}.`);
+    }
+    if (expectedUniformNames.length <= 12 && actualUniformNames.length <= 12 && (missingUniformNames.length || unexpectedUniformNames.length)) {
+      mismatchDetails.push(`Expected: ${expectedUniformNames.join(", ")}.`);
+      mismatchDetails.push(`Actual: ${actualUniformNames.join(", ")}.`);
+    }
+    return `${validationResult.moduleName}: ${validationResult.stage} shader uniform block ${validationResult.uniformBlockName} does not match module.uniformTypes. ${mismatchDetails.join(" ")}`;
+  }
+  function stripShaderComments(shaderSource) {
+    return shaderSource.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  }
+  function normalizeWhitespace(value) {
+    return value.replace(/\s+/g, " ").trim();
+  }
+  function getFirstUniformMismatchDescription(expectedUniformNames, actualUniformNames) {
+    const minimumLength = Math.min(expectedUniformNames.length, actualUniformNames.length);
+    for (let index2 = 0; index2 < minimumLength; index2++) {
+      if (expectedUniformNames[index2] !== actualUniformNames[index2]) {
+        return `First mismatch at field ${index2 + 1}: expected ${expectedUniformNames[index2]}, found ${actualUniformNames[index2]}.`;
+      }
+    }
+    if (expectedUniformNames.length > actualUniformNames.length) {
+      return `Shader block ends after field ${actualUniformNames.length}; expected next field ${expectedUniformNames[actualUniformNames.length]}.`;
+    }
+    if (actualUniformNames.length > expectedUniformNames.length) {
+      return `Shader block has extra field ${actualUniformNames.length}: ${actualUniformNames[expectedUniformNames.length]}.`;
+    }
+    return null;
+  }
+  function formatUniformNameList(uniformNames, maxNames = 8) {
+    if (uniformNames.length <= maxNames) {
+      return uniformNames.join(", ");
+    }
+    const remainingCount = uniformNames.length - maxNames;
+    return `${uniformNames.slice(0, maxNames).join(", ")}, ... (${remainingCount} more)`;
+  }
+  function getPlatformShaderDefines(platformInfo) {
+    switch (platformInfo == null ? void 0 : platformInfo.gpu.toLowerCase()) {
+      case "apple":
+        return `#define APPLE_GPU
+// Apple optimizes away the calculation necessary for emulated fp64
+#define LUMA_FP64_CODE_ELIMINATION_WORKAROUND 1
+#define LUMA_FP32_TAN_PRECISION_WORKAROUND 1
+// Intel GPU doesn't have full 32 bits precision in same cases, causes overflow
+#define LUMA_FP64_HIGH_BITS_OVERFLOW_WORKAROUND 1
+`;
+      case "nvidia":
+        return `#define NVIDIA_GPU
+// Nvidia optimizes away the calculation necessary for emulated fp64
+#define LUMA_FP64_CODE_ELIMINATION_WORKAROUND 1
+`;
+      case "intel":
+        return `#define INTEL_GPU
+// Intel optimizes away the calculation necessary for emulated fp64
+#define LUMA_FP64_CODE_ELIMINATION_WORKAROUND 1
+// Intel's built-in 'tan' function doesn't have acceptable precision
+#define LUMA_FP32_TAN_PRECISION_WORKAROUND 1
+// Intel GPU doesn't have full 32 bits precision in same cases, causes overflow
+#define LUMA_FP64_HIGH_BITS_OVERFLOW_WORKAROUND 1
+`;
+      case "amd":
+        return `#define AMD_GPU
+`;
+      default:
+        return `#define DEFAULT_GPU
+// Prevent driver from optimizing away the calculation necessary for emulated fp64
+#define LUMA_FP64_CODE_ELIMINATION_WORKAROUND 1
+// Headless Chrome's software shader 'tan' function doesn't have acceptable precision
+#define LUMA_FP32_TAN_PRECISION_WORKAROUND 1
+// If the GPU doesn't have full 32 bits precision, will causes overflow
+#define LUMA_FP64_HIGH_BITS_OVERFLOW_WORKAROUND 1
+`;
+    }
+  }
+  function transpileGLSLShader(source2, stage) {
+    var _a2;
+    const sourceGLSLVersion = Number(((_a2 = source2.match(/^#version[ \t]+(\d+)/m)) == null ? void 0 : _a2[1]) || 100);
+    if (sourceGLSLVersion !== 300) {
+      throw new Error("luma.gl v9 only supports GLSL 3.00 shader sources");
+    }
+    switch (stage) {
+      case "vertex":
+        source2 = convertShader(source2, ES300_VERTEX_REPLACEMENTS);
+        return source2;
+      case "fragment":
+        source2 = convertShader(source2, ES300_FRAGMENT_REPLACEMENTS);
+        return source2;
+      default:
+        throw new Error(stage);
+    }
+  }
+  const ES300_REPLACEMENTS = [
+    [
+      /^(#version[ \t]+(100|300[ \t]+es))?[ \t]*\n/,
+      "#version 300 es\n"
+    ],
+    [
+      /\btexture(2D|2DProj|Cube)Lod(EXT)?\(/g,
+      "textureLod("
+    ],
+    [
+      /\btexture(2D|2DProj|Cube)(EXT)?\(/g,
+      "texture("
+    ]
+  ];
+  const ES300_VERTEX_REPLACEMENTS = [
+    ...ES300_REPLACEMENTS,
+    [
+      makeVariableTextRegExp("attribute"),
+      "in $1"
+    ],
+    [
+      makeVariableTextRegExp("varying"),
+      "out $1"
+    ]
+  ];
+  const ES300_FRAGMENT_REPLACEMENTS = [
+    ...ES300_REPLACEMENTS,
+    [
+      makeVariableTextRegExp("varying"),
+      "in $1"
+    ]
+  ];
+  function convertShader(source2, replacements) {
+    for (const [pattern, replacement] of replacements) {
+      source2 = source2.replace(pattern, replacement);
+    }
+    return source2;
+  }
+  function makeVariableTextRegExp(qualifier) {
+    return new RegExp(`\\b${qualifier}[ \\t]+(\\w+[ \\t]+\\w+(\\[\\w+\\])?;)`, "g");
+  }
+  function getShaderHooks(hookFunctions, hookInjections) {
+    let result = "";
+    for (const hookName in hookFunctions) {
+      const hookFunction = hookFunctions[hookName];
+      result += `void ${hookFunction.signature} {
+`;
+      if (hookFunction.header) {
+        result += `  ${hookFunction.header}`;
+      }
+      if (hookInjections[hookName]) {
+        const injections = hookInjections[hookName];
+        injections.sort((a2, b2) => a2.order - b2.order);
+        for (const injection of injections) {
+          result += `  ${injection.injection}
+`;
+        }
+      }
+      if (hookFunction.footer) {
+        result += `  ${hookFunction.footer}`;
+      }
+      result += "}\n";
+    }
+    return result;
+  }
+  function normalizeShaderHooks(hookFunctions) {
+    const result = {
+      vertex: {},
+      fragment: {}
+    };
+    for (const hookFunction of hookFunctions) {
+      let opts;
+      let hook;
+      if (typeof hookFunction !== "string") {
+        opts = hookFunction;
+        hook = opts.hook;
+      } else {
+        opts = {};
+        hook = hookFunction;
+      }
+      hook = hook.trim();
+      const [shaderStage, signature] = hook.split(":");
+      const name2 = hook.replace(/\(.+/, "");
+      const normalizedHook = Object.assign(opts, {
+        signature
+      });
+      switch (shaderStage) {
+        case "vs":
+          result.vertex[name2] = normalizedHook;
+          break;
+        case "fs":
+          result.fragment[name2] = normalizedHook;
+          break;
+        default:
+          throw new Error(shaderStage);
+      }
+    }
+    return result;
+  }
+  function getShaderInfo(source2, defaultName) {
+    return {
+      name: getShaderName$1(source2, defaultName),
+      language: "glsl",
+      version: getShaderVersion(source2)
+    };
+  }
+  function getShaderName$1(shader, defaultName = "unnamed") {
+    const SHADER_NAME_REGEXP = /#define[^\S\r\n]*SHADER_NAME[^\S\r\n]*([A-Za-z0-9_-]+)\s*/;
+    const match = SHADER_NAME_REGEXP.exec(shader);
+    return match ? match[1] : defaultName;
+  }
+  function getShaderVersion(source2) {
+    let version2 = 100;
+    const words = source2.match(/[^\s]+/g);
+    if (words && words.length >= 2 && words[0] === "#version") {
+      const parsedVersion = parseInt(words[1], 10);
+      if (Number.isFinite(parsedVersion)) {
+        version2 = parsedVersion;
+      }
+    }
+    if (version2 !== 100 && version2 !== 300) {
+      throw new Error(`Invalid GLSL version ${version2}`);
+    }
+    return version2;
+  }
+  const WGSL_BINDABLE_VARIABLE_PATTERN = "(?:var<\\s*(uniform|storage(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)?)\\s*>|var)\\s+([A-Za-z_][A-Za-z0-9_]*)";
+  const WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN = "\\s*";
+  const MODULE_WGSL_BINDING_DECLARATION_REGEXES = [
+    new RegExp(`@binding\\(\\s*(auto|\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}@group\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g"),
+    new RegExp(`@group\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}@binding\\(\\s*(auto|\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g")
+  ];
+  const WGSL_BINDING_DECLARATION_REGEXES = [
+    new RegExp(`@binding\\(\\s*(auto|\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}@group\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g"),
+    new RegExp(`@group\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}@binding\\(\\s*(auto|\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g")
+  ];
+  const WGSL_EXPLICIT_BINDING_DECLARATION_REGEXES = [
+    new RegExp(`@binding\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}@group\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g"),
+    new RegExp(`@group\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}@binding\\(\\s*(\\d+)\\s*\\)${WGSL_BINDING_DECLARATION_SEPARATOR_PATTERN}${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g")
+  ];
+  const WGSL_AUTO_BINDING_DECLARATION_REGEXES = [
+    new RegExp(`@binding\\(\\s*(auto)\\s*\\)\\s*@group\\(\\s*(\\d+)\\s*\\)\\s*${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g"),
+    new RegExp(`@group\\(\\s*(\\d+)\\s*\\)\\s*@binding\\(\\s*(auto)\\s*\\)\\s*${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g"),
+    new RegExp(`@binding\\(\\s*(auto)\\s*\\)\\s*@group\\(\\s*(\\d+)\\s*\\)(?:[\\s\\n\\r]*@[A-Za-z_][^\\n\\r]*)*[\\s\\n\\r]*${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g"),
+    new RegExp(`@group\\(\\s*(\\d+)\\s*\\)\\s*@binding\\(\\s*(auto)\\s*\\)(?:[\\s\\n\\r]*@[A-Za-z_][^\\n\\r]*)*[\\s\\n\\r]*${WGSL_BINDABLE_VARIABLE_PATTERN}`, "g")
+  ];
+  function maskWGSLComments(source2) {
+    const maskedCharacters = source2.split("");
+    let index2 = 0;
+    let blockCommentDepth = 0;
+    let inLineComment = false;
+    let inString = false;
+    let isEscaped = false;
+    while (index2 < source2.length) {
+      const character = source2[index2];
+      const nextCharacter = source2[index2 + 1];
+      if (inString) {
+        if (isEscaped) {
+          isEscaped = false;
+        } else if (character === "\\") {
+          isEscaped = true;
+        } else if (character === '"') {
+          inString = false;
+        }
+        index2++;
+        continue;
+      }
+      if (inLineComment) {
+        if (character === "\n" || character === "\r") {
+          inLineComment = false;
+        } else {
+          maskedCharacters[index2] = " ";
+        }
+        index2++;
+        continue;
+      }
+      if (blockCommentDepth > 0) {
+        if (character === "/" && nextCharacter === "*") {
+          maskedCharacters[index2] = " ";
+          maskedCharacters[index2 + 1] = " ";
+          blockCommentDepth++;
+          index2 += 2;
+          continue;
+        }
+        if (character === "*" && nextCharacter === "/") {
+          maskedCharacters[index2] = " ";
+          maskedCharacters[index2 + 1] = " ";
+          blockCommentDepth--;
+          index2 += 2;
+          continue;
+        }
+        if (character !== "\n" && character !== "\r") {
+          maskedCharacters[index2] = " ";
+        }
+        index2++;
+        continue;
+      }
+      if (character === '"') {
+        inString = true;
+        index2++;
+        continue;
+      }
+      if (character === "/" && nextCharacter === "/") {
+        maskedCharacters[index2] = " ";
+        maskedCharacters[index2 + 1] = " ";
+        inLineComment = true;
+        index2 += 2;
+        continue;
+      }
+      if (character === "/" && nextCharacter === "*") {
+        maskedCharacters[index2] = " ";
+        maskedCharacters[index2 + 1] = " ";
+        blockCommentDepth = 1;
+        index2 += 2;
+        continue;
+      }
+      index2++;
+    }
+    return maskedCharacters.join("");
+  }
+  function getWGSLBindingDeclarationMatches(source2, regexes) {
+    var _a2;
+    const maskedSource = maskWGSLComments(source2);
+    const matches2 = [];
+    for (const regex2 of regexes) {
+      regex2.lastIndex = 0;
+      let match;
+      match = regex2.exec(maskedSource);
+      while (match) {
+        const isBindingFirst = regex2 === regexes[0];
+        const index2 = match.index;
+        const length2 = match[0].length;
+        matches2.push({
+          match: source2.slice(index2, index2 + length2),
+          index: index2,
+          length: length2,
+          bindingToken: match[isBindingFirst ? 1 : 2],
+          groupToken: match[isBindingFirst ? 2 : 1],
+          accessDeclaration: (_a2 = match[3]) == null ? void 0 : _a2.trim(),
+          name: match[4]
+        });
+        match = regex2.exec(maskedSource);
+      }
+    }
+    return matches2.sort((left, right) => left.index - right.index);
+  }
+  function replaceWGSLBindingDeclarationMatches(source2, regexes, replacer) {
+    const matches2 = getWGSLBindingDeclarationMatches(source2, regexes);
+    if (!matches2.length) {
+      return source2;
+    }
+    let relocatedSource = "";
+    let lastIndex = 0;
+    for (const match of matches2) {
+      relocatedSource += source2.slice(lastIndex, match.index);
+      relocatedSource += replacer(match);
+      lastIndex = match.index + match.length;
+    }
+    relocatedSource += source2.slice(lastIndex);
+    return relocatedSource;
+  }
+  function hasWGSLAutoBinding(source2) {
+    return /@binding\(\s*auto\s*\)/.test(maskWGSLComments(source2));
+  }
+  function getFirstWGSLAutoBindingDeclarationMatch(source2, regexes) {
+    const autoBindingRegexes = regexes === MODULE_WGSL_BINDING_DECLARATION_REGEXES || regexes === WGSL_BINDING_DECLARATION_REGEXES ? WGSL_AUTO_BINDING_DECLARATION_REGEXES : regexes;
+    return getWGSLBindingDeclarationMatches(source2, autoBindingRegexes).find((declarationMatch) => declarationMatch.bindingToken === "auto");
+  }
+  const WGSL_BINDING_DEBUG_REGEXES = [
+    new RegExp(`@binding\\(\\s*(\\d+)\\s*\\)\\s*@group\\(\\s*(\\d+)\\s*\\)\\s*${WGSL_BINDABLE_VARIABLE_PATTERN}\\s*:\\s*([^;]+);`, "g"),
+    new RegExp(`@group\\(\\s*(\\d+)\\s*\\)\\s*@binding\\(\\s*(\\d+)\\s*\\)\\s*${WGSL_BINDABLE_VARIABLE_PATTERN}\\s*:\\s*([^;]+);`, "g")
+  ];
+  function getShaderBindingDebugRowsFromWGSL(source2, bindingAssignments = []) {
+    var _a2;
+    const maskedSource = maskWGSLComments(source2);
+    const assignmentMap = /* @__PURE__ */ new Map();
+    for (const bindingAssignment of bindingAssignments) {
+      assignmentMap.set(getBindingAssignmentKey(bindingAssignment.name, bindingAssignment.group, bindingAssignment.location), bindingAssignment.moduleName);
+    }
+    const rows2 = [];
+    for (const regex2 of WGSL_BINDING_DEBUG_REGEXES) {
+      regex2.lastIndex = 0;
+      let match;
+      match = regex2.exec(maskedSource);
+      while (match) {
+        const isBindingFirst = regex2 === WGSL_BINDING_DEBUG_REGEXES[0];
+        const binding = Number(match[isBindingFirst ? 1 : 2]);
+        const group2 = Number(match[isBindingFirst ? 2 : 1]);
+        const accessDeclaration = (_a2 = match[3]) == null ? void 0 : _a2.trim();
+        const name2 = match[4];
+        const resourceType = match[5].trim();
+        const moduleName2 = assignmentMap.get(getBindingAssignmentKey(name2, group2, binding));
+        rows2.push(normalizeShaderBindingDebugRow({
+          name: name2,
+          group: group2,
+          binding,
+          owner: moduleName2 ? "module" : "application",
+          moduleName: moduleName2,
+          accessDeclaration,
+          resourceType
+        }));
+        match = regex2.exec(maskedSource);
+      }
+    }
+    return rows2.sort((left, right) => {
+      if (left.group !== right.group) {
+        return left.group - right.group;
+      }
+      if (left.binding !== right.binding) {
+        return left.binding - right.binding;
+      }
+      return left.name.localeCompare(right.name);
+    });
+  }
+  function normalizeShaderBindingDebugRow(row) {
+    const baseRow = {
+      name: row.name,
+      group: row.group,
+      binding: row.binding,
+      owner: row.owner,
+      kind: "unknown",
+      moduleName: row.moduleName,
+      resourceType: row.resourceType
+    };
+    if (row.accessDeclaration) {
+      const access = row.accessDeclaration.split(",").map((value) => value.trim());
+      if (access[0] === "uniform") {
+        return {
+          ...baseRow,
+          kind: "uniform",
+          access: "uniform"
+        };
+      }
+      if (access[0] === "storage") {
+        const storageAccess = access[1] || "read_write";
+        return {
+          ...baseRow,
+          kind: storageAccess === "read" ? "read-only-storage" : "storage",
+          access: storageAccess
+        };
+      }
+    }
+    if (row.resourceType === "sampler" || row.resourceType === "sampler_comparison") {
+      return {
+        ...baseRow,
+        kind: "sampler",
+        samplerKind: row.resourceType === "sampler_comparison" ? "comparison" : "filtering"
+      };
+    }
+    if (row.resourceType.startsWith("texture_storage_")) {
+      return {
+        ...baseRow,
+        kind: "storage-texture",
+        access: getStorageTextureAccess(row.resourceType),
+        viewDimension: getTextureViewDimension(row.resourceType)
+      };
+    }
+    if (row.resourceType.startsWith("texture_")) {
+      return {
+        ...baseRow,
+        kind: "texture",
+        viewDimension: getTextureViewDimension(row.resourceType),
+        sampleType: getTextureSampleType(row.resourceType),
+        multisampled: row.resourceType.startsWith("texture_multisampled_")
+      };
+    }
+    return baseRow;
+  }
+  function getBindingAssignmentKey(name2, group2, binding) {
+    return `${group2}:${binding}:${name2}`;
+  }
+  function getTextureViewDimension(resourceType) {
+    if (resourceType.includes("cube_array")) {
+      return "cube-array";
+    }
+    if (resourceType.includes("2d_array")) {
+      return "2d-array";
+    }
+    if (resourceType.includes("cube")) {
+      return "cube";
+    }
+    if (resourceType.includes("3d")) {
+      return "3d";
+    }
+    if (resourceType.includes("2d")) {
+      return "2d";
+    }
+    if (resourceType.includes("1d")) {
+      return "1d";
+    }
+    return void 0;
+  }
+  function getTextureSampleType(resourceType) {
+    if (resourceType.startsWith("texture_depth_")) {
+      return "depth";
+    }
+    if (resourceType.includes("<i32>")) {
+      return "sint";
+    }
+    if (resourceType.includes("<u32>")) {
+      return "uint";
+    }
+    if (resourceType.includes("<f32>")) {
+      return "float";
+    }
+    return void 0;
+  }
+  function getStorageTextureAccess(resourceType) {
+    const match = /,\s*([A-Za-z_][A-Za-z0-9_]*)\s*>$/.exec(resourceType);
+    return match == null ? void 0 : match[1];
+  }
+  const INJECT_SHADER_DECLARATIONS = `
+
+${DECLARATION_INJECT_MARKER}
+`;
+  const RESERVED_APPLICATION_GROUP_0_BINDING_LIMIT = 100;
+  const FRAGMENT_SHADER_PROLOGUE = `precision highp float;
+`;
+  function assembleWGSLShader(options) {
+    const modules = getShaderModuleDependencies(options.modules || []);
+    const { source: source2, bindingAssignments } = assembleShaderWGSL(options.platformInfo, {
+      ...options,
+      source: options.source,
+      stage: "vertex",
+      modules
+    });
+    return {
+      source: source2,
+      getUniforms: assembleGetUniforms(modules),
+      bindingAssignments,
+      bindingTable: getShaderBindingDebugRowsFromWGSL(source2, bindingAssignments)
+    };
+  }
+  function assembleGLSLShaderPair(options) {
+    const { vs: vs2, fs: fs2 } = options;
+    const modules = getShaderModuleDependencies(options.modules || []);
+    return {
+      vs: assembleShaderGLSL(options.platformInfo, {
+        ...options,
+        source: vs2,
+        stage: "vertex",
+        modules
+      }),
+      fs: assembleShaderGLSL(options.platformInfo, {
+        ...options,
+        source: fs2,
+        stage: "fragment",
+        modules
+      }),
+      getUniforms: assembleGetUniforms(modules)
+    };
+  }
+  function assembleShaderWGSL(platformInfo, options) {
+    var _a2;
+    const { source: source2, stage, modules, hookFunctions = [], inject: inject2 = {}, log: log3 } = options;
+    assert$4(typeof source2 === "string", "shader source must be a string");
+    const coreSource = source2;
+    let assembledSource = "";
+    const hookFunctionMap = normalizeShaderHooks(hookFunctions);
+    const hookInjections = {};
+    const declInjections = {};
+    const mainInjections = {};
+    for (const key2 in inject2) {
+      const injection = typeof inject2[key2] === "string" ? {
+        injection: inject2[key2],
+        order: 0
+      } : inject2[key2];
+      const match = /^(v|f)s:(#)?([\w-]+)$/.exec(key2);
+      if (match) {
+        const hash = match[2];
+        const name2 = match[3];
+        if (hash) {
+          if (name2 === "decl") {
+            declInjections[key2] = [
+              injection
+            ];
+          } else {
+            mainInjections[key2] = [
+              injection
+            ];
+          }
+        } else {
+          hookInjections[key2] = [
+            injection
+          ];
+        }
+      } else {
+        mainInjections[key2] = [
+          injection
+        ];
+      }
+    }
+    const modulesToInject = modules;
+    const applicationRelocation = relocateWGSLApplicationBindings(coreSource);
+    const usedBindingsByGroup = getUsedBindingsByGroupFromApplicationWGSL(applicationRelocation.source);
+    const reservedBindingKeysByGroup = reserveRegisteredModuleBindings(modulesToInject, options._bindingRegistry, usedBindingsByGroup);
+    const bindingAssignments = [];
+    for (const module of modulesToInject) {
+      if (log3) {
+        checkShaderModuleDeprecations(module, coreSource, log3);
+      }
+      const relocation = relocateWGSLModuleBindings(getShaderModuleSource(module, "wgsl", log3), module, {
+        usedBindingsByGroup,
+        bindingRegistry: options._bindingRegistry,
+        reservedBindingKeysByGroup
+      });
+      bindingAssignments.push(...relocation.bindingAssignments);
+      const moduleSource = relocation.source;
+      assembledSource += moduleSource;
+      const injections = ((_a2 = module.injections) == null ? void 0 : _a2[stage]) || {};
+      for (const key2 in injections) {
+        const match = /^(v|f)s:#([\w-]+)$/.exec(key2);
+        if (match) {
+          const name2 = match[2];
+          const injectionType = name2 === "decl" ? declInjections : mainInjections;
+          injectionType[key2] = injectionType[key2] || [];
+          injectionType[key2].push(injections[key2]);
+        } else {
+          hookInjections[key2] = hookInjections[key2] || [];
+          hookInjections[key2].push(injections[key2]);
+        }
+      }
+    }
+    assembledSource += INJECT_SHADER_DECLARATIONS;
+    assembledSource = injectShader(assembledSource, stage, declInjections);
+    assembledSource += getShaderHooks(hookFunctionMap[stage], hookInjections);
+    assembledSource += formatWGSLBindingAssignmentComments(bindingAssignments);
+    assembledSource += applicationRelocation.source;
+    assembledSource = injectShader(assembledSource, stage, mainInjections);
+    assertNoUnresolvedAutoBindings(assembledSource);
+    return {
+      source: assembledSource,
+      bindingAssignments
+    };
+  }
+  function assembleShaderGLSL(platformInfo, options) {
+    var _a2;
+    const { source: source2, stage, language = "glsl", modules, defines: defines2 = {}, hookFunctions = [], inject: inject2 = {}, prologue = true, log: log3 } = options;
+    assert$4(typeof source2 === "string", "shader source must be a string");
+    const sourceVersion = language === "glsl" ? getShaderInfo(source2).version : -1;
+    const targetVersion = platformInfo.shaderLanguageVersion;
+    const sourceVersionDirective = sourceVersion === 100 ? "#version 100" : "#version 300 es";
+    const sourceLines = source2.split("\n");
+    const coreSource = sourceLines.slice(1).join("\n");
+    const allDefines = {};
+    modules.forEach((module) => {
+      Object.assign(allDefines, module.defines);
+    });
+    Object.assign(allDefines, defines2);
+    let assembledSource = "";
+    switch (language) {
+      case "wgsl":
+        break;
+      case "glsl":
+        assembledSource = prologue ? `${sourceVersionDirective}
+
+// ----- PROLOGUE -------------------------
+${`#define SHADER_TYPE_${stage.toUpperCase()}`}
+
+${getPlatformShaderDefines(platformInfo)}
+${stage === "fragment" ? FRAGMENT_SHADER_PROLOGUE : ""}
+
+// ----- APPLICATION DEFINES -------------------------
+
+${getApplicationDefines(allDefines)}
+
+` : `${sourceVersionDirective}
+`;
+        break;
+    }
+    const hookFunctionMap = normalizeShaderHooks(hookFunctions);
+    const hookInjections = {};
+    const declInjections = {};
+    const mainInjections = {};
+    for (const key2 in inject2) {
+      const injection = typeof inject2[key2] === "string" ? {
+        injection: inject2[key2],
+        order: 0
+      } : inject2[key2];
+      const match = /^(v|f)s:(#)?([\w-]+)$/.exec(key2);
+      if (match) {
+        const hash = match[2];
+        const name2 = match[3];
+        if (hash) {
+          if (name2 === "decl") {
+            declInjections[key2] = [
+              injection
+            ];
+          } else {
+            mainInjections[key2] = [
+              injection
+            ];
+          }
+        } else {
+          hookInjections[key2] = [
+            injection
+          ];
+        }
+      } else {
+        mainInjections[key2] = [
+          injection
+        ];
+      }
+    }
+    for (const module of modules) {
+      if (log3) {
+        checkShaderModuleDeprecations(module, coreSource, log3);
+      }
+      const moduleSource = getShaderModuleSource(module, stage, log3);
+      assembledSource += moduleSource;
+      const injections = ((_a2 = module.instance) == null ? void 0 : _a2.normalizedInjections[stage]) || {};
+      for (const key2 in injections) {
+        const match = /^(v|f)s:#([\w-]+)$/.exec(key2);
+        if (match) {
+          const name2 = match[2];
+          const injectionType = name2 === "decl" ? declInjections : mainInjections;
+          injectionType[key2] = injectionType[key2] || [];
+          injectionType[key2].push(injections[key2]);
+        } else {
+          hookInjections[key2] = hookInjections[key2] || [];
+          hookInjections[key2].push(injections[key2]);
+        }
+      }
+    }
+    assembledSource += "// ----- MAIN SHADER SOURCE -------------------------";
+    assembledSource += INJECT_SHADER_DECLARATIONS;
+    assembledSource = injectShader(assembledSource, stage, declInjections);
+    assembledSource += getShaderHooks(hookFunctionMap[stage], hookInjections);
+    assembledSource += coreSource;
+    assembledSource = injectShader(assembledSource, stage, mainInjections);
+    if (language === "glsl" && sourceVersion !== targetVersion) {
+      assembledSource = transpileGLSLShader(assembledSource, stage);
+    }
+    if (language === "glsl") {
+      warnIfGLSLUniformBlocksAreNotStd140(assembledSource, stage, log3);
+    }
+    return assembledSource.trim();
+  }
+  function assembleGetUniforms(modules) {
+    return function getUniforms2(opts) {
+      var _a2;
+      const uniforms = {};
+      for (const module of modules) {
+        const moduleUniforms = (_a2 = module.getUniforms) == null ? void 0 : _a2.call(module, opts, uniforms);
+        Object.assign(uniforms, moduleUniforms);
+      }
+      return uniforms;
+    };
+  }
+  function getApplicationDefines(defines2 = {}) {
+    let sourceText = "";
+    for (const define in defines2) {
+      const value = defines2[define];
+      if (value || Number.isFinite(value)) {
+        sourceText += `#define ${define.toUpperCase()} ${defines2[define]}
+`;
+      }
+    }
+    return sourceText;
+  }
+  function getShaderModuleSource(module, stage, log3) {
+    let moduleSource;
+    switch (stage) {
+      case "vertex":
+        moduleSource = module.vs || "";
+        break;
+      case "fragment":
+        moduleSource = module.fs || "";
+        break;
+      case "wgsl":
+        moduleSource = module.source || "";
+        break;
+      default:
+        assert$4(false);
+    }
+    if (!module.name) {
+      throw new Error("Shader module must have a name");
+    }
+    validateShaderModuleUniformLayout(module, stage, {
+      log: log3
+    });
+    const moduleName2 = module.name.toUpperCase().replace(/[^0-9a-z]/gi, "_");
+    let source2 = `// ----- MODULE ${module.name} ---------------
+
+`;
+    if (stage !== "wgsl") {
+      source2 += `#define MODULE_${moduleName2}
+`;
+    }
+    source2 += `${moduleSource}
+`;
+    return source2;
+  }
+  function getUsedBindingsByGroupFromApplicationWGSL(source2) {
+    const usedBindingsByGroup = /* @__PURE__ */ new Map();
+    for (const match of getWGSLBindingDeclarationMatches(source2, WGSL_EXPLICIT_BINDING_DECLARATION_REGEXES)) {
+      const location2 = Number(match.bindingToken);
+      const group2 = Number(match.groupToken);
+      validateApplicationWGSLBinding(group2, location2, match.name);
+      registerUsedBindingLocation(usedBindingsByGroup, group2, location2, `application binding "${match.name}"`);
+    }
+    return usedBindingsByGroup;
+  }
+  function relocateWGSLApplicationBindings(source2) {
+    const declarationMatches = getWGSLBindingDeclarationMatches(source2, WGSL_BINDING_DECLARATION_REGEXES);
+    const usedBindingsByGroup = /* @__PURE__ */ new Map();
+    for (const declarationMatch of declarationMatches) {
+      if (declarationMatch.bindingToken === "auto") {
+        continue;
+      }
+      const location2 = Number(declarationMatch.bindingToken);
+      const group2 = Number(declarationMatch.groupToken);
+      validateApplicationWGSLBinding(group2, location2, declarationMatch.name);
+      registerUsedBindingLocation(usedBindingsByGroup, group2, location2, `application binding "${declarationMatch.name}"`);
+    }
+    const relocationState = {
+      sawSupportedBindingDeclaration: declarationMatches.length > 0
+    };
+    const relocatedSource = replaceWGSLBindingDeclarationMatches(source2, WGSL_BINDING_DECLARATION_REGEXES, (declarationMatch) => relocateWGSLApplicationBindingMatch(declarationMatch, usedBindingsByGroup, relocationState));
+    if (hasWGSLAutoBinding(source2) && !relocationState.sawSupportedBindingDeclaration) {
+      throw new Error('Unsupported @binding(auto) declaration form in application WGSL. Use adjacent "@group(N)" and "@binding(auto)" decorators followed by a bindable "var" declaration.');
+    }
+    return {
+      source: relocatedSource
+    };
+  }
+  function relocateWGSLModuleBindings(moduleSource, module, context) {
+    const bindingAssignments = [];
+    const declarationMatches = getWGSLBindingDeclarationMatches(moduleSource, MODULE_WGSL_BINDING_DECLARATION_REGEXES);
+    const relocationState = {
+      sawSupportedBindingDeclaration: declarationMatches.length > 0,
+      nextHintedBindingLocation: typeof module.firstBindingSlot === "number" ? module.firstBindingSlot : null
+    };
+    const relocatedSource = replaceWGSLBindingDeclarationMatches(moduleSource, MODULE_WGSL_BINDING_DECLARATION_REGEXES, (declarationMatch) => relocateWGSLModuleBindingMatch(declarationMatch, {
+      module,
+      context,
+      bindingAssignments,
+      relocationState
+    }));
+    if (hasWGSLAutoBinding(moduleSource) && !relocationState.sawSupportedBindingDeclaration) {
+      throw new Error(`Unsupported @binding(auto) declaration form in module "${module.name}". Use adjacent "@group(N)" and "@binding(auto)" decorators followed by a bindable "var" declaration.`);
+    }
+    return {
+      source: relocatedSource,
+      bindingAssignments
+    };
+  }
+  function relocateWGSLModuleBindingMatch(declarationMatch, params) {
+    var _a2, _b2;
+    const { module, context, bindingAssignments, relocationState } = params;
+    const { match, bindingToken, groupToken, name: name2 } = declarationMatch;
+    const group2 = Number(groupToken);
+    if (bindingToken === "auto") {
+      const registryKey = getBindingRegistryKey(group2, module.name, name2);
+      const registryLocation = (_a2 = context.bindingRegistry) == null ? void 0 : _a2.get(registryKey);
+      const location3 = registryLocation !== void 0 ? registryLocation : relocationState.nextHintedBindingLocation === null ? allocateAutoBindingLocation(group2, context.usedBindingsByGroup) : allocateAutoBindingLocation(group2, context.usedBindingsByGroup, relocationState.nextHintedBindingLocation);
+      validateModuleWGSLBinding(module.name, group2, location3, name2);
+      if (registryLocation !== void 0 && claimReservedBindingLocation(context.reservedBindingKeysByGroup, group2, location3, registryKey)) {
+        bindingAssignments.push({
+          moduleName: module.name,
+          name: name2,
+          group: group2,
+          location: location3
+        });
+        return match.replace(/@binding\(\s*auto\s*\)/, `@binding(${location3})`);
+      }
+      registerUsedBindingLocation(context.usedBindingsByGroup, group2, location3, `module "${module.name}" binding "${name2}"`);
+      (_b2 = context.bindingRegistry) == null ? void 0 : _b2.set(registryKey, location3);
+      bindingAssignments.push({
+        moduleName: module.name,
+        name: name2,
+        group: group2,
+        location: location3
+      });
+      if (relocationState.nextHintedBindingLocation !== null && registryLocation === void 0) {
+        relocationState.nextHintedBindingLocation = location3 + 1;
+      }
+      return match.replace(/@binding\(\s*auto\s*\)/, `@binding(${location3})`);
+    }
+    const location2 = Number(bindingToken);
+    validateModuleWGSLBinding(module.name, group2, location2, name2);
+    registerUsedBindingLocation(context.usedBindingsByGroup, group2, location2, `module "${module.name}" binding "${name2}"`);
+    bindingAssignments.push({
+      moduleName: module.name,
+      name: name2,
+      group: group2,
+      location: location2
+    });
+    return match;
+  }
+  function relocateWGSLApplicationBindingMatch(declarationMatch, usedBindingsByGroup, relocationState) {
+    const { match, bindingToken, groupToken, name: name2 } = declarationMatch;
+    const group2 = Number(groupToken);
+    if (bindingToken === "auto") {
+      const location2 = allocateApplicationAutoBindingLocation(group2, usedBindingsByGroup);
+      validateApplicationWGSLBinding(group2, location2, name2);
+      registerUsedBindingLocation(usedBindingsByGroup, group2, location2, `application binding "${name2}"`);
+      return match.replace(/@binding\(\s*auto\s*\)/, `@binding(${location2})`);
+    }
+    relocationState.sawSupportedBindingDeclaration = true;
+    return match;
+  }
+  function reserveRegisteredModuleBindings(modules, bindingRegistry, usedBindingsByGroup) {
+    const reservedBindingKeysByGroup = /* @__PURE__ */ new Map();
+    if (!bindingRegistry) {
+      return reservedBindingKeysByGroup;
+    }
+    for (const module of modules) {
+      for (const binding of getModuleWGSLBindingDeclarations(module)) {
+        const registryKey = getBindingRegistryKey(binding.group, module.name, binding.name);
+        const location2 = bindingRegistry.get(registryKey);
+        if (location2 !== void 0) {
+          const reservedBindingKeys = reservedBindingKeysByGroup.get(binding.group) || /* @__PURE__ */ new Map();
+          const existingReservation = reservedBindingKeys.get(location2);
+          if (existingReservation && existingReservation !== registryKey) {
+            throw new Error(`Duplicate WGSL binding reservation for modules "${existingReservation}" and "${registryKey}": group ${binding.group}, binding ${location2}.`);
+          }
+          registerUsedBindingLocation(usedBindingsByGroup, binding.group, location2, `registered module binding "${registryKey}"`);
+          reservedBindingKeys.set(location2, registryKey);
+          reservedBindingKeysByGroup.set(binding.group, reservedBindingKeys);
+        }
+      }
+    }
+    return reservedBindingKeysByGroup;
+  }
+  function claimReservedBindingLocation(reservedBindingKeysByGroup, group2, location2, registryKey) {
+    const reservedBindingKeys = reservedBindingKeysByGroup.get(group2);
+    if (!reservedBindingKeys) {
+      return false;
+    }
+    const reservedKey = reservedBindingKeys.get(location2);
+    if (!reservedKey) {
+      return false;
+    }
+    if (reservedKey !== registryKey) {
+      throw new Error(`Registered module binding "${registryKey}" collided with "${reservedKey}": group ${group2}, binding ${location2}.`);
+    }
+    return true;
+  }
+  function getModuleWGSLBindingDeclarations(module) {
+    const declarations = [];
+    const moduleSource = module.source || "";
+    for (const match of getWGSLBindingDeclarationMatches(moduleSource, MODULE_WGSL_BINDING_DECLARATION_REGEXES)) {
+      declarations.push({
+        name: match.name,
+        group: Number(match.groupToken)
+      });
+    }
+    return declarations;
+  }
+  function validateApplicationWGSLBinding(group2, location2, name2) {
+    if (group2 === 0 && location2 >= RESERVED_APPLICATION_GROUP_0_BINDING_LIMIT) {
+      throw new Error(`Application binding "${name2}" in group 0 uses reserved binding ${location2}. Application-owned explicit group-0 bindings must stay below ${RESERVED_APPLICATION_GROUP_0_BINDING_LIMIT}.`);
+    }
+  }
+  function validateModuleWGSLBinding(moduleName2, group2, location2, name2) {
+    if (group2 === 0 && location2 < RESERVED_APPLICATION_GROUP_0_BINDING_LIMIT) {
+      throw new Error(`Module "${moduleName2}" binding "${name2}" in group 0 uses reserved application binding ${location2}. Module-owned explicit group-0 bindings must be ${RESERVED_APPLICATION_GROUP_0_BINDING_LIMIT} or higher.`);
+    }
+  }
+  function registerUsedBindingLocation(usedBindingsByGroup, group2, location2, label2) {
+    const usedBindings = usedBindingsByGroup.get(group2) || /* @__PURE__ */ new Set();
+    if (usedBindings.has(location2)) {
+      throw new Error(`Duplicate WGSL binding assignment for ${label2}: group ${group2}, binding ${location2}.`);
+    }
+    usedBindings.add(location2);
+    usedBindingsByGroup.set(group2, usedBindings);
+  }
+  function allocateAutoBindingLocation(group2, usedBindingsByGroup, preferredBindingLocation) {
+    const usedBindings = usedBindingsByGroup.get(group2) || /* @__PURE__ */ new Set();
+    let nextBinding = preferredBindingLocation ?? (group2 === 0 ? RESERVED_APPLICATION_GROUP_0_BINDING_LIMIT : usedBindings.size > 0 ? Math.max(...usedBindings) + 1 : 0);
+    while (usedBindings.has(nextBinding)) {
+      nextBinding++;
+    }
+    return nextBinding;
+  }
+  function allocateApplicationAutoBindingLocation(group2, usedBindingsByGroup) {
+    const usedBindings = usedBindingsByGroup.get(group2) || /* @__PURE__ */ new Set();
+    let nextBinding = 0;
+    while (usedBindings.has(nextBinding)) {
+      nextBinding++;
+    }
+    return nextBinding;
+  }
+  function assertNoUnresolvedAutoBindings(source2) {
+    const unresolvedBinding = getFirstWGSLAutoBindingDeclarationMatch(source2, MODULE_WGSL_BINDING_DECLARATION_REGEXES);
+    if (!unresolvedBinding) {
+      return;
+    }
+    const moduleName2 = getWGSLModuleNameAtIndex(source2, unresolvedBinding.index);
+    if (moduleName2) {
+      throw new Error(`Unresolved @binding(auto) for module "${moduleName2}" binding "${unresolvedBinding.name}" remained in assembled WGSL source.`);
+    }
+    if (isInApplicationWGSLSection(source2, unresolvedBinding.index)) {
+      throw new Error(`Unresolved @binding(auto) for application binding "${unresolvedBinding.name}" remained in assembled WGSL source.`);
+    }
+    throw new Error(`Unresolved @binding(auto) remained in assembled WGSL source near "${formatWGSLSourceSnippet(unresolvedBinding.match)}".`);
+  }
+  function formatWGSLBindingAssignmentComments(bindingAssignments) {
+    if (bindingAssignments.length === 0) {
+      return "";
+    }
+    let source2 = "// ----- MODULE WGSL BINDING ASSIGNMENTS ---------------\n";
+    for (const bindingAssignment of bindingAssignments) {
+      source2 += `// ${bindingAssignment.moduleName}.${bindingAssignment.name} -> @group(${bindingAssignment.group}) @binding(${bindingAssignment.location})
+`;
+    }
+    source2 += "\n";
+    return source2;
+  }
+  function getBindingRegistryKey(group2, moduleName2, bindingName) {
+    return `${group2}:${moduleName2}:${bindingName}`;
+  }
+  function getWGSLModuleNameAtIndex(source2, index2) {
+    const moduleHeaderRegex = /^\/\/ ----- MODULE ([^\n]+) ---------------$/gm;
+    let moduleName2;
+    let match;
+    match = moduleHeaderRegex.exec(source2);
+    while (match && match.index <= index2) {
+      moduleName2 = match[1];
+      match = moduleHeaderRegex.exec(source2);
+    }
+    return moduleName2;
+  }
+  function isInApplicationWGSLSection(source2, index2) {
+    const injectionMarkerIndex = source2.indexOf(INJECT_SHADER_DECLARATIONS);
+    return injectionMarkerIndex >= 0 ? index2 > injectionMarkerIndex : true;
+  }
+  function formatWGSLSourceSnippet(source2) {
+    return source2.replace(/\s+/g, " ").trim();
+  }
+  const DEFINE_NAME_PATTERN = "([a-zA-Z_][a-zA-Z0-9_]*)";
+  const IFDEF_REGEXP = new RegExp(`^\\s*\\#\\s*ifdef\\s*${DEFINE_NAME_PATTERN}\\s*$`);
+  const IFNDEF_REGEXP = new RegExp(`^\\s*\\#\\s*ifndef\\s*${DEFINE_NAME_PATTERN}\\s*(?:\\/\\/.*)?$`);
+  const ELSE_REGEXP = /^\s*\#\s*else\s*(?:\/\/.*)?$/;
+  const ENDIF_REGEXP = /^\s*\#\s*endif\s*$/;
+  const IFDEF_WITH_COMMENT_REGEXP = new RegExp(`^\\s*\\#\\s*ifdef\\s*${DEFINE_NAME_PATTERN}\\s*(?:\\/\\/.*)?$`);
+  const ENDIF_WITH_COMMENT_REGEXP = /^\s*\#\s*endif\s*(?:\/\/.*)?$/;
+  function preprocess$1(source2, options) {
+    var _a2, _b2;
+    const lines = source2.split("\n");
+    const output = [];
+    const conditionalStack = [];
+    let conditional = true;
+    for (const line of lines) {
+      const matchIf = line.match(IFDEF_WITH_COMMENT_REGEXP) || line.match(IFDEF_REGEXP);
+      const matchIfNot = line.match(IFNDEF_REGEXP);
+      const matchElse = line.match(ELSE_REGEXP);
+      const matchEnd = line.match(ENDIF_WITH_COMMENT_REGEXP) || line.match(ENDIF_REGEXP);
+      if (matchIf || matchIfNot) {
+        const defineName = (_a2 = matchIf || matchIfNot) == null ? void 0 : _a2[1];
+        const defineValue = Boolean((_b2 = options == null ? void 0 : options.defines) == null ? void 0 : _b2[defineName]);
+        const branchTaken = matchIf ? defineValue : !defineValue;
+        const active = conditional && branchTaken;
+        conditionalStack.push({
+          parentActive: conditional,
+          branchTaken,
+          active
+        });
+        conditional = active;
+      } else if (matchElse) {
+        const currentConditional = conditionalStack[conditionalStack.length - 1];
+        if (!currentConditional) {
+          throw new Error("Encountered #else without matching #ifdef or #ifndef");
+        }
+        currentConditional.active = currentConditional.parentActive && !currentConditional.branchTaken;
+        currentConditional.branchTaken = true;
+        conditional = currentConditional.active;
+      } else if (matchEnd) {
+        conditionalStack.pop();
+        conditional = conditionalStack.length ? conditionalStack[conditionalStack.length - 1].active : true;
+      } else if (conditional) {
+        output.push(line);
+      }
+    }
+    if (conditionalStack.length > 0) {
+      throw new Error("Unterminated conditional block in shader source");
+    }
+    return output.join("\n");
+  }
+  const _ShaderAssembler = class _ShaderAssembler {
+    constructor() {
+      __publicField(this, "_hookFunctions", []);
+      __publicField(this, "_defaultModules", []);
+      __publicField(this, "_wgslBindingRegistry", /* @__PURE__ */ new Map());
+    }
+    static getDefaultShaderAssembler() {
+      _ShaderAssembler.defaultShaderAssembler = _ShaderAssembler.defaultShaderAssembler || new _ShaderAssembler();
+      return _ShaderAssembler.defaultShaderAssembler;
+    }
+    addDefaultModule(module) {
+      if (!this._defaultModules.find((m2) => m2.name === (typeof module === "string" ? module : module.name))) {
+        this._defaultModules.push(module);
+      }
+    }
+    removeDefaultModule(module) {
+      const moduleName2 = typeof module === "string" ? module : module.name;
+      this._defaultModules = this._defaultModules.filter((m2) => m2.name !== moduleName2);
+    }
+    addShaderHook(hook, opts) {
+      if (opts) {
+        hook = Object.assign(opts, {
+          hook
+        });
+      }
+      this._hookFunctions.push(hook);
+    }
+    assembleWGSLShader(props) {
+      const modules = this._getModuleList(props.modules);
+      const hookFunctions = this._hookFunctions;
+      const { source: source2, getUniforms: getUniforms2, bindingAssignments } = assembleWGSLShader({
+        ...props,
+        source: props.source,
+        _bindingRegistry: this._wgslBindingRegistry,
+        modules,
+        hookFunctions
+      });
+      const defines2 = {
+        ...modules.reduce((accumulator, module) => {
+          Object.assign(accumulator, module.defines);
+          return accumulator;
+        }, {}),
+        ...props.defines
+      };
+      const preprocessedSource = props.platformInfo.shaderLanguage === "wgsl" ? preprocess$1(source2, {
+        defines: defines2
+      }) : source2;
+      return {
+        source: preprocessedSource,
+        getUniforms: getUniforms2,
+        modules,
+        bindingAssignments,
+        bindingTable: getShaderBindingDebugRowsFromWGSL(preprocessedSource, bindingAssignments)
+      };
+    }
+    assembleGLSLShaderPair(props) {
+      const modules = this._getModuleList(props.modules);
+      const hookFunctions = this._hookFunctions;
+      const assembled = assembleGLSLShaderPair({
+        ...props,
+        vs: props.vs,
+        fs: props.fs,
+        modules,
+        hookFunctions
+      });
+      return {
+        ...assembled,
+        modules
+      };
+    }
+    _getModuleList(appModules = []) {
+      const modules = new Array(this._defaultModules.length + appModules.length);
+      const seen2 = {};
+      let count2 = 0;
+      for (let i2 = 0, len2 = this._defaultModules.length; i2 < len2; ++i2) {
+        const module = this._defaultModules[i2];
+        const name2 = module.name;
+        modules[count2++] = module;
+        seen2[name2] = true;
+      }
+      for (let i2 = 0, len2 = appModules.length; i2 < len2; ++i2) {
+        const module = appModules[i2];
+        const name2 = module.name;
+        if (!seen2[name2]) {
+          modules[count2++] = module;
+          seen2[name2] = true;
+        }
+      }
+      modules.length = count2;
+      initializeShaderModules(modules);
+      return modules;
+    }
+  };
+  __publicField(_ShaderAssembler, "defaultShaderAssembler");
+  let ShaderAssembler = _ShaderAssembler;
+  const FS_GLES = `out vec4 transform_output;
+void main() {
+  transform_output = vec4(0);
+}`;
+  const FS300 = `#version 300 es
+${FS_GLES}`;
+  function getPassthroughFS(options) {
+    const { input: input2, inputChannels, output } = {};
+    if (!input2) {
+      return FS300;
+    }
+    if (!inputChannels) {
+      throw new Error("inputChannels");
+    }
+    const inputType = channelCountToType(inputChannels);
+    const outputValue = convertToVec4(input2, inputChannels);
+    return `#version 300 es
+in ${inputType} ${input2};
+out vec4 ${output};
+void main() {
+  ${output} = ${outputValue};
+}`;
+  }
+  function channelCountToType(channels2) {
+    switch (channels2) {
+      case 1:
+        return "float";
+      case 2:
+        return "vec2";
+      case 3:
+        return "vec3";
+      case 4:
+        return "vec4";
+      default:
+        throw new Error(`invalid channels: ${channels2}`);
+    }
+  }
+  function convertToVec4(variable, channels2) {
+    switch (channels2) {
+      case 1:
+        return `vec4(${variable}, 0.0, 0.0, 1.0)`;
+      case 2:
+        return `vec4(${variable}, 0.0, 1.0)`;
+      case 3:
+        return `vec4(${variable}, 1.0)`;
+      case 4:
+        return variable;
+      default:
+        throw new Error(`invalid channels: ${channels2}`);
+    }
+  }
   function fp64ify(a2, out = [], startIndex = 0) {
     const hiPart = Math.fround(a2);
     const loPart = a2 - hiPart;
@@ -61623,26 +62051,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-CvMdquZj.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Da71vDTm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BsYRFu-B.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-C6FyV7V8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DuKkSN_I.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DtWkc6Vj.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DcPn_K0Q.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-GQbiV-DQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-ROGVKgaz.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-20x3EU-U.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-B9bt-vOv.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Lx9CaUWu.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CKsgZrMb.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Ckv_TeWi.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-C1KI5JgT.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-zSokboxC.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -73213,7 +73641,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
       this.fromNormalDistance(normal, distance2);
     }
     fromNormalDistance(normal, distance2) {
-      assert$4(Number.isFinite(distance2));
+      assert$8(Number.isFinite(distance2));
       this.normal.from(normal).normalize();
       this.distance = distance2;
       return this;
@@ -73227,7 +73655,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     }
     fromCoefficients(a2, b2, c2, d2) {
       this.normal.set(a2, b2, c2);
-      assert$4(equals$2(this.normal.len(), 1));
+      assert$8(equals$2(this.normal.len(), 1));
       this.distance = d2;
       return this;
     }
@@ -73317,7 +73745,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
       return intersect2;
     }
     computeVisibilityWithPlaneMask(boundingVolume, parentPlaneMask) {
-      assert$4(Number.isFinite(parentPlaneMask), "parentPlaneMask is required.");
+      assert$8(Number.isFinite(parentPlaneMask), "parentPlaneMask is required.");
       if (parentPlaneMask === CullingVolume.MASK_OUTSIDE || parentPlaneMask === CullingVolume.MASK_INSIDE) {
         return parentPlaneMask;
       }
@@ -76422,11 +76850,11 @@ void main(void) {
       });
       const lowestResolution = loader[loader.length - 1];
       const implementsGetRaster = typeof lowestResolution.getRaster === "function";
-      const layerModelMatrix = modelMatrix ? modelMatrix.clone() : new Matrix4();
+      const layerModelMatrix2 = modelMatrix ? modelMatrix.clone() : new Matrix4();
       const baseLayer = implementsGetRaster && !excludeBackground && new ImageLayer(this.props, {
         id: `Background-Image-${id2}`,
         loader: lowestResolution,
-        modelMatrix: layerModelMatrix.scale(2 ** (loader.length - 1)),
+        modelMatrix: layerModelMatrix2.scale(2 ** (loader.length - 1)),
         visible: !viewportId || this.context.viewport.id === viewportId,
         onHover,
         onClick,
@@ -82939,308 +83367,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     await storyDb.handles.where("id").startsWith(prefix).delete();
   }
-  const IMPORT_DEFAULT_SEED_HEX = [
-    "0dabff",
-    "c3ff00",
-    "ff8b00",
-    "ff00c7",
-    "1e5cff"
-  ];
-  const IMPORT_DEFAULT_LOWER_LIMIT = 2 ** 5;
-  const IMPORT_DEFAULT_UPPER_LIMIT = 2 ** 14;
-  function looksLikeImportDefaultLimits(lower, upper) {
-    if (lower === IMPORT_DEFAULT_LOWER_LIMIT && upper === IMPORT_DEFAULT_UPPER_LIMIT) {
-      return true;
-    }
-    if (lower === 0 && upper === 65535) return true;
-    if (lower === 0 && upper === 255) return true;
-    return false;
-  }
-  function hexToRgb(hex) {
-    const n2 = Number.parseInt(hex.replace("#", ""), 16);
-    return {
-      r: n2 >> 16 & 255,
-      g: n2 >> 8 & 255,
-      b: n2 & 255
-    };
-  }
-  function rgbToHex$1(color2) {
-    return [
-      color2.r ?? 0,
-      color2.g ?? 0,
-      color2.b ?? 0
-    ].map((value) => value.toString(16).padStart(2, "0")).join("");
-  }
-  function looksLikeImportDefaultSeedColor(color2) {
-    return IMPORT_DEFAULT_SEED_HEX.includes(rgbToHex$1(color2));
-  }
-  const UNASSIGNED_STACK_COLOR = {
-    r: 160,
-    g: 160,
-    b: 160
-  };
-  function effectiveSourceColor(channel, allChannels) {
-    if (channel.color) return channel.color;
-    if (allChannels) {
-      const planar = planarRgbDisplayColor(channel, allChannels);
-      if (planar) return planar;
-    }
-    if (channel.samples === 3) {
-      return {
-        r: 204,
-        g: 0,
-        b: 255
-      };
-    }
-    return UNASSIGNED_STACK_COLOR;
-  }
-  function effectiveDisplayColor(channel, allChannels, groupRow) {
-    return planarRgbDisplayColor(channel, allChannels) ?? (groupRow == null ? void 0 : groupRow.color) ?? effectiveSourceColor(channel, allChannels);
-  }
-  function assignedDisplayHex(channel, allChannels, groupRow) {
-    if (!channel.color && !(groupRow == null ? void 0 : groupRow.color) && !planarRgbDisplayColor(channel, allChannels)) {
-      return void 0;
-    }
-    return rgbToHex$1(effectiveDisplayColor(channel, allChannels, groupRow));
-  }
-  function effectiveSourceLimits(channel) {
-    if (channel.gmmContrastLimits) {
-      return [
-        channel.gmmContrastLimits.lower,
-        channel.gmmContrastLimits.upper
-      ];
-    }
-    const lo = channel.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT;
-    const hi2 = channel.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT;
-    return [
-      lo,
-      hi2
-    ];
-  }
-  function effectiveMaskVisualization(row) {
-    return normalizeMaskVisualization(row.maskVisualization);
-  }
-  function effectiveMaskVisualizationForSource(sc2, channelGroups, activeChannelGroupId) {
-    const groups = activeChannelGroupId ? [
-      channelGroups.find((g2) => g2.id === activeChannelGroupId),
-      ...channelGroups.filter((g2) => g2.id !== activeChannelGroupId)
-    ] : channelGroups;
-    for (const g2 of groups) {
-      if (!g2) continue;
-      const row = g2.channels.find((gc2) => gc2.channelId === sc2.id);
-      if (row) return effectiveMaskVisualization(row);
-    }
-    return effectiveMaskVisualization(sc2);
-  }
-  function seedMaskSourceChannelStyles(channels2) {
-    return channels2.map((sc2) => ({
-      ...sc2,
-      color: sc2.color ?? {
-        r: 136,
-        g: 136,
-        b: 136
-      },
-      lowerLimit: sc2.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
-      upperLimit: sc2.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT,
-      ...isMaskChannel(sc2) ? {
-        maskVisualization: sc2.maskVisualization ?? DEFAULT_MASK_VISUALIZATION
-      } : {}
-    }));
-  }
-  function seedDefaultSourceChannelStyles(sourceChannels, palette) {
-    let paletteIndex = 0;
-    return sourceChannels.map((sc2) => {
-      if (sc2.samples === 3) {
-        return {
-          ...sc2,
-          color: sc2.color ?? {
-            r: 204,
-            g: 0,
-            b: 255
-          },
-          lowerLimit: sc2.lowerLimit ?? 0,
-          upperLimit: sc2.upperLimit ?? 255
-        };
-      }
-      if (isMaskChannel(sc2)) {
-        return {
-          ...sc2,
-          color: sc2.color ?? {
-            r: 136,
-            g: 136,
-            b: 136
-          },
-          lowerLimit: sc2.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
-          upperLimit: sc2.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT,
-          maskVisualization: sc2.maskVisualization ?? DEFAULT_MASK_VISUALIZATION
-        };
-      }
-      const planar = planarRgbDisplayColor(sc2, sourceChannels);
-      if (planar) {
-        return {
-          ...sc2,
-          color: sc2.color ?? planar,
-          lowerLimit: sc2.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
-          upperLimit: sc2.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT
-        };
-      }
-      if (sc2.color) {
-        return {
-          ...sc2,
-          color: sc2.color,
-          lowerLimit: sc2.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
-          upperLimit: sc2.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT
-        };
-      }
-      const fromPalette2 = isImageChannel(sc2) && palette && paletteIndex < palette.length ? palette[paletteIndex++] : void 0;
-      return {
-        ...sc2,
-        ...fromPalette2 ? {
-          color: {
-            r: fromPalette2.r,
-            g: fromPalette2.g,
-            b: fromPalette2.b
-          }
-        } : {},
-        lowerLimit: sc2.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
-        upperLimit: sc2.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT
-      };
-    });
-  }
-  const MAX_VIV_INTENSITY_CHANNELS = 10;
-  const VIV_TILE_MAX_CACHE_SIZE = 128;
-  function loaderPixelSizeXY(loader) {
-    var _a2, _b2;
-    const px = (_a2 = loader.metadata) == null ? void 0 : _a2.Pixels;
-    const metaX = Number(px == null ? void 0 : px.SizeX);
-    const metaY = Number(px == null ? void 0 : px.SizeY);
-    if (Number.isFinite(metaX) && Number.isFinite(metaY) && metaX > 1 && metaY > 1) {
-      return {
-        sizeX: Math.round(metaX),
-        sizeY: Math.round(metaY)
-      };
-    }
-    const level = (_b2 = loader.data) == null ? void 0 : _b2[0];
-    if (!(level == null ? void 0 : level.labels) || !(level == null ? void 0 : level.shape)) return null;
-    const xi2 = level.labels.indexOf("x");
-    const yi2 = level.labels.indexOf("y");
-    if (xi2 < 0 || yi2 < 0) return null;
-    const sizeX = Number(level.shape[xi2]);
-    const sizeY = Number(level.shape[yi2]);
-    if (!Number.isFinite(sizeX) || !Number.isFinite(sizeY) || sizeX <= 1 || sizeY <= 1) {
-      return null;
-    }
-    return {
-      sizeX: Math.round(sizeX),
-      sizeY: Math.round(sizeY)
-    };
-  }
-  const toDefaultSettings = (n2) => {
-    const chan_range = [
-      ...Array(n2).keys()
-    ];
-    const n_shown = 3;
-    const n_sub = n_shown;
-    return {
-      loader: null,
-      selections: chan_range.map((c2) => {
-        return {
-          z: 0,
-          t: 0,
-          c: c2
-        };
-      }).slice(0, n_sub),
-      colors: chan_range.map((c2) => {
-        return [
-          [
-            0,
-            0,
-            255
-          ],
-          [
-            0,
-            255,
-            0
-          ],
-          [
-            255,
-            0,
-            0
-          ]
-        ][c2 % 3];
-      }).slice(0, n_sub),
-      contrastLimits: chan_range.map(() => [
-        0,
-        65535
-      ]).slice(0, n_sub),
-      channelsVisible: chan_range.map((n22) => {
-        return n22 < n_shown;
-      }).slice(0, n_sub),
-      sourceChannelIds: []
-    };
-  };
-  const toSettings = (opts) => {
-    return (activeChannelGroupId, modality, loader, channelVisibilities, loaderSourceImageId, channelGroupRowVisibilities = {}) => {
-      const { SourceChannels, channelGroups = [] } = opts;
-      if (!loader) return toDefaultSettings(3);
-      const full_level = loader.data[0];
-      const { labels, shape } = full_level;
-      const c_idx = labels.indexOf("c");
-      const sourceImageMatches = (image_id) => loaderSourceImageId !== void 0 && loaderSourceImageId !== "" ? image_id === loaderSourceImageId : image_id === modality;
-      const onLoader = SourceChannels.filter((sc2) => sourceImageMatches(sc2.imageId) && isImageChannel(sc2));
-      const activeGroup = activeChannelGroupId ? channelGroups.find((g2) => g2.id === activeChannelGroupId) : void 0;
-      const hasVisibilityMap = channelVisibilities != null && Object.keys(channelVisibilities).length > 0;
-      const composited = buildCompositedIntensityLayers({
-        onLoader,
-        activeGroup,
-        channelGroups,
-        stackVisibilities: channelVisibilities ?? {},
-        groupRowVisibilities: channelGroupRowVisibilities,
-        hasVisibilityMap
-      });
-      const layers = composited.slice(0, MAX_VIV_INTENSITY_CHANNELS);
-      if (composited.length > MAX_VIV_INTENSITY_CHANNELS && false) ;
-      const selections = [];
-      const colors = [];
-      const contrastLimits = [];
-      const channelsVisible = [];
-      const sourceChannelIds = [];
-      for (let i2 = 0; i2 < layers.length; i2++) {
-        const { sc: sc2, gc: gc2 } = layers[i2];
-        const [lo, hi2] = gc2 ? [
-          gc2.lowerLimit,
-          gc2.upperLimit
-        ] : effectiveSourceLimits(sc2);
-        const { r: r2, g: g2, b: b2 } = gc2 ? effectiveDisplayColor(sc2, SourceChannels, gc2) : effectiveSourceColor(sc2, SourceChannels);
-        selections.push({
-          z: 0,
-          t: 0,
-          c: sc2.index
-        });
-        colors.push([
-          r2,
-          g2,
-          b2
-        ]);
-        contrastLimits.push([
-          lo,
-          hi2
-        ]);
-        channelsVisible.push(true);
-        sourceChannelIds.push(sc2.id);
-      }
-      const n_channels = c_idx >= 0 ? shape[c_idx] || 0 : 1;
-      return {
-        ...toDefaultSettings(n_channels),
-        selections,
-        colors,
-        contrastLimits,
-        channelsVisible,
-        sourceChannelIds,
-        loader
-      };
-    };
-  };
   const importedPolygonStyle = {
     fillColor: [
       255,
@@ -85310,19 +85436,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function newShapeId() {
     return crypto.randomUUID();
   }
-  function effectiveReferenceImagePixelSize(viewerPublished, docWidth, docHeight) {
-    if (viewerPublished && viewerPublished.width > 0 && viewerPublished.height > 0) {
-      return viewerPublished;
-    }
-    return {
-      width: docWidth,
-      height: docHeight
-    };
-  }
-  function referenceImagePixelSizeForActions(get2) {
+  function referenceWorldFrameForActions(get2) {
     const doc = useDocumentStore.getState();
     const im = doc.images[0];
-    return effectiveReferenceImagePixelSize(get2().viewerReferenceImagePixelSize, (im == null ? void 0 : im.sizeX) ?? 0, (im == null ? void 0 : im.sizeY) ?? 0);
+    return effectiveWorldFrame(get2().viewerWorldFrame, (im == null ? void 0 : im.sizeX) ?? 0, (im == null ? void 0 : im.sizeY) ?? 0);
   }
   function authoringViewportForDoc(get2) {
     const v2 = get2().viewerViewportSize;
@@ -85823,8 +85940,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function maybePersistShapesAfterMutation(get2) {
     const doc = useDocumentStore.getState();
     const waypoints = documentWaypoints(doc);
-    const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
-    if (waypoints.length === 0 || iw <= 0 || ih2 <= 0) {
+    const frame = referenceWorldFrameForActions(get2);
+    if (waypoints.length === 0 || frame.worldWidth <= 0 || frame.worldHeight <= 0) {
       return;
     }
     const state = get2();
@@ -85901,7 +86018,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     sam2ViewportSize: null,
     viewerViewState: null,
     viewerViewportSize: null,
-    viewerReferenceImagePixelSize: null,
+    viewerWorldFrame: null,
     viewerImageLayersLoaded: false,
     squareViewportThumbnailCapture: null,
     editingViewstateWaypointIndex: null
@@ -86445,11 +86562,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     },
     setImageSelectionMaskFromShape: (shape) => {
       var _a2;
-      const { width: imageWidth, height: imageHeight } = referenceImagePixelSizeForActions(get2);
-      if (imageWidth <= 0 || imageHeight <= 0) return false;
+      const frame = referenceWorldFrameForActions(get2);
+      if (frame.worldWidth <= 0 || frame.worldHeight <= 0) return false;
       const ring = polygonRingFromShape(shape);
       if (!ring) return false;
-      const mask2 = rasterizePolygonToImageMask(ring, imageWidth, imageHeight, {
+      const mask2 = rasterizePolygonToImageMask(ring, frame.worldWidth, frame.worldHeight, {
         sourceShapeId: shape.id,
         sourceShapeLabel: (_a2 = shape.metadata) == null ? void 0 : _a2.label
       });
@@ -86496,15 +86613,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         ...preferredShapeIds ?? [],
         ...shapeIds.filter((id2) => !(preferredShapeIds == null ? void 0 : preferredShapeIds.includes(id2)))
       ];
-      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
+      const frame = referenceWorldFrameForActions(get2);
       const apply = get2().setImageSelectionMaskFromShape;
       for (const id2 of tryIds) {
         const live = viewerShapes.find((s2) => s2.id === id2);
         if (live && apply(live)) return true;
         const persisted = docShapes.find((s2) => s2.id === id2);
         if (persisted && apply(storyShapeToViewer(persisted, {
-          imageWidth: iw,
-          imageHeight: ih2
+          imageWidth: frame.worldWidth,
+          imageHeight: frame.worldHeight
         }))) {
           return true;
         }
@@ -86875,11 +86992,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     },
     setStories: (configWaypoints2) => {
       const doc = useDocumentStore.getState();
-      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
+      const frame = referenceWorldFrameForActions(get2);
       const vp = authoringViewportForDoc(get2);
       const nextAuthoring = /* @__PURE__ */ new Map();
       const waypoints = configWaypoints2.map((w2) => {
-        const { waypoint, authoring } = configWaypointToWaypoint(hydrateConfigWaypoint(w2, doc.channelGroups), iw, ih2, vp.width, vp.height);
+        const { waypoint, authoring } = configWaypointToWaypoint(hydrateConfigWaypoint(w2, doc.channelGroups), frame.pixelWidth, frame.pixelHeight, vp.width, vp.height);
         nextAuthoring.set(waypoint.id, authoring);
         return waypoint;
       });
@@ -86896,9 +87013,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     },
     addStory: (configWaypoint) => {
       const doc = useDocumentStore.getState();
-      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
+      const frame = referenceWorldFrameForActions(get2);
       const vp = authoringViewportForDoc(get2);
-      const { waypoint, authoring } = configWaypointToWaypoint(hydrateConfigWaypoint(configWaypoint, doc.channelGroups), iw, ih2, vp.width, vp.height);
+      const { waypoint, authoring } = configWaypointToWaypoint(hydrateConfigWaypoint(configWaypoint, doc.channelGroups), frame.pixelWidth, frame.pixelHeight, vp.width, vp.height);
       doc.setWaypoints([
         ...doc.waypoints,
         waypoint
@@ -86932,8 +87049,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           merged = rest2;
         }
       }
-      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
-      const { waypoint: nextWp, authoring } = configWaypointToWaypoint(merged, iw, ih2, vp.width, vp.height);
+      const frame = referenceWorldFrameForActions(get2);
+      const { waypoint: nextWp, authoring } = configWaypointToWaypoint(merged, frame.pixelWidth, frame.pixelHeight, vp.width, vp.height);
       const waypoints = [
         ...doc.waypoints
       ];
@@ -87027,9 +87144,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         viewerViewportSize: size
       });
     },
-    setViewerReferenceImagePixelSize: (size) => {
+    setViewerWorldFrame: (frame) => {
       set2({
-        viewerReferenceImagePixelSize: size
+        viewerWorldFrame: frame
       });
     },
     setViewerImageLayersLoaded: (loaded) => {
@@ -87080,7 +87197,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     },
     importWaypointShapes: (story, clearExisting = false, shapeRegistry) => {
       const doc0 = useDocumentStore.getState();
-      const { width: imageWidth, height: imageHeight } = referenceImagePixelSizeForActions(get2);
+      const frame = referenceWorldFrameForActions(get2);
       const fromStore = documentShapes(doc0);
       const shapesForLookup = shapeRegistry === void 0 ? fromStore : (() => {
         const merged = new Map(fromStore.map((s2) => [
@@ -87094,7 +87211,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ...merged.values()
         ];
       })();
-      if (imageWidth === 0 || imageHeight === 0) {
+      if (frame.worldWidth === 0 || frame.worldHeight === 0) {
         return;
       }
       const shapeIds = story.shapeIds ?? [];
@@ -87109,8 +87226,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       for (const id2 of shapeIds) {
         const sh2 = shapeById.get(id2);
         if (sh2) newAnnotations.push(storyShapeToViewer(sh2, {
-          imageWidth,
-          imageHeight
+          imageWidth: frame.worldWidth,
+          imageHeight: frame.worldHeight
         }));
       }
       set2((state) => mergeShapesAfterWaypointImport(state, newAnnotations, clearExisting));
@@ -87121,8 +87238,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const doc = useDocumentStore.getState();
       const waypoints = documentWaypoints(doc);
       const row = waypoints[storyIndex];
-      const { width: iw, height: ih2 } = referenceImagePixelSizeForActions(get2);
-      if (!row || iw <= 0 || ih2 <= 0) {
+      const frame = referenceWorldFrameForActions(get2);
+      if (!row || frame.worldWidth <= 0 || frame.worldHeight <= 0) {
         return;
       }
       const hadStored = (((_a2 = row.shapeIds) == null ? void 0 : _a2.length) ?? 0) > 0;
@@ -91601,7 +91718,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       channelsVisible,
       colors,
       contrastLimits,
-      selections
+      selections,
+      modelMatrix: meta.modelMatrix
     };
     return new MultiscaleImageLayer(imageProps);
   }
@@ -96634,8 +96752,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       var _a2;
       return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeY) ?? 0;
     });
-    const viewerRefSize = useAppStore((s2) => s2.viewerReferenceImagePixelSize);
-    const { width: imageWidth, height: imageHeight } = effectiveReferenceImagePixelSize(viewerRefSize, docImageWidth, docImageHeight);
+    const viewerWorldFrame = useAppStore((s2) => s2.viewerWorldFrame);
+    const frame = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
     reactExports.useEffect(() => {
       if (!sharedSam2Worker) {
         sharedSam2Worker = new Worker(new URL("" + new URL("sam2.worker-Clc5RZYk.js", import.meta.url).href, import.meta.url), {
@@ -96855,12 +96973,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setSam2Processing(true);
       try {
         const imageShape = {
-          x: imageWidth,
-          y: imageHeight
+          x: frame.worldWidth,
+          y: frame.worldHeight
         };
         const viewRect = computeImageViewRect(sam2ViewState, sam2ViewportSize, imageShape);
         const samTransform = computeSamTransform(viewRect);
-        const { float32Array, shape } = await sam2ImageFetcher(viewRect);
+        const { float32Array, shape } = await sam2ImageFetcher(pixelViewRectFromWorld(viewRect, frame));
         if (isDebug()) {
           const canvas = saveEncodedImageForDebug(float32Array, shape, clickX, clickY);
           setSam2DebugImages({
@@ -96919,8 +97037,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     }, [
       sam2ImageFetcher,
-      imageWidth,
-      imageHeight,
+      frame,
       ensureReady,
       decodeMask,
       waitForEncode,
@@ -168619,8 +168736,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       var _a2;
       return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeY) ?? 0;
     });
-    const viewerRefSize = useAppStore((s2) => s2.viewerReferenceImagePixelSize);
-    const { width: imageWidth, height: imageHeight } = effectiveReferenceImagePixelSize(viewerRefSize, docImageWidth, docImageHeight);
+    const viewerWorldFrame = useAppStore((s2) => s2.viewerWorldFrame);
+    const frame = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
+    const imageWidth = frame.worldWidth;
+    const imageHeight = frame.worldHeight;
     const { activeStoryIndex, setActiveStory, setActiveChannelGroup, addStory, updateStory, reorderStories, importWaypointShapes, persistImportedShapesToStory, setTargetWaypointCamera, captureSquareViewportThumbnail, removeStory, setShowSquareViewportOverlay, setAuthoringWaypointEditorOpen, setAuthoringWaypointShapesIndex, handleToolChange, setImageSelectionMaskFromWaypoint, layersPanelSelectedShapeIds } = useAppStore();
     const previousDetailStoryIdRef = reactExports.useRef(null);
     const detailBodyRef = reactExports.useRef(null);
@@ -168737,8 +168856,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           const doc = useDocumentStore.getState();
           const st = useAppStore.getState();
           const im = doc.images[0];
-          const { width: w2, height: h2 } = effectiveReferenceImagePixelSize(st.viewerReferenceImagePixelSize, (im == null ? void 0 : im.sizeX) ?? 0, (im == null ? void 0 : im.sizeY) ?? 0);
-          if (w2 > 0 && h2 > 0) {
+          const f2 = effectiveWorldFrame(st.viewerWorldFrame, (im == null ? void 0 : im.sizeX) ?? 0, (im == null ? void 0 : im.sizeY) ?? 0);
+          if (f2.worldWidth > 0 && f2.worldHeight > 0) {
             useAppStore.getState().persistImportedShapesToStory(p2);
           }
         }
@@ -168771,23 +168890,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const st = useAppStore.getState();
         const doc = useDocumentStore.getState();
         const im = doc.images[0];
-        const { width: iw, height: ih2 } = effectiveReferenceImagePixelSize(st.viewerReferenceImagePixelSize, (im == null ? void 0 : im.sizeX) ?? 0, (im == null ? void 0 : im.sizeY) ?? 0);
+        const f2 = effectiveWorldFrame(st.viewerWorldFrame, (im == null ? void 0 : im.sizeX) ?? 0, (im == null ? void 0 : im.sizeY) ?? 0);
         console.warn("[Minerva] waypoint view not saved: no bounds from viewer (camera/size not ready). Try pan/zoom once or reload.", {
           source: source2,
           index: index2,
           viewerViewState: st.viewerViewState,
           viewerViewportSize: st.viewerViewportSize,
-          viewerReferenceImagePixelSize: st.viewerReferenceImagePixelSize,
-          imageWidth: iw,
-          imageHeight: ih2
+          viewerWorldFrame: st.viewerWorldFrame,
+          imageWidth: f2.worldWidth,
+          imageHeight: f2.worldHeight
         });
         return false;
       }
       const loaded = useAppStore.getState().viewerImageLayersLoaded;
       const thumbnail = loaded ? captureSquareViewportThumbnail() : null;
+      const vsPixels = viewStateToPixels(viewStateCanon, frame);
+      const boundsPixels = {
+        x0: bounds.x0 / frame.umPerPixelX,
+        x1: bounds.x1 / frame.umPerPixelX,
+        y0: bounds.y0 / frame.umPerPixelY,
+        y1: bounds.y1 / frame.umPerPixelY
+      };
       updateStory(index2, {
-        Bounds: bounds,
-        ViewState: viewStateCanon,
+        Bounds: boundsPixels,
+        ViewState: vsPixels,
         Pan: void 0,
         Zoom: void 0,
         ...thumbnail ? {
@@ -169497,22 +169623,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fillPath
     };
   }
-  function colorRenderingForSource(live, sourceChannelId) {
-    if ((live == null ? void 0 : live.kind) === "color" && live.sourceChannelId === sourceChannelId) {
-      return live;
-    }
-    return null;
-  }
-  function contrastRenderingForSource(live, sourceChannelId) {
-    if ((live == null ? void 0 : live.kind) === "contrast" && live.sourceChannelId === sourceChannelId) {
+  function renderingForSource(live, sourceChannelId, kind) {
+    if ((live == null ? void 0 : live.kind) === kind && live.sourceChannelId === sourceChannelId) {
       return live;
     }
     return null;
   }
   function contrastEditorPropsForSource(channelRendering, sc2, color2, limits) {
-    const liveColor = colorRenderingForSource(channelRendering, sc2.id);
+    const liveColor = renderingForSource(channelRendering, sc2.id, "color");
     const c2 = liveColor ?? (sc2.color ? color2 : void 0);
-    const liveContrast = contrastRenderingForSource(channelRendering, sc2.id);
+    const liveContrast = renderingForSource(channelRendering, sc2.id, "contrast");
     return {
       groupId: "",
       channelId: sc2.id,
@@ -169528,9 +169648,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function contrastEditorPropsForGroupRow(channelRendering, groupId, gc2, sc2) {
     const sourceId = (sc2 == null ? void 0 : sc2.id) ?? gc2.channelId;
-    const liveColor = colorRenderingForSource(channelRendering, sourceId);
+    const liveColor = renderingForSource(channelRendering, sourceId, "color");
     const c2 = liveColor ?? gc2.color;
-    const liveContrast = contrastRenderingForSource(channelRendering, sourceId);
+    const liveContrast = renderingForSource(channelRendering, sourceId, "contrast");
     return {
       groupId,
       channelId: gc2.id,
@@ -170503,9 +170623,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       b: color2.b ?? 0
     };
   }
-  function colorOnlyIntensities() {
-    return new Uint16Array(0);
-  }
   function defaultContrastLimits(nChannels) {
     const out = new Uint16Array(nChannels * 2);
     for (let i2 = 0; i2 < nChannels; i2++) {
@@ -170529,7 +170646,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return {
       colors,
       locked,
-      intensities: colorOnlyIntensities(),
+      intensities: new Uint16Array(0),
       contrastLimits: defaultContrastLimits(n2),
       luminance: DEFAULT_LUMINANCE,
       excluded: [],
@@ -171022,7 +171139,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const live = useAppStore.getState().channelRendering;
     const doc = useDocumentStore.getState();
     if (target.scope === "source") {
-      const colorLive = colorRenderingForSource(live, target.sourceId);
+      const colorLive = renderingForSource(live, target.sourceId, "color");
       if (colorLive) {
         doc.setImages(patchSourceChannelOnImages(doc.images, target.sourceId, {
           color: {
@@ -171034,7 +171151,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     } else {
       const groupRow = (_a2 = doc.channelGroups.find((g2) => g2.id === target.groupId)) == null ? void 0 : _a2.channels.find((gc2) => gc2.id === target.rowId);
-      const colorLive = groupRow ? colorRenderingForSource(live, groupRow.channelId) : null;
+      const colorLive = groupRow ? renderingForSource(live, groupRow.channelId, "color") : null;
       if (colorLive) {
         doc.setChannelGroups(doc.channelGroups.map((g2) => g2.id !== target.groupId ? g2 : {
           ...g2,
@@ -171053,7 +171170,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function hexForColorTarget(target, channelRendering, sourceChannels, channelGroups) {
     if (target.scope === "source") {
-      const live2 = colorRenderingForSource(channelRendering, target.sourceId);
+      const live2 = renderingForSource(channelRendering, target.sourceId, "color");
       if (live2) return rgbToHex$1(live2);
       const sc22 = findSourceChannel(sourceChannels, target.sourceId);
       if (!sc22) return null;
@@ -171063,7 +171180,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const gc2 = g2 == null ? void 0 : g2.channels.find((c2) => c2.id === target.rowId);
     if (!gc2) return null;
     const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
-    const live = colorRenderingForSource(channelRendering, gc2.channelId);
+    const live = renderingForSource(channelRendering, gc2.channelId, "color");
     if (live) return rgbToHex$1(live);
     return rgbToHex$1(sc2 ? effectiveDisplayColor(sc2, sourceChannels, gc2) : gc2.color);
   }
@@ -171492,7 +171609,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function finishJob(job, outcome, gen) {
     var _a2;
     if (gen !== generation) return;
-    for (const id2 of job.channelIds) {
+    for (const id2 of job.guards.keys()) {
       if (outcome.kind === "failed") dropBlocked(id2);
       else if ((_a2 = readChannel(id2)) == null ? void 0 : _a2.gmmContrastLimits) dropBlocked(id2);
     }
@@ -171506,7 +171623,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const channels2 = flattenImageChannelsInDocumentOrder(doc.images);
     let changed = false;
     const next2 = channels2.map((sc2) => {
-      if (!job.channelIds.has(sc2.id)) return sc2;
+      if (!job.guards.has(sc2.id)) return sc2;
       const guard = job.guards.get(sc2.id) ?? {
         kind: "still-missing"
       };
@@ -171533,7 +171650,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const nextGroups = doc.channelGroups.map((g2) => ({
       ...g2,
       channels: g2.channels.map((gc2) => {
-        if (!job.channelIds.has(gc2.channelId)) return gc2;
+        if (!job.guards.has(gc2.channelId)) return gc2;
         if (!looksLikeImportDefaultLimits(gc2.lowerLimit, gc2.upperLimit)) {
           return gc2;
         }
@@ -171641,7 +171758,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
   }
   function attachChannel(job, channelId, guard) {
-    job.channelIds.add(channelId);
     const prev = job.guards.get(channelId);
     if (!((prev == null ? void 0 : prev.kind) === "unchanged" && guard.kind === "still-missing")) {
       job.guards.set(channelId, guard);
@@ -171665,9 +171781,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       loader,
       sourceImageId: sc2.imageId,
       index: sc2.index,
-      channelIds: /* @__PURE__ */ new Set([
-        sc2.id
-      ]),
       guards: /* @__PURE__ */ new Map([
         [
           sc2.id,
@@ -178069,8 +178182,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       var _a2;
       return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeY) ?? 0;
     });
-    const viewerRefSize = useAppStore((s2) => s2.viewerReferenceImagePixelSize);
-    const { width: imageWidth, height: imageHeight } = effectiveReferenceImagePixelSize(viewerRefSize, docImageWidth, docImageHeight);
+    const viewerWorldFrame = useAppStore((s2) => s2.viewerWorldFrame);
+    const frame = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
+    const imageWidth = frame.worldWidth;
+    const imageHeight = frame.worldHeight;
     const { activeStoryIndex, setActiveStory, activeChannelGroupId, setActiveChannelGroup, importWaypointShapes, setTargetWaypointCamera } = useAppStore();
     const previousActiveStoryIndexRef = reactExports.useRef(null);
     const groupAppliedForStoryRef = reactExports.useRef(null);
@@ -178129,8 +178244,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           const doc = useDocumentStore.getState();
           const st = useAppStore.getState();
           const im = doc.images[0];
-          const { width: w2, height: h2 } = effectiveReferenceImagePixelSize(st.viewerReferenceImagePixelSize, (im == null ? void 0 : im.sizeX) ?? 0, (im == null ? void 0 : im.sizeY) ?? 0);
-          if (w2 > 0 && h2 > 0) {
+          const f2 = effectiveWorldFrame(st.viewerWorldFrame, (im == null ? void 0 : im.sizeX) ?? 0, (im == null ? void 0 : im.sizeY) ?? 0);
+          if (f2.worldWidth > 0 && f2.worldHeight > 0) {
             useAppStore.getState().persistImportedShapesToStory(p2);
           }
         }
@@ -179046,34 +179161,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const sourceChannels = reactExports.useMemo(() => flattenImageChannelsInDocumentOrder(images), [
       images
     ]);
-    const channelGroups = docChannelGroups.map((group2, g2) => ({
-      g: g2,
-      id: group2.id,
-      name: group2.name,
-      channels: group2.channels.map((channel) => {
-        const { color: color2 } = channel;
-        const found = findSourceChannel(sourceChannels, channel.channelId);
-        if (!found) return null;
-        const { r: r2, g: gg2, b: b2 } = color2;
-        const hex_color = [
-          r2,
-          gg2,
-          b2
-        ].map((n2) => n2.toString(16).padStart(2, "0")).join("");
-        return {
-          r: r2,
-          g: gg2,
-          b: b2,
-          lower_range: channel.lowerLimit,
-          upper_range: channel.upperLimit,
-          name: found.name,
-          color: hex_color,
-          group_uuid: group2.id,
-          source_uuid: found.id,
-          channel_uuid: channel.id
-        };
-      }).filter((x2) => x2 != null)
-    }));
     const legendSections = reactExports.useMemo(() => {
       const hasStackVisibilityMap = Object.keys(channelVisibilities).length > 0;
       const sections = [];
@@ -179212,14 +179299,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       hide2 ? styles$6.hide : "",
       styles$6.core
     ].join(" ");
-    const allGroups = channelGroups.length > 0 ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+    const allGroups = docChannelGroups.length > 0 ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         jsxRuntimeExports.jsx("div", {
           className: styles$6.overlaySectionLabel,
           children: "Channel groups"
         }),
         jsxRuntimeExports.jsx(ChannelGroups, {
-          channelGroups
+          channelGroups: docChannelGroups.map((g2) => ({
+            id: g2.id,
+            name: g2.name
+          }))
         })
       ]
     }) : null;
@@ -179502,9 +179592,7 @@ void main() {
     const finest = planes[0];
     const { width: maskW, height: maskH } = planeSize(finest);
     if (maskW <= 0 || maskH <= 0) return null;
-    if (args.worldWidth <= 0 || args.worldHeight <= 0) return null;
-    const scaleX2 = args.worldWidth / maskW;
-    const scaleY2 = args.worldHeight / maskH;
+    const { umPerPixelX: scaleX2, umPerPixelY: scaleY2 } = worldFrameFromLoader(args.loader);
     const { visualization: viz, channelIndex } = args;
     return new TileLayer({
       id: args.id,
@@ -179780,47 +179868,22 @@ void main() {
       resizeObserver.observe(element2);
       return () => resizeObserver.disconnect();
     }, []);
-    const setViewerReferenceImagePixelSize = useAppStore((s2) => s2.setViewerReferenceImagePixelSize);
+    const setViewerWorldFrame = useAppStore((s2) => s2.setViewerWorldFrame);
     const firstLoader = reactExports.useMemo(() => loaderList.length > 0 ? loaderList[0] : null, [
       loaderList
     ]);
-    const imageShape = reactExports.useMemo(() => {
-      if (firstLoader === null) {
-        return {
-          x: 0,
-          y: 0
-        };
-      }
-      const shape_labels = firstLoader.loader.data[0].labels;
-      const shape_values = firstLoader.loader.data[0].shape;
-      return Object.fromEntries(shape_labels.map((k2, i2) => [
-        k2,
-        shape_values[i2]
-      ]));
-    }, [
+    const frame = reactExports.useMemo(() => firstLoader ? worldFrameFromLoader(firstLoader.loader) : null, [
       firstLoader
     ]);
     reactExports.useEffect(() => {
-      if (imageShape.x > 0 && imageShape.y > 0) {
-        setViewerReferenceImagePixelSize({
-          width: Number(imageShape.x),
-          height: Number(imageShape.y)
-        });
-      } else {
-        setViewerReferenceImagePixelSize(null);
-      }
-      return () => {
-        setViewerReferenceImagePixelSize(null);
-      };
+      setViewerWorldFrame(frame);
+      return () => setViewerWorldFrame(null);
     }, [
-      imageShape.x,
-      imageShape.y,
-      setViewerReferenceImagePixelSize
+      frame,
+      setViewerWorldFrame
     ]);
     const maskDisplayLayers = reactExports.useMemo(() => {
-      const imgW = Number(imageShape.x) || 0;
-      const imgH = Number(imageShape.y) || 0;
-      if (imgW <= 0 || imgH <= 0 || omeLoaderEntries.length === 0) return [];
+      if (omeLoaderEntries.length === 0) return [];
       const layers = [];
       for (const sc2 of flattenImageChannelsInDocumentOrder(images)) {
         if (!isMaskChannel(sc2)) continue;
@@ -179839,9 +179902,7 @@ void main() {
           id: `mask-channel-${sc2.id}`,
           loader: entry.loader,
           channelIndex: sc2.index,
-          visualization,
-          worldWidth: imgW,
-          worldHeight: imgH
+          visualization
         });
         if (layer) layers.push(layer);
       }
@@ -179849,8 +179910,6 @@ void main() {
     }, [
       images,
       omeLoaderEntries,
-      imageShape.x,
-      imageShape.y,
       channelVisibilities,
       channelGroupRowVisibilities,
       activeChannelGroupId,
@@ -179861,15 +179920,19 @@ void main() {
       const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
       return withOrthoZoom({
         zoom: -n_levels,
-        target: [
-          imageShape.x / 2,
-          imageShape.y / 2,
+        target: frame ? [
+          frame.worldWidth / 2,
+          frame.worldHeight / 2,
+          0
+        ] : [
+          0,
+          0,
           0
         ]
       });
     }, [
       firstLoader,
-      imageShape
+      frame
     ]);
     const [viewState, setViewState] = reactExports.useState(fitViewState);
     const [orthoSeed, setOrthoSeed] = reactExports.useState(fitViewState);
@@ -179928,8 +179991,8 @@ void main() {
     ]);
     const targetWaypointCamera = useAppStore((state) => state.targetWaypointCamera);
     const clearTargetWaypointCamera = useAppStore((state) => state.clearTargetWaypointCamera);
-    const refImageWidth = Number(imageShape.x) || 0;
-    const refImageHeight = Number(imageShape.y) || 0;
+    const refImageWidth = (frame == null ? void 0 : frame.pixelWidth) ?? 0;
+    const refImageHeight = (frame == null ? void 0 : frame.pixelHeight) ?? 0;
     reactExports.useEffect(() => {
       if (firstLoader !== null && !hasInitialized.current) {
         commitIdleCamera(fitViewState, true);
@@ -180015,11 +180078,12 @@ void main() {
       if (targetWaypointCamera === null) return;
       if (viewportSize.width <= 0 || viewportSize.height <= 0) return;
       if (refImageWidth <= 0 || refImageHeight <= 0) return;
-      const vs2 = getWaypointViewState(targetWaypointCamera, refImageWidth, refImageHeight, viewportSize.width, viewportSize.height);
-      if (!vs2) {
+      const vsPixels = getWaypointViewState(targetWaypointCamera, refImageWidth, refImageHeight, viewportSize.width, viewportSize.height);
+      if (!vsPixels || !frame) {
         clearTargetWaypointCamera();
         return;
       }
+      const vs2 = viewStateToWorld(vsPixels, frame);
       const gen = ++waypointTransitionGenRef.current;
       const viewportW = viewportSize.width;
       const viewportH = viewportSize.height;
@@ -180064,39 +180128,14 @@ void main() {
       viewportSize.height,
       refImageWidth,
       refImageHeight,
+      frame,
       clearTargetWaypointCamera,
       commitIdleCamera
     ]);
     const scaleBarLayer = reactExports.useMemo(() => {
-      var _a2, _b2;
-      const pixels = (_b2 = (_a2 = firstLoader == null ? void 0 : firstLoader.loader) == null ? void 0 : _a2.metadata) == null ? void 0 : _b2.Pixels;
-      const physicalSize = pixels == null ? void 0 : pixels.PhysicalSizeX;
-      const unit = (pixels == null ? void 0 : pixels.PhysicalSizeXUnit) || "\xB5m";
-      const units = new Set([
-        "Y",
-        "Z",
-        "E",
-        "P",
-        "T",
-        "G",
-        "M",
-        "k",
-        "h",
-        "da",
-        "",
-        "d",
-        "c",
-        "m",
-        "\xB5",
-        "n",
-        "p",
-        "f",
-        "a",
-        "z",
-        "y"
-      ].map((prefix) => `${prefix}m`));
-      if (!units.has(unit)) return null;
-      if (!physicalSize || viewportSize.width <= 0 || viewportSize.height <= 0) return null;
+      if (!frame || viewportSize.width <= 0 || viewportSize.height <= 0) {
+        return null;
+      }
       return new ScaleBarLayer({
         id: "scale-bar",
         imageViewState: {
@@ -180104,21 +180143,21 @@ void main() {
           width: viewportSize.width,
           height: viewportSize.height
         },
-        unit,
-        size: physicalSize,
+        unit: WORLD_MICRON,
+        size: 1,
         snap: true,
         height: viewportSize.height,
         width: viewportSize.width
       });
     }, [
       viewState,
-      firstLoader,
+      frame,
       viewportSize.width,
       viewportSize.height
     ]);
     const worldPickSurfaceLayer = reactExports.useMemo(() => {
-      const w2 = Number(imageShape.x) || 0;
-      const h2 = Number(imageShape.y) || 0;
+      const w2 = (frame == null ? void 0 : frame.worldWidth) ?? 0;
+      const h2 = (frame == null ? void 0 : frame.worldHeight) ?? 0;
       const cx = w2 > 0 ? w2 / 2 : 0;
       const cy = h2 > 0 ? h2 / 2 : 0;
       const R2 = Math.min(Math.max(Math.max(w2, h2, 4096) * 8, 512e3), 5e7);
@@ -180160,8 +180199,7 @@ void main() {
         getLineWidth: 0
       });
     }, [
-      imageShape.x,
-      imageShape.y
+      frame
     ]);
     const selectionMaskDeckLayers = reactExports.useMemo(() => {
       if (!imageSelectionMask) return [];
@@ -250534,6 +250572,7 @@ void main() {
       return new TileLayer({
         visible,
         id: "rgb_image",
+        modelMatrix: meta.modelMatrix,
         getTileData: async ({ index: index2, signal }) => {
           const { x: x2, y: y2, z: z2 } = index2;
           const source2 = loaderPlanes2[Math.abs(-z2)];
@@ -250599,7 +250638,8 @@ void main() {
       channelsVisible,
       colors,
       contrastLimits,
-      selections
+      selections,
+      modelMatrix: meta.modelMatrix
     });
   }
   const listDicomWeb = async (series) => {
@@ -250741,7 +250781,8 @@ void main() {
       dicomLoader: args.entry.loader,
       settings: args.settings,
       rgbImage,
-      imageID: `dicom-${args.entry.series}-${args.index}${remount}`
+      imageID: `dicom-${args.entry.series}-${args.index}${remount}`,
+      modelMatrix: layerModelMatrix(args.entry.loader)
     });
   }
   const OME_INTENSITY_OVERLAY_PROPS = {
@@ -250771,7 +250812,8 @@ void main() {
       ...settings,
       maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
       ...args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {},
-      loader: args.loader.data
+      loader: args.loader.data,
+      modelMatrix: layerModelMatrix(args.loader)
     });
   }
   function createEncodedImageLayer(args) {
@@ -250780,7 +250822,8 @@ void main() {
       settings: args.settings,
       imagePath: args.entry.imagePath ?? ".",
       channelFolders: args.entry.channelFolders ?? {},
-      transfer: args.entry.transfer ?? "contrast"
+      transfer: args.entry.transfer ?? "contrast",
+      modelMatrix: layerModelMatrix(args.entry.loader)
     });
   }
   function buildImageLayers(args) {
@@ -251102,12 +251145,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-10T20:09:46.296Z");
+    const label2 = utcShort("2026-09-11T15:50:02.240Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$3.stamp,
       "aria-hidden": true,
-      title: "2026-09-10T20:09:46.296Z",
+      title: "2026-09-11T15:50:02.240Z",
       children: [
         "Updated ",
         label2,
@@ -253904,8 +253947,10 @@ void main() {
       var _a2;
       return ((_a2 = state.images[0]) == null ? void 0 : _a2.sizeY) ?? 0;
     });
-    const viewerRefSize = useAppStore((s2) => s2.viewerReferenceImagePixelSize);
-    const { width: imageWidth, height: imageHeight } = effectiveReferenceImagePixelSize(viewerRefSize, docImageWidth, docImageHeight);
+    const viewerWorldFrame = useAppStore((s2) => s2.viewerWorldFrame);
+    const frame = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
+    const imageWidth = frame.pixelWidth;
+    const imageHeight = frame.pixelHeight;
     reactExports.useEffect(() => {
       const enabledFromConfig = localStorage.getItem("square_viewport_overlay") === "1";
       if (enabledFromConfig) {
