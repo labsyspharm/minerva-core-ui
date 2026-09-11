@@ -28,7 +28,6 @@ type Job = {
   loader: Loader;
   sourceImageId: string;
   index: number;
-  channelIds: Set<string>;
   guards: Map<string, WriteGuard>;
 };
 
@@ -129,7 +128,7 @@ function dropBlocked(channelId: string) {
 
 function finishJob(job: Job, outcome: FitOutcome, gen: number) {
   if (gen !== generation) return;
-  for (const id of job.channelIds) {
+  for (const id of job.guards.keys()) {
     if (outcome.kind === "failed") dropBlocked(id);
     else if (readChannel(id)?.gmmContrastLimits) dropBlocked(id);
   }
@@ -144,7 +143,7 @@ function commitFitted(job: Job, window: ContrastLimits): void {
   const channels = flattenImageChannelsInDocumentOrder(doc.images);
   let changed = false;
   const next = channels.map((sc) => {
-    if (!job.channelIds.has(sc.id)) return sc;
+    if (!job.guards.has(sc.id)) return sc;
     const guard = job.guards.get(sc.id) ?? { kind: "still-missing" as const };
     if (guard.kind === "still-missing") {
       if (sc.gmmContrastLimits) return sc;
@@ -167,7 +166,7 @@ function commitFitted(job: Job, window: ContrastLimits): void {
   const nextGroups = doc.channelGroups.map((g) => ({
     ...g,
     channels: g.channels.map((gc) => {
-      if (!job.channelIds.has(gc.channelId)) return gc;
+      if (!job.guards.has(gc.channelId)) return gc;
       if (!looksLikeImportDefaultLimits(gc.lowerLimit, gc.upperLimit)) {
         return gc;
       }
@@ -260,7 +259,6 @@ function pump() {
 }
 
 function attachChannel(job: Job, channelId: string, guard: WriteGuard) {
-  job.channelIds.add(channelId);
   const prev = job.guards.get(channelId);
   if (!(prev?.kind === "unchanged" && guard.kind === "still-missing")) {
     job.guards.set(channelId, guard);
@@ -290,7 +288,6 @@ function upsertJob(args: {
     loader,
     sourceImageId: sc.imageId,
     index: sc.index,
-    channelIds: new Set([sc.id]),
     guards: new Map([[sc.id, guard]]),
   };
   jobsByKey.set(key, job);

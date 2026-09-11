@@ -206,8 +206,7 @@ const toSettings = (opts: ToSettingsOpts) => {
     const channelsVisible: boolean[] = [];
     const sourceChannelIds: string[] = [];
 
-    for (let i = 0; i < layers.length; i++) {
-      const { sc, gc } = layers[i];
+    for (const { sc, gc } of layers) {
       const [lo, hi] = gc
         ? [gc.lowerLimit, gc.upperLimit]
         : effectiveSourceLimits(sc);

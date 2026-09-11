@@ -53,35 +53,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
-
-  const channelGroups = docChannelGroups.map((group, g) => ({
-    g,
-    id: group.id,
-    name: group.name,
-    channels: group.channels
-      .map((channel) => {
-        const { color } = channel;
-        const found = findSourceChannel(sourceChannels, channel.channelId);
-        if (!found) return null;
-        const { r, g: gg, b } = color;
-        const hex_color = [r, gg, b]
-          .map((n) => n.toString(16).padStart(2, "0"))
-          .join("");
-        return {
-          r,
-          g: gg,
-          b,
-          lower_range: channel.lowerLimit,
-          upper_range: channel.upperLimit,
-          name: found.name,
-          color: hex_color,
-          group_uuid: group.id,
-          source_uuid: found.id,
-          channel_uuid: channel.id,
-        };
-      })
-      .filter((x) => x != null),
-  }));
   const legendSections = React.useMemo((): LegendSection[] => {
     const hasStackVisibilityMap = Object.keys(channelVisibilities).length > 0;
     const sections: LegendSection[] = [];
@@ -229,10 +200,15 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   const hideClass = [hide ? styles.hide : "", styles.core].join(" ");
 
   const allGroups =
-    channelGroups.length > 0 ? (
+    docChannelGroups.length > 0 ? (
       <>
         <div className={styles.overlaySectionLabel}>Channel groups</div>
-        <ChannelGroups channelGroups={channelGroups} />
+        <ChannelGroups
+          channelGroups={docChannelGroups.map((g) => ({
+            id: g.id,
+            name: g.name,
+          }))}
+        />
       </>
     ) : null;
 

@@ -5,9 +5,9 @@ import {
 } from "@/components/shared/ColorPickerPopover";
 import { useAuthorChannelNav } from "@/components/shared/channel/AuthorChannelNav";
 import {
-  colorRenderingForSource,
   contrastEditorPropsForGroupRow,
   contrastEditorPropsForSource,
+  renderingForSource,
 } from "@/components/shared/channel/ChannelContrastEditor";
 import { ChannelRow } from "@/components/shared/channel/ChannelRow";
 import {
@@ -52,7 +52,7 @@ export function commitChannelColorTarget(target: ChannelColorTarget | null) {
   const live = useAppStore.getState().channelRendering;
   const doc = useDocumentStore.getState();
   if (target.scope === "source") {
-    const colorLive = colorRenderingForSource(live, target.sourceId);
+    const colorLive = renderingForSource(live, target.sourceId, "color");
     if (colorLive) {
       doc.setImages(
         patchSourceChannelOnImages(doc.images, target.sourceId, {
@@ -65,7 +65,7 @@ export function commitChannelColorTarget(target: ChannelColorTarget | null) {
       .find((g) => g.id === target.groupId)
       ?.channels.find((gc) => gc.id === target.rowId);
     const colorLive = groupRow
-      ? colorRenderingForSource(live, groupRow.channelId)
+      ? renderingForSource(live, groupRow.channelId, "color")
       : null;
     if (colorLive) {
       doc.setChannelGroups(
@@ -101,7 +101,7 @@ function hexForColorTarget(
   channelGroups: readonly ChannelGroup[],
 ): string | null {
   if (target.scope === "source") {
-    const live = colorRenderingForSource(channelRendering, target.sourceId);
+    const live = renderingForSource(channelRendering, target.sourceId, "color");
     if (live) return rgbToHex(live);
     const sc = findSourceChannel(sourceChannels, target.sourceId);
     if (!sc) return null;
@@ -111,7 +111,7 @@ function hexForColorTarget(
   const gc = g?.channels.find((c) => c.id === target.rowId);
   if (!gc) return null;
   const sc = findSourceChannel(sourceChannels, gc.channelId);
-  const live = colorRenderingForSource(channelRendering, gc.channelId);
+  const live = renderingForSource(channelRendering, gc.channelId, "color");
   if (live) return rgbToHex(live);
   return rgbToHex(
     sc ? effectiveDisplayColor(sc, sourceChannels, gc) : gc.color,

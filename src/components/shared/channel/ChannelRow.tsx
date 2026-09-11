@@ -1,4 +1,5 @@
 import {
+  type CSSProperties,
   type MouseEventHandler,
   type ReactNode,
   useEffect,
@@ -10,15 +11,48 @@ import {
   ChannelContrastEditor,
   type ChannelContrastEditorProps,
 } from "@/components/shared/channel/ChannelContrastEditor";
-import {
-  ChannelColorSwatchButton,
-  ChannelVisibilitySwatch,
-} from "@/components/shared/channel/ChannelVisibilitySwatch";
+import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import { withReseededRandomColors } from "@/lib/imaging/channelKind";
 import styles from "./ChannelRow.module.css";
+
+function ChannelColorSwatchButton(props: {
+  hex?: string;
+  title: string;
+  ariaLabel: string;
+  busy?: boolean;
+  filled?: boolean;
+  onClick: MouseEventHandler<HTMLButtonElement>;
+}) {
+  const { hex, title, ariaLabel, busy, filled = true, onClick } = props;
+  const fill = Boolean(hex) && filled;
+  return (
+    <button
+      type="button"
+      className={[
+        minervaTheme.focusRing,
+        styles.channelColorSwatch,
+        fill ? null : styles.channelColorSwatchUnfilled,
+        busy ? minervaTheme.busyOverlay : null,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      style={
+        fill
+          ? { backgroundColor: `#${hex}` }
+          : hex
+            ? ({ "--swatch-color": `#${hex}` } as CSSProperties)
+            : undefined
+      }
+      title={busy ? "Optimizing color" : title}
+      aria-label={busy ? "Optimizing color" : ariaLabel}
+      aria-busy={busy || undefined}
+      onClick={onClick}
+    />
+  );
+}
 
 function MaskVizButton(props: {
   active: boolean;

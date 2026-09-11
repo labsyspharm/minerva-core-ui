@@ -70,11 +70,6 @@ export function sourceChannelInAnyGroup(
   return sourceIdsInAnyGroup(channelGroups).has(sourceId);
 }
 
-function stackOverlayReady(sc: Channel, requireColor: boolean): boolean {
-  if (requireColor && sc.samples !== 3 && !sc.color) return false;
-  return true;
-}
-
 /** Intensity layers sent to Viv (one OME channel per source; first visible group row wins, active group first). */
 export function buildCompositedIntensityLayers(
   args: CompositedLayersArgs,
@@ -96,7 +91,7 @@ export function buildCompositedIntensityLayers(
       ? onLoader.filter((sc) => isStackVisible(stackVisibilities, sc.id))
       : onLoader.slice(0, DEFAULT_VISIBLE_INTENSITY_CHANNELS);
     return layers
-      .filter((sc) => stackOverlayReady(sc, requireColor))
+      .filter((sc) => !(requireColor && sc.samples !== 3 && !sc.color))
       .map((sc) => ({ sc, gc: null }));
   }
 
@@ -121,7 +116,7 @@ export function buildCompositedIntensityLayers(
     if (!hasVisibilityMap || !isStackVisible(stackVisibilities, sc.id)) {
       continue;
     }
-    if (!stackOverlayReady(sc, requireColor)) continue;
+    if (requireColor && sc.samples !== 3 && !sc.color) continue;
     usedSourceIds.add(sc.id);
     ordered.push({ sc, gc: null });
   }

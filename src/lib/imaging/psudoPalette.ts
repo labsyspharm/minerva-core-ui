@@ -67,10 +67,6 @@ function asRgbColor(color: { r?: number; g?: number; b?: number }): RgbColor {
   return { r: color.r ?? 0, g: color.g ?? 0, b: color.b ?? 0 };
 }
 
-function colorOnlyIntensities(): Uint16Array {
-  return new Uint16Array(0);
-}
-
 function defaultContrastLimits(nChannels: number): Uint16Array {
   const out = new Uint16Array(nChannels * 2);
   for (let i = 0; i < nChannels; i++) {
@@ -100,7 +96,7 @@ function buildOptimizeInputsFromSlots(
   return {
     colors,
     locked,
-    intensities: colorOnlyIntensities(),
+    intensities: new Uint16Array(0),
     contrastLimits: defaultContrastLimits(n),
     luminance: DEFAULT_LUMINANCE,
     excluded: [],

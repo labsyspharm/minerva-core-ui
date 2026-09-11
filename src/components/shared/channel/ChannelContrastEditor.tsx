@@ -114,22 +114,13 @@ export type ChannelContrastEditorProps = {
   distribution?: SourceDistributionData | null;
 };
 
-export function colorRenderingForSource(
+export function renderingForSource<K extends ChannelRendering["kind"]>(
   live: ChannelRendering | null,
   sourceChannelId: string,
-): Extract<ChannelRendering, { kind: "color" }> | null {
-  if (live?.kind === "color" && live.sourceChannelId === sourceChannelId) {
-    return live;
-  }
-  return null;
-}
-
-function contrastRenderingForSource(
-  live: ChannelRendering | null,
-  sourceChannelId: string,
-): Extract<ChannelRendering, { kind: "contrast" }> | null {
-  if (live?.kind === "contrast" && live.sourceChannelId === sourceChannelId) {
-    return live;
+  kind: K,
+): Extract<ChannelRendering, { kind: K }> | null {
+  if (live?.kind === kind && live.sourceChannelId === sourceChannelId) {
+    return live as Extract<ChannelRendering, { kind: K }>;
   }
   return null;
 }
@@ -140,9 +131,9 @@ export function contrastEditorPropsForSource(
   color: { r?: number; g?: number; b?: number },
   limits: [number, number],
 ): ChannelContrastEditorProps {
-  const liveColor = colorRenderingForSource(channelRendering, sc.id);
+  const liveColor = renderingForSource(channelRendering, sc.id, "color");
   const c = liveColor ?? (sc.color ? color : undefined);
-  const liveContrast = contrastRenderingForSource(channelRendering, sc.id);
+  const liveContrast = renderingForSource(channelRendering, sc.id, "contrast");
   return {
     groupId: "",
     channelId: sc.id,
@@ -164,9 +155,13 @@ export function contrastEditorPropsForGroupRow(
   sc: Channel | undefined,
 ): ChannelContrastEditorProps {
   const sourceId = sc?.id ?? gc.channelId;
-  const liveColor = colorRenderingForSource(channelRendering, sourceId);
+  const liveColor = renderingForSource(channelRendering, sourceId, "color");
   const c = liveColor ?? gc.color;
-  const liveContrast = contrastRenderingForSource(channelRendering, sourceId);
+  const liveContrast = renderingForSource(
+    channelRendering,
+    sourceId,
+    "contrast",
+  );
   return {
     groupId,
     channelId: gc.id,

@@ -47,7 +47,7 @@ type PhysicalSizeFields = {
   PhysicalSizeYUnit?: string | null;
 };
 
-export type PhysicalScale = {
+type PhysicalScale = {
   umPerPixelX: number;
   umPerPixelY: number;
 };
@@ -55,7 +55,6 @@ export type PhysicalScale = {
 function metresPerUnit(unit: string): number | null {
   const u = unit.trim();
   if (u === "m") return 1;
-  if (u === "um" || u === "µm" || u === "μm") return 1e-6;
   if (!u.endsWith("m")) return null;
   const prefix = u.slice(0, -1);
   return prefix in METRE_PREFIX ? METRE_PREFIX[prefix] : null;
