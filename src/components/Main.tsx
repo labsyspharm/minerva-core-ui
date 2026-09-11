@@ -93,6 +93,7 @@ import {
 } from "@/lib/imaging/psudoPalette";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
 import { Pool } from "@/lib/imaging/workers/pool";
+import { effectiveWorldFrame } from "@/lib/imaging/worldFrame";
 import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
@@ -105,10 +106,7 @@ import {
 } from "@/lib/persistence/storyPersistence";
 import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
 import { applyOmeRoisFromLoaderToFirstWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
-import {
-  effectiveReferenceImagePixelSize,
-  useAppStore,
-} from "@/lib/stores/appStore";
+import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentSchema";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
 import {
@@ -938,13 +936,14 @@ const Content = (props: Props) => {
   const docImageHeight = useDocumentStore(
     (state) => state.images[0]?.sizeY ?? 0,
   );
-  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
-  const { width: imageWidth, height: imageHeight } =
-    effectiveReferenceImagePixelSize(
-      viewerRefSize,
-      docImageWidth,
-      docImageHeight,
-    );
+  const viewerWorldFrame = useAppStore((s) => s.viewerWorldFrame);
+  const frame = effectiveWorldFrame(
+    viewerWorldFrame,
+    docImageWidth,
+    docImageHeight,
+  );
+  const imageWidth = frame.pixelWidth;
+  const imageHeight = frame.pixelHeight;
 
   useEffect(() => {
     const enabledFromConfig =

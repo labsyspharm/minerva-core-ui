@@ -22,6 +22,11 @@ import {
 } from "@/lib/imaging/maskLayers";
 import { createMaskTileLayer } from "@/lib/imaging/maskTileLayer";
 import { effectiveMaskVisualizationForSource } from "@/lib/imaging/sourceChannelStyle";
+import {
+  viewStateToWorld,
+  WORLD_MICRON,
+  worldFrameFromLoader,
+} from "@/lib/imaging/worldFrame";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -366,48 +371,25 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return () => resizeObserver.disconnect();
   }, []);
 
-  /**
-   * Waypoints, overlays, SAM2, and initial pan/zoom use **only the first stacked
-   * image** (`mainSettingsList[0]`, i.e. first OME file or first DICOM series).
-   * Additional OME layers share the same world axes; different sizes are not registered.
-   */
-  const setViewerReferenceImagePixelSize = useAppStore(
-    (s) => s.setViewerReferenceImagePixelSize,
-  );
+  const setViewerWorldFrame = useAppStore((s) => s.setViewerWorldFrame);
 
   const firstLoader = useMemo(
     () => (loaderList.length > 0 ? loaderList[0] : null),
     [loaderList],
   );
 
-  // Memoize image shape computation
-  const imageShape = useMemo(() => {
-    if (firstLoader === null) {
-      return { x: 0, y: 0 };
-    }
-    const shape_labels = firstLoader.loader.data[0].labels;
-    const shape_values = firstLoader.loader.data[0].shape;
-    return Object.fromEntries(shape_labels.map((k, i) => [k, shape_values[i]]));
-  }, [firstLoader]);
+  const frame = useMemo(
+    () => (firstLoader ? worldFrameFromLoader(firstLoader.loader) : null),
+    [firstLoader],
+  );
 
   useEffect(() => {
-    if (imageShape.x > 0 && imageShape.y > 0) {
-      setViewerReferenceImagePixelSize({
-        width: Number(imageShape.x),
-        height: Number(imageShape.y),
-      });
-    } else {
-      setViewerReferenceImagePixelSize(null);
-    }
-    return () => {
-      setViewerReferenceImagePixelSize(null);
-    };
-  }, [imageShape.x, imageShape.y, setViewerReferenceImagePixelSize]);
+    setViewerWorldFrame(frame);
+    return () => setViewerWorldFrame(null);
+  }, [frame, setViewerWorldFrame]);
 
   const maskDisplayLayers = useMemo(() => {
-    const imgW = Number(imageShape.x) || 0;
-    const imgH = Number(imageShape.y) || 0;
-    if (imgW <= 0 || imgH <= 0 || omeLoaderEntries.length === 0) return [];
+    if (omeLoaderEntries.length === 0) return [];
 
     const layers: Layer[] = [];
     for (const sc of flattenImageChannelsInDocumentOrder(images)) {
@@ -439,8 +421,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
         loader: entry.loader,
         channelIndex: sc.index,
         visualization,
-        worldWidth: imgW,
-        worldHeight: imgH,
       });
       if (layer) layers.push(layer);
     }
@@ -448,8 +428,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }, [
     images,
     omeLoaderEntries,
-    imageShape.x,
-    imageShape.y,
     channelVisibilities,
     channelGroupRowVisibilities,
     activeChannelGroupId,
@@ -464,9 +442,11 @@ export const ImageViewer = (props: ImageViewerProps) => {
     const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
     return withOrthoZoom({
       zoom: -n_levels,
-      target: [imageShape.x / 2, imageShape.y / 2, 0],
+      target: frame
+        ? [frame.worldWidth / 2, frame.worldHeight / 2, 0]
+        : [0, 0, 0],
     });
-  }, [firstLoader, imageShape]);
+  }, [firstLoader, frame]);
 
   const [viewState, setViewState] =
     useState<OrthographicViewState>(fitViewState);
@@ -543,8 +523,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const clearTargetWaypointCamera = useAppStore(
     (state) => state.clearTargetWaypointCamera,
   );
-  const refImageWidth = Number(imageShape.x) || 0;
-  const refImageHeight = Number(imageShape.y) || 0;
+  const refImageWidth = frame?.pixelWidth ?? 0;
+  const refImageHeight = frame?.pixelHeight ?? 0;
 
   useEffect(() => {
     if (firstLoader !== null && !hasInitialized.current) {
@@ -626,17 +606,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
     if (viewportSize.width <= 0 || viewportSize.height <= 0) return;
     if (refImageWidth <= 0 || refImageHeight <= 0) return;
 
-    const vs = getWaypointViewState(
+    const vsPixels = getWaypointViewState(
       targetWaypointCamera,
       refImageWidth,
       refImageHeight,
       viewportSize.width,
       viewportSize.height,
     );
-    if (!vs) {
+    if (!vsPixels || !frame) {
       clearTargetWaypointCamera();
       return;
     }
+    const vs = viewStateToWorld(vsPixels, frame);
 
     const gen = ++waypointTransitionGenRef.current;
     const viewportW = viewportSize.width;
@@ -690,47 +671,17 @@ export const ImageViewer = (props: ImageViewerProps) => {
     viewportSize.height,
     refImageWidth,
     refImageHeight,
+    frame,
     clearTargetWaypointCamera,
     commitIdleCamera,
   ]);
 
   // Memoize scale bar layer
   const scaleBarLayer = useMemo(() => {
-    // Get physical size from loader metadata if available
-    const pixels = firstLoader?.loader?.metadata?.Pixels;
-    const physicalSize = pixels?.PhysicalSizeX;
-    const unit = pixels?.PhysicalSizeXUnit || "µm";
-    const units = new Set(
-      [
-        "Y",
-        "Z",
-        "E",
-        "P",
-        "T",
-        "G",
-        "M",
-        "k",
-        "h",
-        "da",
-        "",
-        "d",
-        "c",
-        "m",
-        "µ",
-        "n",
-        "p",
-        "f",
-        "a",
-        "z",
-        "y",
-      ].map((prefix) => `${prefix}m`),
-    );
-    if (!units.has(unit)) return null;
-    if (!physicalSize || viewportSize.width <= 0 || viewportSize.height <= 0)
+    if (!frame || viewportSize.width <= 0 || viewportSize.height <= 0) {
       return null;
+    }
 
-    // The updated ScaleBarLayer expects imageViewState + height/width as top-level
-    // props for screen-space positioning, but the published types don't expose them.
     return new ScaleBarLayer({
       id: "scale-bar",
       imageViewState: {
@@ -738,18 +689,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
         width: viewportSize.width,
         height: viewportSize.height,
       },
-      unit,
-      size: physicalSize,
+      unit: WORLD_MICRON,
+      size: 1,
       snap: true,
       height: viewportSize.height,
       width: viewportSize.width,
     } as ConstructorParameters<typeof ScaleBarLayer>[0]);
-  }, [viewState, firstLoader, viewportSize.width, viewportSize.height]);
+  }, [viewState, frame, viewportSize.width, viewportSize.height]);
 
   // Invisible layer under the image so gutter picks have geometry (see dragHandlers toCoord).
   const worldPickSurfaceLayer = useMemo(() => {
-    const w = Number(imageShape.x) || 0;
-    const h = Number(imageShape.y) || 0;
+    const w = frame?.worldWidth ?? 0;
+    const h = frame?.worldHeight ?? 0;
     const cx = w > 0 ? w / 2 : 0;
     const cy = h > 0 ? h / 2 : 0;
     const R = Math.min(Math.max(Math.max(w, h, 4096) * 8, 512_000), 50_000_000);
@@ -769,7 +720,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       getFillColor: [0, 0, 0, 0],
       getLineWidth: 0,
     });
-  }, [imageShape.x, imageShape.y]);
+  }, [frame]);
 
   const selectionMaskDeckLayers = useMemo(() => {
     if (!imageSelectionMask) return [] as Layer[];

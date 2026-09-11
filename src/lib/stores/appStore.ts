@@ -11,6 +11,7 @@ import {
   rasterizePolygonToImageMask,
   SELECTION_MASK_CHANNEL_KEY,
 } from "../imaging/maskLayers";
+import { effectiveWorldFrame, type WorldFrame } from "../imaging/worldFrame";
 import { buildBrushHull } from "../shapes/brushHull";
 import { polygonDifference, polygonUnion } from "../shapes/polygonClipping";
 import { arrowLineDegeneratePolygon } from "../shapes/shapeGeometry";
@@ -54,35 +55,11 @@ function newShapeId(): string {
   return crypto.randomUUID();
 }
 
-/** Pixel size of the first stacked image as reported by `ImageViewer` (loader shape). */
-export type ReferenceImagePixelSize = { width: number; height: number };
-
-/**
- * Prefer live viewer geometry (first stacked loader); fall back to `document.images[0]`
- * when the viewer has not published yet (e.g. before mount).
- */
-export function effectiveReferenceImagePixelSize(
-  viewerPublished: ReferenceImagePixelSize | null | undefined,
-  docWidth: number,
-  docHeight: number,
-): ReferenceImagePixelSize {
-  if (
-    viewerPublished &&
-    viewerPublished.width > 0 &&
-    viewerPublished.height > 0
-  ) {
-    return viewerPublished;
-  }
-  return { width: docWidth, height: docHeight };
-}
-
-function referenceImagePixelSizeForActions(
-  get: () => AppStore,
-): ReferenceImagePixelSize {
+function referenceWorldFrameForActions(get: () => AppStore): WorldFrame {
   const doc = useDocumentStore.getState();
   const im = doc.images[0];
-  return effectiveReferenceImagePixelSize(
-    get().viewerReferenceImagePixelSize,
+  return effectiveWorldFrame(
+    get().viewerWorldFrame,
     im?.sizeX ?? 0,
     im?.sizeY ?? 0,
   );
@@ -777,15 +754,8 @@ export interface AppStore {
   setViewerViewState: (vs: OrthographicViewState) => void;
   viewerViewportSize: ViewportSize | null;
   setViewerViewportSize: (size: ViewportSize) => void;
-  /**
-   * Reference stack pixel size from the viewer (first loader `shape`), or null when
-   * the viewer is absent or has not loaded. Waypoint math should prefer this over
-   * `document.images[0]` so it stays aligned with Deck.
-   */
-  viewerReferenceImagePixelSize: ReferenceImagePixelSize | null;
-  setViewerReferenceImagePixelSize: (
-    size: ReferenceImagePixelSize | null,
-  ) => void;
+  viewerWorldFrame: WorldFrame | null;
+  setViewerWorldFrame: (frame: WorldFrame | null) => void;
   /** True when OME-TIFF / DICOM tile stack layers all report `isLoaded` (see ImageViewer). */
   viewerImageLayersLoaded: boolean;
   setViewerImageLayersLoaded: (loaded: boolean) => void;
@@ -892,8 +862,12 @@ export interface AppStore {
 function maybePersistShapesAfterMutation(get: () => AppStore) {
   const doc = useDocumentStore.getState();
   const waypoints = documentWaypoints(doc);
-  const { width: iw, height: ih } = referenceImagePixelSizeForActions(get);
-  if (waypoints.length === 0 || iw <= 0 || ih <= 0) {
+  const frame = referenceWorldFrameForActions(get);
+  if (
+    waypoints.length === 0 ||
+    frame.worldWidth <= 0 ||
+    frame.worldHeight <= 0
+  ) {
     return;
   }
   const state = get();
@@ -968,7 +942,7 @@ const overlayInitialState = {
   sam2ViewportSize: null,
   viewerViewState: null,
   viewerViewportSize: null,
-  viewerReferenceImagePixelSize: null,
+  viewerWorldFrame: null,
   viewerImageLayersLoaded: false,
   squareViewportThumbnailCapture: null,
   editingViewstateWaypointIndex: null,
@@ -1538,15 +1512,14 @@ export const useAppStore = create<AppStore>()(
       },
 
       setImageSelectionMaskFromShape: (shape: Shape) => {
-        const { width: imageWidth, height: imageHeight } =
-          referenceImagePixelSizeForActions(get);
-        if (imageWidth <= 0 || imageHeight <= 0) return false;
+        const frame = referenceWorldFrameForActions(get);
+        if (frame.worldWidth <= 0 || frame.worldHeight <= 0) return false;
         const ring = polygonRingFromShape(shape);
         if (!ring) return false;
         const mask = rasterizePolygonToImageMask(
           ring,
-          imageWidth,
-          imageHeight,
+          frame.worldWidth,
+          frame.worldHeight,
           {
             sourceShapeId: shape.id,
             sourceShapeLabel: shape.metadata?.label,
@@ -1589,8 +1562,7 @@ export const useAppStore = create<AppStore>()(
           ...(preferredShapeIds ?? []),
           ...shapeIds.filter((id) => !preferredShapeIds?.includes(id)),
         ];
-        const { width: iw, height: ih } =
-          referenceImagePixelSizeForActions(get);
+        const frame = referenceWorldFrameForActions(get);
         const apply = get().setImageSelectionMaskFromShape;
         for (const id of tryIds) {
           const live = viewerShapes.find((s) => s.id === id);
@@ -1600,8 +1572,8 @@ export const useAppStore = create<AppStore>()(
             persisted &&
             apply(
               storyShapeToViewer(persisted, {
-                imageWidth: iw,
-                imageHeight: ih,
+                imageWidth: frame.worldWidth,
+                imageHeight: frame.worldHeight,
               }),
             )
           ) {
@@ -2057,15 +2029,14 @@ export const useAppStore = create<AppStore>()(
 
       setStories: (configWaypoints: ConfigWaypoint[]) => {
         const doc = useDocumentStore.getState();
-        const { width: iw, height: ih } =
-          referenceImagePixelSizeForActions(get);
+        const frame = referenceWorldFrameForActions(get);
         const vp = authoringViewportForDoc(get);
         const nextAuthoring = new Map<string, AuthoringWaypointExtra>();
         const waypoints = configWaypoints.map((w) => {
           const { waypoint, authoring } = configWaypointToWaypoint(
             hydrateConfigWaypoint(w, doc.channelGroups),
-            iw,
-            ih,
+            frame.pixelWidth,
+            frame.pixelHeight,
             vp.width,
             vp.height,
           );
@@ -2082,13 +2053,12 @@ export const useAppStore = create<AppStore>()(
 
       addStory: (configWaypoint: ConfigWaypoint) => {
         const doc = useDocumentStore.getState();
-        const { width: iw, height: ih } =
-          referenceImagePixelSizeForActions(get);
+        const frame = referenceWorldFrameForActions(get);
         const vp = authoringViewportForDoc(get);
         const { waypoint, authoring } = configWaypointToWaypoint(
           hydrateConfigWaypoint(configWaypoint, doc.channelGroups),
-          iw,
-          ih,
+          frame.pixelWidth,
+          frame.pixelHeight,
           vp.width,
           vp.height,
         );
@@ -2118,12 +2088,11 @@ export const useAppStore = create<AppStore>()(
             merged = rest as ConfigWaypoint;
           }
         }
-        const { width: iw, height: ih } =
-          referenceImagePixelSizeForActions(get);
+        const frame = referenceWorldFrameForActions(get);
         const { waypoint: nextWp, authoring } = configWaypointToWaypoint(
           merged,
-          iw,
-          ih,
+          frame.pixelWidth,
+          frame.pixelHeight,
           vp.width,
           vp.height,
         );
@@ -2215,8 +2184,8 @@ export const useAppStore = create<AppStore>()(
         set({ viewerViewportSize: size });
       },
 
-      setViewerReferenceImagePixelSize: (size) => {
-        set({ viewerReferenceImagePixelSize: size });
+      setViewerWorldFrame: (frame) => {
+        set({ viewerWorldFrame: frame });
       },
 
       setViewerImageLayersLoaded: (loaded) => {
@@ -2270,8 +2239,7 @@ export const useAppStore = create<AppStore>()(
         shapeRegistry?: StoryShape[],
       ) => {
         const doc0 = useDocumentStore.getState();
-        const { width: imageWidth, height: imageHeight } =
-          referenceImagePixelSizeForActions(get);
+        const frame = referenceWorldFrameForActions(get);
         const fromStore = documentShapes(doc0);
         const shapesForLookup =
           shapeRegistry === undefined
@@ -2286,7 +2254,7 @@ export const useAppStore = create<AppStore>()(
                 return [...merged.values()];
               })();
 
-        if (imageWidth === 0 || imageHeight === 0) {
+        if (frame.worldWidth === 0 || frame.worldHeight === 0) {
           return;
         }
 
@@ -2308,7 +2276,10 @@ export const useAppStore = create<AppStore>()(
           const sh = shapeById.get(id);
           if (sh)
             newAnnotations.push(
-              storyShapeToViewer(sh, { imageWidth, imageHeight }),
+              storyShapeToViewer(sh, {
+                imageWidth: frame.worldWidth,
+                imageHeight: frame.worldHeight,
+              }),
             );
         }
 
@@ -2325,9 +2296,8 @@ export const useAppStore = create<AppStore>()(
         const doc = useDocumentStore.getState();
         const waypoints = documentWaypoints(doc);
         const row = waypoints[storyIndex];
-        const { width: iw, height: ih } =
-          referenceImagePixelSizeForActions(get);
-        if (!row || iw <= 0 || ih <= 0) {
+        const frame = referenceWorldFrameForActions(get);
+        if (!row || frame.worldWidth <= 0 || frame.worldHeight <= 0) {
           return;
         }
         const hadStored = (row.shapeIds?.length ?? 0) > 0;

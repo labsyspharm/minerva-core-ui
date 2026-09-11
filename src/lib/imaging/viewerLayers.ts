@@ -1,5 +1,6 @@
 import type { Layer } from "@deck.gl/core";
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
+import type { Matrix4 } from "@math.gl/core";
 import { useMemo, useRef } from "react";
 import type {
   JpegLoaderEntry,
@@ -16,6 +17,7 @@ import type { DicomIndex } from "./dicomIndex";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
 import { type Loader, toSettings, VIV_TILE_MAX_CACHE_SIZE } from "./viv";
+import { layerModelMatrix } from "./worldFrame";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
 export function applyChannelRendering<S extends MainSettings>(
@@ -89,6 +91,7 @@ export function createDicomTileLayer(args: {
   settings: unknown;
   index: number;
   remountKey?: string | number;
+  modelMatrix: Matrix4;
 }): Layer | null {
   const rgbImage = args.entry.modality === "Brightfield";
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
@@ -98,6 +101,7 @@ export function createDicomTileLayer(args: {
     settings: args.settings,
     rgbImage,
     imageID: `dicom-${args.entry.series}-${args.index}${remount}`,
+    modelMatrix: args.modelMatrix,
   });
 }
 
@@ -128,6 +132,7 @@ export function createMultiscaleLayer(args: {
    */
   transfer?: JpegExportTransfer;
   overlay?: boolean;
+  modelMatrix: Matrix4;
 }): Layer {
   const base = args.settings as MainSettings;
   const settings: MainSettings =
@@ -148,12 +153,14 @@ export function createMultiscaleLayer(args: {
     maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
     ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
     loader: args.loader.data,
+    modelMatrix: args.modelMatrix,
   } as never);
 }
 
 export function createEncodedImageLayer(args: {
   entry: JpegLoaderEntry;
   settings: unknown;
+  modelMatrix: Matrix4;
 }): Layer {
   return createJpegLayers({
     jpegLoader: args.entry.loader.data,
@@ -161,6 +168,7 @@ export function createEncodedImageLayer(args: {
     imagePath: args.entry.imagePath ?? ".",
     channelFolders: args.entry.channelFolders ?? {},
     transfer: args.entry.transfer ?? "contrast",
+    modelMatrix: args.modelMatrix,
   });
 }
 
@@ -191,6 +199,7 @@ export function buildImageLayers(args: {
         settings: dicomSettingsList[i],
         index: nextIndex,
         remountKey: args.remountKey,
+        modelMatrix: layerModelMatrix(entry.loader),
       });
       if (!layer) return [];
       nextIndex += 1;
@@ -209,6 +218,7 @@ export function buildImageLayers(args: {
           index: nextIndex++,
           remountKey: args.remountKey,
           overlay,
+          modelMatrix: layerModelMatrix(loader),
           ...(transfer ? { transfer } : {}),
         }),
       ];
@@ -217,6 +227,7 @@ export function buildImageLayers(args: {
       createEncodedImageLayer({
         entry,
         settings: jpegSettingsList[i],
+        modelMatrix: layerModelMatrix(entry.loader),
       }),
     ),
   ];

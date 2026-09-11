@@ -5,6 +5,7 @@ import type {
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
 import { Pool } from "@/lib/imaging/workers/pool";
+import { worldFrameFromPixelCounts } from "@/lib/imaging/worldFrame";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { DocumentData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
@@ -21,10 +22,12 @@ function seedPlaybackSession(data: DocumentData) {
   const firstGroup = data.channelGroups[0];
   if (firstGroup) app.setActiveChannelGroup(firstGroup.id);
   if (data.waypoints.length > 0) app.setActiveStory(0);
-  app.setViewerReferenceImagePixelSize({
-    width: data.images[0]?.sizeX ?? 0,
-    height: data.images[0]?.sizeY ?? 0,
-  });
+  app.setViewerWorldFrame(
+    worldFrameFromPixelCounts(
+      data.images[0]?.sizeX ?? 0,
+      data.images[0]?.sizeY ?? 0,
+    ),
+  );
 }
 
 /** Fetch, hydrate stores, and build CDN-safe loaders for a published story. */
