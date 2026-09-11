@@ -5,10 +5,8 @@ import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { PanelActionButton } from "@/components/shared/panel/PanelButtons";
 import { StorySpines } from "@/components/shared/StorySpines";
-import {
-  effectiveReferenceImagePixelSize,
-  useAppStore,
-} from "@/lib/stores/appStore";
+import { effectiveWorldFrame } from "@/lib/imaging/worldFrame";
+import { useAppStore } from "@/lib/stores/appStore";
 import type { Waypoint } from "@/lib/stores/documentStore";
 import {
   findSourceChannel,
@@ -58,7 +56,6 @@ const NavChevron = (props: { dir: "left" | "right"; px: number }) => {
 
 export const Presentation = (props: PresentationProps) => {
   const documentTitle = useDocumentStore((s) => s.metadata.title ?? "");
-  const storyId = useDocumentStore((s) => s.activeStoryId ?? "");
   const waypoints = useDocumentStore((s) => s.waypoints);
   const shapes = useDocumentStore((s) => s.shapes);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
@@ -69,13 +66,14 @@ export const Presentation = (props: PresentationProps) => {
   );
   const docImageWidth = useDocumentStore((s) => s.images[0]?.sizeX ?? 0);
   const docImageHeight = useDocumentStore((s) => s.images[0]?.sizeY ?? 0);
-  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
-  const { width: imageWidth, height: imageHeight } =
-    effectiveReferenceImagePixelSize(
-      viewerRefSize,
-      docImageWidth,
-      docImageHeight,
-    );
+  const viewerWorldFrame = useAppStore((s) => s.viewerWorldFrame);
+  const frame = effectiveWorldFrame(
+    viewerWorldFrame,
+    docImageWidth,
+    docImageHeight,
+  );
+  const imageWidth = frame.worldWidth;
+  const imageHeight = frame.worldHeight;
   const {
     activeStoryIndex,
     setActiveStory,
@@ -154,12 +152,12 @@ export const Presentation = (props: PresentationProps) => {
         const doc = useDocumentStore.getState();
         const st = useAppStore.getState();
         const im = doc.images[0];
-        const { width: w, height: h } = effectiveReferenceImagePixelSize(
-          st.viewerReferenceImagePixelSize,
+        const f = effectiveWorldFrame(
+          st.viewerWorldFrame,
           im?.sizeX ?? 0,
           im?.sizeY ?? 0,
         );
-        if (w > 0 && h > 0) {
+        if (f.worldWidth > 0 && f.worldHeight > 0) {
           useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
@@ -396,7 +394,7 @@ export const Presentation = (props: PresentationProps) => {
               .filter(Boolean)
               .join(" ")}
           >
-            <StorySpines seed={storyId} />
+            <StorySpines />
             {ribbonDocTitle}
           </span>
           {props.exitPlaybackPreview ? (

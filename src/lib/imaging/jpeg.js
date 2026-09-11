@@ -29,6 +29,7 @@ function createJpegLayers(meta) {
     colors,
     contrastLimits,
     selections,
+    modelMatrix: meta.modelMatrix,
   };
   return new MultiscaleImageLayer(imageProps);
 }

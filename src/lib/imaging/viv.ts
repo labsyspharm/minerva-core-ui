@@ -19,7 +19,6 @@ import {
  */
 export const MAX_VIV_INTENSITY_CHANNELS = 10;
 
-/** Keep parent pyramid tiles around for best-available refinement while zooming. */
 export const VIV_TILE_MAX_CACHE_SIZE = 128;
 
 type Selection = Record<"z" | "t" | "c", number>;
@@ -37,7 +36,6 @@ type Settings = {
   contrastLimits: Limit[];
   loader: Loader | null;
   colors: Color[];
-  /** Parallel to selections — source channel ids for live preview mapping. */
   sourceChannelIds?: string[];
 };
 
@@ -86,19 +84,6 @@ type Metadata = {
   ROIs?: Roi[];
 };
 
-export type Config = {
-  toSettings: (
-    activeChannelGroupId: string | null,
-    modality: string,
-    l?: Loader,
-    channelVisibilities?: Record<string, boolean>,
-    /** When set (OME multi-image UUID), channel visibility matches this instead of `modality`. */
-    loaderSourceImageId?: string,
-    channelGroupRowVisibilities?: Record<string, boolean>,
-  ) => Settings;
-};
-
-/** Full-resolution pixel size from OME metadata or finest pyramid level (>1 rejects placeholders). */
 export function loaderPixelSizeXY(loader: Loader): {
   sizeX: number;
   sizeY: number;
@@ -135,7 +120,7 @@ export function loaderPixelSizeXY(loader: Loader): {
 const toDefaultSettings = (n: number) => {
   const chan_range = [...Array(n).keys()];
   const n_shown = 3;
-  const n_sub = n_shown; //TODO
+  const n_sub = n_shown;
   return {
     loader: null,
     selections: chan_range
@@ -169,7 +154,7 @@ type ToSettingsOpts = {
 
 const toSettings = (opts: ToSettingsOpts) => {
   return (
-    _activeChannelGroupId: string | null,
+    activeChannelGroupId: string | null,
     modality: string,
     loader: Loader | undefined,
     channelVisibilities?: Record<string, boolean>,
@@ -186,13 +171,12 @@ const toSettings = (opts: ToSettingsOpts) => {
         ? image_id === loaderSourceImageId
         : image_id === modality;
 
-    // Intensity only; masks use createMaskTileLayer.
     const onLoader = SourceChannels.filter(
       (sc) => sourceImageMatches(sc.imageId) && isImageChannel(sc),
     );
 
-    const activeGroup = _activeChannelGroupId
-      ? channelGroups.find((g) => g.id === _activeChannelGroupId)
+    const activeGroup = activeChannelGroupId
+      ? channelGroups.find((g) => g.id === activeChannelGroupId)
       : undefined;
 
     const hasVisibilityMap =
@@ -207,11 +191,10 @@ const toSettings = (opts: ToSettingsOpts) => {
       hasVisibilityMap,
     });
 
-    const layersAll = composited;
-    const layers = layersAll.slice(0, MAX_VIV_INTENSITY_CHANNELS);
-    if (layersAll.length > MAX_VIV_INTENSITY_CHANNELS && import.meta.env.DEV) {
+    const layers = composited.slice(0, MAX_VIV_INTENSITY_CHANNELS);
+    if (composited.length > MAX_VIV_INTENSITY_CHANNELS && import.meta.env.DEV) {
       console.warn(
-        `[viv] ${layersAll.length} visible intensity channels exceeds ` +
+        `[viv] ${composited.length} visible intensity channels exceeds ` +
           `MAX_VIV_INTENSITY_CHANNELS=${MAX_VIV_INTENSITY_CHANNELS}; ` +
           "extra channels are hidden until you toggle some off.",
       );
@@ -223,14 +206,13 @@ const toSettings = (opts: ToSettingsOpts) => {
     const channelsVisible: boolean[] = [];
     const sourceChannelIds: string[] = [];
 
-    for (let i = 0; i < layers.length; i++) {
-      const { sc, gc } = layers[i];
+    for (const { sc, gc } of layers) {
       const [lo, hi] = gc
         ? [gc.lowerLimit, gc.upperLimit]
         : effectiveSourceLimits(sc);
       const { r, g, b } = gc
-        ? effectiveDisplayColor(sc, SourceChannels, gc, i)
-        : effectiveSourceColor(sc, i, SourceChannels);
+        ? effectiveDisplayColor(sc, SourceChannels, gc)
+        : effectiveSourceColor(sc, SourceChannels);
       selections.push({ z: 0, t: 0, c: sc.index });
       colors.push([r, g, b]);
       contrastLimits.push([lo, hi]);

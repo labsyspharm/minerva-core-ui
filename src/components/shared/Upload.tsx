@@ -1,6 +1,7 @@
 import type { FormEventHandler, DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ImageChannelOverviewCard } from "@/components/shared/channel/ImageChannelOverview";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
@@ -600,6 +601,7 @@ const Upload = (props: UploadProps) => {
             </div>
           ) : null}
         </div>
+        <ImageChannelOverviewCard image={im} />
         {showAccessOverlay ? (
           <div className={styles.fileAccessOverlay}>
             <PanelActionButton

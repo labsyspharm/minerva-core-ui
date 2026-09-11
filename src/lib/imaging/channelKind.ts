@@ -31,7 +31,7 @@ export function normalizeMaskVisualization(value: unknown): MaskVisualization {
 }
 
 /** Intensity channels on by default at import; matches default group slot count. */
-export const DEFAULT_VISIBLE_INTENSITY_CHANNELS = 4;
+export const DEFAULT_VISIBLE_INTENSITY_CHANNELS = 5;
 
 /** Document image role for import (`mixed` maps to intensity). */
 export function resolveImageImportRole(image: {

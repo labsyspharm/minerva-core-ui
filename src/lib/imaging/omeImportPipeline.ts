@@ -21,7 +21,7 @@ import {
   applySharedImportPaletteToChannelGroups,
   applySharedImportPaletteToSourceChannels,
 } from "./psudoPalette";
-import { styleSourceChannelsForRole } from "./sourceChannelStyle";
+import { seedMaskSourceChannelStyles } from "./sourceChannelStyle";
 
 export type BuiltOmeImportSlice = {
   sourceChannels: Channel[];
@@ -66,7 +66,7 @@ export function buildOmeImportSlice(args: {
     existingImages,
   );
   if (role === "segmentation") {
-    sourceChannels = styleSourceChannelsForRole(sourceChannels, role);
+    sourceChannels = seedMaskSourceChannelStyles(sourceChannels);
   }
   const nextImages = mergeExtractedChannelsIntoImages(
     existingImages,
@@ -106,14 +106,6 @@ export async function applyPaletteToFlatImportImages(
 ): Promise<Image[]> {
   const styled = await applySharedImportPaletteToSourceChannels(sourceChannels);
   return applySourceChannelsToImages(images, styled);
-}
-
-/** Palette for a replace-import that already has extracted groups. */
-export async function applyPaletteToGroupedImport(
-  groups: ChannelGroup[],
-  sourceChannels: Channel[],
-): Promise<ChannelGroup[]> {
-  return applySharedImportPaletteToChannelGroups(groups, sourceChannels);
 }
 
 export type ReplaceOmeLocalImageResult =

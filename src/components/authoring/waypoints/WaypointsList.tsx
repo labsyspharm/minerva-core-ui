@@ -11,9 +11,10 @@ import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
 import type { ConfigWaypoint } from "@/lib/authoring/config";
 import {
-  effectiveReferenceImagePixelSize,
-  useAppStore,
-} from "@/lib/stores/appStore";
+  effectiveWorldFrame,
+  viewStateToPixels,
+} from "@/lib/imaging/worldFrame";
+import { useAppStore } from "@/lib/stores/appStore";
 import type {
   Channel,
   ChannelGroup,
@@ -70,13 +71,14 @@ const WaypointsList = (props: WaypointsListProps) => {
   );
   const docImageWidth = useDocumentStore((s) => s.images[0]?.sizeX ?? 0);
   const docImageHeight = useDocumentStore((s) => s.images[0]?.sizeY ?? 0);
-  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
-  const { width: imageWidth, height: imageHeight } =
-    effectiveReferenceImagePixelSize(
-      viewerRefSize,
-      docImageWidth,
-      docImageHeight,
-    );
+  const viewerWorldFrame = useAppStore((s) => s.viewerWorldFrame);
+  const frame = effectiveWorldFrame(
+    viewerWorldFrame,
+    docImageWidth,
+    docImageHeight,
+  );
+  const imageWidth = frame.worldWidth;
+  const imageHeight = frame.worldHeight;
   const {
     activeStoryIndex,
     setActiveStory,
@@ -232,12 +234,12 @@ const WaypointsList = (props: WaypointsListProps) => {
         const doc = useDocumentStore.getState();
         const st = useAppStore.getState();
         const im = doc.images[0];
-        const { width: w, height: h } = effectiveReferenceImagePixelSize(
-          st.viewerReferenceImagePixelSize,
+        const f = effectiveWorldFrame(
+          st.viewerWorldFrame,
           im?.sizeX ?? 0,
           im?.sizeY ?? 0,
         );
-        if (w > 0 && h > 0) {
+        if (f.worldWidth > 0 && f.worldHeight > 0) {
           useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
@@ -282,8 +284,8 @@ const WaypointsList = (props: WaypointsListProps) => {
       const st = useAppStore.getState();
       const doc = useDocumentStore.getState();
       const im = doc.images[0];
-      const { width: iw, height: ih } = effectiveReferenceImagePixelSize(
-        st.viewerReferenceImagePixelSize,
+      const f = effectiveWorldFrame(
+        st.viewerWorldFrame,
         im?.sizeX ?? 0,
         im?.sizeY ?? 0,
       );
@@ -295,19 +297,26 @@ const WaypointsList = (props: WaypointsListProps) => {
           index,
           viewerViewState: st.viewerViewState,
           viewerViewportSize: st.viewerViewportSize,
-          viewerReferenceImagePixelSize: st.viewerReferenceImagePixelSize,
-          imageWidth: iw,
-          imageHeight: ih,
+          viewerWorldFrame: st.viewerWorldFrame,
+          imageWidth: f.worldWidth,
+          imageHeight: f.worldHeight,
         },
       );
       return false;
     }
     const loaded = useAppStore.getState().viewerImageLayersLoaded;
     const thumbnail = loaded ? captureSquareViewportThumbnail() : null;
+    const vsPixels = viewStateToPixels(viewStateCanon, frame);
+    const boundsPixels = {
+      x0: bounds.x0 / frame.umPerPixelX,
+      x1: bounds.x1 / frame.umPerPixelX,
+      y0: bounds.y0 / frame.umPerPixelY,
+      y1: bounds.y1 / frame.umPerPixelY,
+    };
 
     updateStory(index, {
-      Bounds: bounds,
-      ViewState: viewStateCanon,
+      Bounds: boundsPixels,
+      ViewState: vsPixels,
       Pan: undefined,
       Zoom: undefined,
       ...(thumbnail ? { ThumbnailDataUrl: thumbnail } : {}),
