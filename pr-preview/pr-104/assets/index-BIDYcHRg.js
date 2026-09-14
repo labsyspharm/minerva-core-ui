@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CH4dxdjd.js","./pako.esm-KbdoS3Oq.js","./lerc-CJ8VnXg5.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-C_0OlVUt.js","./pako.esm-KbdoS3Oq.js","./lerc-IH9uAJHf.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -62053,26 +62053,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-Du4Hyxaz.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CXSPT8WY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CvjcJZC6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CjoRe4Sh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-D90DRhrF.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-OSbLjSQn.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-CH4dxdjd.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-LIEaGP5o.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CJ8VnXg5.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-C_0OlVUt.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-hm4b0P8f.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-IH9uAJHf.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BeaQZPot.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BgewNRmh.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-Hi-lBENV.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BQJVRnGi.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -251154,12 +251154,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-14T13:59:21.957Z");
+    const label2 = utcShort("2026-09-14T14:17:57.014Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$3.stamp,
       "aria-hidden": true,
-      title: "2026-09-14T13:59:21.957Z",
+      title: "2026-09-14T14:17:57.014Z",
       children: [
         "Updated ",
         label2,
@@ -251949,37 +251949,37 @@ void main() {
     if (await isOmeTiff(url, signal)) return "ome-tiff";
     return looksDicom ? "dicomweb" : "ome-tiff";
   }
-  const stack = "_stack_16d3p_1";
-  const panelDropActive = "_panelDropActive_16d3p_11";
-  const addStrip = "_addStrip_16d3p_16";
-  const dropZone = "_dropZone_16d3p_26";
-  const dropZoneActive = "_dropZoneActive_16d3p_43";
-  const dropZoneTitle = "_dropZoneTitle_16d3p_47";
-  const orDivider = "_orDivider_16d3p_52";
-  const urlRow = "_urlRow_16d3p_79";
-  const urlInput = "_urlInput_16d3p_88";
-  const fieldLabel = "_fieldLabel_16d3p_93";
-  const importError = "_importError_16d3p_100";
-  const typeOverlay = "_typeOverlay_16d3p_107";
-  const typeOverlayBackdrop = "_typeOverlayBackdrop_16d3p_119";
-  const typeOverlayCard = "_typeOverlayCard_16d3p_125";
-  const typeOverlayFields = "_typeOverlayFields_16d3p_139";
-  const typeOverlayFile = "_typeOverlayFile_16d3p_149";
-  const typeRow = "_typeRow_16d3p_158";
-  const typeChipActive = "_typeChipActive_16d3p_166";
-  const typeChipSuggested = "_typeChipSuggested_16d3p_170";
-  const typeChipMuted = "_typeChipMuted_16d3p_175";
-  const typeFooter = "_typeFooter_16d3p_189";
-  const typeImport = "_typeImport_16d3p_198";
-  const typeSection = "_typeSection_16d3p_205";
-  const imageCard = "_imageCard_16d3p_213";
-  const fileAccessOverlay = "_fileAccessOverlay_16d3p_225";
-  const fileAccessAction = "_fileAccessAction_16d3p_241";
-  const imageCardHeader = "_imageCardHeader_16d3p_249";
-  const imageCardText = "_imageCardText_16d3p_257";
-  const imageCardTitle = "_imageCardTitle_16d3p_265";
-  const imageCardMeta = "_imageCardMeta_16d3p_273";
-  const imageCardActions = "_imageCardActions_16d3p_279";
+  const stack = "_stack_g378l_1";
+  const panelDropActive = "_panelDropActive_g378l_11";
+  const addStrip = "_addStrip_g378l_16";
+  const dropZone = "_dropZone_g378l_26";
+  const dropZoneActive = "_dropZoneActive_g378l_43";
+  const dropZoneTitle = "_dropZoneTitle_g378l_47";
+  const orDivider = "_orDivider_g378l_52";
+  const urlRow = "_urlRow_g378l_79";
+  const urlInput = "_urlInput_g378l_88";
+  const fieldLabel = "_fieldLabel_g378l_93";
+  const importError = "_importError_g378l_100";
+  const typeOverlay = "_typeOverlay_g378l_107";
+  const typeOverlayBackdrop = "_typeOverlayBackdrop_g378l_119";
+  const typeOverlayCard = "_typeOverlayCard_g378l_125";
+  const typeOverlayFields = "_typeOverlayFields_g378l_139";
+  const typeOverlayFile = "_typeOverlayFile_g378l_149";
+  const typeRow = "_typeRow_g378l_158";
+  const typeChipActive = "_typeChipActive_g378l_166";
+  const typeChipSuggested = "_typeChipSuggested_g378l_170";
+  const typeChipMuted = "_typeChipMuted_g378l_175";
+  const typeFooter = "_typeFooter_g378l_189";
+  const typeImport = "_typeImport_g378l_198";
+  const typeSection = "_typeSection_g378l_205";
+  const imageCard = "_imageCard_g378l_213";
+  const fileAccessOverlay = "_fileAccessOverlay_g378l_225";
+  const fileAccessAction = "_fileAccessAction_g378l_241";
+  const imageCardHeader = "_imageCardHeader_g378l_249";
+  const imageCardText = "_imageCardText_g378l_257";
+  const imageCardTitle = "_imageCardTitle_g378l_265";
+  const imageCardMeta = "_imageCardMeta_g378l_273";
+  const imageCardActions = "_imageCardActions_g378l_279";
   const styles$1 = {
     stack,
     panelDropActive,
@@ -252595,9 +252595,36 @@ void main() {
                   children: [
                     jsxRuntimeExports.jsx("span", {
                       className: styles$1.fieldLabel,
-                      children: "Type"
+                      children: "Image Type"
                     }),
-                    ROLE_OPTIONS.map(({ role, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
+                    detectedRgbDisplay != null ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+                      children: [
+                        RGB_DISPLAY_OPTIONS.map(({ rgb, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
+                          label: label2,
+                          selected: overlayRole === "intensity" && overlayRgbDisplay === rgb,
+                          suggested: detectedRole === "intensity" && detectedRgbDisplay === rgb,
+                          muted: detectedRole !== "intensity" || detectedRgbDisplay !== rgb,
+                          onClick: () => {
+                            roleChosenByUserRef.current = true;
+                            rgbDisplayChosenByUserRef.current = true;
+                            setOverlayRole("intensity");
+                            setOverlayRgbDisplay(rgb);
+                          }
+                        }, label2)),
+                        jsxRuntimeExports.jsx(FormatChip, {
+                          label: "Segmentation Mask",
+                          selected: overlayRole === "segmentation",
+                          suggested: detectedRole === "segmentation",
+                          muted: detectedRole !== "segmentation",
+                          onClick: () => {
+                            roleChosenByUserRef.current = true;
+                            setOverlayRole("segmentation");
+                            formatChosenByUserRef.current = true;
+                            setOverlayFormat("ome-tiff");
+                          }
+                        })
+                      ]
+                    }) : ROLE_OPTIONS.map(({ role, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
                       label: label2,
                       selected: overlayRole === role,
                       suggested: detectedRole === role,
@@ -252632,28 +252659,6 @@ void main() {
                           setOverlayFormat(format);
                         }
                       }, format))
-                    ]
-                  })
-                }) : null,
-                detectedRgbDisplay != null && overlayRole === "intensity" ? jsxRuntimeExports.jsx("div", {
-                  className: styles$1.typeSection,
-                  children: jsxRuntimeExports.jsxs("div", {
-                    className: styles$1.typeRow,
-                    children: [
-                      jsxRuntimeExports.jsx("span", {
-                        className: styles$1.fieldLabel,
-                        children: "Image type"
-                      }),
-                      RGB_DISPLAY_OPTIONS.map(({ rgb, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
-                        label: label2,
-                        selected: overlayRgbDisplay === rgb,
-                        suggested: detectedRgbDisplay === rgb,
-                        muted: detectedRgbDisplay !== rgb,
-                        onClick: () => {
-                          rgbDisplayChosenByUserRef.current = true;
-                          setOverlayRgbDisplay(rgb);
-                        }
-                      }, label2))
                     ]
                   })
                 }) : null
