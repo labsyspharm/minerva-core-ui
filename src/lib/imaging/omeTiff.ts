@@ -217,7 +217,7 @@ function threeChannelOmeFromXml(omeXml: string | null | undefined): boolean {
   return isThreeChannelOme(channels);
 }
 
-/** Thumbnail max edge for QuPath-style dark/light (8-bit RGB). */
+/** Thumbnail max edge for QuPath-style dark/light. */
 const BRIGHTFIELD_THUMB_MAX = 256;
 
 function scalePlaneToUint8Rgb(
@@ -268,7 +268,7 @@ async function detectOmeTiffBrightfield(
         interleave: true,
         signal,
       });
-      return isBrightfieldRgb(rgb);
+      return isBrightfieldRgb(rgb, bits);
     } catch {
       return false;
     }
