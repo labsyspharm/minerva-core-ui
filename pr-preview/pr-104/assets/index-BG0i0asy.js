@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BWj-75rn.js","./pako.esm-KbdoS3Oq.js","./lerc-DhT47gmd.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BWybNZpP.js","./pako.esm-KbdoS3Oq.js","./lerc-aNvtmuiI.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -62092,26 +62092,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-BRWW2L1v.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-FonGZoZj.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BQAUiSXo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BYKXLtld.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-Cs5tWSzf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-VmtIVKON.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BWj-75rn.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DE9uURN6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-DhT47gmd.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BWybNZpP.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-C7hCeXwT.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-aNvtmuiI.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CJxg7pV_.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BiS83qa-.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DsrHqhC3.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-XVZdHdok.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -163439,15 +163439,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const findDicomWeb = (series) => {
     return listDicomWeb(series);
   };
-  function isBrightfieldRgb(data2) {
+  function isBrightfieldRgb(data2, bitsPerSample = 8) {
+    const sampleMax = data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray ? 255 : 2 ** Math.max(1, Math.floor(bitsPerSample) || 8) - 1;
+    const dark = 25 / 255 * sampleMax;
+    const light = 220 / 255 * sampleMax;
+    const nPixels = Math.floor(data2.length / 3);
+    const stride = Math.max(1, Math.ceil(nPixels / 1e4));
     let nDark = 0;
     let nLight = 0;
-    for (let i2 = 0; i2 + 2 < data2.length; i2 += 3) {
+    for (let i2 = 0; i2 + 2 < data2.length; i2 += 3 * stride) {
       const r2 = data2[i2];
       const g2 = data2[i2 + 1];
       const b2 = data2[i2 + 2];
-      if (r2 < 25 && g2 < 25 && b2 < 25) nDark += 1;
-      else if (r2 > 220 && g2 > 220 && b2 > 220) nLight += 1;
+      if (r2 < dark && g2 < dark && b2 < dark) nDark += 1;
+      else if (r2 > light && g2 > light && b2 > light) nLight += 1;
     }
     return nLight > nDark && nDark + nLight > 0;
   }
@@ -163755,7 +163760,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           interleave: true,
           signal
         });
-        return isBrightfieldRgb(rgb);
+        return isBrightfieldRgb(rgb, bits);
       } catch {
         return false;
       }
@@ -252700,12 +252705,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-14T17:43:53.361Z");
+    const label2 = utcShort("2026-09-14T20:35:59.760Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-14T17:43:53.361Z",
+      title: "2026-09-14T20:35:59.760Z",
       children: [
         "Updated ",
         label2,
