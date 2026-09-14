@@ -72,8 +72,8 @@ export const Presentation = (props: PresentationProps) => {
     docImageWidth,
     docImageHeight,
   );
-  const imageWidth = frame.worldWidth;
-  const imageHeight = frame.worldHeight;
+  const imageWidth = frame.pixelWidth;
+  const imageHeight = frame.pixelHeight;
   const {
     activeStoryIndex,
     setActiveStory,
