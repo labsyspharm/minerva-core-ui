@@ -127,7 +127,7 @@
   z-index: 1;
   margin: 0;
   width: 100%;
-  max-width: min(24rem, calc(100vw - 2rem));
+  max-width: min(30rem, calc(100vw - 2rem));
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
@@ -157,7 +157,7 @@
 
 .typeRow {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 6px 8px;
   min-width: 0;

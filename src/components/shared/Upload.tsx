@@ -758,24 +758,64 @@ const Upload = (props: UploadProps) => {
             className={styles.typeOverlayFields}
           >
             <div className={styles.typeRow}>
-              <span className={styles.fieldLabel}>Type</span>
-              {ROLE_OPTIONS.map(({ role, label }) => (
-                <FormatChip
-                  key={role}
-                  label={label}
-                  selected={overlayRole === role}
-                  suggested={detectedRole === role}
-                  muted={detectedRole !== role}
-                  onClick={() => {
-                    roleChosenByUserRef.current = true;
-                    setOverlayRole(role);
-                    if (role === "segmentation") {
+              <span className={styles.fieldLabel}>Image Type</span>
+              {detectedRgbDisplay != null ? (
+                <>
+                  {RGB_DISPLAY_OPTIONS.map(({ rgb, label }) => (
+                    <FormatChip
+                      key={label}
+                      label={label}
+                      selected={
+                        overlayRole === "intensity" && overlayRgbDisplay === rgb
+                      }
+                      suggested={
+                        detectedRole === "intensity" &&
+                        detectedRgbDisplay === rgb
+                      }
+                      muted={
+                        detectedRole !== "intensity" ||
+                        detectedRgbDisplay !== rgb
+                      }
+                      onClick={() => {
+                        roleChosenByUserRef.current = true;
+                        rgbDisplayChosenByUserRef.current = true;
+                        setOverlayRole("intensity");
+                        setOverlayRgbDisplay(rgb);
+                      }}
+                    />
+                  ))}
+                  <FormatChip
+                    label="Segmentation Mask"
+                    selected={overlayRole === "segmentation"}
+                    suggested={detectedRole === "segmentation"}
+                    muted={detectedRole !== "segmentation"}
+                    onClick={() => {
+                      roleChosenByUserRef.current = true;
+                      setOverlayRole("segmentation");
                       formatChosenByUserRef.current = true;
                       setOverlayFormat("ome-tiff");
-                    }
-                  }}
-                />
-              ))}
+                    }}
+                  />
+                </>
+              ) : (
+                ROLE_OPTIONS.map(({ role, label }) => (
+                  <FormatChip
+                    key={role}
+                    label={label}
+                    selected={overlayRole === role}
+                    suggested={detectedRole === role}
+                    muted={detectedRole !== role}
+                    onClick={() => {
+                      roleChosenByUserRef.current = true;
+                      setOverlayRole(role);
+                      if (role === "segmentation") {
+                        formatChosenByUserRef.current = true;
+                        setOverlayFormat("ome-tiff");
+                      }
+                    }}
+                  />
+                ))
+              )}
             </div>
             {dicomAllowed ? (
               <div className={styles.typeSection}>
@@ -791,26 +831,6 @@ const Upload = (props: UploadProps) => {
                       onClick={() => {
                         formatChosenByUserRef.current = true;
                         setOverlayFormat(format);
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            {detectedRgbDisplay != null && overlayRole === "intensity" ? (
-              <div className={styles.typeSection}>
-                <div className={styles.typeRow}>
-                  <span className={styles.fieldLabel}>Image type</span>
-                  {RGB_DISPLAY_OPTIONS.map(({ rgb, label }) => (
-                    <FormatChip
-                      key={label}
-                      label={label}
-                      selected={overlayRgbDisplay === rgb}
-                      suggested={detectedRgbDisplay === rgb}
-                      muted={detectedRgbDisplay !== rgb}
-                      onClick={() => {
-                        rgbDisplayChosenByUserRef.current = true;
-                        setOverlayRgbDisplay(rgb);
                       }}
                     />
                   ))}
