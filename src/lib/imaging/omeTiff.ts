@@ -1,14 +1,14 @@
-import { fromBlob, fromUrl } from "geotiff";
+import { fromBlob, fromUrl, GeoTIFFImage as GeoTIFFImageClass } from "geotiff";
 import { isBrightfieldRgb } from "@/lib/imaging/brightfieldDetect";
-import { planarRgbSlotFromName } from "@/lib/imaging/channelKind";
 import { classify, type MaskDetectResult } from "@/lib/imaging/maskDetect";
 
 type GeoTiffImage = {
   fileDirectory?: {
     ImageDescription?: string | undefined;
-    BitsPerSample?: number[];
+    BitsPerSample?: number[] | ArrayLike<number>;
     SampleFormat?: number[];
     SamplesPerPixel?: number;
+    SubIFDs?: number[] | ArrayLike<number>;
   };
   getHeight: () => number;
   getWidth: () => number;
@@ -32,6 +32,14 @@ type GeoTiffImage = {
 
 type GeoTiffWithImage = {
   getImage: (i: number) => Promise<GeoTiffImage>;
+  dataView?: DataView;
+  littleEndian?: boolean;
+  cache?: unknown;
+  source?: unknown;
+  parseFileDirectoryAt?: (offset: number) => Promise<{
+    fileDirectory: GeoTiffImage["fileDirectory"];
+    geoKeyDirectory: unknown;
+  }>;
 };
 
 async function openOmeTiff(source: Blob | string, signal?: AbortSignal) {
@@ -40,6 +48,47 @@ async function openOmeTiff(source: Blob | string, signal?: AbortSignal) {
       ? await fromUrl(source, {}, signal)
       : await fromBlob(source, signal)
   ) as GeoTiffWithImage;
+}
+
+/** Coarsest pyramid plane (IFD0 + SubIFDs). Avoids decoding full-res for thumbs. */
+async function getCoarsestTiffImage(
+  tiff: GeoTiffWithImage,
+): Promise<GeoTiffImage> {
+  const base = await tiff.getImage(0);
+  const raw = base.fileDirectory?.SubIFDs;
+  const offsets = raw == null ? [] : Array.from(raw as ArrayLike<number>);
+  const baseInternals = base as GeoTiffImage & {
+    dataView?: DataView;
+    littleEndian?: boolean;
+    cache?: unknown;
+    source?: unknown;
+  };
+  if (
+    offsets.length === 0 ||
+    typeof tiff.parseFileDirectoryAt !== "function" ||
+    (baseInternals.source ?? tiff.source) == null
+  ) {
+    return base;
+  }
+  let best = base;
+  let bestArea = base.getWidth() * base.getHeight();
+  for (const offset of offsets) {
+    const parsed = await tiff.parseFileDirectoryAt(offset);
+    const image = new GeoTIFFImageClass(
+      parsed.fileDirectory as never,
+      parsed.geoKeyDirectory as never,
+      (baseInternals.dataView ?? tiff.dataView) as never,
+      (baseInternals.littleEndian ?? tiff.littleEndian ?? true) as never,
+      (baseInternals.cache ?? tiff.cache) as never,
+      (baseInternals.source ?? tiff.source) as never,
+    ) as unknown as GeoTiffImage;
+    const area = image.getWidth() * image.getHeight();
+    if (area > 0 && area < bestArea) {
+      bestArea = area;
+      best = image;
+    }
+  }
+  return best;
 }
 
 /** Run format-agnostic mask detection through a TIFF window reader. */
@@ -132,43 +181,27 @@ export async function isOmeTiff(
 export type PlanarRgbAmbiguity =
   | {
       ambiguous: true;
-      /** Suggested import chip: true = Color image, false = Separate channels. */
+      /** Suggested chip: true = Brightfield, false = Fluorescence. */
       defaultRgbDisplay: boolean;
     }
   | { ambiguous: false };
 
-/**
- * Unnamed 3-channel planar OME (SamplesPerPixel 1/omitted) needs an import
- * choice. Packed RGB and named HE_r/g/b are not ambiguous.
- * Suggestion (`defaultRgbDisplay`) comes from pixel dark/light in
- * {@link detectOmeTiffPlanarRgbAmbiguity}.
- */
-function classifyPlanarRgbAmbiguity(args: {
-  channels: readonly { name: string; samples: number }[];
-}): { ambiguous: true } | { ambiguous: false } {
-  const { channels } = args;
-  if (channels.length === 0) return { ambiguous: false };
+/** Packed RGB (one × SPP=3) or three planar SPP=1 channels. */
+function isThreeChannelOme(
+  channels: readonly { name: string; samples: number }[],
+): boolean {
+  if (channels.length === 1 && channels[0].samples === 3) return true;
   const planar = channels.filter((c) => c.samples === 1);
-  if (planar.length !== 3 || planar.length !== channels.length) {
-    return { ambiguous: false };
-  }
-  if (planar.every((c) => planarRgbSlotFromName(c.name) != null)) {
-    return { ambiguous: false };
-  }
-  return { ambiguous: true };
+  return planar.length === 3 && planar.length === channels.length;
 }
 
-function classifyPlanarRgbAmbiguityFromOmeXml(
-  omeXml: string | null | undefined,
-): { ambiguous: true } | { ambiguous: false } {
-  if (omeXml == null || omeXml.trim() === "") return { ambiguous: false };
+function threeChannelOmeFromXml(omeXml: string | null | undefined): boolean {
+  if (omeXml == null || omeXml.trim() === "") return false;
   const doc = new DOMParser().parseFromString(omeXml, "application/xml");
   const pixels = doc.querySelector("Image")?.querySelector("Pixels");
-  if (!pixels) return { ambiguous: false };
-
+  if (!pixels) return false;
   const channelEls = [...pixels.querySelectorAll(":scope > Channel")];
-  if (channelEls.length === 0) return { ambiguous: false };
-
+  if (channelEls.length === 0) return false;
   const channels = channelEls.map((ch) => {
     const raw = ch.getAttribute("SamplesPerPixel");
     let samples = 1;
@@ -181,8 +214,7 @@ function classifyPlanarRgbAmbiguityFromOmeXml(
       samples,
     };
   });
-
-  return classifyPlanarRgbAmbiguity({ channels });
+  return isThreeChannelOme(channels);
 }
 
 /** Thumbnail max edge for QuPath-style dark/light (8-bit RGB). */
@@ -211,21 +243,23 @@ function scalePlaneToUint8Rgb(
 }
 
 /**
- * QuPath dark/light on a downsampled thumbnail.
- * Packed RGB uses `readRGB` (handles YCbCr); planar falls back to channel 0
- * as gray RGB after dtype→8-bit scaling.
+ * QuPath dark/light on the coarsest pyramid level (SubIFD when present).
+ * geotiff `readRGB({ width, height })` still decodes full-res first — slow.
  */
 async function detectOmeTiffBrightfield(
   source: Blob | string,
   signal?: AbortSignal,
 ): Promise<boolean> {
-  const image = await (await openOmeTiff(source, signal)).getImage(0);
+  const tiff = await openOmeTiff(source, signal);
+  const image = await getCoarsestTiffImage(tiff);
   const w = image.getWidth();
   const h = image.getHeight();
   const scale = Math.min(1, BRIGHTFIELD_THUMB_MAX / Math.max(w, h, 1));
   const tw = Math.max(1, Math.round(w * scale));
   const th = Math.max(1, Math.round(h * scale));
   const spp = image.fileDirectory?.SamplesPerPixel ?? 1;
+  const bitsRaw = image.fileDirectory?.BitsPerSample?.[0];
+  const bits = typeof bitsRaw === "number" ? bitsRaw : 8;
   if (spp >= 3) {
     try {
       const rgb = await image.readRGB({
@@ -247,19 +281,20 @@ async function detectOmeTiffBrightfield(
     height: th,
     signal,
   });
-  const bits = image.fileDirectory?.BitsPerSample?.[0] ?? 8;
   return isBrightfieldRgb(scalePlaneToUint8Rgb(plane, bits));
 }
 
-/** Peek OME-XML; if ambiguous, suggest Color vs Separate via brightfield pixels. */
+/**
+ * For 3-channel OME: skip mask heuristics and suggest Brightfield vs Fluorescence
+ * via dark/light. Otherwise `{ ambiguous: false }` (caller may run mask).
+ */
 export async function detectOmeTiffPlanarRgbAmbiguity(
   source: File | string,
   signal?: AbortSignal,
 ): Promise<PlanarRgbAmbiguity> {
   const xml = await getOmeTiffImageDescriptionOmeXml(source, {}, signal);
   if (signal?.aborted) return { ambiguous: false };
-  const classified = classifyPlanarRgbAmbiguityFromOmeXml(xml);
-  if (!classified.ambiguous) return { ambiguous: false };
+  if (!threeChannelOmeFromXml(xml)) return { ambiguous: false };
   const defaultRgbDisplay = await detectOmeTiffBrightfield(source, signal);
   if (signal?.aborted) return { ambiguous: false };
   return { ambiguous: true, defaultRgbDisplay };

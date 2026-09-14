@@ -149,9 +149,10 @@ const FORMAT_OPTIONS: { format: OverlayFormat; label: string }[] = [
   { format: "dicomweb", label: "DICOMweb" },
 ];
 
+/** QuPath ImageType-style labels: Brightfield → RGB display; Fluorescence → multiplex. */
 const RGB_DISPLAY_OPTIONS: { rgb: boolean; label: string }[] = [
-  { rgb: false, label: "Separate channels" },
-  { rgb: true, label: "Color image" },
+  { rgb: false, label: "Fluorescence" },
+  { rgb: true, label: "Brightfield" },
 ];
 
 function FormatChip({
@@ -290,10 +291,11 @@ const Upload = (props: UploadProps) => {
   const [detectedFormat, setDetectedFormat] =
     useState<OverlayFormat>("ome-tiff");
   const [overlayRgbDisplay, setOverlayRgbDisplay] = useState(false);
-  /** null = not ambiguous; boolean = suggested Color image chip. */
+  /** null = not asking / still detecting; boolean = suggested Brightfield chip. */
   const [detectedRgbDisplay, setDetectedRgbDisplay] = useState<boolean | null>(
     null,
   );
+  const [detecting, setDetecting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importBusy, setImportBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -347,12 +349,12 @@ const Upload = (props: UploadProps) => {
       setDetectedFormat(format);
       setOverlayRgbDisplay(false);
       setDetectedRgbDisplay(null);
+      setDetecting(false);
       setImportError(null);
 
       const ac = new AbortController();
       formatDetectAbortRef.current = ac;
       void (async () => {
-        let detectionStartedAt: number | null = null;
         try {
           let detectedFormat = format;
           if (next.kind === "url") {
@@ -368,47 +370,45 @@ const Upload = (props: UploadProps) => {
           const source =
             next.kind === "local" ? await next.handles[0].getFile() : next.url;
           if (ac.signal.aborted) return;
-          detectionStartedAt = performance.now();
-          const [result, rgbAmbiguity] = await Promise.all([
-            detectOmeTiffMask(source, ac.signal),
-            detectOmeTiffPlanarRgbAmbiguity(source, ac.signal),
-          ]);
-          const durationMs = performance.now() - detectionStartedAt;
-          console.info(
-            `[minerva] mask detection: ${result.label} score=${result.score ?? "n/a"} duration=${durationMs.toFixed(1)}ms`,
+          setDetecting(true);
+
+          // 3-channel OME: skip mask detect; suggest Brightfield vs Fluorescence.
+          const rgbAmbiguity = await detectOmeTiffPlanarRgbAmbiguity(
+            source,
+            ac.signal,
           );
+          if (ac.signal.aborted) return;
+
+          if (rgbAmbiguity.ambiguous) {
+            setDetectedRole("intensity");
+            if (!roleChosenByUserRef.current) {
+              setOverlayRole("intensity");
+            }
+            setDetectedRgbDisplay(rgbAmbiguity.defaultRgbDisplay);
+            if (!rgbDisplayChosenByUserRef.current) {
+              setOverlayRgbDisplay(rgbAmbiguity.defaultRgbDisplay);
+            }
+            return;
+          }
+
+          setDetectedRgbDisplay(null);
+          const result = await detectOmeTiffMask(source, ac.signal);
           if (ac.signal.aborted) return;
 
           if (
             !roleChosenByUserRef.current &&
             (result.score != null || result.label === "rgb")
           ) {
-            const detected =
-              result.label === "mask" ? "segmentation" : "intensity";
-            setDetectedRole(detected);
-            setOverlayRole(detected);
-          }
-
-          if (rgbAmbiguity.ambiguous) {
-            setDetectedRgbDisplay(rgbAmbiguity.defaultRgbDisplay);
-            if (!rgbDisplayChosenByUserRef.current) {
-              setOverlayRgbDisplay(rgbAmbiguity.defaultRgbDisplay);
-            }
-          } else {
-            setDetectedRgbDisplay(null);
+            const role = result.label === "mask" ? "segmentation" : "intensity";
+            setDetectedRole(role);
+            setOverlayRole(role);
           }
         } catch (error) {
           if (!ac.signal.aborted) {
-            const durationMs =
-              detectionStartedAt == null
-                ? null
-                : performance.now() - detectionStartedAt;
-            console.warn(
-              `[minerva] mask detection failed${durationMs == null ? "" : ` after ${durationMs.toFixed(1)}ms`}`,
-              error,
-            );
+            console.warn("[minerva] import detection failed", error);
           }
         } finally {
+          if (!ac.signal.aborted) setDetecting(false);
           if (formatDetectAbortRef.current === ac) {
             formatDetectAbortRef.current = null;
           }
@@ -741,7 +741,7 @@ const Upload = (props: UploadProps) => {
         className={styles.typeOverlay}
         role="dialog"
         aria-modal="true"
-        aria-busy={importBusy}
+        aria-busy={importBusy || detecting}
         aria-labelledby="image-import-dialog-title"
       >
         <div className={styles.typeOverlayBackdrop} aria-hidden="true" />
@@ -753,7 +753,10 @@ const Upload = (props: UploadProps) => {
           >
             {pendingLabel(pending)}
           </div>
-          <fieldset disabled={importBusy} className={styles.typeOverlayFields}>
+          <fieldset
+            disabled={importBusy || detecting}
+            className={styles.typeOverlayFields}
+          >
             <div className={styles.typeRow}>
               <span className={styles.fieldLabel}>Type</span>
               {ROLE_OPTIONS.map(({ role, label }) => (
@@ -797,7 +800,7 @@ const Upload = (props: UploadProps) => {
             {detectedRgbDisplay != null && overlayRole === "intensity" ? (
               <div className={styles.typeSection}>
                 <div className={styles.typeRow}>
-                  <span className={styles.fieldLabel}>Channels</span>
+                  <span className={styles.fieldLabel}>Image type</span>
                   {RGB_DISPLAY_OPTIONS.map(({ rgb, label }) => (
                     <FormatChip
                       key={label}
@@ -831,13 +834,13 @@ const Upload = (props: UploadProps) => {
             <PanelActionButton
               type="button"
               className={styles.typeImport}
-              disabled={importBusy}
+              disabled={importBusy || detecting}
               onClick={() => void runImport()}
             >
-              {importBusy ? (
+              {importBusy || detecting ? (
                 <>
                   <span className={minervaTheme.spinnerSm} aria-hidden="true" />
-                  Importing…
+                  {detecting ? "Detecting…" : "Importing…"}
                 </>
               ) : (
                 "Import"
