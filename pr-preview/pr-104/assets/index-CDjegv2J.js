@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-D2Ww8KC3.js","./pako.esm-KbdoS3Oq.js","./lerc-BnvYbqNw.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BWj-75rn.js","./pako.esm-KbdoS3Oq.js","./lerc-DhT47gmd.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -62092,26 +62092,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DVhMxZ3l.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BwpWUiX8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BRWW2L1v.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-FonGZoZj.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CxFjBqDh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-Cs5tWSzf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-D2Ww8KC3.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BygaQveB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BnvYbqNw.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BWj-75rn.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DE9uURN6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DhT47gmd.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DKOZxkVP.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CJxg7pV_.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-Cn8Ruwt8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DsrHqhC3.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -164733,39 +164733,39 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
     });
   }
-  const stack = "_stack_hebjf_1";
-  const panelDropActive = "_panelDropActive_hebjf_11";
-  const addStrip = "_addStrip_hebjf_16";
-  const addStripRow = "_addStripRow_hebjf_27";
-  const dropZone = "_dropZone_hebjf_41";
-  const dropZoneTitle = "_dropZoneTitle_hebjf_51";
-  const orDivider = "_orDivider_hebjf_57";
-  const urlRow = "_urlRow_hebjf_68";
-  const urlInput = "_urlInput_hebjf_76";
-  const urlAdd = "_urlAdd_hebjf_84";
-  const importError = "_importError_hebjf_95";
-  const dropZoneActive = "_dropZoneActive_hebjf_122";
-  const fieldLabel = "_fieldLabel_hebjf_176";
-  const typeOverlay = "_typeOverlay_hebjf_190";
-  const typeOverlayBackdrop = "_typeOverlayBackdrop_hebjf_202";
-  const typeOverlayCard = "_typeOverlayCard_hebjf_208";
-  const typeOverlayFields = "_typeOverlayFields_hebjf_222";
-  const typeOverlayFile = "_typeOverlayFile_hebjf_232";
-  const typeRow = "_typeRow_hebjf_241";
-  const typeChipActive = "_typeChipActive_hebjf_249";
-  const typeChipSuggested = "_typeChipSuggested_hebjf_253";
-  const typeChipMuted = "_typeChipMuted_hebjf_258";
-  const typeFooter = "_typeFooter_hebjf_272";
-  const typeImport = "_typeImport_hebjf_281";
-  const typeSection = "_typeSection_hebjf_288";
-  const imageCard = "_imageCard_hebjf_296";
-  const fileAccessOverlay = "_fileAccessOverlay_hebjf_308";
-  const fileAccessAction = "_fileAccessAction_hebjf_324";
-  const imageCardHeader = "_imageCardHeader_hebjf_332";
-  const imageCardText = "_imageCardText_hebjf_340";
-  const imageCardTitle = "_imageCardTitle_hebjf_348";
-  const imageCardMeta = "_imageCardMeta_hebjf_356";
-  const imageCardActions = "_imageCardActions_hebjf_362";
+  const stack = "_stack_hcgyu_1";
+  const panelDropActive = "_panelDropActive_hcgyu_11";
+  const addStrip = "_addStrip_hcgyu_16";
+  const addStripRow = "_addStripRow_hcgyu_27";
+  const dropZone = "_dropZone_hcgyu_41";
+  const dropZoneTitle = "_dropZoneTitle_hcgyu_51";
+  const orDivider = "_orDivider_hcgyu_57";
+  const urlRow = "_urlRow_hcgyu_68";
+  const urlInput = "_urlInput_hcgyu_76";
+  const urlAdd = "_urlAdd_hcgyu_84";
+  const importError = "_importError_hcgyu_95";
+  const dropZoneActive = "_dropZoneActive_hcgyu_122";
+  const fieldLabel = "_fieldLabel_hcgyu_183";
+  const typeOverlay = "_typeOverlay_hcgyu_197";
+  const typeOverlayBackdrop = "_typeOverlayBackdrop_hcgyu_209";
+  const typeOverlayCard = "_typeOverlayCard_hcgyu_215";
+  const typeOverlayFields = "_typeOverlayFields_hcgyu_229";
+  const typeOverlayFile = "_typeOverlayFile_hcgyu_239";
+  const typeRow = "_typeRow_hcgyu_248";
+  const typeChipActive = "_typeChipActive_hcgyu_256";
+  const typeChipSuggested = "_typeChipSuggested_hcgyu_260";
+  const typeChipMuted = "_typeChipMuted_hcgyu_265";
+  const typeFooter = "_typeFooter_hcgyu_279";
+  const typeImport = "_typeImport_hcgyu_288";
+  const typeSection = "_typeSection_hcgyu_295";
+  const imageCard = "_imageCard_hcgyu_303";
+  const fileAccessOverlay = "_fileAccessOverlay_hcgyu_315";
+  const fileAccessAction = "_fileAccessAction_hcgyu_331";
+  const imageCardHeader = "_imageCardHeader_hcgyu_339";
+  const imageCardText = "_imageCardText_hcgyu_347";
+  const imageCardTitle = "_imageCardTitle_hcgyu_355";
+  const imageCardMeta = "_imageCardMeta_hcgyu_363";
+  const imageCardActions = "_imageCardActions_hcgyu_369";
   const styles$m = {
     stack,
     panelDropActive,
@@ -252700,12 +252700,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-14T17:25:50.953Z");
+    const label2 = utcShort("2026-09-14T17:43:53.361Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-14T17:25:50.953Z",
+      title: "2026-09-14T17:43:53.361Z",
       children: [
         "Updated ",
         label2,
