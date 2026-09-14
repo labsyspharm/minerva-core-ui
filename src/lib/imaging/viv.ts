@@ -95,8 +95,43 @@ export type Config = {
     /** When set (OME multi-image UUID), channel visibility matches this instead of `modality`. */
     loaderSourceImageId?: string,
     channelGroupRowVisibilities?: Record<string, boolean>,
+    /** Prior `sourceChannelIds` for this loader — keep hidden slots occupied. */
+    stickySourceChannelIds?: readonly string[],
   ) => Settings;
 };
+
+/** Stable Viv channel slots: flip visibility instead of dropping selections. */
+function mergeStickyIntensityOccupancy(args: {
+  visibleSourceIds: readonly string[];
+  stickySourceIds: readonly string[];
+  maxChannels: number;
+  loaderSourceIds: ReadonlySet<string>;
+}): { sourceChannelIds: string[]; channelsVisible: boolean[] } {
+  const preferredVisible = args.visibleSourceIds.slice(0, args.maxChannels);
+  const visibleSet = new Set(preferredVisible);
+
+  const ids = args.stickySourceIds.filter((id) => args.loaderSourceIds.has(id));
+  for (const id of preferredVisible) {
+    if (!ids.includes(id)) ids.push(id);
+  }
+
+  while (ids.length > args.maxChannels) {
+    let dropAt = -1;
+    for (let i = ids.length - 1; i >= 0; i--) {
+      if (!visibleSet.has(ids[i])) {
+        dropAt = i;
+        break;
+      }
+    }
+    if (dropAt < 0) dropAt = ids.length - 1;
+    ids.splice(dropAt, 1);
+  }
+
+  return {
+    sourceChannelIds: ids,
+    channelsVisible: ids.map((id) => visibleSet.has(id)),
+  };
+}
 
 /** Full-resolution pixel size from OME metadata or finest pyramid level (>1 rejects placeholders). */
 export function loaderPixelSizeXY(loader: Loader): {
@@ -175,6 +210,7 @@ const toSettings = (opts: ToSettingsOpts) => {
     channelVisibilities?: Record<string, boolean>,
     loaderSourceImageId?: string,
     channelGroupRowVisibilities: Record<string, boolean> = {},
+    stickySourceChannelIds: readonly string[] = [],
   ) => {
     const { SourceChannels, channelGroups = [] } = opts;
     if (!loader) return toDefaultSettings(3);
@@ -207,24 +243,40 @@ const toSettings = (opts: ToSettingsOpts) => {
       hasVisibilityMap,
     });
 
-    const layersAll = composited;
-    const layers = layersAll.slice(0, MAX_VIV_INTENSITY_CHANNELS);
-    if (layersAll.length > MAX_VIV_INTENSITY_CHANNELS && import.meta.env.DEV) {
+    if (composited.length > MAX_VIV_INTENSITY_CHANNELS && import.meta.env.DEV) {
       console.warn(
-        `[viv] ${layersAll.length} visible intensity channels exceeds ` +
+        `[viv] ${composited.length} visible intensity channels exceeds ` +
           `MAX_VIV_INTENSITY_CHANNELS=${MAX_VIV_INTENSITY_CHANNELS}; ` +
           "extra channels are hidden until you toggle some off.",
       );
     }
 
+    const byId = new Map(composited.map((layer) => [layer.sc.id, layer]));
+    const onLoaderById = new Map(onLoader.map((sc) => [sc.id, sc]));
+    const { sourceChannelIds, channelsVisible } = mergeStickyIntensityOccupancy(
+      {
+        visibleSourceIds: composited.map((layer) => layer.sc.id),
+        stickySourceIds: stickySourceChannelIds,
+        maxChannels: MAX_VIV_INTENSITY_CHANNELS,
+        loaderSourceIds: new Set(onLoader.map((sc) => sc.id)),
+      },
+    );
+
     const selections: Selection[] = [];
     const colors: Color[] = [];
     const contrastLimits: Limit[] = [];
-    const channelsVisible: boolean[] = [];
-    const sourceChannelIds: string[] = [];
 
-    for (let i = 0; i < layers.length; i++) {
-      const { sc, gc } = layers[i];
+    for (let i = 0; i < sourceChannelIds.length; i++) {
+      const id = sourceChannelIds[i];
+      const visibleLayer = byId.get(id);
+      const sc = visibleLayer?.sc ?? onLoaderById.get(id);
+      if (!sc) {
+        throw new Error(`[viv] sticky source ${id} missing from loader`);
+      }
+      const gc =
+        visibleLayer?.gc ??
+        activeGroup?.channels.find((row) => row.channelId === id) ??
+        null;
       const [lo, hi] = gc
         ? [gc.lowerLimit, gc.upperLimit]
         : effectiveSourceLimits(sc);
@@ -234,8 +286,6 @@ const toSettings = (opts: ToSettingsOpts) => {
       selections.push({ z: 0, t: 0, c: sc.index });
       colors.push([r, g, b]);
       contrastLimits.push([lo, hi]);
-      channelsVisible.push(true);
-      sourceChannelIds.push(sc.id);
     }
 
     const n_channels = c_idx >= 0 ? shape[c_idx] || 0 : 1;

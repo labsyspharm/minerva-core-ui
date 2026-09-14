@@ -1,6 +1,10 @@
 import * as React from "react";
 import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import type { OmeImportResult } from "@/components/shared/Upload";
+import { Upload } from "@/components/shared/Upload";
+import { toFile } from "@/lib/imaging/filesystem";
+import type { OmeImageImportRole } from "@/lib/imaging/omeImport";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { listStorySummaries } from "@/lib/persistence/storyPersistence";
 import type { StorySummary } from "@/lib/persistence/types";
@@ -11,6 +15,33 @@ import { rootRouteApi } from "@/router/appRouter";
 import styles from "./MinervaLibraryPage.module.css";
 
 const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
+
+/** One-shot handoff: library stash → Main consumes after navigate. */
+type PendingLibraryImport =
+  | {
+      kind: "ome";
+      role: OmeImageImportRole;
+      source:
+        | { kind: "local"; path: string; handles: Handle.File[] }
+        | { kind: "url"; url: string };
+    }
+  | { kind: "dicomWeb"; url: string };
+
+let pendingLibraryImport: PendingLibraryImport | null = null;
+
+function setPendingLibraryImport(next: PendingLibraryImport): void {
+  pendingLibraryImport = next;
+}
+
+export function takePendingLibraryImport(): PendingLibraryImport | null {
+  const next = pendingLibraryImport;
+  pendingLibraryImport = null;
+  return next;
+}
+
+export function hasPendingLibraryImport(): boolean {
+  return pendingLibraryImport != null;
+}
 
 function formatShortDate(iso: string): string {
   try {
@@ -122,16 +153,15 @@ function GhostBooks({ bayIndex }: { bayIndex: number }) {
 }
 
 /**
- * First bay is always the add row. Remaining slots fill to this many tiers
- * (7 interior lines → 8 shelves including add).
+ * Intake row is its own shelf above. Pad story bays to this many so the
+ * bookcase still reads as a full stack when few stories exist (7 + intake = 8).
  */
-const TARGET_BAYS = 8;
-const STORY_BAYS = TARGET_BAYS - 1;
+const STORY_BAYS = 7;
 
 type BaySlot =
-  | { kind: "loading" }
   | { kind: "story"; story: StorySummary }
-  | { kind: "empty" };
+  | { kind: "empty" }
+  | { kind: "loading" };
 
 function buildBays(summaries: StorySummary[] | null): BaySlot[] {
   if (summaries === null) {
@@ -165,8 +195,7 @@ export function MinervaLibraryPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [busyId, setBusyId] = React.useState<string | null>(null);
   const [addOpen, setAddOpen] = React.useState(false);
-  const [creating, setCreating] = React.useState(false);
-  const [importing, setImporting] = React.useState(false);
+  const [shelfBusy, setShelfBusy] = React.useState(false);
   const addRef = React.useRef<HTMLDivElement>(null);
 
   const refresh = React.useCallback(() => {
@@ -197,6 +226,19 @@ export function MinervaLibraryPage() {
     return () => document.removeEventListener("mousedown", onDoc);
   }, [addOpen]);
 
+  const goToStory = React.useCallback(
+    (id: string) => {
+      navigate({
+        search: (prev: { storyid?: string }) => ({
+          ...prev,
+          storyid: id,
+        }),
+        replace: true,
+      } as never);
+    },
+    [navigate],
+  );
+
   const openStory = React.useCallback(
     async (id: string) => {
       setBusyId(id);
@@ -204,66 +246,67 @@ export function MinervaLibraryPage() {
       try {
         useAppStore.getState().resetStoryViewerSession();
         await switchStory(id);
-        navigate({
-          search: (prev: { storyid?: string }) => ({
-            ...prev,
-            storyid: id,
-          }),
-          replace: true,
-        } as never);
+        goToStory(id);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Could not open story");
       } finally {
         setBusyId(null);
       }
     },
-    [navigate, switchStory],
+    [goToStory, switchStory],
   );
+
+  const openNewStory = React.useCallback(async () => {
+    useAppStore.getState().resetStoryViewerSession();
+    return createStory();
+  }, [createStory]);
 
   const handleNew = React.useCallback(async () => {
     setAddOpen(false);
-    setCreating(true);
+    setShelfBusy(true);
     setError(null);
     try {
-      useAppStore.getState().resetStoryViewerSession();
-      const id = await createStory();
-      navigate({
-        search: (prev: { storyid?: string }) => ({
-          ...prev,
-          storyid: id,
-        }),
-        replace: true,
-      } as never);
+      goToStory(await openNewStory());
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Could not create story");
     } finally {
-      setCreating(false);
+      setShelfBusy(false);
     }
-  }, [createStory, navigate]);
+  }, [goToStory, openNewStory]);
+
+  const startStoryWithPendingImport = React.useCallback(
+    async (pending: PendingLibraryImport): Promise<OmeImportResult> => {
+      setError(null);
+      try {
+        const id = await openNewStory();
+        setPendingLibraryImport(pending);
+        goToStory(id);
+        return { ok: true };
+      } catch (e: unknown) {
+        const error = e instanceof Error ? e.message : "Could not create story";
+        setError(error);
+        return { ok: false, error };
+      }
+    },
+    [goToStory, openNewStory],
+  );
 
   const handleImport = React.useCallback(async () => {
     setAddOpen(false);
-    setImporting(true);
+    setShelfBusy(true);
     setError(null);
     try {
       useAppStore.getState().resetStoryViewerSession();
-      const id = await importStoryJsonFromPicker();
-      navigate({
-        search: (prev: { storyid?: string }) => ({
-          ...prev,
-          storyid: id,
-        }),
-        replace: true,
-      } as never);
+      goToStory(await importStoryJsonFromPicker());
     } catch (e: unknown) {
-      // AbortError = user cancelled the picker; finally still clears `importing`.
+      // AbortError = user cancelled the picker; finally still clears busy.
       if (!(e instanceof DOMException && e.name === "AbortError")) {
         setError(e instanceof Error ? e.message : "Could not import story");
       }
     } finally {
-      setImporting(false);
+      setShelfBusy(false);
     }
-  }, [navigate]);
+  }, [goToStory]);
 
   const handleDelete = React.useCallback(
     (id: string, title: string) => {
@@ -303,44 +346,64 @@ export function MinervaLibraryPage() {
         <div className={styles.bookcaseInner}>
           <div className={styles.shelfBay}>
             <div className={styles.bayContent}>
-              <div className={styles.addWrap} ref={addRef}>
-                <button
-                  type="button"
-                  className={`${minervaTheme.focusRing} ${styles.addTrigger}`}
-                  disabled={creating || importing}
-                  aria-label="Add story"
-                  aria-expanded={addOpen}
-                  aria-haspopup="menu"
-                  onClick={() => setAddOpen((v) => !v)}
-                >
-                  <PlusIcon />
-                  New story
-                </button>
-                {addOpen ? (
-                  <div
-                    className={`${minervaTheme.menu} ${styles.addMenu}`}
-                    role="menu"
+              <div className={styles.intakeRow}>
+                <div className={styles.addWrap} ref={addRef}>
+                  <button
+                    type="button"
+                    className={`${minervaTheme.focusRing} ${styles.addTrigger}`}
+                    disabled={shelfBusy}
+                    aria-label="Add story"
+                    title="New or import story"
+                    aria-expanded={addOpen}
+                    aria-haspopup="menu"
+                    onClick={() => setAddOpen((v) => !v)}
                   >
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className={minervaTheme.menuItem}
-                      disabled={creating || importing}
-                      onClick={() => void handleNew()}
+                    <PlusIcon />
+                  </button>
+                  {addOpen ? (
+                    <div
+                      className={`${minervaTheme.menu} ${styles.addMenu}`}
+                      role="menu"
                     >
-                      New story
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className={minervaTheme.menuItem}
-                      disabled={creating || importing}
-                      onClick={() => void handleImport()}
-                    >
-                      Import story
-                    </button>
-                  </div>
-                ) : null}
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className={minervaTheme.menuItem}
+                        disabled={shelfBusy}
+                        onClick={() => void handleNew()}
+                      >
+                        New story
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className={minervaTheme.menuItem}
+                        disabled={shelfBusy}
+                        onClick={() => void handleImport()}
+                      >
+                        Import story
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+                <Upload
+                  row
+                  onAllow={toFile}
+                  disabled={shelfBusy}
+                  onImportOme={(req) =>
+                    startStoryWithPendingImport({
+                      kind: "ome",
+                      role: req.role,
+                      source: req.source,
+                    })
+                  }
+                  onImportDicomWeb={(req) =>
+                    startStoryWithPendingImport({
+                      kind: "dicomWeb",
+                      url: req.url,
+                    })
+                  }
+                />
               </div>
             </div>
             <ShelfBoard />

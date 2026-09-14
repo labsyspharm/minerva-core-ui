@@ -759,7 +759,7 @@ const loadDicom = (meta) => {
 
 function createTileLayers(meta) {
   const { channelsVisible, colors, contrastLimits, selections } = meta.settings;
-  const visible = channelsVisible.some((x) => x);
+  const anyChannelVisible = (channelsVisible ?? []).some(Boolean);
   const { imageID, pyramids, dicomLoader, rgbImage } = meta;
   const loaderPlanes = Array.isArray(dicomLoader)
     ? dicomLoader
@@ -777,7 +777,8 @@ function createTileLayers(meta) {
   const minZoom = Math.round(-(primaryLevels.length - 1));
   if (rgbImage) {
     return new TileLayer({
-      visible,
+      // RGB TileLayer has no channelsVisible shader path.
+      visible: anyChannelVisible,
       id: "rgb_image",
       getTileData: async ({ index, signal }) => {
         const { x, y, z } = index;
@@ -825,7 +826,7 @@ function createTileLayers(meta) {
     return null;
   }
   return new MultiscaleImageLayer({
-    visible,
+    visible: true,
     loader: loaderPlanes,
     refinementStrategy: "best-available",
     // Contrast limits in ID force layer recreate (avoids flash on group switch).

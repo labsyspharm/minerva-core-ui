@@ -10,27 +10,23 @@ import { VIV_TILE_MAX_CACHE_SIZE } from "./viv";
 
 function createJpegLayers(meta) {
   const { channelsVisible, colors, selections } = meta.settings;
-  const visible = channelsVisible.some((x) => x);
-  const { imagePath, jpegLoader, channelFolders } = meta;
-  const imageID = String(imagePath).replace(/\//g, "-");
   const contrastLimits =
     meta.transfer === "cube-root"
       ? meta.settings.contrastLimits || []
       : (meta.settings.contrastLimits || []).map(
           () => JPEG_BAKED_CONTRAST_LIMIT,
         );
-  const imageProps = {
-    visible,
-    loader: jpegLoader,
+  return new MultiscaleImageLayer({
+    visible: true,
+    loader: meta.jpegLoader,
     refinementStrategy: "no-overlap",
     maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
-    id: `${imageID}-${Object.values(channelFolders || {}).join("-")}-${selections?.map((s) => s.c).join("-")}`,
+    id: meta.layerId,
     channelsVisible,
     colors,
     contrastLimits,
     selections,
-  };
-  return new MultiscaleImageLayer(imageProps);
+  });
 }
 
 const toIndexer = (opts) => {

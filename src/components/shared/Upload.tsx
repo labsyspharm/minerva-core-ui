@@ -88,9 +88,9 @@ export type UploadProps = {
   /** @deprecated DICOM uses `onImportDicomWeb`; kept optional for call-site compatibility. */
   formProps?: FormProps;
   /** Bumps after a successful image import; clears pending add state. */
-  importRevision: number;
+  importRevision?: number;
   /** True when the viewer has image data (same idea as `!noLoader` in main). */
-  imageLoaded: boolean;
+  imageLoaded?: boolean;
   /** Present when `imageLoaded`; dimensions may be 0 briefly while metadata arrives. */
   loadedSource?: LoadedSourceSummary;
   /** Viewer label for the primary loaded stack (local filename or URL basename). */
@@ -121,6 +121,9 @@ export type UploadProps = {
    * groups and waypoints stay linked; assigns a new image id.
    */
   onReplaceImage?: (imageId: string) => void | Promise<void>;
+  /** Library strip (horizontal); default is the Images panel stack. */
+  row?: boolean;
+  disabled?: boolean;
 };
 
 type PendingLocal = {
@@ -251,8 +254,8 @@ function pendingLabel(pending: PendingSource): string {
 const Upload = (props: UploadProps) => {
   const {
     onAllow,
-    importRevision,
-    imageLoaded,
+    importRevision = 0,
+    imageLoaded = false,
     loadedSource,
     fileName = "",
     lastOmeTiffUrl = null,
@@ -266,6 +269,8 @@ const Upload = (props: UploadProps) => {
     onReconnectStoryRoot,
     onRemoveImage,
     onReplaceImage,
+    row = false,
+    disabled = false,
   } = props;
 
   const images = useDocumentStore((s) => s.images);
@@ -415,7 +420,7 @@ const Upload = (props: UploadProps) => {
   );
 
   const browseLocal = useCallback(async () => {
-    if (localPickInFlightRef.current) return;
+    if (disabled || localPickInFlightRef.current) return;
     localPickInFlightRef.current = true;
     setImportError(null);
     try {
@@ -425,16 +430,17 @@ const Upload = (props: UploadProps) => {
     } finally {
       localPickInFlightRef.current = false;
     }
-  }, [acceptLocalHandles, onAllow]);
+  }, [acceptLocalHandles, disabled, onAllow]);
 
   const acceptUrlDraft = useCallback(() => {
+    if (disabled) return;
     const url = urlDraft.trim();
     if (!/^https?:\/\/.+/.test(url)) {
       setImportError("Enter a valid http(s) URL.");
       return;
     }
     openPending({ kind: "url", url });
-  }, [openPending, urlDraft]);
+  }, [disabled, openPending, urlDraft]);
 
   const onDragEnter = (e: ReactDragEvent) => {
     e.preventDefault();
@@ -463,6 +469,7 @@ const Upload = (props: UploadProps) => {
     e.stopPropagation();
     dragDepthRef.current = 0;
     setDragging(false);
+    if (disabled) return;
     const items = [...e.dataTransfer.items].filter((i) => i.kind === "file");
     if (items.length === 0) {
       setImportError("Drop an image file to add it.");
@@ -623,8 +630,9 @@ const Upload = (props: UploadProps) => {
     );
   };
 
-  const imageCards =
-    images.length > 0
+  const imageCards = row
+    ? []
+    : images.length > 0
       ? images.map((im, i) => renderImageCard(im, i))
       : imageLoaded && loadedSource
         ? [
@@ -647,29 +655,44 @@ const Upload = (props: UploadProps) => {
           ]
         : [];
 
+  const dropHandlers = {
+    onDragEnter,
+    onDragLeave,
+    onDragOver,
+    onDrop: (e: ReactDragEvent) => void onDrop(e),
+  };
   const addStrip = (
-    <div className={styles.addStrip}>
+    <div
+      className={[
+        styles.addStrip,
+        row ? styles.addStripRow : "",
+        dragging ? styles.panelDropActive : "",
+      ].join(" ")}
+      {...(row ? dropHandlers : {})}
+    >
       <button
         type="button"
         className={[
           styles.dropZone,
           dragging ? styles.dropZoneActive : "",
         ].join(" ")}
+        disabled={disabled}
         onClick={() => void browseLocal()}
       >
-        <span className={styles.dropZoneTitle}>Drop or Browse File</span>
+        <span className={styles.dropZoneTitle}>Drop or Browse Image File</span>
       </button>
       <div className={styles.orDivider}>
         <span>or</span>
       </div>
       <div className={styles.urlRow}>
         <input
-          id="images-add-url"
+          id="upload-add-url"
           type="url"
           className={`${minervaTheme.input} ${styles.urlInput}`}
           placeholder="Image URL (OME-TIFF or DICOMweb)"
           aria-label="Image URL"
           value={urlDraft}
+          disabled={disabled}
           onChange={(e) => {
             setUrlDraft(e.target.value);
             setImportError(null);
@@ -681,13 +704,16 @@ const Upload = (props: UploadProps) => {
             }
           }}
         />
-        <PanelActionButton
-          type="button"
-          disabled={!urlReady}
-          onClick={acceptUrlDraft}
-        >
-          Add
-        </PanelActionButton>
+        {urlDraft.trim() ? (
+          <PanelActionButton
+            type="button"
+            className={styles.urlAdd}
+            disabled={disabled || !urlReady}
+            onClick={acceptUrlDraft}
+          >
+            Add
+          </PanelActionButton>
+        ) : null}
       </div>
       {importError && !showTypeOverlay ? (
         <div className={styles.importError} role="alert">
@@ -715,7 +741,10 @@ const Upload = (props: UploadProps) => {
           >
             {pendingLabel(pending)}
           </div>
-          <fieldset disabled={importBusy} className={styles.typeOverlayFields}>
+          <fieldset
+            disabled={importBusy || disabled}
+            className={styles.typeOverlayFields}
+          >
             <div className={styles.typeRow}>
               <span className={styles.fieldLabel}>Type</span>
               {ROLE_OPTIONS.map(({ role, label }) => (
@@ -766,14 +795,14 @@ const Upload = (props: UploadProps) => {
             <PanelActionButton
               type="button"
               onClick={clearPending}
-              disabled={importBusy}
+              disabled={importBusy || disabled}
             >
               Cancel
             </PanelActionButton>
             <PanelActionButton
               type="button"
               className={styles.typeImport}
-              disabled={importBusy}
+              disabled={importBusy || disabled}
               onClick={() => void runImport()}
             >
               {importBusy ? (
@@ -792,25 +821,26 @@ const Upload = (props: UploadProps) => {
 
   return (
     <>
-      {/* File drop on the Images panel (HTML5 DnD; not a focusable control). */}
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: panel-wide file drop target */}
-      <div
-        className={[
-          panel.authorPanel,
-          dragging ? styles.panelDropActive : "",
-        ].join(" ")}
-        onDragEnter={onDragEnter}
-        onDragLeave={onDragLeave}
-        onDragOver={onDragOver}
-        onDrop={(e) => void onDrop(e)}
-      >
-        <div className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}>
-          <div className={styles.stack}>
-            {imageCards}
-            {addStrip}
+      {row ? (
+        addStrip
+      ) : (
+        <div
+          className={[
+            panel.authorPanel,
+            dragging ? styles.panelDropActive : "",
+          ].join(" ")}
+          {...dropHandlers}
+        >
+          <div
+            className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}
+          >
+            <div className={styles.stack}>
+              {imageCards}
+              {addStrip}
+            </div>
           </div>
         </div>
-      </div>
+      )}
       {typeOverlayDialog
         ? createPortal(typeOverlayDialog, document.body)
         : null}

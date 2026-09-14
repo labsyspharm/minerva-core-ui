@@ -2,7 +2,11 @@ import type { FormEventHandler } from "react";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { StoryTitleBar } from "@/components/authoring/StoryTitleBar";
-import { MinervaLibraryPage } from "@/components/library/MinervaLibraryPage";
+import {
+  hasPendingLibraryImport,
+  MinervaLibraryPage,
+  takePendingLibraryImport,
+} from "@/components/library/MinervaLibraryPage";
 import { PlaybackModeView } from "@/components/playback/PlaybackModeView";
 import { BuildStamp } from "@/components/shared/BuildStamp";
 import { FileHandler } from "@/components/shared/FileHandler";
@@ -700,7 +704,9 @@ const Content = (props: Props) => {
   const omeTiffUrlLoadGenerationRef = React.useRef(0);
   const jpegUrlLoadGenerationRef = React.useRef(0);
   const [importRevision, setImportRevision] = useState(0);
-  const [isLoadingImage, setIsLoadingImage] = useState(hasDemo);
+  const [isLoadingImage, setIsLoadingImage] = useState(
+    () => hasDemo || hasPendingLibraryImport(),
+  );
   /**
    * Only the latest `beginImageLoading` epoch may clear the overlay. Prevents a
    * finished hydrate / eager-GMM from hiding loading for a newer import.
@@ -2577,6 +2583,11 @@ const Content = (props: Props) => {
 
         return (
           <div className={styles.wrapper}>
+            <ConsumePendingLibraryImport
+              importOme={importOme}
+              importDicomWeb={importDicomWeb}
+              onSettled={clearImageLoading}
+            />
             {!presenting ? (
               <StoryTitleBar
                 onReturnToLibrary={returnToLibrary}
@@ -2604,6 +2615,44 @@ const Content = (props: Props) => {
     </FileHandler>
   );
 };
+
+function ConsumePendingLibraryImport({
+  importOme,
+  importDicomWeb,
+  onSettled,
+}: {
+  importOme: (req: OmeImportRequest) => Promise<OmeImportResult>;
+  importDicomWeb: (req: { url: string }) => Promise<OmeImportResult>;
+  onSettled: () => void;
+}) {
+  const importOmeRef = React.useRef(importOme);
+  importOmeRef.current = importOme;
+  const importDicomWebRef = React.useRef(importDicomWeb);
+  importDicomWebRef.current = importDicomWeb;
+
+  React.useEffect(() => {
+    const pending = takePendingLibraryImport();
+    if (!pending) {
+      onSettled();
+      return;
+    }
+    void (async () => {
+      const result =
+        pending.kind === "dicomWeb"
+          ? await importDicomWebRef.current({ url: pending.url })
+          : await importOmeRef.current({
+              role: pending.role,
+              append: false,
+              source: pending.source,
+            });
+      if (result.ok === false) {
+        window.alert(result.error);
+      }
+    })().finally(onSettled);
+  }, [onSettled]);
+
+  return null;
+}
 
 const LibraryOrAuthor = (props: Props) => {
   const { storyid } = rootRouteApi.useSearch();
