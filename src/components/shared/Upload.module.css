@@ -9,7 +9,7 @@
 }
 
 .panelDropActive {
-  outline: 1px dashed var(--minerva-ink);
+  outline: 2px dashed var(--minerva-ink);
   outline-offset: -2px;
 }
 
@@ -120,7 +120,14 @@
 
 .dropZone:hover,
 .dropZoneActive {
+  border-width: 2px;
   border-color: var(--minerva-ink);
+}
+
+.panelDropActive .dropZone,
+.panelDropActive .dropZone:hover,
+.panelDropActive .dropZoneActive {
+  border-width: 1px;
 }
 
 .dropZoneTitle {
