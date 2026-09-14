@@ -19,6 +19,7 @@ import {
  */
 export const MAX_VIV_INTENSITY_CHANNELS = 10;
 
+/** Keep parent pyramid tiles around for best-available refinement while zooming. */
 export const VIV_TILE_MAX_CACHE_SIZE = 128;
 
 type Selection = Record<"z" | "t" | "c", number>;
@@ -36,6 +37,7 @@ type Settings = {
   contrastLimits: Limit[];
   loader: Loader | null;
   colors: Color[];
+  /** Parallel to selections — source channel ids for live preview mapping. */
   sourceChannelIds?: string[];
 };
 
@@ -84,6 +86,40 @@ type Metadata = {
   ROIs?: Roi[];
 };
 
+/** Stable Viv channel slots: flip visibility instead of dropping selections. */
+function mergeStickyIntensityOccupancy(args: {
+  visibleSourceIds: readonly string[];
+  stickySourceIds: readonly string[];
+  maxChannels: number;
+  loaderSourceIds: ReadonlySet<string>;
+}): { sourceChannelIds: string[]; channelsVisible: boolean[] } {
+  const preferredVisible = args.visibleSourceIds.slice(0, args.maxChannels);
+  const visibleSet = new Set(preferredVisible);
+
+  const ids = args.stickySourceIds.filter((id) => args.loaderSourceIds.has(id));
+  for (const id of preferredVisible) {
+    if (!ids.includes(id)) ids.push(id);
+  }
+
+  while (ids.length > args.maxChannels) {
+    let dropAt = -1;
+    for (let i = ids.length - 1; i >= 0; i--) {
+      if (!visibleSet.has(ids[i])) {
+        dropAt = i;
+        break;
+      }
+    }
+    if (dropAt < 0) dropAt = ids.length - 1;
+    ids.splice(dropAt, 1);
+  }
+
+  return {
+    sourceChannelIds: ids,
+    channelsVisible: ids.map((id) => visibleSet.has(id)),
+  };
+}
+
+/** Full-resolution pixel size from OME metadata or finest pyramid level (>1 rejects placeholders). */
 export function loaderPixelSizeXY(loader: Loader): {
   sizeX: number;
   sizeY: number;
@@ -160,6 +196,7 @@ const toSettings = (opts: ToSettingsOpts) => {
     channelVisibilities?: Record<string, boolean>,
     loaderSourceImageId?: string,
     channelGroupRowVisibilities: Record<string, boolean> = {},
+    stickySourceChannelIds: readonly string[] = [],
   ) => {
     const { SourceChannels, channelGroups = [] } = opts;
     if (!loader) return toDefaultSettings(3);
@@ -171,6 +208,7 @@ const toSettings = (opts: ToSettingsOpts) => {
         ? image_id === loaderSourceImageId
         : image_id === modality;
 
+    // Intensity only; masks use createMaskTileLayer.
     const onLoader = SourceChannels.filter(
       (sc) => sourceImageMatches(sc.imageId) && isImageChannel(sc),
     );
@@ -191,7 +229,6 @@ const toSettings = (opts: ToSettingsOpts) => {
       hasVisibilityMap,
     });
 
-    const layers = composited.slice(0, MAX_VIV_INTENSITY_CHANNELS);
     if (composited.length > MAX_VIV_INTENSITY_CHANNELS && import.meta.env.DEV) {
       console.warn(
         `[viv] ${composited.length} visible intensity channels exceeds ` +
@@ -200,13 +237,32 @@ const toSettings = (opts: ToSettingsOpts) => {
       );
     }
 
+    const byId = new Map(composited.map((layer) => [layer.sc.id, layer]));
+    const onLoaderById = new Map(onLoader.map((sc) => [sc.id, sc]));
+    const { sourceChannelIds, channelsVisible } = mergeStickyIntensityOccupancy(
+      {
+        visibleSourceIds: composited.map((layer) => layer.sc.id),
+        stickySourceIds: stickySourceChannelIds,
+        maxChannels: MAX_VIV_INTENSITY_CHANNELS,
+        loaderSourceIds: new Set(onLoader.map((sc) => sc.id)),
+      },
+    );
+
     const selections: Selection[] = [];
     const colors: Color[] = [];
     const contrastLimits: Limit[] = [];
-    const channelsVisible: boolean[] = [];
-    const sourceChannelIds: string[] = [];
 
-    for (const { sc, gc } of layers) {
+    for (let i = 0; i < sourceChannelIds.length; i++) {
+      const id = sourceChannelIds[i];
+      const visibleLayer = byId.get(id);
+      const sc = visibleLayer?.sc ?? onLoaderById.get(id);
+      if (!sc) {
+        throw new Error(`[viv] sticky source ${id} missing from loader`);
+      }
+      const gc =
+        visibleLayer?.gc ??
+        activeGroup?.channels.find((row) => row.channelId === id) ??
+        null;
       const [lo, hi] = gc
         ? [gc.lowerLimit, gc.upperLimit]
         : effectiveSourceLimits(sc);
@@ -216,8 +272,6 @@ const toSettings = (opts: ToSettingsOpts) => {
       selections.push({ z: 0, t: 0, c: sc.index });
       colors.push([r, g, b]);
       contrastLimits.push([lo, hi]);
-      channelsVisible.push(true);
-      sourceChannelIds.push(sc.id);
     }
 
     const n_channels = c_idx >= 0 ? shape[c_idx] || 0 : 1;

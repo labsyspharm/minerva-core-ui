@@ -8,7 +8,11 @@ import {
   useSyncExternalStore,
 } from "react";
 import { StoryTitleBar } from "@/components/authoring/StoryTitleBar";
-import { MinervaLibraryPage } from "@/components/library/MinervaLibraryPage";
+import {
+  ConsumePendingLibraryImport,
+  hasPendingLibraryImport,
+  MinervaLibraryPage,
+} from "@/components/library/MinervaLibraryPage";
 import { PlaybackModeView } from "@/components/playback/PlaybackModeView";
 import { BuildStamp } from "@/components/shared/BuildStamp";
 import { FileHandler } from "@/components/shared/FileHandler";
@@ -802,7 +806,9 @@ const Content = (props: Props) => {
   const omeTiffUrlLoadGenerationRef = React.useRef(0);
   const jpegUrlLoadGenerationRef = React.useRef(0);
   const [importRevision, setImportRevision] = useState(0);
-  const [isLoadingImage, setIsLoadingImage] = useState(hasDemo);
+  const [isLoadingImage, setIsLoadingImage] = useState(
+    () => hasDemo || hasPendingLibraryImport(),
+  );
   /**
    * Only the latest `beginImageLoading` epoch may clear the overlay. Prevents a
    * finished hydrate from hiding loading for a newer import.
@@ -2351,6 +2357,11 @@ const Content = (props: Props) => {
 
         return (
           <div className={styles.wrapper}>
+            <ConsumePendingLibraryImport
+              importOme={importOme}
+              importDicomWeb={importDicomWeb}
+              onSettled={clearImageLoading}
+            />
             {!presenting ? (
               <StoryTitleBar
                 onReturnToLibrary={returnToLibrary}

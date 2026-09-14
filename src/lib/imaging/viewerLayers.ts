@@ -51,6 +51,23 @@ function applyChannelRendering<S extends MainSettings>(
   return { ...settings, colors };
 }
 
+/**
+ * Viv TileLayer `updateTriggers.getTileData` is `[loader, selections]` by
+ * reference. Contrast/color keep the same `selections` array; eye toggles must
+ * too, or the tile cache clears and the loading spinner flashes.
+ */
+function reuseVivSelections<S extends MainSettings>(
+  next: S,
+  prev: S | undefined,
+): S {
+  if (!prev?.selections?.length || !next.selections?.length) return next;
+  if (prev.selections.length !== next.selections.length) return next;
+  for (let i = 0; i < next.selections.length; i++) {
+    if (prev.selections[i]?.c !== next.selections[i]?.c) return next;
+  }
+  return { ...next, selections: prev.selections };
+}
+
 type ViewerLoaderSources = {
   dicomIndexList?: DicomIndex[];
   omeLoaderEntries?: OmeLoaderEntry[];
@@ -83,20 +100,20 @@ function loaderListFromEntries(sources: ViewerLoaderSources): LoaderList {
   ];
 }
 
-export function createDicomTileLayer(args: {
+function createDicomTileLayer(args: {
   entry: DicomIndex;
   settings: unknown;
-  index: number;
   remountKey?: string | number;
 }): Layer | null {
   const rgbImage = args.entry.modality === "Brightfield";
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
+  const imageKey = args.entry.sourceImageId || `dicom-${args.entry.series}`;
   return createTileLayers({
     pyramids: args.entry.pyramids,
     dicomLoader: args.entry.loader,
     settings: args.settings,
     rgbImage,
-    imageID: `dicom-${args.entry.series}-${args.index}${remount}`,
+    imageID: `${imageKey}${remount}`,
     modelMatrix: layerModelMatrix(args.entry.loader),
   });
 }
@@ -116,10 +133,11 @@ const OME_INTENSITY_OVERLAY_PROPS = {
   },
 };
 
-export function createMultiscaleLayer(args: {
+function createMultiscaleLayer(args: {
   loader: Loader;
   settings: MainSettings | Record<string, unknown>;
-  index: number;
+  /** Stable deck.gl layer id (e.g. sourceImageId); remountKey is appended. */
+  layerId: string;
   /** Appended to the layer id (e.g. after export remount). */
   remountKey?: string | number;
   /**
@@ -139,12 +157,12 @@ export function createMultiscaleLayer(args: {
           ),
         }
       : base;
-  const selections = settings.selections ?? [];
-  const selectionId = selections.map(({ c }) => c).join("-");
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
   return new MultiscaleImageLayer({
-    id: `mainLayer-${args.index}-${selectionId}${remount}`,
+    id: `${args.layerId}${remount}`,
     ...settings,
+    // Keep mounted; hide via channelsVisible (layer visible toggles remount/flash).
+    visible: true,
     maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
     ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
     loader: args.loader.data,
@@ -152,21 +170,22 @@ export function createMultiscaleLayer(args: {
   } as never);
 }
 
-export function createEncodedImageLayer(args: {
+function createEncodedImageLayer(args: {
   entry: JpegLoaderEntry;
   settings: unknown;
+  remountKey?: string | number;
 }): Layer {
+  const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
   return createJpegLayers({
     jpegLoader: args.entry.loader.data,
     settings: args.settings,
-    imagePath: args.entry.imagePath ?? ".",
-    channelFolders: args.entry.channelFolders ?? {},
     transfer: args.entry.transfer ?? "contrast",
+    layerId: `jpeg-${args.entry.sourceImageId}${remount}`,
     modelMatrix: layerModelMatrix(args.entry.loader),
   });
 }
 
-export function buildImageLayers(args: {
+function buildImageLayers(args: {
   dicomIndexList?: DicomIndex[];
   omeLoaderEntries?: OmeLoaderEntry[];
   jpegLoaderEntries?: JpegLoaderEntry[];
@@ -182,35 +201,31 @@ export function buildImageLayers(args: {
   const omeSettingsList = args.omeSettingsList ?? [];
   const jpegSettingsList = args.jpegSettingsList ?? [];
 
-  // One global index across DICOM → OME → JPEG so layer ids stay unique and
-  // align with loaderList / mainSettingsList order.
-  let nextIndex = 0;
-  let omeIntensityPainted = 0;
+  let omeVisiblePainted = 0;
   return [
     ...dicomIndexList.flatMap((entry, i) => {
       const layer = createDicomTileLayer({
         entry,
         settings: dicomSettingsList[i],
-        index: nextIndex,
         remountKey: args.remountKey,
       });
       if (!layer) return [];
-      nextIndex += 1;
       return [layer];
     }),
-    ...omeLoaderEntries.flatMap(({ loader, transfer }, i) => {
+    ...omeLoaderEntries.flatMap(({ loader, transfer, sourceImageId }, i) => {
       const settings = omeSettingsList[i] as MainSettings | undefined;
       // Mask-only loaders have no intensity selections; painted by createMaskTileLayer.
       if (!settings?.selections?.length) return [];
-      const overlay = omeIntensityPainted > 0;
-      omeIntensityPainted += 1;
+      const anyVisible = (settings.channelsVisible ?? []).some(Boolean);
+      const overlay = omeVisiblePainted > 0;
+      if (anyVisible) omeVisiblePainted += 1;
       return [
         createMultiscaleLayer({
           loader,
           settings,
-          index: nextIndex++,
+          layerId: `mainLayer-${sourceImageId}`,
           remountKey: args.remountKey,
-          overlay,
+          overlay: anyVisible ? overlay : true,
           ...(transfer ? { transfer } : {}),
         }),
       ];
@@ -219,6 +234,7 @@ export function buildImageLayers(args: {
       createEncodedImageLayer({
         entry,
         settings: jpegSettingsList[i],
+        remountKey: args.remountKey,
       }),
     ),
   ];
@@ -282,68 +298,57 @@ export function useViewerLayers(args: {
     [dicomIndexList, omeLoaderEntries, jpegLoaderEntries],
   );
 
-  const dicomSettingsList = useMemo(
-    () =>
-      dicomIndexList.map(({ loader, modality, sourceImageId }) =>
-        toDocSettings(
+  const prevSettingsRef = useRef<Map<string, MainSettings>>(new Map());
+
+  const { dicomSettingsList, omeSettingsList, jpegSettingsList } =
+    useMemo(() => {
+      const withSticky = (
+        loaderKey: string,
+        modality: string,
+        loader: Loader | undefined,
+        sourceImageId?: string,
+      ) => {
+        const prev = prevSettingsRef.current.get(loaderKey);
+        const built = toDocSettings(
           activeChannelGroupId,
           modality,
           loader,
           channelVisibilities,
-          sourceImageId || undefined,
+          sourceImageId,
           channelGroupRowVisibilities,
+          prev?.sourceChannelIds ?? [],
+        ) as MainSettings;
+        const settings = reuseVivSelections(built, prev);
+        prevSettingsRef.current.set(loaderKey, settings);
+        return settings;
+      };
+
+      return {
+        dicomSettingsList: dicomIndexList.map(
+          ({ loader, modality, sourceImageId }, i) =>
+            withSticky(
+              sourceImageId || `dicom-${i}`,
+              modality,
+              loader,
+              sourceImageId || undefined,
+            ),
         ),
-      ),
-    [
+        omeSettingsList: omeLoaderEntries.map(({ loader, sourceImageId }) =>
+          withSticky(sourceImageId, "Colorimetric", loader, sourceImageId),
+        ),
+        jpegSettingsList: jpegLoaderEntries.map(({ loader, sourceImageId }) =>
+          withSticky(sourceImageId, "Colorimetric", loader, sourceImageId),
+        ),
+      };
+    }, [
       dicomIndexList,
-      toDocSettings,
-      activeChannelGroupId,
-      channelVisibilities,
-      channelGroupRowVisibilities,
-    ],
-  );
-
-  const omeSettingsList = useMemo(
-    () =>
-      omeLoaderEntries.map(({ loader, sourceImageId }) =>
-        toDocSettings(
-          activeChannelGroupId,
-          "Colorimetric",
-          loader,
-          channelVisibilities,
-          sourceImageId,
-          channelGroupRowVisibilities,
-        ),
-      ),
-    [
       omeLoaderEntries,
-      toDocSettings,
-      activeChannelGroupId,
-      channelVisibilities,
-      channelGroupRowVisibilities,
-    ],
-  );
-
-  const jpegSettingsList = useMemo(
-    () =>
-      jpegLoaderEntries.map(({ loader, sourceImageId }) =>
-        toDocSettings(
-          activeChannelGroupId,
-          "Colorimetric",
-          loader,
-          channelVisibilities,
-          sourceImageId,
-          channelGroupRowVisibilities,
-        ),
-      ),
-    [
       jpegLoaderEntries,
       toDocSettings,
       activeChannelGroupId,
       channelVisibilities,
       channelGroupRowVisibilities,
-    ],
-  );
+    ]);
 
   const dicomSettingsWithLive = useMemo(
     () =>

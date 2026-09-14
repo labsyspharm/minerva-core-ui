@@ -93,9 +93,9 @@ export type UploadProps = {
   /** @deprecated DICOM uses `onImportDicomWeb`; kept optional for call-site compatibility. */
   formProps?: FormProps;
   /** Bumps after a successful image import; clears pending add state. */
-  importRevision: number;
+  importRevision?: number;
   /** True when the viewer has image data (same idea as `!noLoader` in main). */
-  imageLoaded: boolean;
+  imageLoaded?: boolean;
   /** Present when `imageLoaded`; dimensions may be 0 briefly while metadata arrives. */
   loadedSource?: LoadedSourceSummary;
   /** Viewer label for the primary loaded stack (local filename or URL basename). */
@@ -126,6 +126,9 @@ export type UploadProps = {
    * groups and waypoints stay linked; assigns a new image id.
    */
   onReplaceImage?: (imageId: string) => void | Promise<void>;
+  /** Library strip (horizontal); default is the Images panel stack. */
+  row?: boolean;
+  disabled?: boolean;
 };
 
 type PendingLocal = {
@@ -139,20 +142,9 @@ type PendingSource = PendingLocal | PendingUrl;
 type OverlayRole = OmeImportRole;
 type OverlayFormat = "ome-tiff" | "dicomweb";
 
-const ROLE_OPTIONS: { role: OverlayRole; label: string }[] = [
-  { role: "intensity", label: "Microscopy Image" },
-  { role: "segmentation", label: "Segmentation Mask" },
-];
-
 const FORMAT_OPTIONS: { format: OverlayFormat; label: string }[] = [
   { format: "ome-tiff", label: "OME-TIFF" },
   { format: "dicomweb", label: "DICOMweb" },
-];
-
-/** QuPath ImageType-style labels: Brightfield → RGB display; Fluorescence → multiplex. */
-const RGB_DISPLAY_OPTIONS: { rgb: boolean; label: string }[] = [
-  { rgb: false, label: "Fluorescence" },
-  { rgb: true, label: "Brightfield" },
 ];
 
 function FormatChip({
@@ -160,20 +152,17 @@ function FormatChip({
   selected,
   suggested,
   muted,
-  disabled,
   onClick,
 }: {
   label: string;
   selected: boolean;
   suggested?: boolean;
   muted?: boolean;
-  disabled?: boolean;
   onClick: () => void;
 }) {
   return (
     <PanelActionButton
       type="button"
-      disabled={disabled}
       aria-pressed={selected}
       className={[
         selected ? styles.typeChipActive : null,
@@ -262,8 +251,8 @@ function pendingLabel(pending: PendingSource): string {
 const Upload = (props: UploadProps) => {
   const {
     onAllow,
-    importRevision,
-    imageLoaded,
+    importRevision = 0,
+    imageLoaded = false,
     loadedSource,
     fileName = "",
     lastOmeTiffUrl = null,
@@ -277,6 +266,8 @@ const Upload = (props: UploadProps) => {
     onReconnectStoryRoot,
     onRemoveImage,
     onReplaceImage,
+    row = false,
+    disabled = false,
   } = props;
 
   const images = useDocumentStore((s) => s.images);
@@ -446,7 +437,7 @@ const Upload = (props: UploadProps) => {
   );
 
   const browseLocal = useCallback(async () => {
-    if (localPickInFlightRef.current) return;
+    if (disabled || localPickInFlightRef.current) return;
     localPickInFlightRef.current = true;
     setImportError(null);
     try {
@@ -456,16 +447,17 @@ const Upload = (props: UploadProps) => {
     } finally {
       localPickInFlightRef.current = false;
     }
-  }, [acceptLocalHandles, onAllow]);
+  }, [acceptLocalHandles, disabled, onAllow]);
 
   const acceptUrlDraft = useCallback(() => {
+    if (disabled) return;
     const url = urlDraft.trim();
     if (!/^https?:\/\/.+/.test(url)) {
       setImportError("Enter a valid http(s) URL.");
       return;
     }
     openPending({ kind: "url", url });
-  }, [openPending, urlDraft]);
+  }, [disabled, openPending, urlDraft]);
 
   const onDragEnter = (e: ReactDragEvent) => {
     e.preventDefault();
@@ -494,6 +486,7 @@ const Upload = (props: UploadProps) => {
     e.stopPropagation();
     dragDepthRef.current = 0;
     setDragging(false);
+    if (disabled) return;
     const items = [...e.dataTransfer.items].filter((i) => i.kind === "file");
     if (items.length === 0) {
       setImportError("Drop an image file to add it.");
@@ -685,29 +678,44 @@ const Upload = (props: UploadProps) => {
           ]
         : [];
 
+  const dropHandlers = {
+    onDragEnter,
+    onDragLeave,
+    onDragOver,
+    onDrop: (e: ReactDragEvent) => void onDrop(e),
+  };
   const addStrip = (
-    <div className={styles.addStrip}>
+    <div
+      className={[
+        styles.addStrip,
+        row ? styles.addStripRow : "",
+        row && dragging ? styles.panelDropActive : "",
+      ].join(" ")}
+      {...(row ? dropHandlers : {})}
+    >
       <button
         type="button"
         className={[
           styles.dropZone,
           dragging ? styles.dropZoneActive : "",
         ].join(" ")}
+        disabled={disabled}
         onClick={() => void browseLocal()}
       >
-        <span className={styles.dropZoneTitle}>Drop or Browse File</span>
+        <span className={styles.dropZoneTitle}>Drop or Browse Image File</span>
       </button>
       <div className={styles.orDivider}>
         <span>or</span>
       </div>
       <div className={styles.urlRow}>
         <input
-          id="images-add-url"
+          id="upload-add-url"
           type="url"
           className={`${minervaTheme.input} ${styles.urlInput}`}
           placeholder="Image URL (OME-TIFF or DICOMweb)"
           aria-label="Image URL"
           value={urlDraft}
+          disabled={disabled}
           onChange={(e) => {
             setUrlDraft(e.target.value);
             setImportError(null);
@@ -719,13 +727,16 @@ const Upload = (props: UploadProps) => {
             }
           }}
         />
-        <PanelActionButton
-          type="button"
-          disabled={!urlReady}
-          onClick={acceptUrlDraft}
-        >
-          Add
-        </PanelActionButton>
+        {urlDraft.trim() ? (
+          <PanelActionButton
+            type="button"
+            className={styles.urlAdd}
+            disabled={disabled || !urlReady}
+            onClick={acceptUrlDraft}
+          >
+            Add
+          </PanelActionButton>
+        ) : null}
       </div>
       {importError && !showTypeOverlay ? (
         <div className={styles.importError} role="alert">
@@ -754,68 +765,57 @@ const Upload = (props: UploadProps) => {
             {pendingLabel(pending)}
           </div>
           <fieldset
-            disabled={importBusy || detecting}
+            disabled={importBusy || detecting || disabled}
             className={styles.typeOverlayFields}
           >
             <div className={styles.typeRow}>
               <span className={styles.fieldLabel}>Image Type</span>
+              <FormatChip
+                label="Fluorescence"
+                selected={overlayRole === "intensity" && !overlayRgbDisplay}
+                suggested={
+                  detectedRole === "intensity" && detectedRgbDisplay !== true
+                }
+                muted={
+                  detectedRole !== "intensity" || detectedRgbDisplay === true
+                }
+                onClick={() => {
+                  roleChosenByUserRef.current = true;
+                  rgbDisplayChosenByUserRef.current = true;
+                  setOverlayRole("intensity");
+                  setOverlayRgbDisplay(false);
+                }}
+              />
               {detectedRgbDisplay != null ? (
-                <>
-                  {RGB_DISPLAY_OPTIONS.map(({ rgb, label }) => (
-                    <FormatChip
-                      key={label}
-                      label={label}
-                      selected={
-                        overlayRole === "intensity" && overlayRgbDisplay === rgb
-                      }
-                      suggested={
-                        detectedRole === "intensity" &&
-                        detectedRgbDisplay === rgb
-                      }
-                      muted={
-                        detectedRole !== "intensity" ||
-                        detectedRgbDisplay !== rgb
-                      }
-                      onClick={() => {
-                        roleChosenByUserRef.current = true;
-                        rgbDisplayChosenByUserRef.current = true;
-                        setOverlayRole("intensity");
-                        setOverlayRgbDisplay(rgb);
-                      }}
-                    />
-                  ))}
-                  <FormatChip
-                    label="Segmentation Mask"
-                    selected={overlayRole === "segmentation"}
-                    suggested={detectedRole === "segmentation"}
-                    muted={detectedRole !== "segmentation"}
-                    onClick={() => {
-                      roleChosenByUserRef.current = true;
-                      setOverlayRole("segmentation");
-                      formatChosenByUserRef.current = true;
-                      setOverlayFormat("ome-tiff");
-                    }}
-                  />
-                </>
-              ) : (
-                ROLE_OPTIONS.map(({ role, label }) => (
-                  <FormatChip
-                    key={role}
-                    label={label}
-                    selected={overlayRole === role}
-                    suggested={detectedRole === role}
-                    muted={detectedRole !== role}
-                    onClick={() => {
-                      roleChosenByUserRef.current = true;
-                      setOverlayRole(role);
-                      if (role === "segmentation") {
-                        formatChosenByUserRef.current = true;
-                        setOverlayFormat("ome-tiff");
-                      }
-                    }}
-                  />
-                ))
-              )}
+                <FormatChip
+                  label="Brightfield"
+                  selected={overlayRole === "intensity" && overlayRgbDisplay}
+                  suggested={
+                    detectedRole === "intensity" && detectedRgbDisplay === true
+                  }
+                  muted={
+                    detectedRole !== "intensity" || detectedRgbDisplay !== true
+                  }
+                  onClick={() => {
+                    roleChosenByUserRef.current = true;
+                    rgbDisplayChosenByUserRef.current = true;
+                    setOverlayRole("intensity");
+                    setOverlayRgbDisplay(true);
+                  }}
+                />
+              ) : null}
+              <FormatChip
+                label="Segmentation Mask"
+                selected={overlayRole === "segmentation"}
+                suggested={detectedRole === "segmentation"}
+                muted={detectedRole !== "segmentation"}
+                onClick={() => {
+                  roleChosenByUserRef.current = true;
+                  setOverlayRole("segmentation");
+                  formatChosenByUserRef.current = true;
+                  setOverlayFormat("ome-tiff");
+                }}
+              />
             </div>
             {dicomAllowed ? (
               <div className={styles.typeSection}>
@@ -847,14 +847,14 @@ const Upload = (props: UploadProps) => {
             <PanelActionButton
               type="button"
               onClick={clearPending}
-              disabled={importBusy}
+              disabled={importBusy || disabled}
             >
               Cancel
             </PanelActionButton>
             <PanelActionButton
               type="button"
               className={styles.typeImport}
-              disabled={importBusy || detecting}
+              disabled={importBusy || detecting || disabled}
               onClick={() => void runImport()}
             >
               {importBusy || detecting ? (
@@ -873,25 +873,26 @@ const Upload = (props: UploadProps) => {
 
   return (
     <>
-      {/* File drop on the Images panel (HTML5 DnD; not a focusable control). */}
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: panel-wide file drop target */}
-      <div
-        className={[
-          panel.authorPanel,
-          dragging ? styles.panelDropActive : "",
-        ].join(" ")}
-        onDragEnter={onDragEnter}
-        onDragLeave={onDragLeave}
-        onDragOver={onDragOver}
-        onDrop={(e) => void onDrop(e)}
-      >
-        <div className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}>
-          <div className={styles.stack}>
-            {imageCards}
-            {addStrip}
+      {row ? (
+        addStrip
+      ) : (
+        <div
+          className={[
+            panel.authorPanel,
+            dragging ? styles.panelDropActive : "",
+          ].join(" ")}
+          {...dropHandlers}
+        >
+          <div
+            className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}
+          >
+            <div className={styles.stack}>
+              {imageCards}
+              {addStrip}
+            </div>
           </div>
         </div>
-      </div>
+      )}
       {typeOverlayDialog
         ? createPortal(typeOverlayDialog, document.body)
         : null}

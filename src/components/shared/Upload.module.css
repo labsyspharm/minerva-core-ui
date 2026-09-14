@@ -23,13 +23,91 @@
   min-width: 0;
 }
 
+/* Same strip, horizontal. */
+.addStripRow {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 10px;
+  flex: 1 1 auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  min-height: 32px;
+  min-width: 0;
+}
+
+.addStripRow .dropZone {
+  width: auto;
+  min-width: 0;
+  min-height: 32px;
+  height: 100%;
+  padding: 0 10px;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.addStripRow .dropZoneTitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.addStripRow .orDivider {
+  flex: 0 0 auto;
+  gap: 0;
+  align-self: center;
+}
+
+.addStripRow .orDivider::before,
+.addStripRow .orDivider::after {
+  display: none;
+}
+
+.addStripRow .urlRow {
+  position: relative;
+  flex-wrap: nowrap;
+  width: auto;
+  min-width: 0;
+  gap: 0;
+}
+
+.addStripRow .urlInput {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 32px;
+  box-sizing: border-box;
+}
+
+.addStripRow .urlRow:has(.urlAdd) .urlInput {
+  padding-right: 3.25rem;
+}
+
+.addStripRow .urlAdd {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.addStripRow .importError {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+}
+
 .dropZone {
   appearance: none;
   width: 100%;
   box-sizing: border-box;
   border: 1px dashed var(--minerva-edge);
   background: transparent;
-  padding: 1.1rem 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.75rem;
   text-align: center;
   cursor: pointer;
   font-family: inherit;
@@ -37,6 +115,7 @@
   flex-direction: column;
   gap: 0.25rem;
   align-items: center;
+  justify-content: center;
 }
 
 .dropZone:hover,
@@ -45,7 +124,7 @@
 }
 
 .dropZoneTitle {
-  font-size: inherit;
+  font-size: var(--minerva-size);
   color: var(--minerva-ink);
 }
 
@@ -88,6 +167,10 @@
 .urlInput {
   flex: 1;
   min-width: 120px;
+  min-height: 2.75rem;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: var(--minerva-size);
 }
 
 .fieldLabel {
