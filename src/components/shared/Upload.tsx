@@ -24,7 +24,10 @@ import type {
   OmeImageImportRole,
   OmeImportResult,
 } from "@/lib/imaging/omeImport";
-import { detectOmeTiffMask } from "@/lib/imaging/omeTiff";
+import {
+  detectOmeTiffMask,
+  detectOmeTiffPlanarRgbAmbiguity,
+} from "@/lib/imaging/omeTiff";
 import type { Image } from "@/lib/stores/documentStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { jpegSourceNeedsLocalRoot } from "@/lib/storyExport/importStoryFolder";
@@ -75,6 +78,7 @@ export type OmeImportRole = OmeImageImportRole;
 export type OmeImportRequest = {
   role: OmeImportRole;
   append: boolean;
+  rgbDisplay?: boolean;
   source:
     | { kind: "local"; path: string; handles: Handle.File[] }
     | { kind: "url"; url: string };
@@ -143,6 +147,11 @@ const ROLE_OPTIONS: { role: OverlayRole; label: string }[] = [
 const FORMAT_OPTIONS: { format: OverlayFormat; label: string }[] = [
   { format: "ome-tiff", label: "OME-TIFF" },
   { format: "dicomweb", label: "DICOMweb" },
+];
+
+const RGB_DISPLAY_OPTIONS: { rgb: boolean; label: string }[] = [
+  { rgb: false, label: "Separate channels" },
+  { rgb: true, label: "Color image" },
 ];
 
 function FormatChip({
@@ -280,6 +289,11 @@ const Upload = (props: UploadProps) => {
   const [detectedRole, setDetectedRole] = useState<OverlayRole>("intensity");
   const [detectedFormat, setDetectedFormat] =
     useState<OverlayFormat>("ome-tiff");
+  const [overlayRgbDisplay, setOverlayRgbDisplay] = useState(false);
+  /** null = not ambiguous; boolean = suggested Color image chip. */
+  const [detectedRgbDisplay, setDetectedRgbDisplay] = useState<boolean | null>(
+    null,
+  );
   const [importError, setImportError] = useState<string | null>(null);
   const [importBusy, setImportBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -289,6 +303,7 @@ const Upload = (props: UploadProps) => {
   const formatDetectAbortRef = useRef<AbortController | null>(null);
   const formatChosenByUserRef = useRef(false);
   const roleChosenByUserRef = useRef(false);
+  const rgbDisplayChosenByUserRef = useRef(false);
 
   const showTypeOverlay = pending != null;
   const dicomAllowed =
@@ -321,6 +336,7 @@ const Upload = (props: UploadProps) => {
       abortFormatDetect();
       formatChosenByUserRef.current = false;
       roleChosenByUserRef.current = false;
+      rgbDisplayChosenByUserRef.current = false;
       const role = resolveImportRole("intensity", pendingLabel(next));
       let format = inferFormat(next);
       if (role === "segmentation") format = "ome-tiff";
@@ -329,6 +345,8 @@ const Upload = (props: UploadProps) => {
       setOverlayFormat(format);
       setDetectedRole(role);
       setDetectedFormat(format);
+      setOverlayRgbDisplay(false);
+      setDetectedRgbDisplay(null);
       setImportError(null);
 
       const ac = new AbortController();
@@ -351,22 +369,34 @@ const Upload = (props: UploadProps) => {
             next.kind === "local" ? await next.handles[0].getFile() : next.url;
           if (ac.signal.aborted) return;
           detectionStartedAt = performance.now();
-          const result = await detectOmeTiffMask(source, ac.signal);
+          const [result, rgbAmbiguity] = await Promise.all([
+            detectOmeTiffMask(source, ac.signal),
+            detectOmeTiffPlanarRgbAmbiguity(source, ac.signal),
+          ]);
           const durationMs = performance.now() - detectionStartedAt;
           console.info(
             `[minerva] mask detection: ${result.label} score=${result.score ?? "n/a"} duration=${durationMs.toFixed(1)}ms`,
           );
+          if (ac.signal.aborted) return;
+
           if (
-            ac.signal.aborted ||
-            roleChosenByUserRef.current ||
-            (result.score == null && result.label !== "rgb")
+            !roleChosenByUserRef.current &&
+            (result.score != null || result.label === "rgb")
           ) {
-            return;
+            const detected =
+              result.label === "mask" ? "segmentation" : "intensity";
+            setDetectedRole(detected);
+            setOverlayRole(detected);
           }
-          const detected =
-            result.label === "mask" ? "segmentation" : "intensity";
-          setDetectedRole(detected);
-          setOverlayRole(detected);
+
+          if (rgbAmbiguity.ambiguous) {
+            setDetectedRgbDisplay(rgbAmbiguity.defaultRgbDisplay);
+            if (!rgbDisplayChosenByUserRef.current) {
+              setOverlayRgbDisplay(rgbAmbiguity.defaultRgbDisplay);
+            }
+          } else {
+            setDetectedRgbDisplay(null);
+          }
         } catch (error) {
           if (!ac.signal.aborted) {
             const durationMs =
@@ -513,10 +543,15 @@ const Upload = (props: UploadProps) => {
         setImportError("Image import is unavailable.");
         return;
       }
+      const rgbDisplay =
+        detectedRgbDisplay != null && role === "intensity"
+          ? overlayRgbDisplay
+          : undefined;
       if (pending.kind === "local") {
         const result = await onImportOme({
           role,
           append: hasImages,
+          rgbDisplay,
           source: {
             kind: "local",
             path: pending.label,
@@ -529,6 +564,7 @@ const Upload = (props: UploadProps) => {
       const result = await onImportOme({
         role,
         append: hasImages,
+        rgbDisplay,
         source: { kind: "url", url: pending.url },
       });
       if (result && result.ok === false) setImportError(result.error);
@@ -752,6 +788,26 @@ const Upload = (props: UploadProps) => {
                       onClick={() => {
                         formatChosenByUserRef.current = true;
                         setOverlayFormat(format);
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            {detectedRgbDisplay != null && overlayRole === "intensity" ? (
+              <div className={styles.typeSection}>
+                <div className={styles.typeRow}>
+                  <span className={styles.fieldLabel}>Channels</span>
+                  {RGB_DISPLAY_OPTIONS.map(({ rgb, label }) => (
+                    <FormatChip
+                      key={label}
+                      label={label}
+                      selected={overlayRgbDisplay === rgb}
+                      suggested={detectedRgbDisplay === rgb}
+                      muted={detectedRgbDisplay !== rgb}
+                      onClick={() => {
+                        rgbDisplayChosenByUserRef.current = true;
+                        setOverlayRgbDisplay(rgb);
                       }}
                     />
                   ))}

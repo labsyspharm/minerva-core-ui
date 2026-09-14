@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import * as React from "react";
 import {
-  defaultVisibilitiesForSources,
+  applyStackVisibilities,
   isStackVisible,
   sourceChannelInAnyGroup,
 } from "@/lib/imaging/channelCompositor";
@@ -189,7 +189,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     const stackVisibilities =
       Object.keys(channelVisibilities).length > 0
         ? channelVisibilities
-        : defaultVisibilitiesForSources(sourceChannels, {});
+        : applyStackVisibilities(sourceChannels, {}, { kind: "fresh" });
     const nextVisible = !isStackVisible(stackVisibilities, c.source_uuid);
     setChannelVisibilities({
       ...stackVisibilities,

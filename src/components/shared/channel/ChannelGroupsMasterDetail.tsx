@@ -25,8 +25,8 @@ import panel from "@/components/shared/panel/panelShared.module.css";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import {
   applyGroupRowVisibilities,
+  applyStackVisibilities,
   buildCompositedIntensityLayers,
-  defaultVisibilitiesForSources,
   isDisplayedViaGroupRow,
   isGroupRowVisible,
   isStackVisible,
@@ -545,7 +545,10 @@ export const ChannelGroupsMasterDetail = (
   }, [sourceChannels]);
 
   const stackVisibilities = React.useMemo(
-    () => defaultVisibilitiesForSources(sourceChannels, channelVisibilities),
+    () =>
+      applyStackVisibilities(sourceChannels, channelVisibilities, {
+        kind: Object.keys(channelVisibilities).length === 0 ? "fresh" : "sync",
+      }),
     [sourceChannels, channelVisibilities],
   );
   const palettePendingIds = React.useSyncExternalStore(

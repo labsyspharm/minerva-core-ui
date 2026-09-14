@@ -73,7 +73,7 @@ function umPerPixelFromAxis(
   return n * metres * 1e6;
 }
 
-export function parsePhysicalScale(
+function parsePhysicalScale(
   pixels: PhysicalSizeFields | null | undefined,
 ): PhysicalScale {
   const x = umPerPixelFromAxis(

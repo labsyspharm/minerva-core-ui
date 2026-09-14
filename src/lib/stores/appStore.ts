@@ -2,7 +2,7 @@ import type { OrthographicViewState } from "@deck.gl/core";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import type { ConfigWaypoint } from "../authoring/config";
-import { defaultVisibilitiesForSources } from "../imaging/channelCompositor";
+import { applyStackVisibilities } from "../imaging/channelCompositor";
 import type { MaskVisualization } from "../imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
 import {
@@ -2209,9 +2209,10 @@ export const useAppStore = create<AppStore>()(
       setChannelVisibilities: (vis: Record<string, boolean>) => {
         const { images } = useDocumentStore.getState();
         set({
-          channelVisibilities: defaultVisibilitiesForSources(
+          channelVisibilities: applyStackVisibilities(
             flattenImageChannelsInDocumentOrder(images),
             vis,
+            { kind: Object.keys(vis).length === 0 ? "fresh" : "sync" },
           ),
         });
       },

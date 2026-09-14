@@ -6,7 +6,7 @@ import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisi
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
-  defaultVisibilitiesForSources,
+  applyStackVisibilities,
   isGroupRowVisible,
   isStackVisible,
 } from "@/lib/imaging/channelCompositor";
@@ -211,7 +211,10 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     [images],
   );
   const filledStackVis = useMemo(
-    () => defaultVisibilitiesForSources(allSourceChannels, stackVisibilities),
+    () =>
+      applyStackVisibilities(allSourceChannels, stackVisibilities, {
+        kind: Object.keys(stackVisibilities).length === 0 ? "fresh" : "sync",
+      }),
     [allSourceChannels, stackVisibilities],
   );
   const model = useMemo(
@@ -291,9 +294,11 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
       }
       return;
     }
-    const vis = defaultVisibilitiesForSources(
+    const prev = useAppStore.getState().channelVisibilities;
+    const vis = applyStackVisibilities(
       flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images),
-      useAppStore.getState().channelVisibilities,
+      prev,
+      { kind: Object.keys(prev).length === 0 ? "fresh" : "sync" },
     );
     const turningOn = !isStackVisible(vis, chip.sourceId);
     setChannelVisibilities({ ...vis, [chip.sourceId]: turningOn });

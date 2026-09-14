@@ -19,7 +19,7 @@ import { type Loader, toSettings, VIV_TILE_MAX_CACHE_SIZE } from "./viv";
 import { layerModelMatrix } from "./worldFrame";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
-export function applyChannelRendering<S extends MainSettings>(
+function applyChannelRendering<S extends MainSettings>(
   settings: S,
   live: ChannelRendering | null | undefined,
 ): S {
@@ -51,16 +51,14 @@ export function applyChannelRendering<S extends MainSettings>(
   return { ...settings, colors };
 }
 
-export type ViewerLoaderSources = {
+type ViewerLoaderSources = {
   dicomIndexList?: DicomIndex[];
   omeLoaderEntries?: OmeLoaderEntry[];
   jpegLoaderEntries?: JpegLoaderEntry[];
 };
 
 /** Loader-list rows in paint order: DICOM → OME → encoded pyramids. */
-export function loaderListFromEntries(
-  sources: ViewerLoaderSources,
-): LoaderList {
+function loaderListFromEntries(sources: ViewerLoaderSources): LoaderList {
   const {
     dicomIndexList = [],
     omeLoaderEntries = [],

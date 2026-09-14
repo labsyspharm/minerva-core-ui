@@ -319,17 +319,3 @@ export function applyVisibilityTransition(
     ),
   };
 }
-
-/**
- * @deprecated Use {@link applyStackVisibilities} with an explicit transition.
- * Kept for UI fallbacks when no visibility map exists yet.
- */
-export function defaultVisibilitiesForSources(
-  sourceChannels: Channel[],
-  prev: Record<string, boolean> = {},
-): Record<string, boolean> {
-  if (Object.keys(prev).length === 0) {
-    return applyStackVisibilities(sourceChannels, prev, { kind: "fresh" });
-  }
-  return applyStackVisibilities(sourceChannels, prev, { kind: "sync" });
-}

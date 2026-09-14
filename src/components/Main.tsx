@@ -957,6 +957,7 @@ const Content = (props: Props) => {
     in_f: string,
     handles: Handle.File[],
     role: OmeImportRequest["role"] = "intensity",
+    rgbDisplay?: boolean,
   ) => {
     if (handles.length === 0) return;
     clearOmeDerivedCaches();
@@ -986,6 +987,7 @@ const Content = (props: Props) => {
         sourceImageId,
         existingImages: nextImages,
         relevantGroups: relevant_groups,
+        rgbDisplay,
       });
       nextImages = slice.nextImages;
       registry = {
@@ -1047,6 +1049,7 @@ const Content = (props: Props) => {
     in_f: string,
     handles: Handle.File[],
     role: OmeImportRequest["role"],
+    rgbDisplay?: boolean,
   ): Promise<OmeImportResult> => {
     if (handles.length === 0) {
       return { ok: false, error: "Choose a mask file first." };
@@ -1076,6 +1079,7 @@ const Content = (props: Props) => {
         basename,
         sourceImageId,
         existingImages: nextImages,
+        rgbDisplay,
       });
       nextImages = slice.nextImages;
       newEntries.push({ loader, sourceImageId });
@@ -1179,6 +1183,7 @@ const Content = (props: Props) => {
   const onStartOmeTiffUrl = async (
     url: string,
     role: OmeImportRequest["role"] = "intensity",
+    rgbDisplay?: boolean,
   ) => {
     omeTiffUrlLoadGenerationRef.current += 1;
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
@@ -1207,6 +1212,7 @@ const Content = (props: Props) => {
       sourceImageId,
       existingImages: [],
       relevantGroups: relevant_groups,
+      rgbDisplay,
     });
     let SourceChannels = slice.sourceChannels;
     let nextImages = slice.nextImages;
@@ -1249,6 +1255,7 @@ const Content = (props: Props) => {
   const onAppendOmeTiffUrl = async (
     url: string,
     role: OmeImportRequest["role"],
+    rgbDisplay?: boolean,
   ): Promise<OmeImportResult> => {
     omeTiffUrlLoadGenerationRef.current += 1;
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
@@ -1273,6 +1280,7 @@ const Content = (props: Props) => {
       basename,
       sourceImageId,
       existingImages: nextImages,
+      rgbDisplay,
     });
     nextImages = slice.nextImages;
     nextImages = setImageSource(nextImages, sourceImageId, {
@@ -2212,6 +2220,7 @@ const Content = (props: Props) => {
                   req.source.path,
                   req.source.handles,
                   req.role,
+                  req.rgbDisplay,
                 );
                 if (!result.ok) return result;
               } else {
@@ -2219,13 +2228,18 @@ const Content = (props: Props) => {
                   req.source.path,
                   req.source.handles,
                   req.role,
+                  req.rgbDisplay,
                 );
               }
             } else if (req.append) {
-              const result = await onAppendOmeTiffUrl(req.source.url, req.role);
+              const result = await onAppendOmeTiffUrl(
+                req.source.url,
+                req.role,
+                req.rgbDisplay,
+              );
               if (!result.ok) return result;
             } else {
-              await onStartOmeTiffUrl(req.source.url, req.role);
+              await onStartOmeTiffUrl(req.source.url, req.role, req.rgbDisplay);
             }
             const storyId = useDocumentStore.getState().activeStoryId;
             if (storyId) {

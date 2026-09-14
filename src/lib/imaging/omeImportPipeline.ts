@@ -42,6 +42,8 @@ export function buildOmeImportSlice(args: {
   sourceImageId: string;
   existingImages: Image[];
   relevantGroups?: ConfigGroup[];
+  /** Persist when import dialog asked RGB vs separate channels. */
+  rgbDisplay?: boolean;
 }): BuiltOmeImportSlice {
   const {
     loader,
@@ -50,6 +52,7 @@ export function buildOmeImportSlice(args: {
     sourceImageId,
     existingImages,
     relevantGroups = [],
+    rgbDisplay,
   } = args;
   const defaultKind = role === "segmentation" ? "mask" : "channel";
   const extracted = extractChannels(
@@ -75,6 +78,7 @@ export function buildOmeImportSlice(args: {
     basename,
     role,
     sourceChannels,
+    role === "intensity" ? rgbDisplay : undefined,
   );
   return {
     sourceChannels,
