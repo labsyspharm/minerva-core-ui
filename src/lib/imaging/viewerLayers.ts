@@ -176,6 +176,7 @@ function createMultiscaleLayer(args: {
   return new MultiscaleImageLayer({
     id: `${args.layerId}${remount}`,
     ...settings,
+    // Keep mounted; hide via channelsVisible (layer visible toggles remount/flash).
     visible: true,
     maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
     ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),

@@ -3,9 +3,9 @@ import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { StoryTitleBar } from "@/components/authoring/StoryTitleBar";
 import {
+  ConsumePendingLibraryImport,
   hasPendingLibraryImport,
   MinervaLibraryPage,
-  takePendingLibraryImport,
 } from "@/components/library/MinervaLibraryPage";
 import { PlaybackModeView } from "@/components/playback/PlaybackModeView";
 import { BuildStamp } from "@/components/shared/BuildStamp";
@@ -2615,44 +2615,6 @@ const Content = (props: Props) => {
     </FileHandler>
   );
 };
-
-function ConsumePendingLibraryImport({
-  importOme,
-  importDicomWeb,
-  onSettled,
-}: {
-  importOme: (req: OmeImportRequest) => Promise<OmeImportResult>;
-  importDicomWeb: (req: { url: string }) => Promise<OmeImportResult>;
-  onSettled: () => void;
-}) {
-  const importOmeRef = React.useRef(importOme);
-  importOmeRef.current = importOme;
-  const importDicomWebRef = React.useRef(importDicomWeb);
-  importDicomWebRef.current = importDicomWeb;
-
-  React.useEffect(() => {
-    const pending = takePendingLibraryImport();
-    if (!pending) {
-      onSettled();
-      return;
-    }
-    void (async () => {
-      const result =
-        pending.kind === "dicomWeb"
-          ? await importDicomWebRef.current({ url: pending.url })
-          : await importOmeRef.current({
-              role: pending.role,
-              append: false,
-              source: pending.source,
-            });
-      if (result.ok === false) {
-        window.alert(result.error);
-      }
-    })().finally(onSettled);
-  }, [onSettled]);
-
-  return null;
-}
 
 const LibraryOrAuthor = (props: Props) => {
   const { storyid } = rootRouteApi.useSearch();

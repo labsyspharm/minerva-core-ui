@@ -666,7 +666,7 @@ const Upload = (props: UploadProps) => {
       className={[
         styles.addStrip,
         row ? styles.addStripRow : "",
-        dragging ? styles.panelDropActive : "",
+        row && dragging ? styles.panelDropActive : "",
       ].join(" ")}
       {...(row ? dropHandlers : {})}
     >

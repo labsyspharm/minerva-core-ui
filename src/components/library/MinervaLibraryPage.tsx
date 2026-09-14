@@ -1,7 +1,10 @@
 import * as React from "react";
 import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
-import type { OmeImportResult } from "@/components/shared/Upload";
+import type {
+  OmeImportRequest,
+  OmeImportResult,
+} from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
 import { toFile } from "@/lib/imaging/filesystem";
 import type { OmeImageImportRole } from "@/lib/imaging/omeImport";
@@ -16,24 +19,18 @@ import styles from "./MinervaLibraryPage.module.css";
 
 const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
 
-/** One-shot handoff: library stash → Main consumes after navigate. */
+/** One-shot handoff: library stash → story page consumes after navigate. */
 type PendingLibraryImport =
   | {
       kind: "ome";
       role: OmeImageImportRole;
-      source:
-        | { kind: "local"; path: string; handles: Handle.File[] }
-        | { kind: "url"; url: string };
+      source: OmeImportRequest["source"];
     }
   | { kind: "dicomWeb"; url: string };
 
 let pendingLibraryImport: PendingLibraryImport | null = null;
 
-function setPendingLibraryImport(next: PendingLibraryImport): void {
-  pendingLibraryImport = next;
-}
-
-export function takePendingLibraryImport(): PendingLibraryImport | null {
+function takePendingLibraryImport(): PendingLibraryImport | null {
   const next = pendingLibraryImport;
   pendingLibraryImport = null;
   return next;
@@ -41,6 +38,53 @@ export function takePendingLibraryImport(): PendingLibraryImport | null {
 
 export function hasPendingLibraryImport(): boolean {
   return pendingLibraryImport != null;
+}
+
+/** Runs once on story mount when the library stashed an image import. */
+export function ConsumePendingLibraryImport({
+  importOme,
+  importDicomWeb,
+  onSettled,
+}: {
+  importOme: (req: OmeImportRequest) => Promise<OmeImportResult>;
+  importDicomWeb: (req: { url: string }) => Promise<OmeImportResult>;
+  onSettled: () => void;
+}) {
+  const importOmeRef = React.useRef(importOme);
+  importOmeRef.current = importOme;
+  const importDicomWebRef = React.useRef(importDicomWeb);
+  importDicomWebRef.current = importDicomWeb;
+
+  React.useEffect(() => {
+    const pending = takePendingLibraryImport();
+    // Empty take must not call onSettled (clearImageLoading) — that would
+    // invalidate hydrate / eager-GMM epochs on every story open.
+    if (!pending) return;
+
+    let cancelled = false;
+    void (async () => {
+      const result =
+        pending.kind === "dicomWeb"
+          ? await importDicomWebRef.current({ url: pending.url })
+          : await importOmeRef.current({
+              role: pending.role,
+              append: false,
+              source: pending.source,
+            });
+      if (cancelled) return;
+      if (result.ok === false) {
+        window.alert(result.error);
+      }
+    })().finally(() => {
+      if (!cancelled) onSettled();
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [onSettled]);
+
+  return null;
 }
 
 function formatShortDate(iso: string): string {
@@ -279,7 +323,7 @@ export function MinervaLibraryPage() {
       setError(null);
       try {
         const id = await openNewStory();
-        setPendingLibraryImport(pending);
+        pendingLibraryImport = pending;
         goToStory(id);
         return { ok: true };
       } catch (e: unknown) {
