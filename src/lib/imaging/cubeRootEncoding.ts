@@ -1,5 +1,5 @@
 import {
-  isRgbDisplaySource,
+  isRgbDisplayImage,
   resolveImageContentRole,
 } from "@/lib/imaging/channelKind";
 
@@ -76,6 +76,7 @@ export function decodeCubeRootU8ToU16(byte: number): number {
 
 type TransferImage = {
   contentRole?: "intensity" | "segmentation";
+  rgbDisplay?: boolean;
   channels?: ReadonlyArray<{
     kind?: "channel" | "mask";
     samples?: number;
@@ -89,7 +90,7 @@ export function exportTransferForImage(
   image: TransferImage,
   storyTransfer: JpegExportTransfer,
 ): JpegExportTransfer {
-  if (isRgbDisplaySource(image.channels ?? [])) return "contrast";
+  if (isRgbDisplayImage(image)) return "contrast";
   return storyTransfer;
 }
 

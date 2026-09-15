@@ -1,0 +1,158 @@
+.root {
+  padding: 0 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--minerva-edge);
+}
+
+.groupCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.groupHeader:has(.channelFilter) {
+  gap: 12px;
+  padding: 2px 0;
+}
+
+.groupHeader:has(.channelFilter) .groupLabel {
+  line-height: 22px;
+}
+
+.groupLabel {
+  margin: 0;
+  min-width: 0;
+  flex: 0 1 auto;
+  color: var(--minerva-quiet);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channelFilter {
+  box-sizing: border-box;
+  flex: 1 1 6rem;
+  min-width: 0;
+  margin: 0;
+  height: 22px;
+  padding: 0 10px;
+  border: 1px solid var(--minerva-edge);
+  border-radius: var(--minerva-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 20px;
+  outline: none;
+}
+
+.channelFilter::placeholder {
+  color: var(--minerva-quiet);
+}
+
+.filterEmpty {
+  color: var(--minerva-quiet);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.chipWrap {
+  display: grid;
+  /* Keep in sync with CHIP_COLS in ImageChannelOverview.tsx */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.chipCell {
+  display: flex;
+  min-width: 0;
+  height: 22px;
+  box-sizing: border-box;
+  border: 1.5px solid #fff;
+  background: transparent;
+  color: var(--minerva-quiet);
+}
+
+.chipOn {
+  border-color: var(--ch);
+  background: var(--ch);
+  color: #000;
+}
+
+.chipOutlined {
+  border-color: var(--ch);
+  color: var(--minerva-ink);
+}
+
+.chipUnassigned {
+  border-color: #fff;
+  color: var(--minerva-ink);
+}
+
+.chip,
+.chipMenu {
+  appearance: none;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.chip {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  padding: 0 2px 0 4px;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.chipMenu {
+  display: flex;
+  flex: 0 0 14px;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 100%;
+  padding: 0;
+}
+
+.chipMenu svg {
+  width: 8px;
+  height: 8px;
+}
+
+.chipDim {
+  opacity: 0.28;
+}
+
+.editor {
+  grid-column: 1 / -1;
+  margin-top: 0;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}

@@ -30,12 +30,6 @@ type PendingLibraryImport =
 
 let pendingLibraryImport: PendingLibraryImport | null = null;
 
-function takePendingLibraryImport(): PendingLibraryImport | null {
-  const next = pendingLibraryImport;
-  pendingLibraryImport = null;
-  return next;
-}
-
 export function hasPendingLibraryImport(): boolean {
   return pendingLibraryImport != null;
 }
@@ -56,32 +50,25 @@ export function ConsumePendingLibraryImport({
   importDicomWebRef.current = importDicomWeb;
 
   React.useEffect(() => {
-    const pending = takePendingLibraryImport();
+    const pending = pendingLibraryImport;
+    pendingLibraryImport = null;
     // Empty take must not call onSettled (clearImageLoading) — that would
     // invalidate hydrate / eager-GMM epochs on every story open.
     if (!pending) return;
 
-    let cancelled = false;
-    void (async () => {
-      const result =
-        pending.kind === "dicomWeb"
-          ? await importDicomWebRef.current({ url: pending.url })
-          : await importOmeRef.current({
-              role: pending.role,
-              append: false,
-              source: pending.source,
-            });
-      if (cancelled) return;
-      if (result.ok === false) {
-        window.alert(result.error);
-      }
-    })().finally(() => {
-      if (!cancelled) onSettled();
-    });
-
-    return () => {
-      cancelled = true;
-    };
+    const imported =
+      pending.kind === "dicomWeb"
+        ? importDicomWebRef.current({ url: pending.url })
+        : importOmeRef.current({
+            role: pending.role,
+            append: false,
+            source: pending.source,
+          });
+    void imported
+      .then((result) => {
+        if (result.ok === false) window.alert(result.error);
+      })
+      .finally(onSettled);
   }, [onSettled]);
 
   return null;

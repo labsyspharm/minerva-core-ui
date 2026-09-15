@@ -24,7 +24,6 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
     playbackPreviewDisabled,
   } = props;
   const titleText = useDocumentStore((s) => s.metadata.title ?? "");
-  const storyId = useDocumentStore((s) => s.activeStoryId ?? "");
   const setMetadata = useDocumentStore((s) => s.setMetadata);
   const fieldId = React.useId();
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -61,7 +60,7 @@ export function StoryTitleBar(props: StoryTitleBarProps) {
         className={styles.titleFieldWrap}
         htmlFor={editing ? fieldId : undefined}
       >
-        <StorySpines seed={storyId} />
+        <StorySpines />
         {editing ? (
           <input
             ref={inputRef}

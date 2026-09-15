@@ -1,19 +1,58 @@
 import {
+  type CSSProperties,
   type MouseEventHandler,
+  type ReactNode,
   useEffect,
   useId,
   useRef,
   useState,
 } from "react";
 import {
-  ChannelColorSwatchButton,
-  ChannelVisibilitySwatch,
-} from "@/components/shared/channel/ChannelVisibilitySwatch";
+  ChannelContrastEditor,
+  type ChannelContrastEditorProps,
+} from "@/components/shared/channel/ChannelContrastEditor";
+import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import { withReseededRandomColors } from "@/lib/imaging/channelKind";
 import styles from "./ChannelRow.module.css";
+
+function ChannelColorSwatchButton(props: {
+  hex?: string;
+  title: string;
+  ariaLabel: string;
+  busy?: boolean;
+  filled?: boolean;
+  onClick: MouseEventHandler<HTMLButtonElement>;
+}) {
+  const { hex, title, ariaLabel, busy, filled = true, onClick } = props;
+  const fill = Boolean(hex) && filled;
+  return (
+    <button
+      type="button"
+      className={[
+        minervaTheme.focusRing,
+        styles.channelColorSwatch,
+        fill ? null : styles.channelColorSwatchUnfilled,
+        busy ? minervaTheme.busyOverlay : null,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      style={
+        fill
+          ? { backgroundColor: `#${hex}` }
+          : hex
+            ? ({ "--swatch-color": `#${hex}` } as CSSProperties)
+            : undefined
+      }
+      title={busy ? "Optimizing color" : title}
+      aria-label={busy ? "Optimizing color" : ariaLabel}
+      aria-busy={busy || undefined}
+      onClick={onClick}
+    />
+  );
+}
 
 function MaskVizButton(props: {
   active: boolean;
@@ -188,16 +227,15 @@ type ChannelRowNameProps =
     };
 
 type ChannelRowProps = {
-  rowClassName: string;
   visible: boolean;
   visibilityTitle: string;
   visibilityAriaLabel: string;
   onToggleVisibility: MouseEventHandler<HTMLButtonElement>;
   name: ChannelRowNameProps;
   imageSubtitle?: string | null;
-  /** Visibility + name only (hidden stack rows, RGB display). */
-  compact?: boolean;
-  trailing?: React.ReactNode;
+  contrast?: ChannelContrastEditorProps;
+  trailing?: ReactNode;
+  locked?: boolean;
   isMask?: boolean;
   maskVisualization?: MaskVisualization;
   onMaskVisualizationChange?: (viz: MaskVisualization) => void;
@@ -207,7 +245,7 @@ type ChannelRowProps = {
   fixedColorHex?: string;
   colorHex?: string;
   colorTitle?: string;
-  colorAriaLabel?: string;
+  busy?: boolean;
   onColorClick?: MouseEventHandler<HTMLButtonElement>;
 };
 
@@ -271,18 +309,18 @@ function EditableChannelRowName(
   );
 }
 
-/** Shared channel list row: visibility, name, mask viz or color swatch, optional action. */
+/** One-row channel editor: visibility, name, histogram, swatch, optional action. */
 export function ChannelRow(props: ChannelRowProps) {
   const {
-    rowClassName,
     visible,
     visibilityTitle,
     visibilityAriaLabel,
     onToggleVisibility,
     name,
     imageSubtitle,
+    contrast,
     trailing,
-    compact,
+    locked,
     isMask,
     maskVisualization,
     onMaskVisualizationChange,
@@ -291,12 +329,12 @@ export function ChannelRow(props: ChannelRowProps) {
     fixedColorHex,
     colorHex,
     colorTitle,
-    colorAriaLabel,
+    busy,
     onColorClick,
   } = props;
 
-  const showMask = !compact && isMask && maskVisualization;
-  const showColor = !compact && !isMask && colorHex && onColorClick;
+  const showMask = isMask && maskVisualization;
+  const showColor = !isMask && onColorClick;
   const [maskControlsOpen, setMaskControlsOpen] = useState(true);
   const rowRef = useRef<HTMLDivElement>(null);
   const maskControlsId = useId();
@@ -311,7 +349,12 @@ export function ChannelRow(props: ChannelRowProps) {
   };
 
   return (
-    <div ref={rowRef} className={rowClassName}>
+    <div
+      ref={rowRef}
+      className={`${styles.channelRow}${
+        locked ? ` ${styles.detailChannelRowLocked}` : ""
+      }`}
+    >
       <div className={styles.channelRowMain}>
         <ChannelVisibilitySwatch
           visible={visible}
@@ -338,6 +381,9 @@ export function ChannelRow(props: ChannelRowProps) {
             </span>
           ) : null}
         </div>
+        <div className={styles.channelRowMid} data-channel-drag-ignore="">
+          {contrast ? <ChannelContrastEditor {...contrast} /> : null}
+        </div>
         {showMask ? (
           <button
             type="button"
@@ -362,17 +408,21 @@ export function ChannelRow(props: ChannelRowProps) {
         {showColor ? (
           <ChannelColorSwatchButton
             hex={colorHex}
+            busy={busy}
+            filled={visible}
             title={colorTitle ?? `Pick color`}
-            ariaLabel={colorAriaLabel ?? `Pick color`}
+            ariaLabel={colorTitle ?? `Pick color`}
             onClick={onColorClick}
           />
         ) : null}
-        {trailing ? (
-          <div className={styles.channelRowTrailing}>{trailing}</div>
-        ) : null}
+        <div className={styles.channelRowTrailing}>{trailing}</div>
       </div>
       {showMask && maskControlsOpen && onMaskVisualizationChange ? (
-        <div id={maskControlsId} className={styles.maskControlsPanel}>
+        <div
+          id={maskControlsId}
+          className={styles.maskControlsPanel}
+          data-channel-drag-ignore=""
+        >
           <MaskModeControls
             value={maskVisualization}
             ariaLabel={maskAriaLabel ?? name.name}

@@ -5,6 +5,7 @@ import {
   ColorPickerPopover,
   colorPickerAnchorPosition,
 } from "@/components/shared/ColorPickerPopover";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
   PopUpdate as PopUpdateChannel,
   Push as PushChannel,
@@ -16,7 +17,11 @@ import {
   isStackVisible,
 } from "@/lib/imaging/channelCompositor";
 import {
-  effectiveSourceColor,
+  getStackPalettePendingIds,
+  subscribeStackPalettePending,
+} from "@/lib/imaging/psudoPalette";
+import {
+  assignedDisplayHex,
   effectiveSourceLimits,
 } from "@/lib/imaging/sourceChannelStyle";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
@@ -53,51 +58,43 @@ export type LegendSection = {
   entries: LegendEntry[];
 };
 
-/** Legend swatch matching what the viewer draws (group row or stack source). */
 export function legendChannelFromLayer(
   sc: Channel,
-  gc: ChannelGroupChannel | null,
-  activeGroupId: string | null,
-  colorIndex: number,
+  gc: ChannelGroupChannel,
+  groupId: string,
 ): LegendChannel {
-  if (gc) {
-    const { r, g, b } = gc.color;
-    const hex_color = [r, g, b]
-      .map((n) => n.toString(16).padStart(2, "0"))
-      .join("");
-    return {
-      r,
-      g,
-      b,
-      lower_range: gc.lowerLimit,
-      upper_range: gc.upperLimit,
-      name: sc.name,
-      color: hex_color,
-      group_uuid: activeGroupId ?? "",
-      source_uuid: sc.id,
-      channel_uuid: gc.id,
-    };
-  }
-  return legendChannelFromSource(sc, colorIndex);
-}
-
-export function legendChannelFromSource(
-  sc: Channel,
-  colorIndex: number,
-): LegendChannel {
-  const { r, g, b } = effectiveSourceColor(sc, colorIndex);
+  const { r, g, b } = gc.color;
   const hex_color = [r, g, b]
     .map((n) => n.toString(16).padStart(2, "0"))
     .join("");
-  const [lo, hi] = effectiveSourceLimits(sc);
   return {
     r,
     g,
     b,
+    lower_range: gc.lowerLimit,
+    upper_range: gc.upperLimit,
+    name: sc.name,
+    color: hex_color,
+    group_uuid: groupId,
+    source_uuid: sc.id,
+    channel_uuid: gc.id,
+  };
+}
+
+export function legendChannelFromSource(
+  sc: Channel,
+  allChannels: readonly Channel[] = [],
+): LegendChannel {
+  const hex = assignedDisplayHex(sc, allChannels, null);
+  const [lo, hi] = effectiveSourceLimits(sc);
+  return {
+    r: sc.color?.r ?? 255,
+    g: sc.color?.g ?? 255,
+    b: sc.color?.b ?? 255,
     lower_range: lo,
     upper_range: hi,
     name: sc.name,
-    color: hex_color,
+    color: hex ?? "",
     group_uuid: "",
     source_uuid: sc.id,
     channel_uuid: sc.id,
@@ -127,10 +124,9 @@ type LegendRowProps = {
   g: number;
   total: number;
   editable?: boolean;
+  colorPending?: boolean;
   channelVisibilities: Record<string, boolean>;
   channelGroupRowVisibilities: Record<string, boolean>;
-  /** Group member hidden in the viewer — stroked swatch, still listed. */
-  hiddenInViewer?: boolean;
   toggleChannel: (c: LegendChannel) => void;
   updateChannel: (
     gid: string,
@@ -145,13 +141,12 @@ const LegendRow = (props: LegendRowProps) => {
   const { channel } = props;
   const channelName = channel.name;
   const { idx, g, onColorClick } = props;
-  const rowVisible = props.hiddenInViewer
-    ? false
-    : legendRowVisible(
-        channel,
-        props.channelVisibilities,
-        props.channelGroupRowVisibilities,
-      );
+  const colorPending = !!props.colorPending;
+  const rowVisible = legendRowVisible(
+    channel,
+    props.channelVisibilities,
+    props.channelGroupRowVisibilities,
+  );
   const onPop = () => {
     props.popChannel({ g, idx });
   };
@@ -159,8 +154,6 @@ const LegendRow = (props: LegendRowProps) => {
   const uuid = `group/channel/name/${idx}`;
   const statusProps = {
     ...props,
-    // Must be explicit: EditableText defaults `editable` to true (bordered
-    // textarea). Playback / CDN pass undefined and must stay read-only.
     editable: props.editable === true,
     md: false,
     setInput: () => null,
@@ -169,6 +162,9 @@ const LegendRow = (props: LegendRowProps) => {
     uuid,
   };
 
+  const swatchLabel = colorPending
+    ? `Optimizing color of ${channelName}`
+    : `Change color of ${channelName}`;
   const coreUI = (
     <div
       className={styles.rowClickArea}
@@ -176,16 +172,29 @@ const LegendRow = (props: LegendRowProps) => {
     >
       <button
         type="button"
-        className={styles.swatchButton}
+        className={[
+          styles.swatchButton,
+          colorPending ? minervaTheme.busyOverlay : null,
+        ]
+          .filter(Boolean)
+          .join(" ")}
         onClick={onColorClick}
-        title={`Change color of ${channelName}`}
-        aria-label={`Change color of ${channelName}`}
+        title={swatchLabel}
+        aria-label={swatchLabel}
+        aria-busy={colorPending || undefined}
       >
         <div
-          className={[styles.swatch, rowVisible ? styles.swatchFilled : null]
+          className={[
+            styles.swatch,
+            channel.color && rowVisible ? styles.swatchFilled : null,
+          ]
             .filter(Boolean)
             .join(" ")}
-          style={{ "--swatch-color": `#${channel.color}` } as CSSProperties}
+          style={
+            {
+              "--swatch-color": channel.color ? `#${channel.color}` : "#fff",
+            } as CSSProperties
+          }
         />
       </button>
       <button
@@ -233,6 +242,11 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
   const pushChannel = props.pushChannel;
   const { sections } = props;
   const channelGroupRowVisibilities = props.channelGroupRowVisibilities ?? {};
+  const palettePendingIds = React.useSyncExternalStore(
+    subscribeStackPalettePending,
+    getStackPalettePendingIds,
+    getStackPalettePendingIds,
+  );
   const total = sections.reduce(
     (n, s) => n + s.entries.filter((e) => e.type === "channel").length,
     0,
@@ -314,21 +328,15 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
                 const c = entry.channel;
                 const k = rowIdx;
                 rowIdx += 1;
-                const hiddenInViewer =
-                  !!c.group_uuid &&
-                  !isGroupRowVisible(
-                    channelGroupRowVisibilities,
-                    c.channel_uuid,
-                  );
                 const rowProps: LegendRowProps = {
                   channel: c,
                   idx: k,
                   g,
                   total,
                   editable: props.editable,
+                  colorPending: palettePendingIds.includes(c.source_uuid),
                   channelVisibilities: props.channelVisibilities,
                   channelGroupRowVisibilities,
-                  hiddenInViewer,
                   toggleChannel: props.toggleChannel,
                   updateChannel: props.updateChannel ?? (() => {}),
                   popChannel: props.popChannel ?? (() => {}),

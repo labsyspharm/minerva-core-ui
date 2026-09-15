@@ -69,25 +69,3 @@ export function ChannelVisibilitySwatch(props: VisibilityProps) {
     </button>
   );
 }
-
-type ColorProps = {
-  hex: string;
-  title: string;
-  ariaLabel: string;
-  onClick: MouseEventHandler<HTMLButtonElement>;
-};
-
-/** Filled square showing channel color; opens the color picker when clicked. */
-export function ChannelColorSwatchButton(props: ColorProps) {
-  const { hex, title, ariaLabel, onClick } = props;
-  return (
-    <button
-      type="button"
-      className={`${minervaTheme.focusRing} ${styles.channelColorSwatch}`}
-      style={{ backgroundColor: `#${hex}` }}
-      title={title}
-      aria-label={ariaLabel}
-      onClick={onClick}
-    />
-  );
-}

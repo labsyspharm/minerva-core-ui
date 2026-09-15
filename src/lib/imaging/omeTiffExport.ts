@@ -2,7 +2,7 @@ import type { TiffPixelSource } from "@hms-dbmi/viv";
 import { getImageSize } from "@hms-dbmi/viv";
 import {
   effectiveChannelKind,
-  isRgbDisplaySource,
+  isRgbDisplayImage,
 } from "@/lib/imaging/channelKind";
 import type {
   ChannelGroup,
@@ -246,10 +246,6 @@ export function channelIdsFromGroups(
   return ids;
 }
 
-export function isRgbExportImage(image: Image): boolean {
-  return isRgbDisplaySource(image.channels ?? []);
-}
-
 function channelsOfKind(
   image: Image,
   kind: "channel" | "mask",
@@ -280,7 +276,7 @@ export function groupIntensityChannelsForOmeExport(
 ): ImageChannel[] {
   const all = channelsOfKind(image, "channel");
   if (all.length === 0) return [];
-  if (isRgbExportImage(image)) return all;
+  if (isRgbDisplayImage(image)) return all;
   const grouped = groupChannelsForOmeExport(image, channelGroups, "channel");
   return grouped.length > 0 ? grouped : all;
 }
@@ -369,7 +365,7 @@ export function jpegPyramidExportChannels(
   }
 
   for (const image of images) {
-    if (!isRgbExportImage(image)) continue;
+    if (!isRgbDisplayImage(image)) continue;
     const transfer = exportTransferForImage(image, storyTransfer);
     for (const ch of groupIntensityChannelsForOmeExport(image, channelGroups)) {
       if (seenGroupChannelIds.has(ch.id)) continue;

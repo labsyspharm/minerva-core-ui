@@ -11,9 +11,10 @@
 
 import * as React from "react";
 import {
-  effectiveReferenceImagePixelSize,
-  useAppStore,
-} from "@/lib/stores/appStore";
+  effectiveWorldFrame,
+  pixelViewRectFromWorld,
+} from "@/lib/imaging/worldFrame";
+import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   computeImageViewRect,
@@ -156,13 +157,12 @@ export function useSam2() {
   const setSam2DebugImages = useAppStore((s) => s.setSam2DebugImages);
   const docImageWidth = useDocumentStore((s) => s.images[0]?.sizeX ?? 0);
   const docImageHeight = useDocumentStore((s) => s.images[0]?.sizeY ?? 0);
-  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
-  const { width: imageWidth, height: imageHeight } =
-    effectiveReferenceImagePixelSize(
-      viewerRefSize,
-      docImageWidth,
-      docImageHeight,
-    );
+  const viewerWorldFrame = useAppStore((s) => s.viewerWorldFrame);
+  const frame = effectiveWorldFrame(
+    viewerWorldFrame,
+    docImageWidth,
+    docImageHeight,
+  );
 
   // ------- Worker lifecycle -------
 
@@ -402,7 +402,7 @@ export function useSam2() {
       setSam2Processing(true);
 
       try {
-        const imageShape = { x: imageWidth, y: imageHeight };
+        const imageShape = { x: frame.worldWidth, y: frame.worldHeight };
         const viewRect = computeImageViewRect(
           sam2ViewState,
           sam2ViewportSize,
@@ -412,7 +412,7 @@ export function useSam2() {
 
         // Fetch + encode (the slow part).
         const { float32Array, shape } = (await sam2ImageFetcher(
-          viewRect,
+          pixelViewRectFromWorld(viewRect, frame),
         )) as unknown as {
           float32Array: Float32Array;
           shape: [number, number, number, number];
@@ -491,8 +491,7 @@ export function useSam2() {
     },
     [
       sam2ImageFetcher,
-      imageWidth,
-      imageHeight,
+      frame,
       ensureReady,
       decodeMask,
       waitForEncode,

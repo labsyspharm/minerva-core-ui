@@ -60,7 +60,7 @@ export function CompactHeader({
   // headers (Layers) stay in-panel even under the same provider.
   if (!showTitle) {
     if (actionsNode == null) return null;
-    if (slot) return slot.node ? createPortal(actionsNode, slot.node) : null;
+    if (slot?.node) return createPortal(actionsNode, slot.node);
   }
 
   return (
