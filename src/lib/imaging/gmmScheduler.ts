@@ -2,7 +2,7 @@ import {
   type ContrastLimits,
   fitChannelGmmContrastFromUint16,
 } from "@/lib/imaging/autoContrast";
-import { isImageChannel } from "@/lib/imaging/channelKind";
+import { isImageChannel, isRgbDisplayChannel } from "@/lib/imaging/channelKind";
 import {
   fetchPlaneRaster,
   rasterToUint16Array,
@@ -76,8 +76,17 @@ function asWindow(
   return { lower: limits.lower, upper: limits.upper };
 }
 
-function isEligible(sc: Channel): boolean {
-  return isImageChannel(sc) && sc.samples !== 3;
+function documentChannels(): Channel[] {
+  return flattenImageChannelsInDocumentOrder(
+    useDocumentStore.getState().images,
+  );
+}
+
+/** Packed RGB (`samples===3`) and planar H&E / Brightfield — no GMM, no load hold. */
+function isEligible(sc: Channel, all: readonly Channel[]): boolean {
+  return (
+    isImageChannel(sc) && sc.samples !== 3 && !isRgbDisplayChannel(sc, all)
+  );
 }
 
 function acquire(used: { n: number }, waiters: (() => void)[], max: number) {
@@ -106,9 +115,7 @@ function notify() {
 }
 
 function readChannel(channelId: string): Channel | undefined {
-  return flattenImageChannelsInDocumentOrder(
-    useDocumentStore.getState().images,
-  ).find((sc) => sc.id === channelId);
+  return documentChannels().find((sc) => sc.id === channelId);
 }
 
 function removeFromQueues(key: string) {
@@ -296,8 +303,9 @@ function upsertJob(args: {
 }
 
 function targetFor(channelId: string): { sc: Channel; loader: Loader } | null {
-  const sc = readChannel(channelId);
-  if (!sc || !isEligible(sc)) return null;
+  const all = documentChannels();
+  const sc = all.find((c) => c.id === channelId);
+  if (!sc || !isEligible(sc, all)) return null;
   const loader = loadersByImageId.get(sc.imageId);
   if (!loader) return null;
   return { sc, loader };
@@ -305,8 +313,9 @@ function targetFor(channelId: string): { sc: Channel; loader: Loader } | null {
 
 function blockVisible(channelId: string) {
   if (blockedIds.has(channelId)) return;
-  const sc = readChannel(channelId);
-  if (!sc || sc.gmmContrastLimits || !isEligible(sc)) return;
+  const all = documentChannels();
+  const sc = all.find((c) => c.id === channelId);
+  if (!sc || sc.gmmContrastLimits || !isEligible(sc, all)) return;
   blockedIds.add(channelId);
 }
 
@@ -330,7 +339,7 @@ export function reconcileGmm(args: {
   }
 
   for (const sc of channels) {
-    if (!isEligible(sc) || !loadersByImageId.has(sc.imageId)) continue;
+    if (!isEligible(sc, channels)) continue;
     if (sc.gmmContrastLimits) continue;
     if (!visibleChannelIds.has(sc.id)) continue;
     const loader = loadersByImageId.get(sc.imageId);
@@ -343,6 +352,18 @@ export function reconcileGmm(args: {
     });
     if (!job) continue;
     blockVisible(sc.id);
+  }
+
+  for (const id of [...blockedIds]) {
+    const sc = channels.find((c) => c.id === id);
+    if (
+      !sc ||
+      !visibleChannelIds.has(id) ||
+      sc.gmmContrastLimits ||
+      !isEligible(sc, channels)
+    ) {
+      blockedIds.delete(id);
+    }
   }
 
   holdingLoad = blockedIds.size > 0;

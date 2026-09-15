@@ -161,9 +161,10 @@ function createMultiscaleLayer(args: {
   return new MultiscaleImageLayer({
     id: `${args.layerId}${remount}`,
     ...settings,
-    // Keep mounted; hide via channelsVisible (layer visible toggles remount/flash).
-    visible: true,
     maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
+    // Viv's overview ImageLayer getRaster()s the full coarsest plane; isLoaded
+    // waits on that decode even after tiles have painted.
+    excludeBackground: true,
     ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
     loader: args.loader.data,
     modelMatrix: layerModelMatrix(args.loader),
@@ -217,26 +218,31 @@ function buildImageLayers(args: {
       // Mask-only loaders have no intensity selections; painted by createMaskTileLayer.
       if (!settings?.selections?.length) return [];
       const anyVisible = (settings.channelsVisible ?? []).some(Boolean);
+      if (!anyVisible) return [];
       const overlay = omeVisiblePainted > 0;
-      if (anyVisible) omeVisiblePainted += 1;
+      omeVisiblePainted += 1;
       return [
         createMultiscaleLayer({
           loader,
           settings,
           layerId: `mainLayer-${sourceImageId}`,
           remountKey: args.remountKey,
-          overlay: anyVisible ? overlay : true,
+          overlay,
           ...(transfer ? { transfer } : {}),
         }),
       ];
     }),
-    ...jpegLoaderEntries.map((entry, i) =>
-      createEncodedImageLayer({
-        entry,
-        settings: jpegSettingsList[i],
-        remountKey: args.remountKey,
-      }),
-    ),
+    ...jpegLoaderEntries.flatMap((entry, i) => {
+      const settings = jpegSettingsList[i] as MainSettings | undefined;
+      if (!(settings?.channelsVisible ?? []).some(Boolean)) return [];
+      return [
+        createEncodedImageLayer({
+          entry,
+          settings,
+          remountKey: args.remountKey,
+        }),
+      ];
+    }),
   ];
 }
 

@@ -8,8 +8,11 @@ import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
   applyStackVisibilities,
   isGroupRowVisible,
+  isRgbDisplayFullyGrouped,
   isStackVisible,
+  visibilitiesForRgbUnit,
 } from "@/lib/imaging/channelCompositor";
+import { isRgbDisplayImage } from "@/lib/imaging/channelKind";
 import {
   buildImageChannelOverview,
   channelNameMatchesQuery,
@@ -244,6 +247,11 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
       ),
     [model.allChannels, channelNameFilter],
   );
+  const rgbDisplay = isRgbDisplayImage(image);
+  const rgbChannels = flattenImageChannelsInDocumentOrder([image]);
+  const showAllChannelsStrip =
+    model.allChannels.length > 0 &&
+    !isRgbDisplayFullyGrouped(rgbChannels, channelGroups);
 
   const openChip =
     openKey == null
@@ -256,8 +264,24 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     setOpenKey((cur) => (cur === chip.key ? null : chip.key));
   };
 
+  const applyRgbUnit = (visible: boolean) => {
+    const next = visibilitiesForRgbUnit({
+      rgbChannels,
+      channelGroups,
+      groupRowVisibilities: useAppStore.getState().channelGroupRowVisibilities,
+      stackVisibilities: useAppStore.getState().channelVisibilities,
+      visible,
+    });
+    setChannelGroupRowVisibilities(next.channelGroupRowVisibilities);
+    setChannelVisibilities(next.channelVisibilities);
+  };
+
   const onGroupChip = (chip: ImageChannelChip) => {
     if (!chip.groupRowId) return;
+    if (rgbDisplay) {
+      applyRgbUnit(!chip.visible);
+      return;
+    }
     const vis = useAppStore.getState().channelGroupRowVisibilities;
     if (chip.visible) {
       setChannelGroupRowVisibilities({
@@ -276,6 +300,10 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
   };
 
   const onAllChannelsChip = (chip: ImageChannelChip) => {
+    if (rgbDisplay) {
+      applyRgbUnit(!chip.visible);
+      return;
+    }
     if (chip.groupRowId) {
       const vis = useAppStore.getState().channelGroupRowVisibilities;
       const groups = useDocumentStore.getState().channelGroups;
@@ -310,31 +338,59 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
 
   return (
     <div className={styles.root}>
-      {model.groups.map((group) => (
-        <GroupStrip
-          key={group.id}
-          name={group.name}
-          chips={group.chips}
-          openChip={openChip}
-          allVisible={group.allVisible}
-          onChip={onGroupChip}
-          onOpenEditor={onOpenEditor}
-          onToggleVisibility={() => {
-            const docGroup = channelGroups.find((g) => g.id === group.id);
-            if (!docGroup || docGroup.channels.length === 0) return;
-            const allOn = docGroup.channels.every((gc) =>
-              isGroupRowVisible(groupRowVisibilities, gc.id),
-            );
-            const next = { ...groupRowVisibilities };
-            for (const gc of docGroup.channels) next[gc.id] = !allOn;
-            setChannelGroupRowVisibilities(next);
-          }}
-        />
-      ))}
-      {model.allChannels.length > 0 ? (
+      {model.groups.map((group) => {
+        const rgbUnit =
+          rgbDisplay && group.chips.length > 1
+            ? [
+                {
+                  ...group.chips[0],
+                  key: `g:${group.id}:rgb`,
+                  name: "H&E",
+                  visible: group.allVisible,
+                },
+              ]
+            : group.chips;
+        return (
+          <GroupStrip
+            key={group.id}
+            name={group.name}
+            chips={rgbUnit}
+            openChip={openChip}
+            allVisible={group.allVisible}
+            onChip={onGroupChip}
+            onOpenEditor={onOpenEditor}
+            onToggleVisibility={() => {
+              if (rgbDisplay) {
+                applyRgbUnit(!group.allVisible);
+                return;
+              }
+              const docGroup = channelGroups.find((g) => g.id === group.id);
+              if (!docGroup || docGroup.channels.length === 0) return;
+              const allOn = docGroup.channels.every((gc) =>
+                isGroupRowVisible(groupRowVisibilities, gc.id),
+              );
+              const next = { ...groupRowVisibilities };
+              for (const gc of docGroup.channels) next[gc.id] = !allOn;
+              setChannelGroupRowVisibilities(next);
+            }}
+          />
+        );
+      })}
+      {showAllChannelsStrip ? (
         <GroupStrip
           name="All channels"
-          chips={filteredAllChannels}
+          chips={
+            rgbDisplay && filteredAllChannels.length > 1
+              ? [
+                  {
+                    ...filteredAllChannels[0],
+                    key: "e:rgb",
+                    name: "H&E",
+                    visible: filteredAllChannels.every((c) => c.visible),
+                  },
+                ]
+              : filteredAllChannels
+          }
           openChip={openChip}
           onChip={onAllChannelsChip}
           onOpenEditor={onOpenEditor}

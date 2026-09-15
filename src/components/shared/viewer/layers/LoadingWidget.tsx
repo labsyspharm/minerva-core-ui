@@ -23,12 +23,14 @@ export const LoadingWidget = React.forwardRef<
   { onRedraw: (params: { layers: Layer[] }) => void },
   LoadingWidgetProps
 >(({ placement = "top-left", label = "Loading layer data" }, ref) => {
-  const [loading, setLoading] = React.useState(true);
+  // Deck's first render may happen before this ref is attached. Starting true
+  // leaves a permanent spinner when visibility yields no image layers.
+  const [loading, setLoading] = React.useState(false);
 
   // onRedraw callback - matches the original Widget implementation
   const onRedraw = React.useCallback(({ layers }: { layers: Layer[] }) => {
     const isLoading = layers.some((layer) => !layer.isLoaded);
-    setLoading((prev) => (prev !== isLoading ? isLoading : prev));
+    setLoading((prev) => (prev === isLoading ? prev : isLoading));
   }, []);
 
   React.useImperativeHandle(ref, () => ({ onRedraw }), [onRedraw]);

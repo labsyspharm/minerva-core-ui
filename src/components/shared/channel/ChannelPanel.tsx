@@ -4,11 +4,13 @@ import {
   applyStackVisibilities,
   isStackVisible,
   sourceChannelInAnyGroup,
+  visibilitiesForRgbUnit,
 } from "@/lib/imaging/channelCompositor";
 import {
   DEFAULT_VISIBLE_INTENSITY_CHANNELS,
   isImageChannel,
   isMaskChannel,
+  isRgbDisplayChannel,
 } from "@/lib/imaging/channelKind";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { ChannelGroup } from "@/lib/stores/documentStore";
@@ -176,6 +178,29 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   );
 
   const toggleChannel = (c: LegendChannel) => {
+    const stackVisibilities =
+      Object.keys(channelVisibilities).length > 0
+        ? channelVisibilities
+        : applyStackVisibilities(sourceChannels, {}, { kind: "fresh" });
+    const sc = findSourceChannel(sourceChannels, c.source_uuid);
+    if (sc && isRgbDisplayChannel(sc, sourceChannels)) {
+      const nextVisible =
+        c.group_uuid && c.channel_uuid
+          ? !(channelGroupRowVisibilities[c.channel_uuid] ?? true)
+          : !isStackVisible(stackVisibilities, c.source_uuid);
+      const next = visibilitiesForRgbUnit({
+        rgbChannels: sourceChannels.filter(
+          (ch) => ch.imageId === sc.imageId && isImageChannel(ch),
+        ),
+        channelGroups: docChannelGroups,
+        groupRowVisibilities: channelGroupRowVisibilities,
+        stackVisibilities: channelVisibilities,
+        visible: nextVisible,
+      });
+      setChannelGroupRowVisibilities(next.channelGroupRowVisibilities);
+      setChannelVisibilities(next.channelVisibilities);
+      return;
+    }
     if (c.group_uuid && c.channel_uuid) {
       const nextVisible = !(
         channelGroupRowVisibilities[c.channel_uuid] ?? true
@@ -186,10 +211,6 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       });
       return;
     }
-    const stackVisibilities =
-      Object.keys(channelVisibilities).length > 0
-        ? channelVisibilities
-        : applyStackVisibilities(sourceChannels, {}, { kind: "fresh" });
     const nextVisible = !isStackVisible(stackVisibilities, c.source_uuid);
     setChannelVisibilities({
       ...stackVisibilities,

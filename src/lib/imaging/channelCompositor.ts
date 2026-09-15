@@ -7,6 +7,7 @@ import {
   DEFAULT_VISIBLE_INTENSITY_CHANNELS,
   isImageChannel,
   isMaskChannel,
+  isRgbDisplaySource,
 } from "./channelKind";
 import { SELECTION_MASK_CHANNEL_KEY } from "./maskLayers";
 
@@ -70,6 +71,42 @@ export function sourceChannelInAnyGroup(
   return sourceIdsInAnyGroup(channelGroups).has(sourceId);
 }
 
+/** RGB / H&E already in a group — All Channels is the same catalog twice. */
+export function isRgbDisplayFullyGrouped(
+  channels: readonly Channel[],
+  channelGroups: ChannelGroup[],
+): boolean {
+  const intensity = channels.filter(isImageChannel);
+  if (intensity.length === 0 || !isRgbDisplaySource(channels)) return false;
+  const groupedIds = sourceIdsInAnyGroup(channelGroups);
+  return intensity.every((c) => groupedIds.has(c.id));
+}
+
+/** Flip every RGB / H&E plane together (stack eyes and group-row eyes). */
+export function visibilitiesForRgbUnit(args: {
+  rgbChannels: readonly Channel[];
+  channelGroups: readonly ChannelGroup[];
+  groupRowVisibilities: Record<string, boolean>;
+  stackVisibilities: Record<string, boolean>;
+  visible: boolean;
+}): {
+  channelGroupRowVisibilities: Record<string, boolean>;
+  channelVisibilities: Record<string, boolean>;
+} {
+  const ids = new Set(args.rgbChannels.filter(isImageChannel).map((c) => c.id));
+  const channelGroupRowVisibilities = { ...args.groupRowVisibilities };
+  for (const group of args.channelGroups) {
+    for (const gc of group.channels) {
+      if (ids.has(gc.channelId)) {
+        channelGroupRowVisibilities[gc.id] = args.visible;
+      }
+    }
+  }
+  const channelVisibilities = { ...args.stackVisibilities };
+  for (const id of ids) channelVisibilities[id] = args.visible;
+  return { channelGroupRowVisibilities, channelVisibilities };
+}
+
 /** Intensity layers sent to Viv (one OME channel per source; first visible group row wins, active group first). */
 export function buildCompositedIntensityLayers(
   args: CompositedLayersArgs,
@@ -85,6 +122,35 @@ export function buildCompositedIntensityLayers(
   } = args;
 
   const groupedIds = sourceIdsInAnyGroup(channelGroups);
+  const rgbSource = isRgbDisplaySource(onLoader);
+
+  if (rgbSource) {
+    const intensity = onLoader.filter(isImageChannel);
+    const unitOn = intensity.every((sc) =>
+      groupedIds.has(sc.id)
+        ? isDisplayedViaGroupRow(sc.id, channelGroups, groupRowVisibilities)
+        : !hasVisibilityMap || isStackVisible(stackVisibilities, sc.id),
+    );
+    if (!unitOn) return [];
+    const groupsInOrder = activeGroup
+      ? [activeGroup, ...channelGroups.filter((g) => g.id !== activeGroup.id)]
+      : channelGroups;
+    return intensity.map((sc) => {
+      let gc: ChannelGroupChannel | null = null;
+      for (const group of groupsInOrder) {
+        const row = group.channels.find(
+          (r) =>
+            r.channelId === sc.id &&
+            isGroupRowVisible(groupRowVisibilities, r.id),
+        );
+        if (row) {
+          gc = row;
+          break;
+        }
+      }
+      return { sc, gc };
+    });
+  }
 
   if (channelGroups.length === 0) {
     const layers = hasVisibilityMap
@@ -116,7 +182,7 @@ export function buildCompositedIntensityLayers(
     if (!hasVisibilityMap || !isStackVisible(stackVisibilities, sc.id)) {
       continue;
     }
-    if (requireColor && sc.samples !== 3 && !sc.color) continue;
+    if (requireColor && !rgbSource && sc.samples !== 3 && !sc.color) continue;
     usedSourceIds.add(sc.id);
     ordered.push({ sc, gc: null });
   }
@@ -241,6 +307,11 @@ export function applyStackVisibilities(
       return out;
     }
     case "sync": {
+      // Visibility is session-only. A restored document can inherit a non-empty
+      // map containing only ids from the previously open story.
+      if (!sourceChannels.some((sc) => prev[sc.id] !== undefined)) {
+        return freshStackDefaults(sourceChannels);
+      }
       const out = preservedStackVisibilities(sourceChannels, prev, true);
       for (const sc of sourceChannels) {
         if (out[sc.id] !== undefined) continue;

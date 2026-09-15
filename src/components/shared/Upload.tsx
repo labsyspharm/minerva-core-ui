@@ -288,6 +288,7 @@ const Upload = (props: UploadProps) => {
   );
   const [detecting, setDetecting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [stripErrorAt, setStripErrorAt] = useState<"drop" | "url">("drop");
   const [importBusy, setImportBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
   const dragDepthRef = useRef(0);
@@ -420,10 +421,12 @@ const Upload = (props: UploadProps) => {
       if (handles.length === 0) return;
       const handle = handles[0];
       if (!(await ensureFileHandlePermission(handle))) {
+        setStripErrorAt("drop");
         setImportError("Allow file access to load this image.");
         return;
       }
       if (!(await findFile({ handle }))) {
+        setStripErrorAt("drop");
         setImportError("Could not read the selected file.");
         return;
       }
@@ -453,6 +456,7 @@ const Upload = (props: UploadProps) => {
     if (disabled) return;
     const url = urlDraft.trim();
     if (!/^https?:\/\/.+/.test(url)) {
+      setStripErrorAt("url");
       setImportError("Enter a valid http(s) URL.");
       return;
     }
@@ -489,11 +493,13 @@ const Upload = (props: UploadProps) => {
     if (disabled) return;
     const items = [...e.dataTransfer.items].filter((i) => i.kind === "file");
     if (items.length === 0) {
+      setStripErrorAt("drop");
       setImportError("Drop an image file to add it.");
       return;
     }
     const handle = await fileHandleFromDataTransferItem(items[0]);
     if (!handle) {
+      setStripErrorAt("drop");
       setImportError("Could not read the dropped file.");
       return;
     }
@@ -684,6 +690,9 @@ const Upload = (props: UploadProps) => {
     onDragOver,
     onDrop: (e: ReactDragEvent) => void onDrop(e),
   };
+  const stripError = importError && !showTypeOverlay ? importError : null;
+  const dropError = stripError && stripErrorAt === "drop" ? stripError : null;
+  const urlError = stripError && stripErrorAt === "url" ? stripError : null;
   const addStrip = (
     <div
       className={[
@@ -700,49 +709,60 @@ const Upload = (props: UploadProps) => {
           dragging ? styles.dropZoneActive : "",
         ].join(" ")}
         disabled={disabled}
+        aria-invalid={dropError ? true : undefined}
         onClick={() => void browseLocal()}
       >
-        <span className={styles.dropZoneTitle}>Drop or Browse Image File</span>
+        <span
+          className={[styles.dropZoneTitle, dropError ? styles.importError : ""]
+            .filter(Boolean)
+            .join(" ")}
+          role={dropError ? "alert" : undefined}
+        >
+          {dropError ?? "Drop or Browse Image File"}
+        </span>
       </button>
       <div className={styles.orDivider}>
         <span>or</span>
       </div>
       <div className={styles.urlRow}>
-        <input
-          id="upload-add-url"
-          type="url"
-          className={`${minervaTheme.input} ${styles.urlInput}`}
-          placeholder="Image URL (OME-TIFF or DICOMweb)"
-          aria-label="Image URL"
-          value={urlDraft}
-          disabled={disabled}
-          onChange={(e) => {
-            setUrlDraft(e.target.value);
-            setImportError(null);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              acceptUrlDraft();
-            }
-          }}
-        />
-        {urlDraft.trim() ? (
-          <PanelActionButton
-            type="button"
-            className={styles.urlAdd}
-            disabled={disabled || !urlReady}
-            onClick={acceptUrlDraft}
-          >
-            Add
-          </PanelActionButton>
+        <div className={styles.urlField}>
+          <input
+            id="upload-add-url"
+            type="url"
+            className={`${minervaTheme.input} ${styles.urlInput}`}
+            placeholder="Image URL (OME-TIFF or DICOMweb)"
+            aria-label="Image URL"
+            aria-invalid={urlError ? true : undefined}
+            value={urlDraft}
+            disabled={disabled}
+            onChange={(e) => {
+              setUrlDraft(e.target.value);
+              setImportError(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                acceptUrlDraft();
+              }
+            }}
+          />
+          {urlDraft.trim() ? (
+            <PanelActionButton
+              type="button"
+              className={styles.urlAdd}
+              disabled={disabled || !urlReady}
+              onClick={acceptUrlDraft}
+            >
+              Add
+            </PanelActionButton>
+          ) : null}
+        </div>
+        {urlError ? (
+          <div className={styles.importError} role="alert">
+            {urlError}
+          </div>
         ) : null}
       </div>
-      {importError && !showTypeOverlay ? (
-        <div className={styles.importError} role="alert">
-          {importError}
-        </div>
-      ) : null}
     </div>
   );
 

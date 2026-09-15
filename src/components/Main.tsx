@@ -487,7 +487,13 @@ const Content = (props: Props) => {
     void channelVisibilities;
     void channelGroupRowVisibilities;
     void activeChannelGroupId;
-    const shown = visibleGmmIds(useDocumentStore.getState().images);
+    const liveImages = useDocumentStore.getState().images;
+    const shown = visibleGmmIds(liveImages);
+    reconcileGmm({
+      loaderEntries: omeLoaderEntries,
+      channels: flattenImageChannelsInDocumentOrder(liveImages),
+      visibleChannelIds: shown,
+    });
     const prev = prevGmmShownRef.current;
     prevGmmShownRef.current = shown;
     if (prev === null) return;
@@ -500,6 +506,7 @@ const Content = (props: Props) => {
     }
   }, [
     activeStoryId,
+    omeLoaderEntries,
     channelGroups,
     channelVisibilities,
     channelGroupRowVisibilities,

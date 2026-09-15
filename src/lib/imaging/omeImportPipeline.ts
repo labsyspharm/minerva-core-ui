@@ -1,5 +1,9 @@
 import { extractChannels } from "@/lib/authoring/config";
-import { resolveImageImportRole } from "@/lib/imaging/channelKind";
+import {
+  isImageChannel,
+  isRgbDisplaySource,
+  resolveImageImportRole,
+} from "@/lib/imaging/channelKind";
 import { loadOmeLoaderForRole } from "@/lib/imaging/filesystem";
 import type { Loader } from "@/lib/imaging/viv";
 import type { PoolClass } from "@/lib/imaging/workers/pool";
@@ -71,6 +75,15 @@ export function buildOmeImportSlice(args: {
   if (role === "segmentation") {
     sourceChannels = seedMaskSourceChannelStyles(sourceChannels);
   }
+  let extractedGroups = extracted.ChannelGroups;
+  const taggedForRgb =
+    rgbDisplay == null
+      ? sourceChannels
+      : sourceChannels.map((c) => ({ ...c, rgbDisplay }));
+  const persistRgbDisplay =
+    role === "intensity"
+      ? (rgbDisplay ?? (isRgbDisplaySource(taggedForRgb) ? true : undefined))
+      : undefined;
   const nextImages = mergeExtractedChannelsIntoImages(
     existingImages,
     sourceImageId,
@@ -78,11 +91,32 @@ export function buildOmeImportSlice(args: {
     basename,
     role,
     sourceChannels,
-    role === "intensity" ? rgbDisplay : undefined,
+    persistRgbDisplay,
   );
+  if (
+    role === "intensity" &&
+    extractedGroups.length === 0 &&
+    isRgbDisplaySource(taggedForRgb)
+  ) {
+    const intensity = sourceChannels.filter(isImageChannel);
+    extractedGroups = [
+      {
+        id: crypto.randomUUID(),
+        expanded: true,
+        name: "Hematoxylin & Eosin",
+        channels: intensity.map((channel) => ({
+          id: crypto.randomUUID(),
+          channelId: channel.id,
+          color: { r: 204, g: 0, b: 255 },
+          lowerLimit: 0,
+          upperLimit: 255,
+        })),
+      },
+    ];
+  }
   return {
     sourceChannels,
-    extractedGroups: extracted.ChannelGroups,
+    extractedGroups,
     nextImages,
   };
 }

@@ -13,6 +13,7 @@ import { ChannelRow } from "@/components/shared/channel/ChannelRow";
 import {
   isGroupRowVisible,
   isStackVisible,
+  visibilitiesForRgbUnit,
 } from "@/lib/imaging/channelCompositor";
 import {
   isImageChannel,
@@ -280,6 +281,20 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
       : { scope: "source", sourceId: sc.id };
 
   const toggleVisible = () => {
+    if (rgbDisplay) {
+      const next = visibilitiesForRgbUnit({
+        rgbChannels: sourceChannels.filter(
+          (c) => c.imageId === sc.imageId && isImageChannel(c),
+        ),
+        channelGroups,
+        groupRowVisibilities,
+        stackVisibilities,
+        visible: !visible,
+      });
+      setChannelGroupRowVisibilities(next.channelGroupRowVisibilities);
+      setChannelVisibilities(next.channelVisibilities);
+      return;
+    }
     if (gc) {
       setChannelGroupRowVisibilities({
         ...groupRowVisibilities,

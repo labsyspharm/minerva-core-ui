@@ -29,13 +29,16 @@ import {
   buildCompositedIntensityLayers,
   isDisplayedViaGroupRow,
   isGroupRowVisible,
+  isRgbDisplayFullyGrouped,
   isStackVisible,
+  visibilitiesForRgbUnit,
 } from "@/lib/imaging/channelCompositor";
 import {
   DEFAULT_MASK_VISUALIZATION,
   isImageChannel,
   isMaskChannel,
   isRgbDisplayChannel,
+  isRgbDisplaySource,
   type MaskVisualization,
   planarRgbDisplayColor,
 } from "@/lib/imaging/channelKind";
@@ -584,13 +587,18 @@ export const ChannelGroupsMasterDetail = (
   const [lockedColorRowIdsByGroup, setLockedColorRowIdsByGroup] =
     React.useState<Map<string, Set<string>>>(() => new Map());
   const [channelNameFilter, setChannelNameFilter] = React.useState("");
-  const filteredAllChannels = React.useMemo(
-    () =>
-      uniqueSourceChannels.filter((sc) =>
-        channelNameMatchesQuery(sc.name, channelNameFilter),
-      ),
-    [uniqueSourceChannels, channelNameFilter],
-  );
+  const filteredAllChannels = React.useMemo(() => {
+    const matched = uniqueSourceChannels.filter((sc) =>
+      channelNameMatchesQuery(sc.name, channelNameFilter),
+    );
+    if (!isRgbDisplaySource(uniqueSourceChannels)) return matched;
+    const first = matched.find((sc) => isImageChannel(sc));
+    const rest = matched.filter((sc) => !isImageChannel(sc));
+    return first ? [first, ...rest] : matched;
+  }, [uniqueSourceChannels, channelNameFilter]);
+  const showAllChannelsList =
+    uniqueSourceChannels.length > 0 &&
+    !isRgbDisplayFullyGrouped(uniqueSourceChannels, channelGroups);
 
   React.useEffect(() => {
     setLockedColorRowIdsByGroup((prev) => {
@@ -773,6 +781,24 @@ export const ChannelGroupsMasterDetail = (
     const allOn = group.channels.every((gc) =>
       isGroupRowVisible(channelGroupRowVisibilities, gc.id),
     );
+    const first = findSourceChannel(
+      sourceChannels,
+      group.channels[0].channelId,
+    );
+    if (first && isRgbDisplayChannel(first, sourceChannels)) {
+      const next = visibilitiesForRgbUnit({
+        rgbChannels: sourceChannels.filter(
+          (c) => c.imageId === first.imageId && isImageChannel(c),
+        ),
+        channelGroups,
+        groupRowVisibilities: channelGroupRowVisibilities,
+        stackVisibilities: stackVisibilities,
+        visible: !allOn,
+      });
+      setChannelGroupRowVisibilities(next.channelGroupRowVisibilities);
+      setChannelVisibilities(next.channelVisibilities);
+      return;
+    }
     const next = { ...channelGroupRowVisibilities };
     for (const gc of group.channels) {
       next[gc.id] = !allOn;
@@ -1152,6 +1178,12 @@ export const ChannelGroupsMasterDetail = (
       group.channels.some((gc) =>
         isGroupRowVisible(channelGroupRowVisibilities, gc.id),
       );
+    const rgbGroup =
+      group.channels.length > 0 &&
+      group.channels.every((row) => {
+        const src = findSourceChannel(sourceChannels, row.channelId);
+        return src != null && isRgbDisplayChannel(src, sourceChannels);
+      });
     const lockedIds = lockedIdsForGroup(group.id);
 
     const folderDropProps = {
@@ -1249,7 +1281,7 @@ export const ChannelGroupsMasterDetail = (
             </PanelIconButton>
           </div>
         </div>
-        {expanded ? (
+        {expanded && !rgbGroup ? (
           <div className={styles.groupFolderBody}>
             <ul className={styles.groupChildList}>
               {group.channels.map((gc) => {
@@ -1319,6 +1351,25 @@ export const ChannelGroupsMasterDetail = (
                         visibilityAriaLabel={`Toggle visibility for ${name}`}
                         onToggleVisibility={(event) =>
                           toggleWithScrollOnShow(event, !visible, () => {
+                            if (rgbDisplay && sc) {
+                              const next = visibilitiesForRgbUnit({
+                                rgbChannels: sourceChannels.filter(
+                                  (c) =>
+                                    c.imageId === sc.imageId &&
+                                    isImageChannel(c),
+                                ),
+                                channelGroups,
+                                groupRowVisibilities:
+                                  channelGroupRowVisibilities,
+                                stackVisibilities: stackVisibilities,
+                                visible: !visible,
+                              });
+                              setChannelGroupRowVisibilities(
+                                next.channelGroupRowVisibilities,
+                              );
+                              setChannelVisibilities(next.channelVisibilities);
+                              return;
+                            }
                             setChannelGroupRowVisibilities({
                               ...channelGroupRowVisibilities,
                               [gc.id]: !visible,
@@ -1485,6 +1536,20 @@ export const ChannelGroupsMasterDetail = (
       : `Toggle layer for ${sc.name}`;
 
     const toggleAllChannelsVisibility = (nextVisible: boolean) => {
+      if (isRgbDisplayChannel(sc, sourceChannels)) {
+        const next = visibilitiesForRgbUnit({
+          rgbChannels: sourceChannels.filter(
+            (c) => c.imageId === sc.imageId && isImageChannel(c),
+          ),
+          channelGroups,
+          groupRowVisibilities: channelGroupRowVisibilities,
+          stackVisibilities: stackVisibilities,
+          visible: nextVisible,
+        });
+        setChannelGroupRowVisibilities(next.channelGroupRowVisibilities);
+        setChannelVisibilities(next.channelVisibilities);
+        return;
+      }
       if (groupRows.length > 0) {
         const vis = { ...channelGroupRowVisibilities };
         for (const { row } of groupRows) vis[row.id] = nextVisible;
@@ -1574,7 +1639,7 @@ export const ChannelGroupsMasterDetail = (
             }
             name={{
               mode: "editable",
-              name: sc.name,
+              name: rgbDisplay ? "H&E" : sc.name,
               meta,
               onBlur: (value) => renameSourceChannelDisplayName(sc.id, value),
             }}
@@ -1631,7 +1696,7 @@ export const ChannelGroupsMasterDetail = (
           </div>
         ) : null}
 
-        {uniqueSourceChannels.length > 0 ? (
+        {showAllChannelsList ? (
           <>
             <div className={styles.treeSeparator}>
               <span className={styles.treeSeparatorLabel}>All channels</span>
